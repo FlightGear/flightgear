@@ -34,17 +34,20 @@ Uninstallable=yes
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 
 [Files]
+; NOTE: run subst X: F:\ (or whatever path the expanded tree resides at)
 Source: "X:\*.*"; DestDir: "{app}"; Flags: ignoreversion
 Source: "X:\bin\*.*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs
 Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
 Source: "X:\docs\*.*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs
-Source: "X:\bin\Win32\fgrun.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion
+; Source: "X:\bin\Win32\fgrun.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion
+; Source: "X:\bin\Win32\fgadmin.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion
 ; Source: "X:\src\*.*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
 ; Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
+Name: "{group}\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
 Name: "{group}\Uninstall FlightGear v0.9.3"; Filename: "{uninstallexe}"
@@ -53,9 +56,17 @@ Name: "{userdesktop}\FlightGear v0.9.3"; Filename: "{app}\bin\Win32\fgrun.exe"; 
 ; Name: "{userdesktop}\FlightGear v0.9.3"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-; Put installation directory in the fgrun.prefs
-filename: "{app}\bin\win32\mkfgrunp.bat"; WorkingDir: "{app}\bin\win32"; Parameters: """{app}"" ""{userappdata}"""
-filename: "{app}\bin\win32\instscen.bat"; WorkingDir: "{app}\bin\win32"; Parameters: """{src}"" ""{app}"""
+; Put installation directory into the fgrun.prefs
+; filename: "{app}\bin\Win32\mkfgrunp.bat"; WorkingDir: "{app}\bin\Win32"; Parameters: """{app}"" ""{userappdata}"""
+filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery"""
+
+; Put installation and source directories into the fgadmin.prefs
+; filename: "{app}\bin\Win32\mkfgadminp.bat"; WorkingDir: "{app}\bin\Win32"; Parameters: """{src}"" ""{app}"" ""{userappdata}"""
+filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}"" ""--scenery-dest={app}\scenery"""
+
+; Make the user installable scenery directory
+filename: "{app}\bin\Win32\mkscenerydir.bat"; WorkingDir: "{app}"
+
 ; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
 Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 ; For running flightgear directly
