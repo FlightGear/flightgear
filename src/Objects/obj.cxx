@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include <simgear/compiler.h>
+#include <simgear/sg_inlines.h>
 #include <simgear/io/sg_binobj.hxx>
 
 #include STL_STRING
@@ -571,17 +572,12 @@ DummyBSphereEntity::get_entity ()
  * @param p3 The third point in the triangle.
  * @return The greatest distance any point lies from the center.
  */
-static float
-get_bounding_radius (sgVec3 center, float *p1, float *p2, float *p3)
+static inline float
+get_bounding_radius( sgVec3 center, float *p1, float *p2, float *p3)
 {
-  float result = sgDistanceVec3(center, p1);
-  float length = sgDistanceVec3(center, p2);
-  if (length > result)
-    result = length;
-  length = sgDistanceVec3(center, p3);
-  if (length > result)
-    result = length;
-  return result;
+   return sqrt( SG_MAX3( sgDistanceSquaredVec3(center, p1),
+			 sgDistanceSquaredVec3(center, p2),
+			 sgDistanceSquaredVec3(center, p3) ) );
 }
 
 
