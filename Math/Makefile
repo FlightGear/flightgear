@@ -31,8 +31,7 @@ HFILES = mat3.h mat3defs.h mat3err.h
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
-CFLAGS = -g -Wall
-# CFLAGS = -O2 -Wall
+CFLAGS = $(FG_CFLAGS)
 
 AR = ar
 
@@ -50,6 +49,9 @@ $(TARGET): $(OFILES) $(HFILES)
 
 all: $(TARGET)
 
+dep:                                 
+	$(CC) -MM *.c > depend                     
+
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
 
@@ -58,10 +60,14 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
+include depend
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/06/26 19:08:38  curt
+# Restructuring make, adding automatic "make dep" support.
+#
 # Revision 1.3  1997/06/25 15:39:49  curt
 # Minor changes to compile with rsxnt/win32.
 #
