@@ -353,29 +353,6 @@ getGMTString ()
 
 
 /**
- * Get the texture rendering state.
- */
-static bool
-getTextures ()
-{
-  return (material_lib.get_step() == 0);
-}
-
-
-/**
- * Set the texture rendering state.
- */
-static void
-setTextures (bool textures)
-{
-  if (textures)
-    material_lib.set_step(0);
-  else
-    material_lib.set_step(1);
-}
-
-
-/**
  * Return the magnetic variation
  */
 static double
@@ -589,7 +566,6 @@ fgInitProps ()
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
   fgTie("/sim/time/gmt-string", getGMTString);
-  fgTie("/sim/rendering/textures", getTextures, setTextures);
 
 				// Orientation
   fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
