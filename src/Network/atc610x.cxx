@@ -1003,7 +1003,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
               !(radio_switch_data[23] >> 4 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/power-btn",
-              radio_switch_data[23] >> 4 & 0x01 );
+              radio_switch_data[23] >> 5 & 0x01 );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
          << " bfo = " << !(radio_switch_data[23] >> 1 & 0x01)
          << " stby = " << !(radio_switch_data[23] >> 2 & 0x01)
@@ -1243,7 +1243,7 @@ bool FGATC610x::do_radio_display() {
     // turns on the decimal point
 
     // ADF standby frequency / timer
-    if ( adf_vol->getDoubleValue() >= 0.01 ) {
+    if ( adf_power->getBoolValue() ) {
         if ( adf_stby_mode->getIntValue() == 0 ) {
             // frequency
             float adf_stby = adf_stby_freq->getFloatValue();
