@@ -1,4 +1,4 @@
-// flight.c -- a general interface to the various flight models
+// flight.cxx -- a general interface to the various flight models
 //
 // Written by Curtis Olson, started May 1997.
 //
