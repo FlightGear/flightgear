@@ -16,6 +16,7 @@ Surface::Surface()
     _orient[3] = 0; _orient[4] = 1; _orient[5] = 0;
     _orient[6] = 0; _orient[7] = 0; _orient[8] = 1;
     
+    _chord = 0;
     _incidence = 0;
     _slatPos = _spoilerPos = _flapPos = 0;
     _slatDrag = _spoilerDrag = _flapDrag = 1;
