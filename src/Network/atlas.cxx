@@ -68,9 +68,9 @@ bool FGAtlas::gen_message() {
     static SGPropertyNode *adf_freq
         = fgGetNode("/instrumentation/kr-87/outputs/selected-khz", true);
     static SGPropertyNode *nav_freq
-        = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", false);
+        = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
     static SGPropertyNode *nav_sel_radial
-        = fgGetNode("/instrumentation/van/radials/selected-deg", false);
+        = fgGetNode("/instrumentation/van/radials/selected-deg", true);
 
     char rmc[256], gga[256], patla[256];
     char rmc_sum[10], gga_sum[10], patla_sum[10];
