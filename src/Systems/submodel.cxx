@@ -182,9 +182,9 @@ SubmodelSystem::load ()
      sm->buoyancy       = entry_node->getDoubleValue("buoyancy", 0);
      sm->wind           = entry_node->getBoolValue  ("wind", false); 
      sm->first_time     = false;
-     sm->cd             = entry_node->getDoubleValue("cd", 0.295);
+     sm->cd             = entry_node->getDoubleValue("cd", 0.193);
      sm->weight         = entry_node->getDoubleValue("weight", 0.25);
-     sm->contents_node    = fgGetNode(entry_node->getStringValue("contents", "none"), true);
+     sm->contents_node  = fgGetNode(entry_node->getStringValue("contents", "none"), true);
 
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;
