@@ -75,13 +75,7 @@ FGRadioStack::FGRadioStack() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
-    dme_bus_power(fgGetNode("/systems/electrical/outputs/dme", true)),
     need_update(true),
-    dme_freq(0.0),
-    dme_dist(0.0),
-    dme_prev_dist(0.0),
-    dme_spd(0.0),
-    dme_ete(0.0),
     outer_blink(false),
     middle_blink(false),
     inner_blink(false)
@@ -97,7 +91,6 @@ FGRadioStack::FGRadioStack() :
     term_tbl = new SGInterpTable( term.str() );
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
-    dme_last_time.stamp();
 }
 
 
@@ -150,22 +143,10 @@ FGRadioStack::init ()
 			    1000 );
 }
 
+
 void
 FGRadioStack::bind ()
 {
-
-				// User inputs
-    fgTie("/radios/dme/frequencies/selected-khz", this,
-	  &FGRadioStack::get_dme_freq, &FGRadioStack::set_dme_freq);
-
-				// Radio outputs
-    fgTie("/radios/dme/in-range", this, &FGRadioStack::get_dme_inrange);
-
-    fgTie("/radios/dme/distance-nm", this, &FGRadioStack::get_dme_dist);
-
-    fgTie("/radios/dme/speed-kt", this, &FGRadioStack::get_dme_spd);
-
-    fgTie("/radios/dme/ete-min", this, &FGRadioStack::get_dme_ete);
 
     fgTie("/radios/marker-beacon/inner", this,
 	  &FGRadioStack::get_inner_blink);
@@ -176,32 +157,27 @@ FGRadioStack::bind ()
     fgTie("/radios/marker-beacon/outer", this,
 	  &FGRadioStack::get_outer_blink);
 
+    adf.bind();
+    dme.bind();
     navcom1.set_bind_index( 0 );
     navcom1.bind();
     navcom2.set_bind_index( 1 );
     navcom2.bind();
-    adf.bind();
     xponder.bind();
 }
+
 
 void
 FGRadioStack::unbind ()
 {
-    fgUntie("/radios/dme/frequencies/selected-khz");
-
-				// Radio outputs
-    fgUntie("/radios/dme/in-range");
-    fgUntie("/radios/dme/distance-nm");
-    fgUntie("/radios/dme/speed-kt");
-    fgUntie("/radios/dme/ete-min");
-
     fgUntie("/radios/marker-beacon/inner");
     fgUntie("/radios/marker-beacon/middle");
     fgUntie("/radios/marker-beacon/outer");
 
+    adf.unbind();
+    dme.unbind();
     navcom1.unbind();
     navcom2.unbind();
-    adf.unbind();
     xponder.unbind();
 }
 
@@ -210,65 +186,13 @@ FGRadioStack::unbind ()
 void 
 FGRadioStack::update(double dt) 
 {
-    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
-
     need_update = false;
 
-    Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
-    Point3D station;
-
+    adf.update( dt );
     navcom1.update( dt );
     navcom2.update( dt );
-
-    ////////////////////////////////////////////////////////////////////////
-    // DME.
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( dme_valid && dme_has_power() ) {
-	station = Point3D( dme_x, dme_y, dme_z );
-	dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
-	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
-	if (dme_dist < dme_effective_range * SG_NM_TO_METER) {
-            dme_inrange = true;
-	} else if (dme_dist < 2 * dme_effective_range * SG_NM_TO_METER) {
-            dme_inrange = sg_random() <
-                (2 * dme_effective_range * SG_NM_TO_METER - dme_dist) /
-                (dme_effective_range * SG_NM_TO_METER);
-	} else {
-            dme_inrange = false;
-	}
-	if ( dme_inrange ) {
-            SGTimeStamp current_time;
-            station = Point3D( dme_x, dme_y, dme_z );
-            dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
-            current_time.stamp();
-            long dMs = (current_time - dme_last_time) / 1000;
-				// Update every second
-            if (dMs >= 1000) {
-                double dDist = dme_dist - dme_prev_dist;
-                dme_spd = fabs((dDist/dMs) * 3600000);
-				// FIXME: the panel should be able to
-				// handle this!!!
-                if (dme_spd > 999.0)
-                    dme_spd = 999.0;
-                dme_ete = fabs((dme_dist/dme_spd) * 60.0);
-				// FIXME: the panel should be able to
-				// handle this!!!
-                if (dme_ete > 99.0)
-                    dme_ete = 99.0;
-                dme_prev_dist = dme_dist;
-                dme_last_time.stamp();
-            }
-	}
-    } else {
-        dme_inrange = false;
-        dme_dist = 0.0;
-        dme_prev_dist = 0.0;
-        dme_spd = 0.0;
-        dme_ete = 0.0;
-    }
+    dme.update( dt );           // dme is updated after the navcom's
+    xponder.update( dt );
 
     // marker beacon blinking
     bool light_on = ( outer_blink || middle_blink || inner_blink );
@@ -302,9 +226,6 @@ FGRadioStack::update(double dt)
     }
 
     // cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
-
-    adf.update( dt );
-    xponder.update( dt );
 }
 
 
@@ -317,64 +238,11 @@ void FGRadioStack::search()
     double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
-				// FIXME: the panel should handle this
-				// don't worry about overhead for now,
-				// since this is handled only periodically
-    dme_switch_pos = fgGetInt("/radios/dme/switch-position", 2);
-    if ( dme_switch_pos == 1 && dme_has_power() && navcom1.has_power() ) {
-        if ( dme_freq != navcom1.get_nav_freq() ) {
-            dme_freq = navcom1.get_nav_freq();
-            need_update = true;
-        }
-    } else if ( dme_switch_pos == 3 && dme_has_power() && navcom2.has_power() ){
-        if ( dme_freq != navcom2.get_nav_freq() ) {
-            dme_freq = navcom2.get_nav_freq();
-            need_update = true;
-        }
-    } else {
-        dme_freq = 0;
-        dme_inrange = false;
-    }
-
-    FGILS ils;
-    FGNav nav;
-
+    adf.search();
     navcom1.search();
     navcom2.search();
-
-    ////////////////////////////////////////////////////////////////////////
-    // DME
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( current_ilslist->query( lon, lat, elev, dme_freq, &ils ) ) {
-      if (ils.get_has_dme()) {
-	dme_valid = true;
-	dme_lon = ils.get_loclon();
-	dme_lat = ils.get_loclat();
-	dme_elev = ils.get_gselev();
-	dme_range = FG_ILS_DEFAULT_RANGE;
-	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
-	dme_x = ils.get_dme_x();
-	dme_y = ils.get_dme_y();
-	dme_z = ils.get_dme_z();
-      }
-    } else if ( current_navlist->query( lon, lat, elev, dme_freq, &nav ) ) {
-      if (nav.get_has_dme()) {
-	dme_valid = true;
-	dme_lon = nav.get_lon();
-	dme_lat = nav.get_lat();
-	dme_elev = nav.get_elev();
-	dme_range = nav.get_range();
-	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
-	dme_x = nav.get_x();
-	dme_y = nav.get_y();
-	dme_z = nav.get_z();
-      }
-    } else {
-      dme_valid = false;
-      dme_dist = 0;
-    }
-
+    dme.search();
+    xponder.search();
 
     ////////////////////////////////////////////////////////////////////////
     // Beacons.
@@ -440,7 +308,4 @@ void FGRadioStack::search()
 #endif
     }
     last_beacon = beacon_type;
-
-    adf.search();
-    xponder.search();
 }

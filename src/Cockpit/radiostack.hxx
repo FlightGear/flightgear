@@ -38,9 +38,11 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
+#include "dme.hxx"
 #include "kr_87.hxx"            // ADF
 #include "kt_70.hxx"            // Transponder
 #include "navcom.hxx"
+
 
 class FGRadioStack : public FGSubsystem
 {
@@ -58,24 +60,6 @@ class FGRadioStack : public FGSubsystem
 
     bool need_update;
 
-    bool dme_valid;
-    int dme_switch_pos;
-    bool dme_inrange;
-    double dme_freq;
-    double dme_lon;
-    double dme_lat;
-    double dme_elev;
-    double dme_range;
-    double dme_effective_range;
-    double dme_x;
-    double dme_y;
-    double dme_z;
-    double dme_dist;
-    double dme_prev_dist;
-    double dme_spd;
-    double dme_ete;
-    SGTimeStamp dme_last_time;
-
     bool outer_marker;
     bool middle_marker;
     bool inner_marker;
@@ -85,6 +69,7 @@ class FGRadioStack : public FGSubsystem
     bool middle_blink;
     bool inner_blink;
 
+    FGDME dme;
     FGKR_87 adf;                // King KR 87 Digital ADF model
     FGKT_70 xponder;            // Bendix/King KT 70 Panel-Mounted Transponder
     FGNavCom navcom1;
@@ -106,29 +91,10 @@ public:
     inline FGNavCom *get_navcom1() { return &navcom1; }
     inline FGNavCom *get_navcom2() { return &navcom2; }
 
-    // DME Setters
-    inline void set_dme_freq (double freq) {
-        dme_freq = freq; need_update = true;
-    }
-
-
-    // DME Accessors
-    inline bool dme_has_power() const {
-        return (dme_switch_pos == 1 || dme_switch_pos == 3)
-            && (dme_bus_power->getDoubleValue() > 1.0);
-    }
-    inline double get_dme_freq () const { return dme_freq; }
-
     // Marker Beacon Accessors
     inline bool get_inner_blink () const { return inner_blink; }
     inline bool get_middle_blink () const { return middle_blink; }
     inline bool get_outer_blink () const { return outer_blink; }
-
-    // Calculated values.
-    inline bool get_dme_inrange () const { return dme_inrange; }
-    inline double get_dme_dist () const { return dme_dist; }
-    inline double get_dme_spd () const { return dme_spd; }
-    inline double get_dme_ete () const { return dme_ete; }
 };
 
 

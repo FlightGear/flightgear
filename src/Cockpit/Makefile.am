@@ -2,6 +2,7 @@ noinst_LIBRARIES = libCockpit.a
 
 libCockpit_a_SOURCES = \
 	cockpit.cxx cockpit.hxx \
+	dme.cxx dme.hxx \
 	hud.cxx hud.hxx hud_opts.hxx \
 	hud_card.cxx hud_dnst.cxx hud_gaug.cxx hud_inst.cxx \
 	hud_labl.cxx hud_ladr.cxx \

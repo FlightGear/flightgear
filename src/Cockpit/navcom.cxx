@@ -100,13 +100,6 @@ FGNavCom::bind ()
 {
     char propname[256];
 
-    // we know index is valid now so lets bind to the bus property
-    // here.
-    sprintf( propname, "/systems/electrical/outputs/navcomm[%d]", index );
-    // default to true in case no electrical system defined.
-    fgSetDouble( propname, 60.0 );
-    bus_power = fgGetNode( propname, true );
-
 				// User inputs
     sprintf( propname, "/radios/comm[%d]/inputs/power-btn", index );
     fgTie( propname, this,
@@ -170,6 +163,15 @@ FGNavCom::bind ()
 
     sprintf( propname, "/radios/nav[%d]/gs-needle-deflection", index );
     fgTie( propname, this, &FGNavCom::get_nav_gs_needle_deflection );
+
+    // end of binding
+
+    // We know index is valid now so lets bind to the bus property
+    // here.
+    sprintf( propname, "/systems/electrical/outputs/navcom[%d]", index );
+    // default to true in case no electrical system defined.
+    fgSetDouble( propname, 60.0 );
+    bus_power = fgGetNode( propname, true );
 }
 
 
