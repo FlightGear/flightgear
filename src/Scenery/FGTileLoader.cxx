@@ -98,7 +98,12 @@ FGTileLoader::add( FGTileEntry* tile )
 	} else {
             SGPath tmp;
 	    tmp.set( globals->get_fg_root() );
-            tmp.append( "Scenery/Terrain:" );
+            tmp.append( "Scenery/Terrain" );
+#ifdef _MSC_VER
+            tmp.append( ";");
+#else
+            tmp.append( ":");
+#endif
             tmp.append(globals->get_fg_root() );
             tmp.append( "Scenery/Objects" );
             tile_path = tmp.str();
