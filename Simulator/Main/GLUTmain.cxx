@@ -479,7 +479,7 @@ static void fgMainLoop( void ) {
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
 
-#if defined( ENABLE_LINUX_JOYSTICK )
+#if defined( ENABLE_PLIB_JOYSTICK )
     // Read joystick and update control settings
     fgJoystickRead();
 #elif defined( ENABLE_GLUT_JOYSTICK )
