@@ -31,6 +31,7 @@ void FGATC::AddPlane(string pid) {
 }
 
 int FGATC::RemovePlane() {
+    return 0;
 }
 
 void FGATC::SetDisplay() {
