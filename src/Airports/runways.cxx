@@ -93,16 +93,16 @@ bool FGRunways::search( const string& id, FGRunway* r ) {
 
     c4_RowRef row = vRunway->GetAt(index);
 
-    r->id =      (string) pID(row);
-    r->rwy_no =  (string) pRwy(row);
+    r->id =      (const char *) pID(row);
+    r->rwy_no =  (const char *) pRwy(row);
     r->lon =     (double) pLon(row);
     r->lat =     (double) pLat(row);
     r->heading = (double) pHdg(row);
     r->length =  (double) pLen(row);
     r->width =   (double) pWid(row);
-    r->surface_flags = (string) pSurf(row);
-    r->end1_flags =    (string) pEnd1(row);
-    r->end2_flags =    (string) pEnd2(row);
+    r->surface_flags = (const char *) pSurf(row);
+    r->end1_flags =    (const char *) pEnd1(row);
+    r->end2_flags =    (const char *) pEnd2(row);
 
     return true;
 }
@@ -142,16 +142,16 @@ bool FGRunways::next( FGRunway* r ) {
 
     c4_RowRef row = vRunway->GetAt(index);
 
-    r->id =      (string) pID(row);
-    r->rwy_no =  (string) pRwy(row);
+    r->id =      (const char *) pID(row);
+    r->rwy_no =  (const char *) pRwy(row);
     r->lon =     (double) pLon(row);
     r->lat =     (double) pLat(row);
     r->heading = (double) pHdg(row);
     r->length =  (double) pLen(row);
     r->width =   (double) pWid(row);
-    r->surface_flags = (string) pSurf(row);
-    r->end1_flags =    (string) pEnd1(row);
-    r->end2_flags =    (string) pEnd2(row);
+    r->surface_flags = (const char *) pSurf(row);
+    r->end1_flags =    (const char *) pEnd1(row);
+    r->end2_flags =    (const char *) pEnd2(row);
 
     return true;
 }
@@ -189,7 +189,7 @@ int FGRunwaysUtil::load( const string& file ) {
 
 #ifdef __MWERKS__
 
-    in >> skipws;
+    in >> ::skipws;
     char c = 0;
     while ( in.get(c) && c != '\0' ) {
 	if ( c == 'A' ) {
@@ -202,7 +202,7 @@ int FGRunwaysUtil::load( const string& file ) {
 	} else {
 	    in >> skipeol;
 	}
-	in >> skipws;
+	in >> ::skipws;
     }
 
 #else

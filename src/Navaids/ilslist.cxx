@@ -61,10 +61,10 @@ bool FGILSList::init( FGPath path ) {
 #ifdef __MWERKS__
 
     char c = 0;
-    while ( in.get(c) && c != '\0' && n.get_ilstype() != '[' ) {
+    while ( in.get(c) && c != '\0' && ils.get_ilstype() != '[' ) {
         in.putback(c);
         in >> ils;
-	if ( ils.get_type() != '[' ) {
+	if ( ils.get_ilstype() != '[' ) {
 	    ilslist[ils.get_locfreq()].push_back(ils);
 	}
         in >> skipcomment;

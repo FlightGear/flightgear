@@ -253,9 +253,9 @@ fgJoystickInit()
 	seen_joystick = true;
 
 	// Set up range arrays
-	float minRange[naxes];
-	float maxRange[naxes];
-	float center[naxes];
+	float *minRange = new float[naxes];
+	float *maxRange = new float[naxes];
+	float *center = new float[naxes];
 
 	// Initialize with default values
 	js->getMinRange(minRange);
@@ -430,6 +430,11 @@ fgJoystickInit()
 	js->setMinRange(minRange);
 	js->setMaxRange(maxRange);
 	js->setCenter(center);
+
+	//-dw- clean up
+	delete minRange;
+	delete maxRange;
+	delete center;
     }
 
     if (seen_joystick)
@@ -451,7 +456,7 @@ fgJoystickRead()
 
     for (int i = 0; i < MAX_JOYSTICKS; i++) {
 	jsJoystick * js = joysticks[i].js;
-	float axis_values[joysticks[i].naxes];
+	float *axis_values = new float[joysticks[i].naxes];
 	if (js->notWorking()) {
 	    continue;
 	}
@@ -550,6 +555,10 @@ fgJoystickRead()
 		FG_LOG(FG_INPUT, FG_ALERT, "Failed to set value for "
 		       << jsNames[i] << ' ' << buttonNames[j]);
 	}
+
+	// -dw- cleanup 
+	delete axis_values;
+
     }
 
     return true;

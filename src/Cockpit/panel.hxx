@@ -1,4 +1,4 @@
-//  panel.hxx - default, 2D single-engine prop instrument panel
+//  panel.hxx - generic support classes for a 2D panel.
 //
 //  Written by David Megginson, started January 2000.
 //
@@ -61,7 +61,7 @@ class FGTextureManager
 public:
   static ssgTexture * createTexture(const string &relativePath);
 private:
-  static map<string,ssgTexture *>_textureMap;
+  static map<string,ssgTexture *> _textureMap;
 };
 
 
@@ -69,7 +69,7 @@ private:
 ////////////////////////////////////////////////////////////////////////
 // Cropped texture (should migrate out into FGFS).
 //
-// This class defines a rectangular cropped area of a texture.
+// This structure wraps an SSG texture with cropping information.
 ////////////////////////////////////////////////////////////////////////
 
 struct CroppedTexture
@@ -150,18 +150,21 @@ public:
   FGPanelAction (int button, int x, int y, int w, int h);
   virtual ~FGPanelAction ();
 
+				// Getters.
   virtual int getButton () const { return _button; }
   virtual int getX () const { return _x; }
   virtual int getY () const { return _y; }
   virtual int getWidth () const { return _w; }
   virtual int getHeight () const { return _h; }
 
+				// Setters.
   virtual void setButton (int button) { _button = button; }
   virtual void setX (int x) { _x = x; }
   virtual void setY (int y) { _y = y; }
   virtual void setWidth (int w) { _w = w; }
   virtual void setHeight (int h) { _h = h; }
 
+				// Check whether we're in the area.
   virtual bool inArea (int button, int x, int y)
   {
     return (button == _button &&
@@ -171,6 +174,7 @@ public:
 	    y < _y + _h);
   }
 
+				// Perform the action.
   virtual void doAction () = 0;
 
 private:
@@ -419,16 +423,47 @@ class FGTexturedLayer : public FGInstrumentLayer
 {
 public:
   FGTexturedLayer (int w = -1, int h = -1) : FGInstrumentLayer(w, h) {}
-  FGTexturedLayer (CroppedTexture &texture, int w = -1, int h = -1);
+  FGTexturedLayer (const CroppedTexture &texture, int w = -1, int h = -1);
   virtual ~FGTexturedLayer ();
 
   virtual void draw ();
 
-  virtual void setTexture (CroppedTexture &texture) { _texture = texture; }
+  virtual void setTexture (const CroppedTexture &texture) {
+    _texture = texture;
+  }
   virtual CroppedTexture &getTexture () { return _texture; }
+  virtual const CroppedTexture &getTexture () const { return _texture; }
 
 private:
   mutable CroppedTexture _texture;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// A moving window on a texture.
+//
+// This layer automatically recrops a cropped texture based on
+// property values, creating a moving window over the texture.
+////////////////////////////////////////////////////////////////////////
+
+class FGWindowLayer : public FGTexturedLayer
+{
+public:
+  FGWindowLayer (int w = -1, int h = -1);
+  FGWindowLayer (const CroppedTexture &texture, int w = -1, int h = -1);
+  virtual ~FGWindowLayer ();
+
+  virtual void draw ();
+
+  virtual const SGValue * getXValue () const { return _xValue; }
+  virtual void setXValue (const SGValue * value) { _xValue = value; }
+  virtual const SGValue * getYValue () const { return _yValue; }
+  virtual void setYValue (const SGValue * value) { _yValue = value; }
+
+private:
+  const SGValue * _xValue;
+  const SGValue * _yValue;
 };
 
 
@@ -452,18 +487,16 @@ public:
 
   class Chunk {
   public:
-    Chunk (char * text, char * fmt = "%s");
+    Chunk (const string &text, const string &fmt = "%s");
     Chunk (ChunkType type, const SGValue * value,
-	   char * fmt = 0, float mult = 1.0);
+	   const string &fmt = "", float mult = 1.0);
 
-    char * getValue () const;
+    const char * getValue () const;
   private:
     ChunkType _type;
-    union {
-      char * _text;
-      const SGValue * _value;
-    } _value;
-    char * _fmt;
+    string _text;
+    const SGValue * _value;
+    string _fmt;
     float _mult;
     mutable char _buf[1024];
   };
@@ -484,6 +517,8 @@ private:
   typedef vector<Chunk *> chunk_list;
   chunk_list _chunks;
   float _color[4];
+
+  float _pointSize;
 				// FIXME: need only one globally
   mutable fntRenderer _renderer;
 };

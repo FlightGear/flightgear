@@ -55,6 +55,7 @@
 #include <Cockpit/hud.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
+#include <Cockpit/sp_panel.hxx>
 #include <GUI/gui.h>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/matlib.hxx>
@@ -459,6 +460,12 @@ void GLUTspecialkey(int k, int x, int y) {
 	  FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from panel.xml");
 	  delete current_panel;
 	  current_panel = new_panel;
+	  return;
+	}
+	case GLUT_KEY_F4: {
+	  delete current_panel;
+	  current_panel = fgCreateSmallSinglePropPanel(0, 0, 1024, 768);
+	  FG_LOG(FG_INPUT, FG_INFO, "Reverted to built-in panel");
 	  return;
 	}
 	case GLUT_KEY_END: // numeric keypad 1

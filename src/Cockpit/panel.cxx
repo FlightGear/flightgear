@@ -200,7 +200,7 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   x = (int)(((float)x / current_view.get_winWidth()) * _w);
   y = (int)(_h - (((float)y / current_view.get_winHeight()) * _h));
 
-  for (int i = 0; i < _instruments.size(); i++) {
+  for (int i = 0; i < (int)_instruments.size(); i++) {
     FGPanelInstrument *inst = _instruments[i];
     int ix = inst->getXPos();
     int iy = inst->getYPos();
@@ -248,7 +248,7 @@ FGPanelAction::~FGPanelAction ()
 
 FGAdjustAction::FGAdjustAction (int button, int x, int y, int w, int h,
 				SGValue * value, float increment, 
-				float min, float max, bool wrap=false)
+				float min, float max, bool wrap)
   : FGPanelAction(button, x, y, w, h),
     _value(value), _increment(increment), _min(min), _max(max), _wrap(wrap)
 {
@@ -450,7 +450,7 @@ FGLayeredInstrument::~FGLayeredInstrument ()
 void
 FGLayeredInstrument::draw ()
 {
-  for (int i = 0; i < _layers.size(); i++) {
+  for (int i = 0; i < (int)_layers.size(); i++) {
     glPushMatrix();
     glTranslatef(0.0, 0.0, (i / 100.0) + 0.1);
     _layers[i]->draw();
@@ -474,7 +474,7 @@ FGLayeredInstrument::addLayer (FGInstrumentLayer *layer)
 
 int
 FGLayeredInstrument::addLayer (CroppedTexture &texture,
-			       int w = -1, int h = -1)
+			       int w, int h)
 {
   return addLayer(new FGTexturedLayer(texture, w, h));
 }
@@ -551,7 +551,7 @@ FGInstrumentLayer::addTransformation (FGPanelTransformation * transformation)
 ////////////////////////////////////////////////////////////////////////
 
 
-FGTexturedLayer::FGTexturedLayer (CroppedTexture &texture, int w, int h)
+FGTexturedLayer::FGTexturedLayer (const CroppedTexture &texture, int w, int h)
   : FGInstrumentLayer(w, h)
 {
   setTexture(texture);
@@ -587,12 +587,39 @@ FGTexturedLayer::draw ()
 
 
 ////////////////////////////////////////////////////////////////////////
+// Implementation of FGWindowLayer.
+////////////////////////////////////////////////////////////////////////
+
+FGWindowLayer::FGWindowLayer (int w, int h)
+  : FGTexturedLayer (w, h)
+{
+}
+
+FGWindowLayer::FGWindowLayer (const CroppedTexture &texture, int w, int h)
+  : FGTexturedLayer(texture, w, h)
+{
+}
+
+FGWindowLayer::~FGWindowLayer ()
+{
+}
+
+void
+FGWindowLayer::draw ()
+{
+  // doesn't do anything yet
+  FGTexturedLayer::draw();
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Implementation of FGTextLayer.
 ////////////////////////////////////////////////////////////////////////
 
 FGTextLayer::FGTextLayer (int w, int h, Chunk * chunk1, Chunk * chunk2,
 			  Chunk * chunk3)
-  : FGInstrumentLayer(w, h)
+  : FGInstrumentLayer(w, h), _pointSize(14.0)
 {
   _color[0] = _color[1] = _color[2] = 0.0;
   _color[3] = 1.0;
@@ -620,7 +647,7 @@ FGTextLayer::draw ()
   glColor4fv(_color);
   transform();
   _renderer.setFont(guiFntHandle);
-  _renderer.setPointSize(14);
+  _renderer.setPointSize(_pointSize);
   _renderer.begin();
   _renderer.start3f(0, 0, 0);
 
@@ -628,7 +655,7 @@ FGTextLayer::draw ()
   chunk_list::const_iterator it = _chunks.begin();
   chunk_list::const_iterator last = _chunks.end();
   for ( ; it != last; it++) {
-    _renderer.puts((*it)->getValue());
+    _renderer.puts((char *)((*it)->getValue()));
   }
 
   _renderer.end();
@@ -652,9 +679,9 @@ FGTextLayer::setColor (float r, float g, float b)
 }
 
 void
-FGTextLayer::setPointSize (const float size)
+FGTextLayer::setPointSize (float size)
 {
-  _renderer.setPointSize(size);
+  _pointSize = size;
 }
 
 void
@@ -669,37 +696,39 @@ FGTextLayer::setFont(fntFont * font)
 // Implementation of FGTextLayer::Chunk.
 ////////////////////////////////////////////////////////////////////////
 
-FGTextLayer::Chunk::Chunk (char * text, char * fmt = "%s")
+FGTextLayer::Chunk::Chunk (const string &text, const string &fmt)
   : _type(FGTextLayer::TEXT), _fmt(fmt)
 {
-  _value._text = text;
+  _text = text;
+  if (_fmt == "") 
+    _fmt = "%s";
 }
 
 FGTextLayer::Chunk::Chunk (ChunkType type, const SGValue * value,
-			   char * fmt = 0, float mult = 1.0)
+			   const string &fmt, float mult)
   : _type(type), _fmt(fmt), _mult(mult)
 {
-  if (_fmt == 0) {
+  if (_fmt == "") {
     if (type == TEXT_VALUE)
       _fmt = "%s";
     else
       _fmt = "%.2f";
   }
-  _value._value = value;
+  _value = value;
 }
 
-char *
+const char *
 FGTextLayer::Chunk::getValue () const
 {
   switch (_type) {
   case TEXT:
-    sprintf(_buf, _fmt, _value._text);
+    sprintf(_buf, _fmt.c_str(), _text.c_str());
     return _buf;
   case TEXT_VALUE:
-    sprintf(_buf, _fmt, _value._value->getStringValue().c_str());
+    sprintf(_buf, _fmt.c_str(), _value->getStringValue().c_str());
     break;
   case DOUBLE_VALUE:
-    sprintf(_buf, _fmt, _value._value->getFloatValue() * _mult);
+    sprintf(_buf, _fmt.c_str(), _value->getFloatValue() * _mult);
     break;
   }
   return _buf;

@@ -9,68 +9,68 @@
 
 /*global declarations of aero model parameters*/
 
-   SCALAR CLadot;
-   SCALAR CLq;
-   SCALAR CLde;
-   SCALAR CLob;
+   extern SCALAR CLadot;
+   extern SCALAR CLq;
+   extern SCALAR CLde;
+   extern SCALAR CLob;
   
   
-   SCALAR Cdob;
-   SCALAR Cda;  /*Not used*/
-   SCALAR Cdde;
+   extern SCALAR Cdob;
+   extern SCALAR Cda;  /*Not used*/
+   extern SCALAR Cdde;
   
-   SCALAR Cma;
-   SCALAR Cmadot;
-   SCALAR Cmq;
-   SCALAR Cmob; 
-   SCALAR Cmde;
+   extern SCALAR Cma;
+   extern SCALAR Cmadot;
+   extern SCALAR Cmq;
+   extern SCALAR Cmob; 
+   extern SCALAR Cmde;
   
-   SCALAR Clbeta;
-   SCALAR Clp;
-   SCALAR Clr;
-   SCALAR Clda;
-   SCALAR Cldr;
+   extern SCALAR Clbeta;
+   extern SCALAR Clp;
+   extern SCALAR Clr;
+   extern SCALAR Clda;
+   extern SCALAR Cldr;
   
-   SCALAR Cnbeta;
-   SCALAR Cnp;
-   SCALAR Cnr;
-   SCALAR Cnda;
-   SCALAR Cndr;
+   extern SCALAR Cnbeta;
+   extern SCALAR Cnp;
+   extern SCALAR Cnr;
+   extern SCALAR Cnda;
+   extern SCALAR Cndr;
   
-   SCALAR Cybeta;
-   SCALAR Cyp;
-   SCALAR Cyr;
-   SCALAR Cyda;
-   SCALAR Cydr;
+   extern SCALAR Cybeta;
+   extern SCALAR Cyp;
+   extern SCALAR Cyr;
+   extern SCALAR Cyda;
+   extern SCALAR Cydr;
   
   /*nondimensionalization quantities*/
   /*units here are ft and lbs */
-   SCALAR cbar; /*mean aero chord ft*/
-   SCALAR b; /*wing span ft */
-   SCALAR Sw; /*wing planform surface area ft^2*/
-   SCALAR rPiARe; /*reciprocal of Pi*AR*e*/
-   SCALAR lbare;  /*elevator moment arm  MAC*/
+   extern SCALAR cbar; /*mean aero chord ft*/
+   extern SCALAR b; /*wing span ft */
+   extern SCALAR Sw; /*wing planform surface area ft^2*/
+   extern SCALAR rPiARe; /*reciprocal of Pi*AR*e*/
+   extern SCALAR lbare;  /*elevator moment arm  MAC*/
    
-   SCALAR Weight; /*lbs*/
-   SCALAR MaxTakeoffWeight,EmptyWeight;
-   SCALAR Cg;     /*%MAC*/
-   SCALAR Zcg;    /*%MAC*/
+   extern SCALAR Weight; /*lbs*/
+   extern SCALAR MaxTakeoffWeight,EmptyWeight;
+   extern SCALAR Cg;     /*%MAC*/
+   extern SCALAR Zcg;    /*%MAC*/
   
   
-  SCALAR CLwbh,CL,cm,cd,cn,cy,croll,cbar_2V,b_2V,qS,qScbar,qSb;
-  SCALAR CLo,Cdo,Cmo;
+  extern SCALAR CLwbh,CL,cm,cd,cn,cy,croll,cbar_2V,b_2V,qS,qScbar,qSb;
+  extern SCALAR CLo,Cdo,Cmo;
   
-  SCALAR F_X_wind,F_Y_wind,F_Z_wind;
+  extern SCALAR F_X_wind,F_Y_wind,F_Z_wind;
   
-  SCALAR long_trim;
+  extern SCALAR long_trim;
 
   
-  SCALAR elevator, aileron, rudder;
+  extern SCALAR elevator, aileron, rudder;
 
   
-  SCALAR Flap_Position;
+  extern SCALAR Flap_Position;
  
-  int Flaps_In_Transit;
+  extern int Flaps_In_Transit;
   
 
 

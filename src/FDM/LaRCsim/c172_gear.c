@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.16  2000/09/13 19:51:09  curt
+MacOS changes by Darrell Walisser.
+
 Revision 1.15  2000/06/12 18:52:37  curt
 Added differential braking (Alex and David).
 
@@ -226,7 +229,7 @@ char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"
     percent_brake[1] = Brake_pct[0];
     percent_brake[2] = Brake_pct[1];
     
-    caster_angle_rad[0] = 0.52*Rudder_pedal;
+    caster_angle_rad[0] = 0.03*Rudder_pedal;
     
     
 	for (i=0;i<num_wheels;i++)	    /* Loop for each wheel */
