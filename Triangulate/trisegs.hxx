@@ -35,6 +35,8 @@
 
 #include <vector>
 
+#include "trinodes.hxx"
+
 FG_USING_STD(vector);
 
 
@@ -46,7 +48,10 @@ public:
 
     // Constructor and destructor
     inline FGTriSeg( void ) { };
-    inline FGTriSeg( int i1, int i2 ) { n1 = i1; n2 = i2; }
+    inline FGTriSeg( int i1, int i2 ) { 
+	n1 = i1;
+	n2 = i2;
+    }
 
     inline ~FGTriSeg( void ) { };
 
@@ -77,15 +82,26 @@ private:
 
     triseg_list seg_list;
 
+    // Divide segment if there are other points on it, return the
+    // divided list of segments
+    triseg_list divide_segment( const point_list& nodes, 
+				const FGTriSeg& s );
+
 public:
 
     // Constructor and destructor
     FGTriSegments( void );
     ~FGTriSegments( void );
 
-    // Add a point to the point list if it doesn't already exist.
-    // Returns the index (starting at zero) of the point in the list.
+    // Add a segment to the segment list if it doesn't already exist.
+    // Returns the index (starting at zero) of the segment in the
+    // list.
     int unique_add( const FGTriSeg& s );
+
+    // Add a segment to the segment list if it doesn't already exist.
+    // Returns the index (starting at zero) of the segment in the list.
+    void unique_divide_and_add( const point_list& node_list, 
+				const FGTriSeg& s );
 
     // return the master node list
     inline triseg_list get_seg_list() const { return seg_list; }
@@ -99,6 +115,17 @@ public:
 
 
 // $Log$
+// Revision 1.3  1999/03/27 05:30:18  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Add fitted nodes in after corners and polygon nodes since the fitted nodes
+//   are less important.  Subsequent nodes will "snap" to previous nodes if
+//   they are "close enough."
+// Need to manually divide segments to prevent "T" intersetions which can
+//   confound the triangulator.  Hey, I got to use a recursive method!
+// Pass along correct triangle attributes to output file generator.
+// Do fine grained node snapping for corners and polygons, but course grain
+//   node snapping for fitted terrain nodes.
+//
 // Revision 1.2  1999/03/20 20:33:00  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.

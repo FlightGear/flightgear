@@ -41,6 +41,7 @@ FG_USING_STD(vector);
 
 
 #define FG_PROXIMITY_EPSILON 0.000001
+#define FG_COURSE_EPSILON 0.0003
 
 
 typedef vector < Point3D > point_list;
@@ -58,6 +59,10 @@ private:
     // FG_PROXIMITY_EPSILON
     bool close_enough( const Point3D& p, const Point3D& p );
 
+    // return true of the two points are "close enough" as defined by
+    // FG_COURSE_EPSILON
+    bool course_close_enough( const Point3D& p1, const Point3D& p2 );
+
 public:
 
     // Constructor and destructor
@@ -71,6 +76,11 @@ public:
     // Add the point with no uniqueness checking
     int simple_add( const Point3D& p );
 
+    // Add a point to the point list if it doesn't already exist.
+    // Returns the index (starting at zero) of the point in the list.
+    // Use a course proximity check
+    int course_add( const Point3D& p );
+
     // return the master node list
     inline point_list get_node_list() const { return node_list; }
 
@@ -79,10 +89,47 @@ public:
 };
 
 
+// return true of the two points are "close enough" as defined by
+// FG_PROXIMITY_EPSILON
+inline bool FGTriNodes::close_enough( const Point3D& p1, const Point3D& p2 ) {
+    if ( ( fabs(p1.x() - p2.x()) < FG_PROXIMITY_EPSILON ) &&
+	 ( fabs(p1.y() - p2.y()) < FG_PROXIMITY_EPSILON ) ) {
+	return true;
+    } else {
+	return false;
+    }
+}
+
+
+// return true of the two points are "close enough" as defined by
+// FG_COURSE_EPSILON
+inline bool FGTriNodes::course_close_enough( const Point3D& p1, 
+					     const Point3D& p2 )
+{
+    if ( ( fabs(p1.x() - p2.x()) < FG_COURSE_EPSILON ) &&
+	 ( fabs(p1.y() - p2.y()) < FG_COURSE_EPSILON ) ) {
+	return true;
+    } else {
+	return false;
+    }
+}
+
+
 #endif // _TRINODES_HXX
 
 
 // $Log$
+// Revision 1.6  1999/03/27 05:30:16  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Add fitted nodes in after corners and polygon nodes since the fitted nodes
+//   are less important.  Subsequent nodes will "snap" to previous nodes if
+//   they are "close enough."
+// Need to manually divide segments to prevent "T" intersetions which can
+//   confound the triangulator.  Hey, I got to use a recursive method!
+// Pass along correct triangle attributes to output file generator.
+// Do fine grained node snapping for corners and polygons, but course grain
+//   node snapping for fitted terrain nodes.
+//
 // Revision 1.5  1999/03/23 22:02:55  curt
 // Refinements in naming and organization.
 //

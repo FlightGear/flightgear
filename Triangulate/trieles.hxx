@@ -42,11 +42,15 @@ FG_USING_STD(vector);
 class FGTriEle {
     int n1, n2, n3;
 
+    double attribute;
+
 public:
 
     // Constructor and destructor
     inline FGTriEle( void ) { };
-    inline FGTriEle( int i1, int i2, int i3 ) { n1 = i1; n2 = i2; n3 = i3; }
+    inline FGTriEle( int i1, int i2, int i3, double a ) {
+	n1 = i1; n2 = i2; n3 = i3; attribute = a;
+    }
 
     inline ~FGTriEle( void ) { };
 
@@ -56,6 +60,9 @@ public:
     inline void set_n2( int i ) { n2 = i; }
     inline int get_n3() const { return n3; }
     inline void set_n3( int i ) { n3 = i; }
+
+    inline double get_attribute() const { return attribute; }
+    inline void set_attribute( double a ) { attribute = a; }
 };
 
 
@@ -68,6 +75,17 @@ typedef triele_list::const_iterator const_triele_list_iterator;
 
 
 // $Log$
+// Revision 1.3  1999/03/27 05:30:14  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Add fitted nodes in after corners and polygon nodes since the fitted nodes
+//   are less important.  Subsequent nodes will "snap" to previous nodes if
+//   they are "close enough."
+// Need to manually divide segments to prevent "T" intersetions which can
+//   confound the triangulator.  Hey, I got to use a recursive method!
+// Pass along correct triangle attributes to output file generator.
+// Do fine grained node snapping for corners and polygons, but course grain
+//   node snapping for fitted terrain nodes.
+//
 // Revision 1.2  1999/03/23 22:02:53  curt
 // Refinements in naming and organization.
 //

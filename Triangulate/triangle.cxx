@@ -37,7 +37,8 @@ FGTriangle::~FGTriangle( void ) {
 
 // populate this class based on the specified gpc_polys list
 int 
-FGTriangle::build( const fitnode_list& fit_list, 
+FGTriangle::build( const fitnode_list& corner_list,
+		   const fitnode_list& fit_list, 
 		   const FGgpcPolyList& gpc_polys )
 {
     FGTriPoly poly;
@@ -48,18 +49,20 @@ FGTriangle::build( const fitnode_list& fit_list,
     // char junkn[256];
     // FILE *junkfp;
 
-    // traverse the dem fit list and gpc_polys building a unified node
-    // list and converting the polygons so that they reference the
-    // node list by index (starting at zero) rather than listing the
-    // points explicitely
+    // traverse the dem corner and fit lists and gpc_polys building a
+    // unified node list and converting the polygons so that they
+    // reference the node list by index (starting at zero) rather than
+    // listing the points explicitely
 
+    // first the corners since these are important
     const_fitnode_list_iterator f_current, f_last;
-    f_current = fit_list.begin();
-    f_last = fit_list.end();
+    f_current = corner_list.begin();
+    f_last = corner_list.end();
     for ( ; f_current != f_last; ++f_current ) {
 	index = in_nodes.unique_add( *f_current );
     }
 
+    // next process the polygons
     gpc_polygon *gpc_poly;
     const_gpcpoly_iterator current, last;
 
@@ -87,6 +90,8 @@ FGTriangle::build( const fitnode_list& fit_list,
 	    }
 
 	    for ( int j = 0; j < gpc_poly->num_contours; j++ ) {
+		cout << " processing contour, nodes = " 
+		     << gpc_poly->contour[j].num_vertices << endl;
 
 		poly.erase();
 
@@ -115,6 +120,13 @@ FGTriangle::build( const fitnode_list& fit_list,
 	}
     }
 
+    // last, do the rest of the height nodes
+    f_current = fit_list.begin();
+    f_last = fit_list.end();
+    for ( ; f_current != f_last; ++f_current ) {
+	index = in_nodes.course_add( *f_current );
+    }
+
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	if ( polylist[i].size() ) {
 	    cout << get_area_name((AreaType)i) << " = " 
@@ -126,6 +138,7 @@ FGTriangle::build( const fitnode_list& fit_list,
     // that is used by the "Triangle" lib.
 
     int i1, i2;
+    point_list node_list = in_nodes.get_node_list();
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	cout << "area type = " << i << endl;
 	tripoly_list_iterator tp_current, tp_last;
@@ -139,11 +152,13 @@ FGTriangle::build( const fitnode_list& fit_list,
 	    for ( int j = 0; j < (int)(poly.size()) - 1; ++j ) {
 		i1 = poly.get_pt_index( j );
 		i2 = poly.get_pt_index( j + 1 );
-		trisegs.unique_add( FGTriSeg(i1, i2) );
+		// calc_line_params(i1, i2, &m, &b);
+		trisegs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 	    }
 	    i1 = poly.get_pt_index( 0 );
 	    i2 = poly.get_pt_index( poly.size() - 1 );
-	    trisegs.unique_add( FGTriSeg(i1, i2) );
+	    // calc_line_params(i1, i2, &m, &b);
+	    trisegs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 	}
     }
 
@@ -197,6 +212,7 @@ static void write_out_data(struct triangulateio *out) {
 		i, out->regionlist[4*i], out->regionlist[4*i + 1],
 		out->regionlist[4*i + 2]);
     }
+    fclose(fp);
 }
 
 
@@ -312,17 +328,22 @@ int FGTriangle::run_triangulate() {
     vorout.normlist = (REAL *) NULL;      // Needed only if -v switch used.
     
     // TEMPORARY
-    // write_out_data(&in);
+    write_out_data(&in);
 
     // Triangulate the points.  Switches are chosen to read and write
     // a PSLG (p), preserve the convex hull (c), number everything
     // from zero (z), assign a regional attribute to each element (A),
     // and produce an edge list (e), and a triangle neighbor list (n).
 
-    triangulate("pczq15Aen", &in, &out, &vorout);
+    string tri_options = "pczq10Aen";
+    // string tri_options = "pzAen";
+    // string tri_options = "pczq15S400Aen";
+    cout << "Triangulation with options = " << tri_options << endl;
+
+    triangulate(tri_options.c_str(), &in, &out, &vorout);
 
     // TEMPORARY
-    write_out_data(&out);
+    // write_out_data(&out);
 
     // now copy the results back into the corresponding FGTriangle
     // structures
@@ -336,13 +357,19 @@ int FGTriangle::run_triangulate() {
 
     // triangles
     int n1, n2, n3;
+    double attribute;
     for ( int i = 0; i < out.numberoftriangles; i++ ) {
 	n1 = out.trianglelist[i * 3];
 	n2 = out.trianglelist[i * 3 + 1];
 	n3 = out.trianglelist[i * 3 + 2];
+	if ( out.numberoftriangleattributes > 0 ) {
+	    attribute = out.triangleattributelist[i];
+	} else {
+	    attribute = 0.0;
+	}
 	// cout << "triangle = " << n1 << " " << n2 << " " << n3 << endl;
 
-	elelist.push_back( FGTriEle( n1, n2, n3 ) );
+	elelist.push_back( FGTriEle( n1, n2, n3, attribute ) );
     }
 
     // free mem allocated to the "Triangle" structures
@@ -371,6 +398,17 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.12  1999/03/27 05:30:12  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Add fitted nodes in after corners and polygon nodes since the fitted nodes
+//   are less important.  Subsequent nodes will "snap" to previous nodes if
+//   they are "close enough."
+// Need to manually divide segments to prevent "T" intersetions which can
+//   confound the triangulator.  Hey, I got to use a recursive method!
+// Pass along correct triangle attributes to output file generator.
+// Do fine grained node snapping for corners and polygons, but course grain
+//   node snapping for fitted terrain nodes.
+//
 // Revision 1.11  1999/03/23 22:02:51  curt
 // Refinements in naming and organization.
 //

@@ -35,18 +35,6 @@ FGTriNodes::~FGTriNodes( void ) {
 }
 
 
-// return true of the two points are "close enough" as defined by
-// FG_PROXIMITY_EPSILON
-inline bool FGTriNodes::close_enough( const Point3D& p1, const Point3D& p2 ) {
-    if ( ( fabs(p1.x() - p2.x()) < FG_PROXIMITY_EPSILON ) &&
-	 ( fabs(p1.y() - p2.y()) < FG_PROXIMITY_EPSILON ) ) {
-	return true;
-    } else {
-	return false;
-    }
-}
-
-
 // Add a point to the point list if it doesn't already exist.  Returns
 // the index (starting at zero) of the point in the list.
 int FGTriNodes::unique_add( const Point3D& p ) {
@@ -82,7 +70,46 @@ int FGTriNodes::simple_add( const Point3D& p ) {
 }
 
 
+// Add a point to the point list if it doesn't already exist.  Returns
+// the index (starting at zero) of the point in the list.  Use a
+// course proximity check
+int FGTriNodes::course_add( const Point3D& p ) {
+    point_list_iterator current, last;
+    int counter = 0;
+
+    // cout << p.x() << "," << p.y() << endl;
+
+    // see if point already exists
+    current = node_list.begin();
+    last = node_list.end();
+    for ( ; current != last; ++current ) {
+	if ( course_close_enough(p, *current) ) {
+	    // cout << "found an existing match!" << endl;
+	    return counter;
+	}
+	
+	++counter;
+    }
+
+    // add to list
+    node_list.push_back( p );
+
+    return counter;
+}
+
+
 // $Log$
+// Revision 1.6  1999/03/27 05:30:15  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Add fitted nodes in after corners and polygon nodes since the fitted nodes
+//   are less important.  Subsequent nodes will "snap" to previous nodes if
+//   they are "close enough."
+// Need to manually divide segments to prevent "T" intersetions which can
+//   confound the triangulator.  Hey, I got to use a recursive method!
+// Pass along correct triangle attributes to output file generator.
+// Do fine grained node snapping for corners and polygons, but course grain
+//   node snapping for fitted terrain nodes.
+//
 // Revision 1.5  1999/03/23 22:02:54  curt
 // Refinements in naming and organization.
 //

@@ -76,7 +76,9 @@ public:
     int add_nodes();
 
     // populate this class based on the specified gpc_polys list
-    int build( const fitnode_list& fit_list, const FGgpcPolyList& gpc_polys );
+    int build( const fitnode_list& corner_list, 
+	       const fitnode_list& fit_list,
+	       const FGgpcPolyList& gpc_polys );
 
     // front end triangulator for polygon list
     int run_triangulate();
@@ -90,6 +92,17 @@ public:
 
 
 // $Log$
+// Revision 1.9  1999/03/27 05:30:13  curt
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Add fitted nodes in after corners and polygon nodes since the fitted nodes
+//   are less important.  Subsequent nodes will "snap" to previous nodes if
+//   they are "close enough."
+// Need to manually divide segments to prevent "T" intersetions which can
+//   confound the triangulator.  Hey, I got to use a recursive method!
+// Pass along correct triangle attributes to output file generator.
+// Do fine grained node snapping for corners and polygons, but course grain
+//   node snapping for fitted terrain nodes.
+//
 // Revision 1.8  1999/03/23 22:02:52  curt
 // Refinements in naming and organization.
 //
