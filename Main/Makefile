@@ -53,12 +53,12 @@ INTERFACE_FILES = GLUTkey.c
 #---------------------------------------------------------------------------
 
 # For OpenGL
-# GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
+GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 
 # For Mesa
-MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 
 CFLAGS = $(STD_CFLAGS) $(INTERFACE_FLAGS)
@@ -83,7 +83,7 @@ $(TARGET): $(OFILES) $(AFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -106,6 +106,9 @@ mesh2GL.o: mesh2GL.c ../Scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.15  1997/06/25 15:39:47  curt
+# Minor changes to compile with rsxnt/win32.
+#
 # Revision 1.14  1997/06/21 17:52:23  curt
 # Continue directory shuffling ... everything should be compilable/runnable
 # again.

@@ -47,9 +47,18 @@
 #define DEG_TO_RAD       0.017453292
 #define RAD_TO_DEG       57.29577951
 
+#ifndef M_PI
+#define M_PI        3.14159265358979323846	/* pi */
+#endif
+
 #ifndef PI2                                     
 #define PI2  (M_PI + M_PI)
 #endif                                                           
+
+
+#ifndef M_PI_2
+#define M_PI_2      1.57079632679489661923	/* pi/2 */
+#endif
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
@@ -544,9 +553,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.21  1997/06/22 21:44:41  curt
-/* Working on intergrating the VRML (subset) parser.
+/* Revision 1.22  1997/06/25 15:39:47  curt
+/* Minor changes to compile with rsxnt/win32.
 /*
+ * Revision 1.21  1997/06/22 21:44:41  curt
+ * Working on intergrating the VRML (subset) parser.
+ *
  * Revision 1.20  1997/06/21 17:12:53  curt
  * Capitalized subdirectory names.
  *

@@ -51,7 +51,7 @@ $(TARGET): $(OFILES) $(HFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -67,6 +67,9 @@ aircraft.h: ../Flight/flight.h ../Controls/controls.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/06/25 15:39:44  curt
+# Minor changes to compile with rsxnt/win32.
+#
 # Revision 1.3  1997/06/21 17:12:42  curt
 # Capitalized subdirectory names.
 #

@@ -34,8 +34,10 @@
 
 
 unsigned long int fgSimTime;
-static struct itimerval t, ot;
-static void (*callbackfunc)(int multi_loop);
+
+#ifdef HAVE_ITIMER
+  static struct itimerval t, ot;
+  static void (*callbackfunc)(int multi_loop);
 
 
 /* This routine catches the SIGALRM */
@@ -78,6 +80,7 @@ void fgTimerInit(float dt, void (*f)()) {
     }
 }
 
+#endif HAVE_ITIMER
 
 /* This function returns the number of milleseconds since the last
    time it was called. */
@@ -106,9 +109,12 @@ int fgGetTimeInterval() {
 
 
 /* $Log$
-/* Revision 1.3  1997/06/17 16:52:04  curt
-/* Timer interval stuff now uses gettimeofday() instead of ftime()
+/* Revision 1.4  1997/06/25 15:39:49  curt
+/* Minor changes to compile with rsxnt/win32.
 /*
+ * Revision 1.3  1997/06/17 16:52:04  curt
+ * Timer interval stuff now uses gettimeofday() instead of ftime()
+ *
  * Revision 1.2  1997/06/17 03:41:10  curt
  * Nonsignal based interval timing is now working.
  * This would be a good time to look at cleaning up the code structure a bit.

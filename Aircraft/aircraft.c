@@ -29,6 +29,10 @@
 
 #include "aircraft.h"
 
+#ifndef M_PI
+#define M_PI        3.14159265358979323846	/* pi */
+#endif
+
 #define FG_RAD_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
 
 /* Display various parameters to stdout */
@@ -49,9 +53,12 @@ void aircraft_debug(int type) {
 
 
 /* $Log$
-/* Revision 1.7  1997/06/02 03:01:39  curt
-/* Working on views (side, front, back, transitions, etc.)
+/* Revision 1.8  1997/06/25 15:39:45  curt
+/* Minor changes to compile with rsxnt/win32.
 /*
+ * Revision 1.7  1997/06/02 03:01:39  curt
+ * Working on views (side, front, back, transitions, etc.)
+ *
  * Revision 1.6  1997/05/31 19:16:26  curt
  * Elevator trim added.
  *

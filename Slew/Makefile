@@ -50,7 +50,7 @@ $(TARGET): $(OFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -63,6 +63,9 @@ slew.o: slew.c slew.h ../../Aircraft/aircraft.h ../../Controls/controls.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/06/25 15:39:46  curt
+# Minor changes to compile with rsxnt/win32.
+#
 # Revision 1.2  1997/06/21 17:12:51  curt
 # Capitalized subdirectory names.
 #

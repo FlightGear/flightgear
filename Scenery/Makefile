@@ -49,7 +49,7 @@ $(TARGET): $(OFILES) $(HFILES)
 	$(AR) rv $(TARGET) $(OFILES)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -65,6 +65,9 @@ mesh.o: mesh.c mesh.h common.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1997/06/25 15:39:48  curt
+# Minor changes to compile with rsxnt/win32.
+#
 # Revision 1.8  1997/06/21 17:58:07  curt
 # directory shuffling ...
 #

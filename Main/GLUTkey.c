@@ -32,6 +32,10 @@
 #include "GLUTkey.h"
 #include "../Aircraft/aircraft.h"
 
+#ifndef M_PI
+#define M_PI        3.14159265358979323846	/* pi */
+#endif
+
 extern double fogDensity;
 extern double goal_view_offset;
 
@@ -152,9 +156,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.12  1997/06/21 17:12:52  curt
-/* Capitalized subdirectory names.
+/* Revision 1.13  1997/06/25 15:39:46  curt
+/* Minor changes to compile with rsxnt/win32.
 /*
+ * Revision 1.12  1997/06/21 17:12:52  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.11  1997/06/18 04:10:31  curt
  * A couple more runway tweaks ...
  *
