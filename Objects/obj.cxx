@@ -99,7 +99,7 @@ static Point3D calc_tex_coords(double *node, const Point3D& ref) {
 
     pp = fgCartToPolar3d(cp);
 
-    cout << pp << endl;
+    // cout << pp << endl;
 
     pp.setx( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.x(), 1.0) );
     pp.sety( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.y(), 1.0) );
@@ -549,6 +549,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.7  1998/10/20 15:48:44  curt
+// Removed an extraneous output message.
+//
 // Revision 1.6  1998/10/18 01:17:21  curt
 // Point3D tweaks.
 //
