@@ -52,8 +52,8 @@ double Vector::VecLen()
 
    double length = 0;
    for (int i= 0; i < nrData; i++)
-		length += powl(data[i],2);
-   return sqrtl(length);
+		length += pow(data[i],2);
+   return sqrt(length);
 }
 
 
@@ -89,10 +89,12 @@ Vector VecCross(Vector first, Vector second)
             exit(1);
         }
         #endif
+	
 	double x = first.data[1] * second.data[2] - first.data[2]*second.data[1];
         double y = first.data[2] * second.data[0] - first.data[0]*second.data[2];
         double z = first.data[0] * second.data[1] - first.data[1]*second.data[0];
-	return Vector(x,y,z);
+	Vector result(x,y,z);
+	return result;
 }
 
 
