@@ -34,15 +34,15 @@
 #include "../Include/general.h"
 
 #include "../Aircraft/aircraft.h"
+#include "../Astro/moon.h"
+#include "../Astro/sky.h"
+#include "../Astro/stars.h"
+#include "../Astro/sun.h"
 #include "../Cockpit/cockpit.h"
 #include "../Joystick/joystick.h"
 #include "../Math/fg_random.h"
 #include "../Scenery/mesh.h"
-#include "../Scenery/moon.h"
 #include "../Scenery/scenery.h"
-#include "../Scenery/sky.h"
-#include "../Scenery/stars.h"
-#include "../Scenery/sun.h"
 #include "../Time/event.h"
 #include "../Time/fg_time.h"
 #include "../Time/sunpos.h"
@@ -267,9 +267,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.27  1998/01/05 18:44:35  curt
-/* Add an option to advance/decrease time from keyboard.
+/* Revision 1.28  1998/01/07 03:18:58  curt
+/* Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
 /*
+ * Revision 1.27  1998/01/05 18:44:35  curt
+ * Add an option to advance/decrease time from keyboard.
+ *
  * Revision 1.26  1997/12/30 23:09:04  curt
  * Tweaking initialization sequences.
  *

@@ -26,7 +26,7 @@
 
 CFILES = fg_init.c views.c $(INTERFACE_FILES)
 OFILES = $(CFILES:.c=.o)
-AFILES = ../Aircraft/libAircraft.a ../Cockpit/libCockpit.a \
+AFILES = ../Aircraft/libAircraft.a ../Astro/libAstro.a ../Cockpit/libCockpit.a \
 	../Controls/libControls.a ../Flight/libFlight.a \
 	../Joystick/libJoystick.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../Scenery/libScenery.a \
@@ -84,6 +84,9 @@ views.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.40  1998/01/07 03:18:57  curt
+# Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
+#
 # Revision 1.39  1997/12/17 23:13:35  curt
 # Began working on rendering a sky.
 #

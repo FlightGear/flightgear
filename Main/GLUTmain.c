@@ -40,17 +40,17 @@
 #include "../Include/general.h"
 
 #include "../Aircraft/aircraft.h"
+#include "../Astro/moon.h"
+#include "../Astro/sky.h"
+#include "../Astro/stars.h"
+#include "../Astro/sun.h"
 #include "../Cockpit/cockpit.h"
 #include "../Joystick/joystick.h"
 #include "../Math/fg_geodesy.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
 #include "../Scenery/mesh.h"
-#include "../Scenery/moon.h"
 #include "../Scenery/scenery.h"
-#include "../Scenery/sky.h"
-#include "../Scenery/stars.h"
-#include "../Scenery/sun.h"
 #include "../Time/event.h"
 #include "../Time/fg_time.h"
 #include "../Time/fg_timer.h"
@@ -628,9 +628,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.44  1997/12/30 22:22:31  curt
-/* Further integration of event manager.
+/* Revision 1.45  1998/01/07 03:18:55  curt
+/* Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
 /*
+ * Revision 1.44  1997/12/30 22:22:31  curt
+ * Further integration of event manager.
+ *
  * Revision 1.43  1997/12/30 20:47:43  curt
  * Integrated new event manager with subsystem initializations.
  *
