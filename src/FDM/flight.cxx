@@ -205,11 +205,12 @@ FGInterface::init ()
 
 				// Set sea-level radius
   SG_LOG(SG_FLIGHT, SG_INFO, "...initializing sea-level radius...");
-  SG_LOG(SG_FLIGHT, SG_INFO, " lat = " << get_Latitude() << " alt = "
-	 << get_Altitude() );
+  SG_LOG(SG_FLIGHT, SG_INFO, " lat = " << fgGetDouble("/position/latitude-deg")
+	 << " alt = " << fgGetDouble("/position/altitude-ft") );
   double sea_level_radius_meters;
   double lat_geoc;
-  sgGeodToGeoc(get_Latitude(), get_Altitude(),
+  sgGeodToGeoc(fgGetDouble("/position/latitude-deg") * SGD_DEGREES_TO_RADIANS,
+	       fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER,
 	       &sea_level_radius_meters, &lat_geoc);
   set_Sea_level_radius(sea_level_radius_meters * SG_METER_TO_FEET);
 
