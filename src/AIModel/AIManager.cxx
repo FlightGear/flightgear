@@ -95,9 +95,9 @@ void FGAIManager::update(double dt) {
         ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
                 if ((*ai_list_itr)->getDie()) {      
-                   delete (*ai_list_itr);
                    --numObjects[(*ai_list_itr)->getType()];
                    --numObjects[0];
+                   delete (*ai_list_itr);
                    if ( ai_list_itr == ai_list.begin() ) {
                        ai_list.erase(ai_list_itr);
                        ai_list_itr = ai_list.begin();

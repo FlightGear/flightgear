@@ -51,7 +51,9 @@ bool FGAIBallistic::init() {
 
 void FGAIBallistic::bind() {
 //    FGAIBase::bind();
-   props->tie("sim/time/elapsed-sec", SGRawValuePointer<double>(&(this->life_timer)));
+   props->tie("sim/time/elapsed-sec",
+               SGRawValueMethods<FGAIBallistic,double>(*this,
+                                          &FGAIBallistic::_getTime));
 }
 
 void FGAIBallistic::unbind() {
@@ -163,3 +165,8 @@ void FGAIBallistic::Run(double dt) {
    if (altitude < -1000.0) setDie(true);
 
 }
+
+double FGAIBallistic::_getTime() const {
+   return life_timer;
+}
+

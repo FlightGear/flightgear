@@ -42,9 +42,11 @@ public:
     void setDragArea( double a );
     void setLife( double seconds );
     void setBuoyancy( double fpss );
-	void setWind_from_east( double fps );
-	void setWind_from_north( double fps );
-	void setWind( bool val );
+    void setWind_from_east( double fps );
+    void setWind_from_north( double fps );
+    void setWind( bool val );
+
+    double _getTime() const;
 	
 private:
 
@@ -54,11 +56,11 @@ private:
     bool aero_stabilized;   // if true, object will point where it's going
     double drag_area;       // equivalent drag area in ft2
     double life_timer;      // seconds
-	double gravity;         // fps2
-	double buoyancy;        // fps2
-	double wind_from_east;  // fps
-	double wind_from_north; // fps
-	bool wind;              // if true, local wind will be applied to object
+    double gravity;         // fps2
+    double buoyancy;        // fps2
+    double wind_from_east;  // fps
+    double wind_from_north; // fps
+    bool wind;              // if true, local wind will be applied to object
 		
     void Run(double dt);
 };
