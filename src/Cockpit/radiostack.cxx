@@ -331,6 +331,12 @@ double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
 	return 10 + (35 - offset) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
     } else if ( offset < 45 ) {
 	return (45 - offset);
+    } else if ( offset > 170 ) {
+        return FG_ILS_DEFAULT_RANGE;
+    } else if ( offset > 145 ) {
+	return 10 + (offset - 145) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
+    } else if ( offset > 135 ) {
+        return (offset - 135);
     } else {
 	return 0;
     }
