@@ -484,14 +484,15 @@ FGInput::_init_joystick ()
     } else {
 #ifdef FG_PLIB_JOYSTICK_GETNAME
       const char * name = js->getName();
-      std::cout << "Looking for bindings for joystick \""
-		<< name << '"' << std::endl;
+      SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \""
+	     << name << '"');
       vector<SGPropertyNode_ptr> nodes = js_nodes->getChildren("js-named");
       for (unsigned int i = 0; i < nodes.size(); i++) {
 	SGPropertyNode_ptr node = nodes[i];
-	std::cout << "  Trying \"" << node->getStringValue("name") << '"' << std::endl;
+	SG_LOG(SG_INPUT, SG_INFO,
+	       "  Trying \"" << node->getStringValue("name") << '"');
 	if (!strcmp(node->getStringValue("name"), name)) {
-	  std::cout << "  Found bindings" << std::endl;
+	  SG_LOG(SG_INPUT, SG_INFO, "  Found bindings");
 	  js_node = node;
 	  break;
 	}
