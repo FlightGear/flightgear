@@ -144,6 +144,7 @@ FGNewMat::Object::~Object ()
 int
 FGNewMat::Object::get_model_count () const
 {
+  load_models();
   return _models.size();
 }
 
