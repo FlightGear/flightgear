@@ -28,25 +28,34 @@
 #define _FG_TYPES_H
 
 
-/* A simple cartesian point */
-struct fgCartesianPoint {
+/* A simple 3d cartesian point */
+typedef struct {
     double x, y, z;
-};
+} fgCartesianPoint3d;
+
+
+/* A simple 3d polar point */
+typedef struct {
+    double lon, lat, radius;
+} fgPolarPoint3d;
 
 
 /* A simple geodetic point */
-struct fgGeodeticPoint {
+typedef struct {
     double lon, lat, elev;
-};
+} fgGeodeticPoint3d;
 
 
 #endif /* _FG_TYPES_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/04/08 23:35:33  curt
-/* Tweaks to Gnu automake/autoconf system.
+/* Revision 1.3  1998/05/02 01:48:39  curt
+/* typedef-ified fgCartesianPoint3d
 /*
+ * Revision 1.2  1998/04/08 23:35:33  curt
+ * Tweaks to Gnu automake/autoconf system.
+ *
  * Revision 1.1  1998/01/27 00:46:51  curt
  * prepended "fg_" on the front of these to avoid potential conflicts with
  * system include files.
