@@ -271,52 +271,20 @@ void FGTileMgr::initialize_queue()
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
 int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
-	sgdVec3 abs_pos_vector;
-        sgdCopyVec3(abs_pos_vector , globals->get_current_view()->get_absolute_view_pos());
-        return update( lon, lat, visibility_meters, abs_pos_vector,
-                       current_bucket, previous_bucket,
-                       globals->get_scenery()->get_center() );
+    sgdVec3 abs_pos_vector;
+    sgdCopyVec3(abs_pos_vector , globals->get_current_view()->get_absolute_view_pos());
+    return update( lon, lat, visibility_meters, abs_pos_vector,
+                   current_bucket, previous_bucket,
+                   globals->get_scenery()->get_center() );
 }
 
 
-int FGTileMgr::update( double lon, double lat, double visibility_meters,
-                       sgdVec3 abs_pos_vector, SGBucket p_current,
-                       SGBucket p_previous, Point3D center ) {
-    // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
-    //         << lon << " " << lat );
-
-    longitude = lon;
-    latitude = lat;
-    current_bucket = p_current;
-    previous_bucket = p_previous;
-
-    // SG_LOG( SG_TERRAIN, SG_DEBUG, "lon "<< lonlat[LON] <<
-    //      " lat " << lonlat[LAT] );
-
-    // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating Tile list for " << current_bucket );
-
-    setCurrentTile( longitude, latitude);
-
-    // do tile load scheduling. 
-    // Note that we need keep track of both viewer buckets and fdm buckets.
-    if ( state == Running ) {
-       SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
-       if (!(current_bucket == previous_bucket )) {
-	 // We've moved to a new bucket, we need to schedule any
-	 // needed tiles for loading.
-	 schedule_needed(visibility_meters, current_bucket);
-       }
-    } else if ( state == Start || state == Inited ) {
-	SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
-	initialize_queue();
-	state = Running;
-
-	// load the next tile in the load queue (or authorize the next
-	// load in the case of the threaded tile pager)
-	loader.update();
-    }
-
-    
+/**
+ * Update the various queues maintained by the tilemagr (private
+ * internal function, do not call directly.)
+ */
+void FGTileMgr::update_queues()
+{
     // load the next model in the load queue.  Currently this must
     // happen in the render thread because model loading can trigger
     // texture loading which involves use of the opengl api.
@@ -350,16 +318,12 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
     
     // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
 
-
-    // save bucket...
-    previous_bucket = current_bucket;
-
     // activate loader thread one out of every 5 frames
     if ( counter_hack == 0 ) {
-      // Notify the tile loader that it can load another tile
-      loader.update();
+        // Notify the tile loader that it can load another tile
+        loader.update();
     } else {
-      counter_hack = (counter_hack + 1) % 5;
+        counter_hack = (counter_hack + 1) % 5;
     }
 
     if ( !attach_queue.empty() ) {
@@ -400,6 +364,50 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
             delete e;
         }
     }
+}
+
+
+int FGTileMgr::update( double lon, double lat, double visibility_meters,
+                       sgdVec3 abs_pos_vector, SGBucket p_current,
+                       SGBucket p_previous, Point3D center ) {
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
+    //         << lon << " " << lat );
+
+    longitude = lon;
+    latitude = lat;
+    current_bucket = p_current;
+    previous_bucket = p_previous;
+
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, "lon "<< lonlat[LON] <<
+    //      " lat " << lonlat[LAT] );
+
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating Tile list for " << current_bucket );
+
+    setCurrentTile( longitude, latitude);
+
+    // do tile load scheduling. 
+    // Note that we need keep track of both viewer buckets and fdm buckets.
+    if ( state == Running ) {
+       SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
+       if (!(current_bucket == previous_bucket )) {
+	 // We've moved to a new bucket, we need to schedule any
+	 // needed tiles for loading.
+	 schedule_needed(visibility_meters, current_bucket);
+       }
+    } else if ( state == Start || state == Inited ) {
+	SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
+	initialize_queue();
+	state = Running;
+
+	// load the next tile in the load queue (or authorize the next
+	// load in the case of the threaded tile pager)
+	loader.update();
+    }
+
+    update_queues();
+
+    // save bucket...
+    previous_bucket = current_bucket;
 
     // no reason to update this if we haven't moved...
     if ( longitude != last_longitude || latitude != last_latitude ) {

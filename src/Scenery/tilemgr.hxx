@@ -156,6 +156,10 @@ public:
     // Initialize the Tile Manager subsystem
     int init();
 
+    // Update the various queues maintained by the tilemagr (private
+    // internal function, do not call directly.)
+    void update_queues();
+
     // given the current lon/lat (in degrees), fill in the array of
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
