@@ -145,7 +145,7 @@ string fgDEM::next_token() {
 
     in->stream() >> token;
 
-    cout << "    returning " + token + "\n";
+    // cout << "    returning " + token + "\n";
 
     return token;
 }
@@ -182,7 +182,7 @@ int fgDEM::next_exp() {
 
     sscanf(token.c_str(), "%lfD%d", &mantissa, &exp);
 
-    cout << "    Mantissa = " << mantissa << "  Exp = " << exp << "\n";
+    // cout << "    Mantissa = " << mantissa << "  Exp = " << exp << "\n";
 
     acc = 1;
     if ( exp > 0 ) {
@@ -214,7 +214,7 @@ int fgDEM::read_a_record() {
     }
   
     // clean off the trailing whitespace
-    name = trimleft(name);
+    name = trim(name);
     cout << "    Quad name field: " + name + "\n";
 
     // DEM level code, 3 reflects processing by DMA
@@ -285,7 +285,7 @@ int fgDEM::read_a_record() {
     // Minimum/maximum elevations in meters
     dem_z1 = next_exp();
     dem_z2 = next_exp();
-    cout << "    Elevation range " << dem_z1 << dem_z2 << "\n";
+    cout << "    Elevation range " << dem_z1 << " to " << dem_z2 << "\n";
 
     // Counterclockwise angle from the primary axis of ground
     // planimetric referenced to the primary axis of the DEM local
@@ -391,7 +391,7 @@ int fgDEM::parse( ) {
 	cur_col++;
 
 	if ( cur_col % 100 == 0 ) {
-	    cout << "    loaded " << cur_col << "profiles of data\n";
+	    cout << "    loaded " << cur_col << " profiles of data\n";
 	}
     }
 
@@ -520,8 +520,9 @@ void fgDEM::fit( double error, fgBUCKET *p ) {
     double x[DEM_SIZE_1], y[DEM_SIZE_1];
     double m, b, ave_error, max_error;
     double cury, lasty;
-    int n, row, start, end, good_fit;
+    int n, row, start, end;
     int colmin, colmax, rowmin, rowmax;
+    bool good_fit;
     // FILE *dem, *fit, *fit1;
 
     printf("Initializing output mesh structure\n");
@@ -552,7 +553,7 @@ void fgDEM::fit( double error, fgBUCKET *p ) {
 
 	while ( start < colmax ) {
 	    end = start + 1;
-	    good_fit = 1;
+	    good_fit = true;
 
 	    x[(end - start) - 1] = 0.0 + ( start * col_step );
 	    y[(end - start) - 1] = dem_data[start][row];
@@ -585,7 +586,7 @@ void fgDEM::fit( double error, fgBUCKET *p ) {
 		*/
 
 		if ( max_error > error ) {
-		    good_fit = 0;
+		    good_fit = false;
 		}
 		
 		end++;
@@ -818,6 +819,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/09/21 20:53:59  curt
+// minor tweaks to clean a few additional things up after the rewrite.
+//
 // Revision 1.14  1998/09/19 17:59:45  curt
 // Use c++ streams (fg_gzifstream).  Also converted many character arrays to
 // the string class.
