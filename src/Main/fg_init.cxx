@@ -661,19 +661,35 @@ bool fgInitSubsystems( void ) {
     sgSetVec3( position, current_aircraft.fdm_state->get_Latitude(),
 	       current_aircraft.fdm_state->get_Longitude(),
 	       current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER );
-    FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
+    double init_vis = fgGetDouble("/environment/visibility-m");
+
+    FGLocalWeatherDatabase::DatabaseWorkingType working_type;
+
+    if (fgGetString("/environment/weather/working-type") == "internet")
+    {
+      working_type = FGLocalWeatherDatabase::use_internet;
+    } else {
+      working_type = FGLocalWeatherDatabase::default_mode;
+    }
+    
+    if ( init_vis > 0 ) {
+      FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
 	new FGLocalWeatherDatabase( position,
-				    globals->get_fg_root() );
+				    globals->get_fg_root(),
+                                    working_type,
+                                    init_vis );
+    } else {
+      FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
+	new FGLocalWeatherDatabase( position,
+				    globals->get_fg_root(),
+                                    working_type );
+    }
+
     // cout << theFGLocalWeatherDatabase << endl;
     // cout << "visibility = " 
     //      << theFGLocalWeatherDatabase->getWeatherVisibility() << endl;
 
     WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
-    
-    double init_vis = fgGetDouble("/environment/visibility-m");
-    if ( init_vis > 0 ) {
-	WeatherDatabase->setWeatherVisibility( init_vis );
-    }
 
     // register the periodic update of the weather
     global_events.Register( "weather update", fgUpdateWeatherDatabase,

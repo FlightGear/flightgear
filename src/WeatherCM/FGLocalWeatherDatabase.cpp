@@ -46,6 +46,8 @@ HISTORY
                                 on 'the bus'
 18.05.2000 Christian Mayer      Minor clean-ups. Changed the code to use 
                                 FGWeatherUtils.h for unit conversion
+18.07.2001 Christian Mayer      Added the posibility to limit the amount of 
+                                stations for a faster init.
 *****************************************************************************/
 
 /****************************************************************************/
@@ -55,6 +57,7 @@ HISTORY
 #include <simgear/constants.h>
 
 #include <Aircraft/aircraft.hxx>
+#include <Main/fg_props.hxx>
 
 #include "FGLocalWeatherDatabase.h"
 
@@ -104,30 +107,77 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
     case use_internet:
 	{
 	    FGWeatherParse *parsed_data = new FGWeatherParse();
-
-	    parsed_data->input( "weather/current.gz" );
+	    sgVec2               *p;
+	    FGPhysicalProperties *f;
+            string path_to_weather = root + "/weather/current.txt.gz";
+	    parsed_data->input( path_to_weather.c_str() );
 	    unsigned int n = parsed_data->stored_stations();
+            int m = fgGetInt("/environment/weather/max-stations", -1);
 
-	    sgVec2               *p = new sgVec2              [n];
-	    FGPhysicalProperties *f = new FGPhysicalProperties[n];
+            if ( ( m < 0 ) || ( m > n ) )
+            {
+                m = n;
 
-	    // fill the database
-	    for (unsigned int i = 0; i < n; i++) 
-	    {
-		f[i] = parsed_data->getFGPhysicalProperties(i);
-		parsed_data->getPosition(i, p[i]);
+	        p = new sgVec2              [n];
+	        f = new FGPhysicalProperties[n];
 
-		if ( (i%100) == 0)
-		    cerr << ".";
-	    }
+	        // fill the database
+	        for (unsigned int i = 0; i < n; i++) 
+	        {
+		    f[i] = parsed_data->getFGPhysicalProperties(i);
+		    parsed_data->getPosition(i, p[i]);
+
+		    if ( (i%100) == 0)
+		        cerr << ".";
+	        }
+            }
+            else
+            {   // we have to limit the amount of stations
+
+                //store the "distance" between the station and the current
+                //position. As the distance is calculated from the lat/lon
+                //values it's not worth much - but it's good enough for
+                //comparison
+                map<float, unsigned int> squared_distance;
+                sgVec2 cur_pos;
+
+                cur_pos[0] = cache->last_known_position[0];
+                cur_pos[1] = cache->last_known_position[1];
+                
+                unsigned int i;
+                for( i = 0; i < n; i++ )
+                {
+                  sgVec2 pos;
+                  parsed_data->getPosition(i, pos);
+                  squared_distance[sgDistanceSquaredVec2(cur_pos, pos)] = i;
+                }
+
+                p = new sgVec2              [m];
+	        f = new FGPhysicalProperties[m];
+
+                map<float, unsigned int>::const_iterator ci;
+                ci = squared_distance.begin();
+
+	        // fill the database
+	        for ( i = 0; i < m; i++ ) 
+                { 
+		    f[i] = parsed_data->getFGPhysicalProperties(ci->second);
+		    parsed_data->getPosition(ci->second, p[i]);
+
+		    if ( (i%100) == 0)
+		        cerr << ".";
+
+                    ci++;
+	        }
+            }
 
 	    // free the memory of the parsed data to ease the required memory
 	    // for the very memory consuming spherical interpolation
 	    delete parsed_data;
 
 	    //and finally init the interpolation
-	    cerr << "\nInitialiating Interpolation. (2-3 minutes on a PII-350)\n";
-	    database = new SphereInterpolate<FGPhysicalProperties>(n, p, f);
+	    cerr << "\nInitialiating Interpolation. (2-3 minutes on a PII-350 for ca. 3500 stations)\n";
+	    database = new SphereInterpolate<FGPhysicalProperties>(m, p, f);
 
 	    //and free my allocations:
 	    delete[] p;
@@ -154,6 +204,18 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
     default:
 	cerr << "FGLocalWeatherDatabase error: Unknown database type specified!\n";
     };
+
+    cache->latitude_deg  = fgGetNode("/position/latitude-deg" );
+    cache->longitude_deg = fgGetNode("/position/longitude-deg");
+    cache->altitude_ft   = fgGetNode("/position/altitude-ft"  );
+
+    fgTie("/environment/weather/wind-north-mps", this, &FGLocalWeatherDatabase::get_wind_north);
+    fgTie("/environment/weather/wind-east-mps", this, &FGLocalWeatherDatabase::get_wind_east);
+    fgTie("/environment/weather/wind-up-mps", this, &FGLocalWeatherDatabase::get_wind_up);
+    fgTie("/environment/weather/temperature-K", this, &FGLocalWeatherDatabase::get_temperature);
+    fgTie("/environment/weather/air-pressure-Pa", this, &FGLocalWeatherDatabase::get_air_pressure);
+    fgTie("/environment/weather/vapor-pressure-Pa", this, &FGLocalWeatherDatabase::get_vapor_pressure);
+    fgTie("/environment/weather/air-density", this, &FGLocalWeatherDatabase::get_air_density);
 }
 
 FGLocalWeatherDatabase::~FGLocalWeatherDatabase()
@@ -181,14 +243,10 @@ void FGLocalWeatherDatabase::update(const WeatherPrecision dt)
 
 void FGLocalWeatherDatabase::update(const sgVec3& p) //position has changed
 {
-    sgCopyVec3(last_known_position, p);
-
     //uncomment this when you are using the GlobalDatabase
     /*
     cerr << "****\nupdate(p) inside\n";
     cerr << "Parameter: " << p[0] << "/" << p[1] << "/" << p[2] << "\n";
-    sgVec2 p2d;
-    sgSetVec2( p2d, p[0], p[1] );
     cerr << FGPhysicalProperties2D(get(p2d), p2d);
     cerr << "****\n";
     */
@@ -197,7 +255,6 @@ void FGLocalWeatherDatabase::update(const sgVec3& p) //position has changed
 
 void FGLocalWeatherDatabase::update(const sgVec3& p, const WeatherPrecision dt)   //time and/or position has changed
 {
-    sgCopyVec3(last_known_position, p);
 }
 
 /****************************************************************************/
@@ -254,8 +311,6 @@ void FGLocalWeatherDatabase::setProperties(const FGPhysicalProperties2D& x)
 void fgUpdateWeatherDatabase(void)
 {
     sgVec3 position;
-    sgVec3 wind;
-    
     
     sgSetVec3(position, 
         current_aircraft.fdm_state->get_Latitude(),

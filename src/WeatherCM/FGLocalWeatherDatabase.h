@@ -42,6 +42,8 @@ HISTORY
                                 Eberly's spherical interpolation code. This
 				stops our dependancy on the (ugly) voronoi
 				code and simplyfies the code structure a lot.
+18.07.2001 Christian Mayer      Added the posibility to limit the amount of 
+                                stations for a faster init.
 *****************************************************************************/
 
 /****************************************************************************/
@@ -78,6 +80,16 @@ SG_USING_NAMESPACE(std);
 /****************************************************************************/
 /* CLASS DECLARATION							    */
 /****************************************************************************/
+struct _FGLocalWeatherDatabaseCache
+{
+    sgVec3             last_known_position;
+    //sgVec3             current_position;
+    SGPropertyNode     *latitude_deg;
+    SGPropertyNode     *longitude_deg;
+    SGPropertyNode     *altitude_ft;
+    FGPhysicalProperty last_known_property;
+};
+
 class FGLocalWeatherDatabase
 {
 private:
@@ -92,12 +104,25 @@ protected:
     /************************************************************************/
     WeatherPrecision WeatherVisibility;	//how far do I need to simulate the
 					//local weather? Unit: metres
-    sgVec3 last_known_position;
+
+    _FGLocalWeatherDatabaseCache *cache;
+    inline void check_cache_for_update(void) const;
 
     bool Thunderstorm;			//is there a thunderstorm near by?
     FGThunderstorm *theThunderstorm;	//pointer to the thunderstorm.
 
 public:
+    /************************************************************************/
+    /* for tieing them to the property system				    */
+    /************************************************************************/
+    inline WeatherPrecision get_wind_north() const;
+    inline WeatherPrecision get_wind_east() const;
+    inline WeatherPrecision get_wind_up() const;
+    inline WeatherPrecision get_temperature() const;
+    inline WeatherPrecision get_air_pressure() const;
+    inline WeatherPrecision get_vapor_pressure() const;
+    inline WeatherPrecision get_air_density() const;
+
     static FGLocalWeatherDatabase *theFGLocalWeatherDatabase;  
     
     enum DatabaseWorkingType {
@@ -122,10 +147,11 @@ public:
     FGLocalWeatherDatabase(
 	const sgVec3&             position,
 	const string&             root,
-	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
-	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
+	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE,
+	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY)
     {
-	sgCopyVec3( last_known_position, position );
+        cache = new _FGLocalWeatherDatabaseCache;
+	sgCopyVec3( cache->last_known_position, position );
 
 	init( visibility, type, root );
 
@@ -137,10 +163,11 @@ public:
 	const WeatherPrecision    position_lon,
 	const WeatherPrecision    position_alt,
 	const string&             root,
-	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
-	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
+	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE,
+	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY)
     {
-	sgSetVec3( last_known_position, position_lat, position_lon, position_alt );
+        cache = new _FGLocalWeatherDatabaseCache;
+	sgSetVec3( cache->last_known_position, position_lat, position_lon, position_alt );
 
 	init( visibility, type, root );
 
@@ -223,6 +250,72 @@ void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecision 
 WeatherPrecision inline FGLocalWeatherDatabase::getWeatherVisibility(void) const
 {
     return WeatherVisibility;
+}
+
+inline void FGLocalWeatherDatabase::check_cache_for_update(void) const
+{
+  if ( ( cache->last_known_position[0] == cache->latitude_deg->getFloatValue() ) &&
+       ( cache->last_known_position[1] == cache->longitude_deg->getFloatValue() ) &&
+       ( cache->last_known_position[2] == cache->altitude_ft->getFloatValue() * SG_FEET_TO_METER ) )
+    return; //nothing to do 
+
+  sgVec3 position = { cache->latitude_deg->getFloatValue(), 
+                      cache->longitude_deg->getFloatValue(), 
+                      cache->altitude_ft->getFloatValue() * SG_FEET_TO_METER };
+
+  sgCopyVec3(cache->last_known_position, position);
+  cache->last_known_property = get(position);
+}
+
+inline WeatherPrecision FGLocalWeatherDatabase::get_wind_north() const
+{
+  check_cache_for_update();
+
+  return cache->last_known_property.Wind[0];
+}
+
+inline WeatherPrecision FGLocalWeatherDatabase::get_wind_east() const
+{
+  check_cache_for_update();
+
+  return cache->last_known_property.Wind[1];
+}
+
+inline WeatherPrecision FGLocalWeatherDatabase::get_wind_up() const
+{
+  check_cache_for_update();
+
+  return cache->last_known_property.Wind[2];
+}
+
+inline WeatherPrecision FGLocalWeatherDatabase::get_temperature() const
+{
+  check_cache_for_update();
+
+  return cache->last_known_property.Temperature;
+}
+
+inline WeatherPrecision FGLocalWeatherDatabase::get_air_pressure() const
+{
+  check_cache_for_update();
+
+  return cache->last_known_property.AirPressure;
+}
+
+inline WeatherPrecision FGLocalWeatherDatabase::get_vapor_pressure() const
+{
+  check_cache_for_update();
+
+  return cache->last_known_property.VaporPressure;
+}
+
+inline WeatherPrecision FGLocalWeatherDatabase::get_air_density() const
+{
+  // check_for_update();
+  // not required, as the called functions will do that
+
+  return (get_air_pressure()*FG_WEATHER_DEFAULT_AIRDENSITY*FG_WEATHER_DEFAULT_TEMPERATURE) / 
+	 (get_temperature()*FG_WEATHER_DEFAULT_AIRPRESSURE);
 }
 
 
