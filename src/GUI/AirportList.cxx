@@ -21,7 +21,7 @@ AirportList::AirportList (int x, int y, int width, int height)
                  airport->id.c_str(),
                  airport->name.c_str());
         int str_len = strlen(buf);
-        _content[i] = new char[(str_len > 1023) ? 1024 : str_len];
+        _content[i] = new char[(str_len > 1023) ? 1024 : str_len+1];
         strncpy(_content[i], buf, 1023);
     }
     _content[_nAirports] = 0;
