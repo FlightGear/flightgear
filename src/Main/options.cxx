@@ -1179,12 +1179,12 @@ struct OptionDesc {
     {"net-id",                       true,  OPTION_STRING, "sim/networking/call-sign", false, "", 0 },
 #endif
 #ifdef FG_MPLAYER_AS
-    {"callsign",                     false, OPTION_STRING, "sim/multiplay/callsign", false, "", 0 },
+    {"callsign",                     true, OPTION_STRING,  "sim/multiplay/callsign", false, "", 0 },
     {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },
 #endif
     {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
-    {"log-level",                  true,  OPTION_INT,   "/sim/log-level", false, "", 0 },
+    {"log-level",                    true,  OPTION_INT,    "/sim/log-level", false, "", 0 },
     {"view-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_DOUBLE, "/environment/visibility-m", false, "", 0 },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
