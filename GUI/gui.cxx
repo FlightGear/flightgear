@@ -129,7 +129,8 @@ void guiInit()
 #ifdef USING_3DFX
       puShowCursor ();
 #endif
-      puSetDefaultStyle         (PUSTYLE_SMALL_BEVELLED );
+      // puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED );
+      puSetDefaultStyle         ( PUSTYLE_DEFAULT );
       puSetDefaultColourScheme  (0.2, 0.4, 0.8);
       
       /* OK the rest is largerly put in here to mimick Steve Baker's "complex" example
