@@ -85,7 +85,7 @@ void FGAIThermal::Run(double dt) {
    // calculate range to target in feet and nautical miles
    double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;
    double lon_range = fabs(pos.lon() - user_longitude) * ft_per_deg_lon;
-   double range_ft = lat_range*lat_range + lon_range*lon_range;
+   double range_ft = sqrt(lat_range*lat_range + lon_range*lon_range);
    range = range_ft / 6076.11549;
 
    // Calculate speed of rising air if within range. 
