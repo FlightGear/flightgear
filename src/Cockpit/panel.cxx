@@ -847,11 +847,15 @@ FGInstrumentLayer::transform () const
     FGPanelTransformation *t = *it;
     if (t->test()) {
       float val = (t->node == 0 ? 0.0 : t->node->getFloatValue());
+
+      if (t->has_mod)
+          val = fmod(val, t->mod);
       if (val < t->min) {
 	val = t->min;
       } else if (val > t->max) {
 	val = t->max;
       }
+
       if(t->table==0) {
 	val = val * t->factor + t->offset;
       } else {

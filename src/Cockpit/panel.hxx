@@ -44,6 +44,7 @@
 #include <simgear/misc/props.hxx>
 #include <simgear/timing/timestamp.hxx>
 
+#include <cmath>
 #include <vector>
 #include <map>
 #include <plib/fnt.h>
@@ -303,6 +304,8 @@ public:
   const SGPropertyNode * node;
   float min;
   float max;
+  bool has_mod;
+  float mod;
   float factor;
   float offset;
   SGInterpTable * table;

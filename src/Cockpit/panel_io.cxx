@@ -251,6 +251,9 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   t->node = target;
   t->min = node->getFloatValue("min", -9999999);
   t->max = node->getFloatValue("max", 99999999);
+  t->has_mod = node->hasChild("modulator");
+  if (t->has_mod)
+      t->mod = node->getFloatValue("modulator");
   t->factor = node->getFloatValue("scale", 1.0);
   t->offset = node->getFloatValue("offset", 0.0);
 
