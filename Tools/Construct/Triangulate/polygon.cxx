@@ -150,26 +150,15 @@ void FGPolygon::calc_point_inside( const int contour,
 
     p3.sety(100);
     
-    for ( int i = 0; i < (int)poly.size(); ++i ) {
-	cout << "contour = " << i << " size = " << poly[i].size() << endl;
-	for ( int j = 0; j < (int)(poly[i].size() - 1); ++j ) {
-	    // cout << "  p1 = " << poly[i][j] << " p2 = " 
-	    //      << poly[i][j+1] << endl;
-	    p1 = trinodes.get_node( poly[i][j] );
-	    p2 = trinodes.get_node( poly[i][j+1] );
-
-	    if ( intersects(p1, p2, m.x(), &result) ) {
-		// cout << "intersection = " << result << endl;
-		if ( ( result.y() < p3.y() ) &&
-		     ( result.y() > m.y() + FG_EPSILON ) ) {
-		    p3 = result;
-		}
-	    }
-	}
-	// cout << "  p1 = " << poly[i][0] << " p2 = " 
-	//      << poly[i][poly[i].size() - 1] << endl;
-	p1 = trinodes.get_node( poly[i][0] );
-	p2 = trinodes.get_node( poly[i][poly[i].size() - 1] );
+    // for ( int i = 0; i < (int)poly.size(); ++i ) {
+    int i = contour;
+    cout << "contour = " << i << " size = " << poly[i].size() << endl;
+    for ( int j = 0; j < (int)(poly[i].size() - 1); ++j ) {
+	// cout << "  p1 = " << poly[i][j] << " p2 = " 
+	//      << poly[i][j+1] << endl;
+	p1 = trinodes.get_node( poly[i][j] );
+	p2 = trinodes.get_node( poly[i][j+1] );
+	
 	if ( intersects(p1, p2, m.x(), &result) ) {
 	    // cout << "intersection = " << result << endl;
 	    if ( ( result.y() < p3.y() ) &&
@@ -178,6 +167,18 @@ void FGPolygon::calc_point_inside( const int contour,
 	    }
 	}
     }
+    // cout << "  p1 = " << poly[i][0] << " p2 = " 
+    //      << poly[i][poly[i].size() - 1] << endl;
+    p1 = trinodes.get_node( poly[i][0] );
+    p2 = trinodes.get_node( poly[i][poly[i].size() - 1] );
+    if ( intersects(p1, p2, m.x(), &result) ) {
+	// cout << "intersection = " << result << endl;
+	if ( ( result.y() < p3.y() ) &&
+	     ( result.y() > m.y() + FG_EPSILON ) ) {
+	    p3 = result;
+	}
+    }
+    // }
     cout << "low intersection of other segment = " << p3 << endl;
 
     // 4. take midpoint of p2 && m as an arbitrary point inside polygon
