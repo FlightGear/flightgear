@@ -19,10 +19,10 @@ depend: $(DEPENDS)
 	cat $(DEPENDS) > $(MAKEDEPENDFILE)
 
 .cxx.d:
-	$(CPP) $(CPPFLAGS) $(CPPDEFS) -c $< -MD
+	$(CXX) $(CXXFLAGS) $(CXXDEFS) -c $< -MD
 
 .cxx.o:
-	$(CPP) $(CPPFLAGS) $(CPPDEFS) -c $<
+	$(CXX) $(CXXFLAGS) $(CXXDEFS) -c $<
 
 .c.d:
 	$(CC) $(CFLAGS) $(CDEFS) -c $< -MD

@@ -36,6 +36,11 @@ Gene Buckle <geneb@nwlink.com>
   a good hard shove.) :-)
 
 
+Didier Chauveau <chauveau@math.univ-mlv.fr>
+  Provided some initial code to parse the 30 arcsec DEM files found at:
+  http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html
+
+
 Michael I. Gold <gold@puck.asd.sgi.com> -- Patiently answered my endless
   "newbie" OpenGL questions.  His effort alone has made me a great SGI
   fan.

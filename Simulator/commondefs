@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 36
+FG_VERSION_MINOR = 37
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -15,6 +15,8 @@ FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 CC = g++
 CXX = g++
+CCDEPFLAG = -M
+
 LD = ld
 AR = ar
 RANLIB = ranlib
@@ -47,7 +49,7 @@ TAR = tar
 #
 #---------------------------------------------------------------------------
 
-GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
+GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
 
 
 #---------------------------------------------------------------------------
@@ -162,7 +164,7 @@ CDEFS = $(LCDEFS)
 CFLAGS = $(FG_CFLAGS) -I$(FG_ROOT_SRC) $(LCFLAGS)
 
 CXXDEFS = $(LCXXDEFS)
-CXXFLAGS = $(FG_CFLAGS) $(LCXXFLAGS)
+CXXFLAGS = $(CFLAGS)
 
 LDDEFS = $(LLDDEFS)
 LDFLAGS = $(LLDFLAGS) -L$(FG_ROOT_LIB)

@@ -40,7 +40,7 @@ all:
 depend:
 	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making depend in $$dir"; \
-	      cd $$dir; $(CC) $(CFLAGS) -M *.c > depend ) ; \
+	      cd $$dir; $(CC) $(CFLAGS) $(CCDEPFLAG) *.c > depend ) ; \
 	done
 
 Makefile-os2:
@@ -117,6 +117,9 @@ bin-exp-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.44  1998/03/09 22:52:53  curt
+# Misc. configuration tweaks.
+#
 # Revision 1.43  1998/02/19 13:05:43  curt
 # Incorporated some HUD tweaks from Michelle America.
 # Tweaked the sky's sunset/rise colors.
