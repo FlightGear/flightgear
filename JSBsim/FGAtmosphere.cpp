@@ -30,10 +30,6 @@ FUNCTIONAL DESCRIPTION
 Models the atmosphere. The equation used below was determined by a third order
 curve fit using Excel. The data is from the ICAO atmosphere model.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 11/24/98   JSB   Created
@@ -43,12 +39,21 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-FGAtmosphere::FGAtmosphere() : FGModel()
+FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   strcpy(Name,"FGAtmosphere");
 }
@@ -62,9 +67,9 @@ FGAtmosphere::~FGAtmosphere()
 bool FGAtmosphere::Run(void)
 {
   if (!FGModel::Run()) {                 // if false then execute this Run()
-    State->Setrho(0.002377 - 7.0E-08*State->Geth()
+    rho = 0.002377 - 7.0E-08*State->Geth()
         + 7.0E-13*State->Geth()*State->Geth()
-        - 2.0E-18*State->Geth()*State->Geth()*State->Geth());
+        - 2.0E-18*State->Geth()*State->Geth()*State->Geth();
 
     State->SetMach(State->GetVt()/State->Geta()); 
   } else {                               // skip Run() execution this time

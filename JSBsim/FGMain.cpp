@@ -1,6 +1,13 @@
-#define FDM_MAIN
 #include "FGFDMExec.h"
-#undef FDM_MAIN
+#include "FGRotation.h"
+#include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 #include <iostream.h>
 #include <time.h>
@@ -19,10 +26,10 @@ void main(int argc, char** argv)
 
   FDMExec = new FGFDMExec();
 
-  Aircraft->LoadAircraft(argv[1]);
-  State->Reset(argv[2]);
+  FDMExec->GetAircraft()->LoadAircraft(argv[1]);
+  FDMExec->GetState()->Reset(argv[2]);
 
-  while (State->Setsim_time(State->Getsim_time() + 0.1) <= 25.0)
+  while (FDMExec->GetState()->Getsim_time() <= 25.0)
   {
     FDMExec->Run();
     nanosleep(&short_wait,&no_wait);

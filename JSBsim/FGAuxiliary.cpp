@@ -30,10 +30,6 @@ FUNCTIONAL DESCRIPTION
 This class calculates various auxiliary parameters, mostly used by the visual
 system
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 01/26/99   JSB   Created
@@ -43,12 +39,21 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGAuxiliary.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGPosition.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-FGAuxiliary::FGAuxiliary() : FGModel()
+FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   strcpy(Name, "FGAuxiliary");
 }
@@ -64,6 +69,7 @@ bool FGAuxiliary::Run()
   if (!FGModel::Run()) {
   } else {
   }
+  return false;
 }
 
 

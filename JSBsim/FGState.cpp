@@ -1,5 +1,5 @@
 /*******************************************************************************
-
+                                                                       
  Module:       FGState.cpp
  Author:       Jon Berndt
  Date started: 11/17/98
@@ -28,50 +28,43 @@ FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 See header file.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
-
 11/17/98   JSB   Created
 
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
 
-#include "FGState.h"
-#include "FGAircraft.h"
-
 #include <math.h>
+
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGAtmosphere.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
 
-FGState::FGState(void)
+FGState::FGState(FGFDMExec* fdex)
 {
-  U = V = W = Fx = Fy = Fz = 0.0;
-  P = Q = R = L = M = N = 0.0;
-  Q0 = Q1 = Q2 = Q3 = 0.0;
-  Ixx = Iyy = Izz = Ixz = 0.0;
+  FDMExec = fdex;
+
   Vt = 0.0;
   latitude = longitude = 0.0;
-  alpha = beta = gamma = 0.0;
   adot = bdot = 0.0;
-  phi = tht = psi = 0.0;
-  Udot = Vdot = Wdot = 0.0;
-  Pdot = Qdot = Rdot = 0.0;
   h = 0.0;
   a = 1000.0;
-  rho = qbar = 0.0;
+  qbar = 0.0;
   sim_time = dt = 0.1;
-  m = 0.0;
-  g = 32.174;
-
-  const float EarthRad     = 20925650.0;
 }
 
 
@@ -82,9 +75,14 @@ FGState::~FGState(void)
 
 bool FGState::Reset(char* fname)
 {
-  char resetDef[200];
+  char resetDef[256];
+  float U, V, W;
+  float phi, tht, psi;
+  float alpha, beta, gamma;
+  float Q0, Q1, Q2, Q3;
+  float T[4][4];
 
-  sprintf(resetDef, "/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/aircraft/%s/%s", Aircraft->GetAircraftName(), fname);
+  sprintf(resetDef, "/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/aircraft/%s/%s", FDMExec->GetAircraft()->GetAircraftName(), fname);
 
   ifstream resetfile(resetDef);
 
@@ -102,19 +100,25 @@ bool FGState::Reset(char* fname)
 
 // Change all angular measurements from degrees (as in config file) to radians
 
+    gamma = 0.0;
     if (W != 0.0)
       alpha = U*U > 0.0 ? atan2(W, U) : 0.0;
+    else
+      alpha = 0.0;
     if (V != 0.0)
       beta = U*U+W*W > 0.0 ? atan2(V, (fabs(U)/U)*sqrt(U*U + W*W)) : 0.0;
+    else
+      beta = 0.0;
 
     latitude  *= M_PI / 180.0;
     longitude *= M_PI / 180.0;
-    alpha     *= M_PI / 180.0;
-    beta      *= M_PI / 180.0;
-    gamma     *= M_PI / 180.0;
     phi       *= M_PI / 180.0;
     tht       *= M_PI / 180.0;
     psi       *= M_PI / 180.0;
+
+    FDMExec->GetTranslation()->SetUVW(U, V, W);
+    FDMExec->GetRotation()->SetEuler(phi, tht, psi);
+    FDMExec->GetTranslation()->SetABG(alpha, beta, gamma);
 
     Vt = sqrt(U*U + V*V + W*W);
     qbar = sqrt(U*U + V*V + W*W);
@@ -123,6 +127,8 @@ bool FGState::Reset(char* fname)
     Q1 = -sin(psi*0.5)*sin(tht*0.5)*cos(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*sin(phi*0.5);
     Q2 =  sin(psi*0.5)*cos(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*sin(tht*0.5)*cos(phi*0.5);
     Q3 =  sin(psi*0.5)*cos(tht*0.5)*cos(phi*0.5) - cos(psi*0.5)*sin(tht*0.5)*sin(phi*0.5);
+
+    FDMExec->GetRotation()->SetQ0123(Q0, Q1, Q2, Q3);
 
     T[1][1] = Q0*Q0 + Q1*Q1 - Q2*Q2 - Q3*Q3;
     T[1][2] = 2*(Q1*Q2 + Q0*Q3);
@@ -133,6 +139,10 @@ bool FGState::Reset(char* fname)
     T[3][1] = 2*(Q1*Q3 + Q0*Q2);
     T[3][2] = 2*(Q2*Q3 - Q0*Q1);
     T[3][3] = Q0*Q0 - Q1*Q1 - Q2*Q2 + Q3*Q3;
+
+    FDMExec->GetPosition()->SetT(T[1][1], T[1][2], T[1][3],
+                                 T[2][1], T[2][2], T[2][3],
+                                 T[3][1], T[3][2], T[3][3]);
 
     return true;
   } else {
@@ -147,39 +157,15 @@ bool FGState::StoreData(char* fname)
   ofstream datafile(fname);
 
   if (datafile) {
-    datafile << U;
-    datafile << V;
-    datafile << W;
-    datafile << Fx;
-    datafile << Fy;
-    datafile << Fz;
-    datafile << P;
-    datafile << Q;
-    datafile << R;
-    datafile << L;
-    datafile << M;
-    datafile << N;
+    datafile << FDMExec->GetTranslation()->GetU();
+    datafile << FDMExec->GetTranslation()->GetV();
+    datafile << FDMExec->GetTranslation()->GetW();
     datafile << latitude;
     datafile << longitude;
-    datafile << alpha;
-    datafile << beta;
-    datafile << gamma;
-    datafile << phi;
-    datafile << tht;
-    datafile << psi;
-    datafile << Udot;
-    datafile << Vdot;
-    datafile << Wdot;
-    datafile << Pdot;
-    datafile << Qdot;
-    datafile << Rdot;
+    datafile << FDMExec->GetRotation()->Getphi();
+    datafile << FDMExec->GetRotation()->Gettht();
+    datafile << FDMExec->GetRotation()->Getpsi();
     datafile << h;
-    datafile << a;
-    datafile << rho;
-    datafile << qbar;
-    datafile << sim_time;
-    datafile << dt;
-    datafile << g;
     datafile.close();
     return true;
   } else {
@@ -194,44 +180,33 @@ bool FGState::DumpData(char* fname)
   ofstream datafile(fname);
 
   if (datafile) {
-    datafile << "U: " << U << endl;
-    datafile << "V: " << V << endl;
-    datafile << "W: " << W << endl;
-    datafile << "Fx: " << Fx << endl;
-    datafile << "Fy: " << Fy << endl;
-    datafile << "Fz: " << Fz << endl;
-    datafile << "P: " << P << endl;
-    datafile << "Q: " << Q << endl;
-    datafile << "R: " << R << endl;
-    datafile << "L: " << L << endl;
-    datafile << "M: " << M << endl;
-    datafile << "N: " << N << endl;
+    datafile << "U: " << FDMExec->GetTranslation()->GetU() << endl;
+    datafile << "V: " << FDMExec->GetTranslation()->GetV() << endl;
+    datafile << "W: " << FDMExec->GetTranslation()->GetW() << endl;
+    datafile << "P: " << FDMExec->GetRotation()->GetP() << endl;
+    datafile << "Q: " << FDMExec->GetRotation()->GetQ() << endl;
+    datafile << "R: " << FDMExec->GetRotation()->GetR() << endl;
+    datafile << "L: " << FDMExec->GetAircraft()->GetL() << endl;
+    datafile << "M: " << FDMExec->GetAircraft()->GetM() << endl;
+    datafile << "N: " << FDMExec->GetAircraft()->GetN() << endl;
     datafile << "latitude: " << latitude << endl;
     datafile << "longitude: " << longitude << endl;
-    datafile << "alpha: " << alpha << endl;
-    datafile << "beta: " << beta << endl;
-    datafile << "gamma: " << gamma << endl;
-    datafile << "phi: " << phi << endl;
-    datafile << "tht: " << tht << endl;
-    datafile << "psi: " << psi << endl;
-    datafile << "Udot: " << Udot << endl;
-    datafile << "Vdot: " << Vdot << endl;
-    datafile << "Wdot: " << Wdot << endl;
-    datafile << "Pdot: " << Pdot << endl;
-    datafile << "Qdot: " << Qdot << endl;
-    datafile << "Rdot: " << Rdot << endl;
+    datafile << "alpha: " << FDMExec->GetTranslation()->Getalpha() << endl;
+    datafile << "beta: " << FDMExec->GetTranslation()->Getbeta() << endl;
+    datafile << "gamma: " << FDMExec->GetTranslation()->Getgamma() << endl;
+    datafile << "phi: " << FDMExec->GetRotation()->Getphi() << endl;
+    datafile << "tht: " << FDMExec->GetRotation()->Gettht() << endl;
+    datafile << "psi: " << FDMExec->GetRotation()->Getpsi() << endl;
+    datafile << "Pdot: " << FDMExec->GetRotation()->GetPdot() << endl;
+    datafile << "Qdot: " << FDMExec->GetRotation()->GetQdot() << endl;
+    datafile << "Rdot: " << FDMExec->GetRotation()->GetRdot() << endl;
     datafile << "h: " << h << endl;
     datafile << "a: " << a << endl;
-    datafile << "rho: " << rho << endl;
+    datafile << "rho: " << FDMExec->GetAtmosphere()->Getrho() << endl;
     datafile << "qbar: " << qbar << endl;
     datafile << "sim_time: " << sim_time << endl;
     datafile << "dt: " << dt << endl;
-    datafile << "g: " << g << endl;
-    datafile << "m: " << m << endl;
-    datafile << "Ixx: " << Ixx << endl;
-    datafile << "Iyy: " << Iyy << endl;
-    datafile << "Izz: " << Izz << endl;
-    datafile << "Ixz: " << Ixz << endl;
+    datafile << "m: " << FDMExec->GetAircraft()->GetMass() << endl;
     datafile.close();
     return true;
   } else {
@@ -242,45 +217,34 @@ bool FGState::DumpData(char* fname)
 
 bool FGState::DisplayData(void)
 {
-  cout << "U: " << U << endl;
-  cout << "V: " << V << endl;
-  cout << "W: " << W << endl;
-  cout << "Fx: " << Fx << endl;
-  cout << "Fy: " << Fy << endl;
-  cout << "Fz: " << Fz << endl;
-  cout << "P: " << P << endl;
-  cout << "Q: " << Q << endl;
-  cout << "R: " << R << endl;
-  cout << "L: " << L << endl;
-  cout << "M: " << M << endl;
-  cout << "N: " << N << endl;
+  cout << "U: " << FDMExec->GetTranslation()->GetU() << endl;
+  cout << "V: " << FDMExec->GetTranslation()->GetV() << endl;
+  cout << "W: " << FDMExec->GetTranslation()->GetW() << endl;
+  cout << "P: " << FDMExec->GetRotation()->GetP() << endl;
+  cout << "Q: " << FDMExec->GetRotation()->GetQ() << endl;
+  cout << "R: " << FDMExec->GetRotation()->GetR() << endl;
+  cout << "L: " << FDMExec->GetAircraft()->GetL() << endl;
+  cout << "M: " << FDMExec->GetAircraft()->GetM() << endl;
+  cout << "N: " << FDMExec->GetAircraft()->GetN() << endl;
   cout << "Vt: " << Vt << endl;
   cout << "latitude: " << latitude << endl;
   cout << "longitude: " << longitude << endl;
-  cout << "alpha: " << alpha << endl;
-  cout << "beta: " << beta << endl;
-  cout << "gamma: " << gamma << endl;
-  cout << "phi: " << phi << endl;
-  cout << "tht: " << tht << endl;
-  cout << "psi: " << psi << endl;
-  cout << "Udot: " << Udot << endl;
-  cout << "Vdot: " << Vdot << endl;
-  cout << "Wdot: " << Wdot << endl;
-  cout << "Pdot: " << Pdot << endl;
-  cout << "Qdot: " << Qdot << endl;
-  cout << "Rdot: " << Rdot << endl;
+  cout << "alpha: " << FDMExec->GetTranslation()->Getalpha() << endl;
+  cout << "beta: " << FDMExec->GetTranslation()->Getbeta() << endl;
+  cout << "gamma: " << FDMExec->GetTranslation()->Getgamma() << endl;
+  cout << "phi: " << FDMExec->GetRotation()->Getphi() << endl;
+  cout << "tht: " << FDMExec->GetRotation()->Gettht() << endl;
+  cout << "psi: " << FDMExec->GetRotation()->Getpsi() << endl;
+  cout << "Pdot: " << FDMExec->GetRotation()->GetPdot() << endl;
+  cout << "Qdot: " << FDMExec->GetRotation()->GetQdot() << endl;
+  cout << "Rdot: " << FDMExec->GetRotation()->GetRdot() << endl;
   cout << "h: " << h << endl;
   cout << "a: " << a << endl;
-  cout << "rho: " << rho << endl;
+  cout << "rho: " << FDMExec->GetAtmosphere()->Getrho() << endl;
   cout << "qbar: " << qbar << endl;
   cout << "sim_time: " << sim_time << endl;
   cout << "dt: " << dt << endl;
-  cout << "g: " << g << endl;
-  cout << "m: " << m << endl;
-  cout << "Ixx: " << Ixx << endl;
-  cout << "Iyy: " << Iyy << endl;
-  cout << "Izz: " << Izz << endl;
-  cout << "Ixz: " << Ixz << endl;
+  cout << "m: " << FDMExec->GetAircraft()->GetMass() << endl;
 
   return true;
 }

@@ -31,10 +31,6 @@ This is the place where you create output routines to dump data for perusal
 later. Some machines may not support the ncurses console output. Borland is one
 of those environments which does not, so the ncurses stuff is commented out.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 12/02/98   JSB   Created
@@ -43,34 +39,33 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-/*
-#if !defined( __BORLANDC__ )
-#  define HAVE_NCURSES
-#endif
-*/
-
-#include "FGOutput.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream.h>
-
-#ifndef HAVE_NCURSES
-  #include "FGPosition.h"
-#else
+#ifdef HAVE_CURSES
   #include <ncurses.h>
-  #include "FGPosition.h"
 #endif
+
+#include "FGOutput.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGAtmosphere.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-FGOutput::FGOutput(void) : FGModel()
+FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   strcpy(Name, "FGOutput");
   FirstPass = true;
-#ifdef HAVE_NCURSES
+#ifdef HAVE_CURSES
   initscr();
   cbreak();
   noecho();
@@ -96,9 +91,9 @@ bool FGOutput::Run(void)
 
 void FGOutput::ConsoleOutput(void)
 {
+#ifdef HAVE_CURSES
   char buffer[20];
 
-#ifdef HAVE_NCURSES
   clear();
   move(1,1);  insstr("Quaternions");
   move(2,5);  insstr("Q0");
@@ -106,10 +101,10 @@ void FGOutput::ConsoleOutput(void)
   move(2,27); insstr("Q2");
   move(2,38); insstr("Q3");
 
-  move(3,1);  sprintf(buffer,"%4.4f",State->GetQ0()); insstr(buffer);
-  move(3,12); sprintf(buffer,"%4.4f",State->GetQ1()); insstr(buffer);
-  move(3,23); sprintf(buffer,"%4.4f",State->GetQ2()); insstr(buffer);
-  move(3,34); sprintf(buffer,"%4.4f",State->GetQ3()); insstr(buffer);
+  move(3,1);  sprintf(buffer,"%4.4f",Rotation->GetQ0()); insstr(buffer);
+  move(3,12); sprintf(buffer,"%4.4f",Rotation->GetQ1()); insstr(buffer);
+  move(3,23); sprintf(buffer,"%4.4f",Rotation->GetQ2()); insstr(buffer);
+  move(3,34); sprintf(buffer,"%4.4f",Rotation->GetQ3()); insstr(buffer);
 
   move(0,0); insstr("Time: ");
   move(0,6); insstr(gcvt(State->Getsim_time(),6,buffer));
@@ -118,25 +113,25 @@ void FGOutput::ConsoleOutput(void)
   move(2,55); insstr("Tht");
   move(2,64); insstr("Psi");
 
-  move(3,45); sprintf(buffer,"%3.3f",State->Getphi()); insstr(buffer);
-  move(3,54); sprintf(buffer,"%3.3f",State->Gettht()); insstr(buffer);
-  move(3,63); sprintf(buffer,"%3.3f",State->Getpsi()); insstr(buffer);
+  move(3,45); sprintf(buffer,"%3.3f",Rotation->Getphi()); insstr(buffer);
+  move(3,54); sprintf(buffer,"%3.3f",Rotation->Gettht()); insstr(buffer);
+  move(3,63); sprintf(buffer,"%3.3f",Rotation->Getpsi()); insstr(buffer);
 
   move(5,47); insstr("U");
   move(5,56); insstr("V");
   move(5,65); insstr("W");
 
-  move(6,45); sprintf(buffer,"%5.2f",State->GetU()); insstr(buffer);
-  move(6,54); sprintf(buffer,"%5.2f",State->GetV()); insstr(buffer);
-  move(6,63); sprintf(buffer,"%5.2f",State->GetW()); insstr(buffer);
+  move(6,45); sprintf(buffer,"%5.2f",Translation->GetU()); insstr(buffer);
+  move(6,54); sprintf(buffer,"%5.2f",Translation->GetV()); insstr(buffer);
+  move(6,63); sprintf(buffer,"%5.2f",Translation->GetW()); insstr(buffer);
 
   move(8,47); insstr("Fx");
   move(8,56); insstr("Fy");
   move(8,65); insstr("Fz");
 
-  move(9,45); sprintf(buffer,"%5.2f",State->GetFx()); insstr(buffer);
-  move(9,54); sprintf(buffer,"%5.2f",State->GetFy()); insstr(buffer);
-  move(9,63); sprintf(buffer,"%5.2f",State->GetFz()); insstr(buffer);
+  move(9,45); sprintf(buffer,"%5.2f",Aircraft->GetFx()); insstr(buffer);
+  move(9,54); sprintf(buffer,"%5.2f",Aircraft->GetFy()); insstr(buffer);
+  move(9,63); sprintf(buffer,"%5.2f",Aircraft->GetFz()); insstr(buffer);
 
   move(11,47); insstr("Fn");
   move(11,56); insstr("Fe");
@@ -193,27 +188,27 @@ void FGOutput::DelimitedOutput(void)
   } else {
     cout << State->Getsim_time() << ",";
     cout << State->Geth() << ",";
-    cout << State->Getphi() << ",";
-    cout << State->Gettht() << ",";
-    cout << State->Getpsi() << ",";
-    cout << State->Getrho() << ",";
+    cout << Rotation->Getphi() << ",";
+    cout << Rotation->Gettht() << ",";
+    cout << Rotation->Getpsi() << ",";
+    cout << Atmosphere->Getrho() << ",";
     cout << State->GetVt() << ",";
-    cout << State->GetU() << ",";
-    cout << State->GetV() << ",";
-    cout << State->GetW() << ",";
-    cout << State->GetVn() << ",";
-    cout << State->GetVe() << ",";
-    cout << State->GetVd() << ",";
-    cout << State->GetUdot() << ",";
-    cout << State->GetVdot() << ",";
-    cout << State->GetWdot() << ",";
-    cout << State->GetFx() << ",";
-    cout << State->GetFy() << ",";
-    cout << State->GetFz() << ",";
+    cout << Translation->GetU() << ",";
+    cout << Translation->GetV() << ",";
+    cout << Translation->GetW() << ",";
+    cout << Position->GetVn() << ",";
+    cout << Position->GetVe() << ",";
+    cout << Position->GetVd() << ",";
+    cout << Translation->GetUdot() << ",";
+    cout << Translation->GetVdot() << ",";
+    cout << Translation->GetWdot() << ",";
+    cout << Aircraft->GetFx() << ",";
+    cout << Aircraft->GetFy() << ",";
+    cout << Aircraft->GetFz() << ",";
     cout << State->Getlatitude() << ",";
     cout << State->Getlongitude() << ",";
     cout << State->Getqbar() << ",";
-    cout << State->Getalpha() << "";
+    cout << Translation->Getalpha() << "";
     cout << endl;
   }
 }

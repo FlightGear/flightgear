@@ -30,33 +30,76 @@ FUNCTIONAL DESCRIPTION
 This base class for the FGAero, FGRotational, etc. classes defines methods
 common to all models.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
-
+11/11/98   JSB   Created
 
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
 
 #include "FGModel.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGAtmosphere.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-FGModel::FGModel()
+FGModel::FGModel(FGFDMExec* fdmex)
 {
-  NextModel = 0L;
-  exe_ctr = 1;
+  FDMExec     = fdmex;
+  NextModel   = 0L;
+  
+  State       = 0;
+  Atmosphere  = 0;
+  FCS         = 0;
+  Aircraft    = 0;
+  Translation = 0;
+  Rotation    = 0;
+  Position    = 0;
+  Auxiliary   = 0;
+  Output      = 0;
+
+  exe_ctr     = 1;
 }
 
 
 FGModel::~FGModel()
 {
+}
+
+
+bool FGModel::InitModel(void)
+{
+  State       = FDMExec->GetState();
+  Atmosphere  = FDMExec->GetAtmosphere();
+  FCS         = FDMExec->GetFCS();
+  Aircraft    = FDMExec->GetAircraft();
+  Translation = FDMExec->GetTranslation();
+  Rotation    = FDMExec->GetRotation();
+  Position    = FDMExec->GetPosition();
+  Auxiliary   = FDMExec->GetAuxiliary();
+  Output      = FDMExec->GetOutput();
+
+  if (!State ||
+      !Atmosphere ||
+      !FCS ||
+      !Aircraft ||
+      !Translation ||
+      !Rotation ||
+      !Position ||
+      !Auxiliary ||
+      !Output) return(false);
+  else return(true);
 }
 
 

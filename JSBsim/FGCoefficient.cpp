@@ -99,10 +99,6 @@ seen to be equal, and there are the same number of values for each altitude.
 
 See the header file FGCoefficient.h for the values of the identifiers.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 12/28/98   JSB   Created
@@ -111,27 +107,57 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-class FGCoefficient;
 #include <stdio.h>
 #include <stdlib.h>
+#include "FGCoefficient.h"
+
+#include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
 #include "FGFCS.h"
 #include "FGAircraft.h"
-#include "FGCoefficient.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-FGCoefficient::FGCoefficient(void)
+FGCoefficient::FGCoefficient(FGFDMExec* fdex)
 {
+  FDMExec     = fdex;
+  State       = FDMExec->GetState();
+  Atmosphere  = FDMExec->GetAtmosphere();
+  FCS         = FDMExec->GetFCS();
+  Aircraft    = FDMExec->GetAircraft();
+  Translation = FDMExec->GetTranslation();
+  Rotation    = FDMExec->GetRotation();
+  Position    = FDMExec->GetPosition();
+  Auxiliary   = FDMExec->GetAuxiliary();
+  Output      = FDMExec->GetOutput();
+
   rows = columns = 0;
 }
 
 
-FGCoefficient::FGCoefficient(char* fname)
+FGCoefficient::FGCoefficient(FGFDMExec* fdex, char* fname)
 {
   int r, c;
   float ftrashcan;
+
+  FDMExec     = fdex;
+  State       = FDMExec->GetState();
+  Atmosphere  = FDMExec->GetAtmosphere();
+  FCS         = FDMExec->GetFCS();
+  Aircraft    = FDMExec->GetAircraft();
+  Translation = FDMExec->GetTranslation();
+  Rotation    = FDMExec->GetRotation();
+  Position    = FDMExec->GetPosition();
+  Auxiliary   = FDMExec->GetAuxiliary();
+  Output      = FDMExec->GetOutput();
 
   ifstream coeffDefFile(fname);
 
@@ -260,16 +286,38 @@ FGCoefficient::FGCoefficient(char* fname)
 }
 
 
-FGCoefficient::FGCoefficient(int r, int c)
+FGCoefficient::FGCoefficient(FGFDMExec* fdex, int r, int c)
 {
+  FDMExec     = fdex;
+  State       = FDMExec->GetState();
+  Atmosphere  = FDMExec->GetAtmosphere();
+  FCS         = FDMExec->GetFCS();
+  Aircraft    = FDMExec->GetAircraft();
+  Translation = FDMExec->GetTranslation();
+  Rotation    = FDMExec->GetRotation();
+  Position    = FDMExec->GetPosition();
+  Auxiliary   = FDMExec->GetAuxiliary();
+  Output      = FDMExec->GetOutput();
+
   rows = r;
   columns = c;
   Allocate(r,c);
 }
 
 
-FGCoefficient::FGCoefficient(int n)
+FGCoefficient::FGCoefficient(FGFDMExec* fdex, int n)
 {
+  FDMExec     = fdex;
+  State       = FDMExec->GetState();
+  Atmosphere  = FDMExec->GetAtmosphere();
+  FCS         = FDMExec->GetFCS();
+  Aircraft    = FDMExec->GetAircraft();
+  Translation = FDMExec->GetTranslation();
+  Rotation    = FDMExec->GetRotation();
+  Position    = FDMExec->GetPosition();
+  Auxiliary   = FDMExec->GetAuxiliary();
+  Output      = FDMExec->GetOutput();
+
   rows = n;
   columns = 0;
   Allocate(n);
@@ -384,19 +432,19 @@ float FGCoefficient::GetCoeffVal(int val_idx)
   case FG_CBAR:
     return Aircraft->Getcbar();
   case FG_ALPHA:
-    return State->Getalpha();
+    return Translation->Getalpha();
   case FG_ALPHADOT:
     return State->Getadot();
   case FG_BETA:
-    return State->Getbeta();
+    return Translation->Getbeta();
   case FG_BETADOT:
     return State->Getbdot();
   case FG_PITCHRATE:
-    return State->GetQ();
+    return Rotation->GetQ();
   case FG_ROLLRATE:
-    return State->GetP();
+    return Rotation->GetP();
   case FG_YAWRATE:
-    return State->GetR();
+    return Rotation->GetR();
   case FG_ELEVATOR:
     return FCS->GetDe();
   case FG_AILERON:

@@ -29,10 +29,6 @@ FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This class integrates the translational EOM.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 12/02/98   JSB   Created
@@ -60,15 +56,25 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
 
-FGTranslation::FGTranslation(void) : FGModel()
+FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   strcpy(Name, "FGTranslation");
+  Udot = Vdot = Wdot = 0.0;
 }
 
 
@@ -87,13 +93,13 @@ bool FGTranslation::Run(void)
     lastVdot = Vdot;
     lastWdot = Wdot;
 
-    Udot = V*R - W*Q + Fx/m;
-    Vdot = W*P - U*R + Fy/m;
-    Wdot = U*Q - V*P + Fz/m;
+    Udot = V*R - W*Q + Fx/Mass;
+    Vdot = W*P - U*R + Fy/Mass;
+    Wdot = U*Q - V*P + Fz/Mass;
 
-    U += 0.5*dt*(lastUdot + Udot);
-    V += 0.5*dt*(lastVdot + Vdot);
-    W += 0.5*dt*(lastWdot + Wdot);
+    U += 0.5*dt*rate*(lastUdot + Udot);
+    V += 0.5*dt*rate*(lastVdot + Vdot);
+    W += 0.5*dt*rate*(lastWdot + Wdot);
 
     Vt = U*U+V*V+W*W > 0.0 ? sqrt(U*U + V*V + W*W) : 0.0;
 
@@ -115,49 +121,26 @@ void FGTranslation::GetState(void)
 {
   dt = State->Getdt();
 
-  P = State->GetP();
-  Q = State->GetQ();
-  R = State->GetR();
+  P = Rotation->GetP();
+  Q = Rotation->GetQ();
+  R = Rotation->GetR();
 
-  Fx = State->GetFx();
-  Fy = State->GetFy();
-  Fz = State->GetFz();
+  Fx = Aircraft->GetFx();
+  Fy = Aircraft->GetFy();
+  Fz = Aircraft->GetFz();
 
-  m = State->Getm();
-  g = State->Getg();
-  rho = State->Getrho();
+  Mass = Aircraft->GetMass();
+  rho = Atmosphere->Getrho();
 
-  phi = State->Getphi();
-  tht = State->Gettht();
-  psi = State->Getpsi();
-
-  U = State->GetU();
-  V = State->GetV();
-  W = State->GetW();
-
-  Udot = State->GetUdot();
-  Vdot = State->GetVdot();
-  Wdot = State->GetWdot();
-
-  alpha = State->Getalpha();
-  beta = State->Getbeta();
+  phi = Rotation->Getphi();
+  tht = Rotation->Gettht();
+  psi = Rotation->Getpsi();
 }
 
 
 void FGTranslation::PutState(void)
 {
-  State->SetU(U);
-  State->SetV(V);
-  State->SetW(W);
-
   State->SetVt(Vt);
   State->Setqbar(qbar);
-
-  State->SetUdot(Udot);
-  State->SetVdot(Vdot);
-  State->SetWdot(Wdot);
-
-  State->Setalpha(alpha);
-  State->Setbeta(beta);
 }
 

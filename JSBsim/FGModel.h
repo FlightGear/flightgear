@@ -26,9 +26,8 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/22/98   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -39,10 +38,10 @@ SENTRY
 INCLUDES
 *******************************************************************************/
 
+#include "FGDefs.h"
 #include <stdio.h>
 #include <string.h>
 #include <iostream.h>
-#include "FGState.h"
 
 /*******************************************************************************
 DEFINES
@@ -52,23 +51,45 @@ DEFINES
 CLASS DECLARATION
 *******************************************************************************/
 
+class FGFDMExec;
+class FGState;
+class FGAtmosphere;
+class FGFCS;
+class FGAircraft;
+class FGTranslation;
+class FGRotation;
+class FGPosition;
+class FGAuxiliary;
+class FGOutput;
+
 class FGModel
 {
 public:
-  FGModel(void);
+  FGModel(FGFDMExec*);
   ~FGModel(void);
-   
+
   FGModel* NextModel;
   char Name[30];
   virtual bool Run(void);
+  virtual bool InitModel(void);
   void SetRate(int tt) {rate = tt;};
 
 protected:
   int exe_ctr;
   int rate;
+  
+  FGFDMExec*      FDMExec;
+  FGState*        State;
+  FGAtmosphere*   Atmosphere;
+  FGFCS*          FCS;
+  FGAircraft*     Aircraft;
+  FGTranslation*  Translation;
+  FGRotation*     Rotation;
+  FGPosition*     Position;
+  FGAuxiliary*    Auxiliary;
+  FGOutput*       Output;
 
 private:
-
 };
 
 /******************************************************************************/

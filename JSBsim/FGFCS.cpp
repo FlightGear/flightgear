@@ -29,10 +29,6 @@ FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This class models the flight controls for a specific airplane
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 12/12/98   JSB   Created
@@ -42,13 +38,22 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGFCS.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGAtmosphere.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
 
-FGFCS::FGFCS(void) : FGModel()
+FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   strcpy(Name, "FGFCS");
 }

@@ -30,10 +30,6 @@ FUNCTIONAL DESCRIPTION
 This class encapsulates the integration of rates and accelerations to get the
 current position of the aircraft.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-None
-
 HISTORY
 --------------------------------------------------------------------------------
 01/05/99   JSB   Created
@@ -57,19 +53,26 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 *******************************************************************************/
 
-#include "FGPosition.h"
 #include <math.h>
+#include "FGPosition.h"
+#include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
 
-FGPosition::FGPosition(void) : FGModel()
+FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   strcpy(Name, "FGPosition");
-  EarthRad = 20898908.00;       // feet
-  OmegaEarth = 7.2685E-3;       // rad/sec
   AccelN = AccelE = AccelD = 0.0;
   LongitudeDot = LatitudeDot = RadiusDot = 0.0;
 }
@@ -115,11 +118,11 @@ bool FGPosition:: Run(void)
     AccelE = invMass * Fe + invRadius * (Ve*Vd + Vn*Ve*tanLat); // From
     AccelD = invMass * Fd - invRadius * (Vn*Vn + Ve*Ve);        // Reference [3]
 
-    Vn += 0.5*dt*(3.0*AccelN - lastAccelN);                     // Eqn. 3.7
-    Ve += 0.5*dt*(3.0*AccelE - lastAccelE);                     // From
-    Vd += 0.5*dt*(3.0*AccelD - lastAccelD);                     // Reference [3]
+    Vn += 0.5*dt*rate*(3.0*AccelN - lastAccelN);                // Eqn. 3.7
+    Ve += 0.5*dt*rate*(3.0*AccelE - lastAccelE);                // From
+    Vd += 0.5*dt*rate*(3.0*AccelD - lastAccelD);                // Reference [3]
 
-    Vee = Ve - OmegaEarth * (Radius) * cosLat;                  // From Eq. 3.8
+    Vee = Ve - OMEGAEARTH * (Radius) * cosLat;                  // From Eq. 3.8
                                                                 // Reference [3]
     lastLatitudeDot = LatitudeDot;
     lastLongitudeDot = LongitudeDot;
@@ -129,9 +132,9 @@ bool FGPosition:: Run(void)
     LatitudeDot = Vn * invRadius;
     RadiusDot = -Vd;
 
-    Longitude += 0.5*dt*(LongitudeDot + lastLongitudeDot);
-    Latitude  += 0.5*dt*(LatitudeDot + lastLatitudeDot);
-    Radius    += 0.5*dt*(RadiusDot + lastRadiusDot);
+    Longitude += 0.5*dt*rate*(LongitudeDot + lastLongitudeDot);
+    Latitude  += 0.5*dt*rate*(LatitudeDot + lastLatitudeDot);
+    Radius    += 0.5*dt*rate*(RadiusDot + lastRadiusDot);
 
     PutState();
     return false;
@@ -143,41 +146,34 @@ bool FGPosition:: Run(void)
 
 void FGPosition::GetState(void)
 {
-  Q0 = State->GetQ0();
-  Q1 = State->GetQ1();
-  Q2 = State->GetQ2();
-  Q3 = State->GetQ3();
+  dt = State->Getdt();
 
-  Fx = State->GetFx();
-  Fy = State->GetFy();
-  Fz = State->GetFz();
+  Q0 = Rotation->GetQ0();
+  Q1 = Rotation->GetQ1();
+  Q2 = Rotation->GetQ2();
+  Q3 = Rotation->GetQ3();
 
-  U = State->GetU();
-  V = State->GetV();
-  W = State->GetW();
+  Fx = Aircraft->GetFx();
+  Fy = Aircraft->GetFy();
+  Fz = Aircraft->GetFz();
+
+  U = Translation->GetU();
+  V = Translation->GetV();
+  W = Translation->GetW();
 
   Latitude = State->Getlatitude();
   Longitude = State->Getlongitude();
 
-  invMass = 1.0 / State->Getm();
-  invRadius = 1.0 / (State->Geth() + EarthRad);
-  Radius = State->Geth() + EarthRad;
-  dt = State->Getdt();
+  invMass = 1.0 / Aircraft->GetMass();
+  invRadius = 1.0 / (State->Geth() + EARTHRAD);
+  Radius = State->Geth() + EARTHRAD;
 }
 
 
 void FGPosition::PutState(void)
 {
-  for (int r=1;r<=3;r++)
-    for (int c=1;c<=3;c++)
-      State->SetT(r,c,T[r][c]);
-
   State->Setlatitude(Latitude);
   State->Setlongitude(Longitude);
-  State->Seth(Radius - EarthRad);
-
-  State->SetVn(Vn); // remove after testing
-  State->SetVe(Ve); // remove after testing
-  State->SetVd(Vd); // remove after testing
+  State->Seth(Radius - EARTHRAD);
 }
 

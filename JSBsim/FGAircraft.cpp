@@ -1,8 +1,8 @@
-/*******************************************************************************
+/** *****************************************************************************
 
  Module:       FGAircraft.cpp
  Author:       Jon S. Berndt
- Date started: 12/12/98
+ Date started: 12/12/98                                   
  Purpose:      Encapsulates an aircraft
  Called by:    FGFDMExec
 
@@ -27,11 +27,9 @@
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
-Models the aircraft reactions and forces.
-
-ARGUMENTS
---------------------------------------------------------------------------------
-
+Models the aircraft reactions and forces. This class is instantiated by the
+FGFDMExec class and scheduled as an FDM entry. LoadAircraft() is supplied with a
+name of a valid, registered aircraft, and the data file is parsed.
 
 HISTORY
 --------------------------------------------------------------------------------
@@ -133,20 +131,28 @@ stability derivatives for the aircraft.
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
-#include "FGAircraft.h"
-
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <math.h>
 
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGFCS.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
+
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-
-FGAircraft::FGAircraft(void) : FGModel()
+FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   int i;
 
@@ -171,35 +177,33 @@ FGAircraft::~FGAircraft(void)
 
 bool FGAircraft::LoadAircraft(char* fname)
 {
-  char path[250];
-  char fullpath[275];
-  char filename[275];
-  char aircraftDef[2100];
-  char tag[220];
+  char path[256];
+  char fullpath[256];
+  char filename[256];
+  char aircraftDef[256];
+  char tag[256];
   DIR* dir;
   DIR* coeffdir;
-  struct dirent* dirEntry = 0L;
-  struct dirent* coeffdirEntry = 0L;
+  struct dirent* dirEntry;
+  struct dirent* coeffdirEntry;
   struct stat st;
   struct stat st2;
   ifstream coeffInFile;
-
-  char scratch[250];
 
   sprintf(aircraftDef, "/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/aircraft/%s/%s.dat", fname, fname);
   ifstream aircraftfile(aircraftDef);
 
   if (aircraftfile) {
-    aircraftfile >> AircraftName;
-    aircraftfile >> WingArea;
-    aircraftfile >> WingSpan;
-    aircraftfile >> cbar;
-    aircraftfile >> Ixx;
-    aircraftfile >> Iyy;
-    aircraftfile >> Izz;
-    aircraftfile >> Ixz;
-    aircraftfile >> Weight;
-    m = Weight / 32.174;
+    aircraftfile >> AircraftName;   // String with no embedded spaces
+    aircraftfile >> WingArea;       // square feet
+    aircraftfile >> WingSpan;       // feet
+    aircraftfile >> cbar;           // feet
+    aircraftfile >> Ixx;            // slug ft^2
+    aircraftfile >> Iyy;            // "
+    aircraftfile >> Izz;            // "
+    aircraftfile >> Ixz;            // "
+    aircraftfile >> EmptyWeight;    // pounds
+    EmptyMass = EmptyWeight / GRAVITY;
     aircraftfile >> tag;
 
     numTanks = numEngines = 0;
@@ -207,13 +211,13 @@ bool FGAircraft::LoadAircraft(char* fname)
 
     while (strstr(tag,"EOF") == 0) {
       if (strstr(tag,"CGLOC")) {
-        aircraftfile >> Xcg;
-        aircraftfile >> Ycg;
-        aircraftfile >> Zcg;
+        aircraftfile >> Xcg;        // inches
+        aircraftfile >> Ycg;        // inches
+        aircraftfile >> Zcg;        // inches
       } else if (strstr(tag,"EYEPOINTLOC")) {
-        aircraftfile >> Xep;
-        aircraftfile >> Yep;
-        aircraftfile >> Zep;
+        aircraftfile >> Xep;        // inches
+        aircraftfile >> Yep;        // inches
+        aircraftfile >> Zep;        // inches
       } else if (strstr(tag,"TANK")) {
         Tank[numTanks] = new FGTank(aircraftfile);
         switch(Tank[numTanks]->GetType()) {
@@ -227,7 +231,7 @@ bool FGAircraft::LoadAircraft(char* fname)
         numTanks++;
       } else if (strstr(tag,"ENGINE")) {
         aircraftfile >> tag;
-        Engine[numEngines] = new FGEngine(tag);
+        Engine[numEngines] = new FGEngine(FDMExec, tag, numEngines);
         numEngines++;
       }
       aircraftfile >> tag;
@@ -254,7 +258,7 @@ bool FGAircraft::LoadAircraft(char* fname)
     //       previously mentioned axis.
 
     sprintf(path,"/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/aircraft/%s/",AircraftName);
-    if ( dir = opendir(path) ) {
+    if (dir = opendir(path)) {
 
       while (dirEntry = readdir(dir)) {
         sprintf(fullpath,"%s%s",path,dirEntry->d_name);
@@ -268,7 +272,7 @@ bool FGAircraft::LoadAircraft(char* fname)
                     sprintf(filename,"%s%s/%s",path,Axis[axis_ctr],coeffdirEntry->d_name);
                     stat(filename,&st2);
                     if (st2.st_size > 6) {
-                      Coeff[axis_ctr][coeff_ctr[axis_ctr]] = new FGCoefficient(filename);
+                      Coeff[axis_ctr][coeff_ctr[axis_ctr]] = new FGCoefficient(FDMExec, filename);
                       coeff_ctr[axis_ctr]++;
                     }
                   }
@@ -298,6 +302,8 @@ bool FGAircraft::Run(void)
 
     for (int i = 0; i < 3; i++)  Forces[i] = Moments[i] = 0.0;
 
+    MassChange();
+
     FProp(); FAero(); FGear(); FMass();
     MProp(); MAero(); MGear(); MMass();
 
@@ -305,6 +311,59 @@ bool FGAircraft::Run(void)
   } else {                               // skip Run() execution this time
   }
   return false;
+}
+
+
+void FGAircraft::MassChange()
+{
+  // UPDATE TANK CONTENTS
+  //
+  // For each engine, cycle through the tanks and draw an equal amount of
+  // fuel (or oxidizer) from each active tank. The needed amount of fuel is
+  // determined by the engine in the FGEngine class. If more fuel is needed
+  // than is available in the tank, then that amount is considered a shortage,
+  // and will be drawn from the next tank. If the engine cannot be fed what it
+  // needs, it will be considered to be starved, and will shut down.
+
+  float Oshortage, Fshortage;
+
+  for (int e=0; e<numEngines; e++) {
+    Fshortage = Oshortage = 0.0;
+    for (int t=0; t<numTanks; t++) {
+      switch(Engine[e]->GetType()) {
+      case 0: // Rocket
+        switch(Tank[t]->GetType()) {
+        case 0: // Fuel
+          if (Tank[t]->GetSelected()) {
+            Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
+                                   numSelectedFuelTanks)*(dt*rate) + Fshortage);
+          }
+          break;
+        case 1: // Oxidizer
+          if (Tank[t]->GetSelected()) {
+            Oshortage = Tank[t]->Reduce((Engine[e]->CalcOxidizerNeed()/
+                                    numSelectedOxiTanks)*(dt*rate) + Oshortage);
+          }
+          break;
+        }
+        break;
+      default: // piston, turbojet, turbofan, etc.
+        if (Tank[t]->GetSelected()) {
+          Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
+                                   numSelectedFuelTanks)*(dt*rate) + Fshortage);
+        }
+        break;
+      }
+    }
+    if ((Fshortage <= 0.0) || (Oshortage <= 0.0)) Engine[e]->SetStarved();
+    else Engine[e]->SetStarved(false);
+  }
+
+  Weight = EmptyWeight;
+  for (int t=0; t<numTanks; t++)
+    Weight += Tank[t]->GetContents();
+
+  Mass = Weight / GRAVITY;
 }
 
 
@@ -334,59 +393,17 @@ void FGAircraft::FGear(void)
 
 void FGAircraft::FMass(void)
 {
-  Forces[0] += -g*sin(tht) * m;
-  Forces[1] +=  g*sin(phi)*cos(tht) * m;
-  Forces[2] +=  g*cos(phi)*cos(tht) * m;
+  Forces[0] += -GRAVITY*sin(tht) * Mass;
+  Forces[1] +=  GRAVITY*sin(phi)*cos(tht) * Mass;
+  Forces[2] +=  GRAVITY*cos(phi)*cos(tht) * Mass;
 }
 
 
 void FGAircraft::FProp(void)
 {
-  float Oshortage, Fshortage;
-
   for (int i=0;i<numEngines;i++) {
     Forces[0] += Engine[i]->CalcThrust();
   }
-
-  //
-  // UPDATE TANK CONTENTS
-  //
-  // For each engine, cycle through the tanks and draw an equal amount of
-  // fuel (or oxidizer) from each active tank. The needed amount of fuel is
-  // determined by the engine in the FGEngine class. If more fuel is needed
-  // than is available in the tank, then that amount is considered a shortage,
-  // and will be drawn from the next tank. If the engine cannot be fed what it
-  // needs, it will be considered to be starved, and will shut down.
-
-  for (int e=0; e<numEngines; e++) {
-    Fshortage = Oshortage = 0.0;
-    for (int t=0; t<numTanks; t++) {
-      switch(Engine[e]->GetType()) {
-      case 0: // Rocket
-        switch(Tank[t]->GetType()) {
-        case 0: // Fuel
-          if (Tank[t]->GetSelected()) {
-            Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/numSelectedFuelTanks)*(dt*rate) + Fshortage);
-          }
-          break;
-        case 1: // Oxidizer
-          if (Tank[t]->GetSelected()) {
-            Oshortage = Tank[t]->Reduce((Engine[e]->CalcOxidizerNeed()/numSelectedOxiTanks)*(dt*rate) + Oshortage);
-          }
-          break;
-        }
-        break;
-      default: // piston, turbojet, turbofan, etc.
-        if (Tank[t]->GetSelected()) {
-          Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/numSelectedFuelTanks)*(dt*rate) + Fshortage);
-        }
-        break;
-      }
-    }
-    if ((Fshortage < 0.0) || (Oshortage < 0.0)) Engine[e]->SetStarved();
-    else Engine[e]->SetStarved(false);
-  }
-
 }
 
 
@@ -418,33 +435,17 @@ void FGAircraft::MProp(void)
 
 void FGAircraft::GetState(void)
 {
-  Ixx = State->GetIxx();
-  Iyy = State->GetIyy();
-  Izz = State->GetIzz();
-  Ixz = State->GetIxz();
-  alpha = State->Getalpha();
-  beta = State->Getbeta();
-  m   = State->Getm();
-  phi = State->Getphi();
-  tht = State->Gettht();
-  psi = State->Getpsi();
-  g = State->Getg();
   dt = State->Getdt();
+
+  alpha = Translation->Getalpha();
+  beta = Translation->Getbeta();
+  phi = Rotation->Getphi();
+  tht = Rotation->Gettht();
+  psi = Rotation->Getpsi();
 }
 
 
 void FGAircraft::PutState(void)
 {
-  State->SetIxx(Ixx);
-  State->SetIyy(Iyy);
-  State->SetIzz(Izz);
-  State->SetIxz(Ixz);
-  State->SetFx(Forces[0]);
-  State->SetFy(Forces[1]);
-  State->SetFz(Forces[2]);
-  State->SetL(Moments[0]);
-  State->SetM(Moments[1]);
-  State->SetN(Moments[2]);
-  State->Setm(m);
 }
 

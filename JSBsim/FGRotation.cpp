@@ -29,10 +29,6 @@ FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This class integrates the rotational EOM.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 12/02/98   JSB   Created
@@ -60,16 +56,26 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGRotation.h"
+#include "FGAtmosphere.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
 
-FGRotation::FGRotation(void) : FGModel()
+FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   strcpy(Name, "FGRotation");
   Q0dot = Q1dot = Q2dot = Q3dot = 0.0;
+  Pdot = Qdot = Rdot = 0.0;
 }
 
 
@@ -96,9 +102,9 @@ bool FGRotation::Run(void)
     Qdot = (M - (Ixx-Izz)*P*R - Ixz*(P*P - R*R))/Iyy;
     Rdot = (N1*Ixx + L2*Ixz) / (Ixx*Izz - Ixz*Ixz);
 
-    P += dt*(lastPdot + Pdot)/2.0;
-    Q += dt*(lastQdot + Qdot)/2.0;
-    R += dt*(lastRdot + Rdot)/2.0;
+    P += dt*rate*(lastPdot + Pdot)/2.0;
+    Q += dt*rate*(lastQdot + Qdot)/2.0;
+    R += dt*rate*(lastRdot + Rdot)/2.0;
 
     lastQ0dot = Q0dot;
     lastQ1dot = Q1dot;
@@ -110,10 +116,10 @@ bool FGRotation::Run(void)
     Q2dot =  0.5*(Q0*Q + Q3*P - Q1*R);
     Q3dot =  0.5*(Q0*R + Q1*Q - Q2*P);
 
-    Q0 += 0.5*dt*(lastQ0dot + Q0dot);
-    Q1 += 0.5*dt*(lastQ1dot + Q1dot);
-    Q2 += 0.5*dt*(lastQ2dot + Q2dot);
-    Q3 += 0.5*dt*(lastQ3dot + Q3dot);
+    Q0 += 0.5*dt*rate*(lastQ0dot + Q0dot);
+    Q1 += 0.5*dt*rate*(lastQ1dot + Q1dot);
+    Q2 += 0.5*dt*rate*(lastQ2dot + Q2dot);
+    Q3 += 0.5*dt*rate*(lastQ3dot + Q3dot);
 
     sum = Q0*Q0 + Q1*Q1 + Q2*Q2 + Q3*Q3;
 
@@ -148,44 +154,23 @@ bool FGRotation::Run(void)
 void FGRotation::GetState(void)
 {
   dt = State->Getdt();
-  P = State->GetP();
-  Q = State->GetQ();
-  R = State->GetR();
 
-  Pdot = State->GetPdot();
-  Qdot = State->GetQdot();
-  Rdot = State->GetRdot();
+  L = Aircraft->GetL();
+  M = Aircraft->GetM();
+  N = Aircraft->GetN();
 
-  L = State->GetL();
-  M = State->GetM();
-  N = State->GetN();
-
-  Ixx = State->GetIxx();
-  Iyy = State->GetIyy();
-  Izz = State->GetIzz();
-  Ixz = State->GetIxz();
-
-  Q0 = State->GetQ0();
-  Q1 = State->GetQ1();
-  Q2 = State->GetQ2();
-  Q3 = State->GetQ3();
+  Ixx = Aircraft->GetIxx();
+  Iyy = Aircraft->GetIyy();
+  Izz = Aircraft->GetIzz();
+  Ixz = Aircraft->GetIxz();
 
   for (int r=1;r<=3;r++)
     for (int c=1;c<=3;c++)
-      T[r][c] = State->GetT(r,c);
+      T[r][c] = Position->GetT(r,c);
 }
 
 
 void FGRotation::PutState(void)
 {
-   State->SetP(P);
-   State->SetQ(Q);
-   State->SetR(R);
-
-   State->Setphi(phi);
-   State->Settht(tht);
-   State->Setpsi(psi);
-
-   State->SetQ0123(Q0, Q1, Q2, Q3);
 }
 

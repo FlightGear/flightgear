@@ -30,70 +30,58 @@ FUNCTIONAL DESCRIPTION
 This class is a container for all utility classes used by the flight dynamics
 model.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 01/09/99   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 DEFINES
 *******************************************************************************/
-
-/********************************************************************************
+                                                        
+/*******************************************************************************
 INCLUDES
 *******************************************************************************/
 
 #include "FGUtility.h"
 #include "FGState.h"
+#include "FGFDMExec.h"
 #include <math.h>
-
-#ifdef HAVE_NCURSES
-  #include <ncurses.h>
-#endif
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-const float EarthRadSqrd   = 437882827922500.0;
-const float OneSecond      = 4.848136811E-6;
-const float Eccentricity   = 0.996647186;
-const float EccentSqrd     = Eccentricity*Eccentricity;
-const float EPS            = 0.081819221;
-
 FGUtility::FGUtility()
 {
+  // Move constant stuff to here (if any) so it won't take CPU time
+  // in the methods below.
+  SeaLevelR   = EARTHRAD * ECCENT;
 }
 
 
 FGUtility::~FGUtility()
 {
 }
-
+                       
 
 float FGUtility::ToGeodetic()
 {
-  float GeodeticLat, Latitude, Radius, Altitude, SeaLevelR;
+  float GeodeticLat, Latitude, Radius, Altitude;
   float tanLat, xAlpha, muAlpha, sinmuAlpha, denom, rhoAlpha, dMu;
   float lPoint, lambdaSL, sinlambdaSL, dLambda, rAlpha;
 
   Latitude = State->Getlatitude();
-  Radius = State->Geth() + State->EarthRad;
+  Radius = State->Geth() + EARTHRAD;
 
-  if (( M_PI_2 - Latitude < OneSecond) ||
-      ( M_PI_2 + Latitude < OneSecond)) { // Near a pole
+  if (( M_PI_2 - Latitude < ONESECOND) ||
+      ( M_PI_2 + Latitude < ONESECOND)) { // Near a pole
     GeodeticLat = Latitude;
-    SeaLevelR   = State->EarthRad * Eccentricity;
     Altitude    = Radius - SeaLevelR;
   } else {
     tanLat = tan(Latitude);
-    xAlpha = Eccentricity*State->EarthRad /
-                                sqrt(tanLat*tanLat + EccentSqrd);
-    muAlpha = atan2(sqrt(EarthRadSqrd - xAlpha*xAlpha), Eccentricity*xAlpha);
+    xAlpha = ECCENT*EARTHRAD /
+                                sqrt(tanLat*tanLat + ECCENTSQRD);
+    muAlpha = atan2(sqrt(EARTHRADSQRD - xAlpha*xAlpha), ECCENT*xAlpha);
 
     if (Latitude < 0.0) muAlpha = -muAlpha;
 
@@ -103,12 +91,12 @@ float FGUtility::ToGeodetic()
     lPoint      = Radius - rAlpha;
     Altitude    = lPoint*cos(dLambda);
     denom       = sqrt(1-EPS*EPS*sinmuAlpha*sinmuAlpha);
-    rhoAlpha    = State->EarthRad*(1.0 - EPS) / (denom*denom*denom);
+    rhoAlpha    = EARTHRAD*(1.0 - EPS) / (denom*denom*denom);
     dMu         = atan2(lPoint*sin(dLambda),rhoAlpha + Altitude);
     State->SetGeodeticLat(muAlpha - dMu);
-    lambdaSL    = atan(EccentSqrd*tan(GeodeticLat));
+    lambdaSL    = atan(ECCENTSQRD*tan(GeodeticLat));
     sinlambdaSL = sin(lambdaSL);
-    SeaLevelR   = sqrt(EarthRadSqrd / (1 + (1/EccentSqrd - 1.0)* sinlambdaSL*sinlambdaSL));
+    SeaLevelR   = sqrt(EARTHRADSQRD / (1 + INVECCENTSQRDM1* sinlambdaSL*sinlambdaSL));
   }
   return 0.0;
 }
@@ -119,13 +107,13 @@ float FGUtility:: FromGeodetic()
   float lambdaSL, sinlambdaSL, coslambdaSL, sinMu, cosMu, py, px;
   float Altitude, SeaLevelR;
 
-  lambdaSL = atan(EccentSqrd*tan(State->GetGeodeticLat()));
+  lambdaSL = atan(ECCENTSQRD*tan(State->GetGeodeticLat()));
   sinlambdaSL = sin(lambdaSL);
   coslambdaSL = cos(lambdaSL);
   sinMu = sin(State->GetGeodeticLat());
   cosMu = cos(State->GetGeodeticLat());
-  SeaLevelR = sqrt(EarthRadSqrd /
-             (1 + ((1/EccentSqrd)-1)*sinlambdaSL*sinlambdaSL));
+  SeaLevelR = sqrt(EARTHRADSQRD /
+             (1 + INVECCENTSQRDM1*sinlambdaSL*sinlambdaSL));
   px = SeaLevelR*coslambdaSL + Altitude*cosMu;
   py = SeaLevelR*sinlambdaSL + Altitude*sinMu;
   State->Setlatitude(atan2(py,px));

@@ -44,9 +44,8 @@ COMMENTS, REFERENCES,  and NOTES
 
   The order of rotations used in this class corresponds to a 3-2-1 sequence,
   or Y-P-R, or Z-Y-X, if you prefer.
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -57,8 +56,8 @@ SENTRY
 INCLUDES
 *******************************************************************************/
 
-#include "FGModel.h"
 #include <math.h>
+#include "FGModel.h"
 
 /*******************************************************************************
 CLASS DECLARATION
@@ -67,10 +66,48 @@ CLASS DECLARATION
 class FGRotation : public FGModel
 {
 public:
-  FGRotation(void);
+  FGRotation(FGFDMExec*);
   ~FGRotation(void);
 
   bool Run(void);
+
+  inline float GetP(void) {return P;}
+  inline float GetQ(void) {return Q;}
+  inline float GetR(void) {return R;}
+
+  inline float GetPdot(void) {return Pdot;}
+  inline float GetQdot(void) {return Qdot;}
+  inline float GetRdot(void) {return Rdot;}
+
+  inline float Getphi(void) {return phi;}
+  inline float Gettht(void) {return tht;}
+  inline float Getpsi(void) {return psi;}
+
+  inline float GetQ0(void) {return Q0;}
+  inline float GetQ1(void) {return Q1;}
+  inline float GetQ2(void) {return Q2;}
+  inline float GetQ3(void) {return Q3;}
+
+  inline void SetP(float tt) {P = tt;}
+  inline void SetQ(float tt) {Q = tt;}
+  inline void SetR(float tt) {R = tt;}
+
+  inline void SetPQR(float t1, float t2, float t3) {P=t1;
+                                                    Q=t2;
+                                                    R=t3;}
+
+  inline void Setphi(float tt) {phi = tt;}
+  inline void Settht(float tt) {tht = tt;}
+  inline void Setpsi(float tt) {psi = tt;}
+
+  inline void SetEuler(float t1, float t2, float t3) {phi=t1;
+                                                      tht=t2;
+                                                      psi=t3;}
+
+  inline void SetQ0123(float t1, float t2, float t3, float t4) {Q0=t1;
+                                                                Q1=t2;
+                                                                Q2=t3;
+                                                                Q3=t4;}
 
 protected:
 
@@ -90,12 +127,6 @@ private:
   void GetState(void);
   void PutState(void);
 };
-
-#ifndef FDM_MAIN
-extern FGRotation* Rotation;
-#else
-FGRotation* Rotation;
-#endif
 
 /******************************************************************************/
 #endif

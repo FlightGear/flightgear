@@ -26,9 +26,8 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/24/98   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -48,21 +47,18 @@ CLASS DECLARATION
 class FGAtmosphere : public FGModel
 {
 public:
-  FGAtmosphere(void);
+  FGAtmosphere(FGFDMExec*);
   ~FGAtmosphere(void);
+
   bool Run(void);
 
+  inline float Getrho(void) {return rho;}
+  
 protected:
 
 private:
-
+  float rho;
 };
-
-#ifndef FDM_MAIN
-extern FGAtmosphere* Atmosphere;
-#else
-FGAtmosphere* Atmosphere;
-#endif
 
 /******************************************************************************/
 #endif

@@ -26,9 +26,8 @@
 HISTORY
 --------------------------------------------------------------------------------
 12/02/98   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -48,24 +47,19 @@ CLASS DECLARATION
 class FGOutput : public FGModel
 {
 public:
-  FGOutput(void);
+  FGOutput(FGFDMExec*);
   ~FGOutput(void);
+
   bool Run(void);
+
   void ConsoleOutput(void);
   void DelimitedOutput(void);
 
 protected:
 
-
 private:
   bool FirstPass;
 };
-
-#ifndef FDM_MAIN
-extern FGOutput* Output;
-#else
-FGOutput* Output;
-#endif
 
 /******************************************************************************/
 #endif

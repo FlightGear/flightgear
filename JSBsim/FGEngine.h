@@ -32,9 +32,8 @@ a generic engine.
 HISTORY
 --------------------------------------------------------------------------------
 01/21/99   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -53,11 +52,21 @@ DEFINES
 CLASS DECLARATION
 *******************************************************************************/
 
+class FGFDMExec;
+class FGState;
+class FGAtmosphere;
+class FGFCS;
+class FGAircraft;
+class FGTranslation;
+class FGRotation;
+class FGPosition;
+class FGAuxiliary;
+class FGOutput;
+
 class FGEngine
 {
 public:
-  FGEngine(void);
-  FGEngine(char*);
+  FGEngine(FGFDMExec*, char*, int);
   ~FGEngine(void);
 
   float GetThrust(void) {return Thrust;}
@@ -92,7 +101,19 @@ private:
   bool  Starved;
   bool  Flameout;
   float PctPower;
+  int   EngineNumber;
 
+  FGFDMExec*      FDMExec;
+  FGState*        State;
+  FGAtmosphere*   Atmosphere;
+  FGFCS*          FCS;
+  FGAircraft*     Aircraft;
+  FGTranslation*  Translation;
+  FGRotation*     Rotation;
+  FGPosition*     Position;
+  FGAuxiliary*    Auxiliary;
+  FGOutput*       Output;
+  
 protected:
   float CalcRocketThrust(void);
   float CalcPistonThrust(void);

@@ -26,9 +26,8 @@
 HISTORY
 --------------------------------------------------------------------------------
 12/12/98   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -49,37 +48,31 @@ CLASS DECLARATION
 class FGFCS : public FGModel
 {
 public:
-	FGFCS(void);
+	FGFCS(FGFDMExec*);
 	~FGFCS(void);
 
 	bool Run(void);
-
+  
 	inline float GetDa(void) {return Da;}
 	inline float GetDe(void) {return De;}
 	inline float GetDr(void) {return Dr;}
 	inline float GetDf(void) {return Df;}
 	inline float GetDs(void) {return Ds;}
-	inline float GetThrottle(void) {return Throttle;}
+	inline float GetThrottle(int ii) {return Throttle[ii];}
 
 	inline void SetDa(float tt) {Da = tt;}
 	inline void SetDe(float tt) {De = tt;}
 	inline void SetDr(float tt) {Dr = tt;}
 	inline void SetDf(float tt) {Df = tt;}
 	inline void SetDs(float tt) {Ds = tt;}
-	inline void SetThrottle(float tt) {Throttle = tt;}
+	inline void SetThrottle(int ii, float tt) {Throttle[ii] = tt;}
 
 protected:
 
 private:
   float Da, De, Dr, Df, Ds;
-  float Throttle;
+  float Throttle[MAX_ENGINES];
 };
-
-#ifndef FDM_MAIN
-extern FGFCS* FCS;
-#else
-FGFCS* FCS;
-#endif
 
 /******************************************************************************/
 #endif

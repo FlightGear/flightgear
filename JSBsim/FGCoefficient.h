@@ -26,9 +26,8 @@
 HISTORY
 --------------------------------------------------------------------------------
 12/28/98   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -64,13 +63,24 @@ DEFINES
 CLASS DECLARATION
 *******************************************************************************/
 
+class FGFDMExec;
+class FGState;
+class FGAtmosphere;
+class FGFCS;
+class FGAircraft;
+class FGTranslation;
+class FGRotation;
+class FGPosition;
+class FGAuxiliary;
+class FGOutput;
+
 class FGCoefficient
 {
 public:
-  FGCoefficient(void);
-  FGCoefficient(int, int);
-  FGCoefficient(int);
-  FGCoefficient(char*);
+  FGCoefficient(FGFDMExec*);
+  FGCoefficient(FGFDMExec*, int, int);
+  FGCoefficient(FGFDMExec*, int);
+  FGCoefficient(FGFDMExec*, char*);
   ~FGCoefficient(void);
 
   bool Allocate(int);
@@ -98,6 +108,17 @@ private:
   float LookupR, LookupC;
 
   float GetCoeffVal(int);
+
+  FGFDMExec*      FDMExec;
+  FGState*        State;
+  FGAtmosphere*   Atmosphere;
+  FGFCS*          FCS;
+  FGAircraft*     Aircraft;
+  FGTranslation*  Translation;
+  FGRotation*     Rotation;
+  FGPosition*     Position;
+  FGAuxiliary*    Auxiliary;
+  FGOutput*       Output;
 };
 
 /******************************************************************************/

@@ -26,9 +26,8 @@
 HISTORY
 --------------------------------------------------------------------------------
 12/12/98   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -102,7 +101,6 @@ INCLUDES
 #include "FGCoefficient.h"
 #include "FGEngine.h"
 #include "FGTank.h"
-//#include "FGMatrix.h"
 
 /*******************************************************************************
 DEFINITIONS
@@ -116,12 +114,15 @@ CLASS DECLARATION
 class FGAircraft : public FGModel
 {
 public:
-  FGAircraft(void);
+  FGAircraft(FGFDMExec*);
   ~FGAircraft(void);
 
   bool Run(void);
+
   bool LoadAircraft(char*);
-  char* GetAircraftName(void) {return AircraftName;}
+  
+  inline char* GetAircraftName(void) {return AircraftName;}
+
   inline void SetGearUp(bool tt) {GearUp = tt;}
   inline bool GetGearUp(void) {return GearUp;}
   inline float GetWingArea(void) {return WingArea;}
@@ -129,6 +130,21 @@ public:
   inline float Getcbar(void) {return cbar;}
   inline FGEngine* GetEngine(int tt) {return Engine[tt];}
   inline FGTank* GetTank(int tt) {return Tank[tt];}
+  inline float GetWeight(void) {return Weight;}
+  inline float GetMass(void) {return Mass;}
+
+  inline float GetL(void) {return Moments[0];}
+  inline float GetM(void) {return Moments[1];}
+  inline float GetN(void) {return Moments[2];}
+
+  inline float GetFx(void) {return Forces[0];}
+  inline float GetFy(void) {return Forces[1];}
+  inline float GetFz(void) {return Forces[2];}
+
+  inline float GetIxx(void) {return Ixx;}
+  inline float GetIyy(void) {return Iyy;}
+  inline float GetIzz(void) {return Izz;}
+  inline float GetIxz(void) {return Ixz;}
 
 private:
   void GetState(void);
@@ -144,26 +160,28 @@ private:
   void MMass(void);
   void MProp(void);
 
+  void MassChange(void);
+
   float Moments[3];
   float Forces[3];
 
   char AircraftName[50];
-  float Ixx, Iyy, Izz, Ixz, m;
+  float Ixx, Iyy, Izz, Ixz, EmptyMass, Mass;
   float Xcg, Ycg, Zcg;
   float Xep, Yep, Zep;
   float rho, qbar, Vt;
   float alpha, beta;
   float WingArea, WingSpan, cbar;
-  float g, phi, tht, psi;
-  float Weight;
+  float phi, tht, psi;
+  float Weight, EmptyWeight;
   float dt;
 
   int numTanks;
   int numEngines;
   int numSelectedOxiTanks;
   int numSelectedFuelTanks;
-  FGTank* Tank[30];
-  FGEngine *Engine[10];
+  FGTank* Tank[MAX_TANKS];
+  FGEngine *Engine[MAX_ENGINES];
 
   FGCoefficient *Coeff[6][10];
   int coeff_ctr[6];
@@ -183,12 +201,6 @@ private:
 protected:
 
 };
-
-#ifndef FDM_MAIN
-extern FGAircraft* Aircraft;
-#else
-FGAircraft* Aircraft;
-#endif
 
 /******************************************************************************/
 #endif

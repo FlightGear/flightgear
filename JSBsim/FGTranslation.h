@@ -44,9 +44,8 @@ COMMENTS, REFERENCES,  and NOTES
 
   The order of rotations used in this class corresponds to a 3-2-1 sequence,
   or Y-P-R, or Z-Y-X, if you prefer.
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -57,8 +56,8 @@ SENTRY
 INCLUDES
 *******************************************************************************/
 
-#include "FGModel.h"
 #include <math.h>
+#include "FGModel.h"
 
 /*******************************************************************************
 CLASS DECLARATION
@@ -67,34 +66,52 @@ CLASS DECLARATION
 class FGTranslation : public FGModel
 {
 public:
-   FGTranslation(void);
+   FGTranslation(FGFDMExec*);
    ~FGTranslation(void);
+
+   inline float GetU(void) {return U;}
+   inline float GetV(void) {return V;}
+   inline float GetW(void) {return W;}
+
+   inline float GetUdot(void) {return Udot;}
+   inline float GetVdot(void) {return Vdot;}
+   inline float GetWdot(void) {return Wdot;}
+
+   inline float Getalpha(void) {return alpha;}
+   inline float Getbeta (void) {return beta; }
+   inline float Getgamma(void) {return gamma;}
+
+   inline void SetU(float tt) {U = tt;}
+   inline void SetV(float tt) {V = tt;}
+   inline void SetW(float tt) {W = tt;}
+
+   inline void SetUVW(float t1, float t2, float t3) {U=t1; V=t2; W=t3;}
+
+   inline void Setalpha(float tt) {alpha = tt;}
+   inline void Setbeta (float tt) {beta  = tt;}
+   inline void Setgamma(float tt) {gamma = tt;}
+
+   inline void SetABG(float t1, float t2, float t3) {alpha=t1; beta=t2; gamma=t3;}
 
    bool Run(void);
 
 protected:
 
 private:
-  float U, V, W;
+  float U, V, W;                 // Body frame velocities owned by FGTranslation
   float P, Q, R;
   float Vt, qbar;
   float Udot, Vdot, Wdot;
   float lastUdot, lastVdot, lastWdot;
   float phi, tht, psi;
   float Fx, Fy, Fz;
-  float m, g, dt;
-  float alpha, beta;
+  float Mass, dt;
+  float alpha, beta, gamma;
   float rho;
 
   void GetState(void);
   void PutState(void);
 };
-
-#ifndef FDM_MAIN
-extern FGTranslation* Translation;
-#else
-FGTranslation* Translation;
-#endif
 
 /******************************************************************************/
 #endif

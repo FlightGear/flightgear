@@ -28,13 +28,8 @@ FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 See header file.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
-
 01/21/99   JSB   Created
 
 ********************************************************************************
@@ -53,19 +48,19 @@ INCLUDES
 FGTank::FGTank(ifstream& acfile)
 {
   char type[20];
-  
-  acfile >> type;
+
+  acfile >> type;                              // Type = 0: rocket, 1: piston
   if (strstr(type,"FUEL")) Type = 0;
   else if (strstr(type,"OXIDIZER")) Type = 1;
   else Type = -1;
-  acfile >> X;
-  acfile >> Y;
-  acfile >> Z;
-  acfile >> Radius;
-  acfile >> Capacity;
-  acfile >> Contents;
+  acfile >> X;                                 // inches
+  acfile >> Y;                                 // "
+  acfile >> Z;                                 // "
+  acfile >> Radius;                            // "
+  acfile >> Capacity;                          // pounds (amount it can hold)
+  acfile >> Contents;                          // pounds  (amount it is holding)
   Selected = true;
-  PctFull = 100.0*Contents/Capacity;
+  PctFull = 100.0*Contents/Capacity;           // percent full; 0 to 100.0
 }
 
 

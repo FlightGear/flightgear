@@ -30,11 +30,6 @@ FUNCTIONAL DESCRIPTION
 
 This class wraps up the simulation scheduling routines.
 
-
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 11/17/98   JSB   Created
@@ -43,11 +38,22 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#include "FGFDMExec.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream.h>
 #include <time.h>
+
+#include "FGFDMExec.h"
+#include "FGState.h"
+
+#include "FGAtmosphere.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
@@ -58,17 +64,41 @@ INCLUDES
 
 FGFDMExec::FGFDMExec(void)
 {
-  FirstModel = 0L;
+  FirstModel  = 0;
+  Error       = 0;
+  State       = 0;
+  Atmosphere  = 0;
+  FCS         = 0;
+  Aircraft    = 0;
+  Translation = 0;
+  Rotation    = 0;
+  Position    = 0;
+  Auxiliary   = 0;
+  Output      = 0;
 
-  State       = new FGState();
-  Atmosphere  = new FGAtmosphere();
-  FCS         = new FGFCS();
-  Aircraft    = new FGAircraft();
-  Translation = new FGTranslation();
-  Rotation    = new FGRotation();
-  Position    = new FGPosition();
-  Auxiliary   = new FGAuxiliary();
-  Output      = new FGOutput();
+  // Instantiate this FDM Executive's Models
+
+  Atmosphere  = new FGAtmosphere(this);
+  FCS         = new FGFCS(this);
+  Aircraft    = new FGAircraft(this);
+  Translation = new FGTranslation(this);
+  Rotation    = new FGRotation(this);
+  Position    = new FGPosition(this);
+  Auxiliary   = new FGAuxiliary(this);
+  Output      = new FGOutput(this);
+
+  State       = new FGState(this);
+
+  // Initialize models so they can communicate with each other
+
+  if (!Atmosphere->InitModel()) {cerr << "Atmosphere model init failed"; Error+=1;}
+  if (!FCS->InitModel())        {cerr << "FCS model init failed"; Error+=2;}
+  if (!Aircraft->InitModel())   {cerr << "Aircraft model init failed"; Error+=4;}
+  if (!Translation->InitModel()){cerr << "Translation model init failed"; Error+=8;}
+  if (!Rotation->InitModel())   {cerr << "Rotation model init failed"; Error+=16;}
+  if (!Position->InitModel())   {cerr << "Position model init failed"; Error+=32;}
+  if (!Auxiliary->InitModel())  {cerr << "Auxiliary model init failed"; Error+=64;}
+  if (!Output->InitModel())     {cerr << "Output model init failed"; Error+=128;}
 
   Schedule(Atmosphere,  5);
   Schedule(FCS,         1);
@@ -80,7 +110,7 @@ FGFDMExec::FGFDMExec(void)
   Schedule(Output,      5);
 
   terminate = false;
-  freeze = false;
+  frozen = false;
 }
 
 
@@ -118,6 +148,8 @@ bool FGFDMExec::Run(void)
 {
   FGModel* model_iterator;
 
+  if (frozen) return true;
+
   model_iterator = FirstModel;
   if (model_iterator == 0L) return false;
 
@@ -126,6 +158,8 @@ bool FGFDMExec::Run(void)
     model_iterator = model_iterator->NextModel;
     if (model_iterator == 0L) break;
   }
+
+  State->IncrTime();
 
   return true;
 }

@@ -28,10 +28,6 @@ FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 See header file.
 
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 
@@ -41,23 +37,44 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#include "FGEngine.h"
-#include "FGState.h"
-#include "FGFCS.h"
 #include <fstream.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "FGEngine.h"
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "FGAtmosphere.h"
+#include "FGFCS.h"
+#include "FGAircraft.h"
+#include "FGTranslation.h"
+#include "FGRotation.h"
+#include "FGPosition.h"
+#include "FGAuxiliary.h"
+#include "FGOutput.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
 
-FGEngine::FGEngine(char *engineName)
+FGEngine::FGEngine(FGFDMExec* fdex, char *engineName, int num)
 {
-  char fullpath[250];
-  char tag[220];
+  char fullpath[256];
+  char tag[256];
+
+  FDMExec = fdex;
+
+  State       = FDMExec->GetState();
+  Atmosphere  = FDMExec->GetAtmosphere();
+  FCS         = FDMExec->GetFCS();
+  Aircraft    = FDMExec->GetAircraft();
+  Translation = FDMExec->GetTranslation();
+  Rotation    = FDMExec->GetRotation();
+  Position    = FDMExec->GetPosition();
+  Auxiliary   = FDMExec->GetAuxiliary();
+  Output      = FDMExec->GetOutput();
 
   strcpy(Name, engineName);
   sprintf(fullpath,"/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/engine/%s.dat", engineName);
@@ -85,6 +102,7 @@ FGEngine::FGEngine(char *engineName)
     cerr << "Unable to open engine definition file " << engineName << endl;
   }
 
+  EngineNumber = num;
   Thrust = 0.0;
   Starved = Flameout = false;
 }
@@ -99,7 +117,7 @@ float FGEngine::CalcRocketThrust(void)
 {
   float lastThrust;
 
-  Throttle = FCS->GetThrottle();
+  Throttle = FCS->GetThrottle(EngineNumber);
   lastThrust = Thrust;                 // last actual thrust
 
   if (Throttle < MinThrottle || Starved) {
@@ -107,7 +125,7 @@ float FGEngine::CalcRocketThrust(void)
     Flameout = true;
   } else {
     PctPower = Throttle / MaxThrottle;
-    Thrust = PctPower*((1.0 - State->Getrho() / 0.002378)*(VacThrustMax - SLThrustMax) +
+    Thrust = PctPower*((1.0 - Atmosphere->Getrho() / 0.002378)*(VacThrustMax - SLThrustMax) +
 	                       SLThrustMax); // desired thrust
     Flameout = false;
   }
@@ -129,13 +147,13 @@ float FGEngine::CalcThrust(void)
   switch(Type) {
   case 0: // Rocket
     return CalcRocketThrust();
-    break;
+    // break;
   case 1: // Piston
     return CalcPistonThrust();
-    break;
+    // break;
   default:
     return 9999.0;
-    break;
+    // break;
   }
 }
 

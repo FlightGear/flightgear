@@ -26,9 +26,8 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/17/98   JSB   Created
-*******************************************************************************/
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -40,45 +39,62 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGModel.h"
-#include "FGAtmosphere.h"
-#include "FGFCS.h"
-#include "FGAircraft.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
-#include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
 
 /*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/
 
+class FGState;
+class FGAtmosphere;
+class FGFCS;
+class FGAircraft;
+class FGTranslation;
+class FGRotation;
+class FGPosition;
+class FGAuxiliary;
+class FGOutput;
+
 class FGFDMExec
 {
 public:
-   FGFDMExec::FGFDMExec(void);
-   FGFDMExec::~FGFDMExec(void);
+  FGFDMExec::FGFDMExec(void);
+  FGFDMExec::~FGFDMExec(void);
 
-   FGModel* FirstModel;
+  FGModel* FirstModel;
 
-   bool Initialize(void);
-   int  Schedule(FGModel* model, int rate);
-   bool Run(void);
-   bool Freeze(void);
-   bool Resume(void);
+  bool Initialize(void);
+  int  Schedule(FGModel* model, int rate);
+  bool Run(void);
+  void Freeze(void) {frozen = true;}
+  void Resume(void) {frozen = false;}
+
+  inline FGState* GetState(void)             {return State;}
+  inline FGAtmosphere* GetAtmosphere(void)   {return Atmosphere;}
+  inline FGFCS* GetFCS(void)                 {return FCS;}
+  inline FGAircraft* GetAircraft(void)       {return Aircraft;}
+  inline FGTranslation* GetTranslation(void) {return Translation;}
+  inline FGRotation* GetRotation(void)       {return Rotation;}
+  inline FGPosition* GetPosition(void)       {return Position;}
+  inline FGAuxiliary* GetAuxiliary(void)     {return Auxiliary;}
+  inline FGOutput* GetOutput(void)           {return Output;}
 
 private:
-   bool freeze;
-   bool terminate;
+  bool frozen;
+  bool terminate;
+  int Error;
+
+  FGState*       State;
+  FGAtmosphere*  Atmosphere;
+  FGFCS*         FCS;
+  FGAircraft*    Aircraft;
+  FGTranslation* Translation;
+  FGRotation*    Rotation;
+  FGPosition*    Position;
+  FGAuxiliary*   Auxiliary;
+  FGOutput*      Output;
 
 protected:
 };
-
-#ifndef FDM_MAIN
-extern FGFDMExec* FDMExec;
-#else
-FGFDMExec* FDMExec;
-#endif
 
 /******************************************************************************/
 #endif
