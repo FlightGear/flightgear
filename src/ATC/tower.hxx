@@ -83,7 +83,9 @@ class FGTower : public FGATC {
 	void Init();
 	
 	void Update();
-	
+
+	void RequestLandingClearance(string ID);
+	void RequestDepartureClearance(string ID);	
 	void ReportFinal(string ID);
 	void ReportLongFinal(string ID);
 	void ReportOuterMarker(string ID);

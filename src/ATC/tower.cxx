@@ -102,3 +102,19 @@ void FGTower::Update() {
     }
     ++play;
 }
+
+void FGTower::RequestLandingClearance(string ID) {
+	cout << "Request Landing Clearance called...\n";
+}
+void FGTower::RequestDepartureClearance(string ID) {
+	cout << "Request Departure Clearance called...\n";
+}	
+//void FGTower::ReportFinal(string ID);
+//void FGTower::ReportLongFinal(string ID);
+//void FGTower::ReportOuterMarker(string ID);
+//void FGTower::ReportMiddleMarker(string ID);
+//void FGTower::ReportInnerMarker(string ID);
+//void FGTower::ReportGoingAround(string ID);
+void FGTower::ReportRunwayVacated(string ID) {
+	cout << "Report Runway Vacated Called...\n";
+}
