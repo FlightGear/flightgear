@@ -100,65 +100,191 @@ bool FGNativeFDM::open() {
 }
 
 
-static void global2net( const FGInterface *global, FGNetFDM *net ) {
-    static const SGPropertyNode *visibility
-        = fgGetNode("/environment/visibility-m");
+void FGProps2NetFDM( FGNetFDM *net ) {
+    int i;
 
+    // Version sanity checking
     net->version = FG_NET_FDM_VERSION;
 
-    // positions
+    // Aero parameters
     net->longitude = cur_fdm_state->get_Longitude();
     net->latitude = cur_fdm_state->get_Latitude();
     net->altitude = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER;
     net->phi = cur_fdm_state->get_Phi();
     net->theta = cur_fdm_state->get_Theta();
     net->psi = cur_fdm_state->get_Psi();
+    net->phidot = cur_fdm_state->get_Phi_dot_degps() * SG_DEGREES_TO_RADIANS;
+    net->thetadot = cur_fdm_state->get_Theta_dot_degps()
+        * SG_DEGREES_TO_RADIANS;
+    net->psidot = cur_fdm_state->get_Psi_dot_degps() * SG_DEGREES_TO_RADIANS;
 
-    // velocities
     net->vcas = cur_fdm_state->get_V_calibrated_kts();
     net->climb_rate = cur_fdm_state->get_Climb_Rate();
 
-    // environment
+    net->v_north = cur_fdm_state->get_V_north();
+    net->v_east = cur_fdm_state->get_V_east();
+    net->v_down = cur_fdm_state->get_V_down();
+    net->v_wind_body_north = cur_fdm_state->get_uBody();
+    net->v_wind_body_east = cur_fdm_state->get_vBody();
+    net->v_wind_body_down = cur_fdm_state->get_wBody();
+    net->stall_warning = fgGetDouble("/sim/alarms/stall-warning", 0.0);
+
+    net->A_X_pilot = cur_fdm_state->get_A_X_pilot();
+    net->A_Y_pilot = cur_fdm_state->get_A_Y_pilot();
+    net->A_Z_pilot = cur_fdm_state->get_A_Z_pilot();
+
+    // Engine parameters
+    net->num_engines = FGNetFDM::FG_MAX_ENGINES;
+    for ( i = 0; i < net->num_engines; ++i ) {
+        SGPropertyNode *node = fgGetNode("engines/engine", i, true);
+        if ( node->getBoolValue( "running" ) ) {
+            net->eng_state[0] = 2;
+        } else if ( node->getBoolValue( "cranking" ) ) {
+            net->eng_state[0] = 1;
+        } else {
+            net->eng_state[0] = 0;
+        }
+        net->rpm[i] = node->getDoubleValue( "rpm" );
+        net->fuel_flow[i] = node->getDoubleValue( "fuel-flow-gph" );
+        net->EGT[i] = node->getDoubleValue( "egt-degf" );
+        // cout << "egt = " << aero->EGT << endl;
+        net->oil_temp[i] = node->getDoubleValue( "oil-temperature-degf" );
+        net->oil_px[i] = node->getDoubleValue( "oil-pressure-psi" );
+    }
+
+    // Consumables
+    net->num_tanks = FGNetFDM::FG_MAX_TANKS;
+    for ( i = 0; i < net->num_tanks; ++i ) {
+        SGPropertyNode *node = fgGetNode("/consumables/fuel/tank", i, true);
+        net->fuel_quantity[i] = node->getDoubleValue("level-gal_us");
+    }
+
+    // Gear and flaps
+    net->num_wheels = FGNetFDM::FG_MAX_WHEELS;
+    for (i = 0; i < net->num_wheels; ++i ) {
+        SGPropertyNode *node = fgGetNode("/gear/gear", i, true);
+        net->wow[i] = node->getDoubleValue("wow");
+    }
+
+    // cout << "Flap deflection = " << aero->dflap << endl;
+    net->flap_deflection = fgGetDouble("/surface-positions/flap-pos-norm" );
+
+    // the following really aren't used in this context
     net->cur_time = globals->get_time_params()->get_cur_time();
     net->warp = globals->get_warp();
-    net->visibility = visibility->getDoubleValue();
+    net->visibility = fgGetDouble("/environment/visibility-m");
 
     // Convert the net buffer to network format
     net->version = htonl(net->version);
+
     htond(net->longitude);
     htond(net->latitude);
     htond(net->altitude);
     htond(net->phi);
     htond(net->theta);
     htond(net->psi);
+
+    htond(net->phidot);
+    htond(net->thetadot);
+    htond(net->psidot);
     htond(net->vcas);
     htond(net->climb_rate);
+    htond(net->v_north);
+    htond(net->v_east);
+    htond(net->v_down);
+    htond(net->v_wind_body_north);
+    htond(net->v_wind_body_east);
+    htond(net->v_wind_body_down);
+    htond(net->stall_warning);
+
+    htond(net->A_X_pilot);
+    htond(net->A_Y_pilot);
+    htond(net->A_Z_pilot);
+
+    for ( i = 0; i < net->num_engines; ++i ) {
+        htonl(net->eng_state[i]);
+        htond(net->rpm[i]);
+        htond(net->fuel_flow[i]);
+        htond(net->EGT[i]);
+        htond(net->oil_temp[i]);
+        htond(net->oil_px[i]);
+    }
+    net->num_engines = htonl(net->num_engines);
+
+    for ( i = 0; i < net->num_tanks; ++i ) {
+        htond(net->fuel_quantity[i]);
+    }
+    net->num_tanks = htonl(net->num_tanks);
+
+    for ( i = 0; i < net->num_wheels; ++i ) {
+        net->wow[i] = htonl(net->wow[i]);
+    }
+    net->num_wheels = htonl(net->num_wheels);
+    htond(net->flap_deflection);
+
     net->cur_time = htonl( net->cur_time );
     net->warp = htonl( net->warp );
     htond(net->visibility);
 }
 
 
-static void net2global( FGNetFDM *net, FGInterface *global ) {
-    static long int last_warp = 0;
+void FGNetFDM2Props( FGNetFDM *net ) {
+    int i;
 
     // Convert to the net buffer from network format
     net->version = ntohl(net->version);
+
     htond(net->longitude);
     htond(net->latitude);
     htond(net->altitude);
     htond(net->phi);
     htond(net->theta);
     htond(net->psi);
+
+    htond(net->phidot);
+    htond(net->thetadot);
+    htond(net->psidot);
     htond(net->vcas);
     htond(net->climb_rate);
+    htond(net->v_north);
+    htond(net->v_east);
+    htond(net->v_down);
+    htond(net->v_wind_body_north);
+    htond(net->v_wind_body_east);
+    htond(net->v_wind_body_down);
+    htond(net->stall_warning);
+
+    htond(net->A_X_pilot);
+    htond(net->A_Y_pilot);
+    htond(net->A_Z_pilot);
+
+    net->num_engines = htonl(net->num_engines);
+    for ( i = 0; i < net->num_engines; ++i ) {
+	htonl(net->eng_state[i]);
+	htond(net->rpm[i]);
+	htond(net->fuel_flow[i]);
+	htond(net->EGT[i]);
+	htond(net->oil_temp[i]);
+	htond(net->oil_px[i]);
+    }
+
+    net->num_tanks = htonl(net->num_tanks);
+    for ( i = 0; i < net->num_tanks; ++i ) {
+	htond(net->fuel_quantity[i]);
+    }
+
+    net->num_wheels = htonl(net->num_wheels);
+    // I don't need to convert the Wow flags, since they are one byte in size
+    htond(net->flap_deflection);
+
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
     htond(net->visibility);
 
     if ( net->version == FG_NET_FDM_VERSION ) {
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;
-        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius() << endl;
+        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius()
+	//      << endl;
         cur_fdm_state->_updateGeodeticPosition( net->latitude,
                                                 net->longitude,
                                                 net->altitude
@@ -166,20 +292,80 @@ static void net2global( FGNetFDM *net, FGInterface *global ) {
         cur_fdm_state->_set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
+        cur_fdm_state->_set_Euler_Rates( net->phidot,
+					 net->thetadot,
+					 net->psidot );
         cur_fdm_state->_set_V_calibrated_kts( net->vcas );
         cur_fdm_state->_set_Climb_Rate( net->climb_rate );
+        cur_fdm_state->_set_Velocities_Local( net->v_north,
+                                              net->v_east,
+                                              net->v_down );
+        cur_fdm_state->_set_Velocities_Wind_Body( net->v_wind_body_north,
+                                                  net->v_wind_body_east,
+                                                  net->v_wind_body_down );
 
+        fgSetDouble( "/sim/alarms/stall-warning", net->stall_warning );
+        cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
+					       net->A_Y_pilot,
+					       net->A_Z_pilot );
+
+	for ( i = 0; i < net->num_engines; ++i ) {
+	    SGPropertyNode *node = fgGetNode( "engines/engine", i, true );
+	    
+	    // node->setBoolValue("running", t->isRunning());
+	    // node->setBoolValue("cranking", t->isCranking());
+	    
+	    // cout << net->eng_state[i] << endl;
+	    if ( net->eng_state[i] == 0 ) {
+		node->setBoolValue( "cranking", false );
+		node->setBoolValue( "running", false );
+	    } else if ( net->eng_state[i] == 1 ) {
+		node->setBoolValue( "cranking", true );
+		node->setBoolValue( "running", false );
+	    } else if ( net->eng_state[i] == 2 ) {
+		node->setBoolValue( "cranking", false );
+		node->setBoolValue( "running", true );
+	    }
+
+	    node->setDoubleValue( "rpm", net->rpm[i] );
+	    node->setDoubleValue( "fuel-flow-gph", net->fuel_flow[i] );
+	    node->setDoubleValue( "egt-degf", net->EGT[i] );
+	    node->setDoubleValue( "oil-temperature-degf", net->oil_temp[i] );
+	    node->setDoubleValue( "oil-pressure-psi", net->oil_px[i] );		
+	}
+
+	for (i = 0; i < net->num_tanks; ++i ) {
+	    SGPropertyNode * node
+		= fgGetNode("/consumables/fuel/tank", i, true);
+	    node->setDoubleValue("level-gal_us", net->fuel_quantity[i] );
+	}
+
+	for (i = 0; i < net->num_wheels; ++i ) {
+	    SGPropertyNode * node
+		= fgGetNode("/gear/gear", i, true);
+	    node->setDoubleValue("wow", net->wow[i] );
+	}
+
+        fgSetDouble("/surface-positions/flap-pos-norm", net->flap_deflection);
+	SGPropertyNode * node = fgGetNode("/controls", true);
+        fgSetDouble("/surface-positions/elevator-pos-norm", 
+		    node->getDoubleValue( "elevator" ));
+        fgSetDouble("/surface-positions/rudder-pos-norm", 
+		    node->getDoubleValue( "rudder" ));
+        fgSetDouble("/surface-positions/left-aileron-pos-norm", 
+		    node->getDoubleValue( "aileron" ));
+        fgSetDouble("/surface-positions/right-aileron-pos-norm", 
+		    -node->getDoubleValue( "aileron" ));
+
+	/* these are ignored for now  ... */
+	/*
 	if ( net->cur_time ) {
 	    fgSetLong("/sim/time/cur-time-override", net->cur_time);
 	}
 
         globals->set_warp( net->warp );
-        if ( net->warp != last_warp ) {
-            fgUpdateSkyAndLightingParams();
-        }
         last_warp = net->warp;
-
-        fgSetDouble( "/environment/visibility-m", net->visibility );
+	*/
     } else {
 	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
 	SG_LOG( SG_IO, SG_ALERT,
@@ -197,7 +383,7 @@ bool FGNativeFDM::process() {
 
     if ( get_direction() == SG_IO_OUT ) {
 	// cout << "size of cur_fdm_state = " << length << endl;
-	global2net( cur_fdm_state, &buf );
+	FGProps2NetFDM( &buf );
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
@@ -206,12 +392,12 @@ bool FGNativeFDM::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		net2global( &buf, cur_fdm_state );
+		FGNetFDM2Props( &buf );
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		net2global( &buf, cur_fdm_state );
+		FGNetFDM2Props( &buf );
 	    }
 	}
     }

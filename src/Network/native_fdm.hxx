@@ -54,6 +54,15 @@ public:
 };
 
 
+// Helper functions which may be useful outside this class
+
+// Populate the FGNetFDM structure from the property tree.
+void FGProps2NetFDM( FGNetFDM *net );
+
+// Update the property tree from the FGNetFDM structure.
+void FGNetFDM2Props( FGNetFDM *net );
+
+
 #endif // _FG_NATIVE_FDM_HXX
 
 

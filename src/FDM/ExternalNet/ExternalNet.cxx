@@ -29,194 +29,9 @@
 
 #include <Main/fg_props.hxx>
 #include <Network/native_ctrls.hxx>
+#include <Network/native_fdm.hxx>
 
 #include "ExternalNet.hxx"
-
-
-// FreeBSD works better with this included last ... (?)
-#if defined(WIN32) && !defined(__CYGWIN__)
-#  include <windows.h>
-#else
-#  include <netinet/in.h>	// htonl() ntohl()
-#endif
-
-#if defined( linux )
-#  include <sys/types.h>
-#  include <sys/socket.h>
-#endif
-
-// The function htond is defined this way due to the way some
-// processors and OSes treat floating point values.  Some will raise
-// an exception whenever a "bad" floating point value is loaded into a
-// floating point register.  Solaris is notorious for this, but then
-// so is LynxOS on the PowerPC.  By translating the data in place,
-// there is no need to load a FP register with the "corruped" floating
-// point value.  By doing the BIG_ENDIAN test, I can optimize the
-// routine for big-endian processors so it can be as efficient as
-// possible
-static void htond (double &x)	
-{
-    if ( sgIsLittleEndian() ) {
-        int    *Double_Overlay;
-        int     Holding_Buffer;
-    
-        Double_Overlay = (int *) &x;
-        Holding_Buffer = Double_Overlay [0];
-    
-        Double_Overlay [0] = htonl (Double_Overlay [1]);
-        Double_Overlay [1] = htonl (Holding_Buffer);
-    } else {
-        return;
-    }
-}
-
-
-static void net2global( FGNetFDM *net ) {
-    int i;
-
-    // Convert to the net buffer from network format
-    net->version = ntohl(net->version);
-
-    htond(net->longitude);
-    htond(net->latitude);
-    htond(net->altitude);
-    htond(net->phi);
-    htond(net->theta);
-    htond(net->psi);
-
-    htond(net->phidot);
-    htond(net->thetadot);
-    htond(net->psidot);
-    htond(net->vcas);
-    htond(net->climb_rate);
-    htond(net->v_north);
-    htond(net->v_east);
-    htond(net->v_down);
-    htond(net->v_wind_body_north);
-    htond(net->v_wind_body_east);
-    htond(net->v_wind_body_down);
-    htond(net->stall_warning);
-
-    htond(net->A_X_pilot);
-    htond(net->A_Y_pilot);
-    htond(net->A_Z_pilot);
-
-    net->num_engines = htonl(net->num_engines);
-    for ( i = 0; i < net->num_engines; ++i ) {
-	htonl(net->eng_state[i]);
-	htond(net->rpm[i]);
-	htond(net->fuel_flow[i]);
-	htond(net->EGT[i]);
-	htond(net->oil_temp[i]);
-	htond(net->oil_px[i]);
-    }
-
-    net->num_tanks = htonl(net->num_tanks);
-    for ( i = 0; i < net->num_tanks; ++i ) {
-	htond(net->fuel_quantity[i]);
-    }
-
-    net->num_wheels = htonl(net->num_wheels);
-    // I don't need to convert the Wow flags, since they are one byte in size
-    htond(net->flap_deflection);
-
-    net->cur_time = ntohl(net->cur_time);
-    net->warp = ntohl(net->warp);
-    htond(net->visibility);
-
-    if ( net->version == FG_NET_FDM_VERSION ) {
-        // cout << "pos = " << net->longitude << " " << net->latitude << endl;
-        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius()
-	//      << endl;
-        cur_fdm_state->_updateGeodeticPosition( net->latitude,
-                                                net->longitude,
-                                                net->altitude
-                                                  * SG_METER_TO_FEET );
-        cur_fdm_state->_set_Euler_Angles( net->phi,
-                                          net->theta,
-                                          net->psi );
-        cur_fdm_state->_set_Euler_Rates( net->phidot,
-					 net->thetadot,
-					 net->psidot );
-        cur_fdm_state->_set_V_calibrated_kts( net->vcas );
-        cur_fdm_state->_set_Climb_Rate( net->climb_rate );
-        cur_fdm_state->_set_Velocities_Local( net->v_north,
-                                              net->v_east,
-                                              net->v_down );
-        cur_fdm_state->_set_Velocities_Wind_Body( net->v_wind_body_north,
-                                                  net->v_wind_body_east,
-                                                  net->v_wind_body_down );
-
-        fgSetDouble( "/sim/alarms/stall-warning", net->stall_warning );
-        cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
-					       net->A_Y_pilot,
-					       net->A_Z_pilot );
-
-	for ( i = 0; i < net->num_engines; ++i ) {
-	    SGPropertyNode *node = fgGetNode( "engines/engine", i, true );
-	    
-	    // node->setBoolValue("running", t->isRunning());
-	    // node->setBoolValue("cranking", t->isCranking());
-	    
-	    // cout << net->eng_state[i] << endl;
-	    if ( net->eng_state[i] == 0 ) {
-		node->setBoolValue( "cranking", false );
-		node->setBoolValue( "running", false );
-	    } else if ( net->eng_state[i] == 1 ) {
-		node->setBoolValue( "cranking", true );
-		node->setBoolValue( "running", false );
-	    } else if ( net->eng_state[i] == 2 ) {
-		node->setBoolValue( "cranking", false );
-		node->setBoolValue( "running", true );
-	    }
-
-	    node->setDoubleValue( "rpm", net->rpm[i] );
-	    node->setDoubleValue( "fuel-flow-gph", net->fuel_flow[i] );
-	    node->setDoubleValue( "egt-degf", net->EGT[i] );
-	    node->setDoubleValue( "oil-temperature-degf", net->oil_temp[i] );
-	    node->setDoubleValue( "oil-pressure-psi", net->oil_px[i] );		
-	}
-
-	for (i = 0; i < net->num_tanks; ++i ) {
-	    SGPropertyNode * node
-		= fgGetNode("/consumables/fuel/tank", i, true);
-	    node->setDoubleValue("level-gal_us", net->fuel_quantity[i] );
-	}
-
-	for (i = 0; i < net->num_wheels; ++i ) {
-	    SGPropertyNode * node
-		= fgGetNode("/gear/gear", i, true);
-	    node->setDoubleValue("wow", net->wow[i] );
-	}
-
-        fgSetDouble("/surface-positions/flap-pos-norm", net->flap_deflection);
-	SGPropertyNode * node = fgGetNode("/controls", true);
-        fgSetDouble("/surface-positions/elevator-pos-norm", 
-		    node->getDoubleValue( "elevator" ));
-        fgSetDouble("/surface-positions/rudder-pos-norm", 
-		    node->getDoubleValue( "rudder" ));
-        fgSetDouble("/surface-positions/left-aileron-pos-norm", 
-		    node->getDoubleValue( "aileron" ));
-        fgSetDouble("/surface-positions/right-aileron-pos-norm", 
-		    -node->getDoubleValue( "aileron" ));
-
-	/* these are ignored for now  ... */
-	/*
-	if ( net->cur_time ) {
-	    fgSetLong("/sim/time/cur-time-override", net->cur_time);
-	}
-
-        globals->set_warp( net->warp );
-        last_warp = net->warp;
-	*/
-    } else {
-	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
-	SG_LOG( SG_IO, SG_ALERT,
-		"\tread " << net->version << " need " << FG_NET_FDM_VERSION );
-	SG_LOG( SG_IO, SG_ALERT,
-		"\tsomeone needs to upgrade net_fdm.hxx and recompile." );
-    }
-}
 
 
 FGExternalNet::FGExternalNet( double dt, string host, int dop, int dip, int cp )
@@ -256,15 +71,6 @@ FGExternalNet::FGExternalNet( double dt, string host, int dop, int dip, int cp )
 
     // disable blocking
     data_server.setBlocking( false );
-
-#if defined( linux )
-    // set SO_REUSEADDR flag
-    int socket = data_server.getHandle();
-    int one = 1;
-    int result;
-    result = ::setsockopt( socket, SOL_SOCKET, SO_REUSEADDR,
-                           &one, sizeof(one) );
-#endif
 
     // allowed to read from a broadcast addr
     // data_server.setBroadcast( true );
@@ -369,6 +175,6 @@ void FGExternalNet::update( double dt ) {
     length = sizeof(fdm);
     while ( (result = data_server.recv( (char *)(& fdm), length, 0)) >= 0 ) {
 	SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-	net2global( &fdm );
+	FGNetFDM2Props( &fdm );
     }
 }
