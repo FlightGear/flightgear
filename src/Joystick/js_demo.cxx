@@ -6,6 +6,7 @@
 #  include <windows.h>                     
 #endif
 
+#include <string.h>		// plib/js.h should really include this !!!!!!
 #include <plib/js.h>
 
 #define Z 8
