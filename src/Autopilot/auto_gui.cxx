@@ -455,6 +455,11 @@ void fgAPAdjustInit( void ) {
     TmpMaxAileronValue    = current_autopilot->get_MaxAileron();
     TmpRollOutSmoothValue = current_autopilot->get_RollOutSmooth();
 
+    MaxRollAdjust = 2 * current_autopilot->get_MaxRoll();
+    RollOutAdjust = 2 * current_autopilot->get_RollOut();
+    MaxAileronAdjust = 2 * current_autopilot->get_MaxAileron();
+    RollOutSmoothAdjust = 2 * current_autopilot->get_RollOutSmooth();
+
     MaxRollValue       = current_autopilot->get_MaxRoll() / MaxRollAdjust;
     RollOutValue       = current_autopilot->get_RollOut() / RollOutAdjust;
     MaxAileronValue    = current_autopilot->get_MaxAileron() / MaxAileronAdjust;
