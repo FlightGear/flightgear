@@ -242,6 +242,9 @@ $Original log: LaRCsim.c,v $
 #include "ls_init.h"
 #include <Flight/flight.h>
 #include <Aircraft/aircraft.h>
+#include <Autopilot/autopilot.h>
+#include <Debug/fg_debug.h>
+
 
 /* global variable declarations */
 
@@ -545,15 +548,32 @@ int fgLaRCsimInit(double dt) {
 
 
 /* Run an iteration of the EOM (equations of motion) */
-int fgLaRCsimUpdate(int multiloop) {
+int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
     int	i;
 
     if (speedup > 0) {
 	ls_cockpit();
     }
 
+    // translate FG to LaRCsim structure
+    fgFlight_2_LaRCsim(f);
+
     for ( i = 0; i < multiloop; i++ ) {
+	//Insertion by Jeff Goeke-Smith for Autopilot.
+	
+	// run Autopilot system
+	fgPrintf( FG_ALL, FG_BULK,"Attempting autopilot run\n");
+	              
+	fgAPRun();
+	
+	// end of insertion 
+	
 	ls_loop( model_dt, 0);
+
+	// translate LaRCsim back to FG structure so that the
+	// autopilot (and the rest of the sim can use the updated
+	// values
+	fgLaRCsim_2_Flight(f);
     }
 
     return(1);
@@ -914,6 +934,10 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.18  1998/04/21 16:59:38  curt
+ * Integrated autopilot.
+ * Prepairing for C++ integration.
+ *
  * Revision 1.17  1998/02/23 19:07:58  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

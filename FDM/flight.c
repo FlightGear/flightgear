@@ -59,9 +59,7 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
     int result;
 
     if ( model == FG_LARCSIM ) {
-	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
-	fgLaRCsimUpdate(multiloop);
-	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
+	fgLaRCsimUpdate(f, multiloop);
     } else {
 	fgPrintf(FG_FLIGHT,FG_WARN,"Unimplemented flight model == %d\n", model);
     }
@@ -73,9 +71,13 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.11  1998/04/18 04:14:04  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.12  1998/04/21 16:59:33  curt
+/* Integrated autopilot.
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.11  1998/04/18 04:14:04  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.10  1998/02/07 15:29:37  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -28,6 +28,11 @@
 #define _FLIGHT_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Flight/Slew/slew.h>
 /* #include <Flight/LaRCsim/ls_interface.h> */
 
@@ -397,14 +402,23 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt);
 int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _FLIGHT_H */
 
 
 /* $Log$
-/* Revision 1.14  1998/02/07 15:29:37  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.15  1998/04/21 16:59:33  curt
+/* Integrated autopilot.
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.14  1998/02/07 15:29:37  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.13  1998/01/24 00:04:59  curt
  * misc. tweaks.
  *

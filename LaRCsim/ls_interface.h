@@ -36,7 +36,7 @@
 int fgLaRCsimInit(double dt);
 
 /* update position based on inputs, positions, velocities, etc. */
-int fgLaRCsimUpdate(int multiloop);
+int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop);
 
 /* Convert from the fgFLIGHT struct to the LaRCsim generic_ struct */
 int fgFlight_2_LaRCsim (fgFLIGHT *f);
@@ -51,10 +51,14 @@ void ls_loop( SCALAR dt, int initialize );
 
 
 /* $Log$
-/* Revision 1.7  1998/02/07 15:29:39  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.8  1998/04/21 16:59:39  curt
+/* Integrated autopilot.
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.7  1998/02/07 15:29:39  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.6  1998/02/03 23:20:17  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
