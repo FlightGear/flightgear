@@ -39,8 +39,6 @@ FGAIBallistic::~FGAIBallistic() {
 
 bool FGAIBallistic::init() {
    FGAIBase::init();
-   vs = sin( elevation * 0.017453293 ) * speed;
-   hs = cos( elevation * 0.017453293 ) * speed;
    aero_stabilized =  true;
    hdg = azimuth;
    pitch = elevation;
@@ -48,11 +46,11 @@ bool FGAIBallistic::init() {
 }
 
 void FGAIBallistic::bind() {
-    FGAIBase::bind();
+//    FGAIBase::bind();
 }
 
 void FGAIBallistic::unbind() {
-    FGAIBase::unbind();
+//    FGAIBase::unbind();
 }
 
 void FGAIBallistic::update(double dt) {
@@ -63,12 +61,12 @@ void FGAIBallistic::update(double dt) {
 
 
 void FGAIBallistic::setAzimuth(double az) {
-   azimuth = az;
+   hdg = azimuth = az;
 }
 
 
 void FGAIBallistic::setElevation(double el) {
-   elevation = el;
+   pitch = elevation = el;
 }
 
 
@@ -84,17 +82,12 @@ void FGAIBallistic::Run(double dt) {
 
    // the two drag calculations below assume sea-level density, 
    // mass of 0.03 slugs,  drag coeff of 0.295, frontal area of 0.007 ft2 
-   // adjust horizontal speed due to drag 
-   hs -= 0.000082 * hs * hs * dt;
-   if ( hs < 0.0 ) hs = 0.0;
+   // adjust speed due to drag 
+   speed -= 0.000082 * speed * speed * dt;
+   if ( speed < 0.0 ) speed = 0.0;
+   vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed;
+   hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed;
 
-   // adjust vertical speed due to drag
-   if (vs > 0.0) {
-     vs -= 0.000082 * vs * vs * dt;
-   } else {
-     vs += 0.000082 * vs * vs * dt;
-   }
-   
    // convert horizontal speed (fps) to degrees per second
    speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
    speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
@@ -103,15 +96,18 @@ void FGAIBallistic::Run(double dt) {
    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
    pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
 
+   // adjust altitude (feet)
+   altitude += vs * dt;
+   pos.setelev(altitude * SG_FEET_TO_METER); 
+
    // adjust vertical speed for acceleration of gravity
    vs -= 32.17 * dt;
 
-   // adjust altitude (meters)
-   altitude += vs * dt * SG_FEET_TO_METER;
-   pos.setelev(altitude); 
-
-   // adjust pitch if aerostabilized
+   // recalculate pitch (velocity vector) if aerostabilized
    if (aero_stabilized) pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+
+   // recalculate total speed
+   speed = sqrt( vs * vs + hs * hs);
 
    // set destruction flag if altitude less than sea level -1000
    if (altitude < -1000.0) setDie(true);

@@ -55,6 +55,7 @@ FGAIBase::FGAIBase() {
     model = 0;
     _otype = otNull;
     index = 0;
+    fp = (FGAIFlightPlan*)0;
 }
 
 FGAIBase::~FGAIBase() {
