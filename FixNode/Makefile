@@ -27,7 +27,7 @@
 TARGET = fixnode
 
 CFILES = fixnode.c main.c triload.c
-LDLIBS = ../Dem2node/demparse.o ../Dem2node/mesh.o -lm
+LDLIBS = -lDEM -lScenery -lm
 
 
 include $(FG_ROOT_SRC)/commondefs
@@ -46,6 +46,9 @@ include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/03/19 02:50:19  curt
+# Updated to support -lDEM class.
+#
 # Revision 1.2  1998/01/21 02:55:50  curt
 # Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
 #

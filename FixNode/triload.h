@@ -24,8 +24,8 @@
  */
 
 
-#ifndef TRILOAD_H
-#define TRILOAD_H
+#ifndef _TRILOAD_H
+#define _TRILOAD_H
 
 
 #include <stdio.h>
@@ -43,13 +43,16 @@ extern int nodecount, tricount;
 void triload(char *basename, double nodes[MAX_NODES][3]);
 
 
-#endif /* TRILOAD_H */
+#endif // _TRILOAD_H
 
 
 /* $Log$
-/* Revision 1.3  1998/03/03 16:00:59  curt
-/* More c++ compile tweaks.
+/* Revision 1.4  1998/03/19 02:50:20  curt
+/* Updated to support -lDEM class.
 /*
+ * Revision 1.3  1998/03/03 16:00:59  curt
+ * More c++ compile tweaks.
+ *
  * Revision 1.2  1998/01/09 23:03:09  curt
  * Restructured to split 1deg x 1deg dem's into 64 subsections.
  *

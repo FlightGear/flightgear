@@ -29,12 +29,14 @@
 #include <unistd.h>
 
 #include "fixnode.h"
-#include "../Dem2node/mesh.h"
 #include "triload.h"
 
 
 /* load the node information */
-void fixnodes(char *filename, struct MESH *m, double nodes[MAX_NODES][3]) {
+void fixnodes( char *filename, fgDEM dem, 
+	       float dem_data[DEM_SIZE_1][DEM_SIZE_1], 
+	       double nodes[MAX_NODES][3] )
+{
     char toname[256];
     FILE *fd;
     int i;
@@ -50,7 +52,8 @@ void fixnodes(char *filename, struct MESH *m, double nodes[MAX_NODES][3]) {
 	/* printf("Current: %d %.2f %.2f %.2f\n", i, nodes[i][0],
 	       nodes[i][1], nodes[i][2]); */
 
-	nodes[i][2] = mesh_altitude(m, nodes[i][0], nodes[i][1]);
+	nodes[i][2] = 
+	    dem.interpolate_altitude(dem_data, nodes[i][0], nodes[i][1]);
 
 	/* printf("Fixed: %d %.2f %.2f %.2f\n", i, nodes[i][0],
 	       nodes[i][1], nodes[i][2]); */
@@ -77,9 +80,12 @@ void fixnodes(char *filename, struct MESH *m, double nodes[MAX_NODES][3]) {
 
 
 /* $Log$
-/* Revision 1.4  1998/03/03 16:00:57  curt
-/* More c++ compile tweaks.
+/* Revision 1.5  1998/03/19 02:50:19  curt
+/* Updated to support -lDEM class.
 /*
+ * Revision 1.4  1998/03/03 16:00:57  curt
+ * More c++ compile tweaks.
+ *
  * Revision 1.3  1998/01/09 23:03:08  curt
  * Restructured to split 1deg x 1deg dem's into 64 subsections.
  *

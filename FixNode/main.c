@@ -1,27 +1,27 @@
-/* triload.c -- read in a .node file and fix the z values of the interpolated 
- *              points
- *
- * Written by Curtis Olson, started November 1997.
- *
- * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
- * (Log is kept at end of this file)
- */
+// triload.c -- read in a .node file and fix the z values of the interpolated 
+//              points
+//
+// Written by Curtis Olson, started November 1997.
+//
+// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
+//
 
 
 #include <dirent.h>
@@ -29,18 +29,20 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "../Dem2node/demparse.h"
+#include "../DEM/dem.h"
 #include "fixnode.h"
 #include "triload.h"
 
 
-/* Original DEM which is used to interpolate z values */
-static struct MESH dem_mesh;
+// Storage for the original DEM data which is used to interpolate z values
+static fgDEM dem;
+static float dem_data[DEM_SIZE_1][DEM_SIZE_1];
 
-/* Node list */
+// Node list
 static double nodes[MAX_NODES][3];
 
-/* find all the matching files in the specified directory and fix them */
+
+// find all the matching files in the specified directory and fix them
 void process_files(char *root_path) {
     DIR *d;
     struct dirent *de;
@@ -58,7 +60,7 @@ void process_files(char *root_path) {
 	if ( len > 7 ) {
 	    ptr = de->d_name;
 	    ptr += (len - 7);
-	    /* printf("--> %s \n", ptr); */
+	    // printf("--> %s \n", ptr);
 
 	    if ( strcmp(ptr, ".1.node") == 0 ) {
 		strcpy(file_path, root_path);
@@ -66,17 +68,17 @@ void process_files(char *root_path) {
 		strcat(file_path, de->d_name);
 		printf("File = %s\n", file_path);
 
-		/* load the input data files */
+		// load the input data files
 		triload(file_path, nodes);
 
-		fixnodes(file_path, &dem_mesh, nodes);
+		fixnodes(file_path, dem, dem_data, nodes);
 	    }
 	}
     }
 }
 
 
-/* main */
+// main
 int main(int argc, char **argv) {
     char demfile[256], root_path[256];
 
@@ -88,27 +90,32 @@ int main(int argc, char **argv) {
     strcpy(demfile, argv[1]);
     strcpy(root_path, argv[2]);
 
-    /* load the corresponding dem file so we can interpolate elev values */
-    dem_parse(demfile, &dem_mesh);
+    // load the corresponding dem file so we can interpolate elev values
+    dem.open(demfile);
+    dem.parse(dem_data);
+    dem.close();
 
-    /* process all the *.1.node files in the specified directory */
+    // process all the *.1.node files in the specified directory
     process_files(root_path);
 
     return(0);
 }
 
 
-/* $Log$
-/* Revision 1.4  1998/03/03 16:00:58  curt
-/* More c++ compile tweaks.
-/*
- * Revision 1.3  1998/01/09 23:03:08  curt
- * Restructured to split 1deg x 1deg dem's into 64 subsections.
- *
- * Revision 1.2  1997/12/02 13:12:07  curt
- * Updated to fix every node.
- *
- * Revision 1.1  1997/11/27 00:17:34  curt
- * Initial revision.
- *
- */
+// $Log$
+// Revision 1.5  1998/03/19 02:50:20  curt
+// Updated to support -lDEM class.
+//
+// Revision 1.4  1998/03/03 16:00:58  curt
+// More c++ compile tweaks.
+//
+// Revision 1.3  1998/01/09 23:03:08  curt
+// Restructured to split 1deg x 1deg dem's into 64 subsections.
+//
+// Revision 1.2  1997/12/02 13:12:07  curt
+// Updated to fix every node.
+//
+// Revision 1.1  1997/11/27 00:17:34  curt
+// Initial revision.
+//
+//
