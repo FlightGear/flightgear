@@ -35,6 +35,7 @@ FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     life_timer = 0.0;
 	gravity = 32;
 //	buoyancy = 64;
+    no_roll = false;
 	}
 
 FGAIBallistic::~FGAIBallistic() {
@@ -46,6 +47,7 @@ bool FGAIBallistic::init() {
    aero_stabilized = true;
    hdg = azimuth;
    pitch = elevation;
+   roll = rotation;
    Transform();
    return true;
 }
@@ -78,6 +80,9 @@ void FGAIBallistic::setElevation(double el) {
    pitch = elevation = el;
 }
 
+void FGAIBallistic::setRoll(double rl) {
+   rotation = rl;
+}
 
 void FGAIBallistic::setStabilization(bool val) {
    aero_stabilized = val;
@@ -171,3 +176,4 @@ double FGAIBallistic::_getTime() const {
    return life_timer;
 }
 
+// end AIBallistic
