@@ -624,6 +624,8 @@ void fgRenderFrame() {
             // within the range of the far clip plane.
             // Moon distance:    384,467 kilometers
             // Sun distance: 150,000,000 kilometers
+            double sun_eye_eff = 0.67+pow(0.5+cos(cur_light_params.sun_angle*2)/2,0.33)/3;
+            double moon_eye_eff = 0.67+pow(0.5+cos(cur_light_params.moon_angle*2)/2,0.33)/3;
             thesky->reposition( current__view->get_view_pos(),
                                 current__view->get_zero_elev(),
                                 current__view->get_world_up(),
@@ -637,10 +639,10 @@ void fgRenderFrame() {
                                 globals->get_time_params()->getGst(),
                                 globals->get_ephem()->getSunRightAscension(),
                                 globals->get_ephem()->getSunDeclination(),
-                                50000.0,
+                                50000.0 * sun_eye_eff,
                                 globals->get_ephem()->getMoonRightAscension(),
                                 globals->get_ephem()->getMoonDeclination(),
-                                40000.0 );
+                                40000.0 * moon_eye_eff );
         }
 
         glEnable( GL_DEPTH_TEST );
