@@ -167,6 +167,10 @@ ssgSimpleState *menus;
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
+// The atexit() functio handler should know when the graphical subsystem
+// is initialized.
+extern int _bootstrap_OSInit;
+
 
 void fgBuildRenderStates( void ) {
     default_state = new ssgSimpleState;
@@ -1504,15 +1508,6 @@ void fgReshape( int width, int height ) {
 }
 
 
-// do some clean up on exit.  Specifically we want to call alutExit()
-// which happens in the sound manager destructor.
-void fgExitCleanup() {
-    fgSetMouseCursor(MOUSE_CURSOR_POINTER);
-    delete globals;
-//    fgOSExit(0);
-}
-
-
 // Main top level initialization
 bool fgMainInit( int argc, char **argv ) {
 
@@ -1524,8 +1519,6 @@ bool fgMainInit( int argc, char **argv ) {
 
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );
-
-    atexit(fgExitCleanup);
 
     string version;
 #ifdef FLIGHTGEAR_VERSION
@@ -1590,6 +1583,7 @@ bool fgMainInit( int argc, char **argv ) {
     // from main(), in bootstrap.cxx.  Andy doesn't know why, someone
     // feel free to add comments...
     fgOSInit(&argc, argv);
+    _bootstrap_OSInit++;
 #endif
 
     fgRegisterWindowResizeHandler( fgReshape );

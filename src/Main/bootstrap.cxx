@@ -41,6 +41,7 @@ SG_USING_STD(cerr);
 SG_USING_STD(endl);
 
 #include "main.hxx"
+#include "globals.hxx"
 
 
 #ifdef HAVE_WINDOWS_H
@@ -54,6 +55,8 @@ SG_USING_STD(endl);
 #  include <console.h>		// -dw- for command line dialog
 #endif
 
+// foreward declaration.
+void fgExitCleanup();
 
 #if defined(__linux__) && defined(__i386__)
 
@@ -133,8 +136,12 @@ void flush_fpe(void)
 }
 #endif
 
+int _bootstrap_OSInit;
+
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
+
+    _bootstrap_OSInit = 0;
 
     // Enable floating-point exceptions for Linux/x86
 #if defined(__linux__) && defined(__i386__)
@@ -161,6 +168,7 @@ int main ( int argc, char **argv ) {
       PSN psn;
 
       fgOSInit (&argc, argv);
+      _bootstrap_OSInit++;
 
       CPSGetCurrentProcess(&psn);
       CPSSetProcessName(&psn, "FlightGear");
@@ -172,6 +180,7 @@ int main ( int argc, char **argv ) {
     // FIXME: add other, more specific
     // exceptions.
     try {
+        atexit(fgExitCleanup);
         fgMainInit(argc, argv);
     } catch (sg_throwable &t) {
                             // We must use cerr rather than
@@ -185,4 +194,14 @@ int main ( int argc, char **argv ) {
     return 0;
 }
 
+// do some clean up on exit.  Specifically we want to call alutExit()
+// which happens in the sound manager destructor.
+void fgExitCleanup() {
+
+    if (_bootstrap_OSInit != 0)
+        fgSetMouseCursor(MOUSE_CURSOR_POINTER);
+
+    if (globals)
+        delete globals;
+}
 
