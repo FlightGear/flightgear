@@ -123,7 +123,7 @@ public:
       @param AC_cfg pointer to the config file instance that describes the
              aircraft being modeled.
       @return true if successfully loaded, otherwise false */
-  bool LoadPropulsion(FGConfigFile* AC_cfg);
+  bool Load(FGConfigFile* AC_cfg);
 
   /// Retrieves the number of engines defined for the aircraft.
   inline unsigned int GetNumEngines(void) {return Engines.size();}

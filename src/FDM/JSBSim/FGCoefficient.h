@@ -97,7 +97,18 @@ CLASS DECLARATION
 
 class FGCoefficient
 {
+public:
+  FGCoefficient(FGFDMExec*, FGConfigFile*);
+  ~FGCoefficient();
+
   typedef vector <eParam> MultVec;
+  float TotalValue(void);
+  inline string Getname(void) {return name;}
+  inline float GetSD(void) {return SD;}
+  inline MultVec Getmultipliers(void) {return multipliers;}
+  void DumpSD(void);
+
+private:
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
 
   int numInstances;
@@ -105,6 +116,9 @@ class FGCoefficient
   string description;
   string name;
   string method;
+  float Value(float, float);
+  float Value(float);
+  float Value(void);
   float StaticValue;
   eParam LookupR, LookupC;
   MultVec multipliers;
@@ -124,19 +138,6 @@ class FGCoefficient
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
 
-public:
-  FGCoefficient(FGFDMExec*, FGConfigFile*);
-  ~FGCoefficient();
-
-  float Value(float, float);
-  float Value(float);
-  float Value(void);
-  float TotalValue(void);
-  inline string Getname(void) {return name;}
-  inline float GetSD(void) {return SD;}
-  inline MultVec Getmultipliers(void) {return multipliers;}
-  void DumpSD(void);
-private:
   void Debug(void);
 };
 

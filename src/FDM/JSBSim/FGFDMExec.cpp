@@ -364,14 +364,26 @@ bool FGFDMExec::LoadModel(string APath, string EPath, string model)
 {
   bool result = false;
 
+  string aircraftCfgFileName;
+
+  AircraftPath = APath;
+  EnginePath   = EPath;
+
+# ifndef macintosh
+  aircraftCfgFileName = AircraftPath + "/" + model + "/" + model + ".xml";
+# else
+  aircraftCfgFileName = AircraftPath + ";" + model + ";" + model + ".xml";
+# endif
+
+  FGConfigFile AC_cfg(aircraftCfgFileName);
+  if (!AC_cfg.IsOpen()) return false;
+
   if (modelLoaded) {
     DeAllocate();
     Allocate();
   }
 
-  AircraftPath = APath;
-  EnginePath   = EPath;
-  result = Aircraft->LoadAircraft(AircraftPath, EnginePath, model);
+  result = Aircraft->Load(&AC_cfg);
 
   if (result) {
     modelLoaded = true;

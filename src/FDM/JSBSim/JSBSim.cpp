@@ -88,7 +88,7 @@ USEUNIT("FGNozzle.cpp");
 USEUNIT("FGOutput.cpp");
 USEUNIT("FGPiston.cpp");
 USEUNIT("FGPosition.cpp");
-USEUNIT("FGPropeller.cpp");
+USEUNIT("FGJSBBase.cpp");
 USEUNIT("FGPropulsion.cpp");
 USEUNIT("FGRocket.cpp");
 USEUNIT("FGRotation.cpp");
@@ -112,6 +112,7 @@ USEUNIT("filtersjb\FGGain.cpp");
 USEUNIT("filtersjb\FGGradient.cpp");
 USEUNIT("filtersjb\FGSummer.cpp");
 USEUNIT("filtersjb\FGDeadBand.cpp");
+USEUNIT("FGPropeller.cpp");
 //---------------------------------------------------------------------------
 #endif
 

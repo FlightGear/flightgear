@@ -66,9 +66,8 @@ bool FGGroundReactions:: Run(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGGroundReactions::LoadGroundReactions(FGConfigFile* AC_cfg)
+bool FGGroundReactions::Load(FGConfigFile* AC_cfg)
 {
-//
   return true;
 }
 

@@ -83,7 +83,6 @@ public:
   
   inline FGColumnVector GetVel(void) { return vVel; }
   inline FGColumnVector GetVelDot(void) { return vVelDot; }
-  inline FGColumnVector GetUVW(void) { return vUVW; }
   inline double GetVn(void)  { return vVel(eX); }
   inline double GetVe(void)  { return vVel(eY); }
   inline double GetVd(void)  { return vVel(eZ); }
@@ -115,7 +114,6 @@ public:
   }
   
 private:  
-  FGColumnVector vUVW;
   FGColumnVector vVel;
   FGColumnVector vVelDot;
   FGColumnVector vRunwayNormal;

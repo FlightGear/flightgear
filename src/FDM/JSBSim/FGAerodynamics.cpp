@@ -131,7 +131,7 @@ bool FGAerodynamics::Run(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGAerodynamics::LoadAerodynamics(FGConfigFile* AC_cfg)
+bool FGAerodynamics::Load(FGConfigFile* AC_cfg)
 {
   string token, axis;
 

@@ -143,7 +143,7 @@ bool FGPropulsion::GetSteadyState(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropulsion::LoadPropulsion(FGConfigFile* AC_cfg)
+bool FGPropulsion::Load(FGConfigFile* AC_cfg)
 {
   string token, fullpath;
   string engineFileName, engType;

@@ -69,7 +69,7 @@ public:
   ~FGGroundReactions();
 
   bool Run(void);
-  bool LoadGroundReactions(FGConfigFile* AC_cfg);
+  bool Load(FGConfigFile* AC_cfg);
 
 private:
   void Debug(void);

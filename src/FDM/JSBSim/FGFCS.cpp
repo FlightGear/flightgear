@@ -134,12 +134,12 @@ void FGFCS::SetThrottlePos(int engineNum, float setting)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFCS::LoadFCS(FGConfigFile* AC_cfg)
+bool FGFCS::Load(FGConfigFile* AC_cfg)
 {
   string token;
 
-  FCSName = AC_cfg->GetValue("NAME");
-  if (debug_lvl > 0) cout << "    Control System Name: " << FCSName << endl;
+  Name = AC_cfg->GetValue("NAME");
+  if (debug_lvl > 0) cout << "    Control System Name: " << Name << endl;
   AC_cfg->GetNextConfigLine();
   while ((token = AC_cfg->GetValue()) != "/FLIGHT_CONTROL") {
     if (token == "COMPONENT") {

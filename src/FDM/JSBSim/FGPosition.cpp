@@ -93,7 +93,6 @@ extern double globalSceneryAltitude;
 extern double globalSeaLevelRadius;
 
 FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex),
-    vUVW(3),
     vVel(3),
     vVelDot(3),
     vRunwayNormal(3)
@@ -184,9 +183,8 @@ bool FGPosition:: Run(void) {
 void FGPosition::GetState(void) {
   dt = State->Getdt();
 
-  vUVW      = Translation->GetUVW();
   Vt        = Translation->GetVt();
-  vVel      = State->GetTb2l()*vUVW + Atmosphere->GetWindNED();
+  vVel      = State->GetTb2l() * Translation->GetUVW();
   vVelDot   = State->GetTb2l() * Translation->GetUVWdot();
 
   b = Aircraft->GetWingSpan();

@@ -79,6 +79,7 @@ class FGRotation;
 class FGPosition;
 class FGAuxiliary;
 class FGOutput;
+class FGConfigFile;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -105,10 +106,15 @@ public:
   /// Destructor
   virtual ~FGModel();
 
+  /** Loads this model.
+      @param Config a pointer to the config file instance
+      @return true if model is successfully loaded*/
+  virtual bool Load(FGConfigFile* Config) {}
+ 
   FGModel* NextModel;
   string Name;
 
-    /** Runs the model; called by the Executive
+  /** Runs the model; called by the Executive
       @see JSBSim.cpp documentation
       @return false if no error */
   virtual bool Run(void);

@@ -105,7 +105,7 @@ public:
 
   /** Loads the Aerodynamics model
       @return true if successful */
-  bool LoadAerodynamics(FGConfigFile* AC_cfg);
+  bool Load(FGConfigFile* AC_cfg);
 
   /** Outputs coefficient information.
       Non-dimensionalizing parameter descriptions are output

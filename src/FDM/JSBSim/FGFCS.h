@@ -350,11 +350,7 @@ public:
       the config file instance pointer. LoadFCS() is called from FGAircraft.
       @param AC_cfg pointer to the config file instance
       @return true if succesful */
-  bool LoadFCS(FGConfigFile* AC_cfg);
-
-  /** The name of the flight control laws for this aircraft.
-      This is given in the config file, and is not used for anything currently.*/
-  string FCSName;
+  bool Load(FGConfigFile* AC_cfg);
 
   void AddThrottle(void);
 
