@@ -59,30 +59,30 @@ FGGeneric::FGGeneric(string& config) {
 	 * var_sep_string = the string/charachter to place between variables
 	 * line_sep_string = the string/charachter to place at the end of each lot of variables
 	 */
-    var_sep_string = output->getStringValue("var_seperator");
-    line_sep_string = output->getStringValue("line_seperator");
+    var_sep_string = output->getStringValue("var_separator");
+    line_sep_string = output->getStringValue("line_separator");
 
-	if ( var_seperator == "newline" )
-		var_seperator = '\n';
-	else if ( var_seperator == "formfeed" )
-		var_seperator = '\f';
-	else if ( var_seperator == "carriagereturn" )
-		var_seperator = '\r';
-	else if ( var_seperator == "verticaltab" )
-		var_seperator = '\v';
+	if ( var_separator == "newline" )
+		var_separator = '\n';
+	else if ( var_separator == "formfeed" )
+		var_separator = '\f';
+	else if ( var_separator == "carriagereturn" )
+		var_separator = '\r';
+	else if ( var_separator == "verticaltab" )
+		var_separator = '\v';
 	else
-		var_seperator = var_sep_string;
+		var_separator = var_sep_string;
 
 	if ( line_sep_string == "newline" )
-		line_seperator = '\n';
+		line_separator = '\n';
 	else if ( line_sep_string == "formfeed" )
-		line_seperator = '\f';
+		line_separator = '\f';
 	else if ( line_sep_string == "carriagereturn" )
-		line_seperator = '\r';
+		line_separator = '\r';
 	else if ( line_sep_string == "verticaltab" )
-		line_seperator = '\v';
+		line_separator = '\v';
 	else
-		line_seperator = line_sep_string;
+		line_separator = line_sep_string;
 
 
     vector<SGPropertyNode_ptr> chunks = output->getChildren("chunk");
@@ -131,7 +131,7 @@ bool FGGeneric::gen_message() {
     for (unsigned int i = 0; i < _message.size(); i++) {
 
         if (i > 0)
-           generic_sentence += line_seperator;
+           generic_sentence += line_separator;
 
         switch (_message[i].type) {
         case FG_INT:
@@ -159,8 +159,8 @@ bool FGGeneric::gen_message() {
         generic_sentence += tmp;
     }
 
-    /* After each lot of variables has been added, put the line seperator char/string */
-    generic_sentence += line_seperator;
+    /* After each lot of variables has been added, put the line separator char/string */
+    generic_sentence += line_separator;
  
             
     length =  generic_sentence.length();
