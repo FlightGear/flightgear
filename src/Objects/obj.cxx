@@ -226,36 +226,36 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     t->fragment_list.push_back(fragment);
 
     // Allocate ssg structure
-    sgVec3 *vtlist = new sgVec3 [ 4 ];
-    t->vec3_ptrs.push_back( vtlist );
-    sgVec3 *vnlist = new sgVec3 [ 4 ];
-    t->vec3_ptrs.push_back( vnlist );
-    sgVec2 *tclist = new sgVec2 [ 4 ];
-    t->vec2_ptrs.push_back( tclist );
+    ssgVertexArray   *vl = new ssgVertexArray( 4 );
+    ssgNormalArray   *nl = new ssgNormalArray( 4 );
+    ssgTexCoordArray *tl = new ssgTexCoordArray( 4 );
+    ssgColourArray   *cl = new ssgColourArray( 4 );
 
+    // sgVec3 *vtlist = new sgVec3 [ 4 ];
+    // t->vec3_ptrs.push_back( vtlist );
+    // sgVec3 *vnlist = new sgVec3 [ 4 ];
+    // t->vec3_ptrs.push_back( vnlist );
+    // sgVec2 *tclist = new sgVec2 [ 4 ];
+    // t->vec2_ptrs.push_back( tclist );
+
+    sgVec2 tmp2;
+    sgVec3 tmp3;
     for ( i = 0; i < 4; ++i ) {
-	sgSetVec3( vtlist[i], 
+	sgSetVec3( tmp3, 
 		   rel[i].x(), rel[i].y(), rel[i].z() );
-	sgSetVec3( vnlist[i], 
+	vl->add( tmp3 );
+
+	sgSetVec3( tmp3, 
 		   normals[i].x(), normals[i].y(), normals[i].z() );
-	sgSetVec2( tclist[i], texs[i].x(), texs[i].y() );
+	nl->add( tmp3 );
+
+	sgSetVec2( tmp2, texs[i].x(), texs[i].y());
+	tl->add( tmp2 );
     }
     
-    unsigned short *vindex = new unsigned short [ 4 ];
-    t->index_ptrs.push_back( vindex );
-    unsigned short *tindex = new unsigned short [ 4 ];
-    t->index_ptrs.push_back( tindex );
-    for ( i = 0; i < 4; ++i ) {
-	vindex[i] = i;
-	tindex[i] = i;
-    }
-
     ssgLeaf *leaf = 
-	new ssgVTable ( GL_TRIANGLE_FAN,
-			4, vindex, vtlist,
-			4, vindex, vnlist,
-			4, tindex, tclist,
-			0, NULL, NULL ) ;
+	new ssgVtxTable ( GL_TRIANGLE_FAN, vl, nl, tl, cl );
+
     leaf->setState( state );
 
     tile->addKid( leaf );
@@ -753,37 +753,34 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		// xglEnd();
 
 		// build the ssg entity
-		unsigned short *vindex = 
-		    new unsigned short [ fan_vertices.size() ];
-		t->index_ptrs.push_back( vindex );
+		int size = (int)fan_vertices.size();
+		ssgVertexArray   *vl = new ssgVertexArray( size );
+		ssgNormalArray   *nl = new ssgNormalArray( size );
+		ssgTexCoordArray *tl = new ssgTexCoordArray( size );
+		ssgColourArray   *cl = new ssgColourArray();
 
-		unsigned short *tindex = 
-		    new unsigned short [ fan_tex_coords.size() ];
-		t->index_ptrs.push_back( tindex );
+		sgVec2 tmp2;
+		sgVec3 tmp3;
+		for ( i = 0; i < size; ++i ) {
+		    sgCopyVec3( tmp3, vtlist[ fan_vertices[i] ] );
+		    vl -> add( tmp3 );
 
-		for ( i = 0; i < (int)fan_vertices.size(); ++i ) {
-		    vindex[i] = fan_vertices[i];
+		    sgCopyVec3( tmp3, vnlist[ fan_vertices[i] ] );
+		    nl -> add( tmp3 );
+
+		    sgCopyVec2( tmp2, tclist[ fan_tex_coords[i] ] );
+		    tl -> add( tmp2 );
 		}
-		for ( i = 0; i < (int)fan_tex_coords.size(); ++i ) {
-		    tindex[i] = fan_tex_coords[i];
-		}
+
 		ssgLeaf *leaf;
 		if ( token == "tf" ) {
 		    // triangle fan
 		    leaf = 
-			new ssgVTable ( GL_TRIANGLE_FAN,
-					fan_vertices.size(), vindex, vtlist,
-					fan_vertices.size(), vindex, vnlist,
-					fan_tex_coords.size(), tindex, tclist,
-					0, NULL, NULL ) ;
+			new ssgVtxTable ( GL_TRIANGLE_FAN, vl, nl, tl, cl );
 		} else {
 		    // triangle strip
 		    leaf = 
-			new ssgVTable ( GL_TRIANGLE_STRIP,
-					fan_vertices.size(), vindex, vtlist,
-					fan_vertices.size(), vindex, vnlist,
-					fan_tex_coords.size(), tindex, tclist,
-					0, NULL, NULL ) ;
+			new ssgVtxTable ( GL_TRIANGLE_STRIP, vl, nl, tl, cl );
 		}
 		// leaf->makeDList();
 		leaf->setState( state );
