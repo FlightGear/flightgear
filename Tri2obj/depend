@@ -1,0 +1,1 @@
+triload.o: triload.c triload.h
