@@ -4,7 +4,7 @@
 #include "ControlMap.hpp"
 #include "Model.hpp"
 #include "Wing.hpp"
-#include "util/Vector.hpp"
+#include "Vector.hpp"
 
 namespace yasim {
 

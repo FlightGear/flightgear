@@ -1,7 +1,7 @@
 #ifndef _CONTROL_MAP_HPP
 #define _CONTROL_MAP_HPP
 
-#include "util/Vector.hpp"
+#include "Vector.hpp"
 
 namespace yasim {
 

@@ -4,7 +4,7 @@
 #include "Integrator.hpp"
 #include "RigidBody.hpp"
 #include "BodyEnvironment.hpp"
-#include "util/Vector.hpp"
+#include "Vector.hpp"
 
 namespace yasim {
 

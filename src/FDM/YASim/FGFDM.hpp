@@ -4,7 +4,7 @@
 #include <simgear/easyxml.hxx>
 
 #include "Airplane.hpp"
-#include "util/Vector.hpp"
+#include "Vector.hpp"
 
 namespace yasim {
 

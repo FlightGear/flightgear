@@ -1,7 +1,7 @@
 #ifndef _WING_HPP
 #define _WING_HPP
 
-#include "util/Vector.hpp"
+#include "Vector.hpp"
 
 namespace yasim {
 
