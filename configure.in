@@ -133,6 +133,7 @@ AC_OUTPUT( \
 	Makefile \
 	Include/Makefile \
 	Lib/Makefile \
+	Lib/Audio/Makefile \
 	Lib/Bucket/Makefile \
 	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \

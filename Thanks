@@ -8,14 +8,17 @@ credit everyone who has contributed to this project.
 
 
 Michele America <nomimarketing@mail.telepac.pt>
-  Contributed the HUD code.
+  Contributed to the HUD code.
 
 
 Steve Baker <sbaker@link.com>
-  Steve has provided an immense amount of coaching and tutelage, both
-  on the subjects of flight simulation and OpenGL.  It has been his
-  comments and thoughts that have prompted the implementation of most
-  of the more sophisticated features of Flight Gear.
+  - Author of PUI (a graphical interface written entirely on top of
+    OpenGL/GLUT)
+  - Contributed significantly to the basic Audio library.
+  - Steve has provided an immense amount of coaching and tutelage,
+    both on the subjects of flight simulation and OpenGL.  It has been
+    his comments and thoughts that have prompted the implementation of
+    most of the more sophisticated features of Flight Gear.
 
 
 Paul Bleisch <pbleisch@acm.org>
