@@ -177,7 +177,7 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
 
     xrange = (int)(vis / tile_width) + 1;
     yrange = (int)(vis / tile_height) + 1;
-    if ( xrange < 1 ) { xrange /= 1; }
+    if ( xrange < 1 ) { xrange = 1; }
     if ( yrange < 1 ) { yrange = 1; }
 
     // note * 2 at end doubles cache size (for fdm and viewer)
