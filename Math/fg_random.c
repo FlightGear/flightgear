@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <stdio.h>
 #include <stdlib.h>         /* for random(), srandom() */
 #include <time.h>           /* for time() to seed srandom() */        
 
@@ -40,6 +41,8 @@
 /* Seed the random number generater with time() so we don't see the
  * same sequence every time */
 void fg_srandom(void) {
+    printf("Seeding random number generater\n");
+
 #ifdef USE_RAND
     srand(time(NULL));
 #else
@@ -59,9 +62,12 @@ double fg_random(void) {
 
 
 /* $Log$
-/* Revision 1.1  1997/07/30 16:04:09  curt
-/* Moved random routines from Utils/ to Math/
+/* Revision 1.2  1997/12/30 20:47:48  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.1  1997/07/30 16:04:09  curt
+ * Moved random routines from Utils/ to Math/
+ *
  * Revision 1.1  1997/07/19 22:31:57  curt
  * Initial revision.
  *
