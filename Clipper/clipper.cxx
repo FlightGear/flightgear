@@ -55,7 +55,7 @@ bool FGClipper::init() {
 // Load a polygon definition file
 bool FGClipper::load_polys(const string& path) {
     string poly_name;
-    AreaType poly_type;
+    AreaType poly_type = DefaultArea;
     int contours, count, i, j;
     double startx, starty, x, y, lastx, lasty;
 
@@ -67,6 +67,10 @@ bool FGClipper::load_polys(const string& path) {
         FG_LOG( FG_CLIPPER, FG_ALERT, "Cannot open file: " << path );
 	exit(-1);
     }
+
+    gpc_polygon *poly = new gpc_polygon;
+    poly->num_contours = 0;
+    poly->contour = NULL;
 
     in >> skipcomment;
     while ( !in.eof() ) {
@@ -116,22 +120,20 @@ bool FGClipper::load_polys(const string& path) {
 			<< lastx << ", " << lasty );
 	    }
 
-	    gpc_polygon *poly = new gpc_polygon;
-	    poly->num_contours = 0;
-	    poly->contour = NULL;
 	    gpc_add_contour( poly, &v_list );
 
-	    int area = (int)poly_type;
-	    if ( area < FG_MAX_AREA_TYPES ) {
-		polys_in.polys[area].push_back(poly);
-	    } else {
-		FG_LOG( FG_CLIPPER, FG_ALERT, "Polygon type out of range = " 
-			<< (int)poly_type);
-		exit(-1);
-	    }
 	}
 
 	in >> skipcomment;
+    }
+
+    int area = (int)poly_type;
+    if ( area < FG_MAX_AREA_TYPES ) {
+	polys_in.polys[area].push_back(poly);
+    } else {
+	FG_LOG( FG_CLIPPER, FG_ALERT, "Polygon type out of range = " 
+		<< (int)poly_type);
+	exit(-1);
     }
 
     // FILE *ofp= fopen("outfile", "w");
@@ -175,7 +177,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
     // process polygons in priority order
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-
+	cout << "num polys of this type = " << polys_in.polys[i].size() << endl;
 	current = polys_in.polys[i].begin();
 	last = polys_in.polys[i].end();
 	for ( ; current != last; ++current ) {
@@ -256,6 +258,9 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
 
 // $Log$
+// Revision 1.7  1999/03/30 13:41:38  curt
+// Working towards better handling of multi-contoured polygons.
+//
 // Revision 1.6  1999/03/27 05:20:53  curt
 // Pass along default area explicitely to triangulator.
 //
