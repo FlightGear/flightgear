@@ -272,7 +272,7 @@ bool FGInterface::update( int multi_loop ) {
 void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
     double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
 	
-    sgGeocToGeod( lat_geoc, EQUATORIAL_RADIUS_M + alt * FEET_TO_METER,
+    sgGeocToGeod( lat_geoc, ( get_Sea_level_radius() + alt ) * FEET_TO_METER,
 		  &lat_geod, &tmp_alt, &sl_radius1 );
     sgGeodToGeoc( lat_geod, alt * FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
 

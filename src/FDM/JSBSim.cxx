@@ -421,6 +421,7 @@ void FGJSBsim::set_Latitude(double lat) {
     
     snap_shot();
     sgGeodToGeoc( lat, get_Altitude() , &sea_level_radius_meters, &lat_geoc);
+    _set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * METER_TO_FEET  );
     fgic->SetLatitudeRadIC( lat_geoc );
     fdmex->RunIC(fgic); //loop JSBSim once
@@ -446,6 +447,7 @@ void FGJSBsim::set_Altitude(double alt) {
     
     snap_shot();
     sgGeodToGeoc( get_Latitude(), alt , &sea_level_radius_meters, &lat_geoc);
+    _set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * METER_TO_FEET );
     fgic->SetLatitudeRadIC( lat_geoc );
     fgic->SetAltitudeFtIC(alt);
