@@ -1005,7 +1005,7 @@ FGBFI::getAPHeadingLock ()
 {
     return
       (current_autopilot->get_HeadingEnabled() &&
-       current_autopilot->get_HeadingMode() == FGAutopilot::FG_HEADING_LOCK);
+       current_autopilot->get_HeadingMode() == FGAutopilot::FG_DG_HEADING_LOCK);
 }
 
 
@@ -1021,11 +1021,11 @@ FGBFI::setAPHeadingLock (bool lock)
 				// heading other than the current
 				// heading.
     double heading = getAPHeadingMag();
-    current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_LOCK);
+    current_autopilot->set_HeadingMode(FGAutopilot::FG_DG_HEADING_LOCK);
     current_autopilot->set_HeadingEnabled(true);
     setAPHeadingMag(heading);
   } else if (current_autopilot->get_HeadingMode() ==
-	     FGAutopilot::FG_HEADING_LOCK) {
+	     FGAutopilot::FG_DG_HEADING_LOCK) {
     current_autopilot->set_HeadingEnabled(false);
   }
 }

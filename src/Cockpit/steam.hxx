@@ -77,10 +77,10 @@ public:
   static void set_ALT_datum_mb(double datum_mb);
 
 				// Hacks ... temporary stuff
-  static double get_HackVOR1_deg ();
+  // static double get_HackVOR1_deg ();
   static double get_HackOBS1_deg ();
-  static double get_HackGS_deg ();
-  static double get_HackVOR2_deg ();
+  // static double get_HackGS_deg ();
+  // static double get_HackVOR2_deg ();
   static double get_HackOBS2_deg ();
   static double get_HackADF_deg ();
 

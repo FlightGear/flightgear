@@ -113,6 +113,10 @@ FGRadioStack::bind ()
     fgTie("/radios/nav1/dme/distance", this, &FGRadioStack::get_nav1_dme_dist);
     fgTie("/radios/nav1/dme/in-range", this,
 	  &FGRadioStack::get_nav1_dme_inrange);
+    fgTie("/radios/nav1/heading-needle-deflection", this,
+	  &FGRadioStack::get_nav1_heading_needle_deflection);
+    fgTie("/radios/nav1/gs-needle-deflection", this,
+	  &FGRadioStack::get_nav1_gs_needle_deflection);
 
 				// User inputs
     fgTie("/radios/nav2/frequencies/selected", this,
@@ -131,6 +135,10 @@ FGRadioStack::bind ()
     fgTie("/radios/nav2/dme/distance", this, &FGRadioStack::get_nav2_dme_dist);
     fgTie("/radios/nav2/dme/in-range", this,
 	  &FGRadioStack::get_nav2_dme_inrange);
+    fgTie("/radios/nav1/heading-needle-deflection", this,
+	  &FGRadioStack::get_nav2_heading_needle_deflection);
+    fgTie("/radios/nav1/gs-needle-deflection", this,
+	  &FGRadioStack::get_nav2_gs_needle_deflection);
 
 				// User inputs
     fgTie("/radios/adf/frequencies/selected", this,
@@ -153,6 +161,8 @@ FGRadioStack::unbind ()
     fgUntie("/radios/nav1/in-range");
     fgUntie("/radios/nav1/dme/distance");
     fgUntie("/radios/nav1/dme/in-range");
+    fgUntie("/radios/nav1/heading-needle-deflection");
+    fgUntie("/radios/nav1/gs-needle-deflection");
 
     fgUntie("/radios/nav2/frequencies/selected");
     fgUntie("/radios/nav2/frequencies/standby");
@@ -163,6 +173,8 @@ FGRadioStack::unbind ()
     fgUntie("/radios/nav2/in-range");
     fgUntie("/radios/nav2/dme/distance");
     fgUntie("/radios/nav2/dme/in-range");
+    fgUntie("/radios/nav2/heading-needle-deflection");
+    fgUntie("/radios/nav2/gs-needle-deflection");
 
     fgUntie("/radios/adf/frequencies/selected");
     fgUntie("/radios/adf/frequencies/standby");
@@ -433,6 +445,84 @@ void FGRadioStack::search ()
 }
 
 
+// return the amount of heading needle deflection, returns a value
+// clamped to the range of ( -10 , 10 )
+double FGRadioStack::get_nav1_heading_needle_deflection() const {
+    double r;
+
+    if ( nav1_inrange ) {
+        r = nav1_heading - nav1_radial;
+	// cout << "Radial = " << nav1_radial 
+	//      << "  Bearing = " << nav1_heading << endl;
+    
+	while (r> 180.0) r-=360.0;
+	while (r<-180.0) r+=360.0;
+	if ( fabs(r) > 90.0 )
+	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+	// According to Robin Peel, the ILS is 4x more sensitive than a vor
+	if ( nav1_loc ) r *= 4.0;
+	if ( r < -10.0 ) r = -10.0;
+	if ( r > 10.0 ) r = 10.0;
+    } else {
+	r = 0.0;
+    }
+
+    return r;
+}
+
+// return the amount of heading needle deflection, returns a value
+// clamped to the range of ( -10 , 10 )
+double FGRadioStack::get_nav2_heading_needle_deflection() const {
+    double r;
+
+    if ( nav2_inrange ) {
+        r = nav2_heading - nav2_radial;
+	// cout << "Radial = " << nav1_radial 
+	//      << "  Bearing = " << nav1_heading << endl;
+    
+	while (r> 180.0) r-=360.0;
+	while (r<-180.0) r+=360.0;
+	if ( fabs(r) > 90.0 )
+	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+	// According to Robin Peel, the ILS is 4x more sensitive than a vor
+	if ( nav1_loc ) r *= 4.0;
+	if ( r < -10.0 ) r = -10.0;
+	if ( r > 10.0 ) r = 10.0;
+    } else {
+	r = 0.0;
+    }
+
+    return r;
+}
+
+// return the amount of glide slope needle deflection (.i.e. the
+// number of degrees we are off the glide slope * 5.0
+double FGRadioStack::get_nav1_gs_needle_deflection() const {
+    if ( nav1_inrange && nav1_has_gs ) {
+	double x = nav1_gs_dist;
+	double y = (FGBFI::getAltitude() - nav1_elev) * FEET_TO_METER;
+	double angle = atan2( y, x ) * RAD_TO_DEG;
+	return (nav1_target_gs - angle) * 5.0;
+    } else {
+	return 0.0;
+    }
+}
+
+
+// return the amount of glide slope needle deflection (.i.e. the
+// number of degrees we are off the glide slope * 5.0
+double FGRadioStack::get_nav2_gs_needle_deflection() const {
+    if ( nav2_inrange && nav2_has_gs ) {
+	double x = nav2_gs_dist;
+	double y = (FGBFI::getAltitude() - nav2_elev) * FEET_TO_METER;
+	double angle = atan2( y, x ) * RAD_TO_DEG;
+	return (nav2_target_gs - angle) * 5.0;
+    } else {
+	return 0.0;
+    }
+}
+
+
 /**
  * Return true if the NAV1 TO flag should be active.
  */
@@ -444,7 +534,7 @@ FGRadioStack::get_nav1_to_flag () const
     if (nav1_loc)
       return (offset <= 8.0 || offset >= 352.0);
     else
-      return (offset <= 20.0 || offset >= 340.0);
+      return (offset <= 90.0 || offset >= 270.0);
   } else {
     return false;
   }
@@ -462,7 +552,7 @@ FGRadioStack::get_nav1_from_flag () const
     if (nav1_loc)
       return (offset >= 172.0 && offset <= 188.0);
     else
-      return (offset >= 160.0 && offset <= 200.0);
+      return (offset > 90.0 && offset < 270.0);
   } else {
     return false;
   }
@@ -480,7 +570,7 @@ FGRadioStack::get_nav2_to_flag () const
     if (nav2_loc)
       return (offset <= 8.0 || offset >= 352.0);
     else
-      return (offset <= 20.0 || offset >= 340.0);
+      return (offset <= 90.0 || offset >= 270.0);
   } else {
     return false;
   }
@@ -498,7 +588,7 @@ FGRadioStack::get_nav2_from_flag () const
     if (nav2_loc)
       return (offset >= 172.0 && offset <= 188.0);
     else
-      return (offset >= 160.0 && offset <= 200.0);
+      return (offset > 90.0 && offset < 270.0);
   } else {
     return false;
   }

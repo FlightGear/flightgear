@@ -118,9 +118,9 @@ void FGSteam::update ( int timesteps )
 	  fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
 	  fgTie("/steam/vertical-speed", FGSteam::get_VSI_fps);
 	  fgTie("/steam/gyro-compass", FGSteam::get_DG_deg);
-	  fgTie("/steam/vor1", FGSteam::get_HackVOR1_deg);
-	  fgTie("/steam/vor2", FGSteam::get_HackVOR2_deg);
-	  fgTie("/steam/glidescope1", FGSteam::get_HackGS_deg);
+	  // fgTie("/steam/vor1", FGSteam::get_HackVOR1_deg);
+	  // fgTie("/steam/vor2", FGSteam::get_HackVOR2_deg);
+	  // fgTie("/steam/glidescope1", FGSteam::get_HackGS_deg);
 	  fgTie("/steam/adf", FGSteam::get_HackADF_deg);
 	  fgTie("/steam/gyro-compass-error",
 		FGSteam::get_DG_err, FGSteam::set_DG_err,
@@ -413,6 +413,8 @@ void FGSteam::_CatchUp()
 ////////////////////////////////////////////////////////////////////////
 
 
+#if 0
+
 double FGSteam::get_HackGS_deg () {
     if ( current_radiostack->get_nav1_inrange() && 
 	 current_radiostack->get_nav1_has_gs() )
@@ -471,6 +473,7 @@ double FGSteam::get_HackVOR2_deg () {
 
     return r;
 }
+#endif
 
 
 double FGSteam::get_HackOBS1_deg () {
