@@ -343,7 +343,7 @@ int fgAPRun( void )
 
 	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
 	if ( total_adj >  0.5 ) { total_adj =  0.5; }
-	if ( total_adj < -0.3 ) { total_adj = -0.3; }
+	if ( total_adj < -0.2 ) { total_adj = -0.2; }
 
 	fgElevSet( total_adj );
     }
