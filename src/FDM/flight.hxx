@@ -110,17 +110,22 @@ private:
     double Throttle;
     double Mixture;
     double Prop_Advance;
+    int Magnetos;			// 0=off, 1=left, 2=right, 3=both
+    bool Starter;			// flag to indicate the starter switch is on	
 
     // outputs
     double RPM;
-    double Manifold_Pressure;     //inches
+    double Manifold_Pressure;   //inches
     double MaxHP;
-    double Percentage_Power;      //HP
-    double EGT;                   //deg F
-    double CHT;                   //deg F
-    double prop_thrust;           //lbs
-    double Fuel_Flow;             //Gals/hr
-    double Oil_Temp;		  //deg F
+    double Percentage_Power;    //HP
+    double EGT;                 //deg F
+    double CHT;                 //deg F
+    double prop_thrust;         //lbs
+    double Fuel_Flow;           //Gals/hr
+    double Oil_Temp;		//deg F
+    double Oil_Pressure;	//PSI
+    bool running;		//flag to indicate the engine is running self-sustained
+    bool cranking;		//flag to indicate the engine is being turned by the starter
     
     /* others...
     double PercentN1,N1;  //GE,CFM
@@ -149,10 +154,15 @@ public:
     inline double get_prop_thrust() const { return prop_thrust; }
     inline double get_Fuel_Flow() const { return Fuel_Flow; }
     inline double get_Oil_Temp() const { return Oil_Temp; }
+    inline double get_Oil_Pressure() const { return Oil_Pressure; }
+    inline bool get_Running_Flag() const { return running; }
+    inline bool get_Cranking_Flag() const { return cranking; }
 
     inline void set_Throttle( double t ) { Throttle = t; }
     inline void set_Mixture( double m ) { Mixture = m; }
     inline void set_Prop_Advance( double p ) { Prop_Advance = p; }
+    inline void set_Magnetos( int m ) { Magnetos = m; }
+    inline void set_Starter( bool s ) { Starter = s; }
     inline void set_RPM( double r ) { RPM = r; }
     inline void set_Manifold_Pressure( double mp ) { Manifold_Pressure = mp; }
     inline void set_MaxHP( double hp ) { MaxHP = hp; }
