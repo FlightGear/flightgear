@@ -23,6 +23,8 @@
 
 #include <simgear/compiler.h>
 
+#include <stdlib.h>             // atoi()
+
 #include STL_STRING
 
 #include <simgear/debug/logstream.hxx>
@@ -36,6 +38,7 @@
 #include <Network/protocol.hxx>
 #include <Network/atlas.hxx>
 #include <Network/garmin.hxx>
+#include <Network/httpd.hxx>
 #include <Network/joyclient.hxx>
 #include <Network/native.hxx>
 #include <Network/native_ctrls.hxx>
@@ -57,6 +60,8 @@ io_container global_io_list;
 // configure a port based on the config string
 static FGProtocol *parse_port_config( const string& config )
 {
+    bool short_circuit = false;
+
     string::size_type begin, end;
 
     begin = 0;
@@ -80,6 +85,12 @@ static FGProtocol *parse_port_config( const string& config )
     } else if ( protocol == "garmin" ) {
 	FGGarmin *garmin = new FGGarmin;
 	io = garmin;
+    } else if ( protocol == "httpd" ) {
+        // determine port
+        string port = config.substr(begin);
+	FGHttpd *httpd = new FGHttpd( atoi(port.c_str()) );
+	io = httpd;
+        short_circuit = true;
     } else if ( protocol == "joyclient" ) {
 	FGJoyClient *joyclient = new FGJoyClient;
 	io = joyclient;
@@ -108,90 +119,92 @@ static FGProtocol *parse_port_config( const string& config )
 	return NULL;
     }
 
-    // determine medium
-    end = config.find(",", begin);
-    if ( end == string::npos ) {
-	return NULL;		// dummy
-    }
+    if ( ! short_circuit ) {
+        // determine medium
+        end = config.find(",", begin);
+        if ( end == string::npos ) {
+            return NULL;		// dummy
+        }
     
-    string medium = config.substr(begin, end - begin);
-    begin = end + 1;
-    SG_LOG( SG_IO, SG_INFO, "  medium = " << medium );
+        string medium = config.substr(begin, end - begin);
+        begin = end + 1;
+        SG_LOG( SG_IO, SG_INFO, "  medium = " << medium );
 
-    // determine direction
-    end = config.find(",", begin);
-    if ( end == string::npos ) {
-	return NULL;		// dummy
-    }
+        // determine direction
+        end = config.find(",", begin);
+        if ( end == string::npos ) {
+            return NULL;		// dummy
+        }
     
-    string direction = config.substr(begin, end - begin);
-    begin = end + 1;
-    io->set_direction( direction );
-    SG_LOG( SG_IO, SG_INFO, "  direction = " << direction );
+        string direction = config.substr(begin, end - begin);
+        begin = end + 1;
+        io->set_direction( direction );
+        SG_LOG( SG_IO, SG_INFO, "  direction = " << direction );
 
-    // determine hertz
-    end = config.find(",", begin);
-    if ( end == string::npos ) {
-	return NULL;		// dummy
-    }
+        // determine hertz
+        end = config.find(",", begin);
+        if ( end == string::npos ) {
+            return NULL;		// dummy
+        }
     
-    string hertz_str = config.substr(begin, end - begin);
-    begin = end + 1;
-    double hertz = atof( hertz_str.c_str() );
-    io->set_hz( hertz );
-    SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
+        string hertz_str = config.substr(begin, end - begin);
+        begin = end + 1;
+        double hertz = atof( hertz_str.c_str() );
+        io->set_hz( hertz );
+        SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
 
-    if ( medium == "serial" ) {
-	// device name
-	end = config.find(",", begin);
-	if ( end == string::npos ) {
-	    return NULL;
-	}
+        if ( medium == "serial" ) {
+            // device name
+            end = config.find(",", begin);
+            if ( end == string::npos ) {
+                return NULL;
+            }
     
-	string device = config.substr(begin, end - begin);
-	begin = end + 1;
-	SG_LOG( SG_IO, SG_INFO, "  device = " << device );
+            string device = config.substr(begin, end - begin);
+            begin = end + 1;
+            SG_LOG( SG_IO, SG_INFO, "  device = " << device );
 
-	// baud
-	string baud = config.substr(begin);
-	SG_LOG( SG_IO, SG_INFO, "  baud = " << baud );
+            // baud
+            string baud = config.substr(begin);
+            SG_LOG( SG_IO, SG_INFO, "  baud = " << baud );
 
-	SGSerial *ch = new SGSerial( device, baud );
-	io->set_io_channel( ch );
-    } else if ( medium == "file" ) {
-	// file name
-	string file = config.substr(begin);
-	SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
+            SGSerial *ch = new SGSerial( device, baud );
+            io->set_io_channel( ch );
+        } else if ( medium == "file" ) {
+            // file name
+            string file = config.substr(begin);
+            SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
 
-	SGFile *ch = new SGFile( file );
-	io->set_io_channel( ch );
-    } else if ( medium == "socket" ) {
-	// hostname
-	end = config.find(",", begin);
-	if ( end == string::npos ) {
-	    return NULL;
-	}
+            SGFile *ch = new SGFile( file );
+            io->set_io_channel( ch );
+        } else if ( medium == "socket" ) {
+            // hostname
+            end = config.find(",", begin);
+            if ( end == string::npos ) {
+                return NULL;
+            }
     
-	string hostname = config.substr(begin, end - begin);
-	begin = end + 1;
-	SG_LOG( SG_IO, SG_INFO, "  hostname = " << hostname );
+            string hostname = config.substr(begin, end - begin);
+            begin = end + 1;
+            SG_LOG( SG_IO, SG_INFO, "  hostname = " << hostname );
 
-	// port string
-	end = config.find(",", begin);
-	if ( end == string::npos ) {
-	    return NULL;
-	}
+            // port string
+            end = config.find(",", begin);
+            if ( end == string::npos ) {
+                return NULL;
+            }
     
-	string port = config.substr(begin, end - begin);
-	begin = end + 1;
-	SG_LOG( SG_IO, SG_INFO, "  port string = " << port );
+            string port = config.substr(begin, end - begin);
+            begin = end + 1;
+            SG_LOG( SG_IO, SG_INFO, "  port string = " << port );
 
-	// socket style
-	string style_str = config.substr(begin);
-	SG_LOG( SG_IO, SG_INFO, "  style string = " << style_str );
-       
-	SGSocket *ch = new SGSocket( hostname, port, style_str );
-	io->set_io_channel( ch );
+            // socket style
+            string style_str = config.substr(begin);
+            SG_LOG( SG_IO, SG_INFO, "  style string = " << style_str );
+            
+            SGSocket *ch = new SGSocket( hostname, port, style_str );
+            io->set_io_channel( ch );
+        }
     }
 
     return io;

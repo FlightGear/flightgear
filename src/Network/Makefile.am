@@ -4,6 +4,7 @@ libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
 	atlas.cxx atlas.hxx \
 	garmin.cxx garmin.hxx \
+        httpd.cxx httpd.hxx \
 	joyclient.cxx joyclient.hxx \
 	native.cxx native.hxx \
 	native_ctrls.cxx native_ctrls.hxx \

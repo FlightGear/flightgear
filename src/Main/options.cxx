@@ -456,7 +456,7 @@ parse_fov( const string& arg ) {
 //  filename = file system file name
 
 static bool 
-parse_channel( const string& type, const string& channel_str ) {
+add_channel( const string& type, const string& channel_str ) {
     // cout << "Channel string = " << channel_str << endl;
 
     globals->get_channel_options_list()->push_back( type + "," + channel_str );
@@ -789,25 +789,27 @@ parse_option (const string& arg)
     } else if ( arg == "--hud-culled" ) {
         fgSetString("/sim/hud/frame-stat-type", "culled");
     } else if ( arg.find( "--atlas=" ) == 0 ) {
-	parse_channel( "atlas", arg.substr(8) );
+	add_channel( "atlas", arg.substr(8) );
+    } else if ( arg.find( "--httpd=" ) == 0 ) {
+	add_channel( "httpd", arg.substr(8) );
     } else if ( arg.find( "--native=" ) == 0 ) {
-	parse_channel( "native", arg.substr(9) );
+	add_channel( "native", arg.substr(9) );
     } else if ( arg.find( "--native-ctrls=" ) == 0 ) {
-	parse_channel( "native_ctrls", arg.substr(15) );
+	add_channel( "native_ctrls", arg.substr(15) );
     } else if ( arg.find( "--garmin=" ) == 0 ) {
-	parse_channel( "garmin", arg.substr(9) );
+	add_channel( "garmin", arg.substr(9) );
     } else if ( arg.find( "--nmea=" ) == 0 ) {
-	parse_channel( "nmea", arg.substr(7) );
+	add_channel( "nmea", arg.substr(7) );
     } else if ( arg.find( "--props=" ) == 0 ) {
-	parse_channel( "props", arg.substr(8) );
+	add_channel( "props", arg.substr(8) );
     } else if ( arg.find( "--pve=" ) == 0 ) {
-	parse_channel( "pve", arg.substr(6) );
+	add_channel( "pve", arg.substr(6) );
     } else if ( arg.find( "--ray=" ) == 0 ) {
-	parse_channel( "ray", arg.substr(6) );
+	add_channel( "ray", arg.substr(6) );
     } else if ( arg.find( "--rul=" ) == 0 ) {
-	parse_channel( "rul", arg.substr(6) );
+	add_channel( "rul", arg.substr(6) );
     } else if ( arg.find( "--joyclient=" ) == 0 ) {
-	parse_channel( "joyclient", arg.substr(12) );
+	add_channel( "joyclient", arg.substr(12) );
 #ifdef FG_NETWORK_OLK
     } else if ( arg == "--disable-network-olk" ) {
         fgSetBool("/sim/networking/olk", false);

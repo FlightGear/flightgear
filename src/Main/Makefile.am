@@ -79,7 +79,7 @@ fgfs_LDADD = \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	$(SERIAL_LIBS) \
 	$(THREAD_LIBS) \
-	-lplibpu -lplibfnt -lplibssg -lplibsg \
+	-lplibpu -lplibfnt -lplibnet -lplibssg -lplibsg \
 	-lmk4 -lz \
 	$(opengl_LIBS) \
 	$(audio_LIBS)

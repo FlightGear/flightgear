@@ -60,6 +60,7 @@
 // #  include <GL/glext.h>
 // #endif
 
+#include <plib/netChat.h>
 #include <plib/pu.h>
 #include <plib/ssg.h>
 
@@ -1517,7 +1518,10 @@ int mainLoop( int argc, char **argv ) {
  		"GLUT event handler initialization failed ..." );
  	exit(-1);
     }
- 
+
+    // Initialize plib net interface
+    netInit( &argc, argv );
+
     // Initialize ssg (from plib).  Needs to come before we do any
     // other ssg stuff, but after opengl/glut has been initialized.
     ssgInit();
