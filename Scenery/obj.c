@@ -37,6 +37,7 @@
 #include "../constants.h"
 #include "../types.h"
 #include "../Math/fg_geodesy.h"
+#include "../Math/mat3.h"
 #include "../Math/polar.h"
 
 
@@ -68,14 +69,33 @@ struct fgCartesianPoint geod_to_cart(float geod[3]) {
 }
 
 
+/* given three points defining a triangle, calculate the normal */
+void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2, 
+		 struct fgCartesianPoint p3, double normal[3])
+{
+    double v1[3], v2[3];
+    float temp;
+
+    v1[0] = p2.x - p1.x; v1[1] = p2.y - p1.y; v1[2] = p2.z - p1.z;
+    v2[0] = p3.x - p1.x; v2[1] = p3.y - p1.y; v2[2] = p3.z - p1.z;
+
+    MAT3cross_product(normal, v1, v2);
+    MAT3_NORMALIZE_VEC(normal,temp);
+
+    printf("Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]);
+}
+
+
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path) {
     char line[256];
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
-    struct fgCartesianPoint p1, p2, p3, p4, ref;
+    struct fgCartesianPoint p1, p2, p3, p4, ref, last1, last2;
     GLint area;
     FILE *f;
+    double normal[3];
     int first, ncount, n1, n2, n3, n4;
+    int toggle = 0;
 
     if ( (f = fopen(path, "r")) == NULL ) {
 	printf("Cannot open file: %s\n", path);
@@ -116,6 +136,7 @@ GLint fgObjLoad(char *path) {
 	    /* start a new triangle strip */
 
 	    n1 = n2 = n3 = n4 = 0;
+	    toggle = 0;
 
 	    if ( !first ) {
 		/* close out the previous structure and start the next */
@@ -126,21 +147,32 @@ GLint fgObjLoad(char *path) {
 	    }
 
 	    printf("new tri strip = %s", line);
-	    sscanf(line, "t %d %d %d\n", &n1, &n2, &n3);
+	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
 	    p1 = geod_to_cart(nodes[n1]);
 	    p2 = geod_to_cart(nodes[n2]);
 	    p3 = geod_to_cart(nodes[n3]);
 
-            glNormal3d(0.0, 0.0, -1.0);
-
+	    printf("(t) = ");
+	    calc_normal(p1, p2, p3, normal);
+            glNormal3d(normal[0], normal[1], normal[2]);
 	    glVertex3d(p1.x - ref.x, p1.y - ref.y, p1.z - ref.z);
 	    glVertex3d(p2.x - ref.x, p2.y - ref.y, p2.z - ref.z);
 	    glVertex3d(p3.x - ref.x, p3.y - ref.y, p3.z - ref.z);
 
+	    last1 = p2;
+	    last2 = p3;
+
 	    if ( n4 > 0 ) {
 		p4 = geod_to_cart(nodes[n4]);
+		printf("(t) cont = ");
+		calc_normal(last2, last1, p4, normal);
+		glNormal3d(normal[0], normal[1], normal[2]);
 		glVertex3d(p4.x - ref.x, p4.y - ref.y, p4.z - ref.z);
+
+		last1 = last2;
+		last2 = p4;
+		toggle = 1 - toggle;
 	    }
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
@@ -151,11 +183,31 @@ GLint fgObjLoad(char *path) {
 	    printf("read %d %d\n", n1, n2);
 
 	    p1 = geod_to_cart(nodes[n1]);
+
+	    printf("(q) = ");
+	    if ( toggle ) {
+		calc_normal(last1, last2, p1, normal);
+	    } else {
+		calc_normal(last1, p1, last2, normal);
+	    }
+	    glNormal3d(normal[0], normal[1], normal[2]);
 	    glVertex3d(p1.x - ref.x, p1.y - ref.y, p1.z - ref.z);
+
+	    last1 = last2;
+	    last2 = p1;
+	    toggle = 1 - toggle;
 
 	    if ( n2 > 0 ) {
 		p2 = geod_to_cart(nodes[n2]);
+
+		printf("(q) cont = ");
+		calc_normal(last1, last2, p2, normal);
+		glNormal3d(normal[0], normal[1], normal[2]);
 		glVertex3d(p2.x - ref.x, p2.y - ref.y, p2.z - ref.z);
+
+		last1 = last2;
+		last2 = p2;
+		toggle = 1 - toggle;
 	    }
 	} else {
 	    printf("Unknown line in %s = %s\n", path, line);
@@ -172,9 +224,12 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.2  1997/10/30 12:38:45  curt
-/* Working on new scenery subsystem.
+/* Revision 1.3  1997/10/31 04:49:12  curt
+/* Tweaking vertex orders.
 /*
+ * Revision 1.2  1997/10/30 12:38:45  curt
+ * Working on new scenery subsystem.
+ *
  * Revision 1.1  1997/10/28 21:14:54  curt
  * Initial revision.
  *
