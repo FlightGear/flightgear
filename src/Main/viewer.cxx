@@ -26,7 +26,7 @@
 
 #include <simgear/compiler.h>
 
-#include <fg_props.hxx>
+#include "fg_props.hxx"
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

@@ -41,8 +41,10 @@ public:
 
     int version;		         // increment when data values change
 
-    static const int FG_MAX_ENGINES = 4;
-    static const int FG_MAX_WHEELS = 3;
+    enum {
+        FG_MAX_ENGINES = 4,
+        FG_MAX_WHEELS = 3
+    };
 
     // Aero controls
     double aileron;		         // -1 ... 1

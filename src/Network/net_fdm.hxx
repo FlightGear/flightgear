@@ -48,9 +48,11 @@ public:
                                 // SPARC, which don't like misaligned
                                 // data
 
-    static const int FG_MAX_ENGINES = 4;
-    static const int FG_MAX_WHEELS = 3;
-    static const int FG_MAX_TANKS = 2;
+    enum {
+        FG_MAX_ENGINES = 4,
+        FG_MAX_WHEELS = 3,
+        FG_MAX_TANKS = 2
+    };
 
     // Positions
     double longitude;		// geodetic (radians)
