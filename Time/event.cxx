@@ -26,11 +26,23 @@
 #  include <config.h>
 #endif
 
-#include <string.h>
-#include <stdio.h>
+#include <string>
 
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
+#include "Include/compiler.h"
+
+#include STL_ALGORITHM
+#include STL_FUNCTIONAL
+
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cstdio>
+#  ifdef HAVE_STDLIB_H
+#    include <cstdlib>
+#  endif
+#else
+#  include <stdio.h>
+#  ifdef HAVE_STDLIB_H
+#    include <stdlib.h>
+#  endif
 #endif
 
 #if defined( HAVE_WINDOWS_H ) && defined(__MWERKS__)
@@ -39,30 +51,24 @@
                          // contains milliseconds
 #endif
 
-#if defined( linux ) || defined( __FreeBSD__ )
-#  define _G_NO_EXTERN_TEMPLATES
-#endif
-
-#include "Include/fg_stl_config.h"
-#include STL_ALGORITHM
-#include STL_FUNCTIONAL
-
 #include <Debug/logstream.hxx>
 
 #include "event.hxx"
 
+FG_USING_STD(for_each);
+FG_USING_STD(mem_fun);
 
 fgEVENT_MGR global_events;
 
 
 fgEVENT::fgEVENT( const string& desc,
 		  const fgCallback& cb,
-		  EventState _status,
-		  int _interval )
+		  EventState evt_status,
+		  int evt_interval )
     : description(desc),
       event_cb(cb.clone()),
-      status(_status),
-      interval(_interval),
+      status(evt_status),
+      interval(evt_interval),
       cum_time(0),
       min_time(100000),
       max_time(0),
@@ -70,14 +76,10 @@ fgEVENT::fgEVENT( const string& desc,
 {
 }
 
+#if 0
 fgEVENT::fgEVENT( const fgEVENT& evt )
     : description(evt.description),
-#ifdef _FG_NEED_AUTO_PTR
-      // Ugly - cast away const until proper auto_ptr implementation.
-      event_cb((auto_ptr<fgCallback>&)(evt.event_cb)),
-#else
       event_cb(evt.event_cb),
-#endif
       status(evt.status),
       interval(evt.interval),
       last_run(evt.last_run),
@@ -90,9 +92,30 @@ fgEVENT::fgEVENT( const fgEVENT& evt )
 {
 }
 
+fgEVENT&
+fgEVENT::operator= ( const fgEVENT& evt )
+{
+    if ( this != &evt )
+    {
+	description = evt.description;
+	event_cb = evt.event_cb;
+	status = evt.status;
+	interval = evt.interval;
+	last_run = evt.last_run;
+	current = evt.current;
+	next_run = evt.next_run;
+	cum_time = evt.cum_time;
+	min_time = evt.min_time;
+	max_time = evt.max_time;
+	count = evt.count;
+    }
+    return *this;
+}
+#endif
+
 fgEVENT::~fgEVENT()
 {
-//     cout << "fgEVENT::~fgEVENT" << endl;
+    delete event_cb;
 }
 
 void
@@ -167,12 +190,12 @@ fgEVENT_MGR::Register( const string& desc,
 		       fgEVENT::EventState status, 
 		       int interval )
 {
-    fgEVENT e( desc, cb, status, interval );
+    fgEVENT* e = new fgEVENT( desc, cb, status, interval );
 
     FG_LOG( FG_EVENT, FG_INFO, "Registering event: " << desc );
 
     // Actually run the event
-    e.run();
+    e->run();
 
     // Now add to event_table
     event_table.push_back(e);
@@ -206,10 +229,18 @@ fgEVENT_MGR::PrintStats()
     FG_LOG( FG_EVENT, FG_INFO, "Event Stats" );
     FG_LOG( FG_EVENT, FG_INFO, "-----------" );
 
+    ConstEventIterator first = event_table.begin();
+    ConstEventIterator last = event_table.end();
+    while ( first != last )
+    {
+        (*first)->PrintStats();
+        ++first;
+    }
+#if 0 // msvc++ 6.0 barfs at mem_fun()
     for_each( event_table.begin(),
 	      event_table.end(),
-	      mem_fun_ref( &fgEVENT::PrintStats ));
-
+	      mem_fun( &fgEVENT::PrintStats ) );
+#endif
     FG_LOG( FG_EVENT, FG_INFO, "");
 }
 
@@ -236,7 +267,7 @@ void fgEVENT_MGR::Process( void ) {
     // while ( current != last ) {
     for ( i = 0; i < size; i++ ) {
 	// e = *current++;
-	e_ptr = &event_table[i];
+	e_ptr = event_table[i];
 	if ( e_ptr->status == fgEVENT::FG_EVENT_READY ) {
 	    FG_LOG( FG_EVENT, FG_DEBUG, 
 		    "  Item " << i << " current " << cur_time.get_seconds()
@@ -261,10 +292,22 @@ void fgEVENT_MGR::Process( void ) {
 
 // Destructor
 fgEVENT_MGR::~fgEVENT_MGR( void ) {
+    EventIterator first = event_table.begin();
+    EventIterator last = event_table.end();
+    for ( ; first != last; ++first )
+    {
+        delete (*first);
+    }
+
+    run_queue.erase( run_queue.begin(), run_queue.end() );
+    event_table.erase( event_table.begin(), event_table.end() );
 }
 
 
 // $Log$
+// Revision 1.14  1999/01/07 20:25:32  curt
+// Portability changes and updates from Bernie Bright.
+//
 // Revision 1.13  1998/12/04 01:32:46  curt
 // Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
 // convenience inline operators.

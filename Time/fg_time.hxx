@@ -41,7 +41,13 @@
 #endif
 
 #include <GL/glut.h>
-#include <time.h>
+
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <ctime>
+#else
+#  include <time.h>
+#endif
 
 #include <Flight/flight.hxx>
 
@@ -99,6 +105,9 @@ void fgTimeUpdate(FGState *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.12  1999/01/07 20:25:35  curt
+// Portability changes and updates from Bernie Bright.
+//
 // Revision 1.11  1998/12/05 15:54:29  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

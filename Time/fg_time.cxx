@@ -27,10 +27,18 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
+#  include <cstdio>
+#  include <cstdlib>
+#  include <ctime>
+#else
+#  include <math.h>
+#  include <stdio.h>
+#  include <stdlib.h>
+#  include <time.h>
+#endif
 
 #ifdef HAVE_SYS_TIMEB_H
 #  include <sys/timeb.h> // for ftime() and struct timeb
@@ -264,12 +272,9 @@ time_t get_start_gmt(int year) {
 
     long int offset = -(timezone / 3600 - daylight);
 
-    FG_LOG( FG_EVENT, FG_DEBUG,
-	    "  Raw time zone offset = " << timezone );
-    FG_LOG( FG_EVENT, FG_DEBUG,
-	    "  Daylight Savings = " << daylight );
-    FG_LOG( FG_EVENT, FG_DEBUG,
-	    "  Local hours from GMT = " << offset);
+    FG_LOG( FG_EVENT, FG_DEBUG, "  Raw time zone offset = " << timezone );
+    FG_LOG( FG_EVENT, FG_DEBUG, "  Daylight Savings = " << daylight );
+    FG_LOG( FG_EVENT, FG_DEBUG, "  Local hours from GMT = " << offset );
     
     long int start_gmt = start - timezone + (daylight * 3600);
     
@@ -280,24 +285,28 @@ time_t get_start_gmt(int year) {
 #   endif // ! defined ( MK_TIME_IS_GMT )
 }
 
+static char*
+format_time( const struct tm* p, char* buf )
+{
+    sprintf( buf, "%d/%d/%2d %d:%02d:%02d", 
+	     p->tm_mon, p->tm_mday, p->tm_year,
+	     p->tm_hour, p->tm_min, p->tm_sec);
+    return buf;
+}
 
 // return a courser but cheaper estimate of sidereal time
 double sidereal_course(fgTIME *t, double lng) {
     struct tm *gmt;
     time_t start_gmt, now;
     double diff, part, days, hours, lst;
+    char tbuf[64];
 
     gmt = t->gmt;
     now = t->cur_time;
     start_gmt = get_start_gmt(gmt->tm_year);
 
-    FG_LOG( FG_EVENT, FG_DEBUG, 
-	    "  COURSE: GMT = "
-	    << gmt->tm_mon << "/" << gmt->tm_mday << "/" << gmt->tm_year
-	    << " "
-	    << gmt->tm_hour << ":" << gmt->tm_min << ":" <<  gmt->tm_sec );
-
-    FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = " << start_gmt);
+    FG_LOG( FG_EVENT, FG_DEBUG, "  COURSE: GMT = " << format_time(gmt, tbuf) );
+    FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = " << start_gmt );
 
     diff = (now - start_gmt) / (3600.0 * 24.0);
     
@@ -389,6 +398,9 @@ void fgTimeUpdate(FGState *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.28  1999/01/07 20:25:34  curt
+// Portability changes and updates from Bernie Bright.
+//
 // Revision 1.27  1998/12/11 20:26:55  curt
 // #include tweaks.
 //

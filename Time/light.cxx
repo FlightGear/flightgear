@@ -33,12 +33,20 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#ifdef __BORLANDC__
+#include "Include/compiler.h"
+
+#ifdef FG_MATH_EXCEPTION_CLASH
 #  define exception c_exception
 #endif
-#include <math.h>
 
-#include <string.h>
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
+#else
+#  include <math.h>
+#endif
+
+#include <string>
+FG_USING_STD(string);
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
@@ -65,25 +73,23 @@ fgLIGHT::fgLIGHT( void ) {
 
 // initialize lighting tables
 void fgLIGHT::Init( void ) {
-    string path, ambient, diffuse, sky;
-
     FG_LOG( FG_EVENT, FG_INFO, 
 	    "Initializing Lighting interpolation tables." );
 
     // build the path name to the ambient lookup table
-    path = current_options.get_fg_root();
-    ambient = path + "/Lighting/ambient";
-    diffuse = path + "/Lighting/diffuse";
-    sky     = path + "/Lighting/sky";
+    string path = current_options.get_fg_root();
+    string ambient = path + "/Lighting/ambient";
+    string diffuse = path + "/Lighting/diffuse";
+    string sky     = path + "/Lighting/sky";
 
     // initialize ambient table
-    ambient_tbl = new fgINTERPTABLE((char *)ambient.c_str());
+    ambient_tbl = new fgINTERPTABLE( ambient );
 
     // initialize diffuse table
-    diffuse_tbl = new fgINTERPTABLE((char *)diffuse.c_str());
+    diffuse_tbl = new fgINTERPTABLE( diffuse );
     
     // initialize sky table
-    sky_tbl = new fgINTERPTABLE((char *)sky.c_str());
+    sky_tbl = new fgINTERPTABLE( sky );
 }
 
 
@@ -214,6 +220,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.25  1999/01/07 20:25:36  curt
+// Portability changes and updates from Bernie Bright.
+//
 // Revision 1.24  1998/12/09 18:50:35  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

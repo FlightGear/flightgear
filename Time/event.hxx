@@ -31,29 +31,16 @@
 #endif                                   
 
 
-#if defined ( __sun__ ) || defined ( __sgi )
-extern "C" void *memmove(void *, const void *, size_t);
-extern "C" void *memset(void *, int, size_t);
-#endif
-
+#include "Include/compiler.h"
+#include "Include/fg_callback.hxx"
 
 #include <deque>        // STL double ended queue
 #include <list>         // STL list
 #include <string>
 
-#include "Include/fg_stl_config.h"
-
-#ifdef FG_NEED_AUTO_PTR
-#  include "Include/auto_ptr.hxx"
-#else
-#  include <memory>
-#endif
-
-#include "Include/fg_callback.hxx"
-
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+FG_USING_STD(deque);
+FG_USING_STD(list);
+FG_USING_STD(string);
 
 #include "fg_time.hxx"
 #include "timestamp.hxx"
@@ -69,14 +56,14 @@ public:
 	FG_EVENT_QUEUED = 2
     };
 
+    friend class fgEVENT_MGR;
+
     fgEVENT() {} // Required by deque<>.
 
     fgEVENT( const string& desc,
 	     const fgCallback& cb,
-	     EventState _status,
-	     int _interval );
-
-    fgEVENT( const fgEVENT& evt );
+	     EventState evt_status,
+	     int evt_interval );
 
     ~fgEVENT();
 
@@ -85,14 +72,17 @@ public:
 //     void PrintStats() const;
     int PrintStats() const;
 
-public:
+private:
+    // not defined
+    fgEVENT( const fgEVENT& evt );
+    fgEVENT& operator= ( const fgEVENT& evt );
+
+private:
 
     string description;
 
     // The callback object.
-    // We wrap it in an auto_ptr<> because deque<> calls our copy ctor
-    // and dtor when inserting and removing.
-    auto_ptr<fgCallback> event_cb;
+    fgCallback* event_cb;
 
     EventState status;       // status flag
 
@@ -112,10 +102,16 @@ public:
 class fgEVENT_MGR {
 
     // Event table
-    deque < fgEVENT > event_table;
+    typedef deque < fgEVENT* >             EventContainer;
+    typedef EventContainer::iterator       EventIterator;
+    typedef EventContainer::const_iterator ConstEventIterator;
+
+    EventContainer event_table;
 
     // Run Queue
-    list < fgEVENT * > run_queue;
+    typedef list < fgEVENT * > RunContainer;
+
+    RunContainer run_queue;
 
 public:
 
@@ -170,6 +166,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.15  1999/01/07 20:25:33  curt
+// Portability changes and updates from Bernie Bright.
+//
 // Revision 1.14  1998/12/05 14:21:28  curt
 // Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
 // to it's own file, timestamp.hxx.

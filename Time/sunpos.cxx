@@ -39,9 +39,17 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
-#include <stdio.h>
-#include <time.h>
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
+#  include <cstdio>
+#  include <ctime>
+#else
+#  include <math.h>
+#  include <stdio.h>
+#  include <time.h>
+#endif
+
 
 //#include <Astro/orbits.hxx>
 #include <Astro/solarsystem.hxx>
@@ -427,6 +435,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.19  1999/01/07 20:25:37  curt
+// Portability changes and updates from Bernie Bright.
+//
 // Revision 1.18  1998/12/09 18:50:36  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

@@ -40,7 +40,12 @@
 #  include <windows.h>
 #endif
 
-#include <time.h>
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <ctime>
+#else
+#  include <time.h>
+#endif
 
 #ifdef HAVE_SYS_TIMEB_H
 #  include <sys/timeb.h> // for ftime() and struct timeb
@@ -158,6 +163,9 @@ inline long operator - (const fgTIMESTAMP& a, const fgTIMESTAMP& b)
 
 
 // $Log$
+// Revision 1.3  1999/01/07 20:25:39  curt
+// Portability changes and updates from Bernie Bright.
+//
 // Revision 1.2  1998/12/11 20:26:56  curt
 // #include tweaks.
 //

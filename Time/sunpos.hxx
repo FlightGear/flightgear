@@ -44,8 +44,12 @@
 # error This library requires C++
 #endif                                   
 
-
-#include <time.h>
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <ctime>
+#else
+#  include <time.h>
+#endif
 
 /* update the cur_time_params structure with the current sun position */
 void fgUpdateSunPos( void );
