@@ -50,10 +50,6 @@
 #ifndef _IO360_HXX_
 #define _IO360_HXX_
 
-#define DCL_PROP_MODEL
-//#define NEVS_PROP_MODEL
-//#define PHILS_PROP_MODEL
-
 #include <simgear/compiler.h>
 
 #include <iostream>
@@ -65,8 +61,6 @@ FG_USING_STD(ofstream);
 class FGNewEngine {
 
 private:
-
-
 
     float CONVERT_HP_TO_WATTS;
     float CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
@@ -128,6 +122,7 @@ private:
     float p_amb;		// Pascals
     float T_amb;		// deg Kelvin
     float calorific_value_fuel;
+    float rho_air;
     float rho_fuel;		// kg/m^3
     float thi_sea_level;
     float delta_T_exhaust;
@@ -144,50 +139,48 @@ private:
     float angular_acceleration;	//rad/s^2
     double time_step;
 
-    // Initialise Propellor Variables used by this instance
-    float FGProp1_Angular_V;
-    float FGProp1_Coef_Drag;
-    float FGProp1_Torque;
+    // Propellor Variables
     float FGProp1_Thrust;
     float FGProp1_RPS;
-    float FGProp1_Coef_Lift;
-    float Alpha1;
     float FGProp1_Blade_Angle;
-    float FGProp_Fine_Pitch_Stop;
-
-//#ifdef NEVS_PROP_MODEL
-    //Extra Propellor variables used by Nev's prop model
-    float prop_fudge_factor;
     float prop_torque;		// Nm
     float prop_thrust; 		// Newtons
     float blade_length; 	// meters
-    float allowance_for_spinner;        // meters
-    float num_elements;
-    float distance;
-    float number_of_blades;
     float forward_velocity;             // m/s
     float angular_velocity_SI;          // rad/s
-    float element;
-    float element_drag;
-    float element_lift;
-    float element_torque;
-    float rho_air;
     float prop_power_consumed_SI;       // Watts
     float prop_power_consumed_HP;       // HP
-    float theta[6];	//prop angle of each element
-//#endif // NEVS_PROP_MODEL
-
-    // Other internal values
-    float Rho;
+    double prop_diameter;               // meters
+    double J;      			// advance ratio - dimensionless
+    double Cp_20;                   // coefficient of power for 20 degree blade angle
+    double Cp_25;                   // coefficient of power for 25 degree blade angle
+    double Cp;                      // Our actual coefficient of power
+    double blade_angle;             // degrees
+    double neta_prop_20;
+    double neta_prop_25;
+    double neta_prop;               // prop efficiency
 
     // Calculate Engine RPM based on Propellor Lever Position
-    float Calc_Engine_RPM (float Position);
+    float Calc_Engine_RPM(float Position);
+
+    // Calculate Manifold Pressure based on throttle lever position
+    // Note that this is simplistic and needs altering to include engine speed effects
+    float Calc_Manifold_Pressure( float LeverPosn, float MaxMan, float MinMan);
 
     // Calculate combustion efficiency based on equivalence ratio
     float Lookup_Combustion_Efficiency(float thi_actual);
 
+    // Calculate percentage of best power mixture power based on equivalence ratio
+    float Power_Mixture_Correlation(float thi_actual);
+
     // Calculate exhaust gas temperature rise
     float Calculate_Delta_T_Exhaust(void);
+
+    // Calculate Oil Temperature
+    float Calc_Oil_Temp (float Fuel_Flow, float Mixture, float IAS);
+    
+    // Calculate Oil Pressure
+    float Calc_Oil_Press (float Oil_Temp, float Engine_RPM);
 
 public:
 
@@ -219,14 +212,24 @@ public:
     inline void set_Mixture_Lever_Pos( float value ) {
 	Mixture_Lever_Pos = value;
     }
+    // set ambient pressure - takes pounds per square foot
+    inline void set_p_amb( float value ) { 
+	p_amb = value * 47.88026;
+	// Convert to Pascals
+    }
+    // set ambient temperature - takes degrees Rankine
+    inline void set_T_amb( float value ) { 
+	T_amb = value * 0.555555555556;
+	// Convert to degrees Kelvin
+    }
 
     // accessors
     inline float get_RPM() const { return RPM; }
-    inline float get_Manifold_Pressure() const { return Manifold_Pressure; }
+    inline float get_Manifold_Pressure() const { return True_Manifold_Pressure; }
     inline float get_FGProp1_Thrust() const { return FGProp1_Thrust; }
     inline float get_FGProp1_Blade_Angle() const { return FGProp1_Blade_Angle; }
 
-    inline float get_Rho() const { return Rho; }
+ //   inline float get_Rho() const { return Rho; }
     inline float get_MaxHP() const { return MaxHP; }
     inline float get_Percentage_Power() const { return Percentage_Power; }
     inline float get_EGT() const { return EGT_degF; }	 // Returns EGT in Fahrenheit

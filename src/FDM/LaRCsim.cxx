@@ -123,11 +123,9 @@ bool FGLaRCsim::update( int multiloop ) {
 	eng.set_IAS( V_calibrated_kts );
 	eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
 	eng.set_Propeller_Lever_Pos( 100 );
-	if ( controls.get_mixture( 0 ) > 0.60 ) {
-            eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
-	} else {
-            eng.set_Mixture_Lever_Pos( 60.0 );
-	}
+        eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
+	eng.set_p_amb( Static_pressure );
+	eng.set_T_amb( Static_temperature );
 
 	// update engine model
 	eng.update();
