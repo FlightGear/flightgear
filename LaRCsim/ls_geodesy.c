@@ -40,6 +40,9 @@
 
 $Header$
 $Log$
+Revision 1.3  1998/07/08 14:41:37  curt
+.
+
 Revision 1.2  1998/01/19 18:40:25  curt
 Tons of little changes to clean up the code and to remove fatal errors
 when building with the c++ compiler.
