@@ -14,6 +14,8 @@
 #include <simgear/misc/props.hxx>
 #include <Main/fgfs.hxx>
 
+#include "gyro.hxx"
+
 
 /**
  * Model a vacuum-powered heading indicator.
@@ -47,10 +49,9 @@ public:
 
 private:
 
+    Gyro _gyro;
     double _last_heading_deg;
 
-    SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _spin_node;
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;
     SGPropertyNode_ptr _suction_node;

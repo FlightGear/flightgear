@@ -19,10 +19,6 @@ HeadingIndicator::~HeadingIndicator ()
 void
 HeadingIndicator::init ()
 {
-    _serviceable_node =
-        fgGetNode("/instrumentation/heading-indicator/serviceable", true);
-    _spin_node =
-        fgGetNode("/instrumentation/heading-indicator/spin", true);
     _offset_node =
         fgGetNode("/instrumentation/heading-indicator/offset-deg", true);
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
@@ -37,36 +33,26 @@ HeadingIndicator::init ()
 void
 HeadingIndicator::bind ()
 {
+    fgTie("/instrumentation/heading-indicator/serviceable",
+          &_gyro, &Gyro::is_serviceable);
+    fgTie("/instrumentation/heading-indicator/spin",
+          &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
 }
 
 void
 HeadingIndicator::unbind ()
 {
+    fgUntie("/instrumentation/heading-indicator/serviceable");
+    fgUntie("/instrumentation/heading-indicator/spin");
 }
 
 void
 HeadingIndicator::update (double dt)
 {
-                                // First, calculate the bogo-spin from 0 to 1.
-                                // All numbers are made up.
-
-    double spin = _spin_node->getDoubleValue();
-    spin -= 0.005 * dt;         // spin decays every 0.5% every second.
-
-                                // spin increases up to 25% every second
-                                // if suction is available and the gauge
-                                // is serviceable.
-    if (_serviceable_node->getBoolValue()) {
-        double suction = _suction_node->getDoubleValue();
-        double step = 0.25 * (suction / 5.0) * dt;
-        if ((spin + step) <= (suction / 5.0))
-            spin += step;
-    }
-    if (spin > 1.0)
-        spin = 1.0;
-    else if (spin < 0.0)
-        spin = 0.0;
-    _spin_node->setDoubleValue(spin);
+                                // Get the spin from the gyro
+    _gyro.set_power_norm(_suction_node->getDoubleValue()/5.0);
+    _gyro.update(dt);
+    double spin = _gyro.get_spin_norm();
 
                                 // Next, calculate time-based precession
     double offset = _offset_node->getDoubleValue();

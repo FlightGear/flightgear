@@ -24,9 +24,6 @@ AttitudeIndicator::init ()
 {
                                 // TODO: allow index of pump and AI
                                 // to be configured.
-    _serviceable_node =
-        fgGetNode("/instrumentation/attitude-indicator/serviceable", true);
-    _spin_node = fgGetNode("/instrumentation/attitude-indicator/spin", true);
     _pitch_in_node = fgGetNode("/orientation/pitch-deg", true);
     _roll_in_node = fgGetNode("/orientation/roll-deg", true);
     _suction_node = fgGetNode("/systems/vacuum[0]/suction-inhg", true);
@@ -41,36 +38,26 @@ AttitudeIndicator::init ()
 void
 AttitudeIndicator::bind ()
 {
+    fgTie("/instrumentation/attitude-indicator/serviceable",
+          &_gyro, &Gyro::is_serviceable);
+    fgTie("/instrumentation/attitude-indicator/spin",
+          &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
 }
 
 void
 AttitudeIndicator::unbind ()
 {
+    fgUntie("/instrumentation/attitude-indicator/serviceable");
+    fgUntie("/instrumentation/attitude-indicator/spin");
 }
 
 void
 AttitudeIndicator::update (double dt)
 {
-                                // First, calculate the bogo-spin from 0 to 1.
-                                // All numbers are made up.
-
-    double spin = _spin_node->getDoubleValue();
-    spin -= 0.005 * dt;         // spin decays every 0.5% every second.
-
-                                // spin increases up to 25% every second
-                                // if suction is available and the gauge
-                                // is serviceable.
-    if (_serviceable_node->getBoolValue()) {
-        double suction = _suction_node->getDoubleValue();
-        double step = 0.25 * (suction / 5.0) * dt;
-        if ((spin + step) <= (suction / 5.0))
-            spin += step;
-    }
-    if (spin > 1.0)
-        spin = 1.0;
-    else if (spin < 0.0)
-        spin = 0.0;
-    _spin_node->setDoubleValue(spin);
+                                // Get the spin from the gyro
+    _gyro.set_power_norm(_suction_node->getDoubleValue()/5.0);
+    _gyro.update(dt);
+    double spin = _gyro.get_spin_norm();
 
                                 // Next, calculate the indicated roll
                                 // and pitch, introducing errors.

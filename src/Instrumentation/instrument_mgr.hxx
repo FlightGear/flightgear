@@ -30,20 +30,12 @@ SG_USING_STD(vector);
  * In the initial draft, the instruments present are hard-coded, but they
  * will soon be configurable for individual aircraft.
  */
-class FGInstrumentMgr : public FGSubsystem
+class FGInstrumentMgr : public FGSubsystemGroup
 {
 public:
 
     FGInstrumentMgr ();
     virtual ~FGInstrumentMgr ();
-
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
-
-private:
-    vector<FGSubsystem *> _instruments;
 
 };
 

@@ -14,6 +14,8 @@
 #include <simgear/misc/props.hxx>
 #include <Main/fgfs.hxx>
 
+#include "gyro.hxx"
+
 
 /**
  * Model a vacuum-powered attitude indicator.
@@ -23,7 +25,6 @@
  * Input properties:
  *
  * /instrumentation/attitude-indicator/serviceable
- * /instrumentation/attitude-indicator/spin
  * /orientation/pitch-deg
  * /orientation/roll-deg
  * /systems/vacuum[0]/suction-inhg
@@ -48,8 +49,8 @@ public:
 
 private:
 
-    SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _spin_node;
+    Gyro _gyro;
+
     SGPropertyNode_ptr _pitch_in_node;
     SGPropertyNode_ptr _roll_in_node;
     SGPropertyNode_ptr _suction_node;

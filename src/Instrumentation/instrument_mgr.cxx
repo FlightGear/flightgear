@@ -6,57 +6,25 @@
 
 #include "instrument_mgr.hxx"
 #include "airspeed_indicator.hxx"
-#include "altimeter.hxx"
 #include "attitude_indicator.hxx"
+#include "altimeter.hxx"
+#include "turn_indicator.hxx"
 #include "heading_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
 {
-    // NO-OP
+    set_subsystem("asi", new AirspeedIndicator);
+    set_subsystem("ai", new AttitudeIndicator);
+    set_subsystem("alt", new Altimeter);
+    set_subsystem("ti", new TurnIndicator);
+    set_subsystem("hi", new HeadingIndicator);
+    set_subsystem("vsi", new VerticalSpeedIndicator);
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()
 {
-    for (unsigned int i = 0; i < _instruments.size(); i++) {
-        delete _instruments[i];
-        _instruments[i] = 0;
-    }
-}
-
-void
-FGInstrumentMgr::init ()
-{
-                                // TODO: replace with XML configuration
-    _instruments.push_back(new AirspeedIndicator);
-    _instruments.push_back(new Altimeter);
-    _instruments.push_back(new AttitudeIndicator);
-    _instruments.push_back(new HeadingIndicator);
-    _instruments.push_back(new VerticalSpeedIndicator);
-
-                                // Initialize the individual instruments
-    for (unsigned int i = 0; i < _instruments.size(); i++)
-        _instruments[i]->init();
-}
-
-void
-FGInstrumentMgr::bind ()
-{
-    // NO-OP
-}
-
-void
-FGInstrumentMgr::unbind ()
-{
-    // NO-OP
-}
-
-void
-FGInstrumentMgr::update (double dt)
-{
-    for (unsigned int i = 0; i < _instruments.size(); i++)
-        _instruments[i]->update(dt);
 }
 
 // end of instrument_manager.cxx
