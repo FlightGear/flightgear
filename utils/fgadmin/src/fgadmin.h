@@ -10,6 +10,7 @@ using std::string;
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Check_Browser.H>
+#include <FL/Fl_Progress.H>
 
 class FGAdminUI {
 public:
@@ -44,9 +45,11 @@ private:
   inline void cb_remove_b_i(Fl_Button*, void*);
   static void cb_remove_b(Fl_Button*, void*);
 public:
+  Fl_Progress *progress;
   ~FGAdminUI();
   void init();
   void show();
+  static void step( void * );
 private:
   void refresh_lists();
   void quit();

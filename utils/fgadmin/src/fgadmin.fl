@@ -11,7 +11,7 @@ decl {\#include <FL/Fl_Preferences.H>} {public
 decl {using std::string;} {public
 } 
 
-class FGAdminUI {open selected
+class FGAdminUI {open
 } {
   decl {\#include <iostream>} {}
   decl {using std::cout;} {}
@@ -20,12 +20,12 @@ class FGAdminUI {open selected
   } {
     Fl_Window main_window {
       label {FlightGear Admin Wizard} open
-      xywh {187 544 465 435} type Double visible
+      xywh {294 195 465 435} type Double visible
     } {
       Fl_Button quit_b {
         label Quit
         callback {quit();}
-        xywh {190 405 85 25}
+        xywh {360 405 85 25}
       }
       Fl_Button source_b {
         label {Select Scenery Source ...}
@@ -63,6 +63,9 @@ refresh_lists();}
         callback {remove_selected();}
         xywh {250 360 195 35} labelfont 1
       }
+      Fl_Progress progress {selected
+        xywh {20 405 195 25} color 49 selection_color 175
+      }
     }
   }
   decl {~FGAdminUI();} {public
@@ -70,6 +73,8 @@ refresh_lists();}
   decl {void init();} {public
   }
   decl {void show();} {public
+  }
+  decl {static void step( void * );} {public
   }
   decl {void refresh_lists();} {}
   decl {void quit();} {}

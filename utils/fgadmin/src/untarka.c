@@ -1166,7 +1166,7 @@ static int matchname (int arg,int argc,char **argv,char *fname)
 
 /* Tar file list or extract */
 
-static int tar (Readable* rin,int action,int arg,int argc,char **argv, char const* TGZfile, int verbose, void (*step)(void)) {
+static int tar (Readable* rin,int action,int arg,int argc,char **argv, char const* TGZfile, int verbose, void (*step)(void *), void *data) {
   union  tar_buffer buffer;
   int    is_tar_ok=0;
   int    len;
@@ -1341,7 +1341,7 @@ static int tar (Readable* rin,int action,int arg,int argc,char **argv, char cons
 		  outfile = NULL;
 		  utime(fname,&settime);
 #endif
-                  if (step) step();
+                  if (step) step(data);
 		}
 	    }
 	}
@@ -1440,7 +1440,7 @@ int main(int argc,char **argv) {
        case 3: fprintf(stderr, "%s: not a tar file: %s\n", prog, TGZfile); return 1;
        case 4: fprintf(stderr, "%s: cannot open tar file: %s\n", prog, TGZfile); return 1;
       }
-      return tar(&r, action, arg, argc, argv, TGZfile, 1, 0);
+      return tar(&r, action, arg, argc, argv, TGZfile, 1, 0, 0);
       default: error("Unknown option!");
     }
     return 0;
@@ -1448,7 +1448,7 @@ int main(int argc,char **argv) {
 #endif
 
 void
-tarextract(char *TGZfile,char *dest,int verbose, void (*step)(void))
+tarextract(char *TGZfile,char *dest,int verbose, void (*step)(void *), void *data)
 {
    Readable    r;
    if (xOpen4Read(&r,TGZfile) == 0)
@@ -1459,6 +1459,6 @@ tarextract(char *TGZfile,char *dest,int verbose, void (*step)(void))
       chdir( dest );
       argv[0] = "fgadmin";
       argv[1] = TGZfile;
-      tar(&r, TGZ_EXTRACT, arg, argc, argv, TGZfile, 0, step);
+      tar(&r, TGZ_EXTRACT, arg, argc, argv, TGZfile, 0, step, data);
       }
 }

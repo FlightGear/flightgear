@@ -42,6 +42,8 @@ using std::endl;
 using std::vector;
 using std::string;
 
+static const float min_progress = 0.0;
+static const float max_progress = 5000.0;
 
 // destructor
 FGAdminUI::~FGAdminUI() {
@@ -64,6 +66,9 @@ void FGAdminUI::init() {
     dest = buf;
 
     refresh_lists();
+
+    progress->minimum( min_progress );
+    progress->maximum( max_progress );
 }
 
 // show our UI
@@ -180,6 +185,8 @@ void FGAdminUI::update_install_box() {
         }
 
         delete [] sort_list;
+
+        install_box->redraw();
     }
 }
 
@@ -196,7 +203,13 @@ void FGAdminUI::update_remove_box() {
         ulDir *dir = ulOpenDir( dest.c_str() ) ;
         ulDirEnt *ent;
         while ( ent = ulReadDir( dir ) ) {
-            if ( strcmp(ent->d_name, ".") && strcmp(ent->d_name, "..") ) {
+            if ( strlen(ent->d_name) != 7 ) {
+                // simple heuristic to ingore non-scenery directories
+            } else if ( ent->d_name[0] != 'e' && ent->d_name[0] != 'w' ) {
+                // further sanity checks on name
+            } else if ( ent->d_name[4] != 'n' && ent->d_name[4] != 's' ) {
+                // further sanity checks on name
+            } else {
                 dir_list.push_back( ent->d_name );
             }
         }
@@ -216,6 +229,8 @@ void FGAdminUI::update_remove_box() {
         }
 
         delete [] sort_list;
+
+        remove_box->redraw();
     }
 }
 
@@ -224,6 +239,9 @@ void FGAdminUI::update_remove_box() {
 void FGAdminUI::install_selected() {
     char *f;
 
+    install_b->deactivate();
+    remove_b->deactivate();
+
     // traverse install box and install each item
     for ( int i = 0; i <= install_box->nitems(); ++i ) {
         if ( install_box->checked( i ) ) {
@@ -231,15 +249,21 @@ void FGAdminUI::install_selected() {
             SGPath file( source );
             file.append( f );
             cout << "installing " << file.str() << endl;
-            tarextract( (char *)file.c_str(), (char *)dest.c_str(), true, 0 );
+            progress->value( min_progress );
+            main_window->cursor( FL_CURSOR_WAIT );
+            tarextract( (char *)file.c_str(), (char *)dest.c_str(), true, &FGAdminUI::step, this );
+            progress->value( min_progress );
+            main_window->cursor( FL_CURSOR_DEFAULT );
         }
     }
+    install_b->activate();
+    remove_b->activate();
 
     refresh_lists();
 }
 
 
-static void remove_dir( const char *dir_name ) {
+static void remove_dir( const char *dir_name, void (*step)(void*), void *data ) {
     ulDir *dir = ulOpenDir( dir_name ) ;
     ulDirEnt *ent;
     while ( ent = ulReadDir( dir ) ) {
@@ -250,11 +274,12 @@ static void remove_dir( const char *dir_name ) {
         } else if ( ent->d_isdir ) {
             SGPath child( dir_name );
             child.append( ent->d_name );
-            remove_dir( child.c_str() );
+            remove_dir( child.c_str(), step, data );
         } else {
             SGPath child( dir_name );
             child.append( ent->d_name );
             unlink( child.c_str() );
+            if (step) step( data );
         }
     }
     ulCloseDir( dir );
@@ -266,17 +291,42 @@ static void remove_dir( const char *dir_name ) {
 void FGAdminUI::remove_selected() {
     char *f;
 
+    install_b->deactivate();
+    remove_b->deactivate();
     // traverse remove box and recursively remove each item
     for ( int i = 0; i <= remove_box->nitems(); ++i ) {
         if ( remove_box->checked( i ) ) {
             f = remove_box->text( i );
             SGPath dir( dest );
             dir.append( f );
+            progress->value( min_progress );
+            main_window->cursor( FL_CURSOR_WAIT );
             cout << "removing " << dir.str() << endl;
-            remove_dir( dir.c_str() );
+            remove_dir( dir.c_str(), &FGAdminUI::step, this );
+            progress->value( min_progress );
+            main_window->cursor( FL_CURSOR_DEFAULT );
         }
     }
+    install_b->activate();
+    remove_b->activate();
 
     refresh_lists();
    
+}
+
+
+void FGAdminUI::step(void *data)
+{
+   Fl_Progress *p = ((FGAdminUI*)data)->progress;
+
+   // we don't actually know the total work in advanced due to the
+   // nature of tar archives, and it would be inefficient to prescan
+   // the files, so just cycle the progress bar until we are done.
+   float tmp = p->value() + 1;
+   if ( tmp > max_progress ) {
+       tmp = 0.0;
+   }
+   p->value( tmp );
+
+   Fl::check();
 }

@@ -47,7 +47,7 @@ FGAdminUI::FGAdminUI() {
   { Fl_Double_Window* o = main_window = new Fl_Double_Window(465, 435, "FlightGear Admin Wizard");
     w = o;
     o->user_data((void*)(this));
-    { Fl_Button* o = quit_b = new Fl_Button(190, 405, 85, 25, "Quit");
+    { Fl_Button* o = quit_b = new Fl_Button(360, 405, 85, 25, "Quit");
       o->callback((Fl_Callback*)cb_quit_b);
     }
     { Fl_Button* o = source_b = new Fl_Button(5, 5, 225, 25, "Select Scenery Source ...");
@@ -67,6 +67,10 @@ FGAdminUI::FGAdminUI() {
     { Fl_Button* o = remove_b = new Fl_Button(250, 360, 195, 35, "Remove Selected Files");
       o->labelfont(1);
       o->callback((Fl_Callback*)cb_remove_b);
+    }
+    { Fl_Progress* o = progress = new Fl_Progress(20, 405, 195, 25);
+      o->color(FL_BACKGROUND_COLOR);
+      o->selection_color((Fl_Color)175);
     }
     o->end();
   }

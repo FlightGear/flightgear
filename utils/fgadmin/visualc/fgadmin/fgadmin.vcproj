@@ -66,9 +66,10 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="..\..\..\..\fltk-1.1.4"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_ZLIB"
 				StringPooling="TRUE"
-				RuntimeLibrary="4"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -78,8 +79,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="fltk.lib Simgear.lib ul.lib comctl32.lib wsock32.lib zlib.lib"
 				OutputFile="$(OutDir)/fgadmin.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;..\..\..\..\fltk-1.1.4\lib&quot;"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -106,31 +109,27 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm">
 			<File
-				RelativePath="..\..\..\src\fgadmin.cxx">
+				RelativePath="..\..\src\fgadmin.cxx">
 			</File>
 			<File
-				RelativePath="..\..\..\src\fgadmin_funcs.cxx">
+				RelativePath="..\..\src\fgadmin_funcs.cxx">
 			</File>
 			<File
-				RelativePath="..\..\..\src\main.cxx">
+				RelativePath="..\..\src\main.cxx">
 			</File>
 			<File
-				RelativePath="..\..\..\src\untarka.c">
+				RelativePath="..\..\src\untarka.c">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc">
 			<File
-				RelativePath="..\..\..\src\fgadmin.h">
+				RelativePath="..\..\src\fgadmin.h">
 			</File>
 			<File
-				RelativePath="..\..\..\src\tar_utils.hxx">
+				RelativePath="..\..\src\untarka.h">
 			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
 		</Filter>
 	</Files>
 	<Globals>
