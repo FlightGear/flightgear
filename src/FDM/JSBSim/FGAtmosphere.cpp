@@ -262,12 +262,12 @@ void FGAtmosphere::Turbulence(void)
 {
   switch (turbType) {
   case ttBerndt: {
-    vDirectiondAccelDt(eX) = 1 - 2.0*(((double)(rand()))/RAND_MAX);
-    vDirectiondAccelDt(eY) = 1 - 2.0*(((double)(rand()))/RAND_MAX);
-    vDirectiondAccelDt(eZ) = 1 - 2.0*(((double)(rand()))/RAND_MAX);
+    vDirectiondAccelDt(eX) = 1 - 2.0*(double(rand())/double(RAND_MAX));
+    vDirectiondAccelDt(eY) = 1 - 2.0*(double(rand())/double(RAND_MAX));
+    vDirectiondAccelDt(eZ) = 1 - 2.0*(double(rand())/double(RAND_MAX));
 
     
-    MagnitudedAccelDt = 1 - 2.0*(((double)(rand()))/RAND_MAX) - Magnitude;
+    MagnitudedAccelDt = 1 - 2.0*(double(rand())/double(RAND_MAX)) - Magnitude;
     MagnitudeAccel    += MagnitudedAccelDt*rate*State->Getdt();
     Magnitude         += MagnitudeAccel*rate*State->Getdt();
 
