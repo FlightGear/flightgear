@@ -358,5 +358,26 @@ Example:
    <max>360</max>
   </dial>
 
+textbox
+-------
+
+The text will be retrieved/buffered from/within a specified
+property tree, like:
+
+<textbox>
+    <!-- position -->
+    <x>100</x>
+    <y>100</y>
+
+    <!-- dimensions -->
+    <width>200</width> 
+    <height>400</height>
+
+    <property>/gui/path-to-text-node/contents</property>
+
+    <slider>15</slider> <!--width for slider -->
+
+    <editable>true</editable> <!-- whether the puLargeInput is supposed to be editable -->
+</textbox>  
 
 __end__

@@ -77,6 +77,16 @@ save - save properties to an XML file
   file: the name of the file to save, relative to the current
     directory (defaults to "fgfs.sav").
 
+loadxml - load XML file into property tree
+  filename: the path & filename of the file to load
+  targetnode: the target node within the property tree where to store the XML 
+  file's structure
+
+savexml - save property tree node to XML file
+  filename: the path & filename for the file to be saved
+  sourcenode: the source node within the property tree where the XML file's 
+  structure is assembled from.     
+    
 panel-load - (re)load the 2D instrument panel
   path: the path of the XML panel file, relative to $FG_ROOT (defaults
     to the value of /sim/panel/path if specified, or
