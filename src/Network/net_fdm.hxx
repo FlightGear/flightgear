@@ -112,7 +112,7 @@ public:
     // Environment
     time_t cur_time;            // current unix time
     long int warp;              // offset in seconds to unix time
-    float visibility;          // visibility in meters (for env. effects)
+    float visibility;           // visibility in meters (for env. effects)
 
     // Control surface positions (normalized values)
     float elevator;

@@ -169,6 +169,12 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->course_deviation_deg
         = current_radiostack->get_navcom1()->get_nav_reciprocal_radial()
         - current_radiostack->get_navcom1()->get_nav_target_radial();
+    if ( net->course_deviation_deg < -1000.0 
+         || net->course_deviation_deg > 1000.0 )
+    {
+        // Sanity check ...
+        net->course_deviation_deg = 0.0;
+    }
     while ( net->course_deviation_deg >  180.0 ) {
         net->course_deviation_deg -= 360.0;
     }
