@@ -21,7 +21,7 @@
 // $Id$
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/sky/sky.hxx>
+#include <simgear/scene/sky/sky.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>

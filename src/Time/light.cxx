@@ -52,8 +52,8 @@ SG_USING_STD(string);
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/sky/sky.hxx>
 #include <simgear/screen/colors.hxx>
-#include <simgear/sky/sky.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/viewer.hxx>

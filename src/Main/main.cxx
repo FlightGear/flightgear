@@ -83,10 +83,10 @@ SG_USING_STD(endl);
 #include <simgear/scene/model/model.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #ifdef FG_USE_CLOUDS_3D
-#  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
-#  include <simgear/sky/clouds3d/SkyUtil.hpp>
+#  include <simgear/scene/sky/clouds3d/SkySceneLoader.hpp>
+#  include <simgear/scene/sky/clouds3d/SkyUtil.hpp>
 #endif
-#include <simgear/sky/sky.hxx>
+#include <simgear/scene/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 #include <Include/general.hxx>
@@ -96,7 +96,6 @@ SG_USING_STD(endl);
 #include <ATC/ATCmgr.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/AIMgr.hxx>
-
 
 #include <Autopilot/newauto.hxx>
 
