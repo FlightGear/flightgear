@@ -19,16 +19,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-/*****************************************************************
-*
-* WARNING - Curt has some ideas about AI traffic so anything in here
-* may get rewritten or scrapped.  Contact Curt curt@flightgear.org 
-* before spending any time or effort on this code!!!
-*
-******************************************************************/
-
-
-
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
@@ -50,7 +40,8 @@ void FGAIMgr::init() {
 	// Hard wire some local traffic for now.
 	// This is regardless of location and hence *very* ugly but it is a start.
 	FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
-	local_traffic->Init();
+	//local_traffic->Init("KEMT", IN_PATTERN, TAKEOFF_ROLL);
+	local_traffic->Init("KEMT");
 	local_traffic->FlyCircuits(1, true);	// Fly 2 circuits with touch & go in between
 	ai_list.push_back(local_traffic);
 }
@@ -64,12 +55,15 @@ void FGAIMgr::unbind() {
 void FGAIMgr::update(double dt) {
 	// Don't update any planes for first 50 runs through - this avoids some possible initialisation anomalies
 	static int i = 0;
-	i++;
 	if(i < 50) {
+		i++;
 		return;
 	}
 	
 	// Traverse the list of active planes and run all their update methods
+	// TODO - spread the load - not all planes should need updating every frame.
+	// Note that this will require dt to be calculated for each plane though
+	// since they rely on it to calculate distance travelled.
 	ai_list_itr = ai_list.begin();
 	while(ai_list_itr != ai_list.end()) {
 		(*ai_list_itr)->Update(dt);

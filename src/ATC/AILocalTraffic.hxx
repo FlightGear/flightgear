@@ -19,14 +19,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-/*****************************************************************
-*
-* WARNING - Curt has some ideas about AI traffic so anything in here
-* may get rewritten or scrapped.  Contact Curt curt@flightgear.org 
-* before spending any time or effort on this code!!!
-*
-******************************************************************/
-
 #ifndef _FG_AILocalTraffic_HXX
 #define _FG_AILocalTraffic_HXX
 
@@ -39,6 +31,9 @@
 #include "AIPlane.hxx"
 #include "ATCProjection.hxx"
 #include "ground.hxx"
+
+#include <string>
+SG_USING_STD(string);
 
 typedef enum PatternLeg {
 	TAKEOFF_ROLL,
@@ -74,7 +69,9 @@ typedef struct RunwayDetails {
 	double mag_hdg;
 	double mag_var;
 	double hdg;		// true runway heading
+	double length;	// In *METERS*
 	int ID;		// 1 -> 36
+	string rwyID;
 };
 
 typedef struct StartofDescent {
@@ -91,7 +88,7 @@ public:
 	~FGAILocalTraffic();
 	
 	// Initialise
-	void Init();
+	bool Init(string ICAO, OperatingState initialState = PARKED, PatternLeg initialLeg = DOWNWIND);
 	
 	// Run the internal calculations
 	void Update(double dt);
@@ -118,7 +115,8 @@ private:
 	// and the runway aligned with the y axis.
 	
 	// Airport/runway/pattern details
-	char* airportID;	// The ICAO code of the airport that we're operating around
+	string airportID;	// The ICAO code of the airport that we're operating around
+	double aptElev;		// Airport elevation
 	FGGround airport;	// FIXME FIXME FIXME This is a complete hardwired cop-out at the moment - we need to connect to the correct ground in the same way we do to the tower.
 	FGTower* tower;	// A pointer to the tower control.
 	RunwayDetails rwy;
@@ -144,6 +142,8 @@ private:
 	
 	// Physical/rendering stuff
 	double wheelOffset;		// Height above ground at which we need to render the plane whilst taxiing
+	bool elevInitGood;		// We have had at least one good elev reading
+	bool inAir;				// True when off the ground 
 	
 	// environment - some of this might get moved into FGAIPlane
 	SGPropertyNode* wind_from_hdg;	//degrees
@@ -165,11 +165,12 @@ private:
 	double desiredTaxiHeading;
 	double taxiTurnRadius;
 	double nominalTaxiSpeed;
-	Gate* in_dest;
+	Gate* ourGate;
 	ground_network_path_type path;	// a path through the ground network for the plane to taxi
-	int taxiPathPos;	// position of iterator in taxi path when applicable
+	unsigned int taxiPathPos;	// position of iterator in taxi path when applicable
 	node* nextTaxiNode;	// next node in taxi path
 	//Runway out_dest; //FIXME - implement this
+	bool liningUp;	// Set true when the turn onto the runway heading is commenced when taxiing out
 
 	void FlyTrafficPattern(double dt);
 
@@ -188,6 +189,8 @@ private:
 	void GetNextTaxiNode();
 	
 	void DoGroundElev();
+	
+	void GetRwyDetails();
 };
 
 #endif  // _FG_AILocalTraffic_HXX

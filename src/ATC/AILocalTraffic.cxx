@@ -23,6 +23,7 @@
 #  include <config.h>
 #endif
 
+#include <Airports/runways.hxx>
 #include <Main/globals.hxx>
 #include <Main/location.hxx>
 #include <Scenery/scenery.hxx>
@@ -40,6 +41,10 @@ SG_USING_STD(string);
 #include "ATCutils.hxx"
 
 FGAILocalTraffic::FGAILocalTraffic() {
+	roll = 0.0;
+	pitch = 0.0;
+	hdg = 270.0;
+	
 	//Hardwire initialisation for now - a lot of this should be read in from config eventually
 	Vr = 70.0;
 	best_rate_of_climb_speed = 70.0;
@@ -56,31 +61,105 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	nominalTaxiSpeed = 8.0;
 	taxiTurnRadius = 8.0;
 	wheelOffset = 1.45;	// Warning - hardwired to the C172 - we need to read this in from file.
+	elevInitGood = false;
 	// Init the property nodes
 	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
 	wind_speed_knots = fgGetNode("/environment/wind-speed-kts", true);
 	circuitsToFly = 0;
+	liningUp = false;
 }
 
 FGAILocalTraffic::~FGAILocalTraffic() {
 }
 
-void FGAILocalTraffic::Init() {
+
+// Get details of the active runway
+// This is a private internal function and it is assumed that by the 
+// time it is called the tower control and airport code will have been set up.
+void FGAILocalTraffic::GetRwyDetails() {
+	//cout << "GetRwyDetails called" << endl;
+	
+	// Based on the airport-id and wind get the active runway
+	SGPath path( globals->get_fg_root() );
+	path.append( "Airports" );
+	path.append( "runways.mk4" );
+	FGRunways runways( path.c_str() );
+	
+	//wind
+	double hdg = wind_from_hdg->getDoubleValue();
+	double speed = wind_speed_knots->getDoubleValue();
+	hdg = (speed == 0.0 ? 270.0 : hdg);
+	//cout << "Heading = " << hdg << '\n';
+	
+	FGRunway runway;
+	bool rwyGood = runways.search(airportID, int(hdg), &runway);
+	if(rwyGood) {
+		// Get the threshold position
+    	hdg = runway.heading;
+		//cout << "hdg reset to " << hdg << '\n';
+		double other_way = hdg - 180.0;
+		while(other_way <= 0.0) {
+			other_way += 360.0;
+		}
+
+    	// move to the +l end/center of the runway
+		//cout << "Runway center is at " << runway.lon << ", " << runway.lat << '\n';
+    	Point3D origin = Point3D(runway.lon, runway.lat, aptElev);
+		Point3D ref = origin;
+    	double tshlon, tshlat, tshr;
+		double tolon, tolat, tor;
+		rwy.length = runway.length * SG_FEET_TO_METER;
+    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
+        	                rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
+    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), hdg, 
+        	                rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
+		// Note - 25 meters in from the runway end is a bit of a hack to put the plane ahead of the user.
+		// now copy what we need out of runway into rwy
+    	rwy.threshold_pos = Point3D(tshlon, tshlat, aptElev);
+		Point3D takeoff_end = Point3D(tolon, tolat, aptElev);
+		//cout << "Threshold position = " << tshlon << ", " << tshlat << ", " << aptElev << '\n';
+		//cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
+		rwy.hdg = hdg;
+		rwy.rwyID = runway.rwy_no;
+		// Set the projection for the local area
+		ortho.Init(rwy.threshold_pos, rwy.hdg);	
+		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
+		rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
+		rwy.mag_var = 14.0;		// TODO - remove this last hardwired bit!! 
+		//(Although I don't think we even use the magvar any more?)
+		rwy.mag_hdg = rwy.hdg - rwy.mag_var;
+		rwy.ID = (int)rwy.mag_hdg / 10;		
+		//cout << "rwy.ID = " << rwy.ID << '\n';
+	} else {
+		SG_LOG(SG_GENERAL, SG_ALERT, "Help  - can't get good runway in FGAILocalTraffic!!\n");
+	}
+}
+
+/* 
+There are two possible scenarios during initialisation:
+The first is that the user is flying towards the airport, and hence the traffic
+could be initialised anywhere, as long as the AI planes are consistent with
+each other.
+The second is that the user has started the sim at or close to the airport, and
+hence the traffic must be initialised with respect to the user as well as each other.
+To a certain extent it's FGAIMgr that has to worry about this, but we need to provide
+sufficient initialisation functionality within the plane classes to allow the manager
+to initialy position them where and how required.
+*/
+bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg initialLeg) {
+	//cout << "FGAILocalTraffic.Init(...) called" << endl;
 	// Hack alert - Hardwired path!!
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
 	SGPath path = globals->get_fg_root();
 	path.append(planepath);
 	aip.init(planepath.c_str());
-	aip.setVisible(true);
+	aip.setVisible(false);		// This will be set to true once a valid ground elevation has been determined
 	globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
-	// is it OK to leave it like this until the first time transform is called?
-	// Really ought to be started in a parking space unless otherwise specified?
 	
 	// Find the tower frequency - this is dependent on the ATC system being initialised before the AI system
-	// FIXME - ATM this is hardwired.
-	airportID = "KEMT";
+	airportID = ICAO;
 	AirportATC a;
-	if(globals->get_ATC_mgr()->GetAirportATCDetails((string)airportID, &a)) {
+	if(globals->get_ATC_mgr()->GetAirportATCDetails(airportID, &a)) {
 		if(a.tower_freq) {	// Has a tower
 			tower = (FGTower*)globals->get_ATC_mgr()->GetATCPointer((string)airportID, TOWER);	// Maybe need some error checking here
 			freq = (double)tower->get_freq() / 100.0;
@@ -92,94 +171,220 @@ void FGAILocalTraffic::Init() {
 		//cout << "Unable to find airport details in FGAILocalTraffic::Init()\n";
 	}
 
-	// Initiallise the FGAirportData structure
+	// Initialise the relevant FGGround
 	// This needs a complete overhaul soon - what happens if we have 2 AI planes at same airport - they don't both need a structure
 	// This needs to be handled by the ATC manager or similar so only one set of physical data per airport is instantiated
 	// ie. TODO TODO FIXME FIXME
 	airport.Init();
 	
+	// Get the airport elevation
+	aptElev = dclGetAirportElev(airportID.c_str()) * SG_FEET_TO_METER;
+	//cout << "Airport elev in AILocalTraffic = " << aptElev << '\n';
+	// WARNING - we use this elev for the whole airport - some assumptions in the code 
+	// might fall down with very slopey airports.
+
+	//cout << "In Init(), initialState = " << initialState << '\n';
+	operatingState = initialState;
+	switch(operatingState) {
+	case PARKED:
+		ourGate = airport.GetGateNode();
+		if(ourGate == NULL) {
+			// Implies no available gates - what shall we do?
+			// For now just vanish the plane - possibly we can make this more elegant in the future
+			SG_LOG(SG_GENERAL, SG_ALERT, "No gate found by FGAILocalTraffic whilst attempting Init at " << airportID << '\n');
+			return(false);
+		}
+		pitch = 0.0;
+		roll = 0.0;
+		vel = 0.0;
+		slope = 0.0;
+		pos = ourGate->pos;
+		pos.setelev(aptElev);
+		hdg = ourGate->heading;
+		
+		// Now we've set the position we can do the ground elev
+		elevInitGood = false;
+		inAir = false;
+		DoGroundElev();
+		
+		Transform();
+		break;
+	case TAXIING:
+		// FIXME - implement this case properly
+		return(false);	// remove this line when fixed!
+		break;
+	case IN_PATTERN:
+		// For now we'll always start the in_pattern case on the threshold ready to take-off
+		// since we've got the implementation for this case already.
+		// TODO - implement proper generic in_pattern startup.
+		
+		// Get the active runway details (and copy them into rwy)
+		GetRwyDetails();
+
+		// Initial position on threshold for now
+		pos.setlat(rwy.threshold_pos.lat());
+		pos.setlon(rwy.threshold_pos.lon());
+		pos.setelev(rwy.threshold_pos.elev());
+		hdg = rwy.hdg;
+		
+		// Now we've set the position we can do the ground elev
+		// This might not always be necessary if we implement in-air start
+		elevInitGood = false;
+		inAir = false;
+		DoGroundElev();
+		
+		pitch = 0.0;
+		roll = 0.0;
+		leg = TAKEOFF_ROLL;
+		vel = 0.0;
+		slope = 0.0;
+		
+		circuitsToFly = 0;		// ie just fly this circuit and then stop
+		touchAndGo = false;
+		// FIXME TODO - pattern direction is still hardwired
+		patternDirection = -1;		// Left
+		// At the bare minimum we ought to make sure it goes the right way at dual parallel rwy airports!
+		if(rwy.rwyID.size() == 3) {
+			patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
+		}
+		
+		operatingState = IN_PATTERN;
+		
+		Transform();
+		break;
+	default:
+		SG_LOG(SG_GENERAL, SG_ALERT, "Attempt to set unknown operating state in FGAILocalTraffic.Init(...)\n");
+		return(false);
+	}
+	
+	
+	return(true);
 }
 
 // Commands to do something from higher level logic
 void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
-	circuitsToFly += numCircuits - 1;	// Hack (-1) because we only test and decrement circuitsToFly after landing
-										// thus flying one to many circuits.  TODO - Need to sort this out better!
-	touchAndGo = tag;
+	//cout << "FlyCircuits called" << endl;
 	
-	//At the moment we'll assume that we are always finished previous circuits when called,
-	//And just teleport to the threshold to start.
-	//This is a hack though, we need to check where we are and taxi out if appropriate.
-	operatingState = IN_PATTERN;
+	switch(operatingState) {
+	case IN_PATTERN:
+		circuitsToFly += numCircuits;
+		return;
+		break;
+	case TAXIING:
+		// For now we'll punt this and do nothing
+		break;
+	case PARKED:
+		circuitsToFly = numCircuits - 1;	// Hack (-1) because we only test and decrement circuitsToFly after landing
+										// thus flying one too many circuits.  TODO - Need to sort this out better!
+		touchAndGo = tag;
+	
+		// Get the active runway details (and copy them into rwy)
+		GetRwyDetails();
+		
+		// Get the takeoff node for the active runway, get a path to it and start taxiing
+		path = airport.GetPath(ourGate, rwy.rwyID);
+		if(path.size() < 2) {
+			// something has gone wrong
+			SG_LOG(SG_GENERAL, SG_ALERT, "Invalid path from gate to theshold in FGAILocalTraffic::FlyCircuits\n");
+			return;
+		}
+		/*
+		cout << "path returned was:" << endl;
+		for(unsigned int i=0; i<path.size(); ++i) {
+			switch(path[i]->struct_type) {
+			case NODE:
+				cout << "NODE " << ((node*)(path[i]))->nodeID << endl;
+				break;
+			case ARC:
+				cout << "ARC\n";
+				break;
+			}
+		}
+		*/
+		// pop the gate - we're here already!
+		path.erase(path.begin());
+		//path.erase(path.begin());
+		/*
+		cout << "path after popping front is:" << endl;
+		for(unsigned int i=0; i<path.size(); ++i) {
+			switch(path[i]->struct_type) {
+			case NODE:
+				cout << "NODE " << ((node*)(path[i]))->nodeID << endl;
+				break;
+			case ARC:
+				cout << "ARC\n";
+				break;
+			}
+		}
+		*/
+		
+		taxiState = TD_OUTBOUND;
+		StartTaxi();
+		
+		// Maybe the below should be set when we get to the threshold and prepare for TO?
+		// FIXME TODO - pattern direction is still hardwired
+		patternDirection = -1;		// Left
+		// At the bare minimum we ought to make sure it goes the right way at dual parallel rwy airports!
+		if(rwy.rwyID.size() == 3) {
+			patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
+		}
 
-	// Hardwire to KEMT for now
-	// Hardwired points at each end of KEMT runway
-	Point3D P010(-118.037483, 34.081358, 296 * SG_FEET_TO_METER);
-	Point3D P190(-118.032308, 34.090456, 299.395263 * SG_FEET_TO_METER);
-	Point3D takeoff_end;
-	bool d010 = true;	// use this to change the hardwired runway direction
-	if(d010) {
-		rwy.threshold_pos = P010;
-		takeoff_end = P190;
-		rwy.hdg = 25.32;	//from default.apt
-		rwy.ID = 1;
-		patternDirection = -1;	// Left
-		pos.setelev(rwy.threshold_pos.elev() + (-8.5 * SG_FEET_TO_METER));  // This is a complete hack - the rendered runway takes the underlying scenery elev rather than the published runway elev so I should use height above terrain or something.
-	} else {
-		rwy.threshold_pos = P190;
-		takeoff_end = P010;
-		rwy.hdg = 205.32;
-		rwy.ID = 19;
-		patternDirection = 1;	// Right
-		pos.setelev(rwy.threshold_pos.elev() + (-0.0 * SG_FEET_TO_METER));  // This is a complete hack - the rendered runway takes the underlying scenery elev rather than the published runway elev so I should use height above terrain or something.
+		Transform();
+		break;
 	}
-	
-	//rwy.threshold_pos.setlat(34.081358);
-	//rwy.threshold_pos.setlon(-118.037483);
-	//rwy.mag_hdg = 12.0;
-	//rwy.mag_var = 14.0;
-	//rwy.hdg = rwy.mag_hdg + rwy.mag_var;
-	//rwy.threshold_pos.setelev(296 * SG_FEET_TO_METER);
-	
-	// Initial position on threshold for now
-	// TODO - check wind / default runway
-	pos.setlat(rwy.threshold_pos.lat());
-	pos.setlon(rwy.threshold_pos.lon());
-	hdg = rwy.hdg;
-	
-	pitch = 0.0;
-	roll = 0.0;
-	leg = TAKEOFF_ROLL;
-	vel = 0.0;
-	slope = 0.0;
-	
-	// Set the projection for the local area
-	ortho.Init(rwy.threshold_pos, rwy.hdg);	
-	rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
-	// Hardwire to KEMT for now
-	rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
-	//cout << "*********************************************************************************\n";
-	//cout << "*********************************************************************************\n";
-	//cout << "*********************************************************************************\n";
-	//cout << "end1ortho = " << rwy.end1ortho << '\n';
-	//cout << "end2ortho = " << rwy.end2ortho << '\n';	// end2ortho.x() should be zero or thereabouts
-	
-	Transform();
 }   
 
 // Run the internal calculations
 void FGAILocalTraffic::Update(double dt) {
 	switch(operatingState) {
 	case IN_PATTERN:
+		//cout << "In IN_PATTERN\n";
+		if(!inAir) DoGroundElev();
+		if(!elevInitGood) {
+			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
+				pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+				//cout << "TAKEOFF_ROLL, POS = " << pos.lon() << ", " << pos.lat() << ", " << pos.elev() << '\n';
+				//Transform();
+				aip.setVisible(true);
+				//cout << "Making plane visible!\n";
+				elevInitGood = true;
+			}
+		}
 		FlyTrafficPattern(dt);
 		Transform();
 		break;
 	case TAXIING:
+		//cout << "In TAXIING\n";
+		if(!elevInitGood) {
+			//DoGroundElev();
+			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
+				pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+				//Transform();
+				aip.setVisible(true);
+				//Transform();
+				//cout << "Making plane visible!\n";
+				elevInitGood = true;
+			}
+		}
 		DoGroundElev();
 		Taxi(dt);
 		Transform();
 		break;
 	case PARKED:
+		//cout << "In PARKED\n";
+		if(!elevInitGood) {
+			DoGroundElev();
+			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
+				pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+				//Transform();
+				aip.setVisible(true);
+				//Transform();
+				//cout << "Making plane visible!\n";
+				elevInitGood = true;
+			}
+		}
 		// Do nothing
+		Transform();
 		break;
 	default:
 		break;
@@ -192,7 +397,6 @@ void FGAILocalTraffic::Update(double dt) {
 void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	// Need to differentiate between in-air (IAS governed) and on-ground (vel governed)
 	// Take-off is an interesting case - we are on the ground but takeoff speed is IAS governed.
-	bool inAir = true;	// FIXME - possibly make into a class variable
 	
 	static bool transmitted = false;	// FIXME - this is a hack
 
@@ -222,11 +426,14 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 
 	switch(leg) {
 	case TAKEOFF_ROLL:
-		inAir = false;
+		//inAir = false;
 		track = rwy.hdg;
 		if(vel < 80.0) {
 			double dveldt = 5.0;
 			vel += dveldt * dt;
+		}
+		if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
+			pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
 		}
 		IAS = vel + (cos((hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
 		if(IAS >= 70) {
@@ -234,6 +441,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			pitch = 10.0;
 			IAS = best_rate_of_climb_speed;
 			slope = 7.0;
+			inAir = true;
 		}
 		break;
 	case CLIMBOUT:
@@ -348,15 +556,26 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		// Try and track the extended centreline
 		track = rwy.hdg - (0.2 * orthopos.x());
 		//cout << "orthopos.x() = " << orthopos.x() << " hdg = " << hdg << '\n';
-		if(pos.elev() <= rwy.threshold_pos.elev()) {
-			pos.setelev(rwy.threshold_pos.elev());// + (-8.5 * SG_FEET_TO_METER));  // This is a complete hack - the rendered runway takes the underlying scenery elev rather than the published runway elev so I should use height above terrain or something.
-			slope = 0.0;
-			pitch = 0.0;
-			leg = LANDING_ROLL;
+		if(pos.elev() < (rwy.threshold_pos.elev()+20.0+wheelOffset)) {
+			DoGroundElev();	// Need to call it here expicitly on final since it's only called
+			               	// for us in update(...) when the inAir flag is false.
+		}
+		if(pos.elev() < (rwy.threshold_pos.elev()+10.0+wheelOffset)) {
+			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
+				if((aip.getFGLocation()->get_cur_elev_m() + wheelOffset) > pos.elev()) {
+					slope = 0.0;
+					pitch = 0.0;
+					leg = LANDING_ROLL;
+					inAir = false;
+				}
+			}	// else need a fallback position based on arpt elev in case ground elev determination fails?
 		}
 		break;
 	case LANDING_ROLL:
-		inAir = false;
+		//inAir = false;
+		if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
+			pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+		}
 		track = rwy.hdg;
 		double dveldt = -5.0;
 		vel += dveldt * dt;
@@ -506,8 +725,8 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 			}
 			++nItr;
 		}
-		in_dest = airport.GetGateNode();
-		if(in_dest == NULL) {
+		ourGate = airport.GetGateNode();
+		if(ourGate == NULL) {
 			// Implies no available gates - what shall we do?
 			// For now just vanish the plane - possibly we can make this more elegant in the future
 			SG_LOG(SG_GENERAL, SG_ALERT, "No gate found by FGAILocalTraffic whilst landing at " << airportID << '\n');
@@ -515,7 +734,7 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 			operatingState = PARKED;
 			return;
 		}
-		path = airport.GetPath(rwyExit, in_dest);
+		path = airport.GetPath(rwyExit, ourGate);
 		/*
 		cout << "path returned was:" << endl;
 		for(unsigned int i=0; i<path.size(); ++i) {
@@ -590,6 +809,40 @@ void FGAILocalTraffic::StartTaxi() {
 	//cout << "First taxi heading is " << desiredTaxiHeading << endl;
 }
 
+// speed in knots, headings in degrees, radius in meters.
+static double TaxiTurnTowardsHeading(double current_hdg, double desired_hdg, double speed, double radius, double dt) {
+	// wrap heading - this prevents a logic bug where the plane would just go round in circles!!
+	while(current_hdg < 0.0) {
+		current_hdg += 360.0;
+	}
+	while(current_hdg > 360.0) {
+		current_hdg -= 360.0;
+	}
+	if(fabs(current_hdg - desired_hdg) > 0.1) {
+		// Which is the quickest direction to turn onto heading?
+		if(desired_hdg > current_hdg) {
+			if((desired_hdg - current_hdg) <= 180) {
+				// turn right
+				current_hdg += ((speed * 0.514444 * dt) / (radius * DCL_PI)) * 180.0;
+				// TODO - check that increments are less than the delta that we check for the right direction
+				// Probably need to reduce convergence speed as convergence is reached
+			} else {
+				current_hdg -= ((speed * 0.514444 * dt) / (radius * DCL_PI)) * 180.0; 	
+			}
+		} else {
+			if((current_hdg - desired_hdg) <= 180) {
+				// turn left
+				current_hdg -= ((speed * 0.514444 * dt) / (radius * DCL_PI)) * 180.0;
+				// TODO - check that increments are less than the delta that we check for the right direction
+				// Probably need to reduce convergence speed as convergence is reached
+			} else {
+				current_hdg += ((speed * 0.514444 * dt) / (radius * DCL_PI)) * 180.0; 	
+			}
+		}	        
+	}
+	return(current_hdg);
+}
+
 void FGAILocalTraffic::Taxi(double dt) {
 	//cout << "Taxi called" << endl;
 	// Logic - if we are further away from next point than turn radius then head for it
@@ -598,6 +851,11 @@ void FGAILocalTraffic::Taxi(double dt) {
 
 	//Point3D orthopos = ortho.ConvertToLocal(pos);	// ortho position of the plane
 	desiredTaxiHeading = GetHeadingFromTo(pos, nextTaxiNode->pos);
+	
+	bool lastNode = (taxiPathPos == path.size() ? true : false);
+	if(lastNode) {
+		//cout << "LAST NODE\n";
+	}
 
 	// HACK ALERT! - for now we will taxi at constant speed for straights and turns
 	
@@ -605,37 +863,16 @@ void FGAILocalTraffic::Taxi(double dt) {
 	double dist_to_go = dclGetHorizontalSeparation(pos, nextTaxiNode->pos);	// we may be able to do this more cheaply using orthopos
 	//cout << "dist_to_go = " << dist_to_go << endl;
 	if((nextTaxiNode->type == GATE) && (dist_to_go <= 0.1)) {
+		// This might be more robust to outward paths starting with a gate if we check for either
+		// last node or TD_INBOUND ?
 		// park up
-		//taxiing = false;
-		//parked = true;
 		operatingState = PARKED;
-	} else if((dist_to_go > taxiTurnRadius) || (nextTaxiNode->type == GATE)) {
+	} else if(((dist_to_go > taxiTurnRadius) || (nextTaxiNode->type == GATE)) && (!liningUp)){
 		// if the turn radius is r, and speed is s, then in a time dt we turn through
 		// ((s.dt)/(PI.r)) x 180 degrees
 		// or alternatively (s.dt)/r radians
 		//cout << "hdg = " << hdg << " desired taxi heading = " << desiredTaxiHeading << '\n';
-		if(fabs(hdg - desiredTaxiHeading) > 0.1) {
-			// Which is the quickest direction to turn onto heading?
-			if(desiredTaxiHeading > hdg) {
-				if((desiredTaxiHeading - hdg) <= 180) {
-					// turn right
-					hdg += ((nominalTaxiSpeed * 0.514444 * dt) / (taxiTurnRadius * DCL_PI)) * 180.0;
-					// TODO - check that increments are less than the delta that we check for the right direction
-					// Probably need to reduce convergence speed as convergence is reached
-				} else {
-					hdg -= ((nominalTaxiSpeed * 0.514444 * dt) / (taxiTurnRadius * DCL_PI)) * 180.0; 	
-				}
-			} else {
-				if((hdg - desiredTaxiHeading) <= 180) {
-					// turn left
-					hdg -= ((nominalTaxiSpeed * 0.514444 * dt) / (taxiTurnRadius * DCL_PI)) * 180.0;
-					// TODO - check that increments are less than the delta that we check for the right direction
-					// Probably need to reduce convergence speed as convergence is reached
-				} else {
-					hdg += ((nominalTaxiSpeed * 0.514444 * dt) / (taxiTurnRadius * DCL_PI)) * 180.0; 	
-				}
-			}	        
-		}
+		hdg = TaxiTurnTowardsHeading(hdg, desiredTaxiHeading, nominalTaxiSpeed, taxiTurnRadius, dt);
 		double vel = nominalTaxiSpeed;
 		//cout << "vel = " << vel << endl;
 		double dist = vel * 0.514444 * dt;
@@ -648,6 +885,33 @@ void FGAILocalTraffic::Taxi(double dt) {
 		if(aip.getFGLocation()->get_cur_elev_m() > -9990) {
 			pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
 		} // else don't change the elev until we get a valid ground elev again!
+	} else if(lastNode) {
+		if(taxiState == TD_OUTBOUND) {
+			if((!liningUp) && (dist_to_go <= taxiTurnRadius)) {
+				liningUp = true;
+			}
+			if(liningUp) {
+				hdg = TaxiTurnTowardsHeading(hdg, rwy.hdg, nominalTaxiSpeed, taxiTurnRadius, dt);
+				double vel = nominalTaxiSpeed;
+				//cout << "vel = " << vel << endl;
+				double dist = vel * 0.514444 * dt;
+				//cout << "dist = " << dist << endl;
+				double track = hdg;
+				//cout << "track = " << track << endl;
+				double slope = 0.0;
+				pos = dclUpdatePosition(pos, track, slope, dist);
+				//cout << "Updated position...\n";
+				if(aip.getFGLocation()->get_cur_elev_m() > -9990) {
+					pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+				} // else don't change the elev until we get a valid ground elev again!
+				if(fabs(hdg - rwy.hdg) <= 1.0) {
+					operatingState = IN_PATTERN;
+					leg = TAKEOFF_ROLL;
+					inAir = false;
+					liningUp = false;
+				}
+			}
+		} // else at the moment assume TD_INBOUND always ends in a gate in which case we can ignore it
 	} else {
 		// Time to turn (we've already checked it's not the end we're heading for).
 		// set the target node to be the next node which will prompt automatically turning onto
