@@ -7,6 +7,7 @@ libATC_a_SOURCES = \
 	approach.hxx approach.cxx \
 	ground.hxx ground.cxx \
 	commlist.hxx commlist.cxx \
+	ATCDialog.hxx ATCDialog.cxx \
 	ATCdisplay.hxx ATCdisplay.cxx \
 	ATCVoice.hxx ATCVoice.cxx \
 	ATCmgr.hxx ATCmgr.cxx \
@@ -15,6 +16,7 @@ libATC_a_SOURCES = \
 	AIMgr.hxx AIMgr.cxx \
 	AIEntity.hxx AIEntity.cxx \
 	AIPlane.hxx AIPlane.cxx \
-	AILocalTraffic.hxx AILocalTraffic.cxx
+	AILocalTraffic.hxx AILocalTraffic.cxx \
+	transmission.hxx transmission.cxx transmissionlist.hxx transmissionlist.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
