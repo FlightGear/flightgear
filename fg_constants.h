@@ -37,20 +37,27 @@
 #endif
 
 
-/* Make sure PI is defined in its various forms */
+// Make sure PI is defined in its various forms
+
+// PI, only PI, and nothing but PI
 #ifdef M_PI
-#  define  FG_PI  M_PI
+#  define  FG_PI    M_PI
 #else
-#  define  FG_PI  3.14159265358979323846      /* pi */
+#  define  FG_PI    3.14159265358979323846
 #endif
 
+// 2 * PI
+#define FG_2PI      6.28318530717958647692
+
+// PI / 2
 #ifdef M_PI_2
 #  define  FG_PI_2  M_PI_2
 #else
-#  define  FG_PI_2  1.57079632679489661923    /* pi/2 */
+#  define  FG_PI_2  1.57079632679489661923
 #endif
 
-#define FG_2PI (FG_PI + FG_PI)                /* 2*pi */
+// PI / 4
+#define FG_PI_4     0.78539816339744830961
 
 
 /* Radius of Earth in kilometers at the equator.  Another source had
@@ -127,9 +134,12 @@
 
 
 /* $Log$
-/* Revision 1.4  1998/05/16 13:03:10  curt
-/* Defined field of view max/min limits.
+/* Revision 1.5  1998/05/17 16:56:47  curt
+/* Re-organized PI related constants.
 /*
+ * Revision 1.4  1998/05/16 13:03:10  curt
+ * Defined field of view max/min limits.
+ *
  * Revision 1.3  1998/04/08 23:35:32  curt
  * Tweaks to Gnu automake/autoconf system.
  *
