@@ -489,23 +489,23 @@ bool FGMaterialLib::load( const string& mpath ) {
     rwy_green_low_lights->setTexture( tex_name );
     matlib["RWY_GREEN_LOW_LIGHTS"] = new FGNewMat(rwy_green_low_lights);
 
-    // hard coded medium intensity taxiway blue light state
-    tex_name = gen_taxiway_dir_light_map( 20, 20, 235, 205 );
-    ssgSimpleState *taxiway_blue_medium_lights = new ssgSimpleState();
-    taxiway_blue_medium_lights->ref();
-    taxiway_blue_medium_lights->disable( GL_LIGHTING );
-    taxiway_blue_medium_lights->enable ( GL_CULL_FACE ) ;
-    taxiway_blue_medium_lights->enable( GL_TEXTURE_2D );
-    taxiway_blue_medium_lights->enable( GL_BLEND );
-    taxiway_blue_medium_lights->enable( GL_ALPHA_TEST );
-    taxiway_blue_medium_lights->enable( GL_COLOR_MATERIAL );
-    taxiway_blue_medium_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
-    taxiway_blue_medium_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
-    taxiway_blue_medium_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
-    taxiway_blue_medium_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
-    taxiway_blue_medium_lights->setTexture( tex_name );
+    // hard coded low intensity taxiway blue light state
+    tex_name = gen_taxiway_dir_light_map( 20, 20, 235, 155 );
+    ssgSimpleState *taxiway_blue_low_lights = new ssgSimpleState();
+    taxiway_blue_low_lights->ref();
+    taxiway_blue_low_lights->disable( GL_LIGHTING );
+    taxiway_blue_low_lights->enable ( GL_CULL_FACE ) ;
+    taxiway_blue_low_lights->enable( GL_TEXTURE_2D );
+    taxiway_blue_low_lights->enable( GL_BLEND );
+    taxiway_blue_low_lights->enable( GL_ALPHA_TEST );
+    taxiway_blue_low_lights->enable( GL_COLOR_MATERIAL );
+    taxiway_blue_low_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    taxiway_blue_low_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    taxiway_blue_low_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    taxiway_blue_low_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    taxiway_blue_low_lights->setTexture( tex_name );
     matlib["RWY_BLUE_TAXIWAY_LIGHTS"]
-        = new FGNewMat(taxiway_blue_medium_lights);
+        = new FGNewMat(taxiway_blue_low_lights);
 
     // hard coded runway vasi light state
     ssgSimpleState *rwy_vasi_lights = new ssgSimpleState();
