@@ -1,33 +1,33 @@
-/* splittris.c -- reassemble the pieces produced by splittris
- *
- * Written by Curtis Olson, started January 1998.
- *
- * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
- * (Log is kept at end of this file) */
+// assemtris.c -- reassemble the pieces produced by splittris
+//
+// Written by Curtis Olson, started January 1998.
+//
+// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>   /* for atoi() */
+#include <stdlib.h>   // for atoi()
 #include <string.h>
-#include <sys/stat.h> /* for stat() */
-#include <unistd.h>   /* for stat() */
+#include <sys/stat.h> // for stat()
+#include <unistd.h>   // for stat()
 
 #include "assemtris.h"
 
@@ -36,10 +36,8 @@
 #include <Bucket/bucketutils.h>
 
 
-/*
-#define OFFSET_LON 0.1
-#define OFFSET_LAT 0.1
-*/
+// #define OFFSET_LON 0.1
+// #define OFFSET_LAT 0.1
 
 #define OFFSET_LON 0.0
 #define OFFSET_LAT 0.0
@@ -56,7 +54,7 @@ fgBUCKET ne_index, nw_index, sw_index, se_index;
 fgBUCKET north_index, south_index, east_index, west_index;
 
 
-/* return the file base name ( foo/bar/file.ext = file.ext ) */
+// return the file base name ( foo/bar/file.ext = file.ext )
 void extract_file(char *in, char *base) {
     int len, i;
 
@@ -72,7 +70,7 @@ void extract_file(char *in, char *base) {
 }
 
 
-/* return the file path name ( foo/bar/file.ext = foo/bar ) */
+// return the file path name ( foo/bar/file.ext = foo/bar )
 void extract_path(char *in, char *base) {
     int len, i;
 
@@ -88,7 +86,7 @@ void extract_path(char *in, char *base) {
 }
 
 
-/* check to see if specified node is in the extra list */
+// check to see if specified node is in the extra list
 int is_extra_node(double *n) {
     int i;
 
@@ -104,10 +102,10 @@ int is_extra_node(double *n) {
     return(0);
 }
 
-/* Read all the extra nodes.  These typically define inner areas to
-   exclude from triangulations.  There will be a .poly file that
-   refers to these by position number which assumes all the extra
-   nodes come first in the generated .node file. */
+// Read all the extra nodes.  These typically define inner areas to
+// exclude from triangulations.  There will be a .poly file that
+// refers to these by position number which assumes all the extra
+// nodes come first in the generated .node file.
 void read_extra_nodes(char *exfile) {
     FILE *fd;
     int i, junk1, junk2, junk3;
@@ -136,7 +134,7 @@ void read_extra_nodes(char *exfile) {
 }
 
 
-/* check if a file exists */
+// check if a file exists
 int file_exists(char *file) {
     struct stat stat_buf;
     int result;
@@ -146,18 +144,18 @@ int file_exists(char *file) {
     result = stat(file, &stat_buf);
 
     if ( result != 0 ) {
-	/* stat failed, no file */
+	// stat failed, no file
 	printf("not found.\n");
 	return(0);
     } else {
-	/* stat succeeded, file exists */
+	// stat succeeded, file exists
 	printf("exists.\n");
 	return(1);
     }
 }
 
 
-/* check to see if a shared object exists */
+// check to see if a shared object exists
 int shared_object_exists(char *basepath, char *ext, char *file) {
     char scene_path[256];
     long int index;
@@ -343,32 +341,32 @@ int shared_object_exists(char *basepath, char *ext, char *file) {
 }
 
 
-/* my custom file opening routine ... don't open if a shared edge or
- * vertex alread exists */
+// my custom file opening routine ... don't open if a shared edge or
+// vertex alread exists
 FILE *my_open(char *basename, char *basepath, char *ext) {
     FILE *fp;
     char filename[256];
 
-    /* check if a shared object already exists */
+    // check if a shared object already exists
     if ( shared_object_exists(basepath, ext, filename) ) {
-	/* not an actual file open error, but we've already got the
-         * shared edge, so we don't want to create another one */
+	// not an actual file open error, but we've already got the
+        // shared edge, so we don't want to create another one
 	fp = fopen(filename, "r");
 	printf("Opening %s\n", filename);
 	return(fp);
     } else {
-	/* open the file */
+	// open the file
 	printf("not opening\n");
 	return(NULL);
     }
 }
 
 
-/* given a file pointer, read all the gdn (geodetic nodes from it.)
-   The specified offset values (in arcsec) are used to overlap the
-   edges of the tile slightly to cover gaps induced by floating point
-   precision problems.  1 arcsec == about 100 feet so 0.01 arcsec ==
-   about 1 foot */
+// given a file pointer, read all the gdn (geodetic nodes from it.)
+// The specified offset values (in arcsec) are used to overlap the
+// edges of the tile slightly to cover gaps induced by floating point
+// precision problems.  1 arcsec == about 100 feet so 0.01 arcsec ==
+// about 1 foot
 void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
     double n[3];
     char line[256];
@@ -388,11 +386,10 @@ void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
 		nodes[nodecount][1] = n[1] + offset_lat;
 		nodes[nodecount][2] = n[2];
 
-		/*
-		  printf("read_nodes(%d) %.2f %.2f %.2f %s", nodecount, 
-		      nodes[nodecount][0], nodes[nodecount][1], 
-		      nodes[nodecount][2], line);
-		      */
+		// printf("read_nodes(%d) %.2f %.2f %.2f %s", nodecount, 
+		//        nodes[nodecount][0], nodes[nodecount][1], 
+		//        nodes[nodecount][2], line);
+		     
 
 		nodecount++;
 	    } else {
@@ -406,8 +403,8 @@ void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
 }
 
 
-/* load in nodes from the various split and shared pieces to
- * reconstruct a tile */
+// load in nodes from the various split and shared pieces to
+// reconstruct a tile
 void build_node_list(char *basename, char *basepath) {
     char exfile[256];
     FILE *ne, *nw, *se, *sw, *north, *south, *east, *west, *body;
@@ -455,19 +452,19 @@ void build_node_list(char *basename, char *basepath) {
 }
 
 
-/* dump in WaveFront .obj format */
+// dump in WaveFront .obj format
 void dump_nodes(char *basename) {
     char file[256];
     FILE *fd;
     int i;
 
-    /* generate output file name */
+    // generate output file name
     strcpy(file, basename);
     // len = strlen(file);
     // file[len-2] = '\0';
     strcat(file, ".node");
     
-    /* dump vertices */
+    // dump vertices
     printf("Creating node file:  %s\n", file);
     printf("  writing vertices in .node format.\n");
     fd = fopen(file, "w");
@@ -480,7 +477,7 @@ void dump_nodes(char *basename) {
 		i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
     }
 
-    /* now write out actual node data */
+    // now write out actual node data
     for ( i = 0; i < nodecount; i++ ) {
 	fprintf(fd, "%d %.2f %.2f %.2f 0\n", excount + i + 1,
 	       nodes[i][0], nodes[i][1], nodes[i][2]);
@@ -499,13 +496,13 @@ int main(int argc, char **argv) {
     strcpy(basename, argv[1]);
     len = strlen(basename);
 
-    /* find the base path of the file */
+    // find the base path of the file
     extract_path(basename, basepath);
     extract_path(basepath, basepath);
     extract_path(basepath, basepath);
     printf("%s\n", basepath);
 
-    /* find the index of the current file */
+    // find the index of the current file
     extract_file(basename, temp);
     // len = strlen(temp);
     // if ( len >= 2 ) {
@@ -517,7 +514,7 @@ int main(int argc, char **argv) {
 
     printf("bucket = %d %d %d %d\n", 
 	   my_index.lon, my_index.lat, my_index.x, my_index.y);
-    /* generate the indexes of the neighbors */
+    // generate the indexes of the neighbors
     fgBucketOffset(&my_index, &ne_index,  1,  1);
     fgBucketOffset(&my_index, &nw_index, -1,  1);
     fgBucketOffset(&my_index, &se_index,  1, -1);
@@ -528,68 +525,70 @@ int main(int argc, char **argv) {
     fgBucketOffset(&my_index, &east_index,  1,  0);
     fgBucketOffset(&my_index, &west_index, -1,  0);
 
-    /*
-    printf("Corner indexes = %ld %ld %ld %ld\n", 
-	   ne_index, nw_index, sw_index, se_index);
-    printf("Edge indexes = %ld %ld %ld %ld\n",
-	   north_index, south_index, east_index, west_index);
-	   */
+    // printf("Corner indexes = %ld %ld %ld %ld\n", 
+    //        ne_index, nw_index, sw_index, se_index);
+    // printf("Edge indexes = %ld %ld %ld %ld\n",
+    //        north_index, south_index, east_index, west_index);
+	  
 
-    /* load the input data files */
+    // load the input data files
     build_node_list(basename, basepath);
 
-    /* dump in WaveFront .obj format */
+    // dump in WaveFront .obj format
     dump_nodes(basename);
 
     return(0);
 }
 
 
-/* $Log$
-/* Revision 1.13  1998/09/21 20:56:30  curt
-/* Changes to avoid setting airport area nodes back to their original
-/* elevations if they have been changed.
-/*
- *
- * Revision 1.12  1998/09/09 16:24:51  curt
- * Fixed a bug in the handling of exclude files which was causing
- *   a crash by calling fclose() on an invalid file handle.
- * Removed overlapping offsets.
- *
- * Revision 1.11  1998/08/06 12:47:59  curt
- * Removed overlap in tiles as a test.
- *
- * Revision 1.10  1998/07/21 04:34:20  curt
- * Mods to handle extra nodes (i.e. preserve cutouts).
- *
- * Revision 1.9  1998/07/04 00:55:39  curt
- * typedef'd struct fgBUCKET.
- *
- * Revision 1.8  1998/06/01 17:58:19  curt
- * Added a slight border overlap to try to minimize pixel wide gaps between
- * tiles due to round off error.  This is not a perfect solution, but helps.
- *
- * Revision 1.7  1998/04/14 02:26:00  curt
- * Code reorganizations.  Added a Lib/ directory for more general libraries.
- *
- * Revision 1.6  1998/04/08 22:54:58  curt
- * Adopted Gnu automake/autoconf system.
- *
- * Revision 1.5  1998/03/03 16:00:52  curt
- * More c++ compile tweaks.
- *
- * Revision 1.4  1998/01/31 00:41:23  curt
- * Made a few changes converting floats to doubles.
- *
- * Revision 1.3  1998/01/27 18:37:00  curt
- * Lots of updates to get back in sync with changes made over in .../Src/
- *
- * Revision 1.2  1998/01/15 21:33:36  curt
- * Assembling triangles and building a new .node file with the proper shared
- * vertices now works.  Now we just have to use the shared normals and we'll
- * be all set.
- *
- * Revision 1.1  1998/01/15 02:45:26  curt
- * Initial revision.
- *
- */
+// $Log$
+// Revision 1.1  1998/09/25 19:35:29  curt
+// Renamed assemtris.[ch] to assemtris.[ch]xx
+//
+// Revision 1.13  1998/09/21 20:56:30  curt
+// Changes to avoid setting airport area nodes back to their original
+// elevations if they have been changed.
+//
+//
+// Revision 1.12  1998/09/09 16:24:51  curt
+// Fixed a bug in the handling of exclude files which was causing
+//   a crash by calling fclose() on an invalid file handle.
+// Removed overlapping offsets.
+//
+// Revision 1.11  1998/08/06 12:47:59  curt
+// Removed overlap in tiles as a test.
+//
+// Revision 1.10  1998/07/21 04:34:20  curt
+// Mods to handle extra nodes (i.e. preserve cutouts).
+//
+// Revision 1.9  1998/07/04 00:55:39  curt
+// typedef'd struct fgBUCKET.
+//
+// Revision 1.8  1998/06/01 17:58:19  curt
+// Added a slight border overlap to try to minimize pixel wide gaps between
+// tiles due to round off error.  This is not a perfect solution, but helps.
+//
+// Revision 1.7  1998/04/14 02:26:00  curt
+// Code reorganizations.  Added a Lib/ directory for more general libraries.
+//
+// Revision 1.6  1998/04/08 22:54:58  curt
+// Adopted Gnu automake/autoconf system.
+//
+// Revision 1.5  1998/03/03 16:00:52  curt
+// More c++ compile tweaks.
+//
+// Revision 1.4  1998/01/31 00:41:23  curt
+// Made a few changes converting floats to doubles.
+//
+// Revision 1.3  1998/01/27 18:37:00  curt
+// Lots of updates to get back in sync with changes made over in .../Src/
+//
+// Revision 1.2  1998/01/15 21:33:36  curt
+// Assembling triangles and building a new .node file with the proper shared
+// vertices now works.  Now we just have to use the shared normals and we'll
+// be all set.
+//
+// Revision 1.1  1998/01/15 02:45:26  curt
+// Initial revision.
+//
+
