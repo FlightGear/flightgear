@@ -55,6 +55,7 @@ private:
     double elevator;
     double elevator_trim;
     double rudder;
+    double flaps;
     double throttle[MAX_ENGINES];
     double brake[MAX_WHEELS];
 
@@ -76,6 +77,7 @@ public:
     inline double get_elevator() const { return elevator; }
     inline double get_elevator_trim() const { return elevator_trim; }
     inline double get_rudder() const { return rudder; }
+    inline double get_flaps() const { return flaps; }
     inline double get_throttle(int engine) const { return throttle[engine]; }
     inline double get_brake(int wheel) const { return brake[wheel]; }
 
@@ -125,6 +127,14 @@ public:
     inline void move_rudder( double amt ) {
 	rudder += amt;
 	CLAMP( &rudder, -1.0, 1.0 );
+    }
+    inline void set_flaps( double pos ) {
+	flaps = pos;
+	CLAMP( &flaps, 0.0, 1.0 );
+    }
+    inline void move_flaps( double amt ) {
+	flaps += amt;
+	CLAMP( &flaps, 0.0, 1.0 );
     }
     inline void set_throttle( int engine, double pos ) {
 	if ( engine == ALL_ENGINES ) {
