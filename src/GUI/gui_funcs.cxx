@@ -532,7 +532,7 @@ void fgHiResDump()
         puHideCursor();
     }
 
-    FGRenderer *rendrer = globals->get_renderer();
+    FGRenderer *renderer = globals->get_renderer();
     renderer->init();
     renderer->resize( fgGetInt("/sim/startup/xsize"),
                       fgGetInt("/sim/startup/ysize") );
@@ -713,7 +713,7 @@ GLubyte *hiResScreenCapture( int multiplier )
     float fov = oldfov / multiplier;
     FGViewer *v = globals->get_current_view();
     fgSetDouble("/sim/current-view/field-of-view", fov);
-    fgInitVisuals();
+    globals->get_renderer()->init();
     int cur_width = fgGetInt("/sim/startup/xsize");
     int cur_height = fgGetInt("/sim/startup/ysize");
     if (b1) delete( b1 );
@@ -793,7 +793,7 @@ void fgDumpSnapShot () {
 	puHideCursor();
     }
 
-    fgInitVisuals();
+    globals->get_renderer()->init();
     fgReshape( fgGetInt("/sim/startup/xsize"),
 	       fgGetInt("/sim/startup/ysize") );
 
