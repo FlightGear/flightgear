@@ -41,7 +41,18 @@
 #include "newmat.hxx"
 
 
-static bool
+
+////////////////////////////////////////////////////////////////////////
+// Local static functions.
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * Internal method to test whether a file exists.
+ *
+ * TODO: this should be moved to a SimGear library of local file
+ * functions.
+ */
+static inline bool
 local_file_exists( const string& path ) {
     sg_gzifstream in( path );
     if ( ! in.is_open() ) {
@@ -52,24 +63,11 @@ local_file_exists( const string& path ) {
 }
 
 
-void 
-FGNewMat::init ()
-{
-  texture_path = "";
-  state = 0;
-  textured = 0;
-  nontextured = 0;
-  alpha = false;
-  xsize = 0;
-  ysize = 0;
-  wrapu = true;
-  wrapv = true;
-  mipmap = true;
-  texture_loaded = false;
-  refcount = 0;
-  for (int i = 0; i < 4; i++)
-    ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
-}
+
+////////////////////////////////////////////////////////////////////////
+// Constructors and destructor.
+////////////////////////////////////////////////////////////////////////
+
 
 FGNewMat::FGNewMat (const SGPropertyNode * props)
 {
@@ -90,6 +88,82 @@ FGNewMat::FGNewMat (ssgSimpleState * s)
     set_ssg_state(s);
 }
 
+FGNewMat::~FGNewMat (void)
+{
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Public methods.
+////////////////////////////////////////////////////////////////////////
+
+void
+FGNewMat::read_properties (const SGPropertyNode * props)
+{
+				// Get the path to the texture
+  string tname = props->getStringValue("texture", "unknown.rgb");
+  SGPath tpath(globals->get_fg_root());
+  tpath.append("Textures.high");
+  tpath.append(tname);
+  if (!local_file_exists(tpath.str())) {
+    tpath = SGPath(globals->get_fg_root());
+    tpath.append("Textures");
+    tpath.append(tname);
+  }
+  texture_path = tpath.str();
+
+  xsize = props->getDoubleValue("xsize", 0.0);
+  ysize = props->getDoubleValue("ysize", 0.0);
+  wrapu = props->getBoolValue("wrapu", true);
+  wrapv = props->getBoolValue("wrapv", true);
+  mipmap = props->getBoolValue("mipmap", true);
+  light_coverage = props->getDoubleValue("light-coverage");
+
+  ambient[0] = props->getDoubleValue("ambient/r", 0.0);
+  ambient[1] = props->getDoubleValue("ambient/g", 0.0);
+  ambient[2] = props->getDoubleValue("ambient/b", 0.0);
+  ambient[3] = props->getDoubleValue("ambient/a", 0.0);
+
+  diffuse[0] = props->getDoubleValue("diffuse/r", 0.0);
+  diffuse[1] = props->getDoubleValue("diffuse/g", 0.0);
+  diffuse[2] = props->getDoubleValue("diffuse/b", 0.0);
+  diffuse[3] = props->getDoubleValue("diffuse/a", 0.0);
+
+  specular[0] = props->getDoubleValue("specular/r", 0.0);
+  specular[1] = props->getDoubleValue("specular/g", 0.0);
+  specular[2] = props->getDoubleValue("specular/b", 0.0);
+  specular[3] = props->getDoubleValue("specular/a", 0.0);
+
+  emission[0] = props->getDoubleValue("emissive/r", 0.0);
+  emission[1] = props->getDoubleValue("emissive/g", 0.0);
+  emission[2] = props->getDoubleValue("emissive/b", 0.0);
+  emission[3] = props->getDoubleValue("emissive/a", 0.0);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Private methods.
+////////////////////////////////////////////////////////////////////////
+
+void 
+FGNewMat::init ()
+{
+  texture_path = "";
+  state = 0;
+  textured = 0;
+  nontextured = 0;
+  xsize = 0;
+  ysize = 0;
+  wrapu = true;
+  wrapv = true;
+  mipmap = true;
+  texture_loaded = false;
+  refcount = 0;
+  for (int i = 0; i < 4; i++)
+    ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
+}
 
 bool
 FGNewMat::load_texture ()
@@ -109,7 +183,8 @@ FGNewMat::load_texture ()
 }
 
 
-void FGNewMat::build_ssg_state( bool defer_tex_load )
+void 
+FGNewMat::build_ssg_state (bool defer_tex_load)
 {
     GLenum shade_model =
       (fgGetBool("/sim/rendering/shading") ? GL_SMOOTH : GL_FLAT);
@@ -176,7 +251,8 @@ void FGNewMat::build_ssg_state( bool defer_tex_load )
 }
 
 
-void FGNewMat::set_ssg_state( ssgSimpleState *s ) {
+void FGNewMat::set_ssg_state( ssgSimpleState *s )
+{
     state = new ssgStateSelector(2);
     state->ref();
 
@@ -216,51 +292,4 @@ void FGNewMat::set_ssg_state( ssgSimpleState *s ) {
     state->selectStep(0);
 }
 
-
-// Destructor
-FGNewMat::~FGNewMat ( void ) {
-}
-
-
-void
-FGNewMat::read_properties (const SGPropertyNode * props)
-{
-				// Get the path to the texture
-  string tname = props->getStringValue("texture", "unknown.rgb");
-  SGPath tpath(globals->get_fg_root());
-  tpath.append("Textures.high");
-  tpath.append(tname);
-  if (!local_file_exists(tpath.str())) {
-    tpath = SGPath(globals->get_fg_root());
-    tpath.append("Textures");
-    tpath.append(tname);
-  }
-  texture_path = tpath.str();
-
-  xsize = props->getDoubleValue("xsize", 0.0);
-  ysize = props->getDoubleValue("ysize", 0.0);
-  wrapu = props->getBoolValue("wrapu", true);
-  wrapv = props->getBoolValue("wrapv", true);
-  mipmap = props->getBoolValue("mipmap", true);
-  light_coverage = props->getDoubleValue("light-coverage");
-
-  ambient[0] = props->getDoubleValue("ambient/r", 0.0);
-  ambient[1] = props->getDoubleValue("ambient/g", 0.0);
-  ambient[2] = props->getDoubleValue("ambient/b", 0.0);
-  ambient[3] = props->getDoubleValue("ambient/a", 0.0);
-
-  diffuse[0] = props->getDoubleValue("diffuse/r", 0.0);
-  diffuse[1] = props->getDoubleValue("diffuse/g", 0.0);
-  diffuse[2] = props->getDoubleValue("diffuse/b", 0.0);
-  diffuse[3] = props->getDoubleValue("diffuse/a", 0.0);
-
-  specular[0] = props->getDoubleValue("specular/r", 0.0);
-  specular[1] = props->getDoubleValue("specular/g", 0.0);
-  specular[2] = props->getDoubleValue("specular/b", 0.0);
-  specular[3] = props->getDoubleValue("specular/a", 0.0);
-
-  emission[0] = props->getDoubleValue("emissive/r", 0.0);
-  emission[1] = props->getDoubleValue("emissive/g", 0.0);
-  emission[2] = props->getDoubleValue("emissive/b", 0.0);
-  emission[3] = props->getDoubleValue("emissive/a", 0.0);
-}
+// end of newmat.cxx

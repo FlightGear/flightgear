@@ -150,25 +150,30 @@ public:
   /**
    * Get the current state.
    */
-  virtual inline ssgStateSelector *get_state() const { return state; }
+  virtual inline ssgStateSelector *get_state () const { return state; }
 
 
   /**
-   * Add a reference to the texture.
+   * Increment the reference count for this material.
+   *
+   * A material with 0 references may be deleted by the
+   * material library.
    */
-  virtual inline void ref() { refcount++; }
+  virtual inline void ref () { refcount++; }
 
 
   /**
-   * Remove a reference from the texture.
+   * Decrement the reference count for this material.
    */
-  virtual inline void deRef() { refcount--; }
+  virtual inline void deRef () { refcount--; }
 
 
   /**
-   * Get the number of references to the texture.
+   * Get the reference count for this material.
+   *
+   * @return The number of references (0 if none).
    */
-  virtual inline int getRef() const { return refcount; }
+  virtual inline int getRef () const { return refcount; }
 
 protected:
 
@@ -198,9 +203,6 @@ private:
   ssgSimpleState *textured;
   ssgSimpleState *nontextured;
 
-  // alpha texture?
-  bool alpha;
-  
   // texture size
   double xsize, ysize;
 
