@@ -57,7 +57,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
-#include <Astro/sky.hxx>
+#include <Astro/skydome.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>

@@ -74,7 +74,7 @@
 #include <Include/general.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Astro/sky.hxx>
+#include <Astro/skydome.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/solarsystem.hxx>
 
@@ -310,18 +310,21 @@ void fgRenderFrame( void ) {
 	// ssg does to set up the model view matrix
 	xglMatrixMode(GL_MODELVIEW);
 	xglLoadIdentity();
+
+	/*
 	sgMat4 vm_tmp, view_mat;
 	sgTransposeNegateMat4 ( vm_tmp, current_view.VIEW ) ;
 	sgCopyMat4( view_mat, copy_of_ssgOpenGLAxisSwapMatrix ) ;
 	sgPreMultMat4( view_mat, vm_tmp ) ;
 	xglLoadMatrixf( (float *)view_mat );
+	*/
 
 	// draw sky
 	xglDisable( GL_DEPTH_TEST );
-	xglDisable( GL_LIGHTING );
+	// xglDisable( GL_LIGHTING );
 	xglDisable( GL_CULL_FACE );
-
 	xglDisable( GL_FOG );
+	xglDisable( GL_TEXTURE_2D );
 	/* if ( current_options.get_fog() > 0 ) {
 	    xglEnable( GL_FOG );
 	    xglFogi( GL_FOG_MODE, GL_EXP2 );
@@ -339,6 +342,10 @@ void fgRenderFrame( void ) {
 		   current_view.get_cur_zero_elev().y(),
 		   current_view.get_cur_zero_elev().z() );
 
+	current_sky.repaint( cur_light_params.sky_color,
+			     cur_light_params.fog_color,
+			     cur_light_params.sun_angle );
+
 	current_sky.reposition( zero_elev, 
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
@@ -350,6 +357,8 @@ void fgRenderFrame( void ) {
 	xglPopMatrix();
 
 	// xglDisable( GL_FOG );
+
+	/* 
 
 	// setup transformation for drawing astronomical objects
 	xglPushMatrix();
@@ -373,6 +382,7 @@ void fgRenderFrame( void ) {
 	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 
 	xglPopMatrix();
+	*/
 
 	// draw scenery
 	if ( current_options.get_shading() ) {
@@ -530,9 +540,9 @@ void fgRenderFrame( void ) {
 	//         << current_weather.get_visibility() );
 	    
 	if ( agl > 10.0 ) {
-	    ssgSetNearFar( 10.0f, 100000.0f );
+	    ssgSetNearFar( 10.0f, 120000.0f );
 	} else {
-	    ssgSetNearFar( 0.5f, 100000.0f );
+	    ssgSetNearFar( 0.5f, 120000.0f );
 	}
 
 	if ( current_options.get_view_mode() == 
@@ -1339,7 +1349,6 @@ int main( int argc, char **argv ) {
     sky = new ssgRoot;
     sky->setName( "Sky" );
     current_sky.initialize( sky );
-    scene->addKid( sky );
 
     // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;
