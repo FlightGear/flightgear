@@ -380,8 +380,8 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
     // Attempt to open "path.gz" or "path"
     fg_gzifstream in( path );
     if ( ! in.is_open() ) {
-	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
-	FG_LOG( FG_TERRAIN, FG_ALERT, "default to ocean tile: " << path );
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "Cannot open file: " << path );
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "default to ocean tile: " << path );
 
 	return NULL;
     }
