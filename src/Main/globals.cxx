@@ -118,16 +118,17 @@ void FGGlobals::set_fg_root (const string &root) {
 }
 
 void FGGlobals::set_fg_scenery (const string &scenery) {
-
     if (scenery.empty())
         return;
 
+    // TODO: Split the scenery path up into separate
+    // paths (taking into account the search path separator
+    // and test them individually.
+    // -EMH-
     SGPath pt( scenery ), po( scenery );
     pt.append("Terrain");
     po.append("Objects");
 
-cout << "pt: " << pt.str() << endl;
-cout << "po: " << po.str() << endl;
     ulDir *td = ulOpenDir(pt.c_str());
     ulDir *od = ulOpenDir(po.c_str());
 
@@ -146,7 +147,6 @@ cout << "po: " << po.str() << endl;
         fg_scenery = pt.str();
         ulCloseDir(td);
     }
-cout << "fg_scenery: " << fg_scenery << endl;
 }
 
 
