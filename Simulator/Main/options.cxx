@@ -209,7 +209,14 @@ fgOPTIONS::fgOPTIONS() :
 
 void 
 fgOPTIONS::toggle_panel() {
-	
+    
+    FGTime *t = FGTime::cur_time_params;
+    
+    int toggle_pause = t->getPause();
+    
+    if( !toggle_pause )
+        t->togglePauseMode();
+    
     if( panel_status ) {
 	panel_status = false;
     } else {
@@ -220,9 +227,12 @@ fgOPTIONS::toggle_panel() {
 	    new FGPanel;
 	fov *= 0.4232;
     } else {
-	fov *= (1.0 /0.4232);
+	fov *= (1.0 / 0.4232);
     }
     fgReshape( xsize, ysize);
+    
+    if( !toggle_pause )
+        t->togglePauseMode();
 }
 
 double
@@ -306,19 +316,19 @@ fgOPTIONS::parse_time(const string& time_in) {
 
 long int fgOPTIONS::parse_date( const string& date)
 {
-  struct tm gmt;
-  char * date_str, num[256];
-  int i;
-  // initialize to zero
-  gmt.tm_sec = 0;
-  gmt.tm_min = 0;
-  gmt.tm_hour = 0;
-  gmt.tm_mday = 0;
-  gmt.tm_mon = 0;
-  gmt.tm_year = 0;
-  gmt.tm_isdst = 0; // ignore daylight savingtime for the moment
-  date_str = (char *)date.c_str();
-  // get year
+    struct tm gmt;
+    char * date_str, num[256];
+    int i;
+    // initialize to zero
+    gmt.tm_sec = 0;
+    gmt.tm_min = 0;
+    gmt.tm_hour = 0;
+    gmt.tm_mday = 0;
+    gmt.tm_mon = 0;
+    gmt.tm_year = 0;
+    gmt.tm_isdst = 0; // ignore daylight savingtime for the moment
+    date_str = (char *)date.c_str();
+    // get year
     if ( strlen(date_str) ) {
 	i = 0;
 	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
@@ -332,7 +342,7 @@ long int fgOPTIONS::parse_date( const string& date)
 	num[i] = '\0';
 	gmt.tm_year = atoi(num) - 1900;
     }
-   // get month
+    // get month
     if ( strlen(date_str) ) {
 	i = 0;
 	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
@@ -690,8 +700,7 @@ int fgOPTIONS::parse_config_file( const string& path ) {
     FG_LOG( FG_GENERAL, FG_INFO, "Processing config file: " << path );
 
     in >> skipcomment;
-    while ( !in.eof() )
-    {
+    while ( !in.eof() ) {
 	string line;
 
 #ifdef GETLINE_NEEDS_TERMINATOR

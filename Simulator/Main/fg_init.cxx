@@ -388,7 +388,7 @@ int fgInitSubsystems( void )
     // above values
 
     fgFDMInit( current_options.get_flight_model(), cur_fdm_state,
-		       1.0 / DEFAULT_MODEL_HZ );
+	       1.0 / DEFAULT_MODEL_HZ );
 
     // I'm just sticking this here for now, it should probably move
     // eventually
@@ -429,14 +429,18 @@ int fgInitSubsystems( void )
 void fgReInitSubsystems( void )
 {
     FGInterface *f = current_aircraft.fdm_state;
-//    fgLIGHT *l = &cur_light_params;
-//    fgTIME *t = &cur_time_params;
     FGView *v = &current_view;
-
-	fgInitPosition();
+    FGTime *t = FGTime::cur_time_params;
+    
+    int toggle_pause = t->getPause();
+    
+    if( !toggle_pause )
+        t->togglePauseMode();
+    
+    fgInitPosition();
     if( fgTileMgrInit() ) {
-		// Load the local scenery data
-		fgTileMgrUpdate();
+	// Load the local scenery data
+	fgTileMgrUpdate();
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 		exit(-1);
@@ -462,11 +466,11 @@ void fgReInitSubsystems( void )
 				(sea_level_radius_meters * METER_TO_FEET) );
     f->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
 	
-	f->set_sin_cos_longitude(f->get_Longitude());
-	f->set_sin_cos_latitude(f->get_Latitude());
+    f->set_sin_cos_longitude(f->get_Longitude());
+    f->set_sin_cos_latitude(f->get_Latitude());
 	
-	f->set_sin_lat_geocentric(sin(lat_geoc));
-	f->set_cos_lat_geocentric(cos(lat_geoc));
+    f->set_sin_lat_geocentric(sin(lat_geoc));
+    f->set_cos_lat_geocentric(cos(lat_geoc));
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
@@ -500,7 +504,7 @@ void fgReInitSubsystems( void )
     v->UpdateWorldToEye(f);
 
     fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
-		       1.0 / DEFAULT_MODEL_HZ );
+	       1.0 / DEFAULT_MODEL_HZ );
 
     scenery.cur_elev = f->get_Runway_altitude() * FEET_TO_METER;
 
@@ -508,6 +512,9 @@ void fgReInitSubsystems( void )
 	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
     }
 
-	controls.reset_all();
-	fgAPReset();
+    controls.reset_all();
+    fgAPReset();
+
+    if( !toggle_pause )
+        t->togglePauseMode();
 }

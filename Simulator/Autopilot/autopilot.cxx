@@ -240,6 +240,8 @@ static float TmpRollOutSmoothValue;
 static puDialogBox     *APAdjustDialog;
 static puFrame         *APAdjustFrame;
 static puText          *APAdjustDialogMessage;
+static puFont          APAdjustLegendFont;
+static puFont          APAdjustLabelFont;
 
 static int DialogX = 40;
 static int DialogY = 100;
@@ -477,10 +479,11 @@ void fgAPAdjustInit( void )
     MaxAileronValue     = APData->MaxAileron    / MaxAileronAdjust;
     RollOutSmoothValue  = APData->RollOutSmooth / RollOutSmoothAdjust;
 
+    puGetDefaultFonts (  &APAdjustLegendFont,  &APAdjustLabelFont );
     APAdjustDialog = new puDialogBox (DialogX, DialogY);
     {
-        int horiz_slider_height =  puGetStringHeight () +
-	    puGetStringDescender () +
+        int horiz_slider_height =  puGetStringHeight (APAdjustLabelFont) +
+	    puGetStringDescender (APAdjustLabelFont) +
 	    PUSTR_TGAP + PUSTR_BGAP+5;
 
         APAdjustFrame  =  new puFrame (0,0,230, 85+4*horiz_slider_height);

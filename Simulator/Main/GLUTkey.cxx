@@ -56,8 +56,8 @@
 #include "options.hxx"
 #include "views.hxx"
 
-extern void NewAltitude( puObject *cb );
-extern void NewHeading( puObject *cb );
+// extern void NewAltitude( puObject *cb );
+// extern void NewHeading( puObject *cb );
 
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
@@ -374,12 +374,12 @@ void GLUTspecialkey(int k, int x, int y) {
 	    return;
 	case GLUT_KEY_F11: // F11 Altitude Dialog.
 	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Altitude call back function");
-	    NewAltitude( NULL );
+	    // NewAltitude( NULL );
 	    //exit(1);
 	    return;
 	case GLUT_KEY_F12: // F12 Heading Dialog...
 	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Heading call back function");
-	    NewHeading( NULL );
+	    // NewHeading( NULL );
 	    return;
 	case GLUT_KEY_UP:
 	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {

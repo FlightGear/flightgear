@@ -241,6 +241,7 @@ public:
     inline double *get_surface_south() { return surface_south; }
     inline double *get_surface_east() { return surface_east; }
     inline double *get_local_up() { return local_up; }
+    inline double *get_view_forward() { return view_forward; }
     inline const MAT3mat *get_WORLD_TO_EYE() const { return &WORLD_TO_EYE; }
     inline GLfloat *get_MODEL_VIEW() { return MODEL_VIEW; }
 };

@@ -91,8 +91,8 @@ static puOneShot    *YNdialogBoxOkButton = 0;
 static puOneShot    *YNdialogBoxNoButton = 0;
 
 // Accessor CallBacks for external PUI Objects
-extern void NewAltitude( puObject *cb );
-extern void NewHeading( puObject *cb );
+// extern void NewAltitude( puObject *cb );
+// extern void NewHeading( puObject *cb );
 extern void fgAPAdjust( puObject * );
 extern void fgLatLonFormatToggle( puObject *);
 
@@ -512,7 +512,7 @@ puCallback viewSubmenuCb        [] = {
 char *aircraftSubmenu           [] = {
     "Autopilot", "Heading", "Altitude", "Navigation", "Communication", NULL};
 puCallback aircraftSubmenuCb    [] = {
-    fgAPAdjust, NewHeading, NewAltitude, fgLatLonFormatToggle, notCb, NULL };
+    fgAPAdjust, notCb, notCb, fgLatLonFormatToggle, notCb, NULL };
 
 char *environmentSubmenu        [] = {
     "Airport", "Terrain", "Weather", NULL};

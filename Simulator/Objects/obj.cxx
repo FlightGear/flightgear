@@ -67,6 +67,7 @@ FG_USING_STD(string);
 
 
 static double normals[FG_MAX_NODES][3];
+static double tex_coords[FG_MAX_NODES*3][3];
 
 
 // given three points defining a triangle, calculate the normal
@@ -135,8 +136,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint display_list = 0;
     int shading;
-    int in_fragment = 0, in_faces = 0, vncount;
+    int in_fragment = 0, in_faces = 0, vncount, vtcount;
     int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
+    int tex;
     int last1 = 0, last2 = 0, odd = 0;
     double (*nodes)[3];
     Point3D center;
@@ -155,6 +157,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
     in_fragment = 0;
     t->ncount = 0;
     vncount = 0;
+    vtcount = 0;
     t->bounding_radius = 0.0;
     nodes = t->nodes;
     center = t->center;
@@ -271,6 +274,18 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		} else {
 		    FG_LOG( FG_TERRAIN, FG_ALERT, 
 			    "Read too many vertex normals ... dying :-(" );
+		    exit(-1);
+		}
+	    } else if ( token == "vt" ) {
+		// vertex texture coordinate
+		if ( vtcount < FG_MAX_NODES*3 ) {
+		    in >> tex_coords[vtcount][0]
+		       >> tex_coords[vtcount][1];
+		    vtcount++;
+		} else {
+		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+			    "Read too many vertex texture coords ... dying :-("
+			    );
 		    exit(-1);
 		}
 	    } else if ( token == "v" ) {
@@ -397,14 +412,28 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 		in >> n1;
 		xglNormal3dv(normals[n1]);
-		pp = calc_tex_coords(nodes[n1], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
+		if ( in.get( c ) && c == '/' ) {
+		    in >> tex;
+		    pp.setx( tex_coords[tex][0] );
+		    pp.sety( tex_coords[tex][1] );
+		} else {
+		    in.putback( c );
+		    pp = calc_tex_coords(nodes[n1], center);
+		}
+		xglTexCoord2f(pp.x(), pp.y());
 		xglVertex3dv(nodes[n1]);
 
 		in >> n2;
 		xglNormal3dv(normals[n2]);
-		pp = calc_tex_coords(nodes[n2], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
+		if ( in.get( c ) && c == '/' ) {
+		    in >> tex;
+		    pp.setx( tex_coords[tex][0] );
+		    pp.sety( tex_coords[tex][1] );
+		} else {
+		    in.putback( c );
+		    pp = calc_tex_coords(nodes[n2], center);
+		}
+		xglTexCoord2f(pp.x(), pp.y());
 		xglVertex3dv(nodes[n2]);
 		
 		// read all subsequent numbers until next thing isn't a number
@@ -423,8 +452,15 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    //      << n1 << "," << n2 << "," << n3 
 		    //      << endl;
 		    xglNormal3dv(normals[n3]);
-		    pp = calc_tex_coords(nodes[n3], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
+		    if ( in.get( c ) && c == '/' ) {
+			in >> tex;
+			pp.setx( tex_coords[tex][0] );
+			pp.sety( tex_coords[tex][1] );
+		    } else {
+			in.putback( c );
+			pp = calc_tex_coords(nodes[n3], center);
+		    }
+		    xglTexCoord2f(pp.x(), pp.y());
 		    xglVertex3dv(nodes[n3]);
 
 		    fragment.add_face(n1, n2, n3);
