@@ -467,6 +467,33 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     return true;
 }
 
+void fgSetPosFromGlideSlope(void) {
+    double gs = fgGetDouble("/velocities/glideslope");
+    double od = fgGetDouble("/sim/startup/offset-distance");
+    double alt = fgGetDouble("/position/altitude-ft");
+    
+    //if glideslope and offset-distance are set and altitude is
+    //not, calculate the initial altitude
+    if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
+    	od *= SG_NM_TO_METER * SG_METER_TO_FEET;
+	alt = fabs(od*tan(gs));
+	fgSetDouble("/position/altitude-ft",alt);
+	fgSetBool("/sim/startup/onground", false);
+	SG_LOG(SG_GENERAL,SG_INFO, "Calculated altitude as: " << alt  << " ft");
+    } else if( fabs(gs) > 0.01 && alt > 0 && fabs(od) < 0.1) {
+    	od  = alt/tan(gs);
+	od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
+	fgSetDouble("/sim/startup/offset-distance",od);
+	SG_LOG(SG_GENERAL,SG_INFO, "Calculated offset distance as: " 
+	                               << od  << " nm");
+    } else if( fabs(gs) > 0.01 ) {
+    	SG_LOG(SG_GENERAL,SG_ALERT, "Glideslope given but not altitude" 
+	                          << " or offset-distance.  Resetting"
+				  << " glideslope to zero" );
+        fgSetDouble("/velocities/glideslope",0);				  
+    }				   
+	                              
+}    			
 
 // General house keeping initializations
 bool fgInitGeneral( void ) {
