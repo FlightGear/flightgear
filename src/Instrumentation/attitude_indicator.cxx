@@ -3,6 +3,10 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+// TODO:
+// - tumble
+// - better spin-up
+
 #include "attitude_indicator.hxx"
 #include <Main/fg_props.hxx>
 

@@ -6,6 +6,7 @@
 
 #include "system_mgr.hxx"
 #include "electrical.hxx"
+#include "static.hxx"
 #include "vacuum.hxx"
 
 
@@ -27,6 +28,7 @@ FGSystemMgr::init ()
 {
                                 // TODO: replace with XML configuration
     _systems.push_back(new FGElectricalSystem);
+    _systems.push_back(new StaticSystem);
     _systems.push_back(new VacuumSystem);
 
                                 // Initialize the individual systems

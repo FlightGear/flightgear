@@ -5,6 +5,7 @@
 
 
 #include "instrument_mgr.hxx"
+#include "altimeter.hxx"
 #include "attitude_indicator.hxx"
 
 
@@ -25,6 +26,7 @@ void
 FGInstrumentMgr::init ()
 {
                                 // TODO: replace with XML configuration
+    _instruments.push_back(new Altimeter);
     _instruments.push_back(new AttitudeIndicator);
 
                                 // Initialize the individual instruments
