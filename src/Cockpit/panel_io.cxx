@@ -232,8 +232,9 @@ readTexture (const SGPropertyNode * node)
  * Read an action from the instrument's property list.
  *
  * The action will be performed when the user clicks a mouse button
- * within the specified region of the instrument.  Actions always
- * work by modifying the value of a property (see the SGValue class).
+ * within the specified region of the instrument.  Actions always work
+ * by modifying the value of a property (see the SGPropertyNode
+ * class).
  *
  * The following action types are defined:
  *
@@ -276,7 +277,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 				// Adjust a property value
   if (type == "adjust") {
     string propName = node->getStringValue("property");
-    SGValue * value = fgGetValue(propName, true);
+    SGPropertyNode * target = fgGetNode(propName, true);
     float increment = node->getFloatValue("increment", 1.0);
     float min = node->getFloatValue("min", 0.0);
     float max = node->getFloatValue("max", 0.0);
@@ -284,7 +285,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
     if (min == max)
       SG_LOG(SG_COCKPIT, SG_ALERT, "Action " << node->getName()
 	     << " has same min and max value");
-    action = new FGAdjustAction(button, x, y, w, h, value,
+    action = new FGAdjustAction(button, x, y, w, h, target,
 				increment, min, max, wrap);
   } 
 
@@ -292,16 +293,16 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   else if (type == "swap") {
     string propName1 = node->getStringValue("property1");
     string propName2 = node->getStringValue("property2");
-    SGValue * value1 = fgGetValue(propName1, true);
-    SGValue * value2 = fgGetValue(propName2, true);
-    action = new FGSwapAction(button, x, y, w, h, value1, value2);
+    SGPropertyNode * target1 = fgGetNode(propName1, true);
+    SGPropertyNode * target2 = fgGetNode(propName2, true);
+    action = new FGSwapAction(button, x, y, w, h, target1, target2);
   } 
 
 				// Toggle a boolean value
   else if (type == "toggle") {
     string propName = node->getStringValue("property");
-    SGValue * value = fgGetValue(propName, true);
-    action = new FGToggleAction(button, x, y, w, h, value);
+    SGPropertyNode * target = fgGetNode(propName, true);
+    action = new FGToggleAction(button, x, y, w, h, target);
   } 
 
 				// Unrecognized type
@@ -347,7 +348,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   string name = node->getName();
   string type = node->getStringValue("type");
   string propName = node->getStringValue("property", "");
-  SGValue * value = 0;
+  SGPropertyNode * target = 0;
 
   if (type == "") {
     SG_LOG( SG_COCKPIT, SG_ALERT,
@@ -357,10 +358,10 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   }
 
   if (propName != (string)"") {
-    value = fgGetValue(propName, true);
+    target = fgGetNode(propName, true);
   }
 
-  t->value = value;
+  t->node = target;
   t->min = node->getFloatValue("min", -9999999);
   t->max = node->getFloatValue("max", 99999999);
   t->factor = node->getFloatValue("scale", 1.0);
@@ -464,17 +465,17 @@ readTextChunk (const SGPropertyNode * node)
 
 				// The value of a string property.
   else if (type == "text-value") {
-    SGValue * value =
-      fgGetValue(node->getStringValue("property"), true);
-    chunk = new FGTextLayer::Chunk(FGTextLayer::TEXT_VALUE, value, format);
+    SGPropertyNode * target =
+      fgGetNode(node->getStringValue("property"), true);
+    chunk = new FGTextLayer::Chunk(FGTextLayer::TEXT_VALUE, target, format);
   }
 
 				// The value of a float property.
   else if (type == "number-value") {
     string propName = node->getStringValue("property");
     float scale = node->getFloatValue("scale", 1.0);
-    SGValue * value = fgGetValue(propName, true);
-    chunk = new FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE, value,
+    SGPropertyNode * target = fgGetNode(propName, true);
+    chunk = new FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE, target,
 				   format, scale);
   }
 
@@ -576,13 +577,13 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 
 				// A switch instrument layer.
   else if (type == "switch") {
-    SGValue * value =
-      fgGetValue(node->getStringValue("property"), true);
+    SGPropertyNode * target =
+      fgGetNode(node->getStringValue("property"), true);
     FGInstrumentLayer * layer1 =
       readLayer(node->getNode("layer1"), w_scale, h_scale);
     FGInstrumentLayer * layer2 =
       readLayer(node->getNode("layer2"), w_scale, h_scale);
-    layer = new FGSwitchLayer(w, h, value, layer1, layer2);
+    layer = new FGSwitchLayer(w, h, target, layer1, layer2);
   }
 
 				// A built-in instrument layer.
@@ -746,10 +747,10 @@ readPanel (const SGPropertyNode * root)
   //
   // Grab the panel's initial offsets, default to 0, 0.
   //
-  if (!fgHasValue("/sim/panel/x-offset"))
+  if (!fgHasNode("/sim/panel/x-offset"))
     fgSetInt("/sim/panel/x-offset", root->getIntValue("x-offset", 0));
 
-  if (!fgHasValue("/sim/panel/y-offset"))
+  if (!fgHasNode("/sim/panel/y-offset"))
     fgSetInt("/sim/panel/y-offset", root->getIntValue("y-offset", 0));
 
   //

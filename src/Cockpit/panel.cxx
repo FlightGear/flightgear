@@ -404,10 +404,10 @@ FGPanelAction::~FGPanelAction ()
 ////////////////////////////////////////////////////////////////////////
 
 FGAdjustAction::FGAdjustAction (int button, int x, int y, int w, int h,
-				SGValue * value, float increment, 
+				SGPropertyNode * node, float increment, 
 				float min, float max, bool wrap)
   : FGPanelAction(button, x, y, w, h),
-    _value(value), _increment(increment), _min(min), _max(max), _wrap(wrap)
+    _node(node), _increment(increment), _min(min), _max(max), _wrap(wrap)
 {
 }
 
@@ -418,14 +418,14 @@ FGAdjustAction::~FGAdjustAction ()
 void
 FGAdjustAction::doAction ()
 {
-  float val = _value->getFloatValue();
+  float val = _node->getFloatValue();
   val += _increment;
   if (val < _min) {
     val = (_wrap ? _max : _min);
   } else if (val > _max) {
     val = (_wrap ? _min : _max);
   }
-  _value->setDoubleValue(val);
+  _node->setDoubleValue(val);
 }
 
 
@@ -435,8 +435,8 @@ FGAdjustAction::doAction ()
 ////////////////////////////////////////////////////////////////////////
 
 FGSwapAction::FGSwapAction (int button, int x, int y, int w, int h,
-			    SGValue * value1, SGValue * value2)
-  : FGPanelAction(button, x, y, w, h), _value1(value1), _value2(value2)
+			    SGPropertyNode * node1, SGPropertyNode * node2)
+  : FGPanelAction(button, x, y, w, h), _node1(node1), _node2(node2)
 {
 }
 
@@ -447,9 +447,9 @@ FGSwapAction::~FGSwapAction ()
 void
 FGSwapAction::doAction ()
 {
-  float val = _value1->getFloatValue();
-  _value1->setDoubleValue(_value2->getFloatValue());
-  _value2->setDoubleValue(val);
+  float val = _node1->getFloatValue();
+  _node1->setDoubleValue(_node2->getFloatValue());
+  _node2->setDoubleValue(val);
 }
 
 
@@ -459,8 +459,8 @@ FGSwapAction::doAction ()
 ////////////////////////////////////////////////////////////////////////
 
 FGToggleAction::FGToggleAction (int button, int x, int y, int w, int h,
-				SGValue * value)
-  : FGPanelAction(button, x, y, w, h), _value(value)
+				SGPropertyNode * node)
+  : FGPanelAction(button, x, y, w, h), _node(node)
 {
 }
 
@@ -471,7 +471,7 @@ FGToggleAction::~FGToggleAction ()
 void
 FGToggleAction::doAction ()
 {
-  _value->setBoolValue(!(_value->getBoolValue()));
+  _node->setBoolValue(!(_node->getBoolValue()));
 }
 
 
@@ -664,7 +664,7 @@ FGInstrumentLayer::transform () const
   transformation_list::const_iterator last = _transformations.end();
   while (it != last) {
     FGPanelTransformation *t = *it;
-    float val = (t->value == 0 ? 0.0 : t->value->getFloatValue());
+    float val = (t->node == 0 ? 0.0 : t->node->getFloatValue());
     if (val < t->min) {
       val = t->min;
     } else if (val > t->max) {
@@ -841,7 +841,7 @@ FGTextLayer::Chunk::Chunk (const string &text, const string &fmt)
     _fmt = "%s";
 }
 
-FGTextLayer::Chunk::Chunk (ChunkType type, const SGValue * value,
+FGTextLayer::Chunk::Chunk (ChunkType type, const SGPropertyNode * node,
 			   const string &fmt, float mult)
   : _type(type), _fmt(fmt), _mult(mult)
 {
@@ -851,7 +851,7 @@ FGTextLayer::Chunk::Chunk (ChunkType type, const SGValue * value,
     else
       _fmt = "%.2f";
   }
-  _value = value;
+  _node = node;
 }
 
 const char *
@@ -862,10 +862,10 @@ FGTextLayer::Chunk::getValue () const
     sprintf(_buf, _fmt.c_str(), _text.c_str());
     return _buf;
   case TEXT_VALUE:
-    sprintf(_buf, _fmt.c_str(), _value->getStringValue().c_str());
+    sprintf(_buf, _fmt.c_str(), _node->getStringValue().c_str());
     break;
   case DOUBLE_VALUE:
-    sprintf(_buf, _fmt.c_str(), _value->getFloatValue() * _mult);
+    sprintf(_buf, _fmt.c_str(), _node->getFloatValue() * _mult);
     break;
   }
   return _buf;
@@ -877,10 +877,10 @@ FGTextLayer::Chunk::getValue () const
 // Implementation of FGSwitchLayer.
 ////////////////////////////////////////////////////////////////////////
 
-FGSwitchLayer::FGSwitchLayer (int w, int h, const SGValue * value,
+FGSwitchLayer::FGSwitchLayer (int w, int h, const SGPropertyNode * node,
 			      FGInstrumentLayer * layer1,
 			      FGInstrumentLayer * layer2)
-  : FGInstrumentLayer(w, h), _value(value), _layer1(layer1), _layer2(layer2)
+  : FGInstrumentLayer(w, h), _node(node), _layer1(layer1), _layer2(layer2)
 {
 }
 
@@ -894,7 +894,7 @@ void
 FGSwitchLayer::draw ()
 {
   transform();
-  if (_value->getBoolValue()) {
+  if (_node->getBoolValue()) {
     _layer1->draw();
   } else {
     _layer2->draw();

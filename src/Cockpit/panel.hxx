@@ -254,13 +254,13 @@ class FGAdjustAction : public FGPanelAction
 {
 public:
   FGAdjustAction (int button, int x, int y, int w, int h,
-		  SGValue * value, float increment,
+		  SGPropertyNode * node, float increment,
 		  float min, float max, bool wrap=false);
   virtual ~FGAdjustAction ();
   virtual void doAction ();
 
 private:
-  SGValue * _value;
+  SGPropertyNode * _node;
   float _increment;
   float _min;
   float _max;
@@ -280,13 +280,13 @@ class FGSwapAction : public FGPanelAction
 {
 public:
   FGSwapAction (int button, int x, int y, int w, int h,
-		SGValue * value1, SGValue * value2);
+		SGPropertyNode * node1, SGPropertyNode * node2);
   virtual ~FGSwapAction ();
   virtual void doAction ();
 
 private:
-  SGValue * _value1;
-  SGValue * _value2;
+  SGPropertyNode * _node1;
+  SGPropertyNode * _node2;
 };
 
 
@@ -301,12 +301,12 @@ class FGToggleAction : public FGPanelAction
 {
 public:
   FGToggleAction (int button, int x, int y, int w, int h,
-		  SGValue * value);
+		  SGPropertyNode * node);
   virtual ~FGToggleAction ();
   virtual void doAction ();
 
 private:
-  SGValue * _value;
+  SGPropertyNode * _node;
 };
 
 
@@ -379,7 +379,7 @@ public:
   virtual ~FGPanelTransformation ();
 
   Type type;
-  const SGValue * value;
+  const SGPropertyNode * node;
   float min;
   float max;
   float factor;
@@ -512,14 +512,14 @@ public:
   class Chunk {
   public:
     Chunk (const string &text, const string &fmt = "%s");
-    Chunk (ChunkType type, const SGValue * value,
+    Chunk (ChunkType type, const SGPropertyNode * node,
 	   const string &fmt = "", float mult = 1.0);
 
     const char * getValue () const;
   private:
     ChunkType _type;
     string _text;
-    const SGValue * _value;
+    const SGPropertyNode * _node;
     string _fmt;
     float _mult;
     mutable char _buf[1024];
@@ -561,7 +561,7 @@ class FGSwitchLayer : public FGInstrumentLayer
 {
 public:
 				// Transfer pointers!!
-  FGSwitchLayer (int w, int h, const SGValue * value,
+  FGSwitchLayer (int w, int h, const SGPropertyNode * node,
 		 FGInstrumentLayer * layer1,
 		 FGInstrumentLayer * layer2);
   virtual ~FGSwitchLayer ();
@@ -569,7 +569,7 @@ public:
   virtual void draw ();
 
 private:
-  const SGValue * _value;
+  const SGPropertyNode * _node;
   FGInstrumentLayer * _layer1, * _layer2;
 };
 
