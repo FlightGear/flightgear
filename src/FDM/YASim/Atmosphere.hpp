@@ -13,6 +13,9 @@ public:
     static float calcVEAS(float spd, float pressure, float temp, float density);
     static float calcMach(float spd, float temp);
     static float calcStdDensity(float pressure, float temp);
+
+    static float spdFromMach(float mach, float temp);
+    static float spdFromVCAS(float vcas, float pressure, float temp);
     
     // Given ambient ("0") pressure/density/temperature values,
     // calculate the properties of static air (air accelerated to the

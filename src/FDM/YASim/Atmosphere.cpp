@@ -102,6 +102,25 @@ float Atmosphere::calcMach(float spd, float temp)
     return spd / Math::sqrt(GAMMA * R * temp);
 }
 
+float Atmosphere::spdFromMach(float mach, float temp)
+{
+    return mach * Math::sqrt(GAMMA * R * temp);
+}
+
+float Atmosphere::spdFromVCAS(float vcas, float pressure, float temp)
+{
+                                // FIXME: does not account for supersonic
+    float p0 = getStdPressure(0);
+    float rho0 = getStdDensity(0);
+
+    float tmp = (vcas*vcas)/(7*p0/rho0) + 1;
+    float cp = ((Math::pow(tmp,(7/2.))-1)/(pressure/p0)) + 1;
+
+    float m2 = (Math::pow(cp,(1/3.5))-1)/0.2;
+    float vtas= spdFromMach(Math::sqrt(m2), temp);
+    return vtas;
+}
+
 void Atmosphere::calcStaticAir(float p0, float t0, float d0, float v,
                                float* pOut, float* tOut, float* dOut)
 {
