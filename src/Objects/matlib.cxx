@@ -61,6 +61,7 @@ FGMaterialLib material_lib;
 
 // Constructor
 FGMaterialLib::FGMaterialLib ( void ) {
+  set_step(0);
 }
 
 
@@ -294,6 +295,14 @@ void FGMaterialLib::set_step ( int step )
 	FGNewMat *slot = it->second;
 	slot->get_state()->selectStep(step);
     }
+}
+
+
+// Get the step for the state selectors
+int FGMaterialLib::get_step ()
+{
+  material_map_iterator it = begin();
+  return it->second->get_state()->getSelectStep();
 }
 
 
