@@ -7,3 +7,5 @@ mesh.o: mesh.c ../Include/constants.h ../Include/types.h \
  ../Math/polar.h ../Math/../Include/types.h mesh.h common.h scenery.h
 obj.o: obj.c ../XGL/xgl.h obj.h scenery.h ../Include/types.h \
  ../Math/mat3.h
+scenery.o: scenery.c ../XGL/xgl.h ../Include/general.h obj.h scenery.h \
+ ../Include/types.h

@@ -4,8 +4,7 @@ fg_time.o: fg_time.c fg_time.h ../Include/types.h ../Flight/flight.h \
  ../Flight/LaRCsim/../flight.h ../Include/constants.h \
  ../Time/fg_time.h
 fg_timer.o: fg_timer.c fg_timer.h
-scheduler.o: scheduler.c
-sidereal.o: sidereal.c ../Include/constants.h
+sptest.o: sptest.c sunpos.h ../Include/types.h ../Include/constants.h
 sunpos.o: sunpos.c sunpos.h ../Include/types.h fg_time.h \
  ../Flight/flight.h ../Flight/Slew/slew.h \
  ../Flight/LaRCsim/ls_interface.h ../Flight/LaRCsim/../flight.h \
@@ -13,4 +12,5 @@ sunpos.o: sunpos.c sunpos.h ../Include/types.h fg_time.h \
  ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
  ../Main/../Time/fg_time.h ../Math/fg_geodesy.h ../Math/mat3.h \
  ../Math/polar.h ../Math/../Include/types.h
+test_event.o: test_event.c event.h
 ttest.o: ttest.c

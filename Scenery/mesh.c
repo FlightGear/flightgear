@@ -227,7 +227,7 @@ double mesh_altitude(double lon, double lat) {
 	
 	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB); */
 
-	if ( dx > EPSILON ) {
+	if ( dx > FG_EPSILON ) {
 	    elev = dy * (zB - zA) / dx + zA;
 	} else {
 	    elev = zA;
@@ -259,7 +259,7 @@ double mesh_altitude(double lon, double lat) {
 	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB );
 	printf("  xB - xA = %.2f\n", eg.col_step * dy / eg.row_step); */
 
-	if ( dy > EPSILON ) {
+	if ( dy > FG_EPSILON ) {
 	    elev = dx * (zB - zA) / dy    + zA;
 	} else {
 	    elev = zA;
@@ -396,10 +396,13 @@ GLint mesh_to_OpenGL(struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.24  1997/12/15 23:54:59  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.25  1998/01/07 03:31:27  curt
+/* Miscellaneous tweaks.
 /*
+ * Revision 1.24  1997/12/15 23:54:59  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.23  1997/10/30 12:38:44  curt
  * Working on new scenery subsystem.
  *
