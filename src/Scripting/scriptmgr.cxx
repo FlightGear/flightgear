@@ -43,6 +43,10 @@ do_print (int argc, pslValue * argv, pslProgram * p)
             break;
         }
     }
+
+    pslValue result;
+    result.set();
+    return result;
 }
 
 static pslValue
