@@ -450,6 +450,8 @@ FGPanelAction::FGPanelAction ()
 FGPanelAction::FGPanelAction (int button, int x, int y, int w, int h)
   : _button(button), _x(x), _y(y), _w(w), _h(h)
 {
+  for (unsigned int i = 0; i < _bindings.size(); i++)
+    delete _bindings[i];
 }
 
 FGPanelAction::~FGPanelAction ()
@@ -457,7 +459,7 @@ FGPanelAction::~FGPanelAction ()
 }
 
 void
-FGPanelAction::addBinding (const FGBinding &binding)
+FGPanelAction::addBinding (FGBinding * binding)
 {
   _bindings.push_back(binding);
 }
@@ -468,7 +470,7 @@ FGPanelAction::doAction ()
   if (test()) {
     int nBindings = _bindings.size();
     for (int i = 0; i < nBindings; i++) {
-      _bindings[i].fire();
+      _bindings[i]->fire();
     }
   }
 }
@@ -714,7 +716,7 @@ FGGroupLayer::FGGroupLayer ()
 
 FGGroupLayer::~FGGroupLayer ()
 {
-  for (int i = 0; i < _layers.size(); i++)
+  for (unsigned int i = 0; i < _layers.size(); i++)
     delete _layers[i];
 }
 

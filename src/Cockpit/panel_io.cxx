@@ -242,10 +242,10 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   FGPanelAction * action = new FGPanelAction(button, x, y, w, h);
 
   vector<const SGPropertyNode *>bindings = node->getChildren("binding");
-  for (int i = 0; i < bindings.size(); i++) {
+  for (unsigned int i = 0; i < bindings.size(); i++) {
     SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
 	   << bindings[i]->getStringValue("command"));
-    action->addBinding(FGBinding(bindings[i])); // TODO: allow modifiers
+    action->addBinding(new FGBinding(bindings[i])); // TODO: allow modifiers
   }
 
   readConditions(action, node);

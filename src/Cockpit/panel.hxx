@@ -228,7 +228,9 @@ public:
   virtual int getHeight () const { return _h; }
 
 				// Setters.
-  virtual void addBinding (const FGBinding &binding);
+
+				// transfer pointer ownership
+  virtual void addBinding (FGBinding * binding);
   virtual void setButton (int button) { _button = button; }
   virtual void setX (int x) { _x = x; }
   virtual void setY (int y) { _y = y; }
@@ -249,7 +251,7 @@ public:
   virtual void doAction ();
 
 private:
-  typedef vector<FGBinding> binding_list_t;
+  typedef vector<FGBinding *> binding_list_t;
 
   int _button;
   int _x;
