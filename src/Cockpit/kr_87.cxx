@@ -74,6 +74,7 @@ FGKR_87::FGKR_87() :
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
     need_update(true),
+    adf_valid(false),
     adf_freq(0.0),
     adf_alt_freq(0.0),
     adf_vol_btn(0.0)
