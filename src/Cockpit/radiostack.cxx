@@ -473,20 +473,36 @@ FGRadioStack::update(int dt)
 	if ( nav1_vol_btn > 0.1 && nav1_ident_btn ) {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( "nav1-vor-ident" );
-	    sound->set_volume( nav1_vol_btn * 0.3 );
+            if ( sound != NULL ) {
+                sound->set_volume( nav1_vol_btn );
+            } else {
+                SG_LOG( SG_COCKPIT, SG_ALERT,
+                        "Can't find nav1-vor-ident sound" );
+            }
 	    sound = globals->get_soundmgr()->find( "nav1-dme-ident" );
-	    sound->set_volume( nav1_vol_btn * 0.3 );
+            if ( sound != NULL ) {
+                sound->set_volume( nav1_vol_btn );
+            } else {
+                SG_LOG( SG_COCKPIT, SG_ALERT,
+                        "Can't find nav1-dme-ident sound" );
+            }
+            // cout << "nav1_last_time = " << nav1_last_time << " ";
+            // cout << "cur_time = " << globals->get_time_params()->get_cur_time();
 	    if ( nav1_last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
 		nav1_last_time = globals->get_time_params()->get_cur_time();
 		nav1_play_count = 0;
 	    }
+            // cout << " nav1_play_count = " << nav1_play_count << endl;
+            // cout << "playing = "
+            //      << globals->get_soundmgr()->is_playing("nav1-vor-ident")
+            //      << endl;
 	    if ( nav1_play_count < 4 ) {
 		// play VOR ident
 		if ( !globals->get_soundmgr()->is_playing("nav1-vor-ident") ) {
 		    globals->get_soundmgr()->play_once( "nav1-vor-ident" );
 		    ++nav1_play_count;
-		}
+                }
 	    } else if ( nav1_play_count < 5 && nav1_has_dme ) {
 		// play DME ident
 		if ( !globals->get_soundmgr()->is_playing("nav1-vor-ident") &&
@@ -564,10 +580,20 @@ FGRadioStack::update(int dt)
 	if ( nav2_vol_btn > 0.1 && nav2_ident_btn ) {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( "nav2-vor-ident" );
-	    sound->set_volume( nav2_vol_btn * 0.3 );
+            if ( sound != NULL ) {
+                sound->set_volume( nav2_vol_btn );
+            } else {
+                SG_LOG( SG_COCKPIT, SG_ALERT,
+                        "Can't find nav2-vor-ident sound" );
+            }
 	    sound = globals->get_soundmgr()->find( "nav2-dme-ident" );
-	    sound->set_volume( nav2_vol_btn * 0.3 );
-	    if ( nav2_last_time <
+            if ( sound != NULL ) {
+                sound->set_volume( nav2_vol_btn );
+            } else {
+                SG_LOG( SG_COCKPIT, SG_ALERT,
+                        "Can't find nav2-dme-ident sound" );
+            }
+            if ( nav2_last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
 		nav2_last_time = globals->get_time_params()->get_cur_time();
 		nav2_play_count = 0;
@@ -679,7 +705,11 @@ FGRadioStack::update(int dt)
 	if ( adf_vol_btn > 0.1 && adf_ident_btn ) {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( "adf-ident" );
-	    sound->set_volume( adf_vol_btn * 0.3 );
+            if ( sound != NULL ) {
+                sound->set_volume( adf_vol_btn );
+            } else {
+                SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find adf-ident sound" );
+            }
 	    if ( adf_last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
 		adf_last_time = globals->get_time_params()->get_cur_time();
@@ -863,7 +893,11 @@ void FGRadioStack::search()
 	    FGSimpleSound *sound;
 	    sound = morse.make_ident( nav1_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav1-vor-ident" );
+	    if ( globals->get_soundmgr()->add( sound, "nav1-vor-ident" ) ) {
+                // cout << "Added nav1-vor-ident sound" << endl;
+            } else {
+                // cout << "Failed to add v1-vor-ident sound" << endl;
+            }
 
 	    if ( globals->get_soundmgr()->exists( "nav1-dme-ident" ) ) {
 		globals->get_soundmgr()->remove( "nav1-dme-ident" );
@@ -892,7 +926,9 @@ void FGRadioStack::search()
 	nav1_trans_ident = "";
 	last_nav1_ident = "";
 #ifdef ENABLE_AUDIO_SUPPORT
-	globals->get_soundmgr()->remove( "nav1-vor-ident" );
+	if ( ! globals->get_soundmgr()->remove( "nav1-vor-ident" ) ) {
+            // cout << "Failed to remove nav1-vor-ident sound" << endl;
+        }
 	globals->get_soundmgr()->remove( "nav1-dme-ident" );
 #endif
 	// cout << "not picking up vor1. :-(" << endl;

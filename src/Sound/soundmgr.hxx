@@ -70,7 +70,9 @@ public:
 
     inline void play_once( slScheduler *sched ) { play( sched, false); }
     inline void play_looped( slScheduler *sched ) { play( sched, true); }
-    inline bool is_playing( ) { return (requests > 0 ); }
+    inline bool is_playing( ) {
+        return ( sample->getPlayCount() > 0 );
+    }
 
     inline double get_pitch() const { return pitch; }
     inline void set_pitch( double p ) {

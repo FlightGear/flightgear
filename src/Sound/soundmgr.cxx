@@ -75,14 +75,18 @@ FGSimpleSound::~FGSimpleSound() {
 void FGSimpleSound::play( slScheduler *sched, bool looped ) {
     
     requests++;
-    if (requests > 1)
-       return;
+
+    // make sure sound isn't already playing
+    if ( sample->getPlayCount() > 0 ) {
+        return;
+    }
 
     // sched->stopSample(sample);
-    if (looped)
-       sched->loopSample(sample);
-    else
-       sched->playSample(sample);
+    if ( looped ) {
+        sched->loopSample(sample);
+    } else {
+        sched->playSample(sample);
+    }
     
     sched->addSampleEnvelope(sample, 0, 0, pitch_envelope, SL_PITCH_ENVELOPE);
     sched->addSampleEnvelope(sample, 0, 1, volume_envelope, SL_VOLUME_ENVELOPE);
@@ -90,14 +94,17 @@ void FGSimpleSound::play( slScheduler *sched, bool looped ) {
 
 void FGSimpleSound::stop( slScheduler *sched, bool quick ) {
 
-    if (quick)
-       requests = 0;
-    else
-       if (--requests < 0)
-          requests = 0;
+    if ( quick ) {
+        requests = 0;
+    } else {
+        if ( --requests < 0 ) {
+            requests = 0;
+        }
+    }
 
-    if (requests > 0)
+    if ( requests > 0 ) {
        return;
+    }
 
     sched->stopSample( sample );
 }
@@ -226,9 +233,18 @@ void FGSoundMgr::update(int dt) {
 // add a sound effect, return true if successful
 bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname ) {
 
-    sample_map_iterator it = samples.find(refname);
-    if (it != samples.end())
-       return false;
+    sound_map_iterator sound_it = sounds.find( refname );
+    if ( sound_it != sounds.end() ) {
+        // sound already exists
+        return false;
+    }
+
+    sample_map_iterator sample_it = samples.find( refname );
+    if ( sample_it != samples.end() ) {
+        // this sound has existed in the past and it's sample is still
+        // here, delete the sample so we can replace it.
+        samples.erase( sample_it );
+    }
 
     sample_ref *sr = new sample_ref;
 
@@ -240,6 +256,7 @@ bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname ) {
 
     return true;
 }
+
 
 // add a sound from a file, return the sample if successful, else return NULL
 FGSimpleSound *FGSoundMgr::add( const string& refname, const string &file ) {
@@ -271,6 +288,7 @@ FGSimpleSound *FGSoundMgr::add( const string& refname, const string &file ) {
 
     return sound;
 }
+
 
 // remove a sound effect, return true if successful
 bool FGSoundMgr::remove( const string& refname ) {
@@ -306,9 +324,11 @@ bool FGSoundMgr::remove( const string& refname ) {
 	// delete sample;
         sounds.erase( it );
 
+        // cout << "sndmgr: removed -> " << refname << endl;
 	return true;
-   } else {
-	return false;
+    } else {
+        // cout << "sndmgr: failed remove -> " << refname << endl;
+        return false;
     }
 }
 
@@ -330,7 +350,7 @@ FGSimpleSound *FGSoundMgr::find( const string& refname ) {
     sound_map_iterator it = sounds.find( refname );
     if ( it != sounds.end() ) {
 	return it->second;
-   } else {
+    } else {
 	return NULL;
     }
 }
@@ -368,7 +388,7 @@ bool FGSoundMgr::is_playing( const string& refname ) {
     if ((sample = find( refname )) == NULL)
        return false;
 
-    return sample->is_playing();
+    return (sample->get_sample()->getPlayCount() > 0 );
 }
 
 
