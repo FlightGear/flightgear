@@ -59,8 +59,10 @@
 #include <GUI/gui.h>
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
+#include <Airports/runways.hxx>
 
 #include "hud_opts.hxx"
+#include <plib/sg.h>
 
 SG_USING_STD(deque);
 SG_USING_STD(vector);
@@ -679,6 +681,50 @@ public:
 };
 
 typedef lon_label * pLonlabel;
+
+//
+// fgRunway_instr	This class is responsible for rendering the active runway
+//			in the hud (if visible).
+class runway_instr : public instr_item 
+{
+private:	
+	void boundPoint(sgdVec3 v, sgdVec3 m);
+	bool boundOutsidePoints(sgdVec3 v, sgdVec3 m);
+	bool drawLine(sgdVec3 a1, sgdVec3 a2, sgdVec3 p1, sgdVec3 p2);
+	void drawArrow();
+	FGRunway get_active_runway();
+	void get_rwy_points(sgdVec3 *points);
+	void setLineWidth(void);
+
+	sgdVec3 points3d[6],points2d[6];
+	double mm[16],pm[16], arrowScale, arrowRad, lnScale, scaleDist, default_pitch, default_heading;
+	int view[4];
+	FGRunway runway;
+	FGViewer* cockpit_view;	
+	unsigned short stippleOut,stippleCen;
+	bool drawIA,drawIAAlways;
+	RECT location;
+	POINT center; 
+	
+public:
+    runway_instr( int    x,
+                  int    y,			
+				  int	 width,
+				  int    height,
+               	  float  scale_data,
+               	  bool   working = true);
+
+    virtual void draw( void );       // Required method in base class
+	void setArrowRotationRadius(double radius);
+	void setArrowScale(double scale); // Scales the runway indication arrow
+	void setDrawArrow(bool draw);	 // Draws arrow when runway is not visible in HUD if draw=true
+	void setDrawArrowAlways(bool draw); //Always draws arrow if draw=true;
+	void setLineScale(double scale); //Sets the maximum line scale
+	void setScaleDist(double dist_nm); //Sets the distance where to start scaling the lines
+	void setStippleOutline(unsigned short stipple); //Sets the stipple pattern of the outline of the runway
+	void setStippleCenterline(unsigned short stipple); //Sets the stipple patter of the center line of the runway
+};
+
 
 //
 // instr_scale           This class is an abstract base class for both moving

@@ -585,6 +585,29 @@ readTBI(const SGPropertyNode * node)
     return p;
 } //end readTBI
 
+static instr_item * 
+readRunway(const SGPropertyNode * node) {
+	name	= node->getStringValue("name");
+	x	= node->getIntValue("x");
+	y	= node->getIntValue("y");
+	width = node->getIntValue("width");
+	height = node->getIntValue("height");
+	scaling	= node->getDoubleValue("scale");
+	working = node->getBoolValue("working",true);
+	runway_instr *ri = new runway_instr(x,y,width,height,scaling,working);
+	double scale = node->getDoubleValue("arrow_scale",1.0);	
+	ri->setDrawArrow((scale>0)?true:false);
+	ri->setDrawArrowAlways((scale>0)?node->getBoolValue("arrow_always"):false);
+	ri->setStippleOutline(node->getIntValue("outer_stipple",0xFFFF));
+	ri->setStippleCenterline(node->getIntValue("center_stipple",0xFFFF));
+	ri->setArrowRotationRadius(node->getDoubleValue("arrow_radius"));
+	ri->setArrowScale(scale);
+	ri->setLineScale(node->getDoubleValue("line_scale",1.0));
+	ri->setScaleDist(node->getDoubleValue("scale_dist_nm"));
+	SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
+	return (instr_item *) ri;
+}
+
 
 int readInstrument(const SGPropertyNode * node)
 {
@@ -643,6 +666,18 @@ int readInstrument(const SGPropertyNode * node)
 
         }//for - tbis
     }
+    
+    const SGPropertyNode * rwy_group = node->getNode("runways");
+    if (rwy_group != 0) {
+        int nRwy = rwy_group->nChildren();
+        for (int j = 0; j < nRwy; j++) {
+            SG_LOG( SG_COCKPIT, SG_DEBUG,
+                    "**************  Reading runway properties" );
+            HIptr = readRunway(rwy_group->getChild(j));
+            HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+        }//for - runways
+    }    
     return 0;
 }//end readinstrument
 
