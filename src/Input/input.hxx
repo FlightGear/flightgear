@@ -187,14 +187,18 @@ private:
   typedef vector<FGBinding> binding_list_t;
 
 				// Constants
-  static const int MAX_KEYS = 1024;
+  enum 
+  {
+    MAX_KEYS = 1024,
+
   #ifdef WIN32
-  static const int MAX_JOYSTICKS = 2;
+    MAX_JOYSTICKS = 2,
   #else
-  static const int MAX_JOYSTICKS = 10;
+    MAX_JOYSTICKS = 10,
   #endif
-  static const int MAX_AXES = _JS_MAX_AXES;
-  static const int MAX_BUTTONS = 32;
+    MAX_AXES = _JS_MAX_AXES,
+    MAX_BUTTONS = 32
+  };
 
 
   /**
