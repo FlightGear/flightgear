@@ -1,5 +1,5 @@
 /**************************************************************************
- * tileutils.c -- support routines to handle dynamic management of scenery tiles
+ * bucketutils.c -- support routines to handle fgBUCKET operations
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -27,7 +27,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <Scenery/tileutils.h>
+#include <Scenery/bucketutils.h>
 #include <Include/constants.h>
 
 
@@ -44,7 +44,7 @@
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-long int gen_index(struct bucket *p) {
+long int fgBucketGenIndex(struct fgBUCKET *p) {
     long index = 0;
 
     index = ((p->lon + 180) << 14) + ((p->lat + 90) << 6) + (p->y << 3) + p->x;
@@ -55,7 +55,7 @@ long int gen_index(struct bucket *p) {
 
 
 /* Parse a unique scenery tile index and find the lon, lat, x, and y */
-void parse_index(long int index, struct bucket *p) {
+void fgBucketParseIndex(long int index, struct fgBUCKET *p) {
     p->lon = index >> 14;
     index -= p->lon << 14;
     p->lon -= 180;
@@ -72,12 +72,12 @@ void parse_index(long int index, struct bucket *p) {
 
 
 /* Build a path name from an tile index */
-void gen_base_path(struct bucket *p, char *path) {
+void fgBucketGenBasePath(struct fgBUCKET *p, char *path) {
     long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
 
-    index = gen_index(p);
+    index = fgBucketGenIndex(p);
 
     path[0] = '\0';
 
@@ -120,7 +120,7 @@ void gen_base_path(struct bucket *p, char *path) {
 
 
 /* offset an bucket struct by the specified amounts in the X & Y direction */
-void offset_bucket(struct bucket *in, struct bucket *out, int x, int y) {
+void fgBucketOffset(struct fgBUCKET *in, struct fgBUCKET *out, int x, int y) {
     int diff, temp;
     int dist_lat;
 
@@ -176,7 +176,7 @@ void offset_bucket(struct bucket *in, struct bucket *out, int x, int y) {
 
 
 /* Given a lat/lon, find the "bucket" or tile that it falls within */
-void find_bucket(double lon, double lat, struct bucket *p) {
+void fgBucketFind(double lon, double lat, struct fgBUCKET *p) {
     double diff;
 
     diff = lon - (double)(int)lon;
@@ -205,20 +205,20 @@ void find_bucket(double lon, double lat, struct bucket *p) {
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void gen_idx_array(struct bucket *p1, struct bucket *tiles, 
-			  int width, int height) {
-    struct bucket *p2;
+void fgBucketGenIdxArray(struct fgBUCKET *p1, struct fgBUCKET *tiles, 
+			 int width, int height) {
+    struct fgBUCKET *p2;
     int dw, dh, i, j;
 
     dh = height / 2;
     dw = width / 2;
     for ( j = 0; j < height; j++ ) {
 	for ( i = 0; i < width; i++ ) {
-	    offset_bucket(p1, &tiles[(j*width)+i], i - dw, j - dh);
+	    fgBucketOffset(p1, &tiles[(j*width)+i], i - dw, j - dh);
 	    p2 = &tiles[(j*width)+i];
 	    printf("  bucket = %d %d %d %d  index = %ld\n", 
 		   p2->lon, p2->lat, p2->x, p2->y, 
-		   gen_index(&tiles[(j*width)+i]));
+		   fgBucketGenIndex(&tiles[(j*width)+i]));
 	}
     }
 }
@@ -226,7 +226,7 @@ void gen_idx_array(struct bucket *p1, struct bucket *tiles,
 
 /* sample main for testing
 int main() {
-    struct bucket p1;
+    struct fgBUCKET p1;
     long int tile[49];
     char path[256];
     double lon, lat;
@@ -266,9 +266,12 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/23 20:06:51  curt
-/* tileutils.* renamed to bucketutils.*
+/* Revision 1.2  1998/01/24 00:03:28  curt
+/* Initial revision.
 /*
+ * Revision 1.1  1998/01/23 20:06:51  curt
+ * tileutils.* renamed to bucketutils.*
+ *
  * Revision 1.6  1998/01/19 19:27:18  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

@@ -1,5 +1,5 @@
 /**************************************************************************
- * tileutils.h -- support routines to handle dynamic management of scenery tiles
+ * bucketutils.h -- support routines to handle fgBUCKET operations
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -24,11 +24,11 @@
  **************************************************************************/
 
 
-#ifndef _TILEUTILS_H
-#define _TILEUTILS_H
+#ifndef _BUCKETUTILS_H
+#define _BUCKETUTILS_H
 
 
-struct bucket {
+struct fgBUCKET {
     int lon;  /* longitude (-180 to 179) */
     int lat;  /* latitude (-90 to 89) */
     int x;    /* x (0 to 7) */
@@ -49,37 +49,40 @@ struct bucket {
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-long int gen_index(struct bucket *p);
+long int fgBucketGenIndex(struct fgBUCKET *p);
 
 
 /* Parse a unique scenery tile index and find the lon, lat, x, and y */
-void parse_index(long int index, struct bucket *p);
+void fgBucketParseIndex(long int index, struct fgBUCKET *p);
 
 
 /* Build a path name from an tile index */
-void gen_base_path(struct bucket *p, char *path);
+void fgBucketGenBasePath(struct fgBUCKET *p, char *path);
 
 
 /* offset an bucket struct by the specified amounts in the X & Y direction */
-void offset_bucket(struct bucket *in, struct bucket *out, int x, int y);
+void fgBucketOffset(struct fgBUCKET *in, struct fgBUCKET *out, int x, int y);
 
 
 /* Given a lat/lon, find the "bucket" or tile that it falls within */
-void find_bucket(double lon, double lat, struct bucket *p);
+void fgBucketFind(double lon, double lat, struct fgBUCKET *p);
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void gen_idx_array(struct bucket *p1, struct bucket *tiles,
+void fgBucketGenIdxArray(struct fgBUCKET *p1, struct fgBUCKET *tiles,
 			  int width, int height);
 
 
-#endif /* _TILEUTILS_H */
+#endif /* _BUCKETUTILS_H */
 
 
 /* $Log$
-/* Revision 1.1  1998/01/23 20:06:52  curt
-/* tileutils.* renamed to bucketutils.*
+/* Revision 1.2  1998/01/24 00:03:28  curt
+/* Initial revision.
 /*
+ * Revision 1.1  1998/01/23 20:06:52  curt
+ * tileutils.* renamed to bucketutils.*
+ *
  * Revision 1.6  1998/01/22 02:59:42  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

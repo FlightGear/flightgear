@@ -32,25 +32,34 @@
 #include <XGL/xgl.h>
 
 #include <Scenery/scenery.h>
-#include <Scenery/tileutils.h>
+#include <Scenery/bucketutils.h>
 #include <Scenery/obj.h>
+#include <Scenery/tilecache.h>
 
 #include <Aircraft/aircraft.h>
 #include <Include/constants.h>
-#include <Include/general.h>
 #include <Include/types.h>
 
 
-/* here's where we keep the array of closest (potentially viewable) tiles */
-struct bucket local_tiles[49];
-GLint local_display_lists[49];
-struct fgCartesianPoint local_refs[49];
+#define FG_LOCAL_X           3   /* should be odd */
+#define FG_LOCAL_Y           3   /* should be odd */
+#define FG_LOCAL_X_Y         9   /* At least FG_LOCAL_X times FG_LOCAL_Y */
+
+#define FG_TILE_CACHE_SIZE 100   /* Must be > FG_LOCAL_X_Y */
+
+
+/* closest (potentially viewable) tiles, centered on current tile.
+ * This is an array of pointers to cache indexes. */
+int tiles[FG_LOCAL_X_Y];
+
+/* tile cache */
+struct fgTILE tile_cache[FG_TILE_CACHE_SIZE];
 
 
 /* Initialize the Tile Manager subsystem */
 void fgTileMgrInit( void ) {
     printf("Initializing Tile Manager subsystem.\n");
-    /* fgTileCacheInit(); */
+    fgTileCacheInit();
 }
 
 
@@ -58,40 +67,46 @@ void fgTileMgrInit( void ) {
  * the chunk isn't already in the cache, then read it from disk. */
 void fgTileMgrUpdate( void ) {
     struct fgFLIGHT *f;
-    struct fgGENERAL *g;
-    struct bucket p;
-    struct bucket p_last = {-1000, 0, 0, 0};
-    char base_path[256];
-    char file_name[256];
-    int i, j;
+    struct fgBUCKET p1, p2;
+    static struct fgBUCKET p_last = {-1000, 0, 0, 0};
+    int i, j, dw, dh;
+    int index;
 
     f = &current_aircraft.flight;
-    g = &general;
 
-    find_bucket(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
-    printf("Updating Tile list for %d,%d %d,%d\n", p.lon, p.lat, p.x, p.y);
+    fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p1);
 
-    if ( (p.lon == p_last.lon) && (p.lat == p_last.lat) && 
-	 (p.x == p_last.x) && (p.y == p_last.y) ) {
+    if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) && 
+	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
 	/* same bucket as last time */
+	printf("Same bucket as last time\n");
+	return;
     }
 
-    gen_idx_array(&p, local_tiles, 7, 7);
+    if ( p_last.lon == -1000 ) {
+	printf("First time through ... \n");
+	printf("Updating Tile list for %d,%d %d,%d\n", 
+	       p1.lon, p1.lat, p1.x, p1.y);
 
-    /* scenery.center = ref; */
+	/* wipe tile cache */
+	fgTileCacheInit();
 
-    for ( i = 0; i < 49; i++ ) {
-	gen_base_path(&local_tiles[i], base_path);
-	sprintf(file_name, "%s/Scenery/%s/%ld.obj", 
-		g->root_dir, base_path, gen_index(&local_tiles[i]));
-	local_display_lists[i] = 
-	    fgObjLoad(file_name, &local_refs[i]);
+	/* build the local area list and update cache */
+	dw = FG_LOCAL_X / 2;
+	dh = FG_LOCAL_Y / 2;
 
-	if ( (local_tiles[i].lon == p.lon) &&
-	     (local_tiles[i].lat == p.lat) &&
-	     (local_tiles[i].x == p.x) &&
-	     (local_tiles[i].y == p.y) ) {
-	    scenery.center = local_refs[i];
+	for ( j = 0; j < FG_LOCAL_Y; j++ ) {
+	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
+		fgBucketOffset(&p1, &p2, i - dw, j - dh);
+		printf("Updating for bucket %d %d %d %d\n", 
+		       p2.lon, p2.lat, p2.x, p2.y);
+
+		index = fgTileCacheNextAvail();
+		printf("Selected cache index of %d\n", index);
+
+		tiles[(j*FG_LOCAL_Y) + i] = index;
+		fgTileCacheEntryFillIn(index, &p2);
+	    }
 	}
     }
 }
@@ -102,7 +117,10 @@ void fgTileMgrRender( void ) {
     static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
     static GLfloat terrain_ambient[4];
     static GLfloat terrain_diffuse[4];
-    int i, j;
+    struct fgCartesianPoint local_ref;
+    GLint display_list;
+    int i;
+    int index;
 
     for ( i = 0; i < 4; i++ ) {
 	terrain_ambient[i] = terrain_color[i] * 0.5;
@@ -112,22 +130,29 @@ void fgTileMgrRender( void ) {
     xglMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
     xglMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
 
-    for ( i = 0; i < 49; i++ ) {
+    for ( i = 0; i < FG_LOCAL_X_Y; i++ ) {
+	index = tiles[i];
+	/* printf("Index = %d\n", index); */
+	fgTileCacheEntryInfo(index, &display_list, &local_ref );
+
 	xglPushMatrix();
-	xglTranslatef(local_refs[i].x - scenery.center.x,
-		      local_refs[i].y - scenery.center.y,
-		      local_refs[i].z - scenery.center.z);
-	xglCallList(local_display_lists[i]);
+	xglTranslatef(local_ref.x - scenery.center.x,
+		      local_ref.y - scenery.center.y,
+		      local_ref.z - scenery.center.z);
+	xglCallList(display_list);
 	xglPopMatrix();
     }
 }
 
 
 /* $Log$
-/* Revision 1.5  1998/01/19 19:27:18  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.6  1998/01/24 00:03:30  curt
+/* Initial revision.
 /*
+ * Revision 1.5  1998/01/19 19:27:18  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.4  1998/01/19 18:40:38  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.
