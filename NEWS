@@ -1,6 +1,10 @@
 New in 0.52
 * Fog color tries to track the sky color at the center of view in sunrise
   and sunset situations.
+* Optimizations from Norman Vine
+* Code fixes and tweaks from Charlie Hotchkiss.
+* Added an --enable/disable-sound option.
+* Added a pause key "p"
 
 New in 0.51
 * Translucent menus

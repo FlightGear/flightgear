@@ -24,6 +24,8 @@ Please see .... for more information on ....
 
 - README:  This file
 
+- README.Unix:  Hints and tips for compiling on Unix
+
 - README.Win32:  Specific Win32 compiling information and instructions
 
 - README.autoconf:  Info on updating the make system (adding new source

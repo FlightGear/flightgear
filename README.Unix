@@ -1,0 +1,22 @@
+*** not much here yet ***
+
+If you are reading this in hopes that you will find the answer to a
+specific question, please send the question to curt@me.umn.edu and
+suggest that I include the answer here.
+
+
+GLUT
+====
+
+Flight Gear requires GLUT.  GLUT needs to be installed on your system
+before you can build Flight Gear.  GLUT can be found at:
+
+    http://reality.sgi.com/opengl/glut3/glut3.html
+
+GLUT (pronounced like the glut in gluttony) is the OpenGL Utility
+Toolkit, a window system independent toolkit for writing OpenGL
+programs. It implements a simple windowing application programming
+interface (API) for OpenGL. GLUT makes it considerably easier to learn
+about and explore OpenGL programming.  GLUT provides a portable API so
+you can write a single OpenGL program that works on both Win32 PCs and
+X11 workstations.
