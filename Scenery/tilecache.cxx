@@ -33,6 +33,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Airports/genapt.hxx>
 #include <Bucket/bucketutils.h>
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
@@ -53,7 +54,9 @@ fgTILECACHE::fgTILECACHE( void ) {
 
 
 // Initialize the tile cache subsystem
-void fgTILECACHE::Init( void ) {
+void
+fgTILECACHE::init( void )
+{
     int i;
 
     fgPrintf(FG_TERRAIN, FG_INFO, "Initializing the tile cache.\n");
@@ -65,7 +68,9 @@ void fgTILECACHE::Init( void ) {
 
 
 // Search for the specified "bucket" in the cache
-int fgTILECACHE::Exists( fgBUCKET *p ) {
+int
+fgTILECACHE::exists( fgBUCKET *p )
+{
     int i;
 
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
@@ -87,10 +92,12 @@ int fgTILECACHE::Exists( fgBUCKET *p ) {
 
 
 // Fill in a tile cache entry with real data for the specified bucket
-void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
-    string root;
+void
+fgTILECACHE::fill_in( int index, fgBUCKET *p )
+{
+    string root, tile_path, apt_path;
+    char index_str[256];
     char base_path[256];
-    char file_name[256];
 
     // Mark this cache entry as used
     tile_cache[index].used = 1;
@@ -104,19 +111,28 @@ void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
     // Load the appropriate data file and built tile fragment list
     fgBucketGenBasePath(p, base_path);
     root = current_options.get_fg_root();
-    sprintf(file_name, "%s/Scenery/%s/%ld", root.c_str(), 
-	    base_path, fgBucketGenIndex(p));
-    fgObjLoad(file_name, &tile_cache[index]);
-    /*
-    tile_cache[index].display_list = 
-	fgObjLoad(file_name, &tile_cache[index].local_ref,
-		  &tile_cache[index].bounding_radius);    
-		  */
+    sprintf( index_str, "%ld", fgBucketGenIndex(p) );
+
+    tile_path = root + "/Scenery/" + base_path + "/" + index_str;
+    fgObjLoad( tile_path.c_str(), &tile_cache[index] );
+
+    // cout << " ncount before = " << tile_cache[index].ncount << "\n";
+    // cout << " fragments before = " << tile_cache[index].fragment_list.size()
+    //      << "\n";
+
+    apt_path = tile_path + ".apt";
+    fgAptGenerate( apt_path, &tile_cache[index] );
+
+    // cout << " ncount after = " << tile_cache[index].ncount << "\n";
+    // cout << " fragments after = " << tile_cache[index].fragment_list.size()
+    //      << "\n";
 }
 
 
 // Free a tile cache entry
-void fgTILECACHE::EntryFree( int index ) {
+void
+fgTILECACHE::entry_free( int index )
+{
     fgFRAGMENT *fragment;
 
     // Mark this cache entry as un-used
@@ -144,13 +160,17 @@ void fgTILECACHE::EntryFree( int index ) {
 
 
 // Return the specified tile cache entry 
-fgTILE *fgTILECACHE::GetTile( int index ) {
+fgTILE *
+fgTILECACHE::get_tile( int index )
+{
     return ( &tile_cache[index] );
 }
 
 
 // Return index of next available slot in tile cache
-int fgTILECACHE::NextAvail( void ) {
+int
+fgTILECACHE::next_avail( void )
+{
     fgVIEW *v;
     int i;
     float dx, dy, dz, max, med, min, tmp;
@@ -201,7 +221,7 @@ int fgTILECACHE::NextAvail( void ) {
     // We will instead free the furthest cache entry and return it's
     // index.
     
-    EntryFree( max_index );
+    entry_free( max_index );
     return( max_index );
 }
 
@@ -212,6 +232,9 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.16  1998/09/14 12:45:23  curt
+// minor tweaks.
+//
 // Revision 1.15  1998/08/27 17:02:10  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return

@@ -78,22 +78,22 @@ public:
     fgTILECACHE( void );
 
     // Initialize the tile cache subsystem 
-    void Init( void );
+    void init( void );
 
     // Search for the specified "bucket" in the cache 
-    int Exists( fgBUCKET *p );
+    int exists( fgBUCKET *p );
 
     // Return index of next available slot in tile cache 
-    int NextAvail( void );
+    int next_avail( void );
 
     // Free a tile cache entry
-    void EntryFree( int index );
+    void entry_free( int index );
 
     // Fill in a tile cache entry with real data for the specified bucket 
-    void EntryFillIn( int index, fgBUCKET *p );
+    void fill_in( int index, fgBUCKET *p );
 
     // Return a pointer to the specified tile cache entry 
-    fgTILE *GetTile( int index );
+    fgTILE *get_tile( int index );
 
     // Destructor
     ~fgTILECACHE( void );
@@ -108,6 +108,9 @@ extern fgTILECACHE global_tile_cache;
 
 
 // $Log$
+// Revision 1.11  1998/09/14 12:45:25  curt
+// minor tweaks.
+//
 // Revision 1.10  1998/07/04 00:54:31  curt
 // Added automatic mipmap generation.
 //

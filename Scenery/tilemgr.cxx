@@ -96,9 +96,9 @@ void fgTileMgrLoadTile( fgBUCKET *p, int *index) {
 	   p->lon, p->lat, p->x, p->y);
     
     // if not in cache, load tile into the next available slot
-    if ( (*index = c->Exists(p)) < 0 ) {
-	*index = c->NextAvail();
-	c->EntryFillIn(*index, p);
+    if ( (*index = c->exists(p)) < 0 ) {
+	*index = c->next_avail();
+	c->fill_in(*index, p);
     }
 
     fgPrintf( FG_TERRAIN, FG_DEBUG, "Selected cache index of %d\n", *index);
@@ -139,7 +139,7 @@ int fgTileMgrUpdate( void ) {
 		  tile_diameter * tile_diameter);
 
 	// wipe/initialize tile cache
-	c->Init();
+	c->init();
 
 	// build the local area list and update cache
 	for ( j = 0; j < tile_diameter; j++ ) {
@@ -428,8 +428,8 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
 
     // Find current translation offset
     fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
-    index = c->Exists(&p);
-    t = c->GetTile(index);
+    index = c->exists(&p);
+    t = c->get_tile(index);
 
     scenery.next_center.x = t->center.x;
     scenery.next_center.y = t->center.y;
@@ -557,8 +557,8 @@ void fgTileMgrRender( void ) {
 
     // Find current translation offset
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
-    index = c->Exists(&p);
-    t = c->GetTile(index);
+    index = c->exists(&p);
+    t = c->get_tile(index);
 
     scenery.next_center.x = t->center.x;
     scenery.next_center.y = t->center.y;
@@ -585,7 +585,7 @@ void fgTileMgrRender( void ) {
     for ( i = 0; i < (tile_diameter * tile_diameter); i++ ) {
 	index = tiles[i];
 	// fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index);
-	t = c->GetTile(index);
+	t = c->get_tile(index);
 
 	// calculate tile offset
 	x = (t->offset.x = t->center.x - scenery.center.x);
@@ -690,6 +690,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.36  1998/09/14 12:45:26  curt
+// minor tweaks.
+//
 // Revision 1.35  1998/09/10 19:07:16  curt
 // /Simulator/Objects/fragment.hxx
 //   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
