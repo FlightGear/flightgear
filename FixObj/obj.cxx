@@ -23,20 +23,32 @@
 
 
 #include <stdio.h>
+#include <iostream>
 #include <string.h>
+
+#include <vector>
+#include "Include/compiler.h"
+
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #include "obj.hxx"
 
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 
 
+typedef vector < Point3D > container3;
+typedef container3::iterator iterator3;
+typedef container3::const_iterator const_iterator3;
 
 
 // what do ya' know, here's some global variables
-static double nodes[MAXNODES][3];
-static double normals[MAXNODES][3];
+container3 nodes;
+container3 normals;
 static int faces[MAXNODES][3];
-int ncount, vncount, fcount;
+int vncount, fcount;
 
 static int ccw_list[MAXNODES];
 int ccw_list_ptr;
@@ -46,7 +58,7 @@ int cw_list_ptr;
 
 FILE *in, *out;
 
-double refx, refy, refz;
+Point3D ref;
 
 
 // some simple list routines
@@ -131,66 +143,78 @@ void fix_cw_list(int *list, int list_ptr) {
 }
 
 
-// Calculate distance between (0,0,0) and the specified point
-static double calc_dist(double x, double y, double z) {
-    return ( sqrt(x*x + y*y + z*z) );
-}
-
-
 void dump_global_bounds( void ) {
     double dist, radius;
-    int i;
 
     radius = 0.0;
 
     fprintf(out, "\n");
 
-    for ( i = 1; i < ncount; i++ ) {
+    
+    iterator3 current = nodes.begin();
+    iterator3 last = nodes.end();
 
-	dist = calc_dist(nodes[i][0] - refx, nodes[i][1] - refy, 
-			 nodes[i][2] - refz);
-	// printf("node = %.2f %.2f %.2f dist = %.2f\n", 
-        //        nodes[i][0], nodes[i][1], nodes[i][2],
-	//        dist);
+    // skip first dummy node
+    ++current;
+
+    for ( ; current != last; ++current ) {
+	dist = ref.distance3D(*current);
+	// cout << "node = " << *current << " dist = " << dist << endl;
 
 	if ( dist > radius ) {
 	    radius = dist;
 	}
-
     }
 
-    fprintf(out, "gbs %.5f %.5f %.5f %.2f\n", refx, refy, refz, radius);
+    fprintf( out, 
+	     "gbs %.5f %.5f %.5f %.2f\n", 
+	     ref.x(), ref.y(), ref.z(), radius);
 }
 
 
 // dump nodes
 void dump_nodes( void ) {
-    int i;
+    Point3D p;
 
     fprintf(out, "\n");
-    for ( i = 1; i < ncount; i++ ) {
-	fprintf(out, "v %.5f %.5f %.5f\n",
-		nodes[i][0] - refx, nodes[i][1] - refy, nodes[i][2] - refz);
+
+    iterator3 current = nodes.begin();
+    iterator3 last = nodes.end();
+
+    // skip first dummy node
+    ++current;
+
+    for ( ; current != last; ++current ) {
+	p = *current - ref;
+	fprintf( out, "v %.5f %.5f %.5f\n", p.x(), p.y(), p.z() );
     }
 }
 
 
 // dump normals
 void dump_normals( void ) {
-    int i;
+    Point3D p;
 
     fprintf(out, "\n");
-    for ( i = 1; i < vncount; i++ ) {
-	fprintf(out, "vn %.5f %.5f %.5f\n", 
-		normals[i][0], normals[i][1], normals[i][2]);
+
+    iterator3 current = normals.begin();
+    iterator3 last = normals.end();
+
+    // skip first dummy normal
+    ++current;
+
+    for ( ; current != last; ++current ) {
+	p = *current;
+	fprintf(out, "vn %.5f %.5f %.5f\n", p.x(), p.y(), p.z() );
     }
 }
 
 
 // dump faces
 void dump_faces( void ) {
+    Point3D p;
     int i, n1, n2, n3;
-    double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
+    double xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
 
     fprintf(out, "\n");
     for ( i = 1; i < fcount; i++ ) {
@@ -199,40 +223,39 @@ void dump_faces( void ) {
 	n3 = faces[i][2];
 
 	// calc center of face
-	xmin = xmax = nodes[n1][0];
-	ymin = ymax = nodes[n1][1];
-	zmin = zmax = nodes[n1][2];
+	xmin = xmax = nodes[n1].x();
+	ymin = ymax = nodes[n1].y();
+	zmin = zmax = nodes[n1].z();
 
-	if ( nodes[n2][0] < xmin ) { xmin = nodes[n2][0]; }
-	if ( nodes[n2][0] > xmax ) { xmax = nodes[n2][0]; }
-	if ( nodes[n2][1] < ymin ) { ymin = nodes[n2][1]; }
-	if ( nodes[n2][1] > ymax ) { ymax = nodes[n2][1]; }
-	if ( nodes[n2][2] < zmin ) { zmin = nodes[n2][2]; }
-	if ( nodes[n2][2] > zmax ) { zmax = nodes[n2][2]; }
+	if ( nodes[n2].x() < xmin ) { xmin = nodes[n2].x(); }
+	if ( nodes[n2].x() > xmax ) { xmax = nodes[n2].x(); }
+	if ( nodes[n2].y() < ymin ) { ymin = nodes[n2].y(); }
+	if ( nodes[n2].y() > ymax ) { ymax = nodes[n2].y(); }
+	if ( nodes[n2].z() < zmin ) { zmin = nodes[n2].z(); }
+	if ( nodes[n2].z() > zmax ) { zmax = nodes[n2].z(); }
 
-	if ( nodes[n3][0] < xmin ) { xmin = nodes[n3][0]; }
-	if ( nodes[n3][0] > xmax ) { xmax = nodes[n3][0]; }
-	if ( nodes[n3][1] < ymin ) { ymin = nodes[n3][1]; }
-	if ( nodes[n3][1] > ymax ) { ymax = nodes[n3][1]; }
-	if ( nodes[n3][2] < zmin ) { zmin = nodes[n3][2]; }
-	if ( nodes[n3][2] > zmax ) { zmax = nodes[n3][2]; }
+	if ( nodes[n3].x() < xmin ) { xmin = nodes[n3].x(); }
+	if ( nodes[n3].x() > xmax ) { xmax = nodes[n3].x(); }
+	if ( nodes[n3].y() < ymin ) { ymin = nodes[n3].y(); }
+	if ( nodes[n3].y() > ymax ) { ymax = nodes[n3].y(); }
+	if ( nodes[n3].z() < zmin ) { zmin = nodes[n3].z(); }
+	if ( nodes[n3].z() > zmax ) { zmax = nodes[n3].z(); }
 
-	x = (xmin + xmax) / 2.0;
-	y = (ymin + ymax) / 2.0;
-	z = (zmin + zmax) / 2.0;
+	p = Point3D( (xmin + xmax) / 2.0,
+		     (ymin + ymax) / 2.0,
+		     (zmin + zmax) / 2.0 );
 
 	// calc bounding radius
-	radius = calc_dist(nodes[n1][0] - x, nodes[n1][1] - y, 
-			   nodes[n1][2] - z);
+	radius = p.distance3D(nodes[n1]);
 
-	dist = calc_dist(nodes[n2][0] - x, nodes[n2][1] - y, nodes[n2][2] - z);
+	dist = p.distance3D(nodes[n2]);
 	if ( dist > radius ) { radius = dist; }
 
-	dist = calc_dist(nodes[n3][0] - x, nodes[n3][1] - y, nodes[n3][2] - z);
+	dist = p.distance3D(nodes[n3]);
 	if ( dist > radius ) { radius = dist; }
 	
 	// output data
-	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", x, y, z, radius);
+	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", p.x(), p.y(), p.z(), radius);
 	fprintf(out, "f %d %d %d\n", n1, n2, n3);
     }
 }
@@ -240,7 +263,8 @@ void dump_faces( void ) {
 
 // dump list
 void dump_list(int *list, int list_ptr) {
-    double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
+    Point3D p;
+    double xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
     int i, j, len, n;
 
     if ( list_ptr < 3 ) {
@@ -271,41 +295,40 @@ void dump_list(int *list, int list_ptr) {
 
 	// calc center of face
 	n = list[i];
-	xmin = xmax = nodes[n][0];
-	ymin = ymax = nodes[n][1];
-	zmin = zmax = nodes[n][2];
-	// printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
+	xmin = xmax = nodes[n].x();
+	ymin = ymax = nodes[n].y();
+	zmin = zmax = nodes[n].z();
+	// printf("%.2f %.2f %.2f\n", nodes[n].x(), nodes[n].y(), nodes[n].z());
 
 	for ( j = i + 1; j < i + len; j++ ) {
 	    // printf("j = %d\n", j);
 	    n = list[j];
-	    if ( nodes[n][0] < xmin ) { xmin = nodes[n][0]; }
-	    if ( nodes[n][0] > xmax ) { xmax = nodes[n][0]; }
-	    if ( nodes[n][1] < ymin ) { ymin = nodes[n][1]; }
-	    if ( nodes[n][1] > ymax ) { ymax = nodes[n][1]; }
-	    if ( nodes[n][2] < zmin ) { zmin = nodes[n][2]; }
-	    if ( nodes[n][2] > zmax ) { zmax = nodes[n][2]; }
-	    // printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
-	}	    
-	x = (xmin + xmax) / 2.0;
-	y = (ymin + ymax) / 2.0;
-	z = (zmin + zmax) / 2.0;
-	// printf("center = %.2f %.2f %.2f\n", x, y, z);
+	    if ( nodes[n].x() < xmin ) { xmin = nodes[n].x(); }
+	    if ( nodes[n].x() > xmax ) { xmax = nodes[n].x(); }
+	    if ( nodes[n].y() < ymin ) { ymin = nodes[n].y(); }
+	    if ( nodes[n].y() > ymax ) { ymax = nodes[n].y(); }
+	    if ( nodes[n].z() < zmin ) { zmin = nodes[n].z(); }
+	    if ( nodes[n].z() > zmax ) { zmax = nodes[n].z(); }
+	    // printf("%.2f %.2f %.2f\n", nodes[n].x(), nodes[n].y(), nodes[n].z());
+	}
+	p = Point3D( (xmin + xmax) / 2.0,
+		     (ymin + ymax) / 2.0,
+		     (zmin + zmax) / 2.0 );
+	// printf("center = %.2f %.2f %.2f\n", p.x(), p.y(), p.z());
 
 	// calc bounding radius
 	n = list[i];
-	radius = calc_dist(nodes[n][0] - x, nodes[n][1] - y, nodes[n][2] - z);
+	radius = p.distance3D(nodes[n]);
 
 	for ( j = i + 1; j < i + len; j++ ) {
 	    n = list[j];
-	    dist = calc_dist(nodes[n][0] - x, nodes[n][1] - y, 
-			     nodes[n][2] - z);
+	    dist = p.distance3D(nodes[n]);
 	    if ( dist > radius ) { radius = dist; }
 	}
 	// printf("radius = %.2f\n", radius);
 
 	// dump bounding sphere and header
-	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", x, y, z, radius);
+	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", p.x(), p.y(), p.z(), radius);
 	fprintf(out, "t %d %d %d\n", list[i], list[i+1], list[i+2]);
 	// printf("t %d %d %d\n", list[i], list[i+1], list[i+2]);
 	i += 3;
@@ -335,12 +358,12 @@ double check_cur_face(int n1, int n2, int n3) {
 
     // check for the proper rotation by calculating an approximate
     // normal and seeing if it is close to the precalculated normal
-    v1[0] = nodes[n2][0] - nodes[n1][0];
-    v1[1] = nodes[n2][1] - nodes[n1][1];
-    v1[2] = nodes[n2][2] - nodes[n1][2];
-    v2[0] = nodes[n3][0] - nodes[n1][0];
-    v2[1] = nodes[n3][1] - nodes[n1][1];
-    v2[2] = nodes[n3][2] - nodes[n1][2];
+    v1[0] = nodes[n2].x() - nodes[n1].x();
+    v1[1] = nodes[n2].y() - nodes[n1].y();
+    v1[2] = nodes[n2].z() - nodes[n1].z();
+    v2[0] = nodes[n3].x() - nodes[n1].x();
+    v2[1] = nodes[n3].y() - nodes[n1].y();
+    v2[2] = nodes[n3].z() - nodes[n1].z();
 
     MAT3cross_product(approx_normal, v1, v2);
     MAT3_NORMALIZE_VEC(approx_normal,temp);
@@ -362,6 +385,7 @@ double check_cur_face(int n1, int n2, int n3) {
 
 // Load a .obj file
 void obj_fix(char *infile, char *outfile) {
+    Point3D node, normal;
     char line[256];
     double dot_prod;
     int first, n1, n2, n3, n4;
@@ -378,13 +402,20 @@ void obj_fix(char *infile, char *outfile) {
 	exit(-1);
     }
 
+    // push dummy records onto the lists since we start counting with "1"
+    node = Point3D(0.0, 0.0, 0.0);
+    nodes.push_back(node);
+
+    normal = Point3D(0.0, 0.0, 0.0);
+    normals.push_back(normal);
+
+    // initialize other lists
     list_init(&ccw_list_ptr);
     list_init(&cw_list_ptr);
 
     // I start counting at one because that is how the triangle
     // program refers to nodes and normals
     first = 1;
-    ncount = 1;
     vncount = 1;
     fcount = 1;
 
@@ -399,52 +430,37 @@ void obj_fix(char *infile, char *outfile) {
 	    // fprintf(out, "%s", line);
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    // save vertex to memory and output to file
-            if ( ncount < MAXNODES ) {
-                // printf("vertex = %s", line);
-                sscanf(line, "v %lf %lf %lf\n", &x, &y, &z);
-		nodes[ncount][0] = x;
-		nodes[ncount][1] = y;
-		nodes[ncount][2] = z;
+	    // printf("vertex = %s", line);
+	    sscanf(line, "v %lf %lf %lf\n", &x, &y, &z);
 
+	    if ( nodes.size() == 1 ) {
 		// first time through set min's and max'es
-		if ( ncount == 1 ) {
-		    xmin = x;
-		    xmax = x;
-		    ymin = y;
-		    ymax = y;
-		    zmin = z;
-		    zmax = z;
-		}
-    
-		// keep track of min/max vertex values
+		xmin = x;
+		xmax = x;
+		ymin = y;
+		ymax = y;
+		zmin = z;
+		zmax = z;
+	    } else {
+		// update min/max vertex values
 		if ( x < xmin ) xmin = x;
 		if ( x > xmax ) xmax = x;
 		if ( y < ymin ) ymin = y;
 		if ( y > ymax ) ymax = y;
 		if ( z < zmin ) zmin = z;
 		if ( z > zmax ) zmax = z;		
+	    }
 
-		// fprintf(out, "v %.2f %.2f %.2f\n", 
-		//       nodes[ncount][0], nodes[ncount][1], nodes[ncount][2]);
-		ncount++;
-            } else {
-                printf("Read too many nodes ... dying :-(\n");
-                exit(-1);
-            }
+	    node = Point3D(x, y, z);
+	    nodes.push_back(node);
+	    // fprintf(out, "v %.2f %.2f %.2f\n", 
+	    //       node.x(), node.y(), node.z());
 	} else if ( strncmp(line, "vn ", 3) == 0 ) {
 	    // save vertex normals to memory and output to file
-            if ( vncount < MAXNODES ) {
-                // printf("vertex normal = %s", line);
-                sscanf(line, "vn %lf %lf %lf\n", 
-                       &normals[vncount][0], &normals[vncount][1], 
-                       &normals[vncount][2]);
-		// fprintf(out, "vn %.4f %.4f %.4f\n", normals[vncount][0], 
-		//	normals[vncount][1], normals[vncount][2]);
-                vncount++;
-            } else {
-                printf("Read too many vertex normals ... dying :-(\n");
-                exit(-1);
-            }
+	    // printf("vertex normal = %s", line);
+	    sscanf(line, "vn %lf %lf %lf\n", &x, &y, &z);
+	    normal = Point3D(x, y, z);
+	    normals.push_back(normal);
 	} else if ( line[0] == 't' ) {
 	    // starting a new triangle strip
 
@@ -539,9 +555,9 @@ void obj_fix(char *infile, char *outfile) {
     }
 
     // reference point is the "center"
-    refx = (xmin + xmax) / 2.0;
-    refy = (ymin + ymax) / 2.0;
-    refz = (zmin + zmax) / 2.0;
+    ref = Point3D( (xmin + xmax) / 2.0,
+		   (ymin + ymax) / 2.0,
+		   (zmin + zmax) / 2.0 );
 
     // convert the cw_list to ccw add append to ccw_list
     fix_cw_list(cw_list, cw_list_ptr);
@@ -561,6 +577,9 @@ void obj_fix(char *infile, char *outfile) {
 
 
 // $Log$
+// Revision 1.2  1998/10/21 14:55:55  curt
+// Converted to Point3D class.
+//
 // Revision 1.1  1998/06/08 17:11:46  curt
 // Renamed *.[ch] to *.[ch]xx
 //
