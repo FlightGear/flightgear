@@ -903,13 +903,16 @@ void fgUpdateTimeDepCalcs() {
          globals->get_scenery()->get_cur_elev() > -9990 )
     {
 	SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");  
-	
 	cur_fdm_state->init();
 	if ( cur_fdm_state->get_bound() ) {
 	    cur_fdm_state->unbind();
 	}
 	cur_fdm_state->bind();
     }
+
+#ifndef FG_WEATHERCM
+    globals->get_environment_mgr()->update(delta_time_sec);
+#endif
 
     // conceptually, the following block could be done for each fdm
     // instance ...
@@ -1021,10 +1024,6 @@ static void fgMainLoop( void ) {
     // Glut joystick support works by feeding a joystick handler
     // function to glut.  This is taken care of once in the joystick
     // init routine and we don't have to worry about it again.
-#endif
-
-#ifndef FG_WEATHERCM
-    globals->get_environment_mgr()->update(delta_time_sec);
 #endif
 
     // Fix elevation.  I'm just sticking this here for now, it should
