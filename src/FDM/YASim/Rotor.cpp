@@ -92,7 +92,7 @@ void Rotor::inititeration(float dt)
 {
    if ((_engineon)&&(_omegarel>=1)) return;
    if ((!_engineon)&&(_omegarel<=0)) return;
-   _omegarel+=dt*1/5.*(_engineon?1:-1); //hier 30
+   _omegarel+=dt*1/30.*(_engineon?1:-1);
    _omegarel=Math::clamp(_omegarel,0,1);
    _omega=_omegan*_omegarel;
    int i;
