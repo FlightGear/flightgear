@@ -38,7 +38,6 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_random.h>
 #include <simgear/math/polar3d.hxx>
 
 #include <Aircraft/aircraft.hxx>
