@@ -1,3 +1,47 @@
+New in 0.7.0
+* Autopilot can now fly great circle routes.
+* Incorporated a first stab at some networking code contributed by Oliver
+  Delise.
+* Added Christian Mayer's new weather subsystem.
+* Started adding support for "external" views ... still needs some work.
+* Added a flight model acceleration funtion.
+* Added support for mouse yoke control contributed by David Megginson.
+* FDM model hertz now definable from the command line.
+* Added initial timezone support so the user can have better control and more 
+  options for setting the starting time of the sim.
+* We now draw nonexistant tiles as ocean which means we only have to create
+  and distribute tiles that contain some sort of land mass.
+
+* Replaced basic render engine with plib's ssg (simple scene graph).
+* Now expect plib to be installed in it's one true and official location.
+* Added support for timegm() if it exists which explicitely expects GMT input.
+* A bit of your basic code reorganization and shuffling.
+
+* Removed tools dependency on libgfc.  Functionality is now covered by 
+  shapelib which has been added into the Tools tree.
+* Added support for the wonderful GSHHS global land mass data set.
+* Removed dependecy on process-dem.pl script.
+* Created a new distributed/parallel tile build system ... hmmm kind of super
+  computer or beowulf style stuff for getting large chunks of scenery built
+  as fast as possible.
+* Only generate tiles that have land mass data since the sim can recreate pure
+  ocean tiles on the fly.
+* First stab at a water flattening scheme to prevent oceans, lakes, and rivers
+  from running up and down the sides of hills.
+* Changed the default "Work/" subdirectory layout.
+* Updates to better handle segment boundaries in preparation for real airport
+  runway and lighting modeling.
+* Updates and enhancements to my polygon management class.
+
+* Updates to JSBsim.
+* Updates to Tony's c172 model.
+* Updated getting started guide from Micheal Basler.
+
+* FreeBSD portability tweaks.
+* MACos portability tweaks.
+* Borland C++ tweaks.
+* MSVC++ tweaks.
+
 New in 0.6.0
 * Tons of improvements with scenery creation.  Inter-tile gaps have been
   fixed, distorted textures have been fixed, real coastlines have been added,
