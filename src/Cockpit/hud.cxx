@@ -393,6 +393,8 @@ readCard(const SGPropertyNode * node)
         load_fn = get_aileronval;
     } else if (loadfn=="elevatorval") {
         load_fn = get_elevatorval;
+    } else if (loadfn=="elevatortrimval") {
+        load_fn = get_elev_trimval;
     } else if (loadfn=="rudderval") {
         load_fn = get_rudderval;
     } else if (loadfn=="throttleval") {
