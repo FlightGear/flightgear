@@ -191,20 +191,8 @@ public:
 
     void Update();
 	
-	inline char get_type() const { return type; }
-	inline double get_lon() const { return lon; }
-	inline double get_lat() const { return lat; }
-	inline double get_elev() const { return elev; }
-	inline double get_x() const { return x; }
-	inline double get_y() const { return y; }
-	inline double get_z() const { return z; }
-	inline int get_freq() const { return freq; }
-	inline int get_range() const { return range; }
-	inline const char* GetIdent() { return ident.c_str(); }
 	inline string get_trans_ident() { return trans_ident; }
-	inline string get_name() { return name; }
 	inline atc_type GetType() { return GROUND; }
-
     inline void SetDisplay() {display = true;}
     inline void SetNoDisplay() {display = false;}
 
@@ -283,22 +271,12 @@ private:
     // Generate the next clearance for an airplane
     //NextClearance(ground_rec &g);
 	
-	char type;
-	double lon, lat;
-	double elev;
-	double x, y, z;
-	int freq;
-	int range;
 	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
 	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
-	string ident;		// Code of the airport its at.
-	string name;		// Name generally used in transmissions.
 	// for failure modeling
 	string trans_ident;		// transmitted ident
 	bool ground_failed;		// ground failed?
 	bool networkLoadOK;		// Indicates whether LoadNetwork returned true or false at last attempt
-	
-	friend istream& operator>> ( istream&, FGGround& );
 	
 	// Load the logical ground network for this airport from file.
 	// Return true if successfull.
@@ -307,52 +285,6 @@ private:
 	// Parse a runway exit string and push the supplied node pointer onto the runway exit list
 	void ParseRwyExits(node* np, char* es);
 };
-
-inline istream&
-operator >> ( istream& in, FGGround& g )
-{
-	double f;
-	char ch;
-	
-	in >> g.type;
-	
-	if ( g.type == '[' )
-		return in >> skipeol;
-	
-	in >> g.lat >> g.lon >> g.elev >> f >> g.range 
-	>> g.ident;
-	
-	g.name = "";
-	in >> ch;
-	g.name += ch;
-	while(1) {
-		//in >> noskipws
-		in.unsetf(ios::skipws);
-		in >> ch;
-		g.name += ch;
-		if((ch == '"') || (ch == 0x0A)) {
-			break;
-		}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
-	}
-	in.setf(ios::skipws);
-	//cout << "tower.name = " << t.name << '\n';
-	
-	g.freq = (int)(f*100.0 + 0.5);
-	
-	// cout << g.ident << endl;
-	
-	// generate cartesian coordinates
-	Point3D geod( g.lon * SGD_DEGREES_TO_RADIANS, g.lat * SGD_DEGREES_TO_RADIANS, g.elev );
-	Point3D cart = sgGeodToCart( geod );
-	g.x = cart.x();
-	g.y = cart.y();
-	g.z = cart.z();
-	
-	g.trans_ident = g.ident;
-	g.ground_failed = false;
-	
-	return in >> skipeol;
-}
 
 #endif	// _FG_GROUND_HXX
 
