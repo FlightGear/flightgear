@@ -71,7 +71,7 @@ void slSample::changeRate   ( int r )
   buffer = buffer2 ;
 }
 
-#if 0
+
 void slSample::changeToUnsigned ()
 {
   if ( getBps() == 16 )
@@ -89,7 +89,7 @@ void slSample::changeToUnsigned ()
                                            (0xFF-buffer[i]) ;
   }
 }
-#endif
+
 
 
 void slSample::changeBps    ( int b )
@@ -161,7 +161,7 @@ void slSample::changeStereo ( int s )
     {
        Uchar *buffer2 = new Uchar [ length / 2 ] ;
 
-       for ( int i = 0 ; i < length ; i++ )
+       for ( int i = 0 ; i < (length-1)/2 ; i++ )
          buffer2 [ i ] = ((int)buffer [ i*2 ] + (int)buffer [ i*2 + 1 ] ) / 2 ;
 
        delete buffer ;
@@ -173,13 +173,13 @@ void slSample::changeStereo ( int s )
     {
        Ushort *buffer2 = new Ushort [ length / 4 ] ;
 
-       for ( int i = 0 ; i < length / 4 ; i++ )
+       for ( int i = 0 ; i < (length-3) / 4 ; i++ )
          buffer2 [ i ] = ((int)((Ushort *)buffer) [ i*2 ] +
                           (int)((Ushort *)buffer) [ i*2 + 1 ] ) / 2 ;
 
        delete buffer ;
        buffer = (Uchar *)buffer2 ;
-       length /= 2 ;
+       length /= 4 ;
        setStereo ( SL_FALSE ) ;
     }
   }
@@ -238,7 +238,7 @@ int slSample::loadWavFile ( char *fname )
 
   char magic [ 8 ] ;
 
-  if ( fread ( magic, 4, 1, fd ) == -1 ||
+  if ( fread ( magic, 4, 1, fd ) == 0 ||
        magic[0] != 'R' || magic[1] != 'I' ||
        magic[2] != 'F' || magic[3] != 'F' )
   {
@@ -250,7 +250,7 @@ int slSample::loadWavFile ( char *fname )
 
   int leng1 ;
 
-  if ( fread ( & leng1, sizeof(int), 1, fd ) == -1 )
+  if ( fread ( & leng1, sizeof(int), 1, fd ) == 0 )
   {
     fprintf ( stderr, "slSample: File '%s' has premature EOF in header\n", fname ) ;
     fclose ( fd ) ;
@@ -276,7 +276,7 @@ int slSample::loadWavFile ( char *fname )
     {
       found_header = SL_TRUE ;
 
-      if ( fread ( & leng1, sizeof(int), 1, fd ) == -1 )
+      if ( fread ( & leng1, sizeof(int), 1, fd ) == 0 )
       {
 	fprintf ( stderr, "slSample: File '%s' has premature EOF in header\n", fname ) ;
 	fclose ( fd ) ;
@@ -333,7 +333,7 @@ int slSample::loadWavFile ( char *fname )
 	return SL_FALSE ;
       }
 
-      if ( fread ( & length, sizeof(int), 1, fd ) == -1 )
+      if ( fread ( & length, sizeof(int), 1, fd ) == 0 )
       {
 	fprintf ( stderr, "slSample: File '%s' has premature EOF in data\n", fname ) ;
 	fclose ( fd ) ;
@@ -382,7 +382,7 @@ int slSample::loadAUFile ( char *fname )
 
   char magic [ 4 ] ;
 
-  if ( fread ( magic, 4, 1, fd ) == -1 ||
+  if ( fread ( magic, 4, 1, fd ) == 0 ||
        magic[0] != '.' || magic[1] != 's' ||
        magic[2] != 'n' || magic[3] != 'd' )
   {
@@ -398,11 +398,11 @@ int slSample::loadAUFile ( char *fname )
   int irate  ;
   int nchans ;
 
-  if ( fread ( & hdr_length, sizeof(int), 1, fd ) == -1 ||
-       fread ( & dat_length, sizeof(int), 1, fd ) == -1 ||
-       fread ( & nbytes    , sizeof(int), 1, fd ) == -1 ||
-       fread ( & irate     , sizeof(int), 1, fd ) == -1 ||
-       fread ( & nchans    , sizeof(int), 1, fd ) == -1 )
+  if ( fread ( & hdr_length, sizeof(int), 1, fd ) == 0 ||
+       fread ( & dat_length, sizeof(int), 1, fd ) == 0 ||
+       fread ( & nbytes    , sizeof(int), 1, fd ) == 0 ||
+       fread ( & irate     , sizeof(int), 1, fd ) == 0 ||
+       fread ( & nchans    , sizeof(int), 1, fd ) == 0 )
   {
     fprintf ( stderr, "slSample: File '%s' has premature EOF in header\n", fname ) ;
     fclose ( fd ) ;

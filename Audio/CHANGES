@@ -9,6 +9,16 @@
 *                                              *
 \**********************************************/
 
+* 23rd Sept 1998 -- The Good News: Finally got around to
+                         getting the pitch envelope working. (Hooray) 
+                    The Bad News: This costs quite a bit in
+                         performance - and it was a MAJOR rewrite
+                         of significant parts of the internals,
+                         so we may need some bug fixes.
+
+* 7th  July 1998 -- Fixed some error checking in slSample.cxx and
+                    a missing declaration in sl.h
+
 * 6th  July 1998 -- Fixed an initialisation problem when
                     slScheduler was not a static/global.
 

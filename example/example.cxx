@@ -64,6 +64,19 @@ int main ()
     if ( tim % 150 == 0 ) sched.playSample ( s3 ) ;
     if ( tim % 120 == 0 ) sched.playSample ( s4 ) ;
 
+    if ( tim == 300 ) {
+	// introduce an envelope for our engine noise after 10 seconds
+
+	slEnvelope my_envelope ( 2, SL_SAMPLE_LOOP ) ;
+	my_envelope.setStep ( 0,  0.0, 1.0 ) ;
+	my_envelope.setStep ( 1, 10.0, 2.0 ) ;
+	my_envelope.setStep ( 2, 20.0, 1.0 ) ;
+
+	// scheduler -> playSample ( my_sample ) ;
+	sched.addSampleEnvelope ( s, 0, 0, &my_envelope, SL_PITCH_ENVELOPE ) ;
+    }
+
+
     /*
       For the sake of realism, I'll delay for 1/30th second to
       simulate a graphics update process.

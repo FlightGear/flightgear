@@ -224,9 +224,10 @@ public:
   int loadAUFile  ( char *fname ) ;
   int loadWavFile ( char *fname ) ;
 
-  void changeRate   ( int r ) ;
-  void changeBps    ( int b ) ;
-  void changeStereo ( int s ) ;
+  void changeRate       ( int r ) ;
+  void changeBps        ( int b ) ;
+  void changeStereo     ( int s ) ;
+  void changeToUnsigned () ;
 
   void adjustVolume ( float vol ) ;
 
@@ -285,6 +286,8 @@ typedef void (*slCallBack) ( slSample *, slEvent, int ) ;
 
 class slEnvelope
 {
+public:  /* SJB TESTING! */
+
   float *time  ;
   float *value ;
   int   nsteps ;
@@ -356,6 +359,8 @@ public:
 
   float getValue ( float _time ) ;
 
+  void applyToPitch     ( Uchar *dst, slSamplePlayer *src, int nframes, int start, int next_env ) ;
+  void applyToInvPitch  ( Uchar *dst, slSamplePlayer *src, int nframes, int start, int next_env ) ;
   void applyToVolume    ( Uchar *dst, Uchar *src, int nframes, int start ) ;
   void applyToInvVolume ( Uchar *dst, Uchar *src, int nframes, int start ) ;
 } ;
@@ -386,8 +391,8 @@ struct slPendingCallBack
 
 class slSamplePlayer
 {
-  int            lengthRemaining ;
-  Uchar         *bufferPos       ;
+  int            lengthRemaining ;  /* Sample frames remaining until repeat */
+  Uchar         *bufferPos       ;  /* Sample frame to replay next */
   slSample      *sample          ;
 
   slEnvelope    *env            [ SL_MAX_ENVELOPES ] ;
@@ -401,6 +406,8 @@ class slSamplePlayer
 
   slCallBack     callback ;
   int            magic ;
+
+  void  low_read ( int nframes, Uchar *dest ) ;
 
 public:
 
@@ -428,11 +435,6 @@ public:
   }
 
   ~slSamplePlayer () ;
-
-  int getAmountLeft ()
-  {
-    return lengthRemaining ;
-  }
 
   slPreemptMode getPreemptMode () { return preempt_mode ; }
 
@@ -488,8 +490,8 @@ public:
   int isRunning () { return status == SL_SAMPLE_RUNNING ; } 
   int isDone    () { return status == SL_SAMPLE_DONE    ; }
 
-  void   skip ( int nframes ) ;
-  Uchar *read ( int nframes, Uchar *spare1, Uchar *spare2 ) ;
+  void skip ( int nframes ) ;
+  void read ( int nframes, Uchar *dest, int next_env = 0 ) ;
 } ;
 
 
@@ -499,29 +501,24 @@ class slScheduler : public slDSP
   int num_pending_callbacks ;
 
   float safety_margin ;
+
   int mixer_buffer_size ;
-  Uchar *mixer_buffer ;
+
+  Uchar *mixer_buffer  ;
+  Uchar *spare_buffer0 ;
+  Uchar *spare_buffer1 ;
+  Uchar *spare_buffer2 ;
+  
   Uchar *mixer ;
   int amount_left ;
 
   slSamplePlayer *samplePlayer [ SL_MAX_SAMPLES ] ;
 
-  Uchar *spare_buffer1 [ 3 ] ;
-  Uchar *spare_buffer2 [ 3 ] ;
-  
   void init () ;
 
-  Uchar *mergeBlock ( Uchar *d ) ;
-  Uchar *mergeBlock ( Uchar *d, slSamplePlayer *spa ) ;
-  Uchar *mergeBlock ( Uchar *d, slSamplePlayer *spa,
-                                slSamplePlayer *spb ) ;
-  Uchar *mergeBlock ( Uchar *d, slSamplePlayer *spa,
-                                slSamplePlayer *spb,
-                                slSamplePlayer *spc ) ;
-  void mixBuffer () ;
-  void mixBuffer ( slSamplePlayer *a ) ;
   void mixBuffer ( slSamplePlayer *a,
                    slSamplePlayer *b ) ;
+
   void mixBuffer ( slSamplePlayer *a,
                    slSamplePlayer *b,
                    slSamplePlayer *c ) ;

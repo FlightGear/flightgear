@@ -37,13 +37,11 @@ void slScheduler::init ()
   safety_margin = 1.0 ;
 
   mixer = NULL ;
-  mixer_buffer = NULL ;
-  spare_buffer1 [ 0 ] = NULL ;
-  spare_buffer1 [ 1 ] = NULL ;
-  spare_buffer1 [ 2 ] = NULL ;
-  spare_buffer2 [ 0 ] = NULL ;
-  spare_buffer2 [ 1 ] = NULL ;
-  spare_buffer2 [ 2 ] = NULL ;
+
+  mixer_buffer  = NULL ;
+  spare_buffer0 = NULL ;
+  spare_buffer1 = NULL ;
+  spare_buffer2 = NULL ;
 
   initBuffers () ;
 }
@@ -53,25 +51,18 @@ void slScheduler::initBuffers ()
   if ( not_working () ) return ;
 
   delete mixer_buffer ;
-  delete spare_buffer1 [ 0 ] ;
-  delete spare_buffer1 [ 1 ] ;
-  delete spare_buffer1 [ 2 ] ;
-  delete spare_buffer2 [ 0 ] ;
-  delete spare_buffer2 [ 1 ] ;
-  delete spare_buffer2 [ 2 ] ;
+  delete spare_buffer0 ;
+  delete spare_buffer1 ;
+  delete spare_buffer2 ;
 
   mixer_buffer_size = getDriverBufferSize () ;
 
   mixer_buffer = new Uchar [ mixer_buffer_size ] ;
   memset ( mixer_buffer, 0x80, mixer_buffer_size ) ;
 
-  spare_buffer1 [ 0 ] = new Uchar [ mixer_buffer_size ] ;
-  spare_buffer1 [ 1 ] = new Uchar [ mixer_buffer_size ] ;
-  spare_buffer1 [ 2 ] = new Uchar [ mixer_buffer_size ] ;
-
-  spare_buffer2 [ 0 ] = new Uchar [ mixer_buffer_size ] ;
-  spare_buffer2 [ 1 ] = new Uchar [ mixer_buffer_size ] ;
-  spare_buffer2 [ 2 ] = new Uchar [ mixer_buffer_size ] ;
+  spare_buffer0 = new Uchar [ mixer_buffer_size ] ;
+  spare_buffer1 = new Uchar [ mixer_buffer_size ] ;
+  spare_buffer2 = new Uchar [ mixer_buffer_size ] ;
 }
 
 slScheduler::~slScheduler ()
@@ -81,134 +72,27 @@ slScheduler::~slScheduler ()
 
   delete mixer_buffer ;
 
-  delete spare_buffer1 [ 0 ] ;
-  delete spare_buffer1 [ 1 ] ;
-  delete spare_buffer1 [ 2 ] ;
-  delete spare_buffer2 [ 0 ] ;
-  delete spare_buffer2 [ 1 ] ;
-  delete spare_buffer2 [ 2 ] ;
-}
-
-Uchar *slScheduler::mergeBlock ( Uchar *d )
-{
-  register int l = amount_left ;
-  amount_left = 0 ;
-  memset ( d, 0x80, l ) ;
-
-  return d + l ;
+  delete spare_buffer0 ;
+  delete spare_buffer1 ;
+  delete spare_buffer2 ;
 }
 
 
-Uchar *slScheduler::mergeBlock ( Uchar *d, slSamplePlayer *spa )
-{
-  register int l = spa -> getAmountLeft () ;
 
-  if ( l > amount_left )
-    l = amount_left ;
-
-  amount_left -= l ;
-
-  memcpy ( d, spa->read(l, spare_buffer1[0], spare_buffer2[0]), l ) ;
-
-  return d + l ;
-}
-
-
-Uchar *slScheduler::mergeBlock ( Uchar *d, slSamplePlayer *spa, slSamplePlayer *spb )
-{
-  int la = spa -> getAmountLeft () ;
-  int lb = spb -> getAmountLeft () ;
-
-  register int l = ( la < lb ) ? la : lb ;
-
-  if ( l > amount_left )
-    l = amount_left ;
-
-  amount_left -= l ;
-
-  register Uchar *a = spa -> read ( l, spare_buffer1[0], spare_buffer2[0] ) ;
-  register Uchar *b = spb -> read ( l, spare_buffer1[1], spare_buffer2[1] ) ;
-
-  while ( l-- ) *d++ = mix ( *a++, *b++ ) ;
-
-  return d ;
-}
-
-Uchar *slScheduler::mergeBlock ( Uchar *d, slSamplePlayer *spa, slSamplePlayer *spb, slSamplePlayer *spc )
-{
-  int la = spa -> getAmountLeft () ;
-  int lb = spb -> getAmountLeft () ;
-  int lc = spc -> getAmountLeft () ;
-
-  register int l = ( la < lb ) ?
-		    (( la < lc ) ? la : lc ) :
-		    (( lb < lc ) ? lb : lc ) ;
-
-  if ( l > amount_left )
-    l = amount_left ;
-
-  amount_left -= l ;
-
-  register Uchar *a = spa -> read ( l, spare_buffer1[0], spare_buffer2[0] ) ;
-  register Uchar *b = spb -> read ( l, spare_buffer1[1], spare_buffer2[1] ) ;
-  register Uchar *c = spc -> read ( l, spare_buffer1[2], spare_buffer2[2] ) ;
-
-  while ( l-- ) *d++ = mix ( *a++, *b++, *c++ ) ;
-
-  return d ;
-}
-
-
-void slScheduler::mixBuffer ()
-{
-  register Uchar *d = mixer_buffer ;
-
-  amount_left = mixer_buffer_size ;
-
-  while ( amount_left > 0 )
-    d = mergeBlock ( d ) ;
-}
-
-
-void slScheduler::mixBuffer ( slSamplePlayer *spa )
-{
-  register Uchar *d = mixer_buffer ;
-
-  amount_left = mixer_buffer_size ;
-
-  while ( amount_left > 0 )
-  {
-    int la = spa -> getAmountLeft () ;
-
-    if ( la > 0 ) /* Buffer has data left... */
-      d = mergeBlock ( d, spa ) ;
-    else          /* Buffer is empty */
-      d = mergeBlock ( d ) ;
-  }
-}
 
 
 void slScheduler::mixBuffer ( slSamplePlayer *spa, slSamplePlayer *spb )
 {
+  register int    l = mixer_buffer_size ;
   register Uchar *d = mixer_buffer ;
-  amount_left = mixer_buffer_size ;
 
-  while ( amount_left > 0 )
-  {
-    int la = spa -> getAmountLeft () ;
-    int lb = spb -> getAmountLeft () ;
+  register Uchar *a = spare_buffer0 ;
+  register Uchar *b = spare_buffer1 ;
 
-    if ( la > 0 && lb > 0 ) /* Both buffers have data left... */
-      d = mergeBlock ( d, spa, spb ) ;
-    else
-    if ( la > 0 && lb <= 0 ) /* Only the A buffer has data left... */
-      d = mergeBlock ( d, spa ) ;
-    else
-    if ( la <= 0 && lb > 0 ) /* Only the B buffer has data left... */
-      d = mergeBlock ( d, spb ) ;
-    else                     /* Both buffers are empty */
-      d = mergeBlock ( d ) ;
-  }
+  spa -> read ( l, a ) ;
+  spb -> read ( l, b ) ;
+
+  while ( l-- ) *d++ = mix ( *a++, *b++ ) ;
 }
 
 
@@ -216,43 +100,18 @@ void slScheduler::mixBuffer ( slSamplePlayer *spa, slSamplePlayer *spb )
 void slScheduler::mixBuffer ( slSamplePlayer *spa, slSamplePlayer *spb,
                               slSamplePlayer *spc )
 {
+  register int    l = mixer_buffer_size ;
   register Uchar *d = mixer_buffer ;
 
-  amount_left = mixer_buffer_size ;
+  register Uchar *a = spare_buffer0 ;
+  register Uchar *b = spare_buffer1 ;
+  register Uchar *c = spare_buffer2 ;
 
-  while ( amount_left > 0 )
-  {
-    int la = spa -> getAmountLeft () ;
-    int lb = spb -> getAmountLeft () ;
-    int lc = spc -> getAmountLeft () ;
+  spa -> read ( l, a ) ;
+  spb -> read ( l, b ) ;
+  spc -> read ( l, c ) ;
 
-    if ( lc > 0 )  /* C buffer has data left... */
-    {
-      if ( la > 0 && lb > 0 ) /* All three buffers have data left... */
-	d = mergeBlock ( d, spa, spb, spc ) ;
-      else
-      if ( la > 0 && lb <= 0 ) /* Only the A&C buffers have data left... */
-	d = mergeBlock ( d, spa, spc ) ;
-      else
-      if ( la <= 0 && lb > 0 ) /* Only the B&C buffers have data left... */
-	d = mergeBlock ( d, spb, spc ) ;
-      else                     /* Only the C buffer has data left */
-	d = mergeBlock ( d, spc ) ;
-    }
-    else
-    {
-      if ( la > 0 && lb > 0 ) /* Only the A&B buffers have data left... */
-	d = mergeBlock ( d, spa, spb ) ;
-      else
-      if ( la > 0 && lb <= 0 ) /* Only the A buffer has data left... */
-	d = mergeBlock ( d, spa ) ;
-      else
-      if ( la <= 0 && lb > 0 ) /* Only the B buffer has data left... */
-	d = mergeBlock ( d, spb ) ;
-      else                     /* All three buffers are empty */
-	d = mergeBlock ( d ) ;
-    }
-  }
+  while ( l-- ) *d++ = mix ( *a++, *b++, *c++ ) ;
 }
 
 
@@ -312,10 +171,19 @@ void slScheduler::realUpdate ( int dump_first )
       }
     }
 
-    if ( pri[0] < 0 ) mixBuffer () ; else
-    if ( pri[1] < 0 ) mixBuffer ( psp[0] ) ; else
-    if ( pri[2] < 0 ) mixBuffer ( psp[0], psp[1] ) ; else
-		      mixBuffer ( psp[0], psp[1], psp[2] ) ;
+    if ( pri[0] < 0 )
+    {
+      memset ( mixer_buffer, 0x80, mixer_buffer_size ) ;
+      amount_left = 0 ;
+    }
+    else
+    if ( pri[1] < 0 )
+      psp[0] -> read ( mixer_buffer_size, mixer_buffer ) ;
+    else
+    if ( pri[2] < 0 )
+      mixBuffer ( psp[0], psp[1] ) ;
+    else
+      mixBuffer ( psp[0], psp[1], psp[2] ) ;
 
     if ( dump_first )
     {

@@ -46,6 +46,84 @@ int slEnvelope::getStepDelta ( float *_time, float *delta )
   return nsteps - 1 ;
 }
 
+
+void slEnvelope::applyToPitch  ( Uchar *dst, slSamplePlayer *src,
+                                 int nframes, int start, int next_env )
+{
+  float  delta ;
+  float  _time = slScheduler::getCurrent() -> getElapsedTime ( start ) ;
+  int     step = getStepDelta ( &_time, &delta ) ;
+  float _value = delta * (_time - time[step]) + value[step] ;
+
+  delta /= (float) slScheduler::getCurrent() -> getRate () ;
+
+  unsigned char tmp [ 512 ] ;
+  float  pos = 0 ;
+  float npos = 0 ;
+  unsigned char last = 0x80 ;
+
+  while ( nframes-- )
+  {
+    npos += _value ;
+    _value += delta ;
+
+    int offset = (int) ( npos - pos ) ;
+
+    if ( offset > 512 )
+      offset = 512 ;
+
+    if ( offset < 1 )
+      *(dst++) = last ;
+    else
+    {
+      pos += offset ;
+
+      src -> read ( offset, tmp, next_env ) ;
+
+      *(dst++) = last = tmp [ offset-1 ] ; 
+    }
+  }
+}
+
+
+void slEnvelope::applyToInvPitch  ( Uchar *dst, slSamplePlayer *src,
+                                    int nframes, int start, int next_env )
+{
+  float  delta ;
+  float  _time = slScheduler::getCurrent() -> getElapsedTime ( start ) ;
+  int     step = getStepDelta ( &_time, &delta ) ;
+  float _value = delta * (_time - time[step]) + value[step] ;
+
+  delta /= (float) slScheduler::getCurrent() -> getRate () ;
+
+  unsigned char tmp [ 512 ] ;
+  float  pos = 0 ;
+  float npos = 0 ;
+  unsigned char last = 0x80 ;
+
+  while ( nframes-- )
+  {
+    npos += 1.0 / _value ;
+    _value += delta ;
+
+    int offset = (int) ( npos - pos ) ;
+
+    if ( offset > 512 )
+      offset = 512 ;
+
+    if ( offset < 1 )
+      *(dst++) = last ;
+    else
+    {
+      pos += offset ;
+
+      src -> read ( offset, tmp, next_env ) ;
+
+      *(dst++) = last = tmp [ offset-1 ] ; 
+    }
+  }
+}
+
 void slEnvelope::applyToVolume ( Uchar *dst, Uchar *src,
                                  int nframes, int start )
 {

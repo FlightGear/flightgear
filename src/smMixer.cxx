@@ -168,8 +168,8 @@ void smMixer::open ( char *device )
   
 void smMixer::close (){}
 
-smMixer::smMixer ()    { } 
-smMixer::smMixer ( char *device ) { } 
+smMixer::smMixer ()    {} 
+smMixer::smMixer ( char * ) {} 
 smMixer::~smMixer ()         {}
   
 int smMixer::not_working () 
@@ -179,31 +179,31 @@ int smMixer::not_working ()
 
   /* Volume controls are in integer percentages */
 
-int  smMixer::getVolume ( int channel             ) { return 50 ; }
-void smMixer::getVolume ( int channel, int *left, int *right )
+int  smMixer::getVolume ( int             ) { return 50 ; }
+void smMixer::getVolume ( int, int *left, int *right )
 {
   if ( left  ) *left  = 50 ;
   if ( right ) *right = 50 ;
 }
 
-void smMixer::setVolume ( int channel, int volume ) {}
-void smMixer::setVolume ( int channel, int  left, int  right ){}
-void smMixer::setTreble       ( int treble ) {}
-void smMixer::setBass         ( int bass   ) {}
-void smMixer::setMasterVolume ( int volume ) {}
-void smMixer::setSynthVolume  ( int volume ) {}
-void smMixer::setPCMVolume    ( int volume ) {}
-void smMixer::setSpeakerVolume( int volume ) {}
-void smMixer::setLineVolume   ( int volume ) {}
-void smMixer::setMicVolume    ( int volume ) {}
-void smMixer::setCDVolume     ( int volume ) {}
-void smMixer::setMasterVolume ( int left, int right ) {}
-void smMixer::setSynthVolume  ( int left, int right ) {}
-void smMixer::setPCMVolume    ( int left, int right ) {}
-void smMixer::setSpeakerVolume( int left, int right ) {}
-void smMixer::setLineVolume   ( int left, int right ) {}
-void smMixer::setMicVolume    ( int left, int right ) {}
-void smMixer::setCDVolume     ( int left, int right ) {} 
+void smMixer::setVolume ( int , int  ) {}
+void smMixer::setVolume ( int , int , int  ){}
+void smMixer::setTreble       ( int  ) {}
+void smMixer::setBass         ( int    ) {}
+void smMixer::setMasterVolume ( int  ) {}
+void smMixer::setSynthVolume  ( int  ) {}
+void smMixer::setPCMVolume    ( int  ) {}
+void smMixer::setSpeakerVolume( int  ) {}
+void smMixer::setLineVolume   ( int  ) {}
+void smMixer::setMicVolume    ( int  ) {}
+void smMixer::setCDVolume     ( int ) {}
+void smMixer::setMasterVolume ( int, int ) {}
+void smMixer::setSynthVolume  ( int, int ) {}
+void smMixer::setPCMVolume    ( int, int ) {}
+void smMixer::setSpeakerVolume( int, int ) {}
+void smMixer::setLineVolume   ( int, int ) {}
+void smMixer::setMicVolume    ( int, int ) {}
+void smMixer::setCDVolume     ( int, int ) {} 
 
 
 #else
@@ -211,14 +211,12 @@ void smMixer::setCDVolume     ( int left, int right ) {}
 /* win32                                                        */
 /* ------------------------------------------------------------ */
 
-void smMixer::open ( char *device )
-{
-}
+void smMixer::open ( char * ) {}
   
 void smMixer::close (){}
 
-smMixer::smMixer ()    { } 
-smMixer::smMixer ( char *device ) { } 
+smMixer::smMixer ()    {} 
+smMixer::smMixer ( char * ) {} 
 smMixer::~smMixer ()         {}
   
 int smMixer::not_working () 
@@ -228,31 +226,31 @@ int smMixer::not_working ()
 
   /* Volume controls are in integer percentages */
 
-int  smMixer::getVolume ( int channel             ) { return 50 ; }
-void smMixer::getVolume ( int channel, int *left, int *right )
+int  smMixer::getVolume ( int             ) { return 50 ; }
+void smMixer::getVolume ( int, int *left, int *right )
 {
   if ( left  ) *left  = 50 ;
   if ( right ) *right = 50 ;
 }
 
-void smMixer::setVolume ( int channel, int volume ) {}
-void smMixer::setVolume ( int channel, int  left, int  right ){}
-void smMixer::setTreble       ( int treble ) {}
-void smMixer::setBass         ( int bass   ) {}
-void smMixer::setMasterVolume ( int volume ) {}
-void smMixer::setSynthVolume  ( int volume ) {}
-void smMixer::setPCMVolume    ( int volume ) {}
-void smMixer::setSpeakerVolume( int volume ) {}
-void smMixer::setLineVolume   ( int volume ) {}
-void smMixer::setMicVolume    ( int volume ) {}
-void smMixer::setCDVolume     ( int volume ) {}
-void smMixer::setMasterVolume ( int left, int right ) {}
-void smMixer::setSynthVolume  ( int left, int right ) {}
-void smMixer::setPCMVolume    ( int left, int right ) {}
-void smMixer::setSpeakerVolume( int left, int right ) {}
-void smMixer::setLineVolume   ( int left, int right ) {}
-void smMixer::setMicVolume    ( int left, int right ) {}
-void smMixer::setCDVolume     ( int left, int right ) {} 
+void smMixer::setVolume ( int, int ) {}
+void smMixer::setVolume ( int, int, int ){}
+void smMixer::setTreble       ( int ) {}
+void smMixer::setBass         ( int   ) {}
+void smMixer::setMasterVolume ( int ) {}
+void smMixer::setSynthVolume  ( int ) {}
+void smMixer::setPCMVolume    ( int ) {}
+void smMixer::setSpeakerVolume( int ) {}
+void smMixer::setLineVolume   ( int ) {}
+void smMixer::setMicVolume    ( int ) {}
+void smMixer::setCDVolume     ( int ) {}
+void smMixer::setMasterVolume ( int, int ) {}
+void smMixer::setSynthVolume  ( int, int ) {}
+void smMixer::setPCMVolume    ( int, int ) {}
+void smMixer::setSpeakerVolume( int, int ) {}
+void smMixer::setLineVolume   ( int, int ) {}
+void smMixer::setMicVolume    ( int, int ) {}
+void smMixer::setCDVolume     ( int, int ) {} 
 
 
 #endif
