@@ -127,13 +127,14 @@ static Point3D calc_tex_coords(double *node, const Point3D& ref) {
 int fgObjLoad( const string& path, fgTILE *t) {
     fgFRAGMENT fragment;
     Point3D pp;
-    double approx_normal[3], normal[3], scale;
+    double approx_normal[3], normal[3] /*, scale = 0.0 */;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
-    GLint display_list;
+    GLint display_list = 0;
     int shading;
-    int in_fragment, in_faces, vncount, n1, n2, n3, n4;
-    int last1, last2, odd;
+    int in_fragment = 0, in_faces = 0, vncount;
+    int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
+    int last1 = 0, last2 = 0, odd = 0;
     double (*nodes)[3];
     Point3D center;
 
@@ -192,10 +193,14 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    } else if ( token == "usemtl" ) {
 		// material property specification
 
+		// series of individual triangles
+		if ( in_faces ) {
+		    xglEnd();
+		}
+
 		// this also signals the start of a new fragment
 		if ( in_fragment ) {
 		    // close out the previous structure and start the next
-		    xglEnd();
 		    xglEndList();
 		    // printf("xglEnd(); xglEndList();\n");
 
@@ -265,7 +270,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 			    "Read too many vertex normals ... dying :-(" );
 		    exit(-1);
 		}
-	    } else if ( token[0] == 'v' ) {
+	    } else if ( token == "v" ) {
 		// node (vertex)
 		if ( t->ncount < MAX_NODES ) {
 		    in >> t->nodes[t->ncount][0]
@@ -277,7 +282,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 			    "Read too many nodes ... dying :-(");
 		    exit(-1);
 		}
-	    } else if ( token[0] == 't' ) {
+	    } else if ( token == "t" ) {
 		// start a new triangle strip
 
 		n1 = n2 = n3 = n4 = 0;
@@ -293,24 +298,24 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		// printf("xglBegin(tristrip) %d %d %d\n", n1, n2, n3);
 
 		odd = 1; 
-		scale = 1.0;
+		// scale = 1.0;
 
 		if ( shading ) {
 		    // Shading model is "GL_SMOOTH" so use precalculated
 		    // (averaged) normals
-		    MAT3_SCALE_VEC(normal, normals[n1], scale);
+		    // MAT3_SCALE_VEC(normal, normals[n1], scale);
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n1], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
 		    xglVertex3dv(nodes[n1]);		
 
-		    MAT3_SCALE_VEC(normal, normals[n2], scale);
+		    // MAT3_SCALE_VEC(normal, normals[n2], scale);
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n2], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
 		    xglVertex3dv(nodes[n2]);				
 
-		    MAT3_SCALE_VEC(normal, normals[n3], scale);
+		    // MAT3_SCALE_VEC(normal, normals[n3], scale);
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n3], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
@@ -325,7 +330,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 			calc_normal(nodes[n2], nodes[n1], 
 				    nodes[n3], approx_normal);
 		    }
-		    MAT3_SCALE_VEC(normal, approx_normal, scale);
+		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    xglNormal3dv(normal);
 
 		    pp = calc_tex_coords(nodes[n1], center);
@@ -364,12 +369,12 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 		    if ( shading ) {
 			// Shading model is "GL_SMOOTH"
-			MAT3_SCALE_VEC(normal, normals[n4], scale);
+			// MAT3_SCALE_VEC(normal, normals[n4], scale);
 		    } else {
 			// Shading model is "GL_FLAT"
 			calc_normal(nodes[n3], nodes[n2], nodes[n4], 
 				    approx_normal);
-			MAT3_SCALE_VEC(normal, approx_normal, scale);
+			// MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    }
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n4], center);
@@ -381,7 +386,50 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    last2 = n4;
 		    // printf("a normal, texcoord, and vertex (4th)\n");
 		}
-	    } else if ( token[0] == 'f' ) {
+	    } else if ( token == "tf" ) {
+		// triangle fan
+		// fgPrintf( FG_TERRAIN, FG_DEBUG, "new fan");
+
+		xglBegin(GL_TRIANGLE_FAN);
+
+		in >> n1;
+		xglNormal3dv(normals[n1]);
+		pp = calc_tex_coords(nodes[n1], center);
+		xglTexCoord2f(pp.lon(), pp.lat());
+		xglVertex3dv(nodes[n1]);
+
+		in >> n2;
+		xglNormal3dv(normals[n2]);
+		pp = calc_tex_coords(nodes[n2], center);
+		xglTexCoord2f(pp.lon(), pp.lat());
+		xglVertex3dv(nodes[n2]);
+		
+		// read all subsequent numbers until next thing isn't a number
+		while ( true ) {
+		    in >> skipws;
+
+		    char c;
+		    in.get(c);
+		    in.putback(c);
+		    if ( ! isdigit(c) || in.eof() ) {
+			break;
+		    }
+
+		    in >> n3;
+		    cout << "  triangle = " 
+			 << n1 << "," << n2 << "," << n3 
+			 << endl;
+		    xglNormal3dv(normals[n3]);
+		    pp = calc_tex_coords(nodes[n3], center);
+		    xglTexCoord2f(pp.lon(), pp.lat());
+		    xglVertex3dv(nodes[n3]);
+
+		    fragment.add_face(n1, n2, n3);
+		    n2 = n3;
+		}
+
+		xglEnd();
+	    } else if ( token == "f" ) {
 		// unoptimized face
 
 		if ( !in_faces ) {
@@ -410,7 +458,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		xglTexCoord2f(pp.lon(), pp.lat());
 		xglVertex3dv(nodes[n3]);
 		// printf("some normals, texcoords, and vertices (tris)\n");
-	    } else if ( token[0] == 'q' ) {
+	    } else if ( token == "q" ) {
 		// continue a triangle strip
 		n1 = n2 = 0;
 
@@ -441,7 +489,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 		if ( shading ) {
 		    // Shading model is "GL_SMOOTH"
-		    MAT3_SCALE_VEC(normal, normals[n1], scale);
+		    // MAT3_SCALE_VEC(normal, normals[n1], scale);
 		} else {
 		    // Shading model is "GL_FLAT"
 		    if ( odd ) {
@@ -451,7 +499,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 			calc_normal(nodes[last2], nodes[last1], nodes[n1], 
 				    approx_normal);
 		    }
-		    MAT3_SCALE_VEC(normal, approx_normal, scale);
+		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
 
@@ -475,7 +523,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 		    if ( shading ) {
 			// Shading model is "GL_SMOOTH"
-			MAT3_SCALE_VEC(normal, normals[n2], scale);
+			// MAT3_SCALE_VEC(normal, normals[n2], scale);
 		    } else {
 			// Shading model is "GL_FLAT"
 			if ( odd ) {
@@ -485,7 +533,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 			    calc_normal(nodes[last2], nodes[last1], 
 					nodes[n2], approx_normal);
 			}
-			MAT3_SCALE_VEC(normal, approx_normal, scale);
+			// MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    }
 		    xglNormal3dv(normal);
 		
@@ -547,6 +595,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.14  1999/03/30 23:48:24  curt
+// modifications to obj loader to handle tri fans.
+//
 // Revision 1.13  1999/03/27 05:36:03  curt
 // Alas, I have made non-backwardsly compatible changes to the scenery file
 //   format.  Thus I have had to make the corresponding changes here in the
