@@ -132,7 +132,7 @@ void fgTileCacheEntryFree( int index ) {
 
 /* Return info for a tile cache entry */
 void fgTileCacheEntryInfo( int index, GLint *display_list, 
-			   struct fgCartesianPoint *local_ref ) {
+			   fgCartesianPoint3d *local_ref ) {
     *display_list = tile_cache[index].display_list;
     /* fgPrintf(FG_TERRAIN, FG_DEBUG, "Display list = %d\n", *display_list); */
 
@@ -200,9 +200,12 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/30 12:35:31  curt
-/* Added a command line rendering option specify smooth/flat shading.
+/* Revision 1.6  1998/05/02 01:52:17  curt
+/* Playing around with texture coordinates.
 /*
+ * Revision 1.5  1998/04/30 12:35:31  curt
+ * Added a command line rendering option specify smooth/flat shading.
+ *
  * Revision 1.4  1998/04/28 01:21:43  curt
  * Tweaked texture parameter calculations to keep the number smaller.  This
  * avoids the "swimming" problem.

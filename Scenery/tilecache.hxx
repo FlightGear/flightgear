@@ -57,7 +57,7 @@
 struct fgTILE {
     struct fgBUCKET tile_bucket;
     GLint display_list;
-    struct fgCartesianPoint local_ref;
+    fgCartesianPoint3d local_ref;
     double bounding_radius;
     int used;
     int priority;
@@ -81,16 +81,19 @@ void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p );
 
 /* Return info for a tile cache entry */
 void fgTileCacheEntryInfo( int index, GLint *display_list, 
-			   struct fgCartesianPoint *local_ref );
+			   fgCartesianPoint3d *local_ref );
 
 
 #endif /* _TILECACHE_HXX */
 
 
 /* $Log$
-/* Revision 1.4  1998/04/30 12:35:31  curt
-/* Added a command line rendering option specify smooth/flat shading.
+/* Revision 1.5  1998/05/02 01:52:17  curt
+/* Playing around with texture coordinates.
 /*
+ * Revision 1.4  1998/04/30 12:35:31  curt
+ * Added a command line rendering option specify smooth/flat shading.
+ *
  * Revision 1.3  1998/04/25 22:06:32  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

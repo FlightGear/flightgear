@@ -42,10 +42,10 @@ struct fgSCENERY {
     int terrain_skip;
 
     /* center of current scenery chunk */
-    struct fgCartesianPoint center;
+    fgCartesianPoint3d center;
 
     /* next center of current scenery chunk */
-    struct fgCartesianPoint next_center;
+    fgCartesianPoint3d next_center;
 
     /* angle of sun relative to current local horizontal */
     double sun_angle;
@@ -71,9 +71,12 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.1  1998/04/30 12:35:31  curt
-/* Added a command line rendering option specify smooth/flat shading.
+/* Revision 1.2  1998/05/02 01:52:16  curt
+/* Playing around with texture coordinates.
 /*
+ * Revision 1.1  1998/04/30 12:35:31  curt
+ * Added a command line rendering option specify smooth/flat shading.
+ *
  * Revision 1.21  1998/04/25 22:06:31  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

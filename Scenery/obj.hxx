@@ -47,16 +47,19 @@
 
 
 /* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
+GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius);
 
 
 #endif /* _OBJ_HXX */
 
 
 /* $Log$
-/* Revision 1.1  1998/04/30 12:35:29  curt
-/* Added a command line rendering option specify smooth/flat shading.
+/* Revision 1.2  1998/05/02 01:52:15  curt
+/* Playing around with texture coordinates.
 /*
+ * Revision 1.1  1998/04/30 12:35:29  curt
+ * Added a command line rendering option specify smooth/flat shading.
+ *
  * Revision 1.11  1998/04/25 22:06:31  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

@@ -1,6 +1,5 @@
-/* -*- Mode: C++ -*-
- *
- * obj.c -- routines to handle WaveFront .obj format files.
+/*
+ * obj.cxx -- routines to handle "sorta" WaveFront .obj format files.
  *
  * Written by Curtis Olson, started October 1997.
  *
@@ -44,8 +43,10 @@
 #include <Main/options.hxx>
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
-#include <Scenery/obj.hxx>
-#include <Scenery/scenery.hxx>
+#include <Math/polar3d.h>
+
+#include "obj.hxx"
+#include "scenery.hxx"
 
 
 #define MAXNODES 100000
@@ -73,33 +74,29 @@ void calc_normal(double p1[3], double p2[3], double p3[3], double normal[3])
 
 #define FG_TEX_CONSTANT 128.0
 
-float calc_lon(double x, double y, double z) {
-    float tmp;
-    tmp = fmod(
-	       (RAD_TO_DEG*atan2(y, x)) * FG_TEX_CONSTANT, 
-	       10.0);
 
-    // printf("lon = %.2f\n", (float)tmp);
-    return (float)tmp;
-}
+// Calculate texture coordinates for a given point.
+fgPolarPoint3d calc_tex_coords(double *node, fgCartesianPoint3d *ref) {
+    fgCartesianPoint3d cp;
+    fgPolarPoint3d pp;
 
+    cp.x = node[0] + ref->x; 
+    cp.y = node[1] + ref->y;
+    cp.z = node[2] + ref->z;
 
-float calc_lat(double x, double y, double z) {
-    float tmp;
+    pp = fgCartToPolar3d(cp);
 
-    tmp = fmod(
-	       (90.0 - RAD_TO_DEG * 
-		atan2( sqrt(x*x + y*y), z )) * FG_TEX_CONSTANT,
-	       10.0);
+    pp.lon = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lon, 15.0);
+    pp.lat = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lat, 15.0);
 
-    // printf("lat = %.2f\n", (float)tmp);
-    return (float)tmp;
+    return(pp);
 }
 
 
 /* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
+GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
     fgOPTIONS *o;
+    fgPolarPoint3d pp;
     char fgpath[256], line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
@@ -163,7 +160,8 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    if ( ncount < MAXNODES ) {
 		/* fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex = %s", line); */
 		sscanf(line, "v %lf %lf %lf\n", 
-		       &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
+		       &nodes[ncount][0], &nodes[ncount][1], 
+		       &nodes[ncount][2]);
 
 		/* first time through set min's and max'es */
 		/*
@@ -252,64 +250,44 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		// (averaged) normals
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
-		xglTexCoord2f(calc_lon(nodes[n1][0] + ref->x, 
-				       nodes[n1][1] + ref->y,
-				       nodes[n1][2] + ref->z),
-			      calc_lat(nodes[n1][0] + ref->x,
-				       nodes[n1][1] + ref->y,
-				       nodes[n1][2] + ref->z));
+		pp = calc_tex_coords(nodes[n1], ref);
+		xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n2], scale);
 		xglNormal3dv(normal);
-		xglTexCoord2f(calc_lon(nodes[n2][0] + ref->x,
-				       nodes[n2][1] + ref->y,
-				       nodes[n2][2] + ref->z),
-			      calc_lat(nodes[n2][0] + ref->x,
-				       nodes[n2][1] + ref->y,
-				       nodes[n2][2] + ref->z));
+                pp = calc_tex_coords(nodes[n2], ref);
+                xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n3], scale);
 		xglNormal3dv(normal);
-		xglTexCoord2f(calc_lon(nodes[n3][0] + ref->x,
-				       nodes[n3][1] + ref->y,
-				       nodes[n3][2] + ref->z),
-			      calc_lat(nodes[n3][0] + ref->x,
-				       nodes[n3][1] + ref->y,
-				       nodes[n3][2] + ref->z));
+                pp = calc_tex_coords(nodes[n3], ref);
+                xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    } else {
 		// Shading model is "GL_FLAT" so calculate per face
 		// normals on the fly.
 		if ( odd ) {
-		    calc_normal(nodes[n1], nodes[n2], nodes[n3], approx_normal);
+		    calc_normal(nodes[n1], nodes[n2], 
+				nodes[n3], approx_normal);
 		} else {
-		    calc_normal(nodes[n2], nodes[n1], nodes[n3], approx_normal);
+		    calc_normal(nodes[n2], nodes[n1], 
+				nodes[n3], approx_normal);
 		}
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
 		xglNormal3dv(normal);
 
-		xglTexCoord2f(calc_lon(nodes[n1][0] + ref->x,
-				       nodes[n1][1] + ref->y,
-				       nodes[n1][2] + ref->z),
-			      calc_lat(nodes[n1][0] + ref->x,
-				       nodes[n1][1] + ref->y,
-				       nodes[n1][2] + ref->z));
+                pp = calc_tex_coords(nodes[n1], ref);
+                xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
-		xglTexCoord2f(calc_lon(nodes[n2][0] + ref->x,
-				       nodes[n2][1] + ref->y,
-				       nodes[n2][2] + ref->z),
-			      calc_lat(nodes[n2][0] + ref->x,
-				       nodes[n2][1] + ref->y,
-				       nodes[n2][2] + ref->z));
+
+                pp = calc_tex_coords(nodes[n2], ref);
+                xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
-		xglTexCoord2f(calc_lon(nodes[n3][0] + ref->x,
-				       nodes[n3][1] + ref->y,
-				       nodes[n3][2] + ref->z),
-			      calc_lat(nodes[n3][0] + ref->x,
-				       nodes[n3][1] + ref->y,
-				       nodes[n3][2] + ref->z));
+
+                pp = calc_tex_coords(nodes[n3], ref);
+                xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    }
 
@@ -327,12 +305,8 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
-		xglTexCoord2f(calc_lon(nodes[n4][0] + ref->x,
-				       nodes[n4][1] + ref->y,
-				       nodes[n4][2] + ref->z),
-			      calc_lat(nodes[n4][0] + ref->x,
-				       nodes[n4][1] + ref->y,
-				       nodes[n4][2] + ref->z));
+		pp = calc_tex_coords(nodes[n4], ref);
+                xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n4][0], nodes[n4][1], nodes[n4][2]);
 
 		odd = 1 - odd;
@@ -355,30 +329,18 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
             xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    xglTexCoord2f(calc_lon(nodes[n1][0] + ref->x,
-				   nodes[n1][1] + ref->y,
-				   nodes[n1][2] + ref->z),
-			  calc_lat(nodes[n1][0] + ref->x,
-				   nodes[n1][1] + ref->y,
-				   nodes[n1][2] + ref->z));
-	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
+	    pp = calc_tex_coords(nodes[n1], ref);
+	    xglTexCoord2f(pp.lon, pp.lat);
+ 	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
             xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-	    xglTexCoord2f(calc_lon(nodes[n2][0] + ref->x,
-				   nodes[n2][1] + ref->y,
-				   nodes[n2][2] + ref->z),
-			  calc_lat(nodes[n2][0] + ref->x,
-				   nodes[n2][1] + ref->y,
-				   nodes[n2][2] + ref->z));
+            pp = calc_tex_coords(nodes[n2], ref);
+            xglTexCoord2f(pp.lon, pp.lat);
 	    xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 		
             xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-	    xglTexCoord2f(calc_lon(nodes[n3][0] + ref->x,
-				   nodes[n3][1] + ref->y,
-				   nodes[n3][2] + ref->z),
-			  calc_lat(nodes[n3][0] + ref->x,
-				   nodes[n3][1] + ref->y,
-				   nodes[n3][2] + ref->z));
+            pp = calc_tex_coords(nodes[n3], ref);
+            xglTexCoord2f(pp.lon, pp.lat);
 	    xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
@@ -406,12 +368,8 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		xglNormal3dv(normal);
 	    }
 
-	    xglTexCoord2f(calc_lon(nodes[n1][0] + ref->x,
-				   nodes[n1][1] + ref->y,
-				   nodes[n1][2] + ref->z),
-			  calc_lat(nodes[n1][0] + ref->x,
-				   nodes[n1][1] + ref->y,
-				   nodes[n1][2] + ref->z));
+            pp = calc_tex_coords(nodes[n1], ref);
+            xglTexCoord2f(pp.lon, pp.lat);
 	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
     
 	    odd = 1 - odd;
@@ -438,12 +396,8 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		    xglNormal3dv(normal);
 		}
 
-		xglTexCoord2f(calc_lon(nodes[n2][0] + ref->x,
-				       nodes[n2][1] + ref->y,
-				       nodes[n2][2] + ref->z),
-			      calc_lat(nodes[n2][0] + ref->x,
-				       nodes[n2][1] + ref->y,
-				       nodes[n2][2] + ref->z));
+		pp = calc_tex_coords(nodes[n2], ref);
+		xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
 		odd = 1 -odd;
@@ -494,9 +448,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/30 12:35:28  curt
-/* Added a command line rendering option specify smooth/flat shading.
+/* Revision 1.2  1998/05/02 01:52:14  curt
+/* Playing around with texture coordinates.
 /*
+ * Revision 1.1  1998/04/30 12:35:28  curt
+ * Added a command line rendering option specify smooth/flat shading.
+ *
  * Revision 1.35  1998/04/28 21:43:26  curt
  * Wrapped zlib calls up so we can conditionally comment out zlib support.
  *

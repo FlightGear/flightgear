@@ -72,7 +72,7 @@ int fgSceneryInit( void ) {
     path[0] = '\0';
     strcat(path, g->root_dir);
     strcat(path, "/Textures/");
-    strcat(path, "forest.rgb");
+    strcat(path, "desert.rgb");
 
     // Try uncompressed
     if ( (texbuf = read_rgb_texture(path, &width, &height)) == NULL ) {
@@ -123,9 +123,12 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/30 12:35:30  curt
-/* Added a command line rendering option specify smooth/flat shading.
+/* Revision 1.2  1998/05/02 01:52:16  curt
+/* Playing around with texture coordinates.
 /*
+ * Revision 1.1  1998/04/30 12:35:30  curt
+ * Added a command line rendering option specify smooth/flat shading.
+ *
  * Revision 1.42  1998/04/28 21:43:27  curt
  * Wrapped zlib calls up so we can conditionally comment out zlib support.
  *

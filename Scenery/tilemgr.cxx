@@ -185,7 +185,7 @@ int fgTileMgrUpdate( void ) {
 void fgTileMgrRender( void ) {
     fgFLIGHT *f;
     struct fgBUCKET p;
-    struct fgCartesianPoint local_ref;
+    fgCartesianPoint3d local_ref;
     GLint display_list;
     int i;
     int index;
@@ -221,9 +221,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/30 12:35:32  curt
-/* Added a command line rendering option specify smooth/flat shading.
+/* Revision 1.6  1998/05/02 01:52:18  curt
+/* Playing around with texture coordinates.
 /*
+ * Revision 1.5  1998/04/30 12:35:32  curt
+ * Added a command line rendering option specify smooth/flat shading.
+ *
  * Revision 1.4  1998/04/27 03:30:14  curt
  * Minor transformation adjustments to try to keep scenery tiles closer to
  * (0, 0, 0)  GLfloats run out of precision at the distances we need to model
