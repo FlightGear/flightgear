@@ -197,6 +197,7 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/skyblend", true);
     fgSetBool("/sim/rendering/textures", true);
     fgSetBool("/sim/rendering/wireframe", false);
+    fgSetBool("/sim/rendering/distance-attenuation", false);
     fgSetInt("/sim/startup/xsize", 800);
     fgSetInt("/sim/startup/ysize", 600);
     fgSetInt("/sim/rendering/bits-per-pixel", 16);
@@ -797,6 +798,10 @@ parse_option (const string& arg)
 	fgSetString("/sim/rendering/fog", "fastest");
     } else if ( arg == "--fog-nicest" ) {
 	fgSetString("/sim/fog", "nicest");
+    } else if ( arg == "--disable-distance-attenuation" ) {
+      fgSetBool("/environment/distance-attenuation", false);
+    } else if ( arg == "--enable-distance-attenuation" ) {
+      fgSetBool("/environment/distance-attenuation", true);
     } else if ( arg == "--disable-clouds" ) {
         fgSetBool("/environment/clouds/status", false);
     } else if ( arg == "--enable-clouds" ) {

@@ -137,9 +137,7 @@ SG_USING_STD(endl);
 
 #include "fg_commands.hxx"
 
-// #define FG_EXPERIMENTAL_LIGHTING
-#ifdef FG_EXPERIMENTAL_LIGHTING
-#  ifdef WIN32
+#ifdef WIN32
   typedef void (APIENTRY * PFNGLPOINTPARAMETERFEXTPROC)(GLenum pname,
                                                         GLfloat param);
   typedef void (APIENTRY * PFNGLPOINTPARAMETERFVEXTPROC)(GLenum pname,
@@ -147,7 +145,7 @@ SG_USING_STD(endl);
 
   PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
   PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
-#  elif linux
+#elif linux
   #include <GL/glx.h>
 
   typedef void (* OpenGLFuncExt)(GLenum pname, GLfloat param);
@@ -155,7 +153,6 @@ SG_USING_STD(endl);
 
   OpenGLFuncExt glPointParameterfEXT = 0;
   OpenGLFuncExtv glPointParameterfvEXT = 0;
-#  endif
 #endif
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
@@ -741,11 +738,12 @@ void fgRenderFrame() {
 	glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-#ifdef FG_EXPERIMENTAL_LIGHTING
         // Enable states for drawing points with GL_extension
         glEnable(GL_POINT_SMOOTH);
 
-	if (glutExtensionSupported("GL_EXT_point_parameters")) {
+        if ( fgGetBool("/sim/rendering/distance-attenuation")
+	     && glutExtensionSupported("GL_EXT_point_parameters") )
+        {
             float quadratic[3] = {1.0, 0.001, 0.0000001};
             // makes the points fade as they move away
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
@@ -755,7 +753,6 @@ void fgRenderFrame() {
 
         // blending function for runway lights
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
-#endif
 
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
         glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
@@ -788,15 +785,15 @@ void fgRenderFrame() {
 	//_frame_count++;
 
 
-#ifdef FG_EXPERIMENTAL_LIGHTING
-	if (glutExtensionSupported("GL_EXT_point_parameters")) {
+        if ( fgGetBool("/sim/rendering/distance-attenuation")
+	     && glutExtensionSupported("GL_EXT_point_parameters") )
+        {
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
                                   default_attenuation);
 	}
 
         glPointSize(1.0);
         glDisable(GL_POINT_SMOOTH);
-#endif
 
         // draw ground lighting
 	glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
@@ -1595,20 +1592,21 @@ static bool fgMainInit( int argc, char **argv ) {
     glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
 #endif
 
-#ifdef FG_EXPERIMENTAL_LIGHTING
             // get the address of our OpenGL extensions
-#  ifdef WIN32
-    glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
-        wglGetProcAddress("glPointParameterfEXT");
-    glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
-        wglGetProcAddress("glPointParameterfvEXT");
-#  elif linux
-    glPointParameterfEXT = (OpenGLFuncExt) 
-        glXGetProcAddressARB((GLubyte *)"glPointParameterfEXT");
-    glPointParameterfvEXT = (OpenGLFuncExtv) 
-        glXGetProcAddressARB((GLubyte *)"glPointParameterfvEXT");
-#  endif
+    if ( fgGetBool("/sim/rendering/distance-attenuation") )
+    {
+#ifdef WIN32
+        glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
+            wglGetProcAddress("glPointParameterfEXT");
+        glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
+            wglGetProcAddress("glPointParameterfvEXT");
+#elif linux
+        glPointParameterfEXT = (OpenGLFuncExt) 
+            glXGetProcAddressARB((GLubyte *)"glPointParameterfEXT");
+        glPointParameterfvEXT = (OpenGLFuncExtv) 
+            glXGetProcAddressARB((GLubyte *)"glPointParameterfvEXT");
 #endif
+   }
 
     // based on the requested presets, calculate the true starting
     // lon, lat
