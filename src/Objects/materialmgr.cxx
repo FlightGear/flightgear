@@ -177,54 +177,73 @@ fgMATERIAL_MGR::load_lib ( void )
 	    tex_file.append( m.get_texture_name() );
 	    tex_file.concat( ".rgb" );
 
-	    ssgSimpleState *state = new ssgSimpleState;
+	    ssgStateSelector *state = new ssgStateSelector(2);
+	    state->setStep(0, new ssgSimpleState); // textured
+	    state->setStep(1, new ssgSimpleState); // untextured
+
+	    // Set up the textured state
+	    state->selectStep(0);
 	    state->enable( GL_LIGHTING );
 	    if ( current_options.get_shading() == 1 ) {
 		state->setShadeModel( GL_SMOOTH );
 	    } else {
 		state->setShadeModel( GL_FLAT );
 	    }
-	    state->enable ( GL_CULL_FACE      ) ;
-	    if ( current_options.get_textures() ) {
-		state->enable( GL_TEXTURE_2D );
-		state->setTexture( (char *)tex_file.c_str() );
-		state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
-		state->setMaterial ( GL_SPECULAR, 0, 0, 0, 0 ) ;
-		state->setMaterial ( GL_EMISSION, 0, 0, 0, 0 ) ;
-	    } else {
-		state->disable( GL_TEXTURE_2D );
-		state->disable( GL_COLOR_MATERIAL );
-		GLfloat *ambient, *diffuse, *specular, *emission;
-		ambient = m.get_ambient();
-		diffuse = m.get_diffuse();
-		specular = m.get_specular();
-		emission = m.get_emission();
 
-		/* cout << "ambient = " << ambient[0] << "," << ambient[1] 
-		     << "," << ambient[2] << endl; */
-		state->setMaterial ( GL_AMBIENT, 
-				     ambient[0], ambient[1], 
-				     ambient[2], ambient[3] ) ;
-		state->setMaterial ( GL_DIFFUSE, 
-				     diffuse[0], diffuse[1], 
-				     diffuse[2], diffuse[3] ) ;
-		state->setMaterial ( GL_SPECULAR, 
-				     specular[0], specular[1], 
-				     specular[2], specular[3] ) ;
-		state->setMaterial ( GL_EMISSION, 
-				     emission[0], emission[1], 
-				     emission[2], emission[3] ) ;
-    }
+	    state->enable ( GL_CULL_FACE      ) ;
+	    state->enable( GL_TEXTURE_2D );
+	    state->setTexture( (char *)tex_file.c_str() );
+	    state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
+	    state->setMaterial ( GL_SPECULAR, 0, 0, 0, 0 ) ;
+	    state->setMaterial ( GL_EMISSION, 0, 0, 0, 0 ) ;
+
+				// Set up the coloured state
+	    state->selectStep(1);
+	    state->enable( GL_LIGHTING );
+	    if ( current_options.get_shading() == 1 ) {
+		state->setShadeModel( GL_SMOOTH );
+	    } else {
+	        state->setShadeModel( GL_FLAT );
+	    }
+
+	    state->enable ( GL_CULL_FACE      ) ;
+	    state->disable( GL_TEXTURE_2D );
+	    state->disable( GL_COLOR_MATERIAL );
+	    GLfloat *ambient, *diffuse, *specular, *emission;
+	    ambient = m.get_ambient();
+	    diffuse = m.get_diffuse();
+	    specular = m.get_specular();
+	    emission = m.get_emission();
+
+	    /* cout << "ambient = " << ambient[0] << "," << ambient[1] 
+	       << "," << ambient[2] << endl; */
+	    state->setMaterial ( GL_AMBIENT, 
+				   ambient[0], ambient[1], 
+				   ambient[2], ambient[3] ) ;
+	    state->setMaterial ( GL_DIFFUSE, 
+				   diffuse[0], diffuse[1], 
+				   diffuse[2], diffuse[3] ) ;
+	    state->setMaterial ( GL_SPECULAR, 
+				   specular[0], specular[1], 
+				   specular[2], specular[3] ) ;
+	    state->setMaterial ( GL_EMISSION, 
+				   emission[0], emission[1], 
+				   emission[2], emission[3] ) ;
+
+				// Choose the appropriate starting state.
+	    if ( current_options.get_textures() ) {
+	        state->selectStep(0);
+	    } else {
+	        state->selectStep(1);
+	    }
+
 	    m_slot.set_state( state );
 
 	    material_mgr.material_map[material_name] = m_slot;
 	}
     }
 
-    if ( current_options.get_textures() ) {
-	materials_loaded = true;
-    }
-
+    materials_loaded = true;
     return(1);
 }
 
@@ -255,6 +274,21 @@ fgMATERIAL_MGR::find( const string& material, FGMaterialSlot*& mtl_ptr )
 
 // Destructor
 fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
+}
+
+
+// Set the step for all of the state selectors in the material slots
+void
+fgMATERIAL_MGR::set_step ( int step )
+{
+    // container::iterator it = begin();
+    for (container::iterator it = begin(); it != end(); it++) {
+      const string &key = it->first;
+      FG_LOG( FG_GENERAL, FG_INFO,
+	      "Updating material " << key << " to step " << step );
+      FGMaterialSlot &slot = it->second;
+      slot.get_state()->selectStep(step);
+    }
 }
 
 

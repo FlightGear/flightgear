@@ -83,7 +83,7 @@ private:
     // size_t list_size;
 
     // ssg stage structure
-    ssgSimpleState *state;
+    ssgStateSelector *state;
     bool state_valid;
 
 public:
@@ -115,8 +115,8 @@ public:
     inline void set_m( FGMaterial new_m ) { m = new_m; }
 
     // ssg state
-    inline ssgSimpleState *get_state() { return state; }
-    inline void set_state( ssgSimpleState *s ) { state = s; }
+    inline ssgStateSelector *get_state() { return state; }
+    inline void set_state( ssgStateSelector *s ) { state = s; }
     inline bool get_state_valid() const { return state_valid; }
     inline void set_state_valid( bool flag ) { state_valid = flag; }
 };
@@ -152,6 +152,8 @@ public:
     bool find( const string& material, FGMaterialSlot*& mtl_ptr );
 
     void render_fragments();
+
+    void set_step (int step);
 
     // Destructor
     ~fgMATERIAL_MGR ( void );

@@ -451,12 +451,10 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( material_mgr.loaded() ) {
  	        if (current_options.get_textures()) {
  		    current_options.set_textures(false);
- 		    glDisable(GL_TEXTURE_2D);
- 		    ssgOverrideTexture(true);
+		    material_mgr.set_step(1);
  		} else {
 		    current_options.set_textures(true);
- 		    glEnable(GL_TEXTURE_2D);
- 		    ssgOverrideTexture(false);
+		    material_mgr.set_step(0);
 		}
 		FG_LOG( FG_INPUT, FG_INFO, "Toggling texture" );
 	    } else {
