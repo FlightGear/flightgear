@@ -417,19 +417,19 @@ FGInput::doMouseMotion (int x, int y)
 				// Constrain the mouse if requested
   if (mode.constrained) {
     bool need_warp = false;
-    if (x < 0) {
-      x = xsize - 1;
+    if (x <= 0) {
+      x = xsize - 2;
       need_warp = true;
-    } else if (x >= xsize) {
-      x = 0;
+    } else if (x >= (xsize-1)) {
+      x = 1;
       need_warp = true;
     }
 
-    if (y < 0) {
-      y = ysize - 1;
+    if (y <= 0) {
+      y = ysize - 2;
       need_warp = true;
-    } else if (y >= ysize) {
-      y = 0;
+    } else if (y >= (ysize-1)) {
+      y = 1;
       need_warp = true;
     }
 
@@ -765,6 +765,8 @@ FGInput::_update_mouse ()
     m.current_mode = mode;
     if (mode >= 0 && mode < m.nModes) {
       glutSetCursor(m.modes[mode].cursor);
+      glutWarpPointer(fgGetInt("/sim/startup/xsize", 800) / 2,
+		      fgGetInt("/sim/startup/ysize", 600) / 2);
     } else {
       SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
       glutSetCursor(GLUT_CURSOR_INHERIT);
