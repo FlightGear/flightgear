@@ -105,6 +105,7 @@ bool FGNewCache::exists( const SGBucket& b ) const {
 }
 
 
+#if 0
 // Ensure at least one entry is free in the cache
 bool FGNewCache::make_space() {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "Make space in cache" );
@@ -169,6 +170,7 @@ bool FGNewCache::make_space() {
             "FGNewCache::make_space()." );
     return false;
 }
+#endif
 
 
 // Return the index of the oldest tile in the cache, return -1 if
@@ -246,18 +248,12 @@ void FGNewCache::clear_cache() {
 bool FGNewCache::insert_tile( FGTileEntry *e ) {
     // set time of insertion for tracking age of tiles...
     e->set_timestamp(globals->get_sim_time_sec());
-    // clear out a distant entry in the cache if needed.
-    if ( make_space() ) {
-        // register it in the cache
-        long tile_index = e->get_tile_bucket().gen_index();
-        tile_cache[tile_index] = e;
 
-        return true;
-    } else {
-        // failed to find cache space
+    // register it in the cache
+    long tile_index = e->get_tile_bucket().gen_index();
+    tile_cache[tile_index] = e;
 
-        return false;
-    }
+    return true;
 }
 
 

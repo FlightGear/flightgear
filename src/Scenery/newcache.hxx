@@ -82,8 +82,10 @@ public:
     // Check if the specified "bucket" exists in the cache
     bool exists( const SGBucket& b ) const;
 
+#if 0
     // Ensure at least one entry is free in the cache
     bool make_space();
+#endif
 
     // Return the index of the oldest tile in the cache, return -1 if
     // nothing available to be removed.

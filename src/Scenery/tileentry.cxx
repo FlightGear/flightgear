@@ -698,21 +698,17 @@ static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
                 int result = fgPartialFreeSSGtree( (ssgBranch *)kid, n );
                 num_deletes += result;
                 n -= result;
-                if ( kid->getNumKids() == 0 ) {
-                    b->removeKid(i);
-                    num_deletes++;
-                    n--;
-                }
                 if ( n < 0 ) {
                     break;
                 }
             } else {
                 b->removeKid(i);
                 num_deletes++;
+                n--;
             }
         }
         // remove the parent if it is empty
-        if ( b->getNumKids() < 0 ) {
+        if ( b->getNumKids() == 0 ) {
             ssgDeRefDelete( b );
             num_deletes++;
             n--;
@@ -731,6 +727,8 @@ bool FGTileEntry::free_tile() {
     SG_LOG( SG_TERRAIN, SG_DEBUG,
 	    "FREEING TILE = (" << tile_bucket << ")" );
 
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "(start) free_tracker = " << free_tracker );
+    
     if ( !(free_tracker & NODES) ) {
         SG_LOG( SG_TERRAIN, SG_DEBUG,
                 "  deleting " << nodes.size() << " nodes" );
@@ -791,6 +789,8 @@ bool FGTileEntry::free_tile() {
     } else {
         return true;
     }
+
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "(end) free_tracker = " << free_tracker );
 
     // if we fall down to here, we still have work todo, return false
     return false;
