@@ -219,6 +219,8 @@ void NewHeading(puObject *cb)
 {
     //	string ApHeadingLabel( "Enter New Heading" );
     //	ApHeadingDialogMessage  -> setLabel(ApHeadingLabel.c_str());
+    float heading = current_autopilot->get_DGTargetHeading();
+    ApHeadingDialogInput   ->    setValue ( heading );
     ApHeadingDialogInput    -> acceptInput();
     FG_PUSH_PUI_DIALOG( ApHeadingDialog );
 }
@@ -291,6 +293,8 @@ void ApAltitudeDialog_OK (puObject *me)
 
 void NewAltitude(puObject *cb)
 {
+    float altitude = current_autopilot->get_TargetAltitude() * SG_METER_TO_FEET;
+    ApAltitudeDialogInput -> setValue( altitude );
     ApAltitudeDialogInput -> acceptInput();
     FG_PUSH_PUI_DIALOG( ApAltitudeDialog );
 }
