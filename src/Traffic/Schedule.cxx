@@ -258,20 +258,20 @@ void FGAISchedule::update(time_t now)
 	      string flightPlanName = dep->id + string("-") + arr->id + 
 		string(".xml");
 
-	      FGAIFlightPlan* f;
-	      f = new FGAIFlightPlan(flightPlanName, 
-				     lat, 
-				     lon,
-				     i->getCruiseAlt() * 100, // convert from FL to feet
-				     //speed, 
-				     450,
-				     courseToDest,
-				     dep,
-				     arr);
+              FGAIModelEntity entity;
+
+              entity.m_class = "jet_transport";
+              entity.path = modelPath.c_str();
+              entity.flightplan = flightPlanName.c_str();
+              entity.latitude = lat;
+              entity.longitude = lon;
+              entity.altitude = i->getCruiseAlt() * 100; // convert from FL to feet
+              entity.speed = 450;
+	      entity.fp = new FGAIFlightPlan(&entity, courseToDest, dep, arr);
+
 	      // Fixme: A non-existent model path results in an
 	      // abort, due to an unhandled exeption, in fg main loop.
-	      AIManagerRef = aimgr->createAircraft("jet_transport", 
-					       modelPath, f); 
+	      AIManagerRef = aimgr->createAircraft( &entity );
 	      //cerr << "Created: " << AIManagerRef << endl;
 	    }
 	  return;

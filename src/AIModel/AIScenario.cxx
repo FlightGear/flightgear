@@ -17,7 +17,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-#include "AIScenario.hxx"
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
@@ -26,8 +25,12 @@
 #  define exception c_exception
 #endif
 #include <simgear/props/props.hxx>
+
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+
+#include "AIScenario.hxx"
+
 
 
 FGAIScenario::FGAIScenario(string filename)
@@ -49,13 +52,13 @@ FGAIScenario::FGAIScenario(string filename)
   SGPropertyNode * node = root.getNode("scenario");
   for (i = 0; i < node->nChildren(); i++) { 
      //cout << "Reading entry " << i << endl;        
-     entry* en = new entry;
+     FGAIModelEntity* en = new FGAIModelEntity;
      entries.push_back( en );
      SGPropertyNode * entry_node = node->getChild(i);
      en->callsign       = entry_node->getStringValue("callsign", "none");
-     en->aitype         = entry_node->getStringValue("type", "aircraft");
-     en->aircraft_class = entry_node->getStringValue("class", "jet_transport");
-     en->model_path     = entry_node->getStringValue("model", "Models/Geometry/glider.ac");
+     en->m_type         = entry_node->getStringValue("type", "aircraft");
+     en->m_class        = entry_node->getStringValue("class", "jet_transport");
+     en->path           = entry_node->getStringValue("model", "Models/Geometry/glider.ac");
      en->flightplan     = entry_node->getStringValue("flightplan", "");
      en->repeat         = entry_node->getDoubleValue("repeat", 0.0); 
      en->latitude       = entry_node->getDoubleValue("latitude", 0.0); 
@@ -88,7 +91,7 @@ FGAIScenario::~FGAIScenario()
 }
 
 
-FGAIScenario::entry*
+FGAIModelEntity*
 FGAIScenario::getNextEntry( void )
 {
   if (entries.size() == 0) return 0;

@@ -25,6 +25,8 @@
 
 #include <Airports/simple.hxx>
 
+#include "AIBase.hxx"
+
 SG_USING_STD(vector);
 SG_USING_STD(string);
 
@@ -47,11 +49,7 @@ public:
   } waypoint;
 
    FGAIFlightPlan(string filename);
-  FGAIFlightPlan(string filename, 
-		 double lat, 
-		 double lon,
-		 double alt, 
-		 double speed, 
+  FGAIFlightPlan(FGAIModelEntity *entity,
 		 double course,
 		 FGAirport *dep,
 		 FGAirport *arr);

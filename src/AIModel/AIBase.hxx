@@ -27,11 +27,44 @@
 #include <simgear/scene/model/placement.hxx>
 
 #include <Main/fg_props.hxx>
-#include "AIFlightPlan.hxx"
 
 SG_USING_STD(string);
 
 class FGAIManager;
+class FGAIFlightPlan;
+
+
+typedef struct {
+   string callsign;
+
+   // can be aircraft, ship, storm, thermal or ballistic
+   const char* m_type;
+   const char* m_class;
+   const char* path;
+   const char* flightplan;
+
+   FGAIFlightPlan *fp;
+
+   double repeat;             // in seconds
+   double latitude;           // used if no flightplan defined
+   double longitude;          // used if no flightplan defined
+   double altitude;           // used if no flightplan defined
+   double speed;              // used if no flightplan defined
+   double heading;            // used if no flightplan defined
+   double roll;               // used if no flightplan defined
+   double azimuth;            // used by ballistic objects
+   double elevation;          // used by ballistic objects
+   double rudder;             // used by ship objects
+   double strength;           // used by thermal objects
+   double diameter;           // used by thermal objects
+   double eda;                // used by ballistic objects
+   double life;               // life span in seconds
+   double buoyancy;           // acceleration in ft per sec2
+   double wind_from_east;     // in feet per second
+   double wind_from_north;    // in feet per second
+   bool wind;
+} FGAIModelEntity;
+
 
 class FGAIBase {
 

@@ -13,7 +13,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <AIModel/AIManager.hxx>
+#include <AIModel/AIBase.hxx>
 #include <vector>
 #include <string>
 SG_USING_STD(vector);

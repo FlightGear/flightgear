@@ -57,6 +57,8 @@ FGAIBase::FGAIBase() {
     _otype = otNull;
     index = 0;
     fp = (FGAIFlightPlan*)0;
+    delete_me = false;
+    manager = NULL;
 }
 
 FGAIBase::~FGAIBase() {
@@ -89,8 +91,10 @@ void FGAIBase::Transform() {
 bool FGAIBase::init() {
 
    SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
+
    index = manager->getNum(_otype) - 1;
    props = root->getNode(_type_str.c_str(), index, true);
+
    if (model_path != "") {
       model = sgLoad3DModel( globals->get_fg_root(),
 	                     model_path.c_str(),

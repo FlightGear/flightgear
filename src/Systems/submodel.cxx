@@ -92,11 +92,23 @@ SubmodelSystem::release (submodel* sm, double dt)
   transform(sm);
 
   //cout << "Creating a submodel." << endl; 
-  int rval = ai->createBallistic( sm->model, IC.lat, IC.lon, IC.alt, IC.azimuth,
-                                  IC.elevation, IC.speed, 
-				  sm->drag_area, sm->life,
-				  sm->buoyancy,
-				  IC.wind_from_east, IC.wind_from_north, sm->wind);
+  FGAIModelEntity entity;
+
+  entity.path = sm->model.c_str();
+  entity.latitude = IC.lat;
+  entity.longitude = IC.lon;
+  entity.altitude = IC.alt;
+  entity.azimuth = IC.azimuth;
+  entity.elevation = IC.elevation;
+  entity.speed = IC.speed;
+  entity.eda = sm->drag_area;
+  entity.life = sm->life;
+  entity.buoyancy = sm->buoyancy;
+  entity.wind_from_east = IC.wind_from_east;
+  entity.wind_from_north = IC.wind_from_north;
+  entity.wind = sm->wind;
+  int rval = ai->createBallistic( &entity );
+
   //cout << "Submodel created." << endl;
   if (sm->count > 0) (sm->count)--; 
 

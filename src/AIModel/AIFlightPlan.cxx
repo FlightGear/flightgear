@@ -89,11 +89,7 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
 // Position computed by the traffic manager, as well
 // as setting speeds and altitude computed by the
 // traffic manager. 
-FGAIFlightPlan::FGAIFlightPlan(string filename, 
-			       double lat, 
-			       double lon,
-			       double alt,
-			       double speed,
+FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 			       double course, 
 			       FGAirport *dep,
 			       FGAirport *arr)
@@ -101,7 +97,8 @@ FGAIFlightPlan::FGAIFlightPlan(string filename,
   bool useInitialWayPoint = true;
   bool useCurrentWayPoint = false;
   SGPath path( globals->get_fg_root() );
-  path.append( ("/Data/AI/FlightPlans/" + filename).c_str() );
+  path.append( "/Data/AI/FlightPlans" );
+  path.append( entity->path );
   SGPropertyNode root;
 
   try {
@@ -135,17 +132,17 @@ FGAIFlightPlan::FGAIFlightPlan(string filename,
     // cout << path.str() << endl;
     // cout << "Trying to create this plan dynamically" << endl;
     // cout << "Route from " << dep->id << " to " << arr->id << endl;
-       create(dep,arr, alt, speed);
+       create(dep,arr, entity->altitude, entity->speed);
        // Now that we have dynamically created a flight plan,
        // we need to add some code that pops any waypoints already past.
        //return;
   }
   waypoint* init_waypoint   = new waypoint;
   init_waypoint->name       = string("initial position");
-  init_waypoint->latitude   = lat;
-  init_waypoint->longitude  = lon;
-  init_waypoint->altitude   = alt;
-  init_waypoint->speed      = speed;
+  init_waypoint->latitude   = entity->latitude;
+  init_waypoint->longitude  = entity->longitude;
+  init_waypoint->altitude   = entity->altitude;
+  init_waypoint->speed      = entity->speed;
   init_waypoint->crossat    = - 10000;
   init_waypoint->gear_down  = false;
   init_waypoint->flaps_down = false;

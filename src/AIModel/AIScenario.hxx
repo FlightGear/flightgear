@@ -20,8 +20,12 @@
 #define _FG_AISCENARIO_HXX
 
 #include <simgear/compiler.h>
+
 #include <vector>
 #include <string>
+
+#include "AIBase.hxx"
+
 SG_USING_STD(vector);
 SG_USING_STD(string);
 
@@ -30,41 +34,15 @@ class FGAIScenario {
 
 public:
 
-  typedef struct {
-   string callsign;
-   string aitype;       // can be aircraft, ship, storm, thermal, ballistic, smoke
-   string aircraft_class;
-   string model_path;
-   string flightplan;
-   double repeat;             // in seconds
-   double latitude;           // used if no flightplan defined
-   double longitude;          // used if no flightplan defined
-   double altitude;           // used if no flightplan defined
-   double speed;              // used if no flightplan defined
-   double heading;            // used if no flightplan defined
-   double roll;               // used if no flightplan defined
-   double azimuth;            // used by ballistic objects
-   double elevation;          // used by ballistic objects
-   double rudder;             // used by ship objects 
-   double strength;           // used by thermal objects
-   double diameter;           // used by thermal objects
-   double eda;                // used by ballistic objects
-   double life;               // life span in seconds
-   double buoyancy;           // acceleration in ft per sec2
-   double wind_from_east;     // in feet per second
-   double wind_from_north;    // in feet per second
-   bool wind;
-  } entry;
-
    FGAIScenario(string filename);
    ~FGAIScenario();
 
-   entry* getNextEntry( void );
+   FGAIModelEntity* getNextEntry( void );
    int nEntries( void );
 
 private:
 
-    typedef vector <entry*> entry_vector_type;
+    typedef vector <FGAIModelEntity*> entry_vector_type;
     typedef entry_vector_type::iterator entry_vector_iterator;
 
     entry_vector_type       entries;

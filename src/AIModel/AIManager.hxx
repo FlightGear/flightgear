@@ -23,12 +23,15 @@
 #ifndef _FG_AIMANAGER_HXX
 #define _FG_AIMANAGER_HXX
 
-#include <simgear/structure/subsystem_mgr.hxx>
-#include <Main/fg_props.hxx>
 #include <list>
-#include "AIBase.hxx"
-#include "AIScenario.hxx"
-#include "AIFlightPlan.hxx"
+
+#include <simgear/structure/subsystem_mgr.hxx>
+
+#include <Main/fg_props.hxx>
+
+#include <AIModel/AIBase.hxx>
+#include <AIModel/AIScenario.hxx>
+#include <AIModel/AIFlightPlan.hxx>
 
 SG_USING_STD(list);
 class FGAIThermal;
@@ -67,70 +70,12 @@ public:
     int assignID();
     void freeID(int ID);
 
-    int createAircraft( string model_class, // see FGAIAircraft.hxx for possible classes
-                        string path,        // path to exterior model
-                        double latitude,    // in degrees -90 to 90
-                        double longitude,   // in degrees -180 to 180
-                        double altitude,    // in feet
-                        double heading,     // true heading in degrees
-                        double speed,       // in knots true airspeed (KTAS)    
-                        double roll = 0 );  // in degrees
+    int createBallistic( FGAIModelEntity *entity );
+    int createAircraft( FGAIModelEntity *entity );
+    int createThermal( FGAIModelEntity *entity );
+    int createStorm( FGAIModelEntity *entity );
+    int createShip( FGAIModelEntity *entity );
 
-    int createAircraft( string model_class, // see FGAIAircraft.hxx for possible classes
-                        string path,        // path to exterior model
-                        FGAIFlightPlan *flightplan );
-
-    int createShip(     string path,        // path to exterior model
-                        double latitude,    // in degrees -90 to 90
-                        double longitude,   // in degrees -180 to 180
-                        double altitude,    // in feet  (ex. for a lake!)
-                        double heading,     // true heading in degrees
-                        double speed,       // in knots true
-                        double rudder );    // in degrees (right is positive)(0 to 5 works best)
-
-    int createShip(     string path,        // path to exterior model
-                        FGAIFlightPlan *flightplan );
-
-    int createBallistic( string path,           // path to exterior model
-                         double latitude,       // in degrees -90 to 90
-                         double longitude,      // in degrees -180 to 180
-                         double altitude,       // in feet
-                         double azimuth,        // in degrees (same as heading)
-                         double elevation,      // in degrees (same as pitch)
-                         double speed,          // in feet per second
-                         double eda,            // equivalent drag area, ft2
-                         double life,           // life span in seconds
-                         double buoyancy,       // acceleration due to buoyancy feet per second2
-                         double wind_from_east, // in feet per second
-						 double wind_from_north,  // in feet per second
-						 bool wind               // val
-						 );
-     
-    int createStorm( string path,        // path to exterior model
-                     double latitude,    // in degrees -90 to 90
-                     double longitude,   // in degrees -180 to 180
-                     double altitude,    // in feet
-                     double heading,     // true heading in degrees
-                     double speed );     // in knots true airspeed (KTAS)    
-
-    int createThermal( double latitude,    // in degrees -90 to 90
-                       double longitude,   // in degrees -180 to 180
-                       double strength,    // in feet per second
-                       double diameter );  // in feet
-
-    int createSmoke     ( string path,       // path to exterior model
-                         double latitude,   // in degrees -90 to 90
-                         double longitude,  // in degrees -180 to 180
-                         double altitude,   // in feet
-                         double azimuth,    // in degrees (same as heading)
-                         double elevation,  // in degrees (same as pitch)
-                         double speed,      // in feet per second
-                         double eda,        // equivalent drag area, ft2
-                        double life,        // life span in seconds
-                        double buoyancy    // acceleration due to buoyancy feet per second2
-                         );
-
-                 
     void destroyObject( int ID );
 
     inline double get_user_latitude() { return user_latitude; }
@@ -150,7 +95,7 @@ private:
     bool enabled;
     int numObjects;
     SGPropertyNode* root;
-    SGPropertyNode* wind_from_down;
+    SGPropertyNode* wind_from_down_node;
     string scenario_filename;
 
     double user_latitude;

@@ -53,7 +53,7 @@
 #include <simgear/xml/easyxml.hxx>
 
 #include <AIModel/AIFlightPlan.hxx>
-#include <AIModel/AIManager.hxx>
+#include <AIModel/AIBase.hxx>
 #include <Airports/simple.hxx>
 #include <Main/fg_init.hxx>   // That's pretty ugly, but I need fgFindAirportID
 

@@ -1,5 +1,5 @@
 // AIManager.cxx  Based on David Luff's AIMgr:
-// - a global management class for AI objects
+// - a global management type for AI objects
 //
 // Written by David Culp, started October 2003.
 // - davidculp2@comcast.net
@@ -40,6 +40,8 @@ FGAIManager::FGAIManager() {
   _dt = 0.0;
   dt_count = 9;
   scenario_filename = "";
+  ai_list.clear();
+  ids.clear();
 }
 
 FGAIManager::~FGAIManager() {
@@ -60,7 +62,7 @@ void FGAIManager::init() {
   if (!enabled)
       return;
 
-  wind_from_down = fgGetNode("/environment/wind-from-down-fps", true);
+  wind_from_down_node = fgGetNode("/environment/wind-from-down-fps", true);
  
   scenario_filename = root->getNode("scenario", true)->getStringValue();
 
@@ -114,7 +116,7 @@ void FGAIManager::update(double dt) {
                 }
                 ++ai_list_itr;
         }
-        wind_from_down->setDoubleValue( strength );
+        wind_from_down_node->setDoubleValue( strength );
 
 }
 
@@ -153,160 +155,117 @@ void FGAIManager::freeID( int ID ) {
     }  
 }
 
-int FGAIManager::createAircraft( string model_class, string path,
-              double latitude, double longitude, double altitude,
-              double heading, double speed, double roll ) {
+int FGAIManager::createAircraft( FGAIModelEntity *entity ) {
      
         FGAIAircraft* ai_plane = new FGAIAircraft(this);
         ai_list.push_back(ai_plane);
         ai_plane->setID( assignID() );
         ++numObjects;
-        if (model_class == "light") {
+        if (entity->m_class == "light") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
-        } else if (model_class == "ww2_fighter") {
+        } else if (entity->m_class == "ww2_fighter") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::WW2_FIGHTER]);
-        } else if (model_class ==  "jet_transport") {
+        } else if (entity->m_class ==  "jet_transport") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-        } else if (model_class == "jet_fighter") {
+        } else if (entity->m_class == "jet_fighter") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
-        } else if (model_class ==  "tanker") {
+        } else if (entity->m_class ==  "tanker") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
           ai_plane->SetTanker(true);
         } else {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         }
-        ai_plane->setHeading(heading);
-        ai_plane->setSpeed(speed);
-        ai_plane->setPath(path.c_str());
-        ai_plane->setAltitude(altitude);
-        ai_plane->setLongitude(longitude);
-        ai_plane->setLatitude(latitude);
-        ai_plane->setBank(roll);
-        ai_plane->init();
-        ai_plane->bind();
-        return ai_plane->getID();
-}
+        ai_plane->setHeading(entity->heading);
+        ai_plane->setSpeed(entity->speed);
+        ai_plane->setPath(entity->path);
+        ai_plane->setAltitude(entity->altitude);
+        ai_plane->setLongitude(entity->longitude);
+        ai_plane->setLatitude(entity->latitude);
+        ai_plane->setBank(entity->roll);
 
-
-int FGAIManager::createAircraft( string model_class, string path,
-              FGAIFlightPlan* flightplan ) {
-     
-        FGAIAircraft* ai_plane = new FGAIAircraft(this);
-        ai_list.push_back(ai_plane);
-        ai_plane->setID( assignID() );
-        ++numObjects;
-        if (model_class == "light") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
-        } else if (model_class == "ww2_fighter") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::WW2_FIGHTER]);
-        } else if (model_class ==  "jet_transport") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-        } else if (model_class == "jet_fighter") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
-        } else if (model_class ==  "tanker") {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
-          ai_plane->SetTanker(true);
-        } else {
-          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+        if ( entity->fp ) {
+          ai_plane->SetFlightPlan(entity->fp);
         }
-        ai_plane->setPath(path.c_str());
-        ai_plane->SetFlightPlan(flightplan);
+
         ai_plane->init();
         ai_plane->bind();
         return ai_plane->getID();
 }
 
-
-int FGAIManager::createShip( string path, double latitude, double longitude,
-                             double altitude, double heading, double speed,
-                             double rudder ) {
+int FGAIManager::createShip( FGAIModelEntity *entity ) {
 
         FGAIShip* ai_ship = new FGAIShip(this);
         ai_list.push_back(ai_ship);
         ai_ship->setID( assignID() );
         ++numObjects;
-        ai_ship->setHeading(heading);
-        ai_ship->setSpeed(speed);
-        ai_ship->setPath(path.c_str());
-        ai_ship->setAltitude(altitude);
-        ai_ship->setLongitude(longitude);
-        ai_ship->setLatitude(latitude);
-        ai_ship->setBank(rudder);
+        ai_ship->setHeading(entity->heading);
+        ai_ship->setSpeed(entity->speed);
+        ai_ship->setPath(entity->path);
+        ai_ship->setAltitude(entity->altitude);
+        ai_ship->setLongitude(entity->longitude);
+        ai_ship->setLatitude(entity->latitude);
+        ai_ship->setBank(entity->rudder);
+
+        if ( entity->fp ) {
+           ai_ship->setFlightPlan(entity->fp);
+        }
+
         ai_ship->init();
         ai_ship->bind();
         return ai_ship->getID();
 }
 
-int FGAIManager::createShip( string path, FGAIFlightPlan* flightplan ) {
-
-        FGAIShip* ai_ship = new FGAIShip(this);
-        ai_list.push_back(ai_ship);
-        ai_ship->setID( assignID() );
-        ++numObjects;
-        ai_ship->setPath(path.c_str());
-        ai_ship->setFlightPlan(flightplan); 
-        ai_ship->init();
-        ai_ship->bind();
-        return ai_ship->getID();
-}
-
-
-int FGAIManager::createBallistic( string path, double latitude, double longitude,
-                                  double altitude, double azimuth, double elevation,
-                                  double speed, double eda, double life, double buoyancy,
-								  double wind_from_east, double wind_from_north, bool wind ) {
+int FGAIManager::createBallistic( FGAIModelEntity *entity ) {
 
         FGAIBallistic* ai_ballistic = new FGAIBallistic(this);
         ai_list.push_back(ai_ballistic);
         ai_ballistic->setID( assignID() );    
         ++numObjects;
-        ai_ballistic->setAzimuth(azimuth);
-        ai_ballistic->setElevation(elevation);
-        ai_ballistic->setSpeed(speed);
-        ai_ballistic->setPath(path.c_str());
-        ai_ballistic->setAltitude(altitude);
-        ai_ballistic->setLongitude(longitude);
-        ai_ballistic->setLatitude(latitude);
-        ai_ballistic->setDragArea(eda);
-        ai_ballistic->setLife(life);
-        ai_ballistic->setBuoyancy(buoyancy);
-		ai_ballistic->setWind_from_east(wind_from_east);
-		ai_ballistic->setWind_from_north(wind_from_north);
-		ai_ballistic->setWind(wind);
+        ai_ballistic->setAzimuth(entity->azimuth);
+        ai_ballistic->setElevation(entity->elevation);
+        ai_ballistic->setSpeed(entity->speed);
+        ai_ballistic->setPath(entity->path);
+        ai_ballistic->setAltitude(entity->altitude);
+        ai_ballistic->setLongitude(entity->longitude);
+        ai_ballistic->setLatitude(entity->latitude);
+        ai_ballistic->setDragArea(entity->eda);
+        ai_ballistic->setLife(entity->life);
+        ai_ballistic->setBuoyancy(entity->buoyancy);
+	ai_ballistic->setWind_from_east(entity->wind_from_east);
+	ai_ballistic->setWind_from_north(entity->wind_from_north);
+	ai_ballistic->setWind(entity->wind);
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic->getID();
 }
 
-int FGAIManager::createStorm( string path, double latitude, double longitude,
-                             double altitude, double heading, double speed ) {
+int FGAIManager::createStorm( FGAIModelEntity *entity ) {
 
         FGAIStorm* ai_storm = new FGAIStorm(this);
         ai_list.push_back(ai_storm);
         ai_storm->setID( assignID() );
         ++numObjects;
-        ai_storm->setHeading(heading);
-        ai_storm->setSpeed(speed);
-        ai_storm->setPath(path.c_str());
-        ai_storm->setAltitude(altitude);
-        ai_storm->setLongitude(longitude);
-        ai_storm->setLatitude(latitude);
+        ai_storm->setHeading(entity->heading);
+        ai_storm->setSpeed(entity->speed);
+        ai_storm->setPath(entity->path);
+        ai_storm->setAltitude(entity->altitude);
+        ai_storm->setLongitude(entity->longitude);
+        ai_storm->setLatitude(entity->latitude);
         ai_storm->init();
         ai_storm->bind();
         return ai_storm->getID();
 }
 
-int FGAIManager::createThermal( double latitude, double longitude,
-                                double strength, double diameter ) {
+int FGAIManager::createThermal( FGAIModelEntity *entity ) {
 
         FGAIThermal* ai_thermal = new FGAIThermal(this);
         ai_list.push_back(ai_thermal);
         ai_thermal->setID( assignID() );
         ++numObjects;
-        ai_thermal->setLongitude(longitude);
-        ai_thermal->setLatitude(latitude);
-        ai_thermal->setMaxStrength(strength);
-        ai_thermal->setDiameter(diameter / 6076.11549);
+        ai_thermal->setLongitude(entity->longitude);
+        ai_thermal->setLatitude(entity->latitude);
+        ai_thermal->setMaxStrength(entity->strength);
+        ai_thermal->setDiameter(entity->diameter / 6076.11549);
         ai_thermal->init();
         ai_thermal->bind();
         return ai_thermal->getID();
@@ -355,43 +314,30 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 
 void FGAIManager::processScenario( string filename ) {
   FGAIScenario* s = new FGAIScenario( filename );
-  FGAIFlightPlan* f;
 
   for (int i=0;i<s->nEntries();i++) {
-    FGAIScenario::entry* en = s->getNextEntry();
-    f = 0;
-    if (en) {
-      if (en->flightplan != ""){
-        f = new FGAIFlightPlan( en->flightplan );
-      }  
-      if (en->aitype == "aircraft"){
-         if (f){
-           createAircraft( en->aircraft_class, en->model_path, f );
-         } else {
-           createAircraft( en->aircraft_class, en->model_path, en->latitude,
-                           en->longitude, en->altitude, en->heading,
-                           en->speed, en->roll );
-         } 
-      } else if (en->aitype == "ship"){
-         if (f){
-           createShip( en->model_path, f );
-         } else {
-           createShip( en->model_path, en->latitude,
-                           en->longitude, en->altitude, en->heading,
-                           en->speed, en->rudder );
-         } 
+    FGAIModelEntity* en = s->getNextEntry();
 
-      } else if (en->aitype == "storm"){
-        createStorm( en->model_path, en->latitude, en->longitude,
-                     en->altitude, en->heading, en->speed ); 
-      } else if (en->aitype == "thermal"){
-        createThermal( en->latitude, en->longitude, en->strength, 
-                       en->diameter );
-      } else if (en->aitype == "ballistic"){
-        createBallistic( en->model_path, en->latitude, en->longitude,
-                         en->altitude, en->azimuth, en->elevation, en->speed,
-                         en->eda, en->life, en->buoyancy, en->wind_from_east,
-						 en-> wind_from_north, en->wind);
+    if (en) {
+      en->fp = NULL;
+      if (en->flightplan != ""){
+        en->fp = new FGAIFlightPlan( en->flightplan );
+      }
+ 
+      if (en->m_class == "aircraft") {
+         createAircraft( en );
+
+      } else if (en->m_class == "ship") {
+           createShip( en );
+
+      } else if (en->m_class == "storm") {
+        createStorm( en );
+
+      } else if (en->m_class == "thermal") {
+        createThermal( en );
+
+      } else if (en->m_class == "ballistic") {
+        createBallistic( en );
       }      
     }
   }
