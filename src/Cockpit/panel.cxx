@@ -165,8 +165,8 @@ FGCroppedTexture::getTexture ()
 
 FGPanel * current_panel = NULL;
 static fntRenderer text_renderer;
-static fntTexFont *default_font;
-static fntTexFont *led_font;
+static fntTexFont *default_font = 0;
+static fntTexFont *led_font = 0;
 
 /**
  * Constructor.
@@ -946,7 +946,7 @@ FGTextLayer::draw ()
   if (test()) {
     glColor4fv(_color);
     transform();
-    if ( _font_name == "led" ) {
+    if ( _font_name == "led" && led_font != 0) {
 	text_renderer.setFont(led_font);
     } else {
 	text_renderer.setFont(guiFntHandle);
