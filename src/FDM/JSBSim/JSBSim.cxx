@@ -58,6 +58,13 @@
 #include <FDM/JSBSim/FGPropertyManager.h>
 #include "JSBSim.hxx"
 
+static inline double
+FMAX (double a, double b)
+{
+  return a > b ? a : b;
+}
+
+
 /******************************************************************************/
 
 FGJSBsim::FGJSBsim( double dt ) 
@@ -332,8 +339,8 @@ bool FGJSBsim::copy_to_JSBsim() {
 				// Parking brake sets minimum braking
 				// level for mains.
     double parking_brake = globals->get_controls()->get_parking_brake();
-    FCS->SetLBrake(fmax(globals->get_controls()->get_brake(0), parking_brake));
-    FCS->SetRBrake(fmax(globals->get_controls()->get_brake(1), parking_brake));
+    FCS->SetLBrake(FMAX(globals->get_controls()->get_brake(0), parking_brake));
+    FCS->SetRBrake(FMAX(globals->get_controls()->get_brake(1), parking_brake));
     FCS->SetCBrake( globals->get_controls()->get_brake( 2 ) );
 
     FCS->SetGearCmd( globals->get_controls()->get_gear_down());
