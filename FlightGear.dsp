@@ -41,7 +41,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib uuid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386  /libpath:"..\plib" ssg.lib sg.lib pui.lib fnt.lib js.lib ul.lib /libpath:"..\SimGear" SimGear.lib /libpath:"..\SimGear\simgear\metakit\builds" mk4vc60s_d.lib
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib uuid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386  /libpath:"..\plib" ssg.lib sg.lib pui.lib fnt.lib sl.lib ul.lib ssgaux.lib net.lib /libpath:"..\SimGear" SimGear.lib /libpath:"..\SimGear\simgear\metakit\builds" mk4vc60s_d.lib
 
 !ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
 
@@ -56,7 +56,7 @@ LINK32=link.exe
 BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD LINK32 kernel32.lib user32.lib winspool.lib comdlg32.lib gdi32.lib shell32.lib glut32.lib wsock32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept  /libpath:"..\plib" ssg.lib sg.lib pui.lib fnt.lib js.lib ul.lib /libpath:"..\SimGear" SimGear.lib /libpath:"..\SimGear\simgear\metakit\builds" mk4vc60s_d.lib"
+# ADD LINK32 kernel32.lib user32.lib winspool.lib comdlg32.lib gdi32.lib shell32.lib glut32.lib wsock32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept  /libpath:"..\plib" ssg.lib sg.lib pui.lib fnt.lib sl.lib ul.lib ssgaux.lib net.lib /libpath:"..\SimGear" SimGear.lib /libpath:"..\SimGear\simgear\metakit\builds" mk4vc60s_d.lib"
 
 !ENDIF 
 
@@ -1297,36 +1297,6 @@ SOURCE=.\src\FDM\JSBSim\FGMassBalance.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\FDM\JSBSim\FGMatrix.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_JSBSim"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_JSBSim"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\FDM\JSBSim\FGMatrix.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_JSBSim"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_JSBSim"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\FDM\JSBSim\FGMatrix33.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -1613,6 +1583,36 @@ SOURCE=.\src\FDM\JSBSim\FGRocket.cpp
 # Begin Source File
 
 SOURCE=.\src\FDM\JSBSim\FGRocket.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGScript.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGScript.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -4581,6 +4581,21 @@ SOURCE=.\src\FDM\YASim\Wing.cpp
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\YASim\SimpleJet.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_YASim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_YASim"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Flight"
 
@@ -5732,6 +5747,36 @@ SOURCE=.\src\Network\protocol.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\atc610x.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\atc610x.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\atlas.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -5942,6 +5987,21 @@ SOURCE=.\src\Network\native_fdm.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\net_fdm.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\nmea.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -6078,21 +6138,6 @@ SOURCE=.\src\Network\pve.hxx
 # Begin Source File
 
 SOURCE=.\src\Network\raw_ctrls.hxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Network"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Network"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Network\raw_fdm.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 

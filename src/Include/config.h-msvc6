@@ -1,4 +1,5 @@
-/* Special single config.h for MSVC6 build - Geoff McLane - 11 Nov, 2001  */
+
+/* Special single config.h for MSVC6 build - Geoff McLane - 22 Jan, 2002  */
 
 /* Define if the X Window System is missing or not being used.  */
 #define X_DISPLAY_MISSING 1
@@ -19,7 +20,7 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC6-FGFS32-0.7.8"
+#define FLIGHTGEAR_VERSION "MSVC6-WIN32-0.7.9"
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -160,3 +161,7 @@
 #define HAVE_MEMORY_H 1
 
 #define HAVE_MEMCPY 1
+
+#define  ENABLE_AUDIO_SUPPORT
+
+// eof - config.h-msvc6 - single flightgear config.h file
