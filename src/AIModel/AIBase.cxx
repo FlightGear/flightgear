@@ -137,7 +137,7 @@ bool FGAIBase::init() {
 
    if (model_path != "") {
       model = load3DModel( globals->get_fg_root(),
-	                     model_path.c_str(),
+	                     SGPath(model_path).c_str(),
                              props,
 	                     globals->get_sim_time_sec() );
    }

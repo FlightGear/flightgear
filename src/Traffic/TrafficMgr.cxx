@@ -47,6 +47,7 @@
 #include <simgear/compiler.h>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -127,11 +128,11 @@ void  FGTrafficManager::startElement (const char * name, const XMLAttributes &at
   if (attval != 0)
       {
 	//cout << "including " << attval << endl;
-	string path = 
-	  globals->get_fg_root()   + 
-	  string("/Traffic/")      + 
-	  string(attval);
-	readXML(path, *this);
+	SGPath path = 
+	  globals->get_fg_root();
+	path.append("/Traffic/");
+	path.append(attval);
+	readXML(path.str(), *this);
       }
   //  cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl; 
 }
