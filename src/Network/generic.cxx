@@ -21,6 +21,9 @@
 // $Id$
 
 
+#include <string.h>		// strstr()
+#include <stdlib.h>		// strtod(), atoi()
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/structure/exception.hxx>
@@ -32,6 +35,7 @@
 #include <Main/fg_props.hxx>
 
 #include "generic.hxx"
+
 
 
 FGGeneric::FGGeneric(string& config) {
@@ -54,76 +58,14 @@ FGGeneric::FGGeneric(string& config) {
     }
 
     SGPropertyNode *output = root.getNode("generic/output");
+    read_config(output, _out_message);
 
-        /* These variables specified in the fgfsbase/Properties/xxxx.xml file for each format
-         * var_sep_string = the string/charachter to place between variables
-         * line_sep_string = the string/charachter to place at the end of each lot of variables
-         */
-    var_sep_string = output->getStringValue("var_separator");
-    line_sep_string = output->getStringValue("line_separator");
-
-        if ( var_sep_string == "newline" )
-                var_separator = '\n';
-        else if ( var_sep_string == "tab" )
-                var_separator = '\t';
-        else if ( var_sep_string == "space" )
-                var_separator = ' ';
-        else if ( var_sep_string == "formfeed" )
-                var_separator = '\f';
-        else if ( var_sep_string == "carriagereturn" )
-                var_sep_string = '\r';
-        else if ( var_sep_string == "verticaltab" )
-                var_separator = '\v';
-        else
-                var_separator = var_sep_string;
-
-        if ( line_sep_string == "newline" )
-                line_separator = '\n';
-        else if ( line_sep_string == "tab" )
-                line_separator = '\t';
-        else if ( line_sep_string == "space" )
-                line_separator = ' ';
-        else if ( line_sep_string == "formfeed" )
-                line_separator = '\f';
-        else if ( line_sep_string == "carriagereturn" )
-                line_separator = '\r';
-        else if ( line_sep_string == "verticaltab" )
-                line_separator = '\v';
-        else
-                line_separator = line_sep_string;
-
-
-    vector<SGPropertyNode_ptr> chunks = output->getChildren("chunk");
-    for (unsigned int i = 0; i < chunks.size(); i++) {
-
-        _serial_prot chunk;
-
-     // chunk.name = chunks[i]->getStringValue("name");
-        chunk.format = chunks[i]->getStringValue("format", "%d");
-        chunk.offset = chunks[i]->getDoubleValue("offset");
-        chunk.factor = chunks[i]->getDoubleValue("offset", 1.0);
-
-        string node = chunks[i]->getStringValue("node");
-        chunk.prop = fgGetNode(node.c_str(), true);
-
-        string type = chunks[i]->getStringValue("type");
-        if (type == "bool")
-            chunk.type = FG_BOOL;
-        else if (type == "float")
-            chunk.type = FG_DOUBLE;
-        else if (type == "string")
-            chunk.type = FG_STRING;
-        else
-            chunk.type = FG_INT;
-
-        _message.push_back(chunk);
-        
-    }
-
+    SGPropertyNode *input = root.getNode("generic/input");
+    read_config(input, _in_message);
 }
 
 FGGeneric::~FGGeneric() {
-    _message.clear();
+    _out_message.clear();
 }
 
 
@@ -135,38 +77,40 @@ bool FGGeneric::gen_message() {
 
     double val;
 
-    for (unsigned int i = 0; i < _message.size(); i++) {
+    for (unsigned int i = 0; i < _out_message.size(); i++) {
 
         if (i > 0)
            generic_sentence += var_separator;
 
-        switch (_message[i].type) {
+        switch (_out_message[i].type) {
         case FG_INT:
-            val = _message[i].offset +
-                    _message[i].prop->getIntValue() * _message[i].factor;
-            snprintf(tmp, 255, _message[i].format.c_str(), (int)val);
+            val = _out_message[i].offset +
+                    _out_message[i].prop->getIntValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), (int)val);
             break;
 
         case FG_BOOL:
-            snprintf(tmp, 255, _message[i].format.c_str(),
-                               _message[i].prop->getBoolValue());
+            snprintf(tmp, 255, _out_message[i].format.c_str(),
+                               _out_message[i].prop->getBoolValue());
             break;
 
         case FG_DOUBLE:
-            val = _message[i].offset +
-                       _message[i].prop->getDoubleValue() * _message[i].factor;
-            snprintf(tmp, 255, _message[i].format.c_str(), val);
+            val = _out_message[i].offset +
+                       _out_message[i].prop->getDoubleValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), val);
             break;
 
         default: // SG_STRING
-             snprintf(tmp, 255, _message[i].format.c_str(),
-                               _message[i].prop->getStringValue());
+             snprintf(tmp, 255, _out_message[i].format.c_str(),
+                               _out_message[i].prop->getStringValue());
         }
 
         generic_sentence += tmp;
     }
 
-    /* After each lot of variables has been added, put the line separator char/string */
+    /* After each lot of variables has been added, put the line separator
+     * char/string
+     */
     generic_sentence += line_separator;
  
             
@@ -177,7 +121,40 @@ bool FGGeneric::gen_message() {
 }
 
 bool FGGeneric::parse_message() {
-        return true;
+    char *p2, *p1 = buf;
+    double val;
+    int i = 0;
+
+    while (p1 && strcmp(p1, line_separator.c_str())) {
+
+        p2 = strstr(p1, var_separator.c_str());
+        if (p2)
+            *(p2++) = 0;
+
+        switch (_out_message[i].type) {
+        case FG_INT:
+            val = _out_message[i].offset + atoi(p1) * _out_message[i].factor;
+            _out_message[i].prop->setIntValue(val);
+            break;
+
+        case FG_BOOL:
+            _out_message[i].prop->setIntValue( atoi(p1) );
+            break;
+
+        case FG_DOUBLE:
+            val = _out_message[i].offset + strtod(p1, 0) * _out_message[i].factor;
+            _out_message[i].prop->setIntValue(val);
+            break;
+
+        default: // SG_STRING
+             _out_message[i].prop->setStringValue(p1);
+        }
+
+        p1 = p2;
+        i++;
+    }
+    
+    return true;
 }
 
 
@@ -214,13 +191,12 @@ bool FGGeneric::process() {
             return false;
         }
     } else if ( get_direction() == SG_IO_IN ) {
-        // Temporarliy disable this as output only!
-        //if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-        //    parse_message();
-        //} else {
-        //    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
-        //    return false;
-        //}
+        if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
+            parse_message();
+        } else {
+            SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
+            return false;
+        }
     }
 
     return true;
@@ -239,3 +215,78 @@ bool FGGeneric::close() {
 
     return true;
 }
+
+
+void
+FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
+{
+        /* These variables specified in the $FG_ROOT/data/Protocol/xxx.xml
+         * file for each format
+         *
+         * var_sep_string  = the string/charachter to place between variables
+         * line_sep_string = the string/charachter to place at the end of each
+         *                   lot of variables
+         */
+    var_sep_string = root->getStringValue("var_separator");
+    line_sep_string = root->getStringValue("line_separator");
+
+        if ( var_sep_string == "newline" )
+                var_separator = '\n';
+        else if ( var_sep_string == "tab" )
+                var_separator = '\t';
+        else if ( var_sep_string == "space" )
+                var_separator = ' ';
+        else if ( var_sep_string == "formfeed" )
+                var_separator = '\f';
+        else if ( var_sep_string == "carriagereturn" )
+                var_sep_string = '\r';
+        else if ( var_sep_string == "verticaltab" )
+                var_separator = '\v';
+        else
+                var_separator = var_sep_string;
+
+        if ( line_sep_string == "newline" )
+                line_separator = '\n';
+        else if ( line_sep_string == "tab" )
+                line_separator = '\t';
+        else if ( line_sep_string == "space" )
+                line_separator = ' ';
+        else if ( line_sep_string == "formfeed" )
+                line_separator = '\f';
+        else if ( line_sep_string == "carriagereturn" )
+                line_separator = '\r';
+        else if ( line_sep_string == "verticaltab" )
+                line_separator = '\v';
+        else
+                line_separator = line_sep_string;
+
+
+    vector<SGPropertyNode_ptr> chunks = root->getChildren("chunk");
+    for (unsigned int i = 0; i < chunks.size(); i++) {
+
+        _serial_prot chunk;
+
+     // chunk.name = chunks[i]->getStringValue("name");
+        chunk.format = chunks[i]->getStringValue("format", "%d");
+        chunk.offset = chunks[i]->getDoubleValue("offset");
+        chunk.factor = chunks[i]->getDoubleValue("offset", 1.0);
+
+        string node = chunks[i]->getStringValue("node");
+        chunk.prop = fgGetNode(node.c_str(), true);
+
+        string type = chunks[i]->getStringValue("type");
+        if (type == "bool")
+            chunk.type = FG_BOOL;
+        else if (type == "float")
+            chunk.type = FG_DOUBLE;
+        else if (type == "string")
+            chunk.type = FG_STRING;
+        else
+            chunk.type = FG_INT;
+
+        msg.push_back(chunk);
+
+    }
+
+}
+

@@ -75,7 +75,10 @@ private:
     string line_separator;
     string var_sep_string;
     string line_sep_string;
-    vector<_serial_prot> _message;
+    vector<_serial_prot> _out_message;
+    vector<_serial_prot> _in_message;
+
+    void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
 
 };
 
