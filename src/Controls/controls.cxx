@@ -85,7 +85,8 @@ FGControls::bind ()
        &FGControls::get_rudder, &FGControls::set_rudder);
   fgTie("/controls/flaps", this,
        &FGControls::get_flaps, &FGControls::set_flaps);
-  for (int index = 0; index < MAX_ENGINES; index++) {
+  int index;
+  for (index = 0; index < MAX_ENGINES; index++) {
     char name[32];
     sprintf(name, "/controls/throttle[%d]", index);
     fgTie(name, this, index,
@@ -103,7 +104,7 @@ FGControls::bind ()
 	&FGControls::get_mixture, &FGControls::set_mixture);
   fgTie("/controls/propellor-pitch/all", this, ALL_ENGINES,
 	&FGControls::get_prop_advance, &FGControls::set_prop_advance);
-  for (int index = 0; index < MAX_WHEELS; index++) {
+  for (index = 0; index < MAX_WHEELS; index++) {
     char name[32];
     sprintf(name, "/controls/brakes[%d]", index);
     fgTie(name, this, index,
@@ -123,7 +124,8 @@ FGControls::unbind ()
   fgUntie("/controls/elevator-trim");
   fgUntie("/controls/rudder");
   fgUntie("/controls/flaps");
-  for (int index = 0; index < MAX_ENGINES; index++) {
+  int index;
+  for (index = 0; index < MAX_ENGINES; index++) {
     char name[32];
     sprintf(name, "/controls/throttle[%d]", index);
     fgUntie(name);
@@ -132,7 +134,7 @@ FGControls::unbind ()
     sprintf(name, "/controls/propellor-pitch[%d]", index);
     fgUntie(name);
   }
-  for (int index = 0; index < MAX_WHEELS; index++) {
+  for (index = 0; index < MAX_WHEELS; index++) {
     char name[32];
     sprintf(name, "/controls/brakes[%d]", index);
     fgUntie(name);

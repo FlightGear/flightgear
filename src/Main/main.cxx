@@ -1398,8 +1398,14 @@ int main( int argc, char **argv ) {
     // set default log levels
     fglog().setLogLevels( FG_ALL, FG_INFO );
 
+    string version;
+#ifdef FLIGHTGEAR_VERSION
+    version = FLIGHTGEAR_VERSION;
+#else
+    version = "unknown version";
+#endif
     FG_LOG( FG_GENERAL, FG_INFO, "FlightGear:  Version "
-	    << FLIGHTGEAR_VERSION << endl );
+	    << version << endl );
 
     // seed the random number generater
     sg_srandom_time();

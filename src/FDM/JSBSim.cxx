@@ -245,7 +245,7 @@ bool FGJSBsim::update( int multiloop ) {
     }
     
   
-    for ( int i = 0; i < multiloop; i++ ) {
+    for ( i = 0; i < multiloop; i++ ) {
 	fdmex->Run();
     }
 

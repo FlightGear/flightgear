@@ -929,9 +929,9 @@ int FGOptions::parse_option( const string& arg ) {
     } else if ( arg.find( "--view-offset=" ) != string::npos ) {
 	string woffset = arg.substr( 14 );
 	if ( woffset == "LEFT" ) {
-	       default_view_offset = M_PI * 0.25;
+	       default_view_offset = FG_PI * 0.25;
 	} else if ( woffset == "RIGHT" ) {
-	    default_view_offset = M_PI * 1.75;
+	    default_view_offset = FG_PI * 1.75;
 	} else if ( woffset == "CENTER" ) {
 	    default_view_offset = 0.00;
 	} else {

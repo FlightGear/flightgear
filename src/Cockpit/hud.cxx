@@ -20,6 +20,7 @@
 //
 // $Id$
 
+#include <simgear/compiler.h>
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -36,8 +37,8 @@
 
 #include <GL/glut.h>
 #include <stdlib.h>
-#include <string.h>
-#include <fstream.h>
+#include STL_STRING
+#include STL_FSTREAM
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>

@@ -95,8 +95,8 @@ void FGTileEntry::free_tile() {
 	    << " texture coordinate arrays" );
 
     for ( i = 0; i < (int)vec3_ptrs.size(); ++i ) {
-#ifdef macintosh
-	delete [] vec3_ptrs[i];
+#if defined(macintosh) || defined(_MSC_VER)
+	delete [] vec3_ptrs[i];  //that's the correct version
 #else
 	delete vec3_ptrs[i];
 #endif
@@ -104,8 +104,8 @@ void FGTileEntry::free_tile() {
     vec3_ptrs.clear();
 
     for ( i = 0; i < (int)vec2_ptrs.size(); ++i ) {
-#ifdef macintosh
-	delete [] vec2_ptrs[i];
+#if defined(macintosh) || defined(_MSC_VER)
+	delete [] vec2_ptrs[i];  //that's the correct version
 #else
 	delete vec2_ptrs[i];
 #endif
