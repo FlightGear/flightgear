@@ -83,11 +83,16 @@ get_aspect_adjust (int xsize, int ysize)
 bool
 fgPanelVisible ()
 {
-    return (fgGetBool("/sim/virtual-cockpit") ||
-	    ((current_panel != 0) &&
-	     (current_panel->getVisibility()) &&
-	     (globals->get_viewmgr()->get_current() == 0) &&
-	     (globals->get_current_view()->get_view_offset() == 0.0)));
+    if(current_panel == 0)
+	return false;
+    if(current_panel->getVisibility() == 0)
+	return false;
+    if(globals->get_viewmgr()->get_current() != 0)
+	return false;
+    if(globals->get_current_view()->get_view_offset() != 0 &&
+       !fgGetBool("/sim/virtual-cockpit"))
+	return false;
+    return true;
 }
 
 
