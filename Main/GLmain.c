@@ -77,7 +77,7 @@ double goal_view_offset = 0.0;
 double Simtime;
 
 /* Another hack */
-int use_signals = 0;
+int use_signals = 1;
 
 
 /**************************************************************************
@@ -215,39 +215,42 @@ static void fgUpdateVisuals( void ) {
 
 void fgUpdateTimeDepCalcs(int multi_loop) {
     struct flight_params *f;
+    int i;
 
     f = &current_aircraft.flight;
 
     /* update the flight model */
     if ( multi_loop < 0 ) {
-	printf("updating flight model with default = %d\n", DEFAULT_MULTILOOP);
-	fgFlightModelUpdate(FG_LARCSIM, f, DEFAULT_MULTILOOP);
-    } else {
-	printf("updating flight model with dynamic = %d\n", multi_loop);
-	fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
+	multi_loop = DEFAULT_MULTILOOP;
     }
 
-    if ( fabs(goal_view_offset - view_offset) < 0.09 ) {
-	view_offset = goal_view_offset;
-    } else {
-	/* move view_offset towards goal_view_offset */
-	if ( goal_view_offset > view_offset ) {
-	    if ( goal_view_offset - view_offset < M_PI ) {
-		view_offset += 0.05;
-	    } else {
-		view_offset -= 0.05;
-	    }
+    /* printf("updating flight model x %d\n", multi_loop); */
+    fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
+
+    for ( i = 0; i < multi_loop; i++ ) {
+	if ( fabs(goal_view_offset - view_offset) < 0.05 ) {
+	    view_offset = goal_view_offset;
+	    break;
 	} else {
-	    if ( view_offset - goal_view_offset < M_PI ) {
-		view_offset -= 0.05;
+	    /* move view_offset towards goal_view_offset */
+	    if ( goal_view_offset > view_offset ) {
+		if ( goal_view_offset - view_offset < M_PI ) {
+		    view_offset += 0.01;
+		} else {
+		    view_offset -= 0.01;
+		}
 	    } else {
-		view_offset += 0.05;
+		if ( view_offset - goal_view_offset < M_PI ) {
+		    view_offset -= 0.01;
+		} else {
+		    view_offset += 0.01;
+		}
 	    }
-	}
-	if ( view_offset > PI2 ) {
-	    view_offset -= PI2;
-	} else if ( view_offset < 0 ) {
-	    view_offset += PI2;
+	    if ( view_offset > PI2 ) {
+		view_offset -= PI2;
+	    } else if ( view_offset < 0 ) {
+		view_offset += PI2;
+	    }
 	}
     }
 }
@@ -292,13 +295,15 @@ static void fgMainLoop( void ) {
     int elapsed, multi_loop;
 
     elapsed = fgGetTimeInterval();
-    printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
-	   remainder);
+    /* printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
+	   remainder); */
+    printf("--> Frame rate is = %.2f\n", 1000.0 / (float)elapsed);
+    elapsed += remainder;
 
     multi_loop = ((float)elapsed * 0.001) * DEFAULT_MODEL_HZ;
     remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
-    printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
-	   remainder);
+    /* printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
+	   remainder); */
 
     aircraft_debug(1);
     fgUpdateVisuals();
@@ -470,10 +475,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.15  1997/06/17 03:41:10  curt
-/* Nonsignal based interval timing is now working.
-/* This would be a good time to look at cleaning up the code structure a bit.
+/* Revision 1.16  1997/06/17 04:19:16  curt
+/* More timer related tweaks with respect to view direction changes.
 /*
+ * Revision 1.15  1997/06/17 03:41:10  curt
+ * Nonsignal based interval timing is now working.
+ * This would be a good time to look at cleaning up the code structure a bit.
+ *
  * Revision 1.14  1997/06/16 19:32:51  curt
  * Starting to add general timer support.
  *

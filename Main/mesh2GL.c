@@ -44,7 +44,7 @@ GLint mesh2GL(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 15;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 16;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -104,9 +104,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.17  1997/06/16 19:32:52  curt
-/* Starting to add general timer support.
+/* Revision 1.18  1997/06/17 04:19:17  curt
+/* More timer related tweaks with respect to view direction changes.
 /*
+ * Revision 1.17  1997/06/16 19:32:52  curt
+ * Starting to add general timer support.
+ *
  * Revision 1.16  1997/06/02 03:40:07  curt
  * A tiny bit more view tweaking.
  *
