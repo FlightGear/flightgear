@@ -73,8 +73,7 @@ VERSION = @VERSION@
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libAircraft.la
-libAircraft_la_SOURCES = \
-	aircraft.c
+libAircraft_la_SOURCES = aircraft.c aircraft.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 

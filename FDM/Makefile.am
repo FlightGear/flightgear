@@ -4,7 +4,6 @@ libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libFlight.la
 
-libFlight_la_SOURCES = \
-	flight.c
+libFlight_la_SOURCES = flight.c flight.h
 
 INCLUDES += -I..

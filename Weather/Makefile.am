@@ -1,7 +1,7 @@
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libWeather.la
-libWeather_la_SOURCES = \
-	weather.c
+
+libWeather_la_SOURCES = weather.c weather.h
 
 INCLUDES += -I..

@@ -73,8 +73,8 @@ VERSION = @VERSION@
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libJoystick.la
-libJoystick_la_SOURCES = \
-	joystick.c
+
+libJoystick_la_SOURCES = joystick.c joystick.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 

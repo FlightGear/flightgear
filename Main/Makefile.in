@@ -10,8 +10,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-# bindir = ${exec_prefix}/japhar/bin
-
 
 SHELL = /bin/sh
 
@@ -73,17 +71,22 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-bin_PROGRAMS	= fg
-fg_SOURCES	= \
-	fg_debug.c \
-	fg_getopt.c \
-	fg_init.c \
-	views.c \
-	GLUTkey.c \
-	GLUTmain.c
+EXTRA_DIST = runfg.in runfg.bat.in
 
-# Need $(INTERFACE_LIBS) $(GRAPHICS_LIBS)
-fg_LDADD	= \
+bin_PROGRAMS = fg
+
+bin_SCRIPTS = runfg runfg.bat
+
+fg_SOURCES = \
+	GLUTkey.c GLUTkey.h \
+	GLUTmain.c \
+	fg_config.h \
+	fg_debug.c fg_debug.h \
+	fg_getopt.c fg_getopt.h \
+	fg_init.c fg_init.h \
+	views.c views.h
+
+fg_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.la \
 	$(top_builddir)/Simulator/Astro/libAstro.la \
 	$(top_builddir)/Simulator/Cockpit/libCockpit.la \
@@ -92,13 +95,14 @@ fg_LDADD	= \
 	$(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.la \
 	$(top_builddir)/Simulator/Flight/Slew/libSlew.la \
 	$(top_builddir)/Simulator/Scenery/libScenery.la \
+	$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la \
 	$(top_builddir)/Simulator/Time/libTime.la \
 	$(top_builddir)/Simulator/Weather/libWeather.la \
         $(top_builddir)/Simulator/Joystick/libJoystick.la \
 	$(top_builddir)/Simulator/Math/libMath.la
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Simulator/Include/config.h
-CONFIG_CLEAN_FILES = 
+CONFIG_CLEAN_FILES =  runfg runfg.bat
 PROGRAMS =  $(bin_PROGRAMS)
 
 
@@ -110,8 +114,8 @@ X_CFLAGS = @X_CFLAGS@
 X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
-fg_OBJECTS =  fg_debug.o fg_getopt.o fg_init.o views.o GLUTkey.o \
-GLUTmain.o
+fg_OBJECTS =  GLUTkey.o GLUTmain.o fg_debug.o fg_getopt.o fg_init.o \
+views.o
 fg_DEPENDENCIES =  $(top_builddir)/Simulator/Aircraft/libAircraft.la \
 $(top_builddir)/Simulator/Astro/libAstro.la \
 $(top_builddir)/Simulator/Cockpit/libCockpit.la \
@@ -120,16 +124,19 @@ $(top_builddir)/Simulator/Flight/libFlight.la \
 $(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.la \
 $(top_builddir)/Simulator/Flight/Slew/libSlew.la \
 $(top_builddir)/Simulator/Scenery/libScenery.la \
+$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la \
 $(top_builddir)/Simulator/Time/libTime.la \
 $(top_builddir)/Simulator/Weather/libWeather.la \
 $(top_builddir)/Simulator/Joystick/libJoystick.la \
 $(top_builddir)/Simulator/Math/libMath.la
 fg_LDFLAGS = 
+SCRIPTS =  $(bin_SCRIPTS)
+
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 LINK = $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LDFLAGS) -o $@
-DIST_COMMON =  README Makefile.am Makefile.in
+DIST_COMMON =  README Makefile.am Makefile.in runfg.bat.in runfg.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -141,7 +148,7 @@ DEP_FILES =  .deps/GLUTkey.P .deps/GLUTmain.P .deps/fg_debug.P \
 SOURCES = $(fg_SOURCES)
 OBJECTS = $(fg_OBJECTS)
 
-all: Makefile $(PROGRAMS)
+all: Makefile $(PROGRAMS) $(SCRIPTS)
 
 .SUFFIXES:
 .SUFFIXES: .S .c .lo .o .s
@@ -152,6 +159,10 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+runfg: $(top_builddir)/config.status runfg.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= ./config.status
+runfg.bat: $(top_builddir)/config.status runfg.bat.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= ./config.status
 
 mostlyclean-binPROGRAMS:
 
@@ -213,6 +224,25 @@ maintainer-clean-libtool:
 fg: $(fg_OBJECTS) $(fg_DEPENDENCIES)
 	@rm -f fg
 	$(LINK) $(fg_LDFLAGS) $(fg_OBJECTS) $(fg_LDADD) $(LIBS)
+
+install-binSCRIPTS: $(bin_SCRIPTS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_SCRIPTS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo " $(INSTALL_SCRIPT) $$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`"; \
+	    $(INSTALL_SCRIPT) $$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
+	  else if test -f $(srcdir)/$$p; then \
+	    echo " $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`"; \
+	    $(INSTALL_SCRIPT) $(srcdir)/$$p $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
+	  else :; fi; fi; \
+	done
+
+uninstall-binSCRIPTS:
+	@$(NORMAL_UNINSTALL)
+	list='$(bin_SCRIPTS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
+	done
 
 tags: TAGS
 
@@ -284,7 +314,7 @@ dvi:
 check: all
 	$(MAKE)
 installcheck:
-install-exec: install-binPROGRAMS
+install-exec: install-binPROGRAMS install-binSCRIPTS
 	@$(NORMAL_INSTALL)
 
 install-data: 
@@ -293,12 +323,12 @@ install-data:
 install: install-exec install-data all
 	@:
 
-uninstall: uninstall-binPROGRAMS
+uninstall: uninstall-binPROGRAMS uninstall-binSCRIPTS
 
 install-strip:
 	$(MAKE) INSTALL_PROGRAM='$(INSTALL_PROGRAM) -s' INSTALL_SCRIPT='$(INSTALL_PROGRAM)' install
 installdirs:
-	$(mkinstalldirs)  $(DATADIR)$(bindir)
+	$(mkinstalldirs)  $(DATADIR)$(bindir) $(DATADIR)$(bindir)
 
 
 mostlyclean-generic:
@@ -338,13 +368,13 @@ maintainer-clean:  maintainer-clean-binPROGRAMS maintainer-clean-compile \
 maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
 mostlyclean-compile distclean-compile clean-compile \
 maintainer-clean-compile mostlyclean-libtool distclean-libtool \
-clean-libtool maintainer-clean-libtool tags mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir \
-mostlyclean-depend distclean-depend clean-depend \
-maintainer-clean-depend info dvi installcheck install-exec install-data \
-install uninstall all installdirs mostlyclean-generic distclean-generic \
-clean-generic maintainer-clean-generic clean mostlyclean distclean \
-maintainer-clean
+clean-libtool maintainer-clean-libtool uninstall-binSCRIPTS \
+install-binSCRIPTS tags mostlyclean-tags distclean-tags clean-tags \
+maintainer-clean-tags distdir mostlyclean-depend distclean-depend \
+clean-depend maintainer-clean-depend info dvi installcheck install-exec \
+install-data install uninstall all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
 
 
 INCLUDES += -I.. -DGLUT

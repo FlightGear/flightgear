@@ -48,7 +48,7 @@
 #include <Main/views.h>
 
 #include <Include/cmdargs.h>       // Line to command line arguments
-#include <Include/fg_constants.h>
+#include <Include/fg_constants.h>  // for VERSION
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
@@ -703,9 +703,6 @@ int main( int argc, char *argv[] ) {
     f = current_aircraft.flight;
     //  First things first... We must have startup options dealt with.
 
-    #ifndef VERSION
-    #define VERSION "src-32A"
-    #endif
     printf("Flight Gear:  Version %s\n\n", VERSION);
 
      /*********************************************************************
@@ -814,9 +811,12 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.68  1998/04/03 22:09:03  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.69  1998/04/08 23:35:34  curt
+/* Tweaks to Gnu automake/autoconf system.
 /*
+ * Revision 1.68  1998/04/03 22:09:03  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.67  1998/03/23 21:24:37  curt
  * Source code formating tweaks.
  *

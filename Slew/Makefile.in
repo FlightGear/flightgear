@@ -73,8 +73,8 @@ VERSION = @VERSION@
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libSlew.la
-libSlew_la_SOURCES = \
-	slew.c
+
+libSlew_la_SOURCES = slew.c slew.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../../Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 

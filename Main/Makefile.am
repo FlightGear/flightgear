@@ -1,17 +1,19 @@
+EXTRA_DIST = runfg.in runfg.bat.in
 
-# bindir = ${exec_prefix}/japhar/bin
+bin_PROGRAMS = fg
 
-bin_PROGRAMS	= fg
-fg_SOURCES	= \
-	fg_debug.c \
-	fg_getopt.c \
-	fg_init.c \
-	views.c \
-	GLUTkey.c \
-	GLUTmain.c
+bin_SCRIPTS = runfg runfg.bat
 
-# Need $(INTERFACE_LIBS) $(GRAPHICS_LIBS)
-fg_LDADD	= \
+fg_SOURCES = \
+	GLUTkey.c GLUTkey.h \
+	GLUTmain.c \
+	fg_config.h \
+	fg_debug.c fg_debug.h \
+	fg_getopt.c fg_getopt.h \
+	fg_init.c fg_init.h \
+	views.c views.h
+
+fg_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.la \
 	$(top_builddir)/Simulator/Astro/libAstro.la \
 	$(top_builddir)/Simulator/Cockpit/libCockpit.la \
@@ -20,6 +22,7 @@ fg_LDADD	= \
 	$(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.la \
 	$(top_builddir)/Simulator/Flight/Slew/libSlew.la \
 	$(top_builddir)/Simulator/Scenery/libScenery.la \
+	$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la \
 	$(top_builddir)/Simulator/Time/libTime.la \
 	$(top_builddir)/Simulator/Weather/libWeather.la \
         $(top_builddir)/Simulator/Joystick/libJoystick.la \

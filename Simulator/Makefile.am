@@ -5,6 +5,7 @@ SUBDIRS = Aircraft \
 	Cockpit \
 	Controls \
 	Flight \
+	Include \
 	Joystick \
 	Math \
 	Scenery \

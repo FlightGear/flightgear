@@ -74,8 +74,8 @@ libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libCockpit.la
 libCockpit_la_SOURCES = \
-	cockpit.c \
-	hud.c
+	cockpit.c cockpit.h \
+	hud.c hud.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 

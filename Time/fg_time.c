@@ -213,9 +213,14 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     long int offset;
     double diff, part, days, hours, lst;
 
-#ifdef USE_FTIME
+    // ftime() needs a little extra help finding the current timezone
+#if defined( HAVE_GETTIMEOFDAY )
+#elif defined( HAVE_GETLOCALTIME )
+#elif defined( HAVE_FTIME )
     struct timeb current;
-#endif /* USE_FTIME */
+#else
+# error Port me
+#endif
 
 #ifdef __CYGWIN32__
     int daylight;
@@ -252,10 +257,15 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 	      "no daylight savings info ... being hardcoded to %d\n", daylight);
 #endif
 
-#ifdef USE_FTIME
+    // ftime() needs a little extra help finding the current timezone
+#if defined( HAVE_GETTIMEOFDAY )
+#elif defined( HAVE_GETLOCALTIME )
+#elif defined( HAVE_FTIME )
     ftime(&current);
     timezone = current.timezone * 60;
-#endif /* USE_FTIME */
+#else
+# error Port me
+#endif
 
     if ( daylight > 0 ) {
 	daylight = 1;
@@ -362,10 +372,13 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.37  1998/04/03 22:12:55  curt
-/* Converting to Gnu autoconf system.
-/* Centralized time handling differences.
+/* Revision 1.38  1998/04/08 23:35:40  curt
+/* Tweaks to Gnu automake/autoconf system.
 /*
+ * Revision 1.37  1998/04/03 22:12:55  curt
+ * Converting to Gnu autoconf system.
+ * Centralized time handling differences.
+ *
  * Revision 1.36  1998/03/09 22:48:09  curt
  * Debug message tweaks.
  *

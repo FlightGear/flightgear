@@ -157,10 +157,10 @@ int fgInitSubsystems( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position at (HSP) Hot Springs, VA
-    FG_Longitude = (-79.8338964 + 0.01) * DEG_TO_RAD;
-    FG_Latitude  = ( 37.9514564 + 0.008) * DEG_TO_RAD;
-    FG_Runway_altitude = (3792 + 1300);
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    // FG_Longitude = (-79.8338964 + 0.01) * DEG_TO_RAD;
+    // FG_Latitude  = ( 37.9514564 + 0.008) * DEG_TO_RAD;
+    // FG_Runway_altitude = (3792 + 1300);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
     
     // Initial Position at (ANE) Anoka County airport
     // FG_Longitude = -93.2113889 * DEG_TO_RAD;
@@ -400,9 +400,12 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.53  1998/04/03 22:09:06  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.54  1998/04/08 23:35:36  curt
+/* Tweaks to Gnu automake/autoconf system.
 /*
+ * Revision 1.53  1998/04/03 22:09:06  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.52  1998/03/23 21:24:38  curt
  * Source code formating tweaks.
  *

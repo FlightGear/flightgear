@@ -76,8 +76,7 @@ libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libFlight.la
 
-libFlight_la_SOURCES = \
-	flight.c
+libFlight_la_SOURCES = flight.c flight.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Simulator/Include/config.h
 CONFIG_CLEAN_FILES = 

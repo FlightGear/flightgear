@@ -28,9 +28,11 @@
 #define _FG_TIME_H
 
 
-// #ifdef WIN32
-// #  include <windows.h>
-// #endif
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
 
 #include <GL/glut.h>
 #include <time.h>
@@ -113,10 +115,13 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.17  1998/04/03 22:12:56  curt
-/* Converting to Gnu autoconf system.
-/* Centralized time handling differences.
+/* Revision 1.18  1998/04/08 23:35:40  curt
+/* Tweaks to Gnu automake/autoconf system.
 /*
+ * Revision 1.17  1998/04/03 22:12:56  curt
+ * Converting to Gnu autoconf system.
+ * Centralized time handling differences.
+ *
  * Revision 1.16  1998/02/07 15:29:47  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -33,15 +33,6 @@
 #include <Include/fg_constants.h>
 
 
-#ifndef M_PI                                    
-#define M_PI        3.14159265358979323846      /* pi */
-#endif                                                           
-
-#ifndef PI2                                               
-#define PI2  (M_PI + M_PI)                      
-#endif        
-
-
 /* reset flight params to a specific position */
 void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
     fgFLIGHT *f;
@@ -93,10 +84,13 @@ void fgSlewUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1998/02/07 15:29:39  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.12  1998/04/08 23:35:30  curt
+/* Tweaks to Gnu automake/autoconf system.
 /*
+ * Revision 1.11  1998/02/07 15:29:39  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.10  1998/01/27 00:47:53  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

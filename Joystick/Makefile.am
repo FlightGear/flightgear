@@ -1,7 +1,7 @@
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libJoystick.la
-libJoystick_la_SOURCES = \
-	joystick.c
+
+libJoystick_la_SOURCES = joystick.c joystick.h
 
 INCLUDES += -I..
