@@ -80,12 +80,12 @@ libTime_la_SOURCES = \
 	fg_timer.c fg_timer.h \
 	sunpos.c sunpos.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../../Simulator/Include/config.h
+CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES = 
 LTLIBRARIES =  $(lib_LTLIBRARIES)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I../../Simulator/Include
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../Include
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -317,7 +317,7 @@ installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
-INCLUDES += -I..
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -6,4 +6,4 @@ lib_LTLIBRARIES = libFlight.la
 
 libFlight_la_SOURCES = flight.c flight.h
 
-INCLUDES += -I..
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator

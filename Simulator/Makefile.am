@@ -1,15 +1,13 @@
-
-# Place Include last to get 'distclean' do the correct thing
-SUBDIRS = Aircraft \
+SUBDIRS = \
+	Aircraft \
 	Astro \
+	Autopilot \
 	Cockpit \
 	Controls \
 	Flight \
-	Include \
 	Joystick \
 	Math \
 	Scenery \
 	Time \
 	Weather \
-	XGL \
 	Main

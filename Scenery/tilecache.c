@@ -34,9 +34,10 @@
 #include <XGL/xgl.h>
 
 #include <Include/general.h>
+
+#include <Bucket/bucketutils.h>
 #include <Main/fg_debug.h>
 #include <Main/views.h>
-#include <Scenery/Bucket/bucketutils.h>
 #include <Scenery/obj.h>
 #include <Scenery/tilecache.h>
 
@@ -196,9 +197,12 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/04/08 23:30:07  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.10  1998/04/14 02:23:17  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.9  1998/04/08 23:30:07  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.8  1998/04/03 22:11:38  curt
  * Converting to Gnu autoconf system.
  *

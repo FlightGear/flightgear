@@ -10,8 +10,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-# Place Include last to get 'distclean' do the correct thing
-
 
 SHELL = /bin/sh
 
@@ -73,21 +71,21 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-SUBDIRS = Aircraft \
+SUBDIRS = \
+	Aircraft \
 	Astro \
+	Autopilot \
 	Cockpit \
 	Controls \
 	Flight \
-	Include \
 	Joystick \
 	Math \
 	Scenery \
 	Time \
 	Weather \
-	XGL \
 	Main
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../Simulator/Include/config.h
+CONFIG_HEADER = ../Include/config.h
 CONFIG_CLEAN_FILES = 
 DIST_COMMON =  Makefile.am Makefile.in
 

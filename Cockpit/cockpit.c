@@ -24,6 +24,12 @@
  **************************************************************************/
 
 
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H          
+#  include <windows.h>
+#endif
+
 #include <GL/glut.h>
 
 #include <stdlib.h>
@@ -96,9 +102,12 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.11  1998/03/14 00:32:13  curt
-/* Changed a printf() to a fgPrintf().
+/* Revision 1.12  1998/04/14 02:23:09  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.11  1998/03/14 00:32:13  curt
+ * Changed a printf() to a fgPrintf().
+ *
  * Revision 1.10  1998/02/07 15:29:33  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -1,5 +1,3 @@
-SUBDIRS = Bucket
-
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libScenery.la
@@ -11,4 +9,7 @@ libScenery_la_SOURCES = \
 	tilecache.c tilecache.h \
 	tilemgr.c tilemgr.h
 
-INCLUDES += -I..
+INCLUDES += \
+	-I$(top_builddir) \
+	-I$(top_builddir)/Lib \
+	-I$(top_builddir)/Simulator

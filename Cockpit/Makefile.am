@@ -5,4 +5,4 @@ libCockpit_la_SOURCES = \
 	cockpit.c cockpit.h \
 	hud.c hud.h
 
-INCLUDES += -I..
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator

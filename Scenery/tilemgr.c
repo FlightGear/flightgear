@@ -35,11 +35,11 @@
 #include <XGL/xgl.h>
 
 #include <Scenery/scenery.h>
-#include <Scenery/Bucket/bucketutils.h>
 #include <Scenery/obj.h>
 #include <Scenery/tilecache.h>
 
 #include <Aircraft/aircraft.h>
+#include <Bucket/bucketutils.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
 #include <Main/fg_debug.h>
@@ -219,9 +219,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.23  1998/04/08 23:30:08  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.24  1998/04/14 02:23:18  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.23  1998/04/08 23:30:08  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.22  1998/04/03 22:11:38  curt
  * Converting to Gnu autoconf system.
  *

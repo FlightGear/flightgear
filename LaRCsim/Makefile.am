@@ -20,4 +20,4 @@ libLaRCsim_la_SOURCES = \
 	navion_init.c navion_init.h \
 	ls_interface.c ls_interface.h
 
-INCLUDES += -I../..
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator

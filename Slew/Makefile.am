@@ -4,4 +4,4 @@ lib_LTLIBRARIES = libSlew.la
 
 libSlew_la_SOURCES = slew.c slew.h
 
-INCLUDES += -I../..
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator

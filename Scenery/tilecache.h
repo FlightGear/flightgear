@@ -37,7 +37,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Scenery/Bucket/bucketutils.h>
+#include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
 
 /* For best results ... i.e. to avoid tile load problems and blank areas
@@ -81,9 +81,12 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.8  1998/04/08 23:30:08  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.9  1998/04/14 02:23:17  curt
+/* Code reorganizations.  Added a Lib/ directory for more general libraries.
 /*
+ * Revision 1.8  1998/04/08 23:30:08  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.7  1998/04/03 22:11:38  curt
  * Converting to Gnu autoconf system.
  *

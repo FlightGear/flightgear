@@ -8,4 +8,4 @@ libTime_la_SOURCES = \
 	fg_timer.c fg_timer.h \
 	sunpos.c sunpos.h
 
-INCLUDES += -I..
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator
