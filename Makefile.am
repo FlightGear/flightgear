@@ -1,7 +1,8 @@
 SUBDIRS = \
 	tests \
-	man \
-	src
+	src \
+        scripts \
+	man
 
 EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.sh \
 	FlightGear.dsp FlightGear.dsw

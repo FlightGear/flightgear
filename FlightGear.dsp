@@ -35,13 +35,13 @@ RSC=rc.exe
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
-# ADD CPP /nologo /W3 /GX /O2 /D "HAVE_CONFIG_H"  /I ".." /I ".\src" /I ".\src\include" /I "..\SimGear" /I "..\SimGear\simgear\metakit\include" /D "FGFS" /D "HAVE_CONFIG_H" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FD /c  /MTd /I ".." /I ".\src" /I ".\src\include" /I "..\SimGear" /I "..\SimGear\metakit-2.4.3\include" /I "..\SimGear\zlib-1.1.4" /D "HAVE_CONFIG_H" /D "FGFS" /D "FG_NEW_ENVIRONMENT" /D "ENABLE_AUDIO_SUPPORT" /D "ENABLE_PLIB_JOYSTICK"
 # SUBTRACT CPP /YX
 # ADD RSC /l 0xc09 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib uuid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386  /libpath:"..\plib" ssg.lib sg.lib pui.lib fnt.lib sl.lib ul.lib ssgaux.lib net.lib /libpath:"..\SimGear" SimGear.lib /libpath:"..\SimGear\simgear\metakit\builds" mk4vc60s_d.lib
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib uuid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386 
 
 !ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
 
@@ -51,12 +51,12 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FR /FD /GZ /c /D "HAVE_CONFIG_H"  /I ".." /I ".\src" /I ".\src\include" /I "..\SimGear" /I "..\SimGear\simgear\metakit\include" /D "FGFS" /D "HAVE_CONFIG_H"
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /FR /FD /GZ /c  /MTd /I ".." /I ".\src" /I ".\src\include" /I "..\SimGear" /I "..\SimGear\metakit-2.4.3\include" /I "..\SimGear\zlib-1.1.4" /D "HAVE_CONFIG_H" /D "FGFS" /D "FG_NEW_ENVIRONMENT" /D "ENABLE_AUDIO_SUPPORT" /D "ENABLE_PLIB_JOYSTICK"
 # ADD RSC /l 0xc09 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
-# ADD LINK32 kernel32.lib user32.lib winspool.lib comdlg32.lib gdi32.lib shell32.lib glut32.lib wsock32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept  /libpath:"..\plib" ssg.lib sg.lib pui.lib fnt.lib sl.lib ul.lib ssgaux.lib net.lib /libpath:"..\SimGear" SimGear.lib /libpath:"..\SimGear\simgear\metakit\builds" mk4vc60s_d.lib"
+# ADD LINK32 kernel32.lib user32.lib winspool.lib comdlg32.lib gdi32.lib shell32.lib wsock32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept 
 
 !ENDIF 
 
@@ -1088,6 +1088,36 @@ SOURCE=.\src\Environment\environment_mgr.cxx
 # Begin Source File
 
 SOURCE=.\src\Environment\environment_mgr.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Environment"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Environment"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Environment\environment_ctrl.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Environment"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Environment"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Environment\environment_ctrl.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -5660,6 +5690,36 @@ SOURCE=.\src\FDM\MagicCarpet.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UFO.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UFO.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\NullFDM.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -8283,7 +8343,6 @@ SOURCE=.\src\WeatherCM\sphrintp.h
 
 # End Source File
 # End Group
-
 # Begin Source File
 
 SOURCE = .\src\Include\config.h-msvc6
@@ -8293,7 +8352,7 @@ SOURCE = .\src\Include\config.h-msvc6
 # Begin Custom Build - Creating config.h
 InputPath=.\src\Include\config.h-msvc6
 
-".\src\Include\config.h": $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+".\src\Include\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy .\src\Include\config.h-msvc6 .\src\Include\config.h
 
 # End Custom Build
@@ -8303,7 +8362,7 @@ InputPath=.\src\Include\config.h-msvc6
 # Begin Custom Build - Creating config.h
 InputPath=.\src\Include\config.h-msvc6
 
-".\src\Include\config.h": $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+".\src\Include\config.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy .\src\Include\config.h-msvc6 .\src\Include\config.h
 
 # End Custom Build
