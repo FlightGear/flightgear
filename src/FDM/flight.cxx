@@ -577,3 +577,8 @@ void FGInterface::_busdump(void) {
     SG_LOG(SG_FLIGHT,SG_INFO,"altitude_agl: " << altitude_agl );
 }  
 
+
+void fgToggleFDMdataLogging(void) {
+  cur_fdm_state->ToggleDataLogging();
+}
+

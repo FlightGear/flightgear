@@ -431,6 +431,22 @@ void FGJSBsim::snap_shot(void) {
 }				
 
 
+bool FGJSBsim::ToggleDataLogging(void) {
+    return fdmex->GetOutput()->Toggle();
+}
+
+
+bool FGJSBsim::ToggleDataLogging(bool state) {
+    if (state) {
+      fdmex->GetOutput()->Enable();
+      return true;
+    } else {
+      fdmex->GetOutput()->Disable();
+      return false;
+    }
+}
+
+
 //Positions
 void FGJSBsim::set_Latitude(double lat) {
     double sea_level_radius_meters,lat_geoc;

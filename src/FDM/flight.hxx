@@ -447,6 +447,8 @@ public:
     virtual void unbind ();
     virtual void update ();
     virtual bool update( int multi_loop );
+    virtual bool ToggleDataLogging(bool state) {};
+    virtual bool ToggleDataLogging(void) {};
 
     // Define the various supported flight models (many not yet implemented)
     enum {
@@ -1133,6 +1135,9 @@ void fgFDMForceAltitude(const string &model, double alt_meters);
 
 // Set the local ground elevation
 void fgFDMSetGroundElevation(const string &model, double alt_meters);
+
+// Toggle data logging on/off
+void fgToggleFDMdataLogging(void);
 
 
 #endif // _FLIGHT_HXX

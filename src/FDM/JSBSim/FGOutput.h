@@ -79,6 +79,7 @@ public:
   void SetSubsystems(int tt) {SubSystems = tt;}
   inline void Enable(void) { enabled = true; }
   inline void Disable(void) { enabled = false; }
+  inline bool Toggle(void) {enabled = !enabled; return enabled;}
 
 protected:
 

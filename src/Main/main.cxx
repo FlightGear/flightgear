@@ -1577,8 +1577,13 @@ int main( int argc, char **argv ) {
 	fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
     SGPath full_model = globals->get_fg_root();
     full_model.append(acmodel_path);
-    // this should be redundant...
+
+#if !defined( PLIB_1_2_X )
+    // this should be redundant ... but it breaks for relative paths
+    // w/ plib-1.2.0
     ssgModelPath( (char *)full_model.dir().c_str() );
+#endif
+
     ssgTexturePath( (char *)full_model.dir().c_str() );
     ssgEntity *acmodel_obj = ssgLoad( (char *)full_model.c_str() );
 

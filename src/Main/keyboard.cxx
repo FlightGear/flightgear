@@ -449,53 +449,66 @@ void GLUTspecialkey(int k, int x, int y) {
  	    return;
  	}
 	case GLUT_KEY_F3: {
-	  string panel_path =
-	    fgGetString("/sim/panel/path", "Panels/Default/default.xml");
-	  FGPanel * new_panel = fgReadPanel(panel_path);
-	  if (new_panel == 0) {
-	    SG_LOG(SG_INPUT, SG_ALERT,
-		   "Error reading new panel from " << panel_path);
-	    return;
-	  }
-	  SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
-	  current_panel->unbind();
-	  delete current_panel;
-	  current_panel = new_panel;
-	  return;
+            string panel_path =
+                fgGetString("/sim/panel/path", "Panels/Default/default.xml");
+            FGPanel * new_panel = fgReadPanel(panel_path);
+            if (new_panel == 0) {
+                SG_LOG(SG_INPUT, SG_ALERT,
+                       "Error reading new panel from " << panel_path);
+                return;
+            }
+            SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
+            current_panel->unbind();
+            delete current_panel;
+            current_panel = new_panel;
+            return;
 	}
 	case GLUT_KEY_F4: {
-	  SGPath props_path(globals->get_fg_root());
-	  props_path.append("preferences.xml");
-	  SG_LOG(SG_INPUT, SG_INFO, "Rereading global preferences");
-	  if (!readProperties(props_path.str(), globals->get_props())) {
-	    SG_LOG(SG_INPUT, SG_ALERT,
-		   "Failed to reread global preferences from "
-		   << props_path.str());
-	  } else {
-	    SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
-	  }
-	  return;
+            SGPath props_path(globals->get_fg_root());
+            props_path.append("preferences.xml");
+            SG_LOG(SG_INPUT, SG_INFO, "Rereading global preferences");
+            if (!readProperties(props_path.str(), globals->get_props())) {
+                SG_LOG(SG_INPUT, SG_ALERT,
+                       "Failed to reread global preferences from "
+                       << props_path.str());
+            } else {
+                SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
+            }
+            return;
 	}
 	case GLUT_KEY_F5: {
-	  current_panel->setYOffset(current_panel->getYOffset() - 5);
-	  fgReshape(fgGetInt("/sim/startup/xsize"),
-		    fgGetInt("/sim/startup/ysize"));
-	  return;
+            current_panel->setYOffset(current_panel->getYOffset() - 5);
+            fgReshape(fgGetInt("/sim/startup/xsize"),
+                      fgGetInt("/sim/startup/ysize"));
+            return;
 	}
 	case GLUT_KEY_F6: {
-	  current_panel->setYOffset(current_panel->getYOffset() + 5);
-	  fgReshape(fgGetInt("/sim/startup/xsize"),
-		    fgGetInt("/sim/startup/ysize"));
-	  return;
+            current_panel->setYOffset(current_panel->getYOffset() + 5);
+            fgReshape(fgGetInt("/sim/startup/xsize"),
+                      fgGetInt("/sim/startup/ysize"));
+            return;
 	}
 	case GLUT_KEY_F7: {
-	  current_panel->setXOffset(current_panel->getXOffset() - 5);
-	  return;
+            current_panel->setXOffset(current_panel->getXOffset() - 5);
+            return;
 	}
 	case GLUT_KEY_F8: {
-	  current_panel->setXOffset(current_panel->getXOffset() + 5);
-	  return;
+            current_panel->setXOffset(current_panel->getXOffset() + 5);
+            return;
 	}
+        // case GLUT_KEY_F9: {
+        //     return;
+        // }
+        case GLUT_KEY_F10: {
+            fgToggleFDMdataLogging();
+            return;
+        }
+        // case GLUT_KEY_F11: {
+        //     return;
+        // }
+        // case GLUT_KEY_F12: {
+        //     return;
+        // }
 	case GLUT_KEY_END: // numeric keypad 1
 	    v->set_goal_view_offset( SGD_PI * 0.75 );
 	    return;

@@ -194,6 +194,8 @@ public:
         @param multiloop number of times to loop through the FDM
 	      @return true if successful */
     bool update( int multiloop );
+    bool ToggleDataLogging(bool state);
+    bool ToggleDataLogging(void);
 
 private:
     FGFDMExec *fdmex;
