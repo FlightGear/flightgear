@@ -535,67 +535,6 @@ add_channel( const string& type, const string& channel_str ) {
 }
 
 
-void
-fgSetupWind (double min_hdg, double max_hdg, double speed, double gust)
-{
-                                // Initialize to a reasonable state
-  fgDefaultWeatherValue("wind-from-heading-deg", min_hdg);
-  fgDefaultWeatherValue("wind-speed-kt", speed);
-
-  SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << min_hdg << '@' << 
-	 speed << " knots" << endl);
-
-                                // Now, add some variety to the layers
-  min_hdg += 10;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/boundary/entry[1]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/boundary/entry[1]/wind-speed-kt",
-              speed);
-
-  min_hdg += 20;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/aloft/entry[0]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/aloft/entry[0]/wind-speed-kt",
-              speed);
-              
-  min_hdg += 10;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/aloft/entry[1]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/aloft/entry[1]/wind-speed-kt",
-              speed);
-              
-  min_hdg += 10;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/aloft/entry[2]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/aloft/entry[2]/wind-speed-kt",
-              speed);
-
-#ifdef FG_WEATHERCM
-  // convert to fps
-  speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
-  while (min_hdg > 360)
-    min_hdg -= 360;
-  while (min_hdg <= 0)
-    min_hdg += 360;
-  min_hdg *= SGD_DEGREES_TO_RADIANS;
-  fgSetDouble("/environment/wind-from-north-fps", speed * cos(dir));
-  fgSetDouble("/environment/wind-from-east-fps", speed * sin(dir));
-#endif // FG_WEATHERCM
-}
-
-
 // Parse --wp=ID[@alt]
 static bool 
 parse_wp( const string& arg ) {
