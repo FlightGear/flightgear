@@ -43,7 +43,10 @@ class fgOPTIONS {
     char fg_root[256];
 
     // Starting position and orientation
-    char airport_id[5]; // ID of initial starting airport
+
+    // ID of initial starting airport, only need 5 bytes but I guess
+    // 16 is good for memory alignment.
+    char airport_id[16];
     double lon;         // starting longitude in degrees (west = -)
     double lat;         // starting latitude in degrees (south = -)
     double altitude;    // starting altitude in meters
@@ -83,6 +86,9 @@ class fgOPTIONS {
                        // be drawn.  Increase this to see terrain that is 
                        // further away.
 
+    // HUD options
+    int tris_or_culled;
+
     // Time options
     int time_offset;   // Offset true time by this many seconds
 
@@ -104,6 +110,40 @@ public:
     void usage ( void );
 
     // Query functions
+    void get_fg_root(char *root) { strcpy(root, fg_root); }
+    void get_airport_id(char *id) { strcpy(id, airport_id); }
+    double get_lon( void ) { return(lon); }
+    double get_lat( void ) { return(lat); }
+    double get_altitude( void ) { return(altitude); }
+    double get_heading( void ) { return(heading); }
+    double get_roll( void ) { return(roll); }
+    double get_pitch( void ) { return(pitch); }
+    int get_game_mode( void ) { return(game_mode); }
+    int get_splash_screen( void ) { return(splash_screen); }
+    int get_intro_music( void ) { return(intro_music); }
+    int get_mouse_pointer( void ) { return(mouse_pointer); }
+    int get_pause( void ) { return(pause); }
+    int get_hud_status( void ) { return(hud_status); }
+    int get_panel_status( void ) { return(panel_status); }
+    int get_sound( void ) { return(sound); }
+    int get_flight_model( void ) { return(flight_model); }
+    int get_fog( void ) { return(fog); }
+    double get_fov( void ) { return(fov); }
+    int get_fullscreen( void ) { return(fullscreen); }
+    int get_shading( void ) { return(shading); }
+    int get_skyblend( void ) { return(skyblend); }
+    int get_textures( void ) { return(textures); }
+    int get_wireframe( void ) { return(wireframe); }
+    int get_tile_radius( void ) { return(tile_radius); }
+    int get_tile_diameter( void ) { return(tile_diameter); }
+    int get_time_offset( void ) { return(time_offset); }
+    int get_tris_or_culled( void )   { return(tris_or_culled); }
+
+    // Update functions
+    void set_hud_status( int status ) { hud_status = status; }
+    void set_fov( double amount ) { fov = amount; }
+
+#if 0
     void get_fg_root(char *root);
     void get_airport_id(char *id);
     double get_lon( void );
@@ -131,10 +171,12 @@ public:
     int get_tile_radius( void );
     int get_tile_diameter( void );
     int get_time_offset( void );
+    int get_tris_or_culled( void )   { return(tris_or_culled); }
 
     // Update functions
     void set_hud_status( int status );
     void set_fov( double amount );
+#endif
 
     // Destructor
     ~fgOPTIONS( void );
@@ -149,6 +191,11 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.15  1998/08/24 20:11:15  curt
+// Added i/I to toggle full vs. minimal HUD.
+// Added a --hud-tris vs --hud-culled option.
+// Moved options accessor funtions to options.hxx.
+//
 // Revision 1.14  1998/08/20 15:10:35  curt
 // Added GameGLUT support.
 //

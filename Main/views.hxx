@@ -87,6 +87,9 @@ public:
     // reporting purposes)
     double vfc_ratio;
 
+    // Number of triangles rendered;
+    int tris_rendered;
+
     // absolute view position
     fgPoint3d abs_view_pos;
 
@@ -178,6 +181,11 @@ extern fgVIEW current_view;
 
 
 // $Log$
+// Revision 1.12  1998/08/24 20:11:15  curt
+// Added i/I to toggle full vs. minimal HUD.
+// Added a --hud-tris vs --hud-culled option.
+// Moved options accessor funtions to options.hxx.
+//
 // Revision 1.11  1998/08/20 20:32:35  curt
 // Reshuffled some of the code in and around views.[ch]xx
 //

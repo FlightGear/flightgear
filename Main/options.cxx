@@ -159,6 +159,9 @@ fgOPTIONS::fgOPTIONS( void ) {
     // Scenery options
     tile_diameter = 5;
 
+    // HUD options
+    tris_or_culled = 0;
+	
     // Time options
     time_offset = 0;
 }
@@ -481,6 +484,10 @@ int fgOPTIONS::parse_option( char *arg ) {
 	tile_diameter = tile_radius * 2 + 1;
     } else if ( strncmp(arg, "--time-offset=", 14) == 0 ) {
 	time_offset = parse_time_offset(arg);
+    } else if ( strcmp(arg, "--hud-tris") == 0 ) {
+	tris_or_culled = 0;	
+    } else if ( strcmp(arg, "--hud-culled") == 0 ) {
+	tris_or_culled = 1;	
     } else {
 	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown option '%s'\n", arg);
 	return(FG_OPTIONS_ERROR);
@@ -617,11 +624,16 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--tile-radius=n:  specify tile radius, must be 1 - 4\n");
     printf("\n");
 
+    printf("Hud Options:\n");
+    printf("\t--hud-tris:  Hud displays number of triangles rendered\n");
+    printf("\t--hud-culled:  Hud displays percentage of triangles culled\n");
+	
     printf("Time Options:\n");
     printf("\t--time-offset=[+-]hh:mm:ss:  offset local time by this amount\n");
 }
 
 
+#if 0
 // Query functions
 void fgOPTIONS::get_fg_root(char *root) { strcpy(root, fg_root); }
 void fgOPTIONS::get_airport_id(char *id) { strcpy(id, airport_id); }
@@ -655,13 +667,18 @@ int fgOPTIONS::get_time_offset( void ) { return(time_offset); }
 // Update functions
 void fgOPTIONS::set_hud_status( int status ) { hud_status = status; }
 void fgOPTIONS::set_fov( double amount ) { fov = amount; }
-
+#endif
 // Destructor
 fgOPTIONS::~fgOPTIONS( void ) {
 }
 
 
 // $Log$
+// Revision 1.22  1998/08/24 20:11:13  curt
+// Added i/I to toggle full vs. minimal HUD.
+// Added a --hud-tris vs --hud-culled option.
+// Moved options accessor funtions to options.hxx.
+//
 // Revision 1.21  1998/08/20 15:10:34  curt
 // Added GameGLUT support.
 //

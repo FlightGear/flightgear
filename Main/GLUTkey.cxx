@@ -119,6 +119,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // current_options.set_hud_status(!status);
 	    HUD_brightkey( true );
 	    return;
+	case 73: /* i key */
+	    // Minimal Hud
+	    fgHUDInit2(&current_aircraft);
+	    return;
 	case 77: /* M key */
 	    t->warp -= 60;
 	    local_update_sky_and_lighting_params();
@@ -200,6 +204,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 104: /* h key */
 	    HUD_brightkey( false );
+	    return;
+	case 105: /* i key */
+	    fgHUDInit(&current_aircraft);  // normal HUD
 	    return;
 	case 109: /* m key */
 	    t->warp += 60;
@@ -338,10 +345,15 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.19  1998/08/05 00:19:33  curt
-/* Added a local routine to update lighting params every frame when time is
-/* accelerated.
+/* Revision 1.20  1998/08/24 20:11:12  curt
+/* Added i/I to toggle full vs. minimal HUD.
+/* Added a --hud-tris vs --hud-culled option.
+/* Moved options accessor funtions to options.hxx.
 /*
+ * Revision 1.19  1998/08/05 00:19:33  curt
+ * Added a local routine to update lighting params every frame when time is
+ * accelerated.
+ *
  * Revision 1.18  1998/07/30 23:48:24  curt
  * Output position & orientation when pausing.
  * Eliminated libtool use.
