@@ -146,7 +146,9 @@ int fgInitPosition( void ) {
 
 	airports.load("Airports");
 	a = airports.search(o->airport_id);
-	if ( strcmp(a.id, "none") == 0 ) {
+	if ( (fabs(a.longitude) < FG_EPSILON) &&
+	     (fabs(a.latitude) < FG_EPSILON) &&
+	     (fabs(a.elevation) < FG_EPSILON) ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
 		      "Failed to find %s in database.\n", o->airport_id);
 	} else {
@@ -384,6 +386,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.16  1998/05/29 20:37:24  curt
+// Tweaked material properties & lighting a bit in GLUTmain.cxx.
+// Read airport list into a "map" STL for dynamic list sizing and fast tree
+// based lookups.
+//
 // Revision 1.15  1998/05/22 21:28:53  curt
 // Modifications to use the new fgEVENT_MGR class.
 //

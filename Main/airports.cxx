@@ -41,10 +41,11 @@ fgAIRPORTS::fgAIRPORTS( void ) {
 
 // load the data
 int fgAIRPORTS::load( char *file ) {
+    fgAIRPORT a;
     fgOPTIONS *o;
     char path[256], fgpath[256], line[256];
     char id[5];
-    double lon, lat, elev;
+    string id_str;
     fgFile f;
 
     o = &current_options;
@@ -65,22 +66,13 @@ int fgAIRPORTS::load( char *file ) {
 	}
     }
 
-    size = 0;
     while ( fggets(f, line, 250) != NULL ) {
 	// printf("%s", line);
 
-	if ( size < MAX_AIRPORTS ) {
-	    sscanf( line, "%s %lf %lf %lfl\n", id, &lon, &lat, &elev );
-	    strcpy(airports[size].id, id);
-	    airports[size].longitude = lon;
-	    airports[size].latitude = lat;
-	    airports[size].elevation = elev;
-	} else {
-	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Overran size of airport list in fgAIRPORTS::load()\n");
-	}
-
-	size++;
+	sscanf( line, "%s %lf %lf %lfl\n", id, &a.longitude, &a.latitude, 
+		&a.elevation );
+	id_str = id;
+	airports[id_str] = a;
     }
 
     fgclose(f);
@@ -91,16 +83,17 @@ int fgAIRPORTS::load( char *file ) {
 
 // search for the specified id
 fgAIRPORT fgAIRPORTS::search( char *id ) {
+    map < string, fgAIRPORT, less<string> > :: iterator find;
     fgAIRPORT a;
-    int i;
 
-    for ( i = 0; i < size; i++ ) {
-	if ( strcmp(airports[i].id, id) == 0 ) {
-	    return(airports[i]);
-	}
+    find = airports.find(id);
+    if ( find == airports.end() ) {
+	// not found
+	a.longitude = a.latitude = a.elevation = 0;
+    } else {
+	a = (*find).second;
     }
 
-    strcpy(a.id, "none");
     return(a);
 }
 
@@ -111,6 +104,11 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/05/29 20:37:22  curt
+// Tweaked material properties & lighting a bit in GLUTmain.cxx.
+// Read airport list into a "map" STL for dynamic list sizing and fast tree
+// based lookups.
+//
 // Revision 1.4  1998/05/13 18:26:25  curt
 // Root path info moved to fgOPTIONS.
 //

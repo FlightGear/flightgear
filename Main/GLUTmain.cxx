@@ -339,7 +339,6 @@ static void fgRenderFrame( void ) {
     double angle;
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-    GLfloat gray90[4] = { 0.9, 0.9, 0.9, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
 	
     l = &cur_light_params;
@@ -429,12 +428,14 @@ static void fgRenderFrame( void ) {
 	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
 	xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 	// set base color (I don't think this is doing anything here)
-	xglMaterialfv (GL_FRONT, GL_AMBIENT, gray90);
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
 	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
     } else {
 	xglDisable( GL_TEXTURE_2D );
-	xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
-	xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
+	// xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
+	// xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
     }
 
     fgTileMgrRender();
@@ -778,6 +779,11 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.18  1998/05/29 20:37:19  curt
+// Tweaked material properties & lighting a bit in GLUTmain.cxx.
+// Read airport list into a "map" STL for dynamic list sizing and fast tree
+// based lookups.
+//
 // Revision 1.17  1998/05/22 21:28:52  curt
 // Modifications to use the new fgEVENT_MGR class.
 //

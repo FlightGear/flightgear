@@ -34,18 +34,25 @@
 #endif                                   
 
 
-#define MAX_AIRPORTS 10000
+#include <map.h>         // STL associative "array"
+
+#if defined(__CYGWIN32__)
+#  include <string>        // Standard C++ string library
+#elif defined(WIN32)
+#  include <string.h>      // Standard C++ string library
+#else
+#  include <std/string.h>  // Standard C++ string library
+#endif
 
 
 typedef struct {
-    char id[5];
+    // char id[5];
     double longitude, latitude, elevation;
 } fgAIRPORT;
 
 
 class fgAIRPORTS {
-    fgAIRPORT airports[MAX_AIRPORTS];
-    int size;
+    map < string, fgAIRPORT, less<string> > airports;
 
 public:
 
@@ -68,6 +75,11 @@ public:
 
 
 // $Log$
+// Revision 1.2  1998/05/29 20:37:22  curt
+// Tweaked material properties & lighting a bit in GLUTmain.cxx.
+// Read airport list into a "map" STL for dynamic list sizing and fast tree
+// based lookups.
+//
 // Revision 1.1  1998/04/25 15:11:11  curt
 // Added an command line option to set starting position based on airport ID.
 //
