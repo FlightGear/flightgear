@@ -175,7 +175,7 @@ void add_to_shape(int count, double *coords, gpc_polygon *shape) {
 
 
 // process shape (write polygon to all intersecting tiles)
-void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
+void process_shape(string path, AreaType area, gpc_polygon *master_gpc_shape) {
     point2d min, max;
     long int index;
     int i, j;
@@ -184,10 +184,10 @@ void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
     max.x = max.y = -200.0;
 
     // find min/max of polygon
-    for ( i = 0; i < gpc_shape->num_contours; i++ ) {
-	for ( j = 0; j < gpc_shape->contour[i].num_vertices; j++ ) {
-	    double x = gpc_shape->contour[i].vertex[j].x;
-	    double y = gpc_shape->contour[i].vertex[j].y;
+    for ( i = 0; i < master_gpc_shape->num_contours; i++ ) {
+	for ( j = 0; j < master_gpc_shape->contour[i].num_vertices; j++ ) {
+	    double x = master_gpc_shape->contour[i].vertex[j].x;
+	    double y = master_gpc_shape->contour[i].vertex[j].y;
 
 	    if ( x < min.x ) { min.x = x; }
 	    if ( y < min.y ) { min.y = y; }
@@ -198,7 +198,7 @@ void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
 
     /*
     FILE *sfp= fopen("shape", "w");
-    gpc_write_polygon(sfp, gpc_shape);
+    gpc_write_polygon(sfp, master_gpc_shape);
     fclose(sfp);
     exit(-1);
     */
@@ -218,7 +218,7 @@ void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
     FG_LOG( FG_GENERAL, FG_INFO, "  Bucket max = " << b_max );
 	    
     if ( b_min == b_max ) {
-	clip_and_write_poly( path, index, area, b_min, gpc_shape );
+	clip_and_write_poly( path, index, area, b_min, master_gpc_shape );
     } else {
 	FGBucket b_cur;
 	int dx, dy, i, j;
@@ -229,17 +229,81 @@ void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
 	FG_LOG( FG_GENERAL, FG_INFO, "  dx = " << dx 
 		<< "  dy = " << dy );
 
-	if ( (dx > 100) || (dy > 100) ) {
+	if ( (dx > 200) || (dy > 200) ) {
 	    FG_LOG( FG_GENERAL, FG_ALERT, 
 		    "somethings really wrong!!!!" );
 	    exit(-1);
 	}
 
 	for ( j = 0; j <= dy; j++ ) {
+	    // for performance reasons, we'll clip out just this
+	    // horizontal row, and clip all the tiles in this row
+	    // against the smaller shape
+
+	    FG_LOG ( FG_GENERAL, FG_INFO, 
+		     "Generating clip row " << j << " of " << dy );
+		
+	    FGBucket b_clip = fgBucketOffset(min.x, min.y, 0, j);
+	    gpc_polygon row, clip_row;
+	    point2d c, clip_max, clip_min;
+	    c.x = b_clip.get_center_lon();
+	    c.y = b_clip.get_center_lat();
+
+	    // calculate bucket clip_min.y and clip_max.y
+	    if ( (c.y >= -89.0) && (c.y < 89.0) ) {
+		clip_min.y = c.y - FG_HALF_BUCKET_SPAN;
+		clip_max.y = c.y + FG_HALF_BUCKET_SPAN;
+	    } else if ( c.y < -89.0) {
+		clip_min.y = -90.0;
+		clip_max.y = -89.0;
+	    } else if ( c.y >= 89.0) {
+		clip_min.y = 89.0;
+		clip_max.y = 90.0;
+	    } else {
+		FG_LOG ( FG_GENERAL, FG_ALERT, 
+			 "Out of range latitude in clip_and_write_poly() = " 
+			 << c.y );
+	    }
+	    clip_min.x = -180.0;
+	    clip_max.x = 180.0;
+    
+	    // set up clipping tile
+	    v_list.vertex[0].x = clip_min.x;
+	    v_list.vertex[0].y = clip_min.y;
+
+	    v_list.vertex[1].x = clip_max.x;
+	    v_list.vertex[1].y = clip_min.y;
+	    
+	    v_list.vertex[2].x = clip_max.x;
+	    v_list.vertex[2].y = clip_max.y;
+
+	    v_list.vertex[3].x = clip_min.x;
+	    v_list.vertex[3].y = clip_max.y;
+
+	    v_list.num_vertices = 4;
+
+	    row.num_contours = 0;
+	    row.contour = NULL;
+	    gpc_add_contour( &row, &v_list, 0 );
+
+	    clip_row.num_contours = 0;
+	    clip_row.contour = NULL;
+	    
+	    gpc_polygon_clip(GPC_INT, &row, master_gpc_shape, &clip_row);
+
+	    /* FILE *sfp = fopen("master_shape", "w");
+	    gpc_write_polygon(sfp, 0, master_gpc_shape);
+	    fclose(sfp);
+	    sfp = fopen("clip_row", "w");
+	    gpc_write_polygon(sfp, 0, &clip_row);
+	    fclose(sfp); */
+
 	    for ( i = 0; i <= dx; i++ ) {
 		b_cur = fgBucketOffset(min.x, min.y, i, j);
-		clip_and_write_poly( path, index, area, b_cur, gpc_shape );
+		clip_and_write_poly( path, index, area, b_cur, &clip_row );
 	    }
+	    gpc_free_polygon(&row);
+	    gpc_free_polygon(&clip_row);
 	}
 	// string answer; cin >> answer;
     }
