@@ -272,7 +272,7 @@ FGSound::update (int dt)
 
    if ((_type == FGSound::LEVEL)  || (_type == FGSound::INVERTED)) {
 
-      int check = (_offset + _property->getFloatValue() * _factor);
+      bool check = (int)(_offset + _property->getFloatValue() * _factor);
       if (_type == FGSound::INVERTED)
          check = !check;
 
@@ -297,7 +297,7 @@ FGSound::update (int dt)
 
    } else {		// FLIPFLOP, RAISE, FALL
 
-      int check = (_offset + _property->getFloatValue() * _factor);
+      bool check = (int)(_offset + _property->getFloatValue() * _factor);
       if ((bool)check == _active)
             return;
 

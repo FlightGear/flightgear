@@ -1043,11 +1043,13 @@ bool FGTileEntry::obj_load( const std::string& path,
 	// next try the older ascii format, this is some ugly
 	// weirdness because the ascii loader is *old* and hasn't been
 	// updated, but hopefully we can can the ascii format soon.
+        cout << "attempting ascii load generating ocean tile" << endl;
 	ssgBranch *tmp = fgAsciiObjLoad( path, this, ground_lights, is_base );
 	if ( tmp ) {
 	    return tmp;
 	} else {
 	    // default to an ocean tile
+            cout << "generating ocean tile" << endl;
 	    if ( fgGenTile( path, tile_bucket, &c, &br, geometry ) ) {
 		center = c;
 		bounding_radius = br;
@@ -1255,6 +1257,21 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		in >> ::skipws;
 	    }
 	}
+    } else {
+        // no .stg file, generate an ocean tile on the fly for this
+        // area
+        ssgBranch *geometry = new ssgBranch;
+        Point3D c;
+        double br;
+        if ( fgGenTile( basename.str(), tile_bucket, &c, &br, geometry ) ) {
+            center = c;
+            bounding_radius = br;
+            new_tile -> addKid( geometry );
+        } else {
+            delete geometry;
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "Warning: failed to generate ocean tile!" );
+        }
     }
 
     if ( new_tile != NULL ) {

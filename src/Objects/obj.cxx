@@ -908,10 +908,11 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 		   ssgVertexArray *ground_lights )
 {
     SGBinObject obj;
-    bool result = obj.read_bin( path );
 
-    if ( !result ) {
+    if ( ! obj.read_bin( path ) ) {
 	return false;
+    } else {
+        cout << "succeeded: " << path << endl;
     }
 
     // cout << "fans size = " << obj.get_fans_v().size()
