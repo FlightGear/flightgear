@@ -224,7 +224,9 @@ David Megginson <david@megginson.com>
   Working on getting fgfs and ssg to work without textures.
   Also added the new 2D panel and the save/load support.
   Property manager
-  Joystick support
+  Generalized input module
+  3D model animation module
+  initial take of sound-effects module
 
 
 Eric Mitchell <mitchell@mars.ark.com>
