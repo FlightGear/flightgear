@@ -13,6 +13,32 @@
 #include <Main/util.hxx>
 
 
+AttitudeIndicator::AttitudeIndicator ( SGPropertyNode *node )
+    :
+    name("attitude-indicator"),
+    num(0),
+    vacuum_system("/systems/vacuum")
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = (int) child->getDoubleValue();
+        } else if ( cname == "vacuum-system" ) {
+            vacuum_system = cval;
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in attitude-indicator config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 AttitudeIndicator::AttitudeIndicator ()
 {
 }
@@ -24,46 +50,49 @@ AttitudeIndicator::~AttitudeIndicator ()
 void
 AttitudeIndicator::init ()
 {
-                                // TODO: allow index of pump and AI
-                                // to be configured.
+    string branch;
+    branch = "/instrumentation/" + name;
+    vacuum_system += "/suction-inhg";
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    
     _pitch_in_node = fgGetNode("/orientation/pitch-deg", true);
     _roll_in_node = fgGetNode("/orientation/roll-deg", true);
-    _suction_node = fgGetNode("/systems/vacuum[0]/suction-inhg", true);
-    _tumble_flag_node =
-        fgGetNode("/instrumentation/attitude-indicator/config/tumble-flag",
-                  true);
-    _caged_node =
-        fgGetNode("/instrumentation/attitude-indicator/caged-flag", true);
-    _tumble_node =
-        fgGetNode("/instrumentation/attitude-indicator/tumble-norm", true);
-    _pitch_int_node =
-        fgGetNode("/instrumentation/attitude-indicator/internal-pitch-deg",
-                  true);
-    _roll_int_node =
-        fgGetNode("/instrumentation/attitude-indicator/internal-roll-deg",
-                  true);
-    _pitch_out_node =
-        fgGetNode("/instrumentation/attitude-indicator/indicated-pitch-deg",
-                  true);
-    _roll_out_node =
-        fgGetNode("/instrumentation/attitude-indicator/indicated-roll-deg",
-                  true);
+    _suction_node = fgGetNode(vacuum_system.c_str(), true);
+    SGPropertyNode *cnode = node->getChild("config", 0, true);
+    _tumble_flag_node = cnode->getChild("tumble-flag", 0, true);
+    _caged_node = node->getChild("caged-flag", 0, true);
+    _tumble_node = node->getChild("tumble-norm", 0, true);
+    _pitch_int_node = node->getChild("internal-pitch-deg", 0, true);
+    _roll_int_node = node->getChild("internal-roll-deg", 0, true);
+    _pitch_out_node = node->getChild("indicated-pitch-deg", 0, true);
+    _roll_out_node = node->getChild("indicated-roll-deg", 0, true);
+
+    //_serviceable_node->setBoolValue(true);
 }
 
 void
 AttitudeIndicator::bind ()
 {
-    fgTie("/instrumentation/attitude-indicator/serviceable",
+    string branch;
+    branch = "/instrumentation/" + name + "/serviceable";
+
+    fgTie(branch.c_str(),
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
-    fgTie("/instrumentation/attitude-indicator/spin",
+    branch = "/instrumentation/" + name + "/spin";
+    fgTie(branch.c_str(),
           &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
 }
 
 void
 AttitudeIndicator::unbind ()
 {
-    fgUntie("/instrumentation/attitude-indicator/serviceable");
-    fgUntie("/instrumentation/attitude-indicator/spin");
+    string branch;
+    branch = "/instrumentation/" + name + "/serviceable";
+
+    fgUntie(branch.c_str());
+    branch = "/instrumentation/" + name + "/spin";
+    fgUntie(branch.c_str());
 }
 
 void

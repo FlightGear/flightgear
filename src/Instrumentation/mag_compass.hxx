@@ -20,7 +20,7 @@
  *
  * Input properties:
  *
- * /instrumentation/magnetic-compass/serviceable
+ * /instrumentation/"name"/serviceable
  * /orientation/heading-deg
  * /orientation/beta-deg
  * /environment/magnetic-variation-deg
@@ -31,13 +31,14 @@
  *
  * Output properties:
  *
- * /instrumentation/magnetic-compass/indicated-heading-deg
+ * /instrumentation/"name"/indicated-heading-deg
  */
 class MagCompass : public SGSubsystem
 {
 
 public:
 
+    MagCompass ( SGPropertyNode *node);
     MagCompass ();
     virtual ~MagCompass ();
 
@@ -48,6 +49,9 @@ private:
 
     double _error_deg;
     double _rate_degps;
+
+    string name;
+    int num;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _heading_node;

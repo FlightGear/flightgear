@@ -31,6 +31,11 @@ public:
 
     FGInstrumentMgr ();
     virtual ~FGInstrumentMgr ();
+    bool build ();
+
+private:
+    SGPropertyNode *config_props;
+    bool enabled;
 
 };
 

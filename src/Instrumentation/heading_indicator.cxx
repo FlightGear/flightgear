@@ -8,6 +8,32 @@
 #include <Main/util.hxx>
 
 
+HeadingIndicator::HeadingIndicator ( SGPropertyNode *node )
+    :
+    name("heading-indicator"),
+    num(0),
+    vacuum_system("/systems/vacuum")
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else if ( cname == "vacuum-system" ) {
+            vacuum_system = cval;
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in heading-indicator config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 HeadingIndicator::HeadingIndicator ()
 {
 }
@@ -19,31 +45,41 @@ HeadingIndicator::~HeadingIndicator ()
 void
 HeadingIndicator::init ()
 {
-    _offset_node =
-        fgGetNode("/instrumentation/heading-indicator/offset-deg", true);
+    string branch;
+    branch = "/instrumentation/" + name;
+    vacuum_system += "/suction-inhg";
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _offset_node = node->getChild("offset-deg", 0, true);
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
-    _suction_node = fgGetNode("/systems/vacuum[0]/suction-inhg", true);
-    _heading_out_node =
-        fgGetNode("/instrumentation/heading-indicator/indicated-heading-deg",
-                  true);
+    _suction_node = fgGetNode(vacuum_system.c_str(), true);
+    _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
+
+    //_serviceable_node->setBoolValue(true);
 }
 
 void
 HeadingIndicator::bind ()
 {
-    fgTie("/instrumentation/heading-indicator/serviceable",
+    string branch;
+    branch = "/instrumentation/" + name + "/serviceable";
+    fgTie(branch.c_str(),
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
-    fgTie("/instrumentation/heading-indicator/spin",
+    branch = "/instrumentation/" + name + "/spin";
+    fgTie(branch.c_str(),
           &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
 }
 
 void
 HeadingIndicator::unbind ()
 {
-    fgUntie("/instrumentation/heading-indicator/serviceable");
-    fgUntie("/instrumentation/heading-indicator/spin");
+    string branch;
+    branch = "/instrumentation/" + name + "/serviceable";
+    fgUntie(branch.c_str());
+    branch = "/instrumentation/" + name + "/spin";
+    fgUntie(branch.c_str());
 }
 
 void

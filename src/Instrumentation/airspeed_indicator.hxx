@@ -20,21 +20,22 @@
  *
  * Input properties:
  *
- * /instrumentation/airspeed-indicator/serviceable
- * /systems/pitot[0]/total-pressure-inhg
- * /systems/static[0]/pressure-inhg
+ * /instrumentation/"name"/serviceable
+ * "pitot_port"/total-pressure-inhg
+ * "static_port"/pressure-inhg
  * /environment/density-slugft3
  *
  * Output properties:
  *
- * /instrumentation/airspeed-indicator/indicated-speed-kt
+ * /instrumentation/"name"/indicated-speed-kt
  */
 class AirspeedIndicator : public SGSubsystem
 {
 
 public:
 
-    AirspeedIndicator ();
+    AirspeedIndicator ( SGPropertyNode *node );
+    AirspeedIndicator ( int i);
     virtual ~AirspeedIndicator ();
 
     virtual void init ();
@@ -42,6 +43,10 @@ public:
 
 private:
 
+    string name;
+    int num;
+    string pitot_port;
+    string static_port;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _total_pressure_node;
     SGPropertyNode_ptr _static_pressure_node;

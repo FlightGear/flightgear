@@ -25,22 +25,23 @@
  * /position/latitude-deg
  * /position/altitude-ft
  * /systems/electrical/outputs/dme
- * /instrumentation/dme/serviceable
- * /instrumentation/dme/frequencies/source
- * /instrumentation/dme/frequencies/selected-mhz
+ * /instrumentation/"name"/serviceable
+ * /instrumentation/"name"/frequencies/source
+ * /instrumentation/"name"/frequencies/selected-mhz
  *
  * Output properties:
  *
- * /instrumentation/dme/in-range
- * /instrumentation/dme/indicated-distance-nm
- * /instrumentation/dme/indicated-ground-speed-kt
- * /instrumentation/dme/indicated-time-kt
+ * /instrumentation/"name"/in-range
+ * /instrumentation/"name"/indicated-distance-nm
+ * /instrumentation/"name"/indicated-ground-speed-kt
+ * /instrumentation/"name"/indicated-time-kt
  */
 class DME : public SGSubsystem
 {
 
 public:
 
+    DME ( SGPropertyNode *node );
     DME ();
     virtual ~DME ();
 
@@ -74,6 +75,9 @@ private:
     double _transmitter_elevation_ft;
     double _transmitter_range_nm;
     double _transmitter_bias;
+
+    string name;
+    int num;
 
 };
 

@@ -12,6 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
+#include <simgear/route/route.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
 
@@ -66,6 +67,7 @@ class GPS : public SGSubsystem
 
 public:
 
+    GPS (SGPropertyNode *node);
     GPS ();
     virtual ~GPS ();
 
@@ -139,6 +141,12 @@ private:
     SGPropertyNode_ptr _leg_to_flag_node;
     SGPropertyNode_ptr _alt_deviation_node;
 
+    SGPropertyNode *_route;
+    SGPropertyNode *addWp;
+    SGPropertyNode *popWp;
+
+    SGRoute *route;
+
     bool _last_valid;
     double _last_longitude_deg;
     double _last_latitude_deg;
@@ -163,6 +171,9 @@ private:
     double azimuth_error;
     double range_error;
     double elapsed_time;
+
+    string name;
+    int num;
 
 };
 

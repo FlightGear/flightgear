@@ -27,6 +27,31 @@
 SG_USING_STD(string);
 
 
+GPS::GPS ( SGPropertyNode *node)
+    : _last_valid(false),
+      _last_longitude_deg(0),
+      _last_latitude_deg(0),
+      _last_altitude_m(0),
+      _last_speed_kts(0)
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in gps config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 GPS::GPS ()
     : _last_valid(false),
       _last_longitude_deg(0),
@@ -43,120 +68,118 @@ GPS::~GPS ()
 void
 GPS::init ()
 {
+    route = new SGRoute;
+    route->clear();
+
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
     _magvar_node = fgGetNode("/environment/magnetic-variation-deg", true);
-    _serviceable_node = fgGetNode("/instrumentation/gps/serviceable", true);
+    _serviceable_node = node->getChild("serviceable", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/gps", true);
-    _wp0_longitude_node = 
-        fgGetNode("/instrumentation/gps/wp/wp[0]/longitude-deg", true);
-    _wp0_latitude_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/latitude-deg", true);
-    _wp0_altitude_node =
-	fgGetNode("/instrumentation/gps/wp/wp[0]/altitude-ft", true);
-    _wp0_ID_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/ID", true);
-    _wp0_name_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/name", true);
-    _wp0_course_node = 
-        fgGetNode("/instrumentation/gps/wp/wp[0]/desired-course-deg", true);
-    _wp0_waypoint_type_node =
-	fgGetNode("/instrumentation/gps/wp/wp[0]/waypoint-type", true);
-    _wp1_longitude_node = 
-        fgGetNode("/instrumentation/gps/wp/wp[1]/longitude-deg", true);
-    _wp1_latitude_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/latitude-deg", true);
-    _wp1_altitude_node =
-	fgGetNode("/instrumentation/gps/wp/wp[1]/altitude-ft", true);
-    _wp1_ID_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/ID", true);
-    _wp1_name_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/name", true);
-    _wp1_course_node = 
-        fgGetNode("/instrumentation/gps/wp/wp[1]/desired-course-deg", true);
-    _wp1_waypoint_type_node =
-	fgGetNode("/instrumentation/gps/wp/wp[1]/waypoint-type", true);
-    _get_nearest_airport_node =
-	fgGetNode("/instrumentation/gps/wp/wp[1]/get-nearest-airport", true);
-    _tracking_bug_node =
-	fgGetNode("/instrumentation/gps/tracking-bug", true);
 
-    _raim_node = fgGetNode("/instrumentation/gps/raim", true);
-    _indicated_longitude_node =
-        fgGetNode("/instrumentation/gps/indicated-longitude-deg", true);
-    _indicated_latitude_node =
-        fgGetNode("/instrumentation/gps/indicated-latitude-deg", true);
-    _indicated_altitude_node =
-        fgGetNode("/instrumentation/gps/indicated-altitude-ft", true);
-    _indicated_vertical_speed_node =
-	fgGetNode("/instrumentation/gps/indicated-vertical-speed", true);
-    _true_track_node =
-        fgGetNode("/instrumentation/gps/indicated-track-true-deg", true);
-    _magnetic_track_node =
-        fgGetNode("/instrumentation/gps/indicated-track-magnetic-deg", true);
-    _speed_node =
-        fgGetNode("/instrumentation/gps/indicated-ground-speed-kt", true);
-    _wp0_distance_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/distance-nm", true);
-    _wp0_ttw_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/TTW",true);
-    _wp0_bearing_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/bearing-true-deg", true);
-    _wp0_mag_bearing_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/bearing-mag-deg", true);
+    SGPropertyNode *wp_node = node->getChild("wp", 0, true);
+    SGPropertyNode *wp0_node = wp_node->getChild("wp", 0, true);
+    SGPropertyNode *wp1_node = wp_node->getChild("wp", 1, true);
+    addWp = wp1_node->getChild("Add-to-route", 0, true);
+
+    _wp0_longitude_node = wp0_node->getChild("longitude-deg", 0, true);
+    _wp0_latitude_node = wp0_node->getChild("latitude-deg", 0, true);
+    _wp0_altitude_node = wp0_node->getChild("altitude-deg", 0, true);
+    _wp0_ID_node = wp0_node->getChild("ID", 0, true);
+    _wp0_name_node = wp0_node->getChild("name", 0, true);
+    _wp0_course_node = wp0_node->getChild("desired-course-deg", 0, true);
+    _wp0_waypoint_type_node = wp0_node->getChild("waypoint-type", 0, true);
+    _wp0_distance_node = wp0_node->getChild("distance-nm", 0, true);
+    _wp0_ttw_node = wp0_node->getChild("TTW", 0, true);
+    _wp0_bearing_node = wp0_node->getChild("bearing-true-deg", 0, true);
+    _wp0_mag_bearing_node = wp0_node->getChild("bearing-mag-deg", 0, true);
     _wp0_course_deviation_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/course-deviation-deg", true);
-    _wp0_course_error_nm_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/course-error-nm", true);
-    _wp0_to_flag_node =
-        fgGetNode("/instrumentation/gps/wp/wp[0]/to-flag", true);
-    _wp1_distance_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/distance-nm", true);
-    _wp1_ttw_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/TTW",true);
-    _wp1_bearing_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/bearing-true-deg", true);
-    _wp1_mag_bearing_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/bearing-mag-deg", true);
-    _wp1_course_deviation_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/course-deviation-deg", true);
-    _wp1_course_error_nm_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/course-error-nm", true);
-    _wp1_to_flag_node =
-        fgGetNode("/instrumentation/gps/wp/wp[1]/to-flag", true);
-    _odometer_node =
-        fgGetNode("/instrumentation/gps/odometer", true);
-    _trip_odometer_node =
-        fgGetNode("/instrumentation/gps/trip-odometer", true);
-    _true_bug_error_node =
-	fgGetNode("/instrumentation/gps/true-bug-error-deg", true);
-    _magnetic_bug_error_node =
-        fgGetNode("/instrumentation/gps/magnetic-bug-error-deg", true);
+        wp0_node->getChild("course-deviation-deg", 0, true);
+    _wp0_course_error_nm_node = wp0_node->getChild("course-error-nm", 0, true);
+    _wp0_to_flag_node = wp0_node->getChild("to-flag", 0, true);
     _true_wp0_bearing_error_node =
-	fgGetNode("/instrumentation/gps/wp/wp[0]/true-bearing-error-deg", true);
+        wp0_node->getChild("true-bearing-error-deg", 0, true);
     _magnetic_wp0_bearing_error_node =
-	fgGetNode("/instrumentation/gps/wp/wp[0]/magnetic-bearing-error-deg", true);
+        wp0_node->getChild("magnetic-bearing-error-deg", 0, true);
+
+    _wp1_longitude_node = wp1_node->getChild("longitude-deg", 0, true);
+    _wp1_latitude_node = wp1_node->getChild("latitude-deg", 0, true);
+    _wp1_altitude_node = wp1_node->getChild("altitude-deg", 0, true);
+    _wp1_ID_node = wp1_node->getChild("ID", 0, true);
+    _wp1_name_node = wp1_node->getChild("name", 0, true);
+    _wp1_course_node = wp1_node->getChild("desired-course-deg", 0, true);
+    _wp1_waypoint_type_node = wp1_node->getChild("waypoint-type", 0, true);
+    _wp1_distance_node = wp1_node->getChild("distance-nm", 0, true);
+    _wp1_ttw_node = wp1_node->getChild("TTW", 0, true);
+    _wp1_bearing_node = wp1_node->getChild("bearing-true-deg", 0, true);
+    _wp1_mag_bearing_node = wp1_node->getChild("bearing-mag-deg", 0, true);
+    _wp1_course_deviation_node =
+        wp1_node->getChild("course-deviation-deg", 0, true);
+    _wp1_course_error_nm_node = wp1_node->getChild("course-error-nm", 0, true);
+    _wp1_to_flag_node = wp1_node->getChild("to-flag", 0, true);
     _true_wp1_bearing_error_node =
-	fgGetNode("/instrumentation/gps/wp/wp[1]/true-bearing-error-deg", true);
+        wp1_node->getChild("true-bearing-error-deg", 0, true);
     _magnetic_wp1_bearing_error_node =
-	fgGetNode("/instrumentation/gps/wp/wp[1]/magnetic-bearing-error-deg", true);
+        wp1_node->getChild("magnetic-bearing-error-deg", 0, true);
+    _get_nearest_airport_node = 
+        wp1_node->getChild("get-nearest-airport", 0, true);
+
+    _tracking_bug_node = node->getChild("tracking-bug", 0, true);
+    _raim_node = node->getChild("raim", 0, true);
+
+    _indicated_longitude_node =
+        node->getChild("indicated-longitude-deg", 0, true);
+    _indicated_latitude_node =
+        node->getChild("indicated-latitude-deg", 0, true);
+    _indicated_altitude_node =
+        node->getChild("indicated-altitude-ft", 0, true);
+    _indicated_vertical_speed_node =
+        node->getChild("indicated-vertical-speed", 0, true);
+    _true_track_node =
+        node->getChild("indicated-track-true-deg", 0, true);
+    _magnetic_track_node =
+        node->getChild("indicated-track_magnetic-deg", 0, true);
+    _speed_node =
+        node->getChild("indicated-ground-speed-kt", 0, true);
+    _odometer_node =
+        node->getChild("odometer", 0, true);
+    _trip_odometer_node =
+        node->getChild("trip-odometer", 0, true);
+    _true_bug_error_node =
+        node->getChild("true-bug-error-deg", 0, true);
+    _magnetic_bug_error_node =
+        node->getChild("magnetic-bug-error-deg", 0, true);
+
     _leg_distance_node =
-        fgGetNode("/instrumentation/gps/wp/leg-distance-nm", true);
+        wp_node->getChild("leg-distance-nm", 0, true);
     _leg_course_node =
-        fgGetNode("/instrumentation/gps/wp/leg-true-course-deg", true);
+        wp_node->getChild("leg-true-course-deg", 0, true);
     _leg_magnetic_course_node =
-        fgGetNode("/instrumentation/gps/wp/leg-mag-course-deg", true);
+        wp_node->getChild("leg-mag-course-deg", 0, true);
     _alt_dist_ratio_node =
-        fgGetNode("/instrumentation/gps/wp/alt-dist-ratio", true);
+        wp_node->getChild("alt-dist-ratio", 0, true);
     _leg_course_deviation_node =
-        fgGetNode("/instrumentation/gps/wp/leg-course-deviation-deg", true);
+        wp_node->getChild("leg-course-deviation-deg", 0, true);
     _leg_course_error_nm_node =
-        fgGetNode("/instrumentation/gps/wp/leg-course-error-nm", true);
+        wp_node->getChild("leg-course-error-nm", 0, true);
     _leg_to_flag_node =
-        fgGetNode("/instrumentation/gps/wp/leg-to-flag", true);
+        wp_node->getChild("leg-to-flag", 0, true);
     _alt_deviation_node =
-        fgGetNode("/instrumentation/gps/wp/alt-deviation-ft", true);
+        wp_node->getChild("alt-deviation-ft", 0, true);
+
+    _route = node->getChild("route", 0, true);
+    popWp = _route->getChild("Pop-WP", 0, true);
+
+    addWp->setBoolValue(false);
+    popWp->setBoolValue(false);
+
+    _serviceable_node->setBoolValue(true);
 }
 
 void
@@ -633,6 +656,43 @@ GPS::update (double delta_time_sec)
 
 	_true_bug_error_node->setDoubleValue(true_bug_error);
 	_magnetic_bug_error_node->setDoubleValue(magnetic_bug_error);
+
+
+        // Add WP 1 to the route.
+        if ( addWp->getBoolValue() )
+        {
+            addWp->setBoolValue(false);
+
+            SGWayPoint tempWp( _wp1_longitude_node->getDoubleValue(),
+                               _wp1_latitude_node->getDoubleValue(),
+                               _wp1_altitude_node->getDoubleValue(),
+                               SGWayPoint::WGS84,
+                               _wp1_ID_node->getStringValue(),
+                               _wp1_name_node->getStringValue() );
+
+            route->add_waypoint(tempWp);
+
+            SGPropertyNode *wp = 
+                _route->getChild("Waypoint", route->size()-1, true);
+            SGPropertyNode *id = wp->getChild("ID", 0, true);
+            SGPropertyNode *name = wp->getChild("Name", 0, true);
+            SGPropertyNode *lat = wp->getChild("Latitude", 0, true);
+            SGPropertyNode *lon = wp->getChild("Longitude", 0, true);
+            SGPropertyNode *alt = wp->getChild("Altitude", 0, true);
+            
+            id->setStringValue( tempWp.get_id().c_str() );
+            name->setStringValue( tempWp.get_name().c_str() );
+            lat->setDoubleValue( tempWp.get_target_lat() );
+            lon->setDoubleValue( tempWp.get_target_lon() );
+            alt->setDoubleValue( tempWp.get_target_alt() );
+        }
+
+        if ( popWp->getBoolValue() )
+        {
+            popWp->setBoolValue(false);
+
+            route->delete_first();
+        }
 
     } else {
         _true_track_node->setDoubleValue(0.0);

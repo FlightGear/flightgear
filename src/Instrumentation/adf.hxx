@@ -50,6 +50,7 @@ class ADF : public SGSubsystem
 
 public:
 
+    ADF ( SGPropertyNode *node );
     ADF ();
     virtual ~ADF ();
 
@@ -94,6 +95,10 @@ private:
     int _ident_count;
     time_t _last_ident_time;
     double _last_volume;
+
+    string name;
+    int num;
+    string adf_ident;
 };
 
 

@@ -13,6 +13,10 @@
 
 #include "adf.hxx"
 
+#include <iostream>
+#include <string>
+#include <sstream>
+
 
 // Use a bigger number to be more responsive, or a smaller number
 // to be more sluggish.
@@ -48,6 +52,38 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
 }
 
 
+ADF::ADF (SGPropertyNode *node )
+    :
+    _time_before_search_sec(0),
+    _last_frequency_khz(-1),
+    _transmitter_valid(false),
+    _transmitter_elevation_ft(0),
+    _transmitter_range_nm(0),
+    _ident_count(0),
+    _last_ident_time(0),
+    _last_volume(-1),
+    name("adf"),
+    num(0)
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in adf config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
+
 ADF::ADF ()
     : _time_before_search_sec(0),
       _last_frequency_khz(-1),
@@ -56,7 +92,9 @@ ADF::ADF ()
       _transmitter_range_nm(0),
       _ident_count(0),
       _last_ident_time(0),
-      _last_volume(-1)
+      _last_volume(-1),
+      name("adf"),
+      num(0)
 {
 }
 
@@ -67,24 +105,34 @@ ADF::~ADF ()
 void
 ADF::init ()
 {
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
     _heading_node = fgGetNode("/orientation/heading-deg", true);
-    _serviceable_node = fgGetNode("/instrumentation/adf/serviceable", true);
-    _error_node = fgGetNode("/instrumentation/adf/error-deg", true);
+    _serviceable_node = node->getChild("serviceable", 0, true);
+    _error_node = node->getChild("error-deg", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/adf", true);
-    _frequency_node =
-        fgGetNode("/instrumentation/adf/frequencies/selected-khz", true);
-    _mode_node = fgGetNode("/instrumentation/adf/mode", true);
+    branch = branch + "/frequencies";
+    SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
+    _frequency_node = fnode->getChild("selected-khz", 0, true);
+    _mode_node = node->getChild("mode", 0, true);
+    _volume_node = node->getChild("volume-norm", 0, true);
+    _in_range_node = node->getChild("in-range", 0, true);
+    _bearing_node = node->getChild("indicated-bearing-deg", 0, true);
+    _ident_node = node->getChild("ident", 0, true);
+    _ident_audible_node = node->getChild("ident-audible", 0, true);
 
-    _in_range_node = fgGetNode("/instrumentation/adf/in-range", true);
-    _bearing_node =
-        fgGetNode("/instrumentation/adf/indicated-bearing-deg", true);
-    _ident_node = fgGetNode("/instrumentation/adf/ident", true);
-    _volume_node = fgGetNode("/instrumentation/adf/volume-norm", true);
-    _ident_audible_node = fgGetNode("/instrumentation/adf/ident-audible", true);
     morse.init();
+
+    std::ostringstream temp;
+    temp << name << num;
+    adf_ident = temp.str();
+
+    _serviceable_node->setBoolValue(true);
 }
 
 void
@@ -164,7 +212,7 @@ ADF::update (double delta_time_sec)
             _last_volume = volume;
 
             SGSoundSample *sound;
-            sound = globals->get_soundmgr()->find( "adf-ident" );
+            sound = globals->get_soundmgr()->find( adf_ident );
             if ( sound != NULL )
                 sound->set_volume( volume );
             else
@@ -178,8 +226,8 @@ ADF::update (double delta_time_sec)
         }
 
         if ( _ident_count < 4 ) {
-            if ( !globals->get_soundmgr()->is_playing("adf-ident") ) {
-                globals->get_soundmgr()->play_once( "adf-ident" );
+            if ( !globals->get_soundmgr()->is_playing(adf_ident) ) {
+                globals->get_soundmgr()->play_once( adf_ident );
                 ++_ident_count;
             }
         }
@@ -187,7 +235,7 @@ ADF::update (double delta_time_sec)
         _in_range_node->setBoolValue(false);
         set_bearing(delta_time_sec, 90);
         _ident_node->setStringValue("");
-        globals->get_soundmgr()->stop( "adf-ident" );
+        globals->get_soundmgr()->stop( adf_ident );
     }
 }
 
@@ -220,16 +268,16 @@ ADF::search (double frequency_khz, double longitude_rad,
         _last_ident = ident;
         _ident_node->setStringValue(ident.c_str());
 
-        if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
-            // stop is required! -- remove alone wouldn't stop immediately
-            globals->get_soundmgr()->stop( "adf-ident" );
-            globals->get_soundmgr()->remove( "adf-ident" );
+        if ( globals->get_soundmgr()->exists( adf_ident ) ) {
+	    // stop is required! -- remove alone wouldn't stop immediately
+            globals->get_soundmgr()->stop( adf_ident );
+            globals->get_soundmgr()->remove( adf_ident );
         }
 
         SGSoundSample *sound;
         sound = morse.make_ident( ident, LO_FREQUENCY );
         sound->set_volume(_last_volume = 0);
-        globals->get_soundmgr()->add( sound, "adf-ident" );
+        globals->get_soundmgr()->add( sound, adf_ident );
 
         int offset = (int)(sg_random() * 30.0);
         _ident_count = offset / 4;

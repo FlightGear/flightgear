@@ -20,18 +20,19 @@
  *
  * Input properties:
  *
- * /instrumentation/vertical-speed-indicator/serviceable
- * /systems/static[0]/pressure-inhg
+ * /instrumentation/"name"/serviceable
+ * "static_port"/pressure-inhg
  *
  * Output properties:
  *
- * /instrumentation/vertical-speed-indicator/indicated-speed-fpm
+ * /instrumentation/"name"/indicated-speed-fpm
  */
 class VerticalSpeedIndicator : public SGSubsystem
 {
 
 public:
 
+    VerticalSpeedIndicator ( SGPropertyNode *node );
     VerticalSpeedIndicator ();
     virtual ~VerticalSpeedIndicator ();
 
@@ -41,6 +42,10 @@ public:
 private:
 
     double _internal_pressure_inhg;
+
+    string name;
+    int num;
+    string static_port;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;

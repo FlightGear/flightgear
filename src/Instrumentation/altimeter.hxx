@@ -23,19 +23,20 @@ class SGInterpTable;
  *
  * Input properties:
  *
- * /instrumentation/altimeter/serviceable
- * /instrumentation/altimeter/setting-inhg
- * /systems/static[0]/pressure-inhg
+ * /instrumentation/"name"/serviceable
+ * /instrumentation/"name"/setting-inhg
+ * "static_port"/pressure-inhg
  *
  * Output properties:
  *
- * /instrumentation/altimeter/indicated-altitude-ft
+ * /instrumentation/"name"/indicated-altitude-ft
  */
 class Altimeter : public SGSubsystem
 {
 
 public:
 
+    Altimeter (SGPropertyNode *node);
     Altimeter ();
     virtual ~Altimeter ();
 
@@ -43,6 +44,10 @@ public:
     virtual void update (double dt);
 
 private:
+
+    string name;
+    int num;
+    string static_port;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _setting_node;

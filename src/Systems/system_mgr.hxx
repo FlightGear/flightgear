@@ -16,14 +16,14 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
  * Manage aircraft systems.
  *
- * In the initial draft, the systems present are hard-coded, but they
- * will soon be configurable for individual aircraft.
+ * Multiple aircraft systems can be configured for each aircraft.
  */
 class FGSystemMgr : public SGSubsystemGroup
 {
@@ -31,6 +31,12 @@ public:
 
     FGSystemMgr ();
     virtual ~FGSystemMgr ();
+    bool build ();
+
+private:
+    SGPropertyNode *config_props;
+    bool enabled;
+
 };
 
 #endif // __SYSTEM_MGR_HXX

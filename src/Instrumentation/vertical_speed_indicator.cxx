@@ -10,6 +10,32 @@
 #include <Main/util.hxx>
 
 
+VerticalSpeedIndicator::VerticalSpeedIndicator ( SGPropertyNode *node )
+    : _internal_pressure_inhg(29.92),
+      name("vertical-speed-indicator"),
+      num(0),
+      static_port("/systems/static")
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else if ( cname == "static-port" ) {
+            static_port = cval;
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in vertical-speed-indicator config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 VerticalSpeedIndicator::VerticalSpeedIndicator ()
     : _internal_pressure_inhg(29.92)
 {
@@ -22,15 +48,16 @@ VerticalSpeedIndicator::~VerticalSpeedIndicator ()
 void
 VerticalSpeedIndicator::init ()
 {
-    _serviceable_node =
-        fgGetNode("/instrumentation/vertical-speed-indicator/serviceable",
-                  true);
-    _pressure_node =
-        fgGetNode("/systems/static/pressure-inhg", true);
-    _speed_node =
-        fgGetNode("/instrumentation/vertical-speed-indicator/indicated-speed-fpm",
-                  true);
+    string branch;
+    branch = "/instrumentation/" + name;
+    static_port += "/pressure-inhg";
 
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
+    _pressure_node = fgGetNode(static_port.c_str(), true);
+    _speed_node = node->getChild("indicated-speed-fpm", 0, true);
+
+    _serviceable_node->setBoolValue(true);
                                 // Initialize at ambient pressure
     _internal_pressure_inhg = _pressure_node->getDoubleValue();
 }

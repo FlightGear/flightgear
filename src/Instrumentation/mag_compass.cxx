@@ -17,6 +17,30 @@
 #include <Main/util.hxx>
 
 
+MagCompass::MagCompass ( SGPropertyNode *node )
+    : _error_deg(0.0),
+      _rate_degps(0.0),
+      name("magnetic-compass"),
+      num(0)
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in magnetic-compass config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 MagCompass::MagCompass ()
     : _error_deg(0.0),
       _rate_degps(0.0)
@@ -30,8 +54,11 @@ MagCompass::~MagCompass ()
 void
 MagCompass::init ()
 {
-    _serviceable_node =
-        fgGetNode("/instrumentation/magnetic-compass/serviceable", true);
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
     _heading_node =
         fgGetNode("/orientation/heading-deg", true);
     _beta_node =
@@ -46,9 +73,9 @@ MagCompass::init ()
         fgGetNode("/accelerations/ned/east-accel-fps_sec", true);
     _down_accel_node =
         fgGetNode("/accelerations/ned/down-accel-fps_sec", true);
-    _out_node =
-        fgGetNode("/instrumentation/magnetic-compass/indicated-heading-deg",
-                  true);
+    _out_node = node->getChild("indicated-heading-deg", 0, true);
+
+    _serviceable_node->setBoolValue(true);
 }
 
 void

@@ -20,29 +20,28 @@
 /**
  * Model a vacuum-powered attitude indicator.
  *
- * This first, simple draft is hard-wired to vacuum pump #1.
- *
  * Input properties:
  *
- * /instrumentation/attitude-indicator/config/tumble-flag
- * /instrumentation/attitude-indicator/serviceable
- * /instrumentation/attitude-indicator/caged-flag
- * /instrumentation/attitude-indicator/tumble-norm
+ * /instrumentation/"name"/config/tumble-flag
+ * /instrumentation/"name"/serviceable
+ * /instrumentation/"name"/caged-flag
+ * /instrumentation/"name"/tumble-norm
  * /orientation/pitch-deg
  * /orientation/roll-deg
- * /systems/vacuum[0]/suction-inhg
+ * "vacuum-system"/suction-inhg
  *
  * Output properties:
  *
- * /instrumentation/attitude-indicator/indicated-pitch-deg
- * /instrumentation/attitude-indicator/indicated-roll-deg
- * /instrumentation/attitude-indicator/tumble-norm
+ * /instrumentation/"name"/indicated-pitch-deg
+ * /instrumentation/"name"/indicated-roll-deg
+ * /instrumentation/"name"/tumble-norm
  */
 class AttitudeIndicator : public SGSubsystem
 {
 
 public:
 
+    AttitudeIndicator ( SGPropertyNode *node );
     AttitudeIndicator ();
     virtual ~AttitudeIndicator ();
 
@@ -52,6 +51,10 @@ public:
     virtual void update (double dt);
 
 private:
+
+    string name;
+    int num;
+    string vacuum_system;
 
     Gyro _gyro;
 

@@ -22,19 +22,20 @@
  *
  * Input properties:
  *
- * /engines/engine[0]/rpm
+ * "rpm"
  * /environment/pressure-inhg
- * /systems/vacuum[0]/serviceable
+ * /systems/"name"/serviceable
  *
  * Output properties:
  *
- * /systems/vacuum[n]/suction-inhg
+ * /systems/"name"/suction-inhg
  */
 class VacuumSystem : public SGSubsystem
 {
 
 public:
 
+    VacuumSystem( SGPropertyNode *node );
     VacuumSystem( int i );
     virtual ~VacuumSystem ();
 
@@ -45,7 +46,10 @@ public:
 
 private:
 
+    string name;
     int num;
+    string rpm;
+    double scale;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _rpm_node;
     SGPropertyNode_ptr _pressure_node;

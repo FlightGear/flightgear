@@ -11,6 +11,11 @@
 # error This library requires C++
 #endif
 
+#include <simgear/compiler.h>
+
+#include STL_STRING
+SG_USING_STD(string);
+
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
@@ -23,21 +28,22 @@
  *
  * Input properties:
  *
- * /systems/pitot[0]/serviceable
+ * /systems/"name"/serviceable
  * /environment/pressure-slugft3
  * /environment/density-slugft3
  * /velocities/airspeed-kt
  *
  * Output properties:
  *
- * /systems/pitot[0]/total-pressure-inhg
+ * /systems/"name"/total-pressure-inhg
  */
 class PitotSystem : public SGSubsystem
 {
 
 public:
 
-    PitotSystem ();
+    PitotSystem ( SGPropertyNode *node );
+    PitotSystem ( int i );
     virtual ~PitotSystem ();
 
     virtual void init ();
@@ -47,6 +53,8 @@ public:
 
 private:
 
+    int num;
+    string name;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _density_node;

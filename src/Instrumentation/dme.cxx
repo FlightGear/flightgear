@@ -36,6 +36,35 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
 }
 
 
+DME::DME ( SGPropertyNode *node )
+    : _last_distance_nm(0),
+      _last_frequency_mhz(-1),
+      _time_before_search_sec(0),
+      _transmitter_valid(false),
+      _transmitter_elevation_ft(0),
+      _transmitter_range_nm(0),
+      _transmitter_bias(0.0),
+      name("dme"),
+      num(0)
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in dme config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 DME::DME ()
     : _last_distance_nm(0),
       _last_frequency_mhz(-1),
@@ -54,22 +83,25 @@ DME::~DME ()
 void
 DME::init ()
 {
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
-    _serviceable_node = fgGetNode("/instrumentation/dme/serviceable", true);
+    _serviceable_node = node->getChild("serviceable", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/dme", true);
-    _source_node = fgGetNode("/instrumentation/dme/frequencies/source", true);
-    _frequency_node =
-        fgGetNode("/instrumentation/dme/frequencies/selected-mhz", true);
+    SGPropertyNode *fnode = node->getChild("frequencies", 0, true);
+    _source_node = fnode->getChild("source", 0, true);
+    _frequency_node = fnode->getChild("selected-mhz", 0, true);
+    _in_range_node = node->getChild("in-range", 0, true);
+    _distance_node = node->getChild("indicated-distance-nm", 0, true);
+    _speed_node = node->getChild("indicated-ground-speed", 0, true);
+    _time_node = node->getChild("indicated-time-min", 0, true);
 
-    _in_range_node = fgGetNode("/instrumentation/dme/in-range", true);
-    _distance_node =
-        fgGetNode("/instrumentation/dme/indicated-distance-nm", true);
-    _speed_node =
-        fgGetNode("/instrumentation/dme/indicated-ground-speed-kt", true);
-    _time_node =
-        fgGetNode("/instrumentation/dme/indicated-time-min", true);
+    _serviceable_node->setBoolValue(true);
 }
 
 void
@@ -78,7 +110,9 @@ DME::update (double delta_time_sec)
                                 // Figure out the source
     const char * source = _source_node->getStringValue();
     if (source[0] == '\0') {
-        source = "/instrumentation/dme/frequencies/selected-mhz";
+        string branch;
+        branch = "/instrumentation/" + name + "/frequencies/selected-mhz";
+        source = branch.c_str();
         _source_node->setStringValue(source);
     }
 

@@ -8,8 +8,33 @@
 #include <Main/util.hxx>
 
 
-StaticSystem::StaticSystem ()
+StaticSystem::StaticSystem ( SGPropertyNode *node )
+    :
+    name("static"),
+    num(0)
 {
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in systems config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
+StaticSystem::StaticSystem ( int i )
+{
+    name = "static";
+    num = i;
 }
 
 StaticSystem::~StaticSystem ()
@@ -19,9 +44,15 @@ StaticSystem::~StaticSystem ()
 void
 StaticSystem::init ()
 {
-    _serviceable_node = fgGetNode("/systems/static[0]/serviceable", true);
+    string branch;
+    branch = "/systems/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
     _pressure_in_node = fgGetNode("/environment/pressure-inhg", true);
-    _pressure_out_node = fgGetNode("/systems/static[0]/pressure-inhg", true);
+    _pressure_out_node = node->getChild("pressure-inhg", 0, true);
+
+    _serviceable_node->setBoolValue(true);
 }
 
 void

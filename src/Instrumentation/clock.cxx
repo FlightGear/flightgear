@@ -12,6 +12,35 @@
 #include <Main/util.hxx>
 
 
+Clock::Clock ( SGPropertyNode *node )
+    : _is_serviceable(true),
+      _gmt_time_sec(0),
+      _offset_sec(0),
+      _indicated_sec(0),
+      _standstill_offset(0),
+      name("clock"),
+      num(0)
+{
+    _indicated_string[0] = '\0';
+
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in clock config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 Clock::Clock ()
     : _is_serviceable(true),
       _gmt_time_sec(0),
@@ -29,10 +58,16 @@ Clock::~Clock ()
 void
 Clock::init ()
 {
-    _serviceable_node = fgGetNode("/instrumentation/clock/serviceable", true);
-    _offset_node      = fgGetNode("/instrumentation/clock/offset-sec", true);
-    _sec_node         = fgGetNode("/instrumentation/clock/indicated-sec", true);
-    _string_node      = fgGetNode("/instrumentation/clock/indicated-string", true);
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
+    _offset_node = node->getChild("offset-sec", 0, true);
+    _sec_node = node->getChild("indicated-sec", 0, true);
+    _string_node = node->getChild("indicated-string", 0, true);
+
+    _serviceable_node->setBoolValue(true);
 }
 
 void

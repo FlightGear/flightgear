@@ -8,6 +8,29 @@
 #include <Main/util.hxx>
 
 
+SlipSkidBall::SlipSkidBall ( SGPropertyNode *node)
+    :
+    name("slip-skid-ball"),
+    num(0)
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in slip-skid-ball config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 SlipSkidBall::SlipSkidBall ()
 {
 }
@@ -19,14 +42,17 @@ SlipSkidBall::~SlipSkidBall ()
 void
 SlipSkidBall::init ()
 {
-    _serviceable_node =
-        fgGetNode("/instrumentation/slip-skid-ball/serviceable", true);
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
     _y_accel_node = fgGetNode("/accelerations/pilot/y-accel-fps_sec", true);
     _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
-    _out_node =
-        fgGetNode("/instrumentation/slip-skid-ball/indicated-slip-skid", true);
-    _override_node =
-        fgGetNode("/instrumentation/slip-skid-ball/override", true);
+    _out_node = node->getChild("indicated-slip-skid", 0, true);
+    _override_node = node->getChild("iverride", 0, true);
+
+    _serviceable_node->setBoolValue(true);
 }
 
 void

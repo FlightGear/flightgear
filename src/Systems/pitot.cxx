@@ -8,8 +8,34 @@
 #include <Main/util.hxx>
 
 
-PitotSystem::PitotSystem ()
+
+PitotSystem::PitotSystem ( SGPropertyNode *node )
+    :
+    name("pitot"),
+    num(0)
 {
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in systems config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
+PitotSystem::PitotSystem ( int i )
+{
+    num = i;
+    name = "pitot";
 }
 
 PitotSystem::~PitotSystem ()
@@ -19,12 +45,17 @@ PitotSystem::~PitotSystem ()
 void
 PitotSystem::init ()
 {
-    _serviceable_node = fgGetNode("/systems/pitot[0]/serviceable", true);
+    string branch;
+    branch = "/systems/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
     _velocity_node = fgGetNode("/velocities/airspeed-kt", true);
-    _total_pressure_node =
-        fgGetNode("/systems/pitot[0]/total-pressure-inhg", true);
+    _total_pressure_node = node->getChild("total-pressure-inhg", 0, true);
+
+    _serviceable_node->setBoolValue(true);
 }
 
 void

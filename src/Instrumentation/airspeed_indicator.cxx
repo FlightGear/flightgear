@@ -15,9 +15,44 @@
 // A higher number means more responsive.
 #define RESPONSIVENESS 50.0
 
-
-AirspeedIndicator::AirspeedIndicator ()
+AirspeedIndicator::AirspeedIndicator ( SGPropertyNode *node )
+    :
+    name("airspeed-indicator"),
+    num(0),
+    pitot_port("/systems/pitot"),
+    static_port("/systems/static")
 {
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else if ( cname == "pitot-port" ) {
+            pitot_port = cval;
+        } else if ( cname == "static-port" ) {
+            static_port = cval;
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in aispeed-indicator config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
+
+AirspeedIndicator::AirspeedIndicator ( int i )
+    :
+    name("airspeed-indicator"),
+    num(0),
+    pitot_port("/systems/pitot"),
+    static_port("/systems/static")
+{
+    num = i;
 }
 
 AirspeedIndicator::~AirspeedIndicator ()
@@ -27,17 +62,19 @@ AirspeedIndicator::~AirspeedIndicator ()
 void
 AirspeedIndicator::init ()
 {
-    _serviceable_node =
-        fgGetNode("/instrumentation/airspeed-indicator/serviceable",
-                  true);
-    _total_pressure_node =
-        fgGetNode("/systems/pitot/total-pressure-inhg", true);
-    _static_pressure_node =
-        fgGetNode("/systems/static/pressure-inhg", true);
+    string branch;
+    branch = "/instrumentation/" + name;
+    pitot_port += "/total-pressure-inhg";
+    static_port += "/pressure-inhg";
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
+    _total_pressure_node = fgGetNode(pitot_port.c_str(), true);
+    _static_pressure_node = fgGetNode(static_port.c_str(), true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
-    _speed_node =
-        fgGetNode("/instrumentation/airspeed-indicator/indicated-speed-kt",
-                  true);
+    _speed_node = node->getChild("indicated-speed-kt", 0, true);
+
+    _serviceable_node->setBoolValue(true);
 }
 
 #ifndef FPSTOKTS

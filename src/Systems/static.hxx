@@ -21,13 +21,13 @@
  * Input properties:
  *
  * /environment/pressure-inhg
- * /systems/static[0]/serviceable
+ * /systems/"name"/serviceable
  *
  * Output properties:
  *
- * /systems/static[0]/pressure-inhg
+ * /systems/"name"/pressure-inhg
  *
- * TODO: support multiple static ports and specific locations
+ * TODO: support specific locations
  * TODO: support alternate air with errors
  */
 class StaticSystem : public SGSubsystem
@@ -35,7 +35,8 @@ class StaticSystem : public SGSubsystem
 
 public:
 
-    StaticSystem ();
+    StaticSystem ( SGPropertyNode *node );
+    StaticSystem ( int i );
     virtual ~StaticSystem ();
 
     virtual void init ();
@@ -45,6 +46,8 @@ public:
 
 private:
 
+    string name;
+    int num;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_in_node;
     SGPropertyNode_ptr _pressure_out_node;

@@ -25,21 +25,22 @@
  *
  * Input properties:
  *
- * /instrumentation/turn-indicator/serviceable
- * /instrumentation/turn-indicator/spin
+ * /instrumentation/"name"/serviceable
+ * /instrumentation/"name"/spin
  * /orientation/roll-rate-degps
  * /orientation/yaw-rate-degps
  * /systems/electrical/outputs/turn-coordinator
  *
  * Output properties:
  *
- * /instrumentation/turn-indicator/indicated-turn-rate
+ * /instrumentation/"name"/indicated-turn-rate
  */
 class TurnIndicator : public SGSubsystem
 {
 
 public:
 
+    TurnIndicator ( SGPropertyNode *node );
     TurnIndicator ();
     virtual ~TurnIndicator ();
 
@@ -52,6 +53,9 @@ private:
 
     Gyro _gyro;
     double _last_rate;
+
+    string name;
+    int num;
 
     SGPropertyNode_ptr _roll_rate_node;
     SGPropertyNode_ptr _yaw_rate_node;

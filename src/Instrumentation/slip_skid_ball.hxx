@@ -22,19 +22,20 @@
  *
  * Input properties:
  *
- * /instrumentation/slip-skid-ball/serviceable
+ * /instrumentation/"name"/serviceable
  * /accelerations/pilot/y-accel-fps_sec
  * /accelerations/pilot/z-accel-fps_sec
  *
  * Output properties:
  *
- * /instrumentation/slip-skid-ball/indicated-slip-skid
+ * /instrumentation/"name"/indicated-slip-skid
  */
 class SlipSkidBall : public SGSubsystem
 {
 
 public:
 
+    SlipSkidBall ( SGPropertyNode *node );
     SlipSkidBall ();
     virtual ~SlipSkidBall ();
 
@@ -45,6 +46,9 @@ private:
 
     Gyro _gyro;
     double _last_pos;
+
+    string name;
+    int num;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _y_accel_node;

@@ -45,6 +45,36 @@ static double altitude_data[][2] = {
 };
 
 
+Altimeter::Altimeter ( SGPropertyNode *node )
+    : _altitude_table(new SGInterpTable),
+      name("altimeter"),
+      num(0),
+      static_port("/systems/static")
+{
+
+    for (int i = 0; altitude_data[i][0] != -1; i++)
+        _altitude_table->addEntry(altitude_data[i][0], altitude_data[i][1]);
+
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else if ( cname == "static-port" ) {
+            static_port = cval;
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in altimeter config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+}
+
 Altimeter::Altimeter ()
     : _altitude_table(new SGInterpTable)
 {
@@ -61,14 +91,19 @@ Altimeter::~Altimeter ()
 void
 Altimeter::init ()
 {
-    _serviceable_node =
-        fgGetNode("/instrumentation/altimeter/serviceable", true);
-    _setting_node =
-        fgGetNode("/instrumentation/altimeter/setting-inhg", true);
-    _pressure_node =
-        fgGetNode("/systems/static/pressure-inhg", true);
-    _altitude_node =
-        fgGetNode("/instrumentation/altimeter/indicated-altitude-ft", true);
+    string branch;
+    branch = "/instrumentation/" + name;
+    static_port += "/pressure-inhg";
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+
+    _serviceable_node = node->getChild("serviceable", 0, true);
+    _setting_node = node->getChild("setting-inhg", 0, true);
+    _pressure_node = fgGetNode(static_port.c_str(), true);
+    _altitude_node = node->getChild("indicated-altitude-ft", 0, true);
+
+    _serviceable_node->setBoolValue(true);
+    _setting_node->setDoubleValue(29.92);
 }
 
 void

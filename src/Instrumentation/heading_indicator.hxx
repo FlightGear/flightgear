@@ -20,25 +20,24 @@
 /**
  * Model a vacuum-powered heading indicator.
  *
- * This first, simple draft is hard-wired to vacuum pump #1.
- *
  * Input properties:
  *
- * /instrumentation/heading-indicator/serviceable
- * /instrumentation/heading-indicator/spin
- * /instrumentation/heading-indicator/offset-deg
+ * /instrumentation/"name"/serviceable
+ * /instrumentation/"name"/spin
+ * /instrumentation/"name"/offset-deg
  * /orientation/heading-deg
- * /systems/vacuum[0]/suction-inhg
+ * "vacuum_system"/suction-inhg
  *
  * Output properties:
  *
- * /instrumentation/heading-indicator/indicated-heading-deg
+ * /instrumentation/"name"/indicated-heading-deg
  */
 class HeadingIndicator : public SGSubsystem
 {
 
 public:
 
+    HeadingIndicator ( SGPropertyNode *node );
     HeadingIndicator ();
     virtual ~HeadingIndicator ();
 
@@ -51,6 +50,10 @@ private:
 
     Gyro _gyro;
     double _last_heading_deg;
+
+    string name;
+    int num;
+    string vacuum_system;
 
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;

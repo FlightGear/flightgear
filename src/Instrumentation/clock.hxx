@@ -35,6 +35,7 @@ class Clock : public SGSubsystem
 
 public:
 
+    Clock ( SGPropertyNode *node );
     Clock ();
     virtual ~Clock ();
 
@@ -49,6 +50,9 @@ private:
     long _indicated_sec;
     char _indicated_string[16];
     long _standstill_offset;
+
+    string name;
+    int num;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _offset_node;
