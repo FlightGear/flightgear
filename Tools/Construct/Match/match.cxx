@@ -45,11 +45,11 @@ void FGMatch::scan_share_file( const string& dir, const FGBucket& b,
 			       neighbor_type search, neighbor_type dest )
 {
     string file = dir + "/"  + b.gen_base_path() + "/" + b.gen_index_str();
-    cout << "reading shared data from " << file << endl;
+    // cout << "reading shared data from " << file << endl;
 
     fg_gzifstream in( file );
     if ( !in.is_open() ) {
-        cout << "Cannot open file: " << file << endl;
+        // cout << "Cannot open file: " << file << endl;
 	return;
     }
 
@@ -78,7 +78,7 @@ void FGMatch::scan_share_file( const string& dir, const FGBucket& b,
 	in >> key;
 	in >> node;
 	if ( key == target ) {
-	    cout << key << " " << node << endl;
+	    // cout << key << " " << node << endl;
 	    in >> key;
 	    in >> normal;
 
@@ -140,6 +140,7 @@ void FGMatch::load_shared( const FGConstruct& c, neighbor_type n ) {
     FGBucket cb;
 
     if ( n == SW_Corner ) {
+	// cout << "searching for SW corner data" << endl;
 	cb = fgBucketOffset(clon, clat, -1, 0);
 	scan_share_file( base, cb, SE_Corner, n );
 	cb = fgBucketOffset(clon, clat, -1, -1);
@@ -147,6 +148,7 @@ void FGMatch::load_shared( const FGConstruct& c, neighbor_type n ) {
 	cb = fgBucketOffset(clon, clat, 0, -1);
 	scan_share_file( base, cb, NW_Corner, n );
     } else if ( n == SE_Corner ) {
+	// cout << "searching for SE corner data" << endl;
 	cb = fgBucketOffset(clon, clat, 0, -1);
 	scan_share_file( base, cb, NE_Corner, n );
 	cb = fgBucketOffset(clon, clat, 1, -1);
@@ -154,6 +156,7 @@ void FGMatch::load_shared( const FGConstruct& c, neighbor_type n ) {
 	cb = fgBucketOffset(clon, clat, 1, 0);
 	scan_share_file( base, cb, SW_Corner, n );
     } else if ( n == NE_Corner ) {
+	// cout << "searching for NE corner data" << endl;
 	cb = fgBucketOffset(clon, clat, 1, 0);
 	scan_share_file( base, cb, NW_Corner, n );
 	cb = fgBucketOffset(clon, clat, 1, 1);
@@ -161,6 +164,7 @@ void FGMatch::load_shared( const FGConstruct& c, neighbor_type n ) {
 	cb = fgBucketOffset(clon, clat, 0, 1);
 	scan_share_file( base, cb, SE_Corner, n );
     } else if ( n == NW_Corner ) {
+	// cout << "searching for NW corner data" << endl;
 	cb = fgBucketOffset(clon, clat, 0, 1);
 	scan_share_file( base, cb, SW_Corner, n );
 	cb = fgBucketOffset(clon, clat, -1, 1);
@@ -168,15 +172,19 @@ void FGMatch::load_shared( const FGConstruct& c, neighbor_type n ) {
 	cb = fgBucketOffset(clon, clat, -1, 0);
 	scan_share_file( base, cb, NE_Corner, n );
     } else if ( n == NORTH ) {
+	// cout << "searching for NORTH edge data" << endl;
  	cb = fgBucketOffset(clon, clat, 0, 1);
 	scan_share_file( base, cb, SOUTH, n );
     } else if ( n == SOUTH ) {
+	// cout << "searching for SOUTH edge data" << endl;
  	cb = fgBucketOffset(clon, clat, 0, -1);
 	scan_share_file( base, cb, NORTH, n );
     } else if ( n == EAST ) {
+	// cout << "searching for EAST edge data" << endl;
  	cb = fgBucketOffset(clon, clat, 1, 0);
 	scan_share_file( base, cb, WEST, n );
     } else if ( n == WEST ) {
+	// cout << "searching for WEST edge data" << endl;
  	cb = fgBucketOffset(clon, clat, -1, 0);
 	scan_share_file( base, cb, EAST, n );
     }
@@ -196,6 +204,11 @@ void FGMatch::load_neighbor_shared( FGConstruct& c ) {
     load_shared( c, SE_Corner );
     load_shared( c, NE_Corner );
     load_shared( c, NW_Corner );
+
+    north_nodes.clear();
+    south_nodes.clear();
+    east_nodes.clear();
+    west_nodes.clear();
 
     load_shared( c, NORTH );
     load_shared( c, SOUTH );
@@ -222,10 +235,6 @@ void FGMatch::split_tile( FGConstruct& c ) {
 
     // separate nodes and normals into components
 
-    north_nodes.clear();
-    south_nodes.clear();
-    east_nodes.clear();
-    west_nodes.clear();
     body_nodes.clear();
 
     point_list nodes = c.get_geod_nodes();
@@ -337,6 +346,7 @@ void FGMatch::write_shared( FGConstruct& c ) {
 
     system(command.c_str());
 
+#if 0
     cout << "FLAGS" << endl;
     cout << "=====" << endl;
     cout << "sw_flag = " << sw_flag << endl;
@@ -347,6 +357,7 @@ void FGMatch::write_shared( FGConstruct& c ) {
     cout << "south_flag = " << south_flag << endl;
     cout << "east_flag = " << east_flag << endl;
     cout << "west_flag = " << west_flag << endl;
+#endif
 
     FILE *fp;
     if ( (fp = fopen( file.c_str(), "w" )) == NULL ) {
@@ -539,7 +550,9 @@ void FGMatch::assemble_tile( FGConstruct& c ) {
 	insert_normal( new_normals, east_normals[i], index );
     }
 
+    // cout << "Total west nodes = " << west_nodes.size() << endl;
     for ( int i = 0; i < (int)west_nodes.size(); ++i ) {
+	// cout << "adding west node " << west_nodes[i] << endl;
 	index = new_nodes.unique_add( west_nodes[i] );
 	insert_normal( new_normals, west_normals[i], index );
     }

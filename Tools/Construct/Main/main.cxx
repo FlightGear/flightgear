@@ -454,10 +454,10 @@ main(int argc, char **argv) {
     c.set_min_nodes( 50 );
     c.set_max_nodes( (int)(FG_MAX_NODES * 0.8) );
 
-    // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
+    lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
-    lon = -92.486188; lat = 44.590190;      // KRGK
+    // lon = -92.486188; lat = 44.590190;      // KRGK
     // lon = -89.7446823; lat= 29.314495;
     // lon = -122.488090; lat = 42.743183;     // 64S
     // lon = -114.861097; lat = 35.947480;     // 61B
@@ -472,10 +472,12 @@ main(int argc, char **argv) {
     // lon = -121.914; lat = 42.5655;          // TEST (Oregon SW of Crater)
     // lon = -76.201239; lat = 36.894606;      // KORF (Norfolk, Virginia)
 
-    double min_x = lon - 3;
-    double min_y = lat - 1;
+    double xdist = 3.0;
+    double ydist = 1.0;
+    double min_x = lon - xdist;
+    double min_y = lat - ydist;
     FGBucket b_min( min_x, min_y );
-    FGBucket b_max( lon + 3, lat + 1 );
+    FGBucket b_max( lon + xdist, lat + ydist );
 
     FGBucket b_start(566777L);
     bool do_tile = true;
