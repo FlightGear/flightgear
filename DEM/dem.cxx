@@ -29,9 +29,9 @@
 #endif
 
 #include <ctype.h>    // isspace()
+#include <stdlib.h>   // atoi()
 #include <math.h>     // rint()
 #include <stdio.h>
-#include <stdlib.h>   // atoi()
 #include <string.h>
 #include <sys/stat.h> // stat()
 #include <unistd.h>   // stat()
@@ -786,6 +786,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/07/13 20:58:02  curt
+// .
+//
 // Revision 1.9  1998/07/13 15:29:49  curt
 // Added #ifdef HAVE_CONFIG_H
 //
