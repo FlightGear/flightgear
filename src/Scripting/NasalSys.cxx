@@ -143,12 +143,14 @@ static naRef f_getprop(naContext c, naRef args)
         return naNum(p->getDoubleValue());
 
     case SGPropertyNode::STRING:
+    case SGPropertyNode::UNSPECIFIED:
         {
             naRef nastr = naNewString(c);
             const char* val = p->getStringValue();
             naStr_fromdata(nastr, (char*)val, strlen(val));
             return nastr;
         }
+    case SGPropertyNode::ALIAS: // <--- FIXME, recurse?
     default:
         return naNil();
     }
