@@ -554,113 +554,9 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 			    << " ... dying :-(");
 		    exit(-1);
 		}
-	    } else if ( token == "t" ) {
-		// start a new triangle strip
-
-		n1 = n2 = n3 = n4 = 0;
-
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, 
-		//           "    new tri strip = %s", line);
-		in >> n1 >> n2 >> n3;
-		fragment.add_face(n1, n2, n3);
-
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = ");
-
-		// xglBegin(GL_TRIANGLE_STRIP);
-		// printf("xglBegin(tristrip) %d %d %d\n", n1, n2, n3);
-
-		odd = true; 
-		// scale = 1.0;
-
-		if ( shading ) {
-		    // Shading model is "GL_SMOOTH" so use precalculated
-		    // (averaged) normals
-		    // MAT3_SCALE_VEC(normal, normals[n1], scale);
-		    // xglNormal3dv(normal);
-		    pp = local_calc_tex_coords(nodes[n1], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n1].get_n());		
-
-		    // MAT3_SCALE_VEC(normal, normals[n2], scale);
-		    // xglNormal3dv(normal);
-		    pp = local_calc_tex_coords(nodes[n2], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n2].get_n());				
-
-		    // MAT3_SCALE_VEC(normal, normals[n3], scale);
-		    // xglNormal3dv(normal);
-		    pp = local_calc_tex_coords(nodes[n3], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n3].get_n());
-		} else {
-		    // Shading model is "GL_FLAT" so calculate per face
-		    // normals on the fly.
-		    if ( odd ) {
-			calc_normal(nodes[n1], nodes[n2], 
-				    nodes[n3], approx_normal);
-		    } else {
-			calc_normal(nodes[n2], nodes[n1], 
-				    nodes[n3], approx_normal);
-		    }
-		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
-		    // xglNormal3dv(normal);
-
-		    pp = local_calc_tex_coords(nodes[n1], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n1].get_n());		
-
-		    pp = local_calc_tex_coords(nodes[n2], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n2].get_n());		
-		    
-		    pp = local_calc_tex_coords(nodes[n3], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n3].get_n());		
-		}
-		// printf("some normals, texcoords, and vertices\n");
-
-		odd = !odd;
-		last1 = n2;
-		last2 = n3;
-
-		// There can be three or four values 
-		char c;
-		while ( in.get(c) ) {
-		    if ( c == '\n' ) {
-			break; // only the one
-		    }
-		    if ( isdigit(c) ){
-			in.putback(c);
-			in >> n4;
-			break;
-		    }
-		}
-
-		if ( n4 > 0 ) {
-		    fragment.add_face(n3, n2, n4);
-		    
-		    if ( shading ) {
-			// Shading model is "GL_SMOOTH"
-			// MAT3_SCALE_VEC(normal, normals[n4], scale);
-		    } else {
-			// Shading model is "GL_FLAT"
-			calc_normal(nodes[n3], nodes[n2], nodes[n4], 
-				    approx_normal);
-			// MAT3_SCALE_VEC(normal, approx_normal, scale);
-		    }
-		    // xglNormal3dv(normal);
-		    pp = local_calc_tex_coords(nodes[n4], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n4].get_n());		
-		    
-		    odd = !odd;
-		    last1 = n3;
-		    last2 = n4;
-		    // printf("a normal, texcoord, and vertex (4th)\n");
-		}
-	    } else if ( (token == "tf") || (token == "ts") ) {
-		// triangle fan
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, "new fan");
+	    } else if ( (token == "tf") || (token == "ts") || (token == "f") ) {
+		// triangle fan, strip, or individual face
+		// FG_LOG( FG_TERRAIN, FG_INFO, "new fan or strip");
 
 		fan_vertices.clear();
 		fan_tex_coords.clear();
@@ -755,7 +651,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		    // xglTexCoord2f(pp.x(), pp.y());
 		    // xglVertex3dv(nodes[n3].get_n());
 
-		    if ( token == "tf" ) {
+		    if ( (token == "tf") || (token == "f") ) {
 			// triangle fan
 			fragment.add_face(n1, n2, n3);
 			n2 = n3;
@@ -798,138 +694,24 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		    tl -> add( tmp2 );
 		}
 
-		ssgLeaf *leaf;
+		ssgLeaf *leaf = NULL;
 		if ( token == "tf" ) {
 		    // triangle fan
 		    leaf = 
 			new ssgVtxTable ( GL_TRIANGLE_FAN, vl, nl, tl, cl );
-		} else {
+		} else if ( token == "ts" ) {
 		    // triangle strip
 		    leaf = 
 			new ssgVtxTable ( GL_TRIANGLE_STRIP, vl, nl, tl, cl );
+		} else if ( token == "f" ) {
+		    // triangle
+		    leaf = 
+			new ssgVtxTable ( GL_TRIANGLES, vl, nl, tl, cl );
 		}
 		// leaf->makeDList();
 		leaf->setState( state );
 
 		tile->addKid( leaf );
-
-	    } else if ( token == "f" ) {
-		// unoptimized face
-
-		if ( !in_faces ) {
-		    // xglBegin(GL_TRIANGLES);
-		    // printf("xglBegin(triangles)\n");
-		    in_faces = true;
-		}
-
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, "new triangle = %s", line);*/
-		in >> n1 >> n2 >> n3;
-		fragment.add_face(n1, n2, n3);
-
-		// xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-		// xglNormal3dv(normals[n1]);
-		pp = local_calc_tex_coords(nodes[n1], center);
-		// xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3dv(nodes[n1].get_n());
-
-		// xglNormal3dv(normals[n2]);
-		pp = local_calc_tex_coords(nodes[n2], center);
-		// xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3dv(nodes[n2].get_n());
-		
-		// xglNormal3dv(normals[n3]);
-		pp = local_calc_tex_coords(nodes[n3], center);
-		// xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3dv(nodes[n3].get_n());
-		// printf("some normals, texcoords, and vertices (tris)\n");
-	    } else if ( token == "q" ) {
-		// continue a triangle strip
-		n1 = n2 = 0;
-
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, "continued tri strip = %s ", 
-		//           line);
-		in >> n1;
-
-		// There can be one or two values 
-		char c;
-		while ( in.get(c) ) {
-		    if ( c == '\n' ) {
-			break; // only the one
-		    }
-
-		    if ( isdigit(c) ) {
-			in.putback(c);
-			in >> n2;
-			break;
-		    }
-		}
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, "read %d %d\n", n1, n2);
-
-		if ( odd ) {
-		    fragment.add_face(last1, last2, n1);
-		} else {
-		    fragment.add_face(last2, last1, n1);
-		}
-
-		if ( shading ) {
-		    // Shading model is "GL_SMOOTH"
-		    // MAT3_SCALE_VEC(normal, normals[n1], scale);
-		} else {
-		    // Shading model is "GL_FLAT"
-		    if ( odd ) {
-			calc_normal(nodes[last1], nodes[last2], 
-				    nodes[n1], approx_normal);
-		    } else {
-			calc_normal(nodes[last2], nodes[last1], 
-				    nodes[n1], approx_normal);
-		    }
-		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
-		}
-		// xglNormal3dv(normal);
-
-		pp = local_calc_tex_coords(nodes[n1], center);
-		// xglTexCoord2f(pp.lon(), pp.lat());
-		// xglVertex3dv(nodes[n1].get_n());
-		// printf("a normal, texcoord, and vertex (4th)\n");
-   
-		odd = !odd;
-		last1 = last2;
-		last2 = n1;
-
-		if ( n2 > 0 ) {
-		    // fgPrintf( FG_TERRAIN, FG_DEBUG, " (cont)\n");
-
-		    if ( odd ) {
-			fragment.add_face(last1, last2, n2);
-		    } else {
-			fragment.add_face(last2, last1, n2);
-		    }
-
-		    if ( shading ) {
-			// Shading model is "GL_SMOOTH"
-			// MAT3_SCALE_VEC(normal, normals[n2], scale);
-		    } else {
-			// Shading model is "GL_FLAT"
-			if ( odd ) {
-			    calc_normal(nodes[last1], nodes[last2], 
-					nodes[n2], approx_normal);
-			} else {
-			    calc_normal(nodes[last2], nodes[last1], 
-					nodes[n2], approx_normal);
-			}
-			// MAT3_SCALE_VEC(normal, approx_normal, scale);
-		    }
-		    // xglNormal3dv(normal);
-		
-		    pp = local_calc_tex_coords(nodes[n2], center);
-		    // xglTexCoord2f(pp.lon(), pp.lat());
-		    // xglVertex3dv(nodes[n2].get_n());		
-		    // printf("a normal, texcoord, and vertex (4th)\n");
-
-		    odd = !odd;
-		    last1 = last2;
-		    last2 = n2;
-		}
 	    } else {
 		FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
 			<< path << " = " << token );
