@@ -5,12 +5,14 @@
 #include <plib/pu.h>
 #include <plib/ul.h>
 
+#include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 #include <Main/fg_props.hxx>
 
 #include "menubar.hxx"
 #include "dialog.hxx"
 
+SG_USING_STD(map);
 
 
 ////////////////////////////////////////////////////////////////////////

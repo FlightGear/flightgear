@@ -71,8 +71,9 @@ using std::queue;
 
 #endif
 
-
+#if !defined(WIN32) || defined(__GNUC__)
 using std::max;
+#endif
 
 #ifdef __FreeBSD__ // define gcvt on FreeBSD
 
