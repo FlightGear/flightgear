@@ -144,10 +144,9 @@ Bruce Finney <bfinney@gte.net>
 
 Melchior Franz <a8603365@unet.univie.ac.at>
   Made that joystick high/low support for joystick hats.
-  Nasal-ified the Saitek X45 joystick which now forms the basis of a lot of
-  porgrammable joysticks.
+  Nasal-ified the Saitek Cyborg Gold 3D (USB) joystick which now forms
+  the basis of a lot of porgrammable joysticks.
   Created the led.txf font.
-  Made some improvements of the telnet and the http interface.
   Ruthlessly hunted down memory leaks in FlightGear, SimGear, and JSBSim.
   Maintains the only fully working helicopter model in FlightGear (Bolkow 105).
 
