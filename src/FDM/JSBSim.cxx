@@ -112,10 +112,10 @@ int fgJSBsimUpdate(FGInterface& f, int multiloop) {
     }
 
     // copy control positions into the JSBsim structure
-    FDMExec.GetFCS()->SetDa( controls.get_aileron() / 10.0 );
+    FDMExec.GetFCS()->SetDa( controls.get_aileron());
     FDMExec.GetFCS()->SetDe( controls.get_elevator() 
 			     + controls.get_elevator_trim() );
-    FDMExec.GetFCS()->SetDr( controls.get_rudder() / 10.0 );
+    FDMExec.GetFCS()->SetDr( controls.get_rudder());
     FDMExec.GetFCS()->SetDf( 0.0 );
     FDMExec.GetFCS()->SetDs( 0.0 );
     FDMExec.GetFCS()->SetThrottle( FGControls::ALL_ENGINES, 
