@@ -91,8 +91,8 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
   htab[7]=259186.352; //ft.
 
   MagnitudedAccelDt = MagnitudeAccel = Magnitude = 0.0;
-//  turbType = ttNone;
-  turbType = ttBerndt; // temporarily disable turbulence until fully tested
+  turbType = ttNone;
+//  turbType = ttBerndt; // temporarily disable turbulence until fully tested
   TurbGain = 100.0;
 
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
