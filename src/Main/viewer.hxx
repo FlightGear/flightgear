@@ -46,7 +46,7 @@
 
 enum fgViewType {
  FG_LOOKFROM = 0,
- FG_LOOKAT = 1,
+ FG_LOOKAT = 1
 };
 
 // Define a structure containing view information
@@ -56,7 +56,7 @@ public:
 
     enum fgScalingType {  // nominal Field Of View actually applies to ...
 	FG_SCALING_WIDTH,       // window width
-	FG_SCALING_MAX,         // max(width, height)
+	FG_SCALING_MAX          // max(width, height)
 	// FG_SCALING_G_MEAN,      // geometric_mean(width, height)
 	// FG_SCALING_INDEPENDENT  // whole screen
     };
