@@ -177,6 +177,9 @@ static void net2global( FGNetFDM *net ) {
     htond(net->psidot);
     htond(net->vcas);
     htond(net->climb_rate);
+    htond(net->v_north);
+    htond(net->v_east);
+    htond(net->v_down);
 
     htond(net->A_X_pilot);
     htond(net->A_Y_pilot);
@@ -221,6 +224,9 @@ static void net2global( FGNetFDM *net ) {
 					 net->psidot );
         cur_fdm_state->_set_V_calibrated_kts( net->vcas );
         cur_fdm_state->_set_Climb_Rate( net->climb_rate );
+        cur_fdm_state->_set_Velocities_Local( net->v_north,
+                                              net->v_east,
+                                              net->v_down );
         cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
 					       net->A_Y_pilot,
 					       net->A_Z_pilot );

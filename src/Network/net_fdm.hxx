@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 8;
+const int FG_NET_FDM_VERSION = 9;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -69,6 +69,9 @@ public:
     double psidot;		// yaw rate (radians/sec)
     double vcas;		// calibrated airspeed
     double climb_rate;		// feet per second
+    double v_north;             // north velocity in local/body frame, fps
+    double v_east;              // east velocity in local/body frame, fps
+    double v_down;              // down/vertical velocity in local/body frame, fps
 
     // Accelerations
     double A_X_pilot;		// X accel in body frame ft/sec^2
