@@ -24,12 +24,12 @@
 #ifndef FG_EVENT_MGR_H_INCLUDED
 #define FG_EVENT_MGR_H_INCLUDED 1
 
-#include <boost/function.hpp>
-
 #include <simgear/compiler.h>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Main/fgfs.hxx>
+#include <Include/fg_callback.hxx>
+
 #include <vector>
 #include <string>
 
@@ -52,7 +52,6 @@ public:
 	FG_EVENT_QUEUED = 2
     };
 
-    typedef boost::function<void> callback_type;
     typedef int interval_type;
 
 private:
@@ -68,9 +67,9 @@ private:
 	 */
 	FGEvent();
 
-	FGEvent( const string& desc,
-		 callback_type cb,
-		 EventState status_,
+	FGEvent( const char* desc,
+		 fgCallback* cb,
+		 EventState status,
 		 interval_type ms );
 
 	/**
@@ -83,14 +82,19 @@ private:
 	 */
 	void reset()
 	{
-	    status = FG_EVENT_READY;
-	    ms_to_go = interval_ms;
+	    status_ = FG_EVENT_READY;
+	    ms_to_go_ = ms_;
 	}
 
 	/**
 	 * Execute this event's callback.
 	 */
 	void run();
+
+	bool is_ready() const { return status_ == FG_EVENT_READY; }
+
+	string name() const { return name_; }
+	interval_type interval() const { return ms_; }
 
 	/**
 	 * Display event statistics.
@@ -104,19 +108,19 @@ private:
 	 */
 	bool update( int dt_ms )
 	{
-	    if (status != FG_EVENT_READY)
+	    if (status_ != FG_EVENT_READY)
 		return false;
 
-	    ms_to_go -= dt_ms;
-	    return ms_to_go <= 0;
+	    ms_to_go_ -= dt_ms;
+	    return ms_to_go_ <= 0;
 	}
 
     private:
-	string description;
-	callback_type callback;
-	EventState status;
-	interval_type interval_ms;
-	int ms_to_go;
+	string name_;
+	fgCallback* callback_;
+	EventState status_;
+	interval_type ms_;
+	int ms_to_go_;
 
 	unsigned long cum_time;    // cumulative processor time of this event
 	unsigned long min_time;    // time of quickest execution
@@ -150,25 +154,39 @@ public:
      * @param state
      * @param interval Callback repetition rate in milliseconds.
      */
-    void Register( const string& desc,
-		   callback_type cb,
-		   EventState state,
-		   interval_type interval_ms );
-
-    /**
-     * 
-     */
-    void Register( const string& desc,
-		   callback_type cb,
-		   interval_type interval_ms )
+    void Register( const char* name,
+		   void (*cb)(),
+		   interval_type interval_ms,
+		   EventState state = FG_EVENT_READY )
     {
-	this->Register( desc, cb, FG_EVENT_READY, interval_ms );
+	this->Register( FGEvent( name, new fgFunctionCallback(cb), state, interval_ms ) );
+    }
+
+    template< class Obj >
+    void Register( const char* name,
+		   Obj* obj, void (Obj::*pmf)() const,
+		   interval_type interval_ms,
+		   EventState state = FG_EVENT_READY )
+    {
+	this->Register( FGEvent( name, new fgMethodCallback<Obj>(obj,pmf), state, interval_ms ) );
+    }
+
+    template< class Obj >
+    void Register( const char* name,
+		   Obj* obj, void (Obj::*pmf)(),
+		   interval_type interval_ms,
+		   EventState state = FG_EVENT_READY )
+    {
+	this->Register( FGEvent( name, new fgMethodCallback<Obj>(obj,pmf), state, interval_ms ) );
     }
 
     /**
      * Display statistics for all registered events.
      */
     void print_stats() const;
+
+private:
+    void Register( const FGEvent& event );
 
 private:
 

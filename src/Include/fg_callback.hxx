@@ -22,6 +22,8 @@
 #ifndef _FG_CALLBACK_HXX
 #define _FG_CALLBACK_HXX
 
+#include <stdlib.h>
+
 // -dw- need size_t for params() function
 #ifdef __MWERKS__
 typedef unsigned long	size_t;
@@ -114,20 +116,29 @@ fgFunctionCallback::call0v( void** )
 
 //-----------------------------------------------------------------------------
 //
-// Callback for invoking an object method.
+// Callback for invoking a member function.
 //
+//template< typename Ret, class T >
 template< class T >
 class fgMethodCallback : public fgCallback
 {
 public:
     // Pointer to method taking no arguments and returning void.
     typedef void (T::*Method0v)();
+    typedef void (T::*Method0vc)() const;
 
     // A callback instance to invoke method 'm' of object 'o' 
     fgMethodCallback( T* o, Method0v m )
 	: fgCallback(0),
 	  object(o),
 	  method0v(m),
+	  doPtr(&fgMethodCallback<T>::call0v) {}
+
+    // A callback instance to invoke a const method 'm' of object 'o' 
+    fgMethodCallback( T* o, Method0vc m )
+	: fgCallback(0),
+	  object(o),
+	  method0vc(m),
 	  doPtr(&fgMethodCallback<T>::call0v) {}
 
     // Create a clone on the heap.
@@ -146,7 +157,10 @@ private:
 
 private:
     T* object;
-    Method0v method0v;
+    union {
+	Method0v  method0v;
+	Method0vc method0vc;
+    };
 
     // typedef void * (fgMethodCallback::*DoPtr)( void ** );
     typedef void * (fgMethodCallback<T>::*DoPtr)( void ** );
@@ -174,5 +188,4 @@ fgMethodCallback<T>::call0v( void** )
 }
 
 #endif // _FG_CALLBACK_HXX
-
 

@@ -35,7 +35,6 @@
 #include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
 #include <Time/FGEventMgr.hxx>
-#include <boost/bind.hpp>
 
 #include "radiostack.hxx"
 
@@ -143,8 +142,7 @@ FGRadioStack::init ()
 
     // Search radio database once per second
     global_events.Register( "fgRadioSearch()",
-			    boost::bind( &FGRadioStack::search,
-                                         current_radiostack),
+			    current_radiostack, &FGRadioStack::search,
 			    1000 );
 }
 

@@ -105,7 +105,6 @@
 #include <Sound/fg_fx.hxx>
 #include <Sound/soundmgr.hxx>
 #include <Time/FGEventMgr.hxx>
-#include <boost/bind.hpp>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
 #include <Time/moonpos.hxx>
@@ -777,9 +776,8 @@ bool fgInitSubsystems( void ) {
     global_events.init();
 
     // Output event stats every 60 seconds
-    global_events.Register( "fgEVENT_MGR::PrintStats()",
-			    boost::bind( &FGEventMgr::print_stats,
-                                         &global_events ),
+    global_events.Register( "FGEventMgr::print_stats()",
+			    &global_events, &FGEventMgr::print_stats,
 			    60000 );
 
 
@@ -809,7 +807,7 @@ bool fgInitSubsystems( void ) {
 
     // update the lighting parameters (based on sun angle)
     global_events.Register( "fgLight::Update()",
-			    boost::bind( &fgLIGHT::Update, &cur_light_params ),
+			    &cur_light_params, &fgLIGHT::Update,
 			    30000 );
 
 
@@ -1128,5 +1126,3 @@ void fgReInitSubsystems( void )
 	fgSetBool("/sim/freeze/master", false);
     }
 }
-
-

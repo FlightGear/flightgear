@@ -4,15 +4,17 @@
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
-#include <functional>
-#include <boost/bind.hpp>
+// #include <functional>
+// #include <algorithm>
 
 #include "FGEventMgr.hxx"
 
 FGEventMgr::FGEvent::FGEvent()
-    : status(FG_EVENT_SUSP),
-      interval_ms(0),
-      ms_to_go(0),
+    : name_(""),
+      callback_(0),
+      status_(FG_EVENT_SUSP),
+      ms_(0),
+      ms_to_go_(0),
       cum_time(0),
       min_time(100000),
       max_time(0),
@@ -20,15 +22,15 @@ FGEventMgr::FGEvent::FGEvent()
 {
 }
 
-FGEventMgr::FGEvent::FGEvent( const string& desc,
-			      callback_type cb,
-			      EventState status_,
+FGEventMgr::FGEvent::FGEvent( const char* name,
+			      fgCallback* cb,
+			      EventState status,
 			      interval_type ms )
-    : description(desc),
-      callback(cb),
-      status(status_),
-      interval_ms(ms),
-      ms_to_go(ms),
+    : name_(name),
+      callback_(cb),
+      status_(status),
+      ms_(ms),
+      ms_to_go_(ms),
       cum_time(0),
       min_time(100000),
       max_time(0),
@@ -39,6 +41,7 @@ FGEventMgr::FGEvent::FGEvent( const string& desc,
 
 FGEventMgr::FGEvent::~FGEvent()
 {
+    //delete callback_;
 }
 
 void
@@ -50,7 +53,7 @@ FGEventMgr::FGEvent::run()
     start_time.stamp();
 
     // run the event
-    this->callback();
+    callback_->call(0);
 
     finish_time.stamp();
 
@@ -75,8 +78,8 @@ void
 FGEventMgr::FGEvent::print_stats() const
 {
     SG_LOG( SG_EVENT, SG_INFO, 
-            "  " << description 
-            << " int=" << interval_ms / 1000.0
+            "  " << name_
+            << " int=" << ms_ / 1000.0
             << " cum=" << cum_time
             << " min=" << min_time
             << " max=" <<  max_time
@@ -126,18 +129,14 @@ FGEventMgr::update( int dt )
 }
 
 void
-FGEventMgr::Register( const string& desc,
-		      callback_type cb,
-		      EventState state,
-		      interval_type ms )
+FGEventMgr::Register( const FGEvent& event )
 {
-    FGEvent event( desc, cb, state, ms );
-    if (state == FG_EVENT_READY)
-	event.run();
+//     if (event.is_ready())
+// 	event.run();
     event_table.push_back( event );
 
-    SG_LOG( SG_EVENT, SG_INFO, "Registered event " << desc
-	    << " to run every " << ms << "ms" );
+    SG_LOG( SG_EVENT, SG_INFO, "Registered event " << event.name()
+	    << " to run every " << event.interval() << "ms" );
 }
 
 void
@@ -147,8 +146,17 @@ FGEventMgr::print_stats() const
     SG_LOG( SG_EVENT, SG_INFO, "Event Stats" );
     SG_LOG( SG_EVENT, SG_INFO, "-----------" );
 
+#if 1
+    event_container_type::const_iterator first = event_table.begin();
+    event_container_type::const_iterator last = event_table.end();
+    for (; first != last; ++first)
+    {
+	first->print_stats();
+    }
+#else
+    // #@!$ MSVC can't handle const member functions.
     std::for_each( event_table.begin(), event_table.end(),
-		   boost::bind( &FGEvent::print_stats, _1 ) );
-
+        std::mem_fun_ref( &FGEvent::print_stats ) );
+#endif
     SG_LOG( SG_EVENT, SG_INFO, "" );
 }
