@@ -54,7 +54,7 @@ DME::init ()
 {
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
-    _altitude_node = fgGetNode("/position/altitude-deg", true);
+    _altitude_node = fgGetNode("/position/altitude-ft", true);
     _serviceable_node = fgGetNode("/instrumentation/dme/serviceable", true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/dme", true);
     _source_node = fgGetNode("/instrumentation/dme/frequencies/source", true);
@@ -93,7 +93,7 @@ DME::update (double delta_time_sec)
     double latitude_rad =
         _latitude_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double altitude_m =
-        _altitude_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+        _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
 
                                 // On timeout, scan again
     _time_before_search_sec -= delta_time_sec;
