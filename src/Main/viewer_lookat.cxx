@@ -133,7 +133,26 @@ void FGViewerLookAt::update() {
     sgdVec3 vp;
     sgdSubVec3( vp, abs_view_pos, sc );
     sgSetVec3( view_pos, vp );
-    sgAddVec3( view_pos, pilot_offset );
+
+    sgVec3 tmp_offset;
+    sgCopyVec3( tmp_offset, pilot_offset );
+    SG_LOG( SG_VIEW, SG_DEBUG, "tmp offset = "
+            << tmp_offset[0] << "," << tmp_offset[1] << ","
+            << tmp_offset[2] );
+	
+    //!!!!!!!!!!!!!!!!!!!	
+    // THIS IS THE EXPERIMENTAL VIEWING ANGLE SHIFTER
+    // THE MAJORITY OF THE WORK IS DONE IN GUI.CXX
+    extern float GuiQuat_mat[4][4];
+    sgXformPnt3( tmp_offset, tmp_offset, GuiQuat_mat );
+    SG_LOG( SG_VIEW, SG_DEBUG, "tmp_offset = "
+            << tmp_offset[0] << "," << tmp_offset[1] << ","
+            << tmp_offset[2] );
+	
+    sgAddVec3( view_pos, tmp_offset );
+    // !!!!!!!!!! testing
+	
+    // sgAddVec3( view_pos, pilot_offset );
 
     SG_LOG( SG_VIEW, SG_DEBUG, "sea level radius = " << sea_level_radius );
     SG_LOG( SG_VIEW, SG_DEBUG, "Polar view pos = " << p );
@@ -175,14 +194,6 @@ void FGViewerLookAt::update() {
     // cout << "World Up = " << world_up[0] << "," << world_up[1] << ","
     //      << world_up[2] << endl;
     
-
-    //!!!!!!!!!!!!!!!!!!!	
-    // THIS IS THE EXPERIMENTAL VIEWING ANGLE SHIFTER
-    // THE MAJORITY OF THE WORK IS DONE IN GUI.CXX
-    // this in gui.cxx for now just testing
-    extern float GuiQuat_mat[4][4];
-    sgPreMultMat4( VIEW, GuiQuat_mat);
-    // !!!!!!!!!! testing	
 
     // Given a vector pointing straight down (-Z), map into onto the
     // local plane representing "horizontal".  This should give us the
