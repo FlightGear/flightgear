@@ -74,5 +74,5 @@ void net_hud_update(){
   fgd_alt = get_altitude();
   sprintf(fgd_str,"Found %s %3.3f %3.3f", fgd_pilot, fgd_lat, fgd_lon);
 //  printf("Lon: %.3f Lat: %.3f Alt: %.f\n", fgd_lon, fgd_lat, fgd_alt);
-  HUD_TextList.add( fgText( 40, 18, fgd_str) );
+  HUD_TextList.add( fgText( 40, 18 ,fgd_str) );
 }
