@@ -89,17 +89,7 @@ int FGTileMgr::init( void ) {
     if ( state != Start ) {
 	FG_LOG( FG_TERRAIN, FG_INFO,
 		"... Reinitializing." );
-
-	// This is necessay to keep bookeeping straight for the
-	// tile_cache   -- which actually handles all the
-	// (de)allocations  
-	while( load_queue.size() ) {
-	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "Load queue not empty, popping a tile" );
-	    FGLoadRec pending = load_queue.front();
-	    load_queue.pop_front();
-	    load_tile( pending.b, pending.cache_index );
-	}
+	destroy_queue();
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO,
 		"... First time through." );
@@ -159,9 +149,7 @@ int FGTileMgr::sched_tile( const FGBucket& b ) {
 void FGTileMgr::load_tile( const FGBucket& b, int cache_index) {
 
     FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
-
     global_tile_cache.fill_in(cache_index, b);
-
     FG_LOG( FG_TERRAIN, FG_DEBUG, "Loaded for cache index: " << cache_index );
 }
 
@@ -202,7 +190,11 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
     if ( result > -9000 ) {
 	scenery.cur_elev = result;
 	scenery.cur_radius = geoc.radius();
-	sgdCopyVec3(scenery.cur_normal, hit_list.get_normal(this_hit));
+	sgVec3 tmp;
+	sgSetVec3(tmp, hit_list.get_normal(this_hit));
+	current_view.CurrentNormalInLocalPlane(tmp, tmp);
+	sgdSetVec3( scenery.cur_normal, tmp );
+	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
 	return true;
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
@@ -218,11 +210,9 @@ FGBucket FGTileMgr::BucketOffset( int dx, int dy )
 {
     double clat, clon, span;
     if( scroll_direction == SCROLL_INIT ) {
-	pending.set_bucket( longitude, latitude );
-	clat = pending.get_center_lat() + dy * FG_BUCKET_SPAN;
-
+	// use current latitude and longitude
 	// walk dy units in the lat direction
-	pending.set_bucket( longitude, clat );
+	clat = current_bucket.get_center_lat() + dy * FG_BUCKET_SPAN;
 
 	// find the lon span for the new latitude
 	span = bucket_span( clat );
@@ -230,11 +220,9 @@ FGBucket FGTileMgr::BucketOffset( int dx, int dy )
 	// walk dx units in the lon direction
 	clon = longitude + dx * span;
     } else	{
-	pending.set_bucket( last_longitude, last_latitude );
-	clat = pending.get_center_lat() + dy * FG_BUCKET_SPAN;
-
+	// use previous latitude and longitude
 	// walk dy units in the lat direction
-	pending.set_bucket( last_longitude, clat );
+	clat = previous_bucket.get_center_lat() + dy * FG_BUCKET_SPAN;
 
 	// find the lon span for the new latitude
 	span = bucket_span( clat );
@@ -266,7 +254,7 @@ void FGTileMgr::scroll( void )
 	dw = tile_diameter / 2;
 	dh = dw + 1;
 	for ( i = 0; i < tile_diameter; i++ ) {
-	    sched_tile( BucketOffset( i - dw, dh) );
+	    sched_tile( BucketOffset( i - dw, dh ) );
 	}
 	break;
     case SCROLL_EAST:
@@ -279,19 +267,19 @@ void FGTileMgr::scroll( void )
 	}
 	break;
     case SCROLL_SOUTH:
-	dw = tile_diameter / 2;
-	dh = -dw - 1;
 	FG_LOG( FG_TERRAIN, FG_DEBUG, 
 		"  (South) Loading " << tile_diameter << " tiles" );
+	dw = tile_diameter / 2;
+	dh = -dw - 1;
 	for ( i = 0; i < tile_diameter; i++ ) {
-	    sched_tile( BucketOffset( i - dw, dh) );
+	    sched_tile( BucketOffset( i - dw, dh ) );
 	}
 	break;
     case SCROLL_WEST:
-	dh = tile_diameter / 2;
-	dw = -dh - 1;
 	FG_LOG( FG_TERRAIN, FG_DEBUG, 
 		"  (West) Loading " << tile_diameter << " tiles" );
+	dh = tile_diameter / 2;
+	dw = -dh - 1;
 	for ( i = 0; i < tile_diameter; i++ ) {
 	    sched_tile( BucketOffset( dw, i - dh ) );
 	}
@@ -361,6 +349,27 @@ void FGTileMgr::initialize_queue()
             load_queue.pop_front();
             load_tile( pending.b, pending.cache_index );
         }
+    }
+}
+
+
+// forced emptying of the queue
+// This is necessay to keep bookeeping straight for the
+// tile_cache   -- which actually handles all the
+// (de)allocations  
+void FGTileMgr::destroy_queue() {
+    while( load_queue.size() ) {
+	FG_LOG( FG_TERRAIN, FG_INFO, 
+		"Load queue not empty, popping a tile" );
+	FGLoadRec pending = load_queue.front();
+	load_queue.pop_front();
+        FGTileEntry *t = global_tile_cache.get_tile( pending.cache_index );
+	// just t->mark_unused() should be enough
+	// but a little paranoia doesn't hurt us here
+	if(t->is_scheduled_for_use())
+	    t->mark_unused();
+	else
+	    load_tile( pending.b, pending.cache_index );
     }
 }
 

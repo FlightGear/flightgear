@@ -151,6 +151,9 @@ public:
     // Update the field of view coefficients
     void UpdateFOV( const fgOPTIONS& o );
 
+    // Transform a vector from world coordinates to the local plane
+    void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src);
+
     // accessor functions
     inline double get_view_offset() const { return view_offset; }
     inline void set_view_offset( double a ) { view_offset = a; }

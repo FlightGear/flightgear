@@ -55,6 +55,36 @@ FGView current_view;
 FGView::FGView( void ) {
 }
 
+#define USE_FAST_VIEWROT
+#ifdef USE_FAST_VIEWROT
+// VIEW_ROT = LARC_TO_SSG * ( VIEWo * VIEW_OFFSET )
+// This takes advantage of the fact that VIEWo and VIEW_OFFSET
+// only have entries in the upper 3x3 block
+// and that LARC_TO_SSG is just a shift of rows   NHV
+inline static void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 )
+{
+    for ( int j = 0 ; j < 3 ; j++ ) {
+	dst[2][j] = m2[0][0] * m1[0][j] +
+	    m2[0][1] * m1[1][j] +
+	    m2[0][2] * m1[2][j];
+
+	dst[0][j] = m2[1][0] * m1[0][j] +
+	    m2[1][1] * m1[1][j] +
+	    m2[1][2] * m1[2][j];
+
+	dst[1][j] = m2[2][0] * m1[0][j] +
+	    m2[2][1] * m1[1][j] +
+	    m2[2][2] * m1[2][j];
+    }
+    dst[0][3] = 
+	dst[1][3] = 
+	dst[2][3] = 
+	dst[3][0] = 
+	dst[3][1] = 
+	dst[3][2] = SG_ZERO;
+    dst[3][3] = SG_ONE;
+}
+#endif
 
 // Initialize a view structure
 void FGView::Init( void ) {
@@ -73,6 +103,7 @@ void FGView::Init( void ) {
 	set_win_ratio( (winHeight*0.4232) / winWidth );
     }
 
+#ifndef USE_FAST_VIEWROT
     // This never changes -- NHV
     LARC_TO_SSG[0][0] = 0.0; 
     LARC_TO_SSG[0][1] = 1.0; 
@@ -93,7 +124,8 @@ void FGView::Init( void ) {
     LARC_TO_SSG[3][1] = 0.0; 
     LARC_TO_SSG[3][2] = 0.0; 
     LARC_TO_SSG[3][3] = 1.0; 
-	
+#endif // USE_FAST_VIEWROT
+
     force_update_fov_math();
 }
 
@@ -248,7 +280,7 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 		   -f.get_Latitude() * RAD_TO_DEG );
 
     sgSetVec3( local_up, UP[0][0], UP[0][1], UP[0][2] );
-    //    sgXformVec3( local_up, UP );
+    // sgXformVec3( local_up, UP );
     // cout << "Local Up = " << local_up[0] << "," << local_up[1] << ","
     //      << local_up[2] << endl;
     
@@ -283,19 +315,23 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     sgMakeRotMat4( VIEW_OFFSET, view_offset * RAD_TO_DEG, view_up );
     // cout << "VIEW_OFFSET matrix" << endl;
     // print_sgMat4( VIEW_OFFSET );
+    sgXformVec3( view_forward, forward, VIEW_OFFSET );
+    // cout << "view_forward = " << view_forward[0] << ","
+    //      << view_forward[1] << "," << view_forward[2] << endl;
 	
     // VIEW_ROT = LARC_TO_SSG * ( VIEWo * VIEW_OFFSET )
-    sgMat4 TMP2;
-    // sgMultMat4( TMP2, VIEWo, VIEW_OFFSET );
-    // sgMultMat4( VIEW_ROT, LARC_TO_SSG, TMP2 );
+#ifdef USE_FAST_VIEWROT
+    fgMakeViewRot( VIEW_ROT, VIEW_OFFSET, VIEWo );
+#else
+    // sgMultMat4( VIEW_ROT, VIEW_OFFSET, VIEWo );
+    // sgPreMultMat4( VIEW_ROT, LARC_TO_SSG );
     sgCopyMat4( VIEW_ROT, VIEWo );
     sgPostMultMat4( VIEW_ROT, VIEW_OFFSET );
     sgPreMultMat4( VIEW_ROT, LARC_TO_SSG );
-	
+#endif
     // cout << "VIEW_ROT matrix" << endl;
     // print_sgMat4( VIEW_ROT );
 
-	
     sgVec3 trans_vec;
     sgSetVec3( trans_vec, 
 	       view_pos.x() + pilot_offset_world[0],
@@ -314,11 +350,6 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     sgPreMultMat4( VIEW, quat_mat);
     // !!!!!!!!!! testing	
 
-    sgMakeRotMat4( TMP, view_offset * RAD_TO_DEG, view_up );
-    sgXformVec3( view_forward, forward, TMP );
-    // cout << "view_forward = " << view_forward[0] << ","
-    //      << view_forward[1] << "," << view_forward[2] << endl;
-    
     // make a vector to the current view position
     sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
 
@@ -333,14 +364,36 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     //      << surface_south[1] << "," << surface_south[2] << endl;
 
     // now calculate the surface east vector
+#define USE_FAST_SURFACE_EAST
+#ifdef USE_FAST_SURFACE_EAST
+    sgVec3 local_down;
+    sgNegateVec3(local_down, local_up);
+    sgVectorProductVec3(surface_east, surface_south, local_down);
+#else
+#define USE_LOCAL_UP
+#ifdef USE_LOCAL_UP
+    sgMakeRotMat4( TMP, FG_PI_2 * RAD_TO_DEG, local_up );
+#else
     sgMakeRotMat4( TMP, FG_PI_2 * RAD_TO_DEG, view_up );
+#endif // USE_LOCAL_UP
     // cout << "sgMat4 TMP" << endl;
     // print_sgMat4( TMP );
     sgXformVec3(surface_east, surface_south, TMP);
-    // cout << "Surface direction directly east" << surface_east[0] << ","
+#endif //  USE_FAST_SURFACE_EAST
+    // cout << "Surface direction directly east " << surface_east[0] << ","
     //      << surface_east[1] << "," << surface_east[2] << endl;
     // cout << "Should be close to zero = "
     //      << sgScalarProductVec3(surface_south, surface_east) << endl;
+}
+
+
+void  FGView::CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
+    sgVec3 tmp;
+    sgSetVec3(tmp, src[0], src[1], src[2] );
+    sgMat4 TMP;
+    sgTransposeNegateMat4 ( TMP, UP ) ;
+    sgXformVec3(tmp, tmp, TMP);
+    sgSetVec3(dst, tmp[2], tmp[1], tmp[0] );
 }
 
 

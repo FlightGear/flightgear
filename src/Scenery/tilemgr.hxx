@@ -96,6 +96,11 @@ private:
     // initialize the cache
     void initialize_queue();
 
+    // forced emptying of the queue.  This is necessay to keep
+    // bookeeping straight for the tile_cache -- which actually
+    // handles all the (de)allocations
+    void destroy_queue();
+
     FGBucket BucketOffset( int dx, int dy );
 
     // schedule a tile for loading
