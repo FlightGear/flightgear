@@ -128,7 +128,7 @@ void FGExternalPipe::init() {
     int result;
 
     sprintf( cmd, "1longitude-deg=%.8f", lon );
-    result = std::write( pd1, cmd, strlen(cmd) );
+    result = write( pd1, cmd, strlen(cmd) );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
     }
@@ -140,25 +140,25 @@ void FGExternalPipe::init() {
     }
 
     sprintf( cmd, "1altitude-ft=%.8f", alt );
-    result = std::write( pd1, cmd, strlen(cmd) );
+    result = write( pd1, cmd, strlen(cmd) );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
     }
 
     sprintf( cmd, "1ground-m=%.8f", ground );
-    result = std::write( pd1, cmd, strlen(cmd) );
+    result = write( pd1, cmd, strlen(cmd) );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
     }
 
     sprintf( cmd, "1speed-kts=%.8f", speed );
-    result = std::write( pd1, cmd, strlen(cmd) );
+    result = write( pd1, cmd, strlen(cmd) );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
     }
 
     sprintf( cmd, "1heading-deg=%.8f", heading );
-    result = std::write( pd1, cmd, strlen(cmd) );
+    result = write( pd1, cmd, strlen(cmd) );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
     }
@@ -170,7 +170,7 @@ void FGExternalPipe::init() {
     } else {
       sprintf( cmd, "1reset=air" );
     }
-    result = std::write( pd1, cmd, strlen(cmd) );
+    result = write( pd1, cmd, strlen(cmd) );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
     }
@@ -203,7 +203,7 @@ void FGExternalPipe::update( double dt ) {
     *((int *)ptr) = iterations;
     ptr += sizeof(int);
     memcpy( ptr, (char *)(&ctrls), length );
-    result = std::write( pd1, buf, length + 1 );
+    result = write( pd1, buf, length + 1 );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: "
                 << fifo_name_1 );
@@ -211,7 +211,7 @@ void FGExternalPipe::update( double dt ) {
     // cout << "  wrote to pipe" << endl;
 
     length = sizeof(fdm);
-    result = std::read( pd2, (char *)(& fdm), length );
+    result = read( pd2, (char *)(& fdm), length );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Read error from named pipe: "
                 << fifo_name_2 );
