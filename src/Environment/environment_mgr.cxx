@@ -32,8 +32,6 @@
 
 extern SGSky *thesky;		// FIXME: from main.cxx
 
-#define MAX_CLOUD_LAYERS 5
-
 
 FGEnvironmentMgr::FGEnvironmentMgr ()
   : _environment(new FGEnvironment),
@@ -54,14 +52,6 @@ FGEnvironmentMgr::init ()
   _controller->setEnvironment(_environment);
   _controller->init();
   _update_fdm();
-
-  SGPath texture_path(globals->get_fg_root());
-  texture_path.append("Textures");
-  texture_path.append("Sky");
-  for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
-    SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
-    thesky->add_cloud_layer(layer);
-  }
 }
 
 void
@@ -146,6 +136,19 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/environment/wind-from-north-fps");
   fgUntie("/environment/wind-from-east-fps");
   fgUntie("/environment/wind-from-down-fps");
+  for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
+    char buf[128];
+    sprintf(buf, "/environment/clouds/layer[%d]/span-m", i);
+    fgUntie(buf);
+    sprintf(buf, "/environment/clouds/layer[%d]/elevation-ft", i);
+    fgUntie(buf);
+    sprintf(buf, "/environment/clouds/layer[%d]/thickness-ft", i);
+    fgUntie(buf);
+    sprintf(buf, "/environment/clouds/layer[%d]/transition-ft", i);
+    fgUntie(buf);
+    sprintf(buf, "/environment/clouds/layer[%d]/type", i);
+    fgUntie(buf);
+  }
 }
 
 void

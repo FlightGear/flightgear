@@ -45,6 +45,10 @@ class FGEnvironmentMgr : public FGSubsystem
 
 public:
 
+  enum {
+    MAX_CLOUD_LAYERS = 5
+  };
+
   FGEnvironmentMgr ();
   virtual ~FGEnvironmentMgr ();
 
