@@ -4,7 +4,7 @@ libraries.  Key input files for this system are:
 
     configure.in - Top level directory
     Makefile.am - One in each subdirectory
-    Simulator/Include/config.in - input file for building config.h
+    Include/config.in - input file for building config.h
 
 If you need to modify any of these files, you will need to build and
 install the following packages:

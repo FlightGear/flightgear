@@ -117,7 +117,7 @@ dnl Checks for library functions.
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS( ftime gettimeofday mktime strstr rand random \
-	setitimer getitimer signal GetLocalTime )
+	setitimer getitimer signal GetLocalTime rint )
 
 if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then
     echo 
