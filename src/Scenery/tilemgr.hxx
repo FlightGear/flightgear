@@ -35,6 +35,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 
+#include "FGTileLoader.hxx"
 #include "hitlist.hxx"
 #include "newcache.hxx"
 
@@ -102,9 +103,15 @@ private:
     double last_latitude;
 
     /**
-     * 
+     * tile cache
      */
     FGNewCache tile_cache;
+
+    /**
+     * Queue tiles for loading.
+     */
+    FGTileLoader loader;
+    int counter_hack;
 
 public:
 

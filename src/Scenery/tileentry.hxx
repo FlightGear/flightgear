@@ -165,7 +165,13 @@ public:
      * Return true if the tile entry is loaded, otherwise return false
      * indicating that the loading thread is still working on this.
      */
-   inline bool is_loaded() const { return loaded; }
+    inline bool is_loaded() const { return loaded; }
+
+    /**
+     * Return the "bucket" for this tile
+     */
+    inline SGBucket get_tile_bucket() const { return tile_bucket; }
+
 };
 
 

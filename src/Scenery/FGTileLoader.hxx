@@ -62,6 +62,14 @@ public:
     void add( FGTileEntry* tile );
 
     /**
+     * The tile loader thread will only load one tile per call to the
+     * update() method.  This is a way to spread out the work of the
+     * tile loader and slow it down so it is less intrusive.  For
+     * systems built without thead support this is a no-op.
+     */
+    void update();
+
+    /**
      * Returns whether the load queue is empty (contains no elements).
      * @return true if load queue is empty otherwise returns false.
      */
@@ -123,7 +131,8 @@ private:
      * Lock and synchronize access to tile queue.
      */
     SGMutex mutex;
-    SGCondition cond;
+    SGCondition queue_cond;
+    SGCondition frame_cond;
 
     /**
      * Thread cleanup handler.

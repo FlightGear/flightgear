@@ -116,8 +116,14 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
     FGTileEntry *t = tile_cache.get_tile( b );
 
     if ( t == NULL ) {
-        // register a load request
-	tile_cache.load_tile( b );
+        // create a new entry
+        FGTileEntry *e = new FGTileEntry( b );
+
+        // insert the tile into the cache
+	tile_cache.insert_tile( e );
+
+        // Schedule tile for loading
+        loader.add( e );
     }
 }
 
@@ -271,8 +277,6 @@ void FGTileMgr::initialize_queue()
     SG_LOG( SG_TERRAIN, SG_INFO, "Updating Tile list for " << current_bucket );
     // cout << "tile cache size = " << tile_cache.get_size() << endl;
 
-    int i;
-
     // wipe/initialize tile cache
     // tile_cache.init();
     previous_bucket.make_bad();
@@ -288,6 +292,7 @@ void FGTileMgr::initialize_queue()
 #if 0
     // Now force a load of the center tile and inner ring so we
     // have something to see in our first frame.
+    int i;
     for ( i = 0; i < 9; ++i ) {
         if ( load_queue.size() ) {
             SG_LOG( SG_TERRAIN, SG_DEBUG, 
@@ -401,6 +406,13 @@ int FGTileMgr::update( double lon, double lat ) {
     previous_bucket = current_bucket;
     last_longitude = longitude;
     last_latitude  = latitude;
+
+    // activate loader thread one out of every 5 frames
+    counter_hack = (counter_hack + 1) % 5;
+    if ( !counter_hack ) {
+        // Notify the tile loader that it can load another tile
+        loader.update();
+    }
 
     return 1;
 }

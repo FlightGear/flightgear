@@ -46,7 +46,6 @@
 #include <simgear/math/point3d.hxx>
 
 #include "tileentry.hxx"
-#include "FGTileLoader.hxx"
 
 SG_USING_STD(map);
 
@@ -68,11 +67,6 @@ class FGNewCache {
 
     // Free a tile cache entry
     void entry_free( long cache_index );
-
-    /**
-     * Queue tiles for loading.
-     */
-    FGTileLoader loader;
 
 public:
 
@@ -128,7 +122,7 @@ public:
      * Create a new tile and enqueue it for loading.
      * @param b 
      */
-    void load_tile( const SGBucket& b );
+    void insert_tile( FGTileEntry* e );
 };
 
 

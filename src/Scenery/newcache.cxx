@@ -212,18 +212,13 @@ void FGNewCache::make_space() {
  * Create a new tile and schedule it for loading.
  */
 void
-FGNewCache::load_tile( const SGBucket& b )
+FGNewCache::insert_tile( FGTileEntry *e )
 {
     // clear out a distant entry in the cache if needed.
     make_space();
 
-    // create the entry
-    FGTileEntry *e = new FGTileEntry( b );
-
     // register it in the cache
-    long tile_index = b.gen_index();
+    long tile_index = e->get_tile_bucket().gen_index();
     tile_cache[tile_index] = e;
 
-    // Schedule tile for loading
-    loader.add( e );
 }
