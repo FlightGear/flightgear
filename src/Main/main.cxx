@@ -741,14 +741,15 @@ void fgRenderFrame() {
 
 #ifdef FG_EXPERIMENTAL_LIGHTING
         // Enable states for drawing points with GL_extension
+        glEnable(GL_POINT_SMOOTH);
+
 	if (glutExtensionSupported("GL_EXT_point_parameters")) {
-            glEnable(GL_POINT_SMOOTH);
             float quadratic[3] = {1.0, 0.001, 0.0000001};
             // makes the points fade as they move away
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
             glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
-            glPointSize(2.0);
 	}
+        glPointSize(2.0);
 
         // blending function for runway lights
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
