@@ -28,6 +28,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/math/sg_random.h>
 #include <Main/globals.hxx>
 
 #include "ATCVoice.hxx"
@@ -143,7 +144,8 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 		dataOK = false;
 		return(NULL);
 	}
-	
+
+	unsigned char* tmpbuf = new unsigned char[cumLength];	
 	unsigned char* outbuf = new unsigned char[cumLength];
 	len = cumLength;
 	unsigned int bufpos = 0;
@@ -162,10 +164,17 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 			dataOK = false;
 			return(NULL);
 		}
-		memcpy(outbuf + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
+		memcpy(tmpbuf + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
 		bufpos += wdptr[i].length;
 	}
 	
+	// tmpbuf now contains the message starting at the beginning - but we want it to start at a random position.
+	unsigned int offsetIn = (int)(cumLength * sg_random());
+	if(offsetIn > cumLength) offsetIn = cumLength;
+	memcpy(outbuf, tmpbuf + offsetIn, (cumLength - offsetIn));
+	memcpy(outbuf + (cumLength - offsetIn), tmpbuf, offsetIn);
+	
+	delete[] tmpbuf;
 	delete[] wdptr;
 
 	dataOK = true;	
