@@ -58,7 +58,12 @@
 #  define ios_in       ios::in
 #  define ios_out      ios::out
 #  define ios_app      ios::app
+
+#if defined(__GNUC__) && __GNUC_MINOR__ < 8
+#  define ios_binary   ios::bin
+#else
 #  define ios_binary   ios::binary
+#endif
 
 #  define ios_seekdir  ios::seek_dir
 
@@ -142,6 +147,9 @@ struct gzifstream_base
 #endif // _zfstream_hxx
 
 // $Log$
+// Revision 1.6  1998/12/07 21:10:26  curt
+// Portability improvements.
+//
 // Revision 1.5  1998/11/06 21:17:29  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using
@@ -150,3 +158,4 @@ struct gzifstream_base
 // Revision 1.4  1998/11/06 14:05:16  curt
 // More portability improvements by Bernie Bright.
 //
+
