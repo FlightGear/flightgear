@@ -59,7 +59,9 @@ private:
 
   void set_playing (const char * soundName, bool state = true);
 
-  static const int MAX_GEAR = 20;
+  enum {
+    MAX_GEAR = 20
+  };
 
   double _old_flap_position;
 

@@ -236,7 +236,7 @@ FGFX::update ()
   // Update the rumble.
   ////////////////////////////////////////////////////////////////////
 
-  float totalGear = min(cur_fdm_state->get_num_gear(), MAX_GEAR);
+  float totalGear = min(cur_fdm_state->get_num_gear(), int(MAX_GEAR));
   float gearOnGround = 0;
 
 
