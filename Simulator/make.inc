@@ -61,7 +61,7 @@ RANLIB = ranlib
 #
 #---------------------------------------------------------------------------
 
-FG_CFLAGS = -g -Wall -DUSE_RAND
+FG_CFLAGS = -g -Wall
 
 
 #---------------------------------------------------------------------------
@@ -72,9 +72,9 @@ FG_CFLAGS = -g -Wall -DUSE_RAND
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
-# SGI IRIX with the GLUT toolkit (surprisingly, this also works on our 
-#                                 SunOS 4.x machine with the way we have
-#                                 Mesa & Glut installed.)
+# SGI IRIX with the GLUT toolkit 
+#     (Surprisingly, this also works on our SunOS 4.x machine with the 
+#     way we have Mesa & Glut installed.)
 #
 # INTERFACE_FLAGS = -DGLUT
 # INTERFACE_LIBS = -lglut
@@ -85,26 +85,29 @@ FG_CFLAGS = -g -Wall -DUSE_RAND
 #---------------------------------------------------------------------------
 # Linux/Mesa with the GLUT toolkit
 #
-# INTERFACE_FLAGS = -DGLUT
-# INTERFACE_LIBS = -lglut
-# INTERFACE_FILES = GLUTkey.c
-# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+INTERFACE_FLAGS = -DGLUT
+INTERFACE_LIBS = -lglut
+INTERFACE_FILES = GLUTkey.c
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
 # Cygnus Win32 (gcc based) with the GLUT toolkit
 #
-INTERFACE_FLAGS = -DGLUT 
-INTERFACE_LIBS = -Wl,--subsystem,windows -L. -lglut
-INTERFACE_FILES = GLUTkey.c
-GRAPHICS_LIBS = -lglu32 -lopengl32
+# INTERFACE_FLAGS = -DGLUT 
+# INTERFACE_LIBS = -Wl,--subsystem,windows -L. -lglut
+# INTERFACE_FILES = GLUTkey.c
+# GRAPHICS_LIBS = -lglu32 -lopengl32
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1997/07/18 14:28:34  curt
+# Hacked in some support for wind/turbulence.
+#
 # Revision 1.6  1997/07/16 20:04:42  curt
 # Minor tweaks to aid Win32 port.
 #

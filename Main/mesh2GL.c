@@ -31,6 +31,7 @@
 #include <GL/glut.h>
 
 #include <stdlib.h>         /* for random(), srandom() */
+#include <time.h>           /* for time() to seed srandom() */
 
 #include "../constants.h"
 #include "../Scenery/mesh.h"
@@ -86,6 +87,7 @@ GLint mesh2GL(struct mesh *m) {
     /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
     double randx, randy;
+    int t;
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
     struct fgCartesianPoint p11, p12, p21, p22;
@@ -186,6 +188,12 @@ GLint mesh2GL(struct mesh *m) {
     }
     */
 
+#ifdef USE_RAND
+    srand(time(&t));
+#else
+    srandom(time(&t));
+#endif
+
     for ( i = 0; i < 200; i++ ) {
 #ifdef USE_RAND
 	randx = rand() * 3600.0 / RAND_MAX;
@@ -206,9 +214,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.34  1997/07/16 20:04:50  curt
-/* Minor tweaks to aid Win32 port.
+/* Revision 1.35  1997/07/18 14:28:35  curt
+/* Hacked in some support for wind/turbulence.
 /*
+ * Revision 1.34  1997/07/16 20:04:50  curt
+ * Minor tweaks to aid Win32 port.
+ *
  * Revision 1.33  1997/07/14 16:26:04  curt
  * Testing/playing -- placed objects randomly across the entire terrain.
  *

@@ -416,6 +416,17 @@ static void fgMainLoop( void ) {
 	printf("<*> resetting altitude to %.0f meters\n", 
 	       FG_Altitude * FEET_TO_METER);
     }
+
+#ifdef USE_RAND
+    FG_U_gust = rand() * 3.0 / RAND_MAX - 1.0;
+    FG_V_gust = rand() * 3.0 / RAND_MAX - 1.0;
+    FG_W_gust = rand() * 3.0 / RAND_MAX - 1.0;
+#else
+    FG_U_gust = random() * 3.0 / RAND_MAX - 1.0;
+    FG_V_gust = random() * 3.0 / RAND_MAX - 1.0;
+    FG_W_gust = random() * 3.0 / RAND_MAX - 1.0;
+#endif
+
 }
 
 
@@ -537,6 +548,9 @@ int main( int argc, char *argv[] ) {
     FG_Dy_cg = 0.000000E+00;
     FG_Dz_cg = 0.000000E+00;
 
+    /* Configure some wind & turbulance */
+    FG_V_north_airmass = 15; /* ft/s =~ 10mph */
+
     /* Set initial position and slew parameters */
     /* fgSlewInit(-398391.3, 120070.41, 244, 3.1415); */ /* GLOBE Airport */
     /* fgSlewInit(-335340,162540, 15, 4.38); */
@@ -615,9 +629,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.34  1997/07/16 20:04:48  curt
-/* Minor tweaks to aid Win32 port.
+/* Revision 1.35  1997/07/18 14:28:34  curt
+/* Hacked in some support for wind/turbulence.
 /*
+ * Revision 1.34  1997/07/16 20:04:48  curt
+ * Minor tweaks to aid Win32 port.
+ *
  * Revision 1.33  1997/07/12 03:50:20  curt
  * Added an #include <Windows32/Base.h> to help compiling for Win32
  *
