@@ -767,6 +767,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	parse_channel( "pve", arg.substr(6) );
     } else if ( arg.find( "--rul=" ) != string::npos ) {
 	parse_channel( "rul", arg.substr(6) );
+    } else if ( arg.find( "--joyclient=" ) != string::npos ) {
+	parse_channel( "joyclient", arg.substr(12) );
 #ifdef FG_NETWORK_OLK
     } else if ( arg == "--disable-network-olk" ) {
 	network_olk = false;	

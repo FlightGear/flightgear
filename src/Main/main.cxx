@@ -1292,10 +1292,6 @@ int main( int argc, char **argv ) {
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
 
-    // Initialize ssg (from plib).  Needs to come before we do any
-    // other ssg related stuff
-    ssgInit();
-
     // set default log levels
     fglog().setLogLevels( FG_ALL, FG_INFO );
 
@@ -1324,10 +1320,14 @@ int main( int argc, char **argv ) {
 
     // Initialize the various GLUT Event Handlers.
     if( !fgGlutInitEvents() ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, 
-		"GLUT event handler initialization failed ..." );
-	exit(-1);
+ 	FG_LOG( FG_GENERAL, FG_ALERT, 
+ 		"GLUT event handler initialization failed ..." );
+ 	exit(-1);
     }
+ 
+    // Initialize ssg (from plib).  Needs to come before we do any
+    // other ssg stuff, but after opengl/glut has been initialized.
+    ssgInit();
 
     // Initialize the user interface (we need to do this before
     // passing off control to glut and before fgInitGeneral to get our

@@ -41,6 +41,7 @@
 #include <Network/nmea.hxx>
 #include <Network/pve.hxx>
 #include <Network/rul.hxx>
+#include <Network/joyclient.hxx>
 
 #include <Time/timestamp.hxx>
 
@@ -86,6 +87,9 @@ static FGProtocol *parse_port_config( const string& config )
     } else if ( protocol == "rul" ) {
 	FGRUL *rul = new FGRUL;
 	io = rul;
+    } else if ( protocol == "joyclient" ) {
+	FGJoyClient *joyclient = new FGJoyClient;
+	io = joyclient;
     } else {
 	return NULL;
     }
