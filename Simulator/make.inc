@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 21
+FG_VERSION_MINOR = 22
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -159,6 +159,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.30  1998/01/06 01:20:03  curt
+# Version 0.21 -> 0.22
+#
 # Revision 1.29  1998/01/05 18:44:33  curt
 # Add an option to advance/decrease time from keyboard.
 #
