@@ -102,7 +102,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
     // int realh = screen->h;
 }
 
-static void handleKey(int key, int keyup)
+static void handleKey(int key, int raw, int keyup)
 {
     int modmask = 0;
     switch(key) {
@@ -135,6 +135,26 @@ static void handleKey(int key, int keyup)
     case SDLK_F11:      key = PU_KEY_F11;       break;
     case SDLK_F12:      key = PU_KEY_F12;       break;
     }
+
+    // Keypad codes.  This is a situation where we *don't* want the
+    // Unicode cooking for our input.  Oddly, neither PUI nor Glut
+    // define these anywhere, so I lifted the numbers out of
+    // FlightGear's keyboard.xml.  Some unused code are therefore
+    // missing.
+    switch(raw) {
+    case SDLK_KP0:      key = 364; break;
+    case SDLK_KP1:      key = 363; break;
+    case SDLK_KP2:      key = 359; break;
+    case SDLK_KP3:      key = 361; break;
+    case SDLK_KP4:      key = 356; break;
+    case SDLK_KP5:      key = 309; break;
+    case SDLK_KP6:      key = 358; break;
+    case SDLK_KP7:      key = 362; break;
+    case SDLK_KP8:      key = 357; break;
+    case SDLK_KP9:      key = 360; break;
+    case SDLK_KP_ENTER: key = 269; break;
+    }
+
     int keymod = 0;
     if(keyup) {
         CurrentModifiers &= ~modmask;
@@ -170,7 +190,7 @@ void fgOSMainLoop()
             case SDL_KEYUP:
                 key = e.key.keysym.unicode;
                 if(key == 0) key = e.key.keysym.sym;
-                handleKey(key, e.key.state == SDL_RELEASED);
+                handleKey(key, e.key.keysym.sym, e.key.state == SDL_RELEASED);
                 break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
