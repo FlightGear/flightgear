@@ -84,7 +84,7 @@ typedef struct {
 /*
  * Needed for windows builds
  */
-#ifdef ALpha
+#ifdef Alpha
 #undef Alpha
 #endif
 
