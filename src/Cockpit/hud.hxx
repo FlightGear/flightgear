@@ -48,6 +48,7 @@
 
 #include <vector>       // STL vector
 #include <deque>        // STL double ended queue
+#include STL_FSTREAM
 
 #include <simgear/constants.h>
 
@@ -56,6 +57,8 @@
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
 #include <GUI/gui.h>
+#include <Main/globals.hxx>
+#include <Main/viewmgr.hxx>
 
 #include "hud_opts.hxx"
 
@@ -218,6 +221,7 @@ extern float get_aux3(void);
 extern float get_aux4(void);
 extern float get_aux5 (void);
 extern float get_aux6 (void);
+extern float get_aux7 (void);
 extern float get_aux8(void);
 extern float get_aux9(void);
 extern float get_aux10(void);
@@ -240,7 +244,7 @@ enum  hudinstype{ HUDno_instr,
               HUDladder,
               HUDcirc_ladder,
               HUDhorizon,
-              HUDguage,
+              HUDgauge,
               HUDdual_inst,
               HUDmoving_scale,
               HUDtbi
@@ -286,15 +290,19 @@ private:
     float x, y;
     char msg[64];
 public:
-    fgText( float x = 0, float y = 0, char *c = NULL )
-        : x(x), y(y) {strncpy(msg,c,64-1);}
-
+    int digit; //suma
+    fgText(float x = 0, float y = 0, char *c = NULL,int digits=0): x(x), y(y) //suma
+    { 
+        strcpy(msg,c);
+        digit=digits; //suma
+    }
+		   
     fgText( const fgText & image )
-        : x(image.x), y(image.y) {strcpy(msg,image.msg);}
+        : x(image.x), y(image.y),digit(image.digit) {strcpy(msg,image.msg);} //suma
 
     fgText& operator = ( const fgText & image ) {
-        strcpy(msg,image.msg); x = image.x; y = image.y;
-        return *this;
+        strcpy(msg,image.msg); x = image.x; y = image.y;digit=image.digit; //suma
+        return *this;   
     }
 
     ~fgText() {msg[0]='\0';}
@@ -320,12 +328,57 @@ public:
         }
         return 0 ;
     }
-    
-    void Draw(fntRenderer *fnt)
-    {
-        fnt->start2f( x, y );
-        fnt->puts   ( msg ) ;
+   
+    // this code is changed to display Numbers with big/small digits
+    // according to MIL Standards for example Altitude above 10000 ft
+    // is shown as 10ooo.  begin suma
+
+    void Draw(fntRenderer *fnt,int digits) {
+        if(digits==1) {
+            int c=0,i=0;
+            char *t=msg;
+            int p=4;
+
+            if(t[0]=='-') //if negative value then increase the c and p values for '-' sign.
+            {
+                c++;
+                p++;
+            }
+            char *tmp=msg;
+            while(tmp[i]!='\0') {
+                if((tmp[i]>='0') && (tmp[i]<='9'))  
+                    c++;
+                i++;
+            }
+            if(c>p) {
+                fnt->setPointSize(8);
+                int p1=c-3;
+                char *tmp1=msg+p1;
+                int p2=p1*8;
+ 			  
+                fnt->start2f(x+p2,y);
+                fnt->puts(tmp1);
+
+                fnt->setPointSize(12);
+                char tmp2[p1+1];
+                strncpy(tmp2,msg,p1);
+                tmp2[p1]='\0';
+			 
+                fnt->start2f(x,y);
+                fnt->puts(tmp2);
+            } else {
+                fnt->setPointSize(12);					
+                fnt->start2f( x, y );
+                fnt->puts(tmp);
+            }
+        } else {
+            //if digits not equal to 1
+            fnt->setPointSize(8);         
+            fnt->start2f( x, y );
+            fnt->puts( msg ) ;
+        }
     }
+    //end suma
 
     void Draw()
     {
@@ -389,7 +442,7 @@ public:
 
         Font->begin();
         for( ; curString != lastString; curString++ ) {
-            curString->Draw(Font);
+            curString->Draw(Font,curString->digit); //suma
         }
         Font->end();
 
@@ -437,7 +490,8 @@ class instr_item {  // An Abstract Base Class (ABC)
     bool               broken;
     UINT               scr_span;      // Working values for draw;
     POINT              mid_span;      //
-
+    int		       digits;        //suma
+  
   public:
     instr_item( int            x,
                 int            y,
@@ -446,7 +500,9 @@ class instr_item {  // An Abstract Base Class (ABC)
                 FLTFNPTR       data_source,
                 float          data_scaling,
                 UINT           options,
-                bool           working  = true);
+                bool           working  = true,
+                int	       digit = 0); //suma
+
 
     instr_item( const instr_item & image );
 
@@ -463,6 +519,7 @@ class instr_item {  // An Abstract Base Class (ABC)
     UINT    get_span        ( void ) { return scr_span;  }
     POINT   get_centroid    ( void ) { return mid_span;  }
     UINT    get_options     ( void ) { return opts;      }
+    int     get_digits	    ( void ) { return digits;	 } //suma
 
     UINT    huds_vert     (UINT options) { return( options  & HUDS_VERT ); }
     UINT    huds_left     (UINT options) { return( options  & HUDS_LEFT ); }
@@ -490,9 +547,9 @@ class instr_item {  // An Abstract Base Class (ABC)
     {
         HUD_StippleLineList.add(fgLineSeg2D(x1,y1,x2,y2));
     }
-    void TextString( char *msg, float x, float y )
+    void TextString( char *msg, float x, float y,int digit ) //suma
     {
-        HUD_TextList.add(fgText(x, y, msg));        
+        HUD_TextList.add(fgText(x, y, msg,digit)); //suma  
     }
     int getStringWidth ( char *str )
     {
@@ -503,6 +560,18 @@ class instr_item {  // An Abstract Base Class (ABC)
             return FloatToInt( r - l );
         }
         return 0 ;
+    }
+
+    //code to draw ticks as small circles
+    void drawOneCircle(float x1, float y1, float r)
+    {
+        glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle 
+        for(int count=0; count<25; count++) {             
+            float cosine = r * cos(count * 2 * M_PI/10.0); 
+            float sine =   r * sin(count * 2 * M_PI/10.0); 
+            glVertex2f(cosine+x1, sine+y1);
+        }     
+        glEnd(); 
     }
     
 };
@@ -532,6 +601,7 @@ class instr_label : public instr_item {
     char format_buffer[80];
     bool		lat;
     bool		lon;
+    bool		lbox;
 
   public:
     instr_label( int          x,
@@ -547,9 +617,11 @@ class instr_label : public instr_item {
                  fgLabelJust  justification,
                  int          font_size,
                  int          blinking,
-		 bool		  latitude,
-		 bool		  longitude,
-                 bool         working);
+                 bool		  latitude,
+                 bool		  longitude,
+                 bool		  label_box,
+                 bool         working,
+                 int          digit ); //suma);
 
     ~instr_label();
 
@@ -573,19 +645,20 @@ class lat_label : public instr_item {
 
   public:
     lat_label( int          x,
-                 int          y,
-                 UINT         width,
-                 UINT         height,
-                 FLTFNPTR     data_source,
-                 const char  *label_format,
-                 const char  *pre_label_string,
-                 const char  *post_label_string,
-                 float       scale_data,
-                 UINT         options,
-                 fgLabelJust  justification,
-                 int          font_size,
-                 int          blinking,
-                 bool         working);
+               int          y,
+               UINT         width,
+               UINT         height,
+               FLTFNPTR     data_source,
+               const char  *label_format,
+               const char  *pre_label_string,
+               const char  *post_label_string,
+               float       scale_data,
+               UINT         options,
+               fgLabelJust  justification,
+               int          font_size,
+               int          blinking,
+               bool         working,
+               int	    digits =0 );//suma
 
     ~lat_label();
 
@@ -608,19 +681,21 @@ class lon_label : public instr_item {
 
   public:
     lon_label( int          x,
-                 int          y,
-                 UINT         width,
-                 UINT         height,
-                 FLTFNPTR     data_source,
-                 const char  *label_format,
-                 const char  *pre_label_string,
-                 const char  *post_label_string,
-                 float       scale_data,
-                 UINT         options,
-                 fgLabelJust  justification,
-                 int          font_size,
-                 int          blinking,
-                 bool         working);
+               int          y,
+               UINT         width,
+               UINT         height,
+               FLTFNPTR     data_source,
+               const char  *label_format,
+               const char  *pre_label_string,
+               const char  *post_label_string,
+               float       scale_data,
+               UINT         options,
+               fgLabelJust  justification,
+               int          font_size,
+               int          blinking,
+               bool         working,
+               int	    digit=0); //suma
+
 
     ~lon_label();
 
@@ -700,7 +775,16 @@ class hud_card : public instr_scale {
     float marker_offset;
     bool  pointer;
     string  pointer_type;
-
+    string  tick_type;
+    string  tick_length;
+    float   radius; //suma
+    float   maxValue; //suma
+    float   minValue; //suma
+    int		divisions; //suma
+    int     zoom; //suma
+    UINT	Maj_div; //suma
+    UINT	Min_div; //suma
+	
     
   public:
     hud_card( int      x,
@@ -729,20 +813,29 @@ class hud_card : public instr_scale {
 	      float    marker_offset,
 	      bool     pointer,
 	      string   pointer_type,
-              bool     working);
+              string  tick_type,
+              string  tick_length,
+              bool     working,
+              float    radius, //suma
+              int      divisions, //suma
+              int	   zoom); //suma
+
 
     ~hud_card();
     hud_card( const hud_card & image);
     hud_card & operator = (const hud_card & rhs );
 //    virtual void display_enable( bool setting );
     virtual void draw( void );       // Required method in base class
+    void circles(float,float,float); // suma
+    void fixed(float,float,float,float,float,float); //suma
+    void zoomed_scale(int,int); //suma
 };
 
 typedef hud_card * pCardScale;
 
-class guage_instr : public instr_scale {
+class gauge_instr : public instr_scale {
   public:
-    guage_instr( int       x,
+    gauge_instr( int       x,
                  int       y,
                  UINT      width,
                  UINT      height,
@@ -757,13 +850,13 @@ class guage_instr : public instr_scale {
                  UINT      modulus,
                  bool      working);
 
-    ~guage_instr();
-    guage_instr( const guage_instr & image);
-    guage_instr & operator = (const guage_instr & rhs );
+    ~gauge_instr();
+    gauge_instr( const gauge_instr & image);
+    gauge_instr & operator = (const gauge_instr & rhs );
     virtual void draw( void );       // Required method in base class
 };
 
-typedef guage_instr * pGuageInst;
+typedef gauge_instr * pGaugeInst;
 //
 // dual_instr_item         This class was created to form the base class
 //                         for both panel and HUD Turn Bank Indicators.
@@ -791,11 +884,14 @@ class dual_instr_item : public instr_item {
     virtual void draw ( void ) { }
 };
 
-class fgTBI_instr : public dual_instr_item {
+class fgTBI_instr : public dual_instr_item 
+{
   private:
     UINT BankLimit;
     UINT SlewLimit;
     UINT scr_hole;
+    bool tsi;  //suma
+    float rad; //suma
 
   public:
     fgTBI_instr( int       x,
@@ -807,7 +903,9 @@ class fgTBI_instr : public dual_instr_item {
                  float    maxBankAngle,
                  float    maxSlipAngle,
                  UINT      gap_width,
-                 bool      working);
+                 bool      working,
+                 bool	   tsi, //suma
+                 float     rad); //suma
 
     fgTBI_instr( const fgTBI_instr & image);
     fgTBI_instr & operator = (const fgTBI_instr & rhs );
@@ -844,6 +942,10 @@ class HudLadder : public dual_instr_item {
     float	glide_slope;
     bool	energy_worm;
     bool	waypoint_marker;
+    int     zenith; //suma
+    int     nadir; //suma
+    int		hat; //suma
+    
 
     fgTextList         TextList;
     fgLineList         LineList;
@@ -874,14 +976,20 @@ class HudLadder : public dual_instr_item {
 	       float	 glide_slope,
 	       bool	 energy_worm,
 	       bool	 waypoint_marker,
-               bool      working);
+               bool  working,
+               int   zenith, //suma
+               int   nadir, //suma
+               int   hat); //suma
+
 
     ~HudLadder();
 
     HudLadder( const HudLadder & image );
     HudLadder & operator = ( const HudLadder & rhs );
     virtual void draw( void );
-    
+    void drawZenith(float,float,float); //suma
+    void drawNadir(float, float, float); //suma
+
     void Text( float x, float y, char *s)
     {
         TextList.add( fgText( x, y, s) );
@@ -915,7 +1023,7 @@ extern void drawOneLine ( RECT &rect);
 extern void textString  ( int x,
                           int y,
                           char *msg,
-                          void *font = GLUT_BITMAP_8_BY_13);
+                          void *font = GLUT_BITMAP_9_BY_15,int digit=0); //suma
 extern void strokeString( int x,
                           int y,
                           char *msg,

@@ -52,7 +52,6 @@
 #include <GUI/gui.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/viewmgr.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -144,6 +143,19 @@ static bool	glide;
 static float	glide_slope_val;
 static bool	worm_energy;
 static bool	waypoint;
+static string type_tick;//hud
+static string length_tick;//hud
+static bool label_box;//hud
+static int digits; //suma
+static float radius; //suma
+static int divisions; //suma
+static int zoom; //suma
+static int zenith; //suma
+static int nadir ; //suma
+static int hat; //suma
+static bool tsi; //suma
+static float rad; //suma
+
 
 static FLTFNPTR load_fn;    
 static fgLabelJust justification;
@@ -200,7 +212,8 @@ void drawOneLine( RECT &rect)
 //
    /* textString - Bitmap font string */
 
-void textString( int x, int y, char *msg, void *font ){
+void textString( int x, int y, char *msg, void *font,int digit) //suma
+{
 
     if(*msg)
     {
@@ -293,6 +306,10 @@ readLadder(const SGPropertyNode * node)
 				worm_energy		= node->getBoolValue("enable_energy_marker",false);
 				waypoint		= node->getBoolValue("enable_waypoint_marker",false);
 				working			= node->getBoolValue("working");
+				zenith			= node->getIntValue("zenith");  //suma
+				nadir			= node->getIntValue("nadir");  //suma
+				hat				= node->getIntValue("hat");
+
 
 				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 	
@@ -304,7 +321,7 @@ readLadder(const SGPropertyNode * node)
 										screen_hole, lbl_pos, frl_spot, target, vel_vector, 
 										drift, alpha, energy, climb_dive, 
 										glide, glide_slope_val, worm_energy, 
-										waypoint, working);
+										waypoint, working, zenith, nadir, hat);
 				
 				return p;
 		
@@ -342,13 +359,17 @@ readCard(const SGPropertyNode * node)
 				marker_off		= node->getFloatValue("marker_offset",0.0);
 				enable_pointer	= node->getBoolValue("enable_pointer",true);
 				type_pointer	= node->getStringValue("pointer_type");
+				type_tick		= node->getStringValue("tick_type");//hud Can be 'circle' or 'line'
+				length_tick		= node->getStringValue("tick_length");//hud For variable length
 				working			= node->getBoolValue("working");
-
+                radius			= node->getFloatValue("radius"); //suma
+				divisions		= node->getIntValue("divisions"); //suma
+				zoom			= node->getIntValue("zoom"); //suma
 
 				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
-				if(type=="guage")
+				if(type=="gauge")
 					span_units = maxValue - minValue;
 
 				if(loadfn=="anzg")
@@ -412,7 +433,13 @@ readCard(const SGPropertyNode * node)
 														marker_off,
 														enable_pointer,
 														type_pointer,
-														working);
+														type_tick,//hud
+														length_tick,//hud
+														working,
+														radius, //suma
+														divisions, //suma
+														zoom  //suma
+														);
 					return p;
 }// end readCard
 
@@ -438,7 +465,9 @@ readLabel(const SGPropertyNode * node)
         blinking            = node->getIntValue("blinking");
         latitude			= node->getBoolValue("latitude",false);
         longitude			= node->getBoolValue("longitude",false);
+		label_box			= node->getBoolValue("label_box",false);//hud
         working             = node->getBoolValue("working");
+		digits				= node->getIntValue("digits"); //suma
 
 
         SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
@@ -480,26 +509,42 @@ readLabel(const SGPropertyNode * node)
             }
         }
 
-        if ( loadfn == "aux16" ) {
-            load_fn = get_aux16;
-        } else if ( loadfn == "aux17" ) {
-            load_fn = get_aux17;
+		if ( loadfn== "aux1" ) {
+			 load_fn = get_aux1;
+        } else if ( loadfn == "aux2" ) {
+            load_fn = get_aux2;
+        } else if ( loadfn == "aux3" ) {
+            load_fn = get_aux3;
+        } else if ( loadfn == "aux4" ) {
+            load_fn = get_aux4;
+        } else if ( loadfn == "aux5" ) {
+            load_fn = get_aux5;
+        } else if ( loadfn == "aux6" ) {
+            load_fn = get_aux6;
+        } else if ( loadfn == "aux7" ) {
+            load_fn = get_aux7;
+        } else if ( loadfn == "aux8" ) {
+            load_fn = get_aux8;
         } else if ( loadfn == "aux9" ) {
             load_fn = get_aux9;
+        } else if ( loadfn == "aux10" ) {
+            load_fn = get_aux10;
         } else if ( loadfn == "aux11" ) {
             load_fn = get_aux11;
         } else if ( loadfn == "aux12" ) {
             load_fn = get_aux12;
-        } else if ( loadfn == "aux10" ) {
-            load_fn = get_aux10;
         } else if ( loadfn == "aux13" ) {
             load_fn = get_aux13;
         } else if ( loadfn == "aux14" ) {
             load_fn = get_aux14;
         } else if ( loadfn == "aux15" ) {
             load_fn = get_aux15;
-        } else if ( loadfn == "aux8" ) {
-            load_fn = get_aux8;
+		} else if ( loadfn == "aux16" ) {
+            load_fn = get_aux16;
+        } else if ( loadfn == "aux17" ) {
+            load_fn = get_aux17;
+        } else if ( loadfn == "aux18" ) {
+            load_fn = get_aux18;
         } else if ( loadfn == "ax" ) {
             load_fn = get_Ax;
         } else if ( loadfn == "speed" ) {
@@ -524,9 +569,13 @@ readLabel(const SGPropertyNode * node)
             load_fn = get_aoa;
         } else if ( loadfn == "latitude" ) {
             load_fn  = get_latitude;
+		} else if ( loadfn == "anzg" ) {
+			load_fn = get_anzg;
         } else if ( loadfn == "longitude" ) {
             load_fn   = get_longitude;
-        }
+        } else if (loadfn=="throttleval") {
+			load_fn = get_throttleval;
+		}
 
         p = (instr_item *) new instr_label ( x,
                                              y,
@@ -543,7 +592,9 @@ readLabel(const SGPropertyNode * node)
                                              blinking,
                                              latitude,
                                              longitude,
-                                             working);
+											 label_box, //hud
+                                             working,
+											 digits); //suma
 
         return p;
 } // end readLabel
@@ -563,6 +614,8 @@ readTBI(const SGPropertyNode * node)
         maxSlipAngle   = node->getFloatValue("maxSlipAngle");
         gap_width      = node->getIntValue("gap_width");
         working        = node->getBoolValue("working");
+		tsi			   = node->getBoolValue("tsi"); //suma
+		rad			   = node->getFloatValue("rad"); //suma
 
         SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
@@ -576,7 +629,9 @@ readTBI(const SGPropertyNode * node)
                                                 maxBankAngle, 
                                                 maxSlipAngle,
                                                 gap_width,
-                                                working);
+                                                working,
+												tsi, //suma
+												rad); //suma
 
         return p;
 } //end readTBI
@@ -680,13 +735,13 @@ int readHud( istream &input )
 
 
         SGPropertyNode root2;
-	try {
-	  readProperties(path.str(), &root2);
-	} catch (const sg_exception &e) {
-	  guiErrorMessage("Error reading HUD instrument: ", e);
-	  continue;
-	}
-	readInstrument(&root2);
+        try {
+            readProperties(path.str(), &root2);
+        } catch (const sg_exception &e) {
+            guiErrorMessage("Error reading HUD instrument: ", e);
+            continue;
+        } 
+        readInstrument(&root2);
     }//for loop(i)
 
     return 0;
@@ -1033,7 +1088,6 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 //	  glEnable(GL_BLEND);
 	  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	  glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
-//	  glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
 	  glLineWidth(1.5);
   } else {
 	  glLineWidth(1.0);
@@ -1104,7 +1158,7 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
   }
 
   char *gmt_str = get_formated_gmt_time();
-  HUD_TextList.add( fgText(40, 10, gmt_str) );
+  HUD_TextList.add( fgText(40, 10, gmt_str, 0) );
 
 #ifdef FG_NETWORK_OLK
   if ( net_hud_display ) {

@@ -3,9 +3,9 @@
 
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font )  TextString( text, x , y )
+#define textString( x , y, text, font,digit )  TextString( text, x , y,digit ) //suma
 #else
-#define textString( x , y, text, font )  puDrawString ( guiFnt, text, x, y );
+#define textString( x , y, text, font,digit )  puDrawString ( guiFnt, text, x, y ); //suma
 #endif
 
 //======================= Top of instr_label class =========================
@@ -25,9 +25,10 @@ lon_label ::
                       fgLabelJust   justification,
                       int           font_size,
                       int           blinking,
-                      bool          working ):
+                      bool          working,
+					  int			digit): //suma
                            instr_item( x, y, width, height,
-                                       data_source, scale_data,options, working ),
+                                       data_source, scale_data,options, working,digit ), //suma
                            pformat  ( label_format      ),
                            pre_str  ( pre_label_string  ),
                            post_str ( post_label_string ),
@@ -140,12 +141,12 @@ draw( void )       // Required method in base class
   
   if( fontSize == SMALL ) {
     textString( scrn_rect.left + posincr, scrn_rect.top,
-                label_buffer, GLUT_BITMAP_8_BY_13);
+                label_buffer, GLUT_BITMAP_8_BY_13, get_digits()); //suma
     }
   else  {
     if( fontSize == LARGE ) {
       textString( scrn_rect.left + posincr, scrn_rect.top,
-                  label_buffer, GLUT_BITMAP_9_BY_15);
+                  label_buffer, GLUT_BITMAP_9_BY_15, get_digits()); //suma
       }
     }
 }

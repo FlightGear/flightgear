@@ -12,7 +12,7 @@
 //    markers) or just over the middle line.
 //
 // 2.  This class was not intended to be instanciated. See moving_scale
-//     and guage_instr classes.
+//     and gauge_instr classes.
 //============================================================================
 instr_scale ::
 instr_scale ( int       x,

@@ -64,18 +64,12 @@ static pCockpit ac_cockpit;
 
 float get_latitude( void )
 {
-    double lat;
-
-    lat = current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
-
-    float flat = lat;
-    return(flat);
-
+    return current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
 }
 
 float get_lat_min( void )
 {
-    double      a, d;
+    double a, d;
 
     a = current_aircraft.fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;    
     if (a < 0.0) {
@@ -83,18 +77,14 @@ float get_lat_min( void )
     }
     d = (double) ( (int) a);
     float lat_min = (a - d) * 60.0;
-    return(lat_min );
+
+    return lat_min;
 }
 
 
 float get_longitude( void )
 {
-    double lon;
-
-    lon = current_aircraft.fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
-
-    float flon = lon;
-    return(flon);
+    return current_aircraft.fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
 }
 
 
@@ -106,6 +96,7 @@ get_formated_gmt_time( void )
     sprintf( buf, "%d/%d/%4d %d:%02d:%02d", 
          p->tm_mon+1, p->tm_mday, 1900 + p->tm_year,
          p->tm_hour, p->tm_min, p->tm_sec);
+
     return buf;
 }
 
@@ -119,37 +110,34 @@ float get_long_min( void )
     }
     d = (double) ( (int) a);
     float lon_min = (a - d) * 60.0; 
-    return(lon_min);
+
+    return lon_min;
 }
 
 float get_throttleval( void )
 {
-    float throttle = globals->get_controls()->get_throttle( 0 );
-    return (throttle);     // Hack limiting to one engine
+    // Hack limiting to one engine
+    return globals->get_controls()->get_throttle( 0 );
 }
 
 float get_aileronval( void )
 {
-    float aileronval = globals->get_controls()->get_aileron();
-    return (aileronval);
+    return globals->get_controls()->get_aileron();
 }
 
 float get_elevatorval( void )
 {
-    float elevator_val = (float)globals->get_controls()->get_elevator();
-    return elevator_val;
+    return globals->get_controls()->get_elevator();
 }
 
 float get_elev_trimval( void )
 {
-    float elevatorval = globals->get_controls()->get_elevator_trim();
-    return (elevatorval);
+    return globals->get_controls()->get_elevator_trim();
 }
 
 float get_rudderval( void )
 {
-    float rudderval = globals->get_controls()->get_rudder();
-    return (rudderval);
+    return globals->get_controls()->get_rudder();
 }
 
 float get_speed( void )
@@ -164,32 +152,27 @@ float get_speed( void )
 
 float get_mach(void)
 {
-	float mach=current_aircraft.fdm_state->get_Mach_number();
-	return mach;
+    return current_aircraft.fdm_state->get_Mach_number();
 }	
 
 float get_aoa( void )
 {
-    float aoa = current_aircraft.fdm_state->get_Alpha() * SGD_RADIANS_TO_DEGREES;
-    return( aoa );
+    return current_aircraft.fdm_state->get_Alpha() * SGD_RADIANS_TO_DEGREES;
 }
 
 float get_roll( void )
 {
-    float roll = current_aircraft.fdm_state->get_Phi();
-    return( roll );
+    return current_aircraft.fdm_state->get_Phi();
 }
 
 float get_pitch( void )
 {
-    float pitch = current_aircraft.fdm_state->get_Theta();
-    return( pitch );
+    return current_aircraft.fdm_state->get_Theta();
 }
 
 float get_heading( void )
 {
-    float heading = (current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES);
-    return( heading );
+    return current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES;
 }
 
 float get_altitude( void )
@@ -220,25 +203,23 @@ float get_agl( void )
         agl = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
                - scenery.cur_elev);
     }
+
     return agl;
 }
 
 float get_sideslip( void )
 {
-    float sideslip = current_aircraft.fdm_state->get_Beta();
-    return( sideslip );
+    return current_aircraft.fdm_state->get_Beta();
 }
 
 float get_frame_rate( void )
 {
-    float frame_rate = general.get_frame_rate();
-    return (frame_rate); 
+    return general.get_frame_rate();
 }
 
 float get_fov( void )
 {
-    float fov = globals->get_current_view()->get_fov(); 
-    return (fov);
+    return globals->get_current_view()->get_fov(); 
 }
 
 float get_vfc_ratio( void )
@@ -270,7 +251,8 @@ float get_climb_rate( void )
     } else {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * SG_FEET_TO_METER * 60.0;
     }
-    return (climb_rate);
+
+    return climb_rate;
 }
 
 
@@ -292,230 +274,230 @@ float get_view_direction( void )
 // #ifdef FIGHTER_HUD
 float get_Vx   ( void )
 {
-    // CLO - 5 Jan 2000 - something needs to get addressed here
-    // float Vxx = current_aircraft.fdm_state->get_V_north_rel_ground();
-    float Vxx = 0;
-    return (Vxx);
+    // Curt dont comment this and return zero. - Ranga
+    // Please remove comments from get_V_..() function in flight.hxx
+    float Vxx = current_aircraft.fdm_state->get_V_north_rel_ground();
+    return Vxx;
 }
 
 float get_Vy   ( void )
 {
-    // CLO - 5 Jan 2000 - something needs to get addressed here
-    // float Vyy = current_aircraft.fdm_state->get_V_east_rel_ground();
-    float Vyy = 0;
-    return (Vyy);
+    // Curt dont comment this and return zero. - Ranga
+    // Please remove comments from get_V_..() function in flight.hxx
+    float Vyy = current_aircraft.fdm_state->get_V_east_rel_ground();
+    return Vyy;
 }
 
 float get_Vz   ( void )
 {
-    // CLO - 5 Jan 2000 - something needs to get addressed here
-    // float Vzz = current_aircraft.fdm_state->get_V_down_rel_ground();
-    float Vzz = 0;
-    return (Vzz);
+    // Curt dont comment this and return zero. - Ranga
+    // Please remove comments from get_V_..() function in flight.hxx
+    float Vzz = current_aircraft.fdm_state->get_V_down_rel_ground();
+    return Vzz;
 }
 
 float get_Ax   ( void )
 {
     float Ax = current_aircraft.fdm_state->get_V_dot_north();
-    return (Ax);
+    return Ax;
 }
 
 float get_Ay   ( void )
 {
     float Ay = current_aircraft.fdm_state->get_V_dot_east();
-    return (Ay);
+    return Ay;
 }
 
 float get_Az   ( void )
 {
     float Az = current_aircraft.fdm_state->get_V_dot_down();
-    return (Az);
+    return Az;
 }
 
 float get_anzg   ( void )
 {
     float anzg = current_aircraft.fdm_state->get_N_Z_cg();
-    return (anzg);
+    return anzg;
 }
 
 int get_iaux1 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux1();
+    return fdm->get_iaux(1);
 }
 
 int get_iaux2 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux2();
+    return fdm->get_iaux(2);
 }
 
 int get_iaux3 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux3();
+    return fdm->get_iaux(3);
 }
 
 int get_iaux4 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux4();
+    return fdm->get_iaux(4);
 }
 
 int get_iaux5 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux5();
+    return fdm->get_iaux(5);
 }
 
 int get_iaux6 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux6();
+    return fdm->get_iaux(6);
 }
 
 int get_iaux7 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux7();
+    return fdm->get_iaux(7);
 }
 
 int get_iaux8 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux8();
+    return fdm->get_iaux(8);
 }
 
 int get_iaux9 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux9();
+    return fdm->get_iaux(9);
 }
 
 int get_iaux10 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux10();
+    return fdm->get_iaux(10);
 }
 
 int get_iaux11 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_iaux11();
+    return fdm->get_iaux(11);
 }
 
 int get_iaux12 (void)
 {
      FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-     return fdm->get_iaux12();
+     return fdm->get_iaux(12);
 }
 
 float get_aux1 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux1();
+    return fdm->get_daux(1);
 }
 
 float get_aux2 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux2();
+    return fdm->get_daux(2);
 }
 
 float get_aux3 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux3();
+    return fdm->get_daux(3);
 }
 
 float get_aux4 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux4();
+    return fdm->get_daux(4);
 }
 
 float get_aux5 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux5();
+    return fdm->get_daux(5);
 }
 
 float get_aux6 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux6();
+    return fdm->get_daux(6);
 }
 
 float get_aux7 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux7();
+    return fdm->get_daux(7);
 }
 
 float get_aux8 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux8();
+    return fdm->get_daux(8);
 }
 
 float get_aux9 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux9();
+    return fdm->get_faux(1);
 }
 
 float get_aux10 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux10();
+    return fdm->get_faux(2);
 }
 
 float get_aux11 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux11();
+    return fdm->get_faux(3);
 }
 
 float get_aux12 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux12();
+    return fdm->get_faux(4);
 }
 
 float get_aux13 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux13();
+    return fdm->get_faux(5);
 }
 
 float get_aux14 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux14();
+    return fdm->get_faux(6);
 }
 
 float get_aux15 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux15();
+    return fdm->get_faux(7);
 }
 
 float get_aux16 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux16();
+    return fdm->get_faux(8);
 }
 
 float get_aux17 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux17();
+    return fdm->get_faux(9);
 }
 
 float get_aux18 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
-    return fdm->get_aux18();
+    return fdm->get_faux(10);
 }
 // #endif
 // $$$ end - added, VS Renganathan 13 Oct 2K

@@ -29,7 +29,11 @@ HudLadder ::   HudLadder(  string name,
 			   float     glide_slope_val,
 			   bool      worm_energy,
 			   bool      waypoint,
-			   bool      working) :
+			   bool      working,
+   			   int		 zenithsymbol, //suma
+			   int       nadirsymbol, //suma
+			   int		 hat_marker): //suma
+
     dual_instr_item( x, y, width, height,
 		     ptch_source,
 		     roll_source,
@@ -58,8 +62,14 @@ HudLadder ::   HudLadder(  string name,
 
 
 {
-    if( !width_units ) {
-	width_units = 45;
+		
+    zenith= zenithsymbol; //suma
+	nadir=nadirsymbol; //suma
+	hat= hat_marker; //suma
+ 
+	if( !width_units ) 
+	{
+	   width_units = 45;
     }
 }
    
@@ -152,11 +162,11 @@ void HudLadder :: draw( void )
     pla = get_throttleval();
 
     int lgear,wown,wowm,ilcanclaw,ihook;
-    ilcanclaw = get_iaux1();
-    lgear = get_iaux2();
-    wown = get_iaux3();
-    wowm = get_iaux4();
-    ihook = get_iaux5();
+    ilcanclaw = get_iaux2();
+    lgear = get_iaux3();
+    wown = get_iaux4();
+    wowm = get_iaux5();
+    ihook = get_iaux6();
     
     float pitch_value = current_ch1() * SGD_RADIANS_TO_DEGREES;
 	
@@ -166,7 +176,8 @@ void HudLadder :: draw( void )
 	clip_plane = true;
     }
     else
-	if(hudladder_type=="Pitch Ladder") {
+	// hudladder_type=="Pitch Ladder" 
+	{
 	    pitch_ladder = true;
 	    climb_dive_ladder = false;
 	    clip_plane = false;
@@ -239,11 +250,13 @@ void HudLadder :: draw( void )
 	    actslope = atan(up_vel/ground_vel)*SGD_RADIANS_TO_DEGREES;
 	}
 
-	xvvr = (((atan2(Vyy,Vxx)*SGD_RADIANS_TO_DEGREES)-psi)*(640.0/45.0));
+	xvvr = (((atan2(Vyy,Vxx)*SGD_RADIANS_TO_DEGREES)-psi)*
+		(factor/globals->get_current_view()->get_win_ratio()));
 	drift = ((atan2(Vyy,Vxx)*SGD_RADIANS_TO_DEGREES)-psi);
 	yvvr = ((actslope - pitch_value)*factor);
 	vel_y = ((actslope -pitch_value) * cos(roll_value) + drift*sin(roll_value))*factor;
-	vel_x = (-(actslope -pitch_value)*sin(roll_value) + drift*cos(roll_value))*(640/45.0);
+	vel_x = (-(actslope -pitch_value)*sin(roll_value) + drift*cos(roll_value))*
+		(factor/globals->get_current_view()->get_win_ratio());
 	//  printf("%f %f %f %f\n",vel_x,vel_y,drift,psi);
 	//****************************************************************    
 	// OBJECT MOVING RETICLE
@@ -446,7 +459,8 @@ void HudLadder :: draw( void )
 
     //****************************************************************    
 
-    if(climb_dive_ladder) {// CONFORMAL_HUD
+    if(climb_dive_ladder)
+	{                     // CONFORMAL_HUD
 
 	vmin              = pitch_value - (float)width_units;
 	vmax              = pitch_value + (float)width_units; 
@@ -455,7 +469,8 @@ void HudLadder :: draw( void )
 
     }
     else 
-	if (pitch_ladder) {//Default Hud
+	// pitch_ladder - Default Hud
+	{
 
 	    vmin              = pitch_value - (float)width_units * 0.5f;
 	    vmax              = pitch_value + (float)width_units * 0.5f;
@@ -465,8 +480,8 @@ void HudLadder :: draw( void )
     glRotatef(roll_value * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
     // FRL marker not rotated - this line shifted below
 
-    if( div_units ) {
-  
+    if( div_units ) 
+	{
         char     TextLadder[8] ;
         float    label_length ;
         float    label_height ;
@@ -475,34 +490,34 @@ void HudLadder :: draw( void )
         float    bot ;
         float    top ;
         float    text_offset = 4.0f ;
-	float    zero_offset = 0.0;
+    	float    zero_offset = 0.0;
 		
 	if ( climb_dive_ladder ) {
-	    zero_offset = 50.0f ;
+	    zero_offset = 50.0f ; // horizon line is wider by this much (hard coded ??)
 	} else {
-	    if ( pitch_ladder ) {
 		zero_offset = 10.0f ;
-            }
-        }
+    }
 		
 	fntFont *font      = HUDtext->getFont();
 	float    pointsize = HUDtext->getPointSize();
 	float    italic    = HUDtext->getSlant();
 
-        TextList.setFont( HUDtext );
-        TextList.erase();
-        LineList.erase();
-        StippleLineList.erase();
+    TextList.setFont( HUDtext );
+    TextList.erase();
+    LineList.erase();
+    StippleLineList.erase();
 
-        int last = FloatToInt(vmax)+1;
-        int i    = FloatToInt(vmin);
+    int last = FloatToInt(vmax)+1;
+    int i    = FloatToInt(vmin);
 
         if( !scr_hole ) {
 	    x_end =  half_span;
-            for( ; i<last ; i++ ) {
+            for( ; i<last ; i++ ) 
+			{
                 
                 y =  (((float)(i - pitch_value) * factor) + .5f);
-                if( !(i % div_units ))    {        //  At integral multiple of div
+                if( !(i % div_units ))            //  At integral multiple of div
+				{
                 
                     sprintf( TextLadder, "%d", i );
                     font->getBBox ( TextLadder, pointsize, italic,
@@ -513,15 +528,30 @@ void HudLadder :: draw( void )
                 
                     x_ini = -half_span;
                     
-                    if( i >= 0 ) {
+                    if( i >= 0 ) 
+					{
                         // Make zero point wider on left
                         if( i == 0 )
                             x_ini -= zero_offset;
-                        // Zero or above draw solid lines
-                        Line(x_ini, y, x_end, y);
+                            
+						// Zero or above draw solid lines
+						Line(x_ini, y, x_end, y);
+						
+						if(i == 90)
+						if(zenith == 1)
+						{
+						  drawZenith(x_ini, x_end,y);
+						}
                     } else {
                         // Below zero draw dashed lines.
                         StippleLine(x_ini, y, x_end, y);
+
+						
+						if(i == -90)
+						if(nadir ==1)
+						{ 
+							drawNadir(x_ini, x_end,y);
+						}
                     }
                     
                     // Calculate the position of the left text and write it.
@@ -536,7 +566,8 @@ void HudLadder :: draw( void )
 
 		x_end = -half_span + hole;
 		x_ini2= half_span  - hole;
-		for( ; i<last ; i++ )      {
+		for( ; i<last ; i++ )      
+		{
 
 		    if(hudladder_type=="Pitch Ladder")
 			y = (((float)(i - pitch_value) * factor) + .5);
@@ -559,30 +590,48 @@ void HudLadder :: draw( void )
 			x_ini = -half_span;
 			x_end2= half_span;
                     
-			if( i >= 0 ) { 
+			if( i >= 0 ) 
+			{ 
 			    // Make zero point wider on left
-			    if( i == 0 ) {
-				x_ini -= zero_offset;
-				x_end2 +=zero_offset;
-			    } else {
-				if(climb_dive_ladder){
-				    // Zero or above draw solid lines
-				    Line(x_end, y-5.0, x_end, y);
-				    Line(x_ini2, y-5.0, x_ini2, y);
-				}
+			    if( i == 0 ) 
+				{
+				    x_ini -= zero_offset;
+					x_end2 +=zero_offset;
+			    } 
+			    //draw climb bar vertical lines
+				if(climb_dive_ladder)
+				{
+				   // Zero or above draw solid lines
+				   Line(x_end, y-5.0, x_end, y);
+				   Line(x_ini2, y-5.0, x_ini2, y);
 			    }
-
+				// draw pitch / climb bar
 			    Line(x_ini, y, x_end, y);
 			    Line(x_ini2, y, x_end2, y);
 
-			} else {
-			    // Below zero draw dashed lines.
-			    if(climb_dive_ladder) {
-				Line(x_end, y+5.0, x_end, y);
-				Line(x_ini2, y+5.0, x_ini2, y);
+				if(i == 90)
+				if(zenith == 1)
+				{  
+				  drawZenith(x_ini2, x_end,y);
+				}
+			}
+			else  // i < 0
+			{
+			    // draw dive bar vertical lines
+			    if(climb_dive_ladder) 
+				{
+					Line(x_end, y+5.0, x_end, y);
+					Line(x_ini2, y+5.0, x_ini2, y);
 			    }
-			    StippleLine(x_ini, y, x_end, y);
+			    // draw pitch / dive bars
+				StippleLine(x_ini, y, x_end, y);
 			    StippleLine(x_ini2, y, x_end2, y);
+               
+			    if(i == -90)
+			    if(nadir == 1)
+				{
+				    drawNadir(x_ini2, x_end,y);
+				}
 			}
                     
 			// Now calculate the location of the left side label using
@@ -627,8 +676,8 @@ void HudLadder :: draw( void )
 
 	fromwp_lon = get_longitude()*SGD_DEGREES_TO_RADIANS;
 	fromwp_lat = get_latitude()*SGD_DEGREES_TO_RADIANS;
-	towp_lon = get_aux5()*SGD_DEGREES_TO_RADIANS;
-	towp_lat = get_aux6()*SGD_DEGREES_TO_RADIANS;
+	towp_lon = get_aux2()*SGD_DEGREES_TO_RADIANS;
+	towp_lat = get_aux1()*SGD_DEGREES_TO_RADIANS;
 
 	dist = acos(sin(fromwp_lat)*sin(towp_lat)+cos(fromwp_lat)*cos(towp_lat)*cos(fabs(fromwp_lon-towp_lon)));
 	delx= towp_lat - fromwp_lat;
@@ -651,7 +700,9 @@ void HudLadder :: draw( void )
 	// OBJECT MOVING RETICLE
 	// TYPE ARROW
 	// waypoint marker
-	if (fabs(brg-psi) > 10.0) {
+
+   	  if (fabs(brg-psi) > 10.0) 
+	  {
 	    glPushMatrix();
 	    glTranslatef( centroid.x, centroid.y, 0);
 	    glTranslatef( vel_x, vel_y, 0);
@@ -666,9 +717,13 @@ void HudLadder :: draw( void )
 	    glVertex2f(2.5,20.0);
 	    glEnd();
 	    glPopMatrix();
-	}
-	// waypoint marker on heading scale
-	if (fabs(brg-psi) < 12.0) {
+	  }
+
+	  // waypoint marker on heading scale
+	  if (fabs(brg-psi) < 12.0) 
+	  {
+	  if(hat ==0)
+	  {
 	    glBegin(GL_LINE_LOOP);
 	    glVertex2f(((brg-psi)*60/25)+320,240.0);
 	    glVertex2f(((brg-psi)*60/25)+326,240.0-4);
@@ -678,7 +733,155 @@ void HudLadder :: draw( void )
 	    glVertex2f(((brg-psi)*60/25)+317,240.0-4);
 	    glVertex2f(((brg-psi)*60/25)+314,240.0-4);
 	    glEnd();
-	}
-	//*************************************************************
-    }// if waypoint_marker
+	  } else {//if hat=0
+
+		  float x= (brg-psi)*60/25 + 320,  y=240.0, r=5.0;
+		  float x1,y1;
+								
+		  glEnable(GL_POINT_SMOOTH);
+    										  
+    	  glBegin(GL_POINTS);
+			
+		  for(int count=0; count<=200; count++)
+		  {
+			float temp = count * 3.142 * 3 / (200.0*2.0);
+			float temp1 = temp-(45.0*SGD_DEGREES_TO_RADIANS);
+		    x1 = x + r * cos(temp1); 
+		    y1 = y + r * sin(temp1);
+					 
+			glVertex2f(x1, y1);
+		  }
+					
+		  glEnd();
+		  glDisable(GL_POINT_SMOOTH); 
+	  } //hat=0
+
+	  } //brg<12
+    } // if waypoint_marker
 }//draw
+
+/******************************************************************/
+
+//begin suma
+	//  draws the zenith symbol  for highest possible climb angle (i,e 90 degree climb angle)
+
+void HudLadder :: 
+drawZenith(float xfirst,float xlast,float yvalue )
+{
+
+	     float xcentre = (xfirst + xlast)/2.0;
+		 float ycentre = yvalue;
+
+         Line(xcentre-9.0, ycentre, xcentre-3.0, ycentre+1.3);
+	     Line(xcentre-9.0, ycentre, xcentre-3.0, ycentre-1.3);
+  
+   	     Line(xcentre+9.0, ycentre, xcentre+3.0, ycentre+1.3);
+	     Line(xcentre+9.0, ycentre, xcentre+3.0, ycentre-1.3);
+
+	     Line(xcentre, ycentre+9.0, xcentre-1.3, ycentre+3.0);
+	     Line(xcentre, ycentre+9.0, xcentre+1.3, ycentre+3.0);
+
+		 Line(xcentre-3.9, ycentre+3.9, xcentre-3.0, ycentre+1.3);
+	     Line(xcentre-3.9, ycentre+3.9, xcentre-1.3, ycentre+3.0);
+
+	     Line(xcentre+3.9, ycentre+3.9, xcentre+1.3, ycentre+3.0);
+	     Line(xcentre+3.9, ycentre+3.9, xcentre+3.0, ycentre+1.3);
+
+	     Line(xcentre-3.9, ycentre-3.9, xcentre-3.0, ycentre-1.3);
+	     Line(xcentre-3.9, ycentre-3.9, xcentre-1.3, ycentre-2.6);
+
+	     Line(xcentre+3.9, ycentre-3.9, xcentre+3.0, ycentre-1.3);
+	     Line(xcentre+3.9, ycentre-3.9, xcentre+1.3, ycentre-2.6);
+
+	     Line(xcentre-1.3, ycentre-2.6, xcentre, ycentre-27.0);
+         Line(xcentre+1.3, ycentre-2.6, xcentre, ycentre-27.0);
+
+  
+} 
+	//end suma
+
+//begin suma
+	//  draws the nadir symbol  for lowest possible dive angle (i,e 90 degree dive angle)
+
+
+void HudLadder ::
+drawNadir(float xfirst, float xlast, float yvalue)
+{
+
+	     float xcentre = (xfirst + xlast)/2.0;
+		 float ycentre = yvalue;    
+
+
+		float r = 7.5;
+		float ang,temp;
+		float x1,y1,x2,y2,xcent,ycent;
+
+	
+        // to draw a circle
+
+		float xcent1, xcent2, ycent1, ycent2;
+		xcent1 = xcentre + r * cos(0.0);
+		ycent1 = ycentre + r * sin(0.0);
+    	for(int count=1; count<=400; count++) 
+		{  
+			float temp = count * 2 * 3.142 / 400.0;
+		    xcent2 = xcentre + r * cos(temp); 
+			ycent2 = ycentre + r * sin(temp); 			    
+			
+			Line(xcent1, ycent1, xcent2, ycent2);
+
+			xcent1 = xcent2;
+			ycent1 = ycent2;
+		}     
+		
+		xcent2 = xcentre + r * cos(0.0);
+		ycent2 = ycentre + r * sin(0.0);
+
+        drawOneLine(xcent1, ycent1, xcent2, ycent2); //to connect last point to first point
+		//end circle
+
+
+		Line(xcentre, ycentre+7.5, xcentre, ycentre+22.5); //to draw a line above the circle
+
+		Line(xcentre-7.5, ycentre, xcentre+7.5,ycentre); //line in the middle of circle
+
+		float theta = asin (2.5/7.5);
+		float theta1 = asin(5.0/7.5);
+
+		 x1 = xcentre + r * cos(theta);
+		 y1 = ycentre + 2.5;
+
+		 x2 = xcentre + r * cos((180.0 * SGD_DEGREES_TO_RADIANS) - theta);
+		 y2 = ycentre + 2.5;
+
+		 Line(x1,y1,x2,y2);
+
+		
+		 x1 = xcentre + r * cos(theta1);
+		 y1 = ycentre + 5.0;
+
+		 x2 = xcentre + r * cos((180.0 * SGD_DEGREES_TO_RADIANS)-theta1);
+		 y2 = ycentre + 5.0;
+
+		 Line(x1,y1,x2,y2);
+
+
+ 		 x1 = xcentre + r * cos((180.0 * SGD_DEGREES_TO_RADIANS) +theta);
+		 y1 = ycentre - 2.5;
+
+		 x2 = xcentre + r * cos((360.0* SGD_DEGREES_TO_RADIANS)-theta);
+		 y2 = ycentre - 2.5;
+
+		 Line(x1,y1,x2,y2);
+
+		
+		 x1 = xcentre + r * cos((180.0* SGD_DEGREES_TO_RADIANS) +theta1);
+		 y1 = ycentre - 5.0;
+
+		 x2 = xcentre + r * cos((360.0* SGD_DEGREES_TO_RADIANS)-theta1);
+		 y2 = ycentre - 5.0;
+
+		 Line(x1,y1,x2,y2);
+
+
+}

@@ -3,9 +3,9 @@
 
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font )  TextString( text, x , y )
+#define textString( x , y, text, font,digit )  TextString( text, x , y,digit ) //suma
 #else
-#define textString( x , y, text, font )  puDrawString ( guiFnt, text, x, y );
+#define textString( x , y, text, font,digit )  puDrawString ( guiFnt, text, x, y ); //suma
 #endif
 
 //======================= Top of instr_label class =========================
@@ -23,11 +23,13 @@ instr_label ::
                       fgLabelJust   justification,
                       int           font_size,
                       int           blinking,
-		      bool			latitude,
-		      bool			longitude,
-                      bool          working):
+				      bool			latitude,
+				      bool			longitude,
+					  bool			label_box,//hud
+                      bool          working,
+					  int			digit):  //suma
                            instr_item( x, y, width, height,
-                                       data_source,scale_data,options, working ),
+                                       data_source,scale_data,options, working, digit), //suma
                            pformat  ( label_format      ),
                            pre_str  ( pre_label_string  ),
                            post_str ( post_label_string ),
@@ -35,7 +37,8 @@ instr_label ::
                            fontSize ( font_size         ),
                            blink    ( blinking          ),
 						   lat		( latitude			),
-						   lon		( longitude			)
+						   lon		( longitude			),
+						   lbox		( label_box			) //hud
 
 {
   if( pre_str != NULL) {
@@ -70,7 +73,8 @@ instr_label :: instr_label( const instr_label & image) :
                               post_str ( image.post_str ),
                               blink    ( image.blink    ),
 							  lat	   ( image.lat		),
-							  lon	   ( image.lon		)	
+							  lon	   ( image.lon		),	
+							  lbox	   (image.lbox		) //hud
 
 {
   if( pre_str != NULL) {
@@ -101,6 +105,7 @@ instr_label & instr_label ::operator = (const instr_label & rhs )
     post_str   = rhs.post_str;
     lat		   = rhs.lat;
     lon		   = rhs.lon;
+	lbox	   = rhs.lbox; //hud
 
 
     strcpy(format_buffer,rhs.format_buffer);	
@@ -128,10 +133,38 @@ draw( void )       // Required method in base class
 	if(lon)    
 		sprintf( label_buffer, format_buffer, coord_format_lon(get_value()) );
 	else
-		sprintf( label_buffer, format_buffer, get_value() );
-    }
+	{	
+		if(lbox)//hud
+			{// Box for label
+				float x = scrn_rect.left;
+				float y = scrn_rect.top;
+				float w = scrn_rect.right;
+		        float h = HUD_TextSize;
+
+				glPushMatrix();
+				glLoadIdentity();
+				glBegin(GL_LINES);
+					glVertex2f( x - 2.0,  y - 2.0);
+					glVertex2f( x + w + 2.0, y - 2.0);
+					glVertex2f( x + w + 2.0, y + h + 2.0);
+					glVertex2f( x - 2.0,  y + h + 2.0);
+				glEnd();
+		        glEnable(GL_LINE_STIPPLE);
+				glLineStipple( 1, 0xAAAA );
+				glBegin(GL_LINES);
+					glVertex2f( x + w + 2.0, y - 2.0);
+					glVertex2f( x + w + 2.0, y + h + 2.0);
+					glVertex2f( x - 2.0,  y + h + 2.0);
+					glVertex2f( x - 2.0,  y - 2.0);
+				glEnd();
+		        glDisable(GL_LINE_STIPPLE);
+				glPopMatrix();
+			}//hud
+		sprintf( label_buffer, format_buffer, get_value()*data_scaling() );
+	}
+  }
   else {
-    sprintf( label_buffer, format_buffer );
+//    sprintf( label_buffer, format_buffer );
   }
   
   lenstr = getStringWidth( label_buffer );
@@ -143,7 +176,7 @@ draw( void )       // Required method in base class
   fgPrintf( SG_COCKPIT, SG_DEBUG, label_buffer );
   fgPrintf( SG_COCKPIT, SG_DEBUG, "\n" );
 #endif
-//  lenstr = strlen( label_buffer );
+  lenstr = strlen( label_buffer );
 
   if( justify == RIGHT_JUST ) {
 	  posincr = scrn_rect.right - lenstr;
@@ -156,12 +189,12 @@ draw( void )       // Required method in base class
   
   if( fontSize == SMALL ) {
     textString( scrn_rect.left + posincr, scrn_rect.top,
-                label_buffer, GLUT_BITMAP_8_BY_13);
+                label_buffer, GLUT_BITMAP_8_BY_13 ,get_digits()); //suma
     }
   else  {
     if( fontSize == LARGE ) {
       textString( scrn_rect.left + posincr, scrn_rect.top,
-                  label_buffer, GLUT_BITMAP_9_BY_15);
+                  label_buffer, GLUT_BITMAP_9_BY_15 ,get_digits()); //suma
       }
     }
 }

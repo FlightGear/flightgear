@@ -4,7 +4,8 @@
 
 UINT instr_item :: instances = 0;  // Initial value of zero
 int  instr_item :: brightness = BRT_MEDIUM;
-glRGBTRIPLE instr_item :: color = {0.1, 0.7, 0.0};
+//glRGBTRIPLE instr_item :: color = {0.1, 0.7, 0.0};
+glRGBTRIPLE instr_item :: color = {0.0, 1.0, 0.0};
 
 // constructor    ( No default provided )
 instr_item  ::
@@ -15,13 +16,15 @@ instr_item  ::
                FLTFNPTR         data_source,
                float           data_scaling,
                UINT             options,
-               bool             working) :
+               bool             working,
+			   int				digit) : //suma
                       handle         ( ++instances  ),
                       load_value_fn  ( data_source  ),
                       disp_factor    ( data_scaling ),
                       opts           ( options      ),
                       is_enabled     ( working      ),
-                      broken         ( FALSE        )
+                      broken         ( FALSE        ),
+                      digits		 ( digit		) //suma
 {
   scrn_pos.left   = x;
   scrn_pos.top    = y;
