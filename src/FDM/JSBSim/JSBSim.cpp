@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     }
   } else {        // form jsbsim <acname> <resetfile>
     if ( ! FDMExec->LoadModel("aircraft", "engine", string(argv[1]))) {
-    	cerr << "JSBSim could not be started" << endl;
+    	cerr << "  JSBSim could not be started" << endl << endl;
       exit(-1);
     }                   
 

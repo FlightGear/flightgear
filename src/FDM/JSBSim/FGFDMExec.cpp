@@ -395,13 +395,13 @@ bool FGFDMExec::LoadModel(string APath, string EPath, string model)
 
   if (result) {
     modelLoaded = true;
+    if (debug_lvl > 0) cout << "\n\nJSBSim startup complete\n\n";
   } else {
     cerr << fgred
-         << "FGFDMExec: Failed to load aircraft and/or engine model"
+         << "  FGFDMExec: Failed to load aircraft and/or engine model"
          << fgdef << endl;
   }
 
-  if (debug_lvl > 0) cout << "\n\nJSBSim startup complete\n\n";
   return result;
 }
 

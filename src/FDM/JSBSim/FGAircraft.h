@@ -225,13 +225,13 @@ private:
   string CFGVersion;
   string AircraftName;
 
-  void ReadMetrics(FGConfigFile*);
-  void ReadPropulsion(FGConfigFile*);
-  void ReadFlightControls(FGConfigFile*);
-  void ReadAerodynamics(FGConfigFile*);
-  void ReadUndercarriage(FGConfigFile*);
-  void ReadPrologue(FGConfigFile*);
-  void ReadOutput(FGConfigFile*);
+  bool ReadMetrics(FGConfigFile*);
+  bool ReadPropulsion(FGConfigFile*);
+  bool ReadFlightControls(FGConfigFile*);
+  bool ReadAerodynamics(FGConfigFile*);
+  bool ReadUndercarriage(FGConfigFile*);
+  bool ReadPrologue(FGConfigFile*);
+  bool ReadOutput(FGConfigFile*);
   void Debug(void);
 };
 
