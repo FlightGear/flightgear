@@ -396,7 +396,8 @@ bool FGATC610x::open() {
     nav2_stby_freq
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
 
-    adf_on_off_vol = fgGetNode( "/radios/kr-87/inputs/on-off-volume", true );
+    adf_power = fgGetNode( "/radios/kr-87/inputs/power-btn", true );
+    adf_vol = fgGetNode( "/radios/kr-87/inputs/volume", true );
     adf_adf_btn = fgGetNode( "/radios/kr-87/inputs/adf-btn", true );
     adf_bfo_btn = fgGetNode( "/radios/kr-87/inputs/bfo-btn", true );
     adf_freq = fgGetNode( "/radios/kr-87/outputs/selected-khz", true );
@@ -501,7 +502,7 @@ bool FGATC610x::do_analog_in() {
 
     // adf volume
     tmp = (float)analog_in_data[26] / 1024.0f;
-    fgSetFloat( "/radios/kr-87/inputs/on-off-volume", tmp );
+    fgSetFloat( "/radios/kr-87/inputs/volume", tmp );
 
     // nav2 obs tuner
     tmp = (float)analog_in_data[29] * 360.0f / 1024.0f;
@@ -898,6 +899,8 @@ bool FGATC610x::do_radio_switches() {
 	      !(radio_switch_data[23] >> 3 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
               !(radio_switch_data[23] >> 4 & 0x01) );
+    fgSetInt( "/radios/kr-87/inputs/power-btn",
+              radio_switch_data[23] >> 4 & 0x01 );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
          << " bfo = " << !(radio_switch_data[23] >> 1 & 0x01)
          << " stby = " << !(radio_switch_data[23] >> 2 & 0x01)
@@ -1137,7 +1140,7 @@ bool FGATC610x::do_radio_display() {
     // turns on the decimal point
 
     // ADF standby frequency / timer
-    if ( adf_on_off_vol->getDoubleValue() >= 0.01 ) {
+    if ( adf_vol->getDoubleValue() >= 0.01 ) {
         if ( adf_stby_mode->getIntValue() == 0 ) {
             // frequency
             float adf_stby = adf_stby_freq->getFloatValue();

@@ -79,7 +79,8 @@ class FGKR_87 : public FGSubsystem
 
     // input and buttons
     double rotation;            // compass faceplace rotation
-    double on_off_vol_btn;
+    bool power_btn;             // 0 = off, 1 = powered
+    double vol_btn;
     bool adf_btn;               // 0 = normal, 1 = depressed
     bool bfo_btn;               // 0 = normal, 1 = depressed
     bool frq_btn;               // 0 = normal, 1 = depressed
@@ -137,11 +138,15 @@ public:
     // input and buttons
     inline double get_rotation () const { return rotation; }
     inline void set_rotation( double rot ) { rotation = rot; }
-    inline double get_on_off_vol_btn() const { return on_off_vol_btn; }
-    inline void set_on_off_vol_btn( double val ) {
+    inline bool get_power_btn() const { return power_btn; }
+    inline void set_power_btn( bool val ) {
+	power_btn = val;
+    }
+    inline double get_vol_btn() const { return vol_btn; }
+    inline void set_vol_btn( double val ) {
 	if ( val < 0.0 ) val = 0.0;
 	if ( val > 1.0 ) val = 1.0;
-	on_off_vol_btn = val;
+	vol_btn = val;
     }
     inline bool get_adf_btn() const { return adf_btn; }
     inline void set_adf_btn( bool val ) { adf_btn = val; }

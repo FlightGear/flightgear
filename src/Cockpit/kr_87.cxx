@@ -85,7 +85,8 @@ FGKR_87::FGKR_87() :
     timer_mode(0),
     count_mode(0),
     rotation(0),
-    on_off_vol_btn(0.5),
+    power_btn(true),
+    vol_btn(0.5),
     adf_btn(true),
     bfo_btn(false),
     frq_btn(false),
@@ -152,10 +153,14 @@ void FGKR_87::bind () {
     fgTie("/radios/kr-87/inputs/rotation-deg", this,
 	  &FGKR_87::get_rotation, &FGKR_87::set_rotation);
     fgSetArchivable("/radios/kr-87/inputs/rotation-deg");
-    fgTie("/radios/kr-87/inputs/on-off-volume", this,
-	  &FGKR_87::get_on_off_vol_btn,
-	  &FGKR_87::set_on_off_vol_btn);
-    fgSetArchivable("/radios/kr-87/inputs/on-off-volume");
+    fgTie("/radios/kr-87/inputs/power-btn", this,
+	  &FGKR_87::get_power_btn,
+	  &FGKR_87::set_power_btn);
+    fgSetArchivable("/radios/kr-87/inputs/power-btn");
+    fgTie("/radios/kr-87/inputs/volume", this,
+	  &FGKR_87::get_vol_btn,
+	  &FGKR_87::set_vol_btn);
+    fgSetArchivable("/radios/kr-87/inputs/volume");
     fgTie("/radios/kr-87/inputs/adf-btn", this,
 	  &FGKR_87::get_adf_btn,
 	  &FGKR_87::set_adf_btn);
@@ -213,7 +218,8 @@ void FGKR_87::unbind () {
 
     // input and buttons
     fgUntie("/radios/kr-87/inputs/rotation-deg");
-    fgUntie("/radios/kr-87/inputs/on-off-volume");
+    fgUntie("/radios/kr-87/inputs/power-btn");
+    fgUntie("/radios/kr-87/inputs/volume");
     fgUntie("/radios/kr-87/inputs/adf-btn");
     fgUntie("/radios/kr-87/inputs/bfo-btn");
     fgUntie("/radios/kr-87/inputs/frq-btn");
@@ -254,7 +260,7 @@ void FGKR_87::update( double dt ) {
     // Radio
     ////////////////////////////////////////////////////////////////////////
 
-    if ( on_off_vol_btn >= 0.05 ) {
+    if ( power_btn ) {
         // buttons
         if ( adf_btn == 0 ) {
             ant_mode = 1;
@@ -450,11 +456,11 @@ void FGKR_87::update( double dt ) {
     if ( valid && inrange ) {
 	// play station ident via audio system if on + ident_btn,
 	// otherwise turn it off
-	if ( on_off_vol_btn >= 0.01 && ident_btn ) {
+	if ( vol_btn >= 0.01 && ident_btn ) {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( "adf-ident" );
             if ( sound != NULL ) {
-                sound->set_volume( on_off_vol_btn );
+                sound->set_volume( vol_btn );
             } else {
                 SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find adf-ident sound" );
             }
