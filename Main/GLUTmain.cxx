@@ -1,10 +1,8 @@
-
-//
 // GLUTmain.cxx -- top level sim routines
 //
 // Written by Curtis Olson for OpenGL, started May 1997.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+// Copyright (C) 1997  Curtis L. Olson  - curt@me.umn.edu
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -576,7 +574,7 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( current_options.get_sound() && !audio_sched->not_working() ) {
+    if ( current_options.get_sound() && audio_sched->working() ) {
 	double param = c->throttle[0] * 2.0 + 1.0;
 
 	pitch_envelope.setStep  ( 0, 0.01, param );
@@ -698,7 +696,7 @@ static void fgIdleFunction ( void ) {
 	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
 	audio_sched -> loopSample ( s1 );
 
-	if ( !audio_sched->not_working() ) {
+	if ( audio_sched->working() ) {
 	    pitch_envelope.setStep  ( 0, 0.01, 0.6 );
 	    volume_envelope.setStep ( 0, 0.01, 0.6 );
 
@@ -894,6 +892,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.55  1998/09/29 14:58:18  curt
+// Use working() instead of !not_working() for audio.
+//
 // Revision 1.54  1998/09/29 02:03:38  curt
 // Autopilot mods.
 //
