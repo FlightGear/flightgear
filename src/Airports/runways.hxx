@@ -113,12 +113,13 @@ public:
     // Destructor
     ~FGRunways();
 
-    // search for the specified id.
+    // search for the specified apt id.
     // Returns true if successful, otherwise returns false.
     // On success, runway data is returned thru "runway" pointer.
     // "runway" is not changed if "apt" is not found.
-    bool search( const string& id, FGRunway* runway );
-    FGRunway search( const string& id );
+    bool search( const string& aptid, FGRunway* runway );
+    bool search( const string& aptid, const string& rwyno, FGRunway* runway );
+    FGRunway search( const string& aptid );
     bool next( FGRunway* runway );
     FGRunway next();
 };

@@ -67,8 +67,8 @@ FGRunways::FGRunways( const string& file ) {
 }
 
 
-// search for the specified id
-bool FGRunways::search( const string& id, FGRunway* r ) {
+// search for the specified apt id
+bool FGRunways::search( const string& aptid, FGRunway* r ) {
     c4_StringProp pID ("ID");
     c4_StringProp pRwy ("Rwy");
     c4_FloatProp pLon ("Longitude");
@@ -80,7 +80,7 @@ bool FGRunways::search( const string& id, FGRunway* r ) {
     c4_StringProp pEnd1 ("End1Flags");
     c4_StringProp pEnd2 ("End2Flags");
 
-    int index = vRunway->Find(pID[id.c_str()]);
+    int index = vRunway->Find(pID[aptid.c_str()]);
     cout << "index = " << index << endl;
 
     if ( index == -1 ) {
@@ -106,9 +106,61 @@ bool FGRunways::search( const string& id, FGRunway* r ) {
 }
 
 
-FGRunway FGRunways::search( const string& id ) {
+// search for the specified apt id and runway no
+bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
+{
+    c4_StringProp pID ("ID");
+    c4_StringProp pRwy ("Rwy");
+    c4_FloatProp pLon ("Longitude");
+    c4_FloatProp pLat ("Latitude");
+    c4_FloatProp pHdg ("Heading");
+    c4_FloatProp pLen ("Length");
+    c4_FloatProp pWid ("Width");
+    c4_StringProp pSurf ("SurfaceFlags");
+    c4_StringProp pEnd1 ("End1Flags");
+    c4_StringProp pEnd2 ("End2Flags");
+
+    int index = vRunway->Find(pID[aptid.c_str()]);
+    cout << "index = " << index << endl;
+
+    if ( index == -1 ) {
+	return false;
+    }
+
+    c4_RowRef row = vRunway->GetAt(index);
+    string rowid = (const char *) pID(row);
+    string rowrwyno = (const char *) pRwy(row);
+    while ( rowid == aptid ) {
+        next_index = index + 1;
+
+        if ( rowrwyno == rwyno ) {
+            r->id =      (const char *) pID(row);
+            r->rwy_no =  (const char *) pRwy(row);
+            r->lon =     (double) pLon(row);
+            r->lat =     (double) pLat(row);
+            r->heading = (double) pHdg(row);
+            r->length =  (double) pLen(row);
+            r->width =   (double) pWid(row);
+            r->surface_flags = (const char *) pSurf(row);
+            r->end1_flags =    (const char *) pEnd1(row);
+            r->end2_flags =    (const char *) pEnd2(row);
+
+            return true;
+        }
+
+        index++;
+        c4_RowRef row = vRunway->GetAt(index);
+        string rowid = (const char *) pID(row);
+        string rowrwyno = (const char *) pRwy(row);
+    }
+
+    return false;
+}
+
+
+FGRunway FGRunways::search( const string& aptid ) {
     FGRunway a;
-    search( id, &a );
+    search( aptid, &a );
     return a;
 }
 
