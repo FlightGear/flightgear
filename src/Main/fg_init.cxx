@@ -123,7 +123,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 	return false;
     }
 
-    return true;
+   return true;
 }
 
 

@@ -85,7 +85,7 @@ private:
     void load_tile( const FGBucket& b, int cache_index );
 
     int hitcount;
-    ssgHit hitlist [ MAX_HITS ] ;
+    sgVec3 hit_pts [ MAX_HITS ] ;
 
 public:
 

@@ -409,7 +409,7 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
     int side1, side2;
     short i1, i2, i3;
 
-    cout << s << "Intersecting" << endl;
+    // cout << s << "Intersecting" << endl;
 
     // traverse the triangle list for this leaf
     for ( int i = 0; i < leaf->getNumTriangles(); ++i ) {
@@ -649,7 +649,7 @@ void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgMat4 m,
 	    sgXformPnt3( center, m ) ;
 	    // cout << s << "entity bounding sphere:" << endl;
 	    // cout << s << "center = " << center[0] << " "
-		//  << center[1] << " " << center[2] << endl;
+	    //      << center[1] << " " << center[2] << endl;
     	    // cout << s << "radius = " << bsphere->getRadius() << endl;
 	    double radius_sqd = bsphere->getRadius() * bsphere->getRadius();
 	    if ( sgPointLineDistSquared( center, p, dir ) < radius_sqd ) {
@@ -667,10 +667,12 @@ void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgMat4 m,
 		    sgVec3 result;
 		    if ( my_ssg_instersect_leaf( s, (ssgLeaf *)kid, m, p, dir, 
 						 result ) )
-			{
-			    cout << "sgLOS hit: " << result[0] << "," 
-				 << result[1] << "," << result[2] << endl;
-			}
+		    {
+			cout << "sgLOS hit: " << result[0] << "," 
+			     << result[1] << "," << result[2] << endl;
+			hit_pts[hitcount] = result;
+			hitcount++;
+		    }
 		}
 	    } else {
 		// end of the line for this branch
@@ -700,9 +702,38 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
     sgSetVec3(sgavp, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
     sgSetVec3(sgvp, view_pos.x(), view_pos.y(), view_pos.z() );
 
+    cout << "starting ssg_los, abs view pos = " << abs_view_pos[0] << " "
+         << abs_view_pos[1] << " " << abs_view_pos[2] << endl;
     cout << "starting ssg_los, view pos = " << view_pos[0] << " "
-	 << view_pos[1] << " " << view_pos[2] << endl;
+         << view_pos[1] << " " << view_pos[2] << endl;
     my_ssg_los( "", scene, m, sgvp, sgavp );
+
+    double result = -9999;
+
+    for ( int i = 0; i < hitcount; ++i ) {
+	Point3D rel_cart( hit_pts[i][0], hit_pts[i][1], hit_pts[i][2] );
+	Point3D abs_cart = rel_cart + scenery.center;
+	Point3D pp = fgCartToPolar3d( abs_cart );
+	FG_LOG( FG_TERRAIN, FG_INFO, "  polar form = " << pp );
+	// convert to geodetic coordinates
+	double lat_geod, alt, sea_level_r;
+	fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
+		     &alt, &sea_level_r);
+
+	// printf("alt = %.2f\n", alt);
+	// exit since we found an intersection
+	if ( alt > result && alt < 10000 ) {
+	    // printf("returning alt\n");
+	    result = alt;
+	}
+    }
+
+    if ( result > -9000 ) {
+	return result;
+    } else {
+	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
+	return 0.0;
+    }
 }
 
 
@@ -756,6 +787,18 @@ int FGTileMgr::update( void ) {
 			     f->get_Latitude() * RAD_TO_DEG,
 			     0, 0 );
 	sched_tile( p2 );
+
+	// prime scenery center calculations
+	Point3D geod_center( p2.get_center_lon() * RAD_TO_DEG,
+			     p2.get_center_lat() * RAD_TO_DEG, 0.0 );
+	scenery.center = scenery.next_center = fgGeodToCart( geod_center );
+
+	Point3D geod_view_center( p2.get_center_lon() * RAD_TO_DEG, 
+				  p2.get_center_lat() * RAD_TO_DEG, 
+				  cur_fdm_state->get_Altitude()*FEET_TO_METER +
+				  3 );
+	current_view.abs_view_pos = fgGeodToCart( geod_view_center );
+	current_view.view_pos = current_view.abs_view_pos - scenery.center;
 
 	for ( i = 3; i <= tile_diameter; i = i + 2 ) {
 	    int span = i / 2;
@@ -896,12 +939,13 @@ int FGTileMgr::update( void ) {
     Point3D geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
     Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
-    scenery.cur_elev = 
-	current_elev( f->get_Longitude(), f->get_Latitude(), tmp_abs_view_pos );
-    cout << "current elevation == " << scenery.cur_elev << endl;
-    double junk = current_elev_ssg( current_view.abs_view_pos,
-                                    current_view.view_pos );
-    cout << "current elevation (ssg) == " << junk << endl;
+    cout << "current elevation (old) == " 
+	 << current_elev( f->get_Longitude(), f->get_Latitude(), 
+			  tmp_abs_view_pos ) 
+	 << endl;
+    scenery.cur_elev = current_elev_ssg( current_view.abs_view_pos,
+					 current_view.view_pos );
+    cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
 	
     p_last = p1;
     last_lon = f->get_Longitude() * RAD_TO_DEG;
