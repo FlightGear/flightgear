@@ -67,94 +67,94 @@
 #endif
 
 
-class fgTIMESTAMP {
+class FGTimeStamp {
 
 private:
 
     long seconds;
-    long millis;
+    long usec;
 
 public:
 
-    fgTIMESTAMP();
-    fgTIMESTAMP( const long s, const long m );
-    ~fgTIMESTAMP();
+    FGTimeStamp();
+    FGTimeStamp( const long s, const long m );
+    ~FGTimeStamp();
 
     // Set time to current time
     void stamp();
 
-    fgTIMESTAMP& operator = ( const fgTIMESTAMP& t );
+    FGTimeStamp& operator = ( const FGTimeStamp& t );
 
-    friend fgTIMESTAMP operator + (const fgTIMESTAMP& t, const long& m);
-    friend long operator - (const fgTIMESTAMP& a, const fgTIMESTAMP& b);
+    friend FGTimeStamp operator + (const FGTimeStamp& t, const long& m);
+    friend long operator - (const FGTimeStamp& a, const FGTimeStamp& b);
 
     inline long get_seconds() const { return seconds; }
-    inline long get_millis() const { return millis; }
+    // inline long get_usec() const { return usec; }
 };
 
-inline fgTIMESTAMP::fgTIMESTAMP() {
+inline FGTimeStamp::FGTimeStamp() {
 }
 
-inline fgTIMESTAMP::fgTIMESTAMP( const long s, const long m ) {
+inline FGTimeStamp::FGTimeStamp( const long s, const long u ) {
     seconds = s;
-    millis = m;
+    usec = u;
 }
 
-inline fgTIMESTAMP::~fgTIMESTAMP() {
+inline FGTimeStamp::~FGTimeStamp() {
 }
 
-inline fgTIMESTAMP& fgTIMESTAMP::operator = (const fgTIMESTAMP& t)
+inline FGTimeStamp& FGTimeStamp::operator = (const FGTimeStamp& t)
 {
     seconds = t.seconds;
-    millis = t.millis;
+    usec = t.usec;
     return *this;
 }
 
-inline void fgTIMESTAMP::stamp() {
+inline void FGTimeStamp::stamp() {
 #if defined( WIN32 )
     unsigned int t;
     t = timeGetTime();
     seconds = 0;
-    millis =  t;
+    usec =  t * 1000;
 #elif defined( HAVE_GETTIMEOFDAY )
     struct timeval current;
     struct timezone tz;
     // fg_timestamp currtime;
     gettimeofday(&current, &tz);
     seconds = current.tv_sec;
-    millis = current.tv_usec / 1000;
+    usec = current.tv_usec;
 #elif defined( HAVE_GETLOCALTIME )
     SYSTEMTIME current;
     GetLocalTime(&current);
     seconds = current.wSecond;
-    millis = current.wMilliseconds;
+    usec = current.wMilliseconds * 1000;
 #elif defined( HAVE_FTIME )
     struct timeb current;
     ftime(&current);
     seconds = current.time;
-    millis = current.millitm;
+    usec = current.millitm * 1000;
 #else
 # error Port me
 #endif
 }
 
-// difference between time stamps in milliseconds
-inline fgTIMESTAMP operator + (const fgTIMESTAMP& t, const long& m) {
+// difference between time stamps in microseconds (usec)
+inline FGTimeStamp operator + (const FGTimeStamp& t, const long& m) {
 #ifdef WIN32
-    return fgTIMESTAMP( 0, t.millis + m );
+    return FGTimeStamp( 0, t.usec + m );
 #else
-    return fgTIMESTAMP( t.seconds + ( t.millis + m ) / 1000,
-			( t.millis + m ) % 1000 );
+    return FGTimeStamp( t.seconds + ( t.usec + m ) / 1000000,
+			( t.usec + m ) % 1000000 );
 #endif
 }
 
-// difference between time stamps in milliseconds
-inline long operator - (const fgTIMESTAMP& a, const fgTIMESTAMP& b)
+// difference between time stamps in microseconds (usec)
+inline long operator - (const FGTimeStamp& a, const FGTimeStamp& b)
 {
 #if defined( WIN32 )
-    return a.millis - b.millis;
+    return a.usec - b.usec;
 #else
-    return 1000 * (a.seconds - b.seconds) + (a.millis - b.millis);
+    return 1000000 * (a.seconds - b.seconds) + (a.usec - b.usec);
 #endif
 }
 
@@ -163,6 +163,9 @@ inline long operator - (const fgTIMESTAMP& a, const fgTIMESTAMP& b)
 
 
 // $Log$
+// Revision 1.4  1999/01/09 13:37:46  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.3  1999/01/07 20:25:39  curt
 // Portability changes and updates from Bernie Bright.
 //

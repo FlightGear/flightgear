@@ -44,7 +44,7 @@ public:
 
     // The time at which these values are correct (for extrapolating
     // later frames between position updates)
-    fgTIMESTAMP t;
+    FGTimeStamp t;
 
     // Positions
 
@@ -97,6 +97,9 @@ void fgExternalUpdate( FGState& f, int multiloop );
 
 
 // $Log$
+// Revision 1.4  1999/01/09 13:37:37  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.3  1998/12/05 15:54:14  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

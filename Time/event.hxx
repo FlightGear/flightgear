@@ -88,9 +88,9 @@ private:
 
     long interval;    // interval in ms between each iteration of this event
 
-    fgTIMESTAMP last_run;
-    fgTIMESTAMP current;
-    fgTIMESTAMP next_run;
+    FGTimeStamp last_run;
+    FGTimeStamp current;
+    FGTimeStamp next_run;
 
     long cum_time;    // cumulative processor time of this event
     long min_time;    // time of quickest execution
@@ -166,6 +166,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.16  1999/01/09 13:37:43  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.15  1999/01/07 20:25:33  curt
 // Portability changes and updates from Bernie Bright.
 //

@@ -94,7 +94,7 @@ int fgFlightModelInit(int model, FGState& f, double dt) {
 static FGState extrapolate_fdm( FGState &base, int jitter ) {
     FGState result;
 
-    double dt = jitter / 1000.0;
+    double dt = jitter / 1000000.0;
     // cout << "dt = " << dt << endl;
 
     // start by making a straight up copy
@@ -118,9 +118,9 @@ static FGState extrapolate_fdm( FGState &base, int jitter ) {
     double alt = base.get_Altitude() + base.get_Radius_dot() * dt;
     double radius = base.get_Radius_to_vehicle() + base.get_Radius_dot() * dt;
 
-    result.set_Longitude( lon );
-    result.set_Latitude( lat );
-    result.set_Altitude( alt );
+    // result.set_Longitude( lon );
+    // result.set_Latitude( lat );
+    // result.set_Altitude( alt );
     // result.set_Geocentric_Position( lon_geoc, lat_geoc, radius );
 
     return result;
@@ -184,6 +184,9 @@ void fgFlightModelSetAltitude(int model, double alt_meters) {
 
 
 // $Log$
+// Revision 1.10  1999/01/09 13:37:32  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.9  1999/01/08 19:27:37  curt
 // Fixed AOA reading on HUD.
 // Continued work on time jitter compensation.

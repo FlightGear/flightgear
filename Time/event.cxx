@@ -190,7 +190,8 @@ fgEVENT_MGR::Register( const string& desc,
 		       fgEVENT::EventState status, 
 		       int interval )
 {
-    fgEVENT* e = new fgEVENT( desc, cb, status, interval );
+    // convert interval specified in milleseconds to usec
+    fgEVENT* e = new fgEVENT( desc, cb, status, interval * 1000 );
 
     FG_LOG( FG_EVENT, FG_INFO, "Registering event: " << desc );
 
@@ -249,7 +250,7 @@ fgEVENT_MGR::PrintStats()
 // the queue
 void fgEVENT_MGR::Process( void ) {
     fgEVENT *e_ptr;
-    fgTIMESTAMP cur_time;
+    FGTimeStamp cur_time;
     unsigned int i, size;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Processing events" );
@@ -305,6 +306,9 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.15  1999/01/09 13:37:42  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.14  1999/01/07 20:25:32  curt
 // Portability changes and updates from Bernie Bright.
 //

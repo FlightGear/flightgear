@@ -96,13 +96,13 @@ void fgTimerInit(float dt, void (*f)( int )) {
 #endif // HAVE_SETITIMER
 
 
-// This function returns the number of milleseconds since the last
+// This function returns the number of microseconds since the last
 // time it was called.
 int fgGetTimeInterval( void ) {
     int interval;
     static int inited = 0;
-    static fgTIMESTAMP last;
-    fgTIMESTAMP current;
+    static FGTimeStamp last;
+    FGTimeStamp current;
 
     if ( ! inited ) {
 	inited = 1;
@@ -119,6 +119,9 @@ int fgGetTimeInterval( void ) {
 
 
 // $Log$
+// Revision 1.6  1999/01/09 13:37:45  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.5  1998/12/05 14:21:32  curt
 // Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
 // to it's own file, timestamp.hxx.

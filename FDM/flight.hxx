@@ -544,7 +544,7 @@ public:
 	geocentric_position_v[2] = radius;
     }
 
-//     inline void set_Geocentric_Position( double lat, double lon, double rad ) {
+    inline void set_Geocentric_Position( double lat, double lon, double rad ) {
 	geocentric_position_v[0] = lat;
 	geocentric_position_v[1] = lon;
 	geocentric_position_v[2] = rad;
@@ -797,6 +797,9 @@ void fgFlightModelSetAltitude(int model, double alt_meters);
 
 
 // $Log$
+// Revision 1.10  1999/01/09 13:37:33  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.9  1999/01/08 19:27:38  curt
 // Fixed AOA reading on HUD.
 // Continued work on time jitter compensation.

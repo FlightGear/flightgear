@@ -450,8 +450,8 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 static void fgMainLoop( void ) {
     FGState *f;
     fgTIME *t;
-    static int remainder = 0;
-    int elapsed, multi_loop;
+    static long remainder = 0;
+    long elapsed, multi_loop;
     // int i;
     // double accum;
     static time_t last_time = 0;
@@ -508,15 +508,17 @@ static void fgMainLoop( void ) {
     // update "time"
     fgTimeUpdate(f, t);
 
-    // Get elapsed time for this past frame
+    // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
-    FG_LOG( FG_ALL, FG_BULK, 
-	    "Time interval is = " << elapsed 
+    FG_LOG( FG_ALL, FG_DEBUG, 
+	    "Elapsed time interval is = " << elapsed 
 	    << ", previous remainder is = " << remainder );
 
     // Calculate frame rate average
     if ( (t->cur_time != last_time) && (last_time > 0) ) {
 	general.set_frame_rate( frames );
+	FG_LOG( FG_ALL, FG_DEBUG, 
+		"--> Frame rate is = " << general.get_frame_rate() );
 	frames = 0;
     }
     last_time = t->cur_time;
@@ -541,13 +543,11 @@ static void fgMainLoop( void ) {
     // Run flight model
     if ( ! use_signals ) {
 	// Calculate model iterations needed for next frame
-	FG_LOG( FG_ALL, FG_DEBUG, 
-		"--> Frame rate is = " << general.get_frame_rate() );
 	elapsed += remainder;
 
-	multi_loop = (int)(((float)elapsed * 0.001) * DEFAULT_MODEL_HZ);
-	remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
-	FG_LOG( FG_ALL, FG_BULK, 
+	multi_loop = (int)(((double)elapsed * 0.000001) * DEFAULT_MODEL_HZ);
+	remainder = elapsed - ((multi_loop*1000000) / DEFAULT_MODEL_HZ);
+	FG_LOG( FG_ALL, FG_DEBUG, 
 		"Model iterations needed = " << multi_loop
 		<< ", new remainder = " << remainder );
 	
@@ -1000,6 +1000,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.80  1999/01/09 13:37:40  curt
+// Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
+//
 // Revision 1.79  1999/01/08 03:23:56  curt
 // Beginning work on compensating for sim time vs. real world time "jitter".
 //
