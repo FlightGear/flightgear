@@ -1,3 +1,17 @@
+New in 0.7.9 (final)
+* February 16, 2002
+
+* Fixes to the Thanks file.
+* Fix --time-offset in the man page and options help.
+* Fixed the spelling of Celsius.
+* Cleaned up some stray cout's
+* Removed some redundant FG* class qualifiers in various headers.
+* GUI dialog box fixes for autopilot.
+* Ensure that initial engine settings are copied over from FlightGear
+  to JSBSim.
+* FreeBSD fix from JSBSim.
+
+
 New in 0.7.9pre2
 * February 13, 2002
 
