@@ -311,7 +311,7 @@ FGExternalNet::FGExternalNet( double dt, string host, int dop, int dip, int cp )
     data_server.setBlocking( false );
 
     // allowed to read from a broadcast addr
-    data_server.setBroadcast( true );
+    // data_server.setBroadcast( true );
 
     // if we bind to fdm_host = "" then we accept messages from
     // anyone.
