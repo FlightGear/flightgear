@@ -1485,7 +1485,8 @@ int main( int argc, char **argv ) {
     string base_version = fgBasePackageVersion();
     if ( !(base_version == "0.7.9") ) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Base package check failed ... "
-		<< base_version);
+		<< "Found version " << base_version );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version 0.7.9" );
 	exit(-1);
     }
 

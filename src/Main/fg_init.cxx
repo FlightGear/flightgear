@@ -192,9 +192,9 @@ string fgBasePackageVersion() {
 	old_path.append( "Thanks" );
 	sg_gzifstream old( old_path.str() );
 	if ( !old.is_open() ) {
-	    return "[none found]";
+	    return "[none]";
 	} else {
-	    return "[old version, please upgrade]";
+	    return "[old version]";
 	}
     }
 
