@@ -855,6 +855,51 @@ int fgGlutInit( int *argc, char **argv ) {
 	glutEnterGameMode();
     }
 
+    // This seems to be the absolute earliest in the init sequence
+    // that these calls will return valid info.  Too bad it's after
+    // we've already created and sized out window. :-(
+    general.glVendor = (char *)glGetString ( GL_VENDOR );
+    general.glRenderer = (char *)glGetString ( GL_RENDERER );
+    general.glVersion = (char *)glGetString ( GL_VERSION );
+
+    FG_LOG ( FG_GENERAL, FG_INFO, general.glRenderer );
+
+#if 0
+    // try to determine if we should adjust the initial default
+    // display resolution.  The options class defaults (is
+    // initialized) to 640x480.
+    string renderer = general.glRenderer;
+
+    // currently we only know how to deal with Mesa/Glide/Voodoo cards
+    if ( renderer.find( "Glide" ) != string::npos ) {
+	FG_LOG( FG_GENERAL, FG_INFO, "Detected a Glide driver" );
+	if ( renderer.find( "FB/8" ) != string::npos ) {
+	    // probably a voodoo-2
+	    if ( renderer.find( "TMU/SLI" ) != string::npos ) {
+		// probably two SLI'd Voodoo-2's
+		current_options.set_xsize( 1024 );
+		current_options.set_ysize( 768 );
+		FG_LOG( FG_GENERAL, FG_INFO,
+			"It looks like you have two sli'd voodoo-2's." << endl
+			<< "upgrading your win resolution to 1024 x 768" );
+		glutReshapeWindow(1024, 768);
+	    } else {
+		// probably a single non-SLI'd Voodoo-2
+		current_options.set_xsize( 800 );
+		current_options.set_ysize( 600 );
+		FG_LOG( FG_GENERAL, FG_INFO,
+			"It looks like you have a voodoo-2." << endl
+			<< "upgrading your win resolution to 800 x 600" );
+		glutReshapeWindow(800, 600);
+	    }
+	} else if ( renderer.find( "FB/2" ) != string::npos ) {
+	    // probably a voodoo-1, stick with the default
+	}
+    } else {
+	// we have no special knowledge of this card, stick with the default
+    }
+#endif
+
     return(1);
 }
 
@@ -903,40 +948,9 @@ int main( int argc, char **argv ) {
     FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version " << VERSION << endl );
 
     string root;
-    int i;
 
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
-
-    // pull some basic driver info
-    general.glVendor = (char *)glGetString ( GL_VENDOR );
-    general.glRenderer = (char *)glGetString ( GL_RENDERER );
-    general.glVersion = (char *)glGetString ( GL_VERSION );
-
-    // try to determine if we should adjust the default display
-    // resolution.  The options class defaults (is initialized) to
-    // 640x480.
-    string renderer = general.glRenderer;
-
-    // currently we only know how to deal with Mesa/Glide/Voodoo cards
-    if ( renderer.find( "Glide" ) != string::npos ) {
-	if ( renderer.find( "FB/8" ) != string::npos ) {
-	    // probably a voodoo-2
-	    if ( renderer.find( "TMU/SLI" ) != string::npos ) {
-		// probably two SLI'd Voodoo-2's
-		current_options.set_xsize( 1024 );
-		current_options.set_ysize( 768 );
-	    } else {
-		// probably a single non-SLI'd Voodoo-2
-		current_options.set_xsize( 800 );
-		current_options.set_ysize( 600 );
-	    }
-	} else if ( renderer.find( "FB/2" ) != string::npos ) {
-	    // probably a voodoo-1, stick with the default
-	}
-    } else {
-	// we have no special knowledge of this card, stick with the default
-    }
 
     // Attempt to locate and parse a config file
     // First check fg_root
@@ -997,6 +1011,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.69  1998/11/23 20:51:26  curt
+// Fiddling with when I can get info from the opengl driver.
+//
 // Revision 1.68  1998/11/20 01:02:35  curt
 // Try to detect Mesa/Glide/Voodoo and chose the appropriate resolution.
 //
