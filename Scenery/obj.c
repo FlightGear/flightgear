@@ -107,13 +107,13 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     // First try "path.obz" (compressed format)
     strcpy(gzpath, path);
     strcat(gzpath, ".obz");
-    if ( (f = gzopen(gzpath, "r")) == NULL ) {
+    if ( (f = gzopen(gzpath, "rb")) == NULL ) {
 	// Next try "path.obj" (uncompressed format)
 	strcat(path, ".obj");
-	if ( (f = gzopen(path, "r")) == NULL ) {
+	if ( (f = gzopen(path, "rb")) == NULL ) {
 	    // Next try "path.obj.gz" (compressed format)
 	    strcat(path, ".gz");
-	    if ( (f = gzopen(path, "r")) == NULL ) {
+	    if ( (f = gzopen(path, "rb")) == NULL ) {
 		fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
 		return(-1);
 	    }
@@ -405,9 +405,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.30  1998/04/24 14:21:08  curt
-/* Added "file.obj.gz" support.
+/* Revision 1.31  1998/04/25 15:09:57  curt
+/* Changed "r" to "rb" in gzopen() options.  This fixes bad behavior in win32.
 /*
+ * Revision 1.30  1998/04/24 14:21:08  curt
+ * Added "file.obj.gz" support.
+ *
  * Revision 1.29  1998/04/24 00:51:07  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Tweaked the scenery file extentions to be "file.obj" (uncompressed)
