@@ -326,11 +326,6 @@ FGInterface::bind ()
 	&FGInterface::set_Psi_deg);
   fgSetArchivable("/orientation/heading-deg");
 
-                                // Rates
-  fgTie("/rates/roll-deg_sec", this, &FGInterface::get_Phi_dot_degps);
-  fgTie("/rates/pitch-deg_sec", this, &FGInterface::get_Theta_dot_degps);
-  fgTie("/rates/heading-deg_sec", this, &FGInterface::get_Psi_dot_degps);
-
   // Body-axis "euler rates" (rotation speed, but in a funny
   // representation).
   fgTie("/orientation/roll-rate-degps", this,
@@ -438,9 +433,6 @@ FGInterface::unbind ()
   fgUntie("/orientation/roll-deg");
   fgUntie("/orientation/pitch-deg");
   fgUntie("/orientation/heading-deg");
-  fgUntie("/rates/roll-deg_sec");
-  fgUntie("/rates/pitch-deg_sec");
-  fgUntie("/rates/heading-deg_sec");
   fgUntie("/velocities/airspeed-kt");
   fgUntie("/velocities/speed-north-fps");
   fgUntie("/velocities/speed-east-fps");
