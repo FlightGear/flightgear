@@ -47,7 +47,7 @@ FGEnvironment::FGEnvironment()
     _density_slugft3_table(new SGInterpTable),
     visibility_m(32000),
     temperature_sea_level_degc(20),
-    pressure_sea_level_inhg(28),
+    pressure_sea_level_inhg(29.92),
     density_sea_level_slugft3(0.00237),
     wind_from_heading_deg(0),
     wind_speed_kt(0),
