@@ -109,7 +109,21 @@ public:
     sgVec3 *vnlist;
     sgVec2 *tclist;
 
-    // pointer to ssg branch;
+    // ssg tree structure for this tile is as follows:
+    // ssgRoot(scene)
+    //     - ssgBranch(terrain)
+    //        - ssgTransform(tile)
+    //           - ssgRangeSelector(tile)
+    //              - ssgEntity(tile)
+    //                 - kid1(fan)
+    //                 - kid2(fan)
+    //                   ...
+    //                 - kidn(fan)
+
+    // pointer to ssg range selector for this tile
+    ssgRangeSelector *range_ptr;
+
+    // pointer to ssg transform for this tile
     ssgTransform *branch_ptr;
 
 public:

@@ -108,6 +108,11 @@ public:
     double current_elev_new( const FGBucket& p );
     double current_elev( double lon, double lat, const Point3D& abs_view_pos );
 
+    // Prepare the ssg nodes ... for each tile, set it's proper
+    // transform and update it's range selector based on current
+    // visibilty
+    void prep_ssg_nodes( void );
+
     // Render the local tiles --- hack, hack, hack
     void render( void );
 };

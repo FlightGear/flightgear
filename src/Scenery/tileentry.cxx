@@ -42,7 +42,10 @@ FG_USING_STD(mem_fun_ref);
 // Constructor
 FGTileEntry::FGTileEntry ( void )
     : ncount(0),
-      state(Unused)
+      state(Unused),
+      vtlist(NULL),
+      vnlist(NULL),
+      tclist(NULL)
 {
     nodes.clear();
 }
@@ -73,9 +76,15 @@ FGTileEntry::free_tile()
     fragment_list.erase( begin(), end() );
 
     // delete the ssg used structures
-    delete vtlist;
-    delete vnlist;
-    delete tclist;
+    if ( vtlist != NULL ) {
+	delete vtlist;
+    }
+    if ( vnlist != NULL ) {
+	delete vnlist;
+    }
+    if ( tclist != NULL ) {
+	delete tclist;
+    }
 
     // delete the ssg branch
 
@@ -105,7 +114,7 @@ FGTileEntry::free_tile()
 	FG_LOG( FG_TERRAIN, FG_ALERT,
 		"Parent count is zero for an ssg tile!  Dying" );
 	exit(-1);
-    }    
+    }
 }
 
 

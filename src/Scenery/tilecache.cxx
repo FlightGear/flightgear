@@ -137,10 +137,13 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 
     tile_cache[index].mark_loaded();
     tile_cache[index].tile_bucket = p;
-    ssgBranch *new_tile = fgObjLoad( tile_path.str(), &tile_cache[index] );
     tile_cache[index].branch_ptr = new ssgTransform;
-    tile_cache[index].branch_ptr->addKid( new_tile );
-    // tile_cache[index].branch_ptr->addKid( penguin );
+    tile_cache[index].range_ptr = new ssgRangeSelector;
+    ssgBranch *new_tile = fgObjLoad( tile_path.str(), &tile_cache[index] );
+    if ( new_tile != NULL ) {
+	tile_cache[index].range_ptr->addKid( new_tile );
+    }
+    tile_cache[index].branch_ptr->addKid( tile_cache[index].range_ptr );
     terrain->addKid( tile_cache[index].branch_ptr );
 
     // cout << " ncount before = " << tile_cache[index].ncount << "\n";

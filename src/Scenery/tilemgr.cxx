@@ -734,6 +734,42 @@ update_tile_geometry( FGTileEntry *t, GLdouble *MODEL_VIEW)
 }
 
 
+// Prepare the ssg nodes ... for each tile, set it's proper
+// transform and update it's range selector based on current
+// visibilty
+void FGTileMgr::prep_ssg_nodes( void ) {
+    FGTileEntry *t;
+
+    int tile_diameter = current_options.get_tile_diameter();
+
+    float ranges[2];
+    ranges[0] = 0.0f;
+    ranges[1] = current_weather.get_visibility();
+
+    // traverse the potentially viewable tile list and update range
+    // selector and transform
+    for ( int i = 0; i < (tile_diameter * tile_diameter); i++ ) {
+	int index = tiles[i];
+	t = global_tile_cache.get_tile(index);
+
+	if ( t->is_loaded() ) {
+	    // set range selector (LOD trick)
+	    t->range_ptr->setRanges( ranges, 2 );
+
+	    // calculate tile offset
+	    t->SetOffset( scenery.center );
+
+	    // calculate ssg transform
+	    sgCoord sgcoord;
+	    sgSetCoord( &sgcoord,
+			t->offset.x(), t->offset.y(), t->offset.z(),
+			0.0, 0.0, 0.0 );
+	    t->branch_ptr->setTransform( &sgcoord );
+	}
+    }
+}
+
+
 // Render the local tiles
 void FGTileMgr::render( void ) {
     FGInterface *f;
@@ -744,7 +780,6 @@ void FGTileMgr::render( void ) {
     fgFRAGMENT *frag_ptr;
     FGMaterialSlot *mtl_ptr;
     int i;
-    int tile_diameter;
     int index;
     int culled = 0;
     int drawn = 0;
@@ -753,7 +788,7 @@ void FGTileMgr::render( void ) {
     f = current_aircraft.fdm_state;
     v = &current_view;
 
-    tile_diameter = current_options.get_tile_diameter();
+    int tile_diameter = current_options.get_tile_diameter();
 
     // moved to fgTileMgrUpdate, right after we check if we need to
     // load additional tiles:
@@ -774,13 +809,6 @@ void FGTileMgr::render( void ) {
 
 	    // calculate tile offset
 	    t->SetOffset( scenery.center );
-
-	    // calculate ssg transform
-	    sgCoord sgcoord;
-	    sgSetCoord( &sgcoord,
-			t->offset.x(), t->offset.y(), t->offset.z(),
-			0.0, 0.0, 0.0 );
-	    t->branch_ptr->setTransform( &sgcoord );
 
 	    // Course (tile based) culling
 	    if ( viewable(t->offset, t->bounding_radius) ) {
@@ -854,6 +882,6 @@ void FGTileMgr::render( void ) {
     // traverse the transient per-material fragment lists and render
     // out all fragments for each material property.
     xglPushMatrix();
-    // material_mgr.render_fragments();
+    material_mgr.render_fragments();
     xglPopMatrix();
 }
