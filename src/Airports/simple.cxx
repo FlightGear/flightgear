@@ -102,7 +102,7 @@ FGAirports::search( const string& id ) const
 
 // Destructor
 FGAirports::~FGAirports( void ) {
-    // gdbm_close( dbf );
+    delete storage;
 }
 
 

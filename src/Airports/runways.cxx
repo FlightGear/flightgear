@@ -157,7 +157,7 @@ bool FGRunways::next( FGRunway* r ) {
 
 // Destructor
 FGRunways::~FGRunways( void ) {
-    // gdbm_close( dbf );
+    delete storage;
 }
 
 
