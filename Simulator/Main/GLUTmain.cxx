@@ -321,6 +321,7 @@ static void fgRenderFrame( void ) {
 
 	// draw stars and planets
 	fgStarsRender();
+	xglEnable( GL_CULL_FACE ); // for moon
 	//xglEnable(GL_DEPTH_TEST);
 	SolarSystem::theSolarSystem->draw();
 
@@ -366,6 +367,7 @@ static void fgRenderFrame( void ) {
 	xglDisable( GL_FOG );
 
 	// display HUD && Panel
+	xglDisable( GL_CULL_FACE );
 	fgCockpitUpdate();
 
 	// We can do translucent menus, so why not. :-)
