@@ -589,7 +589,7 @@ FGRadioStack::update()
 	inner_blink = false;
     }
 
-    cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
+    // cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
 }
 
 
