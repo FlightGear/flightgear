@@ -61,12 +61,21 @@ Joystick 2 not detected
 +------------------------------------+
 | 0000 +0.0 +0.0 -1.0   .    .    .  |              
 
-It appears that the number of detected buttons is represented by the number of
-"0"s. Clicking the actual buttons will result in the rightmost 0 changing to
-the button number output. i.e. pressing button one will change the display to
-look like this: 0001. It should be noted that this is a hexadecimal (base16)
-number +1. Hex numbers start at 0, so this number is incremented by one for
-hopefully obvious reasons. 
+The buttons are handled internally as a binary number in which bit 0 (the
+least significant bit) represents button 0, bit 1 represents button 1, etc.,
+but this number is displayed on the screen in hexadecimal notation, so:
+  0001 => button 0 pressed
+  0002 => button 1 pressed
+  0004 => button 2 pressed
+  0008 => button 3 pressed
+  0010 => button 4 pressed
+  0020 => button 5 pressed
+  0040 => button 6 pressed
+  ... etc. up to ...
+  8000 => button 15 pressed
+  ... and ...
+  0014 => buttons 2 and 4 pressed simultaneously
+  ... etc.
 
 
 Default Joystick properties:
@@ -225,7 +234,7 @@ In my case I had to make entries to put the throttle on axis2.
 
 --prop:/input/js0/button4/action=adjust
 --prop:/input/js0/button4/control=/controls/elevator-trim
---prop:/iput/js0/button4/step=0.001
+--prop:/input/js0/button4/step=-0.001
 --prop:/input/js0/button4/repeatable=true
  
     // Default buttons 5 and 6 to flaps
@@ -235,12 +244,6 @@ In my case I had to make entries to put the throttle on axis2.
 --prop:/input/js0/button5/repeatable=false
 
 --prop:/input/js0/button6/action=adjust
---prop:/input/js0/button6/control=/controls/flaps"        
+--prop:/input/js0/button6/control=/controls/flaps
 --prop:/input/js0/button6/step=0.34       
 --prop:/input/js0/button6/repeatable=false
-
-
-
-
-
-
