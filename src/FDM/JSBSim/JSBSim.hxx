@@ -199,9 +199,6 @@ public:
         @param wnorth velocity north in fps
         @param weast velocity east in fps
         @param wdown velocity down in fps*/
-    void set_Velocities_Local_Airmass (double wnorth,
-				       double weast,
-				       double wdown );
     /// @name Position Parameter Update
     //@{
 
@@ -258,6 +255,14 @@ private:
     SGPropertyNode *flap_pos_pct;
     
     SGPropertyNode *gear_pos_pct;
+    
+    SGPropertyNode *temperature;
+    SGPropertyNode *pressure;
+    SGPropertyNode *density;
+    
+    SGPropertyNode *wind_from_north;
+    SGPropertyNode *wind_from_east;
+    SGPropertyNode *wind_from_down;
     
     void init_gear(void);
     void update_gear(void);
