@@ -27,7 +27,7 @@
 
 #include <list>
 
-#include "ATCMgr.hxx"
+#include "ATCmgr.hxx"
 #include "AIEntity.hxx"
 
 SG_USING_STD(list);

@@ -23,8 +23,8 @@
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Simgear/misc/sg_path.hxx>
-#include <Simgear/bucket/newbucket.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/bucket/newbucket.hxx>
 
 #include <list>
 
