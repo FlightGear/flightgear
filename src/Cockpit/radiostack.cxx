@@ -43,10 +43,8 @@ SG_USING_STD(string);
 
 static int nav1_play_count = 0;
 static int nav2_play_count = 0;
-static int adf_play_count = 0;
 static time_t nav1_last_time = 0;
 static time_t nav2_last_time = 0;
-static time_t adf_last_time = 0;
 
 
 FGRadioStack *current_radiostack;
@@ -104,10 +102,7 @@ FGRadioStack::FGRadioStack() :
     dme_ete(0.0),
     outer_blink(false),
     middle_blink(false),
-    inner_blink(false),
-    adf_freq(0.0),
-    adf_alt_freq(0.0),
-    adf_vol_btn(0.0)
+    inner_blink(false)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -127,6 +122,7 @@ FGRadioStack::FGRadioStack() :
 // Destructor
 FGRadioStack::~FGRadioStack() 
 {
+    adf.unbind();
     unbind();			// FIXME: should be called externally
 
     delete term_tbl;
@@ -138,12 +134,17 @@ FGRadioStack::~FGRadioStack()
 void
 FGRadioStack::init ()
 {
+    adf.init();
+
     morse.init();
     beacon.init();
     blink.stamp();
 
     search();
+    adf.search();
+
     update(0);			// FIXME: use dt
+    adf.update(0);
 
     // Search radio database once per second
     global_events.Register( "fgRadioSearch()",
@@ -256,31 +257,14 @@ FGRadioStack::bind ()
     fgTie("/radios/dme/speed-kt", this, &FGRadioStack::get_dme_spd);
     fgTie("/radios/dme/ete-min", this, &FGRadioStack::get_dme_ete);
 
-				// User inputs
-    fgTie("/radios/adf/frequencies/selected-khz", this,
-	  &FGRadioStack::get_adf_freq, &FGRadioStack::set_adf_freq);
-    fgSetArchivable("/radios/adf/frequencies/selected-khz");
-    fgTie("/radios/adf/frequencies/standby-khz", this,
-	  &FGRadioStack::get_adf_alt_freq, &FGRadioStack::set_adf_alt_freq);
-    fgSetArchivable("/radios/adf/frequencies/standby-khz");
-    fgTie("/radios/adf/rotation-deg", this,
-	  &FGRadioStack::get_adf_rotation, &FGRadioStack::set_adf_rotation);
-    fgSetArchivable("/radios/adf/rotation-deg");
-    fgTie("/radios/adf/volume", this,
-	  &FGRadioStack::get_adf_vol_btn,
-	  &FGRadioStack::set_adf_vol_btn);
-    fgSetArchivable("/radios/adf/volume");
-    fgTie("/radios/adf/ident", this,
-	  &FGRadioStack::get_adf_ident_btn,
-	  &FGRadioStack::set_adf_ident_btn);
-    fgSetArchivable("/radios/adf/ident");
-
     fgTie("/radios/marker-beacon/inner", this,
 	  &FGRadioStack::get_inner_blink);
     fgTie("/radios/marker-beacon/middle", this,
 	  &FGRadioStack::get_middle_blink);
     fgTie("/radios/marker-beacon/outer", this,
 	  &FGRadioStack::get_outer_blink);
+
+    adf.bind();
 }
 
 void
@@ -328,15 +312,11 @@ FGRadioStack::unbind ()
     fgUntie("/radios/dme/speed-kt");
     fgUntie("/radios/dme/ete-min");
 
-    fgUntie("/radios/adf/frequencies/selected-khz");
-    fgUntie("/radios/adf/frequencies/standby-khz");
-    fgUntie("/radios/adf/rotation-deg");
-    fgUntie("/radios/adf/on");
-    fgUntie("/radios/adf/ident");
-
     fgUntie("/radios/marker-beacon/inner");
     fgUntie("/radios/marker-beacon/middle");
     fgUntie("/radios/marker-beacon/outer");
+
+    adf.unbind();
 }
 
 
@@ -671,68 +651,6 @@ FGRadioStack::update(double dt)
       dme_prev_dist = 0.0;
     }
 
-
-    ////////////////////////////////////////////////////////////////////////
-    // ADF
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( adf_valid ) {
-	// staightline distance
-	station = Point3D( adf_x, adf_y, adf_z );
-	adf_dist = aircraft.distance3D( station );
-
-	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
-			    adf_lat, adf_lon,
-			    &az1, &az2, &s );
-	adf_heading = az1;
-	// cout << " heading = " << nav2_heading
-	//      << " dist = " << nav2_dist << endl;
-
-	adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
-	if ( adf_dist < adf_effective_range * SG_NM_TO_METER ) {
-	    adf_inrange = true;
-	} else if ( adf_dist < 2 * adf_effective_range * SG_NM_TO_METER ) {
-	    adf_inrange = sg_random() < 
-		( 2 * adf_effective_range * SG_NM_TO_METER - adf_dist ) /
-		(adf_effective_range * SG_NM_TO_METER);
-	} else {
-	    adf_inrange = false;
-	}
-    } else {
-	adf_inrange = false;
-    }
-
-#ifdef ENABLE_AUDIO_SUPPORT
-    if ( adf_valid && adf_inrange ) {
-	// play station ident via audio system if on + ident,
-	// otherwise turn it off
-	if ( adf_vol_btn > 0.1 && adf_ident_btn ) {
-	    FGSimpleSound *sound;
-	    sound = globals->get_soundmgr()->find( "adf-ident" );
-            if ( sound != NULL ) {
-                sound->set_volume( adf_vol_btn );
-            } else {
-                SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find adf-ident sound" );
-            }
-	    if ( adf_last_time <
-		 globals->get_time_params()->get_cur_time() - 30 ) {
-		adf_last_time = globals->get_time_params()->get_cur_time();
-		adf_play_count = 0;
-	    }
-	    if ( adf_play_count < 4 ) {
-		// play ADF ident
-		if ( !globals->get_soundmgr()->is_playing("adf-ident") ) {
-		    globals->get_soundmgr()->play_once( "adf-ident" );
-		    ++adf_play_count;
-		}
-	    }
-	} else {
-	    globals->get_soundmgr()->stop( "adf-ident" );
-	}
-    }
-#endif
-
     // marker beacon blinking
     bool light_on = ( outer_blink || middle_blink || inner_blink );
     SGTimeStamp current;
@@ -765,6 +683,8 @@ FGRadioStack::update(double dt)
     }
 
     // cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
+
+    adf.update(0);
 }
 
 
@@ -801,7 +721,6 @@ void FGRadioStack::search()
 
     static string last_nav1_ident = "";
     static string last_nav2_ident = "";
-    static string last_adf_ident = "";
     static bool last_nav1_vor = false;
     static bool last_nav2_vor = false;
 
@@ -1165,63 +1084,7 @@ void FGRadioStack::search()
     }
     last_beacon = beacon_type;
 
-
-    ////////////////////////////////////////////////////////////////////////
-    // ADF.
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( current_navlist->query( lon, lat, elev, adf_freq, &nav ) ) {
-	char freq[128];
-	snprintf( freq, 10, "%.0f", adf_freq );
-	adf_ident = freq;
-	adf_ident += nav.get_ident();
-	// cout << "adf ident = " << adf_ident << endl;
-	adf_valid = true;
-	if ( last_adf_ident != adf_ident ) {
-	    last_adf_ident = adf_ident;
-
-	    adf_trans_ident = nav.get_trans_ident();
-	    adf_lon = nav.get_lon();
-	    adf_lat = nav.get_lat();
-	    adf_elev = nav.get_elev();
-	    adf_range = nav.get_range();
-	    adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
-	    adf_x = nav.get_x();
-	    adf_y = nav.get_y();
-	    adf_z = nav.get_z();
-
-#ifdef ENABLE_AUDIO_SUPPORT
-	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
-		globals->get_soundmgr()->remove( "adf-ident" );
-	    }
-	    FGSimpleSound *sound;
-	    sound = morse.make_ident( adf_trans_ident, LO_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "adf-ident" );
-
-	    int offset = (int)(sg_random() * 30.0);
-	    adf_play_count = offset / 4;
-	    adf_last_time = globals->get_time_params()->get_cur_time() -
-		offset;
-	    // cout << "offset = " << offset << " play_count = "
-	    //      << adf_play_count << " adf_last_time = "
-	    //      << adf_last_time << " current time = "
-	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
-
-	    // cout << "Found an adf station in range" << endl;
-	    // cout << " id = " << nav.get_ident() << endl;
-	}
-    } else {
-	adf_valid = false;
-	adf_ident = "";
-	adf_trans_ident = "";
-#ifdef ENABLE_AUDIO_SUPPORT
-	globals->get_soundmgr()->remove( "adf-ident" );
-#endif
-	last_adf_ident = "";
-	// cout << "not picking up adf. :-(" << endl;
-    }
+    adf.search();
 }
 
 

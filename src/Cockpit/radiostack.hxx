@@ -38,6 +38,7 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
+#include "kr_87.hxx"            // ADF
 
 class FGRadioStack : public FGSubsystem
 {
@@ -176,25 +177,7 @@ class FGRadioStack : public FGSubsystem
     bool middle_blink;
     bool inner_blink;
 
-    string adf_ident;
-    string adf_trans_ident;
-    bool adf_valid;
-    bool adf_inrange;
-    double adf_freq;
-    double adf_alt_freq;
-    double adf_rotation;
-    double adf_lon;
-    double adf_lat;
-    double adf_elev;
-    double adf_range;
-    double adf_effective_range;
-    double adf_dist;
-    double adf_heading;
-    double adf_x;
-    double adf_y;
-    double adf_z;
-    double adf_vol_btn;
-    bool adf_ident_btn;
+    FGKR_87 adf;                // King KR 87 Digital ADF model
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
     double adjustNavRange( double stationElev, double aircraftElev,
@@ -276,19 +259,6 @@ public:
         dme_freq = freq; need_update = true;
     }
 
-    // ADF Setters
-    inline void set_adf_freq( double freq ) {
-	adf_freq = freq; need_update = true;
-    }
-    inline void set_adf_alt_freq( double freq ) { adf_alt_freq = freq; }
-    inline void set_adf_rotation( double rot ) { adf_rotation = rot; }
-    inline void set_adf_vol_btn( double val ) {
-	if ( val < 0.0 ) val = 0.0;
-	if ( val > 1.0 ) val = 1.0;
-	adf_vol_btn = val;
-    }
-    inline void set_adf_ident_btn( bool val ) { adf_ident_btn = val; }
-
     // COMM1 Accessors
     inline double get_comm1_freq () const { return comm1_freq; }
     inline double get_comm1_alt_freq () const { return comm1_alt_freq; }
@@ -309,11 +279,6 @@ public:
 
     // DME Accessors
     inline double get_dme_freq () const { return dme_freq; }
-
-    // ADF Accessors
-    inline double get_adf_freq () const { return adf_freq; }
-    inline double get_adf_alt_freq () const { return adf_alt_freq; }
-    inline double get_adf_rotation () const { return adf_rotation; }
 
     // Marker Beacon Accessors
     inline bool get_inner_blink () const { return inner_blink; }
@@ -383,13 +348,6 @@ public:
     inline double get_dme_dist () const { return dme_dist; }
     inline double get_dme_spd () const { return dme_spd; }
     inline double get_dme_ete () const { return dme_ete; }
-
-    inline bool get_adf_inrange() const { return adf_inrange; }
-    inline double get_adf_lon() const { return adf_lon; }
-    inline double get_adf_lat() const { return adf_lat; }
-    inline double get_adf_heading() const { return adf_heading; }
-    inline double get_adf_vol_btn() const { return adf_vol_btn; }
-    inline bool get_adf_ident_btn() const { return adf_ident_btn; }
 };
 
 
