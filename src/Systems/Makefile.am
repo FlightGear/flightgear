@@ -5,6 +5,7 @@ libSystems_a_SOURCES = \
                         electrical.cxx electrical.hxx \
                         pitot.cxx pitot.hxx \
                         static.cxx static.hxx \
-                        vacuum.cxx vacuum.hxx
+                        vacuum.cxx vacuum.hxx \
+			submodel.cxx submodel.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
