@@ -54,8 +54,8 @@
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Misc/stopwatch.hxx>
+#include <Misc/texcoord.hxx>
 #include <Scenery/tileentry.hxx>
-#include <Clouds/cloudobj.hxx>
 
 #include "materialmgr.hxx"
 #include "obj.hxx"
@@ -93,9 +93,8 @@ static void calc_normal(Point3D p1, Point3D p2,
 
 #define FG_TEX_CONSTANT 69.0
 
-
 // Calculate texture coordinates for a given point.
-static Point3D calc_tex_coords(const Point3D& node, const Point3D& ref) {
+static Point3D local_calc_tex_coords(const Point3D& node, const Point3D& ref) {
     Point3D cp;
     Point3D pp;
     // double tmplon, tmplat;
@@ -151,8 +150,8 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     // set the texture width and height values for this
     // material
     FGMaterial m = fragment.material_ptr->get_m();
-    // double tex_width = m.get_xsize();
-    // double tex_height = m.get_ysize();
+    double tex_width = m.get_xsize();
+    double tex_height = m.get_ysize();
 
     // set ssgState
     state = fragment.material_ptr->get_state();
@@ -209,34 +208,44 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
 
     // Calculate texture coordinates
-    Point3D texs[4];
+    point_list geod_nodes;
+    geod_nodes.clear();
     for ( i = 0; i < 4; ++i ) {
-	texs[i] = calc_tex_coords( rel[i], center );
-	// cout << "texture coordinate = " << texs[i] << endl;
+	geod_nodes.push_back( geod[i] );
     }
+    int_list rectangle;
+    rectangle.clear();
+    for ( i = 0; i < 4; ++i ) {
+	rectangle.push_back( i );
+    }
+    point_list texs = calc_tex_coords( b, geod_nodes, rectangle, 
+				       1000.0 / tex_width );
 
     // Build flight gear structure
     fragment.add_face(0, 1, 2);
     fragment.add_face(0, 2, 3);
     t->fragment_list.push_back(fragment);
 
-    // Build ssg structure
-    t->vtlist = new sgVec3 [ 4 ];
-    t->vnlist = new sgVec3 [ 4 ];
-    t->tclist = new sgVec2 [ 4 ];
+    // Allocate ssg structure
+    sgVec3 *vtlist = new sgVec3 [ 4 ];
+    t->vec3_ptrs.push_back( vtlist );
+    sgVec3 *vnlist = new sgVec3 [ 4 ];
+    t->vec3_ptrs.push_back( vnlist );
+    sgVec2 *tclist = new sgVec2 [ 4 ];
+    t->vec2_ptrs.push_back( tclist );
 
     for ( i = 0; i < 4; ++i ) {
-	sgSetVec3( t->vtlist[i], 
+	sgSetVec3( vtlist[i], 
 		   rel[i].x(), rel[i].y(), rel[i].z() );
-	sgSetVec3( t->vnlist[i], 
+	sgSetVec3( vnlist[i], 
 		   normals[i].x(), normals[i].y(), normals[i].z() );
-	sgSetVec2( t->tclist[i], texs[i].x(), texs[i].y() );
+	sgSetVec2( tclist[i], texs[i].x(), texs[i].y() );
     }
     
     unsigned short *vindex = new unsigned short [ 4 ];
-    t->free_ptrs.push_back( vindex );
+    t->index_ptrs.push_back( vindex );
     unsigned short *tindex = new unsigned short [ 4 ];
-    t->free_ptrs.push_back( tindex );
+    t->index_ptrs.push_back( tindex );
     for ( i = 0; i < 4; ++i ) {
 	vindex[i] = i;
 	tindex[i] = i;
@@ -244,16 +253,16 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 
     ssgLeaf *leaf = 
 	new ssgVTable ( GL_TRIANGLE_FAN,
-			4, vindex, t->vtlist,
-			4, vindex, t->vnlist,
-			4, tindex, t->tclist,
+			4, vindex, vtlist,
+			4, vindex, vnlist,
+			4, tindex, tclist,
 			0, NULL, NULL ) ;
     leaf->setState( state );
 
     tile->addKid( leaf );
-    if ( current_options.get_clouds() ) {
-	fgGenCloudTile(path, t, tile);
-    }
+    // if ( current_options.get_clouds() ) {
+    //    fgGenCloudTile(path, t, tile);
+    // }
 
     return tile;
 }
@@ -284,6 +293,8 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     int_list fan_tex_coords;
     int i;
     ssgSimpleState *state = NULL;
+    sgVec3 *vtlist, *vnlist;
+    sgVec2 *tclist;
 
     ssgBranch *tile = new ssgBranch () ;
 
@@ -370,22 +381,25 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    }
 		    shared_done = true;
 
-		    t->vtlist = new sgVec3 [ nodes.size() ];
-		    t->vnlist = new sgVec3 [ vncount ];
-		    t->tclist = new sgVec2 [ vtcount ];
+		    vtlist = new sgVec3 [ nodes.size() ];
+		    t->vec3_ptrs.push_back( vtlist );
+		    vnlist = new sgVec3 [ vncount ];
+		    t->vec3_ptrs.push_back( vnlist );
+		    tclist = new sgVec2 [ vtcount ];
+		    t->vec2_ptrs.push_back( tclist );
 
 		    for ( i = 0; i < (int)nodes.size(); ++i ) {
-			sgSetVec3( t->vtlist[i], 
+			sgSetVec3( vtlist[i], 
 				   nodes[i][0], nodes[i][1], nodes[i][2] );
 		    }
 		    for ( i = 0; i < vncount; ++i ) {
-			sgSetVec3( t->vnlist[i], 
+			sgSetVec3( vnlist[i], 
 				   normals[i][0], 
 				   normals[i][1],
 				   normals[i][2] );
 		    }
 		    for ( i = 0; i < vtcount; ++i ) {
-			sgSetVec2( t->tclist[i],
+			sgSetVec2( tclist[i],
 				   tex_coords[i][0],
 				   tex_coords[i][1] );
 		    }
@@ -529,19 +543,19 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // (averaged) normals
 		    // MAT3_SCALE_VEC(normal, normals[n1], scale);
 		    // xglNormal3dv(normal);
-		    pp = calc_tex_coords(nodes[n1], center);
+		    pp = local_calc_tex_coords(nodes[n1], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n1].get_n());		
 
 		    // MAT3_SCALE_VEC(normal, normals[n2], scale);
 		    // xglNormal3dv(normal);
-		    pp = calc_tex_coords(nodes[n2], center);
+		    pp = local_calc_tex_coords(nodes[n2], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n2].get_n());				
 
 		    // MAT3_SCALE_VEC(normal, normals[n3], scale);
 		    // xglNormal3dv(normal);
-		    pp = calc_tex_coords(nodes[n3], center);
+		    pp = local_calc_tex_coords(nodes[n3], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n3].get_n());
 		} else {
@@ -557,15 +571,15 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    // xglNormal3dv(normal);
 
-		    pp = calc_tex_coords(nodes[n1], center);
+		    pp = local_calc_tex_coords(nodes[n1], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n1].get_n());		
 
-		    pp = calc_tex_coords(nodes[n2], center);
+		    pp = local_calc_tex_coords(nodes[n2], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n2].get_n());		
 		    
-		    pp = calc_tex_coords(nodes[n3], center);
+		    pp = local_calc_tex_coords(nodes[n3], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n3].get_n());		
 		}
@@ -601,7 +615,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 			// MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    }
 		    // xglNormal3dv(normal);
-		    pp = calc_tex_coords(nodes[n4], center);
+		    pp = local_calc_tex_coords(nodes[n4], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n4].get_n());		
 		    
@@ -628,17 +642,17 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    fan_tex_coords.push_back( tex );
 		    if ( scenery_version >= 0.4 ) {
 			if ( tex_width > 0 ) {
-			    t->tclist[tex][0] *= (1000.0 / tex_width);
+			    tclist[tex][0] *= (1000.0 / tex_width);
 			}
 			if ( tex_height > 0 ) {
-			    t->tclist[tex][1] *= (1000.0 / tex_height);
+			    tclist[tex][1] *= (1000.0 / tex_height);
 			}
 		    }
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
 		    in.putback( c );
-		    pp = calc_tex_coords(nodes[n1], center);
+		    pp = local_calc_tex_coords(nodes[n1], center);
 		}
 		// xglTexCoord2f(pp.x(), pp.y());
 		// xglVertex3dv(nodes[n1].get_n());
@@ -651,17 +665,17 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    fan_tex_coords.push_back( tex );
 		    if ( scenery_version >= 0.4 ) {
 			if ( tex_width > 0 ) {
-			    t->tclist[tex][0] *= (1000.0 / tex_width);
+			    tclist[tex][0] *= (1000.0 / tex_width);
 			}
 			if ( tex_height > 0 ) {
-			    t->tclist[tex][1] *= (1000.0 / tex_height);
+			    tclist[tex][1] *= (1000.0 / tex_height);
 			}
 		    }
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
 		    in.putback( c );
-		    pp = calc_tex_coords(nodes[n2], center);
+		    pp = local_calc_tex_coords(nodes[n2], center);
 		}
 		// xglTexCoord2f(pp.x(), pp.y());
 		// xglVertex3dv(nodes[n2].get_n());
@@ -692,17 +706,17 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 			fan_tex_coords.push_back( tex );
 			if ( scenery_version >= 0.4 ) {
 			    if ( tex_width > 0 ) {
-				t->tclist[tex][0] *= (1000.0 / tex_width);
+				tclist[tex][0] *= (1000.0 / tex_width);
 			    }
 			    if ( tex_height > 0 ) {
-				t->tclist[tex][1] *= (1000.0 / tex_height);
+				tclist[tex][1] *= (1000.0 / tex_height);
 			    }
 			}
 			pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 			pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		    } else {
 			in.putback( c );
-			pp = calc_tex_coords(nodes[n3], center);
+			pp = local_calc_tex_coords(nodes[n3], center);
 		    }
 		    // xglTexCoord2f(pp.x(), pp.y());
 		    // xglVertex3dv(nodes[n3].get_n());
@@ -729,11 +743,11 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// build the ssg entity
 		unsigned short *vindex = 
 		    new unsigned short [ fan_vertices.size() ];
-		t->free_ptrs.push_back( vindex );
+		t->index_ptrs.push_back( vindex );
 
 		unsigned short *tindex = 
 		    new unsigned short [ fan_tex_coords.size() ];
-		t->free_ptrs.push_back( tindex );
+		t->index_ptrs.push_back( tindex );
 
 		for ( i = 0; i < (int)fan_vertices.size(); ++i ) {
 		    vindex[i] = fan_vertices[i];
@@ -746,17 +760,17 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // triangle fan
 		    leaf = 
 			new ssgVTable ( GL_TRIANGLE_FAN,
-					fan_vertices.size(), vindex, t->vtlist,
-					fan_vertices.size(), vindex, t->vnlist,
-					fan_tex_coords.size(), tindex,t->tclist,
+					fan_vertices.size(), vindex, vtlist,
+					fan_vertices.size(), vindex, vnlist,
+					fan_tex_coords.size(), tindex, tclist,
 					0, NULL, NULL ) ;
 		} else {
 		    // triangle strip
 		    leaf = 
 			new ssgVTable ( GL_TRIANGLE_STRIP,
-					fan_vertices.size(), vindex, t->vtlist,
-					fan_vertices.size(), vindex, t->vnlist,
-					fan_tex_coords.size(), tindex,t->tclist,
+					fan_vertices.size(), vindex, vtlist,
+					fan_vertices.size(), vindex, vnlist,
+					fan_tex_coords.size(), tindex, tclist,
 					0, NULL, NULL ) ;
 		}
 		leaf->setState( state );
@@ -778,17 +792,17 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
 		// xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
 		// xglNormal3dv(normals[n1]);
-		pp = calc_tex_coords(nodes[n1], center);
+		pp = local_calc_tex_coords(nodes[n1], center);
 		// xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3dv(nodes[n1].get_n());
 
 		// xglNormal3dv(normals[n2]);
-		pp = calc_tex_coords(nodes[n2], center);
+		pp = local_calc_tex_coords(nodes[n2], center);
 		// xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3dv(nodes[n2].get_n());
 		
 		// xglNormal3dv(normals[n3]);
-		pp = calc_tex_coords(nodes[n3], center);
+		pp = local_calc_tex_coords(nodes[n3], center);
 		// xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3dv(nodes[n3].get_n());
 		// printf("some normals, texcoords, and vertices (tris)\n");
@@ -837,7 +851,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		}
 		// xglNormal3dv(normal);
 
-		pp = calc_tex_coords(nodes[n1], center);
+		pp = local_calc_tex_coords(nodes[n1], center);
 		// xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3dv(nodes[n1].get_n());
 		// printf("a normal, texcoord, and vertex (4th)\n");
@@ -871,7 +885,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    }
 		    // xglNormal3dv(normal);
 		
-		    pp = calc_tex_coords(nodes[n2], center);
+		    pp = local_calc_tex_coords(nodes[n2], center);
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n2].get_n());		
 		    // printf("a normal, texcoord, and vertex (4th)\n");
@@ -931,9 +945,9 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 	    << stopwatch.elapsedSeconds() << " seconds" );
 
     // Generate a cloud layer above the tiles
-    if ( current_options.get_clouds() ) {
-	fgGenCloudTile(path, t, tile);
-    }
+    // if ( current_options.get_clouds() ) {
+    //  	fgGenCloudTile(path, t, tile);
+    // }
     return tile;
 }
 
