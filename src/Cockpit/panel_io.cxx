@@ -254,7 +254,7 @@ readTexture (const SGPropertyNode * node)
  * being drawn at its regular size.
  */
 static FGPanelAction *
-readAction (const SGPropertyNode * node, float hscale, float vscale)
+readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 {
   FGPanelAction * action = 0;
 
@@ -262,10 +262,10 @@ readAction (const SGPropertyNode * node, float hscale, float vscale)
   string type = node->getStringValue("type");
 
   int button = node->getIntValue("button");
-  int x = int(node->getIntValue("x") * hscale);
-  int y = int(node->getIntValue("y") * vscale);
-  int w = int(node->getIntValue("w") * hscale);
-  int h = int(node->getIntValue("h") * vscale);
+  int x = int(node->getIntValue("x") * w_scale);
+  int y = int(node->getIntValue("y") * h_scale);
+  int w = int(node->getIntValue("w") * w_scale);
+  int h = int(node->getIntValue("h") * h_scale);
 
   if (type == "") {
     SG_LOG(SG_INPUT, SG_ALERT,
@@ -340,7 +340,7 @@ readAction (const SGPropertyNode * node, float hscale, float vscale)
  * appear to be applied backwards.
  */
 static FGPanelTransformation *
-readTransformation (const SGPropertyNode * node, float hscale, float vscale)
+readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
 {
   FGPanelTransformation * t = new FGPanelTransformation;
 
@@ -366,20 +366,43 @@ readTransformation (const SGPropertyNode * node, float hscale, float vscale)
   t->factor = node->getFloatValue("scale", 1.0);
   t->offset = node->getFloatValue("offset", 0.0);
 
+				// Check for an interpolation table
+  const SGPropertyNode * trans_table = node->getNode("interpolation");
+  if (trans_table != 0) {
+    cerr << "Found interpolation table with " << trans_table->nChildren() << "children" << endl;
+    t->table = new SGInterpTable();
+    for(int i = 0; i < trans_table->nChildren(); i++) {
+      const SGPropertyNode * node = trans_table->getChild(i);
+      if (node->getName() == "entry") {
+	double ind = node->getDoubleValue("ind", 0.0);
+	double dep = node->getDoubleValue("dep", 0.0);
+	cerr << "Adding interpolation entry " << ind << "==>" << dep << endl;
+	t->table->addEntry(ind, dep);
+      } else {
+	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
+	       << " in interpolation");
+      }
+    }
+  } else {
+    t->table = 0;
+  }
+  
 				// Move the layer horizontally.
   if (type == "x-shift") {
     t->type = FGPanelTransformation::XSHIFT;
-    t->min *= hscale;
-    t->max *= hscale;
-    t->offset *= hscale;
+//     t->min *= w_scale; //removed by Martin Dressler
+//     t->max *= w_scale; //removed by Martin Dressler
+    t->offset *= w_scale;
+    t->factor *= w_scale; //Added by Martin Dressler
   } 
 
 				// Move the layer vertically.
   else if (type == "y-shift") {
     t->type = FGPanelTransformation::YSHIFT;
-    t->min *= vscale;
-    t->max *= vscale;
-    t->offset *= vscale;
+    //t->min *= h_scale; //removed
+    //t->max *= h_scale; //removed
+    t->offset *= h_scale;
+    t->factor *= h_scale; //Added
   } 
 
 				// Rotate the layer.  The rotation
@@ -486,7 +509,7 @@ readTextChunk (const SGPropertyNode * node)
  * Currently, the only built-in layer class is "compass-ribbon".
  */
 static FGInstrumentLayer *
-readLayer (const SGPropertyNode * node, float hscale, float vscale)
+readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 {
   FGInstrumentLayer * layer = NULL;
   string name = node->getStringValue("name");
@@ -494,9 +517,9 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
   int w = node->getIntValue("w", -1);
   int h = node->getIntValue("h", -1);
   if (w != -1)
-    w = int(w * hscale);
+    w = int(w * w_scale);
   if (h != -1)
-    h = int(h * vscale);
+    h = int(h * h_scale);
 
 
   if (type == "") {
@@ -525,7 +548,7 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
     tlayer->setColor(red, green, blue);
 
 				// Set the point size.
-    float pointSize = node->getFloatValue("point-size", 10.0) * hscale;
+    float pointSize = node->getFloatValue("point-size", 10.0) * w_scale;
     tlayer->setPointSize(pointSize);
 
 				// Set the font.
@@ -535,12 +558,15 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
     if (chunk_group != 0) {
       int nChunks = chunk_group->nChildren();
       for (int i = 0; i < nChunks; i++) {
-	FGTextLayer::Chunk * chunk = readTextChunk(chunk_group->getChild(i));
-	if (chunk == 0) {
-	  delete layer;
-	  return 0;
+	const SGPropertyNode * node = chunk_group->getChild(i);
+	if (node->getName() == "chunk") {
+	  FGTextLayer::Chunk * chunk = readTextChunk(node);
+	  if (chunk != 0)
+	    tlayer->addChunk(chunk);
+	} else {
+	  SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
+		 << " in chunks");
 	}
-	tlayer->addChunk(chunk);
       }
       layer = tlayer;
     }
@@ -551,9 +577,9 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
     SGValue * value =
       fgGetValue(node->getStringValue("property"), true);
     FGInstrumentLayer * layer1 =
-      readLayer(node->getNode("layer1"), hscale, vscale);
+      readLayer(node->getNode("layer1"), w_scale, h_scale);
     FGInstrumentLayer * layer2 =
-      readLayer(node->getNode("layer2"), hscale, vscale);
+      readLayer(node->getNode("layer2"), w_scale, h_scale);
     layer = new FGSwitchLayer(w, h, value, layer1, layer2);
   }
 
@@ -592,13 +618,15 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
   if (trans_group != 0) {
     int nTransformations = trans_group->nChildren();
     for (int i = 0; i < nTransformations; i++) {
-      FGPanelTransformation * t = readTransformation(trans_group->getChild(i),
-						     hscale, vscale);
-      if (t == 0) {
-	delete layer;
-	return 0;
+      const SGPropertyNode * node = trans_group->getChild(i);
+      if (node->getName() == "transformation") {
+	FGPanelTransformation * t = readTransformation(node, w_scale, h_scale);
+	if (t != 0)
+	  layer->addTransformation(t);
+      } else {
+	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
+	       << " in transformations");
       }
-      layer->addTransformation(t);
     }
   }
   
@@ -619,21 +647,30 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
  * scaled automatically if the instrument is not at its preferred size.
  */
 static FGPanelInstrument *
-readInstrument (const SGPropertyNode * node, int x, int y,
-		int real_w, int real_h)
+readInstrument (const SGPropertyNode * node)
 {
-  int w = node->getIntValue("w");
-  int h = node->getIntValue("h");
   const string &name = node->getStringValue("name");
+  int x = node->getIntValue("x", -1);
+  int y = node->getIntValue("y", -1);
+  int real_w = node->getIntValue("w", -1);
+  int real_h = node->getIntValue("h", -1);
+  int w = node->getIntValue("w-base", -1);
+  int h = node->getIntValue("h-base", -1);
 
-  float hscale = 1.0;
-  float vscale = 1.0;
+  if (x == -1 || y == -1) {
+    SG_LOG(SG_INPUT, SG_ALERT,
+	   "x and y positions must be specified and >0");
+    return 0;
+  }
+
+  float w_scale = 1.0;
+  float h_scale = 1.0;
   if (real_w != -1) {
-    hscale = float(real_w) / float(w);
+    w_scale = float(real_w) / float(w);
     w = real_w;
   }
   if (real_h != -1) {
-    vscale = float(real_h) / float(h);
+    h_scale = float(real_h) / float(h);
     h = real_h;
   }
 
@@ -649,13 +686,15 @@ readInstrument (const SGPropertyNode * node, int x, int y,
   if (action_group != 0) {
     int nActions = action_group->nChildren();
     for (int i = 0; i < nActions; i++) {
-      FGPanelAction * action = readAction(action_group->getChild(i),
-					  hscale, vscale);
-      if (action == 0) {
-	delete instrument;
-	return new DefaultInstrument(x, y, w, h);
+      const SGPropertyNode * node = action_group->getChild(i);
+      if (node->getName() == "action") {
+	FGPanelAction * action = readAction(node, w_scale, h_scale);
+	if (action != 0)
+	  instrument->addAction(action);
+      } else {
+	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
+	       << " in actions");
       }
-      instrument->addAction(action);
     }
   }
 
@@ -666,18 +705,87 @@ readInstrument (const SGPropertyNode * node, int x, int y,
   if (layer_group != 0) {
     int nLayers = layer_group->nChildren();
     for (int i = 0; i < nLayers; i++) {
-      FGInstrumentLayer * layer = readLayer(layer_group->getChild(i),
-					    hscale, vscale);
-      if (layer == 0) {
-	delete instrument;
-	return new DefaultInstrument(x, y, w, h);
+      const SGPropertyNode * node = layer_group->getChild(i);
+      if (node->getName() == "layer") {
+	FGInstrumentLayer * layer = readLayer(node, w_scale, h_scale);
+	if (layer != 0)
+	  instrument->addLayer(layer);
+      } else {
+	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
+	       << " in layers");
       }
-      instrument->addLayer(layer);
     }
   }
     
   SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
   return instrument;
+}
+
+
+/**
+ * Construct the panel from a property tree.
+ */
+FGPanel *
+readPanel (const SGPropertyNode * root)
+{
+  SG_LOG(SG_INPUT, SG_INFO, "Reading properties for panel " <<
+	 root->getStringValue("name", "[Unnamed Panel]"));
+
+  FGPanel * panel = new FGPanel(0, 0, 1024, 768);
+  panel->setWidth(root->getIntValue("w", 1024));
+  panel->setHeight(root->getIntValue("h", 443));
+
+  //
+  // Grab the visible external viewing area, default to 
+  //
+  panel->setViewHeight(root->getIntValue("view-height",
+					 768 - panel->getHeight() + 2));
+
+  //
+  // Grab the panel's initial offsets, default to 0, 0.
+  //
+  if (!fgHasValue("/sim/panel/x-offset"))
+    fgSetInt("/sim/panel/x-offset", root->getIntValue("x-offset", 0));
+
+  if (!fgHasValue("/sim/panel/y-offset"))
+    fgSetInt("/sim/panel/y-offset", root->getIntValue("y-offset", 0));
+
+  //
+  // Assign the background texture, if any, or a bogus chequerboard.
+  //
+  string bgTexture = root->getStringValue("background");
+  if (bgTexture == "")
+    bgTexture = "FOO";
+  panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
+  SG_LOG(SG_INPUT, SG_INFO, "Set background texture to " << bgTexture);
+
+
+  //
+  // Create each instrument.
+  //
+  SG_LOG(SG_INPUT, SG_INFO, "Reading panel instruments");
+  const SGPropertyNode * instrument_group = root->getChild("instruments");
+  if (instrument_group != 0) {
+    int nInstruments = instrument_group->nChildren();
+    for (int i = 0; i < nInstruments; i++) {
+      const SGPropertyNode * node = instrument_group->getChild(i);
+      if (node->getName() == "instrument") {
+	FGPanelInstrument * instrument = readInstrument(node);
+	if (instrument != 0)
+	  panel->addInstrument(instrument);
+      } else {
+	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
+	       << " in instruments section");
+      }
+    }
+  }
+  SG_LOG(SG_INPUT, SG_INFO, "Done reading panel instruments");
+
+
+  //
+  // Return the new panel.
+  //
+  return panel;
 }
 
 
@@ -696,112 +804,11 @@ fgReadPanel (istream &input)
 {
   SGPropertyNode root;
 
-
-  //
-  // Read the property list from disk.
-  //
   if (!readProperties(input, &root)) {
     SG_LOG(SG_INPUT, SG_ALERT, "Malformed property list for panel.");
     return 0;
   }
-  SG_LOG(SG_INPUT, SG_INFO, "Read properties for panel " <<
-	 root.getStringValue("name"));
-
-  //
-  // Construct a new, empty panel.
-  //
-  FGPanel * panel = new FGPanel(0, 0, 1024, 768);// FIXME: use variable size
-
-
-  //
-  // Grab the panel's dimensions, default to 1024x443.
-  //
-  int panel_w = (root.hasValue("w") ? root.getIntValue("w") : 1024);
-  int panel_h = (root.hasValue("h") ? root.getIntValue("h") : 443);
-  panel->setWidth(panel_w);
-  panel->setHeight(panel_h);
-
-  //
-  // Grab the visible external viewing area, default to 
-  //
-  panel->setViewHeight(root.hasValue("view-height") ?
-		       root.getIntValue("view-height") :
-		       768 - panel_h + 2);
-
-  //
-  // Grab the panel's initial offsets, default to 0, 0.
-  //
-  int xoffset = (root.hasValue("x-offset") ?
-		 root.getIntValue("x-offset") :
-		 0);
-  int yoffset = (root.hasValue("y-offset") ?
-		 root.getIntValue("y-offset") :
-		 0);
-  panel->setXOffset(xoffset);
-  panel->setYOffset(yoffset);
-
-  //
-  // Assign the background texture, if any, or a bogus chequerboard.
-  //
-  string bgTexture = root.getStringValue("background");
-  if (bgTexture == "")
-    bgTexture = "FOO";
-  panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
-  SG_LOG(SG_INPUT, SG_INFO, "Set background texture to " << bgTexture);
-
-
-  //
-  // Create each instrument.
-  //
-  SG_LOG(SG_INPUT, SG_INFO, "Reading panel instruments");
-  const SGPropertyNode * instrument_group = root.getChild("instruments");
-  if (instrument_group != 0) {
-    int nInstruments = instrument_group->nChildren();
-    for (int i = 0; i < nInstruments; i++) {
-      const SGPropertyNode * node = instrument_group->getChild(i);
-      
-      SGPath path( globals->get_fg_root() );
-      path.append(node->getStringValue("path"));
-      
-      SG_LOG(SG_INPUT, SG_INFO, "Reading instrument "
-	     << node->getName()
-	     << " from "
-	     << path.str());
-      
-      int x = node->getIntValue("x", -1);
-      int y = node->getIntValue("y", -1);
-      int w = node->getIntValue("w", -1);
-      int h = node->getIntValue("h", -1);
-      
-      if (x == -1 || y == -1) {
-	SG_LOG(SG_INPUT, SG_ALERT, "x and y positions must be specified and >0");
-	delete panel;
-	return 0;
-      }
-
-				// Read the instrument from
-				// a separate file.
-      FGPanelInstrument * instrument = 0;
-      
-      SGPropertyNode root2;
-      
-      if (readProperties(path.str(), &root2)) {
-	cerr << "Read " << root2.nChildren() << " top-level nodes from "
-	     << path.c_str() << endl;
-	instrument = readInstrument(&root2, x, y, w, h);
-      }
-      if (instrument == 0)
-	instrument = new DefaultInstrument(x, y, w, h);
-      panel->addInstrument(instrument);
-    }
-  }
-  SG_LOG(SG_INPUT, SG_INFO, "Done reading panel instruments");
-
-
-  //
-  // Return the new panel.
-  //
-  return panel;
+  return readPanel(&root);
 }
 
 
@@ -814,20 +821,15 @@ fgReadPanel (istream &input)
 FGPanel *
 fgReadPanel (const string &relative_path)
 {
-  FGPanel * panel = 0;
   SGPath path(globals->get_fg_root());
   path.append(relative_path);
-  ifstream input(path.c_str());
-  if (!input.good()) {
-    SG_LOG(SG_INPUT, SG_ALERT,
-	   "Cannot read panel configuration from " << path.str());
-  } else {
-    panel = fgReadPanel(input);
-    input.close();
+  SGPropertyNode root;
+
+  if (!readProperties(path.str(), &root)) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Malformed property list for panel.");
+    return 0;
   }
-  if (panel == 0)
-    panel = new DefaultPanel(0, 0, 1024, 768);
-  return panel;
+  return readPanel(&root);
 }
 
 
