@@ -8,6 +8,8 @@
            back off of larcsim calcs, and consolate potentially
            redundant code
 
+12/29/97 - View frustum culling
+
 4/21/98 -  Tweak lighting parameter interpolation tables to better fit
            "perceived" reality
 
@@ -17,8 +19,6 @@
 4/14/98 -  Convert gl__() calls in Cockpit/ to xgl__() calls
 
 3/18/98 -  Use win32 specific calls to get daylight savings time on windoze
-
-12/29/97 - View frustum culling
 
 1/5/98 -   Create a development "roadmap"
 
