@@ -1,1 +1,1 @@
-SUBDIRS = Bucket DEM XGL
+SUBDIRS = Bucket Debug DEM Math XGL zlib

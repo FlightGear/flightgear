@@ -71,7 +71,7 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-SUBDIRS = Bucket DEM XGL
+SUBDIRS = Bucket Debug DEM Math XGL zlib
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../Include/config.h
 CONFIG_CLEAN_FILES = 
