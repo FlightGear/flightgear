@@ -149,13 +149,14 @@ bool FGAuxiliary::Run()
     vPilotAccel.InitMatrix();   
     if( Translation->GetVt() > 1 ) {
       vToEyePt = Aircraft->GetXYZep() - MassBalance->GetXYZcg();
-
+      vToEyePt *= inchtoft;
       vPilotAccel =  Aerodynamics->GetForces() 
                   +  Propulsion->GetForces()
                   +  GroundReactions->GetForces();
       vPilotAccel /= MassBalance->GetMass();
       vPilotAccel += Rotation->GetPQRdot() * vToEyePt;
       vPilotAccel += Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt);
+      //vPilotAccel(2)*=-1;
     }
     earthPosAngle += State->Getdt()*Inertial->omega();
     return false;
