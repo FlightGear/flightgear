@@ -175,7 +175,6 @@ public:
 		     const sgdVec3 p, const sgdVec3 dir,
 		     FGHitList *list );
 
-	
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current
     // visibilty

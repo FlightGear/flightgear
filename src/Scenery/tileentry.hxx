@@ -141,15 +141,17 @@ private:
 
     // pointer to ssg transform for this tile
     ssgTransform *terra_transform;
-    ssgTransform *lights_transform;
+    ssgTransform *rwy_lights_transform;
+    ssgTransform *gnd_lights_transform;
 
     // pointer to ssg range selector for this tile
     ssgRangeSelector *terra_range;
-    ssgRangeSelector *lights_range;
+    ssgRangeSelector *rwy_lights_range;
+    ssgRangeSelector *gnd_lights_range;
 
     // we create several preset brightness and can choose which one we
     // want based on lighting conditions.
-    ssgSelector *lights_brightness;
+    ssgSelector *gnd_lights_brightness;
 
     // ADA --->
     // Runway centre coords.

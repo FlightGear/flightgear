@@ -724,10 +724,10 @@ void FGTileEntry::free_tile() {
     // disconnected from the scene graph)
     ssgDeRefDelete( terra_transform );
 
-    if ( lights_transform ) {
+    if ( gnd_lights_transform ) {
 	// delete the terrain lighting branch (this should already have been
     // disconnected from the scene graph)
-	ssgDeRefDelete( lights_transform );
+	ssgDeRefDelete( gnd_lights_transform );
     }
 
     // ADA
@@ -751,23 +751,23 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 #ifdef USE_UP_AND_COMING_PLIB_FEATURE
     terra_range->setRange( 0, SG_ZERO );
     terra_range->setRange( 1, vis + bounding_radius );
-    lights_range->setRange( 0, SG_ZERO );
-    lights_range->setRange( 1, vis * 1.5 + bounding_radius );
+    gnd_lights_range->setRange( 0, SG_ZERO );
+    gnd_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
 #else
     float ranges[2];
     ranges[0] = SG_ZERO;
     ranges[1] = vis + bounding_radius;
     terra_range->setRanges( ranges, 2 );
-    if ( lights_range ) {
+    if ( gnd_lights_range ) {
 	ranges[1] = vis * 1.5 + bounding_radius;
-	lights_range->setRanges( ranges, 2 );
+	gnd_lights_range->setRanges( ranges, 2 );
     }
 #endif
     sgVec3 sgTrans;
     sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
     terra_transform->setTransform( sgTrans );
 
-    if ( lights_transform ) {
+    if ( gnd_lights_transform ) {
 	// we need to lift the lights above the terrain to avoid
 	// z-buffer fighting.  We do this based on our altitude and
 	// the distance this tile is away from scenery center.
@@ -796,18 +796,18 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	    sgScaleVec3( up, 10.0 + agl / 20.0 + dist / 5000 );
 	}
 	sgAddVec3( sgTrans, up );
-	lights_transform->setTransform( sgTrans );
+	gnd_lights_transform->setTransform( sgTrans );
 
 	// select which set of lights based on sun angle
 	float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
 	if ( sun_angle > 95 ) {
-	    lights_brightness->select(0x04);
+	    gnd_lights_brightness->select(0x04);
 	} else if ( sun_angle > 92 ) {
-	    lights_brightness->select(0x02);
+	    gnd_lights_brightness->select(0x02);
 	} else if ( sun_angle > 89 ) {
-	    lights_brightness->select(0x01);
+	    gnd_lights_brightness->select(0x01);
 	} else {
-	    lights_brightness->select(0x00);
+	    gnd_lights_brightness->select(0x00);
 	}
     }
 
@@ -1048,6 +1048,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		if ( custom_obj != NULL ) {
 		    new_tile -> addKid( custom_obj );
 		}
+
 	    } else if ( token == "OBJECT_STATIC" ) {
 		// load object info
 		double lon, lat, elev, hdg;
@@ -1302,31 +1303,30 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     terra_transform->setTransform( &sgcoord );
     // terrain->addKid( terra_transform );
 
-    lights_transform = NULL;
-    lights_range = NULL;
-    /* uncomment this section for testing ground lights */
+    // Add ground lights to scene graph if any exist
+    gnd_lights_transform = NULL;
+    gnd_lights_range = NULL;
     if ( light_pts->getNum() ) {
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "generating lights" );
-	lights_transform = new ssgTransform;
-	lights_range = new ssgRangeSelector;
-	lights_brightness = new ssgSelector;
+	gnd_lights_transform = new ssgTransform;
+	gnd_lights_range = new ssgRangeSelector;
+	gnd_lights_brightness = new ssgSelector;
 	ssgLeaf *lights;
 
 	lights = gen_lights( light_pts, 4, 0.7 );
-	lights_brightness->addKid( lights );
+	gnd_lights_brightness->addKid( lights );
 
 	lights = gen_lights( light_pts, 2, 0.85 );
-	lights_brightness->addKid( lights );
+	gnd_lights_brightness->addKid( lights );
 
 	lights = gen_lights( light_pts, 1, 1.0 );
-	lights_brightness->addKid( lights );
+	gnd_lights_brightness->addKid( lights );
 
-	lights_range->addKid( lights_brightness );
-	lights_transform->addKid( lights_range );
-	lights_transform->setTransform( &sgcoord );
-        // ground->addKid( lights_transform );
+	gnd_lights_range->addKid( gnd_lights_brightness );
+	gnd_lights_transform->addKid( gnd_lights_range );
+	gnd_lights_transform->setTransform( &sgcoord );
+        // ground->addKid( gnd_lights_transform );
     }
-    /* end of ground light section */
 
     // ADA
     // Create runway lights - 23 Mar 2001
@@ -1375,11 +1375,11 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
     SG_LOG( SG_TERRAIN, SG_DEBUG, "num parents now = "
             << terra_transform->getNumParents() );
 
-    if ( lights_transform != 0 ) {
+    if ( gnd_lights_transform != 0 ) {
 	// bump up the ref count so we can remove this later without
 	// having ssg try to free the memory.
-	lights_transform->ref();
-	ground->addKid( lights_transform );
+	gnd_lights_transform->ref();
+	ground->addKid( gnd_lights_transform );
     }
 
     // ADA
@@ -1427,15 +1427,15 @@ FGTileEntry::disconnect_ssg_nodes()
     }
 
     // find the terrain lighting branch
-    if ( lights_transform ) {
-	pcount = lights_transform->getNumParents();
+    if ( gnd_lights_transform ) {
+	pcount = gnd_lights_transform->getNumParents();
 	if ( pcount > 0 ) {
 	    // find the first parent (should only be one)
-	    ssgBranch *parent = lights_transform->getParent( 0 ) ;
+	    ssgBranch *parent = gnd_lights_transform->getParent( 0 ) ;
 	    if( parent ) {
 		// disconnect the light branch (we previously ref()'d
 		// it so it won't get freed now)
-		parent->removeKid( lights_transform );
+		parent->removeKid( gnd_lights_transform );
 	    } else {
 		SG_LOG( SG_TERRAIN, SG_ALERT,
 			"parent pointer is NULL!  Dying" );
