@@ -11,6 +11,7 @@ using namespace yasim;
 // Stubs.  Not needed by a batch program, but required to link.
 bool fgSetFloat (const char * name, float val) { return false; }
 bool fgSetBool(char const * name, bool val) { return false; }
+bool fgGetBool(char const * name, bool def) { return false; }
 SGPropertyNode* fgGetNode (const char * path, bool create) { return 0; }
 float fgGetFloat (const char * name, float defaultValue) { return 0; }
 

@@ -17,6 +17,7 @@ public:
     ~Airplane();
 
     void iterate(float dt);
+    void consumeFuel(float dt);
 
     ControlMap* getControlMap();
     Model* getModel();

@@ -71,6 +71,10 @@ void FGFDM::iterate(float dt)
 {
     getExternalInput(dt);
     _airplane.iterate(dt);
+
+    if(fgGetBool("/sim/freeze/fuel") != true)
+        _airplane.consumeFuel(dt);
+
     setOutputProperties();
 }
 

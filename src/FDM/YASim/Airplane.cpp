@@ -61,12 +61,14 @@ void Airplane::iterate(float dt)
     updateGearState();
 
     _model.iterate();
+}
 
-    // Consume fuel.  This is a really simple implementation that
-    // assumes all engines draw equally from all tanks in proportion
-    // to the amount of fuel stored there.  Needs to be fixed, but
-    // that has to wait for a decision as to what the property
-    // interface will look like.
+void Airplane::consumeFuel(float dt)
+{
+    // This is a really simple implementation that assumes all engines
+    // draw equally from all tanks in proportion to the amount of fuel
+    // stored there.  Needs to be fixed, but that has to wait for a
+    // decision as to what the property interface will look like.
     int i, outOfFuel = 0;
     float fuelFlow = 0, totalFuel = 0.00001; // <-- overflow protection
     for(i=0; i<_thrusters.size(); i++)
