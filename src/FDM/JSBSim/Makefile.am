@@ -10,6 +10,7 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
 	FGInitialCondition.cpp FGInitialCondition.h \
+	FGLGear.cpp FGLGear.h \
 	FGModel.cpp FGModel.h \
 	FGOutput.cpp FGOutput.h \
 	FGPosition.cpp FGPosition.h \
@@ -18,7 +19,8 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGTranslation.cpp FGTranslation.h \
 	FGUtility.cpp FGUtility.h \
 	FGEngine.cpp FGEngine.h \
-	FGTank.cpp FGTank.h 
+	FGTank.cpp FGTank.h \
+	FGfdmSocket.cpp FGfdmSocket.h
 
 noinst_PROGRAMS = testJSBsim
 

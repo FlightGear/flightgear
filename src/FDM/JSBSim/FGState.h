@@ -95,6 +95,7 @@ public:
   inline float Getadot(void) {return adot;}
   inline float Getbdot(void) {return bdot;}
 
+  inline float GetLocalAltitudeOverRunway(void) {return LocalAltitudeOverRunway;}
   inline float Geth(void) {return h;}
   inline float Geta(void) {return a;}
   inline float GetMach(void) {return Mach;}
@@ -115,6 +116,7 @@ public:
 
   inline void Setqbar(float tt) {qbar = tt;}
 
+  inline void SetLocalAltitudeOverRunway(float tt) {LocalAltitudeOverRunway = tt;}
   inline void Seth(float tt) {h = tt;}
   inline void Seta(float tt) {a = tt;}
   inline void SetMach(float tt) {Mach = tt;}
@@ -123,6 +125,7 @@ public:
   inline void  Setdt(float tt) {dt = tt;}
 
   inline float IncrTime(void) {sim_time+=dt;return sim_time;}
+
 
 private:
 
@@ -136,6 +139,7 @@ private:
   float Mach;                       // Mach number
 
   FGFDMExec* FDMExec;
+  float LocalAltitudeOverRunway;
 
 protected:
 

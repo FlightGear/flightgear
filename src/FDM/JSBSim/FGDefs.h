@@ -53,6 +53,8 @@ SENTRY
 #define KTSTOFPS        1.68781
 #define FPSTOKTS        0.592484
 
+#define HPTOFTLBSSEC 550
+
 
 
 /******************************************************************************/

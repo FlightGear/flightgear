@@ -60,6 +60,7 @@ INCLUDES
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
+#include "FGDefs.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
@@ -96,16 +97,37 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
     else if (tag == "TURBOJET")  Type = etTurboJet;
     else                         Type = etUnknown;
 
-    enginefile >> X;
-    enginefile >> Y;
-    enginefile >> Z;
-    enginefile >> SLThrustMax;
-    enginefile >> VacThrustMax;
-    enginefile >> MaxThrottle;
-    enginefile >> MinThrottle;
-    enginefile >> SLFuelFlowMax;
-    if (Type == 1)
+    switch(Type)
+    {
+    case etUnknown:
+      cerr << "Unknown engine type: " << tag << endl;
+      break;
+    case etPiston:
+      enginefile >> X;
+      enginefile >> Y;
+      enginefile >> Z;
+      enginefile >> BrakeHorsePower;
+      enginefile >> MaxThrottle;
+      enginefile >> MinThrottle;
+      enginefile >> SLFuelFlowMax;
+      enginefile >> SpeedSlope;
+      enginefile >> SpeedIntercept;
+      enginefile >> AltitudeSlope;
+
+      break;
+    case etRocket:
+      enginefile >> X;
+      enginefile >> Y;
+      enginefile >> Z;
+      enginefile >> SLThrustMax;
+      enginefile >> VacThrustMax;
+      enginefile >> MaxThrottle;
+      enginefile >> MinThrottle;
+      enginefile >> SLFuelFlowMax;
       enginefile >> SLOxiFlowMax;
+      break;
+    }
+
     enginefile.close();
   } else {
     cerr << "Unable to open engine definition file " << engineName << endl;
@@ -135,7 +157,7 @@ float FGEngine::CalcRocketThrust(void)
   } else {
     PctPower = Throttle / MaxThrottle;
     Thrust = PctPower*((1.0 - Atmosphere->Getrho() / 0.002378)*(VacThrustMax - SLThrustMax) +
-	                       SLThrustMax); // desired thrust
+                       SLThrustMax); // desired thrust
     Flameout = false;
   }
 
@@ -147,6 +169,18 @@ float FGEngine::CalcRocketThrust(void)
 
 float FGEngine::CalcPistonThrust(void)
 {
+  float v,h,pa;
+
+  Throttle = FCS->GetThrottle(EngineNumber);
+  v=State->GetVt();
+  h=State->Geth();
+  if(v < 10)
+    v=10;
+  if(h < 0)
+    h=0;
+  pa=(SpeedSlope*v + SpeedIntercept)*(1 +AltitudeSlope*h)*BrakeHorsePower;
+  Thrust= Throttle*(pa*HPTOFTLBSSEC)/v;
+
   return Thrust;
 }
 

@@ -110,7 +110,7 @@ bool FGState::Reset(string path, string fname)
     resetfile.close();
 
     Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
-                                   latitude*DEGTORAD, longitude*DEGTORAD, h);
+               latitude*DEGTORAD, longitude*DEGTORAD, h);
 
     return true;
   } else {
@@ -179,7 +179,7 @@ void FGState::Initialize(float U, float V, float W,
 
 void FGState::Initialize(FGInitialCondition *FGIC)
 {
-	
+
   float tht,psi,phi;
   float U,V,W;
 
@@ -193,8 +193,7 @@ void FGState::Initialize(FGInitialCondition *FGIC)
   phi = FGIC->GetPhiRadIC();
   psi = FGIC->GetPsiRadIC();
 
-  Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
-                                   latitude*DEGTORAD, longitude*DEGTORAD, h);
+  Initialize(U, V, W, phi, tht, psi,latitude, longitude, h);
 }
 
 

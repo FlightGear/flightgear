@@ -54,7 +54,7 @@ INCLUDES
 #  include <fstream>
 #endif
 
-//using namespace std;
+#include "FGfdmSocket.h"
 
 /*******************************************************************************
 CLASS DECLARATION
@@ -70,12 +70,15 @@ public:
 
   void DelimitedOutput(void);
   void DelimitedOutput(string);
+  void SocketOutput(void);
+  void SocketStatusOutput(string);
 
 protected:
 
 private:
-  bool FirstPass;
+  bool sFirstPass, dFirstPass;
   ofstream datafile;
+  FGfdmSocket* socket;
 };
 
 /******************************************************************************/

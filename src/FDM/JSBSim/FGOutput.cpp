@@ -57,19 +57,25 @@ INCLUDES
 FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGOutput";
-  FirstPass = true;
+  sFirstPass = dFirstPass = true;
+
+#ifdef FG_WITH_JSBSIM_SOCKET
+  socket = new FGfdmSocket("localhost",1138);
+#endif
 }
 
 
 FGOutput::~FGOutput(void)
 {
+  if (socket) delete socket;
 }
 
 
 bool FGOutput::Run(void)
 {
   if (!FGModel::Run()) {
-    DelimitedOutput("JSBSimData.csv");
+    SocketOutput();
+//    DelimitedOutput("JSBSimData.csv");
   } else {
   }
   return false;
@@ -78,7 +84,7 @@ bool FGOutput::Run(void)
 
 void FGOutput::DelimitedOutput(void)
 {
-  if (FirstPass) {
+  if (dFirstPass) {
     cout << "Time,";
     cout << "Altitude,";
     cout << "Phi,";
@@ -112,7 +118,7 @@ void FGOutput::DelimitedOutput(void)
     cout << "M,";
     cout << "N";
     cout << endl;
-    FirstPass = false;
+    dFirstPass = false;
   }
 
   cout << State->Getsim_time() << ",";
@@ -154,7 +160,7 @@ void FGOutput::DelimitedOutput(void)
 
 void FGOutput::DelimitedOutput(string fname)
 {
-  if (FirstPass) {
+  if (sFirstPass) {
     datafile.open(fname.c_str());
     datafile << "Time,";
     datafile << "Altitude,";
@@ -189,7 +195,7 @@ void FGOutput::DelimitedOutput(string fname)
     datafile << "M,";
     datafile << "N";
     datafile << endl;
-    FirstPass = false;
+    sFirstPass = false;
   }
 
   datafile << State->Getsim_time() << ",";
@@ -226,5 +232,99 @@ void FGOutput::DelimitedOutput(string fname)
   datafile << Aircraft->GetN() << "";
   datafile << endl;
   datafile.flush();
+}
+
+void FGOutput::SocketOutput(void)
+{
+  string asciiData;
+
+  if (socket <= 0) return;
+
+  socket->Clear();
+  if (sFirstPass) {
+    socket->Append("<LABELS>");
+    socket->Append("Time");
+    socket->Append("Altitude");
+    socket->Append("Phi");
+    socket->Append("Tht");
+    socket->Append("Psi");
+    socket->Append("Rho");
+    socket->Append("Vtotal");
+    socket->Append("U");
+    socket->Append("V");
+    socket->Append("W");
+    socket->Append("Vn");
+    socket->Append("Ve");
+    socket->Append("Vd");
+    socket->Append("Udot");
+    socket->Append("Vdot");
+    socket->Append("Wdot");
+    socket->Append("P");
+    socket->Append("Q");
+    socket->Append("R");
+    socket->Append("PDot");
+    socket->Append("QDot");
+    socket->Append("RDot");
+    socket->Append("Fx");
+    socket->Append("Fy");
+    socket->Append("Fz");
+    socket->Append("Latitude");
+    socket->Append("Longitude");
+    socket->Append("QBar");
+    socket->Append("Alpha");
+    socket->Append("L");
+    socket->Append("M");
+    socket->Append("N");
+    sFirstPass = false;
+    socket->Send();
+  }
+
+  socket->Clear();
+  socket->Append(State->Getsim_time());
+  socket->Append(State->Geth());
+  socket->Append(Rotation->Getphi());
+  socket->Append(Rotation->Gettht());
+  socket->Append(Rotation->Getpsi());
+  socket->Append(Atmosphere->GetDensity());
+  socket->Append(State->GetVt());
+  socket->Append(Translation->GetU());
+  socket->Append(Translation->GetV());
+  socket->Append(Translation->GetW());
+  socket->Append(Position->GetVn());
+  socket->Append(Position->GetVe());
+  socket->Append(Position->GetVd());
+  socket->Append(Translation->GetUdot());
+  socket->Append(Translation->GetVdot());
+  socket->Append(Translation->GetWdot());
+  socket->Append(Rotation->GetP());
+  socket->Append(Rotation->GetQ());
+  socket->Append(Rotation->GetR());
+  socket->Append(Rotation->GetPdot());
+  socket->Append(Rotation->GetQdot());
+  socket->Append(Rotation->GetRdot());
+  socket->Append(Aircraft->GetFx());
+  socket->Append(Aircraft->GetFy());
+  socket->Append(Aircraft->GetFz());
+  socket->Append(State->Getlatitude());
+  socket->Append(State->Getlongitude());
+  socket->Append(State->Getqbar());
+  socket->Append(Translation->Getalpha());
+  socket->Append(Aircraft->GetL());
+  socket->Append(Aircraft->GetM());
+  socket->Append(Aircraft->GetN());
+  socket->Send();
+}
+
+
+void FGOutput::SocketStatusOutput(string out_str)
+{
+  string asciiData;
+
+  if (socket <= 0) return;
+
+  socket->Clear();
+  asciiData = string("<STATUS>") + out_str;
+  socket->Append(asciiData.c_str());
+  socket->Send();
 }
 

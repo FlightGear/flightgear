@@ -40,28 +40,30 @@ INCLUDES
 *******************************************************************************/
 
 #if __BCPLUSPLUS__	>= 0x0540   // If compiling under Borland C++Builder
-  //---------------------------------------------------------------------------
-  #pragma hdrstop
-  #include <condefs.h>
-  USEUNIT("FGAircraft.cpp");
-  USEUNIT("FGAtmosphere.cpp");
-  USEUNIT("FGAuxiliary.cpp");
-  USEUNIT("FGCoefficient.cpp");
-  USEUNIT("FGEngine.cpp");
-  USEUNIT("FGFCS.cpp");
-  USEUNIT("FGFDMExec.cpp");
-  USEUNIT("FGInitialCondition.cpp");
-  USEUNIT("FGModel.cpp");
-  USEUNIT("FGOutput.cpp");
-  USEUNIT("FGPosition.cpp");
-  USEUNIT("FGRotation.cpp");
-  USEUNIT("FGState.cpp");
-  USEUNIT("FGTank.cpp");
-  USEUNIT("FGTranslation.cpp");
-  USEUNIT("FGUtility.cpp");
-  USERES("JSBSim.res");
-  //---------------------------------------------------------------------------
-  #pragma argsused
+//---------------------------------------------------------------------------
+#pragma hdrstop
+#include <condefs.h>
+USEUNIT("FGAircraft.cpp");
+USEUNIT("FGAtmosphere.cpp");
+USEUNIT("FGAuxiliary.cpp");
+USEUNIT("FGCoefficient.cpp");
+USEUNIT("FGEngine.cpp");
+USEUNIT("FGFCS.cpp");
+USEUNIT("FGFDMExec.cpp");
+USEUNIT("FGInitialCondition.cpp");
+USEUNIT("FGModel.cpp");
+USEUNIT("FGOutput.cpp");
+USEUNIT("FGPosition.cpp");
+USEUNIT("FGRotation.cpp");
+USEUNIT("FGState.cpp");
+USEUNIT("FGTank.cpp");
+USEUNIT("FGTranslation.cpp");
+USEUNIT("FGUtility.cpp");
+USERES("JSBSim.res");
+USEUNIT("FGLGear.cpp");
+USEUNIT("FGfdmSocket.cpp");
+//---------------------------------------------------------------------------
+#pragma argsused
 #endif
 
 #include "FGFDMExec.h"
@@ -114,7 +116,9 @@ int main(int argc, char** argv)
         FDMExec->GetState()->Getsim_time() < 6.0)
     {
 			FDMExec->GetFCS()->SetDe(0.05);
-		}
+		} else {
+			FDMExec->GetFCS()->SetDe(0.00);
+    }
 
     FDMExec->Run();
   }
@@ -125,7 +129,8 @@ int main(int argc, char** argv)
 }
 
 #ifndef FGFS
-WinMain()
+int WinMain()
 {
+  return 0;
 }
 #endif

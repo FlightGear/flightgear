@@ -47,7 +47,7 @@ INCLUDES
 #ifdef FGFS
 #  include <Include/compiler.h>
 #  include STL_STRING
-   FG_USING_STD(string);
+FG_USING_STD(string);
 #else
 #  include <string>
 #endif
@@ -105,6 +105,11 @@ private:
   float SLOxiFlowMax;
   float MaxThrottle;
   float MinThrottle;
+
+  float BrakeHorsePower;
+  float SpeedSlope;
+  float SpeedIntercept;
+  float AltitudeSlope;
 
   float Thrust;
   float Throttle;

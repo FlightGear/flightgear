@@ -100,17 +100,21 @@ INCLUDES
 #  include <Include/compiler.h>
 #  ifdef FG_HAVE_STD_INCLUDES
 #    include <fstream>
+#    include <vector>
 #  else
 #    include <fstream.h>
+#    include <vector.h>
 #  endif
 #else
 #  include <fstream>
+#  include <vector>
 #endif
 
 #include "FGModel.h"
 #include "FGCoefficient.h"
 #include "FGEngine.h"
 #include "FGTank.h"
+#include "FGLGear.h"
 
 /*******************************************************************************
 DEFINITIONS
@@ -125,7 +129,7 @@ CLASS DECLARATION
 class FGAircraft : public FGModel
 {
 public:
-  FGAircraft(FGFDMExec*);  
+  FGAircraft(FGFDMExec*);
   ~FGAircraft(void);
 
   bool Run(void);
@@ -155,20 +159,17 @@ public:
 private:
   void GetState(void);
   void PutState(void);
-  void FAero(void);
-  void FGear(void);
-  void FMass(void);
-  void FProp(void);
-  void MAero(void);
-  void MGear(void);
-  void MMass(void);
-  void MProp(void);
+  void FMAero(void);
+  void FMGear(void);
+  void FMMass(void);
+  void FMProp(void);
   void MassChange(void);
   float Moments[3];
   float Forces[3];
   string AircraftName;
   float baseIxx, baseIyy, baseIzz, baseIxz, EmptyMass, Mass;
   float Ixx, Iyy, Izz, Ixz;
+  float Xrp, Yrp, Zrp;
   float baseXcg, baseYcg, baseZcg;
   float Xcg, Ycg, Zcg;
   float Xep, Yep, Zep;
@@ -200,6 +201,7 @@ private:
               numCoeffs};
 
   string Axis[6];
+  vector <FGLGear*> lGear;
 
 protected:
 

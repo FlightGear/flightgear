@@ -37,6 +37,9 @@ HISTORY
 04/03/99   JSB   Changed Aero() method to correct body axis force calculation
                  from wind vector. Fix provided by Tony Peden.
 05/03/99   JSB   Changed (for the better?) the way configurations are read in.
+9/17/99     TP   Combined force and moment functions. Added aero reference 
+                 point to config file. Added calculations for moments due to 
+				 difference in cg and aero reference point
 
 ********************************************************************************
 COMMENTS, REFERENCES,  and NOTES
@@ -157,16 +160,17 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   int axis;
   string axis_descript;
 
-	axis = -1;
+  axis = -1;
   aircraftDef = aircraft_path + "/" + fname + "/" + fname + ".cfg";
   ifstream aircraftfile(aircraftDef.c_str());
   cout << "Reading Aircraft Configuration File: " << aircraftDef << endl;
+  Output->SocketStatusOutput("Reading Aircraft Configuration File: " + aircraftDef);
 
   numTanks = numEngines = 0;
   numSelectedOxiTanks = numSelectedFuelTanks = 0;
 
   while (!aircraftfile.fail()) {
-  	holding_string.erase();
+    holding_string.erase();
     aircraftfile >> holding_string;
 #if defined(__BORLANDC__) || defined(FG_HAVE_NATIVE_SGI_COMPILERS) || defined(_MSC_VER)
     if (holding_string.compare(0, 2, "//") != 0) {
@@ -174,125 +178,132 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
     if (holding_string.compare("//",0,2) != 0) {
 #endif
       if (holding_string == "AIRCRAFT") {
-      	cout << "Reading in Aircraft parameters ..." << endl;
+        cout << "Reading in Aircraft parameters ..." << endl;
       } else if (holding_string == "AERODYNAMICS") {
-      	cout << "Reading in Aerodynamic parameters ..." << endl;
-			} else if (holding_string == "AC_NAME") {
-		    aircraftfile >> AircraftName;   // String with no embedded spaces
-		    cout << "Aircraft Name: " << AircraftName << endl;
-			} else if (holding_string == "AC_WINGAREA") {
-				aircraftfile >> WingArea;
-				cout << "Aircraft Wing Area: " << WingArea << endl;
-			} else if (holding_string == "AC_WINGSPAN") {
-				aircraftfile >> WingSpan;
-				cout << "Aircraft WingSpan: " << WingSpan << endl;
-			} else if (holding_string == "AC_CHORD") {
-				aircraftfile >> cbar;
-				cout << "Aircraft Chord: " << cbar << endl;
-			} else if (holding_string == "AC_IXX") {
-				aircraftfile >> baseIxx;
-				cout << "Aircraft Base Ixx: " << baseIxx << endl;
-			} else if (holding_string == "AC_IYY") {
-				aircraftfile >> baseIyy;
-				cout << "Aircraft Base Iyy: " << baseIyy << endl;
-			} else if (holding_string == "AC_IZZ") {
-				aircraftfile >> baseIzz;
-				cout << "Aircraft Base Izz: " << baseIzz << endl;
-			} else if (holding_string == "AC_IXZ") {
-				aircraftfile >> baseIxz;
-				cout << "Aircraft Base Ixz: " << baseIxz << endl;
-			} else if (holding_string == "AC_EMPTYWT") {
-				aircraftfile >> EmptyWeight;
-				EmptyMass = EmptyWeight / GRAVITY;
-				cout << "Aircraft Empty Weight: " << EmptyWeight << endl;
-			} else if (holding_string == "AC_CGLOC") {
-				aircraftfile >> baseXcg >> baseYcg >> baseZcg;
-				cout << "Aircraft Base C.G.: " << baseXcg << " " << baseYcg << " " << baseZcg << endl;
-			} else if (holding_string == "AC_EYEPTLOC") {
-				aircraftfile >> Xep >> Yep >> Zep;
-				cout << "Pilot Eyepoint: " << Xep << " " << Yep << " " << Zep << endl;
-			} else if (holding_string == "AC_TANK") {
+        cout << "Reading in Aerodynamic parameters ..." << endl;
+      } else if (holding_string == "AC_NAME") {
+        aircraftfile >> AircraftName;   // String with no embedded spaces
+        cout << "Aircraft Name: " << AircraftName << endl;
+      } else if (holding_string == "AC_WINGAREA") {
+        aircraftfile >> WingArea;
+        cout << "Aircraft Wing Area: " << WingArea << endl;
+      } else if (holding_string == "AC_WINGSPAN") {
+        aircraftfile >> WingSpan;
+        cout << "Aircraft WingSpan: " << WingSpan << endl;
+      } else if (holding_string == "AC_CHORD") {
+        aircraftfile >> cbar;
+        cout << "Aircraft Chord: " << cbar << endl;
+      } else if (holding_string == "AC_IXX") {
+        aircraftfile >> baseIxx;
+        cout << "Aircraft Base Ixx: " << baseIxx << endl;
+      } else if (holding_string == "AC_IYY") {
+        aircraftfile >> baseIyy;
+        cout << "Aircraft Base Iyy: " << baseIyy << endl;
+      } else if (holding_string == "AC_IZZ") {
+        aircraftfile >> baseIzz;
+        cout << "Aircraft Base Izz: " << baseIzz << endl;
+      } else if (holding_string == "AC_IXZ") {
+        aircraftfile >> baseIxz;
+        cout << "Aircraft Base Ixz: " << baseIxz << endl;
+      } else if (holding_string == "AC_EMPTYWT") {
+        aircraftfile >> EmptyWeight;
+        EmptyMass = EmptyWeight / GRAVITY;
+        cout << "Aircraft Empty Weight: " << EmptyWeight << endl;
+      } else if (holding_string == "AC_AERORP") {
+        aircraftfile >> Xrp >> Yrp >> Zrp;
+        cout << "Aerodynamic Reference Point: " << Xrp << " " << Yrp << " " << Zrp << endl;
+      } else if (holding_string == "AC_CGLOC") {
+        aircraftfile >> baseXcg >> baseYcg >> baseZcg;
+        cout << "Aircraft Base C.G.: " << baseXcg << " " << baseYcg << " " << baseZcg << endl;
+      } else if (holding_string == "AC_EYEPTLOC") {
+        aircraftfile >> Xep >> Yep >> Zep;
+        cout << "Pilot Eyepoint: " << Xep << " " << Yep << " " << Zep << endl;
+      } else if (holding_string == "AC_TANK") {
         Tank[numTanks] = new FGTank(aircraftfile);
         switch(Tank[numTanks]->GetType()) {
         case FGTank::ttFUEL:
           numSelectedFuelTanks++;
-					cout << "Reading in Fuel Tank #" << numSelectedFuelTanks << " parameters ..." << endl;
+          cout << "Reading in Fuel Tank #" << numSelectedFuelTanks << " parameters ..." << endl;
           break;
         case FGTank::ttOXIDIZER:
           numSelectedOxiTanks++;
-					cout << "Reading in Oxidizer Tank #" << numSelectedOxiTanks << " parameters ..." << endl;
+          cout << "Reading in Oxidizer Tank #" << numSelectedOxiTanks << " parameters ..." << endl;
           break;
         }
         numTanks++;
 
-			} else if (holding_string == "AC_ENGINE") {
+      } else if (holding_string == "AC_GEAR") {
+
+        lGear.push_back(new FGLGear(aircraftfile));
+
+      } else if (holding_string == "AC_ENGINE") {
 
         aircraftfile >> tag;
-				cout << "Reading in " << tag << " Engine parameters ..." << endl;
+        cout << "Reading in " << tag << " Engine parameters ..." << endl;
         Engine[numEngines] = new FGEngine(FDMExec, engine_path, tag, numEngines);
         numEngines++;
 
-			} else if (holding_string == "}") {
+      } else if (holding_string == "}") {
 
-			} else if (holding_string == "{") {
+      } else if (holding_string == "{") {
 
-			} else if (holding_string == "LIFT") {
+      } else if (holding_string == "LIFT") {
 
-				axis_descript = "   Lift Coefficients ...";
-				axis = LiftCoeff;
-				
-			} else if (holding_string == "DRAG") {
+        axis_descript = "   Lift Coefficients ...";
+        axis = LiftCoeff;
 
-				axis_descript = "   Drag Coefficients ...";
-				axis = DragCoeff;
+      } else if (holding_string == "DRAG") {
 
-			} else if (holding_string == "SIDE") {
+        axis_descript = "   Drag Coefficients ...";
+        axis = DragCoeff;
 
-				axis_descript = "   Side Coefficients ...";
-				axis = SideCoeff;
+      } else if (holding_string == "SIDE") {
 
-			} else if (holding_string == "ROLL") {
+        axis_descript = "   Side Coefficients ...";
+        axis = SideCoeff;
 
-				axis_descript = "   Roll Coefficients ...";
-				axis = RollCoeff;
+      } else if (holding_string == "ROLL") {
 
-			} else if (holding_string == "PITCH") {
+        axis_descript = "   Roll Coefficients ...";
+        axis = RollCoeff;
 
-				axis_descript = "   Pitch Coefficients ...";
-				axis = PitchCoeff;
+      } else if (holding_string == "PITCH") {
 
-			} else if (holding_string == "YAW") {
+        axis_descript = "   Pitch Coefficients ...";
+        axis = PitchCoeff;
 
-				axis_descript = "   Yaw Coefficients ...";
-				axis = YawCoeff;
+      } else if (holding_string == "YAW") {
 
-			}
+        axis_descript = "   Yaw Coefficients ...";
+        axis = YawCoeff;
 
-			if (axis >= 0) {
-				cout << axis_descript << endl;
-  	    aircraftfile >> tag;
-    	  gpos = aircraftfile.tellg();
-				aircraftfile >> tag;
-				if ( !(tag == "}") ) {
-					while ( !(tag == "}") ) {
-						aircraftfile.seekg(gpos);
-    		    Coeff[axis][coeff_ctr[axis]] = new FGCoefficient(FDMExec, aircraftfile);
- 		    	  coeff_ctr[axis]++;
-  		    	aircraftfile >> tag;
-		        gpos = aircraftfile.tellg();
-						aircraftfile >> tag;
-  		    }
- 	    	} else {
- 	    		cout << "      None found ..." << endl;
- 	    	}
- 	    }
- 	    axis = -1;
-			
+      }
+
+      if (axis >= 0) {
+        cout << axis_descript << endl;
+        aircraftfile >> tag;
+        gpos = aircraftfile.tellg();
+        aircraftfile >> tag;
+        if ( !(tag == "}") ) {
+          while ( !(tag == "}") ) {
+            aircraftfile.seekg(gpos);
+            Coeff[axis][coeff_ctr[axis]] = new FGCoefficient(FDMExec, aircraftfile);
+            coeff_ctr[axis]++;
+            aircraftfile >> tag;
+            gpos = aircraftfile.tellg();
+            aircraftfile >> tag;
+          }
+        } else {
+          cout << "      None found ..." << endl;
+        }
+      }
+      axis = -1;
+
     } else {
-    	aircraftfile.getline(scratch, 127);
+      aircraftfile.getline(scratch, 127);
     }
   }
-	cout << "End of Configuration File Parsing." << endl;
+  cout << "End of Configuration File Parsing." << endl;
 
   return true;
 }
@@ -307,8 +318,7 @@ bool FGAircraft::Run(void)
 
     MassChange();
 
-    FProp(); FAero(); FGear(); FMass();
-    MProp(); MAero(); MGear(); MMass();
+    FMProp(); FMAero(); FMGear(); FMMass();
 
     PutState();
   } else {                               // skip Run() execution this time
@@ -344,13 +354,13 @@ void FGAircraft::MassChange()
         case FGTank::ttFUEL:
           if (Tank[t]->GetSelected()) {
             Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
-                                   numSelectedFuelTanks)*(dt*rate) + Fshortage);
+                                         numSelectedFuelTanks)*(dt*rate) + Fshortage);
           }
           break;
         case FGTank::ttOXIDIZER:
           if (Tank[t]->GetSelected()) {
             Oshortage = Tank[t]->Reduce((Engine[e]->CalcOxidizerNeed()/
-                                    numSelectedOxiTanks)*(dt*rate) + Oshortage);
+                                         numSelectedOxiTanks)*(dt*rate) + Oshortage);
           }
           break;
         }
@@ -362,7 +372,7 @@ void FGAircraft::MassChange()
 
         if (Tank[t]->GetSelected()) {
           Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
-                                   numSelectedFuelTanks)*(dt*rate) + Fshortage);
+                                       numSelectedFuelTanks)*(dt*rate) + Fshortage);
         }
         break;
       }
@@ -379,7 +389,7 @@ void FGAircraft::MassChange()
 
   // Calculate new CG here.
 
-  Xt = Yt = Zt = 0;
+  Xt = Yt = Zt = Tw = 0;
   Xw = Yw = Zw = 0;
   for (t=0; t<numTanks; t++) {
     Xt += Tank[t]->GetX()*Tank[t]->GetContents();
@@ -411,57 +421,44 @@ void FGAircraft::MassChange()
 }
 
 
-void FGAircraft::FAero(void)
+void FGAircraft::FMAero(void)
 {
   float F[3];
-
+  float Fxaero,Fyaero,Fzaero;
+  float dxcg,dycg,dzcg;
+  int axis_ctr,ctr;
   F[0] = F[1] = F[2] = 0.0;
 
-  for (int axis_ctr = 0; axis_ctr < 3; axis_ctr++)
-    for (int ctr=0; ctr < coeff_ctr[axis_ctr]; ctr++)
+  for (axis_ctr = 0; axis_ctr < 3; axis_ctr++)
+    for (ctr=0; ctr < coeff_ctr[axis_ctr]; ctr++)
       F[axis_ctr] += Coeff[axis_ctr][ctr]->TotalValue();
+
+  Fxaero = - F[DragCoeff]*cos(alpha)*cos(beta)
+           - F[SideCoeff]*cos(alpha)*sin(beta)
+           + F[LiftCoeff]*sin(alpha);
+  Fyaero =   F[DragCoeff]*sin(beta)
+             + F[SideCoeff]*cos(beta);
+  Fzaero = - F[DragCoeff]*sin(alpha)*cos(beta)
+           - F[SideCoeff]*sin(alpha)*sin(beta)
+           - F[LiftCoeff]*cos(alpha);
 
   Forces[0] += - F[DragCoeff]*cos(alpha)*cos(beta)
                - F[SideCoeff]*cos(alpha)*sin(beta)
                + F[LiftCoeff]*sin(alpha);
   Forces[1] +=   F[DragCoeff]*sin(beta)
-               + F[SideCoeff]*cos(beta);
+                 + F[SideCoeff]*cos(beta);
   Forces[2] += - F[DragCoeff]*sin(alpha)*cos(beta)
                - F[SideCoeff]*sin(alpha)*sin(beta)
                - F[LiftCoeff]*cos(alpha);
-}
 
+  dxcg = (Xcg - Xrp)/12; //cg and rp values are in inches
+  dycg = (Ycg - Yrp)/12;
+  dzcg = (Zcg - Zrp)/12;
 
-void FGAircraft::FGear(void)
-{
-  if (GearUp) {
-    // crash routine
-  } else {
-    
-  }
-}
+  Moments[0] += -Fzaero*dycg - Fyaero*dzcg; //rolling moment
+  Moments[1] +=  Fxaero*dzcg - Fzaero*dxcg; //pitching moment
+  Moments[2] +=  Fxaero*dycg + Fyaero*dxcg; //yawing moment
 
-
-void FGAircraft::FMass(void)
-{
-  Forces[0] += -GRAVITY*sin(tht) * Mass;
-  Forces[1] +=  GRAVITY*sin(phi)*cos(tht) * Mass;
-  Forces[2] +=  GRAVITY*cos(phi)*cos(tht) * Mass;
-}
-
-
-void FGAircraft::FProp(void)
-{
-  for (int i=0;i<numEngines;i++) {
-    Forces[0] += Engine[i]->CalcThrust();
-  }
-}
-
-
-void FGAircraft::MAero(void)
-{
-	int axis_ctr, ctr;
-	
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr = 0; ctr < coeff_ctr[axis_ctr+3]; ctr++) {
       Moments[axis_ctr] += Coeff[axis_ctr+3][ctr]->TotalValue();
@@ -470,23 +467,32 @@ void FGAircraft::MAero(void)
 }
 
 
-void FGAircraft::MGear(void)
+void FGAircraft::FMGear(void)
 {
   if (GearUp) {
+    // crash routine
   } else {
+    for (int i=0;i<lGear.size();i++) {
+      //      lGear[i].
+    }
   }
 }
 
 
-void FGAircraft::MMass(void)
+void FGAircraft::FMMass(void)
 {
+  Forces[0] += -GRAVITY*sin(tht) * Mass;
+  Forces[1] +=  GRAVITY*sin(phi)*cos(tht) * Mass;
+  Forces[2] +=  GRAVITY*cos(phi)*cos(tht) * Mass;
 }
 
 
-void FGAircraft::MProp(void)
+void FGAircraft::FMProp(void)
 {
+  for (int i=0;i<numEngines;i++) {
+    Forces[0] += Engine[i]->CalcThrust();
+  }
 }
-
 
 void FGAircraft::GetState(void)
 {
