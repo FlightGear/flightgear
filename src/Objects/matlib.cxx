@@ -388,7 +388,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     matlib["RWY_YELLOW_LOW_LIGHTS"] = new FGNewMat(rwy_yellow_low_lights);
 
     // hard coded runway red light state
-    tex_name = gen_standard_dir_light_map( 235, 20, 20, 255 );
+    tex_name = gen_standard_dir_light_map( 235, 90, 90, 255 );
     ssgSimpleState *rwy_red_lights = new ssgSimpleState();
     rwy_red_lights->ref();
     rwy_red_lights->disable( GL_LIGHTING );
@@ -405,7 +405,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     matlib["RWY_RED_LIGHTS"] = new FGNewMat(rwy_red_lights);
 
     // hard coded medium intensity runway red light state
-    tex_name = gen_standard_dir_light_map( 235, 20, 20, 205 );
+    tex_name = gen_standard_dir_light_map( 235, 90, 90, 205 );
     ssgSimpleState *rwy_red_medium_lights = new ssgSimpleState();
     rwy_red_medium_lights->ref();
     rwy_red_medium_lights->disable( GL_LIGHTING );
@@ -422,7 +422,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     matlib["RWY_RED_MEDIUM_LIGHTS"] = new FGNewMat(rwy_red_medium_lights);
 
     // hard coded low intensity runway red light state
-    tex_name = gen_standard_dir_light_map( 235, 20, 20, 205 );
+    tex_name = gen_standard_dir_light_map( 235, 90, 90, 205 );
     ssgSimpleState *rwy_red_low_lights = new ssgSimpleState();
     rwy_red_low_lights->ref();
     rwy_red_low_lights->disable( GL_LIGHTING );
@@ -490,7 +490,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     matlib["RWY_GREEN_LOW_LIGHTS"] = new FGNewMat(rwy_green_low_lights);
 
     // hard coded low intensity taxiway blue light state
-    tex_name = gen_taxiway_dir_light_map( 100, 100, 235, 205 );
+    tex_name = gen_taxiway_dir_light_map( 90, 90, 235, 205 );
     ssgSimpleState *taxiway_blue_low_lights = new ssgSimpleState();
     taxiway_blue_low_lights->ref();
     taxiway_blue_low_lights->disable( GL_LIGHTING );
