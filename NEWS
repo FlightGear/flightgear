@@ -1,5 +1,66 @@
+New in 0.9.3
+* October 15, 2003
+
+* Added a flight "replay" system.
+* Many updates to the ATC and AI aircraft subsystem. (David Luff)
+* Add support for moving cloud layers.
+* New "symbolic" time of day dialog box for easily setting dawn, dusk,
+  noon, etc.
+* Aircaft are now each self contained in their own individual
+  subdirectories for easier end user addition and removal.
+* Many improvements to scene lighting throughout the day->night range
+  including more realistic sky and fog colors, more relistic scene
+  illumination, better dusk/dawn sky coloring, better specular
+  lighting support.
+* A nice new chase view has been added.
+* Added displaced thresholds on all runways that have them.
+* Updated default scenery for the KSFO area.
+* Many buildings and bridges added in the San Francisco area.
+* Updated airport and navaid database, many new taxiways, many
+  corrected runways, many new airports (especially outside the USA.)
+
+* Use the field elevation for GS when no specific altitude listed in
+  FAA/DAFIF data
+* Fix to translate DME and TACAN X/Y channels to paired VHF frequencies
+  correctly.  Thanks to Jorge Van Hemelryck <ml@jvh.net> for the fix.
+* Fixes to runway search routines (didn't always work correctly under
+  some circumstances.)
+* Many fixes and updates to the autopilot.  Autothrottle tracks speed
+  much better with much less jumping around.  
+* Expose the tuned navid via the property system to support building
+  more advanced avionics.
+* Improvements to the environment manager and gui's, more control over
+  turbulence, ability to specify boundary condition layers as well as
+  aloft condition layers.
+* JSBSim updates including a new turbine engine model that supports
+  things like starting and stopping procedures and thrust reversing.
+* UIUCsim updates (compiler warning and namespace conflict fixes.)
+* YASim updates (fix drag from shutdown engine.)
+* Support for "clock" instruments that operate independently of
+  computer system time.
+* Annunciators shouldn't work if electrical system not serviceable.
+* A few updated splash screens.
+* Added various fields to net_ctrls and net_fdm to include various
+  failures, faults, control surface positions, and other interesting
+  things.
+* A few updated joystick definition files.
+* Various keyboard mapping tweaks and changes.
+* Many updates and tweaks to default material properties and random
+  land cover objects.
+* Updated aircraft: 747, A320, T-38, A-10, B-52, F-104, Fokker 50,
+  Fokker 100, Piper Cub, P-51, UFO, YF-23, Ornithopter, A-4, C172,
+  and F-16
+* New Aircraft: J-22, Paraglider, SGS-126 Sailplane, ASW 20, and AN-225.
+* Updated cloud textures.
+
+* Removed dependency on Metakit.  The airport and runway databases are now
+  stored in a simple flat file ascii database.
+
+* FreeBSD, Solaris, MSVC, Irix, cygwin, and mingwin fixes.
+
+
 New in 0.9.2
-* June 4, 2002
+* June 4, 2003
 
 * New aircraft available: P51-D (w/ full 3d cockpit), Sea Hawk
   (WV908), a research ornithopter (propelled by actual flapping
