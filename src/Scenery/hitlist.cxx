@@ -527,9 +527,11 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
     hit_list->Intersect( globals->get_scenery()->get_terrain_branch(),
                          orig, dir );
 
-    int this_hit=0;
+    int this_hit = -1;
+    int max_hit = -1;
     Point3D geoc;
     double hit_elev = -9999;
+    double max_elev = -9999;
     Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
     int hitcount = hit_list->num_hits();
@@ -547,6 +549,16 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
             hit_elev = alt;
             this_hit = i;
         }
+        if ( alt > hit_elev ) {
+            max_elev = alt;
+            max_hit = i;
+        }
+    }
+
+    if ( this_hit < 0 ) {
+        // no hits below us, take the max hit 
+        this_hit = max_hit;
+        hit_elev = max_elev;
     }
 
     if ( hit_elev > -9000 ) {
@@ -607,9 +619,11 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
     sgdSetMat4(xform,fxform);
     hit_list->Intersect( terra_transform, xform, orig, dir );
 
-    int this_hit=0;
+    int this_hit = -1;
+    int max_hit = -1;
     Point3D geoc;
     double hit_elev = -9999;
+    double max_elev = -9999;
     Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
     int hitcount = hit_list->num_hits();
@@ -627,6 +641,16 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
             this_hit = i;
             // cout << "  it's a keeper" << endl;
         }
+        if ( alt > hit_elev ) {
+            max_elev = alt;
+            max_hit = i;
+        }
+    }
+
+    if ( this_hit < 0 ) {
+        // no hits below us, take the max hit 
+        this_hit = max_hit;
+        hit_elev = max_elev;
     }
 
     if ( hit_elev > -9000 ) {
