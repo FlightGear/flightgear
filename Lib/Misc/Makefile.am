@@ -5,10 +5,8 @@ noinst_LIBRARIES = libMisc.a
 libMisc_a_SOURCES = \
 	fgpath.cxx fgpath.hxx \
 	fgstream.cxx fgstream.hxx \
-	material.cxx material.hxx \
 	stopwatch.hxx \
 	strutils.cxx strutils.hxx \
-	texload.c texload.h colours.h \
 	zfstream.cxx zfstream.hxx
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib

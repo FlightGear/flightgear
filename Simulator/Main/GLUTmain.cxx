@@ -247,6 +247,7 @@ static void fgRenderFrame( void ) {
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
+    // GLfloat mat_shininess[] = { 10.0 };
     GLbitfield clear_mask;
 
     if ( idle_state != 1000 ) {
@@ -338,6 +339,7 @@ static void fgRenderFrame( void ) {
 	// set lighting parameters
 	xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
 	xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
+	// xglLightfv(GL_LIGHT0, GL_SPECULAR, white );
 	
 	if ( current_options.get_textures() ) {
 	    // texture parameters
@@ -347,6 +349,8 @@ static void fgRenderFrame( void ) {
 	    // set base color (I don't think this is doing anything here)
 	    xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
 	    xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
+	    // xglMaterialfv (GL_FRONT, GL_SPECULAR, white);
+	    // xglMaterialfv (GL_FRONT, GL_SHININESS, mat_shininess);
 	} else {
 	    xglDisable( GL_TEXTURE_2D );
 	    xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);

@@ -43,7 +43,7 @@
 #include <Main/options.hxx>
 #include <Math/fg_random.h>
 #include <Misc/fgpath.hxx>
-#include <Misc/texload.h>
+#include <Objects/texload.h>
 
 #include "splash.hxx"
 #include "views.hxx"
