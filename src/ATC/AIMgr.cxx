@@ -40,7 +40,7 @@
 #include "ATCutils.hxx"
 
 SG_USING_STD(list);
-
+SG_USING_STD(cout);
 
 FGAIMgr::FGAIMgr() {
 	ATC = globals->get_ATC_mgr();
