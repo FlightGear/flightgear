@@ -129,6 +129,10 @@ Bruce Finney <bfinney@gte.net>
   MSVC5 compatibility.
 
 
+Melchior Franz <a8603365@unet.univie.ac.at>
+  Ruthlessly hunted down memory leaks in FlightGear, SimGear, and JSBSim.
+
+
 Jean-loup Gailly and Mark Adler <zlib@gzip.org>
   Authors of the zlib library.  Used for on-the-fly compression and
   decompression routines.
