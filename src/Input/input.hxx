@@ -248,6 +248,8 @@ private:
     MAX_MICE = 1,
     MAX_MOUSE_BUTTONS = 8
   };
+  struct mouse;
+  friend struct mouse;
 
   typedef vector<FGBinding *> binding_list_t;
 
