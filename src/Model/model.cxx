@@ -7,7 +7,7 @@
 #  include <config.h>
 #endif
 
-#include <string.h>		// for strcmp()
+#include <string.h>             // for strcmp()
 
 #include <plib/sg.h>
 #include <plib/ssg.h>
@@ -44,9 +44,9 @@ find_named_node (ssgEntity * node, const char * name)
     int nKids = node->getNumKids();
     for (int i = 0; i < nKids; i++) {
       ssgEntity * result =
-	find_named_node(((ssgBranch*)node)->getKid(i), name);
+        find_named_node(((ssgBranch*)node)->getKid(i), name);
       if (result != 0)
-	return result;
+        return result;
     }
   } 
   return 0;
@@ -71,7 +71,7 @@ splice_branch (ssgBranch * branch, ssgEntity * child)
  */
 static void
 set_rotation (sgMat4 &matrix, double position_deg,
-	      sgVec3 &center, sgVec3 &axis)
+              sgVec3 &center, sgVec3 &axis)
 {
  float temp_angle = -position_deg * SG_DEGREES_TO_RADIANS ;
  
@@ -153,12 +153,12 @@ FG3DModel::init (const string &path)
 {
   SGPropertyNode props;
 
-				// Load the 3D aircraft object itself
+                                // Load the 3D aircraft object itself
   SGPath xmlpath = globals->get_fg_root();
   SGPath modelpath = path;
   xmlpath.append(modelpath.str());
 
-				// Check for an XML wrapper
+                                // Check for an XML wrapper
   if (xmlpath.str().substr(xmlpath.str().size() - 4, 4) == ".xml") {
     readProperties(xmlpath.str(), &props);
     if (props.hasValue("/path")) {
@@ -169,14 +169,14 @@ FG3DModel::init (const string &path)
     }
   }
 
-				// Assume that textures are in
-				// the same location as the XML file.
+                                // Assume that textures are in
+                                // the same location as the XML file.
   ssgTexturePath((char *)xmlpath.dir().c_str());
   _model = ssgLoad((char *)modelpath.c_str());
   if (_model == 0)
     throw sg_exception("Failed to load 3D model");
 
-				// Load animations
+                                // Load animations
   vector<SGPropertyNode *> animation_nodes = props.getChildren("animation");
   for (unsigned int i = 0; i < animation_nodes.size(); i++) {
     vector<SGPropertyNode *> name_nodes =
@@ -185,15 +185,15 @@ FG3DModel::init (const string &path)
       SG_LOG(SG_INPUT, SG_ALERT, "No object-name given for transformation");
     } else {
       for (unsigned int j = 0; j < name_nodes.size(); j++) {
-	Animation * animation =
-	  make_animation(name_nodes[j]->getStringValue(), animation_nodes[i]);
-	if (animation != 0)
-	  _animations.push_back(animation);
+        Animation * animation =
+          make_animation(name_nodes[j]->getStringValue(), animation_nodes[i]);
+        if (animation != 0)
+          _animations.push_back(animation);
       }
     }
   }
 
-				// Set up the range selector node
+                                // Set up the range selector node
   float ranges[2];
   ssgRangeSelector * lod = new ssgRangeSelector;
   lod->addKid(_model);
@@ -202,7 +202,7 @@ FG3DModel::init (const string &path)
   lod->setRanges(ranges, 2);
 
 
-				// Set up the alignment node
+                                // Set up the alignment node
   ssgTransform * align = new ssgTransform;
   align->addKid(lod);
   sgMat4 rot_matrix;
@@ -219,14 +219,14 @@ FG3DModel::init (const string &path)
   sgMultMat4(res_matrix, off_matrix, rot_matrix);
   align->setTransform(res_matrix);
 
-				// Set up the position node
+                                // Set up the position node
   _position->addKid(align);
 
-				// Set up the selector node
+                                // Set up the selector node
   _selector->addKid(_position);
   _selector->clrTraversalMaskBits(SSGTRAV_HOT);
 
-				// Set up a location class
+                                // Set up a location class
   _location = (FGLocation *) new FGLocation;
 
 }
@@ -237,20 +237,22 @@ FG3DModel::update (int dt)
   for (unsigned int i = 0; i < _animations.size(); i++)
     _animations[i]->update(dt);
 
-  sgCoord obj_pos;
-
-  sgMat4 POS, TRANS;
-
   _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
   _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
-  sgCopyMat4(TRANS, _location->getTransformMatrix());
-  sgMakeTransMat4( POS, _location->get_view_pos() );
 
-  sgPostMultMat4( TRANS, POS );
+  sgMat4 POS;
+  sgCopyMat4(POS, _location->getTransformMatrix());
+  
+  sgVec3 trans;
+  sgCopyVec3(trans, _location->get_view_pos());
 
-  sgSetCoord( &obj_pos, TRANS );
-
-  _position->setTransform(&obj_pos);
+  for( int i=0; i<4; i++) {
+    float tmp = POS[i][3];
+    for( int j=0; j<3; j++ ) {
+      POS[i][j] += (tmp * trans[j]);
+    }
+  }
+  _position->setTransform(POS);
 }
 
 bool
@@ -311,7 +313,7 @@ FG3DModel::setHeadingDeg (double heading_deg)
 
 void
 FG3DModel::setOrientation (double roll_deg, double pitch_deg,
-			   double heading_deg)
+                           double heading_deg)
 {
   _roll_deg = roll_deg;
   _pitch_deg = pitch_deg;
@@ -320,7 +322,7 @@ FG3DModel::setOrientation (double roll_deg, double pitch_deg,
 
 FG3DModel::Animation *
 FG3DModel::make_animation (const char * object_name,
-				 SGPropertyNode * node)
+                                 SGPropertyNode * node)
 {
   Animation * animation = 0;
   const char * type = node->getStringValue("type");
@@ -385,7 +387,7 @@ FG3DModel::NullAnimation::~NullAnimation ()
 
 void
 FG3DModel::NullAnimation::init (ssgEntity * object,
-				      SGPropertyNode * props)
+                                      SGPropertyNode * props)
 {
   splice_branch(_branch, object);
   _branch->setName(props->getStringValue("name", 0));
@@ -414,7 +416,7 @@ FG3DModel::RangeAnimation::~RangeAnimation ()
 
 void
 FG3DModel::RangeAnimation::init (ssgEntity * object,
-				      SGPropertyNode * props)
+                                      SGPropertyNode * props)
 {
   float ranges[2];
   splice_branch(_branch, object);
@@ -449,7 +451,7 @@ FG3DModel::SelectAnimation::~SelectAnimation ()
 
 void
 FG3DModel::SelectAnimation::init (ssgEntity * object,
-				      SGPropertyNode * props)
+                                      SGPropertyNode * props)
 {
   splice_branch(_selector, object);
   _selector->setName(props->getStringValue("name", 0));
@@ -489,9 +491,9 @@ FG3DModel::SpinAnimation::~SpinAnimation ()
 
 void
 FG3DModel::SpinAnimation::init (ssgEntity * object,
-				      SGPropertyNode * props)
+                                      SGPropertyNode * props)
 {
-				// Splice in the new transform node
+                                // Splice in the new transform node
   splice_branch(_transform, object);
   _transform->setName(props->getStringValue("name", 0));
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
@@ -545,9 +547,9 @@ FG3DModel::RotateAnimation::~RotateAnimation ()
 
 void
 FG3DModel::RotateAnimation::init (ssgEntity * object,
-					SGPropertyNode * props)
+                                        SGPropertyNode * props)
 {
-				// Splice in the new transform node
+                                // Splice in the new transform node
   splice_branch(_transform, object);
   _transform->setName(props->getStringValue("name", 0));
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
@@ -609,9 +611,9 @@ FG3DModel::TranslateAnimation::~TranslateAnimation ()
 
 void
 FG3DModel::TranslateAnimation::init (ssgEntity * object,
-					SGPropertyNode * props)
+                                        SGPropertyNode * props)
 {
-				// Splice in the new transform node
+                                // Splice in the new transform node
   splice_branch(_transform, object);
   _transform->setName(props->getStringValue("name", 0));
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
