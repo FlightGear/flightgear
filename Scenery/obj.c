@@ -144,24 +144,13 @@ GLint fgObjLoad(char *path) {
 	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
 		       nodes[n1][2] - ref.z);
 
-	    if ( dot_prod > 0 ) {
-		glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-		glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			   nodes[n2][2] - ref.z);
+	    glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+	    glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+		       nodes[n2][2] - ref.z);
 
-		glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-		glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-			   nodes[n3][2] - ref.z);
-	    } else {
-		printf("Reversing\n");
-		glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-		glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-			   nodes[n3][2] - ref.z);
-
-		glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-		glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			   nodes[n2][2] - ref.z);
-	    }
+	    glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+	    glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+		       nodes[n3][2] - ref.z);
 
 	    if ( n4 > 0 ) {
 		glNormal3d(normals[n4][0], normals[n4][1], normals[n4][2]);
@@ -227,12 +216,15 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.4  1997/11/14 00:26:49  curt
-/* Transform scenery coordinates earlier in pipeline when scenery is being
-/* created, not when it is being loaded.  Precalculate normals for each node
-/* as average of the normals of each containing polygon so Garoude shading is
-/* now supportable.
+/* Revision 1.5  1997/11/15 18:16:39  curt
+/* minor tweaks.
 /*
+ * Revision 1.4  1997/11/14 00:26:49  curt
+ * Transform scenery coordinates earlier in pipeline when scenery is being
+ * created, not when it is being loaded.  Precalculate normals for each node
+ * as average of the normals of each containing polygon so Garoude shading is
+ * now supportable.
+ *
  * Revision 1.3  1997/10/31 04:49:12  curt
  * Tweaking vertex orders.
  *

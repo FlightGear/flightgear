@@ -230,9 +230,9 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
     static long int warp = 0;
 
     /* get current Unix calendar time (in seconds) */
-    warp += 60; 
+    warp += 20; 
     /* warp = 0; */
-    t->cur_time = time(NULL) + 43200;
+    t->cur_time = time(NULL) + 4 * 60 * 60;
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
@@ -284,12 +284,15 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.9  1997/11/14 00:26:50  curt
-/* Transform scenery coordinates earlier in pipeline when scenery is being
-/* created, not when it is being loaded.  Precalculate normals for each node
-/* as average of the normals of each containing polygon so Garoude shading is
-/* now supportable.
+/* Revision 1.10  1997/11/15 18:16:42  curt
+/* minor tweaks.
 /*
+ * Revision 1.9  1997/11/14 00:26:50  curt
+ * Transform scenery coordinates earlier in pipeline when scenery is being
+ * created, not when it is being loaded.  Precalculate normals for each node
+ * as average of the normals of each containing polygon so Garoude shading is
+ * now supportable.
+ *
  * Revision 1.8  1997/10/25 03:30:08  curt
  * Misc. tweaks.
  *

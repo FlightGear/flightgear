@@ -101,7 +101,7 @@ void fgInitSubsystems( void ) {
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
     FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Altitude = FG_Runway_altitude + 3.758099;
-    FG_Altitude = 20000;
+    FG_Altitude = 10000;
     
     /* Initial Position north of the city of Globe */
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
@@ -224,9 +224,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1997/10/30 12:38:42  curt
-/* Working on new scenery subsystem.
+/* Revision 1.12  1997/11/15 18:16:35  curt
+/* minor tweaks.
 /*
+ * Revision 1.11  1997/10/30 12:38:42  curt
+ * Working on new scenery subsystem.
+ *
  * Revision 1.10  1997/10/25 03:24:23  curt
  * Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
  *
