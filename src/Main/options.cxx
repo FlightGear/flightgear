@@ -167,7 +167,6 @@ fgSetDefaults ()
 				// Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
     fgSetBool("/environment/clouds/status", true);
-    fgSetDouble("/environment/clouds/altitude-ft", 5000);
     fgSetBool("/sim/startup/fullscreen", false);
     fgSetBool("/sim/rendering/shading", true);
     fgSetBool("/sim/rendering/skyblend", true);
@@ -706,14 +705,6 @@ parse_option (const string& arg)
         fgSetBool("/environment/clouds/status", false);
     } else if ( arg == "--enable-clouds" ) {
         fgSetBool("/environment/clouds/status", true);
-    } else if ( arg.find( "--clouds-asl=" ) == 0 ) {
-				// FIXME: check units
-        if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	  fgSetDouble("/environment/clouds/altitude-ft",
-				atof(arg.substr(13)));
-	else
-	  fgSetDouble("/environment/clouds/altitude-ft",
-				atof(arg.substr(13)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--fov=" ) == 0 ) {
 	parse_fov( arg.substr(6) );
     } else if ( arg == "--disable-fullscreen" ) {
@@ -1202,7 +1193,6 @@ fgUsage ()
          << "    --fog-nicest                  Enable nicest fog/haze" << endl
          << "    --enable-clouds               Enable cloud layers" << endl
          << "    --disable-clouds              Disable cloud layers" << endl
-         << "    --clouds-asl=altitude         Specify altitude of cloud layer above sea" << endl
          << "                                  level" << endl
          << "    --fov=degrees                 Specify field of view angle" << endl
          << "    --disable-fullscreen          Disable fullscreen mode" << endl
