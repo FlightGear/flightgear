@@ -366,7 +366,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     rwy_red_lights->setTexture( tex_name );
     matlib["RWY_RED_LIGHTS"] = new FGNewMat(rwy_red_lights);
 
-    // hard coded mediume intensity runway red light state
+    // hard coded medium intensity runway red light state
     tex_name = gen_standard_dir_light_map( 235, 20, 20, 205 );
     ssgSimpleState *rwy_red_medium_lights = new ssgSimpleState();
     rwy_red_medium_lights->ref();
@@ -382,6 +382,74 @@ bool FGMaterialLib::load( const string& mpath ) {
     rwy_red_medium_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
     rwy_red_medium_lights->setTexture( tex_name );
     matlib["RWY_RED_MEDIUM_LIGHTS"] = new FGNewMat(rwy_red_medium_lights);
+
+    // hard coded low intensity runway red light state
+    tex_name = gen_standard_dir_light_map( 235, 20, 20, 205 );
+    ssgSimpleState *rwy_red_low_lights = new ssgSimpleState();
+    rwy_red_low_lights->ref();
+    rwy_red_low_lights->disable( GL_LIGHTING );
+    rwy_red_low_lights->enable ( GL_CULL_FACE ) ;
+    rwy_red_low_lights->enable( GL_TEXTURE_2D );
+    rwy_red_low_lights->enable( GL_BLEND );
+    rwy_red_low_lights->enable( GL_ALPHA_TEST );
+    rwy_red_low_lights->enable( GL_COLOR_MATERIAL );
+    rwy_red_low_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_red_low_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_red_low_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_red_low_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_red_low_lights->setTexture( tex_name );
+    matlib["RWY_RED_LOW_LIGHTS"] = new FGNewMat(rwy_red_low_lights);
+
+    // hard coded runway green light state
+    tex_name = gen_standard_dir_light_map( 20, 235, 20, 255 );
+    ssgSimpleState *rwy_green_lights = new ssgSimpleState();
+    rwy_green_lights->ref();
+    rwy_green_lights->disable( GL_LIGHTING );
+    rwy_green_lights->enable ( GL_CULL_FACE ) ;
+    rwy_green_lights->enable( GL_TEXTURE_2D );
+    rwy_green_lights->enable( GL_BLEND );
+    rwy_green_lights->enable( GL_ALPHA_TEST );
+    rwy_green_lights->enable( GL_COLOR_MATERIAL );
+    rwy_green_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_green_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_green_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_green_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_green_lights->setTexture( tex_name );
+    matlib["RWY_GREEN_LIGHTS"] = new FGNewMat(rwy_green_lights);
+
+    // hard coded medium intensity runway green light state
+    tex_name = gen_standard_dir_light_map( 20, 235, 20, 205 );
+    ssgSimpleState *rwy_green_medium_lights = new ssgSimpleState();
+    rwy_green_medium_lights->ref();
+    rwy_green_medium_lights->disable( GL_LIGHTING );
+    rwy_green_medium_lights->enable ( GL_CULL_FACE ) ;
+    rwy_green_medium_lights->enable( GL_TEXTURE_2D );
+    rwy_green_medium_lights->enable( GL_BLEND );
+    rwy_green_medium_lights->enable( GL_ALPHA_TEST );
+    rwy_green_medium_lights->enable( GL_COLOR_MATERIAL );
+    rwy_green_medium_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_green_medium_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_green_medium_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_green_medium_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_green_medium_lights->setTexture( tex_name );
+    matlib["RWY_GREEN_MEDIUM_LIGHTS"] = new FGNewMat(rwy_green_medium_lights);
+
+    // hard coded low intensity runway green light state
+    tex_name = gen_standard_dir_light_map( 20, 235, 20, 205 );
+    ssgSimpleState *rwy_green_low_lights = new ssgSimpleState();
+    rwy_green_low_lights->ref();
+    rwy_green_low_lights->disable( GL_LIGHTING );
+    rwy_green_low_lights->enable ( GL_CULL_FACE ) ;
+    rwy_green_low_lights->enable( GL_TEXTURE_2D );
+    rwy_green_low_lights->enable( GL_BLEND );
+    rwy_green_low_lights->enable( GL_ALPHA_TEST );
+    rwy_green_low_lights->enable( GL_COLOR_MATERIAL );
+    rwy_green_low_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_green_low_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_green_low_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_green_low_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_green_low_lights->setTexture( tex_name );
+    matlib["RWY_GREEN_LOW_LIGHTS"] = new FGNewMat(rwy_green_low_lights);
 
     // hard coded runway vasi light state
     ssgSimpleState *rwy_vasi_lights = new ssgSimpleState();
