@@ -46,8 +46,11 @@
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
 #include "../Scenery/mesh.h"
+#include "../Scenery/moon.h"
 #include "../Scenery/scenery.h"
 #include "../Scenery/sky.h"
+#include "../Scenery/stars.h"
+#include "../Scenery/sun.h"
 #include "../Time/fg_time.h"
 #include "../Time/fg_timer.h"
 #include "../Time/sunpos.h"
@@ -89,9 +92,6 @@ static void fgInitVisuals() {
     t = &cur_time_params;
     w = &current_weather;
 
-    xglEnable( GL_DEPTH_TEST );
-    /* xglFrontFace(GL_CW); */
-    xglEnable( GL_CULL_FACE );
     
     /* xglDisable( GL_DITHER ); */
 
@@ -218,22 +218,64 @@ static void fgUpdateViewParams() {
  **************************************************************************/
 
 static void fgUpdateVisuals( void ) {
+    struct fgTIME *t;
+    struct fgVIEW *v;
+    double angle;
+    static double lastAstroUpdate = 0;
+
+    t = &cur_time_params;
+    v = &current_view;
+
     /* update view volume parameters */
     fgUpdateViewParams();
 
-    xglClear( /* GL_COLOR_BUFFER_BIT | */ GL_DEPTH_BUFFER_BIT );
+    xglClear( GL_DEPTH_BUFFER_BIT /* | GL_COLOR_BUFFER_BIT */ );
 
     /* Tell GL we are switching to model view parameters */
     xglMatrixMode(GL_MODELVIEW);
     /* xglLoadIdentity(); */
 
     /* draw sky */
+    xglDisable( GL_DEPTH_TEST );
+    xglDisable( GL_LIGHTING );
+    xglDisable( GL_CULL_FACE );
+    xglShadeModel( GL_SMOOTH );
     fgSkyRender();
 
-    /* draw astronomical objects */
-    /* fgAstroRender(); */
-    
+    /* a hack: Force sun and moon position to be updated on an hourly basis */
+    if (((t->gst - lastAstroUpdate) > 1) || (t->gst < lastAstroUpdate)) {
+	lastAstroUpdate = t->gst;
+	fgSunInit();
+	fgMoonInit();
+    }
+
+    /* setup transformation for drawing astronomical objects */
+    xglPushMatrix();
+    /* Translate to view position */
+    xglTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
+    /* Rotate based on gst (side real time) */
+    angle = t->gst * 15.041085; /* should be 15.041085, Curt thought it was 15*/
+    /* printf("Rotating astro objects by %.2f degrees\n",angle); */
+    xglRotatef( angle, 0.0, 0.0, -1.0 );
+
+    /* draw stars and planets */
+    xglDisable( GL_FOG );
+    fgStarsRender();
+
+    /* draw the sun */
+    fgSunRender();
+
+    /* render the moon */
+    xglEnable( GL_LIGHTING );
+    xglEnable( GL_CULL_FACE );
+    fgMoonRender();
+
+    xglPopMatrix();
+
     /* draw scenery */
+    xglShadeModel( GL_FLAT ); 
+    xglEnable( GL_DEPTH_TEST );
+    xglEnable( GL_FOG );
     fgSceneryRender();
 
     /* display HUD */
@@ -569,9 +611,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.35  1997/12/18 23:32:32  curt
-/* First stab at sky dome actually starting to look reasonable. :-)
+/* Revision 1.36  1997/12/19 16:44:57  curt
+/* Working on scene rendering order and options.
 /*
+ * Revision 1.35  1997/12/18 23:32:32  curt
+ * First stab at sky dome actually starting to look reasonable. :-)
+ *
  * Revision 1.34  1997/12/17 23:13:34  curt
  * Began working on rendering a sky.
  *

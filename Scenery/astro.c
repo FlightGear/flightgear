@@ -87,9 +87,6 @@ void fgAstroRender() {
 	fgMoonInit();
     }
 
-    /* Disable fog effects */
-    xglDisable( GL_FOG );
-
     /* set the sun position */
     /* xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv ); */
 
@@ -115,16 +112,16 @@ void fgAstroRender() {
     fgSunRender();
 
     xglPopMatrix();
-
-    /* reenable fog effects */
-    xglEnable( GL_FOG );
 }
 
 
 /* $Log$
-/* Revision 1.9  1997/12/18 23:32:35  curt
-/* First stab at sky dome actually starting to look reasonable. :-)
+/* Revision 1.10  1997/12/19 16:45:01  curt
+/* Working on scene rendering order and options.
 /*
+ * Revision 1.9  1997/12/18 23:32:35  curt
+ * First stab at sky dome actually starting to look reasonable. :-)
+ *
  * Revision 1.8  1997/12/15 23:54:57  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

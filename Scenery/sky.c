@@ -107,10 +107,6 @@ void fgSkyRender() {
 
     printf("Rendering the sky.\n");
 
-    xglDisable( GL_LIGHTING );
-    xglDisable( GL_CULL_FACE );
-    xglShadeModel( GL_SMOOTH );
-
     xglPushMatrix();
 
     /* Translate to view position */
@@ -159,17 +155,16 @@ void fgSkyRender() {
     xglEnd();
 
     xglPopMatrix();
-
-    xglShadeModel( GL_FLAT ); 
-    xglEnable( GL_CULL_FACE );
-    xglEnable( GL_LIGHTING );
 }
 
 
 /* $Log$
-/* Revision 1.3  1997/12/18 23:32:36  curt
-/* First stab at sky dome actually starting to look reasonable. :-)
+/* Revision 1.4  1997/12/19 16:45:02  curt
+/* Working on scene rendering order and options.
 /*
+ * Revision 1.3  1997/12/18 23:32:36  curt
+ * First stab at sky dome actually starting to look reasonable. :-)
+ *
  * Revision 1.2  1997/12/18 04:07:03  curt
  * Worked on properly translating and positioning the sky dome.
  *

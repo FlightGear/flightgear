@@ -26,7 +26,7 @@
 
 TARGET = libScenery.a
 
-CFILES = astro.c common.c geometry.c mesh.c moon.c obj.c orbits.c planets.c \
+CFILES = common.c geometry.c mesh.c moon.c obj.c orbits.c planets.c \
 	scenery.c sky.c stars.c sun.c
 
 OFILES = $(CFILES:.c=.o)
@@ -99,6 +99,9 @@ geometry.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.26  1997/12/19 16:45:01  curt
+# Working on scene rendering order and options.
+#
 # Revision 1.25  1997/12/17 23:13:45  curt
 # Began working on rendering the sky.
 #

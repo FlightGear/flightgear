@@ -38,9 +38,11 @@
 #include "../Joystick/joystick.h"
 #include "../Math/fg_random.h"
 #include "../Scenery/mesh.h"
-#include "../Scenery/astro.h"
+#include "../Scenery/moon.h"
 #include "../Scenery/scenery.h"
 #include "../Scenery/sky.h"
+#include "../Scenery/stars.h"
+#include "../Scenery/sun.h"
 #include "../Time/fg_time.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
@@ -179,8 +181,17 @@ void fgInitSubsystems( void ) {
     }
     */
 
-    /* Initialize Astronomical Objects */
-    fgAstroInit();
+    /* Initialize the orbital elements of sun, moon and mayor planets */
+    fgSolarSystemInit(*t);
+
+    /* Initialize the Stars subsystem */
+    fgStarsInit();             
+
+    /* Initialize the sun's position */
+    fgSunInit();       
+
+    /* Intialize the moon's position */
+    fgMoonInit(); 
 
     /* Initialize the "sky" */
     fgSkyInit();
@@ -224,9 +235,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.20  1997/12/18 23:32:33  curt
-/* First stab at sky dome actually starting to look reasonable. :-)
+/* Revision 1.21  1997/12/19 16:45:00  curt
+/* Working on scene rendering order and options.
 /*
+ * Revision 1.20  1997/12/18 23:32:33  curt
+ * First stab at sky dome actually starting to look reasonable. :-)
+ *
  * Revision 1.19  1997/12/17 23:13:36  curt
  * Began working on rendering a sky.
  *

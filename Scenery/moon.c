@@ -258,7 +258,7 @@ void fgMoonInit() {
 	    cos(moonPos.Declination);
 	zMoon = 60000.0 * sin(moonPos.Declination);
 
-	glutSolidSphere(1.0, 15, 15);
+	glutSolidSphere(1.0, 10, 10);
 
 	xglEndList();
     }
