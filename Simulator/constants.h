@@ -52,6 +52,30 @@
 #define EARTH_RAD 6378.155
 
 
+/* Earth parameters for WGS 84, taken from LaRCsim/ls_constants.h */
+
+/* Value of earth radius from [8] */
+#define EQUATORIAL_RADIUS_FT 20925650.    /* ft */
+#define EQUATORIAL_RADIUS_KM 6378138.12   /* meter */
+/* Radius squared */
+#define RESQ_FT 437882827922500.          /* ft */
+#define RESQ_KM 40680645877797.1344       /* meter */
+
+/* Value of earth flattening parameter from ref [8] 
+ *
+ *      Note: FP = f
+ *            E  = 1-f
+ *            EPS = sqrt(1-(1-f)^2)
+ */
+              
+#define FP    0.003352813178
+#define E     0.996647186
+#define EPS   0.081819221
+#define INVG  0.031080997
+
+
+/* Conversions */
+
 /* Degrees to Radians */
 #define DEG_TO_RAD       0.017453292          /* deg*pi/180 = rad */
 
@@ -79,9 +103,12 @@
 
 
 /* $Log$
-/* Revision 1.7  1997/07/23 21:52:10  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.8  1997/07/31 22:52:22  curt
+/* Working on redoing internal coordinate systems & scenery transformations.
 /*
+ * Revision 1.7  1997/07/23 21:52:10  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.6  1997/07/21 14:45:01  curt
  * Minor tweaks.
  *

@@ -47,7 +47,7 @@
 #include "../Math/fg_random.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
-#include "../Timer/fg_timer.h"
+#include "../Time/fg_timer.h"
 #include "../Weather/weather.h"
 
 
@@ -71,7 +71,7 @@ static GLfloat sun_vec[4] = {-3.0, 1.0, 2.0, 0.0 };
 /* static GLint scenery, runway; */
 
 /* Another hack */
-double fogDensity = 60.0; /* in meters = about 70 miles */
+double fogDensity = 60000.0; /* in meters */
 double view_offset = 0.0;
 double goal_view_offset = 0.0;
 
@@ -125,28 +125,56 @@ static void fgInitVisuals() {
  **************************************************************************/
 
 static void fgUpdateViewParams() {
-    struct fgCartesianPoint view_pos;
+    struct fgCartesianPoint view_pos /*, alt_up */;
     struct flight_params *f;
-    MAT3mat R, TMP;
-    MAT3vec vec, up, forward, fwrd_view;
+    MAT3mat R, TMP, UP, LOCAL, VIEW;
+    MAT3vec vec, view_up, forward, view_forward, local_up;
 
     f = &current_aircraft.flight;
 
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, 1.0/win_ratio, 0.001, 2000.0);
+    gluPerspective(45.0, 1.0/win_ratio, 1.0, 200000.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    /* calculate position in current FG view coordinate system */
-    view_pos = fgGeodetic2Cartesian(FG_Longitude, FG_Latitude);
-    view_pos = fgRotateCartesianPoint(view_pos);
+    /* calculate view position in current FG view coordinate system */
+    view_pos = fgPolarToCart(FG_Lon_geocentric, FG_Lat_geocentric, 
+			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
+    printf("View pos = %.4f, %.4f, %.4f\n", view_pos.x, view_pos.y, view_pos.z);
 
-    printf("*** Altitude = %.2f meters\n", FG_Altitude * FEET_TO_METER);
+    /* Derive the local UP transformation matrix based on *geodetic*
+     * coordinates */
+    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
+    MAT3rotate(R, vec, FG_Longitude);     /* R = rotate about Z axis */
+    /* printf("Longitude matrix\n"); */
+    /* MAT3print(R, stdout); */
 
-    /* build current rotation matrix */
+    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
+    MAT3mult_vec(vec, vec, R);
+    MAT3rotate(TMP, vec, -FG_Latitude);  /* TMP = rotate about X axis */
+    /* printf("Latitude matrix\n"); */
+    /* MAT3print(TMP, stdout); */
+
+    MAT3mult(UP, R, TMP);
+    printf("Local up matrix\n");
+    MAT3print(UP, stdout);
+
+    MAT3_SET_VEC(local_up, 1.0, 0.0, 0.0);
+    MAT3mult_vec(local_up, local_up, UP);
+
+    printf("    Local Up = (%.4f, %.4f, %.4f)\n", local_up[0], local_up[1], 
+	   local_up[2]);
+    
+    /* Alternative method to Derive local up vector based on
+     * *geodetic* coordinates */
+    /* alt_up = fgPolarToCart(FG_Longitude, FG_Latitude, 1.0); */
+    /* printf("    Alt Up = (%.4f, %.4f, %.4f)\n", 
+       alt_up.x, alt_up.y, alt_up.z); */
+
+    /* Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw) */
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
     MAT3rotate(R, vec, FG_Phi);
     /* printf("Roll matrix\n"); */
@@ -163,30 +191,33 @@ static void fgUpdateViewParams() {
     /* MAT3mult_vec(vec, vec, R); */
     /* MAT3rotate(TMP, vec, FG_PI + FG_PI_2 + FG_Psi + view_offset); */
     MAT3rotate(TMP, vec, FG_Psi - FG_PI_2);
- /* printf("Yaw matrix\n");
+    /* printf("Yaw matrix\n");
     MAT3print(TMP, stdout); */
-    MAT3mult(R, R, TMP);
+    MAT3mult(LOCAL, R, TMP);
+    printf("LOCAL matrix\n");
+    MAT3print(LOCAL, stdout);
 
-    /* MAT3print(R, stdout); */
+    /* Derive the VIEW matrix */
+    MAT3mult(VIEW, UP, LOCAL);
+    printf("VIEW matrix\n");
+    MAT3print(VIEW, stdout);
 
     /* generate the current up, forward, and fwrd-view vectors */
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3mult_vec(up, vec, R);
-
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    MAT3mult_vec(forward, vec, R);
+    MAT3mult_vec(view_up, vec, VIEW);
+
+    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
+    MAT3mult_vec(forward, vec, VIEW);
     printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
 	   forward[2]);
 
-    MAT3rotate(TMP, up, view_offset);
-    MAT3mult_vec(fwrd_view, forward, TMP);
+    MAT3rotate(TMP, view_up, view_offset);
+    MAT3mult_vec(view_forward, forward, TMP);
 
-    printf("View pos = %.4f, %.4f, %.4f\n", view_pos.y, view_pos.z,  
-	   FG_Altitude * FEET_TO_METER);
-    gluLookAt(view_pos.y, view_pos.z,  FG_Altitude*FEET_TO_METER * 0.001,
-	      view_pos.y + fwrd_view[0], view_pos.z + fwrd_view[1], 
-	      FG_Altitude*FEET_TO_METER * 0.001 + fwrd_view[2],
-	      up[0], up[1], up[2]);
+    gluLookAt(view_pos.x, view_pos.y, view_pos.z,
+	      view_pos.x + view_forward[0], view_pos.y + view_forward[1], 
+	      view_pos.z + view_forward[2],
+	      local_up[0], local_up[1], local_up[2]);
 
     glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
 }
@@ -621,9 +652,12 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.40  1997/07/30 16:12:42  curt
-/* Moved fg_random routines from Util/ to Math/
+/* Revision 1.41  1997/07/31 22:52:37  curt
+/* Working on redoing internal coordinate systems & scenery transformations.
 /*
+ * Revision 1.40  1997/07/30 16:12:42  curt
+ * Moved fg_random routines from Util/ to Math/
+ *
  * Revision 1.39  1997/07/21 14:45:01  curt
  * Minor tweaks.
  *

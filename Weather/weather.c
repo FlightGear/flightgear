@@ -40,6 +40,7 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 
     /* Configure some wind */
     FG_V_north_airmass = 15; /* ft/s =~ 10mph */
+    FG_V_north_airmass = 0; 
 
     /* Add some random turbulence */
     FG_U_gust = fg_random() * 1.0 - 0.5;
@@ -49,9 +50,12 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 }
 
 /* $Log$
-/* Revision 1.2  1997/07/30 16:12:44  curt
-/* Moved fg_random routines from Util/ to Math/
+/* Revision 1.3  1997/07/31 22:52:41  curt
+/* Working on redoing internal coordinate systems & scenery transformations.
 /*
+ * Revision 1.2  1997/07/30 16:12:44  curt
+ * Moved fg_random routines from Util/ to Math/
+ *
  * Revision 1.1  1997/07/19 23:03:57  curt
  * Initial revision.
  *

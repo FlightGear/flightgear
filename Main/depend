@@ -18,8 +18,8 @@ GLmain.o: GLmain.c ../constants.h ../Aircraft/aircraft.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h ../Scenery/mesh.h \
  ../Scenery/scenery.h ../Math/fg_random.h ../Math/mat3.h \
- ../Math/polar.h ../Math/../types.h ../Timer/fg_timer.h \
+ ../Math/polar.h ../Math/../types.h ../Time/fg_timer.h \
  ../Weather/weather.h
 mesh2GL.o: mesh2GL.c ../constants.h ../Scenery/mesh.h \
- ../Scenery/scenery.h ../Math/fg_random.h ../Math/mat3.h \
- ../Math/polar.h ../Math/../types.h
+ ../Scenery/scenery.h ../Math/fg_geodesy.h ../Math/fg_random.h \
+ ../Math/mat3.h ../Math/polar.h ../Math/../types.h

@@ -33,6 +33,7 @@
 #include "../constants.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Math/fg_geodesy.h"
 #include "../Math/fg_random.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
@@ -40,7 +41,7 @@
 
 /* The following routine is a real hack used for testing puposes only
  * and should probably be removed. */
-void mesh_make_test_object(double lon, double lat) {
+/* void mesh_make_test_object(double lon, double lat) {
     struct fgCartesianPoint origin;
     double elev;
     double b = 0.10;
@@ -77,7 +78,7 @@ void mesh_make_test_object(double lon, double lat) {
     glVertex3d(origin.y - b, origin.z - b, elev);
     glVertex3d(origin.y, origin.z, elev+h);
     glEnd();
-}
+} */
 
 /* walk through mesh and make ogl calls */
 GLint mesh2GL(struct mesh *m) {
@@ -88,6 +89,7 @@ GLint mesh2GL(struct mesh *m) {
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
     struct fgCartesianPoint p11, p12, p21, p22;
+    double gc_lon, gc_lat, sl_radius;
 
     MAT3vec v1, v2, normal; 
     int i, j, istep, jstep, iend, jend;
@@ -99,9 +101,6 @@ GLint mesh2GL(struct mesh *m) {
      * through the DEM data set.  This value is initialized in
      * .../Scenery/scenery.c:fgSceneryInit() */
     istep = jstep = cur_scenery_params.terrain_skip ;
-
-    /* setup the batch transformation */
-    fgRotateBatchInit(-m->originx * ARCSEC_TO_RAD, -m->originy * ARCSEC_TO_RAD);
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -121,25 +120,32 @@ GLint mesh2GL(struct mesh *m) {
 	glBegin(GL_TRIANGLE_STRIP);
 
 	for ( j = 0; j < jend; j += jstep ) {
-	    p11 = fgGeodetic2Cartesian(x1*ARCSEC_TO_RAD, y1*ARCSEC_TO_RAD);
-	    /* printf("A geodetic is (%.2f, %.2f)\n", x1, y1); */
-	    /* printf("A cart is (%.8f, %.8f, %.8f)\n", p11.x, p11.y, p11.z); */
-	    p11 = fgRotateCartesianPoint(p11);
-	    /* printf("A point is (%.8f, %.8f, %.8f)\n", p11.y, p11.z, z11); */
+	    z11 = m->mesh_data[i         * m->cols + j        ];
+	    z12 = m->mesh_data[(i+istep) * m->cols + j        ];
+	    z21 = m->mesh_data[i         * m->cols + (j+jstep)];
+	    z22 = m->mesh_data[(i+istep) * m->cols + (j+jstep)];
 
-	    p12 = fgGeodetic2Cartesian(x1*ARCSEC_TO_RAD, y2*ARCSEC_TO_RAD);
-	    p12 = fgRotateCartesianPoint(p12);
+	    /* printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
+	       x1, y1, z11); */
+	    gc_lon = x1*ARCSEC_TO_RAD;
+	    fgGeodToGeoc(y1*ARCSEC_TO_RAD, z11, &sl_radius, &gc_lat);
+	    /* printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
+	       gc_lat, sl_radius+z11); */
+	    p11 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z11);
+	    /* printf("A cart point is (%.8f, %.8f, %.8f)\n", 
+	       p11.x, p11.y, p11.z); */
 
-	    p21 = fgGeodetic2Cartesian(x2*ARCSEC_TO_RAD, y1*ARCSEC_TO_RAD);
-	    p21 = fgRotateCartesianPoint(p21);
+	    gc_lon = x1*ARCSEC_TO_RAD;
+	    fgGeodToGeoc(y2*ARCSEC_TO_RAD, z12, &sl_radius, &gc_lat);
+	    p12 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z12);
 
-	    p22 = fgGeodetic2Cartesian(x2*ARCSEC_TO_RAD, y2*ARCSEC_TO_RAD);
-	    p22 = fgRotateCartesianPoint(p22);
+	    gc_lon = x2*ARCSEC_TO_RAD;
+	    fgGeodToGeoc(y1*ARCSEC_TO_RAD, z21, &sl_radius, &gc_lat);
+	    p21 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z21);
 
-	    z11 = 0.001 * m->mesh_data[i         * m->cols + j        ];
-	    z12 = 0.001 * m->mesh_data[(i+istep) * m->cols + j        ];
-	    z21 = 0.001 * m->mesh_data[i         * m->cols + (j+jstep)];
-	    z22 = 0.001 * m->mesh_data[(i+istep) * m->cols + (j+jstep)];
+	    gc_lon = x2*ARCSEC_TO_RAD;
+	    fgGeodToGeoc(y2*ARCSEC_TO_RAD, z22, &sl_radius, &gc_lat);
+	    p22 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z22);
 
 	    v1[0] = p22.y - p11.y; v1[1] = p22.z - p11.z; v1[2] = z22 - z11;
 	    v2[0] = p12.y - p11.y; v2[1] = p12.z - p11.z; v2[2] = z12 - z11;
@@ -151,11 +157,11 @@ GLint mesh2GL(struct mesh *m) {
 	    
 	    if ( j == 0 ) {
 		/* first time through */
-		glVertex3d(p12.y, p12.z, z12);
-		glVertex3d(p11.y, p11.z, z11);
+		glVertex3d(p12.x, p12.y, p12.z);
+		glVertex3d(p11.x, p11.y, p11.z);
 	    }
 	    
-	    glVertex3d(p22.y, p22.z, z22);
+	    glVertex3d(p22.x, p22.y, p22.z);
     
 	    v2[0] = p21.y - p11.y; v2[1] = p21.z - p11.z; v2[2] = z21 - z11;
 	    MAT3cross_product(normal, v2, v1);
@@ -164,7 +170,7 @@ GLint mesh2GL(struct mesh *m) {
 	    /* printf("normal 2 = (%.2f %.2f %.2f\n", normal[0], normal[1], 
 		   normal[2]); */
 
-	    glVertex3d(p21.y, p21.z, z21);
+	    glVertex3d(p21.x, p21.y, p21.z);
 
 	    x1 += m->row_step * jstep;
 	    x2 += m->row_step * jstep;
@@ -181,7 +187,7 @@ GLint mesh2GL(struct mesh *m) {
 	randx = fg_random() * 3600.0;
 	randy = fg_random() * 3600.0;
 
-	mesh_make_test_object(m->originx + randx, m->originy + randy);
+	/* mesh_make_test_object(m->originx + randx, m->originy + randy); */
     }
 
     glEndList();
@@ -192,9 +198,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.40  1997/07/30 16:12:43  curt
-/* Moved fg_random routines from Util/ to Math/
+/* Revision 1.41  1997/07/31 22:52:40  curt
+/* Working on redoing internal coordinate systems & scenery transformations.
 /*
+ * Revision 1.40  1997/07/30 16:12:43  curt
+ * Moved fg_random routines from Util/ to Math/
+ *
  * Revision 1.39  1997/07/21 21:20:48  curt
  * Twiddled with random object placement.
  *

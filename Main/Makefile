@@ -32,7 +32,7 @@ AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../Math/libMath.a \
 	../Scenery/libScenery.a \
-	../Timer/libTimer.a ../Weather/libWeather.a
+	../Time/libTime.a ../Weather/libWeather.a
 
 
 include ../make.inc
@@ -76,6 +76,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.27  1997/07/31 22:52:39  curt
+# Working on redoing internal coordinate systems & scenery transformations.
+#
 # Revision 1.26  1997/07/30 16:12:42  curt
 # Moved fg_random routines from Util/ to Math/
 #

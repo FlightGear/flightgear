@@ -28,7 +28,7 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Controls Flight Math Scenery Timer Weather
+SUBDIRS = Aircraft Controls Flight Math Scenery Time Weather
 MAIN = OpenGL
 
 
@@ -71,6 +71,9 @@ zip: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.22  1997/07/31 22:52:21  curt
+# Working on redoing internal coordinate systems & scenery transformations.
+#
 # Revision 1.21  1997/07/30 16:12:38  curt
 # Moved fg_random routines from Util/ to Math/
 #

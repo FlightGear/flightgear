@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = libTimer.a
+TARGET = libTime.a
 
 CFILES = fg_timer.c
 HFILES = fg_timer.h
@@ -63,6 +63,9 @@ fg_timer.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1997/07/31 22:52:40  curt
+# Working on redoing internal coordinate systems & scenery transformations.
+#
 # Revision 1.9  1997/07/20 02:19:12  curt
 # First stab at a system to generate os2 makefiles automatically.
 #
