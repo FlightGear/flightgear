@@ -7,4 +7,8 @@ libObjects_a_SOURCES = \
 	obj.cxx obj.hxx \
 	texload.c texload.h colours.h
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

@@ -8,4 +8,8 @@ libScenery_a_SOURCES = \
 	tileentry.cxx tileentry.hxx \
 	tilemgr.cxx tilemgr.hxx
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

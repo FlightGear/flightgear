@@ -51,4 +51,8 @@ libUIUCModel_a_SOURCES = \
                         uiuc_warnings_errors.cpp uiuc_warnings_errors.h \
                         uiuc_wrapper.cpp uiuc_wrapper.h
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

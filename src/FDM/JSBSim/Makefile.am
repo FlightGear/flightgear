@@ -67,6 +67,11 @@ testJSBsim_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
 
 # demo_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
 
-INCLUDES += -I$(top_srcdir)/src
-
+if OLD_AUTOMAKE
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
 DEFS += -DFGFS
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+AM_CXXFLAGS = -DFGFS
+endif
+

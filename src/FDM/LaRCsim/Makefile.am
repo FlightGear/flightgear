@@ -32,4 +32,8 @@ libLaRCsim_a_SOURCES = \
 	$(AIRCRAFT_MODEL) \
 	ls_interface.c ls_interface.h
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

@@ -17,4 +17,8 @@ libNetwork_a_SOURCES = \
 	ray.cxx ray.hxx \
 	rul.cxx rul.hxx
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

@@ -6,4 +6,8 @@ libYASim_a_SOURCES = YASim.cxx Airplane.cpp Atmosphere.cpp ControlMap.cpp \
                      PropEngine.cpp RigidBody.cpp Surface.cpp             \
                      Thruster.cpp Wing.cpp SimpleJet.cpp
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

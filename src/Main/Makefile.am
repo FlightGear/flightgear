@@ -25,7 +25,7 @@ else
 THREAD_LIBS =
 endif
 
-if OLD_AUTOMAKE
+if ANCIENT_AUTOMAKE
 # nothing CXXFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
 else
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
@@ -86,4 +86,10 @@ fgfs_LDADD = \
 	$(opengl_LIBS) \
 	$(audio_LIBS)
 
+fgfs_CFLAGS = -DTHIS_IS_A_TEST
+
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

@@ -16,4 +16,8 @@ libGUI_a_SOURCES = \
 	sgVec3Slider.cxx sgVec3Slider.hxx \
 	trackball.c trackball.h
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif

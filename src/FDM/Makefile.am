@@ -19,4 +19,8 @@ bin_PROGRAMS = pstest
 
 pstest_SOURCES = ps-10520c.cxx
 
+if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
+else
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+endif
