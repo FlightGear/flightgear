@@ -37,8 +37,58 @@
 #define FG_MAX(A,B)	((A) > (B) ? (A) :  (B))
 
 
+fgFACE :: fgFACE () : 
+    n1(0), n2(0), n3(0)
+{
+}
+
+fgFACE :: ~fgFACE()
+{
+}
+
+fgFACE :: fgFACE( const fgFACE & image ) :
+    n1( image.n1), n2( image.n2), n3( image.n3)
+{
+}
+
+bool fgFACE :: operator < (const fgFACE & rhs )
+{
+    return ( n1 < rhs.n1 ? true : false);
+}
+
+bool fgFACE :: operator == (const fgFACE & rhs )
+{
+    return ((n1 == rhs.n1) && (n2 == rhs.n2) && ( n3 == rhs.n3));
+}
+
+
 // Constructor
 fgFRAGMENT::fgFRAGMENT ( void ) {
+}
+
+
+// Copy constructor
+fgFRAGMENT ::   fgFRAGMENT ( const fgFRAGMENT & rhs ) :
+    center         ( rhs.center          ),
+    bounding_radius( rhs.bounding_radius ),
+    material_ptr   ( rhs.material_ptr    ),
+    tile_ptr       ( rhs.tile_ptr        ),
+    display_list   ( rhs.display_list    ),
+    faces          ( rhs.faces           )
+{
+}
+
+fgFRAGMENT & fgFRAGMENT :: operator = ( const fgFRAGMENT & rhs )
+{
+    if(!(this == &rhs )) {
+	center          = rhs.center;
+	bounding_radius = rhs.bounding_radius;
+	material_ptr    = rhs.material_ptr;
+	tile_ptr        = rhs.tile_ptr;
+	// display_list    = rhs.display_list;
+	faces           = rhs.faces;
+    }
+    return *this;
 }
 
 
@@ -115,6 +165,7 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
     fgFACE face;
     MAT3vec v1, v2, n, center;
     double p1[3], p2[3], p3[3];
+    double x, y, z;  // temporary holding spot for result
     double a, b, c, d;
     double x0, y0, z0, x1, y1, z1, a1, b1, c1;
     double t1, t2, t3;
@@ -191,12 +242,11 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	// printf("a = %.2f  t1 = %.2f  t2 = %.2f\n", a, t1, t2);
 
 	if ( fabs(a + t1 + t2) > FG_EPSILON ) {
-	    result->x = (t1*x0 - b*y0 + t2*x0 - c*z0 + d) / (a + t1 + t2);
-	    t3 = a1 * (result->x - x0);
-	    result->y = b1 * t3 + y0;
-	    result->z = c1 * t3 + z0;	    
-	    // printf("result(d) = %.2f\n", 
-	    //        a * result->x + b * result->y + c * result->z);
+	    x = (t1*x0 - b*y0 + t2*x0 - c*z0 + d) / (a + t1 + t2);
+	    t3 = a1 * (x - x0);
+	    y = b1 * t3 + y0;
+	    z = c1 * t3 + z0;	    
+	    // printf("result(d) = %.2f\n", a * x + b * y + c * z);
 	} else {
 	    // no intersection point
 	    continue;
@@ -205,16 +255,17 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	if ( side_flag ) {
 	    // check to see if end0 and end1 are on opposite sides of
 	    // plane
-	    if ( (result->x - x0) > FG_EPSILON ) {
-		t1 = result->x; t2 = x0; t3 = x1;
-	    } else if ( (result->y - y0) > FG_EPSILON ) {
-		t1 = result->y; t2 = y0; t3 = y1;
-	    } else if ( (result->z - z0) > FG_EPSILON ) {
-		t1 = result->z; t2 = z0; t3 = z1;
+	    if ( (x - x0) > FG_EPSILON ) {
+		t1 = x; t2 = x0; t3 = x1;
+	    } else if ( (y - y0) > FG_EPSILON ) {
+		t1 = y; t2 = y0; t3 = y1;
+	    } else if ( (z - z0) > FG_EPSILON ) {
+		t1 = z; t2 = z0; t3 = z1;
 	    } else {
 		// everything is too close together to tell the difference
 		// so the current intersection point should work as good
 		// as any
+		result->x = x; result->y = y; result->z = z;
 		return(1);
 	    }
 	    side1 = FG_SIGN (t1 - t2);
@@ -236,17 +287,17 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	// printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
 	//        xmin, ymin, zmin, xmax, ymax, zmax);
 	// punt if outside bouding cube
-	if ( result->x < xmin ) {
+	if ( x < xmin ) {
 	    continue;
-	} else if ( result->x > xmax ) {
+	} else if ( x > xmax ) {
 	    continue;
-	} else if ( result->y < ymin ) {
+	} else if ( y < ymin ) {
 	    continue;
-	} else if ( result->y > ymax ) {
+	} else if ( y > ymax ) {
 	    continue;
-	} else if ( result->z < zmin ) {
+	} else if ( z < zmin ) {
 	    continue;
-	} else if ( result->z > zmax ) {
+	} else if ( z > zmax ) {
 	    continue;
 	}
 
@@ -264,22 +315,23 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	    x1 = p1[1]; y1 = p1[2];
 	    x2 = p2[1]; y2 = p2[2];
 	    x3 = p3[1]; y3 = p3[2];
-	    rx = result->y; ry = result->z;
+	    rx = y; ry = z;
 	} else if ( fabs(min_dim - dy) <= FG_EPSILON ) {
 	    // y is the smallest dimension
 	    x1 = p1[0]; y1 = p1[2];
 	    x2 = p2[0]; y2 = p2[2];
 	    x3 = p3[0]; y3 = p3[2];
-	    rx = result->x; ry = result->z;
+	    rx = x; ry = z;
 	} else if ( fabs(min_dim - dz) <= FG_EPSILON ) {
 	    // z is the smallest dimension
 	    x1 = p1[0]; y1 = p1[1];
 	    x2 = p2[0]; y2 = p2[1];
 	    x3 = p3[0]; y3 = p3[1];
-	    rx = result->x; ry = result->y;
+	    rx = x; ry = y;
 	} else {
 	    // all dimensions are really small so lets call it close
 	    // enough and return a successful match
+	    result->x = x; result->y = y; result->z = z;
 	    return(1);
 	}
 
@@ -307,8 +359,8 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	    continue;
 	}
 
-	// printf( "intersection point = %.2f %.2f %.2f\n", 
-	//         result->x, result->y, result->z);
+	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
+	result->x = x; result->y = y; result->z = z;
 	return(1);
     }
 
@@ -332,6 +384,28 @@ fgFRAGMENT::~fgFRAGMENT ( void ) {
 }
 
 
+// equality operator
+bool  fgFRAGMENT :: operator == ( const fgFRAGMENT & rhs)
+{
+    if(( center.x - rhs.center.x ) < FG_EPSILON) {
+	if(( center.y - rhs.center.y) < FG_EPSILON) {
+	    if(( center.z - rhs.center.z) < FG_EPSILON) {
+		return true;
+	    }
+	}
+    }
+    return false;
+}
+
+// comparison operator
+bool  fgFRAGMENT :: operator < ( const fgFRAGMENT &rhs)
+{
+    // This is completely arbitrary. It satisfies RW's STL implementation
+
+    return bounding_radius < rhs.bounding_radius;
+}
+
+
 // Constructor
 fgTILE::fgTILE ( void ) {
     nodes = new double[MAX_NODES][3];
@@ -345,6 +419,10 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/07/22 21:41:42  curt
+// Add basic fgFACE methods contributed by Charlie Hotchkiss.
+// intersect optimization from Norman Vine.
+//
 // Revision 1.3  1998/07/16 17:34:24  curt
 // Ground collision detection optimizations contributed by Norman Vine.
 //

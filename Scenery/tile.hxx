@@ -47,22 +47,30 @@ extern "C" void *memset(void *, int, size_t);
 #endif
 
 #include <list>         // STL list
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
 
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
 #include <Math/mat3.h>
+
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 
 // Maximum nodes per tile
 #define MAX_NODES 1000
 
 
-typedef struct {
+class fgFACE {
+public:
     int n1, n2, n3;
-} fgFACE;
+
+    fgFACE();
+    ~fgFACE();
+    fgFACE( const fgFACE & image );
+    bool operator < ( const fgFACE & rhs );
+    bool operator == ( const fgFACE & rhs );
+};
 
 
 // Object fragment data class
@@ -95,9 +103,6 @@ public:
     // face list (this indexes into the master tile vertex list)
     list < fgFACE > faces;
 
-    // Constructor
-    fgFRAGMENT ( void );
-
     // Add a face to the face list
     void add_face(int n1, int n2, int n3);
 
@@ -109,8 +114,17 @@ public:
     int intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 		   fgPoint3d *result);
 
+    // Constructors
+    fgFRAGMENT ();
+    fgFRAGMENT ( const fgFRAGMENT &image );
+
     // Destructor
-    ~fgFRAGMENT ( void );
+    ~fgFRAGMENT ( );
+
+    // operators
+    fgFRAGMENT & operator = ( const fgFRAGMENT & rhs );
+    bool operator == ( const fgFRAGMENT & rhs );
+    bool operator <  ( const fgFRAGMENT & rhs );
 };
 
 
@@ -149,6 +163,10 @@ public:
 
 
 // $Log$
+// Revision 1.12  1998/07/22 21:41:42  curt
+// Add basic fgFACE methods contributed by Charlie Hotchkiss.
+// intersect optimization from Norman Vine.
+//
 // Revision 1.11  1998/07/12 03:18:28  curt
 // Added ground collision detection.  This involved:
 // - saving the entire vertex list for each tile with the tile records.
