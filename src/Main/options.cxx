@@ -186,6 +186,8 @@ fgSetDefaults ()
     fgSetString("/sim/networking/call-sign", "Johnny");
 }
 
+
+// parse a time string ([+/-]%f[:%f[:%f]]) into hours
 static double
 parse_time(const string& time_in) {
     char *time_str, num[256];
@@ -265,6 +267,7 @@ parse_time(const string& time_in) {
 }
 
 
+// parse a date string (yyyy:mm:dd:hh:mm:ss) into a time_t (seconds)
 static long int 
 parse_date( const string& date)
 {
@@ -373,7 +376,7 @@ parse_date( const string& date)
 }
 
 
-/// parse degree in the form of [+/-]hhh:mm:ss
+// parse angle in the form of [+/-]ddd:mm:ss into degrees
 static double
 parse_degree( const string& degree_str) {
     double result = parse_time( degree_str );
@@ -384,7 +387,7 @@ parse_degree( const string& degree_str) {
 }
 
 
-// parse time offset command line option
+// parse time offset string into seconds
 static int
 parse_time_offset( const string& time_str) {
     int result;
@@ -454,7 +457,7 @@ parse_channel( const string& type, const string& channel_str ) {
 }
 
 
-// Parse --wp=ID[,alt]
+// Parse --wp=ID[@alt]
 static bool 
 parse_wp( const string& arg ) {
     string id, alt_str;
@@ -586,52 +589,46 @@ parse_option (const string& arg)
 			atof(arg.substr(11)) * METER_TO_FEET);
     } else if ( arg.find( "--uBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
-				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/uBody", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/uBody",
-			       atof(arg.substr(8)) * FEET_TO_METER);
+			       atof(arg.substr(8)) * METER_TO_FEET);
     } else if ( arg.find( "--vBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
-				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/vBody", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/vBody",
-			       atof(arg.substr(8)) * FEET_TO_METER);
+			       atof(arg.substr(8)) * METER_TO_FEET);
     } else if ( arg.find( "--wBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
-				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/wBody", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/wBody",
-			       atof(arg.substr(8)) * FEET_TO_METER);
+			       atof(arg.substr(8)) * METER_TO_FEET);
     } else if ( arg.find( "--vNorth=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
-				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
-	  fgSetDouble("/velocities/speed-north", atof(arg.substr(8)));
+	  fgSetDouble("/velocities/speed-north", atof(arg.substr(9)));
 	else
 	  fgSetDouble("/velocities/speed-north",
-			       atof(arg.substr(8)) * FEET_TO_METER);
+			       atof(arg.substr(9)) * METER_TO_FEET);
     } else if ( arg.find( "--vEast=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
-				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/speed-east", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/speed-east",
-			       atof(arg.substr(8)) * FEET_TO_METER);
+			       atof(arg.substr(8)) * METER_TO_FEET);
     } else if ( arg.find( "--vDown=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
-				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/speed-down", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/speed-down",
-			       atof(arg.substr(8)) * FEET_TO_METER);
+			       atof(arg.substr(8)) * METER_TO_FEET);
     } else if ( arg.find( "--vc=" ) == 0) {
         fgSetString("/sim/startup/speed-set", "knots");
 	fgSetDouble("/velocities/airspeed", atof(arg.substr(5)));

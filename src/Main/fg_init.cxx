@@ -380,12 +380,15 @@ bool fgInitPosition( void ) {
 
     // if we requested on ground startups
     if ( fgGetBool( "/sim/startup/onground" ) ) {
-	fgSetDouble("/position/altitude", scenery.cur_elev + 1 );
+        fgSetDouble( "/position/altitude", (scenery.cur_elev + 1)
+		     * METERS_TO_FEET );
     }
 
     // if requested altitude is below ground level
-    if ( scenery.cur_elev > fgGetDouble("/position/altitude") - 1) {
-	fgSetDouble("/position/altitude", scenery.cur_elev + 1 );
+    if ( scenery.cur_elev >
+	 fgGetDouble("/position/altitude") * METERS_TO_FEET - 1) {
+	fgSetDouble("/position/altitude",
+		    (scenery.cur_elev + 1) * METERS_TO_FEET );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,
