@@ -660,10 +660,12 @@ do_dialog_apply (const SGPropertyNode * arg)
     FGDialog * widget = gui->getCurrentWidget();
     if (widget != 0) {
         if (arg->hasValue("object-name")) {
-            gui->getCurrentWidget()
-                ->applyValue(arg->getStringValue("object-name"));
+            const char * name = arg->getStringValue("object-name");
+            gui->getCurrentWidget()->applyValue(name);
+            gui->getCurrentWidget()->updateValue(name);
         } else {
             gui->getCurrentWidget()->applyValues();
+            gui->getCurrentWidget()->updateValues();
         }
         return true;
     } else {
