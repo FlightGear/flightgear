@@ -120,7 +120,12 @@ static void global2raw( FGRawCtrls *raw ) {
     raw->master_alt = node->getChild("master-alt")->getBoolValue();
     raw->master_avionics = node->getChild("master-avionics")->getBoolValue();
 
-    raw->hground = fgGetDouble( "/environment/ground-elevation-m" );
+    // cur_fdm_state->get_ground_elev_ft() is what we want ... this
+    // reports the altitude of the aircraft.
+    // "/environment/ground-elevation-m" reports the ground elevation
+    // of the current view point which could change substantially if
+    // the user is switching views.
+    raw->hground = cur_fdm_state->get_ground_elev_ft() * SG_FEET_TO_METER;
     raw->magvar = fgGetDouble("/environment/magnetic-variation-deg");
     raw->speedup = fgGetInt("/sim/speed-up");
 
