@@ -1168,7 +1168,7 @@ void fgUpdateHUD( void ) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
 
-// #define ANTI_ALIAS_HUD
+  // #define ANTI_ALIAS_HUD
 #ifdef ANTI_ALIAS_HUD
 #define HUD_COLOR(r,g,b)  glColor4f(r,g,b,hud_trans_alpha)
   glEnable(GL_LINE_SMOOTH);

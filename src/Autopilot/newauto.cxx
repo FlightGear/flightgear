@@ -303,14 +303,11 @@ int FGAutopilot::run() {
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
 	    double tgt_radial;
 	    double cur_radial;
-	    if ( current_radiostack->get_nav1_loc() ) {
-		tgt_radial = current_radiostack->get_nav1_radial() + 180.0;
-	    } else {
-		tgt_radial = current_radiostack->get_nav1_radial();
-	    }
+	    tgt_radial = current_radiostack->get_nav1_radial() 
+		+ FGBFI::getMagVar();
 	    cur_radial = current_radiostack->get_nav1_heading();
-	    cout << "target rad = " << tgt_radial 
-	         << "  current rad = " << cur_radial
+	    cout << "target rad (true) = " << tgt_radial 
+	         << "  current rad (true) = " << cur_radial
 	         << endl;
 
 	    double diff = (tgt_radial - cur_radial);
@@ -324,7 +321,7 @@ int FGAutopilot::run() {
 	    TargetHeading = cur_radial - diff;
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
-	    cout << "target course = " << TargetHeading << endl;
+	    cout << "target course (true) = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	    // update target heading to waypoint
 

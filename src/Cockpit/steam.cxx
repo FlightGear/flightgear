@@ -315,7 +315,7 @@ void FGSteam::_CatchUp()
 > have it tumble when you exceed the usual pitch or bank limits,
 > put in those insidious turning errors ... for now anyway.
 */
-	the_DG_deg = FGBFI::getHeading () - FGBFI::getMagVar ();
+	the_DG_deg = FGBFI::getHeading () - FGBFI::getMagVar();
 
 	/**************************
 	Finished updates, now clear the timer 
@@ -338,7 +338,7 @@ double FGSteam::get_HackGS_deg () {
 	double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
 	    * FEET_TO_METER;
 	double angle = atan2( y, x ) * RAD_TO_DEG;
-	return current_radiostack->get_nav1_target_gs() - angle;
+	return (current_radiostack->get_nav1_target_gs() - angle) * 5.0;
     } else {
 	return 0.0;
     }
@@ -349,8 +349,8 @@ double FGSteam::get_HackVOR1_deg () {
     double r;
 
     if ( current_radiostack->get_nav1_inrange() ) {
-	r = current_radiostack->get_nav1_heading() - 
-	    current_radiostack->get_nav1_radial();
+	r = current_radiostack->get_nav1_heading() - FGBFI::getMagVar()
+	    - current_radiostack->get_nav1_radial();
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	//      << "  Bearing = " << current_radiostack->get_nav1_heading()
 	//      << endl;
@@ -359,7 +359,7 @@ double FGSteam::get_HackVOR1_deg () {
 	    if (r<-180.0) r+=360.0;
 	if ( fabs(r) > 90.0 )
 	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	if ( current_radiostack->get_nav1_loc() ) r *= -5.0;
+	if ( current_radiostack->get_nav1_loc() ) r *= 5.0;
     } else {
 	r = 0.0;
     }
@@ -372,8 +372,8 @@ double FGSteam::get_HackVOR2_deg () {
     double r;
 
     if ( current_radiostack->get_nav2_inrange() ) {
-	r = current_radiostack->get_nav2_radial() -
-	    current_radiostack->get_nav2_heading() + 180.0;
+	r = current_radiostack->get_nav2_heading() - FGBFI::getMagVar()
+	    - current_radiostack->get_nav2_radial();
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	// << "  Bearing = " << current_radiostack->get_nav1_heading() << endl;
     
@@ -403,7 +403,7 @@ double FGSteam::get_HackADF_deg () {
     double r;
 
     if ( current_radiostack->get_adf_inrange() ) {
-	r = current_radiostack->get_adf_heading() - FGBFI::getHeading() + 180.0;
+	r = current_radiostack->get_adf_heading() - FGBFI::getHeading();
 
 	// cout << "Radial = " << current_radiostack->get_adf_heading() 
 	//      << "  Heading = " << FGBFI::getHeading() << endl;

@@ -402,6 +402,9 @@ void FGTime::update( double lon, double lat, double alt_m ) {
     magdip = atan(field[5]/sqrt(field[3]*field[3]+field[4]*field[4]));
 
     FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Current magvar = " << magvar );
+
+    FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current lon=0.00 Sidereal Time = " << gst );
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current LOCAL Sidereal Time = " << lst << " (" 
