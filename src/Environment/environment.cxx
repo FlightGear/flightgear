@@ -48,7 +48,7 @@ FGEnvironment::FGEnvironment()
     visibility_m(32000),
     temperature_sea_level_degc(20),
     pressure_sea_level_inhg(28),
-    density_sea_level_slugft3(0.0024),
+    density_sea_level_slugft3(0.00237),
     wind_from_heading_deg(0),
     wind_speed_kt(0),
     wind_from_north_fps(0),
@@ -258,7 +258,8 @@ FGEnvironment::set_elevation_ft (double e)
 
 // Copied from YASim Atmosphere.cxx, with m converted to ft, degK
 // converted to degC, Pa converted to inHG, and kg/m^3 converted to
-// slug/ft^3.
+// slug/ft^3; they were then converted to deltas from the sea-level
+// defaults (approx. 15degC, 29.92inHG, and 0.00237slugs/ft^3).
 
 // Original comment from YASim:
 
@@ -268,7 +269,8 @@ FGEnvironment::set_elevation_ft (double e)
 // R=287.  I chose to correct the temperature to 288.20, since 79F is
 // pretty hot for a "standard" atmosphere.
 
-// Elevation (ft), temperature (degC), pressure (inHG), density (slug/ft^3)
+// Elevation (ft), delta temperature (degC), delta pressure (inHG),
+// delta density (slug/ft^3)
 static double atmosphere_data[][4] = {
   0, 0.00, 0.000, 0.000000,
   2952, -5.89, -3.058, -0.000198,
