@@ -98,10 +98,11 @@ public:
   void operator<<(FGConfigFile&);
   FGTable& operator<<(const double n);
   FGTable& operator<<(const int n);
-//  FGTable& operator<<(const double n);
   inline double GetElement(int r, int c) {return Data[r][c];}
   void Print(void);
-  
+  template <class T> T Clamp(T lower, T value, T upper)
+    {return value < lower ? lower : (value > upper ? upper : value);}
+
 private:
   enum type {tt1D, tt2D} Type;
   double** Data;

@@ -117,7 +117,7 @@ void FGOutput::SetType(string type)
     Type = otSocket;
   } else if (type == "TERMINAL") {
     Type = otTerminal;
-  } else if (type != string("NONE")){
+  } else if (type != string("NONE")) {
     Type = otUnknown;
     cerr << "Unknown type of output specified in config file" << endl;
   }

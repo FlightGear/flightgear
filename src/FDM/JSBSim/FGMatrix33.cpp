@@ -328,7 +328,7 @@ FGMatrix33 FGMatrix33::operator/(const double scalar)
 {
   FGMatrix33 Quot;
   
-  if( scalar != 0 ) {
+  if ( scalar != 0 ) {
 	  double tmp = 1.0/scalar;
     Quot(1,1) = data[1][1] * tmp;
     Quot(1,2) = data[1][2] * tmp;
@@ -351,7 +351,7 @@ FGMatrix33 FGMatrix33::operator/(const double scalar)
 
 void FGMatrix33::operator/=(const double scalar)
 {
-  if( scalar != 0 ) {
+  if ( scalar != 0 ) {
     double tmp = 1.0/scalar;
     data[1][1] *= tmp;
     data[1][2] *= tmp;

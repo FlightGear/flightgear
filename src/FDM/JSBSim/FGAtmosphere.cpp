@@ -175,13 +175,13 @@ void FGAtmosphere::Calculate(double altitude)
        i = lastIndex-1;
        while (htab[i] > altitude) i--;
     }   
-  } else if (altitude > htab[lastIndex+1]){
-    if (altitude >= htab[7]){
+  } else if (altitude > htab[lastIndex+1]) {
+    if (altitude >= htab[7]) {
       i = 7;
       altitude = htab[7];
     } else {
       i = lastIndex+1;
-      while(htab[i+1] < altitude) i++;
+      while (htab[i+1] < altitude) i++;
     }  
   } 
 

@@ -95,31 +95,29 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFactorGroup: public FGCoefficient {
-  public:
-    FGFactorGroup(FGFDMExec* fdmex);
-    ~FGFactorGroup();
-    
-    bool Load(FGConfigFile *AC_cfg);
-    double TotalValue(void);
-    inline double GetValue(void) const { return totalValue; }
-    //string GetCoefficientStrings(void);
-    //string GetCoefficientValues(void);
-    inline double GetSD(void) { return SDtotal; }
-    inline double GetFactorSD(void) { return FGCoefficient::GetSD(); }
-    
-    void bind(FGPropertyManager* parent);
-    void unbind(void);
-  private:
-    FGFDMExec *FDMExec;
-    string name;
-    string description;
-    typedef vector<FGCoefficient*> CoeffArray;
-    CoeffArray sum;
-    double SDtotal;
-    double totalValue;
-    FGPropertyManager* node;
-    void Debug(int from);
+class FGFactorGroup: public FGCoefficient
+{
+public:
+  FGFactorGroup(FGFDMExec* fdmex);
+  ~FGFactorGroup();
+  
+  bool Load(FGConfigFile *AC_cfg);
+  double TotalValue(void);
+  inline double GetValue(void) const { return totalValue; }
+  //string GetCoefficientStrings(void);
+  //string GetCoefficientValues(void);
+  inline double GetSD(void) { return SDtotal; }
+  inline double GetFactorSD(void) { return FGCoefficient::GetSD(); }
+  
+  void bind(FGPropertyManager* parent);
+  void unbind(void);
+
+private:
+  typedef vector<FGCoefficient*> CoeffArray;
+  CoeffArray sum;
+  double SDtotal;
+  double totalValue;
+  void Debug(int from);
 };
     
 #endif 

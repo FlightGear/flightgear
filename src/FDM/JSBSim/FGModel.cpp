@@ -91,7 +91,6 @@ FGModel::FGModel(FGFDMExec* fdmex)
   //must be brought up now.
   PropertyManager = FDMExec->GetPropertyManager();
   
-  
   exe_ctr     = 1;
 
   if (debug_lvl & 2) cout << "              FGModel Base Class" << endl;

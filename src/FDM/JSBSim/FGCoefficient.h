@@ -131,13 +131,17 @@ public:
   virtual void bind(FGPropertyManager *parent);
   virtual void unbind(void);
 
+protected:
+  FGFDMExec* FDMExec;
+  string description;
+  string name;
+  FGPropertyManager *node;
+
 private:
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
 
   int numInstances;
   string filename;
-  string description;
-  string name;
   string method;
   string multparms;
   string multparmsRow;
@@ -149,7 +153,6 @@ private:
   double totalValue;
   double bias,gain;
   FGPropertyManager *LookupR, *LookupC;
-  FGPropertyManager *node;
   
   MultVec multipliers;
   int rows, columns;
@@ -157,7 +160,6 @@ private:
   double SD; // Actual stability derivative (or other coefficient) value
   FGTable *Table;
 
-  FGFDMExec*      FDMExec;
   FGState*        State;
   FGAtmosphere*   Atmosphere;
   FGFCS*          FCS;

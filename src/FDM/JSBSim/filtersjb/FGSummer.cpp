@@ -110,7 +110,7 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
 FGSummer::~FGSummer()
 {
   unsigned i;
-  for(i=0;i<Inputs.size();i++) {
+  for (i=0;i<Inputs.size();i++) {
     delete Inputs[i];
   }  
   Debug(1);

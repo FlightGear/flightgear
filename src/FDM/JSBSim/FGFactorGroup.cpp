@@ -121,7 +121,6 @@ double FGFactorGroup::TotalValue(void)
      totalValue += sum[i]->TotalValue();
      SDtotal += sum[i]->GetSD();
   }
-  //cout << totalValue << "  " << FGCoefficient::TotalValue() << endl;
   totalValue *= FGCoefficient::TotalValue();
   SDtotal *= FGCoefficient::GetSD();
   Debug(2);
@@ -130,13 +129,10 @@ double FGFactorGroup::TotalValue(void)
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-void FGFactorGroup::bind(FGPropertyManager* parent) {
-  
-  cout << "In FGFactorGroup::bind" << endl;
-  cout << parent->getName() << endl;
+void FGFactorGroup::bind(FGPropertyManager* parent)
+{
   unsigned i;
   node=parent->GetNode(name,true);
-  cout << node->getName() << endl;
   node->SetString("description",description);
   FGCoefficient::bind(node);
   for (i=0; i < sum.size(); i++) { 
@@ -148,7 +144,8 @@ void FGFactorGroup::bind(FGPropertyManager* parent) {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
   
-void FGFactorGroup::unbind(void) {
+void FGFactorGroup::unbind(void)
+{
   unsigned i;
   
   FGCoefficient::unbind();

@@ -136,7 +136,7 @@ private:
   string   LineComment;
   bool     CommentsOn;
   bool     Opened;
-  unsigned int      CurrentIndex;
+  unsigned int CurrentIndex;
   void Debug(int from);
 };
 
