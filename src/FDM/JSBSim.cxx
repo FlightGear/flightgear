@@ -317,9 +317,11 @@ bool FGJSBsim::copy_to_JSBsim() {
     // copy control positions into the JSBsim structure
 
     FCS->SetDaCmd( globals->get_controls()->get_aileron());
+    FCS->SetRollTrimCmd(globals->get_controls()->get_aileron_trim());
     FCS->SetDeCmd( globals->get_controls()->get_elevator());
     FCS->SetPitchTrimCmd(globals->get_controls()->get_elevator_trim());
     FCS->SetDrCmd( -globals->get_controls()->get_rudder());
+    FCS->SetYawTrimCmd(globals->get_controls()->get_rudder_trim());
     FCS->SetDfCmd(  globals->get_controls()->get_flaps() );
     FCS->SetDsbCmd( 0.0 ); //speedbrakes
     FCS->SetDspCmd( 0.0 ); //spoilers

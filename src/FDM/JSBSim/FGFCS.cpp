@@ -67,7 +67,8 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGFCS";
 
-  DaCmd = DeCmd = DrCmd = DfCmd = DsbCmd = DspCmd = PTrimCmd = 0.0;
+  DaCmd = DeCmd = DrCmd = DfCmd = DsbCmd = DspCmd = 0.0;
+  PTrimCmd = YTrimCmd = RTrimCmd = 0.0;
   DaPos = DePos = DrPos = DfPos = DsbPos = DspPos = 0.0;
   GearCmd = GearPos = 1; // default to gear down
   LeftBrake = RightBrake = CenterBrake = 0.0;

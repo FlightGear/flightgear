@@ -140,6 +140,8 @@ FGState::FGState(FGFDMExec* fdex)
   RegisterVariable(FG_ACTIVE_ENGINE,  " active_engine "  );
   RegisterVariable(FG_HOVERB,         " height/span "    );
   RegisterVariable(FG_PITCH_TRIM_CMD, " pitch_trim_cmd " );
+  RegisterVariable(FG_YAW_TRIM_CMD,   " yaw_trim_cmd " );
+  RegisterVariable(FG_ROLL_TRIM_CMD,  " roll_trim_cmd " );
   RegisterVariable(FG_LEFT_BRAKE_CMD, " left_brake_cmd " );
   RegisterVariable(FG_RIGHT_BRAKE_CMD," right_brake_cmd ");
   RegisterVariable(FG_CENTER_BRAKE_CMD," center_brake_cmd ");
@@ -292,6 +294,10 @@ double FGState::GetParameter(eParam val_idx) {
     return Position->GetHOverBMAC();
   case FG_PITCH_TRIM_CMD:
     return FCS->GetPitchTrimCmd();
+  case FG_YAW_TRIM_CMD:
+    return FCS->GetYawTrimCmd();
+  case FG_ROLL_TRIM_CMD:
+    return FCS->GetRollTrimCmd();
   case FG_GEAR_CMD:
     return FCS->GetGearCmd();
   case FG_GEAR_POS:
