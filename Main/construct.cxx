@@ -37,13 +37,10 @@
 // fitted nodes
 int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
     fitnode_list result;
-    char tile_name[256];
     string base = b.gen_base_path();
-    long int b_index = b.gen_index();
-    sprintf(tile_name, "%ld", b_index);
 
     string dem_path = work_base + ".dem" + "/Scenery/" + base 
-	+ "/" + tile_name + ".dem";
+	+ "/" + b.gen_index_str() + ".dem";
     cout << "dem_path = " << dem_path << endl;
 
     if ( ! array.open(dem_path) ) {
@@ -61,11 +58,8 @@ int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
 // do actual scan of directory and loading of files
 int actual_load_polys( const string& dir, FGBucket& b, FGClipper& clipper ) {
     int counter = 0;
-    char tile_char[256];
     string base = b.gen_base_path();
-    long int b_index = b.gen_index();
-    sprintf(tile_char, "%ld", b_index);
-    string tile_str = tile_char;
+    string tile_str = b.gen_index_str();
     string ext;
 
     DIR *d;
@@ -157,9 +151,9 @@ void do_triangulate( const FGArray& array, const FGClipper& clipper,
 
 
 // generate the flight gear scenery file
-void do_output( const FGTriangle& t, FGGenOutput& output ) {
+void do_output( const FGBucket &b, const FGTriangle& t, FGGenOutput& output ) {
     output.build( t );
-    output.write( "output" );
+    output.write( b, "output" );
 }
 
 
@@ -196,11 +190,15 @@ main(int argc, char **argv) {
 
     // generate the output
     FGGenOutput output;
-    do_output( t, output );
+    do_output( b, t, output );
 }
 
 
 // $Log$
+// Revision 1.9  1999/03/25 19:04:31  curt
+// Preparations for outputing scenery file to correct location.
+// Minor tweaks related to FGBucket usage.
+//
 // Revision 1.8  1999/03/23 22:02:17  curt
 // Worked on creating data to output ... normals, bounding spheres, etc.
 //
