@@ -617,6 +617,7 @@ bool FGATCInput::do_switches() {
             float factor = 1.0;
             int filter = -1;
             float scaled_value = 0.0f;
+	    bool invert = false;
 
             // get common options
 
@@ -640,6 +641,10 @@ bool FGATCInput::do_switches() {
             if ( prop != NULL ) {
                 factor = prop->getFloatValue();
             }
+            prop = child->getChild( "invert" );
+            if ( prop != NULL ) {
+                invert = prop->getBoolValue();
+            }
             prop = child->getChild( "steady-state-filter" );
             if ( prop != NULL ) {
                 filter = prop->getIntValue();
@@ -659,6 +664,11 @@ bool FGATCInput::do_switches() {
 
                 // Fetch the raw value
                 int raw_value = switch_matrix[board][row][col];
+
+		// Invert
+		if ( invert ) {
+		    raw_value = !raw_value;
+		}
 
                 // Cook the value
                 scaled_value = (float)raw_value * factor;
@@ -699,6 +709,42 @@ bool FGATCInput::do_switches() {
 
                 // Cook the value
                 scaled_value *= factor;
+            } else if ( cname == "additive-switch" ) {
+                float additive_value = 0.0f;
+		float increment = 0.0f;
+
+                SGPropertyNode *pos;
+                int k = 0;
+                while ( (pos = child->getChild("position", k++)) != NULL ) {
+                    // read the combo position entries from the property tree
+
+                    prop = pos->getChild( "row" );
+                    if ( prop != NULL ) {
+                        row = prop->getIntValue();
+                    }
+                    prop = pos->getChild( "col" );
+                    if ( prop != NULL ) {
+                        col = prop->getIntValue();
+                    }
+                    prop = pos->getChild( "value" );
+                    if ( prop != NULL ) {
+                        increment = prop->getFloatValue();
+                    }
+
+                    // Fetch the raw value
+                    int raw_value = switch_matrix[board][row][col];
+                    // cout << "sm[" << board << "][" << row << "][" << col
+                    //      << "] = " << raw_value << endl;
+
+                    if ( raw_value ) {
+                        // set scaled_value to the first combo_value
+                        // that matches and jump out of loop.
+                        additive_value += increment;
+                    }
+                }
+
+                // Cook the value
+                scaled_value = additive_value * factor;
             }
 
             // handle filter request.  The value of the switch must be
