@@ -77,16 +77,34 @@ static const char * buttonNames[] = {
 
 
 /**
+ * trim capture
+ */
+struct trimcapture {
+    float tolerance;
+    bool captured;
+    string name;
+    SGValue* value;
+};   
+
+
+/**
  * Settings for a single axis.
  */
 struct axis {
-    axis () : value(0), offset(0.0), factor(1.0),
-	last_value(9999999), tolerance(0.002) {}
+    axis () :
+	value(0),
+	offset(0.0),
+	factor(1.0),
+	last_value(9999999),
+	tolerance(0.002),
+	capture(NULL)
+    { }
     SGValue * value;
     float offset;
     float factor;
     float last_value;
     float tolerance;
+    trimcapture* capture;
 };
 
 
@@ -135,6 +153,8 @@ struct joystick {
  * Array of joystick settings.
  */
 static joystick joysticks[MAX_JOYSTICKS];
+
+SGValue *trimmed;
 
 
 /**
@@ -277,6 +297,28 @@ fgJoystickInit()
 	    if (value != 0)
 		center[j] = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    center is " << center[j]);
+      
+            // Capture
+	    name = base;
+	    name += "/capture";
+	    value = fgGetValue(name);
+	    if ( value != 0 ) {
+	        string trimname = "/fdm/trim"
+		    + control.substr(control.rfind("/"),control.length());
+		if ( fgHasValue(trimname) ) {	
+		    a.capture = new trimcapture;
+		    a.capture->tolerance = value->getDoubleValue();
+		    a.capture->captured = false;
+	 	    a.capture->name = control;
+		    a.capture->value = fgGetValue(trimname);
+	            FG_LOG(FG_INPUT, FG_INFO, "    capture is " 
+			   << value->getDoubleValue() );
+                } else {
+		    a.capture = NULL;
+		    FG_LOG(FG_INPUT, FG_INFO, "    capture is " 	
+			   << "unsupported by FDM" );
+		}				
+	   }		 	        
 	}
 
 
@@ -357,6 +399,8 @@ fgJoystickInit()
 	delete center;
     }
 
+    trimmed = fgGetValue("/fdm/trim/trimmed");
+    
     if (seen_joystick)
 	FG_LOG(FG_INPUT, FG_INFO, "Done initializing joysticks");
     else
@@ -373,6 +417,7 @@ int
 fgJoystickRead()
 {
     int buttons;
+    float js_val, diff;
     float *axis_values = new float[MAX_AXES];
 
     for (int i = 0; i < MAX_JOYSTICKS; i++) {
@@ -392,16 +437,40 @@ fgJoystickRead()
 	    bool flag = true;
 	    axis &a = joysticks[i].axes[j];
 
+	    if ( a.capture && trimmed->getBoolValue() ) {
+	    	// if the model has been trimmed then capture the
+	        // joystick. When a trim succeeds, the above
+	        // is true for one frame only.
+		a.capture->captured = false;
+	        FG_LOG( FG_GENERAL, FG_INFO, "Successful trim, capture is " <<
+			"enabled on " << a.capture->name );
+	    } 
+
 	    // If the axis hasn't changed, don't
 	    // force the value.
 	    if (fabs(axis_values[j] - a.last_value) <= a.tolerance)
 		continue;
 	    else
 		a.last_value = axis_values[j];
-
-	    if (a.value)
-		flag = a.value->setDoubleValue((axis_values[j] + a.offset) *
-					       a.factor);
+	    
+	    if ( a.value ) {
+	        js_val = ( axis_values[j] + a.offset ) * a.factor; 
+	        
+		if ( a.capture && !a.capture->captured ) {
+		    diff = js_val - a.capture->value->getDoubleValue();
+                    FG_LOG( FG_GENERAL, FG_INFO, a.capture->name
+			    << " capture: " << diff );
+		    if ( fabs( diff ) < a.capture->tolerance ) {
+			flag = a.value->setDoubleValue( js_val );
+			a.capture->captured = true;
+			FG_LOG(FG_GENERAL,FG_INFO, a.capture->name 
+			       << " captured." );
+		    }
+		} else {
+		    flag = a.value->setDoubleValue( js_val );
+                }
+	    }
+	    	
 	    if (!flag)
 		FG_LOG(FG_INPUT, FG_ALERT, "Failed to set value for joystick "
 		       << i << ", axis " << j);
