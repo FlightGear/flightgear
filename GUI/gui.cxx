@@ -22,8 +22,14 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
+
+#include <stdlib.h>
+#include <string.h>
+
+#include <Include/general.h>
+
 #include "gui.h"
-#define USING_3DFX
+
 
 puMenuBar    *mainMenuBar;
 puButton     *hideMenuButton;
@@ -125,43 +131,53 @@ puCallback helpSubmenuCb        [] = { notCb, notCb, NULL };
 
 void guiInit()
 {
-      puInit();
-#ifdef USING_3DFX
-      puShowCursor ();
-#endif
-      // puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED );
-      puSetDefaultStyle         ( PUSTYLE_DEFAULT );
-      puSetDefaultColourScheme  (0.2, 0.4, 0.8);
-      
-      /* OK the rest is largerly put in here to mimick Steve Baker's "complex" example
-         It should change in future versions */
-      
-      timerText = new puText (300, 10);
-      timerText -> setColour (PUCOL_LABEL, 1.0, 1.0, 1.0);
+    fgGENERAL *g;
+    char *mesa_win_state;
 
-      /* Make a button to hide the menu bar */
-      hideMenuButton = new puButton       (10,10, 150, 50);
-      hideMenuButton -> setValue          (TRUE);
-      hideMenuButton -> setLegend         ("Hide Menu");
-      hideMenuButton -> setCallback       (hideMenuCb);
-      hideMenuButton -> makeReturnDefault (TRUE);
-      hideMenuButton -> hide();
+    g = &general;
 
-      // Make the menu bar
-      mainMenuBar = new puMenuBar ();
-      mainMenuBar -> add_submenu ("File", fileSubmenu, fileSubmenuCb);
-      mainMenuBar -> add_submenu ("Edit", editSubmenu, editSubmenuCb);
-      mainMenuBar -> add_submenu ("View", viewSubmenu, viewSubmenuCb);
-      mainMenuBar -> add_submenu ("Aircraft", aircraftSubmenu, aircraftSubmenuCb);
-      mainMenuBar -> add_submenu ("Environment", environmentSubmenu, environmentSubmenuCb);
-      mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
-      mainMenuBar -> add_submenu ("Help", helpSubmenu, helpSubmenuCb);
-      mainMenuBar-> close ();
+    // Initialize PUI
+    puInit();
+
+    // Determine if we need to render the cursor, or if the windowing
+    // system will do it.  First test if we are rendering with glide.
+    if ( strstr ( g->glRenderer, "Glide" ) ) {
+	// Test for the MESA_GLX_FX env variable
+	if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
+	    // test if we are fullscreen mesa/glide
+	    if ( (mesa_win_state[0] == 'f') || (mesa_win_state[0] == 'F') ) {
+		puShowCursor ();
+	    }
+	}
+    }
+
+    // puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED );
+    puSetDefaultStyle         ( PUSTYLE_DEFAULT );
+    puSetDefaultColourScheme  (0.2, 0.4, 0.8);
+      
+    /* OK the rest is largerly put in here to mimick Steve Baker's
+       "complex" example It should change in future versions */
+      
+    timerText = new puText (300, 10);
+    timerText -> setColour (PUCOL_LABEL, 1.0, 1.0, 1.0);
+
+    /* Make a button to hide the menu bar */
+    hideMenuButton = new puButton       (10,10, 150, 50);
+    hideMenuButton -> setValue          (TRUE);
+    hideMenuButton -> setLegend         ("Hide Menu");
+    hideMenuButton -> setCallback       (hideMenuCb);
+    hideMenuButton -> makeReturnDefault (TRUE);
+    hideMenuButton -> hide();
+
+    // Make the menu bar
+    mainMenuBar = new puMenuBar ();
+    mainMenuBar -> add_submenu ("File", fileSubmenu, fileSubmenuCb);
+    mainMenuBar -> add_submenu ("Edit", editSubmenu, editSubmenuCb);
+    mainMenuBar -> add_submenu ("View", viewSubmenu, viewSubmenuCb);
+    mainMenuBar -> add_submenu ("Aircraft", aircraftSubmenu, aircraftSubmenuCb);
+    mainMenuBar -> add_submenu ("Environment", environmentSubmenu, 
+				environmentSubmenuCb);
+    mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
+    mainMenuBar -> add_submenu ("Help", helpSubmenu, helpSubmenuCb);
+    mainMenuBar-> close ();
 }
-
-
-
-
-
-
-
