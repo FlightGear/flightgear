@@ -294,16 +294,15 @@ void aero( SCALAR dt, int Initialize ) {
 	  }	
   }	     	  
   
-  long_trim=0;
   if(Aft_trim) long_trim = long_trim - trim_inc;
   if(Fwd_trim) long_trim = long_trim + trim_inc;
   
 /*   printf("Long_control: %7.4f, long_trim: %7.4f,DEG_TO_RAD: %7.4f, RAD_TO_DEG: %7.4f\n",Long_control,long_trim,DEG_TO_RAD,RAD_TO_DEG);
  */  /*scale pct control to degrees deflection*/
-  if ((Long_control+long_trim) <= 0)
-  	elevator=(Long_control+long_trim)*28*DEG_TO_RAD;
+  if ((Long_control+Long_trim) <= 0)
+  	elevator=(Long_control+Long_trim)*28*DEG_TO_RAD;
   else
-  	elevator=(Long_control+long_trim)*23*DEG_TO_RAD;
+  	elevator=(Long_control+Long_trim)*23*DEG_TO_RAD;
   
   aileron  = -1*Lat_control*17.5*DEG_TO_RAD;
   rudder   = -1*Rudder_pedal*16*DEG_TO_RAD; 
