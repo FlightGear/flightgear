@@ -494,11 +494,11 @@ do_timeofday (const SGPropertyNode * arg)
     static const SGPropertyNode *cur_time_override
         = fgGetNode("/sim/time/cur-time-override", true);
 
-    SGTime *t = globals->get_time_params();
     int orig_warp = globals->get_warp();
+    SGTime *t = globals->get_time_params();
     time_t cur_time = t->get_cur_time();
-    cout << "cur_time = " << cur_time << endl;
-    cout << "orig_warp = " << orig_warp << endl;
+    // cout << "cur_time = " << cur_time << endl;
+    // cout << "orig_warp = " << orig_warp << endl;
 
     int warp = 0;
     if ( offset_type == "noon" ) {
@@ -526,7 +526,7 @@ do_timeofday (const SGPropertyNode * arg)
                                        latitude->getDoubleValue()
                                          * SGD_DEGREES_TO_RADIANS ); 
     }
-    cout << "warp = " << warp << endl;
+    // cout << "warp = " << warp << endl;
     globals->set_warp( orig_warp + warp );
 
     t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
