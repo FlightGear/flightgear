@@ -1403,19 +1403,16 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 	if ( pt_materials[i].substr(0, 3) == "RWY" ) {
             sgVec3 up;
             sgSetVec3( up, center->x(), center->y(), center->z() );
+            // returns a transform -> lod -> leaf structure
             ssgBranch *branch = gen_directional_lights( nodes, normals,
                                                         pts_v[i], pts_n[i],
                                                         pt_materials[i],
                                                         up );
-            float ranges[] = { 0, 12000 };
             // branches don't honor callbacks as far as I know so I'm
             // commenting this out to avoid a plib runtime warning.
             // branch->setCallback( SSG_CALLBACK_PREDRAW,
             //                      runway_lights_predraw );
-            ssgRangeSelector *lod = new ssgRangeSelector;
-            lod->setRanges( ranges, 2 );
-            lod->addKid( branch );
-            rwy_lights->addKid( lod );
+            rwy_lights->addKid( branch );
         } else {
             material = pt_materials[i];
             tex_index.clear();
