@@ -518,7 +518,7 @@ bool FGJSBsim::copy_from_JSBsim() {
     left_aileron_pos_pct->setDoubleValue( FCS->GetDaLPos(ofNorm) );
     right_aileron_pos_pct->setDoubleValue( -1*FCS->GetDaLPos(ofNorm) );
     rudder_pos_pct->setDoubleValue( FCS->GetDrPos(ofNorm) );
-    flap_pos_pct->setDoubleValue( FCS->GetDfPos(ofRad) );
+    flap_pos_pct->setDoubleValue( FCS->GetDfPos(ofNorm) );
 
     
     return true;
