@@ -3,6 +3,7 @@
 
 #include <Main/fg_props.hxx>
 
+#include "Math.hpp"
 #include "Jet.hpp"
 #include "SimpleJet.hpp"
 #include "Gear.hpp"
@@ -436,41 +437,43 @@ void FGFDM::setOutputProperties()
     for(i=0; i<_thrusters.size(); i++) {
 	EngRec* er = (EngRec*)_thrusters.get(i);
         Thruster* t = er->eng;
+        SGPropertyNode * node = fgGetNode("engines/engine", i, true);
 
-	sprintf(buf, "%s/fuel-flow-gph", er->prefix);
-        fgSetFloat(buf, (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
+        // Set: running, cranking, prop-thrust, max-hp, power-pct
+	node->setBoolValue("running", t->isRunning());
+	node->setBoolValue("cranking", t->isCranking());
+
+        float tmp[3];
+        t->getThrust(tmp);
+        float lbs = Math::mag3(tmp) * (KG2LBS/9.8);
+	node->setFloatValue("prop-thrust", lbs); // Deprecated name
+	node->setFloatValue("thrust-lbs", lbs);
+
+        node->setFloatValue("fuel-flow-gph",
+                            (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
 
 	if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
-
-            sprintf(buf, "%s/rpm", er->prefix);
-            fgSetFloat(buf, p->getOmega() / RPM2RAD);
-        }
-
-        if(t->getPistonEngine()) {
-            PistonEngine* p = t->getPistonEngine();
-	    
-            sprintf(buf, "%s/mp-osi", er->prefix);
-	    fgSetFloat(buf, p->getMP() * (1/INHG2PA));
-
-	    sprintf(buf, "%s/egt-degf", er->prefix);
-	    fgSetFloat(buf, p->getEGT() * K2DEGF + K2DEGFOFFSET);
+            node->setFloatValue("rpm", p->getOmega() * (1/RPM2RAD));
+            
+            if(p->getEngine()->isPistonEngine()) {
+                PistonEngine* pe = p->getEngine()->isPistonEngine();
+                node->setFloatValue("mp-osi", pe->getMP() * (1/INHG2PA));
+                node->setFloatValue("mp-inhg", pe->getMP() * (1/INHG2PA));
+                node->setFloatValue("egt-degf",
+                                    pe->getEGT() * K2DEGF + K2DEGFOFFSET);
+//             } else if(p->isTurbineEngine()) {
+//                 TurbineEngine* te = p->isTurbineEngine();
+            }
         }
 
         if(t->getJet()) {
             Jet* j = t->getJet();
-
-            sprintf(buf, "%s/n1", er->prefix);
-            fgSetFloat(buf, j->getN1());
-
-            sprintf(buf, "%s/n2", er->prefix);
-            fgSetFloat(buf, j->getN2());
-
-            sprintf(buf, "%s/epr", er->prefix);
-            fgSetFloat(buf, j->getEPR());
-
-            sprintf(buf, "%s/egt-degf", er->prefix);
-            fgSetFloat(buf, j->getEGT() * K2DEGF + K2DEGFOFFSET);
+            node->setFloatValue("n1", j->getN1());
+            node->setFloatValue("n2", j->getN2());
+            node->setFloatValue("epr", j->getEPR());
+            node->setFloatValue("egr-degf",
+                                j->getEGT() * K2DEGF + K2DEGFOFFSET);
         }
     }
 }

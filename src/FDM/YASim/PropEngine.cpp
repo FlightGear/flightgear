@@ -1,10 +1,10 @@
 #include "Math.hpp"
 #include "Propeller.hpp"
-#include "PistonEngine.hpp"
+#include "Engine.hpp"
 #include "PropEngine.hpp"
 namespace yasim {
 
-PropEngine::PropEngine(Propeller* prop, PistonEngine* eng, float moment)
+PropEngine::PropEngine(Propeller* prop, Engine* eng, float moment)
 {
     // Start off at 500rpm, because the start code doesn't exist yet
     _omega = 52.3f;

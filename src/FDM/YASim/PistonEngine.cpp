@@ -68,41 +68,6 @@ float PistonEngine::getMaxPower()
     return _power0;
 }
 
-void PistonEngine::setThrottle(float t)
-{
-    _throttle = t;
-}
-
-void PistonEngine::setRunning(bool r)
-{
-    _running = r;
-}
-
-void PistonEngine::setStarter(bool s)
-{
-    _cranking = s;
-}
-
-void PistonEngine::setMagnetos(int m)
-{
-    _magnetos = m;
-}
-
-void PistonEngine::setMixture(float m)
-{
-    _mixture = m;
-}
-
-void PistonEngine::setBoost(float boost)
-{
-    _boost = boost;
-}
-
-bool PistonEngine::isRunning()
-{
-    return _running;
-}
-
 bool PistonEngine::isCranking()
 {
     return _cranking;

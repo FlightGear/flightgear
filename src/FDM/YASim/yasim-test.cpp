@@ -13,6 +13,7 @@ bool fgSetFloat (const char * name, float val) { return false; }
 bool fgSetBool(char const * name, bool val) { return false; }
 bool fgGetBool(char const * name, bool def) { return false; }
 SGPropertyNode* fgGetNode (const char * path, bool create) { return 0; }
+SGPropertyNode* fgGetNode (const char * path, int i, bool create) { return 0; }
 float fgGetFloat (const char * name, float defaultValue) { return 0; }
 float fgGetDouble (const char * name, double defaultValue) { return 0; }
 float fgSetDouble (const char * name, double defaultValue) { return 0; }

@@ -6,11 +6,11 @@
 namespace yasim {
 
 class Propeller;
-class PistonEngine;
+class Engine;
 
 class PropEngine : public Thruster {
 public:
-    PropEngine(Propeller* prop, PistonEngine* eng, float moment);
+    PropEngine(Propeller* prop, Engine* eng, float moment);
     virtual ~PropEngine();
 
     void setMagnetos(int magnetos);
@@ -20,7 +20,7 @@ public:
     void setGearRatio(float ratio) { _gearRatio = ratio; }
 
     virtual PropEngine* getPropEngine() { return this; }
-    virtual PistonEngine* getPistonEngine() { return _eng; }
+    virtual Engine* getEngine() { return _eng; }
     virtual Propeller* getPropeller() { return _prop; }
 
     // Dynamic output
@@ -42,7 +42,7 @@ public:
 private:
     float _moment;
     Propeller* _prop;
-    PistonEngine* _eng;
+    Engine* _eng;
 
     bool _variable;
     int _magnetos;  // 0=off, 1=right, 2=left, 3=both

@@ -206,7 +206,7 @@ void ControlMap::applyControls(float dt)
         case ROTORENGINEON: ((Rotor*)obj)->setEngineOn((int)lval); break;
 	case REVERSE_THRUST: ((Jet*)obj)->setReverse(lval != 0);   break;
 	case BOOST:
-	    ((Thruster*)obj)->getPistonEngine()->setBoost(lval);
+	    ((PistonEngine*)((Thruster*)obj)->getEngine())->setBoost(lval);
 	    break;
 	}
     }

@@ -6,7 +6,7 @@ namespace yasim {
 class Jet;
 class PropEngine;
 class Propeller;
-class PistonEngine;
+class Engine;
 
 class Thruster {
 public:
@@ -19,7 +19,7 @@ public:
     virtual Jet* getJet() { return 0; }
     virtual PropEngine* getPropEngine() { return 0; }
     virtual Propeller* getPropeller() { return 0; }
-    virtual PistonEngine* getPistonEngine() { return 0; }
+    virtual Engine* getEngine() { return 0; }
     
     // Static data
     void getPosition(float* out);

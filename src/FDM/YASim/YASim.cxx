@@ -443,28 +443,4 @@ void YASim::copyFromYASim()
 	node->setBoolValue("wow", g->getCompressFraction() != 0);
 	node->setFloatValue("compression-norm", g->getCompressFraction());
     }
-
-    for(i=0; i<model->numThrusters(); i++) {
-        SGPropertyNode * node = fgGetNode("engines/engine", i, true);
-        Thruster* t = model->getThruster(i);
-
-	node->setBoolValue("running", t->isRunning());
-	node->setBoolValue("cranking", t->isCranking());
-
-        float tmp[3];
-        t->getThrust(tmp);
-	node->setDoubleValue("prop-thrust", Math::mag3(tmp) * KG2LBS / 9.8);
-
-        PropEngine* pe = t->getPropEngine();
-        if(pe) {
-	    node->setDoubleValue("rpm", pe->getOmega() * RAD2RPM);
-
-            pe->getTorque(tmp);
-            float power = Math::mag3(tmp) * pe->getOmega();
-            float maxPower = pe->getPistonEngine()->getMaxPower();
-
-	    node->setDoubleValue("max-hp", maxPower * W2HP);
-	    node->setDoubleValue("power-pct", 100 * power/maxPower);
-        }
-    }
 }
