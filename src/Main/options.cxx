@@ -1031,9 +1031,28 @@ fgOptWind( const char *arg )
 }
 
 static int
-fgOptTurbulence( const char *arg)
+fgOptTurbulence( const char *arg )
 {
     fgDefaultWeatherValue("turbulence/magnitude-norm", atof(arg));
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptCeiling( const char *arg )
+{
+    double elevation, thickness;
+    string spec = arg;
+    string::size_type pos = spec.find(':');
+    if (pos == string::npos) {
+        elevation = atof(spec.c_str());
+        thickness = 2000;
+    } else {
+        elevation = atof(spec.substr(0, pos).c_str());
+        thickness = atof(spec.substr(pos + 1).c_str());
+    }
+    fgSetDouble("/environment/clouds/layer[0]/elevation-ft", elevation);
+    fgSetDouble("/environment/clouds/layer[0]/thickness-ft", thickness);
+    fgSetString("/environment/clouds/layer[0]/coverage", "overcast");
     return FG_OPTIONS_OK;
 }
 
@@ -1315,6 +1334,7 @@ struct OptionDesc {
     {"random-wind",                  false, OPTION_FUNC,   "", false, "", fgOptRandomWind },
     {"wind",                         true,  OPTION_FUNC,   "", false, "", fgOptWind },
     {"turbulence",                   true,  OPTION_FUNC,   "", false, "", fgOptTurbulence },
+    {"ceiling",                      true,  OPTION_FUNC,   "", false, "", fgOptCeiling },
     {"wp",                           true,  OPTION_FUNC,   "", false, "", fgOptWp },
     {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
