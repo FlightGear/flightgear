@@ -35,9 +35,9 @@ public:
 				  float max = 100.0f, float min = 0.0f);
 
 	~FloatSlider () {;}
-		
-	static void adj( puObject *);
 
+	static void adj( puObject *);
+		
 	void updateText() {
 		sprintf( _text, "%05.2f", MyValue );
 	}
@@ -51,6 +51,9 @@ public:
 
         // adjust the TmpValue back to 0 to 1 range of pui widget
         void   setTmp() { TmpValue += 0.0f; }
+
+        void incTmp() { TmpValue += 0.0001f; setTmp(); }
+        void decTmp() { TmpValue -= 0.0001f; setTmp(); }
 
 	// adjust actual "setting" value back to fraction for pui widget
 	void init( float f ) {
@@ -69,7 +72,7 @@ public:
 
 void FloatSlider::adj( puObject *hs )
 {
-	FloatSlider *slider = (FloatSlider *)hs->getUserData();
+	FloatSlider *slider = (FloatSlider *)hs;
 	slider->getValue ( slider->getTmp() );
 	slider->setTmp();
 	slider->set();
@@ -79,17 +82,15 @@ void FloatSlider::adj( puObject *hs )
 FloatSlider::FloatSlider ( int x, int y, int sz, float f, const char *title,
                                                    float max, float min ) :  puSlider( x, y, sz, FALSE )
 {
-	setUserData( this );
 	maxValue = max;
         minValue = min;
 	origValue = f;
 	init(f);
 	setDelta    ( 0.01 );
 	setCBMode   ( PUSLIDER_DELTA ) ;
-	setCallback ( adj ) ;
 	strcpy      ( _title, title);
 	setLabel    ( _title );
-	setLabelPlace ( PUPLACE_LEFT  );
+	setLabelPlace ( PUPLACE_LEFT );
 	setLegend(_text);
 	// setLegendPlace( PUPLACE_RIGHT );
 }
@@ -131,6 +132,9 @@ public:
 
         // adjust the TmpValue back to 0 to 1 range of pui widget
 	void   setTmp() { TmpValue += 0.5f; }
+        
+        void incTmp() { TmpValue += 0.0001f; setTmp(); }
+        void decTmp() { TmpValue -= 0.0001f; setTmp(); }
 
 	// adjust actual "setting" value back to fraction for pui widget
 	// double the range from -max <-> max
@@ -150,7 +154,7 @@ public:
 
 void FloatDial::adj( puObject *hs )
 {
-	FloatDial *dial = (FloatDial *)hs->getUserData();
+	FloatDial *dial = (FloatDial *)hs;
 	dial->getValue ( dial->getTmp() );
 	dial->setTmp();
 	dial->set();
@@ -160,14 +164,12 @@ void FloatDial::adj( puObject *hs )
 FloatDial::FloatDial ( int x, int y, int sz, float f, const char *title,
                                                    float max, float min ) :  puDial( x, y, sz )
 {
-	setUserData( this );
 	maxValue = max;
         minValue = min;
 	origValue = f;
 	init(f);
 	setDelta    ( 0.01 );
 	setCBMode   ( PUSLIDER_DELTA ) ;
-	setCallback ( adj ) ;
 	strcpy      ( _title, title);
 	setLabel    ( _title );
 	setLabelPlace ( PUPLACE_LEFT  );
@@ -180,6 +182,10 @@ FloatDial::FloatDial ( int x, int y, int sz, float f, const char *title,
 
 class sgVec3Slider : public puDialogBox
 {
+        static void handle_arrow(puObject *p_obj);
+	static void heading_adj(puObject *p_obj);
+	static void pitch_adj(puObject *p_obj);
+	static void radius_adj(puObject *p_obj);
 	static void goAway(puObject *p_obj);
 	static void reset(puObject *p_obj);
 	static void cancel(puObject *p_obj);
@@ -193,6 +199,8 @@ protected:
 	puOneShot *OkButton;
 	puOneShot *ResetButton;
 	puOneShot *CancelButton;
+        puArrowButton *right_arrow;
+        puArrowButton *left_arrow;
 	sgVec3 Vec, SaveVec;
 	
 public:
@@ -201,9 +209,10 @@ public:
 				   const char *title = "Vector Adjuster",
 				   const char *Xtitle = "Heading",
 				   const char *Ytitle = "Pitch",
-				   const char *Ztitle = "Radius" );
+				   const char *Ztitle = "Radius   " );
 
 	~sgVec3Slider () {;}
+
 
 	// calc the property Vec with the actual point on sphere
 	void setVec()
@@ -238,15 +247,18 @@ public:
 };
 
 // class constructor
-sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
+sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 cart, const char *title,
                              const char *Xtitle,
                              const char *Ytitle,
                              const char *Ztitle ): puDialogBox ( x, y )
 {
 	puFont LegendFont, LabelFont;
 	puGetDefaultFonts ( &LegendFont, &LabelFont );
-
 	int fudge = 20;
+
+        HeadingPitchRadiusFromVec3( Vec, cart);
+        sgVec3 vec;
+        sgSetVec3(vec, Vec[0], Vec[1], Vec[2]);
 
 	int labelW = LabelFont.getStringWidth(Xtitle);
 	labelW = SG_MAX2( labelW, LabelFont.getStringWidth(Ytitle));
@@ -284,12 +296,26 @@ sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
         /* heading */
 	HS0 = new FloatDial (  dialer_x, dialer_y, dialer_size, vec[0], Xtitle, 180.0f, -180.0f );
         dialer_x = dialer_x + 170;
+        HS0->setUserData (this);
+	HS0->setCallback ( heading_adj ) ;
 
         /* pitch */
 	HS1 = new FloatDial (  dialer_x, dialer_y, dialer_size, vec[1], Ytitle, 89.99f, -89.99f );
+        HS1->setUserData (this);
+	HS1->setCallback ( pitch_adj ) ;
 
         /* radius */
-	HS2 = new FloatSlider (  slider_x, slider_y, slider_width, vec[2], Ztitle, 100.0f, 0.0f );
+	HS2 = new FloatSlider (  slider_x+20, slider_y, slider_width-40, vec[2], Ztitle, 100.0f, 0.0f );
+        HS2->setUserData (this);
+	HS2->setCallback ( radius_adj );
+
+        right_arrow = new puArrowButton ( slider_x + slider_width - 20, slider_y + 1, slider_x + slider_width, slider_y+21, PUARROW_RIGHT ) ;
+        right_arrow->setUserData ( HS2 ) ;
+        right_arrow->setCallback ( handle_arrow ) ;
+
+        left_arrow = new puArrowButton ( slider_x, slider_y + 1, slider_x+20, slider_y+21, PUARROW_LEFT ) ;
+        left_arrow->setUserData ( HS2 ) ;
+        left_arrow->setCallback ( handle_arrow ) ;
 
 	TitleText = new puText( 130, DialogHeight - 40);
         TitleText->setLabel("Pilot Offset");
@@ -305,13 +331,48 @@ sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
 	CancelButton-> setLegend ( gui_msg_CANCEL );
 	CancelButton-> setCallback ( cancel );
 
-	ResetButton = new puOneShot ( 220+fudge, 20, 280+fudge, 50 );
-	ResetButton-> setUserData( this );
-	ResetButton-> setLegend ( gui_msg_RESET );
-	ResetButton-> setCallback ( reset );
+// renabling this button requires binding in the sim/view[?]/config/?-offset-m values
+//	ResetButton = new puOneShot ( 220+fudge, 20, 280+fudge, 50 );
+//	ResetButton-> setUserData( this );
+//	ResetButton-> setLegend ( gui_msg_RESET );
+//	ResetButton-> setCallback ( reset );
 
 	FG_FINALIZE_PUI_DIALOG( this );
 }
+
+void sgVec3Slider::handle_arrow(puObject *arrow)
+{
+  FloatSlider *slider = (FloatSlider *) arrow->getUserData();
+  if (((puArrowButton *)arrow)->getArrowType() == PUARROW_RIGHT)
+    slider->incTmp();
+  else
+    slider->decTmp();
+  slider->set();
+  slider->init( slider->get() );
+  sgVec3Slider *me = (sgVec3Slider *)slider->getUserData();
+  me->setVec();
+};
+
+void sgVec3Slider::heading_adj(puObject *p_obj)
+{
+  sgVec3Slider *me = (sgVec3Slider *)p_obj->getUserData();
+  me->HS0->adj((puObject *)me ->HS0 );
+  me->setVec();
+};
+
+void sgVec3Slider::pitch_adj(puObject *p_obj)
+{
+  sgVec3Slider *me = (sgVec3Slider *)p_obj->getUserData();
+  me->HS1->adj((puObject *)me ->HS1 );
+  me->setVec();
+};
+
+void sgVec3Slider::radius_adj(puObject *p_obj)
+{
+  sgVec3Slider *me = (sgVec3Slider *)p_obj->getUserData();
+  me ->HS2-> adj((puObject *)me ->HS2 );
+  me->setVec();
+};
 
 void sgVec3Slider::goAway(puObject *p_obj)
 {
@@ -343,6 +404,23 @@ void sgVec3Slider::cancel(puObject *p_obj)
 void sgVec3Slider::adjust(puObject *p_obj)
 {
 	sgVec3Slider *me = (sgVec3Slider *)p_obj->getUserData();
+        heading_adj( me );
+        pitch_adj( me );
+        radius_adj( me );
+
+	sgVec3 cart;
+        sgSetVec3(cart,
+               fgGetFloat("/sim/current-view/x-offset-m"),
+               fgGetFloat("/sim/current-view/y-offset-m"),
+               fgGetFloat("/sim/current-view/z-offset-m")
+        );
+
+        HeadingPitchRadiusFromVec3( me->Vec, cart);
+
+        me -> getHS0() -> init(me->Vec[0]);
+        me -> getHS1() -> init(me->Vec[1]);
+        me -> getHS2() -> init(me->Vec[2]);
+
 	me -> getHS0() -> adj((puObject *)me -> getHS0());
 	me -> getHS1() -> adj((puObject *)me -> getHS1());
 	me -> getHS2() -> adj((puObject *)me -> getHS2());
@@ -360,30 +438,25 @@ void sgVec3SliderAdjust( puObject *p_obj )
 static puObject *PO_vec = 0;
 
 void PilotOffsetInit() {
-	sgVec3 v;
-        sgSetVec3(v,
-               fgGetFloat("/sim/view[1]/default/pilot-offset/heading-deg"),
-               fgGetFloat("/sim/view[1]/default/pilot-offset/pitch-deg"),
-               fgGetFloat("/sim/view[1]/default/pilot-offset/radius-m")
+	sgVec3 cart;
+        sgSetVec3(cart,
+               fgGetFloat("/sim/current-view/x-offset-m"),
+               fgGetFloat("/sim/current-view/y-offset-m"),
+               fgGetFloat("/sim/current-view/z-offset-m")
         );
-
-	PilotOffsetInit(v);
+	PilotOffsetInit(cart);
 }
 
-void PilotOffsetInit( sgVec3 vec )
+void PilotOffsetInit( sgVec3 cart )
 {
 	// Only one of these things for now
 	if( PO_vec == 0 ) {
-                /* make change so this gets done once for each vector */
-                fgSetFloat("/sim/view[1]/current/pilot-offset/heading-deg",fgGetFloat("/sim/view[1]/default/pilot-offset/heading-deg"));
-                fgSetFloat("/sim/view[1]/current/pilot-offset/pitch-deg",fgGetFloat("/sim/view[1]/default/pilot-offset/pitch-deg"));
-                fgSetFloat("/sim/view[1]/current/pilot-offset/radius-m",fgGetFloat("/sim/view[1]/default/pilot-offset/radius-m"));
- 		sgVec3Slider *PO = new sgVec3Slider ( 200, 200, vec, "Pilot Offset" );
+ 		sgVec3Slider *PO = new sgVec3Slider ( 200, 200, cart, "Pilot Offset" );
 		PO_vec = PO;
 		// Bindings for Pilot Offset
-                fgTie("/sim/view[1]/current/pilot-offset/heading-deg", getPilotOffsetHeadingDeg, setPilotOffsetHeadingDeg);
-                fgTie("/sim/view[1]/current/pilot-offset/pitch-deg", getPilotOffsetPitchDeg, setPilotOffsetPitchDeg);
-                fgTie("/sim/view[1]/current/pilot-offset/radius-m", getPilotOffsetRadiusM, setPilotOffsetRadiusM);
+                fgTie("/sim/current-view/x-offset-m", getPilotXOffset, setPilotXOffset);
+                fgTie("/sim/current-view/y-offset-m", getPilotYOffset, setPilotYOffset);
+                fgTie("/sim/current-view/z-offset-m", getPilotZOffset, setPilotZOffset);
 	}
 }
 
@@ -393,8 +466,8 @@ void PilotOffsetAdjust( puObject * )
 		PilotOffsetInit();
 	}
 	sgVec3Slider *me = (sgVec3Slider *)PO_vec -> getUserData();
-	me -> stashVec();
 	me -> adjust( me );
+	me -> stashVec();
 	FG_PUSH_PUI_DIALOG( me );
 }
 
@@ -416,9 +489,11 @@ float PilotOffsetGetSetting(int opt)
 		PilotOffsetInit();
 	}
 	sgVec3Slider *me = (sgVec3Slider *)PO_vec -> getUserData();
-        if( opt == 0 ) setting = me -> getHS0() -> get();
-        if( opt == 1 ) setting = me -> getHS1() -> get();
-        if( opt == 2 ) setting = me->  getHS2() -> get();
+        sgVec3 vec;
+        sgCopyVec3(vec, (float *) me->getVec());
+        if( opt == 0 ) setting = vec[0];
+        if( opt == 1 ) setting = vec[1];
+        if( opt == 2 ) setting = vec[2];
 	return( setting );
 }
 
@@ -429,9 +504,18 @@ void PilotOffsetSet(int opt, float setting)
 		PilotOffsetInit();
 	}
 	sgVec3Slider *me = (sgVec3Slider *)PO_vec -> getUserData();
-        if( opt == 0 ) me -> getHS0() -> init( setting );
-        if( opt == 1 ) me -> getHS1() -> init( setting );
-        if( opt == 2 ) me->  getHS2() -> init( setting );
+
+        sgVec3 HPR;
+        sgVec3 vec;
+        sgCopyVec3(vec, (float *) me->getVec());
+        if( opt == 0 ) vec[0] = setting;
+        if( opt == 1 ) vec[1] = setting;
+        if( opt == 2 ) vec[2] = setting;
+        HeadingPitchRadiusFromVec3 ( HPR, vec );
+        me -> getHS0() -> init( HPR[0] );
+        me -> getHS1() -> init( HPR[1] );
+        me -> getHS2() -> init( HPR[2] );
+        me -> stashVec();
 }
 
 
@@ -440,7 +524,7 @@ void PilotOffsetSet(int opt, float setting)
 // input Pitch   == latitude of point on sphere
 // input Radius  == radius of sphere
 
-#define MIN_VIEW_OFFSET 5.0
+#define MIN_VIEW_OFFSET 0.001
 void Vec3FromHeadingPitchRadius ( sgVec3 vec3, float heading, float pitch,
 float radius )
 {
@@ -474,4 +558,45 @@ float radius )
   vec3[2] = (SGfloat)( ch * cp ) * radius ; // X
   vec3[1] = (SGfloat)( sh * cp ) * radius ; // Y
   vec3[0] = (SGfloat)(  sp ) * radius ; // Z
+}
+
+// Convert to speherical coordinates for the dials
+
+void HeadingPitchRadiusFromVec3 ( sgVec3 hpr, sgVec3 vec3 )
+{
+  double x = vec3[0];
+  double y = vec3[1];
+  double z = vec3[2];
+  double Zx;
+  double Pr;
+
+  if (z == 0.0f) {
+    hpr[0] = 0;
+    hpr[1] = 0;
+    hpr[2] = 0;
+  } else {
+    if (fabs(y) < 0.001f)
+      y == 0.001f;
+
+    Zx = sqrt(y*y + z*z);
+
+    hpr[2] = sqrt(x*x + y*y + z*z);
+
+    Pr = Zx / hpr[2];
+    if (Pr > 1.0f)
+      hpr[1] = 0.0f;
+    else 
+      hpr[1] = acos(Pr) * SGD_RADIANS_TO_DEGREES;
+    if (x < 0.0f) 
+      hpr[1] *= -SGD_ONE;
+
+    if (z < 0.0f) {
+      hpr[0] = (SGD_PI - asin(y/Zx)) * SGD_RADIANS_TO_DEGREES;
+    } else {
+      hpr[0] = asin(y/Zx) * SGD_RADIANS_TO_DEGREES;
+      if (hpr[0] > 180) {
+        hpr[0] = 180 - hpr[0];
+      }
+    }
+  }
 }

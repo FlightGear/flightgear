@@ -177,7 +177,7 @@ fgSetDefaults ()
     fgSetInt("/sim/startup/ysize", 600);
     fgSetInt("/sim/rendering/bits-per-pixel", 16);
     fgSetString("/sim/view-mode", "pilot");
-    fgSetDouble("/sim/view/offset-deg", 0);
+    fgSetDouble("/sim/current-view/heading-offset-deg", 0);
     fgSetDouble("/environment/visibility-m", 20000);
 
 				// HUD options
@@ -427,7 +427,7 @@ parse_fov( const string& arg ) {
     if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
     if ( fov > FG_FOV_MAX ) { fov = FG_FOV_MAX; }
 
-    fgSetDouble("/sim/field-of-view", fov);
+    fgSetDouble("/sim/current-view/field-of-view", fov);
 
     // printf("parse_fov(): result = %.4f\n", fov);
 
@@ -886,7 +886,8 @@ parse_option (const string& arg)
 	    (FGViewer *)globals->get_viewmgr()->get_view( 0 );
 	pilot_view->setHeadingOffset_deg( default_view_offset * SGD_RADIANS_TO_DEGREES );
 	pilot_view->setGoalHeadingOffset_deg( default_view_offset * SGD_RADIANS_TO_DEGREES );
-	fgSetDouble("/sim/view/offset-deg", default_view_offset  * SGD_RADIANS_TO_DEGREES );
+	fgSetDouble( "/sim/current-view/heading-offset-deg",
+                     default_view_offset  * SGD_RADIANS_TO_DEGREES );
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--visibility=" ) == 0 ) {
 	fgSetDouble("/environment/visibility-m", atof(arg.substr(13)));
@@ -1290,6 +1291,3 @@ fgUsage ()
          << "                                  instances allowed." << endl
          << endl;
 }
-
-
-

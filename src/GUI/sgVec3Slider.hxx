@@ -18,6 +18,7 @@ void PilotOffsetInit();
 void PilotOffsetInit( sgVec3 vec );
 void PilotOffsetAdjust( puObject * );
 void Vec3FromHeadingPitchRadius( sgVec3 vec3, float heading, float pitch, float radius );
+void HeadingPitchRadiusFromVec3( sgVec3 hpr, sgVec3 vec3 );
 //void PilotOffsetGet( float *po );
 sgVec3 *PilotOffsetGet();
 void PilotOffsetSet( int opt, float setting);
@@ -28,40 +29,39 @@ float PilotOffsetGetSetting( int opt );
 /* binding functions for chase view offset */
 
 static void
-setPilotOffsetHeadingDeg (float value)
+setPilotXOffset (float value)
 {
 	PilotOffsetSet(0, value);
 }
 
 static float
-getPilotOffsetHeadingDeg ()
+getPilotXOffset ()
 {
 	return( PilotOffsetGetSetting(0) );
 }
 
 
 static void
-setPilotOffsetPitchDeg (float value)
+setPilotYOffset (float value)
 {
 	PilotOffsetSet(1, value);
 }
 
 static float
-getPilotOffsetPitchDeg ()
+getPilotYOffset ()
 {
 	return( PilotOffsetGetSetting(1) );
 }
 
 
 static void
-setPilotOffsetRadiusM (float value)
+setPilotZOffset (float value)
 {
 	PilotOffsetSet(2, value);
 }
 
 static float
-getPilotOffsetRadiusM ()
+getPilotZOffset ()
 {
 	return( PilotOffsetGetSetting(2) );
 }
-

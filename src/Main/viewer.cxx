@@ -52,37 +52,6 @@
 // Norman's Optimized matrix rotators!                          //
 //////////////////////////////////////////////////////////////////
 
-static void fgMakeLOCAL( sgMat4 dst, const double Theta,
-				const double Phi, const double Psi)
-{
-    SGfloat cosTheta = (SGfloat) cos(Theta);
-    SGfloat sinTheta = (SGfloat) sin(Theta);
-    SGfloat cosPhi   = (SGfloat) cos(Phi);
-    SGfloat sinPhi   = (SGfloat) sin(Phi);
-    SGfloat sinPsi   = (SGfloat) sin(Psi) ;
-    SGfloat cosPsi   = (SGfloat) cos(Psi) ;
-	
-    dst[0][0] = cosPhi * cosTheta;
-    dst[0][1] =	sinPhi * cosPsi + cosPhi * -sinTheta * -sinPsi;
-    dst[0][2] =	sinPhi * sinPsi + cosPhi * -sinTheta * cosPsi;
-    dst[0][3] =	SG_ZERO;
-
-    dst[1][0] = -sinPhi * cosTheta;
-    dst[1][1] =	cosPhi * cosPsi + -sinPhi * -sinTheta * -sinPsi;
-    dst[1][2] =	cosPhi * sinPsi + -sinPhi * -sinTheta * cosPsi;
-    dst[1][3] = SG_ZERO ;
-	
-    dst[2][0] = sinTheta;
-    dst[2][1] =	cosTheta * -sinPsi;
-    dst[2][2] =	cosTheta * cosPsi;
-    dst[2][3] = SG_ZERO;
-	
-    dst[3][0] = SG_ZERO;
-    dst[3][1] = SG_ZERO;
-    dst[3][2] = SG_ZERO;
-    dst[3][3] = SG_ONE ;
-}
-
 
 // Since these are pure rotation matrices we can save some bookwork
 // by considering them to be 3x3 until the very end -- NHV
@@ -156,48 +125,13 @@ static void MakeVIEW_OFFSET( sgMat4 dst,
     dst[3][3] = SG_ONE;
 }
 
-// Taking advantage of the 3x3 nature of this -- NHV
-inline static void MakeWithWorldUp( sgMat4 dst, const sgMat4 UP, const sgMat4 LOCAL )
-{
-    sgMat4 tmp;
-
-    float a = UP[0][0];
-    float b = UP[1][0];
-    float c = UP[2][0];
-    tmp[0][0] = a*LOCAL[0][0] + b*LOCAL[0][1] + c*LOCAL[0][2] ;
-    tmp[1][0] = a*LOCAL[1][0] + b*LOCAL[1][1] + c*LOCAL[1][2] ;
-    tmp[2][0] = a*LOCAL[2][0] + b*LOCAL[2][1] + c*LOCAL[2][2] ;
-    tmp[3][0] = SG_ZERO ;
-
-    a = UP[0][1];
-    b = UP[1][1];
-    c = UP[2][1];
-    tmp[0][1] = a*LOCAL[0][0] + b*LOCAL[0][1] + c*LOCAL[0][2] ;
-    tmp[1][1] = a*LOCAL[1][0] + b*LOCAL[1][1] + c*LOCAL[1][2] ;
-    tmp[2][1] = a*LOCAL[2][0] + b*LOCAL[2][1] + c*LOCAL[2][2] ;
-    tmp[3][1] = SG_ZERO ;
-
-    a = UP[0][2];
-    c = UP[2][2];
-    tmp[0][2] = a*LOCAL[0][0] + c*LOCAL[0][2] ;
-    tmp[1][2] = a*LOCAL[1][0] + c*LOCAL[1][2] ;
-    tmp[2][2] = a*LOCAL[2][0] + c*LOCAL[2][2] ;
-    tmp[3][2] = SG_ZERO ;
-
-    tmp[0][3] = SG_ZERO ;
-    tmp[1][3] = SG_ZERO ;
-    tmp[2][3] = SG_ZERO ;
-    tmp[3][3] = SG_ONE ;
-    sgCopyMat4(dst, tmp);
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGViewer.
 ////////////////////////////////////////////////////////////////////////
 
 // Constructor
-FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool at_model, int at_model_index ):
+FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool at_model, int at_model_index, double x_offset_m, double y_offset_m, double z_offset_m, double near_m ):
     _scaling_type(FG_SCALING_MAX),
     _fov_deg(55.0),
     _dirty(true),
@@ -210,9 +144,6 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
-    _x_offset_m(0),
-    _y_offset_m(0),
-    _z_offset_m(0),
     _heading_offset_deg(0),
     _pitch_offset_deg(0),
     _roll_offset_deg(0),
@@ -225,6 +156,10 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool
     _from_model_index = from_model_index;
     _at_model = at_model;
     _at_model_index = at_model_index;
+    _x_offset_m = x_offset_m;
+    _y_offset_m = y_offset_m;
+    _z_offset_m = z_offset_m;
+    _ground_level_nearplane_m = near_m;
     //a reasonable guess for init, so that the math doesn't blow up
 }
 
@@ -551,6 +486,7 @@ FGViewer::recalc ()
   sgVec3 minus_z, right, forward, tilt;
   sgMat4 tmpROT;  // temp rotation work matrices
   sgVec3 eye_pos, at_pos;
+  sgVec3 position_offset; // eye position offsets (xyz)
 
   // The position vectors originate from the view point or target location
   // depending on the type of view.
@@ -628,11 +564,6 @@ FGViewer::recalc ()
   sgSetVec3( right, LOCAL[1][0], LOCAL[1][1], LOCAL[1][2] );
   sgSetVec3( forward, -LOCAL[0][0], -LOCAL[0][1], -LOCAL[0][2] );
 
-  // create the (xyz) eye Position offsets Vector
-  sgVec3 position_offset;
-  sgSetVec3( position_offset, -_z_offset_m, _x_offset_m, _y_offset_m );
-
-
   if (_type == FG_LOOKAT) {
 
     // Note that when in "lookat" view the "world up" vector is always applied
@@ -644,10 +575,10 @@ FGViewer::recalc ()
       (_heading_offset_deg -_heading_deg) * SG_DEGREES_TO_RADIANS, _world_up,
       _pitch_offset_deg * SG_DEGREES_TO_RADIANS, right );
    
-    // Eye Position Offsets to vector
-    sgXformVec3( position_offset, position_offset, UP );
-
     // add in the Orientation Offsets here
+    sgSetVec3( position_offset, _x_offset_m, _y_offset_m, _z_offset_m );
+    sgXformVec3( position_offset, position_offset, UP);
+
     sgXformVec3( position_offset, position_offset, VIEW_OFFSET );
 
     // add the Position offsets from object to the eye position
@@ -671,17 +602,26 @@ FGViewer::recalc ()
       _heading_offset_deg  * SG_DEGREES_TO_RADIANS, _view_up,
       _pitch_offset_deg  * SG_DEGREES_TO_RADIANS, right );
 
-    // Eye Position Offsets to vector
-    sgXformVec3( position_offset, position_offset, LOCAL);
-
-    // add the offsets including rotations to the translation vector
-    sgAddVec3( _view_pos, position_offset );
-
     // Make the VIEW matrix.
     sgSetVec4(VIEW[0], right[0], right[1], right[2],SG_ZERO);
     sgSetVec4(VIEW[1], forward[0], forward[1], forward[2],SG_ZERO);
     sgSetVec4(VIEW[2], _view_up[0], _view_up[1], _view_up[2],SG_ZERO);
     sgSetVec4(VIEW[3], SG_ZERO, SG_ZERO, SG_ZERO,SG_ONE);
+
+    // rotate matrix to get a matrix to apply Eye Position Offsets
+    sgMat4 VIEW_UP; // L0 forward L1 right L2 up
+    sgCopyVec4(VIEW_UP[0], LOCAL[1]); 
+    sgCopyVec4(VIEW_UP[1], LOCAL[2]);
+    sgCopyVec4(VIEW_UP[2], LOCAL[0]);
+    sgZeroVec4(VIEW_UP[3]);
+
+    // Eye Position Offsets to vector
+    sgSetVec3( position_offset, _x_offset_m, _y_offset_m, _z_offset_m );
+    sgXformVec3( position_offset, position_offset, VIEW_UP);
+
+    // add the offsets including rotations to the translation vector
+    sgAddVec3( _view_pos, position_offset );
+
     // multiply the OFFSETS (for heading and pitch) into the VIEW
     sgPostMultMat4(VIEW, VIEW_OFFSET);
 
@@ -832,10 +772,3 @@ FGViewer::update (int dt)
     }
   }
 }
-
-
-
-
-
-
-

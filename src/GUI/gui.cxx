@@ -690,10 +690,10 @@ static GlBitmap *b1 = NULL;
 extern FGInterface cur_view_fdm;
 GLubyte *hiResScreenCapture( int multiplier )
 {
-    float oldfov = fgGetDouble("/sim/field-of-view");
+    float oldfov = fgGetDouble("/sim/current-view/field-of-view");
     float fov = oldfov / multiplier;
     FGViewer *v = globals->get_current_view();
-    fgSetDouble("/sim/field-of-view", fov);
+    fgSetDouble("/sim/current-view/field-of-view", fov);
     fgInitVisuals();
     int cur_width = fgGetInt("/sim/startup/xsize");
     int cur_height = fgGetInt("/sim/startup/ysize");
@@ -712,7 +712,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 	    b1->copyBitmap( &b2, cur_width*x, cur_height*y );
 	}
     }
-    fgSetDouble("/sim/field-of-view", oldfov);
+    fgSetDouble("/sim/current-view/field-of-view", oldfov);
     return b1->getBitmap();
 }
 #endif
@@ -1064,4 +1064,3 @@ void guiInit()
         guiToggleMenu(); // Menu off by default
     }
 }
-

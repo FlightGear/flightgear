@@ -62,7 +62,9 @@ public:
     };
 
     // Constructor
-    FGViewer( fgViewType Type, bool from_model, int from_model_index, bool at_model, int at_model_index );
+    FGViewer( fgViewType Type, bool from_model, int from_model_index,
+              bool at_model, int at_model_index, double x_offset_m,
+              double y_offset_m, double z_offset_m, double near_m );
 
     // Destructor
     virtual ~FGViewer( void );
@@ -216,7 +218,7 @@ public:
     virtual const sgVec4 *get_UP() { if ( _dirty ) { recalc(); } return UP; }
 
     //////////////////////////////////////////////////////////////////////
-    // Part 4: frustrum data setters and getters
+    // Part 4: View and frustrum data setters and getters
     //////////////////////////////////////////////////////////////////////
 
     virtual void set_fov( double fov_deg ) {
@@ -230,6 +232,11 @@ public:
 	_aspect_ratio = r;
     }
     virtual double get_aspect_ratio() const { return _aspect_ratio; }
+
+    virtual double getNear_m () const { return _ground_level_nearplane_m; }
+    inline void setNear_m (double near_m) {
+        _ground_level_nearplane_m = near_m;
+    }
 
     //////////////////////////////////////////////////////////////////////
     // Part 5: misc setters and getters
@@ -280,6 +287,9 @@ private:
     double _goal_roll_offset_deg;
     double _goal_pitch_offset_deg;
     double _goal_heading_offset_deg;
+
+    // used to set nearplane when at ground level for this view
+    double _ground_level_nearplane_m;
 
     fgViewType _type;
     fgScalingType _scaling_type;

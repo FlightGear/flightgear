@@ -54,6 +54,8 @@ FGViewMgr::init ()
   bool at_model = false;
   int from_model_index = 0;
   int at_model_index = 0;
+  double x_offset_m, y_offset_m, z_offset_m;
+  double near_m;
 
   for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
     viewpath = "/sim/view";
@@ -94,12 +96,33 @@ FGViewMgr::init ()
       }
     }
 
+    nodepath = viewpath;
+    nodepath += "/config/x-offset-m";
+    x_offset_m = fgGetDouble(nodepath.c_str());
+    nodepath = viewpath;
+    nodepath += "/config/y-offset-m";
+    y_offset_m = fgGetDouble(nodepath.c_str());
+    nodepath = viewpath;
+    nodepath += "/config/z-offset-m";
+    z_offset_m = fgGetDouble(nodepath.c_str());
+
+    nodepath = viewpath;
+    nodepath += "/config/ground-level-nearplane-m";
+    near_m = fgGetDouble(nodepath.c_str());
+
     // supporting two types now "lookat" = 1 and "lookfrom" = 0
     if ( strcmp("lookat",strdata.c_str()) == 0 )
-      add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index, at_model, at_model_index ));
+      add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index,
+                              at_model, at_model_index, x_offset_m, y_offset_m,
+                              z_offset_m, near_m ));
     else
-      add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index, false, 0 ));
+      add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index, false,
+                              0, x_offset_m, y_offset_m, z_offset_m, near_m ));
+
   }
+
+  copyToCurrent();
+  
 }
 
 typedef double (FGViewMgr::*double_getter)() const;
@@ -107,36 +130,33 @@ typedef double (FGViewMgr::*double_getter)() const;
 void
 FGViewMgr::bind ()
 {
-  // FIXME:
-  // need to redo these bindings to the new locations (move to viewer?)
-  fgTie("/sim/view/offset-deg", this,
+  // these are bound to the current view properties
+  fgTie("/sim/current-view/heading-offset-deg", this,
 	&FGViewMgr::getViewOffset_deg, &FGViewMgr::setViewOffset_deg);
-  fgSetArchivable("/sim/view/offset-deg");
-  fgTie("/sim/view/goal-offset-deg", this,
+  fgSetArchivable("/sim/current-view/heading-offset-deg");
+  fgTie("/sim/current-view/goal-heading-offset-deg", this,
 	&FGViewMgr::getGoalViewOffset_deg, &FGViewMgr::setGoalViewOffset_deg);
-  fgSetArchivable("/sim/view/goal-offset-deg");
-  fgTie("/sim/view/tilt-deg", this,
+  fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
+  fgTie("/sim/current-view/pitch-offset-deg", this,
 	&FGViewMgr::getViewTilt_deg, &FGViewMgr::setViewTilt_deg);
-  fgSetArchivable("/sim/view/tilt-deg");
-  fgTie("/sim/view/goal-tilt-deg", this,
+  fgSetArchivable("/sim/current-view/pitch-offset-deg");
+  fgTie("/sim/current-view/goal-pitch-offset-deg", this,
 	&FGViewMgr::getGoalViewTilt_deg, &FGViewMgr::setGoalViewTilt_deg);
-  fgSetArchivable("/sim/view/goal-tilt-deg");
-  fgTie("/sim/view/pilot/x-offset-m", this,
-	&FGViewMgr::getPilotXOffset_m, &FGViewMgr::setPilotXOffset_m);
-  fgSetArchivable("/sim/view/pilot/x-offset-m");
-  fgTie("/sim/view/pilot/y-offset-m", this,
-	&FGViewMgr::getPilotYOffset_m, &FGViewMgr::setPilotYOffset_m);
-  fgSetArchivable("/sim/view/pilot/y-offset-m");
-  fgTie("/sim/view/pilot/z-offset-m", this,
-	&FGViewMgr::getPilotZOffset_m, &FGViewMgr::setPilotZOffset_m);
-  fgSetArchivable("/sim/view/pilot/z-offset-m");
-  fgTie("/sim/field-of-view", this,
-	&FGViewMgr::getFOV_deg, &FGViewMgr::setFOV_deg);
-  fgSetArchivable("/sim/field-of-view");
-  fgTie("/sim/view/axes/long", this,
+  fgSetArchivable("/sim/current-view/goal-pitch-offset-deg");
+
+  fgTie("/sim/current-view/axes/long", this,
 	(double_getter)0, &FGViewMgr::setViewAxisLong);
-  fgTie("/sim/view/axes/lat", this,
+  fgTie("/sim/current-view/axes/lat", this,
 	(double_getter)0, &FGViewMgr::setViewAxisLat);
+
+  fgTie("/sim/current-view/field-of-view", this,
+	&FGViewMgr::getFOV_deg, &FGViewMgr::setFOV_deg);
+  fgSetArchivable("/sim/current-view/field-of-view");
+
+  fgTie("/sim/current-view/ground-level-nearplane-m", this,
+	&FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
+  fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
+
 }
 
 void
@@ -144,16 +164,13 @@ FGViewMgr::unbind ()
 {
   // FIXME:
   // need to redo these bindings to the new locations (move to viewer?)
-  fgUntie("/sim/view/offset-deg");
-  fgUntie("/sim/view/goal-offset-deg");
-  fgUntie("/sim/view/tilt-deg");
-  fgUntie("/sim/view/goal-tilt-deg");
-  fgUntie("/sim/view/pilot/x-offset-m");
-  fgUntie("/sim/view/pilot/y-offset-m");
-  fgUntie("/sim/view/pilot/z-offset-m");
+  fgUntie("/sim/current-view/heading-offset-deg");
+  fgUntie("/sim/current-view/goal-heading-offset-deg");
+  fgUntie("/sim/current-view/pitch-offset-deg");
+  fgUntie("/sim/current-view/goal-pitch-offset-deg");
   fgUntie("/sim/field-of-view");
-  fgUntie("/sim/view/axes/long");
-  fgUntie("/sim/view/axes/lat");
+  fgUntie("/sim/current-view/axes/long");
+  fgUntie("/sim/current-view/axes/lat");
 }
 
 void
@@ -235,26 +252,24 @@ FGViewMgr::update (int dt)
       loop_view->set_dirty();
     }
   }
+  setPilotXOffset_m(fgGetDouble("/sim/current-view/x-offset-m"));
+  setPilotYOffset_m(fgGetDouble("/sim/current-view/y-offset-m"));
+  setPilotZOffset_m(fgGetDouble("/sim/current-view/z-offset-m"));
 
-				// Set up the chase view
-  // FIXME:
-  // Gotta change sgVec3Slider so that it takes xyz values as inputs 
-  // instead of spherical coordinates.
-  FGViewer *chase_view = (FGViewer *)get_view( 1 );
-
-  // get xyz Position offsets directly from GUI/sgVec3Slider
-  // FIXME: change GUI/sgVec3Slider to store the xyz in properties
-  // it would probably be faster than the way PilotOffsetGet()
-  // triggers a recalc all the time.
-  sgVec3 *pPO = PilotOffsetGet();
-  sgVec3 zPO;
-  sgCopyVec3( zPO, *pPO );
-  chase_view->setPositionOffsets(zPO[1], zPO[2], zPO[0] );
-
-				// Update the current view
+  			        // Update the current view
   do_axes();
   view->update(dt);
+  double tmp;
 }
+
+void
+FGViewMgr::copyToCurrent()
+{
+    fgSetDouble("/sim/current-view/x-offset-m", getPilotXOffset_m());
+    fgSetDouble("/sim/current-view/y-offset-m", getPilotYOffset_m());
+    fgSetDouble("/sim/current-view/z-offset-m", getPilotZOffset_m());
+}
+
 
 double
 FGViewMgr::getViewOffset_deg () const
@@ -323,10 +338,9 @@ FGViewMgr::setGoalViewTilt_deg (double tilt)
 double
 FGViewMgr::getPilotXOffset_m () const
 {
-				// FIXME: hard-coded pilot view position
-  const FGViewer * pilot_view = get_view(0);
-  if (pilot_view != 0) {
-    return ((FGViewer *)pilot_view)->getXOffset_m();
+  const FGViewer * view = get_current_view();
+  if (view != 0) {
+    return ((FGViewer *)view)->getXOffset_m();
   } else {
     return 0;
   }
@@ -335,20 +349,18 @@ FGViewMgr::getPilotXOffset_m () const
 void
 FGViewMgr::setPilotXOffset_m (double x)
 {
-				// FIXME: hard-coded pilot view position
-  FGViewer * pilot_view = get_view(0);
-  if (pilot_view != 0) {
-    pilot_view->setXOffset_m(x);
+  FGViewer * view = get_current_view();
+  if (view != 0) {
+    view->setXOffset_m(x);
   }
 }
 
 double
 FGViewMgr::getPilotYOffset_m () const
 {
-				// FIXME: hard-coded pilot view position
-  const FGViewer * pilot_view = get_view(0);
-  if (pilot_view != 0) {
-    return ((FGViewer *)pilot_view)->getYOffset_m();
+  const FGViewer * view = get_current_view();
+  if (view != 0) {
+    return ((FGViewer *)view)->getYOffset_m();
   } else {
     return 0;
   }
@@ -357,20 +369,18 @@ FGViewMgr::getPilotYOffset_m () const
 void
 FGViewMgr::setPilotYOffset_m (double y)
 {
-				// FIXME: hard-coded pilot view position
-  FGViewer * pilot_view = get_view(0);
-  if (pilot_view != 0) {
-    pilot_view->setYOffset_m(y);
+  FGViewer * view = get_current_view();
+  if (view != 0) {
+    view->setYOffset_m(y);
   }
 }
 
 double
 FGViewMgr::getPilotZOffset_m () const
 {
-				// FIXME: hard-coded pilot view position
-  const FGViewer * pilot_view = get_view(0);
-  if (pilot_view != 0) {
-    return ((FGViewer *)pilot_view)->getZOffset_m();
+  const FGViewer * view = get_current_view();
+  if (view != 0) {
+    return ((FGViewer *)view)->getZOffset_m();
   } else {
     return 0;
   }
@@ -379,10 +389,9 @@ FGViewMgr::getPilotZOffset_m () const
 void
 FGViewMgr::setPilotZOffset_m (double z)
 {
-				// FIXME: hard-coded pilot view position
-  FGViewer * pilot_view = get_view(0);
-  if (pilot_view != 0) {
-    pilot_view->setZOffset_m(z);
+  FGViewer * view = get_current_view();
+  if (view != 0) {
+    view->setZOffset_m(z);
   }
 }
 
@@ -399,6 +408,21 @@ FGViewMgr::setFOV_deg (double fov)
   FGViewer * view = get_current_view();
   if (view != 0)
     view->set_fov(fov);
+}
+
+double
+FGViewMgr::getNear_m () const
+{
+  const FGViewer * view = get_current_view();
+  return (view == 0 ? 0.5f : view->getNear_m());
+}
+
+void
+FGViewMgr::setNear_m (double near_m)
+{
+  FGViewer * view = get_current_view();
+  if (view != 0)
+    view->setNear_m(near_m);
 }
 
 void
@@ -456,4 +480,3 @@ FGViewMgr::do_axes ()
 
   get_current_view()->setGoalHeadingOffset_deg(viewDir);
 }
-

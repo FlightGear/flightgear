@@ -93,6 +93,7 @@ public:
 	if ( current >= (int)views.size() ) {
 	    current = 0;
 	}
+        copyToCurrent();
 	return views[current];
     }
     inline FGViewer *prev_view() {
@@ -134,8 +135,11 @@ private:
     void setPilotZOffset_m (double z);
     double getFOV_deg () const;
     void setFOV_deg (double fov);
+    double getNear_m () const;
+    void setNear_m (double near_m);
     void setViewAxisLong (double axis);
     void setViewAxisLat (double axis);
+    void copyToCurrent ();
 
     typedef vector < FGViewer * > viewer_list;
     viewer_list views;

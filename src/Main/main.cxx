@@ -407,6 +407,8 @@ void fgRenderFrame( void ) {
 	= fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
 	= fgGetNode("/position/altitude-ft");
+    static const SGPropertyNode *groundlevel_nearplane
+	= fgGetNode("/sim/current-view/ground-level-nearplane-m");
 
     // Update the default (kludged) properties.
     fgUpdateProps();
@@ -592,15 +594,11 @@ void fgRenderFrame( void ) {
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.get_cur_elev();
 
-//	if (fgGetBool("/sim/view/internal"))
-//	  ssgSetNearFar( 0.2f, 120000.0f );
-//	else if ( agl > 10.0)
-
         if ( agl > 10.0 ) {
             scene_nearplane = 10.0f;
             scene_farplane = 120000.0f;
 	} else {
-            scene_nearplane = 0.5f;
+            scene_nearplane = groundlevel_nearplane->getDoubleValue();
             scene_farplane = 120000.0f;
         }
 
