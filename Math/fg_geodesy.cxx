@@ -1,37 +1,36 @@
-/**************************************************************************
- * fg_geodesy.c -- routines to convert between geodetic and geocentric 
- *                 coordinate systems.
- *
- * Copied and adapted directly from LaRCsim/ls_geodesy.c
- *
- * See below for the complete original LaRCsim comments.
- *
- * $Id$
- * (Log is kept at end of this file)
- **************************************************************************/
+// fg_geodesy.cxx -- routines to convert between geodetic and geocentric 
+//                   coordinate systems.
+//
+// Copied and adapted directly from LaRCsim/ls_geodesy.c
+//
+// See below for the complete original LaRCsim comments.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #include <math.h>
 
-#include <Math/fg_geodesy.h>
 #include <Include/fg_constants.h>
+#include <Math/fg_geodesy.hxx>
+#include <Math/point3d.hxx>
 
 
-/* ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator */
+// ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator
 #define ONE_SECOND 4.848136811E-6
 
 
-/* fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
- *     INPUTS:	
- *         lat_geoc	Geocentric latitude, radians, + = North
- *         radius	C.G. radius to earth center (meters)
- *
- *     OUTPUTS:
- *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level (meters)
- *         sea_level_r	radius from earth center to sea level at
- *                      local vertical (surface normal) of C.G. (meters)
- */
+// fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
+//     INPUTS:	
+//         lat_geoc	Geocentric latitude, radians, + = North
+//         radius	C.G. radius to earth center (meters)
+//
+//     OUTPUTS:
+//         lat_geod	Geodetic latitude, radians, + = North
+//         alt		C.G. altitude above mean sea level (meters)
+//         sea_level_r	radius from earth center to sea level at
+//                      local vertical (surface normal) of C.G. (meters)
+
 
 void fgGeocToGeod( double lat_geoc, double radius, double
 		   *lat_geod, double *alt, double *sea_level_r )
@@ -39,8 +38,8 @@ void fgGeocToGeod( double lat_geoc, double radius, double
     double t_lat, x_alpha, mu_alpha, delt_mu, r_alpha, l_point, rho_alpha;
     double sin_mu_a, denom,delt_lambda, lambda_sl, sin_lambda_sl;
 
-    if( ( (FG_PI_2 - lat_geoc) < ONE_SECOND )     /* near North pole */
-	|| ( (FG_PI_2 + lat_geoc) < ONE_SECOND ) )   /* near South pole */
+    if( ( (FG_PI_2 - lat_geoc) < ONE_SECOND )        // near North pole
+	|| ( (FG_PI_2 + lat_geoc) < ONE_SECOND ) )   // near South pole
     {
 	*lat_geod = lat_geoc;
 	*sea_level_r = EQUATORIAL_RADIUS_M*E;
@@ -60,7 +59,7 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 	    (denom*denom*denom);
 	delt_mu = atan2(l_point*sin(delt_lambda),rho_alpha + *alt);
 	*lat_geod = mu_alpha - delt_mu;
-	lambda_sl = atan( E*E * tan(*lat_geod) ); /* SL geoc. latitude */
+	lambda_sl = atan( E*E * tan(*lat_geod) ); // SL geoc. latitude
 	sin_lambda_sl = sin( lambda_sl );
 	*sea_level_r = 
 	    sqrt(RESQ_M / (1 + ((1/(E*E))-1)*sin_lambda_sl*sin_lambda_sl));
@@ -68,27 +67,27 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 }
 
 
-/* fgGeodToGeoc( lat_geod, alt, *sl_radius, *lat_geoc )
- *     INPUTS:	
- *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level (meters)
- *
- *     OUTPUTS:
- *         sl_radius	SEA LEVEL radius to earth center (meters)
- *                      (add Altitude to get true distance from earth center.
- *         lat_geoc	Geocentric latitude, radians, + = North
- *
- */
+// fgGeodToGeoc( lat_geod, alt, *sl_radius, *lat_geoc )
+//     INPUTS:	
+//         lat_geod	Geodetic latitude, radians, + = North
+//         alt		C.G. altitude above mean sea level (meters)
+//
+//     OUTPUTS:
+//         sl_radius	SEA LEVEL radius to earth center (meters)
+//                      (add Altitude to get true distance from earth center.
+//         lat_geoc	Geocentric latitude, radians, + = North
+//
+
 
 void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 		      double *lat_geoc )
 {
     double lambda_sl, sin_lambda_sl, cos_lambda_sl, sin_mu, cos_mu, px, py;
     
-    lambda_sl = atan( E*E * tan(lat_geod) ); /* sea level geocentric latitude */
+    lambda_sl = atan( E*E * tan(lat_geod) ); // sea level geocentric latitude
     sin_lambda_sl = sin( lambda_sl );
     cos_lambda_sl = cos( lambda_sl );
-    sin_mu = sin(lat_geod);	/* Geodetic (map makers') latitude */
+    sin_mu = sin(lat_geod);                  // Geodetic (map makers') latitude
     cos_mu = cos(lat_geod);
     *sl_radius = 
 	sqrt(RESQ_M / (1 + ((1/(E*E))-1)*sin_lambda_sl*sin_lambda_sl));
@@ -140,6 +139,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.2  1998/10/16 23:36:36  curt
+c++-ifying.
+
 Revision 1.1  1998/10/16 19:30:40  curt
 Renamed .c -> .h so we can start adding c++ supporting routines.
 
@@ -215,31 +217,34 @@ Initial Flight Gear revision.
 --------------------------------------------------------------------------*/
 
 
-/* $Log$
-/* Revision 1.1  1998/10/16 19:30:40  curt
-/* Renamed .c -> .h so we can start adding c++ supporting routines.
-/*
- * Revision 1.6  1998/07/08 14:40:07  curt
- * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
- * Updated fg_geodesy comments to reflect that routines expect and produce
- *   meters.
- *
- * Revision 1.5  1998/04/25 22:06:23  curt
- * Edited cvs log messages in source files ... bad bad bad!
- *
- * Revision 1.4  1998/01/27 00:47:59  curt
- * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
- * system and commandline/config file processing code.
- *
- * Revision 1.3  1998/01/19 19:27:12  curt
- * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
- * This should simplify things tremendously.
- *
- * Revision 1.2  1997/12/15 23:54:54  curt
- * Add xgl wrappers for debugging.
- * Generate terrain normals on the fly.
- *
- * Revision 1.1  1997/07/31 23:13:14  curt
- * Initial revision.
- *
- */
+// $Log$
+// Revision 1.2  1998/10/16 23:36:36  curt
+// c++-ifying.
+//
+// Revision 1.1  1998/10/16 19:30:40  curt
+// Renamed .c -> .h so we can start adding c++ supporting routines.
+//
+// Revision 1.6  1998/07/08 14:40:07  curt
+// polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+// Updated fg_geodesy comments to reflect that routines expect and produce
+//   meters.
+//
+// Revision 1.5  1998/04/25 22:06:23  curt
+// Edited cvs log messages in source files ... bad bad bad!
+//
+// Revision 1.4  1998/01/27 00:47:59  curt
+// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
+// system and commandline/config file processing code.
+//
+// Revision 1.3  1998/01/19 19:27:12  curt
+// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+// This should simplify things tremendously.
+//
+// Revision 1.2  1997/12/15 23:54:54  curt
+// Add xgl wrappers for debugging.
+// Generate terrain normals on the fly.
+//
+// Revision 1.1  1997/07/31 23:13:14  curt
+// Initial revision.
+//
+

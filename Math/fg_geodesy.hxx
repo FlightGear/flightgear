@@ -1,55 +1,81 @@
-/**************************************************************************
- * fg_geodesy.h -- routines to convert between geodetic and geocentric 
- *                 coordinate systems.
- *
- * Copied and adapted directly from LaRCsim/ls_geodesy.c
- *
- * See below for the complete original LaRCsim comments.
- *
- * $Id$
- * (Log is kept at end of this file)
- **************************************************************************/
+// fg_geodesy.hxx -- routines to convert between geodetic and geocentric 
+//                   coordinate systems.
+//
+// Copied and adapted directly from LaRCsim/ls_geodesy.c
+//
+// See below for the complete original LaRCsim comments.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
-#ifndef _FG_GEODESY_H
-#define _FG_GEODESY_H
+#ifndef _FG_GEODESY_HXX
+#define _FG_GEODESY_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
-/* fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
- *     INPUTS:	
- *         lat_geoc	Geocentric latitude, radians, + = North
- *         radius	C.G. radius to earth center (meters)
- *
- *     OUTPUTS:
- *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level (meters)
- *         sea_level_r	radius from earth center to sea level at
- *                      local vertical (surface normal) of C.G. (meters)
- */
+#include <Math/point3d.hxx>
+#include <Math/polar3d.hxx>
+
+
+// fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
+//     INPUTS:	
+//         lat_geoc	Geocentric latitude, radians, + = North
+//         radius	C.G. radius to earth center (meters)
+//
+//     OUTPUTS:
+//         lat_geod	Geodetic latitude, radians, + = North
+//         alt		C.G. altitude above mean sea level (meters)
+//         sea_level_r	radius from earth center to sea level at
+//                      local vertical (surface normal) of C.G. (meters)
 
 void fgGeocToGeod( double lat_geoc, double radius, double
 		   *lat_geod, double *alt, double *sea_level_r );
 
-/* fgGeodToGeoc( lat_geod, alt, *sl_radius, *lat_geoc )
- *     INPUTS:	
- *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level (meters)
- *
- *     OUTPUTS:
- *         sl_radius	SEA LEVEL radius to earth center (meters)
- *                      (add Altitude to get true distance from earth center.
- *         lat_geoc	Geocentric latitude, radians, + = North
- *
- */
+
+// fgGeodToGeoc( lat_geod, alt, *sl_radius, *lat_geoc )
+//     INPUTS:	
+//         lat_geod	Geodetic latitude, radians, + = North
+//         alt		C.G. altitude above mean sea level (meters)
+//
+//     OUTPUTS:
+//         sl_radius	SEA LEVEL radius to earth center (meters)
+//                      (add Altitude to get true distance from earth center.
+//         lat_geoc	Geocentric latitude, radians, + = North
+//
 
 void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 		      double *lat_geoc );
 
+
+// convert a geodetic point lon(radians), lat(radians), elev(meter) to
+// a cartesian point
+
+inline Point3D fgGeodToCart(const Point3D& geod) {
+    Point3D cp;
+    Point3D pp;
+    double gc_lon, gc_lat, sl_radius;
+
+    // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
+    //        geod[0], geod[1], geod[2]);
+
+    gc_lon = geod.lon();
+    fgGeodToGeoc(geod.lat(), geod.radius(), &sl_radius, &gc_lat);
+
+    // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
+    //        gc_lat, sl_radius+geod[2]);
+
+    pp.setvals(gc_lon, gc_lat, sl_radius + geod.radius());
+    cp = fgPolarToCart3d(pp);
+    
+    // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
+
+    return(cp);
+}
 
 
 /***************************************************************************
@@ -94,6 +120,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.2  1998/10/16 23:36:37  curt
+c++-ifying.
+
 Revision 1.1  1998/10/16 19:30:42  curt
 Renamed .c -> .h so we can start adding c++ supporting routines.
 
@@ -160,29 +189,28 @@ Initial Flight Gear revision.
 --------------------------------------------------------------------------*/
 
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _FG_GEODESY_H */
+#endif // _FG_GEODESY_HXX
 
 
-/* $Log$
-/* Revision 1.1  1998/10/16 19:30:42  curt
-/* Renamed .c -> .h so we can start adding c++ supporting routines.
-/*
- * Revision 1.4  1998/07/08 14:40:08  curt
- * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
- * Updated fg_geodesy comments to reflect that routines expect and produce
- *   meters.
- *
- * Revision 1.3  1998/04/21 17:03:48  curt
- * Prepairing for C++ integration.
- *
- * Revision 1.2  1998/01/22 02:59:38  curt
- * Changed #ifdef FILE_H to #ifdef _FILE_H
- *
- * Revision 1.1  1997/07/31 23:13:14  curt
- * Initial revision.
- *
- */
+// $Log$
+// Revision 1.2  1998/10/16 23:36:37  curt
+// c++-ifying.
+//
+// Revision 1.1  1998/10/16 19:30:42  curt
+// Renamed .c -> .h so we can start adding c++ supporting routines.
+//
+// Revision 1.4  1998/07/08 14:40:08  curt
+// polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+// Updated fg_geodesy comments to reflect that routines expect and produce
+//   meters.
+//
+// Revision 1.3  1998/04/21 17:03:48  curt
+// Prepairing for C++ integration.
+//
+// Revision 1.2  1998/01/22 02:59:38  curt
+// Changed #ifdef FILE_H to #ifdef _FILE_H
+//
+// Revision 1.1  1997/07/31 23:13:14  curt
+// Initial revision.
+//
+
