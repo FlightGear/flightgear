@@ -35,6 +35,7 @@
 #else
 #  include <Weather/weather.hxx>
 #endif
+#include <Objects/matlib.hxx>
 
 #include "fgfs.hxx"
 #include "fg_props.hxx"
@@ -108,6 +109,26 @@ _set_view_from_axes ()
 ////////////////////////////////////////////////////////////////////////
 // Default property bindings (not yet handled by any module).
 ////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Get the pause state of the sim.
+ */
+static bool
+getFreeze ()
+{
+  return globals->get_freeze();
+}
+
+
+/**
+ * Set the pause state of the sim.
+ */
+static void
+setFreeze (bool freeze)
+{
+  globals->set_freeze(freeze);
+}
 
 /**
  * Return the current aircraft directory (UIUC) as a string.
@@ -239,6 +260,30 @@ getGMTString ()
   out = buf;
   return out;
 }
+
+
+/**
+ * Get the texture rendering state.
+ */
+static bool
+getTextures ()
+{
+  return (material_lib.get_step() == 0);
+}
+
+
+/**
+ * Set the texture rendering state.
+ */
+static void
+setTextures (bool textures)
+{
+  if (textures)
+    material_lib.set_step(0);
+  else
+    material_lib.set_step(1);
+}
+
 
 /**
  * Return the magnetic variation
@@ -374,7 +419,9 @@ setTank2Fuel ( double gals )
 static bool
 getAPAltitudeLock ()
 {
-    return current_autopilot->get_AltitudeEnabled();
+    return (current_autopilot->get_AltitudeEnabled() &&
+	    current_autopilot->get_AltitudeMode()
+	    == FGAutopilot::FG_ALTITUDE_LOCK);
 }
 
 
@@ -387,6 +434,7 @@ setAPAltitudeLock (bool lock)
   current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
   current_autopilot->set_AltitudeEnabled(lock);
 }
+
 
 /**
  * Get the autopilot target altitude in feet.
@@ -413,7 +461,9 @@ setAPAltitude (double altitude)
 static bool
 getAPGSLock ()
 {
-    return current_autopilot->get_AltitudeEnabled();
+    return (current_autopilot->get_AltitudeEnabled() &&
+	    (current_autopilot->get_AltitudeMode()
+	     == FGAutopilot::FG_ALTITUDE_GS1));
 }
 
 
@@ -424,6 +474,29 @@ static void
 setAPGSLock (bool lock)
 {
   current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_GS1);
+  current_autopilot->set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot terrain lock (true=on).
+ */
+static bool
+getAPTerrainLock ()
+{
+    return (current_autopilot->get_AltitudeEnabled() &&
+	    (current_autopilot->get_AltitudeMode()
+	     == FGAutopilot::FG_ALTITUDE_TERRAIN));
+}
+
+
+/**
+ * Set the autopilot terrain lock (true=on).
+ */
+static void
+setAPTerrainLock (bool lock)
+{
+  current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_TERRAIN);
   current_autopilot->set_AltitudeEnabled(lock);
 }
 
@@ -739,6 +812,29 @@ setFOV (double fov)
   globals->get_current_view()->set_fov( fov );
 }
 
+static long
+getWarp ()
+{
+  return globals->get_warp();
+}
+
+static void
+setWarp (long warp)
+{
+  globals->set_warp(warp);
+}
+
+static long
+getWarpDelta ()
+{
+  return globals->get_warp_delta();
+}
+
+static void
+setWarpDelta (long delta)
+{
+  globals->set_warp_delta(delta);
+}
 
 static void
 setViewAxisLong (double axis)
@@ -757,11 +853,13 @@ void
 fgInitProps ()
 {
 				// Simulation
+  fgTie("/sim/freeze", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
   fgTie("/sim/view/offset", getViewOffset, setViewOffset);
   fgTie("/sim/view/goal-offset", getGoalViewOffset, setGoalViewOffset);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgTie("/sim/time/gmt-string", getGMTString);
+  fgTie("/sim/rendering/textures", getTextures, setTextures);
 
 				// Orientation
   fgTie("/orientation/heading-magnetic", getHeadingMag);
@@ -781,6 +879,7 @@ fgInitProps ()
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
   fgTie("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
   fgTie("/autopilot/locks/glide-slope", getAPGSLock, setAPGSLock);
+  fgTie("/autopilot/locks/terrain", getAPTerrainLock, setAPTerrainLock);
   fgTie("/autopilot/settings/climb-rate", getAPClimb, setAPClimb, false);
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
   fgTie("/autopilot/settings/heading-bug", getAPHeadingBug, setAPHeadingBug,
@@ -806,6 +905,8 @@ fgInitProps ()
 
 				// View
   fgTie("/sim/field-of-view", getFOV, setFOV);
+  fgTie("/sim/time/warp", getWarp, setWarp);
+  fgTie("/sim/time/warp-delta", getWarpDelta, setWarpDelta);
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 }
@@ -855,4 +956,3 @@ fgLoadFlight (istream &input)
 }
 
 // end of fg_props.cxx
-
