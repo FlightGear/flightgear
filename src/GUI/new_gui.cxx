@@ -34,7 +34,7 @@ NewGUI::init ()
 {
     char path1[1024];
     char path2[1024];
-    ulMakePath(path1, getenv("FG_ROOT"), "gui");
+    ulMakePath(path1, globals->get_fg_root().c_str(), "gui");
     ulMakePath(path2, path1, "dialogs");
     readDir(path2);
 #if !defined(FG_OLD_MENUBAR)
