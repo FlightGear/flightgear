@@ -69,7 +69,7 @@ FGGlobals::FGGlobals() :
     initial_state( NULL ),
     locale( NULL ),
     commands( new SGCommandMgr ),
-    model_loader( NULL ),
+    model_lib( NULL ),
     acmodel( NULL ),
     model_mgr( NULL ),
     channel_options_list( NULL ),

@@ -79,9 +79,9 @@ SG_USING_STD(endl);
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
-#include <simgear/scene/model/loader.hxx>
 #include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/model.hxx>
+#include <simgear/scene/model/modellib.hxx>
 #ifdef FG_USE_CLOUDS_3D
 #  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
 #  include <simgear/sky/clouds3d/SkyUtil.hpp>
@@ -1698,7 +1698,7 @@ static bool fgMainInit( int argc, char **argv ) {
     // Initialize the general model subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->set_model_loader(new SGModelLoader);
+    globals->set_model_lib(new SGModelLib);
     globals->set_model_mgr(new FGModelMgr);
     globals->get_model_mgr()->init();
     globals->get_model_mgr()->bind();
@@ -1934,7 +1934,7 @@ void fgLoadDCS(void) {
 
                 if ( strcmp(obj_filename,"repeat") != 0) {
                     ship_obj =
-                      globals->get_model_loader()->load_model( globals->get_fg_root(), obj_filename, globals->get_props(), globals->get_sim_time_sec() );
+                      globals->get_model_lib()->load_model( globals->get_fg_root(), obj_filename, globals->get_props(), globals->get_sim_time_sec() );
                 }
       
                 if ( ship_obj != NULL ) {

@@ -102,7 +102,7 @@ void TriUserData::add_object_to_triangle (SGMatModel * object)
 
     ssgTransform * pos = new ssgTransform;
     pos->setTransform(mat);
-    pos->addKid( object->get_random_model( globals->get_model_loader(),
+    pos->addKid( object->get_random_model( globals->get_model_lib(),
                                            globals->get_fg_root(),
                                            globals->get_props(),
                                            globals->get_sim_time_sec() ) );

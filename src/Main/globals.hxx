@@ -53,7 +53,7 @@ class SGEphemeris;
 class SGCommandMgr;
 class SGMagVar;
 class SGMaterialLib;
-class SGModelLoader;
+class SGModelLib;
 class SGPropertyNode;
 class SGRoute;
 class SGTime;
@@ -163,7 +163,7 @@ private:
 
     SGCommandMgr *commands;
 
-    SGModelLoader * model_loader;
+    SGModelLib *model_lib;
 
     FGAircraftModel *acmodel;
 
@@ -282,10 +282,10 @@ public:
 
     inline SGCommandMgr *get_commands () { return commands; }
 
-    inline SGModelLoader * get_model_loader () { return model_loader; }
+    inline SGModelLib * get_model_lib () { return model_lib; }
 
-    inline void set_model_loader (SGModelLoader * loader) {
-        model_loader = loader;
+    inline void set_model_lib (SGModelLib *m) {
+        model_lib = m;
     }
 
     inline FGAircraftModel *get_aircraft_model () { return acmodel; }

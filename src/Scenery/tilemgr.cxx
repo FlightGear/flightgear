@@ -34,7 +34,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 #include <simgear/misc/exception.hxx>
-#include <simgear/scene/model/loader.hxx>
+#include <simgear/scene/model/modellib.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -281,10 +281,10 @@ void FGTileMgr::update_queues()
         try
         {
             ssgEntity *obj_model =
-                globals->get_model_loader()->load_model( globals->get_fg_root(),
-                                                         dm->get_model_path(),
-                                                         globals->get_props(),
-                                                         globals->get_sim_time_sec() );
+                globals->get_model_lib()->load_model( globals->get_fg_root(),
+                                                      dm->get_model_path(),
+                                                      globals->get_props(),
+                                                      globals->get_sim_time_sec() );
             if ( obj_model != NULL ) {
                 dm->get_obj_trans()->addKid( obj_model );
             }

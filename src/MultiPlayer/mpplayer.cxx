@@ -52,7 +52,7 @@
 #include <plib/netSocket.h>
 #include <plib/sg.h>
 
-#include <simgear/scene/model/loader.hxx>
+#include <simgear/scene/model/modellib.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -141,7 +141,7 @@ void MPPlayer::Close(void) {
 
         // Flush the model loader so that it erases the model from its list of
         // models.
-        globals->get_model_loader()->flush();
+        globals->get_model_lib()->flush1();
 
         // Assume that plib/ssg deletes the model and transform as their
         // refcounts should be zero.
@@ -247,10 +247,10 @@ void MPPlayer::LoadModel(void) {
     m_ModelTrans = new ssgTransform;
 
     // Load the model
-    m_Model = globals->get_model_loader()->load_model( globals->get_fg_root(),
-                                                       m_sModelName,
-                                                       globals->get_props(),
-                                                       globals->get_sim_time_sec() );
+    m_Model = globals->get_model_lib()->load_model( globals->get_fg_root(),
+                                                    m_sModelName,
+                                                    globals->get_props(),
+                                                    globals->get_sim_time_sec() );
     m_Model->clrTraversalMaskBits( SSGTRAV_HOT );
 
     // Add model to transform
