@@ -62,7 +62,8 @@ filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters
 
 ; Put installation and source directories into the fgadmin.prefs
 ; filename: "{app}\bin\Win32\mkfgadminp.bat"; WorkingDir: "{app}\bin\Win32"; Parameters: """{src}"" ""{app}"" ""{userappdata}"""
-filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}"" ""--scenery-dest={app}\scenery"""
+filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}\."" ""--scenery-dest={app}\scenery"""
+; filename: "{app}\bin\Win32\testbatch.bat"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}"" ""--scenery-dest={app}\scenery"""
 
 ; Make the user installable scenery directory
 filename: "{app}\bin\Win32\mkscenerydir.bat"; WorkingDir: "{app}"
