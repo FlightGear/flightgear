@@ -22,24 +22,31 @@
 // (Log is kept at end of this file)
 
 #include <ctype.h> // isspace()
-#include "fgstream.hxx"
+#include <Misc/fgstream.hxx>
+
+fg_gzifstream::fg_gzifstream()
+    : istream(&gzbuf)
+{
+}
 
 //-----------------------------------------------------------------------------
 //
 // Open a possibly gzipped file for reading.
 //
-fg_gzifstream::fg_gzifstream( const string& name, int io_mode )
+fg_gzifstream::fg_gzifstream( const string& name, ios_openmode io_mode )
+    : istream(&gzbuf)
 {
-    open( name, io_mode );
+    this->open( name, io_mode );
 }
 
 //-----------------------------------------------------------------------------
 //
 // Attach a stream to an already opened file descriptor.
 //
-fg_gzifstream::fg_gzifstream( int fd, int io_mode )
-    : gzstream( fd, io_mode )
+fg_gzifstream::fg_gzifstream( int fd, ios_openmode io_mode )
+    : istream(&gzbuf)
 {
+    gzbuf.attach( fd, io_mode );
 }
 
 //-----------------------------------------------------------------------------
@@ -51,10 +58,10 @@ fg_gzifstream::fg_gzifstream( int fd, int io_mode )
 // then append ".gz" and try again.
 //
 void
-fg_gzifstream::open( const string& name, int io_mode )
+fg_gzifstream::open( const string& name, ios_openmode io_mode )
 {
-    gzstream.open( name.c_str(), io_mode );
-    if ( gzstream.fail() )
+    gzbuf.open( name.c_str(), io_mode );
+    if ( ! gzbuf.is_open() )
     {
 	string s = name;
 	if ( s.substr( s.length() - 3, 3 ) == ".gz" )
@@ -70,56 +77,14 @@ fg_gzifstream::open( const string& name, int io_mode )
 	}
 
 	// Try again.
-	gzstream.open( s.c_str(), io_mode );
+	gzbuf.open( s.c_str(), io_mode );
     }
 }
 
-//-----------------------------------------------------------------------------
-//
-// Remove whitespace characters from the stream.
-//
-istream&
-fg_gzifstream::eat_whitespace()
+void
+fg_gzifstream::attach( int fd, ios_openmode io_mode )
 {
-    char c;
-    while ( gzstream.get(c) )
-    {
-	if ( ! isspace( c ) )
-	{
-	    // put pack the non-space character
-	    gzstream.putback(c);
-	    break;
-	}
-    }
-    return gzstream;
-}
-
-//-----------------------------------------------------------------------------
-// 
-// Remove whitspace chatacters and comment lines from a stream.
-//
-istream&
-fg_gzifstream::eat_comments()
-{
-    for (;;)
-    {
-	// skip whitespace
-	eat_whitespace();
-
-	char c;
-	gzstream.get( c );
-	if ( c != '#' )
-	{
-	    // not a comment
-	    gzstream.putback(c);
-	    break;
-	}
-
-	// skip to end of line.
-	while ( gzstream.get(c) && (c != '\n' && c != '\r') )
-	    ;
-    }
-    return gzstream;
+    gzbuf.attach( fd, io_mode );
 }
 
 //
@@ -175,6 +140,9 @@ skipcomment( istream& in )
 }
 
 // $Log$
+// Revision 1.3  1998/11/06 14:05:12  curt
+// More portability improvements by Bernie Bright.
+//
 // Revision 1.2  1998/09/24 15:22:17  curt
 // Additional enhancements.
 //

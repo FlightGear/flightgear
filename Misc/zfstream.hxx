@@ -1,130 +1,159 @@
+//  A C++ I/O streams interface to the zlib gz* functions
+//
+// Written by Bernie Bright, 1998
+// Based on zlib/contrib/iostream/ by Kevin Ruland <kevin@rodin.wustl.edu>
+//
+// Copyright (C) 1998  Bernie Bright - bbright@c031.aone.net.au
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 #ifndef _zfstream_hxx
 #define _zfstream_hxx
 
-#include <fstream.h>
-
 #include "zlib/zlib.h"
-#include "Include/fg_stl_config.h"
+#include "Include/compiler.h"
 
-class gzfilebuf : public streambuf {
+#ifdef FG_HAVE_STD_INCLUDES
 
+#  include <streambuf>
+#  include <istream>
+
+#  define ios_openmode ios_base::openmode
+#  define ios_in       ios_base::in
+#  define ios_out      ios_base::out
+#  define ios_app      ios_base::app
+#  define ios_binary   ios_base::binary
+
+#  define ios_seekdir  ios_base::seekdir
+
+#  define ios_badbit   ios_base::badbit
+#  define ios_failbit  ios_base::failbit
+
+#else
+
+#  ifdef FG_HAVE_STREAMBUF
+#    include <streambuf.h>
+#    include <istream.h>
+#  else
+#    include <iostream.h>
+#  endif
+
+//#  define ios_openmode ios::open_mode
+#  define ios_openmode int
+#  define ios_in       ios::in
+#  define ios_out      ios::out
+#  define ios_app      ios::app
+#  define ios_binary   ios::binary
+
+#  define ios_seekdir  ios::seek_dir
+
+#  define ios_badbit   ios::badbit
+#  define ios_failbit  ios::failbit
+
+// Dummy up some char traits for now.
+template<class charT> struct char_traits{};
+
+FG_TEMPLATE_NULL
+struct char_traits<char>
+{
+    typedef char      char_type;
+    typedef int       int_type;
+    typedef streampos pos_type;
+    typedef streamoff off_type;
+
+    static int_type eof() { return EOF; }
+};
+
+#endif // FG_HAVE_STD_INCLUDES
+
+//-----------------------------------------------------------------------------
+//
+//
+//
+class gzfilebuf : public streambuf
+{
 public:
 
-  gzfilebuf( );
-  virtual ~gzfilebuf();
+#ifndef FG_HAVE_STD_INCLUDES
+    typedef char_traits<char>           traits_type;
+    typedef char_traits<char>::int_type int_type;
+    typedef char_traits<char>::pos_type pos_type;
+    typedef char_traits<char>::off_type off_type;
+#endif
 
-  gzfilebuf *open( const char *name, int io_mode );
-  gzfilebuf *attach( int file_descriptor, int io_mode );
-  gzfilebuf *close();
+    gzfilebuf();
+    virtual ~gzfilebuf();
 
-  int setcompressionlevel( short comp_level );
-  int setcompressionstrategy( short comp_strategy );
+    gzfilebuf* open( const char* name, ios_openmode io_mode );
+    gzfilebuf* attach( int file_descriptor, ios_openmode io_mode );
+    gzfilebuf* close();
 
-  inline int is_open() const { return (file !=NULL); }
-
-  virtual streampos seekoff( streamoff, ios::seek_dir, int );
-
-  virtual int sync();
+//     int setcompressionlevel( int comp_level );
+//     int setcompressionstrategy( int comp_strategy );
+    bool is_open() const { return (file != NULL); }
+    virtual streampos seekoff( streamoff off, ios_seekdir way, int which );
+    virtual int sync();
 
 protected:
 
-  virtual int underflow();
-  virtual int overflow( int = EOF );
+    virtual int_type underflow();
+    virtual int_type overflow( int_type c = traits_type::eof() );
 
 private:
 
-  gzFile file;
-  short mode;
-  short own_file_descriptor;
+    int_type flushbuf();
+    int fillbuf();
 
-  int flushbuf();
-  int fillbuf();
-
-};
-
-class gzfilestream_common : virtual public ios {
-
-//   friend class gzifstream;
-  friend class gzofstream;
-  friend gzofstream &setcompressionlevel( gzofstream &, int );
-  friend gzofstream &setcompressionstrategy( gzofstream &, int );
-
-public:
-  virtual ~gzfilestream_common();
-
-  void attach( int fd, int io_mode );
-  void open( const char *name, int io_mode );
-  void close();
-
-protected:
-  gzfilestream_common();
-
-  gzfilebuf *rdbuf();
+    // Convert io_mode to "rwab" string.
+    void cvt_iomode( char* mode_str, ios_openmode io_mode );
 
 private:
 
-  gzfilebuf buffer;
+    gzFile file;
+    ios_openmode mode;
+    bool own_file_descriptor;
 
-};
+    // Get (input) buffer.
+    int ibuf_size;
+    char* ibuffer;
 
-class gzifstream : public gzfilestream_common, public istream {
+    static const int page_size = 4096;
 
-public:
-
-  gzifstream();
-  gzifstream( const char *name, int io_mode = ios::in );
-  gzifstream( int fd, int io_mode = ios::in );
-
-  virtual ~gzifstream();
-
-};
-
-class gzofstream : public gzfilestream_common, public ostream {
-
-public:
-
-  gzofstream();
-  gzofstream( const char *name, int io_mode = ios::out );
-  gzofstream( int fd, int io_mode = ios::out );
-
-  virtual ~gzofstream();
-
-};
-
-template<class T> class gzomanip {
-    friend gzofstream &operator << FG_NULL_TMPL_ARGS (gzofstream &, const gzomanip<T> &);
-public:
-  gzomanip(gzofstream &(*f)(gzofstream &, T), T v) : func(f), val(v) { }
 private:
-  gzofstream &(*func)(gzofstream &, T);
-  T val;
+    // Not defined
+    gzfilebuf( const gzfilebuf& );
+    void operator= ( const gzfilebuf& );
 };
 
-template<class T> gzofstream &operator<<(gzofstream &s,
-					 const gzomanip<T> &m) {
-  return (*m.func)(s, m.val);
-  
-}
-
-inline gzofstream &setcompressionlevel( gzofstream &s, int l ) {
-  (s.rdbuf())->setcompressionlevel(l);
-  return s;
-}
-
-inline gzofstream &setcompressionstrategy( gzofstream &s, int l ) {
-  (s.rdbuf())->setcompressionstrategy(l);
-  return s;
-}
-
-inline gzomanip<int> setcompressionlevel(int l)
+//-----------------------------------------------------------------------------
+//
+// 
+//
+struct gzifstream_base
 {
-  return gzomanip<int>( /* & */ setcompressionlevel,l);     // & superfluous
-}
+    gzifstream_base() {}
 
-inline gzomanip<int> setcompressionstrategy(int l)
-{
-  return gzomanip<int>( /* & */ setcompressionstrategy,l);  // & superfluous
-}
+    gzfilebuf gzbuf;
+};
 
 #endif // _zfstream_hxx
+
+// $Log$
+// Revision 1.4  1998/11/06 14:05:16  curt
+// More portability improvements by Bernie Bright.
+//

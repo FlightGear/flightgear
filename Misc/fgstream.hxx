@@ -29,21 +29,31 @@
 #endif                                   
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#  include "Include/config.h"
 #endif
 
 #include <string>
 
-#include "Include/fg_stl_config.h"
-FG_USING_NAMESPACE(std);
+#include "Include/compiler.h"
+FG_USING_STD(string);
+
+// #ifdef FG_HAVE_STD_INCLUDES
+// #include <istream>
+// #else
+// #include <istream.h>
+// #endif
 
 #include "zfstream.hxx"
+
+// Input stream manipulator function type.
+class fg_gzifstream;
+typedef fg_gzifstream& (*IManipFunc)( fg_gzifstream& );
 
 //-----------------------------------------------------------------------------
 //
 // Envelope class for gzifstream.
 //
-class fg_gzifstream
+class fg_gzifstream : private gzifstream_base, public istream
 {
 public:
     //
@@ -51,45 +61,21 @@ public:
 
     // Attempt to open a file with and without ".gz" extension.
     fg_gzifstream( const string& name,
-		   int io_mode = ios::in|ios::binary );
+		   ios_openmode io_mode = ios_in | ios_binary );
 
     // 
-    fg_gzifstream( int fd, int io_mode = ios::in|ios::binary );
+    fg_gzifstream( int fd, ios_openmode io_mode = ios_in|ios_binary );
 
     // Attempt to open a file with and without ".gz" extension.
     void open( const string& name,
-	       int io_mode = ios::in|ios::binary );
+	       ios_openmode io_mode = ios_in|ios_binary );
 
-    // Return the underlying stream.
-    istream& stream() { return gzstream; }
-
-    // Check stream state.
-    bool operator ! () const { return !gzstream; }
-
-    // Check for end of file.
-    bool eof() const { return gzstream.eof(); }
-
-    // Remove whitespace from stream.
-    // Whitespace is as defined by isspace().
-    istream& eat_whitespace();
-
-    // Removes comments and whitespace from stream.
-    // A comment is any line starting with '#'.
-    istream& eat_comments();
-
-    // Read one character from stream.
-    istream& get( char& c ) { return gzstream.get(c); }
-
-    // Put a character back into the input buffer.
-    istream& putback( char c ) { return gzstream.putback(c); }
-
-private:
-    // The underlying compressed data stream.
-    gzifstream gzstream;
+    void attach( int fd, ios_openmode io_mode = ios_in|ios_binary );
 
 private:
     // Not defined!
     fg_gzifstream( const fg_gzifstream& );    
+    void operator= ( const fg_gzifstream& );    
 };
 
 // istream manipulator that skips to end of line.
@@ -102,9 +88,13 @@ istream& skipws( istream& in );
 // A comment starts with '#'.
 istream& skipcomment( istream& in );
 
+
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.5  1998/11/06 14:05:13  curt
+// More portability improvements by Bernie Bright.
+//
 // Revision 1.4  1998/10/16 00:50:56  curt
 // Remove leading _ from a couple defines.
 //
