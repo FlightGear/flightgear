@@ -60,6 +60,8 @@
 # endif
 #endif
 
+#include <plib/ssg.h>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>

@@ -13,9 +13,9 @@
 
 #include <vector>
 
-#include <plib/ssg.h>
-
 SG_USING_STD(vector);
+
+class ssgEntity;
 
 class FGHitRec {
 

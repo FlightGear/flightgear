@@ -38,8 +38,6 @@
 #include <vector>
 #include STL_STRING
 
-#include <plib/ssg.h>		// plib includes
-
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -55,6 +53,13 @@ SG_USING_STD(vector);
 typedef vector < Point3D > point_list;
 typedef point_list::iterator point_list_iterator;
 typedef point_list::const_iterator const_point_list_iterator;
+
+class ssgLeaf;
+class ssgBranch;
+class ssgTransform;
+class ssgSelector;
+class ssgRangeSelector;
+class ssgVertexArray;
 
 class FGTileEntry;
 
