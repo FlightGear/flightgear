@@ -32,6 +32,7 @@
 
 SG_USING_STD(vector);
 SG_USING_STD(string);
+SG_USING_NAMESPACE(std);
 
 struct atcMessage {
     string msg;
