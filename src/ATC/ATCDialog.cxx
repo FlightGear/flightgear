@@ -71,7 +71,7 @@ static puButtonBox	*ATCOptionsList = 0;
 // AK
 static void AKATCDialogOK(puObject *)
 {
-	switch(atcDialogCommunicationOptions->getValue()) {
+	switch(ATCOptionsList->getValue()) {
 	case 0:
 		//cout << "Option 0 chosen\n";
 		fgSetBool("/sim/atc/opt0",true);
@@ -305,12 +305,14 @@ void FGATCDialog::DoDialog() {
 		//int yc = 10;
 		int yc = 70;
 		int xsize = 600;
+		
 		if ( atcmlist.size() != 0 ){ 
 			int k=atcmlist.size();
 			//int k = 3;
 			//cout << "k = " << k << endl;
 			int y = (fgGetInt("/sim/startup/ysize") - 200 - 20 - k*20);
 			ATCMenuBox = new puDialogBox (100, y);
+			ATCMenuFrame      =  new puFrame (0,0,xsize,yc+40);
 			// loop over all entries in atcmentrylist
 			ATCOptionsList = new puButtonBox (50, 50, 450, 50+(k*25), NULL, true);
 			char** optList = new char*[k+1];
@@ -336,13 +338,13 @@ void FGATCDialog::DoDialog() {
 		} else {
 			int y = (fgGetInt("/sim/startup/ysize") - 100 - 20 );
 			ATCMenuBox = new puDialogBox (10, y);
+			ATCMenuFrame      =  new puFrame (0,0,xsize,yc+40);
 			ATCMenuBoxMessage =  new puText (10, yc-10);
 			ATCMenuBoxMessage ->     setLabel( "No transmission available" );
 		}
 		
 		ATCMenuBoxMessage =  new puText (10, yc+10);
 		ATCMenuBoxMessage ->     setLabel( "ATC Menu" );
-		ATCMenuFrame      =  new puFrame (0,0,xsize,yc+40);
 		atcDialogOkButton     =  new puOneShot         ((xsize/2)-85, 10, (xsize/2)-25, 50);
 		atcDialogOkButton     ->     setLegend         (gui_msg_OK);
 		atcDialogOkButton     ->     makeReturnDefault (TRUE);
