@@ -33,7 +33,7 @@
 #include <Debug/logstream.hxx>
 
 #if defined( ENABLE_LINUX_JOYSTICK )
-#  include <js.h>
+#  include <plib/js.h>
 #elif defined( ENABLE_GLUT_JOYSTICK )
 #  include <GL/glut.h>
 #  include <XGL/xgl.h>
