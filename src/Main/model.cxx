@@ -47,10 +47,9 @@ find_named_node (ssgEntity * node, const string &name)
 
 FGAircraftModel::FGAircraftModel ()
   : _props(new SGPropertyNode),
-    _object(0),
+    _model(0),
     _selector(new ssgSelector),
-    _position(new ssgTransform),
-    _prop_position(0)
+    _position(new ssgTransform)
 {
 }
 
@@ -66,6 +65,8 @@ FGAircraftModel::init ()
 {
   // TODO: optionally load an XML file with a pointer to the 3D object
   // and placement and animation info
+
+  SG_LOG(SG_INPUT, SG_INFO, "Initializing aircraft 3D model");
 
 				// Load the 3D aircraft object itself
   SGPath path = globals->get_fg_root();
@@ -83,28 +84,23 @@ FGAircraftModel::init ()
   }
 
   ssgTexturePath((char *)path.dir().c_str());
-  _object = ssgLoad((char *)path.c_str());
-  if (_object == 0) {
-    _object = ssgLoad((char *)"Models/Geometry/glider.ac");
-    if (_object == 0)
+  _model = ssgLoad((char *)path.c_str());
+  if (_model == 0) {
+    _model = ssgLoad((char *)"Models/Geometry/glider.ac");
+    if (_model == 0)
       throw sg_exception("Failed to load an aircraft model");
   }
 
-				// Find the propeller
-  ssgEntity * prop_node = find_named_node(_object, "Propeller");
-  if (prop_node != 0) {
-    _prop_position = new ssgTransform;
-    int nParents = prop_node->getNumParents();
-    _prop_position->addKid(prop_node);
-    for (int i = 0; i < nParents; i++) {
-      ssgBranch * parent = prop_node->getParent(i);
-      parent->replaceKid(prop_node, _prop_position);
-    }
+				// Load animations
+  vector<SGPropertyNode *> animation_nodes =
+    _props->getChildren("animation");
+  for (int i = 0; i < animation_nodes.size(); i++) {
+    _animations.push_back(read_animation(animation_nodes[i]));
   }
 
 				// Set up the alignment node
   ssgTransform * align = new ssgTransform;
-  align->addKid(_object);
+  align->addKid(_model);
   sgMat4 rot_matrix;
   sgMat4 off_matrix;
   sgMat4 res_matrix;
@@ -141,23 +137,16 @@ FGAircraftModel::unbind ()
 void
 FGAircraftModel::update (int dt)
 {
-  // START TEMPORARY KLUDGE
-  static float prop_rotation = 0;
-  static sgMat4 prop_matrix;
-
   _current_timestamp.stamp();
-  long ms = (_current_timestamp - _last_timestamp) / 1000;
+  long elapsed_ms = (_current_timestamp - _last_timestamp) / 1000;
   _last_timestamp.stamp();
-
-  double rpms = fgGetDouble("/engines/engine[0]/rpm") / 60000.0;
-  prop_rotation += (ms * rpms * 360);
-  while (prop_rotation >= 360)
-    prop_rotation -= 360;
-  // END TEMPORARY KLUDGE
 
   if (globals->get_viewmgr()->get_current() == 0) {
     _selector->select(false);
   } else {
+    for (int i = 0; i < _animations.size(); i++)
+      do_animation(_animations[i], elapsed_ms);
+
     _selector->select(true);
     FGViewerRPH *pilot_view =
       (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
@@ -179,19 +168,88 @@ FGAircraftModel::update (int dt)
     sgCoord tuxpos;
     sgSetCoord( &tuxpos, sgTUX );
     _position->setTransform( &tuxpos );
+  }
 
-    // START TEMPORARY KLUDGE
-    if (_prop_position != 0) {
-      double offset = -.75;
-      sgMat4 tmp;
-      sgMakeTransMat4(prop_matrix, 0, 0, offset);
-      sgMakeRotMat4(tmp, 0, 0, prop_rotation);
-      sgPostMultMat4(prop_matrix, tmp);
-      sgMakeTransMat4(tmp, 0, 0, -offset);
-      sgPostMultMat4(prop_matrix, tmp);
-      _prop_position->setTransform(prop_matrix);
-    }
-    // END_TEMPORARY KLUDGE
+}
+
+FGAircraftModel::Animation
+FGAircraftModel::read_animation (const SGPropertyNode * node)
+{
+  Animation animation;
+
+				// Figure out the animation type
+  string type_name = node->getStringValue("type");
+  if (type_name == "spin") {
+    SG_LOG(SG_INPUT, SG_INFO, "Reading spin animation");
+    animation.type = Animation::Spin;
+  } else {
+    animation.type = Animation::None;
+    SG_LOG(SG_INPUT, SG_ALERT, "Unknown animation type " << type_name);
+    return animation;
+  }
+
+				// Find the object to be animated
+  string object_name = node->getStringValue("object-name");
+  ssgEntity * target = find_named_node(_model, object_name);
+  if (target != 0) {
+    SG_LOG(SG_INPUT, SG_INFO, "  Target object is " << object_name);
+  } else {
+    animation.type = Animation::None;
+    SG_LOG(SG_INPUT, SG_ALERT, "Object " << object_name
+	   << " not found in model");
+    return animation;
+  }
+
+				// Splice a transform node into the tree
+  animation.transform = new ssgTransform;
+  int nParents = target->getNumParents();
+  animation.transform->addKid(target);
+  for (int i = 0; i < nParents; i++) {
+    ssgBranch * parent = target->getParent(i);
+    parent->replaceKid(target, animation.transform);
+  }
+
+				// Get the node
+  animation.prop =
+    fgGetNode(node->getStringValue("property", "/null"), true);
+
+				// Get the center and axis
+  animation.center_x = node->getFloatValue("center/x-m", 0);
+  animation.center_y = node->getFloatValue("center/y-m", 0);
+  animation.center_z = node->getFloatValue("center/z-m", 0);
+  animation.axis_x = node->getFloatValue("axis/x", 0);
+  animation.axis_y = node->getFloatValue("axis/y", 1);
+  animation.axis_z = node->getFloatValue("axis/z", 0);
+
+  return animation;
+}
+
+void
+FGAircraftModel::do_animation (Animation &animation, long elapsed_ms)
+{
+  switch (animation.type) {
+  case Animation::None:
+    return;
+  case Animation::Spin: {
+    float velocity_rpms = animation.prop->getDoubleValue() / 60000.0;
+    animation.position += (elapsed_ms * velocity_rpms * 360);
+    while (animation.position >= 360)
+      animation.position -= 360;
+    sgMakeTransMat4(animation.matrix, -animation.center_x,
+		    -animation.center_y, -animation.center_z);
+    sgVec3 axis;
+    sgSetVec3(axis, animation.axis_x, animation.axis_y, animation.axis_z);
+    sgMat4 tmp;
+    sgMakeRotMat4(tmp, animation.position, axis);
+    sgPostMultMat4(animation.matrix, tmp);
+    sgMakeTransMat4(tmp, animation.center_x,
+		    animation.center_y, animation.center_z);
+    sgPostMultMat4(animation.matrix, tmp);
+    animation.transform->setTransform(animation.matrix);
+    return;
+  }
+  default:
+    return;
   }
 }
 

@@ -10,6 +10,12 @@
 # error This library requires C++
 #endif
 
+#include <string>
+#include <vector>
+
+SG_USING_STD(string);
+SG_USING_STD(vector);
+
 #include "fgfs.hxx"
 #include <simgear/misc/props.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -28,15 +34,38 @@ public:
 
 private:
 
+  struct Animation
+  {
+    enum Type {
+      None,
+      Spin
+    };
+    string name;
+    Type type;
+    ssgTransform * transform;
+    sgMat4 matrix;
+    SGPropertyNode * prop;
+    float position;
+    float center_x;
+    float center_y;
+    float center_z;
+    float axis_x;
+    float axis_y;
+    float axis_z;
+  };
+
+  Animation read_animation (const SGPropertyNode * node);
+  void do_animation (Animation &animation, long elapsed_ms);
+
   SGPropertyNode * _props;
-  ssgEntity * _object;
+  ssgEntity * _model;
   ssgSelector * _selector;
   ssgTransform * _position;
 
   SGTimeStamp _last_timestamp;
   SGTimeStamp _current_timestamp;
 
-  ssgTransform * _prop_position;
+  vector<Animation> _animations;
 
 };
 
