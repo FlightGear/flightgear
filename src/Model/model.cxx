@@ -14,11 +14,13 @@
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/interpolater.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/location.hxx>
 #include <Scenery/scenery.hxx>
@@ -120,6 +122,26 @@ set_translation (sgMat4 &matrix, double position_m, sgVec3 &axis)
   sgVec3 xyz;
   sgScaleVec3(xyz, axis, position_m);
   sgMakeTransMat4(matrix, xyz);
+}
+
+
+/**
+ * Read an interpolation table from properties.
+ */
+static SGInterpTable *
+read_interpolation_table (const SGPropertyNode * props)
+{
+  const SGPropertyNode * table_node = props->getNode("interpolation");
+  if (table_node != 0) {
+    SGInterpTable * table = new SGInterpTable();
+    vector<const SGPropertyNode *> entries = table_node->getChildren("entry");
+    for (int i = 0; i < entries.size(); i++)
+      table->addEntry(entries[i]->getDoubleValue("ind", 0.0),
+		      entries[i]->getDoubleValue("dep", 0.0));
+    return table;
+  } else {
+    return 0;
+  }
 }
 
 
@@ -324,7 +346,7 @@ FG3DModel::setOrientation (double roll_deg, double pitch_deg,
 
 FG3DModel::Animation *
 FG3DModel::make_animation (const char * object_name,
-                                 SGPropertyNode * node)
+			   SGPropertyNode * node)
 {
   Animation * animation = 0;
   const char * type = node->getStringValue("type");
@@ -533,6 +555,7 @@ FG3DModel::RotateAnimation::RotateAnimation ()
   : _prop(0),
     _offset_deg(0.0),
     _factor(1.0),
+    _table(0),
     _has_min(false),
     _min_deg(0.0),
     _has_max(false),
@@ -544,12 +567,13 @@ FG3DModel::RotateAnimation::RotateAnimation ()
 
 FG3DModel::RotateAnimation::~RotateAnimation ()
 {
+  delete _table;
   _transform = 0;
 }
 
 void
 FG3DModel::RotateAnimation::init (ssgEntity * object,
-                                        SGPropertyNode * props)
+				  SGPropertyNode * props)
 {
                                 // Splice in the new transform node
   splice_branch(_transform, object);
@@ -557,6 +581,7 @@ FG3DModel::RotateAnimation::init (ssgEntity * object,
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
   _offset_deg = props->getDoubleValue("offset-deg", 0.0);
   _factor = props->getDoubleValue("factor", 1.0);
+  _table = read_interpolation_table(props);
   if (props->hasValue("min-deg")) {
     _has_min = true;
     _min_deg = props->getDoubleValue("min-deg");
@@ -578,11 +603,15 @@ FG3DModel::RotateAnimation::init (ssgEntity * object,
 void
 FG3DModel::RotateAnimation::update (int dt)
 {
-  _position_deg = ((_prop->getDoubleValue() + _offset_deg) * _factor);
-  if (_has_min && _position_deg < _min_deg)
-    _position_deg = _min_deg;
-  if (_has_max && _position_deg > _max_deg)
-    _position_deg = _max_deg;
+  if (_table == 0) {
+    _position_deg = (_prop->getDoubleValue() + _offset_deg) * _factor;
+   if (_has_min && _position_deg < _min_deg)
+     _position_deg = _min_deg;
+   if (_has_max && _position_deg > _max_deg)
+     _position_deg = _max_deg;
+  } else {
+    _position_deg = _table->interpolate(_prop->getDoubleValue());
+  }
   set_rotation(_matrix, _position_deg, _center, _axis);
   _transform->setTransform(_matrix);
 }
@@ -597,6 +626,7 @@ FG3DModel::TranslateAnimation::TranslateAnimation ()
   : _prop(0),
     _offset_m(0.0),
     _factor(1.0),
+    _table(0),
     _has_min(false),
     _min_m(0.0),
     _has_max(false),
@@ -608,12 +638,13 @@ FG3DModel::TranslateAnimation::TranslateAnimation ()
 
 FG3DModel::TranslateAnimation::~TranslateAnimation ()
 {
+  delete _table;
   _transform = 0;
 }
 
 void
 FG3DModel::TranslateAnimation::init (ssgEntity * object,
-                                        SGPropertyNode * props)
+				     SGPropertyNode * props)
 {
                                 // Splice in the new transform node
   splice_branch(_transform, object);
@@ -621,6 +652,7 @@ FG3DModel::TranslateAnimation::init (ssgEntity * object,
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
   _offset_m = props->getDoubleValue("offset-m", 0.0);
   _factor = props->getDoubleValue("factor", 1.0);
+  _table = read_interpolation_table(props);
   if (props->hasValue("min-m")) {
     _has_min = true;
     _min_m = props->getDoubleValue("min-m");
@@ -639,18 +671,18 @@ FG3DModel::TranslateAnimation::init (ssgEntity * object,
 void
 FG3DModel::TranslateAnimation::update (int dt)
 {
-  _position_m = ((_prop->getDoubleValue() + _offset_m) * _factor);
-  if (_has_min && _position_m < _min_m)
-    _position_m = _min_m;
-  if (_has_max && _position_m > _max_m)
-    _position_m = _max_m;
+  if (_table == 0) {
+    _position_m = (_prop->getDoubleValue() + _offset_m) * _factor;
+    if (_has_min && _position_m < _min_m)
+      _position_m = _min_m;
+    if (_has_max && _position_m > _max_m)
+      _position_m = _max_m;
+  } else {
+    _position_m = _table->interpolate(_prop->getDoubleValue());
+  }
   set_translation(_matrix, _position_m, _axis);
   _transform->setTransform(_matrix);
 }
 
 
 // end of model.cxx
-
-
-
-

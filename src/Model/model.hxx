@@ -11,12 +11,23 @@
 #endif
 
 #include <vector>
-#include <plib/ssg.h>
 
 SG_USING_STD(vector);
 
-#include <Main/fg_props.hxx>
-#include <Main/location.hxx>
+#include <plib/sg.h>
+
+
+// Don't pull in the headers, since we don't need them here.
+class ssgEntity;
+class ssgRangeSelector;
+class ssgSelector;
+class ssgTransform;
+
+class SGPropertyNode;
+class SGInterpTable;
+class FGCondition;
+class FGLocation;
+
 
 // Has anyone done anything *really* stupid, like making min and max macros?
 #ifdef min
@@ -58,7 +69,7 @@ public:
   virtual void setOrientation (double roll_deg, double pitch_deg,
 			       double heading_deg);
 
-  virtual ssgEntity * getSceneGraph () const { return _selector; }
+  virtual ssgEntity * getSceneGraph () const { return (ssgEntity *)_selector; }
 
   virtual FGLocation * getFGLocation () const { return _location; }
 
@@ -89,6 +100,7 @@ private:
 
 				// Location
   FGLocation * _location;
+
 
   
   //////////////////////////////////////////////////////////////////////
@@ -210,6 +222,7 @@ private:
     SGPropertyNode * _prop;
     double _offset_deg;
     double _factor;
+    SGInterpTable * _table;
     bool _has_min;
     double _min_deg;
     bool _has_max;
@@ -236,6 +249,7 @@ private:
     SGPropertyNode * _prop;
     double _offset_m;
     double _factor;
+    SGInterpTable * _table;
     bool _has_min;
     double _min_m;
     bool _has_max;
