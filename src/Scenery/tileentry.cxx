@@ -700,9 +700,12 @@ static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
 
     if ( n > 0 ) {
         // we still have some delete budget left
-        if ( b->getNumKids() > 100 ) {
-            cout << "large family = " << b->getNumKids() << endl;
-        }
+        // if ( b->getNumKids() > 100 ) {
+        //     cout << "large family = " << b->getNumKids() << endl;
+        // }
+        // deleting in reverse would help if my plib patch get's
+        // applied, but for now it will make things slower.
+        // for ( int i = b->getNumKids() - 1; i >= 0 ; --i ) {
         for ( int i = 0; i < b->getNumKids(); ++i ) {
             ssgEntity *kid = b->getKid(i);
             if ( kid->isAKindOf( ssgTypeBranch() ) && kid->getRef() <= 1 ) {
