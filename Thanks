@@ -219,6 +219,12 @@ Robin Peel <robin@cpwd.com>
   aid database for the Flight Gear project as well as for X-Plane.
 
 
+Alex Perry <arp11@pacbell.net>
+  Contributed code to more accurately model VSI, DG, Altitude.
+  I have a feeling there's been a few other things as well, but
+  my memory is failing me.
+
+
 Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
   Contributed beginnings of a textured instrument panel.
 
@@ -283,6 +289,23 @@ Durk Talsma <d.talsma@chello.nl>
   Help with time functions, gui, and other misc stuff.
   2D Cloud layers (nifty).
   http://people.a2000.nl/dtals
+
+
+UIUC - Department of Aeronautical and Astronautical Engineering
+  Contributed modifications to LaRCsim to allow loading of aircraft
+  parameters from a file.  These modifications were made as part of an
+  icing research project.
+
+  Did the coding and made it all work:
+      Jeff Scott <jscott@students.uiuc.edu>
+      Bipin Sehgal <bsehgal@uiuc.edu>
+      Michael Selig <m-selig@uiuc.edu>
+
+  Helped support the effort
+      Jay Thomas <jthomas2@uiuc.edu>
+      Eunice Lee <ey-lee@students.uiuc.edu>
+      Elizabeth Rendon <mdfhoyos@md.impsat.net.co>
+      Sudhi Uppuluri <suppulur@students.uiuc.edu>
 
 
 Mark Vallevand <Mark.Vallevand@UNISYS.com>
