@@ -64,7 +64,7 @@ FGFX::init()
 
    path.append(path_str.c_str());
    SG_LOG(SG_GENERAL, SG_INFO, "Reading Instrument " << node->getName()
-	  << " from " << path.str());
+          << " from " << path.str());
 
    SGPropertyNode root;
    try {
@@ -97,8 +97,10 @@ FGFX::unbind ()
 void
 FGFX::update (double dt)
 {
-   for (unsigned int i = 0; i < _sound.size(); i++ )
-      _sound[i]->update(dt);
+    if (fgGetBool("/sim/sound/audible")) {
+        for (unsigned int i = 0; i < _sound.size(); i++ )
+            _sound[i]->update(dt);
+    }
 }
 
 // end of fg_fx.cxx
