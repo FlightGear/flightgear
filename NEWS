@@ -1,3 +1,9 @@
+New in 0.43:
+* zlib on the fly decompression/compression support.
+* more code reorganization and clean ups.
+* a fixed up 30 arcsec DEM file preprocessor.  World wide DEM's are 
+  available in this format.
+
 New in 0.42:
 * Simple autopilot heading hold contributed by 
   Jeff Goeke-Smith <jgoeke@voyager.net>
