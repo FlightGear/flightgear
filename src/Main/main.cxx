@@ -571,10 +571,16 @@ void fgRenderFrame( void ) {
 	    sgMat4 sgROT;
 	    sgMakeRotMat4( sgROT, -90.0, ownship_up );
 
-	    sgMat4 sgTMP;
+	    // sgMat4 sgTMP;
+	    // sgMat4 sgTUX;
+	    // sgMultMat4( sgTMP, sgROT, pilot_view.VIEW_ROT );
+	    // sgMultMat4( sgTUX, sgTMP, sgTRANS );
+
+	    // sgTUX = ( sgROT * pilot_view.VIEW_ROT ) * sgTRANS
 	    sgMat4 sgTUX;
-	    sgMultMat4( sgTMP, sgROT, pilot_view.VIEW_ROT );
-	    sgMultMat4( sgTUX, sgTMP, sgTRANS );
+	    sgCopyMat4( sgTUX, sgROT );
+	    sgPostMultMat4( sgTUX, pilot_view.VIEW_ROT );
+	    sgPostMultMat4( sgTUX, sgTRANS );
 	
 	    sgCoord tuxpos;
 	    sgSetCoord( &tuxpos, sgTUX );
