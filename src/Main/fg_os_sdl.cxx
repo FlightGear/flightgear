@@ -77,7 +77,6 @@ void fgOSOpenWindow(int w, int h, int bpp,
 
     int vidmask = SDL_OPENGL;
     if(fullscreen) {
-        __builtin_printf("FULLSCREEN!\n");
         vidmask |= SDL_FULLSCREEN;
     }
     SDL_SetVideoMode(w, h, 16, vidmask); // FIXME: handle errors
@@ -135,9 +134,13 @@ static void handleKey(int key, int keyup)
     case SDLK_F11:      key = PU_KEY_F11;       break;
     case SDLK_F12:      key = PU_KEY_F12;       break;
     }
-    if(keyup) CurrentModifiers &= ~modmask;
-    else      CurrentModifiers |= modmask;
-    if(keyup) CurrentModifiers |= KEYMOD_RELEASED;
+    if(keyup) {
+        CurrentModifiers &= ~modmask;
+        CurrentModifiers |= KEYMOD_RELEASED;
+    } else {
+        CurrentModifiers |= modmask;
+        CurrentModifiers &= ~KEYMOD_RELEASED;
+    }
     if(modmask == 0 && KeyHandler)
         (*KeyHandler)(key, CurrentModifiers, CurrentMouseX, CurrentMouseY);
 }
