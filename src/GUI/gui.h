@@ -60,6 +60,7 @@ extern char *gui_msg_CANCEL; // "CANCEL"
 extern char *gui_msg_RESET;  // "RESET"
 
 // mouse.cxx
+extern void guiInitMouse(int width, int height);
 extern void guiMotionFunc ( int x, int y );
 extern void guiMouseFunc(int button, int updown, int x, int y);
 extern void maybeToggleMouse( void );
@@ -74,21 +75,24 @@ extern void TurnCursorOff( void );
 // These will also repair any damage done to the Panel if active
 
 // Activate Dialog Box
-#define FG_PUSH_PUI_DIALOG( X ) \
-    maybeToggleMouse(); \
-    puPushLiveInterface( (X) ) ; \
-    ( X )->reveal()
+inline void FG_PUSH_PUI_DIALOG( puObject *X ) {
+    maybeToggleMouse(); 
+    puPushLiveInterface( (puInterface *)X ) ; 
+    X->reveal() ;
+}
 
 // Deactivate Dialog Box
-#define FG_POP_PUI_DIALOG( X ) \
-    (X)->hide(); \
-    puPopLiveInterface(); \
+inline void FG_POP_PUI_DIALOG( puObject *X ) {
+    X->hide(); 
+    puPopLiveInterface(); 
     maybeToggleMouse();
+}
 
 // Finalize Dialog Box Construction 
-#define FG_FINALIZE_PUI_DIALOG( X ) \
-    ( X )->close(); \
-    ( X )->hide(); \
+inline void FG_FINALIZE_PUI_DIALOG( puObject *X ) {
+    ((puGroup *)X)->close();
+    X->hide();
     puPopLiveInterface();
+}
             
 #endif // _GUI_H_

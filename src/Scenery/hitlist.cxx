@@ -12,6 +12,8 @@
 #include <GL/glut.h>
 #include <GL/gl.h>
 
+#include <plib/sg.h>
+
 #include <simgear/constants.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
@@ -27,7 +29,7 @@
 
 extern ssgBranch *terrain;
 
-
+#if 0
 // check to see if the intersection point is
 // actually inside this face
 static bool pointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
@@ -167,6 +169,121 @@ static void sgdXformPnt3 ( sgdVec3 dst, const sgVec3 src, const sgdMat4 mat )
                t2 * mat[ 2 ][ 2 ] +
                mat[ 3 ][ 2 ] ) ;
 }
+#endif // 0
+
+
+/*
+   Find the intersection of an infinite line with a plane
+   (the line being defined by a point and direction).
+
+   Norman Vine -- nhv@yahoo.com  (with hacks by Steve)
+*/
+
+int sgdIsectInfLinePlane( sgdVec3 dst, sgdVec3 l_org,
+                          sgdVec3 l_vec, sgdVec4 plane )
+{
+  SGDfloat tmp = sgdScalarProductVec3 ( l_vec, plane ) ;
+
+  /* Is line parallel to plane? */
+
+  if ( sgdAbs ( tmp ) < DBL_EPSILON )
+    return FALSE ;
+
+  sgdScaleVec3 ( dst, l_vec, -( sgdScalarProductVec3 ( l_org, plane )
+                                                + plane[3] ) / tmp ) ;
+  sgdAddVec3  ( dst, l_org ) ;
+
+  return TRUE ;
+}
+
+
+/*
+ * Given a point and a triangle lying on the same plane
+ * check to see if the point is inside the triangle
+ */
+bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
+{
+	sgdVec3 dif;
+
+	int i;
+	for( i=0; i<3; i++ ) {
+		SGDfloat min, max;
+		SG_MIN_MAX3 ( min, max, tri[0][i], tri[1][i], tri[2][i] );
+		// punt if outside bouding cube
+		if( (point[i] < min) || (point[i] > max) )
+			return false;
+		dif[i] = max - min;
+	}
+
+	// drop the smallest dimension so we only have to work in 2d.
+	SGDfloat min_dim = SG_MIN3 (dif[0], dif[1], dif[2]);
+	SGDfloat x1, y1, x2, y2, x3, y3, rx, ry;
+	if ( fabs(min_dim-dif[0]) <= DBL_EPSILON ) {
+		// x is the smallest dimension
+		x1 = point[1];
+		y1 = point[2];
+		x2 = tri[0][1];
+		y2 = tri[0][2];
+		x3 = tri[1][1];
+		y3 = tri[1][2];
+		rx = tri[2][1];
+		ry = tri[2][2];
+	} else if ( fabs(min_dim-dif[1]) <= DBL_EPSILON ) {
+		// y is the smallest dimension
+		x1 = point[0];
+		y1 = point[2];
+		x2 = tri[0][0];
+		y2 = tri[0][2];
+		x3 = tri[1][0];
+		y3 = tri[1][2];
+		rx = tri[2][0];
+		ry = tri[2][2];
+	} else if ( fabs(min_dim-dif[2]) <= DBL_EPSILON ) {
+		// z is the smallest dimension
+		x1 = point[0];
+		y1 = point[1];
+		x2 = tri[0][0];
+		y2 = tri[0][1];
+		x3 = tri[1][0];
+		y3 = tri[1][1];
+		rx = tri[2][0];
+		ry = tri[2][1];
+	} else {
+		// all dimensions are really small so lets call it close
+		// enough and return a successful match
+		return true;
+	}
+
+	// check if intersection point is on the same side of p1 <-> p2 as p3  
+	SGDfloat tmp = (y2 - y3) / (x2 - x3);
+	int side1 = SG_SIGN (tmp * (rx - x3) + y3 - ry);
+	int side2 = SG_SIGN (tmp * (x1 - x3) + y3 - y1);
+	if ( side1 != side2 ) {
+		// printf("failed side 1 check\n");
+		return false;
+	}
+
+	// check if intersection point is on correct side of p2 <-> p3 as p1
+	tmp = (y3 - ry) / (x3 - rx);
+	side1 = SG_SIGN (tmp * (x2 - rx) + ry - y2);
+	side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
+	if ( side1 != side2 ) {
+		// printf("failed side 2 check\n");
+		return false;
+	}
+
+	// check if intersection point is on correct side of p1 <-> p3 as p2
+	tmp = (y2 - ry) / (x2 - rx);
+	side1 = SG_SIGN (tmp * (x3 - rx) + ry - y3);
+	side2 = SG_SIGN (tmp * (x1 - rx) + ry - y1);
+	if ( side1 != side2 ) {
+		// printf("failed side 3  check\n");
+		return false;
+	}
+
+	return true;
+}
+
 
 /*
    Find the intersection of an infinite line with a leaf
@@ -187,18 +304,18 @@ static void sgdXformPnt3 ( sgdVec3 dst, const sgVec3 src, const sgdMat4 mat )
     false otherwise
 */
 int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
-							  sgdVec3 orig, sgdVec3 dir )
+                              sgdVec3 orig, sgdVec3 dir )
 {
     int num_hits = 0;
     for ( int i = 0; i < leaf->getNumTriangles(); ++i ) {
 	short i1, i2, i3;
 	leaf->getTriangle( i, &i1, &i2, &i3 );
 
-	sgdVec3 tri[3];
-	sgdXformPnt3( tri[0], leaf->getVertex( i1 ), m );
-	sgdXformPnt3( tri[1], leaf->getVertex( i2 ), m );
-	sgdXformPnt3( tri[2], leaf->getVertex( i3 ), m );
-
+        sgdVec3 tri[3];
+        sgdSetVec3( tri[0], leaf->getVertex( i1 ) );
+        sgdSetVec3( tri[1], leaf->getVertex( i2 ) );
+        sgdSetVec3( tri[2], leaf->getVertex( i3 ) );
+	
         //avoid division by zero when two points are the same
         if ( sgdEqualVec3(tri[0], tri[1]) ||
              sgdEqualVec3(tri[1], tri[2]) ||
@@ -209,13 +326,21 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
 	sgdVec4 plane;
 	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
 
-	sgdVec3 point;
-	if( sgdIsectInfLinePlane( point, orig, dir, plane ) ) {
-	    if( pointInTriangle( point, tri ) ) {
-		add(leaf,i,point,plane);
-		num_hits++;
-	    }
-	}
+        sgdVec3 point;
+        if( sgdIsectInfLinePlane( point, orig, dir, plane ) ) {
+#if 0
+            if( pointInTriangle( point, tri ) ) {
+                add(leaf,i,point,plane);
+                num_hits++;
+            }
+#endif // 0
+            if( sgdPointInTriangle( point, tri ) ) {
+                // transform point into passed into desired coordinate frame
+                sgdXformPnt3( point, point, m );
+                add(leaf,i,point,plane);
+                num_hits++;
+            }
+        }
     }
     return num_hits;
 }
@@ -224,6 +349,14 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
 				 sgdVec3 orig, sgdVec3 dir )
 {
     sgSphere *bsphere;
+
+    // lookat vector in branch's coordinate frame
+    sgdVec3 _orig, _dir;
+    sgdMat4 _m;
+    sgdTransposeNegateMat4( _m, m);
+    sgdXformPnt3( _orig, orig, _m );
+    sgdXformPnt3( _dir,  dir,  _m );
+	
     for ( ssgEntity *kid = branch->getKid( 0 );
 	  kid != NULL; 
 	  kid = branch->getNextKid() )
@@ -233,9 +366,7 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
 	    sgVec3 fcenter;
 	    sgCopyVec3( fcenter, bsphere->getCenter() );
 	    sgdVec3 center;
-	    center[0] = fcenter[0]; 
-	    center[1] = fcenter[1];
-	    center[2] = fcenter[2];
+	    sgdSetVec3( center, fcenter ); 
 	    sgdXformPnt3( center, m ) ;
             // watch out for overflow
 	    if ( sgdClosestPointToLineDistSquared( center, orig, dir ) <
@@ -253,8 +384,8 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
                         sgdPreMultMat4( m_new, xform );
 		    }
 		    IntersectBranch( (ssgBranch *)kid, m_new, orig, dir );
-		} else if ( kid->isAKindOf ( ssgTypeLeaf() ) ) {
-		    IntersectLeaf( (ssgLeaf *)kid, m, orig, dir );
+		} else if ( kid->isAKindOf( ssgTypeLeaf() ) ) {
+		    IntersectLeaf( (ssgLeaf *)kid, m, _orig, _dir );
 		}
 	    } else {
 		// end of the line for this branch
@@ -319,6 +450,33 @@ void FGHitList::IntersectCachedLeaf( sgdMat4 m,
 	    IntersectLeaf( (ssgLeaf *)last_hit(), m, orig, dir );
 	}
     }
+}
+
+
+void FGHitList::Intersect( ssgBranch *scene, sgdVec3 orig, sgdVec3 dir ) {
+    sgdMat4 m;
+
+// #define USE_CACHED_HIT
+
+#ifdef USE_CACHED_HIT
+    // This optimization gives a slight speedup
+    // but it precludes using the hitlist for dynamic
+    // objects  NHV
+    init();
+    if( last_hit() ) {
+        sgdMakeIdentMat4 ( m ) ;
+        IntersectCachedLeaf(m, orig, dir);
+    }
+    if( ! num_hits() ) {
+#endif
+
+        clear();
+        sgdMakeIdentMat4 ( m ) ;
+        IntersectBranch( scene, m, orig, dir);
+
+#ifdef USE_CACHED_HIT
+    }
+#endif
 }
 
 

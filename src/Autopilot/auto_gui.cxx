@@ -26,12 +26,21 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
+
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include STL_STRING
+
+#include <Aircraft/aircraft.hxx>
+#include <FDM/flight.hxx>
+#include <Controls/controls.hxx>
 #include <Scenery/scenery.hxx>
 
 #include <simgear/constants.h>
+#include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -45,6 +54,8 @@
 
 #include "auto_gui.hxx"
 #include "newauto.hxx"
+
+SG_USING_STD(string);
 
 
 #define mySlider puSlider
@@ -212,7 +223,7 @@ void NewHeading(puObject *cb)
     FG_PUSH_PUI_DIALOG( ApHeadingDialog );
 }
 
-void NewHeadingInit(void)
+void NewHeadingInit()
 {
     //	printf("NewHeadingInit\n");
     char NewHeadingLabel[] = "Enter New Heading";
@@ -284,7 +295,7 @@ void NewAltitude(puObject *cb)
     FG_PUSH_PUI_DIALOG( ApAltitudeDialog );
 }
 
-void NewAltitudeInit(void)
+void NewAltitudeInit()
 {
     //	printf("NewAltitudeInit\n");
     char NewAltitudeLabel[] = "Enter New Altitude";
@@ -331,15 +342,12 @@ void NewAltitudeInit(void)
     FG_FINALIZE_PUI_DIALOG( ApAltitudeDialog );
 }
 
-/////// simple AutoPilot GAIN / LIMITS ADJUSTER
-
-#define fgAP_CLAMP(val,min,max) ( (val) = (val) > (max) ? (max) : (val) < (min) ? (min) : (val) )
 
 static void maxroll_adj( puObject *hs ) {
     float val ;
     
     hs-> getValue ( &val ) ;
-    fgAP_CLAMP ( val, 0.1, 1.0 ) ;
+    SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "maxroll_adj( %p ) %f %f\n", hs, val, MaxRollAdjust * val ) ;
     current_autopilot->set_MaxRoll( MaxRollAdjust * val );
     sprintf( SliderText[ 0 ], "%05.2f", current_autopilot->get_MaxRoll() );
@@ -350,7 +358,7 @@ static void rollout_adj( puObject *hs ) {
     float val ;
 
     hs-> getValue ( &val ) ;
-    fgAP_CLAMP ( val, 0.1, 1.0 ) ;
+    SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "rollout_adj( %p ) %f %f\n", hs, val, RollOutAdjust * val ) ;
     current_autopilot->set_RollOut( RollOutAdjust * val );
     sprintf( SliderText[ 1 ], "%05.2f", current_autopilot->get_RollOut() );
@@ -361,7 +369,7 @@ static void maxaileron_adj( puObject *hs ) {
     float val ;
 
     hs-> getValue ( &val ) ;
-    fgAP_CLAMP ( val, 0.1, 1.0 ) ;
+    SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "maxaileron_adj( %p ) %f %f\n", hs, val, MaxAileronAdjust * val ) ;
     current_autopilot->set_MaxAileron( MaxAileronAdjust * val );
     sprintf( SliderText[ 3 ], "%05.2f", current_autopilot->get_MaxAileron() );
@@ -372,7 +380,7 @@ static void rolloutsmooth_adj( puObject *hs ) {
     float val ;
 
     hs -> getValue ( &val ) ;
-    fgAP_CLAMP ( val, 0.1, 1.0 ) ;
+    SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "rolloutsmooth_adj( %p ) %f %f\n", hs, val, RollOutSmoothAdjust * val ) ;
     current_autopilot->set_RollOutSmooth( RollOutSmoothAdjust * val );
     sprintf( SliderText[ 2 ], "%5.2f", current_autopilot->get_RollOutSmooth() );
@@ -405,7 +413,7 @@ void resetAPAdjust( puObject *self ) {
     fgAPAdjust( self );
 }
 
-void fgAPAdjust( puObject * ) {
+void fgAPAdjust( puObject *self ) {
     TmpMaxRollValue       = current_autopilot->get_MaxRoll();
     TmpRollOutValue       = current_autopilot->get_RollOut();
     TmpMaxAileronValue    = current_autopilot->get_MaxAileron();
@@ -426,7 +434,7 @@ void fgAPAdjust( puObject * ) {
 }
 
 // Done once at system initialization
-void fgAPAdjustInit( void ) {
+void fgAPAdjustInit() {
 
     //	printf("fgAPAdjustInit\n");
 #define HORIZONTAL  FALSE
@@ -671,7 +679,7 @@ void ClearRoute(puObject *cb)
     globals->get_route()->clear();
 }
 
-void NewTgtAirportInit(void)
+void NewTgtAirportInit()
 {
     SG_LOG( SG_AUTOPILOT, SG_INFO, " enter NewTgtAirportInit()" );
     sprintf( NewTgtAirportId, "%s",

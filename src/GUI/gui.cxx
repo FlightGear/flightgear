@@ -1034,6 +1034,7 @@ void guiInit()
     // Set up our Dialog Boxes
     ConfirmExitDialogInit();
     NewAirportInit();
+	
 #ifdef FG_NETWORK_OLK
     NewNetIdInit();
     NewNetFGDInit();

@@ -114,6 +114,7 @@
 #include <FDM/flight.hxx>
 #include <FDM/ADA.hxx>
 #include <Scenery/tileentry.hxx>
+
 // Should already be inlcluded by gl.h if needed by your platform so
 // we shouldn't include this here.
 // #include <GL/glext.h>
@@ -203,7 +204,7 @@ sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
   {  0.0f,  0.0f, -1.0f,  0.0f },
   {  0.0f,  1.0f,  0.0f,  0.0f },
   {  0.0f,  0.0f,  0.0f,  1.0f }
-} ;
+};
 
 // The following defines flightgear options. Because glutlib will also
 // want to parse its own options, those options must not be included here
@@ -259,20 +260,20 @@ void fgBuildRenderStates( void ) {
 
 // fgFindNode -- a function that finds a named node in an ssg graph
 ssgEntity *fgFindNode( ssgEntity *node, const char *name ) {
-  if ( node->getName() != NULL && strcmp( name, node->getName() ) == 0 ) {
-    return node;
-  } else if ( node->isAKindOf( ssgTypeBranch() ) ) {
-    ssgEntity *kid = ((ssgBranch*)node)->getKid(0);
-    while (kid != NULL) {
-      ssgEntity *n = fgFindNode(kid, name);
-      if (n != NULL)
-	return n;
-
-      kid = ((ssgBranch*)node)->getNextKid();
+    if ( node->getName() != NULL && strcmp( name, node->getName() ) == 0 ) {
+        return node;
+    } else if ( node->isAKindOf(ssgTypeBranch()) ) {
+        ssgEntity *kid = ((ssgBranch*)node)->getKid(0);
+        while ( kid != NULL ) {
+            ssgEntity *n = fgFindNode(kid, name);
+            if ( n != NULL ) {
+                return n;
+            }
+            kid = ((ssgBranch*)node)->getNextKid();
+        }
     }
-  }
 
-  return NULL;
+    return NULL;
 }
 
 // fgInitVisuals() -- Initialize various GL/view parameters
@@ -951,7 +952,7 @@ void fgUpdateTimeDepCalcs() {
 	    // run Autopilot system
 	    current_autopilot->run();
 
-	    // update autopilot
+	    // update FDM
 	    cur_fdm_state->update( 1 );
 	}
 	FGSteam::update( multi_loop * fgGetInt("/sim/speed-up") );
@@ -1308,6 +1309,7 @@ void fgReshape( int width, int height ) {
 
     fgSetInt("/sim/startup/xsize", width);
     fgSetInt("/sim/startup/ysize", height);
+    guiInitMouse(width, height);
 
     ssgSetFOV( globals->get_current_view()->get_h_fov(),
 	       globals->get_current_view()->get_v_fov() );
@@ -1400,7 +1402,7 @@ int fgGlutInitEvents( void ) {
     // draw the scene
     glutDisplayFunc( fgRenderFrame );
 
-    return(1);
+    return 1;
 }
 
 
@@ -1544,7 +1546,7 @@ int mainLoop( int argc, char **argv ) {
     int offset = fgGetInt("/sim/startup/time-offset");
     const string &offset_type = fgGetString("/sim/startup/time-offset-type");
     if (offset_type == "system-offset") {
-	globals->set_warp( offset );
+        globals->set_warp( offset );
     } else if (offset_type == "gmt-offset") {
 	globals->set_warp( offset - (currGMT - systemLocalTime) );
     } else if (offset_type == "latitude-offset") {

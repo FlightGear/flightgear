@@ -75,31 +75,6 @@ public:
 };
 
 
-inline void FGHitList::Intersect( ssgBranch *scene,
-				  sgdVec3 orig, sgdVec3 dir )
-{
-    sgdMat4 m;
-
-#ifdef USE_CACHED_HIT
-	// This optimization gives a slight speedup
-	// but it precludes using the hitlist for dynamic
-	// objects  NHV
-    init();
-    if( last_hit() ) {
-	sgdMakeIdentMat4 ( m ) ;
-	IntersectCachedLeaf(m, orig, dir);
-    }
-    if( ! num_hits() ) {
-#endif
-	clear();
-	sgdMakeIdentMat4 ( m ) ;
-	IntersectBranch( scene, m, orig, dir);
-#ifdef USE_CACHED_HIT
-    }
-#endif
-}
-
-
 // Associated function, assuming a wgs84 world with 0,0,0 at the
 // center, find the current terrain intersection elevation for the
 // point specified.

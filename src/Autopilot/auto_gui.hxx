@@ -25,19 +25,6 @@
 #ifndef _AUTO_GUI_HXX
 #define _AUTO_GUI_HXX
 
-#include <simgear/compiler.h>
-                       
-#include STL_STRING
-
-#include <string.h>
-
-#include <Aircraft/aircraft.hxx>
-#include <FDM/flight.hxx>
-#include <Controls/controls.hxx>
-                       
-SG_USING_STD(string);
-
-                  
 // Defines
 #define AP_CURRENT_HEADING -1
 

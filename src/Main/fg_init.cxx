@@ -353,71 +353,71 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     double found_dir = 0.0;
 
     if ( id.length() ) {
-	// set initial position from runway and heading
+        // set initial position from runway and heading
 
-	SGPath path( globals->get_fg_root() );
-	path.append( "Airports" );
-	path.append( "runways.mk4" );
-	FGRunways runways( path.c_str() );
+        SGPath path( globals->get_fg_root() );
+        path.append( "Airports" );
+        path.append( "runways.mk4" );
+        FGRunways runways( path.c_str() );
 
-	SG_LOG( SG_GENERAL, SG_INFO,
-		"Attempting to set starting position from runway code "
-		<< id << " heading " << tgt_hdg );
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Attempting to set starting position from runway code "
+                << id << " heading " << tgt_hdg );
 
-	// SGPath inpath( globals->get_fg_root() );
-	// inpath.append( "Airports" );
-	// inpath.append( "apt_simple" );
-	// airports.load( inpath.c_str() );
+        // SGPath inpath( globals->get_fg_root() );
+        // inpath.append( "Airports" );
+        // inpath.append( "apt_simple" );
+        // airports.load( inpath.c_str() );
 
-	// SGPath outpath( globals->get_fg_root() );
-	// outpath.append( "Airports" );
-	// outpath.append( "simple.gdbm" );
-	// airports.dump_gdbm( outpath.c_str() );
+        // SGPath outpath( globals->get_fg_root() );
+        // outpath.append( "Airports" );
+        // outpath.append( "simple.gdbm" );
+        // airports.dump_gdbm( outpath.c_str() );
 
-	if ( ! runways.search( id, &r ) ) {
-	    SG_LOG( SG_GENERAL, SG_ALERT,
-		    "Failed to find " << id << " in database." );
-	    return false;
-	}
+        if ( ! runways.search( id, &r ) ) {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "Failed to find " << id << " in database." );
+            return false;
+        }
 
-	double diff;
-	double min_diff = 360.0;
+        double diff;
+        double min_diff = 360.0;
 
-	while ( r.id == id ) {
-	    // forward direction
-	    diff = tgt_hdg - r.heading;
-	    while ( diff < -180.0 ) { diff += 360.0; }
-	    while ( diff >  180.0 ) { diff -= 360.0; }
-	    diff = fabs(diff);
-	    SG_LOG( SG_GENERAL, SG_INFO,
-		    "Runway " << r.rwy_no << " heading = " << r.heading <<
-		    " diff = " << diff );
-	    if ( diff < min_diff ) {
-		min_diff = diff;
-		found_r = r;
-		found_dir = 0;
-	    }
+        while ( r.id == id ) {
+            // forward direction
+            diff = tgt_hdg - r.heading;
+            while ( diff < -180.0 ) { diff += 360.0; }
+            while ( diff >  180.0 ) { diff -= 360.0; }
+            diff = fabs(diff);
+            SG_LOG( SG_GENERAL, SG_INFO,
+                    "Runway " << r.rwy_no << " heading = " << r.heading <<
+                    " diff = " << diff );
+            if ( diff < min_diff ) {
+                min_diff = diff;
+                found_r = r;
+                found_dir = 0;
+            }
 
-	    // reverse direction
-	    diff = tgt_hdg - r.heading - 180.0;
-	    while ( diff < -180.0 ) { diff += 360.0; }
-	    while ( diff >  180.0 ) { diff -= 360.0; }
-	    diff = fabs(diff);
-	    SG_LOG( SG_GENERAL, SG_INFO,
-		    "Runway -" << r.rwy_no << " heading = " <<
-		    r.heading + 180.0 <<
-		    " diff = " << diff );
-	    if ( diff < min_diff ) {
-		min_diff = diff;
-		found_r = r;
-		found_dir = 180.0;
-	    }
+            // reverse direction
+            diff = tgt_hdg - r.heading - 180.0;
+            while ( diff < -180.0 ) { diff += 360.0; }
+            while ( diff >  180.0 ) { diff -= 360.0; }
+            diff = fabs(diff);
+            SG_LOG( SG_GENERAL, SG_INFO,
+                    "Runway -" << r.rwy_no << " heading = " <<
+                    r.heading + 180.0 <<
+                    " diff = " << diff );
+            if ( diff < min_diff ) {
+                min_diff = diff;
+                found_r = r;
+                found_dir = 180.0;
+            }
 
-	    runways.next( &r );
-	}
+            runways.next( &r );
+        }
 
-	SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << found_r.rwy_no
-		<< " + " << found_dir );
+        SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << found_r.rwy_no
+                << " + " << found_dir );
 
     } else {
 	return false;
@@ -452,6 +452,7 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 	lat2=olat;
 	lon2=olon;
     }
+	
     fgSetDouble("/position/longitude-deg",  lon2 );
     fgSetDouble("/position/latitude-deg",  lat2 );
     fgSetDouble("/orientation/heading-deg", heading );
@@ -506,6 +507,82 @@ bool fgInitGeneral( void ) {
 }
 
 
+// Initialize the flight model subsystem.  This just creates the
+// object.  The actual fdm initialization is delayed until we get a
+// proper scenery elevation hit.  This is checked for in main.cxx
+
+void fgInitFDM() {
+
+    if ( cur_fdm_state ) {
+        delete cur_fdm_state;
+        cur_fdm_state = 0;
+    }
+
+    double dt = 1.0 / fgGetInt("/sim/model-hz");
+    aircraft_dir = fgGetString("/sim/aircraft-dir");
+    const string &model = fgGetString("/sim/flight-model");
+
+    try {
+	if (model == "larcsim") {
+	    cur_fdm_state = new FGLaRCsim( dt );
+	} else if (model == "jsb") {
+	    cur_fdm_state = new FGJSBsim( dt );
+	} else if (model == "ada") {
+	    cur_fdm_state = new FGADA( dt );
+	} else if (model == "balloon") {
+	    cur_fdm_state = new FGBalloonSim( dt );
+	} else if (model == "magic") {
+	    cur_fdm_state = new FGMagicCarpet( dt );
+	} else if (model == "external") {
+	    cur_fdm_state = new FGExternal( dt );
+	} else if (model == "null") {
+	    cur_fdm_state = new FGNullFDM( dt );
+	} else if (model == "yasim") {
+	    cur_fdm_state = new YASim( dt );
+	} else {
+	    SG_LOG(SG_GENERAL, SG_ALERT,
+		   "Unrecognized flight model '" << model
+		   << "', cannot init flight dynamics model.");
+	    exit(-1);
+	}
+    } catch ( ... ) {
+	SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
+	exit(-1);
+    }
+}
+
+
+// Initialize view parameters
+void fgInitView() {
+    // Initialize pilot view
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *altitude
+	= fgGetNode("/position/altitude-ft");
+
+    FGViewerRPH *pilot_view
+        = (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
+
+    pilot_view->set_geod_view_pos( longitude->getDoubleValue()
+				     * SGD_DEGREES_TO_RADIANS, 
+				   latitude->getDoubleValue()
+				     * SGD_DEGREES_TO_RADIANS,
+				   altitude->getDoubleValue()
+				     * SG_FEET_TO_METER );
+    pilot_view->set_rph( cur_fdm_state->get_Phi(),
+			 cur_fdm_state->get_Theta(),
+			 cur_fdm_state->get_Psi() );
+
+    // set current view to 0 (first) which is our main pilot view
+    globals->set_current_view( pilot_view );
+
+    SG_LOG( SG_GENERAL, SG_DEBUG, "  abs_view_pos = "
+	    << globals->get_current_view()->get_abs_view_pos());
+}
+
+
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -530,8 +607,7 @@ bool fgInitSubsystems( void ) {
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( "materials.xml" );
-    if ( material_lib.load( mpath.str() ) ) {
-    } else {
+    if ( ! material_lib.load( mpath.str() ) ) {
     	SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
 	exit(-1);
     }
@@ -562,44 +638,8 @@ bool fgInitSubsystems( void ) {
     // Initialize the flight model subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    double dt = 1.0 / fgGetInt("/sim/model-hz");
-    // cout << "dt = " << dt << endl;
-
-    aircraft_dir = fgGetString("/sim/aircraft-dir");
-    const string &model = fgGetString("/sim/flight-model");
-    try {
-	if (model == "larcsim") {
-	    cur_fdm_state = new FGLaRCsim( dt );
-	} else if (model == "jsb") {
-	    cur_fdm_state = new FGJSBsim( dt );
-	} else if (model == "ada") {
-	    cur_fdm_state = new FGADA( dt );
-	} else if (model == "balloon") {
-	    cur_fdm_state = new FGBalloonSim( dt );
-	} else if (model == "magic") {
-	    cur_fdm_state = new FGMagicCarpet( dt );
-	} else if (model == "external") {
-	    cur_fdm_state = new FGExternal( dt );
-	} else if (model == "null") {
-	    cur_fdm_state = new FGNullFDM( dt );
-	} else if (model == "yasim") {
-	    cur_fdm_state = new YASim( dt );
-	} else {
-	    SG_LOG(SG_GENERAL, SG_ALERT,
-		   "Unrecognized flight model '" << model
-		   << "', cannot init flight dynamics model.");
-	    exit(-1);
-	}
-    } catch ( ... ) {
-	SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
-	exit(-1);
-    }
-
-    // Actual fdm initialization is delayed until we get a proper
-    // scenery elevation hit.  This is checked for in main.cxx
-    // cur_fdm_state->init();
-    // cur_fdm_state->bind();
-    
+    fgInitFDM();
+	
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
@@ -622,34 +662,7 @@ bool fgInitSubsystems( void ) {
     // Initialize the view manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
-#if 0  /* As this wrongly does an integer division and gets x and y the wrong way around, I guess it's not needed.  JAF */
-    // Initialize win_ratio parameters
-    for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
-	globals->get_viewmgr()->get_view(i)->
-	    set_win_ratio( fgGetInt("/sim/startup/xsize") /
-			   fgGetInt("/sim/startup/ysize") );
-    }
-#endif
-
-    // Initialize pilot view
-    FGViewerRPH *pilot_view =
-	(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
-
-    pilot_view->set_geod_view_pos( longitude->getDoubleValue()
-				     * SGD_DEGREES_TO_RADIANS, 
-				   latitude->getDoubleValue()
-				     * SGD_DEGREES_TO_RADIANS,
-				   altitude->getDoubleValue()
-				     * SG_FEET_TO_METER );
-    pilot_view->set_rph( cur_fdm_state->get_Phi(),
-			 cur_fdm_state->get_Theta(),
-			 cur_fdm_state->get_Psi() );
-
-    // set current view to 0 (first) which is our main pilot view
-    globals->set_current_view( pilot_view );
-
-    SG_LOG( SG_GENERAL, SG_DEBUG, "  abs_view_pos = "
-	    << globals->get_current_view()->get_abs_view_pos());
+    fgInitView();
 
 
     ////////////////////////////////////////////////////////////////////
@@ -786,6 +799,7 @@ bool fgInitSubsystems( void ) {
     fgInitCommands();
 
 
+#ifdef ENABLE_AUDIO_SUPPORT
     ////////////////////////////////////////////////////////////////////
     // Initialize the sound subsystem.
     ////////////////////////////////////////////////////////////////////
@@ -802,6 +816,7 @@ bool fgInitSubsystems( void ) {
     globals->get_fx()->init();
     globals->get_fx()->bind();
 
+#endif
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the radio stack subsystem.
@@ -843,12 +858,11 @@ bool fgInitSubsystems( void ) {
     current_autopilot->init();
 
     // initialize the gui parts of the autopilot
+    fgAPAdjustInit();
     NewTgtAirportInit();
-    fgAPAdjustInit() ;
     NewHeadingInit();
     NewAltitudeInit();
 
-    
     ////////////////////////////////////////////////////////////////////
     // Initialize I/O subsystem.
     ////////////////////////////////////////////////////////////////////
@@ -930,71 +944,20 @@ void fgReInitSubsystems( void )
     // Initialize the Scenery Management subsystem
     scenery.init();
 
-    // if( global_tile_mgr.init() ) {
-	// Load the local scenery data
+#if 0
+    if( global_tile_mgr.init() ) {
+	Load the local scenery data
 	global_tile_mgr.update( longitude->getDoubleValue(),
 				latitude->getDoubleValue() );
-    // } else {
-    	// SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
-		// exit(-1);
-    // }
-
-    // Delete then Initialize the flight model subsystem.
-    delete cur_fdm_state;
-
-    double dt = 1.0 / fgGetInt("/sim/model-hz");
-    aircraft_dir = fgGetString("/sim/aircraft-dir");
-    const string &model = fgGetString("/sim/flight-model");
-    try {
-	if (model == "larcsim") {
-	    cur_fdm_state = new FGLaRCsim( dt );
-	} else if (model == "jsb") {
-	    cur_fdm_state = new FGJSBsim( dt );
-	} else if (model == "ada") {
-	    cur_fdm_state = new FGADA( dt );
-	} else if (model == "balloon") {
-	    cur_fdm_state = new FGBalloonSim( dt );
-	} else if (model == "magic") {
-	    cur_fdm_state = new FGMagicCarpet( dt );
-	} else if (model == "external") {
-	    cur_fdm_state = new FGExternal( dt );
-	} else if (model == "null") {
-	    cur_fdm_state = new FGNullFDM( dt );
-	} else if (model == "yasim") {
-	    cur_fdm_state = new YASim( dt );
-	} else {
-	    SG_LOG(SG_GENERAL, SG_ALERT,
-		   "Unrecognized flight model '" << model
-		   << "', cannot init flight dynamics model.");
-	    exit(-1);
-	}
-    } catch ( ... ) {
-	SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
-	exit(-1);
+    } else {
+    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
+        exit(-1);
     }
+#endif
 
-    // Initialize view parameters
-    FGViewerRPH *pilot_view =
-	(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
+    fgInitFDM();
 
-    pilot_view->set_view_offset( 0.0 );
-    pilot_view->set_goal_view_offset( 0.0 );
-
-    pilot_view->set_geod_view_pos( longitude->getDoubleValue()
-				     * SGD_DEGREES_TO_RADIANS, 
-				   latitude->getDoubleValue()
-				     * SGD_DEGREES_TO_RADIANS, 
-				   cur_fdm_state->get_Altitude()
-				     * SG_FEET_TO_METER );
-    pilot_view->set_rph( cur_fdm_state->get_Phi(),
-			 cur_fdm_state->get_Theta(),
-			 cur_fdm_state->get_Psi() );
-
-    // set current view to 0 (first) which is our main pilot view
-    globals->set_current_view( pilot_view );
-
-    SG_LOG( SG_GENERAL, SG_DEBUG, "  abs_view_pos = "
-	    << globals->get_current_view()->get_abs_view_pos());
+    fgInitView();
 
     globals->get_controls()->reset_all();
     current_autopilot->reset();

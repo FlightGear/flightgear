@@ -96,13 +96,16 @@ static int mouse_joystick_control = 0;
 // on second left click in MOUSE_VIEW mode
 // This has file scope so that it can be reset
 // if the little rodent is moved  NHV
-static  int _mVtoggle;
+static  int _mVtoggle = 0;
 
 // we break up the glutGetModifiers return mask
 // once per loop and stash what we need in these
-static int glut_active_shift;
-static int glut_active_ctrl;
-static int glut_active_alt;
+static int glut_active_shift = 0;
+static int glut_active_ctrl = 0;
+static int glut_active_alt = 0;
+
+static int MOUSE_XSIZE = 0;
+static int MOUSE_YSIZE = 0;
 
 // uncomment this for view to exactly follow mouse in MOUSE_VIEW mode
 // else smooth out the view panning to .01 radian per frame
@@ -141,6 +144,12 @@ static double throttle_sensitivity = 1.0/250.0;
 static double rudder_sensitivity = 1.0/500.0;
 static double trim_sensitivity = 1.0/1000.0;
 
+void guiInitMouse(int width, int height)
+{
+	MOUSE_XSIZE = width;
+	MOUSE_YSIZE = height;
+}
+
 static inline int guiGetMouseButton(void)
 {
 	return last_buttons;
@@ -164,6 +173,64 @@ static inline int right_button( void ) {
     return( last_buttons & (1 << GLUT_RIGHT_BUTTON) );
 }
 
+static inline void set_goal_view_offset( float offset )
+{
+	globals->get_current_view()->set_goal_view_offset(offset);
+}
+
+static inline void set_view_offset( float offset )
+{
+	globals->get_current_view()->set_view_offset(offset);
+}
+
+static inline float get_view_offset() {
+	return globals->get_current_view()->get_view_offset();
+}
+
+static inline float get_goal_view_offset() {
+	return globals->get_current_view()->get_goal_view_offset();
+}
+
+static inline void move_brake(float offset) {
+	globals->get_controls()->move_brake(FGControls::ALL_WHEELS, offset);
+}
+
+static inline void move_throttle(float offset) {
+	globals->get_controls()->move_throttle(FGControls::ALL_ENGINES, offset);
+}
+
+static inline void move_rudder(float offset) {
+	globals->get_controls()->move_rudder(offset);
+}
+
+static inline void move_elevator_trim(float offset) {
+	globals->get_controls()->move_elevator_trim(offset);
+}
+
+static inline void move_aileron(float offset) {
+	globals->get_controls()->move_aileron(offset);
+}
+
+static inline void move_elevator(float offset) {
+	globals->get_controls()->move_elevator(offset);
+}
+
+static inline float get_aileron() {
+	return globals->get_controls()->get_aileron();
+}
+
+static inline float get_elevator() {
+	return globals->get_controls()->get_elevator();
+}
+
+static inline bool AP_HeadingEnabled() {
+	return current_autopilot->get_HeadingEnabled();
+}
+
+static inline bool AP_AltitudeEnabled() {
+	return current_autopilot->get_AltitudeEnabled();
+}
+
 void TurnCursorOn( void )
 {
     mouse_active = ~0;
@@ -181,8 +248,8 @@ void TurnCursorOn( void )
     }
 #endif
 #if defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( fgGetInt("/sim/startup/xsize")/2,
-		     fgGetInt("/sim/startup/ysize")/2);
+    glutWarpPointer( MOUSE_XSIZE/2,
+		     MOUSE_YSIZE/2);
 #endif
 }
 
@@ -192,8 +259,8 @@ void TurnCursorOff( void )
 #if defined(WIN32_CURSOR_TWEAKS)
     glutSetCursor(GLUT_CURSOR_NONE);
 #elif defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( fgGetInt("/sim/startup/xsize"),
-		     fgGetInt("/sim/startup/ysize"));
+    glutWarpPointer( MOUSE_XSIZE,
+		     MOUSE_YSIZE);
 #endif
 }
 
@@ -242,8 +309,8 @@ void BusyCursor( int restore )
 void CenterView( void ) {
     if( mouse_mode == MOUSE_VIEW ) {
 	mouse_mode = MOUSE_POINTER;
-	_savedX = fgGetInt("/sim/startup/xsize")/2;
-	_savedY = fgGetInt("/sim/startup/ysize")/2;
+	_savedX = MOUSE_XSIZE/2;
+	_savedY = MOUSE_YSIZE/2;
 	_mVtoggle = 0;
 	Quat0();
 	build_rotmatrix(GuiQuat_mat, curGuiQuat);
@@ -254,10 +321,36 @@ void CenterView( void ) {
 
 	glutWarpPointer( _savedX, _savedY );
     }
-    globals->get_current_view()->set_goal_view_offset(0.0);
-    globals->get_current_view()->set_view_offset(0.0);
+    set_goal_view_offset(0.0);
+    set_view_offset(0.0);
 }
 
+
+//#define TRANSLATE_HUD
+// temporary hack until pitch_offset is added to view pipeline
+void fgTranslateHud( void ) {
+#ifdef TRANSLATE_HUD
+    if(mouse_mode == MOUSE_VIEW) {
+
+        int ww = MOUSE_XSIZE;
+        int wh = MOUSE_YSIZE;
+
+        float y = 4*(_mY-(wh/2));// * ((wh/SGD_PI)*SG_RADIANS_TO_DEGREES);
+	
+        float x =  get_view_offset() * SG_RADIANS_TO_DEGREES;
+
+        if( x < -180 )	    x += 360;
+        else if( x > 180 )	x -= 360;
+
+        x *= ww/90.0;
+        //	x *= ww/180.0;
+        //	x *= ww/360.0;
+
+        //	glTranslatef( x*ww/640, y*wh/480, 0 );
+        glTranslatef( x*640/ww, y*480/wh, 0 );
+    }
+#endif // TRANSLATE_HUD
+}
 
 void guiMotionFunc ( int x, int y )
 {
@@ -265,21 +358,21 @@ void guiMotionFunc ( int x, int y )
     float W, H;
     double offset;
 
-    ww = fgGetInt("/sim/startup/xsize");
-    wh = fgGetInt("/sim/startup/ysize");
+    ww = MOUSE_XSIZE;
+    wh = MOUSE_YSIZE;
 
     if (mouse_mode == MOUSE_POINTER) {
         // TURN MENU ON IF MOUSE AT TOP
-        if( y == 0 ) {
+        if( y < 1 ) {
             if( !gui_menu_on )
                 guiToggleMenu();			
         }
         // TURN MENU OFF IF MOUSE AT BOTTOM
-        else if( y > wh-1 ) {
+        else if( y > wh-2 ) {
             if( gui_menu_on )
                 guiToggleMenu();			
         }
-        puMouse ( x, y ) ;
+        // puMouse ( x, y ) ;
         glutPostRedisplay () ;
     } else {
         if( x == _mX && y == _mY)
@@ -295,27 +388,21 @@ void guiMotionFunc ( int x, int y )
 		    fgSetString("/sim/control-mode", "mouse");
                 } else {
                     if ( left_button() ) {
-                        offset = (_mX - x) * brake_sensitivity;
-                        globals->get_controls()->move_brake(FGControls::ALL_WHEELS, offset);
-                        offset = (_mY - y) * throttle_sensitivity;
-                        globals->get_controls()->move_throttle(FGControls::ALL_ENGINES, offset);
+                        move_brake(   (_mX - x) * brake_sensitivity);
+                        move_throttle((_mY - y) * throttle_sensitivity);
                     } else if ( right_button() ) {
-                        if( ! current_autopilot->get_HeadingEnabled() ) {
-                            offset = (x - _mX) * rudder_sensitivity;
-                            globals->get_controls()->move_rudder(offset);
+                        if( ! AP_HeadingEnabled() ) {
+                            move_rudder((x - _mX) * rudder_sensitivity);
                         }
-                        if( ! current_autopilot->get_AltitudeEnabled() ) {
-                            offset = (_mY - y) * trim_sensitivity;
-                            globals->get_controls()->move_elevator_trim(offset);
+                        if( ! AP_AltitudeEnabled() ) {
+                            move_elevator_trim((_mY - y) * trim_sensitivity);
                         }
                     } else {
-                        if( ! current_autopilot->get_HeadingEnabled() ) {
-                            offset = (x - _mX) * aileron_sensitivity;
-                            globals->get_controls()->move_aileron(offset);
+                        if( ! AP_HeadingEnabled() ) {
+                            move_aileron((x - _mX) * aileron_sensitivity);
                         }
-                        if( ! current_autopilot->get_AltitudeEnabled() ) {
-                            offset = (_mY - y) * elevator_sensitivity;
-                            globals->get_controls()->move_elevator(offset);
+                        if( ! AP_AltitudeEnabled() ) {
+                            move_elevator((_mY - y) * elevator_sensitivity);
                         }
                     }
                 }
@@ -380,7 +467,7 @@ void guiMotionFunc ( int x, int y )
                 // do horizontal pan
                 // this could be done in above quat
                 // but requires redoing view pipeline
-                offset = globals->get_current_view()->get_goal_view_offset();
+                offset = get_goal_view_offset();
                 offset += ((_mX - x) * SGD_2PI / W );
                 while (offset < 0.0) {
                     offset += SGD_2PI;
@@ -388,9 +475,9 @@ void guiMotionFunc ( int x, int y )
                 while (offset > SGD_2PI) {
                     offset -= SGD_2PI;
                 }
-                globals->get_current_view()->set_goal_view_offset(offset);
+                set_goal_view_offset(offset);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                globals->get_current_view()->set_view_offset(offset);
+                set_view_offset(offset);
 #endif
                 break;
             
@@ -443,13 +530,10 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         _mY = _mVy;
                         x = _Vx;
                         y = _Vy;
-                        curGuiQuat[0] = _quat[0];
-                        curGuiQuat[1] = _quat[1];
-                        curGuiQuat[2] = _quat[2];
-                        curGuiQuat[3] = _quat[3];
-                        globals->get_current_view()->set_goal_view_offset(_view_offset);
+                        sgCopyVec4(curGuiQuat, _quat);
+                        set_goal_view_offset(_view_offset);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                        globals->get_current_view()->set_view_offset(_view_offset);
+                        set_view_offset(_view_offset);
 #endif
                     } else {
                         // center view
@@ -457,18 +541,14 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         _mVy = _mY;
                         _Vx = x;
                         _Vy = y;
-                        _quat[0] = curGuiQuat[0];
-                        _quat[1] = curGuiQuat[1];
-                        _quat[2] = curGuiQuat[2];
-                        _quat[3] = curGuiQuat[3];
-                        x = fgGetInt("/sim/startup/xsize")/2;
-                        y = fgGetInt("/sim/startup/ysize")/2;
+                        sgCopyVec4(_quat,curGuiQuat);
+                        x = MOUSE_XSIZE/2;
+                        y = MOUSE_YSIZE/2;
                         Quat0();
-                        _view_offset =
-			    globals->get_current_view()->get_goal_view_offset();
-                        globals->get_current_view()->set_goal_view_offset(0.0);
+                        _view_offset = get_goal_view_offset();
+                        set_goal_view_offset(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                        globals->get_current_view()->set_view_offset(0.0);
+                        set_view_offset(0.0);
 #endif
                     }
                     glutWarpPointer( x , y);
@@ -476,50 +556,57 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     _mVtoggle = ~_mVtoggle;
                     break;
             }
-        }else if ( button == GLUT_RIGHT_BUTTON) {
+        } else if ( button == GLUT_RIGHT_BUTTON) {
             switch (mouse_mode) {
+				
                 case MOUSE_POINTER:
+                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in yoke mode" );
+					
                     mouse_mode = MOUSE_YOKE;
                     mouse_joystick_control = 0;
                     _savedX = x;
                     _savedY = y;
                     // start with zero point in center of screen
-                    _mX = fgGetInt("/sim/startup/xsize")/2;
-                    _mY = fgGetInt("/sim/startup/ysize")/2;
+                    _mX = MOUSE_XSIZE/2;
+                    _mY = MOUSE_YSIZE/2;
                     
                     // try to have the MOUSE_YOKE position
                     // reflect the current stick position
-                    offset = globals->get_controls()->get_aileron();
-                    x = _mX - (int)(offset * aileron_sensitivity);
-                    offset = globals->get_controls()->get_elevator();
-                    y = _mY - (int)(offset * elevator_sensitivity);
+                    x = _mX - (int)(get_aileron() * aileron_sensitivity);
+                    y = _mY - (int)(get_elevator() * elevator_sensitivity);
                     
                     glutSetCursor(GLUT_CURSOR_CROSSHAIR);
-                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in yoke mode" );
                     break;
                     
                 case MOUSE_YOKE:
+                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in view mode" );
+					
                     mouse_mode = MOUSE_VIEW;
                     fgSetString("/sim/control-mode", "joystick");
-                    x = fgGetInt("/sim/startup/xsize")/2;
-                    y = fgGetInt("/sim/startup/ysize")/2;
+					
+					// recenter cursor and reset 
+                    x = MOUSE_XSIZE/2;
+                    y = MOUSE_YSIZE/2;
                     _mVtoggle = 0;
+// #ifndef RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     Quat0();
                     build_rotmatrix(GuiQuat_mat, curGuiQuat);
+// #endif
                     glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
-                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in view mode" );
                     break;
                     
                 case MOUSE_VIEW:
+                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in pointer mode" );
+					
                     mouse_mode = MOUSE_POINTER;
                     x = _savedX;
                     y = _savedY;
 #ifdef RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     Quat0();
                     build_rotmatrix(GuiQuat_mat, curGuiQuat);
-                    globals->get_current_view()->set_goal_view_offset(0.0);
+                    set_goal_view_offset(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                    globals->get_current_view()->set_view_offset(0.0);
+                    set_view_offset(0.0);
 #endif // NO_SMOOTH_MOUSE_VIEW
 #endif // RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     glutSetCursor(GLUT_CURSOR_INHERIT);
@@ -528,8 +615,6 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     if(!gui_menu_on)
                         TurnCursorOff();
 #endif // WIN32_CURSOR_TWEAKS_OFF
-					
-                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in pointer mode" );
                     break;
             } // end switch (mouse_mode)
             glutWarpPointer( x, y );

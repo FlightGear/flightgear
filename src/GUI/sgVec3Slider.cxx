@@ -286,7 +286,8 @@ sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
         dialer_x = dialer_x + 170;
 
         /* pitch */
-	HS1 = new FloatDial (  dialer_x, dialer_y, dialer_size, vec[1], Ytitle, 89.99f, -89.99f );
+        // HS1 = new FloatDial (  dialer_x, dialer_y, dialer_size, vec[1], Ytitle, 89.99f, -89.99f );
+	HS1 = new FloatDial (  dialer_x, dialer_y, dialer_size, vec[1], Ytitle, 179.99f, -179.99f );
 
         /* radius */
 	HS2 = new FloatSlider (  slider_x, slider_y, slider_width, vec[2], Ztitle, 100.0f, 0.0f );

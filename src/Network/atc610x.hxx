@@ -86,9 +86,9 @@ class FGATC610x : public FGProtocol {
 
 public:
 
-    inline FGATC610x() { }
+    FGATC610x() { }
 
-    inline ~FGATC610x() { }
+    ~FGATC610x() { }
 
     bool open();
 

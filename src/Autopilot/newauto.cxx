@@ -30,6 +30,7 @@
 #include <stdio.h>		// sprintf()
 
 #include <simgear/constants.h>
+#include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
@@ -126,7 +127,7 @@ void FGAutopilot::MakeTargetAltitudeStr( double altitude ) {
 
 
 void FGAutopilot::MakeTargetHeadingStr( double bearing ) {
-    if( bearing < 0. ) {
+    if ( bearing < 0. ) {
 	bearing += 360.;
     } else if (bearing > 360. ) {
 	bearing -= 360.;
@@ -273,7 +274,7 @@ void FGAutopilot::init() {
 	
     TargetHeading = 0.0;	// default direction, due north
     TargetAltitude = 3000;	// default altitude in meters
-    alt_error_accum = 0;    
+    alt_error_accum = 0.0;
     climb_error_accum = 0.0;
 
     MakeTargetAltitudeStr( TargetAltitude );
@@ -306,11 +307,6 @@ void FGAutopilot::init() {
 
     update_old_control_values();
 	
-    // Initialize GUI components of autopilot
-    // NewTgtAirportInit();
-    // fgAPAdjustInit() ;
-    // NewHeadingInit();
-    // NewAltitudeInit();
 };
 
 
@@ -328,8 +324,7 @@ void FGAutopilot::reset() {
     // TargetAltitude = 3000;   // default altitude in meters
     MakeTargetAltitudeStr( TargetAltitude );
 	
-    alt_error_accum = 0;    
-
+    alt_error_accum = 0.0;
     climb_error_accum = 0.0;
 	
     update_old_control_values();
@@ -344,13 +339,10 @@ static double NormalizeDegrees( double Input ) {
     // normalize the input to the range (-180,180]
     // Input should not be greater than -360 to 360.
     // Current rules send the output to an undefined state.
-    if ( Input > 180 )
-	while(Input > 180 )
-	    Input -= 360;
-    else if ( Input <= -180 )
-	while ( Input <= -180 )
-	    Input += 360;
-    return ( Input );
+    while ( Input > 180.0 ) { Input -= 360.0; }
+    while ( Input <= -180.0 ) { Input += 360.0; }
+
+    return Input;
 };
 
 static double LinearExtrapolate( double x, double x1, double y1, double x2, double y2 ) {
@@ -467,8 +459,7 @@ int FGAutopilot::run() {
 	    double adjustment = 
 		current_radiostack->get_nav1_heading_needle_deflection()
 		* (current_radiostack->get_nav1_loc_dist() * SG_METER_TO_NM);
-	    if ( adjustment < -30.0 ) { adjustment = -30.0; }
-	    if ( adjustment >  30.0 ) { adjustment =  30.0; }
+	    SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
 
 	    // determine the target heading to fly to intercept the
 	    // tgt_radial
@@ -546,8 +537,7 @@ int FGAutopilot::run() {
 	    double turn = FGSteam::get_TC_std();
 	    // cout << "turn rate = " << turn << endl;
 	    double AileronSet = -turn / 2.0;
-	    if ( AileronSet < -1.0 ) { AileronSet = -1.0; }
-	    if ( AileronSet >  1.0 ) { AileronSet =  1.0; }
+            SG_CLAMP_RANGE( AileronSet, -1.0, 1.0 );
 	    globals->get_controls()->set_aileron( AileronSet );
 	    globals->get_controls()->set_rudder( AileronSet / 4.0 );
 	} else {
@@ -894,7 +884,7 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     altitude_mode = mode;
 
-    alt_error_accum = 0;    
+    alt_error_accum = 0.0;
 
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {
