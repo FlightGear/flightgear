@@ -101,24 +101,24 @@ int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 
 void FGSteam::update ( int timesteps )
 {
-        if (!isTied) {
-	  isTied = true;
-	  fgTie("/steam/airspeed", FGSteam::get_ASI_kias);
-	  fgTie("/steam/altitude", FGSteam::get_ALT_ft);
-	  fgTie("/steam/altimeter-datum-mb",
-		FGSteam::get_ALT_datum_mb, FGSteam::set_ALT_datum_mb,
-		false);  /* don't modify the value */
-	  fgTie("/steam/turn-rate", FGSteam::get_TC_std);
-	  fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
-	  fgTie("/steam/vertical-speed", FGSteam::get_VSI_fps);
-	  fgTie("/steam/gyro-compass", FGSteam::get_DG_deg);
-	  fgTie("/steam/adf", FGSteam::get_HackADF_deg);
-	  fgTie("/steam/gyro-compass-error",
-		FGSteam::get_DG_err, FGSteam::set_DG_err,
-		false);  /* don't modify the value */
-	  fgTie("/steam/mag-compass", FGSteam::get_MH_deg);
-	}
-	_UpdatesPending += timesteps;
+    if (!isTied) {
+        isTied = true;
+        fgTie("/steam/airspeed", FGSteam::get_ASI_kias);
+        fgTie("/steam/altitude", FGSteam::get_ALT_ft);
+        fgTie("/steam/altimeter-datum-mb",
+              FGSteam::get_ALT_datum_mb, FGSteam::set_ALT_datum_mb,
+              false);  /* don't modify the value */
+        fgTie("/steam/turn-rate", FGSteam::get_TC_std);
+        fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
+        fgTie("/steam/vertical-speed", FGSteam::get_VSI_fps);
+        fgTie("/steam/gyro-compass", FGSteam::get_DG_deg);
+        fgTie("/steam/adf", FGSteam::get_HackADF_deg);
+        fgTie("/steam/gyro-compass-error",
+              FGSteam::get_DG_err, FGSteam::set_DG_err,
+              false);  /* don't modify the value */
+        fgTie("/steam/mag-compass", FGSteam::get_MH_deg);
+    }
+    _UpdatesPending += timesteps;
 }
 
 
