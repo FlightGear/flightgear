@@ -31,7 +31,7 @@
 #  include <sys/timeb.h> /* for ftime() and struct timeb */
 #else
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
-#endif USE_FTIME
+#endif /* USE_FTIME */
 
 
 #include "event.h"
@@ -335,9 +335,12 @@ void fgEventProcess() {
 
 
 /* $Log$
-/* Revision 1.3  1997/12/30 22:22:42  curt
-/* Further integration of event manager.
+/* Revision 1.4  1997/12/31 17:46:50  curt
+/* Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
 /*
+ * Revision 1.3  1997/12/30 22:22:42  curt
+ * Further integration of event manager.
+ *
  * Revision 1.2  1997/12/30 20:47:58  curt
  * Integrated new event manager with subsystem initializations.
  *

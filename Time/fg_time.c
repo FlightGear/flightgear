@@ -29,10 +29,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-#ifdef WIN32
-#include <sys/time.h> /* for gettimeofday() */
-#include <unistd.h>   /* for gettimeofday() */
-#endif
+#ifdef USE_FTIME
+#  include <sys/timeb.h> /* for ftime() and struct timeb */
+#else
+#  include <unistd.h>  /* for gettimeofday() */
+#  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
+#endif /* USE_FTIME */
 
 #include "fg_time.h"
 #include "../Include/constants.h"
@@ -160,13 +162,11 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     long int offset;
     double diff, part, days, hours, lst;
 
-#ifdef WIN32
+#ifdef USE_FTIME
+    struct timeb current;
     int daylight;
     long int timezone;
-
-    struct timeval tv;
-    struct timezone tz;
-#endif
+#endif /* USE_FTIME */
 
     /*
     printf("  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
@@ -180,14 +180,20 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     mt.tm_hour = 12;
     mt.tm_min = 0;
     mt.tm_sec = 0;
+    mt.tm_isdst = -1; /* let the system determine the proper time zone */
 
     start = mktime(&mt);
 
-#ifdef WIN32
+    /* printf("start1 = %ld\n", start);
+    printf("start2 = %s", ctime(&start));
+    printf("start3 = %ld\n", start); */
+
     daylight = mt.tm_isdst;
-    gettimeofday(&tv, &tz);
-    timezone = tz.tz_minuteswest * 60;
-#endif
+
+#ifdef USE_FTIME
+    ftime(&current);
+    timezone = current.timezone * 60;
+#endif /* USE_FTIME */
 
     if ( daylight > 0 ) {
 	daylight = 1;
@@ -292,9 +298,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.24  1997/12/30 22:22:42  curt
-/* Further integration of event manager.
+/* Revision 1.25  1997/12/31 17:46:50  curt
+/* Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
 /*
+ * Revision 1.24  1997/12/30 22:22:42  curt
+ * Further integration of event manager.
+ *
  * Revision 1.23  1997/12/30 20:47:58  curt
  * Integrated new event manager with subsystem initializations.
  *
