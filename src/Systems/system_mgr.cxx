@@ -15,7 +15,7 @@ FGSystemMgr::FGSystemMgr ()
 
 FGSystemMgr::~FGSystemMgr ()
 {
-    for (int i = 0; i < _systems.size(); i++) {
+    for (unsigned int i = 0; i < _systems.size(); i++) {
         delete _systems[i];
         _systems[i] = 0;
     }
@@ -28,7 +28,7 @@ FGSystemMgr::init ()
     _systems.push_back(new VacuumSystem);
 
                                 // Initialize the individual systems
-    for (int i = 0; i < _systems.size(); i++)
+    for (unsigned int i = 0; i < _systems.size(); i++)
         _systems[i]->init();
 }
 
@@ -47,7 +47,7 @@ FGSystemMgr::unbind ()
 void
 FGSystemMgr::update (double dt)
 {
-    for (int i = 0; i < _systems.size(); i++)
+    for (unsigned int i = 0; i < _systems.size(); i++)
         _systems[i]->update(dt);
 }
 
