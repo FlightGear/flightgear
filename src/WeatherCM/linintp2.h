@@ -32,11 +32,16 @@
 #ifndef LININTP2_H
 #define LININTP2_H
 
-template<class T>
+struct EvaluateData
+{
+    unsigned int index[3];
+    double percentage[3];
+};
+
 class mgcLinInterp2D
 {
 public:
-    mgcLinInterp2D (int _numPoints, double* x, double* y, T* _f);
+    mgcLinInterp2D (int _numPoints, double* x, double* y, unsigned int* _f);
 
     ~mgcLinInterp2D ();
 
@@ -57,7 +62,7 @@ public:
     void GetTriangle (int i, double& x0, double& y0, double& x1, double& y1,
         double& x2, double& y2);
 
-    int Evaluate (double x, double y, T& F);
+    int Evaluate (double x, double y, EvaluateData& F);
     
 private:
     typedef struct
@@ -88,7 +93,7 @@ private:
     int numPoints;
     double** point;
     double** tmppoint;
-    T* f;
+    unsigned int* f;
 
     double xmin, xmax, ymin, ymax;
 
@@ -104,7 +109,5 @@ private:
                             double c[3]);
     int InTriangle (Vertex& v0, Vertex& v1, Vertex& v2, Vertex& test);
 };
-
-#include "linintp2.inl"
 
 #endif

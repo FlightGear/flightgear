@@ -88,7 +88,7 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
     setWeatherVisibility(visibility);
 
     DatabaseStatus = type;
-    database = 0;	    //just get sure...
+    database_logic = 0;	    //just get sure...
 
     Thunderstorm = false;
     //I don't need to set theThunderstorm as Thunderstorm == false
@@ -105,8 +105,8 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
     case use_internet:
 	{
 	    FGWeatherParse *parsed_data = new FGWeatherParse();
-	    sgVec2               *p;
-	    FGPhysicalProperties *f;
+	    sgVec2       *p;
+            unsigned int *f;
             string path_to_weather = root + "/weather/current.txt.gz";
 	    parsed_data->input( path_to_weather.c_str() );
 	    unsigned int n = parsed_data->stored_stations();
@@ -116,13 +116,14 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
             {
                 m = n;
 
-	        p = new sgVec2              [n];
-	        f = new FGPhysicalProperties[n];
+	        p = new sgVec2[n];
+	        f = new unsigned int[n];
 
 	        // fill the database
 	        for (unsigned int i = 0; i < n; i++) 
 	        {
-		    f[i] = parsed_data->getFGPhysicalProperties(i);
+                    f[i] = i;
+		    database_data[i] = parsed_data->getFGPhysicalProperties(i);
 		    parsed_data->getPosition(i, p[i]);
 
 		    if ( (i%100) == 0)
@@ -150,8 +151,8 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
                   squared_distance[sgDistanceSquaredVec2(cur_pos, pos)] = i;
                 }
 
-                p = new sgVec2              [m];
-	        f = new FGPhysicalProperties[m];
+                p = new sgVec2      [m];
+                f = new unsigned int[m];
 
                 map<float, unsigned int>::const_iterator ci;
                 ci = squared_distance.begin();
@@ -159,7 +160,8 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 	        // fill the database
 	        for ( i = 0; i < m; i++ ) 
                 { 
-		    f[i] = parsed_data->getFGPhysicalProperties(ci->second);
+                    f[i] = i;
+		    database_data.push_back( parsed_data->getFGPhysicalProperties(ci->second) );
 		    parsed_data->getPosition(ci->second, p[i]);
 
 		    if ( (i%100) == 0)
@@ -175,7 +177,7 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 
 	    //and finally init the interpolation
 	    cerr << "\nInitialiating Interpolation. (2-3 minutes on a PII-350 for ca. 3500 stations)\n";
-	    database = new SphereInterpolate<FGPhysicalProperties>(m, p, f);
+	    database_logic = new SphereInterpolate(m, p, f);
 
 	    //and free my allocations:
 	    delete[] p;
@@ -195,9 +197,9 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 	    double x[2] = {0.0,  0.0};	//make an standard weather that's the same at the whole world
 	    double y[2] = {0.0,  0.0};	//make an standard weather that's the same at the whole world
 	    double z[2] = {1.0, -1.0};	//make an standard weather that's the same at the whole world
-            FGPhysicalProperties *f = new FGPhysicalProperties[2];  //make an standard weather that's the same at the whole world
-	    database = new SphereInterpolate<FGPhysicalProperties>(2,x,y,z,f);
-            delete[] f;
+            unsigned int f[2] = {0, 0};
+            database_data.push_back( FGPhysicalProperties() ); // == database_date[0]
+ 	    database_logic = new SphereInterpolate(2,x,y,z,f);
 	}
 	break;
 
@@ -209,6 +211,10 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
     cache->longitude_deg = fgGetNode("/position/longitude-deg");
     cache->altitude_ft   = fgGetNode("/position/altitude-ft"  );
 
+}
+
+void FGLocalWeatherDatabase::bind()
+{
     fgTie("/environment/weather/wind-north-mps", this, &FGLocalWeatherDatabase::get_wind_north);
     fgTie("/environment/weather/wind-east-mps", this, &FGLocalWeatherDatabase::get_wind_east);
     fgTie("/environment/weather/wind-up-mps", this, &FGLocalWeatherDatabase::get_wind_up);
@@ -216,12 +222,109 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
     fgTie("/environment/weather/air-pressure-Pa", this, &FGLocalWeatherDatabase::get_air_pressure);
     fgTie("/environment/weather/vapor-pressure-Pa", this, &FGLocalWeatherDatabase::get_vapor_pressure);
     fgTie("/environment/weather/air-density", this, &FGLocalWeatherDatabase::get_air_density);
+    
+
+  SGPropertyNode * station_nodes = fgGetNode("/environment/weather");
+  if (station_nodes == 0) {
+    cerr << "No weatherstations (/environment/weather)!!";
+    return;
+  }
+  
+  int index = 0;
+  for(vector<FGPhysicalProperties>::iterator it = database_data.begin(); it != database_data.end(); it++)
+  {
+      SGPropertyNode * station = station_nodes->getNode("station", index, true);
+
+      station -> tie("air-pressure-Pa", 
+        SGRawValueMethods<FGAirPressureItem,WeatherPrecision>(
+          database_data[0].AirPressure,
+          &FGAirPressureItem::getValue,
+          &FGAirPressureItem::setValue)
+        ,false);
+
+    int i;
+    for( i = 0; i < database_data[index].Wind.size(); i++)
+    {
+      SGPropertyNode * wind = station->getNode("wind", i, true);
+      wind -> tie("north-mps", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getWind_x,
+          &FGPhysicalProperties::setWind_x)
+        ,false);
+      wind -> tie("east-mps", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getWind_y,
+          &FGPhysicalProperties::setWind_y)
+        ,false);
+      wind -> tie("up-mps", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getWind_z,
+          &FGPhysicalProperties::setWind_z)
+        ,false);
+      wind -> tie("altitude-m", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getWind_a,
+          &FGPhysicalProperties::setWind_a)
+        ,false);
+    }
+
+    for( i = 0; i < database_data[index].Temperature.size(); i++)
+    {
+      SGPropertyNode * temperature = station->getNode("temperature", i, true);
+      temperature -> tie("value-K", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getTemperature_x,
+          &FGPhysicalProperties::setTemperature_x)
+        ,false);
+      temperature -> tie("altitude-m", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getTemperature_a,
+          &FGPhysicalProperties::setTemperature_a)
+        ,false);
+    }
+
+    for( i = 0; i < database_data[index].VaporPressure.size(); i++)
+    {
+      SGPropertyNode * vaporpressure = station->getNode("vapor-pressure", i, true);
+      vaporpressure -> tie("value-Pa", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getVaporPressure_x,
+          &FGPhysicalProperties::setVaporPressure_x)
+        ,false);
+      vaporpressure -> tie("altitude-m", 
+        SGRawValueMethodsIndexed<FGPhysicalProperties,WeatherPrecision>(
+          database_data[index], i,
+          &FGPhysicalProperties::getVaporPressure_a,
+          &FGPhysicalProperties::setVaporPressure_a)
+        ,false);
+    }
+
+    index++;
+  }
+}
+
+void FGLocalWeatherDatabase::unbind()
+{
+    fgUntie("/environment/weather/wind-north-mps");
+    fgUntie("/environment/weather/wind-east-mps");
+    fgUntie("/environment/weather/wind-up-mps");
+    fgUntie("/environment/weather/temperature-K");
+    fgUntie("/environment/weather/air-pressure-Pa");
+    fgUntie("/environment/weather/vapor-pressure-Pa");
+    fgUntie("/environment/weather/air-density");
 }
 
 FGLocalWeatherDatabase::~FGLocalWeatherDatabase()
 {
     //Tidying up:
-    delete database;
+    delete database_logic;
 }
 
 /****************************************************************************/
@@ -265,9 +368,9 @@ FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
   // check for bogous altitudes. Dunno why, but FGFS want's to know the
   // weather at an altitude of roughly -3000 meters...
   if (p[2] < -500.0f)
-    return FGPhysicalProperty(database->Evaluate(p), -500.0f);
+    return FGPhysicalProperty(DatabaseEvaluate(p), -500.0f);
 
-  return FGPhysicalProperty(database->Evaluate(p), p[2]);
+  return FGPhysicalProperty(DatabaseEvaluate(p), p[2]);
 }
 
 #ifdef macintosh
@@ -279,13 +382,13 @@ FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
 #else
 FGPhysicalProperties FGLocalWeatherDatabase::get(const sgVec2& p) const
 {
-    return database->Evaluate(p);
+    return DatabaseEvaluate(p);
 }
 #endif
 
 WeatherPrecision FGLocalWeatherDatabase::getAirDensity(const sgVec3& p) const
 {
-    FGPhysicalProperty dummy(database->Evaluate(p), p[2]);
+    FGPhysicalProperty dummy(DatabaseEvaluate(p), p[2]);
 
     return 
 	(dummy.AirPressure*FG_WEATHER_DEFAULT_AIRDENSITY*FG_WEATHER_DEFAULT_TEMPERATURE) / 

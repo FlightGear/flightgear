@@ -80,6 +80,37 @@ FGPhysicalProperties::FGPhysicalProperties()
     LightningProbability = 0.0;
 }
 
+/*
+The Methods:
+
+    WeatherPrecision getWind_x( int number ) const;
+    WeatherPrecision getWind_y( int number ) const;
+    WeatherPrecision getWind_z( int number ) const;
+    WeatherPrecision getWind_a( int number ) const;
+    void setWind_x( int number, WeatherPrecision x);
+    void setWind_y( int number, WeatherPrecision y);
+    void setWind_z( int number, WeatherPrecision z);
+    void setWind_a( int number, WeatherPrecision a);
+    WeatherPrecision getTurbulence_x( int number ) const;
+    WeatherPrecision getTurbulence_y( int number ) const;
+    WeatherPrecision getTurbulence_z( int number ) const;
+    WeatherPrecision getTurbulence_a( int number ) const;
+    void setTurbulence_x( int number, WeatherPrecision x);
+    void setTurbulence_y( int number, WeatherPrecision y);
+    void setTurbulence_z( int number, WeatherPrecision z);
+    void setTurbulence_a( int number, WeatherPrecision a);
+    WeatherPrecision getTemperature_x( int number ) const;
+    WeatherPrecision getTemperature_a( int number ) const;
+    void setTemperature_x( int number, WeatherPrecision x);
+    void setTemperature_a( int number, WeatherPrecision a);
+    WeatherPrecision getVaporPressure_x( int number ) const;
+    WeatherPrecision getVaporPressure_a( int number ) const;
+    void setVaporPressure_x( int number, WeatherPrecision x);
+    void setVaporPressure_a( int number, WeatherPrecision a);
+
+are in the extra file FGPhysicalProperties_bind.cpp
+*/
+
 unsigned int FGPhysicalProperties::getNumberOfCloudLayers(void) const
 {
     return Clouds.size();
@@ -289,5 +320,3 @@ WeatherPrecision FGPhysicalProperties::AirPressureAt(const WeatherPrecision x) c
     
     return AirPressure.getValue() * exp(FF);
 }
-
-

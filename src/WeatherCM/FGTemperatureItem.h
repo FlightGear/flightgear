@@ -76,6 +76,9 @@ public:
     WeatherPrecision getValue() const { return value; };
     WeatherPrecision getAlt()   const { return alt;   };  
 
+    void setAlt  (WeatherPrecision x) { alt   = x; }
+    void setValue(WeatherPrecision x) { value = x; }
+
     FGTemperatureItem& operator*= (const WeatherPrecision& arg);
     FGTemperatureItem& operator+= (const FGTemperatureItem& arg);
     FGTemperatureItem& operator-= (const FGTemperatureItem& arg);

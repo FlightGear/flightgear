@@ -96,6 +96,10 @@ public:
     WeatherPrecision y(void) const { return value[1]; };
     WeatherPrecision z(void) const { return value[2]; };
 
+    void x(const WeatherPrecision x) { value[0] = x; };
+    void y(const WeatherPrecision y) { value[1] = y; };
+    void z(const WeatherPrecision z) { value[2] = z; };
+
     FGTurbulenceItem& operator*= (const WeatherPrecision  arg);
     FGTurbulenceItem& operator+= (const FGTurbulenceItem& arg);
     FGTurbulenceItem& operator-= (const FGTurbulenceItem& arg);

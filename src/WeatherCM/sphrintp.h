@@ -32,43 +32,59 @@
 #ifndef SPHRINTP_H
 #define SPHRINTP_H
 
+#include <simgear/compiler.h>
+#include <iostream>
+
 #include "linintp2.h"
 #include <plib/sg.h>
 
-template<class T>
+SG_USING_NAMESPACE(std);
+SG_USING_STD(cout);
+
+
 class SphereInterpolate
 {
 public:
     SphereInterpolate (int n, const double* x, const double* y,
-	const double* z, const T* f);
-    SphereInterpolate (int n, const sgVec2* p, const T* f);
+	const double* z, const unsigned int* f);
+    SphereInterpolate (int n, const sgVec2* p, const unsigned int* f);
    
     ~SphereInterpolate ();
     
     void GetSphericalCoords (const double x, const double y, const double z,
 	double& thetaAngle, double& phiAngle) const;
     
-    int Evaluate (const double x, const double y, const double z, T& f) const;
-    int Evaluate (const double thetaAngle, const double phiAngle, T& f) const;
+    int Evaluate (const double x, const double y, const double z, EvaluateData& f) const;
+    int Evaluate (const double thetaAngle, const double phiAngle, EvaluateData& f) const;
 
 #ifndef macintosh
     // CodeWarrior doesn't know the differece between sgVec2 and
     // sgVec3, so I commented this out for Mac builds. This change is
     // related to a similar change in FGLocalWeatherDatabase module.
      
-    T Evaluate(const sgVec2& p) const
+    EvaluateData Evaluate(const sgVec2& p) const
     {
-	T retval;
+	EvaluateData retval;
 	Evaluate(p[1], p[0], retval);
 	return retval;
     }
 #endif
 
  
-    T Evaluate(const sgVec3& p) const
+    EvaluateData Evaluate(const sgVec3& p) const
     {
-	T retval;
-	Evaluate(p[1], p[0], retval);
+	EvaluateData retval;
+	if (!Evaluate(p[1], p[0], retval))
+        {
+          cout << "Error during spherical interpolation. Point (" 
+               << p[0] << "/" << p[1] << "/" << p[2] << ") was in no triangle\n";
+          retval.index[0] = 0;  //fake something
+          retval.index[1] = 0;
+          retval.index[2] = 0;
+          retval.percentage[0] = 1.0;
+          retval.percentage[1] = 0.0;
+          retval.percentage[2] = 0.0;
+        }
 	return retval;
     }
 
@@ -76,10 +92,8 @@ protected:
     int numPoints;
     double* theta;
     double* phi;
-    T* func;
-    mgcLinInterp2D<T>* pInterp;
+    unsigned int* func;
+    mgcLinInterp2D* pInterp;
 };
-
-#include "sphrintp.inl"
 
 #endif

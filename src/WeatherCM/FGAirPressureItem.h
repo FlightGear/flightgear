@@ -80,11 +80,16 @@ public:
     FGAirPressureItem(const WeatherPrecision v)	{value = v;                             }
     FGAirPressureItem()				{value = FG_WEATHER_DEFAULT_AIRPRESSURE;}
 
-    WeatherPrecision getValue(void) const
+    WeatherPrecision getValue() const
     { 
 	return value;
     };
-   
+
+    void setValue(WeatherPrecision p) 
+    { 
+	value = p;
+    };
+
     FGAirPressureItem& operator*=(const WeatherPrecision   arg);
     FGAirPressureItem& operator+=(const FGAirPressureItem& arg);
     FGAirPressureItem& operator-=(const FGAirPressureItem& arg);

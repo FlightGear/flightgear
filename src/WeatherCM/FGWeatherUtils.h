@@ -198,7 +198,7 @@ inline WeatherPrecision JSBsim2SIdensity    (const WeatherPrecision JSBsim)
 
 inline WeatherPrecision psf2Pascal	    (const WeatherPrecision psf)
 {
-    return psf / 0.0020885434;				//lbs / square foot (used in JSBsim)
+    return psf / 0.020885434;				//lbs / square foot (used in JSBsim)
 }
 
 inline WeatherPrecision Kelvin2Rankine	    (const WeatherPrecision kelvin)
@@ -213,7 +213,7 @@ inline WeatherPrecision SIdensity2JSBsim    (const WeatherPrecision SIdensity)
 
 inline WeatherPrecision Pascal2psf	    (const WeatherPrecision Pascal)
 {
-    return 0.0020885434 * Pascal;			//lbs / square feet (used in JSBsim)
+    return 0.020885434 * Pascal;			//lbs / square feet (used in JSBsim)
 }
 
 /****************************************************************************/

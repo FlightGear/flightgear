@@ -60,8 +60,10 @@ HISTORY
 
 #include <plib/sg.h>
 
-#include <simgear/misc/props.hxx>
+#include <Main/fgfs.hxx>
+
 #include <simgear/constants.h>
+#include <simgear/misc/props.hxx>
 
 #include "sphrintp.h"
 
@@ -92,11 +94,33 @@ struct _FGLocalWeatherDatabaseCache
     FGPhysicalProperty last_known_property;
 };
 
-class FGLocalWeatherDatabase
+class FGLocalWeatherDatabase : public FGSubsystem
 {
 private:
 protected:
-    SphereInterpolate<FGPhysicalProperties> *database;
+    SphereInterpolate            *database_logic;
+    vector<FGPhysicalProperties> database_data;
+#ifndef macintosh
+    FGPhysicalProperties DatabaseEvaluate(const sgVec2& p) const
+    {
+        sgVec2 p_converted = {p[0]*(SGD_2PI/360.0),
+                              p[1]*(SGD_2PI/360.0)};
+        EvaluateData d = database_logic->Evaluate(p_converted);
+        return database_data[d.index[0]]*d.percentage[0] + 
+               database_data[d.index[1]]*d.percentage[1] + 
+               database_data[d.index[2]]*d.percentage[2] ; 
+    }
+#endif
+    FGPhysicalProperties DatabaseEvaluate(const sgVec3& p) const
+    {
+        sgVec3 p_converted = {p[0]*(SGD_2PI/360.0),
+                              p[1]*(SGD_2PI/360.0),
+                              p[2]                };
+        EvaluateData d = database_logic->Evaluate(p_converted);
+        return database_data[d.index[0]]*d.percentage[0] + 
+               database_data[d.index[1]]*d.percentage[1] + 
+               database_data[d.index[2]]*d.percentage[2] ; 
+    }
 
     typedef vector<sgVec2>      pointVector;
     typedef vector<pointVector> tileVector;
@@ -189,6 +213,14 @@ public:
     void update(const WeatherPrecision dt);			//time has changed
     void update(const sgVec3& p);				//position has  changed
     void update(const sgVec3& p, const WeatherPrecision dt);	//time and/or position has changed
+
+    /************************************************************************/
+    /* define methods requited for FGSubsystem     	                    */
+    /************************************************************************/
+    virtual void init () { /* do nothing; that's done in the constructor */ };
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (int dt) { update((float) dt); };
 
     /************************************************************************/
     /* Get the physical properties on the specified point p		    */
