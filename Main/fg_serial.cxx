@@ -123,6 +123,15 @@ static bool config_port(fgSERIAL& s, fgSerialPortKind& kind,
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
 	    return false;
 	}
+    } else if ( format == "garman" ) {
+	if ( direction == "out" ) {
+	    kind = FG_SERIAL_GARMAN_OUT;
+	} else if ( direction == "in" ) {
+	    kind = FG_SERIAL_GARMAN_IN;
+	} else {
+	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
+	    return false;
+	}
     } else if ( format == "fgfs" ) {
 	if ( direction == "out" ) {
 	    kind = FG_SERIAL_FGFS_OUT;
@@ -162,7 +171,7 @@ void fgSerialInit() {
 
 
 static void send_nmea_out( fgSERIAL& s ) {
-    char nmea[256];
+    char rmc[256], gga[256], rmz[256];
     char dir;
     int deg;
     double min;
@@ -206,19 +215,123 @@ static void send_nmea_out( fgSERIAL& s ) {
     char heading[10];
     sprintf( heading, "%05.1f", FG_Psi * RAD_TO_DEG );
 
+    char altitude_m[10];
+    sprintf( altitude_m, "%02d", (int)(FG_Altitude * FEET_TO_METER) );
+
+    char altitude_ft[10];
+    sprintf( altitude_ft, "%02d", (int)FG_Altitude );
+
     char date[10];
     sprintf( date, "%02d%02d%02d", 
 	     t->gmt->tm_mday, t->gmt->tm_mon+1, t->gmt->tm_year );
 
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
-    sprintf( nmea, "$GPRMC,%s,A,%s,%s,%s,%s,%s,000.0,E*00\n",
+    sprintf( rmc, "$GPRMC,%s,A,%s,%s,%s,%s,%s,000.0,E*00\r\n",
 	     utc, lat, lon, speed, heading, date );
 
-    FG_LOG( FG_SERIAL, FG_DEBUG, nmea << endl );
-    s.write_port(nmea);
+    sprintf( gga, "$GPGGA,%s,%s,%s,1,04,0.0,%s,M,00.0,M,,*00\r\n",
+	     utc, lat, lon, altitude_m );
+
+    // sprintf( rmz, "$PGRMZ,%s,f,3*00\r\n", altitude_ft );
+
+    FG_LOG( FG_SERIAL, FG_DEBUG, rmc );
+    FG_LOG( FG_SERIAL, FG_DEBUG, gga );
+    // FG_LOG( FG_SERIAL, FG_DEBUG, rmz );
+
+
+    // one full frame every 2 seconds according to the standard
+    if ( cur_time_params.cur_time % 2 == 0 ) {
+	// rmc on even seconds
+	s.write_port(rmc);
+    } else {
+	// gga on odd seconds
+	s.write_port(gga);
+    }
+    // s.write_port(rmz);
 }
 
 static void read_nmea_in( fgSERIAL& s ) {
+}
+
+static void send_garman_out( fgSERIAL& s ) {
+    char rmc[256], rmz[256];
+    char dir;
+    int deg;
+    double min;
+    fgFLIGHT *f;
+    fgTIME *t;
+
+    f = current_aircraft.flight;
+    t = &cur_time_params;
+
+    char utc[10];
+    sprintf( utc, "%02d%02d%02d", 
+	     t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec );
+
+    char lat[20];
+    double latd = FG_Latitude * RAD_TO_DEG;
+    if ( latd < 0.0 ) {
+	latd *= -1.0;
+	dir = 'S';
+    } else {
+	dir = 'N';
+    }
+    deg = (int)(latd);
+    min = (latd - (double)deg) * 60.0;
+    sprintf( lat, "%02d%06.3f,%c", abs(deg), min, dir);
+
+    char lon[20];
+    double lond = FG_Longitude * RAD_TO_DEG;
+    if ( lond < 0.0 ) {
+	lond *= -1.0;
+	dir = 'W';
+    } else {
+	dir = 'E';
+    }
+    deg = (int)(lond);
+    min = (lond - (double)deg) * 60.0;
+    sprintf( lon, "%02d%06.3f,%c", abs(deg), min, dir);
+
+    char speed[10];
+    sprintf( speed, "%05.1f", FG_V_equiv_kts );
+
+    char heading[10];
+    sprintf( heading, "%05.1f", FG_Psi * RAD_TO_DEG );
+
+    char altitude_m[10];
+    sprintf( altitude_m, "%02d", (int)(FG_Altitude * FEET_TO_METER) );
+
+    char altitude_ft[10];
+    sprintf( altitude_ft, "%02d", (int)FG_Altitude );
+
+    char date[10];
+    sprintf( date, "%02d%02d%02d", 
+	     t->gmt->tm_mday, t->gmt->tm_mon+1, t->gmt->tm_year );
+
+    // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
+    sprintf( rmc, "$GPRMC,%s,A,%s,%s,%s,%s,%s,000.0,E*00\r\n",
+	     utc, lat, lon, speed, heading, date );
+
+    // sprintf( gga, "$GPGGA,%s,%s,%s,1,04,0.0,%s,M,00.0,M,,*00\r\n",
+    //          utc, lat, lon, altitude_m );
+
+    sprintf( rmz, "$PGRMZ,%s,f,3*00\r\n", altitude_ft );
+
+    FG_LOG( FG_SERIAL, FG_DEBUG, rmc );
+    FG_LOG( FG_SERIAL, FG_DEBUG, rmz );
+
+
+    // one full frame every 2 seconds according to the standard
+    if ( cur_time_params.cur_time % 2 == 0 ) {
+	// rmc on even seconds
+	s.write_port(rmc);
+    } else {
+	// gga on odd seconds
+	s.write_port(rmz);
+    }
+}
+
+static void read_garman_in( fgSERIAL& s ) {
 }
 
 static void send_fgfs_out( fgSERIAL& s ) {
@@ -230,10 +343,21 @@ static void read_fgfs_in( fgSERIAL& s ) {
 
 // one more level of indirection ...
 static void process_port( fgSERIAL& s, const fgSerialPortKind kind ) {
+    static long last_time;
     if ( kind == FG_SERIAL_NMEA_OUT ) {
-	send_nmea_out(s);
+	if (cur_time_params.cur_time > last_time ) {
+	    send_nmea_out(s);
+	} 
+	last_time = cur_time_params.cur_time;
     } else if ( kind == FG_SERIAL_NMEA_IN ) {
 	read_nmea_in(s);
+    } else if ( kind == FG_SERIAL_GARMAN_OUT ) {
+	if (cur_time_params.cur_time > last_time ) {
+	    send_garman_out(s);
+	} 
+	last_time = cur_time_params.cur_time;
+    } else if ( kind == FG_SERIAL_GARMAN_IN ) {
+	read_garman_in(s);
     } else if ( kind == FG_SERIAL_FGFS_OUT ) {
 	send_fgfs_out(s);
     } else if ( kind == FG_SERIAL_FGFS_IN ) {
@@ -263,6 +387,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.2  1998/11/19 13:53:25  curt
+// Added a "Garman" mode.
+//
 // Revision 1.1  1998/11/16 13:57:42  curt
 // Initial revision.
 //

@@ -39,8 +39,10 @@ enum fgSerialPortKind {
     FG_SERIAL_DISABLED = 0,
     FG_SERIAL_NMEA_OUT = 1,
     FG_SERIAL_NMEA_IN = 2,
-    FG_SERIAL_FGFS_OUT = 3,
-    FG_SERIAL_FGFS_IN = 4
+    FG_SERIAL_GARMAN_OUT = 3,
+    FG_SERIAL_GARMAN_IN = 4,
+    FG_SERIAL_FGFS_OUT = 5,
+    FG_SERIAL_FGFS_IN = 6
 };
 
 
@@ -67,6 +69,9 @@ void fgSerialProcess();
 
 
 // $Log$
+// Revision 1.2  1998/11/19 13:53:27  curt
+// Added a "Garman" mode.
+//
 // Revision 1.1  1998/11/16 13:57:43  curt
 // Initial revision.
 //
