@@ -1,9 +1,15 @@
+#include <simgear/debug/logstream.hxx>
+
 #include "Math.hpp"
 #include "Surface.hpp"
 #include "Rotorpart.hpp"
 #include "Rotorblade.hpp"
 #include "Rotor.hpp"
-#include <stdio.h>
+#include <iostream>
+#include <iomanip>
+
+SG_USING_STD(setprecision);
+
 //#include <string.h>
 namespace yasim {
 
@@ -512,11 +518,11 @@ void Rotor::compile()
 
   //rotor is divided into 4 pointlike parts
 
-  printf("debug: e %f...%f a%f...%f %f...%f\n",
-      _mincyclicele,_maxcyclicele,
-      _mincyclicail,_maxcyclicail,
-      _min_pitch,_max_pitch);
-
+  SG_LOG(SG_FLIGHT, SG_DEBUG, "debug: e "
+         << _mincyclicele << "..." <<_maxcyclicele << ' '
+         << _mincyclicail << "..." << _maxcyclicail << ' '
+         << _min_pitch << "..." << _max_pitch);
+  
   if(!_sim_blades)
   {
     _dynamic=_dynamic*(1/                          //inverse of the time
@@ -528,7 +534,7 @@ void Rotor::compile()
     directions[0][1]=_forward[1];
     directions[0][2]=_forward[2];
     int i;
-    printf("Rotor rotating ccw? %i\n",_ccw);
+    SG_LOG(SG_FLIGHT, SG_DEBUG, "Rotor rotating ccw? " << _ccw);
     for (i=1;i<5;i++)
 
     {
@@ -570,14 +576,24 @@ void Rotor::compile()
 
     }
 
-    printf("spd: %5.3f lentoc: %5.3f dia: %5.3f rbl: %5.3f hing: %5.3f lfa:%5.3f\n"
-           "zf: %5.3f mpf: %5.3f\n"
-           "tq: %5.3f..%5.3f d3:%5.3f\n"
-           "o/o0: %5.3f phi: %5.3f relamp: %5.3f delta:%5.3f\n"
-           ,speed,lentocenter,_diameter,_rel_blade_center,_rel_len_hinge,
-           lentoforceattac,zentforce,maxpitchforce,
-           torque0,torquemax,_delta3,
-           omega/omega0,phi*180/pi,relamp,_delta);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "spd: " << setprecision(8) << speed
+           << " lentoc: " << lentocenter
+           << " dia: " << _diameter
+           << " rbl: " << _rel_blade_center
+           << " hing: " << _rel_len_hinge
+           << " lfa: " << lentoforceattac);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "zf: " << setprecision(8) << zentforce
+           << " mpf: " << maxpitchforce);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "tq: " << setprecision(8) << torque0 << ".." << torquemax
+           << " d3: " << _delta3);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "o/o0: " << setprecision(8) << omega/omega0
+           << " phi: " << phi*180/pi
+           << " relamp: " << relamp
+           << " delta: " <<_delta);
 
     Rotorpart* rps[4];
     for (i=0;i<4;i++)
@@ -619,7 +635,7 @@ void Rotor::compile()
     directions[0][1]=_forward[1];
     directions[0][2]=_forward[2];
     int i;
-    printf("Rotor rotating ccw? %i\n",_ccw);
+    SG_LOG(SG_FLIGHT, SG_DEBUG, "Rotor rotating ccw? " <<_ccw);
     for (i=1;i<5;i++)
 
     {
@@ -659,14 +675,24 @@ void Rotor::compile()
 
     }
 
-    printf("spd: %5.3f lentoc: %5.3f dia: %5.3f rbl: %5.3f hing: %5.3f lfa:%5.3f\n"
-           "zf: %5.3f mpf: %5.3f\n"
-           "tq: %5.3f..%5.3f d3:%5.3f\n"
-           "o/o0: %5.3f phi: %5.3f relamp:%5.3f delta:%5.3f\n"
-           ,speed,lentocenter,_diameter,_rel_blade_center,_rel_len_hinge,
-           lentoforceattac,zentforce,maxpitchforce,
-           torque0,torquemax,_delta3,
-           omega/omega0,float(phi*180/pi),relamp,_delta);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "spd: " << setprecision(8) << speed
+           << " lentoc: " << lentocenter
+           << " dia: " << _diameter
+           << " rbl: " << _rel_blade_center
+           << " hing: " << _rel_len_hinge
+           << " lfa: " << lentoforceattac);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "zf: " << setprecision(8) << zentforce
+           << " mpf: " << maxpitchforce);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "tq: " << setprecision(8) << torque0 << ".." << torquemax
+           << " d3: " << _delta3);
+    SG_LOG(SG_FLIGHT, SG_DEBUG,
+           "o/o0: " << setprecision(8) << omega/omega0
+           << " phi: " << phi*180/pi
+           << " relamp: " << relamp
+           << " delta: " <<_delta);
 
     float lspeed[3],dirzentforce[3];
 
@@ -790,16 +816,25 @@ Rotorpart* Rotor::newRotorpart(float* pos, float *posforceattac, float *normal,
     r->setLen(len);
 
 
-
-    #define a(x) x[0],x[1],x[2]
-    printf("newrp: pos(%5.3f %5.3f %5.3f) pfa (%5.3f %5.3f %5.3f)\n"
-           "       nor(%5.3f %5.3f %5.3f) spd (%5.3f %5.3f %5.3f)\n"
-           "       dzf(%5.3f %5.3f %5.3f) zf  (%5.3f) mpf (%5.3f)\n"
-           "       pit (%5.3f..%5.3f) mcy (%5.3f..%5.3f) d3 (%5.3f)\n"
-           ,a(pos),a(posforceattac),a(normal),
-          a(speed),a(dirzentforce),zentforce,maxpitchforce,minpitch,maxpitch,mincyclic,maxcyclic,
-          delta3);
-    #undef a
+    SG_LOG(SG_FLIGHT, SG_DEBUG, setprecision(8)
+           << "newrp: pos("
+           << pos[0] << ' ' << pos[1] << ' ' << pos[2]
+           << ") pfa ("
+           << posforceattac[0] << ' ' << posforceattac[1] << ' ' 
+           << posforceattac[2] << ')');
+    SG_LOG(SG_FLIGHT, SG_DEBUG, setprecision(8)
+           << "       nor("
+           << normal[0] << ' ' << normal[1] << ' ' << normal[2]
+           << ") spd ("
+           << speed[0] << ' ' << speed[1] << ' ' << speed[2] << ')');
+    SG_LOG(SG_FLIGHT, SG_DEBUG, setprecision(8)
+           << "       dzf("
+           << dirzentforce[0] << ' ' << dirzentforce[1] << dirzentforce[2]
+           << ") zf  (" << zentforce << ") mpf (" << maxpitchforce << ')');
+    SG_LOG(SG_FLIGHT, SG_DEBUG, setprecision(8)
+           << "       pit(" << minpitch << ".." << maxpitch
+           << ") mcy (" << mincyclic << ".." << maxcyclic
+           << ") d3 (" << delta3 << ')');
 
     return r;
 }

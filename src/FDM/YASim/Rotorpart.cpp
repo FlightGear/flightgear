@@ -1,3 +1,5 @@
+#include <simgear/debug/logstream.hxx>
+
 #include "Math.hpp"
 #include "Rotorpart.hpp"
 #include <stdio.h>
@@ -246,7 +248,8 @@ float Rotorpart::getrealAlpha(void)
 }
 void Rotorpart::setAlphaoutput(char *text,int i)
 {
-   printf("setAlphaoutput rotorpart [%s] typ %i\n",text,i);
+   SG_LOG(SG_FLIGHT, SG_DEBUG, "setAlphaoutput rotorpart ["
+          << text << "] typ" << i);
 
    strncpy(_alphaoutputbuf[i>0],text,255);
 
