@@ -1147,9 +1147,8 @@ fgParseOptions (const string& path) {
         }
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
-	    SG_LOG( SG_GENERAL, SG_ALERT, 
-		    "Config file parse error: " << path << " '" 
-		    << line << "'" );
+            cout << endl << "Config file parse error: " << path << " '" 
+		    << line << "'" << endl;
 	    fgUsage();
 	    exit(-1);
 	}

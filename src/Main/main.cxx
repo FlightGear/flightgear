@@ -1482,11 +1482,10 @@ int mainLoop( int argc, char **argv ) {
         // tell the operator how to use this application
         fgUsage();
 
-	SG_LOG( SG_GENERAL, SG_ALERT, "Base package check failed ... "
-		<< "Found version " << base_version << " at: "
-                << globals->get_fg_root() );
-        SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version"
-                << required_version);
+	cout << endl << "Base package check failed ... " \
+	     << "Found version " << base_version << " at: " \
+             << globals->get_fg_root() << endl;
+        cout << "Please upgrade to version" << required_version << endl;
 	exit(-1);
     }
 
