@@ -35,7 +35,7 @@
 #include STL_FUNCTIONAL
 #include STL_STRING
 
-#ifdef FG_HAVE_STD_INCLUDES
+#ifdef SG_HAVE_STD_INCLUDES
 #  include <cstdio>
 #  ifdef HAVE_STDLIB_H
 #    include <cstdlib>

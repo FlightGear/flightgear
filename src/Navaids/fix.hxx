@@ -28,7 +28,7 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/fgstream.hxx>
 
-#ifdef FG_HAVE_STD_INCLUDES
+#ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
 #elif defined( FG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <iostream.h>

@@ -105,7 +105,7 @@ USEUNIT("FGAerodynamics.cpp");
 #ifdef FGFS
 #include <simgear/compiler.h>
 #include STL_IOSTREAM
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <ctime>
 #  else
 #    include <time.h>
