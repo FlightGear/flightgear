@@ -1386,13 +1386,13 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 6 ) {
         // sleep(1);
 
-        fgUpdateSkyAndLightingParams();
-
         idle_state = 1000;
 
         SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
         fgReshape( fgGetInt("/sim/startup/xsize"),
                fgGetInt("/sim/startup/ysize") );
+
+        fgUpdateSkyAndLightingParams();
     } 
 
     if ( idle_state == 1000 ) {
