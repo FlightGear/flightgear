@@ -183,16 +183,16 @@ void guiToggleMenu(void)
     if( gui_menu_on ) {
         // printf("Hiding Menu\n");
         mainMenuBar->hide  ();
-#if defined(WIN32_CURSOR_TWEAKS)
+#if defined(WIN32_CURSOR_TWEAKS_OFF)
         if( mouse_mode == MOUSE_POINTER )
             TurnCursorOff();
-#endif // #ifdef WIN32_CURSOR_TWEAKS
+#endif // WIN32_CURSOR_TWEAKS_OFF
     } else {
         // printf("Showing Menu\n");
         mainMenuBar->reveal();
 #ifdef WIN32
         TurnCursorOn();
-#endif // #ifdef WIN32
+#endif // WIN32
     }
     gui_menu_on = ~gui_menu_on;
 }
@@ -303,7 +303,7 @@ void LoadDialogOk(puObject *) {
     }
 }
 
-// Do this is the person presses cancel
+// Do this if the person presses cancel
 void LoadDialogCancel(puObject *) {
     FG_POP_PUI_DIALOG( LoadDialog );
 }
@@ -418,7 +418,6 @@ void ConfirmExitDialogInit(void)
     int y = (fgGetInt("/sim/startup/ysize")/2 - 100/2);
 	
     YNdialogBox = new puDialogBox (x, y); // 150, 50
-    //  YNdialogBox = new puDialogBox (150, 50);
     {
         YNdialogFrame = new puFrame (0,0,400, 100);
         
@@ -460,6 +459,7 @@ void helpCb (puObject *)
     SGPath path( globals->get_fg_root() );
     path.append( "Docs/index.html" );
 	
+#if !defined(WIN32)
     string help_app = fgGetString("/sim/startup/browser-app");
 
     if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
@@ -467,8 +467,10 @@ void helpCb (puObject *)
     } else {
         command = help_app + " " + path.str();
     }
-#if !defined(WIN32)
     command += " &";
+#else // WIN32
+	command = "start ";
+	command += path.str();
 #endif
 	
     system( command.c_str() );

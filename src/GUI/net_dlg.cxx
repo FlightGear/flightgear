@@ -103,8 +103,7 @@ void NewNetIdInit(void)
 {
 	sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign").c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
-	int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
-									  NewNetIdLabel ) / 2;
+	int len = 150 - puGetDefaultLabelFont().getStringWidth( NewNetIdLabel ) / 2;
 
 	NetIdDialog = new puDialogBox (150, 50);
 	{
@@ -236,8 +235,8 @@ void NewNetFGDInit(void)
 {
 //    sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign").c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
-	int len = 170 - puGetStringWidth( puGetDefaultLabelFont(),
-									  NewNetFGDLabel ) / 2;
+    int len = 170
+        - puGetDefaultLabelFont().getStringWidth( NewNetFGDLabel ) / 2;
 
 	NetFGDDialog = new puDialogBox (310, 30);
 	{

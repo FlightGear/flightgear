@@ -8,6 +8,8 @@
 
 #if defined(WIN32) || defined(__CYGWIN32__)
 #define WIN32_CURSOR_TWEAKS
+// uncomment this for cursor to turn off when menu is disabled
+// #define WIN32_CURSOR_TWEAKS_OFF
 #elif (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
 #define X_CURSOR_TWEAKS
 #endif

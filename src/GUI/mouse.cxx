@@ -167,7 +167,7 @@ static inline int right_button( void ) {
 void TurnCursorOn( void )
 {
     mouse_active = ~0;
-#if defined(WIN32_CURSOR_TWEAKS)
+#if defined(WIN32)
     switch (mouse_mode) {
         case MOUSE_POINTER:
             glutSetCursor(GLUT_CURSOR_INHERIT);
@@ -510,16 +510,18 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     globals->get_current_view()->set_goal_view_offset(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
                     globals->get_current_view()->set_view_offset(0.0);
-#endif
-#endif      // RESET_VIEW_ON_LEAVING_MOUSE_VIEW
+#endif // NO_SMOOTH_MOUSE_VIEW
+#endif // RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     glutSetCursor(GLUT_CURSOR_INHERIT);
                     
+#if defined(WIN32_CURSOR_TWEAKS_OFF)
                     if(!gui_menu_on)
                         TurnCursorOff();
-                    
+#endif // WIN32_CURSOR_TWEAKS_OFF
+					
                     SG_LOG( SG_INPUT, SG_INFO, "Mouse in pointer mode" );
                     break;
-            }     
+            } // end switch (mouse_mode)
             glutWarpPointer( x, y );
         } // END RIGHT BUTTON
     } // END UPDOWN == GLUT_DOWN
