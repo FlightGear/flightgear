@@ -30,9 +30,9 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 2;
+const int FG_RAW_CTRLS_VERSION = 3;
 
-const int FG_MAX_ENGINES = 10;
+const int FG_MAX_ENGINES = 4;
 const int FG_MAX_WHEELS = 3;
 
 // Define a structure containing the control parameters
@@ -49,6 +49,8 @@ public:
     double elevator_trim;	         // -1 ... 1
     double rudder;		         // -1 ... 1
     double flaps;		         //  0 ... 1
+    int magnetos[FG_MAX_ENGINES];
+    bool starter[FG_MAX_ENGINES];        //  true = starter engauged
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
