@@ -471,7 +471,7 @@ FGInput::_init_joystick ()
   }
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {
-    SGPropertyNode * js_node = js_nodes->getChild("js", i);
+    SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
     if (js_node == 0) {
       SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for joystick " << i);
       js_node = js_nodes->getChild("js", i, true);
@@ -483,8 +483,19 @@ FGInput::_init_joystick ()
       continue;
     } else {
 #ifdef FG_PLIB_JOYSTICK_GETNAME
-      SG_LOG(SG_INPUT, SG_INFO, "");
-      SG_LOG(SG_INPUT, SG_INFO, "Found joystick " << js->getName());
+      const char * name = js->getName();
+      std::cout << "Looking for bindings for joystick \""
+		<< name << '"' << std::endl;
+      vector<SGPropertyNode_ptr> nodes = js_nodes->getChildren("js-named");
+      for (int i = 0; i < nodes.size(); i++) {
+	SGPropertyNode_ptr node = nodes[i];
+	std::cout << "  Trying \"" << node->getStringValue("name") << '"' << std::endl;
+	if (!strcmp(node->getStringValue("name"), name)) {
+	  std::cout << "  Found bindings" << std::endl;
+	  js_node = node;
+	  break;
+	}
+      }
 #endif
     }
 #ifdef WIN32
