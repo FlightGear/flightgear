@@ -37,15 +37,20 @@ void fgStarsInit();
 
 /* Draw the Stars */
 void fgStarsRender();
-
+extern struct OrbElements pltOrbElements[9];
+extern struct fgTIME cur_time_params;
 
 #endif /* STARS_H */
 
 
 /* $Log$
-/* Revision 1.5  1997/09/18 16:20:09  curt
-/* At dusk/dawn add/remove stars in stages.
+/* Revision 1.6  1997/10/25 03:18:29  curt
+/* Incorporated sun, moon, and planet position and rendering code contributed
+/* by Durk Talsma.
 /*
+ * Revision 1.5  1997/09/18 16:20:09  curt
+ * At dusk/dawn add/remove stars in stages.
+ *
  * Revision 1.4  1997/09/05 01:36:00  curt
  * Working on getting stars right.
  *

@@ -35,6 +35,8 @@
 
 #include <GL/glut.h>
 
+#include "orbits.h"
+#include "planets.h"
 #include "stars.h"
 
 #include "../constants.h"
@@ -57,13 +59,14 @@ static GLint stars[FG_STAR_LEVELS];
 void fgStarsInit() {
     FILE *fd;
     struct GENERAL *g;
+    struct CelestialCoord pltPos;
     char path[1024];
     char line[256], name[256];
     char *front, *end;
     double right_ascension, declination, magnitude;
     double ra_save, decl_save;
     double ra_save1, decl_save1;
-    int count, i, max_stars;
+    int count, i, j, max_stars;
 
     g = &general;
 
@@ -145,10 +148,11 @@ void fgStarsInit() {
 		       name, right_ascension, declination, magnitude); */
 
 		glColor3f( magnitude, magnitude, magnitude );
+		/*glColor3f(0,0,0);*/
 		glVertex3f( 190000.0 * cos(right_ascension) * cos(declination),
 			    190000.0 * sin(right_ascension) * cos(declination),
 			    190000.0 * sin(declination) );
-
+		
 		count++;
 	    } /* if valid line */
 
@@ -156,8 +160,21 @@ void fgStarsInit() {
 
 	fclose(fd);
 
+	/* Add the planets to all four display lists */
+	for ( j = 2; j < 9; j++ ) {
+	    pltPos = fgCalculatePlanet(pltOrbElements[j], 
+				       pltOrbElements[0], cur_time_params);
+	    printf("Planet found at %f (ra), %f (dec)\n", 
+		   pltPos.RightAscension, pltPos.Declination);
+	    /* give the planets a temporary color, for testing purposes */
+	    glColor3f( 1.0, 0.0, 0.0);
+	    glVertex3f( 190000.0 * cos(pltPos.RightAscension) * 
+			cos(pltPos.Declination),
+			190000.0 * sin(pltPos.RightAscension) * 
+			cos(pltPos.Declination),
+			190000.0 * sin(pltPos.Declination) );
+	}
 	glEnd();
-
 
 	glBegin(GL_LINE_LOOP);
         glColor3f(1.0, 0.0, 0.0);
@@ -254,9 +271,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.12  1997/09/23 00:29:43  curt
-/* Tweaks to get things to compile with gcc-win32.
+/* Revision 1.13  1997/10/25 03:18:28  curt
+/* Incorporated sun, moon, and planet position and rendering code contributed
+/* by Durk Talsma.
 /*
+ * Revision 1.12  1997/09/23 00:29:43  curt
+ * Tweaks to get things to compile with gcc-win32.
+ *
  * Revision 1.11  1997/09/22 14:44:21  curt
  * Continuing to try to align stars correctly.
  *

@@ -82,15 +82,20 @@ void fgSceneryRender() {
     glPushMatrix();
     glCallList(mesh_hack);
     glPopMatrix();
-
     fgStarsRender();
+
+    fgMoonRender();
 }
 
 
 /* $Log$
-/* Revision 1.19  1997/09/05 14:17:30  curt
-/* More tweaking with stars.
+/* Revision 1.20  1997/10/25 03:18:27  curt
+/* Incorporated sun, moon, and planet position and rendering code contributed
+/* by Durk Talsma.
 /*
+ * Revision 1.19  1997/09/05 14:17:30  curt
+ * More tweaking with stars.
+ *
  * Revision 1.18  1997/09/05 01:35:59  curt
  * Working on getting stars right.
  *

@@ -4,17 +4,35 @@ geometry.o: geometry.c geometry.h mesh.h
 mesh.o: mesh.c ../constants.h ../types.h ../Math/fg_geodesy.h \
  ../Math/fg_random.h ../Math/mat3.h ../Math/polar.h ../Math/../types.h \
  mesh.h common.h scenery.h
+moon.o: moon.c orbits.h ../Time/fg_time.h ../Time/../types.h \
+ ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
+ ../Time/../Flight/LaRCsim/ls_interface.h \
+ ../Time/../Flight/LaRCsim/../flight.h moon.h ../GLUT/views.h \
+ ../GLUT/../types.h ../GLUT/../Flight/flight.h ../GLUT/../Math/mat3.h \
+ ../general.h
+orbits.o: orbits.c orbits.h ../Time/fg_time.h ../Time/../types.h \
+ ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
+ ../Time/../Flight/LaRCsim/ls_interface.h \
+ ../Time/../Flight/LaRCsim/../flight.h ../general.h
 parser.o: parser.c parsevrml.h geometry.h common.h mesh.h scenery.h \
  ../types.h
+planets.o: planets.c ../Time/fg_time.h ../Time/../types.h \
+ ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
+ ../Time/../Flight/LaRCsim/ls_interface.h \
+ ../Time/../Flight/LaRCsim/../flight.h orbits.h planets.h sun.h
 scanner.o: scanner.c parser.h
 scenery.o: scenery.c ../general.h scenery.h ../types.h parsevrml.h \
  stars.h
-stars.o: stars.c stars.h ../constants.h ../general.h ../GLUT/views.h \
- ../GLUT/../types.h ../GLUT/../Flight/flight.h \
- ../GLUT/../Flight/Slew/slew.h \
- ../GLUT/../Flight/LaRCsim/ls_interface.h \
- ../GLUT/../Flight/LaRCsim/../flight.h ../GLUT/../Math/mat3.h \
+stars.o: stars.c orbits.h ../Time/fg_time.h ../Time/../types.h \
+ ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
+ ../Time/../Flight/LaRCsim/ls_interface.h \
+ ../Time/../Flight/LaRCsim/../flight.h planets.h stars.h \
+ ../constants.h ../general.h ../GLUT/views.h ../GLUT/../types.h \
+ ../GLUT/../Flight/flight.h ../GLUT/../Math/mat3.h \
  ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
  ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h ../Time/fg_time.h \
- ../Time/../types.h ../Time/../Flight/flight.h
+ ../Aircraft/../Controls/../limits.h
+sun.o: sun.c ../Time/fg_time.h ../Time/../types.h \
+ ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
+ ../Time/../Flight/LaRCsim/ls_interface.h \
+ ../Time/../Flight/LaRCsim/../flight.h orbits.h

@@ -26,8 +26,9 @@
 
 TARGET = libScenery.a
 
-CFILES = chunkmgr.c common.c mesh.c scenery.c scanner.c parser.c geometry.c \
-	stars.c
+CFILES = chunkmgr.c common.c geometry.c mesh.c moon.c orbits.c parser.c \
+	planets.c scanner.c scenery.c stars.c sun.c
+
 OFILES = $(CFILES:.c=.o)
 
 
@@ -87,17 +88,33 @@ mesh.o:
 mesh2GL.o:
 	$(CC) $(CFLAGS) -c mesh2GL.c -o $@
 
+moon.o:
+	$(CC) $(CFLAGS) -c moon.c -o $@
+
+orbits.o:
+	$(CC) $(CFLAGS) -c orbits.c -o $@
+
+planets.o:
+	$(CC) $(CFLAGS) -c planets.c -o $@
+
 scenery.o:
 	$(CC) $(CFLAGS) -c scenery.c -o $@
 
 stars.c:
 	$(CC) $(CFLAGS) -c starts.c -o $@
 
+sun.o:
+	$(CC) $(CFLAGS) -c sun.c -o $@
+
 geometry.o:
 	$(CC) $(CFLAGS) -c geometry.c -o $@
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.21  1997/10/25 03:18:26  curt
+# Incorporated sun, moon, and planet position and rendering code contributed
+# by Durk Talsma.
+#
 # Revision 1.20  1997/09/22 14:44:21  curt
 # Continuing to try to align stars correctly.
 #
