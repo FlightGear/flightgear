@@ -72,6 +72,10 @@
 			    that are in a rectangular matrix).
 	       03/13/2002   (RD) Added aircraft_directory so full path
 	                    is no longer needed in the aircraft.dat file
+	       04/02/2002   (RD) Removed minmaxfind() since it was no
+	                    longer needed.  Added d_2_to_3(),
+			    d_1_to_2(), and i_1_to_2() so uiuc_menu()
+			    will compile with certain compilers.
 
 ----------------------------------------------------------------------
 
@@ -152,23 +156,50 @@ bool check_float(string  &token)
   return (stream >> value);
 }
 
-void minmaxfind( bool tarray[30], int &tmin, int &tmax)
-{
-  int n=0;
-  bool first=true;
+//void minmaxfind( bool tarray[30], int &tmin, int &tmax)
+//{
+//  int n=0;
+//  bool first=true;
+//
+//  while (n<=30)
+//    {
+//      if (tarray[n])
+//	{
+//	  if (first)
+//	    {
+//	      tmin=n;
+//	      first=false;
+//	    }
+//	  tmax=n;
+//	}
+//      n++;
+//    }
+//}
 
-  while (n<=30)
+void d_2_to_3( double array2D[100][100], double array3D[][100][100], int index3D)
+{
+  for (int i=0; i<=99; i++)
     {
-      if (tarray[n])
+      for (int j=1; j<=99; j++)
 	{
-	  if (first)
-	    {
-	      tmin=n;
-	      first=false;
-	    }
-	  tmax=n;
+	  array3D[index3D][i][j]=array2D[i][j];
 	}
-      n++;
+    }
+}
+
+void d_1_to_2( double array1D[100], double array2D[][100], int index2D)
+{
+  for (int i=0; i<=99; i++)
+    {
+      array2D[index2D][i]=array1D[i];
+    }
+}
+
+void i_1_to_2( int array1D[100], int array2D[][100], int index2D)
+{
+  for (int i=0; i<=99; i++)
+    {
+      array2D[index2D][i]=array1D[i];
     }
 }
 
@@ -253,7 +284,7 @@ void uiuc_menu( string aircraft_name )
     exit(-1);
   }
   
-  cerr << "UIUC File " << aircraft_name <<" is being used" << endl;
+  //construct aircraft-directory
   aircraft_directory = aircraft_name;
   int index_aircraft_dat = aircraft_directory.find("aircraft.dat");
   aircraft_directory.erase(index_aircraft_dat,12);
@@ -1409,11 +1440,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CXfabetaf_aArray[CXfabetaf_index]      = datafile_xArray;
-		  CXfabetaf_betaArray[CXfabetaf_index]   = datafile_yArray;
-		  CXfabetaf_CXArray[CXfabetaf_index]     = datafile_zArray;
-		  CXfabetaf_nAlphaArray[CXfabetaf_index] = datafile_nxArray;
-		  CXfabetaf_nbeta[CXfabetaf_index]       = datafile_ny;
+		  d_2_to_3(datafile_xArray, CXfabetaf_aArray, CXfabetaf_index);
+		  d_1_to_2(datafile_yArray, CXfabetaf_betaArray, CXfabetaf_index);
+		  d_2_to_3(datafile_zArray, CXfabetaf_CXArray, CXfabetaf_index);
+		  i_1_to_2(datafile_nxArray, CXfabetaf_nAlphaArray, CXfabetaf_index);
+		  CXfabetaf_nbeta[CXfabetaf_index] = datafile_ny;
 		  if (CXfabetaf_first==true)
 		    {
 		      if (CXfabetaf_nice == 1)
@@ -1461,11 +1492,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CXfadef_aArray[CXfadef_index]      = datafile_xArray;
-		  CXfadef_deArray[CXfadef_index]     = datafile_yArray;
-		  CXfadef_CXArray[CXfadef_index]     = datafile_zArray;
-		  CXfadef_nAlphaArray[CXfadef_index] = datafile_nxArray;
-		  CXfadef_nde[CXfadef_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, CXfadef_aArray, CXfadef_index);
+		  d_1_to_2(datafile_yArray, CXfadef_deArray, CXfadef_index);
+		  d_2_to_3(datafile_zArray, CXfadef_CXArray, CXfadef_index);
+		  i_1_to_2(datafile_nxArray, CXfadef_nAlphaArray, CXfadef_index);
+		  CXfadef_nde[CXfadef_index] = datafile_ny;
 		  if (CXfadef_first==true)
 		    {
 		      if (CXfadef_nice == 1)
@@ -1513,11 +1544,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CXfaqf_aArray[CXfaqf_index]      = datafile_xArray;
-		  CXfaqf_qArray[CXfaqf_index]      = datafile_yArray;
-		  CXfaqf_CXArray[CXfaqf_index]     = datafile_zArray;
-		  CXfaqf_nAlphaArray[CXfaqf_index] = datafile_nxArray;
-		  CXfaqf_nq[CXfaqf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, CXfaqf_aArray, CXfaqf_index);
+		  d_1_to_2(datafile_yArray, CXfaqf_qArray, CXfaqf_index);
+		  d_2_to_3(datafile_zArray, CXfaqf_CXArray, CXfaqf_index);
+		  i_1_to_2(datafile_nxArray, CXfaqf_nAlphaArray, CXfaqf_index);
+		  CXfaqf_nq[CXfaqf_index] = datafile_ny;
 		  if (CXfaqf_first==true)
 		    {
 		      if (CXfaqf_nice == 1)
@@ -1882,11 +1913,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CZfabetaf_aArray[CZfabetaf_index]      = datafile_xArray;
-		  CZfabetaf_betaArray[CZfabetaf_index]   = datafile_yArray;
-		  CZfabetaf_CZArray[CZfabetaf_index]     = datafile_zArray;
-		  CZfabetaf_nAlphaArray[CZfabetaf_index] = datafile_nxArray;
-		  CZfabetaf_nbeta[CZfabetaf_index]       = datafile_ny;
+		  d_2_to_3(datafile_xArray, CZfabetaf_aArray, CZfabetaf_index);
+		  d_1_to_2(datafile_yArray, CZfabetaf_betaArray, CZfabetaf_index);
+		  d_2_to_3(datafile_zArray, CZfabetaf_CZArray, CZfabetaf_index);
+		  i_1_to_2(datafile_nxArray, CZfabetaf_nAlphaArray, CZfabetaf_index);
+		  CZfabetaf_nbeta[CZfabetaf_index] = datafile_ny;
 		  if (CZfabetaf_first==true)
 		    {
 		      if (CZfabetaf_nice == 1)
@@ -1934,11 +1965,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CZfadef_aArray[CZfadef_index]      = datafile_xArray;
-		  CZfadef_deArray[CZfadef_index]     = datafile_yArray;
-		  CZfadef_CZArray[CZfadef_index]     = datafile_zArray;
-		  CZfadef_nAlphaArray[CZfadef_index] = datafile_nxArray;
-		  CZfadef_nde[CZfadef_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, CZfadef_aArray, CZfadef_index);
+		  d_1_to_2(datafile_yArray, CZfadef_deArray, CZfadef_index);
+		  d_2_to_3(datafile_zArray, CZfadef_CZArray, CZfadef_index);
+		  i_1_to_2(datafile_nxArray, CZfadef_nAlphaArray, CZfadef_index);
+		  CZfadef_nde[CZfadef_index] = datafile_ny;
 		  if (CZfadef_first==true)
 		    {
 		      if (CZfadef_nice == 1)
@@ -1986,11 +2017,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CZfaqf_aArray[CZfaqf_index]      = datafile_xArray;
-		  CZfaqf_qArray[CZfaqf_index]      = datafile_yArray;
-		  CZfaqf_CZArray[CZfaqf_index]     = datafile_zArray;
-		  CZfaqf_nAlphaArray[CZfaqf_index] = datafile_nxArray;
-		  CZfaqf_nq[CZfaqf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, CZfaqf_aArray, CZfaqf_index);
+		  d_1_to_2(datafile_yArray, CZfaqf_qArray, CZfaqf_index);
+		  d_2_to_3(datafile_zArray, CZfaqf_CZArray, CZfaqf_index);
+		  i_1_to_2(datafile_nxArray, CZfaqf_nAlphaArray, CZfaqf_index);
+		  CZfaqf_nq[CZfaqf_index] = datafile_ny;
 		  if (CZfaqf_first==true)
 		    {
 		      if (CZfaqf_nice == 1)
@@ -2255,11 +2286,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Cmfabetaf_aArray[Cmfabetaf_index]      = datafile_xArray;
-		  Cmfabetaf_betaArray[Cmfabetaf_index]   = datafile_yArray;
-		  Cmfabetaf_CmArray[Cmfabetaf_index]     = datafile_zArray;
-		  Cmfabetaf_nAlphaArray[Cmfabetaf_index] = datafile_nxArray;
-		  Cmfabetaf_nbeta[Cmfabetaf_index]       = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cmfabetaf_aArray, Cmfabetaf_index);
+		  d_1_to_2(datafile_yArray, Cmfabetaf_betaArray, Cmfabetaf_index);
+		  d_2_to_3(datafile_zArray, Cmfabetaf_CmArray, Cmfabetaf_index);
+		  i_1_to_2(datafile_nxArray, Cmfabetaf_nAlphaArray, Cmfabetaf_index);
+		  Cmfabetaf_nbeta[Cmfabetaf_index] = datafile_ny;
 		  if (Cmfabetaf_first==true)
 		    {
 		      if (Cmfabetaf_nice == 1)
@@ -2307,11 +2338,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Cmfadef_aArray[Cmfadef_index]      = datafile_xArray;
-		  Cmfadef_deArray[Cmfadef_index]     = datafile_yArray;
-		  Cmfadef_CmArray[Cmfadef_index]     = datafile_zArray;
-		  Cmfadef_nAlphaArray[Cmfadef_index] = datafile_nxArray;
-		  Cmfadef_nde[Cmfadef_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cmfadef_aArray, Cmfadef_index);
+		  d_1_to_2(datafile_yArray, Cmfadef_deArray, Cmfadef_index);
+		  d_2_to_3(datafile_zArray, Cmfadef_CmArray, Cmfadef_index);
+		  i_1_to_2(datafile_nxArray, Cmfadef_nAlphaArray, Cmfadef_index);
+		  Cmfadef_nde[Cmfadef_index] = datafile_ny;
 		  if (Cmfadef_first==true)
 		    {
 		      if (Cmfadef_nice == 1)
@@ -2359,11 +2390,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Cmfaqf_aArray[Cmfaqf_index]      = datafile_xArray;
-		  Cmfaqf_qArray[Cmfaqf_index]      = datafile_yArray;
-		  Cmfaqf_CmArray[Cmfaqf_index]     = datafile_zArray;
-		  Cmfaqf_nAlphaArray[Cmfaqf_index] = datafile_nxArray;
-		  Cmfaqf_nq[Cmfaqf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cmfaqf_aArray, Cmfaqf_index);
+		  d_1_to_2(datafile_yArray, Cmfaqf_qArray, Cmfaqf_index);
+		  d_2_to_3(datafile_zArray, Cmfaqf_CmArray, Cmfaqf_index);
+		  i_1_to_2(datafile_nxArray, Cmfaqf_nAlphaArray, Cmfaqf_index);
+		  Cmfaqf_nq[Cmfaqf_index] = datafile_ny;
 		  if (Cmfaqf_first==true)
 		    {
 		      if (Cmfaqf_nice == 1)
@@ -2569,11 +2600,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CYfabetaf_aArray[CYfabetaf_index]      = datafile_xArray;
-		  CYfabetaf_betaArray[CYfabetaf_index]   = datafile_yArray;
-		  CYfabetaf_CYArray[CYfabetaf_index]     = datafile_zArray;
-		  CYfabetaf_nAlphaArray[CYfabetaf_index] = datafile_nxArray;
-		  CYfabetaf_nbeta[CYfabetaf_index]       = datafile_ny;
+		  d_2_to_3(datafile_xArray, CYfabetaf_aArray, CYfabetaf_index);
+		  d_1_to_2(datafile_yArray, CYfabetaf_betaArray, CYfabetaf_index);
+		  d_2_to_3(datafile_zArray, CYfabetaf_CYArray, CYfabetaf_index);
+		  i_1_to_2(datafile_nxArray, CYfabetaf_nAlphaArray, CYfabetaf_index);
+		  CYfabetaf_nbeta[CYfabetaf_index] = datafile_ny;
 		  if (CYfabetaf_first==true)
 		    {
 		      if (CYfabetaf_nice == 1)
@@ -2621,11 +2652,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CYfadaf_aArray[CYfadaf_index]      = datafile_xArray;
-		  CYfadaf_daArray[CYfadaf_index]     = datafile_yArray;
-		  CYfadaf_CYArray[CYfadaf_index]     = datafile_zArray;
-		  CYfadaf_nAlphaArray[CYfadaf_index] = datafile_nxArray;
-		  CYfadaf_nda[CYfadaf_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, CYfadaf_aArray, CYfadaf_index);
+		  d_1_to_2(datafile_yArray, CYfadaf_daArray, CYfadaf_index);
+		  d_2_to_3(datafile_zArray, CYfadaf_CYArray, CYfadaf_index);
+		  i_1_to_2(datafile_nxArray, CYfadaf_nAlphaArray, CYfadaf_index);
+		  CYfadaf_nda[CYfadaf_index] = datafile_ny;
 		  if (CYfadaf_first==true)
 		    {
 		      if (CYfadaf_nice == 1)
@@ -2673,11 +2704,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CYfadrf_aArray[CYfadrf_index]      = datafile_xArray;
-		  CYfadrf_drArray[CYfadrf_index]     = datafile_yArray;
-		  CYfadrf_CYArray[CYfadrf_index]     = datafile_zArray;
-		  CYfadrf_nAlphaArray[CYfadrf_index] = datafile_nxArray;
-		  CYfadrf_ndr[CYfadrf_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, CYfadrf_aArray, CYfadrf_index);
+		  d_1_to_2(datafile_yArray, CYfadrf_drArray, CYfadrf_index);
+		  d_2_to_3(datafile_zArray, CYfadrf_CYArray, CYfadrf_index);
+		  i_1_to_2(datafile_nxArray, CYfadrf_nAlphaArray, CYfadrf_index);
+		  CYfadrf_ndr[CYfadrf_index] = datafile_ny;
 		  if (CYfadrf_first==true)
 		    {
 		      if (CYfadrf_nice == 1)
@@ -2725,11 +2756,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CYfapf_aArray[CYfapf_index]      = datafile_xArray;
-		  CYfapf_pArray[CYfapf_index]      = datafile_yArray;
-		  CYfapf_CYArray[CYfapf_index]     = datafile_zArray;
-		  CYfapf_nAlphaArray[CYfapf_index] = datafile_nxArray;
-		  CYfapf_np[CYfapf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, CYfapf_aArray, CYfapf_index);
+		  d_1_to_2(datafile_yArray, CYfapf_pArray, CYfapf_index);
+		  d_2_to_3(datafile_zArray, CYfapf_CYArray, CYfapf_index);
+		  i_1_to_2(datafile_nxArray, CYfapf_nAlphaArray, CYfapf_index);
+		  CYfapf_np[CYfapf_index] = datafile_ny;
 		  if (CYfapf_first==true)
 		    {
 		      if (CYfapf_nice == 1)
@@ -2777,11 +2808,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  CYfarf_aArray[CYfarf_index]      = datafile_xArray;
-		  CYfarf_rArray[CYfarf_index]      = datafile_yArray;
-		  CYfarf_CYArray[CYfarf_index]     = datafile_zArray;
-		  CYfarf_nAlphaArray[CYfarf_index] = datafile_nxArray;
-		  CYfarf_nr[CYfarf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, CYfarf_aArray, CYfarf_index);
+		  d_1_to_2(datafile_yArray, CYfarf_rArray, CYfarf_index);
+		  d_2_to_3(datafile_zArray, CYfarf_CYArray, CYfarf_index);
+		  i_1_to_2(datafile_nxArray, CYfarf_nAlphaArray, CYfarf_index);
+		  CYfarf_nr[CYfarf_index] = datafile_ny;
 		  if (CYfarf_first==true)
 		    {
 		      if (CYfarf_nice == 1)
@@ -2975,11 +3006,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Clfabetaf_aArray[Clfabetaf_index]      = datafile_xArray;
-		  Clfabetaf_betaArray[Clfabetaf_index]   = datafile_yArray;
-		  Clfabetaf_ClArray[Clfabetaf_index]     = datafile_zArray;
-		  Clfabetaf_nAlphaArray[Clfabetaf_index] = datafile_nxArray;
-		  Clfabetaf_nbeta[Clfabetaf_index]       = datafile_ny;
+		  d_2_to_3(datafile_xArray, Clfabetaf_aArray, Clfabetaf_index);
+		  d_1_to_2(datafile_yArray, Clfabetaf_betaArray, Clfabetaf_index);
+		  d_2_to_3(datafile_zArray, Clfabetaf_ClArray, Clfabetaf_index);
+		  i_1_to_2(datafile_nxArray, Clfabetaf_nAlphaArray, Clfabetaf_index);
+		  Clfabetaf_nbeta[Clfabetaf_index] = datafile_ny;
 		  if (Clfabetaf_first==true)
 		    {
 		      if (Clfabetaf_nice == 1)
@@ -3027,11 +3058,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Clfadaf_aArray[Clfadaf_index]      = datafile_xArray;
-		  Clfadaf_daArray[Clfadaf_index]     = datafile_yArray;
-		  Clfadaf_ClArray[Clfadaf_index]     = datafile_zArray;
-		  Clfadaf_nAlphaArray[Clfadaf_index] = datafile_nxArray;
-		  Clfadaf_nda[Clfadaf_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, Clfadaf_aArray, Clfadaf_index);
+		  d_1_to_2(datafile_yArray, Clfadaf_daArray, Clfadaf_index);
+		  d_2_to_3(datafile_zArray, Clfadaf_ClArray, Clfadaf_index);
+		  i_1_to_2(datafile_nxArray, Clfadaf_nAlphaArray, Clfadaf_index);
+		  Clfadaf_nda[Clfadaf_index] = datafile_ny;
 		  if (Clfadaf_first==true)
 		    {
 		      if (Clfadaf_nice == 1)
@@ -3079,11 +3110,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Clfadrf_aArray[Clfadrf_index]      = datafile_xArray;
-		  Clfadrf_drArray[Clfadrf_index]     = datafile_yArray;
-		  Clfadrf_ClArray[Clfadrf_index]     = datafile_zArray;
-		  Clfadrf_nAlphaArray[Clfadrf_index] = datafile_nxArray;
-		  Clfadrf_ndr[Clfadrf_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, Clfadrf_aArray, Clfadrf_index);
+		  d_1_to_2(datafile_yArray, Clfadrf_drArray, Clfadrf_index);
+		  d_2_to_3(datafile_zArray, Clfadrf_ClArray, Clfadrf_index);
+		  i_1_to_2(datafile_nxArray, Clfadrf_nAlphaArray, Clfadrf_index);
+		  Clfadrf_ndr[Clfadrf_index] = datafile_ny;
 		  if (Clfadrf_first==true)
 		    {
 		      if (Clfadrf_nice == 1)
@@ -3131,11 +3162,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Clfapf_aArray[Clfapf_index]      = datafile_xArray;
-		  Clfapf_pArray[Clfapf_index]      = datafile_yArray;
-		  Clfapf_ClArray[Clfapf_index]     = datafile_zArray;
-		  Clfapf_nAlphaArray[Clfapf_index] = datafile_nxArray;
-		  Clfapf_np[Clfapf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, Clfapf_aArray, Clfapf_index);
+		  d_1_to_2(datafile_yArray, Clfapf_pArray, Clfapf_index);
+		  d_2_to_3(datafile_zArray, Clfapf_ClArray, Clfapf_index);
+		  i_1_to_2(datafile_nxArray, Clfapf_nAlphaArray, Clfapf_index);
+		  Clfapf_np[Clfapf_index] = datafile_ny;
 		  if (Clfapf_first==true)
 		    {
 		      if (Clfapf_nice == 1)
@@ -3183,11 +3214,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Clfarf_aArray[Clfarf_index]      = datafile_xArray;
-		  Clfarf_rArray[Clfarf_index]      = datafile_yArray;
-		  Clfarf_ClArray[Clfarf_index]     = datafile_zArray;
-		  Clfarf_nAlphaArray[Clfarf_index] = datafile_nxArray;
-		  Clfarf_nr[Clfarf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, Clfarf_aArray, Clfarf_index);
+		  d_1_to_2(datafile_yArray, Clfarf_rArray, Clfarf_index);
+		  d_2_to_3(datafile_zArray, Clfarf_ClArray, Clfarf_index);
+		  i_1_to_2(datafile_nxArray, Clfarf_nAlphaArray, Clfarf_index);
+		  Clfarf_nr[Clfarf_index] = datafile_ny;
 		  if (Clfarf_first==true)
 		    {
 		      if (Clfarf_nice == 1)
@@ -3393,11 +3424,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Cnfabetaf_aArray[Cnfabetaf_index]      = datafile_xArray;
-		  Cnfabetaf_betaArray[Cnfabetaf_index]   = datafile_yArray;
-		  Cnfabetaf_CnArray[Cnfabetaf_index]     = datafile_zArray;
-		  Cnfabetaf_nAlphaArray[Cnfabetaf_index] = datafile_nxArray;
-		  Cnfabetaf_nbeta[Cnfabetaf_index]       = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cnfabetaf_aArray, Cnfabetaf_index);
+		  d_1_to_2(datafile_yArray, Cnfabetaf_betaArray, Cnfabetaf_index);
+		  d_2_to_3(datafile_zArray, Cnfabetaf_CnArray, Cnfabetaf_index);
+		  i_1_to_2(datafile_nxArray, Cnfabetaf_nAlphaArray, Cnfabetaf_index);
+		  Cnfabetaf_nbeta[Cnfabetaf_index] = datafile_ny;
 		  if (Cnfabetaf_first==true)
 		    {
 		      if (Cnfabetaf_nice == 1)
@@ -3445,11 +3476,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Cnfadaf_aArray[Cnfadaf_index]      = datafile_xArray;
-		  Cnfadaf_daArray[Cnfadaf_index]     = datafile_yArray;
-		  Cnfadaf_CnArray[Cnfadaf_index]     = datafile_zArray;
-		  Cnfadaf_nAlphaArray[Cnfadaf_index] = datafile_nxArray;
-		  Cnfadaf_nda[Cnfadaf_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cnfadaf_aArray, Cnfadaf_index);
+		  d_1_to_2(datafile_yArray, Cnfadaf_daArray, Cnfadaf_index);
+		  d_2_to_3(datafile_zArray, Cnfadaf_CnArray, Cnfadaf_index);
+		  i_1_to_2(datafile_nxArray, Cnfadaf_nAlphaArray, Cnfadaf_index);
+		  Cnfadaf_nda[Cnfadaf_index] = datafile_ny;
 		  if (Cnfadaf_first==true)
 		    {
 		      if (Cnfadaf_nice == 1)
@@ -3497,11 +3528,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Cnfadrf_aArray[Cnfadrf_index]      = datafile_xArray;
-		  Cnfadrf_drArray[Cnfadrf_index]     = datafile_yArray;
-		  Cnfadrf_CnArray[Cnfadrf_index]     = datafile_zArray;
-		  Cnfadrf_nAlphaArray[Cnfadrf_index] = datafile_nxArray;
-		  Cnfadrf_ndr[Cnfadrf_index]         = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cnfadrf_aArray, Cnfadrf_index);
+		  d_1_to_2(datafile_yArray, Cnfadrf_drArray, Cnfadrf_index);
+		  d_2_to_3(datafile_zArray, Cnfadrf_CnArray, Cnfadrf_index);
+		  i_1_to_2(datafile_nxArray, Cnfadrf_nAlphaArray, Cnfadrf_index);
+		  Cnfadrf_ndr[Cnfadrf_index] = datafile_ny;
 		  if (Cnfadrf_first==true)
 		    {
 		      if (Cnfadrf_nice == 1)
@@ -3549,11 +3580,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
                                         datafile_ny);
-		  Cnfapf_aArray[Cnfapf_index]      = datafile_xArray;
-		  Cnfapf_pArray[Cnfapf_index]      = datafile_yArray;
-		  Cnfapf_CnArray[Cnfapf_index]     = datafile_zArray;
-		  Cnfapf_nAlphaArray[Cnfapf_index] = datafile_nxArray;
-		  Cnfapf_np[Cnfapf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cnfapf_aArray, Cnfapf_index);
+		  d_1_to_2(datafile_yArray, Cnfapf_pArray, Cnfapf_index);
+		  d_2_to_3(datafile_zArray, Cnfapf_CnArray, Cnfapf_index);
+		  i_1_to_2(datafile_nxArray, Cnfapf_nAlphaArray, Cnfapf_index);
+		  Cnfapf_np[Cnfapf_index] = datafile_ny;
 		  if (Cnfapf_first==true)
 		    {
 		      if (Cnfapf_nice == 1)
@@ -3601,11 +3632,11 @@ void uiuc_menu( string aircraft_name )
                                         datafile_zArray,
                                         datafile_nxArray,
 					datafile_ny);
-		  Cnfarf_aArray[Cnfarf_index]      = datafile_xArray;
-		  Cnfarf_rArray[Cnfarf_index]      = datafile_yArray;
-		  Cnfarf_CnArray[Cnfarf_index]     = datafile_zArray;
-		  Cnfarf_nAlphaArray[Cnfarf_index] = datafile_nxArray;
-		  Cnfarf_nr[Cnfarf_index]          = datafile_ny;
+		  d_2_to_3(datafile_xArray, Cnfarf_aArray, Cnfarf_index);
+		  d_1_to_2(datafile_yArray, Cnfarf_rArray, Cnfarf_index);
+		  d_2_to_3(datafile_zArray, Cnfarf_CnArray, Cnfarf_index);
+		  i_1_to_2(datafile_nxArray, Cnfarf_nAlphaArray, Cnfarf_index);
+		  Cnfarf_nr[Cnfarf_index] = datafile_ny;
 		  if (Cnfarf_first==true)
 		    {
 		      if (Cnfarf_nice == 1)
