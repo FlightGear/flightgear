@@ -35,18 +35,19 @@
 #include "splittris.hxx"
 
 #include <Include/fg_constants.h>
-#include <Include/fg_types.h>
 #include <Bucket/bucketutils.h>
 
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
+#include <Misc/fgstream.hxx>
 
 // int nodecount, tricount;
 double xmin, xmax, ymin, ymax;
 
 // static double nodes_orig[MAX_NODES][3];
-// static fgPoint3d nodes_cart[MAX_NODES];
+// static Point3D nodes_cart[MAX_NODES];
 // static int tris[MAX_TRIS][3];
 
 container_3d nodes_orig;
@@ -56,42 +57,16 @@ container_tri tri_list;
 fgBUCKET ne_index, nw_index, sw_index, se_index;
 fgBUCKET north_index, south_index, east_index, west_index;
 
-// convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to a
-// cartesian point
-fgPoint3d geod_to_cart(fgPoint3d geod) {
-    fgPoint3d cp;
-    fgPoint3d pp;
-    double gc_lon, gc_lat, sl_radius;
-
-    // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
-    //        geod[0], geod[1], geod[2]);
-
-    gc_lon = geod.lon * ARCSEC_TO_RAD;
-    fgGeodToGeoc(geod.lat * ARCSEC_TO_RAD, geod.radius, &sl_radius, &gc_lat);
-
-    // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
-    //        gc_lat, sl_radius+geod[2]);
-
-    pp.lon = gc_lon;
-    pp.lat = gc_lat;
-    pp.radius = sl_radius + geod.radius;
-    cp = fgPolarToCart3d(pp);
-    
-    // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
-
-    return(cp);
-}
-
 
 // given three points defining a triangle, calculate the normal
-void calc_normal(fgPoint3d p1, fgPoint3d p2, 
-		 fgPoint3d p3, double normal[3])
+void calc_normal(const Point3D& p1, const Point3D& p2, 
+		 const Point3D& p3, double normal[3])
 {
     double v1[3], v2[3];
     double temp;
 
-    v1[0] = p2.x - p1.x; v1[1] = p2.y - p1.y; v1[2] = p2.z - p1.z;
-    v2[0] = p3.x - p1.x; v2[1] = p3.y - p1.y; v2[2] = p3.z - p1.z;
+    v1[0] = p2.x() - p1.x(); v1[1] = p2.y() - p1.y(); v1[2] = p2.z() - p1.z();
+    v2[0] = p3.x() - p1.x(); v2[1] = p3.y() - p1.y(); v2[2] = p3.z() - p1.z();
 
     MAT3cross_product(normal, v1, v2);
     MAT3_NORMALIZE_VEC(normal,temp);
@@ -159,9 +134,8 @@ void find_tris(int n, int *t1, int *t2, int *t3, int *t4, int *t5) {
 // Initialize a new mesh structure
 void triload(const string& basename) {
     string nodename, elename;
-    fgPoint3d node1, node2;
+    Point3D node1, node2;
     triangle tri;
-    FILE *node_file, *ele_file;
     int nodecount, tricount, dim, junk1, junk2;
     int i;
 
@@ -169,7 +143,9 @@ void triload(const string& basename) {
     elename  = basename + ".ele";
 
     cout << "Loading node file:  " + nodename + " ...\n";
-    if ( (node_file = fopen(nodename.c_str(), "r")) == NULL ) {
+
+    fg_gzifstream node_in( nodename );
+    if ( !node_in ) {
 	cout << "Cannot open file " + nodename + "\n";
 	exit(-1);
     }
@@ -181,56 +157,54 @@ void triload(const string& basename) {
     nodes_cart.push_back(node1);
     tri_list.push_back(tri);
 
-    fscanf(node_file, "%d %d %d %d", &nodecount, &dim, &junk1, &junk2);
+    node_in.stream() >> nodecount >> dim >> junk1 >> junk2;
     cout << "    Expecting " << nodecount << " nodes\n";
 
     for ( i = 1; i <= nodecount; i++ ) {
-	fscanf(node_file, "%d %lf %lf %lf %d\n", &junk1, 
-	       &(node1.x), &(node1.y), &(node1.z), &junk2);
-	printf("%d %.2f %.2f %.2f\n", junk1, node1.x, node1.y, node1.z);
+	node_in.stream() >> junk1 >> node1 >> junk2;
 	nodes_orig.push_back(node1);
-	node2 = geod_to_cart(node1);
+	// printf("%d %.2f %.2f %.2f\n", junk1, node1.x, node1.y, node1.z);
+
+	node2 = fgGeodToCart(node1);
 	nodes_cart.push_back(node2);
-	printf("%d %.2f %.2f %.2f\n", junk1, node2.x, node2.y, node2.z);
+	// printf("%d %.2f %.2f %.2f\n", junk1, node2.x, node2.y, node2.z);
 
 	if ( i == 1 ) {
-	    xmin = xmax = node1.x;
-	    ymin = ymax = node1.y;
+	    xmin = xmax = node1.x();
+	    ymin = ymax = node1.y();
 	} else {
-	    if ( node1.x < xmin ) {
-		xmin = node1.x;
+	    if ( node1.x() < xmin ) {
+		xmin = node1.x();
 	    }
-	    if ( node1.x > xmax ) {
-		xmax = node1.x;
+	    if ( node1.x() > xmax ) {
+		xmax = node1.x();
 	    }
-	    if ( node1.y < ymin ) {
-		ymin = node1.y;
+	    if ( node1.y() < ymin ) {
+		ymin = node1.y();
 	    }
-	    if ( node1.y > ymax ) {
-		ymax = node1.y;
+	    if ( node1.y() > ymax ) {
+		ymax = node1.y();
 	    }
 	}
     }
 
-    fclose(node_file);
-
     cout << "Loading element file:  " + elename + " ...\n";
-    if ( (ele_file = fopen(elename.c_str(), "r")) == NULL ) {
+    fg_gzifstream ele_in( elename );
+    if ( !ele_in ) {
 	cout << "Cannot open file " + elename + "\n";
 	exit(-1);
     }
 
-    fscanf(ele_file, "%d %d %d", &tricount, &junk1, &junk2);
+    ele_in.stream() >> tricount >> junk1 >> junk2;
     cout << "    Expecting " << tricount << " elements\n";
 
     for ( i = 1; i <= tricount; i++ ) {
-	fscanf(ele_file, "%d %d %d %d\n", &junk1, 
-	       &(tri.n1), &(tri.n2), &(tri.n3));
-	printf("%d %d %d %d\n", junk1, tri.n1, tri.n2, tri.n3);
+	// fscanf(ele_file, "%d %d %d %d\n", &junk1, 
+	//        &(tri.n1), &(tri.n2), &(tri.n3));
+	ele_in.stream() >> junk1 >> tri.n1 >> tri.n2 >> tri.n3;
+	// printf("%d %d %d %d\n", junk1, tri.n1, tri.n2, tri.n3);
 	tri_list.push_back(tri);
     }
-
-    fclose(ele_file);
 }
 
 
@@ -413,10 +387,11 @@ FILE *my_open(const string& basename, const string& basepath,
 
 // dump in WaveFront .obj format
 void dump_obj(const string& basename, const string& basepath) {
-    fgPoint3d node;
+    Point3D node;
     double n1[3], n2[3], n3[3], n4[3], n5[3], norm[3], temp;
     FILE *fp, *sw, *se, *ne, *nw, *north, *south, *east, *west, *body;
     int i, t1, t2, t3, t4, t5, count, size;
+    double x, y, z;
 
     sw = my_open(basename, basepath, ".sw");
     se = my_open(basename, basepath, ".se");
@@ -441,32 +416,36 @@ void dump_obj(const string& basename, const string& basepath) {
     for ( ; current != last; ++current) {
 	node = *current;
 
-	if ( (fabs(node.y - ymin) < FG_EPSILON) && 
-	     (fabs(node.x - xmin) < FG_EPSILON) ) {
+	if ( (fabs(node.y() - ymin) < FG_EPSILON) && 
+	     (fabs(node.x() - xmin) < FG_EPSILON) ) {
 	    fp = sw;
-	} else if ( (fabs(node.y - ymin) < FG_EPSILON) &&
-		    (fabs(node.x - xmax) < FG_EPSILON) ) {
+	} else if ( (fabs(node.y() - ymin) < FG_EPSILON) &&
+		    (fabs(node.x() - xmax) < FG_EPSILON) ) {
 	    fp = se;
-	} else if ( (fabs(node.y - ymax) < FG_EPSILON) &&
-		    (fabs(node.x - xmax) < FG_EPSILON)) {
+	} else if ( (fabs(node.y() - ymax) < FG_EPSILON) &&
+		    (fabs(node.x() - xmax) < FG_EPSILON)) {
 	    fp = ne;
-	} else if ( (fabs(node.y - ymax) < FG_EPSILON) &&
-		    (fabs(node.x - xmin) < FG_EPSILON) ) {
+	} else if ( (fabs(node.y() - ymax) < FG_EPSILON) &&
+		    (fabs(node.x() - xmin) < FG_EPSILON) ) {
 	    fp = nw;
-	} else if ( fabs(node.x - xmin) < FG_EPSILON ) {
+	} else if ( fabs(node.x() - xmin) < FG_EPSILON ) {
 	    fp = west;
-	} else if ( fabs(node.x - xmax) < FG_EPSILON ) {
+	} else if ( fabs(node.x() - xmax) < FG_EPSILON ) {
 	    fp = east;
-	} else if ( fabs(node.y - ymin) < FG_EPSILON ) {
+	} else if ( fabs(node.y() - ymin) < FG_EPSILON ) {
 	    fp = south;
-	} else if ( fabs(node.y - ymax) < FG_EPSILON ) {
+	} else if ( fabs(node.y() - ymax) < FG_EPSILON ) {
 	    fp = north;
 	} else {
 	    fp = body;
 	}
 
+	x = node.x();
+	y = node.y();
+	z = node.z();
+
 	if ( fp != NULL ) {
-	    fprintf(fp, "gdn %.2f %.2f %.2f\n", node.x, node.y, node.z);
+	    fprintf(fp, "gdn %.2f %.2f %.2f\n", x, y, z);
 	}
     }
 
@@ -538,25 +517,25 @@ void dump_obj(const string& basename, const string& basepath) {
 	
 	fp = NULL;
 
-	if ( (fabs(nodes_orig[i].y - ymin) < FG_EPSILON) && 
-	     (fabs(nodes_orig[i].x - xmin) < FG_EPSILON) ) {
+	if ( (fabs(nodes_orig[i].y() - ymin) < FG_EPSILON) && 
+	     (fabs(nodes_orig[i].x() - xmin) < FG_EPSILON) ) {
 	    fp = sw;
-	} else if ( (fabs(nodes_orig[i].y - ymin) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i].x - xmax) < FG_EPSILON) ) {
+	} else if ( (fabs(nodes_orig[i].y() - ymin) < FG_EPSILON) &&
+		    (fabs(nodes_orig[i].x() - xmax) < FG_EPSILON) ) {
 	    fp = se;
-	} else if ( (fabs(nodes_orig[i].y - ymax) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i].x - xmax) < FG_EPSILON)) {
+	} else if ( (fabs(nodes_orig[i].y() - ymax) < FG_EPSILON) &&
+		    (fabs(nodes_orig[i].x() - xmax) < FG_EPSILON)) {
 	    fp = ne;
-	} else if ( (fabs(nodes_orig[i].y - ymax) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i].x - xmin) < FG_EPSILON) ) {
+	} else if ( (fabs(nodes_orig[i].y() - ymax) < FG_EPSILON) &&
+		    (fabs(nodes_orig[i].x() - xmin) < FG_EPSILON) ) {
 	    fp = nw;
-	} else if ( fabs(nodes_orig[i].x - xmin) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].x() - xmin) < FG_EPSILON ) {
 	    fp = west;
-	} else if ( fabs(nodes_orig[i].x - xmax) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].x() - xmax) < FG_EPSILON ) {
 	    fp = east;
-	} else if ( fabs(nodes_orig[i].y - ymin) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].y() - ymin) < FG_EPSILON ) {
 	    fp = south;
-	} else if ( fabs(nodes_orig[i].y - ymax) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].y() - ymax) < FG_EPSILON ) {
 	    fp = north;
 	}
 	if ( fp != NULL ) {
@@ -633,6 +612,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.4  1998/10/18 01:17:27  curt
+// Point3D tweaks.
+//
 // Revision 1.3  1998/09/22 23:49:56  curt
 // C++-ified, STL-ified, and string-ified.
 //

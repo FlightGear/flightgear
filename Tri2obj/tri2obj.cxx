@@ -36,14 +36,14 @@
 #include <Include/fg_types.h>
 #include <Bucket/bucketutils.h>
 
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 
 
 int nodecount, tricount;
 int normalcount = 0;
-static fgPoint3d nodes[MAX_NODES];
+static Point3D nodes[MAX_NODES];
 static int tris[MAX_TRIS][3];
 
 static double normals[MAX_NODES][3];
@@ -52,42 +52,16 @@ fgBUCKET my_index;
 fgBUCKET ne_index, nw_index, sw_index, se_index;
 fgBUCKET north_index, south_index, east_index, west_index;
 
-/* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
- * a cartesian point */
-fgPoint3d geod_to_cart(double geod[3]) {
-    fgPoint3d cp;
-    fgPoint3d pp;
-    double gc_lon, gc_lat, sl_radius;
-
-    /* printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
-	   geod[0], geod[1], geod[2]); */
-
-    gc_lon = geod[0]*ARCSEC_TO_RAD;
-    fgGeodToGeoc(geod[1]*ARCSEC_TO_RAD, geod[2], &sl_radius, &gc_lat);
-
-    /* printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
-	   gc_lat, sl_radius+geod[2]); */
-
-    pp.lon = gc_lon;
-    pp.lat = gc_lat;
-    pp.radius = sl_radius + geod[2];
-    cp = fgPolarToCart3d(pp);
-    
-    /* printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z); */
-
-    return(cp);
-}
-
 
 /* given three points defining a triangle, calculate the normal */
-void calc_normal(fgPoint3d p1, fgPoint3d p2, 
-		 fgPoint3d p3, double normal[3])
+void calc_normal(Point3D p1, Point3D p2, 
+		 Point3D p3, double normal[3])
 {
     double v1[3], v2[3];
     double temp;
 
-    v1[0] = p2.x - p1.x; v1[1] = p2.y - p1.y; v1[2] = p2.z - p1.z;
-    v2[0] = p3.x - p1.x; v2[1] = p3.y - p1.y; v2[2] = p3.z - p1.z;
+    v1[0] = p2.x() - p1.x(); v1[1] = p2.y() - p1.y(); v1[2] = p2.z() - p1.z();
+    v2[0] = p3.x() - p1.x(); v2[1] = p3.y() - p1.y(); v2[2] = p3.z() - p1.z();
 
     MAT3cross_product(normal, v1, v2);
     MAT3_NORMALIZE_VEC(normal, temp);
@@ -407,6 +381,7 @@ FILE *my_open(char *basename, char *basepath, char *ext) {
 void triload(char *basename, char *basepath) {
     char nodename[256], elename[256];
     double n[3];
+    Point3D p;
     FILE *ne, *nw, *se, *sw, *north, *south, *east, *west;
     FILE *node, *ele;
     int dim, junk1, junk2;
@@ -468,7 +443,8 @@ void triload(char *basename, char *basepath) {
 	fscanf(node, "%d %lf %lf %lf %d\n", &junk1, 
 	       &n[0], &n[1], &n[2], &junk2);
 	/* printf("%d %.2f %.2f %.2f\n", junk1, n[0], n[1], n[2]); */
-	nodes[i] = geod_to_cart(n);
+	p = Point3D(n[0], n[1], n[2]);
+	nodes[i] = fgGeodToCart(p);
 	/* printf("%d %.2f %.2f %.2f\n", 
 	       junk1, nodes[i].x, nodes[i].y, nodes[i].z); */
     }
@@ -506,6 +482,7 @@ void dump_obj(char *basename) {
     double n1[3], n2[3], n3[3], n4[3], n5[3], norm[3], temp;
     FILE *obj;
     int i, t1, t2, t3, t4, t5, count;
+    double x, y, z;
 
     strcpy(objname, basename);
     strcat(objname, ".obj");
@@ -517,8 +494,10 @@ void dump_obj(char *basename) {
     /* dump vertices */
     printf("  writing vertices\n");
     for ( i = 1; i <= nodecount; i++ ) {
-	fprintf(obj, "v %.6f %.6f %.6f\n", 
-		nodes[i].x, nodes[i].y, nodes[i].z);
+	x = nodes[i].x();
+	y = nodes[i].y();
+	z = nodes[i].z();
+	fprintf(obj, "v %.6f %.6f %.6f\n", x, y, z);
     }
 
     printf("  calculating and writing normals\n");
@@ -644,9 +623,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.1  1998/07/08 14:54:53  curt
-/* renamed *.[ch] to *.[ch]xx
+/* Revision 1.2  1998/10/18 01:17:29  curt
+/* Point3D tweaks.
 /*
+ * Revision 1.1  1998/07/08 14:54:53  curt
+ * renamed *.[ch] to *.[ch]xx
+ *
  * Revision 1.17  1998/07/04 00:56:40  curt
  * typedef'd struct fgBUCKET.
  *

@@ -239,7 +239,7 @@ int fgDEM::read_a_record() {
     }
   
     // clean off the trailing whitespace
-    name = trim(name, " ");
+    name = trim(name);
     cout << "    Quad name field: " << name << endl;
 
     // DEM level code, 3 reflects processing by DMA
@@ -852,6 +852,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/10/18 01:17:09  curt
+// Point3D tweaks.
+//
 // Revision 1.17  1998/10/16 19:08:12  curt
 // Portability updates from Bernie Bright.
 //

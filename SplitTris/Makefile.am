@@ -32,6 +32,7 @@ splittris_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Math/libMath.a \
         $(top_builddir)/Lib/Debug/libDebug.a \
+	$(top_builddir)/Lib/Misc/libMisc.a \
         $(top_builddir)/Lib/zlib/libz.a
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
@@ -39,6 +40,9 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1998/10/18 01:17:25  curt
+# Point3D tweaks.
+#
 # Revision 1.6  1998/07/30 23:49:26  curt
 # Removed libtool support.
 #

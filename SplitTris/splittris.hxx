@@ -39,7 +39,7 @@
 using namespace std;
 #endif
 
-#include <Include/fg_types.h>
+#include <Math/point3d.hxx>
 
 
 // A triangle (indices of the three nodes)
@@ -48,7 +48,7 @@ typedef struct {
 } triangle;
 
 
-typedef vector < fgPoint3d > container_3d;
+typedef vector < Point3D > container_3d;
 typedef container_3d::iterator iterator_3d;
 typedef container_3d::const_iterator const_iterator_3d;
 
@@ -65,6 +65,9 @@ void triload(const string& basename);
 
 
 // $Log$
+// Revision 1.4  1998/10/18 01:17:28  curt
+// Point3D tweaks.
+//
 // Revision 1.3  1998/09/22 23:49:58  curt
 // C++-ified, STL-ified, and string-ified.
 //
