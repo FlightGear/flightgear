@@ -109,7 +109,7 @@
 
 
 /* For divide by zero avoidance, this will be close enough to zero */
-#define EPSILON 0.000001
+#define FG_EPSILON 0.000001
 
 
 /* Timing constants for Flight Model updates */
@@ -122,9 +122,12 @@
 
 
 /* $Log$
-/* Revision 1.1  1997/12/15 21:02:15  curt
-/* Moved to .../FlightGear/Src/Include/
+/* Revision 1.2  1998/01/07 03:31:26  curt
+/* Miscellaneous tweaks.
 /*
+ * Revision 1.1  1997/12/15 21:02:15  curt
+ * Moved to .../FlightGear/Src/Include/
+ *
  * Revision 1.10  1997/09/13 01:59:45  curt
  * Mostly working on stars and generating sidereal time for accurate star
  * placement.
