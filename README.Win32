@@ -1,4 +1,4 @@
-April 8, 1998
+June 15, 1998
 =============
 
 Here is a quick outline of *one* way you can build FG for Win32 using
@@ -24,13 +24,39 @@ a completely free development environment.
     find a program group "Cygnus" in your start menu.
 
 
-2.  Install the Silicon Graphics OpenGL dynamic link libraries. For
-    this purpose, get the file sgi-opengl2.exe from the flight gear
-    project site. This is a win95/winnt self extracting installation 
-    program. Install it by double-clicking in windows explorer.
+2.  Compiling Flightgear requires two updates of the Cygnus environment. 
+    First, install Cygwin32 beta 19.1 upgrade which is available from:
+
+        ftp://ftp.cygnus.com/pub/gnu-win32/latest/b19.1-update/
+
+    Make sure to follow the directions you find there (it's less than
+    200Kb to download). Make sure you subsitute all the cygwinb19.dll's
+    around (particularly the one in \windows\system in case you put it 
+    there)
+
+    Next, install the EGCS upgrade which is available from:
+
+        http://www.xraylith.wisc.edu/~khan/software/gnu-win32/egcs.html
+
+    Again, make sure you follow the directions.  (This is several
+    megabytes to download.)  It is recommended that you unroll the egcs
+    stuff over top of your cygwin32 installation.  It will replace many of
+    the files.
 
 
-3.  Fetch the Flight Gear code and special Win32 libraries.  These can
+3.  Install the OpenGL dynamic link libraries. 
+
+    If you have an accelerated 3d card, it is highly recommended you
+    install the hardware OpenGL drivers for your specific card.
+
+    If you do not have an accelerated 3d card, you can install the SGI
+    software optimized drivers.  For this purpose, get the file
+    sgi-opengl2.exe from the flight gear project site. This is a
+    win95/winnt self extracting installation program. Install it by
+    double-clicking in windows explorer.
+       
+
+4.  Fetch the Flight Gear code and special Win32 libraries.  These can
     be found at:
 
         http://www.menet.umn.edu/~curt/fgfs/Downloads/Source/
@@ -39,7 +65,7 @@ a completely free development environment.
     files.
 
 
-4.  Unpack the FG source code.  Run:
+5.  Unpack the FG source code.  Run:
 
         pkunzip -d FlightGear-X.XX.zip
 
@@ -47,22 +73,20 @@ a completely free development environment.
     subdirectories.  Otherwise you will have one big mess!  Trust me!
 
 
-5.  Change to the newly created FlightGear-X.XX directory and unpack
+6.  Change to the newly created FlightGear-X.XX directory and unpack
     the Win32 libraries.  Run:
 
 	cd FlightGear-X.XX	
         pkunzip -d win32-libs-X.XX.zip
 
 
-6.  --> IMPORTANT <--
-
-    You will find a file called "install.exe" In the Win32 directory 
+7.  You will find a file called "install.exe" In the Win32 directory 
     created when you unzip the win32-libs-X.XX.zip file.
 
     This version of install.exe should replace the one in your 
     H-i386-cygwin32\bin directory - it's sole claim to fame is that it 
     "understands" that when many calls to it say "install foo" they 
-    mean "install foo.exe".   If you skip this step, and attempt an 
+    mean "install foo.exe".  If you skip this step, and attempt an 
     install with the older version present, "make install" will fail.
 
 Side Note: we need to make a distinction between the "build tree" and
@@ -74,14 +98,23 @@ Side Note: we need to make a distinction between the "build tree" and
     executables, the scenery, the textures, and any other run-time
     files will be located.
 
+    Open the Cygnus bash via its entry in the Start menu.
+    Mount the drive as follows (assuming you unpacked the code on d:):
 
-7.  Configure the make system for your environment and your "install
+         mkdir /mnt
+         mount d: /mnt
+
+    You only have to do this once. The drive stays mounted (until you
+    umount it) even through reboots and switching off the machine.
+
+
+8.  Configure the make system for your environment and your "install
     tree".  Tell the configure script where you would like to install
     the exectuables and all the scenery and textures by using the
     "--prefix" option.  In the following example the base of the
-    "install tree" is "\FlightGear".  Run:
+    "install tree" is "\FlightGear".  Stay within the bash shell. Run:
 
-        ./configure --prefix=\FlightGear
+        ./configure --prefix=/mnt/FlightGear
 
 Side Note: the make procedure is designed to link against opengl.dll,
     glu.dll, and glut.dll.  However, some accelerated video cards
@@ -92,12 +125,12 @@ Side Note: the make procedure is designed to link against opengl.dll,
     make file where these files are listed.
 
 
-8.  Build the executable.  Run:
+9.  Build the executable.  Run:
 
         make
 
 
-9.  Assuming you have installed the updated version of install.exe (see
+10. Assuming you have installed the updated version of install.exe (see
     earlier instructions) you can now create and populate the install 
     tree.  Run:
 
@@ -114,64 +147,19 @@ Important Note: so far you've built and installed the simulator and
     and unzip'ed in your "install tree".
 
 
-10. Download and install the scenery and texture files.
+11. Download and install the (most recent!) scenery and texture files.
 
 
-11. Set the runtime environment variable to point to the base of your
-    "install tree".  Run:
-
-        export FG_ROOT=/FlightGear    (bash)
-        set FG_ROOT=\FlightGear       (command shell)
+12. In Windows explorer, change to /FlightGear/bin within your install tree.
+    Call runfg.bat which will set the environment variable FG_ROOT and
+    call the executable.
 
 
-12. Try it out!  There are several ways to run flight gear once it has
+13. Try it out!  There are several ways to run flight gear once it has
     been installed. The simplest is as follows.  Run:
 
         \FlightGear\bin\runfg.bat     (command shell)
 
 
-13. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
+14. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
     what went wrong.  My email is curt@me.umn.edu
-
-
-===========================================================================
-
-!!!IMPORTANT ADDENDUM FOR FlightGear 0.48 and UP!!!
-
-For those using Cygwin32 to build from source on win95/NT ... I've
-run into a show stopping bug with the cygnus compiler where it can't
-compile legit C++ code that includes the string class as a part of a
-structure built from the STL.  Fortunately, EGCS fixes this and many
-other problems with the cygwin32 compiler.  If you are a cygwin32 user
-and want to be able to compile FG 0.48 you will have to upgrade your
-Cygnus installation from beta 19 to beta 19.1, and overlay the EGCS
-update over top of the Cygnus installation.
-
-If anyone is interested I can send them a small test program that
-exercises this bug in the cygwin32 compiler, but passes with flying
-colors through EGCS.
-
-The Cygwin32 beta 19.1 upgrade is available from:
-
-    ftp://ftp.cygnus.com/pub/gnu-win32/latest/b19.1-update/
-
-Make sure to follow the directions you find there (it's less than
-200Kb to download.)
-
-The EGCS upgrade is available from:
-
-    http://www.xraylith.wisc.edu/~khan/software/gnu-win32/egcs.html
-
-Again, make sure you follow the directions.  (This is several
-megabytes to download.)  It is recommended that you unroll the egcs
-stuff over top of your cygwin32 installation.  It will replace many of
-the files.  I did this today and if you carefully follow the
-directions you shouldn't have any trouble. :-)
-
-Note: you don't have to wait for FG 0.48 to be released to upgrade to
-EGCS, it should build earlier versions of FG just fine.  I hope
-... :-) I've gone through the process once myself, so I guess that
-makes me the expert.  Feel free to forward questions to me at:
-
-    <curt@me.umn.edu>
-
