@@ -324,7 +324,7 @@ FGMenuBar::isVisible () const
     return _visible;
 }
 
-bool
+void
 FGMenuBar::fireItem (puObject * item)
 {
     const char * name = item->getLegend();

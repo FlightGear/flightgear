@@ -72,7 +72,7 @@ public:
      * have to know about PUI internals, but this method allows the
      * callback to pass the menu item one-shot on to the current menu.
      */
-    virtual bool fireItem (puObject * item);
+    virtual void fireItem (puObject * item);
 
 
 private:
