@@ -84,7 +84,9 @@ public:
     typedef container::iterator FragmentIterator;
     typedef container::const_iterator FragmentConstIterator;
 
-    typedef vector < unsigned short * > free_list;
+    typedef vector < sgVec3 * > free_vec3_list;
+    typedef vector < sgVec2 * > free_vec2_list;
+    typedef vector < unsigned short * > free_index_list;
 
 public:
     // node list (the per fragment face lists reference this node list)
@@ -108,11 +110,15 @@ public:
     container fragment_list;
 
     // ssg related structures
-    sgVec3 *vtlist;
-    sgVec3 *vnlist;
-    sgVec2 *tclist;
-    free_list free_ptrs; // list of pointers to free when tile
-                                 // entry goes away
+    // sgVec3 *vtlist;
+    // sgVec3 *vnlist;
+    // sgVec2 *tclist;
+
+    // list of pointers to memory chunks that need to be freed when
+    // tile entry goes away
+    free_vec3_list vec3_ptrs;
+    free_vec2_list vec2_ptrs;
+    free_index_list index_ptrs;
 
     // ssg tree structure for this tile is as follows:
     // ssgRoot(scene)

@@ -42,10 +42,7 @@ FG_USING_STD(mem_fun_ref);
 // Constructor
 FGTileEntry::FGTileEntry ( void )
     : ncount(0),
-      state(Unused),
-      vtlist(NULL),
-      vnlist(NULL),
-      tclist(NULL)
+      state(Unused)
 {
     nodes.clear();
 }
@@ -79,9 +76,8 @@ static void my_remove_branch( ssgBranch * branch ) {
 // Step through the fragment list, deleting the display list, then the
 // fragment, until the list is empty.  Also delete the arrays used by
 // ssg as well as the whole ssg branch
-void
-FGTileEntry::free_tile()
-{
+void FGTileEntry::free_tile() {
+    int i;
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "FREEING TILE = (" << tile_bucket << ")" );
 
@@ -98,29 +94,23 @@ FGTileEntry::free_tile()
 
     // delete the ssg structures
     FG_LOG( FG_TERRAIN, FG_DEBUG,
-	    "  deleting vertex, normal, and texture coordinate arrays" );
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
-	    "    deleting vertex array" );
-    if ( vtlist != NULL ) {
-	delete vtlist;
-	vtlist = NULL;
+	    "  deleting (leaf data) vertex, normal, and "
+	    << " texture coordinate arrays" );
+
+    for ( i = 0; i < (int)vec3_ptrs.size(); ++i ) {
+	delete vec3_ptrs[i];
     }
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
-	    "    deleting normal array" );
-    if ( vnlist != NULL ) {
-	delete vnlist;
-	vnlist = NULL;
+    vec3_ptrs.clear();
+
+    for ( i = 0; i < (int)vec2_ptrs.size(); ++i ) {
+	delete vec2_ptrs[i];
     }
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
-	    "    deleting texture coordinate array" );
-    if ( tclist != NULL ) {
-	delete tclist;
-	tclist = NULL;
+    vec2_ptrs.clear();
+
+    for ( i = 0; i < (int)index_ptrs.size(); ++i ) {
+	delete index_ptrs[i];
     }
-    for ( int i = 0; i < (int)free_ptrs.size(); ++i ) {
-	delete free_ptrs[i];
-    }
-    free_ptrs.clear();
+    index_ptrs.clear();
 
     // delete the ssg branch
 

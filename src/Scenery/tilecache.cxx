@@ -37,6 +37,7 @@
 #include <Debug/logstream.hxx>
 #include <Airports/genapt.hxx>
 #include <Bucket/newbucket.hxx>
+#include <Clouds/cloudobj.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
@@ -82,9 +83,9 @@ FGTileCache::init( void )
 	    << tile_cache.size() );
     FGTileEntry e;
     e.mark_unused();
-    e.vtlist = NULL;
-    e.vnlist = NULL;
-    e.tclist = NULL;
+    e.vec3_ptrs.clear();
+    e.vec2_ptrs.clear();
+    e.index_ptrs.clear();
     
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  size of tile = " 
 	    << sizeof( e ) );
@@ -151,20 +152,15 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     // cout << "FILL IN CACHE ENTRY = " << index << endl;
 
     tile_cache[index].center = Point3D( 0.0 );
-    if ( (tile_cache[index].vtlist != NULL) || 
-	 (tile_cache[index].vnlist != NULL) || 
-	 (tile_cache[index].tclist != NULL) )
+    if ( tile_cache[index].vec3_ptrs.size() || 
+	 tile_cache[index].vec2_ptrs.size() || 
+	 tile_cache[index].index_ptrs.size() )
     {
 	FG_LOG( FG_TERRAIN, FG_ALERT, 
 		"Attempting to overwrite existing or"
 		<< " not properly freed leaf data." );
 	exit(-1);
     }
-    // Force some values in case the tile fails to load (i.e. fill
-    // doesn't exist)
-    // tile_cache[index].vtlist = NULL;
-    // tile_cache[index].vnlist = NULL;
-    // tile_cache[index].tclist = NULL;
 
     // Load the appropriate data file and build tile fragment list
     FGPath tile_path( current_options.get_fg_root() );
@@ -179,6 +175,12 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     tile_cache[index].range_ptr = new ssgRangeSelector;
 
     ssgBranch *new_tile = fgObjLoad( tile_path.str(), &tile_cache[index] );
+    if ( current_options.get_clouds() ) {
+	ssgLeaf *cloud_layer = fgGenCloudLayer( &tile_cache[index],
+					 current_options.get_clouds_asl() );
+	new_tile -> addKid( cloud_layer );
+    }
+
     if ( new_tile != NULL ) {
 	tile_cache[index].range_ptr->addKid( new_tile );
     }
