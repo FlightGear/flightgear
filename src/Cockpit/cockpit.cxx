@@ -109,8 +109,8 @@ get_formated_gmt_time( void )
     static char buf[32];
     FGTime *t = FGTime::cur_time_params;
     const struct tm *p = t->getGmt();
-    sprintf( buf, "%d/%d/%2d %d:%02d:%02d", 
-         p->tm_mon+1, p->tm_mday, p->tm_year,
+    sprintf( buf, "%d/%d/%4d %d:%02d:%02d", 
+         p->tm_mon+1, p->tm_mday, 1900 + p->tm_year,
          p->tm_hour, p->tm_min, p->tm_sec);
     return buf;
 }
