@@ -136,6 +136,7 @@ static void print_sgMat4( sgMat4 &in) {
 
 // Update the view parameters
 void FGView::UpdateViewMath( const FGInterface& f ) {
+
     Point3D p;
     sgVec3 v0, minus_z, sgvec, forward;
     sgMat4 VIEWo, TMP;
@@ -250,6 +251,14 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 		     view_pos.z() + pilot_offset_world[2] );
 
     sgMultMat4( VIEW, VIEW_ROT, TRANS );
+
+//!!!!!!!!!!!!!!!!!!!	
+    // THIS IS THE EXPERIMENTAL VIEWING ANGLE SHIFTER
+    // THE MAJORITY OF THE WORK IS DONE IN GUI.CXX
+    // this in gui.cxx for now just testing
+	extern float quat_mat[4][4];
+	sgPreMultMat4( VIEW, quat_mat);
+// !!!!!!!!!! testing	
 
     sgSetVec3( sgvec, 0.0, 0.0, 1.0 );
     sgXformVec3( forward, sgvec, VIEWo );
