@@ -170,7 +170,9 @@ FGIO::parse_port_config( const string& config )
 	    FGRUL *rul = new FGRUL;
 	    io = rul;
         } else if ( protocol == "generic" ) {
-            FGGeneric *generic = new FGGeneric( tokens[6] );
+            int n = 6;
+            if (tokens[1] == "socket")  n++;
+            FGGeneric *generic = new FGGeneric( tokens[n] );
             io = generic;
 
 #ifdef FG_MPLAYER_AS
