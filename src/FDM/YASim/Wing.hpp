@@ -44,6 +44,10 @@ public:
     // Compile the thing into a bunch of Surface objects
     void compile();
 
+    void getTip(float* tip);
+
+    bool isMirrored();
+
     // Ground effect information
     float getGroundEffect(float* posOut);
     

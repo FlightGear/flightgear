@@ -90,6 +90,8 @@ private:
     void applyDragFactor(float factor);
     void applyLiftRatio(float factor);
     float clamp(float val, float min, float max);
+    void addContactPoint(float* pos);
+    void compileContactPoints();
     float normFactor(float f);
 
     Model _model;
@@ -108,6 +110,7 @@ private:
     float _ballast;
 
     Vector _gears;
+    Vector _contacts; // non-gear ground contact points
     Vector _weights;
     Vector _surfs; // NON-wing Surfaces
 

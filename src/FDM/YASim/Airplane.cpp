@@ -46,6 +46,8 @@ Airplane::~Airplane()
 	delete (GearRec*)_gears.get(i);
     for(i=0; i<_surfs.size(); i++)
 	delete (Surface*)_surfs.get(i);    
+    for(i=0; i<_contacts.size(); i++)
+        delete[] (float*)_contacts.get(i);
 }
 
 void Airplane::iterate(float dt)
@@ -350,8 +352,26 @@ void Airplane::setupState(float aoa, float speed, State* s)
     s->pos[2] = 1;
 }
 
+void Airplane::addContactPoint(float* pos)
+{
+    float* cp = new float[3];
+    cp[0] = pos[0];
+    cp[1] = pos[1];
+    cp[2] = pos[2];
+    _contacts.add(cp);
+}
+
 float Airplane::compileWing(Wing* w)
 {
+    // The tip of the wing is a contact point
+    float tip[3];
+    w->getTip(tip);
+    addContactPoint(tip);
+    if(w->isMirrored()) {
+        tip[1] *= -1;
+        addContactPoint(tip);
+    }
+
     // Make sure it's initialized.  The surfaces will pop out with
     // total drag coefficients equal to their areas, which is what we
     // want.
@@ -379,6 +399,10 @@ float Airplane::compileWing(Wing* w)
 
 float Airplane::compileFuselage(Fuselage* f)
 {
+    // The front and back are contact points
+    addContactPoint(f->front);
+    addContactPoint(f->back);
+
     float wgt = 0;
     float fwd[3];
     Math::sub3(f->front, f->back, fwd);
@@ -456,6 +480,39 @@ void Airplane::compileGear(GearRec* gr)
     _surfs.add(s);
 }
 
+void Airplane::compileContactPoints()
+{
+    // Figure it will compress by 20cm
+    float comp[3];
+    float DIST = 0.2;
+    comp[0] = 0; comp[1] = 0; comp[2] = DIST;
+
+    // Give it a spring constant such that at full compression it will
+    // hold up 10 times the planes mass.  That's about right.  Yeah.
+    float mass = _model.getBody()->getTotalMass();
+    float spring = (1/DIST) * 9.8 * 10 * mass;
+    float damp = 2 * Math::sqrt(spring * mass);
+
+    int i;
+    for(i=0; i<_contacts.size(); i++) {
+        float *cp = (float*)_contacts.get(i);
+
+        Gear* g = new Gear();
+        g->setPosition(cp);
+        
+        g->setCompression(comp);
+        g->setSpring(spring);
+        g->setDamping(damp);
+        g->setBrake(1);
+
+        // I made these up
+        g->setStaticFriction(0.6);
+        g->setDynamicFriction(0.5);
+
+        _model.addGear(g);
+    }
+}
+
 void Airplane::compile()
 {
     double ground[3];
@@ -528,6 +585,10 @@ void Airplane::compile()
 
     solveGear();
     solve();
+
+    // Do this after solveGear, because it creates "gear" objects that
+    // we don't want to affect.
+    compileContactPoints();
 
     // Drop the gear (use a really big dt)
     setGearState(true, 1000000);

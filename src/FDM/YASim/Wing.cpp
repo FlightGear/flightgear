@@ -208,6 +208,21 @@ float Wing::getGroundEffect(float* posOut)
     return span;
 }
 
+void Wing::getTip(float* tip)
+{
+    tip[0] = -Math::tan(_sweep);
+    tip[1] = Math::cos(_dihedral);
+    tip[2] = Math::sin(_dihedral);
+    Math::unit3(tip, tip);
+    Math::mul3(_length, tip, tip);
+    Math::add3(_base, tip, tip);
+}
+
+bool Wing::isMirrored()
+{
+    return _mirror;
+}
+
 void Wing::compile()
 {
     // Have we already been compiled?
