@@ -117,9 +117,9 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 		y_err = fabs(current->y() - (m * current->x() + b));
 
 		if ( y_err < 10 * FG_EPSILON ) {
-		    cout << "FOUND EXTRA SEGMENT NODE (Y)" << endl;
-		    cout << p0 << " < " << *current << " < "
-			 << p1 << endl;
+		    // cout << "FOUND EXTRA SEGMENT NODE (Y)" << endl;
+		    // cout << p0 << " < " << *current << " < "
+		    //      << p1 << endl;
 		    found_extra = true;
 		    extra_index = counter;
 		    break;
@@ -152,9 +152,9 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 		// cout << "  found a potential point, x err = " 
 		//      << x_err << endl;
 		if ( x_err < 10*FG_EPSILON ) {
-		    cout << "FOUND EXTRA SEGMENT NODE (X)" << endl;
-		    cout << p0 << " < " << *current << " < "
-			 << p1 << endl;
+		    // cout << "FOUND EXTRA SEGMENT NODE (X)" << endl;
+		    // cout << p0 << " < " << *current << " < "
+		    //      << p1 << endl;
 		    found_extra = true;
 		    extra_index = counter;
 		    break;
@@ -166,8 +166,8 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 
     if ( found_extra ) {
 	// recurse with two sub segments
-	cout << "dividing " << s.get_n1() << " " << extra_index 
-	     << " " << s.get_n2() << endl;
+	// cout << "dividing " << s.get_n1() << " " << extra_index 
+	//      << " " << s.get_n2() << endl;
 	unique_divide_and_add( nodes, FGTriSeg( s.get_n1(), extra_index ) );
 	unique_divide_and_add( nodes, FGTriSeg( extra_index, s.get_n2() ) );
     } else {
