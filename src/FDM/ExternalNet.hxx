@@ -34,9 +34,14 @@
 
 class HTTPClient : public netBufferChannel
 {
+
+    bool done;
+
 public:
 
-    HTTPClient ( cchar* host, int port, cchar* path ) {
+    HTTPClient ( cchar* host, int port, cchar* path ) :
+        done( false )
+    {
 	open ();
 	connect (host, port);
 
@@ -53,7 +58,10 @@ public:
 	printf("done\n");
 	buffer.remove();
 	printf("after buffer.remove()\n");
+        done = true;
     }
+
+    bool isDone() const { return done; }
 };
 
 

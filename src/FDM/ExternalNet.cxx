@@ -377,29 +377,33 @@ void FGExternalNet::init() {
 
     char cmd[256];
 
+    HTTPClient *http;
     sprintf( cmd, "/longitude-deg?value=%.8f", lon );
-    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-//     cout << "before loop()" << endl;
-    netChannel::loop(0);
-//     cout << "here" << endl;
+    http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    while ( !http->isDone() ) http->poll(0);
+    delete http;
 
     sprintf( cmd, "/latitude-deg?value=%.8f", lat );
-    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    netChannel::loop(0);
+    http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    while ( !http->isDone() ) http->poll(0);
+    delete http;
 
     sprintf( cmd, "/ground-m?value=%.8f", ground );
-    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    netChannel::loop(0);
+    http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    while ( !http->isDone() ) http->poll(0);
+    delete http;
 
     sprintf( cmd, "/heading-deg?value=%.8f", heading );
-    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    netChannel::loop(0);
+    http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    while ( !http->isDone() ) http->poll(0);
+    delete http;
 
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
     sprintf( cmd, "/reset?value=ground" );
-    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
-    netChannel::loop(0);
+    http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    while ( !http->isDone() ) http->poll(0);
+    delete http;
 
     SG_LOG( SG_IO, SG_INFO, "Remote FDM init() finished." );
 }
