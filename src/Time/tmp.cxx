@@ -25,6 +25,7 @@
 #  include <config.h>
 #endif
 
+#include <simgear/misc/fgpath.hxx>
 #include <simgear/magvar/magvar.hxx>
 
 #include <FDM/flight.hxx>
@@ -57,10 +58,12 @@ FGMagVar cur_magvar;
 
 // periodic time updater wrapper
 void fgUpdateLocalTime() {
+    FGPath zone( current_options.get_fg_root() );
+    zone.append( "Timezone" );
 
     globals->get_time_params()->updateLocal( cur_fdm_state->get_Longitude(),
 					     cur_fdm_state->get_Latitude(),
-					     current_options.get_fg_root() );
+					     zone.str() );
 }
 
 

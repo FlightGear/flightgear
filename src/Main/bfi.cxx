@@ -397,8 +397,6 @@ FGBFI::setTimeGMT (time_t time)
 				    current_options.get_fg_root() );
   globals->get_time_params()->update( cur_fdm_state->get_Longitude(),
 				      cur_fdm_state->get_Latitude(),
-				      cur_fdm_state->get_Altitude()
-				      * FEET_TO_METER,
 				      globals->get_warp() );
   needReinit();
 }

@@ -798,7 +798,6 @@ static void fgMainLoop( void ) {
 
     t->update( cur_fdm_state->get_Longitude(),
 	       cur_fdm_state->get_Latitude(),
-	       cur_fdm_state->get_Altitude()* FEET_TO_METER,
 	       globals->get_warp() );
 
     if ( globals->get_warp_delta() != 0 ) {
@@ -1310,15 +1309,17 @@ int main( int argc, char **argv ) {
     guiInit();
 
     // Initialize time
-    SGTime *t = new SGTime( current_options.get_fg_root() );
-    t->init( 0.0, 0.0, current_options.get_fg_root() );
+    FGPath zone( current_options.get_fg_root() );
+    zone.append( "Timezone" );
+    SGTime *t = new SGTime( zone.str() );
+    t->init( 0.0, 0.0, zone.str() );
 
     // Handle potential user specified time offsets
     time_t cur_time = t->get_cur_time();
-    time_t currGMT = t->get_gmt( gmtime(&cur_time) );
-    time_t systemLocalTime = t->get_gmt( localtime(&cur_time) );
+    time_t currGMT = sgTimeGetGMT( gmtime(&cur_time) );
+    time_t systemLocalTime = sgTimeGetGMT( localtime(&cur_time) );
     time_t aircraftLocalTime = 
-	t->get_gmt( fgLocaltime(&cur_time, t->get_zonename() ) );
+	sgTimeGetGMT( fgLocaltime(&cur_time, t->get_zonename() ) );
 
     // Okay, we now have six possible scenarios
     switch ( current_options.get_time_offset_type() ) {
@@ -1355,7 +1356,7 @@ int main( int argc, char **argv ) {
 
     globals->set_warp_delta( 0 );
 
-    t->update( 0.0, 0.0, 0.0, globals->get_warp() );
+    t->update( 0.0, 0.0, globals->get_warp() );
 
     globals->set_time_params( t );
 
