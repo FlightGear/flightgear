@@ -25,7 +25,7 @@
 
 #include STL_STRING
 
-#include <iostream.h>
+#include <iostream>
 
 #include <simgear/debug/logstream.hxx>
 

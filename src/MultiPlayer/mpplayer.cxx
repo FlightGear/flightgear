@@ -38,10 +38,12 @@
 #include "mpplayer.hxx"
 
 #include <stdlib.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#ifndef _MSC_VER
+# include <netdb.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+#endif
 #include <plib/netSocket.h>
 
 #include <Main/globals.hxx>
@@ -281,7 +283,7 @@ void MPPlayer::FillMsgHdr(T_MsgHdr *MsgHdr, const int iMsgId) {
             break;
     }
 
-    inet_aton(m_PlayerAddress.getHost(), &address);
+    address.s_addr = inet_addr( m_PlayerAddress.getHost() );
     MsgHdr->lReplyAddress = address.s_addr;
 
     MsgHdr->iReplyPort = m_PlayerAddress.getPort();
