@@ -2,7 +2,9 @@
 | Done
 --------------------------------------------------------------------------
 
-7/3/98 -  Generate and store the transform matrix when rendering by
+7/11/98 -  Ground collision detection
+
+7/3/98 -   Generate and store the transform matrix when rendering by
            material property so we don't have to push, transform, pop
            continually.  See mesa code for gluLookAt()
 

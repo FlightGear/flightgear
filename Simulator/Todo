@@ -73,7 +73,5 @@
     realtime system interpolates the horizon colours all around the edge
     of the sky.
 
-12/29/97 - Ground collision detection
-
 12/29/97 - glut windows or something for panel area - consider 3d
            panels, careful of texture memory problems.
