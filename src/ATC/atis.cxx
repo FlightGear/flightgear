@@ -187,7 +187,7 @@ string FGATIS::get_transmission() {
 	}
 
 	string rwy_no = runways.search(ident, hdg);
-	if(rwy_no != "NN") {
+	if(rwy_no != (string)"NN") {
 	    transmission += "  Landing and departing runway ";
 	    transmission += rwy_no;
 	    //cout << "in atis.cxx, r.rwy_no = " << rwy_no << " r.id = " << r->id << " r.heading = " << r->heading << endl;
