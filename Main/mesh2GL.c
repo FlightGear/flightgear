@@ -38,8 +38,10 @@
 /* walk through mesh and make ogl calls */
 GLint mesh2GL(struct mesh *m) {
     GLint mesh;
+    static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 };
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
+
     MAT3vec v1, v2, normal; 
     int i, j, istep, jstep, iend, jend;
     float temp;
@@ -49,6 +51,8 @@ GLint mesh2GL(struct mesh *m) {
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
 
+    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color );
+	
     iend = m->cols - 1;
     jend = m->rows - 1;
     
@@ -104,9 +108,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.18  1997/06/17 04:19:17  curt
-/* More timer related tweaks with respect to view direction changes.
+/* Revision 1.19  1997/06/18 02:21:24  curt
+/* Hacked in a runway
 /*
+ * Revision 1.18  1997/06/17 04:19:17  curt
+ * More timer related tweaks with respect to view direction changes.
+ *
  * Revision 1.17  1997/06/16 19:32:52  curt
  * Starting to add general timer support.
  *

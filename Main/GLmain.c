@@ -66,7 +66,7 @@ extern struct mesh *mesh_ptr;
 GLint fgSceneryCompile();
 static void fgSceneryDraw();
 /* pointer to terrain mesh structure */
-static GLint mesh;
+static GLint terrain, runway;
 
 /* Another hack */
 double fogDensity = 2000.0;
@@ -90,7 +90,6 @@ int use_signals = 0;
 
 static void fgInitVisuals() {
     /* if the 4th field is 0.0, this specifies a direction ... */
-    static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 };
     static GLfloat fogColor[4] = {0.65, 0.65, 0.85, 1.0};
     
     glEnable( GL_DEPTH_TEST );
@@ -105,7 +104,6 @@ static void fgInitVisuals() {
     glEnable( GL_LIGHTING );
     glEnable( GL_LIGHT0 );
 
-    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color );
     glShadeModel( GL_FLAT ); /* glShadeModel( GL_SMOOTH ); */
 
     glEnable( GL_FOG );
@@ -135,7 +133,7 @@ static void fgUpdateViewParams() {
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, 1.0/win_ratio, 1.0, 6000.0);
+    gluPerspective(45.0, 1.0/win_ratio, 0.01, 6000.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -144,6 +142,8 @@ static void fgUpdateViewParams() {
     pos_x = (FG_Longitude * RAD_TO_DEG) * 3600.0;
     pos_y = (FG_Latitude   * RAD_TO_DEG) * 3600.0;
     pos_z = FG_Altitude * 0.01; /* (Convert feet to aproximate arcsecs) */
+
+    printf("*** pos_z = %.2f\n", pos_z);
 
     /* build current rotation matrix */
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
@@ -272,23 +272,78 @@ void fgInitTimeDepCalcs() {
 
 static void fgSceneryInit() {
     /* make terrain mesh */
-    mesh = fgSceneryCompile();
+    terrain = fgSceneryCompile();
+    runway = fgRunwayHack(0.69, 53.07);
 }
 
 
 /* create the terrain mesh */
 GLint fgSceneryCompile() {
-    GLint mesh;
+    GLint terrain;
 
-    mesh = mesh2GL(mesh_ptr);
+    terrain = mesh2GL(mesh_ptr);
 
-    return(mesh);
+    return(terrain);
+}
+
+
+/* hack in a runway */
+GLint fgRunwayHack(double width, double length) {
+    static GLfloat concrete[4] = { 0.5, 0.5, 0.5, 1.0 };
+    static GLfloat line[4]     = { 0.9, 0.9, 0.9, 1.0 };
+    int i;
+    int num_lines = 8;
+    float line_len, line_width_2, cur_pos;
+
+    runway = glGenLists(1);
+    glNewList(runway, GL_COMPILE);
+
+    /* draw concrete */
+    glBegin(GL_POLYGON);
+    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, concrete );
+    glNormal3f(0.0, 0.0, 1.0);
+
+    glVertex3d( 0.0,   -width/2.0, 0.0);
+    glVertex3d( 0.0,    width/2.0, 0.0);
+    glVertex3d(length,  width/2.0, 0.0);
+    glVertex3d(length, -width/2.0, 0.0);
+    glEnd();
+
+    /* draw center line */
+    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, line );
+    line_len = length / ( 2 * num_lines + 1);
+    printf("line_len = %.3f\n", line_len);
+    line_width_2 = 0.02;
+    cur_pos = line_len;
+    for ( i = 0; i < num_lines; i++ ) {
+	glBegin(GL_POLYGON);
+	glVertex3d( cur_pos, -line_width_2, 0.005);
+	glVertex3d( cur_pos,  line_width_2, 0.005);
+	cur_pos += line_len;
+	glVertex3d( cur_pos,  line_width_2, 0.005);
+	glVertex3d( cur_pos, -line_width_2, 0.005);
+	cur_pos += line_len;
+	glEnd();
+    }
+
+    glEndList();
+
+    return(runway);
 }
 
 
 /* draw the terrain mesh */
 static void fgSceneryDraw() {
-    glCallList(mesh);
+    static float z = 32.35;
+
+    glCallList(terrain);
+
+    /* z -= 0.01; */
+    printf("*** Drawing runway at %.2f\n", z);
+
+    glTranslatef( -398391.28, 120070.41, z);
+    glRotatef(170.0, 0.0, 0.0, 1.0);
+    glCallList(runway);
 }
 
 
@@ -479,9 +534,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.17  1997/06/17 16:51:58  curt
-/* Timer interval stuff now uses gettimeofday() instead of ftime()
+/* Revision 1.18  1997/06/18 02:21:24  curt
+/* Hacked in a runway
 /*
+ * Revision 1.17  1997/06/17 16:51:58  curt
+ * Timer interval stuff now uses gettimeofday() instead of ftime()
+ *
  * Revision 1.16  1997/06/17 04:19:16  curt
  * More timer related tweaks with respect to view direction changes.
  *
