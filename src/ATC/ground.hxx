@@ -95,6 +95,9 @@ typedef arc_array_type::iterator arc_array_iterator;
 typedef arc_array_type::const_iterator arc_array_const_iterator; 
 
 struct node : public ground_network_element {
+	node();
+	~node();
+	
 	unsigned int nodeID;	//each node in an airport needs a unique ID number - this is ZERO-BASED to match array position
 	Point3D pos;
 	Point3D orthoPos;
@@ -119,12 +122,12 @@ struct Gate : public node {
 	double heading;	// The direction the parked-up plane should point in degrees
 };
 
-typedef vector < Gate > gate_vec_type;
+typedef vector < Gate* > gate_vec_type;
 typedef gate_vec_type::iterator gate_vec_iterator;
 typedef gate_vec_type::const_iterator gate_vec_const_iterator;
 
 // A map of gate vs. the logical (internal FGFS) gate ID
-typedef map < int, Gate > gate_map_type;
+typedef map < int, Gate* > gate_map_type;
 typedef gate_map_type::iterator gate_map_iterator;
 typedef gate_map_type::const_iterator gate_map_const_iterator;
 
@@ -153,6 +156,25 @@ typedef ground_network_path_type::iterator ground_network_path_iterator;
 typedef ground_network_path_type::const_iterator ground_network_path_const_iterator;
 
 //////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////
+//
+// Stuff for the shortest-path algorithms
+struct a_path {
+	a_path();
+	
+	ground_network_path_type path;
+	int cost;
+};
+
+// Paths mapped by nodeID reached so-far
+typedef map < unsigned int, a_path* > shortest_path_map_type;
+typedef shortest_path_map_type::iterator shortest_path_map_iterator;
+
+// Nodes mapped by their ID
+//typedef map < unsigned int, node* > node_map_type;
+//typedef node_map_type::iterator node_map_iterator;
+////////////////////////////////////////////////
 
 // Planes active within the ground network.
 // somewhere in the ATC/AI system we are going to have defined something like
@@ -217,12 +239,8 @@ public:
 	// Return a suitable gate (maybe this should be a list of suitable gates so the plane or controller can choose the closest one)
 	void ReturnGate(Gate &gate, GateType type);
 	
-	//The following two functions have been made public for now but may go private with a higher level accessor at some point
-	// Return the internal ID of a random, suitable, unused gate
-	// For now we are simply implementing as any random unused gate
-	int GetRandomGateID();
-	// Return a pointer to a node based on the gate ID
-	Gate* GetGateNode(int gateID);
+	// Return a pointer to an unused gate
+	Gate* GetGateNode();
 	
 	// Runway stuff - this might change in the future.
 	// Get a list of exits from a given runway
@@ -284,6 +302,16 @@ private:
 	
 	// Parse a runway exit string and push the supplied node pointer onto the runway exit list
 	void ParseRwyExits(node* np, char* es);
+	
+	// Return a random gate ID of an unused gate.
+	// Two error values may be returned and must be checked for by the calling function:
+	// -2 signifies that no gates exist at this airport.
+	// -1 signifies that all gates are currently full.
+	// TODO - modify to return a suitable gate based on aircraft size/weight.
+	int GetRandomGateID();
+	
+	// A shortest path algorithm sort of from memory (I can't find the bl&*dy book again!)
+	ground_network_path_type GetShortestPath(node* A, node* B); 
 };
 
 #endif	// _FG_GROUND_HXX

@@ -29,9 +29,24 @@
 #include STL_FSTREAM
 
 #include "ground.hxx"
+#include "ATCutils.hxx"
 
 SG_USING_STD(ifstream);
 SG_USING_STD(cout);
+
+node::node() {
+}
+
+node::~node() {
+	for(unsigned int i=0; i < arcs.size(); ++i) {
+		delete arcs[i];
+	}
+}
+
+// Make sure that a_path.cost += distance is safe from the moment it's created.
+a_path::a_path() {
+	cost = 0;
+}
 
 FGGround::FGGround() {
 	display = false;
@@ -63,10 +78,16 @@ void FGGround::ParseRwyExits(node* np, char* es) {
 // Return true if successfull.
 // TODO - currently the file is assumed to reside in the base/ATC directory.
 // This might change to something more thought out in the future.
+// NOTE - currently it is assumed that all nodes are loaded before any arcs.
+// It won't work ATM if this doesn't hold true.
 bool FGGround::LoadNetwork() {
 	node* np;
 	arc* ap;
 	Gate* gp;
+	
+	int gateCount = 0;	// This is used to allocate gateID's from zero upwards
+	// This may well change in the future - probably to reading in the real-world
+	// gate numbers from file.
 	
 	ifstream fin;
 	SGPath path = globals->get_fg_root();
@@ -175,6 +196,8 @@ bool FGGround::LoadNetwork() {
 				}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
 			}
 			fin.setf(ios::skipws);
+			ap->distance = (int)dclGetHorizontalSeparation(network[ap->n1]->pos, network[ap->n2]->pos);
+			cout << "Distance  = " << ap->distance << '\n';
 			network[ap->n1]->arcs.push_back(ap);
 			network[ap->n2]->arcs.push_back(ap);
 		} else if(!strcmp(buf, "G")) {
@@ -203,7 +226,11 @@ bool FGGround::LoadNetwork() {
 				}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
 			}
 			fin.setf(ios::skipws);
+			gp->id = gateCount;		// Warning - this will likely change in the future.
+			gp->used = false;
 			network.push_back(gp);
+			gates[gateCount] = gp;
+			gateCount++;
 		} else {
 			// Something has gone seriously pear-shaped
 			cout << "********* ERROR - unknown ground network element type... aborting read of " << path.c_str() << '\n';
@@ -241,116 +268,199 @@ void FGGround::Update() {
 	// Next we need to decide where its going. 
 }
 
-// FIXME - at the moment this assumes there is at least one gate and crashes if none
-// FIXME - In fact, at the moment this routine doesn't work at all and hence is munged to always return Gate 1 !!!!
+// Return a random gate ID of an unused gate.
+// Two error values may be returned and must be checked for by the calling function:
+// -2 signifies that no gates exist at this airport.
+// -1 signifies that all gates are currently full.
 int FGGround::GetRandomGateID() {
-	//cout << "GetRandomGateID called" << endl;
-	return(1);
+	// Check that this airport actually has some gates!!
+	if(!gates.size()) {
+		return(-2);
+	}
 
 	gate_vec_type gateVec;
-	//gate_vec_iterator gateVecItr;
 	int num = 0;
 	int thenum;
 	int ID;
 	
 	gatesItr = gates.begin();
 	while(gatesItr != gates.end()) {
-		if(gatesItr->second.used == false) {
+		if((gatesItr->second)->used == false) {
 			gateVec.push_back(gatesItr->second);
 			num++;
 		}
 		++gatesItr;
 	}
+
+	// Check that there are some unused gates!
+	if(!gateVec.size()) {
+		return(-1);
+	}
 	
 	// Randomly select one from the list
+	sg_srandom_time();
 	thenum = (int)(sg_random() * gateVec.size());
-	ID = gateVec[thenum].id;
-	//cout << "Returning gate ID " << ID << " from GetRandomGateID" << endl;
+	ID = gateVec[thenum]->id;
+	
 	return(ID);
 }
 
-// Return a pointer to a gate node based on the gate ID
-Gate* FGGround::GetGateNode(int gateID) {
-	//TODO - ought to add some sanity checking here - ie does a gate of this ID exist?!
-	return(&(gates[gateID]));
+// Return a pointer to an unused gate node
+Gate* FGGround::GetGateNode() {
+	int id = GetRandomGateID();
+	if(id < 0) {
+		return(NULL);
+	} else {
+		return(gates[id]);
+	}
 }
 
 // Get a path from a point on a runway to a gate
+// TODO !!
 
 // Get a path from a node to another node
 // Eventually we will need complex algorithms for this taking other traffic,
-// shortest path and suitable paths into accout.  For now we're going to hardwire for KEMT!!!!
-ground_network_path_type FGGround::GetPath(node* A, node* B) {
-	ground_network_path_type path;
-	//arc_array_iterator arcItr;
-	//bool found;
+// shortest path and suitable paths into accout.
+// For now we'll just call the shortest path algorithm.
+ground_network_path_type FGGround::GetPath(node* A, node* B) {	
+	return(GetShortestPath(A, B));
+};
 
-	// VERY HARDWIRED - this hardwires a path from the far end of R01 to Gate 1.
-	// In fact in real life the area between R01/19 and Taxiway Alpha at KEMT is tarmaced and planes
-	// are supposed to exit the rwy asap.
-	// OK - for now very hardwire this for testing
-	path.push_back(network[1]);
-	path.push_back(network[1]->arcs[1]);	// ONLY BECAUSE WE KNOW THIS IS THE ONE !!!!!
-	path.push_back(network[3]);
-	path.push_back(network[3]->arcs[1]);
-	path.push_back(network[5]);
-	path.push_back(network[5]->arcs[0]);
-	path.push_back(network[4]);
-	path.push_back(network[4]->arcs[2]);
-	path.push_back(network[6]);
-	path.push_back(network[6]->arcs[2]);
-	path.push_back(network[7]);				// THE GATE!!  Note that for now we're not even looking at the requested exit and gate passed in !!!!!
 
-#if 0	
-	// In this hardwired scheme there are two possibilities - taxiing from rwy to gate or gate to rwy.
-	if(B->type == GATE) {
-		//return an inward path
-		path.push_back(A);
-		// In this hardwired scheme we know A is a rwy exit and should have one taxiway arc only
-		// THIS WILL NOT HOLD TRUE IN THE GENERAL CASE
-		arcItr = A->arcs.begin();
-		found = false;
-		while(arcItr != A->arcs.end()) {
-			if(arcItr->type == TAXIWAY) {
-				path.push_back(&(*arcItr));
-				found = true;
-				break;
+// A shortest path algorithm from memory (ie. I can't find the bl&*dy book again!)
+// I'm sure there must be enchancements that we can make to this, such as biasing the
+// order in which the nodes are searched out from in favour of those geographically
+// closer to the destination.
+// Note that we are working with the master set of nodes and arcs so we mustn't change
+// or delete them -  we only delete the paths that we create during the algorithm.
+ground_network_path_type FGGround::GetShortestPath(node* A, node* B) {
+	a_path* pathPtr;
+	shortest_path_map_type pathMap;
+	node_array_type nodesLeft;
+	
+	// Debugging check
+	int pathsCreated = 0;
+	
+	// Initialise the algorithm
+	nodesLeft.push_back(A);
+	pathPtr = new a_path;
+	pathsCreated++;
+	pathPtr->path.push_back(A);
+	pathPtr->cost = 0;
+	pathMap[A->nodeID] = pathPtr;
+	bool solution_found = false;	// Flag to indicate that at least one candidate path has been found
+	int solution_cost = -1;			// Cost of current best cost solution.  -1 indicates no solution found yet.
+	a_path solution_path;		
+											
+	node* nPtr;	// nPtr is used to point to the node we are currently working with
+	
+	while(nodesLeft.size()) {
+		//cout << "\n*****nodesLeft*****\n";
+		//for(unsigned int i=0; i<nodesLeft.size(); ++i) {
+			//cout << nodesLeft[i]->nodeID << '\n';
+		//}
+		//cout << "*******************\n\n";
+		nPtr = *nodesLeft.begin();		// Thought - definate optimization possibilities here in the choice of which nodes we process first.
+		nodesLeft.erase(nodesLeft.begin());
+		//cout << "Walking out from node " << nPtr->nodeID << '\n';
+		for(unsigned int i=0; i<nPtr->arcs.size(); ++i) {
+			//cout << "ARC TO " << ((nPtr->arcs[i]->n1 == nPtr->nodeID) ? nPtr->arcs[i]->n2 : nPtr->arcs[i]->n1) << '\n';
+		}
+		if((solution_found) && (solution_cost <= pathMap[nPtr->nodeID]->cost)) {
+			// Do nothing - we've already found a solution and this partial path is already more expensive
+		} else {
+			// This path could still be better than the current solution - check it out
+			for(unsigned int i=0; i<(nPtr->arcs.size()); i++) {
+				// Map the new path against the end node, ie. *not* the one we just started with.
+				unsigned int end_nodeID = ((nPtr->arcs[i]->n1 == nPtr->nodeID) ? nPtr->arcs[i]->n2 : nPtr->arcs[i]->n1);
+				//cout << "end_nodeID = " << end_nodeID << '\n';
+				//cout << "pathMap size is " << pathMap.size() << '\n';
+				if(end_nodeID == nPtr->nodeID) {
+					//cout << "Circular arc!\n";
+					// Then its a circular arc - don't bother!!
+					//nPtr->arcs.erase(nPtr->arcs.begin() + i);
+				} else {
+					// see if the end node is already in the map or not
+					if(pathMap.find(end_nodeID) == pathMap.end()) {
+						//cout << "Not in the map" << endl;;
+						// Not in the map - easy!
+						pathPtr = new a_path;
+						pathsCreated++;
+						*pathPtr = *pathMap[nPtr->nodeID];	// *copy* the path
+						pathPtr->path.push_back(nPtr->arcs[i]);
+						pathPtr->path.push_back(network[end_nodeID]);
+						pathPtr->cost += nPtr->arcs[i]->distance;
+						pathMap[end_nodeID] = pathPtr;
+						nodesLeft.push_back(network[end_nodeID]);	// By definition this can't be in the list already, or
+						// it would also have been in the map and hence OR'd with this one.
+						if(end_nodeID == B->nodeID) {
+							//cout << "Solution found!!!" << endl;
+							// Since this node wasn't in the map this is by definition the first solution
+							solution_cost = pathPtr->cost;
+							solution_path = *pathPtr;
+							solution_found = true;
+						}
+					} else {
+						//cout << "Already in the map" << endl;
+						// In the map - not so easy - need to get rid of an arc from the higher cost one.
+						//cout << "Current cost of node " << end_nodeID << " is " << pathMap[end_nodeID]->cost << endl;
+						int newCost = pathMap[nPtr->nodeID]->cost + nPtr->arcs[i]->distance;
+						//cout << "New cost is of node " << nPtr->nodeID << " is " << newCost << endl;
+						if(newCost >= pathMap[end_nodeID]->cost) {
+							// No need to do anything.
+							//cout << "Not doing anything!" << endl;
+						} else {
+							delete pathMap[end_nodeID];
+							pathsCreated--;
+							
+							pathPtr = new a_path;
+							pathsCreated++;
+							*pathPtr = *pathMap[nPtr->nodeID];	// *copy* the path
+							pathPtr->path.push_back(nPtr->arcs[i]);
+							pathPtr->path.push_back(network[end_nodeID]);
+							pathPtr->cost += nPtr->arcs[i]->distance;
+							pathMap[end_nodeID] = pathPtr;
+							
+							// We need to add this node to the list-to-do again to force a recalculation 
+							// onwards from this node with the new lower cost to node cost.
+							nodesLeft.push_back(network[end_nodeID]);
+							
+							if(end_nodeID == B->nodeID) {
+								//cout << "Solution found!!!" << endl;
+								// Need to check if there is a previous better solution
+								if((solution_cost < 0) || (pathPtr->cost < solution_cost)) {
+									solution_cost = pathPtr->cost;
+									solution_path = *pathPtr;
+									solution_found = true;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
-		if(found == false) {
-			//cout << "AI/ATC SUBSYSTEM ERROR - no taxiway from runway exit in airport.cxx" << endl;
-		}
-		// Then push back the start of taxiway node
-		// Then push back the taxiway arc
-		arcItr = A->arcs.begin();
-		found = false;
-		while(arcItr != A->arcs.end()) {
-			if(arcItr->type == TAXIWAY) { // FIXME - OOPS - two taxiways go off this node
-				// How are we going to differentiate, apart from one called Alpha.
-				// I suppose eventually the traversal algorithms will select.
-				path.push_back(&(*arcItr));
-				found = true;
-				break;
-	    	}
-		}
-		if(found == false) {
-	    	//cout << "AI/ATC SUBSYSTEM ERROR - no taxiway from runway exit in airport.cxx" << endl;
-		}
-		// Then push back the junction node
-		// Planes always face one way in the parking, so depending on which parking exit we have either take it or push back another taxiway node
-		// Repeat if necessary
-		// Then push back the gate B
-		path.push_back(B);
-	} else {
-		//return an outward path
-	}	
-
-	// WARNING TODO FIXME - this is VERY FRAGILE - eg taxi to apron!!! but should be enough to
-	// see an AI plane physically taxi.
-#endif	// 0
+	}
 	
-	return(path);
-};
+	// delete all the paths before returning
+	shortest_path_map_iterator spItr = pathMap.begin();
+	while(spItr != pathMap.end()) {
+		if(spItr->second != NULL) {
+			delete spItr->second;
+			--pathsCreated;
+		}
+		++spItr;
+	}
+	
+	//cout << "pathsCreated = " << pathsCreated << '\n';
+	if(pathsCreated > 0) {
+		SG_LOG(SG_GENERAL, SG_ALERT, "WARNING - Possible memory leak in FGGround::GetShortestPath\n\
+									  Please report to flightgear-devel@flightgear.org\n");
+	}
+	
+	//cout << (solution_found ? "Result: solution found\n" : "Result: no solution found\n");
+	return(solution_path.path);		// TODO - we really ought to have a fallback position incase a solution isn't found.
+}
+		
 
 
 // Randomly or otherwise populate some of the gates with parked planes
@@ -403,3 +513,4 @@ void FGGround::AssignGate(ground_rec &g) {
 	// In the long run the logic of which gate or area to send the plane to could be somewhat non-trivial.
 }
 #endif //0
+
