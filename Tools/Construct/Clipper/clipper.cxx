@@ -56,6 +56,7 @@ bool FGClipper::load_polys(const string& path) {
     string poly_name;
     AreaType poly_type = DefaultArea;
     int contours, count, i, j;
+    int hole_flag;
     double startx, starty, x, y, lastx, lasty;
 
     FG_LOG( FG_CLIPPER, FG_INFO, "Loading " << path << " ..." );
@@ -89,6 +90,8 @@ bool FGClipper::load_polys(const string& path) {
 		exit(-1);
 	    }
 
+	    in >> hole_flag;
+
 	    in >> startx;
 	    in >> starty;
 	    v_list.vertex[0].x = startx;
@@ -119,8 +122,7 @@ bool FGClipper::load_polys(const string& path) {
 			<< lastx << ", " << lasty );
 	    }
 
-	    gpc_add_contour( poly, &v_list, 0 );
-
+	    gpc_add_contour( poly, &v_list, hole_flag );
 	}
 
 	in >> skipcomment;

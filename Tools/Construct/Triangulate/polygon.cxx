@@ -124,10 +124,10 @@ void FGPolygon::calc_point_inside( const int contour,
 
     if ( min_node_index == 0 ) {
 	p1 = trinodes.get_node( poly[contour][1] );
-	p2 = trinodes.get_node( poly[contour][poly.size() - 1] );
+	p2 = trinodes.get_node( poly[contour][poly[contour].size() - 1] );
     } else if ( min_node_index == (int)(poly[contour].size()) - 1 ) {
 	p1 = trinodes.get_node( poly[contour][0] );
-	p2 = trinodes.get_node( poly[contour][poly.size() - 1] );
+	p2 = trinodes.get_node( poly[contour][poly[contour].size() - 2] );
     } else {
 	p1 = trinodes.get_node( poly[contour][min_node_index - 1] );
 	p2 = trinodes.get_node( poly[contour][min_node_index + 1] );
@@ -151,9 +151,12 @@ void FGPolygon::calc_point_inside( const int contour,
     p3.sety(100);
     
     for ( int i = 0; i < (int)poly.size(); ++i ) {
-	for ( int j = 0; j < (int)(poly[i].size()) - 1; ++j ) {
-	    p1 = trinodes.get_node( poly[contour][j] );
-	    p2 = trinodes.get_node( poly[contour][j+1] );
+	cout << "contour = " << i << " size = " << poly[i].size() << endl;
+	for ( int j = 0; j < (int)(poly[i].size() - 1); ++j ) {
+	    cout << "  p1 = " << poly[i][j] << " p2 = " 
+		 << poly[i][j+1] << endl;
+	    p1 = trinodes.get_node( poly[i][j] );
+	    p2 = trinodes.get_node( poly[i][j+1] );
 
 	    if ( intersects(p1, p2, m.x(), &result) ) {
 		// cout << "intersection = " << result << endl;
@@ -163,8 +166,10 @@ void FGPolygon::calc_point_inside( const int contour,
 		}
 	    }
 	}
-	p1 = trinodes.get_node( poly[contour][0] );
-	p2 = trinodes.get_node( poly[contour][poly.size() - 1] );
+	cout << "  p1 = " << poly[i][0] << " p2 = " 
+	     << poly[i][poly[i].size() - 1] << endl;
+	p1 = trinodes.get_node( poly[i][0] );
+	p2 = trinodes.get_node( poly[i][poly[i].size() - 1] );
 	if ( intersects(p1, p2, m.x(), &result) ) {
 	    // cout << "intersection = " << result << endl;
 	    if ( ( result.y() < p3.y() ) &&
