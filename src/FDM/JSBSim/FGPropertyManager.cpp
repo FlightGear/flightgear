@@ -53,7 +53,6 @@ string FGPropertyManager::mkPropertyName(string name, bool lowercase) {
   
   /* do this two pass to avoid problems with characters getting skipped
      because the index changed */
-
   unsigned i;
   for(i=0;i<name.length();i++) {
     if( lowercase && isupper(name[i]) )
