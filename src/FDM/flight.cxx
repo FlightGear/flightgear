@@ -42,7 +42,7 @@
 // world time, so we introduce cur_fdm_state which is extrapolated by
 // the difference between sim time and real world time
 
-FGInterface * cur_fdm_state;
+FGInterface *cur_fdm_state;
 FGInterface base_fdm_state;
 
 
