@@ -48,7 +48,7 @@ SG_USING_STD(endl);
 #  include <float.h>
 #endif
 
-#include GLUT_H
+#include FG_GLUT_H
 
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog

@@ -34,7 +34,7 @@
 #  include <windows.h>
 #endif
 
-#include GLUT_H
+#include FG_GLUT_H
 
 #include <string.h>
 

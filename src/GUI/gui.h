@@ -33,7 +33,7 @@
 #  include <windows.h>
 #endif
 
-#include GLUT_H                 // needed before pu.h
+#include FG_GLUT_H              // needed before pu.h
 
 #include <plib/pu.h>		// plib include
 

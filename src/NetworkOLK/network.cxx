@@ -35,7 +35,7 @@
 #endif
 #include <math.h>
 
-#include GLUT_H
+#include FG_GLUT_H
 #include <stdlib.h>
 #include <string.h>
 

@@ -38,7 +38,7 @@
 #  include <windows.h>
 #endif
 
-#include GLUT_H
+#include FG_GLUT_H
 
 #include <plib/sg.h>			// plib include
 

@@ -189,8 +189,8 @@
 #define  ENABLE_AUDIO_SUPPORT
 #endif
 
-#ifndef  GLUT_H
-#define  GLUT_H   <GL/glut.h>
-#endif   // #ifndef GLUT_H
+#ifndef  FG_GLUT_H
+#define  FG_GLUT_H   <GL/glut.h>
+#endif   // #ifndef FG_GLUT_H
 
 // eof - config.h-msvc6 - single flightgear config.h file
