@@ -1213,7 +1213,6 @@ static void fgIdleFunction ( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
 
 	// Start the intro music
-#if !defined(WIN32)
 	if ( fgGetBool("/sim/startup/intro-music") ) {
 	    SGPath mp3file( globals->get_fg_root() );
 	    mp3file.append( "Sounds/intro.mp3" );
@@ -1221,10 +1220,16 @@ static void fgIdleFunction ( void ) {
 	    SG_LOG( SG_GENERAL, SG_INFO, 
 		    "Starting intro music: " << mp3file.str() );
 
+#if defined( __CYGWIN__ )
+	    string command = "start /m `cygpath -w " + mp3file.str() + "`";
+#elif defined( WIN32 )
+	    string command = "start /m " + mp3file.str();
+#else
 	    string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
+#endif
+
 	    system ( command.c_str() );
 	}
-#endif // !WIN32
 
 #endif
 
