@@ -192,15 +192,15 @@ FGInterface::bind ()
   fgTie("/orientation/roll", this,
 	&FGInterface::get_Phi_deg,
 	&FGInterface::set_Phi_deg,
-	false);
+	true);
   fgTie("/orientation/pitch", this,
 	&FGInterface::get_Theta_deg,
 	&FGInterface::set_Theta_deg,
-	false);
+	true);
   fgTie("/orientation/heading", this,
 	&FGInterface::get_Psi_deg,
 	&FGInterface::set_Psi_deg,
-	false);
+	true);
 
 				// Calibrated airspeed
   fgTie("/velocities/airspeed", this,

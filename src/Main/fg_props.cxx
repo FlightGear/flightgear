@@ -20,13 +20,19 @@
 //
 // $Id$
 
-#include <iostream>
+#ifdef HAVE_CONFIG_H
+#  include <simgear/compiler.h>
+#endif
+
+#include STL_IOSTREAM
 
 #include <Main/fgfs.hxx>
 #include "fg_props.hxx"
 
-using std::istream;
-using std::ostream;
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
+SG_USING_STD(istream);
+SG_USING_STD(ostream);
+#endif
 
 
 /**

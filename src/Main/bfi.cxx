@@ -103,7 +103,9 @@ reinit ()
   fgUpdateMoonPos();
   cur_light_params.Update();
   fgUpdateLocalTime();
+#ifndef FG_OLD_WEATHER
   fgUpdateWeatherDatabase();
+#endif
   current_radiostack->search();
 
 				// Restore all of the old states.

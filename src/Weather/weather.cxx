@@ -35,7 +35,7 @@
 #include <math.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_random.h>
+#include <simgear/math/sg_random.h>
 
 #include <Aircraft/aircraft.hxx>
 #include <Weather/weather.hxx>

@@ -169,6 +169,7 @@ void balloon::update()
     /* later, but currently was my main concern to get it going...          */
     /************************************************************************/
 
+#ifndef FG_OLD_WEATHER
     sgVec3 v;
 
     FGPhysicalProperty wdbpos = WeatherDatabase->get(position);
@@ -190,6 +191,13 @@ void balloon::update()
     // loss of energy by cooling down:
     float k = 1.0 / (1.0/4.8 + 1.0/(4.8+3.4*speed) + l_of_the_envelope/lambda);
     float Q = k * balloon_envelope_area * (dt/3600.0) * (wdbpos.Temperature - T);   //(dt/3600.0) = time since last call in hours
+
+#else
+   // I realy don't think there is a solution for this without WeatherCM
+   // but this is a hack, and it's working -- EMH
+   double mAir = 0;
+   float Q = 0;
+#endif
 
     // gain of energy by heating:
     if (fuel_left > 0.0)	//but only with some fuel left ;-)
@@ -218,8 +226,10 @@ void balloon::update()
     sgVec3 fTotal, fFriction, fLift;
 
     sgScaleVec3(fTotal, gravity_vector, mTotal);
+#ifndef FG_OLD_WEATHER
     sgScaleVec3(fFriction, v, cw_envelope * wind_facing_area_of_balloon * WeatherDatabase->getAirDensity(position) * speed / 2.0);  //wind resistance
     sgScaleVec3(fLift, gravity_vector, -balloon_envelope_volume * wdbpos.AirPressure / (287.14 * wdbpos.Temperature));
+#endif
    
     sgAddVec3(fTotal, fLift);
     sgAddVec3(fTotal, fFriction);

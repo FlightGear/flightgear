@@ -65,7 +65,7 @@ FGNewCache::~FGNewCache( void ) {
 
 // Free a tile cache entry
 void FGNewCache::entry_free( long cache_index ) {
-    SG_LOG( SG_TERRAIN, SG_INFO, "FREEING CACHE ENTRY = " << cache_index );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING CACHE ENTRY = " << cache_index );
     FGTileEntry *e = tile_cache[cache_index];
     e->free_tile();
     delete( e );

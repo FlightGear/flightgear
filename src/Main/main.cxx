@@ -555,7 +555,7 @@ void fgRenderFrame( void ) {
 	}
 
 	glEnable( GL_DEPTH_TEST );
-	if ( fgGetString("/sim/rendering/fog") != "disabled" ) {
+	if ( fgGetString("/sim/rendering/fog") != (string)"disabled" ) {
 	    glEnable( GL_FOG );
 	    glFogi( GL_FOG_MODE, GL_EXP2 );
 	    glFogfv( GL_FOG_COLOR, l->adj_fog_color );
