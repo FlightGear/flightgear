@@ -81,9 +81,10 @@ void FGAIAircraft::bind() {
     props->tie("controls/gear/gear-down",
                SGRawValueMethods<FGAIAircraft,bool>(*this,
                                               &FGAIAircraft::_getGearDown));
-
+#if 0
     props->getNode("controls/lighting/landing-lights", true)
            ->alias("controls/gear/gear-down");
+#endif
 }
 
 void FGAIAircraft::unbind() {
