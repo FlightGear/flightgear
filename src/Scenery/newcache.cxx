@@ -67,9 +67,9 @@ void FGNewCache::entry_free( long cache_index ) {
     FGTileEntry *tile = tile_cache[cache_index];
     tile->disconnect_ssg_nodes();
 
-#ifdef WISH_PLIB_WAS_THREADED
+#ifdef WISH_PLIB_WAS_THREADED // but it isn't
     tile->sched_removal();
-#else // plib isn't threaded so we always go here
+#else
     tile->free_tile();
     delete tile;
 #endif

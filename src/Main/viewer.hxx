@@ -116,7 +116,7 @@ protected:
     inline void set_clean() { dirty = false; }
 
     // Update the view volume, position, and orientation
-    virtual void update();
+    virtual void update() = 0;
 
 public:
 
