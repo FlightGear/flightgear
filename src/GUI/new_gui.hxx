@@ -32,7 +32,7 @@ class FGBinding;
  * This subsystem manages the graphical user interface for FlightGear.
  * It creates a menubar from the XML configuration file in
  * $FG_ROOT/gui/menubar.xml, then stores the configuration properties
- * for XML-configured dialog boxes in $FG_ROOT/gui/dialogs/*.  It
+ * for XML-configured dialog boxes found in $FG_ROOT/gui/dialogs/.  It
  * can show or hide the menubar, and can display any dialog by name.
  */
 class NewGUI : public FGSubsystem
@@ -84,9 +84,10 @@ public:
      * Display a dialog box.
      *
      * At initialization time, the subsystem reads all of the XML
-     * configuration files from $FG_ROOT/gui/dialogs/*.  The
-     * configuration for each dialog specifies a name, and this method
-     * invokes the dialog with the name specified (if it exists).
+     * configuration files from the directory $FG_ROOT/gui/dialogs/.
+     * The configuration for each dialog specifies a name, and this
+     * method invokes the dialog with the name specified (if it
+     * exists).
      *
      * @param name The name of the dialog box.
      * @return true if the dialog exists, false otherwise.
