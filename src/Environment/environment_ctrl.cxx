@@ -324,8 +324,8 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       proxy_host( fgGetNode("/sim/presets/proxy/host", true) ),
       proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
       proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
-      _error_dt( 0.0 ),
-      _error_count( 0 )
+      _error_count( 0 ),
+      _error_dt( 0.0 )
 {
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
     thread = new MetarThread(this);
@@ -399,11 +399,11 @@ FGMetarEnvironmentCtrl::init ()
             ->search( longitude->getDoubleValue(),
                       latitude->getDoubleValue(),
                       true );
-        FGMetarResult result = fetch_data( a.id );
+        FGMetarResult result = fetch_data( a._id );
         if ( result.m != NULL ) {
-            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.id);
+            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a._id);
             last_apt = a;
-            _icao = a.id;
+            _icao = a._id;
             search_elapsed = 0.0;
             fetch_elapsed = 0.0;
             update_metar_properties( result.m );
@@ -413,8 +413,8 @@ FGMetarEnvironmentCtrl::init ()
         } else {
             // mark as no metar so it doesn't show up in subsequent
             // searches.
-            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a.id );
-            globals->get_airports()->no_metar( a.id );
+            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a._id );
+            globals->get_airports()->no_metar( a._id );
         }
     }
 }
@@ -456,13 +456,13 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
             ->search( longitude->getDoubleValue(),
                       latitude->getDoubleValue(),
                       true );
-        if ( last_apt.id != a.id
+        if ( last_apt._id != a._id
              || fetch_elapsed > same_station_interval_sec )
         {
-            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.id);
-            request_queue.push( a.id );
+            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a._id);
+            request_queue.push( a._id );
             last_apt = a;
-            _icao = a.id;
+            _icao = a._id;
             search_elapsed = 0.0;
             fetch_elapsed = 0.0;
         } else {
@@ -534,7 +534,7 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
 
     // fetch station elevation if exists
     FGAirport a = globals->get_airports()->search( icao );
-    station_elevation_ft = a.elevation;
+    station_elevation_ft = a._elevation;
 
     // fetch current metar data
     try {

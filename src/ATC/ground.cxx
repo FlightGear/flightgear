@@ -367,25 +367,25 @@ void FGGround::DoRwyDetails() {
 	FGRunway runway;
 	bool rwyGood = globals->get_runways()->search(ident, int(hdg), &runway);
 	if(rwyGood) {
-		activeRwy = runway.rwy_no;
-		rwy.rwyID = runway.rwy_no;
+		activeRwy = runway._rwy_no;
+		rwy.rwyID = runway._rwy_no;
 		SG_LOG(SG_ATC, SG_INFO, "In FGGround, active runway for airport " << ident << " is " << activeRwy);
 		
 		// Get the threshold position
-		double other_way = runway.heading - 180.0;
+		double other_way = runway._heading - 180.0;
 		while(other_way <= 0.0) {
 			other_way += 360.0;
 		}
     	// move to the +l end/center of the runway
-		//cout << "Runway center is at " << runway.lon << ", " << runway.lat << '\n';
-    	Point3D origin = Point3D(runway.lon, runway.lat, aptElev);
+		//cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
+    	Point3D origin = Point3D(runway._lon, runway._lat, aptElev);
 		Point3D ref = origin;
     	double tshlon, tshlat, tshr;
 		double tolon, tolat, tor;
-		rwy.length = runway.length * SG_FEET_TO_METER;
+		rwy.length = runway._length * SG_FEET_TO_METER;
     	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
         	                rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
-    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway.heading, 
+    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway._heading, 
         	                rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
 		// Note - 25 meters in from the runway end is a bit of a hack to put the plane ahead of the user.
 		// now copy what we need out of runway into rwy
@@ -393,7 +393,7 @@ void FGGround::DoRwyDetails() {
 		Point3D takeoff_end = Point3D(tolon, tolat, aptElev);
 		//cout << "Threshold position = " << tshlon << ", " << tshlat << ", " << aptElev << '\n';
 		//cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
-		rwy.hdg = runway.heading;
+		rwy.hdg = runway._heading;
 		// Set the projection for the local area based on this active runway
 		ortho.Init(rwy.threshold_pos, rwy.hdg);	
 		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero

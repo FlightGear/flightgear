@@ -48,13 +48,13 @@ SG_USING_STD(vector);
 
 
 struct FGAirport {
-    string id;
-    double longitude;
-    double latitude;
-    double elevation;
-    string code;
-    string name;
-    bool has_metar;
+    string _id;
+    double _longitude;
+    double _latitude;
+    double _elevation;
+    string _code;               // depricated and can be removed
+    string _name;
+    bool _has_metar;
 };
 
 typedef map < string, FGAirport > airport_map;
@@ -73,11 +73,15 @@ private:
 
 public:
 
-    // Constructor
-    FGAirportList( const string &airport_file, const string &metar_file );
+    // Constructor (new)
+    FGAirportList() {}
 
     // Destructor
     ~FGAirportList();
+
+    // add an entry to the list
+    void add( const string id, const double longitude, const double latitude,
+              const double elevation, const string name, const bool has_metar );
 
     // search for the specified id.
     // Returns true if successful, otherwise returns false.
@@ -108,6 +112,11 @@ public:
      * Mark the specified airport record as not having metar
      */
     void no_metar( const string &id );
+
+    /**
+     * Mark the specified airport record as (yes) having metar
+     */
+    void has_metar( const string &id );
 
 };
 

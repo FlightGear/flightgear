@@ -96,8 +96,8 @@ bool fgNavDBInit( FGAirportList *airports,
             // cout << r->get_type() << " " << r->get_apt_id() << " zero elev"
             //      << endl;
             FGAirport a = airports->search( r->get_apt_id() );
-            if ( a.id == r->get_apt_id() ) {
-                r->set_elev_ft( a.elevation );
+            if ( a._id == r->get_apt_id() ) {
+                r->set_elev_ft( a._elevation );
                 // cout << "  setting to " << a.elevation << endl;
             }
         }
@@ -137,7 +137,7 @@ bool fgNavDBInit( FGAirportList *airports,
 static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
                                  double threshold )
 {
-    double hdg = rwy->heading;
+    double hdg = rwy->_heading;
     hdg += 180.0;
     if ( hdg > 360.0 ) {
         hdg -= 360.0;
@@ -145,8 +145,8 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
 
     // calculate runway threshold point
     double thresh_lat, thresh_lon, return_az;
-    geo_direct_wgs_84 ( 0.0, rwy->lat, rwy->lon, hdg,
-                        rwy->length/2.0 * SG_FEET_TO_METER,
+    geo_direct_wgs_84 ( 0.0, rwy->_lat, rwy->_lon, hdg,
+                        rwy->_length/2.0 * SG_FEET_TO_METER,
                         &thresh_lat, &thresh_lon, &return_az );
     // cout << "Threshold = " << thresh_lat << "," << thresh_lon << endl;
 
@@ -170,9 +170,9 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
     // cout << "Distance moved = " << dist_m << endl;
 
     // cout << "orig heading = " << loc->get_multiuse() << endl;
-    // cout << "new heading = " << rwy->heading << endl;
+    // cout << "new heading = " << rwy->_heading << endl;
 
-    double hdg_diff = loc->get_multiuse() - rwy->heading;
+    double hdg_diff = loc->get_multiuse() - rwy->_heading;
 
     // clamp to [-180.0 ... 180.0]
     if ( hdg_diff < -180.0 ) {
@@ -184,7 +184,7 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
     if ( fabs(hdg_diff) <= threshold ) {
         loc->set_lat( nloc_lat );
         loc->set_lon( nloc_lon );
-        loc->set_multiuse( rwy->heading );
+        loc->set_multiuse( rwy->_heading );
     }
 }
 

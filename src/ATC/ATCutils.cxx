@@ -314,7 +314,7 @@ bool dclFindAirportID( const string& id, FGAirport *a ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
 
         result = globals->get_airports()->search( id );
-        if ( result.id.empty() ) {
+        if ( result._id.empty() ) {
             SG_LOG( SG_GENERAL, SG_WARN,
                     "Failed to find " << id << " in basic.dat.gz" );
             return false;
@@ -327,8 +327,8 @@ bool dclFindAirportID( const string& id, FGAirport *a ) {
 
     SG_LOG( SG_GENERAL, SG_INFO,
             "Position for " << id << " is ("
-            << a->longitude << ", "
-            << a->latitude << ")" );
+            << a->_longitude << ", "
+            << a->_latitude << ")" );
 
     return true;
 }
@@ -342,7 +342,7 @@ double dclGetAirportElev( const string& id ) {
             "Finding elevation for airport: " << id );
 
     if ( dclFindAirportID( id, &a ) ) {
-        return a.elevation * SG_FEET_TO_METER;
+        return a._elevation * SG_FEET_TO_METER;
     } else {
         return -9999.0;
     }
@@ -357,7 +357,7 @@ Point3D dclGetAirportPos( const string& id ) {
             "Finding position for airport: " << id );
 
     if ( dclFindAirportID( id, &a ) ) {
-        return Point3D(a.longitude, a.latitude, a.elevation);
+        return Point3D(a._longitude, a._latitude, a._elevation);
     } else {
         return Point3D(0.0, 0.0, -9999.0);
     }
@@ -367,8 +367,8 @@ Point3D dclGetAirportPos( const string& id ) {
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
 bool OnRunway(Point3D pt, const FGRunway& rwy) {
 	FGATCAlignedProjection ortho;
-	Point3D centre(rwy.lon, rwy.lat, 0.0);	// We don't need the elev
-	ortho.Init(centre, rwy.heading);
+	Point3D centre(rwy._lon, rwy._lat, 0.0);	// We don't need the elev
+	ortho.Init(centre, rwy._heading);
 	
 	Point3D xyc = ortho.ConvertToLocal(centre);
 	Point3D xyp = ortho.ConvertToLocal(pt);
@@ -376,8 +376,8 @@ bool OnRunway(Point3D pt, const FGRunway& rwy) {
 	//cout << "Length offset = " << fabs(xyp.y() - xyc.y()) << '\n';
 	//cout << "Width offset = " << fabs(xyp.x() - xyc.x()) << '\n';
 	
-	if((fabs(xyp.y() - xyc.y()) < ((rwy.length/2.0) + 5.0)) 
-		&& (fabs(xyp.x() - xyc.x()) < (rwy.width/2.0))) {
+	if((fabs(xyp.y() - xyc.y()) < ((rwy._length/2.0) + 5.0)) 
+		&& (fabs(xyp.x() - xyc.x()) < (rwy._width/2.0))) {
 		return(true);
 	}
 	

@@ -190,18 +190,18 @@ void FGAISchedule::update(time_t now)
 	  dep = i->getDepartureAirport();
 	  arr = i->getArrivalAirport  ();
 	  
-	  temp = sgPolarToCart3d(Point3D(dep->longitude * 
+	  temp = sgPolarToCart3d(Point3D(dep->_longitude * 
 					 SG_DEGREES_TO_RADIANS, 
-					 dep->latitude  * 
+					 dep->_latitude  * 
 					 SG_DEGREES_TO_RADIANS, 
 					 1.0));
 	  a[0] = temp.x();
 	  a[1] = temp.y();
 	  a[2] = temp.z();
 	  
-	  temp = sgPolarToCart3d(Point3D(arr->longitude *
+	  temp = sgPolarToCart3d(Point3D(arr->_longitude *
 					 SG_DEGREES_TO_RADIANS,
-					 arr->latitude  *
+					 arr->_latitude  *
 					 SG_DEGREES_TO_RADIANS, 
 					 1.0));
 	  b[0] = temp.x();
@@ -250,8 +250,8 @@ void FGAISchedule::update(time_t now)
 	    }
 	  else
 	    {
-	      lat = dep->latitude;
-	      lon = dep->longitude;
+	      lat = dep->_latitude;
+	      lon = dep->_longitude;
 	    }
 	  
 	  SGWayPoint current  (lon,
@@ -260,8 +260,8 @@ void FGAISchedule::update(time_t now)
 	  SGWayPoint user (   userLongitude,
 			      userLatitude,
 			      i->getCruiseAlt());
-	  SGWayPoint dest (   arr->longitude,
-			      arr->latitude,
+	  SGWayPoint dest (   arr->_longitude,
+			      arr->_latitude,
 			      i->getCruiseAlt());
 	  // We really only need distance to user
 	  // and course to destination 
@@ -276,11 +276,11 @@ void FGAISchedule::update(time_t now)
 	  // one hour flight time, so that would be a good approximate point
 	  // to start a more detailed simulation of this aircraft.
 	  //cerr << registration << " is currently enroute from " 
-	  //   << dep->id << " to " << arr->id << "distance : " 
+	  //   << dep->_id << " to " << arr->_id << "distance : " 
           //   << distanceToUser*SG_METER_TO_NM << endl;
 	  if ((distanceToUser*SG_METER_TO_NM) < 500.0)
 	    {
-	      string flightPlanName = dep->id + string("-") + arr->id + 
+	      string flightPlanName = dep->_id + string("-") + arr->_id + 
 		string(".xml");
 	      int alt;
 	      //if  ((i->getDepartureTime() < now))
@@ -289,7 +289,7 @@ void FGAISchedule::update(time_t now)
 	      //	}
 	      //else
 	      //{
-	      //	  alt = dep->elevation+19;
+	      //	  alt = dep->_elevation+19;
 	      //	}
 
               FGAIModelEntity entity;

@@ -17,9 +17,9 @@ AirportList::AirportList (int x, int y, int width, int height)
     _content = new char *[_nAirports+1];
     for (int i = 0; i < _nAirports; i++) {
         const FGAirport *airport = _airports->getAirport(i);
-        snprintf(buf, 1023, "%s  %s\0",
-                 airport->id.c_str(),
-                 airport->name.c_str());
+        snprintf(buf, 1023, "%s  %s",
+                 airport->_id.c_str(),
+                 airport->_name.c_str());
 
         unsigned int buf_len = (strlen(buf) > 1023) ? 1023 : strlen(buf);
         
@@ -43,7 +43,7 @@ AirportList::~AirportList ()
 char *
 AirportList::getStringValue ()
 {
-    return (char *)_airports->getAirport(getIntegerValue())->id.c_str();
+    return (char *)_airports->getAirport(getIntegerValue())->_id.c_str();
 }
 
 // end of AirportList.cxx

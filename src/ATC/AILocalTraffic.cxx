@@ -179,20 +179,20 @@ void FGAILocalTraffic::GetRwyDetails(string id) {
 	FGRunway runway;
 	bool rwyGood = globals->get_runways()->search(id, rwy.rwyID, &runway);
 	if(rwyGood) {
-    	double hdg = runway.heading;
+    	double hdg = runway._heading;
 		double other_way = hdg - 180.0;
 		while(other_way <= 0.0) {
 			other_way += 360.0;
 		}
 
     	// move to the +l end/center of the runway
-		//cout << "Runway center is at " << runway.lon << ", " << runway.lat << '\n';
-    	Point3D origin = Point3D(runway.lon, runway.lat, aptElev);
+		//cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
+    	Point3D origin = Point3D(runway._lon, runway._lat, aptElev);
 		Point3D ref = origin;
     	double tshlon, tshlat, tshr;
 		double tolon, tolat, tor;
-		rwy.length = runway.length * SG_FEET_TO_METER;
-		rwy.width = runway.width * SG_FEET_TO_METER;
+		rwy.length = runway._length * SG_FEET_TO_METER;
+		rwy.width = runway._width * SG_FEET_TO_METER;
     	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
         	                rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
     	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), hdg, 

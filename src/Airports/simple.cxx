@@ -32,91 +32,30 @@
 #include <simgear/compiler.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/sgstream.hxx>
 
 #include STL_STRING
-#include STL_IOSTREAM
 
 #include "simple.hxx"
 
 SG_USING_NAMESPACE(std);
-SG_USING_STD(istream);
 
 
-inline istream&
-operator >> ( istream& in, FGAirport& a )
+// add an entry to the list
+void FGAirportList::add( const string id, const double longitude,
+                         const double latitude, const double elevation,
+                         const string name, const bool has_metar )
 {
-    string junk;
-    in >> junk >> a.id >> a.latitude >> a.longitude >> a.elevation
-       >> a.code;
-
-    getline( in,a.name );
-
-    // Remove the space before the name
-    if ( a.name.substr(0,1) == " " ) {
-        a.name = a.name.erase(0,1);
-    }
-
-    a.has_metar = false;
-
-#if 0
-    // As a quick seed for the has_metar value, only airports with
-    // four-letter codes can have metar stations
-    a.has_metar = (isalpha(a.id[0]) && isalpha(a.id[1]) && isalpha(a.id[2])
-        && isalpha(a.id[3]) && !a.id[4]);
-#endif
-
-    return in;
-}
-
-
-FGAirportList::FGAirportList( const string &airport_file,
-                              const string &metar_file ) {
-    SG_LOG( SG_GENERAL, SG_INFO, "Reading simple airport list: "
-            << airport_file );
-
-    // open the specified file for reading
-    sg_gzifstream apt_in( airport_file );
-    if ( !apt_in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << airport_file );
-	exit(-1);
-    }
-
-    // skip header line
-    apt_in >> skipeol;
-
     FGAirport a;
-    while ( apt_in ) {
-        apt_in >> a;
-        airports_by_id[a.id] = a;
-        airports_array.push_back( &airports_by_id[a.id] );
-    }
-
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Reading simple metar station list: "
-            << metar_file );
-
-    // open the specified file for reading
-    sg_gzifstream metar_in( metar_file );
-    if ( !metar_in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << metar_file );
-    }
-
-    string ident;
-    while ( metar_in ) {
-        metar_in >> ident;
-        if ( ident == "#" || ident == "//" ) {
-            metar_in >> skipeol;
-        } else {
-            airport_map_iterator apt = airports_by_id.find( ident );
-            if ( apt == airports_by_id.end() ) {
-                SG_LOG( SG_GENERAL, SG_DEBUG, "no apt = " << ident );
-            } else {
-                SG_LOG( SG_GENERAL, SG_DEBUG, "metar = " << ident );
-                airports_by_id[ident].has_metar = true;
-            }
-        }
-    }
+    a._id = id;
+    a._longitude = longitude;
+    a._latitude = latitude;
+    a._elevation = elevation;
+    a._name = name;
+    a._has_metar = has_metar;
+    airports_by_id[a._id] = a;
+    airports_array.push_back( &airports_by_id[a._id] );
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Adding " << id << " pos = " << longitude
+            << ", " << latitude << " elev = " << elevation );
 }
 
 
@@ -134,10 +73,10 @@ FGAirport FGAirportList::search( double lon_deg, double lat_deg,
     unsigned int i;
     for ( i = 0; i < airports_array.size(); ++i ) {
         // crude manhatten distance based on lat/lon difference
-        double d = fabs(lon_deg - airports_array[i]->longitude)
-            + fabs(lat_deg - airports_array[i]->latitude);
+        double d = fabs(lon_deg - airports_array[i]->_longitude)
+            + fabs(lat_deg - airports_array[i]->_latitude);
         if ( d < min_dist ) {
-            if ( !with_metar || (with_metar && airports_array[i]->has_metar) ) {
+            if ( !with_metar || (with_metar&&airports_array[i]->_has_metar) ) {
                 closest = i;
                 min_dist = d;
             }
@@ -168,5 +107,13 @@ const FGAirport *FGAirportList::getAirport( int index ) const
  * Mark the specified airport record as not having metar
  */
 void FGAirportList::no_metar( const string &id ) {
-    airports_by_id[id].has_metar = false;
+    airports_by_id[id]._has_metar = false;
+}
+
+
+/**
+ * Mark the specified airport record as (yes) having metar
+ */
+void FGAirportList::has_metar( const string &id ) {
+    airports_by_id[id]._has_metar = true;
 }

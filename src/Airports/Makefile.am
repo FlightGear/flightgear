@@ -3,6 +3,7 @@ noinst_LIBRARIES = libAirports.a
 noinst_PROGRAMS = calc_loc
 
 libAirports_a_SOURCES = \
+	apt_loader.cxx apt_loader.hxx \
 	runways.cxx runways.hxx \
 	simple.cxx simple.hxx
 

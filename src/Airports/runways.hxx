@@ -52,26 +52,26 @@ struct ltstr {
 
 struct FGRunway {
 
-    string type;
-    string id;
-    string rwy_no;
+    string _id;
+    string _rwy_no;
+    string _type;                // runway / taxiway
 
-    double lon;
-    double lat;
-    double heading;
-    double length;
-    double width;
-    
-    string surface_flags;
-    string end1_flags;
-    string end2_flags;
+    double _lon;
+    double _lat;
+    double _heading;
+    double _length;
+    double _width;
+    double _displ_thresh1;
+    double _displ_thresh2;
+    double _stopway1;
+    double _stopway2;
 
-    double end1_displaced_threshold;
-    double end2_displaced_threshold;
-
-    double end1_stopway;
-    double end2_stopway;
-
+    string _lighting_flags;
+    int _surface_code;
+    string _shoulder_code;
+    int _marking_code;
+    double _smoothness;
+    bool   _dist_remaining;
 };
 
 typedef multimap < string, FGRunway, ltstr > runway_map;
@@ -87,11 +87,21 @@ private:
 
 public:
 
-    // Constructor
-    FGRunwayList( const string& file );
+    // Constructor (new)
+    FGRunwayList() {}
 
     // Destructor
     ~FGRunwayList();
+
+    // add an entry to the list
+    void add( const string id, const string rwy_no,
+              const double longitude, const double latitude,
+              const double heading, const double length, const double width,
+              const double displ_thresh1, const double displ_thresh2,
+              const double stopway1, const double stopway2,
+              const string lighting_flags, const int surface_code,
+              const string shoulder_code, const int marking_code,
+              const double smoothness, const bool dist_remaining );
 
     // search for the specified apt id.
     // Returns true if successful, otherwise returns false.

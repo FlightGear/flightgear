@@ -100,8 +100,8 @@ FGScheduledFlight::FGScheduledFlight(string cs,
 {
   callsign          = cs;
   fltRules          = fr;
-  departurePort.id  = depPrt;
-  arrivalPort.id    = arrPrt;
+  departurePort._id  = depPrt;
+  arrivalPort._id    = arrPrt;
   //departureTime     = processTimeString(deptime);
   //arrivalTime       = processTimeString(arrtime);
   cruiseAltitude    = cruiseAlt;
@@ -245,11 +245,11 @@ FGAirport * FGScheduledFlight::getArrivalAirport  ()
 // of the airports cannot be found. 
 void FGScheduledFlight::initializeAirports()
 {
-  if(!(fgFindAirportID(arrivalPort.id, &arrivalPort  )))
+  if(!(fgFindAirportID(arrivalPort._id, &arrivalPort  )))
     {
       //cerr << ": Could not find " << arrivalPort.id << endl; 
     }
-  if(!(fgFindAirportID(departurePort.id, &departurePort)))
+  if(!(fgFindAirportID(departurePort._id, &departurePort)))
     {
       //cerr << ": Could not find " << departurePort.id << endl;
     }

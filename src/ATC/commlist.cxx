@@ -276,7 +276,7 @@ bool FGCommList::FindByCode( string ICAO, ATCData& ad, atc_type tp ) {
     FGAirport a;
     if ( dclFindAirportID( ICAO, &a ) ) {
 		comm_list_type stations;
-		int found = FindByPos(a.longitude, a.latitude, a.elevation, 10.0, &stations, tp);
+		int found = FindByPos(a._longitude, a._latitude, a._elevation, 10.0, &stations, tp);
 		if(found) {
 			comm_list_iterator itr = stations.begin();
 			while(itr != stations.end()) {

@@ -70,6 +70,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
+#include <Airports/apt_loader.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <ATC/ATCdisplay.hxx>
@@ -629,7 +630,7 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 
         result = globals->get_airports()->search( id );
 
-        if ( result.id.empty() ) {
+        if ( result._id.empty() ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
                     "Failed to find " << id << " in basic.dat.gz" );
             return false;
@@ -642,8 +643,8 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 
     SG_LOG( SG_GENERAL, SG_INFO,
             "Position for " << id << " is ("
-            << a->longitude << ", "
-            << a->latitude << ")" );
+            << a->_longitude << ", "
+            << a->_latitude << ")" );
 
     return true;
 }
@@ -658,7 +659,7 @@ static double fgGetAirportElev( const string& id ) {
             "Finding elevation for airport: " << id );
 
     if ( fgFindAirportID( id, &a ) ) {
-        return a.elevation;
+        return a._elevation;
     } else {
         return -9999.0;
     }
@@ -711,9 +712,9 @@ static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
     float fudge_lat = .003f - fudge_lon;
 
     if ( fgFindAirportID( id, &a ) ) {
-        fgSetDouble("/sim/tower/longitude-deg",  a.longitude + fudge_lon);
-        fgSetDouble("/sim/tower/latitude-deg",  a.latitude + fudge_lat);
-        fgSetDouble("/sim/tower/altitude-ft", a.elevation + towerheight);
+        fgSetDouble("/sim/tower/longitude-deg",  a._longitude + fudge_lon);
+        fgSetDouble("/sim/tower/latitude-deg",  a._latitude + fudge_lat);
+        fgSetDouble("/sim/tower/altitude-ft", a._elevation + towerheight);
         return true;
     } else {
         return false;
@@ -743,17 +744,17 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     }
 
     double lat2, lon2, az2;
-    double heading = r.heading;
+    double heading = r._heading;
     double azimuth = heading + 180.0;
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
     SG_LOG( SG_GENERAL, SG_INFO,
-            "runway =  " << r.lon << ", " << r.lat
-            << " length = " << r.length * SG_FEET_TO_METER 
+            "runway =  " << r._lon << ", " << r._lat
+            << " length = " << r._length * SG_FEET_TO_METER 
             << " heading = " << azimuth );
 	    
-    geo_direct_wgs_84 ( 0, r.lat, r.lon, azimuth, 
-                        r.length * SG_FEET_TO_METER * 0.5 - 5.0,
+    geo_direct_wgs_84 ( 0, r._lat, r._lon, azimuth, 
+                        r._length * SG_FEET_TO_METER * 0.5 - 5.0,
                         &lat2, &lon2, &az2 );
 
     if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON ) {
@@ -813,18 +814,18 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
     }
 
     double lat2, lon2, az2;
-    double heading = r.heading;
+    double heading = r._heading;
     double azimuth = heading + 180.0;
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
     
     SG_LOG( SG_GENERAL, SG_INFO,
-    "runway =  " << r.lon << ", " << r.lat
-    << " length = " << r.length * SG_FEET_TO_METER 
+    "runway =  " << r._lon << ", " << r._lat
+    << " length = " << r._length * SG_FEET_TO_METER 
     << " heading = " << azimuth );
     
-    geo_direct_wgs_84 ( 0, r.lat, r.lon, 
+    geo_direct_wgs_84 ( 0, r._lat, r._lon, 
     azimuth,
-    r.length * SG_FEET_TO_METER * 0.5 - 5.0,
+    r._length * SG_FEET_TO_METER * 0.5 - 5.0,
     &lat2, &lon2, &az2 );
     
     if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
@@ -1037,19 +1038,20 @@ static void parseWaypoints() {
 bool
 fgInitNav ()
 {
-    SG_LOG(SG_GENERAL, SG_INFO, "Loading Simple Airport List");
-    SGPath p_simple( globals->get_fg_root() );
-    p_simple.append( "Airports/basic.dat" );
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading Airport Database ...");
+
+    SGPath aptdb( globals->get_fg_root() );
+    aptdb.append( "Airports/apt.dat" );
+
     SGPath p_metar( globals->get_fg_root() );
     p_metar.append( "Airports/metar.dat" );
-    FGAirportList *airports = new FGAirportList(p_simple.str(), p_metar.str());
-    globals->set_airports( airports );
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Loading Runway List");
-    SGPath p_runway( globals->get_fg_root() );
-    p_runway.append( "Airports/runways.dat" );
-    FGRunwayList *runways = new FGRunwayList( p_runway.str() );
+    FGAirportList *airports = new FGAirportList();
+    globals->set_airports( airports );
+    FGRunwayList *runways = new FGRunwayList();
     globals->set_runways( runways );
+
+    fgAirportDBLoad( airports, runways, aptdb.str(), p_metar.str() );
 
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;

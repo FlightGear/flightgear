@@ -559,11 +559,11 @@ void FGApproach::get_active_runway() {
   
   FGRunway runway;
   if ( globals->get_runways()->search( ident, int(hdg), &runway) ) {
-    active_runway = runway.rwy_no;
-    active_rw_hdg = runway.heading;
-    active_rw_lon = runway.lon;
-    active_rw_lat = runway.lat;
-    active_rw_len = runway.length;
+    active_runway = runway._rwy_no;
+    active_rw_hdg = runway._heading;
+    active_rw_lon = runway._lon;
+    active_rw_lat = runway._lat;
+    active_rw_len = runway._length;
     //cout << "Active runway is: " << active_runway << "  heading = " 
     // << active_rw_hdg 
     // << " lon = " << active_rw_lon 

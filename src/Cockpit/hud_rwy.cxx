@@ -162,26 +162,26 @@ void runway_instr::get_rwy_points(sgdVec3 *points3d) {
 	if (center != currentCenter) //if changing tiles
 		tileCenter = center; //use last center
 	double alt = current_aircraft.fdm_state->get_Runway_altitude()*SG_FEET_TO_METER;
-	double length = (runway.length/2.0)*SG_FEET_TO_METER;
-	double width = (runway.width/2.0)*SG_FEET_TO_METER;
+	double length = (runway._length/2.0)*SG_FEET_TO_METER;
+	double width = (runway._width/2.0)*SG_FEET_TO_METER;
 	double frontLat,frontLon,backLat,backLon,az,tempLat,tempLon;
 	
-	geo_direct_wgs_84(alt,runway.lat,runway.lon,runway.heading,length,&backLat,&backLon,&az);
+	geo_direct_wgs_84(alt,runway._lat,runway._lon,runway._heading,length,&backLat,&backLon,&az);
 	sgGeodToCart(backLat*SG_DEGREES_TO_RADIANS,backLon*SG_DEGREES_TO_RADIANS,alt,points3d[4]);
 
-	geo_direct_wgs_84(alt,runway.lat,runway.lon,runway.heading+180,length,&frontLat,&frontLon,&az);	
+	geo_direct_wgs_84(alt,runway._lat,runway._lon,runway._heading+180,length,&frontLat,&frontLon,&az);	
 	sgGeodToCart(frontLat*SG_DEGREES_TO_RADIANS,frontLon*SG_DEGREES_TO_RADIANS,alt,points3d[5]);
 
-	geo_direct_wgs_84(alt,backLat,backLon,runway.heading+90,width,&tempLat,&tempLon,&az);
+	geo_direct_wgs_84(alt,backLat,backLon,runway._heading+90,width,&tempLat,&tempLon,&az);
 	sgGeodToCart(tempLat*SG_DEGREES_TO_RADIANS,tempLon*SG_DEGREES_TO_RADIANS,alt,points3d[0]);
 
-	geo_direct_wgs_84(alt,backLat,backLon,runway.heading-90,width,&tempLat,&tempLon,&az);
+	geo_direct_wgs_84(alt,backLat,backLon,runway._heading-90,width,&tempLat,&tempLon,&az);
 	sgGeodToCart(tempLat*SG_DEGREES_TO_RADIANS,tempLon*SG_DEGREES_TO_RADIANS,alt,points3d[1]);
 
-	geo_direct_wgs_84(alt,frontLat,frontLon,runway.heading-90,width,&tempLat,&tempLon,&az);
+	geo_direct_wgs_84(alt,frontLat,frontLon,runway._heading-90,width,&tempLat,&tempLon,&az);
 	sgGeodToCart(tempLat*SG_DEGREES_TO_RADIANS,tempLon*SG_DEGREES_TO_RADIANS,alt,points3d[2]);
 
-	geo_direct_wgs_84(alt,frontLat,frontLon,runway.heading+90,width,&tempLat,&tempLon,&az);
+	geo_direct_wgs_84(alt,frontLat,frontLon,runway._heading+90,width,&tempLat,&tempLon,&az);
 	sgGeodToCart(tempLat*SG_DEGREES_TO_RADIANS,tempLon*SG_DEGREES_TO_RADIANS,alt,points3d[3]);
 	
 	for(int i = 0; i < 6; i++)
@@ -354,8 +354,8 @@ void runway_instr::drawArrow() {
 	Point3D ac,rwy;
 	ac.setlat(current_aircraft.fdm_state->get_Latitude_deg());
 	ac.setlon(current_aircraft.fdm_state->get_Longitude_deg());
-	rwy.setlat(runway.lat);
-	rwy.setlon(runway.lon);
+	rwy.setlat(runway._lat);
+	rwy.setlon(runway._lon);
 	float theta = GetHeadingFromTo(ac,rwy);
 	theta -= fgGetDouble("/orientation/heading-deg");
 	theta = -theta;
@@ -382,7 +382,7 @@ void runway_instr::drawArrow() {
 void runway_instr::setLineWidth() {
 	//Calculate the distance from the runway, A
 	double course, distance;
-	calc_gc_course_dist(Point3D(runway.lon*SGD_DEGREES_TO_RADIANS, runway.lat*SGD_DEGREES_TO_RADIANS, 0.0),
+	calc_gc_course_dist(Point3D(runway._lon*SGD_DEGREES_TO_RADIANS, runway._lat*SGD_DEGREES_TO_RADIANS, 0.0),
 		Point3D(current_aircraft.fdm_state->get_Longitude(),current_aircraft.fdm_state->get_Latitude(), 0.0 ),
 		&course, &distance);
 	distance *= SG_METER_TO_NM;

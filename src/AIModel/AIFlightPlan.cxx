@@ -376,14 +376,14 @@ double wind_speed;
     //cerr << "Cruise Alt << " << alt << endl;
     // Temporary code to add some small random variation to aircraft parking positions;
   direction = (rand() % 360);
-geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction, 
+geo_direct_wgs_84 ( 0, dep->_latitude, dep->_longitude, direction, 
       100,
       &lat2, &lon2, &az2 );
   waypoint *wpt = new waypoint;
-  wpt->name      = dep->id; //wpt_node->getStringValue("name", "END");
+  wpt->name      = dep->_id; //wpt_node->getStringValue("name", "END");
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
-  wpt->altitude  = dep->elevation + 19; // probably need to add some model height to it
+  wpt->altitude  = dep->_elevation + 19; // probably need to add some model height to it
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
@@ -395,7 +395,7 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
   // Get the current active runway, based on code from David Luff
   FGEnvironment 
     stationweather = ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
-    ->getEnvironment(dep->latitude, dep->longitude, dep->elevation);
+    ->getEnvironment(dep->_latitude, dep->_longitude, dep->_elevation);
   
   wind_speed = stationweather.get_wind_speed_kt();
   wind_heading = stationweather.get_wind_from_heading_deg();
@@ -404,28 +404,28 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
                         // which is consistent with Flightgear's initial setup.
   }
   
-  string rwy_no = globals->get_runways()->search(dep->id, int(wind_heading));
-  if (!(globals->get_runways()->search(dep->id, (int) wind_heading, &rwy )))
+  string rwy_no = globals->get_runways()->search(dep->_id, int(wind_heading));
+  if (!(globals->get_runways()->search(dep->_id, (int) wind_heading, &rwy )))
     {
-      cout << "Failed to find runway for " << dep->id << endl;
+      cout << "Failed to find runway for " << dep->_id << endl;
       // Hmm, how do we handle a potential error like this?
       exit(1);
     }
 
  
-  double heading = rwy.heading;
+  double heading = rwy._heading;
   double azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-  geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
-		      rwy.length * SG_FEET_TO_METER * 0.5 - 5.0,
+  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+		      rwy._length * SG_FEET_TO_METER * 0.5 - 5.0,
 		      &lat2, &lon2, &az2 );
   
   //Add the runway startpoint;
   wpt = new waypoint;
-  wpt->name      = rwy.id;
+  wpt->name      = rwy._id;
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
-  wpt->altitude  = dep->elevation + 19;
+  wpt->altitude  = dep->_elevation + 19;
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
@@ -437,14 +437,14 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
   //Next: The point on the runway where we begin to accelerate to take-off speed
   //100 meters down the runway seems to work. Shorter distances cause problems with
   // the turn with larger aircraft
-  geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
-		      rwy.length * SG_FEET_TO_METER * 0.5 - 105.0,
+  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+		      rwy._length * SG_FEET_TO_METER * 0.5 - 105.0,
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "accel";
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
-  wpt->altitude  = dep->elevation + 19;
+  wpt->altitude  = dep->_elevation + 19;
   wpt->speed     = speed; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
@@ -496,7 +496,7 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
 
   //Beginning of Decent
   stationweather = ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
-    ->getEnvironment(arr->latitude, arr->longitude, arr->elevation);
+    ->getEnvironment(arr->_latitude, arr->_longitude, arr->_elevation);
 
   wind_speed = stationweather.get_wind_speed_kt();
   wind_heading = stationweather.get_wind_from_heading_deg();
@@ -506,23 +506,23 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
                         // which is consistent with Flightgear's initial setup.
   }
 
-  rwy_no = globals->get_runways()->search(arr->id, int(wind_heading));
-  //cout << "Using runway # " << rwy_no << " for departure at " << dep->id << endl;
+  rwy_no = globals->get_runways()->search(arr->_id, int(wind_heading));
+  //cout << "Using runway # " << rwy_no << " for departure at " << dep->_id << endl;
   
-   if (!(globals->get_runways()->search(arr->id, (int) wind_heading, &rwy )))
+   if (!(globals->get_runways()->search(arr->_id, (int) wind_heading, &rwy )))
     {
-      cout << "Failed to find runway for " << arr->id << endl;
+      cout << "Failed to find runway for " << arr->_id << endl;
       // Hmm, how do we handle a potential error like this?
       exit(1);
     }
   //cerr << "Done" << endl;
- heading = rwy.heading;
+ heading = rwy._heading;
  azimuth = heading + 180.0;
  while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
  
 
- geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
+ geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
 		     100000,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
@@ -539,14 +539,14 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
   waypoints.push_back(wpt); 
 
   // Ten thousand ft. Slowing down to 240 kts
-  geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
+  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
 		     20*SG_NM_TO_METER,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "Dec 10000ft"; //wpt_node->getStringValue("name", "END");
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
-  wpt->altitude  = arr->elevation + 19;
+  wpt->altitude  = arr->_elevation + 19;
   wpt->speed     = 240; 
   wpt->crossat   = 10000;
   wpt->gear_down = false;
@@ -556,14 +556,14 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
   waypoints.push_back(wpt);  
 
   // Three thousand ft. Slowing down to 160 kts
-  geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
+  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
 		     8*SG_NM_TO_METER,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "DEC 3000ft"; //wpt_node->getStringValue("name", "END");
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
-  wpt->altitude  = arr->elevation + 19;
+  wpt->altitude  = arr->_elevation + 19;
   wpt->speed     = 160; 
   wpt->crossat   = 3000;
   wpt->gear_down = true;
@@ -572,16 +572,16 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
   wpt->on_ground = false;
   waypoints.push_back(wpt); 
   //Runway Threshold
- geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
-		     rwy.length*0.45 * SG_FEET_TO_METER,
+ geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+		     rwy._length*0.45 * SG_FEET_TO_METER,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "Threshold"; //wpt_node->getStringValue("name", "END");
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
-  wpt->altitude  = arr->elevation + 19;
+  wpt->altitude  = arr->_elevation + 19;
   wpt->speed     = 15; 
-  wpt->crossat   = arr->elevation + 19;
+  wpt->crossat   = arr->_elevation + 19;
   wpt->gear_down = true;
   wpt->flaps_down= true;
   wpt->finished  = false;
@@ -589,14 +589,14 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
   waypoints.push_back(wpt); 
 
  //Full stop at the runway centerpoint
- geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
-		     rwy.length*0.45,
+ geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+		     rwy._length*0.45,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "Center"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = rwy.lat;
-  wpt->longitude = rwy.lon;
-  wpt->altitude  = arr->elevation + 19;
+  wpt->latitude  = rwy._lat;
+  wpt->longitude = rwy._lon;
+  wpt->altitude  = arr->_elevation + 19;
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
@@ -606,16 +606,16 @@ geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction,
   waypoints.push_back(wpt); 
 
 direction = (rand() % 360);
-geo_direct_wgs_84 ( 0, arr->latitude, arr->longitude, direction, 
+geo_direct_wgs_84 ( 0, arr->_latitude, arr->_longitude, direction, 
   100,
   &lat2, &lon2, &az2 );
 
   // Add the final destination waypoint
   wpt = new waypoint;
-  wpt->name      = arr->id; //wpt_node->getStringValue("name", "END");
+  wpt->name      = arr->_id; //wpt_node->getStringValue("name", "END");
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
-  wpt->altitude  = arr->elevation+19;
+  wpt->altitude  = arr->_elevation+19;
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
