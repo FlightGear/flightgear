@@ -99,7 +99,7 @@ metar_SOURCES = metar_main.cxx
 
 metar_LDADD = \
         -lsgenvironment -lsgio -lsgbucket -lsgmisc -lsgstructure -lsgdebug \
-        -lplibnet -lplibul \
+        -lplibnet -lplibul $(network_LIBS) \
         -lz $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
