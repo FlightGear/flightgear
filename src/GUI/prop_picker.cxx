@@ -479,9 +479,12 @@ void fgPropPicker::find_props ()
 		dflag[ pi ] = 1 ;
                 files[ pi ] = new char[ strlen(line.c_str())+strlen(sindex)+4 ] ;
 	        strcpy ( files [ pi ], line.c_str() ) ;
-	        strcat ( files [ pi ], "[" ) ;
-                strcat ( files [ pi ], sindex ) ;
-	        strcat ( files [ pi ], "]/" ) ;
+		if ( node->getChild(name, 1) != 0 ) {
+	            strcat ( files [ pi ], "[" ) ;
+                    strcat ( files [ pi ], sindex ) ;
+	            strcat ( files [ pi ], "]" ) ;
+		}
+	        strcat ( files [ pi ], "/" ) ;
    	        values[ pi ] = new char[ 2 ] ;
 	    } else {
                 dflag[ pi ] = 0 ;
