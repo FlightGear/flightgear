@@ -459,7 +459,8 @@ void FGPiston::doCHT(void)
     
   double HeatCapacityCylinderHead = CpCylinderHead * MassCylinderHead;
     
-  CylinderHeadTemp_degK += dqdt_cylinder_head / HeatCapacityCylinderHead;
+  CylinderHeadTemp_degK +=
+    (dqdt_cylinder_head / HeatCapacityCylinderHead) * dt;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
