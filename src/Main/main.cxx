@@ -133,10 +133,11 @@ SG_USING_STD(endl);
 #include <FDM/ADA.hxx>
 #include <Scenery/tileentry.hxx>
 
-#if !defined(sgi)
-// PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
-// PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
+#if ( WIN32 )
+  PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
+  PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
 #endif
+
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 //Required for using GL_extensions
 void fgLoadDCS (void);
@@ -718,13 +719,14 @@ void fgRenderFrame() {
 	// Set punch through fog density
 	glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
 
+// #define FG_EXPERIMENTAL_LIGHTING
 #ifdef FG_EXPERIMENTAL_LIGHTING
         // Enable states for drawing points with GL_extension
 	if (glutExtensionSupported("GL_EXT_point_parameters")) {
             glEnable(GL_POINT_SMOOTH);
-            float quadratic[3] = {1.0, 0.01, 0.0001};
+            float quadratic[3] = {1.0, 0.01, 0.00001};
             // get the address of our OpenGL extensions
-#if !defined(sgi)
+#if defined(WIN32)
             glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
                 wglGetProcAddress("glPointParameterfEXT");
             glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
@@ -733,24 +735,11 @@ void fgRenderFrame() {
             // makes the points fade as they move away
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
             glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
-            glPointSize(4.0);
-
-            // Enable states for drawing runway lights with spherical mapping
-            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-            glEnable(GL_TEXTURE_GEN_S);
-            glEnable(GL_TEXTURE_GEN_T);
-
-            //Maybe this is not the best way, but it works !!
-            glPolygonMode(GL_FRONT, GL_POINT);
-            glCullFace(GL_BACK);
-            glEnable(GL_CULL_FACE);
+            glPointSize(8.0);
 	}
 
-	glDisable( GL_LIGHTING );
         // blending function for runway lights
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
-	glEnable(GL_BLEND);
 #endif
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
@@ -778,11 +767,6 @@ void fgRenderFrame() {
 
 #ifdef FG_EXPERIMENTAL_LIGHTING
 	if (glutExtensionSupported("GL_EXT_point_parameters")) {
-            // Disable states used for runway lighting
-            glPolygonMode(GL_FRONT, GL_FILL);
-
-            glDisable(GL_TEXTURE_GEN_S);
-            glDisable(GL_TEXTURE_GEN_T);
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
                                   default_attenuation);
 	}
