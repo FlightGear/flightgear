@@ -248,6 +248,7 @@ LIBS="$base_LIBS"
 AC_SUBST(base_LIBS)
 AC_SUBST(opengl_LIBS)
 
+AM_CONDITIONAL(HAVE_XWINDOWS, test "x$ac_cv_lib_X11_XCreateWindow" = "xyes" )
 
 dnl Check if Generic Polygon Clipping library is installed
 dnl (from http://www.cs.man.ac.uk/aig/staff/alan/software/)
