@@ -1,0 +1,81 @@
+The generic communication protocol for FlightGear provides a powerfull way
+of adding a simple ASCII based output only protocol, just by defining an
+XML encoded configuration file and placing it in the $FG_ROOT/data/Protocols
+directory.
+
+The definition of the protocol consists of variable separators, line separators,
+and chuncks of text.
+
+Each chunck defines:
+
+<name>		for ease of use
+<node>		the property tree node which provides the data
+<type>		the value type (needed for formatting)
+<format>	defines the actual piece of text which should be sent.
+		it can include formatting options like:
+				<type>
+			%s	string
+			%i	integer	(default)
+			%f	float
+
+<factor>	an optionale multiplication factor which can be used for
+		unit conversion. (for example, radians to degrees).
+<offset>	an optional offset which can be used for unit conversion.
+		(for example, degrees Celsius to degrees Fahrenheit).
+
+
+The output section also could define the variable separator and line separator.
+
+The separators can be either a control character such as a tab or newline, or a
+user specified string or other single charachter. The currently supported
+control charachters are:
+
+<var_separator>:
+<line_separator>:
+Name		Charachter
+
+newline		'\n'
+tab		'\t'
+formfeed	'\f'
+carriagereturn	'\r'
+verticaltab	'\v'
+
+any other charachters just need to be added to "Network/generic.cxx"
+
+The var_separator is placed between each variable, while the line_separator is
+placed at the end of each lot of variables.
+
+
+A simple protocol configuration file then could look something like the
+following:
+
+<?xml version="1.0"?>
+
+<PropertyList>
+ <output>
+
+   <line_separator>newline</line_separator>
+   <var_separator>newline</var_separator>
+
+   <chunk>
+    <name>speed</name>
+    <format>V=%d</format>
+    <node>/velocities/airspeed-kt</node>
+   </chunk>
+
+   <chunk>
+    <name>heading (rad)</name>
+    <format>H=%02d</format>
+    <node>/orientation/heading-deg</node>
+    <factor>57.29578</factor>  <!-- degrees to radians -->
+   </chunk>
+
+   <chunk>
+    <name>pitch angle (deg)</name>
+    <format>P=%05.1f</format>
+    <type>float</type>
+    <node>/orientation/pitch-deg</node>
+   </chunk>
+
+ </output>
+</PropertyList>

@@ -1,0 +1,91 @@
+Using Extensions
+----------------
+
+
+To use an OpenGL extension in the code is is necessary to include a refference
+to the extensions.hxx header file and add the following to the code (as an
+example):
+
+
+/* global variables */
+glPointParameterfProc glPointParameterfPtr = 0;
+glPointParameterfvProc glPointParameterfvPtr = 0;
+bool glPointParameterIsSupported = false;
+
+
+To be able to use these extensions the functions pointers have to be initialized
+by something like the following examplde code:
+
+
+if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") )
+{
+  glPointParameterIsSupported = true;
+  glPointParameterfPtr =  (glPointParameterfProc)
+                          SGLookupFunction("glPointParameterfEXT");
+  glPointParameterfvPtr = (glPointParameterfvProc)
+                          SGLookupFunction("glPointParameterfvEXT");
+
+} else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
+  glPointParameterIsSupported = true;
+  glPointParameterfPtr =  (glPointParameterfProc)
+                          SGLookupFunction("glPointParameterfARB");
+  glPointParameterfvPtr = (glPointParameterfvProc)
+                          SGLookupFunction("glPointParameterfvARB");
+} else
+  glPointParameterIsSupported = false;
+
+
+If a function is supported the function pointers are now initialized.
+
+When using the functions (note that glPointParameterfvPtr() is used instead of
+glPointParameterfvEXT() )it is important to check whether the
+glPointParameterIsSupported is set to true:
+
+
+if ( distance_attenuation && glPointParameterIsSupported )
+{
+  // Enable states for drawing points with GL_extension
+  glEnable(GL_POINT_SMOOTH);
+
+  float quadratic[3] = {1.0, 0.001, 0.0000001};
+
+  // makes the points fade as they move away
+  glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT, quadratic);
+  glPointParameterfPtr(GL_POINT_SIZE_MIN_EXT, 1.0);
+}
+
+
+
+Adding Extensions
+-----------------
+
+To add an extension to the SimGear extension support code you normally only need
+to edit the extensions.hxx header file in the screen directory.
+
+Currently there are two extensions supported:
+* glPointParameterf
+* glActiveTexture
+
+Adding a new extension involves adding the defines assosiated with the extension
+(surrounded by the appropriate extension test):
+
+
+#ifndef GL_EXT_point_parameters
+# define GL_EXT_point_parameters 1
+# define GL_POINT_SIZE_MIN_EXT                                  0x8126
+# define GL_DISTANCE_ATTENUATION_EXT                            0x8129
+#endif
+
+
+
+This is needed because not all OpenGL implementations define them correctly.
+The following step is to add a typedef for the function pointer:
+
+
+typedef void (APIENTRY * glPointParameterfProc)(GLenum pname, GLfloat param);
+
+
+
+The APIENTRY refference is only used by windows machines but is defined empty
+for all other platforms and hence needs to be added for cross platfrom
+compatibillity.
