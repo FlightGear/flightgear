@@ -28,7 +28,7 @@ CC = gcc
 
 
 SUBSUBDIRS = flight/LaRCsim flight/slew
-SUBDIRS = aircraft controls flight scenery
+SUBDIRS = aircraft controls flight mat3 scenery
 MAIN = OpenGL
 
 
@@ -53,6 +53,9 @@ clean:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1997/05/30 19:26:56  curt
+# The LaRCsim flight model is starting to look like it is working.
+#
 # Revision 1.4  1997/05/29 02:31:43  curt
 # Update subdirectory structure.
 #

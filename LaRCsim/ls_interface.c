@@ -496,7 +496,7 @@ int initialize;
 int ls_cockpit() {
     sim_control_.paused = 0;
 
-    Throttle_pct = 0.99;
+    Throttle_pct = 0.95;
 
     /* printf("Mach = %.2f  ", Mach_number);
     printf("%.4f,%.4f,%.2f  ", Latitude, Longitude, Altitude);
@@ -900,6 +900,9 @@ int fgLaRCsim_2_Flight (struct flight_params *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.4  1997/05/30 19:30:15  curt
+ * The LaRCsim flight model is starting to look like it is working.
+ *
  * Revision 1.3  1997/05/30 03:54:12  curt
  * Made a bit more progress towards integrating the LaRCsim flight model.
  *

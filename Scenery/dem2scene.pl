@@ -182,8 +182,8 @@ sub output_scene_hdr {
     $dem_x1 =~ s/D/E/; $dem_x1 += 0.0;
     $dem_y1 =~ s/D/E/; $dem_y1 += 0.0;
     print "    // This mesh is rooted at the following coordinates (in arc seconds)\n";
-    print "    origin_lat = $dem_x1\n";
-    print "    origin_lon = $dem_y1\n";
+    print "    origin_lon = $dem_x1\n";
+    print "    origin_lat = $dem_y1\n";
     print "\n";
 
     print "    // Number of rows and columns (needed by the parser so it can create\n";
@@ -293,6 +293,9 @@ while ( ($token = &next_token()) ne "_END_OF_FILE_" ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/05/30 19:30:16  curt
+# The LaRCsim flight model is starting to look like it is working.
+#
 # Revision 1.1  1997/05/27 21:56:02  curt
 # Initial revision (with data skipping support)
 #

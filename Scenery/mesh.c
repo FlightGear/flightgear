@@ -82,9 +82,9 @@ void mesh_set_option_name(struct mesh *m, char *name) {
 void mesh_set_option_value(struct mesh *m, char *value) {
     printf("Setting %s to %s\n", m->option_name, value);
 
-    if ( strcmp(m->option_name, "origin_lat") == 0 ) {
+    if ( strcmp(m->option_name, "origin_lon") == 0 ) {
 	m->originx = atof(value);
-    } else if ( strcmp(m->option_name, "origin_lon") == 0 ) {
+    } else if ( strcmp(m->option_name, "origin_lat") == 0 ) {
 	m->originy = atof(value);
     } else if ( strcmp(m->option_name, "rows") == 0 ) {
 	m->rows = atoi(value);
@@ -102,9 +102,12 @@ void mesh_set_option_value(struct mesh *m, char *value) {
 
 
 /* $Log$
-/* Revision 1.3  1997/05/23 15:40:41  curt
-/* Added GNU copyright headers.
+/* Revision 1.4  1997/05/30 19:30:17  curt
+/* The LaRCsim flight model is starting to look like it is working.
 /*
+ * Revision 1.3  1997/05/23 15:40:41  curt
+ * Added GNU copyright headers.
+ *
  * Revision 1.2  1997/05/19 18:20:50  curt
  * Slight change to origin key words.
  *

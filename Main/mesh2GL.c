@@ -32,22 +32,7 @@
 #endif
 
 #include "../scenery/mesh.h"
-#include "mat3.h"
-
-
-/* Sets the first vector to be the cross-product of the last two
-    vectors. */
-static void mat3_cross_product(float result_vec[3], register float vec1[3], 
-                       register float vec2[3]) {
-   float tempvec[3];
-   register float *temp = tempvec;
-
-   temp[0] = vec1[1] * vec2[2] - vec1[2] * vec2[1];
-   temp[1] = vec1[2] * vec2[0] - vec1[0] * vec2[2];
-   temp[2] = vec1[0] * vec2[1] - vec1[1] * vec2[0];
-
-   MAT3_COPY_VEC(result_vec, temp);
-}
+#include "../mat3/mat3.h"
 
 
 /* walk through mesh and make ogl calls */
@@ -55,11 +40,11 @@ GLint mesh2GL(struct mesh *m) {
     GLint mesh;
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
-    float v1[3], v2[3], normal[3]; 
+    MAT3vec v1, v2, normal; 
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 10;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -84,24 +69,24 @@ GLint mesh2GL(struct mesh *m) {
 
 	    v1[0] = x2 - x1; v1[1] = 0;       v1[2] = z21 - z11;
 	    v2[0] = 0;       v2[1] = y2 - y1; v2[2] = z12 - z11;
-	    mat3_cross_product(normal, v1, v2);
+	    MAT3cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
-	    glNormal3fv(normal);
+	    glNormal3d(normal[0], normal[1], normal[2]);
 
 	    if ( j == 0 ) {
 		/* first time through */
-		glVertex3f(x1, y1, z11);
-		glVertex3f(x1, y2, z12);
+		glVertex3f(x1, y1, z11-45);
+		glVertex3f(x1, y2, z12-45);
 	    }
 
-	    glVertex3f(x2, y1, z21);
+	    glVertex3f(x2, y1, z21-45);
 	    
 	    v1[0] = x2 - x1; v1[1] = y1 - y2; v1[2] = z21 - z12;
 	    v2[0] = x2 - x1; v2[1] = 0; v2[2] = z22 - z12;
-	    mat3_cross_product(normal, v1, v2);
+	    MAT3cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
-	    glNormal3fv(normal);
-	    glVertex3f(x2, y2, z22);
+	    glNormal3d(normal[0], normal[1], normal[2]);
+	    glVertex3f(x2, y2, z22-45);
 
 	    x1 = x2;
 	    x2 = x1 + (m->row_step * jstep);
@@ -119,9 +104,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.10  1997/05/30 03:54:11  curt
-/* Made a bit more progress towards integrating the LaRCsim flight model.
+/* Revision 1.11  1997/05/30 19:27:02  curt
+/* The LaRCsim flight model is starting to look like it is working.
 /*
+ * Revision 1.10  1997/05/30 03:54:11  curt
+ * Made a bit more progress towards integrating the LaRCsim flight model.
+ *
  * Revision 1.9  1997/05/29 22:39:51  curt
  * Working on incorporating the LaRCsim flight model.
  *

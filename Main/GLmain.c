@@ -46,6 +46,8 @@
 
 #include "../aircraft/aircraft.h"
 #include "../scenery/scenery.h"
+#include "../mat3/mat3.h"
+
 
 #define FG_RAD_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
 #define FG_DEG_2_RAD(DEG) ((DEG) * M_PI / 180.0)
@@ -118,6 +120,8 @@ static void fgInitVisuals() {
 static void fgUpdateViewParams() {
     double pos_x, pos_y, pos_z;
     struct flight_params *f;
+    MAT3mat R, tmp;
+    MAT3vec vec, forward, up;
 
     f = &current_aircraft.flight;
 
@@ -129,17 +133,42 @@ static void fgUpdateViewParams() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
+    /* calculate position in arc seconds */
     pos_x = FG_RAD_2_DEG(FG_Longitude) * 3600.0;
     pos_y = FG_RAD_2_DEG(FG_Latitude) * 3600.0;
     pos_z = FG_Altitude * 0.01; /* (Convert feet to aproximate arcsecs) */
 
-    glRotatef(FG_Phi,   1.0, 0.0, 0.0);
-    glRotatef(FG_Theta, 0.0, 1.0, 0.0);
-    glRotatef(FG_Psi,   0.0, 0.0, 1.0);
+    /* build current rotation matrix */
+    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
+    MAT3rotate(R, vec, FG_Phi);
+    /* printf("Roll matrix\n"); */
+    /* MAT3print(R, stdout); */
+
+    MAT3_SET_VEC(vec, 0.0, -1.0, 0.0);
+    MAT3rotate(tmp, vec, FG_Theta);
+    /* printf("Pitch matrix\n"); */
+    /* MAT3print(tmp, stdout); */
+    MAT3mult(R, R, tmp);
+
+    MAT3_SET_VEC(vec, 0.0, 0.0, -1.0);
+    MAT3rotate(tmp, vec, M_PI + M_PI_2 + FG_Psi );
+    /* printf("Yaw matrix\n");
+    MAT3print(tmp, stdout); */
+    MAT3mult(R, R, tmp);
+
+    /* MAT3print(R, stdout); */
+
+    /* generate the current forward and up vectors */
+    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
+    MAT3mult_vec(forward, vec, R);
+    printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
+	   forward[2]);
+    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
+    MAT3mult_vec(up, vec, R);
 
     gluLookAt(pos_x, pos_y, pos_z,
-	      pos_x + 1.0, pos_y, pos_z,
-	      0.0, 0.0, 1.0);
+	      pos_x + forward[0], pos_y + forward[1], pos_z + forward[2],
+	      up[0], up[1], up[2]);
 
 }
 
@@ -335,7 +364,7 @@ int main( int argc, char *argv[] ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  4.38;
+    FG_Psi   =  2.14 /* 4.38 */;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -410,9 +439,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.8  1997/05/30 03:54:10  curt
-/* Made a bit more progress towards integrating the LaRCsim flight model.
+/* Revision 1.9  1997/05/30 19:27:01  curt
+/* The LaRCsim flight model is starting to look like it is working.
 /*
+ * Revision 1.8  1997/05/30 03:54:10  curt
+ * Made a bit more progress towards integrating the LaRCsim flight model.
+ *
  * Revision 1.7  1997/05/29 22:39:49  curt
  * Working on incorporating the LaRCsim flight model.
  *

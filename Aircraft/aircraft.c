@@ -39,19 +39,22 @@ void aircraft_debug(int type) {
     f = &current_aircraft.flight;
     c = &current_aircraft.controls;
 
-    printf("Pos = (%.2f,%.2f,%.2f)  Dir = %.2f  Mach = %.2f\n", 
+    printf("Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
 	   FG_RAD_2_DEG(FG_Longitude) * 3600.0, 
            FG_RAD_2_DEG(FG_Latitude) * 3600.0, 
-	   FG_Altitude, FG_Psi, FG_Mach_number);
-    printf("Elev = %.2f, Aileron = %.2f, Rudder = %.2f\n", 
-	   c->elev, c->aileron, c->rudder);
+	   FG_Altitude, FG_Phi, FG_Theta, FG_Psi);
+    printf("Mach = %.2f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f\n", 
+	   FG_Mach_number, c->elev, c->aileron, c->rudder);
 }
 
 
 /* $Log$
-/* Revision 1.4  1997/05/30 03:54:11  curt
-/* Made a bit more progress towards integrating the LaRCsim flight model.
+/* Revision 1.5  1997/05/30 19:30:14  curt
+/* The LaRCsim flight model is starting to look like it is working.
 /*
+ * Revision 1.4  1997/05/30 03:54:11  curt
+ * Made a bit more progress towards integrating the LaRCsim flight model.
+ *
  * Revision 1.3  1997/05/29 22:39:56  curt
  * Working on incorporating the LaRCsim flight model.
  *
