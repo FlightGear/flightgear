@@ -1103,7 +1103,7 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   fgHUDAddLabel  ( hud, 440, 90,  SMALL, NOBLINK,
                       RIGHT_JUST, NULL, " m",        "%05.2f", get_long_min );
   fgHUDAddLabel  ( hud, 10,470, SMALL, NOBLINK,
-		      RIGHT_JUST, "Frame rate =", NULL,  "%2.2f ", get_frame_rate);
+		      RIGHT_JUST, "Frame rate = ", NULL,  "%.1f ", get_frame_rate);
 
   fgHUDAddControlSurfaces( hud, 10, 10, NULL );
 
@@ -1616,10 +1616,13 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.5  1998/05/06 03:15:08  curt
-/* Durk Talsma contributed a graphical frame rate counter which is displayed
-/* as part of the HUD.
+/* Revision 1.6  1998/05/07 23:12:31  curt
+/* Changed frame rate formatting a bit.
 /*
+ * Revision 1.5  1998/05/06 03:15:08  curt
+ * Durk Talsma contributed a graphical frame rate counter which is displayed
+ * as part of the HUD.
+ *
  * Revision 1.4  1998/05/03 00:46:46  curt
  * polar.h -> polar3d.h
  *
