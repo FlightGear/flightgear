@@ -36,8 +36,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
-#include <Sound/fg_fx.hxx>
-#include <Sound/soundmgr.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/hud.hxx>
 #include <Cockpit/panel_io.hxx>

@@ -29,11 +29,10 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/sound/soundmgr.hxx>
 
 #include <plib/sl.h>
 #include <plib/sm.h>
-
-#include "soundmgr.hxx"
 
 
 // Quoting from http://www.kluft.com/~ikluft/ham/morse-intro.html by
@@ -124,8 +123,8 @@ public:
     // allocate and initialize sound samples
     bool init();
 
-    // make a FGSimpleSound morse code transmission for the specified string
-    FGSimpleSound *make_ident( const string& id,
+    // make a SimpleSound morse code transmission for the specified string
+    SimpleSound *make_ident( const string& id,
 			       const int freq = LO_FREQUENCY );
 };
 

@@ -110,7 +110,6 @@
 #include <Scripting/scriptmgr.hxx>
 #endif
 #include <Sound/fg_fx.hxx>
-#include <Sound/soundmgr.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/FGEventMgr.hxx>
 #include <Time/light.hxx>
@@ -143,6 +142,9 @@
 #endif
 
 SG_USING_STD(string);
+
+
+class Sound;
 
 extern const char *default_root;
 
@@ -1537,7 +1539,7 @@ bool fgInitSubsystems() {
     // Initialize the sound subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->set_soundmgr(new FGSoundMgr);
+    globals->set_soundmgr(new SoundMgr);
     globals->get_soundmgr()->init();
     globals->get_soundmgr()->bind();
 

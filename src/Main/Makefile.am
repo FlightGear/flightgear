@@ -90,7 +90,7 @@ fgfs_LDADD = \
 	$(WEATHER_LIBS) \
 	-lsgroute -lsgsky -lsgephem -lsgmodel -lsgtiming -lsgio -lsgscreen \
 	-lsgmath -lsgbucket -lsgprops -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
-	-lsgserial \
+	-lsgsound -lsgserial \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
         $(PSL_LIBS) \

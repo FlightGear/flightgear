@@ -28,6 +28,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/sound/soundmgr.hxx>
 
 #include STL_IOSTREAM
 
@@ -43,7 +44,6 @@
 #include <Objects/matlib.hxx>
 
 #include <GUI/gui.h>
-#include <Sound/soundmgr.hxx>
 
 #include "globals.hxx"
 #include "fgfs.hxx"
@@ -234,7 +234,7 @@ setFreeze (bool f)
     frozen = f;
 
     // Stop sound on a pause
-    FGSoundMgr *s = globals->get_soundmgr();
+    SoundMgr *s = globals->get_soundmgr();
     if ( s != NULL ) {
         if ( f ) {
             s->pause();

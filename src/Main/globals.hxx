@@ -55,6 +55,7 @@ class SGMagVar;
 class SGPropertyNode;
 class SGRoute;
 class SGTime;
+class SoundMgr;
 
 class FGAIMgr;
 class FGATCMgr;
@@ -73,7 +74,6 @@ class FGMultiplayRxMgr;
 class FGMultiplayTxMgr;
 #endif
 class FGPanel;
-class FGSoundMgr;
 class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
@@ -130,7 +130,7 @@ private:
     FGPanel *current_panel;
 
     // sound manager
-    FGSoundMgr *soundmgr;
+    SoundMgr *soundmgr;
 
     // environment information
     FGEnvironmentMgr * environment_mgr;
@@ -257,8 +257,8 @@ public:
     inline FGPanel *get_current_panel() const { return current_panel; }
     inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }
 
-    inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
-    inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }
+    inline SoundMgr *get_soundmgr() const { return soundmgr; }
+    inline void set_soundmgr( SoundMgr *sm ) { soundmgr = sm; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }

@@ -121,7 +121,6 @@ SG_USING_STD(endl);
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #ifdef ENABLE_AUDIO_SUPPORT
-#  include <Sound/soundmgr.hxx>
 #  include <Sound/fg_fx.hxx>
 #  include <Sound/morse.hxx>
 #endif

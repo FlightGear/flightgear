@@ -32,11 +32,11 @@
 #endif
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/sound/sound.hxx>
 
 #include <Main/fg_props.hxx>
 
 #include "fg_fx.hxx"
-#include "fg_sound.hxx"
 
 
 FGFX::FGFX ()
@@ -62,7 +62,7 @@ FGFX::init()
    }
 
    path.append(path_str.c_str());
-   SG_LOG(SG_GENERAL, SG_INFO, "Reading Instrument " << node->getName()
+   SG_LOG(SG_GENERAL, SG_INFO, "Reading sound " << node->getName()
           << " from " << path.str());
 
    SGPropertyNode root;
@@ -76,8 +76,10 @@ FGFX::init()
 
    node = root.getNode("fx");
    for (i = 0; i < node->nChildren(); i++) {
-      FGSound *sound = new FGSound();
-      sound->init(node->getChild(i));
+      Sound *sound = new Sound();
+
+      sound->init(globals->get_props(), node->getChild(i),
+                  globals->get_soundmgr(), globals->get_fg_root());
 
       _sound.push_back(sound);
    }

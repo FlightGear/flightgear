@@ -445,7 +445,7 @@ void FGKR_87::update( double dt ) {
 	// play station ident via audio system if on + ant mode,
 	// otherwise turn it off
 	if ( vol_btn >= 0.01 && audio_btn ) {
-	    FGSimpleSound *sound;
+	    SimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( "adf-ident" );
             if ( sound != NULL ) {
                 if ( !adf_btn ) {
@@ -514,7 +514,7 @@ void FGKR_87::search() {
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );
 	    }
-	    FGSimpleSound *sound;
+	    SimpleSound *sound;
 	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, "adf-ident" );

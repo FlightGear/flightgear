@@ -31,12 +31,12 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/sound/soundmgr.hxx>
 
 #include <plib/sl.h>
 #include <plib/sm.h>
 
 #include "morse.hxx"
-#include "soundmgr.hxx"
 
 
 // Quoting from http://www.smartregs.com/data/sa326.htm
@@ -100,9 +100,9 @@ private:
     unsigned char middle_buf[ MIDDLE_SIZE ] ;
     unsigned char outer_buf[ OUTER_SIZE ] ;
 
-    FGSimpleSound *inner;
-    FGSimpleSound *middle;
-    FGSimpleSound *outer;
+    SimpleSound *inner;
+    SimpleSound *middle;
+    SimpleSound *outer;
 
 public:
 
@@ -112,9 +112,9 @@ public:
     // allocate and initialize sound samples
     bool init();
 
-    FGSimpleSound *get_inner() { return inner; }
-    FGSimpleSound *get_middle() { return middle; }
-    FGSimpleSound *get_outer() { return outer; }
+    SimpleSound *get_inner() { return inner; }
+    SimpleSound *get_middle() { return middle; }
+    SimpleSound *get_outer() { return outer; }
    
 };
 

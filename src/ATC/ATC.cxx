@@ -18,9 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <simgear/sound/soundmgr.hxx>
+
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
-#include <Sound/soundmgr.hxx>
 
 #include "ATC.hxx"
 #include "ATCdisplay.hxx"
@@ -73,7 +74,7 @@ void FGATC::Render(string msg, string refname, bool repeating) {
 		int len;
 		unsigned char* buf = vPtr->WriteMessage((char*)msg.c_str(), len, voice);
 		if(voice) {
-			FGSimpleSound* simple = new FGSimpleSound(buf, len);
+			SimpleSound* simple = new SimpleSound(buf, len);
 			// TODO - at the moment the volume is always set off comm1 
 			// and can't be changed after the transmission has started.
 			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));

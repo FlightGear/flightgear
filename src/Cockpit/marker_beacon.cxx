@@ -193,7 +193,7 @@ void FGMarkerBeacon::search()
 	// cout << "OUTER MARKER" << endl;
         if ( last_beacon != FGMkrBeacon::OUTER ) {
             if ( ! globals->get_soundmgr()->exists( "outer-marker" ) ) {
-                FGSimpleSound *sound = beacon.get_outer();
+                SimpleSound *sound = beacon.get_outer();
                 sound->set_volume( 0.3 );
                 globals->get_soundmgr()->add( sound, "outer-marker" );
             }
@@ -210,7 +210,7 @@ void FGMarkerBeacon::search()
 	// cout << "MIDDLE MARKER" << endl;
 	if ( last_beacon != FGMkrBeacon::MIDDLE ) {
 	    if ( ! globals->get_soundmgr()->exists( "middle-marker" ) ) {
-		FGSimpleSound *sound = beacon.get_middle();
+		SimpleSound *sound = beacon.get_middle();
 		sound->set_volume( 0.3 );
 		globals->get_soundmgr()->add( sound, "middle-marker" );
 	    }
@@ -227,7 +227,7 @@ void FGMarkerBeacon::search()
 	// cout << "INNER MARKER" << endl;
 	if ( last_beacon != FGMkrBeacon::INNER ) {
 	    if ( ! globals->get_soundmgr()->exists( "inner-marker" ) ) {
-		FGSimpleSound *sound = beacon.get_inner();
+		SimpleSound *sound = beacon.get_inner();
 		sound->set_volume( 0.3 );
 		globals->get_soundmgr()->add( sound, "inner-marker" );
 	    }
