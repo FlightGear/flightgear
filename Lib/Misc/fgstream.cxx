@@ -95,12 +95,11 @@ skipeol( istream& in )
 {
     char c = 0;
     // skip to end of line.
-    while ( in.get(c) && (c != '\n' && c != '\r') )
-	;
-
-    #ifdef __MWERKS // -dw- need to strip line ending!
-    in >> skipws;
-    #endif
+    while ( in.get(c)  ) {
+    	if ( (c == '\n') || (c == '\r') ) {
+	    break;
+	}	
+    }
 
     return in;
 }
@@ -109,11 +108,15 @@ istream&
 skipws( istream& in ) {
     char c;
     while ( in.get(c) ) {
-	#ifdef __MWERKS__ // -dw- for unix file compatibility
-	if ( ! (isspace( c ) ) || c != '\0' || c!='\n' || c != '\r' ) {
-	#else
-	if ( ! isspace( c ) ) {
+	// -dw- for unix file compatibility
+	// -clo- this causes problems for unix
+	#ifdef __MWERKS__
+    	if ( (c == '\n') || (c == '\r') ) {
+	    break;
+	}	
 	#endif
+
+	if ( ! isspace( c ) ) {
 	    // put pack the non-space character
 	    in.putback(c);
 	    break;
@@ -128,7 +131,11 @@ skipcomment( istream& in )
     while ( in )
     {
 	// skip whitespace
+#ifdef __MWERKS__
+	in >> ::skipws;
+#else
 	in >> skipws;
+#endif
 
 	char c;
 	if ( in.get( c ) && c != '#' )

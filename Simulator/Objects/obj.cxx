@@ -148,7 +148,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
     // Attempt to open "path.gz" or "path"
     fg_gzifstream in( path );
-    if ( ! in ) {
+    if ( ! in.is_open() ) {
 	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
 	return 0;
     }
@@ -174,7 +174,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	string token;
 	char c;
 
+#if defined( MACOS )
+	in >> ::skipws;
+#else
 	in >> skipws;
+#endif
 
 	if ( in.get( c ) && c == '#' ) {
 	    // process a comment line
@@ -450,7 +454,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		
 		// read all subsequent numbers until next thing isn't a number
 		while ( true ) {
+#if defined( MACOS )
+		    in >> ::skipws;
+#else
 		    in >> skipws;
+#endif
 
 		    char c;
 		    in.get(c);
@@ -604,7 +612,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 	    // eat white space before start of while loop so if we are
 	    // done with useful input it is noticed before hand.
+#if defined( MACOS )
+	    in >> ::skipws;
+#else
 	    in >> skipws;
+#endif
 	}
     }
 

@@ -98,6 +98,7 @@
 #  ifndef FG_NDEBUG
 #    include <sioux.h> // settings for output window
 #  endif
+#  include <console.h>
 #endif
 
 
@@ -845,9 +846,12 @@ void fgReshape( int width, int height ) {
 
 // Initialize GLUT and define a main window
 int fgGlutInit( int *argc, char **argv ) {
+
+#if !defined( MACOS )
     // GLUT will extract all glut specific options so later on we only
     // need wory about our own.
     xglutInit(argc, argv);
+#endif
 
     // Define Display Parameters
     xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
@@ -954,16 +958,9 @@ int fgGlutInitEvents( void ) {
 
 // Main ...
 int main( int argc, char **argv ) {
-#ifdef MACOS
-#  ifndef FG_NDEBUG
 
-    // -dw- this will not work unless called before any standard
-    // output, so why not put it here?
-    SIOUXSettings.toppixel = 540;
-    SIOUXSettings.leftpixel = 50;
-    SIOUXSettings.rows = 15;
-
-#  endif
+#if defined( MACOS )
+    argc = ccommand( &argv );
 #endif
 
     FGInterface *f;

@@ -1,4 +1,3 @@
-//
 // timestamp.hxx -- class for managing a timestamp (seconds & milliseconds.)
 //
 // Written by Curtis Olson, started December 1998.
@@ -56,7 +55,13 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
-#ifdef  WIN32
+// -dw- want to use metrowerks time.h
+#ifdef MACOS
+#  include <time.h>
+#  include <timer.h>
+#endif
+
+#ifdef WIN32
 #  include <windows.h>
 #  if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
 #    define NEAR /* */
@@ -136,11 +141,13 @@ inline void FGTimeStamp::stamp() {
     ftime(&current);
     seconds = current.time;
     usec = current.millitm * 1000;
-#elif defined( __MWERKS__ )
-    // -dw- uses system clock to get time stamp... don't know if this works
-    long ticks = clock();
-    seconds = ticks / CLOCKS_PER_SEC;
-    usec = seconds * 100000;
+// -dw- uses time manager
+#elif defined( MACOS )
+    UnsignedWide ms;
+    Microseconds(&ms);
+	
+    seconds = ms.lo / 1000000;
+    usec = ms.lo - ( seconds * 1000000 );
 #else
 # error Port me
 #endif

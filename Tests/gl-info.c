@@ -94,5 +94,12 @@ int main ( int argc, char **argv )
   getPrintf ( GL_POINT_SIZE_GRANULARITY, "GL_POINT_SIZE_GRANULARITY" ) ;
   getPrint2f( GL_POINT_SIZE_RANGE      , "GL_POINT_SIZE_RANGE" ) ;
 
+  printf("Default values:\n\n");
+
+  getPrinti( GL_UNPACK_ALIGNMENT  , "GL_UNPACK_ALIGNMENT"   ) ;
+  getPrinti( GL_UNPACK_ROW_LENGTH  , "GL_UNPACK_ROW_LENGTH"   ) ;
+  getPrinti( GL_UNPACK_SKIP_PIXELS  , "GL_UNPACK_SKIP_PIXELS"   ) ;
+  getPrinti( GL_UNPACK_SKIP_ROWS  , "GL_UNPACK_SKIP_ROWS"   ) ;
+
   return 0 ;
 }

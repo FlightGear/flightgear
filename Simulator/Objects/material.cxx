@@ -126,8 +126,13 @@ FGMaterial::load_texture( const string& root )
 #  error port me
 #endif
 
-    // set the texture parameters for this texture
+    // set the texture parameters back to the defaults for loading
+    // this texture
     xglPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    xglPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    xglPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    xglPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );

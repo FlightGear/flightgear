@@ -184,7 +184,6 @@ FGPanel::FGPanel(void){
     xglPixelZoom(Xzoom, Yzoom);
     xglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
-    xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
     xglRasterPos2i(0,0);
     xglPixelZoom(Xzoom, Yzoom);
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
