@@ -29,6 +29,7 @@
 #ifndef _FGSCHEDULE_HXX_
 #define _FGSCHEDULE_HXX_
 
+#define TRAFFICTOAIDIST 150.0
 
 
 class FGAISchedule
@@ -37,34 +38,56 @@ class FGAISchedule
   string modelPath;
   string livery;
   string registration;
+  string airline;
+  string acType;
+  string m_class;
+  string flightType;
   bool heavy;
   FGScheduledFlightVec flights;
   float lat;
   float lon; 
+  double radius;
+  double groundOffset;
+  double distanceToUser;
   void* AIManagerRef;
   bool firstRun;
 
 
  public:
   FGAISchedule();                                           // constructor
-  FGAISchedule(string, string, string, bool, FGScheduledFlightVec);  // construct & init
+  FGAISchedule(string, string, string, bool, string, string, string, string, double, double, FGScheduledFlightVec);  // construct & init
   FGAISchedule(const FGAISchedule &other);             // copy constructor
 
   ~FGAISchedule(); //destructor
 
-  void update(time_t now);
+  bool update(time_t now);
+  bool init();
+
+  double getSpeed         ();
+  void setClosestDistanceToUser();
   void next();   // forces the schedule to move on to the next flight.
 
   time_t      getDepartureTime    () { return flights.begin()->getDepartureTime   (); };
   FGAirport * getDepartureAirport () { return flights.begin()->getDepartureAirport(); };
   FGAirport * getArrivalAirport   () { return flights.begin()->getArrivalAirport  (); };
   int         getCruiseAlt        () { return flights.begin()->getCruiseAlt       (); };
+  double      getRadius           () { return radius; };
+  double      getGroundOffset     () { return groundOffset;};
+  string      getFlightType       () { return flightType;};
+  string      getAirline          () { return airline; };
+  string      getAircraft         () { return acType; };
+  string      getCallSign         () { return flights.begin()->getCallSign (); };
+  string      getRegistration     () { return registration;};
+  bool getHeavy                   () { return heavy; };
+  bool operator< (const FGAISchedule &other) const { return (distanceToUser < other.distanceToUser); };
+  //void * getAiRef                 () { return AIManagerRef; };
+  //FGAISchedule* getAddress        () { return this;};
   // More member functions follow later
 
 };
 
-typedef vector<FGAISchedule>           ScheduleVector;
-typedef vector<FGAISchedule>::iterator ScheduleVectorIterator;
+typedef vector<FGAISchedule >           ScheduleVector;
+typedef vector<FGAISchedule >::iterator ScheduleVectorIterator;
 
 #endif
 

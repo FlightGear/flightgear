@@ -232,8 +232,8 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
         if ( ident == "#" || ident == "//" ) {
             metar_in >> skipeol;
         } else {
-            FGAirport a = airports->search( ident );
-            if ( a._id == ident ) {
+            const FGAirport &a = airports->search( ident );
+            if ( a.getId() == ident ) {
                 airports->has_metar( ident );
             }
         }

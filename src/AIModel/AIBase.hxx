@@ -26,6 +26,7 @@
 #include <simgear/constants.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -75,7 +76,9 @@ typedef struct {
    double radius;             // used by ship ojects, in feet
    double x_offset;           // used by ship ojects, in meters
    double y_offset;           // used by ship ojects, in meters
-   double z_offset;           // used by ship ojects, in meters    
+   double z_offset;           // used by ship ojects, in meters   
+  string acType;              // used by aircraft objects
+  string company;             // used by aircraft objects
 } FGAIModelEntity;
 
 

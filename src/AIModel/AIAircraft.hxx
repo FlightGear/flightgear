@@ -48,7 +48,6 @@ private:
 	} PERF_STRUCT;
 	
 public:
-
         enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER, TANKER};
         static const PERF_STRUCT settings[];
 	
@@ -68,7 +67,13 @@ public:
         void YawTo(double angle);
         void ClimbTo(double altitude);
         void TurnTo(double heading);
-        void ProcessFlightPlan( double dt );
+        void ProcessFlightPlan( double dt, time_t now );
+  void getGroundElev(double dt);
+  void loadNextLeg  ();
+
+  void setAcType(string ac) { acType = ac; };
+  void setCompany(string comp) { company = comp;};
+  //void setSchedule(FGAISchedule *ref) { trafficRef = ref;};
 
         inline void SetTanker(bool setting) { isTanker = setting; };
 
@@ -78,6 +83,10 @@ private:
         bool hdg_lock;
         bool alt_lock;
         double dt_count;  
+  double dt_elev_count;
+  double headingChangeRate;
+  double groundTargetSpeed;
+  double groundOffset;
         double dt; 
 
         const PERF_STRUCT *performance;
@@ -87,8 +96,15 @@ private:
 
 	void Run(double dt);
         double sign(double x);	
+  
+  string acType;
+  string company;
+  int spinCounter;
+  double prevSpeed;
+  double prev_dist_to_go;
 
         bool _getGearDown() const;
+  bool reachedWaypoint;
 };
 
 

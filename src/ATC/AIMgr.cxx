@@ -133,7 +133,7 @@ void FGAIMgr::init() {
 				f_ident = file.substr(0, pos);
 				FGAirport a;
 				if(dclFindAirportID(f_ident, &a)) {
-					SGBucket sgb(a._longitude, a._latitude);
+					SGBucket sgb(a.getLongitude(), a.getLatitude());
 					int idx = sgb.gen_index();
 					if(facilities.find(idx) != facilities.end()) {
 						facilities[idx]->push_back(f_ident);

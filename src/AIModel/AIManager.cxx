@@ -156,6 +156,8 @@ FGAIManager::createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref) {
         } else {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         }
+	ai_plane->setAcType(entity->acType);
+	ai_plane->setCompany(entity->company);
         ai_plane->setHeading(entity->heading);
         ai_plane->setSpeed(entity->speed);
         ai_plane->setPath(entity->path.c_str());

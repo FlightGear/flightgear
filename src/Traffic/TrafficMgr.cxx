@@ -53,6 +53,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/xml/easyxml.hxx>
 
+#include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/AIBase.hxx>
 #include <Airports/simple.hxx>
@@ -72,22 +73,45 @@ FGTrafficManager::FGTrafficManager()
 
 
 void FGTrafficManager::init()
-{
+{ 
+  //cerr << "Initializing Schedules" << endl;
+  time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   currAircraft = scheduledAircraft.begin();
+  while (currAircraft != scheduledAircraft.end())
+    {
+      if (!(currAircraft->init()))
+	{
+	  currAircraft=scheduledAircraft.erase(currAircraft);
+	  //cerr << "Erasing " << currAircraft->getRegistration() << endl;
+	  currAircraft--;
+	}
+      else 
+	{
+	  currAircraft++;
+	}
+    }
+  //cerr << "Sorting by distance " << endl;
+  sort(scheduledAircraft.begin(), scheduledAircraft.end());
+  currAircraft = scheduledAircraft.begin();
+  currAircraftClosest = scheduledAircraft.begin();
+  //cerr << "Done initializing schedules" << endl;
 }
 
 void FGTrafficManager::update(double something)
 {
-
-  //static const SGPropertyNode *warp = globals->get_props()->getNode("/sim/time/warp");
-  
-  //time_t now = time(NULL) + globals->get_warp();
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-  //  cerr << "TrafficManager update" << globals->get_warp() << endl;
-    if(currAircraft == scheduledAircraft.end())
+  if(currAircraft == scheduledAircraft.end())
+    {
+      //cerr << "resetting schedule " << endl;
       currAircraft = scheduledAircraft.begin();
-    currAircraft->update(now);
-    currAircraft++;
+    }
+  if (!(currAircraft->update(now)))
+    {
+      // after proper initialization, we shouldnt get here.
+      // But let's make sure
+      cerr << "Failed to update aircraft schedule in traffic manager" << endl;
+    }
+  currAircraft++;
 }
 
 void FGTrafficManager::release(void *id)
@@ -146,6 +170,18 @@ void  FGTrafficManager::endElement (const char * name) {
     livery = value;
   else if (element == string("registration"))
     registration = value;
+  else if (element == string("airline"))
+    airline = value;
+  else if (element == string("actype"))
+    acType = value;
+  else if (element == string("flighttype"))
+    flighttype = value;
+  else if (element == string("radius"))
+    radius = atoi(value.c_str());
+  else if (element == string("offset"))
+    offset = atoi(value.c_str());
+  else if (element == string("performance-class"))
+    m_class = value;
   else if (element == string("heavy"))
     {
       if(value == string("true"))
@@ -195,10 +231,16 @@ void  FGTrafficManager::endElement (const char * name) {
     {
       //cerr << "Pushing back aircraft " << registration << endl;
       scheduledAircraft.push_back(FGAISchedule(mdl, 
-						livery, 
-						registration, 
-						heavy, 
-						flights));
+					       livery, 
+					       registration, 
+					       heavy,
+					       acType, 
+					       airline, 
+					       m_class, 
+					       flighttype,
+					       radius,
+					       offset,
+					       flights));
       while(flights.begin() != flights.end())
 	flights.pop_back();
     }

@@ -399,11 +399,11 @@ FGMetarEnvironmentCtrl::init ()
             ->search( longitude->getDoubleValue(),
                       latitude->getDoubleValue(),
                       true );
-        FGMetarResult result = fetch_data( a._id );
+        FGMetarResult result = fetch_data( a.getId() );
         if ( result.m != NULL ) {
-            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a._id);
+            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.getId());
             last_apt = a;
-            _icao = a._id;
+            _icao = a.getId();
             search_elapsed = 0.0;
             fetch_elapsed = 0.0;
             update_metar_properties( result.m );
@@ -413,8 +413,8 @@ FGMetarEnvironmentCtrl::init ()
         } else {
             // mark as no metar so it doesn't show up in subsequent
             // searches.
-            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a._id );
-            globals->get_airports()->no_metar( a._id );
+            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a.getId() );
+            globals->get_airports()->no_metar( a.getId() );
         }
     }
 }
@@ -456,13 +456,13 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
             ->search( longitude->getDoubleValue(),
                       latitude->getDoubleValue(),
                       true );
-        if ( last_apt._id != a._id
+        if ( last_apt.getId() != a.getId()
              || fetch_elapsed > same_station_interval_sec )
         {
-            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a._id);
-            request_queue.push( a._id );
+            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.getId());
+            request_queue.push( a.getId() );
             last_apt = a;
-            _icao = a._id;
+            _icao = a.getId();
             search_elapsed = 0.0;
             fetch_elapsed = 0.0;
         } else {
@@ -534,7 +534,7 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
 
     // fetch station elevation if exists
     FGAirport a = globals->get_airports()->search( icao );
-    station_elevation_ft = a._elevation;
+    station_elevation_ft = a.getElevation();
 
     // fetch current metar data
     try {

@@ -460,7 +460,7 @@ void FGATCDialog::FreqDisplay(string ident) {
     FGAirport a;
     if ( dclFindAirportID( ident, &a ) ) {
 		comm_list_type stations;
-		int found = current_commlist->FindByPos(a._longitude, a._latitude, a._elevation, 20.0, &stations);
+		int found = current_commlist->FindByPos(a.getLongitude(), a.getLatitude(), a.getElevation(), 20.0, &stations);
 		if(found) {
 			ostringstream ostr;
 			comm_list_iterator itr = stations.begin();

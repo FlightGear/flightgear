@@ -668,7 +668,7 @@ int NewWaypoint( string Tgt_Alt )
 
       sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
 
-      SGWayPoint wp( a._longitude, a._latitude, alt,
+      SGWayPoint wp( a.getLongitude(), a.getLatitude(), alt,
                      SGWayPoint::WGS84, TgtAptId );
       rm->add_waypoint( wp );
 

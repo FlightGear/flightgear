@@ -65,11 +65,23 @@ FGAISchedule::FGAISchedule(string    mdl,
 			   string    liv, 
 			   string    reg, 
 			   bool      hvy, 
+			   string act, 
+			   string arln, 
+			   string mclass, 
+			   string fltpe,
+			   double rad,
+			   double grnd,
 			   FGScheduledFlightVec flt)
 {
   modelPath    = mdl; 
   livery       = liv; 
   registration = reg;
+  acType       = act;
+  airline      = arln;
+  m_class      = mclass;
+  flightType   = fltpe;
+  radius       = rad;
+  groundOffset = grnd;
   heavy = hvy;
   for (FGScheduledFlightVecIterator i = flt.begin();
        i != flt.end();
@@ -89,15 +101,49 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
   lat          = other.lat;
   lon          = other.lon;
   AIManagerRef = other.AIManagerRef;
+  acType       = other.acType;
+  airline      = other.airline;
+  m_class      = other.m_class;
   firstRun     = other.firstRun;
+  radius       = other.radius;
+  groundOffset = other.groundOffset;
+  flightType   = other.flightType;
+  distanceToUser = other.distanceToUser;
 }
+
 
 FGAISchedule::~FGAISchedule()
 {
   
 } 
 
-void FGAISchedule::update(time_t now)
+bool FGAISchedule::init()
+{
+  //tm targetTimeDate;
+  //SGTime* currTimeDate = globals->get_time_params();
+
+  //tm *temp = currTimeDate->getGmt();
+  //char buffer[512];
+  //sgTimeFormatTime(&targetTimeDate, buffer);
+  //cout << "Scheduled Time " << buffer << endl; 
+  //cout << "Time :" << time(NULL) << " SGTime : " << sgTimeGetGMT(temp) << endl;
+  for (FGScheduledFlightVecIterator i = flights.begin(); 
+       i != flights.end(); 
+       i++)
+    {
+      //i->adjustTime(now);
+      if (!(i->initializeAirports()))
+	return false;
+    } 
+  //sort(flights.begin(), flights.end());
+  // Since time isn't initialized yet when this function is called,
+  // Find the closest possible airport.
+  // This should give a reasonable initialization order. 
+  setClosestDistanceToUser();
+  return true;
+}
+
+bool FGAISchedule::update(time_t now)
 {
   FGAirport *dep;
   FGAirport *arr;
@@ -110,7 +156,7 @@ void FGAISchedule::update(time_t now)
   string airport;
   
   double courseToUser,   courseToDest;
-  double distanceToUser, distanceToDest;
+  double distanceToDest;
   double speed;
 
   Point3D temp;
@@ -123,7 +169,7 @@ void FGAISchedule::update(time_t now)
     userLongitude;
 
   if (fgGetBool("/sim/traffic-manager/enabled") == false)
-    return;
+    return true;
   
   aimgr = (FGAIManager *) globals-> get_subsystem("ai_model");  
   // Before the flight status of this traffic entity is updated 
@@ -142,11 +188,11 @@ void FGAISchedule::update(time_t now)
   if (firstRun)
     {
       for (FGScheduledFlightVecIterator i = flights.begin(); 
-	   i != flights.end(); 
-	   i++)
-	{
-	  i->adjustTime(now);
-	}
+  	   i != flights.end(); 
+  	   i++)
+  	{
+  	  i->adjustTime(now);
+  	}
       firstRun = false;
     }
   
@@ -168,13 +214,13 @@ void FGAISchedule::update(time_t now)
       userLatitude  = fgGetDouble("/position/latitude-deg");
       userLongitude = fgGetDouble("/position/longitude-deg");
 
-
+      //cerr << "Estimated minimum distance to user: " << distanceToUser << endl;
       // This flight entry is entirely in the past, do we need to 
       // push it forward in time to the next scheduled departure. 
       if ((i->getDepartureTime() < now) && (i->getArrivalTime() < now))
 	{
 	  i->update();
-	  return;
+	  return true;
 	}
 
       // Departure time in the past and arrival time in the future.
@@ -189,19 +235,21 @@ void FGAISchedule::update(time_t now)
 	{
 	  dep = i->getDepartureAirport();
 	  arr = i->getArrivalAirport  ();
+	  if (!(dep && arr))
+	    return false;
 	  
-	  temp = sgPolarToCart3d(Point3D(dep->_longitude * 
+	  temp = sgPolarToCart3d(Point3D(dep->getLongitude() * 
 					 SG_DEGREES_TO_RADIANS, 
-					 dep->_latitude  * 
+					 dep->getLatitude()  * 
 					 SG_DEGREES_TO_RADIANS, 
 					 1.0));
 	  a[0] = temp.x();
 	  a[1] = temp.y();
 	  a[2] = temp.z();
 	  
-	  temp = sgPolarToCart3d(Point3D(arr->_longitude *
+	  temp = sgPolarToCart3d(Point3D(arr->getLongitude() *
 					 SG_DEGREES_TO_RADIANS,
-					 arr->_latitude  *
+					 arr->getLatitude()  *
 					 SG_DEGREES_TO_RADIANS, 
 					 1.0));
 	  b[0] = temp.x();
@@ -219,9 +267,21 @@ void FGAISchedule::update(time_t now)
 	  // total time enroute and elapsed time enroute. 
  
 	  totalTimeEnroute     = i->getArrivalTime() - i->getDepartureTime();
-	  elapsedTimeEnroute   = now - i->getDepartureTime();
-	  remainingTimeEnroute = i->getArrivalTime()   - now;  
-	  
+	  if (now > i->getDepartureTime())
+	    {
+	      //err << "Lat = " << lat << ", lon = " << lon << endl;
+	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
+	      elapsedTimeEnroute   = now - i->getDepartureTime();
+	      remainingTimeEnroute = i->getArrivalTime()   - now;  
+	    }
+	  else
+	    {
+	      lat = dep->getLatitude();
+	      lon = dep->getLongitude();
+	      elapsedTimeEnroute = 0;
+	      remainingTimeEnroute = totalTimeEnroute;
+	    }
+	  	  
 	  angle *= ( (double) elapsedTimeEnroute/ (double) totalTimeEnroute);
 	  
 	  
@@ -236,23 +296,21 @@ void FGAISchedule::update(time_t now)
 		  newPos[j] += matrix[j][k]*a[k];
 		}
 	    }
-
+	  
 	  temp = sgCartToPolar3d(Point3D(newPos[0], newPos[1],newPos[2]));
-
 	  if (now > i->getDepartureTime())
 	    {
 	      //cerr << "Lat = " << lat << ", lon = " << lon << endl;
 	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
 	      lat = temp.lat() * SG_RADIANS_TO_DEGREES;
 	      lon = temp.lon() * SG_RADIANS_TO_DEGREES; 
-	      //err << "Lat = " << lat << ", lon = " << lon << endl;
-	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
 	    }
 	  else
 	    {
-	      lat = dep->_latitude;
-	      lon = dep->_longitude;
+	      lat = dep->getLatitude();
+	      lon = dep->getLongitude();
 	    }
+	  
 	  
 	  SGWayPoint current  (lon,
 			       lat,
@@ -260,8 +318,8 @@ void FGAISchedule::update(time_t now)
 	  SGWayPoint user (   userLongitude,
 			      userLatitude,
 			      i->getCruiseAlt());
-	  SGWayPoint dest (   arr->_longitude,
-			      arr->_latitude,
+	  SGWayPoint dest (   arr->getLongitude(),
+			      arr->getLatitude(),
 			      i->getCruiseAlt());
 	  // We really only need distance to user
 	  // and course to destination 
@@ -278,9 +336,9 @@ void FGAISchedule::update(time_t now)
 	  //cerr << registration << " is currently enroute from " 
 	  //   << dep->_id << " to " << arr->_id << "distance : " 
           //   << distanceToUser*SG_METER_TO_NM << endl;
-	  if ((distanceToUser*SG_METER_TO_NM) < 500.0)
+	  if ((distanceToUser*SG_METER_TO_NM) < TRAFFICTOAIDIST)
 	    {
-	      string flightPlanName = dep->_id + string("-") + arr->_id + 
+	      string flightPlanName = dep->getId() + string("-") + arr->getId() + 
 		string(".xml");
 	      int alt;
 	      //if  ((i->getDepartureTime() < now))
@@ -294,32 +352,43 @@ void FGAISchedule::update(time_t now)
 
               FGAIModelEntity entity;
 
-              entity.m_class = "jet_transport";
+              entity.m_class = m_class; //"jet_transport";
+	      entity.company = airline; //i->getAirline();
+	      entity.acType  = acType; //i->getAcType();
               entity.path = modelPath.c_str();
               entity.flightplan = flightPlanName.c_str();
               entity.latitude = lat;
               entity.longitude = lon;
               entity.altitude = i->getCruiseAlt() *100; // convert from FL to feet
-              entity.speed = 450;
-	      entity.fp = new FGAIFlightPlan(&entity, courseToDest, i->getDepartureTime(), dep, arr);
-
+              entity.speed = speed;
+	      entity.roll  = 0.0;
+	      entity.fp = new FGAIFlightPlan(&entity, courseToDest, i->getDepartureTime(), dep, 
+					     arr,true, radius, flightType, acType, airline);
+	      
 	      // Fixme: A non-existent model path results in an
 	      // abort, due to an unhandled exeption, in fg main loop.
 	      AIManagerRef = aimgr->createAircraft( &entity, this);
-	      //cerr << "Created: " << AIManagerRef << endl;
+	      //cerr << "Class: " << m_class << ". acType: " << acType << ". Airline: " << airline << ". Speed = " << speed << ". From " << dep->getId() << " to " << arr->getId() << ". Time Fraction = " << (remainingTimeEnroute/(double) totalTimeEnroute) << endl;
+	      //cerr << "Latitude : " << lat << ". Longitude : " << lon << endl;
+	      //cerr << "Dep      : " << dep->getLatitude()<< ", "<< dep->getLongitude() << endl;
+	      //cerr << "Arr      : " << arr->getLatitude()<< ", "<< arr->getLongitude() << endl;
+	      //cerr << "Time remaining = " << (remainingTimeEnroute/3600.0) << endl;
+	      //cerr << "Total time     = " << (totalTimeEnroute/3600.0) << endl;
+	      //cerr << "Distance remaining = " << distanceToDest*SG_METER_TO_NM << endl;
+	      
 	    }
-	  return;
-	}
+	  return true;
+    }
 
       // Both departure and arrival time are in the future, so this
       // the aircraft is parked at the departure airport.
       // Currently this status is mostly ignored, but in future
       // versions, code should go here that -if within user range-
       // positions these aircraft at parking locations at the airport.
-      if ((i->getDepartureTime() > now) && (i->getArrivalTime() > now))
+  if ((i->getDepartureTime() > now) && (i->getArrivalTime() > now))
 	{ 
 	  dep = i->getDepartureAirport();
-	  return;
+	  return true;
 	} 
     }
 }
@@ -331,3 +400,71 @@ void FGAISchedule::next()
   sort(flights.begin(), flights.end());
 }
 
+double FGAISchedule::getSpeed()
+{
+  double courseToUser,   courseToDest;
+  double distanceToUser, distanceToDest;
+  double speed, remainingTimeEnroute;
+  FGAirport *dep, *arr;
+
+  FGScheduledFlightVecIterator i = flights.begin();
+  dep = i->getDepartureAirport();
+  arr = i->getArrivalAirport  ();
+  if (!(dep && arr))
+    return 0;
+ 
+  SGWayPoint dest (   dep->getLongitude(),
+		      dep->getLatitude(),
+		      i->getCruiseAlt()); 
+  SGWayPoint curr (    arr->getLongitude(),
+		      arr->getLatitude(),
+		      i->getCruiseAlt());
+  remainingTimeEnroute     = i->getArrivalTime() - i->getDepartureTime();
+  dest.CourseAndDistance(curr, &courseToDest, &distanceToDest);
+  speed =  (distanceToDest*SG_METER_TO_NM) / 
+    ((double) remainingTimeEnroute/3600.0);
+  return speed;
+}
+
+
+void FGAISchedule::setClosestDistanceToUser()
+{
+  
+  
+  double course;
+  double dist;
+
+  Point3D temp;
+  time_t 
+    totalTimeEnroute, 
+    elapsedTimeEnroute;
+ 
+  double userLatitude  = fgGetDouble("/position/latitude-deg");
+  double userLongitude = fgGetDouble("/position/longitude-deg");
+
+  FGAirport *dep;
+  
+  distanceToUser = HUGE;
+  FGScheduledFlightVecIterator i = flights.begin();
+  while (i != flights.end())
+    {
+      dep = i->getDepartureAirport();
+      //if (!(dep))
+      //return HUGE;
+      
+      SGWayPoint user (   userLongitude,
+			  userLatitude,
+			  i->getCruiseAlt());
+      SGWayPoint current (dep->getLongitude(),
+			  dep->getLatitude(),
+			  0);
+      user.CourseAndDistance(current, &course, &dist);
+      if (dist < distanceToUser)
+	{
+	  distanceToUser = dist;
+	  //cerr << "Found closest distance to user for " << registration << " to be " << distanceToUser << " at airport " << dep->getId() << endl;
+	}
+      i++;
+    }
+  //return distToUser;
+}

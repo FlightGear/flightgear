@@ -96,8 +96,8 @@ bool fgNavDBInit( FGAirportList *airports,
             // cout << r->get_type() << " " << r->get_apt_id() << " zero elev"
             //      << endl;
             FGAirport a = airports->search( r->get_apt_id() );
-            if ( a._id == r->get_apt_id() ) {
-                r->set_elev_ft( a._elevation );
+            if ( a.getId() == r->get_apt_id() ) {
+                r->set_elev_ft( a.getElevation() );
                 // cout << "  setting to " << a.elevation << endl;
             }
         }

@@ -51,15 +51,17 @@ class FGScheduledFlight
 private:
   string callsign;
   string fltRules;
-  FGAirport departurePort;
-  FGAirport arrivalPort;
+  FGAirport *departurePort;
+  FGAirport *arrivalPort;
+  string depId;
+  string arrId;
   time_t departureTime;
   time_t arrivalTime;
   time_t repeatPeriod;
   int cruiseAltitude;
   bool initialized;
 
-  void initializeAirports();
+ 
  
 public:
   FGScheduledFlight();
@@ -77,6 +79,7 @@ public:
   ~FGScheduledFlight();
 
   void update();
+   bool initializeAirports();
   
   void adjustTime(time_t now);
 
@@ -94,7 +97,7 @@ public:
   };
 
   time_t processTimeString(string time);
-  
+  string getCallSign() {return callsign; };
 };
 
 typedef vector<FGScheduledFlight>           FGScheduledFlightVec;

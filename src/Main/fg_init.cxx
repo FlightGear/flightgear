@@ -636,7 +636,7 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 
         result = globals->get_airports()->search( id );
 
-        if ( result._id.empty() ) {
+        if ( result.getId().empty() ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
                     "Failed to find " << id << " in basic.dat.gz" );
             return false;
@@ -649,8 +649,8 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 
     SG_LOG( SG_GENERAL, SG_INFO,
             "Position for " << id << " is ("
-            << a->_longitude << ", "
-            << a->_latitude << ")" );
+            << a->getLongitude() << ", "
+            << a->getLatitude() << ")" );
 
     return true;
 }
@@ -665,7 +665,7 @@ static double fgGetAirportElev( const string& id ) {
             "Finding elevation for airport: " << id );
 
     if ( fgFindAirportID( id, &a ) ) {
-        return a._elevation;
+        return a.getElevation();
     } else {
         return -9999.0;
     }
@@ -718,9 +718,9 @@ static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
     float fudge_lat = .003f - fudge_lon;
 
     if ( fgFindAirportID( id, &a ) ) {
-        fgSetDouble("/sim/tower/longitude-deg",  a._longitude + fudge_lon);
-        fgSetDouble("/sim/tower/latitude-deg",  a._latitude + fudge_lat);
-        fgSetDouble("/sim/tower/altitude-ft", a._elevation + towerheight);
+        fgSetDouble("/sim/tower/longitude-deg",  a.getLongitude() + fudge_lon);
+        fgSetDouble("/sim/tower/latitude-deg",  a.getLatitude() + fudge_lat);
+        fgSetDouble("/sim/tower/altitude-ft", a.getElevation() + towerheight);
         return true;
     } else {
         return false;
@@ -1715,11 +1715,11 @@ bool fgInitSubsystems() {
      globals->add_subsystem("Traffic Manager", new FGTrafficManager);
 	     FGTrafficManager *dispatcher = 
 	     (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
-	     SGPath path =globals->get_fg_root();
-	     path.append("Traffic/fgtraffic.xml");
+	     SGPath path = globals->get_fg_root();
+	     path.append("/Traffic/fgtraffic.xml");
      readXML(path.str(),
-	     *dispatcher);
-     globals->get_subsystem("Traffic Manager")->init();
+	*dispatcher);
+	     //globals->get_subsystem("Traffic Manager")->init();
 
     globals->add_subsystem("instrumentation", new FGInstrumentMgr);
     globals->add_subsystem("systems", new FGSystemMgr);

@@ -42,13 +42,14 @@ class FGTrafficManager : public SGSubsystem, public XMLVisitor
 {
 private:
   ScheduleVector scheduledAircraft;
-  ScheduleVectorIterator currAircraft;
+  ScheduleVectorIterator currAircraft, currAircraftClosest;
   string value;
 
   string mdl, livery, registration, callsign, fltrules, 
     port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
-    repeat;
+    repeat, acType, airline, m_class, flighttype;
   int cruiseAlt;
+  double radius, offset;
   bool heavy;
 
   IdList releaseList;

@@ -314,7 +314,7 @@ bool dclFindAirportID( const string& id, FGAirport *a ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
 
         result = globals->get_airports()->search( id );
-        if ( result._id.empty() ) {
+        if ( result.getId().empty() ) {
             SG_LOG( SG_GENERAL, SG_WARN,
                     "Failed to find " << id << " in basic.dat.gz" );
             return false;
@@ -327,8 +327,8 @@ bool dclFindAirportID( const string& id, FGAirport *a ) {
 
     SG_LOG( SG_GENERAL, SG_INFO,
             "Position for " << id << " is ("
-            << a->_longitude << ", "
-            << a->_latitude << ")" );
+            << a->getLongitude() << ", "
+            << a->getLatitude() << ")" );
 
     return true;
 }
@@ -342,7 +342,7 @@ double dclGetAirportElev( const string& id ) {
             "Finding elevation for airport: " << id );
 
     if ( dclFindAirportID( id, &a ) ) {
-        return a._elevation * SG_FEET_TO_METER;
+        return a.getElevation() * SG_FEET_TO_METER;
     } else {
         return -9999.0;
     }
@@ -357,7 +357,7 @@ Point3D dclGetAirportPos( const string& id ) {
             "Finding position for airport: " << id );
 
     if ( dclFindAirportID( id, &a ) ) {
-        return Point3D(a._longitude, a._latitude, a._elevation);
+        return Point3D(a.getLongitude(), a.getLatitude(), a.getElevation());
     } else {
         return Point3D(0.0, 0.0, -9999.0);
     }

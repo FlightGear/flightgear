@@ -81,6 +81,8 @@ FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)
   callsign        = other.callsign;
   fltRules        = other.fltRules;
   departurePort   = other.departurePort;
+  depId           = other.depId;
+  arrId           = other.arrId;
   departureTime   = other.departureTime;
   cruiseAltitude  = other.cruiseAltitude;
   arrivalPort     = other.arrivalPort;
@@ -100,8 +102,11 @@ FGScheduledFlight::FGScheduledFlight(string cs,
 {
   callsign          = cs;
   fltRules          = fr;
-  departurePort._id  = depPrt;
-  arrivalPort._id    = arrPrt;
+  //departurePort.setId(depPrt);
+  //arrivalPort.setId(arrPrt);
+  depId = depPrt;
+  arrId = arrPrt;
+  //cerr << "Constructor: departure " << depId << ". arrival " << arrId << endl;
   //departureTime     = processTimeString(deptime);
   //arrivalTime       = processTimeString(arrtime);
   cruiseAltitude    = cruiseAlt;
@@ -225,7 +230,10 @@ FGAirport *FGScheduledFlight::getDepartureAirport()
     {
       initializeAirports();
     }
-  return &departurePort;
+  if (initialized)
+    return departurePort;
+  else
+    return 0;
 }
 FGAirport * FGScheduledFlight::getArrivalAirport  ()
 {
@@ -233,7 +241,10 @@ FGAirport * FGScheduledFlight::getArrivalAirport  ()
     {
       initializeAirports();
     }
-  return &arrivalPort;
+   if (initialized)
+     return arrivalPort;
+   else
+     return 0;
 }
 
 // Upon the first time of requesting airport information
@@ -243,15 +254,24 @@ FGAirport * FGScheduledFlight::getArrivalAirport  ()
 // but we should improve that. The best idea is probably to cancel
 // this flight entirely by removing it from the schedule, if one
 // of the airports cannot be found. 
-void FGScheduledFlight::initializeAirports()
+bool FGScheduledFlight::initializeAirports()
 {
-  if(!(fgFindAirportID(arrivalPort._id, &arrivalPort  )))
+  //cerr << "Initializing using : " << depId << " " << arrId << endl;
+  departurePort = globals->get_airports()->search( depId, departurePort );
+  if(departurePort->getId().empty())
     {
-      //cerr << ": Could not find " << arrivalPort.id << endl; 
+      cerr << "Could not find " << depId << endl; 
+      return false;
     }
-  if(!(fgFindAirportID(departurePort._id, &departurePort)))
+  arrivalPort = globals->get_airports()->search(arrId, arrivalPort);
+  if(arrivalPort->getId().empty())
     {
-      //cerr << ": Could not find " << departurePort.id << endl;
+      cerr << "Could not find " << arrId << endl;
+      return false;
     }
+
+  //cerr << "Found : " << departurePort->getId() << endl;
+  //cerr << "Found : " << arrivalPort->getId() << endl;
   initialized = true;
+  return true;
 }

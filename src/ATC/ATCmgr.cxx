@@ -221,9 +221,9 @@ bool FGATCMgr::AIRegisterAirport(string ident) {
 			//cout << "ident = " << ident << '\n';
 			AirportATC *a = new AirportATC;
 			// I'm not entirely sure that this AirportATC structure business is actually needed - it just duplicates what we can find out anyway!
-			a->lon = ap._longitude;
-			a->lat = ap._latitude;
-			a->elev = ap._elevation;
+			a->lon = ap.getLongitude();
+			a->lat = ap.getLatitude();
+			a->elev = ap.getElevation();
 			a->atis_freq = GetFrequency(ident, ATIS);
 			//cout << "ATIS freq = " << a->atis_freq << '\n';
 			a->atis_active = false;
@@ -270,9 +270,9 @@ bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 		if(dclFindAirportID(ident, &ap)) {
 			AirportATC *a = new AirportATC;
 			// I'm not entirely sure that this AirportATC structure business is actually needed - it just duplicates what we can find out anyway!
-			a->lon = ap._longitude;
-			a->lat = ap._latitude;
-			a->elev = ap._elevation;
+			a->lon = ap.getLongitude();
+			a->lat = ap.getLatitude();
+			a->elev = ap.getElevation();
 			a->atis_freq = GetFrequency(ident, ATIS);
 			a->atis_active = false;
 			a->tower_freq = GetFrequency(ident, TOWER);

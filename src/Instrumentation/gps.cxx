@@ -325,12 +325,12 @@ GPS::update (double delta_time_sec)
             FGAirport a;
             //cout << "Airport found" << endl;
             a = globals->get_airports()->search(longitude_deg, latitude_deg, false);
-            _wp1_ID_node->setStringValue(a._id.c_str());
-            wp1_longitude_deg = a._longitude;
-            wp1_latitude_deg = a._latitude;
-            _wp1_name_node->setStringValue(a._name.c_str());
+            _wp1_ID_node->setStringValue(a.getId().c_str());
+            wp1_longitude_deg = a.getLongitude();
+            wp1_latitude_deg = a.getLatitude();
+            _wp1_name_node->setStringValue(a.getName().c_str());
             _get_nearest_airport_node->setBoolValue(false);
-            _last_wp1_ID = wp1_ID = a._id.c_str();
+            _last_wp1_ID = wp1_ID = a.getId().c_str();
         }
         
         // If the waypoint 0 ID has changed, try to find the new ID
@@ -341,11 +341,11 @@ GPS::update (double delta_time_sec)
             if (waypont_type == "airport") {
                 FGAirport a;
                 a = globals->get_airports()->search( wp0_ID );
-                if ( a._id == wp0_ID ) {
+                if ( a.getId() == wp0_ID ) {
                     //cout << "Airport found" << endl;
-                    wp0_longitude_deg = a._longitude;
-                    wp0_latitude_deg = a._latitude;
-                    _wp0_name_node->setStringValue(a._name.c_str());
+                    wp0_longitude_deg = a.getLongitude();
+                    wp0_latitude_deg = a.getLatitude();
+                    _wp0_name_node->setStringValue(a.getName().c_str());
                 }
             }
             else if (waypont_type == "nav") {
@@ -380,11 +380,11 @@ GPS::update (double delta_time_sec)
             if (waypont_type == "airport") {
                 FGAirport a;
                 a = globals->get_airports()->search( wp1_ID );
-                if ( a._id == wp1_ID ) {
+                if ( a.getId() == wp1_ID ) {
                     //cout << "Airport found" << endl;
-                    wp1_longitude_deg = a._longitude;
-                    wp1_latitude_deg = a._latitude;
-                    _wp1_name_node->setStringValue(a._name.c_str());
+                    wp1_longitude_deg = a.getLongitude();
+                    wp1_latitude_deg = a.getLatitude();
+                    _wp1_name_node->setStringValue(a.getName().c_str());
                 }
             }
             else if (waypont_type == "nav") {

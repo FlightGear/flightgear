@@ -45,6 +45,8 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
 {
   int i;
   start_time = 0;
+  leg = 10;
+  gateId = 0;
   SGPath path( globals->get_fg_root() );
   path.append( ("/Data/AI/FlightPlans/" + filename).c_str() );
   SGPropertyNode root;
@@ -55,7 +57,7 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
       SG_LOG(SG_GENERAL, SG_ALERT,
        "Error reading AI flight plan: " << path.str());
        // cout << path.str() << endl;
-      return;
+     return;
   }
 
   SGPropertyNode * node = root.getNode("flightplan");
@@ -94,8 +96,15 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 			       double course,
 			       time_t start,
 			       FGAirport *dep,
-			       FGAirport *arr)
+			       FGAirport *arr,
+			       bool firstLeg,
+			       double radius,
+			       string fltType,
+			       string acType,
+			       string airline)
 {
+  leg = 10;
+  gateId=0;
   start_time = start;
   bool useInitialWayPoint = true;
   bool useCurrentWayPoint = false;
@@ -116,55 +125,86 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
       useCurrentWayPoint = true;
     }
 
-  try {
-    readProperties(path.str(), &root);
-    
-    SGPropertyNode * node = root.getNode("flightplan");
-  
-    //waypoints.push_back( init_waypoint );
-    for (int i = 0; i < node->nChildren(); i++) { 
-      //cout << "Reading waypoint " << i << endl;
-      waypoint* wpt = new waypoint;
-      SGPropertyNode * wpt_node = node->getChild(i);
-      wpt->name      = wpt_node->getStringValue("name", "END");
-      wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
-      wpt->longitude = wpt_node->getDoubleValue("lon", 0);
-      wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
-      wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
-      //wpt->speed     = speed;
-      wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
-      wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
-      wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
-      
-      if (wpt->name == "END") wpt->finished = true;
-      else wpt->finished = false;
-      waypoints.push_back(wpt);
+  if (path.exists()) 
+    {
+      try 
+	{
+	  readProperties(path.str(), &root);
+	  
+	  SGPropertyNode * node = root.getNode("flightplan");
+	  
+	  //waypoints.push_back( init_waypoint );
+	  for (int i = 0; i < node->nChildren(); i++) { 
+	    //cout << "Reading waypoint " << i << endl;
+	    waypoint* wpt = new waypoint;
+	    SGPropertyNode * wpt_node = node->getChild(i);
+	    wpt->name      = wpt_node->getStringValue("name", "END");
+	    wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
+	    wpt->longitude = wpt_node->getDoubleValue("lon", 0);
+	    wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
+	    wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
+	    //wpt->speed     = speed;
+	    wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
+	    wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
+	    wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
+	    
+	    if (wpt->name == "END") wpt->finished = true;
+	    else wpt->finished = false;
+	    waypoints.push_back(wpt);
+	  }
+	}
+      catch (const sg_exception &e) {
+	SG_LOG(SG_GENERAL, SG_ALERT,
+	       "Error reading AI flight plan: ");
+	cerr << "Errno = " << errno << endl;
+	if (errno == ENOENT)
+	  {
+	    cerr << "Reason: No such file or directory" << endl;
+	  }
+      }
     }
-  }
-  catch (const sg_exception &e) {
-    //SG_LOG(SG_GENERAL, SG_ALERT,
-    // "Error reading AI flight plan: ");
-    // cout << path.str() << endl;
-    // cout << "Trying to create this plan dynamically" << endl;
-    // cout << "Route from " << dep->id << " to " << arr->id << endl;
-       create(dep,arr, entity->altitude, entity->speed);
-       // Now that we have dynamically created a flight plan,
-       // we need to add some code that pops any waypoints already past.
-       //return;
-  }
-  waypoint* init_waypoint   = new waypoint;
-  init_waypoint->name       = string("initial position");
-  init_waypoint->latitude   = entity->latitude;
-  init_waypoint->longitude  = entity->longitude;
-  init_waypoint->altitude   = entity->altitude;
-  init_waypoint->speed      = entity->speed;
-  init_waypoint->crossat    = - 10000;
-  init_waypoint->gear_down  = false;
-  init_waypoint->flaps_down = false;
-  init_waypoint->finished   = false;
-
-  wpt_vector_iterator i = waypoints.begin();
-  while (i != waypoints.end())
+  else
+    {
+      // cout << path.str() << endl;
+      // cout << "Trying to create this plan dynamically" << endl;
+      // cout << "Route from " << dep->id << " to " << arr->id << endl;
+      time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+      time_t timeDiff = now-start; 
+      leg = 1;
+      if ((timeDiff > 300) && (timeDiff < 1200))
+	leg = 2;
+      else if ((timeDiff >= 1200) && (timeDiff < 1500))
+	leg = 3;
+      else if ((timeDiff >= 1500) && (timeDiff < 2000))
+	leg = 4;
+      else if (timeDiff >= 2000)
+	leg = 5;
+      
+      //cerr << "Set leg to : " << leg << endl;  
+      wpt_iterator = waypoints.begin();
+      create(dep,arr, leg, entity->altitude, entity->speed, entity->latitude, entity->longitude,
+	     firstLeg, radius, fltType, acType, airline);
+      wpt_iterator = waypoints.begin();
+      //cerr << "after create: " << (*wpt_iterator)->name << endl;
+      //leg++;
+      // Now that we have dynamically created a flight plan,
+      // we need to add some code that pops any waypoints already past.
+      //return;
+    }
+  /*
+    waypoint* init_waypoint   = new waypoint;
+    init_waypoint->name       = string("initial position");
+    init_waypoint->latitude   = entity->latitude;
+    init_waypoint->longitude  = entity->longitude;
+    init_waypoint->altitude   = entity->altitude;
+    init_waypoint->speed      = entity->speed;
+    init_waypoint->crossat    = - 10000;
+    init_waypoint->gear_down  = false;
+    init_waypoint->flaps_down = false;
+    init_waypoint->finished   = false;
+    
+    wpt_vector_iterator i = waypoints.begin();
+    while (i != waypoints.end())
     {
       //cerr << "Checking status of each waypoint: " << (*i)->name << endl;
        SGWayPoint first(init_waypoint->longitude, 
@@ -229,11 +269,13 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 	  //delete wpt;
 	  delete *(i);
 	  i = waypoints.erase(i);
+	  }
+	  
 	}
-    }
+  */
   //for (i = waypoints.begin(); i != waypoints.end(); i++)
   //  cerr << "Using waypoint : " << (*i)->name << endl;
-  wpt_iterator = waypoints.begin();
+  //wpt_iterator = waypoints.begin();
   //cout << waypoints.size() << " waypoints read." << endl;
 }
 
@@ -242,7 +284,13 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 
 FGAIFlightPlan::~FGAIFlightPlan()
 {
-  waypoints.clear();
+  deleteWaypoints();
+  //waypoints.clear();
+  //while (waypoints.begin() != waypoints.end())
+  //  {
+  //    delete *(waypoints.begin());
+  //    waypoints.erase (waypoints.begin());
+  //  }
 }
 
 
@@ -266,7 +314,9 @@ FGAIFlightPlan::getCurrentWaypoint( void )
 FGAIFlightPlan::waypoint*
 FGAIFlightPlan::getNextWaypoint( void )
 {
-  if (wpt_iterator == waypoints.end()) {
+  wpt_vector_iterator i = waypoints.end();
+  i--;  // end() points to one element after the last one. 
+  if (wpt_iterator == i) {
     return 0;
   } else {
     wpt_vector_iterator next = wpt_iterator;
@@ -274,14 +324,27 @@ FGAIFlightPlan::getNextWaypoint( void )
   }
 }
 
-void FGAIFlightPlan::IncrementWaypoint( void )
+void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 {
-  wpt_iterator++;
+  if (eraseWaypoints)
+    {
+      if (wpt_iterator == waypoints.begin())
+	wpt_iterator++;
+      else
+	{
+	  delete *(waypoints.begin());
+	  waypoints.erase(waypoints.begin());
+	  wpt_iterator = waypoints.begin();
+	  wpt_iterator++;
+	}
+    }
+  else
+    wpt_iterator++;
 }
 
 // gives distance in feet from a position to a waypoint
 double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp){
-   // get size of a degree at the present latitude
+   // get size of a degree2 at the present latitude
    // this won't work over large distances
    double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat / SG_RADIANS_TO_DEGREES);
    double ft_per_deg_lon = 365228.16 * cos(lat / SG_RADIANS_TO_DEGREES);
@@ -293,12 +356,28 @@ double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp){
 // sets distance in feet from a lead point to the current waypoint
 void FGAIFlightPlan::setLeadDistance(double speed, double bearing, 
                                      waypoint* current, waypoint* next){
-  double turn_radius = 0.1911 * speed * speed; // an estimate for 25 degrees bank
+  double turn_radius;
+    if (fabs(speed) > 1) 
+      turn_radius = 0.1911 * speed * speed; // an estimate for 25 degrees bank
+    else
+      turn_radius = 1.0;
+
   double inbound = bearing;
   double outbound = getBearing(current, next);
-  double diff = fabs(inbound - outbound);
-  if (diff > 180.0) diff = 360.0 - diff;
-  lead_distance = turn_radius * sin(diff * SG_DEGREES_TO_RADIANS); 
+  leadInAngle = fabs(inbound - outbound);
+  if (leadInAngle > 180.0) 
+    leadInAngle = 360.0 - leadInAngle;
+  if (leadInAngle < 1.0) // To prevent lead_dist from getting so small it is skipped 
+    leadInAngle = 1.0;
+  
+  lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
+  //  if ((errno == EDOM) || (errno == ERANGE) || lead_distance < 1.0)
+  //  {
+  //    cerr << "Lead Distance = " << lead_distance
+  //	   << "Diff          = " << diff
+  //	   << "Turn Radius   = " << turn_radius 
+  //	   << "Speed         = " << speed << endl;
+  //  }
 }
 
 void FGAIFlightPlan::setLeadDistance(double distance_ft){
@@ -345,310 +424,51 @@ double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp){
 //   if (!southerly && !easterly) return 270.0 + angle; 
   SGWayPoint sgWp(wp->longitude,wp->latitude, wp->altitude, SGWayPoint::WGS84, string("temp"));
   sgWp.CourseAndDistance(lon, lat, wp->altitude, &course, &distance);
+  
   return course;
-  // Omit a compiler warning.
- 
+  // Omit a compiler warning. 
+  //if ((errno == EDOM) || (errno == ERANGE))
+  //  {
+  //    cerr << "Lon:  " << wp->longitude
+  //	   << "Lat       = " << wp->latitude
+  //   << "Tgt Lon   = " <<  
+  //   << "TgT Lat   = " << speed << endl;
+  //  }
+  
 }
 
-/* FGAIFlightPlan::create()
- * dynamically create a flight plan for AI traffic, based on data provided by the
- * Traffic Manager, when reading a filed flightplan failes. (DT, 2004/07/10) 
- *
- * Probably need to split this into separate functions for different parts of the flight
 
- * once the code matures a bit more.
- *
- */ 
-void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, double alt, double speed)
+
+void FGAIFlightPlan::deleteWaypoints()
 {
-double wind_speed;
-  double wind_heading;
-  FGRunway rwy;
-  double lat, lon, az;
-  double lat2, lon2, az2;
-  int direction;
-  
-  //waypoints.push_back(wpt);
-  // Create the outbound taxi leg, for now simplified as a 
-  // Direct route from the airport center point to the start
-  // of the runway.
-  ///////////////////////////////////////////////////////////
-    //cerr << "Cruise Alt << " << alt << endl;
-    // Temporary code to add some small random variation to aircraft parking positions;
-  direction = (rand() % 360);
-geo_direct_wgs_84 ( 0, dep->_latitude, dep->_longitude, direction, 
-      100,
-      &lat2, &lon2, &az2 );
-  waypoint *wpt = new waypoint;
-  wpt->name      = dep->_id; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = dep->_elevation + 19; // probably need to add some model height to it
-  wpt->speed     = 15; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  waypoints.push_back(wpt);
-  
-  // Get the current active runway, based on code from David Luff
-  FGEnvironment 
-    stationweather = ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
-    ->getEnvironment(dep->_latitude, dep->_longitude, dep->_elevation);
-  
-  wind_speed = stationweather.get_wind_speed_kt();
-  wind_heading = stationweather.get_wind_from_heading_deg();
-  if (wind_speed == 0) {
-    wind_heading = 270;	// This forces West-facing rwys to be used in no-wind situations
-                        // which is consistent with Flightgear's initial setup.
-  }
-  
-  string rwy_no = globals->get_runways()->search(dep->_id, int(wind_heading));
-  if (!(globals->get_runways()->search(dep->_id, (int) wind_heading, &rwy )))
+  for (wpt_vector_iterator i = waypoints.begin(); i != waypoints.end();i++)
+    delete (*i);
+  waypoints.clear();
+}
+
+// Delete all waypoints except the last, 
+// which we will recycle as the first waypoint in the next leg;
+void FGAIFlightPlan::resetWaypoints()
+{
+  if (waypoints.begin() == waypoints.end())
+    return;
+  else
     {
-      cout << "Failed to find runway for " << dep->_id << endl;
-      // Hmm, how do we handle a potential error like this?
-      exit(1);
+      waypoint *wpt = new waypoint;
+      wpt_vector_iterator i = waypoints.end();
+      i--;
+      wpt->name      = (*i)->name;
+      wpt->latitude  = (*i)->latitude;
+      wpt->longitude =  (*i)->longitude;
+      wpt->altitude  =  (*i)->altitude;
+      wpt->speed     =  (*i)->speed;
+      wpt->crossat   =  (*i)->crossat;
+      wpt->gear_down =  (*i)->gear_down;
+      wpt->flaps_down=  (*i)->flaps_down;
+      wpt->finished  = false;
+      wpt->on_ground =  (*i)->on_ground;
+      //cerr << "Recycling waypoint " << wpt->name << endl;
+      deleteWaypoints();
+      waypoints.push_back(wpt);
     }
-
- 
-  double heading = rwy._heading;
-  double azimuth = heading + 180.0;
-  while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		      rwy._length * SG_FEET_TO_METER * 0.5 - 5.0,
-		      &lat2, &lon2, &az2 );
-  
-  //Add the runway startpoint;
-  wpt = new waypoint;
-  wpt->name      = rwy._id;
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = dep->_elevation + 19;
-  wpt->speed     = 15; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  waypoints.push_back(wpt);
-
-  //Next: The point on the runway where we begin to accelerate to take-off speed
-  //100 meters down the runway seems to work. Shorter distances cause problems with
-  // the turn with larger aircraft
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		      rwy._length * SG_FEET_TO_METER * 0.5 - 105.0,
-		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "accel";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = dep->_elevation + 19;
-  wpt->speed     = speed; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  waypoints.push_back(wpt); 
-  
-  lat = lat2;
-  lon = lon2;
-  az  = az2;
-
- //Next: the Start of Climb
-  geo_direct_wgs_84 ( 0, lat, lon, heading, 
-		      2560 * SG_FEET_TO_METER,
-		      &lat2, &lon2, &az2 );
-
-  wpt = new waypoint;
-  wpt->name      = "SOC";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = alt + 19;
-  wpt->speed     = speed; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  waypoints.push_back(wpt); 
-
-//Next: the Top of Climb
-  geo_direct_wgs_84 ( 0, lat, lon, heading, 
-		      20*SG_NM_TO_METER,
-		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "10000ft climb";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = 10000;
-  wpt->speed     = speed; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  waypoints.push_back(wpt); 
-
-
-
-  //Beginning of Decent
-  stationweather = ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
-    ->getEnvironment(arr->_latitude, arr->_longitude, arr->_elevation);
-
-  wind_speed = stationweather.get_wind_speed_kt();
-  wind_heading = stationweather.get_wind_from_heading_deg();
-
-  if (wind_speed == 0) {
-    wind_heading = 270;	// This forces West-facing rwys to be used in no-wind situations
-                        // which is consistent with Flightgear's initial setup.
-  }
-
-  rwy_no = globals->get_runways()->search(arr->_id, int(wind_heading));
-  //cout << "Using runway # " << rwy_no << " for departure at " << dep->_id << endl;
-  
-   if (!(globals->get_runways()->search(arr->_id, (int) wind_heading, &rwy )))
-    {
-      cout << "Failed to find runway for " << arr->_id << endl;
-      // Hmm, how do we handle a potential error like this?
-      exit(1);
-    }
-  //cerr << "Done" << endl;
- heading = rwy._heading;
- azimuth = heading + 180.0;
- while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-
- 
-
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		     100000,
-		     &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "BOD"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = 10000;
-  wpt->speed     = speed; 
-  wpt->crossat   = alt +19;
-  wpt->gear_down = false;
-  wpt->flaps_down= false;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  waypoints.push_back(wpt); 
-
-  // Ten thousand ft. Slowing down to 240 kts
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		     20*SG_NM_TO_METER,
-		     &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "Dec 10000ft"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = arr->_elevation + 19;
-  wpt->speed     = 240; 
-  wpt->crossat   = 10000;
-  wpt->gear_down = false;
-  wpt->flaps_down= false;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  waypoints.push_back(wpt);  
-
-  // Three thousand ft. Slowing down to 160 kts
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		     8*SG_NM_TO_METER,
-		     &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "DEC 3000ft"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = arr->_elevation + 19;
-  wpt->speed     = 160; 
-  wpt->crossat   = 3000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  waypoints.push_back(wpt); 
-  //Runway Threshold
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		     rwy._length*0.45 * SG_FEET_TO_METER,
-		     &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "Threshold"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = arr->_elevation + 19;
-  wpt->speed     = 15; 
-  wpt->crossat   = arr->_elevation + 19;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  waypoints.push_back(wpt); 
-
- //Full stop at the runway centerpoint
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		     rwy._length*0.45,
-		     &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "Center"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = rwy._lat;
-  wpt->longitude = rwy._lon;
-  wpt->altitude  = arr->_elevation + 19;
-  wpt->speed     = 15; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  waypoints.push_back(wpt); 
-
-direction = (rand() % 360);
-geo_direct_wgs_84 ( 0, arr->_latitude, arr->_longitude, direction, 
-  100,
-  &lat2, &lon2, &az2 );
-
-  // Add the final destination waypoint
-  wpt = new waypoint;
-  wpt->name      = arr->_id; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = arr->_elevation+19;
-  wpt->speed     = 15; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  waypoints.push_back(wpt); 
-
-  // And finally one more named "END"
-  wpt = new waypoint;
-  wpt->name      = "END"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = 19;
-  wpt->speed     = 15; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = true;
-  wpt->on_ground = true;
-  waypoints.push_back(wpt);
-
- // And finally one more named "EOF"
-  wpt = new waypoint;
-  wpt->name      = "EOF"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = 19;
-  wpt->speed     = 15; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = true;
-  wpt->on_ground  = true;
-  waypoints.push_back(wpt);
 }
