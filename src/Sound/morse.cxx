@@ -55,6 +55,19 @@ static const char alphabet[26][4] = {
     { DA, DA, DI, DIT }		/* Z */ 
 };
 
+static const char numerals[10][5] = {
+    { DA, DA, DA, DA, DAH },    // 0
+    { DI, DA, DA, DA, DAH },    // 1
+    { DI, DI, DA, DA, DAH },    // 2
+    { DI, DI, DI, DA, DAH },    // 3
+    { DI, DI, DI, DI, DAH },    // 4
+    { DI, DI, DI, DI, DIT },    // 5
+    { DA, DI, DI, DI, DIT },    // 6
+    { DA, DA, DI, DI, DIT },    // 7
+    { DA, DA, DA, DI, DIT },    // 8
+    { DA, DA, DA, DA, DIT }     // 9
+};
+
 
 // constructor
 FGMorse::FGMorse() {
@@ -187,6 +200,16 @@ FGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
 		}
 	    }
 	    length += SPACE_SIZE;
+        } else if ( idptr[i] >= '0' && idptr[i] <= '9' ) {
+            char c = idptr[i] - '0';
+            for ( j = 0; j < 5; ++j) {
+                if ( numerals[c][j] == DIT ) {
+                    length += DIT_SIZE;
+                } else if ( numerals[c][j] == DAH ) {
+                    length += DAH_SIZE;
+                }
+            }
+            length += SPACE_SIZE;
 	} else {
 	    // skip unknown character
 	}
@@ -212,6 +235,19 @@ FGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
 		    buf_ptr += DAH_SIZE;
 		}
 	    }
+	    memcpy( buf_ptr, space, SPACE_SIZE );
+	    buf_ptr += SPACE_SIZE;
+        } else if ( idptr[i] >= '0' && idptr[i] <= '9' ) {
+            char c = idptr[i] - '0';
+            for ( j = 0; j < 5; ++j ) {
+                if ( numerals[c][j] == DIT ) {
+                    memcpy( buf_ptr, dit_ptr, DIT_SIZE );
+                    buf_ptr += DIT_SIZE;
+                } else if ( numerals[c][j] == DAH ) {
+                    memcpy( buf_ptr, dah_ptr, DAH_SIZE );
+                    buf_ptr += DAH_SIZE;
+                }
+            }
 	    memcpy( buf_ptr, space, SPACE_SIZE );
 	    buf_ptr += SPACE_SIZE;
 	} else {
