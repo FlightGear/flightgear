@@ -57,11 +57,14 @@ INCLUDES
 #  include <simgear/compiler.h>
 #  ifdef FG_HAVE_STD_INCLUDES
 #    include <cmath>
+#    include <iomanip>
 #  else
 #    include <math.h>
+#    include <iomanip.h>
 #  endif
 #else
 #  include <cmath>
+#  include <iomanip>
 #endif
 
 #include "FGPosition.h"
@@ -91,17 +94,24 @@ FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex),
   LongitudeDot = LatitudeDot = RadiusDot = 0.0;
   lastLongitudeDot = lastLatitudeDot = lastRadiusDot = 0.0;
   Longitude = Latitude = 0.0;
-  h = 0.0;
-  Radius = EARTHRAD + h;
-  gamma=Vt=0.0;
-  RunwayRadius = EARTHRAD;
+  h = gamma = Vt = 0.0;
+  SeaLevelRadius = EARTHRAD;               // For initialization ONLY
+  Radius         = SeaLevelRadius + h;
+  RunwayRadius   = SeaLevelRadius;
+  DistanceAGL    = Radius - RunwayRadius;  // Geocentric
 }
 
 /******************************************************************************/
 
 FGPosition::~FGPosition(void) {}
 
-/******************************************************************************/
+/*************************************************************************** Run
+Purpose: Called on a schedule to perform Positioning algorithms
+Notes:   [TP] Make sure that -Vt <= hdot <= Vt, which, of course, should always
+         be the case
+         [JB] Run in standalone mode, SeaLevelRadius will be EARTHRAD. In FGFS,
+         SeaLevelRadius is stuffed from FGJSBSim in JSBSim.cxx each pass.
+*/
 
 bool FGPosition:: Run(void) {
   double cosLat;
@@ -110,7 +120,9 @@ bool FGPosition:: Run(void) {
   if (!FGModel::Run()) {
     GetState();
 
-    vVel = State->GetTl2b()*vUVW;
+    invMass   = 1.0 / Aircraft->GetMass();
+    Radius    = h + SeaLevelRadius;
+    invRadius = 1.0 / Radius;
 
     cosLat = cos(Latitude);
     if (cosLat != 0) LongitudeDot = vVel(eEast) / (Radius * cosLat);
@@ -122,22 +134,22 @@ bool FGPosition:: Run(void) {
     Latitude  += 0.5*dt*rate*(LatitudeDot + lastLatitudeDot);
     Radius    += 0.5*dt*rate*(RadiusDot + lastRadiusDot);
 
-    h = Radius - EARTHRAD;                 // Geocentric
+    h = Radius - SeaLevelRadius;           // Geocentric
 
     DistanceAGL = Radius - RunwayRadius;   // Geocentric
 
-    hoverb = h/b;
+    hoverb = DistanceAGL/b;
 
-    if(Vt > 0) {
-      hdot_Vt=RadiusDot/Vt;
-      //make sure that -Vt <= hdot <= Vt, which, of course, should always be the case
-      if(fabs(hdot_Vt) <= 1) gamma= asin(hdot_Vt);
-    } else
-      gamma=0.0;
+    if (Vt > 0) {
+      hdot_Vt = RadiusDot/Vt;
+      if (fabs(hdot_Vt) <= 1) gamma = asin(hdot_Vt);
+    } else {
+      gamma = 0.0;
+    }
 
-    lastLatitudeDot = LatitudeDot;
+    lastLatitudeDot  = LatitudeDot;
     lastLongitudeDot = LongitudeDot;
-    lastRadiusDot = RadiusDot;
+    lastRadiusDot    = RadiusDot;
 
     return false;
 
@@ -151,11 +163,10 @@ bool FGPosition:: Run(void) {
 void FGPosition::GetState(void) {
   dt = State->Getdt();
 
-  vUVW = Translation->GetUVW();
-  Vt = Translation->GetVt();
-  invMass = 1.0 / Aircraft->GetMass();
-  invRadius = 1.0 / (h + EARTHRAD);
-  Radius = h + EARTHRAD;
+  vUVW      = Translation->GetUVW();
+  Vt        = Translation->GetVt();
+  vVel      = State->GetTb2l()*vUVW;
+
   b = Aircraft->GetWingSpan();
 }
 

@@ -140,7 +140,8 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
     vXYZcg(3),
     vXYZep(3),
     vEuler(3),
-vFs(3) {
+    vFs(3)
+{
   Name = "FGAircraft";
 
   AxisIdx["DRAG"]  = 0;
@@ -149,6 +150,8 @@ vFs(3) {
   AxisIdx["ROLL"]  = 3;
   AxisIdx["PITCH"] = 4;
   AxisIdx["YAW"]   = 5;
+
+  GearUp = false;
 
   numTanks = numEngines = numSelectedFuelTanks = numSelectedOxiTanks = 0;
 }
@@ -363,7 +366,8 @@ void FGAircraft::FMGear(void) {
   }
   else {
     for (unsigned int i=0;i<lGear.size();i++) {
-      vForces += lGear[i]->Force();
+      vForces  += lGear[i]->Force();
+      vMoments += lGear[i]->Moment();
     }
   }
 }
@@ -556,6 +560,10 @@ void FGAircraft::ReadOutput(FGConfigFile* AC_cfg) {
       *AC_cfg >> parameter;
       if (parameter == "ON") subsystems += ssCoefficients;
     }
+    if (parameter == "GROUND_REACTIONS") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssGroundReactions;
+    }
   }
 
   Output->SetSubsystems(subsystems);
@@ -668,4 +676,43 @@ string FGAircraft::GetCoefficientValues(void) {
   ;
 }
 
+/******************************************************************************/
+
+string FGAircraft::GetGroundReactionStrings(void) {
+  string GroundReactionStrings = "";
+  bool firstime = true;
+
+  for (unsigned int i=0;i<lGear.size();i++) {
+    if (!firstime) GroundReactionStrings += ", ";
+    GroundReactionStrings += (lGear[i]->GetName() + "_WOW, ");
+    GroundReactionStrings += (lGear[i]->GetName() + "_compressLength, ");
+    GroundReactionStrings += (lGear[i]->GetName() + "_compressSpeed, ");
+    GroundReactionStrings += (lGear[i]->GetName() + "_Force");
+
+    firstime = false;
+  }
+
+  return GroundReactionStrings;
+}
+
+/******************************************************************************/
+
+string FGAircraft::GetGroundReactionValues(void) {
+  char buff[20];
+  string GroundReactionValues = "";
+
+  bool firstime = true;
+
+  for (unsigned int i=0;i<lGear.size();i++) {
+    if (!firstime) GroundReactionValues += ", ";
+    GroundReactionValues += string( lGear[i]->GetWOW()?"1":"0" ) + ", ";
+    GroundReactionValues += (string(gcvt(lGear[i]->GetCompLen(),    5, buff)) + ", ");
+    GroundReactionValues += (string(gcvt(lGear[i]->GetCompVel(),    6, buff)) + ", ");
+    GroundReactionValues += (string(gcvt(lGear[i]->GetCompForce(), 10, buff)));
+
+    firstime = false;
+  }
+
+  return GroundReactionValues;
+}
 

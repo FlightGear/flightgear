@@ -51,36 +51,8 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.10  2000/05/16 19:35:11  curt
-// Updates from the Jon and Tony show.
-//
-// Tony submitted:
-//
-// JSBsim:
-// Added trimming routine, it is longitudinal & in-air only at this point
-// Added support for taking wind & weather data from external source
-// Added support for flaps.
-// Added independently settable pitch trim
-// Added alphamin and max to config file, stall modeling and warning to
-// follow
-//
-// c172.cfg:
-// Flaps!
-// Adjusted Cmo, model should be speed stable now
-//
-// FG:
-// Hooked up Christian's weather code, should be using it soon.
-// Hooked up the trimming routine.  Note that the X-15 will not trim.
-//   This is not a model or trimming routine deficiency, just the
-//   nature of the X-15
-// The trimming routine sets the pitch trim and and throttle at startup.
-// The throttle is set using Norman's code for the autothrottle so the
-// autothrottle is on by default.  --notrim will turn it off.
-// Added --vc, --mach, and --notrim switches
-//       (vc is airspeed in knots)
-// uBody, vBody, and wBody are still supported, last one entered
-// on the command line counts, i.e. you can set vc or mach or u,v,
-// and w but any combination will be ignored.
+// Revision 1.11  2000/05/27 03:48:15  curt
+// 5/26/2000 updated from Jon and Tony.
 //
 // Revision 1.3  2000/04/26 10:55:57  jsb
 // Made changes as required by Curt to install JSBSim into FGFS

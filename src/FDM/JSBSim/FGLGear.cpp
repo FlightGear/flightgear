@@ -37,20 +37,26 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGLGear.h"
+#include <algorithm>
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
 
-FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3), Exec(fdmex)
+FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
+                                                           vMoment(3),
+                                                           Exec(fdmex)
 {
   string tmp;
   *AC_cfg >> tmp >> name >> vXYZ(1) >> vXYZ(2) >> vXYZ(3) >> kSpring >> bDamp
                                                     >> statFCoeff >> brakeCoeff;
-  State = Exec->GetState();
-  Aircraft = Exec->GetAircraft();
-  Position = Exec->GetPosition();                                                  
+  State       = Exec->GetState();
+  Aircraft    = Exec->GetAircraft();
+  Position    = Exec->GetPosition();
+  Rotation    = Exec->GetRotation();
+  
+  WOW = false;
 }
 
 
@@ -65,10 +71,43 @@ FGLGear::~FGLGear(void)
 FGColumnVector FGLGear::Force(void)
 {
   static FGColumnVector vForce(3);
+  static FGColumnVector vLocalForce(3);
   static FGColumnVector vLocalGear(3);
+  static FGColumnVector vWhlBodyVec(3);
+  static FGColumnVector vWhlVelVec(3);
 
-  vLocalGear = State->GetTb2l() * (vXYZ - Aircraft->GetXYZcg());
-  vLocalGear(3) = -vLocalGear(3);
+  vWhlBodyVec     = vXYZ - Aircraft->GetXYZcg();
+  vWhlBodyVec(eX) = -vWhlBodyVec(eX);
+  vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
+  vWhlBodyVec     = vWhlBodyVec/12.0;
+
+  vLocalGear = State->GetTb2l() * vWhlBodyVec;
+
+  compressLength = vLocalGear(eZ) - Position->GetDistanceAGL();
+
+  if (compressLength > 0.00) {
+
+    WOW = true;
+
+    vWhlVelVec = State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
+    compressSpeed = vWhlVelVec(eZ) + Position->GetVd();
+
+    vLocalForce(eZ) = min(-compressLength * kSpring - compressSpeed * bDamp, (float)0.0);
+
+    vForce = State->GetTl2b() * vLocalForce ;
+
+    // currently only aircraft body axis Z-force modeled
+    vMoment(eX) = vForce(eZ) * vWhlBodyVec(eY);
+    vMoment(eY) = -vForce(eZ) * vWhlBodyVec(eX);
+    vMoment(eZ) = 0.0;
+
+  } else {
+
+    WOW = false;
+    vForce.InitMatrix();
+    vMoment.InitMatrix();
+  }
+
 
   return vForce;
 }

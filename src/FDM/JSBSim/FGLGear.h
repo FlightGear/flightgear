@@ -74,6 +74,7 @@ CLASS DECLARATION
 
 class FGAircraft;
 class FGPosition;
+class FGRotation;
 
 class FGLGear
 {
@@ -82,22 +83,35 @@ public:
   ~FGLGear(void);
 
   FGColumnVector Force(void);
+  FGColumnVector Moment(void) {return vMoment;}
+
+  inline string GetName(void)      {return name;          }
+  inline bool   GetWOW(void)       {return WOW;           }
+  inline float  GetCompLen(void)   {return compressLength;}
+  inline float  GetCompVel(void)   {return compressSpeed; }
+  inline float  GetCompForce(void) {return Force()(3);    }
 
 private:
+  enum {eX=1, eY, eZ};
   FGColumnVector vXYZ;
-  float kSpring, bDamp, compressLength;
+  FGColumnVector vMoment;
+  float kSpring, bDamp, compressLength, compressSpeed;
   float statFCoeff, rollFCoeff, skidFCoeff;
   float frictionForce, compForce;
   float brakePct, brakeForce, brakeCoeff;
+  bool WOW;
   string name;
-  FGState* State;
-  FGAircraft* Aircraft;
-  FGPosition* Position;
-  FGFDMExec* Exec;
+
+  FGFDMExec*     Exec;
+  FGState*       State;
+  FGAircraft*    Aircraft;
+  FGPosition*    Position;
+  FGRotation*    Rotation;
 };
 
 #include "FGAircraft.h"
 #include "FGPosition.h"
+#include "FGRotation.h"
 
 /******************************************************************************/
 #endif

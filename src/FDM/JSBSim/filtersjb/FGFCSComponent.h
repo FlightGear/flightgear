@@ -44,19 +44,17 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  include STL_STRING
-   FG_USING_STD(string);
-#else
-#  include <string>
 #endif
+
+#include <string>
 
 /*******************************************************************************
 DEFINES
 *******************************************************************************/
 
-class FGFCS;
+using std::string;
 
-using namespace std;
+class FGFCS;
 
 /*******************************************************************************
 CLASS DECLARATION
@@ -89,7 +87,7 @@ public:
   inline string GetName(void) {return Name;}
 };
 
-#include <FDM/JSBsim/FGFCS.h>
+#include "../FGFCS.h"
 
 #endif
 
