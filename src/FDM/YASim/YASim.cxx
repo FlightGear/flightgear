@@ -356,9 +356,17 @@ void YASim::copyFromYASim()
 
     // _set_Geocentric_Rates(M2FT*v[0], M2FT*v[1], M2FT*v[2]); // UNUSED
 
-    Math::vmul33(s->orient, s->v, v);
+    // Airflow velocity.
+    float wind[3];
+    wind[0] = get_V_north_airmass() * FT2M * -1.0;  // Wind in NED
+    wind[1] = get_V_east_airmass() * FT2M * -1.0;
+    wind[2] = get_V_down_airmass() * FT2M * -1.0;
+    Math::tmul33(xyz2ned, wind, wind);              // Wind in global
+    Math::sub3(s->v, wind, v);                      // V - wind in global
+    Math::vmul33(s->orient, s->v, v);               // to body coordinates
     _set_Velocities_Wind_Body(v[0]*M2FT, -v[1]*M2FT, -v[2]*M2FT);
     _set_V_rel_wind(Math::mag3(v)*M2FT); // units?
+
 
     // These don't work, use a dummy based on altitude
     // float P = get_Static_pressure();
