@@ -66,9 +66,9 @@ LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
-AFILES = ../aircraft/libaircraft.a ../flight/libflight.a \
-	../flight/LaRCsim/libLaRCsim.a ../flight/slew/libslew.a \
-	../mat3/libmat3.a ../scenery/libscenery.a
+AFILES = ../aircraft/libaircraft.a ../controls/libcontrols.a \
+	../flight/libflight.a ../flight/LaRCsim/libLaRCsim.a \
+	../flight/slew/libslew.a ../mat3/libmat3.a ../scenery/libscenery.a
 
 
 #---------------------------------------------------------------------------
@@ -103,6 +103,9 @@ mesh2GL.o: mesh2GL.c ../scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1997/05/31 19:16:25  curt
+# Elevator trim added.
+#
 # Revision 1.10  1997/05/31 04:13:53  curt
 # WE CAN NOW FLY!!!
 #

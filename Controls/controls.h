@@ -35,19 +35,58 @@
 
 struct control_params {
     double aileron;
-    double elev;
+    double elevator;
+    double elevator_trim;
     double rudder;
-    double throttle[MAX_ENGINES];
+    double throttle[FG_MAX_ENGINES];
 };
+
+
+#define FG_Elevator     c->elevator
+#define FG_Aileron      c->aileron
+#define FG_Rudder       c->rudder
+#define FG_Throttle     c->throttle
+#define FG_Throttle_All -1
+#define FG_Elev_Trim    c->elevator_trim
+
+/* 
+#define Left_button     cockpit_.left_pb_on_stick
+#define Right_button    cockpit_.right_pb_on_stick
+#define First_trigger   cockpit_.trig_pos_1
+#define Second_trigger  cockpit_.trig_pos_2
+#define Left_trim       cockpit_.left_trim
+#define Right_trim      cockpit_.right_trim
+#define SB_extend       cockpit_.sb_extend
+#define SB_retract      cockpit_.sb_retract
+#define Gear_sel_up     cockpit_.gear_sel_up 
+*/
+
+
+void fgControlsInit();
+
+void fgElevMove(double amt);
+void fgElevSet(double pos);
+void fgElevTrimMove(double amt);
+void fgElevTrimSet(double pos);
+void fgAileronMove(double amt);
+void fgAileronSet(double pos);
+void fgRudderMove(double amt);
+void fgRudderSet(double pos);
+void fgThrottleMove(int engine, double amt);
+void fgThrottleSet(int engine, double pos);
+
 
 
 #endif CONTROLS_H
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 15:40:33  curt
-/* Added GNU copyright headers.
+/* Revision 1.3  1997/05/31 19:16:27  curt
+/* Elevator trim added.
 /*
+ * Revision 1.2  1997/05/23 15:40:33  curt
+ * Added GNU copyright headers.
+ *
  * Revision 1.1  1997/05/16 15:59:48  curt
  * Initial revision.
  *

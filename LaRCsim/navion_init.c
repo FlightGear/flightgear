@@ -67,9 +67,4 @@ void model_init()
   
   Dx_pilot = 0; Dy_pilot = 0; Dz_pilot = 0;
   
-  Runway_altitude = 0;
-  Runway_latitude = 0;
-  Runway_longitude = 0;
-  Runway_heading = 0;
-  
 }

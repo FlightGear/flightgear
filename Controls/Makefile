@@ -24,9 +24,9 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = stamp-done
+TARGET = libcontrols.a
 
-CFILES = 
+CFILES = controls.c
 HFILES = controls.h
 OFILES = $(CFILES:.c=.o)
 
@@ -45,8 +45,8 @@ LIBS =
 # Primary Targets
 #---------------------------------------------------------------------------
 
-$(TARGET): $(OFILES) $(HFILES)
-	touch stamp-done
+$(TARGET): $(OFILES)
+	$(AR) rv $(TARGET) $(OFILES)
 
 all: $(TARGET)
 
@@ -61,9 +61,15 @@ clean:
 controls.h: ../limits.h
 	touch controls.h
 
+controls.o: controls.c controls.h ../aircraft/aircraft.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c controls.c
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/05/31 19:16:27  curt
+# Elevator trim added.
+#
 # Revision 1.2  1997/05/23 15:40:32  curt
 # Added GNU copyright headers.
 #

@@ -36,8 +36,8 @@ CC = gcc
 CFLAGS = -g -Wall
 # CFLAGS = -O2 -Wall
 
-FLEX = flex -f
-BISON = bison -v
+FLEX = flex -f -L
+BISON = bison -v --no-lines
 AR = ar
 
 INCLUDES = 
@@ -56,6 +56,9 @@ $(TARGET): $(OFILES) $(HFILES)
 
 clean:
 	rm -f *.o $(TARGET) parser.output *~ core
+
+realclean: clean
+	rm -f scanner.c parser.c
 
 
 #---------------------------------------------------------------------------
@@ -86,6 +89,9 @@ mesh.o: mesh.c mesh.h common.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1997/05/31 19:16:29  curt
+# Elevator trim added.
+#
 # Revision 1.4  1997/05/27 17:48:50  curt
 # Added -f flag to flex to generate a "fast" scanner.
 #

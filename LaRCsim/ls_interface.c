@@ -501,10 +501,11 @@ int ls_cockpit() {
 
     c = &current_aircraft.controls;
 
-    Lat_control = -c->aileron;
-    Long_control = -c->elev;
-    Rudder_pedal = c->rudder;
-    Throttle_pct = c->throttle[0];
+    Lat_control = FG_Aileron;
+    Long_control = FG_Elevator;
+    Long_trim = FG_Elev_Trim;
+    Rudder_pedal = FG_Rudder;
+    Throttle_pct = FG_Throttle[0];
 
     /* printf("Mach = %.2f  ", Mach_number);
     printf("%.4f,%.4f,%.2f  ", Latitude, Longitude, Altitude);
@@ -908,6 +909,9 @@ int fgLaRCsim_2_Flight (struct flight_params *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.7  1997/05/31 19:16:28  curt
+ * Elevator trim added.
+ *
  * Revision 1.6  1997/05/31 04:13:53  curt
  * WE CAN NOW FLY!!!
  *

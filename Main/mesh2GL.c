@@ -44,7 +44,7 @@ GLint mesh2GL(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 12;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 50;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -75,18 +75,18 @@ GLint mesh2GL(struct mesh *m) {
 
 	    if ( j == 0 ) {
 		/* first time through */
-		glVertex3f(x1, y1, z11-45);
-		glVertex3f(x1, y2, z12-45);
+		glVertex3f(x1, y1, z11);
+		glVertex3f(x1, y2, z12);
 	    }
 
-	    glVertex3f(x2, y1, z21-45);
+	    glVertex3f(x2, y1, z21);
 	    
 	    v1[0] = x2 - x1; v1[1] = y1 - y2; v1[2] = z21 - z12;
 	    v2[0] = x2 - x1; v2[1] = 0; v2[2] = z22 - z12;
 	    MAT3cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
 	    glNormal3d(normal[0], normal[1], normal[2]);
-	    glVertex3f(x2, y2, z22-45);
+	    glVertex3f(x2, y2, z22);
 
 	    x1 = x2;
 	    x2 = x1 + (m->row_step * jstep);
@@ -104,12 +104,15 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.13  1997/05/31 04:13:53  curt
-/* WE CAN NOW FLY!!!
+/* Revision 1.14  1997/05/31 19:16:26  curt
+/* Elevator trim added.
 /*
-/* Continuing work on the LaRCsim flight model integration.
-/* Added some MSFS-like keyboard input handling.
-/*
+ * Revision 1.13  1997/05/31 04:13:53  curt
+ * WE CAN NOW FLY!!!
+ *
+ * Continuing work on the LaRCsim flight model integration.
+ * Added some MSFS-like keyboard input handling.
+ *
  * Revision 1.12  1997/05/30 23:26:20  curt
  * Added elevator/aileron controls.
  *

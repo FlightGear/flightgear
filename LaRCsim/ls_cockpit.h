@@ -35,6 +35,9 @@
 
 $Header$
 $Log$
+Revision 1.2  1997/05/31 19:16:27  curt
+Elevator trim added.
+
 Revision 1.1  1997/05/29 00:09:54  curt
 Initial Flight Gear revision.
 
@@ -53,6 +56,7 @@ Initial Flight Gear revision.
 
 typedef struct {
     float   long_stick, lat_stick, rudder_pedal;
+    float   long_trim;
     float   throttle[4];
     short   forward_trim, aft_trim, left_trim, right_trim;
     short   left_pb_on_stick, right_pb_on_stick, trig_pos_1, trig_pos_2;
@@ -70,6 +74,7 @@ extern COCKPIT cockpit_;
 #define First_trigger	cockpit_.trig_pos_1
 #define Second_trigger	cockpit_.trig_pos_2
 #define Long_control	cockpit_.long_stick
+#define Long_trim       cockpit_.long_trim
 #define Lat_control	cockpit_.lat_stick
 #define Fwd_trim	cockpit_.forward_trim
 #define Aft_trim	cockpit_.aft_trim

@@ -29,16 +29,19 @@
 
 
 /* Maximum number of engines for a single aircraft */
-#define MAX_ENGINES 10
+#define FG_MAX_ENGINES 10
 
 
 #endif LIMITS_H
 
 
 /* $Log$
-/* Revision 1.2  1997/05/27 17:48:10  curt
-/* Added GNU copyright.
+/* Revision 1.3  1997/05/31 19:16:24  curt
+/* Elevator trim added.
 /*
+ * Revision 1.2  1997/05/27 17:48:10  curt
+ * Added GNU copyright.
+ *
  * Revision 1.1  1997/05/16 16:08:00  curt
  * Initial revision.
  *

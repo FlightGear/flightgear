@@ -43,32 +43,39 @@ void GLUTkey(unsigned char k, int x, int y) {
 
     switch (k) {
     case 50: /* numeric keypad 2 */
-	c->elev += 0.01;
+	fgElevMove(-0.01);
 	return;
     case 56: /* numeric keypad 8 */
-	c->elev -= 0.01;
+	fgElevMove(0.01);
+	return;
+    case 49: /* numeric keypad 1 */
+	fgElevTrimMove(-0.001);
+	return;
+    case 55: /* numeric keypad 7 */
+	fgElevTrimMove(0.001);
 	return;
     case 52: /* numeric keypad 4 */
-	c->aileron += 0.01;
+	fgAileronMove(-0.01);
 	return;
     case 54: /* numeric keypad 6 */
-	c->aileron -= 0.01;
+	fgAileronMove(0.01);
 	return;
     case 48: /* numeric keypad Ins */
-	c->rudder -= 0.01;
+	fgRudderMove(-0.01);
 	return;
     case 13: /* numeric keypad Enter */
-	c->rudder += 0.01;
+	fgRudderMove(0.01);
 	return;
     case 53: /* numeric keypad 5 */
-	c->aileron = 0.0;
-	c->elev = 0.0;
-	c->rudder = 0.0;
+	fgAileronSet(0.0);
+	fgElevSet(0.0);
+	fgRudderSet(0.0);
+	return;
     case 57: /* numeric keypad 9 (Pg Up) */
-	c->throttle[0] += 0.05;
+	fgThrottleMove(0, 0.01);
 	return;
     case 51: /* numeric keypad 3 (Pg Dn) */
-	c->throttle[0] -= 0.05;
+	fgThrottleMove(0, -0.01);
 	return;
     case 122:
 	fogDensity *= 1.10;
@@ -97,16 +104,16 @@ void GLUTspecialkey(unsigned char k, int x, int y) {
 
     switch (k) {
     case GLUT_KEY_UP:
-	c->elev -= 0.01;
+	fgElevMove(0.01);
 	return;
     case GLUT_KEY_DOWN:
-	c->elev += 0.01;
+	fgElevMove(-0.01);
 	return;
     case GLUT_KEY_LEFT:
-	c->aileron += 0.01;
+	fgAileronMove(-0.01);
 	return;
     case GLUT_KEY_RIGHT:
-	c->aileron -= 0.01;
+	fgAileronMove(0.01);
 	return;
     }
 
@@ -114,12 +121,15 @@ void GLUTspecialkey(unsigned char k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.6  1997/05/31 04:13:52  curt
-/* WE CAN NOW FLY!!!
+/* Revision 1.7  1997/05/31 19:16:25  curt
+/* Elevator trim added.
 /*
-/* Continuing work on the LaRCsim flight model integration.
-/* Added some MSFS-like keyboard input handling.
-/*
+ * Revision 1.6  1997/05/31 04:13:52  curt
+ * WE CAN NOW FLY!!!
+ *
+ * Continuing work on the LaRCsim flight model integration.
+ * Added some MSFS-like keyboard input handling.
+ *
  * Revision 1.5  1997/05/30 23:26:19  curt
  * Added elevator/aileron controls.
  *

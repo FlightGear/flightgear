@@ -49,8 +49,8 @@
 #include "../mat3/mat3.h"
 
 
-#define FG_RAD_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
-#define FG_DEG_2_RAD(DEG) ((DEG) * M_PI / 180.0)
+#define DEG_TO_RAD       0.017453292
+#define RAD_TO_DEG       57.29577951
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
@@ -124,7 +124,6 @@ static void fgUpdateViewParams() {
     struct flight_params *f;
     MAT3mat R, tmp;
     MAT3vec vec, forward, up;
-    MAT3hvec sun;
 
     f = &current_aircraft.flight;
 
@@ -137,8 +136,8 @@ static void fgUpdateViewParams() {
     glLoadIdentity();
     
     /* calculate position in arc seconds */
-    pos_x = FG_RAD_2_DEG(FG_Longitude) * 3600.0;
-    pos_y = FG_RAD_2_DEG(FG_Latitude) * 3600.0;
+    pos_x = (FG_Longitude * RAD_TO_DEG) * 3600.0;
+    pos_y = (FG_Latitude   * RAD_TO_DEG) * 3600.0;
     pos_z = FG_Altitude * 0.01; /* (Convert feet to aproximate arcsecs) */
 
     /* build current rotation matrix */
@@ -353,16 +352,21 @@ int main( int argc, char *argv[] ) {
     /* setup view parameters, only makes GL calls */
     fgInitVisuals();
 
-    /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
+    /* Globe Aiport, AZ */
+    FG_Runway_altitude = 3234.5;
+    FG_Runway_latitude = 120070.41;
+    FG_Runway_longitude = -398391.28;
+    FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
     /* Initial Position */
-    FG_Latitude  = FG_DEG_2_RAD(  120625.64 / 3600.0 );
-    FG_Longitude = FG_DEG_2_RAD( -398673.28 / 3600.0 );
-    FG_Altitude  = 3.758099E+00;
+    FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
+    FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
+    FG_Altitude  = FG_Runway_altitude + 3.758099;
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
 	   FG_Longitude, FG_Altitude);
 
+  
     /* Initial Velocity */
     FG_V_north = 0.0 /*  7.287719E+00 */;
     FG_V_east  = 0.0 /*  1.521770E+03 */;
@@ -371,7 +375,7 @@ int main( int argc, char *argv[] ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  2.14 /* 4.38 */;
+    FG_Psi   =  102.0 * DEG_TO_RAD;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -393,7 +397,7 @@ int main( int argc, char *argv[] ) {
     FG_Dz_cg = 0.000000E+00;
 
     /* Set initial position and slew parameters */
-    /* fgSlewInit(-398391.3, 120070.4, 244, 3.1415); */ /* GLOBE Airport */
+    /* fgSlewInit(-398391.3, 120070.41, 244, 3.1415); */ /* GLOBE Airport */
     /* fgSlewInit(-335340,162540, 15, 4.38); */
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
@@ -446,12 +450,15 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.10  1997/05/31 04:13:52  curt
-/* WE CAN NOW FLY!!!
+/* Revision 1.11  1997/05/31 19:16:25  curt
+/* Elevator trim added.
 /*
-/* Continuing work on the LaRCsim flight model integration.
-/* Added some MSFS-like keyboard input handling.
-/*
+ * Revision 1.10  1997/05/31 04:13:52  curt
+ * WE CAN NOW FLY!!!
+ *
+ * Continuing work on the LaRCsim flight model integration.
+ * Added some MSFS-like keyboard input handling.
+ *
  * Revision 1.9  1997/05/30 19:27:01  curt
  * The LaRCsim flight model is starting to look like it is working.
  *

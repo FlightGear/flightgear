@@ -124,7 +124,7 @@ void aero()
   static SCALAR scale = 1.0;
   
   static SCALAR trim_inc = 0.0002;
-  static SCALAR long_trim;
+  /* static SCALAR long_trim; */
 
   static DATA U_0;
   static DATA X_0;
@@ -183,10 +183,6 @@ void aero()
       N_r = -0.7605;
       N_da = -0.2218;
       N_dr = -4.597;
-
-      
-      /* initialize trim 'actuator' */
-      long_trim = 1.969572E-03;
     }
     
   u = V_rel_wind - U_0;
@@ -196,8 +192,8 @@ void aero()
   aileron  = lat_scale  * Lat_control;
   rudder   = yaw_scale  * Rudder_pedal;
   
-  if(Aft_trim) long_trim = long_trim - trim_inc;
-  if(Fwd_trim) long_trim = long_trim + trim_inc;
+  /* if(Aft_trim) long_trim = long_trim - trim_inc; */
+  /* if(Fwd_trim) long_trim = long_trim + trim_inc; */
   
   scale = V_rel_wind*V_rel_wind/(U_0*U_0); 
   if (scale > 1.0) scale = 1.0; /* ebj */
@@ -209,7 +205,7 @@ void aero()
   
   M_l_aero = scale*(I_xx*(L_beta*Beta + L_p*P_body + L_r*R_body
 		   + L_da*aileron + L_dr*rudder));
-  M_m_aero = scale*(M_0 + I_yy*(M_w*w + M_q*Q_body + M_de*(elevator + long_trim)));
+  M_m_aero = scale*(M_0 + I_yy*(M_w*w + M_q*Q_body + M_de*(elevator + Long_trim)));
   M_n_aero = scale*(I_zz*(N_beta*Beta + N_p*P_body + N_r*R_body
 		   + N_da*aileron + N_dr*rudder));
   
