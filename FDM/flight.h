@@ -33,12 +33,14 @@
 
 
 /* Define the various supported flight models (not all implemented) */
-#define FG_SLEW      0
-#define FG_LARCSIM   1
-#define FG_ACM       2
-#define FG_HELO      3
-#define FG_BALLOON   4
-#define FG_PARACHUTE 5
+#define FG_LARCSIM     0
+#define FG_ACM         1
+#define FG_HELICOPTER  2
+#define FG_AUTOGYRO    3
+#define FG_BALLOON     4
+#define FG_PARACHUTE   5
+#define FG_SLEW        6
+#define FG_EXTERN_GPS  7
 
 
 /* Define a structure containing the shared flight model parameters */
@@ -407,9 +409,13 @@ int fgFlightModelUpdate(int model, struct flight_params *f, int multiloop);
 
 
 /* $Log$
-/* Revision 1.5  1997/06/21 17:12:49  curt
-/* Capitalized subdirectory names.
+/* Revision 1.6  1997/06/21 17:52:22  curt
+/* Continue directory shuffling ... everything should be compilable/runnable
+/* again.
 /*
+ * Revision 1.5  1997/06/21 17:12:49  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.4  1997/05/29 22:39:57  curt
  * Working on incorporating the LaRCsim flight model.
  *

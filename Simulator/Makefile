@@ -27,7 +27,7 @@
 CC = gcc
 
 
-SUBSUBDIRS = Flight/LaRCsim Flight/Slew
+SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn
 SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
 MAIN = OpenGL
 
@@ -59,6 +59,10 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1997/06/21 17:52:22  curt
+# Continue directory shuffling ... everything should be compilable/runnable
+# again.
+#
 # Revision 1.7  1997/06/21 17:12:38  curt
 # Capitalized subdirectory names.
 #

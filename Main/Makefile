@@ -68,7 +68,8 @@ CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
-	../Flight/Slew/libSlew.a ../mat3/libmat3.a ../Scenery/libScenery.a \
+	../Flight/Slew/libSlew.a ../mat3/libmat3.a \
+	../Scenery/ParseScn/libParseScn.a ../Scenery/libScenery.a \
 	../Timer/libTimer.a
 
 
@@ -105,6 +106,10 @@ mesh2GL.o: mesh2GL.c ../Scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.14  1997/06/21 17:52:23  curt
+# Continue directory shuffling ... everything should be compilable/runnable
+# again.
+#
 # Revision 1.13  1997/06/21 17:12:54  curt
 # Capitalized subdirectory names.
 #
