@@ -856,7 +856,7 @@ setAPThrottleControl (double value)
   if (getAPAutoThrottleLock())
     current_autopilot->AutoThrottleAdjust(value < 0.0 ? -0.01 : 0.01);
   else
-    globals->get_controls()->set_throttle(0, value);
+    globals->get_controls()->set_throttle(FGControls::ALL_ENGINES, value);
 }
 
 
