@@ -45,7 +45,9 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
     // jet_transport
     {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0},
     // jet_fighter
-    {7.0, 3.0, 4000.0, 2000.0, 150.0, 350.0, 500.0, 350.0, 150.0}
+    {7.0, 3.0, 4000.0, 2000.0, 150.0, 350.0, 500.0, 350.0, 150.0},
+    // tanker
+    {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0}
 };
 
 
@@ -56,6 +58,7 @@ FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
    fp = 0;
    dt_count = 0;
    use_perf_vs = true;
+   isTanker = false;
 
    // set heading and altitude locks
    hdg_lock = false;
@@ -68,6 +71,7 @@ FGAIAircraft::~FGAIAircraft() {
 
 
 bool FGAIAircraft::init() {
+   refuel_node = fgGetNode("systems/refuel/contact", true);
    return FGAIBase::init();
 }
 
@@ -298,6 +302,19 @@ void FGAIAircraft::Run(double dt) {
    rotation = hdg - user_heading;
    if (rotation < 0.0) rotation += 360.0; 
 
+   //************************************//
+   // Tanker code                        //
+   //************************************//
+
+   if ( isTanker) {
+     if ( (range_ft < 250.0) &&
+          (y_shift > 0.0)    &&
+          (elevation > 0.0) ) {
+       refuel_node->setBoolValue(true);
+     } else {
+       refuel_node->setBoolValue(false);
+     } 
+   }
 }
 
 

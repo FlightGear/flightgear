@@ -115,6 +115,7 @@ void FGAIManager::update(double dt) {
                 ++ai_list_itr;
         }
         wind_from_down->setDoubleValue( strength );
+
 }
 
 
@@ -168,6 +169,9 @@ int FGAIManager::createAircraft( string model_class, string path,
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         } else if (model_class == "jet_fighter") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
+        } else if (model_class ==  "tanker") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+          ai_plane->SetTanker(true);
         } else {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         }
@@ -199,6 +203,9 @@ int FGAIManager::createAircraft( string model_class, string path,
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         } else if (model_class == "jet_fighter") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
+        } else if (model_class ==  "tanker") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+          ai_plane->SetTanker(true);
         } else {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         }

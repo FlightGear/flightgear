@@ -46,7 +46,7 @@ private:
 	
 public:
 
-        enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER};
+        enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER, TANKER};
         static const PERF_STRUCT settings[];
 	
 	FGAIAircraft(FGAIManager* mgr);
@@ -67,6 +67,8 @@ public:
         void TurnTo(double heading);
         void ProcessFlightPlan( double dt );
 
+        inline void SetTanker(bool setting) { isTanker = setting; };
+
 private:
 
         bool hdg_lock;
@@ -76,6 +78,8 @@ private:
 
         const PERF_STRUCT *performance;
         bool use_perf_vs;
+        SGPropertyNode* refuel_node;
+        bool isTanker;
 
 	void Run(double dt);
         double sign(double x);	
