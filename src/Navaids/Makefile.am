@@ -14,8 +14,4 @@ testnavs_LDADD = \
 	-lsgtiming -lsgmath -lsgmisc -lsgdebug -lsgmagvar -lsgxml \
 	-lz
 
-if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
-else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
-endif

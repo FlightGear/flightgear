@@ -23,8 +23,4 @@ libYASim_a_SOURCES = \
         Vector.hpp \
         Wing.cpp Wing.hpp
 
-if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
-else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
-endif

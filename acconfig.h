@@ -187,12 +187,6 @@
 /* Define if you have the wait3 system call.  */
 #undef HAVE_WAIT3
 
-/* Define if you have MetaKit installed system wide.  */
-#undef HAVE_MK4
-
-/* Define if you have zlib installed system wide.  */
-#undef HAVE_ZLIB
-
 /* Define as __inline if that's what the C compiler calls it.  */
 #undef inline
 

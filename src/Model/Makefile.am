@@ -6,8 +6,4 @@ libModel_a_SOURCES = loader.cxx loader.hxx \
                      acmodel.cxx acmodel.hxx \
                      panelnode.cxx panelnode.hxx
 
-if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
-else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
-endif

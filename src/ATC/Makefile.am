@@ -12,8 +12,4 @@ libATC_a_SOURCES = \
 	AIEntity.hxx AIEntity.cxx \
 	AILocalTraffic.hxx AILocalTraffic.cxx
 
-if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
-else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
-endif

@@ -8,8 +8,4 @@ libTime_a_SOURCES = \
 	sunpos.cxx sunpos.hxx \
 	tmp.cxx tmp.hxx
 
-if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
-else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
-endif

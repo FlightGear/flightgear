@@ -1,9 +1,3 @@
-if ENABLE_UNIX_SERIAL
-SERIAL_LIBS = -lsgserial
-else
-SERIAL_LIBS =
-endif
-
 if ENABLE_WEATHERCM
 WEATHER_LIBS = $(top_builddir)/src/WeatherCM/libWeatherCM.a
 else
@@ -81,7 +75,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Input/libInput.a \
 	-lsgroute -lsgsky -lsgephem -lsgtiming -lsgio -lsgscreen \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
-	$(SERIAL_LIBS) \
+	-lsgserial \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibnet -lplibssg -lplibsg \
 	-lmk4 -lz \
@@ -90,10 +84,4 @@ fgfs_LDADD = \
 
 fgfs_CFLAGS = -DTHIS_IS_A_TEST
 
-if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
-else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
-endif
-
-

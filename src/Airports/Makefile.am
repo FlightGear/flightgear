@@ -12,8 +12,4 @@ gensimple_LDADD = libAirports.a -lsgdebug -lsgmisc -lsgxml -lmk4 -lz
 genrunways_SOURCES = genrunways.cxx
 genrunways_LDADD = libAirports.a -lsgdebug -lsgmisc -lsgxml -lmk4 -lz
 
-if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
-else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
-endif

@@ -13,10 +13,9 @@ libfiltersjb_a_SOURCES = \
 	FGSwitch.cpp FGSwitch.h
 
 if OLD_AUTOMAKE
-INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
 DEFS += -DFGFS
 else
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 AM_CXXFLAGS = -DFGFS
 endif
 
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
