@@ -117,7 +117,6 @@ private:
   //
   // constants
   //
-  const double CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
 
   const double R_air;
   const double rho_fuel;    // kg/m^3
