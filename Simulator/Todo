@@ -11,6 +11,12 @@
            Press release # 
            John G. Watson (818) 354-5011 release 98-52
 
+7/22/98 -  add some trig debugging wrappers that can be #ifdef'd in
+           kind of like the xgl stuff.  The debugging version can do
+           bounds checking and such.
+
+7/21/98 -  add a --enable/disable-sound option.
+
 6/10/98 -  problem with view culling when not looking forward.  Need to 
            generate the correct matrix and work it into the calculations.
 
