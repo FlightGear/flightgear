@@ -245,6 +245,11 @@
 /*                                                                           */
 /*****************************************************************************/
 
+/* CLO: 3/21/99 - this could be done as a compile flag, but I always want
+this defined and I don't want to sprinkle extra stuff throughout the 
+Makefile system if I don't have to. */
+#define ANSI_DECLARATORS 1
+
 struct triangulateio {
   REAL *pointlist;                                               /* In / out */
   REAL *pointattributelist;                                      /* In / out */
