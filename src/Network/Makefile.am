@@ -6,6 +6,7 @@ libNetwork_a_SOURCES = \
 	fg_serial.cxx fg_serial.hxx \
 	fg_socket.cxx fg_socket.hxx \
 	protocol.cxx protocol.hxx \
+	native.cxx native.hxx \
 	garmin.cxx garmin.hxx \
 	nmea.cxx nmea.hxx \
 	pve.cxx pve.hxx \
