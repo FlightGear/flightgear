@@ -29,19 +29,27 @@
 
 
 int main(int argc, char **argv) {
-    char basename[256];
+    char infile[256], outfile[256];
 
-    strcpy(basename, argv[1]);
+    if ( argc != 3 ) {
+	printf("Usage %s: infile outfile\n", argv[0]);
+    }
+
+    strcpy(infile, argv[1]);
+    strcpy(outfile, argv[2]);
 
     /* load the input data files */
-    obj_fix(basename);
+    obj_fix(infile, outfile);
 
     return(0);
 }
 
 
 /* $Log$
-/* Revision 1.1  1997/12/08 19:28:54  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/09 23:03:12  curt
+/* Restructured to split 1deg x 1deg dem's into 64 subsections.
 /*
+ * Revision 1.1  1997/12/08 19:28:54  curt
+ * Initial revision.
+ *
  */

@@ -36,14 +36,17 @@ extern int stack[MAXNODES];
 
 
 /* Load a .obj file */
-void obj_fix(char *basename);
+void obj_fix(char *infile, char *outfile);
 
 
 #endif /* OBJ_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/12/08 19:28:55  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/09 23:03:13  curt
+/* Restructured to split 1deg x 1deg dem's into 64 subsections.
 /*
+ * Revision 1.1  1997/12/08 19:28:55  curt
+ * Initial revision.
+ *
  */

@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "fixnode.h"
 #include "../Dem2node/mesh.h"
@@ -33,8 +34,8 @@
 
 
 /* load the node information */
-void fixnodes(char *basename, struct MESH *m) {
-    char file[256];
+void fixnodes(char *filename, struct MESH *m) {
+    char toname[256];
     FILE *fd;
     int i;
 
@@ -55,12 +56,14 @@ void fixnodes(char *basename, struct MESH *m) {
 	       nodes[i][1], nodes[i][2]); */
     }
 
-    strcpy(file, basename);
-    strcat(file, ".1.node");
 
-    printf("Overwriting original node file: %s\n", file);
+    sprintf(toname, "%s.orig", filename);
+    printf("Moving %s to %s\n", filename, toname);
+    rename(filename, toname);
 
-    fd = fopen(file, "w");
+    printf("Saving new node file: %s\n", filename);
+
+    fd = fopen(filename, "w");
 
     fprintf(fd, "%d 2 1 0\n", nodecount);
 
@@ -74,9 +77,12 @@ void fixnodes(char *basename, struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.2  1997/12/02 13:12:07  curt
-/* Updated to fix every node.
+/* Revision 1.3  1998/01/09 23:03:08  curt
+/* Restructured to split 1deg x 1deg dem's into 64 subsections.
 /*
+ * Revision 1.2  1997/12/02 13:12:07  curt
+ * Updated to fix every node.
+ *
  * Revision 1.1  1997/11/27 00:17:33  curt
  * Initial revision.
  *

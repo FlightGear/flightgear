@@ -63,7 +63,7 @@ void list_add(int *list, int *list_ptr, int node) {
     list[*list_ptr] = node;
     *list_ptr += 1;
 
-    printf("list pointer = %d  adding %d\n", *list_ptr, node); 
+    /* printf("list pointer = %d  adding %d\n", *list_ptr, node); */
 }
 
 
@@ -84,7 +84,7 @@ void dump_list(int *list, int list_ptr) {
 
 	/* dump header */
 	fprintf(out, "t %d %d %d\n", list[i], list[i+1], list[i+2]);
-	printf("t %d %d %d\n", list[i], list[i+1], list[i+2]);
+	/* printf("t %d %d %d\n", list[i], list[i+1], list[i+2]); */
 	i += 3;
 
 	/* dump rest of strip (until -1) */
@@ -139,26 +139,19 @@ double check_cur_face(int n1, int n2, int n3) {
 
 
 /* Load a .obj file */
-void obj_fix(char *basename) {
+void obj_fix(char *infile, char *outfile) {
     char line[256];
-    char inpath[256], outpath[256];
     double dot_prod;
     int first, ncount, vncount, n1, n2, n3, n4;
     int is_ccw;
 
-    strcpy(inpath, basename);
-    strcat(inpath, ".obj");
-
-    strcpy(outpath, basename);
-    strcat(outpath, ".1.obj");
-
-    if ( (in = fopen(inpath, "r")) == NULL ) {
-	printf("Cannot open file: %s\n", inpath);
+    if ( (in = fopen(infile, "r")) == NULL ) {
+	printf("Cannot open file: %s\n", infile);
 	exit(-1);
     }
 
-    if ( (out = fopen(outpath, "w")) == NULL ) {
-	printf("Cannot open file: %s\n", outpath);
+    if ( (out = fopen(outfile, "w")) == NULL ) {
+	printf("Cannot open file: %s\n", outfile);
 	exit(-1);
     }
 
@@ -169,7 +162,7 @@ void obj_fix(char *basename) {
     ncount = 1;
     vncount = 1;
 
-    printf("Reading file:  %s\n", inpath);
+    printf("Reading file:  %s\n", infile);
 
     while ( fgets(line, 250, in) != NULL ) {
 	if ( line[0] == '#' ) {
@@ -274,7 +267,7 @@ void obj_fix(char *basename) {
 		}
 	    }
 	} else {
-	    printf("Unknown line in %s = %s\n", inpath, line);
+	    printf("Unknown line in %s = %s\n", infile, line);
 	}
     }
 
@@ -290,7 +283,10 @@ void obj_fix(char *basename) {
 
 
 /* $Log$
-/* Revision 1.1  1997/12/08 19:28:54  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/09 23:03:12  curt
+/* Restructured to split 1deg x 1deg dem's into 64 subsections.
 /*
+ * Revision 1.1  1997/12/08 19:28:54  curt
+ * Initial revision.
+ *
  */

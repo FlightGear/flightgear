@@ -30,37 +30,19 @@
 #include "triload.h"
 
 
-int origcount;
 int nodecount;
 double nodes[MAX_NODES][3];
 
 
 /* load the node information */
-void triload(char *basename) {
-    char origname[256], nodename[256];
-    FILE *orig, *node;
+void triload(char *filename) {
+    FILE *node;
     int dim, junk1, junk2;
     int i;
 
-    strcpy(origname, basename);
-    strcat(origname, ".node");
-
-    strcpy(nodename, basename);
-    strcat(nodename, ".1.node");
-
-    /* open original node file to see number of original nodes */
-
-    printf("Checking original node file:  %s ...\n", origname);
-    if ( (orig = fopen(origname, "r")) == NULL ) {
-	printf("Cannot open file '%s'\n", origname);
-	exit(-1);
-    }
-    fscanf(orig, "%d %d %d %d", &origcount, &dim, &junk1, &junk2);
-    printf("    Found %d nodes\n", origcount);
-
-    printf("Loading node file:  %s ...\n", nodename);
-    if ( (node = fopen(nodename, "r")) == NULL ) {
-	printf("Cannot open file '%s'\n", nodename);
+    printf("Loading node file:  %s ...\n", filename);
+    if ( (node = fopen(filename, "r")) == NULL ) {
+	printf("Cannot open file '%s'\n", filename);
 	exit(-1);
     }
 
@@ -85,7 +67,10 @@ void triload(char *basename) {
 
 
 /* $Log$
-/* Revision 1.1  1997/11/27 00:17:35  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/09 23:03:09  curt
+/* Restructured to split 1deg x 1deg dem's into 64 subsections.
 /*
+ * Revision 1.1  1997/11/27 00:17:35  curt
+ * Initial revision.
+ *
  */

@@ -29,8 +29,8 @@
 
 #include "tri2obj.h"
 
-#include "../../Src/constants.h"
-#include "../../Src/types.h"
+#include "../../Src/Include/constants.h"
+#include "../../Src/Include/types.h"
 #include "../../Src/Math/fg_geodesy.h"
 #include "../../Src/Math/mat3.h"
 #include "../../Src/Math/polar.h"
@@ -234,10 +234,7 @@ void dump_obj(char *basename) {
     /* dump faces */
     printf("  writing faces\n");
     for ( i = 1; i <= tricount; i++ ) {
-	fprintf(obj, "f %d//%d %d//%d %d//%d\n", 
-		tris[i][0], tris[i][0], 
-		tris[i][1], tris[i][1], 
-		tris[i][2], tris[i][2]);
+	fprintf(obj, "f %d %d %d\n", tris[i][0], tris[i][1], tris[i][2]);
     }
 
     fclose(obj);
@@ -259,9 +256,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.5  1997/12/08 19:17:50  curt
-/* Fixed a type in the normal generation code.
+/* Revision 1.6  1998/01/09 23:03:15  curt
+/* Restructured to split 1deg x 1deg dem's into 64 subsections.
 /*
+ * Revision 1.5  1997/12/08 19:17:50  curt
+ * Fixed a type in the normal generation code.
+ *
  * Revision 1.4  1997/12/02 13:13:32  curt
  * Fixed problem with averaged vertex normals.
  *

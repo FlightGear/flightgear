@@ -83,7 +83,7 @@ TRILIBDEFS = -DTRILIBRARY
 
 # RM should be set to the name of your favorite rm (file deletion program).
 
-RM = /bin/rm
+RM = /bin/rm -f
 
 # The action starts here.
 

@@ -36,7 +36,7 @@
 #define MAX_TRIS  400000
 
 
-extern int origcount, nodecount, tricount;
+extern int nodecount, tricount;
 double nodes[MAX_NODES][3];
 
 
@@ -48,7 +48,10 @@ void triload(char *basename);
 
 
 /* $Log$
-/* Revision 1.1  1997/11/27 00:17:35  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/09 23:03:09  curt
+/* Restructured to split 1deg x 1deg dem's into 64 subsections.
 /*
+ * Revision 1.1  1997/11/27 00:17:35  curt
+ * Initial revision.
+ *
  */
