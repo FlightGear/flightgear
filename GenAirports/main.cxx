@@ -53,12 +53,12 @@ void write_airport( int p_index, list_container hull_list, FGBucket b,
 		    const string& root, const bool cut_and_keep ) {
     char tile_name[256], poly_index[256];
 
-    long int b_index = b.gen_index();
     string base = b.gen_base_path();
     string path = root + "/Scenery/" + base;
     string command = "mkdir -p " + path;
     system( command.c_str() );
 
+    long int b_index = b.gen_index();
     sprintf(tile_name, "%ld", b_index);
     string aptfile = path + "/" + tile_name;
 
@@ -344,6 +344,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.9  1999/03/12 22:54:19  curt
+// Rearrange a bit of code ...
+//
 // Revision 1.8  1999/03/01 15:35:26  curt
 // Fixed bug in output format generated.
 //
