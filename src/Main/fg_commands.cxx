@@ -154,6 +154,8 @@ do_null (const SGPropertyNode * arg)
 #if defined(HAVE_PLIB_PSL)
 /**
  * Built-in command: run a PSL script.
+ *
+ * script: the PSL script to execute
  */
 static bool
 do_script (const SGPropertyNode * arg)
@@ -179,10 +181,87 @@ do_exit (const SGPropertyNode * arg)
 
 
 /**
+ * Built-in command: reinitialize one or more subsystems.
+ *
+ * subsystem[*]: the name(s) of the subsystem(s) to reinitialize; if
+ * none is specified, reinitialize all of them.
+ */
+static bool
+do_reinit (const SGPropertyNode * arg)
+{
+    bool result = true;
+
+    vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
+    if (subsystems.size() == 0)
+        globals->get_subsystem_mgr()->reinit();
+    else for (int i = 0; i < subsystems.size(); i++) {
+        const char * name = subsystems[i]->getStringValue();
+        FGSubsystem * subsystem = globals->get_subsystem(name);
+        if (subsystem == 0) {
+            result = false;
+            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");
+        } else {
+            subsystem->reinit();
+        }
+    }
+    return result;
+}
+
+
+/**
+ * Built-in command: suspend one or more subsystems.
+ *
+ * subsystem[*] - the name(s) of the subsystem(s) to suspend.
+ */
+static bool
+do_suspend (const SGPropertyNode * arg)
+{
+    bool result = true;
+
+    vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
+    for (int i = 0; i < subsystems.size(); i++) {
+        const char * name = subsystems[i]->getStringValue();
+        FGSubsystem * subsystem = globals->get_subsystem(name);
+        if (subsystem == 0) {
+            result = false;
+            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");
+        } else {
+            subsystem->suspend();
+        }
+    }
+    return result;
+}
+
+/**
+ * Built-in command: suspend one or more subsystems.
+ *
+ * subsystem[*] - the name(s) of the subsystem(s) to suspend.
+ */
+static bool
+do_resume (const SGPropertyNode * arg)
+{
+    bool result = true;
+
+    vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
+    for (int i = 0; i < subsystems.size(); i++) {
+        const char * name = subsystems[i]->getStringValue();
+        FGSubsystem * subsystem = globals->get_subsystem(name);
+        if (subsystem == 0) {
+            result = false;
+            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");
+        } else {
+            subsystem->resume();
+        }
+    }
+    return result;
+}
+
+
+/**
  * Built-in command: load flight.
  *
  * file (optional): the name of the file to load (relative to current
- * directory).  Defaults to "fgfs.sav".
+ *   directory).  Defaults to "fgfs.sav"
  */
 static bool
 do_load (const SGPropertyNode * arg)
@@ -709,6 +788,9 @@ static struct {
     { "script", do_script },
 #endif // HAVE_PLIB_PSL
     { "exit", do_exit },
+    { "reinit", do_reinit },
+    { "suspend", do_reinit },
+    { "resume", do_reinit },
     { "load", do_load },
     { "save", do_save },
     { "panel-load", do_panel_load },

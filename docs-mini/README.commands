@@ -1,5 +1,222 @@
-Binding New Commands in FlightGear
-----------------------------------
+FlightGear Commands Mini-HOWTO
+
+David Megginson
+Started: 2002-10-25
+Last revised: 2003-01-20
+
+
+In FlightGear, a *command* represents an action, while a *property*
+represents a state.  The trigger for a command can be any kind of user
+input, including the keyboard, mouse, joystick, GUI, instrument panel,
+or a remote network client.
+
+
+XML Command Binding Markup
+--------------------------
+
+Most of the command-binding in FlightGear is handled through static
+XML configuration files such as $FG_ROOT/keyboard.xml for the
+keyboard, $FG_ROOT/mice.xml for the mouse, and
+$FG_ROOT/gui/menubar.xml for the menubar.  In all of these files, you
+reference a command through a binding.  This binding advances the
+first throttle by 1%, up to a maximum value of 1.0:
+
+  <binding>
+   <command>property-adjust</command>
+   <property>/controls/throttle[0]</property>
+   <step type="double">0.01</step>
+   <max>1.0</max>
+  </binding>
+
+A command binding always consists of the XML 'binding' element, with
+one subelement named 'command' containing the command name (such as
+'property-adjust').  All other subelements are named parameters to the
+command: in this case, the parameters are 'property', 'step', and
+'max'.  Here is a simpler binding, with no parameters:
+
+  <binding>
+   <command>exit</command>
+  </binding>
+
+Bindings always appear inside some other kind of markup, depending on
+the input type.  For example, here is the binding from keyboard.xml
+that links the ESC key to the 'exit' command:
+
+ <key n="27">
+  <name>ESC</name>
+  <desc>Prompt and quit FlightGear.</desc>
+  <binding>
+    <command>exit</command>
+  </binding>
+ </key>
+
+Usually, more than one binding is allowed for a single input trigger,
+and bindings are executed in order from first to last.
+
+
+Built-in Commands
+-----------------
+
+As of the last revision date, the following commands were available
+from inside FlightGear; the most commonly-used ones are the commands
+that operate on property values (FlightGear's internal state):
+
+
+null - do nothing
+
+script - execute a PSL script
+  script: the PSL script to execute
+
+exit - prompt and quit FlightGear
+
+load - load properties from an XML file
+  file: the name of the file to load, relative to the current
+    directory (defaults to "fgfs.sav")
+
+save - save properties to an XML file
+  file: the name of the file to save, relative to the current
+    directory (defaults to "fgfs.sav").
+
+panel-load - (re)load the 2D instrument panel
+  path: the path of the XML panel file, relative to $FG_ROOT (defaults
+    to the value of /sim/panel/path if specified, or
+    "Panels/Default/default.xml" as a last resort.
+
+panel-mouse-click - pass a mouse click to the instrument panel
+  button: the number of the mouse button (0-based)
+  is-down: true if the button is down, false if it is up
+  x-pos: the x position of the mouse click
+  y-pos: the y position of the mouse click
+
+preferences-load - (re)load preferences
+  path: the file name to load preferences from, relative to $FG_ROOT.
+    Defaults to "preferences.xml".
+
+view-cycle - cycle to the next viewpoint
+
+screen-capture - capture the screen to a file
+
+tile-cache-reload - reload the scenery tile cache
+
+lighting-update - update FlightGear's lighting
+
+property-toggle - swap a property value between true and false
+  property: the name of the property to toggle
+
+property-assign - assign a value to a property
+  property[0]: the name of the property that will get the new value.
+  value: the new value for the property; or
+  property[1]: the name of the property holding the new value.
+
+property-adjust - adjust the value of a property
+  property: the name of the property to increment or decrement
+  step: the amount of the increment or decrement (defaults to 0)
+  offset: input offset distance (used for the mouse; multiplied by
+    factor)
+  factor: factor for multiplying offset distance (used for the mouse;
+    defaults to 1)
+  min: the minimum allowed value (default: no minimum)
+  max: the maximum allowed value (default: no maximum)
+  mask: 'integer' to apply only to the left of the decimal point;
+    'decimal' to apply only to the right of the decimal point; 'all'
+    to apply to the full value (defaults to 'all')
+  wrap: true if the value should be wrapped when it passes min or max;
+    both min and max must be specified (defaults to false)
+
+property-multiply - multiply the value of a property
+  property: the name of the property to multiply
+  factor: the amount by which to multiply (defaults to 1.0)
+  min: the minimum allowed value (default: no minimum)
+  max: the maximum allowed value (default: no maximum)
+  mask: 'integer' to apply only to the left of the decimal point;
+    'decimal' to apply only to the right of the decimal point; 'all'
+    to apply to the full value (defaults to 'all')
+  wrap: true if the value should be wrapped when it passes min or max;
+    both min and max must be specified (defaults to false)
+
+property-swap - swap the values of two properties
+  property[0]: the name of the first property
+  property[1]: the name of the second property
+
+property-scale - set the value of a property based on an axis
+  property: the name of the property to set
+  setting: the current input setting (usually a joystick axis from -1
+    or 0 to 1)
+  offset: the offset to shift by, before applying the factor (defaults
+    to 0)
+  factor: the factor to multiply by (use negative to reverse; defaults
+    to 1.0)
+
+property-cycle - cycle a property through a set of values
+  property: the name of the property to cycle
+  value[*]: all of the allowed values
+
+dialog-show - show an XML-configured dialog box
+  dialog-name - the name of the dialog to show
+
+dialog-close - close the active dialog box
+
+dialog-update - copy values from FlightGear to the active dialog box
+  object-name: the name of the GUI object to update (defaults to all
+    objects)
+
+dialog-apply - copy values from the active dialog box to FlightGear
+  object-name: the name of the GUI object to apply (defaults to all
+    objects)
+
+presets-commit - commit preset values from /sim/presets
+
+
+The following commands are temporary, and will soon disappear or be
+renamed; do NOT rely on them:
+
+old-save-dialog - offer to save a flight
+
+old-load-dialog - offer to load a flight
+
+old-reinit-dialog - offer to reinit FlightGear
+
+old-hires-snapshot-dialog - save a hires screen shot
+
+old-snapshot-dialog - save a screenshot
+
+old-print-dialog - print the screen (Windows only)
+
+old-pilot-offset-dialog - set pilot offsets graphically
+
+old-hud-alpha-dialog - set the alpha value for the HUD
+
+old-properties-dialog - display the property browser
+
+old-preset-airport-dialog - set the default airport
+
+old-preset-runway-dialog - set the default runway
+
+old-preset-offset-distance-dialog - set the default offset distance
+
+old-preset-altitude-dialog - set the default altitude
+
+old-preset-glidescope-dialog - set the default glidescope
+
+old-preset-airspeed-dialog - set the default airspeed
+
+old-preset-commit-dialog - commit preset values
+
+old-ap-add-waypoint-dialog - add a waypoint to the current route
+
+old-ap-pop-waypoint-dialog - remove a waypoint from the current route
+
+old-ap-clear-dialog - clear the current route
+
+old-ap-adjust-dialog - adjust the autopilot settings
+
+old-lat-lon-format-dialog - toggle the lat/lon format in the HUD
+
+old-help-dialog - offer online help
+
+
+Adding New Commands in C++
+--------------------------
 
 
 To add a new command to FlightGear, you first need to create a
