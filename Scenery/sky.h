@@ -27,13 +27,19 @@
 /* (Re)generate the display list */
 void fgSkyInit();
 
+/* (Re)calculate the sky colors at each vertex */
+void fgSkyColorsInit();
+
 /* Draw the Sky */
 void fgSkyRender();
 
 
 /* $Log$
-/* Revision 1.1  1997/12/17 23:14:31  curt
-/* Initial revision.
-/* Begin work on rendering the sky. (Rather than just using a clear screen.)
+/* Revision 1.2  1997/12/22 23:45:49  curt
+/* First stab at sunset/sunrise sky glow effects.
 /*
+ * Revision 1.1  1997/12/17 23:14:31  curt
+ * Initial revision.
+ * Begin work on rendering the sky. (Rather than just using a clear screen.)
+ *
  */

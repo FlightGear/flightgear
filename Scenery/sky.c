@@ -61,12 +61,17 @@
 #define OUTER_ELEV        0.0
 
 
-static float sky_inner[12][3];
-static float sky_middle[12][3];
-static float sky_outer[12][3];
+static float inner_vertex[12][3];
+static float middle_vertex[12][3];
+static float outer_vertex[12][3];
 
-/* Calculate the sky structure verticies */
-void fgSkyInit() {
+static float inner_color[12][4];
+static float middle_color[12][4];
+static float outer_color[12][4];
+
+
+/* Calculate the sky structure vertices */
+void fgSkyVerticesInit() {
     float theta;
     int i;
 
@@ -75,22 +80,131 @@ void fgSkyInit() {
     for ( i = 0; i < 12; i++ ) {
 	theta = (i * 30.0) * DEG_TO_RAD;
 	
-	sky_inner[i][0] = cos(theta) * INNER_RADIUS;
-	sky_inner[i][1] = sin(theta) * INNER_RADIUS;
-	sky_inner[i][2] = INNER_ELEV;
+	inner_vertex[i][0] = cos(theta) * INNER_RADIUS;
+	inner_vertex[i][1] = sin(theta) * INNER_RADIUS;
+	inner_vertex[i][2] = INNER_ELEV;
 	
 	printf(" %.2f %.2f\n", cos(theta) * INNER_RADIUS, 
 	       sin(theta) * INNER_RADIUS);
 
-	sky_middle[i][0] = cos((double)theta) * MIDDLE_RADIUS;
-	sky_middle[i][1] = sin((double)theta) * MIDDLE_RADIUS;
-	sky_middle[i][2] = MIDDLE_ELEV;
+	middle_vertex[i][0] = cos((double)theta) * MIDDLE_RADIUS;
+	middle_vertex[i][1] = sin((double)theta) * MIDDLE_RADIUS;
+	middle_vertex[i][2] = MIDDLE_ELEV;
 	    
-	sky_outer[i][0] = cos((double)theta) * OUTER_RADIUS;
-	sky_outer[i][1] = sin((double)theta) * OUTER_RADIUS;
-	sky_outer[i][2] = OUTER_ELEV;
+	outer_vertex[i][0] = cos((double)theta) * OUTER_RADIUS;
+	outer_vertex[i][1] = sin((double)theta) * OUTER_RADIUS;
+	outer_vertex[i][2] = OUTER_ELEV;
 	    
     }
+}
+
+
+/* (Re)calculate the sky colors at each vertex */
+void fgSkyColorsInit() {
+    struct fgLIGHT *l;
+    float sun_angle, diff;
+    float outer_red_param, outer_red_amt, outer_red_diff;
+    float middle_red_param, middle_red_amt, middle_red_diff;
+    int i, j;
+
+    l = &cur_light_params;
+
+    printf("Generating the sky colors for each vertex.\n");
+
+    /* setup for the possibility of sunset effects */
+    sun_angle = l->sun_angle * RAD_TO_DEG;
+    printf("  Sun angle in degrees = %.2f\n", sun_angle);
+
+    if ( (sun_angle > 80.0) && (sun_angle < 100.0) ) {
+	/* 0.0 - 0.4 */
+	outer_red_param = (10.0 - fabs(90.0 - sun_angle)) / 25.0;
+	outer_red_diff = outer_red_param / 6.0;
+    } else {
+	outer_red_param = 0.0;
+	outer_red_diff = 0.0;
+    }
+    printf("  outer_red_param = %.2f  outer_red_diff = %.2f\n", 
+	   outer_red_param, outer_red_diff);
+
+    if ( (sun_angle > 85.0) && (sun_angle < 95.0) ) {
+	/* 0.0 - 0.4 */
+	middle_red_param = (5.0 - fabs(90.0 - sun_angle)) / 12.5;
+	middle_red_diff = middle_red_param / 6.0;
+    } else {
+	middle_red_param = 0.0;
+	middle_red_diff = 0.0;
+    }
+    printf("  middle_red_param = %.2f  middle_red_diff = %.2f\n", 
+	   middle_red_param, middle_red_diff);
+
+    /* calculate transition colors between sky and fog */
+    outer_red_amt = outer_red_param;
+    middle_red_amt = middle_red_param;
+
+    for ( i = 0; i < 6; i++ ) {
+	for ( j = 0; j < 3; j++ ) {
+	    diff = l->sky_color[j] - l->fog_color[j];
+	    inner_color[i][j] = l->sky_color[j] - diff * 0.3;
+	    middle_color[i][j] = l->sky_color[j] - diff * 0.9;
+	    outer_color[i][j] = l->fog_color[j];
+	}
+	outer_color[i][0] += outer_red_amt;
+	middle_color[i][0] += middle_red_amt;
+	if ( outer_color[i][0] > 1.0 ) { outer_color[i][0] = 1.0; }
+	if ( middle_color[i][0] > 1.0 ) { middle_color[i][0] = 1.0; }
+	inner_color[i][3] = middle_color[i][3] = outer_color[i][3] = 
+	    l->sky_color[3];
+
+	outer_red_amt -= outer_red_diff;
+	middle_red_amt -= middle_red_diff;
+
+	printf("inner_color[%d] = %.2f %.2f %.2f %.2f\n", i, inner_color[i][0],
+	       inner_color[i][1], inner_color[i][2], inner_color[i][3]);
+	printf("middle_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
+	       middle_color[i][0], middle_color[i][1], middle_color[i][2], 
+	       middle_color[i][3]);
+	printf("outer_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
+	       outer_color[i][0], outer_color[i][1], outer_color[i][2], 
+	       outer_color[i][3]);
+    }
+
+    outer_red_amt = 0.0;
+    middle_red_amt = 0.0;
+
+    for ( i = 6; i < 12; i++ ) {
+
+	for ( j = 0; j < 3; j++ ) {
+	    diff = l->sky_color[j] - l->fog_color[j];
+	    inner_color[i][j] = l->sky_color[j] - diff * 0.3;
+	    middle_color[i][j] = l->sky_color[j] - diff * 0.9;
+	    outer_color[i][j] = l->fog_color[j];
+	}
+	outer_color[i][0] += outer_red_amt;
+	middle_color[i][0] += middle_red_amt;
+	if ( outer_color[i][0] > 1.0 ) { outer_color[i][0] = 1.0; }
+	if ( middle_color[i][0] > 1.0 ) { middle_color[i][0] = 1.0; }
+	inner_color[i][3] = middle_color[i][3] = outer_color[i][3] = 
+	    l->sky_color[3];
+
+	outer_red_amt += outer_red_diff;
+	middle_red_amt += middle_red_diff;
+
+	printf("inner_color[%d] = %.2f %.2f %.2f %.2f\n", i, inner_color[i][0],
+	       inner_color[i][1], inner_color[i][2], inner_color[i][3]);
+	printf("middle_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
+	       middle_color[i][0], middle_color[i][1], middle_color[i][2], 
+	       middle_color[i][3]);
+	printf("outer_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
+	       outer_color[i][0], outer_color[i][1], outer_color[i][2], 
+	       outer_color[i][3]);
+    }
+}
+
+
+/* Initialize the sky structure and colors */
+void fgSkyInit() {
+    fgSkyVerticesInit();
+    fgSkyColorsInit();
 }
 
 
@@ -99,7 +213,7 @@ void fgSkyRender() {
     struct fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgVIEW *v;
-    float inner_color[4], middle_color[4], diff, east_dot, dot, angle;
+    float /* inner_color[4], middle_color[4], diff, */ east_dot, dot, angle;
     int i;
 
     f = &current_aircraft.flight;
@@ -107,21 +221,6 @@ void fgSkyRender() {
     v = &current_view;
 
     printf("Rendering the sky.\n");
-
-    /*
-    l->fog_color[0] = 1.0;
-    l->fog_color[1] = 0.0;
-    l->fog_color[2] = 0.0;
-    l->fog_color[3] = 1.0;
-    */
-
-    /* calculate transition colors between sky and fog */
-    for ( i = 0; i < 3; i++ ) {
-	diff = l->sky_color[i] - l->fog_color[i];
-	inner_color[i] = l->sky_color[i] - diff * 0.3;
-	middle_color[i] = l->sky_color[i] - diff * 1.0;
-    }
-    inner_color[3] = middle_color[3] = l->sky_color[3];
 
     xglPushMatrix();
 
@@ -160,41 +259,42 @@ void fgSkyRender() {
     xglBegin( GL_TRIANGLE_FAN );
     xglColor4fv(l->sky_color);
     xglVertex3f(0.0, 0.0, CENTER_ELEV);
-    xglColor4fv( inner_color );
     for ( i = 0; i < 12; i++ ) {
-	xglVertex3fv( sky_inner[i] );
+	xglColor4fv( inner_color[i] );
+	xglVertex3fv( inner_vertex[i] );
     }
-    xglVertex3fv( sky_inner[0] );
+    xglColor4fv( inner_color[0] );
+    xglVertex3fv( inner_vertex[0] );
     xglEnd();
 
     /* Draw the middle ring */
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
-	xglColor4fv( middle_color );
-	xglVertex3fv( sky_middle[i] );
-	xglColor4fv( inner_color );
-	xglVertex3fv( sky_inner[i] );
+	xglColor4fv( middle_color[i] );
+	xglVertex3fv( middle_vertex[i] );
+	xglColor4fv( inner_color[i] );
+	xglVertex3fv( inner_vertex[i] );
     }
-    xglColor4fv( middle_color );
-      xglColor4f(1.0, 0.0, 0.0, 1.0);
-    xglVertex3fv( sky_middle[0] );
-    xglColor4fv( inner_color );
-      xglColor4f(1.0, 0.0, 0.0, 1.0);
-    xglVertex3fv( sky_inner[0] );
+    xglColor4fv( middle_color[0] );
+    /* xglColor4f(1.0, 0.0, 0.0, 1.0); */
+    xglVertex3fv( middle_vertex[0] );
+    xglColor4fv( inner_color[0] );
+    /* xglColor4f(1.0, 0.0, 0.0, 1.0); */
+    xglVertex3fv( inner_vertex[0] );
     xglEnd();
 
     /* Draw the outer ring */
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
-	xglColor4fv( l->fog_color );
-	xglVertex3fv( sky_outer[i] );
-	xglColor4fv( middle_color );
-	xglVertex3fv( sky_middle[i] );
+	xglColor4fv( outer_color[i] );
+	xglVertex3fv( outer_vertex[i] );
+	xglColor4fv( middle_color[i] );
+	xglVertex3fv( middle_vertex[i] );
     }
-    xglColor4fv( l->fog_color );
-    xglVertex3fv( sky_outer[0] );
-    xglColor4fv( middle_color );
-    xglVertex3fv( sky_middle[0] );
+    xglColor4fv( outer_color[0] );
+    xglVertex3fv( outer_vertex[0] );
+    xglColor4fv( middle_color[0] );
+    xglVertex3fv( middle_vertex[0] );
     xglEnd();
 
     xglPopMatrix();
@@ -202,9 +302,12 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.6  1997/12/22 04:14:34  curt
-/* Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+/* Revision 1.7  1997/12/22 23:45:48  curt
+/* First stab at sunset/sunrise sky glow effects.
 /*
+ * Revision 1.6  1997/12/22 04:14:34  curt
+ * Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+ *
  * Revision 1.5  1997/12/19 23:34:59  curt
  * Lot's of tweaking with sky rendering and lighting.
  *

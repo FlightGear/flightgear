@@ -209,6 +209,9 @@ static void fgUpdateViewParams() {
     l->sky_color[1] = base_sky_color[1] * sky_brightness;
     l->sky_color[2] = base_sky_color[2] * sky_brightness;
     l->sky_color[3] = base_sky_color[3];
+
+    /* mental note: this should really be done every 10-30 seconds I suppose */
+    fgSkyColorsInit();
 }
 
 
@@ -620,9 +623,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.38  1997/12/22 04:14:28  curt
-/* Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+/* Revision 1.39  1997/12/22 23:45:45  curt
+/* First stab at sunset/sunrise sky glow effects.
 /*
+ * Revision 1.38  1997/12/22 04:14:28  curt
+ * Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+ *
  * Revision 1.37  1997/12/19 23:34:03  curt
  * Lot's of tweaking with sky rendering and lighting.
  *
