@@ -88,6 +88,7 @@ FGControls::FGControls() :
     APU_bleed( false ),
     mode( 0 ),
     dump( false ),
+    outflow_valve( 0.0 ),
     taxi_light( false ),
     logo_lights( false ),
     nav_lights( false ),
@@ -196,6 +197,7 @@ FGControls::init ()
         reverser[engine] = false;
         water_injection[engine] = false;
         nitrous_injection[engine] = false;
+        cowl_flaps_norm[engine] = 0.0;
         condition[engine] = 0;
     }
 
