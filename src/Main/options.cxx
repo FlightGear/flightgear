@@ -670,20 +670,29 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg == "--enable-wireframe" ) {
 	wireframe = true;
     } else if ( arg.find( "--geometry=" ) != string::npos ) {
+	bool geometry_ok = true;
 	string geometry = arg.substr( 11 );
-	if ( geometry == "640x480" ) {
+	string::size_type i = geometry.find('x');
+
+ 	if (i != string::npos) {
+	    xsize = atoi(geometry.substr(0, i));
+	    ysize = atoi(geometry.substr(i+1));
+	    // cout << "Geometry is " << xsize << 'x' << ysize << '\n';
+  	} else {
+	    geometry_ok = false;
+ 	}
+
+ 	if ( xsize <= 0 || ysize <= 0 ) {
 	    xsize = 640;
 	    ysize = 480;
-	} else if ( geometry == "800x600" ) {
-	    xsize = 800;
-	    ysize = 600;
-	} else if ( geometry == "1024x768" ) {
-	    xsize = 1024;
-	    ysize = 768;
-	} else {
-	    FG_LOG( FG_GENERAL, FG_ALERT, "Unknown geometry: " << geometry );
-	    exit(-1);
-	}
+	    geometry_ok = false;
+ 	}
+
+ 	if ( !geometry_ok ) {
+  	    FG_LOG( FG_GENERAL, FG_ALERT, "Unknown geometry: " << geometry );
+ 	    FG_LOG( FG_GENERAL, FG_ALERT,
+ 		    "Setting geometry to " << xsize << 'x' << ysize << '\n');
+  	}
     } else if ( arg == "--units-feet" ) {
 	units = FG_UNITS_FEET;	
     } else if ( arg == "--units-meters" ) {

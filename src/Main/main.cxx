@@ -908,6 +908,8 @@ void fgReshape( int width, int height ) {
     current_view.set_winHeight( height );
     current_view.force_update_fov_math();
 
+    glViewport ( 0, 0, width, height );
+
     if ( idle_state == 1000 ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
