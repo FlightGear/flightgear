@@ -78,15 +78,27 @@ static void fgRadioSearch( void ) {
 }
 
 // Constructor
-FGRadioStack::FGRadioStack() {
-    nav1_radial = 0.0;
-    nav1_dme_dist = 0.0;
-    nav2_radial = 0.0;
-    nav2_dme_dist = 0.0;
-    need_update = true;
-    lon_node = fgGetNode("/position/longitude-deg");
-    lat_node = fgGetNode("/position/latitude-deg");
-    alt_node = fgGetNode("/position/altitude-ft");
+FGRadioStack::FGRadioStack() :
+    lon_node(fgGetNode("/position/longitude-deg", true)),
+    lat_node(fgGetNode("/position/latitude-deg", true)),
+    alt_node(fgGetNode("/position/altitude-ft", true)),
+    need_update(true),
+    nav1_radial(0.0),
+    nav1_dme_dist(0.0),
+    nav2_radial(0.0),
+    nav2_dme_dist(0.0)
+{
+    SGPath path( globals->get_fg_root() );
+    SGPath term = path;
+    term.append( "Navaids/range.term" );
+    SGPath low = path;
+    low.append( "Navaids/range.low" );
+    SGPath high = path;
+    high.append( "Navaids/range.high" );
+
+    term_tbl = new SGInterpTable( term.str() );
+    low_tbl = new SGInterpTable( low.str() );
+    high_tbl = new SGInterpTable( high.str() );
 }
 
 
@@ -94,6 +106,10 @@ FGRadioStack::FGRadioStack() {
 FGRadioStack::~FGRadioStack() 
 {
     unbind();			// FIXME: should be called externally
+
+    delete term_tbl;
+    delete low_tbl;
+    delete high_tbl;
 }
 
 
@@ -106,18 +122,6 @@ FGRadioStack::init ()
 
     search();
     update();
-
-    SGPath path( globals->get_fg_root() );
-    SGPath term = path;
-    term.append( "Navaids/range.term" );
-    SGPath low = path;
-    low.append( "Navaids/range.low" );
-    SGPath high = path;
-    high.append( "Navaids/range.high" );
-
-    term_tbl = new SGInterpTable( term.str() );
-    low_tbl = new SGInterpTable( low.str() );
-    high_tbl = new SGInterpTable( high.str() );
 
     // Search radio database once per second
     global_events.Register( "fgRadioSearch()", fgRadioSearch,
