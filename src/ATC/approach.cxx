@@ -172,7 +172,7 @@ void FGApproach::Update(double dt) {
 				else tpars.VDir = 2;
 				tpars.alt = planes[i].aalt;
 				message = current_transmissionlist->gen_text(station, code, tpars, true );
-				cout << message << '\n';
+				//cout << message << '\n';
 				globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 				planes[i].lmc = code;
 				planes[i].tlm = etime_node->getDoubleValue();
