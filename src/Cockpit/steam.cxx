@@ -319,6 +319,8 @@ void FGSteam::_CatchUp()
 	occasionally due to some dirt in the tube or on the ball.
 	*/
         // cout << current_aircraft.fdm_state->get_A_Z_pilot() << endl;
+        // cout << "Ay = " << current_aircraft.fdm_state->get_A_Y_pilot()
+        //  << " Az = " << current_aircraft.fdm_state->get_A_Z_pilot() << endl;
 	d = -current_aircraft.fdm_state->get_A_Z_pilot();
 	if ( d < 1 ) d = 1;
 	set_lowpass ( & the_TC_rad,

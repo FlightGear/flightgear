@@ -29,6 +29,23 @@
 #include "pt_lights.hxx"
 
 
+// strobe pre-draw (we want a larger point size)
+static int StrobePreDraw( ssgEntity *e ) {
+    glPushAttrib( GL_POINT_BIT );
+    glPointSize(4.0);
+    glEnable(GL_POINT_SMOOTH);
+
+    return true;
+}
+
+// strobe post-draw (we want a larger point size)
+static int StrobePostDraw( ssgEntity *e ) {
+    glPopAttrib();
+
+    return true;
+}
+
+
 // Generate a directional light
 ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up, 
                                 const string &material ) {
@@ -243,6 +260,9 @@ ssgTimedSelector *gen_reil_lights( const point_list &nodes,
                 << material );
     }
 
+    leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
+    leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
+
     ssgTimedSelector *reil = new ssgTimedSelector;
 
     // need to add this twice to work around an ssg bug
@@ -325,6 +345,9 @@ ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
             SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
                     << material );
         }
+
+        leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
+        leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
 
         rabbit->addKid( leaf );
         if ( first ) {
