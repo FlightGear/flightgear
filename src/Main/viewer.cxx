@@ -725,6 +725,8 @@ FGViewer::copyLocationData()
 void
 FGViewer::dampEyeData (double &alt_ft, double &roll_deg, double &pitch_deg, double &heading_deg)
 {
+  const double interval = 0.01;
+
   static FGViewer *last = 0;
   if (last != this) {
     _damp_sync = 0.0;
@@ -736,16 +738,20 @@ FGViewer::dampEyeData (double &alt_ft, double &roll_deg, double &pitch_deg, doub
     return;
   }
 
-  if (_damp_sync < 0.01) {
-    alt_ft = _damped_alt_ft;
-    roll_deg = _damped_roll_deg;
-    pitch_deg = _damped_pitch_deg;
-    heading_deg = _damped_heading_deg;
+  if (_damp_sync < interval) {
+    if (_damp_alt > 0.0)
+      alt_ft = _damped_alt_ft;
+    if (_damp_roll > 0.0)
+      roll_deg = _damped_roll_deg;
+    if (_damp_pitch > 0.0)
+      pitch_deg = _damped_pitch_deg;
+    if (_damp_heading > 0.0)
+      heading_deg = _damped_heading_deg;
     return;
   }
 
-  while (_damp_sync >= 0.01) {
-    _damp_sync -= 0.01;
+  while (_damp_sync >= interval) {
+    _damp_sync -= interval;
 
     double d;
     if (_damp_alt > 0.0)
