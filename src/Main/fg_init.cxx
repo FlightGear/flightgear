@@ -81,7 +81,7 @@
 #include <FDM/MagicCarpet.hxx>
 #include <Include/general.hxx>
 #include <Input/input.hxx>
-#include <Joystick/joystick.hxx>
+// #include <Joystick/joystick.hxx>
 #include <Objects/matlib.hxx>
 #include <Navaids/fixlist.hxx>
 #include <Navaids/ilslist.hxx>
@@ -706,9 +706,9 @@ bool fgInitSubsystems( void ) {
     // Initialize the joystick subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    if ( ! fgJoystickInit() ) {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Joystick initialization!" );
-    }
+    // if ( ! fgJoystickInit() ) {
+    //   SG_LOG( SG_GENERAL, SG_ALERT, "Error in Joystick initialization!" );
+    // }
 
 
     ////////////////////////////////////////////////////////////////////
