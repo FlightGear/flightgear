@@ -323,7 +323,9 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       fetch_elapsed( 9999.0 ),
       proxy_host( fgGetNode("/sim/presets/proxy/host", true) ),
       proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
-      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) )
+      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
+      _error_dt( 0.0 ),
+      _error_count( 0 )
 {
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
     thread = new MetarThread(this);
@@ -391,7 +393,8 @@ FGMetarEnvironmentCtrl::init ()
         = fgGetNode( "/position/latitude-deg", true );
 
     bool found_metar = false;
-    while ( !found_metar ) {
+
+    while ( !found_metar && (_error_count < 3) ) {
         FGAirport a = globals->get_airports()
             ->search( longitude->getDoubleValue(),
                       latitude->getDoubleValue(),
@@ -419,6 +422,9 @@ FGMetarEnvironmentCtrl::init ()
 void
 FGMetarEnvironmentCtrl::reinit ()
 {
+    _error_count = 0;
+    _error_dt = 0.0;
+
 #if 0
     update_env_config();
 #endif
@@ -429,6 +435,11 @@ FGMetarEnvironmentCtrl::reinit ()
 void
 FGMetarEnvironmentCtrl::update(double delta_time_sec)
 {
+
+    _dt += delta_time_sec;
+    if (_error_count >= 3)
+       return;
+
     FGMetarResult result;
 
     static const SGPropertyNode *longitude
@@ -468,6 +479,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         id = request_queue.front();
         request_queue.pop();
     }
+
     if ( !id.empty() ) {
         SG_LOG( SG_GENERAL, SG_INFO, "inline fetching = " << id );
         result = fetch_data( id );
@@ -510,6 +522,16 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
     FGMetarResult result;
     result.icao = icao;
 
+    // if the last error was more than three seconds ago,
+    // then pretent nothing happened.
+    if (_error_dt < 3) {
+        _error_dt += _dt;
+
+    } else {
+        _error_dt = 0.0;
+        _error_count = 0;
+    }
+
     // fetch station elevation if exists
     FGAirport a = globals->get_airports()->search( icao );
     station_elevation_ft = a.elevation;
@@ -520,11 +542,20 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
         string auth = proxy_auth->getStringValue();
         string port = proxy_port->getStringValue();
         result.m = new SGMetar( icao, host, port, auth);
+
     } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
                 << e.getFormattedMessage().c_str() );
+        if (_error_count++ >= 3) {
+           SG_LOG( SG_GENERAL, SG_WARN, "Stop fetching data permanently.");
+           thread->cancel();
+           thread->join();
+        }
+
         result.m = NULL;
     }
+
+    _dt = 0;
 
     return result;
 }
@@ -650,7 +681,7 @@ FGMetarEnvironmentCtrl::update_metar_properties( SGMetar *m )
 void
 FGMetarEnvironmentCtrl::MetarThread::run()
 {
-    // pthread_cleanup_push( metar_cleanup_handler, fetcher );
+    pthread_cleanup_push( metar_cleanup_handler, fetcher );
     while ( true )
     {
         set_cancel( SGThread::CANCEL_DISABLE );
@@ -663,7 +694,7 @@ FGMetarEnvironmentCtrl::MetarThread::run()
 
         fetcher->result_queue.push( result );
     }
-    // pthread_cleanup_pop(1);
+    pthread_cleanup_pop(1);
 }
 
 /**

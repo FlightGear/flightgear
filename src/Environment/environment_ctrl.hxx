@@ -217,7 +217,7 @@ private:
         ~MetarThread() {}
 
         /**
-         * Fetched the metar data from the NOAA.
+         * Fetche the metar data from the NOAA.
          */
         void run();
 
@@ -248,6 +248,11 @@ private:
      * Thread cleanup handler.
      */
     friend void metar_cleanup_handler( void* );
+
+
+    int _error_count;
+    double _dt;
+    double _error_dt;
 #endif // ENABLE_THREADS
 };
 
