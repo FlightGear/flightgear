@@ -100,7 +100,7 @@ void AptDialog_OK (puObject *)
                 // if ( global_tile_mgr.init() ) {
                     // Load the local scenery data
                     global_tile_mgr.update( longitude->getDoubleValue(),
-                                            longitude->getDoubleValue() );
+                                            latitude->getDoubleValue() );
 	        // } else {
                     // SG_LOG( SG_GENERAL, SG_ALERT, 
                             // "Error in Tile Manager initialization!" );

@@ -88,7 +88,7 @@ void FGNewCache::init( void ) {
     SG_LOG( SG_TERRAIN, SG_INFO, "  current cache size = " 
 	    << tile_cache.size() );
 
-#if 0 // don't clear the cache right now
+#if 0 // don't clear the cache
     clear_cache();
 #endif
 
@@ -103,36 +103,6 @@ bool FGNewCache::exists( const SGBucket& b ) const {
 
     return ( it != tile_cache.end() );
 }
-
-
-// depricated for threading
-#if 0
-// Fill in a tile cache entry with real data for the specified bucket
-void FGNewCache::fill_in( const SGBucket& b ) {
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "FILL IN CACHE ENTRY = " << b.gen_index() );
-
-    // clear out a distant entry in the cache if needed.
-    make_space();
-
-    // create the entry
-    FGTileEntry *e = new FGTileEntry( b );
-
-    // register it in the cache
-    long tile_index = b.gen_index();
-    tile_cache[tile_index] = e;
-
-    SGPath tile_path;
-    if ( globals->get_fg_scenery() != (string)"" ) {
-	tile_path.set( globals->get_fg_scenery() );
-    } else {
-	tile_path.set( globals->get_fg_root() );
-	tile_path.append( "Scenery" );
-    }
-    
-    // Load the appropriate data file
-    e->load( tile_path, true );
-}
-#endif
 
 
 // Ensure at least one entry is free in the cache
@@ -160,7 +130,7 @@ bool FGNewCache::make_space() {
 	    long index = current->first;
 	    FGTileEntry *e = current->second;
 
-	    if ( e->is_loaded() && e->get_pending_models() == 0 ) {
+	    if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
 		// calculate approximate distance from view point
 		sgdCopyVec3( abs_view_pos,
 			     globals->get_current_view()->get_abs_view_pos() );
@@ -183,20 +153,23 @@ bool FGNewCache::make_space() {
 		    max_dist = dist;
 		    max_index = index;
 		}
-	    }
+	    } else {
+                SG_LOG( SG_TERRAIN, SG_INFO, "loaded = " << e->is_loaded()
+                        << " pending models = " << e->get_pending_models() );
+            }
 	}
 
 	// If we made it this far, then there were no open cache entries.
 	// We will instead free the furthest cache entry and return true
-
+        
+        SG_LOG( SG_TERRAIN, SG_INFO, "    max_dist = " << max_dist );
+        SG_LOG( SG_TERRAIN, SG_INFO, "    index = " << max_index );
 	if ( max_index >= 0 ) {
-	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    max_dist = " << max_dist );
-	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    index = " << max_index );
 	    entry_free( max_index );
 	    return true;
 	} else {
 	    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! can't make_space(), tile "
-                    "cache is full, but no entries available to removal." );
+                    "cache is full, but no entries available for removal." );
 	    return false;
 	}
     }
@@ -215,7 +188,7 @@ void FGNewCache::clear_cache() {
 	long index = current->first;
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "clearing " << index );
 	FGTileEntry *e = current->second;
-        if ( e->is_loaded() && e->get_pending_models() == 0 ) {
+        if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
             e->tile_bucket.make_bad();
             entry_free(index);
         }
@@ -232,14 +205,14 @@ void FGNewCache::clear_cache() {
 bool FGNewCache::insert_tile( FGTileEntry *e ) {
     // clear out a distant entry in the cache if needed.
     if ( make_space() ) {
-      // register it in the cache
-      long tile_index = e->get_tile_bucket().gen_index();
-      tile_cache[tile_index] = e;
+        // register it in the cache
+        long tile_index = e->get_tile_bucket().gen_index();
+        tile_cache[tile_index] = e;
 
-      return true;
+        return true;
     } else {
-      // failed to find cache space
+        // failed to find cache space
 
-      return false;
+        return false;
     }
 }

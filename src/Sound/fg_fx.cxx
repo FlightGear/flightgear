@@ -157,7 +157,7 @@ FGFX::update ()
   // Update the engine sound.
   ////////////////////////////////////////////////////////////////////
 
-  if (_engine_running_prop->getBoolValue()) {
+  if (cur_fdm_state->get_num_engines() > 0 && _engine_running_prop->getBoolValue()) {
 	  // pitch corresponds to rpm
 	  // volume corresponds to manifold pressure
 

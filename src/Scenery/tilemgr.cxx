@@ -154,7 +154,20 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
 
 // schedule a needed buckets for loading
 void FGTileMgr::schedule_needed() {
-    cout << "scheduling needed tiles for " << longitude << " " << latitude << endl;
+    // sanity check (unfortunately needed!)
+    if ( longitude < -180.0 || longitude > 180.0 
+         || latitude < -90.0 || latitude > 90.0 )
+    {
+        SG_LOG( SG_TERRAIN, SG_ALERT,
+                "Attempting to schedule tiles for bogus latitude and" );
+        SG_LOG( SG_TERRAIN, SG_ALERT,
+                "longitude.  This is a FATAL error.  Exiting!" );
+        exit(-1);        
+    }
+
+   SG_LOG( SG_TERRAIN, SG_INFO,
+           "scheduling needed tiles for " << longitude << " " << latitude );
+
 #ifndef FG_OLD_WEATHER
     if ( WeatherDatabase != NULL ) {
 	vis = WeatherDatabase->getWeatherVisibility();
