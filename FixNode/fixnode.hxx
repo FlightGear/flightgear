@@ -37,15 +37,16 @@
 
 
 // load the node information
-void fixnodes( char *basename, fgDEM dem, 
-	       float dem_data[DEM_SIZE_1][DEM_SIZE_1], 
-	       double nodes[MAX_NODES][3] );
+void fixnodes( char *basename, fgDEM *dem, double nodes[MAX_NODES][3] );
 
 
 #endif // _FIXNODE_H
 
 
 // $Log$
+// Revision 1.2  1998/07/22 21:46:41  curt
+// Fixed a bug that was triggering a seg fault.
+//
 // Revision 1.1  1998/04/08 23:05:56  curt
 // Adopted Gnu automake/autoconf system.
 //

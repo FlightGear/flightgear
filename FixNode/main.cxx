@@ -40,8 +40,7 @@
 
 
 // Storage for the original DEM data which is used to interpolate z values
-static fgDEM dem;
-static float dem_data[DEM_SIZE_1][DEM_SIZE_1];
+fgDEM dem;
 
 // Node list
 static double nodes[MAX_NODES][3];
@@ -76,7 +75,7 @@ void process_files(char *root_path) {
 		// load the input data files
 		triload(file_path, nodes);
 
-		fixnodes(file_path, dem, dem_data, nodes);
+		fixnodes(file_path, &dem, nodes);
 	    }
 	}
     }
@@ -91,6 +90,8 @@ int main(int argc, char **argv) {
 	printf("Usage %s demfile root_path\n", argv[0]);
 	exit(-1);
     }
+
+    printf("Starting fixnode\n");
 
     strcpy(demfile, argv[1]);
     strcpy(root_path, argv[2]);
@@ -108,6 +109,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.5  1998/07/22 21:46:41  curt
+// Fixed a bug that was triggering a seg fault.
+//
 // Revision 1.4  1998/06/27 16:55:24  curt
 // Changed include order for <sys/types.h>
 //

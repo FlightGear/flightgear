@@ -33,9 +33,7 @@
 
 
 /* load the node information */
-void fixnodes( char *filename, fgDEM dem, 
-	       float dem_data[DEM_SIZE_1][DEM_SIZE_1], 
-	       double nodes[MAX_NODES][3] )
+void fixnodes( char *filename, fgDEM *dem, double nodes[MAX_NODES][3] )
 {
     char toname[256];
     FILE *fd;
@@ -53,7 +51,7 @@ void fixnodes( char *filename, fgDEM dem,
 	       nodes[i][1], nodes[i][2]); */
 
 	nodes[i][2] = 
-	    dem.interpolate_altitude(nodes[i][0], nodes[i][1]);
+	    dem->interpolate_altitude(nodes[i][0], nodes[i][1]);
 
 	/* printf("Fixed: %d %.2f %.2f %.2f\n", i, nodes[i][0],
 	       nodes[i][1], nodes[i][2]); */
@@ -80,9 +78,12 @@ void fixnodes( char *filename, fgDEM dem,
 
 
 /* $Log$
-/* Revision 1.2  1998/04/14 02:26:03  curt
-/* Code reorganizations.  Added a Lib/ directory for more general libraries.
+/* Revision 1.3  1998/07/22 21:46:40  curt
+/* Fixed a bug that was triggering a seg fault.
 /*
+ * Revision 1.2  1998/04/14 02:26:03  curt
+ * Code reorganizations.  Added a Lib/ directory for more general libraries.
+ *
  * Revision 1.1  1998/04/08 23:05:56  curt
  * Adopted Gnu automake/autoconf system.
  *
