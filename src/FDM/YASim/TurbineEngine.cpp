@@ -46,6 +46,7 @@ void TurbineEngine::integrate(float dt)
 
 void TurbineEngine::calc(float pressure, float temp, float omega)
 {
+    _running = true;
     _omega = omega;
     _rho = Atmosphere::calcStdDensity(pressure, temp);
 
