@@ -94,13 +94,13 @@ FGAircraftModel::init ()
 				// Load animations
   vector<SGPropertyNode *> animation_nodes =
     props.getChildren("animation");
-  for (int i = 0; i < animation_nodes.size(); i++) {
+  for (unsigned int i = 0; i < animation_nodes.size(); i++) {
     vector<SGPropertyNode *> name_nodes =
       animation_nodes[i]->getChildren("object-name");
     if (name_nodes.size() < 1) {
       SG_LOG(SG_INPUT, SG_ALERT, "No object-name given for transformation");
     } else {
-      for (int j = 0; j < name_nodes.size(); j++) {
+      for (unsigned int j = 0; j < name_nodes.size(); j++) {
 	_animations.push_back(read_animation(name_nodes[j]->getStringValue(),
 					     animation_nodes[i]));
       }
@@ -153,7 +153,7 @@ FGAircraftModel::update (int dt)
   if (globals->get_viewmgr()->get_current() == 0) {
     _selector->select(false);
   } else {
-    for (int i = 0; i < _animations.size(); i++)
+    for (unsigned int i = 0; i < _animations.size(); i++)
       do_animation(_animations[i], elapsed_ms);
 
     _selector->select(true);
