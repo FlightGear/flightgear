@@ -44,10 +44,14 @@
 FGEnvironment::FGEnvironment()
   : _temperature_degc_table(new SGInterpTable),
     _pressure_inhg_table(new SGInterpTable),
+    elevation_ft(0),
     visibility_m(32000),
     temperature_sea_level_degc(15),
+    temperature_degc(15),
     dewpoint_sea_level_degc(5), // guess
+    dewpoint_degc(5),
     pressure_sea_level_inhg(29.92),
+    pressure_inhg(29.92),
     wind_from_heading_deg(0),
     wind_speed_kt(0),
     wind_from_north_fps(0),
