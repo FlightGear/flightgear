@@ -38,8 +38,9 @@
 #include <stdlib.h>
 
 #include <Aircraft/aircraft.h>
-#include <Astro/orbits.hxx>
-#include <Astro/sun.hxx>
+// #include <Astro/orbits.hxx>
+// #include <Astro/sun.hxx>
+#include <Astro/solarsystem.hxx>
 #include <Astro/sky.hxx>
 #include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
 #include <Cockpit/hud.hxx>
@@ -62,7 +63,8 @@
 
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
-    fgSunInit();
+    // fgSunInit();
+    SolarSystem::theSolarSystem->rebuild();
     cur_light_params.Update();
     fgSkyColorsInit();
 }
@@ -345,9 +347,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.21  1998/08/29 13:09:25  curt
-/* Changes to event manager from Bernie Bright.
+/* Revision 1.22  1998/09/15 04:27:27  curt
+/* Changes for new Astro code.
 /*
+ * Revision 1.21  1998/08/29 13:09:25  curt
+ * Changes to event manager from Bernie Bright.
+ *
  * Revision 1.20  1998/08/24 20:11:12  curt
  * Added i/I to toggle full vs. minimal HUD.
  * Added a --hud-tris vs --hud-culled option.

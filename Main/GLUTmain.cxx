@@ -53,11 +53,12 @@
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
-#include <Astro/moon.hxx>
-#include <Astro/planets.hxx>
+//#include <Astro/moon.hxx>
+//#include <Astro/planets.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
-#include <Astro/sun.hxx>
+//#include <Astro/sun.hxx>
+#include <Astro/solarsystem.hxx>
 
 #ifdef ENABLE_AUDIO_SUPPORT
 #  include <Audio/src/sl.h>
@@ -310,24 +311,7 @@ static void fgRenderFrame( void ) {
 
 	// draw stars and planets
 	fgStarsRender();
-	fgPlanetsRender();
-
-	// draw the sun
-	fgSunRender();
-
-	// render the moon
-	xglEnable( GL_LIGHTING );
-	xglEnable( GL_LIGHT0 );
-	// set lighting parameters
-	xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
-	xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
-	xglEnable( GL_CULL_FACE );
-    
-	// Let's try some blending technique's (Durk)
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
-	fgMoonRender();
-	glDisable(GL_BLEND);
+	SolarSystem::theSolarSystem->draw();
 
 	xglPopMatrix();
 
@@ -888,6 +872,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.51  1998/09/15 04:27:28  curt
+// Changes for new Astro code.
+//
 // Revision 1.50  1998/09/15 02:09:24  curt
 // Include/fg_callback.hxx
 //   Moved code inline to stop g++ 2.7 from complaining.

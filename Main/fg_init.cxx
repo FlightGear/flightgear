@@ -44,11 +44,12 @@
 
 #include <Aircraft/aircraft.h>
 #include <Airports/simple.hxx>
-#include <Astro/moon.hxx>
-#include <Astro/planets.hxx>
+// #include <Astro/moon.hxx>
+// #include <Astro/planets.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
-#include <Astro/sun.hxx>
+// #include <Astro/sun.hxx>
+#include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.h>
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
@@ -299,8 +300,10 @@ int fgInitSubsystems( void )
     v->UpdateViewMath(f);
     v->UpdateWorldToEye(f);
 
-    // Initialize the orbital elements of sun, moon and mayor planets
-    fgSolarSystemInit(*t);
+    // Build the solar system
+    //fgSolarSystemInit(*t);
+    fgPrintf(FG_GENERAL, FG_INFO, "Building SolarSystem\n");
+    SolarSystem::theSolarSystem = new SolarSystem(t);
 
     // Initialize the Stars subsystem
     if( fgStarsInit() ) {
@@ -310,21 +313,27 @@ int fgInitSubsystems( void )
     }
 
     // Initialize the planetary subsystem
-    global_events.Register( "fgPlanetsInit()", fgPlanetsInit, 
-			    fgEVENT::FG_EVENT_READY, 600000);
+    // global_events.Register( "fgPlanetsInit()", fgPlanetsInit, 
+    //			    fgEVENT::FG_EVENT_READY, 600000);
 
     // Initialize the sun's position 
-    global_events.Register( "fgSunInit()", fgSunInit, 
-			    fgEVENT::FG_EVENT_READY, 30000 );
+    // global_events.Register( "fgSunInit()", fgSunInit, 
+    //			    fgEVENT::FG_EVENT_READY, 30000 );
 
     // Intialize the moon's position
-    global_events.Register( "fgMoonInit()", fgMoonInit, 
-			    fgEVENT::FG_EVENT_READY, 600000 );
+    // global_events.Register( "fgMoonInit()", fgMoonInit, 
+    //			    fgEVENT::FG_EVENT_READY, 600000 );
 
+    // register the periodic update of Sun, moon, and planets
+    global_events.Register( "ssolsysUpdate", solarSystemRebuild,
+			    fgEVENT::FG_EVENT_READY, 600000);
+    
     // fgUpdateSunPos() needs a few position and view parameters set
     // so it can calculate local relative sun angle and a few other
     // things for correctly orienting the sky.
     fgUpdateSunPos();
+    global_events.Register( "fgUpdateSunPos()", fgUpdateSunPos,
+			    fgEVENT::FG_EVENT_READY, 60000);
 
     // Initialize Lighting interpolation tables
     l->Init();
@@ -389,6 +398,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.38  1998/09/15 04:27:30  curt
+// Changes for new Astro code.
+//
 // Revision 1.37  1998/09/15 02:09:26  curt
 // Include/fg_callback.hxx
 //   Moved code inline to stop g++ 2.7 from complaining.
