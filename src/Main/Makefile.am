@@ -43,6 +43,7 @@ fgfs_SOURCES = \
 	globals.cxx globals.hxx \
 	keyboard.cxx keyboard.hxx \
 	options.cxx options.hxx \
+	soundmgr.cxx soundmgr.hxx \
 	splash.cxx splash.hxx \
 	viewer.cxx viewer.hxx \
 	viewer_lookat.cxx viewer_lookat.hxx \

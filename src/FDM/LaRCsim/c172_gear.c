@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.19  2001/03/02 21:37:01  curt
+Added a first pass at a C++ sound manager class.
+
 Revision 1.18  2000/12/13 22:02:02  curt
 MacOS changes contributed by Darrell Walisser (12/13/2000)
 
@@ -374,7 +377,7 @@ char gear_strings[NUM_WHEELS][12]={"nose","right main", "left main", "tail skid"
 			add3( tempM, M_gear_v, M_gear_v );   
 
 
-		}
+			}
 
 
 

@@ -36,6 +36,7 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/props.hxx>
 
+#include "soundmgr.hxx"
 #include "viewmgr.hxx"
 
 FG_USING_STD( vector );
@@ -76,6 +77,9 @@ private:
 
     // Global autopilot "route"
     SGRoute *route;
+
+    // sound manager
+    FGSoundMgr *soundmgr;
 
     // viewer maneger
     FGViewMgr *viewmgr;
@@ -123,6 +127,9 @@ public:
 
     inline SGRoute *get_route() const { return route; }
     inline void set_route( SGRoute *r ) { route = r; }
+
+    inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
+    inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }
 
     inline FGViewMgr *get_viewmgr() const { return viewmgr; }
     inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }

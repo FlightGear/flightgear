@@ -56,11 +56,6 @@
 #include <plib/pu.h>
 #include <plib/ssg.h>
 
-#ifdef ENABLE_AUDIO_SUPPORT
-#  include <plib/sl.h>
-#  include <plib/sm.h>
-#endif
-
 #include <simgear/constants.h>  // for VERSION
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/polar3d.hxx>
@@ -124,6 +119,10 @@ int objc=0;
 #include "keyboard.hxx"
 #include "splash.hxx"
 
+#ifdef ENABLE_AUDIO_SUPPORT
+#  include "soundmgr.hxx"
+#endif
+
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
 #endif
@@ -146,12 +145,8 @@ void fgReshape( int width, int height );
 
 // Global structures for the Audio library
 #ifdef ENABLE_AUDIO_SUPPORT
-slEnvelope pitch_envelope ( 1, SL_SAMPLE_ONE_SHOT ) ;
-slEnvelope volume_envelope ( 1, SL_SAMPLE_ONE_SHOT ) ;
-slScheduler *audio_sched;
-smMixer *audio_mixer;
-slSample *s1;
-slSample *s2;
+   static FGSimpleSound *s1;
+   static FGSimpleSound *s2;
 #endif
 
 
@@ -1037,11 +1032,13 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( fgGetBool("/sim/sound") && !audio_sched->not_working() ) {
-
+    if ( fgGetBool("/sim/sound") && globals->get_soundmgr()->is_working() ) {
 	if ( fgGetString("/sim/aircraft") == "c172" ) {
 	    // pitch corresponds to rpm
 	    // volume corresponds to manifold pressure
+
+	    // cout << "AUDIO working = "
+	    //      << globals->get_soundmgr()->is_working() << endl;
 
 	    double rpm_factor;
 	    if ( cur_fdm_state->get_engine(0) != NULL ) {
@@ -1058,7 +1055,6 @@ static void fgMainLoop( void ) {
 	    // and sounds bad to boot.  :-)
 	    if (pitch < 0.7) { pitch = 0.7; }
 	    if (pitch > 5.0) { pitch = 5.0; }
-	    // cout << "pitch = " << pitch << endl;
 
 	    double mp_factor;
 	    if ( cur_fdm_state->get_engine(0) != NULL ) {
@@ -1077,15 +1073,15 @@ static void fgMainLoop( void ) {
 	    if ( volume > 1.0 ) { volume = 1.0; }
 	    // cout << "volume = " << volume << endl;
 
-	    pitch_envelope.setStep  ( 0, 0.01, pitch );
-	    volume_envelope.setStep ( 0, 0.01, volume );
+	    s1->set_pitch( pitch );
+	    s1->set_volume( volume );
 	} else {
 	    double param = controls.get_throttle( 0 ) * 2.0 + 1.0;
-	    pitch_envelope.setStep  ( 0, 0.01, param );
-	    volume_envelope.setStep ( 0, 0.01, param );
+	    s1->set_pitch( param );
+	    s1->set_volume( param );
 	}
 
-	audio_sched -> update();
+	globals->get_soundmgr()->update();
     }
 #endif
 
@@ -1185,40 +1181,19 @@ static void fgIdleFunction ( void ) {
 #endif // WIN32
 
 	if ( fgGetBool("/sim/sound") ) {
-	    audio_sched = new slScheduler ( 8000 );
-	    audio_mixer = new smMixer;
-	    audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
-	    audio_sched -> setSafetyMargin ( 1.0 ) ;
+	    globals->get_soundmgr()->init();
 
-	    FGPath slfile( globals->get_fg_root() );
-	    slfile.append( "Sounds/wasp.wav" );
-
-	    s1 = new slSample ( (char *)slfile.c_str() );
+	    s1 = new FGSimpleSound( "Sounds/wasp.wav" );
+	    globals->get_soundmgr()->add( s1, "engine loop" );
+	    globals->get_soundmgr()->play_looped( "engine loop" );
 	    FG_LOG( FG_GENERAL, FG_INFO,
-		    "Rate = " << s1 -> getRate()
-		    << "  Bps = " << s1 -> getBps()
-		    << "  Stereo = " << s1 -> getStereo() );
-	    audio_sched -> loopSample ( s1 );
+		    "Rate = " << s1->get_sample()->getRate()
+		    << "  Bps = " << s1->get_sample()->getBps()
+		    << "  Stereo = " << s1->get_sample()->getStereo() );
 
-	    if ( audio_sched->not_working() ) {
-		// skip
-	    } else {
-		pitch_envelope.setStep  ( 0, 0.01, 0.6 );
-		volume_envelope.setStep ( 0, 0.01, 0.6 );
-
-		audio_sched -> addSampleEnvelope( s1, 0, 0, 
-						  &pitch_envelope,
-						  SL_PITCH_ENVELOPE );
-		audio_sched -> addSampleEnvelope( s1, 0, 1, 
-						  &volume_envelope,
-						  SL_VOLUME_ENVELOPE );
-	    }
-
-	    // strcpy(slfile, path);
-	    // strcat(slfile, "thunder.wav");
-	    // s2 -> loadFile ( slfile );
-	    // s2 -> adjustVolume(0.5);
-	    // audio_sched -> playSample ( s2 );
+	    s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
+	    s2->set_volume( 2.0 );
+	    globals->get_soundmgr()->add( s2, "flaps" );
 	}
 #endif
 
@@ -1403,6 +1378,11 @@ int main( int argc, char **argv ) {
 
     SGRoute *route = new SGRoute;
     globals->set_route( route );
+
+#ifdef ENABLE_AUDIO_SUPPORT
+    FGSoundMgr *soundmgr = new FGSoundMgr;
+    globals->set_soundmgr( soundmgr );
+#endif
 
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );
