@@ -100,6 +100,7 @@
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>
+#include <AIModel/submodel.hxx>
 #include <AIModel/AIManager.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
@@ -1693,6 +1694,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
     globals->add_subsystem("ai_model", new FGAIManager);
+    globals->add_subsystem("submodel_mgr", new FGSubmodelMgr);
 
 
      // It's probably a good idea to initialize the top level traffic manager

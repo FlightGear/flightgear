@@ -20,7 +20,7 @@ SG_USING_STD(vector);
 SG_USING_STD(string);
 
 
-class SubmodelSystem : public SGSubsystem
+class FGSubmodelMgr : public SGSubsystem
 {
 
 public:
@@ -73,8 +73,8 @@ public:
   double     mass;
  } IC_struct;  
 
-    SubmodelSystem ();
-    ~SubmodelSystem ();
+    FGSubmodelMgr ();
+    ~FGSubmodelMgr ();
 
     void load ();
     void init ();

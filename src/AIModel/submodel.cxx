@@ -13,9 +13,9 @@
 #include <AIModel/AIManager.hxx>
 
 
-const double SubmodelSystem::lbs_to_slugs = 0.031080950172;
+const double FGSubmodelMgr::lbs_to_slugs = 0.031080950172;
 
-SubmodelSystem::SubmodelSystem ()
+FGSubmodelMgr::FGSubmodelMgr ()
 {
     
   x_offset = y_offset = 0.0;
@@ -28,12 +28,12 @@ SubmodelSystem::SubmodelSystem ()
   string contents_node;
 }
 
-SubmodelSystem::~SubmodelSystem ()
+FGSubmodelMgr::~FGSubmodelMgr ()
 {
 }
 
 void
-SubmodelSystem::init ()
+FGSubmodelMgr::init ()
 {
     load();
     _serviceable_node = fgGetNode("/sim/systems/submodels/serviceable", true);
@@ -63,12 +63,12 @@ SubmodelSystem::init ()
 }
 
 void
-SubmodelSystem::bind ()
+FGSubmodelMgr::bind ()
 {
 }
 
 void
-SubmodelSystem::unbind ()
+FGSubmodelMgr::unbind ()
 {
   submodel_iterator = submodels.begin();
   while(submodel_iterator != submodels.end()) {
@@ -78,7 +78,7 @@ SubmodelSystem::unbind ()
 }
 
 void
-SubmodelSystem::update (double dt)
+FGSubmodelMgr::update (double dt)
 {
   if (!(_serviceable_node->getBoolValue())) return;
   int i=-1;
@@ -98,7 +98,7 @@ SubmodelSystem::update (double dt)
 }
 
 bool
-SubmodelSystem::release (submodel* sm, double dt)
+FGSubmodelMgr::release (submodel* sm, double dt)
 {
   sm->timer += dt;
   if (sm->timer < sm->delay) return false;
@@ -137,7 +137,7 @@ SubmodelSystem::release (submodel* sm, double dt)
 }
 
 void
-SubmodelSystem::load ()
+FGSubmodelMgr::load ()
 {
 
     int i;
@@ -205,7 +205,7 @@ SubmodelSystem::load ()
 
 
 void
-SubmodelSystem::transform( submodel* sm) 
+FGSubmodelMgr::transform( submodel* sm) 
 {
 
 // get initial conditions 
@@ -335,7 +335,7 @@ SubmodelSystem::transform( submodel* sm)
 }
 
 void 
-SubmodelSystem::updatelat(double lat) 
+FGSubmodelMgr::updatelat(double lat) 
 {
     double latitude = lat;
     ft_per_deg_latitude = 366468.96 - 3717.12 * cos(latitude / SG_RADIANS_TO_DEGREES);

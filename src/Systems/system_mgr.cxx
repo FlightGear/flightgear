@@ -20,13 +20,11 @@
 #include "pitot.hxx"
 #include "static.hxx"
 #include "vacuum.hxx"
-#include "submodel.hxx"
 
 
 FGSystemMgr::FGSystemMgr ()
 {
     set_subsystem( "electrical", new FGElectricalSystem );
-    set_subsystem( "submodel", new SubmodelSystem() );
 
     config_props = new SGPropertyNode;
 
