@@ -14,7 +14,6 @@
 
 
 AttitudeIndicator::AttitudeIndicator ()
-    : _tumble(0)
 {
 }
 
@@ -33,6 +32,10 @@ AttitudeIndicator::init ()
     _tumble_flag_node =
         fgGetNode("/instrumentation/attitude-indicator/config/tumble-flag",
                   true);
+    _caged_node =
+        fgGetNode("/instrumentation/attitude-indicator/caged-flag", true);
+    _tumble_node =
+        fgGetNode("/instrumentation/attitude-indicator/tumble-norm", true);
     _pitch_out_node =
         fgGetNode("/instrumentation/attitude-indicator/indicated-pitch-deg",
                   true);
@@ -60,6 +63,13 @@ AttitudeIndicator::unbind ()
 void
 AttitudeIndicator::update (double dt)
 {
+                                // If it's caged, it doesn't indicate
+    if (_caged_node->getBoolValue()) {
+        _roll_out_node->setDoubleValue(0.0);
+        _pitch_out_node->setDoubleValue(0.0);
+        return;
+    }
+
                                 // Get the spin from the gyro
     _gyro.set_power_norm(_suction_node->getDoubleValue()/5.0);
     _gyro.update(dt);
@@ -75,29 +85,30 @@ AttitudeIndicator::update (double dt)
                                 // Calculate the tumble for the
                                 // next pass.
     if (_tumble_flag_node->getBoolValue()) {
-        if (_tumble < 1.0) {
-            if (fabs(roll) > 45.0) {
-                double target = (fabs(roll) - 45.0) / 45.0;
-                if (_tumble < target)
-                    _tumble = target;
-            }
-            if (fabs(pitch) > 45.0) {
-                double target = (fabs(pitch) - 45.0) / 45.0;
-                if (_tumble < target)
-                    _tumble = target;
-            }
-            if (_tumble > 1.0) {
-                _tumble = 1.0;
-            }
+        double tumble = _tumble_node->getDoubleValue();
+        if (fabs(roll) > 45.0) {
+            double target = (fabs(roll) - 45.0) / 45.0;
+            target *= target;   // exponential past +-45 degrees
+            if (roll < 0)
+                target = -target;
+
+            if (fabs(target) > fabs(tumble))
+                tumble = target;
+
+            if (tumble > 1.0)
+                tumble = 1.0;
+            else if (tumble < -1.0)
+                tumble = -1.0;
         }
-                                // Reerect in 5 minutes
-        _tumble -= dt/300.0;
-        if (_tumble < 0.0)
-            _tumble = 0.0;
+                                    // Reerect in 5 minutes
+        double step = dt/300.0;
+        if (tumble < -step)
+            tumble += step;
+        else if (tumble > step)
+            tumble -= step;
 
-        responsiveness *= ((1.0 - _tumble) * (1.0 - _tumble) *
-                           (1.0 - _tumble) * (1.0 - _tumble));
-
+        roll += tumble * 45;
+        _tumble_node->setDoubleValue(tumble);
     }
 
     roll = fgGetLowPass(_roll_out_node->getDoubleValue(), roll,

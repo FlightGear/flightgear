@@ -26,6 +26,8 @@
  *
  * /instrumentation/attitude-indicator/config/tumble-flag
  * /instrumentation/attitude-indicator/serviceable
+ * /instrumentation/attitude-indicator/caged-flag
+ * /instrumentation/attitude-indicator/tumble-norm
  * /orientation/pitch-deg
  * /orientation/roll-deg
  * /systems/vacuum[0]/suction-inhg
@@ -34,6 +36,7 @@
  *
  * /instrumentation/attitude-indicator/indicated-pitch-deg
  * /instrumentation/attitude-indicator/indicated-roll-deg
+ * /instrumentation/attitude-indicator/tumble-norm
  */
 class AttitudeIndicator : public FGSubsystem
 {
@@ -52,9 +55,9 @@ private:
 
     Gyro _gyro;
 
-    double _tumble;
-
     SGPropertyNode_ptr _tumble_flag_node;
+    SGPropertyNode_ptr _caged_node;
+    SGPropertyNode_ptr _tumble_node;
     SGPropertyNode_ptr _pitch_in_node;
     SGPropertyNode_ptr _roll_in_node;
     SGPropertyNode_ptr _suction_node;
