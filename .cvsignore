@@ -13,3 +13,12 @@ confstatKYCAXU
 do-config.sh
 gmon.out
 www
+.cdtproject
+.project
+config.guess
+config.sub
+depcomp
+INSTALL
+install-sh
+missing
+mkinstalldirs
