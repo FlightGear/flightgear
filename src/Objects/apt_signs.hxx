@@ -36,15 +36,19 @@
 
 #include <plib/ssg.h>		// plib include
 
+class SGMaterialLib;            // forward declaration
+
 SG_USING_STD(string);
 
 
 // Generate a taxi sign
-ssgBranch *gen_taxi_sign( const string path, const string content );
+ssgBranch *gen_taxi_sign( SGMaterialLib *matlib,
+                          const string path, const string content );
 
 
 // Generate a runway sign
-ssgBranch *gen_runway_sign( const string path, const string name );
+ssgBranch *gen_runway_sign( SGMaterialLib *matlib,
+                            const string path, const string name );
 
 
 #endif // _APT_SIGNS_HXX

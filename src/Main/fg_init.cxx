@@ -1314,7 +1314,7 @@ bool fgInitSubsystems() {
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( "materials.xml" );
-    if ( ! material_lib.load( globals->get_fg_root(), mpath.str() ) ) {
+    if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str()) ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
         exit(-1);
     }

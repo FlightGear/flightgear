@@ -52,6 +52,7 @@ class SGEphemeris;
 
 class SGCommandMgr;
 class SGMagVar;
+class SGMaterialLib;
 class SGModelLoader;
 class SGPropertyNode;
 class SGRoute;
@@ -119,6 +120,9 @@ private:
 
     // Magnetic Variation
     SGMagVar *mag;
+
+    // Material properties library
+    SGMaterialLib *matlib;
 
     // Current autopilot
     FGAutopilot *autopilot;
@@ -231,6 +235,9 @@ public:
 
     inline SGMagVar *get_mag() const { return mag; }
     inline void set_mag( SGMagVar *m ) { mag = m; }
+
+    inline SGMaterialLib *get_matlib() const { return matlib; }
+    inline void set_matlib( SGMaterialLib *m ) { matlib = m; }
 
     inline FGAutopilot *get_autopilot() const { return autopilot; }
     inline void set_autopilot( FGAutopilot *ap) { autopilot = ap; }

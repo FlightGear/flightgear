@@ -39,6 +39,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/sg_types.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
 SG_USING_STD(string);
 
@@ -51,6 +52,7 @@ SG_USING_STD(string);
 bool fgBinObjLoad( const string& path, const bool is_base,
                    Point3D *center,
                    double *bounding_radius,
+                   SGMaterialLib *matlib,
                    ssgBranch* geometry,
                    ssgBranch* rwy_lights,
                    ssgBranch* taxi_lights,
@@ -58,14 +60,14 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 
 // Generate an ocean tile
 bool fgGenTile( const string& path, SGBucket b,
-                Point3D *center,
-                double *bounding_radius,
-                ssgBranch* geometry );
+                Point3D *center, double *bounding_radius,
+                SGMaterialLib *matlib, ssgBranch* geometry );
 
 
 // Create a ssg leaf
 ssgLeaf *gen_leaf( const string& path,
-                   const GLenum ty, const string& material,
+                   const GLenum ty,
+                   SGMaterialLib *matlib, const string& material,
                    const point_list& nodes, const point_list& normals,
                    const point_list& texcoords,
                    const int_list& node_index,

@@ -146,14 +146,15 @@ private:
      */
     volatile int pending_models;
 
-    bool obj_load( const std::string& path,
-			 ssgBranch* geometry,
-			 ssgBranch* rwy_lights,
-			 ssgBranch* taxi_lights,
-			 ssgVertexArray* gound_lights,
-			 bool is_base );
+    bool obj_load( const string& path,
+                   ssgBranch* geometry,
+                   ssgBranch* rwy_lights,
+                   ssgBranch* taxi_lights,
+                   ssgVertexArray* gound_lights,
+                   bool is_base );
 
-    ssgLeaf* gen_lights( ssgVertexArray *lights, int inc, float bright );
+    ssgLeaf* gen_lights( SGMaterialLib *matlib, ssgVertexArray *lights,
+                         int inc, float bright );
 
     double timestamp;
 

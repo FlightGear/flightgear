@@ -27,6 +27,8 @@
 
 #include <simgear/compiler.h>
 
+#include STL_STRING
+
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -46,6 +48,8 @@
 
 #include "tileentry.hxx"
 #include "tilemgr.hxx"
+
+SG_USING_STD(string);
 
 
 // Constructor
@@ -475,7 +479,9 @@ static int fgLightsPostdraw( ssgEntity *e ) {
 }
 
 
-ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright ) {
+ssgLeaf* FGTileEntry::gen_lights( SGMaterialLib *matlib, ssgVertexArray *lights,
+                                  int inc, float bright )
+{
     // generate a repeatable random seed
     float *p1 = lights->get( 0 );
     unsigned int *seed = (unsigned int *)p1;
@@ -525,8 +531,8 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
         new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
 
     // assign state
-    SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
-    leaf->setState( newmat->get_state() );
+    SGMaterial *mat = matlib->find( "GROUND_LIGHTS" );
+    leaf->setState( mat->get_state() );
     leaf->setCallback( SSG_CALLBACK_PREDRAW, fgLightsPredraw );
     leaf->setCallback( SSG_CALLBACK_POSTDRAW, fgLightsPostdraw );
 
@@ -534,7 +540,7 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
 }
 
 
-bool FGTileEntry::obj_load( const std::string& path,
+bool FGTileEntry::obj_load( const string& path,
                             ssgBranch* geometry,
                             ssgBranch* rwy_lights,
                             ssgBranch* taxi_lights,
@@ -545,7 +551,7 @@ bool FGTileEntry::obj_load( const std::string& path,
 
     // try loading binary format
     if ( fgBinObjLoad( path, is_base,
-                       &c, &br, geometry,
+                       &c, &br, globals->get_matlib(), geometry,
                        rwy_lights, taxi_lights, ground_lights ) )
     {
         if ( is_base ) {
@@ -554,7 +560,9 @@ bool FGTileEntry::obj_load( const std::string& path,
         }
     } else {
         // default to an ocean tile
-        if ( fgGenTile( path, tile_bucket, &c, &br, geometry ) ) {
+        if ( fgGenTile( path, tile_bucket, &c, &br,
+                        globals->get_matlib(), geometry ) )
+        {
             center = c;
             bounding_radius = br;
         } else {
@@ -711,7 +719,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
                 obj_trans->setTransform( &obj_pos );
 
                 ssgBranch *custom_obj
-                    = gen_taxi_sign( custom_path.str(), name );
+                    = gen_taxi_sign( globals->get_matlib(),
+                                     custom_path.str(), name );
 
                 // wire the pieces together
                 if ( custom_obj != NULL ) {
@@ -739,7 +748,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
                 obj_trans->setTransform( &obj_pos );
 
                 ssgBranch *custom_obj
-                    = gen_runway_sign( custom_path.str(), name );
+                    = gen_runway_sign( globals->get_matlib(),
+                                       custom_path.str(), name );
 
                 // wire the pieces together
                 if ( custom_obj != NULL ) {
@@ -770,7 +780,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
         ssgBranch *geometry = new ssgBranch;
         Point3D c;
         double br;
-        if ( fgGenTile( basename.str(), tile_bucket, &c, &br, geometry ) ) {
+        if ( fgGenTile( basename.str(), tile_bucket, &c, &br,
+                        globals->get_matlib(), geometry ) ) {
             center = c;
             bounding_radius = br;
             new_tile -> addKid( geometry );
@@ -806,13 +817,13 @@ FGTileEntry::load( const SGPath& base, bool is_base )
         gnd_lights_brightness = new ssgSelector;
         ssgLeaf *lights;
 
-        lights = gen_lights( light_pts, 4, 0.7 );
+        lights = gen_lights( globals->get_matlib(), light_pts, 4, 0.7 );
         gnd_lights_brightness->addKid( lights );
 
-        lights = gen_lights( light_pts, 2, 0.85 );
+        lights = gen_lights( globals->get_matlib(), light_pts, 2, 0.85 );
         gnd_lights_brightness->addKid( lights );
 
-        lights = gen_lights( light_pts, 1, 1.0 );
+        lights = gen_lights( globals->get_matlib(), light_pts, 1, 1.0 );
         gnd_lights_brightness->addKid( lights );
 
         gnd_lights_range->addKid( gnd_lights_brightness );

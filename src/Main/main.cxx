@@ -1228,7 +1228,7 @@ static void fgMainLoop( void ) {
     globals->get_io()->update( delta_time_sec );
 
     // see if we need to load any deferred-load textures
-    material_lib.load_next_deferred();
+    globals->get_matlib()->load_next_deferred();
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -1681,6 +1681,7 @@ static bool fgMainInit( int argc, char **argv ) {
     ssgModelPath( (char *)modelpath.c_str() );
 
     // Initialize the global scenery manager
+    globals->set_matlib( new SGMaterialLib );
     globals->set_scenery( new FGScenery );
     globals->get_scenery()->init();
     globals->get_scenery()->bind();

@@ -28,7 +28,9 @@
 #include "obj.hxx"
 
 
-ssgBranch *gen_taxi_sign( const string path, const string content ) {
+ssgBranch *gen_taxi_sign( SGMaterialLib *matlib,
+                          const string path, const string content )
+{
     // for demo purposes we assume each element (letter) is 1x1 meter.
     // Sign is placed 0.25 meters above the ground
 
@@ -95,7 +97,7 @@ ssgBranch *gen_taxi_sign( const string path, const string content ) {
 	tex_index.push_back( 2 );
 	tex_index.push_back( 3 );
 
-	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, matlib, material,
 				  nodes, normals, texcoords,
 				  vertex_index, normal_index, tex_index,
 				  false, NULL );
@@ -107,7 +109,9 @@ ssgBranch *gen_taxi_sign( const string path, const string content ) {
 }
 
 
-ssgBranch *gen_runway_sign( const string path, const string name ) {
+ssgBranch *gen_runway_sign( SGMaterialLib *matlib,
+                            const string path, const string name )
+{
     // for demo purposes we assume each element (letter) is 1x1 meter.
     // Sign is placed 0.25 meters above the ground
 
@@ -152,7 +156,7 @@ ssgBranch *gen_runway_sign( const string path, const string name ) {
     tex_index.push_back( 2 );
     tex_index.push_back( 3 );
 
-    ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
+    ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, matlib, material,
 			      nodes, normals, texcoords,
 			      vertex_index, normal_index, tex_index,
 			      false, NULL );

@@ -1,4 +1,4 @@
-// obj.hxx -- routines to handle loading scenery and building the plib
+// obj.cxx -- routines to handle loading scenery and building the plib
 //            scene graph.
 //
 // Written by Curtis Olson, started October 1997.
@@ -58,7 +58,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Time/light.hxx>
-#include <Scenery/tileentry.hxx>
 
 #include "pt_lights.hxx"
 #include "obj.hxx"
@@ -85,29 +84,26 @@ runway_lights_pretrav (ssgEntity * e, int mask)
 
 // Generate an ocean tile
 bool fgGenTile( const string& path, SGBucket b,
-                      Point3D *center,
-                      double *bounding_radius,
-                      ssgBranch* geometry )
+                Point3D *center, double *bounding_radius,
+                SGMaterialLib *matlib, ssgBranch* geometry )
 {
-    SGMaterial *newmat;
-
     ssgSimpleState *state = NULL;
 
-    geometry -> setName ( (char *)path.c_str() ) ;
+    geometry->setName( (char *)path.c_str() );
 
     double tex_width = 1000.0;
     // double tex_height;
 
     // find Ocean material in the properties list
-    newmat = material_lib.find( "Ocean" );
-    if ( newmat != NULL ) {
+    SGMaterial *mat = matlib->find( "Ocean" );
+    if ( mat != NULL ) {
         // set the texture width and height values for this
         // material
-        tex_width = newmat->get_xsize();
+        tex_width = mat->get_xsize();
         // tex_height = newmat->get_ysize();
         
         // set ssgState
-        state = newmat->get_state();
+        state = mat->get_state();
     } else {
         SG_LOG( SG_TERRAIN, SG_ALERT, 
                 "Ack! unknown usemtl name = " << "Ocean" 
@@ -282,9 +278,9 @@ class LeafUserData : public ssgBase
 {
 public:
     bool is_filled_in;
-    ssgLeaf * leaf;
-    SGMaterial * mat;
-    ssgBranch * branch;
+    ssgLeaf *leaf;
+    SGMaterial *mat;
+    ssgBranch *branch;
     float sin_lat;
     float cos_lat;
     float sin_lon;
@@ -660,26 +656,19 @@ leaf_out_of_range_callback (ssgEntity * entity, int mask)
 static void
 gen_random_surface_objects (ssgLeaf *leaf,
                             ssgBranch *branch,
-                            Point3D * center,
-                            const string &material_name)
+                            Point3D *center,
+                            SGMaterial *mat )
 {
                                 // If the surface has no triangles, return
                                 // now.
     int num_tris = leaf->getNumTriangles();
     if (num_tris < 1)
-      return;
-
-                                // Get the material for this surface.
-    SGMaterial * mat = material_lib.find(material_name);
-    if (mat == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "Unknown material " << material_name);
-      return;
-    }
+        return;
 
                                 // If the material has no randomly-placed
                                 // objects, return now.
     if (mat->get_object_group_count() < 1)
-      return;
+        return;
 
                                 // Calculate the geodetic centre of
                                 // the tile, for aligning automatic
@@ -731,7 +720,8 @@ gen_random_surface_objects (ssgLeaf *leaf,
 ////////////////////////////////////////////////////////////////////////
 
 ssgLeaf *gen_leaf( const string& path,
-                   const GLenum ty, const string& material,
+                   const GLenum ty, 
+                   SGMaterialLib *matlib, const string& material,
                    const point_list& nodes, const point_list& normals,
                    const point_list& texcoords,
                    const int_list& node_index,
@@ -743,8 +733,8 @@ ssgLeaf *gen_leaf( const string& path,
     ssgSimpleState *state = NULL;
     float coverage = -1;
 
-    SGMaterial *newmat = material_lib.find( material );
-    if ( newmat == NULL ) {
+    SGMaterial *mat = matlib->find( material );
+    if ( mat == NULL ) {
         // see if this is an on the fly texture
         string file = path;
         string::size_type pos = file.rfind( "/" );
@@ -753,14 +743,14 @@ ssgLeaf *gen_leaf( const string& path,
         file += "/";
         file += material;
         // cout << "current file = " << file << endl;
-        if ( ! material_lib.add_item( file ) ) {
+        if ( ! matlib->add_item( file ) ) {
             SG_LOG( SG_TERRAIN, SG_ALERT, 
                     "Ack! unknown usemtl name = " << material 
                     << " in " << path );
         } else {
             // locate our newly created material
-            newmat = material_lib.find( material );
-            if ( newmat == NULL ) {
+            mat = matlib->find( material );
+            if ( mat == NULL ) {
                 SG_LOG( SG_TERRAIN, SG_ALERT, 
                         "Ack! bad on the fly material create = "
                         << material << " in " << path );
@@ -768,13 +758,13 @@ ssgLeaf *gen_leaf( const string& path,
         }
     }
 
-    if ( newmat != NULL ) {
+    if ( mat != NULL ) {
         // set the texture width and height values for this
         // material
-        tex_width = newmat->get_xsize();
-        tex_height = newmat->get_ysize();
-        state = newmat->get_state();
-        coverage = newmat->get_light_coverage();
+        tex_width = mat->get_xsize();
+        tex_height = mat->get_ysize();
+        state = mat->get_state();
+        coverage = mat->get_light_coverage();
         // cout << "(w) = " << tex_width << " (h) = "
         //      << tex_width << endl;
     } else {
@@ -879,6 +869,7 @@ ssgLeaf *gen_leaf( const string& path,
 bool fgBinObjLoad( const string& path, const bool is_base,
                    Point3D *center,
                    double *bounding_radius,
+                   SGMaterialLib *matlib,
                    ssgBranch* geometry,
                    ssgBranch* rwy_lights,
                    ssgBranch* taxi_lights,
@@ -920,7 +911,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
             // returns a transform -> lod -> leaf structure
             ssgBranch *branch = gen_directional_lights( nodes, normals,
                                                         pts_v[i], pts_n[i],
-                                                        pt_materials[i],
+                                                        matlib, pt_materials[i],
                                                         up );
             // branches don't honor callbacks as far as I know so I'm
             // commenting this out to avoid a plib runtime warning.
@@ -934,7 +925,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
         } else {
             material = pt_materials[i];
             tex_index.clear();
-            ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
+            ssgLeaf *leaf = gen_leaf( path, GL_POINTS, matlib, material,
                                       nodes, normals, texcoords,
                                       pts_v[i], pts_n[i], tex_index,
                                       false, ground_lights );
@@ -961,14 +952,21 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     group_list const& tris_n = obj.get_tris_n();
     group_list const& tris_tc = obj.get_tris_tc();
     for ( i = 0; i < tris_v.size(); ++i ) {
-        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, tri_materials[i],
+        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, matlib, tri_materials[i],
                                   nodes, normals, texcoords,
                                   tris_v[i], tris_n[i], tris_tc[i],
                                   is_base, ground_lights );
 
-        if (use_random_objects)
-          gen_random_surface_objects(leaf, random_object_branch,
-                                     center, tri_materials[i]);
+        if ( use_random_objects ) {
+            SGMaterial *mat = matlib->find( tri_materials[i] );
+            if ( mat == NULL ) {
+                SG_LOG( SG_INPUT, SG_ALERT,
+                        "Unknown material for random surface objects = "
+                        << tri_materials[i] );
+            }
+            gen_random_surface_objects( leaf, random_object_branch,
+                                        center, mat );
+        }
         geometry->addKid( leaf );
     }
 
@@ -978,14 +976,22 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     group_list const& strips_n = obj.get_strips_n();
     group_list const& strips_tc = obj.get_strips_tc();
     for ( i = 0; i < strips_v.size(); ++i ) {
-        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, strip_materials[i],
+        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP,
+                                  matlib, strip_materials[i],
                                   nodes, normals, texcoords,
                                   strips_v[i], strips_n[i], strips_tc[i],
                                   is_base, ground_lights );
 
-        if (use_random_objects)
-          gen_random_surface_objects(leaf, random_object_branch,
-                                     center,strip_materials[i]);
+        if ( use_random_objects ) {
+            SGMaterial *mat = matlib->find( strip_materials[i] );
+            if ( mat == NULL ) {
+                SG_LOG( SG_INPUT, SG_ALERT,
+                        "Unknown material for random surface objects = "
+                        << strip_materials[i] );
+            }
+            gen_random_surface_objects( leaf, random_object_branch,
+                                        center, mat );
+        }
         geometry->addKid( leaf );
     }
 
@@ -995,13 +1001,21 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     group_list const& fans_n = obj.get_fans_n();
     group_list const& fans_tc = obj.get_fans_tc();
     for ( i = 0; i < fans_v.size(); ++i ) {
-        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, fan_materials[i],
+        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN,
+                                  matlib, fan_materials[i],
                                   nodes, normals, texcoords,
                                   fans_v[i], fans_n[i], fans_tc[i],
                                   is_base, ground_lights );
-        if (use_random_objects)
-          gen_random_surface_objects(leaf, random_object_branch,
-                                     center, fan_materials[i]);
+        if ( use_random_objects ) {
+            SGMaterial *mat = matlib->find( fan_materials[i] );
+            if ( mat == NULL ) {
+                SG_LOG( SG_INPUT, SG_ALERT,
+                        "Unknown material for random surface objects = "
+                        << fan_materials[i] );
+            }
+            gen_random_surface_objects( leaf, random_object_branch,
+                                        center, mat );
+        }
         geometry->addKid( leaf );
     }
 

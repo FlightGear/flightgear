@@ -48,7 +48,7 @@ static int StrobePostDraw( ssgEntity *e ) {
 
 // Generate a directional light
 ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up, 
-                                const string &material ) {
+                                const SGMaterial *mat ) {
 
     // calculate a vector perpendicular to dir and up
     sgVec3 perp;
@@ -117,13 +117,10 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-    SGMaterial *newmat = material_lib.find( material );
-
-    if ( newmat != NULL ) {
-        leaf->setState( newmat->get_state() );
+    if ( mat != NULL ) {
+        leaf->setState( mat->get_state() );
     } else {
-        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
-                << material );
+        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: mat = NULL" );
     }
 
     return leaf;
@@ -159,12 +156,12 @@ static void calc_center_point( const point_list &nodes,
 }
 
 
-ssgTransform *gen_dir_light_group( const point_list &nodes,
-                                   const point_list &normals,
-                                   const int_list &pnt_i,
-                                   const int_list &nml_i,
-                                   const string &material,
-                                   sgVec3 up, bool vertical = false )
+static ssgTransform *gen_dir_light_group( const point_list &nodes,
+                                          const point_list &normals,
+                                          const int_list &pnt_i,
+                                          const int_list &nml_i,
+                                          const SGMaterial *mat,
+                                          sgVec3 up, bool vertical = false )
 {
     sgVec3 center;
     calc_center_point( nodes, pnt_i, center );
@@ -234,13 +231,10 @@ ssgTransform *gen_dir_light_group( const point_list &nodes,
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-    SGMaterial *newmat = material_lib.find( material );
-
-    if ( newmat != NULL ) {
-        leaf->setState( newmat->get_state() );
+    if ( mat != NULL ) {
+        leaf->setState( mat->get_state() );
     } else {
-        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
-                << material );
+        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: material = NULL" );
     }
 
     // put an LOD on each lighting component
@@ -260,12 +254,12 @@ ssgTransform *gen_dir_light_group( const point_list &nodes,
 }
 
 
-ssgTransform *gen_reil_lights( const point_list &nodes,
-                               const point_list &normals,
-                               const int_list &pnt_i,
-                               const int_list &nml_i,
-                               const string &material,
-                               sgVec3 up )
+static ssgTransform *gen_reil_lights( const point_list &nodes,
+                                      const point_list &normals,
+                                      const int_list &pnt_i,
+                                      const int_list &nml_i,
+                                      SGMaterialLib *matlib,
+                                      sgVec3 up )
 {
     sgVec3 center;
     calc_center_point( nodes, pnt_i, center );
@@ -319,13 +313,13 @@ ssgTransform *gen_reil_lights( const point_list &nodes,
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-    SGMaterial *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
+    SGMaterial *mat = matlib->find( "RWY_WHITE_LIGHTS" );
 
-    if ( newmat != NULL ) {
-        leaf->setState( newmat->get_state() );
+    if ( mat != NULL ) {
+        leaf->setState( mat->get_state() );
     } else {
-        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
-                << material );
+        SG_LOG( SG_TERRAIN, SG_ALERT,
+                "Warning: can't find material = RWY_WHITE_LIGHTS" );
     }
 
     leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
@@ -359,12 +353,12 @@ ssgTransform *gen_reil_lights( const point_list &nodes,
 }
 
 
-ssgTransform *gen_odals_lights( const point_list &nodes,
-                                const point_list &normals,
-                                const int_list &pnt_i,
-                                const int_list &nml_i,
-                                const string &material,
-                                sgVec3 up )
+static ssgTransform *gen_odals_lights( const point_list &nodes,
+                                       const point_list &normals,
+                                       const int_list &pnt_i,
+                                       const int_list &nml_i,
+                                       SGMaterialLib *matlib,
+                                       sgVec3 up )
 {
     sgVec3 center;
     calc_center_point( nodes, pnt_i, center );
@@ -374,6 +368,13 @@ ssgTransform *gen_odals_lights( const point_list &nodes,
 
     sgVec4 color;
     sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+
+    // we don't want directional lights here
+    SGMaterial *mat = matlib->find( "GROUND_LIGHTS" );
+    if ( mat == NULL ) {
+        SG_LOG( SG_TERRAIN, SG_ALERT,
+                "Warning: can't material = GROUND_LIGHTS" );
+    }
 
     // center line strobes
     int i;
@@ -392,16 +393,7 @@ ssgTransform *gen_odals_lights( const point_list &nodes,
         ssgLeaf *leaf = 
             new ssgVtxTable ( GL_POINTS, vl, NULL, NULL, cl );
 
-        // we don't want directional lights here
-        SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
-
-        if ( newmat != NULL ) {
-            leaf->setState( newmat->get_state() );
-        } else {
-            SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
-                    << material );
-        }
-
+        leaf->setState( mat->get_state() );
         leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
         leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
 
@@ -427,16 +419,7 @@ ssgTransform *gen_odals_lights( const point_list &nodes,
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_POINTS, vl, NULL, NULL, cl );
 
-    // we don't want directional lights here
-    SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
-
-    if ( newmat != NULL ) {
-        leaf->setState( newmat->get_state() );
-    } else {
-        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
-                << material );
-    }
-
+    leaf->setState( mat->get_state() );
     leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
     leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
 
@@ -466,12 +449,12 @@ ssgTransform *gen_odals_lights( const point_list &nodes,
 }
 
 
-ssgTransform *gen_rabbit_lights( const point_list &nodes,
-                                 const point_list &normals,
-                                 const int_list &pnt_i,
-                                 const int_list &nml_i,
-                                 const string &material,
-                                 sgVec3 up )
+static ssgTransform *gen_rabbit_lights( const point_list &nodes,
+                                        const point_list &normals,
+                                        const int_list &pnt_i,
+                                        const int_list &nml_i,
+                                        SGMaterialLib *matlib,
+                                        sgVec3 up )
 {
     sgVec3 center;
     calc_center_point( nodes, pnt_i, center );
@@ -481,6 +464,12 @@ ssgTransform *gen_rabbit_lights( const point_list &nodes,
     sgNormalizeVec3( nup, up );
 
     ssgTimedSelector *rabbit = new ssgTimedSelector;
+
+    SGMaterial *mat = matlib->find( "RWY_WHITE_LIGHTS" );
+    if ( mat == NULL ) {
+        SG_LOG( SG_TERRAIN, SG_ALERT,
+                "Warning: can't material = RWY_WHITE_LIGHTS" );
+    }
 
     int i;
     sgVec3 pt, normal;
@@ -527,15 +516,7 @@ ssgTransform *gen_rabbit_lights( const point_list &nodes,
         ssgLeaf *leaf = 
             new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-        SGMaterial *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
-
-        if ( newmat != NULL ) {
-            leaf->setState( newmat->get_state() );
-        } else {
-            SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
-                    << material );
-        }
-
+        leaf->setState( mat->get_state() );
         leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
         leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
 
@@ -564,8 +545,10 @@ ssgTransform *gen_rabbit_lights( const point_list &nodes,
 }
 
 
-// Generate a directional light
-ssgLeaf *gen_normal_line( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
+#if 0 // debugging infrastructure
+// Generate a normal line 
+static ssgLeaf *gen_normal_line( SGMaterialLib *matlib,
+                                 sgVec3 pt, sgVec3 dir, sgVec3 up ) {
 
     ssgVertexArray *vl = new ssgVertexArray( 3 );
     ssgColourArray *cl = new ssgColourArray( 3 );
@@ -584,47 +567,51 @@ ssgLeaf *gen_normal_line( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_LINES, vl, NULL, NULL, cl );
 
-    SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
-    leaf->setState( newmat->get_state() );
+    SGMaterial *mat = matlib->find( "GROUND_LIGHTS" );
+    leaf->setState( mat->get_state() );
 
     return leaf;
 }
+#endif
 
 
 ssgBranch *gen_directional_lights( const point_list &nodes,
                                    const point_list &normals,
                                    const int_list &pnt_i,
                                    const int_list &nml_i,
+                                   SGMaterialLib *matlib,
                                    const string &material,
                                    sgVec3 up )
 {
     sgVec3 nup;
     sgNormalizeVec3( nup, up );
 
+    SGMaterial *mat = matlib->find( material );
+
     if ( material == "RWY_REIL_LIGHTS" ) {
         // cout << "found a reil" << endl;
         ssgTransform *reil = gen_reil_lights( nodes, normals, pnt_i, nml_i,
-                                              material, up );
+                                              matlib, up );
         return reil;
     } else if ( material == "RWY_ODALS_LIGHTS" ) {
         // cout << "found a odals" << endl;
         ssgTransform *odals = gen_odals_lights( nodes, normals, pnt_i, nml_i,
-                                                material, up );
+                                                matlib, up );
         return odals;
     } else if ( material == "RWY_SEQUENCED_LIGHTS" ) {
         // cout << "found a rabbit" << endl;
         ssgTransform *rabbit = gen_rabbit_lights( nodes, normals,
                                                   pnt_i, nml_i,
-                                                  material, up );
+                                                  matlib, up );
         return rabbit;
     } else if ( material == "RWY_BLUE_TAXIWAY_LIGHTS" ) {
         ssgTransform *light_group = gen_dir_light_group( nodes, normals, pnt_i,
-                                                         nml_i, material, up,
+                                                         nml_i, mat, up,
                                                          true );
         return light_group;
     } else {
         ssgTransform *light_group = gen_dir_light_group( nodes, normals, pnt_i,
-                                                         nml_i, material, up );
+                                                         nml_i, mat, up );
         return light_group;
     }
 
