@@ -100,7 +100,6 @@ void HttpdChannel::foundTerminator (void) {
         unsigned int pos = rest.find( " " );
         if ( pos != string::npos ) {
             request = rest.substr( 0, pos );
-            request = urlDecode(request);
         } else {
             request = "/";
         }
@@ -112,6 +111,7 @@ void HttpdChannel::foundTerminator (void) {
             string args = request.substr( pos + 1 );
             request = request.substr( 0, pos );
             printf("'%s' '%s'\n", request.c_str(), args.c_str());
+            request = urlDecode(request);
 
             // parse args looking for "value="
             bool done = false;
@@ -133,11 +133,13 @@ void HttpdChannel::foundTerminator (void) {
                     string b = arg.substr( apos + 1 );
                     printf("    a = %s  b = %s\n", a.c_str(), b.c_str() );
                     if ( a == "value" ) {
-                        fgSetString( request, b );
+                        fgSetString( request, urlDecode(b) );
                     } 
                 }
             }
-        }
+        } else {
+            request = urlDecode(request);
+	}
 
         node = globals->get_props()->getNode(request);
 
@@ -225,8 +227,7 @@ void HttpdChannel::foundTerminator (void) {
             response += value;
             response += "\" maxlength=2047>";
             response += "<input type=submit value=\"update\" name=\"submit\">";
-            response += "<FORM>";
-            response += "<BR>";
+            response += "</FORM>";
         }
         response += "</BODY>";
         response += getTerminator();
@@ -257,7 +258,7 @@ void HttpdChannel::foundTerminator (void) {
 }
 
 
-// encode everything but "a-zA-Z0-9_.-/"
+// encode everything but "a-zA-Z0-9_.-/" (see RFC2396)
 string HttpdChannel::urlEncode(string s) {
     string r = "";
     
