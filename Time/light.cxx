@@ -42,7 +42,7 @@
 #include <Math/fg_geodesy.h>
 #include <Math/interpolater.hxx>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
+#include <Math/polar3d.hxx>
 
 #include "fg_time.hxx"
 #include "light.hxx"
@@ -167,6 +167,9 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/07/08 14:48:38  curt
+// polar3d.h renamed to polar3d.hxx
+//
 // Revision 1.9  1998/05/29 20:37:51  curt
 // Renamed <Table>.table to be <Table> so we can add a .gz under DOS.
 //

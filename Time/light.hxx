@@ -62,7 +62,7 @@ public:
     double sun_lon, sun_gc_lat;
 
     // in cartesian coordiantes
-    fgCartesianPoint3d fg_sunpos;
+    fgPoint3d fg_sunpos;
 
     // (in view coordinates)
     GLfloat sun_vec[4];
@@ -114,6 +114,9 @@ void fgLightUpdate ( void );
 
 
 // $Log$
+// Revision 1.5  1998/07/08 14:48:39  curt
+// polar3d.h renamed to polar3d.hxx
+//
 // Revision 1.4  1998/05/20 20:54:17  curt
 // Converted fgLIGHT to a C++ class.
 //

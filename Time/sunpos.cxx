@@ -50,8 +50,8 @@
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
-#include <Math/vector.h>
+#include <Math/polar3d.hxx>
+#include <Math/vector.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "fg_time.hxx"
@@ -276,7 +276,7 @@ void fgUpdateSunPos( void ) {
     fgTIME *t;
     fgVIEW *v;
     MAT3vec nup, nsun, v0;
-    fgPolarPoint3d p;
+    fgPoint3d p;
     double sun_gd_lat, sl_radius;
     double ntmp;
 
@@ -350,6 +350,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/07/08 14:48:39  curt
+// polar3d.h renamed to polar3d.hxx
+//
 // Revision 1.8  1998/05/02 01:53:18  curt
 // Fine tuning mktime() support because of varying behavior on different
 // platforms.
