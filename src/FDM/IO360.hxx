@@ -137,6 +137,10 @@ private:
     float enthalpy_exhaust;
     float Percentage_of_best_power_mixture_power;
     float abstract_mixture;	//temporary hack
+    float engine_inertia;	//kg.m^2
+    float prop_inertia;		//kg.m^2
+    float angular_acceleration;	//rad/s^2
+    double time_step;
 
     // Initialise Propellor Variables used by this instance
     float FGProp1_Angular_V;
@@ -189,16 +193,16 @@ public:
 
     //constructor
     FGEngine() {
-	outfile.open("FGEngine.dat", ios::out|ios::trunc);
+//	outfile.open("FGEngine.dat", ios::out|ios::trunc);
     }
 
     //destructor
     ~FGEngine() {
-	outfile.close();
+//	outfile.close();
     }
 
     // set initial default values
-    void init();
+    void init(double dt);
 
     // update the engine model based on current control positions
     void update();

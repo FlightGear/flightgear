@@ -1,11 +1,11 @@
 // 10520d test program
 
-#include "10520d.hxx"
+#include "IO360.hxx"
 
 int main() {
     FGEngine e;
 
-    e.init();
+    e.init( 1.0 / 120.0 );
 
     e.set_IAS( 80 );
     e.set_Throttle_Lever_Pos( 50.0 );

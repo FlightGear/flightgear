@@ -45,7 +45,9 @@ int FGLaRCsim::init( double dt ) {
 
 #ifdef USE_NEW_ENGINE_CODE
     // Initialize our little engine that hopefully might
-    eng.init();
+    eng.init(dt);
+    // dcl - in passing dt to init rather than update I am assuming
+    // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
 #endif
 
     // cout << "FGLaRCsim::init()" << endl;

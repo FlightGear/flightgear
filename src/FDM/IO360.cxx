@@ -66,6 +66,10 @@
 // I've tried to match the prop and engine model to give roughly 600 RPM idle and 180 HP at 2700 RPM
 // but it is by no means currently at a completed stage - DCL 15/9/00
 //
+// DCL 28/9/00 - Added estimate of engine and prop inertia and changed engine speed calculation to be calculated from Angular acceleration = Torque / Inertia.  
+//		 Requires a timestep to be passed to FGEngine::init and currently assumes this timestep does not change.
+//		 Could easily be altered to pass a variable timestep to FGEngine::update every step instead if required.
+//
 //////////////////////////////////////////////////////////////////////
 
 #include <iostream.h>
@@ -128,7 +132,7 @@ float FGEngine::Lookup_Combustion_Efficiency(float thi_actual)
     neta_comb[8] = 0.63;
     neta_comb[9] = 0.57;
     neta_comb[10] = 0.525;
-    //combustion efficiency values from Heywood [1]
+    //combustion efficiency values from Heywood: ISBN 0-07-100499-8
 
     int i;
     int j;
@@ -194,7 +198,7 @@ static float Calc_Manifold_Pressure ( float LeverPosn, float MaxMan, float MinMa
 
 
 // set initial default values
-void FGEngine::init() {
+void FGEngine::init(double dt) {
 
     CONVERT_CUBIC_INCHES_TO_METERS_CUBED = 1.638706e-5;
     // Control and environment inputs
@@ -206,6 +210,7 @@ void FGEngine::init() {
     Cp_fuel = 1700;	// J/KgK
     calorific_value_fuel = 47.3e6;  // W/Kg  Note that this is only an approximate value
     R_air = 287.3;
+    time_step = dt;
 
     // Engine Specific Variables used by this program that have limits.
     // Will be set in a parameter file to be read in to create
@@ -220,6 +225,8 @@ void FGEngine::init() {
     MaxHP = 180;    //Lycoming IO360
 //  displacement = 520;  //Continental IO520-M
     displacement = 360;	 //Lycoming IO360   
+    engine_inertia = 0.2;  //kgm^2 - value taken from a popular family saloon car engine - need to find an aeroengine value !!!!!
+    prop_inertia = 0.03;  //kgm^2 - this value is a total guess - dcl
     displacement_SI = displacement * CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
 
     Gear_Ratio = 1;
@@ -491,7 +498,7 @@ void FGEngine::update() {
     // Engine Power & Torque Calculations
 
     // Loop until stable - required for testing only
-    for (num = 0; num < num2; num++) {
+//    for (num = 0; num < num2; num++) {
 	// cout << Manifold_Pressure << " Inches" << "\t";
 	// cout << RPM << "  RPM" << "\t";
 
@@ -530,7 +537,8 @@ void FGEngine::update() {
 	//uses a curve fit to the data in the IO360 / O360 operating manual
 	//due to the shape of the curve I had to use a 6th order fit - I am sure it must be possible to reduce this in future,
 	//possibly by using separate fits for rich and lean of best power mixture
-	//first adjust actual mixture to abstract mixture - this is a temporary hack
+	//first adjust actual mixture to abstract mixture - this is a temporary hack in order to account for the fact that the data I have
+	//dosn't specify actual mixtures and I want to be able to change what I think they are without redoing the curve fit each time.
 	//y=10x-12 for now
 	abstract_mixture = 10.0 * equivalence_ratio - 12.0;
 	float m = abstract_mixture;  //to simplify writing the next equation
@@ -710,15 +718,7 @@ void FGEngine::update() {
 //#if 0
 #ifdef PHILS_PROP_MODEL  //Do Torque calculations in Ft/lbs - yuk :-(((
 	Torque_Imbalance = FGProp1_Torque - Torque; 
-#endif
 
-#ifdef NEVS_PROP_MODEL	    //use proper units - Nm
-	Torque_Imbalance = prop_torque - Torque_SI;
-#endif
-
-	//  cout <<  Torque_Imbalance << endl;
-
-//  Some really crude engine speed calculations for now - we really need some moments of inertia and a dt in here !!!!
 	if (Torque_Imbalance > 5) {
 	    RPM -= 14.5;
 	    // FGProp1_RPM -= 25;
@@ -730,8 +730,19 @@ void FGEngine::update() {
 	    // FGProp1_RPM += 25;
 //	    FGProp1_Blade_Angle += 0.75;
 	}
+#endif
 
-	//DCL - This constant speed prop bit is all a bit of a hack for now
+
+#ifdef NEVS_PROP_MODEL	    //use proper units - Nm
+	Torque_Imbalance = Torque_SI - prop_torque;  //This gives a +ve value when the engine torque exeeds the prop torque
+
+	angular_acceleration = Torque_Imbalance / (engine_inertia + prop_inertia);
+	angular_velocity_SI += (angular_acceleration * time_step);
+	RPM = (angular_velocity_SI * 60) / (2.0 * PI);
+#endif
+
+
+
 /*
 	if( RPM > (Desired_RPM + 2)) {
 	    FGProp1_Blade_Angle += 0.75;  //This value could be altered depending on how far from the desired RPM we are
@@ -757,11 +768,11 @@ void FGEngine::update() {
 	    RPM = 0;
 
 //	outfile << "RPM = " << RPM << " Blade angle = " << FGProp1_Blade_Angle << " Engine torque = " << Torque << " Prop torque = " << FGProp1_Torque << '\n';
-	outfile << "RPM = " << RPM << " Engine torque = " << Torque_SI << " Prop torque = " << prop_torque << '\n';    
+//	outfile << "RPM = " << RPM << " Engine torque = " << Torque_SI << " Prop torque = " << prop_torque << '\n';    
 
 	// cout << FGEng1_RPM << " Blade_Angle  " << FGProp1_Blade_Angle << endl << endl;
 
-    }
+
 
     // cout << "Final engine RPM = " << RPM << '\n';
 }
