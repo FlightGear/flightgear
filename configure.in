@@ -20,8 +20,14 @@ AM_PROG_LIBTOOL
 dnl Initialize maintainer mode
 AM_MAINTAINER_MODE
 
+dnl This is needed for AC_TRY_COMPILE later
+AC_ISC_POSIX
+
 dnl Check to see if this `configure' is being run in the `Cygwin32' environment
-AM_CYGWIN32
+dnl AM_CYGWIN32
+
+dnl Check for MS Windows environment
+AC_CHECK_HEADER(windows.h)
 
 dnl Using AM_CONDITIONAL is a step out of the protected little 
 dnl automake fold so it is potentially dangerous.  But, we are
@@ -29,16 +35,22 @@ dnl beginning to run into cases where the standard checks are not
 dnl enough.  AM_CONDITIONALS are then referenced to conditionally
 dnl build a Makefile.in from a Makefile.am which lets us define custom
 dnl includes, compile alternative source files, etc.
+
+dnl Check for external variables daylight and timezone.
+AC_EXT_DAYLIGHT
+AM_CONDITIONAL(HAVE_DAYLIGHT, test "$have_daylight" = yes )
+
+AC_EXT_TIMEZONE
+AM_CONDITIONAL(HAVE_TIMEZONE, test "$have_timezone" = yes )
+
 dnl Check for Linux style audio support
+AM_CONDITIONAL(HAVE_AUDIO_SUPPORT, \
+	test -r /usr/include/soundcard.h \
+		-o -r /usr/include/linux/soundcard.h \
+		-o -r /usr/include/machine/soundcard.h \
+		-o "x$ac_cv_header_windows_h" = "xyes" )
 
-AM_CONDITIONAL(HAVE_DAYLIGHT, grep daylight /usr/include/time.h )
-
-AM_CONDITIONAL(HAVE_TIMEZONE, grep timezone /usr/include/time.h )
-
-AM_CONDITIONAL(HAVE_OSS_AUDIO, \
-	test -r /usr/include/soundcard.h -o -r /usr/include/linux/soundcard.h )
-
-AC_CHECK_HEADER(windows.h)
+AM_CONDITIONAL(HAVE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
 
 dnl extra library and include directories
 EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"
@@ -153,6 +165,8 @@ AC_OUTPUT( \
 	Include/Makefile \
 	Lib/Makefile \
 	Lib/Audio/Makefile \
+	Lib/Audio/src/Makefile \
+	Lib/Audio/example/Makefile \
 	Lib/Bucket/Makefile \
 	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \

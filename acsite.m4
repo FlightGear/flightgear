@@ -349,3 +349,46 @@ fi
 dnl
 dnl
 dnl
+
+dnl AC_EXT_DAYLIGHT
+dnl Check for an external variable daylight. Stolen from w3c-libwww.
+AC_DEFUN(AC_EXT_DAYLIGHT,
+[ AC_MSG_CHECKING(int daylight variable)
+AC_TRY_COMPILE([#include <time.h>], [return daylight;],
+  have_daylight=yes,
+  have_daylight=no)
+AC_MSG_RESULT($have_daylight)
+])dnl
+
+dnl AC_EXT_TIMEZONE
+dnl Check for an external variable timezone. Stolen from tcl-8.0.
+AC_DEFUN(AC_EXT_TIMEZONE,
+[
+#
+# Its important to include time.h in this check, as some systems (like convex)
+# have timezone functions, etc.
+#
+have_timezone=no
+AC_MSG_CHECKING([long timezone variable])
+AC_TRY_COMPILE([#include <time.h>],
+        [extern long timezone;
+         timezone += 1;
+         exit (0);],
+        [have_timezone=yes
+         AC_MSG_RESULT(yes)],
+         AC_MSG_RESULT(no))
+
+#
+# On some systems (eg IRIX 6.2), timezone is a time_t and not a long.
+#
+if test "$have_timezone" = no; then
+   AC_MSG_CHECKING([time_t timezone variable])
+   AC_TRY_COMPILE([#include <time.h>],
+        [extern time_t timezone;
+         timezone += 1;
+         exit (0);],
+        [have_timezone=yes
+         AC_MSG_RESULT(yes)],
+         AC_MSG_RESULT(no))
+fi
+])dnl
