@@ -103,8 +103,8 @@ void fgInitSubsystems( void ) {
     /* Initial Position north of the city of Globe */
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
-    FG_Longitude = ( -397867.44 / 3600.0 ) * DEG_TO_RAD;
-    FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD;
+    /* FG_Longitude = ( -397867.44 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Altitude = 0.0 + 3.758099; */
 
     /* Initial Position: 10125 Jewell St. NE */
@@ -115,7 +115,7 @@ void fgInitSubsystems( void ) {
     /* A random test position */
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
-    FG_Runway_altitude = 4500.0;
+    FG_Runway_altitude = 8500.0;
     FG_Altitude = FG_Runway_altitude + 3.758099;
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
@@ -130,9 +130,7 @@ void fgInitSubsystems( void ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    /* FG_Psi   =  270.0 * DEG_TO_RAD; */
-    FG_Psi   =  258.0 * DEG_TO_RAD;
-    /* FG_Psi   =  0.0 * DEG_TO_RAD; */
+    FG_Psi   =  270.0 * DEG_TO_RAD;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -220,10 +218,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.15  1997/12/11 04:43:55  curt
-/* Fixed sun vector and lighting problems.  I thing the moon is now lit
-/* correctly.
+/* Revision 1.16  1997/12/12 19:52:48  curt
+/* Working on lightling and material properties.
 /*
+ * Revision 1.15  1997/12/11 04:43:55  curt
+ * Fixed sun vector and lighting problems.  I thing the moon is now lit
+ * correctly.
+ *
  * Revision 1.14  1997/12/10 22:37:47  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

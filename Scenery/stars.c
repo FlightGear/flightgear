@@ -123,17 +123,21 @@ void fgStarsInit() {
 		sscanf(front, "%lf,%lf,%lf\n", 
 		       &right_ascension, &declination, &magnitude);
 
+		/*
 		if ( strcmp(name, "Betelgeuse") == 0 ) {
 		    printf("  *** Marking %s\n", name);
 		    ra_save = right_ascension;
 		    decl_save = declination;
 		}
+		*/
 
+		/*
 		if ( strcmp(name, "Alnilam") == 0 ) {
 		    printf("  *** Marking %s\n", name);
 		    ra_save1 = right_ascension;
 		    decl_save1 = declination;
 		}
+		*/
 
 		/* scale magnitudes to (0.0 - 1.0) */
 		magnitude = (0.0 - magnitude) / 5.0 + 1.0;
@@ -175,6 +179,7 @@ void fgStarsInit() {
 	}
 	glEnd();
 
+	/*
 	glBegin(GL_LINE_LOOP);
         glColor3f(1.0, 0.0, 0.0);
 	glVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
@@ -190,7 +195,9 @@ void fgStarsInit() {
 		    190000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(decl_save+0.2) );
 	glEnd();
+	*/
 
+	/*
 	glBegin(GL_LINE_LOOP);
         glColor3f(0.0, 1.0, 0.0);
 	glVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
@@ -206,6 +213,7 @@ void fgStarsInit() {
 		    190000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(decl_save1+0.2) );
 	glEnd();
+	*/
        
 	glEndList();
 
@@ -256,10 +264,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.18  1997/12/10 22:37:52  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.19  1997/12/12 19:53:00  curt
+/* Working on lightling and material properties.
 /*
+ * Revision 1.18  1997/12/10 22:37:52  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.17  1997/12/09 04:25:33  curt
  * Working on adding a global lighting params structure.
  *

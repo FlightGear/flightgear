@@ -89,6 +89,9 @@ void fgAstroRender() {
     /* Disable fog effects */
     glDisable( GL_FOG );
 
+    /* set the sun position */
+    /* glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv );*/
+
     glPushMatrix();
 
     /* Translate to view position */
@@ -118,10 +121,13 @@ void fgAstroRender() {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/11 04:43:56  curt
-/* Fixed sun vector and lighting problems.  I thing the moon is now lit
-/* correctly.
+/* Revision 1.5  1997/12/12 19:52:54  curt
+/* Working on lightling and material properties.
 /*
+ * Revision 1.4  1997/12/11 04:43:56  curt
+ * Fixed sun vector and lighting problems.  I thing the moon is now lit
+ * correctly.
+ *
  * Revision 1.3  1997/12/10 22:37:49  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

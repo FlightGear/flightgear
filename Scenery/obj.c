@@ -48,7 +48,9 @@ float normals[MAXNODES][3];
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path) {
     char line[256], winding[256];
-    static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
+    static GLfloat terrain_color[4] = { 0.6, 0.6, 0.25, 1.0 };
+    static GLfloat terrain_ambient[4];
+    static GLfloat terrain_diffuse[4];
     double v1[3], v2[3], approx_normal[3], dot_prod, temp;
     struct fgCartesianPoint ref;
     GLint area;
@@ -64,8 +66,13 @@ GLint fgObjLoad(char *path) {
     area = glGenLists(1);
     glNewList(area, GL_COMPILE);
 
-    /* glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color ); */
-    glColor3fv(color);
+    for ( i = 0; i < 4; i++ ) {
+	terrain_ambient[i] = terrain_color[i];
+	terrain_diffuse[i] = terrain_color[i];
+    }
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
 
     first = 1;
     ncount = 1;
@@ -252,9 +259,12 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.8  1997/12/10 01:19:51  curt
-/* Tweaks for verion 0.15 release.
+/* Revision 1.9  1997/12/12 19:52:57  curt
+/* Working on lightling and material properties.
 /*
+ * Revision 1.8  1997/12/10 01:19:51  curt
+ * Tweaks for verion 0.15 release.
+ *
  * Revision 1.7  1997/12/08 22:51:17  curt
  * Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
  * admission of defeat.  I will eventually go back and get all the stripes

@@ -225,9 +225,17 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 
 
 void fgMoonInit() {
+    struct fgLIGHT *l;
+    static GLfloat moon_color[4] = { 1.0, 1.0, 1.0, 1.0 };
 //   int i;
+
+    l = &cur_light_params;
+
     moon = glGenLists(1);
     glNewList(moon, GL_COMPILE );
+
+    /* glMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
 
     fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
     moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
@@ -245,7 +253,6 @@ void fgMoonInit() {
     yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
     zMoon = 60000.0 * sin(moonPos.Declination);
 
-    glColor3f(1.0, 1.0, 1.0);
     glutSolidSphere(1.0, 10, 10);
 
     glEndList();
@@ -255,13 +262,13 @@ void fgMoonInit() {
 /* Draw the moon */
 void fgMoonRender() {
     struct fgLIGHT *l;
-    GLfloat color[4] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat moon_color[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     l = &cur_light_params;
 
     /* set lighting parameters */
     glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_clear );
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, color );
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, moon_color );
 
     glPushMatrix();
     glTranslatef(xMoon, yMoon, zMoon);

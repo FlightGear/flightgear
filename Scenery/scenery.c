@@ -81,16 +81,17 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 /* Render out the current scene */
 void fgSceneryRender() {
     glCallList(area_terrain);
-
-    fgAstroRender();
 }
 
 
 /* $Log$
-/* Revision 1.25  1997/12/10 22:37:51  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.26  1997/12/12 19:52:58  curt
+/* Working on lightling and material properties.
 /*
+ * Revision 1.25  1997/12/10 22:37:51  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.24  1997/12/08 22:51:18  curt
  * Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
  * admission of defeat.  I will eventually go back and get all the stripes

@@ -103,9 +103,9 @@ static void fgInitVisuals() {
        to unit length after transformation.  See glNormal. */
     glEnable( GL_NORMALIZE );
 
-    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
     glEnable( GL_LIGHTING );
     glEnable( GL_LIGHT0 );
+    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     glShadeModel( GL_FLAT ); /* glShadeModel( GL_SMOOTH ); */
 
@@ -133,7 +133,7 @@ static void fgUpdateViewParams() {
     struct fgVIEW *v;
 
     double x_2, x_4, x_8, x_10;
-    double ambient, diffuse, sky_brightness;
+    double light, ambient, diffuse, sky_brightness;
     /* if the 4th field is 0.0, this specifies a direction ... */
     /* clear color (sky) */
     GLfloat sky_color[4] = {0.60, 0.60, 0.90, 1.0};
@@ -174,15 +174,9 @@ static void fgUpdateViewParams() {
     x_8 = x_4 * x_4;
     x_10 = x_8 * x_2;
 
-    ambient = 0.4 * pow(1.1, -x_10 / 30.0);
-
-    /* diffuse = 0.4 * cos(0.3 * x_2);
-    if ( t->sun_angle > FG_PI_2 + 0.05 ) {
-	diffuse = 0.0;
-    }
-    */
-
-    diffuse = ambient;
+    light = pow(1.1, -x_10 / 30.0);
+    ambient = 0.3 * light;
+    diffuse = 0.7 * light;
 
     sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
 
@@ -239,6 +233,9 @@ static void fgUpdateVisuals( void ) {
 
     /* draw scenery */
     fgSceneryRender();
+
+    /* draw astronomical objects */
+    fgAstroRender();
 
     /* display HUD */
     if( show_hud )
@@ -573,10 +570,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.29  1997/12/11 04:43:54  curt
-/* Fixed sun vector and lighting problems.  I thing the moon is now lit
-/* correctly.
+/* Revision 1.30  1997/12/12 19:52:47  curt
+/* Working on lightling and material properties.
 /*
+ * Revision 1.29  1997/12/11 04:43:54  curt
+ * Fixed sun vector and lighting problems.  I thing the moon is now lit
+ * correctly.
+ *
  * Revision 1.28  1997/12/10 22:37:45  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
