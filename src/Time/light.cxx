@@ -52,6 +52,7 @@ SG_USING_STD(string);
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/screen/colors.hxx>
 #include <simgear/sky/sky.hxx>
 
 #include <Aircraft/aircraft.hxx>
@@ -107,17 +108,18 @@ void fgLIGHT::Update( void ) {
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
-#if defined (sgi) || defined( macintosh )
-    GLfloat base_sky_color[4] = { 0.252, 0.403, 0.657, 1.0 };
-#else // default
-    GLfloat base_sky_color[4] = { 0.336, 0.406, 0.574, 1.0 };
-#endif
-    GLfloat base_fog_color[4] = { 0.80, 0.83, 1.0, 1.0 };
+    GLfloat base_sky_color[4] = { 0.392, 0.539, 0.752, 1.0 };
+    // base fog color
+    GLfloat base_fog_color[4] = { 0.90, 0.93, 1.0, 1.0 };
     double deg, ambient, diffuse, specular, sky_brightness;
 
     f = current_aircraft.fdm_state;
 
     SG_LOG( SG_EVENT, SG_INFO, "Updating light parameters." );
+
+    // first, correct the colors for system specific gamma settings
+    // gamma_correct( (float *)&base_sky_color );
+    // gamma_correct( (float *)&base_fog_color );
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
@@ -144,28 +146,33 @@ void fgLIGHT::Update( void ) {
     scene_ambient[1] = white[1] * ambient;
     scene_ambient[2] = white[2] * ambient;
     scene_ambient[3] = 1.0;
+    gamma_correct( (float *)&scene_ambient );
 
     scene_diffuse[0] = white[0] * diffuse;
     scene_diffuse[1] = white[1] * diffuse;
     scene_diffuse[2] = white[2] * diffuse;
     scene_diffuse[3] = 1.0;
+    gamma_correct( (float *)&scene_diffuse );
 
     scene_specular[0] = white[0] * specular;
     scene_specular[1] = white[1] * specular;
     scene_specular[2] = white[2] * specular;
     scene_specular[3] = 1.0;
+    gamma_correct( (float *)&scene_specular );
 
     // set sky color
     sky_color[0] = base_sky_color[0] * sky_brightness;
     sky_color[1] = base_sky_color[1] * sky_brightness;
     sky_color[2] = base_sky_color[2] * sky_brightness;
     sky_color[3] = base_sky_color[3];
+    gamma_correct( (float *)&sky_color );
 
     // set cloud and fog color
     cloud_color[0] = fog_color[0] = base_fog_color[0] * sky_brightness;
     cloud_color[1] = fog_color[1] = base_fog_color[1] * sky_brightness;
     cloud_color[2] = fog_color[2] = base_fog_color[2] * sky_brightness;
     cloud_color[3] = fog_color[3] = base_fog_color[3];
+    gamma_correct( (float *)&cloud_color );
 
     // update the cloud colors for sunrise/sunset effects (darken them)
     if (sun_angle > 1.0) {
@@ -174,6 +181,7 @@ void fgLIGHT::Update( void ) {
        cloud_color[1] /= sun2;
        cloud_color[2] /= sun2;
     }
+    gamma_correct( (float *)&cloud_color );
 }
 
 
@@ -280,6 +288,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
     adj_fog_color[1] = rf3 * f_green + rf2 * s_green;
     adj_fog_color[2] = rf3 * f_blue  + rf2 * s_blue;
 
+    gamma_correct( (float *)&adj_fog_color );
 #endif
 }
 
