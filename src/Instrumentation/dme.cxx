@@ -30,6 +30,8 @@ adjust_range (double transmitter_elevation_ft, double aircraft_altitude_ft,
     double range_nm = 1.23 * sqrt(delta_elevation_ft);
     if (range_nm > max_range_nm)
         range_nm = max_range_nm;
+    else if (range_nm < 20.0)
+        range_nm = 20.0;
     double rand = sg_random();
     return range_nm + (range_nm * rand * rand);
 }
