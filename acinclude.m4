@@ -102,7 +102,7 @@ for exdir in $exdirs ; do
 		mylibdir="${exdir}/lib${subexdir}"
 		wi_EXTRA_LDIR($mylibdir)
 
-		progdir="${exdir}/bin${subexdirr}"
+		progdir="${exdir}/bin${subexdir}"
 		wi_EXTRA_PDIR($progdir)
 	fi
 done

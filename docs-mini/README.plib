@@ -14,4 +14,3 @@ You should be able to just run "./configure" to configure the package
 and use all of plib's defaults.  Then run "make" followed by "make
 install".  By default, plib installs itself into /usr so if you don't
 like this, be sure to specify an alternate prefix such as --prefix=/usr/local
-
