@@ -349,8 +349,8 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.11  1998/05/13 18:30:22  curt
-# Updated ...
+# Revision 1.12  1998/05/20 20:55:50  curt
+# Makefile tweaks
 #
 # Revision 1.4  1998/04/24 00:44:07  curt
 # Added zlib support.

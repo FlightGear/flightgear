@@ -28,15 +28,15 @@
 
 $| = 1;                         # flush buffers after every write
 
-$do_dem2node =     1;
-$do_triangle_1 = 1;
-$do_fixnode =    1;
-$do_splittris =  1;
-$do_assemtris =  1;
-$do_triangle_2 = 1;
+$do_dem2node =     0;
+$do_triangle_1 = 0;
+$do_fixnode =    0;
+$do_splittris =  0;
+$do_assemtris =  0;
+$do_triangle_2 = 0;
 
-$do_tri2obj =    1;
-$do_strips =     1;
+$do_tri2obj =    0;
+$do_strips =     0;
 $do_fixobj =     1;
 
 
@@ -68,7 +68,7 @@ while ( $dem_file = shift(@ARGV) ) {
     if ( $do_dem2node ) {
 	dem2node() ;
     } else {
-	$subdir = "../Scenery/w100n040/w093n045";
+	$subdir = "../Scenery/w120n030/w111n033";
 	print "WARNING:  Hardcoding subdir = $subdir\n";
     }
 
@@ -380,7 +380,7 @@ sub fixobj {
 	    }
 	    close(OUT);
 
-	    unlink("$subdir/$file");
+	    # unlink("$subdir/$file");
 	}
     }
 }
@@ -388,6 +388,9 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.18  1998/05/20 20:55:40  curt
+# Makefile tweaks
+#
 # Revision 1.17  1998/04/28 01:23:25  curt
 # Added a work around so that we can get past the "triangle" program
 # hanging, by aborting and rerunning with that tile marked to use the "-i"
