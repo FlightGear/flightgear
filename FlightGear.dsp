@@ -2337,21 +2337,6 @@ SOURCE=.\src\FDM\LaRCsim\ls_sym.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\FDM\LaRCsim\ls_trim.c
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_LaRCsim"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\FDM\LaRCsim\ls_types.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"

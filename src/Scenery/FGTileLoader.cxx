@@ -64,6 +64,17 @@ FGTileLoader::~FGTileLoader()
 #endif // ENABLE_THREADS
 }
 
+
+/**
+ * 
+ */
+void FGTileLoader::reinit() {
+    while ( !tile_load_queue.empty() ) {
+	tile_load_queue.pop();
+    }
+}
+
+
 /**
  * 
  */
@@ -119,9 +130,10 @@ FGTileLoader::update()
         FGTileEntry* tile = tile_load_queue.front();
         tile_load_queue.pop();
         tile->load( tile_path, true );
-        FGTileMgr::loaded( tile );
+        FGTileMgr::ready_to_attach( tile );
     }
 
+#ifdef WISH_PLIB_WAS_THREADED // but it isn't
     if ( !tile_free_queue.empty() ) {
         cout << "freeing next tile ..." << endl;
         // free the next tile in the queue
@@ -130,6 +142,7 @@ FGTileLoader::update()
 	tile->free_tile();
 	delete tile;
     }
+#endif
 
 #endif // ENABLE_THREADS
 }

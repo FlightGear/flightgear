@@ -572,12 +572,18 @@ int ls_ForceAltitude(double alt_feet) {
     Altitude = alt_feet;
     ls_geod_to_geoc( Latitude, Altitude, &Sea_level_radius, &Lat_geocentric);
     Radius_to_vehicle = Altitude + Sea_level_radius;
+
+    return 0;
 }
 
 
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.5  2001/05/21 18:44:59  curt
+ * Tile pager tweaks.
+ * MSVC++ tweaks.
+ *
  * Revision 1.4  2001/03/24 05:03:12  curt
  * SG-ified logstream.
  *

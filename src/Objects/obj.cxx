@@ -1068,7 +1068,7 @@ ssgBranch *gen_runway_sign( const string path, const string name ) {
     ssgBranch *object = new ssgBranch();
     object->setName( (char *)name.c_str() );
 
-    double offset = name.length() / 2.0;
+    double width = name.length() / 3.0;
 
     string material = name + ".rgb";
 
@@ -1078,10 +1078,10 @@ ssgBranch *gen_runway_sign( const string path, const string name ) {
     int_list vertex_index; vertex_index.clear();
     int_list tex_index; tex_index.clear();
 
-    nodes.push_back( Point3D( -offset, 0, 0.25 ) );
-    nodes.push_back( Point3D( offset + 1, 0, 0.25 ) );
-    nodes.push_back( Point3D( -offset, 0, 1.25 ) );
-    nodes.push_back( Point3D( offset + 1, 0, 1.25 ) );
+    nodes.push_back( Point3D( -width, 0, 0.25 ) );
+    nodes.push_back( Point3D( width + 1, 0, 0.25 ) );
+    nodes.push_back( Point3D( -width, 0, 1.25 ) );
+    nodes.push_back( Point3D( width + 1, 0, 1.25 ) );
 
     normals.push_back( Point3D( 0, -1, 0 ) );
     normals.push_back( Point3D( 0, -1, 0 ) );

@@ -74,7 +74,7 @@ SGLockedQueue<FGTileEntry *> FGTileMgr::attach_queue;
 SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
 #else
 queue<FGTileEntry *> FGTileMgr::attach_queue;
-queue<FGTileDeferredModel *> FGTileMgr::model_queue;
+queue<FGDeferredModel *> FGTileMgr::model_queue;
 #endif // ENABLE_THREADS
 
 
@@ -96,6 +96,25 @@ FGTileMgr::~FGTileMgr() {
 int FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
+    tile_cache.init();
+    destroy_queue();
+
+    while ( ! attach_queue.empty() ) {
+        attach_queue.pop();
+    }
+
+    while ( ! model_queue.empty() ) {
+#ifdef ENABLE_THREADS
+	FGDeferredModel* dm = model_queue.pop();
+#else
+        FGDeferredModel* dm = model_queue.front();
+        model_queue.pop();
+#endif
+        delete dm;
+    }
+    loader.reinit();
+
+#if 0        
     if ( state != Start ) {
 	SG_LOG( SG_TERRAIN, SG_INFO,
 		"... Reinitializing." );
@@ -105,6 +124,7 @@ int FGTileMgr::init() {
 		"... First time through." );
 	tile_cache.init();
     }
+#endif
 
     hit_list.clear();
 
