@@ -30,12 +30,6 @@
 
 #include "Include/compiler.h"
 
-#if defined ( sun )                                                   
-  extern "C" {                                               
-    extern void *memmove(void *, const void *, size_t);             
-  }                                        
-#endif
-
 #include STL_ALGORITHM
 #include STL_FUNCTIONAL
 
@@ -312,6 +306,9 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.17  1999/01/27 04:50:18  curt
+// Move sun/solaris specific stuff to compiler.h
+//
 // Revision 1.16  1999/01/21 20:14:18  curt
 // Sun portability hack.
 //
