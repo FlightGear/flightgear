@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <algorithm>
 
+#include <simgear/structure/exception.hxx>
+
 #include <Main/fg_props.hxx>
 
 #include "environment_mgr.hxx"
@@ -412,7 +414,15 @@ FGMetarEnvironmentCtrl::fetch_data (const char *icao)
 
         _icao = strdup(icao);
     }
-    SGMetar *m = new SGMetar(_icao);
+
+    SGMetar *m;
+    try {
+        m = new SGMetar(_icao);
+    } catch (const sg_io_exception& e) {
+        SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
+                                      << e.getFormattedMessage().c_str() );
+        return;
+    }
 
     d = m->getMinVisibility().getVisibility_m();
     d = (d != SGMetarNaN) ? d : 10000;
