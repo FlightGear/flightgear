@@ -122,9 +122,13 @@
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:35  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.1  1998/01/27 00:46:50  curt
+/* prepended "fg_" on the front of these to avoid potential conflicts with
+/* system include files.
 /*
+ * Revision 1.3  1998/01/22 02:59:35  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/07 03:31:26  curt
  * Miscellaneous tweaks.
  *

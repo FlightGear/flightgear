@@ -36,9 +36,13 @@
 
 
 /* $Log$
-/* Revision 1.2  1998/01/22 02:59:35  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.1  1998/01/27 00:46:51  curt
+/* prepended "fg_" on the front of these to avoid potential conflicts with
+/* system include files.
 /*
+ * Revision 1.2  1998/01/22 02:59:35  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.1  1997/12/15 21:02:16  curt
  * Moved to .../FlightGear/Src/Include/
  *
