@@ -4,12 +4,6 @@ else
 WEATHER_DIR = Environment
 endif
 
-if HAVE_PLIB_PSL
-SCRIPTING_DIRS = Scripting
-else
-SCRIPTING_DIRS =
-endif
-
 if ENABLE_MPLAYER_AS
 MPLAYER_DIRS = MultiPlayer
 else
@@ -35,7 +29,7 @@ SUBDIRS = \
         Objects \
 	Replay \
         Scenery \
-        $(SCRIPTING_DIRS) \
+	Scripting \
         Sound \
         Systems \
         Time \
