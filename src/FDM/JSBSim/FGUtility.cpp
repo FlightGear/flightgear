@@ -59,7 +59,7 @@ INCLUDES
 
 #ifndef M_PI_2
 /* get a definition for pi */
-#include <Include/fg_constants.h>
+#include <simgear/constants.h>
 #define M_PI_2 FG_PI_2
 #endif
 
@@ -82,10 +82,12 @@ FGUtility::~FGUtility()
 
 float FGUtility::ToGeodetic()
 {
+    return 0.0;
 }
 
 
 float FGUtility:: FromGeodetic()
 {
+    return 0.0;
 }
 

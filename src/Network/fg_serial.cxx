@@ -113,7 +113,7 @@ int FGSerial::readline( char *buf, int length ) {
     // copy to external buffer
     strncpy( buf, save_buf, result );
     buf[result] = '\0';
-    cout << "fg_serial line = " << buf << endl;
+    FG_LOG( FG_IO, FG_INFO, "fg_serial line = " << buf );
 
     // shift save buffer
     for ( i = result; i < save_len; ++i ) {

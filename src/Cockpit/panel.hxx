@@ -38,11 +38,11 @@
 #include <plib/ssg.h>
 
 #include <vector>
-#include <hash_map>
+#include <map>
 #include <plib/fnt.h>
 
 FG_USING_STD(vector);
-FG_USING_STD(hash_map);
+FG_USING_STD(map);
 
 class FGPanelInstrument;
 
@@ -76,7 +76,7 @@ private:
   ssgTexture * _bg;
 
 				// Internalization table.
-  hash_map<const char *,ssgTexture *> _textureMap;
+  map<const char *,ssgTexture *> _textureMap;
 
 				// List of instruments in panel.
   instrument_list_type _instruments;

@@ -23,12 +23,20 @@
 
 #include <simgear/compiler.h>
 
-#include <sys/time.h>		// select()
-#include <sys/types.h>		// socket(), bind(), select(), accept()
-#include <sys/socket.h>		// socket(), bind(), listen(), accept()
-#include <netinet/in.h>		// struct sockaddr_in
-#include <netdb.h>		// gethostbyname()
-#include <unistd.h>		// select(), fsync()/fdatasync()
+#if ! defined( _MSC_VER )
+#  include <sys/time.h>		// select()
+#  include <sys/types.h>	// socket(), bind(), select(), accept()
+#  include <sys/socket.h>	// socket(), bind(), listen(), accept()
+#  include <netinet/in.h>	// struct sockaddr_in
+#  include <netdb.h>		// gethostbyname()
+#  include <unistd.h>		// select(), fsync()/fdatasync()
+#else
+#  include <sys/timeb.h>	// select()
+#  include <winsock2.h>		// socket(), bind(), listen(), accept(),
+				// struct sockaddr_in, gethostbyname()
+#  include <windows.h>
+#  include <io.h>
+#endif
 
 #if defined( sgi )
 #include <strings.h>
@@ -56,7 +64,7 @@ FGSocket::~FGSocket() {
 int FGSocket::make_server_socket () {
     struct sockaddr_in name;
 
-#if defined( __CYGWIN__ ) || defined( __CYGWIN32__ ) || defined( sgi )
+#if defined( __CYGWIN__ ) || defined( __CYGWIN32__ ) || defined( sgi ) || defined( _MSC_VER )
     int length;
 #else
     socklen_t length;
@@ -154,7 +162,7 @@ bool FGSocket::open( FGProtocol::fgProtocolDir dir ) {
 	// call.  A port of "0" indicates that we want to let the os
 	// pick any available port.
 	sock = make_server_socket();
-	cout << "socket is connected to port = " << port << endl;
+	FG_LOG( FG_IO, FG_INFO, "socket is connected to port = " << port );
 
 	// Specify the maximum length of the connection queue
 	listen(sock, FG_MAX_SOCKET_QUEUE);
@@ -231,9 +239,9 @@ int FGSocket::readline( char *buf, int length ) {
 	char *buf_ptr = save_buf + save_len;
 	result = std::read( sock, buf_ptr, FG_MAX_MSG_SIZE - save_len );
 	save_len += result;
-	cout << "current read = " << buf_ptr << endl;
-	cout << "current save_buf = " << save_buf << endl;
-	cout << "save_len = " << save_len << endl;
+	// cout << "current read = " << buf_ptr << endl;
+	// cout << "current save_buf = " << save_buf << endl;
+	// cout << "save_len = " << save_len << endl;
     }
 
     // look for the end of line in save_buf
@@ -243,17 +251,17 @@ int FGSocket::readline( char *buf, int length ) {
 	result = i + 1;
     } else {
 	// no end of line yet
-	cout << "no eol found" << endl;
+	// cout << "no eol found" << endl;
 	return 0;
     }
-    cout << "line length = " << result << endl;
+    // cout << "line length = " << result << endl;
 
     // we found an end of line
 
     // copy to external buffer
     strncpy( buf, save_buf, result );
     buf[result] = '\0';
-    cout << "fg_socket line = " << buf << endl;
+    // cout << "fg_socket line = " << buf << endl;
     
     // shift save buffer
     for ( i = result; i < save_len; ++i ) {

@@ -68,7 +68,7 @@ INCLUDES
 
 #ifndef M_PI
 /* get a definition for pi */
-#include <Include/fg_constants.h>
+#include <simgear/constants.h>
 #define M_PI FG_PI
 #endif
 

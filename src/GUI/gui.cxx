@@ -70,8 +70,8 @@
 #include <Time/fg_time.hxx>
 
 #if defined( WIN32 ) && !defined( __CYGWIN__ )
-#  include <Screen/win32-printer.h>
-#  include <Screen/GlBitmaps.h>
+#  include <simgear/screen/win32-printer.h>
+#  include <simgear/screen/GlBitmaps.h>
 #endif
 
 /*
@@ -864,7 +864,7 @@ static void rotateView( double roll, double pitch, double yaw )
 	// rotate view
 }
 
-static GLBitmap *b1 = NULL;
+static GlBitmap *b1 = NULL;
 extern FGInterface cur_view_fdm;
 GLubyte *hiResScreenCapture( int multiplier )
 {

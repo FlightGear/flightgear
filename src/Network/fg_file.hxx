@@ -36,7 +36,9 @@
 #include <sys/types.h>		// for open(), read(), write(), close()
 #include <sys/stat.h>		// for open(), read(), write(), close()
 #include <fcntl.h>		// for open(), read(), write(), close()
-#include <unistd.h>		// for open(), read(), write(), close()
+#if !defined( _MSC_VER )
+#  include <unistd.h>		// for open(), read(), write(), close()
+#endif
 
 #include "iochannel.hxx"
 #include "protocol.hxx"
