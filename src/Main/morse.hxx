@@ -91,7 +91,7 @@ static const char end = '0';
 
 static const int BYTES_PER_SECOND = 8000;
 static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
-static const int TRANSITION_BYTES = 40;
+static const int TRANSITION_BYTES = (int)(0.005 * BYTES_PER_SECOND);
 static const int COUNT_SIZE = BYTES_PER_SECOND * BEAT_LENGTH / 1000;
 static const int DIT_SIZE = 2 * COUNT_SIZE;   // 2 counts
 static const int DAH_SIZE = 4 * COUNT_SIZE;   // 4 counts
@@ -143,7 +143,7 @@ public:
     bool init();
 
     // make a FGSimpleSound morse code transmission for the specified string
-    FGSimpleSound make_ident( const string& id );
+    FGSimpleSound *make_ident( const string& id );
 };
 
 

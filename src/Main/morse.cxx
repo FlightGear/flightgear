@@ -38,7 +38,6 @@ bool FGMorse::init() {
     int i, j;
 
     // Make DIT
-    unsigned char dit[ DIT_SIZE ] ;
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
 	float level = ( sin( (double) i * 2.0 * M_PI / (8000.0 / FREQUENCY)) )
 	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
@@ -71,7 +70,6 @@ bool FGMorse::init() {
     }
 
     // Make DAH
-    unsigned char dah[ DAH_SIZE ] ;
     for ( i = 0; i < TRANSITION_BYTES; ++i ) {
 	float level = ( sin( (double) i * 2.0 * M_PI / (8000.0 / FREQUENCY) ) )
 	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
@@ -114,5 +112,56 @@ bool FGMorse::init() {
 
 
 // make a FGSimpleSound morse code transmission for the specified string
-FGSimpleSound FGMorse::make_ident( const string& id ) {
+FGSimpleSound *FGMorse::make_ident( const string& id ) {
+    char *idptr = (char *)id.c_str();
+
+    int length = 0;
+    int i, j;
+
+    // 1. Determine byte length of message
+    for ( i = 0; i < (int)id.length(); ++i ) {
+	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
+	    char c = idptr[i] - 'A';
+	    for ( j = 0; j < 4 || alphabet[c][j] == end; ++j ) {
+		if ( alphabet[c][j] == DIT ) {
+		    length += DIT_SIZE;
+		} else if ( alphabet[c][j] == DAH ) {
+		    length += DAH_SIZE;
+		}
+	    }
+	    length += SPACE_SIZE;
+	} else {
+	    // skip unknown character
+	}
+    }
+
+    // 2. Allocate space for the message
+    unsigned char *buffer = new unsigned char[length];
+
+    // 3. Assemble the message;
+    unsigned char *bufptr = buffer;
+
+    for ( i = 0; i < (int)id.length(); ++i ) {
+	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
+	    char c = idptr[i] - 'A';
+	    for ( j = 0; j < 4 || alphabet[c][j] == end; ++j ) {
+		if ( alphabet[c][j] == DIT ) {
+		    memcpy( bufptr, dit, DIT_SIZE );
+		    bufptr += DIT_SIZE;
+		} else if ( alphabet[c][j] == DAH ) {
+		    memcpy( bufptr, dah, DAH_SIZE );
+		    bufptr += DAH_SIZE;
+		}
+	    }
+	    memcpy( bufptr, space, SPACE_SIZE );
+	    bufptr += SPACE_SIZE;
+	} else {
+	    // skip unknown character
+	}
+    }
+
+    // 4. create the simple sound and return
+    FGSimpleSound *sample = new FGSimpleSound( buffer, length );
+
+    return sample;
 }

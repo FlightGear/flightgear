@@ -24,6 +24,7 @@
 // $Id$
 
 
+#include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
 #include "globals.hxx"
@@ -61,6 +62,11 @@ FGSimpleSound::~FGSimpleSound() {
 FGSoundMgr::FGSoundMgr() {
     audio_sched = new slScheduler( 8000 );
     audio_mixer = new smMixer;
+
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "Rate = " << audio_sched->getRate()
+	    << "  Bps = " << audio_sched->getBps()
+	    << "  Stereo = " << audio_sched->getStereo() );
 }
 
 // destructor

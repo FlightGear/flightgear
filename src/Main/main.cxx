@@ -117,6 +117,7 @@ int objc=0;
 #include "fg_io.hxx"
 #include "globals.hxx"
 #include "keyboard.hxx"
+#include "morse.hxx"
 #include "splash.hxx"
 
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -1191,8 +1192,11 @@ static void fgIdleFunction ( void ) {
 		    << "  Bps = " << s1->get_sample()->getBps()
 		    << "  Stereo = " << s1->get_sample()->getStereo() );
 
-	    s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
-	    s2->set_volume( 2.0 );
+	    // s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
+	    // s2->set_volume( 2.0 );
+	    FGMorse mmm;
+	    mmm.init();
+	    s2 = mmm.make_ident( "JLI" );
 	    globals->get_soundmgr()->add( s2, "flaps" );
 	}
 #endif
