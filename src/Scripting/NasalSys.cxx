@@ -506,6 +506,8 @@ void FGNasalSys::setTimer(naRef args)
 void FGNasalSys::handleTimer(NasalTimer* t)
 {
     naCall(_context, t->handler, naNil(), naNil(), naNil());
+    if(naGetError(_context))
+        logError();
     gcRelease(t->gcKey);
 }
 
