@@ -86,12 +86,7 @@ FGTileLoader::add( FGTileEntry* tile )
 	beenhere = true;
     }
 
-#ifdef ENABLE_THREADS
-    tile_queue.push( tile );
-#else
-    tile->load( tile_path, true );
-    tile->add_ssg_nodes( terrain, ground );
-#endif // ENABLE_THREADS
+    tile_load_queue.push( tile );
 }
 
 /**
@@ -101,9 +96,20 @@ void
 FGTileLoader::update()
 {
 #ifdef ENABLE_THREADS
+    // send a signal to the pager thread that it is allowed to load
+    // another tile
     mutex.lock();
     frame_cond.signal();
     mutex.unlock();
+#else
+    if ( !tile_load_queue.empty() ) {
+        cout << "loading next tile ..." << endl;
+        // load the next tile in the queue
+        FGTileEntry* tile = tile_load_queue.front();
+        tile_load_queue.pop();
+        tile->load( tile_path, true );
+        FGTileMgr::loaded( tile );
+    }
 #endif // ENABLE_THREADS
 }
 
@@ -118,12 +124,12 @@ FGTileLoader::LoaderThread::run()
     pthread_cleanup_push( cleanup_handler, loader );
     while ( true ) {
 	// Wait for a load request to be placed in the queue.
-	FGTileEntry* tile = loader->tile_queue.pop();
+	FGTileEntry* tile = loader->tile_load_queue.pop();
 
         // Wait for the next frame signal before we load a tile from the queue
-        // loader->mutex.lock();
-        // loader->frame_cond.wait( loader->mutex );
-        // loader->mutex.unlock();
+        loader->mutex.lock();
+        loader->frame_cond.wait( loader->mutex );
+        loader->mutex.unlock();
 
   	set_cancel( SGThread::CANCEL_DISABLE );
 	tile->load( loader->tile_path, true );

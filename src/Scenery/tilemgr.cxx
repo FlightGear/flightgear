@@ -71,6 +71,8 @@ static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
 
 #ifdef ENABLE_THREADS
 SGLockedQueue<FGTileEntry*> FGTileMgr::loaded_queue;
+#else
+queue<FGTileEntry*> FGTileMgr::loaded_queue;
 #endif // ENABLE_THREADS
 
 // Constructor
@@ -358,17 +360,9 @@ int FGTileMgr::update( double lon, double lat ) {
 	state = Running;
     }
 
-    // now handled by threaded tile pager
-#if 0
-    if ( load_queue.size() ) {
-	SG_LOG( SG_TERRAIN, SG_INFO, "Load queue size = " << load_queue.size()
-		<< " loading a tile" );
-
-	SGBucket pending = load_queue.front();
-	load_queue.pop_front();
-	load_tile( pending );
-    }
-#endif
+    // load the next tile in the load queue (or authorize the next
+    // load in the case of the threaded tile pager)
+    loader.update();
 
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
@@ -418,15 +412,17 @@ int FGTileMgr::update( double lon, double lat ) {
         // Notify the tile loader that it can load another tile
         // loader.update();
 
+	if ( !loaded_queue.empty() ) {
 #ifdef ENABLE_THREADS
-	if (!loaded_queue.empty())
-	{
 	    FGTileEntry* e = loaded_queue.pop();
+#else
+	    FGTileEntry* e = loaded_queue.front();
+            loaded_queue.pop();
+#endif
 	    e->add_ssg_nodes( terrain, ground );
 	    //std::cout << "Adding ssg nodes for "
 	    //<< e->get_tile_bucket() << "\n";
 	}
-#endif // ENABLE_THREADS
     }
 
     return 1;

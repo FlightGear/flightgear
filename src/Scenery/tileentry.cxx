@@ -351,7 +351,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     }
 
     // load custom objects
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "CUSTOM OBJECTS" );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "Checking for custom objects ..." );
 
     SGPath index_path = tile_path;
     index_path.append( index_str );
@@ -391,6 +391,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
 		// load the object itself
 		SGPath custom_path = tile_path;
+                ssgTexturePath( (char *)custom_path.c_str() );
 		custom_path.append( name );
 		ssgEntity *obj_model = ssgLoad( (char *)custom_path.c_str() );
 

@@ -30,6 +30,8 @@
 #ifdef ENABLE_THREADS
 #  include <simgear/threads/SGThread.hxx>
 #  include <simgear/threads/SGQueue.hxx>
+#else
+#  include <queue>
 #endif
 
 // Forward reference.
@@ -71,7 +73,7 @@ public:
      * Returns whether the load queue is empty (contains no elements).
      * @return true if load queue is empty otherwise returns false.
      */
-    // bool empty() const { return tile_queue.empty(); }
+    // bool empty() const { return tile_load_queue.empty(); }
 
 private:
 
@@ -81,7 +83,9 @@ private:
     /**
      * FIFO queue of tiles to load from data files.
      */
-    SGBlockingQueue< FGTileEntry* > tile_queue;
+    SGBlockingQueue< FGTileEntry* > tile_load_queue;
+#else
+    queue< FGTileEntry* > tile_load_queue;
 #endif
 
     /**
