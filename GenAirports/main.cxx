@@ -89,14 +89,13 @@ void process_airport( string last_airport, list < string > & runway_list,
 	}
     }
 
-    printf("Runway points in degrees\n");
+    // printf("Runway points in degrees\n");
     current = apt_list.begin();
     last = apt_list.end();
     for ( ; current != last; ++current ) {
-	// printf( "(%.4f, %.4f)\n", 
-	printf( "%.5f %.5f\n", current->lon, current->lat );
+	// printf( "%.5f %.5f\n", current->lon, current->lat );
     }
-    printf("\n");
+    // printf("\n");
 
     // generate convex hull
     hull_list = convex_hull(apt_list);
@@ -281,6 +280,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.5  1998/09/17 18:40:43  curt
+// Debug message tweaks.
+//
 // Revision 1.4  1998/09/09 20:59:56  curt
 // Loop construct tweaks for STL usage.
 // Output airport file to be used to generate airport scenery on the fly

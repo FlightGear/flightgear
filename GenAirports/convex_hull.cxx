@@ -235,7 +235,7 @@ list_container convex_hull( list_container input_list )
     }
 
     // translate back to correct lon/lat
-    printf("Final sorted convex hull\n");
+    // printf("Final sorted convex hull\n");
     con_hull.erase( con_hull.begin(), con_hull.end() );
     map_current = radians_map.begin();
     map_last = radians_map.end();
@@ -246,7 +246,7 @@ list_container convex_hull( list_container input_list )
 	result.x = cos(p.theta) * p.dist + average.x;
 	result.y = sin(p.theta) * p.dist + average.y;
 
-	printf("%.6f %.6f\n", result.x, result.y);
+	// printf("%.6f %.6f\n", result.x, result.y);
 
 	con_hull.push_back(result);
     }
@@ -256,6 +256,9 @@ list_container convex_hull( list_container input_list )
 
 
 // $Log$
+// Revision 1.4  1998/09/17 18:40:42  curt
+// Debug message tweaks.
+//
 // Revision 1.3  1998/09/09 20:59:55  curt
 // Loop construct tweaks for STL usage.
 // Output airport file to be used to generate airport scenery on the fly
