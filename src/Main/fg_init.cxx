@@ -330,9 +330,24 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 	    "runway =  " << found_r.lon << ", " << found_r.lat
 	    << " length = " << found_r.length * FEET_TO_METER * 0.5 
 	    << " heading = " << azimuth );
+    
     geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
 			azimuth, found_r.length * FEET_TO_METER * 0.5 - 5.0,
 			&lat2, &lon2, &az2 );
+
+    if ( fabs( fgGetDouble("/sim/startup/offset-distance") ) > FG_EPSILON ) {
+	double olat, olon;
+	double odist = fgGetDouble("/sim/startup/offset-distance");
+	odist *= NM_TO_METER;
+	double oaz = azimuth;
+	if ( fabs(fgGetDouble("/sim/startup/offset-azimuth")) > FG_EPSILON ) {
+	    oaz = fgGetDouble("/sim/startup/offset-azimuth") + 180;
+	}
+	while ( oaz >= 360.0 ) { oaz -= 360.0; }
+	geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
+	lat2=olat;
+	lon2=olon;
+    }
     fgSetDouble("/position/longitude",  lon2 );
     fgSetDouble("/position/latitude",  lat2 );
     fgSetDouble("/orientation/heading", heading );

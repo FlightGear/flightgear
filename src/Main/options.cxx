@@ -565,6 +565,10 @@ parse_option (const string& arg)
     } else if ( arg.find( "--airport-id=") != string::npos ) {
 				// NB: changed property name!!!
 	fgSetString("/sim/startup/airport-id", arg.substr(13));
+    } else if ( arg.find( "--offset-distance=") != string::npos ) {
+	fgSetDouble("/sim/startup/offset-distance", atof(arg.substr(18)));
+    } else if ( arg.find( "--offset-azimuth=") != string::npos ) {
+	fgSetDouble("/sim/startup/offset-azimuth", atof(arg.substr(17))); 
     } else if ( arg.find( "--lon=" ) != string::npos ) {
 	fgSetDouble("/position/longitude",
 			      parse_degree(arg.substr(6)));
@@ -1060,6 +1064,10 @@ fgUsage ()
     cout << "Initial Position and Orientation:" << endl;
     cout << "\t--airport-id=ABCD:  specify starting postion by airport id" 
 	 << endl;
+    cout << "\t--offset-distance:  specify distance to threshhold"
+         << " (NM)" << endl; 
+    cout << "\t--offset-azimuth:  specify heading to threshhold (deg) " 
+         << endl;    
     cout << "\t--lon=degrees:  starting longitude in degrees (west = -)" 
 	 << endl;
     cout << "\t--lat=degrees:  starting latitude in degrees (south = -)"
