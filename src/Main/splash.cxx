@@ -41,37 +41,21 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
-
-#include <Objects/texload.h>
+#include <simgear/misc/texture.hxx>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
 #include "splash.hxx"
 
 
-static GLuint splash_texid;
-static GLubyte *splash_texbuf;
+static SGTexture splash;
 
 
 // Initialize the splash screen
 void fgSplashInit ( void ) {
-    int width, height;
-
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
-#ifdef GL_VERSION_1_1
-    glGenTextures(1, &splash_texid);
-    glBindTexture(GL_TEXTURE_2D, splash_texid);
-#elif GL_EXT_texture_object
-    glGenTexturesEXT(1, &splash_texid);
-    glBindTextureEXT(GL_TEXTURE_2D, splash_texid);
-#else
-#  error port me
-#endif
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);   
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    splash.bind();
 
     // load in the texture data
     int num = (int)(sg_random() * 4.0 + 1.0);
@@ -83,14 +67,15 @@ void fgSplashInit ( void ) {
     tpath.concat( num_str );
     tpath.concat( ".rgb" );
 
-    if ( (splash_texbuf = 
-	  read_rgb_texture(tpath.c_str(), &width, &height)) == NULL )
+    splash.read_rgb_texture(tpath.c_str());
+    if (!splash.usable())
     {
 	// Try compressed
 	SGPath fg_tpath = tpath;
 	fg_tpath.concat( ".gz" );
-	if ( (splash_texbuf = 
-	      read_rgb_texture(fg_tpath.c_str(), &width, &height)) == NULL )
+
+        splash.read_rgb_texture(fg_tpath.c_str());
+	if ( !splash.usable() )
 	{
 	    SG_LOG( SG_GENERAL, SG_ALERT, 
 		    "Error in loading splash screen texture " << tpath.str() );
@@ -98,8 +83,7 @@ void fgSplashInit ( void ) {
 	} 
     } 
 
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, 
-		   GL_UNSIGNED_BYTE, (GLvoid *)(splash_texbuf) );
+    splash.select();
 }
 
 
@@ -143,13 +127,7 @@ void fgSplashUpdate ( double progress, float alpha ) {
 
     // now draw the logo
     glEnable(GL_TEXTURE_2D);
-#ifdef GL_VERSION_1_1
-    glBindTexture(GL_TEXTURE_2D, splash_texid);
-#elif GL_EXT_texture_object
-    glBindTextureEXT(GL_TEXTURE_2D, splash_texid);
-#else
-#  error port me
-#endif
+    splash.bind();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
     glColor4f( 1.0, 1.0, 1.0, alpha );

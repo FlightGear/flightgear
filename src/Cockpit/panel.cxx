@@ -38,7 +38,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
-#include <Objects/texload.h>
 #include <Time/light.hxx>
 
 #include "hud.hxx"
