@@ -181,6 +181,9 @@ public:
   virtual bool doMouseAction (int button, int updown, int x, int y);
 
 private:
+  void setupVirtualCockpit();
+  void cleanupVirtualCockpit();
+
   mutable bool _visibility;
   mutable bool _mouseDown;
   mutable int _mouseButton, _mouseX, _mouseY;

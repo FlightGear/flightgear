@@ -57,7 +57,6 @@
 #  undef NONE
 #endif
 
-
 
 ////////////////////////////////////////////////////////////////////////
 // Local functions.
@@ -84,10 +83,11 @@ get_aspect_adjust (int xsize, int ysize)
 bool
 fgPanelVisible ()
 {
-  return ((current_panel != 0) &&
-	  (current_panel->getVisibility()) &&
-	  (globals->get_viewmgr()->get_current() == 0) &&
-	  (globals->get_current_view()->get_view_offset() == 0.0));
+    return (fgGetBool("/sim/virtual-cockpit") ||
+	    ((current_panel != 0) &&
+	     (current_panel->getVisibility()) &&
+	     (globals->get_viewmgr()->get_current() == 0) &&
+	     (globals->get_current_view()->get_view_offset() == 0.0)));
 }
 
 
@@ -330,19 +330,23 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
     y_offset += y_adjust;
   }
 
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
-  // gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
-
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-
-  glTranslated(x_offset, y_offset, 0);
-
-				// Draw the background
+  if(fgGetBool("/sim/virtual-cockpit")) {
+      setupVirtualCockpit();
+  } else {
+      glMatrixMode(GL_PROJECTION);
+      glPushMatrix();
+      glLoadIdentity();
+      gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
+      // gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
+      
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
+      
+      glTranslated(x_offset, y_offset, 0);
+  }
+  
+  // Draw the background
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_LIGHTING);
   glEnable(GL_BLEND);
@@ -395,18 +399,150 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
 
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
-    glLoadIdentity();
+    glPushMatrix();
     glTranslated(x_offset, y_offset, 0);
     glTranslated(instr->getXPos(), instr->getYPos(), 0);
     instr->draw();
+    glPopMatrix();
   }
 
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
+  if(fgGetBool("/sim/virtual-cockpit")) {
+      cleanupVirtualCockpit();
+  } else {
+      glMatrixMode(GL_PROJECTION);
+      glPopMatrix();
+      glMatrixMode(GL_MODELVIEW);
+      glPopMatrix();
+  }
+
   ssgForceBasicState();
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+}
+
+// Yanked from the YASim codebase.  Should probably be replaced with
+// the 4x4 routine from plib, which is more appropriate here.
+static void invert33Matrix(float* m)
+{
+    // Compute the inverse as the adjoint matrix times 1/(det M).
+    // A, B ... I are the cofactors of a b c
+    //                                 d e f
+    //                                 g h i
+    float a=m[0], b=m[1], c=m[2];
+    float d=m[3], e=m[4], f=m[5];
+    float g=m[6], h=m[7], i=m[8];
+
+    float A =  (e*i - h*f);
+    float B = -(d*i - g*f);
+    float C =  (d*h - g*e);
+    float D = -(b*i - h*c);
+    float E =  (a*i - g*c);
+    float F = -(a*h - g*b);
+    float G =  (b*f - e*c);
+    float H = -(a*f - d*c);
+    float I =  (a*e - d*b);
+
+    float id = 1/(a*A + b*B + c*C);
+
+    m[0] = id*A; m[1] = id*D; m[2] = id*G;
+    m[3] = id*B; m[4] = id*E; m[5] = id*H;
+    m[6] = id*C; m[7] = id*F; m[8] = id*I;     
+}
+
+void
+FGPanel::setupVirtualCockpit()
+{
+    int i;
+    FGViewer* view = globals->get_current_view();
+
+    // Corners for the panel quad.  These numbers put a "standard"
+    // panel at 1m from the eye, with a horizontal size of 60 degrees,
+    // and with its center 5 degrees down.  This will work well for
+    // most typical screen-space panel definitions.  In principle,
+    // these should be settable per-panel, so that you can have lots
+    // of panel objects plastered about the cockpit in realistic
+    // positions and orientations.
+    float DY = .0875; // tan(5 degrees)
+    float a[] = { -0.5773503, -0.4330172 - DY, -1 }; // bottom left
+    float b[] = {  0.5773503, -0.4330172 - DY, -1 }; // bottom right
+    float c[] = { -0.5773503,  0.4330172 - DY, -1 }; // top left
+
+    // A standard projection, in meters, with especially close clip
+    // planes.
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluPerspective(view->get_v_fov(), 1/view->get_aspect_ratio(), 
+		   0.01, 100);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    // Generate a "look at" matrix using OpenGL (!) coordinate
+    // conventions.
+    float lookat[3];
+    float pitch = view->get_view_tilt();
+    float rot = view->get_view_offset();
+    lookat[0] = -sin(rot);
+    lookat[1] = sin(pitch) / cos(pitch);
+    lookat[2] = -cos(rot);
+    if(fabs(lookat[1]) > 9999) lookat[1] = 9999; // FPU sanity
+    gluLookAt(0, 0, 0, lookat[0], lookat[1], lookat[2], 0, 1, 0);
+
+    // Translate the origin to the location of the panel quad
+    glTranslatef(a[0], a[1], a[2]);
+ 
+    // Generate a matrix to translate unit square coordinates from the
+    // panel to real world coordinates.  Use a basis for the panel
+    // quad and invert.  Note: this matrix is relatively expensive to
+    // compute, and is invariant.  Consider precomputing and storing
+    // it.  Also, consider using the plib vector math routines, so the
+    // reuse junkies don't yell at me.  (Fine, I hard-coded a cross
+    // product.  Just shoot me and be done with it.)
+    float u[3], v[3], w[3], m[9];
+    for(i=0; i<3; i++) u[i] = b[i] - a[i]; // U = B - A
+    for(i=0; i<3; i++) v[i] = c[i] - a[i]; // V = C - A
+    w[0] = u[1]*v[2] - v[1]*u[2];          // W = U x V
+    w[1] = u[2]*v[0] - v[2]*u[0];
+    w[2] = u[0]*v[1] - v[0]*u[1];
+    for(int i=0; i<3; i++) {               //    |Ux Uy Uz|-1
+	m[i] = u[i];                       // m =|Vx Vy Vz|
+	m[i+3] = v[i];                     //    |Wx Wy Wz|
+	m[i+6] = w[i];
+    }
+    invert33Matrix(m);
+
+    float glm[16]; // Expand to a 4x4 OpenGL matrix.
+    glm[0] = m[0]; glm[4] = m[1]; glm[8]  = m[2]; glm[12] = 0;
+    glm[1] = m[3]; glm[5] = m[4]; glm[9]  = m[5]; glm[13] = 0;
+    glm[2] = m[6]; glm[6] = m[7]; glm[10] = m[8]; glm[14] = 0;
+    glm[3] = 0;    glm[7] = 0;    glm[11] = 0;    glm[15] = 1;
+    glMultMatrixf(glm);
+
+    // Finally, a scaling factor to convert the 1024x768 range the
+    // panel uses to a unit square mapped to the panel quad.
+    glScalef(1./1024, 1./768, 1);
+
+    // Scale to the appropriate vertical size.  I'm not quite clear on
+    // this yet; an identical scaling is not appropriate for
+    // _width, for example.  This should probably go away when panel
+    // coordinates get sanified for virtual cockpits.
+    glScalef(1, _height/768.0, 1);
+    
+    // Now, turn off the Z buffer.  The panel code doesn't need
+    // it, and we're using different clip planes anyway (meaning we
+    // can't share it without glDepthRange() hackery or much
+    // framebuffer bandwidth wasteage)
+    glDisable(GL_DEPTH_TEST);
+}
+
+void
+FGPanel::cleanupVirtualCockpit()
+{
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glEnable(GL_DEPTH_TEST);
 }
 
 
@@ -694,7 +830,8 @@ FGLayeredInstrument::draw ()
   if (test()) {
     for (int i = 0; i < (int)_layers.size(); i++) {
       glPushMatrix();
-      glTranslatef(0.0, 0.0, (i / 100.0) + 0.1);
+      if(!fgGetBool("/sim/virtual-cockpit"))
+	  glTranslatef(0.0, 0.0, (i / 100.0) + 0.1);
       _layers[i]->draw();
       glPopMatrix();
     }
