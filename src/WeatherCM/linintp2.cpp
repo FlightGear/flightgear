@@ -406,7 +406,7 @@ Corner3:;
     }
 
     // create the triangles
-    SG_LOG(SG_MATH, SG_DEBUG "[ 60%] create the triangles");
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 60%] create the triangles");
 
     triangle = new Triangle[numTriangles];
 
