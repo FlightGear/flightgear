@@ -138,7 +138,7 @@ FGTileEntry *dummy_tile;
 sgVec3 rway_ols;
 // ADA
 // Clip plane settings...
-float cockpit_nearplane = 0.2f;
+float cockpit_nearplane = 0.1f;
 float cockpit_farplane = 120000.0f;
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
@@ -640,13 +640,9 @@ void fgRenderFrame( void ) {
 
 	// draw the ssg scene
 	glEnable( GL_DEPTH_TEST );
+
         ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( scene );
-
-        // if in cockpit view adjust nearfar...
-        if (globals->get_current_view()->getType() == 0 )
-          ssgSetNearFar( cockpit_nearplane, cockpit_farplane );
-	ssgCullAndDraw( cockpit );
 
 	// change state for lighting here
 
@@ -692,6 +688,7 @@ void fgRenderFrame( void ) {
         ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( lighting );
 
+
 #ifdef FG_EXPERIMENTAL_LIGHTING
 	if (glutExtensionSupported("GL_EXT_point_parameters")) {
             // Disable states used for runway lighting
@@ -710,6 +707,16 @@ void fgRenderFrame( void ) {
 	    // draw the sky cloud layers
 	    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 	}
+
+        // if in cockpit view adjust nearfar...
+        if (globals->get_current_view()->getType() == 0 ) {
+          glClearDepth(1);
+          glClear(GL_DEPTH_BUFFER_BIT);
+          ssgSetNearFar( cockpit_nearplane, cockpit_farplane );
+  	  ssgCullAndDraw( cockpit );
+        } else {
+  	  ssgCullAndDraw( cockpit );
+        }
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -1897,4 +1904,5 @@ void fgUpdateDCS (void) {
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //           added Venky         , 12 Nov 2K
+
 
