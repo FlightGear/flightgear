@@ -296,16 +296,16 @@ int fgAPRun( void )
 
     // altitude hold enabled?
     if ( APData->altitude_hold == 1 ) {
-	double error, size;
+	double error;
 	double prop_error, int_error;
 	double prop_adj, int_adj, total_adj;
 
 	// normal altitude hold
 	APData->TargetClimbRate = 
-	    (APData->TargetAltitude - fgAPget_altitude()) * 12.0;
-
+	    (APData->TargetAltitude - fgAPget_altitude()) * 8.0;
+	
 	// brain dead ground hugging with no look ahead
-	// APData->TargetClimbRate = ( 500 - fgAPget_agl() ) * 12.0;
+	// APData->TargetClimbRate = ( 250 - fgAPget_agl() ) * 8.0;
 
 	// just try to zero out rate of climb ...
 	// APData->TargetClimbRate = 0.0;
@@ -334,16 +334,16 @@ int fgAPRun( void )
 
 	// calculate integral error, and adjustment amount
 	int_error = APData->alt_error_accum;
-	printf("error = %.2f  int_error = %.2f\n", error, int_error);
-	int_adj = int_error / 1500.0;
+	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
+	int_adj = int_error / 8000.0;
 	
 	// caclulate proportional error
 	prop_error = error;
 	prop_adj = prop_error / 2000.0;
 
 	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
-	if ( total_adj >  0.5 ) { total_adj =  0.5; }
-	if ( total_adj < -0.2 ) { total_adj = -0.2; }
+	if ( total_adj >  0.4 ) { total_adj =  0.4; }
+	if ( total_adj < -0.3 ) { total_adj = -0.3; }
 
 	fgElevSet( total_adj );
     }
