@@ -33,12 +33,12 @@ extern "C" {
 #endif                                   
 
 
-struct fgBUCKET {
+typedef struct {
     int lon;  /* longitude (-180 to 179) */
     int lat;  /* latitude (-90 to 89) */
     int x;    /* x (0 to 7) */
     int y;    /* y (0 to 7) */
-};
+} fgBUCKET;
 
 
 /* Generate the unique scenery tile index containing the specified
@@ -54,28 +54,28 @@ struct fgBUCKET {
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-long int fgBucketGenIndex(struct fgBUCKET *p);
+long int fgBucketGenIndex(fgBUCKET *p);
 
 
 /* Parse a unique scenery tile index and find the lon, lat, x, and y */
-void fgBucketParseIndex(long int index, struct fgBUCKET *p);
+void fgBucketParseIndex(long int index, fgBUCKET *p);
 
 
 /* Build a path name from an tile index */
-void fgBucketGenBasePath(struct fgBUCKET *p, char *path);
+void fgBucketGenBasePath(fgBUCKET *p, char *path);
 
 
 /* offset an bucket struct by the specified amounts in the X & Y direction */
-void fgBucketOffset(struct fgBUCKET *in, struct fgBUCKET *out, int x, int y);
+void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y);
 
 
-/* Given a lat/lon, find the "bucket" or tile that it falls within */
-void fgBucketFind(double lon, double lat, struct fgBUCKET *p);
+/* Given a lat/lon in degrees, find the "bucket" or tile that it falls
+   within */
+void fgBucketFind(double lon, double lat, fgBUCKET *p);
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void fgBucketGenIdxArray(struct fgBUCKET *p1, struct fgBUCKET *tiles,
-			  int width, int height);
+void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height);
 
 
 #ifdef __cplusplus
@@ -87,9 +87,12 @@ void fgBucketGenIdxArray(struct fgBUCKET *p1, struct fgBUCKET *tiles,
 
 
 /* $Log$
-/* Revision 1.1  1998/04/08 23:28:59  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.2  1998/07/04 00:46:48  curt
+/* typedef'd struct fgBUCKET.
 /*
+ * Revision 1.1  1998/04/08 23:28:59  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.2  1998/01/24 00:03:28  curt
  * Initial revision.
  *

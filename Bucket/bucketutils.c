@@ -45,7 +45,7 @@
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-long int fgBucketGenIndex(struct fgBUCKET *p) {
+long int fgBucketGenIndex(fgBUCKET *p) {
     long index = 0;
 
     index = ((p->lon + 180) << 14) + ((p->lat + 90) << 6) + (p->y << 3) + p->x;
@@ -56,7 +56,7 @@ long int fgBucketGenIndex(struct fgBUCKET *p) {
 
 
 /* Parse a unique scenery tile index and find the lon, lat, x, and y */
-void fgBucketParseIndex(long int index, struct fgBUCKET *p) {
+void fgBucketParseIndex(long int index, fgBUCKET *p) {
     p->lon = index >> 14;
     index -= p->lon << 14;
     p->lon -= 180;
@@ -73,7 +73,7 @@ void fgBucketParseIndex(long int index, struct fgBUCKET *p) {
 
 
 /* Build a path name from an tile index */
-void fgBucketGenBasePath(struct fgBUCKET *p, char *path) {
+void fgBucketGenBasePath(fgBUCKET *p, char *path) {
     long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
@@ -121,7 +121,7 @@ void fgBucketGenBasePath(struct fgBUCKET *p, char *path) {
 
 
 /* offset an bucket struct by the specified amounts in the X & Y direction */
-void fgBucketOffset(struct fgBUCKET *in, struct fgBUCKET *out, int x, int y) {
+void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y) {
     int diff, temp;
     int dist_lat;
 
@@ -176,8 +176,9 @@ void fgBucketOffset(struct fgBUCKET *in, struct fgBUCKET *out, int x, int y) {
 }
 
 
-/* Given a lat/lon, find the "bucket" or tile that it falls within */
-void fgBucketFind(double lon, double lat, struct fgBUCKET *p) {
+/* Given a lat/lon in degrees, find the "bucket" or tile that it falls
+   within */
+void fgBucketFind(double lon, double lat, fgBUCKET *p) {
     double diff;
 
     diff = lon - (double)(int)lon;
@@ -206,9 +207,8 @@ void fgBucketFind(double lon, double lat, struct fgBUCKET *p) {
 
 
 /* Given a lat/lon, fill in the local tile index array */
-void fgBucketGenIdxArray(struct fgBUCKET *p1, struct fgBUCKET *tiles, 
-			 int width, int height) {
-    struct fgBUCKET *p2;
+void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height) {
+    fgBUCKET *p2;
     int dw, dh, i, j;
 
     dh = height / 2;
@@ -227,7 +227,7 @@ void fgBucketGenIdxArray(struct fgBUCKET *p1, struct fgBUCKET *tiles,
 
 /* sample main for testing
 int main() {
-    struct fgBUCKET p1;
+    fgBUCKET p1;
     long int tile[49];
     char path[256];
     double lon, lat;
@@ -267,9 +267,12 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.2  1998/04/25 22:06:22  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.3  1998/07/04 00:46:47  curt
+/* typedef'd struct fgBUCKET.
 /*
+ * Revision 1.2  1998/04/25 22:06:22  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.1  1998/04/08 23:28:58  curt
  * Adopted Gnu automake/autoconf system.
  *
