@@ -1009,7 +1009,9 @@ fgInitNav ()
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Simple Airport List");
     SGPath p_simple( globals->get_fg_root() );
     p_simple.append( "Airports/basic.dat" );
-    FGAirportList *airports = new FGAirportList( p_simple.str() );
+    SGPath p_metar( globals->get_fg_root() );
+    p_metar.append( "Airports/metar.dat" );
+    FGAirportList *airports = new FGAirportList(p_simple.str(), p_metar.str());
     globals->set_airports( airports );
 
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Runway List");

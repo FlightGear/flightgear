@@ -54,35 +54,65 @@ operator >> ( istream& in, FGAirport& a )
     in.getline( name, 256 );
     a.name = name;
 
-    // a.has_metar = true;         // assume true
-    // only airports with four-letter codes can have metar stations
+    a.has_metar = false;
+
+#if 0
+    // As a quick seed for the has_metar value, only airports with
+    // four-letter codes can have metar stations
     a.has_metar = (isalpha(a.id[0]) && isalpha(a.id[1]) && isalpha(a.id[2])
         && isalpha(a.id[3]) && !a.id[4]);
+#endif
 
     return in;
 }
 
 
-FGAirportList::FGAirportList( const string& file ) {
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Reading simple airport list: " << file );
+FGAirportList::FGAirportList( const string &airport_file,
+                              const string &metar_file ) {
+    SG_LOG( SG_GENERAL, SG_INFO, "Reading simple airport list: "
+            << airport_file );
 
     // open the specified file for reading
-    sg_gzifstream in( file );
-    if ( !in.is_open() ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
+    sg_gzifstream apt_in( airport_file );
+    if ( !apt_in.is_open() ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << airport_file );
 	exit(-1);
     }
 
     // skip header line
-    in >> skipeol;
+    apt_in >> skipeol;
 
     FGAirport a;
-    int size = 0;
-    while ( in ) {
-        in >> a;
+    while ( apt_in ) {
+        apt_in >> a;
         airports_by_id[a.id] = a;
         airports_array.push_back( &airports_by_id[a.id] );
-        size++;
+    }
+
+
+    SG_LOG( SG_GENERAL, SG_INFO, "Reading simple metar station list: "
+            << metar_file );
+
+    // open the specified file for reading
+    sg_gzifstream metar_in( metar_file );
+    if ( !metar_in.is_open() ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << metar_file );
+    }
+
+    string ident;
+    while ( metar_in ) {
+        metar_in >> ident;
+        if ( ident == "#" || ident == "//" ) {
+            metar_in >> skipeol;
+        } else {
+            airport_map_iterator apt = airports_by_id.find( ident );
+            if ( apt == airports_by_id.end() ) {
+                SG_LOG( SG_GENERAL, SG_DEBUG, "no apt = " << ident );
+            } else {
+                SG_LOG( SG_GENERAL, SG_DEBUG, "metar = " << ident );
+                airports_by_id[ident].has_metar = true;
+            }
+        }
     }
 }
 

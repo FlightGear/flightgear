@@ -75,7 +75,7 @@ private:
 public:
 
     // Constructor
-    FGAirportList( const string& file );
+    FGAirportList( const string &airport_file, const string &metar_file );
 
     // Destructor
     ~FGAirportList();
