@@ -133,6 +133,9 @@ public:
     // clear screen color
     GLfloat sky_color[4];
 
+    // screen color adjusted for sunset effects
+    GLfloat adj_sky_color[4];
+
     // Constructor
     fgLIGHT( void );
 

@@ -105,10 +105,10 @@ void fgLIGHT::Update( void ) {
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
-    GLfloat base_sky_color[4] = { 0.392, 0.539, 0.712, 1.0 };
+    GLfloat base_sky_color[4] = { 0.39, 0.50, 0.74, 1.0 };
     // base fog color
-    GLfloat base_fog_color[4] = { 0.90, 0.93, 1.0, 1.0 };
-    double deg, ambient, diffuse, specular, sky_brightness;
+    GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0, 1.0 };
+    float deg, ambient, diffuse, specular, sky_brightness;
 
     SG_LOG( SG_EVENT, SG_INFO, "Updating light parameters." );
 
@@ -133,46 +133,46 @@ void fgLIGHT::Update( void ) {
     // if ( diffuse < 0.0 ) { diffuse = 0.0; }
     // if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
 
+    gamma_correct_c( &ambient );
     scene_ambient[0] = white[0] * ambient;
     scene_ambient[1] = white[1] * ambient;
     scene_ambient[2] = white[2] * ambient;
     scene_ambient[3] = 1.0;
-    gamma_correct( (float *)&scene_ambient );
 
+    gamma_correct_c( &diffuse );
     scene_diffuse[0] = white[0] * diffuse;
     scene_diffuse[1] = white[1] * diffuse;
     scene_diffuse[2] = white[2] * diffuse;
     scene_diffuse[3] = 1.0;
-    gamma_correct( (float *)&scene_diffuse );
 
+    gamma_correct_c( &specular );
     scene_specular[0] = white[0] * specular;
     scene_specular[1] = white[1] * specular;
     scene_specular[2] = white[2] * specular;
     scene_specular[3] = 1.0;
-    gamma_correct( (float *)&scene_specular );
 
     // set sky color
     sky_color[0] = base_sky_color[0] * sky_brightness;
     sky_color[1] = base_sky_color[1] * sky_brightness;
     sky_color[2] = base_sky_color[2] * sky_brightness;
     sky_color[3] = base_sky_color[3];
-    gamma_correct( (float *)&sky_color );
+    gamma_correct_rgb( sky_color );
 
     // set cloud and fog color
     cloud_color[0] = fog_color[0] = base_fog_color[0] * sky_brightness;
     cloud_color[1] = fog_color[1] = base_fog_color[1] * sky_brightness;
     cloud_color[2] = fog_color[2] = base_fog_color[2] * sky_brightness;
     cloud_color[3] = fog_color[3] = base_fog_color[3];
-    gamma_correct( (float *)&cloud_color );
+    gamma_correct_rgb( fog_color );
 
-    // update the cloud colors for sunrise/sunset effects (darken them)
+    // adjust the cloud colors for sunrise/sunset effects (darken them)
     if (sun_angle > 1.0) {
-       float sun2 = pow(sun_angle, 1/3);
+       float sun2 = pow(sun_angle, 0.5);
        cloud_color[0] /= sun2;
        cloud_color[1] /= sun2;
        cloud_color[2] /= sun2;
     }
-    gamma_correct( (float *)&cloud_color );
+    gamma_correct_rgb( cloud_color );
 }
 
 
@@ -262,25 +262,40 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
 #else
 
-    float rf1 = fabs((rotation - SGD_PI) / SGD_PI);		// 0.0 .. 1.0
-    float rf2 = rf1 * rf1;
-    float rf3 = 1.0 - rf1;
-
+    // revert to unmodified values before usign them.
+    //
     float *sun_color = thesky->get_sun_color();
-    float s_red =   fog_color[0] * (1.25 - pow(sun_color[0], 1/2)/4.0);
-    float s_green = fog_color[1] * (0.48 + pow(sun_color[1], 1/1.5)/1.923);
-    float s_blue =  fog_color[2] * sun_color[2];
 
-    float f_brightness = (sun_angle > 1.0) ? pow(sun_angle, 1/6) : 1.0;
-    float f_red =   cloud_color[0] / f_brightness;
-    float f_green = cloud_color[1] / f_brightness;
-    float f_blue =  (cloud_color[2] / f_brightness) * pow(sun_color[2], 1/6);
+    gamma_restore_c( sun_color );
+    gamma_restore_rgb( fog_color );
+    gamma_restore_rgb( cloud_color );
 
-    adj_fog_color[0] = rf3 * f_red   + rf2 * s_red;
-    adj_fog_color[1] = rf3 * f_green + rf2 * s_green;
-    adj_fog_color[2] = rf3 * f_blue  + rf2 * s_blue;
+    // Calculate the fog color in the direction of the sun for
+    // sunrise/sunset effects.
+    //
+    float s_red =   (fog_color[0] + 2 * pow(sun_color[0], 2)) / 3;
+    float s_green = (fog_color[1] + 2 * pow(sun_color[1], 2)) / 3;
+    float s_blue =  (fog_color[2] + 2 * sun_color[2]) / 3;
 
-    gamma_correct( (float *)&adj_fog_color );
+    // interpolate beween the sunrise/sunset color and the color
+    // at the opposite direction of this effect.
+    //
+    float sif = 0.5 - cos(sun_angle*2)/2;
+    float rf1 = fabs((rotation - SGD_PI) / SGD_PI);             // 0.0 .. 1.0
+    float rf2 = 0.87 * pow(rf1 * rf1, 1/sif);
+    float rf3 = 1.0 - rf2;
+
+    adj_fog_color[0] = rf3 * fog_color[0] + rf2 * s_red;
+    adj_fog_color[1] = rf3 * fog_color[1] + rf2 * s_green;
+    adj_fog_color[2] = rf3 * fog_color[2] + rf2 * s_blue;
+    gamma_correct_rgb( adj_fog_color );
+
+    // make sure the colors have their original value before they are being
+    // used by the rest of the program.
+    //
+    gamma_correct_c( sun_color );
+    gamma_correct_rgb( fog_color );
+    gamma_correct_rgb( cloud_color );
 #endif
 }
 
