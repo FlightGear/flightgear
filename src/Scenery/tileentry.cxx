@@ -676,6 +676,8 @@ FGTileEntry::load( const string &base_path, bool is_base )
                     SGPath custom_path;
                     if ( token == "OBJECT_STATIC" ) {
                         custom_path= tile_path;
+                    } else {
+                        custom_path = globals->get_fg_root();
                     }
                     custom_path.append( name );
 

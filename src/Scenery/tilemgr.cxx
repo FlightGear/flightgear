@@ -280,7 +280,7 @@ void FGTileMgr::update_queues()
         try
         {
             ssgEntity *obj_model =
-                globals->get_model_lib()->load_model( globals->get_fg_root(),
+                globals->get_model_lib()->load_model( ".",
                                                       dm->get_model_path(),
                                                       globals->get_props(),
                                                       globals->get_sim_time_sec() );

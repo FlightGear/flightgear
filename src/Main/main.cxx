@@ -1676,9 +1676,6 @@ bool fgMainInit( int argc, char **argv ) {
         exit(-1);
     }
 
-    SGPath modelpath( globals->get_fg_root() );
-    ssgModelPath( (char *)modelpath.c_str() );
-
     ////////////////////////////////////////////////////////////////////
     // Initialize the property-based built-in commands
     ////////////////////////////////////////////////////////////////////

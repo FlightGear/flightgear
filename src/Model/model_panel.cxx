@@ -49,19 +49,16 @@ fgLoad3DModelPanel( const string &fg_root, const string &path,
   SGPropertyNode props;
 
                                 // Load the 3D aircraft object itself
-  SGPath xmlpath;
   SGPath modelpath = path;
-  if ( ulIsAbsolutePathName( path.c_str() ) ) {
-    xmlpath = modelpath;
-  }
-  else {
-    xmlpath = fg_root;
-    xmlpath.append(modelpath.str());
+  if ( !ulIsAbsolutePathName( path.c_str() ) ) {
+    SGPath tmp = fg_root;
+    tmp.append(modelpath.str());
+    modelpath = tmp;
   }
 
                                 // Check for an XML wrapper
-  if (xmlpath.str().substr(xmlpath.str().size() - 4, 4) == ".xml") {
-    readProperties(xmlpath.str(), &props);
+  if (modelpath.str().substr(modelpath.str().size() - 4, 4) == ".xml") {
+    readProperties(modelpath.str(), &props);
     if (props.hasValue("/path")) {
       modelpath = modelpath.dir();
       modelpath.append(props.getStringValue("/path"));
@@ -74,7 +71,7 @@ fgLoad3DModelPanel( const string &fg_root, const string &path,
                                 // Assume that textures are in
                                 // the same location as the XML file.
   if (model == 0) {
-    ssgTexturePath((char *)xmlpath.dir().c_str());
+    ssgTexturePath((char *)modelpath.dir().c_str());
     model = (ssgBranch *)ssgLoad((char *)modelpath.c_str());
     if (model == 0)
       throw sg_exception("Failed to load 3D model");
