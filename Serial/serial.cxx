@@ -50,21 +50,36 @@ fgSERIAL::~fgSERIAL() {
 }
 
 bool fgSERIAL::open_port(const string& device) {
+    struct termios config;
+
     if ( (fd = open(device.c_str(), O_RDWR | O_NONBLOCK)) == -1 ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Cannot open " << device
 		<< " for serial I/O" );
 	return false;
     } else {
 	dev_open = true;
-	return true;
     }
+
+    // set software flow control 
+    if ( tcgetattr( fd, &config ) != 0 ) {
+	FG_LOG( FG_SERIAL, FG_ALERT, "Unable to poll port settings" );
+	return false;
+    }
+
+    config.c_iflag |= IXON;
+    config.c_iflag |= IXOFF;
+
+    if ( tcsetattr( fd, TCSANOW, &config ) != 0 ) {
+	FG_LOG( FG_SERIAL, FG_ALERT, "Unable to update port settings" );
+	return false;
+    }
+
+    return true;
 }
 
 bool fgSERIAL::set_baud(int baud) {
     struct termios config;
     speed_t speed;
-
-    cout << "attempting to set baud rate to: " << baud << endl;
 
     if ( tcgetattr( fd, &config ) != 0 ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unable to poll port settings" );
@@ -111,8 +126,6 @@ bool fgSERIAL::set_baud(int baud) {
 	return false;
     }
 
-    cout << "successfully set baud to " << baud << endl;
-
     return true;
 }
 
@@ -157,6 +170,9 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.2  1998/11/19 03:35:43  curt
+// Updates ...
+//
 // Revision 1.1  1998/11/16 13:53:02  curt
 // Initial revision.
 //
