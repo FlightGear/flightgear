@@ -107,6 +107,7 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	contactTower = false;
 	contactGround = false;
 	_taxiToGA = false;
+	_removeSelf = false;
 	
 	descending = false;
 	targetDescentRate = 0.0;
@@ -521,14 +522,20 @@ void FGAILocalTraffic::Update(double dt) {
 		string trns = "GA Parking, Thank you and Good Day";
 		//double f = globals->get_ATC_mgr()->GetFrequency(airportID, GROUND) / 100.0;	
 		pending_transmission = trns;
-		ConditionalTransmit(5.0);
+		ConditionalTransmit(5.0, 99);
+		_taxiToGA = false;
 		if(_controlled) {
 			tower->DeregisterAIPlane(plane.callsign);
 		}
-		_taxiToGA = false;
-		// HACK - check if we are at a simple airport or not first
-		globals->get_AI_mgr()->ScheduleRemoval(plane.callsign);
-	}		
+		// NOTE - we can't delete this instance yet since then the frequency won't get release when the message display finishes.
+	}
+
+	if((_removeSelf) && (responseCounter >= 8.0)) {
+		_removeSelf = false;
+		// MEGA HACK - check if we are at a simple airport or not first instead of simply hardwiring KEMT as the only non-simple airport.
+		// TODO FIXME TODO FIXME !!!!!!!
+		if(airportID != "KEMT") globals->get_AI_mgr()->ScheduleRemoval(plane.callsign);
+	}
 	
 	if((changeFreq) && (responseCounter > 8.0)) {
 		switch(changeFreqType) {
@@ -565,9 +572,6 @@ void FGAILocalTraffic::Update(double dt) {
 			tower->DeregisterAIPlane(plane.callsign);
 			tuned_station = ground;
 			freq = (double)ground->get_freq() / 100.0;
-			// HACK - check if we are at a simple airport or not first
-			// TODO FIXME TODO FIXME !!!!!!!
-			if(airportID != "KEMT") globals->get_AI_mgr()->ScheduleRemoval(plane.callsign);
 			break;
 		// And to avoid compiler warnings...
 		case APPROACH:  break;
@@ -1303,6 +1307,10 @@ void FGAILocalTraffic::ProcessCallback(int code) {
 		tower->ReportDownwind(plane.callsign);
 	} else if(code == 13) {
 		tower->ReportFinal(plane.callsign);
+	} else if(code == 99) { // Flag this instance for deletion
+		responseCounter = 0;
+		_removeSelf = true;
+		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " delete instance callback called.");
 	}
 }
 

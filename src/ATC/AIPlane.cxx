@@ -70,6 +70,10 @@ void FGAIPlane::Update(double dt) {
 						_timeout = 0.0;
 						_pending = false;
 						// timed out - don't render.
+						if(_callback_code == 99) {
+							// MEGA-HACK - 99 is the remove self callback - currently this *does* need to be run even if the transmission isn't made.
+							ProcessCallback(_callback_code);
+						}
 					}
 				}
 			}
@@ -107,7 +111,6 @@ void FGAIPlane::Update(double dt) {
 			}
 		}
 		// Run the callback regardless of whether on same freq as user or not.
-		//cout << "_callback_code = " << _callback_code << '\n';
 		if(_callback_code) {
 			ProcessCallback(_callback_code);
 		}
@@ -119,6 +122,7 @@ void FGAIPlane::Update(double dt) {
 			_transmitting = false;
 			// For now we'll let ATC decide whether to respond
 			//if(tuned_station) tuned_station->SetResponseReqd(plane.callsign);
+			//if(tuned_station->get_ident() == "KRHV") cout << "Notifying transmission finished" << endl;
 			if(tuned_station) tuned_station->NotifyTransmissionFinished(plane.callsign);
 		}
 		_counter += dt;

@@ -200,6 +200,7 @@ private:
 	bool contactGround;	// we have been told to contact ground
 	bool changeFreq;	// true when we need to change frequency
 	bool _taxiToGA;		// Temporary mega-hack indicating we are to taxi to the GA parking and disconnect from tower control.
+	bool _removeSelf;	// Indicates that we wish to remove this instance.  The use of a variable is a hack to allow time for messages to purge before removal, due to the fagility of the current dialog system.
 	atc_type changeFreqType;	// the service we need to change to
 	bool freeTaxi;	// False if the airport has a facilities file with a logical taxi network defined, true if we need to calculate our own taxiing points.
 	

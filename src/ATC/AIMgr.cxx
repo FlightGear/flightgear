@@ -254,7 +254,7 @@ void FGAIMgr::update(double dt) {
 				bool gen = false;
 				//cout << "Size of list is " << (*it).second.size() << " at " << s << '\n';
 				if((*it).second.size()) {
-					FGAIEntity* e = *((*it).second.rbegin());
+					FGAIEntity* e = *((*it).second.rbegin());	// Get the last airplane currently scheduled to arrive at this airport.
 					cd = dclGetHorizontalSeparation(e->GetPos(), dclGetAirportPos(s));
 					if(cd < (d < 5000 ? 10000 : d + 5000)) {
 						gen = true;
@@ -266,7 +266,8 @@ void FGAIMgr::update(double dt) {
 				if(gen) {
 					//cout << "Generating extra traffic at airport " << s << ", at least " << cd << " meters out\n";
 					//GenerateSimpleAirportTraffic(s, cd);
-					GenerateSimpleAirportTraffic(s, cd + 2000.0);	// The random seems a bit wierd - traffic could get far too bunched without the +2000.
+					GenerateSimpleAirportTraffic(s, cd + 3000.0);	// The random seems a bit wierd - traffic could get far too bunched without the +3000.
+					// TODO - make the anti-random constant variable depending on the ai-traffic level.
 				}
 			}
 			++it;
@@ -473,6 +474,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(string ident, double min_dist) {
 			double dir = int(sg_random() * 36);
 			if(dir == 36) dir--;
 			dir *= 10;
+			
 			if(sg_random() < 0.3) cessna = false;
 			else cessna = true;
 			string s = GenerateShortForm(GenerateUniqueCallsign(), (cessna ? "Cessna-" : "Piper-"));

@@ -384,6 +384,8 @@ void FGAIGAVFRTraffic::RegisterTransmission(int code) {
 		_clearedDownwindEntry = true;
 		break;
 	default:
+		SG_LOG(SG_ATC, SG_WARN, "FGAIGAVFRTraffic::RegisterTransmission(...) called with unknown code " << code);
+		FGAILocalTraffic::RegisterTransmission(code);
 		break;
 	}
 }
@@ -398,6 +400,7 @@ void FGAIGAVFRTraffic::ProcessCallback(int code) {
 	// 12 - report base
 	// 13 - report final
 	// 14 - Contact Tower for VFR arrival
+	// 99 - Remove self
 	if(code < 14) {
 		FGAILocalTraffic::ProcessCallback(code);
 	} else if(code == 14) {
@@ -405,6 +408,9 @@ void FGAIGAVFRTraffic::ProcessCallback(int code) {
 			tower->VFRArrivalContact(plane, this, FULL_STOP);
 		}
 		// TODO else possibly announce arrival intentions at uncontrolled airport?
+	} else if(code == 99) {
+		// Might handle this different in future - hence separated from the other codes to pass to AILocalTraffic.
+		FGAILocalTraffic::ProcessCallback(code);
 	}
 }
 
