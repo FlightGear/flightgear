@@ -167,6 +167,7 @@ _set_view_from_axes ()
 // Local functions
 ////////////////////////////////////////////////////////////////////////
 
+
 /**
  * Initialize the BFI by binding its functions to properties.
  *
@@ -197,7 +198,7 @@ FGBFI::init ()
   fgTie("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
   fgTie("/autopilot/settings/heading", getAPHeading, setAPHeading);
-  fgTie("/autopilot/settings/heading-dg", getAPHeadingDG, setAPHeadingDG);
+  fgTie("/autopilot/settings/heading-dg", getAPHeadingDG, setAPHeadingDG, false);
   fgTie("/autopilot/settings/heading-magnetic",
              getAPHeadingMag, setAPHeadingMag);
   fgTie("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);

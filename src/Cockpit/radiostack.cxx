@@ -135,9 +135,9 @@ FGRadioStack::bind ()
     fgTie("/radios/nav2/dme/distance", this, &FGRadioStack::get_nav2_dme_dist);
     fgTie("/radios/nav2/dme/in-range", this,
 	  &FGRadioStack::get_nav2_dme_inrange);
-    fgTie("/radios/nav1/heading-needle-deflection", this,
+    fgTie("/radios/nav2/heading-needle-deflection", this,
 	  &FGRadioStack::get_nav2_heading_needle_deflection);
-    fgTie("/radios/nav1/gs-needle-deflection", this,
+    fgTie("/radios/nav2/gs-needle-deflection", this,
 	  &FGRadioStack::get_nav2_gs_needle_deflection);
 
 				// User inputs
@@ -477,15 +477,15 @@ double FGRadioStack::get_nav2_heading_needle_deflection() const {
 
     if ( nav2_inrange ) {
         r = nav2_heading - nav2_radial;
-	// cout << "Radial = " << nav1_radial 
-	//      << "  Bearing = " << nav1_heading << endl;
+	// cout << "Radial = " << nav2_radial 
+	//      << "  Bearing = " << nav2_heading << endl;
     
 	while (r> 180.0) r-=360.0;
 	while (r<-180.0) r+=360.0;
 	if ( fabs(r) > 90.0 )
 	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
 	// According to Robin Peel, the ILS is 4x more sensitive than a vor
-	if ( nav1_loc ) r *= 4.0;
+	if ( nav2_loc ) r *= 4.0;
 	if ( r < -10.0 ) r = -10.0;
 	if ( r > 10.0 ) r = 10.0;
     } else {
@@ -532,7 +532,7 @@ FGRadioStack::get_nav1_to_flag () const
   if (nav1_inrange) {
     double offset = fabs(nav1_heading - nav1_radial);
     if (nav1_loc)
-      return (offset <= 8.0 || offset >= 352.0);
+      return true;
     else
       return (offset <= 90.0 || offset >= 270.0);
   } else {
@@ -550,7 +550,7 @@ FGRadioStack::get_nav1_from_flag () const
   if (nav1_inrange) {
     double offset = fabs(nav1_heading - nav1_radial);
     if (nav1_loc)
-      return (offset >= 172.0 && offset <= 188.0);
+      return false;
     else
       return (offset > 90.0 && offset < 270.0);
   } else {
@@ -568,7 +568,7 @@ FGRadioStack::get_nav2_to_flag () const
   if (nav2_inrange) {
     double offset = fabs(nav2_heading - nav2_radial);
     if (nav2_loc)
-      return (offset <= 8.0 || offset >= 352.0);
+      return true;
     else
       return (offset <= 90.0 || offset >= 270.0);
   } else {
@@ -586,12 +586,11 @@ FGRadioStack::get_nav2_from_flag () const
   if (nav2_inrange) {
     double offset = fabs(nav2_heading - nav2_radial);
     if (nav2_loc)
-      return (offset >= 172.0 && offset <= 188.0);
+      return false;
     else
       return (offset > 90.0 && offset < 270.0);
   } else {
     return false;
   }
 }
-
 

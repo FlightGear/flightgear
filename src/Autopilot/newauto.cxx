@@ -32,6 +32,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/sg_random.h>
 
 #include <Cockpit/steam.hxx>
 #include <Cockpit/radiostack.hxx>
@@ -51,6 +52,7 @@ FGAutopilot *current_autopilot;
 const double min_climb = 70.0;	// kts
 const double best_climb = 75.0;	// kts
 const double ideal_climb_rate = 500.0 * FEET_TO_METER; // fpm -> mpm
+const double ideal_decent_rate = 1000.0 * FEET_TO_METER; // fpm -> mpm
 
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
@@ -207,6 +209,9 @@ void FGAutopilot::init() {
     heading_hold = false ;      // turn the heading hold off
     altitude_hold = false ;     // turn the altitude hold off
     auto_throttle = false ;	// turn the auto throttle off
+
+    sg_srandom_time();
+    DGTargetHeading = sg_random() * 360.0;
 
     // Initialize target location to startup location
     old_lat = FGBFI::getLatitude();
@@ -638,13 +643,15 @@ int FGAutopilot::run() {
 	    TargetClimbRate = max_climb;
 	}
 
-	if ( TargetClimbRate < -ideal_climb_rate ) {
-	    TargetClimbRate = -ideal_climb_rate;
+	if ( TargetClimbRate < -ideal_decent_rate ) {
+	    TargetClimbRate = -ideal_decent_rate;
 	}
+	// cout << "Target climb = " << TargetClimbRate * METER_TO_FEET 
+	//      << " fpm" << endl;
 
 	error = FGBFI::getVerticalSpeed() * FEET_TO_METER - TargetClimbRate;
-	// cout << "climb rate = " << fgAPget_climb() 
-	//      << "  error = " << error << endl;
+	cout << "climb rate = " << FGBFI::getVerticalSpeed()
+	     << "  vsi rate = " << FGSteam::get_VSI_fps() << endl;
 
 	// accumulate the error under the curve ... this really should
 	// be *= delta t
@@ -761,7 +768,9 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 
     if ( heading_mode == FG_DG_HEADING_LOCK ) {
 	// set heading hold to current heading (as read from DG)
-	DGTargetHeading = FGSteam::get_DG_deg();
+	// ... no, leave target heading along ... just use the current
+	// heading bug value
+        //  DGTargetHeading = FGSteam::get_DG_deg();
     } else if ( heading_mode == FG_HEADING_LOCK ) {
 	// set heading hold to current heading
 	TargetHeading = FGBFI::getHeading();
