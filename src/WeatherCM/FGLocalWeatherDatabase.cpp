@@ -76,8 +76,6 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 				   const DatabaseWorkingType type,
 				   const string &root )
 {
-    FGPhysicalProperties f[2];  //make an standard weather that's the same at the whole world
-
     cerr << "Initializing FGLocalWeatherDatabase\n";
     cerr << "-----------------------------------\n";
 
@@ -197,6 +195,7 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 	    double x[2] = {0.0,  0.0};	//make an standard weather that's the same at the whole world
 	    double y[2] = {0.0,  0.0};	//make an standard weather that's the same at the whole world
 	    double z[2] = {1.0, -1.0};	//make an standard weather that's the same at the whole world
+            FGPhysicalProperties f[2];  //make an standard weather that's the same at the whole world
 	    database = new SphereInterpolate<FGPhysicalProperties>(2,x,y,z,f);
 	}
 	break;
@@ -262,7 +261,12 @@ void FGLocalWeatherDatabase::update(const sgVec3& p, const WeatherPrecision dt) 
 /****************************************************************************/
 FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
 {
-    return FGPhysicalProperty(database->Evaluate(p), p[2]);
+  // check for bogous altitudes. Dunno why, but FGFS want's to know the
+  // weather at an altitude of roughly -3000 meters...
+  if (p[2] < -500.0f)
+    return FGPhysicalProperty(database->Evaluate(p), -500.0f);
+
+  return FGPhysicalProperty(database->Evaluate(p), p[2]);
 }
 
 #ifdef macintosh
