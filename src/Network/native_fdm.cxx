@@ -30,6 +30,8 @@
 #include <simgear/io/iochannel.hxx>
 
 #include <FDM/flight.hxx>
+#include <Time/tmp.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include "native_fdm.hxx"
@@ -98,6 +100,9 @@ bool FGNativeFDM::open() {
 
 
 static void global2net( const FGInterface *global, FGNetFDM *net ) {
+    static const SGPropertyNode *visibility
+        = fgGetNode("/environment/visibility-m");
+
     net->version = FG_NET_FDM_VERSION;
 
     // positions
@@ -112,9 +117,10 @@ static void global2net( const FGInterface *global, FGNetFDM *net ) {
     net->vcas = cur_fdm_state->get_V_calibrated_kts();
     net->climb_rate = cur_fdm_state->get_Climb_Rate();
 
-    // time
+    // environment
     net->cur_time = globals->get_time_params()->get_cur_time();
     net->warp = globals->get_warp();
+    net->visibility = visibility->getDoubleValue();
 
     // Convert the net buffer to network format
     net->version = htonl(net->version);
@@ -128,13 +134,15 @@ static void global2net( const FGInterface *global, FGNetFDM *net ) {
     htond(net->climb_rate);
     net->cur_time = htonl( net->cur_time );
     net->warp = htonl( net->warp );
+    htond(net->visibility);
 }
 
 
 static void net2global( FGNetFDM *net, FGInterface *global ) {
+    static long int last_warp = 0;
 
     // Convert to the net buffer from network format
-    net->version = htonl(net->version);
+    net->version = ntohl(net->version);
     htond(net->longitude);
     htond(net->latitude);
     htond(net->altitude);
@@ -143,25 +151,34 @@ static void net2global( FGNetFDM *net, FGInterface *global ) {
     htond(net->psi);
     htond(net->vcas);
     htond(net->climb_rate);
-    net->cur_time = htonl(net->cur_time);
-    net->warp = htonl(net->warp);
+    net->cur_time = ntohl(net->cur_time);
+    net->warp = ntohl(net->warp);
+    htond(net->visibility);
 
     if ( net->version == FG_NET_FDM_VERSION ) {
-	// cout << "pos = " << net->longitude << " " << net->latitude << endl;
-	// cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius() << endl;
-	cur_fdm_state->_updateGeodeticPosition( net->latitude,
-						net->longitude,
-						net->altitude
-						  * SG_METER_TO_FEET );
-	cur_fdm_state->_set_Euler_Angles( net->phi,
-					  net->theta,
-					  net->psi );
-	cur_fdm_state->_set_V_calibrated_kts( net->vcas );
-	cur_fdm_state->_set_Climb_Rate( net->climb_rate );
+        // cout << "pos = " << net->longitude << " " << net->latitude << endl;
+        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius() << endl;
+        cur_fdm_state->_updateGeodeticPosition( net->latitude,
+                                                net->longitude,
+                                                net->altitude
+                                                  * SG_METER_TO_FEET );
+        cur_fdm_state->_set_Euler_Angles( net->phi,
+                                          net->theta,
+                                          net->psi );
+        cur_fdm_state->_set_V_calibrated_kts( net->vcas );
+        cur_fdm_state->_set_Climb_Rate( net->climb_rate );
 
         globals->set_warp( net->warp );
+        if ( net->warp != last_warp ) {
+            fgUpdateSkyAndLightingParams();
+        }
+        last_warp = net->warp;
+
+        fgSetDouble( "/environment/visibility-m", net->visibility );
     } else {
 	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
+	SG_LOG( SG_IO, SG_ALERT,
+		"\tread " << net->version << " need " << FG_NET_FDM_VERSION );
 	SG_LOG( SG_IO, SG_ALERT,
 		"\tsomeone needs to upgrade net_fdm.hxx and recompile." );
     }

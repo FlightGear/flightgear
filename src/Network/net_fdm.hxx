@@ -58,9 +58,10 @@ public:
     double vcas;		// calibrated airspeed
     double climb_rate;		// feet per second
 
-    // Time
+    // Environment
     time_t cur_time;            // current unix time
     long int warp;              // offset in seconds to unix time
+    double visibility;          // visibility in meters (for env. effects)
 };
 
 
