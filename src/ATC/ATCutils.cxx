@@ -315,7 +315,7 @@ bool dclFindAirportID( const string& id, FGAirport *a ) {
 
         result = globals->get_airports()->search( id );
         if ( result.id.empty() ) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
+            SG_LOG( SG_GENERAL, SG_WARN,
                     "Failed to find " << id << " in basic.dat.gz" );
             return false;
         }
