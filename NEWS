@@ -1,3 +1,43 @@
+New in 0.7.4
+* July 19, 2000
+
+* VOR reception now scales with altitude.
+* Added differential braking support.
+* Landing gear modeling code now works in JSBSim
+* Overhauled cloud code substantially, new cloud textures.
+* Added support for Ray Woodworth's 5 axis motion chair.
+* Red light the panel at night and shade based on time of day.
+
+* Fixed autopilot altitude hold increment bug.
+* Fixed screen snap shot function.
+* Fixed mach number for LaRCsim.
+* --start-date-gmt option fixed.
+* Fixes to uiuc includes and initializations
+* Fixes to periodic scheduler.
+* Fixed a tile loading bug if the load queue wasn't empty before a reset or
+  teleport.
+
+* Some additional MSVC5 portability fixes.
+* Tweaks to build with newest gcc under Irix contributed by Erik Hofman.
+
+* Clean out a pile of old junk in the material manager library from the
+  pre-ssg days, and majorly overhauled it.
+* Complete reengineering of the panel code in preparation for moving the
+  configuration out into a data file.
+* Lots of hashing around with Joystick support trying to achieve something
+  that is flexible enough to handle the zillions of possible configurations
+  out there.  Hopefully we are approaching a workable solution.
+* Better windows support in our joystick module.
+* View code simplifications and optimizations contributed by Norman Vine.
+
+* Added support for $FG_SCENERY and --fg-scenery=path so scenery can have a
+  different location from the base package.
+* Moved drop in sky module, world time module, ephemeris module, and low
+  level communications modules over to simgear.
+* Replaced gdbm with metakit
+* Added David Megginson's property manager
+
+
 New in 0.7.3
 * May 18, 2000
 * Added a radio stack 2 VOR/ILS and an ADF to the instrument panel.
