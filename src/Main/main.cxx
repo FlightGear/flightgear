@@ -1130,8 +1130,8 @@ int main( int argc, char **argv ) {
     penguin_sel = new ssgSelector;
     penguin_pos = new ssgTransform;
 
-    // ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
-    ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
+    ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
+    // ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
     penguin_pos->addKid( tux_obj );
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
