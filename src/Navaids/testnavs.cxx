@@ -34,7 +34,7 @@ int main() {
     FGPath p_fix( "/home/curt/FlightGear/Navaids/default.fix" );
     current_fixlist->init( p_fix );
     FGFix fix;
-    if ( current_fixlist->query( "GONER", -82, 41, 3000,
+    if ( current_fixlist->query( "SHELL", -82, 41, 3000,
 				 &fix, &heading, &dist) ) {
 	cout << "Found a matching fix" << endl;
 	cout << " id = " << fix.get_ident() << endl;
