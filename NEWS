@@ -1,6 +1,6 @@
 New in 0.48
 * Fixed polygon winding problem in scenery generation, so all
-  tri-strips are would counter clockwise (opengl default).
+  tri-strips are wound counter clockwise (opengl default).
 
 New in 0.47
 * Course (per tile) view frustum culling.
