@@ -43,6 +43,10 @@
 
 //#define printf //
 
+/* Work around Cygwin link trouble, missing errno */
+#if defined( __MINGW32__ ) || defined( __CYGWIN__ )
+int errno;
+#endif
 
 /* Netstuff */
 #include <arpa/inet.h>
