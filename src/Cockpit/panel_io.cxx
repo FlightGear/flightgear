@@ -174,13 +174,13 @@ FGMagRibbon::draw ()
 static FGCroppedTexture
 readTexture (const SGPropertyNode * node)
 {
-  FGCroppedTexture texture(node->getStringValue("path"),
-			   node->getFloatValue("x1"),
-			   node->getFloatValue("y1"),
-			   node->getFloatValue("x2", 1.0),
-			   node->getFloatValue("y2", 1.0));
-  SG_LOG(SG_COCKPIT, SG_DEBUG, "Read texture " << node->getName());
-  return texture;
+    FGCroppedTexture texture(node->getStringValue("path"),
+			     node->getFloatValue("x1"),
+			     node->getFloatValue("y1"),
+			     node->getFloatValue("x2", 1.0),
+			     node->getFloatValue("y2", 1.0));
+    SG_LOG(SG_COCKPIT, SG_DEBUG, "Read texture " << node->getName());
+    return texture;
 }
 
 
@@ -499,9 +499,9 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     SGPropertyNode * target =
       fgGetNode(node->getStringValue("property"), true);
     FGInstrumentLayer * layer1 =
-      readLayer(node->getNode("layer1"), w_scale, h_scale);
+      readLayer(node->getNode("layer[0]"), w_scale, h_scale);
     FGInstrumentLayer * layer2 =
-      readLayer(node->getNode("layer2"), w_scale, h_scale);
+      readLayer(node->getNode("layer[1]"), w_scale, h_scale);
     layer = new FGSwitchLayer(w, h, target, layer1, layer2);
   }
 
