@@ -103,7 +103,6 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
 {
     int i;
     SGPropertyNode *node;
-    SGPropertyNode *starter;
     SGPropertyNode *fuelpump;
     SGPropertyNode *tempnode;
 
@@ -123,9 +122,12 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
         // Controls
         node = fgGetNode("/controls/engines/engine", i );
-        starter = fgGetNode("/systems/electrical/outputs/starter", i );
         fuelpump = fgGetNode("/systems/electrical/outputs/fuel-pump", i );
 
+        tempnode = node->getChild("starter");
+        if ( tempnode != NULL ) {
+            net->starter_power[i] = ( tempnode->getDoubleValue() >= 1.0 );
+        }
         tempnode = node->getChild("master-bat");
         if ( tempnode != NULL ) {
             net->master_bat[i] = tempnode->getBoolValue();
@@ -152,12 +154,6 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
             net->fuel_pump_power[i] = ( fuelpump->getDoubleValue() >= 1.0 );
         } else {
             net->fuel_pump_power[i] = 0.0;
-        }
-
-        if ( starter != NULL ) {
-            net->starter_power[i] = ( starter->getDoubleValue() >= 1.0 );
-        } else {
-            net->starter_power[i] = 0.0;
         }
 
 	// Faults
@@ -370,6 +366,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         node->getChild( "condition" )
             ->setDoubleValue( net->condition[i] );
         node->getChild( "magnetos" )->setDoubleValue( net->magnetos[i] );
+        node->getChild( "starter" )->setDoubleValue( net->starter_power[i] );
 
 	// Faults
 	SGPropertyNode *faults = node->getNode( "faults", true );
@@ -386,8 +383,6 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
 
     fgSetBool( "/systems/electrical/outputs/fuel-pump",
                net->fuel_pump_power[0] );
-    fgSetBool( "/systems/electrical/outputs/starter",
-               net->starter_power[0] );
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
         node = fgGetNode( "/controls/fuel/tank", i );
