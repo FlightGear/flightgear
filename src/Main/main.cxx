@@ -104,20 +104,30 @@
 
 #include <Input/input.hxx>
 
-// begin - added Venky
-//    $$$ begin - added VS Renganathan
+// ADA
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/math/point3d.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/ADA.hxx>
+#include <Scenery/tileentry.hxx>
+// Should be inlcluded by gl.h if needed by your platform
+// #include <GL/glext.h>
+PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
+PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
+float default_attenuation[3] = {1.0, 0.0, 0.0};
+//Required for using GL_extensions
 void fgLoadDCS (void);
 void fgUpdateDCS (void);
 ssgSelector *ship_sel=NULL;
 // upto 32 instances of a same object can be loaded.
 ssgTransform *ship_pos[32];
-double obj_lat[32],obj_lon[32],obj_alt[32];
+double obj_lat[32],obj_lon[32],obj_alt[32],obj_pitch[32],obj_roll[32];
 int objc=0;
-//    $$$ end - added VS Renganathan
-// end - added Venky
+ssgSelector *lightpoints_brightness = new ssgSelector;
+ssgTransform *lightpoints_transform = new ssgTransform;
+FGTileEntry *dummy_tile;
+sgVec3 rway_ols;
+// ADA
 
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -443,6 +453,11 @@ void fgRenderFrame( void ) {
 	pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			     cur_fdm_state->get_Theta(),
 			     cur_fdm_state->get_Psi() );
+
+        if (fgGetString("/sim/flight-model") == "ada") {
+            //+ve x is aft, +ve z is up (see viewer.hxx)
+            pilot_view->set_pilot_offset( -5.0, 0.0, 1.0 ); 
+	}
 
 	FGViewerLookAt *chase_view =
 	    (FGViewerLookAt *)globals->get_viewmgr()->get_view( 1 );
@@ -784,7 +799,54 @@ void fgRenderFrame( void ) {
 	// Set punch through fog density
 	glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
 
+#ifdef FG_EXPERIMENTAL_LIGHTING
+        // Enable states for drawing points with GL_extension
+	if (glutExtensionSupported("GL_EXT_point_parameters")) {
+            glEnable(GL_POINT_SMOOTH);
+            float quadratic[3] = {1.0, 0.01, 0.0001};
+            // get the address of our OpenGL extensions
+            glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
+                wglGetProcAddress("glPointParameterfEXT");
+            glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
+                wglGetProcAddress("glPointParameterfvEXT");
+            // makes the points fade as they move away
+            glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
+            glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
+            glPointSize(4.0);
+
+            // Enable states for drawing runway lights with spherical mapping
+            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+            glEnable(GL_TEXTURE_GEN_S);
+            glEnable(GL_TEXTURE_GEN_T);
+
+            //Maybe this is not the best way, but it works !!
+            glPolygonMode(GL_FRONT, GL_POINT);
+            glCullFace(GL_BACK);
+            glEnable(GL_CULL_FACE);
+	}
+
+	glDisable( GL_LIGHTING );
+        // blending function for runway lights
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
+	glEnable(GL_BLEND);
+#endif
+
 	ssgCullAndDraw( lighting );
+
+#ifdef FG_EXPERIMENTAL_LIGHTING
+	if (glutExtensionSupported("GL_EXT_point_parameters")) {
+            // Disable states used for runway lighting
+            glPolygonMode(GL_FRONT, GL_FILL);
+
+            glDisable(GL_TEXTURE_GEN_S);
+            glDisable(GL_TEXTURE_GEN_T);
+            glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
+                                  default_attenuation);
+	}
+
+        glPointSize(1.0);
+#endif
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky cloud layers
@@ -1135,47 +1197,51 @@ static void fgMainLoop( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound") && globals->get_soundmgr()->is_working() ) {
 	if ( fgGetString("/sim/aircraft") == "c172" ) {
-	    // pitch corresponds to rpm
-	    // volume corresponds to manifold pressure
+	    if(fgGetBool("/engines/engine[0]/running")) {
+		// pitch corresponds to rpm
+		// volume corresponds to manifold pressure
 
-	    // cout << "AUDIO working = "
-	    //      << globals->get_soundmgr()->is_working() << endl;
+		// cout << "AUDIO working = "
+		//      << globals->get_soundmgr()->is_working() << endl;
 
-	    double rpm_factor;
-	    if ( cur_fdm_state->get_engine(0) != NULL ) {
-		rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
-	    } else {
-		rpm_factor = 1.0;
-	    }
-	    // cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM()
-	    //      << endl;
+	   	double rpm_factor;
+	    	if ( cur_fdm_state->get_engine(0) != NULL ) {
+		    rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
+	    	} else {
+		    rpm_factor = 1.0;
+	    	}
+	    	// cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM()
+	    	//      << endl;
 
-	    double pitch = 0.3 + rpm_factor * 3.0;
+	    	double pitch = 0.3 + rpm_factor * 3.0;
 	
-	    // don't run at absurdly slow rates -- not realistic
-	    // and sounds bad to boot.  :-)
-	    if (pitch < 0.7) { pitch = 0.7; }
-	    if (pitch > 5.0) { pitch = 5.0; }
+	    	// don't run at absurdly slow rates -- not realistic
+	    	// and sounds bad to boot.  :-)
+	    	if (pitch < 0.7) { pitch = 0.7; }
+	    	if (pitch > 5.0) { pitch = 5.0; }
 
-	    double mp_factor;
-	    if ( cur_fdm_state->get_engine(0) != NULL ) {
-		mp_factor = 
-		    cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 100;
+	   	double mp_factor;
+	    	if ( cur_fdm_state->get_engine(0) != NULL ) {
+		    mp_factor = cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 100;
+	    	} else {
+		    mp_factor = 0.3;
+	    	}
+	    	/* cout << "mp = " 
+	            << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
+	            << endl; */
+
+	    	double volume = 0.15 + mp_factor / 2.0;
+
+	    	if ( volume < 0.15 ) { volume = 0.15; }
+	    	if ( volume > 0.5 ) { volume = 0.5; }
+	    	// cout << "volume = " << volume << endl;
+
+	    	s1->set_pitch( pitch );
+	    	s1->set_volume( volume );
 	    } else {
-		mp_factor = 0.3;
+		s1->set_pitch(0.0);
+		s1->set_volume(0.0);
 	    }
-	    /* cout << "mp = " 
-	         << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
-	         << endl; */
-
-	    double volume = 0.15 + mp_factor / 2.0;
-
-	    if ( volume < 0.15 ) { volume = 0.15; }
-	    if ( volume > 0.5 ) { volume = 0.5; }
-	    // cout << "volume = " << volume << endl;
-
-	    s1->set_pitch( pitch );
-	    s1->set_volume( volume );
 	} else {
 	    double param
 		= globals->get_controls()->get_throttle( 0 ) * 2.0 + 1.0;
@@ -1666,31 +1732,48 @@ int mainLoop( int argc, char **argv ) {
     airport->setName( "Airport Lighting" );
     lighting->addKid( airport );
 
+    // ADA
+    fgLoadDCS();
+    // ADA
+
     // temporary visible aircraft "own ship"
     acmodel_selector = new ssgSelector;
     acmodel_pos = new ssgTransform;
 
-    // Get the model location, and load textures from the same
-    // directory.  Use an absolute path for the model to avoid
-    // incompatibilities in different versions of PLIB.
-    string acmodel_path =
-	fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
-    SGPath full_model = globals->get_fg_root();
-    full_model.append(acmodel_path);
+    ssgEntity *acmodel_obj = NULL;
+    if (fgGetString("/sim/flight-model") == "ada") {
+        // ada exteranl aircraft model loading
+        if( !ship_pos[0]->getKid(0) ) {
+            // fall back to default
+            ssgEntity *acmodel_obj = ssgLoad( (char *)"glider.ac" );
+            if( !acmodel_obj ) {
+                SG_LOG( SG_GENERAL, SG_ALERT, "FAILED to LOAD an AC model! ..." );
+                exit(-1);
+            }
+            acmodel_pos->addKid( acmodel_obj );
+        } else {
+            acmodel_obj = ship_pos[0]->getKid(0);
+        }
+    } else {
+        // default aircraft model loading
 
-#if !defined( PLIB_1_2_X )
-    // this should be redundant ... but it breaks for relative paths
-    // ssgModelPath( (char *)full_model.dir().c_str() );
-#endif
+        // Get the model location, and load textures from the same
+        // directory.  Use an absolute path for the model to avoid
+        // incompatibilities in different versions of PLIB.
+        string acmodel_path =
+            fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
+        SGPath full_model = globals->get_fg_root();
+        full_model.append(acmodel_path);
 
-    ssgTexturePath( (char *)full_model.dir().c_str() );
-    ssgEntity *acmodel_obj = ssgLoad( (char *)full_model.c_str() );
-    if( !acmodel_obj ) {
-        // fall back to default
-        acmodel_obj = ssgLoad( (char *)"Models/Geometry/glider.ac" );
+        ssgTexturePath( (char *)full_model.dir().c_str() );
+        acmodel_obj = ssgLoad( (char *)full_model.c_str() );
         if( !acmodel_obj ) {
-            SG_LOG( SG_GENERAL, SG_ALERT, "FAILED to LOAD an AC model! ..." );
-            exit(-1);
+            // fall back to default
+            acmodel_obj = ssgLoad( (char *)"Models/Geometry/glider.ac" );
+            if( !acmodel_obj ) {
+                SG_LOG( SG_GENERAL, SG_ALERT, "FAILED to LOAD an AC model! ..." );
+                exit(-1);
+            }
         }
     }
 
@@ -1741,10 +1824,6 @@ int mainLoop( int argc, char **argv ) {
     acmodel_selector->clrTraversalMaskBits( SSGTRAV_HOT );
     scene->addKid( acmodel_selector );
 
-    // $$$ begin - added VS Renganthan 17 Oct 2K
-    fgLoadDCS();
-    // $$$ end - added VS Renganthan 17 Oct 2K
-
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
     if ( fgGetBool("/sim/networking/network-olk") ) {
@@ -1785,8 +1864,7 @@ int main ( int argc, char **argv ) {
 void fgLoadDCS(void) {
 
     ssgEntity *ship_obj = NULL;
-    // double bz[3];
-    // int j=0;
+
     char obj_filename[25];
 
     for ( int k = 0; k < 32; k++ ) {
@@ -1834,17 +1912,119 @@ void fgLoadDCS(void) {
                 // instance of the last object.
 
                 if ( strcmp(obj_filename,"repeat") != 0) {
-                    ship_obj = ssgLoadOBJ( obj_filename );
+                    ship_obj = ssgLoad( obj_filename );
                 }
       
                 if ( ship_obj != NULL ) {
+					ship_obj->setName(obj_filename);
+			        if (objc == 0)
+						ship_obj->clrTraversalMaskBits( SSGTRAV_HOT );
+					else
+						ship_obj->setTraversalMaskBits( SSGTRAV_HOT );
                     ship_pos[objc]->addKid( ship_obj ); // add object to transform node
                     ship_sel->addKid( ship_pos[objc] ); // add transform node to selector
+                    SG_LOG( SG_TERRAIN, SG_ALERT, "Loaded file: "
+                            << obj_filename );
                 } else {
                     SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: "
                             << obj_filename );
                 }
             
+				// temporary hack for deck lights - ultimately should move to PLib (when??)
+				//const char *extn = file_extension ( obj_filename ) ;
+				if ( objc == 1 ){
+				    ssgVertexArray *lights = new ssgVertexArray( 100 );
+					ssgVertexArray *lightpoints = new ssgVertexArray( 100 );
+					ssgVertexArray *lightnormals = new ssgVertexArray( 100 );
+					ssgVertexArray *lightdir = new ssgVertexArray( 100 );
+					int ltype[500], light_type;
+					static int ltcount = 0;
+				    string token;
+					sgVec3 rway_dir,rway_normal,lightpt;
+					Point3D node;
+					modelpath.append(obj_filename);
+					sg_gzifstream in1( modelpath.str() );
+					if ( ! in1.is_open() ) {
+						SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << modelpath.str() );
+					} else {
+						while ( ! in1.eof() ) {
+							in1 >> skipws;
+							if ( in1.get( c ) && c == '#' ) { 
+								in1 >> skipeol;
+							} else { 
+								in1.putback(c);
+								in1 >> token;
+								//cout << token << endl;
+								if ( token == "runway" ) {
+									in1 >> node;
+									sgSetVec3 (rway_dir, node[0], node[1], node[2] );			 
+								} else if ( token == "edgelight" ) {
+									in1 >> node;
+									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+									light_type = 1;
+								} else if ( token == "taxi" ) {
+									in1 >> node;
+									sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
+									light_type = 2;
+								} else if ( token == "vasi" ) {
+									in1 >> node;
+									sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
+									light_type = 3;
+								} else if ( token == "threshold" ) {
+									in1 >> node;
+									sgSetVec3 (rway_normal, node[0], node[1], node[2] );			 
+									light_type = 4;
+								} else if ( token == "rabbit" ) {
+									in1 >> node;
+									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+									light_type = 5;
+								} else if ( token == "ols" ) {
+									in1 >> node;
+									sgSetVec3 (rway_ols, node[0], node[1], node[2] );
+									light_type = 6;
+								} else if ( token == "red" ) {
+									in1 >> node;
+									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+									light_type = 7;
+								} else if ( token == "green" ) {
+									in1 >> node;
+									sgSetVec3 (rway_normal, node[0], node[1], node[2] );
+									light_type = 8;
+								} else if ( token == "lp" ) {
+									in1 >> node;
+									sgSetVec3 (lightpt, node[0], node[1], node[2] );
+									lightpoints->add( lightpt );
+									lightnormals->add( rway_normal );
+									lightdir->add( rway_dir );
+									ltype[ltcount]= light_type;
+									ltcount++;
+								}
+								if (in1.eof()) break;
+							} 
+						}  //while
+	
+						if ( lightpoints->getNum() ) {
+							ssgBranch *lightpoints_branch;
+							long int dummy = -999;
+							dummy_tile = new FGTileEntry((SGBucket)dummy);
+							dummy_tile->lightmaps_sequence = new ssgSelector;
+							dummy_tile->ols_transform = new ssgTransform;
+
+							// call function to generate the runway lights
+							lightpoints_branch = 
+							dummy_tile->gen_runway_lights( lightpoints, lightnormals,
+																lightdir, ltype);
+							lightpoints_brightness->addKid(lightpoints_branch);
+							lightpoints_transform->addKid(lightpoints_brightness);
+						    //dummy_tile->lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
+							lightpoints_transform->addKid( dummy_tile->lightmaps_sequence );
+							lightpoints_transform->ref();
+							ground->addKid( lightpoints_transform );
+						} 
+					} //if in1 
+                } //if objc
+				// end hack for deck lights
+
                 objc++;
 
                 if (in.eof()) break;
@@ -1853,8 +2033,7 @@ void fgLoadDCS(void) {
 
         SG_LOG ( SG_TERRAIN, SG_ALERT, "Finished object processing." );
 
-        ship_sel->clrTraversalMaskBits( SSGTRAV_HOT );
-        scene->addKid( ship_sel ); //add selector node to root node 
+        terrain->addKid( ship_sel ); //add selector node to root node 
     }
 
     return;
@@ -1876,9 +2055,14 @@ void fgUpdateDCS (void) {
     // Deck should be the first object in objects.txt in case of fdm=ada
 
     if (fgGetString("/sim/flight-model") == "ada") {
-        obj_lon[0] = fdm->get_aux5()*SGD_DEGREES_TO_RADIANS;
-        obj_lat[0] = fdm->get_aux6()*SGD_DEGREES_TO_RADIANS;
-        obj_alt[0] = fdm->get_aux7();
+		if ((fdm->get_iaux(1))==1)
+		{
+			obj_lat[1] = fdm->get_daux(1)*SGD_DEGREES_TO_RADIANS;
+			obj_lon[1] = fdm->get_daux(2)*SGD_DEGREES_TO_RADIANS;
+			obj_alt[1] = fdm->get_daux(3);
+			obj_pitch[1] = fdm->get_faux(1);
+			obj_roll[1] = fdm->get_faux(2);
+		}
     }
     
     for ( int m = 0; m < objc; m++ ) {
@@ -1908,13 +2092,17 @@ void fgUpdateDCS (void) {
 	sgSetVec3( ship_rt, 0.0, 1.0, 0.0);//up,pitch
 	sgSetVec3( ship_up, 0.0, 0.0, 1.0); //north,yaw
 
-	sgMat4 sgROT_lon, sgROT_lat, sgROT_hdg;
+	sgMat4 sgROT_lon, sgROT_lat, sgROT_hdg, sgROT_pitch, sgROT_roll;
 	sgMakeRotMat4( sgROT_lon, obj_lon[m]*SGD_RADIANS_TO_DEGREES, ship_up );
 	sgMakeRotMat4( sgROT_lat, 90-obj_latgc*SGD_RADIANS_TO_DEGREES, ship_rt );
 	sgMakeRotMat4( sgROT_hdg, 180.0, ship_up );
+	sgMakeRotMat4( sgROT_pitch, obj_pitch[m], ship_rt );
+	sgMakeRotMat4( sgROT_roll, obj_roll[m], ship_fwd );
 	
 	sgMat4 sgTUX;
 	sgCopyMat4( sgTUX, sgROT_hdg );
+	sgPostMultMat4( sgTUX, sgROT_pitch );
+	sgPostMultMat4( sgTUX, sgROT_roll );
 	sgPostMultMat4( sgTUX, sgROT_lat );
 	sgPostMultMat4( sgTUX, sgROT_lon );
 	sgPostMultMat4( sgTUX, sgTRANS );
@@ -1922,9 +2110,60 @@ void fgUpdateDCS (void) {
 	sgCoord shippos;
 	sgSetCoord(&shippos, sgTUX );
 	ship_pos[m]->setTransform( &shippos );
+	// temporary hack for deck lights - ultimately should move to PLib (when ??)
+	if (m == 1) {
+		if (lightpoints_transform) {
+			lightpoints_transform->setTransform( &shippos );
+			float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+			if ( sun_angle > 89 ) {
+				lightpoints_brightness->select(0x01);
+			} else {
+				lightpoints_brightness->select(0x00);
+			}
+		}
+
+		float elev;
+		sgVec3 rp,to;
+		float *vp;
+		float alt;
+		float ref_elev;
+		sgXformPnt3( rp, rway_ols, sgTUX );
+		vp = globals->get_current_view()->get_view_pos();
+	    to[0] = rp[0]-vp[0];
+	    to[1] = rp[1]-vp[1];
+	    to[2] = rp[2]-vp[2];
+		float dist = sgLengthVec3( to );
+		alt = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER)-rway_ols[2];
+
+		elev = asin(alt/dist)*SGD_RADIANS_TO_DEGREES;
+
+	    ref_elev = elev - 3.75; // +ve above, -ve below
+        
+		unsigned int sel;
+		sel = 0xFF;
+// DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
+//		if (ref_elev > 0.51) sel = 0x21;
+//		if ((ref_elev <= 0.51) & (ref_elev > 0.17)) sel = 0x22;
+//		if ((ref_elev <= 0.17) & (ref_elev >= -0.17)) sel = 0x24;
+//		if ((ref_elev < -0.17) & (ref_elev >= -0.51)) sel = 0x28;
+//		if (ref_elev < -0.51) sel = 0x30;
+// DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
+		dummy_tile->lightmaps_sequence->select(sel);
+
+		sgVec3 up;
+		sgCopyVec3 (up, ship_up);
+		if (dist > 750) 
+			sgScaleVec3 (up, 4.0*ref_elev*dist/750.0);
+		else
+			sgScaleVec3 (up, 4.0*ref_elev);
+		dummy_tile->ols_transform->setTransform(up);
+		//cout << "ref_elev  " << ref_elev << endl;
+	}
+    // end hack for deck lights
+
     }
     if ( ship_sel != NULL ) {
-	ship_sel->select(0xFFFFFFFF);
+	ship_sel->select(0xFFFFFFFE); // first object is ownship, added to acmodel
     }
 }
 

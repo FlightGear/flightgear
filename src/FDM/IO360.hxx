@@ -105,10 +105,13 @@ private:
     float HP;			// Current power output in HP
     float Power_SI;		// Current power output in Watts
     float Torque_SI;		// Torque in Nm
+    float Torque_FMEP;          // The component of Engine torque due to FMEP (Nm)
     float RPS;
     float Torque_Imbalance;
-    bool  started;		//flag to indicate the engine is running self sustaining
+    bool  running;		//flag to indicate the engine is running self sustaining
     bool  cranking;		//flag to indicate the engine is being cranked
+    bool  spark;		//flag to indicate a spark is available
+    bool  fuel;			//flag to indicate fuel is available
 
     //DCL
     float volumetric_efficiency;
@@ -140,6 +143,8 @@ private:
     float engine_inertia;	//kg.m^2
     float prop_inertia;		//kg.m^2
     float angular_acceleration;	//rad/s^2
+    float n_R;                  //Number of cycles per power stroke
+    float FMEP;                 //Friction Mean Effective Pressure (Pa)
     double time_step;
 
     // Propellor Variables

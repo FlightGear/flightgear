@@ -85,6 +85,11 @@
 //
 // DCL 22/03/01 - based on Riley's post on the list (25 rpm gain at 1000 rpm as lever is pulled out from full rich)
 //                I have reduced the sea level full rich mixture to thi = 1.3 
+//
+// DCL 18/9/01  - Got the engine to start and stop in response to the magneto switch.
+//                Changed all PI to LS_PI (in ls_constants.h).
+//                Engine now checks for fuel and stops when not available. 
+//
 //////////////////////////////////////////////////////////////////////
 
 #include <simgear/compiler.h>
@@ -99,7 +104,9 @@ SG_USING_STD(cout);
 #endif
 
 #include "IO360.hxx"
+#include "LaRCsim/ls_constants.h"
 
+#include <Main/fg_props.hxx>
 
 // Static utility functions
 
@@ -317,22 +324,27 @@ void FGNewEngine::init(double dt) {
     Max_Fuel_Flow = 130;
     Mag_Derate_Percent = 5;
 //    MaxHP = 285;    //Continental IO520-M
-    MaxHP = 180;    //Lycoming IO360
+    MaxHP = 200;    //Lycoming IO360 -A-C-D series
+//  MaxHP = 180;    //Current Lycoming IO360 ?
 //  displacement = 520;  //Continental IO520-M
     displacement = 360;	 //Lycoming IO360
     displacement_SI = displacement * CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
     engine_inertia = 0.2;  //kgm^2 - value taken from a popular family saloon car engine - need to find an aeroengine value !!!!!
-    prop_inertia = 0.03;  //kgm^2 - this value is a total guess - dcl
+    prop_inertia = 0.05;  //kgm^2 - this value is a total guess - dcl
     Gear_Ratio = 1;
+    n_R = 2;         // Number of crank revolutions per power cycle - 2 for a 4 cylinder engine.
 
-    started = true;
+    running = fgGetBool("/engines/engine[0]/running");
     cranking = false;
-
+    fgSetBool("/engines/engine[0]/cranking", false);
 
     // Initialise Engine Variables used by this instance
+    if(running)
+	RPM = 600;
+    else
+	RPM = 0;
     Percentage_Power = 0;
     Manifold_Pressure = 29.00; // Inches
-    RPM = 600;
     Fuel_Flow_gals_hr = 0;
     Torque = 0;
     Torque_SI = 0;
@@ -371,7 +383,9 @@ void FGNewEngine::update() {
 //	cout << "AFR = " << 14.7 / equivalence_ratio << '\n';
 //	cout << "Mixture lever = " << Mixture_Lever_Pos << '\n';
 //	cout << "n = " << RPM << " rpm\n";
-        cout << "T_amb = " << T_amb << '\n';
+//      cout << "T_amb = " << T_amb << '\n';
+	cout << "running = " << running << '\n';
+	cout << "fuel = " << fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") << '\n';
     }
     count1++;
     if(count1 == 600)
@@ -382,15 +396,76 @@ void FGNewEngine::update() {
     float Vo = 0;
     float V1 = 0;
 
-    // Set up the new variables
-    float PI = 3.1428571;
+    // Parameters that alter the operation of the engine. (spark, fuel, starter motor etc)
+    // Check for spark
+    int Magneto_Left = 0;
+    int Magneto_Right = 0;
+    int mag_pos = fgGetInt("/engines/engine[0]/magneto");
+    // Magneto positions:
+    // 0 -> off
+    // 1 -> left only
+    // 2 -> right only
+    // 3 -> both
+    if(mag_pos != 0) {
+	spark = true;
+    } else {
+	spark = false;
+    }  // neglects battery voltage, master on switch, etc for now.
+    if((mag_pos == 1) || (mag_pos > 2)) 
+	Magneto_Left = 1;
+    if(mag_pos > 1)
+	Magneto_Right = 1;
+ 
+    // crude check for fuel
+    if((fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") > 0) || (fgGetFloat("/consumables/fuel/tank[1]/level-gal_us") > 0)) {
+	fuel = true;
+    } else {
+	fuel = false;
+    }  // Need to make this better, eg position of fuel selector switch.
 
-    // Parameters that alter the operation of the engine.
-    int Fuel_Available = 1;	// Yes = 1. Is there Fuel Available. Calculated elsewhere
+    // Check if we are turning the starter motor
+    bool temp = fgGetBool("/engines/engine[0]/starter");
+    if(cranking != temp) {
+	// This check saves .../cranking from getting updated every loop - they only update when changed.
+	cranking = temp;
+	if(cranking)
+	    fgSetBool("/engines/engine[0]/cranking", true);
+	else
+	    fgSetBool("/engines/engine[0]/cranking", false);
+    }
+    // Note that although /engines/engine[0]/starter and /engines/engine[0]/cranking might appear to be duplication it is
+    // not since the starter may be engaged with the battery voltage too low for cranking to occur (or perhaps the master 
+    // switch just left off) and the sound manager will read .../cranking to determine wether to play a cranking sound.
+    // For now though none of that is implemented so cranking can be set equal to .../starter without further checks.
+
     int Alternate_Air_Pos =0;	// Off = 0. Reduces power by 3 % for same throttle setting
-    int Magneto_Left = 1;	// 1 = On.   Reduces power by 5 % for same power lever settings
-    int Magneto_Right = 1;	// 1 = On.  Ditto, Both of the above though do not alter fuel flow
+    // DCL - don't know what this Alternate_Air_Pos is - this is a leftover from the Schubert code.
 
+    //Check mode of engine operation
+    if(cranking) {
+	if(RPM <= 480) {
+	    RPM += 100;
+	    if(RPM > 480)
+		RPM = 480;
+	} else {
+	    // consider making a horrible noise if the starter is engaged with the engine running
+	}
+    }
+    if((!running) && (spark) && (fuel)) {
+	// start the engine if revs high enough
+	if(RPM > 450) {
+	    // For now just instantaneously start but later we should maybe crank for a bit
+	    running = true;
+	    fgSetBool("/engines/engine[0]/running", true);
+	    RPM = 600;
+	}
+    }
+    if( (running) && ((!spark)||(!fuel)) ) {
+	// Cut the engine
+	// note that we only cut the power - the engine may continue to spin if the prop is in a moving airstream
+	running = false;
+	fgSetBool("/engines/engine[0]/running", false);
+    }
 
     // Calculate Sea Level Manifold Pressure
     Manifold_Pressure = Calc_Manifold_Pressure( Throttle_Lever_Pos, Max_Manifold_Pressure, Min_Manifold_Pressure );
@@ -470,7 +545,8 @@ void FGNewEngine::update() {
     Percentage_Power = Percentage_Power * Percentage_of_best_power_mixture_power / 100.0;
 
     // Now Derate engine for the effects of Bad/Switched off magnetos
-    if (Magneto_Left == 0 && Magneto_Right == 0) {
+    //if (Magneto_Left == 0 && Magneto_Right == 0) {
+    if(!running) {
 	// cout << "Both OFF\n";
 	Percentage_Power = 0;
     } else if (Magneto_Left && Magneto_Right) {
@@ -481,16 +557,40 @@ void FGNewEngine::update() {
 	//  cout << FGEng1_Percentage_Power <<  "%" << "\t";
     }
 
+    //DCL - stall the engine if RPM drops below 450 - this is possible if mixture lever is pulled right out
+    //This is a kludge that I should eliminate by adding a total fmep estimation.
+    if(RPM < 450)
+        Percentage_Power = 0;
+
+    if(Percentage_Power < 0)
+	Percentage_Power = 0;
+
+    // FMEP calculation.  For now we will just use this during motored operation, ie when %Power == 0.
+    // Eventually we will calculate IMEP and use the FMEP all the time to give BMEP
+    //
+    if(Percentage_Power == 0) {
+        // This FMEP data is from the Patton paper, assumes fully warm conditions.
+        FMEP = 1e-12*pow(RPM,4) - 1e-8*pow(RPM,3) + 5e-5*pow(RPM,2) - 0.0722*RPM + 154.85;
+        // Gives FMEP in kPa - now convert to Pa
+        FMEP *= 1000;
+    } else {
+        FMEP = 0.0;
+    }
+
+    Torque_FMEP = (FMEP * displacement_SI) / (2.0 * LS_PI * n_R);
+
     HP = Percentage_Power * MaxHP / 100.0;
 
     Power_SI = HP * CONVERT_HP_TO_WATTS;
 
     // Calculate Engine Torque. Check for div by zero since percentage power correlation does not guarantee zero power at zero rpm.
+    // However this is problematical since there is a resistance to movement even at rest
+    // Ie this is a dynamics equation not a statics one.  This can be solved by going over to MEP based torque calculations.
     if(RPM == 0) {
-        Torque_SI = 0;
+        Torque_SI = 0 - Torque_FMEP;
     }
     else {
-        Torque_SI = (Power_SI * 60.0) / (2.0 * PI * RPM);  //Torque = power / angular velocity
+        Torque_SI = ((Power_SI * 60.0) / (2.0 * LS_PI * RPM)) - Torque_FMEP;  //Torque = power / angular velocity
 	// cout << Torque << " Nm\n";
     }
 
@@ -628,7 +728,7 @@ the values from file to avoid the necessity for re-compilation every time I chan
     
     Gear_Ratio = 1.0;
     FGProp1_RPS = RPM * Gear_Ratio / 60.0;  // Borrow this variable from Phils model for now !!
-    angular_velocity_SI = 2.0 * PI * RPM / 60.0;
+    angular_velocity_SI = 2.0 * LS_PI * RPM / 60.0;
     forward_velocity = IAS * 0.514444444444;        // Convert to m/s
     
     //cout << "Gear_Ratio = " << Gear_Ratio << '\n';
@@ -659,6 +759,10 @@ the values from file to avoid the necessity for re-compilation every time I chan
     //cout << "prop HP consumed = " << prop_power_consumed_SI / 745.699 << '\n';
     if(angular_velocity_SI == 0)
         prop_torque = 0;
+	// However this can give problems - if rpm == 0 but forward velocity increases the prop should be able to generate a torque to start the engine spinning
+	// Unlikely to happen in practice - but I suppose someone could move the lever of a stopped large piston engine from feathered to windmilling.
+        // This *does* give problems - if the plane is put into a steep climb whilst windmilling the engine friction will eventually stop it spinning.
+        // When put back into a dive it never starts re-spinning again.  Although it is unlikely that anyone would do this in real life, they might well do it in a sim!!!
     else
         prop_torque = prop_power_consumed_SI / angular_velocity_SI;
     
@@ -667,9 +771,14 @@ the values from file to avoid the necessity for re-compilation every time I chan
     neta_prop_25 = -0.3121*J*J*J*J + 0.4234*J*J*J - 0.7686*J*J + 1.5237*J - 0.0004;
     neta_prop = neta_prop_20 + ( (neta_prop_25 - neta_prop_20) * ((blade_angle - 20)/(25 - 20)) );
     
-    //FIXME - need to check for zero forward velocity to avoid divide by zero
+    // Check for zero forward velocity to avoid divide by zero
     if(forward_velocity < 0.0001)
         prop_thrust = 0.0;
+	// I don't see how this works - how can the plane possibly start from rest ???
+	// Hmmmm - it works because the forward_velocity at present never drops below about 0.03 even at rest
+	// We can't really rely on this in the future - needs fixing !!!!
+	// The problem is that we're doing this calculation backwards - we're working out the thrust from the power consumed and the velocity, which becomes invalid as velocity goes to zero.
+	// It would be far more natural to work out the power consumed from the thrust - FIXME!!!!!.
     else
         prop_thrust = neta_prop * prop_power_consumed_SI / forward_velocity;       //TODO - rename forward_velocity to IAS_SI
     //cout << "prop_thrust = " << prop_thrust << '\n';
@@ -679,14 +788,20 @@ the values from file to avoid the necessity for re-compilation every time I chan
     
     //Calculate new RPM from torque balance and inertia.
     Torque_Imbalance = Torque_SI - prop_torque;  //This gives a +ve value when the engine torque exeeds the prop torque
+    // (Engine torque is +ve when it acts in the direction of engine revolution, prop torque is +ve when it opposes the direction of engine revolution)
     
     angular_acceleration = Torque_Imbalance / (engine_inertia + prop_inertia);
     angular_velocity_SI += (angular_acceleration * time_step);
-    RPM = (angular_velocity_SI * 60) / (2.0 * PI);
+    // Don't let the engine go into reverse
+    if(angular_velocity_SI < 0)
+        angular_velocity_SI = 0;
+    RPM = (angular_velocity_SI * 60) / (2.0 * LS_PI);
+
+//    if(RPM < 0)
+//	RPM = 0;
     
     //DCL - stall the engine if RPM drops below 500 - this is possible if mixture lever is pulled right out
-    if(RPM < 500)
-        RPM = 0;
+//    if(RPM < 500)
+//        RPM = 0;
     
 }
-
