@@ -236,10 +236,10 @@ extern float HUD_matrix[16];
 class fgText {
 private:
     float x, y;
-    char msg[32];
+    char msg[64];
 public:
     fgText( float x = 0, float y = 0, char *c = NULL )
-        : x(x), y(y) {strncpy(msg,c,32-1);}
+        : x(x), y(y) {strncpy(msg,c,64-1);}
 
     fgText( const fgText & image )
         : x(image.x), y(image.y) {strcpy(msg,image.msg);}
