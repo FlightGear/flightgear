@@ -514,13 +514,25 @@ public:
     virtual void set_V_calibrated_kts(double vc);
     virtual void set_Mach_number(double mach);
     virtual void set_Velocities_Local( double north, double east, double down );
-    inline void set_V_north (double north) { v_local_v[0] = north; }
-    inline void set_V_east (double east) { v_local_v[1] = east; }
-    inline void set_V_down (double down) { v_local_v[2] = down; }
+    inline void set_V_north (double north) { 
+      set_Velocities_Local(north, v_local_v[1], v_local_v[2]);
+    }
+    inline void set_V_east (double east) { 
+      set_Velocities_Local(v_local_v[0], east, v_local_v[2]);
+    }
+    inline void set_V_down (double down) { 
+      set_Velocities_Local(v_local_v[0], v_local_v[1], down);
+    }
     virtual void set_Velocities_Wind_Body( double u, double v, double w);
-    virtual void set_uBody (double uBody) { v_wind_body_v[0] = uBody; }
-    virtual void set_vBody (double vBody) { v_wind_body_v[1] = vBody; }
-    virtual void set_wBody (double wBody) { v_wind_body_v[2] = wBody; }
+    virtual void set_uBody (double uBody) { 
+      set_Velocities_Wind_Body(uBody, v_wind_body_v[1], v_wind_body_v[2]);
+    }
+    virtual void set_vBody (double vBody) { 
+      set_Velocities_Wind_Body(v_wind_body_v[0], vBody, v_wind_body_v[2]);
+    }
+    virtual void set_wBody (double wBody) {
+      set_Velocities_Wind_Body(v_wind_body_v[0], v_wind_body_v[1], wBody);
+    }
     
     // Euler angles 
     virtual void set_Euler_Angles( double phi, double theta, double psi );
