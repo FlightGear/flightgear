@@ -476,10 +476,10 @@ static void fgMainLoop( void ) {
     // Fix elevation.  I'm just sticking this here for now, it should
     // probably move eventually
 
-    /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
+    printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
-	   FG_Runway_altitude * FEET_TO_METER,
-	   FG_Altitude * FEET_TO_METER); */
+	   f->get_Runway_altitude() * FEET_TO_METER,
+	   f->get_Altitude() * FEET_TO_METER);
 
     if ( scenery.cur_elev > -9990 ) {
 	if ( f->get_Altitude() * FEET_TO_METER < 
@@ -493,17 +493,17 @@ static void fgMainLoop( void ) {
 				      cur_flight_params, 
 				      scenery.cur_elev + alt_adjust_m );
 
-	    FG_LOG( FG_ALL, FG_BULK, 
+	    FG_LOG( FG_ALL, FG_DEBUG, 
 		    "<*> resetting altitude to " 
 		    << f->get_Altitude() * FEET_TO_METER << " meters" );
 	}
 	f->set_Runway_altitude( scenery.cur_elev * METER_TO_FEET );
     }
 
-    /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
+    printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
-	   FG_Runway_altitude * FEET_TO_METER,
-	   FG_Altitude * FEET_TO_METER); */
+	   f->get_Runway_altitude() * FEET_TO_METER,
+	   f->get_Altitude() * FEET_TO_METER);
 
     // update "time"
     fgTimeUpdate(f, t);
@@ -946,7 +946,7 @@ int main( int argc, char **argv ) {
     // fgInitDebug();
 
     // set default log levels
-    fglog().setLogLevels( FG_ALL, FG_INFO );
+    fglog().setLogLevels( FG_ALL, FG_DEBUG );
 
     FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version " << VERSION << endl );
 
@@ -1014,6 +1014,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.71  1998/12/05 14:19:51  curt
+// Looking into a problem with cur_view_params.abs_view_pos initialization.
+//
 // Revision 1.70  1998/12/03 01:17:14  curt
 // Converted fgFLIGHT to a class.
 //

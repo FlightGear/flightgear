@@ -267,6 +267,7 @@ int fgInitSubsystems( void )
     v->Init();
     FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
     v->UpdateViewMath(f);
+    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->abs_view_pos );
     v->UpdateWorldToEye(f);
 
     // Build the solar system
@@ -369,6 +370,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.54  1998/12/05 14:19:53  curt
+// Looking into a problem with cur_view_params.abs_view_pos initialization.
+//
 // Revision 1.53  1998/12/03 04:25:05  curt
 // Working on fixing up new fgFLIGHT class.
 //
