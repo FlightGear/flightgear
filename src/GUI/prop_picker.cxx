@@ -41,14 +41,10 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/props.hxx>
 
-#include STL_STRING
-SG_USING_STD(string);
-
-// A local alternative name, for use when a variable called "string" is in scope - e.g. in classes derived from puInput.
-typedef string stdString;
-
 #define DOTDOTSLASH "../"
 #define SLASH       "/"
+
+string name, line, value;
 
 static puObject *PP_widget = 0;
 
@@ -141,17 +137,13 @@ static string getValueTypeString( const SGPropertyNode *node ) {
 
 void fgPropPicker::fgPropPickerHandleSlider ( puObject * slider )
 {
-  puListBox* list_box = (puListBox*) slider -> getUserData () ;
-
   float val ;
   slider -> getValue ( &val ) ;
   val = 1.0f - val ;
-  int scroll_range = list_box->getNumItems () - list_box->getNumVisible () ;
-  if ( scroll_range > 0 )
-  {
-    int index = int ( scroll_range * val + 0.5 ) ;
-    list_box -> setTopItem ( index ) ;
-  }
+
+  puListBox* list_box = (puListBox*) slider -> getUserData () ;
+  int index = int ( list_box -> getNumItems () * val ) ;
+  list_box -> setTopItem ( index ) ;
 }
 
 void fgPropPicker::fgPropPickerHandleArrow ( puObject *arrow )
@@ -168,18 +160,14 @@ void fgPropPicker::fgPropPickerHandleArrow ( puObject *arrow )
   float val ;
   slider -> getValue ( &val ) ;
   val = 1.0f - val ;
-  int scroll_range = list_box->getNumItems () - list_box->getNumVisible () ;
-  if ( scroll_range > 0 )
+  int num_items = list_box->getNumItems () - 1 ;
+  if ( num_items > 0 )
   {
-    int index = int ( scroll_range * val + 0.5 ) ;
-    index += inc ;
-    // if ( index > scroll_range ) index = scroll_range ;
-    // Allow buttons to scroll further than the slider does
-    if ( index > ( list_box->getNumItems () - 1 ) )
-      index = ( list_box->getNumItems () - 1 ) ;
+    int index = int ( num_items * val + 0.5 ) + inc ;
+    if ( index > num_items ) index = num_items ;
     if ( index < 0 ) index = 0 ;
 
-    slider -> setValue ( 1.0f - (float)index / scroll_range ) ;
+    slider -> setValue ( 1.0f - (float)index / num_items ) ;
     list_box -> setTopItem ( index ) ;
   }
 }
@@ -308,15 +296,16 @@ void fgPropPicker::fgPropPickerHandleOk ( puObject* b )
   FG_POP_PUI_DIALOG( prop_picker );
 }
 
+/*
 
-void fgPropPicker::delete_arrays ()
+fgPropPicker::~fgPropPicker ()
 {
   if ( files )
   {
     for ( int i=0; i<num_files; i++ ) {
-      delete[] files[i];
-      delete[] names[i];
-      delete[] values[i];
+      delete files[i];
+      delete names[i];
+      delete values[i];
     }
 
     delete[] files;
@@ -324,13 +313,6 @@ void fgPropPicker::delete_arrays ()
     delete[] values;
     delete[] dflag;
   }
-}
-
-/*
-
-fgPropPicker::~fgPropPicker ()
-{
-  delete_arrays();
 
   if ( this == puActiveWidget () )
     puDeactivateWidget () ;
@@ -364,7 +346,10 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
   proppath ->    setLabel          (startDir);
 
   slider = new puSlider (w-30,40+20*arrows,h-100-40*arrows,TRUE,20);
+  slider->setDelta(0.1f);
   slider->setValue(1.0f);
+  slider->setSliderFraction (0.2f) ;
+  slider->setCBMode( PUSLIDER_DELTA );
   
   list_box = new puListBox ( 10, 40, w-40, h-60 ) ;
   list_box -> setLabel ( title );
@@ -390,6 +375,17 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
     up_arrow->setCallback ( fgPropPickerHandleArrow ) ;
   }
 
+  if ( arrows == 2 )
+  {
+    down_arrow = new puArrowButton ( w-30, 40, w-10, 60, PUARROW_FASTDOWN ) ;
+    down_arrow->setUserData ( slider ) ;
+    down_arrow->setCallback ( fgPropPickerHandleArrow ) ;
+
+    up_arrow = new puArrowButton ( w-30, h-80, w-10, h-60, PUARROW_FASTUP ) ;
+    up_arrow->setUserData ( slider ) ;
+    up_arrow->setCallback ( fgPropPickerHandleArrow ) ;
+  }
+
   // after picker is built, load the list box with data...
   find_props () ;
 
@@ -404,36 +400,43 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
 }
 
 
-// Like strcmp, but for sorting property nodes into a suitable display order.
-static int nodeNameCompare(const void *ppNode1, const void *ppNode2)
-{
-  const SGPropertyNode_ptr pNode1 = *(const SGPropertyNode_ptr *)ppNode1;
-  const SGPropertyNode_ptr pNode2 = *(const SGPropertyNode_ptr *)ppNode2;
-
-  // Compare name first, and then index.
-  int diff = strcmp(pNode1->getName(), pNode2->getName());
-  if (diff) return diff;
-  return pNode1->getIndex() - pNode2->getIndex();
-}
-
-
-// Replace the current list of properties with the children of node "startDir".
 void fgPropPicker::find_props ()
 {
-  int pi;
-  int i;
 
-  delete_arrays();
+  int pi;
+
+  if ( files != NULL )
+  {
+    for ( int i = 0 ; i < num_files ; i++ ) {
+      delete files[i] ;
+      delete names[i] ;
+      delete values[i] ;
+    }
+
+    delete [] files ;
+    delete [] names ;
+    delete [] values ;
+    delete [] dflag ;
+  }
+
   num_files = 0 ;
 
-//  printf("dir begin of find_props=%s\n",startDir);
-//  printf("len of dir=%i",strlen(startDir));
-  SGPropertyNode * node = globals->get_props()->getNode(startDir);
+  char dir [ PUSTRING_MAX * 2 ] ;
 
-  num_files = (node) ? (int)node->nChildren() : 0;
+  int  iindex = 0;
+  char sindex [ 20 ];
+
+  strcpy ( dir, startDir ) ;
+
+  int i = 0 ;
+//  printf("dir begin of find_props=%s\n",dir);
+//  printf("len of dir=%i",strlen(dir));
+  SGPropertyNode * node = globals->get_props()->getNode(dir);
+
+  num_files = (int)node->nChildren();
 
   // instantiate string objects and add [.] and [..] for subdirs
-  if (strcmp(startDir,"/") == 0) {
+  if (strcmp(dir,"/") == 0) {
     files = new char* [ num_files+1 ] ;
     names = new char* [ num_files+1 ] ;
     values = new char* [ num_files+1 ] ;
@@ -447,7 +450,7 @@ void fgPropPicker::find_props ()
     names = new char* [ num_files+1 ] ;
     values = new char* [ num_files+1 ] ;
     dflag = new char  [ num_files+1 ] ;
-    stdString line = ".";
+    line = ".";
     files [ 0 ] = new char[ strlen(line.c_str())+2 ];
     strcpy ( files [ 0 ], line.c_str() );
     names [ 0 ] = new char[ 2 ];
@@ -465,67 +468,64 @@ void fgPropPicker::find_props ()
   };
 
 
-  if (node) {
-    // Get the list of children
-    int nChildren = node->nChildren();
-    SGPropertyNode_ptr * children = new SGPropertyNode_ptr[nChildren];
-    for (i = 0; i < nChildren; i++) {
-      children[i] = node->getChild(i);
-    }
-
-#if 1
-    // Sort the children into display order
-    qsort(children, nChildren, sizeof(children[0]), nodeNameCompare);
-#else
-    // Sort the entries.  This is a simple N^2 extraction sort.  More
-    // elaborate algorithms aren't necessary for the few dozen
-    // properties we're going to sort.
-    for (i = 0; i < nChildren; i++) {
-      int j, min = i;
-      for (j = i+1; j < nChildren; j++)
-	if (nodeNameCompare(&children[j], &children[min]) < 0)
-	  min = j;
-      if (i != min) {
-	SGPropertyNode_ptr tmp = children[min];
-	children[min] = children[i];
-	children[i] = tmp;
-      }
-    }
-#endif
-
-    // Make lists of the children's names, values, etc.
-    for (i = 0; i < nChildren; i++) {
-	    SGPropertyNode * child = children[i];
-	    stdString name = child->getDisplayName(true);
-  	    names[ pi ] = new char[ strlen(name.c_str())+2 ] ;
-	    strcpy ( names [ pi ], name.c_str() ) ;
+  for (i = 0; i < (int)node->nChildren(); i++) {
+	    SGPropertyNode * child = node->getChild(i);
+	    name = child->getName();
+	    if ( node->getChild(name.c_str(), 1) != 0 ) {
+		iindex = child->getIndex();
+		sprintf(sindex, "[%d]", iindex);
+	        name += sindex;
+	    }
+	    line = name;
+  	    names[ pi ] = new char[ strlen(line.c_str())+2 ] ;
+	    strcpy ( names [ pi ], line.c_str() ) ;
 	    if ( child->nChildren() > 0 ) {
 		dflag[ pi ] = 1 ;
-                files[ pi ] = new char[ strlen(name.c_str())+2 ] ;
-	        strcpy ( files [ pi ], name.c_str() ) ;
+                files[ pi ] = new char[ strlen(line.c_str())+strlen(sindex)+4 ] ;
+	        strcpy ( files [ pi ], line.c_str() ) ;
 	        strcat ( files [ pi ], "/" ) ;
    	        values[ pi ] = new char[ 2 ] ;
 	    } else {
                 dflag[ pi ] = 0 ;
-		stdString value = child->getStringValue();
+		value = node->getStringValue ( name.c_str(), "" );
    	        values[ pi ] = new char[ strlen(value.c_str())+2 ] ;
                 strcpy ( values [pi], value.c_str() );
-		stdString line = name + " = '" + value + "' " + "(";
-		line += getValueTypeString( child );
+		line += " = '" + value + "' " + "(";
+		line += getValueTypeString( node->getNode( name.c_str() ) );
                 line += ")";
-                // truncate entries to plib pui limit
-                if (line.length() > (PUSTRING_MAX-1)) line[PUSTRING_MAX-1] = '\0';
                 files[ pi ] = new char[ strlen(line.c_str())+2 ] ;
 	        strcpy ( files [ pi ], line.c_str() ) ;
 	    }
             // printf("files->%i of %i %s\n",pi, node->nChildren(), files [pi]);
             ++pi;
-    }
+  }
 
-    delete [] children;
+  // truncate entries to 80 characters (plib pui limit)
+  for (i = 0; i < num_files; i++) {
+    if (strlen(files[i]) > 80) files[i][79] = '\0';
   }
 
   files [ num_files ] = NULL ;
+
+  // leave the . and .. alone...
+  int ii = ( strcmp(files [0], "." ) == 0 ) ? 2 : 0;
+
+  // Sort the entries.  This is a simple N^2 extraction sort.  More
+  // elaborate algorithms aren't necessary for the few dozen
+  // properties we're going to sort.
+  for(i=ii; i<num_files; i++) {
+    int j, min = i;
+    char df, *tmp;
+    for(j=i+1; j<num_files; j++)
+      if(strcmp(names[j], names[min]) < 0)
+	min = j;
+    if(i != min) {
+      tmp =  names[min];  names[min] =  names[i];  names[i] = tmp;
+      tmp =  files[min];  files[min] =  files[i];  files[i] = tmp;
+      tmp = values[min]; values[min] = values[i]; values[i] = tmp;
+      df  =  dflag[min];  dflag[min] =  dflag[i];  dflag[i] = df;
+    }
+  }
 
   // printf("files pointer=%i/%i\n", files, num_files);
 
@@ -533,18 +533,22 @@ void fgPropPicker::find_props ()
 
   list_box -> newList ( files ) ;
 
-  // adjust the size of the slider...
-  if (num_files > list_box->getNumVisible()) {
-    slider->setSliderFraction((float)list_box->getNumVisible() / num_files);
-    slider->setValue(1.0f);
-    slider->reveal();
-    up_arrow->reveal();
-    down_arrow->reveal();
-  } else {
-    slider->hide();
-    up_arrow->hide();
-    down_arrow->hide();      
+  // if non-empty list, adjust the size of the slider...
+  if (num_files > 1) {
+    if ((11.0f/(num_files)) < 1) {
+      slider->setSliderFraction (11.0f/(num_files)) ;
+      slider->reveal();
+      up_arrow->reveal();
+      down_arrow->reveal();
+      }
+    else {
+      slider->setSliderFraction (0.9999f) ;
+      slider->hide();
+      up_arrow->hide();
+      down_arrow->hide();      
+      }
   }
+  
 }
 
 void fgPropEdit::fgPropEditHandleCancel ( puObject* b )
