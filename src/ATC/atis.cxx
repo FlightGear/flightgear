@@ -252,6 +252,8 @@ void FGATIS::UpdateTransmission() {
 	double speed = stationweather.get_wind_speed_kt();
 	double hdg = stationweather.get_wind_from_heading_deg();
 	if (speed == 0) {
+		hdg = 270;	// This forces West-facing rwys to be used in no-wind situations
+		          	// which is consistent with Flightgear's initial setup.
 		transmission += " / Winds_light_and_variable";
 	} else {
 		// FIXME: get gust factor in somehow
