@@ -53,7 +53,7 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include <FDM/JSBSim/FGFDMExec.h>
 
