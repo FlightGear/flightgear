@@ -24,15 +24,19 @@ AC_PROG_LN_S
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_HOST
 
-dnl Used on the Irix platform
-AR="ar"
-ARFLAGS="cru"
 case "${host}" in
 *-*-irix*)
     if test "$CXX" = "CC"; then
         AR="CC -ar"
         ARFLAGS="-o"
+    else
+        AR="ar"
+        ARFLAGS="cru"
     fi
+    ;;
+*)
+    AR="ar"
+    ARFLAGS="cru"
     ;;
 esac
 AC_SUBST(AR)
@@ -276,7 +280,11 @@ case "${host}" in
 	AC_CHECK_LIB(MesaGLU, gluLookAt)
     fi
 
-    LIBS="$LIBS -lglut"
+    AC_CHECK_LIB(glut, glutGetModifiers)
+    if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno" ; then
+        dnl if no "real" glut, check for freeglut
+        AC_CHECK_LIB(freeglut, glutGetModifiers)
+    fi
     ;;
 
 esac
