@@ -722,7 +722,10 @@ bool FGInitialCondition::Load(string acpath, string acname, string rstfile)
 # endif
 
   FGConfigFile resetfile(resetDef);
-  if (!resetfile.IsOpen()) return false;
+  if (!resetfile.IsOpen()) {
+    cerr << "Failed to open reset file: " << resetDef << endl;
+    return false;
+  }  
 
   resetfile.GetNextConfigLine();
   token = resetfile.GetValue();

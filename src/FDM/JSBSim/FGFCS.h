@@ -146,7 +146,6 @@ CLASS DOCUMENTATION
     @see FGSwitch
     @see FGGradient
     @see FGFilter
-    @see FGFlaps
     @see FGDeadBand
 */
 
