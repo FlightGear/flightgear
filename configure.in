@@ -350,8 +350,6 @@ AC_OUTPUT( \
 	Tools/Prep/GenAirports/Makefile \
 	Tools/Prep/ShapeFile/Makefile \
 	Tools/Utils/Makefile \
-	Tools/Utils/Makedir/Makefile \
-	Tools/Areas/Makefile \
 	Tests/Makefile \
 )
 
