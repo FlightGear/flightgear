@@ -284,8 +284,8 @@ fgLoad3DModel (const string &path)
   }
 
                                 // Set up the alignment node
-  ssgTransform * align = new ssgTransform;
-  align->addKid(model);
+  ssgTransform * alignmainmodel = new ssgTransform;
+  alignmainmodel->addKid(model);
   sgMat4 res_matrix;
   make_offsets_matrix(&res_matrix,
                       props.getFloatValue("/offsets/heading-deg", 0.0),
@@ -294,7 +294,7 @@ fgLoad3DModel (const string &path)
                       props.getFloatValue("/offsets/x-m", 0.0),
                       props.getFloatValue("/offsets/y-m", 0.0),
                       props.getFloatValue("/offsets/z-m", 0.0));
-  align->setTransform(res_matrix);
+  alignmainmodel->setTransform(res_matrix);
 
                                 // Load panels
   unsigned int i;
@@ -336,7 +336,7 @@ fgLoad3DModel (const string &path)
     model->addKid(align);
   }
 
-  return model;
+  return alignmainmodel;
 }
 
 
