@@ -226,8 +226,8 @@ FGSubsystemGroup::Member::update (double delta_time_sec)
     elapsed_sec += delta_time_sec;
     if (elapsed_sec >= min_step_sec) {
         if (!subsystem->is_suspended()) {
-            subsystem->update(delta_time_sec);
-            elapsed_sec -= min_step_sec;
+            subsystem->update(elapsed_sec);
+            elapsed_sec = 0;
         }
     }
 }
