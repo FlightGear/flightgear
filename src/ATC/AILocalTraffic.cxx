@@ -295,66 +295,12 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 		return;
 		break;
 	case TAXIING:
-		// For now we'll punt this and do nothing
+		// TODO - For now we'll punt this and do nothing
 		break;
 	case PARKED:
 		circuitsToFly = numCircuits;	// Note that one too many circuits gets flown because we only test and decrement circuitsToFly after landing
 										// thus flying one too many circuits.  TODO - Need to sort this out better!
 		touchAndGo = tag;
-#if 0	
-		// Get the active runway details (and copy them into rwy)
-		GetRwyDetails();
-		
-		// Get the takeoff node for the active runway, get a path to it and start taxiing
-		path = ground->GetPath(ourGate, rwy.rwyID);
-		if(path.size() < 2) {
-			// something has gone wrong
-			SG_LOG(SG_ATC, SG_ALERT, "Invalid path from gate to theshold in FGAILocalTraffic::FlyCircuits\n");
-			return;
-		}
-		/*
-		cout << "path returned was:" << endl;
-		for(unsigned int i=0; i<path.size(); ++i) {
-			switch(path[i]->struct_type) {
-			case NODE:
-				cout << "NODE " << ((node*)(path[i]))->nodeID << endl;
-				break;
-			case ARC:
-				cout << "ARC\n";
-				break;
-			}
-		}
-		*/
-		// pop the gate - we're here already!
-		path.erase(path.begin());
-		//path.erase(path.begin());
-		/*
-		cout << "path after popping front is:" << endl;
-		for(unsigned int i=0; i<path.size(); ++i) {
-			switch(path[i]->struct_type) {
-			case NODE:
-				cout << "NODE " << ((node*)(path[i]))->nodeID << endl;
-				break;
-			case ARC:
-				cout << "ARC\n";
-				break;
-			}
-		}
-		*/
-		
-		taxiState = TD_OUTBOUND;
-		StartTaxi();
-		
-		// Maybe the below should be set when we get to the threshold and prepare for TO?
-		// FIXME TODO - pattern direction is still hardwired
-		patternDirection = -1;		// Left
-		// At the bare minimum we ought to make sure it goes the right way at dual parallel rwy airports!
-		if(rwy.rwyID.size() == 3) {
-			patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
-		}
-
-		Transform();
-#endif
 		break;
 	}
 }   
@@ -474,7 +420,7 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "^" << flush;
 		Transform();
 		break;
-		case PARKED:
+	case PARKED:
 		//cout << "In PARKED\n";
 		if(!elevInitGood) {
 			DoGroundElev();
