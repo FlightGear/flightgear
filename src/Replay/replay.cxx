@@ -21,6 +21,8 @@
 // $Id$
 
 
+#include <simgear/constants.h>
+
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 #include <Network/net_ctrls.hxx>
@@ -123,7 +125,7 @@ void FGReplay::update( double dt ) {
         }
 
         // update the medium term list
-        if ( sim_time - last_mt_time > 1.0 ) {
+        if ( sim_time - last_mt_time > mt_dt ) {
             last_mt_time = sim_time;
             medium_term.push_back( st_front );
 
@@ -135,7 +137,7 @@ void FGReplay::update( double dt ) {
                 }
 
                 // update the long term list
-                if ( sim_time - last_lt_time > 10.0 ) {
+                if ( sim_time - last_lt_time > lt_dt ) {
                     last_lt_time = sim_time;
                     long_term.push_back( mt_front );
 
@@ -165,8 +167,21 @@ void FGReplay::update( double dt ) {
 }
 
 
-static double weight( double data1, double data2, double ratio ) {
-    return data1 + ( data2 - data1 ) * ratio;
+static double weight( double data1, double data2, double ratio,
+                      bool rotational = false ) {
+    if ( rotational ) {
+        // special handling of rotational data
+        double tmp = data2 - data1;
+        if ( tmp > SGD_PI ) {
+            tmp -= SGD_2PI;
+        } else if ( tmp < -SGD_PI ) {
+            tmp += SGD_2PI;
+        }
+        return data1 + tmp * ratio;
+    } else {
+        // normal "linear" data
+        return data1 + ( data2 - data1 ) * ratio;
+    }
 }
 
 /** 
@@ -187,7 +202,6 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     FGNetFDM fdm1 = f1.fdm;
     FGNetFDM fdm2 = f2.fdm;
 
-    // do some work
     double ratio = (time - f1.sim_time) / (f2.sim_time - f1.sim_time);
 
     cout << fdm1.longitude << " " << fdm2.longitude << endl;
@@ -195,9 +209,32 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     result.fdm.latitude = weight( fdm1.latitude, fdm2.latitude, ratio );
     result.fdm.altitude = weight( fdm1.altitude, fdm2.altitude, ratio );
     result.fdm.agl = weight( fdm1.agl, fdm2.agl, ratio );
-    result.fdm.phi = weight( fdm1.phi, fdm2.phi, ratio );
-    result.fdm.theta = weight( fdm1.theta, fdm2.theta, ratio );
-    result.fdm.psi = weight( fdm1.psi, fdm2.psi, ratio );
+    result.fdm.phi = weight( fdm1.phi, fdm2.phi, ratio, true );
+    result.fdm.theta = weight( fdm1.theta, fdm2.theta, ratio, true );
+    result.fdm.psi = weight( fdm1.psi, fdm2.psi, ratio, true );
+
+    result.fdm.phidot = weight( fdm1.phidot, fdm2.phidot, ratio, true );
+    result.fdm.thetadot = weight( fdm1.thetadot, fdm2.thetadot, ratio, true );
+    result.fdm.psidot = weight( fdm1.psidot, fdm2.psidot, ratio, true );
+    result.fdm.vcas = weight( fdm1.vcas, fdm2.vcas, ratio );
+    result.fdm.climb_rate = weight( fdm1.climb_rate, fdm2.climb_rate, ratio );
+    result.fdm.v_north = weight( fdm1.v_north, fdm2.v_north, ratio );
+    result.fdm.v_east = weight( fdm1.v_east, fdm2.v_east, ratio );
+    result.fdm.v_down = weight( fdm1.v_down, fdm2.v_down, ratio );
+
+    result.fdm.v_wind_body_north
+        = weight( fdm1.v_wind_body_north, fdm2.v_wind_body_north, ratio );
+    result.fdm.v_wind_body_east
+        = weight( fdm1.v_wind_body_east, fdm2.v_wind_body_east, ratio );
+    result.fdm.v_wind_body_down
+        = weight( fdm1.v_wind_body_down, fdm2.v_wind_body_down, ratio );
+
+    result.fdm.stall_warning
+        = weight( fdm1.stall_warning, fdm2.stall_warning, ratio );
+
+    result.fdm.A_X_pilot = weight( fdm1.A_X_pilot, fdm2.A_X_pilot, ratio );
+    result.fdm.A_Y_pilot = weight( fdm1.A_Y_pilot, fdm2.A_Y_pilot, ratio );
+    result.fdm.A_Z_pilot = weight( fdm1.A_Z_pilot, fdm2.A_Z_pilot, ratio );
 
     return result;
 }
