@@ -57,16 +57,23 @@ SG_USING_STD(string);
 #define FG_MAX_NODES 4000
 
 
-// Load a binary object file
-ssgBranch *fgBinObjLoad(const string& path, FGTileEntry *tile,
-			ssgVertexArray *lights, const bool is_base);
+// Load an Binary obj file
+bool fgBinObjLoad( const string& path, const bool is_base,
+		   Point3D *center,
+		   double *bounding_radius,
+		   ssgBranch* geometry,
+		   ssgBranch* rwy_lights,
+		   ssgVertexArray *ground_lights );
 
 // Load an ascii object file
 ssgBranch *fgAsciiObjLoad(const string& path, FGTileEntry *tile,
 			  ssgVertexArray *lights, const bool is_base);
 
 // Generate an ocean tile
-ssgBranch *fgGenTile( const string& path, FGTileEntry *t);
+bool fgGenTile( const string& path, SGBucket b,
+		Point3D *center,
+		double *bounding_radius,
+		ssgBranch* geometry );
 
 
 // Create an ssg leaf

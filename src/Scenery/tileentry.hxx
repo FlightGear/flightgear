@@ -104,6 +104,8 @@ class FGTileEntry {
 
 public:
 
+    /* CLO123 FROM HERE TO THE CORRESPONDING MARKER ARE THINGS THAT
+       CAN BE DELETED AFTER WE DROP THE ASCII SCENERY FORMAT */
     typedef vector < sgVec3 * > free_vec3_list;
     typedef vector < sgVec2 * > free_vec2_list;
     typedef vector < unsigned short * > free_index_list;
@@ -111,6 +113,7 @@ public:
     // node list
     point_list nodes;
     int ncount;
+    /* CLO123 MARKER */
 
     // global tile culling data
     Point3D center;
@@ -180,7 +183,8 @@ private:
     volatile int pending_models;
 
     ssgBranch* obj_load( const std::string& path,
-			 ssgVertexArray* lights, bool is_base );
+			 ssgVertexArray* gound_lights,
+			 bool is_base );
 
     ssgLeaf* gen_lights( ssgVertexArray *lights, int inc, float bright );
 

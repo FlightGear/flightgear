@@ -108,19 +108,17 @@ static Point3D local_calc_tex_coords(const Point3D& node, const Point3D& ref) {
 }
 
 
-// Generate a generic ocean tile on the fly
-ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
+// Generate an ocean tile
+bool fgGenTile( const string& path, SGBucket b,
+		      Point3D *center,
+		      double *bounding_radius,
+		      ssgBranch* geometry )
+{
     FGNewMat *newmat;
 
     ssgSimpleState *state = NULL;
 
-    ssgBranch *tile = new ssgBranch () ;
-    if ( !tile ) {
-        SG_LOG( SG_TERRAIN, SG_ALERT, "fgGenTile(): NO MEMORY" );
-        return NULL;
-    }
-
-    tile -> setName ( (char *)path.c_str() ) ;
+    geometry -> setName ( (char *)path.c_str() ) ;
 
     double tex_width = 1000.0;
     // double tex_height;
@@ -142,14 +140,14 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
 
     // Calculate center point
-    SGBucket b = t->tile_bucket;
     double clon = b.get_center_lon();
     double clat = b.get_center_lat();
     double height = b.get_height();
     double width = b.get_width();
 
-    Point3D center = sgGeodToCart(Point3D(clon*SGD_DEGREES_TO_RADIANS,clat*SGD_DEGREES_TO_RADIANS,0.0));
-    t->center = center;
+    *center = sgGeodToCart( Point3D(clon*SGD_DEGREES_TO_RADIANS,
+				    clat*SGD_DEGREES_TO_RADIANS,
+				    0.0) );
     // cout << "center = " << center << endl;;
     
     // Caculate corner vertices
@@ -168,18 +166,14 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
 
     Point3D cart[4], rel[4];
-    t->nodes.clear();
     for ( i = 0; i < 4; ++i ) {
 	cart[i] = sgGeodToCart(rad[i]);
-	rel[i] = cart[i] - center;
-	t->nodes.push_back( rel[i] );
+	rel[i] = cart[i] - *center;
 	// cout << "corner " << i << " = " << cart[i] << endl;
     }
 
-    t->ncount = 4;
-
     // Calculate bounding radius
-    t->bounding_radius = center.distance3D( cart[0] );
+    *bounding_radius = center->distance3D( cart[0] );
     // cout << "bounding radius = " << t->bounding_radius << endl;
 
     // Calculate normals
@@ -239,9 +233,9 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 
     leaf->setState( state );
 
-    tile->addKid( leaf );
+    geometry->addKid( leaf );
 
-    return tile;
+    return true;
 }
 
 
@@ -311,7 +305,7 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 
 // Load an Ascii obj file
 ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
-				  ssgVertexArray *lights, const bool is_base)
+			   ssgVertexArray *lights, const bool is_base)
 {
     FGNewMat *newmat = NULL;
     string material;
@@ -906,28 +900,29 @@ ssgLeaf *gen_leaf( const string& path,
 
 
 // Load an Binary obj file
-ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
-                         ssgVertexArray *lights, const bool is_base)
+bool fgBinObjLoad( const string& path, const bool is_base,
+		   Point3D *center,
+		   double *bounding_radius,
+		   ssgBranch* geometry,
+		   ssgBranch* rwy_lights,
+		   ssgVertexArray *ground_lights )
 {
-    int i;
-
     SGBinObject obj;
     bool result = obj.read_bin( path );
 
     if ( !result ) {
-	return NULL;
+	return false;
     }
 
     // cout << "fans size = " << obj.get_fans_v().size()
     //      << " fan_mats size = " << obj.get_fan_materials().size() << endl;
 
-    ssgBranch *object = new ssgBranch();
-    object->setName( (char *)path.c_str() );
+    geometry->setName( (char *)path.c_str() );
    
-    if ( is_base && t != NULL ) {
+    if ( is_base ) {
 	// reference point (center offset/bounding sphere)
-	t->center = obj.get_gbs_center();
-	t->bounding_radius = obj.get_gbs_radius();
+	*center = obj.get_gbs_center();
+	*bounding_radius = obj.get_gbs_radius();
     }
 
     point_list nodes = obj.get_wgs84_nodes();
@@ -938,6 +933,8 @@ ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
     string material;
     int_list vertex_index;
     int_list tex_index;
+
+    int i;
 
     // generate points
     string_list pt_materials = obj.get_pt_materials();
@@ -950,9 +947,9 @@ ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 	ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
 				  nodes, normals, texcoords,
 				  vertex_index, tex_index,
-				  false, lights );
+				  false, ground_lights );
 
-	object->addKid( leaf );
+	geometry->addKid( leaf );
     }
 
     // generate triangles
@@ -966,9 +963,9 @@ ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, material,
 				  nodes, normals, texcoords,
 				  vertex_index, tex_index,
-				  is_base, lights );
+				  is_base, ground_lights );
 
-	object->addKid( leaf );
+	geometry->addKid( leaf );
     }
 
     // generate strips
@@ -982,9 +979,9 @@ ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
 				  nodes, normals, texcoords,
 				  vertex_index, tex_index,
-				  is_base, lights );
+				  is_base, ground_lights );
 
-	object->addKid( leaf );
+	geometry->addKid( leaf );
     }
 
     // generate fans
@@ -998,10 +995,10 @@ ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, material,
 				  nodes, normals, texcoords,
 				  vertex_index, tex_index,
-				  is_base, lights );
+				  is_base, ground_lights );
 
-	object->addKid( leaf );
+	geometry->addKid( leaf );
     }
 
-    return object;
+    return true;
 }

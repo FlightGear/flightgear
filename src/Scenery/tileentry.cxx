@@ -959,22 +959,42 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
 
 ssgBranch*
 FGTileEntry::obj_load( const std::string& path,
-		       ssgVertexArray* lights, bool is_base )
+		       ssgVertexArray* ground_lights, bool is_base )
 {
-    ssgBranch* result = 0;
+    ssgBranch* geometry = new ssgBranch;
+    ssgBranch* rwy_lights = new ssgBranch;
+
+    Point3D c;			// returned center point
+    double br;			// returned bounding radius
 
     // try loading binary format
-    result = fgBinObjLoad( path, this, lights, is_base );
-    if ( result == NULL ) {
-	// next try the older ascii format
-	result = fgAsciiObjLoad( path, this, lights, is_base );
-	if ( result == NULL ) {
+    if ( fgBinObjLoad( path, is_base,
+		       &c, &br, geometry, rwy_lights, ground_lights ) )
+    {
+	if ( is_base ) {
+	    center = c;
+	    bounding_radius = br;
+	}
+    } else {
+	// next try the older ascii format, this is some ugly
+	// weirdness because the ascii loader is *old* and hasn't been
+	// updated, but hopefully we can can the ascii format soon.
+	ssgBranch *tmp = fgAsciiObjLoad( path, this, ground_lights, is_base );
+	if ( tmp ) {
+	    return tmp;
+	} else {
 	    // default to an ocean tile
-	    result = fgGenTile( path, this );
+	    if ( fgGenTile( path, tile_bucket, &c, &br, geometry ) ) {
+		center = c;
+		bounding_radius = br;
+	    } else {
+		SG_LOG( SG_TERRAIN, SG_ALERT,
+			"Warning: failed to generate ocean tile!" );
+	    }
 	}
     }
 
-    return result;
+    return geometry;
 }
 
 
