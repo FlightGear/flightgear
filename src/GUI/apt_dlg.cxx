@@ -98,6 +98,9 @@ void AptDialog_OK (puObject *)
             fgSetPosFromAirportIDandHdg( AptId, 
                                          cur_fdm_state->get_Psi() *
                                          SGD_RADIANS_TO_DEGREES);
+            fgSetTowerPosFromAirportID( AptId, 
+                                        cur_fdm_state->get_Psi() *
+                                        SGD_RADIANS_TO_DEGREES);
             // BusyCursor(0);
             fgReInitSubsystems();
 	    double visibility_meters =
