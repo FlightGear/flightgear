@@ -23,6 +23,12 @@ else
 THREAD_LIBS =
 endif
 
+if FG_USE_CLOUDS_3D
+CLOUD3D_LIBS = -lsgclouds3d
+else
+CLOUD3D_LIBS = 
+endif
+
 if HAVE_PLIB_PSL
 SCRIPTING_LIBS = $(top_builddir)/src/Scripting/libScripting.a
 PSL_LIBS = -lplibpsl
@@ -91,7 +97,7 @@ fgfs_LDADD = \
 	$(WEATHER_LIBS) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
-	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial \
+	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial $(CLOUD3D_LIBS) \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
