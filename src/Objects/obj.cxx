@@ -267,40 +267,84 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 }
 
 
-void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights ) {
-    int num = leaf->getNumVertices();
-    float *n1, *n2, *n3;
+static double triangle_area_3d( float *p1, float *p2, float *p3 ) {
+    // Heron's formula: A^2 = s(s-a)(s-b)(s-c) where A is the area,
+    // a,b,c are the side lengths, s=(a+b+c)/2. In R^3 you can compute
+    // the lengths of the sides with the distance formula, of course.
+
+    double a = sgDistanceVec3( p1, p2 );
+    double b = sgDistanceVec3( p2, p3 );
+    double c = sgDistanceVec3( p3, p1 );
+
+    double s = (a + b + c) / 2.0;
+
+    return sqrt( s * ( s - a ) * ( s - b ) * ( s - c ) );
+}
+
+
+static void random_pt_inside_tri( float *res,
+				  float *n1, float *n2, float *n3 )
+{
     sgVec3 p1, p2, p3;
+
+    double a = sg_random();
+    double b = sg_random();
+    if ( a + b > 1.0 ) {
+	a = 1.0 - a;
+	b = 1.0 - b;
+    }
+    double c = 1 - a - b;
+
+    sgScaleVec3( p1, n1, a );
+    sgScaleVec3( p2, n2, b );
+    sgScaleVec3( p3, n3, c );
+
+    sgAddVec3( res, p1, p2 );
+    sgAddVec3( res, p3 );
+}
+
+
+static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
+				       double factor ) {
+    int num = leaf->getNumTriangles();
+    short int n1, n2, n3;
+    float *p1, *p2, *p3;
     sgVec3 result;
-    float remainder = 1.0;
-    float weight;
 
-    n1 = leaf->getVertex( 1 );
-    n2 = leaf->getVertex( 2 );
-    for ( int i = 3; i < num; ++i ) {
-	n3 = leaf->getVertex( i );
-	weight = sg_random();
-	remainder -= weight;
-	sgScaleVec3( p1, n1, weight );
+    for ( int i = 0; i < num; ++i ) {
+	leaf->getTriangle( i, &n1, &n2, &n3 );
+	p1 = leaf->getVertex(n1);
+	p2 = leaf->getVertex(n2);
+	p3 = leaf->getVertex(n3);
+	double area = triangle_area_3d( p1, p2, p3 );
+	double num = area / factor;
 
-	weight = sg_random() * remainder;
-	remainder -= weight;
-	sgScaleVec3( p2, n2, weight );
-
-	sgScaleVec3( p3, n3, remainder );
-
-	sgAddVec3( result, p1, p2 );
-	sgAddVec3( result, p3 );
-
-	sgScaleVec3( result, 1.0 / 3.0 );
-	lights->add( result );
+	// generate a light point for each unit of area
+	while ( num > 1.0 ) {
+	    random_pt_inside_tri( result, p1, p2, p3 );
+	    lights->add( result );
+	    num -= 1.0;
+	}
+	// for partial units of area, use a zombie door method to
+	// create the proper random chance of a light being created
+	// for this triangle
+	if ( num > 0.0 ) {
+	    if ( sg_random() <= num ) {
+		// a zombie made it through our door
+		random_pt_inside_tri( result, p1, p2, p3 );
+		lights->add( result );
+	    }
+	}
     }
 }
 
 
 // Load a .obj file
-ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
+ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
+		      ssgVertexArray *lights, const bool is_base)
+{
     FGNewMat *newmat;
+    string material;
     Point3D pp;
     // sgVec3 approx_normal;
     // double normal[3], scale = 0.0;
@@ -451,7 +495,6 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		in_faces = false;
 
 		// scan the material line
-		string material;
 		in >> material;
 		
 		// find this material in the properties list
@@ -699,14 +742,41 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 
 		tile->addKid( leaf );
 
-		/*
-		ssgVertexArray *lights = NULL;
 		if ( is_base ) {
 		    // generate lighting
-		    lights = new ssgVertexArray( size );
-		    gen_random_surface_points( leaf, lights );
+		    if ( material == "Urban" || material == "BuiltUpCover" ) {
+			gen_random_surface_points( leaf, lights, 100000.0 );
+		    } else if ( material == "EvergreenBroadCover" ||
+				material == "Default" || material == "Island" ||
+				material == "SomeSort" ||
+				material == "DeciduousBroadCover" ||
+				material == "EvergreenNeedleCover" ||
+				material == "DeciduousNeedleCover" ) {
+			gen_random_surface_points( leaf, lights, 10000000.0 );
+		    } else if ( material == "MixedForestCover" ) {
+			gen_random_surface_points( leaf, lights, 5000000.0 );
+		    } else if ( material == "WoodedTundraCover" ||
+				material == "BareTundraCover" ||
+				material == "HerbTundraCover" ||
+				material == "MixedTundraCover" ||
+				material == "Marsh" ||
+				material == "HerbWetlandCover" ||
+				material == "WoodedWetlandCover" ) {
+			gen_random_surface_points( leaf, lights, 20000000.0 );
+		    } else if ( material == "ShrubCover" ||
+				material == "ShrubGrassCover" ) {
+			gen_random_surface_points( leaf, lights, 4000000.0 );
+		    } else if ( material == "GrassCover" ||
+				material == "SavannaCover" ) {
+			gen_random_surface_points( leaf, lights, 4000000.0 );
+		    } else if ( material == "MixedCropPastureCover" ||
+				material == "IrrCropPastureCover" ||
+				material == "DryCropPastureCover" ||
+				material == "CropGrassCover" ||
+				material == "CropWoodCover" ) {
+			gen_random_surface_points( leaf, lights, 2000000.0 );
+		    }
 		}
-		*/
 	    } else {
 		FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
 			<< path << " = " << token );

@@ -56,7 +56,8 @@ FG_USING_STD(string);
 
 
 // Load a .obj file
-ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile, const bool is_base);
+ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile,
+		     ssgVertexArray *lights, const bool is_base);
 
 
 #endif // _OBJ_HXX
