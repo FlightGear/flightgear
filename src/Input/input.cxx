@@ -553,9 +553,9 @@ FGInput::_init_joystick ()
     SG_LOG(SG_INPUT, SG_INFO, "Initializing joystick " << i);
 
 				// Set up range arrays
-    float minRange[naxes];
-    float maxRange[naxes];
-    float center[naxes];
+    float minRange[MAX_AXES];
+    float maxRange[MAX_AXES];
+    float center[MAX_AXES];
 
 				// Initialize with default values
     js->getMinRange(minRange);
