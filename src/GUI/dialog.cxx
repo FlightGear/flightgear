@@ -134,7 +134,7 @@ FGDialog::~FGDialog ()
     for (i = 0; i < _char_arrays.size(); i++) {
         for (int j = 0; _char_arrays[i][j] != 0; j++)
             free(_char_arrays[i][j]); // added with strdup
-        delete _char_arrays[i];
+        delete[] _char_arrays[i];
     }
 
                                 // Delete all the info objects we

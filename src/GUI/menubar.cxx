@@ -217,7 +217,7 @@ FGMenuBar::~FGMenuBar ()
     for (i = 0; i < _char_arrays.size(); i++) {
         for (int j = 0; _char_arrays[i][j] != 0; j++)
             free(_char_arrays[i][j]); // added with strdup
-        delete _char_arrays[i];
+        delete[] _char_arrays[i];
     }
 
                                 // Delete all the callback arrays
@@ -225,7 +225,7 @@ FGMenuBar::~FGMenuBar ()
                                 // plib.
     SG_LOG(SG_GENERAL, SG_INFO, "Deleting callback arrays");
     for (i = 0; i < _callback_arrays.size(); i++)
-        delete _callback_arrays[i];
+        delete[] _callback_arrays[i];
 
                                 // Delete all those bindings
     SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings");
