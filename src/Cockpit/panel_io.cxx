@@ -66,7 +66,7 @@ public:
 FGMagRibbon::FGMagRibbon (int w, int h)
   : FGTexturedLayer(w, h)
 {
-  CroppedTexture texture("Textures/Panel/compass-ribbon.rgb");
+  CroppedTexture texture("Instruments/Default/Textures/compass-ribbon.rgb");
   setTexture(texture);
 }
 
