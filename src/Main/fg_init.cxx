@@ -86,6 +86,7 @@
 #include <FDM/ADA.hxx>
 #include <FDM/Balloon.h>
 #include <FDM/ExternalNet/ExternalNet.hxx>
+#include <FDM/ExternalPipe/ExternalPipe.hxx>
 #include <FDM/JSBSim/JSBSim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
@@ -1058,7 +1059,6 @@ static bool fgSetPosFromFix( const string& id ) {
 bool
 fgInitNav ()
 {
-
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
 
     SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
@@ -1080,6 +1080,8 @@ fgInitNav ()
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
+
+    return true;
 }
 
 
@@ -1298,6 +1300,9 @@ void fgInitFDM() {
                 begin = end + 1;
             }
             cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
+        } else if ( model.find("pipe") == 0 ) {
+            string pipe_path = model.substr(5);
+            cur_fdm_state = new FGExternalPipe( dt, pipe_path );
         } else if ( model == "null" ) {
             cur_fdm_state = new FGNullFDM( dt );
         } else if ( model == "yasim" ) {

@@ -1962,8 +1962,9 @@ void fgShowAircraft(void) {
 
    sort(aircraft.begin(), aircraft.end());
    cout << "Available aircraft:" << endl;
-   for (int i = 0; i < aircraft.size(); i++)
-      cout << aircraft[i] << endl;
+   for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
+       cout << aircraft[i] << endl;
+   }
 
    aircraft.clear();
    ulCloseDir(dirp);
