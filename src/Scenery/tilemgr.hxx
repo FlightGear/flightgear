@@ -34,6 +34,9 @@
 #include <plib/ssg.h>
 
 #include <simgear/bucket/newbucket.hxx>
+#ifdef ENABLE_THREADS
+#  include <simgear/threads/SGQueue.hxx>
+#endif // ENABLE_THREADS
 
 #include "FGTileLoader.hxx"
 #include "hitlist.hxx"
@@ -112,6 +115,20 @@ private:
      */
     FGTileLoader loader;
     int counter_hack;
+
+#ifdef ENABLE_THREADS
+    /**
+     * Tiles to add to scene graph.
+     */
+    static SGLockedQueue<FGTileEntry*> loaded_queue;
+
+public:
+
+    /**
+     * Add a loaded tile to the scene graph queue.
+     */
+    static void loaded( FGTileEntry* t ) { loaded_queue.push(t); }
+#endif // ENABLE_THREADS
 
 public:
 

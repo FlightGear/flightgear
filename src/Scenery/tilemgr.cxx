@@ -57,6 +57,7 @@
 
 extern ssgRoot *scene;
 extern ssgBranch *terrain;
+extern ssgBranch *ground;
 
 // the tile manager
 FGTileMgr global_tile_mgr;
@@ -68,11 +69,15 @@ static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
     return Point3D(a.x()+b[0], a.y()+b[1], a.z()+b[2]);
 }
 
+#ifdef ENABLE_THREADS
+SGLockedQueue<FGTileEntry*> FGTileMgr::loaded_queue;
+#endif // ENABLE_THREADS
 
 // Constructor
 FGTileMgr::FGTileMgr():
     state( Start ),
-    vis( 16000 )
+    vis( 16000 ),
+    counter_hack(0)
 {
 }
 
@@ -411,7 +416,17 @@ int FGTileMgr::update( double lon, double lat ) {
     counter_hack = (counter_hack + 1) % 5;
     if ( !counter_hack ) {
         // Notify the tile loader that it can load another tile
-        loader.update();
+        // loader.update();
+
+#ifdef ENABLE_THREADS
+	if (!loaded_queue.empty())
+	{
+	    FGTileEntry* e = loaded_queue.pop();
+	    e->add_ssg_nodes( terrain, ground );
+	    //std::cout << "Adding ssg nodes for "
+	    //<< e->get_tile_bucket() << "\n";
+	}
+#endif // ENABLE_THREADS
     }
 
     return 1;

@@ -48,6 +48,7 @@ Bernie Bright <bbright@c031.aone.net.au>
   STL portability, tons o' stuff. :-)
   Currently trying to get a BeOS port together but life keeps getting 
   in the way!
+  Threading support and threaded tile pager.
 
 
 Bernhard H. Buckel <buckel@mail.uni-wuerzburg.de>

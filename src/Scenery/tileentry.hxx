@@ -118,8 +118,9 @@ private:
     ssgSelector *lights_brightness;
 
     /**
-     * Indicates this tile has been loaded from a file.
-     * Note that this may be set asynchronously by another thread.
+     * Indicates this tile has been loaded from a file and connected
+     * into the scene graph.  Note that this may be set asynchronously
+     * by another thread.
      */
     volatile bool loaded;
 
@@ -172,6 +173,10 @@ public:
      */
     inline SGBucket get_tile_bucket() const { return tile_bucket; }
 
+    /**
+     * Add terrain mesh and ground lighting to scene graph.
+     */
+    void add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground );
 };
 
 

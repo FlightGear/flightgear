@@ -24,14 +24,12 @@
 #ifndef FG_TILE_LOADER_HXX
 #define FG_TILE_LOADER_HXX
 
-#include <queue>
-#include <pthread.h>
-
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #ifdef ENABLE_THREADS
 #  include <simgear/threads/SGThread.hxx>
+#  include <simgear/threads/SGQueue.hxx>
 #endif
 
 // Forward reference.
@@ -73,7 +71,7 @@ public:
      * Returns whether the load queue is empty (contains no elements).
      * @return true if load queue is empty otherwise returns false.
      */
-    bool empty() const { return tile_queue.empty(); }
+    // bool empty() const { return tile_queue.empty(); }
 
 private:
 
@@ -82,8 +80,8 @@ private:
     /**
      * FIFO queue of tiles to load from data files.
      */
-    std::queue< FGTileEntry* > tile_queue;
-
+    SGBlockingQueue< FGTileEntry* > tile_queue;
+    
     /**
      * Base name of directory containing tile data file.
      */
@@ -131,7 +129,6 @@ private:
      * Lock and synchronize access to tile queue.
      */
     SGMutex mutex;
-    SGCondition queue_cond;
     SGCondition frame_cond;
 
     /**

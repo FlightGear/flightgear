@@ -27,6 +27,7 @@
 #include <Main/globals.hxx>
 #include "FGTileLoader.hxx"
 #include "tileentry.hxx"
+#include "tilemgr.hxx"
 
 /**
  * 
@@ -50,7 +51,7 @@ FGTileLoader::~FGTileLoader()
 {
 #ifdef ENABLE_THREADS
     // Wake up its time to die.
-    queue_cond.broadcast();
+    // queue_cond.broadcast();
 
     for (int i = 0; i < MAX_THREADS; ++i)
     {
@@ -83,11 +84,7 @@ FGTileLoader::add( FGTileEntry* tile )
     }
 
 #ifdef ENABLE_THREADS
-    mutex.lock();
     tile_queue.push( tile );
-    // Signal waiting working threads.
-    queue_cond.signal();
-    mutex.unlock();
 #else
     tile->load( tile_path, true );
 #endif // ENABLE_THREADS
@@ -117,32 +114,18 @@ FGTileLoader::LoaderThread::run()
     pthread_cleanup_push( cleanup_handler, loader );
     while ( true ) {
 	// Wait for a load request to be placed in the queue.
-	loader->mutex.lock();
-	while (loader->empty())
-	{
-	    loader->queue_cond.wait( loader->mutex );
-	}
-
-	// Have we been canceled - exits if yes.
-	//pthread_testcancel();
-	if (loader->empty())
-	{
-	    loader->mutex.unlock();
-	    pthread_exit( PTHREAD_CANCELED );
-	}
+	FGTileEntry* tile = loader->tile_queue.pop();
 
         // Wait for the next frame signal before we load a tile from the queue
-        // Note that loader->mutex is already locked at this point.
-        loader->frame_cond.wait( loader->mutex );
-
-	// Grab the tile to load and release the mutex.
-	FGTileEntry* tile = loader->tile_queue.front();
-	loader->tile_queue.pop();
-	loader->mutex.unlock();
+        // loader->mutex.lock();
+        // loader->frame_cond.wait( loader->mutex );
+        // loader->mutex.unlock();
 
   	set_cancel( SGThread::CANCEL_DISABLE );
 	tile->load( loader->tile_path, true );
   	set_cancel( SGThread::CANCEL_DEFERRED );
+
+  	FGTileMgr::loaded( tile );
     }
     pthread_cleanup_pop(1);
 }

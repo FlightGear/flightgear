@@ -102,7 +102,7 @@ static void my_remove_branch( ssgBranch * branch ) {
 // ssg as well as the whole ssg branch
 void FGTileEntry::free_tile() {
     int i;
-    SG_LOG( SG_TERRAIN, SG_DEBUG,
+    SG_LOG( SG_TERRAIN, SG_INFO,
 	    "FREEING TILE = (" << tile_bucket << ")" );
 
     SG_LOG( SG_TERRAIN, SG_DEBUG,
@@ -115,12 +115,12 @@ void FGTileEntry::free_tile() {
 	    << " texture coordinate arrays" );
 
     for ( i = 0; i < (int)vec3_ptrs.size(); ++i ) {
-	delete [] vec3_ptrs[i];  //that's the correct version
+	delete [] vec3_ptrs[i];
     }
     vec3_ptrs.clear();
 
     for ( i = 0; i < (int)vec2_ptrs.size(); ++i ) {
-	delete [] vec2_ptrs[i];  //that's the correct version
+	delete [] vec2_ptrs[i];
     }
     vec2_ptrs.clear();
 
@@ -326,10 +326,6 @@ FGTileEntry::obj_load( const std::string& path,
 void
 FGTileEntry::load( const SGPath& base, bool is_base )
 {
-    // a cheesy hack (to be fixed later)
-    extern ssgBranch *terrain;
-    extern ssgBranch *ground;
-
     string index_str = tile_bucket.gen_index_str();
 
     SGPath tile_path = base;
@@ -339,7 +335,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     basename.append( index_str );
     string path = basename.str();
 
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "Loading tile " << path );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << path );
 
     // fgObjLoad will generate ground lighting for us ...
     ssgVertexArray *light_pts = new ssgVertexArray( 100 );
@@ -386,7 +382,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		offset.x(), offset.y(), offset.z(),
 		0.0, 0.0, 0.0 );
     terra_transform->setTransform( &sgcoord );
-    terrain->addKid( terra_transform );
+    // terrain->addKid( terra_transform );
 
     lights_transform = NULL;
     lights_range = NULL;
@@ -410,9 +406,17 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 	lights_range->addKid( lights_brightness );
 	lights_transform->addKid( lights_range );
 	lights_transform->setTransform( &sgcoord );
-	ground->addKid( lights_transform );
+        // ground->addKid( lights_transform );
     }
     /* end of ground light section */
+}
+
+void
+FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
+{
+    terrain->addKid( terra_transform );
+    if (lights_transform != 0)
+	ground->addKid( lights_transform );
 
     loaded = true;
 }
