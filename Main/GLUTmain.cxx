@@ -1,3 +1,4 @@
+
 //
 // GLUTmain.cxx -- top level sim routines
 //
@@ -141,13 +142,14 @@ static void fgInitVisuals( void ) {
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     // xglFogi (GL_FOG_MODE, GL_LINEAR);
-    xglFogi (GL_FOG_MODE, GL_EXP);
+    xglFogi (GL_FOG_MODE, GL_EXP2);
     // Fog density is now set when the weather system is initialized
     // xglFogf (GL_FOG_DENSITY, w->fog_density);
-    if ( o->shading ) {
-	xglHint (GL_FOG_HINT, GL_NICEST );
-    } else {
+    if ( (o->fog == 1) || (o->shading == 0) ) {
+	// if fastest fog requested, or if flat shading force fastest
 	xglHint (GL_FOG_HINT, GL_FASTEST );
+    } else if ( o->fog == 2 ) {
+	xglHint (GL_FOG_HINT, GL_NICEST );
     }
     if ( o->wireframe ) {
 	// draw wire frame
@@ -352,7 +354,7 @@ static void fgRenderFrame( void ) {
 	xglShadeModel( GL_FLAT ); 
     }
     xglEnable( GL_DEPTH_TEST );
-    if ( o->fog ) {
+    if ( o->fog > 0 ) {
 	xglEnable( GL_FOG );
 	xglFogfv (GL_FOG_COLOR, l->fog_color);
     }
@@ -750,6 +752,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.26  1998/06/13 00:40:32  curt
+// Tweaked fog command line options.
+//
 // Revision 1.25  1998/06/12 14:27:26  curt
 // Pui -> PUI, Gui -> GUI.
 //

@@ -71,7 +71,7 @@ fgOPTIONS::fgOPTIONS( void ) {
     hud_status = 0;
 
     // Rendering options
-    fog = 1;
+    fog = 2;    // nicest
     fov = 65.0;
     fullscreen = 0;
     shading = 1;
@@ -281,10 +281,12 @@ int fgOPTIONS::parse_option( char *arg ) {
     } else if ( strncmp(arg, "--fg-root=", 10) == 0 ) {
 	arg += 10;
 	strcpy(fg_root, arg);
-    } else if ( strcmp(arg, "--disable-fog") == 0 ) {
+    } else if ( strcmp(arg, "--fog-disable") == 0 ) {
 	fog = 0;	
-    } else if ( strcmp(arg, "--enable-fog") == 0 ) {
+    } else if ( strcmp(arg, "--fog-fastest") == 0 ) {
 	fog = 1;	
+    } else if ( strcmp(arg, "--fog-nicest") == 0 ) {
+	fog = 2;	
     } else if ( strncmp(arg, "--fov=", 6) == 0 ) {
 	fov = parse_fov(arg);
     } else if ( strcmp(arg, "--disable-fullscreen") == 0 ) {
@@ -400,9 +402,10 @@ void fgOPTIONS::usage ( void ) {
     printf("\n");
 
     printf("Rendering Options:\n");
-    printf("\t--disable-fog:  disable fog/haze\n");
-    printf("\t--enable-fog:  enable fog/haze\n");
-    printf("\t--fov=xx.x:  specify the field of view angle in degrees\n");
+    printf("\t--fog-disable:  disable fog/haze\n");
+    printf("\t--fog-fastest:  enable fastest fog/haze\n");
+    printf("\t--fog-nicest:  enable nicest fog/haze\n");
+    printf("\t--fov=xx.x:  specify initial field of view angle in degrees\n");
     printf("\t--disable-fullscreen:  disable fullscreen mode\n");
     printf("\t--enable-fullscreen:  enable fullscreen mode\n");
     printf("\t--shading-flat:  enable flat shading\n");
@@ -430,6 +433,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/06/13 00:40:33  curt
+// Tweaked fog command line options.
+//
 // Revision 1.10  1998/05/16 13:08:36  curt
 // C++ - ified views.[ch]xx
 // Shuffled some additional view parameters into the fgVIEW class.
