@@ -1,0 +1,120 @@
+#!/bin/sh
+
+# fgfs-launch-clinets -- script to launch fgfs scenery construction clients
+#
+# Written by Curtis Olson, started May 1999.
+#
+# Copyright (C) 1999  Curtis L. Olson  - curt@flightgear.org
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+# $Id$
+
+CLIENT=fgfs-tools-client
+HOSTNAME=`uname -n`
+
+# check usage
+if [ $# != 1 ]; then
+    echo "Usage: $0 base_dir"
+    exit
+else
+    BASE_DIR=$1
+    CLIENT_LIST_RUDE="${BASE_DIR}/clients.rude"
+    CLIENT_LIST_NICE="${BASE_DIR}/clients.nice"
+    WORK_BASE="${BASE_DIR}/work"
+    OUTPUT_DIR="${BASE_DIR}/FlightGear"
+    LOG_DIR="${BASE_DIR}/work.status"
+    SERVER_LOG_FILE=${LOG_DIR}/server.log
+    echo "Base directory is $BASE_DIR"
+    echo "Client list files are $CLIENT_LIST_RUDE $CLIENT_LIST_NICE"
+    echo "Work base is $WORK_BASE"
+    echo "Output base is $OUTPUT_DIR"
+    echo "Logging to $LOG_FILE"
+fi
+
+SERVER_HOST=`grep "Server launched" $SERVER_LOG_FILE | awk '{ print $5 }'`
+if [ "x$SERVER_HOST" = "x" ]; then
+    echo "Can't find server host name in $SERVER_LOG_FILE"
+    exit
+else
+    echo "Server hostname is $SERVER_HOST"
+fi
+
+SERVER_PORT=`grep port $SERVER_LOG_FILE | awk '{ print $7 }'`
+if [ "x$SERVER_PORT" = "x" ]; then
+    echo "Can't find server port number in $SERVER_LOG_FILE"
+    exit
+else
+    echo "Server port number is $SERVER_PORT"
+fi
+
+# check if client binary exists
+if type $CLIENT > /dev/null; then
+    echo "client: `type $CLIENT`"
+else
+    echo "cannot locate $CLIENT"
+    exit
+fi
+
+# read client lists
+if [ -f $CLIENT_LIST_RUDE ]; then
+    TMP=`cat $CLIENT_LIST_RUDE`
+    CLIENTS_RUDE=`echo $TMP`
+fi
+if [ -f $CLIENT_LIST_NICE ]; then
+    TMP=`cat $CLIENT_LIST_NICE`
+    CLIENTS_NICE=`echo $TMP`
+fi
+echo "Rude clients = $CLIENTS_RUDE"
+echo "Nice clients = $CLIENTS_NICE"
+
+# check if log directory exists, and if not, make it
+if [ ! -d $LOG_DIR ]; then
+    mkdir -p $LOG_DIR
+fi
+
+# launch a copy of the client process on each specified machine
+
+for i in $CLIENTS_RUDE; do
+    echo "Launching client process on $i"
+
+    LOG_FILE="${LOG_DIR}/client-$i.log"
+
+    # KILL_COMMAND="killall $CLIENT"
+    # ssh -n $i "$KILL_COMMAND"
+
+    RMT_COMMAND="source ~/.profile; nice $CLIENT $SERVER_HOST $SERVER_PORT $WORK_BASE $OUTPUT_DIR -r"
+    echo "client command:"
+    echo ""
+    echo "$RMT_COMMAND"
+    echo ""
+    ssh -n $i "$RMT_COMMAND > $LOG_FILE 2>&1 &"
+done
+
+for i in $CLIENTS_NICE; do
+    echo "Launching client process on $i"
+
+    LOG_FILE="${LOG_DIR}/client-$i.log"
+
+    # KILL_COMMAND="killall $CLIENT"
+    # ssh -n $i "$KILL_COMMAND"
+
+    RMT_COMMAND="source ~/.profile; nice $CLIENT $SERVER_HOST $SERVER_PORT $WORK_BASE $OUTPUT_DIR"
+    echo "client command:"
+    echo ""
+    echo "$RMT_COMMAND"
+    echo ""
+    ssh -n $i "$RMT_COMMAND > $LOG_FILE 2>&1 &"
+done
