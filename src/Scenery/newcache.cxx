@@ -133,7 +133,7 @@ bool FGNewCache::make_space() {
 	    if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
 		// calculate approximate distance from view point
 		sgdCopyVec3( abs_view_pos,
-			     globals->get_current_view()->get_abs_view_pos() );
+			     globals->get_current_view()->get_absolute_view_pos() );
 
 		SG_LOG( SG_TERRAIN, SG_DEBUG, "DIST Abs view pos = " 
 			<< abs_view_pos[0] << ","
@@ -220,3 +220,4 @@ bool FGNewCache::insert_tile( FGTileEntry *e ) {
         return false;
     }
 }
+

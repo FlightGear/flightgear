@@ -1,6 +1,7 @@
 // viewmgr.cxx -- class for managing all the views in the flightgear world.
 //
 // Written by Curtis Olson, started October 2000.
+//   partially rewritten by Jim Wilson March 2002
 //
 // Copyright (C) 2000  Curtis L. Olson  - curt@flightgear.org
 //
@@ -44,8 +45,8 @@ FGViewMgr::~FGViewMgr( void ) {
 void
 FGViewMgr::init ()
 {
-  add_view(new FGViewerRPH);
-  add_view(new FGViewerLookAt);
+  add_view(new FGViewer, 0);
+  add_view(new FGViewer, 1);
 }
 
 typedef double (FGViewMgr::*double_getter)() const;
@@ -120,38 +121,44 @@ FGViewMgr::update (int dt)
     * SGD_DEGREES_TO_RADIANS;
 
 				// Set up the pilot view
-  FGViewerRPH *pilot_view = (FGViewerRPH *)get_view( 0 );
-  pilot_view ->set_geod_view_pos(lon_rad, lat_rad, alt_m);
-  pilot_view->set_rph(roll_rad, pitch_rad, heading_rad);
+  FGViewer *pilot_view = (FGViewer *)get_view( 0 );
+  pilot_view ->setPosition(
+	fgGetDouble("/position/longitude-deg"),
+	fgGetDouble("/position/latitude-deg"),
+	fgGetDouble("/position/altitude-ft"));
+  pilot_view->setOrientation(
+	fgGetDouble("/orientation/roll-deg"),
+	fgGetDouble("/orientation/pitch-deg"),
+	fgGetDouble("/orientation/heading-deg"));
   if (fgGetString("/sim/flight-model") == "ada") {
     //+ve x is aft, +ve z is up (see viewer.hxx)
-    pilot_view->set_pilot_offset( -5.0, 0.0, 1.0 ); 
+    pilot_view->setPositionOffsets( -5.0, 0.0, 1.0 );
   }
 
 				// Set up the chase view
 
-				// FIXME: the matrix math belongs in
-				// the viewer, not here.
-  FGViewerLookAt *chase_view = (FGViewerLookAt *)get_view( 1 );
+  FGViewer *chase_view = (FGViewer *)get_view( 1 );
 
-  sgVec3 po;		// chase view pilot_offset
-  sgVec3 wup;		// chase view world up
-  sgSetVec3( po, 0.0, 0.0, 100.0 );
-  sgCopyVec3( wup, pilot_view->get_world_up() );
-  sgMat4 CXFM;		// chase view + pilot offset xform
-  sgMakeRotMat4( CXFM,
-		 chase_view->get_view_offset() * SGD_RADIANS_TO_DEGREES -
-		 heading_rad * SGD_RADIANS_TO_DEGREES,
-		 wup );
-  sgVec3 npo;		// new pilot offset after rotation
+  // get xyz Position offsets directly from GUI/sgVec3Slider
+  // FIXME: change GUI/sgVec3Slider to store the xyz in properties
+  // it would probably be faster than the way PilotOffsetGet()
+  // triggers a recalc all the time.
   sgVec3 *pPO = PilotOffsetGet();
-  sgXformVec3( po, *pPO, pilot_view->get_UP() );
-  sgXformVec3( npo, po, CXFM );
+  sgVec3 zPO;
+  sgCopyVec3( zPO, *pPO );
+  chase_view->setPositionOffsets(zPO[0], zPO[1], zPO[2] );
 
-  chase_view->set_geod_view_pos(lon_rad, lat_rad, alt_m);
-  chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
-  chase_view->set_view_forward( pilot_view->get_view_pos() ); 
-  chase_view->set_view_up( wup );
+  chase_view->setOrientation(
+	fgGetDouble("/orientation/roll-deg"),
+	fgGetDouble("/orientation/pitch-deg"),
+	fgGetDouble("/orientation/heading-deg"));
+
+  chase_view ->setTargetPosition(
+	fgGetDouble("/position/longitude-deg"),
+	fgGetDouble("/position/latitude-deg"),
+	fgGetDouble("/position/altitude-ft"));
+  chase_view->setPositionOffsets(zPO[0], zPO[1], zPO[2] );
+  chase_view->set_view_forward( pilot_view->get_view_pos() );
 
 				// Update the current view
   do_axes();
@@ -162,7 +169,7 @@ double
 FGViewMgr::getViewOffset_deg () const
 {
   const FGViewer * view = get_current_view();
-  return (view == 0 ? 0 : view->get_view_offset() * SGD_RADIANS_TO_DEGREES);
+  return (view == 0 ? 0 : view->getHeadingOffset_deg());
 }
 
 void
@@ -170,14 +177,14 @@ FGViewMgr::setViewOffset_deg (double offset)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
-    view->set_view_offset(offset * SGD_DEGREES_TO_RADIANS);
+    view->setHeadingOffset_deg(offset);
 }
 
 double
 FGViewMgr::getGoalViewOffset_deg () const
 {
   const FGViewer * view = get_current_view();
-  return (view == 0 ? 0 : view->get_goal_view_offset() * SGD_RADIANS_TO_DEGREES);
+  return (view == 0 ? 0 : view->get_goal_view_offset());
 }
 
 void
@@ -185,14 +192,14 @@ FGViewMgr::setGoalViewOffset_deg (double offset)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
-    view->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
+    view->set_goal_view_offset(offset);
 }
 
 double
 FGViewMgr::getViewTilt_deg () const
 {
   const FGViewer * view = get_current_view();
-  return (view == 0 ? 0 : view->get_view_tilt() * SGD_RADIANS_TO_DEGREES);
+  return (view == 0 ? 0 : view->getPitchOffset_deg());
 }
 
 void
@@ -200,14 +207,14 @@ FGViewMgr::setViewTilt_deg (double tilt)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
-    view->set_view_tilt(tilt * SGD_DEGREES_TO_RADIANS);
+    view->setPitchOffset_deg(tilt);
 }
 
 double
 FGViewMgr::getGoalViewTilt_deg () const
 {
   const FGViewer * view = get_current_view();
-  return (view == 0 ? 0 : view->get_goal_view_tilt() * SGD_RADIANS_TO_DEGREES);
+  return (view == 0 ? 0 : view->get_goal_view_tilt());
 }
 
 void
@@ -215,7 +222,7 @@ FGViewMgr::setGoalViewTilt_deg (double tilt)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
-    view->set_goal_view_tilt(tilt * SGD_DEGREES_TO_RADIANS);
+    view->set_goal_view_tilt(tilt);
 }
 
 double
@@ -224,8 +231,7 @@ FGViewMgr::getPilotXOffset_m () const
 				// FIXME: hard-coded pilot view position
   const FGViewer * pilot_view = get_view(0);
   if (pilot_view != 0) {
-    float * offset = ((FGViewer *)pilot_view)->get_pilot_offset();
-    return offset[0];
+    return ((FGViewer *)pilot_view)->getXOffset_m();
   } else {
     return 0;
   }
@@ -237,8 +243,7 @@ FGViewMgr::setPilotXOffset_m (double x)
 				// FIXME: hard-coded pilot view position
   FGViewer * pilot_view = get_view(0);
   if (pilot_view != 0) {
-    float * offset = pilot_view->get_pilot_offset();
-    pilot_view->set_pilot_offset(x, offset[1], offset[2]);
+    pilot_view->setXOffset_m(x);
   }
 }
 
@@ -248,8 +253,7 @@ FGViewMgr::getPilotYOffset_m () const
 				// FIXME: hard-coded pilot view position
   const FGViewer * pilot_view = get_view(0);
   if (pilot_view != 0) {
-    float * offset = ((FGViewer *)pilot_view)->get_pilot_offset();
-    return offset[1];
+    return ((FGViewer *)pilot_view)->getYOffset_m();
   } else {
     return 0;
   }
@@ -261,8 +265,7 @@ FGViewMgr::setPilotYOffset_m (double y)
 				// FIXME: hard-coded pilot view position
   FGViewer * pilot_view = get_view(0);
   if (pilot_view != 0) {
-    float * offset = pilot_view->get_pilot_offset();
-    pilot_view->set_pilot_offset(offset[0], y, offset[2]);
+    pilot_view->setYOffset_m(y);
   }
 }
 
@@ -272,8 +275,7 @@ FGViewMgr::getPilotZOffset_m () const
 				// FIXME: hard-coded pilot view position
   const FGViewer * pilot_view = get_view(0);
   if (pilot_view != 0) {
-    float * offset = ((FGViewer *)pilot_view)->get_pilot_offset();
-    return offset[2];
+    return ((FGViewer *)pilot_view)->getZOffset_m();
   } else {
     return 0;
   }
@@ -285,8 +287,7 @@ FGViewMgr::setPilotZOffset_m (double z)
 				// FIXME: hard-coded pilot view position
   FGViewer * pilot_view = get_view(0);
   if (pilot_view != 0) {
-    float * offset = pilot_view->get_pilot_offset();
-    pilot_view->set_pilot_offset(offset[0], offset[1], z);
+    pilot_view->setZOffset_m(z);
   }
 }
 
@@ -358,5 +359,6 @@ FGViewMgr::do_axes ()
     viewDir = SGD_RADIANS_TO_DEGREES * atan2 ( -axis_lat, -axis_long );
   if ( viewDir < -1 ) viewDir += 360;
 
-  get_current_view()->set_goal_view_offset(viewDir*SGD_DEGREES_TO_RADIANS);
+  get_current_view()->set_goal_view_offset(viewDir);
 }
+

@@ -89,7 +89,7 @@ fgPanelVisible ()
 	return false;
      if(globals->get_viewmgr()->get_current() != 0)
 	return false;
-     if(globals->get_current_view()->get_view_offset() != 0 &&
+     if(globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0 &&
         !fgGetBool("/sim/virtual-cockpit"))
 	return false;
      return true;
@@ -452,8 +452,8 @@ FGPanel::setupVirtualCockpit()
     // Generate a "look at" matrix using OpenGL (!) coordinate
     // conventions.
     float lookat[3];
-    float pitch = view->get_view_tilt();
-    float rot = view->get_view_offset();
+    float pitch = view->getPitchOffset_deg() * SGD_DEGREES_TO_RADIANS;
+    float rot = view->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
     lookat[0] = -sin(rot);
     lookat[1] = sin(pitch) / cos(pitch);
     lookat[2] = -cos(rot);
@@ -1148,5 +1148,6 @@ FGSwitchLayer::draw ()
 
 
 // end of panel.cxx
+
 
 

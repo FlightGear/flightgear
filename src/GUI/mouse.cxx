@@ -175,20 +175,30 @@ static inline int right_button( void ) {
 
 static inline void set_goal_view_offset( float offset )
 {
-	globals->get_current_view()->set_goal_view_offset(offset);
+	globals->get_current_view()->set_goal_view_offset(offset * SGD_RADIANS_TO_DEGREES);
 }
 
 static inline void set_view_offset( float offset )
 {
-	globals->get_current_view()->set_view_offset(offset);
+	globals->get_current_view()->setHeadingOffset_deg(offset * SGD_RADIANS_TO_DEGREES);
+}
+
+static inline void set_goal_view_tilt( float tilt )
+{
+	globals->get_current_view()->set_goal_view_tilt(tilt);
+}
+
+static inline void set_view_tilt( float tilt )
+{
+	globals->get_current_view()->setPitchOffset_deg(tilt);
 }
 
 static inline float get_view_offset() {
-	return globals->get_current_view()->get_view_offset();
+	return globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
 }
 
 static inline float get_goal_view_offset() {
-	return globals->get_current_view()->get_goal_view_offset();
+	return globals->get_current_view()->get_goal_view_offset() * SGD_DEGREES_TO_RADIANS;
 }
 
 static inline void move_brake(float offset) {
@@ -476,8 +486,10 @@ void guiMotionFunc ( int x, int y )
                     offset -= SGD_2PI;
                 }
                 set_goal_view_offset(offset);
+                set_goal_view_tilt(asin( GuiQuat_mat[1][2]) * SGD_RADIANS_TO_DEGREES );
 #ifdef NO_SMOOTH_MOUSE_VIEW
                 set_view_offset(offset);
+                set_view_tilt(asin( GuiQuat_mat[1][2]) * SGD_RADIANS_TO_DEGREES );
 #endif
                 break;
             
@@ -532,6 +544,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         y = _Vy;
                         sgCopyVec4(curGuiQuat, _quat);
                         set_goal_view_offset(_view_offset);
+                        set_goal_view_tilt(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
                         set_view_offset(_view_offset);
 #endif
@@ -547,8 +560,10 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         Quat0();
                         _view_offset = get_goal_view_offset();
                         set_goal_view_offset(0.0);
+                        set_goal_view_tilt(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
                         set_view_offset(0.0);
+                        set_view_tilt(0.0);
 #endif
                     }
                     glutWarpPointer( x , y);
@@ -605,8 +620,10 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     Quat0();
                     build_rotmatrix(GuiQuat_mat, curGuiQuat);
                     set_goal_view_offset(0.0);
+                    set_goal_view_tilt(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
                     set_view_offset(0.0);
+                    set_view_tilt(0.0);
 #endif // NO_SMOOTH_MOUSE_VIEW
 #endif // RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     glutSetCursor(GLUT_CURSOR_INHERIT);
@@ -645,4 +662,6 @@ void guiMouseFunc(int button, int updown, int x, int y)
     
     glutPostRedisplay ();
 }
+
+
 

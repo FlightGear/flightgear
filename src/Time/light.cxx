@@ -175,17 +175,17 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	SG_LOG( SG_EVENT, SG_ALERT, "Psi rotation bad = " << f->get_Psi() );
 	exit(-1);
     }
-    if ( globals->get_current_view()->get_view_offset() < -2.0 * SGD_2PI ||
-	 globals->get_current_view()->get_view_offset() > 2.0 * SGD_2PI ) {
+    if ( globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS < -2.0 * SGD_2PI ||
+	 globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS > 2.0 * SGD_2PI ) {
 	SG_LOG( SG_EVENT, SG_ALERT, "current view()->view offset bad = " 
-		<< globals->get_current_view()->get_view_offset() );
+		<< globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS );
 	exit(-1);
     }
 
     // first determine the difference between our view angle and local
     // direction to the sun
     rotation = -(sun_rotation + SGD_PI) 
-	- (f->get_Psi() - globals->get_current_view()->get_view_offset());
+	- (f->get_Psi() - globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS);
     if ( globals->get_current_view()->get_reverse_view_offset() ) {
 	rotation += SGD_PI;
     }
@@ -239,5 +239,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
 // Destructor
 fgLIGHT::~fgLIGHT( void ) {
 }
+
 
 

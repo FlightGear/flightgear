@@ -259,7 +259,7 @@ float get_climb_rate( void )
 
 float get_view_direction( void )
 {
-    double view_off = SGD_2PI - globals->get_current_view()->get_view_offset();
+    double view_off = SGD_2PI - globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
     double view = ( current_aircraft.fdm_state->get_Psi() + view_off)
 	* SGD_RADIANS_TO_DEGREES;
     
@@ -745,3 +745,4 @@ void fgCockpitUpdate( void ) {
     
     glViewport( 0, 0, iwidth, iheight );
 }
+

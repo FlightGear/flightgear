@@ -2,6 +2,8 @@
 //
 // Written by Curtis Olson, started August 1997.
 //                          overhaul started October 2000.
+//   partially rewritten by Jim Wilson jim@kelcomaine.com using interface
+//                          by David Megginson March 2002
 //
 // Copyright (C) 1997 - 2000  Curtis L. Olson  - curt@flightgear.org
 //
@@ -42,73 +44,8 @@
 #define FG_FOV_MAX 179.9
 
 
-/**
- * Representation of a single viewpoint in the FlightGear world.
- */
-class FGViewPoint
-{
-public:
-  FGViewPoint ();
-  virtual ~FGViewPoint ();
-
-  /**
-   * Set the geodetic position for the view point.
-   */
-  virtual void setPosition (double lon_deg, double lat_deg, double alt_ft);
-
-
-  /**
-   * Get the longitude in degrees.
-   */
-  virtual double getLongitude_deg () const { return _lon_deg; }
-
-  /**
-   * Get the latitude in degrees.
-   */
-  virtual double getLatitude_deg () const { return _lat_deg; }
-
-  /**
-   * Get the altitude in feet ASL.
-   */
-  virtual double getAltitudeASL_ft () const { return _alt_ft; }
-
-  /**
-   * Get the absolute view position in fgfs coordinates.
-   */
-  virtual const double * getAbsoluteViewPos () const;
-
-
-  /**
-   * Get the relative view position in fgfs coordinates.
-   *
-   * The position is relative to the scenery centre.
-   */
-  virtual const float * getRelativeViewPos () const;
-
-
-  /**
-   * Get the absolute zero-elevation view position in fgfs coordinates.
-   */
-  virtual const float * getZeroElevViewPos () const;
-
-private:
-
-  void recalc () const;
-
-  mutable sgdVec3 _absolute_view_pos;
-  mutable sgVec3 _relative_view_pos;
-  mutable sgVec3 _zero_elev_view_pos;
-
-  bool _dirty;
-  double _lon_deg;
-  double _lat_deg;
-  double _alt_ft;
-
-};
-
-
 // Define a structure containing view information
-class FGViewer {
+class FGViewer : public FGSubsystem {
 
 public:
 
@@ -125,17 +62,154 @@ public:
 	// FG_SCALING_INDEPENDENT  // whole screen
     };
 
+    // Constructor
+    FGViewer( void );
+
+    // Destructor
+    virtual ~FGViewer( void );
+
+    //////////////////////////////////////////////////////////////////////
+    // Part 1: standard FGSubsystem implementation.
+    //////////////////////////////////////////////////////////////////////
+
+    virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
+    void update (int dt);
+
+
+    //////////////////////////////////////////////////////////////////////
+    // Part 2: user settings.
+    //////////////////////////////////////////////////////////////////////
+
+    virtual fgViewType getType() const { return _type; }
+    virtual void setType( int type );
+
+		    // Reference geodetic position of view from position...
+    virtual double getLongitude_deg () const { return _lon_deg; }
+    virtual double getLatitude_deg () const { return _lat_deg; }
+    virtual double getAltitudeASL_ft () const { return _alt_ft; }
+		    // Set individual coordinates for the view point position.
+    virtual void setLongitude_deg (double lon_deg);
+    virtual void setLatitude_deg (double lat_deg);
+    virtual void setAltitude_ft (double alt_ft);
+		    // Set the geodetic position for the view point.
+    virtual void setPosition (double lon_deg, double lat_deg, double alt_ft);
+
+		    // Reference geodetic target position...
+    virtual double getTargetLongitude_deg () const { return _target_lon_deg; }
+    virtual double getTargetLatitude_deg () const { return _target_lat_deg; }
+    virtual double getTargetAltitudeASL_ft () const { return _target_alt_ft; }
+		    // Set individual coordinates for the Target point position.
+    virtual void setTargetLongitude_deg (double lon_deg);
+    virtual void setTargetLatitude_deg (double lat_deg);
+    virtual void setTargetAltitude_ft (double alt_ft);
+		    // Set the geodetic position for the Target point.
+    virtual void setTargetPosition (double lon_deg, double lat_deg, double alt_ft);
+
+		    // Refence orientation...
+    virtual double getRoll_deg () const { return _roll_deg; }
+    virtual double getPitch_deg () const {return _pitch_deg; }
+    virtual double getHeading_deg () const {return _heading_deg; }
+    virtual void setRoll_deg (double roll_deg);
+    virtual void setPitch_deg (double pitch_deg);
+    virtual void setHeading_deg (double heading_deg);
+    virtual void setOrientation (double roll_deg, double pitch_deg, double heading_deg);
+
+		    // Position offsets from reference
+    virtual double getXOffset_m () const { return _x_offset_m; }
+    virtual double getYOffset_m () const { return _y_offset_m; }
+    virtual double getZOffset_m () const { return _z_offset_m; }
+    virtual void setXOffset_m (double x_offset_m);
+    virtual void setYOffset_m (double y_offset_m);
+    virtual void setZOffset_m (double z_offset_m);
+    virtual void setPositionOffsets (double x_offset_m,
+				     double y_offset_m,
+				     double z_offset_m);
+
+		    // Orientation offsets from reference
+    virtual double getRollOffset_deg () const { return _roll_offset_deg; }
+    virtual double getPitchOffset_deg () const { return _pitch_offset_deg; }
+    virtual double getHeadingOffset_deg () const { return _heading_offset_deg; }
+    virtual void setRollOffset_deg (double roll_offset_deg);
+    virtual void setPitchOffset_deg (double pitch_offset_deg);
+    virtual void setHeadingOffset_deg (double heading_offset_deg);
+    virtual void setOrientationOffsets (double roll_offset_deg,
+				     double heading_offset_deg,
+				     double pitch_offset_deg);
+
+
+
+    //////////////////////////////////////////////////////////////////////
+    // Part 3: output vectors and matrices in FlightGear coordinates.
+    //////////////////////////////////////////////////////////////////////
+
+    // Vectors and positions...
+
+	    // Get zero view_pos
+    virtual float * get_view_pos() {if ( _dirty ) { recalc(); }	return view_pos; }
+	    // Get the absolute view position in fgfs coordinates.
+    virtual double * get_absolute_view_pos ();
+	    // Get zero elev
+    virtual float * get_zero_elev() {if ( _dirty ) { recalc(); } return zero_elev; }
+	    // Get world up vector
+    virtual float *get_world_up() {if ( _dirty ) { recalc(); } return world_up; }
+	    // Get the relative (to scenery center) view position in fgfs coordinates.
+    virtual float * getRelativeViewPos ();
+	    // Get the absolute zero-elevation view position in fgfs coordinates.
+    virtual float * getZeroElevViewPos ();
+	    // Get surface east vector
+    virtual float *get_surface_east() {	if ( _dirty ) { recalc(); } return surface_east; }
+	    // Get surface south vector
+    virtual float *get_surface_south() {if ( _dirty ) { recalc(); } return surface_south; }
+
+	    // Matrices...
+    virtual const sgVec4 *get_VIEW() { if ( _dirty ) { recalc(); } return VIEW; }
+    virtual const sgVec4 *get_VIEW_ROT() { if ( _dirty ) { recalc(); }	return VIEW_ROT; }
+    virtual const sgVec4 *get_UP() { if ( _dirty ) { recalc(); } return UP; }
+	    // (future?)
+	    // virtual double get_ground_elev() { if ( _dirty ) { recalc(); } return ground_elev; }
+
+
 private:
 
     // flag forcing a recalc of derived view parameters
-    bool dirty;
+    bool _dirty;
+
+    void recalc ();
+    void recalcPositionVectors (double lon_deg, double lat_deg, double alt_ft) const;
+
+    mutable sgdVec3 _absolute_view_pos;
+    mutable sgVec3 _relative_view_pos;
+    mutable sgVec3 _zero_elev_view_pos;
+
+    double _lon_deg;
+    double _lat_deg;
+    double _alt_ft;
+    double _target_lon_deg;
+    double _target_lat_deg;
+    double _target_alt_ft;
+
+    double _roll_deg;
+    double _pitch_deg;
+    double _heading_deg;
+
+    // Position offsets from center of gravity.  The X axis is positive
+    // out the tail, Y is out the right wing, and Z is positive up.
+    // distance in meters
+    double _x_offset_m;
+    double _y_offset_m;
+    double _z_offset_m;
+
+    // orientation offsets from reference
+    double _roll_offset_deg;
+    double _pitch_offset_deg;
+    double _heading_offset_deg;
 
 protected:
 
     fgViewType _type;
     fgScalingType scalingType;
-
-    FGViewPoint view_point;
 
     // the nominal field of view (angle, in degrees)
     double fov; 
@@ -143,23 +217,12 @@ protected:
     // ratio of window width and height; height = width * aspect_ratio
     double aspect_ratio;
 
-    // the current view offset angle from forward (rotated about the
-    // view_up vector)
-    double view_offset;
     bool reverse_view_offset;
 
     // the goal view offset angle  (used for smooth view changes)
     double goal_view_offset;
 
-    // the view tilt angles
-    double view_tilt;
     double goal_view_tilt;
-
-    // geodetic view position
-    sgdVec3 geod_view_pos;
-
-    // absolute view position in earth coordinates
-    sgdVec3 abs_view_pos;
 
     // view position in opengl world coordinates (this is the
     // abs_view_pos translated to scenery.center)
@@ -175,11 +238,6 @@ protected:
     // height ASL of the terrain for our current view position
     // (future?) double ground_elev;
 
-    // pilot offset from center of gravity.  The X axis is positive
-    // out the tail, Y is out the right wing, and Z is positive up.
-    // Distances in meters of course.
-    sgVec3 pilot_offset;
-
     // surface vector heading south
     sgVec3 surface_south;
 
@@ -194,24 +252,35 @@ protected:
     // sg versions of our friendly matrices
     sgMat4 VIEW, VIEW_ROT, UP;
 
-    inline void set_dirty() { dirty = true; }
-    inline void set_clean() { dirty = false; }
+    // up vector for the view (usually point straight up through the
+    // top of the aircraft
+    sgVec3 view_up;
 
-    // Update the view volume, position, and orientation
-    virtual void update() = 0;
+    // the vector pointing straight out the nose of the aircraft
+    sgVec3 view_forward;
+
+    // Transformation matrix for the view direction offset relative to
+    // the AIRCRAFT matrix
+    sgMat4 VIEW_OFFSET;
+
+    // sg versions of our friendly matrices (from lookat)
+    sgMat4 LOCAL, TRANS, LARC_TO_SSG;
+
+    inline void set_dirty() { _dirty = true; }
+    inline void set_clean() { _dirty = false; }
+
+    // from lookat
+    void fgMakeLookAtMat4 ( sgMat4 dst, const sgVec3 eye, const sgVec3 center,
+			const sgVec3 up );
+
+    // from rph
+    void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 );
+    void fgMakeLOCAL( sgMat4 dst, const double Theta,
+				const double Phi, const double Psi);
+
 
 public:
 
-    // Constructor
-    FGViewer( void );
-
-    // Destructor
-    virtual ~FGViewer( void );
-
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (int dt);
 
     //////////////////////////////////////////////////////////////////////
     // setter functions
@@ -224,55 +293,36 @@ public:
     inline void set_aspect_ratio( double r ) {
 	aspect_ratio = r;
     }
-    inline void set_view_offset( double a ) {
-	set_dirty();
-	view_offset = a;
-    }
     inline void inc_view_offset( double amt ) {
 	set_dirty();
-	view_offset += amt;
+	_heading_offset_deg += amt;
     }
     inline void set_goal_view_offset( double a) {
 	set_dirty();
 	goal_view_offset = a;
 	while ( goal_view_offset < 0.0 ) {
-	    goal_view_offset += SGD_2PI;
+	    goal_view_offset += 360;
 	}
-	while ( goal_view_offset > SGD_2PI ) {
-	    goal_view_offset -= SGD_2PI;
+	while ( goal_view_offset > 360 ) {
+	    goal_view_offset -= 360;
 	}
     }
     inline void set_reverse_view_offset( bool val ) {
 	reverse_view_offset = val;
     }
-    inline void set_view_tilt( double a ) {
-	set_dirty();
-	view_tilt = a;
-    }
     inline void inc_view_tilt( double amt ) {
 	set_dirty();
-	view_tilt += amt;
+	_pitch_offset_deg += amt;
     }
     inline void set_goal_view_tilt( double a) {
 	set_dirty();
 	goal_view_tilt = a;
-	while ( goal_view_tilt < 0 ) {
-	    goal_view_tilt += 360.0;
+	while ( goal_view_tilt < -90 ) {
+	    goal_view_tilt = -90.0;
 	}
-	while ( goal_view_tilt > 360.0 ) {
-	    goal_view_tilt -= 360.0;
+	while ( goal_view_tilt > 90.0 ) {
+	    goal_view_tilt = 90.0;
 	}
-    }
-    inline void set_geod_view_pos( double lon, double lat, double alt ) {
-	// data should be in radians and meters asl
-	set_dirty();
-	// cout << "set_geod_view_pos = " << lon << ", " << lat << ", " << alt
-	//      << endl;
-	sgdSetVec3( geod_view_pos, lon, lat, alt );
-    }
-    inline void set_pilot_offset( float x, float y, float z ) {
-	set_dirty();
-	sgSetVec3( pilot_offset, x, y, z );
     }
     inline void set_sea_level_radius( double r ) {
 	// data should be in meters from the center of the earth
@@ -280,71 +330,44 @@ public:
 	sea_level_radius = r;
     }
 
+    /* from lookat */
+    inline void set_view_forward( sgVec3 vf ) {
+	set_dirty();
+	sgCopyVec3( view_forward, vf );
+    }
+    inline void set_view_up( sgVec3 vf ) {
+	set_dirty();
+	sgCopyVec3( view_up, vf );
+    }
+    /* end from lookat */
+
+
     //////////////////////////////////////////////////////////////////////
     // accessor functions
     //////////////////////////////////////////////////////////////////////
     inline int get_type() const { return _type ; }
     inline int is_a( int t ) const { return get_type() == t ; }
-    inline bool is_dirty() const { return dirty; }
+    inline bool is_dirty() const { return _dirty; }
     inline double get_fov() const { return fov; }
     inline double get_aspect_ratio() const { return aspect_ratio; }
-    inline double get_view_offset() const { return view_offset; }
     inline bool get_reverse_view_offset() const { return reverse_view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }
-    inline double get_view_tilt() const { return view_tilt; }
     inline double get_goal_view_tilt() const { return goal_view_tilt; }
-    inline double *get_geod_view_pos() { return geod_view_pos; }
-    inline float *get_pilot_offset() { return pilot_offset; }
     inline double get_sea_level_radius() const { return sea_level_radius; }
     // Get horizontal field of view angle, in degrees.
     double get_h_fov();
     // Get vertical field of view angle, in degrees.
     double get_v_fov();
 
+    /* from lookat */
+    inline float *get_view_forward() { return view_forward; }
+    inline float *get_view_up() { return view_up; }
+    /* end from lookat */
+
     //////////////////////////////////////////////////////////////////////
     // derived values accessor functions
     //////////////////////////////////////////////////////////////////////
-    inline double *get_abs_view_pos() {
-	if ( dirty ) { update(); }
-	return abs_view_pos;
-    }
-    inline float *get_view_pos() {
-	if ( dirty ) { update(); }
-	return view_pos;
-    }
-    inline float *get_zero_elev() {
-	if ( dirty ) { update(); }
-	return zero_elev;
-    }
-    // (future?)
-    // inline double get_ground_elev() {
-    //  if ( dirty ) { update(); }
-    //	return ground_elev;
-    // }
-    inline float *get_surface_south() {
-	if ( dirty ) { update(); }
-	return surface_south;
-    }
-    inline float *get_surface_east() {
-	if ( dirty ) { update(); }
-	return surface_east;
-    }
-    inline float *get_world_up() {
-	if ( dirty ) { update(); }
-	return world_up;
-    }
-    inline const sgVec4 *get_VIEW() {
-	if ( dirty ) { update(); }
-	return VIEW;
-    }
-    inline const sgVec4 *get_VIEW_ROT() {
-	if ( dirty ) { update(); }
-	return VIEW_ROT;
-    }
-    inline const sgVec4 *get_UP() {
-	if ( dirty ) { update(); }
-	return UP;
-    }
+
 };
 
 

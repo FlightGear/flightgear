@@ -52,8 +52,6 @@ fgfs_SOURCES = \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
 	viewer.cxx viewer.hxx \
-	viewer_lookat.cxx viewer_lookat.hxx \
-	viewer_rph.cxx viewer_rph.hxx \
 	viewmgr.cxx viewmgr.hxx
 
 fgfs_LDADD = \
@@ -95,3 +93,4 @@ INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
 else
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 endif
+

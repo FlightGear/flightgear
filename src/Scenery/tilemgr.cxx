@@ -403,7 +403,7 @@ int FGTileMgr::update( double lon, double lat ) {
 			scenery.get_center()[0],
 			scenery.get_center()[1],
 			scenery.get_center()[2] );
-	    hit = fgCurrentElev(globals->get_current_view()->get_abs_view_pos(),
+	    hit = fgCurrentElev(globals->get_current_view()->get_absolute_view_pos(),
 				sc,
 				current_tile->get_terra_transform(),
 				&hit_list,
@@ -452,3 +452,4 @@ void FGTileMgr::prep_ssg_nodes() {
 	tile_cache.next();
    }
 }
+

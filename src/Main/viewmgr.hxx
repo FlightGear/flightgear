@@ -39,8 +39,7 @@
 #include <vector>
 
 #include "fgfs.hxx"
-#include "viewer_lookat.hxx"
-#include "viewer_rph.hxx"
+#include "viewer.hxx"
 
 SG_USING_STD(vector);
 
@@ -107,8 +106,10 @@ public:
     // setters
     inline void clear() { views.clear(); }
     inline void set_view( const int v ) { current = v; }
-    inline void add_view( FGViewer * v ) {
+    inline void add_view( FGViewer * v, int type ) {
 	views.push_back(v);
+        v->setType(type);
+        v->init();
     }
 
 private:
@@ -146,3 +147,7 @@ private:
 
 
 #endif // _VIEWMGR_HXX
+
+
+
+

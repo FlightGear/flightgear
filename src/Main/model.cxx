@@ -159,8 +159,8 @@ FGAircraftModel::update (int dt)
       do_animation(_animations[i], elapsed_ms);
 
     _selector->select(true);
-    FGViewerRPH *pilot_view =
-      (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
+    FGViewer *pilot_view =
+      (FGViewer *)globals->get_viewmgr()->get_view( 0 );
     
     sgMat4 sgTRANS;
     sgMakeTransMat4( sgTRANS, pilot_view->get_view_pos() );
@@ -178,15 +178,13 @@ FGAircraftModel::update (int dt)
     if (view_number == 0) {
 				// FIXME: orientation is not applied
 				// correctly when view is not forward
-      sgMakeRotMat4( sgROT, -pilot_view->get_view_offset()
-		     * SGD_RADIANS_TO_DEGREES, pilot_view->get_world_up() );
+      sgMakeRotMat4( sgROT, -pilot_view->getHeadingOffset_deg(), 
+         pilot_view->get_world_up() );
 
       /* Warning lame hack from Wilson ahead */
       /* get the pitch value */
-      sgVec3 rph;
-      sgCopyVec3(rph, pilot_view->get_rph());
       /* double it to counter the value already in the VIEW_ROT */
-      float pitch = rph[1] * 2;
+      float pitch = pilot_view->getPitch_deg() * SGD_DEGREES_TO_RADIANS * 2;
       /* make a ROT matrix 
          with the values waited by the X coordinate from the offset 
          rotation see sgROT above
@@ -383,3 +381,7 @@ FGAircraftModel::Animation::setRotation()
 
 
 // end of model.cxx
+
+
+
+
