@@ -25,32 +25,35 @@
 #include "controls.hxx"
 
 
-fgCONTROLS controls;
+FGControls controls;
 
 
 // Constructor
-fgCONTROLS::fgCONTROLS() :
+FGControls::FGControls() :
     aileron( 0.0 ),
     elevator( 0.0 ),
     elevator_trim( 1.969572E-03 ),
     rudder( 0.0 )
 {
-    for ( int engine = 0; engine < FG_MAX_ENGINES; engine++ ) {
+    for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
 	throttle[engine] = 0.0;
     }
 
-    for ( int wheel = 0; wheel < FG_MAX_WHEELS; wheel++ ) {
+    for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
         brake[wheel] = 0.0;
     }
 }
 
 
 // Destructor
-fgCONTROLS::~fgCONTROLS() {
+FGControls::~FGControls() {
 }
 
 
 // $Log$
+// Revision 1.3  1998/12/05 16:13:12  curt
+// Renamed class fgCONTROLS to class FGControls.
+//
 // Revision 1.2  1998/10/25 14:08:41  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //

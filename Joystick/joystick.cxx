@@ -103,7 +103,7 @@ void joystick(unsigned int buttonMask, int js_x, int js_y, int js_z)
     // Pass the values to the control routines
     controls.set_elevator( joy_y );
     controls.set_aileron( -joy_x ); 
-    controls.set_throttle( fgCONTROLS::FG_ALL_ENGINES, joy_z );
+    controls.set_throttle( FGControls::ALL_ENGINES, joy_z );
 }
 
 #endif // ENABLE_GLUT_JOYSTICK
@@ -181,7 +181,7 @@ int fgJoystickRead( void ) {
     if ( ! js1->notWorking() ) {
 	js1->read( &b, js_ax1 ) ;
 	controls.set_rudder( js_ax1[0] );
-	controls.set_throttle( fgCONTROLS::FG_ALL_ENGINES, -js_ax1[1] * 1.05 );
+	controls.set_throttle( FGControls::ALL_ENGINES, -js_ax1[1] * 1.05 );
     }
 
     return 1;
@@ -191,6 +191,9 @@ int fgJoystickRead( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/12/05 16:13:16  curt
+// Renamed class fgCONTROLS to class FGControls.
+//
 // Revision 1.5  1998/11/06 21:18:04  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

@@ -63,7 +63,7 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
 // update position based on inputs, positions, velocities, etc.
 void fgSlewUpdate( void ) {
     FGState *f;
-    fgCONTROLS *c;
+    FGControls *c;
 
     f = current_aircraft.fdm_state;
     c = current_aircraft.controls;
@@ -83,6 +83,9 @@ void fgSlewUpdate( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/12/05 16:13:14  curt
+// Renamed class fgCONTROLS to class FGControls.
+//
 // Revision 1.3  1998/12/05 15:54:16  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

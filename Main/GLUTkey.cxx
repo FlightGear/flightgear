@@ -205,17 +205,17 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    controls.set_rudder(0.0);
 	    return;
 	case 57: // numeric keypad 9 (Pg Up)
-	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, 0.01 );
+	    controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
 	    return;
 	case 51: // numeric keypad 3 (Pg Dn)
-	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, -0.01 );
+	    controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
 	    return;
 	case 98: // b key
 	    int b_ret;
 	    double b_set;
 	    b_ret = int( controls.get_brake( 0 ) );
 	    b_set = double(!b_ret);
-	    controls.set_brake( fgCONTROLS::FG_ALL_WHEELS, b_set);
+	    controls.set_brake( FGControls::ALL_WHEELS, b_set);
 	    return;
 	case 104: // h key
 	    HUD_brightkey( false );
@@ -375,10 +375,10 @@ void GLUTspecialkey(int k, int x, int y) {
 	    controls.set_rudder(0.0);
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9 (Pg Up)
-	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, 0.01 );
+	    controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3 (Pg Dn)
-	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, -0.01 );
+	    controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
 	    return;
 	}
     }
@@ -386,6 +386,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.35  1998/12/05 16:13:17  curt
+// Renamed class fgCONTROLS to class FGControls.
+//
 // Revision 1.34  1998/12/05 15:54:17  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

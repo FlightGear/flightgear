@@ -26,9 +26,6 @@
 #define _CONTROLS_HXX
 
 
-// #include <Include/fg_limits.h>
-
-
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
@@ -36,15 +33,15 @@
 
 // Define a structure containing the control parameters
 
-class fgCONTROLS {
+class FGControls {
 
 public:
 
-    static const int FG_ALL_ENGINES = -1;
-    static const int FG_MAX_ENGINES = 10;
+    static const int ALL_ENGINES = -1;
+    static const int MAX_ENGINES = 10;
 
-    static const int FG_ALL_WHEELS = -1;
-    static const int FG_MAX_WHEELS = 3;
+    static const int ALL_WHEELS = -1;
+    static const int MAX_WHEELS = 3;
 
 private:
 
@@ -52,13 +49,13 @@ private:
     double elevator;
     double elevator_trim;
     double rudder;
-    double throttle[FG_MAX_ENGINES];
-    double brake[FG_MAX_WHEELS];
+    double throttle[MAX_ENGINES];
+    double brake[MAX_WHEELS];
 
 public:
 
-    fgCONTROLS();
-    ~fgCONTROLS();
+    FGControls();
+    ~FGControls();
 
     // Query functions
     inline double get_aileron() const { return aileron; }
@@ -110,14 +107,14 @@ public:
 	if ( rudder >  1.0 ) rudder =  1.0;
     }
     inline void set_throttle( int engine, double pos ) {
-	if ( engine == FG_ALL_ENGINES ) {
-	    for ( int i = 0; i < FG_MAX_ENGINES; i++ ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
 		throttle[i] = pos;
 		if ( throttle[i] < 0.0 ) throttle[i] = 0.0;
 		if ( throttle[i] >  1.0 ) throttle[i] =  1.0;
 	    }
 	} else {
-	    if ( (engine >= 0) && (engine < FG_MAX_ENGINES) ) {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 		throttle[engine] = pos;
 		if ( throttle[engine] < 0.0 ) throttle[engine] = 0.0;
 		if ( throttle[engine] >  1.0 ) throttle[engine] =  1.0;
@@ -125,14 +122,14 @@ public:
 	}
     }
     inline void move_throttle( int engine, double amt ) {
-	if ( engine == FG_ALL_ENGINES ) {
-	    for ( int i = 0; i < FG_MAX_ENGINES; i++ ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
 		throttle[i] += amt;
 		if ( throttle[i] < 0.0 ) throttle[i] = 0.0;
 		if ( throttle[i] >  1.0 ) throttle[i] =  1.0;
 	    }
 	} else {
-	    if ( (engine >= 0) && (engine < FG_MAX_ENGINES) ) {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 		throttle[engine] += amt;
 		if ( throttle[engine] < 0.0 ) throttle[engine] = 0.0;
 		if ( throttle[engine] >  1.0 ) throttle[engine] =  1.0;
@@ -140,14 +137,14 @@ public:
 	}
     }
     inline void set_brake( int wheel, double pos ) {
-	if ( wheel == FG_ALL_WHEELS ) {
-	    for ( int i = 0; i < FG_MAX_WHEELS; i++ ) {
+	if ( wheel == ALL_WHEELS ) {
+	    for ( int i = 0; i < MAX_WHEELS; i++ ) {
 		brake[i] = pos;
 		if ( brake[i] < 0.0 ) brake[i] = 0.0;
 		if ( brake[i] >  1.0 ) brake[i] =  1.0;
 	    }
 	} else {
-	    if ( (wheel >= 0) && (wheel < FG_MAX_WHEELS) ) {
+	    if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
 		brake[wheel] = pos;
 		if ( brake[wheel] < 0.0 ) brake[wheel] = 0.0;
 		if ( brake[wheel] >  1.0 ) brake[wheel] =  1.0;
@@ -155,14 +152,14 @@ public:
 	}
     }
     inline void move_brake( int wheel, double amt ) {
-	if ( wheel == FG_ALL_WHEELS ) {
-	    for ( int i = 0; i < FG_MAX_WHEELS; i++ ) {
+	if ( wheel == ALL_WHEELS ) {
+	    for ( int i = 0; i < MAX_WHEELS; i++ ) {
 		brake[i] += amt;
 		if ( brake[i] < 0.0 ) brake[i] = 0.0;
 		if ( brake[i] >  1.0 ) brake[i] =  1.0;
 	    }
 	} else {
-	    if ( (wheel >= 0) && (wheel < FG_MAX_WHEELS) ) {
+	    if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
 		brake[wheel] += amt;
 		if ( brake[wheel] < 0.0 ) brake[wheel] = 0.0;
 		if ( brake[wheel] >  1.0 ) brake[wheel] =  1.0;
@@ -172,38 +169,16 @@ public:
 };
 
 
-/*
-#define FG_Elevator     c->elevator
-#define FG_Aileron      c->aileron
-#define FG_Rudder       c->rudder
-#define FG_Throttle     c->throttle
-#define FG_Throttle_All -1
-#define FG_Elev_Trim    c->elevator_trim
-#define FG_Brake_Amt    c->brake_amt
-*/
+extern FGControls controls;
 
-extern fgCONTROLS controls;
-
-/*
-void fgControlsInit( void );
-void fgElevMove(double amt);
-void fgElevSet(double pos);
-void fgElevTrimMove(double amt);
-void fgElevTrimSet(double pos);
-void fgAileronMove(double amt);
-void fgAileronSet(double pos);
-void fgRudderMove(double amt);
-void fgRudderSet(double pos);
-void fgThrottleMove(int engine, double amt);
-void fgThrottleSet(int engine, double pos);
-void fgBrakeSet( double brake_amt );
-double fgBrakeGet( void );
-*/
 
 #endif // _CONTROLS_HXX
 
 
 // $Log$
+// Revision 1.3  1998/12/05 16:13:13  curt
+// Renamed class fgCONTROLS to class FGControls.
+//
 // Revision 1.2  1998/10/25 14:08:42  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //

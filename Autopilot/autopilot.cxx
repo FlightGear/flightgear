@@ -339,7 +339,7 @@ int fgAPRun( void )
 	if ( total_adj > 1.0 ) { total_adj = 1.0; }
 	if ( total_adj < 0.0 ) { total_adj = 0.0; }
 
-	controls.set_throttle( fgCONTROLS::FG_ALL_ENGINES, total_adj );
+	controls.set_throttle( FGControls::ALL_ENGINES, total_adj );
     }
 
      /*
