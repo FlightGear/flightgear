@@ -352,7 +352,7 @@ float FGCoefficient::Value(float rVal, float cVal)
   col1temp = rFactor*(Table3D[r][c-1] - Table3D[r-1][c-1]) + Table3D[r-1][c-1];
   col2temp = rFactor*(Table3D[r][c] - Table3D[r-1][c]) + Table3D[r-1][c];
 
-  Value = col1temp + cFactor*(col2temp - col1temp);
+  SD = Value = col1temp + cFactor*(col2temp - col1temp);
 
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
@@ -379,7 +379,7 @@ float FGCoefficient::Value(float Val)
     Factor = 1.0;
   }
 
-  Value = Factor*(Table3D[r][1] - Table3D[r-1][1]) + Table3D[r-1][1];
+  SD = Value = Factor*(Table3D[r][1] - Table3D[r-1][1]) + Table3D[r-1][1];
 
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
@@ -394,7 +394,7 @@ float FGCoefficient::Value(void)
 	float Value;
 	int midx;
 	
-	Value = StaticValue;
+	SD = Value = StaticValue;
 
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
@@ -463,3 +463,8 @@ float FGCoefficient::GetCoeffVal(int val_idx)
   return 0;
 }
 
+
+void FGCoefficient::DumpSD(void)
+{
+  cout << "   " << name << " = " << SD << endl;
+}

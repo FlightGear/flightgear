@@ -35,13 +35,13 @@ FGControls::FGControls() :
     elevator_trim( 1.969572E-03 ),
     rudder( 0.0 )
 {
-    for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
-	throttle[engine] = 0.0;
-    }
+  for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
+    throttle[engine] = 0.0;
+  }
 
-    for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
-        brake[wheel] = 0.0;
-    }
+  for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
+    brake[wheel] = 0.0;
+  }
 }
 
 
@@ -51,6 +51,16 @@ FGControls::~FGControls() {
 
 
 // $Log$
+// Revision 1.7  1999/12/30 17:01:59  curt
+// Here is a wrap-up of the latest changes to JSBSim. It still is flaky, but
+// much less so due to returning the aero reference point stuff to the config
+// files. Don't know what happened there ...
+//
+// Additionally, I have added a new field to the config file: CFG_VERSION. A
+// version number, currently 1.1, is assigned to the config file and a matching
+// definition is found in FGDefs.h. The two need to match. Tony has also added
+// code into FGAircraft.cpp to handle if aero reference point is not specified.
+//
 // Revision 1.6  1999/09/07 21:15:45  curt
 // Updates to get engine working.
 //

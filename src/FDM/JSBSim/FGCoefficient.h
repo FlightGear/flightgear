@@ -133,6 +133,9 @@ public:
   float Value(float);
   float Value(void);
   float TotalValue(void);
+  inline float GetSDValue(void) {return SD;}
+  inline void SetSDValue(float tt) {SD = tt;}
+  void DumpSD(void);
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
 
 protected:
@@ -153,6 +156,7 @@ private:
   Type type;
   int multipliers;
   int mult_count;
+  float SD; // Actual stability derivative (or other coefficient) value
 
   float GetCoeffVal(int);
 

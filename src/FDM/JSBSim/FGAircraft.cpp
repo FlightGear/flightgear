@@ -159,6 +159,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   streampos gpos;
   int axis;
   string axis_descript;
+  bool readAeroRp=false;
 
   axis = -1;
   aircraftDef = aircraft_path + "/" + fname + "/" + fname + ".cfg";
@@ -168,6 +169,8 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
 
   numTanks = numEngines = 0;
   numSelectedOxiTanks = numSelectedFuelTanks = 0;
+
+  Xcg=Ycg=Zcg=0; //protection for no cg specified in file
 
   while (!aircraftfile.fail()) {
     holding_string.erase();
@@ -218,6 +221,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
         cout << "Aircraft Empty Weight: " << EmptyWeight << endl;
       } else if (holding_string == "AC_AERORP") {
         aircraftfile >> Xrp >> Yrp >> Zrp;
+        readAeroRp=true;
         cout << "Aerodynamic Reference Point: " << Xrp << " " << Yrp << " " << Zrp << endl;
       } else if (holding_string == "AC_CGLOC") {
         aircraftfile >> baseXcg >> baseYcg >> baseZcg;
@@ -310,8 +314,15 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
       aircraftfile.getline(scratch, 127);
     }
   }
-  cout << "End of Configuration File Parsing." << endl;
+  
+    if(!readAeroRp) {
+    Xrp = Xcg;
+    Yrp = Ycg;
+    Zrp = Zcg;
+    cout << "Aerodynamic reference point not found, set to empty weight cg location" << endl;
+  }	
 
+  cout << "End of Configuration File Parsing." << endl;
   return true;
 }
 
@@ -431,32 +442,31 @@ void FGAircraft::MassChange()
 void FGAircraft::FMAero(void)
 {
   float F[3];
-  float Fxaero,Fyaero,Fzaero;
   float dxcg,dycg,dzcg;
+  float ca, cb, sa, sb;
   int axis_ctr,ctr;
   F[0] = F[1] = F[2] = 0.0;
 
-  for (axis_ctr = 0; axis_ctr < 3; axis_ctr++)
-    for (ctr=0; ctr < coeff_ctr[axis_ctr]; ctr++)
+  for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
+    for (ctr=0; ctr < coeff_ctr[axis_ctr]; ctr++) {
       F[axis_ctr] += Coeff[axis_ctr][ctr]->TotalValue();
+      Coeff[axis_ctr][ctr]->DumpSD();
+    }
+  }
 
-  Fxaero = - F[DragCoeff]*cos(alpha)*cos(beta)
-           - F[SideCoeff]*cos(alpha)*sin(beta)
-           + F[LiftCoeff]*sin(alpha);
-  Fyaero =   F[DragCoeff]*sin(beta)
-             + F[SideCoeff]*cos(beta);
-  Fzaero = - F[DragCoeff]*sin(alpha)*cos(beta)
-           - F[SideCoeff]*sin(alpha)*sin(beta)
-           - F[LiftCoeff]*cos(alpha);
+  ca = cos(alpha);
+  sa = sin(alpha);
+  cb = cos(beta);
+  sb = sin(beta);
 
-  Forces[0] += - F[DragCoeff]*cos(alpha)*cos(beta)
-               - F[SideCoeff]*cos(alpha)*sin(beta)
-               + F[LiftCoeff]*sin(alpha);
-  Forces[1] +=   F[DragCoeff]*sin(beta)
-                 + F[SideCoeff]*cos(beta);
-  Forces[2] += - F[DragCoeff]*sin(alpha)*cos(beta)
-               - F[SideCoeff]*sin(alpha)*sin(beta)
-               - F[LiftCoeff]*cos(alpha);
+  Forces[0] += - F[DragCoeff]*ca*cb
+               - F[SideCoeff]*ca*sb
+               + F[LiftCoeff]*sa;
+  Forces[1] +=   F[DragCoeff]*sb
+                 + F[SideCoeff]*cb;
+  Forces[2] += - F[DragCoeff]*sa*cb
+               - F[SideCoeff]*sa*sb
+               - F[LiftCoeff]*ca;
 
   // The d*cg distances below, given in inches, are the distances FROM the c.g.
   // TO the reference point. Since the c.g. and ref point are given in inches in
@@ -468,13 +478,14 @@ void FGAircraft::FMAero(void)
   dycg =  (Yrp - Ycg)/12;
   dzcg = -(Zrp - Zcg)/12;
 
-  Moments[0] +=  Fzaero*dycg - Fyaero*dzcg; //rolling moment
-  Moments[1] +=  Fxaero*dzcg - Fzaero*dxcg; //pitching moment
-  Moments[2] += -Fxaero*dycg + Fyaero*dxcg; //yawing moment
+  Moments[0] +=  Forces[2]*dycg - Forces[1]*dzcg; //rolling moment
+  Moments[1] +=  Forces[0]*dzcg - Forces[2]*dxcg; //pitching moment
+  Moments[2] += -Forces[0]*dycg + Forces[1]*dxcg; //yawing moment
 
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr = 0; ctr < coeff_ctr[axis_ctr+3]; ctr++) {
       Moments[axis_ctr] += Coeff[axis_ctr+3][ctr]->TotalValue();
+      Coeff[axis_ctr+3][ctr]->DumpSD();
     }
   }
 }
