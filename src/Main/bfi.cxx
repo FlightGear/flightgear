@@ -139,10 +139,6 @@ FGBFI::init ()
 			       getThrottle, setThrottle);
   current_properties.tieDouble("/controls/flaps",
 			       getFlaps, setFlaps);
-  current_properties.tieBool  ("/controls/flaps/raise",
- 			       0, setFlapsRaise);
-  current_properties.tieBool  ("/controls/flaps/lower",
- 			       0, setFlapsLower);
   current_properties.tieDouble("/controls/aileron",
 			       getAileron, setAileron);
   current_properties.tieDouble("/controls/rudder",
@@ -151,8 +147,18 @@ FGBFI::init ()
 			       getElevator, setElevator);
   current_properties.tieDouble("/controls/elevator-trim",
 			       getElevatorTrim, setElevatorTrim);
+  current_properties.tieDouble("/controls/brakes/all",
+			       getBrakes, setBrakes);
+  current_properties.tieDouble("/controls/brakes/left",
+			       getLeftBrake, setLeftBrake);
+  current_properties.tieDouble("/controls/brakes/right",
+			       getRightBrake, setRightBrake);
+  current_properties.tieDouble("/controls/brakes/Center",
+			       getRightBrake, setCenterBrake);
+
+				// Deprecated...
   current_properties.tieDouble("/controls/brake",
-			       getBrake, setBrake);
+			       getBrakes, setBrakes);
   current_properties.tieDouble("/controls/left-brake",
 			       getLeftBrake, setLeftBrake);
   current_properties.tieDouble("/controls/right-brake",
@@ -165,6 +171,8 @@ FGBFI::init ()
 			       getAPAltitude, setAPAltitude);
   current_properties.tieBool("/autopilot/locks/heading",
 			     getAPHeadingLock, setAPHeadingLock);
+  current_properties.tieDouble("/autopilot/settings/heading",
+			       getAPHeading, setAPHeading);
   current_properties.tieDouble("/autopilot/settings/heading-magnetic",
 			       getAPHeadingMag, setAPHeadingMag);
   current_properties.tieBool("/autopilot/locks/nav1",
@@ -258,7 +266,7 @@ FGBFI::reinit ()
   double throttle = getThrottle();
   double elevator_trim = getElevatorTrim();
   double flaps = getFlaps();
-  double brake = getBrake();
+  double brake = getBrakes();
   bool apHeadingLock = getAPHeadingLock();
   double apHeadingMag = getAPHeadingMag();
   bool apAltitudeLock = getAPAltitudeLock();
@@ -291,7 +299,7 @@ FGBFI::reinit ()
   setThrottle(throttle);
   setElevatorTrim(elevator_trim);
   setFlaps(flaps);
-  setBrake(brake);
+  setBrakes(brake);
   setAPHeadingLock(apHeadingLock);
   setAPHeadingMag(apHeadingMag);
   setAPAltitudeLock(apAltitudeLock);
@@ -528,8 +536,8 @@ void
 FGBFI::setAltitude (double altitude)
 {
   fgFDMForceAltitude(getFlightModel(), altitude * FEET_TO_METER);
-//   current_options.set_altitude(altitude * FEET_TO_METER);
-//   current_aircraft.fdm_state->set_Altitude(altitude);
+  current_options.set_altitude(altitude * FEET_TO_METER);
+  current_aircraft.fdm_state->set_Altitude(altitude);
 //   needReinit();
 }
 
@@ -783,24 +791,6 @@ FGBFI::setFlaps (double flaps)
 }
 
 
-void
-FGBFI::setFlapsRaise (bool step)
-{
-    if (step)
-	controls.set_flaps(controls.get_flaps() - 0.26);
-    printf ( "Raise: %i\n", step );
-}
-
-
-void
-FGBFI::setFlapsLower (bool step)
-{
-    if (step)
-	controls.set_flaps(controls.get_flaps() + 0.26);
-    printf ( "Lower: %i\n", step );
-}
-
-
 /**
  * Get the aileron, from -1.0 (left) to 1.0 (right).
  */
@@ -886,23 +876,47 @@ FGBFI::setElevatorTrim (double trim)
 
 
 /**
- * Get the brake setting, from 0.0 (none) to 1.0 (full).
+ * Get the highest brake setting, from 0.0 (none) to 1.0 (full).
  */
 double
-FGBFI::getBrake ()
+FGBFI::getBrakes ()
 {
-				// FIXME: add brake selector
+  double b1 = getCenterBrake();
+  double b2 = getLeftBrake();
+  double b3 = getRightBrake();
+  return (b1 > b2 ? (b1 > b3 ? b1 : b3) : (b2 > b3 ? b2 : b3));
+}
+
+
+/**
+ * Set all brakes, from 0.0 (none) to 1.0 (full).
+ */
+void
+FGBFI::setBrakes (double brake)
+{
+  setCenterBrake(brake);
+  setLeftBrake(brake);
+  setRightBrake(brake);
+}
+
+
+/**
+ * Get the center brake, from 0.0 (none) to 1.0 (full).
+ */
+double
+FGBFI::getCenterBrake ()
+{
   return controls.get_brake(2);
 }
 
 
 /**
- * Set the brake, from 0.0 (none) to 1.0 (full).
+ * Set the center brake, from 0.0 (none) to 1.0 (full).
  */
 void
-FGBFI::setBrake (double brake)
+FGBFI::setCenterBrake (double brake)
 {
-  controls.set_brake(FGControls::ALL_WHEELS, brake);
+  controls.set_brake(2, brake);
 }
 
 
@@ -1026,6 +1040,26 @@ FGBFI::setAPHeadingLock (bool lock)
 	     FGAutopilot::FG_HEADING_LOCK) {
     current_autopilot->set_HeadingEnabled(false);
   }
+}
+
+
+/**
+ * Get the autopilot target heading in degrees.
+ */
+double
+FGBFI::getAPHeading ()
+{
+  return current_autopilot->get_TargetHeading();
+}
+
+
+/**
+ * Set the autopilot target heading in degrees.
+ */
+void
+FGBFI::setAPHeading (double heading)
+{
+  current_autopilot->set_TargetHeading( heading );
 }
 
 

@@ -403,7 +403,7 @@ struct InstrumentData
 InstrumentData instruments[] =
 {
 
-  {"magcompass", 512, 459, SIX_W, SIX_W/2, {}, {
+  {"magcompass", 768, 459, SIX_W, SIX_W/2, {}, {
     {new MagRibbon(int(SIX_W*0.8), int(SIX_W*0.2))},
     {new MyTexturedLayer("compassFront", SIX_W, SIX_W*(24.0/80.0))}
   }},
@@ -465,7 +465,7 @@ InstrumentData instruments[] =
     {new MyTexturedLayer("turnBall",
        int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0))), {
       {TransData::Rotation, FGSteam::get_TC_rad,
-	 -0.1, 0.1, -2000.0, 0.0},
+	 -0.1, 0.1, 400.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -(SIX_W/4)+4}
     }}
   }},
@@ -558,8 +558,8 @@ InstrumentData instruments[] =
     }},
     {new MyTexturedLayer("bug",
 			 int(SIX_W*(4.0/64.0)), int(SIX_W*(4.0/64.0))), {
-      {TransData::Rotation, FGBFI::getAPHeadingMag, -720.0, 720.0, 1.0, 0.0},
-      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, 1.0, 0.0},
+      {TransData::Rotation, FGBFI::getAPHeading, -720.0, 720.0, 1.0, 180.0},
+      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, -1.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -(SIX_W/2.0)+4}
     }},
     {new MyTexturedLayer("compassCenter", int(SIX_W*0.625), int(SIX_W*0.625))},
@@ -567,7 +567,7 @@ InstrumentData instruments[] =
        int(SIX_W*(21.0/112.0)), int(SIX_W*(21.0/112.0))), {
       {TransData::XShift, 0, 0.0, 0.0, 0.0, SIX_W/2-10},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
-      {TransData::Rotation, FGBFI::getAPHeadingMag, -360.0, 360.0, 1.0, 0.0}
+      {TransData::Rotation, FGBFI::getAPHeading, -360.0, 360.0, 1.0, 0.0}
     }},
     {new MyTexturedLayer("knob",
 			 int(SIX_W*(22.0/112.0)), int(SIX_W*(22.0/112.0))), {

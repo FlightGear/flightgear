@@ -110,32 +110,34 @@ public:
   static double getRudder ();
   static double getElevator ();
   static double getElevatorTrim ();
-  static double getBrake ();
+  static double getBrakes ();
   static double getLeftBrake ();
   static double getRightBrake ();
+  static double getCenterBrake ();
 
   static void setThrottle (double throttle);
   static void setFlaps (double flaps);
-  static void setFlapsRaise (bool step);
-  static void setFlapsLower (bool step);
   static void setAileron (double aileron);
   static void setRudder (double rudder);
   static void setElevator (double elevator);
   static void setElevatorTrim (double trim);
-  static void setBrake (double brake);
+  static void setBrakes (double brake);
   static void setLeftBrake (double brake);
   static void setRightBrake (double brake);
+  static void setCenterBrake (double brake);
 
 
 				// Autopilot
   static bool getAPAltitudeLock ();
   static double getAPAltitude ();
   static bool getAPHeadingLock ();
+  static double getAPHeading ();
   static double getAPHeadingMag ();
 
   static void setAPAltitudeLock (bool lock);
   static void setAPAltitude (double altitude);
   static void setAPHeadingLock (bool lock);
+  static void setAPHeading (double heading);
   static void setAPHeadingMag (double heading);
 
   static bool getAPNAV1Lock ();

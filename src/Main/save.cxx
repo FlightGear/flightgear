@@ -104,8 +104,7 @@ fgSaveFlight (ostream &output)
   //
   SAVE("elevator-trim", FGBFI::getElevatorTrim());
   SAVE("flaps", FGBFI::getFlaps());
-				// FIXME: save each brake separately
-  SAVE("brake", FGBFI::getBrake());
+  SAVE("brake", FGBFI::getBrakes());
 
   //
   // Radio navigation
@@ -323,7 +322,7 @@ fgLoadFlight (istream &input)
     else if (text == "brake:") {
       input >> n;
       cout << "brake is " << n << endl;
-      FGBFI::setBrake(n);
+      FGBFI::setBrakes(n);
     }
 
 

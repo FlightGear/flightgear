@@ -37,7 +37,7 @@ kludgeRange (double stationElev, double aircraftElev, double nominalRange)
 				// Assume that the nominal range (usually
 				// 50nm) applies at a 5,000 ft difference.
 				// Just a wild guess!
-  double factor = ((aircraftElev*METER_TO_FEET) - stationElev) / 5000.0;
+  double factor = ((aircraftElev*METER_TO_FEET) - stationElev) / 1000.0;
   double range = fabs(nominalRange * factor);
 
 				// Clamp the range to keep it sane; for

@@ -132,20 +132,20 @@ setupDefaults ()
     // Default axis 0 to aileron
     if (!props.getValue("/input/js0/axis0/control")) {
 	props.setStringValue("/input/js0/axis0/control", "/controls/aileron");
-	props.setFloatValue("/input/js0/axis0/dead-band", 0.1);
+	props.setDoubleValue("/input/js0/axis0/dead-band", 0.1);
     }
 
     // Default axis 1 to elevator
     if (!props.getValue("/input/js0/axis1/control")) {
 	props.setStringValue("/input/js0/axis1/control", "/controls/elevator");
-	props.setFloatValue("/input/js0/axis1/dead-band", 0.1);
-	props.setFloatValue("/input/js0/axis1/factor", -1.0);
+	props.setDoubleValue("/input/js0/axis1/dead-band", 0.1);
+	props.setDoubleValue("/input/js0/axis1/factor", -1.0);
     }
 
     // Default axis 2 to rudder
     if (!props.getValue("/input/js0/axis2/control")) {
 	props.setStringValue("/input/js0/axis2/control", "/controls/rudder");
-	props.setFloatValue("/input/js0/axis2/dead-band", 0.1);
+	props.setDoubleValue("/input/js0/axis2/dead-band", 0.1);
     }
 
     // Default axis 3 to throttle
@@ -153,34 +153,35 @@ setupDefaults ()
     // and factor to make it work
     if (!props.getValue("/input/js0/axis3/control")) {
 	props.setStringValue("/input/js0/axis3/control", "/controls/throttle");
-	props.setFloatValue("/input/js0/axis3/dead-band", 0.0);
-	props.setFloatValue("/input/js0/axis3/offset", -1.0);
-	props.setFloatValue("/input/js0/axis3/factor", -0.5);
+	props.setDoubleValue("/input/js0/axis3/dead-band", 0.0);
+	props.setDoubleValue("/input/js0/axis3/offset", -1.0);
+	props.setDoubleValue("/input/js0/axis3/factor", -0.5);
     }
 
     // Default button 0 to all brakes
     if (!props.getValue("/input/js0/button0/control")) {
 	props.setStringValue("/input/js0/button0/action", "switch");
-	props.setStringValue("/input/js0/button0/control", "/controls/brake");
-	props.setFloatValue("/input/js0/button0/step", 1.0);
-	props.setFloatValue("/input/js0/button0/repeatable", false);
+	props.setStringValue("/input/js0/button0/control", "/controls/brakes/all");
+	props.setDoubleValue("/input/js0/button0/step", 1.0);
+	props.setDoubleValue("/input/js0/button0/repeatable", false);
     }
 
     // Default button 1 to left brake.
     if (!props.getValue("/input/js0/button1/control")) {
 	props.setStringValue("/input/js0/button1/action", "switch");
-	props.setStringValue("/input/js0/button1/control", "/controls/left-brake");
-	props.setFloatValue("/input/js0/button1/step", 1.0);
-	props.setFloatValue("/input/js0/button1/repeatable", false);
+	props.setStringValue("/input/js0/button1/control",
+			     "/controls/brakes/left");
+	props.setDoubleValue("/input/js0/button1/step", 1.0);
+	props.setDoubleValue("/input/js0/button1/repeatable", false);
     }
 
     // Default button 2 to right brake.
     if (!props.getValue("/input/js0/button2/control")) {
 	props.setStringValue("/input/js0/button2/action", "switch");
 	props.setStringValue("/input/js0/button2/control",
-			     "/controls/right-brake");
-	props.setFloatValue("/input/js0/button2/step", 1.0);
-	props.setFloatValue("/input/js0/button2/repeatable", false);
+			     "/controls/brakes/right");
+	props.setDoubleValue("/input/js0/button2/step", 1.0);
+	props.setDoubleValue("/input/js0/button2/repeatable", false);
     }
 
     // Default buttons 3 and 4 to elevator trim
@@ -188,14 +189,14 @@ setupDefaults ()
 	props.setStringValue("/input/js0/button3/action", "adjust");
 	props.setStringValue("/input/js0/button3/control",
 			     "/controls/elevator-trim");
-	props.setFloatValue("/input/js0/button3/step", 0.001);
+	props.setDoubleValue("/input/js0/button3/step", 0.001);
 	props.setBoolValue("/input/js0/button3/repeatable", true);
     }
     if (!props.getValue("/input/js0/button4/control")) {
 	props.setStringValue("/input/js0/button4/action", "adjust");
 	props.setStringValue("/input/js0/button4/control",
 			     "/controls/elevator-trim");
-	props.setFloatValue("/input/js0/button4/step", -0.001);
+	props.setDoubleValue("/input/js0/button4/step", -0.001);
 	props.setBoolValue("/input/js0/button4/repeatable", true);
     }
 
@@ -203,13 +204,13 @@ setupDefaults ()
     if (!props.getValue("/input/js0/button5/control")) {
 	props.setStringValue("/input/js0/button5/action", "adjust");
 	props.setStringValue("/input/js0/button5/control", "/controls/flaps");
-	props.setFloatValue("/input/js0/button5/step", -0.34);
+	props.setDoubleValue("/input/js0/button5/step", -0.34);
 	props.setBoolValue("/input/js0/button5/repeatable", false);
     }
     if (!props.getValue("/input/js0/button6/control")) {
 	props.setStringValue("/input/js0/button6/action", "adjust");
 	props.setStringValue("/input/js0/button6/control", "/controls/flaps");
-	props.setFloatValue("/input/js0/button6/step", 0.34);
+	props.setDoubleValue("/input/js0/button6/step", 0.34);
 	props.setBoolValue("/input/js0/button6/repeatable", false);
     }
 }
@@ -293,7 +294,7 @@ fgJoystickInit()
 	    name += "/dead-band";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		js->setDeadBand(j, value->getFloatValue());
+		js->setDeadBand(j, value->getDoubleValue());
 	    FG_LOG(FG_INPUT, FG_INFO, "    dead-band is " << js->getDeadBand(j));
 
 	    // Offset
@@ -301,7 +302,7 @@ fgJoystickInit()
 	    name += "/offset";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		a.offset = value->getFloatValue();
+		a.offset = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    offset is " << a.offset);
 
 
@@ -310,7 +311,7 @@ fgJoystickInit()
 	    name += "/factor";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		a.factor = value->getFloatValue();
+		a.factor = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    factor is " << a.factor);
 
 
@@ -319,7 +320,7 @@ fgJoystickInit()
 	    name += "/tolerance";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		a.tolerance = value->getFloatValue();
+		a.tolerance = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    tolerance is " << a.tolerance);
 
 
@@ -328,7 +329,7 @@ fgJoystickInit()
 	    name += "/saturation";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		js->setSaturation(j, value->getFloatValue());
+		js->setSaturation(j, value->getDoubleValue());
 	    FG_LOG(FG_INPUT, FG_INFO, "    saturation is " << js->getSaturation(j));
 
 	    // Minimum range
@@ -336,7 +337,7 @@ fgJoystickInit()
 	    name += "/min-range";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		minRange[j] = value->getFloatValue();
+		minRange[j] = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    min-range is " << minRange[j]);
 
 	    // Maximum range
@@ -344,7 +345,7 @@ fgJoystickInit()
 	    name += "/max-range";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		maxRange[j] = value->getFloatValue();
+		maxRange[j] = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    max-range is " << maxRange[j]);
 
 	    // Center
@@ -352,7 +353,7 @@ fgJoystickInit()
 	    name += "/center";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		center[j] = value->getFloatValue();
+		center[j] = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    center is " << center[j]);
 	}
 
@@ -387,7 +388,7 @@ fgJoystickInit()
 	    name += "/step";
 	    value = current_properties.getValue(name);
 	    if (value != 0)
-		b.step = value->getFloatValue();
+		b.step = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    step is " << b.step);
 
 	    // Type
