@@ -100,7 +100,6 @@ extern void fgLatLonFormatToggle( puObject *);
 
 #if defined( TR_HIRES_SNAP)
 #include <simgear/screen/tr.h>
-extern void trRenderFrame( void );
 extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                          GLfloat x_end, GLfloat y_end );
 #endif
@@ -632,7 +631,7 @@ void fgHiResDump()
         trBeginTile(tr);
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
         int curRow =  trGet(tr, TR_CURRENT_ROW);
-        trRenderFrame();
+        globals->get_renderer()->screendump();
         if ( do_hud )
             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
                          (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
