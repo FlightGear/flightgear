@@ -21,6 +21,7 @@
                06/30/2003   (RD) replaced istrstream with istringstream
                             to get rid of the annoying warning about
                             using the strstream header
+               08/20/2003   (RD) removed old_flap_routine
 
 ----------------------------------------------------------------------
 
@@ -472,11 +473,6 @@ void parse_init( const string& linetoken2, const string& linetoken3,
 	  use_uiuc_network = true;
 	  server_IP = linetoken3;
 	  token4 >> port_num;
-	  break;
-	}
-      case old_flap_routine_flag:
-	{
-	  old_flap_routine = true;
 	  break;
 	}
       case icing_demo_flag:

@@ -11,6 +11,7 @@ libUIUCModel_a_SOURCES = \
                         uiuc_aerodeflections.cpp uiuc_aerodeflections.h \
 			uiuc_aircraftdir.h uiuc_aircraft.h \
 			uiuc_alh_ap.cpp uiuc_alh_ap.h \
+			uiuc_auto_pilot.cpp uiuc_auto_pilot.h \
                         uiuc_betaprobe.cpp uiuc_betaprobe.h \
                         uiuc_coef_drag.cpp uiuc_coef_drag.h \
                         uiuc_coef_lift.cpp uiuc_coef_lift.h \
@@ -28,6 +29,7 @@ libUIUCModel_a_SOURCES = \
 			uiuc_gear.cpp uiuc_gear.h\
 			uiuc_get_flapper.cpp uiuc_get_flapper.h \
 			uiuc_getwind.cpp uiuc_getwind.h \
+			uiuc_hh_ap.cpp uiuc_hh_ap.h \
                         uiuc_ice.cpp uiuc_ice.h \
 			uiuc_iceboot.cpp uiuc_iceboot.h \
 			uiuc_iced_nonlin.cpp uiuc_iced_nonlin.h \
@@ -75,6 +77,7 @@ libUIUCModel_a_SOURCES = \
 			uiuc_menu_functions.cpp uiuc_menu_functions.h \
 			uiuc_pah_ap.cpp uiuc_pah_ap.h \
                         uiuc_parsefile.cpp uiuc_parsefile.h \
+			uiuc_rah_ap.cpp uiuc_rah_ap.h \
                         uiuc_recorder.cpp uiuc_recorder.h \
                         uiuc_warnings_errors.cpp uiuc_warnings_errors.h \
                         uiuc_wrapper.cpp uiuc_wrapper.h

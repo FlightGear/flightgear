@@ -186,11 +186,53 @@ void uiuc_icing_demo()
 				     demo_ap_pah_on_ntime,
 				     time);
   }
-  if (demo_ap_Theta_ref_deg){
-    double time = Simtime - demo_ap_Theta_ref_deg_startTime;
-    ap_Theta_ref_deg = uiuc_1Dinterpolation(demo_ap_Theta_ref_deg_timeArray,
-					    demo_ap_Theta_ref_deg_daArray,
-					    demo_ap_Theta_ref_deg_ntime,
+  if (demo_ap_alh_on){
+    double time = Simtime - demo_ap_alh_on_startTime;
+    ap_alh_on = uiuc_1Dinterpolation(demo_ap_alh_on_timeArray,
+				     demo_ap_alh_on_daArray,
+				     demo_ap_alh_on_ntime,
+				     time);
+  }
+  if (demo_ap_rah_on){
+    double time = Simtime - demo_ap_rah_on_startTime;
+    ap_rah_on = uiuc_1Dinterpolation(demo_ap_rah_on_timeArray,
+				     demo_ap_rah_on_daArray,
+				     demo_ap_rah_on_ntime,
+				     time);
+  }
+  if (demo_ap_hh_on){
+    double time = Simtime - demo_ap_hh_on_startTime;
+    ap_hh_on = uiuc_1Dinterpolation(demo_ap_hh_on_timeArray,
+				    demo_ap_hh_on_daArray,
+				    demo_ap_hh_on_ntime,
+				    time);
+  }
+  if (demo_ap_Theta_ref){
+    double time = Simtime - demo_ap_Theta_ref_startTime;
+    ap_Theta_ref_rad = uiuc_1Dinterpolation(demo_ap_Theta_ref_timeArray,
+					    demo_ap_Theta_ref_daArray,
+					    demo_ap_Theta_ref_ntime,
+					    time);
+  }
+  if (demo_ap_alt_ref){
+    double time = Simtime - demo_ap_alt_ref_startTime;
+    ap_alt_ref_ft = uiuc_1Dinterpolation(demo_ap_alt_ref_timeArray,
+					    demo_ap_alt_ref_daArray,
+					    demo_ap_alt_ref_ntime,
+					    time);
+  }
+  if (demo_ap_Phi_ref){
+    double time = Simtime - demo_ap_Phi_ref_startTime;
+    ap_Phi_ref_rad = uiuc_1Dinterpolation(demo_ap_Phi_ref_timeArray,
+					    demo_ap_Phi_ref_daArray,
+					    demo_ap_Phi_ref_ntime,
+					    time);
+  }
+  if (demo_ap_Psi_ref){
+    double time = Simtime - demo_ap_Psi_ref_startTime;
+    ap_Psi_ref_rad = uiuc_1Dinterpolation(demo_ap_Psi_ref_timeArray,
+					    demo_ap_Psi_ref_daArray,
+					    demo_ap_Psi_ref_ntime,
 					    time);
   }
 

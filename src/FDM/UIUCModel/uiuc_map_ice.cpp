@@ -17,11 +17,13 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               --/--/2002   (RD) add SIS icing
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+               Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -159,8 +161,14 @@ void uiuc_map_ice()
   ice_map["demo_eps_pitch_input"] =      demo_eps_pitch_input_flag  ; 
   ice_map["tactilefadef"]         =      tactilefadef_flag          ;
   ice_map["tactile_pitch"]        =      tactile_pitch_flag         ;
-  ice_map["demo_ap_Theta_ref_deg"]=      demo_ap_Theta_ref_deg_flag ;
   ice_map["demo_ap_pah_on"]       =      demo_ap_pah_on_flag        ;
+  ice_map["demo_ap_alh_on"]       =      demo_ap_alh_on_flag        ;
+  ice_map["demo_ap_rah_on"]       =      demo_ap_rah_on_flag        ;
+  ice_map["demo_ap_hh_on"]        =      demo_ap_hh_on_flag         ;
+  ice_map["demo_ap_Theta_ref_"]   =      demo_ap_Theta_ref_flag     ;
+  ice_map["demo_ap_alt_ref_"]     =      demo_ap_alt_ref_flag       ;
+  ice_map["demo_ap_Phi_ref_"]     =      demo_ap_Phi_ref_flag       ;
+  ice_map["demo_ap_Psi_ref_"]     =      demo_ap_Psi_ref_flag       ;
   ice_map["demo_tactile"]         =      demo_tactile_flag          ;
   ice_map["demo_ice_tail"]        =      demo_ice_tail_flag         ;
   ice_map["demo_ice_left"]        =      demo_ice_left_flag         ;

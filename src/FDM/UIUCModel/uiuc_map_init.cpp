@@ -19,6 +19,7 @@
  HISTORY:      04/08/2000   initial release
                06/18/2001   (RD) Added Alpha, Beta, U_body
 	                    V_body, and W_body.
+               08/20/2003   (RD) Removed old_flap_routine
 
 ----------------------------------------------------------------------
  
@@ -108,7 +109,6 @@ void uiuc_map_init()
   init_map["ignore_unknown_keywords"] = ignore_unknown_keywords_flag;
   init_map["trim_case_2"]         =      trim_case_2_flag           ;
   init_map["use_uiuc_network"]    =      use_uiuc_network_flag      ;
-  init_map["old_flap_routine"]    =      old_flap_routine_flag      ;
   init_map["icing_demo"]          =      icing_demo_flag            ;
   init_map["outside_control"]     =      outside_control_flag       ;
 }

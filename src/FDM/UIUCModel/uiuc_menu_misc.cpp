@@ -121,19 +121,19 @@ void parse_misc( const string& linetoken2, const string& linetoken3,
 	simpleHingeMomentCoef = token_value;
 	break;
       }
-    case dfTimefdf_flag:
-      {
-	dfTimefdf = linetoken3;
+      //case dfTimefdf_flag:
+      //{
+      //dfTimefdf = linetoken3;
 	/* call 1D File Reader with file name (dfTimefdf);
 	   function returns array of dfs (dfArray) and 
 	   corresponding time values (TimeArray) and max 
 	   number of terms in arrays (ndf) */
-	uiuc_1DdataFileReader(dfTimefdf,
-			      dfTimefdf_dfArray,
-			      dfTimefdf_TimeArray,
-			      dfTimefdf_ndf);
-	break;
-      }
+	//uiuc_1DdataFileReader(dfTimefdf,
+	//		      dfTimefdf_dfArray,
+	//		      dfTimefdf_TimeArray,
+	//		      dfTimefdf_ndf);
+	//break;
+      //}
     case flapper_flag:
       {
 	string flap_file;

@@ -17,11 +17,13 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               --/--/2002   (RD) added flapper
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+               Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -69,7 +71,7 @@
 void uiuc_map_misc()
 {
   misc_map["simpleHingeMomentCoef"] =    simpleHingeMomentCoef_flag ;
-  misc_map["dfTimefdf"]             =    dfTimefdf_flag             ;
+  //misc_map["dfTimefdf"]             =    dfTimefdf_flag             ;
   misc_map["flapper"]               =    flapper_flag               ;
   misc_map["flapper_phi_init"]      =    flapper_phi_init_flag      ;
 }

@@ -285,14 +285,14 @@ void parse_CL( const string& linetoken2, const string& linetoken3,
 	  aeroLiftParts -> storeCommands (*command_line);
 	  
 	  // additional variables to streamline flap routine in aerodeflections
-	  ndf = CLfdf_ndf;
-	  int temp_counter = 1;
-	  while (temp_counter <= ndf)
-	    {
-	      dfArray[temp_counter] = CLfdf_dfArray[temp_counter];
-	      TimeArray[temp_counter] = dfTimefdf_TimeArray[temp_counter];
-	      temp_counter++;
-	    }
+	  //ndf = CLfdf_ndf;
+	  //int temp_counter = 1;
+	  //while (temp_counter <= ndf)
+	  //  {
+	  //    dfArray[temp_counter] = CLfdf_dfArray[temp_counter];
+	  //    TimeArray[temp_counter] = dfTimefdf_TimeArray[temp_counter];
+	  //    temp_counter++;
+	  //  }
 	  break;
 	}
       case CLfadf_flag:

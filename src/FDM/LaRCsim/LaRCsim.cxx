@@ -325,7 +325,7 @@ void FGLaRCsim::update( double dt ) {
 
       // flaps with transition occuring in uiuc_aerodeflections.cpp
       if (use_flaps) {
-      fgSetDouble("/surface-positions/flight/flap-pos-norm",               flap_pos_pct);
+      fgSetDouble("/surface-positions/flight/flap-pos-norm",               flap_pos_norm);
       }
 
       // spoilers with transition occurring in uiuc_aerodeflections.cpp

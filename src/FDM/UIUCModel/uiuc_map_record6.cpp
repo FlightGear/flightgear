@@ -76,13 +76,32 @@ void uiuc_map_record6()
   record_map["eps_airspeed_min"]        = eps_airspeed_min_record        ;
   record_map["tactilefadefI"]           = tactilefadefI_record           ;
   /******************************autopilot****************************/
-  record_map["ap_Theta_ref_deg"]        = ap_Theta_ref_deg_record        ;
   record_map["ap_pah_on"]               = ap_pah_on_record               ;
+  record_map["ap_alh_on"]               = ap_alh_on_record               ;
+  record_map["ap_rah_on"]               = ap_rah_on_record               ;
+  record_map["ap_hh_on"]                = ap_hh_on_record                ;
+  record_map["ap_Theta_ref_deg"]        = ap_Theta_ref_deg_record        ;
+  record_map["ap_Theta_ref_rad"]        = ap_Theta_ref_rad_record        ;
+  record_map["ap_alt_ref_ft"]           = ap_alt_ref_ft_record           ;
+  record_map["ap_Phi_ref_deg"]          = ap_Phi_ref_deg_record          ;
+  record_map["ap_Phi_ref_rad"]          = ap_Phi_ref_rad_record          ;
+  record_map["ap_Psi_ref_deg"]          = ap_Psi_ref_deg_record          ;
+  record_map["ap_Psi_ref_rad"]          = ap_Psi_ref_rad_record          ;
   /***********************trigger variables**************************/
   record_map["trigger_on"]              = trigger_on_record              ;
   record_map["trigger_num"]             = trigger_num_record             ;
   record_map["trigger_toggle"]          = trigger_toggle_record          ;
   record_map["trigger_counter"]         = trigger_counter_record         ;
+  /****************local to body transformation matrix**************/
+  record_map["T_local_to_body_11"]      = T_local_to_body_11_record      ;
+  record_map["T_local_to_body_12"]      = T_local_to_body_12_record      ;
+  record_map["T_local_to_body_13"]      = T_local_to_body_13_record      ;
+  record_map["T_local_to_body_21"]      = T_local_to_body_21_record      ;
+  record_map["T_local_to_body_22"]      = T_local_to_body_22_record      ;
+  record_map["T_local_to_body_23"]      = T_local_to_body_23_record      ;
+  record_map["T_local_to_body_31"]      = T_local_to_body_31_record      ;
+  record_map["T_local_to_body_32"]      = T_local_to_body_32_record      ;
+  record_map["T_local_to_body_33"]      = T_local_to_body_33_record      ;
 }
 
 // end uiuc_map_record6.cpp

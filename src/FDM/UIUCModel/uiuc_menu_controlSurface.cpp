@@ -509,6 +509,96 @@ void parse_controlSurface( const string& linetoken2, const string& linetoken3,
 	  use_rudder_sas_type1 = true;
 	  break;
 	}
+      case ap_pah_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  ap_pah_start_time=token_value;
+	  ap_pah_on = 1;
+	  break;
+	}
+      case ap_alh_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  ap_alh_start_time=token_value;
+	  ap_alh_on = 1;
+	  break;
+	}
+      case ap_rah_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  ap_rah_start_time=token_value;
+	  ap_rah_on = 1;
+	  break;
+	}
+      case ap_hh_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  ap_hh_start_time=token_value;
+	  ap_hh_on = 1;
+	  break;
+	}
+      case ap_Theta_ref_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  token4 >> token_value_convert1;
+	  convert_y = uiuc_convert(token_value_convert1);
+
+	  ap_Theta_ref_rad = token_value * convert_y;
+	  break;
+	}
+      case ap_alt_ref_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  ap_alt_ref_ft = token_value;
+	  break;
+	}
+      case ap_Phi_ref_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  token4 >> token_value_convert1;
+	  convert_y = uiuc_convert(token_value_convert1);
+
+	  ap_Phi_ref_rad = token_value * convert_y;
+	  break;
+	}
+      case ap_Psi_ref_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  token4 >> token_value_convert1;
+	  convert_y = uiuc_convert(token_value_convert1);
+
+	  ap_Psi_ref_rad = token_value * convert_y;
+	  break;
+	}
       default:
 	{
 	  if (ignore_unknown_keywords) {

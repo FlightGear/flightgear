@@ -195,7 +195,6 @@ void uiuc_defaults_inits ()
   W_body_init_true = false;
   trim_case_2 = false;
   use_uiuc_network = false;
-  old_flap_routine = false;
   icing_demo = false;
   outside_control = false;
   set_Long_trim = false;
@@ -270,7 +269,9 @@ void uiuc_defaults_inits ()
   demo_eps_pitch_input = false;
   tactilefadef = false;
   demo_ap_pah_on = false;
-  demo_ap_Theta_ref_deg = false;
+  demo_ap_alh_on = false;
+  demo_ap_Theta_ref = false;
+  demo_ap_alt_ref = false;
   demo_tactile = false;
   demo_ice_tail = false;
   demo_ice_left = false;
@@ -281,16 +282,17 @@ void uiuc_defaults_inits ()
   Dx_cg = 0.0;
   Dy_cg = 0.0;
   Dz_cg = 0.0;
+  ap_pah_on = 0;
+  ap_alh_on = 0;
 
-
-  // Calculates the local velocity (V_north, V_east, V_down) from the body
-  // velocities.
-  // Called from uiuc_local_vel_init which is called from ls_step.
-  // Used during initialization (while Simtime=0)
 }
 
 void uiuc_vel_init ()
 {
+  // Calculates the local velocity (V_north, V_east, V_down) from the body
+  // velocities.
+  // Called from uiuc_local_vel_init which is called from ls_step.
+  // Used during initialization (while Simtime=0)
   if (U_body_init_true && V_body_init_true && W_body_init_true)
     {
   double det_T_l_to_b, cof11, cof12, cof13, cof21, cof22, cof23, cof31, cof32, cof33;
@@ -312,12 +314,12 @@ void uiuc_vel_init ()
 
   V_east = V_east_rel_ground + OMEGA_EARTH*Sea_level_radius*cos(Lat_geocentric);
     }
-  // Initializes the UIUC aircraft model.
-  // Called once from uiuc_init_2_wrapper
 }
 
 void uiuc_init_aeromodel ()
 {
+  // Initializes the UIUC aircraft model.
+  // Called once from uiuc_init_2_wrapper
   SGPath path(globals->get_fg_root());
   path.append(aircraft_dir);
   path.append("aircraft.dat");
@@ -483,12 +485,12 @@ void uiuc_record_routine(double dt)
 void uiuc_network_recv_routine()
 {
   //if (use_uiuc_network)
-    //uiuc_network(1);
+  //  uiuc_network(1);
 }
 
 void uiuc_network_send_routine()
 {
   //if (use_uiuc_network)
-    //uiuc_network(2);
+  //  uiuc_network(2);
 }
 //end uiuc_wrapper.cpp

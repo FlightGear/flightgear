@@ -33,7 +33,7 @@
 			    Added pilot_elev_no, pilot_ail_no, and
 			    pilot_rud_no.
 	       07/05/2001   (RD) Added pilot_(elev,ail,rud)_no=false
-	       01/11/2002   (AP) Added call to uiuc_bootTime()
+	       01/11/2002   (AP) Added call to uiuc_iceboot()
                12/02/2002   (RD) Moved icing demo interpolations to its
                             own function
 	       
@@ -104,10 +104,6 @@ void uiuc_coefficients(double dt)
   static string uiuc_coefficients_error = " (from uiuc_coefficients.cpp) ";
   double l_trim, l_defl;
   double V_rel_wind_dum, U_body_dum;
-  static bool ap_pah_on_prev = false;
-  int ap_pah_init = 1;
-  static bool ap_alh_on_prev = false;
-  int ap_alh_init = 1;
 
   if (Alpha_init_true && Simtime==0)
     Std_Alpha = Alpha_init;
@@ -223,38 +219,15 @@ void uiuc_coefficients(double dt)
       uiuc_controlInput();
     }
 
-  if (ap_pah_on && icing_demo==false)
-    {
-      double V_rel_wind_ms;
-      V_rel_wind_ms = V_rel_wind * 0.3048;
-      ap_Theta_ref_rad = ap_Theta_ref_deg * DEG_TO_RAD;
-      if (ap_pah_on_prev == false)
-	ap_pah_init = 0;
-      elevator = pah_ap(Theta, Theta_dot, ap_Theta_ref_rad, V_rel_wind_ms, dt, 
-			ap_pah_init);
-      if (elevator*RAD_TO_DEG <= -1*demax)
-	elevator = -1*demax * DEG_TO_RAD;
-      if (elevator*RAD_TO_DEG >= demin)
-	elevator = demin * DEG_TO_RAD;
-      pilot_elev_no=true;
-    }
+  //if (Simtime >=10.0)
+  //  {
+  //    ap_hh_on = 1;
+  //    ap_Psi_ref_rad = 0*DEG_TO_RAD;
+  //  }
 
-  if (ap_alh_on && icing_demo==false)
+  if (ap_pah_on || ap_alh_on || ap_rah_on || ap_hh_on)
     {
-      double V_rel_wind_ms;
-      double Altitude_m;
-      V_rel_wind_ms = V_rel_wind * 0.3048;
-      ap_alt_ref_m = ap_alt_ref_ft * 0.3048;
-      Altitude_m = Altitude * 0.3048;
-      if (ap_alh_on_prev == false)
-	ap_alh_init = 0;
-      elevator = alh_ap(Theta, Theta_dot, ap_alt_ref_m, Altitude_m, 
-			V_rel_wind_ms, dt, ap_alh_init);
-      if (elevator*RAD_TO_DEG <= -1*demax)
-	elevator = -1*demax * DEG_TO_RAD;
-      if (elevator*RAD_TO_DEG >= demin)
-	elevator = demin * DEG_TO_RAD;
-      pilot_elev_no=true;
+      uiuc_auto_pilot(dt);
     }
 
   CD = CX = CL = CZ = Cm = CY = Cl = Cn = 0.0;

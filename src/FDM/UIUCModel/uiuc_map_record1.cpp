@@ -110,6 +110,9 @@ void uiuc_map_record1()
   record_map["Phi"]               =      Phi_record                 ;
   record_map["Theta"]             =      Theta_record               ;
   record_map["Psi"]               =      Psi_record                 ;
+  record_map["Phi_deg"]           =      Phi_deg_record             ;
+  record_map["Theta_deg"]         =      Theta_deg_record           ;
+  record_map["Psi_deg"]           =      Psi_deg_record             ;
 
 
   /******************** Accelerations ********************/

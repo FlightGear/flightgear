@@ -30,6 +30,9 @@
                03/03/2003   (RD) changed flap code to call
                             uiuc_find_position to determine
                             flap position
+               08/20/2003   (RD) changed spoiler variables and code
+                            to match flap conventions.  Changed
+                            flap_pos_pct to flap_pos_norm
 
 ----------------------------------------------------------------------
 
@@ -299,26 +302,19 @@ void uiuc_aerodeflections( double dt )
     // determine flap position [rad] with respect to flap command
     flap_pos = uiuc_find_position(flap_cmd,flap_increment_per_timestep,flap_pos);
     // get the normalized position
-    flap_pos_pct = flap_pos/(flap_max * DEG_TO_RAD);
+    flap_pos_norm = flap_pos/(flap_max * DEG_TO_RAD);
   }
   
     
   if(use_spoilers) {
-    // angle of spoilers desired [deg]
-    spoiler_cmd_deg = Spoiler_handle;
-    // amount spoilers move per time step [deg]
-    spoiler_increment_per_timestep = spoiler_rate * dt; 
-    // determine spoiler position with respect to spoiler command
-    if (spoiler_pos_deg < spoiler_cmd_deg) {
-      spoiler_pos_deg += spoiler_increment_per_timestep;
-      if (spoiler_pos_deg > spoiler_cmd_deg) 
-	spoiler_pos_deg = spoiler_cmd_deg;
-    } else if (spoiler_pos_deg > spoiler_cmd_deg) {
-      spoiler_pos_deg -= spoiler_increment_per_timestep;
-      if (spoiler_pos_deg < spoiler_cmd_deg)
-	spoiler_pos_deg = spoiler_cmd_deg;
-    } 
-    spoiler_pos = spoiler_pos_deg * DEG_TO_RAD;
+    // angle of spoilers desired [rad]
+    spoiler_cmd = Spoiler_handle * DEG_TO_RAD;
+    // amount spoilers move per time step [rad/sec]
+    spoiler_increment_per_timestep = spoiler_rate * dt * DEG_TO_RAD; 
+    // determine spoiler position [rad] with respect to spoiler command
+    spoiler_pos = uiuc_find_position(spoiler_cmd,spoiler_increment_per_timestep,spoiler_pos);
+    // get the normailized position
+    spoiler_pos_norm = spoiler_pos/(spoiler_max * DEG_TO_RAD);
   }
 
 

@@ -247,7 +247,7 @@ void uiuc_coef_lift()
             CLfdfI = uiuc_1Dinterpolation(CLfdf_dfArray,
                                           CLfdf_CLArray,
                                           CLfdf_ndf,
-                                          flap);
+                                          flap_pos);
             CL += CLfdfI;
             break;
           }
@@ -259,7 +259,7 @@ void uiuc_coef_lift()
                                            CLfadf_nAlphaArray,
                                            CLfadf_ndf,
                                            Std_Alpha,
-                                           flap);
+                                           flap_pos);
             CL += CLfadfI;
             break;
           }

@@ -73,6 +73,13 @@
 	       09/18/2002   (MSS) Added downwash options
                03/03/2003   (RD) Changed flap_cmd_deg to flap_cmd (rad)
                03/16/2003   (RD) Added trigger variables
+               08/20/2003   (RD) Removed old_flap_routine.  Changed spoiler
+                            variables to match flap convention.  Changed
+                            flap_pos_pct to flap_pos_norm
+               10/31/2003   (RD) Added variables and keywords for pah and alh
+                            autopilots
+               11/04/2003   (RD) Added variables and keywords for rah and hh
+                            autopilots
 
 ----------------------------------------------------------------------
 
@@ -196,7 +203,6 @@ enum {Dx_pilot_flag = 2000,
       ignore_unknown_keywords_flag,
       trim_case_2_flag,
       use_uiuc_network_flag,
-      old_flap_routine_flag,
       icing_demo_flag,
       outside_control_flag};
 
@@ -225,7 +231,9 @@ enum {de_flag = 4000, da_flag, dr_flag,
       rudder_stick_gain_flag,
       use_elevator_sas_type1_flag, 
       use_aileron_sas_type1_flag, 
-      use_rudder_sas_type1_flag};
+      use_rudder_sas_type1_flag,
+      ap_pah_flag, ap_alh_flag, ap_Theta_ref_flag, ap_alt_ref_flag,
+      ap_rah_flag, ap_Phi_ref_flag, ap_hh_flag, ap_Psi_ref_flag};
 
 // controlsMixer == Controls mixer
 enum {nomix_flag = 5000};
@@ -349,8 +357,11 @@ enum {iceTime_flag = 15000, transientTime_flag, eta_ice_final_flag,
       demo_eps_airspeed_max_flag, demo_eps_airspeed_min_flag,
       demo_boot_cycle_tail_flag, demo_boot_cycle_wing_left_flag,
       demo_boot_cycle_wing_right_flag, demo_eps_pitch_input_flag,
-      tactilefadef_flag, tactile_pitch_flag, demo_ap_Theta_ref_deg_flag,
-      demo_ap_pah_on_flag, demo_tactile_flag, demo_ice_tail_flag, 
+      tactilefadef_flag, tactile_pitch_flag, demo_ap_pah_on_flag,
+      demo_ap_alh_on_flag, demo_ap_rah_on_flag, demo_ap_hh_on_flag,
+      demo_ap_Theta_ref_flag, demo_ap_alt_ref_flag,
+      demo_ap_Phi_ref_flag, demo_ap_Psi_ref_flag, 
+      demo_tactile_flag, demo_ice_tail_flag, 
       demo_ice_left_flag, demo_ice_right_flag};
 
 // record ===== Record desired quantites to file
@@ -370,7 +381,8 @@ enum {Simtime_record = 16000, dt_record,
       Dx_cg_record, Dy_cg_record, Dz_cg_record,
       Lat_geocentric_record, Lon_geocentric_record, Radius_to_vehicle_record, 
       Latitude_record, Longitude_record, Altitude_record, 
-      Phi_record, Theta_record, Psi_record, 
+      Phi_record, Theta_record, Psi_record,
+      Phi_deg_record, Theta_deg_record, Psi_deg_record, 
 
       // added to uiuc_map_record1.cpp
       V_dot_north_record, V_dot_east_record, V_dot_down_record, 
@@ -425,10 +437,11 @@ enum {Simtime_record = 16000, dt_record,
       elevator_record, elevator_deg_record, 
       Lat_control_record, aileron_record, aileron_deg_record, 
       Rudder_pedal_record, rudder_record, rudder_deg_record, 
-      Flap_handle_record, flap_record, flap_cmd_record, flap_cmd_deg_record,
-      flap_pos_record, flap_pos_deg_record,
+      Flap_handle_record, flap_cmd_record, flap_cmd_deg_record,
+      flap_pos_record, flap_pos_deg_record, flap_pos_norm_record,
       Spoiler_handle_record, spoiler_cmd_deg_record, 
       spoiler_pos_deg_record, spoiler_pos_norm_record, spoiler_pos_record,
+      spoiler_cmd_record,
 
       // added to uiuc_map_record4.cpp
       CD_record, CDfaI_record, CDfCLI_record, CDfadeI_record, CDfdfI_record, 
@@ -492,6 +505,7 @@ enum {Simtime_record = 16000, dt_record,
       M_l_engine_record, M_m_engine_record, M_n_engine_record, 
       M_l_gear_record, M_m_gear_record, M_n_gear_record, 
       M_l_rp_record, M_m_rp_record, M_n_rp_record,
+      M_l_cg_record, M_m_cg_record, M_n_cg_record,
 
       // added to uiuc_map_record5.cpp
       flapper_freq_record, flapper_phi_record,
@@ -524,6 +538,10 @@ enum {Simtime_record = 16000, dt_record,
       debug4_record, 
       debug5_record, 
       debug6_record,
+      debug7_record, 
+      debug8_record, 
+      debug9_record,
+      debug10_record,
 
       // added to uiuc_map_record6.cpp
       CL_clean_record, CL_iced_record,
@@ -563,13 +581,23 @@ enum {Simtime_record = 16000, dt_record,
       tactilefadefI_record,
 
       // added to uiuc_map_record6.cpp
-      ap_Theta_ref_deg_record, ap_pah_on_record, trigger_on_record,
-      trigger_num_record, trigger_toggle_record, trigger_counter_record};
+      ap_pah_on_record, ap_alh_on_record, ap_Theta_ref_deg_record,
+      ap_Theta_ref_rad_record, ap_alt_ref_ft_record, trigger_on_record,
+      ap_rah_on_record, ap_Phi_ref_rad_record, ap_Phi_ref_deg_record,
+      ap_hh_on_record, ap_Psi_ref_rad_record, ap_Psi_ref_deg_record,
+      trigger_num_record, trigger_toggle_record, trigger_counter_record,
+
+      // added to uiuc_map_record6.cpp
+      T_local_to_body_11_record, T_local_to_body_12_record,
+      T_local_to_body_13_record, T_local_to_body_21_record,
+      T_local_to_body_22_record, T_local_to_body_23_record,
+      T_local_to_body_31_record, T_local_to_body_32_record,
+      T_local_to_body_33_record};
 
 
 // misc ======= Miscellaneous inputs
 // added to uiuc_map_misc.cpp
-enum {simpleHingeMomentCoef_flag = 17000, dfTimefdf_flag, flapper_flag,
+enum {simpleHingeMomentCoef_flag = 17000, flapper_flag,
       flapper_phi_init_flag};
 
 //321654
@@ -742,8 +770,6 @@ struct AIRCRAFT
 #define use_uiuc_network       aircraft_->use_uiuc_network
 #define server_IP              aircraft_->server_IP
 #define port_num               aircraft_->port_num
-  bool old_flap_routine;
-#define old_flap_routine       aircraft_->old_flap_routine
   bool icing_demo;
 #define icing_demo             aircraft_->icing_demo
   bool outside_control;
@@ -785,8 +811,8 @@ struct AIRCRAFT
 #define aileron           aircraft_->aileron
 #define elevator          aircraft_->elevator
 #define rudder            aircraft_->rudder
-  double flap;
-#define flap              aircraft_->flap
+  //  double flap;
+  //#define flap              aircraft_->flap
 
   bool set_Long_trim, zero_Long_trim;
   double Long_trim_constant;
@@ -2631,18 +2657,90 @@ struct AIRCRAFT
 #define demo_ap_pah_on_daArray   aircraft_->demo_ap_pah_on_daArray
 #define demo_ap_pah_on_ntime     aircraft_->demo_ap_pah_on_ntime
 #define demo_ap_pah_on_startTime aircraft_->demo_ap_pah_on_startTime
-  bool demo_ap_Theta_ref_deg;
-  string demo_ap_Theta_ref_deg_file;
-  double demo_ap_Theta_ref_deg_timeArray[10];
-  double demo_ap_Theta_ref_deg_daArray[10];
-  int demo_ap_Theta_ref_deg_ntime;
-  double demo_ap_Theta_ref_deg_startTime;
-#define demo_ap_Theta_ref_deg           aircraft_->demo_ap_Theta_ref_deg
-#define demo_ap_Theta_ref_deg_file      aircraft_->demo_ap_Theta_ref_deg_file
-#define demo_ap_Theta_ref_deg_timeArray aircraft_->demo_ap_Theta_ref_deg_timeArray
-#define demo_ap_Theta_ref_deg_daArray   aircraft_->demo_ap_Theta_ref_deg_daArray
-#define demo_ap_Theta_ref_deg_ntime     aircraft_->demo_ap_Theta_ref_deg_ntime
-#define demo_ap_Theta_ref_deg_startTime aircraft_->demo_ap_Theta_ref_deg_startTime
+  bool demo_ap_alh_on;
+  string demo_ap_alh_on_file;
+  double demo_ap_alh_on_timeArray[10];
+  int demo_ap_alh_on_daArray[10];
+  int demo_ap_alh_on_ntime;
+  double demo_ap_alh_on_startTime;
+#define demo_ap_alh_on           aircraft_->demo_ap_alh_on
+#define demo_ap_alh_on_file      aircraft_->demo_ap_alh_on_file
+#define demo_ap_alh_on_timeArray aircraft_->demo_ap_alh_on_timeArray
+#define demo_ap_alh_on_daArray   aircraft_->demo_ap_alh_on_daArray
+#define demo_ap_alh_on_ntime     aircraft_->demo_ap_alh_on_ntime
+#define demo_ap_alh_on_startTime aircraft_->demo_ap_alh_on_startTime
+  bool demo_ap_rah_on;
+  string demo_ap_rah_on_file;
+  double demo_ap_rah_on_timeArray[10];
+  int demo_ap_rah_on_daArray[10];
+  int demo_ap_rah_on_ntime;
+  double demo_ap_rah_on_startTime;
+#define demo_ap_rah_on           aircraft_->demo_ap_rah_on
+#define demo_ap_rah_on_file      aircraft_->demo_ap_rah_on_file
+#define demo_ap_rah_on_timeArray aircraft_->demo_ap_rah_on_timeArray
+#define demo_ap_rah_on_daArray   aircraft_->demo_ap_rah_on_daArray
+#define demo_ap_rah_on_ntime     aircraft_->demo_ap_rah_on_ntime
+#define demo_ap_rah_on_startTime aircraft_->demo_ap_rah_on_startTime
+  bool demo_ap_hh_on;
+  string demo_ap_hh_on_file;
+  double demo_ap_hh_on_timeArray[10];
+  int demo_ap_hh_on_daArray[10];
+  int demo_ap_hh_on_ntime;
+  double demo_ap_hh_on_startTime;
+#define demo_ap_hh_on           aircraft_->demo_ap_hh_on
+#define demo_ap_hh_on_file      aircraft_->demo_ap_hh_on_file
+#define demo_ap_hh_on_timeArray aircraft_->demo_ap_hh_on_timeArray
+#define demo_ap_hh_on_daArray   aircraft_->demo_ap_hh_on_daArray
+#define demo_ap_hh_on_ntime     aircraft_->demo_ap_hh_on_ntime
+#define demo_ap_hh_on_startTime aircraft_->demo_ap_hh_on_startTime
+  bool demo_ap_Theta_ref;
+  string demo_ap_Theta_ref_file;
+  double demo_ap_Theta_ref_timeArray[10];
+  double demo_ap_Theta_ref_daArray[10];
+  int demo_ap_Theta_ref_ntime;
+  double demo_ap_Theta_ref_startTime;
+#define demo_ap_Theta_ref           aircraft_->demo_ap_Theta_ref
+#define demo_ap_Theta_ref_file      aircraft_->demo_ap_Theta_ref_file
+#define demo_ap_Theta_ref_timeArray aircraft_->demo_ap_Theta_ref_timeArray
+#define demo_ap_Theta_ref_daArray   aircraft_->demo_ap_Theta_ref_daArray
+#define demo_ap_Theta_ref_ntime     aircraft_->demo_ap_Theta_ref_ntime
+#define demo_ap_Theta_ref_startTime aircraft_->demo_ap_Theta_ref_startTime
+  bool demo_ap_alt_ref;
+  string demo_ap_alt_ref_file;
+  double demo_ap_alt_ref_timeArray[10];
+  double demo_ap_alt_ref_daArray[10];
+  int demo_ap_alt_ref_ntime;
+  double demo_ap_alt_ref_startTime;
+#define demo_ap_alt_ref           aircraft_->demo_ap_alt_ref
+#define demo_ap_alt_ref_file      aircraft_->demo_ap_alt_ref_file
+#define demo_ap_alt_ref_timeArray aircraft_->demo_ap_alt_ref_timeArray
+#define demo_ap_alt_ref_daArray   aircraft_->demo_ap_alt_ref_daArray
+#define demo_ap_alt_ref_ntime     aircraft_->demo_ap_alt_ref_ntime
+#define demo_ap_alt_ref_startTime aircraft_->demo_ap_alt_ref_startTime
+  bool demo_ap_Phi_ref;
+  string demo_ap_Phi_ref_file;
+  double demo_ap_Phi_ref_timeArray[10];
+  double demo_ap_Phi_ref_daArray[10];
+  int demo_ap_Phi_ref_ntime;
+  double demo_ap_Phi_ref_startTime;
+#define demo_ap_Phi_ref           aircraft_->demo_ap_Phi_ref
+#define demo_ap_Phi_ref_file      aircraft_->demo_ap_Phi_ref_file
+#define demo_ap_Phi_ref_timeArray aircraft_->demo_ap_Phi_ref_timeArray
+#define demo_ap_Phi_ref_daArray   aircraft_->demo_ap_Phi_ref_daArray
+#define demo_ap_Phi_ref_ntime     aircraft_->demo_ap_Phi_ref_ntime
+#define demo_ap_Phi_ref_startTime aircraft_->demo_ap_Phi_ref_startTime
+  bool demo_ap_Psi_ref;
+  string demo_ap_Psi_ref_file;
+  double demo_ap_Psi_ref_timeArray[10];
+  double demo_ap_Psi_ref_daArray[10];
+  int demo_ap_Psi_ref_ntime;
+  double demo_ap_Psi_ref_startTime;
+#define demo_ap_Psi_ref           aircraft_->demo_ap_Psi_ref
+#define demo_ap_Psi_ref_file      aircraft_->demo_ap_Psi_ref_file
+#define demo_ap_Psi_ref_timeArray aircraft_->demo_ap_Psi_ref_timeArray
+#define demo_ap_Psi_ref_daArray   aircraft_->demo_ap_Psi_ref_daArray
+#define demo_ap_Psi_ref_ntime     aircraft_->demo_ap_Psi_ref_ntime
+#define demo_ap_Psi_ref_startTime aircraft_->demo_ap_Psi_ref_startTime
   bool demo_tactile;
   string demo_tactile_file;
   double demo_tactile_timeArray[1500];
@@ -2807,14 +2905,14 @@ struct AIRCRAFT
 
   double simpleHingeMomentCoef;
 #define simpleHingeMomentCoef    aircraft_->simpleHingeMomentCoef
-  string dfTimefdf;
-  double dfTimefdf_dfArray[100];
-  double dfTimefdf_TimeArray[100];
-  int dfTimefdf_ndf;
-#define dfTimefdf              aircraft_->dfTimefdf
-#define dfTimefdf_dfArray      aircraft_->dfTimefdf_dfArray
-#define dfTimefdf_TimeArray    aircraft_->dfTimefdf_TimeArray
-#define dfTimefdf_ndf          aircraft_->dfTimefdf_ndf
+  //string dfTimefdf;
+  //double dfTimefdf_dfArray[100];
+  //double dfTimefdf_TimeArray[100];
+  //int dfTimefdf_ndf;
+  //#define dfTimefdf              aircraft_->dfTimefdf
+  //#define dfTimefdf_dfArray      aircraft_->dfTimefdf_dfArray
+  //#define dfTimefdf_TimeArray    aircraft_->dfTimefdf_TimeArray
+  //#define dfTimefdf_ndf          aircraft_->dfTimefdf_ndf
 
   FlapData *flapper_data;
 #define flapper_data           aircraft_->flapper_data
@@ -2855,21 +2953,18 @@ struct AIRCRAFT
 #define dfArray   aircraft_->dfArray
 #define TimeArray aircraft_->TimeArray
 
-  double flap_percent, flap_increment_per_timestep, flap_cmd, flap_pos, flap_pos_pct;
+  double flap_percent, flap_increment_per_timestep, flap_cmd, flap_pos, flap_pos_norm;
 #define flap_percent                  aircraft_->flap_percent
 #define flap_increment_per_timestep   aircraft_->flap_increment_per_timestep
 #define flap_cmd                      aircraft_->flap_cmd
-  //#define flap_cmd_deg                  aircraft_->flap_cmd_deg
 #define flap_pos                      aircraft_->flap_pos
-  //#define flap_pos_deg                  aircraft_->flap_pos_deg
-#define flap_pos_pct                  aircraft_->flap_pos_pct
+#define flap_pos_norm                 aircraft_->flap_pos_norm
 
-  double Spoiler_handle, spoiler_increment_per_timestep, spoiler_cmd_deg;
-  double spoiler_pos_norm, spoiler_pos_deg, spoiler_pos;
+  double Spoiler_handle, spoiler_increment_per_timestep, spoiler_cmd;
+  double spoiler_pos_norm, spoiler_pos;
 #define Spoiler_handle                 aircraft_->Spoiler_handle
 #define spoiler_increment_per_timestep aircraft_->spoiler_increment_per_timestep
-#define spoiler_cmd_deg                aircraft_->spoiler_cmd_deg
-#define spoiler_pos_deg                aircraft_->spoiler_pos_deg
+#define spoiler_cmd                    aircraft_->spoiler_cmd
 #define spoiler_pos_norm               aircraft_->spoiler_pos_norm
 #define spoiler_pos                    aircraft_->spoiler_pos
 
@@ -2951,15 +3046,31 @@ struct AIRCRAFT
   
   int ap_pah_on;
 #define ap_pah_on              aircraft_->ap_pah_on
-  double ap_Theta_ref_deg, ap_Theta_ref_rad;
-#define ap_Theta_ref_deg       aircraft_->ap_Theta_ref_deg
+  double ap_pah_start_time;
+#define ap_pah_start_time      aircraft_->ap_pah_start_time
+  double ap_Theta_ref_rad;
 #define ap_Theta_ref_rad       aircraft_->ap_Theta_ref_rad
 
   int ap_alh_on;
 #define ap_alh_on              aircraft_->ap_alh_on
-  double ap_alt_ref_ft, ap_alt_ref_m;
+  double ap_alh_start_time;
+#define ap_alh_start_time      aircraft_->ap_alh_start_time
+  double ap_alt_ref_ft;
 #define ap_alt_ref_ft          aircraft_->ap_alt_ref_ft
-#define ap_alt_ref_m           aircraft_->ap_alt_ref_m
+
+  int ap_rah_on;
+#define ap_rah_on              aircraft_->ap_rah_on
+  double ap_rah_start_time;
+#define ap_rah_start_time      aircraft_->ap_rah_start_time
+  double ap_Phi_ref_rad;
+#define ap_Phi_ref_rad         aircraft_->ap_Phi_ref_rad
+
+  int ap_hh_on;
+#define ap_hh_on              aircraft_->ap_hh_on
+  double ap_hh_start_time;
+#define ap_hh_start_time      aircraft_->ap_hh_start_time
+  double ap_Psi_ref_rad;
+#define ap_Psi_ref_rad         aircraft_->ap_Psi_ref_rad
 
   int pitch_trim_up, pitch_trim_down;
 #define pitch_trim_up          aircraft_->pitch_trim_up
@@ -2981,6 +3092,13 @@ struct AIRCRAFT
 #define trigger_num            aircraft_->trigger_num
 #define trigger_toggle         aircraft_->trigger_toggle
 #define trigger_counter        aircraft_->trigger_counter
+
+  // temp debug values
+  double debug7, debug8, debug9, debug10;
+#define debug7                 aircraft_->debug7
+#define debug8                 aircraft_->debug8
+#define debug9                 aircraft_->debug9
+#define debug10                aircraft_->debug10
 };
 
 extern AIRCRAFT *aircraft_;    // usually defined in the first program that includes uiuc_aircraft.h

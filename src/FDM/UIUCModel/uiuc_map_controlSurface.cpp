@@ -20,7 +20,7 @@
                06/18/2001   (RD) Added aileron_input, rudder_input,
 	                    pilot_elev_no, pilot_ail_no, and 
 			    pilot_rud_no
-	       11/12/2001   (RD) Added flap_max, flap_rate, and
+	       11/12/2001   (RD) Added flap_max, flap_rate
 
 ----------------------------------------------------------------------
  
@@ -115,6 +115,15 @@ void uiuc_map_controlSurface()
   controlSurface_map["use_aileron_sas_type1"]  = use_aileron_sas_type1_flag  ;
   controlSurface_map["use_elevator_sas_type1"] = use_elevator_sas_type1_flag ;
   controlSurface_map["use_rudder_sas_type1"]   = use_rudder_sas_type1_flag   ;
+
+  controlSurface_map["ap_pah"]           = ap_pah_flag              ;
+  controlSurface_map["ap_alh"]           = ap_alh_flag              ;
+  controlSurface_map["ap_rah"]           = ap_rah_flag              ;
+  controlSurface_map["ap_hh"]            = ap_hh_flag               ;
+  controlSurface_map["ap_Theta_ref"]     = ap_Theta_ref_flag        ;
+  controlSurface_map["ap_alt_ref"]       = ap_alt_ref_flag          ;
+  controlSurface_map["ap_Phi_ref"]       = ap_Phi_ref_flag          ;
+  controlSurface_map["ap_Psi_ref"]       = ap_Psi_ref_flag          ;
 }
 
 // end uiuc_map_controlSurface.cpp

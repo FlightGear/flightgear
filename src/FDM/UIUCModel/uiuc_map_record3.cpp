@@ -20,6 +20,8 @@
  HISTORY:      06/03/2000   file creation
                11/12/2001   (RD) Added flap_cmd_deg and flap_pos
                03/03/2003   (RD) Added flap_cmd
+               08/20/2003   (RD) Changed spoiler variables to match
+                            flap convention.  Added flap_pos_norm
 
 ----------------------------------------------------------------------
  
@@ -139,16 +141,17 @@ void uiuc_map_record3()
   record_map["rudder"]            =      rudder_record              ;
   record_map["rudder_deg"]        =      rudder_deg_record          ;
   record_map["Flap_handle"]       =      Flap_handle_record         ;
-  record_map["flap"]              =      flap_record                ;
   record_map["flap_cmd"]          =      flap_cmd_record            ;
   record_map["flap_cmd_deg"]      =      flap_cmd_deg_record        ;
   record_map["flap_pos"]          =      flap_pos_record            ;
   record_map["flap_pos_deg"]      =      flap_pos_deg_record        ;
+  record_map["flap_pos_norm"]     =      flap_pos_norm_record       ;
   record_map["Spoiler_handle"]    =      Spoiler_handle_record      ;
+  record_map["spoiler_cmd"]       =      spoiler_cmd_record         ;
   record_map["spoiler_cmd_deg"]   =      spoiler_cmd_deg_record     ;
+  record_map["spoiler_pos"]       =      spoiler_pos_record         ;
   record_map["spoiler_pos_deg"]   =      spoiler_pos_deg_record     ;
   record_map["spoiler_pos_norm"]  =      spoiler_pos_norm_record    ;
-  record_map["spoiler_pos"]       =      spoiler_pos_record         ;
 
 }
 

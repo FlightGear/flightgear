@@ -116,10 +116,15 @@ void uiuc_map_record5()
   record_map["M_m_gear"]          =      M_m_gear_record            ;
   record_map["M_n_gear"]          =      M_n_gear_record            ;
 
-  // total moments
+  // total moments about reference point
   record_map["M_l_rp"]            =      M_l_rp_record              ;
   record_map["M_m_rp"]            =      M_m_rp_record              ;
   record_map["M_n_rp"]            =      M_n_rp_record              ;
+
+  // total moments about cg
+  record_map["M_l_cg"]            =      M_l_cg_record              ;
+  record_map["M_m_cg"]            =      M_m_cg_record              ;
+  record_map["M_n_cg"]            =      M_n_cg_record              ;
   
   /***********************Flapper Data********************/
   record_map["flapper_freq"]       =      flapper_freq_record        ;
@@ -139,6 +144,11 @@ void uiuc_map_record5()
   record_map["debug4"]             =       debug4_record              ;
   record_map["debug5"]             =       debug5_record              ;
   record_map["debug6"]             =       debug6_record              ;
+
+  record_map["debug7"]             =       debug7_record              ;
+  record_map["debug8"]             =       debug8_record              ;
+  record_map["debug9"]             =       debug9_record              ;
+  record_map["debug10"]            =       debug10_record             ;
 
   /******************** Misc data **********************************/
   record_map["V_down_fpm"]         =       V_down_fpm_record          ;

@@ -12,8 +12,7 @@
 #include "uiuc_iceboot.h"  //Anne's code
 #include "uiuc_iced_nonlin.h"
 #include "uiuc_icing_demo.h"
-#include "uiuc_pah_ap.h"
-#include "uiuc_alh_ap.h"
+#include "uiuc_auto_pilot.h"
 #include "uiuc_1Dinterpolation.h"
 #include "uiuc_3Dinterpolation.h"
 #include "uiuc_warnings_errors.h"
