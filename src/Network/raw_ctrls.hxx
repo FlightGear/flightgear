@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 8;
+const int FG_RAW_CTRLS_VERSION = 10;
 
 
 // Define a structure containing the control parameters
@@ -60,6 +60,7 @@ public:
     bool starter[FG_MAX_ENGINES];        // true = starter engauged
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
+    bool fuel_pump[FG_MAX_ENGINES];      // true = on
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
 
     // Fuel management
@@ -72,6 +73,11 @@ public:
     
     // Landing Gear
     bool gear_handle; // true=gear handle down; false= gear handle up
+
+    // Switches
+    bool master_bat;
+    bool master_alt;
+    bool master_avionics;
 
     // Other values of use to a remote FDM
     double hground;		         // ground elevation (meters)
