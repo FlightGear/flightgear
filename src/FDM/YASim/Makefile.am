@@ -1,10 +1,27 @@
 noinst_LIBRARIES = libYASim.a
 
-libYASim_a_SOURCES = YASim.cxx Airplane.cpp Atmosphere.cpp ControlMap.cpp \
-                     FGFDM.cpp Gear.cpp Glue.cpp Integrator.cpp Jet.cpp   \
-                     Math.cpp Model.cpp PistonEngine.cpp Propeller.cpp    \
-                     PropEngine.cpp RigidBody.cpp Surface.cpp             \
-                     Thruster.cpp Wing.cpp SimpleJet.cpp
+libYASim_a_SOURCES = \
+        YASim.cxx YASim.hxx \
+        Airplane.cpp Airplane.hpp \
+        Atmosphere.cpp Atmosphere.hpp \
+        BodyEnvironment.hpp \
+        ControlMap.cpp ControlMap.hpp \
+        FGFDM.cpp FGFDM.hpp \
+        Gear.cpp Gear.hpp \
+        Glue.cpp Glue.hpp \
+        Integrator.cpp Integrator.hpp \
+        Jet.cpp Jet.hpp \
+        Math.cpp Math.hpp \
+        Model.cpp Model.hpp \
+        PistonEngine.cpp PistonEngine.hpp \
+        PropEngine.cpp PropEngine.hpp \
+        Propeller.cpp Propeller.hpp \
+        RigidBody.cpp RigidBody.hpp \
+        SimpleJet.cpp SimpleJet.hpp \
+        Surface.cpp Surface.hpp \
+        Thruster.cpp Thruster.hpp \
+        Vector.hpp \
+        Wing.cpp Wing.hpp
 
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
