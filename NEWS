@@ -1,4 +1,9 @@
-New in 0.44:
+New in 0.44: 
+* Minor transformation adjustments to try to keep scenery tiles closer
+  to (0, 0, 0) GLfloats run out of precision at the distances we need
+  to model the earth, but we can do a bunch of pre-transformations
+  using double floats and then cast to GLfloat once everything is
+  close in where we have less precision problems.
 * command line option to set starting position by airport ID
 * Cleaned up initialization sequence to eliminate interdependencies
   between sun position, lighting, and view position.  This creates a
