@@ -27,6 +27,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include <math.h>		// rint()
 #include <stdio.h>
@@ -179,6 +180,8 @@ fgSetDefaults ()
 #else
     fgSetString("/sim/startup/browser-app", "webrun.bat");
 #endif
+    fgSetInt("/sim/log-level", SG_WARN);
+
 				// Features
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
@@ -929,6 +932,13 @@ fgOptTraceWrite( const char *arg )
 }
 
 static int
+fgOptDebugLevel( const char *arg )
+{
+    fgSetInt( "/sim/log-level", atoi( arg ) );
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptViewOffset( const char *arg )
 {
     // $$$ begin - added VS Renganathan, 14 Oct 2K
@@ -1152,6 +1162,7 @@ struct OptionDesc {
 #endif
     {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
+    {"log-level",                  true,  OPTION_FUNC,   "", false, "", fgOptDebugLevel },
     {"view-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_DOUBLE, "/environment/visibility-m", false, "", 0 },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
@@ -1647,6 +1658,9 @@ parse_option (const string& arg)
 	SG_LOG(SG_GENERAL, SG_INFO, "Tracing writes for property " << name);
 	fgGetNode(name.c_str(), true)
 	  ->setAttribute(SGPropertyNode::TRACE_WRITE, true);
+    } else if ( arg.find("--log-level=") == 0) {
+        int level = atoi(arg.substr(14));
+        sglog().setLogLevels( SG_ALL, level );
     } else if ( arg.find( "--view-offset=" ) == 0 ) {
         // $$$ begin - added VS Renganathan, 14 Oct 2K
         // for multi-window outside window imagery

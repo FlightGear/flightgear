@@ -279,6 +279,7 @@ ssgSimpleState *menus;
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
+
 void fgBuildRenderStates( void ) {
     default_state = new ssgSimpleState;
     default_state->ref();
@@ -1021,6 +1022,8 @@ static void fgMainLoop( void ) {
 
     SGTime *t = globals->get_time_params();
 
+    sglog().setLogLevels( SG_ALL, (sgDebugPriority)fgGetInt("/sim/log-level") );
+
     FGLocation * acmodel_location = 0;
     if(cur_fdm_state->getACModel() != 0) {
       acmodel_location = (FGLocation *)  cur_fdm_state->getACModel()->get3DModel()->getFGLocation();
@@ -1525,7 +1528,7 @@ static bool fgMainInit( int argc, char **argv ) {
 #endif
 
     // set default log levels
-    sglog().setLogLevels( SG_ALL, SG_INFO );
+    sglog().setLogLevels( SG_ALL, SG_WARN );
 
     string version;
 #ifdef FLIGHTGEAR_VERSION

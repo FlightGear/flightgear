@@ -786,6 +786,18 @@ do_presets_commit (const SGPropertyNode * arg)
     return true;
 }
 
+/**
+ * Built-in command: set log level (0 ... 7)
+ */
+static bool
+do_log_level (const SGPropertyNode * arg)
+{
+   sglog().setLogLevels( SG_ALL, (sgDebugPriority)arg->getIntValue() );
+
+   return true;
+}
+
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -833,6 +845,7 @@ static struct {
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
     { "presets-commit", do_presets_commit },
+    { "log-level", do_log_level },
     { 0, 0 }			// zero-terminated
 };
 
