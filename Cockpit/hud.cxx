@@ -1473,7 +1473,7 @@ void HudLadder :: draw( void )
 // mustange and the engine readouts of a B36!
 //
 
-#define INSTRDEFS 16
+#define INSTRDEFS 17
 
 int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 {
@@ -1767,6 +1767,22 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         loc.top    = 100; // Ignore
         loc.right  = 500; // Ignore
         loc.bottom =  25;
+        HIptr = (instr_item *) new instr_label( loc, get_vfc_ratio,
+                                                "%.2f",
+                                                "VFC Ratio = ",
+                                                NULL,
+                                                ReadTOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      case 17:
+        loc.left   = 10;
+        loc.top    = 100; // Ignore
+        loc.right  = 500; // Ignore
+        loc.bottom =  40;
         HIptr = (instr_item *) new instr_label( loc, get_fov,
                                                 "%.1f",
                                                 "FOV = ",
@@ -1899,9 +1915,12 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.9  1998/05/16 13:04:14  curt
-/* New updates from Charlie Hotchkiss.
+/* Revision 1.10  1998/05/17 16:58:12  curt
+/* Added a View Frustum Culling ratio display to the hud.
 /*
+ * Revision 1.9  1998/05/16 13:04:14  curt
+ * New updates from Charlie Hotchkiss.
+ *
  * Revision 1.8  1998/05/13 18:27:54  curt
  * Added an fov to hud display.
  *

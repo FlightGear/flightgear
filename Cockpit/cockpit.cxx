@@ -41,6 +41,7 @@
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Main/options.hxx>
+#include <Main/views.hxx>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.h>
@@ -227,6 +228,15 @@ double get_fov( void )
     return o->fov;                                                      
 }
 
+double get_vfc_ratio( void )
+{
+    fgVIEW *v;                                                               
+ 
+    v = &current_view;                     
+ 
+    return v->vfc_ratio;                                                      
+}
+
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
 	fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
@@ -264,9 +274,12 @@ void fgCockpitUpdate( void )
 }
 
 /* $Log$
-/* Revision 1.7  1998/05/16 13:04:13  curt
-/* New updates from Charlie Hotchkiss.
+/* Revision 1.8  1998/05/17 16:58:12  curt
+/* Added a View Frustum Culling ratio display to the hud.
 /*
+ * Revision 1.7  1998/05/16 13:04:13  curt
+ * New updates from Charlie Hotchkiss.
+ *
  * Revision 1.6  1998/05/13 18:27:53  curt
  * Added an fov to hud display.
  *

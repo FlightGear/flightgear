@@ -149,6 +149,7 @@ extern double get_lat_min     ( void );
 extern double get_longitude   ( void );
 extern double get_long_min    ( void );
 extern double get_fov         ( void );
+extern double get_vfc_ratio   ( void );
 
 enum  hudinstype{ HUDno_instr,
               HUDscale,
@@ -445,9 +446,12 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.4  1998/05/16 13:04:15  curt
-/* New updates from Charlie Hotchkiss.
+/* Revision 1.5  1998/05/17 16:58:13  curt
+/* Added a View Frustum Culling ratio display to the hud.
 /*
+ * Revision 1.4  1998/05/16 13:04:15  curt
+ * New updates from Charlie Hotchkiss.
+ *
  * Revision 1.3  1998/05/13 18:27:55  curt
  * Added an fov to hud display.
  *
