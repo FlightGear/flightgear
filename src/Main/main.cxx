@@ -331,7 +331,7 @@ void trRenderFrame( void ) {
             //  and update the stencil buffer with 1
             glEnable( GL_STENCIL_TEST );
             glStencilFunc( GL_ALWAYS, 1, 1 );
-            glStencilOp( GL_REPLACE, GL_REPLACE, GL_REPLACE );
+            glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE );
         }
         FGTileMgr::set_tile_filter( false );
         sgSetModelFilter( true );
@@ -701,7 +701,7 @@ void fgRenderFrame() {
                     //  and update the stencil buffer with 1
                     glEnable( GL_STENCIL_TEST );
                     glStencilFunc( GL_ALWAYS, 1, 1 );
-                    glStencilOp( GL_REPLACE, GL_REPLACE, GL_REPLACE );
+                    glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE );
                 }
                 FGTileMgr::set_tile_filter( false );
                 sgSetModelFilter( true );
@@ -1017,6 +1017,8 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/time/cur-time-override", true);
     // static const SGPropertyNode *replay_master
     //     = fgGetNode("/sim/freeze/replay", true);
+
+    SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping",true);
 
     // Update the elapsed time.
     static bool first_time = true;
@@ -1769,9 +1771,14 @@ bool fgMainInit( int argc, char **argv ) {
 
     // build our custom render states
     fgBuildRenderStates();
-    
-    // pass control off to the master event handler
-    fgOSMainLoop();
+
+    try {
+        // pass control off to the master event handler
+        fgOSMainLoop();
+    } catch (...) {
+        SG_LOG( SG_ALL, SG_ALERT,
+            "Unknown exception in the main loop. Aborting..." );
+    }
 
     // we never actually get here ... but to avoid compiler warnings,
     // etc.
