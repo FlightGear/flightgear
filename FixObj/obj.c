@@ -159,7 +159,7 @@ void dump_global_bounds( void ) {
 
     }
 
-    fprintf(out, "gb %.4f %.4f %.4f %.2f\n", refx, refy, refz, radius);
+    fprintf(out, "gb %.5f %.5f %.5f %.2f\n", refx, refy, refz, radius);
 }
 
 
@@ -169,7 +169,7 @@ void dump_nodes( void ) {
 
     fprintf(out, "\n");
     for ( i = 1; i < ncount; i++ ) {
-	fprintf(out, "v %.4f %.4f %.4f\n",
+	fprintf(out, "v %.5f %.5f %.5f\n",
 		nodes[i][0] - refx, nodes[i][1] - refy, nodes[i][2] - refz);
     }
 }
@@ -181,7 +181,7 @@ void dump_normals( void ) {
 
     fprintf(out, "\n");
     for ( i = 1; i < vncount; i++ ) {
-	fprintf(out, "vn %.4f %.4f %.4f\n", 
+	fprintf(out, "vn %.5f %.5f %.5f\n", 
 		normals[i][0], normals[i][1], normals[i][2]);
     }
 }
@@ -477,10 +477,13 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.13  1998/05/20 20:55:19  curt
-/* Fixed arbitrary polygon winding problem here so all tristrips are passed
-/* to runtime simulator with a consistant counter clockwise winding.
+/* Revision 1.14  1998/05/23 15:19:49  curt
+/* Output more digits after the decimal place.
 /*
+ * Revision 1.13  1998/05/20 20:55:19  curt
+ * Fixed arbitrary polygon winding problem here so all tristrips are passed
+ * to runtime simulator with a consistant counter clockwise winding.
+ *
  * Revision 1.12  1998/05/16 13:11:26  curt
  * Fixed an off by one error in node, normal, and face counters.
  *

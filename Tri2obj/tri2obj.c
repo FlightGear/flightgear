@@ -517,7 +517,7 @@ void dump_obj(char *basename) {
     /* dump vertices */
     printf("  writing vertices\n");
     for ( i = 1; i <= nodecount; i++ ) {
-	fprintf(obj, "v %.2f %.2f %.2f\n", 
+	fprintf(obj, "v %.6f %.6f %.6f\n", 
 		nodes[i].x, nodes[i].y, nodes[i].z);
     }
 
@@ -644,9 +644,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.15  1998/05/02 01:54:39  curt
-/* Converting to polar3d.h routines.
+/* Revision 1.16  1998/05/23 15:20:41  curt
+/* Output more digits after the decimal place.
 /*
+ * Revision 1.15  1998/05/02 01:54:39  curt
+ * Converting to polar3d.h routines.
+ *
  * Revision 1.14  1998/04/18 04:01:32  curt
  * Now use libMath rather than having local copies of math routines.
  *
