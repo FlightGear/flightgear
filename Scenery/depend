@@ -1,6 +1,10 @@
+chunkmgr.o: chunkmgr.c chunkmgr.h mesh.h
 common.o: common.c common.h
 geometry.o: geometry.c geometry.h mesh.h
-mesh.o: mesh.c ../constants.h scenery.h mesh.h common.h
-parser.o: parser.c parsevrml.h geometry.h common.h mesh.h scenery.h
+mesh.o: mesh.c ../constants.h ../types.h ../Math/fg_geodesy.h \
+ ../Math/fg_random.h ../Math/mat3.h ../Math/polar.h ../Math/../types.h \
+ mesh.h common.h scenery.h
+parser.o: parser.c parsevrml.h geometry.h common.h mesh.h scenery.h \
+ ../types.h
 scanner.o: scanner.c parser.h
-scenery.o: scenery.c scenery.h parsevrml.h
+scenery.o: scenery.c scenery.h ../types.h parsevrml.h

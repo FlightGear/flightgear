@@ -39,13 +39,13 @@ GLint mesh_hack;
 
 
 /* Shared structure to hold current scenery parameters */
-struct scenery_params cur_scenery_params;
+struct scenery_params scenery;
 
 
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    cur_scenery_params.terrain_skip = 5;
+    scenery.terrain_skip = 3;
 }
 
 
@@ -69,9 +69,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.9  1997/08/04 17:08:11  curt
-/* Testing cvs on IRIX 6.x
+/* Revision 1.10  1997/08/06 00:24:30  curt
+/* Working on correct real time sun lighting.
 /*
+ * Revision 1.9  1997/08/04 17:08:11  curt
+ * Testing cvs on IRIX 6.x
+ *
  * Revision 1.8  1997/07/18 23:41:27  curt
  * Tweaks for building with Cygnus Win32 compiler.
  *

@@ -26,8 +26,7 @@
 
 TARGET = libTime.a
 
-CFILES = fg_timer.c sunpos.c
-HFILES = fg_timer.h
+CFILES = fg_time.c fg_timer.c sunpos.c
 OFILES = $(CFILES:.c=.o)
 
 
@@ -63,6 +62,9 @@ fg_timer.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.12  1997/08/06 00:24:31  curt
+# Working on correct real time sun lighting.
+#
 # Revision 1.11  1997/08/01 15:28:44  curt
 # Added sunpos.c
 #

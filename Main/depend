@@ -1,22 +1,15 @@
-GLTKkey.o: GLTKkey.c /usr/include/gltk.h GLTKkey.h \
- ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
- ../Aircraft/../Flight/Slew/slew.h \
- ../Aircraft/../Flight/LaRCsim/ls_interface.h \
- ../Aircraft/../Flight/LaRCsim/../flight.h \
- ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h
 GLUTkey.o: GLUTkey.c GLUTkey.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
  ../Aircraft/../Flight/LaRCsim/ls_interface.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h ../constants.h
-GLmain.o: GLmain.c ../constants.h ../Aircraft/aircraft.h \
+GLUTmain.o: GLUTmain.c ../constants.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
  ../Aircraft/../Flight/LaRCsim/ls_interface.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h ../Scenery/mesh.h \
- ../Scenery/scenery.h ../Math/fg_random.h ../Math/mat3.h \
- ../Math/polar.h ../Math/../types.h ../Time/fg_timer.h \
- ../Weather/weather.h
+ ../Scenery/scenery.h ../Scenery/../types.h ../Math/fg_random.h \
+ ../Math/mat3.h ../Math/polar.h ../Math/../types.h ../Time/fg_timer.h \
+ ../Time/sunpos.h ../Weather/weather.h

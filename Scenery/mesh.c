@@ -175,7 +175,7 @@ double mesh_altitude(double lon, double lat) {
     int xindex, yindex;
     int skip;
 
-    skip = cur_scenery_params.terrain_skip;
+    skip = scenery.terrain_skip;
     /* determine if we are in the lower triangle or the upper triangle 
        ______
        |   /|
@@ -275,10 +275,11 @@ GLint mesh_to_OpenGL(struct mesh *m) {
     GLint mesh;
     /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
+    double centerx, centery;
     double randx, randy;
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
-    struct fgCartesianPoint p11, p12, p21, p22;
+    struct fgCartesianPoint p11, p12, p21, p22, c;
     double gc_lon, gc_lat, sl_radius;
 
     MAT3vec v1, v2, normal; 
@@ -290,7 +291,13 @@ GLint mesh_to_OpenGL(struct mesh *m) {
     /* Detail level.  This is how big a step we take as we walk
      * through the DEM data set.  This value is initialized in
      * .../Scenery/scenery.c:fgSceneryInit() */
-    istep = jstep = cur_scenery_params.terrain_skip ;
+    istep = jstep = scenery.terrain_skip ;
+
+    centerx = m->originx + (m->rows * m->row_step) / 2.0;
+    centery = m->originy + (m->cols * m->col_step) / 2.0;
+    fgGeodToGeoc(centery*ARCSEC_TO_RAD, 0, &sl_radius, &gc_lat);
+    c = fgPolarToCart(centerx*ARCSEC_TO_RAD, gc_lat, sl_radius);
+    scenery.center = c;
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -347,11 +354,11 @@ GLint mesh_to_OpenGL(struct mesh *m) {
             
             if ( j == 0 ) {
                 /* first time through */
-                glVertex3d(p12.x, p12.y, p12.z);
-                glVertex3d(p11.x, p11.y, p11.z);
+                glVertex3d(p12.x - c.x, p12.y - c.y, p12.z - c.z);
+                glVertex3d(p11.x - c.x, p11.y - c.y, p11.z - c.z);
             }
             
-            glVertex3d(p22.x, p22.y, p22.z);
+            glVertex3d(p22.x - c.x, p22.y - c.y, p22.z - c.z);
     
             v2[0] = p21.y - p11.y; v2[1] = p21.z - p11.z; v2[2] = z21 - z11;
             MAT3cross_product(normal, v2, v1);
@@ -360,7 +367,7 @@ GLint mesh_to_OpenGL(struct mesh *m) {
             /* printf("normal 2 = (%.2f %.2f %.2f\n", normal[0], normal[1], 
                    normal[2]); */
 
-            glVertex3d(p21.x, p21.y, p21.z);
+            glVertex3d(p21.x - c.x, p21.y - c.y, p21.z - c.z);
 
             x1 += m->row_step * jstep;
             x2 += m->row_step * jstep;
@@ -387,9 +394,12 @@ GLint mesh_to_OpenGL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.18  1997/08/02 19:10:14  curt
-/* Incorporated mesh2GL.c into mesh.c
+/* Revision 1.19  1997/08/06 00:24:28  curt
+/* Working on correct real time sun lighting.
 /*
+ * Revision 1.18  1997/08/02 19:10:14  curt
+ * Incorporated mesh2GL.c into mesh.c
+ *
  * Revision 1.17  1997/07/18 23:41:26  curt
  * Tweaks for building with Cygnus Win32 compiler.
  *

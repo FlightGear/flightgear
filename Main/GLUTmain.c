@@ -40,10 +40,12 @@
 #include "../Aircraft/aircraft.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Math/fg_geodesy.h"
 #include "../Math/fg_random.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
 #include "../Time/fg_timer.h"
+#include "../Time/sunpos.h"
 #include "../Weather/weather.h"
 
 
@@ -55,7 +57,7 @@ struct aircraft_params current_aircraft;
 static GLfloat win_ratio = 1.0;
 
 /* sun direction */
-static GLfloat sun_vec[4] = {0.2948, 0.7816, -0.5498, 0.0 };
+static GLfloat sun_vec[4] = {1.0, 0.0, 0.0, 0.0 };
 
 /* temporary hack */
 /* extern struct mesh *mesh_ptr; */
@@ -136,9 +138,15 @@ static void fgUpdateViewParams() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
+    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
+
     /* calculate view position in current FG view coordinate system */
     view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
 			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
+    view_pos.x -= scenery.center.x;
+    view_pos.y -= scenery.center.y;
+    view_pos.z -= scenery.center.z;
+
     printf("View pos = %.4f, %.4f, %.4f\n", view_pos.x, view_pos.y, view_pos.z);
 
     /* Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw) */
@@ -214,8 +222,6 @@ static void fgUpdateViewParams() {
 	      view_pos.x + view_forward[0], view_pos.y + view_forward[1], 
 	      view_pos.z + view_forward[2],
 	      view_up[0], view_up[1], view_up[2]);
-
-    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
 }
 
 
@@ -248,6 +254,8 @@ static void fgUpdateVisuals( void ) {
 
 void fgUpdateTimeDepCalcs(int multi_loop) {
     struct flight_params *f;
+    struct fgCartesianPoint sunpos;
+    double sun_lon, sun_gd_lat, sun_gc_lat, sl_radius;
     int i;
 
     f = &current_aircraft.flight;
@@ -260,6 +268,21 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     /* printf("updating flight model x %d\n", multi_loop); */
     fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
 
+    /* refresh sun position */
+    fgSunPosition(time(NULL), &sun_lon, &sun_gd_lat);
+    fgGeodToGeoc(sun_gd_lat, 0, &sl_radius, &sun_gc_lat);
+    sunpos = fgPolarToCart(sun_lon, sun_gc_lat, sl_radius);
+    printf("Sun position is (%.2f, %.2f, %.2f)\n", 
+	   sunpos.x, sunpos.y, sunpos.z);
+    /* not necessary to divide, but I'm just doing it by a "random"
+     * constant to get near the magnitude of the number down to the
+     * 0.0 - 1.0 range */
+    sun_vec[0] = -sunpos.x; 
+    sun_vec[1] = -sunpos.y;
+    sun_vec[2] = -sunpos.z;
+    sun_vec[3] = 0.0;       /* make this a directional light source only */
+
+    /* update the view angle */
     for ( i = 0; i < multi_loop; i++ ) {
 	if ( fabs(goal_view_offset - view_offset) < 0.05 ) {
 	    view_offset = goal_view_offset;
@@ -620,9 +643,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.2  1997/08/04 20:25:15  curt
-/* Organizational tweaking.
+/* Revision 1.3  1997/08/06 00:24:22  curt
+/* Working on correct real time sun lighting.
 /*
+ * Revision 1.2  1997/08/04 20:25:15  curt
+ * Organizational tweaking.
+ *
  * Revision 1.1  1997/08/02 18:45:00  curt
  * Renamed GLmain.c GLUTmain.c
  *

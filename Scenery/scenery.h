@@ -28,12 +28,19 @@
 #define SCENERY_H
 
 
+#include "../types.h"
+
+
 /* Define a structure containing global scenery parameters */
 struct scenery_params {
-    int terrain_skip;  /* number of terrain data points to skip */
+    /* number of terrain data points to skip */
+    int terrain_skip;
+
+    /* center of current scenery chunk */
+    struct fgCartesianPoint center;
 };
 
-extern struct scenery_params cur_scenery_params;
+extern struct scenery_params scenery;
 
 
 /* Initialize the Scenery Management system */
@@ -53,9 +60,12 @@ void fgSceneryRender();
 
 
 /* $Log$
-/* Revision 1.7  1997/07/23 21:52:27  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.8  1997/08/06 00:24:30  curt
+/* Working on correct real time sun lighting.
 /*
+ * Revision 1.7  1997/07/23 21:52:27  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.6  1997/07/11 01:30:03  curt
  * More tweaking of terrian floor.
  *

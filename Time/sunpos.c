@@ -41,7 +41,7 @@
 
 #include <math.h>
 #include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include "sunpos.h"
 #include "../constants.h"
@@ -254,7 +254,10 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
 
 /* $Log$
-/* Revision 1.1  1997/08/01 15:27:56  curt
-/* Initial revision.
+/* Revision 1.2  1997/08/06 00:24:32  curt
+/* Working on correct real time sun lighting.
 /*
+ * Revision 1.1  1997/08/01 15:27:56  curt
+ * Initial revision.
+ *
  */

@@ -40,7 +40,7 @@
 #define SUNPOS_H
 
 
-#include <sys/time.h>
+#include <time.h>
 
 
 /* given a particular time (expressed in seconds since the unix
