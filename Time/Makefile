@@ -26,7 +26,7 @@
 
 TARGET = libTime.a
 
-CFILES = fg_time.c fg_timer.c sunpos.c
+CFILES = event.c fg_time.c fg_timer.c sunpos.c
 OFILES = $(CFILES:.c=.o)
 
 
@@ -56,6 +56,9 @@ clean:
 
 include depend
 
+event.o:
+	$(CC) $(CFLAGS) -c event.c -o $@
+
 fg_time.o:
 	$(CC) $(CFLAGS) -c fg_time.c -o $@
 
@@ -68,6 +71,9 @@ sunpos.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.14  1997/12/30 04:19:22  curt
+# Initial revision.
+#
 # Revision 1.13  1997/09/22 14:44:22  curt
 # Continuing to try to align stars correctly.
 #
