@@ -145,7 +145,7 @@ FGAIManager::createAircraft( FGAIModelEntity *entity ) {
         }
         ai_plane->setHeading(entity->heading);
         ai_plane->setSpeed(entity->speed);
-        ai_plane->setPath(entity->path);
+        ai_plane->setPath(entity->path.c_str());
         ai_plane->setAltitude(entity->altitude);
         ai_plane->setLongitude(entity->longitude);
         ai_plane->setLatitude(entity->latitude);
@@ -169,7 +169,7 @@ FGAIManager::createShip( FGAIModelEntity *entity ) {
         ++numObjects[FGAIBase::otShip];
         ai_ship->setHeading(entity->heading);
         ai_ship->setSpeed(entity->speed);
-        ai_ship->setPath(entity->path);
+        ai_ship->setPath(entity->path.c_str());
         ai_ship->setAltitude(entity->altitude);
         ai_ship->setLongitude(entity->longitude);
         ai_ship->setLatitude(entity->latitude);
@@ -194,7 +194,7 @@ FGAIManager::createBallistic( FGAIModelEntity *entity ) {
         ai_ballistic->setAzimuth(entity->azimuth);
         ai_ballistic->setElevation(entity->elevation);
         ai_ballistic->setSpeed(entity->speed);
-        ai_ballistic->setPath(entity->path);
+        ai_ballistic->setPath(entity->path.c_str());
         ai_ballistic->setAltitude(entity->altitude);
         ai_ballistic->setLongitude(entity->longitude);
         ai_ballistic->setLatitude(entity->latitude);
@@ -220,7 +220,7 @@ FGAIManager::createStorm( FGAIModelEntity *entity ) {
         ++numObjects[FGAIBase::otStorm];
         ai_storm->setHeading(entity->heading);
         ai_storm->setSpeed(entity->speed);
-        ai_storm->setPath(entity->path);
+        ai_storm->setPath(entity->path.c_str());
         ai_storm->setAltitude(entity->altitude);
         ai_storm->setLongitude(entity->longitude);
         ai_storm->setLatitude(entity->latitude);
@@ -294,19 +294,19 @@ void FGAIManager::processScenario( string &filename ) {
     FGAIModelEntity* en = s->getNextEntry();
 
     if (en) {
-      if ( !strcmp(en->m_type, "aircraft")) {
-         createAircraft( en );
+      if ( en->m_type == "aircraft") {
+        createAircraft( en );
 
-      } else if ( !strcmp(en->m_type, "ship")) {
-           createShip( en );
+      } else if ( en->m_type == "ship") {
+        createShip( en );
 
-      } else if ( !strcmp(en->m_type, "thunderstorm")) {
+      } else if ( en->m_type == "thunderstorm") {
         createStorm( en );
 
-      } else if ( !strcmp(en->m_type, "thermal")) {
+      } else if ( en->m_type == "thermal") {
         createThermal( en );
 
-      } else if ( !strcmp(en->m_type, "ballistic")) {
+      } else if ( en->m_type == "ballistic") {
         createBallistic( en );
       }      
     }

@@ -38,10 +38,10 @@ typedef struct {
    string callsign;
 
    // can be aircraft, ship, storm, thermal or ballistic
-   const char* m_type;
-   const char* m_class;
-   const char* path;
-   const char* flightplan;
+   string m_type;
+   string m_class;
+   string path;
+   string flightplan;
 
    FGAIFlightPlan *fp;
 
