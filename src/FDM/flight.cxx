@@ -41,9 +41,22 @@
 // world time, so we introduce cur_fdm_state which is extrapolated by
 // the difference between sim time and real world time
 
-FGInterface cur_fdm_state;
+FGInterface * cur_fdm_state;
 FGInterface base_fdm_state;
 
+
+int FGInterface::init( double dt ) {
+    cout << "dummy init() ... SHOULDN'T BE CALLED!" << endl;
+    return 0;
+}
+
+int FGInterface::update( int multi_loop ) {
+    cout << "dummy update() ... SHOULDN'T BE CALLED!" << endl;
+    return 0;
+}
+
+FGInterface::~FGInterface() {
+}
 
 // Extrapolate fdm based on time_offset (in usec)
 void FGInterface::extrapolate( int time_offset ) {
@@ -75,6 +88,7 @@ void FGInterface::extrapolate( int time_offset ) {
 }
 
 
+#if 0
 // Initialize the flight model parameters
 int fgFDMInit(int model, FGInterface& f, double dt) {
     double save_alt = 0.0;
@@ -127,8 +141,10 @@ int fgFDMInit(int model, FGInterface& f, double dt) {
 
     return 1;
 }
+#endif
 
 
+#if 0
 // Run multiloop iterations of the flight model
 int fgFDMUpdate(int model, FGInterface& f, int multiloop, int time_offset) {
     double time_step, start_elev, end_elev;
@@ -173,6 +189,7 @@ int fgFDMUpdate(int model, FGInterface& f, int multiloop, int time_offset) {
 
     return 1;
 }
+#endif
 
 
 // Set the altitude (force)
@@ -199,7 +216,7 @@ void fgFDMForceAltitude(int model, double alt_meters) {
 // Set the local ground elevation
 void fgFDMSetGroundElevation(int model, double ground_meters) {
     base_fdm_state.set_Runway_altitude( ground_meters * METER_TO_FEET );
-    cur_fdm_state.set_Runway_altitude( ground_meters * METER_TO_FEET );
+    cur_fdm_state->set_Runway_altitude( ground_meters * METER_TO_FEET );
 }
 
 

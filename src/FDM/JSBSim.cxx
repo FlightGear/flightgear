@@ -48,14 +48,10 @@
 #include "JSBsim.hxx"
 
 
-// The default aircraft
-FGFDMExec FDMExec;
-
-
 // Initialize the JSBsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
-int fgJSBsimInit(double dt, FGInterface& f) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "Starting initializing JSBsim" );
+int FGJSBsim::init( double dt ) {
+    FG_LOG( FG_FLIGHT, FG_INFO, "Starting and initializing JSBsim" );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  created FDMExec" );
 
@@ -75,12 +71,12 @@ int fgJSBsimInit(double dt, FGInterface& f) {
       current_options.get_uBody(),
       current_options.get_vBody(),
       current_options.get_wBody(),
-      f.get_Phi(),
-      f.get_Theta(),
-      f.get_Psi(),
-      f.get_Latitude(),
-      f.get_Longitude(),
-      f.get_Altitude()
+      get_Phi(),
+      get_Theta(),
+      get_Psi(),
+      get_Latitude(),
+      get_Longitude(),
+      get_Altitude()
     );
 
 //    FDMExec.GetState()->Setlatitude(f.get_Latitude());
@@ -92,23 +88,27 @@ int fgJSBsimInit(double dt, FGInterface& f) {
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded initial conditions" );
 
-    FDMExec.GetState()->Setdt(dt);
+    FDMExec.GetState()->Setdt( dt );
     FG_LOG( FG_FLIGHT, FG_INFO, "  set dt" );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing JSBsim" );
+
+    copy_from_JSBsim();
 
     return 1;
 }
 
 
 // Run an iteration of the EOM (equations of motion)
-int fgJSBsimUpdate(FGInterface& f, int multiloop) {
+int FGJSBsim::update( int multiloop ) {
     double save_alt = 0.0;
+    double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
+    double start_elev = get_Altitude();
 
     // lets try to avoid really screwing up the JSBsim model
-    if ( f.get_Altitude() < -9000 ) {
-	save_alt = f.get_Altitude();
-	f.set_Altitude( 0.0 );
+    if ( get_Altitude() < -9000 ) {
+	save_alt = get_Altitude();
+	set_Altitude( 0.0 );
     }
 
     // copy control positions into the JSBsim structure
@@ -123,7 +123,7 @@ int fgJSBsimUpdate(FGInterface& f, int multiloop) {
     // FCS->SetBrake( controls.get_brake( 0 ) );
 
     // Inform JSBsim of the local terrain altitude
-    // Runway_altitude =   f.get_Runway_altitude();
+    // Runway_altitude =   get_Runway_altitude();
 
     // old -- FGInterface_2_JSBsim() not needed except for Init()
     // translate FG to JSBsim structure
@@ -146,11 +146,17 @@ int fgJSBsimUpdate(FGInterface& f, int multiloop) {
     // autopilot (and the rest of the sim can use the updated
     // values
 
-    fgJSBsim_2_FGInterface(f);
+    copy_from_JSBsim();
 
     // but lets restore our original bogus altitude when we are done
     if ( save_alt < -9000.0 ) {
-	f.set_Altitude( save_alt );
+	set_Altitude( save_alt );
+    }
+
+    double end_elev = get_Altitude();
+    if ( time_step > 0.0 ) {
+	// feet per second
+	set_Climb_Rate( (end_elev - start_elev) / time_step );
     }
 
     return 1;
@@ -158,47 +164,46 @@ int fgJSBsimUpdate(FGInterface& f, int multiloop) {
 
 
 // Convert from the FGInterface struct to the JSBsim generic_ struct
-int FGInterface_2_JSBsim (FGInterface& f) {
-
+int FGJSBsim::copy_to_JSBsim() {
     return 1;
 }
 
 
 // Convert from the JSBsim generic_ struct to the FGInterface struct
-int fgJSBsim_2_FGInterface (FGInterface& f) {
+int FGJSBsim::copy_from_JSBsim() {
 
     // Velocities
-    f.set_Velocities_Local( FDMExec.GetPosition()->GetVn(), 
+    set_Velocities_Local( FDMExec.GetPosition()->GetVn(), 
 			    FDMExec.GetPosition()->GetVe(), 
 			    FDMExec.GetPosition()->GetVd() );
-    // f.set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
+    // set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
     // 		     V_down_rel_ground );
-    // f.set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
+    // set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
     // 			    V_down_airmass );
-    // f.set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
+    // set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
     //                          V_east_rel_airmass, V_down_rel_airmass );
-    // f.set_Velocities_Gust( U_gust, V_gust, W_gust );
-    // f.set_Velocities_Wind_Body( U_body, V_body, W_body );
+    // set_Velocities_Gust( U_gust, V_gust, W_gust );
+    // set_Velocities_Wind_Body( U_body, V_body, W_body );
 
-    // f.set_V_rel_wind( V_rel_wind );
-    // f.set_V_true_kts( V_true_kts );
-    // f.set_V_rel_ground( V_rel_ground );
-    // f.set_V_inertial( V_inertial );
-    // f.set_V_ground_speed( V_ground_speed );
-    // f.set_V_equiv( V_equiv );
+    // set_V_rel_wind( V_rel_wind );
+    // set_V_true_kts( V_true_kts );
+    // set_V_rel_ground( V_rel_ground );
+    // set_V_inertial( V_inertial );
+    // set_V_ground_speed( V_ground_speed );
+    // set_V_equiv( V_equiv );
 
-    /* ***FIXME*** */ f.set_V_equiv_kts( FDMExec.GetState()->GetVt() );
-    // f.set_V_calibrated( V_calibrated );
-    // f.set_V_calibrated_kts( V_calibrated_kts );
+    /* ***FIXME*** */ set_V_equiv_kts( FDMExec.GetState()->GetVt() );
+    // set_V_calibrated( V_calibrated );
+    // set_V_calibrated_kts( V_calibrated_kts );
 
-    f.set_Omega_Body( FDMExec.GetRotation()->GetP(), 
+    set_Omega_Body( FDMExec.GetRotation()->GetP(), 
 		      FDMExec.GetRotation()->GetQ(), 
 		      FDMExec.GetRotation()->GetR() );
-    // f.set_Omega_Local( P_local, Q_local, R_local );
-    // f.set_Omega_Total( P_total, Q_total, R_total );
+    // set_Omega_Local( P_local, Q_local, R_local );
+    // set_Omega_Total( P_total, Q_total, R_total );
     
-    // f.set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
-    // ***FIXME*** f.set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+    // set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
+    // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
     // Positions
     double lat_geoc = FDMExec.GetState()->Getlatitude();
@@ -216,72 +221,72 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
 	    << " sl_radius2 = " << sl_radius2 * METER_TO_FEET
 	    << " Equator = " << EQUATORIAL_RADIUS_FT );
 	    
-    f.set_Geocentric_Position( lat_geoc, lon, 
+    set_Geocentric_Position( lat_geoc, lon, 
 			       sl_radius2 * METER_TO_FEET + alt );
-    f.set_Geodetic_Position( lat_geod, lon, alt );
-    f.set_Euler_Angles( FDMExec.GetRotation()->Getphi(), 
+    set_Geodetic_Position( lat_geod, lon, alt );
+    set_Euler_Angles( FDMExec.GetRotation()->Getphi(), 
 			FDMExec.GetRotation()->Gettht(),
 			FDMExec.GetRotation()->Getpsi() );
 
     // Miscellaneous quantities
-    // f.set_T_Local_to_Body(T_local_to_body_m);
-    // f.set_Gravity( Gravity );
-    // f.set_Centrifugal_relief( Centrifugal_relief );
+    // set_T_Local_to_Body(T_local_to_body_m);
+    // set_Gravity( Gravity );
+    // set_Centrifugal_relief( Centrifugal_relief );
 
-    f.set_Alpha( FDMExec.GetTranslation()->Getalpha() );
-    f.set_Beta( FDMExec.GetTranslation()->Getbeta() );
-    // f.set_Alpha_dot( Alpha_dot );
-    // f.set_Beta_dot( Beta_dot );
+    set_Alpha( FDMExec.GetTranslation()->Getalpha() );
+    set_Beta( FDMExec.GetTranslation()->Getbeta() );
+    // set_Alpha_dot( Alpha_dot );
+    // set_Beta_dot( Beta_dot );
 
-    // f.set_Cos_alpha( Cos_alpha );
-    // f.set_Sin_alpha( Sin_alpha );
-    // f.set_Cos_beta( Cos_beta );
-    // f.set_Sin_beta( Sin_beta );
+    // set_Cos_alpha( Cos_alpha );
+    // set_Sin_alpha( Sin_alpha );
+    // set_Cos_beta( Cos_beta );
+    // set_Sin_beta( Sin_beta );
 
-    // f.set_Cos_phi( Cos_phi );
-    // f.set_Sin_phi( Sin_phi );
-    // f.set_Cos_theta( Cos_theta );
-    // f.set_Sin_theta( Sin_theta );
-    // f.set_Cos_psi( Cos_psi );
-    // f.set_Sin_psi( Sin_psi );
+    // set_Cos_phi( Cos_phi );
+    // set_Sin_phi( Sin_phi );
+    // set_Cos_theta( Cos_theta );
+    // set_Sin_theta( Sin_theta );
+    // set_Cos_psi( Cos_psi );
+    // set_Sin_psi( Sin_psi );
 
-    // ***ATTENDTOME*** f.set_Gamma_vert_rad( Gamma_vert_rad );
-    // f.set_Gamma_horiz_rad( Gamma_horiz_rad );
+    // ***ATTENDTOME*** set_Gamma_vert_rad( Gamma_vert_rad );
+    // set_Gamma_horiz_rad( Gamma_horiz_rad );
 
-    // f.set_Sigma( Sigma );
-    // f.set_Density( Density );
-    // f.set_V_sound( V_sound );
-    // f.set_Mach_number( Mach_number );
+    // set_Sigma( Sigma );
+    // set_Density( Density );
+    // set_V_sound( V_sound );
+    // set_Mach_number( Mach_number );
 
-    // f.set_Static_pressure( Static_pressure );
-    // f.set_Total_pressure( Total_pressure );
-    // f.set_Impact_pressure( Impact_pressure );
-    // f.set_Dynamic_pressure( Dynamic_pressure );
+    // set_Static_pressure( Static_pressure );
+    // set_Total_pressure( Total_pressure );
+    // set_Impact_pressure( Impact_pressure );
+    // set_Dynamic_pressure( Dynamic_pressure );
 
-    // f.set_Static_temperature( Static_temperature );
-    // f.set_Total_temperature( Total_temperature );
+    // set_Static_temperature( Static_temperature );
+    // set_Total_temperature( Total_temperature );
 
-    /* **FIXME*** */ f.set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
-    /* **FIXME*** */ f.set_Earth_position_angle( 0.0 );
+    /* **FIXME*** */ set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
+    /* **FIXME*** */ set_Earth_position_angle( 0.0 );
 
-    /* ***FIXME*** */ f.set_Runway_altitude( 0.0 );
-    // f.set_Runway_latitude( Runway_latitude );
-    // f.set_Runway_longitude( Runway_longitude );
-    // f.set_Runway_heading( Runway_heading );
-    // f.set_Radius_to_rwy( Radius_to_rwy );
+    /* ***FIXME*** */ set_Runway_altitude( 0.0 );
+    // set_Runway_latitude( Runway_latitude );
+    // set_Runway_longitude( Runway_longitude );
+    // set_Runway_heading( Runway_heading );
+    // set_Radius_to_rwy( Radius_to_rwy );
 
-    // f.set_CG_Rwy_Local( D_cg_north_of_rwy, D_cg_east_of_rwy, D_cg_above_rwy);
-    // f.set_CG_Rwy_Rwy( X_cg_rwy, Y_cg_rwy, H_cg_rwy );
-    // f.set_Pilot_Rwy_Local( D_pilot_north_of_rwy, D_pilot_east_of_rwy, 
+    // set_CG_Rwy_Local( D_cg_north_of_rwy, D_cg_east_of_rwy, D_cg_above_rwy);
+    // set_CG_Rwy_Rwy( X_cg_rwy, Y_cg_rwy, H_cg_rwy );
+    // set_Pilot_Rwy_Local( D_pilot_north_of_rwy, D_pilot_east_of_rwy, 
     //                        D_pilot_above_rwy );
-    // f.set_Pilot_Rwy_Rwy( X_pilot_rwy, Y_pilot_rwy, H_pilot_rwy );
+    // set_Pilot_Rwy_Rwy( X_pilot_rwy, Y_pilot_rwy, H_pilot_rwy );
 
-    f.set_sin_lat_geocentric( lat_geoc );
-    f.set_cos_lat_geocentric( lat_geoc );
-    f.set_sin_cos_longitude( lon );
-    f.set_sin_cos_latitude( lat_geod );
+    set_sin_lat_geocentric( lat_geoc );
+    set_cos_lat_geocentric( lat_geoc );
+    set_sin_cos_longitude( lon );
+    set_sin_cos_latitude( lat_geod );
 
-    return 0;
+    return 1;
 }
 
 

@@ -36,7 +36,7 @@ fgAIRCRAFT current_aircraft;
 void fgAircraftInit( void ) {
     FG_LOG( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure" );
 
-    current_aircraft.fdm_state   = &cur_fdm_state;
+    current_aircraft.fdm_state   = cur_fdm_state;
     current_aircraft.controls = &controls;
 }
 

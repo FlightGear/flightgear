@@ -30,17 +30,25 @@
 #include <Aircraft/aircraft.hxx>
 
 
-// reset flight params to a specific position 
-int fgJSBsimInit(double dt, FGInterface& f);
+class FGJSBsim: public FGInterface {
 
-// update position based on inputs, positions, velocities, etc.
-int fgJSBsimUpdate(FGInterface& f, int multiloop);
+    // The aircraft for this instance
+    FGFDMExec FDMExec;
 
-// Convert from the FGInterface struct to the JSBsim generic_ struct
-int FGInterface_2_JSBsim (FGInterface& f);
+public:
 
-// Convert from the JSBsim generic_ struct to the FGInterface struct
-int fgJSBsim_2_FGInterface (FGInterface& f);
+    // copy FDM state to LaRCsim structures
+    int copy_to_JSBsim();
+
+    // copy FDM state from LaRCsim structures
+    int copy_from_JSBsim();
+
+    // reset flight params to a specific position 
+    int init( double dt );
+
+    // update position based on inputs, positions, velocities, etc.
+    int update( int multiloop );
+};
 
 
 #endif // _JSBSIM_HXX

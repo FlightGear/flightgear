@@ -30,17 +30,22 @@
 #include "flight.hxx"
 
 
-// reset flight params to a specific position 
-int fgLaRCsimInit(double dt);
+class FGLaRCsim: public FGInterface {
 
-// update position based on inputs, positions, velocities, etc.
-int fgLaRCsimUpdate(FGInterface& f, int multiloop);
+public:
 
-// Convert from the FGInterface struct to the LaRCsim generic_ struct
-int FGInterface_2_LaRCsim (FGInterface& f);
+    // copy FDM state to LaRCsim structures
+    int copy_to_LaRCsim();
 
-// Convert from the LaRCsim generic_ struct to the FGInterface struct
-int fgLaRCsim_2_FGInterface (FGInterface& f);
+    // copy FDM state from LaRCsim structures
+    int copy_from_LaRCsim();
+
+    // reset flight params to a specific position 
+    int init( double dt );
+
+    // update position based on inputs, positions, velocities, etc.
+    int update( int multiloop );
+};
 
 
 #endif // _LARCSIM_HXX

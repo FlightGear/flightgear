@@ -105,6 +105,10 @@ class FGInterface {
 
 public:
 
+    virtual int init( double dt );
+    virtual int update( int multi_loop );
+    virtual ~FGInterface();
+
     // Define the various supported flight models (many not yet implemented)
     enum {
 	// Slew (in MS terminology)
@@ -851,7 +855,7 @@ typedef fdm_state_list::iterator fdm_state_list_iterator;
 typedef fdm_state_list::const_iterator const_fdm_state_list_iterator;
 
 
-extern FGInterface cur_fdm_state;
+extern FGInterface * cur_fdm_state;
 
 
 // General interface to the flight model routines

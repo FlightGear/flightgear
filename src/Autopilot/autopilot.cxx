@@ -142,7 +142,7 @@ extern char *coord_format_lon(float);
 
 static inline double get_ground_speed( void ) {
     // starts in ft/s so we convert to kts
-    double ft_s = current_aircraft.fdm_state->get_V_ground_speed() 
+    double ft_s = cur_fdm_state->get_V_ground_speed() 
 	* current_options.get_speed_up();;
     double kts = ft_s * FEET_TO_METER * 3600 * METER_TO_NM;
     return kts;
@@ -209,50 +209,50 @@ static inline void MakeTargetLatLonStr( fgAPDataPtr APData, double lat, double l
 }
 
 static inline double get_speed( void ) {
-    return( current_aircraft.fdm_state->get_V_equiv_kts() );
+    return( cur_fdm_state->get_V_equiv_kts() );
 }
 
 static inline double get_aoa( void ) {
-    return( current_aircraft.fdm_state->get_Gamma_vert_rad() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Gamma_vert_rad() * RAD_TO_DEG );
 }
 
 static inline double fgAPget_latitude( void ) {
-    return( current_aircraft.fdm_state->get_Latitude() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Latitude() * RAD_TO_DEG );
 }
 
 static inline double fgAPget_longitude( void ) {
-    return( current_aircraft.fdm_state->get_Longitude() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Longitude() * RAD_TO_DEG );
 }
 
 static inline double fgAPget_roll( void ) {
-    return( current_aircraft.fdm_state->get_Phi() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Phi() * RAD_TO_DEG );
 }
 
 static inline double get_pitch( void ) {
-    return( current_aircraft.fdm_state->get_Theta() );
+    return( cur_fdm_state->get_Theta() );
 }
 
 double fgAPget_heading( void ) {
-    return( current_aircraft.fdm_state->get_Psi() * RAD_TO_DEG );
+    return( cur_fdm_state->get_Psi() * RAD_TO_DEG );
 }
 
 static inline double fgAPget_altitude( void ) {
-    return( current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER );
+    return( cur_fdm_state->get_Altitude() * FEET_TO_METER );
 }
 
 static inline double fgAPget_climb( void ) {
     // return in meters per minute
-    return( current_aircraft.fdm_state->get_Climb_Rate() * FEET_TO_METER * 60 );
+    return( cur_fdm_state->get_Climb_Rate() * FEET_TO_METER * 60 );
 }
 
 static inline double get_sideslip( void ) {
-    return( current_aircraft.fdm_state->get_Beta() );
+    return( cur_fdm_state->get_Beta() );
 }
 
 static inline double fgAPget_agl( void ) {
     double agl;
 
-    agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+    agl = cur_fdm_state->get_Altitude() * FEET_TO_METER
 	- scenery.cur_elev;
 
     return( agl );
@@ -607,7 +607,7 @@ void NewAltitudeInit(void)
     char NewAltitudeLabel[] = "Enter New Altitude";
     char *s;
 
-    float alt = current_aircraft.fdm_state->get_Altitude();
+    float alt = cur_fdm_state->get_Altitude();
 
     if ( current_options.get_units() == fgOPTIONS::FG_UNITS_METERS) {
 	alt *= FEET_TO_METER;
