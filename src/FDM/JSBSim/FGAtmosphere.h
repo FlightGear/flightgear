@@ -161,7 +161,7 @@ public:
 private:
   double rho;
 
-  enum tType {ttBerndt, ttNone} turbType;
+  enum tType {ttStandard, ttBerndt, ttNone} turbType;
 
   int lastIndex;
   double h;
