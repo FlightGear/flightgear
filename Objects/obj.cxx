@@ -416,9 +416,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    }
 
 		    in >> n3;
-		    cout << "  triangle = " 
-			 << n1 << "," << n2 << "," << n3 
-			 << endl;
+		    // cout << "  triangle = " 
+		    //      << n1 << "," << n2 << "," << n3 
+		    //      << endl;
 		    xglNormal3dv(normals[n3]);
 		    pp = calc_tex_coords(nodes[n3], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
@@ -595,6 +595,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.15  1999/03/31 13:25:58  curt
+// Removed some debugging output.
+//
 // Revision 1.14  1999/03/30 23:48:24  curt
 // modifications to obj loader to handle tri fans.
 //
