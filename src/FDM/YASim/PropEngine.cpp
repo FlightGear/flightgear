@@ -82,9 +82,10 @@ void PropEngine::stabilize()
 {
     float speed = -Math::dot3(_wind, _dir);
     _eng->setThrottle(_throttle);
-    _eng->setStarter(_starter);
-    _eng->setMagnetos(true);	// FIXME: otherwise, an infinite loop
     _eng->setMixture(_mixture);
+
+    _eng->setMagnetos(3);
+    _eng->setRunning(true);
 
     if(_variable) {
 	_omega = _minOmega + _advance * (_maxOmega - _minOmega);
@@ -117,6 +118,9 @@ void PropEngine::stabilize()
 	    else            _prop->modPitch(1-(step*0.005));
 	}
     }
+
+    // ...and back off
+    _eng->setRunning(false);
 }
 
 void PropEngine::integrate(float dt)
@@ -142,10 +146,6 @@ void PropEngine::integrate(float dt)
     // Runge-Kutta stuff.
     float rotacc = (engTorque-propTorque)/Math::abs(_moment);
     _omega += dt * rotacc;
-
-    // Clamp to a 500 rpm idle.  This should probably be settable, and
-    // needs to go away when the startup code gets written.
-//     if(_omega < 52.3) _omega = 52.3;
 
     // Store the total angular momentum into _gyro
     Math::mul3(_omega*_moment, _dir, _gyro);

@@ -77,6 +77,8 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
     map->src0 = map->dst0 = 0;
     if(type==FLAP0 || type==FLAP1 || type==STEER)
 	map->src0 = map->dst0 = -1;
+    if(type==MAGNETOS)
+	map->src1 = map->dst1 = 3;
 
     // And add it to the approproate vectors.
     Vector* maps = (Vector*)_inputs.get(input);
@@ -141,8 +143,8 @@ void ControlMap::applyControls()
 	switch(o->type) {
 	case THROTTLE: ((Thruster*)obj)->setThrottle(lval);        break;
 	case MIXTURE:  ((Thruster*)obj)->setMixture(lval);         break;
-	case STARTER:  ((Thruster*)obj)->setStarter(bool(lval));   break;
-	case MAGNETOS: ((PropEngine*)obj)->setMagnetos(int(lval)); break;
+	case STARTER:  ((Thruster*)obj)->setStarter((bool)lval);   break;
+	case MAGNETOS: ((PropEngine*)obj)->setMagnetos((int)lval); break;
 	case ADVANCE:  ((PropEngine*)obj)->setAdvance(lval);       break;
 	case REHEAT:   ((Jet*)obj)->setReheat(lval);               break;
 	case VECTOR:   ((Jet*)obj)->setRotation(lval);             break;

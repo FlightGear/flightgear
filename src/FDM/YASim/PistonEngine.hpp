@@ -17,6 +17,9 @@ public:
     void setMixture(float mixture);
     void setBoost(float boost); // fraction of turbo-mul used
 
+    // For solver use
+    void setRunning(bool r);
+
     float getMaxPower(); // max sea-level power
 
     void calc(float pressure, float temp, float speed);

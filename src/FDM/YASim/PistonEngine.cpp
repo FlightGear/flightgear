@@ -5,6 +5,7 @@ namespace yasim {
 
 const static float HP2W = 745.7;
 const static float CIN2CM = 1.6387064e-5;
+const static float RPM2RADPS = 0.1047198;
 
 PistonEngine::PistonEngine(float power, float speed)
 {
@@ -71,9 +72,14 @@ void PistonEngine::setThrottle(float t)
     _throttle = t;
 }
 
+void PistonEngine::setRunning(bool r)
+{
+    _running = r;
+}
+
 void PistonEngine::setStarter(bool s)
 {
-    _starter = s;
+    _cranking = s;
 }
 
 void PistonEngine::setMagnetos(int m)
@@ -123,19 +129,10 @@ float PistonEngine::getEGT()
 
 void PistonEngine::calc(float pressure, float temp, float speed)
 {
-    if (_magnetos == 0) {
-      _running = false;
-      _mp = pressure;
-      _torque = 0;
-      _fuelFlow = 0;
-      _egt = 80;		// FIXME: totally made-up
-      return;
-    }
-
-    _running = true;
-    _cranking = false;
-
-    // TODO: degrade performance on single magneto
+    if(_magnetos == 0 || speed < 200*RPM2RADPS)
+	_running = false;
+    else
+	_running = true;
 
     // Calculate manifold pressure as ambient pressure modified for
     // turbocharging and reduced by the throttle setting.  According
@@ -178,10 +175,29 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     else
         burned = _fuelFlow + (burnable-_fuelFlow)*(r-.625)*(4.0/3.0);
 
+    // Correct for engine control state
+    if(!_running)
+	burned = 0;
+    if(_magnetos < 3)
+	burned *= 0.9;
+
     // And finally the power is just the reference power scaled by the
     // amount of fuel burned, and torque is that divided by RPM.
     float power = _power0 * burned/_f0;
     _torque = power/speed;
+
+    // Figure that the starter motor produces 20% of the engine's
+    // cruise torque.
+    if(_cranking && !_running)
+	_torque += 0.20 * _power0/_omega0;
+
+    // Also, add a negative torque of 10% of cruise, to represent
+    // internal friction.  Propeller aerodynamic friction is too low
+    // at low RPMs to provide a good deceleration.  Interpolate it
+    // away as we approach cruise RPMs, though, to prevent interaction
+    // with the power computations.  Ugly.
+    if(speed > 0 && speed < _omega0)
+	_torque -= 0.05 * (_power0/_omega0) * (1 - speed/_omega0);
 
     // Now EGT.  This one gets a little goofy.  We can calculate the
     // work done by an isentropically expanding exhaust gas as the
@@ -204,6 +220,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     float specHeat = 1300;
     float corr = 1.0/(Math::pow(_compression, 0.4) - 1);
     _egt = corr * (power * 1.1) / (massFlow * specHeat);
+    if(_egt < temp) _egt = temp;
 }
 
 }; // namespace yasim
