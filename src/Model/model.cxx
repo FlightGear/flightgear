@@ -349,6 +349,9 @@ fgLoad3DModel( const string &fg_root, const string &path,
 // Implementation of Animation
 ////////////////////////////////////////////////////////////////////////
 
+// Initialize the static data member
+double Animation::sim_time_sec = 0.0;
+
 Animation::Animation (SGPropertyNode_ptr props, ssgBranch * branch)
     : _branch(branch)
 {
@@ -365,7 +368,7 @@ Animation::init ()
 }
 
 void
-Animation::update ()
+Animation::update()
 {
 }
 
@@ -440,7 +443,7 @@ SelectAnimation::~SelectAnimation ()
 }
 
 void
-SelectAnimation::update ()
+SelectAnimation::update()
 {
   if (_condition != 0 && _condition->test()) 
       ((ssgSelector *)_branch)->select(0xffff);
@@ -461,7 +464,7 @@ SpinAnimation::SpinAnimation( SGPropertyNode *prop_root,
     _prop((SGPropertyNode *)prop_root->getNode(props->getStringValue("property", "/null"), true)),
     _factor(props->getDoubleValue("factor", 1.0)),
     _position_deg(props->getDoubleValue("starting-position-deg", 0)),
-    _last_time_sec( sim_time_sec /* globals->get_sim_time_sec() */ )
+    _last_time_sec( sim_time_sec )
 {
     _center[0] = props->getFloatValue("center/x-m", 0);
     _center[1] = props->getFloatValue("center/y-m", 0);
@@ -477,7 +480,7 @@ SpinAnimation::~SpinAnimation ()
 }
 
 void
-SpinAnimation::update( double sim_time_sec )
+SpinAnimation::update()
 {
   double dt = sim_time_sec - _last_time_sec;
   _last_time_sec = sim_time_sec;
@@ -511,7 +514,7 @@ TimedAnimation::~TimedAnimation ()
 }
 
 void
-TimedAnimation::update( double sim_time_sec )
+TimedAnimation::update()
 {
     if ((sim_time_sec - _last_time_sec) >= _duration_sec) {
         _last_time_sec = sim_time_sec;
@@ -602,7 +605,7 @@ TranslateAnimation::~TranslateAnimation ()
 }
 
 void
-TranslateAnimation::update ()
+TranslateAnimation::update()
 {
   if (_table == 0) {
     _position_m = (_prop->getDoubleValue() + _offset_m) * _factor;

@@ -53,8 +53,7 @@ class FGLocation;
  * instead, they should use the FGModelLoader declared in loader.hxx.
  */
 ssgBranch * fgLoad3DModel( const string& fg_root, const string &path,
-                           SGPropertyNode *prop_root,
-                           double sim_time_sec );
+                           SGPropertyNode *prop_root, double sim_time_sec );
 
 
 
@@ -86,9 +85,17 @@ public:
   /**
    * Update the animation.
    */
-  virtual void update ();
+  virtual void update();
+
+  /**
+   * Set the value of sim_time_sec.  This needs to be called every
+   * frame in order for the time based animations to work correctly.
+   */
+  static void set_sim_time_sec( double val ) { sim_time_sec = val; }
 
 protected:
+
+  static double sim_time_sec;
 
   ssgBranch * _branch;
 
@@ -137,7 +144,7 @@ public:
   SelectAnimation( SGPropertyNode *prop_root,
                    SGPropertyNode_ptr props );
   virtual ~SelectAnimation ();
-  virtual void update ();
+  virtual void update();
 private:
   FGCondition * _condition;
 };
@@ -155,7 +162,7 @@ public:
                  SGPropertyNode_ptr props,
                  double sim_time_sec );
   virtual ~SpinAnimation ();
-  virtual void update( double sim_time_sec );
+  virtual void update();
 private:
   SGPropertyNode_ptr _prop;
   double _factor;
@@ -175,7 +182,7 @@ class TimedAnimation : public Animation
 public:
     TimedAnimation (SGPropertyNode_ptr props);
     virtual ~TimedAnimation ();
-    virtual void update( double sim_time_sec );
+    virtual void update();
 private:
     double _duration_sec;
     double _last_time_sec;
@@ -219,7 +226,7 @@ public:
   TranslateAnimation( SGPropertyNode *prop_root,
                       SGPropertyNode_ptr props );
   virtual ~TranslateAnimation ();
-  virtual void update ();
+  virtual void update();
 private:
   SGPropertyNode_ptr _prop;
   double _offset_m;

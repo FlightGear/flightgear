@@ -497,6 +497,7 @@ void fgRenderFrame() {
         }
         // Keep resetting sim time while the sim is initializing
         globals->set_sim_time_sec( 0.0 );
+        Animation::set_sim_time_sec( 0.0 );
     } else {
         // idle_state is now 1000 meaning we've finished all our
         // initializations and are running the main loop, so this will
@@ -1024,6 +1025,7 @@ static void fgMainLoop( void ) {
         delta_time_sec = 0;
     last_time_stamp = current_time_stamp;
     globals->inc_sim_time_sec( delta_time_sec );
+    Animation::set_sim_time_sec( globals->get_sim_time_sec() );
 
     static long remainder = 0;
     long elapsed;
@@ -1038,6 +1040,7 @@ static void fgMainLoop( void ) {
     SGTime *t = globals->get_time_params();
 
     sglog().setLogLevels( SG_ALL, (sgDebugPriority)fgGetInt("/sim/log-level") );
+    sglog().setLogLevels( SG_ALL, SG_INFO );
 
     FGLocation * acmodel_location = 0;
     if(cur_fdm_state->getACModel() != 0) {
