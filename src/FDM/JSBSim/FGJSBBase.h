@@ -38,7 +38,7 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <limits>
+#include <float.h>
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
@@ -204,7 +204,7 @@ public:
       @param b second value to compare
       @return if the two values can be considered equal up to roundoff */
   static bool EqualToRoundoff(double a, double b) {
-    double eps = 2.0*std::numeric_limits<double>::epsilon();
+    double eps = 2.0*DBL_EPSILON;
     return fabs(a - b) <= eps*max(fabs(a), fabs(b));
   }
 
@@ -213,7 +213,7 @@ public:
       @param b second value to compare
       @return if the two values can be considered equal up to roundoff */
   static bool EqualToRoundoff(float a, float b) {
-    float eps = 2.0*std::numeric_limits<float>::epsilon();
+    float eps = 2.0*FLT_EPSILON;
     return fabs(a - b) <= eps*max(fabs(a), fabs(b));
   }
 
