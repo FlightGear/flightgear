@@ -10,6 +10,7 @@
 
 
 #include <math.h>
+#include <errno.h>
 
 #include <Include/fg_constants.h>
 #include <Math/fg_geodesy.hxx>
@@ -54,6 +55,13 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 	r_alpha = x_alpha/cos(lat_geoc);
 	l_point = radius - r_alpha;
 	*alt = l_point*cos(delt_lambda);
+
+	// check for domain error
+	if ( errno == EDOM ) {
+	    cout << "Domain ERROR in fgGeocToGeod!!!!\n";
+	    *alt = 0.0;
+	}
+
 	denom = sqrt(1-EPS*EPS*sin_mu_a*sin_mu_a);
 	rho_alpha = EQUATORIAL_RADIUS_M*(1-EPS)/
 	    (denom*denom*denom);
@@ -63,7 +71,14 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 	sin_lambda_sl = sin( lambda_sl );
 	*sea_level_r = 
 	    sqrt(RESQ_M / (1 + ((1/(E*E))-1)*sin_lambda_sl*sin_lambda_sl));
+
+	// check for domain error
+	if ( errno == EDOM ) {
+	    cout << "Domain ERROR in fgGeocToGeod!!!!\n";
+	    *sea_level_r = 0.0;
+	}
     }
+
 }
 
 
@@ -139,6 +154,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.3  1998/11/11 00:18:36  curt
+Check for domain error in fgGeoctoGeod()
+
 Revision 1.2  1998/10/16 23:36:36  curt
 c++-ifying.
 
@@ -218,6 +236,9 @@ Initial Flight Gear revision.
 
 
 // $Log$
+// Revision 1.3  1998/11/11 00:18:36  curt
+// Check for domain error in fgGeoctoGeod()
+//
 // Revision 1.2  1998/10/16 23:36:36  curt
 // c++-ifying.
 //

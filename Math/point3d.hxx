@@ -133,7 +133,7 @@ operator >> ( istream& in, Point3D& p)
 inline ostream&
 operator<< ( ostream& out, const Point3D& p )
 {
-    return out << p.n[PX] << ',' << p.n[PY] << ',' << p.n[PZ];
+    return out << p.n[PX] << ", " << p.n[PY] << ", " << p.n[PZ];
 }
 
 ///////////////////////////
@@ -293,6 +293,9 @@ Point3D::distance3D(const Point3D& a ) const
 
 
 // $Log$
+// Revision 1.4  1998/11/11 00:18:38  curt
+// Check for domain error in fgGeoctoGeod()
+//
 // Revision 1.3  1998/10/20 18:21:49  curt
 // Tweaks from Bernie Bright.
 //
