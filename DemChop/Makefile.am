@@ -33,6 +33,7 @@ demchop_LDADD = \
 	$(top_builddir)/Tools/Lib/DEM/libDEM.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
+	$(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(base_LIBS)
 
@@ -46,6 +47,9 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1999/03/12 22:53:45  curt
+# First working version!
+#
 # Revision 1.1  1999/03/10 01:02:54  curt
 # Initial revision.
 #

@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 
     fglog().setLogLevels( FG_ALL, FG_DEBUG );
 
-    if ( argc != 4 ) {
+    if ( argc != 3 ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, 
 		"Usage " << argv[0] << " <dem_file> <work_dir>" );
 	exit(-1);
@@ -59,21 +59,23 @@ int main(int argc, char **argv) {
     string command = "mkdir -p " + work_dir;
     system( command.c_str() );
 
-    fgDEM dem(dem_name);
+    FGDem dem(dem_name);
     dem.parse();
     dem.close();
 
     point2d min, max;
-    min.x = dem.get_originx() / 3600.0;
-    min.y = dem.get_originy() / 3600.0;
+    min.x = dem.get_originx() / 3600.0 + FG_HALF_BUCKET_SPAN;
+    min.y = dem.get_originy() / 3600.0 + FG_HALF_BUCKET_SPAN;
     FGBucket b_min( min.x, min.y );
 
-    max.x = min.x + ( dem.get_cols() * dem.get_col_step() ) / 3600.0;
-    max.y = min.y + ( dem.get_rows() * dem.get_row_step() ) / 3600.0;
+    max.x = (dem.get_originx() + dem.get_cols() * dem.get_col_step()) / 3600.0 
+	- FG_HALF_BUCKET_SPAN;
+    max.y = (dem.get_originy() + dem.get_rows() * dem.get_row_step()) / 3600.0 
+	- FG_HALF_BUCKET_SPAN;
     FGBucket b_max( max.x, max.y );
 
     if ( b_min == b_max ) {
-	dem.write_area( b_min );
+	dem.write_area( work_dir, b_min, true );
     } else {
 	FGBucket b_cur;
 	int dx, dy, i, j;
@@ -90,7 +92,7 @@ int main(int argc, char **argv) {
 	for ( j = 0; j <= dy; j++ ) {
 	    for ( i = 0; i <= dx; i++ ) {
 		b_cur = fgBucketOffset(min.x, min.y, i, j);
-		dem.write_area( b_cur );
+		dem.write_area( work_dir, b_cur, true );
 	    }
 	}
     }
@@ -100,6 +102,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.3  1999/03/12 22:53:46  curt
+// First working version!
+//
 // Revision 1.2  1999/03/10 16:09:44  curt
 // Hacking towards the first working version.
 //
