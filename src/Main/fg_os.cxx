@@ -139,6 +139,11 @@ void fgOSMainLoop()
     glutMainLoop();
 }
 
+void fgOSExit(int code)
+{
+    exit(code);
+}
+
 static int CurrentCursor = MOUSE_CURSOR_POINTER;
 
 int fgGetMouseCursor()

@@ -1447,6 +1447,7 @@ void fgReshape( int width, int height ) {
 // which happens in the sound manager destructor.
 void fgExitCleanup() {
     delete globals;
+    fgOSExit(0);
 }
 
 

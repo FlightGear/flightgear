@@ -46,6 +46,7 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool stencil,
                     bool fullscreen);
 void fgOSFullScreen();
 void fgOSMainLoop();
+void fgOSExit(int code);
 
 void fgSetMouseCursor(int cursor);
 int  fgGetMouseCursor();
