@@ -72,11 +72,11 @@ void fgBucketParseIndex(long int index, fgBUCKET *p) {
 
 // Build a path name from an tile index
 void fgBucketGenBasePath( const fgBUCKET *p, char *path) {
-    long int index;
+    // long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
 
-    index = fgBucketGenIndex(p);
+    // index = fgBucketGenIndex(p);
 
     path[0] = '\0';
 
@@ -206,7 +206,7 @@ void fgBucketFind(double lon, double lat, fgBUCKET *p) {
 
 // Given a lat/lon, fill in the local tile index array
 void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height) {
-    fgBUCKET *p2;
+    // fgBUCKET *p2;
     int dw, dh, i, j;
 
     dh = height / 2;
@@ -214,7 +214,7 @@ void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height) {
     for ( j = 0; j < height; j++ ) {
 	for ( i = 0; i < width; i++ ) {
 	    fgBucketOffset(p1, &tiles[(j*width)+i], i - dw, j - dh);
-	    p2 = &tiles[(j*width)+i];
+	    // p2 = &tiles[(j*width)+i];
 	    /* printf( "  bucket = %d %d %d %d  index = %ld\n", 
 		    p2->lon, p2->lat, p2->x, p2->y, 
 		    fgBucketGenIndex(&tiles[(j*width)+i])); */
@@ -265,6 +265,9 @@ int main() {
 
 
 // $Log$
+// Revision 1.2  1999/02/26 22:07:53  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.1  1999/02/17 20:52:05  curt
 // Renamed bucketutils.c -> bucketutils.cxx
 //

@@ -32,11 +32,14 @@
 # error This library requires C++
 #endif                                   
 
-
-#include <string>
-
 #include "Include/compiler.h"
+
+#include STL_STRING
 FG_USING_STD(string);
+
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
 
 #define MAX_TABLE_SIZE 32
 
@@ -63,6 +66,9 @@ public:
 
 
 // $Log$
+// Revision 1.5  1999/02/26 22:08:05  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.4  1999/01/27 04:46:17  curt
 // Portability tweaks by Bernie Bright.
 //

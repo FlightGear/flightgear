@@ -34,13 +34,18 @@
 #  include <config.h>
 #endif
 
-#include "Include/compiler.h"
-#include <string>
-FG_USING_STD(string);
-
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
 #  include <windows.h>
 #endif
+
+#include <Include/compiler.h>
+#include STL_STRING
+FG_USING_STD(string);
+
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
+
 
 // if someone know how to do this all with C++ streams let me know
 // #include <stdio.h>
@@ -80,6 +85,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/02/26 22:08:13  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.3  1999/02/02 20:13:24  curt
 // MSVC++ portability changes by Bernie Bright:
 //

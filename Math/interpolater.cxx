@@ -24,7 +24,9 @@
 // (Log is kept at end of this file)
 
 
-#include <string>
+#include <Include/compiler.h>
+
+#include STL_STRING
 
 #include <Debug/logstream.hxx>
 #include <Include/fg_zlib.h>
@@ -101,6 +103,9 @@ fgINTERPTABLE::~fgINTERPTABLE( void ) {
 
 
 // $Log$
+// Revision 1.7  1999/02/26 22:08:03  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.6  1999/01/27 04:46:16  curt
 // Portability tweaks by Bernie Bright.
 //

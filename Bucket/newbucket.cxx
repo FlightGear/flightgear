@@ -34,12 +34,12 @@
 
 // Build the path name for this bucket
 string FGBucket::gen_base_path() {
-    long int index;
+    // long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
     char path[256];
 
-    index = gen_index();
+    // index = gen_index();
 
     path[0] = '\0';
 	
@@ -146,6 +146,9 @@ void fgBucketDiff( const FGBucket& b1, const FGBucket& b2, int *dx, int *dy ) {
 
 
 // $Log$
+// Revision 1.3  1999/02/26 22:07:54  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.2  1999/02/11 01:09:33  curt
 // Added a routine to calculate the offset in bucket units between two buckets.
 //
@@ -154,3 +157,4 @@ void fgBucketDiff( const FGBucket& b1, const FGBucket& b2, int *dx, int *dy ) {
 // fgBUCKET struct and C routines.  This FGBucket class adjusts the tile
 // width towards the poles to ensure the tiles are at least 8 miles wide.
 //
+

@@ -32,20 +32,27 @@
 #  include "Include/config.h"
 #endif
 
-#include <string>
+#include <Include/compiler.h>
 
-#include "Include/compiler.h"
-#ifdef FG_HAVE_STD_INCLUDES
+#if defined( FG_HAVE_STD_INCLUDES )
 #  include <istream>
+#elif defined ( FG_HAVE_NATIVE_SGI_COMPILERS )
+#  include <CC/stream.h>
 #else
 #  include <istream.h>
 #endif
 
+#include STL_STRING
+
+#include "zfstream.hxx"
+
 FG_USING_STD(string);
 FG_USING_STD(istream);
 
+#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_NAMESPACE(std);
+#endif
 
-#include "zfstream.hxx"
 
 //-----------------------------------------------------------------------------
 //
@@ -92,6 +99,9 @@ istream& skipcomment( istream& in );
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.7  1999/02/26 22:08:08  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.6  1999/01/19 20:41:46  curt
 // Portability updates contributed by Bernie Bright.
 //

@@ -29,7 +29,7 @@
 
 #include <Include/compiler.h>
 
-#include <string>
+#include STL_STRING
 
 FG_USING_STD(string);
 FG_USING_NAMESPACE(std);
@@ -290,6 +290,9 @@ fgBucketGenIndex( const fgBUCKET& p )
 
 
 // $Log$
+// Revision 1.3  1999/02/26 22:07:55  curt
+// Added initial support for native SGI compilers.
+//
 // Revision 1.2  1999/02/11 01:09:34  curt
 // Added a routine to calculate the offset in bucket units between two buckets.
 //
