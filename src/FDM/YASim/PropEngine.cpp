@@ -216,7 +216,8 @@ void PropEngine::integrate(float dt)
     // _current_ RPM.  Seek to that.  This is sort of a continuous
     // Newton-Raphson, basically.
     if(_variable) {
-	float targetOmega = _minOmega + _advance*(_maxOmega-_minOmega);
+	float targetPropSpd = _minOmega + _advance*(_maxOmega-_minOmega);
+        float targetOmega = targetPropSpd / _gearRatio; // -> "engine omega"
 	float ratio2 = (_omega*_omega)/(targetOmega*targetOmega);
 	float targetTorque = engTorque * ratio2;
 
