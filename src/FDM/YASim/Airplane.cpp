@@ -431,6 +431,8 @@ float Airplane::compileFuselage(Fuselage* f)
         Math::unit3(fwd, x);
         y[0] = 0; y[1] = 1; y[2] = 0;
         Math::cross3(x, y, z);
+	Math::unit3(z, z);
+	Math::cross3(z, x, y);
         s->setOrientation(o);
 
         _model.addSurface(s);
