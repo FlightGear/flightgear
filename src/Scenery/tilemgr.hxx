@@ -100,6 +100,7 @@ private:
     // current longitude latitude
     double longitude;
     double latitude;
+    double altitude_m;
     double last_longitude;
     double last_latitude;
 
@@ -166,7 +167,8 @@ public:
     int update( SGLocation *location, double visibility_meters,
                 sgdVec3 abs_pos_vector );
 
-    int updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center );
+    int updateCurrentElevAtPos( sgdVec3 abs_pos_vector, double altitude_m,
+                                Point3D center );
 
     // Determine scenery altitude.  Normally this just happens when we
     // render the scene, but we'd also like to be able to do this

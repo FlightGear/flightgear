@@ -367,6 +367,15 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
 {
     longitude = location->getLongitude_deg();
     latitude = location->getLatitude_deg();
+    // add 2.0m to the max altitude to give a little leeway to the
+    // ground reaction code.
+    altitude_m = location->getAltitudeASL_ft() * SG_FEET_TO_METER + 2.0;
+
+    // if current altitude is apparently not initialized, set max
+    // altitude to something big.
+    if ( altitude_m < -1000 ) {
+        altitude_m = 10000;
+    }
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << longitude << " " << latatitude );
 
@@ -411,7 +420,7 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
     // no reason to update this if we haven't moved...
     if ( longitude != last_longitude || latitude != last_latitude ) {
         // update current elevation... 
-        if ( updateCurrentElevAtPos( abs_pos_vector,
+        if ( updateCurrentElevAtPos( abs_pos_vector, altitude_m,
                                      location->get_tile_center() ) )
         {
             last_longitude = longitude;
@@ -432,8 +441,10 @@ void FGTileMgr::refresh_view_timestamps() {
 }
 
 
-int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
-
+int FGTileMgr::updateCurrentElevAtPos( sgdVec3 abs_pos_vector,
+                                       double max_alt_m,
+                                       Point3D center)
+{
     sgdVec3 sc;
 
     sgdSetVec3( sc, center[0], center[1], center[2]);
@@ -449,6 +460,7 @@ int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
         // scenery center has been properly defined so any hit should
         // be valid (and not just luck)
         hit = fgCurrentElev(abs_pos_vector,
+                            max_alt_m,
                             sc,
 		// uncomment next paramater to fly under
 		// bridges and a slightly faster algorithm

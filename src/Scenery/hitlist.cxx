@@ -511,7 +511,8 @@ static void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center, float *radiu
 // ======================
 // Determine scenery altitude via ssg.
 // returned results are in meters
-bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
+bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
+                    sgdVec3 scenery_center,
                     FGHitList *hit_list,
                     double *terrain_elev, double *radius, double *normal)
 {
@@ -539,7 +540,8 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
                      &alt, &sea_level_r);
         // cout << "hit " << i << " lon = " << geoc.lon() << " lat = "
         //      << lat_geod << " alt = " << alt << endl;
-        if ( alt > result && alt < 10000 ) {
+        if ( alt > result && alt < max_alt_m ) {
+            // cout << "  it's a keeper" << endl;
             result = alt;
             this_hit = i;
         }
@@ -571,7 +573,8 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
 // ======================
 // Determine scenery altitude via ssg.
 // returned results are in meters
-bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
+bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
+                    sgdVec3 scenery_center,
                     ssgTransform *terra_transform,
                     FGHitList *hit_list,
                     double *terrain_elev, double *radius, double *normal)
@@ -604,7 +607,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
         double lat_geod, alt, sea_level_r;
         sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
                      &alt, &sea_level_r);
-        if ( alt > result && alt < 20000 ) {
+        if ( alt > result && alt < max_alt_m ) {
             result = alt;
             this_hit = i;
         }
@@ -624,7 +627,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
         return true;
     } else {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "DOING FULL TERRAIN INTERSECTION" );
-        return fgCurrentElev( abs_view_pos, scenery_center, hit_list,
+        return fgCurrentElev( abs_view_pos, max_alt_m, scenery_center, hit_list,
                               terrain_elev,radius,normal);
     }
 }

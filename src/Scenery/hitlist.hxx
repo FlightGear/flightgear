@@ -85,6 +85,7 @@ public:
 // center, find the current terrain intersection elevation for the
 // point specified.
 bool fgCurrentElev( sgdVec3 abs_view_pos,
+                    double max_alt_m,
                     sgdVec3 scenery_center,
                     ssgTransform *terra_transform,
                     FGHitList *hit_list,
@@ -93,6 +94,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos,
                     double *normal );
 
 bool fgCurrentElev( sgdVec3 abs_view_pos,
+                    double max_alt_m,
                     sgdVec3 scenery_center,
                     FGHitList *hit_list,
                     double *terrain_elev,
