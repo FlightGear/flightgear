@@ -1383,7 +1383,8 @@ int mainLoop( int argc, char **argv ) {
         fgUsage();
 
 	SG_LOG( SG_GENERAL, SG_ALERT, "Base package check failed ... "
-		<< "Found version " << base_version );
+		<< "Found version " << base_version << " at: "
+                << globals->get_fg_root() );
         SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version 0.7.9" );
 	exit(-1);
     }
