@@ -1359,7 +1359,6 @@ bool FGATC610x::do_switches() {
         fgSetBool( "/controls/starter[0]", starter );
     }
 
-
     // flaps
     float flaps = 0.0;
     if ( switch_matrix[board][6][3] ) {
@@ -1382,23 +1381,29 @@ bool FGATC610x::do_switches() {
         fgSetFloat( "/controls/flaps", flaps );
     }
 
-    // fuel selector
+    // fuel selector (also filtered)
+    int fuel = 0;
     if ( switch_matrix[board][2][3] ) {
         // both
-        fgSetBool( "/controls/fuel-selector[0]", true );
-        fgSetBool( "/controls/fuel-selector[1]", true );
+        fuel = 3;
     } else if ( switch_matrix[board][1][3] ) {
         // left
-        fgSetBool( "/controls/fuel-selector[0]", true );
-        fgSetBool( "/controls/fuel-selector[1]", false );
+        fuel = 1;
     } else if ( switch_matrix[board][3][3] ) {
         // right
-        fgSetBool( "/controls/fuel-selector[0]", false );
-        fgSetBool( "/controls/fuel-selector[1]", true );
+        fuel = 2;
     } else {
         // fuel cutoff
-        fgSetBool( "/controls/fuel-selector[0]", false );
-        fgSetBool( "/controls/fuel-selector[1]", false );
+        fuel = 0;
+    }
+
+    static int fuel1, fuel2, fuel3;
+    fuel3 = fuel2;
+    fuel2 = fuel1;
+    fuel1 = fuel;
+    if ( fuel1 == fuel2 && fuel2 == fuel3 ) {
+        fgSetBool( "/controls/fuel-selector[0]", fuel & 0x01 );
+        fgSetBool( "/controls/fuel-selector[1]", fuel & 0x02 );
     }
 
     return true;
