@@ -141,7 +141,13 @@ TODO: allow differential braking (this will be useful if FlightGear
       ever supports tail-draggers like the DC-3)
 ---------------------------------------------------------------------*/
 
-static int mouse_yoke = 0;
+typedef enum {
+    MOUSE_POINTER,
+    MOUSE_YOKE,
+    MOUSE_VIEW
+} MouseMode;
+
+MouseMode mouse_mode = MOUSE_POINTER;
 static float aileron_sensitivity = 500.0;
 static float elevator_sensitivity = 500.0;
 static float brake_sensitivity = 250.0;
@@ -151,66 +157,114 @@ static float trim_sensitivity = 1000.0;
 
 void guiMotionFunc ( int x, int y )
 {
-    if (mouse_yoke) {
-	int ww = current_view.get_winWidth();
-	int wh = current_view.get_winHeight();
-
-	if (last_buttons & (1 << GLUT_LEFT_BUTTON)) {
-	    float brake_offset = (_mX - x) / brake_sensitivity;
-	    float throttle_offset = (_mY - y) / throttle_sensitivity;
-	    controls.move_brake(FGControls::ALL_WHEELS, brake_offset);
-	    controls.move_throttle(FGControls::ALL_ENGINES, throttle_offset);
-	} else if (last_buttons & (1 << GLUT_MIDDLE_BUTTON)) {
-	    float rudder_offset = (x - _mX) / rudder_sensitivity;
-	    float trim_offset = (_mY - y) / trim_sensitivity;
-	    controls.move_rudder(rudder_offset);
-	    controls.move_elevator_trim(trim_offset);
-	} else {
-	    float aileron_offset = (x - _mX) / aileron_sensitivity;
-	    float elevator_offset = (_mY - y) / elevator_sensitivity;
-	    controls.move_aileron(aileron_offset);
-	    controls.move_elevator(elevator_offset);
-	}
-	if (x < 5 || x > ww-5 || y < 5 || y > wh-5) {
-	    _mX = x = ww / 2;
-	    _mY = y = wh / 2;
-	    glutWarpPointer(x, y);
-	}
+    if (mouse_mode == MOUSE_POINTER) {
+      puMouse ( x, y ) ;
+      glutPostRedisplay () ;
     } else {
-        puMouse ( x, y ) ;
-        glutPostRedisplay () ;
+      int ww = current_view.get_winWidth();
+      int wh = current_view.get_winHeight();
+
+				// Mouse as yoke
+      if (mouse_mode == MOUSE_YOKE) {
+	if (last_buttons & (1 << GLUT_LEFT_BUTTON)) {
+	  float brake_offset = (_mX - x) / brake_sensitivity;
+	  float throttle_offset = (_mY - y) / throttle_sensitivity;
+	  controls.move_brake(FGControls::ALL_WHEELS, brake_offset);
+	  controls.move_throttle(FGControls::ALL_ENGINES, throttle_offset);
+	} else if (last_buttons & (1 << GLUT_MIDDLE_BUTTON)) {
+	  float rudder_offset = (x - _mX) / rudder_sensitivity;
+	  float trim_offset = (_mY - y) / trim_sensitivity;
+	  controls.move_rudder(rudder_offset);
+	  controls.move_elevator_trim(trim_offset);
+	} else {
+	  float aileron_offset = (x - _mX) / aileron_sensitivity;
+	  float elevator_offset = (_mY - y) / elevator_sensitivity;
+	  controls.move_aileron(aileron_offset);
+	  controls.move_elevator(elevator_offset);
+	}
+
+				// Mouse as view
+      } else {
+	FGView * v = &current_view;
+	double offset = v->get_goal_view_offset();
+	double full = FG_PI * 2.0;
+	offset += (_mX - x) / 500.0;
+	while (offset < 0) {
+	  offset += full;
+	}
+	while (offset > full) {
+	  offset -= full;
+	}
+	v->set_goal_view_offset(offset);
+      }
+
+				// Keep the mouse in the window.
+      if (x < 5 || x > ww-5 || y < 5 || y > wh-5) {
+	_mX = x = ww / 2;
+	_mY = y = wh / 2;
+	glutWarpPointer(x, y);
+      }
     }
+
+				// Record the new mouse position.
     _mX = x;
     _mY = y;
 }
 
 void guiMouseFunc(int button, int updown, int x, int y)
 {
-    // Toggle mouse as pointer or yoke
-    if (updown == GLUT_DOWN && (button & GLUT_RIGHT_BUTTON)) {
-        FG_LOG( FG_INPUT, FG_INFO, "Toggling mouse as yoke" );
-        mouse_yoke = !mouse_yoke;
-	if (mouse_yoke) {
-            FG_LOG( FG_INPUT, FG_INFO, "Mouse in yoke mode" );
-	    _savedX = x;
-	    _savedY = y;
-  	    glutSetCursor(GLUT_CURSOR_NONE);
-	} else {
-	    _mX = x = _savedX;
-	    _mY = y = _savedY;
-	    glutWarpPointer(x, y);
-	    glutSetCursor(GLUT_CURSOR_INHERIT);
-            FG_LOG( FG_INPUT, FG_INFO, "Mouse in pointer mode" );
-	}
+				// Was the left button pressed?
+    if (updown == GLUT_DOWN && button == GLUT_LEFT_BUTTON) {
+      switch (mouse_mode) {
+      case MOUSE_POINTER:
+	break;
+      case MOUSE_YOKE:
+	break;
+      case MOUSE_VIEW:
+        current_view.set_goal_view_offset( 0.00 );
+	break;
+      }
+
+				// Or was it the right button?
+    } else if (updown == GLUT_DOWN && button == GLUT_RIGHT_BUTTON) {
+      switch (mouse_mode) {
+      case MOUSE_POINTER:
+	mouse_mode = MOUSE_YOKE;
+	_savedX = x;
+	_savedY = y;
+	glutSetCursor(GLUT_CURSOR_NONE);
+	FG_LOG( FG_INPUT, FG_INFO, "Mouse in yoke mode" );
+	break;
+      case MOUSE_YOKE:
+	mouse_mode = MOUSE_VIEW;
+	FG_LOG( FG_INPUT, FG_INFO, "Mouse in view mode" );
+	break;
+      case MOUSE_VIEW:
+	mouse_mode = MOUSE_POINTER;
+	_mX = x = _savedX;
+	_mY = y = _savedY;
+	glutWarpPointer(x, y);
+	glutSetCursor(GLUT_CURSOR_INHERIT);
+	FG_LOG( FG_INPUT, FG_INFO, "Mouse in pointer mode" );
+	break;
+      }     
     }
+
+				// Register the new position (if it
+				// hasn't been registered already).
     _mX = x;
     _mY = y;
-    if ( updown == PU_DOWN ) {
+
+				// Note which button is pressed.
+    if ( updown == GLUT_DOWN ) {
         last_buttons |=  ( 1 << button ) ;
     } else {
         last_buttons &= ~( 1 << button ) ;
     }
-    if (!mouse_yoke) {
+
+				// If we're in pointer mode, let PUI
+				// know what's going on.
+    if (mouse_mode == MOUSE_POINTER) {
 	puMouse (button, updown, x,y);
 	glutPostRedisplay ();
     }
@@ -234,7 +288,7 @@ static inline void TurnCursorOn( void )
     glutSetCursor(GLUT_CURSOR_INHERIT);
 #endif
 #if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
-    glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH)/2, glutGet(GLUT_SCREEN_HEIGHT)/2);
+    glutWarpPointer( glutGet((GLenum)GLUT_SCREEN_WIDTH)/2, glutGet((GLenum)GLUT_SCREEN_HEIGHT)/2);
 #endif
 }
 
@@ -245,7 +299,7 @@ static inline void TurnCursorOff( void )
     glutSetCursor(GLUT_CURSOR_NONE);
 #else  // I guess this is what we want to do ??
 #if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
-    glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+    glutWarpPointer( glutGet((GLenum)GLUT_SCREEN_WIDTH), glutGet((GLenum)GLUT_SCREEN_HEIGHT));
 #endif
 #endif
 }
@@ -280,7 +334,7 @@ void BusyCursor( int restore )
     if( restore ) {
         glutSetCursor(cursor);
     } else {
-        cursor = glutGet( GLUT_WINDOW_CURSOR );
+        cursor = glutGet( (GLenum)GLUT_WINDOW_CURSOR );
 #ifdef WIN32
         TurnCursorOn();
 #endif
