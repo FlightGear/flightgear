@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 17;
+const int FG_NET_CTRLS_VERSION = 18;
 
 
 // Define a structure containing the control parameters
@@ -95,6 +95,10 @@ public:
     double wind_speed_kt;
     double wind_dir_deg;
     double turbulence_norm;
+
+    // temp and pressure
+    double temp_c;
+    double press_inhg;
 
     // other information about environment
     double hground;		         // ground elevation (meters)
