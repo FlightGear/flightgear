@@ -204,7 +204,7 @@ void FGLocalWeatherDatabase::update(const sgVec3& p, const WeatherPrecision dt) 
 /****************************************************************************/
 FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
 {
-    return FGPhysicalProperty(database->Evaluate(p), p[3]);
+    return FGPhysicalProperty(database->Evaluate(p), p[2]);
 }
 
 #ifdef macintosh
@@ -222,7 +222,7 @@ FGPhysicalProperties FGLocalWeatherDatabase::get(const sgVec2& p) const
 
 WeatherPrecision FGLocalWeatherDatabase::getAirDensity(const sgVec3& p) const
 {
-    FGPhysicalProperty dummy(database->Evaluate(p), p[3]);
+    FGPhysicalProperty dummy(database->Evaluate(p), p[2]);
 
     return 
 	(dummy.AirPressure*FG_WEATHER_DEFAULT_AIRDENSITY*FG_WEATHER_DEFAULT_TEMPERATURE) / 
