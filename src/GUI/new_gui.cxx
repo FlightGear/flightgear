@@ -95,9 +95,13 @@ NewGUI::closeActiveDialog ()
     // algorithm to do (delete map entries by value, not key)?  I hate
     // the STL :) -Andy
     map<string,FGDialog *>::iterator iter = _active_dialogs.begin();
-    for(/**/; iter != _active_dialogs.end(); iter++)
-        if(iter->second == _active_dialog)
+    for(/**/; iter != _active_dialogs.end(); iter++) {
+        if(iter->second == _active_dialog) {
             _active_dialogs.erase(iter);
+            // iter is no longer valid
+            break;
+        }
+    }
 
     delete _active_dialog;
     _active_dialog = 0;
@@ -206,7 +210,7 @@ NewGUI::readDir (const char * path)
             SGPropertyNode * props = new SGPropertyNode;
             try {
                 readProperties(subpath, props);
-            } catch (const sg_exception &ex) {
+            } catch (const sg_exception &) {
                 SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog "
                        << subpath);
                 delete props;
