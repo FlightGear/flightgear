@@ -128,6 +128,21 @@ void YASim::init()
 
     m->setCrashed(false);
 
+    // Figure out the initial speed type
+    string speed_set = fgGetString("/sim/presets/speed-set", "UVW");
+    if (speed_set == "NED")
+        _speed_set = NED;
+    else if (speed_set == "UVW")
+        _speed_set = UVW;
+    else if (speed_set == "knots")
+        _speed_set = KNOTS;
+    else if (speed_set == "mach")
+        _speed_set = MACH;
+    else {
+        _speed_set = UVW;
+        SG_LOG(SG_FLIGHT, SG_ALERT, "Unknown speed type " << speed_set);
+    }
+
     // Build a filename and parse it
     SGPath f(globals->get_fg_root());
     f.append("Aircraft-yasim");
@@ -258,8 +273,42 @@ void YASim::copyToYASim(bool copyState)
     Glue::euler2orient(roll, pitch, hdg, s.orient);
     Math::mmul33(s.orient, xyz2ned, s.orient);
 
-    // Copy in the existing velocity for now...
-    Math::set3(model->getState()->v, s.v);
+    // Velocity
+    string speed_set = fgGetString("/sim/presets/speed-set", "UVW");
+    float v[3];
+    switch (_speed_set) {
+    case NED:
+        v[0] = get_V_north() * FT2M * -1.0;
+        v[1] = get_V_east() * FT2M * -1.0;
+        v[2] = get_V_down() * FT2M * -1.0;
+        break;
+    case UVW:
+        v[0] = get_uBody() * FT2M;
+        v[1] = get_vBody() * FT2M;
+        v[2] = get_wBody() * FT2M;
+        Math::tmul33(s.orient, v, v);
+        break;
+    case KNOTS:
+        // FIXME: right now this does true instead of calibrated airspeed
+        v[0] = get_V_calibrated_kts()/MPS2KTS;
+        v[1] = 0;
+        v[2] = 0;
+        Math::tmul33(s.orient, v, v);
+        break;
+    case MACH:
+        // FIXME: not even trying to implement this yet
+        v[0] = 0;
+        v[1] = 0;
+        v[2] = 0;
+        break;
+    default:
+        v[0] = 0;
+        v[1] = 0;
+        v[2] = 0;
+        break;
+    }
+    _speed_set = UVW;           // change to this after initial setting
+    Math::set3(v, s.v);
 
     if(copyState)
 	model->setState(&s);

@@ -17,6 +17,7 @@ public:
     virtual void update(double dt);
 
  private:
+
     void report();
     void copyFromYASim();
     void copyToYASim(bool copyState);
@@ -25,6 +26,13 @@ public:
 
     yasim::FGFDM* _fdm;
     float _dt;
+    enum {
+        NED,
+        UVW,
+        KNOTS,
+        MACH
+    } _speed_set;
+
 };
 
 #endif // _YASIM_HXX
