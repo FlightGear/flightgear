@@ -48,11 +48,9 @@ Jim Brennan <jj@kingmont.com>
   Provided a big chunk of online space to store USA scenery for Flight Gear.
 
 
-Bernie Bright <bbright@c031.aone.net.au>
-  Many C++ style, usage, and implementation improvements.  
+Bernie Bright <bbright@bigpond.net.au>
+  Many C++ style, usage, and implementation improvements.
   STL portability, tons o' stuff. :-)
-  Currently trying to get a BeOS port together but life keeps getting 
-  in the way!
   Threading support and threaded tile pager.
 
 
