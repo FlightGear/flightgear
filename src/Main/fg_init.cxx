@@ -696,7 +696,12 @@ bool fgInitSubsystems( void ) {
 
     // fgFDMInit( current_options.get_flight_model(), cur_fdm_state,
     //            1.0 / current_options.get_model_hz() );
-    cur_fdm_state->init( 1.0 / current_options.get_model_hz() );
+    if ( cur_fdm_state->init( 1.0 / current_options.get_model_hz() ) ) {
+	// fdm init successful
+    } else {
+	FG_LOG( FG_GENERAL, FG_ALERT, "FDM init() failed!  Cannot continue." );
+	exit(-1);
+    }
 
     // I'm just sticking this here for now, it should probably move
     // eventually
