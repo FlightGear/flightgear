@@ -260,11 +260,11 @@ int fgInitSubsystems( void ) {
     FG_Dz_cg = 0.000000E+00;
 
     // Initialize the event manager
-    fgEventInit();
+    global_events.Init();
 
     // Output event stats every 60 seconds
-    fgEventRegister( "fgEventPrintStats()", fgEventPrintStats,
-		     FG_EVENT_READY, 60000 );
+    global_events.Register( "fgEventPrintStats()", fgEventPrintStats,
+			    FG_EVENT_READY, 60000 );
 
     // Initialize the time dependent variables
     fgTimeInit(t);
@@ -286,13 +286,16 @@ int fgInitSubsystems( void ) {
     }
 
     // Initialize the planetary subsystem
-    fgEventRegister("fgPlanetsInit()", fgPlanetsInit, FG_EVENT_READY, 600000);
+    global_events.Register( "fgPlanetsInit()", fgPlanetsInit, 
+			    FG_EVENT_READY, 600000);
 
     // Initialize the sun's position 
-    fgEventRegister("fgSunInit()", fgSunInit, FG_EVENT_READY, 30000 );
+    global_events.Register( "fgSunInit()", fgSunInit, 
+			    FG_EVENT_READY, 30000 );
 
     // Intialize the moon's position
-    fgEventRegister( "fgMoonInit()", fgMoonInit, FG_EVENT_READY, 600000 );
+    global_events.Register( "fgMoonInit()", fgMoonInit, 
+			    FG_EVENT_READY, 600000 );
 
     // fgUpdateSunPos() needs a few position and view parameters set
     // so it can calculate local relative sun angle and a few other
@@ -303,15 +306,15 @@ int fgInitSubsystems( void ) {
     l->Init();
 
     // update the lighting parameters (based on sun angle)
-    fgEventRegister( "fgLightUpdate()", fgLightUpdate,
-		     FG_EVENT_READY, 30000 );
+    global_events.Register( "fgLightUpdate()", fgLightUpdate,
+			    FG_EVENT_READY, 30000 );
 
     // Initialize the weather modeling subsystem
     fgWeatherInit();
 
     // update the weather for our current position
-    fgEventRegister( "fgWeatherUpdate()", fgWeatherUpdate,
-		     FG_EVENT_READY, 120000 );
+    global_events.Register( "fgWeatherUpdate()", fgWeatherUpdate,
+			    FG_EVENT_READY, 120000 );
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
@@ -381,6 +384,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/05/22 21:28:53  curt
+// Modifications to use the new fgEVENT_MGR class.
+//
 // Revision 1.14  1998/05/20 20:51:35  curt
 // Tweaked smooth shaded texture lighting properties.
 // Converted fgLIGHT to a C++ class.

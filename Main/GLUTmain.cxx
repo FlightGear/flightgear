@@ -613,7 +613,7 @@ static void fgMainLoop( void ) {
     fgTileMgrUpdate();
 
     // Process/manage pending events
-    fgEventProcess();
+    global_events.Process();
 
     // redraw display
     fgRenderFrame();
@@ -778,6 +778,9 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.17  1998/05/22 21:28:52  curt
+// Modifications to use the new fgEVENT_MGR class.
+//
 // Revision 1.16  1998/05/20 20:51:33  curt
 // Tweaked smooth shaded texture lighting properties.
 // Converted fgLIGHT to a C++ class.
