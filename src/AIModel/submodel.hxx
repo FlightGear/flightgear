@@ -52,6 +52,7 @@ public:
   double             cd;
   double             weight;
   double             contents;
+  bool               aero_stabilised;
  } submodel; 
 
  typedef struct {

@@ -44,7 +44,6 @@ FGAIBallistic::~FGAIBallistic() {
 
 bool FGAIBallistic::init() {
    FGAIBase::init();
-   aero_stabilized = true;
    hdg = azimuth;
    pitch = elevation;
    roll = rotation;
@@ -84,8 +83,8 @@ void FGAIBallistic::setRoll(double rl) {
    rotation = rl;
 }
 
-void FGAIBallistic::setStabilization(bool val) {
-   aero_stabilized = val;
+void FGAIBallistic::setStabilisation(bool val) {
+   aero_stabilised = val;
 }
 
 void FGAIBallistic::setDragArea(double a) {
@@ -181,7 +180,8 @@ void FGAIBallistic::Run(double dt) {
    pos.setelev(altitude * SG_FEET_TO_METER); 
 
    // recalculate pitch (velocity vector) if aerostabilized
-   if (aero_stabilized) pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
+   //   cout << "aero_stabilised " << aero_stabilised  << endl ;
+   if (aero_stabilised) pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
 
    // recalculate total speed
    speed = sqrt( vs * vs + hs * hs);

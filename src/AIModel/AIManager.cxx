@@ -207,6 +207,7 @@ FGAIManager::createBallistic( FGAIModelEntity *entity ) {
         ai_ballistic->setRoll(entity->roll);
         ai_ballistic->setCd(entity->cd);
         ai_ballistic->setMass(entity->mass);
+        ai_ballistic->setStabilisation(entity->aero_stabilised);
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic;

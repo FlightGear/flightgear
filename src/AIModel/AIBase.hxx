@@ -65,6 +65,7 @@ typedef struct {
    double cd;                 // coefficient of drag
    bool wind;                 // if true, model reacts to parent wind
    double mass;               // in slugs
+   bool aero_stabilised;      // if true, ballistic object aligns with trajectory
 } FGAIModelEntity;
 
 

@@ -129,6 +129,7 @@ FGSubmodelMgr::release (submodel* sm, double dt)
   entity.wind = sm->wind;
   entity.cd = sm->cd;
   entity.mass = IC.mass;
+  entity.aero_stabilised = sm->aero_stabilised;
   ai->createBallistic( &entity );
  
   if (sm->count > 0) (sm->count)--; 
@@ -184,6 +185,7 @@ FGSubmodelMgr::load ()
      sm->first_time     = false;
      sm->cd             = entry_node->getDoubleValue("cd", 0.193);
      sm->weight         = entry_node->getDoubleValue("weight", 0.25);
+     sm->aero_stabilised = entry_node->getBoolValue  ("aero-stabilised", true);
      sm->contents_node  = fgGetNode(entry_node->getStringValue("contents", "none"), true);
 
      sm->trigger->setBoolValue(false);
