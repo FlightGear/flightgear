@@ -1,13 +1,11 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Header: FGMatrix33.h
+Header: FGColumnVector3.h
 Author: Originally by Tony Peden [formatted and adapted here by Jon Berndt]
 Date started: Unknown
 
 HISTORY
 --------------------------------------------------------------------------------
-??/??/??   TP   Created
-03/16/2000 JSB  Added exception throwing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
@@ -54,7 +52,6 @@ INCLUDES
    using std::string;
 #endif
 
-#include "FGMatrix33.h"
 #include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -67,8 +64,6 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGMatrix33;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DECLARATION: FGColumnVector3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -77,7 +72,7 @@ class FGColumnVector3 : public FGJSBBase
 {
 public:
   FGColumnVector3(void);
-  FGColumnVector3(int m);
+  FGColumnVector3(double X, double Y, double Z);
   FGColumnVector3(const FGColumnVector3& b);
   ~FGColumnVector3(void);
   
@@ -104,7 +99,6 @@ public:
   FGColumnVector3 Normalize(void);
 
   friend FGColumnVector3 operator*(const double scalar, const FGColumnVector3& A);
-  //friend FGColumnVector3 operator*(const FGMatrix33& M, FGColumnVector3& V);
 
   friend ostream& operator<<(ostream& os, const FGColumnVector3& col);
 

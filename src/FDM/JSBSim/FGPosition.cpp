@@ -95,10 +95,7 @@ extern double globalTriNormal[3];
 extern double globalSceneryAltitude;
 extern double globalSeaLevelRadius;
 
-FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex),
-    vVel(3),
-    vVelDot(3),
-    vRunwayNormal(3)
+FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGPosition";
   LongitudeDot = LatitudeDot = RadiusDot = 0.0;

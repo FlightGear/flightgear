@@ -77,12 +77,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex),
-    vUVW(3),
-    vUVWdot(3),
-    vlastUVWdot(3),
-    mVel(3,3),
-    vAeroUVW(3)
+FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGTranslation";
   qbar = 0;

@@ -294,18 +294,18 @@ private:
   struct condition {
     vector <eParam>  TestParam;
     vector <eParam>  SetParam;
-    vector <double>   TestValue;
-    vector <double>   SetValue;
+    vector <double>  TestValue;
+    vector <double>  SetValue;
     vector <string>  Comparison;
-    vector <double>   TC;
+    vector <double>  TC;
     vector <bool>    Persistent;
     vector <eAction> Action;
     vector <eType>   Type;
     vector <bool>    Triggered;
-    vector <double>   newValue;
-    vector <double>   OriginalValue;
-    vector <double>   StartTime;
-    vector <double>   EndTime;
+    vector <double>  newValue;
+    vector <double>  OriginalValue;
+    vector <double>  StartTime;
+    vector <double>  EndTime;
 
     condition() {
     }

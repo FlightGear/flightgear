@@ -263,7 +263,7 @@ bool FGJSBsim::update( int multiloop ) {
         fdmex->Run();
     }
 
-    struct FGJSBBase::Message* msg;
+    FGJSBBase::Message* msg;
     while (fdmex->ReadMessage()) {
       msg = fdmex->ProcessMessage();
       switch (msg->type) {

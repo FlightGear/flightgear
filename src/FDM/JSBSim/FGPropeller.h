@@ -129,7 +129,7 @@ public:
   double GetIxx(void)           { return Ixx;           }
   
   /// Retrieves the Torque in foot-pounds (Don't you love the English system?)
-  double GetTorque(void)        { return Torque;        }
+  double GetTorque(void)        { return vTorque(eX);    }
   
   /** Retrieves the power required (or "absorbed") by the propeller -
       i.e. the power required to keep spinning the propeller at the current
@@ -159,7 +159,8 @@ private:
   double P_Factor;
   double Sense;
   double Pitch;
-  double Torque;
+  double ExcessTorque;
+  FGColumnVector3 vTorque;
   FGTable *cThrust;
   FGTable *cPower;
   void Debug(void);

@@ -68,9 +68,7 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg)
   Cycles=2;
   IdleRPM=600;
   // Set constants
- 
-  
-  
+
   Name = Eng_cfg->GetValue("NAME");
   Eng_cfg->GetNextConfigLine();
   while (Eng_cfg->GetValue() != string("/FG_PISTON")) {

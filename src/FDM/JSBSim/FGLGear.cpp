@@ -57,13 +57,7 @@ static const char *IdHdr = ID_LGEAR;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
-                                                           vMoment(3),
-                                                           vWhlBodyVec(3),
-                                                           vForce(3),
-                                                           vLocalForce(3),
-                                                           vWhlVelVec(3),
-                                                           Exec(fdmex)
+FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
 {
   string tmp;
   string Retractable;
@@ -202,19 +196,24 @@ FGColumnVector3& FGLGear::Force(void)
 {
   vForce.InitMatrix();
   vMoment.InitMatrix();
-  if(isRetractable ) {
-    if( FCS->GetGearPos() < 0.01 ) {
-      GearUp=true;GearDown=false;
-     } else if(FCS->GetGearPos() > 0.99) {
-      GearDown=true;GearUp=false;
+
+  if (isRetractable) {
+    if (FCS->GetGearPos() < 0.01) {
+      GearUp   = true;
+      GearDown = false;
+     } else if (FCS->GetGearPos() > 0.99) {
+      GearDown = true;
+      GearUp   = false;
      } else {
-      GearUp=false; GearDown=false;
+      GearUp   = false;
+      GearDown = false;
      }
   } else {
-      GearUp=false; GearDown=true;
+      GearUp   = false;
+      GearDown = true;
   }         
       
-  if( GearDown ) {
+  if (GearDown) {
     double SteerGain = 0;
     double SinWheel, CosWheel, SideWhlVel, RollingWhlVel;
     double RollingForce, SideForce, FCoeff;

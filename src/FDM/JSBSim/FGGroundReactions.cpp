@@ -45,11 +45,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGGroundReactions::FGGroundReactions(FGFDMExec* fgex) : FGModel(fgex),
-                                                        vForces(3),
-                                                        vMoments(3),
-                                                        vMaxStaticGrip(3),
-                                                        vMaxMomentResist(3)
+FGGroundReactions::FGGroundReactions(FGFDMExec* fgex) : FGModel(fgex)
 {
   Name = "FGGroundReactions";
 

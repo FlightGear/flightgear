@@ -30,17 +30,18 @@ CLASS IMPLEMENTATION
 FGColumnVector4::FGColumnVector4(void)
 {
   rowCtr = 1;
-  //cout << "Allocated: " <<  data << endl;
+  data[1]=0;data[2]=0;data[3]=0;data[4]=0;
+
   if (debug_lvl & 2) cout << "Instantiated: FGColumnVector4" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector4::FGColumnVector4(int m)
+FGColumnVector4::FGColumnVector4(double A, double B, double C, double D)
 {
   rowCtr = 1;
   data[1]=0;data[2]=0;data[3]=0;data[4]=0;
-  //cout << "Allocated: " <<  data << endl;
+
   if (debug_lvl & 2) cout << "Instantiated: FGColumnVector4" << endl;
 }
 
@@ -48,7 +49,6 @@ FGColumnVector4::FGColumnVector4(int m)
 
 FGColumnVector4::~FGColumnVector4(void)
 {
-  //cout << "Freed: " << data << endl;
   if (debug_lvl & 2) cout << "Destroyed:    FGColumnVector4" << endl;
 }
 
@@ -240,34 +240,6 @@ FGColumnVector4 FGColumnVector4::Normalize(void)
   return *this;
 }
 
-/* //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGColumnVector4 FGColumnVector4::operator*(const FGColumnVector4& V)
-{
-  FGColumnVector4 Product;
-  
-  Product(1) = data[2] * V(3) - data[3] * V(2);
-  Product(2) = data[3] * V(1) - data[1] * V(3);
-  Product(3) = data[1] * V(2) - data[2] * V(1);
-
-  return Product;
-} */
-
-
-/* //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGColumnVector4::operator*=(const FGColumnVector4& V)
-{
-  double a,b,c;
-  a = data[1]; b=data[2]; c=data[3];
-  
-  data[1] = b * V(3) - c * V(2);
-  data[2] = c * V(1) - a * V(3);
-  data[3] = a * V(2) - b * V(1);
-
-}
- */
-
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGColumnVector4 FGColumnVector4::multElementWise(const FGColumnVector4& V)
@@ -284,13 +256,6 @@ FGColumnVector4 FGColumnVector4::multElementWise(const FGColumnVector4& V)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGColumnVector4::Debug(void)
-{
-    //TODO: Add your source code here
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 ostream& operator<<(ostream& os, FGColumnVector4& col)
 {
   os << col(1) << " , " << col(2) << " , " << col(3) << " , " << col(4);
@@ -302,8 +267,14 @@ ostream& operator<<(ostream& os, FGColumnVector4& col)
 FGColumnVector4& FGColumnVector4::operator<<(const double ff)
 {
   data[rowCtr] = ff;
-  if (++rowCtr > 4 )
-      rowCtr = 1;
+  if (++rowCtr > 4) rowCtr = 1;
   return *this;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGColumnVector4::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

@@ -63,9 +63,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex),
-  vPilotAccel(3),
-  vToEyePt(3)
+FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAuxiliary";
   vcas = veas = mach = qbar = pt = 0;

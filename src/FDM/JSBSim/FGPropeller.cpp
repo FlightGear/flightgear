@@ -105,6 +105,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
 
   Type = ttPropeller;
   RPM = 0;
+  vTorque.InitMatrix();
 
   if (debug_lvl & 2) cout << "Instantiated: FGPropeller" << endl;
 }
@@ -155,8 +156,8 @@ double FGPropeller::Calculate(double PowerAvailable)
   if (P_Factor > 0.0001) {
     alpha = fdmex->GetTranslation()->Getalpha();
     beta  = fdmex->GetTranslation()->Getbeta();
-    SetLocationY( GetLocationY() + P_Factor*alpha*fabs(Sense)/Sense);
-    SetLocationZ( GetLocationZ() + P_Factor*beta*fabs(Sense)/Sense);
+    SetActingLocationY( GetLocationY() + P_Factor*alpha*fabs(Sense)/Sense);
+    SetActingLocationZ( GetLocationZ() + P_Factor*beta*fabs(Sense)/Sense);
   } else if (P_Factor < 0.000) {
     cerr << "P-Factor value in config file must be greater than zero" << endl;
   }
@@ -175,10 +176,10 @@ double FGPropeller::Calculate(double PowerAvailable)
 
   if (omega <= 5) omega = 1.0;
 
-  Torque = PowerAvailable / omega;
-  RPM = (RPS + ((Torque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
+  ExcessTorque = PowerAvailable / omega;
+  RPM = (RPS + ((ExcessTorque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
 
-  vMn = fdmex->GetRotation()->GetPQR()*vH + Torque*Sense;
+  vMn = fdmex->GetRotation()->GetPQR()*vH + vTorque*Sense;
 
   return Thrust; // return thrust in pounds
 }
@@ -216,6 +217,8 @@ double FGPropeller::GetPowerRequired(void)
 
   PowerRequired = cPReq*RPS*RPS*RPS*Diameter*Diameter*Diameter*Diameter
                                                        *Diameter*rho;
+  vTorque(eX) = PowerRequired / ((RPM/60)*2.0*M_PI);
+
   return PowerRequired;
 }
 

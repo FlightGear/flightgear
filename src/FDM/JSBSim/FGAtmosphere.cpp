@@ -68,15 +68,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
-                                               vDirectiondAccelDt(3),
-                                               vDirectionAccel(3),
-                                               vDirection(3),
-                                               vTurbulence(3),
-                                               vTurbulenceGrad(3),
-                                               vBodyTurbGrad(3),
-                                               vTurbPQR(3),
-                                               vWindNED(3)
+FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAtmosphere";
   lastIndex=0;

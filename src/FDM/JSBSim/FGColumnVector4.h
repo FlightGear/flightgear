@@ -1,13 +1,11 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Header: FGMatrix33.h
+Header: FGColumnVector4.h
 Author: Originally by Tony Peden [formatted and adapted here by Jon Berndt]
 Date started: Unknown
 
 HISTORY
 --------------------------------------------------------------------------------
-??/??/??   TP   Created
-03/16/2000 JSB  Added exception throwing
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
@@ -74,21 +72,19 @@ class FGColumnVector4 : public FGJSBBase
 {
 public:
   FGColumnVector4(void);
-  FGColumnVector4(int m);
+  FGColumnVector4(double A, double B, double C, double D);
   FGColumnVector4(const FGColumnVector4& b);
   ~FGColumnVector4(void);
   
   FGColumnVector4 operator=(const FGColumnVector4& b);
   
   FGColumnVector4 operator*(const double scalar);
-  //FGColumnVector4 operator*(const FGColumnVector4& V);   // Cross product operator
   FGColumnVector4 operator/(const double scalar);
   FGColumnVector4 operator+(const FGColumnVector4& B); // must not return reference
   FGColumnVector4 operator-(const FGColumnVector4& B);
   
   void operator-=(const FGColumnVector4 &B);
   void operator+=(const FGColumnVector4 &B);
-  //void operator*=(const FGColumnVector4 &B);
   void operator*=(const double scalar);
   void operator/=(const double scalar);
   
@@ -97,8 +93,8 @@ public:
   
   FGColumnVector4& operator<<(const double ff);
 
-  inline void InitMatrix(void) { data[1]=0; data[2]=0; data[3]=0; }
-  inline void InitMatrix(double ff) { data[1]=ff; data[2]=ff; data[3]=ff; }
+  inline void InitMatrix(void) { data[1]=0; data[2]=0; data[3]=0; data[4]=0; }
+  inline void InitMatrix(double ff) { data[1]=ff; data[2]=ff; data[3]=ff; data[4]=ff;}
 
   double Magnitude(void);
   FGColumnVector4 Normalize(void);
@@ -118,3 +114,4 @@ private:
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

@@ -1,9 +1,9 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Module: FGMatrix33.cpp
+Module: FGColumnVector3.cpp
 Author: Originally by Tony Peden [formatted here (and broken??) by JSB]
 Date started: 1998
-Purpose: FGMatrix33 class
+Purpose: FGColumnVector3 class
 Called by: Various
 
 FUNCTIONAL DESCRIPTION
@@ -19,8 +19,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGColumnVector3.h"
-#include "FGMatrix33.h"
-
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_COLUMNVECTOR3;
@@ -39,10 +37,10 @@ FGColumnVector3::FGColumnVector3(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector3::FGColumnVector3(int m)
+FGColumnVector3::FGColumnVector3(double X, double Y, double Z)
 {
   rowCtr = 1;
-  data[0]=0; data[1]=0; data[2]=0; data[3]=0;
+  data[0] = 0; data[eX] = X; data[eY] = Y; data[eZ] = Z;
 
   if (debug_lvl & 2) cout << "Instantiated: FGColumnVector3" << endl;
 }
@@ -80,29 +78,6 @@ FGColumnVector3 FGColumnVector3::operator=(const FGColumnVector3& b)
   
   return *this;
 }
-
-
-/* //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-double& FGColumnVector3::operator()(int m) const
-{
-  return data[m];
-}
- */
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-/* FGColumnVector3 operator*(const FGMatrix33& Mat, FGColumnVector3& Col)
-{
-  FGColumnVector3 Product;
-
-  Product(1) = Col(1)*Mat(1,1) + Col(2)*Mat(1,2) + Col(3)*Mat(1,3);
-  Product(2) = Col(1)*Mat(2,1) + Col(2)*Mat(2,2) + Col(3)*Mat(2,3);
-  Product(3) = Col(1)*Mat(3,1) + Col(2)*Mat(3,2) + Col(3)*Mat(3,3);
-
-  return Product;
-}
- */
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -292,13 +267,6 @@ FGColumnVector3 FGColumnVector3::multElementWise(const FGColumnVector3& V)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGColumnVector3::Debug(void)
-{
-    //TODO: Add your source code here
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 ostream& operator<<(ostream& os, const FGColumnVector3& col)
 {
   os << col(1) << " , " << col(2) << " , " << col(3);
@@ -314,3 +282,11 @@ FGColumnVector3& FGColumnVector3::operator<<(const double ff)
       rowCtr = 1;
   return *this;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGColumnVector3::Debug(void)
+{
+    //TODO: Add your source code here
+}
+
