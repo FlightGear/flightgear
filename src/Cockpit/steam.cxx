@@ -31,7 +31,6 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
 #include <Aircraft/aircraft.hxx>
-#include <NetworkOLK/features.hxx>
 
 SG_USING_NAMESPACE(std);
 
