@@ -870,6 +870,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 
 // Set up lights rendering call backs
 static int fgLightsPredraw( ssgEntity *e ) {
+#if 0
 #ifdef GL_EXT_point_parameters
     if (glutExtensionSupported("GL_EXT_point_parameters")) {
 	static float quadratic[3] = {1.0, 0.01, 0.0001};
@@ -878,10 +879,12 @@ static int fgLightsPredraw( ssgEntity *e ) {
 	glPointSize(4.0);
     }
 #endif
+#endif
     return true;
 }
 
 static int fgLightsPostdraw( ssgEntity *e ) {
+#if 0
 #ifdef GL_EXT_point_parameters
     if (glutExtensionSupported("GL_EXT_point_parameters")) {
 	static float default_attenuation[3] = {1.0, 0.0, 0.0};
@@ -889,6 +892,7 @@ static int fgLightsPostdraw( ssgEntity *e ) {
 			      default_attenuation);
 	glPointSize(1.0);
     }
+#endif
 #endif
     return true;
 }
