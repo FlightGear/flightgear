@@ -59,7 +59,7 @@ static double getWindDown ();
 static double axisLong = 0.0;
 static double axisLat = 0.0;
 
-static bool winding_ccw = false; // FIXME: temporary
+static bool winding_ccw = true; // FIXME: temporary
 
 static bool fdm_data_logging = false; // FIXME: temporary
 
@@ -423,6 +423,19 @@ getCHT ()
 {
   if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
       return current_aircraft.fdm_state->get_engine(0)->get_CHT();
+  } else {
+      return 0.0;
+  }
+}
+
+/**
+ * Return the current engine0 Oil Temp.
+ */
+static double
+getOilTemp ()
+{
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      return current_aircraft.fdm_state->get_engine(0)->get_Oil_Temp();
   } else {
       return 0.0;
   }
@@ -1016,6 +1029,7 @@ fgInitProps ()
   fgTie("/engines/engine[0]/rpm", getRPM);
   fgTie("/engines/engine[0]/egt-degf", getEGT);
   fgTie("/engines/engine[0]/cht-degf", getCHT);
+  fgTie("/engines/engine[0]/oil-temperature-degf", getOilTemp);
   fgTie("/engines/engine[0]/mp-osi", getMP);
   fgTie("/engines/engine[0]/fuel-flow-gph", getFuelFlow);
 
@@ -1084,7 +1098,7 @@ fgInitProps ()
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 
 				// Misc. Temporary junk.
-  fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW);
+  fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
   fgTie("/sim/temp/full-screen", getFullScreen, setFullScreen);
   fgTie("/sim/temp/fdm-data-logging", getFDMDataLogging, setFDMDataLogging);
 	
