@@ -36,11 +36,6 @@ old_cflags="$CFLAGS"
 while test $# -ge 1
 do
 case "$1" in
-    -h* | --h*)
-      echo 'usage:'
-      echo '  configure [--shared] [--prefix=PREFIX]  [--exec_prefix=EXPREFIX]'
-      echo '     [--libdir=LIBDIR] [--includedir=INCLUDEDIR]'
-        exit 0;;
     -p*=* | --p*=*) prefix=`echo $1 | sed 's/[-a-z_]*=//'`; shift;;
     -e*=* | --e*=*) exec_prefix=`echo $1 | sed 's/[-a-z_]*=//'`; shift;;
     -l*=* | --libdir=*) libdir=`echo $1 | sed 's/[-a-z_]*=//'`; shift;;
@@ -49,7 +44,14 @@ case "$1" in
     -e* | --e*) exec_prefix="$2"; shift; shift;;
     -l* | --l*) libdir="$2"; shift; shift;;
     -i* | --i*) includedir="$2"; shift; shift;;
-    -s* | --s*) shared=1; shift;;
+    -sh* | --sh*) shared=1; shift;;
+    --src*) shift;;
+    --c*) shift;;
+    *)
+      echo 'usage:'
+      echo '  configure [--shared] [--prefix=PREFIX]  [--exec_prefix=EXPREFIX]'
+      echo '     [--libdir=LIBDIR] [--includedir=INCLUDEDIR]'
+        exit 0;;
     esac
 done
 
