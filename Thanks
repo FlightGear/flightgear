@@ -27,6 +27,13 @@ Michael Basler <pmb@knUUt.de>
   Author of the Getting Started guide.
 
 
+Paul Beardsley <Beardspa@hotmail.com>
+  The 1903 Flyer was inspired by a model contributed by Paul
+  Beardsley.  Very little of the original model remains, but without
+  Paul's excellent work we might not have our own 1903 Flyer. Model
+  was reworked and retextured by Jim Wilson.
+
+
 Jon S. Berndt <jon@jsbsim.org>
   Chief architect of JSBSim, the default flight dynamics model (FDM)
   for FlightGear. Jon's professional work has involved simulation and
@@ -167,6 +174,11 @@ Habibie <habibie@MailandNews.com>
   RedHat package building changes for SimGear.
 
 
+Dave Haskell <dave@haskell.demon.co.uk>
+  Original exterior textures for the Cessna 310 U-3A model. Only a few
+  minor modifications were made.
+
+
 Mike Hill <mikehill@flightsim.com>
   Contributed 3d aircraft models to our project.
   http://www.flightsimnetwork.com/mikehill/home.htm
@@ -214,8 +226,20 @@ Bob Kuehne <rpk@who.net>
   Redid the Makefile system so it is simpler and more robust.
 
 
+Chris Lampard <c.lampard@ntlworld.com>
+  Original exterior geometry for the Cessna 310 U-3A model. Several
+  modifications made but most of the exterior is as is converted from
+  Chris's original.  The interior cockpit was added by Jim Wilson.
+
+
 David Luff <david.luff@nottingham.ac.uk>
   Contributed heavily to the IO360 piston engine model.
+
+
+Lewis Magruder <blackhawk96@hotmail.com>
+  Original exterior model and textures.  Lewis's work is pretty much
+  as converted from the original.  The interior cockpit was added by
+  Jim Wilson.
 
 
 Christian Mayer <flightgear@christianmayer.de>
