@@ -32,7 +32,7 @@ SG_USING_STD(ofstream);
  * Built-in command: do nothing.
  */
 static bool
-do_null (const SGPropertyNode * arg)
+do_null (const SGPropertyNode * arg, SGCommandState ** state)
 {
   return true;
 }
@@ -44,7 +44,7 @@ do_null (const SGPropertyNode * arg)
  * TODO: show a confirm dialog.
  */
 static bool
-do_exit (const SGPropertyNode * arg)
+do_exit (const SGPropertyNode * arg, SGCommandState ** state)
 {
   SG_LOG(SG_INPUT, SG_ALERT, "Program exit requested.");
   ConfirmExitDialog();
@@ -59,7 +59,7 @@ do_exit (const SGPropertyNode * arg)
  * directory).  Defaults to "fgfs.sav".
  */
 static bool
-do_load (const SGPropertyNode * arg)
+do_load (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string &file = arg->getStringValue("file", "fgfs.sav");
   ifstream input(file.c_str());
@@ -81,7 +81,7 @@ do_load (const SGPropertyNode * arg)
  * current directory).  Defaults to "fgfs.sav".
  */
 static bool
-do_save (const SGPropertyNode * arg)
+do_save (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string &file = arg->getStringValue("file", "fgfs.sav");
   SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
@@ -105,7 +105,7 @@ do_save (const SGPropertyNode * arg)
  * and if that's unspecified, to "Panels/Default/default.xml".
  */
 static bool
-do_panel_load (const SGPropertyNode * arg)
+do_panel_load (const SGPropertyNode * arg, SGCommandState ** state)
 {
   string panel_path =
     arg->getStringValue("path",
@@ -133,7 +133,7 @@ do_panel_load (const SGPropertyNode * arg)
  * to FG_ROOT). Defaults to "preferences.xml".
  */
 static bool
-do_preferences_load (const SGPropertyNode * arg)
+do_preferences_load (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string &path = arg->getStringValue("path", "preferences.xml");
   SGPath props_path(globals->get_fg_root());
@@ -154,7 +154,7 @@ do_preferences_load (const SGPropertyNode * arg)
  * Built-in command: cycle view.
  */
 static bool
-do_view_cycle (const SGPropertyNode * arg)
+do_view_cycle (const SGPropertyNode * arg, SGCommandState ** state)
 {
   globals->get_current_view()->set_view_offset(0.0);
   globals->set_current_view(globals->get_viewmgr()->next_view());
@@ -167,7 +167,7 @@ do_view_cycle (const SGPropertyNode * arg)
  * Built-in command: capture screen.
  */
 static bool
-do_screen_capture (const SGPropertyNode * arg)
+do_screen_capture (const SGPropertyNode * arg, SGCommandState ** state)
 {
   fgDumpSnapShot();
   return true;
@@ -178,7 +178,7 @@ do_screen_capture (const SGPropertyNode * arg)
  * Reload the tile cache.
  */
 static bool
-do_tile_cache_reload (const SGPropertyNode * arg)
+do_tile_cache_reload (const SGPropertyNode * arg, SGCommandState ** state)
 {
   bool freeze = globals->get_freeze();
   SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
@@ -205,7 +205,7 @@ do_tile_cache_reload (const SGPropertyNode * arg)
  * Update the lighting manually.
  */
 static bool
-do_lighting_update (const SGPropertyNode * arg)
+do_lighting_update (const SGPropertyNode * arg, SGCommandState ** state)
 {
   fgUpdateSkyAndLightingParams();
   return true;
@@ -218,7 +218,7 @@ do_lighting_update (const SGPropertyNode * arg)
  * property: The name of the property to toggle.
  */
 static bool
-do_property_toggle (const SGPropertyNode * arg)
+do_property_toggle (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string & propname = arg->getStringValue("property", "");
   if (propname == "")
@@ -236,7 +236,7 @@ do_property_toggle (const SGPropertyNode * arg)
  * value: the value to assign.
  */
 static bool
-do_property_assign (const SGPropertyNode * arg)
+do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string & propname = arg->getStringValue("property", "");
   if (propname == "")
@@ -258,7 +258,7 @@ do_property_assign (const SGPropertyNode * arg)
   case SGPropertyNode::STRING:
     return node->setStringValue(arg->getStringValue("value"));
   default:
-    return node->setUnknownValue(arg->getStringValue("value"));
+    return node->setUnspecifiedValue(arg->getStringValue("value"));
   }
 }
 
@@ -270,7 +270,7 @@ do_property_assign (const SGPropertyNode * arg)
  * step: the amount of the increment or decrement.
  */
 static bool
-do_property_adjust (const SGPropertyNode * arg)
+do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string & propname = arg->getStringValue("property", "");
   if (propname == "")
@@ -294,7 +294,7 @@ do_property_adjust (const SGPropertyNode * arg)
     return node->setFloatValue(node->getFloatValue()
 			       + arg->getFloatValue("step"));
   case SGPropertyNode::DOUBLE:
-  case SGPropertyNode::UNKNOWN:
+  case SGPropertyNode::UNSPECIFIED:
     return node->setDoubleValue(node->getDoubleValue()
 				+ arg->getDoubleValue("step"));
   default:			// doesn't make sense with strings
@@ -304,6 +304,46 @@ do_property_adjust (const SGPropertyNode * arg)
 
 
 /**
+<<<<<<< fg_commands.cxx
+ * Built-in command: multiply a property value.
+ *
+ * property: the name of the property to multiply.
+ * factor: the amount by which to multiply.
+ */
+static bool
+do_property_multiply (const SGPropertyNode * arg, SGCommandState ** state)
+{
+  const string & propname = arg->getStringValue("property", "");
+  if (propname == "")
+    return false;
+
+  SGPropertyNode * node = fgGetNode(propname, true);
+
+  switch (node->getType()) {
+  case SGPropertyNode::BOOL:
+    return node->setBoolValue(node->getBoolValue() &&
+			      arg->getBoolValue("factor"));
+  case SGPropertyNode::INT:
+    return node->setIntValue(int(node->getIntValue()
+				 * arg->getDoubleValue("factor")));
+  case SGPropertyNode::LONG:
+    return node->setLongValue(long(node->getLongValue()
+				   * arg->getDoubleValue("factor")));
+  case SGPropertyNode::FLOAT:
+    return node->setFloatValue(float(node->getFloatValue()
+				     * arg->getDoubleValue("factor")));
+  case SGPropertyNode::DOUBLE:
+  case SGPropertyNode::UNSPECIFIED:
+    return node->setDoubleValue(node->getDoubleValue()
+				* arg->getDoubleValue("factor"));
+  default:			// doesn't make sense with strings
+    return false;
+  }
+}
+
+
+/**
+=======
  * Built-in command: multiply a property value.
  *
  * property: the name of the property to multiply.
@@ -332,7 +372,7 @@ do_property_multiply (const SGPropertyNode * arg)
     return node->setFloatValue(float(node->getFloatValue()
 				     * arg->getDoubleValue("factor")));
   case SGPropertyNode::DOUBLE:
-  case SGPropertyNode::UNKNOWN:
+  case SGPropertyNode::UNSPECIFIED:
     return node->setDoubleValue(node->getDoubleValue()
 				* arg->getDoubleValue("factor"));
   default:			// doesn't make sense with strings
@@ -348,7 +388,7 @@ do_property_multiply (const SGPropertyNode * arg)
  * property[1]: the name of the second property.
  */
 static bool
-do_property_swap (const SGPropertyNode * arg)
+do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string &propname1 = arg->getStringValue("property[0]", "");
   const string &propname2 = arg->getStringValue("property[1]", "");
@@ -358,8 +398,8 @@ do_property_swap (const SGPropertyNode * arg)
   SGPropertyNode * node1 = fgGetNode(propname1, true);
   SGPropertyNode * node2 = fgGetNode(propname2, true);
   const string & tmp = node1->getStringValue();
-  return (node1->setUnknownValue(node2->getStringValue()) &&
-	  node2->setUnknownValue(tmp));
+  return (node1->setUnspecifiedValue(node2->getStringValue()) &&
+	  node2->setUnspecifiedValue(tmp));
 }
 
 
@@ -372,7 +412,7 @@ do_property_swap (const SGPropertyNode * arg)
  * factor: the factor to multiply by (use negative to reverse).
  */
 static bool
-do_property_scale (const SGPropertyNode * arg)
+do_property_scale (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string &propname = arg->getStringValue("property");
   double setting = arg->getDoubleValue("setting", 0.0);
