@@ -129,7 +129,7 @@ void FGGlobals::set_fg_scenery (const string &scenery) {
 
     for (unsigned i = 0; i < path_list.size(); i++) {
 
-        ulDir *d = ulOpenDir( path_list[0].c_str() );
+        ulDir *d = ulOpenDir( path_list[i].c_str() );
         if (d == NULL)
             continue;
         ulCloseDir( d );
