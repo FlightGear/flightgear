@@ -95,6 +95,16 @@ FGJSBsim::FGJSBsim( double dt )
                                engine_path.str(),
                                fgGetString("/sim/aircraft") );
     
+
+    if (result) {
+	SG_LOG( SG_FLIGHT, SG_INFO,
+		"  loaded aircraft.");
+    } else {
+	SG_LOG( SG_FLIGHT, SG_INFO,
+		"  aircraft does not exist (you may have mis-typed the name).");
+	throw(-1);
+    }
+
     int Neng = Propulsion->GetNumEngines();
     SG_LOG(SG_FLIGHT,SG_INFO, "Neng: " << Neng );
     
@@ -120,11 +130,9 @@ FGJSBsim::FGJSBsim( double dt )
 
 /******************************************************************************/
 FGJSBsim::~FGJSBsim(void) {
-    if ( fdmex != NULL ) {
-        delete fdmex;
-	fdmex = NULL;
-        delete fgic;
-	fgic = NULL;
+    if (fdmex != NULL) {
+        delete fdmex; fdmex=NULL;
+        delete fgic; fgic=NULL;
     }  
 }
 
