@@ -340,9 +340,9 @@ char rcsid[] = "junk";
 
 
                 
-                printf("\tN: %g,dZrwy: %g dZdotrwy: %g\n",reaction_normal_force,HEIGHT_AGL_WHEEL,v_wheel_cg_local_v[2]); 
-                printf("\tFxgear: %g Fygear: %g, Fzgear: %g\n",F_X_gear,F_Y_gear,F_Z_gear);
-                printf("\tMgear: %g, Lgear: %g, Ngear: %g\n\n",M_m_gear,M_l_gear,M_n_gear);
+/*                  printf("\tN: %g,dZrwy: %g dZdotrwy: %g\n",reaction_normal_force,HEIGHT_AGL_WHEEL,v_wheel_cg_local_v[2]);  */
+/*                  printf("\tFxgear: %g Fygear: %g, Fzgear: %g\n",F_X_gear,F_Y_gear,F_Z_gear); */
+/*                  printf("\tMgear: %g, Lgear: %g, Ngear: %g\n\n",M_m_gear,M_l_gear,M_n_gear); */
                 
                 
     }
