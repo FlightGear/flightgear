@@ -143,6 +143,12 @@ void uiuc_coef_roll()
             /* Cl_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cl_p_save = Cl_p * P_body * b_2U;
+//  	    if (Cl_p_save > 0.1) {
+//  	      Cl_p_save = 0.1;
+//  	    }
+//  	    if (Cl_p_save < -0.1) {
+//  	      Cl_p_save = -0.1;
+//  	    }
 	    if (eta_q_Cl_p_fac)
 	      {
 		Cl += Cl_p_save * eta_q_Cl_p_fac;

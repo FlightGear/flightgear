@@ -134,9 +134,11 @@ AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
 
 void uiuc_initial_init ()
 {
-  // This function called from both ls_step and ls_model(uiuc model side).
-  // Apply brute force initializations, which override ls_step and ls_aux values
-  // for the first time step.
+  // This function is called from uiuc_init_2_wrapper (uiuc_aero.c in LaRCsim)
+  // which is called from ls_step and ls_model.
+  // Apply brute force initializations, which override unwanted changes
+  // performed by LaRCsim.
+  // Used during initialization (while Simtime=0).
   if (P_body_init_true)
     P_body = P_body_init;
   if (Q_body_init_true)
@@ -161,7 +163,7 @@ void uiuc_initial_init ()
 
 void uiuc_defaults_inits ()
 {
-  // set defaults and initialize (called from ls_step.c at Simtime=0)
+  // set defaults and initialize (called once from uiuc_init_2_wrapper)
 
   //fog inits 
   fog_field = 0;
@@ -276,7 +278,15 @@ void uiuc_defaults_inits ()
   flapper_model = false;
   ignore_unknown_keywords = false;
   pilot_throttle_no = false;
+  Dx_cg = 0.0;
+  Dy_cg = 0.0;
+  Dz_cg = 0.0;
 
+
+  // Calculates the local velocity (V_north, V_east, V_down) from the body
+  // velocities.
+  // Called from uiuc_local_vel_init which is called from ls_step.
+  // Used during initialization (while Simtime=0)
 }
 
 void uiuc_vel_init ()
@@ -302,6 +312,8 @@ void uiuc_vel_init ()
 
   V_east = V_east_rel_ground + OMEGA_EARTH*Sea_level_radius*cos(Lat_geocentric);
     }
+  // Initializes the UIUC aircraft model.
+  // Called once from uiuc_init_2_wrapper
 }
 
 void uiuc_init_aeromodel ()
@@ -366,6 +378,10 @@ void uiuc_force_moment(double dt)
     M_m_aero += -(I_yy_appMass_ratio * I_yy) * Q_dot_body;
   if (I_zz_appMass_ratio)
     M_n_aero += -(I_zz_appMass_ratio * I_zz) * R_dot_body;
+
+  // adding in apparent mass in body axis X direction
+  // F_X_aero += -(0.05 * Mass) * U_dot_body;
+
 
   if (Mass_appMass)
     F_Z_aero += -Mass_appMass * W_dot_body;

@@ -18,6 +18,9 @@
 ----------------------------------------------------------------------
 
  HISTORY:      04/04/2003   initial release
+               06/30/2003   (RD) replaced istrstream with istringstream
+                            to get rid of the annoying warning about
+                            using the strstream header
 
 ----------------------------------------------------------------------
 
@@ -103,14 +106,14 @@ void parse_CL( const string& linetoken2, const string& linetoken3,
     double datafile_zArray[100][100];
     double convert_f;
     int datafile_nxArray[100], datafile_ny;
-    istrstream token3(linetoken3.c_str());
-    istrstream token4(linetoken4.c_str());
-    istrstream token5(linetoken5.c_str());
-    istrstream token6(linetoken6.c_str());
-    istrstream token7(linetoken7.c_str());
-    istrstream token8(linetoken8.c_str());
-    istrstream token9(linetoken9.c_str());
-    istrstream token10(linetoken10.c_str());
+    istringstream token3(linetoken3.c_str());
+    istringstream token4(linetoken4.c_str());
+    istringstream token5(linetoken5.c_str());
+    istringstream token6(linetoken6.c_str());
+    istringstream token7(linetoken7.c_str());
+    istringstream token8(linetoken8.c_str());
+    istringstream token9(linetoken9.c_str());
+    istringstream token10(linetoken10.c_str());
 
     static bool CZfabetaf_first = true;
     static bool CZfadef_first = true;

@@ -18,6 +18,9 @@
 ----------------------------------------------------------------------
 
  HISTORY:      04/04/2003   initial release
+               06/30/2003   (RD) replaced istrstream with istringstream
+                            to get rid of the annoying warning about
+                            using the strstream header
 
 ----------------------------------------------------------------------
 
@@ -98,14 +101,14 @@ void parse_engine( const string& linetoken2, const string& linetoken3,
 		   LIST command_line ) {
     double token_value;
     int token_value_convert1, token_value_convert2;
-    istrstream token3(linetoken3.c_str());
-    istrstream token4(linetoken4.c_str());
-    istrstream token5(linetoken5.c_str());
-    istrstream token6(linetoken6.c_str());
-    istrstream token7(linetoken7.c_str());
-    istrstream token8(linetoken8.c_str());
-    istrstream token9(linetoken9.c_str());
-    istrstream token10(linetoken10.c_str());
+    istringstream token3(linetoken3.c_str());
+    istringstream token4(linetoken4.c_str());
+    istringstream token5(linetoken5.c_str());
+    istringstream token6(linetoken6.c_str());
+    istringstream token7(linetoken7.c_str());
+    istringstream token8(linetoken8.c_str());
+    istringstream token9(linetoken9.c_str());
+    istringstream token10(linetoken10.c_str());
 
     switch(engine_map[linetoken2])
       {

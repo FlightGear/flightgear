@@ -7,9 +7,10 @@
 
 #include <string>
 #include STL_IOSTREAM
-#include STL_STRSTREAM
+//#include STL_STRSTREAM
+#include <sstream>
 
-SG_USING_STD(istrstream);
+//SG_USING_STD(istrstream);
 
 void d_2_to_3( double array2D[100][100], double array3D[][100][100], int index3D);
 void d_1_to_2( double array1D[100], double array2D[][100], int index2D);

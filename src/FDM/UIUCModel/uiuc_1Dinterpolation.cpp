@@ -23,10 +23,13 @@
 ----------------------------------------------------------------------
 
  HISTORY:      02/03/2000   initial release
+               09/01/2002   (RD) added second interpolation routine
+                            for integer case
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Jeff Scott         <jscott@mail.com>
+               Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 

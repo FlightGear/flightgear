@@ -3,13 +3,14 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRSTREAM
+//#include STL_STRSTREAM
+#include <sstream>
 
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
 #include "uiuc_warnings_errors.h"
 
-SG_USING_STD(istrstream);
+//SG_USING_STD(istrstream);
 
 int uiuc_1DdataFileReader( string file_name, 
                             double x[], 

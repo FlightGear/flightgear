@@ -1,10 +1,78 @@
+/**********************************************************************
+                                                                       
+ FILENAME:     uiuc_menu_functions.cpp
+
+----------------------------------------------------------------------
+
+ DESCRIPTION:  provides common functions used by different menu
+               routines
+
+----------------------------------------------------------------------
+
+ STATUS:       alpha version
+
+----------------------------------------------------------------------
+
+ REFERENCES:   
+
+----------------------------------------------------------------------
+
+ HISTORY:      04/04/2003   initial release
+               06/30/2003   (RD) replaced istrstream with istringstream
+                            to get rid of the annoying warning about
+                            using the strstream header
+
+----------------------------------------------------------------------
+
+ AUTHOR(S):    Robert Deters      <rdeters@uiuc.edu>
+               Michael Selig      <m-selig@uiuc.edu>
+
+----------------------------------------------------------------------
+
+ VARIABLES:
+
+----------------------------------------------------------------------
+
+ INPUTS:       n/a
+
+----------------------------------------------------------------------
+
+ OUTPUTS:      n/a
+
+----------------------------------------------------------------------
+
+ CALLED BY:    uiuc_menu_XX()
+
+----------------------------------------------------------------------
+
+ CALLS TO:     
+
+ ----------------------------------------------------------------------
+
+ COPYRIGHT:    (C) 2003 by Michael Selig
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+ USA or view http://www.gnu.org/copyleft/gpl.html.
+
+**********************************************************************/
 
 #include "uiuc_menu_functions.h"
 
 bool check_float( const string &token)
 {
   float value;
-  istrstream stream(token.c_str()); 
+  istringstream stream(token.c_str()); 
   return (stream >> value);
 }
 

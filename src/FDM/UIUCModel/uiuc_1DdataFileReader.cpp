@@ -18,10 +18,16 @@
 ----------------------------------------------------------------------
 
  HISTORY:      02/15/2000   initial release
+               09/01/2002   (RD) added second data file reader for
+                            integer case
+               06/30/2003   (RD) replaced istrstream with istringstream
+                            to get rid of the annoying warning about
+                            using the strstream header
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Jeff Scott         <jscott@mail.com>
+               Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -92,8 +98,8 @@ uiuc_1DdataFileReader( string file_name,
       linetoken1 = matrix -> getToken(*command_line, 1); // gettoken(string,tokenNo);
       linetoken2 = matrix -> getToken(*command_line, 2); // 2 represents token No 2
 
-      istrstream token1(linetoken1.c_str());
-      istrstream token2(linetoken2.c_str());
+      istringstream token1(linetoken1.c_str());
+      istringstream token2(linetoken2.c_str());
 
       token1 >> token_value1;
       token2 >> token_value2;
@@ -136,8 +142,8 @@ uiuc_1DdataFileReader( string file_name,
       linetoken1 = matrix -> getToken(*command_line, 1); // gettoken(string,tokenNo);
       linetoken2 = matrix -> getToken(*command_line, 2); // 2 represents token No 2
 
-      istrstream token1(linetoken1.c_str());
-      istrstream token2(linetoken2.c_str());
+      istringstream token1(linetoken1.c_str());
+      istringstream token2(linetoken2.c_str());
 
       token1 >> token_value1;
       token2 >> token_value2;

@@ -122,6 +122,11 @@ void uiuc_engine()
         case simpleSingle_flag:
           {
             F_X_engine = Throttle[3] * simpleSingleMaxThrust;
+	    F_Y_engine = 0.0;
+	    F_Z_engine = 0.0;
+	    M_l_engine = 0.0;
+	    M_m_engine = 0.0;
+	    M_n_engine = 0.0;
             break;
           }
         case simpleSingleModel_flag:
@@ -129,6 +134,11 @@ void uiuc_engine()
 	    /* simple model based on Hepperle's equation
 	     * exponent dtdvvt was computed in uiuc_menu.cpp */
 	    F_X_engine = Throttle[3] * t_v0 * (1 - pow((V_rel_wind/v_t0),dtdvvt));
+	    F_Y_engine = 0.0;
+	    F_Z_engine = 0.0;
+	    M_l_engine = 0.0;
+	    M_m_engine = 0.0;
+	    M_n_engine = 0.0;
 	    if (b_slipstreamEffects) {
 	      tc = F_X_engine/(Dynamic_pressure * LS_PI * propDia * propDia / 4);
 	      w_induced = 0.5 *  V_rel_wind * (-1 + pow((1+tc),.5));

@@ -20,6 +20,9 @@
  HISTORY:      02/29/2000   initial release
                10/25/2001   (RD) Modified so that it recognizes a
 	                    blank line
+               06/30/2003   (RD) replaced istrstream with istringstream
+                            to get rid of the annoying warning about
+                            using the strstream header
 
 ----------------------------------------------------------------------
 
@@ -101,8 +104,8 @@ void uiuc_2DdataFileReader( string file_name,
       linetoken1 = matrix -> getToken(*command_line, 1); // gettoken(string,tokenNo);
       linetoken2 = matrix -> getToken(*command_line, 2); // 2 represents token No 2
 
-      istrstream token1(linetoken1.c_str());
-      istrstream token2(linetoken2.c_str());
+      istringstream token1(linetoken1.c_str());
+      istringstream token2(linetoken2.c_str());
 
       //reset token_value1 and token_value2 for first if statement
       token_value1 = -999;
