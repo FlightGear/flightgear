@@ -185,6 +185,7 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
 
         // Autopilot
         {"NewAltitude", NewAltitude},
+	{"NewHeading", NewHeading},
         {"AddWayPoint", AddWayPoint},
         {"PopWayPoint", PopWayPoint},
         {"ClearRoute", ClearRoute},

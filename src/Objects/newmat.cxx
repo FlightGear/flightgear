@@ -416,6 +416,7 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
     textured->setMaterial ( GL_SPECULAR,
                             specular[0], specular[1],
                             specular[2], specular[3] ) ;
+    textured->setShininess( 75.0 );
     textured->setMaterial ( GL_EMISSION,
                             emission[0], emission[1],
                             emission[2], emission[3] ) ;
