@@ -774,25 +774,20 @@ parse_option (const string& arg)
 	fgSetString("/sim/startup/units", "meters");
     } else if ( arg.find( "--time-offset" ) == 0 ) {
         fgSetInt("/sim/startup/time-offset",
-			   parse_time_offset( (arg.substr(14)) ));
+                 parse_time_offset( (arg.substr(14)) ));
+	fgSetString("/sim/startup/time-offset-type", "system-offset");
     } else if ( arg.find( "--time-match-real") == 0 ) {
-        fgSetString("/sim/startup/time-offset-type",
-			      "system-offset");
+        fgSetString("/sim/startup/time-offset-type", "system-offset");
     } else if ( arg.find( "--time-match-local") == 0 ) {
-        fgSetString("/sim/startup/time-offset-type",
-			      "latitude-offset");
+        fgSetString("/sim/startup/time-offset-type", "latitude-offset");
     } else if ( arg.find( "--start-date-sys=") == 0 ) {
-        fgSetInt("/sim/startup/time-offset",
-			   parse_date((arg.substr(17))));
+        fgSetInt("/sim/startup/time-offset", parse_date((arg.substr(17))));
 	fgSetString("/sim/startup/time-offset-type", "system");
     } else if ( arg.find( "--start-date-lat=") == 0 ) {
-        fgSetInt("/sim/startup/time-offset",
-			   parse_date((arg.substr(17))));
-	fgSetString("/sim/startup/time-offset-type",
-			   "latitude");
+        fgSetInt("/sim/startup/time-offset", parse_date((arg.substr(17))));
+	fgSetString("/sim/startup/time-offset-type", "latitude");
     } else if ( arg.find( "--start-date-gmt=") == 0 ) {
-        fgSetInt("/sim/startup/time-offset",
-			   parse_date((arg.substr(17))));
+        fgSetInt("/sim/startup/time-offset", parse_date((arg.substr(17))));
 	fgSetString("/sim/startup/time-offset-type", "gmt");
     } else if ( arg == "--hud-tris" ) {
         fgSetString("/sim/hud/frame-stat-type", "tris");
