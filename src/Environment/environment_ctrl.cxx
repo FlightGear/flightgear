@@ -429,7 +429,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
            _icao = a.id;
             elapsed = 0.0;
             update_env_config();
-            env->init();
+            env->reinit();
         } else {
             // mark as no metar so it doesn't show up in subsequent
             // searches.
