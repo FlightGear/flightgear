@@ -245,20 +245,18 @@ the lon/lat coordinates of the GIS structures.
 
 \subsubsection{DEM}
 
-This is a library of routines distributed as part of Flight Gear.
-This library has routines to parse the 3 arcsec DEM file format,
-approximate the regular grid of height data, with an irregular grid,
-and interpolate the elevation of any arbitrary point inside the grid.
+This library has routines to parse the 3 arcsec DEM file format, and
+output a square section corresponding to a specified tile.
 
-An irregular grid can often represent the same level detail as a
-regular grid with 4-6x fewer polygons.  This is very desirable in a
-flight sim where both detail and rendering speed is very important.
+\subsubsection{Polygon}
 
-Another feature of an irregular grid is that it carries fewer
-artifacts that could provide negative training value to pilots.  For
-instance a regular grid could give a pilot non-realistic cues for
-determining north/south/east/west.
+This lib contains routines to assign a unique id number to each
+polygon before it is clipped against tial boundaries.  We can use this
+unique id later on to match up the edges of polygons across tile
+boundaries.
 
+This lib also contains routines to track and assign names (types) to
+each polygon so we can color it with the correct texture at run time.
 
 \subsubsection{Triangle}
 
@@ -308,12 +306,30 @@ for the file name.
 \subsection{Preprocessing tools}
 
 The preprocessing tools are responsible for inputing raw world data,
-clipping it to the appropriate scenery tiles, outputing it into the
-workspace directory tree.
+clipping it to the appropriate scenery tiles, and outputing it into
+the workspace directory tree.
 
 The scenery assembly and creation tools work on each tile
 individually, so they expect all the relevant information for a tile
 to already be there.
+
+\subsubsection{DemChop}
+
+This utility inputs 3 arcsec dem files, chops the data up along tile
+boundaries and outputs the result into the scenery workspace.
+
+\subsubsection{DemInfo}
+
+Reads the ``A'' record from a 3 arcsec DEM file and dumps some
+pertinent information.
+
+\subsubsection{DemRaw2ascii}
+
+This tool will input the 30 arcsec raw DEM format, split it up into 1
+x 1 degree sections, and output the result into the 3 arcsec format so
+it can be fed through the scenery pipeline.  (Note to self, at some
+point, this could be updated to work like DemChop and output the tile
+chunks directly.)
 
 \subsubsection{GenAirports}
 
@@ -321,14 +337,14 @@ This tools inputs an ascii specification of the airports of the world
 that looks like the following:
 
 \begin{verbatim}
-KORD Chicago O Hare International                       
-        -087.917774 41.976778 13000 200 140 155154 14 R 668
-        -087.902380 41.969040 10141 150 90 154154 09 R 668
-        -087.903546 41.991918 10003 150 140 155154 14 L 668
-        -087.889594 41.961618 8071 150 41 154154 04 R 668
-        -087.903705 41.983954 7967 150 90 154154 09 L 668 
-        -087.905138 41.989606 7500 150 39 142144 04 L 668
-        -087.900410 41.990086 5341 150 180 131131 18 x 668
+A KORD  41.979595 -087.904464   668 CYY Chicago O Hare International
+R 04L  41.989606 -087.905138 039.39   7500 150 AHYN NNNLYN NNNNNY
+R 04R  41.961618 -087.889594 041.40   8071 150 AHYN YNNNNY YNNNNY
+R 09L  41.983954 -087.903705 089.70   7967 150 AHYN YNNNNY YNNNNY
+R 09R  41.969040 -087.902380 089.88  10141 150 AHYN YNNNNY YNNNNY
+R 14L  41.991918 -087.903546 140.10  10003 150 AHYN YNNBYN YNNNNY
+R 14R  41.976778 -087.917774 140.08  13000 200 AHYN YNNBYN YNNNNY
+R 18   41.990086 -087.900410 180.00   5341 150 AMNN NNNNNN NNNNNN
 \end{verbatim}
 
 For each airport, a bounding polygon is generated, and written as a
@@ -336,6 +352,10 @@ clipping record for each intersecting tile in the scenery construction
 area.  The actual airport will belong to the tile containing it's
 center point, but the airport will need to be clipped out of the base
 terrain from any tiles it might spill over into.
+
+Robin Peel (robin@cpwd.com) maintains this data base, primarily for
+use with X-Plane, but lets us use it too.  His distribution contians a
+much more detailed description of the fields and formats.
 
 \subsubsection{ShapeFile}
 
@@ -352,32 +372,21 @@ neighboring tiles and this unique polygon id will enable us to do
 this.  Each polygon that is written out (no matter what the source or
 type) should have a unique id number assigned to it.
 
-\subsubsection{DemRaw2ascii}
-
-This tool will input the 30 arcsec raw DEM format, split it up into 1
-x 1 degree sections, and output the result into the 3 arcsec format so
-it can be fed through the scenery pipeline.
-
-\subsubsection{Dem2node}
-
-This tool takes the raw DEM files and calls routines from libDEM.a to
-create the irregular grid approximation of the original data.  The
-elevation data is writen to the to the appropriate tile in the scenery
-work space.
-
 \subsection{Scenery generation tools}
 
 Issues:
 
-Combining height data, polygon data.
+\begin{itemize}
+\item Combining height data, polygon data.
 
-Triangulating / tri-stripping / tri-fanning.
+\item Triangulating / tri-stripping / tri-fanning.
 
-Matching vertices and normals along edges and at corners.
+\item Matching vertices and normals along edges and at corners.
 
-Resolving conflicts in data:
+\item Resolving conflicts in data:
   overlapping polygon areas.
   conflicting height data between airports and DEM data
+\end{itemize}
 
 Here's the basic process to create scenery:
 
@@ -447,9 +456,49 @@ Finally, we need to take our 3d, fan-ified polygons and convert them
 to the FGFS scenery format and copy them from the work space directory
 tree into the final scenery directory tree.
 
+\subsubsection{Array}
+
+This library reads in the regular grid data written by the DemChop
+preprocessing tool.  It has a fit routine which approximates the
+regular grid of height data with an irregular grid, and interpolate
+the elevation of any arbitrary point inside this grid.
+
+An irregular grid can often represent the same level detail as a
+regular grid with 4-6x fewer polygons.  This is very desirable in a
+flight sim where both detail and rendering speed is very important.
+
+Another feature of an irregular grid is that it carries fewer
+artifacts that could provide negative training value to pilots.  For
+instance a regular grid could give a pilot non-realistic cues for
+determining north/south/east/west.
+
+\subsubsection{Clipper}
+
+This library makes heavy use of ``the generic polygon clipper''.  The
+polygons of each tile are clipped against the tile boundaries as well
+as any higher priority polygons for that tile.  To do this the library
+processes the polygons from highest priority to lowest and
+incrimentally builds up an accumulation ``super-polygon''.  This
+super-polygon is the union of all the polygons processed so far.  As
+each polygon is processed, it is first clipped against this
+super-accumlation-polygon.  What's left after the clip is the new
+shape of the polygon.  This is the scheme for eliminating overlapping
+features on a priority basis.  In the end we can create a base-terrain
+polygon out the remaining open areas of the tile that weren't covered
+by any other polygons.  This way we end up with a set of ``puzzle''
+pieces that together form the complete tile with no overlaps and no
+gaps.
+
+
+% \subsubsection{Dem2node}
+% 
+% This tool takes the raw DEM files and calls routines from libDEM.a to
+% create the irregular grid approximation of the original data.  The
+% elevation data is writen to the to the appropriate tile in the scenery
+% work space.
+
 % \subsubsection{Areas}
 % \subsubsection{AssemTris}
-% \subsubsection{Clipper}
 % \subsubsection{FixNode}
 % \subsubsection{FixObj}
 % \subsubsection{SplitTris}
@@ -457,11 +506,6 @@ tree into the final scenery directory tree.
 % \subsubsection{Tri2obj}
 
 \subsection{Miscellaneous Utilities}
-
-\subsubsection{DemInfo}
-
-Reads the ``A'' record from a 3 arcsec DEM file and dumps some
-pertinent information.
 
 \subsubsection{tile-sizes.pl}
 
@@ -473,6 +517,9 @@ Generates the width of a 1/8 x 1/8 degree tile at various latitudes.
 
 %------------------------------------------------------------------------
 % $Log$
+% Revision 1.3  1999/03/13 21:42:37  curt
+% Updated to match current scenery generation tools progress.
+%
 % Revision 1.2  1999/03/08 21:59:52  curt
 % Updated based on current efforts.
 %
