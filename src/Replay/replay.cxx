@@ -372,7 +372,7 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
 /** 
  * interpolate a specific time from a specific list
  */
-static void interpolate( double time, replay_list_type list ) {
+static void interpolate( double time, const replay_list_type &list ) {
     // sanity checking
     if ( list.size() == 0 ) {
         // handle empty list
