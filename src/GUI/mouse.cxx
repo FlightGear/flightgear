@@ -372,7 +372,7 @@ void guiMotionFunc ( int x, int y )
             if( gui_menu_on )
                 guiToggleMenu();			
         }
-        // puMouse ( x, y ) ;
+        puMouse ( x, y ) ;
         glutPostRedisplay () ;
     } else {
         if( x == _mX && y == _mY)
