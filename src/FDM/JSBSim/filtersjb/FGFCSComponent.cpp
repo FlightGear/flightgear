@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGFCSComponent.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FCSCOMPONENT;
 
@@ -49,7 +51,6 @@ CLASS IMPLEMENTATION
 FGFCSComponent::FGFCSComponent(FGFCS* _fcs) : fcs(_fcs)
 {
   Type       = "";
-  ID         = 0;
   Input      = 0.0;
   Output     = 0.0;
   OutputNode = 0;
@@ -82,14 +83,14 @@ bool FGFCSComponent::Run(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGPropertyManager* FGFCSComponent::resolveSymbol(string token) {
+FGPropertyManager* FGFCSComponent::resolveSymbol(string token)
+{
   string prop;
-  FGPropertyManager* tmp=PropertyManager->GetNode(token,false);
-  if( !tmp ){
-    if( token.find("/") == token.npos ) 
-      prop = "model/" + token;
+  FGPropertyManager* tmp = PropertyManager->GetNode(token,false);
+  if (!tmp) {
+    if (token.find("/") == token.npos) prop = "model/" + token;
     cerr << "Creating new property " << prop << endl;
-    tmp=PropertyManager->GetNode(token,true);
+    tmp = PropertyManager->GetNode(token,true);
   }
   return tmp;  
 }              
@@ -97,7 +98,8 @@ FGPropertyManager* FGFCSComponent::resolveSymbol(string token) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFCSComponent::bind(void) {
+void FGFCSComponent::bind(void)
+{
   string tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
   FGPropertyManager *tmpn;
   PropertyManager->Tie( tmp,this, &FGFCSComponent::GetOutput);
@@ -154,4 +156,4 @@ void FGFCSComponent::Debug(int from)
     }
   }
 }
-
+}

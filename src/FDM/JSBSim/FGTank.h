@@ -74,6 +74,8 @@ DEFINES
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGTank : public FGJSBBase
 {
 public:
@@ -104,7 +106,7 @@ private:
   bool  Selected;
   void Debug(int from);
 };
-
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
 

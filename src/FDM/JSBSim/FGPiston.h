@@ -80,6 +80,8 @@ DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGPiston : public FGEngine
 {
 public:
@@ -162,6 +164,6 @@ private:
 
   void Debug(int from);
 };
-
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

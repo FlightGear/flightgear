@@ -75,6 +75,8 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGAuxiliary : public FGModel {
 public:
   /** Constructor
@@ -128,6 +130,8 @@ private:
   void GetState(void);
   void Debug(int from);
 };
+
+} // namespace JSBSim
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

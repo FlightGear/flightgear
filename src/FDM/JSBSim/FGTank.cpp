@@ -38,18 +38,20 @@ INCLUDES
 
 #include "FGTank.h"
 
+#if !defined ( sgi ) || defined( __GNUC__ )
+using std::cerr;
+using std::endl;
+using std::cout;
+#endif
+
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TANK;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-#if !defined ( sgi ) || defined( __GNUC__ )
-using std::cerr;
-using std::endl;
-using std::cout;
-#endif
 
 FGTank::FGTank(FGConfigFile* AC_cfg)
 {
@@ -156,4 +158,4 @@ void FGTank::Debug(int from)
     }
   }
 }
-
+}

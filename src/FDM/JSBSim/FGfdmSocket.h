@@ -88,6 +88,8 @@ CLASS DECLARATION
 
 using std::string;
 
+namespace JSBSim {
+
 class FGfdmSocket : public FGJSBBase
 {
 public:
@@ -109,5 +111,5 @@ private:
   bool connected;
   void Debug(int from);
 };
-
+}
 #endif

@@ -82,6 +82,8 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 *******************************************************************************/
 
+namespace JSBSim {
+
 class FGAtmosphere : public FGModel {
 public:
 
@@ -189,6 +191,8 @@ private:
   void Turbulence(void);
   void Debug(int from);
 };
+
+} // namespace JSBSim
 
 /******************************************************************************/
 #endif

@@ -76,6 +76,8 @@ CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
+namespace JSBSim {
+
 class FGTable : public FGJSBBase
 {
 public:
@@ -111,7 +113,7 @@ private:
   double** Allocate(void);
   void Debug(int from);
 };
-
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #endif

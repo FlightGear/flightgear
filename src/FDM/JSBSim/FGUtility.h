@@ -50,6 +50,8 @@ DEFINES
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGFDMExec;
 class FGState;
 
@@ -64,6 +66,6 @@ private:
   FGFDMExec* FDMExec;
   void Debug(int from);
 };
-
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

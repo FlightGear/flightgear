@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGDeadBand.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_DEADBAND;
 
@@ -56,14 +58,30 @@ FGDeadBand::FGDeadBand(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
   AC_cfg->GetNextConfigLine();
   string token;
 
+  clipmax = clipmin = 0.0;
+  clip = false;
+  gain = 1.0;
+  width = 0.0;
+
   while ((token = AC_cfg->GetValue()) != string("/COMPONENT")) {
     *AC_cfg >> token;
-    if (token == "ID") {
-      *AC_cfg >> ID;
-    } else if (token == "INPUT") {
-      *AC_cfg >> InputIdx;
-    } else {
+    if (token == "INPUT") {
+      if (InputNodes.size() > 0) {
+        cerr << "Deadband can only accept one input" << endl;
+      } else  {
+        *AC_cfg >> token;
+        InputNodes.push_back(resolveSymbol(token));
+      }  
+    } else if (token == "WIDTH") {
+      *AC_cfg >> width;
+    } else if (token == "CLIPTO") {
+      *AC_cfg >> clipmin >> clipmax;
+      if (clipmax > clipmin) clip = true;
+    } else if (token == "GAIN") {
+      *AC_cfg >> gain;
+    } else if (token == "OUTPUT") {
       *AC_cfg >> token;
+      OutputNode = PropertyManager->GetNode(token);
     }
   }
   FGFCSComponent::bind();
@@ -82,6 +100,23 @@ FGDeadBand::~FGDeadBand()
 bool FGDeadBand::Run(void )
 {
   FGFCSComponent::Run(); // call the base class for initialization of Input
+
+  Input = InputNodes[0]->getDoubleValue();
+
+  if (Input < -width/2.0) {
+    Output = (Input + width/2.0)*gain;
+  } else if (Input > width/2.0) {
+    Output = (Input - width/2.0)*gain;
+  } else {
+    Output = 0.0;
+  }
+
+  if (clip) {
+    if (Output > clipmax)      Output = clipmax;
+    else if (Output < clipmin) Output = clipmin;
+  }
+
+  if (IsOutput) SetOutput();
 
   return true;
 }
@@ -111,7 +146,12 @@ void FGDeadBand::Debug(int from)
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
-
+      cout << "      INPUT: " << InputNodes[0]->getName() << endl;
+      cout << "      DEADBAND WIDTH: " << width << endl;
+      cout << "      GAIN: " << gain << endl;
+      if (clip) cout << "      CLIPTO: " << clipmin 
+                                  << ", " << clipmax << endl;
+      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification
@@ -131,4 +171,4 @@ void FGDeadBand::Debug(int from)
     }
   }
 }
-
+}

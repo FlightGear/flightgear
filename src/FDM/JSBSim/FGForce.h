@@ -217,6 +217,8 @@ and vMn, the moments, can be made directly. Otherwise, the usage is similar.<br>
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGForce : public FGJSBBase
 {
 public:
@@ -328,6 +330,6 @@ private:
 
   virtual void Debug(int from);
 };
-
+}
 #endif
 

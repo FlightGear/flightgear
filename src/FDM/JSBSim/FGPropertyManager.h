@@ -70,6 +70,8 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGPropertyManager : public SGPropertyNode {
   public:
     /// Constructor
@@ -608,6 +610,6 @@ class FGPropertyManager : public SGPropertyNode {
     	   "Failed to tie property " << name << " to indexed object methods" << endl;
    }
 };                                                                                       
-
+}
 #endif // FGPROPERTYMANAGER_H
 

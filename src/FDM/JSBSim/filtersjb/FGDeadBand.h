@@ -50,6 +50,8 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGFCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,6 +64,16 @@ CLASS DOCUMENTATION
 
 /** Models a deadband object.
     Owned and Operated by the FGFCS class.
+
+    <COMPONENT NAME="Deadbeat1" TYPE="DEADBAND">
+      INPUT {input}
+      WIDTH {deadband width}
+      GAIN {optional deadband gain}
+      MIN {minimum value}
+      MAX {maximum value}
+      OUTPUT {optional output parameter to set}
+    </COMPONENT>
+
     @author Jon S. Berndt
     @see -
   */
@@ -80,10 +92,14 @@ public:
 
 private:
   FGConfigFile* AC_cfg;
+  double width;
+  double clipmax, clipmin;
+  bool clip;
+  double gain;
   
   void Debug(int from);
 };
-
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #endif

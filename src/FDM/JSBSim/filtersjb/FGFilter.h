@@ -69,7 +69,6 @@ CLASS DOCUMENTATION
     <pre>
     
     &ltCOMPONENT NAME="Elevator Filter" TYPE="LAG_FILTER">
-      ID           16
       INPUT        15
       C1           600
       OUTPUT       FG_ELEVATOR_POS
@@ -86,6 +85,8 @@ CLASS DOCUMENTATION
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+namespace JSBSim {
 
 class FGFilter  : public FGFCSComponent         
 {
@@ -121,6 +122,6 @@ private:
   FGConfigFile* AC_cfg;
   void Debug(int from);
 };
-
+}
 #endif
 

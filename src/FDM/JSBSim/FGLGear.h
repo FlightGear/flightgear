@@ -60,6 +60,8 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGAircraft;
 class FGPosition;
 class FGRotation;
@@ -186,6 +188,8 @@ public:
   enum BrakeGroup {bgNone=0, bgLeft, bgRight, bgCenter, bgNose, bgTail };
   /// Steering group membership enumerators
   enum SteerType {stSteer, stFixed, stCaster};
+  /// Report type enumerators
+  enum ReportType {erNone=0, erTakeoff, erLand};
   /** Constructor
       @param Executive a pointer to the parent executive object
       @param File a pointer to the config file instance */
@@ -265,7 +269,9 @@ private:
   double maxCompLen;
   double SinkRate;
   double GroundSpeed;
-  double DistanceTraveled;
+  double TakeoffDistanceTraveled;
+  double TakeoffDistanceTraveled50ft;
+  double LandingDistanceTraveled;
   double MaximumStrutForce;
   double MaximumStrutTravel;
   double SideWhlVel, RollingWhlVel;
@@ -275,7 +281,9 @@ private:
   bool WOW;
   bool lastWOW;
   bool FirstContact;
-  bool Reported;
+  bool StartedGroundRun;
+  bool LandingReported;
+  bool TakeoffReported;
   bool ReportEnable;
   bool isRetractable;
   bool GearUp, GearDown;
@@ -296,10 +304,10 @@ private:
   FGFCS*      FCS;
   FGMassBalance* MassBalance;
 
-  void Report(void);
+  void Report(ReportType rt);
   void Debug(int from);
 };
-
+}
 #include "FGAircraft.h"
 #include "FGPosition.h"
 #include "FGRotation.h"

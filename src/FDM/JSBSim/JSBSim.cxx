@@ -796,3 +796,4 @@ void FGJSBsim::update_ic(void) {
      fgic->SetClimbRateFpsIC( get_Climb_Rate() );
    }  
 }
+

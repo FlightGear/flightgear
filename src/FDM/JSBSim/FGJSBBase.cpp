@@ -37,6 +37,8 @@ INCLUDES
 
 #include "FGJSBBase.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_JSBBASE;
 
@@ -67,7 +69,7 @@ const double FGJSBBase::in3tom3 = 1.638706E-5;
 const double FGJSBBase::Reng = 1716.0;
 const double FGJSBBase::SHRatio = 1.40;
 const string FGJSBBase::needed_cfg_version = "1.60";
-const string FGJSBBase::JSBSim_version = "0.9.2";
+const string FGJSBBase::JSBSim_version = "0.9.4";
 
 queue <FGJSBBase::Message*> FGJSBBase::Messages;
 FGJSBBase::Message FGJSBBase::localMsg;
@@ -183,4 +185,5 @@ void FGJSBBase::disableHighLighting(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+} // namespace JSBSim
 

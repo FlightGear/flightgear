@@ -56,6 +56,8 @@ INCLUDES
 #include "FGEngine.h"
 #include "FGTank.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_ENGINE;
 
@@ -211,4 +213,4 @@ void FGEngine::Debug(int from)
     }
   }
 }
-
+}

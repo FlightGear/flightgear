@@ -21,6 +21,8 @@ INCLUDES
 #include "FGMatrix33.h"
 #include "FGColumnVector3.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_MATRIX33;
 
@@ -440,4 +442,4 @@ void FGMatrix33::Debug(int from)
     }
   }
 }
-
+}

@@ -84,6 +84,8 @@ INCLUDES
 #include "FGOutput.h"
 #include "FGPropertyManager.h"
 
+namespace JSBSim {
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -380,3 +382,4 @@ void FGAircraft::Debug(int from)
   }
 }
 
+} // namespace JSBSim

@@ -48,6 +48,8 @@ INCLUDES
 #include "FGAerodynamics.h"
 
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TRIMAXIS;
 
@@ -482,5 +484,4 @@ void FGTrimAxis::Debug(int from)
     }
   }
 }
-
-
+}

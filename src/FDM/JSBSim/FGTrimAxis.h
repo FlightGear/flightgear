@@ -48,6 +48,8 @@ INCLUDES
 
 #define DEFAULT_TOLERANCE 0.001
 
+namespace JSBSim {
+
 const string StateNames[10]=   { "all","udot","vdot","wdot","qdot","pdot","rdot",
                                 "hmgt","nlf" 
                               };
@@ -165,5 +167,5 @@ private:
   
   void Debug(int from);
 };
-
+}
 #endif

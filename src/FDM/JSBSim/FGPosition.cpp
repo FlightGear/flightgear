@@ -86,6 +86,8 @@ INCLUDES
 #include "FGPropertyManager.h"
 
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_POSITION;
 
@@ -348,4 +350,4 @@ void FGPosition::Debug(int from)
     }
   }
 }
-
+}

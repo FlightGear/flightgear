@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGFilter.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FILTER;
 
@@ -69,8 +71,7 @@ FGFilter::FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
 
   while ((token = AC_cfg->GetValue()) != string("/COMPONENT")) {
     *AC_cfg >> token;
-    if      (token == "ID")     *AC_cfg >> ID;
-    else if (token == "C1")     *AC_cfg >> C1;
+    if (token == "C1")          *AC_cfg >> C1;
     else if (token == "C2")     *AC_cfg >> C2;
     else if (token == "C3")     *AC_cfg >> C3;
     else if (token == "C4")     *AC_cfg >> C4;
@@ -239,4 +240,4 @@ void FGFilter::Debug(int from)
     }
   }
 }
-
+}

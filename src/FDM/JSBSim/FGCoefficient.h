@@ -61,6 +61,8 @@ using std::vector;
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGFDMExec;
 class FGState;
 class FGAtmosphere;
@@ -207,6 +209,8 @@ private:
 
   virtual void Debug(int from);
 };
+
+} // using namespace JSBSim
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

@@ -70,6 +70,8 @@ using namespace std;
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGFDMExec;
 class FGState;
 class FGAtmosphere;
@@ -157,7 +159,7 @@ protected:
   FGOutput*          Output;
   FGPropertyManager* PropertyManager;
 };
-
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
 

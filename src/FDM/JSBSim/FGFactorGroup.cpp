@@ -60,6 +60,8 @@ INCLUDES
 #  include STL_IOMANIP
 #endif
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FACTORGROUP;
 
@@ -200,3 +202,4 @@ void FGFactorGroup::Debug(int from)
   }
 }
 
+}

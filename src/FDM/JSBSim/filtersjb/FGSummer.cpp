@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGSummer.h"            
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_SUMMER;
 
@@ -63,9 +65,7 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
   while ((token = AC_cfg->GetValue()) != string("/COMPONENT")) {
     *AC_cfg >> token;
 
-    if (token == "ID") {
-      *AC_cfg >> ID;
-    } else if (token == "INPUT") {
+    if (token == "INPUT") {
       token = AC_cfg->GetValue("INPUT");
       *AC_cfg >> token;
       InputNodes.push_back( resolveSymbol(token) );
@@ -169,4 +169,4 @@ void FGSummer::Debug(int from)
     }
   }
 }
-
+}

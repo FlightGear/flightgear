@@ -60,6 +60,8 @@ DEFINITIONS
 
 #define ID_INITIALCONDITION "$Id$"
 
+namespace JSBSim {
+
 typedef enum { setvt, setvc, setve, setmach, setuvw, setned, setvg } speedset;
 typedef enum { setwned, setwmd, setwhc } windset; 
 
@@ -301,6 +303,6 @@ private:
   bool solve(double *y, double x);
   void Debug(int from);
 };
-
+}
 #endif
 

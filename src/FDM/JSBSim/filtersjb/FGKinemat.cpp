@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGKinemat.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FLAPS;
 
@@ -65,9 +67,7 @@ FGKinemat::FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
 
   while ((token = AC_cfg->GetValue()) != string("/COMPONENT")) {
     *AC_cfg >> token;
-    if (token == "ID") {
-      *AC_cfg >> ID;
-    } else if (token == "INPUT") {
+    if (token == "INPUT") {
       token = AC_cfg->GetValue("INPUT");
       if( InputNodes.size() > 0 ) {
         cerr << "Kinemat can only accept one input" << endl;
@@ -226,4 +226,4 @@ void FGKinemat::Debug(int from)
     }
   }
 }
-
+}

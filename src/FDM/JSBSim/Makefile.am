@@ -41,9 +41,7 @@ libJSBSim_a_SOURCES = \
 	FGTranslation.cpp FGTranslation.h \
 	FGTrim.cpp FGTrim.h \
 	FGTrimAxis.cpp FGTrimAxis.h \
-	FGTurboJet.cpp FGTurboJet.h \
-	FGTurboProp.cpp FGTurboProp.h \
-	FGTurboShaft.cpp FGTurboShaft.h \
+	FGTurbine.cpp FGTurbine.h \
 	FGUtility.cpp FGUtility.h \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h \

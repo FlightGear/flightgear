@@ -62,13 +62,15 @@ DEFINITIONS
 
 #define ID_TRIM "$Id$"
 
-typedef enum { tLongitudinal, tFull, tGround, tPullup, 
-               tCustom, tNone, tTurn 
-             } TrimMode;
-
 #if defined(_WIN32) && !defined(__CYGWIN__)
   #define snprintf _snprintf
 #endif
+
+namespace JSBSim {
+
+typedef enum { tLongitudinal, tFull, tGround, tPullup, 
+               tCustom, tNone, tTurn 
+             } TrimMode;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -302,15 +304,6 @@ public:
   inline double GetTargetNlf(void) { return targetNlf; }
 
 };
-
+}
 
 #endif
-
-
-
-
-
-
-
-
-

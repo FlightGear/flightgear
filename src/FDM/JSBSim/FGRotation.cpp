@@ -69,6 +69,8 @@ INCLUDES
 #include "FGPropertyManager.h"
 
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_ROTATION;
 
@@ -279,4 +281,4 @@ void FGRotation::Debug(int from)
     }
   }
 }
-
+}

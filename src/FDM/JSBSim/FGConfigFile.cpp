@@ -21,6 +21,8 @@ INCLUDES
 #include <stdlib.h>
 #include <math.h>
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_CONFIGFILE;
 
@@ -339,4 +341,4 @@ void FGConfigFile::Debug(int from)
     }
   }
 }
-
+}

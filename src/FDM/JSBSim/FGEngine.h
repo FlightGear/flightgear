@@ -67,6 +67,9 @@ DEFINITIONS
 #define ID_ENGINE "$Id$"
 
 using std::string;
+using std::vector;
+
+namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -83,8 +86,6 @@ class FGPropulsion;
 class FGPosition;
 class FGAuxiliary;
 class FGOutput;
-
-using std::vector;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -241,7 +242,7 @@ protected:
   vector <int> SourceTanks;
   virtual void Debug(int from);
 };
-
+}
 #include "FGState.h"
 #include "FGFDMExec.h"
 #include "FGAtmosphere.h"

@@ -59,6 +59,8 @@ using std::string;
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGFCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,16 +121,14 @@ protected:
   FGPropertyManager* treenode;
   string Type;
   string Name;
-  int ID;
-  vector<FGPropertyManager*> InputNodes;
-  int InputIdx;
+  vector <FGPropertyManager*> InputNodes;
   double Input;
   FGPropertyManager* OutputNode;
   double Output;
   bool IsOutput;
   virtual void Debug(int from);
 };
-
+}
 #include "../FGFCS.h"
 
 #endif

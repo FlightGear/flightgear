@@ -85,6 +85,8 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGSummer  : public FGFCSComponent
 {
 public:
@@ -105,5 +107,5 @@ private:
   double Bias;
   void Debug(int from);
 };
-
+}
 #endif

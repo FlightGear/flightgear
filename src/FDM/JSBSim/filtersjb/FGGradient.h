@@ -50,6 +50,8 @@ DEFINES
 
 #define ID_GRADIENT "$Id$"
 
+namespace JSBSim {
+
 class FGFCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,5 +70,5 @@ private:
   FGConfigFile* AC_cfg;
   void Debug(int from);
 };
-
+}
 #endif

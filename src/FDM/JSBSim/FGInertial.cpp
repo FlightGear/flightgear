@@ -39,6 +39,8 @@ INCLUDES
 #include "FGPosition.h"
 #include "FGMassBalance.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_INERTIAL;
 
@@ -190,4 +192,4 @@ void FGInertial::Debug(int from)
     }
   }
 }
-
+}

@@ -66,6 +66,8 @@ DEFINES
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGKinemat  : public FGFCSComponent {
 public:
   FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg);
@@ -88,5 +90,5 @@ private:
 
   void Debug(int from);
 };
-
+}
 #endif

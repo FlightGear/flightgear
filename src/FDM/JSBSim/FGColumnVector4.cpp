@@ -20,6 +20,8 @@ INCLUDES
 
 #include "FGColumnVector4.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_COLUMNVECTOR4;
 
@@ -309,5 +311,4 @@ void FGColumnVector4::Debug(int from)
     }
   }
 }
-
-
+}

@@ -55,6 +55,8 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_MODEL;
 
@@ -199,4 +201,4 @@ void FGModel::Debug(int from)
     }
   }
 }
-
+}

@@ -73,6 +73,8 @@ INCLUDES
 #include "FGInitialCondition.h"
 #include "FGPropertyManager.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FDMEXEC;
 
@@ -245,12 +247,11 @@ bool FGFDMExec::Allocate(void)
   if (Error > 0) result = false;
   
   IC = new FGInitialCondition(this); 
-  //Trim is allocated as needed by GetTrim()                                 
-
   
   // Schedule a model. The second arg (the integer) is the pass number. For
   // instance, the atmosphere model gets executed every fifth pass it is called
   // by the executive. Everything else here gets executed each pass.
+  // IC and Trim objects are NOT scheduled.
 
   Schedule(Atmosphere,      1);
   Schedule(FCS,             1);
@@ -265,9 +266,6 @@ bool FGFDMExec::Allocate(void)
   Schedule(Position,        1);
   Schedule(Auxiliary,       1);
   Schedule(Output,          1);
-  //IC and Trim are *not* scheduled objects
-  
-  
 
   modelLoaded = false;
 
@@ -699,5 +697,6 @@ void FGFDMExec::Debug(int from)
       cout << IdHdr << endl;
     }
   }
+}
 }
 

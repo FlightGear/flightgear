@@ -62,6 +62,8 @@ using std::vector;
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGFDMExec;
 class FGState;
 class FGAtmosphere;
@@ -120,5 +122,5 @@ private:
   FGPropertyManager *node;
   void Debug(int from);
 };
-    
+}    
 #endif 

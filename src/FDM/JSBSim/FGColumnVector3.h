@@ -66,6 +66,8 @@ FORWARD DECLARATIONS
 DECLARATION: FGColumnVector3
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 class FGColumnVector3 : public FGJSBBase
 {
 public:
@@ -110,6 +112,6 @@ private:
   int rowCtr;
   void Debug(int from);
 };
-
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

@@ -37,6 +37,8 @@ INCLUDES
 
 #include "FGRotor.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_ROTOR;
 
@@ -109,4 +111,4 @@ void FGRotor::Debug(int from)
     }
   }
 }
-
+}

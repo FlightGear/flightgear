@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGfdmSocket.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FDMSOCKET;
 
@@ -204,4 +206,4 @@ void FGfdmSocket::Debug(int from)
     }
   }
 }
-
+}

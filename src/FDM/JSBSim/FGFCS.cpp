@@ -57,6 +57,8 @@ INCLUDES
 #include "filtersjb/FGSummer.h"
 #include "filtersjb/FGKinemat.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FCS;
 
@@ -896,3 +898,4 @@ void FGFCS::Debug(int from)
   }
 }
 
+}

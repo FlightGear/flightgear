@@ -38,6 +38,8 @@ INCLUDES
 #include "FGGroundReactions.h"
 #include "FGPropertyManager.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_GROUNDREACTIONS;
 
@@ -269,4 +271,4 @@ void FGGroundReactions::Debug(int from)
     }
   }
 }
-
+}

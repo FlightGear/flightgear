@@ -65,6 +65,8 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+namespace JSBSim {
+
 typedef enum { iDe=0, iDaL, iDaR, iDr, iDsb, iDsp, iDf, NNorm } FcIdx;
 typedef enum { ofRad=0, ofNorm, ofMag , NForms} OutputForm;
 
@@ -644,7 +646,7 @@ private:
   int ToNormalize[NNorm];
   void Debug(int from);
 };
-
+}
 
 #endif
 

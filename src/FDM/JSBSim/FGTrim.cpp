@@ -58,6 +58,8 @@ INCLUDES
 #pragma warning (disable : 4786 4788)
 #endif
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TRIM;
 
@@ -665,4 +667,4 @@ void FGTrim::SetMode(TrimMode tt) {
     current_axis=0;
 }    
 //YOU WERE WARNED, BUT YOU DID IT ANYWAY.
-
+}

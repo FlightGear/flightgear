@@ -57,6 +57,7 @@ FORWARD DECLARATIONS
 
 #include <FDM/JSBSim/FGFDMExec.h>
 
+namespace JSBSim {
 class FGState;
 class FGAtmosphere;
 class FGFCS;
@@ -71,6 +72,9 @@ class FGPosition;
 class FGAuxiliary;
 class FGOutput;
 class FGInitialCondition;
+}
+
+using namespace JSBSim;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]

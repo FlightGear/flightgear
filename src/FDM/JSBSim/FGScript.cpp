@@ -57,6 +57,8 @@ INCLUDES
 #include "FGScript.h"
 #include "FGConfigFile.h"
 
+namespace JSBSim {
+
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FGSCRIPT;
 
@@ -415,4 +417,4 @@ void FGScript::Debug(int from)
     }
   }
 }
-
+}

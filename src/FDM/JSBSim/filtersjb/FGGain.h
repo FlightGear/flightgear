@@ -60,6 +60,8 @@ DEFINES
 
 #define ID_GAIN "$Id$"
 
+namespace JSBSim {
+
 class FGFCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,5 +91,5 @@ private:
 
   void Debug(int from);
 };
-
+}
 #endif

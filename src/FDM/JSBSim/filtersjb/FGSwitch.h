@@ -1,8 +1,8 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Header:       FGSwitch.h
- Author:       
- Date started: 
+ Author:       Jon S. Berndt
+ Date started: 12/23/2002
 
  ------------- Copyright (C)  -------------
 
@@ -27,10 +27,6 @@ HISTORY
 --------------------------------------------------------------------------------
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES,  and NOTES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -43,16 +39,71 @@ INCLUDES
 
 #include "FGFCSComponent.h"
 #include "../FGConfigFile.h"
+#include "FGCondition.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DEFINES
+DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_SWITCH "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Encapsulates a switch for the flight control system.
+
+The SWITCH component models a switch - either on/off or a multi-choice rotary
+switch. The switch can represent a physical cockpit switch, or can represent a
+logical switch, where several conditions might need to be satisfied before a
+particular state is reached. The VALUE of the switch - the output value - is
+chosen depending on the state of the switch. Each switch is comprised of two or
+more TESTs. Each TEST has a VALUE associated with it. The first TEST that
+evaluates to TRUE will set the output value of the switch according to the VALUE
+parameter belonging to that TEST. Each TEST contains one or more CONDITIONS, which
+each must be logically related (if there are more than one) given the value of
+the LOGIC parameter, and which takes the form:
+
+  property conditional property|value
+
+e.g.
+
+  qbar GE 21.0
+
+or,
+
+  roll_rate < pitch_rate
+
+Within a TEST, a CONDITION_GROUP can be specified. A CONDITION_GROUP allows for
+complex groupings of logical comparisons. Each CONDITION_GROUP contains
+additional conditions, as well as possibly additional CONDITION_GROUPs.
+
+<COMPONENT NAME="switch1" TYPE="SWITCH">
+  <TEST LOGIC="{AND|OR|DEFAULT}" OUTPUT="{property|value}">
+    {property} {conditional} {property|value}
+    <CONDITION_GROUP LOGIC="{AND|OR}">
+      {property} {conditional} {property|value}
+      ...
+    </CONDITION_GROUP>
+    ...
+  </TEST>
+  <TEST LOGIC="{AND|OR}" OUTPUT="{property|value}">
+    {property} {conditional} {property|value}
+    ...
+  </TEST>
+  ...
+</COMPONENT>
+*/
+   
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+namespace JSBSim {
+
 
 class FGSwitch  : public FGFCSComponent
 {
@@ -65,7 +116,33 @@ public:
 private:
   FGFCS* fcs;
   FGConfigFile* AC_cfg;
+
+  enum eLogic {elUndef=0, eAND, eOR, eDefault};
+  enum eComparison {ecUndef=0, eEQ, eNE, eGT, eGE, eLT, eLE};
+  map <const string, eComparison> mComparison;
+
+  struct test {
+    vector <FGCondition> conditions;
+    eLogic Logic;
+    double OutputVal;
+    FGPropertyManager *OutputProp;
+    
+    double GetValue(void) {
+      if (OutputProp == 0L) return OutputVal;
+      else                  return OutputProp->getDoubleValue();
+    }
+
+    test(void) { // constructor for the test structure
+      Logic      = elUndef;
+      OutputVal  = 0.0;
+      OutputProp = 0L;
+    }
+
+  };
+
+  vector <test> tests;
+  
   void Debug(int from);
 };
-
+}
 #endif
