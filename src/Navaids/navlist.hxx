@@ -30,27 +30,37 @@
 
 #include <map>
 #include <vector>
+#include STL_STRING
 
 #include "nav.hxx"
 
 SG_USING_STD(map);
 SG_USING_STD(vector);
-
+SG_USING_STD(string);
 
 class FGNavList {
 
     // convenience types
-    typedef vector < FGNav > nav_list_type;
+    typedef vector < FGNav* > nav_list_type;
     typedef nav_list_type::iterator nav_list_iterator;
     typedef nav_list_type::const_iterator nav_list_const_iterator;
 
-    // typedef map < int, nav_list_type, less<int> > nav_map_type;
     typedef map < int, nav_list_type > nav_map_type;
     typedef nav_map_type::iterator nav_map_iterator;
     typedef nav_map_type::const_iterator nav_map_const_iterator;
 
+    typedef map < string, nav_list_type > nav_ident_map_type;
+	
     nav_map_type navaids;
-
+    nav_ident_map_type ident_navaids;
+	
+    // internal helper to pick a Nav item from a nav_list based on
+    // distance from the aircraft point
+    bool findNavFromList(const Point3D &aircraft, 
+                         nav_list_iterator current,
+                         nav_list_iterator last,
+                         FGNav *n);
+	
 public:
 
     FGNavList();
@@ -62,6 +72,9 @@ public:
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters
     bool query( double lon, double lat, double elev, double freq, FGNav *n );
+
+    // locate closest item in the DB matching the requested ident
+    bool findByIdent(const char* ident, double lon, double lat, FGNav *nav);
 };
 
 

@@ -1,4 +1,4 @@
-// navaids.cxx -- navaids management class
+// navlist.cxx -- navaids management class
 //
 // Written by Curtis Olson, started April 2000.
 //
@@ -72,9 +72,9 @@ bool FGNavList::init( SGPath path ) {
     while ( ! in.eof() ) {
 #endif
 
-        FGNav n;
-        in >> n;
-        if ( n.get_type() == '[' ) {
+        FGNav *n = new FGNav;
+        in >> (*n);
+        if ( n->get_type() == '[' ) {
             break;
         }
 
@@ -86,7 +86,9 @@ bool FGNavList::init( SGPath path ) {
 	cout << " freq = " << n.get_freq() << endl;
  	cout << " range = " << n.get_range() << endl << endl; */
 
-        navaids[n.get_freq()].push_back(n);
+        navaids      [n->get_freq() ].push_back(n);
+        ident_navaids[n->get_ident()].push_back(n);
+		
         in >> skipcomment;
 
 	/* if ( n.get_type() != 'N' ) {
@@ -116,25 +118,49 @@ bool FGNavList::query( double lon, double lat, double elev, double freq,
     nav_list_iterator current = stations.begin();
     nav_list_iterator last = stations.end();
 
-    // double az1, az2, s;
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
+    return findNavFromList(aircraft, current, last, n);
+}
+
+
+bool FGNavList::findByIdent(const char* ident, double lon, double lat,
+                            FGNav *nav)
+{
+    nav_list_type stations = ident_navaids[ident];
+
+    nav_list_iterator current = stations.begin();
+    nav_list_iterator last = stations.end();
+	
+    Point3D aircraft = sgGeodToCart( Point3D(lon, lat, 0.0) );
+    return findNavFromList(aircraft, current, last, nav);
+}
+
+
+bool FGNavList::findNavFromList(const Point3D &aircraft, 
+                                nav_list_iterator current,
+                                nav_list_iterator end, FGNav *n)
+{
+    // double az1, az2, s;
+    
     Point3D station;
     double d;
-    for ( ; current != last ; ++current ) {
+    for ( ; current != end ; ++current ) {
 	// cout << "testing " << current->get_ident() << endl;
-	station = Point3D(current->get_x(), current->get_y(), current->get_z());
+	station = Point3D((*current)->get_x(), (*current)->get_y(),
+                          (*current)->get_z());
 
 	d = aircraft.distance3Dsquared( station );
 
 	// cout << "  dist = " << sqrt(d)
-	//      << "  range = " << current->get_range() * SG_NM_TO_METER << endl;
+	//      << "  range = " << current->get_range() * SG_NM_TO_METER
+        //      << endl;
 
-	// match up to twice the published range so we can model
+	// match up to 2 * range^2 the published range so we can model
 	// reduced signal strength
-	if ( d < (2 * current->get_range() * SG_NM_TO_METER 
-		  * 2 * current->get_range() * SG_NM_TO_METER ) ) {
+	double twiceRange = 2 * (*current)->get_range() * SG_NM_TO_METER;
+	if ( d < (twiceRange * twiceRange)) {
 	    // cout << "matched = " << current->get_ident() << endl;
-	    *n = *current;
+	    *n = (**current);
 	    return true;
 	}
     }
