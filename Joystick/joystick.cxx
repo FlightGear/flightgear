@@ -34,7 +34,7 @@
 #include <Debug/logstream.hxx>
 
 #if defined( ENABLE_LINUX_JOYSTICK )
-#  include <Joystick/js.hxx>
+#  include <js.h>
 #elif defined( ENABLE_GLUT_JOYSTICK )
 #  include <GL/glut.h>
 #  include <XGL/xgl.h>
@@ -197,6 +197,9 @@ int fgJoystickRead( void ) {
 
 
 // $Log$
+// Revision 1.8  1999/04/03 04:20:33  curt
+// Integration of Steve's plib conglomeration.
+//
 // Revision 1.7  1999/01/19 17:52:30  curt
 // Some joystick tweaks by Norman Vine.
 //
