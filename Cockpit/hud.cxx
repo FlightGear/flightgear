@@ -52,6 +52,14 @@
 
 #include "hud.hxx"
 
+
+#ifdef __sun__
+extern "C" {
+  extern void *memmove(void *, const void *, size_t);
+}
+#endif
+
+
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
@@ -1915,9 +1923,13 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.10  1998/05/17 16:58:12  curt
-/* Added a View Frustum Culling ratio display to the hud.
+/* Revision 1.11  1998/06/05 18:17:10  curt
+/* Added the declaration of memmove needed by the stl which apparently
+/* solaris only defines for cc compilations and not for c++ (__STDC__)
 /*
+ * Revision 1.10  1998/05/17 16:58:12  curt
+ * Added a View Frustum Culling ratio display to the hud.
+ *
  * Revision 1.9  1998/05/16 13:04:14  curt
  * New updates from Charlie Hotchkiss.
  *
