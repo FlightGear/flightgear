@@ -105,7 +105,8 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
     vXYZep(3),
     vDXYZcg(3),
     vBodyAccel(3),
-    vNcg(3)
+    vNcg(3),
+    vNwcg(3)
 {
   Name = "FGAircraft";
   alphaclmin = alphaclmax = 0;
@@ -179,6 +180,9 @@ bool FGAircraft::Run(void)
     vBodyAccel = vForces/MassBalance->GetMass();
     
     vNcg = vBodyAccel/Inertial->gravity();
+
+    vNwcg = State->GetTb2s() * vNcg;
+    vNwcg(3) = -1*vNwcg(3) + 1;
     
     if (alphaclmax != 0) {
       if (Translation->Getalpha() > 0.85*alphaclmax) {
@@ -192,6 +196,13 @@ bool FGAircraft::Run(void)
   } else {                               // skip Run() execution this time
     return true;
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGAircraft::GetNlf(void)
+{
+  return vNwcg(3);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

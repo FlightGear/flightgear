@@ -144,6 +144,7 @@ Notes:   [TP] Make sure that -Vt <= hdot <= Vt, which, of course, should always
 bool FGPosition::Run(void) {
   double cosLat;
   double hdot_Vt;
+  FGColumnVector3 vMac;
 
   if (!FGModel::Run()) {
     GetState();
@@ -171,7 +172,13 @@ bool FGPosition::Run(void) {
 
     DistanceAGL = Radius - RunwayRadius;   // Geocentric
     
-    hoverb = DistanceAGL/b;
+    
+    hoverbcg = DistanceAGL/b;
+    
+    vMac=State->GetTb2l()*Aircraft->GetXYZrp();
+    
+    vMac *= inchtoft;
+    hoverbmac = (DistanceAGL + vMac(3))/b;
 
     if (Vt > 0) {
       hdot_Vt = RadiusDot/Vt;
@@ -209,7 +216,7 @@ void FGPosition::Seth(double tt) {
  h = tt;
  Radius    = h + SeaLevelRadius;
  DistanceAGL = Radius - RunwayRadius;   // Geocentric
- hoverb = DistanceAGL/b;
+ hoverbcg = DistanceAGL/b;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -218,7 +225,7 @@ void FGPosition::SetDistanceAGL(double tt) {
   DistanceAGL=tt;
   Radius = RunwayRadius + DistanceAGL;
   h = Radius - SeaLevelRadius;
-  hoverb = DistanceAGL/b;
+  hoverbcg = DistanceAGL/b;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

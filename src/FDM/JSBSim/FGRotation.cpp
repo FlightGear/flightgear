@@ -81,7 +81,8 @@ FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex),
         vMoments(3),
         vEuler(3),
         vEulerRates(3),
-	vlastPQRdot(3)
+        vlastPQRdot(3),
+        vAeroPQR(3)
 {
   Name = "FGRotation";
   cTht=cPhi=cPsi=1.0;
@@ -115,6 +116,7 @@ bool FGRotation::Run(void)
     vPQRdot(eR) = (N1*Ixx + L2*Ixz) / (Ixx*Izz - Ixz*Ixz);
 
     vPQR += dt*rate*(vlastPQRdot + vPQRdot)/2.0;
+    vAeroPQR = vPQR + Atmosphere->GetTurbPQR();
 
     State->IntegrateQuat(vPQR, rate);
     State->CalcMatrices();

@@ -64,7 +64,8 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGEngine::FGEngine(FGFDMExec* exec) {
+FGEngine::FGEngine(FGFDMExec* exec)
+{
   FDMExec     = exec;
   State       = FDMExec->GetState();
   Atmosphere  = FDMExec->GetAtmosphere();
@@ -101,7 +102,8 @@ FGEngine::~FGEngine()
 // This base class method removes fuel from the fuel tanks as appropriate,
 // and sets the starved flag if necessary.
 
-void FGEngine::ConsumeFuel(void) {
+void FGEngine::ConsumeFuel(void)
+{
   double Fshortage, Oshortage;
   FGTank* Tank;
 

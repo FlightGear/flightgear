@@ -200,7 +200,11 @@ public:
   inline void SetAlphaCLMax(double tt) { alphaclmax=tt; }
   inline void SetAlphaCLMin(double tt) { alphaclmin=tt; }
   
-  inline bool GetStallWarn(void) { return impending_stall; }
+  inline double GetStallWarn(void) { return impending_stall; }
+  
+  float GetNlf(void);
+  
+  inline FGColumnVector3& GetNwcg(void) { return vNwcg; }
 
 private:
   FGColumnVector3 vMoments;
@@ -211,6 +215,7 @@ private:
   FGColumnVector3 vDXYZcg;
   FGColumnVector3 vBodyAccel;
   FGColumnVector3 vNcg;
+  FGColumnVector3 vNwcg;
 
   double WingArea, WingSpan, cbar, WingIncidence;
   double HTailArea, VTailArea, HTailArm, VTailArm;

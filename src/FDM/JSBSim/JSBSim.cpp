@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     }
   }
 
-  struct FGJSBBase::Message* msg;
+  FGJSBBase::Message* msg;
   while (FDMExec->Run()) {
     while (FDMExec->ReadMessage()) {
       msg = FDMExec->ProcessMessage();

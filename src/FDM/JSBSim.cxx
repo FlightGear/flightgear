@@ -198,7 +198,7 @@ void FGJSBsim::init() {
     break;
     }
     
-    stall_warning->setBoolValue(false);
+    stall_warning->setDoubleValue(0);
     
     SG_LOG( SG_FLIGHT, SG_INFO, "  Bank Angle: "
             <<  Rotation->Getphi()*RADTODEG << " deg" );
@@ -382,7 +382,7 @@ bool FGJSBsim::copy_from_JSBsim() {
    //                           Auxiliary->GetNpilot(2)/32.1739,
    //                           Auxiliary->GetNpilot(3)/32.1739 );
 
-    _set_Nlf( Aerodynamics->GetNlf() );
+    _set_Nlf( Aircraft->GetNlf() );
 
     // Velocities
 

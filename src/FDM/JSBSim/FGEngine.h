@@ -117,15 +117,15 @@ public:
   virtual double  GetThrottleMax(void) { return MaxThrottle; }
   double  GetThrottle(void) { return Throttle; }
   double  GetMixture(void) { return Mixture; }
-  int    GetMagnetos(void) { return Magnetos; }
+  int     GetMagnetos(void) { return Magnetos; }
   bool    GetStarter(void) { return Starter; }
   double  GetThrust(void) { return Thrust; }
-  bool   GetStarved(void) { return Starved; }
-  bool   GetFlameout(void) { return Flameout; }
-  bool   GetRunning(void) { return Running; }
-  bool   GetCranking(void) { return Cranking; }
-  int    GetType(void) { return Type; }
-  string GetName(void) { return Name; }
+  bool    GetStarved(void) { return Starved; }
+  bool    GetFlameout(void) { return Flameout; }
+  bool    GetRunning(void) { return Running; }
+  bool    GetCranking(void) { return Cranking; }
+  int     GetType(void) { return Type; }
+  string  GetName(void) { return Name; }
 
   virtual double getManifoldPressure_inHg () const {
     return ManifoldPressure_inHg;
@@ -181,6 +181,9 @@ public:
 
   /// Sets engine placement information
   void SetPlacement(double x, double y, double z, double pitch, double yaw);
+
+  /// Sets the engine number
+  void SetEngineNumber(int nn) {EngineNumber = nn;}
 
   virtual double GetPowerAvailable(void) {return 0.0;};
 

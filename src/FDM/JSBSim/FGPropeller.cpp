@@ -50,7 +50,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
   string token;
   int rows, cols;
 
-  MaxPitch = MinPitch = P_Factor = Sense = 0.0;
+  MaxPitch = MinPitch = P_Factor = Sense = Pitch = 0.0;
 
   Name = Prop_cfg->GetValue("NAME");
   Prop_cfg->GetNextConfigLine();
@@ -138,7 +138,7 @@ FGPropeller::~FGPropeller()
 double FGPropeller::Calculate(double PowerAvailable)
 {
   double J, C_Thrust, omega;
-  double Vel = (fdmex->GetTranslation()->GetvAero())(1);
+  double Vel = fdmex->GetTranslation()->GetvAeroUVW(eU);
   double rho = fdmex->GetAtmosphere()->GetDensity();
   double RPS = RPM/60.0;
   double alpha, beta;
@@ -194,7 +194,7 @@ double FGPropeller::GetPowerRequired(void)
 
   double cPReq, RPS = RPM / 60.0;
 
-  double J = (fdmex->GetTranslation()->GetvAero())(1) / (Diameter * RPS);
+  double J = fdmex->GetTranslation()->GetvAeroUVW(eU) / (Diameter * RPS);
   double rho = fdmex->GetAtmosphere()->GetDensity();
 
   if (MaxPitch == MinPitch) { // Fixed pitch prop

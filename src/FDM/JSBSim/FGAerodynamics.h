@@ -134,8 +134,6 @@ public:
       coefficients */
   string GetCoefficientValues(void);
 
-  /// Gets the Normal Load Factor
-  double GetNlf(void);
 
 private:
   typedef map<string,int> AxisIndex;

@@ -145,6 +145,7 @@ public:
   inline void SetTurbGain(double tt) {TurbGain = tt;}
   
   inline double GetTurbPQR(int idx) {return vTurbPQR(idx);}
+  inline FGColumnVector3& GetTurbPQR(void) {return vTurbPQR;}
   
 private:
   double rho;

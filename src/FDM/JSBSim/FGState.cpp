@@ -76,6 +76,7 @@ CLASS IMPLEMENTATION
 FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
     mTl2b(3,3),
     mTs2b(3,3),
+    mTb2s(3,3),
     vQtrn(4),
     vlastQdot(4),
     vQdot(4),
@@ -223,12 +224,12 @@ double FGState::GetParameter(eParam val_idx) {
     return Rotation->GetPQR(eP);
   case FG_YAWRATE:
     return Rotation->GetPQR(eR);
-  case FG_AEROQ:
-    return Rotation->GetPQR(eQ) + Atmosphere->GetTurbPQR(eQ); // add aero turbulence effects
   case FG_AEROP:
-    return Rotation->GetPQR(eP) + Atmosphere->GetTurbPQR(eP); // add aero turbulence effects
+    return Rotation->GetAeroPQR(eP);
+  case FG_AEROQ:
+    return Rotation->GetAeroPQR(eQ);
   case FG_AEROR:
-    return Rotation->GetPQR(eR) + Atmosphere->GetTurbPQR(eR); // add aero turbulence effects
+    return Rotation->GetAeroPQR(eR);
   case FG_CL_SQRD:
     if (Translation->Getqbar() > 0.00)
       scratch = Aerodynamics->GetvLastFs(eLift)/(Aircraft->GetWingArea()*Translation->Getqbar());
@@ -297,7 +298,7 @@ double FGState::GetParameter(eParam val_idx) {
     if (ActiveEngine < 0) return FCS->GetMixturePos(0);
     else return FCS->GetMixturePos(ActiveEngine);
   case FG_HOVERB:
-    return Position->GetHOverB();
+    return Position->GetHOverBMAC();
   case FG_PITCH_TRIM_CMD:
     return FCS->GetPitchTrimCmd();
   default:
@@ -432,7 +433,7 @@ bool FGState::Reset(string path, string acname, string fname)
 
   resetfile.GetNextConfigLine();
   token = resetfile.GetValue();
-  if (token != "initialize") {
+  if (token != string("initialize")) {
     cerr << "The reset file " << resetDef
          << " does not appear to be a reset file" << endl;
     return false;
@@ -440,7 +441,7 @@ bool FGState::Reset(string path, string acname, string fname)
   
   resetfile.GetNextConfigLine();
   resetfile >> token;
-  while (token != "/initialize" && token != "EOF") {
+  while (token != string("/initialize") && token != string("EOF")) {
     if (token == "UBODY") resetfile >> U;
     if (token == "VBODY") resetfile >> V;
     if (token == "WBODY") resetfile >> W;
@@ -482,7 +483,7 @@ void FGState::Initialize(double U, double V, double W,
 {
   double alpha, beta;
   double qbar, Vt;
-  FGColumnVector3 vAero;
+  FGColumnVector3 vAeroUVW;
 
   Position->SetLatitude(Latitude);
   Position->SetLongitude(Longitude);
@@ -500,14 +501,14 @@ void FGState::Initialize(double U, double V, double W,
   
   Atmosphere->SetWindNED(wnorth, weast, wdown);
   
-  vAero = vUVW + mTl2b*Atmosphere->GetWindNED();
+  vAeroUVW = vUVW + mTl2b*Atmosphere->GetWindNED();
   
-  if (vAero(eW) != 0.0)
-    alpha = vAero(eU)*vAero(eU) > 0.0 ? atan2(vAero(eW), vAero(eU)) : 0.0;
+  if (vAeroUVW(eW) != 0.0)
+    alpha = vAeroUVW(eU)*vAeroUVW(eU) > 0.0 ? atan2(vAeroUVW(eW), vAeroUVW(eU)) : 0.0;
   else
     alpha = 0.0;
-  if (vAero(eV) != 0.0)
-    beta = vAero(eU)*vAero(eU)+vAero(eW)*vAero(eW) > 0.0 ? atan2(vAero(eV), (fabs(vAero(eU))/vAero(eU))*sqrt(vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW))) : 0.0;
+  if (vAeroUVW(eV) != 0.0)
+    beta = vAeroUVW(eU)*vAeroUVW(eU)+vAeroUVW(eW)*vAeroUVW(eW) > 0.0 ? atan2(vAeroUVW(eV), (fabs(vAeroUVW(eU))/vAeroUVW(eU))*sqrt(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW))) : 0.0;
   else
     beta = 0.0;
 
@@ -689,19 +690,46 @@ FGMatrix33& FGState::GetTs2b(void)
   cb = cos(beta);
   sb = sin(beta);
 
-  mTs2b(1,1) = -ca*cb;
+  mTs2b(1,1) = ca*cb;
   mTs2b(1,2) = -ca*sb;
-  mTs2b(1,3) = sa;
-  mTs2b(2,1) = -sb;
+  mTs2b(1,3) = -sa;
+  mTs2b(2,1) = sb;
   mTs2b(2,2) = cb;
   mTs2b(2,3) = 0.0;
-  mTs2b(3,1) = -sa*cb;
+  mTs2b(3,1) = sa*cb;
   mTs2b(3,2) = -sa*sb;
-  mTs2b(3,3) = -ca;
+  mTs2b(3,3) = ca;
 
   return mTs2b;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGMatrix33& FGState::GetTb2s(void)
+{
+  float alpha,beta;
+  float ca, cb, sa, sb;
+  
+  alpha = Translation->Getalpha();
+  beta  = Translation->Getbeta();
+  
+  ca = cos(alpha);
+  sa = sin(alpha);
+  cb = cos(beta);
+  sb = sin(beta);
+
+  mTb2s(1,1) = ca*cb;
+  mTb2s(1,2) = sb;
+  mTb2s(1,3) = sa*cb;
+  mTb2s(2,1) = -ca*sb;
+  mTb2s(2,2) = cb;
+  mTb2s(2,3) = -sa*sb;
+  mTb2s(3,1) = -sa;
+  mTb2s(3,2) = 0.0;
+  mTb2s(3,3) = ca;
+
+  return mTb2s;
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -742,7 +770,7 @@ void FGState::ReportState(void) {
                     Position->Gethdot()*60 );
   cout << out;                  
   snprintf(out,80, "    Normal Load Factor: %4.2f g's  Pitch Rate: %5.2f deg/s\n",
-                    Aerodynamics->GetNlf(),
+                    Aircraft->GetNlf(),
                     GetParameter(FG_PITCHRATE)*radtodeg );
   cout << out;
   snprintf(out,80, "    Heading: %3.0f deg true  Sideslip: %5.2f deg\n",

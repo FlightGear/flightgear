@@ -168,10 +168,10 @@ public:
   string GetPropulsionStrings(void);
   string GetPropulsionValues(void);
 
-  inline FGColumnVector3& GetForces(void)  {return *Forces; }
-  inline double GetForces(int n) { return (*Forces)(n);}
-  inline FGColumnVector3& GetMoments(void) {return *Moments;}
-  inline double GetMoments(int n) {return (*Moments)(n);}
+  inline FGColumnVector3& GetForces(void)  {return Forces; }
+  inline double GetForces(int n) { return Forces(n);}
+  inline FGColumnVector3& GetMoments(void) {return Moments;}
+  inline double GetMoments(int n) {return Moments(n);}
   
   FGColumnVector3& GetTanksCG(void);
   double GetTanksWeight(void);
@@ -195,8 +195,8 @@ private:
   unsigned int numTanks;
   unsigned int numThrusters;
   double dt;
-  FGColumnVector3 *Forces;
-  FGColumnVector3 *Moments;
+  FGColumnVector3 Forces;
+  FGColumnVector3 Moments;
   FGColumnVector3 vXYZtank;
   void Debug(void);
 };

@@ -85,7 +85,7 @@ FGFCS::~FGFCS()
 
   unsigned int i;
 
-  for(i=0;i<Components.size();i++) delete Components[i];
+  for (i=0;i<Components.size();i++) delete Components[i];
   if (debug_lvl & 2) cout << "Destroyed:    FGFCS" << endl;
 }
 

@@ -105,7 +105,8 @@ public:
   
   inline double GetGamma(void) { return gamma; }
   inline void SetGamma(double tt) { gamma = tt; }
-  inline double GetHOverB(void) { return hoverb; }
+  inline double GetHOverBCG(void) { return hoverbcg; }
+  inline double GetHOverBMAC(void){ return hoverbmac; }
   void SetvVel(const FGColumnVector3& v) { vVel = v; }
   void SetLatitude(double tt) { Latitude = tt; }
   void SetLongitude(double tt) { Longitude = tt; }
@@ -133,7 +134,7 @@ private:
   double SeaLevelRadius;
   double gamma;
   double Vt, Vground;
-  double hoverb,b;
+  double hoverbcg,hoverbmac,b;
 
   double psigt;
 

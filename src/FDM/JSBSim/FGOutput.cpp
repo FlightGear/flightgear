@@ -148,8 +148,6 @@ void FGOutput::DelimitedOutput(string fname)
     }
     if (SubSystems & ssAerosurfaces) {
       outstream << ", ";
-      outstream << "Throttle, ";
-      outstream << "Mixture, ";
       outstream << "Aileron Cmd, ";
       outstream << "Elevator Cmd, ";
       outstream << "Rudder Cmd, ";
@@ -224,8 +222,6 @@ void FGOutput::DelimitedOutput(string fname)
   }
   if (SubSystems & ssAerosurfaces) {
     outstream << ", ";
-    outstream << FCS->GetThrottlePos(0) << ", ";
-    outstream << FCS->GetMixturePos(0) << ", ";
     outstream << FCS->GetDaCmd() << ", ";
     outstream << FCS->GetDeCmd() << ", ";
     outstream << FCS->GetDrCmd() << ", ";
@@ -242,7 +238,7 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Translation->Getqbar() << ", ";
     outstream << Translation->GetVt() << ", ";
     outstream << Translation->GetUVW() << ", ";
-    outstream << Translation->GetvAero() << ", ";
+    outstream << Translation->GetvAeroUVW() << ", ";
     outstream << Position->GetVel();
   }
   if (SubSystems & ssForces) {
@@ -360,9 +356,9 @@ void FGOutput::SocketOutput(void)
   socket->Append(Translation->GetUVW(eU));
   socket->Append(Translation->GetUVW(eV));
   socket->Append(Translation->GetUVW(eW));
-  socket->Append(Translation->GetvAero(eU));
-  socket->Append(Translation->GetvAero(eV));
-  socket->Append(Translation->GetvAero(eW));
+  socket->Append(Translation->GetvAeroUVW(eU));
+  socket->Append(Translation->GetvAeroUVW(eV));
+  socket->Append(Translation->GetvAeroUVW(eW));
   socket->Append(Position->GetVn());
   socket->Append(Position->GetVe());
   socket->Append(Position->GetVd());
