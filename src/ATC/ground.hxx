@@ -211,13 +211,9 @@ struct GRunwayDetails {
 	Point3D threshold_pos;
 	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
 	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
-	double mag_hdg;
-	double mag_var;
 	double hdg;		// true runway heading
 	double length;	// In *METERS*
-	int ID;		// 1 -> 36
 	string rwyID;
-	// Do we really need *both* the last two??
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -278,8 +274,9 @@ public:
 	ground_network_path_type GetPathToHoldShort(node* A, string rwyID);
 
 private:
-	// Tower stuff
-
+	FGATCMgr* ATCmgr;	
+	// This is purely for synactic convienience to avoid writing globals->get_ATC_mgr()-> all through the code!
+	
     // Need a data structure to hold details of the various active planes
     // Need a data structure to hold details of the logical network
     // including which gates are filled - or possibly another data structure
@@ -295,10 +292,6 @@ private:
 	// A map of all the gates indexed against internal (FGFS) ID
 	gate_map_type gates;
 	gate_map_iterator gatesItr;
-	
-	// Runway stuff - this might change in the future.
-	//runway_array_type runways;	// STL way
-	Rwy runways[36];	// quick hack!
 
 	FGATCAlignedProjection ortho;
 	
@@ -314,12 +307,35 @@ private:
     // Generate the next clearance for an airplane
     //NextClearance(ground_rec &g);
 	
+	// environment - need to make sure we're getting the surface winds and not winds aloft.
+	SGPropertyNode* wind_from_hdg;	//degrees
+	SGPropertyNode* wind_speed_knots;		//knots
+	
 	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
 	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
 	// for failure modeling
 	string trans_ident;		// transmitted ident
 	bool ground_failed;		// ground failed?
 	bool networkLoadOK;		// Indicates whether LoadNetwork returned true or false at last attempt
+	
+	// Tower control
+	bool untowered;		// True if this is an untowered airport (we still need the ground class for shortest path implementation etc
+	//FGATC* tower;		// Pointer to the tower control
+
+	// Logical runway details - this might change in the future.
+	//runway_array_type runways;	// STL way
+	Rwy runways[36];	// quick hack!
+	
+	// Physical runway details
+	double aptElev;		// Airport elevation
+	string activeRwy;	// Active runway number - For now we'll disregard multiple / alternate runway operation.
+	RunwayDetails rwy;	// Assumed to be the active one for now.// Figure out which runways are active.
+	
+	// For now we'll just be simple and do one active runway - eventually this will get much more complex
+	// Copied from FGTower - TODO - it would be better to implement this just once, and have ground call tower
+	// for runway operation details, but at the moment we can't guarantee that tower control at a given airport
+	// will be initialised before ground so we can't do that.
+	void DoRwyDetails();	
 	
 	// Load the logical ground network for this airport from file.
 	// Return true if successfull.

@@ -52,18 +52,28 @@ a_path::a_path() {
 }
 
 FGGround::FGGround() {
+	ATCmgr = globals->get_ATC_mgr();
 	display = false;
 	networkLoadOK = false;
 	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
 	ground_traffic_itr = ground_traffic.begin();
+	
+	// Init the property nodes - TODO - need to make sure we're getting surface winds.
+	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
+	wind_speed_knots = fgGetNode("/environment/wind-speed-kts", true);
 }
 
 FGGround::FGGround(string id) {
+	ATCmgr = globals->get_ATC_mgr();
 	display = false;
 	networkLoadOK = false;
 	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
 	ground_traffic_itr = ground_traffic.begin();
 	ident = id;
+	
+	// Init the property nodes - TODO - need to make sure we're getting surface winds.
+	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
+	wind_speed_knots = fgGetNode("/environment/wind-speed-kts", true);
 }
 
 FGGround::~FGGround() {
@@ -258,16 +268,15 @@ bool FGGround::LoadNetwork() {
 
 void FGGround::Init() {
 	display = false;
+	untowered = false;
 	
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// For now we'll hardwire the threshold end FIXME FIXME FIXME - use actual active rwy
-	Point3D P010(-118.037483, 34.081358, 296 * SG_FEET_TO_METER);
-	double hdg = 25.32;
-	ortho.Init(P010, hdg);
-	// FIXME TODO FIXME TODO
-	// TODO FIXME TODO FIXME
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	
+	// Figure out which is the active runway - TODO - it would be better to have ground call tower
+	// for runway operation details, but at the moment we can't guarantee that tower control at a given airport
+	// will be initialised before ground so we can't do that.
+	DoRwyDetails();
+	//cout << "In FGGround::Init, active rwy is " << activeRwy << '\n';
+	ortho.Init(rwy.threshold_pos, rwy.hdg);
+
 	networkLoadOK = LoadNetwork();
 }
 
@@ -301,7 +310,7 @@ void FGGround::Update(double dt) {
 				trns += g->plane.callsign;
 				trns += " taxi holding point runway ";	// TODO - add the holding point name
 				// eg " taxi holding point G2 runway "
-				//trns += "
+				trns += ConvertRwyNumToSpokenString(activeRwy);
 				if(display) {
 					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 				}
@@ -329,6 +338,66 @@ void FGGround::Update(double dt) {
 			ground_traffic_itr = ground_traffic.begin();
 		}				
 		++ground_traffic_itr;
+	}
+}
+
+// Figure out which runways are active.
+// For now we'll just be simple and do one active runway - eventually this will get much more complex
+// Copied from FGTower - TODO - it would be better to implement this just once, and have ground call tower
+// for runway operation details, but at the moment we can't guarantee that tower control at a given airport
+// will be initialised before ground so we can't do that.
+void FGGround::DoRwyDetails() {
+	//cout << "GetRwyDetails called" << endl;
+	
+	// Based on the airport-id and wind get the active runway
+	SGPath path( globals->get_fg_root() );
+	path.append( "Airports" );
+	path.append( "runways.mk4" );
+	FGRunways r_ways( path.c_str() );
+	
+	//wind
+	double hdg = wind_from_hdg->getDoubleValue();
+	double speed = wind_speed_knots->getDoubleValue();
+	hdg = (speed == 0.0 ? 270.0 : hdg);
+	//cout << "Heading = " << hdg << '\n';
+	
+	FGRunway runway;
+	bool rwyGood = r_ways.search(ident, int(hdg), &runway);
+	if(rwyGood) {
+		activeRwy = runway.rwy_no;
+		rwy.rwyID = runway.rwy_no;
+		SG_LOG(SG_ATC, SG_INFO, "In FGGround, active runway for airport " << ident << " is " << activeRwy);
+		
+		// Get the threshold position
+		double other_way = runway.heading - 180.0;
+		while(other_way <= 0.0) {
+			other_way += 360.0;
+		}
+    	// move to the +l end/center of the runway
+		//cout << "Runway center is at " << runway.lon << ", " << runway.lat << '\n';
+    	Point3D origin = Point3D(runway.lon, runway.lat, aptElev);
+		Point3D ref = origin;
+    	double tshlon, tshlat, tshr;
+		double tolon, tolat, tor;
+		rwy.length = runway.length * SG_FEET_TO_METER;
+    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
+        	                rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
+    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway.heading, 
+        	                rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
+		// Note - 25 meters in from the runway end is a bit of a hack to put the plane ahead of the user.
+		// now copy what we need out of runway into rwy
+    	rwy.threshold_pos = Point3D(tshlon, tshlat, aptElev);
+		Point3D takeoff_end = Point3D(tolon, tolat, aptElev);
+		//cout << "Threshold position = " << tshlon << ", " << tshlat << ", " << aptElev << '\n';
+		//cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
+		rwy.hdg = runway.heading;
+		// Set the projection for the local area based on this active runway
+		ortho.Init(rwy.threshold_pos, rwy.hdg);	
+		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
+		rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
+	} else {
+		SG_LOG(SG_ATC, SG_ALERT, "Help  - can't get good runway in FGTower!!");
+		activeRwy = "NN";
 	}
 }
 
