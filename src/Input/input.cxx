@@ -71,12 +71,12 @@ SG_USING_STD(string);
 ////////////////////////////////////////////////////////////////////////
 
 FGBinding::FGBinding ()
-  : _action(ACTION_NONE), _node(0), _adjust_step(0), _assign_value(0)
+  : _command(0), _arg(0)
 {
 }
 
 FGBinding::FGBinding (const SGPropertyNode * node)
-  : _action(ACTION_NONE), _node(0), _adjust_step(0), _assign_value(0)
+  : _command(0), _arg(0)
 {
   read(node);
 }
@@ -87,135 +87,31 @@ FGBinding::~FGBinding ()
 }
 
 void
-FGBinding::setAction (Action action)
-{
-  _action = action;
-}
-
-void
-FGBinding::setProperty (SGPropertyNode * node)
-{
-  _node = node;
-}
-
-void
-FGBinding::setAdjustStep (const SGValue * step)
-{
-  _adjust_step = step;
-}
-
-void
-FGBinding::setAssignValue (const SGValue * value)
-{
-  _assign_value = value;
-}
-
-void
 FGBinding::read (const SGPropertyNode * node)
 {
-  if (node->hasValue("action")) {
-    string action = node->getStringValue("action");
-    if (action == "none")
-      _action = ACTION_NONE;
-    else if (action == "switch")
-      _action = ACTION_SWITCH;
-    else if (action == "adjust")
-      _action = ACTION_ADJUST;
-    else if (action == "assign")
-      _action = ACTION_ASSIGN;
-    else
-      SG_LOG(SG_INPUT, SG_ALERT, "Ignoring unrecognized action type "
-	     << action);
+  _command_name = node->getStringValue("command", "");
+  if (_command_name == "") {
+    SG_LOG(SG_INPUT, SG_ALERT, "No command supplied for binding.");
+    _command = 0;
+    return;
   }
 
-  if (node->hasValue("control"))
-    _node = fgGetNode(node->getStringValue("control"), true);
-
-  if (node->hasValue("step"))
-    _adjust_step = node->getChild("step")->getValue();
-
-  if (node->hasValue("value"))
-    _assign_value = node->getChild("value")->getValue();
+  _command = globals->get_commands()->getCommand(_command_name);
+  if (_command == 0) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Command " << _command_name << " is undefined");
+    _arg = 0;
+    return;
+  }
+  _arg = node;			// FIXME: don't use whole node!!!
 }
 
 void
 FGBinding::fire () const
 {
-  if (_node == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT, "No control property attached to binding");
-    return;
-  }
-
-  switch (_action) {
-
-  case ACTION_NONE:
-    break;
-
-  case ACTION_SWITCH:
-    _node->setBoolValue(!_node->getBoolValue());
-    break;
-
-  case ACTION_ADJUST:
-    if  (_adjust_step == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No step provided for adjust binding");
-      break;
-    }
-    switch (_node->getType()) {
-    case SGValue::BOOL:
-      if (_adjust_step->getBoolValue())
-	_node->setBoolValue(!_node->getBoolValue());
-      break;
-    case SGValue::INT:
-      _node->setIntValue(_node->getIntValue() + _adjust_step->getIntValue());
-      break;
-    case SGValue::LONG:
-      _node->setLongValue(_node->getLongValue() + _adjust_step->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      _node->setFloatValue(_node->getFloatValue()
-			   + _adjust_step->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-    case SGValue::UNKNOWN:	// force to double
-      _node->setDoubleValue(_node->getDoubleValue()
-			    + _adjust_step->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      SG_LOG(SG_INPUT, SG_ALERT, "Cannot increment or decrement string value"
-	     << _node->getStringValue());
-      break;
-    }
-    break;
-
-  case ACTION_ASSIGN:
-    if  (_assign_value == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No value provided for assign binding");
-      break;
-    }
-    switch (_node->getType()) {
-    case SGValue::BOOL:
-      _node->setBoolValue(_assign_value->getBoolValue());
-      break;
-    case SGValue::INT:
-      _node->setIntValue(_assign_value->getIntValue());
-      break;
-    case SGValue::LONG:
-      _node->setLongValue(_assign_value->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      _node->setFloatValue(_assign_value->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-      _node->setDoubleValue(_assign_value->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      _node->setStringValue(_assign_value->getStringValue());
-      break;
-    case SGValue::UNKNOWN:
-      _node->setUnknownValue(_assign_value->getStringValue());
-      break;
-    }
-    break;
+  if (_command == 0) {
+    SG_LOG(SG_INPUT, SG_ALERT, "No command attached to binding");
+  } else if (!(*_command)(_arg)) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command " << _command_name);
   }
 }
 
@@ -338,41 +234,12 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 		glFrontFace ( GL_CW );
 	    }
 	    return;
-	case 19: // Ctrl-S key
-	    current_autopilot->set_AutoThrottleEnabled(
-		  ! current_autopilot->get_AutoThrottleEnabled()
-	        );
-	    return;
 	case 20: // Ctrl-T key
 	    current_autopilot->set_AltitudeMode( 
                   FGAutopilot::FG_ALTITUDE_TERRAIN );
 	    current_autopilot->set_AltitudeEnabled(
 		  ! current_autopilot->get_AltitudeEnabled()
 	        );
-	    return;
-	case 49: // numeric keypad 1
-	    v->set_goal_view_offset( SGD_PI * 0.75 );
-	    return;
-	case 50: // numeric keypad 2
-	    v->set_goal_view_offset( SGD_PI );
-	    return;
-	case 51: // numeric keypad 3
-	    v->set_goal_view_offset( SGD_PI * 1.25 );
-	    return;
-	case 52: // numeric keypad 4
-	    v->set_goal_view_offset( SGD_PI * 0.50 );
-	    return;
-	case 54: // numeric keypad 6
-	    v->set_goal_view_offset( SGD_PI * 1.50 );
-	    return;
-	case 55: // numeric keypad 7
-	    v->set_goal_view_offset( SGD_PI * 0.25 );
-	    return;
-	case 56: // numeric keypad 8
-	    v->set_goal_view_offset( 0.00 );
-	    return;
-	case 57: // numeric keypad 9
-	    v->set_goal_view_offset( SGD_PI * 1.75 );
 	    return;
 	case 72: // H key
 	    HUD_brightkey( true );
@@ -491,43 +358,10 @@ FGInput::doKey (int k, int modifiers, int x, int y)
             current_panel->setXOffset(current_panel->getXOffset() + 5);
             return;
 	}
-        // case 256+GLUT_KEY_F9: {
-        //     return;
-        // }
         case 256+GLUT_KEY_F10: {
             fgToggleFDMdataLogging();
             return;
         }
-        // case 256+GLUT_KEY_F11: {
-        //     return;
-        // }
-        // case 256+GLUT_KEY_F12: {
-        //     return;
-        // }
-	case 256+GLUT_KEY_END: // numeric keypad 1
-	    v->set_goal_view_offset( SGD_PI * 0.75 );
-	    return;
-	case 256+GLUT_KEY_DOWN: // numeric keypad 2
-	    v->set_goal_view_offset( SGD_PI );
-	    return;
-	case 256+GLUT_KEY_PAGE_DOWN: // numeric keypad 3
-	    v->set_goal_view_offset( SGD_PI * 1.25 );
-	    return;
-	case 256+GLUT_KEY_LEFT: // numeric keypad 4
-	    v->set_goal_view_offset( SGD_PI * 0.50 );
-	    return;
-	case 256+GLUT_KEY_RIGHT: // numeric keypad 6
-	    v->set_goal_view_offset( SGD_PI * 1.50 );
-	    return;
-	case 256+GLUT_KEY_HOME: // numeric keypad 7
-	    v->set_goal_view_offset( SGD_PI * 0.25 );
-	    return;
-	case 256+GLUT_KEY_UP: // numeric keypad 8
-	    v->set_goal_view_offset( 0.00 );
-	    return;
-	case 256+GLUT_KEY_PAGE_UP: // numeric keypad 9
-	    v->set_goal_view_offset( SGD_PI * 1.75 );
-	    return;
 
 // END SPECIALS
 
@@ -596,13 +430,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    globals->inc_warp_delta( 30 );
 	    fgUpdateSkyAndLightingParams();
 	    return;
-	case 118: // v key
-	    // handles GUI state as well as Viewer LookAt Direction
-	    CenterView();
-	    globals->set_current_view( globals->get_viewmgr()->next_view() );
-	    fgReshape( fgGetInt("/sim/startup/xsize"),
-		       fgGetInt("/sim/startup/ysize") );
-	    return;
 	case 120: // x key
 	    fov = globals->get_current_view()->get_fov();
 	    fov /= 1.05;
@@ -656,9 +483,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 		   globals->set_freeze( false );
 		return;
 	    }
-	case 256+GLUT_KEY_F3: // F3 Take a screen shot
-	    fgDumpSnapShot();
-	    return;
         case 256+GLUT_KEY_F4: // F4 Update lighting manually
 	    fgUpdateSkyAndLightingParams();
             return;
@@ -718,103 +542,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 // END SPECIALS
 
     }
-}
-
-
-void
-FGInput::action (const SGPropertyNode * binding)
-{
-  const string &action = binding->getStringValue("action", "");
-  const string &control = binding->getStringValue("control", "");
-  bool repeatable = binding->getBoolValue("repeatable", false);
-  int step = binding->getIntValue("step", 0.0);
-
-  if (control == "") {
-    SG_LOG(SG_INPUT, SG_ALERT, "No control specified for key "
-	   << binding->getIndex());
-    return;
-  }
-
-  else if (action == "") {
-    SG_LOG(SG_INPUT, SG_ALERT, "No action specified for key "
-	   << binding->getIndex());
-    return;
-  }
-
-  else if (action == "switch") {
-    fgSetBool(control, !fgGetBool(control));
-  }
-
-  else if (action == "adjust") {
-    const SGValue * step = binding->getValue("step");
-    if (step == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No step supplied for adjust action for key "
-	     << binding->getIndex());
-      return;
-    }
-    SGValue * target = fgGetValue(control, true);
-				// Use the target's type...
-    switch (target->getType()) {
-    case SGValue::BOOL:
-    case SGValue::INT:
-      target->setIntValue(target->getIntValue() + step->getIntValue());
-      break;
-    case SGValue::LONG:
-      target->setLongValue(target->getLongValue() + step->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      target->setFloatValue(target->getFloatValue() + step->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-    case SGValue::UNKNOWN:	// treat unknown as a double
-      target->setDoubleValue(target->getDoubleValue()
-			     + step->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed attempt to adjust string property "
-	     << control);
-      break;
-    }
-  }
-
-  else if (action == "assign") {
-    const SGValue * value = binding->getValue("value");
-    if (value == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No value supplied for assign action for key "
-	     << binding->getIndex());
-      return;
-    }
-    SGValue * target = fgGetValue(control, true);
-				// Use the target's type...
-    switch (target->getType()) {
-    case SGValue::BOOL:
-      target->setBoolValue(value->getBoolValue());
-      break;
-    case SGValue::INT:
-      target->setIntValue(value->getIntValue());
-      break;
-    case SGValue::LONG:
-      target->setLongValue(value->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      target->setFloatValue(value->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-      target->setDoubleValue(value->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      target->setStringValue(value->getStringValue());
-      break;
-    case SGValue::UNKNOWN:
-      target->setUnknownValue(value->getStringValue());
-      break;
-    }
-  }
-
-  else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Unknown action " << action
-	   << " for key " << binding->getIndex());
-  }
 }
 
 
