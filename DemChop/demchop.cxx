@@ -31,6 +31,8 @@
 #include <Bucket/newbucket.hxx>
 #include <DEM/dem.hxx>
 
+#include "point2d.hxx"
+
 FG_USING_STD(string);
 
 
@@ -88,11 +90,7 @@ int main(int argc, char **argv) {
 	for ( j = 0; j <= dy; j++ ) {
 	    for ( i = 0; i <= dx; i++ ) {
 		b_cur = fgBucketOffset(min.x, min.y, i, j);
-		if ( b_cur == b ) {
-		    dem.write_area( b_cur );
-		} else {
-		    dem.write_area( b_cur );
-		}
+		dem.write_area( b_cur );
 	    }
 	}
     }
@@ -102,6 +100,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.2  1999/03/10 16:09:44  curt
+// Hacking towards the first working version.
+//
 // Revision 1.1  1999/03/10 01:02:54  curt
 // Initial revision.
 //
