@@ -16,16 +16,6 @@ Michele America <nomimarketing@mail.telepac.pt>
   Contributed to the HUD code.
 
 
-Steve Baker <sbaker@link.com>
-  - Author of plib which contains pui (portable opengl based user interface)
-    sl (portable audio library) js (linux joystick interface class)
-    sg (simple geometry library) ssg (simple scene graph library)
-  - Steve has provided an immense amount of coaching and tutelage,
-    both on the subjects of flight simulation and OpenGL.  It has been
-    his comments and thoughts that have prompted the implementation of
-    most of the more sophisticated features of Flight Gear.
-
-
 Michael Basler <pmb@knUUt.de>
   Coauthor of the Getting Started guide.
 
