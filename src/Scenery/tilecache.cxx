@@ -129,7 +129,14 @@ FGTileCache::exists( const FGBucket& p )
 void
 FGTileCache::fill_in( int index, const FGBucket& p )
 {
-    // cout << "FILL IN CACHE ENTRY = " << index << endl;
+    cout << "FILL IN CACHE ENTRY = " << index << endl;
+
+    // Force some values in case the tile fails to load (i.e. fill
+    // doesn't exist)
+    tile_cache[index].center = Point3D( 0.0 );
+    tile_cache[index].vtlist = NULL;
+    tile_cache[index].vnlist = NULL;
+    tile_cache[index].tclist = NULL;
 
     // Load the appropriate data file and build tile fragment list
     FGPath tile_path( current_options.get_fg_root() );
@@ -152,13 +159,13 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     terrain->addKid( tile_cache[index].select_ptr );
 
     if ( tile_cache[index].is_scheduled_for_cache() ) {
-	// cout << "FOUND ONE SCHEDULED FOR CACHE" << endl;
+	cout << "FOUND ONE SCHEDULED FOR CACHE" << endl;
 	// load, but not needed now so disable
 	tile_cache[index].mark_loaded();
 	tile_cache[index].ssg_disable();
 	tile_cache[index].select_ptr->select(0);
     } else {
-	// cout << "FOUND ONE READY TO LOAD" << endl;
+	cout << "FOUND ONE READY TO LOAD" << endl;
 	tile_cache[index].mark_loaded();
 	tile_cache[index].select_ptr->select(1);
     }
@@ -167,9 +174,10 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 
 // Free a tile cache entry
 void
-FGTileCache::entry_free( int index )
+FGTileCache::entry_free( int cache_index )
 {
-    tile_cache[index].free_tile();
+    cout << "FREEING CACHE ENTRY = " << cache_index << endl;
+    tile_cache[cache_index].free_tile();
 }
 
 
@@ -177,9 +185,10 @@ FGTileCache::entry_free( int index )
 int
 FGTileCache::next_avail( void )
 {
-    Point3D delta, abs_view_pos;
+    // Point3D delta;
+    Point3D abs_view_pos;
     int i;
-    float max, med, min, tmp;
+    // float max, med, min, tmp;
     float dist, max_dist;
     int max_index;
     
@@ -194,7 +203,7 @@ FGTileCache::next_avail( void )
 	if ( tile_cache[i].is_unused() ) {
 	    // favor unused cache slots
 	    return(i);
-	} else if ( tile_cache[i].is_loaded() ) {
+	} else if ( tile_cache[i].is_loaded() || tile_cache[i].is_cached() ) {
 	    // calculate approximate distance from view point
 	    abs_view_pos = current_view.get_abs_view_pos();
 
@@ -203,6 +212,7 @@ FGTileCache::next_avail( void )
 	    FG_LOG( FG_TERRAIN, FG_DEBUG,
 		    "    ref point = " << tile_cache[i].center );
 
+	    /*
 	    delta.setx( fabs(tile_cache[i].center.x() - abs_view_pos.x() ) );
 	    delta.sety( fabs(tile_cache[i].center.y() - abs_view_pos.y() ) );
 	    delta.setz( fabs(tile_cache[i].center.z() - abs_view_pos.z() ) );
@@ -215,6 +225,9 @@ FGTileCache::next_avail( void )
 		tmp = max; max = min; min = tmp;
 	    }
 	    dist = max + (med + min) / 4;
+	    */
+
+	    dist = tile_cache[i].center.distance3D( abs_view_pos );
 
 	    FG_LOG( FG_TERRAIN, FG_DEBUG, "    distance = " << dist );
 
@@ -228,9 +241,16 @@ FGTileCache::next_avail( void )
     // If we made it this far, then there were no open cache entries.
     // We will instead free the furthest cache entry and return it's
     // index.
-    
-    entry_free( max_index );
-    return( max_index );
+
+    if ( max_index >=0 ) {
+	FG_LOG( FG_TERRAIN, FG_INFO, "    max_dist = " << max_dist );
+	FG_LOG( FG_TERRAIN, FG_INFO, "    index = " << max_index );
+	entry_free( max_index );
+	return( max_index );
+    } else {
+	FG_LOG( FG_TERRAIN, FG_ALERT, "WHOOPS!!! Dying in next_avail()" );
+	exit( -1 );
+    }
 }
 
 

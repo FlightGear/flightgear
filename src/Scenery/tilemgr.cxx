@@ -98,7 +98,7 @@ int FGTileMgr::init( void ) {
 // schedule a tile for loading
 static void disable_tile( int cache_index ) {
     // see if tile already exists in the cache
-    // cout << "DISABLING CACHE ENTRY = " << cache_index << endl;
+    cout << "DISABLING CACHE ENTRY = " << cache_index << endl;
     FGTileEntry *t = global_tile_cache.get_tile( cache_index );
     t->ssg_disable();
 }
@@ -111,7 +111,7 @@ int FGTileMgr::sched_tile( const FGBucket& b ) {
 
     if ( cache_index >= 0 ) {
 	// tile exists in cache, reenable it.
-	// cout << "REENABLING DISABLED TILE" << endl;
+	cout << "REENABLING DISABLED TILE" << endl;
 	FGTileEntry *t = global_tile_cache.get_tile( cache_index );
 	t->select_ptr->select( 1 );
 	t->mark_loaded();
@@ -528,7 +528,7 @@ int FGTileMgr::update( void ) {
 	if ( (p1.get_lon() > p_last.get_lon()) ||
 	     ( (p1.get_lon() == p_last.get_lon()) && (p1.get_x() > p_last.get_x()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << " tiles" );
+		    "  (East) Loading " << tile_diameter << " tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling East
 		disable_tile( tiles[(j*tile_diameter) + 0] );
@@ -544,7 +544,7 @@ int FGTileMgr::update( void ) {
 		    ( (p1.get_lon() == p_last.get_lon()) && 
 		      (p1.get_x() < p_last.get_x()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << " tiles" );
+		    "  (West) Loading " << tile_diameter << " tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling West
 		disable_tile( tiles[(j*tile_diameter) + tile_diameter - 1] );
@@ -561,7 +561,7 @@ int FGTileMgr::update( void ) {
 	if ( (p1.get_lat() > p_last.get_lat()) ||
 	     ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() > p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << " tiles" );
+		    "  (North) Loading " << tile_diameter << " tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling North
 		disable_tile( tiles[0 + i] );
@@ -577,7 +577,7 @@ int FGTileMgr::update( void ) {
 	} else if ( (p1.get_lat() < p_last.get_lat()) ||
 		    ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() < p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << " tiles" );
+		    "  (South) Loading " << tile_diameter << " tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling South
 		disable_tile( tiles[((tile_diameter-1) * tile_diameter) + i] );

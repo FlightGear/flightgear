@@ -202,6 +202,7 @@ public:
 	return state == Scheduled_for_cache;
     }
     inline bool is_loaded() const { return state == Loaded; }
+    inline bool is_cached() const { return state == Cached; }
 
     inline void mark_unused() { state = Unused; }
     inline void mark_scheduled_for_use() { state = Scheduled_for_use; }

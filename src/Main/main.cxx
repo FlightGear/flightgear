@@ -500,7 +500,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 
 	// printf("updating flight model x %d\n", multi_loop);
 	fgFDMUpdate( current_options.get_flight_model(), 
-		     cur_fdm_state, multi_loop, remainder );
+		     cur_fdm_state, multi_loop * 1, remainder );
     } else {
 	fgFDMUpdate( current_options.get_flight_model(), 
 		     cur_fdm_state, 0, remainder );

@@ -64,24 +64,34 @@ FGTileEntry::~FGTileEntry ( void ) {
 void
 FGTileEntry::free_tile()
 {
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
+    FG_LOG( FG_TERRAIN, FG_INFO,
 	    "FREEING TILE = (" << tile_bucket << ")" );
 
     // mark tile unused
     mark_unused();
 
     // delete fragment list
+    FG_LOG( FG_TERRAIN, FG_INFO,
+	    "  deleting " << fragment_list.size() << " fragments" );
     for_each( begin(), end(),
 	      mem_fun_ref( &fgFRAGMENT::deleteDisplayList ));
     fragment_list.erase( begin(), end() );
 
     // delete the ssg used structures
+    FG_LOG( FG_TERRAIN, FG_INFO,
+	    "  deleting vertex, normal, and texture coordinate arrays" );
+    FG_LOG( FG_TERRAIN, FG_INFO,
+	    "    deleting vertex array" );
     if ( vtlist != NULL ) {
 	delete vtlist;
     }
+    FG_LOG( FG_TERRAIN, FG_INFO,
+	    "    deleting normal array" );
     if ( vnlist != NULL ) {
 	delete vnlist;
     }
+    FG_LOG( FG_TERRAIN, FG_INFO,
+	    "    deleting texture coordinate array" );
     if ( tclist != NULL ) {
 	delete tclist;
     }
@@ -123,12 +133,12 @@ FGTileEntry::free_tile()
 // selector to disable it from ever being drawn.
 void 
 FGTileEntry::ssg_disable() {
-    // cout << "TILE STATE = " << state << endl;
+    cout << "TILE STATE = " << state << endl;
     if ( state == Scheduled_for_use ) {
 	state = Scheduled_for_cache;
     } else if ( (state == Loaded) || (state == Cached) ) {
 	state = Cached;
-	// cout << "DISABLING SSG NODE" << endl;
+	cout << "DISABLING SSG NODE" << endl;
 	select_ptr->select(0);
 
 #if 0
@@ -150,5 +160,5 @@ FGTileEntry::ssg_disable() {
 		"Trying to disable an unused tile!  Dying" );
 	exit(-1);
     }	
-    // cout << "TILE STATE = " << state << endl;
+    cout << "TILE STATE = " << state << endl;
 }
