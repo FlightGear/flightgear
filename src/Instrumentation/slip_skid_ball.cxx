@@ -34,7 +34,7 @@ SlipSkidBall::update (double delta_time_sec)
         double d = -_z_accel_node->getDoubleValue();
         if (d < 1.0)
             d = 1.0;
-        double pos = _y_accel_node->getDoubleValue() / d * 5.0;
+        double pos = _y_accel_node->getDoubleValue() / d * 10.0;
         pos = fgGetLowPass(_out_node->getDoubleValue(), pos, delta_time_sec);
         _out_node->setDoubleValue(pos);
     }
