@@ -30,6 +30,8 @@
 #include "viewmgr.hxx"
 #include "fg_props.hxx"
 
+// strings 
+string viewpath, nodepath, strdata;
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
@@ -47,8 +49,19 @@ FGViewMgr::~FGViewMgr( void ) {
 void
 FGViewMgr::init ()
 {
-  add_view(new FGViewer, 0);
-  add_view(new FGViewer, 1);
+  char stridx [ 20 ];
+  for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
+    nodepath = "/sim/view";
+    sprintf(stridx, "[%d]", i);
+    nodepath += stridx;
+    nodepath += "/type";
+    strdata = fgGetString(nodepath.c_str());
+    // supporting two types now "lookat" = 1 and "lookfrom" = 1
+    if ( strcmp("lookat",strdata.c_str()) == 0 )
+      add_view(new FGViewer, 1);
+    else
+      add_view(new FGViewer, 0);
+  }
 }
 
 typedef double (FGViewMgr::*double_getter)() const;
@@ -56,6 +69,8 @@ typedef double (FGViewMgr::*double_getter)() const;
 void
 FGViewMgr::bind ()
 {
+  // FIXME:
+  // need to redo these bindings to the new locations (move to viewer?)
   fgTie("/sim/view/offset-deg", this,
 	&FGViewMgr::getViewOffset_deg, &FGViewMgr::setViewOffset_deg);
   fgSetArchivable("/sim/view/offset-deg");
@@ -89,6 +104,8 @@ FGViewMgr::bind ()
 void
 FGViewMgr::unbind ()
 {
+  // FIXME:
+  // need to redo these bindings to the new locations (move to viewer?)
   fgUntie("/sim/view/offset-deg");
   fgUntie("/sim/view/goal-offset-deg");
   fgUntie("/sim/view/tilt-deg");
@@ -104,41 +121,73 @@ FGViewMgr::unbind ()
 void
 FGViewMgr::update (int dt)
 {
+  char stridx [20];
+
   FGViewer * view = get_current_view();
   if (view == 0)
     return;
 
-				// Grab some values we'll need.
-  double lon_rad = fgGetDouble("/position/longitude-deg")
-    * SGD_DEGREES_TO_RADIANS;
-  double lat_rad = fgGetDouble("/position/latitude-deg")
-    * SGD_DEGREES_TO_RADIANS;
-  double alt_m = fgGetDouble("/position/altitude-ft")
-    * SG_FEET_TO_METER;
-  double roll_rad = fgGetDouble("/orientation/roll-deg")
-    * SGD_DEGREES_TO_RADIANS;
-  double pitch_rad = fgGetDouble("/orientation/pitch-deg")
-    * SGD_DEGREES_TO_RADIANS;
-  double heading_rad = fgGetDouble("/orientation/heading-deg")
-    * SGD_DEGREES_TO_RADIANS;
+  for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
+    viewpath = "/sim/view";
+    sprintf(stridx, "[%d]", i);
+    viewpath += stridx;
 
-				// Set up the pilot view
-  FGViewer *pilot_view = (FGViewer *)get_view( 0 );
-  pilot_view ->setPosition(
-	fgGetDouble("/position/longitude-deg"),
-	fgGetDouble("/position/latitude-deg"),
-	fgGetDouble("/position/altitude-ft"));
-  pilot_view->setOrientation(
-	fgGetDouble("/orientation/roll-deg"),
-	fgGetDouble("/orientation/pitch-deg"),
-	fgGetDouble("/orientation/heading-deg"));
-  if (!strcmp(fgGetString("/sim/flight-model"), "ada")) {
-    //+ve x is aft, +ve z is up (see viewer.hxx)
-    pilot_view->setPositionOffsets( -5.0, 0.0, 1.0 );
+
+    FGViewer *loop_view = (FGViewer *)get_view( i );
+
+		// Set up view
+    nodepath = viewpath;
+    nodepath += "/config/eye-lon-deg-path";
+    double lon_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    nodepath = viewpath;
+    nodepath += "/config/eye-lat-deg-path";
+    double lat_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    nodepath = viewpath;
+    nodepath += "/config/eye-alt-ft-path";
+    double alt_ft = fgGetDouble(fgGetString(nodepath.c_str()));
+    nodepath = viewpath;
+    nodepath += "/config/eye-roll-deg-path";
+    double roll_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    nodepath = viewpath;
+    nodepath += "/config/eye-pitch-deg-path";
+    double pitch_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    nodepath = viewpath;
+    nodepath += "/config/eye-heading-deg-path";
+    double heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+  
+    loop_view->setPosition(lon_deg, lat_deg, alt_ft);
+    loop_view->setOrientation(roll_deg, pitch_deg, heading_deg);
+
+    // if lookat (type 1) then get target data...
+    if (loop_view->getType() == 1) {
+      nodepath = viewpath;
+      nodepath += "/config/target-lon-deg-path";
+      lon_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+      nodepath = viewpath;
+      nodepath += "/config/target-lat-deg-path";
+      lat_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+      nodepath = viewpath;
+      nodepath += "/config/target-alt-ft-path";
+      alt_ft = fgGetDouble(fgGetString(nodepath.c_str()));
+      nodepath = viewpath;
+      nodepath += "/config/target-roll-deg-path";
+      roll_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+      nodepath = viewpath;
+      nodepath += "/config/target-pitch-deg-path";
+      pitch_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+      nodepath = viewpath;
+      nodepath += "/config/target-heading-deg-path";
+      heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
+    
+      loop_view ->setTargetPosition(lon_deg, lat_deg, alt_ft);
+      loop_view->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
+    }
   }
 
 				// Set up the chase view
-
+  // FIXME:
+  // Gotta change sgVec3Slider so that it takes xyz values as inputs 
+  // instead of spherical coordinates.
   FGViewer *chase_view = (FGViewer *)get_view( 1 );
 
   // get xyz Position offsets directly from GUI/sgVec3Slider
@@ -149,19 +198,6 @@ FGViewMgr::update (int dt)
   sgVec3 zPO;
   sgCopyVec3( zPO, *pPO );
   chase_view->setPositionOffsets(zPO[1], zPO[0], zPO[2] );
-
-  chase_view->setOrientation(
-	fgGetDouble("/orientation/roll-deg"),
-	fgGetDouble("/orientation/pitch-deg"),
-	fgGetDouble("/orientation/heading-deg"));
-  chase_view ->setPosition(
-	fgGetDouble("/position/longitude-deg"),
-	fgGetDouble("/position/latitude-deg"),
-	fgGetDouble("/position/altitude-ft"));
-  chase_view ->setTargetPosition(
-	fgGetDouble("/position/longitude-deg"),
-	fgGetDouble("/position/latitude-deg"),
-	fgGetDouble("/position/altitude-ft"));
 
 				// Update the current view
   do_axes();
@@ -368,8 +404,4 @@ FGViewMgr::do_axes ()
 
   get_current_view()->setGoalHeadingOffset_deg(viewDir);
 }
-
-
-
-
 

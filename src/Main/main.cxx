@@ -1379,11 +1379,6 @@ int mainLoop( int argc, char **argv ) {
     FGControls *controls = new FGControls;
     globals->set_controls( controls );
 
-    FGViewMgr *viewmgr = new FGViewMgr;
-    globals->set_viewmgr( viewmgr );
-    viewmgr->init();
-    viewmgr->bind();
-
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
 
@@ -1466,6 +1461,11 @@ int mainLoop( int argc, char **argv ) {
     SGPath modelpath( globals->get_fg_root() );
     ssgModelPath( (char *)modelpath.c_str() );
   
+    FGViewMgr *viewmgr = new FGViewMgr;
+    globals->set_viewmgr( viewmgr );
+    viewmgr->init();
+    viewmgr->bind();
+
     // Scene graph root
     scene = new ssgRoot;
     scene->setName( "Scene" );
@@ -1933,5 +1933,6 @@ void fgUpdateDCS (void) {
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //           added Venky         , 12 Nov 2K
+
 
 

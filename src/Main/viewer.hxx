@@ -150,6 +150,13 @@ public:
     virtual void setPitch_deg (double pitch_deg);
     virtual void setHeading_deg (double heading_deg);
     virtual void setOrientation (double roll_deg, double pitch_deg, double heading_deg);
+    virtual double getTargetRoll_deg () const { return _target_roll_deg; }
+    virtual double getTargetPitch_deg () const {return _target_pitch_deg; }
+    virtual double getTargetHeading_deg () const {return _target_heading_deg; }
+    virtual void setTargetRoll_deg (double roll_deg);
+    virtual void setTargetPitch_deg (double pitch_deg);
+    virtual void setTargetHeading_deg (double heading_deg);
+    virtual void setTargetOrientation (double roll_deg, double pitch_deg, double heading_deg);
 
 
 
@@ -250,6 +257,9 @@ private:
     double _roll_deg;
     double _pitch_deg;
     double _heading_deg;
+    double _target_roll_deg;
+    double _target_pitch_deg;
+    double _target_heading_deg;
 
     // Position offsets from center of gravity.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
@@ -341,6 +351,7 @@ private:
 
 
 #endif // _VIEWER_HXX
+
 
 
 
