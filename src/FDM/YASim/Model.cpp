@@ -257,7 +257,7 @@ void Model::calcForces(State* s)
     // Account for ground effect by multiplying the vertical force
     // component by an amount linear with the fraction of the wingspan
     // above the ground.
-    float dist = ground[4] - Math::dot3(ground, _wingCenter);
+    float dist = ground[3] - Math::dot3(ground, _wingCenter);
     if(dist > 0 && dist < _groundEffectSpan) {
 	float fz = Math::dot3(faero, ground);
 	Math::mul3(fz * _groundEffect * dist/_groundEffectSpan,
