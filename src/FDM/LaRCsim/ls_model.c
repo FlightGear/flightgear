@@ -37,6 +37,9 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.1  2002/09/10 01:14:02  curt
+Initial revision
+
 Revision 1.5  2002/04/01 19:37:34  curt
 I have attached revisions to the UIUC code.  The revisions include the
 ability to run a nonlinear model with flaps.  The files ls_model.c and

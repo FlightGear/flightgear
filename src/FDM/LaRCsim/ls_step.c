@@ -50,6 +50,9 @@
 
 $Header$
 $Log$
+Revision 1.1  2002/09/10 01:14:02  curt
+Initial revision
+
 Revision 1.5  2001/09/14 18:47:27  curt
 More changes in support of UIUCModel.
 

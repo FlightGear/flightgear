@@ -580,6 +580,9 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.1  2002/09/10 01:14:02  curt
+ * Initial revision
+ *
  * Revision 1.6  2002/01/30 15:17:27  david
  * Fixes from Cameron Moore:
  *

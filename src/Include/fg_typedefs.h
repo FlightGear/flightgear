@@ -2,6 +2,9 @@
 //  Alterations: Copyright C. Hotchkiss 1996
 //
 // $Log$
+// Revision 1.1  2002/09/10 01:14:04  curt
+// Initial revision
+//
 // Revision 1.2  2001/05/16 21:27:59  curt
 // Added David Megginson's patch for reconfigurable keyboard bindings.
 //

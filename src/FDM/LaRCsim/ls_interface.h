@@ -66,6 +66,9 @@ int ls_ForceAltitude(double alt_feet);
 
 
 // $Log$
+// Revision 1.1  2002/09/10 01:14:02  curt
+// Initial revision
+//
 // Revision 1.5  2001/03/24 05:03:12  curt
 // SG-ified logstream.
 //
