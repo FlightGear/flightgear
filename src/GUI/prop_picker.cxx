@@ -504,7 +504,7 @@ void fgPropPicker::find_props ()
 
   files [ num_files ] = NULL ;
 
-  printf("files pointer=%i\n", files);
+  printf("files pointer=%p\n", files);
   proppath ->    setLabel          (startDir);
   list_box -> newList ( files ) ;
   

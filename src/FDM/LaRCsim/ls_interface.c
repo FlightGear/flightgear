@@ -295,7 +295,7 @@ void ls_stamp( void ) {
     date = (nowtime->tm_year)*10000 
 	 + (nowtime->tm_mon + 1)*100
 	 + (nowtime->tm_mday);
-    sprintf(sim_control_.date_string, "%06d\0", date);
+    sprintf(sim_control_.date_string, "%06ld\0", date);
     sprintf(sim_control_.time_stamp, "%02d:%02d:%02d\0", 
 	nowtime->tm_hour, nowtime->tm_min, nowtime->tm_sec);
 #ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
@@ -580,6 +580,13 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.6  2002/01/30 15:17:27  david
+ * Fixes from Cameron Moore:
+ *
+ * I've attached 3 diffs against files in FlightGear to fix some printf
+ * format strings.  The changes are pretty straight forward.  Let me know
+ * if you have any questions.  (BTW, I'm using gcc 2.95.4)
+ *
  * Revision 1.5  2001/05/21 18:44:59  curt
  * Tile pager tweaks.
  * MSVC++ tweaks.

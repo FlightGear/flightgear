@@ -140,7 +140,7 @@ void FGfdmSocket::Append(long item)
 {
   char s[25];
 
-  sprintf(s,"%12d",item);
+  sprintf(s,"%12ld",item);
 
   if (size == 0) buffer += string(s);
   else buffer += string(",") + string(s);
