@@ -134,12 +134,12 @@ void FGLight::reinit () {
 
 void FGLight::bind () {
     SGPropertyNode *prop = globals->get_props();
-    prop->tie("/sim/time/sun-pos-rad", SGRawValuePointer<double>(&_sun_angle));
+    prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
 }
 
 void FGLight::unbind () {
     SGPropertyNode *prop = globals->get_props();
-    prop->untie("/sim/time/sun-pos-rad");
+    prop->untie("/sim/time/sun-angle-rad");
 }
 
 
