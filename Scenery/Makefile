@@ -36,7 +36,7 @@ CC = gcc
 CFLAGS = -g -Wall
 # CFLAGS = -O2 -Wall
 
-FLEX = flex
+FLEX = flex -f
 BISON = bison -v
 AR = ar
 
@@ -86,6 +86,9 @@ mesh.o: mesh.c mesh.h common.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/05/27 17:48:50  curt
+# Added -f flag to flex to generate a "fast" scanner.
+#
 # Revision 1.3  1997/05/23 15:40:40  curt
 # Added GNU copyright headers.
 #
