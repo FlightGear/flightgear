@@ -303,8 +303,13 @@ int FGAutopilot::run() {
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
 	    double tgt_radial;
 	    double cur_radial;
-	    tgt_radial = current_radiostack->get_nav1_radial() 
-		+ FGBFI::getMagVar();
+	    if ( current_radiostack->get_nav1_loc() ) {
+		// localizers radials are "true"
+		tgt_radial = current_radiostack->get_nav1_radial();
+	    } else {
+		tgt_radial = current_radiostack->get_nav1_radial() 
+		    + FGBFI::getMagVar();
+	    }
 	    cur_radial = current_radiostack->get_nav1_heading();
 	    cout << "target rad (true) = " << tgt_radial 
 	         << "  current rad (true) = " << cur_radial

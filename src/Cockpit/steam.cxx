@@ -349,8 +349,14 @@ double FGSteam::get_HackVOR1_deg () {
     double r;
 
     if ( current_radiostack->get_nav1_inrange() ) {
-	r = current_radiostack->get_nav1_heading() - FGBFI::getMagVar()
-	    - current_radiostack->get_nav1_radial();
+	if ( current_radiostack->get_nav1_loc() ) {
+	    // localizer doesn't need magvar offset
+	    r = current_radiostack->get_nav1_heading()
+		- current_radiostack->get_nav1_radial();
+	} else {
+	    r = current_radiostack->get_nav1_heading() - FGBFI::getMagVar()
+		- current_radiostack->get_nav1_radial();
+	}
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	//      << "  Bearing = " << current_radiostack->get_nav1_heading()
 	//      << endl;
@@ -372,8 +378,14 @@ double FGSteam::get_HackVOR2_deg () {
     double r;
 
     if ( current_radiostack->get_nav2_inrange() ) {
-	r = current_radiostack->get_nav2_heading() - FGBFI::getMagVar()
-	    - current_radiostack->get_nav2_radial();
+	if ( current_radiostack->get_nav2_loc() ) {
+	    // localizer doesn't need magvar offset
+	    r = current_radiostack->get_nav2_heading()
+		- current_radiostack->get_nav2_radial();
+	} else {
+	    r = current_radiostack->get_nav2_heading() - FGBFI::getMagVar()
+		- current_radiostack->get_nav2_radial();
+	}
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	// << "  Bearing = " << current_radiostack->get_nav1_heading() << endl;
     
