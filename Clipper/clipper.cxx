@@ -201,6 +201,18 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 		*result_diff = tmp;
 		result_union = tmp;
 	    } else {
+   		cout << "DIFF: tmp.num_contours = " << tmp.num_contours
+			<< " accum.num_contours = " << accum.num_contours
+			<< endl;
+		// tmp output accum
+		FILE *ofp= fopen("tmp-debug", "w");
+		gpc_write_polygon(ofp, &tmp);
+		fclose(ofp);
+
+		ofp= fopen("accum-debug", "w");
+		gpc_write_polygon(ofp, &accum);
+		fclose(ofp);
+
 		gpc_polygon_clip(GPC_DIFF, &tmp, &accum, result_diff);
 		gpc_polygon_clip(GPC_UNION, &tmp, &accum, &result_union);
 	    }
@@ -248,16 +260,21 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     // tmp output accum
     FILE *ofp= fopen("accum", "w");
     gpc_write_polygon(ofp, &accum);
+    fclose(ofp);
 
     // tmp output safety_base
     ofp= fopen("remains", "w");
     gpc_write_polygon(ofp, remains);
+    fclose(ofp);
 
     return true;
 }
 
 
 // $Log$
+// Revision 1.8  1999/03/30 23:49:22  curt
+// Added some debugging output.
+//
 // Revision 1.7  1999/03/30 13:41:38  curt
 // Working towards better handling of multi-contoured polygons.
 //
