@@ -382,9 +382,9 @@ bool FGJSBsim::copy_from_JSBsim() {
                             Aircraft->GetNcg()(2),
                             Aircraft->GetNcg()(3) );
     
-    _set_Accels_Pilot_Body( Auxiliary->GetPilotAccel()(1),
-                            Auxiliary->GetPilotAccel()(2),
-                            Auxiliary->GetPilotAccel()(3) );
+    _set_Accels_Pilot_Body( Auxiliary->GetNpilot()(1),
+                            Auxiliary->GetNpilot()(2),
+                            Auxiliary->GetNpilot()(3) );
 
    // _set_Accels_Pilot_Body_N( Auxiliary->GetPilotAccel()(1)/32.1739,
    //                           Auxiliary->GetNpilot(2)/32.1739,
