@@ -634,8 +634,9 @@ void FGFDM::parseTurbineEngine(XMLAttributes* a)
     float flatRating = attrf(a, "flat-rating") * HP2W;
     TurbineEngine* eng = new TurbineEngine(power, omega, alt, flatRating);
 
-    if(a->hasAttribute("min-n2"))
-        eng->setN2Range(attrf(a, "min-n2"), attrf(a, "max-n2"));
+    if(a->hasAttribute("n2-low-idle"))
+        eng->setN2Range(attrf(a, "n2-low-idle"), attrf(a, "n2-high-idle"),
+                        attrf(a, "n2-max"));
 
     // Nasty units conversion: lbs/hr per hp -> kg/s per watt
     if(a->hasAttribute("bsfc"))
