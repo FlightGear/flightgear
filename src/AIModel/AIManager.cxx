@@ -90,7 +90,7 @@ void FGAIManager::update(double dt) {
         if (!enabled)
             return;
 
-        _dt = dt;	
+        _dt = dt;
 
         ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
@@ -203,8 +203,8 @@ FGAIManager::createBallistic( FGAIModelEntity *entity ) {
         ai_ballistic->setWind_from_north(entity->wind_from_north);
         ai_ballistic->setWind(entity->wind);
         ai_ballistic->setRoll(entity->roll);
-		ai_ballistic->setCd(entity->cd);
-		ai_ballistic->setWeight(entity->weight);
+        ai_ballistic->setCd(entity->cd);
+        ai_ballistic->setWeight(entity->weight);
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic;
@@ -214,7 +214,6 @@ void*
 FGAIManager::createStorm( FGAIModelEntity *entity ) {
 
         FGAIStorm* ai_storm = new FGAIStorm(this);
-        ai_list.push_back(ai_storm);
         ++numObjects[0];
         ++numObjects[FGAIBase::otStorm];
         ai_storm->setHeading(entity->heading);
@@ -225,6 +224,7 @@ FGAIManager::createStorm( FGAIModelEntity *entity ) {
         ai_storm->setLatitude(entity->latitude);
         ai_storm->init();
         ai_storm->bind();
+        ai_list.push_back(ai_storm);
         return ai_storm;
 }
 
@@ -232,7 +232,6 @@ void*
 FGAIManager::createThermal( FGAIModelEntity *entity ) {
 
         FGAIThermal* ai_thermal = new FGAIThermal(this);
-        ai_list.push_back(ai_thermal);
         ++numObjects[0];
         ++numObjects[FGAIBase::otThermal];
         ai_thermal->setLongitude(entity->longitude);
@@ -241,6 +240,7 @@ FGAIManager::createThermal( FGAIModelEntity *entity ) {
         ai_thermal->setDiameter(entity->diameter / 6076.11549);
         ai_thermal->init();
         ai_thermal->bind();
+        ai_list.push_back(ai_thermal);
         return ai_thermal;
 }
 

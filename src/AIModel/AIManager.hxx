@@ -78,7 +78,9 @@ public:
     inline double get_user_yaw() { return user_yaw; }
     inline double get_user_speed() {return user_speed; }
 
-    inline int getNum( FGAIBase::object_type ot ) { return numObjects[ot]; }
+    inline int getNum( FGAIBase::object_type ot ) {
+      return (0 < ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
+    }
 
     void processScenario( string filename );
 

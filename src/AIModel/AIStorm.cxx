@@ -36,7 +36,7 @@ SG_USING_STD(string);
 
 FGAIStorm::FGAIStorm(FGAIManager* mgr) {
    manager = mgr;   
-   _type_str = "thunderstorm";
+   _type_str = "storm";
    _otype = otStorm;
 }
 

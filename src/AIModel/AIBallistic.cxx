@@ -27,7 +27,6 @@
 #include "AIBallistic.hxx"
 
 
-
 FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     manager = mgr;
     _type_str = "ballistic";
@@ -122,6 +121,7 @@ void FGAIBallistic::setWeight(double w) {
 }
 
 void FGAIBallistic::Run(double dt) {
+
    life_timer += dt;
    if (life_timer > life) setDie(true); 
 
@@ -130,7 +130,7 @@ void FGAIBallistic::Run(double dt) {
    double wind_speed_from_north_deg_sec;
    double wind_speed_from_east_deg_sec;
    double mass;
-      
+   
    // the drag calculations below assume sea-level density,
    // rho = 0.023780  slugs/ft3
    // calculate mass
@@ -153,7 +153,7 @@ void FGAIBallistic::Run(double dt) {
    speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
    
    // if wind not required, set to zero
-   if (!wind){
+   if (!wind) {
       wind_from_north = 0;
       wind_from_east = 0;
    }

@@ -44,7 +44,7 @@
 #include "AIManager.hxx"
 
 
-const double FGAIBase::rho = 0.023780;  // sea level air density slugs/ft3
+const double FGAIBase::e = 2.71828183;
 const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
 
@@ -80,6 +80,24 @@ FGAIBase::~FGAIBase() {
 void FGAIBase::update(double dt) {
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()/SG_RADIANS_TO_DEGREES);
     ft_per_deg_lon = 365228.16 * cos(pos.lat() / SG_RADIANS_TO_DEGREES);
+
+    // Calculate rho at altitude, using standard atmosphere
+    // For the temperature T and the pressure p,
+
+    if (altitude < 36152) {		// curve fits for the troposphere
+      T = 59 - 0.00356 * altitude;
+      p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
+
+    } else if ( 36152 < altitude < 82345 ) {    // lower stratosphere
+      T = -70;
+      p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
+
+    } else {                                    //  upper stratosphere
+      T = -205.05 + (0.00164 * altitude);
+      p = 51.97 * pow( ((T + 459.7) / 389.98) , -11.388);
+    }
+
+    rho = p / (1718 * (T + 459.7));
 }
 
 

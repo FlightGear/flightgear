@@ -179,7 +179,10 @@ public:
     double _getY_shift() const;
     double _getRotation() const;
 
-    static const double rho;
+    double rho;
+    double T;                             // temperature, degs farenheit
+    double p;                             // pressure lbs/sq ft
+    static const double e;
     static const double lbs_to_slugs;
 
     int _getID() const;
