@@ -82,6 +82,9 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	reportReadyForDeparture = false;
 	contactTower = false;
 	contactGround = false;
+	
+	descending = false;
+	targetDescentRate = 0.0;
 }
 
 FGAILocalTraffic::~FGAILocalTraffic() {
@@ -540,6 +543,11 @@ void FGAILocalTraffic::Update(double dt) {
 		break;
 	}
 	//cout << "I " << flush;
+	
+	// Convienience output for AI debugging user the property logger
+	fgSetDouble("/AI/Local1/ortho-x", (ortho.ConvertToLocal(pos)).x());
+	fgSetDouble("/AI/Local1/ortho-y", (ortho.ConvertToLocal(pos)).y());
+	fgSetDouble("/AI/Local1/elev", pos.elev() * SG_METER_TO_FEET);
 }
 
 void FGAILocalTraffic::RegisterTransmission(int code) {
@@ -619,7 +627,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			leg = CLIMBOUT;
 			pitch = 10.0;
 			IAS = best_rate_of_climb_speed;
-			slope = 7.0;
+			//slope = 7.0;	
+			slope = 6.0;	// Reduced it slightly since it's climbing a lot steeper than I can in the JSBSim C172.
 			inAir = true;
 		}
 		break;
@@ -704,15 +713,32 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			TransmitPatternPositionReport();
 			transmitted = true;
 		}
-		if(orthopos.y() < -480) {
-			// FIXME - TODO - take tower baseleg constraint ie. other traffic, into account when calculating start of descent
-			slope = -4.0;	// FIXME - calculate to descent at 500fpm and hit the threshold (taking wind into account as well!!)
+		if((orthopos.y() < -100) && (!descending)) {
+			// Maybe we should think about when to start descending.
+			// For now we're assuming that we aim to follow the same glidepath regardless of wind.
+			double d1;
+			double d2;
+			CalculateSoD((tower->GetBaseConstraint(d1) ? d1 : -1000.0), (tower->GetDownwindConstraint(d2) ? d2 : 1000.0 * patternDirection), (patternDirection ? true : false));
+			if(SoD.leg == DOWNWIND) {
+				descending = (orthopos.y() < SoD.y ? true : false);
+			}
+
+		}
+		if(descending) {
+			slope = -5.5;	// FIXME - calculate to descent at 500fpm and hit the desired point on the runway (taking wind into account as well!!)
 			pitch = -3.0;
 			IAS = 85.0;
 		}
-		if(orthopos.y() < -980) {
+		
+		// Try and arrange to turn nicely onto base
+		turn_circumference = IAS * 0.514444 * turn_time;	
+		//Hmmm - this is an interesting one - ground vs airspeed in relation to turn radius
+		//We'll leave it as a hack with IAS for now but it needs revisiting.		
+		turn_radius = turn_circumference / (2.0 * DCL_PI);
+		if(orthopos.y() < -1000.0 + turn_radius) {
+		//if(orthopos.y() < -980) {
 			double bb = 0.0;
-			if(tower->GetDownwindConstraint(bb)) {
+			if(tower->GetBaseConstraint(bb)) {
 				if(fabs(orthopos.y()) > fabs(bb)) {
 					cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
 					leg = TURN3;
@@ -740,15 +766,29 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			TransmitPatternPositionReport();
 			transmitted = true;
 		}
+		
+		if(!descending) {
+			double d1;
+			// Make downwind leg position artifically large to avoid any chance of SoD being returned as
+			// on downwind when we are already on base.
+			CalculateSoD((tower->GetBaseConstraint(d1) ? d1 : -1000.0), (10000.0 * patternDirection), (patternDirection ? true : false));
+			if(SoD.leg == BASE) {
+				descending = (fabs(orthopos.y()) < fabs(SoD.y) ? true : false);
+			}
+
+		}
+		if(descending) {
+			slope = -5.5;	// FIXME - calculate to descent at 500fpm and hit the threshold (taking wind into account as well!!)
+			pitch = -4.0;
+			IAS = 70.0;
+		}
+		
 		track = rwy.hdg - (90 * patternDirection);
-		slope = -6.0;	// FIXME - calculate to descent at 500fpm and hit the threshold
-		pitch = -4.0;
-		IAS = 70.0;	// FIXME - slowdown gradually
-		// Try and arrange to turn nicely onto base
+
+		// Try and arrange to turn nicely onto final
 		turn_circumference = IAS * 0.514444 * turn_time;	
 		//Hmmm - this is an interesting one - ground vs airspeed in relation to turn radius
-		//We'll leave it as a hack with IAS for now but it needs revisiting.
-		
+		//We'll leave it as a hack with IAS for now but it needs revisiting.		
 		turn_radius = turn_circumference / (2.0 * DCL_PI);
 		if(fabs(orthopos.x()) < (turn_radius + 50)) {
 			leg = TURN4;
@@ -769,6 +809,20 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		if(!transmitted) {
 			TransmitPatternPositionReport();
 			transmitted = true;
+		}
+		if(!descending) {
+			// Make base leg position artifically large to avoid any chance of SoD being returned as
+			// on base or downwind when we are already on final.
+			CalculateSoD(-10000.0, (1000.0 * patternDirection), (patternDirection ? true : false));
+			if(SoD.leg == FINAL) {
+				descending = (fabs(orthopos.y()) < fabs(SoD.y) ? true : false);
+			}
+
+		}
+		if(descending) {
+			slope = -5.5;	// FIXME - calculate to descent at 500fpm and hit the threshold (taking wind into account as well!!)
+			pitch = -4.0;
+			IAS = 70.0;
 		}
 		// Try and track the extended centreline
 		track = rwy.hdg - (0.2 * orthopos.x());
@@ -859,6 +913,36 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	hdg = track + crab;
 	dist = vel * 0.514444 * dt;
 	pos = dclUpdatePosition(pos, track, slope, dist);
+}
+
+// Pattern direction is true for right, false for left
+void FGAILocalTraffic::CalculateSoD(double base_leg_pos, double downwind_leg_pos, bool pattern_direction) {
+	// For now we'll ignore wind and hardwire the glide angle.
+	double ga = 5.5;	//degrees
+	double pa = 1000.0 * SG_FEET_TO_METER;	// pattern altitude in meters
+	// FIXME - get glideslope angle and pattern altitude agl from airport details if available
+	
+	// For convienience, we'll have +ve versions of the input distances
+	double blp = fabs(base_leg_pos);
+	double dlp = fabs(downwind_leg_pos);
+	
+	//double turn_allowance = 150.0;	// Approximate distance in meters that a 90deg corner is shortened by turned in a light plane.
+	
+	double stod = pa / tan(ga * DCL_DEGREES_TO_RADIANS);	// distance in meters from touchdown point to start descent
+	cout << "Descent to start = " << stod << " meters out\n";
+	if(stod < blp) {	// Start descending on final
+		SoD.leg = FINAL;
+		SoD.y = stod * -1.0;
+		SoD.x = 0.0;
+	} else if(stod < (blp + dlp)) {	// Start descending on base leg
+		SoD.leg = BASE;
+		SoD.y = blp * -1.0;
+		SoD.x = (pattern_direction ? (stod - dlp) : (stod - dlp) * -1.0);
+	} else {	// Start descending on downwind leg
+		SoD.leg = DOWNWIND;
+		SoD.x = (pattern_direction ? dlp : dlp * -1.0);
+		SoD.y = (blp - (stod - (blp + dlp))) * -1.0;
+	}
 }
 
 void FGAILocalTraffic::TransmitPatternPositionReport(void) {

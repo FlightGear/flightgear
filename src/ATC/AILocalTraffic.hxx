@@ -48,10 +48,10 @@ enum OperatingState {
 	PARKED
 };
 
-struct StartofDescent {
+struct StartOfDescent {
 	PatternLeg leg;
-	double orthopos_x;
-	double orthopos_y;
+	double x;	// Runway aligned orthopos
+	double y;	// ditto
 };
 
 class FGAILocalTraffic : public FGAIPlane {
@@ -143,7 +143,9 @@ private:
 	int numAhead;		// More importantly - how many of them are ahead of us?
 	double distToNext;		// And even more importantly, how near are we getting to the one immediately ahead?
 	//PatternLeg leg;		// Our current position in the pattern - now moved to FGAIPlane
-	StartofDescent SoD;		// Start of descent calculated wrt wind, pattern size & altitude, glideslope etc
+	StartOfDescent SoD;		// Start of descent calculated wrt wind, pattern size & altitude, glideslope etc
+	bool descending;		// We're in the coming down phase of the pattern
+	double targetDescentRate;	// m/s
 
 	// Taxiing details
 	// At the moment this assumes that all taxiing in is to gates (a loose term that includes
@@ -179,7 +181,7 @@ private:
 
 	void TransmitPatternPositionReport();
 
-	void CalculateStartofDescent();
+	void CalculateSoD(double base_leg_pos, double downwind_leg_pos, bool pattern_direction);
 
 	void ExitRunway(Point3D orthopos);
 
