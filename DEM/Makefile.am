@@ -1,8 +1,6 @@
-libdir  = ${exec_prefix}/lib
+noinst_LIBRARIES = libDEM.a
 
-lib_LTLIBRARIES = libDEM.la
-
-libDEM_la_SOURCES = dem.cxx dem.hxx leastsqs.cxx leastsqs.hxx
+libDEM_a_SOURCES = dem.cxx dem.hxx leastsqs.cxx leastsqs.hxx
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
