@@ -570,7 +570,8 @@ FGInput::_init_joystick ()
     //
     // Initialize the axes.
     //
-    for (int j = 0; j < naxes; j++) {
+    int j;
+    for (j = 0; j < naxes; j++) {
       const SGPropertyNode * axis_node = js_node->getChild("axis", j);
       if (axis_node == 0) {
 	SG_LOG(SG_INPUT, SG_INFO, "No bindings for axis " << j);
@@ -592,7 +593,7 @@ FGInput::_init_joystick ()
     //
     // Initialize the buttons.
     //
-    for (int j = 0; j < nbuttons; j++) {
+    for (j = 0; j < nbuttons; j++) {
       const SGPropertyNode * button_node = js_node->getChild("button", j);
       if (button_node == 0) {
 	SG_LOG(SG_INPUT, SG_INFO, "No bindings for button " << j);
@@ -630,7 +631,10 @@ FGInput::_update_joystick ()
   float js_val, diff;
   float axis_values[MAX_AXES];
 
-  for (int i = 0; i < MAX_JOYSTICKS; i++) {
+  int i;
+  int j;
+
+  for ( i = 0; i < MAX_JOYSTICKS; i++) {
 
     jsJoystick * js = _joystick_bindings[i].js;
     if (js == 0 || js->notWorking())
@@ -640,7 +644,7 @@ FGInput::_update_joystick ()
 
 
 				// Fire bindings for the axes.
-    for (int j = 0; j < _joystick_bindings[i].naxes; j++) {
+    for ( j = 0; j < _joystick_bindings[i].naxes; j++) {
       axis &a = _joystick_bindings[i].axes[j];
       
 				// Do nothing if the axis position
@@ -658,7 +662,7 @@ FGInput::_update_joystick ()
     }
 
 				// Fire bindings for the buttons.
-    for (int j = 0; j < _joystick_bindings[i].nbuttons; j++) {
+    for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
       bool pressed = ((buttons & (1 << j)) > 0);
       button &b = _joystick_bindings[i].buttons[j];
 
