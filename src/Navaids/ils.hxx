@@ -57,13 +57,14 @@ class FGILS {
     double locheading;
     double loclat;
     double loclon;
-    double x, y, z;
     double gselev;
     double gsangle;
     double gslat;
     double gslon;
+    double gs_x, gs_y, gs_z;
     double dmelat;
     double dmelon;
+    double dme_x, dme_y, dme_z;
     double omlat;
     double omlon;
     double mmlat;
@@ -86,14 +87,17 @@ public:
     inline double get_loclat() const { return loclat; }
     inline double get_loclon() const { return loclon; }
     inline double get_gselev() const { return gselev; }
-    inline double get_x() const { return x; }
-    inline double get_y() const { return y; }
-    inline double get_z() const { return z; }
     inline double get_gsangle() const { return gsangle; }
     inline double get_gslat() const { return gslat; }
     inline double get_gslon() const { return gslon; }
+    inline double get_gs_x() const { return gs_x; }
+    inline double get_gs_y() const { return gs_y; }
+    inline double get_gs_z() const { return gs_z; }
     inline double get_dmelat() const { return dmelat; }
     inline double get_dmelon() const { return dmelon; }
+    inline double get_dme_x() const { return dme_x; }
+    inline double get_dme_y() const { return dme_y; }
+    inline double get_dme_z() const { return dme_z; }
     inline double get_omlat() const { return omlat; }
     inline double get_omlon() const { return omlon; }
     inline double get_mmlat() const { return mmlat; }
@@ -121,11 +125,31 @@ operator >> ( istream& in, FGILS& i )
     i.locfreq = (int)(f*100.0 + 0.5);
 
     // generate cartesian coordinates
-    Point3D geod( i.loclon * DEG_TO_RAD, i.loclat * DEG_TO_RAD, i.gselev );
-    Point3D cart = fgGeodToCart( geod );
-    i.x = cart.x();
-    i.y = cart.y();
-    i.z = cart.z();
+    Point3D geod, cart;
+
+    if ( i.gslon < FG_EPSILON && i.gslat < FG_EPSILON ) {
+	i.gslon = i.loclon;
+	i.gslat = i.loclat;
+    }
+
+    if ( i.dmelon < FG_EPSILON && i.dmelat < FG_EPSILON ) {
+	i.dmelon = i.gslon;
+	i.dmelat = i.gslat;
+    }
+
+    geod = Point3D( i.gslon * DEG_TO_RAD, i.gslat * DEG_TO_RAD, i.gselev );
+    cart = fgGeodToCart( geod );
+    i.gs_x = cart.x();
+    i.gs_y = cart.y();
+    i.gs_z = cart.z();
+    // cout << "gs = " << cart << endl;
+
+    geod = Point3D( i.dmelon * DEG_TO_RAD, i.dmelat * DEG_TO_RAD, i.gselev );
+    cart = fgGeodToCart( geod );
+    i.dme_x = cart.x();
+    i.dme_y = cart.y();
+    i.dme_z = cart.z();
+    // cout << "dme = " << cart << endl;
 
      // return in >> skipeol;
     return in;

@@ -122,7 +122,9 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
     double d;
     for ( ; current != last ; ++current ) {
 	// cout << "  testing " << current->get_locident() << endl;
-	station = Point3D(current->get_x(), current->get_y(), current->get_z());
+	station = Point3D(current->get_dme_x(), 
+			  current->get_dme_y(),
+			  current->get_dme_z());
 	// cout << "    aircraft = " << aircraft << " station = " << station 
 	//      << endl;
 

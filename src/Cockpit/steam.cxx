@@ -131,7 +131,7 @@ void FGSteam::_CatchUp()
 { if ( _UpdatesPending != 0 )
   {	double dt = _UpdatesPending * 1.0 / current_options.get_model_hz();
         double AccN, AccE, AccU;
-	int i,j;
+	int i /*,j*/;
 	double d, the_ENGINE_rpm;
 
 #if 0
@@ -334,7 +334,7 @@ double FGSteam::get_HackGS_deg () {
     if ( current_radiostack->get_nav1_inrange() && 
 	 current_radiostack->get_nav1_loc() )
     {
-	double x = current_radiostack->get_nav1_dist();
+	double x = current_radiostack->get_nav1_gs_dist();
 	double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
 	    * FEET_TO_METER;
 	double angle = atan2( y, x ) * RAD_TO_DEG;
@@ -365,7 +365,8 @@ double FGSteam::get_HackVOR1_deg () {
 	    if (r<-180.0) r+=360.0;
 	if ( fabs(r) > 90.0 )
 	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	if ( current_radiostack->get_nav1_loc() ) r *= 5.0;
+	// According to Robin Peel, the ILS is 4x more sensitive than a vor
+	if ( current_radiostack->get_nav1_loc() ) r *= 4.0;
     } else {
 	r = 0.0;
     }

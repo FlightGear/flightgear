@@ -812,7 +812,7 @@ createDME (int x, int y)
 
 				// Layer: current distance
   FGTextLayer * text = new FGTextLayer(SIX_W/2, SIX_W/4);
-  text->addChunk(new FGTextLayer::Chunk(FGBFI::getNAV1Dist, "%05.1f",
+  text->addChunk(new FGTextLayer::Chunk(FGBFI::getNAV1DistDME, "%05.1f",
 					METER_TO_NM));
   text->setPointSize(14);
   text->setColor(1.0, 0.5, 0.0);

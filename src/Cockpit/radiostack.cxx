@@ -33,7 +33,7 @@ FGRadioStack *current_radiostack;
 
 // Constructor
 FGRadioStack::FGRadioStack() {
-    nav1_dist = 0.0;
+    nav1_dme_dist = 0.0;
     need_update = true;
 }
 
@@ -53,15 +53,19 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 
     if ( nav1_valid ) {
 	// staightline distance
-	station = Point3D( nav1_x, nav1_y, nav1_z );
-	nav1_dist = aircraft.distance3D( station );
+	station = Point3D( nav1_dme_x, nav1_dme_y, nav1_dme_z );
+	nav1_dme_dist = aircraft.distance3D( station );
+	if ( nav1_loc ) {
+	    station = Point3D( nav1_gs_x, nav1_gs_y, nav1_gs_z );
+	    nav1_gs_dist = aircraft.distance3D( station );
+	}
 	
-	if ( nav1_dist < nav1_effective_range * NM_TO_METER ) {
+	if ( nav1_dme_dist < nav1_effective_range * NM_TO_METER ) {
 	    nav1_inrange = true;
 	    
 	    // wgs84 heading
 	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
-				nav1_lat, nav1_lon,
+				nav1_loclat, nav1_loclon,
 				&az1, &az2, &s );
 	    nav1_heading = az1;
 
@@ -82,15 +86,19 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 
     if ( nav2_valid ) {
 	// staightline distance
-	station = Point3D( nav2_x, nav2_y, nav2_z );
-	nav2_dist = aircraft.distance3D( station );
+	station = Point3D( nav2_dme_x, nav2_dme_y, nav2_dme_z );
+	nav2_dme_dist = aircraft.distance3D( station );
+	if ( nav2_loc ) {
+	    station = Point3D( nav2_gs_x, nav2_gs_y, nav2_gs_z );
+	    nav2_gs_dist = aircraft.distance3D( station );
+	}
 
-	if ( nav2_dist < nav2_effective_range * NM_TO_METER ) {
+	if ( nav2_dme_dist < nav2_effective_range * NM_TO_METER ) {
 	    nav2_inrange = true;
 
 	    // wgs84 heading
 	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
-				nav2_lat, nav2_lon,
+				nav2_loclat, nav2_loclon,
 				&az1, &az2, &s );
 	    nav2_heading = az1;
 
@@ -145,32 +153,39 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 	nav1_loc = true;
 	nav1_dme = true;
 
-	nav1_lon = ils.get_loclon();
-	nav1_lat = ils.get_loclat();
+	nav1_loclon = ils.get_loclon();
+	nav1_loclat = ils.get_loclat();
+	nav1_gslon = ils.get_gslon();
+	nav1_gslat = ils.get_gslat();
+	nav1_dmelon = ils.get_dmelon();
+	nav1_dmelat = ils.get_dmelat();
 	nav1_elev = ils.get_gselev();
 	nav1_effective_range = FG_ILS_DEFAULT_RANGE;
 	nav1_target_gs = ils.get_gsangle();
 	nav1_radial = ils.get_locheading();
 	while ( nav1_radial <   0.0 ) { nav1_radial += 360.0; }
 	while ( nav1_radial > 360.0 ) { nav1_radial -= 360.0; }
-	nav1_x = ils.get_x();
-	nav1_y = ils.get_y();
-	nav1_z = ils.get_z();
+	nav1_gs_x = ils.get_gs_x();
+	nav1_gs_y = ils.get_gs_y();
+	nav1_gs_z = ils.get_gs_z();
+	nav1_dme_x = ils.get_dme_x();
+	nav1_dme_y = ils.get_dme_y();
+	nav1_dme_z = ils.get_dme_z();
 	// cout << "Found an ils station in range" << endl;
 	// cout << " id = " << ils.get_locident() << endl;
     } else if ( current_navlist->query( lon, lat, elev, nav1_freq, &nav ) ) {
 	nav1_valid = true;
 	nav1_loc = false;
 	nav1_dme = nav.get_dme();
-	nav1_lon = nav.get_lon();
-	nav1_lat = nav.get_lat();
+	nav1_loclon = nav.get_lon();
+	nav1_loclat = nav.get_lat();
 	nav1_elev = nav.get_elev();
 	nav1_effective_range = nav.get_range();
 	nav1_target_gs = 0.0;
 	nav1_radial = nav1_sel_radial;
-	nav1_x = nav.get_x();
-	nav1_y = nav.get_y();
-	nav1_z = nav.get_z();
+	nav1_dme_x = nav.get_x();
+	nav1_dme_y = nav.get_y();
+	nav1_dme_y = nav.get_z();
 	// cout << "Found a vor station in range" << endl;
 	// cout << " id = " << nav.get_ident() << endl;
     } else {
@@ -183,17 +198,20 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 	nav2_loc = true;
 	nav2_dme = true;
 
-	nav2_lon = ils.get_loclon();
-	nav2_lat = ils.get_loclat();
+	nav2_loclon = ils.get_loclon();
+	nav2_loclat = ils.get_loclat();
 	nav2_elev = ils.get_gselev();
 	nav2_effective_range = FG_ILS_DEFAULT_RANGE;
 	nav2_target_gs = ils.get_gsangle();
 	nav2_radial = ils.get_locheading();
 	while ( nav2_radial <   0.0 ) { nav2_radial += 360.0; }
 	while ( nav2_radial > 360.0 ) { nav2_radial -= 360.0; }
-	nav2_x = ils.get_x();
-	nav2_y = ils.get_y();
-	nav2_z = ils.get_z();
+	nav2_gs_x = ils.get_gs_x();
+	nav2_gs_y = ils.get_gs_y();
+	nav2_gs_z = ils.get_gs_z();
+	nav2_dme_x = ils.get_dme_x();
+	nav2_dme_y = ils.get_dme_y();
+	nav2_dme_z = ils.get_dme_z();
 	// cout << "Found an ils station in range" << endl;
 	// cout << " id = " << ils.get_locident() << endl;
     } else if ( current_navlist->query( lon, lat, elev, nav2_freq, &nav ) ) {
@@ -201,15 +219,15 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 	nav2_loc = false;
 	nav2_dme = nav.get_dme();
 
-	nav2_lon = nav.get_lon();
-	nav2_lat = nav.get_lat();
+	nav2_loclon = nav.get_lon();
+	nav2_loclat = nav.get_lat();
 	nav2_elev = nav.get_elev();
 	nav2_effective_range = nav.get_range();
 	nav2_target_gs = 0.0;
 	nav2_radial = nav2_sel_radial;
-	nav2_x = nav.get_x();
-	nav2_y = nav.get_y();
-	nav2_z = nav.get_z();
+	nav2_dme_x = nav.get_x();
+	nav2_dme_y = nav.get_y();
+	nav2_dme_z = nav.get_z();
 	// cout << "Found a vor station in range" << endl;
 	// cout << " id = " << nav.get_ident() << endl;
     } else {

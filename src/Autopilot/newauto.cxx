@@ -319,7 +319,7 @@ int FGAutopilot::run() {
 	    while ( diff < -180.0 ) { diff += 360.0; }
 	    while ( diff > 180.0 ) { diff -= 360.0; }
 		
-	    diff *= (current_radiostack->get_nav1_dist() * METER_TO_NM);
+	    diff *= (current_radiostack->get_nav1_dme_dist() * METER_TO_NM);
 	    if ( diff < -30.0 ) { diff = -30.0; }
 	    if ( diff >  30.0 ) { diff =  30.0; }
 
@@ -460,7 +460,7 @@ int FGAutopilot::run() {
 	    TargetClimbRate =
 		( TargetAltitude - FGBFI::getAltitude() * FEET_TO_METER ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
-	    double x = current_radiostack->get_nav1_dist();
+	    double x = current_radiostack->get_nav1_gs_dist();
 	    double y = (FGBFI::getAltitude() 
 			- current_radiostack->get_nav1_elev()) * FEET_TO_METER;
 	    double angle = atan2( y, x ) * RAD_TO_DEG;

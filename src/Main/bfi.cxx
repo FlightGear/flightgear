@@ -860,9 +860,9 @@ FGBFI::getNAV1SelRadial ()
 }
 
 double
-FGBFI::getNAV1Dist ()
+FGBFI::getNAV1DistDME ()
 {
-  return current_radiostack->get_nav1_dist();
+  return current_radiostack->get_nav1_dme_dist();
 }
 
 double
@@ -890,9 +890,9 @@ FGBFI::getNAV2SelRadial ()
 }
 
 double
-FGBFI::getNAV2Dist ()
+FGBFI::getNAV2DistDME ()
 {
-  return current_radiostack->get_nav1_dist();
+  return current_radiostack->get_nav2_dme_dist();
 }
 
 double

@@ -136,13 +136,13 @@ public:
   static double getNAV1AltFreq ();
   static double getNAV1Radial ();
   static double getNAV1SelRadial ();
-  static double getNAV1Dist ();
+  static double getNAV1DistDME ();
 
   static double getNAV2Freq ();
   static double getNAV2AltFreq ();
   static double getNAV2Radial ();
   static double getNAV2SelRadial ();
-  static double getNAV2Dist ();
+  static double getNAV2DistDME ();
 
   static double getADFFreq ();
   static double getADFAltFreq ();

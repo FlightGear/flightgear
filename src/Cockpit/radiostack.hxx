@@ -43,16 +43,24 @@ class FGRadioStack {
     double nav1_alt_freq;
     double nav1_radial;
     double nav1_sel_radial;
-    double nav1_lon;
-    double nav1_lat;
+    double nav1_loclon;
+    double nav1_loclat;
+    double nav1_gslon;
+    double nav1_gslat;
+    double nav1_gs_x;
+    double nav1_gs_y;
+    double nav1_gs_z;
+    double nav1_gs_dist;
+    double nav1_dmelon;
+    double nav1_dmelat;
+    double nav1_dme_x;
+    double nav1_dme_y;
+    double nav1_dme_z;
+    double nav1_dme_dist;
     double nav1_elev;
     double nav1_effective_range;
-    double nav1_dist;
     double nav1_heading;
     double nav1_target_gs;
-    double nav1_x;
-    double nav1_y;
-    double nav1_z;
 
     bool nav2_valid;
     bool nav2_inrange;
@@ -62,16 +70,24 @@ class FGRadioStack {
     double nav2_alt_freq;
     double nav2_radial;
     double nav2_sel_radial;
-    double nav2_lon;
-    double nav2_lat;
+    double nav2_loclon;
+    double nav2_loclat;
+    double nav2_gslon;
+    double nav2_gslat;
+    double nav2_gs_x;
+    double nav2_gs_y;
+    double nav2_gs_z;
+    double nav2_gs_dist;
+    double nav2_dmelon;
+    double nav2_dmelat;
+    double nav2_dme_x;
+    double nav2_dme_y;
+    double nav2_dme_z;
+    double nav2_dme_dist;
     double nav2_elev;
     double nav2_effective_range;
-    double nav2_dist;
     double nav2_heading;
     double nav2_target_gs;
-    double nav2_x;
-    double nav2_y;
-    double nav2_z;
 
     bool adf_valid;
     bool adf_inrange;
@@ -144,10 +160,15 @@ public:
     inline bool get_nav1_inrange() const { return nav1_inrange; }
     inline bool get_nav1_dme() const { return nav1_dme; }
     inline bool get_nav1_loc() const { return nav1_loc; }
-    inline double get_nav1_lon() const { return nav1_lon; }
-    inline double get_nav1_lat() const { return nav1_lat; }
+    inline double get_nav1_loclon() const { return nav1_loclon; }
+    inline double get_nav1_loclat() const { return nav1_loclat; }
+    inline double get_nav1_gslon() const { return nav1_gslon; }
+    inline double get_nav1_gslat() const { return nav1_gslat; }
+    inline double get_nav1_gs_dist() const { return nav1_gs_dist; }
+    inline double get_nav1_dmelon() const { return nav1_dmelon; }
+    inline double get_nav1_dmelat() const { return nav1_dmelat; }
+    inline double get_nav1_dme_dist() const { return nav1_dme_dist; }
     inline double get_nav1_elev() const { return nav1_elev; }
-    inline double get_nav1_dist() const { return nav1_dist; }
     inline double get_nav1_heading() const { return nav1_heading; }
     inline double get_nav1_radial() const { return nav1_radial; }
     inline double get_nav1_target_gs() const { return nav1_target_gs; }
@@ -155,10 +176,15 @@ public:
     inline bool get_nav2_inrange() const { return nav2_inrange; }
     inline bool get_nav2_dme() const { return nav2_dme; }
     inline bool get_nav2_loc() const { return nav2_loc; }
-    inline double get_nav2_lon() const { return nav2_lon; }
-    inline double get_nav2_lat() const { return nav2_lat; }
+    inline double get_nav2_loclon() const { return nav2_loclon; }
+    inline double get_nav2_loclat() const { return nav2_loclat; }
+    inline double get_nav2_gslon() const { return nav2_gslon; }
+    inline double get_nav2_gslat() const { return nav2_gslat; }
+    inline double get_nav2_gs_dist() const { return nav2_gs_dist; }
+    inline double get_nav2_dmelon() const { return nav2_dmelon; }
+    inline double get_nav2_dmelat() const { return nav2_dmelat; }
+    inline double get_nav2_dme_dist() const { return nav2_dme_dist; }
     inline double get_nav2_elev() const { return nav2_elev; }
-    inline double get_nav2_dist() const { return nav2_dist; }
     inline double get_nav2_heading() const { return nav2_heading; }
     inline double get_nav2_radial() const { return nav2_radial; }
     inline double get_nav2_target_gs() const { return nav2_target_gs; }
