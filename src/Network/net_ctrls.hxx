@@ -16,7 +16,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 22;
+const int FG_NET_CTRLS_VERSION = 23;
 
 
 // Define a structure containing the control parameters
@@ -71,6 +71,8 @@ public:
     // Brake controls
     double brake_left;
     double brake_right;
+    double copilot_brake_left;
+    double copilot_brake_right;
     double brake_parking;
     
     // Landing Gear

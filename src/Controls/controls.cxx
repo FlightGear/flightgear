@@ -74,6 +74,8 @@ FGControls::FGControls() :
     dump_valve( false ),
     brake_left( 0.0 ),
     brake_right( 0.0 ),
+    copilot_brake_left( 0.0 ),
+    copilot_brake_right( 0.0 ),
     brake_parking( 0.0 ),
     steering( 0.0 ),
     gear_down( true ),
@@ -204,7 +206,9 @@ FGControls::init ()
         condition[engine] = 1.0;
     }
 
-    brake_left = brake_right = brake_parking = 0.0;
+    brake_left = brake_right
+        = copilot_brake_left = copilot_brake_right
+        = brake_parking = 0.0;
     for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
         alternate_extension[wheel] = false;
     }
@@ -432,6 +436,16 @@ FGControls::bind ()
 	&FGControls::get_brake_right, 
         &FGControls::set_brake_right);
   fgSetArchivable("/controls/gear/brake-right");
+
+  fgTie("/controls/gear/copilot-brake-left", this,
+	&FGControls::get_copilot_brake_left, 
+        &FGControls::set_copilot_brake_left);
+  fgSetArchivable("/controls/gear/copilot-brake-left");
+
+  fgTie("/controls/gear/copilot-brake-right", this,
+	&FGControls::get_copilot_brake_right, 
+        &FGControls::set_copilot_brake_right);
+  fgSetArchivable("/controls/gear/copilot-brake-right");
 
   fgTie("/controls/gear/brake-parking", this,
 	&FGControls::get_brake_parking, 
@@ -1626,6 +1640,20 @@ FGControls::move_brake_right( double amt )
 {
     brake_right += amt;
     CLAMP( &brake_right, 0.0, 1.0 );
+}
+
+void
+FGControls::set_copilot_brake_left( double pos )
+{
+    copilot_brake_left = pos;
+    CLAMP(&brake_left, 0.0, 1.0);
+}
+
+void
+FGControls::set_copilot_brake_right( double pos )
+{
+    copilot_brake_right = pos;
+    CLAMP(&brake_right, 0.0, 1.0);
 }
 
 void

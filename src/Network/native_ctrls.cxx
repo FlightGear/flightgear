@@ -187,6 +187,10 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     node = fgGetNode("/controls/gear", true);
     net->brake_left = node->getChild("brake-left")->getDoubleValue();
     net->brake_right = node->getChild("brake-right")->getDoubleValue();
+    net->copilot_brake_left
+        = node->getChild("copilot-brake-left")->getDoubleValue();
+    net->copilot_brake_right
+        = node->getChild("copilot-brake-right")->getDoubleValue();
     net->brake_parking = node->getChild("brake-parking")->getDoubleValue();
 
     net->gear_handle = fgGetBool( "controls/gear/gear-down" );
@@ -262,6 +266,8 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         net->num_tanks = htonl(net->num_tanks);
         htond(net->brake_left);
         htond(net->brake_right);
+        htond(net->copilot_brake_left);
+        htond(net->copilot_brake_right);
         htond(net->brake_parking);
         net->gear_handle = htonl(net->gear_handle);
         net->master_avionics = htonl(net->master_avionics);
@@ -321,6 +327,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         }
         htond(net->brake_left);
         htond(net->brake_right);
+        htond(net->copilot_brake_left);
+        htond(net->copilot_brake_right);
         htond(net->brake_parking);
         net->gear_handle = htonl(net->gear_handle);
         net->master_avionics = htonl(net->master_avionics);
@@ -390,6 +398,10 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     if ( node != NULL ) {
         node->getChild( "brake-left" )->setDoubleValue( net->brake_left );
         node->getChild( "brake-right" )->setDoubleValue( net->brake_right );
+        node->getChild( "copilot-brake-left" )
+            ->setDoubleValue( net->copilot_brake_left );
+        node->getChild( "copilot-brake-right" )
+            ->setDoubleValue( net->copilot_brake_right );
         node->getChild( "brake-parking" )->setDoubleValue( net->brake_parking );
     }
 

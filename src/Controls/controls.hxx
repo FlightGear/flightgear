@@ -156,6 +156,8 @@ private:
     // controls/gear/
     double brake_left;
     double brake_right;
+    double copilot_brake_left;
+    double copilot_brake_right;
     double brake_parking;
     double steering;
     bool gear_down;
@@ -336,6 +338,8 @@ public:
     // controls/gear/
     inline double get_brake_left() const { return brake_left; }
     inline double get_brake_right() const { return brake_right; }
+    inline double get_copilot_brake_left() const { return copilot_brake_left; }
+    inline double get_copilot_brake_right() const { return copilot_brake_right; }
     inline double get_brake_parking() const { return brake_parking; }
     inline double get_steering() const { return steering; }
     inline bool get_gear_down() const { return gear_down; }
@@ -519,6 +523,8 @@ public:
     void move_brake_left( double amt );
     void set_brake_right( double pos );
     void move_brake_right( double amt );
+    void set_copilot_brake_left( double pos );
+    void set_copilot_brake_right( double pos );
     void set_brake_parking( double pos );
     void set_steering( double pos );
     void move_steering( double amt );
