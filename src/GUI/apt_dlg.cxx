@@ -92,21 +92,18 @@ void AptDialog_OK (puObject *)
             cur_fdm_state->unbind();
         
             AptId = a.id.c_str();  /// NHV fix wrong case crash
-            fgSetString("/sim/presets/airport-id",  AptId.c_str() );
-            // fgSetDouble("/position/altitude-ft", -9999.0 );
-            // fgSetPosFromAirportID( AptId );
-            fgSetPosFromAirportIDandHdg( AptId, 
-                                         cur_fdm_state->get_Psi() *
-                                         SGD_RADIANS_TO_DEGREES);
-            fgSetTowerPosFromAirportID( AptId, 
-                                        cur_fdm_state->get_Psi() *
-                                        SGD_RADIANS_TO_DEGREES);
+            fgSetString("/sim/presets/airport-id", AptId.c_str() );
+            fgSetDouble("/sim/presets/longitude-deg", -9999.0 );
+            fgSetDouble("/sim/presets/latitude-deg", -9999.0 );
+            fgInitPosition();
+
             // BusyCursor(0);
             fgReInitSubsystems();
 	    double visibility_meters =
-	      fgGetDouble("/environment/visibility-m");
+                fgGetDouble("/environment/visibility-m");
             global_tile_mgr.update( longitude->getDoubleValue(),
-                                    latitude->getDoubleValue(),visibility_meters );
+                                    latitude->getDoubleValue(),
+                                    visibility_meters );
             // BusyCursor(1);
         } else {
             AptId  += " not in database.";

@@ -73,13 +73,6 @@ void reInit(puObject *cb)
 
     globals->restoreInitialState();
 
-    // Unsuccessful KLUDGE to fix the 'every other time'
-    // problem when doing a 'reset' after a 'goto airport'
-	
-    // string AptId( fgGetString("/sim/presets/airport-id") );
-    // if( AptId.c_str() != "\0" )
-    //      fgSetPosFromAirportID( AptId );
-	
     SGTime *t = globals->get_time_params();
     delete t;
     t = fgInitTime();
@@ -87,10 +80,9 @@ void reInit(puObject *cb)
 
     fgReInitSubsystems();
 
-    // reduntant(fgReInitSubsystems) ?
-    double visibility_meters = fgGetDouble("/environment/visibility-m");
     global_tile_mgr.update( fgGetDouble("/position/longitude-deg"),
-                            fgGetDouble("/position/latitude-deg"),visibility_meters );
+                            fgGetDouble("/position/latitude-deg"),
+                            fgGetDouble("/environment/visibility-m") );
     
     cur_light_params.Update();
 

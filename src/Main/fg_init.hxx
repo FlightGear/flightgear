@@ -79,18 +79,8 @@ void fgReInitSubsystems( void );
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a );
 
-// Set pos given an airport id
-bool fgSetPosFromAirportID( const string& id );
-
-// Set tower position given an airport id
-bool fgSetTowerPosFromAirportID( const string& id, double hdg );
-
-// Set position and heading given an airport id and heading (degrees)
-bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
-
-//find altitude given glideslope and offset distance or offset distance
-//given glideslope and altitude
-void fgSetPosFromGlideSlope(void);
+// Set the initial position based on presets (or defaults)
+bool fgInitPosition();
 
 // Initialize various time dependent systems (lighting, sun position, etc.)
 // returns a new instance of the SGTime class

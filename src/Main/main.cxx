@@ -1609,31 +1609,9 @@ static bool fgMainInit( int argc, char **argv ) {
 #  endif
 #endif
 
-    // Set position relative to glide slope if requested
-    fgSetPosFromGlideSlope();
-
-    // If we have an explicit, in-range lon/lat, use it.
-    // If not, check for an airport-id and use that.
-    // If not, default to the middle of the KSFO field.
-    // The default values for lon/lat are deliberately out of range
-    // so that the airport-id can take effect; valid lon/lat will
-    // override airport-id, however.
-    double lon_deg = fgGetDouble("/position/longitude-deg");
-    double lat_deg = fgGetDouble("/position/latitude-deg");
-    if (lon_deg < -180 || lon_deg > 180 || lat_deg < -90 || lat_deg > 90) {
-      if ( fgGetString("/sim/presets/airport-id")[0] != '\0' ) {
-	fgSetPosFromAirportIDandHdg( fgGetString("/sim/presets/airport-id"),
-				     fgGetDouble("/sim/presets/heading-deg") );
-        // set tower position (a little off the heading for single 
-	// runway airports)
-        fgSetTowerPosFromAirportID( fgGetString("/sim/presets/airport-id"),
-				    fgGetDouble("/sim/presets/heading-deg") );
-      } else {
-				// Default to middle of KSFO field
-	fgSetDouble("/sim/presets/longitude-deg", -122.374843);
-	fgSetDouble("/sim/presets/latitude-deg", 37.619002);
-      }
-    }
+    // based on the requested presets, calculate the true starting
+    // lon, lat
+    fgInitPosition();
 
     SGTime *t = fgInitTime();
     globals->set_time_params( t );

@@ -577,7 +577,7 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 
 
 // Preset lon/lat given an airport id
-bool fgSetPosFromAirportID( const string& id ) {
+static bool fgSetPosFromAirportID( const string& id ) {
     FGAirport a;
     // double lon, lat;
 
@@ -608,7 +608,7 @@ bool fgSetPosFromAirportID( const string& id ) {
 
 
 // Set current tower position lon/lat given an airport id
-bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
+static bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
     FGAirport a;
     // tower height hard coded for now...
     float towerheight=50.0f;
@@ -630,7 +630,7 @@ bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
 
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
+static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     FGRunway r;
     FGRunway found_r;
     double found_dir = 0.0;
@@ -756,36 +756,83 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 }
 
 
-void fgSetPosFromGlideSlope() {
+static void fgSetDistOrAltFromGlideSlope() {
     double gs = fgGetDouble("/sim/presets/glideslope");
     double od = fgGetDouble("/sim/presets/offset-distance");
     double alt = fgGetDouble("/sim/presets/altitude-ft");
     
-    // if glideslope and offset-distance are set and altitude is not,
-    // calculate the initial altitude
     if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
+        // set altitude from glideslope and offset-distance
         od *= SG_NM_TO_METER * SG_METER_TO_FEET;
         alt = fabs(od*tan(gs));
-        fgSetDouble("/sim/presets/altitude-ft",alt);
+        fgSetDouble("/sim/presets/altitude-ft", alt);
         fgSetBool("/sim/presets/onground", false);
         SG_LOG(SG_GENERAL,SG_INFO, "Calculated altitude as: " << alt  << " ft");
     } else if( fabs(gs) > 0.01 && alt > 0 && fabs(od) < 0.1) {
+        // set offset-distance from glideslope and altitude
         od  = alt/tan(gs);
         od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
-        fgSetDouble("/sim/presets/offset-distance",od);
+        fgSetDouble("/sim/presets/offset-distance", od);
         SG_LOG(SG_GENERAL, SG_INFO, "Calculated offset distance as: " 
                                        << od  << " nm");
     } else if( fabs(gs) > 0.01 ) {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Glideslope given but not altitude or offset-distance." );
         SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
-        fgSetDouble("/sim/presets/glideslope",0);
+        fgSetDouble("/sim/presets/glideslope", 0);
     }                              
 }                       
 
 
+// Set the initial position based on presets (or defaults)
+bool fgInitPosition() {
+    // Calculate offset-distance or altitude relative to glide slope
+    // if either was not specified.
+    fgSetDistOrAltFromGlideSlope();
+
+    // If we have an explicit, in-range lon/lat, don't change it, just use it.
+    // If not, check for an airport-id and use that.
+    // If not, default to the middle of the KSFO field.
+    // The default values for lon/lat are deliberately out of range
+    // so that the airport-id can take effect; valid lon/lat will
+    // override airport-id, however.
+    double lon_deg = fgGetDouble("/sim/presets/longitude-deg");
+    double lat_deg = fgGetDouble("/sim/presets/latitude-deg");
+    if ( lon_deg >= -180.0 && lon_deg <= 180.0
+         && lat_deg >= -90.0 && lat_deg <= 90.0 )
+    {
+        // valid lon/lat specified, use it.
+    } else {
+        string apt = fgGetString("/sim/presets/airport-id");
+        double hdg = fgGetDouble("/sim/presets/heading-deg");
+        if ( !apt.empty() ) {
+            // An airport id is requested, set position from that.
+            fgSetPosFromAirportIDandHdg( apt, hdg );
+
+            // set tower position (a little off the heading for single
+            // runway airports)
+            fgSetTowerPosFromAirportID( apt, hdg );
+        } else {
+            // No lon/lat specified, no airport specified, default to
+            // middle of KSFO field.
+            fgSetDouble("/sim/presets/longitude-deg", -122.374843);
+            fgSetDouble("/sim/presets/latitude-deg", 37.619002);
+        }
+    }
+
+    fgSetDouble( "/position/longitude-deg",
+                 fgGetDouble("/sim/presets/longitude-deg") );
+    fgSetDouble( "/position/latitude-deg",
+                 fgGetDouble("/sim/presets/latitude-deg") );
+    fgSetDouble( "/orientation/heading-deg",
+                 fgGetDouble("/sim/presets/heading-deg") );
+
+    return true;
+}
+
+
 // General house keeping initializations
-bool fgInitGeneral( void ) {
+bool fgInitGeneral() {
     string root;
 
 #if defined(FX) && defined(XMESA)
