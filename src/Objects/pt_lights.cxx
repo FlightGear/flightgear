@@ -272,15 +272,17 @@ ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
 
     ssgTimedSelector *rabbit = new ssgTimedSelector;
 
-    unsigned int i;
+    int i;
     sgVec3 pt, normal;
-    for ( i = 0; i < pnt_i.size(); ++i ) {
+    for ( i = (int)pnt_i.size() - 1; i >= 0; --i ) {
         ssgVertexArray   *vl = new ssgVertexArray( 3 );
         ssgNormalArray   *nl = new ssgNormalArray( 3 );
         ssgColourArray   *cl = new ssgColourArray( 3 );
      
         sgSetVec3( pt, nodes[pnt_i[i]][0], nodes[pnt_i[i]][1],
                    nodes[pnt_i[i]][2] );
+        cout << "nml_i[" << i << "] = " << nml_i[i] << endl;
+
         sgSetVec3( normal, normals[nml_i[i]][0], normals[nml_i[i]][1],
                    normals[nml_i[i]][2] );
 
@@ -332,8 +334,8 @@ ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
             
     }
 
-    rabbit->setDuration( 5 );
-    rabbit->setLimits( 0, pnt_i.size() );
+    rabbit->setDuration( 10 );
+    rabbit->setLimits( 0, pnt_i.size() + 1 );
     rabbit->setMode( SSG_ANIM_SHUTTLE );
     rabbit->control( SSG_ANIM_START );
    
