@@ -150,10 +150,12 @@ static double get_sideslip( void )
 // Local Prototype section
 
 double LinearExtrapolate( double x,double x1, double y1, double x2, double y2);
+double NormalizeDegrees( double Input);
 
 // End Local ProtoTypes
 
 fgAPDataPtr APDataGlobal; 	// global variable holding the AP info
+				// I want this gone.  Data should be in aircraft structure
 
 
 
@@ -161,23 +163,22 @@ void fgAPInit( fgAIRCRAFT *current_aircraft )
 {
 	fgAPDataPtr APData ;
 
-	fgPrintf( FG_COCKPIT, FG_INFO, "Init AutoPilot Subsystem\n" );
+	fgPrintf( FG_AUTOPILOT, FG_INFO, "Init AutoPilot Subsystem\n" );
 
 	APData  = (fgAPDataPtr)calloc(sizeof(fgAPData),1);
 	
 	if (APData == NULL) // I couldn't get the mem.  Dying
-		// return ( NULL);
-		exit(1);
+		fgPrintf( FG_AUTOPILOT, FG_EXIT,"No ram for Autopilot. Dying.\n");
 		
 	APData->Mode = 0 ; 		// turn the AP off
 	APData->Heading = 0.0; 		// default direction, due north
 	
 	// These eventually need to be read from current_aircaft somehow.
 	
-	APData->MaxRoll = 10;		// the maximum roll, in Deg
-	APData->RollOut = 10;		// the deg from heading to start rolling out at, in Deg
+	APData->MaxRoll = 7;		// the maximum roll, in Deg
+	APData->RollOut = 30;		// the deg from heading to start rolling out at, in Deg
 	APData->MaxAileron= .1;		// how far can I move the aleron from center.
-	APData->RollOutSmooth = 5;	// Smoothing distance for alerion control
+	APData->RollOutSmooth = 10;	// Smoothing distance for alerion control
 	
 	//Remove at a later date
 	APDataGlobal = APData;
@@ -203,17 +204,11 @@ int fgAPRun( void )
 		double RelRoll;
 		double AileronSet;
 		
-		RelHeading =  APData->Heading - fgAPget_heading();  // figure out how far off we are from desired heading
-		if (RelHeading > 180)				// Normalize the number to the range (-180,180]
-			RelHeading-= 360;			//               too much calc, sorry ^^^^^^^^^
-		if (RelHeading <= -180)
-			RelHeading+=360;
-		
-		//assert(RelHeading <= 180);
-		//assert(RelHeading > -180);
-		
+		RelHeading =  NormalizeDegrees( APData->Heading - fgAPget_heading());
+		  // figure out how far off we are from desired heading
+		  
 		// Now it is time to deterime how far we should be rolled.
-		fgPrintf( FG_COCKPIT, FG_DEBUG, "RelHeading:\n");
+		fgPrintf( FG_AUTOPILOT, FG_DEBUG, "RelHeading: %f\n", RelHeading);
 		
 		
 		if ( abs(RelHeading) > APData->RollOut )  // We are further from heading than the roll out point
@@ -236,20 +231,10 @@ int fgAPRun( void )
 		// Target Roll has now been Found.
 		
 		// Compare Target roll to Current Roll, Generate Rel Roll
-		fgPrintf( FG_COCKPIT, FG_DEBUG, "TargetRoll:\n");
+		fgPrintf( FG_COCKPIT, FG_BULK, "TargetRoll: %f\n", TargetRoll);
 		
-		RelRoll = TargetRoll - fgAPget_roll();
-		 
-		if (RelRoll > 180)                           // Normalize the number to the range (-180,180]
-			RelRoll-= 360 ;                       //               too much calc, sorry ^^^^^^^^^
-		if (RelRoll <= -180)
-			RelRoll+=360 ;
-		
+		RelRoll = NormalizeDegrees(TargetRoll - fgAPget_roll());
 		                                                                 
-		assert(RelRoll <= 180);
-		assert(RelRoll > -180);
-		
-		
 		if ( abs(RelRoll) > APData->RollOutSmooth )  // We are further from heading than the roll out smooth point
 		{
 			if (RelRoll < 0 )              // set Target Roll to Max in desired direction
@@ -265,6 +250,31 @@ int fgAPRun( void )
 		
 		//Cool, it is done.
 		return 0;
+		}
+	
+	if (APData->Mode == 2) // Glide slope hold
+		{
+		double RelSlope;
+		double RelElevator;
+		
+		// First, calculate Relative slope and normalize it
+		RelSlope = NormalizeDegrees( APData->TargetSlope - get_pitch());
+		
+		// Now calculate the elevator offset from current angle
+		if ( abs(RelSlope) > APData->SlopeSmooth )
+		{
+			if ( RelSlope < 0 )		//  set RelElevator to max in the correct direction
+				RelElevator = -APData->MaxElevator;
+			else
+				RelElevator = APData->MaxElevator;
+		}
+		
+		else
+			RelElevator = LinearExtrapolate(RelSlope,-APData->SlopeSmooth,-APData->MaxElevator,APData->SlopeSmooth,APData->MaxElevator);
+		
+		// set the elevator
+		fgElevMove(RelElevator);
+		
 		}
 	
 	//every thing else failed.  Not in a valid autopilot mode
@@ -283,7 +293,29 @@ void fgAPSetMode( int mode)
 	 fgPrintf( FG_COCKPIT, FG_INFO, "APSetMode : %d\n", mode );
 	 
 	 APData->Mode = mode;  // set the new mode
-	 APData->Heading = fgAPget_heading();  // Lock to current heading
+	 
+}
+
+void fgAPSetHeading( double Heading)
+{
+	// Set the heading for the autopilot subsystem
+	// Special Magic Number:
+	//			-1= Set Heading To Current Heading, Define equivilent AP_CURRENT_HEADING
+	
+	// Remove at a later date
+	fgAPDataPtr APData;
+
+	APData = APDataGlobal;
+	// end section
+	
+	if (Heading == AP_CURRENT_HEADING) {
+	    APData->Heading = fgAPget_heading();
+	} else {
+	    APData->Heading = Heading;
+	}
+
+	fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetHeading : %f\n", 
+		  APData->Heading);
 }
 	         
 
@@ -302,4 +334,16 @@ double LinearExtrapolate( double x,double x1,double y1,double x2,double y2)
 	
 	return (y);
 	
+};
+
+double NormalizeDegrees(double Input)
+{
+	// normalize the input to the range (-180,180]
+	// Input should not be greater than -360 to 360.  Current rules send the output to an undefined state.
+	if (Input > 180)
+		Input -= 360;
+	if (Input <= -180)
+		Input += 360;
+		
+	return (Input);
 };

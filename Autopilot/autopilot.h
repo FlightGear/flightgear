@@ -37,22 +37,32 @@ extern "C" {
 #endif                                   
 
 
+// Structures
 typedef struct {
 		int Mode ; // the current mode the AP is operating in
 		double Heading; // the heading the AP  should steer to.
+		double TargetSlope; // the glide slope hold value
+		
 		double MaxRoll ; // the max the plane can roll for the turn
 		double RollOut;  // when the plane should roll out
 				 // measured from Heading
 		double MaxAileron; // how far to move the aleroin from center
 		double RollOutSmooth; // deg to use for smoothing Aileron Control
+		double MaxElevator; // the maximum elevator allowed
+		double SlopeSmooth; // smoothing angle for elevator
 		
 		} fgAPData, *fgAPDataPtr ;
 		
+
+// Defines
+#define AP_CURRENT_HEADING -1
+
 
 // prototypes
 void fgAPInit( fgAIRCRAFT *current_aircraft );
 int fgAPRun( void );
 void fgAPSetMode( int mode);
+void fgAPSetHeading( double Heading);
 
 
 #ifdef __cplusplus
@@ -61,4 +71,3 @@ void fgAPSetMode( int mode);
 
 
 #endif // _AUTOPILOT_H
-		
