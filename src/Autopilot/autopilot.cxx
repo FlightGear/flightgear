@@ -1,8 +1,11 @@
 // autopilot.cxx -- autopilot subsystem
 //
-// Written by Jeff Goeke-Smith, started April 1998.
+// Started by Jeff Goeke-Smith, started April 1998.
 //
 // Copyright (C) 1998  Jeff Goeke-Smith, jgoeke@voyager.net
+//
+// Heavy modifications and additions by Norman Vine and few by Curtis
+// Olson
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -1747,8 +1750,10 @@ int geo_direct_wgs_84 ( double alt, double lat1, double lon1, double az1, double
 		    sinsig = sin(sig); cossig = cos(sig);
 		    temp = sig;
 		    sig = first + 
-			tb*sinsig*(c2sigm+tb*(cossig*(-1.0+2.0*pow(c2sigm,2.0)) - 
-					      tb*c2sigm*(-3.0+4.0*pow(sinsig,2.0))*(-3.0+4.0*pow(c2sigm,2.0))/6.0)/4.0);
+			tb*sinsig*(c2sigm+tb*(cossig*(-1.0+2.0*c2sigm*c2sigm) - 
+					      tb*c2sigm*(-3.0+4.0*sinsig*sinsig)
+					      *(-3.0+4.0*c2sigm*c2sigm)/6.0)
+				   /4.0);
 		    }
 		while( fabs(sig-temp) > testv);
 		/* 	LATITUDE OF POINT 2 */
@@ -1765,8 +1770,10 @@ int geo_direct_wgs_84 ( double alt, double lat1, double lon1, double az1, double
 		/* TERM C */
 		tc = f*cos2saz*(4.0+f*(4.0-3.0*cos2saz))/16.0;
 		/* DIFFERENCE IN LONGITUDE */
-		dlam = dlams-(1.0-tc)*f*sinaz*(sig+tc*sinsig*(c2sigm+tc*cossig*(-1.0+2.0*
-										pow(c2sigm,2.0))));
+		dlam = dlams-(1.0-tc)*f*sinaz*(sig+tc*sinsig*
+					       (c2sigm+
+						tc*cossig*(-1.0+2.0*
+							   c2sigm*c2sigm)));
 		*lon2 = (lam1+dlam)/RADDEG;
 		if(*lon2 > 180.0  ) *lon2 -= 360.0;
 		if(*lon2 < -180.0 ) *lon2 += 360.0;
@@ -1843,8 +1850,9 @@ int geo_inverse_wgs_84( double alt, double lat1, double lon1, double lat2,
     
 		    do {
 			sdlams = sin(dlams), cdlams = cos(dlams);
-			sinsig = sqrt(pow(cosu2*sdlams,2.0)+
-				      pow(cosu1*sinu2-sinu1*cosu2*cdlams,2.0));
+			sinsig = sqrt(cosu2*cosu2*sdlams*sdlams+
+				      (cosu1*sinu2-sinu1*cosu2*cdlams)*
+				      (cosu1*sinu2-sinu1*cosu2*cdlams));
 			cossig = sinu1*sinu2+cosu1*cosu2*cdlams;
 			
 			sig = atan2(sinsig,cossig);
@@ -1856,12 +1864,12 @@ int geo_inverse_wgs_84( double alt, double lat1, double lon1, double lat2,
 			temp = dlams;
 			dlams = dlam+(1.0-tc)*f*sinaz*
 			    (sig+tc*sinsig*
-			     (c2sigm+tc*cossig*(-1.0+2.0*pow(c2sigm,2.0))));
+			     (c2sigm+tc*cossig*(-1.0+2.0*c2sigm*c2sigm)));
 			if (fabs(dlams) > GEOD_INV_PI && iter++ > 50) 
 			    return iter;
 		    } while ( fabs(temp-dlams) > testv);
 
-		    us = cos2saz*(pow(a,2.0)-pow(b,2.0))/pow(b,2.0);	/* !! */
+		    us = cos2saz*(a*a-b*b)/(b*b);	/* !! */
 		    /* BACK AZIMUTH FROM NORTH */
 		    rnumer = -(cosu1*sdlams);
 		    denom = sinu1*cosu2-cosu1*sinu2*cdlams;
@@ -1880,9 +1888,9 @@ int geo_inverse_wgs_84( double alt, double lat1, double lon1, double lat2,
 		    tb = us*(256.0+us*(-128.0+us*(74.0-47.0*us)))/1024.0;
 		    /* GEODETIC DISTANCE */
 		    *s = b*ta*(sig-tb*sinsig*
-			       (c2sigm+tb*(cossig*(-1.0+2.0*pow(c2sigm,2.0))-tb*
-					   c2sigm*(-3.0+4.0*pow(sinsig,2.0))*
-					   (-3.0+4.0*pow(c2sigm,2.0))/6.0)/
+			       (c2sigm+tb*(cossig*(-1.0+2.0*c2sigm*c2sigm)-tb*
+					   c2sigm*(-3.0+4.0*sinsig*sinsig)*
+					   (-3.0+4.0*c2sigm*c2sigm)/6.0)/
 				4.0));
 		    return 0;
 		}
