@@ -172,22 +172,6 @@ bool FGSoundMgr::remove( const string& refname ) {
 					NULL,
 					SL_VOLUME_ENVELOPE );
 
-#if defined ( PLIB_1_2_X )
-	// if PLIB_1_2_X, we can't reliably remove sounds
-	// that are currently being played. :-( So, let's just not
-	// remove them and return false.  The effects of this are that
-	// the sound sample will continue to finish playing (or
-	// continue to loop forever.)  And the sound sample will
-	// remain registered in the plib audio system.  This is a
-	// memory leak, and eventually this could cause us to max out
-	// the total number of allowed sound samples in plib, but what
-	// are you going to do?  Hopefully the plib team will do a new
-	// stable relase with these problems fixed.
-
-	// cout << "plib broken audio, skipping actual remove" << endl;
-
-	return false;
-#else
 	// must call audio_sched->update() after stopping the sound
 	// but before deleting it.
 	audio_sched -> update();
@@ -198,7 +182,6 @@ bool FGSoundMgr::remove( const string& refname ) {
         sounds.erase( it );
 
 	return true;
-#endif
    } else {
 	return false;
     }

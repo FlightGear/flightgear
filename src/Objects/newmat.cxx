@@ -172,11 +172,7 @@ FGNewMat::load_texture ()
     return false;
   } else {
     SG_LOG( SG_GENERAL, SG_INFO, "Loading deferred texture " << texture_path );
-#ifdef PLIB_1_2_X
-    textured->setTexture((char *)texture_path.c_str(), wrapu, wrapv );
-#else
     textured->setTexture((char *)texture_path.c_str(), wrapu, wrapv, mipmap );
-#endif
     texture_loaded = true;
     return true;
   }
