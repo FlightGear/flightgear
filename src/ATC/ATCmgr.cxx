@@ -161,11 +161,13 @@ void FGATCMgr::update(double dt) {
 	}
 	
 	// Search the tuned frequencies every now and then - this should be done with the event scheduler
-	static int i = 0;
+	static int i = 0;	// Very ugly - but there should only ever be one instance of FGATCMgr.
+	/*
 	if(i == 7) {
 		//cout << "About to AreaSearch()" << endl;
 		AreaSearch();
 	}
+	*/
 	if(i == 15) {
 		//cout << "About to search(1)" << endl;
 		FreqSearch(1);
@@ -599,9 +601,11 @@ void FGATCMgr::FreqSearch(int channel) {
 				// Generate the station and put in the ATC list
 				FGApproach* a = new FGApproach;
 				a->SetData(&data);
+				comm_atc_ptr[chan] = a;
+				a->SetDisplay();
+				a->Init();
 				a->AddPlane("Player");
 				atc_list.push_back(a);
-				comm_atc_ptr[chan] = a;
 			}			
 		}
 	} else {
@@ -618,7 +622,6 @@ void FGATCMgr::FreqSearch(int channel) {
 		}
 	}
 }
-
 
 // Search ATC stations by area in order that we appear 'on the radar'
 void FGATCMgr::AreaSearch() {
@@ -640,12 +643,14 @@ void FGATCMgr::AreaSearch() {
 			FGATC* app = FindInList((app_itr->ident).c_str(), app_itr->type);
 			if(app != NULL) {
 				// The station is already in the ATC list
+				//cout << "In list adding player\n";
 				app->AddPlane("Player");
 				//app->Update();
 			} else {
 				// Generate the station and put in the ATC list
 				FGApproach* a = new FGApproach;
 				a->SetData(&(*app_itr));
+				//cout << "Adding player\n";
 				a->AddPlane("Player");
 				//a->Update();
 				atc_list.push_back(a);
