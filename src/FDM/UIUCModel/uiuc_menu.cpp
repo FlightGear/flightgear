@@ -42,11 +42,26 @@
                             maps; added zero_Long_trim to 
                             controlSurface map
                03/09/2001   (DPM) added support for gear.
+	       06/18/2001   (RD) Added Alpha, Beta, U_body,
+	                    V_body, and W_body to init map.  Added 
+			    aileron_input, rudder_input, pilot_elev_no,
+			    pilot_ail_no, and pilot_rud_no to
+			    controlSurface map.  Added Throttle_pct_input
+			    to engine map.  Added CZfa to CL map.
+	       07/05/2001   (RD) Changed pilot_elev_no = true to pilot_
+	                    elev_no_check=false.  This is to allow pilot
+			    to fly aircraft after input files have been
+			    used.
+ 	       08/27/2001   (RD) Added xxx_init_true and xxx_init for
+	                    P_body, Q_body, R_body, Phi, Theta, Psi,
+			    U_body, V_body, and W_body to help in
+			    starting the A/C at an initial condition.
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
                Michael Selig      <m-selig@uiuc.edu>
                David Megginson    <david@megginson.com>
 
@@ -309,8 +324,9 @@ void uiuc_menu( string aircraft_name )
                     token3 >> token_value;
                   else
                     uiuc_warnings_errors(1, *command_line);
-                  
-                  P_body = token_value;
+
+                  P_body_init_true = true;
+                  P_body_init = token_value;
                   initParts -> storeCommands (*command_line);
                   break;
                 }
@@ -321,7 +337,8 @@ void uiuc_menu( string aircraft_name )
                   else
                     uiuc_warnings_errors(1, *command_line);
                   
-                  Q_body = token_value;
+		  Q_body_init_true = true;
+                  Q_body_init = token_value;
                   initParts -> storeCommands (*command_line);
                   break;
                 }
@@ -332,7 +349,8 @@ void uiuc_menu( string aircraft_name )
                   else
                     uiuc_warnings_errors(1, *command_line);
                   
-                  R_body = token_value;
+		  R_body_init_true = true;
+                  R_body_init = token_value;
                   initParts -> storeCommands (*command_line);
                   break;
                 }
@@ -343,7 +361,8 @@ void uiuc_menu( string aircraft_name )
                   else
                     uiuc_warnings_errors(1, *command_line);
                   
-                  Phi = token_value;
+		  Phi_init_true = true;
+                  Phi_init = token_value;
                   initParts -> storeCommands (*command_line);
                   break;
                 }
@@ -354,7 +373,8 @@ void uiuc_menu( string aircraft_name )
                   else
                     uiuc_warnings_errors(1, *command_line);
                   
-                  Theta = token_value;
+		  Theta_init_true = true;
+                  Theta_init = token_value;
                   initParts -> storeCommands (*command_line);
                   break;
                 }
@@ -365,7 +385,8 @@ void uiuc_menu( string aircraft_name )
                   else
                     uiuc_warnings_errors(1, *command_line);
                   
-                  Psi = token_value;
+		  Psi_init_true = true;
+                  Psi_init = token_value;
                   initParts -> storeCommands (*command_line);
                   break;
                 }
@@ -412,6 +433,61 @@ void uiuc_menu( string aircraft_name )
                   dyn_on_speed = token_value;
                   break;
                 }
+	      case Alpha_flag:
+		{
+		  if (check_float(linetoken3))
+		    token3 >> token_value;
+		  else
+		    uiuc_warnings_errors(1, *command_line);
+
+		  Alpha_init_true = true;
+		  Alpha_init = token_value * DEG_TO_RAD;
+		  break;
+		}
+	      case Beta_flag:
+		{
+		  if (check_float(linetoken3))
+		    token3 >> token_value;
+		  else
+		    uiuc_warnings_errors(1, *command_line);
+
+		  Beta_init_true = true;
+		  Beta_init = token_value * DEG_TO_RAD;
+		  break;
+		}
+	      case U_body_flag:
+		{
+		  if (check_float(linetoken3))
+		    token3 >> token_value;
+		  else
+		    uiuc_warnings_errors(1, *command_line);
+
+		  U_body_init_true = true;
+		  U_body_init = token_value;
+		  break;
+		}
+	      case V_body_flag:
+		{
+		  if (check_float(linetoken3))
+		    token3 >> token_value;
+		  else
+		    uiuc_warnings_errors(1, *command_line);
+
+		  V_body_init_true = true;
+		  V_body_init = token_value;
+		  break;
+		}
+	      case W_body_flag:
+		{
+		  if (check_float(linetoken3))
+		    token3 >> token_value;
+		  else
+		    uiuc_warnings_errors(1, *command_line);
+
+		  W_body_init_true = true;
+		  W_body_init = token_value;
+		  break;
+		}
               default:
                 {
                   uiuc_warnings_errors(2, *command_line);
@@ -693,6 +769,53 @@ void uiuc_menu( string aircraft_name )
                   elevator_input_startTime = token_value;
                   break;
                 }
+	      case aileron_input_flag:
+                {
+                  aileron_input = true;
+                  aileron_input_file = linetoken3;
+                  token4 >> token_value_convert1;
+                  token5 >> token_value_convert2;
+                  convert_y = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  uiuc_1DdataFileReader(aileron_input_file,
+                                        aileron_input_timeArray,
+                                        aileron_input_daArray,
+                                        aileron_input_ntime);
+                  token6 >> token_value;
+                  aileron_input_startTime = token_value;
+                  break;
+                }
+	      case rudder_input_flag:
+                {
+                  rudder_input = true;
+                  rudder_input_file = linetoken3;
+                  token4 >> token_value_convert1;
+                  token5 >> token_value_convert2;
+                  convert_y = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  uiuc_1DdataFileReader(rudder_input_file,
+                                        rudder_input_timeArray,
+                                        rudder_input_drArray,
+                                        rudder_input_ntime);
+                  token6 >> token_value;
+                  rudder_input_startTime = token_value;
+                  break;
+                }
+	      case pilot_elev_no_flag:
+		{
+		  pilot_elev_no_check = true;
+		  break;
+		}
+	      case pilot_ail_no_flag:
+		{
+		  pilot_ail_no_check = true;
+		  break;
+		}
+	      case pilot_rud_no_flag:
+		{
+		  pilot_rud_no_check = true;
+		  break;
+		}
               default:
                 {
                   uiuc_warnings_errors(2, *command_line);
@@ -807,6 +930,22 @@ void uiuc_menu( string aircraft_name )
               case cherokee_flag:
                 {
                   engineParts -> storeCommands (*command_line);
+                  break;
+                }
+              case Throttle_pct_input_flag:
+                {
+                  Throttle_pct_input = true;
+                  Throttle_pct_input_file = linetoken3;
+		  token4 >> token_value_convert1;
+		  token5 >> token_value_convert2;
+		  convert_y = uiuc_convert(token_value_convert1);
+		  convert_x = uiuc_convert(token_value_convert2);
+                  uiuc_1DdataFileReader(Throttle_pct_input_file,
+                                        Throttle_pct_input_timeArray,
+                                        Throttle_pct_input_dTArray,
+                                        Throttle_pct_input_ntime);
+                  token6 >> token_value;
+                  Throttle_pct_input_startTime = token_value;
                   break;
                 }
               default:
@@ -1436,6 +1575,24 @@ void uiuc_menu( string aircraft_name )
 
                   CZ_adf = token_value;
                   CZ_adf_clean = CZ_adf;
+                  aeroLiftParts -> storeCommands (*command_line);
+                  break;
+                }
+              case CZfa_flag:
+                {
+                  CZfa = linetoken3;
+                  token4 >> token_value_convert1;
+                  token5 >> token_value_convert2;
+                  convert_y = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  /* call 1D File Reader with file name (CZfa) and conversion 
+                     factors; function returns array of alphas (aArray) and 
+                     corresponding CZ values (CZArray) and max number of 
+                     terms in arrays (nAlpha) */
+                  uiuc_1DdataFileReader(CZfa,
+                                        CZfa_aArray,
+                                        CZfa_CZArray,
+                                        CZfa_nAlpha);
                   aeroLiftParts -> storeCommands (*command_line);
                   break;
                 }
@@ -2922,7 +3079,74 @@ void uiuc_menu( string aircraft_name )
               };
             break;
           } // end ice map
-          
+         
+
+	case fog_flag:
+          {
+	    switch(fog_map[linetoken2])
+              {
+              case fog_segments_flag:
+                {
+                  if (check_float(linetoken3))
+		    token3 >> token_value_convert1;
+		  else
+		    uiuc_warnings_errors(1, *command_line);
+
+	          if (token_value_convert1 < 1 || token_value_convert1 > 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  
+		  fog_field = true;
+		  fog_point_index = 0;
+		  delete[] fog_time;
+		  delete[] fog_value;
+		  fog_segments = token_value_convert1;
+		  fog_time = new double[fog_segments+1];
+		  fog_time[0] = 0.0;
+		  fog_value = new int[fog_segments+1];
+		  fog_value[0] = 0;
+		  
+		  break;
+		}
+	      case fog_point_flag:
+		{
+		  if (check_float(linetoken3))
+		    token3 >> token_value;
+	          else
+		    uiuc_warnings_errors(1, *command_line);
+
+		  if (token_value < 0.1)
+		    uiuc_warnings_errors(1, *command_line);
+
+		  if (check_float(linetoken4))
+		    token4 >> token_value_convert1;
+		  else
+		    uiuc_warnings_errors(1, *command_line);
+
+		  if (token_value_convert1 < -1000 || token_value_convert1 > 1000)
+		    uiuc_warnings_errors(1, *command_line);
+
+		  if (fog_point_index == fog_segments || fog_point_index == -1)
+		    uiuc_warnings_errors(1, *command_line);
+
+		  fog_point_index++;
+		  fog_time[fog_point_index] = token_value;
+		  fog_value[fog_point_index] = token_value_convert1;
+
+		  break;
+		}
+	      default:
+		{
+		  uiuc_warnings_errors(2, *command_line);
+		  break;
+		}
+	      };
+	    break;
+	  } // end fog map	  
+	  
+
+
+
+	  
 
         case record_flag:
           {

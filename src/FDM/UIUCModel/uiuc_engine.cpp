@@ -19,11 +19,13 @@
 ----------------------------------------------------------------------
 
  HISTORY:      01/30/2000   initial release
+               06/18/2001   (RD) Added Throttle_pct_input.
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
                Michael Selig      <m-selig@uiuc.edu>
 
 ----------------------------------------------------------------------
@@ -80,6 +82,20 @@ void uiuc_engine()
   stack command_list;
   string linetoken1;
   string linetoken2;
+
+  if (Throttle_pct_input)
+    {
+      double Throttle_pct_input_endTime = Throttle_pct_input_timeArray[Throttle_pct_input_ntime];
+      if (Simtime >= Throttle_pct_input_startTime && 
+          Simtime <= (Throttle_pct_input_startTime + Throttle_pct_input_endTime))
+        {
+          double time = Simtime - Throttle_pct_input_startTime;
+          Throttle_pct = uiuc_1Dinterpolation(Throttle_pct_input_timeArray,
+                         Throttle_pct_input_dTArray,
+                         Throttle_pct_input_ntime,
+                         time);
+        }
+    }
   
   Throttle[3] = Throttle_pct;
 

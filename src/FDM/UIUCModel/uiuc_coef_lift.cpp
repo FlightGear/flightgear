@@ -19,11 +19,13 @@
 ----------------------------------------------------------------------
 
  HISTORY:      04/15/2000   initial release
+               06/18/2001   (RD) Added CZfa
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -385,6 +387,15 @@ void uiuc_coef_lift()
                   }
               }
             CZ += CZ_adf * Alpha * flap;
+            break;
+          }
+        case CZfa_flag:
+          {
+            CZfaI = uiuc_1Dinterpolation(CZfa_aArray,
+                                         CZfa_CZArray,
+                                         CZfa_nAlpha,
+                                         Alpha);
+            CZ += CZfaI;
             break;
           }
         };

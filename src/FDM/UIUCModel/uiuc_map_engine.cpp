@@ -17,11 +17,13 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               06/18/2001   (RD) Added Throttle_pct_input
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -71,6 +73,7 @@ void uiuc_map_engine()
   engine_map["simpleSingle"]      =      simpleSingle_flag         ;
   engine_map["c172"]              =      c172_flag                 ;
   engine_map["cherokee"]          =      cherokee_flag             ;
+  engine_map["Throttle_pct_input"]=      Throttle_pct_input_flag   ;
 }
 
 // end uiuc_map_engine.cpp

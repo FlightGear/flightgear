@@ -28,11 +28,17 @@
                             Cnfada, and Cnfbetadr switches
 	       04/15/2000   (JS) broke up into multiple 
 	                    uiuc_coef_xxx functions
+	       06/18/2001   (RD) Added initialization of Alpha and
+	                    Beta.  Added aileron_input and rudder_input.
+			    Added pilot_elev_no, pilot_ail_no, and
+			    pilot_rud_no.
+	       07/05/2001   (RD) Added pilot_(elev,ail,rud)_no=false
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -93,6 +99,14 @@
 
 void uiuc_coefficients()
 {
+  double l_trim, l_defl;
+
+  if (Alpha_init_true && Simtime==0)
+    Alpha = Alpha_init;
+
+  if (Beta_init_true && Simtime==0)
+    Beta = Beta_init;
+
   // calculate rate derivative nondimensionalization factors
   // check if speed is sufficient to compute dynamic pressure terms
   if (nondim_rate_V_rel_wind)         // c172_aero uses V_rel_wind
@@ -132,8 +146,11 @@ void uiuc_coefficients()
       uiuc_ice_eta();
     }
 
-  // check to see if phugoid mode engaged
-  if (elevator_step || elevator_singlet || elevator_doublet || elevator_input)
+  // check to see if data files are used for control deflections
+  pilot_elev_no = false;
+  pilot_ail_no = false;
+  pilot_rud_no = false;
+  if (elevator_step || elevator_singlet || elevator_doublet || elevator_input || aileron_input || rudder_input)
     {
       uiuc_controlInput();
     }
@@ -149,6 +166,36 @@ void uiuc_coefficients()
   uiuc_coef_sideforce();
   uiuc_coef_roll();
   uiuc_coef_yaw();
+
+  if (pilot_ail_no)
+    {
+      if (aileron <=0)
+	Lat_control = - aileron / damax * RAD_TO_DEG;
+      else
+	Lat_control = - aileron / damin * RAD_TO_DEG;
+    }
+
+  if (pilot_elev_no)
+    {
+      l_trim = elevator_tab;
+      l_defl = elevator - elevator_tab;
+      if (l_trim <=0 )
+	Long_trim = l_trim / demax * RAD_TO_DEG;
+      else
+	Long_trim = l_trim / demin * RAD_TO_DEG;
+      if (l_defl <= 0)
+	Long_control = l_defl / demax * RAD_TO_DEG;
+      else
+	Long_control = l_defl / demin * RAD_TO_DEG;
+    }
+
+  if (pilot_rud_no)
+    {
+      if (rudder <=0)
+	Rudder_pedal = - rudder / drmax * RAD_TO_DEG;
+      else
+	Rudder_pedal = - rudder / drmin * RAD_TO_DEG;
+    }
 
   return;
 }

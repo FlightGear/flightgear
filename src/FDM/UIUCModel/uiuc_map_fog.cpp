@@ -1,10 +1,10 @@
 /********************************************************************** 
  
- FILENAME:     uiuc_map_keyword.cpp 
+ FILENAME:     uiuc_map_fog.cpp 
 
 ---------------------------------------------------------------------- 
 
- DESCRIPTION:  initializes the main keyword map
+ DESCRIPTION:  initializes the fog map
 
 ----------------------------------------------------------------------
  
@@ -16,12 +16,11 @@
  
 ----------------------------------------------------------------------
  
- HISTORY:      04/08/2000   initial release
+ HISTORY:      05/20/2001   initial release
 
 ----------------------------------------------------------------------
  
- AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
-               Jeff Scott         <jscott@mail.com>
+ AUTHOR(S):    Michael Savchenko       <savchenk@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -63,27 +62,15 @@
  
 **********************************************************************/
 
-#include "uiuc_map_keyword.h"
+
+#include "uiuc_map_fog.h"
 
 
-void uiuc_map_keyword()
+void uiuc_map_fog()
 {
-  Keyword_map["init"]             =      init_flag                  ;
-  Keyword_map["geometry"]         =      geometry_flag              ;
-  Keyword_map["controlSurface"]   =      controlSurface_flag        ;
-  Keyword_map["mass"]             =      mass_flag                  ;
-  Keyword_map["engine"]           =      engine_flag                ;
-  Keyword_map["CD"]               =      CD_flag                    ;
-  Keyword_map["CL"]               =      CL_flag                    ;
-  Keyword_map["Cm"]               =      Cm_flag                    ;
-  Keyword_map["CY"]               =      CY_flag                    ;
-  Keyword_map["Cl"]               =      Cl_flag                    ;
-  Keyword_map["Cn"]               =      Cn_flag                    ;
-  Keyword_map["gear"]             =      gear_flag                  ;
-  Keyword_map["ice"]              =      ice_flag                   ;
-  Keyword_map["record"]           =      record_flag                ;
-  Keyword_map["misc"]             =      misc_flag                  ;
-  Keyword_map["fog"]		  =	 fog_flag		    ;
+  fog_map["fog_segments"]	=	fog_segments_flag	;
+  fog_map["fog_point"]		=	fog_point_flag		;
+  
 }
 
-// end uiuc_map_keyword.cpp
+// end uiuc_map_fog.cpp

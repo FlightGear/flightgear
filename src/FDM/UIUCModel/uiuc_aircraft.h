@@ -37,11 +37,27 @@
                04/01/2000   (JS) added throttle, longitudinal, lateral, 
 	                    and rudder inputs to record map
                03/09/2001   (DPM) added support for gear
-
+	       06/18/2001   (RD) added variables needed for aileron,
+	                    rudder, and throttle_pct input files.  
+			    Added Alpha, Beta, U_body, V_body, and 
+                            W_body to init map.  Added variables 
+			    needed to ignore elevator, aileron, and 
+			    rudder pilot inputs.  Added CZ as a function
+			    of alpha, CZfa.  Added twinotter to engine
+			    group.
+	       07/05/2001   (RD) added pilot_elev_no_check, pilot_ail_no
+	                    _check, and pilot_rud_no_check variables.
+			    This allows pilot to fly aircraft after the
+			    input files have been used.
+	       08/27/2001   (RD) Added xxx_init_true and xxx_init for
+	                    P_body, Q_body, R_body, Phi, Theta, Psi,
+			    U_body, V_body, and W_body to help in
+			    starting the A/C at an initial condition.
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
                David Megginson    <david@megginson.com>
 
 ----------------------------------------------------------------------
@@ -119,7 +135,7 @@ typedef stack :: iterator LIST;
 /* Add more keywords here if required*/
 enum {init_flag = 1000, geometry_flag, controlSurface_flag, controlsMixer_flag, 
       mass_flag, engine_flag, CD_flag, CL_flag, Cm_flag, CY_flag, Cl_flag, 
-      Cn_flag, gear_flag, ice_flag, record_flag, misc_flag};
+      Cn_flag, gear_flag, ice_flag, record_flag, misc_flag, fog_flag};
 
 // init ======= Initial values for equation of motion
 enum {Dx_pilot_flag = 2000, Dy_pilot_flag, Dz_pilot_flag, 
@@ -128,7 +144,8 @@ enum {Dx_pilot_flag = 2000, Dy_pilot_flag, Dz_pilot_flag,
       P_body_flag, Q_body_flag, R_body_flag, 
       Phi_flag, Theta_flag, Psi_flag,
       Long_trim_flag, recordRate_flag, recordStartTime_flag, 
-      nondim_rate_V_rel_wind_flag, dyn_on_speed_flag};
+      nondim_rate_V_rel_wind_flag, dyn_on_speed_flag, Alpha_flag, 
+      Beta_flag, U_body_flag, V_body_flag, W_body_flag};
 
 // geometry === Aircraft-specific geometric quantities
 enum {bw_flag = 3000, cbar_flag, Sw_flag, ih_flag, bh_flag, ch_flag, Sh_flag};
@@ -136,7 +153,7 @@ enum {bw_flag = 3000, cbar_flag, Sw_flag, ih_flag, bh_flag, ch_flag, Sh_flag};
 // controlSurface = Control surface deflections and properties
 enum {de_flag = 4000, da_flag, dr_flag, 
       set_Long_trim_flag, set_Long_trim_deg_flag, zero_Long_trim_flag, 
-      elevator_step_flag, elevator_singlet_flag, elevator_doublet_flag, elevator_input_flag};
+      elevator_step_flag, elevator_singlet_flag, elevator_doublet_flag, elevator_input_flag, aileron_input_flag, rudder_input_flag, pilot_elev_no_flag, pilot_ail_no_flag, pilot_rud_no_flag};
 
 // controlsMixer == Controls mixer
 enum {nomix_flag = 5000};
@@ -145,7 +162,7 @@ enum {nomix_flag = 5000};
 enum {Weight_flag = 6000, Mass_flag, I_xx_flag, I_yy_flag, I_zz_flag, I_xz_flag};
 
 // engine ===== Propulsion data
-enum {simpleSingle_flag = 7000, c172_flag, cherokee_flag};
+enum {simpleSingle_flag = 7000, c172_flag, cherokee_flag, Throttle_pct_input_flag};
 
 // CD ========= Aerodynamic x-force quantities (longitudinal)
 enum {CDo_flag = 8000, CDK_flag, CD_a_flag, CD_adot_flag, CD_q_flag, CD_ih_flag, CD_de_flag, 
@@ -157,7 +174,7 @@ enum {CDo_flag = 8000, CDK_flag, CD_a_flag, CD_adot_flag, CD_q_flag, CD_ih_flag,
 enum {CLo_flag = 9000, CL_a_flag, CL_adot_flag, CL_q_flag, CL_ih_flag, CL_de_flag, 
       CLfa_flag, CLfade_flag, CLfdf_flag, CLfadf_flag, 
       CZo_flag, CZ_a_flag, CZ_a2_flag, CZ_a3_flag, CZ_adot_flag, 
-      CZ_q_flag, CZ_de_flag, CZ_deb2_flag, CZ_df_flag, CZ_adf_flag};
+      CZ_q_flag, CZ_de_flag, CZ_deb2_flag, CZ_df_flag, CZ_adf_flag, CZfa_flag};
 
 // Cm ========= Aerodynamic m-moment quantities (longitudinal)
 enum {Cmo_flag = 10000, Cm_a_flag, Cm_a2_flag, Cm_adot_flag, Cm_q_flag, 
@@ -297,8 +314,12 @@ enum {Simtime_record = 16000, dt_record,
 // misc ======= Miscellaneous inputs
 enum {simpleHingeMomentCoef_flag = 17000, dfTimefdf_flag};
 
+//321654
+// fog ======== Fog field quantities
+enum {fog_segments_flag = 18000, fog_point_flag}; 
 
-typedef struct
+//321654  
+struct AIRCRAFT
 {
   // ParseFile stuff [] Bipin to add more comments
   ParseFile *airplane;
@@ -375,6 +396,50 @@ typedef struct
 #define nondim_rate_V_rel_wind aircraft_->nondim_rate_V_rel_wind
   double dyn_on_speed;
 #define dyn_on_speed           aircraft_->dyn_on_speed
+  bool P_body_init_true;
+  double P_body_init;
+#define P_body_init_true       aircraft_->P_body_init_true
+#define P_body_init            aircraft_->P_body_init
+  bool Q_body_init_true;
+  double Q_body_init;
+#define Q_body_init_true       aircraft_->Q_body_init_true
+#define Q_body_init            aircraft_->Q_body_init
+  bool R_body_init_true;
+  double R_body_init;
+#define R_body_init_true       aircraft_->R_body_init_true
+#define R_body_init            aircraft_->R_body_init
+  bool Phi_init_true;
+  double Phi_init;
+#define Phi_init_true          aircraft_->Phi_init_true
+#define Phi_init               aircraft_->Phi_init
+  bool Theta_init_true;
+  double Theta_init;
+#define Theta_init_true        aircraft_->Theta_init_true
+#define Theta_init             aircraft_->Theta_init
+  bool Psi_init_true;
+  double Psi_init;
+#define Psi_init_true          aircraft_->Psi_init_true
+#define Psi_init               aircraft_->Psi_init
+  bool Alpha_init_true;
+  double Alpha_init;
+#define Alpha_init_true        aircraft_->Alpha_init_true
+#define Alpha_init             aircraft_->Alpha_init
+  bool Beta_init_true;
+  double Beta_init;
+#define Beta_init_true         aircraft_->Beta_init_true
+#define Beta_init              aircraft_->Beta_init
+  bool U_body_init_true;
+  double U_body_init;
+#define U_body_init_true       aircraft_->U_body_init_true
+#define U_body_init            aircraft_->U_body_init
+  bool V_body_init_true;
+  double V_body_init;
+#define V_body_init_true       aircraft_->V_body_init_true
+#define V_body_init            aircraft_->V_body_init
+  bool W_body_init_true;
+  double W_body_init;
+#define W_body_init_true       aircraft_->W_body_init_true
+#define W_body_init            aircraft_->W_body_init
 
 
   /* Variables (token2) ===========================================*/
@@ -457,6 +522,47 @@ typedef struct
 #define elevator_input_ntime       aircraft_->elevator_input_ntime
 #define elevator_input_startTime   aircraft_->elevator_input_startTime
 
+  bool aileron_input;
+  string aileron_input_file;
+  double aileron_input_timeArray[1000];
+  double aileron_input_daArray[1000];
+  int aileron_input_ntime;
+  double aileron_input_startTime;
+#define aileron_input             aircraft_->aileron_input
+#define aileron_input_file        aircraft_->aileron_input_file
+#define aileron_input_timeArray   aircraft_->aileron_input_timeArray
+#define aileron_input_daArray     aircraft_->aileron_input_daArray
+#define aileron_input_ntime       aircraft_->aileron_input_ntime
+#define aileron_input_startTime   aircraft_->aileron_input_startTime
+
+  bool rudder_input;
+  string rudder_input_file;
+  double rudder_input_timeArray[1000];
+  double rudder_input_drArray[1000];
+  int rudder_input_ntime;
+  double rudder_input_startTime;
+#define rudder_input             aircraft_->rudder_input
+#define rudder_input_file        aircraft_->rudder_input_file
+#define rudder_input_timeArray   aircraft_->rudder_input_timeArray
+#define rudder_input_drArray     aircraft_->rudder_input_drArray
+#define rudder_input_ntime       aircraft_->rudder_input_ntime
+#define rudder_input_startTime   aircraft_->rudder_input_startTime
+
+  bool pilot_elev_no;
+#define pilot_elev_no            aircraft_->pilot_elev_no
+  bool pilot_elev_no_check;
+#define pilot_elev_no_check      aircraft_->pilot_elev_no_check
+
+  bool pilot_ail_no;
+#define pilot_ail_no             aircraft_->pilot_ail_no
+  bool pilot_ail_no_check;
+#define pilot_ail_no_check       aircraft_->pilot_ail_no_check
+
+  bool pilot_rud_no;
+#define pilot_rud_no             aircraft_->pilot_rud_no
+  bool pilot_rud_no_check;
+#define pilot_rud_no_check       aircraft_->pilot_rud_no_check
+
   
   /* Variables (token2) ===========================================*/
   /* controlsMixer = Control mixer ================================*/
@@ -487,6 +593,19 @@ typedef struct
   double simpleSingleMaxThrust;
 #define simpleSingleMaxThrust  aircraft_->simpleSingleMaxThrust
   
+  bool Throttle_pct_input;
+  string Throttle_pct_input_file;
+  double Throttle_pct_input_timeArray[1000];
+  double Throttle_pct_input_dTArray[1000];
+  int Throttle_pct_input_ntime;
+  double Throttle_pct_input_startTime;
+#define Throttle_pct_input            aircraft_->Throttle_pct_input
+#define Throttle_pct_input_file       aircraft_->Throttle_pct_input_file
+#define Throttle_pct_input_timeArray  aircraft_->Throttle_pct_input_timeArray
+#define Throttle_pct_input_dTArray    aircraft_->Throttle_pct_input_dTArray
+#define Throttle_pct_input_ntime      aircraft_->Throttle_pct_input_ntime
+#define Throttle_pct_input_startTime  aircraft_->Throttle_pct_input_startTime
+
 
   /* Variables (token2) ===========================================*/
   /* CD ============ Aerodynamic x-force quantities (longitudinal) */
@@ -648,6 +767,16 @@ typedef struct
 #define CZ_deb2  aircraft_->CZ_deb2
 #define CZ_df    aircraft_->CZ_df
 #define CZ_adf   aircraft_->CZ_adf
+  string CZfa;
+  double CZfa_aArray[100];
+  double CZfa_CZArray[100];
+  int CZfa_nAlpha;
+  double CZfaI;
+#define CZfa               aircraft_->CZfa
+#define CZfa_aArray        aircraft_->CZfa_aArray
+#define CZfa_CZArray       aircraft_->CZfa_CZArray
+#define CZfa_nAlpha        aircraft_->CZfa_nAlpha
+#define CZfaI              aircraft_->CZfaI
 
 
   /* Variables (token2) ===========================================*/
@@ -1048,6 +1177,47 @@ typedef struct
 #define Cn_b3_clean    aircraft_->Cn_b3_clean
 
 
+  //321654
+  /* Variables (token2) ===========================================*/
+  /* fog =========== Fog field quantities ======================== */
+
+  map <string,int> fog_map;
+#define fog_map 	aircraft_->fog_map
+
+  bool fog_field;
+  int fog_segments;
+  int fog_point_index;
+  double *fog_time;
+  int *fog_value;
+  double fog_next_time;
+  int fog_current_segment;
+ 
+  int Fog;
+  
+  AIRCRAFT()
+  {
+    fog_field = false;
+    fog_segments = 0;
+    fog_point_index = -1;
+    fog_time = NULL;
+    fog_value = NULL;
+    fog_next_time = 0.0;
+    fog_current_segment = 0;
+    Fog = 0;
+  };
+
+#define fog_field	aircraft_->fog_field
+#define fog_segments	aircraft_->fog_segments
+#define fog_point_index	aircraft_->fog_point_index
+#define fog_time	aircraft_->fog_time
+#define fog_value	aircraft_->fog_value
+#define fog_next_time	aircraft_->fog_next_time
+#define fog_current_segment	aircraft_->fog_current_segment
+
+#define Fog             aircraft_->Fog
+
+ 
+
   /* Variables (token2) ===========================================*/
   /* record ======== Record desired quantites to file =============*/
   
@@ -1169,7 +1339,7 @@ typedef struct
 #define fout aircraft_->fout
   
   
-} AIRCRAFT;
+};
 
 extern AIRCRAFT *aircraft_;    // usually defined in the first program that includes uiuc_aircraft.h
 

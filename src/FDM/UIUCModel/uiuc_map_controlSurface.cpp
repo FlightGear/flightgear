@@ -17,11 +17,15 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               06/18/2001   Added aileron_input, rudder_input,
+	                    pilot_elev_no, pilot_ail_no, and 
+			    pilot_rud_no
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -78,6 +82,11 @@ void uiuc_map_controlSurface()
   controlSurface_map["elevator_singlet"] = elevator_singlet_flag    ;
   controlSurface_map["elevator_doublet"] = elevator_doublet_flag    ;
   controlSurface_map["elevator_input"]   = elevator_input_flag      ;
+  controlSurface_map["aileron_input"]    = aileron_input_flag       ;
+  controlSurface_map["rudder_input"]     = rudder_input_flag        ;
+  controlSurface_map["pilot_elev_no"]    = pilot_elev_no_flag       ;
+  controlSurface_map["pilot_ail_no"]     = pilot_ail_no_flag        ;
+  controlSurface_map["pilot_rud_no"]     = pilot_rud_no_flag        ;
 }
 
 // end uiuc_map_controlSurface.cpp

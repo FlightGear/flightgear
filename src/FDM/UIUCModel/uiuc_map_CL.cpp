@@ -17,11 +17,13 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               06/18/2001   Added CZfa
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -88,6 +90,7 @@ void uiuc_map_CL()
   CL_map["CZ_deb2"]               =      CZ_deb2_flag               ;
   CL_map["CZ_df"]                 =      CZ_df_flag                 ;
   CL_map["CZ_adf"]                =      CZ_adf_flag                ;
+  CL_map["CZfa"]                  =      CZfa_flag                  ;
 }
 
 // end uiuc_map_CL.cpp

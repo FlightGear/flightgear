@@ -17,11 +17,14 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               06/18/2001   (RD) Added Alpha, Beta, U_body
+	                    V_body, and W_body.
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -89,6 +92,11 @@ void uiuc_map_init()
   init_map["recordStartTime"]     =      recordStartTime_flag       ;
   init_map["nondim_rate_V_rel_wind"]=    nondim_rate_V_rel_wind_flag;
   init_map["dyn_on_speed"]        =      dyn_on_speed_flag          ;
+  init_map["Alpha"]               =      Alpha_flag                 ;
+  init_map["Beta"]                =      Beta_flag                  ;
+  init_map["U_body"]              =      U_body_flag                ;
+  init_map["V_body"]              =      V_body_flag                ;
+  init_map["W_body"]              =      W_body_flag                ;
 }
 
 // end uiuc_map_init.cpp
