@@ -276,7 +276,44 @@ subdivide triangles to ensure that they never get too long and
 skinny.  It will also let you set up boundaries and holes within the
 triangulation area.
 
+\subsection{Scenery Work Space}
+
+The scenery is constructed in a directory structure that parallels the
+final structure.  The structure looks something like the following:
+
+\begin{verbatim}
+  Scenery/ ->
+    w140n50/ ->
+    w140n60/ ->
+    w150n50/ ->
+      w141n59/ ->
+      w142n59/ ->
+      w148n59/ ->
+        533872.gz
+        533873.gz
+        533874.gz
+\end{verbatim}
+
+Beneath the scenery subdirectory is a series of subdirectories
+representing 10x10 degree chunks.  Each directory is named after the
+lower left hand corner of the area it contains.
+
+Beneath each of the 10x10 degree subdirectories is a subdirectory for
+each 1x1 degree area.  Within each of these 1x1 degree subdirectories,
+is a file for each tile.  The file name is the tile's unique numeric
+index number.  There can be multiple files per tile.  When this is
+needed, all files relating to a tile will have the same numeric root
+for the file name.
+
 \subsection{Preprocessing tools}
+
+The preprocessing tools are responsible for inputing raw world data,
+clipping it to the appropriate scenery tiles, outputing it into the
+workspace directory tree.
+
+The scenery assembly and creation tools work on each tile
+individually, so they expect all the relevant information for a tile
+to already be there.
 
 \subsubsection{GenAirports}
 
@@ -306,6 +343,14 @@ The ShapeFile tool will take the polygons from shapefiles (via GFC),
 clip them to the appropriate tile boundares (via GPC) and write the
 resulting polygons to the appropriate tile in the scenery work space.
 
+The file naming scheme is tile\_index.polygon\_id where tile\_index is
+the unique numeric index number for the tile and polygon\_id is a
+unique id for the corresponding polygon.  Each polygon is assigned a
+unique id before it is clipped against tile boundaries.  Later we will
+need to match up the edges of polygons with the pieces from the
+neighboring tiles and this unique polygon id will enable us to do
+this.  Each polygon that is written out (no matter what the source or
+type) should have a unique id number assigned to it.
 
 \subsubsection{DemRaw2ascii}
 
@@ -428,6 +473,9 @@ Generates the width of a 1/8 x 1/8 degree tile at various latitudes.
 
 %------------------------------------------------------------------------
 % $Log$
+% Revision 1.2  1999/03/08 21:59:52  curt
+% Updated based on current efforts.
+%
 % Revision 1.1  1999/02/15 00:38:46  curt
 % Initial revision.
 %
