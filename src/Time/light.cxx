@@ -161,25 +161,18 @@ void fgLIGHT::Update( void ) {
     sky_color[2] = base_sky_color[2] * sky_brightness;
     sky_color[3] = base_sky_color[3];
 
-    // set cloud color
-    cloud_color[0] = base_fog_color[0] * sky_brightness;
-    cloud_color[1] = base_fog_color[1] * sky_brightness;
-    cloud_color[2] = base_fog_color[2] * sky_brightness;
-    cloud_color[3] = base_fog_color[3];
-
-    // set fog color
-    float *sun_color = thesky->get_sun_color();
-    fog_color[0] = cloud_color[0] * (1.25 - sun_color[0]/4.0);    // 100% red
-    fog_color[1] = cloud_color[1] * (0.48 + sun_color[1]/1.923);  //  40% green
-    fog_color[2] = cloud_color[2] * sun_color[2];                 //   0% blue
-    fog_color[3] = cloud_color[3];
+    // set cloud and fog color
+    cloud_color[0] = fog_color[0] = base_fog_color[0] * sky_brightness;
+    cloud_color[1] = fog_color[1] = base_fog_color[1] * sky_brightness;
+    cloud_color[2] = fog_color[2] = base_fog_color[2] * sky_brightness;
+    cloud_color[3] = fog_color[3] = base_fog_color[3];
 
     // update the cloud colors for sunrise/sunset effects (darken them)
     if (sun_angle > 1.0) {
-       float sun_2x = sqrt(sun_angle);
-       cloud_color[0] /= sun_2x;
-       cloud_color[1] /= sun_2x;
-       cloud_color[2] /= sun_2x;
+       float sun2 = sqrt(sun_angle);
+       cloud_color[0] /= sun2;
+       cloud_color[1] /= sun2;
+       cloud_color[2] /= sun2;
     }
 }
 
@@ -187,7 +180,6 @@ void fgLIGHT::Update( void ) {
 // calculate fog color adjusted for sunrise/sunset effects
 void fgLIGHT::UpdateAdjFog( void ) {
     FGInterface *f;
-    double sun_angle_deg, rotation, param1[3], param2[3];
 
     f = current_aircraft.fdm_state;
 
@@ -212,6 +204,8 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	exit(-1);
     }
 
+    double rotation;
+
     // first determine the difference between our view angle and local
     // direction to the sun
     rotation = -(sun_rotation + SGD_PI) 
@@ -222,6 +216,11 @@ void fgLIGHT::UpdateAdjFog( void ) {
     while ( rotation > SGD_2PI ) {
 	rotation -= SGD_2PI;
     }
+
+#ifdef USE_OLD_SUNSET_CODE
+
+    double sun_angle_deg, param1[3], param2[3];
+
     rotation *= SGD_RADIANS_TO_DEGREES;
     // fgPrintf( SG_EVENT, SG_INFO, 
     //           "  View to sun difference in degrees = %.2f\n", rotation);
@@ -260,6 +259,28 @@ void fgLIGHT::UpdateAdjFog( void ) {
     if ( adj_fog_color[2] > 1.0 ) { adj_fog_color[2] = 1.0; }
 
     adj_fog_color[3] = fog_color[3];
+
+#else
+
+    float rf1 = 0.1 + fabs((rotation - SG_PI) / SG_PI) * 0.8;	// 0.1 .. 0.9
+    float rf2 = rf1 * rf1;
+    float rf3 = 1.0 - rf1;
+
+    float *sun_color = thesky->get_sun_color();
+    float s_red =   fog_color[0] * (1.26 - sun_color[0]/4.0);	// 100% red
+    float s_green = fog_color[1] * (0.45 + sun_color[1]/2.0);	//  40% green
+    float s_blue =  fog_color[2] * sun_color[2];		//   0% blue
+
+    float f_brightness = (sun_angle > 1.0) ? sun_angle : 1.0;
+    float f_red =   fog_color[0] / f_brightness;
+    float f_green = fog_color[1] / f_brightness;
+    float f_blue =  fog_color[2] / f_brightness;
+
+    adj_fog_color[0] = rf3 * f_red   + rf2 * s_red;
+    adj_fog_color[1] = rf3 * f_green + rf2 * s_green;
+    adj_fog_color[2] = rf3 * f_blue  + rf2 * s_blue;
+
+#endif
 }
 
 
