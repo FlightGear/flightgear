@@ -96,6 +96,7 @@
 
 static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;
+extern float init_volume;
 
 
 #ifdef macintosh
@@ -550,6 +551,8 @@ static void fgMainLoop( void ) {
 
     if (!scenery_loaded && globals->get_tile_mgr()->all_queues_empty() && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
+        fgSetFloat("/sim/sound/volume", init_volume);
+        globals->get_soundmgr()->set_volume(init_volume);
     }
 
     if (fgGetBool("/sim/rendering/specular-highlight")) {
@@ -577,8 +580,6 @@ static void fgIdleFunction ( void ) {
     // printf("idle state == %d\n", idle_state);
 
     if ( idle_state == 0 ) {
-        fgSetBool("sim/initialised", false);
-
         // Initialize the splash screen right away
         if ( fgGetBool("/sim/startup/splash-screen") ) {
             fgSplashInit(fgGetString("/sim/startup/splash-texture"));
@@ -662,7 +663,6 @@ static void fgIdleFunction ( void ) {
     if ( idle_state == 1000 ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
-        fgSetBool("sim/initialised",true);
         fgSetBool("sim/sceneryloaded",false);
 
         fgRegisterIdleHandler(fgMainLoop);

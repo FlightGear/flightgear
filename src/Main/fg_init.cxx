@@ -142,8 +142,8 @@ SG_USING_STD(string);
 
 
 class Sound;
-
 extern const char *default_root;
+float init_volume;
 
 
 #ifdef FG_USE_CLOUDS_3D
@@ -1654,6 +1654,8 @@ bool fgInitSubsystems() {
     // Initialize the sound subsystem.
     ////////////////////////////////////////////////////////////////////
 
+    init_volume = fgGetFloat("/sim/sound/volume");
+    fgSetFloat("/sim/sound/volume", 0.0f);
     globals->set_soundmgr(new SGSoundMgr);
     globals->get_soundmgr()->init();
     globals->get_soundmgr()->bind();
@@ -1850,7 +1852,6 @@ void fgReInitSubsystems()
         fgSetBool("/sim/freeze/master", true);
     }
     fgSetBool("/sim/crashed", false);
-    fgSetBool("/sim/initialised", false);
 
     // Initialize the FDM
     fgInitFDM();
@@ -1874,7 +1875,6 @@ void fgReInitSubsystems()
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
-    fgSetBool("/sim/initialised", true);
     fgSetBool("/sim/sceneryloaded",false);
 }
 
