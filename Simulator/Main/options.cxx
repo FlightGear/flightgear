@@ -194,7 +194,7 @@ fgOPTIONS::fgOPTIONS() :
 #if defined( WIN32 )
 	fg_root = "\\FlightGear";
 #elif defined( MACOS )
-	fg_root = ":";
+	fg_root = "";
 #else
 	fg_root = PKGLIBDIR;
 #endif

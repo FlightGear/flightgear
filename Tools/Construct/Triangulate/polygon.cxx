@@ -21,6 +21,14 @@
 // $Id$
 
 
+// include Generic Polygon Clipping Library
+//
+//    http://www.cs.man.ac.uk/aig/staff/alan/software/
+//
+extern "C" {
+#include <gpc.h>
+}
+
 #include <Include/fg_constants.h>
 #include <Math/point3d.hxx>
 
@@ -210,5 +218,36 @@ void FGPolygon::calc_point_inside( const int contour,
 
     cout << "inside point = " << inside_list[contour] << endl;
 }
+
+
+// wrapper functions for gpc polygon clip routines
+
+// Difference
+FGPolygon polygon_diff(	const FGPolygon& subject, const FGPolygon& clip ) {
+    FGPolygon result;
+
+    gpc_polygon *poly = new gpc_polygon;
+    poly->num_contours = 0;
+    poly->contour = NULL;
+
+    gpc_vertex_list v_list;
+    v_list.num_vertices = 0;
+    v_list.vertex = new gpc_vertex[FG_MAX_VERTICES];
+
+    // free allocated memory
+    gpc_free_polygon( poly );
+    delete v_list.vertex;
+
+    return result;
+}
+
+// Intersection
+FGPolygon polygon_int( const FGPolygon& subject, const FGPolygon& clip );
+
+// Exclusive or
+FGPolygon polygon_xor( const FGPolygon& subject, const FGPolygon& clip );
+
+// Union
+FGPolygon polygon_union( const FGPolygon& subject, const FGPolygon& clip );
 
 

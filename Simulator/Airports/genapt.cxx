@@ -221,8 +221,8 @@ fgAptGenerate(const string& path, fgTILE *tile)
     // gpc_vertex_list perimeter_2d;
 
     fg_gzifstream in( path );
-    if ( !in ) {
-	// exit immediately assuming an airport file for this tile
+    if ( !in.is_open() ) {
+	// return immediately assuming an airport file for this tile
 	// doesn't exist.
 	return 0;
     }

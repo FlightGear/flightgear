@@ -46,6 +46,11 @@
 #include "sky.hxx"
 
 
+#ifdef __MWERKS__
+#  pragma global_optimizer off
+#endif
+
+
 // in meters of course
 #define CENTER_ELEV   25000.0
 

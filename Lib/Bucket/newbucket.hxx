@@ -38,6 +38,13 @@
 #  include <iostream.h>
 #endif
 
+// I don't understand ... <math.h> or <cmath> should be included
+// already depending on how you defined FG_HAVE_STD_INCLUDES, but I
+// can go ahead and add this -- CLO
+#ifdef __MWERKS__
+#  include <math.h> // needed fabs()
+#endif
+
 #include STL_STRING
 
 FG_USING_STD(string);

@@ -41,6 +41,9 @@
 FG_USING_STD(vector);
 
 
+#define FG_MAX_VERTICES 100000
+
+
 typedef vector < int_list > polytype;
 typedef polytype::iterator polytype_iterator;
 typedef polytype::const_iterator const_polytype_iterator;
@@ -102,12 +105,28 @@ public:
     }
 
     inline void erase() { poly.clear(); }
+
 };
 
 
 typedef vector < FGPolygon > poly_list;
 typedef poly_list::iterator poly_list_iterator;
 typedef poly_list::const_iterator const_poly_list_iterator;
+
+
+// wrapper functions for gpc polygon clip routines
+
+// Difference
+FGPolygon polygon_diff(	const FGPolygon& subject, const FGPolygon& clip );
+
+// Intersection
+FGPolygon polygon_int( const FGPolygon& subject, const FGPolygon& clip );
+
+// Exclusive or
+FGPolygon polygon_xor( const FGPolygon& subject, const FGPolygon& clip );
+
+// Union
+FGPolygon polygon_union( const FGPolygon& subject, const FGPolygon& clip );
 
 
 #endif // _POLYGON_HXX

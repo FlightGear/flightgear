@@ -70,6 +70,8 @@ static float joy_y_max = joy_scale;
 static int joy_z_min = 1000, /* joy_z_ctr=0, */ joy_z_max = -1000;
 static int joy_z_dead_min = 100, joy_z_dead_max = -100;
 
+#elif defined( MACOS )
+#  warning port me: no joystick support
 #else
 #  error port me: no joystick support
 #endif
@@ -163,6 +165,8 @@ int fgJoystickInit( void ) {
 
     glutJoystickFunc(joystick, 100);
 
+#elif defined( MACOS )
+#  warning port me: no joystick support
 #else
 #  error port me: no joystick support
 #endif

@@ -16,6 +16,7 @@
 # include <errno.h>
 #endif
 
+#include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
@@ -67,7 +68,7 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 
 	// check for domain error
 	if ( errno == EDOM ) {
-	    cout << "Domain ERROR in fgGeocToGeod!!!!\n";
+	    FG_LOG( FG_GENERAL, FG_ALERT, "Domain ERROR in fgGeocToGeod!!!!" );
 	    *alt = 0.0;
 	}
 
@@ -83,7 +84,7 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 
 	// check for domain error
 	if ( errno == EDOM ) {
-	    cout << "Domain ERROR in fgGeocToGeod!!!!\n";
+	    FG_LOG( FG_GENERAL, FG_ALERT, "Domain ERROR in fgGeocToGeod!!!!" );
 	    *sea_level_r = 0.0;
 	}
     }

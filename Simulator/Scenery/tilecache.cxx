@@ -108,7 +108,8 @@ fgTILECACHE::fill_in( int index, FGBucket& p )
     // cout << " fragments before = " << tile_cache[index].fragment_list.size()
     //      << "\n";
 
-    string apt_path = tile_path.str() + ".apt";
+    string apt_path = tile_path.str();
+    apt_path += ".apt";
     fgAptGenerate( apt_path, &tile_cache[index] );
 
     // cout << " ncount after = " << tile_cache[index].ncount << "\n";

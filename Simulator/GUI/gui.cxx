@@ -57,6 +57,7 @@
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/views.hxx>
+#include <Misc/fgpath.hxx>
 #include <Time/fg_time.hxx>
 
 #include "gui.h"
@@ -568,7 +569,6 @@ _____________________________________________________________________*/
 void guiInit()
 {
     char *mesa_win_state;
-    string fntpath;
 
     // Initialize PUI
     puInit();
@@ -583,15 +583,17 @@ void guiInit()
     gui_msg_RESET  = msg_RESET;  // "RESET"
 
     // Next check home directory
+    FGPath fntpath;
     char* envp = ::getenv( "FG_FONTS" );
     if ( envp != NULL ) {
-        fntpath = envp;
+        fntpath.set( envp );
     } else {
-        fntpath = current_options.get_fg_root() + "/Fonts";
+        fntpath.set( current_options.get_fg_root() );
+	fntpath.append( "Fonts" );
     }
 
     // Install our fast fonts
-    fntpath += "/typewriter.txf";
+    fntpath.append( "typewriter.txf" );
     guiFntHandle = new fntTexFont ;
     guiFntHandle -> load ( fntpath.c_str() ) ;
     puFont GuiFont ( guiFntHandle, 15 ) ;

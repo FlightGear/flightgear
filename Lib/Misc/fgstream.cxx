@@ -99,6 +99,14 @@ skipeol( istream& in )
     	if ( (c == '\n') || (c == '\r') ) {
 	    break;
 	}	
+
+#ifdef __MWERKS__
+	// also break on '\0'
+    	if ( c == '\0' ) {
+	    break;
+	}	
+#endif
+
     }
 
     return in;
@@ -108,13 +116,14 @@ istream&
 skipws( istream& in ) {
     char c;
     while ( in.get(c) ) {
+
+#ifdef __MWERKS__
 	// -dw- for unix file compatibility
 	// -clo- this causes problems for unix
-	#ifdef __MWERKS__
-    	if ( (c == '\n') || (c == '\r') ) {
+    	if ( (c == '\n') || (c == '\r') || (c == '\0') ) {
 	    break;
 	}	
-	#endif
+#endif
 
 	if ( ! isspace( c ) ) {
 	    // put pack the non-space character

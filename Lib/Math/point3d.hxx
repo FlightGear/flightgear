@@ -45,6 +45,13 @@
 # include <math.h>
 #endif
 
+// I don't understand ... <math.h> or <cmath> should be included
+// already depending on how you defined FG_HAVE_STD_INCLUDES, but I
+// can go ahead and add this -- CLO
+#ifdef __MWERKS__
+#  include <math.h> // needed fabs()
+#endif
+
 #ifndef FG_HAVE_NATIVE_SGI_COMPILERS
 FG_USING_STD(ostream);
 FG_USING_STD(istream);

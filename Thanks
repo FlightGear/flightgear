@@ -242,8 +242,9 @@ Carmelo Volpe <carmelo.volpe@csb.ki.se>
 
 
 Darrell Walisser <dwaliss1@purdue.edu>
-  Contributed a large number of MacOS changes and is close to having a
-  working Mac versions of FGFS.
+  Contributed a large number of MacOS changes and has somehow managed
+  to get a pile of code written by a bunch of people who've never seen
+  a Mac to compile and run on said platform.
 
 
 Robert Allan Zeh <raz@cmg.FCNBD.COM>
