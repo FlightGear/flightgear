@@ -349,8 +349,8 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.7  1998/04/26 13:37:13  curt
-# Removed DemInfo for now.
+# Revision 1.8  1998/04/28 01:24:14  curt
+# Updates ...
 #
 # Revision 1.4  1998/04/24 00:44:06  curt
 # Added zlib support.
