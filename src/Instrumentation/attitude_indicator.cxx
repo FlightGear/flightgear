@@ -6,6 +6,12 @@
 // TODO:
 // - better spin-up
 
+#include <simgear/compiler.h>
+
+#include STL_IOSTREAM
+#include STL_STRING
+#include <sstream>
+
 #include <math.h>	// fabs()
 
 #include "attitude_indicator.hxx"
@@ -72,25 +78,27 @@ AttitudeIndicator::init ()
 void
 AttitudeIndicator::bind ()
 {
+    std::ostringstream temp;
     string branch;
-    branch = "/instrumentation/" + name + "/serviceable";
+    temp << num;
+    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
 
-    fgTie(branch.c_str(),
+    fgTie((branch + "/serviceable").c_str(),
           &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
-    branch = "/instrumentation/" + name + "/spin";
-    fgTie(branch.c_str(),
+    fgTie((branch + "/spin").c_str(),
           &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
 }
 
 void
 AttitudeIndicator::unbind ()
 {
+    std::ostringstream temp;
     string branch;
-    branch = "/instrumentation/" + name + "/serviceable";
+    temp << num;
+    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
 
-    fgUntie(branch.c_str());
-    branch = "/instrumentation/" + name + "/spin";
-    fgUntie(branch.c_str());
+    fgUntie((branch + "/serviceable").c_str());
+    fgUntie((branch + "/spin").c_str());
 }
 
 void

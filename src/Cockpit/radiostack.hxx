@@ -36,18 +36,18 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
-#include "dme.hxx"
-#include "kt_70.hxx"            // Transponder
-#include "marker_beacon.hxx"
+//#include "dme.hxx"
+//#include "kt_70.hxx"            // Transponder
+//#include "marker_beacon.hxx"
 #include "navcom.hxx"
 
 
 class FGRadioStack : public SGSubsystem
 {
-    FGDME dme;
+    //FGDME dme;
     //FGKR_87 adf;                // King KR 87 Digital ADF model
-    FGKT_70 xponder;            // Bendix/King KT 70 Panel-Mounted Transponder
-    FGMarkerBeacon beacon;
+    //FGKT_70 xponder;            // Bendix/King KT 70 Panel-Mounted Transponder
+    //FGMarkerBeacon beacon;
     FGNavCom navcom1;
     FGNavCom navcom2;
 
@@ -64,7 +64,7 @@ public:
     // Update nav/adf radios based on current postition
     void search ();
 
-    inline FGDME *get_dme() { return &dme; }
+    //inline FGDME *get_dme() { return &dme; }
     inline FGNavCom *get_navcom1() { return &navcom1; }
     inline FGNavCom *get_navcom2() { return &navcom2; }
 };

@@ -51,10 +51,10 @@ FGRadioStack::FGRadioStack() {
 FGRadioStack::~FGRadioStack() 
 {
     //adf.unbind();
-    beacon.unbind();
+    //beacon.unbind();
     navcom1.unbind();
     navcom2.unbind();
-    xponder.unbind();
+    //xponder.unbind();
 }
 
 
@@ -68,8 +68,8 @@ FGRadioStack::init ()
     navcom2.init();
 
     //adf.init();
-    beacon.init();
-    xponder.init();
+    //beacon.init();
+    //xponder.init();
 
     search();
     update(0);			// FIXME: use dt
@@ -84,13 +84,13 @@ void
 FGRadioStack::bind ()
 {
     //adf.bind();
-    beacon.bind();
-    dme.bind();
+    //beacon.bind();
+    //dme.bind();
     navcom1.set_bind_index( 0 );
     navcom1.bind();
     navcom2.set_bind_index( 1 );
     navcom2.bind();
-    xponder.bind();
+    //xponder.bind();
 }
 
 
@@ -98,11 +98,11 @@ void
 FGRadioStack::unbind ()
 {
     //adf.unbind();
-    beacon.unbind();
-    dme.unbind();
+    //beacon.unbind();
+    //dme.unbind();
     navcom1.unbind();
     navcom2.unbind();
-    xponder.unbind();
+    //xponder.unbind();
 }
 
 
@@ -111,11 +111,11 @@ void
 FGRadioStack::update(double dt) 
 {
     //adf.update( dt );
-    beacon.update( dt );
+    //beacon.update( dt );
     navcom1.update( dt );
     navcom2.update( dt );
-    dme.update( dt );           // dme is updated after the navcom's
-    xponder.update( dt );
+    //dme.update( dt );           // dme is updated after the navcom's
+    //xponder.update( dt );
 }
 
 
@@ -123,9 +123,9 @@ FGRadioStack::update(double dt)
 void FGRadioStack::search() 
 {
     //adf.search();
-    beacon.search();
+    //beacon.search();
     navcom1.search();
     navcom2.search();
-    dme.search();
-    xponder.search();
+    //dme.search();
+    //xponder.search();
 }

@@ -27,7 +27,10 @@
 #include "gps.hxx"
 #include "heading_indicator.hxx"
 #include "kr_87.hxx"
+#include "kt_70.hxx"
 #include "mag_compass.hxx"
+#include "marker_beacon.hxx"
+#include "navradio.hxx"
 #include "slip_skid_ball.hxx"
 #include "transponder.hxx"
 #include "turn_indicator.hxx"
@@ -111,15 +114,27 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "encoder" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new Encoder( node ) );
+        } else if ( name == "gps" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new GPS( node ), 0.45 );
         } else if ( name == "heading-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new HeadingIndicator( node ) );
         } else if ( name == "KR-87" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new FGKR_87( node ) );
+        } else if ( name == "KT-70" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new FGKT_70( node ) );
         } else if ( name == "magnetic-compass" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new MagCompass( node ) );
+        } else if ( name == "marker-beacon" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new FGMarkerBeacon( node ) );
+        } else if ( name == "nav-radio" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new FGNavRadio( node ) );
         } else if ( name == "slip-skid-ball" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new SlipSkidBall( node ) );
@@ -132,9 +147,6 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "vertical-speed-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new VerticalSpeedIndicator( node ) );
-        } else if ( name == "gps" ) {
-            set_subsystem( "instrument" + temp.str(), 
-                           new GPS( node ), 0.45 );
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
                     << name );
