@@ -270,19 +270,19 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
 
     /* refresh sun position */
-    time_warp += 600;
+    time_warp += 1200;
     fgSunPosition(time(NULL) + time_warp, &sun_lon, &sun_gd_lat);
-    fgGeodToGeoc(sun_gd_lat, 0, &sl_radius, &sun_gc_lat);
+    fgGeodToGeoc(sun_gd_lat, 20000.0, &sl_radius, &sun_gc_lat);
     sunpos = fgPolarToCart(sun_lon, sun_gc_lat, sl_radius);
-    printf("Sun position is (%.2f, %.2f, %.2f)\n", 
-	   sunpos.x, sunpos.y, sunpos.z);
-    /* not necessary to divide, but I'm just doing it by a "random"
-     * constant to get near the magnitude of the number down to the
-     * 0.0 - 1.0 range */
-    sun_vec[0] = -sunpos.x; 
-    sun_vec[1] = -sunpos.y;
-    sun_vec[2] = -sunpos.z;
-    sun_vec[3] = 0.0;       /* make this a directional light source only */
+    printf("Time warp = %.2f  Sun position is (%.2f, %.2f, %.2f)\n", 
+	   time_warp / 3600.0, sunpos.x, sunpos.y, sunpos.z);
+
+    /* the sun position has to be translated just like everything else */
+    sun_vec[0] = sunpos.x - scenery.center.x; 
+    sun_vec[1] = sunpos.y - scenery.center.y;
+    sun_vec[2] = sunpos.z - scenery.center.z;
+    /* make this a directional light source only */
+    sun_vec[3] = 0.0;
 
     /* update the view angle */
     for ( i = 0; i < multi_loop; i++ ) {
@@ -645,9 +645,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.4  1997/08/06 15:41:26  curt
-/* Working on correct sun position.
+/* Revision 1.5  1997/08/06 21:08:32  curt
+/* Sun position now *really* works (I think) ... I still have sun time warping
+/* code in place, probably should remove it soon.
 /*
+ * Revision 1.4  1997/08/06 15:41:26  curt
+ * Working on correct sun position.
+ *
  * Revision 1.3  1997/08/06 00:24:22  curt
  * Working on correct real time sun lighting.
  *
