@@ -208,7 +208,7 @@ fgOPTIONS::fgOPTIONS() :
 	// variable $FG_ROOT if it is set.
 	fg_root = envp;
     } else {
-	// Otherwise, default to a random compiled in location if
+	// Otherwise, default to a random compiled-in location if
 	// $FG_ROOT is not set.  This can still be overridden from the
 	// command line or a config file.
 
@@ -219,6 +219,20 @@ fgOPTIONS::fgOPTIONS() :
 #else
 	fg_root = PKGLIBDIR;
 #endif
+    }
+
+    // set a possibly independent location for scenery data
+    envp = ::getenv( "FG_SCENERY" );
+
+    if ( envp != NULL ) {
+	// fg_root could be anywhere, so default to environmental
+	// variable $FG_ROOT if it is set.
+	fg_scenery = envp;
+    } else {
+	// Otherwise, default to Scenery being in $FG_ROOT/Scenery
+	FGPath tmp( fg_root );
+	tmp.append( "Scenery" );
+	fg_scenery = tmp.str();
     }
 
     airport_id = "";		// default airport id
@@ -675,6 +689,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	pitch = atof( arg.substr(8) );
     } else if ( arg.find( "--fg-root=" ) != string::npos ) {
 	fg_root = arg.substr( 10 );
+    } else if ( arg.find( "--fg-scenery=" ) != string::npos ) {
+	fg_scenery = arg.substr( 13 );
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
 	flight_model = parse_fdm( arg.substr(6) );
     if((flight_model == FGInterface::FG_JSBSIM) && (get_trim_mode() == 0)) {
@@ -908,6 +924,9 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--help -h:  print usage" << endl;
     cout << "\t--fg-root=path:  specify the root path for all the data files"
 	 << endl;
+    cout << "\t--fg-scenery=path:  specify the base path for all the scenery"
+	 << " data." << endl
+	 << "\t\tdefaults to $FG_ROOT/Scenery" << endl;
     cout << "\t--disable-game-mode:  disable full-screen game mode" << endl;
     cout << "\t--enable-game-mode:  enable full-screen game mode" << endl;
     cout << "\t--disable-splash-screen:  disable splash screen" << endl;

@@ -128,6 +128,9 @@ private:
     // The flight gear "root" directory
     string fg_root;
 
+    // The scenery "root" directory
+    string fg_scenery;
+
     // Starting position and orientation
     string airport_id;  // ID of initial starting airport
     double lon;         // starting longitude in degrees (west = -)
@@ -224,6 +227,7 @@ public:
 
     // Query functions
     inline string get_fg_root() const { return fg_root; }
+    inline string get_fg_scenery() const { return fg_scenery; }
     inline string get_airport_id() const { return airport_id; }
     inline double get_lon() const { return lon; }
     inline double get_lat() const { return lat; }
@@ -294,6 +298,7 @@ public:
 
     // Update functions
     inline void set_fg_root (const string value) { fg_root = value; }
+    inline void set_fg_scenery (const string value) { fg_scenery = value; }
     inline void set_airport_id( const string id ) { airport_id = id; }
     inline void set_lon (double value) { lon = value; }
     inline void set_lat (double value) { lat = value; }

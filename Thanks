@@ -190,6 +190,8 @@ David Megginson <david@megginson.com>
   Updates to README.running.
   Working on getting fgfs and ssg to work without textures.
   Also added the new 2D panel and the save/load support.
+  Property manager
+  Joystick support
 
 
 Eric Mitchell <mitchell@mars.ark.com>

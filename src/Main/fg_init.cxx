@@ -1,4 +1,3 @@
-//
 // fg_init.cxx -- Flight Gear top level initialization routines
 //
 // Written by Curtis Olson, started August 1997.
