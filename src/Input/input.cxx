@@ -24,12 +24,18 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>                     
+#endif
+
 #include <simgear/compiler.h>
 
+#include <math.h>
 #include <ctype.h>
 
 #include STL_FSTREAM
 #include STL_STRING
+#include <vector>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -63,7 +69,13 @@
 
 SG_USING_STD(ifstream);
 SG_USING_STD(string);
+SG_USING_STD(vector);
 
+
+
+////////////////////////////////////////////////////////////////////////
+// Local data structures.
+////////////////////////////////////////////////////////////////////////
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -108,9 +120,24 @@ FGBinding::read (const SGPropertyNode * node)
 void
 FGBinding::fire () const
 {
+  _fire(_arg);
+}
+
+void
+FGBinding::fire (double setting) const
+{
+  SGPropertyNode arg;
+  copyProperties(_arg, &arg);
+  arg.setDoubleValue("setting", setting);
+  _fire(&arg);
+}
+
+void
+FGBinding::_fire(const SGPropertyNode * arg) const
+{
   if (_command == 0) {
     SG_LOG(SG_INPUT, SG_ALERT, "No command attached to binding");
-  } else if (!(*_command)(_arg)) {
+  } else if (!(*_command)(arg)) {
     SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command " << _command_name);
   }
 }
@@ -140,36 +167,8 @@ FGInput::~FGInput ()
 void
 FGInput::init ()
 {
-				// Read the keyboard bindings.
-				// TODO: zero the old bindings first.
-  const SGPropertyNode * keyboard =
-    globals->get_props()->getNode("/input/keyboard", true);
-  vector<const SGPropertyNode *> keys = keyboard->getChildren("key");
-
-  for (unsigned int i = 0; i < keys.size(); i++) {
-    int code = keys[i]->getIntValue("code", -1);
-    int modifiers = FG_MOD_NONE;
-    if (keys[i]->getBoolValue("mod-shift"))
-      modifiers |= FG_MOD_SHIFT;
-    if (keys[i]->getBoolValue("mod-ctrl"))
-      modifiers |= FG_MOD_CTRL;
-    if (keys[i]->getBoolValue("mod-alt"))
-      modifiers |= FG_MOD_ALT;
-
-    if (code < 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No code provided for key "
-	     << keys[i]->getStringValue("name", "[unnamed]"));
-    } else {
-      SG_LOG(SG_INPUT, SG_INFO, "Binding key " << code
-	     << " with modifiers " << modifiers);
-      vector<const SGPropertyNode *> bindings =
-	keys[i]->getChildren("binding");
-      for (unsigned int j = 0; j < bindings.size(); j++) {
-	SG_LOG(SG_INPUT, SG_INFO, "  Adding binding " << j);
-	_key_bindings[modifiers][code].push_back(FGBinding(bindings[j]));
-      }
-    }
-  }
+  _init_keyboard();
+  _init_joystick();
 }
 
 void
@@ -187,29 +186,59 @@ FGInput::unbind ()
 void 
 FGInput::update ()
 {
-  // we'll do something here with the joystick
+  _update_keyboard();
+  _update_joystick();
 }
 
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
-  float fov, tmp;
-  static bool winding_ccw = true;
-  int speed;
-
-  SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
-	 << " with modifiers " << modifiers);
-
-  const vector<FGBinding> * bindings = _find_bindings(k, modifiers);
-  if (bindings != 0) {
-    for (unsigned int i = 0; i < bindings->size(); i++)
-      (*bindings)[i].fire();
+				// Sanity check.
+  if (k < 0 || k >= MAX_KEYS) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Key value " << k << " out of range");
     return;
   }
 
-  SG_LOG(SG_INPUT, SG_INFO, "(No user binding.)");
+  button &b = _key_bindings[k];
+
+				// Key pressed.
+  if (modifiers&FG_MOD_UP == 0) {
+    SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
+	   << " with modifiers " << modifiers);
+    if (!b.last_state || b.is_repeatable) {
+      const binding_list_t &bindings =
+	_find_key_bindings(k, modifiers);
+      int max = bindings.size();
+      if (max > 0) {
+	for (int i = 0; i < max; i++)
+	  bindings[i].fire();
+	return;
+      }
+    }
+  }
+
+				// Key released.
+  else {
+    SG_LOG(SG_INPUT, SG_INFO, "User released key " << k
+	   << " with modifiers " << modifiers);
+    if (b.last_state) {
+      const binding_list_t &bindings =
+	_find_key_bindings(k, modifiers);
+      int max = bindings.size();
+      if (max > 0) {
+	for (int i = 0; i < max; i++)
+	  bindings[i].fire();
+	return;
+      }
+    }
+  }
+
 
 				// Use the old, default actions.
+  SG_LOG(SG_INPUT, SG_INFO, "(No user binding.)");
+  float fov, tmp;
+  static bool winding_ccw = true;
+  int speed;
   FGInterface *f = current_aircraft.fdm_state;
   FGViewer *v = globals->get_current_view();
   
@@ -371,27 +400,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
     } else {
 	SG_LOG( SG_INPUT, SG_DEBUG, "" );
 	switch (k) {
-	case 98: // b key
-	    int b_ret;
-	    double b_set;
-	    b_ret = int( controls.get_brake( 0 ) );
-	    b_set = double(!b_ret);
-	    controls.set_brake( FGControls::ALL_WHEELS, b_set);
-	    return;
-	case 44: // , key
-	    if (controls.get_brake(0) > 0.0) {
-	        controls.set_brake(0, 0.0);
-	    } else {
-	        controls.set_brake(0, 1.0);
-	    }
-	    return;
-	case 46: // . key
-	    if (controls.get_brake(1) > 0.0) {
-	        controls.set_brake(1, 0.0);
-	    } else {
-	        controls.set_brake(1, 1.0);
-	    }
-	    return;
 	case 104: // h key
 	    HUD_masterswitch( true );
 	    return;
@@ -545,34 +553,258 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 }
 
 
-const vector<FGBinding> *
-FGInput::_find_bindings (int k, int modifiers)
+void
+FGInput::_init_keyboard ()
 {
-  keyboard_map::const_iterator it = _key_bindings[modifiers].find(k);
+				// TODO: zero the old bindings first.
+  SG_LOG(SG_INPUT, SG_INFO, "Initializing key bindings");
+  SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
+  if (key_nodes == 0) {
+    SG_LOG(SG_INPUT, SG_ALERT, "No key bindings (/input/keyboard)!!");
+    return;
+  }
+  
+  vector<SGPropertyNode *> keys = key_nodes->getChildren("key");
+  for (unsigned int i = 0; i < keys.size(); i++) {
+    int index = keys[i]->getIndex();
+    SG_LOG(SG_INPUT, SG_INFO, "Binding key " << index);
+    _key_bindings[index].is_repeatable = keys[i]->getBoolValue("repeatable");
+    _read_bindings(keys[i], _key_bindings[index].bindings, FG_MOD_NONE);
+  }
+}
+
+
+void
+FGInput::_init_joystick ()
+{
+				// TODO: zero the old bindings first.
+  SG_LOG(SG_INPUT, SG_INFO, "Initializing joystick bindings");
+  SGPropertyNode * js_nodes = fgGetNode("/input/joysticks");
+  if (js_nodes == 0) {
+    SG_LOG(SG_INPUT, SG_ALERT, "No joystick bindings (/input/joysticks)!!");
+    return;
+  }
+
+  for (int i = 0; i < MAX_JOYSTICKS; i++) {
+    const SGPropertyNode * js_node = js_nodes->getChild("js", i);
+    if (js_node == 0) {
+      SG_LOG(SG_INPUT, SG_ALERT, "No bindings for joystick " << i);
+      continue;
+    }
+    jsJoystick * js = new jsJoystick(i);
+    _joystick_bindings[i].js = js;
+    if (js->notWorking()) {
+      SG_LOG(SG_INPUT, SG_INFO, "Joystick " << i << " not found");
+      continue;
+    }
+#ifdef WIN32
+    JOYCAPS jsCaps ;
+    joyGetDevCaps( i, &jsCaps, sizeof(jsCaps) );
+    int nbuttons = jsCaps.wNumButtons;
+    if (nbuttons > MAX_BUTTONS) nbuttons = MAX_BUTTONS;
+#else
+    int nbuttons = MAX_BUTTONS;
+#endif
+	
+    int naxes = js->getNumAxes();
+    if (naxes > MAX_AXES) naxes = MAX_AXES;
+    _joystick_bindings[i].naxes = naxes;
+    _joystick_bindings[i].nbuttons = nbuttons;
+
+    SG_LOG(SG_INPUT, SG_INFO, "Initializing joystick " << i);
+
+				// Set up range arrays
+    float minRange[naxes];
+    float maxRange[naxes];
+    float center[naxes];
+
+				// Initialize with default values
+    js->getMinRange(minRange);
+    js->getMaxRange(maxRange);
+    js->getCenter(center);
+
+				// Allocate axes and buttons
+    _joystick_bindings[i].axes = new axis[naxes];
+    _joystick_bindings[i].buttons = new button[nbuttons];
+
+
+    //
+    // Initialize the axes.
+    //
+    for (int j = 0; j < naxes; j++) {
+      const SGPropertyNode * axis_node = js_node->getChild("axis", j);
+      if (axis_node == 0) {
+	SG_LOG(SG_INPUT, SG_INFO, "No bindings for axis " << j);
+	continue;
+      }
+      
+      axis &a = _joystick_bindings[i].axes[j];
+
+      js->setDeadBand(j, axis_node->getDoubleValue("dead-band", 0.0));
+
+      a.tolerance = axis_node->getDoubleValue("tolerance", 0.002);
+      minRange[j] = axis_node->getDoubleValue("min-range", minRange[j]);
+      maxRange[j] = axis_node->getDoubleValue("max-range", maxRange[j]);
+      center[j] = axis_node->getDoubleValue("center", center[j]);
+
+      _read_bindings(axis_node, a.bindings, FG_MOD_NONE);
+    }
+
+    //
+    // Initialize the buttons.
+    //
+    for (int j = 0; j < nbuttons; j++) {
+      const SGPropertyNode * button_node = js_node->getChild("button", j);
+      if (button_node == 0) {
+	SG_LOG(SG_INPUT, SG_INFO, "No bindings for button " << j);
+	continue;
+      }
+
+      button &b = _joystick_bindings[i].buttons[j];
+      
+      b.is_repeatable =
+	button_node->getBoolValue("repeatable", b.is_repeatable);
+
+				// Get the bindings for the button
+      _read_bindings(button_node, b.bindings, FG_MOD_NONE);
+    }
+
+    js->setMinRange(minRange);
+    js->setMaxRange(maxRange);
+    js->setCenter(center);
+  }
+}
+
+
+void
+FGInput::_update_keyboard ()
+{
+  // no-op
+}
+
+
+void
+FGInput::_update_joystick ()
+{
+  int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
+  int buttons;
+  float js_val, diff;
+  float axis_values[MAX_AXES];
+
+  for (int i = 0; i < MAX_JOYSTICKS; i++) {
+
+    jsJoystick * js = _joystick_bindings[i].js;
+    if (js == 0 || js->notWorking())
+      continue;
+
+    js->read(&buttons, axis_values);
+
+
+				// Fire bindings for the axes.
+    for (int j = 0; j < _joystick_bindings[i].naxes; j++) {
+      axis &a = _joystick_bindings[i].axes[j];
+      
+				// Do nothing if the axis position
+				// is unchanged; only a change in
+				// position fires the bindings.
+      if (fabs(axis_values[j] - a.last_value) > a.tolerance) {
+// 	SG_LOG(SG_INPUT, SG_INFO, "Axis " << j << " has moved");
+	SGPropertyNode node;
+	a.last_value = axis_values[j];
+// 	SG_LOG(SG_INPUT, SG_INFO, "There are "
+// 	       << a.bindings[modifiers].size() << " bindings");
+	for (int k = 0; k < a.bindings[modifiers].size(); k++)
+	  a.bindings[modifiers][k].fire(axis_values[j]);
+      }
+    }
+
+				// Fire bindings for the buttons.
+    for (int j = 0; j < _joystick_bindings[i].nbuttons; j++) {
+      bool pressed = ((buttons & (1 << j)) > 0);
+      button &b = _joystick_bindings[i].buttons[j];
+
+      if (pressed) {
+				// The press event may be repeated.
+	if (!b.last_state || b.is_repeatable) {
+// 	  SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been pressed");
+	  for (int k = 0; k < b.bindings[modifiers].size(); k++)
+	    b.bindings[modifiers][k].fire();
+	}
+      } else {
+				// The release event is never repeated.
+	modifiers |= FG_MOD_UP;
+	if (b.last_state)
+// 	  SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been released");
+	  for (int k = 0; k < b.bindings[modifiers].size(); k++)
+	    b.bindings[modifiers][k].fire();
+      }
+	  
+      b.last_state = pressed;
+    }
+  }
+}
+
+
+void
+FGInput::_read_bindings (const SGPropertyNode * node, 
+			 binding_list_t * binding_list,
+			 int modifiers)
+{
+  vector<const SGPropertyNode *> bindings = node->getChildren("binding");
+  for (unsigned int i = 0; i < bindings.size(); i++) {
+    SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
+	   << bindings[i]->getStringValue("command"));
+    binding_list[modifiers].push_back(FGBinding(bindings[i]));
+  }
+
+				// Read nested bindings for modifiers
+  if (node->getChild("mod-up") != 0)
+    _read_bindings(node->getChild("mod-up"), binding_list,
+		   modifiers|FG_MOD_UP);
+
+  if (node->getChild("mod-shift") != 0)
+    _read_bindings(node->getChild("mod-shift"), binding_list,
+		   modifiers|FG_MOD_SHIFT);
+
+  if (node->getChild("mod-ctrl") != 0)
+    _read_bindings(node->getChild("mod-ctrl"), binding_list,
+		   modifiers|FG_MOD_CTRL);
+
+  if (node->getChild("mod-alt") != 0)
+    _read_bindings(node->getChild("mod-alt"), binding_list,
+		   modifiers|FG_MOD_ALT);
+}
+
+
+const vector<FGBinding> &
+FGInput::_find_key_bindings (unsigned int k, int modifiers)
+{
+  button &b = _key_bindings[k];
 
 				// Try it straight, first.
-  if (it != _key_bindings[modifiers].end())
-    return &(_key_bindings[modifiers][k]);
+  if (b.bindings[modifiers].size() > 0)
+    return b.bindings[modifiers];
 
 				// Try removing the control modifier
 				// for control keys.
   else if ((modifiers&FG_MOD_CTRL) && iscntrl(k))
-    return _find_bindings(k, modifiers&~FG_MOD_CTRL);
+    return _find_key_bindings(k, modifiers&~FG_MOD_CTRL);
 
 				// Try removing shift modifier 
 				// for upper case or any punctuation
 				// (since different keyboards will
 				// shift different punctuation types)
   else if ((modifiers&FG_MOD_SHIFT) && (isupper(k) || ispunct(k)))
-    return _find_bindings(k, modifiers&~FG_MOD_SHIFT);
+    return _find_key_bindings(k, modifiers&~FG_MOD_SHIFT);
 
 				// Try removing alt modifier for
 				// high-bit characters.
   else if ((modifiers&FG_MOD_ALT) && k >= 128 && k < 256)
-    return _find_bindings(k, modifiers&~FG_MOD_ALT);
+    return _find_key_bindings(k, modifiers&~FG_MOD_ALT);
 
+				// Give up and return the empty vector.
   else
-    return 0;
+    return b.bindings[modifiers];
 }
 
 // end of input.cxx
