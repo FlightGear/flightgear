@@ -34,7 +34,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include STL_STRSTREAM
+#include <sstream>
 
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
@@ -43,7 +43,7 @@
 
 #include "props.hxx"
 
-SG_USING_STD(strstream);
+SG_USING_STD(stringstream);
 SG_USING_STD(ends);
 
 /**
@@ -211,18 +211,18 @@ PropsChannel::foundTerminator()
 		push( line.c_str() );
 	    }
 	} else if ( command == "dump" ) {
-	    strstream buf;
+	    stringstream buf;
 	    if ( tokens.size() <= 1 ) {
 		writeProperties( buf, node );
 		buf << ends; // null terminate the string
-		push( buf.str() );
+		push( buf.str().c_str() );
 		push( getTerminator() );
 	    } else {
 		SGPropertyNode *child = node->getNode( tokens[1].c_str() );
 		if ( child ) {
 		    writeProperties ( buf, child );
 		    buf << ends; // null terminate the string
-		    push( buf.str() );
+		    push( buf.str().c_str() );
 		    push( getTerminator() );
 		} else {
 		    node_not_found_error( tokens[1] );

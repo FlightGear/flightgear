@@ -34,7 +34,6 @@
 #include <stdlib.h>		// atoi() atof()
 
 #include STL_STRING
-#include STL_STRSTREAM
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
@@ -49,7 +48,6 @@
 
 SG_USING_STD(string);
 SG_USING_STD(cout);
-SG_USING_STD(istrstream);
 
 
 bool FGHttpd::open() {
