@@ -21,31 +21,197 @@
 // $Id$
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/lowlevel.hxx> // endian tests
+
+#include <Main/fg_props.hxx>
 
 #include "ExternalNet.hxx"
 
 
-FGExternalNet::FGExternalNet( double dt ) {
+// FreeBSD works better with this included last ... (?)
+#if defined(WIN32) && !defined(__CYGWIN__)
+#  include <windows.h>
+#else
+#  include <netinet/in.h>	// htonl() ntohl()
+#endif
+
+
+// The function htond is defined this way due to the way some
+// processors and OSes treat floating point values.  Some will raise
+// an exception whenever a "bad" floating point value is loaded into a
+// floating point register.  Solaris is notorious for this, but then
+// so is LynxOS on the PowerPC.  By translating the data in place,
+// there is no need to load a FP register with the "corruped" floating
+// point value.  By doing the BIG_ENDIAN test, I can optimize the
+// routine for big-endian processors so it can be as efficient as
+// possible
+static void htond (double &x)	
+{
+    if ( sgIsLittleEndian() ) {
+        int    *Double_Overlay;
+        int     Holding_Buffer;
+    
+        Double_Overlay = (int *) &x;
+        Holding_Buffer = Double_Overlay [0];
+    
+        Double_Overlay [0] = htonl (Double_Overlay [1]);
+        Double_Overlay [1] = htonl (Holding_Buffer);
+    } else {
+        return;
+    }
+}
+
+
+static void global2raw( FGRawCtrls *raw ) {
+    int i;
+
+    static const SGPropertyNode *aileron
+        = fgGetNode("/controls/aileron");
+    static const SGPropertyNode *elevator
+        = fgGetNode("/controls/elevator");
+    static const SGPropertyNode *elevator_trim
+        = fgGetNode("/controls/elevator-trim");
+    static const SGPropertyNode *rudder
+        = fgGetNode("/controls/rudder");
+    static const SGPropertyNode *flaps
+        = fgGetNode("/controls/flaps");
+    char buf[256];
+
+    // fill in values
+    raw->version = FG_RAW_CTRLS_VERSION;
+    raw->aileron = fgGetDouble( "/controls/aileron" );
+    raw->elevator = fgGetDouble( "/controls/elevator" );
+    raw->elevator_trim = fgGetDouble( "/controls/elevator-trim" );
+    raw->rudder = fgGetDouble( "/controls/rudder" );
+    raw->flaps = fgGetDouble( "/controls/flaps" );
+    for ( i = 0; i < FG_MAX_ENGINES; ++i ) {
+	sprintf( buf, "/controls/throttle[%d]", i );
+	raw->throttle[i] = fgGetDouble( buf );
+	sprintf( buf, "/controls/mixture[%d]", i );
+	raw->mixture[i] = fgGetDouble( buf );
+	sprintf( buf, "/controls/propeller-pitch[%d]", i );
+	raw->prop_advance[i] = fgGetDouble( buf );
+    }
+    for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
+	sprintf( buf, "/controls/brakes[%d]", i );
+	raw->brake[i] = fgGetDouble( buf );
+    }
+    raw->hground = fgGetDouble( "/environment/ground-elevation-m" );
+
+    // convert to network byte order
+    raw->version = htonl(raw->version);
+    htond(raw->aileron);
+    htond(raw->elevator);
+    htond(raw->elevator_trim);
+    htond(raw->rudder);
+    htond(raw->flaps);
+    for ( i = 0; i < FG_MAX_ENGINES; ++i ) {
+	htond(raw->throttle[i]);
+	htond(raw->mixture[i]);
+	htond(raw->prop_advance[i]);
+    }
+    for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
+	htond(raw->brake[i]);
+    }
+    htond(raw->hground);
+
+}
+
+
+static void net2global( FGNetFDM *net ) {
+    // Convert to the net buffer from network format
+    net->version = ntohl(net->version);
+    htond(net->longitude);
+    htond(net->latitude);
+    htond(net->altitude);
+    htond(net->phi);
+    htond(net->theta);
+    htond(net->psi);
+    htond(net->vcas);
+    htond(net->climb_rate);
+    net->cur_time = ntohl(net->cur_time);
+    net->warp = ntohl(net->warp);
+    htond(net->visibility);
+
+    if ( net->version == FG_NET_FDM_VERSION ) {
+        // cout << "pos = " << net->longitude << " " << net->latitude << endl;
+        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius() << endl;
+        cur_fdm_state->_updateGeodeticPosition( net->latitude,
+                                                net->longitude,
+                                                net->altitude
+                                                  * SG_METER_TO_FEET );
+        cur_fdm_state->_set_Euler_Angles( net->phi,
+                                          net->theta,
+                                          net->psi );
+        cur_fdm_state->_set_V_calibrated_kts( net->vcas );
+        cur_fdm_state->_set_Climb_Rate( net->climb_rate );
+
+	/* these are ignored for now  ... */
+	/*
+	if ( net->cur_time ) {
+	    fgSetLong("/sim/time/cur-time-override", net->cur_time);
+	}
+
+        globals->set_warp( net->warp );
+        last_warp = net->warp;
+	*/
+    } else {
+	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
+	SG_LOG( SG_IO, SG_ALERT,
+		"\tread " << net->version << " need " << FG_NET_FDM_VERSION );
+	SG_LOG( SG_IO, SG_ALERT,
+		"\tsomeone needs to upgrade net_fdm.hxx and recompile." );
+    }
+}
+
+
+FGExternalNet::FGExternalNet( double dt, int dop, int dip, int cp,
+			      string host )
+{
     set_delta_t( dt );
 
     valid = true;
 
-    // client sends data
+    data_in_port = dip;
+    data_out_port = dop;
+    cmd_port = cp;
+    fdm_host = host;
+
+    /////////////////////////////////////////////////////////
+    // Setup client udp connection (sends data to remote fdm)
+
     if ( ! data_client.open( false ) ) {
 	SG_LOG( SG_FLIGHT, SG_ALERT, "Error opening client data channel" );
 	valid = false;
     }
+
     // fire and forget
     data_client.setBlocking( false );
 
-    // server receives data
+    if ( data_client.connect( fdm_host.c_str(), data_out_port ) == -1 ) {
+        printf("error connecting to %s:%d\n", fdm_host.c_str(), data_out_port);
+	valid = false;
+    }
+
+    /////////////////////////////////////////////////////////
+    // Setup server udp connection (for receiving data)
+
     if ( ! data_server.open( false ) ) {
 	SG_LOG( SG_FLIGHT, SG_ALERT, "Error opening client server channel" );
 	valid = false;
     }
+
     // we want to block for incoming data in order to syncronize frame
     // rates.
-    data_server.setBlocking( true );
+    data_server.setBlocking( false /* don't block while testing */ );
+    // data_server.setBlocking( true /* don't block while testing */ );
+
+    // if we bind to fdm_host = "" then we accept messages from
+    // anyone.
+    if ( data_server.bind( fdm_host.c_str(), data_in_port ) == -1 ) {
+        printf("error binding to port %d\n", data_in_port);
+	valid = false;
+    }
 }
 
 
@@ -63,6 +229,33 @@ void FGExternalNet::init() {
     // Explicitly call the superclass's
     // init method first.
     common_init();
+
+    double lon = fgGetDouble( "/position/longitude-deg" );
+    double lat = fgGetDouble( "/position/latitude-deg" );
+    double ground = fgGetDouble( "/environment/ground-elevation-m" );
+    double heading = fgGetDouble("/orientation/heading-deg");
+
+    char cmd[256];
+
+    sprintf( cmd, "/longitude-deg?value=%.8f", lon );
+    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    netChannel::loop(0);
+
+    sprintf( cmd, "/latitude-deg?value=%.8f", lat );
+    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    netChannel::loop(0);
+
+    sprintf( cmd, "/ground-m?value=%.8f", ground );
+    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    netChannel::loop(0);
+
+    sprintf( cmd, "/heading-deg?value=%.8f", heading );
+    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    netChannel::loop(0);
+
+    sprintf( cmd, "/reset?value=ground" );
+    new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    netChannel::loop(0);
 }
 
 
@@ -70,5 +263,20 @@ void FGExternalNet::init() {
 // model values are getting filled in elsewhere (most likely from some
 // external source.)
 void FGExternalNet::update( int multiloop ) {
-    // cout << "FGExternalNet::update()" << endl;
+    int length;
+    int result;
+
+    // Send control positions to remote fdm
+    length = sizeof(ctrls);
+    global2raw( &ctrls );
+    if ( data_client.send( (char *)(& ctrls), length, 0 ) != length ) {
+	SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+    }
+
+    // Read next set of FDM data (blocking enabled to maintain 'sync')
+    length = sizeof(fdm);
+    if ( (result = data_server.recv( (char *)(& fdm), length, 0)) >= 0 ) {
+	SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
+	net2global( &fdm );
+    }
 }

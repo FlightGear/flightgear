@@ -23,28 +23,59 @@
 #ifndef _EXTERNAL_NET_HXX
 #define _EXTERNAL_NET_HXX
 
+#include <plib/netBuffer.h>
 #include <plib/netSocket.h>
 
+#include <Network/raw_ctrls.hxx>
+#include <Network/net_fdm.hxx>
+
 #include "flight.hxx"
+
+
+class HTTPClient : public netBufferChannel
+{
+public:
+
+    HTTPClient ( cchar* host, int port, cchar* path ) {
+	open ();
+	connect (host, port);
+
+	cchar* s = netFormat ( "GET %s HTTP/1.0\r\n\r\n", path );
+	bufferSend( s, strlen(s) ) ;
+    }
+
+    virtual void handleBufferRead (netBuffer& buffer)
+    {
+	const char* s = buffer.getData();
+	while (*s)
+	    fputc(*s++,stdout);
+
+	buffer.remove();
+    }
+};
 
 
 class FGExternalNet: public FGInterface {
 
 private:
 
-    int data_port;
+    int data_in_port;
+    int data_out_port;
     int cmd_port;
-    string host;
+    string fdm_host;
 
     netSocket data_client;
     netSocket data_server;
 
     bool valid;
 
+    FGRawCtrls ctrls;
+    FGNetFDM fdm;
+
 public:
 
     // Constructor
-    FGExternalNet::FGExternalNet( double dt );
+    FGExternalNet::FGExternalNet( double dt, int dop, int dip, int cp, string host );
 
     // Destructor
     FGExternalNet::~FGExternalNet();
@@ -59,5 +90,3 @@ public:
 
 
 #endif // _EXTERNAL_NET_HXX
-
-

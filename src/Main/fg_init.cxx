@@ -81,6 +81,7 @@
 #include <FDM/ADA.hxx>
 #include <FDM/Balloon.h>
 #include <FDM/External.hxx>
+#include <FDM/ExternalNet.hxx>
 #include <FDM/JSBSim/JSBSim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
@@ -566,6 +567,8 @@ void fgInitFDM() {
 	    cur_fdm_state = new FGMagicCarpet( dt );
 	} else if (model == "external") {
 	    cur_fdm_state = new FGExternal( dt );
+	} else if (model == "network") {
+	    cur_fdm_state = new FGExternalNet( dt, 5501, 5502, 5503, "localhost" );
 	} else if (model == "null") {
 	    cur_fdm_state = new FGNullFDM( dt );
 	} else if (model == "yasim") {
