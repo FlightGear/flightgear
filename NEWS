@@ -1,3 +1,7 @@
+New in 0.53
+* Some initial "GameGLUT" support contributed by Gary R. Van Sickle
+  (tiberius@braemarinc.com)
+
 New in 0.52
 * Stars added in 8 stages as sky gets darker for a smoother more realistic
   transition.

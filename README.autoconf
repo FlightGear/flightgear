@@ -32,3 +32,11 @@ For debuging purposes you might want to try something like:
 
     CFLAGS=-Wall CXXFLAGS=-Wall ./configure; make; make install
 
+For full optimization using the EGCS compiler on an Intel processor you 
+could try something like:
+
+    MACH="-mpentiumpro"
+    CFLAGS = -O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH
+    CXXFLAGS = -O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH
+    ./configure
+

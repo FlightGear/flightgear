@@ -154,6 +154,10 @@ Durk Talsma <pn_talsma@macmail.psy.uva.nl>
   sky.  Planets are correctly positioned and have proper magnitude.
 
 
+Gary R. Van Sickle <tiberius@braemarinc.com>
+  Contributed some initial GameGLUT support and other fixes.
+
+
 Carmelo Volpe <carmelo.volpe@csb.ki.se>
   Porting Flight Gear to the Metro Works development environment (PC/Mac)
 
