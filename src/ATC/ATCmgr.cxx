@@ -393,7 +393,8 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGATCMgr::Render(string msg, string refname, bool repeating) {
 #ifdef ENABLE_AUDIO_SUPPORT
-	voice = voiceOK && fgGetBool("/sim/sound/audible");
+	voice = (voiceOK && fgGetBool("/sim/sound/audible")
+                 && fgGetBool("/sim/sound/voice"));
 	if(voice) {
 		int len;
 		unsigned char* buf = v1.WriteMessage((char*)msg.c_str(), len, voice);
