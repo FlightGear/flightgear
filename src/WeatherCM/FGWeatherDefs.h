@@ -54,8 +54,8 @@ HISTORY
 typedef float WeatherPrecision;
 
 //set the minimum visibility to get a at least half way realistic weather
-#define MINIMUM_WEATHER_VISIBILIY 10.0    /* metres */
-#define DEFAULT_WEATHER_VISIBILIY 32000.0 /* metres */
+#define MINIMUM_WEATHER_VISIBILITY 10.0    /* metres */
+#define DEFAULT_WEATHER_VISIBILITY 32000.0 /* metres */
 //prefered way the database is working
 #define PREFERED_WORKING_TYPE default_mode
 

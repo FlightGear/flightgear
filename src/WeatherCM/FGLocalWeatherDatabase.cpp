@@ -93,7 +93,7 @@ void FGLocalWeatherDatabase::tileLocalWeather(const FGPhysicalProperties2DVector
 FGLocalWeatherDatabase* FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 0;
 FGLocalWeatherDatabase *WeatherDatabase;
 
-FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& posititon, const WeatherPrecision visibility, const DatabaseWorkingType type)
+FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& position, const WeatherPrecision visibility, const DatabaseWorkingType type)
 {
     cerr << "Initializing FGLocalWeatherDatabase\n";
     cerr << "-----------------------------------\n";
@@ -109,7 +109,7 @@ FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& posititon, const We
 
     DatabaseStatus = type;
     global = 0;	    //just get sure...
-    sgCopyVec3(last_known_position, posititon);
+    sgCopyVec3(last_known_position, position);
 
 
     theFGLocalWeatherDatabase = this;
@@ -120,7 +120,7 @@ FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& posititon, const We
 	{
 	    global = new FGGlobalWeatherDatabase;	//initialize GlobalDatabase
 	    global->setDatabaseStatus(FGGlobalWeatherDatabase_working);
-	    tileLocalWeather(global->getAll(posititon, WeatherVisibility, 3));
+	    tileLocalWeather(global->getAll(position, WeatherVisibility, 3));
 	}
 	break;
 

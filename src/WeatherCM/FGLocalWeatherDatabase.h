@@ -130,21 +130,28 @@ public:
     /* Constructor and Destructor					    */
     /************************************************************************/
     FGLocalWeatherDatabase(
-	const sgVec3&             posititon,
-	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILIY,
+	const sgVec3&             position,
+	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
 	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE);
 
     FGLocalWeatherDatabase(
-	const WeatherPrecision    posititon_lat,
-	const WeatherPrecision    posititon_lon,
-	const WeatherPrecision    posititon_alt,
-	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILIY,
+	const WeatherPrecision    position_lat,
+	const WeatherPrecision    position_lon,
+	const WeatherPrecision    position_alt,
+	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
 	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
     {
-	sgVec3 position;
-	sgSetVec3( position, posititon_lat, posititon_lon, posititon_alt );
+	cout << "This constructor is broken and should *NOT* be used!" << endl;
+	exit(-1);
 
-	FGLocalWeatherDatabase( position, visibility, type );
+	sgVec3 position;
+	sgSetVec3( position, position_lat, position_lon, position_alt );
+
+	// Christian: the following line does not do what you intend.
+	// It just creates a new FGLocalWeatherDatabase which isn't
+	// assigned to anything so it is immediately discared.
+
+	/* BAD --> */ FGLocalWeatherDatabase( position, visibility, type );
     }
 
     ~FGLocalWeatherDatabase();
@@ -202,10 +209,10 @@ void fgUpdateWeatherDatabase(void);
 /****************************************************************************/
 void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecision visibility)
 {
-    if (visibility >= MINIMUM_WEATHER_VISIBILIY)
+    if (visibility >= MINIMUM_WEATHER_VISIBILITY)
 	WeatherVisibility = visibility;
     else
-	WeatherVisibility = MINIMUM_WEATHER_VISIBILIY;
+	WeatherVisibility = MINIMUM_WEATHER_VISIBILITY;
 
     //This code doesn't belong here as this is the optical visibility and not
     //the visibility of the weather database (that should be bigger...). The

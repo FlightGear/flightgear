@@ -233,7 +233,7 @@ bool fgInitSubsystems( void ) {
     } else if ( current_options.get_flight_model() == FGInterface::FG_JSBSIM ) {
 	cur_fdm_state = new FGJSBsim;
     } else if ( current_options.get_flight_model() == 
-		FGInterface::FG_BALLOONSIM ) {
+	 	FGInterface::FG_BALLOONSIM ) {
 	cur_fdm_state = new FGBalloonSim;
     } else if ( current_options.get_flight_model() == 
 		FGInterface::FG_MAGICCARPET ) {
@@ -432,18 +432,21 @@ bool fgInitSubsystems( void ) {
 #ifndef FG_OLD_WEATHER
     // Initialize the WeatherDatabase
     FG_LOG(FG_GENERAL, FG_INFO, "Creating LocalWeatherDatabase");
+    sgVec3 position;
+    sgSetVec3( position, current_aircraft.fdm_state->get_Latitude(),
+	       current_aircraft.fdm_state->get_Longitude(),
+	       current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER );
     FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-	new FGLocalWeatherDatabase(
-	               current_aircraft.fdm_state->get_Latitude(),
-		       current_aircraft.fdm_state->get_Longitude(),
-		       current_aircraft.fdm_state->get_Altitude() 
-		          * FEET_TO_METER );
+	new FGLocalWeatherDatabase( position );
+    // cout << theFGLocalWeatherDatabase << endl;
+    // cout << "visibility = " 
+    //      << theFGLocalWeatherDatabase->getWeatherVisibility() << endl;
 
     WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
-
+     
     // register the periodic update of the weather
     global_events.Register( "weather update", fgUpdateWeatherDatabase,
-			    fgEVENT::FG_EVENT_READY, 30000);
+                            fgEVENT::FG_EVENT_READY, 30000);
 #else
     current_weather.Init();
 #endif
