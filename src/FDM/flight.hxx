@@ -839,6 +839,9 @@ public:
     inline double get_Phi_dot() const { return euler_rates_v[0]; }
     inline double get_Theta_dot() const { return euler_rates_v[1]; }
     inline double get_Psi_dot() const { return euler_rates_v[2]; }
+    inline double get_Phi_dot_degps() const { return euler_rates_v[0] * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Theta_dot_degps() const { return euler_rates_v[1] * SGD_RADIANS_TO_DEGREES; }
+    inline double get_Psi_dot_degps() const { return euler_rates_v[2] * SGD_RADIANS_TO_DEGREES; }
 
     // inline double * get_Geocentric_rates_v() { return geocentric_rates_v; }
     inline double get_Latitude_dot() const { return geocentric_rates_v[0]; }
