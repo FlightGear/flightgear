@@ -8,7 +8,7 @@ fgadmin_SOURCES = \
 	main.cxx \
 	untarka.c untarka.h
 
-fgadmin_LDADD = -lsgmisc -lplibul -ltar -lz
+fgadmin_LDADD = -lsgmisc -lplibul -lz
 
 fgadmin.cxx fgadmin.h: fgadmin.fl
 	fluid -c fgadmin.fl

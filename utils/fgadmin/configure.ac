@@ -166,20 +166,6 @@ else
     AC_DEFINE([HAVE_ZLIB], 1, [Define to enable gz compressed tar archives])
 fi
 
-dnl Check for system installed zlib
-AC_CHECK_HEADER(libtar.h)
-if test "x$ac_cv_header_libtar_h" != "xyes"; then
-    echo
-    echo "libtar library not found."
-    echo
-    echo "If your OS does not provide an installable package for libtar"
-    echo "you will have to compile and install it first yourself."
-    echo
-    echo "configure aborted."
-    echo
-    exit
-fi
-
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( errno.h fcntl.h sys/types.h sys/stat.h )
