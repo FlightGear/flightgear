@@ -414,6 +414,7 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	panel_status = false;
     } else if ( arg == "--enable-panel" ) {
 	panel_status = true;
+	fov *= 0.4232;
     } else if ( arg == "--disable-sound" ) {
 	sound = false;
     } else if ( arg == "--enable-sound" ) {
@@ -641,6 +642,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.43  1999/03/22 23:47:55  curt
+// FOV set properly when panel activated.
+//
 // Revision 1.42  1999/03/11 23:09:50  curt
 // When "Help" is selected from the menu check to see if netscape is running.
 // If so, command it to go to the flight gear user guide url.  Otherwise
