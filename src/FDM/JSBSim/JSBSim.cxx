@@ -625,9 +625,9 @@ bool FGJSBsim::copy_from_JSBsim()
       case FGEngine::etSimTurbine:
         { // FGSimTurbine code block
         FGSimTurbine* eng = (FGSimTurbine*)Propulsion->GetEngine(i);
-        node->setDoubleValue("N1", eng->GetN1());
-        node->setDoubleValue("N2", eng->GetN2());
-        node->setDoubleValue("EGT_degC", eng->GetEGT());
+        node->setDoubleValue("n1", eng->GetN1());
+        node->setDoubleValue("n2", eng->GetN2());
+        node->setDoubleValue("egt_degf", 32 + eng->GetEGT()*9/5);
         node->setBoolValue("augmentation", eng->GetAugmentation());
         node->setBoolValue("water-injection", eng->GetInjection());
         node->setBoolValue("ignition", eng->GetIgnition());
