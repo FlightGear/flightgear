@@ -50,7 +50,6 @@ extern fntTexFont *guiFntHandle;
 // Activate Dialog Box
 #define FG_PUSH_PUI_DIALOG( X ) \
     maybeToggleMouse(); \
-    puPushGroup( (X) ) ; \
     puPushLiveInterface( (X) ) ; \
     ( X )->reveal()
 
@@ -58,7 +57,6 @@ extern fntTexFont *guiFntHandle;
 #define FG_POP_PUI_DIALOG( X ) \
     (X)->hide(); \
     puPopLiveInterface(); \
-    puPopGroup(); \
     guiFixPanel(); \
     maybeToggleMouse();
 
