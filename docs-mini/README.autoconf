@@ -14,7 +14,7 @@ you can fetch them from the locations listed below:
 
 After making a change to configure.in you will need to run:
 
-    aclocal ; automake -a ; autoconf
+    aclocal ; autoheader ; automake -a ; autoconf
 
 Then follow the regular build procedure:
 
