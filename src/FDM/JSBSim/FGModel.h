@@ -109,7 +109,7 @@ public:
   /** Loads this model.
       @param Config a pointer to the config file instance
       @return true if model is successfully loaded*/
-  virtual bool Load(FGConfigFile* Config) {}
+  virtual bool Load(FGConfigFile* Config) {return true;}
  
   FGModel* NextModel;
   string Name;

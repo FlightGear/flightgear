@@ -35,6 +35,13 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#ifdef FGFS
+#  include <simgear/compiler.h>
+#  include STL_ALGORITHM
+#else
+#  include <algorithm>
+#endif
+
 #include "FGNozzle.h"
 
 static const char *IdSrc = "$Id$";
@@ -90,7 +97,7 @@ FGNozzle::~FGNozzle()
 float FGNozzle::Calculate(float CfPc)
 {
   float pAtm = fdmex->GetAtmosphere()->GetPressure();
-  Thrust = (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff;
+  Thrust = max((float)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
   vFn(1) = Thrust;
 
   return Thrust;
