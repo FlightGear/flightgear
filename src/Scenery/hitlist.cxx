@@ -222,7 +222,7 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
 	  kid = branch->getNextKid() )
     {
 	if ( kid->getTraversalMask() & SSGTRAV_HOT ) {
-	    bsphere = kid->getBSphere();
+            bsphere = kid->getBSphere();
 	    sgVec3 fcenter;
 	    sgCopyVec3( fcenter, bsphere->getCenter() );
 	    sgdVec3 center;
@@ -230,20 +230,20 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
 	    center[1] = fcenter[1];
 	    center[2] = fcenter[2];
 	    sgdXformPnt3( center, m ) ;
-	    double radius_sqd = bsphere->getRadius() * bsphere->getRadius();
+            // watch out for overflow
 	    if ( sgdClosestPointToLineDistSquared( center, orig, dir ) <
-		 radius_sqd )
+		 double(bsphere->getRadius() * bsphere->getRadius()) )
 	    {
 		// possible intersections
 		if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
 		    sgdMat4 m_new;
 		    sgdCopyMat4(m_new, m);
 		    if ( kid->isA( ssgTypeTransform() ) ) {
-			sgMat4 fxform;
-			((ssgTransform *)kid)->getTransform( fxform );
-			sgdMat4 xform;
-			sgdSetMat4( xform, fxform );
-			sgdPreMultMat4( m_new, xform );
+                        sgMat4 fxform;
+                        ((ssgTransform *)kid)->getTransform( fxform );
+                        sgdMat4 xform;
+                        sgdSetMat4( xform, fxform );
+                        sgdPreMultMat4( m_new, xform );
 		    }
 		    IntersectBranch( (ssgBranch *)kid, m_new, orig, dir );
 		} else if ( kid->isAKindOf ( ssgTypeLeaf() ) ) {
@@ -307,8 +307,8 @@ void FGHitList::IntersectCachedLeaf( sgdMat4 m,
 	sgdXformPnt3( center, m );
 
 	if ( sgdClosestPointToLineDistSquared( center, orig, dir ) <
-	     radius*radius )
-        {
+	     double(radius*radius) )
+	{
 	    IntersectLeaf( (ssgLeaf *)last_hit(), m, orig, dir );
 	}
     }
@@ -357,34 +357,34 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
     
     int hitcount = hit_list->num_hits();
     for ( int i = 0; i < hitcount; ++i ) {
-	geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );      
-	double lat_geod, alt, sea_level_r;
-	sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
-		     &alt, &sea_level_r);
-	if ( alt > result && alt < 10000 ) {
-	    result = alt;
-	    this_hit = i;
-	}
+        geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );      
+        double lat_geod, alt, sea_level_r;
+        sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
+                     &alt, &sea_level_r);
+        if ( alt > result && alt < 10000 ) {
+            result = alt;
+            this_hit = i;
+        }
     }
 
     if ( result > -9000 ) {
-	*terrain_elev = result;
-	*radius = geoc.radius();
-	sgVec3 tmp;
-	sgSetVec3(tmp, hit_list->get_normal(this_hit));
-	// cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
-	//      << tmp[2] << endl;
-	/* ssgState *IntersectedLeafState =
-	    ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
-	CurrentNormalInLocalPlane(tmp, tmp);
-	sgdSetVec3( normal, tmp );
-	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
-	return true;
+        *terrain_elev = result;
+        *radius = geoc.radius();
+        sgVec3 tmp;
+        sgSetVec3(tmp, hit_list->get_normal(this_hit));
+        // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
+        //      << tmp[2] << endl;
+        /* ssgState *IntersectedLeafState =
+           ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
+        CurrentNormalInLocalPlane(tmp, tmp);
+        sgdSetVec3( normal, tmp );
+        // cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
+        return true;
     } else {
-	SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
-	*terrain_elev = 0.0;
-	float *up = globals->get_current_view()->get_world_up();
-	sgdSetVec3(normal, up[0], up[1], up[2]);
-	return false;
+        SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
+        *terrain_elev = 0.0;
+        float *up = globals->get_current_view()->get_world_up();
+        sgdSetVec3(normal, up[0], up[1], up[2]);
+        return false;
     }
 }
