@@ -32,7 +32,7 @@ FGAircraftModel::FGAircraftModel ()
   : _aircraft(0),
     _scene(new ssgRoot),
     _nearplane(0.01f),
-    _farplane(5000.0f)
+    _farplane(100.0f)
 {
 }
 
@@ -89,10 +89,13 @@ FGAircraftModel::draw ()
 				// OK, now adjust the clip planes and draw
 				// FIXME: view number shouldn't be 
 				// hard-coded.
+  int view_number = globals->get_viewmgr()->get_current();
   if (_aircraft->getVisible()) {
-    glClearDepth(1);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    ssgSetNearFar(_nearplane, _farplane);
+    if (view_number == 0) {
+      glClearDepth(1);
+      glClear(GL_DEPTH_BUFFER_BIT);
+      ssgSetNearFar(_nearplane, _farplane);
+    }
     ssgCullAndDraw(_scene);
   }
 
