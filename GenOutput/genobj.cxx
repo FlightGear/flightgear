@@ -153,27 +153,19 @@ void FGGenOutput::gen_normals() {
 // calculate the global bounding sphere.  Center is the average of the
 // points.
 void FGGenOutput::calc_gbs() {
-    double x = 0;
-    double y = 0;
-    double z = 0;
-
     double dist_squared;
     double radius_squared = 0;
     
+    gbs_center = Point3D( 0.0 );
+
     const_point_list_iterator current = wgs84_nodes.begin();
     const_point_list_iterator last = wgs84_nodes.end();
 
     for ( ; current != last; ++current ) {
-	x += current->x();
-	y += current->y();
-	z += current->z();
+	gbs_center += *current;
     }
 
-    x /= wgs84_nodes.size();
-    y /= wgs84_nodes.size();
-    z /= wgs84_nodes.size();
-
-    gbs_center = Point3D(x, y, z);
+    gbs_center /= wgs84_nodes.size();
 
     current =  wgs84_nodes.begin();
     for ( ; current != last; ++current ) {
@@ -218,14 +210,66 @@ int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
 }
 
 
+// caclulate the bounding sphere for a list of triangle faces
+void FGGenOutput::calc_group_bounding_sphere( const triele_list& tris, 
+					      Point3D *center, double *radius )
+{
+    cout << "calculate group bounding sphere for " << tris.size() << " tris." 
+	 << endl;
+
+    // generate a list of unique points from the triangle list
+    FGTriNodes nodes;
+
+    const_triele_list_iterator t_current = tris.begin();
+    const_triele_list_iterator t_last = tris.end();
+    for ( ; t_current != t_last; ++t_current ) {
+	Point3D p1 = wgs84_nodes[ t_current->get_n1() ];
+	Point3D p2 = wgs84_nodes[ t_current->get_n2() ];
+	Point3D p3 = wgs84_nodes[ t_current->get_n3() ];
+
+	nodes.unique_add(p1);
+	nodes.unique_add(p2);
+	nodes.unique_add(p3);
+    }
+
+    // find average of point list
+    Point3D c( 0.0 );
+    point_list points = nodes.get_node_list();
+    cout << "found " << points.size() << " unique nodes" << endl;
+    point_list_iterator p_current = points.begin();
+    point_list_iterator p_last = points.end();
+    for ( ; p_current != p_last; ++p_current ) {
+	c += *p_current;
+    }
+    c /= points.size();
+
+    // find max radius
+    double dist_squared;
+    double max_squared = 0;
+
+    p_current = points.begin();
+    p_last = points.end();
+    for ( ; p_current != p_last; ++p_current ) {
+	dist_squared = c.distance3Dsquared(*p_current);
+	if ( dist_squared > max_squared ) {
+	    max_squared = dist_squared;
+	}
+    }
+
+    *center = c;
+    *radius = sqrt(max_squared);
+}
+
+
 // caclulate the bounding sphere for the specified triangle face
-void FGGenOutput::calc_bounding_sphere( int i, Point3D *center, 
-					double *radius ) {
+void FGGenOutput::calc_bounding_sphere( const FGTriEle& t, 
+					Point3D *center, double *radius )
+{
     Point3D c( 0.0 );
 
-    Point3D p1 = wgs84_nodes[ tri_elements[i].get_n1() ];
-    Point3D p2 = wgs84_nodes[ tri_elements[i].get_n2() ];
-    Point3D p3 = wgs84_nodes[ tri_elements[i].get_n3() ];
+    Point3D p1 = wgs84_nodes[ t.get_n1() ];
+    Point3D p2 = wgs84_nodes[ t.get_n2() ];
+    Point3D p3 = wgs84_nodes[ t.get_n3() ];
 
     c = p1 + p2 + p3;
     c /= 3;
@@ -306,27 +350,44 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
     }
     fprintf(fp, "\n");
 
-    // write triangles
+    // write triangles (grouped by type for now)
     Point3D center;
     double radius;
     fprintf(fp, "# triangle list\n");
     fprintf(fp, "\n");
-    const_triele_list_iterator t_current = tri_elements.begin();
-    const_triele_list_iterator t_last = tri_elements.end();
-    int counter = 0;
-    int attribute;
-    string attr_name;
-    for ( ; t_current != t_last; ++t_current ) {
-	attribute = (int)t_current->get_attribute();
-	calc_bounding_sphere( counter, &center, &radius );
-	attr_name = get_area_name( (AreaType)attribute );
-	fprintf(fp, "# usemtl %s\n", attr_name.c_str() );
-	fprintf(fp, "# bs %.2f %.2f %.2f %.2f\n", 
-		center.x(), center.y(), center.z(), radius);
-	fprintf(fp, "f %d %d %d\n", 
-		t_current->get_n1(), t_current->get_n2(), t_current->get_n3());
-	fprintf(fp, "\n");
-	++counter;
+
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	triele_list area_tris;
+	area_tris.erase( area_tris.begin(), area_tris.end() );
+
+	const_triele_list_iterator t_current = tri_elements.begin();
+	const_triele_list_iterator t_last = tri_elements.end();
+	for ( ; t_current != t_last; ++t_current ) {
+	    if ( (int)t_current->get_attribute() == i ) {
+		area_tris.push_back( *t_current );
+	    }
+	}
+
+	if ( (int)area_tris.size() > 0 ) {
+	    string attr_name = get_area_name( (AreaType)i );
+	    calc_group_bounding_sphere( area_tris, &center, &radius );
+	    cout << "writing " << (int)area_tris.size() << " faces for " 
+		 << attr_name << endl;
+
+	    fprintf(fp, "# usemtl %s\n", attr_name.c_str() );
+	    fprintf(fp, "# bs %.4f %.4f %.4f %.2f\n", 
+		    center.x(), center.y(), center.z(), radius);
+
+	    triele_list_iterator a_current = area_tris.begin();
+	    triele_list_iterator a_last = area_tris.end();
+	    for ( ; a_current != a_last; ++a_current ) {
+		fprintf( fp, "f %d %d %d\n", 
+			 a_current->get_n1(), 
+			 a_current->get_n2(),
+			 a_current->get_n3() );
+	    }
+	    fprintf( fp, "\n" );
+	}
     }
 
     fclose(fp);
@@ -339,6 +400,11 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 
 
 // $Log$
+// Revision 1.5  1999/03/27 14:06:42  curt
+// Tweaks to bounding sphere calculation routines.
+// Group like triangles together for output to be in a single display list,
+// even though they are individual, non-fanified, triangles.
+//
 // Revision 1.4  1999/03/27 05:23:22  curt
 // Interpolate real z value of all nodes from dem data.
 // Write scenery file to correct location.

@@ -102,8 +102,13 @@ private:
     // the points.
     void calc_gbs();
 
+    // caclulate the bounding sphere for a list of triangle faces
+    void calc_group_bounding_sphere( const triele_list& tris, 
+				     Point3D *center, double *radius );
+
     // caclulate the bounding sphere for the specified triangle face
-    void calc_bounding_sphere( int i, Point3D *center, double *radius );
+    void calc_bounding_sphere( const FGTriEle& t, 
+			       Point3D *center, double *radius );
 
 public:
 
@@ -124,6 +129,11 @@ public:
 
 
 // $Log$
+// Revision 1.6  1999/03/27 14:06:43  curt
+// Tweaks to bounding sphere calculation routines.
+// Group like triangles together for output to be in a single display list,
+// even though they are individual, non-fanified, triangles.
+//
 // Revision 1.5  1999/03/27 05:23:23  curt
 // Interpolate real z value of all nodes from dem data.
 // Write scenery file to correct location.
