@@ -31,6 +31,9 @@
 #include <GL/glut.h>
 #include "../XGL/xgl.h"
 
+#include <math.h>
+
+#include "../Include/constants.h"
 /* temporary */
 #include "../Math/fg_random.h"
 
@@ -88,41 +91,53 @@ static void parse_index(long int index, struct ai *p) {
 
 
 /* Build a path name from an area index */
-static void gen_path(struct ai *p, char *path) {
+static void gen_path(long int index, char *path) {
+    struct ai p;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
 
+    parse_index(index, &p);
+
     path[0] = '\0';
 
-    top_lon = p->lon / 10;
-    main_lon = p->lon;
-    if ( p->lon < 0 ) {
+    top_lon = p.lon / 10;
+    main_lon = p.lon;
+    if ( (p.lon < 0) && (top_lon * 10 != p.lon) ) {
 	top_lon -= 1;
-	top_lon *= -1;
 	main_lon -= 1;
-	main_lon *= -1;
-	hem = 'w';
-    } else {
-	hem = 'e';
     }
     top_lon *= 10;
-
-    top_lat = p->lat / 10;
-    main_lat = p->lat;
-    if ( p->lat < 0 ) {
-	top_lat -= 1;
-	top_lat *= -1;
-	main_lat -= 1;
-	main_lat *= -1;
-	pole = 's';
+    if ( top_lon >= 0 ) {
+	hem = 'e';
     } else {
-	pole = 'n';
+	hem = 'w';
+	top_lon *= -1;
+    }
+    if ( main_lon < 0 ) {
+	main_lon *= -1;
+    }
+
+    top_lat = p.lat / 10;
+    main_lat = p.lat;
+    if ( (p.lat < 0) && (top_lat * 10 != p.lat) ) {
+	top_lat -= 1;
+	main_lat -= 1;
     }
     top_lat *= 10;
+    if ( top_lat >= 0 ) {
+	pole = 'n';
+    } else {
+	pole = 's';
+	top_lat *= -1;
+    }
+    if ( main_lat < 0 ) {
+	main_lat *= -1;
+    }
 
-    sprintf(path, "%c%03d%c%03d/%c%03d%c%03d/", 
+    sprintf(path, "%c%03d%c%03d/%c%03d%c%03d/%ld.ter", 
 	    hem, top_lon, pole, top_lat,
-	    hem, main_lon, pole, main_lat);
+	    hem, main_lon, pole, main_lat,
+	    index);
 }
 
 
@@ -185,29 +200,35 @@ static void offset_ai(struct ai *in, struct ai *out, int x, int y) {
 /* Given a lat/lon, fill in the local area index array */
 static void gen_idx_array(double lon, double lat) {
     struct ai p1, p2, p3;
+    double diff;
     char path[256];
     long int index = 0;
     int i, j;
 
     printf("lon = %.2f  lat = %.2f\n", lon, lat);
 
-    if ( lon < 0 ) {
-	p1.lon = (int)lon - 1;
-    } else {
+    diff = lon - (double)(int)lon;
+    printf("diff = %.2f\n", diff);
+    if ( (lon >= 0) || (fabs(diff) < FG_EPSILON) ) {
 	p1.lon = (int)lon;
+    } else {
+	p1.lon = (int)lon - 1;
     }
     printf("  p1.lon = %d\n", p1.lon);
 
-    if ( lat < 0 ) {
-	p1.lat = (int)lat - 1;
-    } else {
+    diff = lat - (double)(int)lat;
+    printf("diff = %.2f\n", diff);
+    if ( (lat >= 0) || (fabs(diff) < FG_EPSILON) ) {
 	p1.lat = (int)lat;
+    } else {
+	p1.lat = (int)lat - 1;
     }
     printf("  p1.lat = %d\n", p1.lat);
 
     p1.x = (lon - p1.lon) * 8;
     p1.y = (lat - p1.lat) * 8;
-    printf("  x,y index = %d,%d\n", p1.x, p1.y);
+    printf("  lon,lat = %d,%d  x,y index = %d,%d\n", 
+	   p1.lon, p1.lat, p1.x, p1.y);
 
     for ( i = -3; i <= 3; i++ ) {
 	for ( j = -3; j <= 3; j++ ) {
@@ -216,10 +237,10 @@ static void gen_idx_array(double lon, double lat) {
 	    area_array[i][j] = gen_index(&p2);
 	    printf("  generated index = %ld\n", area_array[i][j]);
 
-	    parse_index(area_array[i][j], &p3);
-	    printf("  %d %d %d %d\n", p3.lon, p3.lat, p3.x, p3.y);
-	    gen_path(&p3, path);
-	    printf("  path = %s\n", path);
+	    /* parse_index(area_array[i][j], &p3); */
+	    /* printf("  %d %d %d %d\n", p3.lon, p3.lat, p3.x, p3.y); */
+	    gen_path(area_array[i][j], path);
+	    printf("  path = %s\n\n", path);
 	}
     }
 }
@@ -237,7 +258,15 @@ main() {
     p1.x = 7;
     p1.y = 7;
 
-    printf("Max index = %ld\n", gen_index(&p1));
+    /* printf("Max index = %ld\n", gen_index(&p1)); */
+
+    lon = -50.0;
+    lat = -50.0;
+    gen_idx_array(lon, lat);
+
+    lon = 50.0;
+    lat = 50.0;
+    gen_idx_array(lon, lat);
 
     for ( i = 0; i < 100; i++ ) {
 	lon = ( 360.0 * fg_random() ) - 180.0;
@@ -249,8 +278,14 @@ main() {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 02:05:48  curt
-/* Initial revision.
-/* */
+/* Revision 1.2  1998/01/07 03:29:29  curt
+/* Given an arbitrary lat/lon, we can now:
+/*   generate a unique index for the chunk containing the lat/lon
+/*   generate a path name to the chunk file
+/*   build a list of the indexes of all the nearby areas.
+/*
+ * Revision 1.1  1998/01/07 02:05:48  curt
+ * Initial revision.
+ * */
 
 
