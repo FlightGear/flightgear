@@ -367,9 +367,9 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
 {
     longitude = location->getLongitude_deg();
     latitude = location->getLatitude_deg();
-    // add 2.0m to the max altitude to give a little leeway to the
+    // add 1.0m to the max altitude to give a little leeway to the
     // ground reaction code.
-    altitude_m = location->getAltitudeASL_ft() * SG_FEET_TO_METER + 2.0;
+    altitude_m = location->getAltitudeASL_ft() * SG_FEET_TO_METER + 1.0;
 
     // if current altitude is apparently not initialized, set max
     // altitude to something big.

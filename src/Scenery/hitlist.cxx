@@ -9,6 +9,9 @@
 #include <float.h>
 #include <math.h>
 
+#include <plib/sg.h>
+#include <plib/ssg.h>
+
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/point3d.hxx>
@@ -21,17 +24,79 @@
 
 #include "hitlist.hxx"
 
-// forward declaration of our helper/convenience functions
-static void sgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2);
-static void ssgGetEntityTransform(ssgEntity *entity, sgMat4 m );
-static void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center, float *radius, sgMat4 m );
+// Specialized version of sgMultMat4 needed because of mixed matrix
+// types
+static inline void sgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2) {
+    for ( int j = 0 ; j < 4 ; j++ ) {
+        dst[0][j] = m2[0][0] * m1[0][j] +
+                    m2[0][1] * m1[1][j] +
+                    m2[0][2] * m1[2][j] +
+                    m2[0][3] * m1[3][j] ;
+
+        dst[1][j] = m2[1][0] * m1[0][j] +
+                    m2[1][1] * m1[1][j] +
+                    m2[1][2] * m1[2][j] +
+                    m2[1][3] * m1[3][j] ;
+
+        dst[2][j] = m2[2][0] * m1[0][j] +
+                    m2[2][1] * m1[1][j] +
+                    m2[2][2] * m1[2][j] +
+                    m2[2][3] * m1[3][j] ;
+
+        dst[3][j] = m2[3][0] * m1[0][j] +
+                    m2[3][1] * m1[1][j] +
+                    m2[3][2] * m1[2][j] +
+                    m2[3][3] * m1[3][j] ;
+    }
+}
 
 
-// ======================
-// This is same as PLib's sgdIsectInfLinePlane()
-// and can be replaced by it after the next PLib release
-static int fgdIsectInfLinePlane( sgdVec3 dst, const sgdVec3 l_org,
-                                 const sgdVec3 l_vec, const sgdVec4 plane )
+/*
+ * Walk backwards up the tree, transforming the vertex by all the
+ * matrices along the way.
+ *
+ * Upwards recursion hurts my head.
+ */
+static void ssgGetEntityTransform(ssgEntity *entity, sgMat4 m ) {
+    sgMat4 mat ;
+
+    // If this node has a parent - get the composite matrix for the
+    // parent.
+    if ( entity->getNumParents() > 0 )
+        ssgGetEntityTransform ( entity->getParent(0), mat ) ;
+    else
+        sgMakeIdentMat4 ( mat ) ;
+
+    // If this node has a transform - then concatenate it.
+    if ( entity -> isAKindOf ( ssgTypeTransform () ) ) {
+        sgMat4 this_mat ;
+        ((ssgTransform *) entity) -> getTransform ( this_mat ) ;
+        sgPostMultMat4 ( mat, this_mat ) ;
+    }
+
+    sgCopyMat4 ( m, mat ) ;
+}
+
+
+// return the passed entitity's bsphere's center point radius and
+// fully formed current model matrix for entity
+static inline void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center,
+                                  float *radius, sgMat4 m )
+{
+    sgSphere *bsphere = entity->getBSphere();
+    *radius = (double)bsphere->getRadius();
+    sgCopyVec3( center, bsphere->getCenter() );
+    sgMakeIdentMat4 ( m ) ;
+    ssgGetEntityTransform( entity, m );
+}
+
+
+// This is same as PLib's sgdIsectInfLinePlane() and can be replaced
+// by it after the next PLib release
+static inline bool fgdIsectInfLinePlane( sgdVec3 dst,
+                                         const sgdVec3 l_org,
+                                         const sgdVec3 l_vec,
+                                         const sgdVec4 plane )
 {
     SGDfloat tmp = sgdScalarProductVec3 ( l_vec, plane ) ;
 
@@ -47,15 +112,14 @@ static int fgdIsectInfLinePlane( sgdVec3 dst, const sgdVec3 l_org,
     return true ;
 }
 
-// ======================
-
 /*
- * Given a point and a triangle lying on the same plane
- * check to see if the point is inside the triangle
+ * Given a point and a triangle lying on the same plane check to see
+ * if the point is inside the triangle
+ *
+ * This is same as PLib's sgdPointInTriangle() and can be replaced by
+ * it after the next PLib release
  */
-// This is same as PLib's sgdPointInTriangle()
-// and can be replaced by it after the next PLib release
-static bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
+static inline bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
 {
     sgdVec3 dif;
 
@@ -145,26 +209,30 @@ static bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     return true;
 }
 
-// ======================
 
-inline static int isZeroAreaTri( sgdVec3 tri[3] )
+// Check if all three vertices are the same point (or close enough)
+static inline int isZeroAreaTri( sgdVec3 tri[3] )
 {
     return( sgdEqualVec3(tri[0], tri[1]) ||
             sgdEqualVec3(tri[1], tri[2]) ||
             sgdEqualVec3(tri[2], tri[0]) );
 }
 
+
+// Constructor
 FGHitList::FGHitList() :
-        last(NULL), test_dist(DBL_MAX)
+    last(NULL), test_dist(DBL_MAX)
 {
 }
 
+
+// Destructor
 FGHitList::~FGHitList() {}
 
 
 /*
-Find the intersection of an infinite line with a leaf
-the line being defined by a point and direction.
+Find the intersection of an infinite line with a leaf the line being
+defined by a point and direction.
 
 Variables
 In:
@@ -181,10 +249,11 @@ true if intersection found
 false otherwise
 
 !!! WARNING !!!
-If you need an exhaustive list of hitpoints YOU MUST use
-the generic version of this function as the specialized
-versions will do an early out of expensive tests if the point
-can not be the closest one found
+
+If you need an exhaustive list of hitpoints YOU MUST use the generic
+version of this function as the specialized versions will do an early
+out of expensive tests if the point can not be the closest one found
+
 !!! WARNING !!!
 */
 int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
@@ -222,8 +291,8 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
     return num_hits;
 }
 
-// ======================
 
+// Short circuit/slightly optimized version of the full IntersectLeaf()
 int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
                               sgdVec3 orig, sgdVec3 dir,
                               GLenum primType )
@@ -279,7 +348,7 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
                     sgdCopyVec3( tri[0], tri[2] );
                     sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
                 } else {
-                    sgdCopyVec3( tri[2], tri[1] );
+                    sgdCopyVec3( tri[1], tri[2] );
                     sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
                 }
             }
@@ -337,18 +406,19 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
     return num_hits;
 }
 
-// ======================
+
+
 inline static bool IN_RANGE( sgdVec3 v, double radius ) {
     return ( sgdScalarProductVec3(v, v) < (radius*radius) );
 }
 
-// ======================
+
 void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
                                  sgdVec3 orig, sgdVec3 dir )
 {
-    /* the lookat vector and matrix in branch's coordinate frame
-     * but we won't determine these unless needed,
-     * This 'lazy evaluation' is a result of profiling data */
+    /* the lookat vector and matrix in branch's coordinate frame but
+     * we won't determine these unless needed, This 'lazy evaluation'
+     * is a result of profiling data */
     sgdVec3 orig_leaf, dir_leaf;
     sgdMat4 m_leaf;
 
@@ -401,8 +471,10 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
                         sgdXformPnt3( dir_leaf,  dir,  m_leaf );
                         first_time = 0;
                     }
-                    GLenum primType = ((ssgLeaf *)kid)->getPrimitiveType();
-                    IntersectLeaf( (ssgLeaf *)kid, m, orig_leaf, dir_leaf, primType );
+                    // GLenum primType = ((ssgLeaf *)kid)->getPrimitiveType();
+                    // IntersectLeaf( (ssgLeaf *)kid, m, orig_leaf, dir_leaf,
+                    //                primType );
+                    IntersectLeaf( (ssgLeaf *)kid, m, orig_leaf, dir_leaf );
                 }
             }  // Out of range
         } // branch not requested to be traversed
@@ -410,8 +482,6 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
 }
 
 
-
-// ======================
 // a temporary hack until we get everything rewritten with sgdVec3
 static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
 {
@@ -419,7 +489,6 @@ static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
 }
 
 
-// ======================
 void FGHitList::Intersect( ssgBranch *scene, sgdVec3 orig, sgdVec3 dir ) {
     sgdMat4 m;
     clear();
@@ -427,95 +496,26 @@ void FGHitList::Intersect( ssgBranch *scene, sgdVec3 orig, sgdVec3 dir ) {
     IntersectBranch( scene, m, orig, dir );
 }
 
-// ======================
+
 void FGHitList::Intersect( ssgBranch *scene, sgdMat4 m, sgdVec3 orig, sgdVec3 dir )
 {
     clear();
     IntersectBranch( scene, m, orig, dir );
 }
 
-// ======================
-// Need these because of mixed matrix types
-static void sgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2)
-{
-    for ( int j = 0 ; j < 4 ; j++ )
-    {
-        dst[0][j] = m2[0][0] * m1[0][j] +
-                    m2[0][1] * m1[1][j] +
-                    m2[0][2] * m1[2][j] +
-                    m2[0][3] * m1[3][j] ;
 
-        dst[1][j] = m2[1][0] * m1[0][j] +
-                    m2[1][1] * m1[1][j] +
-                    m2[1][2] * m1[2][j] +
-                    m2[1][3] * m1[3][j] ;
-
-        dst[2][j] = m2[2][0] * m1[0][j] +
-                    m2[2][1] * m1[1][j] +
-                    m2[2][2] * m1[2][j] +
-                    m2[2][3] * m1[3][j] ;
-
-        dst[3][j] = m2[3][0] * m1[0][j] +
-                    m2[3][1] * m1[1][j] +
-                    m2[3][2] * m1[2][j] +
-                    m2[3][3] * m1[3][j] ;
-    }
-}
-
-// ======================
-static void ssgGetEntityTransform(ssgEntity *entity, sgMat4 m )
-{
-    /*
-       Walk backwards up the tree, transforming the
-       vertex by all the matrices along the way.
-
-       Upwards recursion hurts my head.
-       */
-
-    sgMat4 mat ;
-
-    /*
-       If this node has a parent - get the composite
-       matrix for the parent.
-       */
-    if ( entity->getNumParents() > 0 )
-        ssgGetEntityTransform ( entity->getParent(0), mat ) ;
-    else
-        sgMakeIdentMat4 ( mat ) ;
-
-    /*
-       If this node has a transform - then concatenate it.
-       */
-    if ( entity -> isAKindOf ( ssgTypeTransform () ) ) {
-        sgMat4 this_mat ;
-        ((ssgTransform *) entity) -> getTransform ( this_mat ) ;
-        sgPostMultMat4 ( mat, this_mat ) ;
-    }
-
-    sgCopyMat4 ( m, mat ) ;
-}
-
-// ======================
-// return the passed entitity's bsphere's center point radius and
-// fully formed current model matrix for entity
-static void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center, float *radius, sgMat4 m )
-{
-    sgSphere *bsphere = entity->getBSphere();
-    *radius = (double)bsphere->getRadius();
-    sgCopyVec3( center, bsphere->getCenter() );
-    sgMakeIdentMat4 ( m ) ;
-    ssgGetEntityTransform( entity, m );
-}
-
-
-// ======================
 // Determine scenery altitude via ssg.
 // returned results are in meters
+static double hitlist1_time = 0.0;
+
 bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                     sgdVec3 scenery_center,
                     FGHitList *hit_list,
                     double *terrain_elev, double *radius, double *normal)
 {
+    SGTimeStamp start; start.stamp();
+
+    bool result;
     sgdVec3 view_pos;
     sgdSubVec3( view_pos, abs_view_pos, scenery_center );
 
@@ -528,7 +528,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 
     int this_hit=0;
     Point3D geoc;
-    double result = -9999;
+    double hit_elev = -9999;
     Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
     int hitcount = hit_list->num_hits();
@@ -539,17 +539,17 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
         sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
                      &alt, &sea_level_r);
         // cout << "hit " << i << " lon = " << geoc.lon() << " lat = "
-        //      << lat_geod << " alt = " << alt << endl;
-        if ( alt > result && alt < max_alt_m ) {
+        //      << lat_geod << " alt = " << alt << "  max alt = " << max_alt_m
+        //      << endl;
+        if ( alt > hit_elev && alt < max_alt_m ) {
             // cout << "  it's a keeper" << endl;
-            result = alt;
+            hit_elev = alt;
             this_hit = i;
         }
     }
-    // cout << endl;
 
-    if ( result > -9000 ) {
-        *terrain_elev = result;
+    if ( hit_elev > -9000 ) {
+        *terrain_elev = hit_elev;
         *radius = geoc.radius();
         sgVec3 tmp;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
@@ -559,18 +559,25 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 	// cout << "world_up  : " << up[0] << " " << up[1] << " " << up[2] << endl;
         /* ssgState *IntersectedLeafState =
               ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
-        return true;
+        result = true;
     } else {
         SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
         *terrain_elev = 0.0;
         float *up = globals->get_current_view()->get_world_up();
         sgdSetVec3(normal, up[0], up[1], up[2]);
-        return false;
+        result = false;
     }
+
+    SGTimeStamp finish; finish.stamp();
+    hitlist1_time = ( 29.0 * hitlist1_time + (finish - start) ) / 30.0;
+    // cout << " time per call = " << hitlist1_time << endl;
+
+    return result;
 }
 
 
-// ======================
+static double hitlist2_time = 0.0;
+
 // Determine scenery altitude via ssg.
 // returned results are in meters
 bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
@@ -579,6 +586,9 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                     FGHitList *hit_list,
                     double *terrain_elev, double *radius, double *normal)
 {
+    SGTimeStamp start; start.stamp();
+
+    bool result;
     sgdVec3 view_pos;
     sgdSubVec3( view_pos, abs_view_pos, scenery_center );
 
@@ -598,23 +608,28 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
 
     int this_hit=0;
     Point3D geoc;
-    double result = -9999;
+    double hit_elev = -9999;
     Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
     int hitcount = hit_list->num_hits();
+    // cout << "hits = " << hitcount << endl;
     for ( int i = 0; i < hitcount; ++i ) {
         geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
         double lat_geod, alt, sea_level_r;
         sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
                      &alt, &sea_level_r);
-        if ( alt > result && alt < max_alt_m ) {
-            result = alt;
+        // cout << "hit " << i << " lon = " << geoc.lon() << " lat = "
+        //      << lat_geod << " alt = " << alt << "  max alt = " << max_alt_m
+        //      << endl;
+        if ( alt > hit_elev && alt < max_alt_m ) {
+            hit_elev = alt;
             this_hit = i;
+            // cout << "  it's a keeper" << endl;
         }
     }
 
-    if ( result > -9000 ) {
-        *terrain_elev = result;
+    if ( hit_elev > -9000 ) {
+        *terrain_elev = hit_elev;
         *radius = geoc.radius();
         sgVec3 tmp;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
@@ -624,11 +639,17 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
        // cout << "world_up  : " << up[0] << " " << up[1] << " " << up[2] << endl;
         /* ssgState *IntersectedLeafState =
               ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
-        return true;
+        result = true;
     } else {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "DOING FULL TERRAIN INTERSECTION" );
-        return fgCurrentElev( abs_view_pos, max_alt_m, scenery_center, hit_list,
-                              terrain_elev,radius,normal);
+        result = fgCurrentElev( abs_view_pos, max_alt_m, scenery_center,
+                                hit_list, terrain_elev, radius, normal);
     }
+
+    SGTimeStamp finish; finish.stamp();
+    hitlist2_time = ( 29.0 * hitlist2_time + (finish - start) ) / 30.0;
+    cout << "time per call 2 = " << hitlist2_time << endl;
+
+    return result;
 }
 
