@@ -40,8 +40,8 @@ find_named_node (ssgEntity * node, const string &name)
       if (result != 0)
 	return result;
     }
-    return 0;
-  }
+  } 
+  return 0;
 }
 
 FGAircraftModel::FGAircraftModel ()
@@ -78,18 +78,13 @@ FGAircraftModel::init ()
 				// Find the propeller
   ssgEntity * prop_node = find_named_node(_object, "Propeller");
   if (prop_node != 0) {
-    std::cout << "Found propeller node" << std::endl;
-    std::cout << "User data is " << int(prop_node->getUserData()) << std::endl;
     _prop_position = new ssgTransform;
     int nParents = prop_node->getNumParents();
     _prop_position->addKid(prop_node);
-    std::cout << "Found " << nParents << " parent(s)" << std::endl;
     for (int i = 0; i < nParents; i++) {
       ssgBranch * parent = prop_node->getParent(i);
       parent->replaceKid(prop_node, _prop_position);
     }
-  } else {
-    std::cout << "Did not find propeller node" << std::endl;
   }
 
 				// Set up the alignment node
