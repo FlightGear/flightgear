@@ -34,7 +34,7 @@
 # error This library requires C++
 #endif
 
-#include <string>
+const int OGC_VERSION = 4;
 
 class ogcFGData {
 
@@ -43,9 +43,9 @@ public:
     // defines msg types and contents. The msg_content is used as a 'pointer' to
     // a predefined set of msg strings
  
-    unsigned int	version_id;
-    unsigned int	msg_type;
-    unsigned int	msg_content;
+    int	version_id;
+    int	msg_type;
+    int	msg_content;
 
     // position
 
@@ -60,11 +60,11 @@ public:
     double	heading;
     double	altitude;
     double	altitude_agl;  // this can also be the radar altimeter
-    double 	v_kcas;
+    double  v_kcas;
     double	groundspeed;
     double	vvi;
     double  mach;
-    double	v_tas;  // true airspeed in knots
+    double	v_keas;  // equivalent airspeed in knots
 
   // Data used by the FMC and autopilots
 
@@ -79,19 +79,23 @@ public:
 
   // Control surface positions
 
-    double	aileron;
+    double	left_aileron;
+    double  right_aileron;
     double	aileron_trim;
     double	elevator;
     double	elevator_trim;
     double	rudder;
     double	rudder_trim;
     double	flaps;
+    double  flaps_cmd;
 
-  // Gear positions 0 = UP and 1 = DOWN
+  // gear positions 0 = up and 1 = down  The 747 has 5 wheel bogey assemblies
 
     double	gear_nose;
     double	gear_left;
     double	gear_right;
+    double  gear_left_rear;
+    double  gear_right_rear;  
 
     // engine data
 
@@ -114,7 +118,10 @@ public:
     double	static_pressure;
     double	total_pressure;
     double	dynamic_pressure;
-	
+    
+    // more environmental data
+		double wind;
+		double wind_dir;
 };
 
 #endif // _OPENGC_HXX

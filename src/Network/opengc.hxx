@@ -31,6 +31,7 @@
 #include STL_STRING
 
 #include <FDM/flight.hxx>
+#include <Main/fg_props.hxx>
 
 #include "protocol.hxx"
 #include "opengc_data.hxx"
@@ -39,6 +40,25 @@ class FGOpenGC : public FGProtocol, public FGInterface {
 
     ogcFGData buf;
     int length;
+    
+    SGPropertyNode *press_node;
+    SGPropertyNode *temp_node;
+    SGPropertyNode *wind_dir_node;
+    SGPropertyNode *wind_speed_node;
+    SGPropertyNode *epr0_node;
+    
+    // Control surfaces
+    SGPropertyNode *p_left_aileron;
+    SGPropertyNode *p_right_aileron;
+    SGPropertyNode *p_elevator;
+    SGPropertyNode *p_elevator_trim;
+    SGPropertyNode *p_rudder;
+    SGPropertyNode *p_flaps;
+    SGPropertyNode *p_flaps_cmd;
+    
+    // Aero numbers
+    SGPropertyNode *p_alphadot;
+    SGPropertyNode *p_betadot;
 
 public:
 
@@ -54,7 +74,7 @@ public:
     // close the channel
     bool close();
 
-   
+    void collect_data( const FGInterface *fdm, ogcFGData *data );
 };
 
 #endif // _FG_OPENGC_HXX

@@ -40,7 +40,21 @@
 
 SG_USING_STD(vector);
 
-FGOpenGC::FGOpenGC() {
+FGOpenGC::FGOpenGC() : 
+	press_node(fgGetNode("/environment/pressure-inhg", true)),
+	temp_node(fgGetNode("/environment/temperature-degc", true)),
+	wind_dir_node(fgGetNode("/environment/wind-from-heading-deg", true)),
+	wind_speed_node(fgGetNode("/environment/wind-speed-kt", true)),
+	p_left_aileron(fgGetNode("surface-positions/left-aileron-pos-norm", true)),
+	p_right_aileron(fgGetNode("surface-positions/right-aileron-pos-norm", true)),
+	p_elevator(fgGetNode("surface-positions/elevator-pos-norm", true)),
+	p_elevator_trim(fgGetNode("surface-positions/elevator_trim-pos-norm", true)),
+	p_rudder(fgGetNode("surface-positions/rudder-pos-norm", true)),
+	p_flaps(fgGetNode("surface-positions/flap-pos-norm", true)),
+	p_flaps_cmd(fgGetNode("/controls/flaps", true)),
+	p_alphadot(fgGetNode("/fdm/jsbsim/aero/alphadot-radsec", true)),
+	p_betadot(fgGetNode("/fdm/jsbsim/aero/betadot-radsec", true))
+{
 }
 
 FGOpenGC::~FGOpenGC() {
@@ -66,10 +80,10 @@ bool FGOpenGC::open() {
     return true;
 }
 
-
-static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
-												
-    data->version_id = 0x0012;
+//static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
+void FGOpenGC::collect_data( const FGInterface *fdm, ogcFGData *data ) {	
+											
+    data->version_id = OGC_VERSION;
 
     data->longitude = cur_fdm_state->get_Longitude_deg();   
     data->latitude = cur_fdm_state->get_Latitude_deg();
@@ -84,7 +98,7 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
     data->vvi = cur_fdm_state->get_Climb_Rate();
     data->mach = cur_fdm_state->get_Mach_number();
     data->groundspeed = cur_fdm_state->get_V_ground_speed();
-    data->v_tas = cur_fdm_state->get_V_equiv_kts();
+    data->v_keas = cur_fdm_state->get_V_equiv_kts();
 
     data->phi_dot = cur_fdm_state->get_Phi_dot();
     data->theta_dot = cur_fdm_state->get_Theta_dot();
@@ -92,23 +106,25 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
 
     data->alpha = cur_fdm_state->get_Alpha();
     data->beta = cur_fdm_state->get_Beta();
-    data->alpha_dot = cur_fdm_state->get_Alpha_dot();
-    data->beta_dot = cur_fdm_state->get_Beta_dot();
-
- 
-    data->aileron = globals->get_controls()->get_aileron();
-    //data->aileron_trim = p_Controls->get_aileron_trim();
-    data->elevator = globals->get_controls()->get_elevator();
-    data->elevator_trim = globals->get_controls()->get_elevator_trim();
-    data->rudder = globals->get_controls()->get_rudder();
+    data->alpha_dot = p_alphadot->getDoubleValue();
+    data->beta_dot = p_betadot->getDoubleValue();
+    
     //data->rudder_trim = p_Controls->get_rudder_trim();
-    //data->flaps = fgGetDouble("/controls/flaps");
-    data->flaps = globals->get_controls()->get_flaps();
+    
+    data->left_aileron = p_left_aileron->getDoubleValue();
+    data->right_aileron = p_right_aileron->getDoubleValue();
+    data->elevator = p_elevator->getDoubleValue();
+    data->elevator_trim = p_elevator_trim->getDoubleValue();
+    data->rudder = p_rudder->getDoubleValue();
+    data->flaps = p_flaps->getDoubleValue();
+    data->flaps_cmd = p_flaps_cmd->getDoubleValue();
 
-    //data->gear_nose = p_gear[0]->GetPosition();
-    //data->gear_left = p_gear[1]->GetPosition();
-    //data->gear_right = p_gear[2]->GetPosition();
-
+    data->gear_nose = fgGetDouble("gear/gear[0]/position-norm");
+    data->gear_nose = fgGetDouble("gear/gear[1]/position-norm");
+    data->gear_nose = fgGetDouble("gear/gear[2]/position-norm");
+	  data->gear_nose = fgGetDouble("gear/gear[3]/position-norm");
+	  data->gear_nose = fgGetDouble("gear/gear[4]/position-norm");
+	  
     data->rpm[0] = fgGetDouble("/engines/engine[0]/rpm");
     data->rpm[1] = fgGetDouble("/engines/engine[1]/rpm");   
 
@@ -116,11 +132,11 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
     data->epr[1] = fgGetDouble("/engines/engine[1]/epr");
     data->epr[2] = fgGetDouble("/engines/engine[2]/epr");
     data->epr[3] = fgGetDouble("/engines/engine[3]/epr");
-
-    data->egt[0] = fgGetDouble("/engines/engine[0]/egt-degf");
-    data->egt[1] = fgGetDouble("/engines/engine[1]/egt-degf");
-    data->egt[2] = fgGetDouble("/engines/engine[2]/egt-degf");
-    data->egt[3] = fgGetDouble("/engines/engine[3]/egt-degf");
+    
+    data->egt[0] = (fgGetDouble("/engines/engine[0]/egt-degf") - 32.0) * 0.555;
+    data->egt[1] = (fgGetDouble("/engines/engine[1]/egt-degf") - 32.0) * 0.555;
+    data->egt[2] = (fgGetDouble("/engines/engine[2]/egt-degf") - 32.0) * 0.555;
+    data->egt[3] = (fgGetDouble("/engines/engine[3]/egt-degf") - 32.0) * 0.555;
 
     data->n2_turbine[0] = fgGetDouble("/engines/engine[0]/n2");
     data->n2_turbine[1] = fgGetDouble("/engines/engine[1]/n2");
@@ -131,25 +147,30 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
     data->n1_turbine[1] = fgGetDouble("/engines/engine[1]/n1");
     data->n1_turbine[2] = fgGetDouble("/engines/engine[2]/n1");
     data->n1_turbine[3] = fgGetDouble("/engines/engine[3]/n1");
-
-    data->fuel_flow[0] = fgGetDouble("/engines/engine[0]/fuel-flow-gph");
-    data->fuel_flow[1] = fgGetDouble("/engines/engine[1]/fuel-flow-gph");
-    data->fuel_flow[1] = fgGetDouble("/engines/engine[1]/fuel-flow-gph");
-    data->fuel_flow[2] = fgGetDouble("/engines/engine[2]/fuel-flow-gph");
+// Convert gph to pph for turbine engines
+    data->fuel_flow[0] = fgGetDouble("/engines/engine[0]/fuel-flow-gph") * 6.5;
+    data->fuel_flow[1] = fgGetDouble("/engines/engine[1]/fuel-flow-gph") * 6.5;
+    data->fuel_flow[2] = fgGetDouble("/engines/engine[2]/fuel-flow-gph") * 6.5;
+    data->fuel_flow[3] = fgGetDouble("/engines/engine[3]/fuel-flow-gph") * 6.5;
 
     data->oil_pressure[0] = fgGetDouble("/engines/engine[0]/oil-pressure-psi");
     data->oil_pressure[1] = fgGetDouble("/engines/engine[1]/oil-pressure-psi");
     data->oil_pressure[2] = fgGetDouble("/engines/engine[2]/oil-pressure-psi");
     data->oil_pressure[3] = fgGetDouble("/engines/engine[3]/oil-pressure-psi");
+// Just a few test numbers to test interface and drive EICAS displayss    
+    for (int j=0; j<4; j++) data->oil_pressure[j] = 100.4 + 2.3*j;
 
     data->man_pressure[0] = fgGetDouble("/engines/engine[0]/mp-osi");
     data->man_pressure[1] = fgGetDouble("/engines/engine[1]/mp-osi");    
 
-    data->static_temperature = cur_fdm_state->get_Static_temperature();
     data->total_temperature = cur_fdm_state->get_Total_temperature();
-    data->static_pressure = cur_fdm_state->get_Static_pressure();
     data->total_pressure = cur_fdm_state->get_Total_pressure();
     data->dynamic_pressure = cur_fdm_state->get_Dynamic_pressure();
+    
+    data->static_pressure = press_node->getDoubleValue();
+    data->static_temperature = temp_node->getDoubleValue();
+    data->wind = wind_speed_node->getDoubleValue();
+    data->wind_dir =  wind_dir_node->getDoubleValue();
 }
 
 static void distribute_data( const ogcFGData *data, FGInterface *chunk ) {
