@@ -63,6 +63,9 @@ static char calc_atlas_cksum(char *sentence) {
 bool FGAtlas::gen_message() {
     // cout << "generating atlas message" << endl;
 
+    static SGPropertyNode *adf_freq
+        = fgGetNode("/radios/adf/frequencies/selected-khz", true);
+
     char rmc[256], gga[256], patla[256];
     char rmc_sum[10], gga_sum[10], patla_sum[10];
     char dir;
@@ -130,7 +133,7 @@ bool FGAtlas::gen_message() {
 	     current_radiostack->get_nav1_sel_radial(),
 	     current_radiostack->get_nav2_freq(),
 	     current_radiostack->get_nav2_sel_radial(),
-	     current_radiostack->get_adf_freq() );
+	     adf_freq->getDoubleValue() );
     sprintf( patla_sum, "%02X", calc_atlas_cksum(patla) );
 
     SG_LOG( SG_IO, SG_DEBUG, rmc );
