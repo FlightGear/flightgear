@@ -578,6 +578,7 @@ void fgRenderFrame( void ) {
 	thesky->preDraw();
 
 	// draw the ssg scene
+	glEnable( GL_DEPTH_TEST );
 	ssgCullAndDraw( scene );
 
 	// draw the sky cloud layers
