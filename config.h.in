@@ -70,6 +70,9 @@
 /* Define if you have the GetLocalTime function.  */
 #undef HAVE_GETLOCALTIME
 
+/* Define if you have the bcopy function.  */
+#undef HAVE_BCOPY
+
 /* Define if you have the ftime function.  */
 #undef HAVE_FTIME
 
@@ -81,6 +84,9 @@
 
 /* Define if you have the gettimeofday function.  */
 #undef HAVE_GETTIMEOFDAY
+
+/* Define if you have the memcpy function.  */
+#undef HAVE_MEMCPY
 
 /* Define if you have the mktime function.  */
 #undef HAVE_MKTIME
@@ -111,6 +117,9 @@
 
 /* Define if you have the <malloc.h> header file.  */
 #undef HAVE_MALLOC_H
+
+/* Define if you have the <memory.h> header file.  */
+#undef HAVE_MEMORY_H
 
 /* Define if you have the <stdlib.h> header file.  */
 #undef HAVE_STDLIB_H
