@@ -479,6 +479,10 @@ FGInput::_init_joystick ()
           n_axis = num_node->getIntValue(TGT_PLATFORM,n_axis);
       }
 
+      if (n_axis >= naxes) {
+          SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for axis " << n_axis);
+          continue;
+      }
       axis &a = _joystick_bindings[i].axes[n_axis];
 
       js->setDeadBand(n_axis, axis_node->getDoubleValue("dead-band", 0.0));
@@ -512,6 +516,12 @@ FGInput::_init_joystick ()
       if (num_node != 0) {
           n_but = num_node->getIntValue(TGT_PLATFORM,n_but);
       }
+
+      if (n_but >= nbuttons) {
+          SG_LOG(SG_INPUT, SG_DEBUG, "Dropping bindings for button " << n_but);
+          continue;
+      }
+
       sprintf(buf, "%d", n_but);
       SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << n_but);
       _init_button(button_node,
