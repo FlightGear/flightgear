@@ -42,7 +42,7 @@
 #include <Math/fg_geodesy.h>
 #include <Math/interpolater.hxx>
 #include <Math/mat3.h>
-#include <Math/polar.h>
+#include <Math/polar3d.h>
 
 #include "fg_time.hxx"
 #include "light.hxx"
@@ -158,6 +158,9 @@ void fgLightUpdate( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/05/03 00:48:38  curt
+// polar.h -> polar3d.h
+//
 // Revision 1.4  1998/04/28 01:22:18  curt
 // Type-ified fgTIME and fgVIEW.
 //

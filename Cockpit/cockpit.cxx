@@ -42,7 +42,7 @@
 #include <Debug/fg_debug.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
-#include <Math/polar.h>
+#include <Math/polar3d.h>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <Weather/weather.h>
@@ -104,9 +104,12 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.3  1998/04/30 12:36:02  curt
-/* C++-ifying a couple source files.
+/* Revision 1.4  1998/05/03 00:46:45  curt
+/* polar.h -> polar3d.h
 /*
+ * Revision 1.3  1998/04/30 12:36:02  curt
+ * C++-ifying a couple source files.
+ *
  * Revision 1.2  1998/04/25 22:06:26  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *
