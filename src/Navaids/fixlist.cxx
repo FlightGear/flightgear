@@ -61,10 +61,10 @@ bool FGFixList::init( SGPath path ) {
 #ifdef __MWERKS__
 
     char c = 0;
-    while ( in.get(c) && c != '\0' && fix.get_ident() != "[End]" ) {
+    while ( in.get(c) && c != '\0' && fix.get_ident() != (string)"[End]" ) {
         in.putback(c);
         in >> fix;
-	if ( fix.get_ident() != "[End]" ) {
+	if ( fix.get_ident() != (string)"[End]" ) {
 	    fixlist[fix.get_ident()] = fix;
 	}
         in >> skipcomment;
@@ -72,7 +72,7 @@ bool FGFixList::init( SGPath path ) {
 
 #else
 
-    while ( ! in.eof() && fix.get_ident() != "[End]" ) {
+    while ( ! in.eof() && fix.get_ident() != (string)"[End]" ) {
         in >> fix;
 	/* cout << "id = " << n.get_ident() << endl;
 	cout << " type = " << n.get_type() << endl;
@@ -81,7 +81,7 @@ bool FGFixList::init( SGPath path ) {
 	cout << " elev = " << n.get_elev() << endl;
 	cout << " freq = " << n.get_freq() << endl;
  	cout << " range = " << n.get_range() << endl; */
-	if ( fix.get_ident() != "[End]" ) {
+	if ( fix.get_ident() != (string)"[End]" ) {
 	    fixlist[fix.get_ident()] = fix;
 	}
         in >> skipcomment;

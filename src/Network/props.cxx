@@ -31,12 +31,14 @@
 
 #include <stdlib.h>		// atoi() atof()
 
-#include <strstream>
+#include STL_STRSTREAM
 
 #include "props.hxx"
 
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(istrstream);
+#endif
 
 FGProps::FGProps() {
 }

@@ -427,7 +427,7 @@ bool FGNMEA::parse_message() {
 	    string alt_units = msg.substr(begin, end - begin);
 	    begin = end + 1;
 
-	    if ( alt_units != "F" ) {
+	    if ( alt_units != (string)"F" ) {
 		altitude *= SG_METER_TO_FEET;
 	    }
 

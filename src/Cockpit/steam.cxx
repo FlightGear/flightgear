@@ -23,11 +23,9 @@
 #  include <config.h>
 #endif
 
-#if defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <iostream.h>
-#else
-#  include <iostream>
-#endif
+#include <simgear/compiler.h>
+
+#include STL_IOSTREAM
 
 #include <simgear/constants.h>
 #include <simgear/math/sg_types.hxx>

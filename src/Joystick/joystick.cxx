@@ -43,7 +43,9 @@
 #include "joystick.hxx"
 
 SG_USING_STD(string);
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
+#endif
 
 #ifdef WIN32
 static const int MAX_JOYSTICKS = 2;

@@ -218,7 +218,7 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     e->tile_bucket = b;
 
     SGPath tile_path;
-    if ( globals->get_fg_scenery() != "" ) {
+    if ( globals->get_fg_scenery() != (string)"" ) {
 	tile_path.set( globals->get_fg_scenery() );
     } else {
 	tile_path.set( globals->get_fg_root() );

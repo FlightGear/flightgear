@@ -89,13 +89,17 @@
 
 #include <simgear/compiler.h>
 
-#include <iostream>
-#include <fstream>
 #include <math.h>
+
+#include STL_FSTREAM
+#include STL_IOSTREAM
+
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
+SG_USING_STD(cout);
+#endif
 
 #include "IO360.hxx"
 
-SG_USING_STD(cout);
 
 // Static utility functions
 

@@ -28,7 +28,7 @@
 #include <simgear/compiler.h>
 
 #include <math.h>
-#include <iostream>
+#include STL_IOSTREAM
 
 #include "FDM/LaRCsimIC.hxx"
 #include <FDM/LaRCsim/ls_cockpit.h>
@@ -38,8 +38,10 @@
 #include <FDM/LaRCsim/ls_constants.h>
 #include <FDM/LaRCsim/ls_geodesy.h>
 
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(endl);
+#endif
 
 
 LaRCsimIC::LaRCsimIC(void) {
