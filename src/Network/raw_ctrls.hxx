@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 5;
+const int FG_RAW_CTRLS_VERSION = 6;
 
 
 // Define a structure containing the control parameters
@@ -64,6 +64,9 @@ public:
     // Brake controls
     int num_wheels;		         // number of valid wheels
     double brake[FG_MAX_WHEELS];         //  0 ... 1
+    
+    // Landing Gear
+    bool gear_handle; // true=gear handle down; false= gear handle up
 
     // Other values of use to a remote FDM
     double hground;		         // ground elevation (meters)
