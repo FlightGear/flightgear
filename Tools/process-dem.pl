@@ -124,7 +124,43 @@ while ( <OUT> ) {
 close(OUT);
 
 
-# 5.  tri2obj file (.1.node)
+# 4.1 findedges file (.1.node) (.1.ele)
+
+#     Extract the edge vertices (in original geodetic coordinates) and
+#     normals (in cartesian coordinates) and save them in something
+#     very close to the .obj format as file.north, file.south,
+#     file.east file.west.
+
+@FILES = `ls $subdir`;
+foreach $file ( @FILES ) {
+    chop($file);
+    if ( $file =~ m/\.1\.node$/ ) {
+	$file =~ s/\.node$//;  # strip off the ".node"
+
+	$command = "./FindEdges/findedges $subdir/$file";
+	print "Running '$command'\n";
+	open(OUT, "$command |");
+	while ( <OUT> ) {
+	    print $_;
+	}
+	close(OUT);
+    }
+}
+
+
+exit(1);
+
+
+# 4.2 read in tri files (node/ele) skipping edges, read edges out of
+#     edge files, save including proper shared edges (as node/ele)
+#     files.  If my edge and adjacent edge both exist, use other,
+#     delete mine.  If only mine exists, use it.
+
+
+# 4.3 Retriangulate fixed up files (without -q option)
+
+
+# 5.  tri2obj file (.1.node) (.1.ele)
 #
 #     Take the file.1.node and file.1.ele and produce file.1.obj
 
@@ -145,7 +181,6 @@ foreach $file ( @FILES ) {
 	unlink("$subdir/$file.node");
 	unlink("$subdir/$file.node.orig");
 	unlink("$subdir/$file.ele");
-
     }
 }
 
@@ -213,6 +248,9 @@ foreach $file ( @FILES ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/01/12 20:42:08  curt
+# Working on fitting tiles together in a seamless manner.
+#
 # Revision 1.1  1998/01/09 23:06:46  curt
 # Initial revision.
 #

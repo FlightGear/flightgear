@@ -1,2 +1,6 @@
 - Try reversing cw-wound strips rather than calling glFrontFace() in the 
   display list.
+
+- Generate a face adjacency matrix
+
+- Split areas into smaller chunks
