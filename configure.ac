@@ -316,6 +316,12 @@ LIBS="$base_LIBS"
 
 dnl check for OpenAL libraries
 case "${host}" in
+*-*-cygwin* | *-*-mingw32*)
+    dnl CygWin under Windoze.
+
+    LIBS="$LIBS -lopenal32 -lwinmm -ldsound -ldxguid -lole32"
+    ;;
+
 *-apple-darwin*)
     dnl Mac OS X
 
