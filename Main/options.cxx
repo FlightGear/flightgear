@@ -1,4 +1,3 @@
-//
 // options.cxx -- class to handle command line options
 //
 // Written by Curtis Olson, started April 1998.
@@ -630,6 +629,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.37  1999/01/19 20:57:05  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.36  1999/01/07 20:25:10  curt
 // Updated struct fgGENERAL to class FGGeneral.
 //

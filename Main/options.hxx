@@ -34,6 +34,8 @@
 #  include <config.h>
 #endif
 
+#include <Include/compiler.h>
+
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
@@ -41,16 +43,13 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <string>
-#include <Include/compiler.h>
+#include STL_STRING
 FG_USING_STD(string);
 
 #include <vector>                                                               
 #include "Include/fg_stl_config.h"                                              
 
-#ifdef NEEDNAMESPACESTD                                                         
-using namespace std;                                                            
-#endif                                                                          
+FG_USING_NAMESPACE(std);
 
 #include "fg_serial.hxx"
 
@@ -247,6 +246,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.25  1999/01/19 20:57:06  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.24  1998/11/25 01:34:01  curt
 // Support for an arbitrary number of serial ports.
 //

@@ -22,15 +22,20 @@
 // (Log is kept at end of this file)
 
 
-#include <stdlib.h>   // atoi()
+#include <Include/compiler.h>
 
-#include <string>
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cstdlib>    // atoi()
+#else
+#  include <stdlib.h>   // atoi()
+#endif
+
+#include STL_STRING
+#include STL_IOSTREAM                                           
 #include <vector>                                                               
 #include "Include/fg_stl_config.h"                                              
 
-#ifdef NEEDNAMESPACESTD                                                         
-using namespace std;                                                            
-#endif                                                                          
+FG_USING_NAMESPACE(std);
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
@@ -451,6 +456,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.8  1999/01/19 20:57:04  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.7  1998/12/05 15:54:21  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

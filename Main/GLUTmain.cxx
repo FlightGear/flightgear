@@ -42,7 +42,9 @@
 #   include <stdlib.h>
 #endif
 
-#include <sys/stat.h> /* for stat() */
+#ifdef HAVE_SYS_STAT_H
+#  include <sys/stat.h> /* for stat() */
+#endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>    /* for stat() */
@@ -1000,6 +1002,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.81  1999/01/19 20:57:03  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.80  1999/01/09 13:37:40  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //

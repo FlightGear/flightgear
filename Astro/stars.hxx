@@ -40,7 +40,7 @@ int fgStarsInit( void );
 // Draw the Stars
 void fgStarsRender( void );
 
-extern struct OrbElements pltOrbElements[9];
+// [no longer used?] extern struct OrbElements pltOrbElements[9];
 extern fgTIME cur_time_params;
 
 
@@ -48,6 +48,9 @@ extern fgTIME cur_time_params;
 
 
 // $Log$
+// Revision 1.8  1999/01/19 20:57:00  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.7  1998/09/24 15:36:20  curt
 // Converted to c++ style comments.
 //

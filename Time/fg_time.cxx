@@ -28,6 +28,7 @@
 #endif
 
 #include "Include/compiler.h"
+
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <cmath>
 #  include <cstdio>
@@ -398,6 +399,9 @@ void fgTimeUpdate(FGState *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.29  1999/01/19 20:57:08  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.28  1999/01/07 20:25:34  curt
 // Portability changes and updates from Bernie Bright.
 //
