@@ -44,6 +44,7 @@ longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
 opType(TTT_UNKNOWN),
+leg(LEG_UNKNOWN),
 isUser(false)
 {
 	plane.callsign = "UNKNOWN";
@@ -59,6 +60,7 @@ longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
 opType(TTT_UNKNOWN),
+leg(LEG_UNKNOWN),
 isUser(false)
 {
 	plane = p;
@@ -74,6 +76,7 @@ longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
 opType(TTT_UNKNOWN),
+leg(LEG_UNKNOWN),
 isUser(false)
 {
 	plane.callsign = "UNKNOWN";
@@ -90,6 +93,7 @@ longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
 opType(TTT_UNKNOWN),
+leg(LEG_UNKNOWN),
 isUser(false)
 {
 	plane = p;
@@ -230,7 +234,6 @@ void FGTower::Update(double dt) {
 	// Do one plane from the hold list
 	if(ii == 4) {
 		if(holdList.size()) {
-			//cout << "A" << endl;
 			//cout << "*holdListItr = " << *holdListItr << endl;
 			if(holdListItr == holdList.end()) {
 				holdListItr = holdList.begin();
@@ -240,14 +243,10 @@ void FGTower::Update(double dt) {
 			TowerPlaneRec* t = *holdListItr;
 			//cout << "t = " << t << endl;
 			if(t->holdShortReported) {
-				//cout << "B" << endl;
 				double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
 				if(t->clearanceCounter > responseTime) {
-					//cout << "C" << endl;
 					if(t->nextOnRwy) {
-						//cout << "D" << endl;
 						if(rwyOccupied) {
-							//cout << "E" << endl;
 							// Do nothing for now - consider acknowloging hold short eventually
 						} else {
 							// Lets Roll !!!!
@@ -337,20 +336,49 @@ void FGTower::Update(double dt) {
 		if(circuitList.size()) {
 			circuitListItr = circuitList.begin();	// TODO - at the moment we're constraining plane 2 based on plane 1 - this won't work for 3 planes in the circuit!!
 			TowerPlaneRec* t = *circuitListItr;
+			if(t->isUser) {
+				t->pos.setlon(user_lon_node->getDoubleValue());
+				t->pos.setlat(user_lat_node->getDoubleValue());
+				t->pos.setelev(user_elev_node->getDoubleValue());
+			} else {
+				// TODO - set/update the position if it's an AI plane
+			}
 			Point3D tortho = ortho.ConvertToLocal(t->pos);
 			if(t->isUser) {
 				// Need to figure out which leg he's on
+				//cout << "rwy.hdg = " << rwy.hdg << " user hdg = " << user_hdg_node->getDoubleValue();
 				double ho = GetAngleDiff_deg(user_hdg_node->getDoubleValue(), rwy.hdg);
+				//cout << " ho = " << ho << '\n';
 				// TODO FIXME - get the wind and convert this to track, or otherwise use track somehow!!!
 				// If it's gusty might need to filter the value, although we are leaving 30 degrees each way leeway!
 				if(abs(ho) < 30) {
 					// could be either takeoff, climbout or landing - check orthopos.y
-					if((tortho.y() < 0) || (t->leg == TURN4) || (t->leg == LANDING_ROLL)) {
-						t->leg = LANDING_ROLL;
-						//cout << "Landing_roll\n";
+					//cout << "tortho.y = " << tortho.y() << '\n';
+					if((tortho.y() < 0) || (t->leg == TURN4) || (t->leg == FINAL)) {
+						t->leg = FINAL;
+						//cout << "Final\n";
 					} else {
 						t->leg = CLIMBOUT;	// TODO - check elev wrt. apt elev to differentiate takeoff roll and climbout
 						//cout << "Climbout\n";
+						// If it's the user we may be unsure of his/her intentions.
+						// (Hopefully the AI planes won't try confusing the sim!!!)
+						if(t->opType == TTT_UNKNOWN) {
+							if(tortho.y() > 5000) {
+								// 5 km out from threshold - assume it's a departure
+								t->opType = OUTBOUND;
+								// Since we are unknown operation we should be in depList already.
+								circuitList.erase(circuitListItr);
+								circuitListItr = circuitList.begin();
+							}
+						} else if(t->opType == CIRCUIT) {
+							if(tortho.y() > 10000) {
+								// 10 km out - assume the user has abandoned the circuit!!
+								t->opType = OUTBOUND;
+								depList.push_back(t);
+								circuitList.erase(circuitListItr);
+								circuitListItr = circuitList.begin();
+							}
+						}
 					}
 				} else if(abs(ho) < 60) {
 					// turn1 or turn 4
@@ -394,29 +422,35 @@ void FGTower::Update(double dt) {
 			case FINAL:
 				// Base leg must be at least as far out as the plane is - actually possibly not necessary for separation, but we'll use that for now.
 				base_leg_pos = tortho.y();
+				//cout << "base_leg_pos = " << base_leg_pos << '\n';
 				break;
 			case TURN4:
 				// Fall through to base
 			case BASE:
 				base_leg_pos = tortho.y();
+				//cout << "base_leg_pos = " << base_leg_pos << '\n';
 				break;
 			case TURN3:
 				// Fall through to downwind
 			case DOWNWIND:
 				// Only have the downwind leg pos as turn-to-base constraint if more negative than we already have.
 				base_leg_pos = (tortho.y() < base_leg_pos ? tortho.y() : base_leg_pos);
+				//cout << "base_leg_pos = " << base_leg_pos;
 				downwind_leg_pos = tortho.x();		// Assume that a following plane can simply be constrained by the immediately in front downwind plane
+				//cout << " downwind_leg_pos = " << downwind_leg_pos << '\n';
 				break;
 			case TURN2:
 				// Fall through to crosswind
 			case CROSSWIND:
 				crosswind_leg_pos = tortho.y();
+				//cout << "crosswind_leg_pos = " << crosswind_leg_pos << '\n';
 				break;
 			case TURN1:
 				// Fall through to climbout
 			case CLIMBOUT:
 				// Only use current by constraint as largest
-				crosswind_leg_pos = (tortho.y() > crosswind_leg_pos ? tortho.x() : crosswind_leg_pos);
+				crosswind_leg_pos = (tortho.y() > crosswind_leg_pos ? tortho.y() : crosswind_leg_pos);
+				//cout << "crosswind_leg_pos = " << crosswind_leg_pos << '\n';
 				break;
 			case TAKEOFF_ROLL:
 				break;
@@ -448,6 +482,37 @@ void FGTower::Update(double dt) {
 	// How big should ii get - ie how long should the update cycle interval stretch?
 	if(ii >= ii_max) {
 		ii = 0;
+	}
+}
+
+
+// Returns true if positions of crosswind/downwind/base leg turns should be constrained by previous traffic
+// plus the constraint position as a rwy orientated orthopos (meters)
+bool FGTower::GetCrosswindConstraint(double& cpos) {
+	if(crosswind_leg_pos != 0.0) {
+		cpos = crosswind_leg_pos;
+		return(true);
+	} else {
+		cpos = 0.0;
+		return(false);
+	}
+}
+bool FGTower::GetDownwindConstraint(double& dpos) {
+	if(downwind_leg_pos != 0.0) {
+		dpos = downwind_leg_pos;
+		return(true);
+	} else {
+		dpos = 0.0;
+		return(false);
+	}
+}
+bool FGTower::GetBaseConstraint(double& bpos) {
+	if(base_leg_pos != 0.0) {
+		bpos = base_leg_pos;
+		return(true);
+	} else {
+		bpos = 0.0;
+		return(false);
 	}
 }
 

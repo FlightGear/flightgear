@@ -605,6 +605,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	double wind_from = wind_from_hdg->getDoubleValue();
 	double wind_speed = wind_speed_knots->getDoubleValue();
 
+	double dveldt;
+	
 	switch(leg) {
 	case TAKEOFF_ROLL:
 		//inAir = false;
@@ -627,9 +629,26 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		break;
 	case CLIMBOUT:
 		track = rwy.hdg;
+		// Turn to crosswind if above 600ft AND if other traffic allows
+		// (decided in FGTower and accessed through GetCrosswindConstraint(...)).
 		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 600) {
-			cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
-			leg = TURN1;
+			double cc = 0.0;
+			if(tower->GetCrosswindConstraint(cc)) {
+				if(orthopos.y() > cc) {
+					cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
+					leg = TURN1;
+				}
+			} else {
+				cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
+				leg = TURN1;
+			}
+		}
+		// Need to check for levelling off in case we can't turn crosswind as soon
+		// as we would like due to other traffic.
+		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
+			slope = 0.0;
+			pitch = 0.0;
+			IAS = 80.0;		// FIXME - use smooth transistion to new speed and attitude.
 		}
 		break;
 	case TURN1:
@@ -647,9 +666,18 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			pitch = 0.0;
 			IAS = 80.0;		// FIXME - use smooth transistion to new speed
 		}
-		// turn 1000m out for now
+		// turn 1000m out for now, taking other traffic into accout
 		if(fabs(orthopos.x()) > 980) {
-			leg = TURN2;
+			double dd = 0.0;
+			if(tower->GetDownwindConstraint(dd)) {
+				if(fabs(orthopos.x()) > fabs(dd)) {
+					cout << "Turning to downwind, distance from centerline = " << fabs(orthopos.x()) << '\n'; 
+					leg = TURN2;
+				}
+			} else {
+				cout << "Turning to downwind, distance from centerline = " << fabs(orthopos.x()) << '\n'; 
+				leg = TURN2;
+			}
 		}
 		break;
 	case TURN2:
@@ -681,15 +709,26 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			transmitted = true;
 		}
 		if(orthopos.y() < -480) {
+			// FIXME - TODO - take tower baseleg constraint ie. other traffic, into account when calculating start of descent
 			slope = -4.0;	// FIXME - calculate to descent at 500fpm and hit the threshold (taking wind into account as well!!)
 			pitch = -3.0;
 			IAS = 85.0;
 		}
 		if(orthopos.y() < -980) {
-			//roll = -20;
-			leg = TURN3;
-			transmitted = false;
-			IAS = 80.0;
+			double bb = 0.0;
+			if(tower->GetDownwindConstraint(bb)) {
+				if(fabs(orthopos.y()) > fabs(bb)) {
+					cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
+					leg = TURN3;
+					transmitted = false;
+					IAS = 80.0;
+				}
+			} else {
+				cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
+				leg = TURN3;
+				transmitted = false;
+				IAS = 80.0;
+			}
 		}
 		break;
 	case TURN3:
@@ -759,7 +798,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		}
 		track = rwy.hdg;
-		double dveldt = -5.0;
+		dveldt = -5.0;
 		vel += dveldt * dt;
 		// FIXME - differentiate between touch and go and full stops
 		if(vel <= 15.0) {
@@ -774,6 +813,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 				--circuitsToFly;
 			}
 		}
+		break;
+	case LEG_UNKNOWN:
 		break;
     }
 

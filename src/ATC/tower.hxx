@@ -135,6 +135,12 @@ public:
 	inline atc_type GetType() { return TOWER; }
 	
 	inline FGGround* GetGroundPtr() { return ground; }
+	
+	// Returns true if positions of crosswind/downwind/base leg turns should be constrained by previous traffic
+	// plus the constraint position as a rwy orientated orthopos (meters)
+	bool GetCrosswindConstraint(double& cpos);
+	bool GetDownwindConstraint(double& dpos);
+	bool GetBaseConstraint(double& bpos);
 
 private:
 	FGATCMgr* ATCmgr;	
@@ -224,7 +230,7 @@ private:
     SGPropertyNode* user_lon_node;
     SGPropertyNode* user_lat_node;
     SGPropertyNode* user_elev_node;
-	SGPropertyNode* user_hdg_node;
+    SGPropertyNode* user_hdg_node;
 	
 	// Details of the general traffic flow etc in the circuit
 	double crosswind_leg_pos;	// Distance from threshold crosswind leg is being turned to in meters (actual operation - *not* ideal circuit)
