@@ -342,6 +342,8 @@ void *fgBillboard( ssgBranch *lightmaps, ssgVertexArray *light_maps, ssgSimpleSt
         leaf->setState( lightmap_state );
         lightmaps->addKid( leaf );
     }
+
+    return NULL;
 }
 
 ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray *normal,

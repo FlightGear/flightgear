@@ -1515,10 +1515,6 @@ int mainLoop( int argc, char **argv ) {
     argc = ccommand( &argv );
 #endif
 
-#ifdef HAVE_BC5PLUS
-    _control87(MCW_EM, MCW_EM);  /* defined in float.h */
-#endif
-
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_INFO );
 
@@ -1859,9 +1855,13 @@ int mainLoop( int argc, char **argv ) {
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 
-#ifdef _MSC_VER
+#if defined( _MSC_VER ) && defined( DEBUG )
     // Christian, we should document what this does
     _control87( _EM_INEXACT, _MCW_EM );
+#endif
+
+#if defined( HAVE_BC5PLUS )
+    _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
 
     // FIXME: add other, more specific
