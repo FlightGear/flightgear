@@ -491,6 +491,18 @@ bool fgInitSubsystems( void ) {
 
     current_radiostack->set_adf_freq( 266.0 );
 
+#if 0
+    // This block of settings are Alex's defaults for San Diego
+    current_radiostack->set_nav1_freq( 111.70 );
+    current_radiostack->set_nav1_alt_freq( 115.30 );
+    current_radiostack->set_nav1_sel_radial( 280.0 );
+    current_radiostack->set_nav2_freq( 117.80 );
+    current_radiostack->set_nav2_alt_freq( 114.00 );
+    current_radiostack->set_nav2_sel_radial( 68.0 );
+    current_radiostack->set_adf_freq( 210.0 );
+    // End of Alex's custom settings
+#endif
+
     current_radiostack->search( cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
 				cur_fdm_state->get_Altitude() * FEET_TO_METER );
