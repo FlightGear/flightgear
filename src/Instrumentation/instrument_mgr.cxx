@@ -7,6 +7,8 @@
 #include "instrument_mgr.hxx"
 #include "altimeter.hxx"
 #include "attitude_indicator.hxx"
+#include "heading_indicator.hxx"
+#include "vertical_speed_indicator.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -28,6 +30,8 @@ FGInstrumentMgr::init ()
                                 // TODO: replace with XML configuration
     _instruments.push_back(new Altimeter);
     _instruments.push_back(new AttitudeIndicator);
+    _instruments.push_back(new HeadingIndicator);
+    _instruments.push_back(new VerticalSpeedIndicator);
 
                                 // Initialize the individual instruments
     for (unsigned int i = 0; i < _instruments.size(); i++)
