@@ -33,10 +33,10 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Main/fg_debug.h>
+#include <Math/mat3.h>
 #include <Scenery/obj.h>
 #include <Scenery/scenery.h>
-
-#include <Math/mat3.h>
 
 
 
@@ -58,23 +58,24 @@ void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
     MAT3cross_product(normal, v1, v2);
     MAT3_NORMALIZE_VEC(normal,temp);
 
-    /* printf("  Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]);*/
+    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "  Normal = %.2f %.2f %.2f\n", 
+                 normal[0], normal[1], normal[2]);*/
 }
 
 
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
     char line[256], winding_str[256];
-    double v1[3], v2[3], approx_normal[3], normal[3], dot_prod, scale, temp;
+    double approx_normal[3], normal[3], scale;
     GLint area;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
     static int use_vertex_norms = 1;
-    int i, winding;
+    int winding;
     int last1, last2, odd;
 
     if ( (f = fopen(path, "r")) == NULL ) {
-	printf("Cannot open file: %s\n", path);
+	fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
 	/* exit(-1); */
 	return(0);
     }
@@ -94,7 +95,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
-		/* printf("vertex = %s", line); */
+		/* fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex = %s", line); */
 		sscanf(line, "v %f %f %f\n", 
 		       &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
 		if ( ncount == 1 ) {
@@ -106,24 +107,24 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 		}
 		ncount++;
 	    } else {
-		printf("Read too many nodes ... dying :-(\n");
-		exit(-1);
+		fgPrintf( FG_TERRAIN, FG_EXIT, 
+			  "Read too many nodes ... dying :-(\n");
 	    }
 	} else if ( strncmp(line, "vn ", 3) == 0 ) {
 	    /* vertex normal */
 	    if ( vncount < MAXNODES ) {
-		/* printf("vertex normal = %s", line); */
+		/* fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex normal = %s", line); */
 		sscanf(line, "vn %f %f %f\n", 
 		       &normals[vncount][0], &normals[vncount][1], 
 		       &normals[vncount][2]);
 		vncount++;
 	    } else {
-		printf("Read too many vertex normals ... dying :-(\n");
-		exit(-1);
+		fgPrintf( FG_TERRAIN, FG_EXIT, 
+			  "Read too many vertex normals ... dying :-(\n");
 	    }
 	} else if ( strncmp(line, "winding ", 8) == 0 ) {
 	    sscanf(line+8, "%s", winding_str);
-	    printf("    WINDING = %s\n", winding_str);
+	    fgPrintf( FG_TERRAIN, FG_DEBUG, "    WINDING = %s\n", winding_str);
 
 	    /* can't call xglFrontFace() between xglBegin() & xglEnd() */
 	    xglEnd();
@@ -148,10 +149,11 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 		first = 0;
 	    }
 
-	    /* printf("    new tri strip = %s", line); */
+	    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "    new tri strip = %s", 
+	       line); */
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
-	    /* printf("(t) = "); */
+	    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = "); */
 
 	    xglBegin(GL_TRIANGLE_STRIP);
 
@@ -226,7 +228,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 
 	    xglBegin(GL_TRIANGLES);
 
-	    /* printf("new triangle = %s", line);*/
+	    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "new triangle = %s", line);*/
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
             xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
@@ -244,9 +246,10 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 	    /* continue a triangle strip */
 	    n1 = n2 = 0;
 
-	    /* printf("continued tri strip = %s ", line); */
+	    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "continued tri strip = %s ", 
+	       line); */
 	    sscanf(line, "q %d %d\n", &n1, &n2);
-	    /* printf("read %d %d\n", n1, n2); */
+	    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "read %d %d\n", n1, n2); */
 
 	    if ( use_vertex_norms ) {
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
@@ -271,7 +274,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 	    last2 = n1;
 
 	    if ( n2 > 0 ) {
-		/* printf(" (cont)\n"); */
+		/* fgPrintf( FG_TERRAIN, FG_DEBUG, " (cont)\n"); */
 
 		if ( use_vertex_norms ) {
 		    MAT3_SCALE_VEC(normal, normals[n2], scale);
@@ -296,7 +299,8 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 		last2 = n2;
 	    }
 	} else {
-	    printf("Unknown line in %s = %s\n", path, line);
+	    fgPrintf( FG_TERRAIN, FG_WARN, "Unknown line in %s = %s\n", 
+		      path, line);
 	}
     }
 
@@ -328,10 +332,13 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 
 
 /* $Log$
-/* Revision 1.18  1998/01/19 19:27:16  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.19  1998/01/27 03:26:42  curt
+/* Playing with new fgPrintf command.
 /*
+ * Revision 1.18  1998/01/19 19:27:16  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.17  1998/01/13 00:23:10  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

@@ -39,6 +39,7 @@
 #include <Aircraft/aircraft.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
+#include <Main/fg_debug.h>
 
 
 #define FG_LOCAL_X           3   /* should be odd */
@@ -58,7 +59,7 @@ struct fgTILE tile_cache[FG_TILE_CACHE_SIZE];
 
 /* Initialize the Tile Manager subsystem */
 void fgTileMgrInit( void ) {
-    printf("Initializing Tile Manager subsystem.\n");
+    fgPrintf( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem.\n");
 
     fgTileCacheInit();
 }
@@ -66,11 +67,11 @@ void fgTileMgrInit( void ) {
 
 /* load a tile */
 void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
-    printf("Updating for bucket %d %d %d %d\n", 
+    fgPrintf( FG_TERRAIN, FG_DEBUG, "Updating for bucket %d %d %d %d\n", 
 	   p->lon, p->lat, p->x, p->y);
     
     *index = fgTileCacheNextAvail();
-    printf("Selected cache index of %d\n", *index);
+    fgPrintf( FG_TERRAIN, FG_DEBUG, "Selected cache index of %d\n", *index);
     
     fgTileCacheEntryFillIn(*index, p);
 }
@@ -93,13 +94,13 @@ void fgTileMgrUpdate( void ) {
     if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) && 
 	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
 	/* same bucket as last time */
-	printf("Same bucket as last time\n");
+	fgPrintf( FG_TERRAIN, FG_DEBUG, "Same bucket as last time\n");
     } else if ( p_last.lon == -1000 ) {
 	/* First time through, initialize the system and load all
          * relavant tiles */
 
-	printf("First time through ... \n");
-	printf("Updating Tile list for %d,%d %d,%d\n", 
+	fgPrintf( FG_TERRAIN, FG_DEBUG, "First time through ... \n");
+	fgPrintf( FG_TERRAIN, FG_DEBUG, "Updating Tile list for %d,%d %d,%d\n", 
 	       p1.lon, p1.lat, p1.x, p1.y);
 
 	/* wipe tile cache */
@@ -198,7 +199,7 @@ void fgTileMgrRender( void ) {
 
     for ( i = 0; i < FG_LOCAL_X_Y; i++ ) {
 	index = tiles[i];
-	/* printf("Index = %d\n", index); */
+	/* fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index); */
 	fgTileCacheEntryInfo(index, &display_list, &local_ref );
 
 	xglPushMatrix();
@@ -212,10 +213,13 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/01/27 00:48:04  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.9  1998/01/27 03:26:44  curt
+/* Playing with new fgPrintf command.
 /*
+ * Revision 1.8  1998/01/27 00:48:04  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.7  1998/01/26 15:55:25  curt
  * Progressing on building dynamic scenery system.
  *

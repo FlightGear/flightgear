@@ -27,8 +27,9 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <Scenery/bucketutils.h>
 #include <Include/fg_constants.h>
+#include <Main/fg_debug.h>
+#include <Scenery/bucketutils.h>
 
 
 /* Generate the unique scenery tile index containing the specified
@@ -199,8 +200,9 @@ void fgBucketFind(double lon, double lat, struct fgBUCKET *p) {
 
     p->x = (lon - p->lon) * 8;
     p->y = (lat - p->lat) * 8;
-    printf("Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
-	   p->lon, p->lat, p->x, p->y);
+    fgPrintf( FG_TERRAIN, FG_DEBUG, 
+	      "Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
+	      p->lon, p->lat, p->x, p->y);
 }
 
 
@@ -216,9 +218,10 @@ void fgBucketGenIdxArray(struct fgBUCKET *p1, struct fgBUCKET *tiles,
 	for ( i = 0; i < width; i++ ) {
 	    fgBucketOffset(p1, &tiles[(j*width)+i], i - dw, j - dh);
 	    p2 = &tiles[(j*width)+i];
-	    printf("  bucket = %d %d %d %d  index = %ld\n", 
-		   p2->lon, p2->lat, p2->x, p2->y, 
-		   fgBucketGenIndex(&tiles[(j*width)+i]));
+	    fgPrintf( FG_TERRAIN, FG_DEBUG, 
+		      "  bucket = %d %d %d %d  index = %ld\n", 
+		      p2->lon, p2->lat, p2->x, p2->y, 
+		      fgBucketGenIndex(&tiles[(j*width)+i]));
 	}
     }
 }
@@ -266,10 +269,13 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/27 00:48:01  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.4  1998/01/27 03:26:41  curt
+/* Playing with new fgPrintf command.
 /*
+ * Revision 1.3  1998/01/27 00:48:01  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.2  1998/01/24 00:03:28  curt
  * Initial revision.
  *

@@ -31,11 +31,12 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Include/general.h>
 #include <Scenery/bucketutils.h>
 #include <Scenery/obj.h>
 #include <Scenery/tilecache.h>
+#include <Main/fg_debug.h>
 
-#include <Include/general.h>
 
 /* tile cache */
 struct fgTILE tile_cache[FG_TILE_CACHE_SIZE];
@@ -45,7 +46,7 @@ struct fgTILE tile_cache[FG_TILE_CACHE_SIZE];
 void fgTileCacheInit( void ) {
     int i;
 
-    printf("Initializing the tile cache.\n");
+    fgPrintf(FG_TERRAIN, FG_INFO, "Initializing the tile cache.\n");
 
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
 	tile_cache[i].used = 0;
@@ -97,7 +98,7 @@ void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p ) {
 void fgTileCacheEntryInfo( int index, GLint *display_list, 
 			   struct fgCartesianPoint *local_ref ) {
     *display_list = tile_cache[index].display_list;
-    /* printf("Display list = %d\n", *display_list); */
+    /* fgPrintf(FG_TERRAIN, FG_DEBUG, "Display list = %d\n", *display_list); */
 
     local_ref->x = tile_cache[index].local_ref.x;
     local_ref->y = tile_cache[index].local_ref.y;
@@ -112,10 +113,13 @@ void fgTileCacheEntryFree( in index ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/27 00:48:03  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.4  1998/01/27 03:26:43  curt
+/* Playing with new fgPrintf command.
 /*
+ * Revision 1.3  1998/01/27 00:48:03  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.2  1998/01/26 15:55:24  curt
  * Progressing on building dynamic scenery system.
  *

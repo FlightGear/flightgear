@@ -35,7 +35,7 @@
 #include <string.h>
 
 #include <Include/general.h>
-
+#include <Main/fg_debug.h>
 #include <Scenery/obj.h>
 #include <Scenery/scenery.h>
 
@@ -50,7 +50,7 @@ struct fgSCENERY scenery;
 
 /* Initialize the Scenery Management system */
 void fgSceneryInit( void ) {
-    printf("Initializing scenery subsystem\n");
+    fgPrintf(FG_TERRAIN, FG_INFO, "Initializing scenery subsystem\n");
 
     /* set the default terrain detail level */
     scenery.terrain_skip = 6;
@@ -74,7 +74,7 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
     strcat(path, "/Scenery/");
     strcat(path, "mesa-e.obj");
 
-    printf("  Loading Scenery: %s\n", path);
+    fgPrintf(FG_TERRAIN, FG_DEBUG, "  Loading Scenery: %s\n", path);
 
     area_terrain = fgObjLoad(path, &scenery.center);
 }
@@ -100,10 +100,13 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.33  1998/01/19 19:27:17  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.34  1998/01/27 03:26:43  curt
+/* Playing with new fgPrintf command.
 /*
+ * Revision 1.33  1998/01/19 19:27:17  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.32  1998/01/19 18:40:37  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.
