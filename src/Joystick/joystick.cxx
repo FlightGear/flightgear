@@ -67,7 +67,7 @@ static const char * buttonNames[] = {
 struct axis {
   axis () : value(0), offset(0.0), factor(1.0),
 	    last_value(9999999), tolerance(0.002) {}
-  FGValue * value;
+  SGValue * value;
   float offset;
   float factor;
   float last_value;
@@ -86,7 +86,7 @@ struct button {
   };
   button () : value(0), step(0.0), action(ADJUST), isRepeatable(true),
 	      lastState(-1) {}
-  FGValue * value;
+  SGValue * value;
   float step;
   Action action;
   bool isRepeatable;
@@ -117,7 +117,7 @@ static joystick joysticks[MAX_JOYSTICKS];
 static void
 setupDefaults ()
 {
-  FGPropertyList &props = current_properties;
+  SGPropertyList &props = current_properties;
 
 				// Default axis 0 to aileron
   if (!props.getValue("/input/js0/axis0/control")) {
@@ -258,7 +258,7 @@ fgJoystickInit()
 				// Control property
       string name = base;
       name += "/control";
-      FGValue * value = current_properties.getValue(name);
+      SGValue * value = current_properties.getValue(name);
       if (value == 0) {
 	FG_LOG(FG_INPUT, FG_INFO, "    no control defined");
 	continue;
@@ -352,7 +352,7 @@ fgJoystickInit()
       string name = base;
       name += "/control";
       cout << "Trying name " << name << endl;
-      FGValue * value = current_properties.getValue(name);
+      SGValue * value = current_properties.getValue(name);
       if (value == 0) {
 	FG_LOG(FG_INPUT, FG_INFO, "    no control defined");
 	continue;
