@@ -961,6 +961,23 @@ fgOptLogLevel( const char *arg )
 {
     fgSetString("/sim/logging/classes", "all");
     fgSetString("/sim/logging/priority", arg);
+
+    string priority = arg;
+    if (priority == "bulk") {
+      logbuf::set_log_priority(SG_BULK);
+    } else if (priority == "debug") {
+      logbuf::set_log_priority(SG_DEBUG);
+    } else if (priority.empty() || priority == "info") { // default
+      logbuf::set_log_priority(SG_INFO);
+    } else if (priority == "warn") {
+      logbuf::set_log_priority(SG_WARN);
+    } else if (priority == "alert") {
+      logbuf::set_log_priority(SG_ALERT);
+    } else {
+      SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
+    }
+    SG_LOG(SG_GENERAL, SG_INFO, "Logging priority is " << priority);
+
     return FG_OPTIONS_OK;
 }
 
