@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = libmat3.a
+TARGET = libMath.a
 
 CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c
 HFILES = mat3.h mat3defs.h mat3err.h
@@ -59,6 +59,9 @@ include depend
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1997/07/05 20:43:31  curt
+# renamed mat3 directory to Math so we could add other math related routines.
+#
 # Revision 1.6  1997/06/27 21:38:14  curt
 # Working on Makefile structure.
 #
