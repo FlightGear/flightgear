@@ -43,6 +43,7 @@
 
 #include <plib/ssg.h>
 #include <plib/pu.h>
+#include <plib/netSocket.h>
 
 #include <simgear/screen/extensions.hxx>
 #include <simgear/scene/material/matlib.hxx>
