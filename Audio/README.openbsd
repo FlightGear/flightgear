@@ -1,0 +1,13 @@
+
+Building SL for OpenBSD.
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+   % make openbsd
+   % su root
+   % make install
+
+...that's all folks.
+
+Header  files   go into /usr/include/SL (analogous to /usr/include/GL for graphics)
+Library file(s) go into /usr/lib
+

@@ -1,0 +1,119 @@
+
+/**********************************************\
+*                                              *
+*                W A R N I N G                 *
+*                                              *
+* This file is now kept in reverse chronolog-  *
+* ical order so recent changes are now at the  *
+* top.                                         *
+*                                              *
+\**********************************************/
+
+* 6th  July 1998 -- Fixed an initialisation problem when
+                    slScheduler was not a static/global.
+
+                    Tom Knienieder's port to SGI/IRIX is now
+                    working, documentation updated to reflect that.
+
+* 16th June 1998 -- Added some slPortability.h fixes for
+                    FreeBSD and the Cygnus WIN32 compiler.
+                    Many thanks to Curt.
+
+* 14th June 1998 -- Tom Knienieder's port to OpenBSD is now
+                    working, documentation updated to reflect that.
+                    Tom's improved Makefiles included, also some
+                    example sound samples that were accidentally
+                    left out of the release are now present.
+                    A couple of typo's in the WIN32 section
+                    have been fixed. The top level Makefile
+                    now requires you to type 'make linux',
+                    'make win' or 'make openbsd'.
+
+* 13th June 1998 -- Tom Knienieder's port to WIN32 engine is now
+                    working, documentation updated to reflect that
+                    revised status. Some default constructor parameters
+                    have changed, slDSP no longer supports setRate/setBps/setStereo.
+                    You now have to delete the slDSP and recreate it with
+                    new parameters. This makes porting a little easier.
+                    'sound_test' renamed 'example'.
+
+* 7th  June 1998 -- Volume envelopes (and inverse volume envelopes)
+                    now work correctly. Pan envelopes won't work
+                    until stereo is implemented. Pitch and filter
+                    envelopes turn out to be a major pain to implement
+                    with the present slSceduler/slSamplePlayer interface,
+                    so some significant internal changes are to be
+                    expected.
+
+                    Changed the CHANGES file to be in reverse
+                    chronological order.
+
+                    This version is officially  SL v0.3 (beta)
+ 
+*  3rd June 1998 -- Moved sample program and it's data files into
+                    'example', moved documents into 'doc' and sources
+                    into 'src'. Final library goes into 'lib'.
+
+                    The entire preempting mechanism was broken -
+                    now it's fixed.
+ 
+                    Added a callback mechanism that allows
+                    applications to know when a sound
+                    loops, finishes playing, is pre-empted, etc.
+
+                    New mechanisms added to stop/pause/resume a
+                    playing sample.
+ 
+                    All the documentation - and some of the code -
+                    for slEnvelopes has been added, they don't
+                    work yet - so don't bother with them for now.
+
+                    Made some code a little more bullet-proof.
+                    slSample's are now reference-counted so you
+                    can't accidentally delete one while it's
+                    playing without getting a FATAL error.
+
+* 2nd  June 1998 -- Fixed bug in initialisation that prevented SL
+                    from functioning correctly in the case were there
+                    is no sound card present.
+
+                    This version is officially  SL v0.2 (beta)
+
+* 1st  June 1998 -- Split library into two parts - libsm and
+                    libsl. libsm contains only the Mixer class
+                    since it is likely to be hard to port to
+                    a lot of non-OSS systems - and most programs
+                    won't need it anyway. Hence the documentation
+                    has blossomed into three files and all the
+                    'slMixer' references have turned into 'smMixer'.
+                    Also, I finally got a hold of the OSS documentation,
+                    which is a lot more complete - and straightened
+                    me out on a few points. slDSP has changed
+                    (internally) somewhat as a result and in particular,
+                    you can no longer mess with the sampling rate,
+                    stereo and bps settings after the slDSP or
+                    slScheduler has been created. This also allows the
+                    scheduler to enforce it's rule about only mono/8bps
+                    operations.
+
+                    I also added an 'autoMatch' function to the slSample
+                    class to automagically match incoming samples to the
+                    current slDSP/slScheduler. This makes using the library
+                    a lot less painful and error-prone.
+ 
+                    This version is officially  SL v0.1 (beta)
+ 
+                    We need a better name!
+
+* 30th May  1998 -- Almost total rewrite, library can now
+                    play multiple sounds without interruption,
+                    supports '.WAV' and '.AU' file formats as
+                    well as raw binary files. Able to copy with
+                    much shorter safetyMargin on sound buffers,
+                    and play without using the 'stop' call.
+                    All class and external symbols now begin
+                    with 'sl' or 'SL'. HTML documentation now
+                    available.
+
+* 27th May  1998 -- First hack
+
