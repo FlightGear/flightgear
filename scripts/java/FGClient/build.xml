@@ -19,7 +19,7 @@
 </target>
 
 <target name="jar" depends="compile">
- <jar jarfile="fgfsclient.jar" basedir="classes" excludes="**/Makefile"/>
+ <jar manifest="main-class.txt" jarfile="fgfsclient.jar" basedir="classes" excludes="**/Makefile"/>
 </target>
 
 <target name="javadoc" depends="prepare">

@@ -2,13 +2,14 @@
 
 import java.io.IOException;
 
-import java.awt.FlowLayout;
+import java.util.HashMap;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 
 import org.flightgear.fgfsclient.FGFSConnection;
+import org.flightgear.fgfsclient.PropertyPage;
 
 
 /**
@@ -35,27 +36,104 @@ public class FGFSDemo
 	super("FlightGear Client Console");
 
 	fgfs = new FGFSConnection(host, port);
+	tabs = new JTabbedPane();
+	pages = new HashMap();
 
-	getContentPane().setLayout(new FlowLayout());
+	PropertyPage page = new PropertyPage(fgfs, "Simulation");
+	page.addField("/sim/aircraft", "Aircraft:");
+	page.addField("/sim/startup/airport-id", "Airport ID:");
+	page.addField("/sim/time/gmt", "Current time (GMT):");
+	page.addField("/sim/startup/trim", "Trim on ground (true/false):");
+	page.addField("/sim/sound/audible", "Sound enabled (true/false):");
+	page.addField("/sim/startup/browser-app", "Web browser:");
+	addPage(page);
 
-	altitudeLabel = new JTextField(fgfs.get("/position/altitude-ft"));
-	longitudeLabel = new JTextField(fgfs.get("/position/longitude-deg"));
-	latitudeLabel = new JTextField(fgfs.get("/position/latitude-deg"));
+	page = new PropertyPage(fgfs, "View");
+	page.addField("/sim/view-mode", "View mode:");
+	page.addField("/sim/current-view/field-of-view",
+		      "Field of view (deg):");
+	page.addField("/sim/current-view/pitch-offset-deg",
+		      "View pitch offset (deg):");
+	page.addField("/sim/current-view/heading-offset-deg",
+		      "View heading offset (deg):");
+	addPage(page);
 
-	getContentPane().add(new JLabel("Altitude: "));
-	getContentPane().add(altitudeLabel);
-	getContentPane().add(new JLabel("Longitude: "));
-	getContentPane().add(longitudeLabel);
-	getContentPane().add(new JLabel("Latitude: "));
-	getContentPane().add(latitudeLabel);
+	page = new PropertyPage(fgfs, "Location");
+	page.addField("/position/altitude-ft", "Altitude (ft):");
+	page.addField("/position/longitude-deg", "Longitude (deg):");
+	page.addField("/position/latitude-deg", "Latitude (deg):");
+	page.addField("/orientation/roll-deg", "Roll (deg):");
+	page.addField("/orientation/pitch-deg", "Pitch (deg):");
+	page.addField("/orientation/heading-deg", "Heading (deg):");
+	addPage(page);
+
+	page = new PropertyPage(fgfs, "Weather");
+	page.addField("/environment/wind-from-heading-deg",
+		      "Wind direction (deg FROM):");
+	page.addField("/environment/params/base-wind-speed-kt",
+		      "Wind speed (kt):");
+	page.addField("/environment/params/gust-wind-speed-kt",
+		      "Maximum gust (kt):");
+	page.addField("/environment/wind-from-down-fps",
+		      "Updraft (fps):");
+	page.addField("/environment/temperature-degc", "Temperature (degC):");
+	page.addField("/environment/dewpoint-degc", "Dewpoint (degC):");
+	page.addField("/environment/pressure-sea-level-inhg",
+		      "Altimeter setting (inHG):");
+	addPage(page);
+
+	page = new PropertyPage(fgfs, "Clouds");
+	page.addField("/environment/clouds/layer[0]/type",
+		      "Layer 0 type:");
+	page.addField("/environment/clouds/layer[0]/elevation-ft",
+		      "Layer 0 height (ft):");
+	page.addField("/environment/clouds/layer[0]/thickness-ft",
+		      "Layer 0 thickness (ft):");
+	page.addField("/environment/clouds/layer[1]/type",
+		      "Layer 1 type:");
+	page.addField("/environment/clouds/layer[1]/elevation-ft",
+		      "Layer 1 height (ft):");
+	page.addField("/environment/clouds/layer[1]/thickness-ft",
+		      "Layer 1 thickness (ft):");
+	page.addField("/environment/clouds/layer[2]/type",
+		      "Layer 2 type:");
+	page.addField("/environment/clouds/layer[2]/elevation-ft",
+		      "Layer 2 height (ft):");
+	page.addField("/environment/clouds/layer[2]/thickness-ft",
+		      "Layer 2 thickness (ft):");
+	page.addField("/environment/clouds/layer[3]/type",
+		      "Layer 3 type:");
+	page.addField("/environment/clouds/layer[3]/elevation-ft",
+		      "Layer 3 height (ft):");
+	page.addField("/environment/clouds/layer[3]/thickness-ft",
+		      "Layer 3 thickness (ft):");
+	page.addField("/environment/clouds/layer[4]/type",
+		      "Layer 4 type:");
+	page.addField("/environment/clouds/layer[4]/elevation-ft",
+		      "Layer 4 height (ft):");
+	page.addField("/environment/clouds/layer[4]/thickness-ft",
+		      "Layer 4 thickness (ft):");
+	addPage(page);
+
+	page = new PropertyPage(fgfs, "Velocities");
+	page.addField("/velocities/airspeed-kt", "Airspeed (kt):");
+	page.addField("/velocities/speed-down-fps", "Descent speed (fps):");
+	addPage(page);
+
+	getContentPane().add(tabs);
 
 	new Thread(new Updater()).start();
     }
 
+    private void addPage (PropertyPage page)
+    {
+	tabs.add(page.getName(), new JScrollPane(page));
+	pages.put(page.getName(), page);
+    }
+
     private FGFSConnection fgfs;
-    private JTextField altitudeLabel;
-    private JTextField longitudeLabel;
-    private JTextField latitudeLabel;
+    private JTabbedPane tabs;
+    private HashMap pages;
 
     public static void main (String args[])
 	throws Exception
@@ -77,16 +155,19 @@ public class FGFSDemo
 	public void run ()
 	{
 	    while (true) {
-		try {
-		    altitudeLabel.setText(fgfs.get("/position/altitude-ft"));
-		    longitudeLabel.setText(fgfs.get("/position/longitude-deg"));
-		    latitudeLabel.setText(fgfs.get("/position/latitude-deg"));
-		} catch (IOException e) {
+		int index = tabs.getSelectedIndex();
+		if (index > -1) {
+		    String name = tabs.getTitleAt(index);
+		    PropertyPage page = (PropertyPage)pages.get(name);
+		    try {
+			page.update();
+		    } catch (IOException e) {
+		    }
 		}
-		try {
-		    Thread.sleep(1000);
-		} catch (InterruptedException e) {
-		}
+ 		try {
+ 		    Thread.sleep(1000);
+ 		} catch (InterruptedException e) {
+ 		}
 	    }
 	}
 
