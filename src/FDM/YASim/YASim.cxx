@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/xml/easyxml.hxx>
@@ -386,7 +384,7 @@ void YASim::copyFromYASim()
     _set_Accels_CG_Body(M2FT*v[0], -M2FT*v[1], -M2FT*v[2]);
 
     _fdm->getAirplane()->getPilotAccel(v);
-    _set_Accels_Pilot_Body(M2FT*v[0], -M2FT*v[1], -M2FT*v[2]);
+    _set_Accels_Pilot_Body(M2FT*v[0], M2FT*v[1], -M2FT*v[2]);
 
     // The one appears (!) to want inverted pilot acceleration
     // numbers, in G's...
