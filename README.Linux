@@ -1,4 +1,4 @@
-Aug 27, 1998
+Oct 8, 1998
 ============
 
 This is a short description of the things I had to do to get
@@ -20,7 +20,8 @@ you prefer another location, you'll have to edit the Makefile for
 FlightGear by hand. Be sure to read and understand the file
 /usr/local/glide/README.
 
-- the MESA library version 2.6 (or greater) installed.
+- the MESA library version 2.6 (or greater) installed. I used 3.0 to
+be on the safer side...
 
 Grab it at"
 
@@ -45,7 +46,6 @@ need.
 You will need the following files:
 
 	FlightGear-x.xx.tar.gz 
-	az-patch-x.xx.tar.gz
 	base-x.xx.tar.gz 
 	textures-x.xx.tar.gz
 
@@ -75,21 +75,15 @@ by using the su command) and type
 	make install
 
 This will install the binaries in /usr/local/bin. Notice that the name
-of the FlightGear binary is "fg", so simply typing "fg" at the prompt
-will give you
-
-	fg: No such job
-
-since fg is a shell internal. Use the "runfg" script instead! Later
-versions of FlightGear will be named "fgfs", so watch out!
+of the FlightGear binary is "fgfs".
 
 Another problem with Linux/Glide is permission-related. All programs
 accessing the Accelerator board need root permissions. The solution is
-either to play as root or make the /usr/local/bin/fg binary "setuid
+either to play as root or make the /usr/local/bin/fgfs binary "setuid
 root", i.e. when this binary is run root priviledges are given. Do
 this by issuing (as root)
 
-	chmod +s /usr/local/bin/fg
+	chmod +s /usr/local/bin/fgfs
 
 A solution for this problem is upcoming, keep an eye on the 3Dfx
 website.
@@ -98,8 +92,7 @@ website.
 
 Change to /usr/local/lib/FlightGear and unpack the data files:
 
-	tar xvfz WHERE_YOUDOWNLOADED_THE_FILES/az-patch-x.xx.tar.gz 
-	tar xvfzWHERE_YOU DOWNLOADED_THE_FILES/base-x.xx.tar.gz 
+	tar xvfz WHERE_YOU DOWNLOADED_THE_FILES/base-x.xx.tar.gz 
 	tar xvfz WHERE_YOU DOWNLOADED_THE_FILES/textures-x.xx.tar.gz
 
 That's it...
@@ -138,4 +131,7 @@ beer to me, if not flame me!
 
 Bernhard H. Buckel
 <buckel@wmad95.mathematik.uni-wuerzburg.de>
+
+
+
 
