@@ -73,6 +73,7 @@ FGKR_87::FGKR_87() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
+    bus_power(fgGetNode("/systems/electrical/outputs/adf", true)),
     need_update(true),
     valid(false),
     inrange(false),
@@ -103,25 +104,11 @@ FGKR_87::FGKR_87() :
     elapsed_timer(0.0),
     tmp_timer(0.0)
 {
-    SGPath path( globals->get_fg_root() );
-    SGPath term = path;
-    term.append( "Navaids/range.term" );
-    SGPath low = path;
-    low.append( "Navaids/range.low" );
-    SGPath high = path;
-    high.append( "Navaids/range.high" );
-
-    term_tbl = new SGInterpTable( term.str() );
-    low_tbl = new SGInterpTable( low.str() );
-    high_tbl = new SGInterpTable( high.str() );
 }
 
 
 // Destructor
 FGKR_87::~FGKR_87() {
-    delete term_tbl;
-    delete low_tbl;
-    delete high_tbl;
 }
 
 
@@ -260,7 +247,7 @@ void FGKR_87::update( double dt ) {
     // Radio
     ////////////////////////////////////////////////////////////////////////
 
-    if ( power_btn ) {
+    if ( has_power() ) {
         // buttons
         if ( adf_btn == 0 ) {
             ant_mode = 1;

@@ -30,7 +30,6 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/navlist.hxx>
@@ -41,13 +40,10 @@ class FGKR_87 : public FGSubsystem
 {
     FGMorse morse;
 
-    SGInterpTable *term_tbl;
-    SGInterpTable *low_tbl;
-    SGInterpTable *high_tbl;
-
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
+    SGPropertyNode *bus_power;
 
     bool need_update;
 
@@ -128,6 +124,9 @@ public:
     inline double get_stn_lat() const { return stn_lat; }
     inline double get_dist() const { return dist; }
     inline double get_heading() const { return heading; }
+    inline bool has_power() const {
+        return power_btn && (bus_power->getDoubleValue() > 1.0);
+    }
 
     // modes
     inline int get_ant_mode() const { return ant_mode; }
