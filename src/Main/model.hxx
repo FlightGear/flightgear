@@ -98,6 +98,24 @@ private:
     virtual ~NullAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
     virtual void update (int dt);
+  private:
+    ssgBranch * _branch;
+  };
+
+
+  /**
+   * Animation to select alternative versions of the same object.
+   */
+  class SelectAnimation : public Animation
+  {
+  public:
+    SelectAnimation ();
+    virtual ~SelectAnimation ();
+    virtual void init (ssgEntity * object, SGPropertyNode * props);
+    virtual void update (int dt);
+  private:
+    FGCondition * _condition;
+    ssgSelector * _selector;
   };
 
 

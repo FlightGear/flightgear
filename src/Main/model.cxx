@@ -32,6 +32,9 @@ FGAircraftModel current_model;	// FIXME: add to globals
 // Static utility functions.
 ////////////////////////////////////////////////////////////////////////
 
+/**
+ * Locate a named SSG node in a branch.
+ */
 static ssgEntity *
 find_named_node (ssgEntity * node, const char * name)
 {
@@ -296,6 +299,8 @@ FGAircraftModel::make_animation (const char * object_name,
   const char * type = node->getStringValue("type");
   if (!strcmp("none", type)) {
     animation = new NullAnimation();
+  } else if (!strcmp("select", type)) {
+    animation = new SelectAnimation();
   } else if (!strcmp("spin", type)) {
     animation = new SpinAnimation();
   } else if (!strcmp("rotate", type)) {
@@ -340,22 +345,65 @@ FGAircraftModel::Animation::~Animation ()
 ////////////////////////////////////////////////////////////////////////
 
 FGAircraftModel::NullAnimation::NullAnimation ()
+  : _branch(new ssgBranch)
 {
 }
 
 FGAircraftModel::NullAnimation::~NullAnimation ()
 {
+  _branch = 0;
 }
 
 void
 FGAircraftModel::NullAnimation::init (ssgEntity * object,
-				      SGPropertyNode * node)
+				      SGPropertyNode * props)
 {
+  splice_branch(_branch, object);
+  _branch->setName(props->getStringValue("name", 0));
 }
 
 void
 FGAircraftModel::NullAnimation::update (int dt)
 {
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAircraftModel::SelectAnimation
+////////////////////////////////////////////////////////////////////////
+
+FGAircraftModel::SelectAnimation::SelectAnimation ()
+  : _condition(0),
+    _selector(new ssgSelector)
+{
+}
+
+FGAircraftModel::SelectAnimation::~SelectAnimation ()
+{
+  delete _condition;
+  _selector = 0;
+}
+
+void
+FGAircraftModel::SelectAnimation::init (ssgEntity * object,
+				      SGPropertyNode * props)
+{
+  splice_branch(_selector, object);
+  _selector->setName(props->getStringValue("name", 0));
+  SGPropertyNode * node = props->getChild("condition");
+  if (node != 0) {
+    _condition = fgReadCondition(node);
+  }
+}
+
+void
+FGAircraftModel::SelectAnimation::update (int dt)
+{
+  if (_condition != 0 && _condition->test()) 
+    _selector->select(0xffff);
+  else
+    _selector->select(0x0000);
 }
 
 
@@ -383,6 +431,7 @@ FGAircraftModel::SpinAnimation::init (ssgEntity * object,
 {
 				// Splice in the new transform node
   splice_branch(_transform, object);
+  _transform->setName(props->getStringValue("name", 0));
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
   _factor = props->getDoubleValue("factor", 1.0);
   _position_deg = props->getDoubleValue("starting-position-deg", 0);
@@ -438,6 +487,7 @@ FGAircraftModel::RotateAnimation::init (ssgEntity * object,
 {
 				// Splice in the new transform node
   splice_branch(_transform, object);
+  _transform->setName(props->getStringValue("name", 0));
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
   _offset_deg = props->getDoubleValue("offset-deg", 0.0);
   _factor = props->getDoubleValue("factor", 1.0);
@@ -501,6 +551,7 @@ FGAircraftModel::TranslateAnimation::init (ssgEntity * object,
 {
 				// Splice in the new transform node
   splice_branch(_transform, object);
+  _transform->setName(props->getStringValue("name", 0));
   _prop = fgGetNode(props->getStringValue("property", "/null"), true);
   _offset_m = props->getDoubleValue("offset-m", 0.0);
   _factor = props->getDoubleValue("factor", 1.0);
@@ -533,7 +584,3 @@ FGAircraftModel::TranslateAnimation::update (int dt)
 
 
 // end of model.cxx
-
-
-
-
