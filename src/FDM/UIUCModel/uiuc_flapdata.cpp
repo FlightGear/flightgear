@@ -92,14 +92,33 @@ FlapData::FlapData(const char* filename){
 //Frees all memory associated with this object
 FlapData::~FlapData(){
   //  printf("deleting flapdata\n");
-        delete liftTable;
-        delete thrustTable;
-        delete momentTable;
-        delete inertiaTable;
-        delete alphaArray;
-        delete speedArray;
-        delete freqArray;
-        delete phiArray;
+  int i, j, k;
+  for(i=0;i<alphaLength;i++){
+    for(j=0;j<speedLength;j++){
+      for(k=0;k<freqLength;k++){
+	delete[] liftTable[i][j][k];
+	delete[] thrustTable[i][j][k];
+	delete[] momentTable[i][j][k];
+	delete[] inertiaTable[i][j][k];
+      }
+      delete[] liftTable[i][j];
+      delete[] thrustTable[i][j];
+      delete[] momentTable[i][j];
+      delete[] inertiaTable[i][j];
+    }
+    delete[] liftTable[i];
+    delete[] thrustTable[i];
+    delete[] momentTable[i];
+    delete[] inertiaTable[i];
+  }
+  delete[] liftTable;
+  delete[] thrustTable;
+  delete[] momentTable;
+  delete[] inertiaTable;
+  delete alphaArray;
+  delete speedArray;
+  delete freqArray;
+  delete phiArray;
 }
 
 //An initialization function that does the same thing
@@ -299,10 +318,10 @@ int FlapData::readIn (ifstream* f){
                         momentTable[i][j]=new double*[freqLength];
                         inertiaTable[i][j]=new double*[freqLength];
                         for(k=0;k<freqLength;k++){
-                                assert((liftTable[i][j][k]=new double[phiLength])!=NULL);
-                                assert((thrustTable[i][j][k]=new double[phiLength])!=NULL);
-                                assert((momentTable[i][j][k]=new double[phiLength])!=NULL);
-                                assert((inertiaTable[i][j][k]=new double[phiLength])!=NULL);
+                                 liftTable[i][j][k]=new double[phiLength];
+                                 thrustTable[i][j][k]=new double[phiLength];
+                                 momentTable[i][j][k]=new double[phiLength];
+                                 inertiaTable[i][j][k]=new double[phiLength];
                         }
                 }
         }
