@@ -292,7 +292,7 @@ GLint fgRunwayHack(double width, double length) {
     static GLfloat concrete[4] = { 0.5, 0.5, 0.5, 1.0 };
     static GLfloat line[4]     = { 0.9, 0.9, 0.9, 1.0 };
     int i;
-    int num_lines = 8;
+    int num_lines = 16;
     float line_len, line_width_2, cur_pos;
 
     runway = glGenLists(1);
@@ -534,9 +534,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.18  1997/06/18 02:21:24  curt
-/* Hacked in a runway
+/* Revision 1.19  1997/06/18 04:10:31  curt
+/* A couple more runway tweaks ...
 /*
+ * Revision 1.18  1997/06/18 02:21:24  curt
+ * Hacked in a runway
+ *
  * Revision 1.17  1997/06/17 16:51:58  curt
  * Timer interval stuff now uses gettimeofday() instead of ftime()
  *

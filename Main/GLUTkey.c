@@ -73,10 +73,10 @@ void GLUTkey(unsigned char k, int x, int y) {
     } else {
 	switch (k) {
 	case 50: /* numeric keypad 2 */
-	    fgElevMove(-0.02);
+	    fgElevMove(-0.05);
 	    return;
 	case 56: /* numeric keypad 8 */
-	    fgElevMove(0.02);
+	    fgElevMove(0.05);
 	    return;
 	case 49: /* numeric keypad 1 */
 	    fgElevTrimMove(-0.001);
@@ -85,16 +85,16 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgElevTrimMove(0.001);
 	    return;
 	case 52: /* numeric keypad 4 */
-	    fgAileronMove(-0.02);
+	    fgAileronMove(-0.05);
 	    return;
 	case 54: /* numeric keypad 6 */
-	    fgAileronMove(0.02);
+	    fgAileronMove(0.05);
 	    return;
 	case 48: /* numeric keypad Ins */
-	    fgRudderMove(-0.02);
+	    fgRudderMove(-0.05);
 	    return;
 	case 13: /* numeric keypad Enter */
-	    fgRudderMove(0.02);
+	    fgRudderMove(0.05);
 	    return;
 	case 53: /* numeric keypad 5 */
 	    fgAileronSet(0.0);
@@ -135,16 +135,16 @@ void GLUTspecialkey(int k, int x, int y) {
 
     switch (k) {
     case GLUT_KEY_UP:
-	fgElevMove(0.02);
+	fgElevMove(0.05);
 	return;
     case GLUT_KEY_DOWN:
-	fgElevMove(-0.02);
+	fgElevMove(-0.05);
 	return;
     case GLUT_KEY_LEFT:
-	fgAileronMove(-0.02);
+	fgAileronMove(-0.05);
 	return;
     case GLUT_KEY_RIGHT:
-	fgAileronMove(0.02);
+	fgAileronMove(0.05);
 	return;
     }
 
@@ -152,9 +152,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.10  1997/06/18 02:21:23  curt
-/* Hacked in a runway
+/* Revision 1.11  1997/06/18 04:10:31  curt
+/* A couple more runway tweaks ...
 /*
+ * Revision 1.10  1997/06/18 02:21:23  curt
+ * Hacked in a runway
+ *
  * Revision 1.9  1997/06/02 03:40:06  curt
  * A tiny bit more view tweaking.
  *

@@ -46,7 +46,7 @@ GLint mesh2GL(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 16;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -108,9 +108,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.19  1997/06/18 02:21:24  curt
-/* Hacked in a runway
+/* Revision 1.20  1997/06/18 04:10:32  curt
+/* A couple more runway tweaks ...
 /*
+ * Revision 1.19  1997/06/18 02:21:24  curt
+ * Hacked in a runway
+ *
  * Revision 1.18  1997/06/17 04:19:17  curt
  * More timer related tweaks with respect to view direction changes.
  *
