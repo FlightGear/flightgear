@@ -78,7 +78,8 @@ AreaType get_area_type( string area ) {
     } else if ( (area == "Swamp or Marsh")
 		|| (area == "Marsh") ) {
 	return MarshArea;
-    } else if ( area == "Bay  Estuary or Ocean" ) {
+    } else if ( (area == "Bay  Estuary or Ocean")
+                || (area == "Ocean") ) {
 	return OceanArea;
     } else if ( area == "Lake" ) {
 	return LakeArea;
@@ -150,6 +151,9 @@ string get_area_name( AreaType area ) {
 
 
 // $Log$
+// Revision 1.3  1999/03/02 01:03:58  curt
+// Added more reverse lookup support.
+//
 // Revision 1.2  1999/03/01 15:35:52  curt
 // Generalized the routines a bit to make them more useful.
 //
