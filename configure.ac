@@ -93,26 +93,6 @@ fi
 AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno")
 
 
-# Check if SimGear was built with Norman JPEG factory support
-AC_CHECK_HEADER(simgear/screen/jpgfactory.hxx)
-if test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes"; then
-    AC_CHECK_LIB(jpeg, jpeg_start_compress)
-    if test "x$ac_cv_lib_jpeg_jpeg_start_compress" != "xyes" ; then
-        echo
-        echo "The JPEG factory code was built and installed with SimGear."
-        echo "However it appears the libjpeg is no longer installed."
-        echo "You need to install libjpeg or remove jpgfactory support from"
-        echo "SimGear"
-        echo
-        echo "libjpeg is available at :"
-        echo "  ftp://ftp.uu.net in the directory graphics/jpeg"
-	exit 1
-    fi
-    AC_DEFINE([FG_JPEG_SERVER], 1,
-              [Define to build with jpeg screen shot server])
-fi
-AM_CONDITIONAL(ENABLE_JPEG_SERVER, test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes")
-
 # Specify if we want to use WeatherCM instead of FGEnvironment.
 # default to with_weathercm=no
 AC_ARG_WITH(new-environment, [  --with-weathercm        Use WeatherCM instead of FGEnvironment])
@@ -477,6 +457,9 @@ if test "x$ac_cv_header_mk4_h" != "xyes"; then
 fi
 
 AC_MSG_CHECKING([for proper metakit version])
+
+saved_LIBS="$LIBS"
+LIBS="$saved_LIBS -lmk4"
 AC_TRY_RUN([
 #include <mk4.h>
 
@@ -498,6 +481,27 @@ int main() {
    AC_MSG_ERROR([Install metakit 2.4.3 or later first...])],
   AC_MSG_RESULT(yes)
 )
+LIBS="$saved_LIBS"
+
+# Check if SimGear was built with Norman JPEG factory support
+AC_CHECK_HEADER(simgear/screen/jpgfactory.hxx)
+if test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes"; then
+    AC_CHECK_LIB(jpeg, jpeg_start_compress)
+    if test "x$ac_cv_lib_jpeg_jpeg_start_compress" != "xyes" ; then
+        echo
+        echo "The JPEG factory code was built and installed with SimGear."
+        echo "However it appears the libjpeg is no longer installed."
+        echo "You need to install libjpeg or remove jpgfactory support from"
+        echo "SimGear"
+        echo
+        echo "libjpeg is available at :"
+        echo "  ftp://ftp.uu.net in the directory graphics/jpeg"
+	exit 1
+    fi
+    AC_DEFINE([FG_JPEG_SERVER], 1,
+              [Define to build with jpeg screen shot server])
+fi
+AM_CONDITIONAL(ENABLE_JPEG_SERVER, test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes")
 
 AC_LANG_POP
 
