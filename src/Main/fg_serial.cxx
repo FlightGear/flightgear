@@ -572,7 +572,7 @@ static void send_pve_out( fgIOCHANNEL *p ) {
 	pitch_deg -= 360;
     }
 
-    int heave = (int)(f->get_W_body());
+    int heave = (int)(f->get_W_body()) + 128;
 
     // scale roll and pitch to output format (1 - 255)
     // straight && level == (128, 128)
@@ -580,7 +580,7 @@ static void send_pve_out( fgIOCHANNEL *p ) {
     int roll = (int)( (roll_deg+180.0) * 255.0 / 360.0) + 1;
     int pitch = (int)( (pitch_deg+180.0) * 255.0 / 360.0) + 1;
 
-    sprintf( pve, "p%c%c\n", roll, pitch);
+    sprintf( pve, "p%c%c%c\n", roll, pitch, heave);
 
     FG_LOG( FG_SERIAL, FG_INFO, "roll=" << roll << " pitch=" << pitch <<
 	    " heave=" << heave );
