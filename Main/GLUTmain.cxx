@@ -350,13 +350,10 @@ static void fgRenderFrame( void ) {
 
 	if ( (iteration == 0) && (current_options.get_panel_status()) ) {   
 	    // Did we run this loop before ?? ...and do we need the panel ??
-	    fgPanelReInit();
+	    fgPanelReInit(0, 0, 1024, 768);
 	}
 
 	// display HUD && Panel
-	if ( current_options.get_panel_status() ) {
-	    xglViewport(0, 0, v->winWidth, v->winHeight);
-	}
 	fgCockpitUpdate();
 	iteration = 1; // don't ReInit the panel in the future
 
@@ -747,7 +744,7 @@ static void fgReshape( int width, int height ) {
 	if ( ! current_options.get_panel_status() ) {
 	    v->win_ratio = (GLfloat) width / (GLfloat) height;
 	} else {
-	    v->win_ratio = (GLfloat) width / ((GLfloat) (height)*0.67);
+	    v->win_ratio = (GLfloat) width / ((GLfloat) (height)*0.4232);
 	}
     }
 
@@ -762,7 +759,7 @@ static void fgReshape( int width, int height ) {
 	// the system.
 	v->UpdateViewParams();
 	if ( current_options.get_panel_status() ) {
-	    fgPanelReInit();
+	    fgPanelReInit(0, 0, 1024, 768);
 	}
     }
     
@@ -777,12 +774,7 @@ int fgGlutInit( int *argc, char **argv ) {
     xglutInit(argc, argv);
 
     // Define Display Parameters
-    if ( ! current_options.get_panel_status() ) {
-	xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
-    } else {
-	xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | 
-			      GLUT_STENCIL);
-    }
+    xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
     // Define initial window size
     xglutInitWindowSize(640, 480);
@@ -899,6 +891,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.65  1998/11/09 23:39:22  curt
+// Tweaks for the instrument panel.
+//
 // Revision 1.64  1998/11/07 19:07:09  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment

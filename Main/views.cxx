@@ -28,6 +28,7 @@
 #endif
 
 #include <Aircraft/aircraft.hxx>
+#include <Cockpit/panel.hxx>
 #include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
@@ -192,6 +193,11 @@ void fgVIEW::UpdateViewParams( void ) {
 
     UpdateViewMath(f);
     UpdateWorldToEye(f);
+    
+    if ((current_options.get_panel_status() != panel_hist) &&                          (current_options.get_panel_status()))
+	{
+	    fgPanelReInit( 0, 0, 1024, 768);
+	}
 
     // if (!o->panel_status) {
     // xglViewport( 0, (GLint)((winHeight) / 2 ) , 
@@ -201,7 +207,12 @@ void fgVIEW::UpdateViewParams( void ) {
     // xglLoadIdentity();
     // gluPerspective(o->fov, win_ratio / 2.0, 1.0, 100000.0);
     // } else {
-    xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
+    if ( ! current_options.get_panel_status() ) {
+	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
+    } else {
+	xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
+                    (GLint)((winHeight)*0.4232) );
+    }
     // Tell GL we are about to modify the projection parameters
     xglMatrixMode(GL_PROJECTION);
     xglLoadIdentity();
@@ -246,6 +257,8 @@ void fgVIEW::UpdateViewParams( void ) {
 
     // set the sun position
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+
+    panel_hist = current_options.get_panel_status();
 }
 
 
@@ -586,6 +599,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.26  1998/11/09 23:39:25  curt
+// Tweaks for the instrument panel.
+//
 // Revision 1.25  1998/11/06 21:18:15  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using
