@@ -736,24 +736,23 @@ void fgRenderFrame() {
 	glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-        if (fgGetBool("/sim/rendering/experimental-lighting")) {
+#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
+        // Enable states for drawing points with GL_extension
+        glEnable(GL_POINT_SMOOTH);
 
-            // Enable states for drawing points with GL_extension
-            glEnable(GL_POINT_SMOOTH);
-
-            if ( fgGetBool("/sim/rendering/distance-attenuation")
-                 && glutExtensionSupported("GL_EXT_point_parameters") )
-            {
-                float quadratic[3] = {1.0, 0.001, 0.0000001};
-                // makes the points fade as they move away
-                glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
-                glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
-            }
-            glPointSize(4.0);
-
-            // blending function for runway lights
-            glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
+        if ( fgGetBool("/sim/rendering/distance-attenuation")
+             && glutExtensionSupported("GL_EXT_point_parameters") )
+        {
+            float quadratic[3] = {1.0, 0.001, 0.0000001};
+            // makes the points fade as they move away
+            glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
+            glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
         }
+        glPointSize(4.0);
+
+        // blending function for runway lights
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
+#endif
 
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
         glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
@@ -786,17 +785,17 @@ void fgRenderFrame() {
 	//_frame_count++;
 
 
-        if (fgGetBool("/sim/rendering/experimental-lighting")) {
-            if ( fgGetBool("/sim/rendering/distance-attenuation")
-                 && glutExtensionSupported("GL_EXT_point_parameters") )
-            {
-                glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
-                                      default_attenuation);
-            }
-
-            glPointSize(1.0);
-            glDisable(GL_POINT_SMOOTH);
+#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
+        if ( fgGetBool("/sim/rendering/distance-attenuation")
+             && glutExtensionSupported("GL_EXT_point_parameters") )
+        {
+            glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
+                                  default_attenuation);
         }
+
+        glPointSize(1.0);
+        glDisable(GL_POINT_SMOOTH);
+#endif
 
         // draw ground lighting
 	glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
