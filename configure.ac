@@ -10,6 +10,8 @@ dnl Require at least automake 2.52
 AC_PREREQ(2.52)
 
 dnl Initialize the automake stuff
+dnl set the $host variable based on local machine/os
+AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE(FlightGear, 0.9.4)
 
 dnl Checks for programs.
@@ -28,9 +30,6 @@ if test "x$with_simgear" != "x" ; then
     echo "SimGear prefix path is $with_simgear"
     EXTRA_DIRS="${EXTRA_DIRS} $with_simgear"
 fi
-
-dnl set the $host variable based on local machine/os
-AC_CANONICAL_HOST
 
 case "${host}" in
 *-*-irix*)
@@ -215,6 +214,15 @@ AC_SEARCH_LIBS(dlclose, dl)
 
 base_LIBS="$LIBS"
 
+dnl Check for SDL if enabled.
+AC_ARG_ENABLE(sdl, [  --enable-sdl    Configure to use SDL instead of GLUT], enable_sdl="yes", enable_sdl="")
+AM_CONDITIONAL(USE_SDL, test "x$enable_sdl" = "xyes")
+if test "x$enable_sdl" = "xyes"; then
+    AC_DEFINE([PU_USE_SDL], 1, [Define to use SDL])
+else
+    AC_DEFINE([PU_USE_GLUT], 1, [Define to use glut])
+fi
+
 dnl check for glut location
 AC_CHECK_HEADER(GL/glut.h)
 if test "x$ac_cv_header_GL_glut_h" = "xyes"; then
@@ -224,8 +232,10 @@ else
     if test "x$ac_cv_header_GLUT_glut_h" = "xyes"; then
         AC_DEFINE([FG_GLUT_H], <GLUT/glut.h>, [Define as glut.h include location])
     else
-        echo "Neither GL/glut.h nor GLUT/glut.h found.  Cannot continue"
-        exit
+        if test "x$enable_sdl" != "xyes"; then
+            echo "Neither GL/glut.h nor GLUT/glut.h found.  Cannot continue"
+            exit
+        fi
     fi
 fi
 
@@ -290,6 +300,9 @@ case "${host}" in
 
     AC_SEARCH_LIBS(gluLookAt, [ GLU MesaGLU ])
     AC_SEARCH_LIBS(glutGetModifiers, [ glut freeglut ])
+    if test "x$enable_sdl" = "xyes"; then
+        AC_SEARCH_LIBS(SDL_Init, SDL)
+    fi
     ;;
 
 esac

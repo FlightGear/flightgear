@@ -3,7 +3,11 @@
 
 // Plib pui needs to know at compile time what toolkit is in use.
 // Change this when we move to something other than glut.
-#define PU_USE_GLUT
+// #define PU_USE_GLUT -- moved to configure.ac -- EMH
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 
 enum { MOUSE_BUTTON_LEFT,
        MOUSE_BUTTON_MIDDLE,

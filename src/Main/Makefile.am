@@ -10,6 +10,12 @@ else
 THREAD_LIBS =
 endif
 
+if USE_SDL
+GFX_SOURCES = fg_os_sdl.cxx fg_os.hxx
+else
+GFX_SOURCES = fg_os.cxx fg_os.hxx
+endif
+
 if FG_USE_CLOUDS_3D
 CLOUD3D_LIBS = -lsgclouds3d
 else
@@ -41,7 +47,7 @@ libMain_a_SOURCES = \
 	util.cxx util.hxx \
 	viewer.cxx viewer.hxx \
 	viewmgr.cxx viewmgr.hxx \
-	fg_os.cxx fg_os.hxx
+	$(GFX_SOURCES)
 
 fgfs_SOURCES = bootstrap.cxx
 
