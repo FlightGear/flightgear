@@ -1611,6 +1611,7 @@ static bool fgMainInit( int argc, char **argv ) {
 
     // based on the requested presets, calculate the true starting
     // lon, lat
+    fgInitNav();
     fgInitPosition();
 
     SGTime *t = fgInitTime();
