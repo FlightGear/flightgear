@@ -1101,6 +1101,27 @@ parse_colon (const string &s, double * val1, double * val2)
 
 
 static int
+fgOptFailure( const char * arg )
+{
+    string a = arg;
+    if (a == "pitot") {
+        fgSetBool("/systems/pitot/serviceable", false);
+    } else if (a == "static") {
+        fgSetBool("/systems/static/serviceable", false);
+    } else if (a == "vacuum") {
+        fgSetBool("/systems/vacuum/serviceable", false);
+    } else if (a == "electrical") {
+        fgSetBool("/systems/electrical/serviceable", false);
+    } else {
+        SG_LOG(SG_INPUT, SG_ALERT, "Unknown failure mode: " << a);
+        return FG_OPTIONS_ERROR;
+    }
+
+    return FG_OPTIONS_OK;
+}
+
+
+static int
 fgOptNAV1( const char * arg )
 {
     double radial, freq;
@@ -1339,6 +1360,7 @@ struct OptionDesc {
     {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
+    {"failure",                      true,  OPTION_FUNC,   "", false, "", fgOptFailure },
     {"com1",                         true,  OPTION_DOUBLE, "/radios/comm[0]/frequencies/selected-mhz", false, "", 0 },
     {"com2",                         true,  OPTION_DOUBLE, "/radios/comm[1]/frequencies/selected-mhz", false, "", 0 },
     {"nav1",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV1 },
