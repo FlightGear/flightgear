@@ -316,9 +316,12 @@ static void loadFlight(puObject *cb)
 void guiTogglePanel(puObject *cb)
 {
   if (fgGetBool("/sim/panel/visibility"))
-    fgSetBool("/sim/panel/visiblity", false);
+    fgSetBool("/sim/panel/visibility", false);
   else
     fgSetBool("/sim/panel/visibility", true);
+
+  fgReshape(fgGetInt("/sim/startup/xsize"),
+	    fgGetInt("/sim/startup/ysize"));
 }
     
 //void MenuHideMenuCb(puObject *cb)
