@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.3  2000/06/12 18:52:37  curt
+Added differential braking (Alex and David).
+
 Revision 1.2  2000/04/10 18:09:41  curt
 David Megginson made a few (mostly minor) mods to the LaRCsim files, and
 it's now possible to choose the LaRCsim model at runtime, as in
@@ -235,9 +238,8 @@ char rcsid[] = "$Id$";
    * Put aircraft specific executable code here
    */
    
-    /* replace with cockpit brake handle connection code */
-    percent_brake[1] = Brake_pct;
-    percent_brake[2] = percent_brake[1];
+    percent_brake[1] = Brake_pct[0];
+    percent_brake[2] = Brake_pct[1];
     
     caster_angle_rad[0] = 0.03*Rudder_pedal;
     

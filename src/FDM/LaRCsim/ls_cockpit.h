@@ -35,6 +35,9 @@
 
 $Header$
 $Log$
+Revision 1.3  2000/06/12 18:52:37  curt
+Added differential braking (Alex and David).
+
 Revision 1.2  1999/10/29 16:08:32  curt
 Added flaps support to c172 model.
 
@@ -92,7 +95,7 @@ typedef struct {
     short   left_pb_on_stick, right_pb_on_stick, trig_pos_1, trig_pos_2;
     short   sb_extend, sb_retract, gear_sel_up;
     float   throttle_pct;
-    float   brake_pct;
+    float   brake_pct[2];
 } COCKPIT;
 
 extern COCKPIT cockpit_;

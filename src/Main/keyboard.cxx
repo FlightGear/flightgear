@@ -324,6 +324,20 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    b_set = double(!b_ret);
 	    controls.set_brake( FGControls::ALL_WHEELS, b_set);
 	    return;
+	case 44: // , key
+	    if (controls.get_brake(0) > 0.0) {
+	        controls.set_brake(0, 0.0);
+	    } else {
+	        controls.set_brake(0, 1.0);
+	    }
+	    return;
+	case 46: // . key
+	    if (controls.get_brake(1) > 0.0) {
+	        controls.set_brake(1, 0.0);
+	    } else {
+	        controls.set_brake(1, 1.0);
+	    }
+	    return;
 	case 104: // h key
 	    HUD_masterswitch( true );
 	    return;

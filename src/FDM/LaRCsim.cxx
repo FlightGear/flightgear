@@ -91,7 +91,8 @@ int FGLaRCsim::update( int multiloop ) {
     Rudder_pedal = controls.get_rudder();
     Flap_handle = 30.0 * controls.get_flaps();
     Throttle_pct = controls.get_throttle( 0 ) * 1.0;
-    Brake_pct = controls.get_brake( 0 );
+    Brake_pct[0] = controls.get_brake( 1 );
+    Brake_pct[1] = controls.get_brake( 0 );
 
     // Inform LaRCsim of the local terrain altitude
     Runway_altitude = get_Runway_altitude();
