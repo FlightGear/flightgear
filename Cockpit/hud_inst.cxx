@@ -14,7 +14,7 @@
 #include <Include/fg_constants.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
+#include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <Weather/weather.h>

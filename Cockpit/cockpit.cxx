@@ -47,7 +47,7 @@
 #include <Main/views.hxx>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
+#include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <Weather/weather.h>
@@ -293,10 +293,13 @@ void fgCockpitUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/06/27 16:47:53  curt
-/* Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
-/* first pass at an isntrument panel.
+/* Revision 1.10  1998/07/08 14:41:08  curt
+/* Renamed polar3d.h to polar3d.hxx
 /*
+ * Revision 1.9  1998/06/27 16:47:53  curt
+ * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
+ * first pass at an isntrument panel.
+ *
  * Revision 1.8  1998/05/17 16:58:12  curt
  * Added a View Frustum Culling ratio display to the hud.
  *

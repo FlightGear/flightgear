@@ -45,7 +45,7 @@
 #include <Include/fg_constants.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
+#include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <Weather/weather.h>
@@ -582,9 +582,12 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.14  1998/07/06 21:31:20  curt
-/* Removed an extraneous ^M.
+/* Revision 1.15  1998/07/08 14:41:08  curt
+/* Renamed polar3d.h to polar3d.hxx
 /*
+ * Revision 1.14  1998/07/06 21:31:20  curt
+ * Removed an extraneous ^M.
+ *
  * Revision 1.13  1998/07/03 13:16:28  curt
  * Added Charlie Hotchkiss's HUD updates and improvementes.
  *
