@@ -64,7 +64,7 @@ void fgTILECACHE::Init( void ) {
 
 
 // Search for the specified "bucket" in the cache
-int fgTILECACHE::Exists( struct fgBUCKET *p ) {
+int fgTILECACHE::Exists( fgBUCKET *p ) {
     int i;
 
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
@@ -86,7 +86,7 @@ int fgTILECACHE::Exists( struct fgBUCKET *p ) {
 
 
 // Fill in a tile cache entry with real data for the specified bucket
-void fgTILECACHE::EntryFillIn( int index, struct fgBUCKET *p ) {
+void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
     fgOPTIONS *o;
     char base_path[256];
     char file_name[256];
@@ -209,6 +209,12 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/07/04 00:54:30  curt
+// Added automatic mipmap generation.
+//
+// When rendering fragments, use saved model view matrix from associated tile
+// rather than recalculating it with push() translate() pop().
+//
 // Revision 1.10  1998/05/23 14:09:22  curt
 // Added tile.cxx and tile.hxx.
 // Working on rewriting the tile management system so a tile is just a list

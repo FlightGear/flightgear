@@ -69,7 +69,7 @@ int fgTileMgrInit( void ) {
 
 
 // load a tile
-void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
+void fgTileMgrLoadTile( fgBUCKET *p, int *index) {
     fgTILECACHE *c;
 
     c = &global_tile_cache;
@@ -93,8 +93,8 @@ int fgTileMgrUpdate( void ) {
     fgTILECACHE *c;
     fgFLIGHT *f;
     fgOPTIONS *o;
-    struct fgBUCKET p1, p2;
-    static struct fgBUCKET p_last = {-1000, 0, 0, 0};
+    fgBUCKET p1, p2;
+    static fgBUCKET p_last = {-1000, 0, 0, 0};
     int i, j, dw, dh;
 
     c = &global_tile_cache;
@@ -299,13 +299,16 @@ void fgTileMgrRender( void ) {
     fgOPTIONS *o;
     fgTILE *t;
     fgVIEW *v;
-    struct fgBUCKET p;
-    fgCartesianPoint3d frag_offset, last_offset;
+    fgBUCKET p;
+    fgCartesianPoint3d frag_offset;
     fgFRAGMENT *frag_ptr;
     fgMATERIAL *mtl_ptr;
+    fgTILE *last_tile_ptr;
+    GLdouble *m;
+    double x, y, z;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
-    int i, size;
+    int i, j, size;
     int index;
     int culled = 0;
     int drawn = 0;
@@ -336,13 +339,24 @@ void fgTileMgrRender( void ) {
 	t = c->GetTile(index);
 
 	// calculate tile offset
-	t->offset.x = t->center.x - scenery.center.x;
-	t->offset.y = t->center.y - scenery.center.y;
-	t->offset.z = t->center.z - scenery.center.z;
+	x = t->offset.x = t->center.x - scenery.center.x;
+	y = t->offset.y = t->center.y - scenery.center.y;
+	z = t->offset.z = t->center.z - scenery.center.z;
+
+	m = t->model_view;
+	for ( j = 0; j < 16; j++ ) {
+	    m[j] = v->MODEL_VIEW[j];
+	}
+
+	// Calculate the model_view transformation matrix for this tile
+	m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
+	m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
+	m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
+	m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
 
 	// Course (tile based) culling
 	if ( viewable(&(t->offset), t->bounding_radius) ) {
-	    // at least a portion of this tile is viewable
+	    // at least a portion of this tile could be viewable
 	    
 	    // xglPushMatrix();
 	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
@@ -363,20 +377,9 @@ void fgTileMgrRender( void ) {
 
 		    if ( viewable(&frag_offset, frag_ptr->bounding_radius*2) ) {
 			// add to transient per-material property fragment list
-			frag_ptr->tile_offset.x = t->offset.x;
-			frag_ptr->tile_offset.y = t->offset.y;
-			frag_ptr->tile_offset.z = t->offset.z;
-
-			/*
-			frag_ptr->matrix[12] = t->offset.x;
-			frag_ptr->matrix[13] = t->offset.y;
-			frag_ptr->matrix[14] = t->offset.z;
-
-			xglGetFloatv(GL_MODELVIEW_MATRIX, frag_ptr->matrix);
-			for ( j = 1; j < 16; j++ ) {
-			    printf(" a%d = %f\n", j, frag_ptr->matrix[j]);
-			}
-			*/
+			// frag_ptr->tile_offset.x = t->offset.x;
+			// frag_ptr->tile_offset.y = t->offset.y;
+			// frag_ptr->tile_offset.z = t->offset.z;
 
 			mtl_ptr = (fgMATERIAL *)(frag_ptr->material_ptr);
 			// printf(" lookup = %s\n", mtl_ptr->texture_name);
@@ -428,7 +431,7 @@ void fgTileMgrRender( void ) {
         // (fgMATERIAL)value = (*mapcurrent).second;
 	mtl_ptr = &(*mapcurrent).second;
 
-	last_offset.x = last_offset.y = last_offset.z = -99999999.0;
+	last_tile_ptr = NULL;
 
 	size = mtl_ptr->list_size;
 	if ( size > 0 ) {
@@ -450,36 +453,37 @@ void fgTileMgrRender( void ) {
 	    for ( i = 0; i < size; i++ ) {
 		frag_ptr = mtl_ptr->list[i];
 		
-		if ( (frag_ptr->tile_offset.x == last_offset.x) && 
-		     (frag_ptr->tile_offset.y == last_offset.y) &&
-		     (frag_ptr->tile_offset.z == last_offset.z) ) {
+		if ( frag_ptr->tile_ptr == last_tile_ptr ) {
 		    // same tile as last time, no transform necessary
 		} else {
 		    // new tile, new translate
 		    // xglLoadMatrixf( frag_ptr->matrix );
-		    xglPopMatrix();
-		    xglPushMatrix();
-		    xglTranslatef( frag_ptr->tile_offset.x,  
-				   frag_ptr->tile_offset.y, 
-				   frag_ptr->tile_offset.z ); 
+		    t = (fgTILE *)(frag_ptr->tile_ptr);
+		    xglLoadMatrixd(t->model_view );
 		}
 	    
 		// Woohoo!!!  We finally get to draw something!
 		// printf("  display_list = %d\n", frag_ptr->display_list);
 		xglCallList(frag_ptr->display_list);
 
-		last_offset = frag_ptr->tile_offset;
+		last_tile_ptr = (fgTILE *)(frag_ptr->tile_ptr);
 	    }
 	}
 
-	xglPopMatrix();
-
         *mapcurrent++;
     }
+
+    xglPopMatrix();
 }
 
 
 // $Log$
+// Revision 1.22  1998/07/04 00:54:31  curt
+// Added automatic mipmap generation.
+//
+// When rendering fragments, use saved model view matrix from associated tile
+// rather than recalculating it with push() translate() pop().
+//
 // Revision 1.21  1998/06/27 16:54:59  curt
 // Check for GL_VERSION_1_1 or GL_EXT_texture_object to decide whether to use
 //   "EXT" versions of texture management routines.

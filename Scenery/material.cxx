@@ -74,10 +74,11 @@ int fgMATERIAL_MGR::load_lib ( void ) {
     fgOPTIONS *o;
     char material_name[256];
     char mpath[256], fg_mpath[256], tpath[256], fg_tpath[256];
-    char line[256], *line_ptr;
+    char line[256], *line_ptr, value[256];
     GLubyte *texbuf;
     fgFile f;
     int width, height;
+    int alpha;
 
     o = &current_options;
 
@@ -114,6 +115,7 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    // ignore blank lines
 	} else if ( strstr(line_ptr, "{") ) {
 	    // start of record
+	    alpha = 0;
 	    m.ambient[0]  = m.ambient[1]  = m.ambient[2]  = m.ambient[3]  = 0.0;
 	    m.diffuse[0]  = m.diffuse[1]  = m.diffuse[2]  = m.diffuse[3]  = 0.0;
 	    m.specular[0] = m.specular[1] = m.specular[2] = m.specular[3] = 0.0;
@@ -126,6 +128,21 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 			  line );
 	    }
 	    printf("  Loading material = %s\n", material_name);
+	} else if ( strncmp(line_ptr, "alpha", 5) == 0 ) {
+	    line_ptr += 5;
+	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
+		      (line_ptr[0] == '=') ) &&
+		    (line_ptr[0] != '\n') ) {
+		line_ptr++;
+	    }
+	    sscanf(line_ptr, "%s\n", value);
+	    if ( strcmp(value, "no") == 0 ) {
+		alpha = 0;
+	    } else if ( strcmp(value, "yes") == 0 ) {
+		alpha = 1;
+	    } else {
+		fgPrintf( FG_TERRAIN, FG_INFO, "Bad alpha value '%s'\n", line );
+	    }
 	} else if ( strncmp(line_ptr, "texture", 7) == 0 ) {
 	    line_ptr += 7;
 	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
@@ -152,7 +169,9 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
 	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-			      GL_LINEAR /* GL_LINEAR_MIPMAP_LINEAR */ ) ;
+			      /* GL_LINEAR */ 
+			      /* GL_NEAREST_MIPMAP_LINEAR */
+			      GL_LINEAR_MIPMAP_LINEAR ) ;
 	    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
 	    xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 
@@ -163,21 +182,48 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    strcat(tpath, m.texture_name);
 	    strcat(tpath, ".rgb");
 
-	    // Try uncompressed
-	    if ( (texbuf = read_rgb_texture(tpath, &width, &height)) == NULL ) {
-		// Try compressed
-		strcpy(fg_tpath, tpath);
-		strcat(fg_tpath, ".gz");
-		if ( (texbuf = read_rgb_texture(fg_tpath, &width, &height)) 
-		     == NULL ) {
-		    fgPrintf( FG_GENERAL, FG_EXIT, 
-			      "Error loading texture %s\n", tpath );
-		    return(0);
-		} 
-	    } 
+	    if ( alpha == 0 ) {
+		// load rgb texture
 
-	    xglTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0,
-			  GL_RGB, GL_UNSIGNED_BYTE, texbuf);
+		// Try uncompressed
+		if ( (texbuf = read_rgb_texture(tpath, &width, &height))
+		     == NULL ) {
+		    // Try compressed
+		    strcpy(fg_tpath, tpath);
+		    strcat(fg_tpath, ".gz");
+		    if ( (texbuf = read_rgb_texture(fg_tpath, &width, &height)) 
+			 == NULL ) {
+			fgPrintf( FG_GENERAL, FG_EXIT, 
+				  "Error in loading texture %s\n", tpath );
+			return(0);
+		    } 
+		} 
+
+		/* xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+			      GL_RGB, GL_UNSIGNED_BYTE, texbuf); */
+
+		gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, width, height, 
+				    GL_RGB, GL_UNSIGNED_BYTE, texbuf );
+	    } else if ( alpha == 1 ) {
+		// load rgba (alpha) texture
+
+		// Try uncompressed
+		if ( (texbuf = read_alpha_texture(tpath, &width, &height))
+		     == NULL ) {
+		    // Try compressed
+		    strcpy(fg_tpath, tpath);
+		    strcat(fg_tpath, ".gz");
+		    if ((texbuf = read_alpha_texture(fg_tpath, &width, &height))
+			== NULL ) {
+			fgPrintf( FG_GENERAL, FG_EXIT, 
+				  "Error in loading texture %s\n", tpath );
+			return(0);
+		    } 
+		} 
+
+		xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+			      GL_RGBA, GL_UNSIGNED_BYTE, texbuf);
+	    }
 
 	} else if ( strncmp(line_ptr, "ambient", 7) == 0 ) {
 	    line_ptr += 7;
@@ -255,6 +301,12 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/07/04 00:54:28  curt
+// Added automatic mipmap generation.
+//
+// When rendering fragments, use saved model view matrix from associated tile
+// rather than recalculating it with push() translate() pop().
+//
 // Revision 1.6  1998/06/27 16:54:59  curt
 // Check for GL_VERSION_1_1 or GL_EXT_texture_object to decide whether to use
 //   "EXT" versions of texture management routines.

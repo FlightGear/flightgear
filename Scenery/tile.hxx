@@ -61,13 +61,20 @@ public:
     double bounding_radius;
 
     // variable offset data for this object fragment for this frame
-    fgCartesianPoint3d tile_offset;
+    // fgCartesianPoint3d tile_offset;
 
     // saved transformation matrix for this fragment (used by renderer)
     // GLfloat matrix[16];
+    
+    // tile_ptr & material_ptr are set so that when we traverse the
+    // list of fragments we can quickly reference back the tile or
+    // material property this fragment is assigned to.
 
     // material property pointer
     void *material_ptr;
+
+    // tile pointer
+    void *tile_ptr;
 
     // OpenGL display list for fragment data
     GLint display_list;
@@ -89,9 +96,10 @@ public:
     fgCartesianPoint3d center;
     double bounding_radius;
     fgCartesianPoint3d offset;
+    GLdouble model_view[16];
 
     // this tile's official location in the world
-    struct fgBUCKET tile_bucket;
+    fgBUCKET tile_bucket;
 
     // the tile cache will mark here if the tile is being used
     int used;
@@ -110,6 +118,12 @@ public:
 
 
 // $Log$
+// Revision 1.8  1998/07/04 00:54:30  curt
+// Added automatic mipmap generation.
+//
+// When rendering fragments, use saved model view matrix from associated tile
+// rather than recalculating it with push() translate() pop().
+//
 // Revision 1.7  1998/06/12 00:58:05  curt
 // Build only static libraries.
 // Declare memmove/memset for Sloaris.

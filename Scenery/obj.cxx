@@ -206,6 +206,9 @@ int fgObjLoad(char *path, fgTILE *tile) {
 	    // scan the material line
 	    sscanf(line, "usemtl %s\n", material);
 
+	    // give the fragment a pointer back to the tile
+	    (fgTILE *)fragment.tile_ptr = tile;
+
 	    // find this material in the properties list
 	    map < string, fgMATERIAL, less<string> > :: iterator myfind = 
 		material_mgr.material_map.find(material);
@@ -435,6 +438,12 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.15  1998/07/04 00:54:28  curt
+// Added automatic mipmap generation.
+//
+// When rendering fragments, use saved model view matrix from associated tile
+// rather than recalculating it with push() translate() pop().
+//
 // Revision 1.14  1998/06/17 21:36:40  curt
 // Load and manage multiple textures defined in the Materials library.
 // Boost max material fagments for each material property to 800.

@@ -57,7 +57,7 @@
 /*
 // Tile cache record 
 typedef struct {
-    struct fgBUCKET tile_bucket;
+    fgBUCKET tile_bucket;
     GLint display_list;
     fgCartesianPoint3d local_ref;
     double bounding_radius;
@@ -81,7 +81,7 @@ public:
     void Init( void );
 
     // Search for the specified "bucket" in the cache 
-    int Exists( struct fgBUCKET *p );
+    int Exists( fgBUCKET *p );
 
     // Return index of next available slot in tile cache 
     int NextAvail( void );
@@ -90,7 +90,7 @@ public:
     void EntryFree( int index );
 
     // Fill in a tile cache entry with real data for the specified bucket 
-    void EntryFillIn( int index, struct fgBUCKET *p );
+    void EntryFillIn( int index, fgBUCKET *p );
 
     // Return a pointer to the specified tile cache entry 
     fgTILE *GetTile( int index );
@@ -108,6 +108,12 @@ extern fgTILECACHE global_tile_cache;
 
 
 // $Log$
+// Revision 1.10  1998/07/04 00:54:31  curt
+// Added automatic mipmap generation.
+//
+// When rendering fragments, use saved model view matrix from associated tile
+// rather than recalculating it with push() translate() pop().
+//
 // Revision 1.9  1998/05/23 14:09:22  curt
 // Added tile.cxx and tile.hxx.
 // Working on rewriting the tile management system so a tile is just a list

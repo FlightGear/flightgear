@@ -187,6 +187,9 @@ read_alpha_texture(char *name, int *width, int *height)
 
     (*width)=image->xsize;
     (*height)=image->ysize;
+
+    printf("image->zsize = %d\n", image->zsize);
+
     if (image->zsize != 1) {
       ImageClose(image);
       return NULL;
