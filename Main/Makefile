@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET=viewer
+TARGET=proto
 
 CC = gcc
 
@@ -68,7 +68,8 @@ CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
 AFILES = ../aircraft/libaircraft.a ../controls/libcontrols.a \
 	../flight/libflight.a ../flight/LaRCsim/libLaRCsim.a \
-	../flight/slew/libslew.a ../mat3/libmat3.a ../scenery/libscenery.a
+	../flight/slew/libslew.a ../mat3/libmat3.a ../scenery/libscenery.a \
+	../timer/libtimer.a
 
 
 #---------------------------------------------------------------------------
@@ -88,7 +89,8 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-GLmain.o: GLmain.c GLUTkey.h ../aircraft/aircraft.h ../scenery/scenery.h
+GLmain.o: GLmain.c GLUTkey.h ../aircraft/aircraft.h ../scenery/scenery.h \
+	../timer/fg_timer.h
 	$(CC) $(CFLAGS) $(INCLUDES) -c GLmain.c
 
 GLUTkey.o: GLUTkey.c GLUTkey.h ../aircraft/aircraft.h
@@ -103,6 +105,9 @@ mesh2GL.o: mesh2GL.c ../scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.12  1997/06/16 19:32:51  curt
+# Starting to add general timer support.
+#
 # Revision 1.11  1997/05/31 19:16:25  curt
 # Elevator trim added.
 #

@@ -28,7 +28,7 @@ CC = gcc
 
 
 SUBSUBDIRS = flight/LaRCsim flight/slew
-SUBDIRS = aircraft controls flight mat3 scenery
+SUBDIRS = aircraft controls flight mat3 scenery timer
 MAIN = OpenGL
 
 
@@ -53,6 +53,9 @@ clean:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/06/16 19:32:50  curt
+# Starting to add general timer support.
+#
 # Revision 1.5  1997/05/30 19:26:56  curt
 # The LaRCsim flight model is starting to look like it is working.
 #

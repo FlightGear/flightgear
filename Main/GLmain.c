@@ -23,17 +23,10 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>    /* for timer routines */
 
-#if defined(__WATCOMC__) || defined(__MSC__)
-#  include <time.h>
-#else
-#  include <sys/time.h>
-#endif
 
 #ifdef GLUT
     #include <GL/glut.h>
@@ -47,6 +40,7 @@
 #include "../aircraft/aircraft.h"
 #include "../scenery/scenery.h"
 #include "../mat3/mat3.h"
+#include "../timer/fg_timer.h"
 
 
 #define DEG_TO_RAD       0.017453292
@@ -211,30 +205,13 @@ static void fgUpdateVisuals( void ) {
 
 
 /**************************************************************************
- * Timer management routines
+ * Update internal time dependent calculations (i.e. flight model)
  **************************************************************************/
 
-static struct itimerval t, ot;
-
-/* This routine catches the SIGALRM */
-void fgTimerCatch() {
+void fgUpdateTimeDepCalcs() {
     struct flight_params *f;
-    static double lastSimtime = -99.9;
-    int Overrun;
-
-    /* ignore any SIGALRM's until we come back from our EOM iteration */
-    signal(SIGALRM, SIG_IGN);
 
     f = &current_aircraft.flight;
-
-    /* printf("In fgTimerCatch()\n"); */
-
-    Overrun = (lastSimtime == Simtime);
-
-    /* add this back in when you get simtime working */
-    /* if ( Overrun ) {
-	printf("OVERRUN!!!\n");
-    } */
 
     /* update the flight model */
     fgFlightModelUpdate(FG_LARCSIM, f, DEFAULT_MULTILOOP);
@@ -262,29 +239,12 @@ void fgTimerCatch() {
 	    view_offset += PI2;
 	}
     }
-
-    lastSimtime = Simtime;
-    signal(SIGALRM, fgTimerCatch);
 }
 
-/* this routine initializes the interval timer to generate a SIGALRM after
- * the specified interval (dt) */
-void fgTimerInit(float dt) {
-    int terr;
-    int isec;
-    float usec;
 
-    isec = (int) dt;
-    usec = 1000000* (dt - (float) isec);
-
-    t.it_interval.tv_sec = isec;
-    t.it_interval.tv_usec = usec;
-    t.it_value.tv_sec = isec;
-    t.it_value.tv_usec = usec;
-    /* printf("fgTimerInit() called\n"); */
-    fgTimerCatch();   /* set up for SIGALRM signal catch */
-    terr = setitimer( ITIMER_REAL, &t, &ot );
-    if (terr) perror("Error returned from setitimer");
+void fgInitTimeDepCalcs() {
+    /* initialize timer */
+    fgTimerInit( 1.0 / DEFAULT_MODEL_HZ, fgUpdateTimeDepCalcs );
 }
 
 
@@ -318,9 +278,8 @@ static void fgSceneryDraw() {
  * ready for the next move?*/
 static void fgMainLoop( void )
 {
-    fgSlewUpdate();
+    printf("Time interval is = %d\n", fgGetTimeInterval());
     aircraft_debug(1);
-
     fgUpdateVisuals();
 }
 
@@ -436,11 +395,12 @@ int main( int argc, char *argv[] ) {
 
     fgFlightModelInit(FG_LARCSIM, f, 1.0/(DEFAULT_MODEL_HZ*DEFAULT_MULTILOOP));
 
+    printf("Ready to initialize timer\n");
+    /* init timer routines, signals, etc. */
+    fgInitTimeDepCalcs();
+
     /* build all objects */
     fgSceneryInit();
-
-    /* initialize timer */
-    fgTimerInit( 1.0 / DEFAULT_MODEL_HZ );
 
     #ifdef GLUT
       /* call fgReshape() on window resizes */
@@ -483,9 +443,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.13  1997/06/02 03:40:06  curt
-/* A tiny bit more view tweaking.
+/* Revision 1.14  1997/06/16 19:32:51  curt
+/* Starting to add general timer support.
 /*
+ * Revision 1.13  1997/06/02 03:40:06  curt
+ * A tiny bit more view tweaking.
+ *
  * Revision 1.12  1997/06/02 03:01:38  curt
  * Working on views (side, front, back, transitions, etc.)
  *

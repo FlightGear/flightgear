@@ -30,3 +30,8 @@ Contains miscellaneous matrix/vector routines.
 scenery/
 --------
 Scenery parsing/generating code.
+
+
+timer/
+------
+Code to handle time and timing of events.
