@@ -26,10 +26,6 @@
 
 #include "ATCmgr.hxx"
 #include "commlist.hxx"
-//#include "atislist.hxx"
-//#include "groundlist.hxx"
-//#include "towerlist.hxx"
-//#include "approachlist.hxx"
 #include "ATCdisplay.hxx"
 #include "ATCDialog.hxx"
 #include "ATCutils.hxx"
@@ -501,7 +497,7 @@ void FGATCMgr::AreaSearch() {
 	elev = elev_node->getDoubleValue() * SG_FEET_TO_METER;
 	
 	// search stations in range
-	int num_app = current_commlist->FindByPos(lon, lat, elev, &approaches, APPROACH);
+	int num_app = current_commlist->FindByPos(lon, lat, elev, 100.0, &approaches, APPROACH);
 	if (num_app != 0) {
 		//cout << num_app << " approaches found in radiostack search !!!!" << endl;
 		

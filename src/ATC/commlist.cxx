@@ -163,7 +163,7 @@ bool FGCommList::FindByFreq( double lon, double lat, double elev, double freq,
 	return false;
 }
 
-int FGCommList::FindByPos(double lon, double lat, double elev, comm_list_type* stations, atc_type tp)
+int FGCommList::FindByPos(double lon, double lat, double elev, double range, comm_list_type* stations, atc_type tp)
 {
 	// number of relevant stations found within range
 	int found = 0;
@@ -173,13 +173,12 @@ int FGCommList::FindByPos(double lon, double lat, double elev, comm_list_type* s
 	SGBucket buck(lon, lat);
 
 	// get neigboring buckets
-	int max_range = 100;
-	int bx = (int)( max_range*SG_NM_TO_METER / buck.get_width_m() / 2);
-	int by = (int)( max_range*SG_NM_TO_METER / buck.get_height_m() / 2 );
+	int bx = (int)( range*SG_NM_TO_METER / buck.get_width_m() / 2);
+	int by = (int)( range*SG_NM_TO_METER / buck.get_height_m() / 2 );
 	
 	// loop over bucket range 
-	for ( int i=-bx; i<bx; i++) {
-		for ( int j=-by; j<by; j++) {
+	for ( int i=-bx; i<=bx; i++) {
+		for ( int j=-by; j<=by; j++) {
 			buck = sgBucketOffset(lon, lat, i, j);
 			long int bucket = buck.gen_index();
 			comm_list_type Fstations = commlist_bck[bucket];
@@ -217,7 +216,7 @@ bool FGCommList::FindByCode( string ICAO, ATCData& ad, atc_type tp ) {
     FGAirport a;
     if ( dclFindAirportID( ICAO, &a ) ) {
 		comm_list_type stations;
-		int found = FindByPos(a.longitude, a.latitude, a.elevation, &stations, tp);
+		int found = FindByPos(a.longitude, a.latitude, a.elevation, 10.0, &stations, tp);
 		if(found) {
 			comm_list_iterator itr = stations.begin();
 			while(itr != stations.end()) {

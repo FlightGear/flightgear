@@ -78,16 +78,16 @@ public:
     bool FindByFreq( double lon, double lat, double elev, double freq, ATCData* ad, atc_type tp = INVALID );
 	
     // query the database by location, lon and lat are
-    // in degrees, elev is in meters
+    // in degrees, elev is in meters, range is in nautical miles.
 	// Returns the number of stations of the specified type that are in range, and pushes them into stations
-	// If atc_type is specifed, returns the number of all stations in range, and pushes them into stations
+	// If no atc_type is specifed, returns the number of all stations in range, and pushes them into stations
 	// ** stations is erased before use **
-    int FindByPos( double lon, double lat, double elev, comm_list_type* stations, atc_type tp = INVALID );
+    int FindByPos( double lon, double lat, double elev, double range, comm_list_type* stations, atc_type tp = INVALID );
 	
 	// Find by Airport code.
 	bool FindByCode( string ICAO, ATCData& ad, atc_type tp = INVALID );
 
-    // Return the callsign for an ATIS transmission given transmission time and airpord id
+    // Return the callsign for an ATIS transmission given transmission time and airport id
 	// This maybe should get moved somewhere else!!
     int GetCallSign( string apt_id, int hours, int mins );
 	
