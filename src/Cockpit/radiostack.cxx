@@ -34,7 +34,8 @@
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
-#include <Time/event.hxx>
+#include <Time/FGEventMgr.hxx>
+#include <boost/bind.hpp>
 
 #include "radiostack.hxx"
 
@@ -76,11 +77,6 @@ static double kludgeRange ( double stationElev, double aircraftElev,
   return range;
 }
 
-
-// periodic radio station search wrapper
-static void fgRadioSearch( void ) {
-    current_radiostack->search();
-}
 
 // Constructor
 FGRadioStack::FGRadioStack() :
@@ -146,8 +142,10 @@ FGRadioStack::init ()
     update(1);			// FIXME: use dt
 
     // Search radio database once per second
-    global_events.Register( "fgRadioSearch()", fgRadioSearch,
-			    fgEVENT::FG_EVENT_READY, 1000);
+    global_events.Register( "fgRadioSearch()",
+			    boost::bind( &FGRadioStack::search,
+                                         current_radiostack),
+			    1000 );
 }
 
 void

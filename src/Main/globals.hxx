@@ -102,7 +102,7 @@ private:
     long int warp_delta;
 
     // Logger
-    FGLogger * logger;
+    FGLogger *logger;
 
     // Time structure
     SGTime *time_params;

@@ -103,7 +103,8 @@
 #include <Scenery/tilemgr.hxx>
 #include <Sound/fg_fx.hxx>
 #include <Sound/soundmgr.hxx>
-#include <Time/event.hxx>
+#include <Time/FGEventMgr.hxx>
+#include <boost/bind.hpp>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
 #include <Time/moonpos.hxx>
@@ -715,13 +716,13 @@ bool fgInitSubsystems( void ) {
     // Initialize the event manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    global_events.Init();
+    global_events.init();
 
     // Output event stats every 60 seconds
     global_events.Register( "fgEVENT_MGR::PrintStats()",
-			    fgMethodCallback<fgEVENT_MGR>( &global_events,
-						   &fgEVENT_MGR::PrintStats),
-			    fgEVENT::FG_EVENT_READY, 60000 );
+			    boost::bind( &FGEventMgr::print_stats,
+                                         &global_events ),
+			    60000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -740,19 +741,18 @@ bool fgInitSubsystems( void ) {
     // things for correctly orienting the sky.
     fgUpdateSunPos();
     fgUpdateMoonPos();
-    global_events.Register( "fgUpdateSunPos()", fgUpdateSunPos,
-			    fgEVENT::FG_EVENT_READY, 60000);
-    global_events.Register( "fgUpdateMoonPos()", fgUpdateMoonPos,
-			    fgEVENT::FG_EVENT_READY, 60000);
+    global_events.Register( "fgUpdateSunPos()", &fgUpdateSunPos,
+			    60000);
+    global_events.Register( "fgUpdateMoonPos()", &fgUpdateMoonPos,
+			    60000);
 
     // Initialize Lighting interpolation tables
     l->Init();
 
     // update the lighting parameters (based on sun angle)
     global_events.Register( "fgLight::Update()",
-			    fgMethodCallback<fgLIGHT>( &cur_light_params,
-						       &fgLIGHT::Update),
-			    fgEVENT::FG_EVENT_READY, 30000 );
+			    boost::bind( &fgLIGHT::Update, &cur_light_params ),
+			    30000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -768,8 +768,8 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     // update the current timezone each 30 minutes
-    global_events.Register( "fgUpdateLocalTime()", fgUpdateLocalTime,
-			    fgEVENT::FG_EVENT_READY, 1800000);
+    global_events.Register( "fgUpdateLocalTime()", &fgUpdateLocalTime,
+			    30*60*1000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -815,8 +815,8 @@ bool fgInitSubsystems( void ) {
     WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
 
     // register the periodic update of the weather
-    global_events.Register( "weather update", fgUpdateWeatherDatabase,
-                            fgEVENT::FG_EVENT_READY, 30000);
+    global_events.Register( "weather update", &fgUpdateWeatherDatabase,
+                            30000);
 #else
     globals->get_environment_mgr()->init();
     globals->get_environment_mgr()->bind();

@@ -108,7 +108,7 @@ SG_USING_STD(endl);
 #  include <Sound/fg_fx.hxx>
 #  include <Sound/morse.hxx>
 #endif
-#include <Time/event.hxx>
+#include <Time/FGEventMgr.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
@@ -169,6 +169,8 @@ float scene_farplane = 120000.0f;
 #  include <console.h>		// -dw- for command line dialog
 #endif
 
+
+FGEventMgr global_events;
 
 // This is a record containing a bit of global housekeeping information
 FGGeneral general;
@@ -403,6 +405,9 @@ void fgRenderFrame( void ) {
 
     int dt_ms = int(globals->get_elapsed_time_ms() - old_elapsed_ms);
     old_elapsed_ms = globals->get_elapsed_time_ms();
+
+    // Process/manage pending events
+    global_events.update( dt_ms );
 
     static const SGPropertyNode *longitude
 	= fgGetNode("/position/longitude-deg");
@@ -1089,9 +1094,6 @@ static void fgMainLoop( void ) {
     // see if we need to load any deferred-load textures
     material_lib.load_next_deferred();
 
-    // Process/manage pending events
-    global_events.Process();
-
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound/audible")
@@ -1350,7 +1352,7 @@ int mainLoop( int argc, char **argv ) {
 #endif
 
     // set default log levels
-    sglog().setLogLevels( SG_ALL, SG_INFO );
+     sglog().setLogLevels( SG_ALL, SG_INFO );
 
     string version;
 #ifdef FLIGHTGEAR_VERSION
