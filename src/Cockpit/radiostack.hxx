@@ -46,6 +46,7 @@ class FGRadioStack : public FGSubsystem
     bool need_update;
 
     string nav1_ident;
+    string nav1_trans_ident;
     bool nav1_valid;
     bool nav1_inrange;
     bool nav1_has_dme;
@@ -82,6 +83,7 @@ class FGRadioStack : public FGSubsystem
     bool nav1_ident_btn;
 
     string nav2_ident;
+    string nav2_trans_ident;
     bool nav2_valid;
     bool nav2_inrange;
     bool nav2_has_dme;

@@ -259,7 +259,13 @@ FGRadioStack::update()
 	} else {
 	    nav1_radial = nav1_sel_radial;
 	}
+    } else {
+	nav1_inrange = false;
+	nav1_dme_dist = 0.0;
+	// cout << "not picking up vor. :-(" << endl;
+    }
 
+    if ( nav1_valid && nav1_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
 	if ( nav1_on_btn && nav1_ident_btn ) {
@@ -286,12 +292,6 @@ FGRadioStack::update()
 	    globals->get_soundmgr()->stop( "nav1-vor-ident" );
 	    globals->get_soundmgr()->stop( "nav1-dme-ident" );
 	}
-    } else {
-	nav1_inrange = false;
-	nav1_dme_dist = 0.0;
-	globals->get_soundmgr()->stop( "nav1-vor-ident" );
-	globals->get_soundmgr()->stop( "nav1-dme-ident" );
-	// cout << "not picking up vor. :-(" << endl;
     }
 
     if ( nav2_valid ) {
@@ -380,6 +380,7 @@ void FGRadioStack::search()
     if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
 	nav1_ident = ils.get_locident();
 	if ( last_nav1_ident != nav1_ident ) {
+	    nav1_trans_ident = ils.get_trans_ident();
 	    last_nav1_ident = nav1_ident;
 	    nav1_valid = true;
 	    nav1_loc = true;
@@ -413,14 +414,14 @@ void FGRadioStack::search()
 		globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	    }
 	    FGSimpleSound *sound;
-	    sound = morse.make_ident( nav1_ident, LO_FREQUENCY );
+	    sound = morse.make_ident( nav1_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, "nav1-vor-ident" );
 
 	    if ( globals->get_soundmgr()->exists( "nav1-dme-ident" ) ) {
 		globals->get_soundmgr()->remove( "nav1-dme-ident" );
 	    }
-	    sound = morse.make_ident( nav1_ident, HI_FREQUENCY );
+	    sound = morse.make_ident( nav1_trans_ident, HI_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, "nav1-dme-ident" );
 
@@ -439,6 +440,7 @@ void FGRadioStack::search()
 	nav1_ident = nav.get_ident();
 	if ( last_nav1_ident != nav1_ident ) {
 	    last_nav1_ident = nav1_ident;
+	    nav1_trans_ident = nav.get_trans_ident();
 	    nav1_valid = true;
 	    nav1_loc = false;
 	    nav1_has_dme = nav.get_has_dme();
@@ -459,14 +461,14 @@ void FGRadioStack::search()
 		globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	    }
 	    FGSimpleSound *sound;
-	    sound = morse.make_ident( nav1_ident, LO_FREQUENCY );
+	    sound = morse.make_ident( nav1_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, "nav1-vor-ident" );
 
 	    if ( globals->get_soundmgr()->exists( "nav1-dme-ident" ) ) {
 		globals->get_soundmgr()->remove( "nav1-dme-ident" );
 	    }
-	    sound = morse.make_ident( nav1_ident, HI_FREQUENCY );
+	    sound = morse.make_ident( nav1_trans_ident, HI_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, "nav1-dme-ident" );
 
@@ -495,6 +497,7 @@ void FGRadioStack::search()
 	nav2_ident = ils.get_locident();
 	if ( last_nav2_ident != nav2_ident ) {
 	    last_nav2_ident = nav2_ident;
+	    nav2_trans_ident = ils.get_trans_ident();
 	    nav2_valid = true;
 	    nav2_loc = true;
 	    nav2_has_dme = ils.get_has_dme();
@@ -525,6 +528,7 @@ void FGRadioStack::search()
 	nav2_ident = nav.get_ident();
 	if ( last_nav2_ident != nav2_ident ) {
 	    last_nav2_ident = nav2_ident;
+	    nav2_trans_ident = nav.get_trans_ident();
 	    nav2_valid = true;
 	    nav2_loc = false;
 	    nav2_has_dme = nav.get_has_dme();

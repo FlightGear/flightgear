@@ -53,7 +53,7 @@ class FGILS {
     char aptcode[5];
     char rwyno[4];
     int  locfreq;
-    char locident[5];
+    char locident[5];		// official ident
     double locheading;
     double loclat;
     double loclon;
@@ -75,6 +75,12 @@ class FGILS {
     double imlat;
     double imlon;
 
+    // for failure modeling
+    string trans_ident;		// transmitted ident
+    bool loc_failed;		// localizer failed?
+    bool gs_failed;		// glide slope failed?
+    bool dme_failed;		// dme failed?
+
 public:
 
     inline FGILS(void) {}
@@ -86,6 +92,7 @@ public:
     inline char *get_rwyno() { return rwyno; }
     inline int get_locfreq() const { return locfreq; }
     inline char *get_locident() { return locident; }
+    inline string get_trans_ident() { return trans_ident; }
     inline double get_locheading() const { return locheading; }
     inline double get_loclat() const { return loclat; }
     inline double get_loclon() const { return loclon; }
@@ -167,7 +174,11 @@ operator >> ( istream& in, FGILS& i )
 	// cout << "dme = " << cart << endl;
     }
 
-     // return in >> skipeol;
+    i.trans_ident = "I";
+    i.trans_ident += i.locident;
+    i.loc_failed = i.gs_failed = i.dme_failed = false;
+   
+    // return in >> skipeol;
     return in;
 }
 

@@ -129,23 +129,6 @@ bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname  ) {
 // remove a sound effect, return true if successful
 bool FGSoundMgr::remove( const string& refname ) {
 
-#if defined ( PLIB_AUDIO_IS_BROKEN )
-    // if PLIB_AUDIO_IS_BROKEN, we can't reliably remove sounds that
-    // are currently being played. :-( So, let's just not remove them
-    // and return false.  The effects of this are that the sound
-    // sample will continue to finish playing (or continue to loop
-    // forever.)  And the sound sample will remain registered in the
-    // plib audio system.  This is a memory leak, and eventually this
-    // could cause us to max out the total number of allowed sound
-    // samples in plib, but what are you going to do?  Hopefully the
-    // plib team will do a new stable relase with these problems
-    // fixed.
-
-    cout << "plib broken audio, skipping remove" << endl;
-
-    return false;
-#endif
-
     sound_map_iterator it = sounds.find( refname );
     if ( it != sounds.end() ) {
 	// first stop the sound from playing (so we don't bomb the

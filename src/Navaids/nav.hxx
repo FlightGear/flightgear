@@ -59,6 +59,11 @@ class FGNav {
     string ident;		// to avoid a core dump with corrupt data
     double magvar;		// magvar from true north (negative = W)
 
+    // for failure modeling
+    string trans_ident;		// transmitted ident
+    bool nav_failed;		// nav failed?
+    bool dme_failed;		// dme failed?
+
 public:
 
     inline FGNav(void) {}
@@ -75,6 +80,7 @@ public:
     inline int get_range() const { return range; }
     inline bool get_has_dme() const { return has_dme; }
     inline const char *get_ident() { return ident.c_str(); }
+    inline string get_trans_ident() { return trans_ident; }
     inline double get_magvar () const { return magvar; }
 
     /* inline void set_type( char t ) { type = t; }
@@ -155,6 +161,9 @@ operator >> ( istream& in, FGNav& n )
     n.x = cart.x();
     n.y = cart.y();
     n.z = cart.z();
+
+    n.trans_ident = n.ident;
+    n.nav_failed = n.dme_failed = false;
 
     return in >> skipeol;
 }
