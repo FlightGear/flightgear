@@ -39,9 +39,9 @@
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/screen/texture.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/misc/texture.hxx>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
