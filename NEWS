@@ -1,4 +1,17 @@
+New in 0.49
+* Fog mode is now GL_FOG_EXP2 instead of GL_FOG_LINEAR
+* Build the non-shared pieces of the FG sim as static libs.
+
 New in 0.48
+* Incorporated Steve Baker's PUI user interface library written
+  entirely on top of OpenGL
+* Incorporated Steve Baker's Audio library which currently only
+  supports Linux, but a win32 port is very close to being done.
+* Sort object fragments by material property before rendering.  This
+  will be a big help to performance when we start including objects
+  with a wide variety of material properties and textures.
+* Overlapped scenery tiles to reduce the chance of an occasional
+  floating point precission induced gaps.
 * Fixed a bug in zlib exposed by Borland Win32 compiler.
 * Impose a maximum triangle area during scenery generation so even
   very flat areas will get split into a few smaller sub triangles.

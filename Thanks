@@ -80,6 +80,10 @@ Bruce Jackson <e.b.jackson@larc.nasa.gov>
   patiently answered my many, many questions.
 
 
+Tom Knienieder <knienieder@ms.netwing.at>
+  Ported Steve's Audio library to Win32
+
+
 Reto Koradi <kor@mol.biol.ethz.ch> http://www.mol.biol.ethz.ch/~kor
   Helped me get on track with setting up fog effects.
 
