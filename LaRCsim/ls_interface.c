@@ -562,7 +562,7 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 	//Insertion by Jeff Goeke-Smith for Autopilot.
 	
 	// run Autopilot system
-	fgPrintf( FG_ALL, FG_BULK,"Attempting autopilot run\n");
+	// fgPrintf( FG_ALL, FG_BULK, "Attempting autopilot run\n");
 	              
 	fgAPRun();
 	
@@ -934,6 +934,9 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.19  1998/05/11 18:17:28  curt
+ * Output message tweaking.
+ *
  * Revision 1.18  1998/04/21 16:59:38  curt
  * Integrated autopilot.
  * Prepairing for C++ integration.
