@@ -85,11 +85,12 @@ void
 FGFX::init ()
 {
   FGSoundMgr * mgr = globals->get_soundmgr();
+  int i;
 
   //
   // Create and add engine-related sounds.
   //
-  for (int i = 0; i < MAX_ENGINES; i++) {
+  for (i = 0; i < MAX_ENGINES; i++) {
 				// Engine
     _engine[i] =
       new FGSimpleSound(fgGetString("/sim/sounds/engine/path",
@@ -181,7 +182,7 @@ FGFX::init ()
   // Grab some properties.
   ////////////////////////////////////////////////////////////////////
 
-  for (int i = 0; i < MAX_ENGINES; i++) {
+  for (i = 0; i < MAX_ENGINES; i++) {
     char buf[100];
     sprintf(buf, "/engines/engine[%d]/running", i);
     _engine_running_prop[i] = fgGetNode(buf, true);
@@ -208,13 +209,13 @@ void
 FGFX::update ()
 {
   FGSoundMgr * mgr = globals->get_soundmgr();
-
+  int i;
 
   ////////////////////////////////////////////////////////////////////
   // Update the engine sound.
   ////////////////////////////////////////////////////////////////////
   
-  for (int i = 0; i < MAX_ENGINES; i++) {
+  for (i = 0; i < MAX_ENGINES; i++) {
 
     if (cur_fdm_state->get_num_engines() > 0 &&
 	_engine_running_prop[i]->getBoolValue()) {
@@ -311,7 +312,7 @@ FGFX::update ()
 
 				// FIXME: take rotational velocities
 				// into account as well.
-  for (int i = 0; i < totalGear; i++) {
+  for (i = 0; i < totalGear; i++) {
     if (cur_fdm_state->get_gear_unit(i)->GetWoW()) {
       gearOnGround++;
       if (!_gear_on_ground[i]) {

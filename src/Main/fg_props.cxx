@@ -123,26 +123,27 @@ _set_view_from_axes ()
 struct LogClassMapping {
   sgDebugClass c;
   string name;
+  LogClassMapping(sgDebugClass cc, string nname) { c = cc; name = nname; }
 };
 
 LogClassMapping log_class_mappings [] = {
-  {SG_NONE, "none"},
-  {SG_TERRAIN, "terrain"},
-  {SG_ASTRO, "astro"},
-  {SG_FLIGHT, "flight"},
-  {SG_INPUT, "input"},
-  {SG_GL, "gl"},
-  {SG_VIEW, "view"},
-  {SG_COCKPIT, "cockpit"},
-  {SG_GENERAL, "general"},
-  {SG_MATH, "math"},
-  {SG_EVENT, "event"},
-  {SG_AIRCRAFT, "aircraft"},
-  {SG_AUTOPILOT, "autopilot"},
-  {SG_IO, "io"},
-  {SG_CLIPPER, "clipper"},
-  {SG_NETWORK, "network"},
-  {SG_UNDEFD, ""}
+  LogClassMapping(SG_NONE, "none"),
+  LogClassMapping(SG_TERRAIN, "terrain"),
+  LogClassMapping(SG_ASTRO, "astro"),
+  LogClassMapping(SG_FLIGHT, "flight"),
+  LogClassMapping(SG_INPUT, "input"),
+  LogClassMapping(SG_GL, "gl"),
+  LogClassMapping(SG_VIEW, "view"),
+  LogClassMapping(SG_COCKPIT, "cockpit"),
+  LogClassMapping(SG_GENERAL, "general"),
+  LogClassMapping(SG_MATH, "math"),
+  LogClassMapping(SG_EVENT, "event"),
+  LogClassMapping(SG_AIRCRAFT, "aircraft"),
+  LogClassMapping(SG_AUTOPILOT, "autopilot"),
+  LogClassMapping(SG_IO, "io"),
+  LogClassMapping(SG_CLIPPER, "clipper"),
+  LogClassMapping(SG_NETWORK, "network"),
+  LogClassMapping(SG_UNDEFD, "")
 };
 
 
