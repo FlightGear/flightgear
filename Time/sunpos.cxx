@@ -1,4 +1,4 @@
-// sunpos.c (taken from XEarth)
+// sunpos.cxx (adapted from XEarth)
 // kirk johnson
 // july 1993
 //
@@ -47,7 +47,7 @@
 #include <Astro/solarsystem.hxx>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
@@ -423,6 +423,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.14  1998/10/17 01:34:32  curt
+// C++ ifying ...
+//
 // Revision 1.13  1998/10/16 00:56:12  curt
 // Converted to Point3D class.
 //

@@ -33,22 +33,21 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 
 #include <Bucket/bucketutils.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-// #include <Include/fg_types.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Math/vector.hxx>
 #include <Objects/material.hxx>
 #include <Objects/obj.hxx>
-#include <Weather/weather.h>
+#include <Weather/weather.hxx>
 
 #include "scenery.hxx"
 #include "tile.hxx"
@@ -634,6 +633,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.40  1998/10/17 01:34:28  curt
+// C++ ifying ...
+//
 // Revision 1.39  1998/10/16 00:55:50  curt
 // Converted to Point3D class.
 //

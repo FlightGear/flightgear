@@ -25,7 +25,7 @@
 #include "LaRCsim.hxx"
 
 #include <Aircraft/aircraft.hxx>
-#include <Controls/controls.h>
+#include <Controls/controls.hxx>
 #include <Flight/flight.hxx>
 #include <Flight/LaRCsim/ls_cockpit.h>
 #include <Flight/LaRCsim/ls_generic.h>
@@ -78,6 +78,17 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 
 // Convert from the fgFLIGHT struct to the LaRCsim generic_ struct
 int fgFlight_2_LaRCsim (fgFLIGHT *f) {
+    fgCONTROLS *c;
+
+    c = current_aircraft.controls;
+
+    Lat_control = FG_Aileron;
+    Long_control = FG_Elevator;
+    Long_trim = FG_Elev_Trim;
+    Rudder_pedal = FG_Rudder;
+    Throttle_pct = FG_Throttle[0];
+    Brake_pct = FG_Brake_Amt;
+
     Mass =      FG_Mass;
     I_xx =      FG_I_xx;
     I_yy =      FG_I_yy;
@@ -254,16 +265,6 @@ int fgFlight_2_LaRCsim (fgFLIGHT *f) {
 
 // Convert from the LaRCsim generic_ struct to the fgFLIGHT struct
 int fgLaRCsim_2_Flight (fgFLIGHT *f) {
-    fgCONTROLS *c;
-
-    c = current_aircraft.controls;
-
-    Lat_control = FG_Aileron;
-    Long_control = FG_Elevator;
-    Long_trim = FG_Elev_Trim;
-    Rudder_pedal = FG_Rudder;
-    Throttle_pct = FG_Throttle[0];
-
     FG_Mass =   Mass;
     FG_I_xx =   I_xx;
     FG_I_yy =   I_yy;
@@ -439,6 +440,9 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f) {
 
 
 // $Log$
+// Revision 1.2  1998/10/17 01:34:11  curt
+// C++ ifying ...
+//
 // Revision 1.1  1998/10/17 00:43:58  curt
 // Initial revision.
 //

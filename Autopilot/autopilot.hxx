@@ -29,7 +29,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Flight/flight.hxx>
-#include <Controls/controls.h>
+#include <Controls/controls.hxx>
                        
                        
 #ifdef __cplusplus                                                          

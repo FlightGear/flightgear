@@ -42,13 +42,10 @@
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
-// #include <Astro/moon.hxx>
-// #include <Astro/planets.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
-// #include <Astro/sun.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -64,7 +61,7 @@
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
-#include <Weather/weather.h>
+#include <Weather/weather.hxx>
 
 #include "fg_init.hxx"
 #include "options.hxx"
@@ -365,6 +362,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.43  1998/10/17 01:34:22  curt
+// C++ ifying ...
+//
 // Revision 1.42  1998/10/16 23:27:54  curt
 // C++-ifying.
 //

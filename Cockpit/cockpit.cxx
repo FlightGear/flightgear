@@ -50,7 +50,6 @@
 #include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
-#include <Weather/weather.h>
 
 #include "cockpit.hxx"
 
@@ -316,6 +315,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/10/17 01:33:56  curt
+// C++ ifying ...
+//
 // Revision 1.18  1998/10/16 23:27:23  curt
 // C++-ifying.
 //

@@ -35,6 +35,9 @@
 
 $Header$
 $Log$
+Revision 1.5  1998/10/17 01:34:14  curt
+C++ ifying ...
+
 Revision 1.4  1998/08/06 12:46:39  curt
 Header change.
 
@@ -73,6 +76,7 @@ typedef struct {
     short   left_pb_on_stick, right_pb_on_stick, trig_pos_1, trig_pos_2;
     short   sb_extend, sb_retract, gear_sel_up;
     float   throttle_pct;
+    float   brake_pct;
 } COCKPIT;
 
 extern COCKPIT cockpit_;
@@ -94,6 +98,7 @@ extern COCKPIT cockpit_;
 #define SB_extend	cockpit_.sb_extend
 #define SB_retract	cockpit_.sb_retract
 #define Gear_sel_up	cockpit_.gear_sel_up
+#define Brake_pct       cockpit_.brake_pct
 
 
 #endif /* _LS_COCKPIT_H */

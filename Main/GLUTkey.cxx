@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Astro/sky.hxx>
 #include <Autopilot/autopilot.hxx>
@@ -46,7 +46,7 @@
 #include <Objects/material.hxx>
 #include <PUI/pu.h>
 #include <Time/light.hxx>
-#include <Weather/weather.h>
+#include <Weather/weather.hxx>
 
 #include "GLUTkey.hxx"
 #include "options.hxx"
@@ -381,6 +381,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.28  1998/10/17 01:34:20  curt
+// C++ ifying ...
+//
 // Revision 1.27  1998/10/02 12:46:46  curt
 // Added an "auto throttle"
 //

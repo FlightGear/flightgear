@@ -34,7 +34,7 @@
 #include <string>
 
 #include <Debug/fg_debug.h>
-#include <Flight/flight.h>
+#include <Flight/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Misc/fgstream.hxx>
 
@@ -566,6 +566,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.26  1998/10/17 01:34:24  curt
+// C++ ifying ...
+//
 // Revision 1.25  1998/09/15 02:09:27  curt
 // Include/fg_callback.hxx
 //   Moved code inline to stop g++ 2.7 from complaining.

@@ -36,7 +36,6 @@
 
 #include <string.h>
 
-#include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
 #include <Objects/texload.h>
@@ -149,6 +148,9 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.6  1998/10/17 01:34:25  curt
+// C++ ifying ...
+//
 // Revision 1.5  1998/09/26 13:17:29  curt
 // Clear screen to "black" before drawing splash screen.
 //

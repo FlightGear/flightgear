@@ -35,12 +35,12 @@
 
 #include <string.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/interpolater.hxx>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
@@ -212,6 +212,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/10/17 01:34:30  curt
+// C++ ifying ...
+//
 // Revision 1.17  1998/08/29 13:11:33  curt
 // Bernie Bright writes:
 //   I've created some new classes to enable pointers-to-functions and

@@ -50,7 +50,7 @@
 #include <Include/fg_constants.h>  // for VERSION
 #include <Include/general.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/solarsystem.hxx>
@@ -75,7 +75,7 @@
 #include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/sunpos.hxx>
-#include <Weather/weather.h>
+#include <Weather/weather.hxx>
 
 #include "GLUTkey.hxx"
 #include "fg_init.hxx"
@@ -894,6 +894,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.59  1998/10/17 01:34:21  curt
+// C++ ifying ...
+//
 // Revision 1.58  1998/10/16 23:27:52  curt
 // C++-ifying.
 //

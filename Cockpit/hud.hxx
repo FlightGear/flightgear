@@ -49,7 +49,7 @@
 #include <fg_constants.h>
 #include <Aircraft/aircraft.hxx>
 #include <Flight/flight.hxx>
-#include <Controls/controls.h>
+#include <Controls/controls.hxx>
 
 #include <deque>        // STL double ended queue
 
@@ -524,6 +524,9 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 // $Log$
+// Revision 1.16  1998/10/17 01:33:59  curt
+// C++ ifying ...
+//
 // Revision 1.15  1998/10/16 23:27:27  curt
 // C++-ifying.
 //

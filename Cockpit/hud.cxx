@@ -47,7 +47,6 @@
 #include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
-#include <Weather/weather.h>
 
 #if defined ( __sun__ ) || defined ( __sgi )
 extern "C" {
@@ -830,6 +829,9 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.25  1998/10/17 01:33:57  curt
+// C++ ifying ...
+//
 // Revision 1.24  1998/10/16 23:27:25  curt
 // C++-ifying.
 //

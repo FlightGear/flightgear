@@ -18,7 +18,6 @@
 #include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
-#include <Weather/weather.h>
 
 
 #include "hud.hxx"

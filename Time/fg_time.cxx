@@ -54,7 +54,7 @@
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Debug/fg_debug.h>
-#include <Flight/flight.h>
+#include <Flight/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Time/light.hxx>
@@ -448,6 +448,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.19  1998/10/17 01:34:29  curt
+// C++ ifying ...
+//
 // Revision 1.18  1998/10/02 21:36:09  curt
 // Fixes to try to break through the win95/98 18.3 fps barrier.
 //

@@ -27,7 +27,7 @@
 #  include <config.h>
 #endif
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
@@ -585,6 +585,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.23  1998/10/17 01:34:26  curt
+// C++ ifying ...
+//
 // Revision 1.22  1998/10/16 00:54:03  curt
 // Converted to Point3D class.
 //
