@@ -29,73 +29,31 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 #include <GL/glut.h>
 
 #include "obj.h"
 #include "scenery.h"
 
-#include "../constants.h"
-#include "../types.h"
-#include "../Math/fg_geodesy.h"
 #include "../Math/mat3.h"
-#include "../Math/polar.h"
+
 
 
 #define MAXNODES 100000
 
 float nodes[MAXNODES][3];
-
-
-/* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
- * a cartesian point */
-struct fgCartesianPoint geod_to_cart(float geod[3]) {
-    struct fgCartesianPoint p;
-    double gc_lon, gc_lat, sl_radius;
-
-    /* printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
-	   geod[0], geod[1], geod[2]); */
-
-    gc_lon = geod[0]*ARCSEC_TO_RAD;
-    fgGeodToGeoc(geod[1]*ARCSEC_TO_RAD, geod[2], &sl_radius, &gc_lat);
-
-    /* printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
-	   gc_lat, sl_radius+geod[2]); */
-
-    p = fgPolarToCart(gc_lon, gc_lat, sl_radius+geod[2]);
-    
-    /* printf("A cart point is (%.8f, %.8f, %.8f)\n", p.x, p.y, p.z); */
-
-    return(p);
-}
-
-
-/* given three points defining a triangle, calculate the normal */
-void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2, 
-		 struct fgCartesianPoint p3, double normal[3])
-{
-    double v1[3], v2[3];
-    float temp;
-
-    v1[0] = p2.x - p1.x; v1[1] = p2.y - p1.y; v1[2] = p2.z - p1.z;
-    v2[0] = p3.x - p1.x; v2[1] = p3.y - p1.y; v2[2] = p3.z - p1.z;
-
-    MAT3cross_product(normal, v1, v2);
-    MAT3_NORMALIZE_VEC(normal,temp);
-
-    printf("Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]);
-}
+float normals[MAXNODES][3];
 
 
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path) {
     char line[256];
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
-    struct fgCartesianPoint p1, p2, p3, p4, ref, last1, last2;
+    double v1[3], v2[3], approx_normal[3], dot_prod, temp;
+    struct fgCartesianPoint ref;
     GLint area;
     FILE *f;
-    double normal[3];
-    int first, ncount, n1, n2, n3, n4;
-    int toggle = 0;
+    int first, ncount, vncount, n1, n2, n3, n4;
 
     if ( (f = fopen(path, "r")) == NULL ) {
 	printf("Cannot open file: %s\n", path);
@@ -108,15 +66,14 @@ GLint fgObjLoad(char *path) {
     /* glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color ); */
     glColor3fv(color);
 
-    glBegin(GL_TRIANGLE_STRIP);
-
     first = 1;
     ncount = 1;
+    vncount = 1;
 
     while ( fgets(line, 250, f) != NULL ) {
 	if ( line[0] == '#' ) {
 	    /* comment -- ignore */
-	} else if ( line[0] == 'v' ) {
+	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
 		/* printf("vertex = %s", line); */
@@ -124,7 +81,9 @@ GLint fgObjLoad(char *path) {
 		       &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
 		if ( ncount == 1 ) {
 		    /* first node becomes the reference point */
-		    ref = geod_to_cart(nodes[ncount]);
+		    ref.x = nodes[ncount][0];
+		    ref.y = nodes[ncount][1];
+		    ref.z = nodes[ncount][2];
 		    scenery.center = ref;
 		}
 		ncount++;
@@ -132,82 +91,126 @@ GLint fgObjLoad(char *path) {
 		printf("Read too many nodes ... dying :-(\n");
 		exit(-1);
 	    }
+	} else if ( strncmp(line, "vn ", 3) == 0 ) {
+	    /* vertex normal */
+	    if ( vncount < MAXNODES ) {
+		/* printf("vertex normal = %s", line); */
+		sscanf(line, "vn %f %f %f\n", 
+		       &normals[vncount][0], &normals[vncount][1], 
+		       &normals[vncount][2]);
+		vncount++;
+	    } else {
+		printf("Read too many vertex normals ... dying :-(\n");
+		exit(-1);
+	    }
 	} else if ( line[0] == 't' ) {
 	    /* start a new triangle strip */
 
 	    n1 = n2 = n3 = n4 = 0;
-	    toggle = 0;
 
 	    if ( !first ) {
 		/* close out the previous structure and start the next */
 		glEnd();
-		glBegin(GL_TRIANGLE_STRIP);
 	    } else {
 		first = 0;
 	    }
 
+	    glBegin(GL_TRIANGLE_STRIP);
+
 	    printf("new tri strip = %s", line);
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
-	    p1 = geod_to_cart(nodes[n1]);
-	    p2 = geod_to_cart(nodes[n2]);
-	    p3 = geod_to_cart(nodes[n3]);
-
 	    printf("(t) = ");
-	    calc_normal(p1, p2, p3, normal);
-            glNormal3d(normal[0], normal[1], normal[2]);
-	    glVertex3d(p1.x - ref.x, p1.y - ref.y, p1.z - ref.z);
-	    glVertex3d(p2.x - ref.x, p2.y - ref.y, p2.z - ref.z);
-	    glVertex3d(p3.x - ref.x, p3.y - ref.y, p3.z - ref.z);
 
-	    last1 = p2;
-	    last2 = p3;
+	    /* try to get the proper rotation by calculating an
+             * approximate normal and seeing if it is close to the
+	     * precalculated normal */
+	    v1[0] = nodes[n2][0] - nodes[n1][0];
+	    v1[1] = nodes[n2][1] - nodes[n1][1];
+	    v1[2] = nodes[n2][2] - nodes[n1][2];
+	    v2[0] = nodes[n3][0] - nodes[n1][0];
+	    v2[1] = nodes[n3][1] - nodes[n1][1];
+	    v2[2] = nodes[n3][2] - nodes[n1][2];
+	    MAT3cross_product(approx_normal, v1, v2);
+	    MAT3_NORMALIZE_VEC(approx_normal,temp);
+	    printf("Approx normal = %.2f %.2f %.2f\n", approx_normal[0], 
+		   approx_normal[1], approx_normal[2]);
+	    dot_prod = MAT3_DOT_PRODUCT(normals[n1], approx_normal);
+	    printf("Dot product = %.4f\n", dot_prod);
+	    /* angle = acos(dot_prod); */
+	    /* printf("Normal ANGLE = %.3f rads.\n", angle); */
+	    
+            glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+		       nodes[n1][2] - ref.z);
+
+	    if ( dot_prod > 0 ) {
+		glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+		glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			   nodes[n2][2] - ref.z);
+
+		glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+		glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+			   nodes[n3][2] - ref.z);
+	    } else {
+		printf("Reversing\n");
+		glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+		glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+			   nodes[n3][2] - ref.z);
+
+		glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+		glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			   nodes[n2][2] - ref.z);
+	    }
 
 	    if ( n4 > 0 ) {
-		p4 = geod_to_cart(nodes[n4]);
-		printf("(t) cont = ");
-		calc_normal(last2, last1, p4, normal);
-		glNormal3d(normal[0], normal[1], normal[2]);
-		glVertex3d(p4.x - ref.x, p4.y - ref.y, p4.z - ref.z);
-
-		last1 = last2;
-		last2 = p4;
-		toggle = 1 - toggle;
+		glNormal3d(normals[n4][0], normals[n4][1], normals[n4][2]);
+		glVertex3d(nodes[n4][0] - ref.x, nodes[n4][1] - ref.y, 
+			   nodes[n4][2] - ref.z);
 	    }
+	} else if ( line[0] == 'f' ) {
+	    /* unoptimized face */
+
+	    if ( !first ) {
+		/* close out the previous structure and start the next */
+		glEnd();
+	    } else {
+		first = 0;
+	    }
+
+	    glBegin(GL_TRIANGLES);
+
+	    printf("new triangle = %s", line);
+	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
+
+            glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+		       nodes[n1][2] - ref.z);
+
+            glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+	    glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+		       nodes[n2][2] - ref.z);
+
+            glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+	    glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+		       nodes[n3][2] - ref.z);
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
 	    n1 = n2 = 0;
 
-	    printf("continued tri strip = %s", line);
+	    printf("continued tri strip = %s ", line);
 	    sscanf(line, "q %d %d\n", &n1, &n2);
 	    printf("read %d %d\n", n1, n2);
 
-	    p1 = geod_to_cart(nodes[n1]);
-
-	    printf("(q) = ");
-	    if ( toggle ) {
-		calc_normal(last1, last2, p1, normal);
-	    } else {
-		calc_normal(last1, p1, last2, normal);
-	    }
-	    glNormal3d(normal[0], normal[1], normal[2]);
-	    glVertex3d(p1.x - ref.x, p1.y - ref.y, p1.z - ref.z);
-
-	    last1 = last2;
-	    last2 = p1;
-	    toggle = 1 - toggle;
+            glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+		       nodes[n1][2] - ref.z);
 
 	    if ( n2 > 0 ) {
-		p2 = geod_to_cart(nodes[n2]);
-
-		printf("(q) cont = ");
-		calc_normal(last1, last2, p2, normal);
-		glNormal3d(normal[0], normal[1], normal[2]);
-		glVertex3d(p2.x - ref.x, p2.y - ref.y, p2.z - ref.z);
-
-		last1 = last2;
-		last2 = p2;
-		toggle = 1 - toggle;
+		printf(" (cont)\n");
+		glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+		glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			   nodes[n2][2] - ref.z);
 	    }
 	} else {
 	    printf("Unknown line in %s = %s\n", path, line);
@@ -224,9 +227,15 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.3  1997/10/31 04:49:12  curt
-/* Tweaking vertex orders.
+/* Revision 1.4  1997/11/14 00:26:49  curt
+/* Transform scenery coordinates earlier in pipeline when scenery is being
+/* created, not when it is being loaded.  Precalculate normals for each node
+/* as average of the normals of each containing polygon so Garoude shading is
+/* now supportable.
 /*
+ * Revision 1.3  1997/10/31 04:49:12  curt
+ * Tweaking vertex orders.
+ *
  * Revision 1.2  1997/10/30 12:38:45  curt
  * Working on new scenery subsystem.
  *
