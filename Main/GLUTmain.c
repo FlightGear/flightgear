@@ -154,7 +154,7 @@ static void fgUpdateViewParams() {
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(100.0, 1.0/win_ratio, 1.0, 200000.0);
+    gluPerspective(60.0, 1.0/win_ratio, 1.0, 200000.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -555,9 +555,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.14  1997/09/05 01:35:53  curt
-/* Working on getting stars right.
+/* Revision 1.15  1997/09/05 14:17:27  curt
+/* More tweaking with stars.
 /*
+ * Revision 1.14  1997/09/05 01:35:53  curt
+ * Working on getting stars right.
+ *
  * Revision 1.13  1997/09/04 02:17:34  curt
  * Shufflin' stuff.
  *

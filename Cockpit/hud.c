@@ -467,7 +467,7 @@ double get_speed()
 	struct FLIGHT *f;
               
 	f = &current_aircraft.flight;
-	return( FG_V_true_kts );
+	return( FG_V_equiv_kts );
 }
 
 double get_aoa()
@@ -499,7 +499,7 @@ double get_heading()
 	struct FLIGHT *f;
               
 	f = &current_aircraft.flight;
-	return( FG_Gamma_horiz_rad*RAD_TO_DEG ); 
+	return( FG_Psi*RAD_TO_DEG ); 
 }
 
 double get_altitude()
@@ -799,9 +799,12 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.2  1997/09/04 02:17:30  curt
-/* Shufflin' stuff.
+/* Revision 1.3  1997/09/05 14:17:26  curt
+/* More tweaking with stars.
 /*
+ * Revision 1.2  1997/09/04 02:17:30  curt
+ * Shufflin' stuff.
+ *
  * Revision 1.1  1997/08/29 18:03:22  curt
  * Initial revision.
  *

@@ -103,6 +103,11 @@ void fgInitSubsystems( void ) {
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Altitude = 0.0 + 3.758099; */
 
+    /* Initial Position: 10125 Jewell St. NE */
+    /* FG_Latitude  = (  45.15 ) * DEG_TO_RAD; */
+    /* FG_Longitude = ( -93.15 ) * DEG_TO_RAD; */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
 	   FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG, 
 	   FG_Altitude * FEET_TO_METER);
@@ -200,9 +205,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1997/09/04 02:17:36  curt
-/* Shufflin' stuff.
+/* Revision 1.6  1997/09/05 14:17:30  curt
+/* More tweaking with stars.
 /*
+ * Revision 1.5  1997/09/04 02:17:36  curt
+ * Shufflin' stuff.
+ *
  * Revision 1.4  1997/08/27 21:32:26  curt
  * Restructured view calculation code.  Added stars.
  *
