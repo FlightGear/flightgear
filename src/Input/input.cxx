@@ -482,6 +482,7 @@ FGInput::_init_joystick ()
     char buf[8];
     for (j = 0; j < nbuttons; j++) {
       sprintf(buf, "%d", j);
+      SG_LOG(SG_INPUT, SG_INFO, "Initializing button " << j);
       _init_button(js_node->getChild("button", j),
 		   _joystick_bindings[i].buttons[j],
 		   buf);
@@ -503,7 +504,6 @@ FGInput::_init_button (const SGPropertyNode * node,
   if (node == 0)
     SG_LOG(SG_INPUT, SG_INFO, "No bindings for button " << name);
   else {
-    _read_bindings(node, b.bindings, FG_MOD_NONE);
     b.is_repeatable = node->getBoolValue("repeatable", b.is_repeatable);
     
     		// Get the bindings for the button
@@ -569,30 +569,32 @@ FGInput::_update_joystick ()
     }
 
 				// Fire bindings for the buttons.
-    for (j = 0; j < _joystick_bindings[i].nbuttons; j++)
+    for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
       _update_button(_joystick_bindings[i].buttons[j],
 		     modifiers,
 		     (buttons & (1 << j)) > 0);
+    }
   }
 }
 
 
-inline void
+void
 FGInput::_update_button (button &b, int modifiers, bool pressed)
 {
   if (pressed) {
 				// The press event may be repeated.
     if (!b.last_state || b.is_repeatable) {
-//    SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been pressed");
+      SG_LOG(SG_INPUT, SG_INFO, "Button has been pressed");
       for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
 	b.bindings[modifiers][k].fire();
     }
   } else {
 				// The release event is never repeated.
-    if (b.last_state)
-//    SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been released");
+    if (b.last_state) {
+      SG_LOG(SG_INPUT, SG_INFO, "Button has been released");
       for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
 	b.bindings[modifiers|FG_MOD_UP][k].fire();
+    }
   }
 	  
   b.last_state = pressed;
@@ -604,6 +606,7 @@ FGInput::_read_bindings (const SGPropertyNode * node,
 			 binding_list_t * binding_list,
 			 int modifiers)
 {
+  SG_LOG(SG_INPUT, SG_INFO, "Reading all bindings");
   vector<const SGPropertyNode *> bindings = node->getChildren("binding");
   for (unsigned int i = 0; i < bindings.size(); i++) {
     SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
