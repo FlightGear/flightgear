@@ -1216,9 +1216,7 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( fgGetBool("/sim/sound/audible")
-         && globals->get_soundmgr()->is_working() )
-    {
+    if ( globals->get_soundmgr()->is_working() ) {
         globals->get_soundmgr()->update( delta_time_sec );
     }
 #endif
