@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifndef _VECTOR_H
+#define _VECTOR_H
+
+
 #include <Math/mat3.h>
 
 
@@ -32,11 +36,17 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 				    MAT3vec result);
 
 
+#endif /* _VECTOR_H */
+
+
 /* $Log$
-/* Revision 1.2  1998/01/19 19:27:14  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.3  1998/01/22 02:59:39  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.2  1998/01/19 19:27:14  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.1  1997/12/22 04:13:18  curt
  * Initial revision.
  *

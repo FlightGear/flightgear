@@ -11,8 +11,8 @@
  **************************************************************************/
 
 
-#ifndef FG_GEODESY_H
-#define FG_GEODESY_H
+#ifndef _FG_GEODESY_H
+#define _FG_GEODESY_H
 
 
 /* fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
@@ -89,6 +89,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.2  1998/01/22 02:59:38  curt
+Changed #ifdef FILE_H to #ifdef _FILE_H
+
 Revision 1.1  1997/07/31 23:13:14  curt
 Initial revision.
 
@@ -141,11 +144,14 @@ Initial Flight Gear revision.
 --------------------------------------------------------------------------*/
 
 
-#endif /* FG_GEODESY_H */
+#endif /* _FG_GEODESY_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/07/31 23:13:14  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/22 02:59:38  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.1  1997/07/31 23:13:14  curt
+ * Initial revision.
+ *
  */

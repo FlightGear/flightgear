@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef FG_RANDOM_H
-#define FG_RANDOM_H
+#ifndef _FG_RANDOM_H
+#define _FG_RANDOM_H
 
 
 /* Seed the random number generater with time() so we don't see the
@@ -36,13 +36,16 @@ void fg_srandom(void);
 double fg_random(void);
 
 
-#endif /* FG_RANDOM_H */
+#endif /* _FG_RANDOM_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/07/30 16:04:09  curt
-/* Moved random routines from Utils/ to Math/
+/* Revision 1.2  1998/01/22 02:59:38  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.1  1997/07/30 16:04:09  curt
+ * Moved random routines from Utils/ to Math/
+ *
  * Revision 1.2  1997/07/23 21:52:28  curt
  * Put comments around the text after an #endif for increased portability.
  *

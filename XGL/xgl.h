@@ -1,3 +1,6 @@
+#ifndef _XGL_H
+#define _XGL_H
+
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -823,3 +826,4 @@ void xglPrioritizeTexturesEXT       ( GLsizei n, GLuint *textures, GLclampf *pri
 
 #endif
 
+#endif /* _XGL_H */

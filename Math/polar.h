@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef POLAR_H
-#define POLAR_H
+#ifndef _POLAR_H
+#define _POLAR_H
 
 
 #include <Include/types.h>
@@ -59,14 +59,17 @@ void fgRotateBatchInit(double Theta, double Phi);
 struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
-#endif /* POLAR_H */
+#endif /* _POLAR_H */
 
 
 /* $Log$
-/* Revision 1.5  1998/01/19 19:27:13  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.6  1998/01/22 02:59:39  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.5  1998/01/19 19:27:13  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.4  1997/12/15 23:54:55  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.
