@@ -79,13 +79,13 @@ public:
     
 private:
 
-    static const double st_list_time = 60.0;   // 60 secs of high res data
-    static const double mt_list_time = 600.0;  // 10 mins of 1 fps data
-    static const double lt_list_time = 3600.0; // 1 hr of 10 spf data
+    static const double st_list_time;   // 60 secs of high res data
+    static const double mt_list_time;  // 10 mins of 1 fps data
+    static const double lt_list_time; // 1 hr of 10 spf data
 
     // short term sample rate is as every frame
-    static const double mt_dt = 0.5; // medium term sample rate (sec)
-    static const double lt_dt = 5.0; // long term sample rate (sec)
+    static const double mt_dt; // medium term sample rate (sec)
+    static const double lt_dt; // long term sample rate (sec)
 
     double sim_time;
     double last_mt_time;

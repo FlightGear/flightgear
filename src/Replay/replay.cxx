@@ -31,6 +31,13 @@
 
 #include "replay.hxx"
 
+const double FGReplay::st_list_time = 60.0;   // 60 secs of high res data
+const double FGReplay::mt_list_time = 600.0;  // 10 mins of 1 fps data
+const double FGReplay::lt_list_time = 3600.0; // 1 hr of 10 spf data
+
+// short term sample rate is as every frame
+const double FGReplay::mt_dt = 0.5; // medium term sample rate (sec)
+const double FGReplay::lt_dt = 5.0; // long term sample rate (sec)
 
 /**
  * Constructor
