@@ -63,3 +63,18 @@ following (assuming sh syntax):
 
   CC=cc CXX=CC CFLAGS=-Xcpluscomm ./configure
 
+Then (and this step is *VERY* important for your success) run the following 
+command:
+
+  find . -name Makefile -exec irix-hack.pl {} \;
+
+Note, you should make sure you have perl installed on your system.  The
+"irix-hack.pl" script assumes that perl is located in /usr/bin/perl so
+if this isn't the proper location on your system, change it in the first
+line of "irix-hack.pl" before running the above command.  One way to see
+if perl is on your system (and determine where) is to run:
+
+  which perl
+
+Perl can be installed from "eoe.sw.gifts_perl" or can be fetched and
+built from the net.
