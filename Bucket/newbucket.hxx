@@ -31,9 +31,16 @@
 
 #include STL_STRING
 
-FG_USING_STD(string);
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cstdio> // sprintf()
+#  include <iostream>
+#else
+#  include <stdio.h> // sprintf()
+#  include <iostream.h>
+#endif
 
-#include <stdio.h> // sprintf()
+FG_USING_STD(string);
+FG_USING_STD(ostream);
 
 #include <Include/fg_constants.h>
 
@@ -41,6 +48,9 @@ FG_USING_STD(string);
 #define FG_BUCKET_SPAN      0.125   // 1/8 of a degree
 #define FG_HALF_BUCKET_SPAN 0.0625  // 1/2 of 1/8 of a degree = 1/16 = 0.0625
 
+class FGBucket;
+ostream& operator<< ( ostream&, const FGBucket& );
+bool operator== ( const FGBucket&, const FGBucket& );
 
 class FGBucket {
 
@@ -313,6 +323,11 @@ fgBucketGenIndex( const fgBUCKET& p )
 
 
 // $Log$
+// Revision 1.6  1999/03/15 17:58:41  curt
+// MSVC++ portability tweaks contributed by Bernie Bright.
+//   Added using std::ostream declaration.
+//   Added forward declarations to work around a MSVC bug.
+//
 // Revision 1.5  1999/03/12 22:51:18  curt
 // Added some informational methods.
 //
