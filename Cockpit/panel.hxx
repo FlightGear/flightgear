@@ -243,8 +243,8 @@ float YPos;
     GLfloat vertices[20];
 }Pointer;
 
-void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor = 1);
-void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue, bool filled = false);
+void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor);
+void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue, bool filled);
 void DrawBeechcraftLogo(float XPos, float YPos, float Width, float Height);
 
 void PrintMatrix( void);
@@ -254,6 +254,9 @@ void PrintMatrix( void);
 
 
 // $Log$
+// Revision 1.9  1999/03/09 20:58:18  curt
+// Tweaks for compiling under native Irix compilers.
+//
 // Revision 1.8  1999/03/08 21:56:10  curt
 // Added panel changes sent in by Friedemann.
 //

@@ -580,7 +580,7 @@ void FGTexInstrument::UpdatePointer(void){
 // fgEraseArea - 'Erases' a drawn Polygon by overlaying it with a textured 
 //                 area. Shall be a method of a panel class once.
 
-void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor = 1){
+void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor){
 int i, j;
 int n;
 float a;
@@ -691,7 +691,7 @@ xglMatrixMode(GL_MODELVIEW);
 xglLoadIdentity();
 xglTranslatef(BallXPos, BallYPos, 0.0);
 xglTranslatef(0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31,                                     0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD) * 39)),                             0.0);
-fgEraseArea(vertices, 72, BallTexXPos +                                                     ((0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31) / 0.625),                         BallTexYPos + ((0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD)                                  * 39))) / 0.625),                                                   BallXPos + (0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31),                       BallYPos + (0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD)                         * 39))), 1);
+fgEraseArea(vertices, 72, BallTexXPos +                                                     ((0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31) / 0.625),                         BallTexYPos + ((0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD)                                  * 39))) / 0.625),                                                   BallXPos + (0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31),                       BallYPos + (0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD)                         * 39))), 1, 1);
 xglDisable(GL_TEXTURE_2D);
 xglEnable(GL_BLEND);
 xglBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
@@ -714,9 +714,9 @@ xglLoadIdentity();
 xglTranslatef(XPos, YPos, 0.0);
 xglRotatef(rollhist[0] * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
 
-fgEraseArea(Wings, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1); 
-fgEraseArea(Elevator, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1); 
-fgEraseArea(Rudder, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1); 
+fgEraseArea(Wings, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1, 1); 
+fgEraseArea(Elevator, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1, 1); 
+fgEraseArea(Rudder, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1, 1); 
 
 xglLoadIdentity();
 xglTranslatef(XPos, YPos, 0.0);
@@ -778,7 +778,7 @@ vertices[(2 * n) + 1] = sin(10 * n * DEG_TO_RAD) * BallRadius;
 	}	
 }
 
-void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue, bool filled = false){
+void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue, bool filled){
      int i;
      float diff = (alpha2 - alpha1) / (float)(steps - 1);
      
@@ -876,8 +876,8 @@ void FGRpmGauge::Init(void){
      xglEnd();
      
 DrawScale(XPos, YPos, 22.5, 25.625, 50, 135, 10, 1.0, 0.0, 0.7,                           0.0,FILLED);
-DrawScale(XPos, YPos, 21.0, 25.625, -70, 180, 8, 1.8, 0.88, 0.88, 0.88);
-DrawScale(XPos, YPos, 22.5, 25.0, -70, 180, 40, 0.6, 0.5, 0.5, 0.5);
+DrawScale(XPos, YPos, 21.0, 25.625, -70, 180, 8, 1.8, 0.88, 0.88, 0.88, false);
+DrawScale(XPos, YPos, 22.5, 25.0, -70, 180, 40, 0.6, 0.5, 0.5, 0.5, false);
           
      xglEndList();
      }
@@ -1051,7 +1051,7 @@ xglEnable(GL_TEXTURE_2D);
      xglLoadIdentity();
      xglTranslatef(XPos, YPos, 0.0);
      xglRotatef(-tape[0], 0.0, 0.0, 1.0);
-    fgEraseArea(vertices, 20, (GLfloat)(teXpos),                                               (GLfloat)(texYpos), (GLfloat)(XPos),                                            (GLfloat)(YPos), 0);
+    fgEraseArea(vertices, 20, (GLfloat)(teXpos),                                               (GLfloat)(texYpos), (GLfloat)(XPos),                                            (GLfloat)(YPos), 0, 1);
      
      UpdatePointer();
      
@@ -1059,6 +1059,9 @@ xglEnable(GL_TEXTURE_2D);
      }
      
 // $Log$
+// Revision 1.18  1999/03/09 20:58:17  curt
+// Tweaks for compiling under native Irix compilers.
+//
 // Revision 1.17  1999/03/08 21:56:09  curt
 // Added panel changes sent in by Friedemann.
 //
