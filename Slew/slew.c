@@ -30,6 +30,7 @@
 #include "../flight.h"
 #include "../../Aircraft/aircraft.h"
 #include "../../Controls/controls.h"
+#include "../../constants.h"
 
 
 #ifndef M_PI                                    
@@ -76,10 +77,10 @@ void fgSlewUpdate() {
     c = &current_aircraft.controls;
 
     /* f->Psi += ( c->aileron / 8 );
-    if ( f->Psi > PI2 ) {
-	f->Psi -= PI2;
+    if ( f->Psi > FG_2PI ) {
+	f->Psi -= FG_2PI;
     } else if ( f->Psi < 0 ) {
-	f->Psi += PI2;
+	f->Psi += FG_2PI;
     }
 
     f->vel_x = -c->elev;
@@ -90,9 +91,12 @@ void fgSlewUpdate() {
 
 
 /* $Log$
-/* Revision 1.4  1997/06/21 17:12:51  curt
-/* Capitalized subdirectory names.
+/* Revision 1.5  1997/07/19 22:35:06  curt
+/* Moved fiddled with PI to avoid compiler warnings.
 /*
+ * Revision 1.4  1997/06/21 17:12:51  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.3  1997/05/29 22:40:00  curt
  * Working on incorporating the LaRCsim flight model.
  *
