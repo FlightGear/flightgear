@@ -318,7 +318,7 @@ int FGTriangle::run_triangulate() {
     // from zero (z), assign a regional attribute to each element (A),
     // and produce an edge list (e), and a triangle neighbor list (n).
 
-    triangulate("pczAen", &in, &out, &vorout);
+    triangulate("pczq15Aen", &in, &out, &vorout);
 
     // TEMPORARY
     write_out_data(&out);
@@ -349,6 +349,10 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.9  1999/03/21 15:48:02  curt
+// Removed Dem2node from the Tools fold.
+// Tweaked the triangulator options to add quality mesh refinement.
+//
 // Revision 1.8  1999/03/21 14:02:06  curt
 // Added a mechanism to dump out the triangle structures for viewing.
 // Fixed a couple bugs in first pass at triangulation.

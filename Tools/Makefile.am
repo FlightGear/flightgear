@@ -7,7 +7,6 @@ SUBDIRS = \
 	Utils \
 	Areas \
 	AssemTris \
-	Dem2node \
 	FixNode \
 	FixObj \
 	SplitTris \

@@ -169,8 +169,8 @@ main(int argc, char **argv) {
     // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
-    lon = -92.486188; lat = 44.590190;      // KRGK
-    // lon = -89.744682312011719; lat= 29.314495086669922;
+    // lon = -92.486188; lat = 44.590190;      // KRGK
+    lon = -89.744682312011719; lat= 29.314495086669922;
 
     FGBucket b( lon, lat );
 
@@ -189,6 +189,10 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.6  1999/03/21 15:48:01  curt
+// Removed Dem2node from the Tools fold.
+// Tweaked the triangulator options to add quality mesh refinement.
+//
 // Revision 1.5  1999/03/21 14:02:05  curt
 // Added a mechanism to dump out the triangle structures for viewing.
 // Fixed a couple bugs in first pass at triangulation.
