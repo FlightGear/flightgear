@@ -1,36 +1,79 @@
-// JSBsim.hxx -- interface to the "JSBsim" flight model
-//
-// Written by Curtis Olson, started February 1999.
-//
-// Copyright (C) 1999  Curtis L. Olson  - curt@flightgear.org
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-//
-// $Id$
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+ Header:        JSBSim.hxx
+ Author:        Curtis L. Olson
+ Maintained by: Tony Peden, Curt Olson
+ Date started:  02/01/1999
+
+------ Copyright (C) 1999 - 2000  Curtis L. Olson (curt@flightgear.org) ------
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation; either version 2 of the
+ License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+HISTORY
+--------------------------------------------------------------------------------
+02/01/1999   CLO   Created
+Additional log messages stored in CVS
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SENTRY
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef _JSBSIM_HXX
 #define _JSBSIM_HXX
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+INCLUDES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 #include <FDM/JSBSim/FGFDMExec.h>
 #include <FDM/JSBSim/FGInitialCondition.h>
 #undef MAX_ENGINES
-
 #include <Aircraft/aircraft.hxx>
 
-#define ID_JSBSIMXX "$Header"
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+#define ID_JSBSIMXX "$Header JSBSim.hxx,v 1.4 2000/10/22 14:02:16 jsb Exp $"
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** FGFS / JSBSim interface (aka "The Bus")
+    This class provides for an interface between FlightGear and its data
+    structures and JSBSim and its data structures. This is the class which is
+    used to command JSBSim when integrated with FlightGear. See the
+    documentation for main for direction on running JSBSim apart from FlightGear.
+    @author Curtis L. Olson (original)
+    @author Tony Peden (Maintained and refined)
+    @version $Id$
+    @see main in file JSBSim.cpp (use main() wrapper for standalone usage)
+*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DECLARATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGJSBsim: public FGInterface {
 
@@ -44,17 +87,18 @@ class FGJSBsim: public FGInterface {
     float trim_throttle;
 
 public:
-
+    /// Constructor
     FGJSBsim::FGJSBsim(void);
+    /// Destructor
     FGJSBsim::~FGJSBsim();
 
-    // copy FDM state to LaRCsim structures
+    /// copy FDM state to LaRCsim structures
     bool copy_to_JSBsim();
 
-    // copy FDM state from LaRCsim structures
+    /// copy FDM state from LaRCsim structures
     bool copy_from_JSBsim();
 
-    // reset flight params to a specific position 
+    /// Reset flight params to a specific position
     bool init( double dt );
     
     // Positions
