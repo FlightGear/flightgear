@@ -1,3 +1,9 @@
+New in 0.6.2
+* MSVC++ and FreeBSD portability enhancements.
+* MACos fixes.
+* JSBsim updates.
+* c172 updates.
+
 New in 0.6.1
 * Tony Peden contributed a c172 flight model replacement for the
   Navion.  Still needs to be debugged a bit before it is usable.
