@@ -939,8 +939,13 @@ void fgHUDalphaInit( void ) {
 
 void fgHUDReshape(void) {
     if ( HUDtext ) {
-        delete HUDtext;
+        // this chunk of code is not necessarily thread safe if the
+        // compiler optimizer reorders these statements.  Note that
+        // "delete ptr" does not set "ptr = NULL".  We have to do that
+        // ourselves.
+        fntRenderer *tmp = HUDtext;
         HUDtext = NULL;
+        delete tmp;
     }
 
     HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
