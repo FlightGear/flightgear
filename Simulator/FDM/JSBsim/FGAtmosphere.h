@@ -58,26 +58,12 @@ using namespace std;
 class FGAtmosphere : public FGModel
 {
 public:
-  // ***************************************************************************
-  /** @memo Constructor
-      @param FGFDMExec* - a pointer to the "owning" FDM Executive
-  */
   FGAtmosphere(FGFDMExec*);
-
-  // ***************************************************************************
-  /** @memo Destructor
-  */
   ~FGAtmosphere(void);
-
-  // ***************************************************************************
-  /** This must be called for each dt to execute the model algorithm */
   bool Run(void);
 
-  // ***************************************************************************
-  /** @memo Returns the air density
-      @return float air density in slugs/cubic foot
-  */
   inline float Getrho(void) {return rho;}
+  float CalcRho(float altitude);
 
 protected:
 

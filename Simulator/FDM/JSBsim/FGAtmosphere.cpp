@@ -71,8 +71,17 @@ bool FGAtmosphere::Run(void)
         + 7.0E-13*State->Geth()*State->Geth()
         - 2.0E-18*State->Geth()*State->Geth()*State->Geth();
 
-    State->SetMach(State->GetVt()/State->Geta()); 
+    State->SetMach(State->GetVt()/State->Geta());
   } else {                               // skip Run() execution this time
   }
   return false;
 }
+
+float FGAtmosphere::CalcRho(float altitude)
+{
+  return (0.002377 - 7.0E-08*altitude
+        + 7.0E-13*altitude*altitude
+        - 2.0E-18*altitude*altitude*altitude);
+
+}
+

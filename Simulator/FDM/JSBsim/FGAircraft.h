@@ -129,7 +129,7 @@ public:
   ~FGAircraft(void);
 
   bool Run(void);
-  bool LoadAircraftEx(string, string, string);
+  bool LoadAircraft(string, string, string);
   inline string GetAircraftName(void) {return AircraftName;}
   inline void SetGearUp(bool tt) {GearUp = tt;}
   inline bool GetGearUp(void) {return GearUp;}
