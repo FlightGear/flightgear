@@ -42,6 +42,9 @@ class FGProps : public FGProtocol {
     char buf[max_cmd_len];
     int length;
 
+    // tree view of property list
+    string path;
+
 public:
 
     FGProps();

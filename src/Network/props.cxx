@@ -25,6 +25,9 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
+#include <simgear/misc/props.hxx>
+
+#include <stdlib.h>		// atoi() atof()
 
 #include <strstream>
 
@@ -42,6 +45,8 @@ FGProps::~FGProps() {
 
 // open hailing frequencies
 bool FGProps::open() {
+    path = "/";
+
     if ( is_enabled() ) {
 	FG_LOG( FG_IO, FG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
@@ -61,8 +66,37 @@ bool FGProps::open() {
 }
 
 
+// return a human readable form of the value "type"
+static string getValueTypeString( const SGValue *v ) {
+    string result;
+
+    if ( v == NULL ) {
+	return "unknown";
+    }
+
+    SGValue::Type type = v->getType();
+    if ( type == SGValue::UNKNOWN ) {
+	result = "unknown";
+    } else if ( type == SGValue::BOOL ) {
+	result = "bool";
+    } else if ( type == SGValue::INT ) {
+	result = "int";
+    } else if ( type == SGValue::FLOAT ) {
+	result = "float";
+    } else if ( type == SGValue::DOUBLE ) {
+	result = "double";
+    } else if ( type == SGValue::STRING ) {
+	result = "string";
+    }
+
+    return result;
+}
+
+
 bool FGProps::process_command( const char *cmd ) {
-    cout << "processing command = " << cmd << endl;
+    SGIOChannel *io = get_io_channel();
+
+    cout << "processing command = " << cmd;
     string_list tokens;
     tokens.clear();
 
@@ -76,9 +110,127 @@ bool FGProps::process_command( const char *cmd ) {
 
     string command = tokens[0];
 
-    if ( command == "ls" ) {
-	
+    SGPropertyNode node( path, &current_properties );
+    if ( node.getPath() == "" ) {
+	node.setPath( "/" );
     }
+
+    if ( command == "ls" ) {
+	for (int i = 0; i < (int)node.size(); i++) {
+	    SGPropertyNode child = node.getChild(i);
+	    string name = child.getName();
+	    string line = name;
+	    if ( child.size() > 0 ) {
+		line += "/\n";
+	    } else {
+		string value = node.getStringValue ( name, "" );
+		line += " =\t'" + value + "'\t(";
+		line += getValueTypeString( node.getValue( name ) );
+		line += ")\n";
+	    }
+	    io->writestring( line.c_str() );
+	}
+    } else if ( command == "cd" ) {
+	// string tmp = "current path = " + node.getPath() + "\n";
+	// io->writestring( tmp.c_str() );
+
+	if ( tokens.size() <= 1 ) {
+	    // do nothing
+	} else if ( tokens[1] == "." ) {
+	    // do nothing
+	} else if ( tokens[1] == ".." ) {
+	    // go back one level
+	    string current = node.getPath();
+	    int pos = current.rfind("/");
+	    // cout << "path = " << current << endl;
+	    // cout << "new path = " << current.substr(0, pos) << endl;d
+	    string tmp = current.substr(0, pos);
+	    node.setPath( tmp );
+	    path = tmp;
+	} else {
+	    // decend to specified child
+	    string tmp = node.getPath();
+	    tmp += "/" + tokens[1];
+	    node.setPath( tmp );
+	    path = tmp;
+	}
+    } else if ( command == "show" ) {
+	if ( tokens.size() <= 1 ) {
+	    // do nothing
+	} else {
+	    string ttt = "debug = '" + tokens[1] + "'\n";
+	    io->writestring( ttt.c_str() );
+
+	    string value = node.getStringValue ( tokens[1], "" );
+	    string tmp = tokens[1] + " = '" + value + "' (";
+	    tmp += getValueTypeString( node.getValue( tokens[1] ) );
+	    tmp += ")\n";
+ 
+	    io->writestring( tmp.c_str() );
+	}
+    } else if ( command == "set" ) {
+	if ( tokens.size() <= 2 ) {
+	    // do nothing
+	} else {
+	    SGValue *v = node.getValue( tokens[1] );
+	    if ( v != NULL ) {
+		SGValue::Type type = v->getType();
+		if ( type == SGValue::UNKNOWN ) {
+		    v->setUnknownValue( tokens[2] );
+		} else if ( type == SGValue::BOOL ) {
+		    if ( tokens[2] == "true" ) {
+			v->setBoolValue( true );
+		    } else if ( tokens[2] == "false" ) {
+			v->setBoolValue( false );
+		    } else {
+			v->setBoolValue( atoi( tokens[2].c_str() ) );
+		    }
+		} else if ( type == SGValue::INT ) {
+		    v->setIntValue( atoi( tokens[2].c_str() ) );
+		} else if ( type == SGValue::FLOAT ) {
+		    v->setFloatValue( atof( tokens[2].c_str() ) );
+		} else if ( type == SGValue::DOUBLE ) {
+		    v->setDoubleValue( atof( tokens[2].c_str() ) );
+		} else if ( type == SGValue::STRING ) {
+		    v->setStringValue( tokens[2] );
+		}
+
+		// now fetch and write out the new value as confirmation
+		// of the change
+		string value = node.getStringValue ( tokens[1], "" );
+		string tmp = tokens[1] + " = '" + value + "' (";
+		tmp += getValueTypeString( node.getValue( tokens[1] ) );
+		tmp += ")\n";
+ 
+		io->writestring( tmp.c_str() );
+	    } else {
+		string tmp = tokens[1] + " is unknown.\n";
+
+		io->writestring( tmp.c_str() );
+	    }
+
+	}
+    } else if ( command == "quit" ) {
+	close();
+    } else {
+	io->writestring( "\n" );
+	io->writestring( "Valid commands are:\n" );
+	io->writestring( "\n" );
+	io->writestring( "help             show help message\n" );
+	io->writestring( "ls               list current directory\n" );
+	io->writestring( "cd <dir>         cd to a directory, '..' to move back\n" );
+	io->writestring( "show <var>       show the value of a parameter\n" );
+	io->writestring( "set <var> <val>  set <var> to a new <val>\n" );
+	io->writestring( "quit             terminate connection\n" );
+	io->writestring( "\n" );
+    }
+
+    string prompt = node.getPath();
+    if ( prompt == "" ) {
+	prompt = "/";
+    }
+    prompt += "> ";
+    io->writestring( prompt.c_str() );
 
     return true;
 }
@@ -88,11 +240,11 @@ bool FGProps::process_command( const char *cmd ) {
 bool FGProps::process() {
     SGIOChannel *io = get_io_channel();
 
-    cout << "processing incoming props command" << endl;
+    // cout << "processing incoming props command" << endl;
 
     if ( get_direction() == SG_IO_BI ) {
-	cout << "  (bi directional)" << endl;
-	while ( io->read( buf, max_cmd_len ) > 0 ) {
+	// cout << "  (bi directional)" << endl;
+	while ( io->readline( buf, max_cmd_len ) > 0 ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
 	    process_command( buf );
 	}
@@ -114,6 +266,8 @@ bool FGProps::close() {
     if ( ! io->close() ) {
 	return false;
     }
+
+    cout << "successfully closed channel\n";
 
     return true;
 }
