@@ -242,7 +242,7 @@ base_LIBS="$LIBS"
 dnl check for glut location
 AC_CHECK_HEADER(GL/glut.h)
 if test "x$ac_cv_header_GL_glut_h" = "xyes"; then
-    AC_DEFINE([GLUT_H], "GL/glut.h", [Define as glut.h include location])
+    AC_DEFINE([GLUT_H], <GL/glut.h>, [Define as glut.h include location])
 else
     AC_CHECK_HEADER(GLUT/glut.h)
     if test "x$ac_cv_header_GLUT_glut_h" = "xyes"; then
