@@ -64,7 +64,7 @@ FGJSBsim::FGJSBsim( double dt )
 {
     bool result;
    
-    fdmex=new FGFDMExec;
+    fdmex = new FGFDMExec;
     
     State        = fdmex->GetState();
     Atmosphere   = fdmex->GetAtmosphere();
@@ -267,11 +267,15 @@ bool FGJSBsim::update( int multiloop ) {
       FGEngInterface * e = get_engine(i);
       FGEngine * eng = Propulsion->GetEngine(i);
       FGThruster * thrust = Propulsion->GetThruster(i);
+      eng->SetMagnetos( globals->get_controls()->get_magnetos(i) );
+      eng->SetStarter( globals->get_controls()->get_starter(i) );
       e->set_Manifold_Pressure( eng->getManifoldPressure_inHg() );
       e->set_RPM( thrust->GetRPM() );
       e->set_EGT( eng->getExhaustGasTemp_degF() );
       e->set_CHT( eng->getCylinderHeadTemp_degF() );
       e->set_Oil_Temp( eng->getOilTemp_degF() );
+      e->set_Running_Flag( eng->GetRunning() );
+      e->set_Cranking_Flag( eng->GetCranking() );
       e->set_Throttle( globals->get_controls()->get_throttle(i) );
     }
 

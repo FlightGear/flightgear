@@ -56,11 +56,15 @@ libJSBSim_a_SOURCES = \
 	FGTank.cpp FGTank.h \
 	FGfdmSocket.cpp FGfdmSocket.h
 
-noinst_PROGRAMS = testJSBsim
+noinst_PROGRAMS = testJSBsim # demo
 
 testJSBsim_SOURCES = JSBSim.cpp
 
 testJSBsim_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
+
+# demo_SOURCES = demo.cxx
+
+# demo_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
 
 INCLUDES += -I$(top_srcdir)/src
 
