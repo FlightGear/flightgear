@@ -2,7 +2,7 @@
 //
 // Written by Curtis Olson, started January 1998.
 //
-// Copyright (C) 1998, 1999  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1998 - 2000  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

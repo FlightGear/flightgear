@@ -50,8 +50,6 @@
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/point3d.hxx>
 
-#include <Objects/fragment.hxx>
-
 #if defined( sgi )
 #include <strings.h>
 #endif
@@ -81,16 +79,13 @@ private:
 
 public:
 
-    typedef vector < fgFRAGMENT > container;
-    typedef container::iterator FragmentIterator;
-    typedef container::const_iterator FragmentConstIterator;
-
     typedef vector < sgVec3 * > free_vec3_list;
     typedef vector < sgVec2 * > free_vec2_list;
     typedef vector < unsigned short * > free_index_list;
 
 public:
-    // node list (the per fragment face lists reference this node list)
+
+    // node list
     point_list nodes;
     int ncount;
 
@@ -104,13 +99,6 @@ public:
 
     // the tile cache will keep track here if the tile is being used
     tile_state state;
-
-    container fragment_list;
-
-    // ssg related structures
-    // sgVec3 *vtlist;
-    // sgVec3 *vnlist;
-    // sgVec2 *tclist;
 
     // list of pointers to memory chunks that need to be freed when
     // tile entry goes away
@@ -147,23 +135,7 @@ public:
     // Destructor
     ~FGTileEntry ( void );
 
-    FragmentIterator begin() { return fragment_list.begin(); }
-    FragmentConstIterator begin() const { return fragment_list.begin(); }
-
-    FragmentIterator end() { return fragment_list.end(); }
-    FragmentConstIterator end() const { return fragment_list.end(); }
-
-    void add_fragment( fgFRAGMENT& frag ) {
- 	frag.tile_ptr = this;
-	fragment_list.push_back( frag );
-    }
-
-    size_t num_fragments() const {
-	return fragment_list.size();
-    }
-
-    // Step through the fragment list, deleting the display list, then
-    // the fragment, until the list is empty.  Also delete the arrays
+    // Clean up the memory used by this tile and delete the arrays
     // used by ssg as well as the whole ssg branch
     void free_tile();
 

@@ -42,7 +42,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Objects/materialmgr.hxx>
 #include <Objects/obj.hxx>
 
 #ifndef FG_OLD_WEATHER
@@ -86,11 +85,6 @@ FGTileMgr::~FGTileMgr ( void ) {
 // Initialize the Tile Manager subsystem
 int FGTileMgr::init( void ) {
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem." );
-
-    // load default material library
-    if ( ! material_mgr.loaded() ) {
-        material_mgr.load_lib();
-    }
 
     global_tile_cache.init();
     hit_list.clear();

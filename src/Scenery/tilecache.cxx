@@ -2,7 +2,7 @@
 //
 // Written by Curtis Olson, started January 1998.
 //
-// Copyright (C) 1998, 1999  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1998 - 2000  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -39,8 +39,6 @@
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
-#include <Airports/genapt.hxx>
-#include <Clouds/cloudobj.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Objects/obj.hxx>
@@ -175,7 +173,7 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     tile_path.append( "Scenery" );
     tile_path.append( p.gen_base_path() );
     
-    // Load the appropriate data file and build tile fragment list
+    // Load the appropriate data file
     FGPath tile_base = tile_path;
     tile_base.append( p.gen_index_str() );
     ssgBranch *new_tile = fgObjLoad( tile_base.str(), &tile_cache[index], 
@@ -217,14 +215,6 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 		new_tile -> addKid( custom_obj );
 	    }
 	}
-    }
-
-    // generate cloud layer
-    if ( current_options.get_clouds() ) {
-	ssgLeaf *cloud_layer = fgGenCloudLayer( &tile_cache[index],
-					 current_options.get_clouds_asl() );
-	cloud_layer->clrTraversalMaskBits( SSGTRAV_HOT );
-	new_tile -> addKid( cloud_layer );
     }
 
     tile_cache[index].transform_ptr->addKid( tile_cache[index].range_ptr );

@@ -3,7 +3,6 @@ noinst_LIBRARIES = libAirports.a
 noinst_PROGRAMS = buildsimple
 
 libAirports_a_SOURCES = \
-	genapt.cxx genapt.hxx \
 	simple.cxx simple.hxx
 
 buildsimple_SOURCES = buildsimple.cxx

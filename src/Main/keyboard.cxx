@@ -55,7 +55,7 @@
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
 #include <Scenery/tilemgr.hxx>
-#include <Objects/materialmgr.hxx>
+#include <Objects/matlib.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
@@ -529,18 +529,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
  	    return;
  	case GLUT_KEY_F9: // F9 toggles textures on and off...
-	    if ( material_mgr.loaded() ) {
- 	        if (current_options.get_textures()) {
- 		    current_options.set_textures(false);
-		    material_mgr.set_step(1);
- 		} else {
-		    current_options.set_textures(true);
-		    material_mgr.set_step(0);
-		}
-		FG_LOG( FG_INPUT, FG_INFO, "Toggling texture" );
+	    FG_LOG( FG_INPUT, FG_INFO, "Toggling texture" );
+	    if ( current_options.get_textures() ) {
+		current_options.set_textures( false );
+		material_lib.set_step( 1 );
 	    } else {
-		FG_LOG( FG_INPUT, FG_INFO, 
-			"No textures loaded, cannot toggle" );
+		current_options.set_textures( true );
+		material_lib.set_step( 0 );
 	    }
  	    return;
 	case GLUT_KEY_F10: // F10 toggles menu on and off...

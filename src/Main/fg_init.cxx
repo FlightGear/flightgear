@@ -70,6 +70,7 @@
 #include <FDM/MagicCarpet.hxx>
 #include <Include/general.hxx>
 #include <Joystick/joystick.hxx>
+#include <Objects/matlib.hxx>
 #include <Navaids/fixlist.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
@@ -273,9 +274,18 @@ bool fgInitSubsystems( void ) {
     // set the initial position
     fgInitPosition();
 
+    // Initialize the material property lib
+    FGPath mpath( current_options.get_fg_root() );
+    mpath.append( "materials" );
+    if ( material_lib.load( mpath.str() ) ) {
+    } else {
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error loading material lib!" );
+	exit(-1);
+    }
+
     // Initialize the Scenery Management subsystem
     if ( fgSceneryInit() ) {
-	// Scenery initialized ok.
+	// Material lib initialized ok.
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Scenery initialization!" );
 	exit(-1);

@@ -87,7 +87,6 @@
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
-#include <Objects/materialmgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Sky/sky.hxx>

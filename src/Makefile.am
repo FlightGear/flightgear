@@ -15,7 +15,6 @@ SUBDIRS = \
         Aircraft \
         Airports \
         Autopilot \
-        Clouds \
         Cockpit \
         Controls \
         Ephemeris \

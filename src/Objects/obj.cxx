@@ -57,7 +57,7 @@
 #include <Main/options.hxx>
 #include <Scenery/tileentry.hxx>
 
-#include "materialmgr.hxx"
+#include "matlib.hxx"
 #include "obj.hxx"
 
 FG_USING_STD(string);
@@ -73,6 +73,7 @@ static double normals[FG_MAX_NODES][3];
 static double tex_coords[FG_MAX_NODES*3][3];
 
 
+#if 0
 // given three points defining a triangle, calculate the normal
 static void calc_normal(Point3D p1, Point3D p2, 
 			Point3D p3, sgVec3 normal)
@@ -88,6 +89,7 @@ static void calc_normal(Point3D p1, Point3D p2,
     // fgPrintf( FG_TERRAIN, FG_DEBUG, "  Normal = %.2f %.2f %.2f\n", 
     //           normal[0], normal[1], normal[2]);
 }
+#endif
 
 
 #define FG_TEX_CONSTANT 69.0
@@ -130,30 +132,31 @@ static Point3D local_calc_tex_coords(const Point3D& node, const Point3D& ref) {
 
 // Generate a generic ocean tile on the fly
 ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
-    fgFRAGMENT fragment;
-    fragment.init();
-    fragment.tile_ptr = t;
+    FGNewMat *newmat;
 
     ssgSimpleState *state = NULL;
 
     ssgBranch *tile = new ssgBranch () ;
     tile -> setName ( (char *)path.c_str() ) ;
 
+    double tex_width = 1000.0;
+    // double tex_height;
+
     // find Ocean material in the properties list
-    if ( ! material_mgr.find( "Ocean", fragment.material_ptr )) {
+    newmat = material_lib.find( "Ocean" );
+    if ( newmat != NULL ) {
+	// set the texture width and height values for this
+	// material
+	tex_width = newmat->get_xsize();
+	// tex_height = newmat->get_ysize();
+	
+	// set ssgState
+	state = newmat->get_state();
+    } else {
 	FG_LOG( FG_TERRAIN, FG_ALERT, 
 		"Ack! unknown usemtl name = " << "Ocean" 
 		<< " in " << path );
     }
-
-    // set the texture width and height values for this
-    // material
-    FGMaterial m = fragment.material_ptr->get_m();
-    double tex_width = m.get_xsize();
-    // double tex_height = m.get_ysize();
-
-    // set ssgState
-    state = fragment.material_ptr->get_state();
 
     // Calculate center point
     FGBucket b = t->tile_bucket;
@@ -164,7 +167,6 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 
     Point3D center = fgGeodToCart(Point3D(clon*DEG_TO_RAD,clat*DEG_TO_RAD,0.0));
     t->center = center;
-    fragment.center = center;
     // cout << "center = " << center << endl;;
     
     // Caculate corner vertices
@@ -194,7 +196,6 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 
     // Calculate bounding radius
     t->bounding_radius = center.distance3D( cart[0] );
-    fragment.bounding_radius = t->bounding_radius;
     // cout << "bounding radius = " << t->bounding_radius << endl;
 
     // Calculate normals
@@ -219,11 +220,6 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
     point_list texs = calc_tex_coords( b, geod_nodes, rectangle, 
 				       1000.0 / tex_width );
-
-    // Build flight gear structure
-    fragment.add_face(0, 1, 2);
-    fragment.add_face(0, 2, 3);
-    t->fragment_list.push_back(fragment);
 
     // Allocate ssg structure
     ssgVertexArray   *vl = new ssgVertexArray( 4 );
@@ -271,21 +267,21 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 }
 
 
-// Load a .obj file and build the fragment list
+// Load a .obj file
 ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
-    fgFRAGMENT fragment;
+    FGNewMat *newmat;
     Point3D pp;
-    sgVec3 approx_normal;
+    // sgVec3 approx_normal;
     // double normal[3], scale = 0.0;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     // GLint display_list = 0;
     int shading;
-    bool in_fragment = false, in_faces = false;
+    bool in_faces = false;
     int vncount, vtcount;
-    int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
+    int n1 = 0, n2 = 0, n3 = 0;
     int tex;
-    int last1 = 0, last2 = 0;
+    // int last1 = 0, last2 = 0;
     bool odd = false;
     point_list nodes;
     Point3D node;
@@ -315,7 +311,6 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 
     shading = current_options.get_shading();
 
-    in_fragment = false;
     if ( is_base ) {
 	t->ncount = 0;
     }
@@ -375,11 +370,10 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		//      << " radius = " << t->bounding_radius << endl;
 	    } else if ( token == "bs" )	{
 		// reference point (center offset)
-		in >> fragment.center;
-		in >> fragment.bounding_radius;
-
-		// cout << "center = " << fragment.center 
-		//      << " radius = " << fragment.bounding_radius << endl;
+		// (skip past this)
+		Point3D junk1;
+		double junk2;
+		in >> junk1 >> junk2;
 	    } else if ( token == "usemtl" ) {
 		// material property specification
 
@@ -419,45 +413,19 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		    }
 		}
 
-		// series of individual triangles
-		// if ( in_faces ) {
-		//     xglEnd();
-	        // }
-
-		// this also signals the start of a new fragment
-		if ( in_fragment ) {
-		    // close out the previous structure and start the next
-		    // xglEndList();
-		    // printf("xglEnd(); xglEndList();\n");
-
-		    // update fragment
-		    // fragment.display_list = display_list;
-
-		    // push this fragment onto the tile's object list
-		    t->fragment_list.push_back(fragment);
-		} else {
-		    in_fragment = true;
-		}
-
-		// printf("start of fragment (usemtl)\n");
-
 		// display_list = xglGenLists(1);
 		// xglNewList(display_list, GL_COMPILE);
 		// printf("xglGenLists(); xglNewList();\n");
 		in_faces = false;
 
-		// reset the existing face list
-		// printf("cleaning a fragment with %d faces\n", 
-		//        fragment.faces.size());
-		fragment.init();
-		
 		// scan the material line
 		string material;
 		in >> material;
-		fragment.tile_ptr = t;
 		
 		// find this material in the properties list
-		if ( ! material_mgr.find( material, fragment.material_ptr )) {
+
+		newmat = material_lib.find( material );
+		if ( newmat == NULL ) {
 		    // see if this is an on the fly texture
 		    string file = path;
 		    int pos = file.rfind( "/" );
@@ -466,38 +434,30 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		    file += "/";
 		    file += material;
 		    cout << "current file = " << file << endl;
-		    if ( ! material_mgr.add_item( file ) ) {
+		    if ( ! material_lib.add_item( file ) ) {
 			FG_LOG( FG_TERRAIN, FG_ALERT, 
 				"Ack! unknown usemtl name = " << material 
 				<< " in " << path );
 		    } else {
 			// locate our newly created material
-			if ( !material_mgr.find( material, fragment.material_ptr ) ) {
+			newmat = material_lib.find( material );
+			if ( newmat == NULL ) {
 			    FG_LOG( FG_TERRAIN, FG_ALERT, 
 				    "Ack! bad on the fly materia create = "
 				    << material << " in " << path );
 			}
-			    
 		    }
 		}
 
-		// set the texture width and height values for this
-		// material
-		FGMaterial m = fragment.material_ptr->get_m();
-		tex_width = m.get_xsize();
-		tex_height = m.get_ysize();
-		state = fragment.material_ptr->get_state();
-		// cout << "(w) = " << tex_width << " (h) = " 
-		//      << tex_width << endl;
-
-		// initialize the fragment transformation matrix
-		/*
-		 for ( i = 0; i < 16; i++ ) {
-	           fragment.matrix[i] = 0.0;
-	         }
-	         fragment.matrix[0] = fragment.matrix[5] =
-		 fragment.matrix[10] = fragment.matrix[15] = 1.0;
-	        */
+		if ( newmat != NULL ) {
+		    // set the texture width and height values for this
+		    // material
+		    tex_width = newmat->get_xsize();
+		    tex_height = newmat->get_ysize();
+		    state = newmat->get_state();
+		    // cout << "(w) = " << tex_width << " (h) = " 
+		    //      << tex_width << endl;
+		}
 	    } else {
 		// unknown comment, just gobble the input untill the
 		// end of line
@@ -653,15 +613,9 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 
 		    if ( (token == "tf") || (token == "f") ) {
 			// triangle fan
-			fragment.add_face(n1, n2, n3);
 			n2 = n3;
 		    } else {
 			// triangle strip
-			if ( odd ) {
-			    fragment.add_face(n1, n2, n3);
-			} else {
-			    fragment.add_face(n2, n1, n3);
-			}
 			odd = !odd;
 			n1 = n2;
 			n2 = n3;
@@ -726,34 +680,6 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 #endif
 	}
     }
-
-    if ( in_fragment ) {
-	// close out the previous structure and start the next
-	// xglEnd();
-	// xglEndList();
-	// printf("xglEnd(); xglEndList();\n");
-	
-	// update fragment
-	// fragment.display_list = display_list;
-	
-	// push this fragment onto the tile's object list
-	t->fragment_list.push_back(fragment);
-    }
-
-#if 0
-    // Draw normal vectors (for visually verifying normals)
-    xglBegin(GL_LINES);
-    xglColor3f(0.0, 0.0, 0.0);
-    for ( i = 0; i < t->ncount; i++ ) {
-	xglVertex3d(nodes[i][0],
-		    nodes[i][1] ,
- 		    nodes[i][2]);
-	xglVertex3d(nodes[i][0] + 500*normals[i][0],
- 		    nodes[i][1] + 500*normals[i][1],
- 		    nodes[i][2] + 500*normals[i][2]);
-    } 
-    xglEnd();
-#endif
 
     if ( is_base ) {
 	t->nodes = nodes;

@@ -1,9 +1,8 @@
 noinst_LIBRARIES = libObjects.a
 
 libObjects_a_SOURCES = \
-	fragment.cxx fragment.hxx \
-	material.cxx material.hxx \
-	materialmgr.cxx materialmgr.hxx \
+	newmat.cxx newmat.hxx \
+	matlib.cxx matlib.hxx \
 	obj.cxx obj.hxx \
 	texload.c texload.h colours.h
 

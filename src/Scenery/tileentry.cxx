@@ -74,8 +74,7 @@ static void my_remove_branch( ssgBranch * branch ) {
 }
 
 
-// Step through the fragment list, deleting the display list, then the
-// fragment, until the list is empty.  Also delete the arrays used by
+// Clean up the memory used by this tile and delete the arrays used by
 // ssg as well as the whole ssg branch
 void FGTileEntry::free_tile() {
     int i;
@@ -85,10 +84,6 @@ void FGTileEntry::free_tile() {
     // mark tile unused
     mark_unused();
 
-    // delete fragment list and node list
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
-	    "  deleting " << fragment_list.size() << " fragments" );
-    fragment_list.clear();
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "  deleting " << nodes.size() << " nodes" );
     nodes.clear();

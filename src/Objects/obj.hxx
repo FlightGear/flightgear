@@ -55,7 +55,7 @@ FG_USING_STD(string);
 #define FG_MAX_NODES 2000
 
 
-// Load a .obj file and build the fragment list
+// Load a .obj file
 ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile, const bool is_base);
 
 
