@@ -9,6 +9,7 @@ SUBDIRS = \
 	FixNode \
 	FixObj \
 	GenAirports \
+	Makedir \
 	SplitTris \
 	Stripe_w \
 	Tri2obj \

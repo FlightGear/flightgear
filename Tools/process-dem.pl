@@ -99,7 +99,8 @@ sub fix_command {
     chop($system);
 
     if ( $system =~ m/CYGWIN32/ ) { 
-	$in =~ s/\//\\\\/;
+        $in =~ s/\/+/\//g;
+        $in =~ s/\//\\/g;
     }
 
     return($in);
@@ -440,8 +441,26 @@ sub install {
     $tmp =~ s/$work_dir//;
     # print "Temp dir = $tmp\n";
     $install_dir = "$fg_root/$tmp";
+
+    # try to get rid of double //
+    $install_dir =~ s/\/+/\//g;
     print "Install dir = $install_dir\n";
-    system("mkdir -p $install_dir");
+
+    if ( $system !~ m/CYGWIN32/ ) {
+	$command = "mkdir -p $install_dir";
+    } else {
+        $command = "Makedir/makedir $install_dir";
+	$command = fix_command($command);
+    }
+
+    # system($command);
+
+    open(OUT, "$command |");
+    while ( <OUT> ) {
+	print $_;
+    }
+    close(OUT);
+
 
     # write out version and info record
     open(VERSION, ">$install_dir/VERSION") || 
@@ -461,7 +480,10 @@ sub install {
 	if ( $file =~ m/\d\d.obj$/ ) {
 	    $new_file = file_root($file);
 	    
-	    $command = "gzip -v --best < $subdir/$file > $install_dir/$new_file.gz";
+	    $command = 
+		"gzip -v --best < $subdir/$file > $install_dir/$new_file.gz";
+	    $command = fix_command($command);
+
 	    # $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
@@ -489,6 +511,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.29  1998/10/02 21:41:56  curt
+# Added Makedir + fixes for win32.
+#
 # Revision 1.28  1998/09/17 18:40:15  curt
 # Changes to allow multiple copies of the scenery processing tools
 # to be run concurrently.
