@@ -6,8 +6,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	Thanks \
-	acsite.m4 \
-	acconfig.h \
+	acinclude.m4 \
 	autogen.sh \
 	irix-hack.sh \
 	FlightGear.dsp \
