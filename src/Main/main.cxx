@@ -216,7 +216,7 @@ static void fgMainLoop( void ) {
     // static const SGPropertyNode *replay_master
     //     = fgGetNode("/sim/freeze/replay", true);
 
-    SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping",true);
+    SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
 
     // Update the elapsed time.
     static bool first_time = true;
