@@ -18,355 +18,209 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/constants.h>
+#include <Main/globals.hxx>
+
+#include <stdlib.h>
+#include STL_FSTREAM
 
 #include "ground.hxx"
 
 FGGround::FGGround() {
 	display = false;
+	networkLoadOK = false;
 }
 
 FGGround::~FGGround() {
 }
 
-void FGGround::Init() {
-	display = false;
+void FGGround::ParseRwyExits(node* np, char* es) {
+	char* token;
+	char estr[20];
+	strcpy(estr, es);
+	const char delimiters[] = "-";
+	token = strtok(estr, delimiters);
+	while(token != NULL) {
+		int i = atoi(token);
+		//cout << "token = " << token << endl;
+		//cout << "rwy number = " << i << endl;
+		//runways[(atoi(token))].exits.push_back(np);
+		runways[i].exits.push_back(np);
+		//cout << "token = " << token << '\n';
+		token = strtok(NULL, delimiters);
+	}
+}
 	
-	// Build hardwired (very simplified) logical network for KEMT for now
-	// Once it works we'll progress to reading KEMT data from file,
-	// and finally to reading any airport with specified taxiway data from file.
 
+// Load the ground logical network of the current instances airport
+// Return true if successfull.
+// TODO - currently the file is assumed to reside in the base/ATC directory.
+// This might change to something more thought out in the future.
+bool FGGround::LoadNetwork() {
 	node* np;
 	arc* ap;
 	Gate* gp;
+	
+	ifstream fin;
+	SGPath path = globals->get_fg_root();
+	//string taxiPath = "ATC/" + ident + ".taxi";
+	string taxiPath = "ATC/KEMT.taxi";	// FIXME - HARDWIRED FOR TESTING
+	path.append(taxiPath);
+	
+	SG_LOG(SG_GENERAL, SG_INFO, "Trying to read taxiway data for " << ident << "...");
+	//cout << "Trying to read taxiway data for " << ident << "..." << endl;
+	fin.open(path.c_str(), ios::in);
+	if(!fin) {
+		SG_LOG(SG_GENERAL, SG_ALERT, "Unable to open taxiway data input file " << path.c_str());
+		//cout << "Unable to open taxiway data input file " << path.c_str() << endl;
+		return(false);
+	}
+	
+	char ch;
+	char buf[30];
+	while(!fin.eof()) {
+		fin >> buf;
+		// Node, arc, or [End]?
+		//cout << "Read in ground network element type = " << buf << endl;
+		if(!strcmp(buf, "[End]")) {		// TODO - maybe make this more robust to spelling errors by just looking for '['
+			cout << "Done reading " << path.c_str() << endl;
+			break;
+		} else if(!strcmp(buf, "N")) {
+			// Node
+			np = new node;
+			np->struct_type = NODE;
+			fin >> buf;
+			np->nodeID = atoi(buf);
+			fin >> buf;
+			np->pos.setlon(atof(buf));
+			fin >> buf;
+			np->pos.setlat(atof(buf));
+			fin >> buf;
+			np->pos.setelev(atof(buf));
+			fin >> buf;		// node type
+			if(!strcmp(buf, "J")) {
+				np->type = JUNCTION;
+			} else if(!strcmp(buf, "T")) {
+				np->type = TJUNCTION;
+			} else if(!strcmp(buf, "H")) {
+				np->type = HOLD;
+			} else {
+				cout << "**** ERROR ***** Unknown node type in taxi network...\n";
+				delete np;
+				return(false);
+			}
+			fin >> buf;		// rwy exit information - gets parsed later - FRAGILE - will break if buf is reused.
+			// Now the name
+			np->name = "";
+			while(1) {
+				fin.unsetf(ios::skipws);
+				fin >> ch;
+				np->name += ch;
+				if((ch == '"') || (ch == 0x0A)) {
+					break;
+				}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
+			}
+			fin.setf(ios::skipws);
+			network.push_back(np);
+			// FIXME - fragile - replies on buf not getting modified from exits read to here
+			// see if we also need to push it onto the runway exit list
+			cout << "strlen(buf) = " << strlen(buf) << endl;
+			if(strlen(buf) > 2) {
+				cout << "Calling ParseRwyExits for " << buf << endl;
+				ParseRwyExits(np, buf);
+			}
+		} else if(!strcmp(buf, "A")) {
+			ap = new arc;
+			ap->struct_type = ARC;
+			fin >> buf;
+			ap->n1 = atoi(buf);
+			fin >> buf;
+			ap->n2 = atoi(buf);
+			fin >> buf;
+			if(!strcmp(buf, "R")) {
+				ap->type = RUNWAY;
+			} else if(!strcmp(buf, "T")) {
+				ap->type = TAXIWAY;
+			} else {
+				cout << "**** ERROR ***** Unknown arc type in taxi network...\n";
+				delete ap;
+				return(false);
+			}
+			// directed?
+			fin >> buf;
+			if(!strcmp(buf, "Y")) {
+				ap->directed = true;
+			} else if(!strcmp(buf, "N")) {
+				ap->directed = false;
+			} else {
+				cout << "**** ERROR ***** Unknown arc directed value in taxi network - should be Y/N !!!\n";
+				delete ap;
+				return(false);
+			}			
+			// Now the name
+			ap->name = "";
+			while(1) {
+				fin.unsetf(ios::skipws);
+				fin >> ch;
+				ap->name += ch;
+				if((ch == '"') || (ch == 0x0A)) {
+					break;
+				}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
+			}
+			fin.setf(ios::skipws);
+			network[ap->n1]->arcs.push_back(ap);
+			network[ap->n2]->arcs.push_back(ap);
+		} else if(!strcmp(buf, "G")) {
+			gp = new Gate;
+			gp->struct_type = NODE;
+			gp->type = GATE;
+			fin >> buf;
+			gp->nodeID = atoi(buf);
+			fin >> buf;
+			gp->pos.setlon(atof(buf));
+			fin >> buf;
+			gp->pos.setlat(atof(buf));
+			fin >> buf;
+			gp->pos.setelev(atof(buf));
+			fin >> buf;		// gate type - ignore this for now
+			fin >> buf;		// gate heading
+			gp->heading = atoi(buf);
+			// Now the name
+			gp->name = "";
+			while(1) {
+				fin.unsetf(ios::skipws);
+				fin >> ch;
+				gp->name += ch;
+				if((ch == '"') || (ch == 0x0A)) {
+					break;
+				}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
+			}
+			fin.setf(ios::skipws);
+			network.push_back(gp);
+		} else {
+			// Something has gone seriously pear-shaped
+			cout << "********* ERROR - unknown ground network element type... aborting read of " << path.c_str() << '\n';
+			return(false);
+		}
+		
+		fin >> skipeol;		
+	}
+	return(true);
+}
+
+void FGGround::Init() {
+	display = false;
 	
 	// For now we'll hardwire the threshold end
 	Point3D P010(-118.037483, 34.081358, 296 * SG_FEET_TO_METER);
 	double hdg = 25.32;
 	ortho.Init(P010, hdg);
-
-	// HARDWIRED FOR TESTING - for now we'll only allow exit at each end of runway
-
-	///////////////////////////////////////////////////////
-	// NODES
-	///////////////////////////////////////////////////////
-
-	// node - runway01 threshold
-	Point3D p1(-118.0372167, 34.08178333, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p1;
-	np->orthoPos = ortho.ConvertToLocal(p1);
-	np->name = "rwy 01";
-	np->nodeID = 0;
-	np->type = JUNCTION;
-	runways[1].exits.push_back(np);
-	runways[19].exits.push_back(np);
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// node - runway19 threshold
-	Point3D p2(-118.0321833, 34.09066667, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p2;
-	np->orthoPos = ortho.ConvertToLocal(p2);
-	np->name = "rwy 19";
-	np->nodeID = 1;
-	np->type = JUNCTION;
-	runways[1].exits.push_back(np);
-	runways[19].exits.push_back(np);
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// node - AlphaSouth
-	Point3D p3(-118.0369167, 34.08166667, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p3;
-	np->orthoPos = ortho.ConvertToLocal(p3);
-	np->name = "";
-	np->nodeID = 2;
-	np->type = HOLD;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// node - AlphaNorth
-	Point3D p4(-118.03185, 34.0906, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p4;
-	np->orthoPos = ortho.ConvertToLocal(p4);
-	np->name = "";
-	np->nodeID = 3;
-	np->type = HOLD;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// node - southern turnoff to parking
-	Point3D p5(-118.03515, 34.0848, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p5;
-	np->orthoPos = ortho.ConvertToLocal(p5);
-	np->name = "";
-	np->nodeID = 4;
-	np->type = TJUNCTION;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// node - northern turnoff to parking
-	Point3D p6(-118.0349667, 34.08511667, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p6;
-	np->orthoPos = ortho.ConvertToLocal(p6);
-	np->name = "";
-	np->nodeID = 5;
-	np->type = TJUNCTION;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// GATES
-
-	// node - Turn into gate 1 (Western-most gate, ie. nearest rwy)
-	Point3D p7(-118.0348333, 34.08466667, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p7;
-	np->orthoPos = ortho.ConvertToLocal(p7);
-	np->name = "";
-	np->nodeID = 6;
-	np->type = TJUNCTION;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// node - Gate 1
-	Point3D p8(-118.0347333, 34.08483333, 0.0);
-	gp = new Gate;
-	gp->struct_type = NODE;
-	gp->pos = p8;
-	gp->orthoPos = ortho.ConvertToLocal(p8);
-	gp->name = "";
-	gp->nodeID = 7;
-	gp->type = GATE;
-	gp->heading = 10;
-	//np->max_turn_radius = ...
-	network.push_back(gp);
-	gates[1] = *gp;
-
-	// node - Turn out of gate 1
-	Point3D p9(-118.03465, 34.08498333, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p9;
-	np->orthoPos = ortho.ConvertToLocal(p9);
-	np->name = "";
-	np->nodeID = 8;
-	np->type = TJUNCTION;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	// node - Turn into gate 2
-	Point3D p10(-118.0346, 34.08456667, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p10;
-	np->orthoPos = ortho.ConvertToLocal(p10);
-	np->name = "";
-	np->nodeID = 9;
-	np->type = TJUNCTION;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-	gates[2] = *gp;
-
-	// node - Gate 2
-	Point3D p11(-118.0345167, 34.08473333, 0.0);
-	gp = new Gate;
-	gp->struct_type = NODE;
-	gp->pos = p11;
-	gp->orthoPos = ortho.ConvertToLocal(p11);
-	gp->name = "";
-	gp->nodeID = 10;
-	gp->type = GATE;
-	gp->heading = 10;
-	//np->max_turn_radius = ...
-	network.push_back(gp);
-
-	// node - Turn out of gate 2	
-	Point3D p12(-118.0344167, 34.0849, 0.0);
-	np = new node;
-	np->struct_type = NODE;
-	np->pos = p12;
-	np->orthoPos = ortho.ConvertToLocal(p12);
-	np->name = "";
-	np->nodeID = 11;
-	np->type = TJUNCTION;
-	//np->max_turn_radius = ...
-	network.push_back(np);
-
-	/////////////////////////////////////////////////////////
-	// ARCS
-	/////////////////////////////////////////////////////////
-
-	// Each arc connects two nodes
-	// Eventually the nodeID of the nodes that the arc connects will be read from file
-	// For now we just 'know' them !!
-
-	// arc - the runway - connects nodes 0 and 1
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = RUNWAY;
-	ap->directed = false;
-	ap->n1 = 0;
-	ap->n2 = 1;
-	network[0]->arcs.push_back(ap);
-	network[1]->arcs.push_back(ap);
-
-	// arc - the exit from 01 threshold to alpha - connects nodes 0 and 2
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = false;
-	ap->n1 = 0;
-	ap->n2 = 2;
-	network[0]->arcs.push_back(ap);
-	network[2]->arcs.push_back(ap);
-
-	// arc - the exit from 19 threshold to alpha - connects nodes 1 and 3
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = false;
-	ap->n1 = 1;
-	ap->n2 = 3;
-	network[1]->arcs.push_back(ap);
-	network[3]->arcs.push_back(ap);
-
-	// arc - Alpha south - connects nodes 2 and 4
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = false;
-	ap->n1 = 2;
-	ap->n2 = 4;
-	network[2]->arcs.push_back(ap);
-	network[4]->arcs.push_back(ap);
-
-	// arc - Alpha middle - connects nodes 4 and 5
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = false;
-	ap->n1 = 4;
-	ap->n2 = 5;
-	network[4]->arcs.push_back(ap);
-	network[5]->arcs.push_back(ap);
-
-	// arc - Alpha North - connects nodes 3 and 5
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = false;
-	ap->n1 = 3;
-	ap->n2 = 5;
-	network[3]->arcs.push_back(ap);
-	network[5]->arcs.push_back(ap);
-
-	// arc - connects nodes 4 and 6
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 4;
-	ap->n2 = 6;
-	network[4]->arcs.push_back(ap);
-	network[6]->arcs.push_back(ap);
-
-	// arc - connects nodes 6 and 9
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 6;
-	ap->n2 = 9;
-	network[6]->arcs.push_back(ap);
-	network[9]->arcs.push_back(ap);
-
-	// arc - connects nodes 5 and 8
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 5;
-	ap->n2 = 8;	
-	network[5]->arcs.push_back(ap);
-	network[8]->arcs.push_back(ap);
-
-	// arc - connects nodes 8 and 11
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 8;
-	ap->n2 = 11;
-	network[8]->arcs.push_back(ap);
-	network[11]->arcs.push_back(ap);
-
-	// arc - connects nodes 6 and 7
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 6;
-	ap->n2 = 7;
-	network[6]->arcs.push_back(ap);
-	network[7]->arcs.push_back(ap);
-
-	// arc - connects nodes 7 and 8
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 7;
-	ap->n2 = 8;
-	network[7]->arcs.push_back(ap);
-	network[8]->arcs.push_back(ap);
-
-	// arc - connects nodes 9 and 10
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 9;
-	ap->n2 = 10;
-	network[9]->arcs.push_back(ap);
-	network[10]->arcs.push_back(ap);
-
-	// arc - connects nodes 10 and 11
-	ap = new arc;
-	ap->struct_type = ARC;
-	ap->name = "";
-	ap->type = TAXIWAY;
-	ap->directed = true;
-	ap->n1 = 10;
-	ap->n2 = 11;
-	network[10]->arcs.push_back(ap);
-	network[11]->arcs.push_back(ap);
+	
+	networkLoadOK = LoadNetwork();
 }
 
 void FGGround::Update() {
@@ -500,9 +354,11 @@ ground_network_path_type FGGround::GetPath(node* A, node* B) {
 // (might eventually be done by the AIMgr if and when lots of AI traffic is generated)
 
 // Return a list of exits from a given runway
+// It is up to the calling function to check for non-zero size of returned array before use
 node_array_type FGGround::GetExits(int rwyID) {
 	return(runways[rwyID].exits);
 }
+
 #if 0
 void FGGround::NewArrival(plane_rec plane) {
 	// What are we going to do here?

@@ -83,7 +83,7 @@ struct ground_network_element {
 
 struct arc : public ground_network_element {
 	int distance;
-	char* name;
+	string name;
 	arc_type type;
 	bool directed;	//false if 2-way, true if 1-way.  
 	//This is a can of worms since arcs might be one way in different directions under different circumstances
@@ -240,6 +240,7 @@ public:
 	
 	// Runway stuff - this might change in the future.
 	// Get a list of exits from a given runway
+	// It is up to the calling function to check for non-zero size of returned array before use
 	node_array_type GetExits(int rwyID);
 	
 	// Get a path from one node to another
@@ -297,8 +298,16 @@ private:
 	// for failure modeling
 	string trans_ident;		// transmitted ident
 	bool ground_failed;		// ground failed?
+	bool networkLoadOK;		// Indicates whether LoadNetwork returned true or false at last attempt
 	
 	friend istream& operator>> ( istream&, FGGround& );
+	
+	// Load the logical ground network for this airport from file.
+	// Return true if successfull.
+	bool LoadNetwork();
+	
+	// Parse a runway exit string and push the supplied node pointer onto the runway exit list
+	void ParseRwyExits(node* np, char* es);
 };
 
 inline istream&
