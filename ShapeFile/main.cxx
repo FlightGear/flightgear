@@ -97,7 +97,7 @@ int main( int argc, char **argv ) {
 	FG_LOG( FG_GENERAL, FG_DEBUG, "Record = " << i << "  rings = " 
 		<< shape.numRings() );
 
-	AreaType area = get_area_type(dbf, i);
+	AreaType area = get_shapefile_type(dbf, i);
 	FG_LOG( FG_GENERAL, FG_DEBUG, "area type = " << get_area_name(area) 
 		<< " (" << (int)area << ")" );
 
@@ -261,6 +261,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.5  1999/03/01 15:36:28  curt
+// Tweaked a function call name in "names.hxx".
+//
 // Revision 1.4  1999/02/25 21:31:05  curt
 // First working version???
 //
