@@ -14,8 +14,11 @@
 #include <stdio.h>
 #include "gui.h"
 
+void PilotOffsetInit();
 void PilotOffsetInit( sgVec3 vec );
 void PilotOffsetAdjust( puObject * );
+void Vec3FromHeadingPitchRadius( sgVec3 vec3, float heading, float pitch, float radius );
 //void PilotOffsetGet( float *po );
 sgVec3 *PilotOffsetGet();
+
 #endif // _VEC3_SLIDER_H
