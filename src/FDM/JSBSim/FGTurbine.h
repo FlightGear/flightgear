@@ -62,6 +62,7 @@ public:
   ~FGTurbine();
 
   double Calculate(double);
+  double GetPowerAvailable(void) { return PowerCommand; }
 
 private:
   typedef vector<FGCoefficient*> CoeffArray;

@@ -63,6 +63,7 @@ public:
 
   double Calculate(double);
   double CalcFuelNeed(void);
+  double GetPowerAvailable(void);
   
 private:
 

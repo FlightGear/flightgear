@@ -155,6 +155,14 @@ double FGSimTurbine::CalcFuelNeed(void)
   return FuelFlow_pph /3600 * State->Getdt() * Propulsion->GetRate();
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGSimTurbine::GetPowerAvailable(void) {
+  if( throttle <= 0.77 )
+    return 64.94*throttle;
+  else
+    return 217.38*throttle - 117.38;
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
