@@ -298,9 +298,22 @@ public:
     void add( fgLineSeg2D seg ) { List.push_back(seg); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
     void draw( void ) {
+	vector < fgLineSeg2D > :: iterator curSeg;
+	vector < fgLineSeg2D > :: iterator lastSeg;
+	curSeg  = List.begin();
+	lastSeg = List.end();
+	glBegin(GL_LINES);
+	for ( ; curSeg != lastSeg; curSeg++ ) {
+	    curSeg->draw();
+	}
+	glEnd();
+    }
+
+#if 0
+    void draw( void ) {
         vector < fgLineSeg2D > :: iterator curSeg;
         vector < fgLineSeg2D > :: iterator lastSeg;
-        curSeg  = List.begin();
+	curSeg  = List.begin();
         lastSeg = List.end();
         glBegin(GL_LINES);
         for ( ; curSeg != lastSeg; curSeg++ ) {
@@ -308,6 +321,8 @@ public:
         }
         glEnd();
     }
+#endif
+
 };
 
 class fgTextList {

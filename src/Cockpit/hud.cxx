@@ -78,6 +78,9 @@ fgTextList         HUD_TextList;
 fgLineList         HUD_LineList;
 fgLineList         HUD_StippleLineList;
 
+float hud_trans_alpha = 0.5f;
+void fgHUDalphaInit( void );
+
 class locRECT {
   public:
     RECT rect;
@@ -654,7 +657,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 //    }
 //  while( HIptr );
 
-  return 0;  // For now. Later we may use this for an error code.
+  fgHUDalphaInit();
+   return 0;  // For now. Later we may use this for an error code.
 
 }
 
@@ -1021,148 +1025,107 @@ int brightness        = pHUDInstr->get_brightness();
   pHUDInstr->SetBrightness( brightness );
 }
 
-#if 0
-// fgUpdateHUD
-//
-// Performs a once around the list of calls to instruments installed in
-// the HUD object with requests for redraw. Kinda. It will when this is
-// all C++.
-//
-void fgUpdateHUD( void ) {
-  int brightness;
-//  int day_night_sw = current_aircraft.controls->day_night_switch;
-  int day_night_sw = global_day_night_switch;
-  int hud_displays = HUD_deque.size();
-  instr_item *pHUDInstr;
-  float line_width;
 
-  if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
-    return;
-    }
+#define fgAP_CLAMP(val,min,max) ( (val) = (val) > (max) ? (max) : (val) < (min) ? (min) : (val) )
 
-  HUD_TextList.erase();
-  HUD_LineList.erase();
-//  HUD_StippleLineList.erase();
-  
-  pHUDInstr = HUD_deque[0];
-  brightness = pHUDInstr->get_brightness();
-//  brightness = HUD_deque.at(0)->get_brightness();
+static puDialogBox *HUDalphaDialog;
+static puFrame     *HUDalphaFrame;
+static puText      *HUDalphaDialogMessage;
+static puText      *HUDalphaTitle;
+static puText      *HUDalphaText;
+static puOneShot   *HUDalphaOkButton;
+static puSlider    *HUDalphaHS0;
+static puFont       HUDalphaLegendFont;
+static puFont       HUDalphaLabelFont;
+static char         SliderText[1][ 8 ];
 
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
+static void alpha_adj( puObject *hs ) {
+	float val ;
 
-  glLoadIdentity();
-  gluOrtho2D(0, 640, 0, 480);
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-
-  glColor3f(1.0, 1.0, 1.0);
-  glIndexi(7);
-
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
-
-  // We can do translucency, so why not. :-)
-//  glEnable    ( GL_BLEND ) ;
-//  glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-  
-  if( day_night_sw == DAY) {
-      switch (brightness) {
-          case BRT_LIGHT:
-//            glColor4f (0.1, 0.9, 0.1, 0.75);
-            glColor3f (0.1, 0.9, 0.1);
-            break;
-
-          case BRT_MEDIUM:
-//            glColor4f (0.1, 0.7, 0.0, 0.75);
-            glColor3f (0.1, 0.7, 0.0);
-            break;
-
-          case BRT_DARK:
-//            glColor4f (0.0, 0.6, 0.0, 0.75);
-            glColor3f(0.0, 0.6, 0.0);
-            break;
-
-          case BRT_BLACK:
-//            glColor4f( 0.0, 0.0, 0.0, 0.75);
-            glColor3f( 0.0, 0.0, 0.0);
-            break;
-
-          default:;
-      }
-  }
-  else {
-      if( day_night_sw == NIGHT) {
-          switch (brightness) {
-              case BRT_LIGHT:
-//                glColor4f (0.9, 0.1, 0.1, 0.75);
-                glColor3f (0.9, 0.1, 0.1);
-                break;
-
-              case BRT_MEDIUM:
-//                glColor4f (0.7, 0.0, 0.1, 0.75);
-                glColor3f (0.7, 0.0, 0.1);
-                break;
-
-              case BRT_DARK:
-              default:
-//                glColor4f (0.6, 0.0, 0.0, 0.75);
-                  glColor3f (0.6, 0.0, 0.0);
-          }
-      }
-          else {     // Just in case default
-//            glColor4f (0.1, 0.9, 0.1, 0.75);
-              glColor3f (0.1, 0.9, 0.1);
-          }
-  }
-
-  deque < instr_item * > :: iterator current = HUD_deque.begin();
-  deque < instr_item * > :: iterator last = HUD_deque.end();
-
-  for ( ; current != last; ++current ) {
-      pHUDInstr = *current;
-
-      if( pHUDInstr->enabled()) {
-          //  fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
-          //            hud->code, hud->status );
-          pHUDInstr->draw();
-//        HUD_deque.at(i)->draw(); // Responsible for broken or fixed variants.
-                              // No broken displays honored just now.
-      }
-  }
-
-  char *gmt_str = get_formated_gmt_time();
-  HUD_TextList.add( fgText( 40, 10, gmt_str) );
-
-#ifdef FG_NETWORK_OLK
-  if ( net_hud_display ) {
-      net_hud_update();
-  }
-#endif
-
-  HUD_TextList.draw();
-
-  line_width = (current_options.get_xsize() > 1000) ? 1.0 : 0.5;
-  glLineWidth(line_width);
-  HUD_LineList.draw();
-
-//  glEnable(GL_LINE_STIPPLE);
-//  glLineStipple( 1, 0x00FF );
-//  HUD_StippleLineList.draw();
-//  glDisable(GL_LINE_STIPPLE);
-
-//  glDisable( GL_BLEND );
-  
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
+	hs-> getValue ( &val ) ;
+	fgAP_CLAMP ( val, 0.1, 1.0 ) ;
+	//    printf ( "maxroll_adj( %p ) %f %f\n", hs, val, MaxRollAdjust * val ) ;
+	hud_trans_alpha = val;
+	sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
+	HUDalphaText -> setLabel ( SliderText[ 0 ] ) ;
 }
-#endif
 
+void fgHUDalphaAdjust( puObject * ) {
+	FG_PUSH_PUI_DIALOG( HUDalphaDialog );
+}
+
+static void goAwayHUDalphaAdjust (puObject *)
+{
+	FG_POP_PUI_DIALOG( HUDalphaDialog );
+}
+
+// Done once at system initialization
+void fgHUDalphaInit( void ) {
+
+	//	printf("fgAPAdjustInit\n");
+#define HORIZONTAL  FALSE
+
+	int DialogX = 40;
+	int DialogY = 100;
+	int DialogWidth = 230;
+
+	char Label[] =  "HUD Alpha Adjust";
+	char *s;
+
+	int labelX = (DialogWidth / 2) -
+				 (puGetStringWidth( puGetDefaultLabelFont(), Label ) / 2);
+	labelX -= 30;  // KLUDGEY
+
+	int nSliders = 1;
+	int slider_x = 10;
+	int slider_y = 55;
+	int slider_width = 210;
+	int slider_title_x = 15;
+	int slider_value_x = 160;
+	float slider_delta = 0.05f;
+
+	puGetDefaultFonts (  &HUDalphaLegendFont,  &HUDalphaLabelFont );
+	HUDalphaDialog = new puDialogBox ( DialogX, DialogY ); {
+		int horiz_slider_height = puGetStringHeight (HUDalphaLabelFont) +
+								  puGetStringDescender (HUDalphaLabelFont) +
+								  PUSTR_TGAP + PUSTR_BGAP + 5;
+
+		HUDalphaFrame = new puFrame ( 0, 0,
+									  DialogWidth,
+									  85 + nSliders * horiz_slider_height );
+
+		HUDalphaDialogMessage = new puText ( labelX,
+											 52 + nSliders
+											 * horiz_slider_height );
+		HUDalphaDialogMessage -> setDefaultValue ( Label );
+		HUDalphaDialogMessage -> getDefaultValue ( &s );
+		HUDalphaDialogMessage -> setLabel        ( s );
+
+		HUDalphaHS0 = new puSlider ( slider_x, slider_y,
+									 slider_width, HORIZONTAL ) ;
+		HUDalphaHS0-> setDelta ( slider_delta ) ;
+		HUDalphaHS0-> setValue ( hud_trans_alpha ) ;
+		HUDalphaHS0-> setCBMode ( PUSLIDER_DELTA ) ;
+		HUDalphaHS0-> setCallback ( alpha_adj ) ;
+
+		sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
+		HUDalphaTitle = new puText ( slider_title_x, slider_y ) ;
+		HUDalphaTitle-> setDefaultValue ( "MaxAlpha" ) ;
+		HUDalphaTitle-> getDefaultValue ( &s ) ;
+		HUDalphaTitle-> setLabel ( s ) ;
+		HUDalphaText = new puText ( slider_value_x, slider_y ) ;
+		HUDalphaText-> setLabel ( SliderText[ 0 ] ) ;
+
+
+		HUDalphaOkButton = new puOneShot ( 10, 10, 60, 50 );
+		HUDalphaOkButton-> setLegend ( gui_msg_OK );
+		HUDalphaOkButton-> makeReturnDefault ( TRUE );
+		HUDalphaOkButton-> setCallback ( goAwayHUDalphaAdjust );
+	}
+	FG_FINALIZE_PUI_DIALOG( HUDalphaDialog );
+
+#undef HORIZONTAL
+}
 
 // fgUpdateHUD
 //
@@ -1205,58 +1168,60 @@ void fgUpdateHUD( void ) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
 
-  // We can do translucency, so why not. :-)
-//  glEnable    ( GL_BLEND ) ;
-//  glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-  
+// #define ANTI_ALIAS_HUD
+#ifdef ANTI_ALIAS_HUD
+#define HUD_COLOR(r,g,b)  glColor4f(r,g,b,hud_trans_alpha)
+  glEnable(GL_LINE_SMOOTH);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+  glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
+  glLineWidth(1.5);
+#else
+#define HUD_COLOR(r,g,b)  glColor3f(r,g,b)
+  glLineWidth(1.0);
+#endif
+
   if( day_night_sw == DAY) {
 	  switch (brightness) {
 		  case BRT_LIGHT:
-//            glColor4f (0.1, 0.9, 0.1, 0.75);
-            glColor3f (0.1, 0.9, 0.1);
+            HUD_COLOR (0.1f, 0.9f, 0.1f);
             break;
 
           case BRT_MEDIUM:
-//            glColor4f (0.1, 0.7, 0.0, 0.75);
-            glColor3f (0.1, 0.7, 0.0);
+            HUD_COLOR (0.1f, 0.7f, 0.0f);
             break;
 
           case BRT_DARK:
-//            glColor4f (0.0, 0.6, 0.0, 0.75);
-            glColor3f(0.0, 0.6, 0.0);
+            HUD_COLOR (0.0f, 0.6f, 0.0f);
             break;
 
           case BRT_BLACK:
-//            glColor4f( 0.0, 0.0, 0.0, 0.75);
-            glColor3f( 0.0, 0.0, 0.0);
+            HUD_COLOR( 0.0f, 0.0f, 0.0f);
             break;
 
-          default:;
+          default:
+ 		    HUD_COLOR (0.1f, 0.9f, 0.1f);
 	  }
   }
   else {
 	  if( day_night_sw == NIGHT) {
 		  switch (brightness) {
 			  case BRT_LIGHT:
-//                glColor4f (0.9, 0.1, 0.1, 0.75);
-                glColor3f (0.9, 0.1, 0.1);
+                HUD_COLOR (0.9f, 0.1f, 0.1f);
                 break;
 
               case BRT_MEDIUM:
-//                glColor4f (0.7, 0.0, 0.1, 0.75);
-                glColor3f (0.7, 0.0, 0.1);
+                HUD_COLOR (0.7f, 0.0f, 0.1f);
                 break;
 
 			  case BRT_DARK:
 			  default:
-//				  glColor4f (0.6, 0.0, 0.0, 0.75);
-				  glColor3f (0.6, 0.0, 0.0);
+				  HUD_COLOR (0.6f, 0.0f, 0.0f);
 		  }
 	  }
-          else {     // Just in case default
-//			  glColor4f (0.1, 0.9, 0.1, 0.75);
-			  glColor3f (0.1, 0.9, 0.1);
-		  }
+	  else {     // Just in case default
+		  HUD_COLOR (0.1f, 0.9f, 0.1f);
+	  }
   }
 
   deque < instr_item * > :: iterator current = HUD_deque.begin();
@@ -1319,8 +1284,6 @@ void fgUpdateHUD( void ) {
   
   HUD_TextList.draw();
 
-  line_width = (current_options.get_xsize() > 1000) ? 1.0 : 0.5;
-  glLineWidth(line_width);
   HUD_LineList.draw();
 
 //  glEnable(GL_LINE_STIPPLE);
@@ -1328,8 +1291,13 @@ void fgUpdateHUD( void ) {
 //  HUD_StippleLineList.draw();
 //  glDisable(GL_LINE_STIPPLE);
 
-//  glDisable( GL_BLEND );
   
+#ifdef ANTI_ALIAS_HUD
+  glDisable(GL_BLEND);
+  glDisable(GL_LINE_SMOOTH);
+  glLineWidth(1.0);
+#endif
+
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
   glMatrixMode(GL_PROJECTION);
