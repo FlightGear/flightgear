@@ -1756,11 +1756,12 @@ static bool fgMainInit( int argc, char **argv ) {
     sky_tex_path.append( "Sky" );
     thesky->texture_path( sky_tex_path.str() );
 
-    thesky->build( 550.0, 550.0,
+    thesky->build( 80000.0, 80000.0,
+                   550.0, 550.0,
                    globals->get_ephem()->getNumPlanets(), 
-                   globals->get_ephem()->getPlanets(), 60000.0,
+                   globals->get_ephem()->getPlanets(),
                    globals->get_ephem()->getNumStars(),
-                   globals->get_ephem()->getStars(), 60000.0 );
+                   globals->get_ephem()->getStars() );
 
     // Initialize MagVar model
     SGMagVar *magvar = new SGMagVar();
