@@ -103,8 +103,8 @@ FGBinding::FGBinding (const SGPropertyNode * node)
 
 FGBinding::~FGBinding ()
 {
-  delete _arg;			// Delete the saved arguments
-  delete _command_state;	// Delete the saved command state
+//   delete _arg;			// Delete the saved arguments
+//   delete _command_state;	// Delete the saved command state
 }
 
 void
@@ -667,9 +667,9 @@ FGInput::axis::axis ()
 
 FGInput::axis::~axis ()
 {
-  for (int i = 0; i < FG_MOD_MAX; i++)
-    for (unsigned int j = 0; i < bindings[i].size(); j++)
-      delete bindings[i][j];
+//   for (int i = 0; i < FG_MOD_MAX; i++)
+//     for (int j = 0; i < bindings[i].size(); j++)
+//       delete bindings[i][j];
 }
 
 
@@ -684,9 +684,9 @@ FGInput::joystick::joystick ()
 
 FGInput::joystick::~joystick ()
 {
-  delete js;
-  delete[] axes;
-  delete[] buttons;
+//   delete js;
+//   delete[] axes;
+//   delete[] buttons;
 }
 
 
