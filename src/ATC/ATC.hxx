@@ -83,13 +83,15 @@ struct ATCData {
 	string name;
 };
 
-// perhaps we could use an FGRunway instead of this
+// perhaps we could use an FGRunway instead of this.
+// That wouldn't cache the orthopos though.
 struct RunwayDetails {
 	Point3D threshold_pos;
 	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
 	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
 	double hdg;		// true runway heading
 	double length;	// In *METERS*
+	double width;	// ditto
 	string rwyID;
 };
 
