@@ -79,7 +79,7 @@ get_prop2 (const SGPropertyNode * arg)
  * Built-in command: do nothing.
  */
 static bool
-do_null (const SGPropertyNode * arg, SGCommandState ** state)
+do_null (const SGPropertyNode * arg)
 {
   return true;
 }
@@ -91,7 +91,7 @@ do_null (const SGPropertyNode * arg, SGCommandState ** state)
  * TODO: show a confirm dialog.
  */
 static bool
-do_exit (const SGPropertyNode * arg, SGCommandState ** state)
+do_exit (const SGPropertyNode * arg)
 {
   SG_LOG(SG_INPUT, SG_ALERT, "Program exit requested.");
   ConfirmExitDialog();
@@ -106,7 +106,7 @@ do_exit (const SGPropertyNode * arg, SGCommandState ** state)
  * directory).  Defaults to "fgfs.sav".
  */
 static bool
-do_load (const SGPropertyNode * arg, SGCommandState ** state)
+do_load (const SGPropertyNode * arg)
 {
   const string &file = arg->getStringValue("file", "fgfs.sav");
   ifstream input(file.c_str());
@@ -128,7 +128,7 @@ do_load (const SGPropertyNode * arg, SGCommandState ** state)
  * current directory).  Defaults to "fgfs.sav".
  */
 static bool
-do_save (const SGPropertyNode * arg, SGCommandState ** state)
+do_save (const SGPropertyNode * arg)
 {
   const string &file = arg->getStringValue("file", "fgfs.sav");
   bool write_all = arg->getBoolValue("write-all", false);
@@ -153,7 +153,7 @@ do_save (const SGPropertyNode * arg, SGCommandState ** state)
  * and if that's unspecified, to "Panels/Default/default.xml".
  */
 static bool
-do_panel_load (const SGPropertyNode * arg, SGCommandState ** state)
+do_panel_load (const SGPropertyNode * arg)
 {
   string panel_path =
     arg->getStringValue("path",
@@ -183,7 +183,7 @@ do_panel_load (const SGPropertyNode * arg, SGCommandState ** state)
  * y-pos: the y position of the mouse click.
  */
 static bool
-do_panel_mouse_click (const SGPropertyNode * arg, SGCommandState ** state)
+do_panel_mouse_click (const SGPropertyNode * arg)
 {
   if (current_panel != 0)
     return current_panel
@@ -203,7 +203,7 @@ do_panel_mouse_click (const SGPropertyNode * arg, SGCommandState ** state)
  * to FG_ROOT). Defaults to "preferences.xml".
  */
 static bool
-do_preferences_load (const SGPropertyNode * arg, SGCommandState ** state)
+do_preferences_load (const SGPropertyNode * arg)
 {
   const string &path = arg->getStringValue("path", "preferences.xml");
   SGPath props_path(globals->get_fg_root());
@@ -254,7 +254,7 @@ do_view_prev( bool )
  * Built-in command: cycle view.
  */
 static bool
-do_view_cycle (const SGPropertyNode * arg, SGCommandState ** state)
+do_view_cycle (const SGPropertyNode * arg)
 {
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
@@ -268,7 +268,7 @@ do_view_cycle (const SGPropertyNode * arg, SGCommandState ** state)
  * Built-in command: capture screen.
  */
 static bool
-do_screen_capture (const SGPropertyNode * arg, SGCommandState ** state)
+do_screen_capture (const SGPropertyNode * arg)
 {
   fgDumpSnapShot();
   return true;
@@ -279,7 +279,7 @@ do_screen_capture (const SGPropertyNode * arg, SGCommandState ** state)
  * Reload the tile cache.
  */
 static bool
-do_tile_cache_reload (const SGPropertyNode * arg, SGCommandState ** state)
+do_tile_cache_reload (const SGPropertyNode * arg)
 {
     static const SGPropertyNode *master_freeze
 	= fgGetNode("/sim/freeze/master");
@@ -312,7 +312,7 @@ do_tile_cache_reload (const SGPropertyNode * arg, SGCommandState ** state)
  * Update the lighting manually.
  */
 static bool
-do_lighting_update (const SGPropertyNode * arg, SGCommandState ** state)
+do_lighting_update (const SGPropertyNode * arg)
 {
   fgUpdateSkyAndLightingParams();
   return true;
@@ -325,7 +325,7 @@ do_lighting_update (const SGPropertyNode * arg, SGCommandState ** state)
  * property: The name of the property to toggle.
  */
 static bool
-do_property_toggle (const SGPropertyNode * arg, SGCommandState ** state)
+do_property_toggle (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
   return prop->setBoolValue(!prop->getBoolValue());
@@ -339,7 +339,7 @@ do_property_toggle (const SGPropertyNode * arg, SGCommandState ** state)
  * value: the value to assign.
  */
 static bool
-do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
+do_property_assign (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
   const SGPropertyNode * value = arg->getNode("value");
@@ -385,7 +385,7 @@ do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
  *       false).
  */
 static bool
-do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
+do_property_adjust (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
   const SGPropertyNode * step = arg->getChild("step");
@@ -505,7 +505,7 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
  * factor: the amount by which to multiply.
  */
 static bool
-do_property_multiply (const SGPropertyNode * arg, SGCommandState ** state)
+do_property_multiply (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
   const SGPropertyNode * factor = arg->getChild("factor");
@@ -549,7 +549,7 @@ do_property_multiply (const SGPropertyNode * arg, SGCommandState ** state)
  * property[1]: the name of the second property.
  */
 static bool
-do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
+do_property_swap (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop1 = get_prop(arg);
   SGPropertyNode * prop2 = get_prop2(arg);
@@ -570,7 +570,7 @@ do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
  * factor: the factor to multiply by (use negative to reverse).
  */
 static bool
-do_property_scale (const SGPropertyNode * arg, SGCommandState ** state)
+do_property_scale (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
   double setting = arg->getDoubleValue("setting");

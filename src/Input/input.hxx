@@ -143,7 +143,6 @@ private:
   SGCommandMgr::command_t _command;
   mutable SGPropertyNode * _arg;
   mutable SGPropertyNode * _setting;
-  mutable SGCommandState * _command_state;
 };
 
 

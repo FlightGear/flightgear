@@ -83,16 +83,14 @@ static FGInput * default_input = 0;
 FGBinding::FGBinding ()
   : _command(0),
     _arg(new SGPropertyNode),
-    _setting(0),
-    _command_state(0)
+    _setting(0)
 {
 }
 
 FGBinding::FGBinding (const SGPropertyNode * node)
   : _command(0),
     _arg(new SGPropertyNode),
-    _setting(0),
-    _command_state(0)
+    _setting(0)
 {
   read(node);
 }
@@ -138,7 +136,7 @@ FGBinding::fire () const
   if (test()) {
     if (_command == 0) {
       SG_LOG(SG_INPUT, SG_WARN, "No command attached to binding");
-    } else if (!(*_command)(_arg, &_command_state)) {
+    } else if (!(*_command)(_arg)) {
       SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command "
 	     << _command_name);
     }
