@@ -11,8 +11,7 @@
 #include <Bucket/bucketutils.h>
 
 #ifdef __CYGWIN32__
-#  define MKDIR(a) mkdir(a,S_IRWXU)     // I am just guessing at this flag
-(NHV)
+#  define MKDIR(a) mkdir(a,S_IRWXU)     // I am just guessing at this flag (NHV)
 #endif // __CYGWIN32__
 
 #ifdef __CYGWIN32__
