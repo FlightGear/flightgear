@@ -229,7 +229,6 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     ssgVertexArray   *vl = new ssgVertexArray( 4 );
     ssgNormalArray   *nl = new ssgNormalArray( 4 );
     ssgTexCoordArray *tl = new ssgTexCoordArray( 4 );
-    ssgColourArray   *cl = new ssgColourArray( 4 );
 
     // sgVec3 *vtlist = new sgVec3 [ 4 ];
     // t->vec3_ptrs.push_back( vtlist );
@@ -254,7 +253,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
     
     ssgLeaf *leaf = 
-	new ssgVtxTable ( GL_TRIANGLE_FAN, vl, nl, tl, cl );
+	new ssgVtxTable ( GL_TRIANGLE_FAN, vl, nl, tl, NULL );
 
     leaf->setState( state );
 
@@ -757,7 +756,6 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		ssgVertexArray   *vl = new ssgVertexArray( size );
 		ssgNormalArray   *nl = new ssgNormalArray( size );
 		ssgTexCoordArray *tl = new ssgTexCoordArray( size );
-		ssgColourArray   *cl = new ssgColourArray();
 
 		sgVec2 tmp2;
 		sgVec3 tmp3;
@@ -776,11 +774,11 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		if ( token == "tf" ) {
 		    // triangle fan
 		    leaf = 
-			new ssgVtxTable ( GL_TRIANGLE_FAN, vl, nl, tl, cl );
+			new ssgVtxTable ( GL_TRIANGLE_FAN, vl, nl, tl, NULL );
 		} else {
 		    // triangle strip
 		    leaf = 
-			new ssgVtxTable ( GL_TRIANGLE_STRIP, vl, nl, tl, cl );
+			new ssgVtxTable ( GL_TRIANGLE_STRIP, vl, nl, tl, NULL );
 		}
 		// leaf->makeDList();
 		leaf->setState( state );

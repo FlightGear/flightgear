@@ -176,7 +176,7 @@ fgMATERIAL_MGR::load_lib ( void )
 	    FGPath tex_file( current_options.get_fg_root() );
 	    tex_file.append( "Textures" );
 	    tex_file.append( m.get_texture_name() );
-	    tex_file.concat( ".rgb" );
+	    // tex_file.concat( ".rgb" );
 
 	    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
 		    << material_name << " (" << tex_file.c_str() << ")");
