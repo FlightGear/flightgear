@@ -8,7 +8,7 @@ endif
 
 libGUI_a_SOURCES = \
 	apt_dlg.cxx apt_dlg.hxx \
-	gui.cxx gui.h \
+	gui.cxx gui.h gui_funcs.cxx \
 	gui_local.cxx gui_local.hxx \
 	mouse.cxx \
 	$(NETWORK_SRCS) \
