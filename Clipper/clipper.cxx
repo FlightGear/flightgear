@@ -177,7 +177,8 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
     // process polygons in priority order
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	cout << "num polys of this type = " << polys_in.polys[i].size() << endl;
+	// cout << "num polys of this type = " 
+	//       << polys_in.polys[i].size() << endl;
 	current = polys_in.polys[i].begin();
 	last = polys_in.polys[i].end();
 	for ( ; current != last; ++current ) {
@@ -201,9 +202,9 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 		*result_diff = tmp;
 		result_union = tmp;
 	    } else {
-   		cout << "DIFF: tmp.num_contours = " << tmp.num_contours
-			<< " accum.num_contours = " << accum.num_contours
-			<< endl;
+   		// cout << "DIFF: tmp.num_contours = " << tmp.num_contours
+		//      << " accum.num_contours = " << accum.num_contours
+		//      << endl;
 		// tmp output accum
 		FILE *ofp= fopen("tmp-debug", "w");
 		gpc_write_polygon(ofp, &tmp);
@@ -272,6 +273,9 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
 
 // $Log$
+// Revision 1.9  1999/03/31 23:46:38  curt
+// Debuggin output tweaks.
+//
 // Revision 1.8  1999/03/30 23:49:22  curt
 // Added some debugging output.
 //
