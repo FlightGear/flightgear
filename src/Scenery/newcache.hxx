@@ -46,17 +46,16 @@
 #include <simgear/math/point3d.hxx>
 
 #include "tileentry.hxx"
+#include "FGTileLoader.hxx"
 
 SG_USING_STD(map);
 
-
-typedef map < long, FGTileEntry * > tile_map;
-typedef tile_map::iterator tile_map_iterator;
-typedef tile_map::const_iterator const_tile_map_iterator;
-
-
 // A class to store and manage a pile of tiles
 class FGNewCache {
+
+    typedef map < long, FGTileEntry * > tile_map;
+    typedef tile_map::iterator tile_map_iterator;
+    typedef tile_map::const_iterator const_tile_map_iterator;
 
     // cache storage space
     tile_map tile_cache;
@@ -70,6 +69,11 @@ class FGNewCache {
     // Free a tile cache entry
     void entry_free( long cache_index );
 
+    /**
+     * Queue tiles for loading.
+     */
+    FGTileLoader loader;
+
 public:
 
     // Constructor
@@ -82,13 +86,13 @@ public:
     void init( void );
 
     // Check if the specified "bucket" exists in the cache
-    bool exists( const SGBucket& b );
+    bool exists( const SGBucket& b ) const;
 
     // Ensure at least one entry is free in the cache
     void make_space();
 
     // Fill in a tile cache entry with real data for the specified bucket 
-    void fill_in( const SGBucket& b );
+    // void fill_in( const SGBucket& b );
 
     // Return a pointer to the specified tile cache entry 
     inline FGTileEntry *get_tile( const long tile_index ) {
@@ -119,11 +123,13 @@ public:
 
     inline int get_max_cache_size() const { return max_cache_size; }
     inline void set_max_cache_size( int m ) { max_cache_size = m; }
+
+    /**
+     * Create a new tile and enqueue it for loading.
+     * @param b 
+     */
+    void load_tile( const SGBucket& b );
 };
-
-
-// the tile cache
-extern FGNewCache global_tile_cache;
 
 
 #endif // _NEWCACHE_HXX 

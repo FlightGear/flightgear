@@ -453,8 +453,8 @@ public:
     virtual void unbind ();
     virtual void update ();
     virtual bool update( int multi_loop );
-    virtual bool ToggleDataLogging(bool state) {};
-    virtual bool ToggleDataLogging(void) {};
+    virtual bool ToggleDataLogging(bool state) { return false; }
+    virtual bool ToggleDataLogging(void) { return false; }
 
     // Define the various supported flight models (many not yet implemented)
     enum {

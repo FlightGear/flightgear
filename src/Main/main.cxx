@@ -787,9 +787,9 @@ void fgUpdateTimeDepCalcs() {
 	cur_fdm_state->update( 0 );
 	FGSteam::update( 0 );
 
-	if ( global_tile_mgr.queue_size() == 0 ) {
+	//if ( global_tile_mgr.queue_size() == 0 ) {
 	    initial_freeze = false;
-	}
+	    //}
     }
 
     if ( fgGetString("/sim/view-mode") == "pilot" ) {

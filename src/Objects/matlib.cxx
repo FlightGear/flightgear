@@ -129,15 +129,16 @@ bool FGMaterialLib::load( const string& mpath ) {
 		in >> m;
 
 		// build the ssgSimpleState
-		SGPath tex_path( globals->get_fg_root() );
-		tex_path.append( "Textures.high" );
+		SGPath tmp_path( globals->get_fg_root() );
+		tmp_path.append( "Textures.high" );
 
-		SGPath tmp_path = tex_path;
-		tmp_path.append( m.get_texture_name() );
-		if ( ! local_file_exists(tmp_path.str())
+		SGPath tex_path = tmp_path;
+		tex_path.append( m.get_texture_name() );
+		if ( ! local_file_exists(tex_path.str())
 		     || general.get_glMaxTexSize() < 512 ) {
 		    tex_path = SGPath( globals->get_fg_root() );
 		    tex_path.append( "Textures" );
+		    tex_path.append( m.get_texture_name() );
 		}
 	    
 		SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
@@ -150,8 +151,10 @@ bool FGMaterialLib::load( const string& mpath ) {
 		    shade_model = GL_FLAT;
 		}
 
-		m.build_ssg_state( tex_path.str(), shade_model,
-				   fgGetBool("/sim/rendering/textures") );
+		m.set_texture_name( tex_path.str() );
+		m.build_ssg_state( shade_model,
+				   fgGetBool("/sim/rendering/textures"),
+				   false );
 
 #if EXTRA_DEBUG
 		m.dump_info();
@@ -201,10 +204,10 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
     string tex_name = full_path.substr( pos + 1 );
     string tex_path = full_path.substr( 0, pos );
 
-    FGNewMat m( mat_name, tex_name );
+    FGNewMat m( mat_name, full_path );
 
     SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
-	    << mat_name << " (" << tex_path << ")");
+	    << mat_name << " (" << full_path << ")");
 
 #if EXTRA_DEBUG
     m.dump_info();
@@ -217,8 +220,8 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
 	shade_model = GL_FLAT;
     }
 
-    m.build_ssg_state( tex_path, shade_model,
-		       fgGetBool("/sim/rendering/textures") );
+    m.build_ssg_state( shade_model, fgGetBool("/sim/rendering/textures"),
+		       true );
 
     material_lib.matlib[mat_name] = m;
 

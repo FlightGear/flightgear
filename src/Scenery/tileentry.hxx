@@ -160,6 +160,12 @@ public:
      *        random ground light points
      */
     void load( const SGPath& base, bool is_base );
+
+    /**
+     * Return true if the tile entry is loaded, otherwise return false
+     * indicating that the loading thread is still working on this.
+     */
+   inline bool is_loaded() const { return loaded; }
 };
 
 

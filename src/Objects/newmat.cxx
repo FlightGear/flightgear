@@ -70,12 +70,9 @@ FGNewMat::FGNewMat ( const string &mat_name, const string &tex_name )
 }
 
 
-void FGNewMat::build_ssg_state( const string& path,
-				GLenum shade_model, bool texture_default )
+void FGNewMat::build_ssg_state( GLenum shade_model, bool texture_default,
+				bool defer_tex_load )
 {
-    SGPath tex_file( path );
-    tex_file.append( texture_name );
-
     state = new ssgStateSelector(2);
     state->ref();
 
@@ -92,7 +89,12 @@ void FGNewMat::build_ssg_state( const string& path,
     textured->enable( GL_TEXTURE_2D );
     textured->disable( GL_BLEND );
     textured->disable( GL_ALPHA_TEST );
-    textured->setTexture( (char *)tex_file.c_str(), wrapu, wrapv );
+    if ( !defer_tex_load ) {
+	textured->setTexture( (char *)texture_name.c_str(), wrapu, wrapv );
+	texture_loaded = true;
+    } else {
+	texture_loaded = false;
+    }
     // cout << "wrap u = " << wrapu << " wrapv = " << wrapv << endl;
     textured->enable( GL_COLOR_MATERIAL );
     textured->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );

@@ -339,7 +339,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     basename.append( index_str );
     string path = basename.str();
 
-    SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << path );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "Loading tile " << path );
 
     // fgObjLoad will generate ground lighting for us ...
     ssgVertexArray *light_pts = new ssgVertexArray( 100 );

@@ -43,13 +43,9 @@
 
 #include "newcache.hxx"
 #include "tileentry.hxx"
-#include "tilemgr.hxx"		// temp, need to delete later
+
 
 SG_USING_NAMESPACE(std);
-
-
-// the tile cache
-FGNewCache global_tile_cache;
 
 
 // Constructor
@@ -68,7 +64,7 @@ void FGNewCache::entry_free( long cache_index ) {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING CACHE ENTRY = " << cache_index );
     FGTileEntry *e = tile_cache[cache_index];
     e->free_tile();
-    delete( e );
+    delete e;
     tile_cache.erase( cache_index );
 }
 
@@ -107,14 +103,16 @@ void FGNewCache::init( void ) {
 
 
 // Search for the specified "bucket" in the cache
-bool FGNewCache::exists( const SGBucket& b ) {
+bool FGNewCache::exists( const SGBucket& b ) const {
     long tile_index = b.gen_index();
-    tile_map_iterator it = tile_cache.find( tile_index );
+    const_tile_map_iterator it = tile_cache.find( tile_index );
 
     return ( it != tile_cache.end() );
 }
 
 
+// depricated for threading
+#if 0
 // Fill in a tile cache entry with real data for the specified bucket
 void FGNewCache::fill_in( const SGBucket& b ) {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FILL IN CACHE ENTRY = " << b.gen_index() );
@@ -140,13 +138,12 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     // Load the appropriate data file
     e->load( tile_path, true );
 }
+#endif
 
 
 // Ensure at least one entry is free in the cache
 void FGNewCache::make_space() {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "Make space in cache" );
-
-    
     SG_LOG( SG_TERRAIN, SG_DEBUG, "cache entries = " << tile_cache.size() );
     SG_LOG( SG_TERRAIN, SG_DEBUG, "max size = " << max_cache_size );
 
@@ -169,26 +166,29 @@ void FGNewCache::make_space() {
 	    long index = current->first;
 	    FGTileEntry *e = current->second;
 
-	    // calculate approximate distance from view point
-	    sgdCopyVec3( abs_view_pos,
-			 globals->get_current_view()->get_abs_view_pos() );
+	    if ( e->is_loaded() ) {
+		// calculate approximate distance from view point
+		sgdCopyVec3( abs_view_pos,
+			     globals->get_current_view()->get_abs_view_pos() );
 
-	    SG_LOG( SG_TERRAIN, SG_DEBUG, "DIST Abs view pos = " 
-		    << abs_view_pos[0] << ","
-		    << abs_view_pos[1] << ","
-		    << abs_view_pos[2] );
-	    SG_LOG( SG_TERRAIN, SG_DEBUG,
-		    "    ref point = " << e->center );
+		SG_LOG( SG_TERRAIN, SG_DEBUG, "DIST Abs view pos = " 
+			<< abs_view_pos[0] << ","
+			<< abs_view_pos[1] << ","
+			<< abs_view_pos[2] );
+		SG_LOG( SG_TERRAIN, SG_DEBUG,
+			"    ref point = " << e->center );
 
-	    sgdVec3 center;
-	    sgdSetVec3( center, e->center.x(), e->center.y(), e->center.z() );
-	    dist = sgdDistanceVec3( center, abs_view_pos );
+		sgdVec3 center;
+		sgdSetVec3( center,
+			    e->center.x(), e->center.y(), e->center.z() );
+		dist = sgdDistanceVec3( center, abs_view_pos );
 
-	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    distance = " << dist );
+		SG_LOG( SG_TERRAIN, SG_DEBUG, "    distance = " << dist );
 
-	    if ( dist > max_dist ) {
-		max_dist = dist;
-		max_index = index;
+		if ( dist > max_dist ) {
+		    max_dist = dist;
+		    max_index = index;
+		}
 	    }
 	}
 
@@ -205,4 +205,25 @@ void FGNewCache::make_space() {
 	    exit( -1 );
 	}
     }
+}
+
+
+/**
+ * Create a new tile and schedule it for loading.
+ */
+void
+FGNewCache::load_tile( const SGBucket& b )
+{
+    // clear out a distant entry in the cache if needed.
+    make_space();
+
+    // create the entry
+    FGTileEntry *e = new FGTileEntry( b );
+
+    // register it in the cache
+    long tile_index = b.gen_index();
+    tile_cache[tile_index] = e;
+
+    // Schedule tile for loading
+    loader.add( e );
 }

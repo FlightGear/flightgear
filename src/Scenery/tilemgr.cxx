@@ -93,7 +93,7 @@ int FGTileMgr::init() {
     } else {
 	SG_LOG( SG_TERRAIN, SG_INFO,
 		"... First time through." );
-	global_tile_cache.init();
+	tile_cache.init();
     }
 
     hit_list.clear();
@@ -113,29 +113,32 @@ int FGTileMgr::init() {
 // schedule a tile for loading
 void FGTileMgr::sched_tile( const SGBucket& b ) {
     // see if tile already exists in the cache
-    FGTileEntry *t = global_tile_cache.get_tile( b );
+    FGTileEntry *t = tile_cache.get_tile( b );
 
     if ( t == NULL ) {
         // register a load request
-        load_queue.push_back( b );
+	tile_cache.load_tile( b );
     }
 }
 
 
+// depricated for threading
+#if 0
 // load a tile
 void FGTileMgr::load_tile( const SGBucket& b ) {
     // see if tile already exists in the cache
-    FGTileEntry *t = global_tile_cache.get_tile( b );
+    FGTileEntry *t = tile_cache.get_tile( b );
 
     if ( t == NULL ) {
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "Loading tile " << b );
-	global_tile_cache.fill_in( b );
-	t = global_tile_cache.get_tile( b );
+	tile_cache.fill_in( b );
+	t = tile_cache.get_tile( b );
 	t->prep_ssg_node( scenery.center, vis);
     } else {
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "Tile already in cache " << b );
     }
 }
+#endif
 
 
 static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
@@ -215,20 +218,20 @@ void FGTileMgr::schedule_needed() {
 #else
     vis = current_weather.get_visibility();
 #endif
-    cout << "visibility = " << vis << endl;
+    // cout << "visibility = " << vis << endl;
 
     double tile_width = current_bucket.get_width_m();
     double tile_height = current_bucket.get_height_m();
-    cout << "tile width = " << tile_width << "  tile_height = " << tile_height
-	 << endl;
+    // cout << "tile width = " << tile_width << "  tile_height = "
+    //      << tile_height !<< endl;
 
     xrange = (int)(vis / tile_width) + 1;
     yrange = (int)(vis / tile_height) + 1;
     if ( xrange < 1 ) { xrange = 1; }
     if ( yrange < 1 ) { yrange = 1; }
-    cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
+    // cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
 
-    global_tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) );
+    tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) );
 
     SGBucket b;
 
@@ -243,9 +246,7 @@ void FGTileMgr::schedule_needed() {
 	for ( y = -1; y <= 1; ++y ) {
 	    if ( x != 0 || y != 0 ) {
 		b = sgBucketOffset( longitude, latitude, x, y );
-		if ( ! global_tile_cache.exists( b ) ) {
-		    sched_tile( b );
-		}
+		sched_tile( b );
 	    }
 	}
     }
@@ -255,9 +256,7 @@ void FGTileMgr::schedule_needed() {
 	for ( y = -yrange; y <= yrange; ++y ) {
 	    if ( x < -1 || x > 1 || y < -1 || y > 1 ) {
 		SGBucket b = sgBucketOffset( longitude, latitude, x, y );
-		if ( ! global_tile_cache.exists( b ) ) {
-		    sched_tile( b );
-		}
+		sched_tile( b );
 	    }
 	}
     }
@@ -270,12 +269,12 @@ void FGTileMgr::initialize_queue()
     // system and load all relavant tiles
 
     SG_LOG( SG_TERRAIN, SG_INFO, "Updating Tile list for " << current_bucket );
-    cout << "tile cache size = " << global_tile_cache.get_size() << endl;
+    // cout << "tile cache size = " << tile_cache.get_size() << endl;
 
     int i;
 
     // wipe/initialize tile cache
-    // global_tile_cache.init();
+    // tile_cache.init();
     previous_bucket.make_bad();
 
     // build the local area list and schedule tiles for loading
@@ -285,6 +284,8 @@ void FGTileMgr::initialize_queue()
 
     schedule_needed();
 
+    // do we really want to lose this? CLO
+#if 0
     // Now force a load of the center tile and inner ring so we
     // have something to see in our first frame.
     for ( i = 0; i < 9; ++i ) {
@@ -297,6 +298,7 @@ void FGTileMgr::initialize_queue()
             load_tile( pending );
         }
     }
+#endif
 }
 
 
@@ -305,7 +307,7 @@ void FGTileMgr::initialize_queue()
 // tile_cache   -- which actually handles all the
 // (de)allocations  
 void FGTileMgr::destroy_queue() {
-    load_queue.clear();
+    // load_queue.clear();
 }
 
 
@@ -328,8 +330,8 @@ int FGTileMgr::update( double lon, double lat ) {
     current_bucket.set_bucket( longitude, latitude );
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating Tile list for " << current_bucket );
 
-    if ( global_tile_cache.exists( current_bucket ) ) {
-        current_tile = global_tile_cache.get_tile( current_bucket );
+    if ( tile_cache.exists( current_bucket ) ) {
+        current_tile = tile_cache.get_tile( current_bucket );
         scenery.next_center = current_tile->center;
     } else {
         SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
@@ -346,6 +348,8 @@ int FGTileMgr::update( double lon, double lat ) {
 	state = Running;
     }
 
+    // now handled by threaded tile pager
+#if 0
     if ( load_queue.size() ) {
 	SG_LOG( SG_TERRAIN, SG_INFO, "Load queue size = " << load_queue.size()
 		<< " loading a tile" );
@@ -354,6 +358,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	load_queue.pop_front();
 	load_tile( pending );
     }
+#endif
 
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
@@ -419,15 +424,15 @@ void FGTileMgr::prep_ssg_nodes() {
     // selector and transform
 
     FGTileEntry *e;
-    global_tile_cache.reset_traversal();
+    tile_cache.reset_traversal();
 
-    while ( ! global_tile_cache.at_end() ) {
+    while ( ! tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
-        if ( (e = global_tile_cache.get_current()) ) {
+        if ( (e = tile_cache.get_current()) ) {
 	    e->prep_ssg_node( scenery.center, vis);
         } else {
             cout << "warning ... empty tile in cache" << endl;
         }
-	global_tile_cache.next();
+	tile_cache.next();
    }
 }

@@ -31,16 +31,12 @@
 
 #include <simgear/compiler.h>
 
-#include <list>
-
 #include <plib/ssg.h>
 
 #include <simgear/bucket/newbucket.hxx>
 
 #include "hitlist.hxx"
-
-SG_USING_STD(list);
-
+#include "newcache.hxx"
 
 #if defined(USE_MEM) || defined(WIN32)
 #  define FG_MEM_COPY(to,from,n)        memcpy(to, from, n)
@@ -66,9 +62,6 @@ private:
 
     load_state state;
 
-    // pending tile load queue
-    list < SGBucket > load_queue;
-
     // initialize the cache
     void initialize_queue();
 
@@ -79,9 +72,6 @@ private:
 
     // schedule a tile for loading
     void sched_tile( const SGBucket& b );
-
-    // load a tile
-    void load_tile( const SGBucket& b );
 
     // schedule a needed buckets for loading
     void schedule_needed();
@@ -110,6 +100,11 @@ private:
     double latitude;
     double last_longitude;
     double last_latitude;
+
+    /**
+     * 
+     */
+    FGNewCache tile_cache;
 
 public:
 
@@ -144,8 +139,6 @@ public:
     // transform and update it's range selector based on current
     // visibilty
     void prep_ssg_nodes();
-
-    inline int queue_size() const { return load_queue.size(); }
 };
 
 

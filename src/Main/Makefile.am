@@ -19,6 +19,12 @@ NETWORK_LIBS = \
 	$(top_builddir)/src/Network/libNetwork.a
 endif
 
+if WITH_THREADS
+THREAD_LIBS = -lsgthreads
+else
+THREAD_LIBS =
+endif
+
 if OLD_AUTOMAKE
 # nothing CXXFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
 else
@@ -73,6 +79,7 @@ fgfs_LDADD = \
 	-lsgroute -lsgsky -lsgephem -lsgtiming -lsgio -lsgscreen \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	$(SERIAL_LIBS) \
+	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibssg -lplibsg \
 	-lmk4 -lz \
 	$(opengl_LIBS) \

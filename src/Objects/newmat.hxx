@@ -89,6 +89,9 @@ private:
     // material properties
     sgVec4 ambient, diffuse, specular, emission;
 
+    // true if texture loading deferred, and not yet loaded
+    bool texture_loaded;
+
 public:
 
     // Constructor
@@ -102,8 +105,8 @@ public:
     friend istream& operator >> ( istream& in, FGNewMat& m );
 
     // void load_texture( const string& root );
-    void build_ssg_state( const string& path, 
-			  GLenum shade_model, bool texture_default );
+    void build_ssg_state( GLenum shade_model, bool texture_default,
+			  bool defer_tex_load = false );
     void set_ssg_state( ssgSimpleState *s );
 
     inline string get_material_name() const { return material_name; }

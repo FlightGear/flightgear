@@ -103,6 +103,9 @@
 /* Define if the X Window System is missing or not being used.  */
 #undef X_DISPLAY_MISSING
 
+/* Define to use tile loading threads */
+#undef ENABLE_THREADS
+
 /* Define if you have the GetLocalTime function.  */
 #undef HAVE_GETLOCALTIME
 
