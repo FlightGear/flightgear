@@ -326,7 +326,7 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
         ToNormalize[iDsb]=i;
       } else if ( nodeName == "spoiler-pos-rad" ) {
         ToNormalize[iDsp]=i;
-      } else if ( nodeName == "flaps-pos-deg" ) {
+      } else if ( nodeName == "flap-pos-deg" ) {
         ToNormalize[iDf]=i;
       }
     }
