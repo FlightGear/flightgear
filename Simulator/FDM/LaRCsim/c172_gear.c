@@ -12,8 +12,7 @@
 
 ----------------------------------------------------------------------------
 
-	GENEALOGY:  Renamed navion_gear.c originally created 931012 by E. B. Jackson 	
-	
+	GENEALOGY:	Created 931012 by E. B. Jackson
 
 ----------------------------------------------------------------------------
 
@@ -37,33 +36,8 @@
 
 $Header$
 $Log$
-Revision 1.1  1999/06/15 20:05:27  curt
-Added c172 model from Tony Peden.
-
-Revision 1.1.1.1  1999/04/05 21:32:45  curt
-Start of 0.6.x branch.
-
-Revision 1.6  1998/10/17 01:34:16  curt
-C++ ifying ...
-
-Revision 1.5  1998/09/29 02:03:00  curt
-Added a brake + autopilot mods.
-
-Revision 1.4  1998/08/06 12:46:40  curt
-Header change.
-
-Revision 1.3  1998/02/03 23:20:18  curt
-Lots of little tweaks to fix various consistency problems discovered by
-Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-passed arguments along to the real printf().  Also incorporated HUD changes
-by Michele America.
-
-Revision 1.2  1998/01/19 18:40:29  curt
-Tons of little changes to clean up the code and to remove fatal errors
-when building with the c++ compiler.
-
-Revision 1.1  1997/05/29 00:10:02  curt
-Initial Flight Gear revision.
+Revision 1.2  1999/08/19 21:24:03  curt
+Updated Tony's c172 model code.
 
 
 ----------------------------------------------------------------------------
@@ -94,47 +68,48 @@ Initial Flight Gear revision.
 #include "ls_cockpit.h"
 
 
-void sub3( DATA v1[],  DATA v2[], DATA result[] )
+sub3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] - v2[0];
     result[1] = v1[1] - v2[1];
     result[2] = v1[2] - v2[2];
 }
 
-void add3( DATA v1[],  DATA v2[], DATA result[] )
+add3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] + v2[0];
     result[1] = v1[1] + v2[1];
     result[2] = v1[2] + v2[2];
 }
 
-void cross3( DATA v1[],  DATA v2[], DATA result[] )
+cross3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[1]*v2[2] - v1[2]*v2[1];
     result[1] = v1[2]*v2[0] - v1[0]*v2[2];
     result[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
-void multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
+multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[1][0]*v[1] + m[2][0]*v[2];
     result[1] = m[0][1]*v[0] + m[1][1]*v[1] + m[2][1]*v[2];
     result[2] = m[0][2]*v[0] + m[1][2]*v[1] + m[2][2]*v[2];
 }
 
-void mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
+mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2];
     result[1] = m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2];
     result[2] = m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2];
 }
 
-void clear3( DATA v[] )
+clear3( DATA v[] )
 {
     v[0] = 0.; v[1] = 0.; v[2] = 0.;
 }
 
-void gear( SCALAR dt, int Initialize ) {
+gear()
+{
 char rcsid[] = "$Id$";
 
   /*
@@ -220,8 +195,7 @@ char rcsid[] = "$Id$";
    * Put aircraft specific executable code here
    */
    
-    /* replace with cockpit brake handle connection code */
-    percent_brake[1] = Brake_pct;
+    percent_brake[1] = 0.; /* replace with cockpit brake handle connection code */
     percent_brake[2] = percent_brake[1];
     
     caster_angle_rad[0] = 0.03*Rudder_pedal;

@@ -65,6 +65,7 @@ $Header$
 #include "ls_generic.h"
 #include "ls_sim_control.h"
 #include "ls_cockpit.h"
+#include "c172_aero.h"
 
 extern SIM_CONTROL	sim_control_;
 
@@ -75,8 +76,10 @@ void engine( SCALAR dt, int init ) {
 
     /* F_X_engine = Throttle[3]*813.4/0.2; */  /* original code */
     /* F_Z_engine = Throttle[3]*11.36/0.2; */  /* original code */
-    F_X_engine = Throttle[3]*813.4/0.83;
-    F_Z_engine = Throttle[3]*11.36/0.83;
+    F_X_engine = Throttle[3]*350/0.83;
+    F_Z_engine = Throttle[3]*4.9/0.83;
+	M_m_engine = F_X_engine*0.734*cbar;
+	/* 0.734 - estimated (WAGged) location of thrust line in the z-axis*/
 
     Throttle_pct = Throttle[3];
 }
