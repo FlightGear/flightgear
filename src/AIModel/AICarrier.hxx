@@ -115,8 +115,9 @@ private:
         
     double flolsXYZ[3], eyeXYZ[3]; 
     double lat, lon, alt;
-    double dist;
+    double dist, angle;
     int source;
+    
     Point3D eyepos;
     Point3D flolspos;	
 };

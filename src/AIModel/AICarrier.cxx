@@ -102,15 +102,20 @@ void FGAICarrier::bind() {
    props->tie("controls/flols/source-lights",
                 SGRawValuePointer<int>(&source));
    props->tie("controls/flols/distance-m",
-                SGRawValuePointer<double>(&dist));                            
+                SGRawValuePointer<double>(&dist)); 
+   props->tie("controls/flols/angle-degs",
+                SGRawValuePointer<double>(&angle));                                              
    props->setBoolValue("controls/flols/cut-lights", false);
    props->setBoolValue("controls/flols/wave-off-lights", false);
    props->setBoolValue("controls/flols/cond-datum-lights", true);  
+   props->setBoolValue("controls/crew", false);  
    }
 
 void FGAICarrier::unbind() {
     FGAIBase::unbind();
     props->untie("controls/flols/source-lights");
+    props->untie("controls/flols/distance-m"); 
+    props->untie("controls/flols/angle-degs");    
 }
    
 void FGAICarrier::mark_nohot(ssgEntity* e) {
@@ -251,9 +256,9 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool m
           if (ch) {
             SG_LOG(SG_GENERAL, SG_WARN,
                    "AICarrier: Carrier hardware gets marked twice!\n"
-                   "           You have propably a whole branch marked as"
-                   " a catapult which also includes other carrier hardware."
-                   );
+                   "You have probably a whole branch marked as"
+                   "a catapult which also includes other carrier hardware."
+                    );
           } else {
             SG_LOG(SG_GENERAL, SG_ALERT,
                    "AICarrier: Found user data attached to a leaf node which "
@@ -410,6 +415,10 @@ void FGAICarrier::UpdateFlols( double dt) {
 //calculate the ditance from eye to flols
       
   dist = sgdDistanceVec3( flolsXYZ, eyeXYZ );
+
+//apply an index error
+
+  dist -= 100;
   
   //cout << "distance " << dist << endl; 
   
@@ -419,7 +428,8 @@ void FGAICarrier::UpdateFlols( double dt) {
        
        // calculate the angle from the flols to eye
        // above the horizontal
-       double angle;
+       // double angle;
+       
        if ( dist != 0 ) {
            angle = asin( y / dist );
          } else {
