@@ -21,6 +21,7 @@
 // $Id$
 // (Log is kept at end of this file)
 
+#define MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -572,10 +573,64 @@ static void fgMainLoop( void ) {
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( current_options.get_sound() && audio_sched->working() ) {
-	double param = controls.get_throttle( 0 ) * 2.0 + 1.0;
 
-	pitch_envelope.setStep  ( 0, 0.01, param );
-	volume_envelope.setStep ( 0, 0.01, param );
+#   ifdef MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
+
+	// note: all these factors are relative to the sample.  our
+	// sample format should really contain a conversion factor so
+	// that we can get prop speed right for arbitrary samples.
+	// Note that for normal-size props, there is a point at which
+	// the prop tips approach the speed of sound; that is a pretty
+	// strong limit to how fast the prop can go.
+
+	// multiplication factor is prime pitch control; add some log
+	// component for verisimilitude
+
+	double pitch = log((controls.get_throttle(0) * 14.0) + 1.0);
+	//fprintf(stderr, "pitch1: %f ", pitch);
+	if (controls.get_throttle(0) > 0.0 || f->v_rel_wind > 40.0) {
+	    //fprintf(stderr, "rel_wind: %f ", f->v_rel_wind);
+	    // only add relative wind and AoA if prop is moving
+	    // or we're really flying at idle throttle
+	    if (pitch < 5.4) {  // this needs tuning
+		// prop tips not breaking sound barrier
+		pitch += log(f->v_rel_wind + 0.8)/2;
+	    } else {
+		// prop tips breaking sound barrier
+		pitch += log(f->v_rel_wind + 0.8)/10;
+	    }
+	    //fprintf(stderr, "pitch2: %f ", pitch);
+	    //fprintf(stderr, "AoA: %f ", FG_Gamma_vert_rad);
+
+	    // Angle of Attack next... -x^3(e^x) is my best guess Just
+	    // need to calculate some reasonable scaling factor and
+	    // then clamp it on the positive aoa (neg adj) side
+	    double aoa = FG_Gamma_vert_rad * 2.2;
+	    double aoa_adj = pow(-aoa, 3) * pow(M_E, aoa);
+	    if (aoa_adj < -0.8) aoa_adj = -0.8;
+	    pitch += aoa_adj;
+	    //fprintf(stderr, "pitch3: %f ", pitch);
+
+	    // don't run at absurdly slow rates -- not realistic
+	    // and sounds bad to boot.  :-)
+	    if (pitch < 0.8) pitch = 0.8;
+	}
+	//fprintf(stderr, "pitch4: %f\n", pitch);
+
+	double volume = controls.get_throttle(0) * 1.15 + 0.3 +
+	    log(f->v_rel_wind + 1.0)/14.0;
+	// fprintf(stderr, "volume: %f\n", volume);
+
+	pitch_envelope.setStep  ( 0, 0.01, pitch );
+	volume_envelope.setStep ( 0, 0.01, volume );
+
+#   else
+
+       double param = controls.get_throttle( 0 ) * 2.0 + 1.0;
+       pitch_envelope.setStep  ( 0, 0.01, param );
+       volume_envelope.setStep ( 0, 0.01, param );
+
+#   endif // experimental throttle patch
 
 	audio_sched -> update();
     }
@@ -891,6 +946,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.66  1998/11/11 00:24:00  curt
+// Added Michael Johnson's audio patches for testing.
+// Also did a few tweaks to avoid numerical problems when starting at a place
+// with no (or bogus) scenery.
+//
 // Revision 1.65  1998/11/09 23:39:22  curt
 // Tweaks for the instrument panel.
 //

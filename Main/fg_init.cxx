@@ -212,8 +212,12 @@ int fgInitSubsystems( void )
     abs_view_pos = fgGeodToCart(geod_pos);
 
     // Calculate ground elevation at starting point
+    FG_LOG( FG_GENERAL, FG_DEBUG, 
+	    "Altitude before update " << scenery.cur_elev );
     scenery.cur_elev = 
 	fgTileMgrCurElev( FG_Longitude, FG_Latitude, abs_view_pos );
+    FG_LOG( FG_GENERAL, FG_DEBUG, 
+	    "Altitude after update " << scenery.cur_elev );
     FG_Runway_altitude = scenery.cur_elev * METER_TO_FEET;
 
     // Reset our altitude if we are below ground
@@ -377,6 +381,11 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.49  1998/11/11 00:24:02  curt
+// Added Michael Johnson's audio patches for testing.
+// Also did a few tweaks to avoid numerical problems when starting at a place
+// with no (or bogus) scenery.
+//
 // Revision 1.48  1998/11/07 19:07:10  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment
