@@ -50,12 +50,10 @@ do_wrap (T * value, T min, T max)
 {
     if (min >= max) {           // basic sanity check
         *value = min;
-    } else {
-        T range = max - min;
-        while (*value < min)
-            *value += range;
-        while (*value > max)
-            *value -= range;
+    } else if (*value > max) {
+        *value = min;
+    } else if (*value < min) {
+        *value = max;
     }
 }
 
@@ -69,6 +67,57 @@ static inline SGPropertyNode *
 get_prop2 (const SGPropertyNode * arg)
 {
     return fgGetNode(arg->getStringValue("property[1]", "/null"), true);
+}
+
+
+/**
+ * Get a double value and split it as required.
+ */
+static void
+split_value (double full_value, const char * mask,
+             double * unmodifiable, double * modifiable)
+{
+    if (!strcmp("integer", mask)) {
+        *modifiable = (full_value < 0 ? ceil(full_value) : floor (full_value));
+        *unmodifiable = full_value - *modifiable;
+    } else if (!strcmp("decimal", mask)) {
+        *unmodifiable = (full_value < 0 ? ceil(full_value) : floor(full_value));
+        *modifiable = full_value - *unmodifiable;
+    } else {
+        if (strcmp("all", mask))
+            SG_LOG(SG_GENERAL, SG_ALERT, "Bad value " << mask << " for mask;"
+                   << " assuming 'all'");
+        *unmodifiable = 0;
+        *modifiable = full_value;
+    }
+}
+
+
+/**
+ * Clamp or wrap a value as specified.
+ */
+static void
+limit_value (double * value, const SGPropertyNode * arg)
+{
+    const SGPropertyNode * min_node = arg->getChild("min");
+    const SGPropertyNode * max_node = arg->getChild("max");
+
+    bool wrap = arg->getBoolValue("wrap");
+
+    if (min_node == 0 || max_node == 0)
+        wrap = false;
+  
+    if (wrap) {                 // wrap
+        if (*value < min_node->getDoubleValue())
+            *value = max_node->getDoubleValue();
+        else if (*value > max_node->getDoubleValue())
+            *value = min_node->getDoubleValue();
+    } else {                    // clamp
+        if ((min_node != 0) && (*value < min_node->getDoubleValue()))
+            *value = min_node->getDoubleValue();
+        else if ((max_node != 0) && (*value > max_node->getDoubleValue()))
+            *value = max_node->getDoubleValue();
+    }
 }
 
 
@@ -373,10 +422,11 @@ do_property_assign (const SGPropertyNode * arg)
  *
  * property: the name of the property to increment or decrement.
  * step: the amount of the increment or decrement (default: 0).
- * offset: a normalized amount to offset by (if step is not present).
- * factor: the amount by which to multiply the offset (if step is not present).
  * min: the minimum allowed value (default: no minimum).
  * max: the maximum allowed value (default: no maximum).
+ * mask: 'integer' to apply only to the left of the decimal point, 
+ *       'decimal' to apply only to the right of the decimal point,
+ *       or 'all' to apply to the whole number (the default).
  * wrap: true if the value should be wrapped when it passes min or max;
  *       both min and max must be present for this to work (default:
  *       false).
@@ -385,113 +435,15 @@ static bool
 do_property_adjust (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
-  const SGPropertyNode * step = arg->getChild("step");
-  const SGPropertyNode * offset = arg->getChild("offset");
-  const SGPropertyNode * factor = arg->getChild("factor");
-  const SGPropertyNode * min = arg->getChild("min");
-  const SGPropertyNode * max = arg->getChild("max");
-  bool wrap = arg->getBoolValue("wrap");
+  double step = arg->getDoubleValue("step");
 
-  if (min == 0 || max == 0)
-      wrap = false;
+  double unmodifiable, modifiable;
+  split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all"),
+              &unmodifiable, &modifiable);
+  modifiable += step;
+  limit_value(&modifiable, arg);
 
-  double amount = 0;
-  if (step == 0)
-    amount = offset->getDoubleValue() * factor->getDoubleValue();
-
-  switch (prop->getType()) {
-
-  case SGPropertyNode::BOOL: {
-    bool value;
-    if (step != 0)
-      value = step->getBoolValue();
-    else
-      value = (0.0 != amount);
-    if (value)
-      return prop->setBoolValue(!prop->getBoolValue());
-    else
-      return true;
-  }
-
-  case SGPropertyNode::INT: {
-    int value;
-    if (step != 0)
-      value = prop->getIntValue() + step->getIntValue();
-    else
-      value = prop->getIntValue() + int(amount);
-    if (wrap) {
-        do_wrap(&value, min->getIntValue(), max->getIntValue());
-    } else {
-        if (min != 0 && value < min->getIntValue())
-            value = min->getIntValue();
-        if (max != 0 && value > max->getIntValue())
-            value = max->getIntValue();
-    }
-    return prop->setIntValue(value);
-  }
-
-  case SGPropertyNode::LONG: {
-    long value;
-    if (step != 0)
-      value = prop->getLongValue() + step->getLongValue();
-    else
-      value = prop->getLongValue() + long(amount);
-    if (wrap) {
-        do_wrap(&value, min->getLongValue(), max->getLongValue());
-    } else {
-        if (min != 0 && value < min->getLongValue())
-            value = min->getLongValue();
-        if (max != 0 && value > max->getLongValue())
-            value = max->getLongValue();
-    }
-    return prop->setLongValue(value);
-  }
-
-  case SGPropertyNode::FLOAT: {
-    float value;
-    if (step != 0)
-      value = prop->getFloatValue() + step->getFloatValue();
-    else
-      value = prop->getFloatValue() + float(amount);
-    if (wrap) {
-        do_wrap(&value, min->getFloatValue(), max->getFloatValue());
-    } else {
-        if (min != 0 && value < min->getFloatValue())
-            value = min->getFloatValue();
-        if (max != 0 && value > max->getFloatValue())
-            value = max->getFloatValue();
-    }
-    return prop->setFloatValue(value);
-  }
-
-  case SGPropertyNode::DOUBLE:
-  case SGPropertyNode::UNSPECIFIED:
-  case SGPropertyNode::NONE: {
-    double value;
-    if (step != 0)
-      value = prop->getDoubleValue() + step->getDoubleValue();
-    else
-      value = prop->getDoubleValue() + amount;
-    if (wrap) {
-        do_wrap(&value, min->getDoubleValue(), max->getDoubleValue());
-    } else {
-        if (min != 0 && value < min->getDoubleValue())
-            value = min->getDoubleValue();
-        if (max != 0 && value > max->getDoubleValue())
-            value = max->getDoubleValue();
-    }
-    return prop->setDoubleValue(value);
-  }
-
-  case SGPropertyNode::STRING: // doesn't make sense with strings
-    SG_LOG(SG_INPUT, SG_ALERT, "Cannot adjust a string value");
-    return false;
-
-  default:
-    SG_LOG(SG_INPUT, SG_ALERT, "Unknown value type");
-    return false;
-
-  }
+  prop->setDoubleValue(unmodifiable + modifiable);
 }
 
 
@@ -500,42 +452,28 @@ do_property_adjust (const SGPropertyNode * arg)
  *
  * property: the name of the property to multiply.
  * factor: the amount by which to multiply.
+ * min: the minimum allowed value (default: no minimum).
+ * max: the maximum allowed value (default: no maximum).
+ * mask: 'integer' to apply only to the left of the decimal point, 
+ *       'decimal' to apply only to the right of the decimal point,
+ *       or 'all' to apply to the whole number (the default).
+ * wrap: true if the value should be wrapped when it passes min or max;
+ *       both min and max must be present for this to work (default:
+ *       false).
  */
 static bool
 do_property_multiply (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
-  const SGPropertyNode * factor = arg->getChild("factor");
+  double factor = arg->getDoubleValue("factor", 1);
 
-  if (factor == 0)
-      return true;
+  double unmodifiable, modifiable;
+  split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all"),
+              &unmodifiable, &modifiable);
+  modifiable *= factor;
+  limit_value(&modifiable, arg);
 
-  switch (prop->getType()) {
-
-  case SGPropertyNode::BOOL:
-    return prop->setBoolValue(prop->getBoolValue() && factor->getBoolValue());
-
-  case SGPropertyNode::INT:
-    return prop->setIntValue(int(prop->getIntValue()
-                                 * factor->getDoubleValue()));
-
-  case SGPropertyNode::LONG:
-    return prop->setLongValue(long(prop->getLongValue()
-				   * factor->getDoubleValue()));
-
-  case SGPropertyNode::FLOAT:
-    return prop->setFloatValue(float(prop->getFloatValue()
-				     * factor->getDoubleValue()));
-
-  case SGPropertyNode::DOUBLE:
-  case SGPropertyNode::UNSPECIFIED:
-  case SGPropertyNode::NONE:
-    return prop->setDoubleValue(prop->getDoubleValue()
-				* factor->getDoubleValue());
-
-  default:			// doesn't make sense with strings
-    return false;
-  }
+  prop->setDoubleValue(unmodifiable + modifiable);
 }
 
 
