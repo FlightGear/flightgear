@@ -14,9 +14,17 @@
 
 #include <simgear/constants.h>
 #include <simgear/sg_inlines.h>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 
+#include <Main/globals.hxx>
+
 #include "hitlist.hxx"
+
+
+extern ssgBranch *terrain;
 
 
 // check to see if the intersection point is
@@ -302,5 +310,80 @@ void FGHitList::IntersectCachedLeaf( sgdMat4 m,
         {
 	    IntersectLeaf( (ssgLeaf *)last_hit(), m, orig, dir );
 	}
+    }
+}
+
+
+static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
+    sgVec3 tmp;
+    sgSetVec3(tmp, src[0], src[1], src[2] );
+    sgMat4 TMP;
+    sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
+    sgXformVec3(tmp, tmp, TMP);
+    sgSetVec3(dst, tmp[2], tmp[1], tmp[0] );
+}
+
+
+// a temporary hack until we get everything rewritten with sgdVec3
+static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
+{
+    return Point3D(a.x()+b[0], a.y()+b[1], a.z()+b[2]);
+}
+
+
+// Determine scenery altitude via ssg.  Normally this just happens
+// when we render the scene, but we'd also like to be able to do this
+// explicitely.  lat & lon are in radians.  view_pos in current world
+// coordinate translated near (0,0,0) (in meters.)  Returns result in
+// meters.
+bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
+		    FGHitList *hit_list,
+		    double *terrain_elev, double *radius, double *normal)
+{
+    sgdVec3 view_pos;
+    sgdSubVec3( view_pos, abs_view_pos, scenery_center );
+
+    sgdVec3 orig, dir;
+    sgdCopyVec3(orig, view_pos );
+    sgdCopyVec3(dir, abs_view_pos );
+
+    hit_list->Intersect( terrain, orig, dir );
+
+    int this_hit=0;
+    Point3D geoc;
+    double result = -9999;
+    Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
+    
+    int hitcount = hit_list->num_hits();
+    for ( int i = 0; i < hitcount; ++i ) {
+	geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );      
+	double lat_geod, alt, sea_level_r;
+	sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
+		     &alt, &sea_level_r);
+	if ( alt > result && alt < 10000 ) {
+	    result = alt;
+	    this_hit = i;
+	}
+    }
+
+    if ( result > -9000 ) {
+	*terrain_elev = result;
+	*radius = geoc.radius();
+	sgVec3 tmp;
+	sgSetVec3(tmp, hit_list->get_normal(this_hit));
+	// cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
+	//      << tmp[2] << endl;
+	/* ssgState *IntersectedLeafState =
+	    ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
+	CurrentNormalInLocalPlane(tmp, tmp);
+	sgdSetVec3( normal, tmp );
+	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
+	return true;
+    } else {
+	SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
+	*terrain_elev = 0.0;
+	float *up = globals->get_current_view()->get_world_up();
+	sgdSetVec3(normal, up[0], up[1], up[2]);
+	return false;
     }
 }

@@ -81,10 +81,6 @@ private:
     // see comment at prep_ssg_nodes()
     void prep_ssg_node( int idx );
 	
-    // int hitcount;
-    // sgdVec3 hit_pts [ MAX_HITS ] ;
-
-    // ssgEntity *last_hit;
     FGHitList hit_list;
 
     SGBucket previous_bucket;
@@ -177,7 +173,6 @@ public:
 		     const sgdVec3 p, const sgdVec3 dir,
 		     FGHitList *list );
 
-    bool current_elev_ssg( sgdVec3 abs_view_pos, double *terrain_elev );
 	
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current

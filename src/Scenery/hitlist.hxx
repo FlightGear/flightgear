@@ -93,4 +93,13 @@ inline void FGHitList::Intersect( ssgBranch *scene,
     }
 }
 
+
+// Associated function, assuming a wgs84 world with 0,0,0 at the
+// center, find the current terrain intersection elevation for the
+// point specified.
+bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
+		    FGHitList *hit_list,
+		    double *terrain_elev, double *radius, double *normal );
+
+
 #endif // _HITLIST_HXX

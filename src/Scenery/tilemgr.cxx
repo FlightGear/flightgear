@@ -63,12 +63,6 @@ extern ssgBranch *ground;
 FGTileMgr global_tile_mgr;
 
 
-// a temporary hack until we get everything rewritten with sgdVec3
-static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
-{
-    return Point3D(a.x()+b[0], a.y()+b[1], a.z()+b[2]);
-}
-
 #ifdef ENABLE_THREADS
 SGLockedQueue<FGTileEntry *> FGTileMgr::attach_queue;
 SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
@@ -149,72 +143,6 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
 
         // Schedule tile for loading
         loader.add( e );
-    }
-}
-
-
-static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
-    sgVec3 tmp;
-    sgSetVec3(tmp, src[0], src[1], src[2] );
-    sgMat4 TMP;
-    sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
-    sgXformVec3(tmp, tmp, TMP);
-    sgSetVec3(dst, tmp[2], tmp[1], tmp[0] );
-}
-
-
-// Determine scenery altitude via ssg.  Normally this just happens
-// when we render the scene, but we'd also like to be able to do this
-// explicitely.  lat & lon are in radians.  view_pos in current world
-// coordinate translated near (0,0,0) (in meters.)  Returns result in
-// meters.
-bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, double *terrain_elev ) {
-    sgdVec3 view_pos;
-    sgdVec3 sc;
-    sgdSetVec3( sc, scenery.center.x(), scenery.center.y(), scenery.center.z());
-    sgdSubVec3( view_pos, abs_view_pos, sc );
-
-    sgdVec3 orig, dir;
-    sgdCopyVec3(orig, view_pos );
-    sgdCopyVec3(dir, abs_view_pos );
-
-    hit_list.Intersect( terrain, orig, dir );
-
-    int this_hit=0;
-    Point3D geoc;
-    double result = -9999;
-
-    int hitcount = hit_list.num_hits();
-    for ( int i = 0; i < hitcount; ++i ) {
-	geoc = sgCartToPolar3d( scenery.center + hit_list.get_point(i) );      
-	double lat_geod, alt, sea_level_r;
-	sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
-		     &alt, &sea_level_r);
-	if ( alt > result && alt < 10000 ) {
-	    result = alt;
-	    this_hit = i;
-	}
-    }
-
-    if ( result > -9000 ) {
-	*terrain_elev = result;
-	scenery.cur_radius = geoc.radius();
-	sgVec3 tmp;
-	sgSetVec3(tmp, hit_list.get_normal(this_hit));
-	// cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
-	//      << tmp[2] << endl;
-	/* ssgState *IntersectedLeafState =
-	    ((ssgLeaf*)hit_list.get_entity(this_hit))->getState(); */
-	CurrentNormalInLocalPlane(tmp, tmp);
-	sgdSetVec3( scenery.cur_normal, tmp );
-	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
-	return true;
-    } else {
-	SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
-	*terrain_elev = 0.0;
-	float *up = globals->get_current_view()->get_world_up();
-	sgdSetVec3(scenery.cur_normal, up[0], up[1], up[2]);
-	return false;
     }
 }
 
@@ -401,6 +329,8 @@ int FGTileMgr::update( double lon, double lat ) {
 	}
     }
     counter_hack = (counter_hack + 1) % 5;
+    sgdVec3 sc;
+    sgdSetVec3( sc, scenery.center[0], scenery.center[1], scenery.center[2] );
 
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
@@ -419,7 +349,9 @@ int FGTileMgr::update( double lon, double lat ) {
 	prep_ssg_nodes();
 	sgSetVec3( tmp_view_pos, 0.0, 0.0, 0.0 );
 	double tmp_elev;
-	if ( current_elev_ssg(tmp_abs_view_pos, &tmp_elev) ) {
+	if ( fgCurrentElev(tmp_abs_view_pos, sc, &hit_list,
+			   &tmp_elev, &scenery.cur_radius, scenery.cur_normal) )
+	{
 	    scenery.cur_elev = tmp_elev;
 	} else {
 	    scenery.cur_elev = 0.0;
@@ -429,8 +361,9 @@ int FGTileMgr::update( double lon, double lat ) {
 	// cout << "abs view pos = " << current_view.abs_view_pos
 	//      << " view pos = " << current_view.view_pos << endl;
 	double tmp_elev;
-	if ( current_elev_ssg(globals->get_current_view()->get_abs_view_pos(),
-			      &tmp_elev) )
+	if ( fgCurrentElev(globals->get_current_view()->get_abs_view_pos(),
+			   sc, &hit_list,
+			   &tmp_elev, &scenery.cur_radius, scenery.cur_normal) )
 	{
 	    scenery.cur_elev = tmp_elev;
 	} else {
