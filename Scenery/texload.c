@@ -7,6 +7,8 @@
 #include <stdlib.h> 
 #include <string.h>
 
+#include <zlib/zlib.h>
+
 #include "texload.h"
 
 typedef struct _ImageRec {
@@ -18,7 +20,7 @@ typedef struct _ImageRec {
     unsigned int wasteBytes;
     char name[80];
     unsigned long colorMap;
-    FILE *file;
+    gzFile file;
     unsigned char *tmp;
     unsigned long rleEnd;
     unsigned int *rowStart;
@@ -86,11 +88,12 @@ static ImageRec *ImageOpen(char *fileName)
         fprintf(stderr, "Out of memory!\n");
         exit(1);
     }
-    if ((image->file = fopen(fileName, "rb")) == NULL) {
+    if ((image->file = gzopen(fileName, "rb")) == NULL) {
       return NULL;
     }
 
-    fread(image, 1, 12, image->file);
+    // fread(image, 1, 12, image->file);
+    gzread(image->file, image, 12);
 
     if (swapFlag) {
         ConvertShort(&image->imagic, 6);
@@ -111,9 +114,11 @@ static ImageRec *ImageOpen(char *fileName)
             exit(1);
         }
         image->rleEnd = 512 + (2 * x);
-        fseek(image->file, 512, SEEK_SET);
-        fread(image->rowStart, 1, x, image->file);
-        fread(image->rowSize, 1, x, image->file);
+        gzseek(image->file, 512, SEEK_SET);
+        // fread(image->rowStart, 1, x, image->file);
+	gzread(image->file, image->rowStart, x);
+        // fread(image->rowSize, 1, x, image->file);
+	gzread(image->file, image->rowSize, x);
         if (swapFlag) {
             ConvertUint(image->rowStart, x/(int) sizeof(unsigned));
             ConvertUint((unsigned *)image->rowSize, x/(int) sizeof(int));
@@ -124,7 +129,7 @@ static ImageRec *ImageOpen(char *fileName)
 
 static void
 ImageClose(ImageRec *image) {
-    fclose(image->file);
+    gzclose(image->file);
     free(image->tmp);
     free(image);
 }
@@ -135,9 +140,11 @@ ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z) {
     int count;
 
     if ((image->type & 0xFF00) == 0x0100) {
-        fseek(image->file, (long) image->rowStart[y+z*image->ysize], SEEK_SET);
-        fread(image->tmp, 1, (unsigned int)image->rowSize[y+z*image->ysize],
-              image->file);
+        gzseek(image->file, (long) image->rowStart[y+z*image->ysize], SEEK_SET);
+        // fread(image->tmp, 1, (unsigned int)image->rowSize[y+z*image->ysize],
+        //      image->file);
+	gzread(image->file, image->tmp, 
+	       (unsigned int)image->rowSize[y+z*image->ysize]);
 
         iPtr = image->tmp;
         oPtr = buf;
@@ -159,9 +166,10 @@ ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z) {
             }
         }
     } else {
-        fseek(image->file, 512+(y*image->xsize)+(z*image->xsize*image->ysize),
+        gzseek(image->file, 512+(y*image->xsize)+(z*image->xsize*image->ysize),
               SEEK_SET);
-        fread(buf, 1, image->xsize, image->file);
+        // fread(buf, 1, image->xsize, image->file);
+	gzread(image->file, buf, image->xsize);
     }
 }
 
