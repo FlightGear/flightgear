@@ -49,17 +49,12 @@
 // already depending on how you defined FG_HAVE_STD_INCLUDES, but I
 // can go ahead and add this -- CLO
 #ifdef __MWERKS__
-#  include <math.h> // needed fabs()
+FG_USING_NAMESPACE(std);
 #endif
 
 #ifndef FG_HAVE_NATIVE_SGI_COMPILERS
 FG_USING_STD(ostream);
 FG_USING_STD(istream);
-#endif
-
-// -dw- someone seems to have forgotten this...
-#ifdef __MWERKS__
-FG_USING_STD(std);
 #endif
 
 

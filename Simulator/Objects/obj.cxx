@@ -168,13 +168,19 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 
     // ignore initial comments and blank lines. (priming the pump)
     // in >> skipcomment;
-    string line;
+    // string line;
 
+    string token;
+    char c;
+
+#ifdef __MWERKS__
+    while ( in.get(c) && c  != '\0' ) {
+	in.putback(c);
+#else
     while ( ! in.eof() ) {
-	string token;
-	char c;
+#endif
 
-#if defined( MACOS )
+#ifdef __MWERKS__
 	in >> ::skipws;
 #else
 	in >> skipws;

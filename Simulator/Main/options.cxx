@@ -694,13 +694,19 @@ int fgOPTIONS::parse_command_line( int argc, char **argv ) {
 // Parse config file options
 int fgOPTIONS::parse_config_file( const string& path ) {
     fg_gzifstream in( path );
-    if ( !in )
+    if ( !in.is_open() )
 	return(FG_OPTIONS_ERROR);
 
     FG_LOG( FG_GENERAL, FG_INFO, "Processing config file: " << path );
 
     in >> skipcomment;
-    while ( !in.eof() ) {
+#ifndef __MWERKS__
+    while ( ! in.eof() ) {
+#else
+    char c = '\0';
+    while ( in.get(c) && c != '\0' ) {
+	in.putback(c);
+#endif
 	string line;
 
 #ifdef GETLINE_NEEDS_TERMINATOR

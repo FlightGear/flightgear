@@ -93,20 +93,17 @@ fg_gzifstream::attach( int fd, ios_openmode io_mode )
 istream&
 skipeol( istream& in )
 {
-    char c = 0;
+    char c = '\0';
     // skip to end of line.
-    while ( in.get(c)  ) {
+
+#ifdef __MWERKS__
+    while ( in.get(c) && c != '\0' ) {
+#else
+    while ( in.get(c) ) {
+#endif
     	if ( (c == '\n') || (c == '\r') ) {
 	    break;
 	}	
-
-#ifdef __MWERKS__
-	// also break on '\0'
-    	if ( c == '\0' ) {
-	    break;
-	}	
-#endif
-
     }
 
     return in;
@@ -115,32 +112,21 @@ skipeol( istream& in )
 istream&
 skipws( istream& in ) {
     char c;
-    while ( in.get(c) ) {
-
 #ifdef __MWERKS__
-
-	// -dw- for unix file compatibility
-	// -clo- this causes problems for unix
-    	if ( (c == '\n') || (c == '\r') || (c == '\0') ) {
-	    break;
-	}
-
-	if ( ! isspace( c ) && c != '\n' ) {
-	    // put pack the non-space character
-	    in.putback(c);
-	    break;
-	}
-
+    while ( in.get(c) && c != '\0' ) {
 #else
-
-	if ( ! isspace( c ) ) {
-	    // put pack the non-space character
-	    in.putback(c);
-	    break;
-	}
-
+    while ( in.get(c) ) {
 #endif
 
+#ifdef __MWERKS__
+	if ( ! isspace( c ) && c != '\n' ) {
+#else
+	if ( ! isspace( c ) ) {
+#endif
+	    // put pack the non-space character
+	    in.putback(c);
+	    break;
+	}
     }
     return in;
 }

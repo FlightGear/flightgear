@@ -48,7 +48,7 @@ FG_USING_STD(endl);
 #endif
 
 #ifdef __MWERKS__
-#  define cerr std::cerr and
+#  define cerr std::cerr
 #  define endl std::endl
 FG_USING_STD(iostream);
 #endif
