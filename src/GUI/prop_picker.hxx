@@ -26,6 +26,8 @@ class fgPropPicker : public puDialogBox
   static void fgPropPickerHandleArrow ( puObject *arrow );
   static void fgPropPickerHandleOk ( puObject* b );
 
+  void delete_arrays () ;
+
   char** files ;
   char** names ;
   char** values ;
