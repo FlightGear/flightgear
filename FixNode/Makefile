@@ -37,7 +37,7 @@ include $(FG_ROOT_SRC)/commondefs
 # Rule for TARGET
 #---------------------------------------------------------------------------
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS) $(FG_ROOT_LIB)/stamp_libs
 	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
 
 
@@ -46,6 +46,11 @@ include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1998/04/06 21:09:44  curt
+# Additional win32 support.
+# Fixed a bad bug in dem file parsing that was causing the output to be
+# flipped about x = y.
+#
 # Revision 1.3  1998/03/19 02:50:19  curt
 # Updated to support -lDEM class.
 #

@@ -416,7 +416,7 @@ void rawProcessStrip( fgRAWDEM *raw, int lat_degrees, char *path ) {
                  * row/col are reversed here.  raw->strip is backwards
                  * for convenience.  I am converting to [x,y] now. */
 		raw->center[col-xstart][row] = raw->strip[row][col];
-	
+
 		if ( raw->strip[row][col] < min) {
 		    min = raw->strip[row][col];
 		}
@@ -440,9 +440,14 @@ void rawProcessStrip( fgRAWDEM *raw, int lat_degrees, char *path ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/03/03 13:10:29  curt
-/* Close to a working version.
+/* Revision 1.4  1998/04/06 21:09:43  curt
+/* Additional win32 support.
+/* Fixed a bad bug in dem file parsing that was causing the output to be
+/* flipped about x = y.
 /*
+ * Revision 1.3  1998/03/03 13:10:29  curt
+ * Close to a working version.
+ *
  * Revision 1.2  1998/03/03 02:04:01  curt
  * Starting DEM Ascii format output routine.
  *

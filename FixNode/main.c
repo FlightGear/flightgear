@@ -1,5 +1,5 @@
-// triload.c -- read in a .node file and fix the z values of the interpolated 
-//              points
+// main.c -- read in a .node file and fix the z values of the interpolated 
+//           points
 //
 // Written by Curtis Olson, started November 1997.
 //
@@ -103,6 +103,11 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.6  1998/04/06 21:09:44  curt
+// Additional win32 support.
+// Fixed a bad bug in dem file parsing that was causing the output to be
+// flipped about x = y.
+//
 // Revision 1.5  1998/03/19 02:50:20  curt
 // Updated to support -lDEM class.
 //

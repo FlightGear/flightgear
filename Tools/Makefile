@@ -63,15 +63,17 @@ source-tar: clean
 	(cd ..; \
 	tar cvzf demtools-$(FG_VERSION).tar.gz Tools/Makefile Tools/README \
 	Tools/Todo Tools/make.inc Tools/process-dem.pl Tools/AssemTris \
-        Tools/Dem2node Tools/DemRaw2Ascii Tools/FixNode Tools/FixObj \
-	Tools/SplitTris Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
+        Tools/DEM Tools/gpc2.01 Tools/Dem2node Tools/DemRaw2Ascii \
+	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
+	Tools/Tri2obj Tools/Triangle)
 
 source-zip: clean
 	(cd ..; \
 	zip -r demtools-$(FG_VERSION).zip Tools/Makefile Tools/README \
 	Tools/Todo Tools/make.inc Tools/process-dem.pl Tools/AssemTris \
-        Tools/Dem2node Tools/DemRaw2Ascii Tools/FixNode Tools/FixObj \
-	Tools/SplitTris Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
+        Tools/DEM Tools/gpc2.01 Tools/Dem2node Tools/DemRaw2Ascii \
+	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
+	Tools/Tri2obj Tools/Triangle)
 
 bin-tar: all
 	echo "need to fix this"
@@ -91,6 +93,11 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.14  1998/04/06 21:09:37  curt
+# Additional win32 support.
+# Fixed a bad bug in dem file parsing that was causing the output to be
+# flipped about x = y.
+#
 # Revision 1.13  1998/03/19 02:52:51  curt
 # Updated to reflect some minor tool reorganization and the creation of class
 # to handle DEM processing needs.

@@ -91,6 +91,21 @@ while ( $dem_file = shift(@ARGV) ) {
 exit(0);
 
 
+# fix command to work with windoze, replaces first "/" with "\\"
+sub fix_command {
+    my($in) = @_;
+
+    $system = `uname -s`;
+    chop($system);
+
+    if ( $system =~ m/CYGWIN32/ ) { 
+	$in =~ s/\//\\\\/;
+    }
+
+    return($in);
+}
+
+
 # return the file name root (ending at last ".")
 sub file_root {
     my($file) = @_;
@@ -110,11 +125,11 @@ sub file_root {
 
 sub demfit {
     if ( $dem_file =~ m/.gz$/ ) {
-	$command = "gzip -dc $dem_file | ./Dem2node/dem2node $ENV{FG_ROOT} - $error";
+	$command = "gzip -dc $dem_file | Dem2node/dem2node $ENV{FG_ROOT} - $error";
     } else {
-	$command = "./Dem2node/dem2node $ENV{FG_ROOT} $dem_file $error";
+	$command = "Dem2node/dem2node $ENV{FG_ROOT} $dem_file $error";
     }
-
+    $command = fix_command($command);
     print "Running '$command'\n";
 
     open(OUT, "$command |");
@@ -141,7 +156,8 @@ sub triangle_1 {
 	print $file;
 	chop($file);
 	if ( ($file =~ m/\.node$/) && ($file !~ m/\.\d\.node$/) ) {
-	    $command = "./Triangle/triangle -q $subdir/$file";
+	    $command = "Triangle/triangle -q $subdir/$file";
+	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -164,10 +180,11 @@ sub triangle_1 {
 
 sub fixnode {
     if ( $dem_file =~ m/.gz$/ ) {
-	$command = "gzip -dc $dem_file | ./FixNode/fixnode - $subdir";
+	$command = "gzip -dc $dem_file | FixNode/fixnode - $subdir";
     } else {
-	$command = "./FixNode/fixnode $dem_file $subdir";
+	$command = "FixNode/fixnode $dem_file $subdir";
     }
+    $command = fix_command($command);
     print "Running '$command'\n";
     open(OUT, "$command |");
     while ( <OUT> ) {
@@ -199,7 +216,8 @@ sub splittris {
 	if ( $file =~ m/\.1\.node$/ ) {
 	    $file =~ s/\.node$//;  # strip off the ".node"
 	
-	    $command = "./SplitTris/splittris $subdir/$file";
+	    $command = "SplitTris/splittris $subdir/$file";
+	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -226,7 +244,8 @@ sub assemtris {
 	if ( $file =~ m/\.1\.body$/ ) {
 	    $file =~ s/\.body$//;  # strip off the ".body"
 	
-	    $command = "./AssemTris/assemtris $subdir/$file";
+	    $command = "AssemTris/assemtris $subdir/$file";
+	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -248,7 +267,8 @@ sub triangle_2 {
 	print $file;
 	chop($file);
 	if ( ($file =~ m/\.node$/) && ($file !~ m/\.\d\.node$/) ) {
-	    $command = "./Triangle/triangle $subdir/$file";
+	    $command = "Triangle/triangle $subdir/$file";
+	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -280,7 +300,8 @@ sub tri2obj {
 	if ( $file =~ m/\.1\.node$/ ) {
 	    $file =~ s/\.node$//;  # strip off the ".node"
 	    
-	    $command = "./Tri2obj/tri2obj $subdir/$file";
+	    $command = "Tri2obj/tri2obj $subdir/$file";
+	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -310,7 +331,8 @@ sub strips {
     foreach $file ( @FILES ) {
 	chop($file);
 	if ( $file =~ m/\.1\.obj$/ ) {
-	    $command = "./Stripe_u/strips $subdir/$file";
+	    $command = "Stripe_u/strips $subdir/$file";
+	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -348,7 +370,8 @@ sub fixobj {
 	    $newfile = $file;
 	    $newfile =~ s/\.2\.obj$/.obj/;
 	    
-	    $command = "./FixObj/fixobj $subdir/$file $subdir/$newfile";
+	    $command = "FixObj/fixobj $subdir/$file $subdir/$newfile";
+	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -364,6 +387,11 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.14  1998/04/06 21:09:38  curt
+# Additional win32 support.
+# Fixed a bad bug in dem file parsing that was causing the output to be
+# flipped about x = y.
+#
 # Revision 1.13  1998/03/19 02:52:52  curt
 # Updated to reflect some minor tool reorganization and the creation of class
 # to handle DEM processing needs.

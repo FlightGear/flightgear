@@ -28,6 +28,7 @@
 #include <math.h>     // rint()
 #include <stdio.h>
 #include <stdlib.h>   // atoi()
+#include <string.h>
 #include <sys/stat.h> // stat()
 #include <unistd.h>   // stat()
 
@@ -37,9 +38,59 @@
 #include <Include/fg_constants.h>
 
 
+#ifdef WIN32
+#  define MKDIR(a) mkdir(a,S_IRWXU)     // I am just guessing at this flag (NHV)
+#endif // WIN32
+
+
 fgDEM::fgDEM( void ) {
     // printf("class fgDEM CONstructor called.\n");
 }
+
+
+#ifdef WIN32
+
+// return the file path name ( foo/bar/file.ext = foo/bar )
+void extract_path (char *in, char *base) {
+    int len, i;
+    
+    len = strlen (in);
+    strcpy (base, in);
+
+    i = len - 1;
+    while ( (i >= 0) && (in[i] != '/') ) {
+	i--;
+    }
+
+    base[i] = '\0';
+}
+
+
+// Make a subdirectory
+int my_mkdir (char *dir) {
+    struct stat stat_buf;
+    int result;
+
+    printf ("mk_dir() ");
+
+    result = stat (dir, &stat_buf);
+
+    if (result != 0) {
+	MKDIR (dir);
+	result = stat (dir, &stat_buf);
+	if (result != 0) {
+	    printf ("problem creating %s\n", dir);
+	} else {
+	    printf ("%s created\n", dir);
+	}
+    } else {
+	printf ("%s already exists\n", dir);
+    }
+
+    return (result);
+}
+
+#endif // WIN32
 
 
 // open a DEM file
@@ -93,7 +144,7 @@ static int next_int(FILE *fd) {
 
 
 // return next double from input stream
-double next_double(FILE *fd) {
+static double next_double(FILE *fd) {
     char token[80];
 
     next_token(fd, token);
@@ -102,7 +153,7 @@ double next_double(FILE *fd) {
 
 
 // return next exponential num from input stream
-int next_exp(FILE *fd) {
+static int next_exp(FILE *fd) {
     double mantissa;
     int exp, acc;
     int i;
@@ -258,7 +309,7 @@ void fgDEM::read_a_record( void ) {
     next_token(fd, token);
 
     // number of profiles
-    dem_num_profiles = rows = next_int(fd);
+    dem_num_profiles = cols = next_int(fd);
     printf("    Expecting %d profiles\n", dem_num_profiles);
 }
 
@@ -270,14 +321,14 @@ void fgDEM::read_b_record(float dem_data[DEM_SIZE_1][DEM_SIZE_1])
     int i;
 
     // row / column id of this profile
-    prof_col = next_int(fd);
     prof_row = next_int(fd);
+    prof_col = next_int(fd);
     // printf("col id = %d  row id = %d\n", prof_col, prof_row);
 
     // Number of columns and rows (elevations) in this profile
-    prof_num_cols = cols = next_int(fd);
-    prof_num_rows = next_int(fd);
-    // printf("    profile num rows = %d\n", prof_num_cols);
+    prof_num_rows = rows = next_int(fd);
+    prof_num_cols = next_int(fd);
+    // printf("    profile num rows = %d\n", prof_num_rows);
 
     // Ground planimetric coordinates (arc-seconds) of the first
     // elevation in the profile
@@ -294,9 +345,9 @@ void fgDEM::read_b_record(float dem_data[DEM_SIZE_1][DEM_SIZE_1])
     next_token(fd, token);
 
     // One (usually) dimensional array (prof_num_cols,1) of elevations
-    for ( i = 0; i < prof_num_cols; i++ ) {
+    for ( i = 0; i < prof_num_rows; i++ ) {
 	prof_data = next_int(fd);
-	dem_data[i][cur_row] = (float)prof_data;
+	dem_data[cur_col][i] = (float)prof_data;
     }
 }
 
@@ -311,10 +362,10 @@ int fgDEM::parse( float dem_data[DEM_SIZE_1][DEM_SIZE_1] ) {
 
     for ( i = 0; i < dem_num_profiles; i++ ) {
 	read_b_record( dem_data );
-	cur_row++;
+	cur_col++;
 
-	if ( cur_row % 100 == 0 ) {
-	    printf("    loaded %d profiles of data\n", cur_row);
+	if ( cur_col % 100 == 0 ) {
+	    printf("    loaded %d profiles of data\n", cur_col);
 	}
     }
 
@@ -581,9 +632,9 @@ void fgDEM::fit( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
 // Initialize output mesh structure
 void fgDEM::outputmesh_init( float output_data[DEM_SIZE_1][DEM_SIZE_1] ) {
     int i, j;
-
-    for ( i = 0; i < DEM_SIZE_1; i++ ) {
-	for ( j = 0; j < DEM_SIZE_1; j++ ) {
+    
+    for ( j = 0; j < DEM_SIZE_1; j++ ) {
+	for ( i = 0; i < DEM_SIZE_1; i++ ) {
 	    output_data[i][j] = -9999.0;
 	}
     }
@@ -613,6 +664,9 @@ void fgDEM::outputmesh_output_nodes( float output_data[DEM_SIZE_1][DEM_SIZE_1],
 {
     struct stat stat_buf;
     char base_path[256], dir[256], file[256];
+#ifdef WIN32
+    char tmp_path[256];
+#endif
     char command[256];
     FILE *fd;
     long int index;
@@ -637,8 +691,30 @@ void fgDEM::outputmesh_output_nodes( float output_data[DEM_SIZE_1][DEM_SIZE_1],
     result = stat(dir, &stat_buf);
     if ( result != 0 ) {
 	printf("Stat error need to create directory\n");
+
+#ifndef WIN32
+
 	sprintf(command, "mkdir -p %s\n", dir);
 	system(command);
+
+#else // WIN32
+
+	// Cygwin crashes when trying to output to node file
+	// explicitly making directory structure seems OK on Win95
+
+	extract_path (base_path, tmp_path);
+
+	sprintf (dir, "%s/Scenery", fg_root);
+	if (my_mkdir (dir)) { exit (-1); }
+
+	sprintf (dir, "%s/Scenery/%s", fg_root, tmp_path);
+	if (my_mkdir (dir)) { exit (-1); }
+
+	sprintf (dir, "%s/Scenery/%s", fg_root, base_path);
+	if (my_mkdir (dir)) { exit (-1); }
+
+#endif // WIN32
+
     } else {
 	// assume directory exists
     }
@@ -687,6 +763,11 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/04/06 21:09:41  curt
+// Additional win32 support.
+// Fixed a bad bug in dem file parsing that was causing the output to be
+// flipped about x = y.
+//
 // Revision 1.2  1998/03/23 20:35:41  curt
 // Updated to use FG_EPSILON
 //
