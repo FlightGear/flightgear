@@ -37,6 +37,7 @@
 // Constructor
 FGViewer::FGViewer( void ):
     fov(55.0),
+    scalingType(FG_SCALING_MAX),
     view_offset(0.0),
     goal_view_offset(0.0),
     view_tilt(0.0),
@@ -67,6 +68,47 @@ FGViewer::bind ()
 void
 FGViewer::unbind ()
 {
+}
+
+double
+FGViewer::get_h_fov()
+{
+    switch (scalingType) {
+    case FG_SCALING_WIDTH:  // h_fov == fov
+	return fov;
+    case FG_SCALING_MAX:
+	if (aspect_ratio < 1.0) {
+	    // h_fov == fov
+	    return fov;
+	} else {
+	    // v_fov == fov
+	    return atan(tan(fov/2 * SG_DEGREES_TO_RADIANS) / aspect_ratio) *
+		SG_RADIANS_TO_DEGREES * 2;
+	}
+    default:
+	assert(false);
+    }
+}
+
+double
+FGViewer::get_v_fov()
+{
+    switch (scalingType) {
+    case FG_SCALING_WIDTH:  // h_fov == fov
+	return atan(tan(fov/2 * SG_DEGREES_TO_RADIANS) * aspect_ratio) *
+	    SG_RADIANS_TO_DEGREES * 2;
+    case FG_SCALING_MAX:
+	if (aspect_ratio < 1.0) {
+	    // h_fov == fov
+	    return atan(tan(fov/2 * SG_DEGREES_TO_RADIANS) * aspect_ratio) *
+		SG_RADIANS_TO_DEGREES * 2;
+	} else {
+	    // v_fov == fov
+	    return fov;
+	}
+    default:
+	assert(false);
+    }
 }
 
 void

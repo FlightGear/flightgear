@@ -64,14 +64,18 @@ FGSimpleSound::~FGSimpleSound() {
 // constructor
 FGSoundMgr::FGSoundMgr() {
     audio_sched = new slScheduler( 8000 );
-    audio_sched -> setMaxConcurrent ( 6 ); 
+    if ( audio_sched->notWorking() ) {
+	SG_LOG( SG_GENERAL, SG_ALERT, "Audio initialization failed!" );
+    } else {
+	audio_sched -> setMaxConcurrent ( 6 ); 
 
-    audio_mixer = new smMixer;
+	audio_mixer = new smMixer;
 
-    SG_LOG( SG_GENERAL, SG_INFO,
-	    "Rate = " << audio_sched->getRate()
-	    << "  Bps = " << audio_sched->getBps()
-	    << "  Stereo = " << audio_sched->getStereo() );
+	SG_LOG( SG_GENERAL, SG_INFO,
+		"Rate = " << audio_sched->getRate()
+		<< "  Bps = " << audio_sched->getBps()
+		<< "  Stereo = " << audio_sched->getStereo() );
+    }
 }
 
 // destructor

@@ -52,6 +52,13 @@ public:
 	FG_HPR = 2
     };
 
+    enum fgScalingType {  // nominal Field Of View actually applies to ...
+	FG_SCALING_WIDTH,       // window width
+	FG_SCALING_MAX,         // max(width, height)
+	// FG_SCALING_G_MEAN,      // geometric_mean(width, height)
+	// FG_SCALING_INDEPENDENT  // whole screen
+    };
+
 private:
 
     // flag forcing a recalc of derived view parameters
@@ -60,12 +67,10 @@ private:
 protected:
 
     fgViewType _type;
+    fgScalingType scalingType;
 
-    // the field of view in the x (width) direction
+    // the nominal field of view (angle, in degrees)
     double fov; 
-
-    // ratio of x and y fov's; fov(y) = fov(x) * fov_ratio
-    double fov_ratio;
 
     // ratio of window width and height; height = width * aspect_ratio
     double aspect_ratio;
@@ -143,13 +148,13 @@ public:
     //////////////////////////////////////////////////////////////////////
     // setter functions
     //////////////////////////////////////////////////////////////////////
-    inline void set_fov( double amount ) { fov = amount; }
-    // Don't provide set_fov_ratio explicitely. Use set_aspect_ratio
-    // instead.
+
+    inline void set_fov( double fov_deg ) {
+	fov = fov_deg;
+    }
+
     inline void set_aspect_ratio( double r ) {
 	aspect_ratio = r;
-	fov_ratio = atan(tan(fov/2 * SG_DEGREES_TO_RADIANS) * aspect_ratio) *
-	    SG_RADIANS_TO_DEGREES / (fov/2);
     }
     inline void set_view_offset( double a ) {
 	set_dirty();
@@ -215,7 +220,6 @@ public:
     inline bool is_dirty() const { return dirty; }
     inline double get_fov() const { return fov; }
     inline double get_aspect_ratio() const { return aspect_ratio; }
-    inline double get_fov_ratio() const { return fov_ratio; }
     inline double get_view_offset() const { return view_offset; }
     inline bool get_reverse_view_offset() const { return reverse_view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }
@@ -224,6 +228,10 @@ public:
     inline double *get_geod_view_pos() { return geod_view_pos; }
     inline float *get_pilot_offset() { return pilot_offset; }
     inline double get_sea_level_radius() const { return sea_level_radius; }
+    // Get horizontal field of view angle, in degrees.
+    double get_h_fov();
+    // Get vertical field of view angle, in degrees.
+    double get_v_fov();
 
     //////////////////////////////////////////////////////////////////////
     // derived values accessor functions

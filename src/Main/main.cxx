@@ -668,8 +668,8 @@ void fgRenderFrame( void ) {
 
 	// glMatrixMode( GL_PROJECTION );
 	// glLoadIdentity();
- 	float fov = globals->get_current_view()->get_fov();
- 	ssgSetFOV(fov, fov * globals->get_current_view()->get_fov_ratio());
+	ssgSetFOV( globals->get_current_view()->get_h_fov(),
+		   globals->get_current_view()->get_v_fov() );
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.get_cur_elev();
@@ -1309,8 +1309,8 @@ void fgReshape( int width, int height ) {
     fgSetInt("/sim/startup/xsize", width);
     fgSetInt("/sim/startup/ysize", height);
 
-    float fov = globals->get_current_view()->get_fov();
-    ssgSetFOV(fov, fov * globals->get_current_view()->get_fov_ratio());
+    ssgSetFOV( globals->get_current_view()->get_h_fov(),
+	       globals->get_current_view()->get_v_fov() );
 
     fgHUDReshape();
 }
