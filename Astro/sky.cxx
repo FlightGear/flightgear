@@ -252,8 +252,8 @@ void fgSkyInit( void ) {
     fgSkyVerticesInit();
 
     /* regester fgSkyColorsInit() as an event to be run periodically */
-    fgEventRegister("fgSkyColorsInit()", fgSkyColorsInit, 
-		    FG_EVENT_READY, 30000);
+    global_events.Register( "fgSkyColorsInit()", fgSkyColorsInit, 
+		            FG_EVENT_READY, 30000);
 }
 
 
@@ -373,9 +373,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/28 01:19:02  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.6  1998/05/23 14:07:14  curt
+/* Use new C++ events class.
 /*
+ * Revision 1.5  1998/04/28 01:19:02  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.4  1998/04/26 05:10:01  curt
  * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
  *
