@@ -693,34 +693,137 @@ void guiToggleMenu(void)
 the Gui callback functions 
 ____________________________________________________________________*/
 
-static void saveFlight(puObject *cv)
-{
-    BusyCursor(0);
-    ofstream output("fgfs.sav");
-    if (output.good() && fgSaveFlight(output)) {
-      output.close();
-      mkDialog("Saved flight to ./fgfs.sav");
-      FG_LOG(FG_INPUT, FG_INFO, "Saved flight to fgfs.sav");
-    } else {
-      mkDialog("Cannot save flight to ./fgfs.sav");
-      FG_LOG(FG_INPUT, FG_ALERT, "Cannot save flight to fgfs.sav");
-    }
-    BusyCursor(1);
+
+// Hier Neu :-) This is my newly added code
+// Added by David Findlay <nedz@bigpond.com>
+// on Sunday 3rd of December
+
+// Start new Save Dialog Box
+static puDialogBox     *SaveDialog = 0;
+static puFrame         *SaveDialogFrame = 0;
+static puText          *SaveDialogMessage = 0;
+static puInput         *SaveDialogInput = 0;
+
+static puOneShot       *SaveDialogOkButton = 0;
+static puOneShot       *SaveDialogCancelButton = 0;
+static puOneShot       *SaveDialogResetButton = 0;
+
+// Default save filename
+static char saveFile[256] = "fgfs.sav";
+
+// Cancel Button
+void SaveDialogCancel(puObject *) {
+    FG_POP_PUI_DIALOG( SaveDialog );
 }
 
+// If press OK do this
+void SaveDialogOk(puObject*) {
+
+    FG_POP_PUI_DIALOG( SaveDialog );
+
+    char *s;
+    SaveDialogInput->getValue(&s);
+
+    ofstream output(s);
+    cout << saveFile << endl;
+    if (output.good() && fgSaveFlight(output)) {
+	output.close();
+	mkDialog("Saved flight");
+	FG_LOG(FG_INPUT, FG_INFO, "Saved flight");
+    } else {
+	mkDialog("Cannot save flight");
+	FG_LOG(FG_INPUT, FG_ALERT, "Cannot save flight");
+    }
+}
+
+// Create Dialog
+static void saveFlight(puObject *cv) {
+    SaveDialog = new puDialogBox (150, 50);
+    {
+        SaveDialogFrame   = new puFrame           (0,0,350, 150);
+        SaveDialogMessage = new puText            ((150 - puGetStringWidth( puGetDefaultLabelFont(), "File Name:" ) / 2), 110);
+        SaveDialogMessage ->    setLabel          ("File Name:");
+
+        SaveDialogInput   = new puInput           (50, 70, 300, 100);
+        SaveDialogInput   ->    setValue          (saveFile);
+        SaveDialogInput   ->    acceptInput();
+
+        SaveDialogOkButton     =  new puOneShot   (50, 10, 110, 50);
+        SaveDialogOkButton     ->     setLegend   (gui_msg_OK);
+        SaveDialogOkButton     ->     setCallback ( SaveDialogOk );
+        SaveDialogOkButton     ->     makeReturnDefault(TRUE);
+
+        SaveDialogCancelButton =  new puOneShot   (140, 10, 210, 50);
+        SaveDialogCancelButton ->     setLegend   (gui_msg_CANCEL);
+        SaveDialogCancelButton ->     setCallback ( SaveDialogCancel );
+    }
+    FG_FINALIZE_PUI_DIALOG( SaveDialog );
+   
+    SaveDialog -> reveal();
+}
+
+// Load Dialog Start
+static puDialogBox     *LoadDialog = 0;
+static puFrame         *LoadDialogFrame = 0;
+static puText          *LoadDialogMessage = 0;
+static puInput         *LoadDialogInput = 0;
+
+static puOneShot       *LoadDialogOkButton = 0;
+static puOneShot       *LoadDialogCancelButton = 0;
+static puOneShot       *LoadDialogResetButton = 0;
+
+// Default load filename
+static char loadFile[256] = "fgfs.sav";
+
+// Do this if the person click okay
+void LoadDialogOk(puObject *) {
+
+    FG_POP_PUI_DIALOG( LoadDialog );
+
+    char *l;
+    LoadDialogInput->getValue(&l);
+
+    ifstream input(l);
+    if (input.good() && fgLoadFlight(input)) {
+	input.close();
+	mkDialog("Loaded flight");
+	FG_LOG(FG_INPUT, FG_INFO, "Restored flight");
+    } else {
+	mkDialog("Failed to load flight");
+	FG_LOG(FG_INPUT, FG_ALERT, "Cannot load flight");
+    }
+}
+
+// Do this is the person presses cancel
+void LoadDialogCancel(puObject *) {
+    FG_POP_PUI_DIALOG( LoadDialog );
+}
+
+// Create Load Dialog
 static void loadFlight(puObject *cb)
 {
-    BusyCursor(0);
-    ifstream input("fgfs.sav");
-    if (input.good() && fgLoadFlight(input)) {
-      input.close();
-      mkDialog("Loaded flight from fgfs.sav");
-      FG_LOG(FG_INPUT, FG_INFO, "Restored flight from ./fgfs.sav");
-    } else {
-      mkDialog("Failed to load flight from fgfs.sav");
-      FG_LOG(FG_INPUT, FG_ALERT, "Cannot load flight from ./fgfs.sav");
+    LoadDialog = new puDialogBox (150, 50);
+    {
+        LoadDialogFrame   = new puFrame           (0,0,350, 150);
+        LoadDialogMessage = new puText            ((150 - puGetStringWidth( puGetDefaultLabelFont(), "File Name:" ) / 2), 110);
+        LoadDialogMessage ->    setLabel          ("File Name:");
+
+        LoadDialogInput   = new puInput           (50, 70, 300, 100);
+        LoadDialogInput   ->    setValue          (loadFile);
+        LoadDialogInput   ->    acceptInput();
+
+        LoadDialogOkButton     =  new puOneShot   (50, 10, 110, 50);
+        LoadDialogOkButton     ->     setLegend   (gui_msg_OK);
+        LoadDialogOkButton     ->     setCallback ( LoadDialogOk );
+        LoadDialogOkButton     ->     makeReturnDefault(TRUE);
+
+        LoadDialogCancelButton =  new puOneShot   (140, 10, 210, 50);
+        LoadDialogCancelButton ->     setLegend   (gui_msg_CANCEL);
+        LoadDialogCancelButton ->     setCallback ( LoadDialogCancel );
     }
-    BusyCursor(1);
+    FG_FINALIZE_PUI_DIALOG( LoadDialog );
+   
+    LoadDialog -> reveal();
 }
 
 void reInit(puObject *cb)
