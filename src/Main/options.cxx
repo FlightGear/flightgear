@@ -539,13 +539,14 @@ add_channel( const string& type, const string& channel_str ) {
 // at this stage. 
 
 // Parse --wp=ID[@alt]
-static bool 
+static void 
 parse_wp( const string& arg ) {
-  string_list *waypoints = globals->get_initial_waypoints();
-  if (!waypoints)
-    waypoints = new string_list;
-  waypoints->push_back(arg);
-  globals->set_initial_waypoints(waypoints);
+    string_list *waypoints = globals->get_initial_waypoints();
+    if (!waypoints) {
+        waypoints = new string_list;
+    }
+    waypoints->push_back(arg);
+    globals->set_initial_waypoints(waypoints);
 }
 
 

@@ -1001,26 +1001,25 @@ static bool fgSetPosFromFix( const string& id ) {
     }
 }
  
-static bool parseWaypoints()
-  {
+static void parseWaypoints() {
     string_list *waypoints = globals->get_initial_waypoints();
-    if (waypoints) 
-      {
+    if (waypoints) {
 	vector<string>::iterator i;
 	for (i = waypoints->begin(); 
 	     i  != waypoints->end();
 	     i++)
-	  {
-	    NewWaypoint(*i);
-	  }
+        {
+            NewWaypoint(*i);
+        }
 	// Now were done using the way points we can deallocate the
 	// memory they used
-	while (waypoints->begin() != waypoints->end())
-	  waypoints->pop_back();
+	while (waypoints->begin() != waypoints->end()) {
+            waypoints->pop_back();
+        }
 	delete waypoints;
 	globals->set_initial_waypoints(0);
-      }
-   }
+    }
+}
 
  
  
