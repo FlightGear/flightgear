@@ -2,8 +2,8 @@
 
 #ifndef  _MSC_VER
 
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <netdb.h>
