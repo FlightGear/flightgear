@@ -383,7 +383,7 @@ Specify a waypoint for the GC autopilot.  Multiple instances of this
 option are recognized in build a route.
 .SH ENVIRONMENT
 .TP
-.B $FGROOT
+.B $FG_ROOT
 Path used to locate data files.
 .SH FILES
 ~/.fgfsrc
@@ -391,27 +391,27 @@ Path used to locate data files.
 Per user configuration file.
 .RE
 .TP
-$FGROOT/system.fgfsrc
+$FG_ROOT/system.fgfsrc
 .RS
 System-wide configuration file in command line format.
 .RE
 .TP
-$FGROOT/preferences.xml
+$FG_ROOT/preferences.xml
 .RS
 System-wide configuration file in XML format.
 .RE
 .TP
-$FGROOT/keyboard.xml
+$FG_ROOT/keyboard.xml
 .RS
 Keyboard bindings.
 .RE
 .TP
-$FGROOT/Input/Joysticks/
+$FG_ROOT/Input/Joysticks/
 .RS
 Joystick bindings.
 .RE
 .TP
-$FGROOT/mice.xml
+$FG_ROOT/mice.xml
 .RS
 Mouse bindings.
 .RE
