@@ -92,7 +92,7 @@ bool FGAICarrier::init() {
    // Attach a pointer to this carrier class to those objects.
    mark_wires(sel, wire_objects);
    mark_cat(sel, catapult_objects);
-   mark_solid(sel, solid_objects);
+   mark_solid(sel, solid_objects, false);
 
    return true;
 }
@@ -160,13 +160,18 @@ bool FGAICarrier::mark_wires(ssgEntity* e, const list<string>& wire_objects) {
   return found;
 }
 
-bool FGAICarrier::mark_solid(ssgEntity* e, const list<string>& solid_objects) {
+bool FGAICarrier::mark_solid(ssgEntity* e, const list<string>& solid_objects, bool mark) {
   bool found = false;
   if (e->isAKindOf(ssgTypeBranch())) {
     ssgBranch* br = (ssgBranch*)e;
     ssgEntity* kid;
+
+    list<string>::const_iterator it;
+    for (it = solid_objects.begin(); it != solid_objects.end(); ++it)
+      mark = mark || e->getName() && (*it) == e->getName();
+
     for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
-      found = mark_solid(kid, solid_objects) || found;
+      found = mark_solid(kid, solid_objects, mark) || found;
 
     if (found)
       br->setTraversalMaskBits(SSGTRAV_HOT);
@@ -174,7 +179,7 @@ bool FGAICarrier::mark_solid(ssgEntity* e, const list<string>& solid_objects) {
   } else if (e->isAKindOf(ssgTypeLeaf())) {
     list<string>::const_iterator it;
     for (it = solid_objects.begin(); it != solid_objects.end(); ++it) {
-      if (e->getName() && (*it) == e->getName()) {
+      if (mark || (e->getName() && (*it) == e->getName())) {
         e->setTraversalMaskBits(SSGTRAV_HOT);
         e->setUserData( FGAICarrierHardware::newSolid( this ) );
         found = true;
