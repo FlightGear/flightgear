@@ -204,6 +204,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     net->left_aileron = node->getDoubleValue( "left-aileron-pos-norm" );
     net->right_aileron = node->getDoubleValue( "right-aileron-pos-norm" );
     net->rudder = node->getDoubleValue( "rudder-pos-norm" );
+    net->rudder = node->getDoubleValue( "nose-wheel-pos-norm" );
     net->speedbrake = node->getDoubleValue( "speedbrake-pos-norm" );
     net->spoilers = node->getDoubleValue( "spoilers-pos-norm" );
 
@@ -270,6 +271,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->left_aileron);
         htonf(net->right_aileron);
         htonf(net->rudder);
+        htonf(net->nose_wheel);
         htonf(net->speedbrake);
         htonf(net->spoilers);
     }
@@ -342,6 +344,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->left_aileron);
         htonf(net->right_aileron);
         htonf(net->rudder);
+        htonf(net->nose_wheel);
         htonf(net->speedbrake);
         htonf(net->spoilers);
     }
@@ -440,6 +443,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         node->setDoubleValue("left-aileron-pos-norm", net->left_aileron);
         node->setDoubleValue("right-aileron-pos-norm", net->right_aileron);
         node->setDoubleValue("rudder-pos-norm", net->rudder);
+        node->setDoubleValue("nose-wheel-pos-norm", net->nose_wheel);
         node->setDoubleValue("speedbrake-pos-norm", net->speedbrake);
         node->setDoubleValue("spoilers-pos-norm", net->spoilers);
     } else {

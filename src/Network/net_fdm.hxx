@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 14;
+const int FG_NET_FDM_VERSION = 15;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -121,6 +121,7 @@ public:
     float left_aileron;
     float right_aileron;
     float rudder;
+    float nose_wheel;
     float speedbrake;
     float spoilers;
 };
