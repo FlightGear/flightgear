@@ -68,6 +68,7 @@
 
 #if defined( WIN32 ) && !defined( __CYGWIN__ )
 #  include <Screen/win32-printer.h>
+#  include <Screen/GlBitmaps.h>
 #endif
 
 /*
@@ -847,6 +848,48 @@ void helpCb (puObject *)
     mkDialog ("Help started in netscape window.");
 }
 
+#if defined( WIN32 ) && !defined( __CYGWIN__)
+
+static void rotateView( double roll, double pitch, double yaw )
+{
+	// rotate view
+}
+
+static GLBitmap *b1 = NULL;
+extern FGInterface cur_view_fdm;
+GLubyte *hiResScreenCapture( int multiplier )
+{
+	float oldfov = current_options.get_fov();
+	float fov = oldfov / multiplier;
+	FGView *v = &current_view;
+	current_options.set_fov(fov);
+	v->force_update_fov_math();
+    fgInitVisuals();
+    int cur_width = current_view.get_winWidth( );
+    int cur_height = current_view.get_winHeight( );
+	if (b1) delete( b1 );
+	// New empty (mostly) bitmap
+	b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
+	int x,y;
+	for ( y = 0; y < multiplier; y++ )
+	{
+		for ( x = 0; x < multiplier; x++ )
+		{
+			fgReshape( cur_width, cur_height );
+			// pan to tile
+			rotateView( 0, (y*fov)-((multiplier-1)*fov/2), (x*fov)-((multiplier-1)*fov/2) );
+			fgRenderFrame();
+			// restore view
+			GlBitmap b2;
+			b1->copyBitmap( &b2, cur_width*x, cur_height*y );
+		}
+	}
+	current_view.UpdateViewParams(cur_view_fdm);
+	current_options.set_fov(oldfov);
+	v->force_update_fov_math();
+	return b1->getBitmap();
+}
+#endif
 
 
 #if defined( WIN32 ) && !defined( __CYGWIN__)
@@ -861,16 +904,11 @@ void printScreen ( puObject *obj ) {
     BusyCursor( 0 );
     mainMenuBar->hide();
 
-    CGlPrinter p( CGlPrinter::READ_BITMAP );
+    CGlPrinter p( CGlPrinter::PRINT_BITMAP );
     int cur_width = current_view.get_winWidth( );
     int cur_height = current_view.get_winHeight( );
-    p.Begin( "FlightGear" );
-    fgInitVisuals();
-    fgReshape( cur_width, cur_height );
-    //fgReshape( p.GetHorzRes(), p.GetVertRes() );
-    fgRenderFrame();
-    fgRenderFrame();
-    p.End();
+    p.Begin( "FlightGear", cur_width*3, cur_height*3 );
+	p.End( hiResScreenCapture(3) );
 
     if( menu_on ) {
 	mainMenuBar->reveal();
