@@ -615,7 +615,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	multi_loop = 1;
     }
 
-    if ( !current_options.get_pause() ) {
+    if ( !globals->get_freeze() ) {
 	// run Autopilot system
 	current_autopilot->run();
 

@@ -91,6 +91,7 @@
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
+#include "globals.hxx"
 #include "options.hxx"
 #include "views.hxx"
 #include "bfi.hxx"
@@ -592,10 +593,9 @@ bool fgInitSubsystems( void ) {
 
 void fgReInitSubsystems( void )
 {
-    int toggle_pause = current_options.get_pause();
-    
-    if( !toggle_pause )
-        current_options.toggle_pause();
+    bool freeze = globals->get_freeze();
+    if( !freeze )
+        globals->set_freeze( true );
     
     fgInitPosition();
     if( global_tile_mgr.init() ) {
@@ -682,6 +682,6 @@ void fgReInitSubsystems( void )
     controls.reset_all();
     current_autopilot->reset();
 
-    if( !toggle_pause )
-        current_options.toggle_pause();
+    if( !freeze )
+        globals->set_freeze( false );
 }

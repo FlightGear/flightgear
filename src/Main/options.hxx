@@ -147,7 +147,6 @@ private:
     bool splash_screen; // show splash screen
     bool intro_music;   // play introductory music
     int mouse_pointer;  // show mouse pointer
-    bool pause;         // pause intially enabled/disabled
     fgControlMode control_mode; // primary control mode
     fgAutoCoordMode auto_coordination;	// enable auto coordination
 
@@ -242,7 +241,6 @@ public:
     inline bool get_splash_screen() const { return splash_screen; }
     inline bool get_intro_music() const { return intro_music; }
     inline int get_mouse_pointer() const { return mouse_pointer; }
-    inline bool get_pause() const { return pause; }
     inline bool get_anti_alias_hud() const { return anti_alias_hud; }
     inline fgControlMode get_control_mode() const { return control_mode; }
     inline void set_control_mode( fgControlMode mode ) { control_mode = mode; }
@@ -312,8 +310,6 @@ public:
     inline void set_splash_screen (bool value) { splash_screen = value; }
     inline void set_intro_music (bool value) { intro_music = value; }
     inline void set_mouse_pointer (int value) { mouse_pointer = value; }
-    inline void set_pause (bool value) { pause = value; }
-    inline void toggle_pause () { pause = !pause; }
     inline void set_anti_alias_hud (bool value) { anti_alias_hud = value; }
     inline void set_hud_status( bool status ) { hud_status = status; }
     inline void set_sound (bool value) { sound = value; }

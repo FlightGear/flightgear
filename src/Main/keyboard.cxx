@@ -342,7 +342,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 112: // p key
-	    current_options.toggle_pause();
+	    globals->set_freeze( ! globals->get_freeze() );
 
 	    {
 		FGBucket p( f->get_Longitude() * RAD_TO_DEG,
@@ -471,10 +471,10 @@ void GLUTspecialkey(int k, int x, int y) {
 	switch (k) {
 	case GLUT_KEY_F2: // F2 Reload Tile Cache...
 	    {
-		int toggle_pause;
+		bool freeze;
 		FG_LOG(FG_INPUT, FG_INFO, "ReIniting TileCache");
-		if( (toggle_pause = !current_options.get_pause()) )
-		    current_options.toggle_pause();
+		if ( !freeze ) 
+		    globals->set_freeze( true );
 		BusyCursor(0);
 		if( global_tile_mgr.init() ) {
 		    // Load the local scenery data
@@ -486,8 +486,8 @@ void GLUTspecialkey(int k, int x, int y) {
 		    exit(-1);
 		}
 		BusyCursor(1);
-		if(toggle_pause)
-		    current_options.toggle_pause();
+		if ( !freeze )
+		   globals->set_freeze( false );
 		return;
 	    }
 	case GLUT_KEY_F3: // F3 Take a screen shot

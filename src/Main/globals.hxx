@@ -55,8 +55,8 @@ public:
     FGGlobals();
     ~FGGlobals();
 
-    inline bool get_frozen() const { return freeze; }
-    inline void toggle_frozen() { freeze = !freeze; }
+    inline bool get_freeze() const { return freeze; }
+    inline void set_freeze( bool f ) { freeze = f; }
 
     inline long int get_warp() const { return warp; }
     inline void set_warp( long int w ) { warp = w; }

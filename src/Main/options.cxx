@@ -156,7 +156,6 @@ fgOPTIONS::fgOPTIONS() :
     splash_screen(1),
     intro_music(1),
     mouse_pointer(0),
-    pause(0),
     control_mode(FG_JOYSTICK),
     auto_coordination(FG_AUTO_COORD_NOT_SPECIFIED),
 
@@ -232,8 +231,10 @@ fgOPTIONS::fgOPTIONS() :
 void 
 fgOPTIONS::toggle_panel() {
     
-    if( !pause )
-        toggle_pause();
+    bool freeze = globals->get_freeze();
+
+    if( !freeze )
+        globals->set_freeze(true);
     
     if( panel_status ) {
 	panel_status = false;
@@ -252,8 +253,8 @@ fgOPTIONS::toggle_panel() {
     // fgReshape( xsize, ysize);
     fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
 
-    if( !pause )
-        toggle_pause();
+    if( !freeze )
+        globals->set_freeze( false );
 }
 
 double
@@ -594,10 +595,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	mouse_pointer = 1;
     } else if ( arg == "--enable-mouse-pointer" ) {
 	mouse_pointer = 2;
-    } else if ( arg == "--disable-pause" ) {
-	pause = false;	
-    } else if ( arg == "--enable-pause" ) {
-	pause = true;	
+    } else if ( arg == "--disable-freeze" ) {
+	globals->set_freeze( false );
+    } else if ( arg == "--enable-freeze" ) {
+	globals->set_freeze( true );
     } else if ( arg == "--disable-anti-alias-hud" ) {
 	anti_alias_hud = false;	
     } else if ( arg == "--enable-anti-alias-hud" ) {
@@ -916,8 +917,8 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--enable-mouse-pointer:  enable extra mouse pointer (i.e. for"
 	 << endl;
     cout << "\t\tfull screen voodoo/voodoo-II based cards.)" << endl;
-    cout << "\t--disable-pause:  start out in an active state" << endl;
-    cout << "\t--enable-pause:  start out in a paused state" << endl;
+    cout << "\t--disable-freeze:  start out in an running state" << endl;
+    cout << "\t--enable-freeze:  start out in a frozen state" << endl;
     cout << "\t--control=mode:  primary control mode " 
 	 << "(joystick, keyboard, mouse)" << endl;
     cout << endl;

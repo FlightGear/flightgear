@@ -64,11 +64,12 @@
 #include <Cockpit/panel.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
-#include <Main/options.hxx>
+#include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/globals.hxx>
+#include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Main/save.hxx>
-#include <Main/bfi.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -669,16 +670,21 @@ void mkDialog (const char *txt)
 // Repair any damage done to the Panel by other Gui Items
 void guiFixPanel( void )
 {
-    int toggle_pause;
+#if 0 // this function does nothing anyway
+    bool freeze = globals->get_freeze();
 
     if ( current_options.get_panel_status() ) {
         // FGView *v = &current_view;
-        if( (toggle_pause = !current_options.get_pause()) )
-            current_options.toggle_pause();
+        if( !freeze )
+            globals->set_freeze( true );
 
-        if(toggle_pause)
-            current_options.toggle_pause();
+	// we must have some something here at some point but this
+	// function does nothing now.
+
+        if( !freeze )
+            globals->set_freeze( false );
     }
+#endif
 }
 
 // Toggle the Menu and Mouse display state
@@ -1029,9 +1035,9 @@ void AptDialog_OK (puObject *)
 
     FGAirport a;
     
-    int PauseMode = current_options.get_pause();
-    if(!PauseMode)
-        current_options.toggle_pause();
+    int freeze = globals->get_freeze();
+    if(!freeze)
+        globals->set_freeze( true );
 
     char *s;
     AptDialogInput->getValue(&s);
@@ -1058,8 +1064,8 @@ void AptDialog_OK (puObject *)
             mkDialog(AptId.c_str());
         }
     }
-    if( PauseMode != current_options.get_pause() )
-        current_options.toggle_pause();
+    if(!freeze)
+        globals->set_freeze( false );
 }
 
 void AptDialog_Reset(puObject *)
@@ -1139,9 +1145,9 @@ void NetIdDialog_OK (puObject *)
 {
     string NetId;
     
-    int PauseMode = current_options.get_pause();
-    if(!PauseMode)
-        current_options.toggle_pause();
+    bool freeze = globals->get_freeze();
+    if(!freeze)
+        globals->set_freeze( true );
 /*  
    The following needs some cleanup because 
    "string options.NetId" and "char *net_callsign" 
@@ -1156,8 +1162,8 @@ void NetIdDialog_OK (puObject *)
 /* Entering a callsign indicates : user wants Net HUD Info */
     net_hud_display = 1;
 
-    if( PauseMode != current_options.get_pause() )
-        current_options.toggle_pause();
+    if(!freeze)
+        globals->set_freeze( false );
 }
 
 void NewCallSign(puObject *cb)
@@ -1257,15 +1263,16 @@ void NetFGDDialog_OK (puObject *)
 {
     char *NetFGD;    
 
-    int PauseMode = current_options.get_pause();
-    if(!PauseMode) current_options.toggle_pause();
+    bool freeze = globals->get_freeze();
+    if(!freeze)
+        globals->set_freeze( true );
     NetFGDHostDialogInput->getValue( &NetFGD );
     strcpy( fgd_host, NetFGD);
     NetFGDPortLoDialogInput->getValue( (int *) &base_port );
     NetFGDPortHiDialogInput->getValue( (int *) &end_port );
     NetFGDDialog_Cancel( NULL );
-    if( PauseMode != current_options.get_pause() )
-        current_options.toggle_pause();
+    if(!freeze)
+        globals->set_freeze( false );
 }
 
 void NetFGDDialog_SCAN (puObject *)
@@ -1273,8 +1280,9 @@ void NetFGDDialog_SCAN (puObject *)
     char *NetFGD;
     int fgd_port;
     
-    int PauseMode = current_options.get_pause();
-    if(!PauseMode) current_options.toggle_pause();
+    bool freeze = globals->get_freeze();
+    if(!freeze)
+        globals->set_freeze( true );
 //    printf("Vor getvalue %s\n");
     NetFGDHostDialogInput->getValue( &NetFGD );
 //    printf("Vor strcpy %s\n", (char *) NetFGD);
@@ -1285,9 +1293,8 @@ void NetFGDDialog_SCAN (puObject *)
                  base_port, end_port);
     net_resolv_fgd(fgd_host);
     printf("Resolve : %d\n", net_r);
-    if( PauseMode != current_options.get_pause() ) {
-	current_options.toggle_pause();
-    }
+    if(!freeze)
+        globals->set_freeze( false );
     if ( net_r == 0 ) {
       fgd_port = 10000;
       strcpy( fgd_name, "");
