@@ -725,6 +725,9 @@ FGTileEntry::load( const string &base_path, bool is_base )
                                        geometry, NULL, NULL, NULL, light_pts,
                                        true ) )
                             {
+                                geometry->getKid( 0 )->setTravCallback( 
+                                                        SSG_CALLBACK_PRETRAV,
+                                                        &FGTileMgr::tile_filter_cb );
                                 new_tile -> addKid( geometry );
                             } else {
                                 delete geometry;
@@ -752,6 +755,9 @@ FGTileEntry::load( const string &base_path, bool is_base )
                                        taxi_lights, NULL, false ) )
                             {
                                 if ( geometry -> getNumKids() > 0 ) {
+                                    geometry->getKid( 0 )->setTravCallback(
+                                                                SSG_CALLBACK_PRETRAV,
+                                                                &FGTileMgr::tile_filter_cb );
                                     new_tile -> addKid( geometry );
                                 } else {
                                     delete geometry;
