@@ -43,15 +43,6 @@ class FGEventMgr : public FGSubsystem
 {
 public:
 
-    /**
-     * 
-     */
-    enum EventState {
-	FG_EVENT_SUSP   = 0,
-	FG_EVENT_READY  = 1,
-	FG_EVENT_QUEUED = 2
-    };
-
     typedef int interval_type;
 
 private:
@@ -69,8 +60,8 @@ private:
 
 	FGEvent( const char* desc,
 		 fgCallback* cb,
-		 EventState status,
-		 interval_type ms );
+		 interval_type repeat_value,
+		 interval_type initial_value );
 
 	/**
 	 * 
@@ -82,8 +73,7 @@ private:
 	 */
 	void reset()
 	{
-	    status_ = FG_EVENT_READY;
-	    ms_to_go_ = ms_;
+	    ms_to_go_ = repeat_value_;
 	}
 
 	/**
@@ -91,10 +81,9 @@ private:
 	 */
 	void run();
 
-	bool is_ready() const { return status_ == FG_EVENT_READY; }
-
 	string name() const { return name_; }
-	interval_type interval() const { return ms_; }
+	interval_type repeat_value() const { return repeat_value_; }
+	int value() const { return ms_to_go_; }
 
 	/**
 	 * Display event statistics.
@@ -108,9 +97,6 @@ private:
 	 */
 	bool update( int dt_ms )
 	{
-	    if (status_ != FG_EVENT_READY)
-		return false;
-
 	    ms_to_go_ -= dt_ms;
 	    return ms_to_go_ <= 0;
 	}
@@ -118,8 +104,8 @@ private:
     private:
 	string name_;
 	fgCallback* callback_;
-	EventState status_;
-	interval_type ms_;
+	interval_type repeat_value_;
+	interval_type initial_value_;
 	int ms_to_go_;
 
 	unsigned long cum_time;    // cumulative processor time of this event
@@ -148,36 +134,36 @@ public:
     void update( int dt );
 
     /**
-     * Register a function to be executed every 'interval' milliseconds.
+     * Register a free standing function to be executed some time in the future.
      * @param desc A brief description of this callback for logging.
      * @param cb The callback function to be executed.
-     * @param state
-     * @param interval Callback repetition rate in milliseconds.
+     * @param repeat_value repetition rate in milliseconds.
+     * @param initial_value initial delay value in milliseconds.  A value of
+     * -1 means run immediately.
      */
+    template< typename Fun >
     void Register( const char* name,
-		   void (*cb)(),
-		   interval_type interval_ms,
-		   EventState state = FG_EVENT_READY )
+		   const Fun& f,
+		   interval_type repeat_value,
+		   interval_type initial_value = -1 )
     {
-	this->Register( FGEvent( name, new fgFunctionCallback(cb), state, interval_ms ) );
+	this->Register( FGEvent( name,
+				 make_callback(f),
+				 repeat_value,
+				 initial_value ) );
     }
 
-    template< class Obj >
+    template< class ObjPtr, typename MemFn >
     void Register( const char* name,
-		   Obj* obj, void (Obj::*pmf)() const,
-		   interval_type interval_ms,
-		   EventState state = FG_EVENT_READY )
+		   const ObjPtr& p,
+		   MemFn pmf,
+		   interval_type repeat_value,
+		   interval_type initial_value = -1 )
     {
-	this->Register( FGEvent( name, new fgMethodCallback<Obj>(obj,pmf), state, interval_ms ) );
-    }
-
-    template< class Obj >
-    void Register( const char* name,
-		   Obj* obj, void (Obj::*pmf)(),
-		   interval_type interval_ms,
-		   EventState state = FG_EVENT_READY )
-    {
-	this->Register( FGEvent( name, new fgMethodCallback<Obj>(obj,pmf), state, interval_ms ) );
+	this->Register( FGEvent( name,
+				 make_callback(p,pmf),
+				 repeat_value,
+				 initial_value ) );
     }
 
     /**
