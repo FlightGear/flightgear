@@ -28,6 +28,8 @@
 #include "AIAircraft.hxx"
 #include "AIShip.hxx"
 #include "AIBallistic.hxx"
+#include "AIStorm.hxx"
+#include "AIThermal.hxx"
 
 SG_USING_STD(list);
 
@@ -89,7 +91,23 @@ void FGAIManager::init() {
                                 entry->getDoubleValue("elevation"),
                                 entry->getDoubleValue("speed") );
 
-      } 
+      } else if (!strcmp(entry->getStringValue("type", ""), "storm")) {
+
+        rval = createStorm( entry->getStringValue("path"),
+                            entry->getDoubleValue("latitude"),
+                            entry->getDoubleValue("longitude"),
+                            entry->getDoubleValue("altitude-ft"),
+                            entry->getDoubleValue("heading"),
+                            entry->getDoubleValue("speed-KTAS") );
+
+      } else if (!strcmp(entry->getStringValue("type", ""), "thermal")) {
+
+        rval = createThermal( entry->getDoubleValue("latitude"),
+                              entry->getDoubleValue("longitude"),
+                              entry->getDoubleValue("strength-fps"),
+                              entry->getDoubleValue("diameter-ft") );
+
+      }       
     }
   }
 
@@ -230,6 +248,40 @@ int FGAIManager::createBallistic( string path, double latitude, double longitude
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic->getID();
+}
+
+int FGAIManager::createStorm( string path, double latitude, double longitude,
+                             double altitude, double heading, double speed ) {
+
+        FGAIStorm* ai_storm = new FGAIStorm(this);
+        ai_list.push_back(ai_storm);
+        ai_storm->setID( assignID() );
+        ++numObjects;
+        ai_storm->setHeading(heading);
+        ai_storm->setSpeed(speed);
+        ai_storm->setPath(path.c_str());
+        ai_storm->setAltitude(altitude);
+        ai_storm->setLongitude(longitude);
+        ai_storm->setLatitude(latitude);
+        ai_storm->init();
+        ai_storm->bind();
+        return ai_storm->getID();
+}
+
+int FGAIManager::createThermal( double latitude, double longitude,
+                                double strength, double diameter ) {
+
+        FGAIThermal* ai_thermal = new FGAIThermal(this);
+        ai_list.push_back(ai_thermal);
+        ai_thermal->setID( assignID() );
+        ++numObjects;
+        ai_thermal->setLongitude(longitude);
+        ai_thermal->setLatitude(latitude);
+        ai_thermal->setStrength(strength);
+        ai_thermal->setDiameter(diameter / 6076.11549);
+        ai_thermal->init();
+        ai_thermal->bind();
+        return ai_thermal->getID();
 }
 
 void FGAIManager::destroyObject( int ID ) {

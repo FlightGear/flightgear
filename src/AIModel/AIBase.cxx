@@ -50,6 +50,8 @@ FGAIBase::FGAIBase() {
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
     x_shift = y_shift = rotation = 0.0;
+    invisible = true;
+    model_path = "";
 }
 
 FGAIBase::~FGAIBase() {
@@ -62,9 +64,11 @@ void FGAIBase::update(double dt) {
 
 
 void FGAIBase::Transform() {
-    aip.setPosition(pos.lon(), pos.lat(), pos.elev() * SG_METER_TO_FEET);
-    aip.setOrientation(roll, pitch, hdg);
-    aip.update( globals->get_scenery()->get_center() );    
+    if (!invisible) {
+      aip.setPosition(pos.lon(), pos.lat(), pos.elev() * SG_METER_TO_FEET);
+      aip.setOrientation(roll, pitch, hdg);
+      aip.update( globals->get_scenery()->get_center() );    
+    }
 }
 
 
@@ -76,16 +80,22 @@ bool FGAIBase::init() {
    p_vec.clear();
 
    props = root->getNode(_type_str, num, true);
-   ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
-	                             model_path.c_str(),
-                                     props,
-	                             globals->get_sim_time_sec() );
+   ssgBranch *model = 0;
+   if (model_path != "") {
+      model = sgLoad3DModel( globals->get_fg_root(),
+	                     model_path.c_str(),
+                             props,
+	                     globals->get_sim_time_sec() );
+   }
    if (model) {
      aip.init( model );
      aip.setVisible(true);
+     invisible = false;
      globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
    } else {
-     SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load aircraft model.");
+     if (model_path != "") { 
+       SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model.");
+     }
    } 
 
    setDie(false);

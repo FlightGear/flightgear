@@ -27,7 +27,6 @@
 #include <Main/fg_props.hxx>
 #include <list>
 #include "AIBase.hxx"
-#include "AIAircraft.hxx"
 
 SG_USING_STD(list);
 
@@ -54,7 +53,7 @@ private:
 
 public:
 
-    enum object_type { otAircraft, otShip, otBallistic, otRocket };
+    enum object_type { otAircraft, otShip, otBallistic, otRocket, otStorm, otThermal };
 
     FGAIManager();
     ~FGAIManager();
@@ -94,6 +93,18 @@ public:
                          double elevation,  // in degrees (same as pitch)
                          double speed );    // in feet per second
 
+    int createStorm( string path,        // path to exterior model
+                     double latitude,    // in degrees -90 to 90
+                     double longitude,   // in degrees -180 to 180
+                     double altitude,    // in feet
+                     double heading,     // true heading in degrees
+                     double speed );     // in knots true airspeed (KTAS)    
+
+    int createThermal( double latitude,    // in degrees -90 to 90
+                       double longitude,   // in degrees -180 to 180
+                       double strength,    // in feet per second
+                       double diameter );  // in feet
+                 
     void destroyObject( int ID );
 
     inline double get_user_latitude() { return user_latitude; }

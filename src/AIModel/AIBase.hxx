@@ -97,6 +97,7 @@ protected:
     SGModelPlacement aip;
     bool delete_me;
     int id;
+    bool invisible;
 
     void Transform();
 
