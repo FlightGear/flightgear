@@ -134,7 +134,7 @@ sub stop_logging {
 }
 
 
-sub quick_plot {
+sub quick_plot_vs_time {
     my( $data_file ) = shift;
     my( $plot_file ) = shift;
     my( $title ) = shift;
@@ -157,6 +157,43 @@ sub quick_plot {
     print CMD "set xlabel \"Time (sec)\"\n";
     print CMD "set ylabel \"$title\"\n";
     print CMD "plot \"$tmpdata\" using 1:$column title \"$title\" with lines\n";
+    print CMD "quit\n";
+    close( CMD );
+
+    # plot the graph
+    system( "gnuplot $tmpcmd" );
+
+    # clean up all our droppings
+    unlink( $tmpcmd );
+    unlink( $tmpdata );
+}
+
+
+sub quick_plot {
+    my( $data_file ) = shift;
+    my( $plot_file ) = shift;
+    my( $xtitle ) = shift;
+    my( $ytitle ) = shift;
+    my( $xcolumn ) = shift;
+    my( $ycolumn ) = shift;
+
+    print "quick plot -> $plot_file\n";
+
+    my( $tmpcmd ) = "$tmp_dir/plot_cmd_tmp.$$";
+    my( $tmpdata ) = "$tmp_dir/plot_data_tmp.$$";
+    my( $png_image ) = "$plot_file.png";
+
+    # strip the leading header off the file so gnuplot doesn't squawk
+    system( "tail +2 $data_file | sed -e \"s/,/ /g\" > $tmpdata" );
+
+    # create the gnuplot command file
+    open( CMD, ">$tmpcmd" );
+    print CMD "set terminal png color\n";
+    print "png_image = $png_image\n";
+    print CMD "set output \"$png_image\"\n";
+    print CMD "set xlabel \"$xtitle\"\n";
+    print CMD "set ylabel \"$ytitle\"\n";
+    print CMD "plot \"$tmpdata\" using $xcolumn:$ycolumn title \"$xtitle vs. $ytitle\" with lines\n";
     print CMD "quit\n";
     close( CMD );
 
