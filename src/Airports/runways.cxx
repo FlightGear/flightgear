@@ -508,9 +508,7 @@ bool FGRunwaysUtil::dump_mk4( const string& file ) {
 bool
 FGRunwaysUtil::search( const string& id, FGRunway* a ) const
 {
-cout << "ID " << id << endl;
     const_iterator it = runways.find( FGRunway(id) );
-cout << "it = " << it << " end = " << runways.end() << endl;
     if ( it != runways.end() )
     {
 	*a = *it;
