@@ -122,11 +122,11 @@ bool FGClipper::load_polys(const string& path) {
 	    gpc_add_contour( poly, &v_list );
 
 	    int area = (int)poly_type;
-	    if ( area < FG_MAX_AREAS ) {
+	    if ( area < FG_MAX_AREA_TYPES ) {
 		polys_in.polys[area].push_back(poly);
 	    } else {
 		FG_LOG( FG_CLIPPER, FG_ALERT, "Polygon type out of range = " 
-			<< poly_type);
+			<< (int)poly_type);
 		exit(-1);
 	    }
 	}
@@ -143,7 +143,8 @@ bool FGClipper::load_polys(const string& path) {
 
 // Do actually clipping work
 bool FGClipper::clip_all(const point2d& min, const point2d& max) {
-    gpc_polygon accum, result_diff, result_union, tmp;
+    gpc_polygon accum, result_union, tmp;
+    gpc_polygon *result_diff;
     gpcpoly_iterator current, last;
 
     FG_LOG( FG_CLIPPER, FG_INFO, "Running master clipper" );
@@ -173,7 +174,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     gpc_add_contour( &polys_in.safety_base, &v_list );
 
     // process polygons in priority order
-    for ( int i = 0; i < FG_MAX_AREAS; ++i ) {
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 
 	current = polys_in.polys[i].begin();
 	last = polys_in.polys[i].end();
@@ -183,22 +184,46 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
 #ifdef EXTRA_SAFETY_CLIP
 	    // clip to base tile
-	    gpc_polygon_clip(GPC_INT, &polys_in.safety_base, *current, &tmp);
+	    gpc_polygon_clip(GPC_INT, *current, &polys_in.safety_base, &tmp);
 #else
-	    &tmp = *current;
+	    tmp = *current;
 #endif
 
 	    // clip current polygon against previous higher priority
 	    // stuff
+	    result_diff = new gpc_polygon;
+	    result_diff->num_contours = 0;
+	    result_diff->contour = NULL;
+
 	    if ( accum.num_contours == 0 ) {
-		result_diff = tmp;
+		*result_diff = tmp;
 		result_union = tmp;
 	    } else {
-		gpc_polygon_clip(GPC_DIFF, &accum, &tmp, &result_diff);
-		gpc_polygon_clip(GPC_UNION, &accum, &tmp, &result_union);
+		gpc_polygon_clip(GPC_DIFF, &tmp, &accum, result_diff);
+		gpc_polygon_clip(GPC_UNION, &tmp, &accum, &result_union);
 	    }
-	    
-	    polys_clipped.polys[i].push_back(&result_diff);
+
+	    /*
+	    cout << "original contours = " << tmp.num_contours << endl;
+
+	    for ( int j = 0; j < tmp.num_contours; j++ ) {
+		for (int k = 0;k < tmp.contour[j].num_vertices;k++ ) {
+		    cout << tmp.contour[j].vertex[k].x << ","
+			 << tmp.contour[j].vertex[k].y << endl;
+		}
+	    }
+
+	    cout << "clipped contours = " << result_diff->num_contours << endl;
+
+	    for ( int j = 0; j < result_diff->num_contours; j++ ) {
+		for (int k = 0;k < result_diff->contour[j].num_vertices;k++ ) {
+		    cout << result_diff->contour[j].vertex[k].x << ","
+			 << result_diff->contour[j].vertex[k].y << endl;
+		}
+	    }
+	    */
+
+	    polys_clipped.polys[i].push_back(result_diff);
 	    accum = result_union;
 	}
     }
@@ -222,6 +247,10 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
 
 // $Log$
+// Revision 1.4  1999/03/19 00:26:18  curt
+// Fixed a clipping bug (polygons specified in wrong order).
+// Touched up a few compiler warnings.
+//
 // Revision 1.3  1999/03/17 23:48:58  curt
 // minor renaming and a bit of rearranging.
 //

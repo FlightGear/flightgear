@@ -57,7 +57,7 @@ typedef gpcpoly_container::iterator gpcpoly_iterator;
 typedef gpcpoly_container::const_iterator const_gpcpoly_iterator;
 
 
-#define FG_MAX_AREAS 20
+#define FG_MAX_AREA_TYPES 20
 #define EXTRA_SAFETY_CLIP
 #define FG_MAX_VERTICES 100000
 
@@ -70,7 +70,7 @@ public:
 
 class FGgpcPolyList {
 public:
-    gpcpoly_container polys[FG_MAX_AREAS];
+    gpcpoly_container polys[FG_MAX_AREA_TYPES];
     gpc_polygon safety_base;
 };
 
@@ -109,6 +109,10 @@ public:
 
 
 // $Log$
+// Revision 1.5  1999/03/19 00:26:19  curt
+// Fixed a clipping bug (polygons specified in wrong order).
+// Touched up a few compiler warnings.
+//
 // Revision 1.4  1999/03/18 04:31:10  curt
 // Let's not pass copies of huge structures on the stack ... ye might see a
 // segfault ... :-)
