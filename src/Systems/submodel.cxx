@@ -112,7 +112,7 @@ SubmodelSystem::release (submodel* sm, double dt)
   entity.wind_from_east = IC.wind_from_east;
   entity.wind_from_north = IC.wind_from_north;
   entity.wind = sm->wind;
-  int rval = ai->createBallistic( &entity );
+  ai->createBallistic( &entity );
 
   //cout << "Submodel created." << endl;
   if (sm->count > 0) (sm->count)--; 

@@ -124,7 +124,8 @@ bool FGAIBase::isa( object_type otype ) {
 
 
 void FGAIBase::bind() {
-   props->tie("id", SGRawValuePointer<int>(&id));
+   props->tie("id", SGRawValueMethods<FGAIBase,int>(*this,
+                                         &FGAIBase::_getID));
    props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
    props->tie("velocities/vertical-speed-fps",
                SGRawValueMethods<FGAIBase,double>(*this,
@@ -313,3 +314,6 @@ bool FGAIBase::_isNight() {
     return (fgGetFloat("/sim/time/sun-angle-rad") > 1.57);
 }
 
+int FGAIBase::_getID() const {
+    return (int)(this);
+}

@@ -83,6 +83,8 @@ private:
 
 	void Run(double dt);
         double sign(double x);	
+
+        bool _getGearDown() const;
 };
 
 

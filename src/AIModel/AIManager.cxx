@@ -42,7 +42,6 @@ FGAIManager::FGAIManager() {
   dt_count = 9;
   scenario_filename = "";
   ai_list.clear();
-  ids.clear();
 }
 
 FGAIManager::~FGAIManager() {
@@ -52,7 +51,6 @@ FGAIManager::~FGAIManager() {
       ++ai_list_itr;
     }
   ai_list.clear();
-  ids.clear();
 }
 
 
@@ -97,7 +95,6 @@ void FGAIManager::update(double dt) {
         ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
                 if ((*ai_list_itr)->getDie()) {      
-                   freeID((*ai_list_itr)->getID());
                    delete (*ai_list_itr);
                    --numObjects[(*ai_list_itr)->getType()];
                    --numObjects[0];
@@ -123,45 +120,11 @@ void FGAIManager::update(double dt) {
 }
 
 
-// This function returns the next available ID
-int FGAIManager::assignID() {
-  int maxint = 30000;
-  int x; 
-  bool used;
-  for (x=1; x<maxint; x++) {
-     used = false;
-     id_itr = ids.begin();
-     while( id_itr != ids.end() ) {
-       if ((*id_itr) == x) used = true;
-       ++id_itr;
-     }
-     if (!used) {
-       ids.push_back(x);
-       return x;
-     } 
-  }
-  return -1;  // no available ID's
-}
-
-
-// This function removes an ID from the ID array, making it
-// available for assignment to another AI object
-void FGAIManager::freeID( int ID ) {
-    id_itr = ids.begin();
-    while( id_itr != ids.end() ) {
-      if (*id_itr == ID) {
-        ids.erase( id_itr );
-        return;
-      }
-      ++id_itr;
-    }  
-}
-
-int FGAIManager::createAircraft( FGAIModelEntity *entity ) {
+void*
+FGAIManager::createAircraft( FGAIModelEntity *entity ) {
      
         FGAIAircraft* ai_plane = new FGAIAircraft(this);
         ai_list.push_back(ai_plane);
-        ai_plane->setID( assignID() );
         ++numObjects[0];
         ++numObjects[FGAIBase::otAircraft];
         if (entity->m_class == "light") {
@@ -192,14 +155,14 @@ int FGAIManager::createAircraft( FGAIModelEntity *entity ) {
 
         ai_plane->init();
         ai_plane->bind();
-        return ai_plane->getID();
+        return ai_plane;
 }
 
-int FGAIManager::createShip( FGAIModelEntity *entity ) {
+void*
+FGAIManager::createShip( FGAIModelEntity *entity ) {
 
         FGAIShip* ai_ship = new FGAIShip(this);
         ai_list.push_back(ai_ship);
-        ai_ship->setID( assignID() );
         ++numObjects[0];
         ++numObjects[FGAIBase::otShip];
         ai_ship->setHeading(entity->heading);
@@ -216,14 +179,14 @@ int FGAIManager::createShip( FGAIModelEntity *entity ) {
 
         ai_ship->init();
         ai_ship->bind();
-        return ai_ship->getID();
+        return ai_ship;
 }
 
-int FGAIManager::createBallistic( FGAIModelEntity *entity ) {
+void*
+FGAIManager::createBallistic( FGAIModelEntity *entity ) {
 
         FGAIBallistic* ai_ballistic = new FGAIBallistic(this);
         ai_list.push_back(ai_ballistic);
-        ai_ballistic->setID( assignID() );    
         ++numObjects[0];
         ++numObjects[FGAIBase::otBallistic];
         ai_ballistic->setAzimuth(entity->azimuth);
@@ -241,14 +204,14 @@ int FGAIManager::createBallistic( FGAIModelEntity *entity ) {
 	ai_ballistic->setWind(entity->wind);
         ai_ballistic->init();
         ai_ballistic->bind();
-        return ai_ballistic->getID();
+        return ai_ballistic;
 }
 
-int FGAIManager::createStorm( FGAIModelEntity *entity ) {
+void*
+FGAIManager::createStorm( FGAIModelEntity *entity ) {
 
         FGAIStorm* ai_storm = new FGAIStorm(this);
         ai_list.push_back(ai_storm);
-        ai_storm->setID( assignID() );
         ++numObjects[0];
         ++numObjects[FGAIBase::otStorm];
         ai_storm->setHeading(entity->heading);
@@ -259,14 +222,14 @@ int FGAIManager::createStorm( FGAIModelEntity *entity ) {
         ai_storm->setLatitude(entity->latitude);
         ai_storm->init();
         ai_storm->bind();
-        return ai_storm->getID();
+        return ai_storm;
 }
 
-int FGAIManager::createThermal( FGAIModelEntity *entity ) {
+void*
+FGAIManager::createThermal( FGAIModelEntity *entity ) {
 
         FGAIThermal* ai_thermal = new FGAIThermal(this);
         ai_list.push_back(ai_thermal);
-        ai_thermal->setID( assignID() );
         ++numObjects[0];
         ++numObjects[FGAIBase::otThermal];
         ai_thermal->setLongitude(entity->longitude);
@@ -275,20 +238,19 @@ int FGAIManager::createThermal( FGAIModelEntity *entity ) {
         ai_thermal->setDiameter(entity->diameter / 6076.11549);
         ai_thermal->init();
         ai_thermal->bind();
-        return ai_thermal->getID();
+        return ai_thermal;
 }
 
-void FGAIManager::destroyObject( int ID ) {
+void FGAIManager::destroyObject( void* ID ) {
         ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
             if ((*ai_list_itr)->getID() == ID) {
-              freeID( ID );
               --numObjects[0];
               --numObjects[(*ai_list_itr)->getType()];
               delete (*ai_list_itr);
               ai_list.erase(ai_list_itr);
-              --ai_list_itr;
-              return;
+
+              break;
             }
             ++ai_list_itr;
         }
@@ -351,9 +313,5 @@ void FGAIManager::processScenario( string filename ) {
   }
 
   delete s;
-}
-
-int FGAIManager::getNum( FGAIBase::object_type ot ) {
-  return numObjects[ot];
 }
 

@@ -52,11 +52,6 @@ private:
     ai_list_type ai_list;
     ai_list_iterator ai_list_itr;
 
-    // array of already-assigned ID's
-    typedef vector <int> id_vector_type;
-    id_vector_type ids;                    
-    id_vector_type::iterator id_itr;
-
 public:
 
     FGAIManager();
@@ -67,16 +62,13 @@ public:
     void unbind();
     void update(double dt);
 
-    int assignID();
-    void freeID(int ID);
+    void* createBallistic( FGAIModelEntity *entity );
+    void* createAircraft( FGAIModelEntity *entity );
+    void* createThermal( FGAIModelEntity *entity );
+    void* createStorm( FGAIModelEntity *entity );
+    void* createShip( FGAIModelEntity *entity );
 
-    int createBallistic( FGAIModelEntity *entity );
-    int createAircraft( FGAIModelEntity *entity );
-    int createThermal( FGAIModelEntity *entity );
-    int createStorm( FGAIModelEntity *entity );
-    int createShip( FGAIModelEntity *entity );
-
-    void destroyObject( int ID );
+    void destroyObject( void* ID );
 
     inline double get_user_latitude() { return user_latitude; }
     inline double get_user_longitude() { return user_longitude; }
@@ -86,8 +78,9 @@ public:
     inline double get_user_yaw() { return user_yaw; }
     inline double get_user_speed() {return user_speed; }
 
+    inline int getNum( FGAIBase::object_type ot ) { return numObjects[ot]; }
+
     void processScenario( string filename );
-    int getNum( FGAIBase::object_type ot);
 
 private:
 

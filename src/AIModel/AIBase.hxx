@@ -91,8 +91,7 @@ public:
     void setLongitude( double longitude );
     void setBank( double bank );
 
-    void setID( int ID );
-    int  getID();
+    void* getID();
     void setDie( bool die );
     bool getDie();
 
@@ -139,7 +138,6 @@ protected:
     ssgBranch * model;     //The 3D model object
     SGModelPlacement aip;
     bool delete_me;
-    int id;
     bool invisible;
     bool no_roll;
     double life;
@@ -179,6 +177,8 @@ public:
     double _getY_shift() const;
     double _getRotation() const;
 
+    int _getID() const;
+
     inline double _getRange() { return range; };
 
     static bool _isNight();
@@ -217,10 +217,9 @@ inline void FGAIBase::setLatitude ( double latitude ) {
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }
 inline bool FGAIBase::getDie() { return delete_me; }
 
-inline void FGAIBase::setID( int ID ) { id = ID; }
-inline int  FGAIBase::getID() { return id; }
-
 inline FGAIBase::object_type FGAIBase::getType() { return _otype; }
+
+inline void* FGAIBase::getID() { return this; }
 
 #endif	// _FG_AIBASE_HXX
 

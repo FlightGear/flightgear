@@ -78,20 +78,19 @@ bool FGAIAircraft::init() {
 void FGAIAircraft::bind() {
     FGAIBase::bind();
 
-/*
     props->tie("controls/gear/gear-down",
-               SGRawValueFunctions<bool>(FGAIAircraft::_getGearDown));
+               SGRawValueMethods<FGAIAircraft,bool>(*this,
+                                              &FGAIAircraft::_getGearDown));
 
     props->getNode("controls/lighting/landing-lights", true)
            ->alias("controls/gear/gear-down");
-*/
 }
 
 void FGAIAircraft::unbind() {
     FGAIBase::unbind();
 
-//    props->untie("controls/gear/gear-down");
-//    props->getNode("controls/lighting/landing-lights")->unalias();
+    props->untie("controls/gear/gear-down");
+    props->getNode("controls/lighting/landing-lights")->unalias();
 }
 
 
@@ -384,4 +383,8 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
 
 }
 
-
+bool FGAIAircraft::_getGearDown() const {
+   return ((props->getFloatValue("position/altitude-agl-ft") < 900.0)
+            && (props->getFloatValue("velocities/airspeed-kt")
+                 < performance->land_speed*1.25));
+}

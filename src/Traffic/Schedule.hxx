@@ -40,7 +40,7 @@ class FGAISchedule
   FGScheduledFlightVec flights;
   float lat;
   float lon; 
-  int AIManagerRef;
+  void* AIManagerRef;
   bool firstRun;
 
  public:
