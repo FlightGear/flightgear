@@ -39,6 +39,8 @@
 #include <plib/sl.h>
 #include <plib/sm.h>
 
+#include <simgear/timing/timestamp.hxx>
+
 SG_USING_STD(map);
 SG_USING_STD(string);
 
@@ -85,6 +87,9 @@ class FGSoundMgr {
     slScheduler *audio_sched;
     smMixer *audio_mixer;
     sound_map sounds;
+
+    SGTimeStamp last;
+    double safety;
 
 public:
 

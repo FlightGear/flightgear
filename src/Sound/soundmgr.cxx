@@ -87,8 +87,11 @@ FGSoundMgr::~FGSoundMgr() {
 
 // initialize the sound manager
 bool FGSoundMgr::init() {
+    last.stamp();
+    safety = 0.5;
+
     audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
-    audio_sched -> setSafetyMargin ( 1.0 ) ;
+    audio_sched -> setSafetyMargin ( 2 * safety ) ;
 
     sound_map_iterator current = sounds.begin();
     sound_map_iterator end = sounds.end();
@@ -109,6 +112,23 @@ bool FGSoundMgr::init() {
 
 // run the audio scheduler
 bool FGSoundMgr::update() {
+    SGTimeStamp current;
+    current.stamp();
+
+    double elapsed = (double)(current - last) / 1000000.0;
+    last = current;
+
+    if ( elapsed > safety ) {
+	safety = elapsed;
+    } else {
+	safety = safety * 0.99 + elapsed * 0.01;
+    }
+    if ( safety > 0.5 ) {
+	safety = 0.5;
+    }
+    cout << "safety = " << safety << endl;
+    audio_sched -> setSafetyMargin ( 2 * safety ) ;
+
     if ( !audio_sched->not_working() ) {
 	audio_sched -> update();
 	return true;

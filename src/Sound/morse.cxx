@@ -133,7 +133,7 @@ bool FGMorse::init() {
 
 // allocate and initialize sound samples
 bool FGMorse::cust_init(const int freq ) {
-    int i, j;
+    int i;
 
     // Make DIT
     make_tone( cust_dit, freq, DIT_SIZE - COUNT_SIZE, DIT_SIZE,
