@@ -117,7 +117,7 @@ static int glut_active_alt;
 #define NO_SMOOTH_MOUSE_VIEW
 
 // uncomment following to
-#define RESET_VIEW_ON_LEAVING_MOUSE_VIEW
+// #define RESET_VIEW_ON_LEAVING_MOUSE_VIEW
 
 /* --------------------------------------------------------------------
 Support for mouse as control yoke (david@megginson.com)
