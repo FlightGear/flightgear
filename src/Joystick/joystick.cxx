@@ -1,6 +1,7 @@
 // joystick.cxx -- joystick support
 //
 // Written by Curtis Olson, started October 1998.
+// Amended by Alexander Perry, started May 2000, for lots of game controllers.
 //
 // Copyright (C) 1998 - 1999  Curtis L. Olson - curt@flightgear.org
 //
@@ -33,6 +34,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
+#include <Main/views.hxx>
 
 #if defined( ENABLE_PLIB_JOYSTICK )
 #  include <plib/js.h>		// plib include
@@ -47,15 +49,61 @@
 
 #if defined( ENABLE_PLIB_JOYSTICK )
 
+// Maximum number of joystick devices
+#define jsN 8
+
 // joystick classes
-static jsJoystick *js0;
-static jsJoystick *js1;
+static jsJoystick *( js[jsN] );
 
 // these will hold the values of the axes
-static float *js_ax0, *js_ax1;
+// the first points to all the axes, the second by device
+static int    js_axes;
+static float *js_ax_all, *( js_ax[jsN] );
+static int    js_buttons[jsN];
 
+// these will point to elements of that float array
+static float *to_elevator, *to_aileron, *to_rudder, *to_throttle;
+static float *to_viewhat, *to_brakeL, *to_brakeR;
+
+// these will point to elements of that digital button array
+static int *to_gearmove, *to_flapup, *to_flapdn, *to_eltrimup, *to_eltrimdn;
+static int msk_gearmove, msk_flapup, msk_flapdn, msk_eltrimup, msk_eltrimdn;
+
+// this finds the first unused occasion of a specific channel number
+// on a controller with a known number of channels.  Remember, when
+// you use USB devices, they appear in a semi-random order.  Sigh.
+void to_find_A ( int firstcall, float **ptr, int axes, int axis )
+{	int a;
+	if (firstcall) (*ptr) = NULL;
+	for ( a = 0; a < jsN; a++ )
+	if ( ( NULL != js[a] )
+	  && ( NULL == *ptr )
+	  && ( axes == js[a]->getNumAxes() )
+	  && ( (js_ax[a])[axis] > 0.5 )
+	   )	{	( *ptr) = (js_ax[a]) + axis;
+			(**ptr) = 0;
+		}
+}
+
+// this finds a specific button on a given controller device
+static int to_find_D_zero;
+void to_find_D ( int butnum, float *ana, int **butptr, int *mask )
+{	int a;
+	to_find_D_zero = 0;
+	(*butptr) = & to_find_D_zero;
+	(*mask) = ( (int) 1 ) << butnum;
+	if ( NULL != ana )
+	 for ( a=0; a < jsN; a++ )
+	  if ( ( NULL != js[a] )
+	    && ( ana >= js_ax[a] )
+	    && ( ana -  js_ax[a] <= js[a]->getNumAxes() )
+	       ){	(*butptr) = & ( js_buttons[a] );
+//			printf ( "Button %i uses mask %i\n", butnum, *mask );
+		}
+}
+
+// this decides whether we believe the throttle is safe to use
 static bool sync_throttle=false;
-
 static float throttle_tmp=0;
 
 #define SYNC_TOLERANCE 0.02
@@ -127,58 +175,90 @@ void joystick(unsigned int buttonMask, int js_x, int js_y, int js_z)
 // Initialize the joystick(s)
 int fgJoystickInit( void ) {
 
+    int i, j;
+
     FG_LOG( FG_INPUT, FG_INFO, "Initializing joystick" );
 
 #if defined( ENABLE_PLIB_JOYSTICK )
 
-    js0 = new jsJoystick ( 0 );
-    js1 = new jsJoystick ( 1 );
-
-    if ( js0->notWorking () ) {
-	// not working
-    } else {
-	// allocate storage for axes values
-	js_ax0 = new float [ js0->getNumAxes() ];
-
-	// configure
-	js0->setDeadBand( 0, 0.1 );
-	js0->setDeadBand( 1, 0.1 );
-
-	FG_LOG ( FG_INPUT, FG_INFO, 
-		 "  Joystick 0 detected with " << js0->getNumAxes() 
-		 << " axes" );
+    js_axes = 0;
+    for ( i = 0; i < jsN; i ++ )
+    {   js[i] = new jsJoystick ( i );
+        if ( js[i]->notWorking () ) 
+	{   // not working
+//BUG	    free ( js[i] );
+            js[i] = NULL;
+        } else {
+	    j = js[i]->getNumAxes();
+	    FG_LOG ( FG_INPUT, FG_INFO, 
+		 "  Joystick " << i  << " detected with " << j << " axes" );
+	    // Count axes and set all the deadbands
+	    js_axes += j;
+	    while ( j>0 )
+		js[i]->setDeadBand( --j, 0.1 );
+	}
     }
 
-    if ( js1->notWorking () ) {
-	// not working
-    } else {
-	// allocate storage for axes values
-	js_ax1 = new float [ js1->getNumAxes() ];
+    // allocate storage for axes values
+    js_ax_all = new float [ js_axes + 1 ];
+    j = 0;
+    for ( i = 0; i < jsN; i ++ )
+      if ( js[i] != NULL )
+      { // Point to the memory
+	js_ax [i] = js_ax_all + j;
+	j += js[i]->getNumAxes();
+      }
 
-	// configure
-	js1->setDeadBand( 0, 0.1 );
-	js1->setDeadBand( 1, 0.1 );
-
-	FG_LOG ( FG_INPUT, FG_INFO,
-		 "  Joystick 1 detected with " << js1->getNumAxes() 
-		 << " axes" );
-    }
-
-    if ( js0->notWorking() && js1->notWorking() ) {
+    // Warn user if we didn't find anything in the end
+    if ( js_axes == 0 ) {
 	FG_LOG ( FG_INPUT, FG_INFO, "  No joysticks detected" );
-	return 0;
     }
+
+    // Guess channel assignments; do this once and save nightmares later
+    for ( i = 0; i < js_axes; i++ )
+    {	js_ax_all[i] = 1.0;
+	js_buttons[i] = 0;
+    }
+
+    to_find_A ( 1, &to_aileron	, 6, 0 );	// Yoke
+    to_find_A ( 0, &to_aileron	, 2, 0 );	// Analog JS
+    to_find_A ( 1, &to_elevator	, 6, 1 );	// Yoke
+    to_find_A ( 0, &to_elevator	, 2, 1 );	// Analog JS
+
+    to_find_A ( 1, &to_throttle	, 6, 3 );	// Yoke
+    to_find_A ( 0, &to_throttle	, 2, 0 );	// Analog JS, presume second
+    to_find_A ( 0, &to_throttle	, 4, 2 );	// gaming joystick
+
+    to_find_A ( 1, &to_rudder	, 4, 3 );	// Pedals or gaming joystick
+    to_find_A ( 0, &to_rudder	, 2, 1 );	// Analog JS, maybe second
+
+    to_find_A ( 1, &to_viewhat	, 6, 4 );	// Yoke
+
+    to_find_A ( 1, &to_brakeL	, 4, 0 );	// Pedals
+    to_find_A ( 1, &to_brakeR	, 4, 1 );	// Pedals
+
+    // Derive some of the interesting buttons from the channels
+	// 0 is the push-to-talk, 1 is gear switch
+    to_find_D (  1, to_viewhat	, &to_gearmove,	&msk_gearmove );
+	// 2,3 are rudder trim
+	// 4,5 are spare buttons
+	// 8,9 are flaps
+    to_find_D (  9, to_viewhat	, &to_flapup,	&msk_flapup );
+    to_find_D (  8, to_viewhat	, &to_flapdn,	&msk_flapdn );
+    to_find_D (  6, to_viewhat	, &to_eltrimup,	&msk_eltrimup );
+    to_find_D (  7, to_viewhat	, &to_eltrimdn,	&msk_eltrimdn );
 
     // I hate doing this sort of thing, but it's overridable from the
     // command line/config file.  If the user hasn't specified an
-    // autocoordination preference, and if they have a single 2 axis
+    // autocoordination preference, and if they only have two axes of
     // joystick, then automatical enable auto_coordination.
 
-    if ( (current_options.get_auto_coordination() == 
-	  fgOPTIONS::FG_AUTO_COORD_NOT_SPECIFIED) &&
-	 (!js0->notWorking() && js1->notWorking() && (js0->getNumAxes() < 3)
-	  )
-	 )
+    if ( ( current_options.get_auto_coordination() == 
+	   fgOPTIONS::FG_AUTO_COORD_NOT_SPECIFIED
+         )
+      && ( js_axes > 0 )
+      && ( js_axes < 3 )
+       )
     {
 	current_options.set_auto_coordination(fgOPTIONS::FG_AUTO_COORD_ENABLED);
     }
@@ -208,17 +288,36 @@ int fgJoystickInit( void ) {
 
 // update the control parameters based on joystick intput
 int fgJoystickRead( void ) {
-    int b;
+    int i;
 
-    if ( ! js0->notWorking() ) {
-	js0->read( &b, js_ax0 ) ;
-	controls.set_aileron( js_ax0[0] );
-	controls.set_elevator( -js_ax0[1] );
+    // Go and fetch all the readings in one pass
+    for ( i = 0; i < jsN; i++ )
+	if ( NULL != js[i] )
+	    js[i]->read( & ( js_buttons[i] ), js_ax[i] ) ;
 
-	//  Added by William Riley -- riley@technologist.com
-	if ( js0->getNumAxes() >= 3 ) {
-	    throttle_tmp=(-js_ax0[3] + 1) / 2;
-        
+    // These are the easy ones for now
+    if ( NULL != to_aileron )	controls.set_aileron (   * to_aileron  );
+    if ( NULL != to_elevator )	controls.set_elevator( - * to_elevator );
+    if ( NULL != to_brakeL )	controls.set_brake   ( 0, * to_brakeL );
+    if ( NULL != to_brakeR )	controls.set_brake   ( 1, * to_brakeR );
+				// Good! Brakes need half travel to act.
+
+// No gear implemented yet!
+//  if ( msk_gearmove & *to_gearmove )	controls.set_gear 
+//						( 1 - controls.get_gear());
+
+    if ( msk_flapup & *to_flapup )	controls.move_flaps (   0.02 );
+    if ( msk_flapdn & *to_flapdn )	controls.move_flaps ( - 0.02 );
+    if ( msk_eltrimup & *to_eltrimup )
+				controls.move_elevator_trim (   0.005 );
+    if ( msk_eltrimdn & *to_eltrimdn )
+				controls.move_elevator_trim ( - 0.005 );
+
+    //  Added by William Riley -- riley@technologist.com
+    //  Modified by Alex Perry
+    if ( NULL != to_throttle ) {
+	    throttle_tmp=(- * to_throttle + 1) / 2;
+
 	    if(sync_throttle == true) {
 		if (fabs(controls.get_throttle(0)-throttle_tmp)
 		    < SYNC_TOLERANCE)
@@ -231,25 +330,39 @@ int fgJoystickRead( void ) {
 		controls.set_throttle( FGControls::ALL_ENGINES,throttle_tmp );
 	    }
 	} 
-	if ( js0->getNumAxes() > 3 ) {
+
+    if ( NULL != to_rudder )
+	{
 	    if ( current_options.get_auto_coordination() !=
 		  fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
 	    {
-		controls.set_rudder( js_ax0[2] );
+	        double dead_zone = 0.0; // 0.4;
+	        double value = * to_rudder;
+		if (value < -dead_zone) {
+		  value += dead_zone;
+		  value *= 1.0 / (1.0 - dead_zone);
+		} else if (value > dead_zone) {
+		  value -= dead_zone;
+		  value *= 1.0 / (1.0 - dead_zone);
+		} else {
+		  value = 0.0;
+		}
+		controls.set_rudder(value);
 	    }
 	}
-	//  End of William's code
+    //  End of William's code
 
-    }
-
-    if ( ! js1->notWorking() ) {
-	js1->read( &b, js_ax1 ) ;
-	if ( current_options.get_auto_coordination() !=
-	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
-	{
-	    controls.set_rudder( js_ax1[0] );
-	}
-	controls.set_throttle( FGControls::ALL_ENGINES, -js_ax1[1] * 1.05 );
+    // Use hat to set view direction
+    // Alex Perry 2000-05-31, based on concept by dpm
+    if ( NULL != to_viewhat )
+    {	  double n = * ( to_viewhat + 1 );
+	  double e = * ( to_viewhat     );
+	  double d;
+	  if ( fabs(n) + fabs(e) > 0.1 )
+	  {	d = atan2 ( -e, -n );
+		if ( d < 0 ) d += 2 * FG_PI;
+		current_view.set_goal_view_offset ( d );
+	  }
     }
 
     return 1;

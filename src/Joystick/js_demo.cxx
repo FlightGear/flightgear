@@ -1,33 +1,42 @@
 
 #include <plib/js.h>
 
+#define Z 8
+
 int main ( int, char ** )
 {
-  jsJoystick *js[2] ;
-  float      *ax[2] ;
+  jsJoystick *js[Z] ;
+  float      *ax[Z] ;
+  int i, j, t, useful[Z];
 
-  js[0] = new jsJoystick ( 0 ) ;
-  js[1] = new jsJoystick ( 1 ) ;
+  for ( i = 0; i < Z; i++ )
+      js[i] = new jsJoystick ( i ) ;
 
   printf ( "Joystick test program.\n" ) ;
   printf ( "~~~~~~~~~~~~~~~~~~~~~~\n" ) ;
 
-  if ( js[0]->notWorking () ) printf ( "Joystick 0 not detected\n" ) ;
-  if ( js[1]->notWorking () ) printf ( "Joystick 1 not detected\n" ) ;
-  if ( js[0]->notWorking () && js[1]->notWorking () ) exit ( 1 ) ;
+  t = 0;
+  for ( i = 0; i < Z; i++ )
+  { useful[i] = ! ( js[i]->notWorking () );
+    if ( useful[i] )
+         t++;
+    else printf ( "Joystick %i not detected\n", i ) ;
+  }
+  if ( t == 0 ) exit ( 1 ) ;
 
-  ax[0] = new float [ js[0]->getNumAxes () ] ;
-  ax[1] = new float [ js[1]->getNumAxes () ] ;
+  for ( i = 0; i < Z; i++ )
+    if ( useful[i] )
+       ax[i] = new float [ js[i]->getNumAxes () ] ;
 
-  int i, j ;
-
-  for ( i = 0 ; i < 2 ; i++ )
-    printf ( "+---------------JS.%d-----------------", i ) ;
+  for ( i = 0 ; i < Z ; i++ )
+    if ( useful[i] )
+       printf ( "+---------------JS.%d-----------------", i ) ;
 
   printf ( "+\n" ) ;
 
-  for ( i = 0 ; i < 2 ; i++ )
-  {
+  for ( i = 0 ; i < Z ; i++ )
+   if ( useful[i] )
+   {
     if ( js[i]->notWorking () )
       printf ( "|       ~~~ Not Detected ~~~         " ) ;
     else
@@ -40,19 +49,21 @@ int main ( int, char ** )
       for ( ; j < 6 ; j++ )
         printf ( "     " ) ;
     }
-  }
+   }
 
   printf ( "|\n" ) ;
 
-  for ( i = 0 ; i < 2 ; i++ )
-    printf ( "+------------------------------------" ) ;
+  for ( i = 0 ; i < Z ; i++ )
+    if ( useful[i] )
+      printf ( "+------------------------------------" ) ;
 
   printf ( "+\n" ) ;
 
   while (1)
   {
-    for ( i = 0 ; i < 2 ; i++ )
-    {
+    for ( i = 0 ; i < Z ; i++ )
+    if ( useful[i] )
+     {
       if ( js[i]->notWorking () )
         printf ( "|  .   .   .   .   .   .   .   .   . " ) ;
       else
@@ -69,7 +80,7 @@ int main ( int, char ** )
 	for ( ; j < 6 ; j++ )
 	  printf ( "  .  " ) ;
       }
-    }
+     }
 
     printf ( "|\r" ) ;
     fflush ( stdout ) ;
