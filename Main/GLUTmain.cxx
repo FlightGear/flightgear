@@ -209,8 +209,11 @@ static void fgInitVisuals( void ) {
     xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
     xglFogf (GL_FOG_END, w->visibility);
     // xglFogf (GL_FOG_DENSITY, w->visibility);
-    xglHint (GL_FOG_HINT, GL_NICEST /* GL_FASTEST */ );
-
+    if ( o->shading ) {
+	xglHint (GL_FOG_HINT, GL_NICEST );
+    } else {
+	xglHint (GL_FOG_HINT, GL_FASTEST );
+    }
     if ( o->wireframe ) {
 	// draw wire frame
 	xglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -747,6 +750,9 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.13  1998/05/11 18:18:15  curt
+// For flat shading use "glHint (GL_FOG_HINT, GL_FASTEST )"
+//
 // Revision 1.12  1998/05/07 23:14:15  curt
 // Added "D" key binding to set autopilot heading.
 // Made frame rate calculation average out over last 10 frames.
