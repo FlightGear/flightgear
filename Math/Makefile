@@ -26,7 +26,7 @@
 
 TARGET = libMath.a
 
-CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c polar.c
+CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c fg_random.c polar.c
 OFILES = $(CFILES:.c=.o)
 
 
@@ -68,12 +68,18 @@ MAT3mat.o:
 MAT3vec.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
+fg_random.o:
+	$(CC) $(CFLAGS) -c fg_random.c -o $@
+
 polar.o:
 	$(CC) $(CFLAGS) -c polar.c -o $@
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1997/07/30 16:04:08  curt
+# Moved random routines from Utils/ to Math/
+#
 # Revision 1.10  1997/07/20 02:19:11  curt
 # First stab at a system to generate os2 makefiles automatically.
 #
