@@ -88,3 +88,26 @@ Moving Map Example:
     your current location.  Atlas is a really nifty program with many
     neat options such as the ability to generate and use background
     bitmaps that show the terrain, cities, lakes, oceans, rivers, etc.
+
+
+HTTP Server Example
+
+    You can now interact with a running copy of FlightGear using your
+    web browser.  You can view all the key internal variables and even
+    change the ones that are writable.  If you have support in your
+    favorite [scripting] language for interacting with an http server,
+    you should be able to use this as a mechanism to interface your
+    script with FlightGear.
+
+    Start up fgfs with the --httpd=<port#> option:
+
+    For example:
+
+        fgfs --httpd=5500
+
+    Now point your web browser to:
+
+        http://host.domain.name:5500/
+
+    When a value is displayed, you can click on it to bring up a form
+    to assign it a new value.

@@ -1186,6 +1186,7 @@ fgUsage ()
     cout << endl;
 
     cout << "Network Options:" << endl;
+    cout << "\t--httpd=port:  enable http server on the specified port" << endl;
     cout << "\t--enable-network-olk:  enable Multipilot mode" << endl;
     cout << "\t--disable-network-olk:  disable Multipilot mode (default)" << endl;
     cout << "\t--net-hud:  Hud displays network info" << endl;

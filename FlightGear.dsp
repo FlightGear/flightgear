@@ -4388,40 +4388,6 @@ SOURCE=.\src\GUI\mouse.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\GUI\net_dlg.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_GUI"
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_GUI"
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\GUI\net_dlg.hxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_GUI"
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_GUI"
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\GUI\sgVec3Slider.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
