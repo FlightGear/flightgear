@@ -6,6 +6,7 @@
 
 #ifdef SL_USING_OSS_AUDIO
 #define SMMIXER_DEFAULT_DEVICE "/dev/mixer"
+// static char *labels [] = SOUND_DEVICE_LABELS;
 #elif defined(WIN32)
 #define SMMIXER_DEFAULT_DEVICE "mixer"
 #else
@@ -28,7 +29,7 @@ private:
   int fd ;
 
 #ifdef SL_USING_OSS_AUDIO
-  static char *labels [] = SOUND_DEVICE_LABELS ;
+  // static char *labels [] = SOUND_DEVICE_LABELS ;
 
   int ioctl ( int cmd, int param = 0 )
   {
