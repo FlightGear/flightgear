@@ -194,24 +194,30 @@ FGInput::init ()
   glutPassiveMotionFunc (GLUTmotion);
 }
 
-void
-FGInput::bind ()
-{
-  // no op
-}
-
-void
-FGInput::unbind ()
-{
-  // no op
-}
-
 void 
 FGInput::update (double dt)
 {
   _update_keyboard();
   _update_joystick();
   _update_mouse();
+}
+
+void
+FGInput::suspend ()
+{
+    // NO-OP
+}
+
+void
+FGInput::resume ()
+{
+    // NO-OP
+}
+
+bool
+FGInput::is_suspended () const
+{
+    return false;
 }
 
 void

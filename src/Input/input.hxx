@@ -194,9 +194,10 @@ public:
   // Implementation of FGSubsystem.
   //
   virtual void init ();
-  virtual void bind ();
-  virtual void unbind ();
   virtual void update (double dt);
+  virtual void suspend ();
+  virtual void resume ();
+  virtual bool is_suspended () const;
 
 
   /**
