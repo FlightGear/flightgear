@@ -53,10 +53,12 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	nav1_lon = ils.get_loclon();
 	nav1_lat = ils.get_loclat();
 	nav1_elev = ils.get_gselev();
-	cout << "Found a vor station in range" << endl;
-	cout << " id = " << ils.get_locident() << endl;
-	cout << " heading = " << nav1_heading
-	     << " dist = " << nav1_dist << endl;
+	nav1_target_gs = ils.get_gsangle();
+	nav1_radial = ils.get_locheading();
+	// cout << "Found a vor station in range" << endl;
+	// cout << " id = " << ils.get_locident() << endl;
+	// cout << " heading = " << nav1_heading
+	//      << " dist = " << nav1_dist << endl;
     } else {
 	nav1_inrange = false;
 	cout << "not picking up vor. :-(" << endl;
@@ -70,10 +72,10 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	nav2_lon = nav.get_lon();
 	nav2_lat = nav.get_lat();
 	nav2_elev = nav.get_elev();
-	cout << "Found a vor station in range" << endl;
-	cout << " id = " << nav.get_ident() << endl;
-	cout << " heading = " << nav2_heading
-	     << " dist = " << nav2_dist << endl;
+	// cout << "Found a vor station in range" << endl;
+	// cout << " id = " << nav.get_ident() << endl;
+	// cout << " heading = " << nav2_heading
+	//      << " dist = " << nav2_dist << endl;
     } else {
 	nav2_inrange = false;
 	cout << "not picking up vor. :-(" << endl;
@@ -87,10 +89,10 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	adf_lon = nav.get_lon();
 	adf_lat = nav.get_lat();
 	adf_elev = nav.get_elev();
-	cout << "Found an adf station in range" << endl;
-	cout << " id = " << nav.get_ident() << endl;
-	cout << " heading = " << adf_heading
-	     << " dist = " << junk << endl;
+	// cout << "Found an adf station in range" << endl;
+	// cout << " id = " << nav.get_ident() << endl;
+	// cout << " heading = " << adf_heading
+	//      << " dist = " << junk << endl;
     } else {
 	adf_inrange = false;
 	cout << "not picking up adf. :-(" << endl;

@@ -232,47 +232,75 @@ void FGSteam::_CatchUp()
 
 
 
-double FGSteam::get_HackGS_deg   ()
-{	double x,y,dme;
-	if (0==NAV1_LOC) return 0.0;
-	y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
-	x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
+double FGSteam::get_HackGS_deg () {
+
+    double x = current_radiostack->get_nav1_dist();
+    double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
+	* FEET_TO_METER;
+    double angle = atan2( y, x ) * RAD_TO_DEG;
+    return current_radiostack->get_nav1_target_gs() - angle;
+
+#if 0
+    double x,y,dme;
+    if (0==NAV1_LOC) return 0.0;
+    y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
+    x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
 	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-	dme = x*x + y*y;
-	if ( dme > 0.1 ) x = sqrt ( dme ); else x = 0.3;
-	y = FGBFI::getAltitude() - NAV1_Alt;
-	return 3.0 - (y/x) * 60.0 / 6000.0;
+    dme = x*x + y*y;
+    if ( dme > 0.1 ) x = sqrt ( dme ); else x = 0.3;
+    y = FGBFI::getAltitude() - NAV1_Alt;
+    return 3.0 - (y/x) * 60.0 / 6000.0;
+#endif
 }
 
 
-double FGSteam::get_HackVOR1_deg ()
-{	double r;
-	double x,y;
-	y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
-	x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
-	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-	r = atan2 ( x, y ) * RAD_TO_DEG - NAV1_Rad - FGBFI::getMagVar();
-	if (r> 180.0) r-=360.0; else
+double FGSteam::get_HackVOR1_deg () {
+    double r;
+
+#if 0
+    double x,y;
+    y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
+    x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
+	* cos ( FGBFI::getLatitude () / RAD_TO_DEG );
+    r = atan2 ( x, y ) * RAD_TO_DEG - NAV1_Rad - FGBFI::getMagVar();
+#endif
+
+    r = current_radiostack->get_nav1_radial() - 
+	current_radiostack->get_nav1_heading() + 180.0;
+    // cout << "Radial = " << current_radiostack->get_nav1_radial() 
+    //      << "  Bearing = " << current_radiostack->get_nav1_heading() << endl;
+    
+    if (r> 180.0) r-=360.0; else
 	if (r<-180.0) r+=360.0;
-	if ( fabs(r) > 90.0 )
-		r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	if (NAV1_LOC) r*=5.0;
-	return r;
+    if ( fabs(r) > 90.0 )
+	r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+    if (NAV1_LOC) r*=5.0;
+
+    return r;
 }
 
 
-double FGSteam::get_HackVOR2_deg ()
-{	double r;
-	double x,y;
-	y = 60.0 * ( NAV2_Lat - FGBFI::getLatitude () );
-	x = 60.0 * ( NAV2_Lon - FGBFI::getLongitude() )
-	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-	r = atan2 ( x, y ) * RAD_TO_DEG - NAV2_Rad - FGBFI::getMagVar();
-	if (r> 180.0) r-=360.0; else
+double FGSteam::get_HackVOR2_deg () {
+    double r;
+
+#if 0
+    double x,y;
+    y = 60.0 * ( NAV2_Lat - FGBFI::getLatitude () );
+    x = 60.0 * ( NAV2_Lon - FGBFI::getLongitude() )
+	* cos ( FGBFI::getLatitude () / RAD_TO_DEG );
+    r = atan2 ( x, y ) * RAD_TO_DEG - NAV2_Rad - FGBFI::getMagVar();
+#endif
+
+    r = current_radiostack->get_nav2_radial() -
+	current_radiostack->get_nav2_heading() + 180.0;
+    // cout << "Radial = " << current_radiostack->get_nav1_radial() 
+    // << "  Bearing = " << current_radiostack->get_nav1_heading() << endl;
+    
+    if (r> 180.0) r-=360.0; else
 	if (r<-180.0) r+=360.0;
-	if ( fabs(r) > 90.0 )
-		r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	return r;
+    if ( fabs(r) > 90.0 )
+	r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+    return r;
 }
 
 

@@ -473,13 +473,13 @@ bool fgInitSubsystems( void ) {
     // Initialize the underlying radio stack model
     current_radiostack = new FGRadioStack;
 
-    current_radiostack->set_nav1_freq( 111.70 );
-    current_radiostack->set_nav1_radial( 280.0 );
+    current_radiostack->set_nav1_freq( 110.30 );
+    current_radiostack->set_nav1_radial( 299.0 );
 
-    current_radiostack->set_nav2_freq( 117.80 );
-    current_radiostack->set_nav2_radial( 068.0 );
+    current_radiostack->set_nav2_freq( 115.70 );
+    current_radiostack->set_nav2_radial( 45.0 );
 
-    current_radiostack->set_adf_freq( 210.0 );
+    current_radiostack->set_adf_freq( 266.0 );
 
     current_radiostack->update( cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),

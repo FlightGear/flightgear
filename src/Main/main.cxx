@@ -745,8 +745,8 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     ephem->update( t, cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
-    current_radiostack->update( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
+    current_radiostack->update( cur_fdm_state->get_Longitude() * RAD_TO_DEG,
+				cur_fdm_state->get_Latitude() * RAD_TO_DEG,
 				cur_fdm_state->get_Altitude() * FEET_TO_METER );
 }
 
