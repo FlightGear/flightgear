@@ -390,7 +390,7 @@ void Moon::newImage()
 	// set lighting parameters
 	xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
 	xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
-	xglEnable( GL_CULL_FACE );
+	// xglEnable( GL_CULL_FACE );
 	xglMaterialfv(GL_FRONT, GL_AMBIENT, black);
 	xglMaterialfv(GL_FRONT, GL_DIFFUSE, moonColor); 
 	
