@@ -1,6 +1,6 @@
 EXTRA_DIST = runfg.in runfg.bat.in
 
-bin_PROGRAMS = fg
+bin_PROGRAMS = fg ttest
 
 bin_SCRIPTS = runfg runfg.bat
 
@@ -30,6 +30,10 @@ fg_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
 	$(top_builddir)/Lib/Debug/libDebug.la \
 	$(top_builddir)/Lib/zlib/libz.la
+
+ttest_SOURCES = ttest.cxx
+
+ttest_LDADD = $(top_builddir)/Lib/Math/libMath.la \
 
 INCLUDES += \
 	-DGLUT \

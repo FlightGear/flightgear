@@ -1,5 +1,5 @@
-//
-// views.cxx -- data structures and routines for managing and view parameters.
+// views.cxx -- data structures and routines for managing and view
+//               parameters.
 //
 // Written by Curtis Olson, started August 1997.
 //
@@ -23,7 +23,6 @@
 // (Log is kept at end of this file)
 
 
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -37,6 +36,7 @@
 #include <Scenery/scenery.hxx>
 #include <Time/fg_time.hxx>
 
+#include "options.hxx"
 #include "views.hxx"
 
 
@@ -44,51 +44,77 @@
 fgVIEW current_view;
 
 
+// Constructor
+fgVIEW::fgVIEW( void ) {
+}
+
+
 // Initialize a view structure
-void fgViewInit(fgVIEW *v) {
+void fgVIEW::Init( void ) {
     fgPrintf( FG_VIEW, FG_INFO, "Initializing View parameters\n");
 
-    v->view_offset = 0.0;
-    v->goal_view_offset = 0.0;
+    view_offset = 0.0;
+    goal_view_offset = 0.0;
 }
 
 
 // Update the view parameters
-void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
+void fgVIEW::Update( fgFLIGHT *f ) {
+    fgOPTIONS *o;
     fgPolarPoint3d p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
-    double ntmp;
+    double theta_x, theta_y, ntmp;
+
+    o = &current_options;
 
     scenery.center.x = scenery.next_center.x;
     scenery.center.y = scenery.next_center.y;
     scenery.center.z = scenery.next_center.z;
+
+    printf("win_ratio = %.2f\n", win_ratio);
+
+    // calculate sin() and cos() of fov / 2 in X direction;
+    theta_x = FG_PI_2 - (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
+    printf("theta_x = %.2f\n", theta_x);
+    sin_fov_x = sin(theta_x);
+    cos_fov_x = cos(theta_x);
+    slope_x = sin_fov_x / cos_fov_x;
+    printf("slope_x = %.2f\n", slope_x);
+
+    // calculate sin() and cos() of fov / 2 in Y direction;
+    theta_y = FG_PI_2 - (o->fov * DEG_TO_RAD) / 2.0;
+    printf("theta_y = %.2f\n", theta_y);
+    sin_fov_y = sin(theta_y);
+    cos_fov_y = cos(theta_y);
+    slope_y = sin_fov_y / cos_fov_y;
+    printf("slope_y = %.2f\n", slope_y);
 
     // calculate the cartesion coords of the current lat/lon/0 elev
     p.lon = FG_Longitude;
     p.lat = FG_Lat_geocentric;
     p.radius = FG_Sea_level_radius * FEET_TO_METER;
 
-    v->cur_zero_elev = fgPolarToCart3d(p);
+    cur_zero_elev = fgPolarToCart3d(p);
 
-    v->cur_zero_elev.x -= scenery.center.x;
-    v->cur_zero_elev.y -= scenery.center.y;
-    v->cur_zero_elev.z -= scenery.center.z;
+    cur_zero_elev.x -= scenery.center.x;
+    cur_zero_elev.y -= scenery.center.y;
+    cur_zero_elev.z -= scenery.center.z;
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier
     p.radius = FG_Radius_to_vehicle * FEET_TO_METER + 1.0;
 
-    v->abs_view_pos = fgPolarToCart3d(p);
+    abs_view_pos = fgPolarToCart3d(p);
 
-    v->view_pos.x = v->abs_view_pos.x - scenery.center.x;
-    v->view_pos.y = v->abs_view_pos.y - scenery.center.y;
-    v->view_pos.z = v->abs_view_pos.z - scenery.center.z;
+    view_pos.x = abs_view_pos.x - scenery.center.x;
+    view_pos.y = abs_view_pos.y - scenery.center.y;
+    view_pos.z = abs_view_pos.z - scenery.center.z;
 
     fgPrintf( FG_VIEW, FG_DEBUG, "Absolute view pos = %.4f, %.4f, %.4f\n", 
-	   v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z);
+	   abs_view_pos.x, abs_view_pos.y, abs_view_pos.z);
     fgPrintf( FG_VIEW, FG_DEBUG, "Relative view pos = %.4f, %.4f, %.4f\n", 
-	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
+	   view_pos.x, view_pos.y, view_pos.z);
 
     // Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw)
     // from FG_T_local_to_body[3][3]
@@ -156,11 +182,11 @@ void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
     // printf("Local up matrix\n");
     // MAT3print(UP, stdout);
 
-    MAT3_SET_VEC(v->local_up, 1.0, 0.0, 0.0);
-    MAT3mult_vec(v->local_up, v->local_up, UP);
+    MAT3_SET_VEC(local_up, 1.0, 0.0, 0.0);
+    MAT3mult_vec(local_up, local_up, UP);
 
     // printf( "Local Up = (%.4f, %.4f, %.4f)\n",
-    //         v->local_up[0], v->local_up[1], v->local_up[2]);
+    //         local_up[0], local_up[1], local_up[2]);
     
     // Alternative method to Derive local up vector based on
     // *geodetic* coordinates
@@ -175,39 +201,131 @@ void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
 
     // generate the current up, forward, and fwrd-view vectors
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    MAT3mult_vec(v->view_up, vec, VIEW);
+    MAT3mult_vec(view_up, vec, VIEW);
 
     MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
     MAT3mult_vec(forward, vec, VIEW);
     // printf( "Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
     //         forward[2]);
 
-    MAT3rotate(TMP, v->view_up, v->view_offset);
-    MAT3mult_vec(v->view_forward, forward, TMP);
+    MAT3rotate(TMP, view_up, view_offset);
+    MAT3mult_vec(view_forward, forward, TMP);
 
     // make a vector to the current view position
-    MAT3_SET_VEC(v0, v->view_pos.x, v->view_pos.y, v->view_pos.z);
+    MAT3_SET_VEC(v0, view_pos.x, view_pos.y, view_pos.z);
 
     // Given a vector pointing straight down (-Z), map into onto the
     // local plane representing "horizontal".  This should give us the
     // local direction for moving "south".
     MAT3_SET_VEC(minus_z, 0.0, 0.0, -1.0);
-    map_vec_onto_cur_surface_plane(v->local_up, v0, minus_z, v->surface_south);
-    MAT3_NORMALIZE_VEC(v->surface_south, ntmp);
+    map_vec_onto_cur_surface_plane(local_up, v0, minus_z, surface_south);
+    MAT3_NORMALIZE_VEC(surface_south, ntmp);
     // printf( "Surface direction directly south %.2f %.2f %.2f\n",
-    //         v->surface_south[0], v->surface_south[1], v->surface_south[2]);
+    //         surface_south[0], surface_south[1], surface_south[2]);
 
     // now calculate the surface east vector
-    MAT3rotate(TMP, v->view_up, FG_PI_2);
-    MAT3mult_vec(v->surface_east, v->surface_south, TMP);
+    MAT3rotate(TMP, view_up, FG_PI_2);
+    MAT3mult_vec(surface_east, surface_south, TMP);
     // printf( "Surface direction directly east %.2f %.2f %.2f\n",
-    //         v->surface_east[0], v->surface_east[1], v->surface_east[2]);
+    //         surface_east[0], surface_east[1], surface_east[2]);
     // printf( "Should be close to zero = %.2f\n", 
-    //         MAT3_DOT_PRODUCT(v->surface_south, v->surface_east));
+    //         MAT3_DOT_PRODUCT(surface_south, surface_east));
+}
+
+
+// Update the "World to Eye" transformation matrix
+// This is most useful for view frustum culling
+void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
+    MAT3mat R_Phi, R_Theta, R_Psi, R_Lat, R_Lon, T_view;
+    MAT3mat TMP;
+    MAT3hvec vec;
+
+    // Roll Matrix
+    MAT3_SET_HVEC(vec, 0.0, 0.0, -1.0, 1.0);
+    MAT3rotate(R_Phi, vec, FG_Phi);
+    // printf("Roll matrix (Phi)\n");
+    // MAT3print(R_Phi, stdout);
+
+    // Pitch Matrix
+    MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
+    MAT3rotate(R_Theta, vec, FG_Theta);
+    // printf("\nPitch matrix (Theta)\n");
+    // MAT3print(R_Theta, stdout);
+
+    // Yaw Matrix
+    MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
+    MAT3rotate(R_Psi, vec, FG_Psi + FG_PI - view_offset );
+    // printf("\nYaw matrix (Psi)\n");
+    // MAT3print(R_Psi, stdout);
+
+    // Latitude
+    MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
+    // R_Lat = rotate about X axis
+    MAT3rotate(R_Lat, vec, FG_Latitude);
+    // printf("\nLatitude matrix\n");
+    // MAT3print(R_Lat, stdout);
+
+    // Longitude
+    MAT3_SET_HVEC(vec, 0.0, 0.0, 1.0, 1.0);
+    // R_Lon = rotate about Z axis
+    MAT3rotate(R_Lon, vec, FG_Longitude - FG_PI_2 );
+    // printf("\nLongitude matrix\n");
+    // MAT3print(R_Lon, stdout);
+
+    // View position in scenery centered coordinates
+    MAT3_SET_HVEC(vec, view_pos.x, view_pos.y, view_pos.z, 1.0);
+    MAT3translate(T_view, vec);
+    // printf("\nTranslation matrix\n");
+    // MAT3print(T_view, stdout);
+
+    // aircraft roll/pitch/yaw
+    MAT3mult(TMP, R_Phi, R_Theta);
+    MAT3mult(AIRCRAFT, TMP, R_Psi);
+    // printf("\naircraft roll pitch yaw\n");
+    // MAT3print(AIRCRAFT, stdout);
+
+    // lon/lat
+    MAT3mult(WORLD, R_Lat, R_Lon);
+    // printf("\nworld\n");
+    // MAT3print(WORLD, stdout);
+
+    MAT3mult(EYE_TO_WORLD, AIRCRAFT, WORLD);
+    MAT3mult(EYE_TO_WORLD, EYE_TO_WORLD, T_view);
+    // printf("\nEye to world\n");
+    // MAT3print(EYE_TO_WORLD, stdout);
+
+    MAT3invert(WORLD_TO_EYE, EYE_TO_WORLD);
+    // printf("\nWorld to eye\n");
+    // MAT3print(WORLD_TO_EYE, stdout);
+
+    // printf( "\nview_pos = %.2f %.2f %.2f\n", 
+    //         view_pos.x, view_pos.y, view_pos.z );
+
+    // MAT3_SET_HVEC(eye, 0.0, 0.0, 0.0, 1.0);
+    // MAT3mult_vec(vec, eye, EYE_TO_WORLD);
+    // printf("\neye -> world = %.2f %.2f %.2f\n", vec[0], vec[1], vec[2]);
+
+    // MAT3_SET_HVEC(vec1, view_pos.x, view_pos.y, view_pos.z, 1.0);
+    // MAT3mult_vec(vec, vec1, WORLD_TO_EYE);
+    // printf( "\nabs_view_pos -> eye = %.2f %.2f %.2f\n", 
+    //         vec[0], vec[1], vec[2]);
+}
+
+
+// Destructor
+fgVIEW::~fgVIEW( void ) {
 }
 
 
 // $Log$
+// Revision 1.9  1998/05/16 13:08:37  curt
+// C++ - ified views.[ch]xx
+// Shuffled some additional view parameters into the fgVIEW class.
+// Changed tile-radius to tile-diameter because it is a much better
+//   name.
+// Added a WORLD_TO_EYE transformation to views.cxx.  This allows us
+//  to transform world space to eye space for view frustum culling.
+//
 // Revision 1.8  1998/05/02 01:51:01  curt
 // Updated polartocart conversion routine.
 //

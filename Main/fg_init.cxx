@@ -133,8 +133,8 @@ int fgInitPosition( void ) {
     // Test Position
     // FG_Longitude = (  8.5 ) * DEG_TO_RAD;
     // FG_Latitude  = ( 47.5 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = ( 6000 );
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
+    FG_Runway_altitude = ( 6000 );
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     if ( strlen(o->airport_id) ) {
 	fgAIRPORTS airports;
@@ -271,9 +271,9 @@ int fgInitSubsystems( void ) {
     fgTimeUpdate(f, t);
 
     // Initialize view parameters
-    // ---->
-    fgViewInit(v);
-    fgViewUpdate(f, v, l);
+    v->Init();
+    v->Update(f);
+    v->UpdateWorldToEye(f);
 
     // Initialize the orbital elements of sun, moon and mayor planets
     fgSolarSystemInit(*t);
@@ -297,11 +297,9 @@ int fgInitSubsystems( void ) {
     // fgUpdateSunPos() needs a few position and view parameters set
     // so it can calculate local relative sun angle and a few other
     // things for correctly orienting the sky.
-    // ---->
     fgUpdateSunPos();
 
     // Initialize Lighting interpolation tables
-    // ---->
     fgLightInit();
 
     // update the lighting parameters (based on sun angle)
@@ -323,7 +321,6 @@ int fgInitSubsystems( void ) {
     }
 
     // Initialize the "sky"
-    // ---->
     fgSkyInit();
 
     // Initialize the Scenery Management subsystem
@@ -384,6 +381,14 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/05/16 13:08:35  curt
+// C++ - ified views.[ch]xx
+// Shuffled some additional view parameters into the fgVIEW class.
+// Changed tile-radius to tile-diameter because it is a much better
+//   name.
+// Added a WORLD_TO_EYE transformation to views.cxx.  This allows us
+//  to transform world space to eye space for view frustum culling.
+//
 // Revision 1.12  1998/05/13 18:29:58  curt
 // Added a keyboard binding to dynamically adjust field of view.
 // Added a command line option to specify fov.

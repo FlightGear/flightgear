@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include <Debug/fg_debug.h>
+#include <Include/fg_constants.h>
 #include <Include/fg_zlib.h>
 
 #include "options.hxx"
@@ -79,7 +80,7 @@ fgOPTIONS::fgOPTIONS( void ) {
     wireframe = 0;
 
     // Scenery options
-    tile_radius = 7;
+    tile_diameter = 7;
 
     // Time options
     time_offset = 0;
@@ -229,21 +230,15 @@ static int parse_time_offset(char *time_str) {
 }
 
 
-// Parse --tile-radius=n type option 
+// Parse --tile-diameter=n type option 
 
-#define FG_RADIUS_MIN 3
-#define FG_RADIUS_MAX 9
+#define FG_RADIUS_MIN 1
+#define FG_RADIUS_MAX 4
 
 static int parse_tile_radius(char *arg) {
     int radius, tmp;
 
     radius = parse_int(arg);
-
-    // radius must be odd
-    tmp = radius / 2;
-    if ( radius == ( tmp * 2 ) ) {
-	radius -= 1;
-    }
 
     if ( radius < FG_RADIUS_MIN ) { radius = FG_RADIUS_MIN; }
     if ( radius > FG_RADIUS_MAX ) { radius = FG_RADIUS_MAX; }
@@ -255,10 +250,6 @@ static int parse_tile_radius(char *arg) {
 
 
 // Parse --fov=x.xx type option 
-
-#define FG_FOV_MIN 0.1
-#define FG_FOV_MAX 179.9
-
 static double parse_fov(char *arg) {
     double fov;
 
@@ -318,6 +309,7 @@ int fgOPTIONS::parse_option( char *arg ) {
 	wireframe = 1;	
     } else if ( strncmp(arg, "--tile-radius=", 14) == 0 ) {
 	tile_radius = parse_tile_radius(arg);
+	tile_diameter = tile_radius * 2 + 1;
     } else if ( strncmp(arg, "--time-offset=", 14) == 0 ) {
 	time_offset = parse_time_offset(arg);
     } else {
@@ -424,7 +416,7 @@ void fgOPTIONS::usage ( void ) {
     printf("\n");
 
     printf("Scenery Options:\n");
-    printf("\t--tile-radius=n:  specify tile radius, must be odd 3, 5, or 7\n");
+    printf("\t--tile-radius=n:  specify tile radius, must be 1 - 4\n");
     printf("\n");
 
     printf("Time Options:\n");
@@ -438,6 +430,14 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/05/16 13:08:36  curt
+// C++ - ified views.[ch]xx
+// Shuffled some additional view parameters into the fgVIEW class.
+// Changed tile-radius to tile-diameter because it is a much better
+//   name.
+// Added a WORLD_TO_EYE transformation to views.cxx.  This allows us
+//  to transform world space to eye space for view frustum culling.
+//
 // Revision 1.9  1998/05/13 18:29:59  curt
 // Added a keyboard binding to dynamically adjust field of view.
 // Added a command line option to specify fov.

@@ -59,8 +59,10 @@ public:
     int wireframe;     // Wireframe mode enabled/disabled
 
     // Scenery options
-    int tile_radius;   // Square radius of rendered tiles.  for instance
-                       // if tile_radius = 3 then a 3 x 3 grid of tiles will 
+    int tile_radius;   // Square radius of rendered tiles (around center 
+                       // square.)
+    int tile_diameter; // Diameter of rendered tiles.  for instance
+                       // if tile_diameter = 3 then a 3 x 3 grid of tiles will 
                        // be drawn.  Increase this to see terrain that is 
                        // further away.
 
@@ -95,6 +97,14 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.8  1998/05/16 13:08:36  curt
+// C++ - ified views.[ch]xx
+// Shuffled some additional view parameters into the fgVIEW class.
+// Changed tile-radius to tile-diameter because it is a much better
+//   name.
+// Added a WORLD_TO_EYE transformation to views.cxx.  This allows us
+//  to transform world space to eye space for view frustum culling.
+//
 // Revision 1.7  1998/05/13 18:29:59  curt
 // Added a keyboard binding to dynamically adjust field of view.
 // Added a command line option to specify fov.

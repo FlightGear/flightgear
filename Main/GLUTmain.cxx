@@ -72,10 +72,6 @@
 // This is a record containing global housekeeping information
 fgGENERAL general;
 
-// view parameters
-static GLfloat win_ratio = 1.0;
-static GLint winWidth, winHeight;
-
 // Another hack
 int use_signals = 0;
 
@@ -233,21 +229,22 @@ static void fgUpdateViewParams( void ) {
     o = &current_options;
     v = &current_view;
 
-    fgViewUpdate(f, v, l);
+    v->Update(f);
+    v->UpdateWorldToEye(f);
 
     if (displayInstruments) {
-	xglViewport( 0, (GLint)(winHeight / 2 ) , 
-		     (GLint)winWidth, (GLint)winHeight / 2 );
+	xglViewport( 0, (GLint)((v->winHeight) / 2 ) , 
+		     (GLint)(v->winWidth), (GLint)(v->winHeight) / 2 );
 	// Tell GL we are about to modify the projection parameters
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(o->fov, 2.0/win_ratio, 1.0, 100000.0);
+	gluPerspective(o->fov, v->win_ratio / 2.0, 1.0, 100000.0);
     } else {
-	xglViewport(0, 0 , (GLint)winWidth, (GLint) winHeight);
+	xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
 	// Tell GL we are about to modify the projection parameters
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(o->fov, 1.0/win_ratio, 10.0, 100000.0);
+	gluPerspective(o->fov, v->win_ratio, 10.0, 100000.0);
     }
 
     xglMatrixMode(GL_MODELVIEW);
@@ -288,7 +285,11 @@ static void fgUpdateViewParams( void ) {
 
 // Draw a basic instrument panel
 static void fgUpdateInstrViewParams( void ) {
-    xglViewport(0, 0 , (GLint)winWidth, (GLint)winHeight / 2);
+    fgVIEW *v;
+
+    v = &current_view;
+
+    xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) / 2);
   
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
@@ -618,14 +619,18 @@ static void fgMainLoop( void ) {
 
 // Handle new window size or exposure
 static void fgReshape( int width, int height ) {
+    fgVIEW *v;
+
+    v = &current_view;
+
     // Do this so we can call fgReshape(0,0) ourselves without having
     // to know what the values of width & height are.
     if ( (height > 0) && (width > 0) ) {
-	win_ratio = (GLfloat) height / (GLfloat) width;
+	v->win_ratio = (GLfloat) width / (GLfloat) height;
     }
 
-    winWidth = width;
-    winHeight = height;
+    v->winWidth = width;
+    v->winHeight = height;
 
     // Inform gl of our view window size (now handled elsewhere)
     // xglViewport(0, 0, (GLint)width, (GLint)height);
@@ -768,6 +773,14 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.15  1998/05/16 13:08:34  curt
+// C++ - ified views.[ch]xx
+// Shuffled some additional view parameters into the fgVIEW class.
+// Changed tile-radius to tile-diameter because it is a much better
+//   name.
+// Added a WORLD_TO_EYE transformation to views.cxx.  This allows us
+//  to transform world space to eye space for view frustum culling.
+//
 // Revision 1.14  1998/05/13 18:29:57  curt
 // Added a keyboard binding to dynamically adjust field of view.
 // Added a command line option to specify fov.
