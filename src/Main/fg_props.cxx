@@ -884,7 +884,7 @@ fgInitProps ()
 
   //consumables
   fgTie("/consumables/fuel/tank[0]/level-gal_us", getTank1Fuel, setTank1Fuel, false);
-  fgTie("/consumables/fuel/tank2/level-gal_us", getTank2Fuel, setTank2Fuel, false);
+  fgTie("/consumables/fuel/tank[1]/level-gal_us", getTank2Fuel, setTank2Fuel, false);
 
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
