@@ -570,8 +570,8 @@ void
 FGBFI::setAltitude (double altitude)
 {
   if (getAltitude() != altitude) {
-    fgFDMForceAltitude(getFlightModel(), altitude * FEET_TO_METER);
-    current_options.set_altitude(altitude * FEET_TO_METER);
+    fgFDMForceAltitude(getFlightModel(), altitude);
+    current_options.set_altitude(altitude);
     current_aircraft.fdm_state->set_Altitude(altitude);
   }
 }
