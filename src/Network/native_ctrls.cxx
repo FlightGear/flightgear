@@ -141,9 +141,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
     net->num_tanks = FGNetCtrls::FG_MAX_TANKS;
     for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
         node = fgGetNode("/controls/fuel/tank", i);
-        if ( node->getChild("fuel-selector") != 0 ) {
+        if ( node->getChild("fuel_selector") != 0 ) {
             net->fuel_selector[i]
-                = node->getChild("fuel-selector")->getBoolValue();
+                = node->getChild("fuel_selector")->getBoolValue();
         } else {
             net->fuel_selector[i] = false;
         }
@@ -310,7 +310,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
         node = fgGetNode( "/controls/fuel/tank", i );
-        node->getChild( "fuel-selector" )
+        node->getChild( "fuel_selector" )
             ->setBoolValue( net->fuel_selector[i] );
     }
     for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
