@@ -26,11 +26,11 @@
 
 #include <math.h>
 
-#include "slew.h"
-#include "../flight.h"
-#include "../../Aircraft/aircraft.h"
-#include "../../Controls/controls.h"
-#include "../../Include/constants.h"
+#include <Flight/Slew/slew.h>
+#include <Flight/flight.h>
+#include <Aircraft/aircraft.h>
+#include <Controls/controls.h>
+#include <Include/constants.h>
 
 
 #ifndef M_PI                                    
@@ -93,10 +93,14 @@ void fgSlewUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/01/19 18:40:30  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.9  1998/01/19 19:27:06  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.8  1998/01/19 18:40:30  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.7  1997/12/15 23:54:42  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

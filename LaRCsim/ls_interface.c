@@ -240,8 +240,8 @@ $Original log: LaRCsim.c,v $
 #include "ls_aux.h"
 #include "ls_model.h"
 #include "ls_init.h"
-#include "../flight.h"
-#include "../../Aircraft/aircraft.h"
+#include <Flight/flight.h>
+#include <Aircraft/aircraft.h>
 
 /* global variable declarations */
 
@@ -915,6 +915,10 @@ int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.14  1998/01/19 19:27:04  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.13  1998/01/19 18:40:26  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

@@ -23,10 +23,10 @@
  **************************************************************************/
 
 
-#include "../Time/fg_time.h"
-#include "orbits.h"
-#include "planets.h"
-#include "sun.h"
+#include <Time/fg_time.h>
+#include <Astro/orbits.h>
+#include <Astro/planets.h>
+#include <Astro/sun.h>
 
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
@@ -133,9 +133,13 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:18  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 19:26:59  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.1  1998/01/07 03:16:18  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.4  1997/12/30 20:47:52  curt
  * Integrated new event manager with subsystem initializations.
  *

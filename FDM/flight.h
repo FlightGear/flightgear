@@ -28,8 +28,8 @@
 #define FLIGHT_H
 
 
-#include "Slew/slew.h"
-#include "LaRCsim/ls_interface.h"
+#include <Flight/Slew/slew.h>
+/* #include <Flight/LaRCsim/ls_interface.h> */
 
 
 /* Define the various supported flight models (most not yet implemented) */
@@ -396,10 +396,14 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop);
 
 
 /* $Log$
-/* Revision 1.10  1997/12/10 22:37:43  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.11  1998/01/19 19:27:03  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.10  1997/12/10 22:37:43  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.9  1997/09/04 02:17:33  curt
  * Shufflin' stuff.
  *

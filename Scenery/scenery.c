@@ -29,15 +29,15 @@
 #endif
 
 #include <GL/glut.h>
-#include "../XGL/xgl.h"
+#include <XGL/xgl.h>
 
 #include <stdio.h>
 #include <string.h>
 
-#include "../Include/general.h"
+#include <Include/general.h>
 
-#include "obj.h"
-#include "scenery.h"
+#include <Scenery/obj.h>
+#include <Scenery/scenery.h>
 
 
 /* Temporary hack until we get the scenery management system running */
@@ -100,10 +100,14 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.32  1998/01/19 18:40:37  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.33  1998/01/19 19:27:17  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.32  1998/01/19 18:40:37  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.31  1998/01/13 00:23:11  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

@@ -29,16 +29,16 @@
 #endif
 
 #include <GL/glut.h>
-#include "../XGL/xgl.h"
+#include <XGL/xgl.h>
 
-#include "scenery.h"
-#include "tileutils.h"
-#include "obj.h"
+#include <Scenery/scenery.h>
+#include <Scenery/tileutils.h>
+#include <Scenery/obj.h>
 
-#include "../Aircraft/aircraft.h"
-#include "../Include/constants.h"
-#include "../Include/general.h"
-#include "../Include/types.h"
+#include <Aircraft/aircraft.h>
+#include <Include/constants.h>
+#include <Include/general.h>
+#include <Include/types.h>
 
 
 /* here's where we keep the array of closest (potentially viewable) tiles */
@@ -124,10 +124,14 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/19 18:40:38  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.5  1998/01/19 19:27:18  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.4  1998/01/19 18:40:38  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.3  1998/01/13 00:23:11  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------------
 # Makefile
 #
-# Written by Curtis Olson, started July 1997.
+# Written by Curtis Olson, started May 1997.
 #
 # Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
 #
@@ -23,49 +23,14 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
-
-TARGET = libWeather.a
+ARLIBRARY = libWeather.a
+TARGETS = $(ARLIBRARY)
 
 CFILES = weather.c
-HFILES = weather.h
-OFILES = $(CFILES:.c=.o)
+CXXFILES = 
 
+LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
 
-include ../make.inc
+include $(FG_ROOT_SRC)/commondefs
 
-
-CFLAGS = $(FG_CFLAGS)
-
-
-#---------------------------------------------------------------------------
-# Primary Targets
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OFILES)
-	$(AR) rv $(TARGET) $(OFILES)
-	$(RANLIB) $(TARGET)
-
-all: $(TARGET)
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-include depend
-
-weather.o:
-	$(CC) $(CFLAGS) -c weather.c -o $@
-
-
-#---------------------------------------------------------------------------
-# $Log$
-# Revision 1.2  1997/07/20 02:19:12  curt
-# First stab at a system to generate os2 makefiles automatically.
-#
-# Revision 1.1  1997/07/19 23:03:57  curt
-# Initial revision.
-#
+include $(COMMONRULES)

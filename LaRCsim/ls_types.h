@@ -30,6 +30,11 @@
 	DATE	PURPOSE						BY
 	
 --------------------------------------------------------------------------*/
+
+#ifndef _LS_TYPES_H
+#define _LS_TYPES_H
+
+
 /* SCALAR type is used throughout equations of motion code - sets precision */
 
 typedef double SCALAR;
@@ -39,5 +44,9 @@ typedef SCALAR VECTOR_3[3];
 /* DATA type is old style; this statement for continuity */
 
 #define DATA SCALAR
+
+
+#endif /* _LS_TYPES_H */
+
 
 /* --------------------------- end of ls_types.h -------------------------*/

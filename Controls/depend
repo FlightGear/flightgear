@@ -1,6 +1,7 @@
-controls.o: controls.c controls.h ../Include/limits.h \
- ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
- ../Aircraft/../Flight/Slew/slew.h \
- ../Aircraft/../Flight/LaRCsim/ls_interface.h \
- ../Aircraft/../Flight/LaRCsim/../flight.h \
- ../Aircraft/../Controls/controls.h
+controls.o: controls.c /home/rpk/FlightGear/Src/Controls/controls.h \
+ /home/rpk/FlightGear/Src/Controls/../Include/limits.h \
+ /home/rpk/FlightGear/Src/Aircraft/aircraft.h \
+ /home/rpk/FlightGear/Src/Flight/flight.h \
+ /home/rpk/FlightGear/Src/Flight/Slew/slew.h \
+ /home/rpk/FlightGear/Src/Flight/LaRCsim/ls_interface.h \
+ /home/rpk/FlightGear/Src/Flight/LaRCsim/../flight.h

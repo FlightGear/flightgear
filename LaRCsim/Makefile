@@ -1,134 +1,15 @@
-#---------------------------------------------------------------------------
-# Makefile
-#
-# Written by Curtis Olson, started May 1997.
-#
-# $Id$
-# (Log is kept at end of this file)
-#---------------------------------------------------------------------------
-
-
-TARGET = libLaRCsim.a
+ARLIBRARY = libLaRCsim.a
+TARGETS = $(ARLIBRARY)
 
 LaRCsimFILES = atmos_62.c ls_accel.c ls_aux.c ls_geodesy.c ls_gravity.c \
-	ls_step.c ls_model.c default_model_routines.c ls_init.c # ls_sync.c
-
+        ls_step.c ls_model.c default_model_routines.c ls_init.c # ls_sync.c
 NavionFILES = navion_aero.c navion_engine.c navion_gear.c navion_init.c
-
 InterfaceFILES = ls_interface.c
-
 CFILES =  $(LaRCsimFILES) $(NavionFILES) $(InterfaceFILES)
+CXXFILES = 
 
-OFILES = $(CFILES:.c=.o)
+LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
 
+include $(FG_ROOT_SRC)/commondefs
 
-include ../../make.inc
-
-
-CFLAGS = $(FG_CFLAGS)
-
-LIBS = -lm
-
-
-#---------------------------------------------------------------------------
-# Primary Targets
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OFILES)
-	$(AR) rv $(TARGET) $(OFILES)
-	$(RANLIB) $(TARGET)
-
-simtest: $(TARGET) LaRCsim.o
-	$(CC) -o simtest LaRCsim.o libLaRCsim.a $(LIBS)
-
-all: $(TARGET)
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-include depend
-
-atmos_62.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-default_model_routines.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_accel.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_aux.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_geodesy.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_gravity.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_init.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_interface.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_model.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-ls_step.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-navion_aero.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-navion_engine.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-navion_gear.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-navion_init.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
-
-
-#---------------------------------------------------------------------------
-# $Log$
-# Revision 1.10  1997/07/20 02:19:10  curt
-# First stab at a system to generate os2 makefiles automatically.
-#
-# Revision 1.9  1997/07/18 23:41:23  curt
-# Tweaks for building with Cygnus Win32 compiler.
-#
-# Revision 1.8  1997/07/12 02:24:48  curt
-# Added ranlib.
-#
-# Revision 1.7  1997/07/07 20:59:48  curt
-# Working on scenery transformations to enable us to fly fluidly over the
-# poles with no discontinuity/distortion in scenery.
-#
-# Revision 1.6  1997/06/27 21:38:06  curt
-# Working on Makefile structure.
-#
-# Revision 1.5  1997/06/27 20:03:34  curt
-# Working on Makefile structure.
-#
-# Revision 1.4  1997/06/26 19:08:30  curt
-# Restructuring make, adding automatic "make dep" support.
-#
-# Revision 1.3  1997/06/21 17:12:50  curt
-# Capitalized subdirectory names.
-#
-# Revision 1.2  1997/06/17 16:52:02  curt
-# Timer interval stuff now uses gettimeofday() instead of ftime()
-#
-# Revision 1.1  1997/05/29 00:09:52  curt
-# Initial Flight Gear revision.
-#
-# Revision 1.1  1997/05/16 16:04:44  curt
-# Initial revision.
-#
+include $(COMMONRULES)

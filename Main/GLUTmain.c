@@ -29,34 +29,34 @@
 #endif
 
 #include <GL/glut.h>
-#include "../XGL/xgl.h"
+#include <XGL/xgl.h>
 #include <stdio.h>
 
-#include "GLUTkey.h"
-#include "fg_init.h"
-#include "views.h"
+#include <Main/GLUTkey.h>
+#include <Main/fg_init.h>
+#include <Main/views.h>
 
-#include "../Include/constants.h"
-#include "../Include/general.h"
+#include <Include/constants.h>
+#include <Include/general.h>
 
-#include "../Aircraft/aircraft.h"
-#include "../Astro/moon.h"
-#include "../Astro/sky.h"
-#include "../Astro/stars.h"
-#include "../Astro/sun.h"
-#include "../Cockpit/cockpit.h"
-#include "../Joystick/joystick.h"
-#include "../Math/fg_geodesy.h"
-#include "../Math/mat3.h"
-#include "../Math/polar.h"
-#include "../Scenery/mesh.h"
-#include "../Scenery/scenery.h"
-#include "../Scenery/tilemgr.h"
-#include "../Time/event.h"
-#include "../Time/fg_time.h"
-#include "../Time/fg_timer.h"
-#include "../Time/sunpos.h"
-#include "../Weather/weather.h"
+#include <Aircraft/aircraft.h>
+#include <Astro/moon.h>
+#include <Astro/sky.h>
+#include <Astro/stars.h>
+#include <Astro/sun.h>
+#include <Cockpit/cockpit.h>
+#include <Joystick/joystick.h>
+#include <Math/fg_geodesy.h>
+#include <Math/mat3.h>
+#include <Math/polar.h>
+#include <Scenery/mesh.h>
+#include <Scenery/scenery.h>
+#include <Scenery/tilemgr.h>
+#include <Time/event.h>
+#include <Time/fg_time.h>
+#include <Time/fg_timer.h>
+#include <Time/sunpos.h>
+#include <Weather/weather.h>
 
 
 /* This is a record containing global housekeeping information */
@@ -630,16 +630,19 @@ int main( int argc, char *argv[] ) {
 
 #ifdef NO_PRINTF
   #include <stdarg.h>
-  int printf (const char *format, ...) {
-  }
+  int printf (const char *format, ...) {}
 #endif
 
 
 /* $Log$
-/* Revision 1.49  1998/01/19 18:40:31  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.50  1998/01/19 19:27:07  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.49  1998/01/19 18:40:31  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.48  1998/01/19 18:35:46  curt
  * Minor tweaks and fixes for cygwin32.
  *

@@ -24,11 +24,11 @@
  **************************************************************************/
 
 
-#ifndef LS_INTERFACE_H
-#define LS_INTERFACE_H
+#ifndef _LS_INTERFACE_H
+#define _LS_INTERFACE_H
 
 
-#include "../flight.h"
+#include <Flight/flight.h>
 
 
 /* reset flight params to a specific position */ 
@@ -44,14 +44,18 @@ int fgFlight_2_LaRCsim (struct fgFLIGHT *f);
 int fgLaRCsim_2_Flight (struct fgFLIGHT *f);
 
 
-#endif /* LS_INTERFACE_H */
+#endif /* _LS_INTERFACE_H */
 
 
 /* $Log$
-/* Revision 1.4  1998/01/19 18:40:27  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.5  1998/01/19 19:27:05  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.4  1998/01/19 18:40:27  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.3  1997/07/23 21:52:20  curt
  * Put comments around the text after an #endif for increased portability.
  *

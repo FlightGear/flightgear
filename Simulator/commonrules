@@ -1,0 +1,40 @@
+# emacs make tag: -*- Mode: Makefile -*-
+
+default: $(TARGETS)
+
+.SUFFIXES: .d .cxx .c .o
+
+$(ARLIBRARY): $(OBJECTS)
+	$(AR) rv $(ARLIBRARY) $(OBJECTS)
+	$(RANLIB) $(ARLIBRARY)
+	echo $(VPATH)
+	$(MV) $(ARLIBRARY) $(FG_ROOT_LIB)
+
+$(LDLIBTARGET): $(OBJECTS)
+	$(LD) -o $(LDLIBRARY) $(LDFLAGS) $(OBJECTS)
+	$(MV) $(LDLIBRARY) $(LDLIBTARGET)
+
+depend: $(DEPENDS)
+	cat $(DEPENDS) > $(MAKEDEPENDFILE)
+
+.cxx.d:
+	$(CPP) $(CPPFLAGS) $(CPPDEFS) -c $< -MD
+
+.cxx.o:
+	$(CPP) $(CPPFLAGS) $(CPPDEFS) -c $<
+
+.c.d:
+	$(CC) $(CFLAGS) $(CDEFS) -c $< -MD
+
+.c.o:
+	$(CC) $(CFLAGS) $(CDEFS) -c $<
+
+clean:
+	rm -f $(OBJECTS) $(TARGET) $(DIRT)
+
+clobber: clean
+	rm -f *.d *.o *.a *.os2 *~ core $(MAKEDEPENDFILE)
+
+#include $(MAKEDEPENDFILE)
+
+

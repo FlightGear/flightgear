@@ -23,192 +23,118 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
+TARGET = fg-$(FG_VERSION)
 
 CFILES = fg_init.c views.c $(INTERFACE_FILES)
-OFILES = $(CFILES:.c=.o)
-AFILES = ../Aircraft/libAircraft.a ../Astro/libAstro.a ../Cockpit/libCockpit.a \
-	../Controls/libControls.a ../Flight/libFlight.a \
-	../Joystick/libJoystick.a ../Flight/LaRCsim/libLaRCsim.a \
-	../Flight/Slew/libSlew.a ../Scenery/libScenery.a \
-	../Time/libTime.a ../Weather/libWeather.a ../Math/libMath.a \
+
+FGLIBS = -lAircraft -lAstro -lCockpit -lControls -lFlight \
+	-lJoystick -lLaRCsim -lSlew -lScenery -lTime -lWeather -lMath \
+	-lc \
+	$(NULL)
 
 
-include ../make.inc
+LCDEFS = -DGLUT
+LLDFLAGS =
+LDLIBS = $(FGLIBS) $(FG_DEBUG_LIBS) \
+	$(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
-
-CFLAGS = $(FG_CFLAGS) $(INTERFACE_FLAGS)
-LIBS =  $(FG_DEBUG_LIBS) $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
-
-
-TARGET=fg-$(FG_VERSION)
-
+include $(FG_ROOT_SRC)/commondefs
 
 #---------------------------------------------------------------------------
-# Primary Targets
+# Rule for TARGET
 #---------------------------------------------------------------------------
 
-$(TARGET): $(OFILES) $(AFILES)
-	$(CC) -o $(TARGET) $(OFILES) $(AFILES) $(LIBS)
-	$(RM) -f fg$(FG_VERSION_MAJOR)
-	$(LN) $(TARGET) fg$(FG_VERSION_MAJOR)
+$(TARGET): $(OBJECTS)
+	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
+	$(LN) -sf $(TARGET) fg$(FG_VERSION_MAJOR)
 
-all: $(TARGET)
-
-clean:
-	rm -f *.o $(TARGET) $(TARGET).exe \
-		fg$(FG_VERSION_MAJOR) fg$(FG_VERSION_MAJOR).exe \
-		lib*.a *.os2 *~ core
-
-
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-include depend
-
-GLUTmain.o:
-	$(CC) $(CFLAGS) -c GLUTmain.c -o $@
-
-GLUTkey.o:
-	$(CC) $(CFLAGS) -c GLUTkey.c -o $@
-
-GLTKkey.o:
-	$(CC) $(CFLAGS) -c GLTKkey.c -o $@
-
-fg_init.o:
-	$(CC) $(CFLAGS) -c fg_init.c -o $@
-
-views.o:
-	$(CC) $(CFLAGS) -c views.c -o $@
-
+include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.40  1998/01/07 03:18:57  curt
-# Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
+# Revision 1.41  1998/01/19 19:27:08  curt
+# Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+# This should simplify things tremendously.
 #
-# Revision 1.39  1997/12/17 23:13:35  curt
-# Began working on rendering a sky.
+# Revision 1.1  1998/01/07 03:16:15  curt
+# Moved from .../Src/Scenery/ to .../Src/Astro/
 #
-# Revision 1.38  1997/12/15 23:54:47  curt
-# Add xgl wrappers for debugging.
-# Generate terrain normals on the fly.
+# Revision 1.26  1997/12/19 16:45:01  curt
+# Working on scene rendering order and options.
 #
-# Revision 1.37  1997/12/12 21:41:26  curt
-# More light/material property tweaking ... still a ways off.
+# Revision 1.25  1997/12/17 23:13:45  curt
+# Began working on rendering the sky.
 #
-# Revision 1.36  1997/12/10 01:19:47  curt
-# Tweaks for verion 0.15 release.
+# Revision 1.24  1997/11/25 19:25:33  curt
+# Changes to integrate Durk's moon/sun code updates + clean up.
 #
-# Revision 1.35  1997/10/28 21:11:22  curt
-# Organizational changes.
+# Revision 1.23  1997/10/28 21:00:20  curt
+# Changing to new terrain format.
 #
-# Revision 1.34  1997/10/25 03:24:21  curt
-# Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
+# Revision 1.22  1997/10/25 03:30:07  curt
+# Misc. tweaks.
 #
-# Revision 1.33  1997/09/04 02:17:35  curt
-# Shufflin' stuff.
+# Revision 1.21  1997/10/25 03:18:26  curt
+# Incorporated sun, moon, and planet position and rendering code contributed
+# by Durk Talsma.
 #
-# Revision 1.32  1997/08/27 21:31:27  curt
-# Added views.[ch]
+# Revision 1.20  1997/09/22 14:44:21  curt
+# Continuing to try to align stars correctly.
 #
-# Revision 1.31  1997/08/25 20:27:23  curt
-# Merged in initial HUD and Joystick code.
+# Revision 1.19  1997/08/27 03:30:23  curt
+# Changed naming scheme of basic shared structures.
 #
-# Revision 1.30  1997/08/22 21:34:40  curt
-# Doing a bit of reorganizing and house cleaning.
+# Revision 1.18  1997/08/02 19:10:12  curt
+# Incorporated mesh2GL.c into mesh.c
 #
-# Revision 1.29  1997/08/04 20:25:15  curt
-# Organizational tweaking.
+# Revision 1.17  1997/07/23 21:52:23  curt
+# Put comments around the text after an #endif for increased portability.
 #
-# Revision 1.28  1997/08/02 18:45:01  curt
-# Renamed GLmain.c GLUTmain.c
-#
-# Revision 1.27  1997/07/31 22:52:39  curt
-# Working on redoing internal coordinate systems & scenery transformations.
-#
-# Revision 1.26  1997/07/30 16:12:42  curt
-# Moved fg_random routines from Util/ to Math/
-#
-# Revision 1.25  1997/07/20 02:19:11  curt
+# Revision 1.16  1997/07/20 02:19:11  curt
 # First stab at a system to generate os2 makefiles automatically.
 #
-# Revision 1.24  1997/07/19 23:04:47  curt
-# Added an initial weather section.
+# Revision 1.15  1997/07/12 02:24:47  curt
+# Added ranlib.
 #
-# Revision 1.23  1997/07/19 22:34:03  curt
-# Moved PI definitions to ../constants.h
-# Moved random() stuff to ../Utils/ and renamed fg_random()
+# Revision 1.14  1997/06/29 21:16:47  curt
+# More twiddling with the Scenery Management system.
 #
-# Revision 1.22  1997/07/18 23:41:25  curt
-# Tweaks for building with Cygnus Win32 compiler.
-#
-# Revision 1.21  1997/07/05 20:43:34  curt
-# renamed mat3 directory to Math so we could add other math related routines.
-#
-# Revision 1.20  1997/06/29 21:19:17  curt
-# Working on scenery management system.
-#
-# Revision 1.19  1997/06/27 21:38:09  curt
+# Revision 1.13  1997/06/27 21:38:10  curt
 # Working on Makefile structure.
 #
-# Revision 1.18  1997/06/27 20:03:36  curt
+# Revision 1.12  1997/06/27 20:03:37  curt
 # Working on Makefile structure.
 #
-# Revision 1.17  1997/06/26 22:14:54  curt
+# Revision 1.11  1997/06/26 22:14:57  curt
 # Beginning work on a scenery management system.
 #
-# Revision 1.16  1997/06/26 19:08:33  curt
+# Revision 1.10  1997/06/26 19:08:34  curt
 # Restructuring make, adding automatic "make dep" support.
 #
-# Revision 1.15  1997/06/25 15:39:47  curt
+# Revision 1.9  1997/06/25 15:39:48  curt
 # Minor changes to compile with rsxnt/win32.
 #
-# Revision 1.14  1997/06/21 17:52:23  curt
-# Continue directory shuffling ... everything should be compilable/runnable
-# again.
+# Revision 1.8  1997/06/21 17:58:07  curt
+# directory shuffling ...
 #
-# Revision 1.13  1997/06/21 17:12:54  curt
+# Revision 1.1  1997/06/21 17:39:28  curt
+# Moved to the ParseScn subdirectory.
+#
+# Revision 1.6  1997/06/21 17:12:55  curt
 # Capitalized subdirectory names.
 #
-# Revision 1.12  1997/06/16 19:32:51  curt
-# Starting to add general timer support.
-#
-# Revision 1.11  1997/05/31 19:16:25  curt
+# Revision 1.5  1997/05/31 19:16:29  curt
 # Elevator trim added.
 #
-# Revision 1.10  1997/05/31 04:13:53  curt
-# WE CAN NOW FLY!!!
+# Revision 1.4  1997/05/27 17:48:50  curt
+# Added -f flag to flex to generate a "fast" scanner.
 #
-# Continuing work on the LaRCsim flight model integration.
-# Added some MSFS-like keyboard input handling.
-#
-# Revision 1.9  1997/05/30 23:26:19  curt
-# Added elevator/aileron controls.
-#
-# Revision 1.8  1997/05/30 19:27:02  curt
-# The LaRCsim flight model is starting to look like it is working.
-#
-# Revision 1.7  1997/05/29 22:39:50  curt
-# Working on incorporating the LaRCsim flight model.
-#
-# Revision 1.6  1997/05/29 02:33:23  curt
-# Updated to reflect changing interfaces in other "modules."
-#
-# Revision 1.5  1997/05/27 17:44:32  curt
-# Renamed & rearranged variables and routines.   Added some initial simple
-# timer/alarm routines so the flight model can be updated on a regular interval.
-#
-# Revision 1.4  1997/05/23 15:40:26  curt
+# Revision 1.3  1997/05/23 15:40:40  curt
 # Added GNU copyright headers.
-# Fog now works!
 #
-# Revision 1.3  1997/05/23 00:35:13  curt
-# Trying to get fog to work ...
+# Revision 1.2  1997/05/17 00:17:01  curt
+# Cosmetic changes.
 #
-# Revision 1.2  1997/05/21 15:57:52  curt
-# Renamed due to added GLUT support.
-#
-# Revision 1.1  1997/05/16 16:05:51  curt
+# Revision 1.1  1997/05/16 16:07:02  curt
 # Initial revision.
 #

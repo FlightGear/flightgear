@@ -27,18 +27,18 @@
 #include <GL/glut.h>
 
 #include <stdlib.h>
-#include "cockpit.h"
+#include <Cockpit/cockpit.h>
 
-#include "../Include/constants.h"
+#include <Include/constants.h>
 
-#include "../Aircraft/aircraft.h"
-#include "../Scenery/mesh.h"
-#include "../Scenery/scenery.h"
-#include "../Math/mat3.h"
-#include "../Math/polar.h"
-#include "../Time/fg_timer.h"
-#include "../Math/fg_random.h"
-#include "../Weather/weather.h"
+#include <Aircraft/aircraft.h>
+#include <Scenery/mesh.h>
+#include <Scenery/scenery.h>
+#include <Math/mat3.h>
+#include <Math/polar.h>
+#include <Time/fg_timer.h>
+#include <Math/fg_random.h>
+#include <Weather/weather.h>
 
 // #define DEBUG
 
@@ -90,10 +90,14 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.5  1998/01/19 18:40:19  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.6  1998/01/19 19:27:01  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.5  1998/01/19 18:40:19  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.4  1997/12/30 20:47:34  curt
  * Integrated new event manager with subsystem initializations.
  *

@@ -27,8 +27,8 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "tileutils.h"
-#include "../Include/constants.h"
+#include <Scenery/tileutils.h>
+#include <Include/constants.h>
 
 
 /* Generate the unique scenery tile index containing the specified
@@ -266,9 +266,13 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.5  1998/01/14 02:19:04  curt
-/* Makde offset_bucket visible to outside.
+/* Revision 1.6  1998/01/19 19:27:18  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.5  1998/01/14 02:19:04  curt
+ * Makde offset_bucket visible to outside.
+ *
  * Revision 1.4  1998/01/13 00:23:12  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

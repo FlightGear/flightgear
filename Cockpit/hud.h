@@ -28,9 +28,9 @@
 #define HUD_H
 
 
-#include "../Aircraft/aircraft.h"
-#include "../Flight/flight.h"
-#include "../Controls/controls.h"
+#include <Aircraft/aircraft.h>
+#include <Flight/flight.h>
+#include <Controls/controls.h>
 
 
 /* Instrument types */
@@ -233,10 +233,14 @@ void fgUpdateHUD2( struct HUD *hud );
 
 
 /* $Log$
-/* Revision 1.4  1998/01/19 18:40:21  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.5  1998/01/19 19:27:01  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.4  1998/01/19 18:40:21  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.3  1997/12/30 16:36:41  curt
  * Merged in Durk's changes ...
  *

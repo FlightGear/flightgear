@@ -28,10 +28,10 @@
 #define VIEWS_H
 
 
-#include "../Include/types.h"
-#include "../Flight/flight.h"
-#include "../Math/mat3.h"
-#include "../Time/fg_time.h"
+#include <Include/types.h>
+#include <Flight/flight.h>
+#include <Math/mat3.h>
+#include <Time/fg_time.h>
 
 
 /* Define a structure containing view information */
@@ -89,9 +89,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
 
 
 /* $Log$
-/* Revision 1.5  1997/12/22 04:14:32  curt
-/* Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+/* Revision 1.6  1998/01/19 19:27:10  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.5  1997/12/22 04:14:32  curt
+ * Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+ *
  * Revision 1.4  1997/12/17 23:13:36  curt
  * Began working on rendering a sky.
  *

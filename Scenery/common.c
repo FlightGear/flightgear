@@ -28,7 +28,7 @@
 #include <string.h>
 #endif
 
-#include "common.h"
+#include <Scenery/common.h>
 
 
 /* strip the enclosing quotes from a string, works within the current
@@ -48,9 +48,13 @@ char *strip_quotes(char *s) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/06 01:20:23  curt
-/* Tweaks to help building with MSVC++
+/* Revision 1.4  1998/01/19 19:27:14  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.3  1998/01/06 01:20:23  curt
+ * Tweaks to help building with MSVC++
+ *
  * Revision 1.2  1997/05/23 15:40:41  curt
  * Added GNU copyright headers.
  *

@@ -1,0 +1,22 @@
+#!/bin/csh
+
+set GENMAKEBASE=${FG_ROOT_SRC}
+
+set ARLIBDIRS="Aircraft Astro Cockpit Controls Flight Flight/Slew Joystick Scenery Time Weather"
+set MUSTDOMANUALLY="Math Flight/LaRCsim XGL"
+
+set AR_PROTOMAKE=${GENMAKEBASE}/armake.proto
+
+echo $ARLIBDIRS
+
+foreach dir (${ARLIBDIRS})
+    cd $dir
+    set cfiles=`ls *.c | sed -e's%^M% %'`
+    set cxxfiles=`ls *.cxx`
+    sed \
+	-e "s%__LIB_NAME_HERE__%lib`basename ${dir}`.a%g" \
+	-e "s%__CXX_SRC_HERE__%${cxxfiles}%g" \
+        -e "s%__C_SRC_HERE__%${cfiles}%g" \
+	${AR_PROTOMAKE} > Makefile
+    cd ${GENMAKEBASE}
+end

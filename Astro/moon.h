@@ -26,9 +26,9 @@
 #define _MOON_H_
 
 
-#include "orbits.h"
+#include <Astro/orbits.h>
 
-#include "../Time/fg_time.h"
+#include <Time/fg_time.h>
 #include <math.h>
 
 #define X .525731112119133606
@@ -51,10 +51,14 @@ extern struct OrbElements pltOrbElements[9];
 
 
 /* $Log$
-/* Revision 1.2  1998/01/19 18:40:17  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.3  1998/01/19 19:26:58  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.2  1998/01/19 18:40:17  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.1  1998/01/07 03:16:16  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *

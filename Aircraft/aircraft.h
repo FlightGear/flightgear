@@ -27,8 +27,8 @@
 #ifndef AIRCRAFT_H
 #define AIRCRAFT_H
 
-#include "../Flight/flight.h"
-#include "../Controls/controls.h"
+#include <Flight/flight.h>
+#include <Controls/controls.h>
 
 
 /* Define a structure containing all the parameters for an aircraft */
@@ -51,10 +51,14 @@ void fgAircraftOutputCurrent(struct fgAIRCRAFT *a);
 
 
 /* $Log$
-/* Revision 1.7  1997/12/10 22:37:38  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.8  1998/01/19 19:26:57  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.7  1997/12/10 22:37:38  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.6  1997/09/13 02:00:06  curt
  * Mostly working on stars and generating sidereal time for accurate star
  * placement.

@@ -24,11 +24,11 @@
  **************************************************************************/
  
 
-#include "hud.h"
+#include <Cockpit/hud.h>
 
 
 // And in the future (near future i hope).
-// #include "panel.h"
+// #include <Cockpit/panel.h>
 
 struct fgCOCKPIT {
 	int code;
@@ -43,10 +43,14 @@ void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 18:40:19  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.4  1998/01/19 19:27:01  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.3  1998/01/19 18:40:19  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.2  1997/12/10 22:37:39  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

@@ -24,9 +24,9 @@
  **************************************************************************/
 
 
-#include "weather.h"
-#include "../Aircraft/aircraft.h"
-#include "../Math/fg_random.h"
+#include <Weather/weather.h>
+#include <Aircraft/aircraft.h>
+#include <Math/fg_random.h>
 
 
 /* This is a record containing current weather info */
@@ -64,10 +64,14 @@ void fgWeatherUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1998/01/19 18:40:41  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.12  1998/01/19 19:27:22  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.11  1998/01/19 18:40:41  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.10  1997/12/30 22:22:46  curt
  * Further integration of event manager.
  *

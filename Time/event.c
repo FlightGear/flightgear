@@ -35,7 +35,7 @@
 #endif /* USE_FTIME */
 
 
-#include "event.h"
+#include <Time/event.h>
 
 
 #define MAX_EVENTS 100    /* size of event table */
@@ -338,10 +338,14 @@ void fgEventProcess( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/01/19 18:40:39  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.7  1998/01/19 19:27:19  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.6  1998/01/19 18:40:39  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.5  1998/01/06 01:20:27  curt
  * Tweaks to help building with MSVC++
  *

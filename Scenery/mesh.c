@@ -38,16 +38,16 @@
 
 #include <GL/glut.h>
 
-#include "../Include/constants.h"
-#include "../Include/types.h"
-#include "../Math/fg_geodesy.h"
-#include "../Math/fg_random.h"
-#include "../Math/mat3.h"
-#include "../Math/polar.h"
+#include <Include/constants.h>
+#include <Include/types.h>
+#include <Math/fg_geodesy.h>
+#include <Math/fg_random.h>
+#include <Math/mat3.h>
+#include <Math/polar.h>
 
-#include "mesh.h"
-#include "common.h"
-#include "scenery.h"
+#include <Scenery/mesh.h>
+#include <Scenery/common.h>
+#include <Scenery/scenery.h>
 
 
 /* Temporary hack until we get the scenery management system running */
@@ -396,10 +396,14 @@ GLint mesh_to_OpenGL(struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.26  1998/01/19 18:40:36  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.27  1998/01/19 19:27:15  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.26  1998/01/19 18:40:36  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.25  1998/01/07 03:31:27  curt
  * Miscellaneous tweaks.
  *

@@ -28,7 +28,7 @@
 #define SCENERY_H
 
 
-#include "../Include/types.h"
+#include <Include/types.h>
 
 
 /* Define a structure containing global scenery parameters */
@@ -63,10 +63,14 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.13  1998/01/19 18:40:38  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.14  1998/01/19 19:27:17  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.13  1998/01/19 18:40:38  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.12  1997/12/15 23:55:03  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

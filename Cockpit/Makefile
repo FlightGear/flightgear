@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------------
 # Makefile
 #
-# Written by Curtis Olson, started July 1997.
+# Written by Curtis Olson, started May 1997.
 #
 # Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
 #
@@ -23,49 +23,14 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
-
-TARGET = libCockpit.a
+ARLIBRARY = libCockpit.a
+TARGETS = $(ARLIBRARY)
 
 CFILES = cockpit.c hud.c
-HFILES = cockpit.h hud.h
-OFILES = $(CFILES:.c=.o)
+CXXFILES = 
 
+LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
 
-include ../make.inc
+include $(FG_ROOT_SRC)/commondefs
 
-
-CFLAGS = $(FG_CFLAGS)
-
-
-#---------------------------------------------------------------------------
-# Primary Targets
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OFILES)
-	$(AR) rv $(TARGET) $(OFILES)
-	$(RANLIB) $(TARGET)
-
-all: $(TARGET)
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-include depend
-
-cockpit.o:
-	$(CC) $(CFLAGS) -c cockpit.c -o $@
-
-hud.o:
-	$(CC) $(CFLAGS) -c hud.c -o $@
-
-
-#---------------------------------------------------------------------------
-# $Log$
-# Revision 1.1  1997/08/29 18:03:19  curt
-# Initial revision.
-#
+include $(COMMONRULES)

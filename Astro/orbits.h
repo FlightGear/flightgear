@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../Time/fg_time.h"
+#include <Time/fg_time.h>
 
 
 
@@ -81,9 +81,13 @@ void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:17  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 19:26:58  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.1  1998/01/07 03:16:17  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.2  1997/12/30 16:36:52  curt
  * Merged in Durk's changes ...
  *

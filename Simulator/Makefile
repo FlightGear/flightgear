@@ -23,30 +23,28 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
-
-include make.inc
-
+include $(FG_ROOT_SRC)/commondefs
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
 SUBDIRS = Aircraft Astro Cockpit Controls Flight Joystick Math Scenery \
 	Time Weather XGL
 MAIN = Main
-
+ORDEREDDIRS = $(SUBSUBDIRS) $(SUBDIRS) $(MAIN)
 
 all: 
-	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
+	for dir in $(ORDEREDDIRS); do \
 	    ( cd $$dir; $(MAKE) ) ; \
 	done
 
 depend:
-	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
+	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making depend in $$dir"; \
 	      cd $$dir; $(CC) -MM *.c > depend ) ; \
 	done
 
 Makefile-os2:
 	cat Makefile | perl mkmfos2.pl > Makefile.os2; \
-	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
+	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making Makefile.os2 in $$dir"; \
 	      cat $$dir/Makefile | perl mkmfos2.pl > $$dir/Makefile.os2; \
 	      cat $$dir/depend   | perl mkmfos2.pl > $$dir/depend.os2) ; \
@@ -54,10 +52,14 @@ Makefile-os2:
 
 clean:
 	-rm -f *.os2 *~
-	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
+	for dir in $(ORDEREDDIRS); do \
 	    (cd $$dir; $(MAKE) clean) ; \
 	done
 
+clobber:
+	for dir in $(ORDEREDDIRS); do \
+	    (cd $$dir; $(MAKE) clean) ; \
+	done
 
 source-tar: clean
 	(cd ../..; \
@@ -98,6 +100,10 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.36  1998/01/19 19:26:51  curt
+# Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+# This should simplify things tremendously.
+#
 # Revision 1.35  1998/01/07 03:18:14  curt
 # Created the Astro/ subdirctory for stuff high in the sky ...
 #

@@ -31,12 +31,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <GL/glut.h>
-#include "../XGL/xgl.h"
+#include <XGL/xgl.h>
 
-#include "obj.h"
-#include "scenery.h"
+#include <Scenery/obj.h>
+#include <Scenery/scenery.h>
 
-#include "../Math/mat3.h"
+#include <Math/mat3.h>
 
 
 
@@ -328,10 +328,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 
 
 /* $Log$
-/* Revision 1.17  1998/01/13 00:23:10  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.18  1998/01/19 19:27:16  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.17  1998/01/13 00:23:10  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.16  1997/12/30 23:09:40  curt
  * Worked on winding problem without luck, so back to calling glFrontFace()
  * 3 times for each scenery area.

@@ -23,16 +23,16 @@
 
 #include <math.h>
 #include <GL/glut.h>
-#include "../XGL/xgl.h"
+#include <XGL/xgl.h>
 
-#include "orbits.h"
-#include "moon.h"
+#include <Astro/orbits.h>
+#include <Astro/moon.h>
 
-#include "../Aircraft/aircraft.h"
-#include "../Include/constants.h"
-#include "../Include/general.h"
-#include "../Main/views.h"
-#include "../Time/fg_time.h"
+#include <Aircraft/aircraft.h>
+#include <Include/constants.h>
+#include <Include/general.h>
+#include <Main/views.h>
+#include <Time/fg_time.h>
 
 struct CelestialCoord moonPos;
 
@@ -320,10 +320,14 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.2  1998/01/19 18:40:16  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.3  1998/01/19 19:26:57  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.2  1998/01/19 18:40:16  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.1  1998/01/07 03:16:16  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *

@@ -23,70 +23,14 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
-
-TARGET = libAircraft.a
+ARLIBRARY = libAircraft.a
+TARGETS = $(ARLIBRARY)
 
 CFILES = aircraft.c
-HFILES = aircraft.h
-OFILES = $(CFILES:.c=.o)
+CXXFILES = 
 
+LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
 
-include ../make.inc
+include $(FG_ROOT_SRC)/commondefs
 
-
-CFLAGS = $(FG_CFLAGS)
-
-
-#---------------------------------------------------------------------------
-# Primary Targets
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OFILES) $(HFILES)
-	$(AR) rv $(TARGET) $(OFILES)
-	$(RANLIB) $(TARGET)
-
-all: $(TARGET)
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-include depend
-
-aircraft.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c aircraft.c -o $@
-
-
-#---------------------------------------------------------------------------
-# $Log$
-# Revision 1.9  1997/07/20 02:19:09  curt
-# First stab at a system to generate os2 makefiles automatically.
-#
-# Revision 1.8  1997/07/12 02:24:37  curt
-# Added ranlib.
-#
-# Revision 1.7  1997/06/27 21:38:02  curt
-# Working on Makefile structure.
-#
-# Revision 1.6  1997/06/27 20:03:32  curt
-# Working on Makefile structure.
-#
-# Revision 1.5  1997/06/26 19:08:28  curt
-# Restructuring make, adding automatic "make dep" support.
-#
-# Revision 1.4  1997/06/25 15:39:44  curt
-# Minor changes to compile with rsxnt/win32.
-#
-# Revision 1.3  1997/06/21 17:12:42  curt
-# Capitalized subdirectory names.
-#
-# Revision 1.2  1997/05/23 15:40:29  curt
-# Added GNU copyright headers.
-#
-# Revision 1.1  1997/05/16 15:58:23  curt
-# Initial revision.
-#
+include $(COMMONRULES)

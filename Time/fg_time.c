@@ -36,10 +36,9 @@
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
 #endif /* USE_FTIME */
 
-#include "fg_time.h"
-#include "../Include/constants.h"
-#include "../Flight/flight.h"
-#include "../Time/fg_time.h"
+#include <Time/fg_time.h>
+#include <Include/constants.h>
+#include <Flight/flight.h>
 
 
 #define DEGHR(x)        ((x)/15.)
@@ -301,9 +300,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.28  1998/01/19 18:35:49  curt
-/* Minor tweaks and fixes for cygwin32.
+/* Revision 1.29  1998/01/19 19:27:20  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.28  1998/01/19 18:35:49  curt
+ * Minor tweaks and fixes for cygwin32.
+ *
  * Revision 1.27  1998/01/13 00:23:13  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

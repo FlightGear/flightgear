@@ -35,8 +35,8 @@
 #include <GL/glut.h>
 #include <time.h>
 
-#include "../Include/types.h"
-#include "../Flight/flight.h"
+#include <Include/types.h>
+#include <Flight/flight.h>
 
 
 /* Define a structure containing global time parameters */
@@ -99,9 +99,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.12  1998/01/05 18:44:37  curt
-/* Add an option to advance/decrease time from keyboard.
+/* Revision 1.13  1998/01/19 19:27:20  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.12  1998/01/05 18:44:37  curt
+ * Add an option to advance/decrease time from keyboard.
+ *
  * Revision 1.11  1997/12/19 23:35:07  curt
  * Lot's of tweaking with sky rendering and lighting.
  *

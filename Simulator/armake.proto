@@ -23,11 +23,11 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
-ARLIBRARY = libControls.a
+ARLIBRARY = __LIB_NAME_HERE__
 TARGETS = $(ARLIBRARY)
 
-CFILES = controls.c
-CXXFILES = 
+CFILES = __C_SRC_HERE__
+CXXFILES = __CXX_SRC_HERE__
 
 LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
 

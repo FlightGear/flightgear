@@ -23,72 +23,14 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
-
-TARGET=libFlight.a
+ARLIBRARY = libFlight.a
+TARGETS = $(ARLIBRARY)
 
 CFILES = flight.c
-OFILES = $(CFILES:.c=.o)
+CXXFILES = 
 
+LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
 
-include ../make.inc
+include $(FG_ROOT_SRC)/commondefs
 
-
-CFLAGS = $(FG_CFLAGS)
-
-
-#---------------------------------------------------------------------------
-# Primary Targets
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OFILES)
-	$(AR) rv $(TARGET) $(OFILES)
-	$(RANLIB) $(TARGET)
-
-all: $(TARGET)
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-include depend
-
-flight.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c flight.c -o $@
-
-
-#---------------------------------------------------------------------------
-# $Log$
-# Revision 1.10  1997/07/20 02:19:10  curt
-# First stab at a system to generate os2 makefiles automatically.
-#
-# Revision 1.9  1997/07/12 02:24:46  curt
-# Added ranlib.
-#
-# Revision 1.8  1997/06/27 21:38:05  curt
-# Working on Makefile structure.
-#
-# Revision 1.7  1997/06/27 20:03:34  curt
-# Working on Makefile structure.
-#
-# Revision 1.6  1997/06/26 19:08:30  curt
-# Restructuring make, adding automatic "make dep" support.
-#
-# Revision 1.5  1997/06/25 15:39:46  curt
-# Minor changes to compile with rsxnt/win32.
-#
-# Revision 1.4  1997/06/21 17:12:48  curt
-# Capitalized subdirectory names.
-#
-# Revision 1.3  1997/05/29 02:32:25  curt
-# Starting to build generic flight model interface.
-#
-# Revision 1.2  1997/05/23 15:40:36  curt
-# Added GNU copyright headers.
-#
-# Revision 1.1  1997/05/16 16:04:44  curt
-# Initial revision.
-#
+include $(COMMONRULES)

@@ -23,12 +23,12 @@
  **************************************************************************/
 
 #include <GL/glut.h>
-#include "../XGL/xgl.h"
+#include <XGL/xgl.h>
 
-#include "../Time/fg_time.h"
-#include "../Main/views.h"
-#include "orbits.h"
-#include "sun.h"
+#include <Time/fg_time.h>
+#include <Main/views.h>
+#include <Astro/orbits.h>
+#include <Astro/sun.h>
 
 GLint sun_obj;
 
@@ -190,10 +190,14 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.2  1998/01/19 18:40:18  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.3  1998/01/19 19:27:00  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.2  1998/01/19 18:40:18  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.1  1998/01/07 03:16:20  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *

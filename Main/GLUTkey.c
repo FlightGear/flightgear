@@ -29,16 +29,16 @@
 #endif
 
 #include <GL/glut.h>
-#include "../XGL/xgl.h"
+#include <XGL/xgl.h>
 #include <stdio.h>
 
-#include "GLUTkey.h"
-#include "views.h"
+#include <Main/GLUTkey.h>
+#include <Main/views.h>
 
-#include "../Include/constants.h"
+#include <Include/constants.h>
 
-#include "../Aircraft/aircraft.h"
-#include "../Weather/weather.h"
+#include <Aircraft/aircraft.h>
+#include <Weather/weather.h>
 
 
 extern int show_hud;             /* HUD state */
@@ -243,9 +243,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.25  1998/01/05 18:44:34  curt
-/* Add an option to advance/decrease time from keyboard.
+/* Revision 1.26  1998/01/19 19:27:07  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.25  1998/01/05 18:44:34  curt
+ * Add an option to advance/decrease time from keyboard.
+ *
  * Revision 1.24  1997/12/30 16:36:46  curt
  * Merged in Durk's changes ...
  *
