@@ -5,8 +5,9 @@
 #include "Rotorpart.hpp"
 #include "Rotorblade.hpp"
 #include "Rotor.hpp"
-#include <iostream>
-#include <iomanip>
+
+#include STL_IOSTREAM
+#include STL_IOMANIP
 
 SG_USING_STD(setprecision);
 
