@@ -101,7 +101,7 @@ fgEVENT::run()
     FG_LOG(FG_EVENT, FG_INFO, "Running " << description );
 
     // record starting time
-    timestamp( &last_run );
+    last_run.stamp();
 
     // run the event
     event_cb->call( (void**)NULL );
@@ -113,8 +113,8 @@ fgEVENT::run()
     status = FG_EVENT_READY;
 
     // calculate duration and stats
-    timestamp( &current );
-    long duration = timediff( &last_run, &current );
+    current.stamp();
+    long duration = current - last_run;
 
     cum_time += duration;
 
@@ -127,7 +127,7 @@ fgEVENT::run()
     }
 
     // determine the next absolute run time
-    timesum( &next_run, &last_run, interval );
+    next_run =  last_run + interval;
 }
 
 
@@ -218,16 +218,16 @@ fgEVENT_MGR::PrintStats()
 // the queue
 void fgEVENT_MGR::Process( void ) {
     fgEVENT *e_ptr;
-    fg_timestamp cur_time;
+    fgTIMESTAMP cur_time;
     unsigned int i, size;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Processing events" );
     
     // get the current time
-    timestamp(&cur_time);
+    cur_time.stamp();
 
     FG_LOG( FG_EVENT, FG_DEBUG, 
-	    "  Current timestamp = " << cur_time.seconds );
+	    "  Current timestamp = " << cur_time.get_seconds() );
 
     // printf("Checking if anything is ready to move to the run queue\n");
 
@@ -239,9 +239,9 @@ void fgEVENT_MGR::Process( void ) {
 	e_ptr = &event_table[i];
 	if ( e_ptr->status == fgEVENT::FG_EVENT_READY ) {
 	    FG_LOG( FG_EVENT, FG_DEBUG, 
-		    "  Item " << i << " current " << cur_time.seconds 
-		    << " next run @ " << e_ptr->next_run.seconds );
-	    if ( timediff(&cur_time, &(e_ptr->next_run)) <= 0) {
+		    "  Item " << i << " current " << cur_time.get_seconds()
+		    << " next run @ " << e_ptr->next_run.get_seconds() );
+	    if ( ( e_ptr->next_run - cur_time ) <= 0 ) {
 	        run_queue.push_back(e_ptr);
 		e_ptr->status = fgEVENT::FG_EVENT_QUEUED;
 	    }
@@ -265,6 +265,10 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/12/04 01:32:46  curt
+// Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
+// convenience inline operators.
+//
 // Revision 1.12  1998/11/23 21:49:07  curt
 // Borland portability tweaks.
 //

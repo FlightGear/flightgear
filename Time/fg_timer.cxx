@@ -102,18 +102,17 @@ void fgTimerInit(float dt, void (*f)( int )) {
 int fgGetTimeInterval( void ) {
     int interval;
     static int inited = 0;
-    static fg_timestamp last;
-    fg_timestamp current;
+    static fgTIMESTAMP last;
+    fgTIMESTAMP current;
 
     if ( ! inited ) {
 	inited = 1;
-	timestamp(&last);
+	last.stamp();
 	interval = 0;
     } else {
-        timestamp(&current);
-	interval = timediff(&last, &current);
-	last.seconds = current.seconds;
-	last.millis = current.millis;
+        current.stamp();
+	interval = current - last;
+	last = current;
     }
 
     return(interval);
@@ -121,9 +120,13 @@ int fgGetTimeInterval( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/28 01:22:18  curt
-/* Type-ified fgTIME and fgVIEW.
+/* Revision 1.4  1998/12/04 01:32:51  curt
+/* Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
+/* convenience inline operators.
 /*
+ * Revision 1.3  1998/04/28 01:22:18  curt
+ * Type-ified fgTIME and fgVIEW.
+ *
  * Revision 1.2  1998/04/25 20:24:03  curt
  * Cleaned up initialization sequence to eliminate interdependencies
  * between sun position, lighting, and view position.  This creates a

@@ -97,6 +97,7 @@ void fgTimeInit(fgTIME *t) {
 }
 
 
+/*
 // Portability wrap to get current time.
 void timestamp(fg_timestamp *timestamp) {
 #if defined( WIN32 )
@@ -149,7 +150,7 @@ void timesum(fg_timestamp *res, fg_timestamp *start, long millis) {
     res->millis = ( start->millis + millis ) % 1000;
 #endif
 }
-
+*/
 
 // given a date in months, mn, days, dy, years, yr, return the
 // modified Julian date (number of days elapsed since 1900 jan 0.5),
@@ -452,6 +453,10 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.24  1998/12/04 01:32:49  curt
+// Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
+// convenience inline operators.
+//
 // Revision 1.23  1998/12/03 01:18:40  curt
 // Converted fgFLIGHT to a class.
 //

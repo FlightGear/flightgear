@@ -97,9 +97,9 @@ public:
 
     long interval;    // interval in ms between each iteration of this event
 
-    fg_timestamp last_run;
-    fg_timestamp current;
-    fg_timestamp next_run;
+    fgTIMESTAMP last_run;
+    fgTIMESTAMP current;
+    fgTIMESTAMP next_run;
 
     long cum_time;    // cumulative processor time of this event
     long min_time;    // time of quickest execution
@@ -169,6 +169,10 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.13  1998/12/04 01:32:47  curt
+// Converted "struct fg_timestamp" to "class fgTIMESTAMP" and added some
+// convenience inline operators.
+//
 // Revision 1.12  1998/10/16 00:56:08  curt
 // Converted to Point3D class.
 //
