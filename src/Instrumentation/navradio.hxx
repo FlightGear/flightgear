@@ -73,6 +73,8 @@ class FGNavRadio : public SGSubsystem
     bool nav_loc;
     double nav_freq;
     double nav_alt_freq;
+    string fmt_freq;            // formated frequency
+    string fmt_alt_freq;        // formated alternate frequency
     double nav_heading;         // true heading to nav station
     double nav_radial;          // current radial we are on (taking
                                 // into consideration the vor station
@@ -152,7 +154,9 @@ public:
     inline void set_nav_freq( double freq ) {
 	nav_freq = freq; need_update = true;
     }
+    inline void set_fmt_freq( const char *freq ) { fmt_freq = freq; }
     inline void set_nav_alt_freq( double freq ) { nav_alt_freq = freq; }
+    inline void set_fmt_alt_freq( const char *freq ) { fmt_alt_freq = freq; }
     inline void set_nav_sel_radial( double radial ) {
 	nav_sel_radial = radial; need_update = true;
     }
@@ -170,9 +174,13 @@ public:
     inline bool get_power_btn() const { return power_btn; }
     inline bool get_audio_btn() const { return audio_btn; }
 
-   // NAV Accessors
+    // NAV Accessors
     inline double get_nav_freq () const { return nav_freq; }
+    inline const char *get_fmt_freq () const { return fmt_freq.c_str(); }
     inline double get_nav_alt_freq () const { return nav_alt_freq; }
+    inline const char *get_fmt_alt_freq () const {
+        return fmt_alt_freq.c_str();
+    }
     inline double get_nav_sel_radial() const { return nav_sel_radial; }
     inline double get_nav_target_radial() const { return nav_target_radial; }
     inline double get_nav_target_radial_true() const {

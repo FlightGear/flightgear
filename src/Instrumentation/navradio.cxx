@@ -57,6 +57,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     audio_btn(true),
     nav_freq(0.0),
     nav_alt_freq(0.0),
+    fmt_freq(""),
+    fmt_alt_freq(""),
     nav_heading(0.0),
     nav_radial(0.0),
     nav_target_radial(0.0),
@@ -160,6 +162,14 @@ FGNavRadio::bind ()
     fgTie( (branch + "/frequencies/standby-mhz").c_str() , this,
            &FGNavRadio::get_nav_alt_freq, &FGNavRadio::set_nav_alt_freq);
     fgSetArchivable( (branch + "/frequencies/standby-mhz").c_str() );
+
+    fgTie( (branch + "/frequencies/selected-mhz-fmt").c_str() , this,
+	  &FGNavRadio::get_fmt_freq, &FGNavRadio::set_fmt_freq );
+    fgSetArchivable( (branch + "/frequencies/selected-mhz-fmt").c_str() );
+
+    fgTie( (branch + "/frequencies/standby-mhz-fmt").c_str() , this,
+           &FGNavRadio::get_fmt_alt_freq, &FGNavRadio::set_fmt_alt_freq);
+    fgSetArchivable( (branch + "/frequencies/standby-mhz-fmt").c_str() );
 
     fgTie( (branch + "/radials/selected-deg").c_str() , this,
            &FGNavRadio::get_nav_sel_radial, &FGNavRadio::set_nav_sel_radial );
@@ -343,6 +353,14 @@ FGNavRadio::update(double dt)
     Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
     Point3D station;
     double az1, az2, s;
+
+    // Create "formatted" versions of the nav frequencies for
+    // consistant display output.
+    char tmp[16];
+    sprintf( tmp, "%.2f", nav_freq );
+    fmt_freq = tmp;
+    sprintf( tmp, "%.2f", nav_alt_freq );
+    fmt_alt_freq = tmp;
 
     // On timeout, scan again
     _time_before_search_sec -= dt;
