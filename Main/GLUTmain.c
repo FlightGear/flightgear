@@ -47,6 +47,7 @@
 #include "../Math/polar.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Scenery/sky.h"
 #include "../Time/fg_time.h"
 #include "../Time/fg_timer.h"
 #include "../Time/sunpos.h"
@@ -225,6 +226,9 @@ static void fgUpdateVisuals( void ) {
     /* Tell GL we are switching to model view parameters */
     xglMatrixMode(GL_MODELVIEW);
     /* xglLoadIdentity(); */
+
+    /* draw sky */
+    fgSkyRender();
 
     /* draw scenery */
     fgSceneryRender();
@@ -565,10 +569,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.33  1997/12/15 23:54:45  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.34  1997/12/17 23:13:34  curt
+/* Began working on rendering a sky.
 /*
+ * Revision 1.33  1997/12/15 23:54:45  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.32  1997/12/15 20:59:08  curt
  * Misc. tweaks.
  *

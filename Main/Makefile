@@ -49,6 +49,7 @@ TARGET=fg-$(FG_VERSION)
 
 $(TARGET): $(OFILES) $(AFILES)
 	$(CC) -o $(TARGET) $(OFILES) $(AFILES) $(LIBS)
+	$(RM) -f fg$(FG_VERSION_MAJOR)
 	$(LN) $(TARGET) fg$(FG_VERSION_MAJOR)
 
 all: $(TARGET)
@@ -83,6 +84,9 @@ views.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.39  1997/12/17 23:13:35  curt
+# Began working on rendering a sky.
+#
 # Revision 1.38  1997/12/15 23:54:47  curt
 # Add xgl wrappers for debugging.
 # Generate terrain normals on the fly.

@@ -36,6 +36,7 @@
 /* Define a structure containing view information */
 struct fgVIEW {
     struct fgCartesianPoint view_pos;
+    struct fgCartesianPoint cur_zero_elev;
     MAT3vec local_up, view_up, view_forward;
     double view_offset, goal_view_offset;
 };
@@ -55,10 +56,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v);
 
 
 /* $Log$
-/* Revision 1.3  1997/12/15 23:54:51  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.4  1997/12/17 23:13:36  curt
+/* Began working on rendering a sky.
 /*
+ * Revision 1.3  1997/12/15 23:54:51  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.2  1997/12/10 22:37:48  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

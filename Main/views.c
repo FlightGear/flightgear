@@ -50,6 +50,10 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
     MAT3vec vec, forward;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
 
+    /* calculate the cartesion coords of the current lat/lon/0 elev */
+    v->cur_zero_elev = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
+				     FG_Sea_level_radius);
+
     /* calculate view position in current FG view coordinate system */
     v->view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
 			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
@@ -133,10 +137,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
 
 
 /* $Log$
-/* Revision 1.3  1997/12/15 23:54:50  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.4  1997/12/17 23:13:36  curt
+/* Began working on rendering a sky.
 /*
+ * Revision 1.3  1997/12/15 23:54:50  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.2  1997/12/10 22:37:48  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

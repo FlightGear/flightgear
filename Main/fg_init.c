@@ -40,6 +40,7 @@
 #include "../Scenery/mesh.h"
 #include "../Scenery/astro.h"
 #include "../Scenery/scenery.h"
+#include "../Scenery/sky.h"
 #include "../Time/fg_time.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
@@ -179,6 +180,9 @@ void fgInitSubsystems( void ) {
     /* Initialize Astronomical Objects */
     fgAstroInit();
 
+    /* Initialize the "sky" */
+    fgSkyInit();
+
     /* Initialize the Scenery Management subsystem */
     fgSceneryInit();
 
@@ -218,10 +222,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.18  1997/12/15 23:54:49  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.19  1997/12/17 23:13:36  curt
+/* Began working on rendering a sky.
 /*
+ * Revision 1.18  1997/12/15 23:54:49  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.17  1997/12/15 20:59:09  curt
  * Misc. tweaks.
  *
