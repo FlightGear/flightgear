@@ -47,8 +47,8 @@ $(TARGET): $(OFILES) $(HFILES)
 
 all: $(TARGET)
 
-dep:                                 
-	$(CC) -MM *.c > depend                     
+# depend:
+# 	$(CC) -MM *.c > depend                     
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -72,6 +72,9 @@ scenery.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.12  1997/06/27 20:03:37  curt
+# Working on Makefile structure.
+#
 # Revision 1.11  1997/06/26 22:14:57  curt
 # Beginning work on a scenery management system.
 #

@@ -25,7 +25,7 @@
 
 
 #include "scenery.h"
-#include "ParseVrml/parsevrml.h"
+#include "ParseVRML/parsevrml.h"
 
 
 /* Initialize the Scenery Management system */
@@ -51,7 +51,10 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.1  1997/06/27 02:26:30  curt
-/* Initial revision.
+/* Revision 1.2  1997/06/27 20:03:37  curt
+/* Working on Makefile structure.
 /*
+ * Revision 1.1  1997/06/27 02:26:30  curt
+ * Initial revision.
+ *
  */

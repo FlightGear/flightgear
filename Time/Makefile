@@ -49,8 +49,8 @@ $(TARGET): $(OFILES)
 
 all: $(TARGET)
 
-dep:                                 
-	$(CC) -MM *.c > depend                     
+# depend:
+# 	$(CC) -MM *.c > depend                     
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -68,6 +68,9 @@ fg_timer.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1997/06/27 20:03:40  curt
+# Working on Makefile structure.
+#
 # Revision 1.4  1997/06/26 19:08:37  curt
 # Restructuring make, adding automatic "make dep" support.
 #

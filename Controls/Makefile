@@ -49,8 +49,8 @@ $(TARGET): $(OFILES)
 
 all: $(TARGET)
 
-dep:                                 
-	$(CC) -MM *.c > depend                     
+# depend:
+# 	$(CC) -MM *.c > depend                     
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -68,6 +68,9 @@ controls.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1997/06/27 20:03:33  curt
+# Working on Makefile structure.
+#
 # Revision 1.6  1997/06/26 19:08:29  curt
 # Restructuring make, adding automatic "make dep" support.
 #

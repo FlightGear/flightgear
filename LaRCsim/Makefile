@@ -43,8 +43,8 @@ simtest: $(TARGET) LaRCsim.o
 
 all: $(TARGET)
 
-dep:                                 
-	$(CC) -MM *.c > depend                     
+# depend:
+# 	$(CC) -MM *.c > depend
 
 clean:
 	rm -f *.o $(TARGET) *~ core
@@ -59,6 +59,9 @@ include depend
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1997/06/27 20:03:34  curt
+# Working on Makefile structure.
+#
 # Revision 1.4  1997/06/26 19:08:30  curt
 # Restructuring make, adding automatic "make dep" support.
 #

@@ -79,8 +79,8 @@ $(TARGET): $(OFILES) $(AFILES)
 
 all: $(TARGET)
 
-dep:
-	$(CC) -MM *.c > depend
+# depend:
+# 	$(CC) -MM *.c > depend
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
@@ -107,6 +107,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.18  1997/06/27 20:03:36  curt
+# Working on Makefile structure.
+#
 # Revision 1.17  1997/06/26 22:14:54  curt
 # Beginning work on a scenery management system.
 #

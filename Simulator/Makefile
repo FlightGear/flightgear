@@ -98,7 +98,7 @@ export INTERFACE_FLAGS INTERFACE_LIBS GRAPHICS_LIBS
 # You shouldn't need to modify anything beyond this point
 #---------------------------------------------------------------------------
 
-SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVrml
+SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVRML
 SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
 MAIN = OpenGL
 
@@ -111,12 +111,20 @@ all:
 	    ( cd $$dir; $(MAKE) ) ; \
 	done
 
-dep:
+depend:
 	for dir in $(SUBSUBDIRS) $(SUBDIRS); do \
-	    ( cd $$dir; $(MAKE) dep ) ; \
+	    ( cd $$dir; $(MAKE) depend ) ; \
 	done
 	for dir in $(MAIN); do \
-	    ( cd $$dir; $(MAKE) dep ) ; \
+	    ( cd $$dir; $(MAKE) depend ) ; \
+	done
+
+dep:
+	for dir in $(SUBSUBDIRS) $(SUBDIRS); do \
+	    ( cd $$dir; $(CC) -MM *.c > depend ) ; \
+	done
+	for dir in $(MAIN); do \
+	    ( cd $$dir; $(CC) -MM *.c > depend ) ; \
 	done
 
 clean:
@@ -134,6 +142,9 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1997/06/27 20:03:31  curt
+# Working on Makefile structure.
+#
 # Revision 1.10  1997/06/26 19:08:22  curt
 # Restructuring make, adding automatic "make dep" support.
 #
