@@ -778,8 +778,6 @@ void NewTgtAirportInit()
     SG_LOG( SG_AUTOPILOT, SG_INFO, " enter NewTgtAirportInit()" );
     sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id") );
     SG_LOG( SG_AUTOPILOT, SG_INFO, " NewTgtAirportId " << NewTgtAirportId );
-    int len = 150
-        - puGetDefaultLabelFont().getStringWidth( NewTgtAirportLabel ) / 2;
     
     TgtAptDialog = new puDialogBox (150, 350);
     {
