@@ -502,7 +502,7 @@ do_timeofday (const SGPropertyNode * arg)
 
     int warp = 0;
     if ( offset_type == "real" ) {
-        warp = 0;
+        warp = -orig_warp;
     } else if ( offset_type == "dawn" ) {
         warp = fgTimeSecondsUntilSunAngle( cur_time,
                                            longitude->getDoubleValue()
