@@ -42,7 +42,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
-#include <Include/general.h>
+#include <Include/general.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Math/fg_random.h>
@@ -217,7 +217,7 @@ double get_sideslip( void )
 
 double get_frame_rate( void )
 {
-    return (double) general.frame_rate;
+    return (double) general.get_frame_rate();
 }
 
 double get_fov( void )
@@ -303,6 +303,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.28  1999/01/07 20:24:17  curt
+// Update fgGENERAL to FGGeneral.
+//
 // Revision 1.27  1998/12/18 23:35:09  curt
 // Converted to a simpler frame rate counting method.
 //
