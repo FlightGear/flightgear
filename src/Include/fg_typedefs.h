@@ -2,8 +2,11 @@
 //  Alterations: Copyright C. Hotchkiss 1996
 //
 // $Log$
-// Revision 1.1  1999/06/17 18:07:30  curt
-// Initial revision
+// Revision 1.2  2001/05/16 21:27:59  curt
+// Added David Megginson's patch for reconfigurable keyboard bindings.
+//
+// Revision 1.1.1.1  1999/06/17 18:07:30  curt
+// Start of 0.7.x branch
 //
 // Revision 1.2  1999/04/22 18:45:42  curt
 // Borland tweaks.
@@ -49,8 +52,8 @@
 //    any application include files.
 */
 
-#if !defined(_TYPEDEFS)
-#define _TYPEDEFS
+#ifndef _FG_TYPEDEFS
+#define _FG_TYPEDEFS
 
 //
 //    Define the types to be used to manipulate 8-, 16-, and 32-bit
@@ -81,32 +84,6 @@ typedef float          FLOAT ;   // 32-bit floating point data
 typedef double         DOUBLE ;  // 64-bit floating point data
 typedef long double    LDOUBLE ; // 80-bit floating point data
 
-#ifndef __cplusplus
-typedef int bool;
-typedef int BOOL;
-typedef int Bool;
-#else
-#ifndef WIN32
-#define BOOL int
-#endif
-#endif
-
-#define Bool int
-
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
-
-#ifndef true          // C++ defines bool, true and false.
-#define true TRUE
-#define false FALSE
-#endif
-
-#ifndef EOF
-#define EOF (-1)
-#endif
-
 typedef void(*VFNPTR)   ( void );
 typedef void(*VFNINTPTR)( int  );
 typedef int (*FNPTR)    ( void );
@@ -115,6 +92,4 @@ typedef int (*FNUIPTR)  ( UINT );
 typedef double( *DBLFNPTR)( void );
 typedef float( *FLTFNPTR)( void );
 
-#endif
-
-  /* !defined(_TYPEDEFS) */
+#endif // _FG_TYPEDEFS

@@ -76,12 +76,140 @@
 extern void fgReshape( int width, int height );
 
 
-// Handle keyboard events
+#ifdef BOOL
+#error A sloppy coder has defined BOOL as a macro!
+#undef BOOL
+#endif
+
+
+/**
+ * Fire a user-defined key binding.
+ *
+ * <p>This function is temporary; eventually, all of the keyboard,
+ * joystick, and mouse support should migrate into a common Input
+ * module.</p>
+ *
+ * @param binding The property node for the binding.
+ */
+static void
+doBinding (const SGPropertyNode * binding)
+{
+  const string &action = binding->getStringValue("action", "");
+  const string &control = binding->getStringValue("control", "");
+  bool repeatable = binding->getBoolValue("repeatable", false);
+  int step = binding->getIntValue("step", 0.0);
+
+  if (control == "") {
+    SG_LOG(SG_INPUT, SG_ALERT, "No control specified for key "
+	   << binding->getIndex());
+    return;
+  }
+
+  else if (action == "") {
+    SG_LOG(SG_INPUT, SG_ALERT, "No action specified for key "
+	   << binding->getIndex());
+    return;
+  }
+
+  else if (action == "switch") {
+    SG_LOG(SG_INPUT, SG_INFO, "Toggling value of " << control);
+    fgSetBool(control, !fgGetBool(control));
+  }
+
+  else if (action == "adjust") {
+    const SGValue * step = binding->getValue("value");
+    if (step == 0) {
+      SG_LOG(SG_INPUT, SG_ALERT, "No step supplied for adjust action for key "
+	     << binding->getIndex());
+      return;
+    }
+    SGValue * target = fgGetValue(control, true);
+				// Use the target's type...
+    switch (target->getType()) {
+    case SGValue::BOOL:
+    case SGValue::INT:
+      target->setIntValue(target->getIntValue() + step->getIntValue());
+      break;
+    case SGValue::LONG:
+      target->setLongValue(target->getLongValue() + step->getLongValue());
+      break;
+    case SGValue::FLOAT:
+      target->setFloatValue(target->getFloatValue() + step->getFloatValue());
+      break;
+    case SGValue::DOUBLE:
+    case SGValue::UNKNOWN:	// treat unknown as a double
+      target->setDoubleValue(target->getDoubleValue()
+			     + step->getDoubleValue());
+      break;
+    case SGValue::STRING:
+      SG_LOG(SG_INPUT, SG_ALERT, "Failed attempt to adjust string property "
+	     << control);
+      break;
+    }
+  }
+
+  else if (action == "assign") {
+    const SGValue * value = binding->getValue("value");
+    if (value == 0) {
+      SG_LOG(SG_INPUT, SG_ALERT, "No value supplied for assign action for key "
+	     << binding->getIndex());
+      return;
+    }
+    SGValue * target = fgGetValue(control, true);
+				// Use the target's type...
+    switch (target->getType()) {
+    case SGValue::BOOL:
+      target->setBoolValue(value->getBoolValue());
+      break;
+    case SGValue::INT:
+      target->setIntValue(value->getIntValue());
+      break;
+    case SGValue::LONG:
+      target->setLongValue(value->getLongValue());
+      break;
+    case SGValue::FLOAT:
+      target->setFloatValue(value->getFloatValue());
+      break;
+    case SGValue::DOUBLE:
+      target->setDoubleValue(value->getDoubleValue());
+      break;
+    case SGValue::STRING:
+      target->setStringValue(value->getStringValue());
+      break;
+    case SGValue::UNKNOWN:
+      target->setUnknownValue(value->getStringValue());
+      break;
+    }
+  }
+
+  else {
+    SG_LOG(SG_INPUT, SG_ALERT, "Unknown action " << action
+	   << " for key " << binding->getIndex());
+  }
+}
+
+
+/**
+ * Keyboard event handler for Glut.
+ *
+ * @param k The integer value for the key pressed.
+ * @param x (unused)
+ * @param y (unused)
+ */
 void GLUTkey(unsigned char k, int x, int y) {
     float fov, tmp;
     static bool winding_ccw = true;
     int speed;
 
+				// First, check for a user override.
+    const SGPropertyNode * binding = globals->get_props()
+      ->getNode("/input/keyboard/", true)->getChild("key", int(k));
+    if (binding != 0) {
+      doBinding(binding);
+      return;
+    }
+
+				// Use the old, default actions.
     FGInterface *f = current_aircraft.fdm_state;
     FGViewer *v = globals->get_current_view();
 
