@@ -1119,7 +1119,7 @@ FGTextLayer::Chunk::getValue () const
       break;
     case DOUBLE_VALUE:
       double d = _offs + _node->getFloatValue() * _mult;
-      if (_trunc)  d = truncf(d);
+      if (_trunc)  d = floorf(d);
       sprintf(_buf, _fmt.c_str(), d);
       break;
     }
