@@ -61,6 +61,7 @@ FGLogger::init ()
     }
         
     log.interval_ms = child->getLongValue("interval-ms");
+    log.last_time_ms = globals->get_sim_time_sec() * 1000;
     log.delimiter = delimiter.c_str()[0];
     log.output = new ofstream(filename.c_str());
     if (!log.output) {
@@ -117,18 +118,19 @@ FGLogger::unbind ()
 void
 FGLogger::update (double dt)
 {
-  double sim_time_ms = globals->get_sim_time_sec() * 1000;
-  for (unsigned int i = 0; i < _logs.size(); i++) {
-    if ((sim_time_ms - _logs[i].last_time_ms) >= _logs[i].interval_ms) {
-      _logs[i].last_time_ms = sim_time_ms;
-      (*_logs[i].output) << sim_time_ms;
-      for (unsigned int j = 0; j < _logs[i].nodes.size(); j++) {
-	(*_logs[i].output) << _logs[i].delimiter
+    double sim_time_sec = globals->get_sim_time_sec();
+    double sim_time_ms = sim_time_sec * 1000;
+    for (unsigned int i = 0; i < _logs.size(); i++) {
+        while ((sim_time_ms - _logs[i].last_time_ms) >= _logs[i].interval_ms) {
+            _logs[i].last_time_ms += _logs[i].interval_ms;
+            (*_logs[i].output) << sim_time_sec;
+            for (unsigned int j = 0; j < _logs[i].nodes.size(); j++) {
+                (*_logs[i].output) << _logs[i].delimiter
 			   << _logs[i].nodes[j]->getStringValue();
-      }
-      (*_logs[i].output) << endl;
+            }
+            (*_logs[i].output) << endl;
+        }
     }
-  }
 }
 
 
