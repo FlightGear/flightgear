@@ -99,11 +99,19 @@ FGTileEntry::free_tile()
 
     // delete the ssg branch
 
-    // make sure we have a sane number of parents
     int pcount = select_ptr->getNumParents();
     if ( pcount > 0 ) {
 	// find the first parent (should only be one)
 	ssgBranch *parent = select_ptr->getParent( 0 ) ;
+	if( parent ) {
+	    parent->removeKid(select_ptr);
+	} else {
+	    FG_LOG( FG_TERRAIN, FG_ALERT,
+		    "parent pointer is NULL!  Dying" );
+	    exit(-1);
+	}
+
+#if 0
 	// find the number of kids this parent has
 	int kcount = parent->getNumKids();
 	// find the kid that matches our original select_ptr
@@ -122,6 +130,8 @@ FGTileEntry::free_tile()
 		    "Couldn't find the kid to delete!  Dying" );
 	    exit(-1);
 	}
+#endif
+
     } else {
 	FG_LOG( FG_TERRAIN, FG_ALERT,
 		"Parent count is zero for an ssg tile!  Dying" );
