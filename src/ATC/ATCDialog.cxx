@@ -45,7 +45,7 @@ ATCMenuEntry::ATCMenuEntry() {
 ATCMenuEntry::~ATCMenuEntry() {
 }
 
-static char* t0 = "Request landing clearance";
+static char* t0 = "Contact tower for landing";
 static char* t1 = "Request departure clearance";
 static char* t2 = "Report Runway vacated";
 static char** towerOptions = new char*[4];
@@ -121,15 +121,15 @@ static void ATCDialogOK (puObject *me)
 		switch(atcDialogCommunicationOptions->getValue()) {
 		case 0:
 			//cout << "Option 0 chosen\n";
-			twr->RequestLandingClearance("golf bravo echo");
+			twr->RequestLandingClearance("charlie foxtrot sierra");
 			break;
 		case 1:
 			//cout << "Option 1 chosen\n";
-			twr->RequestDepartureClearance("golf bravo echo");
+			twr->RequestDepartureClearance("charlie foxtrot sierra");
 			break;
 		case 2:
 			//cout << "Option 2 chosen\n";
-			twr->ReportRunwayVacated("golf bravo echo");
+			twr->ReportRunwayVacated("charlie foxtrot sierra");
 			break;
 		default:
 			break;
