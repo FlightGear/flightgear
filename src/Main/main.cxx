@@ -576,19 +576,21 @@ void fgRenderFrame() {
 
 	// update the sky dome
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
-	    /* cout << "thesky->repaint() sky_color = "
+	    /*
+             SG_LOG( SG_GENERAL, SG_BULK, "thesky->repaint() sky_color = "
 		 << cur_light_params.sky_color[0] << " "
 		 << cur_light_params.sky_color[1] << " "
 		 << cur_light_params.sky_color[2] << " "
-		 << cur_light_params.sky_color[3] << endl;
-	    cout << "    fog = "
+		 << cur_light_params.sky_color[3] );
+	    SG_LOG( SG_GENERAL, SG_BULK, "    fog = "
 		 << cur_light_params.fog_color[0] << " "
 		 << cur_light_params.fog_color[1] << " "
 		 << cur_light_params.fog_color[2] << " "
-		 << cur_light_params.fog_color[3] << endl;
-	    cout << "    sun_angle = " << cur_light_params.sun_angle
-		 << "    moon_angle = " << cur_light_params.moon_angle
-                 << endl; */
+		 << cur_light_params.fog_color[3] ); 
+	    SG_LOG( SG_GENERAL, SG_BULK,
+                    "    sun_angle = " << cur_light_params.sun_angle
+		 << "    moon_angle = " << cur_light_params.moon_angle );
+            */
 	    thesky->repaint( cur_light_params.sky_color,
 			     cur_light_params.adj_fog_color,
 			     cur_light_params.sun_angle,
@@ -598,18 +600,24 @@ void fgRenderFrame() {
 			     globals->get_ephem()->getNumStars(),
 			     globals->get_ephem()->getStars() );
 
-	    /* cout << "thesky->reposition( view_pos = " << view_pos[0] << " "
-		 << view_pos[1] << " " << view_pos[2] << endl;
-	    cout << "    zero_elev = " << zero_elev[0] << " "
+	    /*
+            SG_LOG( SG_GENERAL, SG_BULK,
+                    "thesky->reposition( view_pos = " << view_pos[0] << " "
+		 << view_pos[1] << " " << view_pos[2] );
+	    SG_LOG( SG_GENERAL, SG_BULK,
+                    "    zero_elev = " << zero_elev[0] << " "
 		 << zero_elev[1] << " " << zero_elev[2]
 		 << " lon = " << cur_fdm_state->get_Longitude()
-		 << " lat = " << cur_fdm_state->get_Latitude() << endl;
-	    cout << "    sun_rot = " << cur_light_params.sun_rotation
-		 << " gst = " << SGTime::cur_time_params->getGst() << endl;
-	    cout << "    sun ra = " << globals->get_ephem()->getSunRightAscension()
-		 << " sun dec = " << globals->get_ephem()->getSunDeclination()
-		 << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
-		 << " moon dec = " << globals->get_ephem()->getMoonDeclination() << endl; */
+		 << " lat = " << cur_fdm_state->get_Latitude() );
+	    SG_LOG( SG_GENERAL, SG_BULK,
+                    "    sun_rot = " << cur_light_params.sun_rotation
+		 << " gst = " << SGTime::cur_time_params->getGst() );
+	    SG_LOG( SG_GENERAL, SG_BULK,
+                 "    sun ra = " << globals->get_ephem()->getSunRightAscension()
+              << " sun dec = " << globals->get_ephem()->getSunDeclination()
+              << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
+              << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
+            */
 
 	    thesky->reposition( current__view->get_view_pos(),
 				current__view->get_zero_elev(),

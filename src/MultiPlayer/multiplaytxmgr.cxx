@@ -36,7 +36,10 @@
 #include <arpa/inet.h>
 #include <plib/netSocket.h>
 #include <stdlib.h>
+
+#include <simgear/debug/logstream.hxx>
 #include <Main/fg_props.hxx>
+
 #include "multiplaytxmgr.hxx"
 #include "mpmessages.hxx"
 #include "mpplayer.hxx"
@@ -92,8 +95,10 @@ bool FGMultiplayTxMgr::init(void) {
         string sTxAddress = fgGetString("/sim/multiplay/txhost");
         iTxPort = fgGetInt("/sim/multiplay/txport");
 
-        cout << "FGMultiplayTxMgr::init - txaddress= " << sTxAddress << endl;
-        cout << "FGMultiplayTxMgr::init - txport= " << iTxPort << endl;
+        SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayTxMgr::init - txaddress= "
+                                     << sTxAddress );
+        SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayTxMgr::init - txport= "
+                                     << iTxPort );
         
         if (iTxPort > 0) {
 
@@ -126,7 +131,7 @@ bool FGMultiplayTxMgr::init(void) {
         // If Tx port == zero then don't initialise
         } else {
 
-            cout << "FGMultiplayTxMgr::init - Tx Port is zero. Multiplay out disabled." << endl;
+            SG_LOG( SG_NETWORK, SG_WARN, "FGMultiplayTxMgr::init - Tx Port is zero. Multiplay out disabled." );
             bSuccess = false;
 
         }
@@ -135,7 +140,7 @@ bool FGMultiplayTxMgr::init(void) {
         m_bInitialised = bSuccess;
 
     } else {
-        cerr << "FGMultiplayTxMgr::init - Attempt to init object that is already opened" << endl;
+        SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayTxMgr::init - Attempt to init object that is already opened" );
         bSuccess = false;
     }
 

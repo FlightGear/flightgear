@@ -26,8 +26,6 @@
 #include STL_FSTREAM
 #include STL_IOSTREAM
 
-SG_USING_STD(cout);
-
 #include "IO360.hxx"
 #include "LaRCsim/ls_constants.h"
 
@@ -131,10 +129,10 @@ void FGNewEngine::update() {
 //	cout << "n = " << RPM << " rpm\n";
 //      cout << "T_amb = " << T_amb << '\n';
 //	cout << "running = " << running << '\n';
-	cout << "fuel = " << fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") << '\n';
+//	cout << "fuel = " << fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") << '\n';
 //	cout << "Percentage_Power = " << Percentage_Power << '\n';
 //	cout << "current_oil_temp = " << current_oil_temp << '\n';
-	cout << "EGT = " << EGT << '\n';
+//	cout << "EGT = " << EGT << '\n';
     }
     count1++;
     if(count1 == 100)
@@ -340,7 +338,7 @@ float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
     }
 
     //if we get here something has gone badly wrong
-    cout << "ERROR: error in FGNewEngine::Lookup_Combustion_Efficiency\n";
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "error in FGNewEngine::Lookup_Combustion_Efficiency");
     return neta_comb_actual;
 }
 
@@ -394,7 +392,7 @@ float FGNewEngine::Power_Mixture_Correlation(float thi_actual)
     }
 
     //if we get here something has gone badly wrong
-    cout << "ERROR: error in FGNewEngine::Power_Mixture_Correlation\n";
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "error in FGNewEngine::Power_Mixture_Correlation");
     return mixPerPow_actual;
 }
 

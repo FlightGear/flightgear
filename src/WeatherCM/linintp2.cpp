@@ -53,7 +53,7 @@ mgcLinInterp2D::mgcLinInterp2D (int _numPoints, double* x, double* y,
         return;
     }
 
-    cout << "[ 20%] allocating memory                                              \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 20%] allocating memory");
 
     point = new double*[numPoints];
     tmppoint = new double*[numPoints+3];
@@ -71,7 +71,7 @@ mgcLinInterp2D::mgcLinInterp2D (int _numPoints, double* x, double* y,
 	f[i] = _f[i];
     }
 
-    cout << "[ 30%] creating delaunay diagram                                      \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 30%] creating delaunay diagram");
 
     Delaunay2D();
 }
@@ -290,7 +290,7 @@ int mgcLinInterp2D::Delaunay2D ()
     nts = 1;  // number of triangles
     i4 = 1;
 
-    cout << "[ 40%] create triangulation                                           \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 40%] create triangulation");
 
     // compute triangulation
     for (i0 = 0; i0 < numPoints; i0++)
@@ -383,7 +383,7 @@ Corner3:;
     }
 
     // count the number of triangles
-    cout << "[ 50%] count the number of triangles                                  \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 50%] count the number of triangles");
 
     numTriangles = 0;
     i0 = -1;
@@ -405,7 +405,7 @@ Corner3:;
     }
 
     // create the triangles
-    cout << "[ 60%] create the triangles                                         \r";
+    SG_LOG(SG_MATH, SG_DEBUG "[ 60%] create the triangles");
 
     triangle = new Triangle[numTriangles];
 
@@ -439,7 +439,7 @@ Corner3:;
     }
 
     // build edge table
-    cout << "[ 70%] build the edge table                                       \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 70%] build the edge table");
 
     numEdges = 0;
     edge = new Edge[3*numTriangles];
@@ -448,7 +448,7 @@ Corner3:;
     for (i = 0; i < numTriangles; i++)
     {
 	if ( (i%500) == 0)
-	    cout << "[ 7" << 10*i/numTriangles << "%] build the edge table                     \r";
+	    SG_LOG(SG_MATH, SG_BULK, "[ 7" << 10*i/numTriangles << "%] build the edge table");
 
         Triangle& t = triangle[i];
 
@@ -481,7 +481,7 @@ Corner3:;
     }
 
     // establish links between adjacent triangles
-    cout << "[ 80%] establishing links between adjacent triangles                   \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 80%] establishing links between adjacent triangles");
 
     for (i = 0; i < numEdges; i++)
     {
@@ -505,7 +505,7 @@ ExitDelaunay:;
     delete[] ccr[0];
     delete[] ccr;
 
-    cout << "[ 90%] finsishes delauney triangulation                            \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 90%] finsishes delauney triangulation");
 
     return result;
 }

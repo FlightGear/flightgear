@@ -56,6 +56,8 @@
 #include <arpa/inet.h>
 #include <plib/netSocket.h>
 #include <stdlib.h>
+
+#include <simgear/debug/logstream.hxx>
 #include <Main/fg_props.hxx>
 
 #include "multiplayrxmgr.hxx"
@@ -119,9 +121,13 @@ bool FGMultiplayRxMgr::init(void) {
         m_sRxAddress = fgGetString("/sim/multiplay/rxhost");
         m_iRxPort = fgGetInt("/sim/multiplay/rxport");
 
-        cout << "FGMultiplayRxMgr::init - rxaddress= " << m_sRxAddress << endl;
-        cout << "FGMultiplayRxMgr::init - rxport= " << m_iRxPort << endl;
-        cout << "FGMultiplayRxMgr::init - callsign= " << m_sCallsign << endl;
+        SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayRxMgr::init - rxaddress= "
+                                     << m_sRxAddress );
+        SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayRxMgr::init - rxport= "
+                                     << m_iRxPort);
+        SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayRxMgr::init - callsign= "
+                                     << m_sCallsign );
+
 
         // Create and open rx socket
         mDataRxSocket = new netSocket();
@@ -238,9 +244,9 @@ void FGMultiplayRxMgr::ProcessData(void) {
                             case CHAT_MSG_ID:
                                 if (MsgHdr->iMsgLen == sizeof(T_MsgHdr) + sizeof(T_ChatMsg)) {
                                     ChatMsg = (T_ChatMsg *)(sMsg + sizeof(T_MsgHdr));
-                                    cout << "Chat [" << MsgHdr->sCallsign << "]" << " " << ChatMsg->sText << endl;
+                                    SG_LOG( SG_NETWORK, SG_BULK, "Chat [" << MsgHdr->sCallsign << "]" << " " << ChatMsg->sText );
                                 } else {
-                                    cerr << "FGMultiplayRxMgr::MP_ProcessData - Chat message received with insufficient data" << endl;
+                                    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayRxMgr::MP_ProcessData - Chat message received with insufficient data" );
                                 }
                                 break;
 
@@ -268,8 +274,7 @@ void FGMultiplayRxMgr::ProcessData(void) {
                                         iPlayerCnt = 0;
                                         do {
                                             if (m_Player[iPlayerCnt] == NULL) {
-                                                cout << "FGMultiplayRxMgr::ProcessRxData - Add new player. IP: " << sIpAddress
-                                                    << ", Call: " <<  sCallsign << ", model: " << sModelName << endl;
+                                                SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayRxMgr::ProcessRxData - Add new player. IP: " << sIpAddress << ", Call: " <<  sCallsign << ", model: " << sModelName );
                                                 m_Player[iPlayerCnt] = new MPPlayer;
                                                 m_Player[iPlayerCnt]->Open(string(sIpAddress), iPort, string(sCallsign), string(sModelName), false);
                                                 m_Player[iPlayerCnt]->SetPosition(PosMsg->PlayerPos);

@@ -91,7 +91,7 @@ FGAirports::search( const string& id, FGAirport* a ) const
     c4_FloatProp pElev ("Elevation");
 
     int idx = vAirport->Find(pID[id.c_str()]);
-    cout << "idx = " << idx << endl;
+    SG_LOG( SG_TERRAIN, SG_INFO, "idx = " << idx );
 
     if ( idx == -1 ) {
 	return false;
@@ -214,7 +214,7 @@ bool FGAirportsUtil::dump_mk4( const string& file ) {
     const_iterator end = airports.end();
     while ( current != end ) {
 	// add each airport record
-	cout << "out -> " << current->id << endl;
+	SG_LOG( SG_TERRAIN, SG_BULK, "out -> " << current->id );
 	pID (row) = current->id.c_str();
 	pLon (row) = current->longitude;
 	pLat (row) = current->latitude;

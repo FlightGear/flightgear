@@ -313,7 +313,7 @@ void SaveDialogOk(puObject*) {
     SaveDialogInput->getValue(&s);
 
     ofstream output(s);
-    cout << saveFile << endl;
+    // cout << saveFile << endl;
     if (output.good() && fgSaveFlight(output)) {
 	output.close();
 	mkDialog("Saved flight");

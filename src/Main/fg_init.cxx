@@ -458,8 +458,8 @@ bool fgDetectLanguage() {
 
     SGPropertyNode *locale = fgInitLocale(language);
     if (!locale) {
-       cerr << "No internationalization settings specified in preferences.xml"
-            << endl;
+       SG_LOG(SG_GENERAL, SG_ALERT,
+              "No internationalization settings specified in preferences.xml" );
 
        return false;
     }
@@ -1212,11 +1212,11 @@ void fgInitFDM() {
 static void printMat(const sgVec4 *mat, char *name="")
 {
     int i;
-    cout << name << endl;
+    SG_LOG(SG_GENERAL, SG_BULK, name );
     for(i=0; i<4; i++) {
-        cout <<"  "<<mat[i][0]<<" "<<mat[i][1]<<" "<<mat[i][2]<<" "<<mat[i][3]<<endl;
+        SG_LOG(SG_GENERAL, SG_BULK, "  " << mat[i][0] << " " << mat[i][1]
+                                    << " " << mat[i][2] << " " << mat[i][3] );
     }
-    cout << endl;
 }
 
 // Initialize view parameters

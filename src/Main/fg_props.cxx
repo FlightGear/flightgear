@@ -463,7 +463,7 @@ getWindEast ()
 static void
 setWindEast (double speed)
 {
-  cout << "Set wind-east to " << speed << endl;
+  SG_LOG(SG_GENERAL, SG_INFO,, "Set wind-east to " << speed );
   current_aircraft.fdm_state->set_Velocities_Local_Airmass(getWindNorth(),
 							   speed,
 							   getWindDown());
@@ -578,7 +578,7 @@ setFDMDataLogging (bool state)
 void
 fgInitProps ()
 {
-  cout << "start of fgInitProps()" << endl;
+  SG_LOG(SG_GENERAL, SG_DEBUG, "start of fgInitProps()" );
 				// Simulation
   fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
@@ -617,7 +617,7 @@ fgInitProps ()
   fgTie("/sim/temp/full-screen", getFullScreen, setFullScreen);
   fgTie("/sim/temp/fdm-data-logging", getFDMDataLogging, setFDMDataLogging);
 
-  cout << "end of fgInitProps()" << endl;
+  SG_LOG(SG_GENERAL, SG_DEBUG, "end of fgInitProps()" );
 }
 
 

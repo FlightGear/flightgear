@@ -547,7 +547,7 @@ void FGNavCom::search()
 	    if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {
                 // cout << "Added nav-vor-ident sound" << endl;
             } else {
-                cout << "Failed to add v1-vor-ident sound" << endl;
+                SG_LOG(SG_COCKPIT, SG_WARN, "Failed to add v1-vor-ident sound");
             }
 
 	    if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
@@ -576,7 +576,7 @@ void FGNavCom::search()
 	nav_trans_ident = "";
 	last_nav_id = "";
 	if ( ! globals->get_soundmgr()->remove( nav_fx_name ) ) {
-            cout << "Failed to remove nav-vor-ident sound" << endl;
+            SG_LOG(SG_COCKPIT, SG_WARN, "Failed to remove nav-vor-ident sound");
         }
 	globals->get_soundmgr()->remove( dme_fx_name );
 	// cout << "not picking up vor1. :-(" << endl;

@@ -284,7 +284,7 @@ void FGKR_87::update( double dt ) {
         if ( set_rst_btn == 1 && set_rst_btn == last_set_rst_btn ) {
             // button depressed and was last iteration too
             tmp_timer += dt;
-            cout << "tmp_timer = " << tmp_timer << endl;
+            // cout << "tmp_timer = " << tmp_timer << endl;
             if ( tmp_timer > 2.0 ) {
                 // button held depressed for 2 seconds
                 cout << "entering elapsed count down mode" << endl;

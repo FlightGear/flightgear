@@ -338,7 +338,7 @@ parse_time(const string& time_in) {
 	result += seconds / 3600.0;
     }
 
-    cout << " parse_time() = " << sign * result << endl;
+    SG_LOG( SG_GENERAL, SG_INFO, " parse_time() = " << sign * result );
 
     return(sign * result);
 }
@@ -526,11 +526,11 @@ parse_fov( const string& arg ) {
 
 static bool
 add_channel( const string& type, const string& channel_str ) {
-    cout << "Channel string = " << channel_str << endl;
+    SG_LOG(SG_GENERAL, SG_INFO, "Channel string = " << channel_str );
 
     globals->get_channel_options_list()->push_back( type + "," + channel_str );
     
-    cout << "here" << endl;
+    // cout << "here" << endl;
 
     return true;
 }
@@ -1808,7 +1808,7 @@ fgUsage (bool verbose)
 
     SGPropertyNode options_root;
 
-    cout << "" << endl;
+    cout << endl;
 
     try {
         fgLoadProps("options.xml", &options_root);

@@ -100,9 +100,9 @@ static string GetReverseRunwayNo(string rwyno) {
     string tmp = rwyno.substr(1, 1);
     if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (rwyno.size() == 1)) {
 	tmp = rwyno;
-	cout << "Standardising rwy number from " << tmp;
 	rwyno = "0" + tmp;
-	cout << " to " << rwyno << '\n';
+        SG_LOG( SG_GENERAL, SG_INFO, "Standardising rwy number from " << tmp
+                                     << " to " << rwyno );
     }
     
     char buf[4];
@@ -196,9 +196,9 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
     string tmp = runwayno.substr(1, 1);
     if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (runwayno.size() == 1)) {
 	tmp = runwayno;
-	cout << "Standardising rwy number from " << tmp;
 	runwayno = "0" + tmp;
-	cout << " to " << runwayno << '\n';
+        SG_LOG(SG_GENERAL, SG_INFO, "Standardising rwy number from " << tmp
+                                     << " to " << runwayno );
     }
 
     c4_RowRef row = vRunway->GetAt(index);

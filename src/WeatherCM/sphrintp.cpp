@@ -51,8 +51,8 @@ SphereInterpolate::SphereInterpolate (int n, const double* x,
     // For complete spherical coverage, include the two antipodal points
     // (0,0,1,f(0,0,1)) and (0,0,-1,f(0,0,-1)) in the data set.
     
-    cout << "Initialising spherical interpolator.\n";
-    cout << "[  0%] Allocating memory                                           \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "Initialising spherical interpolator.");
+    SG_LOG(SG_MATH, SG_DEBUG, "[  0%] Allocating memory");
 
     theta = new double[3*n];
     phi = new double[3*n];
@@ -68,7 +68,7 @@ SphereInterpolate::SphereInterpolate (int n, const double* x,
     }
     
     // use periodicity to get wrap-around in the Delaunay triangulation
-    cout << "[ 10%] copying vertices for wrap-around\r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 10%] copying vertices for wrap-aroundr");
     int j, k;
     for (i = 0, j = n, k = 2*n; i < n; i++, j++, k++)
     {
@@ -82,7 +82,7 @@ SphereInterpolate::SphereInterpolate (int n, const double* x,
     
     pInterp = new mgcLinInterp2D(3*n,theta,phi,func);
 
-    cout << "[100%] Finished initialising spherical interpolator.                   \n";
+    SG_LOG(SG_MATH, SG_DEBUG, "[100%] Finished initialising spherical interpolator.");
 }
 
 SphereInterpolate::SphereInterpolate (int n, const sgVec2* p, const unsigned int* f)
@@ -90,15 +90,15 @@ SphereInterpolate::SphereInterpolate (int n, const sgVec2* p, const unsigned int
     // Assumes (x[i],y[i],z[i]) is unit length for all 0 <= i < n.
     // For complete spherical coverage, include the two antipodal points
     // (0,0,1,f(0,0,1)) and (0,0,-1,f(0,0,-1)) in the data set.
-    cout << "Initialising spherical interpolator.\n";
-    cout << "[  0%] Allocating memory                                           \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "Initialising spherical interpolator.");
+    SG_LOG(SG_MATH, SG_DEBUG, "[  0%] Allocating memory");
 
     theta = new double[3*n];
     phi = new double[3*n];
     func = new unsigned int[3*n];
 
     // convert data to spherical coordinates
-    cout << "[ 10%] copying vertices for wrap-around                              \r";
+    SG_LOG(SG_MATH, SG_DEBUG, "[ 10%] copying vertices for wrap-around");
 
     int i, j, k;
     for (i = 0, j = n, k = 2*n; i < n; i++, j++, k++)
@@ -118,7 +118,7 @@ SphereInterpolate::SphereInterpolate (int n, const sgVec2* p, const unsigned int
     
     pInterp = new mgcLinInterp2D(3*n,theta,phi,func);
 
-    cout << "[100%] Finished initialising spherical interpolator.                   \n";
+    SG_LOG(SG_MATH, SG_DEBUG, "[100%] Finished initialising spherical interpolator.");
 }
 //---------------------------------------------------------------------------
 SphereInterpolate::~SphereInterpolate ()
