@@ -134,24 +134,31 @@ FGRadioStack::bind ()
 				// User inputs
     fgTie("/radios/nav[0]/frequencies/selected-mhz", this,
 	  &FGRadioStack::get_nav1_freq, &FGRadioStack::set_nav1_freq);
+    fgSetArchivable("/radios/nav[0]/frequencies/selected-mhz");
     fgTie("/radios/nav[0]/standby-mhz", this,
 	  &FGRadioStack::get_nav1_alt_freq, &FGRadioStack::set_nav1_alt_freq);
+    fgSetArchivable("/radios/nav[0]/standby-mhz");
     fgTie("/radios/nav[0]/radials/selected-deg", this,
 	  &FGRadioStack::get_nav1_sel_radial,
 	  &FGRadioStack::set_nav1_sel_radial);
+    fgSetArchivable("/radios/nav[0]/radials/selected-deg");
     fgTie("/radios/nav[0]/volume", this,
 	  &FGRadioStack::get_nav1_vol_btn,
 	  &FGRadioStack::set_nav1_vol_btn);
+    fgSetArchivable("/radios/nav[0]/volume");
     fgTie("/radios/nav[0]/ident", this,
 	  &FGRadioStack::get_nav1_ident_btn,
 	  &FGRadioStack::set_nav1_ident_btn);
+    fgSetArchivable("/radios/nav[0]/ident");
 
 				// Radio outputs
-    fgTie("/radios/nav[0]/radials/actual-deg", this, &FGRadioStack::get_nav1_radial);
+    fgTie("/radios/nav[0]/radials/actual-deg", this,
+	  &FGRadioStack::get_nav1_radial);
     fgTie("/radios/nav[0]/to-flag", this, &FGRadioStack::get_nav1_to_flag);
     fgTie("/radios/nav[0]/from-flag", this, &FGRadioStack::get_nav1_from_flag);
     fgTie("/radios/nav[0]/in-range", this, &FGRadioStack::get_nav1_inrange);
-    fgTie("/radios/nav[0]/dme/distance-nm", this, &FGRadioStack::get_nav1_dme_dist);
+    fgTie("/radios/nav[0]/dme/distance-nm", this,
+	  &FGRadioStack::get_nav1_dme_dist);
     fgTie("/radios/nav[0]/dme/in-range", this,
 	  &FGRadioStack::get_nav1_dme_inrange);
     fgTie("/radios/nav[0]/heading-needle-deflection", this,
@@ -162,24 +169,31 @@ FGRadioStack::bind ()
 				// User inputs
     fgTie("/radios/nav[1]/frequencies/selected-mhz", this,
 	  &FGRadioStack::get_nav2_freq, &FGRadioStack::set_nav2_freq);
+    fgSetArchivable("/radios/nav[1]/frequencies/selected-mhz");
     fgTie("/radios/nav[1]/standby-mhz", this,
 	  &FGRadioStack::get_nav2_alt_freq, &FGRadioStack::set_nav2_alt_freq);
+    fgSetArchivable("/radios/nav[1]/standby-mhz");
     fgTie("/radios/nav[1]/radials/selected-deg", this,
 	  &FGRadioStack::get_nav2_sel_radial,
 	  &FGRadioStack::set_nav2_sel_radial);
+    fgSetArchivable("/radios/nav[1]/radials/selected-deg");
     fgTie("/radios/nav[1]/volume", this,
 	  &FGRadioStack::get_nav2_vol_btn,
 	  &FGRadioStack::set_nav2_vol_btn);
+    fgSetArchivable("/radios/nav[1]/volume");
     fgTie("/radios/nav[1]/ident", this,
 	  &FGRadioStack::get_nav2_ident_btn,
 	  &FGRadioStack::set_nav2_ident_btn);
+    fgSetArchivable("/radios/nav[1]/ident");
 
 				// Radio outputs
-    fgTie("/radios/nav[1]/radials/actual-deg", this, &FGRadioStack::get_nav2_radial);
+    fgTie("/radios/nav[1]/radials/actual-deg", this,
+	  &FGRadioStack::get_nav2_radial);
     fgTie("/radios/nav[1]/to-flag", this, &FGRadioStack::get_nav2_to_flag);
     fgTie("/radios/nav[1]/from-flag", this, &FGRadioStack::get_nav2_from_flag);
     fgTie("/radios/nav[1]/in-range", this, &FGRadioStack::get_nav2_inrange);
-    fgTie("/radios/nav[1]/dme/distance-nm", this, &FGRadioStack::get_nav2_dme_dist);
+    fgTie("/radios/nav[1]/dme/distance-nm", this,
+	  &FGRadioStack::get_nav2_dme_dist);
     fgTie("/radios/nav[1]/dme/in-range", this,
 	  &FGRadioStack::get_nav2_dme_inrange);
     fgTie("/radios/nav[1]/heading-needle-deflection", this,
@@ -190,16 +204,21 @@ FGRadioStack::bind ()
 				// User inputs
     fgTie("/radios/adf/frequencies/selected-khz", this,
 	  &FGRadioStack::get_adf_freq, &FGRadioStack::set_adf_freq);
+    fgSetArchivable("/radios/adf/frequencies/selected-khz");
     fgTie("/radios/adf/frequencies/standby-khz", this,
 	  &FGRadioStack::get_adf_alt_freq, &FGRadioStack::set_adf_alt_freq);
+    fgSetArchivable("/radios/adf/frequencies/standby-khz");
     fgTie("/radios/adf/rotation-deg", this,
 	  &FGRadioStack::get_adf_rotation, &FGRadioStack::set_adf_rotation);
+    fgSetArchivable("/radios/adf/rotation-deg");
     fgTie("/radios/adf/volume", this,
 	  &FGRadioStack::get_adf_vol_btn,
 	  &FGRadioStack::set_adf_vol_btn);
+    fgSetArchivable("/radios/adf/volume");
     fgTie("/radios/adf/ident", this,
 	  &FGRadioStack::get_adf_ident_btn,
 	  &FGRadioStack::set_adf_ident_btn);
+    fgSetArchivable("/radios/adf/ident");
 
     fgTie("/radios/marker-beacon/inner", this,
 	  &FGRadioStack::get_inner_blink);
