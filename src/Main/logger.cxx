@@ -40,7 +40,7 @@ FGLogger::init ()
     return;
 
   vector<SGPropertyNode *> children = logging->getChildren("log");
-  for (int i = 0; i < children.size(); i++) {
+  for (unsigned int i = 0; i < children.size(); i++) {
     _logs.push_back(Log());
     Log &log = _logs[_logs.size()-1];
     SGPropertyNode * child = children[i];
@@ -54,7 +54,7 @@ FGLogger::init ()
     }
     vector<SGPropertyNode *> entries = child->getChildren("entry");
     (*log.output) << "Time";
-    for (int j = 0; j < entries.size(); j++) {
+    for (unsigned int j = 0; j < entries.size(); j++) {
       SGPropertyNode * entry = entries[j];
       SGPropertyNode * node =
 	fgGetNode(entry->getStringValue("property"), true);
@@ -80,11 +80,11 @@ void
 FGLogger::update (int dt)
 {
   long elapsed_ms = globals->get_elapsed_time_ms();
-  for (int i = 0; i < _logs.size(); i++) {
+  for (unsigned int i = 0; i < _logs.size(); i++) {
     if ((elapsed_ms - _logs[i].last_time_ms) >= _logs[i].interval_ms) {
       _logs[i].last_time_ms = elapsed_ms;
       (*_logs[i].output) << globals->get_elapsed_time_ms();
-      for (int j = 0; j < _logs[i].nodes.size(); j++) {
+      for (unsigned int j = 0; j < _logs[i].nodes.size(); j++) {
 	(*_logs[i].output) << _logs[i].delimiter
 			   << _logs[i].nodes[j]->getStringValue();
       }
