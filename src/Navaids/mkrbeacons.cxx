@@ -25,11 +25,11 @@
 
 
 // constructor
-FGBeacon::FGBeacon() {
-    FGBeacon( 0, 0, 0, NOBEACON );
+FGMkrBeacon::FGMkrBeacon() {
+    FGMkrBeacon( 0, 0, 0, NOBEACON );
 }
 
-FGBeacon::FGBeacon( double _lon, double _lat, double _elev,
+FGMkrBeacon::FGMkrBeacon( double _lon, double _lat, double _elev,
 		    fgMkrBeacType _type ) {
     lon = _lon;
     lat = _lat;
@@ -44,7 +44,7 @@ FGBeacon::FGBeacon( double _lon, double _lat, double _elev,
 }
 
 // destructor
-FGBeacon::~FGBeacon() {
+FGMkrBeacon::~FGMkrBeacon() {
 }
 
 
@@ -67,7 +67,7 @@ bool FGMarkerBeacons::init() {
 
 
 // real add a marker beacon
-bool FGMarkerBeacons::real_add( const int master_index, const FGBeacon& b ) {
+bool FGMarkerBeacons::real_add( const int master_index, const FGMkrBeacon& b ) {
     // cout << "Master index = " << master_index << endl;
     beacon_map[master_index].push_back( b );
     
@@ -77,7 +77,7 @@ bool FGMarkerBeacons::real_add( const int master_index, const FGBeacon& b ) {
 
 // front end for add a marker beacon
 bool FGMarkerBeacons::add( double lon, double lat, double elev,
-			   FGBeacon::fgMkrBeacType type ) {
+			   FGMkrBeacon::fgMkrBeacType type ) {
     double diff;
 
     int lonidx = (int)lon;
@@ -97,7 +97,7 @@ bool FGMarkerBeacons::add( double lon, double lat, double elev,
     latidx += 90;
 
     int master_index = lonidx * 1000 + latidx;
-    FGBeacon b( lon, lat, elev, type );
+    FGMkrBeacon b( lon, lat, elev, type );
 
     // add to the actual bucket
     real_add( master_index, b );
@@ -133,7 +133,7 @@ bool FGMarkerBeacons::add( double lon, double lat, double elev,
 
 // returns marker beacon type if we are over a marker beacon, NOBEACON
 // otherwise
-FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
+FGMkrBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 						double elev ) {
     double diff;
 
@@ -213,7 +213,7 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
     cout << "lon = " << lon << " lat = " << lat
          << "  closest beacon = " << sqrt( min_dist ) << endl;
 
-    return FGBeacon::NOBEACON;
+    return FGMkrBeacon::NOBEACON;
 }
 
 

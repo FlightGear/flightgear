@@ -37,7 +37,7 @@ SG_USING_STD(map);
 SG_USING_STD(vector);
 
 
-class FGBeacon {
+class FGMkrBeacon {
 
 public:
 
@@ -59,9 +59,9 @@ private:
 
 public:
 
-    FGBeacon();
-    FGBeacon( double _lon, double _lat, double _elev, fgMkrBeacType _type );
-    ~FGBeacon();
+    FGMkrBeacon();
+    FGMkrBeacon( double _lon, double _lat, double _elev, fgMkrBeacType _type );
+    ~FGMkrBeacon();
 
     inline double get_elev() const { return elev; }
     inline fgMkrBeacType get_type() const { return type; }
@@ -75,7 +75,7 @@ public:
 class FGMarkerBeacons {
 
     // convenience types
-    typedef vector < FGBeacon > beacon_list_type;
+    typedef vector < FGMkrBeacon > beacon_list_type;
     typedef beacon_list_type::iterator beacon_list_iterator;
     typedef beacon_list_type::const_iterator beacon_list_const_iterator;
 
@@ -86,7 +86,8 @@ class FGMarkerBeacons {
     beacon_map_type beacon_map;
 
     // real add a marker beacon
-    bool FGMarkerBeacons::real_add( const int master_index, const FGBeacon& b );
+    bool FGMarkerBeacons::real_add( const int master_index,
+				    const FGMkrBeacon& b );
 
 public:
 
@@ -98,11 +99,11 @@ public:
 
     // add a marker beacon
     bool add( double lon, double lat, double elev,
-	      FGBeacon::fgMkrBeacType type );
+	      FGMkrBeacon::fgMkrBeacType type );
 
     // returns marker beacon type if we are over a marker beacon, NOBEACON
     // otherwise
-    FGBeacon::fgMkrBeacType query( double lon, double lat, double elev );
+    FGMkrBeacon::fgMkrBeacType query( double lon, double lat, double elev );
 };
 
 

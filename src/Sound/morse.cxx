@@ -65,154 +65,64 @@ FGMorse::~FGMorse() {
 }
 
 
-// allocate and initialize sound samples
-bool FGMorse::init() {
+// Make a tone of specified freq and total_len with trans_len ramp in
+// and out and only the first len bytes with sound, the rest with
+// silence
+void make_tone( unsigned char *buf, int freq, 
+		int len, int total_len, int trans_len )
+{
     int i, j;
 
-    // Make Low DIT
-    for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-                             / (8000.0 / LO_FREQUENCY) ) )
-	    * ((double)i / TRANSITION_BYTES)
+    for ( i = 0; i < trans_len; ++i ) {
+	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
+	    * ((double)i / trans_len) / 2.0 + 0.5;
+
+	/* Convert to unsigned byte */
+	buf[ i ] = (unsigned char) ( level * 255.0 ) ;
+    }
+
+    for ( i = trans_len; i < len - trans_len; ++i ) {
+	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
 	    / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
-	lo_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
+	buf[ i ] = (unsigned char) ( level * 255.0 ) ;
     }
-
-    for ( i = TRANSITION_BYTES;
-	  i < DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / LO_FREQUENCY) ) )
-	    / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	lo_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    j = TRANSITION_BYTES;
-    for ( i = DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  i < DIT_SIZE - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / LO_FREQUENCY) ) )
-	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
+    j = trans_len;
+    for ( i = len - trans_len; i < len; ++i ) {
+	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
+	    * ((double)j / trans_len) / 2.0 + 0.5;
 	--j;
 
 	/* Convert to unsigned byte */
-	lo_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
+	buf[ i ] = (unsigned char) ( level * 255.0 ) ;
     }
-    for ( i = DIT_SIZE - COUNT_SIZE; i < DIT_SIZE; ++i ) {
-	lo_dit[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
+    for ( i = len; i < total_len; ++i ) {
+	buf[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
     }
+}
+
+
+// allocate and initialize sound samples
+bool FGMorse::init() {
+    // Make Low DIT
+    make_tone( lo_dit, LO_FREQUENCY, DIT_SIZE - COUNT_SIZE, DIT_SIZE,
+	       TRANSITION_BYTES );
 
     // Make High DIT
-    for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / HI_FREQUENCY)) )
-	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	hi_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-
-    for ( i = TRANSITION_BYTES;
-	  i < DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / HI_FREQUENCY) ) )
-	    / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	hi_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    j = TRANSITION_BYTES;
-    for ( i = DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  i < DIT_SIZE - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / HI_FREQUENCY) ) )
-	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
-	--j;
-
-	/* Convert to unsigned byte */
-	hi_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    for ( i = DIT_SIZE - COUNT_SIZE; i < DIT_SIZE; ++i ) {
-	hi_dit[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
-    }
+    make_tone( hi_dit, HI_FREQUENCY, DIT_SIZE - COUNT_SIZE, DIT_SIZE,
+	       TRANSITION_BYTES );
 
     // Make Low DAH
-    for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / LO_FREQUENCY) ) )
-	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	lo_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-
-    for ( i = TRANSITION_BYTES;
-	  i < DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / LO_FREQUENCY) ) )
-	    / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	lo_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    j = TRANSITION_BYTES;
-    for ( i = DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  i < DAH_SIZE - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / LO_FREQUENCY) ) )
-	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
-	--j;
-
-	/* Convert to unsigned byte */
-	lo_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    for ( i = DAH_SIZE - COUNT_SIZE; i < DAH_SIZE; ++i ) {
-	lo_dah[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
-    }
+    make_tone( lo_dah, LO_FREQUENCY, DAH_SIZE - COUNT_SIZE, DAH_SIZE,
+	       TRANSITION_BYTES );
 
     // Make High DAH
-    for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / HI_FREQUENCY) ) )
-	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	hi_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-
-    for ( i = TRANSITION_BYTES;
-	  i < DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / HI_FREQUENCY) ) )
-	    / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	hi_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    j = TRANSITION_BYTES;
-    for ( i = DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  i < DAH_SIZE - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI
-			     / (8000.0 / HI_FREQUENCY) ) )
-	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
-	--j;
-
-	/* Convert to unsigned byte */
-	hi_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    for ( i = DAH_SIZE - COUNT_SIZE; i < DAH_SIZE; ++i ) {
-	hi_dah[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
-    }
+    make_tone( hi_dah, HI_FREQUENCY, DAH_SIZE - COUNT_SIZE, DAH_SIZE,
+	       TRANSITION_BYTES );
 
     // Make SPACE
+    int i;
     for ( i = 0; i < SPACE_SIZE; ++i ) {
 	space[ i ] = (unsigned char) ( 0.5 * 255 ) ;
     }
@@ -226,69 +136,12 @@ bool FGMorse::cust_init(const int freq ) {
     int i, j;
 
     // Make DIT
-    for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq)) )
-	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	cust_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-
-    for ( i = TRANSITION_BYTES;
-	  i < DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
-	    / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	cust_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    j = TRANSITION_BYTES;
-    for ( i = DIT_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  i < DIT_SIZE - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
-	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
-	--j;
-
-	/* Convert to unsigned byte */
-	cust_dit[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    for ( i = DIT_SIZE - COUNT_SIZE; i < DIT_SIZE; ++i ) {
-	cust_dit[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
-    }
+    make_tone( cust_dit, freq, DIT_SIZE - COUNT_SIZE, DIT_SIZE,
+	       TRANSITION_BYTES );
 
     // Make DAH
-    for ( i = 0; i < TRANSITION_BYTES; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
-	    * ((double)i / TRANSITION_BYTES) / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	cust_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-
-    for ( i = TRANSITION_BYTES;
-	  i < DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
-	    / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	cust_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    j = TRANSITION_BYTES;
-    for ( i = DAH_SIZE - TRANSITION_BYTES - COUNT_SIZE;
-	  i < DAH_SIZE - COUNT_SIZE;
-	  ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
-	    * ((double)j / TRANSITION_BYTES) / 2.0 + 0.5;
-	--j;
-
-	/* Convert to unsigned byte */
-	cust_dah[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    for ( i = DAH_SIZE - COUNT_SIZE; i < DAH_SIZE; ++i ) {
-	cust_dah[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
-    }
+    make_tone( cust_dah, freq, DAH_SIZE - COUNT_SIZE, DAH_SIZE,
+	       TRANSITION_BYTES );
 
     // Make SPACE
     for ( i = 0; i < SPACE_SIZE; ++i ) {

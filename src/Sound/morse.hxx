@@ -130,6 +130,21 @@ public:
 };
 
 
+/**
+ * \relates FGMorse
+ * Make a tone of specified freq and total_len with trans_len ramp in
+ * and out and only the first len bytes with sound, the rest with
+ * silence.
+ * @param buf unsigned char pointer to sound buffer
+ * @param freq desired frequency of tone
+ * @param len length of tone within sound
+ * @param total_len total length of sound (anything more than len is padded
+ *        with silence.
+ * @param trans_len length of ramp up and ramp down to avoid audio "pop"
+ */
+void make_tone( unsigned char *buf, int freq, 
+		int len, int total_len, int trans_len );
+
 #endif // _MORSE_HXX
 
 

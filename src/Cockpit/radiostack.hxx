@@ -34,11 +34,13 @@
 
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
+#include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
 
 class FGRadioStack : public FGSubsystem
 {
+    FGBeacon beacon;
     FGMorse morse;
 
     SGInterpTable *term_tbl;
