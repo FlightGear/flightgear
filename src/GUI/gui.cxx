@@ -195,7 +195,8 @@ void guiInit()
     }
 
     // Install our fast fonts
-    fntpath.append(fgGetString("/sim/font", "typewriter.txf"));
+    SGPropertyNode *locale = globals->get_locale();
+    fntpath.append(locale->getStringValue("font", "typewriter.txf"));
     guiFntHandle = new fntTexFont ;
     guiFntHandle -> load ( (char *)fntpath.c_str() ) ;
     puFont GuiFont ( guiFntHandle, 15 ) ;

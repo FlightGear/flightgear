@@ -302,6 +302,96 @@ bool fgInitConfig ( int argc, char **argv ) {
     return true;
 }
 
+// Initialize the localization
+SGPropertyNode *fgInitLocale(const char *language) {
+   SGPropertyNode *c_node = NULL, *d_node = NULL;
+   SGPropertyNode *intl = fgGetNode("/sim/intl");
+
+   SG_LOG(SG_GENERAL, SG_INFO, "Selecting language: " << language );
+
+   // localization not defined
+   if (!intl)
+      return NULL;
+ 
+   //
+   // Select the proper language from the list
+   //
+   vector<SGPropertyNode_ptr> locale = intl->getChildren("locale");
+   for (unsigned int i = 0; i < locale.size(); i++) {
+
+      vector<SGPropertyNode_ptr> lang = locale[i]->getChildren("lang");
+      for (unsigned int j = 0; j < lang.size(); j++) {
+
+         if (!strcmp(lang[j]->getStringValue(), language)) {
+            c_node = locale[i];
+            break;
+         }
+      }
+   }
+
+
+   // Get the defaults
+   d_node = intl->getChild("locale");
+   if (!c_node)
+      c_node = d_node;
+
+   // Check for localized font
+   SGPropertyNode *font_n = c_node->getNode("font", true);
+   if ( !strcmp(font_n->getStringValue(), "") )
+      font_n->setStringValue(d_node->getStringValue("font", "typewriter.txf"));
+
+
+   //
+   // Load the default strings
+   //
+   SGPath d_path( globals->get_fg_root() );
+
+   const char *d_path_str = d_node->getStringValue("strings");
+   if (!d_path_str) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
+      return NULL;
+   }
+
+   d_path.append(d_path_str);
+   SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from "
+                                  << d_path.str());
+
+   SGPropertyNode *strings = c_node->getNode("strings");
+   try {
+      readProperties(d_path.str(), strings);
+   } catch (const sg_exception &e) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings");
+      return NULL;
+   }
+
+
+   //
+   // Load the language specific strings
+   //
+   if (c_node != d_node) {
+      SGPath c_path( globals->get_fg_root() );
+
+      const char *c_path_str = c_node->getStringValue("strings");
+      if (!c_path_str) {
+         SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
+         return NULL;
+      }
+
+      c_path.append(c_path_str);
+      SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from "
+                                     << c_path.str());
+
+      try {
+         readProperties(c_path.str(), strings);
+      } catch (const sg_exception &e) {
+         SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings");
+         return NULL;
+      }
+   }
+
+   return c_node;
+}
+
 
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a ) {

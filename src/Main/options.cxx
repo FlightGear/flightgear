@@ -60,8 +60,6 @@
 #include "options.hxx"
 #include "viewmgr.hxx"
 
-// Hack: from main.cxx
-extern SGPropertyNode *fgInitLocale(const char *);
 
 SG_USING_STD(string);
 SG_USING_NAMESPACE(std);

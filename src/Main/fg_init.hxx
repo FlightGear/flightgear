@@ -57,6 +57,10 @@ string fgBasePackageVersion();
 bool fgInitConfig ( int argc, char **argv );
 
 
+// Initialize the localization
+SGPropertyNode *fgInitLocale(const char *language);
+
+
 // General house keeping initializations
 bool fgInitGeneral ( void );
 
