@@ -135,7 +135,7 @@ dnl enough.  AM_CONDITIONALS are then referenced to conditionally
 dnl build a Makefile.in from a Makefile.am which lets us define custom
 dnl includes, compile alternative source files, etc.
 
-# Check for external variables daylight and timezone.
+dnl Check for external variables daylight and timezone.
 AC_EXT_DAYLIGHT
 if test "$have_daylight" = yes; then
     AC_DEFINE([HAVE_DAYLIGHT], 1, [Define if system has daylight variable])
@@ -146,7 +146,7 @@ if test "$have_timezone" = yes; then
     AC_DEFINE([HAVE_TIMEZONE], 1, [Define if system has timezone variable])
 fi
 
-# Check for audio support
+dnl add correct audio libs and configure for audio support
 audio_LIBS="-lplibsl -lplibsm"
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
@@ -159,6 +159,7 @@ case "${host}" in
 
 esac
 AC_SUBST(audio_LIBS)
+AC_DEFINE([ENABLE_AUDIO_SUPPORT], 1, [Define for audio support])
 
 dnl X11 might be installed on Mac OS X or cygwin/mingwin, we don't want
 dnl to use it if it is.
