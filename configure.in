@@ -320,6 +320,7 @@ AC_OUTPUT( \
 	Tools/Makefile \
 	Tools/Areas/Makefile \
 	Tools/AssemTris/Makefile \
+	Tools/Clipper/Makefile \
 	Tools/DEM/Makefile \
 	Tools/Dem2node/Makefile \
 	Tools/DemInfo/Makefile \
@@ -328,6 +329,7 @@ AC_OUTPUT( \
 	Tools/FixObj/Makefile \
 	Tools/GenAirports/Makefile \
 	Tools/Makedir/Makefile \
+	Tools/ShapeFile/Makefile \
 	Tools/SplitTris/Makefile \
 	Tools/Stripe_w/Makefile \
 	Tools/Tri2obj/Makefile \

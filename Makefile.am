@@ -1,10 +1,11 @@
 SUBDIRS = Include Lib Simulator Tools Tests
 
 EXTRA_DIST = README.Unix README.Linux README.MacOS README.Win32 \
-	README.autoconf README.running Thanks VERSION acsite.m4
+	README.autoconf README.running Thanks VERSION acsite.m4 acconfig.h
 
 dist-hook:
 	tar cf - Hints | (cd $(distdir); tar xvf -)
+	tar cf - Simulator/FDM/JSBsim/aircraft Simulator/FDM/JSBsim/engine | (cd $(distdir); tar xvf -)
 
 
 ##########################################################################
