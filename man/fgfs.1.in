@@ -76,6 +76,9 @@ Disable cloud rendering.
 .B "--disable-freeze"
 Start out in a running state.
 .TP
+.B "--disable-fuel-freeze"
+Disable fuel freeze (enabling fuel consumption).
+.TP
 .B "--disable-fullscreen"
 Disable fullscreen mode.
 .TP
@@ -123,6 +126,9 @@ Enable cloud rendering.
 .TP
 .B "--enable-freeze"
 Start out in a frozen state.
+.TP
+.B "--enable-fuel-freeze"
+Enable fuel freeze (disabling fuel consumption).
 .TP
 .B "--enable-fullscreen"
 Enable fullscreen mode.
@@ -214,6 +220,9 @@ altitude above ground level.
 .BI "--joyclient=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection to an Agwagon joystick
 .TP
+.BI "--jpg-httpd=" "port"
+Start a screen shot HTTP server on the specified port.
+.TP
 .BI "--lat=" "degrees"
 Specify starting latitude (degrees).
 .TP
@@ -297,9 +306,6 @@ Specify a starting date/time with respect to Local Aircraft Time.
 .TP
 .BI "--start-date-sys=" "yyyy:mm:dd:hh:mm:ss"
 Specify a starting date/time with respect to your local system time.
-.TP
-.BI "--tile-radius=" "n"
-Specify tile radius.  Valid values are 1 - 4.
 .TP
 .B "--time-match-local"
 Synchronize time with local real-world time.
