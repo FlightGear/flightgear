@@ -38,3 +38,18 @@ interface (API) for OpenGL. GLUT makes it considerably easier to learn
 about and explore OpenGL programming.  GLUT provides a portable API so
 you can write a single OpenGL program that works on both Win32 PCs and
 X11 workstations.
+
+
+Joystick Support
+================
+
+GLUT only has win32 joystick support but even at that, it is not well
+implimented.  So we use Steve Backer's joystick library when possible,
+and fall back to GLUT for win32 until Steve's library adds win32
+support.
+
+To make sure joystick support is included when building under Linux:
+
+  - make sure you have the proper joystick module installed.
+  - make sure the proper devices are created in /dev.
+  - /usr/include/linux/joystick.h must exist on your system.
