@@ -270,7 +270,7 @@ FGSound::update (double dt)
       )
    {
 
-      if ((_mode != FGSound::IN_TRANSIT) || (_stopping < MAX_TRANSIT_TIME)) {
+      if ((_mode != FGSound::IN_TRANSIT) || (_stopping > MAX_TRANSIT_TIME)) {
 
          if (_sample->is_playing()) {
             SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
