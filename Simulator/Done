@@ -2,6 +2,12 @@
 | Done
 --------------------------------------------------------------------------
 
+5/6/98 -   HUD updates from Jeff Goeke-Smith.
+
+5/5/98 -   Added a visual frame rate counter on the HUD.
+
+5/2/98  -  Option to go full screen.  call glutFullScreen()
+
 4/29/98 -  Option to toggle between smooth / flat shading.
 
 4/28/98 -  Physically check if airport list overruns array size when loading.
