@@ -3,6 +3,7 @@ EXTRA_DIST = process-dem.pl
 SUBDIRS = \
 	Areas \
 	AssemTris \
+	Clipper \
 	DEM \
 	Dem2node \
 	DemInfo \
@@ -11,6 +12,7 @@ SUBDIRS = \
 	FixObj \
 	GenAirports \
 	Makedir \
+	ShapeFile \
 	SplitTris \
 	Stripe_w \
 	Tri2obj \
