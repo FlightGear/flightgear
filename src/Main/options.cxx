@@ -935,6 +935,8 @@ parse_option (const string& arg)
         apath.append( "Aircraft" );
         apath.append( arg.substr(11) );
         apath.concat( "-set.xml" );
+	SG_LOG(SG_INPUT, SG_INFO, "Reading aircraft: " << arg.substr(11)
+	    << " from " << apath.str());
         try {
             readProperties( apath.str(), globals->get_props() );
         } catch (const sg_exception &e) {

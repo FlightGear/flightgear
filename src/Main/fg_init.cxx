@@ -243,7 +243,7 @@ bool fgInitConfig ( int argc, char **argv ) {
       aircraft_path.append(aircraft);
       aircraft_path.concat("-set.xml");
       SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
-	     << " from " << props_path.str());
+	     << " from " << aircraft_path.str());
       try {
 	readProperties(aircraft_path.str(), globals->get_props());
       } catch (const sg_exception &e) {
@@ -868,6 +868,7 @@ bool fgInitSubsystems( void ) {
     // Initialize ATC list management and query systems
     ////////////////////////////////////////////////////////////////////
 
+    //DCL
     SG_LOG(SG_GENERAL, SG_INFO, "  ATIS");
     current_atislist = new FGATISList;
     SGPath p_atis( globals->get_fg_root() );
