@@ -402,7 +402,11 @@ add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
     branch->addKid(pos);
 }
 
-class RandomObjectUserData : public ssgBase
+
+/**
+ * User data for populating triangles when they come in range.
+ */
+class TriUserData : public ssgBase
 {
 public:
   bool is_filled_in;
@@ -436,6 +440,9 @@ fill_in_triangle (float * p1, float * p2, float * p3,
 		  FGNewMat::ObjectGroup * object_group, ssgBranch * branch,
 		  double lon_deg, double lat_deg)
 {
+				// generate a repeatable random seed
+    sg_srandom((unsigned int)(p1[0]));
+
     int nObjects = object_group->get_object_count();
     for (int i = 0; i < nObjects; i++) {
       FGNewMat::Object * object = object_group->get_object(i);
@@ -466,7 +473,6 @@ fill_in_triangle (float * p1, float * p2, float * p3,
     }
 }
 
-
 /**
  * SSG callback for an in-range triangle of randomly-placed objects.
  *
@@ -480,9 +486,9 @@ fill_in_triangle (float * p1, float * p2, float * p3,
  * @return Always 1, to allow traversal and culling to continue.
  */
 static int
-in_range_callback (ssgEntity * entity, int mask)
+tri_in_range_callback (ssgEntity * entity, int mask)
 {
-  RandomObjectUserData * data = (RandomObjectUserData *)entity->getUserData();
+  TriUserData * data = (TriUserData *)entity->getUserData();
   if (!data->is_filled_in) {
     fill_in_triangle(data->p1, data->p2, data->p3, data->object_group,
 		     data->branch, data->lon_deg, data->lat_deg);
@@ -505,9 +511,9 @@ in_range_callback (ssgEntity * entity, int mask)
  * @return Always 0, to prevent any further traversal or culling.
  */
 static int
-out_of_range_callback (ssgEntity * entity, int mask)
+tri_out_of_range_callback (ssgEntity * entity, int mask)
 {
-  RandomObjectUserData * data = (RandomObjectUserData *)entity->getUserData();
+  TriUserData * data = (TriUserData *)entity->getUserData();
   if (data->is_filled_in) {
     data->branch->removeAllKids();
     data->is_filled_in = false;
@@ -630,7 +636,7 @@ setup_triangle (float * p1, float * p2, float * p3,
 				// allow for objects far from the center.
 	float ranges[] = {0,
 			  group->get_range_m() + bounding_radius,
-                          500000};
+                          SG_MAX};
 	ssgRangeSelector * lod = new ssgRangeSelector;
 	lod->setRanges(ranges, 3);
 	location->addKid(lod);
@@ -643,7 +649,7 @@ setup_triangle (float * p1, float * p2, float * p3,
 				// Set up the user data for if/when
 				// the random objects in this triangle
 				// are filled in.
-	RandomObjectUserData * data = new RandomObjectUserData;
+	TriUserData * data = new TriUserData;
 	data->is_filled_in = false;
 	data->p1 = p1;
 	data->p2 = p2;
@@ -656,16 +662,91 @@ setup_triangle (float * p1, float * p2, float * p3,
 				// Set up the in-range node.
 	in_range->setUserData(data);
 	in_range->setTravCallback(SSG_CALLBACK_PRETRAV,
-				 in_range_callback);
+				 tri_in_range_callback);
 	lod->addKid(in_range);
 
 				// Set up the out-of-range node.
 	out_of_range->setUserData(data);
 	out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
-				      out_of_range_callback);
+				      tri_out_of_range_callback);
 	out_of_range->addKid(DummyBSphereEntity::get_entity());
 	lod->addKid(out_of_range);
     }
+}
+
+
+/**
+ * User data for populating tiles when they come in range.
+ */
+class TileUserData : public ssgBase
+{
+public:
+  bool is_filled_in;
+  ssgLeaf * leaf;
+  FGNewMat * mat;
+  ssgBranch * branch;
+  double lon_deg;
+  double lat_deg;
+};
+
+
+/**
+ * SSG callback for an in-range tile of randomly-placed objects.
+ *
+ * This pretraversal callback is attached to a branch that is
+ * traversed only when a tile is in range.  If the tile is not
+ * currently prepared to be populated with randomly-placed objects,
+ * this callback will prepare it (actual population is handled by
+ * the tri_in_range_callback for individual triangles).
+ *
+ * @param entity The entity to which the callback is attached (not used).
+ * @param mask The entity's traversal mask (not used).
+ * @return Always 1, to allow traversal and culling to continue.
+ */
+static int
+tile_in_range_callback (ssgEntity * entity, int mask)
+{
+  TileUserData * data = (TileUserData *)entity->getUserData();
+
+  if (!data->is_filled_in) {
+				// Iterate through all the triangles
+				// and populate them.
+    int num_tris = data->leaf->getNumTriangles();
+    for ( int i = 0; i < num_tris; ++i ) {
+      short n1, n2, n3;
+      data->leaf->getTriangle(i, &n1, &n2, &n3);
+      setup_triangle(data->leaf->getVertex(n1),
+		     data->leaf->getVertex(n2),
+		     data->leaf->getVertex(n3),
+		     data->mat, data->branch, data->lon_deg, data->lat_deg);
+    }
+    data->is_filled_in = true;
+  }
+  return 1;
+}
+
+
+/**
+ * SSG callback for an out-of-range tile of randomly-placed objects.
+ *
+ * This pretraversal callback is attached to a branch that is
+ * traversed only when a tile is out of range.  If the tile is
+ * currently prepared to be populated with randomly-placed objects (or
+ * is actually populated), the objects will be removed.
+ *
+ * @param entity The entity to which the callback is attached (not used).
+ * @param mask The entity's traversal mask (not used).
+ * @return Always 0, to prevent any further traversal or culling.
+ */
+static int
+tile_out_of_range_callback (ssgEntity * entity, int mask)
+{
+  TileUserData * data = (TileUserData *)entity->getUserData();
+  if (data->is_filled_in) {
+    data->branch->removeAllKids();
+    data->is_filled_in = false;
+  }
+  return 0;
 }
 
 
@@ -675,10 +756,13 @@ setup_triangle (float * p1, float * p2, float * p3,
  * The leaf node provides the geometry of the surface, while the
  * material provides the objects and placement density.  Latitude
  * and longitude are required so that the objects can be rotated
- * to the world-up vector.
+ * to the world-up vector.  This function does not actually add
+ * any objects; instead, it attaches an ssgRangeSelector to the
+ * branch with callbacks to generate the objects when needed.
  *
  * @param leaf The surface where the objects should be placed.
  * @param branch The branch that will hold the randomly-placed objects.
+ * @param center The center of the tile in FlightGear coordinates.
  * @param lon_deg The longitude of the surface center, in degrees.
  * @param lat_deg The latitude of the surface center, in degrees.
  * @param material_name The name of the surface's material.
@@ -686,12 +770,16 @@ setup_triangle (float * p1, float * p2, float * p3,
 static void
 gen_random_surface_objects (ssgLeaf *leaf,
 			    ssgBranch *branch,
-			    float lon_deg,
-			    float lat_deg,
+			    Point3D * center,
 			    const string &material_name)
 {
-				// First, look up the material
-				// for this surface.
+				// If the surface has no triangles, return
+				// now.
+    int num_tris = leaf->getNumTriangles();
+    if (num_tris < 1)
+      return;
+
+				// Get the material for this surface.
     FGNewMat * mat = material_lib.find(material_name);
     if (mat == 0) {
       SG_LOG(SG_INPUT, SG_ALERT, "Unknown material " << material_name);
@@ -703,25 +791,44 @@ gen_random_surface_objects (ssgLeaf *leaf,
     if (mat->get_object_group_count() < 1)
       return;
 
-				// If the surface has no triangles, return
-				// now.
-    int num_tris = leaf->getNumTriangles();
-    if (num_tris < 1)
-      return;
+				// Calculate the geodetic centre of
+				// the tile, for aligning automatic
+				// objects.
+    double lon_deg, lat_rad, lat_deg, alt_m, sl_radius_m;
+    Point3D geoc = sgCartToPolar3d(*center);
+    lon_deg = geoc.lon() * SGD_RADIANS_TO_DEGREES;
+    sgGeocToGeod(geoc.lat(), geoc.radius(),
+		 &lat_rad, &alt_m, &sl_radius_m);
+    lat_deg = lat_rad * SGD_RADIANS_TO_DEGREES;
 
-				// generate a repeatable random seed
-    sg_srandom((unsigned int)(leaf->getVertex(0)[0]));
+				// LOD for the tile
+				// max random object range: 20000m
+    float ranges[] = {0, 20000, 1000000};
+    ssgRangeSelector * lod = new ssgRangeSelector;
+    lod->setRanges(ranges, 3);
+    branch->addKid(lod);
 
-				// Iterate through all the triangles
-				// and populate them.
-    for ( int i = 0; i < num_tris; ++i ) {
-      short n1, n2, n3;
-      leaf->getTriangle(i, &n1, &n2, &n3);
-      setup_triangle(leaf->getVertex(n1),
-		     leaf->getVertex(n2),
-		     leaf->getVertex(n3),
-		     mat, branch, lon_deg, lat_deg);
-    }
+				// Create the in-range and out-of-range
+				// branches.
+    ssgBranch * in_range = new ssgBranch;
+    ssgBranch * out_of_range = new ssgBranch;
+    lod->addKid(in_range);
+    lod->addKid(out_of_range);
+
+    TileUserData * data = new TileUserData;
+    data->is_filled_in = false;
+    data->leaf = leaf;
+    data->mat = mat;
+    data->branch = in_range;
+    data->lon_deg = lon_deg;
+    data->lat_deg = lat_deg;
+
+    in_range->setUserData(data);
+    in_range->setTravCallback(SSG_CALLBACK_PRETRAV, tile_in_range_callback);
+    out_of_range->setUserData(data);
+    out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
+				   tile_out_of_range_callback);
+    out_of_range->addKid(DummyBSphereEntity::get_entity());
 }
 
 
@@ -1339,22 +1446,11 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 
     geometry->setName( (char *)path.c_str() );
    
-    double geod_lon = 0.0, geod_lat = 0.0, geod_alt = 0.0,
-      geod_sl_radius = 0.0;
     if ( is_base ) {
 	// reference point (center offset/bounding sphere)
 	*center = obj.get_gbs_center();
 	*bounding_radius = obj.get_gbs_radius();
 
-				// Calculate the geodetic centre of
-				// the tile, for aligning automatic
-				// objects.
-	Point3D geoc = sgCartToPolar3d(*center);
-	geod_lon = geoc.lon();
-	sgGeocToGeod(geoc.lat(), geoc.radius(),
-		     &geod_lat, &geod_alt, &geod_sl_radius);
-	geod_lon *= SGD_RADIANS_TO_DEGREES;
-	geod_lat *= SGD_RADIANS_TO_DEGREES;
     }
 
     point_list nodes = obj.get_wgs84_nodes();
@@ -1419,8 +1515,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  is_base, ground_lights );
 
 	if (use_random_objects)
-	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
-				     material);
+	  gen_random_surface_objects(leaf, geometry, center, material);
 	geometry->addKid( leaf );
     }
 
@@ -1440,8 +1535,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  is_base, ground_lights );
 
 	if (use_random_objects)
-	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
-				     material);
+	  gen_random_surface_objects(leaf, geometry, center, material);
 	geometry->addKid( leaf );
     }
 
@@ -1460,8 +1554,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 	if (use_random_objects)
-	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
-				     material);
+	  gen_random_surface_objects(leaf, geometry, center, material);
 	geometry->addKid( leaf );
     }
 
