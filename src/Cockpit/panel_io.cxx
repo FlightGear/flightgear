@@ -295,7 +295,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
     type = "rotation";
   }
 
-  if (propName != "") {
+  if (propName != (string)"") {
     target = fgGetNode(propName.c_str(), true);
   }
 

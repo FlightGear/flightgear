@@ -86,18 +86,17 @@ FGSound::init()
    _property = fgGetNode(_node->getStringValue("property"), true);
 
    //
-   // seet sound global properties
+   // set global sound properties
    //
    _name = _node->getStringValue("name");
 
-   if ((_factor = _node->getFloatValue("factor")) == 0.0)
+   if ((_factor = _node->getDoubleValue("factor")) == 0.0)
       _factor = 1.0;
 
-   if ((_offset = _node->getFloatValue("offset")) == 0.0)
+   if ((_offset = _node->getDoubleValue("offset")) == 0.0)
       _offset = 0.0;
 
-   SG_LOG(SG_GENERAL, SG_INFO,
-    "Loading sound information for: " << _name );
+   SG_LOG(SG_GENERAL, SG_INFO, "Loading sound information for: " << _name );
 
    string mode_str = _node->getStringValue("mode");
    if (mode_str == "looped") {
@@ -127,9 +126,9 @@ FGSound::init()
    //
    // set position properties
    //
-   _pos.dist = _node->getFloatValue("dist");
-   _pos.hor = _node->getFloatValue("pos_hor");
-   _pos.vert = _node->getFloatValue("pos_vert"); 
+   _pos.dist = _node->getDoubleValue("dist");
+   _pos.hor = _node->getDoubleValue("pos_hor");
+   _pos.vert = _node->getDoubleValue("pos_vert"); 
 #endif
 
    //
@@ -145,7 +144,7 @@ FGSound::init()
           == 0)
          volume.prop = fgGetNode("/null", true);
 
-      if ((volume.factor = kids[i]->getFloatValue("factor")) == 0.0)
+      if ((volume.factor = kids[i]->getDoubleValue("factor")) == 0.0)
          volume.factor = 1.0;
       else 
          if (volume.factor < 0.0) {
@@ -164,16 +163,16 @@ FGSound::init()
       if (!volume.fn)
          SG_LOG( SG_GENERAL, SG_INFO, "Unknown volume type, default to 'lin'");
 
-      if ((volume.offset = kids[i]->getFloatValue("offset")) == 0.0)
+      if ((volume.offset = kids[i]->getDoubleValue("offset")) == 0.0)
          volume.offset = 0.0;
 
-      if ((volume.min = kids[i]->getFloatValue("min")) < 0.0) {
+      if ((volume.min = kids[i]->getDoubleValue("min")) < 0.0) {
          SG_LOG( SG_GENERAL, SG_WARN,
           "Volume minimum value below 0. Forced to 0.");
          volume.min = 0.0;
       }
 
-      if ((volume.max = kids[i]->getFloatValue("max")) <= volume.min) {
+      if ((volume.max = kids[i]->getDoubleValue("max")) < volume.min) {
          SG_LOG( SG_GENERAL, SG_ALERT,
           "Volume maximum value below minimum value. Forced above minimum.");
         volume.max = volume.min + 5.0;
@@ -197,12 +196,12 @@ FGSound::init()
           == 0)
          pitch.prop = fgGetNode("/null", true);
 
-      if ((pitch.factor = kids[i]->getFloatValue("factor")) == 0.0)
+      if ((pitch.factor = kids[i]->getDoubleValue("factor")) == 0.0)
          pitch.factor = 1.0;
 
       pitch.fn = NULL;
       for (int j=0; __fg_snd_fn[j].fn; j++) 
-         if(__fg_snd_fn[j].name == kids[i]->getStringValue("type")) {
+         if (__fg_snd_fn[j].name == kids[i]->getStringValue("type")) {
             pitch.fn = __fg_snd_fn[j].fn;
             break;
       }
@@ -210,16 +209,16 @@ FGSound::init()
       if (!pitch.fn)
          SG_LOG( SG_GENERAL, SG_INFO, "Unknown pitch type, default to 'lin'");
      
-      if ((pitch.offset = kids[i]->getFloatValue("offset")) == 0.0)
+      if ((pitch.offset = kids[i]->getDoubleValue("offset")) == 0.0)
          pitch.offset = 1.0;
 
-      if ((pitch.min = kids[i]->getFloatValue("min")) < 0.0) {
+      if ((pitch.min = kids[i]->getDoubleValue("min")) < 0.0) {
          SG_LOG( SG_GENERAL, SG_WARN,
               "Pitch minimum value below 0. Forced to 0.");
          pitch.min = 0.0;
       }
 
-      if ((pitch.max = kids[i]->getFloatValue("max")) <= pitch.min) {
+      if ((pitch.max = kids[i]->getDoubleValue("max")) < pitch.min) {
          SG_LOG( SG_GENERAL, SG_ALERT,
               "Pitch maximum value below minimum value. Forced above minimum.");
          pitch.max = pitch.min + 5.0;
@@ -264,7 +263,10 @@ FGSound::update (int dt)
 
    if ((_type == FGSound::LEVEL)  || (_type == FGSound::INVERTED)) {
 
-      bool check = (int)(_offset + _property->getFloatValue() * _factor);
+      //
+      // use an integer to get false when:  -1 < check < 1
+      //
+      bool check = (int)(_offset + _property->getDoubleValue() * _factor);
       if (_type == FGSound::INVERTED)
          check = !check;
 
@@ -289,7 +291,7 @@ FGSound::update (int dt)
 
    } else {		// FLIPFLOP, RAISE, FALL
 
-      bool check = (int)(_offset + _property->getFloatValue() * _factor);
+      bool check = (int)(_offset + _property->getDoubleValue() * _factor);
       if (check == _active)
             return;
 

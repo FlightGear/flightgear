@@ -53,6 +53,7 @@
 
 #include "matlib.hxx"
 
+SG_USING_NAMESPACE(std);
 SG_USING_STD(string);
 
 
@@ -89,7 +90,7 @@ bool FGMaterialLib::load( const string& mpath ) {
       for (unsigned int j = 0; j < names.size(); j++) {
 	string name = names[j]->getStringValue();
 	m->ref();
-	std::cerr << "Material " << name << endl;
+	// cerr << "Material " << name << endl;
 	matlib[name] = m;
 	SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material "
 		<< names[j]->getStringValue());
