@@ -203,7 +203,7 @@ static bool
 parse_wind (const string &wind, double * min_hdg, double * max_hdg,
 	    double * speed, double * gust)
 {
-  unsigned int pos = wind.find('@');
+  string::size_type pos = wind.find('@');
   if (pos == string::npos)
     return false;
   string dir = wind.substr(0, pos);
@@ -501,7 +501,7 @@ parse_wp( const string& arg ) {
     string id, alt_str;
     double alt = 0.0;
 
-    unsigned int pos = arg.find( "@" );
+    string::size_type pos = arg.find( "@" );
     if ( pos != string::npos ) {
 	id = arg.substr( 0, pos );
 	alt_str = arg.substr( pos + 1 );
@@ -867,7 +867,7 @@ parse_option (const string& arg)
 #endif
     } else if ( arg.find( "--prop:" ) == 0 ) {
         string assign = arg.substr(7);
-	unsigned int pos = assign.find('=');
+	string::size_type pos = assign.find('=');
 	if ( pos == arg.npos || pos == 0 ) {
 	    SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
 	    return FG_OPTIONS_ERROR;
@@ -927,7 +927,7 @@ parse_option (const string& arg)
 	fgSetDouble("/environment/params/gust-wind-speed-kt", gust);
 
         string val = arg.substr(7);
-	unsigned int pos = val.find('@');
+	string::size_type pos = val.find('@');
 	if ( pos == string::npos ) {
 	  SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << val );
 	  return FG_OPTIONS_ERROR;

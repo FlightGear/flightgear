@@ -97,7 +97,7 @@ void HttpdChannel::foundTerminator (void) {
         string request;
         string tmp;
 
-        unsigned int pos = rest.find( " " );
+        string::size_type pos = rest.find( " " );
         if ( pos != string::npos ) {
             request = rest.substr( 0, pos );
         } else {
@@ -127,7 +127,7 @@ void HttpdChannel::foundTerminator (void) {
                 }
 
                 printf("  arg = %s\n", arg.c_str() );
-                unsigned int apos = arg.find("=");
+                string::size_type apos = arg.find("=");
                 if ( apos != string::npos ) {
                     string a = arg.substr( 0, apos );
                     string b = arg.substr( apos + 1 );

@@ -1095,7 +1095,8 @@ void fgReInitSubsystems( void )
 	= fgGetNode("/sim/freeze/master");
 
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "/position/altitude = " << altitude->getDoubleValue() );
+	    "fgReInitSubsystems(): /position/altitude = "
+            << altitude->getDoubleValue() );
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
