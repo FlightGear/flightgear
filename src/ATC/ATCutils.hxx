@@ -34,8 +34,11 @@ SG_USING_STD(string);
 *
 ********************************/
 
+// Convert any number to spoken digits
+string ConvertNumToSpokenDigits(string n);
+
 // Convert a 2 digit rwy number to a spoken-style string
-string convertNumToSpokenString(int n);
+string ConvertRwyNumToSpokenString(int n);
 
 // Return the phonetic letter of a letter represented as an integer 1->26
 string GetPhoneticIdent(int i);
@@ -47,7 +50,7 @@ string GetPhoneticIdent(int i);
 *
 ********************************/
 
-// Given two positions, get the HORIZONTAL separation
+// Given two positions, get the HORIZONTAL separation (in meters)
 double dclGetHorizontalSeparation(Point3D pos1, Point3D pos2);
 
 // Given a point and a line, get the HORIZONTAL shortest distance from the point to a point on the line.
@@ -57,3 +60,9 @@ double dclGetLinePointSeparation(double px, double py, double x1, double y1, dou
 // Given a position (lat/lon/elev), heading, vertical angle, and distance, calculate the new position.
 // Assumes that the ground is not hit!!!  Expects heading and angle in degrees, distance in meters.
 Point3D dclUpdatePosition(Point3D pos, double heading, double angle, double distance);
+
+// Get a heading from one lat/lon to another (in degrees)
+double GetHeadingFromTo(Point3D A, Point3D B);
+
+// Given a heading (in degrees), bound it from 0 -> 360
+void dclBoundHeading(double &hdg);
