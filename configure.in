@@ -258,8 +258,8 @@ AC_OUTPUT( \
 	Simulator/GUI/Makefile \
 	Simulator/Joystick/Makefile \
 	Simulator/Main/Makefile \
-	Simulator/Main/runfg \
-	Simulator/Main/runfg.bat \
+	Simulator/Main/runfgfs \
+	Simulator/Main/runfgfs.bat \
 	Simulator/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
@@ -279,4 +279,4 @@ AC_OUTPUT( \
 	Tests/Makefile \
 )
 
-AC_OUTPUT_COMMANDS([chmod 755 Simulator/Main/runfg])
+AC_OUTPUT_COMMANDS([chmod 755 Simulator/Main/runfgfs])
