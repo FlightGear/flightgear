@@ -16,6 +16,7 @@
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
+#include <Environment/environment.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
@@ -469,6 +470,55 @@ do_tile_cache_reload (const SGPropertyNode * arg)
     return true;
 }
 
+
+/**
+ * Set the outside air temperature at the "current" altitude by first
+ * calculating the corresponding sea level temp, and assigning that to
+ * all boundary and aloft environment layers.
+ */
+static bool
+do_set_oat_degc (const SGPropertyNode * arg)
+{
+    const string &temp_str = arg->getStringValue("temp-degc", "15.0");
+
+    static const SGPropertyNode *altitude_ft
+      = fgGetNode("/position/altitude-ft");
+
+    FGEnvironment dummy;	// instantiate a dummy so we can leech a method
+    dummy.set_elevation_ft( altitude_ft->getDoubleValue() );
+    dummy.set_temperature_degc( atof( temp_str.c_str() ) );
+    double temp_sea_level_degc = dummy.get_temperature_sea_level_degc();
+
+    cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
+    cout << "Temp at alt (C) = " << atof( temp_str.c_str() ) << endl;
+    cout << "Temp sea level (C) = " << temp_sea_level_degc << endl;
+ 
+    SGPropertyNode *node, *child;
+
+    // boundary layers
+    node = fgGetNode( "/environment/config/boundary" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "temperature-sea-level-degc",
+			       temp_sea_level_degc );
+	++i;
+      }
+    }
+
+    // aloft layers
+    node = fgGetNode( "/environment/config/aloft" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "temperature-sea-level-degc",
+			       temp_sea_level_degc );
+	++i;
+      }
+    }
+
+    return true;
+}
 
 /**
  * Update the lighting manually.
@@ -983,6 +1033,7 @@ static struct {
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
     { "tile-cache-reload", do_tile_cache_reload },
+    { "set-outside-air-temp-degc", do_set_oat_degc },
     { "timeofday", do_timeofday },
     { "property-toggle", do_property_toggle },
     { "property-assign", do_property_assign },
