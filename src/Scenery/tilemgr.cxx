@@ -55,6 +55,7 @@ queue<FGDeferredModel *> FGTileMgr::model_queue;
 #endif // ENABLE_THREADS
 queue<FGTileEntry *> FGTileMgr::delete_queue;
 
+bool FGTileMgr::tile_filter = true;
 
 // Constructor
 FGTileMgr::FGTileMgr():
@@ -512,3 +513,13 @@ void FGTileMgr::prep_ssg_nodes( SGLocation *location, float vis ) {
     }
 }
 
+bool FGTileMgr::set_tile_filter( bool f ) {
+    bool old = tile_filter;
+    tile_filter = f;
+    return old;
+}
+
+int FGTileMgr::tile_filter_cb( ssgEntity *, int )
+{
+  return tile_filter;
+}

@@ -128,6 +128,11 @@ private:
 #endif // ENABLE_THREADS
     static queue<FGTileEntry *> delete_queue;
 
+    /**
+     * Tile filter indicator, to implement multipass rendering
+     */
+    static bool tile_filter;
+
 public:
 
     /**
@@ -188,6 +193,9 @@ public:
 
     inline SGBucket get_current_bucket () { return current_bucket; }
     inline SGBucket get_previous_bucket () { return previous_bucket; }
+
+    static bool set_tile_filter( bool f );
+    static int tile_filter_cb( ssgEntity *, int );
 };
 
 
