@@ -36,7 +36,7 @@
 #include <Misc/fgstream.hxx>
 
 #include "fixnode.hxx"
-#include "triload.hxx"
+// #include "triload.hxx"
 
 
 // load the node information
@@ -116,6 +116,9 @@ void fix_nodes( const string& filename, fgDEM& dem, container& node_list )
 
 
 // $Log$
+// Revision 1.5  1998/09/22 23:49:10  curt
+// eliminated a left over #include
+//
 // Revision 1.4  1998/09/19 20:43:52  curt
 // C++-ified and STL-ified the code.  Combined triload.* and fixnode.* into
 // a single file.
