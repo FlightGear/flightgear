@@ -104,7 +104,7 @@ public:
 	return true;
     }
 
-    void render_fragments();
+    // void render_fragments();
 
     // Destructor
     ~FGMaterialSlot ( void );
@@ -151,7 +151,7 @@ public:
 
     bool find( const string& material, FGMaterialSlot*& mtl_ptr );
 
-    void render_fragments();
+    // void render_fragments();
 
     void set_step (int step);
 

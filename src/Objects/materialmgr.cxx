@@ -73,6 +73,7 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 }
 
 
+#if 0
 void
 FGMaterialSlot::render_fragments()
 {
@@ -126,6 +127,7 @@ FGMaterialSlot::render_fragments()
 
     current_view.set_tris_rendered( tris_rendered );
 }
+#endif 
 
 
 // Load a library of material properties
@@ -183,37 +185,35 @@ fgMATERIAL_MGR::load_lib ( void )
 #endif
 	    
 	    ssgStateSelector *state = new ssgStateSelector(2);
-	    state->setStep(0, new ssgSimpleState); // textured
-	    state->setStep(1, new ssgSimpleState); // untextured
+	    ssgSimpleState *textured = new ssgSimpleState();
+	    ssgSimpleState *nontextured = new ssgSimpleState();
 
 	    // Set up the textured state
-	    state->selectStep(0);
-	    state->enable( GL_LIGHTING );
+	    textured->enable( GL_LIGHTING );
 	    if ( current_options.get_shading() == 1 ) {
-		state->setShadeModel( GL_SMOOTH );
+		textured->setShadeModel( GL_SMOOTH );
 	    } else {
-		state->setShadeModel( GL_FLAT );
+		textured->setShadeModel( GL_FLAT );
 	    }
 
-	    state->enable ( GL_CULL_FACE      ) ;
-	    state->enable( GL_TEXTURE_2D );
-	    state->setTexture( (char *)tex_file.c_str() );
-	    state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
-	    state->setMaterial ( GL_SPECULAR, 0, 0, 0, 0 ) ;
-	    state->setMaterial ( GL_EMISSION, 0, 0, 0, 0 ) ;
+	    textured->enable ( GL_CULL_FACE      ) ;
+	    textured->enable( GL_TEXTURE_2D );
+	    textured->setTexture( (char *)tex_file.c_str() );
+	    textured->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
+	    textured->setMaterial ( GL_SPECULAR, 0, 0, 0, 0 ) ;
+	    textured->setMaterial ( GL_EMISSION, 0, 0, 0, 0 ) ;
 
-				// Set up the coloured state
-	    state->selectStep(1);
-	    state->enable( GL_LIGHTING );
+	    // Set up the coloured state
+	    nontextured->enable( GL_LIGHTING );
 	    if ( current_options.get_shading() == 1 ) {
-		state->setShadeModel( GL_SMOOTH );
+		nontextured->setShadeModel( GL_SMOOTH );
 	    } else {
-	        state->setShadeModel( GL_FLAT );
+	        nontextured->setShadeModel( GL_FLAT );
 	    }
 
-	    state->enable ( GL_CULL_FACE      ) ;
-	    state->disable( GL_TEXTURE_2D );
-	    state->disable( GL_COLOR_MATERIAL );
+	    nontextured->enable ( GL_CULL_FACE      ) ;
+	    nontextured->disable( GL_TEXTURE_2D );
+	    nontextured->disable( GL_COLOR_MATERIAL );
 	    GLfloat *ambient, *diffuse, *specular, *emission;
 	    ambient = m.get_ambient();
 	    diffuse = m.get_diffuse();
@@ -222,18 +222,21 @@ fgMATERIAL_MGR::load_lib ( void )
 
 	    /* cout << "ambient = " << ambient[0] << "," << ambient[1] 
 	       << "," << ambient[2] << endl; */
-	    state->setMaterial ( GL_AMBIENT, 
+	    nontextured->setMaterial ( GL_AMBIENT, 
 				   ambient[0], ambient[1], 
 				   ambient[2], ambient[3] ) ;
-	    state->setMaterial ( GL_DIFFUSE, 
+	    nontextured->setMaterial ( GL_DIFFUSE, 
 				   diffuse[0], diffuse[1], 
 				   diffuse[2], diffuse[3] ) ;
-	    state->setMaterial ( GL_SPECULAR, 
+	    nontextured->setMaterial ( GL_SPECULAR, 
 				   specular[0], specular[1], 
 				   specular[2], specular[3] ) ;
-	    state->setMaterial ( GL_EMISSION, 
+	    nontextured->setMaterial ( GL_EMISSION, 
 				   emission[0], emission[1], 
 				   emission[2], emission[3] ) ;
+
+	    state->setStep( 0, textured );    // textured
+	    state->setStep( 1, nontextured ); // untextured
 
 				// Choose the appropriate starting state.
 	    if ( current_options.get_textures() ) {
@@ -297,6 +300,7 @@ fgMATERIAL_MGR::set_step ( int step )
 }
 
 
+#ifdef
 void
 fgMATERIAL_MGR::render_fragments()
 {
@@ -307,5 +311,5 @@ fgMATERIAL_MGR::render_fragments()
 	(*current).second.render_fragments();
     }
 }
-
+#endif
 
