@@ -236,9 +236,6 @@ FGInput::makeDefault (bool status)
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
-  SG_LOG( SG_INPUT, SG_DEBUG, "User pressed key " << k
-          << " with modifiers " << modifiers );
-
                                 // Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
     SG_LOG(SG_INPUT, SG_WARN, "Key value " << k << " out of range");
