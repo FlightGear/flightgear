@@ -1,5 +1,10 @@
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <string.h>
 #include <iostream>
+
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 

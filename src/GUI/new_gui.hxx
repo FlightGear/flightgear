@@ -7,6 +7,10 @@
 # error This library requires C++
 #endif
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <plib/pu.h>
 
 #include <simgear/compiler.h>	// for SG_USING_STD

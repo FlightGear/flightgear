@@ -3,6 +3,10 @@
 #ifndef __PULIST_HXX
 #define __PULIST_HXX 1
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <plib/pu.h>
 
 
