@@ -11,7 +11,7 @@ libNavaids_a_SOURCES = \
 testnavs_SOURCES = testnavs.cxx
 testnavs_LDADD = \
 	libNavaids.a \
-	-lsgtiming -lsgmath -lsgmisc -lsgdebug -lsgmagvar \
+	-lsgtiming -lsgmath -lsgmisc -lsgdebug -lsgmagvar -lsgxml \
 	-lz
 
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
