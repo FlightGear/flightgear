@@ -54,7 +54,36 @@ FGGeneric::FGGeneric(string& config) {
     }
 
     SGPropertyNode *output = root.getNode("generic/output");
-    seperator = output->getStringValue("seperator");
+
+	/* These variables specified in the fgfsbase/Properties/xxxx.xml file for each format
+	 * var_sep_string = the string/charachter to place between variables
+	 * line_sep_string = the string/charachter to place at the end of each lot of variables
+	 */
+    var_sep_string = output->getStringValue("var_seperator");
+    line_sep_string = output->getStringValue("line_seperator");
+
+	if ( var_seperator == "newline" )
+		var_seperator = '\n';
+	else if ( var_seperator == "formfeed" )
+		var_seperator = '\f';
+	else if ( var_seperator == "carriagereturn" )
+		var_seperator = '\r';
+	else if ( var_seperator == "verticaltab" )
+		var_seperator = '\v';
+	else
+		var_seperator = var_sep_string;
+
+	if ( line_sep_string == "newline" )
+		line_seperator = '\n';
+	else if ( line_sep_string == "formfeed" )
+		line_seperator = '\f';
+	else if ( line_sep_string == "carriagereturn" )
+		line_seperator = '\r';
+	else if ( line_sep_string == "verticaltab" )
+		line_seperator = '\v';
+	else
+		line_seperator = line_sep_string;
+
 
     vector<SGPropertyNode_ptr> chunks = output->getChildren("chunk");
     for (unsigned int i = 0; i < chunks.size(); i++) {
@@ -102,7 +131,7 @@ bool FGGeneric::gen_message() {
     for (unsigned int i = 0; i < _message.size(); i++) {
 
         if (i > 0)
-           generic_sentence += seperator;
+           generic_sentence += line_seperator;
 
         switch (_message[i].type) {
         case FG_INT:
@@ -129,6 +158,9 @@ bool FGGeneric::gen_message() {
 
         generic_sentence += tmp;
     }
+
+    /* After each lot of variables has been added, put the line seperator char/string */
+    generic_sentence += line_seperator;
  
             
     length =  generic_sentence.length();

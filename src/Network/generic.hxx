@@ -71,7 +71,10 @@ private:
     int length;
     char buf[ FG_MAX_MSG_SIZE ];
 
-    string seperator;
+    string var_seperator;
+    string line_seperator;
+    string var_sep_string;
+    string line_sep_string;
     vector<_serial_prot> _message;
 
 };
