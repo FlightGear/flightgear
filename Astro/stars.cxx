@@ -43,6 +43,7 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
+#include <Include/fg_types.h>
 #include <Include/fg_zlib.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -55,14 +56,15 @@
 
 #define EpochStart           (631065600)
 #define DaysSinceEpoch(secs) (((secs)-EpochStart)*(1.0/(24*3600)))
-
+#define FG_MAX_STARS 3500
 
 /* Define four structures, each with varying amounts of stars */
-/* static */  GLint stars[FG_STAR_LEVELS];
+static GLint stars[FG_STAR_LEVELS];
 
 
 /* Initialize the Star Management Subsystem */
 int fgStarsInit( void ) {
+    fgPoint3d starlist[FG_MAX_STARS];
     fgFile fd;
     /* struct CelestialCoord pltPos; */
     char path[256], gzpath[256];
@@ -72,7 +74,7 @@ int fgStarsInit( void ) {
     double min_magnitude[FG_STAR_LEVELS];
     /* double ra_save, decl_save; */
     /* double ra_save1, decl_save1; */
-    int i;
+    int i, j, starcount, count;
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
@@ -85,6 +87,60 @@ int fgStarsInit( void ) {
 	fgPrintf( FG_ASTRO, FG_EXIT, "Big whups in stars.cxx\n");
     }
 
+    fgPrintf( FG_ASTRO, FG_INFO, "  Loading stars from %s\n", path);
+
+    // load star data file
+    if ( (fd = fgopen(path, "rb")) == NULL ) {
+	strcpy(gzpath, path);
+	strcat(gzpath, ".gz");
+	if ( (fd = fgopen(gzpath, "rb")) == NULL ) {
+	    // Oops, lets not even try to continue. This is critical.
+	    fgPrintf( FG_ASTRO, FG_EXIT,
+		      "Cannot open star file: '%s'\n", path);
+	}
+    }
+
+    starcount = 0;
+
+    // read in each line of the file
+    while ( (fggets(fd, line, 256) != NULL) && (starcount < FG_MAX_STARS) ) {
+	front = line;
+
+	// printf("  Read line = %s", front);
+
+	// advance to first non-whitespace character
+	while ( (front[0] == ' ') || (front[0] == '\t') ) {
+	    front++;
+	}
+
+	// printf("  Line length (after trimming) = %d\n", strlen(front));
+
+	if ( front[0] == '#' ) {
+	    // comment
+	} else if ( strlen(front) <= 1 ) {
+	    // blank line
+	} else {
+	    // star data line
+
+	    // get name
+	    end = front;
+	    while ( end[0] != ',' ) {
+		end++;
+	    }
+	    end[0] = '\0';
+	    strcpy(name, front);
+	    front = end;
+	    front++;
+
+	    sscanf(front, "%lf,%lf,%lf\n",
+		   &right_ascension, &declination, &magnitude);
+	    starlist[starcount].x = right_ascension;
+	    starlist[starcount].y = declination;
+	    starlist[starcount].z = magnitude;
+	    starcount++;
+	}
+    }
+
     min_magnitude[0] = 4.2;
     min_magnitude[1] = 3.6;
     min_magnitude[2] = 3.0;
@@ -94,101 +150,46 @@ int fgStarsInit( void ) {
     min_magnitude[6] = 0.6;
     min_magnitude[7] = 0.0;
 
-
+    // build the various star display lists
     for ( i = 0; i < FG_STAR_LEVELS; i++ ) {
-	fgPrintf( FG_ASTRO, FG_INFO,
-		  "  Loading stars brighter than %.2f from %2\n", 
-		  min_magnitude[i], path);
-
-	if ( (fd = fgopen(path, "rb")) == NULL ) {
-	    strcpy(gzpath, path);
-	    strcat(gzpath, ".gz");
-	    if ( (fd = fgopen(gzpath, "rb")) == NULL ) {
-		// Oops, lets not even try to continue. This is critical.
-		fgPrintf( FG_ASTRO, FG_EXIT,
-			  "Cannot open star file: '%s'\n", path);
-	    }
-	}
 
 	stars[i] = xglGenLists(1);
 	xglNewList( stars[i], GL_COMPILE );
 	xglBegin( GL_POINTS );
 
-	/* read in each line of the file */
-	while ( fggets(fd, line, 256) != NULL ) {
-	    front = line;
+	count = 0;
 
-	    /* printf("  Read line = %s", front); */
+	for ( j = 0; j < starcount; j++ ) {
+	    magnitude = starlist[j].z;
+	    // printf("magnitude = %.2f\n", magnitude);
 
-	    /* advance to first non-whitespace character */
-	    while ( (front[0] == ' ') || (front[0] == '\t') ) {
-		front++;
-	    }
+	    if ( magnitude < min_magnitude[i] ) {
+		right_ascension = starlist[j].x;
+		declination = starlist[j].y;
 
-	    /* printf("  Line length (after trimming) = %d\n", strlen(front));*/
+		count++;
 
-	    if ( front[0] == '#' ) {
-		/* comment */
-	    } else if ( strlen(front) <= 1 ) {
-		/* blank line */
-	    } else {
-		/* star data line */
-
-		/* get name */
-		end = front;
-		while ( end[0] != ',' ) {
-		    end++;
-		}
-		end[0] = '\0';
-		strcpy(name, front);
-		front = end;
-		front++;
-
-		sscanf(front, "%lf,%lf,%lf\n",
-		       &right_ascension, &declination, &magnitude);
-
-		/*
-		  if ( strcmp(name, "Betelgeuse") == 0 ) {
-		  printf("  *** Marking %s\n", name);
-		  ra_save = right_ascension;
-		  decl_save = declination;
-		  }
-		  */
-
-		/*
-		  if ( strcmp(name, "Alnilam") == 0 ) {
-		  printf("  *** Marking %s\n", name);
-		  ra_save1 = right_ascension;
-		  decl_save1 = declination;
-		  }
-		  */
-
-		if ( magnitude < min_magnitude[i] ) {
-		    /* scale magnitudes to (0.0 - 1.0) */
-		    magnitude = (0.0 - magnitude) / 5.0 + 1.0;
-
-		    /* scale magnitudes again so they look ok */
-		    if ( magnitude > 1.0 ) { magnitude = 1.0; }
-		    if ( magnitude < 0.0 ) { magnitude = 0.0; }
-		    /* magnitude =
-			magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.042);
-			*/
-		    magnitude = magnitude * 0.9 + 
-			(((FG_STAR_LEVELS - 1) - i) * 0.014);
-		    /* printf("  Found star: %d %s, %.3f %.3f %.3f\n", count,
-		       name, right_ascension, declination, magnitude); */
+		/* scale magnitudes to (0.0 - 1.0) */
+		magnitude = (0.0 - magnitude) / 5.0 + 1.0;
+		
+		/* scale magnitudes again so they look ok */
+		if ( magnitude > 1.0 ) { magnitude = 1.0; }
+		if ( magnitude < 0.0 ) { magnitude = 0.0; }
+		/* magnitude =
+		   magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.042);
+		   */
+		magnitude = magnitude * 0.9 + 
+		    (((FG_STAR_LEVELS - 1) - i) * 0.014);
+		/* printf("  Found star: %d %s, %.3f %.3f %.3f\n", count,
+		   name, right_ascension, declination, magnitude); */
 		    
-		    xglColor3f( magnitude, magnitude, magnitude );
-		    /*xglColor3f(0,0,0);*/
-		    xglVertex3f( 50000.0*cos(right_ascension)*cos(declination),
-				 50000.0*sin(right_ascension)*cos(declination),
-				 50000.0*sin(declination) );
-		}
-	    } //  valid line
-
+		xglColor3f( magnitude, magnitude, magnitude );
+		/*xglColor3f(0,0,0);*/
+		xglVertex3f( 50000.0*cos(right_ascension)*cos(declination),
+			     50000.0*sin(right_ascension)*cos(declination),
+			     50000.0*sin(declination) );
+	    }
 	} /* while */
-
-	fgclose(fd);
 
 	xglEnd();
 
@@ -229,6 +230,10 @@ int fgStarsInit( void ) {
 	*/
 
 	xglEndList();
+	    
+	fgPrintf( FG_ASTRO, FG_INFO,
+		  "  Loading %d stars brighter than %.2f\n", 
+		  count, min_magnitude[i]);
     }
 
     return 1;  // OK, we got here because initialization worked.
@@ -283,10 +288,15 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/08/06 12:45:20  curt
-/* Modified to bring in stars in 8 increments based on magnitude, not number
-/* of stars.
+/* Revision 1.10  1998/08/10 20:33:09  curt
+/* Rewrote star loading and rendering to:
+/*   1. significantly improve load speed
+/*   2. transition from no stars to stars through eight stages.
 /*
+ * Revision 1.9  1998/08/06 12:45:20  curt
+ * Modified to bring in stars in 8 increments based on magnitude, not number
+ * of stars.
+ *
  * Revision 1.8  1998/07/13 21:00:10  curt
  * Wrote access functions for current fgOPTIONS.
  *
