@@ -26,6 +26,8 @@
 #  include <windows.h>
 #endif
 
+#include <string.h>		// for strcmp()
+
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 
@@ -313,7 +315,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
     t->table = new SGInterpTable();
     for(int i = 0; i < trans_table->nChildren(); i++) {
       const SGPropertyNode * node = trans_table->getChild(i);
-      if (string(node->getName()) == "entry") {
+      if (!strcmp(node->getName(), "entry")) {
 	double ind = node->getDoubleValue("ind", 0.0);
 	double dep = node->getDoubleValue("dep", 0.0);
 	SG_LOG( SG_COCKPIT, SG_INFO, "Adding interpolation entry "
@@ -485,7 +487,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     for (int i = 0; i < node->nChildren(); i++) {
       const SGPropertyNode * child = node->getChild(i);
       cerr << "Trying child " << child->getName() << endl;
-      if (string(child->getName()) == "layer") {
+      if (!strcmp(child->getName(), "layer")) {
 	cerr << "succeeded!" << endl;
 	((FGGroupLayer *)layer)->addLayer(readLayer(child, w_scale, h_scale));
       }
@@ -516,7 +518,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
       int nChunks = chunk_group->nChildren();
       for (int i = 0; i < nChunks; i++) {
 	const SGPropertyNode * node = chunk_group->getChild(i);
-	if (string(node->getName()) == "chunk") {
+	if (!strcmp(node->getName(), "chunk")) {
 	  FGTextLayer::Chunk * chunk = readTextChunk(node);
 	  if (chunk != 0)
 	    tlayer->addChunk(chunk);
@@ -576,7 +578,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     int nTransformations = trans_group->nChildren();
     for (int i = 0; i < nTransformations; i++) {
       const SGPropertyNode * node = trans_group->getChild(i);
-      if (string(node->getName()) == "transformation") {
+      if (!strcmp(node->getName(), "transformation")) {
 	FGPanelTransformation * t = readTransformation(node, w_scale, h_scale);
 	if (t != 0)
 	  layer->addTransformation(t);
@@ -645,7 +647,7 @@ readInstrument (const SGPropertyNode * node)
     int nActions = action_group->nChildren();
     for (int i = 0; i < nActions; i++) {
       const SGPropertyNode * node = action_group->getChild(i);
-      if (string(node->getName()) == "action") {
+      if (!strcmp(node->getName(), "action")) {
 	FGPanelAction * action = readAction(node, w_scale, h_scale);
 	if (action != 0)
 	  instrument->addAction(action);
@@ -664,7 +666,7 @@ readInstrument (const SGPropertyNode * node)
     int nLayers = layer_group->nChildren();
     for (int i = 0; i < nLayers; i++) {
       const SGPropertyNode * node = layer_group->getChild(i);
-      if (string(node->getName()) == "layer") {
+      if (!strcmp(node->getName(), "layer")) {
 	FGInstrumentLayer * layer = readLayer(node, w_scale, h_scale);
 	if (layer != 0)
 	  instrument->addLayer(layer);
@@ -783,7 +785,7 @@ readPanel (const SGPropertyNode * root)
     int nInstruments = instrument_group->nChildren();
     for (int i = 0; i < nInstruments; i++) {
       const SGPropertyNode * node = instrument_group->getChild(i);
-      if (string(node->getName()) == "instrument") {
+      if (!strcmp(node->getName(), "instrument")) {
 	FGPanelInstrument * instrument = readInstrument(node);
 	if (instrument != 0)
 	  panel->addInstrument(instrument);

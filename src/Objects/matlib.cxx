@@ -83,7 +83,7 @@ bool FGMaterialLib::load( const string& mpath ) {
   int nMaterials = materials.nChildren();
   for (int i = 0; i < nMaterials; i++) {
     const SGPropertyNode * node = materials.getChild(i);
-    if (string(node->getName()) == "material") {
+    if (!strcmp(node->getName(), "material")) {
       FGNewMat * m = new FGNewMat(node);
 
       vector<const SGPropertyNode *>names = node->getChildren("name");
