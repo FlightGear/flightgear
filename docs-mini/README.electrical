@@ -1,0 +1,149 @@
+Specifying and Configuring and Aircraft Electrical System
+=========================================================
+
+Written by Curtis L. Olson <curt@flightgear.org>
+Started February 3, 2003
+
+
+Introduction
+============
+
+The FlightGear electrical system model is an approximation.  We don't
+model down to the level of individual electrons, but we do try to
+model a rich enough subset of components so that a realistic (from the
+pilot's perspective) electrical system may be implemented.  We try to
+model enough of the general flow so that typical electrical system
+failures can be implimented and so that the pilot can practice
+realistic troubleshooting techniques and learn the basic structure and
+relationships of the real aircraft electrical system.
+
+An electrical system can be built from 4 major components: suppliers,
+buses, outputs, and connectors.  Suppliers are things like batteries
+and generators.  Buses collect input from multiple suppliers and feed
+multiple outputs.  Outputs are not strictly necessary, but are
+included so we can name generic output types and provide a consistent
+naming scheme to other FlightGear subsystems.  Finally connectors
+connect a supplier to a bus, or a bus to an output, and optionally can
+specify a switch property (either a physical switch or a circuit
+breaker.)
+
+At run time, the structure specified in the electrical system config
+file is parsed and a directional graph (in the computer science sense)
+is built.  Each frame, the current is propagated through the system,
+starting at the suppliers, flowing through the buses, and finally to
+the outputs.  The system follows the path of connectors laid out in
+the config file and honors the state of any connector switch.
+
+
+Suppliers
+=========
+
+A supplier entry could look like the following:
+
+  <supplier>
+    <name>Battery 1</name>
+    <prop>/systems/electrical/suppliers/battery[0]</prop>
+    <kind>battery</kind>
+    <volts>24</volts>
+    <amps>60</amps>   <!-- WAG -->
+  </supplier>
+
+<name> can be anything you choose to call this entry.
+<prop> is the name of a property that will be updated with the state
+       of this supplier.
+<kind> can be "battery", "alternator", or "external".
+<volts> specifies the volts of the source
+<amps> specifies the amps of the source
+
+Currently <volts> and <amps> are not really modeled in detail.  This
+is more of a place holder for the future.
+
+
+Buses
+=====
+
+A bus entry could look like the following:
+
+  <bus>
+    <name>Essential/Cross Feed Bus</name>
+    <prop>/systems/electrical/outputs/bus-essential</prop>
+    <prop>/systems/electrical/outputs/annunciators</prop>
+    <prop>/systems/electrical/outputs/master-switch</prop>
+  </bus>
+
+<name> is whatever you choose to call this bus
+
+You can have an arbitrary number of <prop> entries.  Each entry is the
+name of a property that will be updated with the value of the current
+at that bus.  This allows you to wire devices directly to the bus but
+does not allow you to insert a switch or circuit breaker in between.
+See "Outputs" and "Connectors" if you want to do that.
+
+
+Outputs
+=======
+
+An output entry could look like the following:
+
+  <output>
+    <name>Starter 1 Power</name>
+    <prop>/systems/electrical/outputs/starter[0]</prop>
+  </output>
+
+An output isn't entirely unlike a bus, but it's nice conceptually to
+have a separate entity type.  This enables us to specify a common set
+of output property names so that other subsystems can automatically
+work with any electrical system that follows the same conventions.  An
+output lives on the other side of a switch, so this is how you can
+wire in cockpit switches to model things like fuel pump power,
+avionics master switch, or any other switch on the panel.
+
+<name> is whatever you choose to call this bus
+
+You can have an arbitrary number of <prop> entries.  Each entry is the
+name of a property that will be updated with the value of the current
+at that bus.  This allows you to wire devices directly to the bus but
+does not allow you to insert a switch or circuit breaker in between.
+See "Outputs" and "Connectors" if you want to do that.
+
+Other FlightGear subsystems can monitor the property name associated
+with the various outputs to decide how to render an instrument,
+whether to run the fuel pump, whether to spin a gyro, or any other
+subsystem that cares about electrical power.
+
+
+Connectors
+==========
+
+An connector entry could look like the following:
+
+  <connector>
+    <input>Alternator 1</input>
+    <output>Virtual Bus 1</output>
+    <switch>/controls/switches/master-alt</switch>
+  </connector>
+
+A connector specifies and input, and output, and any number of
+switches that are wired in series.  In other words, all switches need
+to be true/on in order for current to get from the input to the output
+of the connector.
+
+<input> specifies the <name> of the input.  Typically you would
+specify a "supplier" or a "bus".
+
+<output> specifies the <name> of the output.  Typically you would
+specify a bus or an output.
+
+You can have an arbitrary number of <switch> entries.  The switches
+are wired in series so all of them need to be on (i.e. true) in order
+for current to pass to the output.
+
+
+Summary
+=======
+
+The electrical system has a lot of power and flexibility to model a
+variety of electrical systems.  However, it is not yet perfect or
+finished.  One major weakness is that it doesn't yet model degraded
+battery or generator power, and it doesn't model the "charge" of the
+batteries in case of a generator failure.
