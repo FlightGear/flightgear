@@ -17,5 +17,5 @@ GLmain.o: GLmain.c ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h ../Scenery/scenery.h \
- ../mat3/mat3.h ../Timer/fg_timer.h
-mesh2GL.o: mesh2GL.c ../Scenery/mesh.h ../mat3/mat3.h
+ ../Math/mat3.h ../Timer/fg_timer.h
+mesh2GL.o: mesh2GL.c ../Scenery/mesh.h ../Math/mat3.h

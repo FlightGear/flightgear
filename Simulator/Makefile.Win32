@@ -27,20 +27,18 @@
 include make.inc
 
 
-SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVRML
-SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
+SUBSUBDIRS = Flight/LaRCsim Flight/Slew
+SUBDIRS = Aircraft Controls Flight Math Scenery Timer
 MAIN = OpenGL
 
 
 all: 
 	$(MAKE) -C Flight/LaRCsim 
 	$(MAKE) -C Flight/Slew 
-	$(MAKE) -C Scenery/ParseScn 
-	$(MAKE) -C Scenery/ParseVRML
 	$(MAKE) -C Aircraft 
 	$(MAKE) -C Controls 
 	$(MAKE) -C Flight 
-	$(MAKE) -C mat3 
+	$(MAKE) -C Math 
 	$(MAKE) -C Scenery 
 	$(MAKE) -C Timer
 	$(MAKE) -C OpenGL
@@ -55,12 +53,10 @@ clean:
 	-rm -f *~
 	$(MAKE) -C Flight/LaRCsim clean
 	$(MAKE) -C Flight/Slew clean
-	$(MAKE) -C Scenery/ParseScn clean
-	$(MAKE) -C Scenery/ParseVRML clean
 	$(MAKE) -C Aircraft clean
 	$(MAKE) -C Controls clean
 	$(MAKE) -C Flight clean
-	$(MAKE) -C mat3 clean
+	$(MAKE) -C Math clean
 	$(MAKE) -C Scenery clean
 	$(MAKE) -C Timer clean
 	$(MAKE) -C OpenGL clean
@@ -73,6 +69,9 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/07/05 20:43:27  curt
+# renamed mat3 directory to Math so we could add other math related routines.
+#
 # Revision 1.1  1997/07/04 00:17:21  curt
 # Initial revision.
 #

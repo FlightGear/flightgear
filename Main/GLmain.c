@@ -40,7 +40,7 @@
 
 #include "../Aircraft/aircraft.h"
 #include "../Scenery/scenery.h"
-#include "../mat3/mat3.h"
+#include "../Math/mat3.h"
 #include "../Timer/fg_timer.h"
 
 
@@ -580,9 +580,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.25  1997/06/29 21:19:17  curt
-/* Working on scenery management system.
+/* Revision 1.26  1997/07/05 20:43:34  curt
+/* renamed mat3 directory to Math so we could add other math related routines.
 /*
+ * Revision 1.25  1997/06/29 21:19:17  curt
+ * Working on scenery management system.
+ *
  * Revision 1.24  1997/06/26 22:14:53  curt
  * Beginning work on a scenery management system.
  *

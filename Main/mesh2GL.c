@@ -27,7 +27,7 @@
 #include <GL/glut.h>
 
 #include "../Scenery/mesh.h"
-#include "../mat3/mat3.h"
+#include "../Math/mat3.h"
 
 
 /* walk through mesh and make ogl calls */
@@ -105,9 +105,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.23  1997/07/03 00:51:14  curt
-/* Playing with terrain color.
+/* Revision 1.24  1997/07/05 20:43:35  curt
+/* renamed mat3 directory to Math so we could add other math related routines.
 /*
+ * Revision 1.23  1997/07/03 00:51:14  curt
+ * Playing with terrain color.
+ *
  * Revision 1.22  1997/06/29 21:19:17  curt
  * Working on scenery management system.
  *

@@ -30,7 +30,7 @@ CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
-	../Flight/Slew/libSlew.a ../mat3/libmat3.a \
+	../Flight/Slew/libSlew.a ../Math/libMath.a \
 	../Scenery/libScenery.a \
 	../Timer/libTimer.a
 
@@ -76,6 +76,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.21  1997/07/05 20:43:34  curt
+# renamed mat3 directory to Math so we could add other math related routines.
+#
 # Revision 1.20  1997/06/29 21:19:17  curt
 # Working on scenery management system.
 #

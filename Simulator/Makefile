@@ -28,7 +28,7 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
+SUBDIRS = Aircraft Controls Flight Math Scenery Timer
 MAIN = OpenGL
 
 
@@ -58,6 +58,9 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.15  1997/07/05 20:43:27  curt
+# renamed mat3 directory to Math so we could add other math related routines.
+#
 # Revision 1.14  1997/06/29 21:19:16  curt
 # Working on scenery management system.
 #
