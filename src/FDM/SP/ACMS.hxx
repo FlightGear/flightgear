@@ -40,6 +40,12 @@ public:
     // update position based on properties
     void update( double dt );
 
+private:
+
+    SGPropertyNode *_alt, *_speed, *_climb_rate;
+    SGPropertyNode *_pitch, *_roll, *_heading;
+    SGPropertyNode *_acc_lat, *_acc_lon, *_acc_down;
+    SGPropertyNode *_temp, *_wow;
 };
 
 

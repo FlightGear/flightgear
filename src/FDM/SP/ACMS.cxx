@@ -25,6 +25,17 @@
 #include "ACMS.hxx"
 
 FGACMS::FGACMS( double dt )
+ : _alt    (fgGetNode("/fdm/acms/position/altitude-ft", true)),
+   _speed  (fgGetNode("/fdm/acms/velocities/airspeed-kt", true)),
+   _climb_rate( fgGetNode("/fdm/acms/velocities/vertical-speed-fps", true)),
+   _pitch  (fgGetNode("/fdm/acms/orientation/pitch-rad", true)),
+   _roll   (fgGetNode("/fdm/acms/orientation/roll-rad", true)),
+   _heading(fgGetNode("/fdm/acms/orientation/heading-rad", true)),
+   _acc_lat(fgGetNode("/fdm/acms/accelerations/ned/east-accel-fps_sec", true)),
+   _acc_lon(fgGetNode("/fdm/acms/accelerations/ned/north-accel-fps_sec", true)),
+   _acc_down(fgGetNode("/fdm/acms/accelerations/ned/down-accel-fps_sec", true)),
+   _temp    (fgGetNode("/fdm/acms/environment/temperature-degc", true)),
+   _wow     (fgGetNode("/fdm/acms/gear/wow", true))
 {
 //     set_delta_t( dt );
 }
@@ -40,56 +51,58 @@ void FGACMS::init() {
     common_init();
 }
 
-
 // Run an iteration of the EOM (equations of motion)
 void FGACMS::update( double dt ) {
 
-    double pitch = get_Theta();
-    double roll = get_Phi();
-    double heading = get_Psi() * SG_DEGREES_TO_RADIANS;
-    double alt = get_Altitude();
+    if (is_suspended())
+        return;
 
-    double sl_radius, lat_geoc;
-    sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
+    double pitch = _pitch->getDoubleValue();
+    double roll = _roll->getDoubleValue();
+    double heading = _heading->getDoubleValue();
+    double alt = _alt->getDoubleValue();
 
-    double lon_acc = get_V_north();
-    double lat_acc = get_V_east();
-    double vert_acc = get_V_down();
+    set_Theta(pitch);
+    set_Phi(roll);
+    set_Psi(heading);
+    set_Altitude(alt);
+    _set_Climb_Rate( _climb_rate->getDoubleValue() );
 
-    double accel_heading = atan( lon_acc/lat_acc );
-    double accel_pitch = atan( vert_acc/accel_heading );
 
-    double accel = sqrt(sqrt(lon_acc*lon_acc + lat_acc*lat_acc)
-                        + vert_acc*vert_acc);
+    double acc_lat = _acc_lat->getDoubleValue();
+    double acc_lon = _acc_lon->getDoubleValue();
+    double acc_down = _acc_down->getDoubleValue();
+    _set_Accels_Local( acc_lon, acc_lat, acc_down );
 
-    double velocity = get_V_true_kts() * accel / (SG_METER_TO_NM * 3600.0);
-    double speed = cos (pitch) * velocity; // meters/sec
-    double dist = speed * dt;
-    double kts = velocity * 6076.11549 * 3600.0;
+    sgVec3 accel_ned;
+    sgSetVec3(accel_ned, acc_lon, acc_lat, acc_down);
+    double accel = sgLengthVec3 (accel_ned) * SG_FEET_TO_METER;
 
-    double climb_rate = fgGetDouble("/velocities/climb-rate", 0);
-    double climb = climb_rate * dt;
-
-    _set_Alpha( pitch - accel_pitch);
-    _set_Beta( heading - accel_heading);
-    _set_Climb_Rate( climb_rate );
+    double velocity = (_speed->getDoubleValue() * SG_FEET_TO_METER) * accel;
+    double dist = cos (pitch) * velocity * dt;
+    double kts = velocity * SG_MPS_TO_KMH * SG_KMH_TO_MPS * SG_MPS_TO_KT;
     _set_V_equiv_kts( kts );
     _set_V_calibrated_kts( kts );
     _set_V_ground_speed( kts );
-    _set_Altitude( get_Altitude() + climb );
 
     // update (lon/lat) position
     double lat2, lon2, az2;
     geo_direct_wgs_84 ( get_Altitude(),
                         get_Latitude() * SGD_RADIANS_TO_DEGREES,
                         get_Longitude() * SGD_RADIANS_TO_DEGREES,
-                        get_Psi() * SGD_RADIANS_TO_DEGREES,
+                        heading * SGD_RADIANS_TO_DEGREES,
                         dist, &lat2, &lon2, &az2 );
-    _set_Geocentric_Position( lat_geoc, get_Longitude(),
-                             sl_radius + get_Altitude() + climb );
-    _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
 
     _set_Longitude( lon2 * SGD_DEGREES_TO_RADIANS );
     _set_Latitude( lat2 * SGD_DEGREES_TO_RADIANS );
+
+    double sl_radius, lat_geoc;
+    sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
+
+    _set_Euler_Angles( roll, pitch, heading );
+    _set_Euler_Rates(0,0,0);
+
+    _set_Geocentric_Position( lat_geoc, get_Longitude(), sl_radius);
+    _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
 
 }
