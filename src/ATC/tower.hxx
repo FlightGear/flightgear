@@ -76,6 +76,7 @@ public:
     inline int get_range() const { return range; }
     inline const char* GetIdent() { return ident.c_str(); }
     inline string get_trans_ident() { return trans_ident; }
+    inline string get_name() { return name; }
     inline atc_type GetType() { return TOWER; }
 
     // Make a request of tower control

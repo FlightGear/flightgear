@@ -39,10 +39,18 @@
 FGAIEntity::~FGAIEntity() {
 }
 
-// Run the internal calculations
-void FGAIEntity::Update() {
+void FGAIEntity::Update(double dt) {
 }
 
+// Run the internal calculations
+//void FGAIEntity::Update() {
+void FGAIEntity::Transform() {
+    aip.setPosition(pos.lon(), pos.lat(), pos.elev() * SG_METER_TO_FEET);
+    aip.setOrientation(roll, pitch, hdg);
+    aip.update();    
+}
+
+/*
 void FGAIEntity::Transform() {
 
     // Translate moving object w.r.t eye
@@ -53,17 +61,17 @@ void FGAIEntity::Transform() {
     sgCoord shippos;
     FastWorldCoordinate(&shippos, sc);
     position->setTransform( &shippos );
-    globals->get_scenery()->get_scene_graph()->addKid(position);
     //cout << "Transform called\n";
 }
+*/
 
 #if 0
 // Taken from tileentry.cxx
 void FGAIEntity::WorldCoordinate(sgCoord *obj_pos, Point3D center) {
     // setup transforms
-    Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
-                  lat * SGD_DEGREES_TO_RADIANS,
-                  elev );
+    Point3D geod( pos.lon() * SGD_DEGREES_TO_RADIANS,
+                  pos.lat() * SGD_DEGREES_TO_RADIANS,
+                  pos.elev() );
 	
     Point3D world_pos = sgGeodToCart( geod );
     Point3D offset = world_pos - center;
@@ -89,15 +97,15 @@ void FGAIEntity::WorldCoordinate(sgCoord *obj_pos, Point3D center) {
     sgSetCoord( obj_pos, TUX );
 }
 #endif
-
+/*
 // Norman's 'fast hack' for above
 void FGAIEntity::FastWorldCoordinate(sgCoord *obj_pos, Point3D center) {
-    double lon_rad = lon * SGD_DEGREES_TO_RADIANS;
-    double lat_rad = lat * SGD_DEGREES_TO_RADIANS;
+    double lon_rad = pos.lon() * SGD_DEGREES_TO_RADIANS;
+    double lat_rad = pos.lat() * SGD_DEGREES_TO_RADIANS;
     double hdg_rad = hdg * SGD_DEGREES_TO_RADIANS;
 
     // setup transforms
-    Point3D geod( lon_rad, lat_rad, elev );
+    Point3D geod( lon_rad, lat_rad, pos.elev() );
 	
     Point3D world_pos = sgGeodToCart( geod );
     Point3D offset = world_pos - center;
@@ -133,3 +141,4 @@ void FGAIEntity::FastWorldCoordinate(sgCoord *obj_pos, Point3D center) {
 
     sgSetCoord( obj_pos, mat );
 }
+*/

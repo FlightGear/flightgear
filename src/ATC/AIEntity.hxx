@@ -29,10 +29,20 @@
 #ifndef _FG_AIEntity_HXX
 #define _FG_AIEntity_HXX
 
+#include <Model/model.hxx>
 #include <plib/sg.h>
 #include <plib/ssg.h>
 #include <simgear/math/point3d.hxx>
 
+
+/*****************************************************************
+*
+*  FGAIEntity - this class implements the minimum requirement
+*  for any AI entity - a position, an orientation, an associated
+*  3D model, and the ability to be moved.  It does nothing useful
+*  and all AI entities are expected to be derived from it.
+*
+******************************************************************/
 class FGAIEntity {
 
 public:
@@ -44,27 +54,29 @@ public:
     virtual ~FGAIEntity();
 
     // Run the internal calculations
-    virtual void Update();
+    virtual void Update(double dt);
 
 protected:
 
-    double lat;		//WGS84
-    double lon;		//WGS84
-    double elev;	//Meters
+    Point3D pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
+    //double lat;		//WGS84
+    //double lon;		//WGS84
+    //double elev;	//Meters
     double hdg;		//True heading in degrees
     double roll;	//degrees
     double pitch;	//degrees
 
     char* model_path;	//Path to the 3D model
+    FGModelPlacement aip;
 
-    ssgEntity* model;
-    ssgTransform* position;
+    //ssgEntity* model;
+    //ssgTransform* position;
 
     void Transform();
 
     //void WorldCoordinate(sgCoord *obj_pos, Point3D center);
 
-    void FastWorldCoordinate(sgCoord *obj_pos, Point3D center);
+    //void FastWorldCoordinate(sgCoord *obj_pos, Point3D center);
 
 };
 

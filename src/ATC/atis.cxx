@@ -54,40 +54,7 @@ SG_USING_STD(cout);
 #include "atis.hxx"
 #include "atislist.hxx"
 #include "ATCdisplay.hxx"
-
-string GetPhoneticIdent(int i) {
-// TODO - Check i is between 1 and 26 and wrap if necessary
-    switch(i) {
-    case 1 : return("Alpha");
-    case 2 : return("Bravo");
-    case 3 : return("Charlie");
-    case 4 : return("Delta");
-    case 5 : return("Echo");
-    case 6 : return("Foxtrot");
-    case 7 : return("Golf");
-    case 8 : return("Hotel");
-    case 9 : return("Indigo");
-    case 10 : return("Juliet");
-    case 11 : return("Kilo");
-    case 12 : return("Lima");
-    case 13 : return("Mike");
-    case 14 : return("November");
-    case 15 : return("Oscar");
-    case 16 : return("Papa");
-    case 17 : return("Quebec");
-    case 18 : return("Romeo");
-    case 19 : return("Sierra");
-    case 20 : return("Tango");
-    case 21 : return("Uniform");
-    case 22 : return("Victor");
-    case 23 : return("Whiskey");
-    case 24 : return("X-ray");
-    case 25 : return("Yankee");
-    case 26 : return("Zulu");
-    }
-    // We shouldn't get here
-    return("Error");
-}
+#include "ATCutils.hxx"
 
 // Constructor
 FGATIS::FGATIS()

@@ -86,7 +86,7 @@ bool FGApproachList::init( SGPath path ) {
  	//cout << " Name = " << a.get_name() << endl; 
 
 	approachlist_freq[a.get_freq()].push_back(a);
-	approachlist_bck[a.get_bucket()].push_back(a);
+	approachlist_bck[int(a.get_bucket())].push_back(a);
         in >> skipcomment;
 
     }

@@ -8,8 +8,10 @@ libATC_a_SOURCES = \
 	ATCdisplay.hxx ATCdisplay.cxx \
 	ATCmgr.hxx ATCmgr.cxx \
 	ATCutils.hxx ATCutils.cxx \
+	ATCProjection.hxx ATCProjection.cxx \
 	AIMgr.hxx AIMgr.cxx \
 	AIEntity.hxx AIEntity.cxx \
+	AIPlane.hxx AIPlane.cxx \
 	AILocalTraffic.hxx AILocalTraffic.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

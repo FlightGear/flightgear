@@ -146,6 +146,22 @@ void FGATCMgr::RemoveFromList(const char* id, atc_type tp) {
     }
 }
 
+//DCL - this routine untested so far.
+// Find in list - return a currently active ATC pointer given ICAO code and type
+FGATC* FGATCMgr::FindInList(const char* id, atc_type tp) {
+    atc_list_itr = atc_list.begin();
+    while(atc_list_itr != atc_list.end()) {
+	if( (!strcmp((*atc_list_itr)->GetIdent(), id))
+	    && ((*atc_list_itr)->GetType() == tp) ) {
+	    return(*atc_list_itr);
+	}	// Note that that can upset where we are in the list but that shouldn't really matter
+	++atc_list_itr;
+    }
+    // We need a fallback position
+    cout << "*** Failed to find FGATC* in FGATCMgr::FindInList - this should not happen!" << endl;
+    return(NULL);
+}
+
 // Returns true if the airport is found in the map
 bool FGATCMgr::GetAirportATCDetails(string icao, AirportATC* a) {
     if(airport_atc_map.find(icao) != airport_atc_map.end()) {
@@ -168,6 +184,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
     case TOWER:
 	if(a->tower_active) {
 	    // Get the pointer from the list
+	    return(FindInList(icao.c_str(), type));	// DCL - this untested so far.
 	} else {
 	    FGTower* t = new FGTower;
 	    if(current_towerlist->query(a->lon, a->lat, a->elev, a->tower_freq, &tower)) {
@@ -199,7 +216,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 
     cout << "ERROR IN FGATCMgr - reached end of GetATCPointer\n";
 
-    return NULL;
+    return(NULL);
 }
 
 

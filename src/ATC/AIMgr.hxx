@@ -84,7 +84,7 @@ public:
 
     void unbind();
 
-    void update(int dt);
+    void update(double dt);
 
 private:
 

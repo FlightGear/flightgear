@@ -60,11 +60,18 @@ void FGAIMgr::bind() {
 void FGAIMgr::unbind() {
 }
 
-void FGAIMgr::update(int dt) {
+void FGAIMgr::update(double dt) {
+    // Don't update any planes for first 50 runs through - this avoids some possible initialisation anomalies
+    static int i = 0;
+    i++;
+    if(i < 50) {
+	return;
+    }
+
     // Traverse the list of active planes and run all their update methods
     ai_list_itr = ai_list.begin();
     while(ai_list_itr != ai_list.end()) {
-	(*ai_list_itr)->Update();
+	(*ai_list_itr)->Update(dt);
 	++ai_list_itr;
     }
 }

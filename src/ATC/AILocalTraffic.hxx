@@ -35,11 +35,12 @@
 #include <simgear/math/point3d.hxx>
 
 #include "tower.hxx"
-#include "AIEntity.hxx"
+#include "AIPlane.hxx"
+#include "ATCProjection.hxx"
 
-typedef enum pattern_leg {
+typedef enum PatternLeg {
     TAKEOFF_ROLL,
-    OUTWARD,
+    CLIMBOUT,
     TURN1,
     CROSSWIND,
     TURN2,
@@ -51,7 +52,23 @@ typedef enum pattern_leg {
     LANDING_ROLL
 };
 
-class FGAILocalTraffic : public FGAIEntity {
+// perhaps we could use an FGRunway instead of this
+typedef struct RunwayDetails {
+    Point3D threshold_pos;
+    Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
+    Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
+    double mag_hdg;
+    double mag_var;
+    double hdg;		// true runway heading
+};
+
+typedef struct StartofDescent {
+    PatternLeg leg;
+    double orthopos_x;
+    double orthopos_y;
+};
+
+class FGAILocalTraffic : public FGAIPlane {
 
 public:
 
@@ -62,24 +79,27 @@ public:
     void Init();
 
     // Run the internal calculations
-    void Update();
+    void Update(double dt);
+
+protected:
+
+    // Attempt to enter the traffic pattern in a reasonably intelligent manner
+    void EnterTrafficPattern(double dt);
 
 private:
+    FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the threshold at the origin
+					// and the runway aligned with the y axis.
 
+    // Airport/runway/pattern details
     char* airport;	// The ICAO code of the airport that we're operating around
-    double freq;	// The frequency that we're operating on - might not need this eventually
     FGTower* tower;	// A pointer to the tower control.
+    RunwayDetails rwy;
+    double patternDirection;	// 1 for right, -1 for left (This is double because we multiply/divide turn rates
+				// with it to get RH/LH turns - DON'T convert it to int under ANY circumstances!!
+    double glideAngle;		// Assumed to be visual glidepath angle for FGAILocalTraffic - can be found at www.airnav.com
+    // Its conceivable that patternDirection and glidePath could be moved into the RunwayDetails structure.
 
-    double mag_hdg;	// degrees - the heading that the physical aircraft is pointing
-    double mag_var;	// degrees
-
-    double vel;		// velocity along track in m/s
-    double track;	// track - degrees relative to *magnetic* north
-    double slope;	// Actual slope that the plane is flying (degrees) - +ve is uphill
-    double AoA;		// degrees - difference between slope and pitch
-    // We'll assume that the plane doesn't yaw or slip - the track/heading difference is to allow for wind
-
-    // Performance characteristics of the plane in knots and ft/min
+    // Performance characteristics of the plane in knots and ft/min - some of this might get moved out into FGAIPlane
     double Vr;
     double best_rate_of_climb_speed;
     double best_rate_of_climb;
@@ -90,11 +110,27 @@ private:
     double max_circuit_speed;
     double nominal_descent_rate;
     double nominal_approach_speed;
+    double nominal_final_speed;
     double stall_speed_landing_config;
 
-    // OK, what do we need to know whilst flying the pattern
-    pattern_leg leg;
+    // environment - some of this might get moved into FGAIPlane
+    double wind_from_hdg;	// degrees
+    double wind_speed_knots;	// knots
 
+    // Pattern details that (may) change
+    int numInPattern;		// Number of planes in the pattern (this might get more complicated if high performance GA aircraft fly a higher pattern eventually)
+    int numAhead;		// More importantly - how many of them are ahead of us?
+    double distToNext;		// And even more importantly, how near are we getting to the one immediately ahead?
+    PatternLeg leg;		// Out current position in the pattern
+    StartofDescent SoD;		// Start of descent calculated wrt wind, pattern size & altitude, glideslope etc
+
+    void FlyTrafficPattern(double dt);
+
+    // TODO - need to add something to define what option we are flying - Touch and go / Stop and go / Landing properly / others?
+
+    void TransmitPatternPositionReport();
+
+    void CalculateStartofDescent();
 };
 
 #endif  // _FG_AILocalTraffic_HXX

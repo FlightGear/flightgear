@@ -167,6 +167,9 @@ private:
     // Remove a class from the atc_list and delete it from memory
     void RemoveFromList(const char* id, atc_type tp);
 
+    // Return a pointer to a class in the list (external interface to this is through GetATCPointer)
+    FGATC* FGATCMgr::FindInList(const char* id, atc_type tp);
+
     // Search a specified freq for matching stations
     void Search();
 
