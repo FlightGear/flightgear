@@ -382,38 +382,22 @@ do_property_toggle (const SGPropertyNode * arg)
  * Built-in command: assign a value to a property.
  *
  * property: the name of the property to assign.
- * value: the value to assign.
+ * value: the value to assign; or
+ * property[1]: the property to copy from.
  */
 static bool
 do_property_assign (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
+  const SGPropertyNode * prop2 = get_prop2(arg);
   const SGPropertyNode * value = arg->getNode("value");
 
-  switch (prop->getType()) {
-
-  case SGPropertyNode::BOOL:
-    return prop->setBoolValue(value->getBoolValue());
-
-  case SGPropertyNode::INT:
-    return prop->setIntValue(value->getIntValue());
-
-  case SGPropertyNode::LONG:
-    return prop->setLongValue(value->getLongValue());
-
-  case SGPropertyNode::FLOAT:
-    return prop->setFloatValue(value->getFloatValue());
-
-  case SGPropertyNode::DOUBLE:
-    return prop->setDoubleValue(value->getDoubleValue());
-
-  case SGPropertyNode::STRING:
-    return prop->setStringValue(value->getStringValue());
-
-  default:
-    return prop->setUnspecifiedValue(value->getStringValue());
-
-  }
+  if (value != 0)
+      return prop->setUnspecifiedValue(value->getStringValue());
+  else if (prop2)
+      return prop->setUnspecifiedValue(prop2->getStringValue());
+  else
+      return false;
 }
 
 
