@@ -135,7 +135,8 @@ FGPanel::FGPanel (int window_x, int window_y, int window_w, int window_h)
     _mouseInstrument(0),
     _winx(window_x), _winy(window_y), _winw(window_w), _winh(window_h),
     _width(_winw), _height(int(_winh * 0.5768 + 1)),
-    _x_offset(0), _y_offset(0), _view_height(int(_winh * 0.4232))
+    _x_offset(0), _y_offset(0), _view_height(int(_winh * 0.4232)),
+    _bound(false)
 {
   setVisibility(fgPanelVisible());
 }
@@ -146,7 +147,8 @@ FGPanel::FGPanel (int window_x, int window_y, int window_w, int window_h)
  */
 FGPanel::~FGPanel ()
 {
-  unbind();
+  if (_bound)
+    unbind();
   for (instrument_list_type::iterator it = _instruments.begin();
        it != _instruments.end();
        it++) {
@@ -185,6 +187,7 @@ FGPanel::bind ()
   fgTie("/sim/panel/visibility", &_visibility);
   fgTie("/sim/panel/x-offset", &_x_offset);
   fgTie("/sim/panel/y-offset", &_y_offset);
+  _bound = true;
 }
 
 
@@ -197,6 +200,7 @@ FGPanel::unbind ()
   fgUntie("/sim/panel/visibility");
   fgUntie("/sim/panel/x-offset");
   fgUntie("/sim/panel/y-offset");
+  _bound = false;
 }
 
 

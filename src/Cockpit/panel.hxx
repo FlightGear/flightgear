@@ -180,6 +180,7 @@ private:
   int _x_offset;
   int _y_offset;
   int _view_height;
+  bool _bound;
   
   ssgTexture * _bg;
 				// List of instruments in panel.
