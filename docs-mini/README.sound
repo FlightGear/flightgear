@@ -1,9 +1,9 @@
 
 OpenAL setup for general use (Linux)
 -------------------------------------
-As of July 2004 it is best to add at least the following line to your
-~/.fgfsrc file on Linux because it wil find out what audio backend to
-use, starting with the most appropriate:
+As of the July 2004 release of OpenAL it is best to add at least the
+following line to your ~/.openalrc file on Linux because it wil find out
+what audio backend to use, starting with the most appropriate:
 
 (define devices '(native alsa sdl esd arts null))
 
@@ -25,12 +25,12 @@ we want to use ALSA instead of OSS.
 IRIX surround sound (5.1) setup
 -------------------------------------
 To add 4 channel surround sound on IRIX hardware that supports in
-directly you can just add the following line to your ~/.fgfsrc file:
+directly you can just add the following line to your ~/.openalrc file:
 
 (define speaker-num 4)
 
 To add 4 channel surround sound to IRIX systems that have more than one 
-stereo output you can add the following section to your ~/.fgfsrc file
+stereo output you can add the following section to your ~/.openalrc file
 (for a typical O2 configuration):
 
 (define speaker-num 4)
@@ -45,8 +45,8 @@ or alternatively:
 
 
 
-(Note the following section is obsolete as of July 2004m since your could
-command OpenAL to use ALSA or Arts directly)
+(Note the following section is obsolete as of the July 2004 release of 
+OpenAL, since your could command OpenAL to use ALSA or Arts directly)
 
 ALSA and Arts
 -------------------------------------
