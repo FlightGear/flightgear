@@ -1,0 +1,91 @@
+# valgrind suppression rules for FlightGear
+
+# Format of this file is:
+# {
+#     name_of_suppression
+#     kind: one of Param Value1 Value2 Value4 Value8
+#               Cond Free Addr1 Addr2 Addr4 Addr8
+#     (if Param: name of system call param, if Free: name of free-ing fn)
+#     caller0 name, or /name/of/so/file.so
+#     caller1 name, or ditto
+#     (optionally: caller2 name)
+#     (optionally: caller3 name)
+#  }
+
+# sample rules for Linux kernel 2.4, glibc 2.2.4, XFree86 4.2.0, 3dfx
+
+{
+    _dlopen_signal_error(Addr1)
+    Addr1
+    fun:_dl_signal_error
+    fun:_dl_open
+    fun:dlopen_doit
+}
+
+{
+    _dl_signal_error(Addr4)
+    Addr4
+    fun:_dl_signal_error
+    fun:_dl_open
+    fun:dlopen_doit
+}
+
+{
+    memcpy(Addr1)
+    Addr1
+    fun:memcpy
+    fun:_dl_signal_error
+    fun:_dl_open
+    fun:dlopen_doit
+}
+
+{
+    memcpy(Addr4)
+    Addr4
+    fun:memcpy
+    fun:_dl_signal_error
+    fun:_dl_open
+    fun:dlopen_doit
+}
+
+{
+    ioctl(generic)/(Param)
+    Param
+    ioctl(generic)
+    fun:__ioctl
+    fun:driMesaCreateScreen
+    fun:__driCreateScreen
+}
+
+{
+    Mesa/texsubimage2d...(Addr1)
+    Addr1
+    fun:texsubimage2d_*_to_*
+    fun:convert_texsubimage2d_*
+    fun:_mesa_convert_texsubimage2d
+    fun:tdfxDDTexImage2D
+}
+
+{
+    Mesa/texsubimage2d...(Addr4)
+    Addr4
+    fun:texsubimage2d_*_to_*
+    fun:convert_texsubimage2d_*
+    fun:_mesa_convert_texsubimage2d
+    fun:tdfxDDTexImage2D
+}
+
+{
+    Mesa/texsubimage2d...(Value1)
+    Value1
+    fun:texsubimage2d_*_to_*
+    fun:convert_texsubimage2d_*
+    fun:_mesa_convert_texsubimage2d
+    fun:tdfxDDTexImage2D
+}
+
+{
+    known-plib-bug/already_reported(Cond)
+    Cond
+    fun:removeEntity__7ssgListUi
+}

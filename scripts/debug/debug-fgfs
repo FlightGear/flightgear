@@ -1,0 +1,81 @@
+#!/usr/bin/bash
+# $Id$
+#
+#
+#  To use this script you need
+#  - a Linux 2.4 system with libc 2.2.* and at least XFree86 4.1
+#  - the valgrind debugger (http://developer.kde.org/~sewardj/)
+#  - lots of memory (RAM + swap space > 600MB!) and
+#  - a fast computer =or= a lot of patience.
+#
+#  It is useful (but not required) to compile FlightGear without
+#  any optimizations (-O0 without -funroll-loops etc.). Otherwise
+#  the debug messages might not seem to make sense in some cases.
+#
+#  The sample suppression file is designed for a SuSE 7.1 system
+#  with Linux 2.4.18, XFree86 4.2.0 and a 3dfx card. Don't use it
+#  as it is, but create your own! You will likely have different
+#  libraries with different bugs.
+#
+#  If you have problems with valgrind and FlightGear, don't bother
+#  the valgrind author -- ask on the flightgear-devel list first!
+#
+#
+# 
+#  adapt the following two entries to your needs:
+#
+fgfs="../FlightGear/src/Main/fgfs"
+opt="--disable-game-mode --disable-fullscreen --fdm=magic"
+
+
+
+gdb="--gdb-attach=yes"
+cmd=
+extra=
+
+while true; do
+	case "$1" in
+	-h|--help)	cat <<-EOF
+		debug [-r] [-g] [-i] [-b] [-c] [-x] [-h]
+
+		-r	run fgfs
+		-g	run fgfs with gdb
+		-i	interactive valgrind run (default)
+		-b	valgrind batch run
+		-c	start gdb with most recent core dump
+		-x	add some extra pedantic valgrind parameters
+		-h	show this help screen
+		EOF
+		exit 0
+		;;
+	-r)	cmd="$fgfs $opt" ;;
+	-g)	cmd="gdb -x .gdbinit $fgfs" ;;
+	-i)	cmd=""; gdb="" ;;
+	-b)	gdb="" ;;
+	-x)	extra="--single-step=yes --optimise=no --cleanup=no --dump-error=1" ;;
+	-c)	core=$(ls -t core*|head -1)
+		if test -z $core; then
+			echo "$0: there's no core file"
+			exit 1
+		fi
+		cmd="gdb $fgfs $core"
+		;;
+	*)	break ;;
+	esac
+	shift
+done
+
+if ! test -e "$fgfs"; then
+	echo "$0: there's no fgfs exectuable $fgfs"
+	exit 2
+fi
+
+echo "set args $opt" > .gdbinit
+
+test -e fgfs.supp || head -14 sample.fgfs.supp > fgfs.supp
+
+test -z "$cmd" && cmd="nice valgrind $gdb --num-callers=10 --suppressions=fgfs.supp $extra $* $fgfs $opt"
+
+echo "command: $cmd"
+exec $cmd
+
