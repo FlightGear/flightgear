@@ -31,8 +31,10 @@
 
 #include <simgear/constants.h>
 #include <simgear/math/fg_types.hxx>
+#include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
 #include <Main/bfi.hxx>
+#include <NetworkOLK/features.hxx>
 
 FG_USING_NAMESPACE(std);
 
@@ -48,9 +50,6 @@ FG_USING_NAMESPACE(std);
 // Anything that reads the BFI directly is not implemented at all!
 
 
-#define VARY_E		(14)
-
-
 double FGSteam::the_STATIC_inhg = 29.92;
 double FGSteam::the_ALT_ft = 0.0;
 double FGSteam::get_ALT_ft() { _CatchUp(); return the_ALT_ft; }
@@ -64,15 +63,20 @@ double FGSteam::get_VSI_fps() { _CatchUp(); return the_VSI_fps; }
 double FGSteam::the_VACUUM_inhg = 0.0;
 double FGSteam::get_VACUUM_inhg() { _CatchUp(); return the_VACUUM_inhg; }
 
-double FGSteam::get_MH_deg () {
-    return FGBFI::getHeading () - FGBFI::getMagVar ();
-}
-double FGSteam::get_DG_deg () {
-    return FGBFI::getHeading () - FGBFI::getMagVar ();
-}
+double FGSteam::the_MH_err   = 0.0;
+double FGSteam::the_MH_deg   = 0.0;
+double FGSteam::the_MH_degps = 0.0;
+double FGSteam::get_MH_deg () { _CatchUp(); return the_MH_deg; }
 
-double FGSteam::get_TC_rad   () { return FGBFI::getSideSlip (); }
-double FGSteam::get_TC_radps () { return FGBFI::getRoll (); }
+double FGSteam::the_DG_deg   = 0.0;
+double FGSteam::the_DG_degps = 0.0;
+double FGSteam::the_DG_inhg  = 0.0;
+double FGSteam::get_DG_deg () { _CatchUp(); return the_DG_deg; }
+
+double FGSteam::the_TC_rad   = 0.0;
+double FGSteam::the_TC_std   = 0.0;
+double FGSteam::get_TC_rad () { _CatchUp(); return the_TC_rad; }
+double FGSteam::get_TC_std () { _CatchUp(); return the_TC_std; }
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -126,13 +130,123 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 void FGSteam::_CatchUp()
 { if ( _UpdatesPending != 0 )
   {	double dt = _UpdatesPending * 1.0 / current_options.get_model_hz();
+        double AccN, AccE, AccU;
 	int i,j;
 	double d, the_ENGINE_rpm;
-	/*
+
+#if 0
+        /**************************
+	There is the possibility that this is the first call.
+	If this is the case, we will emit the feature registrations
+	just to be on the safe side.  Doing it more than once will
+	waste CPU time but doesn't hurt anything really.
+	*/
+	if ( _UpdatesPending == 999 )
+	{ FGFeature::register_int (    "Avionics/NAV1/Localizer", &NAV1_LOC );
+	  FGFeature::register_double ( "Avionics/NAV1/Latitude",  &NAV1_Lat );
+	  FGFeature::register_double ( "Avionics/NAV1/Longitude", &NAV1_Lon );
+	  FGFeature::register_double ( "Avionics/NAV1/Radial",    &NAV1_Rad );
+	  FGFeature::register_double ( "Avionics/NAV1/Altitude",  &NAV1_Alt );
+	  FGFeature::register_int (    "Avionics/NAV2/Localizer", &NAV2_LOC );
+	  FGFeature::register_double ( "Avionics/NAV2/Latitude",  &NAV2_Lat );
+	  FGFeature::register_double ( "Avionics/NAV2/Longitude", &NAV2_Lon );
+	  FGFeature::register_double ( "Avionics/NAV2/Radial",    &NAV2_Rad );
+	  FGFeature::register_double ( "Avionics/NAV2/Altitude",  &NAV2_Alt );
+	  FGFeature::register_double ( "Avionics/ADF/Latitude",   &ADF_Lat );
+	  FGFeature::register_double ( "Avionics/ADF/Longitude",  &ADF_Lon );
+	}
+#endif
+
+	/**************************
 	Someone has called our update function and
 	it turns out that we are running somewhat behind.
 	Here, we recalculate everything for a 'dt' second step.
 	*/
+
+	/**************************
+	The ball responds to the acceleration vector in the body
+	frame, only the components perpendicular to the longitudinal
+	axis of the aircraft.  This is only related to actual
+	side slip for a symmetrical aircraft which is not touching
+	the ground and not changing its attitude.  Math simplifies
+	by assuming (for small angles) arctan(x)=x in radians.
+	Obvious failure mode is the absence of liquid in the
+	tube, which is there to damp the motion, so that instead
+	the ball will bounce around, hitting the tube ends.
+	More subtle flaw is having it not move or a travel limit
+	occasionally due to some dirt in the tube or on the ball.
+	*/
+	// the_TC_rad = - ( FGBFI::getSideSlip () ); /* incorrect */
+	d = - current_aircraft.fdm_state->get_A_Z_pilot();
+	if ( d < 1 ) d = 1;
+	set_lowpass ( & the_TC_rad,
+	        current_aircraft.fdm_state->get_A_Y_pilot () / d,
+	        dt );
+
+	/**************************
+	The rate of turn indication is from an electric gyro.
+	We should have it spin up with the master switch.
+	It is mounted at a funny angle so that it detects
+	both rate of bank (i.e. rolling into and out of turns)
+	and the rate of turn (i.e. how fast heading is changing).
+	*/
+	set_lowpass ( & the_TC_std,
+	        current_aircraft.fdm_state->get_Phi_dot ()
+	                * RAD_TO_DEG / 20.0 +
+	        current_aircraft.fdm_state->get_Psi_dot ()
+	                * RAD_TO_DEG / 3.0  , dt );
+
+	/**************************
+	We want to know the pilot accelerations,
+	to compute the magnetic compass errors.
+	*/
+	AccN = current_aircraft.fdm_state->get_V_dot_north();
+	AccE = current_aircraft.fdm_state->get_V_dot_east();
+	AccU = current_aircraft.fdm_state->get_V_dot_down()
+	     - 9.81 / 0.3;
+	if ( fabs(the_TC_rad) > 0.2 )
+	{       /* Massive sideslip jams it; it stops turning */
+	        the_MH_degps = 0.0;
+	        the_MH_err   = FGBFI::getHeading () - the_MH_deg;
+	} else
+	{       double MagDip, MagVar, CosDip;
+	        double FrcN, FrcE, FrcU, AccTot;
+	        double EdgN, EdgE, EdgU;
+	        double TrqN, TrqE, TrqU, Torque;
+	        /* Find a force vector towards exact magnetic north */
+	        MagVar = FGBFI::getMagVar() / RAD_TO_DEG;
+	        MagDip = FGBFI::getMagDip() / RAD_TO_DEG;
+	        CosDip = cos ( MagDip );
+	        FrcN = CosDip * cos ( MagVar );
+	        FrcE = CosDip * sin ( MagVar );
+	        FrcU = sin ( MagDip );
+	        /* Rotation occurs around acceleration axis,
+	           but axis magnitude is irrelevant.  So compute it. */
+	        AccTot = AccN*AccN + AccE*AccE + AccU*AccU;
+	        if ( AccTot > 1.0 )  AccTot = sqrt ( AccTot );
+	                        else AccTot = 1.0;
+	        /* Force applies to north marking on compass card */
+	        EdgN = cos ( the_MH_err / RAD_TO_DEG );
+	        EdgE = sin ( the_MH_err / RAD_TO_DEG );
+	        EdgU = 0.0;
+	        /* Apply the force to the edge to get torques */
+	        TrqN = EdgE * FrcU - EdgU * FrcE;
+	        TrqE = EdgU * FrcN - EdgN * FrcU;
+	        TrqU = EdgN * FrcE - EdgE * FrcN;
+	        /* Select the component parallel to the axis */
+	        Torque = ( TrqN * AccN + 
+	                   TrqE * AccE + 
+	                   TrqU * AccU ) * 5.0 / AccTot;
+	        /* The magnetic compass has angular momentum,
+	           so we apply a torque to it and wait */
+	        if ( dt < 1.0 )
+	        {       the_MH_degps= the_MH_degps * (1.0 - dt) - Torque;
+	                the_MH_err += dt * the_MH_degps;
+	        }
+	        if ( the_MH_err >  180.0 ) the_MH_err -= 360.0; else
+	        if ( the_MH_err < -180.0 ) the_MH_err += 360.0;
+	        the_MH_deg  = FGBFI::getHeading () - the_MH_err;
+	}
 
 	/**************************
 	This is not actually correct, but provides a
@@ -201,6 +315,7 @@ void FGSteam::_CatchUp()
 > have it tumble when you exceed the usual pitch or bank limits,
 > put in those insidious turning errors ... for now anyway.
 */
+	the_DG_deg = FGBFI::getHeading () - FGBFI::getMagVar ();
 
 	/**************************
 	Finished updates, now clear the timer 
@@ -216,19 +331,6 @@ void FGSteam::_CatchUp()
 
 
 double FGSteam::get_HackGS_deg () {
-
-#if 0
-    double x,y,dme;
-    if (0==NAV1_LOC) return 0.0;
-    y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
-    x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
-	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-    dme = x*x + y*y;
-    if ( dme > 0.1 ) x = sqrt ( dme ); else x = 0.3;
-    y = FGBFI::getAltitude() - NAV1_Alt;
-    return 3.0 - (y/x) * 60.0 / 6000.0;
-#endif
-
     if ( current_radiostack->get_nav1_inrange() && 
 	 current_radiostack->get_nav1_loc() )
     {
@@ -245,14 +347,6 @@ double FGSteam::get_HackGS_deg () {
 
 double FGSteam::get_HackVOR1_deg () {
     double r;
-
-#if 0
-    double x,y;
-    y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
-    x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
-	* cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-    r = atan2 ( x, y ) * RAD_TO_DEG - NAV1_Rad - FGBFI::getMagVar();
-#endif
 
     if ( current_radiostack->get_nav1_inrange() ) {
 	r = current_radiostack->get_nav1_radial() - 
@@ -276,14 +370,6 @@ double FGSteam::get_HackVOR1_deg () {
 
 double FGSteam::get_HackVOR2_deg () {
     double r;
-
-#if 0
-    double x,y;
-    y = 60.0 * ( NAV2_Lat - FGBFI::getLatitude () );
-    x = 60.0 * ( NAV2_Lon - FGBFI::getLongitude() )
-	* cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-    r = atan2 ( x, y ) * RAD_TO_DEG - NAV2_Rad - FGBFI::getMagVar();
-#endif
 
     if ( current_radiostack->get_nav2_inrange() ) {
 	r = current_radiostack->get_nav2_radial() -
@@ -315,14 +401,6 @@ double FGSteam::get_HackOBS2_deg () {
 
 double FGSteam::get_HackADF_deg () {
     double r;
-
-#if 0
-    double x,y;
-    y = 60.0 * ( ADF_Lat - FGBFI::getLatitude () );
-    x = 60.0 * ( ADF_Lon - FGBFI::getLongitude() )
-	* cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-    r = atan2 ( x, y ) * RAD_TO_DEG - FGBFI::getHeading ();
-#endif
 
     if ( current_radiostack->get_adf_inrange() ) {
 	r = current_radiostack->get_adf_heading() - FGBFI::getHeading() + 180.0;

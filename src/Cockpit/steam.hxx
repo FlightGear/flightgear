@@ -64,7 +64,7 @@ public:
 
 				// Velocities
   static double get_ASI_kias ();
-  static double get_TC_radps ();
+  static double get_TC_std ();
   static double get_VSI_fps ();
 
 				// Engine Gauges
@@ -81,8 +81,11 @@ public:
 
 private:
 	static double	the_ALT_ft;
+        static double   the_TC_rad, the_TC_std;
 	static double	the_STATIC_inhg, the_VACUUM_inhg;
 	static double	the_VSI_fps, the_VSI_case;
+        static double   the_MH_deg, the_MH_degps, the_MH_err;
+        static double   the_DG_deg, the_DG_degps, the_DG_inhg;
 
 	static int	_UpdatesPending;
 	static void	_CatchUp ();

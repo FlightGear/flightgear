@@ -183,8 +183,8 @@ createTurnCoordinator (int x, int y)
 				// moves with roll
   inst->addLayer(createTexture("Textures/Panel/turn.rgb"));
   inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_TC_radps,
-			  -30.0, 30.0, 1.0, 0.0);
+			  FGSteam::get_TC_std,
+			  -2.5, 2.5, 20.0, 0.0);
 
 				// Layer 2: little ball
 				// moves with slip/skid
@@ -227,18 +227,18 @@ createGyroCompass (int x, int y)
 				// rotates with heading
   inst->addLayer(createTexture("Textures/Panel/gyro-bg.rgb"));
   inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getHeading,
-			  -360.0, 360.0, -1.0, 0.0);
+			  FGSteam::get_MH_deg,
+			  -720.0, 720.0, -1.0, 0.0);
 
 				// Layer 1: heading bug
 				// rotates with heading and AP heading
   inst->addLayer(createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getHeading,
-			  -360.0, 360.0, -1.0, 0.0);
+			  FGSteam::get_MH_deg,
+			  -720.0, 720.0, -1.0, 0.0);
   inst->addTransformation(FGInstrumentLayer::ROTATION,
 			  FGBFI::getAPHeading,
-			  -360.0, 360.0, 1.0, 0.0);
+			  -720.0, 720.0, 1.0, 0.0);
 
 				// Layer 2: fixed center
   inst->addLayer(createTexture("Textures/Panel/gyro-fg.rgb"));

@@ -298,14 +298,14 @@ public:
 
     FG_VECTOR_3    v_dot_local_v;
     // inline double * get_V_dot_local_v() { return v_dot_local_v; }
-    // inline double get_V_dot_north() const { return v_dot_local_v[0]; }
-    // inline double get_V_dot_east() const { return v_dot_local_v[1]; }
-    // inline double get_V_dot_down() const { return v_dot_local_v[2]; }
-    /* inline void set_Accels_Local( double north, double east, double down ) {
+    inline double get_V_dot_north() const { return v_dot_local_v[0]; }
+    inline double get_V_dot_east() const { return v_dot_local_v[1]; }
+    inline double get_V_dot_down() const { return v_dot_local_v[2]; }
+    inline void set_Accels_Local( double north, double east, double down ) {
 	v_dot_local_v[0] = north;
 	v_dot_local_v[1] = east;
 	v_dot_local_v[2] = down;
-    } */
+    }
 
     FG_VECTOR_3    v_dot_body_v;
     // inline double * get_V_dot_body_v() { return v_dot_body_v; }
@@ -529,9 +529,9 @@ public:
 
     FG_VECTOR_3    euler_rates_v;
     // inline double * get_Euler_rates_v() { return euler_rates_v; }
-    // inline double get_Phi_dot() const { return euler_rates_v[0]; }
-    // inline double get_Theta_dot() const { return euler_rates_v[1]; }
-    // inline double get_Psi_dot() const { return euler_rates_v[2]; }
+    inline double get_Phi_dot() const { return euler_rates_v[0]; }
+    inline double get_Theta_dot() const { return euler_rates_v[1]; }
+    inline double get_Psi_dot() const { return euler_rates_v[2]; }
     inline void set_Euler_Rates( double phi, double theta, double psi ) {
 	euler_rates_v[0] = phi;
 	euler_rates_v[1] = theta;

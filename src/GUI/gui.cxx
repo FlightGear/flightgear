@@ -678,7 +678,7 @@ void guiFixPanel( void )
     int toggle_pause;
 
     if ( current_options.get_panel_status() ) {
-        FGView *v = &current_view;
+        // FGView *v = &current_view;
         FGTime *t = FGTime::cur_time_params;
 
         if( (toggle_pause = !t->getPause()) )
@@ -809,11 +809,11 @@ void ConfirmExitDialogInit(void)
         
         YNdialogBoxOkButton =  new puOneShot      (100, 10, 160, 50);
         YNdialogBoxOkButton -> setLegend          (gui_msg_OK);
+        YNdialogBoxOkButton -> makeReturnDefault  (TRUE );
         YNdialogBoxOkButton -> setCallback        (goodBye);
         
         YNdialogBoxNoButton =  new puOneShot      (240, 10, 300, 50);
         YNdialogBoxNoButton -> setLegend          (gui_msg_NO);
-        //      YNdialogBoxNoButton -> makeReturnDefault  (TRUE );
         YNdialogBoxNoButton -> setCallback        (goAwayYesNoCb);
     }
     FG_FINALIZE_PUI_DIALOG( YNdialogBox );

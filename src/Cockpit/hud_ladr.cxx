@@ -108,6 +108,7 @@ void HudLadder :: draw( void )
 
     glPushMatrix();
     glTranslatef( centroid.x, centroid.y, 0);
+    glScalef( current_options.get_fov()/55.0, 1.0, 1.0 );
     glRotatef(roll_value * RAD_TO_DEG, 0.0, 0.0, 1.0);
 
     // Draw the target spot.

@@ -327,7 +327,7 @@ int FGLaRCsim::copy_from_LaRCsim() {
     // set_Moments_Gear( M_l_gear, M_m_gear, M_n_gear );
 
     // Accelerations
-    // set_Accels_Local( V_dot_north, V_dot_east, V_dot_down );
+    set_Accels_Local( V_dot_north, V_dot_east, V_dot_down );
     set_Accels_Body( U_dot_body, V_dot_body, W_dot_body );
     set_Accels_CG_Body( A_X_cg, A_Y_cg, A_Z_cg );
     set_Accels_Pilot_Body( A_X_pilot, A_Y_pilot, A_Z_pilot );
