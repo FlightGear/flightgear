@@ -96,21 +96,12 @@ struct PlaneApp {
 
 class FGApproach : public FGATC {
 
-  char     type;
-  double   lon, lat;
-  double   elev;
-  double   x, y, z;
-  int      freq;
   int      bucket;
-  double   range;
-
   string active_runway;         
   double active_rw_hdg;
 
   bool     display;		// Flag to indicate whether we should be outputting to the display.
   bool     displaying;	        // Flag to indicate whether we are outputting to the display.
-  string   ident;		// Code of the airport its at.
-  string   name;		// Name transmitted in the broadcast.
   int      num_planes;          // number of planes on the stack
   PlaneApp planes[max_planes];  // Array of planes
   string   transmission;
@@ -146,20 +137,9 @@ public:
   //Indicate that this instance should not be outputting to the ATC display
   inline void SetNoDisplay(void) {display = false;}
   
-  inline char get_type() const { return type; }
-  inline double get_lon() const { return lon; }
-  inline double get_lat() const { return lat; }
-  inline double get_elev() const { return elev; }
-  inline double get_x() const { return x; }
-  inline double get_y() const { return y; }
-  inline double get_z() const { return z; }
   inline double get_bucket() const { return bucket; }
-  inline int get_freq() const { return freq; }
-  inline double get_range() const { return range; }
   inline int get_pnum() const { return num_planes; }
-  inline const char* GetIdent() { return ident.c_str(); }
   inline string get_trans_ident() { return trans_ident; }
-  inline string get_name() { return name; }
   inline atc_type GetType() { return APPROACH; }
   
 private:
@@ -198,66 +178,8 @@ private:
   
   //Update the transmission string
   void UpdateTransmission(void);
-  
-  friend istream& operator>> ( istream&, FGApproach& );
+
 };
 
-
-inline istream&
-operator >> ( istream& in, FGApproach& a )
-{
-    double f;
-    char ch;
-
-    static bool first_time = true;
-    static double julian_date = 0;
-    static const double MJD0    = 2415020.0;
-    if ( first_time ) {
-	julian_date = sgTimeCurrentMJD(0, 0) + MJD0;
-	first_time = false;
-    }
-
-    in >> a.type;
-    
-    if ( a.type == '[' )
-      return in >> skipeol;
-
-    in >> a.lat >> a.lon >> a.elev >> f >> a.range 
-       >> a.ident;
-
-    a.name = "";
-    in >> ch;
-    a.name += ch;
-    while(1) {
-	//in >> noskipws
-	in.unsetf(ios::skipws);
-	in >> ch;
-	a.name += ch;
-	if((ch == '"') || (ch == 0x0A)) {
-	    break;
-	}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
-    }
-    in.setf(ios::skipws);
-    //cout << "approach.name = " << a.name << '\n';
-
-    a.freq = (int)(f*100.0 + 0.5);
-
-    // generate cartesian coordinates
-    Point3D geod( a.lon * SGD_DEGREES_TO_RADIANS , a.lat * SGD_DEGREES_TO_RADIANS, 
-		  a.elev * SG_FEET_TO_METER );
-    Point3D cart = sgGeodToCart( geod );
-    a.x = cart.x();
-    a.y = cart.y();
-    a.z = cart.z();
-
-    // get bucket number
-    SGBucket buck(a.lon, a.lat);
-    a.bucket = buck.gen_index();
-
-    a.trans_ident = a.ident;
-    a.approach_failed = false;
-
-    return in >> skipeol;
-}
-
 #endif // _FG_APPROACH_HXX
+

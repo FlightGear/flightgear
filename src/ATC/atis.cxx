@@ -50,27 +50,21 @@ SG_USING_STD(cout);
 #include <Airports/runways.hxx>
 
 #include "atis.hxx"
-#include "atislist.hxx"
+#include "commlist.hxx"
+//#include "atislist.hxx"
 #include "ATCdisplay.hxx"
 #include "ATCutils.hxx"
 #include "ATCmgr.hxx"
 
 // Constructor
-FGATIS::FGATIS()
-: type(0),
-lon(0.0), lat(0.0),
-elev(0.0),
-x(0.0), y(0.0), z(0.0),
-freq(0),
-range(0),
+FGATIS::FGATIS() :
 display(false),
 displaying(false),
-ident(""),
-name(""),
 transmission(""),
 trans_ident(""),
 atis_failed(false),
 refname("atis")
+//type(ATIS)
 {
 }
 
@@ -136,7 +130,7 @@ void FGATIS::UpdateTransmission() {
 	hours = atoi((time_str.substr(1,2)).c_str());	//Warning - this is fragile if the 
 	//time string format changes
 	//cout << "In atis.cxx, hours = " << hours << endl;
-	phonetic_id = current_atislist->GetCallSign(ident, hours, 0);
+	phonetic_id = current_commlist->GetCallSign(ident, hours, 0);
 	phonetic_id_string = GetPhoneticIdent(phonetic_id);
 	transmission += " ";
 	transmission += phonetic_id_string;

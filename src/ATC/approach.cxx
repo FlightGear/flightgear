@@ -55,19 +55,12 @@ PlaneApp::PlaneApp()
 }
 
 //Constructor
-FGApproach::FGApproach()
-: type(0),
-  lon(0.0), lat(0.0), elev(0.0),
-  x(0.0), y(0.0), z(0.0),
-  freq(0),
+FGApproach::FGApproach() :
   bucket(0),
-  range(0.0),
   active_runway(""),
   active_rw_hdg(0.0),
   display(false),
   displaying(false),
-  ident(""),
-  name(""),
   num_planes(0),
   transmission(""),
   first(true),
@@ -106,6 +99,7 @@ void FGApproach::Update() {
     if ( planes[i].contact == 0) {
       double comm1_freq = comm1_node->getDoubleValue();
       if ( (int)(comm1_freq*100.0 + 0.5) == freq ) planes[i].contact = 1;
+	  //cout << "comm1 = " << (int)(comm1_freq*100.0 + 0.5) << " freq = " << freq << '\n';
     }
     else if ( planes[i].contact == 1 ) {
       if ( planes[i].wpn == 0 ) {    // calculate initial waypoints
@@ -256,8 +250,9 @@ void FGApproach::get_active_runway() {
 #else
   double hdg = stationweather.get_wind_from_heading_deg();
 #endif
-  
+
   FGRunway runway;
+  //if ( runways.search( "EGNX", int(hdg), &runway) ) {
   if ( runways.search( ident, int(hdg), &runway) ) {
     active_runway = runway.rwy_no;
     active_rw_hdg = runway.heading;

@@ -1,5 +1,4 @@
-// Implementation of FGATC - ATC subsystem abstract base class.
-// Nothing in here should ever get called.
+// Implementation of FGATC - ATC subsystem base class.
 //
 // Written by David Luff, started February 2002.
 //
@@ -40,12 +39,21 @@ void FGATC::SetDisplay() {
 void FGATC::SetNoDisplay() {
 }
 
-const char* FGATC::GetIdent() {
-    return("Error - base class function called in FGATC...");
-}
-
 atc_type FGATC::GetType() {
     return INVALID;
+}
+
+void FGATC::SetData(ATCData* d) {
+	lon = d->lon;
+	lat = d->lat;
+	elev = d->elev;
+	x = d->x;
+	y = d->y;
+	z = d->z;
+	range = d->range;
+	ident = d->ident;
+	name = d->name;
+	freq = d->freq;
 }
 
 ostream& operator << (ostream& os, atc_type atc) {

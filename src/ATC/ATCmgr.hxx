@@ -42,8 +42,6 @@ SG_USING_STD(string);
 SG_USING_STD(list);
 SG_USING_STD(map);
 
-const int max_app = 20;
-
 // Structure for holding details of the ATC frequencies at a given airport, and whether they are in the active list or not.
 // These can then be cross referenced with the [atis][tower][etc]lists which are stored by frequency.
 // Non-available services are denoted by a frequency of zero.
@@ -100,19 +98,15 @@ private:
     double elev;
 
     // Type of ATC control that the user's radios are tuned to.
-    atc_type comm1_type;
-    atc_type comm2_type;
+    atc_type comm_type[2];
 	
 	// Pointer to the ATC station that the user is currently tuned into.
-	FGATC* comm1_atc_ptr;
-	FGATC* comm2_atc_ptr;
+	FGATC* comm_atc_ptr[2];
 
-    double comm1_freq;
-    double comm2_freq;
+    double comm_freq[2];
 
     // Pointers to users current communication frequencies.
-    SGPropertyNode* comm1_node;
-    SGPropertyNode* comm2_node;
+    SGPropertyNode* comm_node[2];
 
     // Pointers to current users position
     SGPropertyNode* lon_node;
@@ -121,44 +115,19 @@ private:
 
     // Position of the ATC that the comm radios are tuned to in order to decide 
 	// whether transmission will be received.
-    double comm1_x, comm1_y, comm1_z, comm1_elev;
-    double comm2_x, comm2_y, comm2_z, comm2_elev;
+    double comm_x[2], comm_y[2], comm_z[2], comm_lon[2], comm_lat[2], comm_elev[2];
 
-    double comm1_range, comm1_effective_range;
-    bool comm1_valid; 
-    bool comm1_atis_valid;
-    bool comm1_tower_valid;
-    bool comm1_approach_valid;
-    const char* comm1_ident;
-    const char* comm1_atis_ident;
-    const char* comm1_tower_ident;
-    const char* comm1_approach_ident;
-    const char* last_comm1_ident;
-    const char* last_comm1_atis_ident;
-    const char* last_comm1_tower_ident;
-    const char* last_comm1_approach_ident;
-	
-    double comm2_range, comm2_effective_range;
-    bool comm2_valid;
-    bool comm2_atis_valid;
-    bool comm2_tower_valid;
-    bool comm2_approach_valid;
-    const char* comm2_ident;
-    const char* comm2_atis_ident;
-    const char* comm2_tower_ident;
-    const char* comm2_approach_ident;
-    const char* last_comm2_ident;
-    const char* last_comm2_atis_ident;
-    const char* last_comm2_tower_ident;
-    const char* last_comm2_approach_ident;
-	
+    double comm_range[2], comm_effective_range[2];
+    bool comm_valid[2]; 
+    const char* comm_ident[2];
+    const char* last_comm_ident[2];
+
     const char* approach_ident;
     bool last_in_range;
 
-    FGATIS atis;
+    //FGATIS atis;
     //FGGround ground;
     FGTower tower;
-    FGApproach approaches[max_app];
     FGApproach approach;
     //FGDeparture departure;
 
@@ -202,21 +171,32 @@ public:
 	// Display a dialog box with options relevant to the currently tuned ATC service.
 	void doStandardDialog();
 	
-	atc_type GetComm1ATCType() { return(comm1_type); }
-	FGATC* GetComm1ATCPointer() { return(comm1_atc_ptr); }
-	atc_type GetComm2ATCType() { return(comm2_type); }
-	FGATC* GetComm2ATCPointer() { return(comm2_atc_ptr); }
+	atc_type GetComm1ATCType() { return(comm_type[0]); }
+	FGATC* GetComm1ATCPointer() { return(comm_atc_ptr[0]); }
+	atc_type GetComm2ATCType() { return(comm_type[1]); }
+	FGATC* GetComm2ATCPointer() { return(comm_atc_ptr[1]); }
 	
 private:
 
     // Remove a class from the atc_list and delete it from memory
+	// *if* no other comm channel or AI plane is using it.
+    void CommRemoveFromList(const char* id, atc_type tp, int chan);
+
+    // Remove a class from the atc_list and delete it from memory
+	// Should be called from the above - not directly!!
     void RemoveFromList(const char* id, atc_type tp);
 
-    // Return a pointer to a class in the list (external interface to this is through GetATCPointer)
+    // Return a pointer to a class in the list given ICAO code and type
+	// (external interface to this is through GetATCPointer) 
+	// Return NULL if the given service is not in the list
+	// - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
     FGATC* FindInList(const char* id, atc_type tp);
 
     // Search the specified channel for stations on the same frequency and in range.
-    void Search(int chan);
+    void FreqSearch(int channel);
+	
+	// Search ATC stations by area in order that we appear 'on the radar'
+	void AreaSearch(); 
 
 };
 

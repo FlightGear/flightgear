@@ -61,10 +61,6 @@ public:
     // load all atis and build the map
     bool init( SGPath path );
 
-    // query the database for the specified frequency, lon and lat are
-    // in degrees, elev is in meters
-    bool query( double lon, double lat, double elev, double freq, FGTower *t );
-
 };
 
 

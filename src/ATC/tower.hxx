@@ -99,18 +99,7 @@ class FGTower : public FGATC {
 	inline void SetDisplay() {display = true;}
 	inline void SetNoDisplay() {display = false;}
 	
-	inline char get_type() const { return type; }
-	inline double get_lon() const { return lon; }
-	inline double get_lat() const { return lat; }
-	inline double get_elev() const { return elev; }
-	inline double get_x() const { return x; }
-	inline double get_y() const { return y; }
-	inline double get_z() const { return z; }
-	inline int get_freq() const { return freq; }
-	inline int get_range() const { return range; }
-	inline const char* GetIdent() { return ident.c_str(); }
 	inline string get_trans_ident() { return trans_ident; }
-	inline string get_name() { return name; }
 	inline atc_type GetType() { return TOWER; }
 	
 	// Make a request of tower control
@@ -122,17 +111,8 @@ class FGTower : public FGATC {
 	void IssueGoAround(TowerPlaneRec* tpr);
 	void IssueDepartureClearance(TowerPlaneRec* tpr);
 	
-	char type;
-	double lon, lat;
-	double elev;
-	double x, y, z;
-	int freq;
-	int range;
 	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
 	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
-	string ident;		// Code of the airport its at.
-	string name;		// Name generally used in transmissions.
-
 	
 	// Need a data structure to hold details of the various active planes
 	// or possibly another data structure with the positions of the inactive planes.
@@ -165,53 +145,5 @@ class FGTower : public FGATC {
 	
 	friend istream& operator>> ( istream&, FGTower& );
 };
-
-
-inline istream&
-operator >> ( istream& in, FGTower& t )
-{
-	double f;
-	char ch;
-	
-	in >> t.type;
-	
-	if ( t.type == '[' )
-		return in >> skipeol;
-	
-	in >> t.lat >> t.lon >> t.elev >> f >> t.range 
-	>> t.ident;
-	
-	t.name = "";
-	in >> ch;
-	t.name += ch;
-	while(1) {
-		//in >> noskipws
-		in.unsetf(ios::skipws);
-		in >> ch;
-		t.name += ch;
-		if((ch == '"') || (ch == 0x0A)) {
-			break;
-		}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
-	}
-	in.setf(ios::skipws);
-	//cout << "tower.name = " << t.name << '\n';
-	
-	t.freq = (int)(f*100.0 + 0.5);
-	
-	// cout << t.ident << endl;
-	
-	// generate cartesian coordinates
-	Point3D geod( t.lon * SGD_DEGREES_TO_RADIANS, t.lat * SGD_DEGREES_TO_RADIANS, t.elev );
-	Point3D cart = sgGeodToCart( geod );
-	t.x = cart.x();
-	t.y = cart.y();
-	t.z = cart.z();
-	
-	t.trans_ident = t.ident;
-	t.tower_failed = false;
-	
-	return in >> skipeol;
-}
-
 
 #endif  //_FG_TOWER_HXX

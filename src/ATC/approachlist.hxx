@@ -59,16 +59,6 @@ public:
   
   // load the approach data and build the map
   bool init( SGPath path );
-  
-  // query the database for the specified frequency, lon and lat are
-  // in degrees, elev is in meters
-  bool query_freq( double lon, double lat, double elev, double freq, FGApproach *a );
-
-  // query the database for the specified bucket number, lon and lat are
-  // in degrees
-  bool query_bck( double lon, double lat, double elev, FGApproach *a, int max_app, int &num_app );
-
-  bool get_name( string apt_id  );
 
 };
 

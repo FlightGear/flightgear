@@ -25,10 +25,11 @@
 #include <simgear/debug/logstream.hxx>
 
 #include "ATCmgr.hxx"
-#include "atislist.hxx"
+#include "commlist.hxx"
+//#include "atislist.hxx"
 //#include "groundlist.hxx"
-#include "towerlist.hxx"
-#include "approachlist.hxx"
+//#include "towerlist.hxx"
+//#include "approachlist.hxx"
 #include "ATCdisplay.hxx"
 
 /*
@@ -158,34 +159,16 @@ static bool do_ATC_dialog(const SGPropertyNode* arg) {
 
 
 FGATCMgr::FGATCMgr() {
-	comm1_ident = "";
-	comm1_atis_ident = "";
-	comm1_tower_ident = "";
-	comm1_approach_ident = "";
-	last_comm1_ident = "";
-	last_comm1_atis_ident = "";
-	last_comm1_tower_ident = "";
-	last_comm1_approach_ident = "";
+	comm_ident[0] = "";
+	comm_ident[1] = "";
+	last_comm_ident[0] = "";
+	last_comm_ident[1] = "";
 	approach_ident = "";
 	last_in_range = false;
-	comm1_atis_valid = false;
-	comm1_tower_valid = false;
-	comm1_approach_valid = false;
-	comm1_type = INVALID;
-	comm1_atc_ptr = NULL;
-	comm2_ident = "";
-	comm2_atis_ident = "";
-	comm2_tower_ident = "";
-	comm2_approach_ident = "";
-	last_comm2_ident = "";
-	last_comm2_atis_ident = "";
-	last_comm2_tower_ident = "";
-	last_comm2_approach_ident = "";
-	comm2_atis_valid = false;
-	comm2_tower_valid = false;
-	comm2_approach_valid = false;
-	comm2_type = INVALID;
-	comm2_atc_ptr = NULL;
+	comm_type[0] = INVALID;
+	comm_type[1] = INVALID;
+	comm_atc_ptr[0] = NULL;
+	comm_atc_ptr[1] = NULL;
 }
 
 FGATCMgr::~FGATCMgr() {
@@ -198,8 +181,8 @@ void FGATCMgr::unbind() {
 }
 
 void FGATCMgr::init() {
-	comm1_node = fgGetNode("/radios/comm[0]/frequencies/selected-mhz", true);
-	comm2_node = fgGetNode("/radios/comm[1]/frequencies/selected-mhz", true);
+	comm_node[0] = fgGetNode("/radios/comm[0]/frequencies/selected-mhz", true);
+	comm_node[1] = fgGetNode("/radios/comm[1]/frequencies/selected-mhz", true);
 	lon_node = fgGetNode("/position/longitude-deg", true);
 	lat_node = fgGetNode("/position/latitude-deg", true);
 	elev_node = fgGetNode("/position/altitude-ft", true);
@@ -208,6 +191,11 @@ void FGATCMgr::init() {
 	// global_events.Register( "fgATCSearch()", fgATCSearch,
 	//		    fgEVENT::FG_EVENT_READY, 800);
 	// For some reason the above doesn't compile - including Time/event.hxx stops compilation.
+	
+	// Initialise the frequency search map
+    current_commlist = new FGCommList;
+    SGPath p_comm( globals->get_fg_root() );
+    current_commlist->init( p_comm );
 	
 	// Initialise the airport_atc_map - we'll cheat for now and just hardcode KEMT and any others that may be needed for development
 	AirportATC *a = new AirportATC;
@@ -245,6 +233,7 @@ void FGATCMgr::init() {
 }
 
 void FGATCMgr::update(double dt) {
+	//cout << "Entering update..." << endl;
 	//Traverse the list of active stations.
 	//Only update one class per update step to avoid the whole ATC system having to calculate between frames.
 	//Eventually we should only update every so many steps.
@@ -253,25 +242,34 @@ void FGATCMgr::update(double dt) {
 		if(atc_list_itr == atc_list.end()) {
 			atc_list_itr = atc_list.begin();
 		}
+		//cout << "Updating " << (*atc_list_itr)->get_ident() << ' ' << (*atc_list_itr)->GetType() << '\n';
+		//cout << "Freq = " << (*atc_list_itr)->get_freq() << '\n';
 		(*atc_list_itr)->Update();
+		//cout << "Done ATC update..." << endl;
 		++atc_list_itr;
 	}
 	
 	// Search the tuned frequencies every now and then - this should be done with the event scheduler
 	static int i = 0;
+	if(i == 7) {
+		AreaSearch();
+	}
 	if(i == 15) {
-		Search(1);
+		//cout << "About to search(1)" << endl;
+		FreqSearch(1);
 	}
 	if(i == 30) {
-		Search(2);
+		//cout << "About to search(2)" << endl;
+		FreqSearch(2);
 		i = 0;
 	}
 	++i;
 }
-/*
-// Remove from list only if not needed by the AI system
-void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp) {
-	AirportATC a;
+
+// Remove from list only if not needed by the AI system or the other comm channel
+// TODO - implement me!!
+void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
+	/*AirportATC a;
 	if(GetAirportATCDetails((string)id, &a)) {
 		if(a.set_by_AI) {
 			// Don't remove
@@ -281,19 +279,23 @@ void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp) {
 		} else {
 			// remove
 		}
-	}
+	}*/
+	
+	// Hack - need to implement this properly
+	RemoveFromList(id, tp);
 }
-*/    
+    
 
 // Remove from list - should only be called from above or similar
+// This function *will* remove it from the list regardless of who else might want it.
 void FGATCMgr::RemoveFromList(const char* id, atc_type tp) {
 	//cout << "Requested type = " << tp << '\n';
 	//cout << "id = " << id << '\n';
 	atc_list_itr = atc_list.begin();
 	while(atc_list_itr != atc_list.end()) {
 		//cout << "type = " << (*atc_list_itr)->GetType() << '\n';
-		//cout << "Ident = " << (*atc_list_itr)->GetIdent() << '\n';
-		if( (!strcmp((*atc_list_itr)->GetIdent(), id))
+		//cout << "Ident = " << (*atc_list_itr)->get_ident() << '\n';
+		if( (!strcmp((*atc_list_itr)->get_ident(), id))
 			&& ((*atc_list_itr)->GetType() == tp) ) {
 				//Before removing it stop it transmitting!!
 				//cout << "OBLITERATING FROM LIST!!!\n";
@@ -308,19 +310,19 @@ void FGATCMgr::RemoveFromList(const char* id, atc_type tp) {
 }
 
 
-//DCL - this routine untested so far.
 // Find in list - return a currently active ATC pointer given ICAO code and type
+// Return NULL if the given service is not in the list
+// - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
 FGATC* FGATCMgr::FindInList(const char* id, atc_type tp) {
 	atc_list_itr = atc_list.begin();
 	while(atc_list_itr != atc_list.end()) {
-		if( (!strcmp((*atc_list_itr)->GetIdent(), id))
+		if( (!strcmp((*atc_list_itr)->get_ident(), id))
 		&& ((*atc_list_itr)->GetType() == tp) ) {
 			return(*atc_list_itr);
 		}	// Note that that can upset where we are in the list but that shouldn't really matter
 		++atc_list_itr;
 	}
-	// We need a fallback position
-	SG_LOG(SG_GENERAL, SG_ALERT, "*** Failed to find FGATC* in FGATCMgr::FindInList - this should not happen!");
+	// If we get here it's not in the list
 	return(NULL);
 }
 
@@ -351,8 +353,9 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 			return(FindInList(icao.c_str(), type));	// DCL - this untested so far.
 		} else {
 			FGTower* t = new FGTower;
-			if(current_towerlist->query(a->lon, a->lat, a->elev, a->tower_freq, &tower)) {
-				*t = tower;
+			ATCData data;
+			if(current_commlist->FindByFreq(a->lon, a->lat, a->elev, a->tower_freq, &data, TOWER)) {
+				t->SetData(&data);
 				atc_list.push_back(t);
 				a->tower_active = true;
 				airport_atc_map[icao] = a;
@@ -396,7 +399,9 @@ void FGATCMgr::Render(string msg, string refname, bool repeating) {
 		unsigned char* buf = v1.WriteMessage((char*)msg.c_str(), len, voice);
 		if(voice) {
 			FGSimpleSound* simple = new FGSimpleSound(buf, len);
-			simple->set_volume(2.0);
+			// TODO - at the moment the volume is always set off comm1 
+			// and can't be changed after the transmission has started.
+			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));
 			globals->get_soundmgr()->add(simple, refname);
 			if(repeating) {
 				globals->get_soundmgr()->play_looped(refname);
@@ -446,7 +451,7 @@ void FGATCMgr::doStandardDialog() {
 	//cout << "comm1_type = " << comm1_type << endl;
 	
 	// Second - customise the dialog box
-	switch(comm1_type) {
+	switch(comm_type[0]) {
 	case INVALID:
 		atcDialogCommunicationOptions->newList(NULL);
 		atcDialogMessage->setLabel("Not tuned in to any ATC service.");
@@ -480,312 +485,144 @@ void FGATCMgr::doStandardDialog() {
 	// This is in ATCDialogOK()
 }
 
-////////////////////////////////////////////////////////////////
-//
-// TODO - The whole ATC frequency storage and search is really
-//        really ugly and needs reworking at some point.
-//
-////////////////////////////////////////////////////////////////
-// Search the specified comm channel (1 or 2)
-void FGATCMgr::Search(int chan) {
+// Search for ATC stations by frequency
+void FGATCMgr::FreqSearch(int channel) {
+	int chan = channel - 1;		// Convert to zero-based for the arrays
+
+	ATCData data;	
+	double freq = comm_node[chan]->getDoubleValue();
+	lon = lon_node->getDoubleValue();
+	lat = lat_node->getDoubleValue();
+	elev = elev_node->getDoubleValue() * SG_FEET_TO_METER;
 	
-	if(chan == 1) {
-		////////////////////////////////////////////////////////////////////////
-		// Comm1.
-		////////////////////////////////////////////////////////////////////////
-		//cout << "In FGATCMgr::Search() - atc_list.size = " << atc_list.size() << '\n';
-		
-		comm1_freq = comm1_node->getDoubleValue();
-		//cout << "************* comm1_freq = " << comm1_freq << '\n';
-		double lon = lon_node->getDoubleValue();
-		double lat = lat_node->getDoubleValue();
-		double elev = elev_node->getDoubleValue() * SG_FEET_TO_METER;
-		
-		// We must be able to generalise some of the repetetive searching below!
-		
-		//Search for ATIS first
-		if(current_atislist->query(lon, lat, elev, comm1_freq, &atis)) {
-			//cout << "atis found in radiostack search !!!!" << endl;
-			//cout << "last_comm1_atis_ident = " << last_comm1_atis_ident << '\n';
-			//cout << "comm1_type " << comm1_type << '\n';
-			comm1_atis_ident = atis.GetIdent();
-			comm1_atis_valid = true;
-			if(last_comm1_atis_ident != comm1_atis_ident) {
-				if(last_comm1_atis_ident != "") {
-					RemoveFromList(last_comm1_atis_ident, ATIS);
-				}
-				last_comm1_atis_ident = comm1_atis_ident;
-				//cout << "last_comm1_atis_ident = " << last_comm1_atis_ident << '\n';
-				comm1_type = ATIS;
-				comm1_elev = atis.get_elev();
-				comm1_range = FG_ATIS_DEFAULT_RANGE;
-				comm1_effective_range = comm1_range;
-				comm1_x = atis.get_x();
-				comm1_y = atis.get_y();
-				comm1_z = atis.get_z();
-				FGATIS* a = new FGATIS;
-				*a = atis;
-				comm1_atc_ptr = a;
-				a->SetDisplay();
-				a->set_refname("atis1");
-				atc_list.push_back(a);
-				//cout << "Found a new atis station in range" << endl;
-				//cout << " id = " << atis.GetIdent() << endl;
-				return;  //This rather assumes that we never have more than one type of station in range.
-			}
-		} else {
-			if(comm1_atis_valid) {
-				//cout << "Removing ATIS " << comm1_atis_ident << " from list\n";
-				RemoveFromList(comm1_atis_ident, ATIS);
-				comm1_atis_valid = false;
-				if(comm1_type == ATIS) {
-					comm1_type = INVALID;
-				}
-				comm1_atis_ident = "";
-				//comm1_trans_ident = "";
-				last_comm1_atis_ident = "";
-				comm1_atc_ptr = NULL;
-			}
-			//cout << "not picking up atis" << endl;
-		}
-		
-		//Next search for tower
-		//cout << "comm1_freq = " << comm1_freq << '\n';
-		if(current_towerlist->query(lon, lat, elev, comm1_freq, &tower)) {
-			//cout << "tower found in radiostack search !!!!" << endl;
-			comm1_tower_ident = tower.GetIdent();
-			//cout << "comm1_tower_ident = " << comm1_tower_ident << '\n';
-			comm1_tower_valid = true;
-			if(last_comm1_tower_ident != comm1_tower_ident) {
-				if(last_comm1_tower_ident != "") {
-					RemoveFromList(last_comm1_tower_ident, TOWER);
-				}
-				last_comm1_tower_ident = comm1_tower_ident;
-				comm1_type = TOWER;
-				comm1_elev = tower.get_elev();
-				comm1_range = FG_TOWER_DEFAULT_RANGE;
-				comm1_effective_range = comm1_range;
-				comm1_x = tower.get_x();
-				comm1_y = tower.get_y();
-				comm1_z = tower.get_z();
-				FGTower* t = new FGTower;
-				*t = tower;
-				comm1_atc_ptr = t;
-				t->SetDisplay();
-				atc_list.push_back(t);
-				//cout << "Found a new tower station in range" << endl;
-				//cout << " id = " << tower.GetIdent() << endl;
-				return;  //This rather assumes that we never have more than one type of station in range.
-			}
-		} else {
-			if(comm1_tower_valid) {
-				//cout << "removing tower\n";
-				RemoveFromList(comm1_tower_ident, TOWER);
-				//comm1_valid = false;
-				if(comm1_type == TOWER) {
-					comm1_type = INVALID;	// Only invalidate if we haven't switched it to something else
-				}
-				comm1_tower_valid = false;
-				comm1_tower_ident = "";
-				last_comm1_tower_ident = "";
-				comm1_atc_ptr = NULL;
-				//comm1_ident = "";
-				//comm1_trans_ident = "";
-				//last_comm1_ident = "";
-			}
-			//cout << "not picking up tower" << endl;
-		}
-		/*
-		//Next search for Ground control
-		if(current_groundlist->query(lon, lat, elev, comm1_freq, &ground)) {
-			//cout << "Ground Control found in radiostack search !!!!" << endl;
-			comm1_ident = ground.GetIdent();
-			comm1_valid = true;
-			if((last_comm1_ident != comm1_ident) || (comm1_type != GROUND)) {
-				if(last_comm1_ident != "") {
-					RemoveFromList(last_comm1_ident, GROUND);
-				}
-				last_comm1_ident = comm1_ident;
-				comm1_type = GROUND;
-				comm1_elev = ground.get_elev();
-				comm1_range = FG_GROUND_DEFAULT_RANGE;
-				comm1_effective_range = comm1_range;
-				comm1_x = ground.get_x();
-				comm1_y = ground.get_y();
-				comm1_z = ground.get_z();
-				FGGround* g = new FGGround;
-				*g = ground;
-				g->SetDisplay();
-				atc_list.push_back(g);
-				// For now we will automatically make contact with ground when the radio is tuned.
-				// This rather assumes that the user tunes the radio at the appropriate place
-				// (ie. having just turned off the runway) and only uses ground control on arrival
-				// but its a start!
-				g->NewArrival(current_plane);
-				//cout << "Found a new ground station in range" << endl;
-				//cout << " id = " << ground.GetIdent() << endl;
-				return;  //This rather assumes that we never have more than one type of station in range.
-			}
-		} else {
-			if((comm1_valid) && (comm1_type == GROUND)) {
-				RemoveFromList(comm1_ident, GROUND);
-				comm1_valid = false;
-				comm1_type = INVALID;
-				comm1_ident = "";
-				//comm1_trans_ident = "";
-				last_comm1_ident = "";
-			}
-			//cout << "not picking up ground control" << endl;
-		}
-		*/
-		// ================================================================================
-		// Search for Approach stations
-		// ================================================================================
-		// init number of approach stations reachable by plane
-		int  num_app = 0;
-		
-		// search stations in range
-		current_approachlist->query_bck(lon, lat, elev, approaches, max_app, num_app);
-		if (num_app != 0) {
-			//cout << num_app << " approaches found in radiostack search !!!!" << endl;
-			
-			for ( int i=0; i<num_app; i++ ) {
-				bool new_app = true;
-				approach_ident = approaches[i].GetIdent();
-				
-				// check if station already exists on ATC stack
-				atc_list_itr = atc_list.begin();
-				while(atc_list_itr != atc_list.end()) {
-					//cout << "ATC list: " << (*atc_list_itr)->GetIdent() << endl;
-					if((!strcmp((*atc_list_itr)->GetIdent(), approach_ident))
-						&& ((*atc_list_itr)->GetType() == APPROACH) ) {
-							new_app = false;
-							string pid = "Player";
-							(*atc_list_itr)->AddPlane(pid);
-							(*atc_list_itr)->Update();
-							break;
-						}
-					++atc_list_itr;
-				}
-				// generate new Approach on ATC stack
-				if (new_app) {
-					FGApproach* a = new FGApproach;
-					*a = approaches[i];
-					string pid = "Player";
-					a->AddPlane(pid);
-					a->Update();
-					a->SetDisplay();
-					comm1_atc_ptr = a;
-					atc_list.push_back(a);
-					//cout << "Found a new approach station in range: Id = " 
-					//     << approaches[i].GetIdent() << endl;
-				}
-			}
-		}
-		
-		// remove planes which are out of range
-		atc_list_itr = atc_list.begin();
-		while(atc_list_itr != atc_list.end()) {
-			if((*atc_list_itr)->GetType() == APPROACH ) {
-				int np = (*atc_list_itr)->RemovePlane();
-				// if approach has no planes left remove it from ATC list
-				if ( np == 0) {
-					(*atc_list_itr)->SetNoDisplay();
-					(*atc_list_itr)->Update();
-					delete (*atc_list_itr);
-					atc_list_itr = atc_list.erase(atc_list_itr);
-					break;     // the other stations will be checked next time
-				}
-			}
-			++atc_list_itr;
-		}
-		
-	} else {	// chan = 2
-		
-		////////////////////////////////////////////////////////////////////////
-		// Comm2.
-		////////////////////////////////////////////////////////////////////////
-		//cout << "In FGATCMgr::Search() - atc_list.size = " << atc_list.size() << '\n';
-		
-		comm2_freq = comm2_node->getDoubleValue();
-		//cout << "************* comm1_freq = " << comm1_freq << '\n';
-		double lon = lon_node->getDoubleValue();
-		double lat = lat_node->getDoubleValue();
-		double elev = elev_node->getDoubleValue() * SG_FEET_TO_METER;
-		
-		if(current_atislist->query(lon, lat, elev, comm2_freq, &atis)) {
-			comm2_atis_ident = atis.GetIdent();
-			comm2_atis_valid = true;
-			if(last_comm2_atis_ident != comm2_atis_ident) {
-				if(last_comm2_atis_ident != "") {
-					RemoveFromList(last_comm2_atis_ident, ATIS);
-				}
-				last_comm2_atis_ident = comm2_atis_ident;
-				comm2_type = ATIS;
-				comm2_elev = atis.get_elev();
-				comm2_range = FG_ATIS_DEFAULT_RANGE;
-				comm2_effective_range = comm2_range;
-				comm2_x = atis.get_x();
-				comm2_y = atis.get_y();
-				comm2_z = atis.get_z();
-				FGATIS* a = new FGATIS;
-				*a = atis;
-				comm2_atc_ptr = a;
-				a->SetDisplay();
-				a->set_refname("atis2");
-				atc_list.push_back(a);
-				//cout << "Found a new atis station in range" << endl;
-				//cout << " id = " << atis.GetIdent() << endl;
-				return;  //This rather assumes that we never have more than one type of station in range.
-			}
-		} else {
-			if(comm2_atis_valid) {
-				RemoveFromList(comm2_atis_ident, ATIS);
-				comm2_atis_valid = false;
-				if(comm2_type == ATIS) {
-					comm2_type = INVALID;
-				}
-				comm2_atis_ident = "";
-				//comm2_trans_ident = "";
-				last_comm2_atis_ident = "";
-				comm2_atc_ptr = NULL;
-			}
-		}
-		
-		if(current_towerlist->query(lon, lat, elev, comm2_freq, &tower)) {
-			//cout << "tower found in radiostack search !!!!" << endl;
-			comm2_tower_ident = tower.GetIdent();
-			comm2_tower_valid = true;
-			if(last_comm2_tower_ident != comm2_tower_ident) {
-				if(last_comm2_tower_ident != "") {
-					RemoveFromList(last_comm2_tower_ident, TOWER);
-				}
-				last_comm2_tower_ident = comm2_tower_ident;
-				comm2_type = TOWER;
-				comm2_elev = tower.get_elev();
-				comm2_range = FG_TOWER_DEFAULT_RANGE;
-				comm2_effective_range = comm2_range;
-				comm2_x = tower.get_x();
-				comm2_y = tower.get_y();
-				comm2_z = tower.get_z();
-				FGTower* t = new FGTower;
-				*t = tower;
-				comm2_atc_ptr = t;
-				t->SetDisplay();
-				atc_list.push_back(t);
+	// Query the data store and get the closest match if any
+	if(current_commlist->FindByFreq(lon, lat, elev, freq, &data)) {
+		// We have a match
+		// What's the logic?
+		// If this channel not previously valid then easy - add ATC to list
+		// If this channel was valid then - Have we tuned to a different service?
+		// If so - de-register one and add the other
+		if(comm_valid[chan]) {
+			if((comm_ident[chan] == data.ident) && (comm_type[chan] == data.type)) {
+				// Then we're still tuned into the same service so do nought and return
 				return;
-			}
-		} else {
-			if(comm2_tower_valid) {
-				RemoveFromList(comm2_tower_ident, TOWER);
-				if(comm2_type == TOWER) {
-					comm2_type = INVALID;	// Only invalidate if we haven't switched it to something else
-				}
-				comm2_tower_valid = false;
-				comm2_tower_ident = "";
-				last_comm2_tower_ident = "";
-				comm2_atc_ptr = NULL;
+			} else {
+				// Something's changed - either the location or the service type
+				// We need to feed the channel in so we're not removing it if we're also tuned in on the other channel
+				CommRemoveFromList(comm_ident[chan], comm_type[chan], chan);
 			}
 		}
+		// At this point we can assume that we need to add the service.
+		comm_ident[chan] = (data.ident).c_str();
+		comm_type[chan] = data.type;
+		comm_x[chan] = (double)data.x;
+		comm_y[chan] = (double)data.y;
+		comm_z[chan] = (double)data.z;
+		comm_lon[chan] = (double)data.lon;
+		comm_lat[chan] = (double)data.lat;
+		comm_elev[chan] = (double)data.elev;
+		comm_valid[chan] = true;
+		
+		// This was a switch-case statement but the compiler didn't like the new variable creation with it. 
+		if(comm_type[chan] == ATIS) {
+			FGATIS* a = new FGATIS;
+			a->SetData(&data);
+			comm_atc_ptr[chan] = a;
+			a->SetDisplay();
+			//a->set_refname((chan) ? "atis2" : "atis1");		// FIXME - that line is limited to 2 channels
+			atc_list.push_back(a);
+		} else if (comm_type[chan] == TOWER) {
+			FGATC* app = FindInList(comm_ident[chan], TOWER);
+			if(app != NULL) {
+				// The station is already in the ATC list
+				app->SetDisplay();
+			} else {
+				// Generate the station and put in the ATC list
+				FGTower* t = new FGTower;
+				t->SetData(&data);
+				comm_atc_ptr[chan] = t;
+				t->SetDisplay();
+				atc_list.push_back(t);
+			}
+		} /*else if (comm_type[chan] == APPROACH) {
+			// We have to be a bit more carefull here since approaches are also searched by area
+			FGATC* app = FindInList(comm_ident[chan], APPROACH);
+			if(app != NULL) {
+				// The station is already in the ATC list
+				app->AddPlane("Player");
+				app->SetDisplay();
+			} else {
+				// Generate the station and put in the ATC list
+				FGApproach* a = new FGApproach;
+				a->SetData(&data);
+				a->AddPlane("Player");
+				atc_list.push_back(a);
+			}			
+		}*/
+	} else {
+		if(comm_valid[chan]) {
+			if(comm_type[chan] != APPROACH) {
+				// Currently approaches are removed by Alexander's out-of-range mechanism
+				CommRemoveFromList(comm_ident[chan], comm_type[chan], chan);
+			}
+			// Note that we *don't* call SetNoDisplay() here because the other comm channel
+			// might be tuned into the same station - this is handled by CommRemoveFromList(...)
+			comm_type[chan] = INVALID;
+			comm_atc_ptr[chan] = NULL;
+			comm_valid[chan] = false;
+		}
+	}
+}
+
+
+// Search ATC stations by area in order that we appear 'on the radar'
+void FGATCMgr::AreaSearch() {
+	// Search for Approach stations
+	comm_list_type approaches;
+	comm_list_iterator app_itr;
+	
+	lon = lon_node->getDoubleValue();
+	lat = lat_node->getDoubleValue();
+	elev = elev_node->getDoubleValue() * SG_FEET_TO_METER;
+	
+	// search stations in range
+	int num_app = current_commlist->FindByPos(lon, lat, elev, &approaches, APPROACH);
+	if (num_app != 0) {
+		//cout << num_app << " approaches found in radiostack search !!!!" << endl;
+		
+		for(app_itr = approaches.begin(); app_itr != approaches.end(); app_itr++) {
+			
+			FGATC* app = FindInList((app_itr->ident).c_str(), app_itr->type);
+			if(app != NULL) {
+				// The station is already in the ATC list
+				app->AddPlane("Player");
+				//app->Update();
+			} else {
+				// Generate the station and put in the ATC list
+				FGApproach* a = new FGApproach;
+				a->SetData(&(*app_itr));
+				a->AddPlane("Player");
+				//a->Update();
+				atc_list.push_back(a);
+			}
+		}
+	}
+	
+	// remove planes which are out of range
+	// TODO - I'm not entirely sure that this belongs here.
+	atc_list_itr = atc_list.begin();
+	while(atc_list_itr != atc_list.end()) {
+		if((*atc_list_itr)->GetType() == APPROACH ) {
+			int np = (*atc_list_itr)->RemovePlane();
+			// if approach has no planes left remove it from ATC list
+			if ( np == 0) {
+				(*atc_list_itr)->SetNoDisplay();
+				(*atc_list_itr)->Update();
+				delete (*atc_list_itr);
+				atc_list_itr = atc_list.erase(atc_list_itr);
+				break;     // the other stations will be checked next time
+			}
+		}
+		++atc_list_itr;
 	}
 }
