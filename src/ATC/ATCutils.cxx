@@ -30,6 +30,7 @@
 #include <Main/globals.hxx>
 
 #include "ATCutils.hxx"
+#include "ATCProjection.hxx"
 
 // Convert any number to spoken digits
 string ConvertNumToSpokenDigits(string n) {
@@ -280,3 +281,25 @@ double dclGetAirportElev( const string& id ) {
         return -9999.0;
     }
 }
+
+// Runway stuff
+// Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
+bool OnRunway(Point3D pt, FGRunway* rwy) {
+	FGATCAlignedProjection ortho;
+	Point3D centre(rwy->lon, rwy->lat, 0.0);	// We don't need the elev
+	ortho.Init(centre, rwy->heading);
+	
+	Point3D xyc = ortho.ConvertToLocal(centre);
+	Point3D xyp = ortho.ConvertToLocal(pt);
+	
+	//cout << "Length offset = " << fabs(xyp.y() - xyc.y()) << '\n';
+	//cout << "Width offset = " << fabs(xyp.x() - xyc.x()) << '\n';
+	
+	if((fabs(xyp.y() - xyc.y()) < ((rwy->length/2.0) + 5.0)) 
+		&& (fabs(xyp.x() - xyc.x()) < (rwy->width/2.0))) {
+		return(true);
+	}
+	
+	return(false);
+}
+	

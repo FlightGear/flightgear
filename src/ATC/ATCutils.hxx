@@ -19,6 +19,7 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include <Airports/simple.hxx>
+#include <Airports/runways.hxx>
 
 #include <math.h>
 #include <simgear/math/point3d.hxx>
@@ -91,3 +92,12 @@ bool dclFindAirportID( const string& id, FGAirport *a );
 
 // get airport elevation
 double dclGetAirportElev( const string& id );
+
+/****************
+*
+* Runways
+*
+****************/
+
+// Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
+bool OnRunway(Point3D pt, FGRunway* rwy);
