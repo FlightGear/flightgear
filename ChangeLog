@@ -1,4 +1,6 @@
-I haven't found a good way to maintain this file.  For now you can view
-the CVS logs at:
+See the NEWS file for a list of major changes between releases.
 
-    http://www.menet.umn.edu/~curt/fgfs/CVSlogs/FlightGear.html
+CVS commit messages are archived on the flightgear-cvslogs mailing list.
+For details on accessing the archive, see:
+
+  http://lists.sourceforge.net/lists/listinfo/flightgear-cvslogs
