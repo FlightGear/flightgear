@@ -171,23 +171,25 @@ void balloon::update()
 
     sgVec3 v;
 
+    FGPhysicalProperty wdbpos = WeatherDatabase->get(position);
+
     //get the current wind velocity and store it in v
-    //Point3D temp = WeatherDatabase->get(position).Wind;
+    //Point3D temp = wdbpos.Wind;
     //sgSetVec3(v, temp.x(), temp.y(), temp.z());
-    sgCopyVec3(v, WeatherDatabase->get(position).Wind );
+    sgCopyVec3(v, wdbpos.Wind );
 
     sgSubVec3(v, velocity);
     float speed = sgLengthVec3(v);
     
     // calculate the density of the gas inside
-    double rho = WeatherDatabase->get(position).AirPressure / (287.14 * T);
+    double rho = wdbpos.AirPressure / (287.14 * T);
 
     // calculate the mass of the air
     double mAir = rho * balloon_envelope_volume;
 
     // loss of energy by cooling down:
     float k = 1.0 / (1.0/4.8 + 1.0/(4.8+3.4*speed) + l_of_the_envelope/lambda);
-    float Q = k * balloon_envelope_area * (dt/3600.0) * (WeatherDatabase->get(position).Temperature - T);   //(dt/3600.0) = time since last call in hours
+    float Q = k * balloon_envelope_area * (dt/3600.0) * (wdbpos.Temperature - T);   //(dt/3600.0) = time since last call in hours
 
     // gain of energy by heating:
     if (fuel_left > 0.0)	//but only with some fuel left ;-)
@@ -217,7 +219,7 @@ void balloon::update()
 
     sgScaleVec3(fTotal, gravity_vector, mTotal);
     sgScaleVec3(fFriction, v, cw_envelope * wind_facing_area_of_balloon * WeatherDatabase->getAirDensity(position) * speed / 2.0);  //wind resistance
-    sgScaleVec3(fLift, gravity_vector, -balloon_envelope_volume * WeatherDatabase->get(position).AirPressure / (287.14 * WeatherDatabase->get(position).Temperature));
+    sgScaleVec3(fLift, gravity_vector, -balloon_envelope_volume * wdbpos.AirPressure / (287.14 * wdbpos.Temperature));
    
     sgAddVec3(fTotal, fLift);
     sgAddVec3(fTotal, fFriction);
