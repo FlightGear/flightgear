@@ -1,4 +1,16 @@
 
+ALSA surround sound (5.1) setup
+-------------------------------------
+(taken from http://floam.ascorbic.com/how-to/alsa5.1)
+
+Make a ~/.openalrc, we are telling OpenAL that we want surround sound and
+we want to use ALSA instead of OSS.
+
+(define speaker-num 4)
+(define devices '(alsa))
+(define alsa-out-device "surround40:0,0")
+
+
 ALSA and Arts
 -------------------------------------
 
