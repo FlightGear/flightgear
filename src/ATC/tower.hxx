@@ -57,7 +57,10 @@ enum tower_callback_type {
 	USER_REQUEST_VFR_DEPARTURE = 1,
 	USER_REQUEST_VFR_ARRIVAL = 2,
 	USER_REQUEST_VFR_ARRIVAL_FULL_STOP = 3,
-	USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO = 4
+	USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO = 4,
+	USER_REPORT_3_MILE_FINAL = 5,
+	USER_REPORT_DOWNWIND = 6,
+	USER_REPORT_RWY_VACATED = 7
 };
 
 // TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
@@ -89,6 +92,8 @@ public:
 	bool longFinalAcknowledged;
 	bool finalReported;
 	bool finalAcknowledged;
+	bool rwyVacatedReported;
+	bool rwyVacatedAcknowledged;
 	bool instructedToGoAround;	// set true if told by tower to go around
 	bool onRwy;		// is physically on the runway
 	bool nextOnRwy;		// currently projected by tower to be the next on the runway
@@ -153,6 +158,8 @@ public:
 	// in the future and consider multi-runway use, airplane weight etc.
 	inline string GetActiveRunway() { return activeRwy; }
 	inline RunwayDetails GetActiveRunwayDetails() { return rwy; }
+	// Get the pattern direction of the active rwy.
+	inline int GetPatternDirection() { return rwy.patternDirection; }
 	
 	inline void SetDisplay() { display = true; }
 	inline void SetNoDisplay() { display = false; }

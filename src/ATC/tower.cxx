@@ -45,6 +45,8 @@ TowerPlaneRec::TowerPlaneRec() :
 	longFinalAcknowledged(false),
 	finalReported(false),
 	finalAcknowledged(false),
+	rwyVacatedReported(false),
+	rwyVacatedAcknowledged(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -68,6 +70,8 @@ TowerPlaneRec::TowerPlaneRec(PlaneRec p) :
 	longFinalAcknowledged(false),
 	finalReported(false),
 	finalAcknowledged(false),
+	rwyVacatedReported(false),
+	rwyVacatedAcknowledged(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -91,6 +95,8 @@ TowerPlaneRec::TowerPlaneRec(Point3D pt) :
 	longFinalAcknowledged(false),
 	finalReported(false),
 	finalAcknowledged(false),
+	rwyVacatedReported(false),
+	rwyVacatedAcknowledged(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -115,6 +121,8 @@ TowerPlaneRec::TowerPlaneRec(PlaneRec p, Point3D pt) :
 	longFinalAcknowledged(false),
 	finalReported(false),
 	finalAcknowledged(false),
+	rwyVacatedReported(false),
+	rwyVacatedAcknowledged(false),
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
@@ -388,6 +396,13 @@ void FGTower::ReceiveUserCallback(int code) {
 		VFRArrivalContact("USER", FULL_STOP);
 	} else if(code == (int)USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO) {
 		VFRArrivalContact("USER", TOUCH_AND_GO);
+	} else if(code == (int)USER_REPORT_DOWNWIND) {
+		ReportDownwind("USER");
+	} else if(code == (int)USER_REPORT_3_MILE_FINAL) {
+		// For now we'll just call report final instead of report long final to avoid having to alter the response code
+		ReportFinal("USER");
+	} else if(code == (int)USER_REPORT_RWY_VACATED) {
+		ReportRunwayVacated("USER");
 	}
 }
 
@@ -401,7 +416,23 @@ void FGTower::Respond() {
 			string trns = t->plane.callsign;
 			trns += " ";
 			trns += name;
-			trns += " tower Report three mile straight in for runway ";
+			trns += " Tower";
+			// Should we clear staight in or for downwind entry?
+			// For now we'll clear straight in if greater than 1km from a line drawn through the threshold perpendicular to the rwy.
+			// Later on we might check the actual heading and direct some of those to enter on downwind or base.
+			Point3D op = ortho.ConvertToLocal(t->pos);
+			if(op.y() < -1000) {
+				trns += " Report three mile straight-in runway ";
+				current_atcdialog->add_entry(ident, "@AP Tower @CS @MI mile final Runway @RW", "Report Final", TOWER, (int)USER_REPORT_3_MILE_FINAL);
+			} else {
+				// For now we'll just request reporting downwind.
+				// TODO - In real life something like 'report 2 miles southwest right downwind rwy 19R' might be used
+				// but I'm not sure how to handle all permutations of which direction to tell to report from yet.
+				trns += " Report ";
+				trns += (rwy.patternDirection ? "right " : "left ");
+				trns += "downwind runway ";
+				current_atcdialog->add_entry(ident, "@AP Tower @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
+			}
 			trns += ConvertRwyNumToSpokenString(activeRwy);
 			if(display) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
@@ -415,16 +446,21 @@ void FGTower::Respond() {
 			for(tower_plane_rec_list_iterator twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
 				if((*twrItr)->plane.callsign == responseID) break;
 				++i;
-			}			
-			string trns = "Number ";
+			}
+			string trns = t->plane.callsign;
+			trns += " Number ";
 			trns += ConvertNumToSpokenDigits(i);
 			trns += " ";
-			trns += t->plane.callsign;
-			if(display) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+			if(i == 1) {
+				trns += "Cleared to land";
+				t->clearedToLand = true;
 			}
-			if(t->isUser && t->opType == TTT_UNKNOWN) {
-				t->opType = CIRCUIT;
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns);
+			}
+			if(t->isUser) {
+				if(t->opType == TTT_UNKNOWN) t->opType = CIRCUIT;
+				current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
 			}
 		} else if(t->holdShortReported) {
 			if(t->nextOnRwy) {
@@ -469,6 +505,7 @@ void FGTower::Respond() {
 				}
 				// TODO - add winds
 				t->clearedToLand = true;
+				if(t->isUser) current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
 			} else if(t->eta < 20) {
 				// Do nothing - we'll be telling it to go around in less than 10 seconds if the
 				// runway doesn't clear so no point in calling "continue approach".
@@ -478,9 +515,27 @@ void FGTower::Respond() {
 				t->clearedToLand = false;
 			}
 			if(display && disp) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+				globals->get_ATC_display()->RegisterSingleMessage(trns);
 			}
 			t->finalAcknowledged = true;
+		} else if(t->rwyVacatedReported && !(t->rwyVacatedAcknowledged)) {
+			string trns = t->plane.callsign;
+			if(separateGround) {
+				trns += " Contact ground on ";
+				double f = globals->get_ATC_mgr()->GetFrequency(ident, GROUND) / 100.0;	
+				char buf[10];
+				sprintf(buf, "%.2f", f);
+				trns += buf;
+				trns += " Good Day";
+			} else {
+				// Cop-out!!
+				trns += " cleared for taxi to the GA parking";
+			}
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns);
+			}
+			t->rwyVacatedAcknowledged = true;
+			// Maybe we should check that the plane really *has* vacated the runway!
 		}
 	}
 	freqClear = true;	// FIXME - set this to come true after enough time to render the message
@@ -978,6 +1033,14 @@ void FGTower::DoRwyDetails() {
 		ortho.Init(rwy.threshold_pos, rwy.hdg);	
 		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
 		rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
+		
+		// Set the pattern direction
+		// TODO - we'll check for a facilities file with this in eventually - for now assume left traffic except
+		// for certain circumstances (RH parallel rwy).
+		rwy.patternDirection = -1;		// Left
+		if(rwy.rwyID.size() == 3) {
+			rwy.patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
+		}
 	} else {
 		SG_LOG(SG_ATC, SG_ALERT, "Help  - can't get good runway in FGTower!!");
 		activeRwy = "NN";
@@ -1429,14 +1492,14 @@ void FGTower::VFRArrivalContact(string ID, LandingType opt) {
 	if(ID == "USER" || ID == usercall) {
 		t = FindPlane(usercall);
 		if(!t) {
-			cout << "NOT t\n";
+			//cout << "NOT t\n";
 			t = new TowerPlaneRec;
 			t->isUser = true;
 			t->pos.setlon(user_lon_node->getDoubleValue());
 			t->pos.setlat(user_lat_node->getDoubleValue());
 			t->pos.setelev(user_elev_node->getDoubleValue());
 		} else {
-			cout << "IS t\n";
+			//cout << "IS t\n";
 			// Oops - the plane is already registered with this tower - maybe we took off and flew a giant circuit without
 			// quite getting out of tower airspace - just ignore for now and treat as new arrival.
 			// TODO - Maybe should remove from departure and circuit list if in there though!!
@@ -1463,6 +1526,10 @@ void FGTower::VFRArrivalContact(string ID, LandingType opt) {
 	
 	appList.push_back(t);	// Not necessarily permanent
 	AddToTrafficList(t);
+	
+	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL_FULL_STOP, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO, TOWER);
 }
 
 void FGTower::RequestDepartureClearance(string ID) {
@@ -1470,6 +1537,10 @@ void FGTower::RequestDepartureClearance(string ID) {
 }
 	
 void FGTower::ReportFinal(string ID) {
+	if(ID == "USER") {
+		ID = fgGetString("/sim/user/callsign");
+		current_atcdialog->remove_entry(ident, USER_REPORT_3_MILE_FINAL, TOWER);
+	}
 	TowerPlaneRec* t = FindPlane(ID);
 	if(t) {
 		t->finalReported = true;
@@ -1482,7 +1553,23 @@ void FGTower::ReportFinal(string ID) {
 	}
 }
 
-//void FGTower::ReportLongFinal(string ID);
+void FGTower::ReportLongFinal(string ID) {
+	if(ID == "USER") {
+		ID = fgGetString("/sim/user/callsign");
+		current_atcdialog->remove_entry(ident, USER_REPORT_3_MILE_FINAL, TOWER);
+	}
+	TowerPlaneRec* t = FindPlane(ID);
+	if(t) {
+		t->longFinalReported = true;
+		t->longFinalAcknowledged = false;
+		if(!(t->clearedToLand)) {
+			responseReqd = true;
+		} // possibly respond with wind even if already cleared to land?
+	} else {
+		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportLongFinal(...)");
+	}
+}
+
 //void FGTower::ReportOuterMarker(string ID);
 //void FGTower::ReportMiddleMarker(string ID);
 //void FGTower::ReportInnerMarker(string ID);
@@ -1490,6 +1577,17 @@ void FGTower::ReportFinal(string ID) {
 
 void FGTower::ReportRunwayVacated(string ID) {
 	//cout << "Report Runway Vacated Called...\n";
+	if(ID == "USER") {
+		ID = fgGetString("/sim/user/callsign");
+		current_atcdialog->remove_entry(ident, USER_REPORT_RWY_VACATED, TOWER);
+	}
+	TowerPlaneRec* t = FindPlane(ID);
+	if(t) {
+		t->rwyVacatedReported = true;
+		responseReqd = true;
+	} else {
+		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportRunwayVacated(...)");
+	}
 }
 
 TowerPlaneRec* FGTower::FindPlane(string ID) {
@@ -1512,7 +1610,10 @@ TowerPlaneRec* FGTower::FindPlane(string ID) {
 
 void FGTower::ReportDownwind(string ID) {
 	//cout << "ReportDownwind(...) called\n";
-	// Tell the plane reporting what number she is in the circuit
+	if(ID == "USER") {
+		ID = fgGetString("/sim/user/callsign");
+		current_atcdialog->remove_entry(ident, USER_REPORT_DOWNWIND, TOWER);
+	}
 	TowerPlaneRec* t = FindPlane(ID);
 	if(t) {
 		t->downwindReported = true;

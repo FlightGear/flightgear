@@ -19,6 +19,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+/*==========================================================
+
+TODO list.
+
+Should get pattern direction from tower.
+
+Need to continually monitor and adjust deviation from glideslope
+during descent to avoid occasionally landing short or long.
+
+============================================================*/
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

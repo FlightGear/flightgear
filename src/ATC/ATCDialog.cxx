@@ -254,41 +254,33 @@ void FGATCDialog::add_entry(string station, string transmission, string menutext
   a.menuentry = menutext;
   a.callback_code = code;
 
-  //atcmentrylist_station[station.c_str()].push_back(a);
   (available_dialog[type])[station.c_str()].push_back(a);
 
 }
 
 void FGATCDialog::remove_entry( const string &station, const string &trans, atc_type type ) {
-  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
-  atcmentry_vec_iterator current  = atcmlist.begin();
-  atcmentry_vec_iterator last     = atcmlist.end();
-  
-  while(current != last) {
-    if(current->transmission == trans) current = atcmlist.erase(current);
+  atcmentry_vec_type* p = &((available_dialog[type])[station]);
+  atcmentry_vec_iterator current  = p->begin();  
+  while(current != p->end()) {
+    if(current->transmission == trans) current = p->erase(current);
 	else ++current;
   }
 }
 
 void FGATCDialog::remove_entry( const string &station, int code, atc_type type ) {
-  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
-  atcmentry_vec_iterator current  = atcmlist.begin();
-  atcmentry_vec_iterator last     = atcmlist.end();
-  
-  while(current != last) {
-    if(current->callback_code == code) current = atcmlist.erase(current);
+  atcmentry_vec_type* p = &((available_dialog[type])[station]);
+  atcmentry_vec_iterator current  = p->begin();
+  while(current != p->end()) {
+    if(current->callback_code == code) current = p->erase(current);
 	else ++current;
   }
 }
 
 // query the database whether the transmission is already registered; 
 bool FGATCDialog::trans_reg( const string &station, const string &trans, atc_type type ) {
-  //atcmentry_list_type     atcmlist = atcmentrylist_station[station];
-  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
-  atcmentry_vec_iterator current  = atcmlist.begin();
-  atcmentry_vec_iterator last     = atcmlist.end();
-  
-  for ( ; current != last ; ++current ) {
+  atcmentry_vec_type* p = &((available_dialog[type])[station]);
+  atcmentry_vec_iterator current  = p->begin();
+  for ( ; current != p->end() ; ++current ) {
     if ( current->transmission == trans ) return true;
   }
   return false;
@@ -296,12 +288,9 @@ bool FGATCDialog::trans_reg( const string &station, const string &trans, atc_typ
 
 // query the database whether the transmission is already registered; 
 bool FGATCDialog::trans_reg( const string &station, int code, atc_type type ) {
-  //atcmentry_list_type     atcmlist = atcmentrylist_station[station];
-  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
-  atcmentry_vec_iterator current  = atcmlist.begin();
-  atcmentry_vec_iterator last     = atcmlist.end();
-  
-  for ( ; current != last ; ++current ) {
+  atcmentry_vec_type* p = &((available_dialog[type])[station]);
+  atcmentry_vec_iterator current  = p->begin();
+  for ( ; current != p->end() ; ++current ) {
     if ( current->callback_code == code ) return true;
   }
   return false;
@@ -366,7 +355,7 @@ void FGATCDialog::PopupDialog() {
 				} 
 				optList[k] = NULL;
 				atcDialogCommunicationOptions->newList(optList);
-				atcDialogCommunicationOptions->setSize(w-100, h-100);
+				atcDialogCommunicationOptions->setSize(w-100, h-90);
 				atcDialogCommunicationOptions->reveal();
 				atcDialogMessage -> setLabel( "ATC Menu" );
 				atcDialogMessage -> setPosition(w / 2, h - 30);

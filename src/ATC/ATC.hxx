@@ -95,6 +95,7 @@ struct RunwayDetails {
 	double length;	// In *METERS*
 	double width;	// ditto
 	string rwyID;
+	int patternDirection;	// -1 for left, 1 for right
 };
 
 ostream& operator << (ostream& os, atc_type atc);
