@@ -53,6 +53,8 @@ SG_USING_STD(vector);
 
 #if defined( UL_WIN32 )
 #define TGT_PLATFORM	"windows"
+#elif defined ( UL_MAC_OSX )
+#define TGT_PLATFORM    "mac"
 #else
 #define TGT_PLATFORM	"unix"
 #endif
