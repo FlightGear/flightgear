@@ -375,7 +375,7 @@ void fgDEM::read_b_record( void ) {
 int fgDEM::parse( void ) {
     int i;
 
-    cur_row = 0;
+    cur_col = 0;
 
     read_a_record();
 
@@ -772,6 +772,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/05/02 01:49:21  curt
+// Fixed a bug where the wrong variable was being initialized.
+//
 // Revision 1.5  1998/04/25 15:00:32  curt
 // Changed "r" to "rb" in gzopen() options.  This fixes bad behavior in win32.
 //
