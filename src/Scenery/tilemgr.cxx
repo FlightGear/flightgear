@@ -402,16 +402,17 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 
     // no reason to update this if we haven't moved...
     if ( longitude != last_longitude || latitude != last_latitude ) {
-      // update current elevation... 
-      if (updateCurrentElevAtPos(abs_pos_vector, center)) {
-        last_longitude = longitude;
-        last_latitude = latitude;
-      }
+        // update current elevation... 
+        if ( updateCurrentElevAtPos( abs_pos_vector, center )
+             )
+            /*if ( updateCurrentElevAtPos( abs_pos_vector,
+                                     globals->get_scenery()->get_next_center() )
+                                     )*/
+        {
+            last_longitude = longitude;
+            last_latitude = latitude;
+        }
     }
-
-#if 0
-    }
-#endif
 
     return 1;
 }
@@ -457,25 +458,26 @@ int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
     
     bool hit = false;
     if ( fabs(sc[0]) > 1.0 || fabs(sc[1]) > 1.0 || fabs(sc[2]) > 1.0 ) {
-       // scenery center has been properly defined so any hit
-       // should be valid (and not just luck)
-       hit = fgCurrentElev(abs_pos_vector,
-	  sc,
-	  current_tile->get_terra_transform(),
-	  &hit_list,
-	  &hit_elev,
-	  &hit_radius,
-          hit_normal);
+        // scenery center has been properly defined so any hit should
+        // be valid (and not just luck)
+        hit = fgCurrentElev(abs_pos_vector,
+                            sc,
+                            // current_tile->get_terra_transform(),
+                            &hit_list,
+                            &hit_elev,
+                            &hit_radius,
+                            hit_normal);
     }
 
     if ( hit ) {
-          globals->get_scenery()->set_cur_elev( hit_elev );
-          globals->get_scenery()->set_cur_radius( hit_radius );
-          globals->get_scenery()->set_cur_normal( hit_normal );
+        // cout << "elev = " << hit_elev << " " << hit_radius << endl;
+        globals->get_scenery()->set_cur_elev( hit_elev );
+        globals->get_scenery()->set_cur_radius( hit_radius );
+        globals->get_scenery()->set_cur_normal( hit_normal );
     } else {
-          globals->get_scenery()->set_cur_elev( -9999.0 );
-          globals->get_scenery()->set_cur_radius( 0.0 );
-          globals->get_scenery()->set_cur_normal( hit_normal );
+        globals->get_scenery()->set_cur_elev( -9999.0 );
+        globals->get_scenery()->set_cur_radius( 0.0 );
+        globals->get_scenery()->set_cur_normal( hit_normal );
     }
     return hit;
 }
