@@ -64,7 +64,11 @@
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
-#include <Joystick/joystick.h>
+
+#ifdef ENABLE_JOYSTICK_SUPPORT
+#  include <Joystick/joystick.hxx>
+#endif
+
 #include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
@@ -464,8 +468,6 @@ static void fgMainLoop( void ) {
     int elapsed, multi_loop;
     int i;
     double accum;
-    // double joy_x, joy_y;
-    // int joy_b1, joy_b2;
 
     c = &cur_control_params;
     f = current_aircraft.flight;
@@ -511,12 +513,10 @@ static void fgMainLoop( void ) {
     // update "time"
     fgTimeUpdate(f, t);
 
-    // Read joystick
-    /* fgJoystickRead( &joy_x, &joy_y, &joy_b1, &joy_b2 );
-    printf( "Joystick X %f  Y %f  B1 %d  B2 %d\n",  
-	    joy_x, joy_y, joy_b1, joy_b2 );
-    fgElevSet( -joy_y );
-    fgAileronSet( joy_x ); */
+#ifdef ENABLE_JOYSTICK_SUPPORT
+    // Read joystick and update control settings
+    fgJoystickRead();
+#endif
 
     // Get elapsed time for this past frame
     elapsed = fgGetTimeInterval();
@@ -894,6 +894,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.60  1998/10/25 10:57:18  curt
+// Changes to use the new joystick library if it is available.
+//
 // Revision 1.59  1998/10/17 01:34:21  curt
 // C++ ifying ...
 //

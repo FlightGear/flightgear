@@ -13,6 +13,13 @@ if ENABLE_WIN32_AUDIO
 LIBS += -lwinmm
 endif
 
+if ENABLE_JOYSTICK_SUPPORT
+DEFS += -DENABLE_JOYSTICK_SUPPORT
+JOYSTICK_LIBS = $(top_builddir)/Simulator/Joystick/libJoystick.a
+else
+JOYSTICK_LIBS = 
+endif
+
 if ENABLE_XMESA_FX
 DEFS += -DXMESA -DFX
 endif
@@ -46,8 +53,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Objects/libObjects.a \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
-        $(top_builddir)/Simulator/Joystick/libJoystick.a \
-	$(AUDIO_LIBS) \
+	$(JOYSTICK_LIBS) $(AUDIO_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \

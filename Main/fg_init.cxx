@@ -50,7 +50,11 @@
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
-#include <Joystick/joystick.h>
+
+#ifdef ENABLE_JOYSTICK_SUPPORT
+#  include <Joystick/joystick.hxx>
+#endif
+
 #include <Math/fg_geodesy.hxx>
 #include <Math/fg_random.h>
 #include <Math/point3d.hxx>
@@ -345,12 +349,14 @@ int fgInitSubsystems( void )
 	      FG_Altitude * FEET_TO_METER);
     // end of thing that I just stuck in that I should probably move
 
+#ifdef ENABLE_JOYSTICK_SUPPORT
     // Joystick support
-    if (fgJoystickInit(0) ) {
+    if ( fgJoystickInit() ) {
 	// Joystick initialized ok.
     } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Joystick initialization!\n" );
+    	fgPrintf( FG_GENERAL, FG_ALERT, "Error in Joystick initialization!\n" );
     }
+#endif
 
     // Autopilot init added here, by Jeff Goeke-Smith
     fgAPInit(&current_aircraft);
@@ -362,6 +368,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.45  1998/10/25 10:57:21  curt
+// Changes to use the new joystick library if it is available.
+//
 // Revision 1.44  1998/10/18 01:17:17  curt
 // Point3D tweaks.
 //
