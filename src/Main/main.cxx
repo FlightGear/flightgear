@@ -445,7 +445,7 @@ void fgRenderFrame() {
 	// now work without seg faulting the system.
 
 	// calculate our current position in cartesian space
-	scenery.set_center( scenery.get_next_center() );
+	globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
 
 	// update view port
 	fgReshape( fgGetInt("/sim/startup/xsize"),
@@ -584,8 +584,9 @@ void fgRenderFrame() {
 	ssgSetFOV( current__view->get_h_fov(),
 		   current__view->get_v_fov() );
 
-	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-	    - scenery.get_cur_elev();
+	double agl =
+            current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
+	    - globals->get_scenery()->get_cur_elev();
 
         if ( agl > 10.0 ) {
             scene_nearplane = 10.0f;
@@ -769,7 +770,9 @@ void fgUpdateTimeDepCalcs() {
     // cout << "cur_fdm_state->get_inited() = " << cur_fdm_state->get_inited() 
     //      << " cur_elev = " << scenery.get_cur_elev() << endl;
 
-    if ( !cur_fdm_state->get_inited() && scenery.get_cur_elev() > -9990 ) {
+    if ( !cur_fdm_state->get_inited() &&
+         globals->get_scenery()->get_cur_elev() > -9990 )
+    {
 	SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");  
 	
 	cur_fdm_state->init();
@@ -897,16 +900,18 @@ static void fgMainLoop( void ) {
 	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
 	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
-    if ( scenery.get_cur_elev() > -9990 && cur_fdm_state->get_inited() ) {
+    if ( globals->get_scenery()->get_cur_elev() > -9990
+         && cur_fdm_state->get_inited() )
+    {
 	if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
-	     (scenery.get_cur_elev() + alt_adjust_m - 3.0) ) {
+	     (globals->get_scenery()->get_cur_elev() + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
 		   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-		   scenery.get_cur_elev() + alt_adjust_m - 3.0,
-		   scenery.get_cur_elev() + alt_adjust_m );
-	    cur_fdm_state->set_Altitude( scenery.get_cur_elev() 
-                                                + alt_adjust_m );
+		   globals->get_scenery()->get_cur_elev() + alt_adjust_m - 3.0,
+		   globals->get_scenery()->get_cur_elev() + alt_adjust_m );
+	    cur_fdm_state->set_Altitude( globals->get_scenery()->get_cur_elev() 
+                                         + alt_adjust_m );
 
 	    SG_LOG( SG_ALL, SG_DEBUG, 
 		    "<*> resetting altitude to " 
@@ -1850,7 +1855,7 @@ void fgUpdateDCS (void) {
         Point3D obj_pos = sgGeodToCart( obj_posn );
 
         // Translate moving object w.r.t eye
-        Point3D Objtrans = obj_pos-scenery.get_center();
+        Point3D Objtrans = obj_pos - globals->get_scenery()->get_center();
         bz[0]=Objtrans.x();
         bz[1]=Objtrans.y();
         bz[2]=Objtrans.z();

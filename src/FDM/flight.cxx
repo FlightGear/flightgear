@@ -188,7 +188,7 @@ FGInterface::common_init ()
                    * SGD_DEGREES_TO_RADIANS );
     set_Latitude( fgGetDouble("/position/latitude-deg")
                   * SGD_DEGREES_TO_RADIANS );
-    double ground_elev_m = scenery.get_cur_elev();
+    double ground_elev_m = globals->get_scenery()->get_cur_elev();
     double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
     if ( fgGetBool("/sim/startup/onground")
          || fgGetDouble("/position/altitude-ft") < ground_elev_ft ) {
@@ -448,7 +448,8 @@ void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
     _set_Geodetic_Position( lat, lon, alt );
 
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET );
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
@@ -504,7 +505,8 @@ void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
     _set_Geodetic_Position( lat_geod, lon, alt );
 
     _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET );
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );

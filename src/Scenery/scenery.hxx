@@ -83,13 +83,6 @@ public:
 };
 
 
-extern FGScenery scenery;
-
-
-// Initialize the Scenery Management system
-int fgSceneryInit( void );
-
-
 #endif // _SCENERY_HXX
 
 

@@ -42,10 +42,6 @@
 #include "scenery.hxx"
 
 
-// Shared structure to hold current scenery parameters
-FGScenery scenery;
-
-
 // Scenery Management system
 FGScenery::FGScenery() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing scenery subsystem" );

@@ -400,7 +400,7 @@ void fgUpdateMoonPos( void ) {
     Point3D vp( v->get_view_pos()[0],
 		v->get_view_pos()[1],
 		v->get_view_pos()[2] );
-    rel_moonpos = l->fg_moonpos - ( vp + scenery.get_center() );
+    rel_moonpos = l->fg_moonpos - ( vp + globals->get_scenery()->get_center() );
     sgSetVec3( to_moon, rel_moonpos.x(), rel_moonpos.y(), rel_moonpos.z() );
     // printf( "Vector to moon = %.2f %.2f %.2f\n",
     //         to_moon[0], to_moon[1], to_moon[2]);

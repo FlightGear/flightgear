@@ -75,7 +75,7 @@ static void global2raw( const FGControls *global, FGRawCtrls *raw ) {
 	raw->brake[i] =  globals->get_controls()->get_brake(i);
     }
 
-    raw->hground = scenery.get_cur_elev();
+    raw->hground = globals->get_scenery()->get_cur_elev();
 }
 
 
@@ -97,7 +97,7 @@ static void raw2global( const FGRawCtrls *raw, FGControls *global ) {
 	    globals->get_controls()->set_brake( i, raw->brake[i] );
 	}
 	globals->get_controls()->set_gear_down( raw->gear_handle );
-	scenery.set_cur_elev( raw->hground );
+	globals->get_scenery()->set_cur_elev( raw->hground );
     } else {
 	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in raw2global()" );
 	SG_LOG( SG_IO, SG_ALERT,

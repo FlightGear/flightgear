@@ -190,7 +190,7 @@ void FGADA::init() {
     copy_to_FGADA();
 	// Write FGExternal structure from socket to establish connection
 	int result = fdmsock->write(OutBuffer, nbytes);
-	printf("Connection established.\n");
+	printf("Connection established = %d.\n", result);
     }
 }
 
@@ -222,15 +222,15 @@ void FGADA::update( double dt ) {
 
     copy_to_FGADA();
     fgGetDouble("/sim/view/offset",view_offset);
-	if ( view_offset == 0.0) {
-         memcpy (&OutBuffer, &visuals_to_sixdof, sizeof (OutBuffer));
-		 int result = fdmsock->write(OutBuffer, nbytes);
-	}
+    if ( view_offset == 0.0) {
+        memcpy (&OutBuffer, &visuals_to_sixdof, sizeof (OutBuffer));
+        fdmsock->write(OutBuffer, nbytes);
+    }
 }
 
 // Convert from the FGInterface struct to the FGADA struct (output)
 bool FGADA::copy_to_FGADA () {
-    ground_elevation = scenery.get_cur_elev();
+    ground_elevation = globals->get_scenery()->get_cur_elev();
     return true;
 }
 

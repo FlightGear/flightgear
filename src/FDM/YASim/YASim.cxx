@@ -233,7 +233,7 @@ void YASim::copyToYASim(bool copyState)
 
     // The ground elevation doesn't come from FGInterface; query it
     // from the scenery and set it for others to find.
-    double ground = scenery.get_cur_elev();
+    double ground = globals->get_scenery()->get_cur_elev();
     _set_Runway_altitude(ground * FT2M);
     // cout << "YASIM: ground = " << ground << endl;
 

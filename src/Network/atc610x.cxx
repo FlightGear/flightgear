@@ -272,9 +272,17 @@ bool FGATC610x::open() {
     // Release the hardware
     ATC610xRelease( lock_fd );
 
+    SG_LOG( SG_IO, SG_ALERT,
+	    "  - Waiting for compass to come home." );
+
     bool home = false;
+    int timeout = 900;          // about 30 seconds
     while ( ! home ) {
-	SG_LOG( SG_IO, SG_DEBUG, "Checking if compass home ..." );
+        if ( timeout % 150 == 0 ) {
+            SG_LOG( SG_IO, SG_INFO, "waiting for compass = " << timeout );
+        } else {
+            SG_LOG( SG_IO, SG_DEBUG, "Checking if compass home ..." );
+        }
 
 	while ( ATC610xLock( lock_fd ) <= 0 );
 
@@ -292,6 +300,8 @@ bool FGATC610x::open() {
 #else
 	usleep(33);
 #endif
+
+        --timeout;
     }
 
     compass_position = 0.0;

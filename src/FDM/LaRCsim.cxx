@@ -188,7 +188,7 @@ void FGLaRCsim::update( double dt ) {
 
     // Inform LaRCsim of the local terrain altitude
     // Runway_altitude = get_Runway_altitude();
-    Runway_altitude = scenery.get_cur_elev() * SG_METER_TO_FEET;
+    Runway_altitude = globals->get_scenery()->get_cur_elev() * SG_METER_TO_FEET;
 
     // Weather
     /* V_north_airmass = get_V_north_airmass();
@@ -616,7 +616,8 @@ void FGLaRCsim::snap_shot(void) {
 void FGLaRCsim::set_Latitude(double lat) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Latitude: " << lat  );
     snap_shot();
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET );
     lsic->SetLatitudeGDRadIC(lat);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -626,7 +627,8 @@ void FGLaRCsim::set_Longitude(double lon) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
     snap_shot();
     
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET );
     lsic->SetLongitudeRadIC(lon);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -635,7 +637,8 @@ void FGLaRCsim::set_Longitude(double lon) {
 void FGLaRCsim::set_Altitude(double alt) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
     snap_shot();
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET );
     lsic->SetAltitudeFtIC(alt);
     set_ls();
     copy_from_LaRCsim(); //update the bus

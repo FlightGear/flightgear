@@ -493,6 +493,7 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     return true;
 }
 
+
 void fgSetPosFromGlideSlope(void) {
     double gs = fgGetDouble("/velocities/glideslope");
     double od = fgGetDouble("/sim/startup/offset-distance");
@@ -591,7 +592,7 @@ void fgInitFDM() {
 	    cur_fdm_state = new FGUFO( dt );
 	} else if ( model == "external" ) {
 	    cur_fdm_state = new FGExternal( dt );
-	} else if ( model.find("network,") == 0 ) {
+	} else if ( model.find("network") == 0 ) {
             string host = "localhost";
             int port1 = 5501;
             int port2 = 5502;
@@ -744,8 +745,9 @@ bool fgInitSubsystems( void ) {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    scenery.init();
-    scenery.bind();
+    globals->set_scenery( new FGScenery );
+    globals->get_scenery()->init();
+    globals->get_scenery()->bind();
 
     if ( global_tile_mgr.init() ) {
 	// Load the local scenery data
@@ -761,7 +763,7 @@ bool fgInitSubsystems( void ) {
 
     SG_LOG( SG_GENERAL, SG_DEBUG,
     	    "Current terrain elevation after tile mgr init " <<
-	    scenery.get_cur_elev() );
+	    globals->get_scenery()->get_cur_elev() );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1101,18 +1103,9 @@ void fgReInitSubsystems( void )
     }
     
     // Initialize the Scenery Management subsystem
-    scenery.init();
-
-#if 0
-    if( global_tile_mgr.init() ) {
-	Load the local scenery data
-	global_tile_mgr.update( longitude->getDoubleValue(),
-				latitude->getDoubleValue() );
-    } else {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
-        exit(-1);
-    }
-#endif
+    // FIXME, what really needs to get initialized here, at the time
+    // this was commented out, scenery.init() was a noop
+    // scenery.init();
 
     fgInitFDM();
     

@@ -46,7 +46,7 @@ void FGAIEntity::Update() {
 void FGAIEntity::Transform() {
 
     // Translate moving object w.r.t eye
-    Point3D sc = scenery.get_center();
+    Point3D sc = globals->get_scenery()->get_center();
     //cout << "sc0 = " << sc.x() << " sc1 = " << sc.y() << " sc2 = " << sc.z() << '\n';
     //cout << "op0 = " << obj_pos.x() << " op1 = " << obj_pos.y() << " op2 = " << obj_pos.z() << '\n';
 

@@ -940,8 +940,8 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
 	target_alt = new_altitude * SG_FEET_TO_METER;
     }
 
-    if( target_alt < scenery.get_cur_elev() ) {
-	target_alt = scenery.get_cur_elev();
+    if( target_alt < globals->get_scenery()->get_cur_elev() ) {
+	target_alt = globals->get_scenery()->get_cur_elev();
     }
 
     TargetAltitude = target_alt;

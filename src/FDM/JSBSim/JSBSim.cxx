@@ -281,8 +281,9 @@ FGJSBsim::update( double dt ) {
       if ( startup_trim->getBoolValue() ) {
         SG_LOG(SG_FLIGHT, SG_INFO,
           "Ready to trim, terrain altitude is: " 
-            << scenery.get_cur_elev() * SG_METER_TO_FEET );
-        fgic->SetTerrainAltitudeFtIC( scenery.get_cur_elev() * SG_METER_TO_FEET );
+            << globals->get_scenery()->get_cur_elev() * SG_METER_TO_FEET );
+        fgic->SetTerrainAltitudeFtIC( globals->get_scenery()->get_cur_elev()
+                                      * SG_METER_TO_FEET );
         do_trim();
       } else {
         fdmex->RunIC(fgic);  //apply any changes made through the set_ functions
@@ -359,7 +360,8 @@ bool FGJSBsim::copy_to_JSBsim() {
       eng->SetStarter( globals->get_controls()->get_starter(i) );
     }
 
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET );
     Position->SetSeaLevelRadius( get_Sea_level_radius() );
     Position->SetRunwayRadius( get_Runway_altitude() 
                                + get_Sea_level_radius() );
@@ -576,8 +578,10 @@ void FGJSBsim::set_Latitude(double lat) {
                       &sea_level_radius_meters, &lat_geoc );
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET  );    
-    _set_Runway_altitude(  scenery.get_cur_elev() * SG_METER_TO_FEET  );
-    fgic->SetTerrainAltitudeFtIC( scenery.get_cur_elev() * SG_METER_TO_FEET  );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET  );
+    fgic->SetTerrainAltitudeFtIC( globals->get_scenery()->get_cur_elev()
+                                  * SG_METER_TO_FEET  );
     fgic->SetLatitudeRadIC( lat_geoc );
     needTrim=true;
 }
@@ -587,8 +591,10 @@ void FGJSBsim::set_Longitude(double lon) {
     SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Longitude: " << lon );
     update_ic();
     fgic->SetLongitudeRadIC( lon );
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET  );
-    fgic->SetTerrainAltitudeFtIC( scenery.get_cur_elev() * SG_METER_TO_FEET  );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET  );
+    fgic->SetTerrainAltitudeFtIC( globals->get_scenery()->get_cur_elev()
+                                  * SG_METER_TO_FEET  );
     needTrim=true;
 }
 
@@ -605,10 +611,13 @@ void FGJSBsim::set_Altitude(double alt) {
                   &sea_level_radius_meters, &lat_geoc);
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET );
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET  );
-    fgic->SetTerrainAltitudeFtIC( scenery.get_cur_elev() * SG_METER_TO_FEET  );
+    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
+                          * SG_METER_TO_FEET  );
+    fgic->SetTerrainAltitudeFtIC( globals->get_scenery()->get_cur_elev()
+                                  * SG_METER_TO_FEET  );
     SG_LOG(SG_FLIGHT, SG_INFO,
-          "Terrain altitude: " << scenery.get_cur_elev() * SG_METER_TO_FEET );
+          "Terrain altitude: " << globals->get_scenery()->get_cur_elev()
+           * SG_METER_TO_FEET );
     fgic->SetLatitudeRadIC( lat_geoc );
     fgic->SetAltitudeFtIC(alt);
     needTrim=true;

@@ -66,6 +66,7 @@ class FGATCDisplay;
 class FGAIMgr;
 class FGAircraftModel;
 class FGModelMgr;
+class FGScenery;
 
 class ssgRoot;
 class ssgBranch;
@@ -160,6 +161,9 @@ private:
 
     // list of serial port-like configurations
     string_list *channel_options_list;
+
+    // FlightGear scenery manager
+    FGScenery *scenery;
 
     // SSG scene graph
     ssgRoot * scene_graph;
@@ -276,6 +280,9 @@ public:
     inline void set_channel_options_list( string_list *l ) {
 	channel_options_list = l;
     }
+
+    inline FGScenery * get_scenery () const { return scenery; }
+    inline void set_scenery ( FGScenery *s ) { scenery = s; }
 
     inline ssgRoot * get_scene_graph () const { return scene_graph; }
     inline void set_scene_graph (ssgRoot * s) { scene_graph = s; }

@@ -33,13 +33,10 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/vector.hxx>
 
 #include <Scenery/scenery.hxx>
-
-#include <simgear/math/vector.hxx>
-/*
 #include "globals.hxx"
-*/
 
 #include "location.hxx"
 
@@ -244,7 +241,7 @@ FGLocation::recalcPosition (double lon_deg, double lat_deg, double alt_ft) const
   Point3D p = Point3D(lon_deg * SG_DEGREES_TO_RADIANS,
 		      lat_geoc_rad,
 		      sea_level_radius_m);
-  Point3D tmp = sgPolarToCart3d(p) - scenery.get_next_center();
+  Point3D tmp = sgPolarToCart3d(p) - globals->get_scenery()->get_next_center();
   sgSetVec3(_zero_elev_view_pos, tmp[0], tmp[1], tmp[2]);
 
 				// Calculate the absolute view position
@@ -259,9 +256,9 @@ FGLocation::recalcPosition (double lon_deg, double lat_deg, double alt_ft) const
                                 // aka Relative View Position
   sgdVec3 scenery_center;
   sgdSetVec3(scenery_center,
-	     scenery.get_next_center().x(),
-	     scenery.get_next_center().y(),
-	     scenery.get_next_center().z());
+	     globals->get_scenery()->get_next_center().x(),
+	     globals->get_scenery()->get_next_center().y(),
+	     globals->get_scenery()->get_next_center().z());
   sgdVec3 view_pos;
   sgdSubVec3(view_pos, _absolute_view_pos, scenery_center);
   sgSetVec3(_relative_view_pos, view_pos);

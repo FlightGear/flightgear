@@ -799,7 +799,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	double agl;
 	if ( current_aircraft.fdm_state ) {
 	    agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-		- scenery.get_cur_elev();
+		- globals->get_scenery()->get_cur_elev();
 	} else {
 	    agl = 0.0;
 	}
@@ -847,7 +847,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	double agl;
 	if ( current_aircraft.fdm_state ) {
 	    agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-		- scenery.get_cur_elev();
+		- globals->get_scenery()->get_cur_elev();
 	} else {
 	    agl = 0.0;
 	}
@@ -902,7 +902,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             double agl1;
             if ( current_aircraft.fdm_state ) {
                 agl1 = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-                    - scenery.get_cur_elev();
+                    - globals->get_scenery()->get_cur_elev();
             } else {
                 agl1 = 0.0;
             }
@@ -1286,7 +1286,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     terra_transform->addKid( terra_range );
 
     // calculate initial tile offset
-    SetOffset( scenery.get_center() );
+    SetOffset( globals->get_scenery()->get_center() );
     sgCoord sgcoord;
     sgSetCoord( &sgcoord,
 		offset.x(), offset.y(), offset.z(),

@@ -261,10 +261,10 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
 
     if ( tile_cache.exists( current_bucket ) ) {
         current_tile = tile_cache.get_tile( current_bucket );
-        scenery.set_next_center( current_tile->center );
+        globals->get_scenery()->set_next_center( current_tile->center );
     } else {
         SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
-        scenery.set_next_center( Point3D(0.0) );
+        globals->get_scenery()->set_next_center( Point3D(0.0) );
     }
 
     if ( state == Running ) {
@@ -338,40 +338,12 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
 
     sgdVec3 sc;
     sgdSetVec3( sc,
-                scenery.get_center()[0],
-                scenery.get_center()[1],
-                scenery.get_center()[2] );
-
-#if 0
-    if ( scenery.center == Point3D(0.0) ) {
-	// initializing
-	cout << "initializing scenery current elevation ... " << endl;
-	sgdVec3 tmp_abs_view_pos;
-
-	Point3D geod_pos = Point3D( longitude * SGD_DEGREES_TO_RADIANS,
-				    latitude * SGD_DEGREES_TO_RADIANS,
-				    0.0);
-	Point3D tmp = sgGeodToCart( geod_pos );
-	scenery.center = tmp;
-	sgdSetVec3( tmp_abs_view_pos, tmp.x(), tmp.y(), tmp.z() );
-
-	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
-	prep_ssg_nodes(visibility_meters);
-
-	double tmp_elev;
-	if ( fgCurrentElev(tmp_abs_view_pos, sc, &hit_list,
-			   &tmp_elev, &scenery.cur_radius, scenery.cur_normal) )
-	{
-	    scenery.set_cur_elev( tmp_elev );
-	} else {
-	    scenery.set_cur_elev( 0.0 );
-	}
-	// cout << "result = " << scenery.get_cur_elev() << endl;
-    } else {
-#endif
+                globals->get_scenery()->get_center()[0],
+                globals->get_scenery()->get_center()[1],
+                globals->get_scenery()->get_center()[2] );
 
          /*
-       cout << "abs view pos = "
+         cout << "abs view pos = "
               << globals->get_current_view()->get_abs_view_pos()[0] << ","
               << globals->get_current_view()->get_abs_view_pos()[1] << ","
               << globals->get_current_view()->get_abs_view_pos()[2]
@@ -396,9 +368,9 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
             // scenery center has been properly defined so any hit
             // should be valid (and not just luck)
 	    sgdSetVec3( sc,
-			scenery.get_center()[0],
-			scenery.get_center()[1],
-			scenery.get_center()[2] );
+			globals->get_scenery()->get_center()[0],
+			globals->get_scenery()->get_center()[1],
+			globals->get_scenery()->get_center()[2] );
 	    hit = fgCurrentElev(globals->get_current_view()->get_absolute_view_pos(),
 				sc,
 				current_tile->get_terra_transform(),
@@ -409,13 +381,13 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
         }
 
         if ( hit ) {
-            scenery.set_cur_elev( hit_elev );
-            scenery.set_cur_radius( hit_radius );
-            scenery.set_cur_normal( hit_normal );
+            globals->get_scenery()->set_cur_elev( hit_elev );
+            globals->get_scenery()->set_cur_radius( hit_radius );
+            globals->get_scenery()->set_cur_normal( hit_normal );
         } else {
-            scenery.set_cur_elev( -9999.0 );
-            scenery.set_cur_radius( 0.0 );
-            scenery.set_cur_normal( hit_normal );
+            globals->get_scenery()->set_cur_elev( -9999.0 );
+            globals->get_scenery()->set_cur_radius( 0.0 );
+            globals->get_scenery()->set_cur_normal( hit_normal );
         }
 	// cout << "Current elevation = " << scenery.get_cur_elev() << endl;
 
@@ -444,7 +416,7 @@ void FGTileMgr::prep_ssg_nodes(float vis) {
     while ( ! tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
 	if ( (e = tile_cache.get_current()) ) {
-	    e->prep_ssg_node( scenery.get_center(), up, vis);
+	    e->prep_ssg_node( globals->get_scenery()->get_center(), up, vis);
         } else {
 	    SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
         }
