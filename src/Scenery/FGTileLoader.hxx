@@ -54,12 +54,14 @@ public:
      */
     ~FGTileLoader();
 
+#if 0 // we don't ever want to do this I don't think
     /**
      * Flush anything in pending load queue without doing the work
      * Leave the free queue intact since that's are only record of
      * things we need to remove.
      */
     void reinit();
+#endif
     
     /**
      * Add a tile to the end of the load queue.

@@ -97,7 +97,13 @@ int FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
     tile_cache.init();
-    destroy_queue();
+
+#if 0
+
+    // instead it's just a lot easier to let any pending work flush
+    // through, rather than trying to arrest the queue and nuke all
+    // the various work at all the various stages and get everything
+    // cleaned up properly.
 
     while ( ! attach_queue.empty() ) {
         attach_queue.pop();
@@ -113,17 +119,6 @@ int FGTileMgr::init() {
         delete dm;
     }
     loader.reinit();
-
-#if 0        
-    if ( state != Start ) {
-	SG_LOG( SG_TERRAIN, SG_INFO,
-		"... Reinitializing." );
-	destroy_queue();
-    } else {
-	SG_LOG( SG_TERRAIN, SG_INFO,
-		"... First time through." );
-	tile_cache.init();
-    }
 #endif
 
     hit_list.clear();
@@ -315,15 +310,6 @@ void FGTileMgr::initialize_queue()
         }
     }
 #endif
-}
-
-
-// forced emptying of the queue
-// This is necessay to keep bookeeping straight for the
-// tile_cache   -- which actually handles all the
-// (de)allocations  
-void FGTileMgr::destroy_queue() {
-    // load_queue.clear();
 }
 
 

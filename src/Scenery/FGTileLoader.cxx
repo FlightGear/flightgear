@@ -65,6 +65,7 @@ FGTileLoader::~FGTileLoader()
 }
 
 
+#if 0 // we don't ever want to do this I don't think
 /**
  * 
  */
@@ -73,6 +74,7 @@ void FGTileLoader::reinit() {
 	tile_load_queue.pop();
     }
 }
+#endif
 
 
 /**
@@ -125,7 +127,7 @@ FGTileLoader::update()
     mutex.unlock();
 #else
     if ( !tile_load_queue.empty() ) {
-        cout << "loading next tile ..." << endl;
+        // cout << "loading next tile ..." << endl;
         // load the next tile in the queue
         FGTileEntry* tile = tile_load_queue.front();
         tile_load_queue.pop();
@@ -135,7 +137,7 @@ FGTileLoader::update()
 
 #ifdef WISH_PLIB_WAS_THREADED // but it isn't
     if ( !tile_free_queue.empty() ) {
-        cout << "freeing next tile ..." << endl;
+        // cout << "freeing next tile ..." << endl;
         // free the next tile in the queue
         FGTileEntry* tile = tile_free_queue.front();
         tile_free_queue.pop();
@@ -174,7 +176,7 @@ FGTileLoader::LoaderThread::run()
 #ifdef WISH_PLIB_WAS_THREADED // but it isn't
 	// Handle and pending removals
 	while ( !loader->tile_free_queue.empty() ) {
-	    cout << "freeing next tile ..." << endl;
+	    // cout << "freeing next tile ..." << endl;
 	    // free the next tile in the queue
 	    FGTileEntry* tile = loader->tile_free_queue.pop();
 	    tile->free_tile();

@@ -577,6 +577,12 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
     terra_transform->ref();
     terrain->addKid( terra_transform );
 
+    SG_LOG( SG_TERRAIN, SG_DEBUG,
+            "connected a tile into scene graph.  terra_transform = "
+            << terra_transform );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "num parents now = "
+            << terra_transform->getNumParents() );
+
     if ( lights_transform != 0 ) {
 	// bump up the ref count so we can remove this later without
 	// having ssg try to free the memory.
@@ -591,8 +597,14 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
 void
 FGTileEntry::disconnect_ssg_nodes()
 {
-    cout << "disconnecting ssg nodes" << endl;
+    SG_LOG( SG_TERRAIN, SG_INFO, "disconnecting ssg nodes" );
 
+    if ( ! loaded ) {
+        SG_LOG( SG_TERRAIN, SG_INFO, "removing a not-fully loaded tile!" );
+    } else {
+        SG_LOG( SG_TERRAIN, SG_INFO, "removing a fully loaded tile!  terra_transform = " << terra_transform );
+    }
+        
     // find the terrain branch parent
     int pcount = terra_transform->getNumParents();
     if ( pcount > 0 ) {

@@ -49,7 +49,9 @@ SG_USING_NAMESPACE(std);
 
 
 // Constructor
-FGNewCache::FGNewCache( void ) {
+FGNewCache::FGNewCache( void ) :
+    max_cache_size(50)
+{
     tile_cache.clear();
 }
 
@@ -78,32 +80,16 @@ void FGNewCache::entry_free( long cache_index ) {
 
 // Initialize the tile cache subsystem
 void FGNewCache::init( void ) {
-    // This is a hack that should really get cleaned up at some point
-    extern ssgBranch *terrain;
-
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing the tile cache." );
 
-    // expand cache if needed.  For best results ... i.e. to avoid
-    // tile load problems and blank areas: 
-    max_cache_size = 50;	// a random number to start with
     SG_LOG( SG_TERRAIN, SG_INFO, "  max cache size = " 
 	    << max_cache_size );
     SG_LOG( SG_TERRAIN, SG_INFO, "  current cache size = " 
 	    << tile_cache.size() );
-    
-    tile_map_iterator current = tile_cache.begin();
-    tile_map_iterator end = tile_cache.end();
-    
-    for ( ; current != end; ++current ) {
-	long index = current->first;
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "clearing " << index );
-	FGTileEntry *e = current->second;
-	e->tile_bucket.make_bad();
-	entry_free(index);
-    }
 
-    // and ... just in case we missed something ... 
-    terrain->removeAllKids();
+#if 0 // don't clear the cache right now
+    clear_cache();
+#endif
 
     SG_LOG( SG_TERRAIN, SG_INFO, "  done with init()"  );
 }
@@ -208,10 +194,34 @@ void FGNewCache::make_space() {
 	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    index = " << max_index );
 	    entry_free( max_index );
 	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! Dying in next_avail()" );
+	    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! Dying in make_space()"
+                    "tile cache is full, but no entries available to removal.");
 	    exit( -1 );
 	}
     }
+}
+
+
+// Clear all completely loaded tiles (ignores partially loaded tiles)
+void FGNewCache::clear_cache() {
+    // This is a hack that should really get cleaned up at some point
+    extern ssgBranch *terrain;
+
+    tile_map_iterator current = tile_cache.begin();
+    tile_map_iterator end = tile_cache.end();
+    
+    for ( ; current != end; ++current ) {
+	long index = current->first;
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "clearing " << index );
+	FGTileEntry *e = current->second;
+        if ( e->is_loaded() && e->get_pending_models() == 0 ) {
+            e->tile_bucket.make_bad();
+            entry_free(index);
+        }
+    }
+
+    // and ... just in case we missed something ... 
+    terrain->removeAllKids();
 }
 
 

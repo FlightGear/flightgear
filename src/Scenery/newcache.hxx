@@ -85,6 +85,9 @@ public:
     // Ensure at least one entry is free in the cache
     void make_space();
 
+    // Clear all completely loaded tiles (ignores partially loaded tiles)
+    void clear_cache();
+
     // Fill in a tile cache entry with real data for the specified bucket 
     // void fill_in( const SGBucket& b );
 
