@@ -177,8 +177,8 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.3  1999/06/28 15:39:24  curt
-// Updates contributed by Jon Berndt.
+// Revision 1.4  1999/07/31 02:55:24  curt
+// Updates from Jon.
 //
 // Revision 1.1  1999/02/13 01:12:03  curt
 // Initial Revision.

@@ -107,57 +107,74 @@ bool FGState::Reset(string path, string fname)
     resetfile >> h;
     resetfile.close();
 
-// Change all angular measurements from degrees (as in config file) to radians
-
-    gamma = 0.0;
-    if (W != 0.0)
-      alpha = U*U > 0.0 ? atan2(W, U) : 0.0;
-    else
-      alpha = 0.0;
-    if (V != 0.0)
-      beta = U*U+W*W > 0.0 ? atan2(V, (fabs(U)/U)*sqrt(U*U + W*W)) : 0.0;
-    else
-      beta = 0.0;
-
-    latitude  *= M_PI / 180.0;
-    longitude *= M_PI / 180.0;
-    phi       *= M_PI / 180.0;
-    tht       *= M_PI / 180.0;
-    psi       *= M_PI / 180.0;
-
-    FDMExec->GetTranslation()->SetUVW(U, V, W);
-    FDMExec->GetRotation()->SetEuler(phi, tht, psi);
-    FDMExec->GetTranslation()->SetABG(alpha, beta, gamma);
-
-    Vt = sqrt(U*U + V*V + W*W);
-    qbar = 0.5*(U*U + V*V + W*W)*FDMExec->GetAtmosphere()->CalcRho(h);
-
-    Q0 =  sin(psi*0.5)*sin(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*cos(phi*0.5);
-    Q1 = -sin(psi*0.5)*sin(tht*0.5)*cos(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*sin(phi*0.5);
-    Q2 =  sin(psi*0.5)*cos(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*sin(tht*0.5)*cos(phi*0.5);
-    Q3 =  sin(psi*0.5)*cos(tht*0.5)*cos(phi*0.5) - cos(psi*0.5)*sin(tht*0.5)*sin(phi*0.5);
-
-    FDMExec->GetRotation()->SetQ0123(Q0, Q1, Q2, Q3);
-
-    T[1][1] = Q0*Q0 + Q1*Q1 - Q2*Q2 - Q3*Q3;
-    T[1][2] = 2*(Q1*Q2 + Q0*Q3);
-    T[1][3] = 2*(Q1*Q3 - Q0*Q2);
-    T[2][1] = 2*(Q1*Q2 - Q0*Q3);
-    T[2][2] = Q0*Q0 - Q1*Q1 + Q2*Q2 - Q3*Q3;
-    T[2][3] = 2*(Q2*Q3 + Q0*Q1);
-    T[3][1] = 2*(Q1*Q3 + Q0*Q2);
-    T[3][2] = 2*(Q2*Q3 - Q0*Q1);
-    T[3][3] = Q0*Q0 - Q1*Q1 - Q2*Q2 + Q3*Q3;
-
-    FDMExec->GetPosition()->SetT(T[1][1], T[1][2], T[1][3],
-                                 T[2][1], T[2][2], T[2][3],
-                                 T[3][1], T[3][2], T[3][3]);
+    Initialize(U, V, W, phi, tht, psi, latitude, longitude, h);
 
     return true;
   } else {
     cerr << "Unable to load reset file " << fname << endl;
     return false;
   }
+}
+
+
+void FGState::Initialize(float U, float V, float W,
+                         float phi, float tht, float psi,
+                         float Latitude, float Longitude, float H)
+{
+  float alpha, beta, gamma;
+  float Q0, Q1, Q2, Q3;
+  float T[4][4];
+
+  latitude = Latitude;
+  longitude = Longitude;
+  h = H;
+
+// Change all angular measurements from degrees (as in config file) to radians
+
+  gamma = 0.0;
+  if (W != 0.0)
+    alpha = U*U > 0.0 ? atan2(W, U) : 0.0;
+  else
+    alpha = 0.0;
+  if (V != 0.0)
+    beta = U*U+W*W > 0.0 ? atan2(V, (fabs(U)/U)*sqrt(U*U + W*W)) : 0.0;
+  else
+    beta = 0.0;
+
+  latitude  *= M_PI / 180.0;
+  longitude *= M_PI / 180.0;
+  phi       *= M_PI / 180.0;
+  tht       *= M_PI / 180.0;
+  psi       *= M_PI / 180.0;
+
+  FDMExec->GetTranslation()->SetUVW(U, V, W);
+  FDMExec->GetRotation()->SetEuler(phi, tht, psi);
+  FDMExec->GetTranslation()->SetABG(alpha, beta, gamma);
+
+  Vt = sqrt(U*U + V*V + W*W);
+  qbar = 0.5*(U*U + V*V + W*W)*FDMExec->GetAtmosphere()->CalcRho(h);
+
+  Q0 =  sin(psi*0.5)*sin(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*cos(phi*0.5);
+  Q1 = -sin(psi*0.5)*sin(tht*0.5)*cos(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*sin(phi*0.5);
+  Q2 =  sin(psi*0.5)*cos(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*sin(tht*0.5)*cos(phi*0.5);
+  Q3 =  sin(psi*0.5)*cos(tht*0.5)*cos(phi*0.5) - cos(psi*0.5)*sin(tht*0.5)*sin(phi*0.5);
+
+  FDMExec->GetRotation()->SetQ0123(Q0, Q1, Q2, Q3);
+
+  T[1][1] = Q0*Q0 + Q1*Q1 - Q2*Q2 - Q3*Q3;
+  T[1][2] = 2*(Q1*Q2 + Q0*Q3);
+  T[1][3] = 2*(Q1*Q3 - Q0*Q2);
+  T[2][1] = 2*(Q1*Q2 - Q0*Q3);
+  T[2][2] = Q0*Q0 - Q1*Q1 + Q2*Q2 - Q3*Q3;
+  T[2][3] = 2*(Q2*Q3 + Q0*Q1);
+  T[3][1] = 2*(Q1*Q3 + Q0*Q2);
+  T[3][2] = 2*(Q2*Q3 - Q0*Q1);
+  T[3][3] = Q0*Q0 - Q1*Q1 - Q2*Q2 + Q3*Q3;
+
+  FDMExec->GetPosition()->SetT(T[1][1], T[1][2], T[1][3],
+                               T[2][1], T[2][2], T[2][3],
+                               T[3][1], T[3][2], T[3][3]);
+  DisplayData();
 }
 
 

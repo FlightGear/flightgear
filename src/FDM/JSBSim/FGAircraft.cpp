@@ -399,7 +399,9 @@ void FGAircraft::FAero(void)
 void FGAircraft::FGear(void)
 {
   if (GearUp) {
+    // crash routine
   } else {
+    
   }
 }
 

@@ -196,33 +196,34 @@ void FGOutput::DelimitedOutput(void)
     cout << "N";
     cout << endl;
     FirstPass = false;
-  } else {
-    cout << State->Getsim_time() << ",";
-    cout << State->Geth() << ",";
-    cout << Rotation->Getphi() << ",";
-    cout << Rotation->Gettht() << ",";
-    cout << Rotation->Getpsi() << ",";
-    cout << Atmosphere->Getrho() << ",";
-    cout << State->GetVt() << ",";
-    cout << Translation->GetU() << ",";
-    cout << Translation->GetV() << ",";
-    cout << Translation->GetW() << ",";
-    cout << Position->GetVn() << ",";
-    cout << Position->GetVe() << ",";
-    cout << Position->GetVd() << ",";
-    cout << Translation->GetUdot() << ",";
-    cout << Translation->GetVdot() << ",";
-    cout << Translation->GetWdot() << ",";
-    cout << Aircraft->GetFx() << ",";
-    cout << Aircraft->GetFy() << ",";
-    cout << Aircraft->GetFz() << ",";
-    cout << State->Getlatitude() << ",";
-    cout << State->Getlongitude() << ",";
-    cout << State->Getqbar() << ",";
-    cout << Translation->Getalpha() << ",";
-		cout << Aircraft->GetL() << ",";
-		cout << Aircraft->GetM() << ",";
-		cout << Aircraft->GetN() << "";
-    cout << endl;
   }
+
+  cout << State->Getsim_time() << ",";
+  cout << State->Geth() << ",";
+  cout << Rotation->Getphi() << ",";
+  cout << Rotation->Gettht() << ",";
+  cout << Rotation->Getpsi() << ",";
+  cout << Atmosphere->Getrho() << ",";
+  cout << State->GetVt() << ",";
+  cout << Translation->GetU() << ",";
+  cout << Translation->GetV() << ",";
+  cout << Translation->GetW() << ",";
+  cout << Position->GetVn() << ",";
+  cout << Position->GetVe() << ",";
+  cout << Position->GetVd() << ",";
+  cout << Translation->GetUdot() << ",";
+  cout << Translation->GetVdot() << ",";
+  cout << Translation->GetWdot() << ",";
+  cout << Aircraft->GetFx() << ",";
+  cout << Aircraft->GetFy() << ",";
+  cout << Aircraft->GetFz() << ",";
+  cout << State->Getlatitude() << ",";
+  cout << State->Getlongitude() << ",";
+  cout << State->Getqbar() << ",";
+  cout << Translation->Getalpha() << ",";
+  cout << Aircraft->GetL() << ",";
+  cout << Aircraft->GetM() << ",";
+  cout << Aircraft->GetN() << "";
+  cout << endl;
+
 }

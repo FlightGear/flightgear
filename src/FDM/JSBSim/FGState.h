@@ -78,6 +78,7 @@ public:
   ~FGState(void);
 
   bool Reset(string, string);
+  void Initialize(float, float, float, float, float, float, float, float, float);
   bool StoreData(string);
   bool DumpData(string);
   bool DisplayData(void);

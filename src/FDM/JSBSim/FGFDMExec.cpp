@@ -93,7 +93,7 @@ FGFDMExec::FGFDMExec(void)
   Rotation    = new FGRotation(this);
   Position    = new FGPosition(this);
   Auxiliary   = new FGAuxiliary(this);
-  Output      = new FGOutput(this);
+//  Output      = new FGOutput(this);
 
   State       = new FGState(this);
 
@@ -106,7 +106,7 @@ FGFDMExec::FGFDMExec(void)
   if (!Rotation->InitModel())   {cerr << "Rotation model init failed"; Error+=16;}
   if (!Position->InitModel())   {cerr << "Position model init failed"; Error+=32;}
   if (!Auxiliary->InitModel())  {cerr << "Auxiliary model init failed"; Error+=64;}
-  if (!Output->InitModel())     {cerr << "Output model init failed"; Error+=128;}
+//  if (!Output->InitModel())     {cerr << "Output model init failed"; Error+=128;}
 
   Schedule(Atmosphere,  5);
   Schedule(FCS,         1);
@@ -115,7 +115,7 @@ FGFDMExec::FGFDMExec(void)
   Schedule(Translation, 1);
   Schedule(Position,    1);
   Schedule(Auxiliary,   1);
-  Schedule(Output,      1);
+//  Schedule(Output,      1);
 
   terminate = false;
   frozen = false;
