@@ -241,11 +241,12 @@ private:
     SGPropertyNode *rudder_trim;
     SGPropertyNode *stall_warning;
     
-    SGPropertyNode *elevator_pos_deg;
+    /* SGPropertyNode *elevator_pos_deg;
     SGPropertyNode *left_aileron_pos_deg;
     SGPropertyNode *right_aileron_pos_deg;
     SGPropertyNode *rudder_pos_deg;
-    SGPropertyNode *flap_pos_deg;
+    SGPropertyNode *flap_pos_deg; */
+
     
     SGPropertyNode *elevator_pos_pct;
     SGPropertyNode *left_aileron_pos_pct;

@@ -151,28 +151,30 @@ FGJSBsim::FGJSBsim( double dt )
     stall_warning = fgGetNode("/sim/aero/alarms/stall-warning",true);
     stall_warning->setDoubleValue(0);
     
-    elevator_pos_deg=fgGetNode("/surface-positions/elevator-pos-deg",true);
+    /* elevator_pos_deg=fgGetNode("/surface-positions/elevator-pos-deg",true);
     left_aileron_pos_deg
         =fgGetNode("/surface-positions/left-aileron-pos-deg",true);
     right_aileron_pos_deg
         =fgGetNode("/surface-positions/right-aileron-pos-deg",true);
     rudder_pos_deg=fgGetNode("/surface-positions/rudder-pos-deg",true);
-    flap_pos_deg=fgGetNode("/surface-positions/flap-pos-deg",true);
+    flap_pos_deg=fgGetNode("/surface-positions/flap-pos-deg",true); */
+
     
-    flap_pos_pct=fgGetNode("/surface-positions/flap-pos-pct",true);
-    elevator_pos_pct=fgGetNode("/surface-positions/elevator-pos-pct",true);
+    flap_pos_pct=fgGetNode("/surface-positions/flap-pos-norm",true);
+    elevator_pos_pct=fgGetNode("/surface-positions/elevator-pos-norm",true);
     left_aileron_pos_pct
-        =fgGetNode("/surface-positions/left-aileron-pos-pct",true);
+        =fgGetNode("/surface-positions/left-aileron-pos-norm",true);
     right_aileron_pos_pct
-        =fgGetNode("/surface-positions/right-aileron-pos-pct",true);
-    rudder_pos_pct=fgGetNode("/surface-positions/rudder-pos-pct",true);
+        =fgGetNode("/surface-positions/right-aileron-pos-norm",true);
+    rudder_pos_pct=fgGetNode("/surface-positions/rudder-pos-norm",true);
     
     
-    elevator_pos_deg->setDoubleValue(0);
+    /* elevator_pos_deg->setDoubleValue(0);
     left_aileron_pos_deg->setDoubleValue(0);
     right_aileron_pos_deg->setDoubleValue(0);
     rudder_pos_deg->setDoubleValue(0);
-    flap_pos_deg->setDoubleValue(0);
+    flap_pos_deg->setDoubleValue(0); */
+
     
     elevator_pos_pct->setDoubleValue(0);
     left_aileron_pos_pct->setDoubleValue(0);
@@ -518,11 +520,12 @@ bool FGJSBsim::copy_from_JSBsim() {
     
     stall_warning->setDoubleValue( Aircraft->GetStallWarn() );
     
-    elevator_pos_deg->setDoubleValue( FCS->GetDePos()*SG_RADIANS_TO_DEGREES );
+    /* elevator_pos_deg->setDoubleValue( FCS->GetDePos()*SG_RADIANS_TO_DEGREES );
     left_aileron_pos_deg->setDoubleValue( FCS->GetDaLPos()*SG_RADIANS_TO_DEGREES );
     right_aileron_pos_deg->setDoubleValue( FCS->GetDaRPos()*SG_RADIANS_TO_DEGREES );
     rudder_pos_deg->setDoubleValue( -1*FCS->GetDrPos()*SG_RADIANS_TO_DEGREES );
-    flap_pos_deg->setDoubleValue( FCS->GetDfPos() );
+    flap_pos_deg->setDoubleValue( FCS->GetDfPos() ); */
+
     
     elevator_pos_pct->setDoubleValue( FCS->GetDePosN() );
     left_aileron_pos_pct->setDoubleValue( FCS->GetDaLPosN() );
