@@ -56,7 +56,7 @@ int fgLaRCsimUpdate(FGInterface& f, int multiloop) {
     Long_control = controls.get_elevator();
     Long_trim = controls.get_elevator_trim();
     Rudder_pedal = controls.get_rudder();
-    Throttle_pct = controls.get_throttle( 0 );
+    Throttle_pct = controls.get_throttle( 0 ) * 1.0;
     Brake_pct = controls.get_brake( 0 );
 
     // Inform LaRCsim of the local terrain altitude
