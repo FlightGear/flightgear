@@ -38,14 +38,22 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream.h>
-#include <time.h>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <iostream>
+#    include <ctime>
+#  else
+#    include <iostream.h>
+#    include <time.h>
+#  endif
+#else
+#  include <iostream>
+#  include <ctime>
+#endif
 
 #include "FGFDMExec.h"
 #include "FGState.h"
-
 #include "FGAtmosphere.h"
 #include "FGFCS.h"
 #include "FGAircraft.h"

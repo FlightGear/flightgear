@@ -9,11 +9,13 @@
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-#include <iostream.h>
-#include <time.h>
+#include <iostream>
+#include <ctime>
 
 void main(int argc, char** argv)
 {
+	FGFDMExec* FDMExec;
+	
   struct timespec short_wait = {0,100000000};
   struct timespec no_wait    = {0,100000000};
 
@@ -26,8 +28,8 @@ void main(int argc, char** argv)
 
   FDMExec = new FGFDMExec();
 
-  FDMExec->GetAircraft()->LoadAircraft(argv[1]);
-  FDMExec->GetState()->Reset(argv[2]);
+  FDMExec->GetAircraft()->LoadAircraft(string(argv[1]));
+  FDMExec->GetState()->Reset(string(argv[2]));
 
   while (FDMExec->GetState()->Getsim_time() <= 25.0)
   {

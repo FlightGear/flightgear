@@ -44,9 +44,23 @@ SENTRY
 INCLUDES
 *******************************************************************************/
 
-#include <stdio.h>
-#include <fstream.h>
-#include <string>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  include STL_STRING
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
+#  else
+#    include <fstream.h>
+#  endif
+   FG_USING_STD(string);
+#  ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+     FG_USING_NAMESPACE(std);
+#  endif
+#else
+#  include <string>
+#  include <fstream>
+#endif
+
 #include "FGDefs.h"
 
 /*******************************************************************************
@@ -64,9 +78,9 @@ public:
    FGState(FGFDMExec*);
   ~FGState(void);
 
-  bool FGState::Reset(const string& path, const string& fname);
-  bool StoreData(char*);
-  bool DumpData(char*);
+  bool Reset(string, string);
+  bool StoreData(string);
+  bool DumpData(string);
   bool DisplayData(void);
 
   inline float GetVt(void) {return Vt;}

@@ -44,6 +44,17 @@ SENTRY
 INCLUDES
 *******************************************************************************/
 
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  include STL_STRING
+   FG_USING_STD(string);
+#  ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+     FG_USING_NAMESPACE(std);
+#  endif
+#else
+#  include <string>
+#endif
+
 /*******************************************************************************
 DEFINES
 *******************************************************************************/
@@ -66,28 +77,29 @@ class FGOutput;
 class FGEngine
 {
 public:
-  FGEngine(FGFDMExec*, char*, int);
+  FGEngine(FGFDMExec*, string, string, int);
   ~FGEngine(void);
 
-  float GetThrust(void) {return Thrust;}
-  bool  GetStarved(void) {return Starved;}
-  bool  GetFlameout(void) {return Flameout;}
-  float GetThrottle(void) {return Throttle;}
-  char* GetName() {return Name;}
+  enum EngineType {etUnknown, etRocket, etPiston, etTurboProp, etTurboJet};
+
+  float  GetThrottle(void) {return Throttle;}
+  float  GetThrust(void) {return Thrust;}
+  bool   GetStarved(void) {return Starved;}
+  bool   GetFlameout(void) {return Flameout;}
+  int    GetType(void) {return Type;}
+  string GetName() {return Name;}
 
   void SetStarved(bool tt) {Starved = tt;}
   void SetStarved(void) {Starved = true;}
-
-  int GetType(void) {return Type;}
 
   float CalcThrust(void);
   float CalcFuelNeed(void);
   float CalcOxidizerNeed(void);
 
 private:
-  char  Name[30];
+  string Name;
+  EngineType Type;
   float X, Y, Z;
-  int   Type;
   float SLThrustMax;
   float VacThrustMax;
   float SLFuelFlowMax;
@@ -113,7 +125,7 @@ private:
   FGPosition*     Position;
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
-  
+
 protected:
   float CalcRocketThrust(void);
   float CalcPistonThrust(void);

@@ -24,16 +24,16 @@
 
 #include <stdio.h>
 
-#include "flight.hxx"
-#include "JSBsim.hxx"
-#include "LaRCsim.hxx"
-
 #include <Debug/logstream.hxx>
 #include <FDM/External/external.hxx>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Include/fg_constants.h>
 #include <Math/fg_geodesy.hxx>
 #include <Time/timestamp.hxx>
+
+#include "flight.hxx"
+#include "JSBsim.hxx"
+#include "LaRCsim.hxx"
 
 
 // base_fdm_state is the internal state that is updated in integer
@@ -195,6 +195,10 @@ void fgFDMSetGroundElevation(int model, double ground_meters) {
 
 
 // $Log$
+// Revision 1.16  1999/02/26 22:09:12  curt
+// Added initial support for native SGI compilers.
+// Integrated Jon's next version of JSBsim.
+//
 // Revision 1.15  1999/02/05 21:29:01  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

@@ -53,7 +53,16 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 *******************************************************************************/
 
-#include <math.h>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <cmath>
+#  else
+#    include <math.h>
+#  endif
+#else
+#  include <cmath>
+#endif
 #include "FGPosition.h"
 #include "FGAtmosphere.h"
 #include "FGState.h"
@@ -72,7 +81,7 @@ INCLUDES
 
 FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  strcpy(Name, "FGPosition");
+  Name = "FGPosition";
   AccelN = AccelE = AccelD = 0.0;
   LongitudeDot = LatitudeDot = RadiusDot = 0.0;
 }

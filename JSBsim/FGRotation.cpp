@@ -73,7 +73,7 @@ INCLUDES
 
 FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  strcpy(Name, "FGRotation");
+  Name = "FGRotation";
   Q0dot = Q1dot = Q2dot = Q3dot = 0.0;
   Pdot = Qdot = Rdot = 0.0;
 }

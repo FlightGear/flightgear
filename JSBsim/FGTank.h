@@ -43,8 +43,22 @@ SENTRY
 /*******************************************************************************
 INCLUDES
 *******************************************************************************/
-
-#include <fstream.h>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  include STL_STRING
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
+#  else
+#    include <fstream.h>
+#  endif
+   FG_USING_STD(string);
+#  ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+     FG_USING_NAMESPACE(std);
+#  endif
+#else
+#  include <string>
+#  include <fstream>
+#endif
 
 /*******************************************************************************
 DEFINES
@@ -65,11 +79,13 @@ public:
   bool GetSelected(void) {return Selected;}
   float GetPctFull(void) {return PctFull;}
   float GetContents(void) {return Contents;}
+
+  enum TankType {ttUNKNOWN, ttFUEL, ttOXIDIZER};
   
 private:
+  TankType Type;
   float X, Y, Z;
   float Capacity;
-  int   Type;
   float Radius;
   float PctFull;
   float Contents;

@@ -55,7 +55,7 @@ INCLUDES
 
 FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  strcpy(Name, "FGFCS");
+  Name = "FGFCS";
 }
 
 

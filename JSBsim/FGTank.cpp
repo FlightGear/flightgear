@@ -35,10 +35,18 @@ HISTORY
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
+#  else
+#    include <fstream.h>
+#  endif
+#else
+#  include <fstream>
+#endif
 
 #include "FGTank.h"
-#include <fstream.h>
-#include <string.h>
 
 /*******************************************************************************
 ************************************ CODE **************************************
@@ -47,12 +55,12 @@ INCLUDES
 
 FGTank::FGTank(ifstream& acfile)
 {
-  char type[20];
+  string type;
 
-  acfile >> type;                              // Type = 0: rocket, 1: piston
-  if (strstr(type,"FUEL")) Type = 0;
-  else if (strstr(type,"OXIDIZER")) Type = 1;
-  else Type = -1;
+  acfile >> type;                              // Type = 0: fuel, 1: oxidizer
+  if (type == "FUEL") Type = ttFUEL;
+  else if (type == "OXIDIZER") Type = ttOXIDIZER;
+  else Type = ttUNKNOWN;
   acfile >> X;                                 // inches
   acfile >> Y;                                 // "
   acfile >> Z;                                 // "

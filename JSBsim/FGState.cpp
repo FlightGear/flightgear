@@ -36,9 +36,16 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#include <math.h>
-
-#include <string>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <cmath>
+#  else
+#    include <math.h>
+#  endif
+#else
+#  include <cmath>
+#endif
 
 #include "FGState.h"
 #include "FGFDMExec.h"
@@ -75,7 +82,7 @@ FGState::~FGState(void)
 }
 
 
-bool FGState::Reset(const string& path, const string& fname)
+bool FGState::Reset(string path, string fname)
 {
   string resetDef;
   float U, V, W;
@@ -84,12 +91,10 @@ bool FGState::Reset(const string& path, const string& fname)
   float Q0, Q1, Q2, Q3;
   float T[4][4];
 
-  resetDef = path;
-  resetDef += "/";
-  resetDef += FDMExec->GetAircraft()->GetAircraftName();
-  resetDef += "/" + fname;
+  resetDef = path + "/" + FDMExec->GetAircraft()->GetAircraftName() + 
+      "/" + fname;
 
-  ifstream resetfile( resetDef.c_str() );
+  ifstream resetfile(resetDef.c_str());
 
   if (resetfile) {
     resetfile >> U;
@@ -157,9 +162,9 @@ bool FGState::Reset(const string& path, const string& fname)
 }
 
 
-bool FGState::StoreData(char* fname)
+bool FGState::StoreData(string fname)
 {
-  ofstream datafile(fname);
+  ofstream datafile(fname.c_str());
 
   if (datafile) {
     datafile << FDMExec->GetTranslation()->GetU();
@@ -180,9 +185,9 @@ bool FGState::StoreData(char* fname)
 }
 
 
-bool FGState::DumpData(char* fname)
+bool FGState::DumpData(string fname)
 {
-  ofstream datafile(fname);
+  ofstream datafile(fname.c_str());
 
   if (datafile) {
     datafile << "U: " << FDMExec->GetTranslation()->GetU() << endl;

@@ -107,10 +107,7 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "FGCoefficient.h"
-
 #include "FGAtmosphere.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
@@ -143,7 +140,7 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex)
 }
 
 
-FGCoefficient::FGCoefficient(FGFDMExec* fdex, char* fname)
+FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
 {
   int r, c;
   float ftrashcan;
@@ -159,7 +156,7 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, char* fname)
   Auxiliary   = FDMExec->GetAuxiliary();
   Output      = FDMExec->GetOutput();
 
-  ifstream coeffDefFile(fname);
+  ifstream coeffDefFile(fname.c_str());
 
   if (coeffDefFile) {
     if (!coeffDefFile.fail()) {
@@ -167,11 +164,11 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, char* fname)
       coeffDefFile >> description;
       coeffDefFile >> method;
 
-      if (strcmp(method,"EQUATION") == 0) type = 4;
-      else if (strcmp(method,"TABLE") == 0) type = 3;
-      else if (strcmp(method,"VECTOR") == 0) type = 2;
-      else if (strcmp(method,"VALUE") == 0) type = 1;
-      else type = 0;
+      if      (method == "EQUATION") type = 4;
+      else if (method == "TABLE")    type = 3;
+      else if (method == "VECTOR")   type = 2;
+      else if (method == "VALUE")    type = 1;
+      else                           type = 0;
 
       if (type == 2 || type == 3) {
         coeffDefFile >> rows;

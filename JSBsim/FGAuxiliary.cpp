@@ -55,7 +55,7 @@ INCLUDES
 
 FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  strcpy(Name, "FGAuxiliary");
+  Name = "FGAuxiliary";
 }
 
 

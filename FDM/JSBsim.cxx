@@ -22,6 +22,17 @@
 // (Log is kept at end of this file)
 
 
+#include <Include/compiler.h>
+
+#include STL_STRING
+
+#include <Aircraft/aircraft.hxx>
+#include <Controls/controls.hxx>
+#include <Debug/logstream.hxx>
+#include <Include/fg_constants.h>
+#include <Main/options.hxx>
+#include <Math/fg_geodesy.hxx>
+
 #include <FDM/JSBsim/FGFDMExec.h>
 #include <FDM/JSBsim/FGAircraft.h>
 #include <FDM/JSBsim/FGFCS.h>
@@ -31,12 +42,6 @@
 #include <FDM/JSBsim/FGTranslation.h>
 
 #include "JSBsim.hxx"
-
-#include <Aircraft/aircraft.hxx>
-#include <Controls/controls.hxx>
-#include <Debug/logstream.hxx>
-#include <Include/fg_constants.h>
-#include <Math/fg_geodesy.hxx>
 
 
 // The default aircraft
@@ -50,10 +55,13 @@ int fgJSBsimInit(double dt) {
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  created FDMExec" );
 
-    FDMExec.GetAircraft()->LoadAircraft("X15");
+    string aircraft_path = current_options.get_fg_root() + "/Aircraft";
+    string engine_path = current_options.get_fg_root() + "/Engine";
+
+    FDMExec.GetAircraft()->LoadAircraft(aircraft_path, engine_path, "X15");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" );
 
-    FDMExec.GetState()->Reset("reset00");
+    FDMExec.GetState()->Reset(aircraft_path, "Reset00");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded initial conditions" );
 
     FDMExec.GetState()->Setdt(dt);
@@ -98,7 +106,10 @@ int fgJSBsimUpdate(FGInterface& f, int multiloop) {
 
     /* FDMExec.GetState()->Setsim_time(State->Getsim_time() 
 				    + State->Getdt() * multiloop); */
-    FDMExec.Run();
+
+    for ( int i = 0; i < multiloop; i++ ) {
+	FDMExec.Run();
+    }
 
     // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
     // printf("%d Altitude = %.2f\n", i, Altitude * 0.3048);
@@ -162,19 +173,24 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
     // ***FIXME*** f.set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
     // Positions
-    double lat = FDMExec.GetState()->Getlatitude();
+    double lat_geoc = FDMExec.GetState()->Getlatitude();
     double lon = FDMExec.GetState()->Getlongitude();
     double alt = FDMExec.GetState()->Geth();
-    double lat_geoc, sl_radius;
-    fgGeodToGeoc( lat, alt * FEET_TO_METER, &sl_radius, &lat_geoc );
+    double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
+    fgGeocToGeod( lat_geoc, EQUATORIAL_RADIUS_M + alt * FEET_TO_METER,
+		  &lat_geod, &tmp_alt, &sl_radius1 );
+    fgGeodToGeoc( lat_geod, alt * FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
 
-    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << lon << " lat = " << lat 
+    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << lon << " lat_geod = " << lat_geod
 	    << " lat_geoc = " << lat_geoc
-	    << " alt = " << alt 
-	    << " sl_radius = " << sl_radius * METER_TO_FEET);
+	    << " alt = " << alt << " tmp_alt = " << tmp_alt * METER_TO_FEET
+	    << " sl_radius1 = " << sl_radius1 * METER_TO_FEET
+	    << " sl_radius2 = " << sl_radius2 * METER_TO_FEET
+	    << " Equator = " << EQUATORIAL_RADIUS_FT );
 	    
-    f.set_Geocentric_Position( lat_geoc, lon, sl_radius * METER_TO_FEET + alt );
-    f.set_Geodetic_Position( lat, lon, alt );
+    f.set_Geocentric_Position( lat_geoc, lon, 
+			       sl_radius2 * METER_TO_FEET + alt );
+    f.set_Geodetic_Position( lat_geod, lon, alt );
     f.set_Euler_Angles( FDMExec.GetRotation()->Getphi(), 
 			FDMExec.GetRotation()->Gettht(),
 			FDMExec.GetRotation()->Getpsi() );
@@ -217,7 +233,7 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
     // f.set_Static_temperature( Static_temperature );
     // f.set_Total_temperature( Total_temperature );
 
-    /* **FIXME*** */ f.set_Sea_level_radius( sl_radius * METER_TO_FEET );
+    /* **FIXME*** */ f.set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
     /* **FIXME*** */ f.set_Earth_position_angle( 0.0 );
 
     /* ***FIXME*** */ f.set_Runway_altitude( 0.0 );
@@ -238,6 +254,10 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
 
 
 // $Log$
+// Revision 1.3  1999/02/26 22:09:10  curt
+// Added initial support for native SGI compilers.
+// Integrated Jon's next version of JSBsim.
+//
 // Revision 1.2  1999/02/11 21:09:40  curt
 // Interface with Jon's submitted JSBsim changes.
 //

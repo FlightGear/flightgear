@@ -55,7 +55,7 @@ INCLUDES
 
 FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  strcpy(Name,"FGAtmosphere");
+  Name = "FGAtmosphere";
 }
 
 

@@ -37,7 +37,22 @@ SENTRY
 /*******************************************************************************
 INCLUDES
 *******************************************************************************/
-#include <fstream.h>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  include STL_STRING
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
+#  else
+#    include <fstream.h>
+#  endif
+   FG_USING_STD(string);
+#  ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+     FG_USING_NAMESPACE(std);
+#  endif
+#else
+#  include <string>
+#  include <fstream>
+#endif
 
 /*******************************************************************************
 DEFINES
@@ -80,7 +95,7 @@ public:
   FGCoefficient(FGFDMExec*);
   FGCoefficient(FGFDMExec*, int, int);
   FGCoefficient(FGFDMExec*, int);
-  FGCoefficient(FGFDMExec*, char*);
+  FGCoefficient(FGFDMExec*, string);
   ~FGCoefficient(void);
 
   bool Allocate(int);
@@ -93,19 +108,19 @@ public:
 protected:
 
 private:
+  string filename;
+  string description;
+  string name;
+  string method;
   float StaticValue;
   float *Table2D;
   float **Table3D;
-  int rows, columns;
-  char filename[50];
-  char description[50];
-  char name[10];
-  int type;
-  char method[15];
-  int multipliers;
-  long int mult_idx[10];
-  int mult_count;
   float LookupR, LookupC;
+  long int mult_idx[10];
+  int rows, columns;
+  int type;
+  int multipliers;
+  int mult_count;
 
   float GetCoeffVal(int);
 

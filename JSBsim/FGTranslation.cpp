@@ -73,7 +73,7 @@ INCLUDES
 
 FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  strcpy(Name, "FGTranslation");
+  Name = "FGTranslation";
   Udot = Vdot = Wdot = 0.0;
 }
 

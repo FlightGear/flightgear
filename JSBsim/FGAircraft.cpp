@@ -1,4 +1,4 @@
-/** *****************************************************************************
+/*******************************************************************************
 
  Module:       FGAircraft.cpp
  Author:       Jon S. Berndt
@@ -131,11 +131,20 @@ stability derivatives for the aircraft.
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
-#include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <math.h>
+
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <cmath>
+#  else
+#    include <math.h>
+#  endif
+#else
+#  include <cmath>
+#endif
 
 #include "FGAircraft.h"
 #include "FGTranslation.h"
@@ -156,17 +165,16 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   int i;
 
-  strcpy(Name,"FGAircraft");
+  Name = "FGAircraft";
 
-  for (i=0;i<6;i++) Axis[i] = (char*)malloc(7);
   for (i=0;i<6;i++) coeff_ctr[i] = 0;
 
-  strcpy(Axis[LiftCoeff],"CLIFT");
-  strcpy(Axis[DragCoeff],"CDRAG");
-  strcpy(Axis[SideCoeff],"CSIDE");
-  strcpy(Axis[RollCoeff],"CROLL");
-  strcpy(Axis[PitchCoeff],"CPITCH");
-  strcpy(Axis[YawCoeff],"CYAW");
+  Axis[LiftCoeff]  = "CLIFT";
+  Axis[DragCoeff]  = "CDRAG";
+  Axis[SideCoeff]  = "CSIDE";
+  Axis[RollCoeff]  = "CROLL";
+  Axis[PitchCoeff] = "CPITCH";
+  Axis[YawCoeff]   = "CYAW";
 }
 
 
@@ -175,13 +183,14 @@ FGAircraft::~FGAircraft(void)
 }
 
 
-bool FGAircraft::LoadAircraft(char* fname)
+bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, 
+			      string fname)
 {
-  char path[256];
-  char fullpath[256];
-  char filename[256];
-  char aircraftDef[256];
-  char tag[256];
+  string path;
+  string fullpath;
+  string filename;
+  string aircraftDef;
+  string tag;
   DIR* dir;
   DIR* coeffdir;
   struct dirent* dirEntry;
@@ -190,8 +199,8 @@ bool FGAircraft::LoadAircraft(char* fname)
   struct stat st2;
   ifstream coeffInFile;
 
-  sprintf(aircraftDef, "/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/aircraft/%s/%s.dat", fname, fname);
-  ifstream aircraftfile(aircraftDef);
+  aircraftDef = aircraft_path + "/" + fname + "/" + fname + ".dat";
+  ifstream aircraftfile(aircraftDef.c_str());
 
   if (aircraftfile) {
     aircraftfile >> AircraftName;   // String with no embedded spaces
@@ -209,29 +218,30 @@ bool FGAircraft::LoadAircraft(char* fname)
     numTanks = numEngines = 0;
     numSelectedOxiTanks = numSelectedFuelTanks = 0;
 
-    while (strstr(tag,"EOF") == 0) {
-      if (strstr(tag,"CGLOC")) {
+    while ( !(tag == "EOF") ) {
+      if (tag == "CGLOC") {
         aircraftfile >> Xcg;        // inches
         aircraftfile >> Ycg;        // inches
         aircraftfile >> Zcg;        // inches
-      } else if (strstr(tag,"EYEPOINTLOC")) {
+      } else if (tag == "EYEPOINTLOC") {
         aircraftfile >> Xep;        // inches
         aircraftfile >> Yep;        // inches
         aircraftfile >> Zep;        // inches
-      } else if (strstr(tag,"TANK")) {
+      } else if (tag == "TANK") {
         Tank[numTanks] = new FGTank(aircraftfile);
         switch(Tank[numTanks]->GetType()) {
-        case 0:
-          numSelectedOxiTanks++;
-          break;
-        case 1:
+        case FGTank::ttFUEL:
           numSelectedFuelTanks++;
+          break;
+        case FGTank::ttOXIDIZER:
+          numSelectedOxiTanks++;
           break;
         }
         numTanks++;
-      } else if (strstr(tag,"ENGINE")) {
+      } else if (tag == "ENGINE") {
         aircraftfile >> tag;
-        Engine[numEngines] = new FGEngine(FDMExec, tag, numEngines);
+        Engine[numEngines] = new FGEngine(FDMExec, engine_path, tag, 
+					  numEngines);
         numEngines++;
       }
       aircraftfile >> tag;
@@ -257,20 +267,20 @@ bool FGAircraft::LoadAircraft(char* fname)
     //       track of the number of coefficients registered for each of the
     //       previously mentioned axis.
 
-    sprintf(path,"/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/aircraft/%s/",AircraftName);
-    if (dir = opendir(path)) {
+    path = aircraft_path + "/" + AircraftName + "/";
+    if (dir = opendir(path.c_str())) {
 
       while (dirEntry = readdir(dir)) {
-        sprintf(fullpath,"%s%s",path,dirEntry->d_name);
-        stat(fullpath,&st);
+        fullpath = path + dirEntry->d_name;
+        stat(fullpath.c_str(),&st);
         if ((st.st_mode & S_IFMT) == S_IFDIR) {
           for (int axis_ctr=0; axis_ctr < 6; axis_ctr++) {
-            if (strstr(dirEntry->d_name,Axis[axis_ctr])) {
-              if (coeffdir = opendir(fullpath)) {
+            if (dirEntry->d_name == Axis[axis_ctr]) {
+              if (coeffdir = opendir(fullpath.c_str())) {
                 while (coeffdirEntry = readdir(coeffdir)) {
                   if (coeffdirEntry->d_name[0] != '.') {
-                    sprintf(filename,"%s%s/%s",path,Axis[axis_ctr],coeffdirEntry->d_name);
-                    stat(filename,&st2);
+                    filename = path + Axis[axis_ctr] + "/" + coeffdirEntry->d_name;
+                    stat(filename.c_str(),&st2);
                     if (st2.st_size > 6) {
                       Coeff[axis_ctr][coeff_ctr[axis_ctr]] = new FGCoefficient(FDMExec, filename);
                       coeff_ctr[axis_ctr]++;
@@ -331,15 +341,16 @@ void FGAircraft::MassChange()
     Fshortage = Oshortage = 0.0;
     for (int t=0; t<numTanks; t++) {
       switch(Engine[e]->GetType()) {
-      case 0: // Rocket
+      case FGEngine::etRocket:
+
         switch(Tank[t]->GetType()) {
-        case 0: // Fuel
+        case FGTank::ttFUEL:
           if (Tank[t]->GetSelected()) {
             Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
                                    numSelectedFuelTanks)*(dt*rate) + Fshortage);
           }
           break;
-        case 1: // Oxidizer
+        case FGTank::ttOXIDIZER:
           if (Tank[t]->GetSelected()) {
             Oshortage = Tank[t]->Reduce((Engine[e]->CalcOxidizerNeed()/
                                     numSelectedOxiTanks)*(dt*rate) + Oshortage);
@@ -347,7 +358,11 @@ void FGAircraft::MassChange()
           break;
         }
         break;
-      default: // piston, turbojet, turbofan, etc.
+
+      case FGEngine::etPiston:
+      case FGEngine::etTurboJet:
+      case FGEngine::etTurboProp:
+
         if (Tank[t]->GetSelected()) {
           Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
                                    numSelectedFuelTanks)*(dt*rate) + Fshortage);

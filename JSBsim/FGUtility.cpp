@@ -42,10 +42,20 @@ DEFINES
 INCLUDES
 *******************************************************************************/
 
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <cmath>
+#  else
+#    include <math.h>
+#  endif
+#else
+#  include <cmath>
+#endif
+
 #include "FGUtility.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
-#include <math.h>
 
 /*******************************************************************************
 ************************************ CODE **************************************

@@ -4,6 +4,7 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGAtmosphere.cpp FGAtmosphere.h \
 	FGAuxiliary.cpp FGAuxiliary.h \
 	FGCoefficient.cpp FGCoefficient.h \
+	FGDefs.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
 	FGModel.cpp FGModel.h \
@@ -15,3 +16,7 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGUtility.cpp FGUtility.h \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h 
+
+INCLUDES += -I$(top_builddir)
+
+DEFS += -DFGFS

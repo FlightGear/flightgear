@@ -39,9 +39,27 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGDefs.h"
-#include <stdio.h>
-#include <string.h>
-#include <iostream.h>
+
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  include STL_STRING
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <cstring>
+#    include <iostream>
+#  else
+#    include <string.h>
+#    include <iostream.h>
+#  endif
+   FG_USING_STD(string);
+#  ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+     FG_USING_NAMESPACE(std);
+#  endif
+#else
+#  include <string>
+#  include <cstring>
+#  include <iostream>
+#endif
+
 
 /*******************************************************************************
 DEFINES
@@ -69,7 +87,7 @@ public:
   ~FGModel(void);
 
   FGModel* NextModel;
-  char Name[30];
+  string Name;
   virtual bool Run(void);
   virtual bool InitModel(void);
   void SetRate(int tt) {rate = tt;};

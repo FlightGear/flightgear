@@ -30,7 +30,6 @@ See header file.
 
 HISTORY
 --------------------------------------------------------------------------------
-
 01/21/99   JSB   Created
 
 ********************************************************************************
@@ -38,9 +37,6 @@ INCLUDES
 *******************************************************************************/
 
 #include <fstream.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "FGEngine.h"
 #include "FGState.h"
@@ -59,10 +55,11 @@ INCLUDES
 *******************************************************************************/
 
 
-FGEngine::FGEngine(FGFDMExec* fdex, char *engineName, int num)
+FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, 
+		   int num)
 {
-  char fullpath[256];
-  char tag[256];
+  string fullpath;
+  string tag;
 
   FDMExec = fdex;
 
@@ -76,17 +73,19 @@ FGEngine::FGEngine(FGFDMExec* fdex, char *engineName, int num)
   Auxiliary   = FDMExec->GetAuxiliary();
   Output      = FDMExec->GetOutput();
 
-  strcpy(Name, engineName);
-  sprintf(fullpath,"/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/engine/%s.dat", engineName);
-  ifstream enginefile(fullpath);
+  Name = engineName;
+  fullpath = enginePath + "/" + engineName + ".dat";
+  ifstream enginefile(fullpath.c_str());
 
   if (enginefile) {
     enginefile >> tag;
-    if (strstr(tag,"ROCKET")) Type = 0;
-    else if (strstr(tag,"PISTON")) Type = 1;
-    else if (strstr(tag,"TURBOPROP")) Type = 2;
-    else if (strstr(tag,"TURBOJET")) Type = 3;
-    else Type = 0;
+
+    if      (tag == "ROCKET")    Type = etRocket;
+    else if (tag == "PISTON")    Type = etPiston;
+    else if (tag == "TURBOPROP") Type = etTurboProp;
+    else if (tag == "TURBOJET")  Type = etTurboJet;
+    else                         Type = etUnknown;
+
     enginefile >> X;
     enginefile >> Y;
     enginefile >> Z;
@@ -95,7 +94,7 @@ FGEngine::FGEngine(FGFDMExec* fdex, char *engineName, int num)
     enginefile >> MaxThrottle;
     enginefile >> MinThrottle;
     enginefile >> SLFuelFlowMax;
-    if (Type == 0)
+    if (Type == 1)
       enginefile >> SLOxiFlowMax;
     enginefile.close();
   } else {
@@ -130,7 +129,7 @@ float FGEngine::CalcRocketThrust(void)
     Flameout = false;
   }
 
-  Thrust +=	0.8*(Thrust - lastThrust); // actual thrust
+  Thrust += 0.8*(Thrust - lastThrust); // actual thrust
 
   return Thrust;
 }
@@ -145,10 +144,10 @@ float FGEngine::CalcPistonThrust(void)
 float FGEngine::CalcThrust(void)
 {
   switch(Type) {
-  case 0: // Rocket
+  case etRocket:
     return CalcRocketThrust();
     // break;
-  case 1: // Piston
+  case etPiston:
     return CalcPistonThrust();
     // break;
   default:

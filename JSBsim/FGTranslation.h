@@ -56,7 +56,17 @@ SENTRY
 INCLUDES
 *******************************************************************************/
 
-#include <math.h>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <cmath>
+#  else
+#    include <math.h>
+#  endif
+#else
+#  include <cmath>
+#endif
+
 #include "FGModel.h"
 
 /*******************************************************************************

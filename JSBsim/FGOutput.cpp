@@ -39,11 +39,18 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream.h>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <iostream>
+#  else
+#    include <iostream.h>
+#  endif
+#else
+#  include <iostream>
+#endif
 #ifdef HAVE_CURSES
-  #include <ncurses.h>
+#  include <ncurses.h>
 #endif
 
 #include "FGOutput.h"
@@ -63,7 +70,7 @@ INCLUDES
 
 FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  strcpy(Name, "FGOutput");
+  Name = "FGOutput";
   FirstPass = true;
 #ifdef HAVE_CURSES
   initscr();
@@ -92,7 +99,7 @@ bool FGOutput::Run(void)
 void FGOutput::ConsoleOutput(void)
 {
 #ifdef HAVE_CURSES
-  char buffer[20];
+  string buffer;
 
   clear();
   move(1,1);  insstr("Quaternions");
@@ -101,10 +108,10 @@ void FGOutput::ConsoleOutput(void)
   move(2,27); insstr("Q2");
   move(2,38); insstr("Q3");
 
-  move(3,1);  sprintf(buffer,"%4.4f",Rotation->GetQ0()); insstr(buffer);
-  move(3,12); sprintf(buffer,"%4.4f",Rotation->GetQ1()); insstr(buffer);
-  move(3,23); sprintf(buffer,"%4.4f",Rotation->GetQ2()); insstr(buffer);
-  move(3,34); sprintf(buffer,"%4.4f",Rotation->GetQ3()); insstr(buffer);
+  move(3,1);  buffer = Rotation->GetQ0(); insstr(buffer.c_str());
+  move(3,12); buffer = Rotation->GetQ1(); insstr(buffer.c_str());
+  move(3,23); buffer = Rotation->GetQ2(); insstr(buffer.c_str());
+  move(3,34); buffer = Rotation->GetQ3(); insstr(buffer.c_str());
 
   move(0,0); insstr("Time: ");
   move(0,6); insstr(gcvt(State->Getsim_time(),6,buffer));
@@ -113,41 +120,41 @@ void FGOutput::ConsoleOutput(void)
   move(2,55); insstr("Tht");
   move(2,64); insstr("Psi");
 
-  move(3,45); sprintf(buffer,"%3.3f",Rotation->Getphi()); insstr(buffer);
-  move(3,54); sprintf(buffer,"%3.3f",Rotation->Gettht()); insstr(buffer);
-  move(3,63); sprintf(buffer,"%3.3f",Rotation->Getpsi()); insstr(buffer);
+  move(3,45); buffer = Rotation->Getphi(); insstr(buffer.c_str());
+  move(3,54); buffer = Rotation->Gettht(); insstr(buffer.c_str());
+  move(3,63); buffer = Rotation->Getpsi(); insstr(buffer.c_str());
 
   move(5,47); insstr("U");
   move(5,56); insstr("V");
   move(5,65); insstr("W");
 
-  move(6,45); sprintf(buffer,"%5.2f",Translation->GetU()); insstr(buffer);
-  move(6,54); sprintf(buffer,"%5.2f",Translation->GetV()); insstr(buffer);
-  move(6,63); sprintf(buffer,"%5.2f",Translation->GetW()); insstr(buffer);
+  move(6,45); buffer = Translation->GetU(); insstr(buffer.c_str());
+  move(6,54); buffer = Translation->GetV(); insstr(buffer.c_str());
+  move(6,63); buffer = Translation->GetW(); insstr(buffer.c_str());
 
   move(8,47); insstr("Fx");
   move(8,56); insstr("Fy");
   move(8,65); insstr("Fz");
 
-  move(9,45); sprintf(buffer,"%5.2f",Aircraft->GetFx()); insstr(buffer);
-  move(9,54); sprintf(buffer,"%5.2f",Aircraft->GetFy()); insstr(buffer);
-  move(9,63); sprintf(buffer,"%5.2f",Aircraft->GetFz()); insstr(buffer);
+  move(9,45); buffer = Aircraft->GetFx(); insstr(buffer.c_str());
+  move(9,54); buffer = Aircraft->GetFy(); insstr(buffer.c_str());
+  move(9,63); buffer = Aircraft->GetFz(); insstr(buffer.c_str());
 
   move(11,47); insstr("Fn");
   move(11,56); insstr("Fe");
   move(11,65); insstr("Fd");
 
-  move(12,45); sprintf(buffer,"%5.2f",Position->GetFn()); insstr(buffer);
-  move(12,54); sprintf(buffer,"%5.2f",Position->GetFe()); insstr(buffer);
-  move(12,63); sprintf(buffer,"%5.2f",Position->GetFd()); insstr(buffer);
+  move(12,45); buffer = Position->GetFn(); insstr(buffer.c_str());
+  move(12,54); buffer = Position->GetFe(); insstr(buffer.c_str());
+  move(12,63); buffer = Position->GetFd(); insstr(buffer.c_str());
 
   move(14,47); insstr("Latitude");
   move(14,57); insstr("Longitude");
   move(14,67); insstr("Altitude");
 
-  move(15,47); sprintf(buffer,"%5.2f",State->Getlatitude()); insstr(buffer);
-  move(15,57); sprintf(buffer,"%5.2f",State->Getlongitude()); insstr(buffer);
-  move(15,67); sprintf(buffer,"%5.2f",State->Geth()); insstr(buffer);
+  move(15,47); buffer = State->Getlatitude(); insstr(buffer.c_str());
+  move(15,57); buffer = State->Getlongitude(); insstr(buffer.c_str());
+  move(15,67); buffer = State->Geth(); insstr(buffer.c_str());
 
   refresh();
 
