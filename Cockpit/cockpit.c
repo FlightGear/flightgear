@@ -85,20 +85,24 @@ fgCOCKPIT *fgCockpitAddHUD( fgCOCKPIT *cockpit, HUD *hud )
 void fgCockpitUpdate( void )
 {
 
-	fgPrintf( FG_COCKPIT, FG_INFO,
+	fgPrintf( FG_COCKPIT, FG_DEBUG,
 		  "Cockpit: code %d   status %d\n", 
 		  aircraft_cockpit->code, aircraft_cockpit->status );
-	if( aircraft_cockpit->hud != NULL )			// That is, if the aircraft has a HUD,
-		fgUpdateHUD( aircraft_cockpit->hud );	// then draw it.
-                
+	if( aircraft_cockpit->hud != NULL ) {
+	    // That is, if the aircraft has a HUD, then draw it.
+	    fgUpdateHUD( aircraft_cockpit->hud );
+	}
 }
 
 
 /* $Log$
-/* Revision 1.10  1998/02/07 15:29:33  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.11  1998/03/14 00:32:13  curt
+/* Changed a printf() to a fgPrintf().
 /*
+ * Revision 1.10  1998/02/07 15:29:33  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.9  1998/02/03 23:20:14  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
