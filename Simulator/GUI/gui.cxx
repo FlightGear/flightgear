@@ -61,6 +61,7 @@
 
 #include "gui.h"
 
+FG_USING_STD(cout);
 FG_USING_STD(string);
 
 puFont guiFnt = 0;
