@@ -72,7 +72,9 @@
 
 #include "uiuc_recorder.h"
 
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(endl);		// -dw
+#endif
 
 void uiuc_recorder( double dt )
 {

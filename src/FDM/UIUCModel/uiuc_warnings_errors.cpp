@@ -78,11 +78,13 @@ for information.
 
 #include "uiuc_warnings_errors.h"
 
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD (cerr);
 SG_USING_STD (endl);
 
-#ifndef _MSC_VER
+#  ifndef _MSC_VER
 SG_USING_STD (exit);
+#  endif
 #endif
 
 void uiuc_warnings_errors(int errorCode, string line)

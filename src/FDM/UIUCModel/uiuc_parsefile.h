@@ -5,12 +5,14 @@
 
 #include <string>
 #include <list>
-#include <fstream>
+#include STL_FSTREAM
 
 SG_USING_STD(list);
 SG_USING_STD(string);
 SG_USING_STD(getline);
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(ifstream);
+#endif
 
 #define DELIMITERS " \t"
 #define COMMENT "#"

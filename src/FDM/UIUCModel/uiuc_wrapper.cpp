@@ -78,8 +78,10 @@
 #include "uiuc_betaprobe.h"
 #include <FDM/LaRCsim/ls_generic.h>
 
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(endl);
+#endif
 
 extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);
@@ -93,7 +95,7 @@ void uiuc_init_aeromodel ()
 {
   string aircraft;
 
-  if (aircraft_dir != "")
+  if (aircraft_dir != (string)"")
     aircraft = aircraft_dir + "/";
 
   aircraft += "aircraft.dat";

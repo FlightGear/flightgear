@@ -104,12 +104,14 @@
 
 #include "uiuc_menu.h"
 
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cerr);
 SG_USING_STD(cout);
 SG_USING_STD(endl);
 
-#ifndef _MSC_VER
+#  ifndef _MSC_VR
 SG_USING_STD(exit);
+#  endif
 #endif
 
 bool check_float(string  &token)

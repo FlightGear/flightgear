@@ -66,7 +66,9 @@
 
 #include "uiuc_gear.h"
 
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cerr);
+#endif
 
 
 #define HEIGHT_AGL_WHEEL d_wheel_rwy_local_v[2]
