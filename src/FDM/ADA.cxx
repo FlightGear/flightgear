@@ -23,6 +23,7 @@
 #endif
 
 #include <simgear/io/iochannel.hxx>
+#include <simgear/io/sg_socket.hxx>
 #include <simgear/constants.h>
 
 #include <Controls/controls.hxx>

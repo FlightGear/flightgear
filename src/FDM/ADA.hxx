@@ -21,7 +21,7 @@
 #define _ADA_HXX
 
 
-#include <simgear/io/sg_socket.hxx>
+class SGSocket;
 
 #include <FDM/flight.hxx>
 
