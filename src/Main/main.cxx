@@ -113,8 +113,10 @@
 // Should already be inlcluded by gl.h if needed by your platform so
 // we shouldn't include this here.
 // #include <GL/glext.h>
+#if !defined(sgi)
 // PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
 // PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
+#endif
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 //Required for using GL_extensions
 void fgLoadDCS (void);
@@ -806,10 +808,12 @@ void fgRenderFrame( void ) {
             glEnable(GL_POINT_SMOOTH);
             float quadratic[3] = {1.0, 0.01, 0.0001};
             // get the address of our OpenGL extensions
+#if !defined(sgi)
             glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
                 wglGetProcAddress("glPointParameterfEXT");
             glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
                 wglGetProcAddress("glPointParameterfvEXT");
+#endif
             // makes the points fade as they move away
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
             glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
