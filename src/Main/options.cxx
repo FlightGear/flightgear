@@ -1273,7 +1273,7 @@ void fgShowAircraft(void) {
    while ((dire = ulReadDir(dirp)) != NULL) {
       char *ptr;
 
-      if ((ptr = strstr(dire->d_name, "-set.xml")) ) {
+      if ((ptr = strstr(dire->d_name, "-set.xml")) && ptr[8] == '\0' ) {
           SGPath afile = path;
           afile.append(dire->d_name);
 
