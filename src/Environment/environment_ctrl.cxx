@@ -316,7 +316,7 @@ FGInterpolateEnvironmentCtrl::bucket::operator< (const bucket &b) const
 
 FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
     : env( new FGInterpolateEnvironmentCtrl ),
-      _icao( fgGetString("/sim/presets/airport-id") ),
+      _icao( "" ),
       search_interval_sec( 60.0 ),        // 1 minute
       same_station_interval_sec( 900.0 ), // 15 minutes
       search_elapsed( 9999.0 ),
@@ -396,19 +396,21 @@ FGMetarEnvironmentCtrl::init ()
             ->search( longitude->getDoubleValue(),
                       latitude->getDoubleValue(),
                       true );
-        if ( fetch_data( a.id ) ) {
-            cout << "closest station w/ metar = " << a.id << endl;
+        FGMetarResult result = fetch_data( a.id );
+        if ( result.m != NULL ) {
+            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.id);
             last_apt = a;
             _icao = a.id;
             search_elapsed = 0.0;
             fetch_elapsed = 0.0;
+            update_metar_properties( result.m );
             update_env_config();
             env->init();
             found_metar = true;
         } else {
             // mark as no metar so it doesn't show up in subsequent
             // searches.
-            cout << "no metar at metar = " << a.id << endl;
+            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a.id );
             globals->get_airports()->no_metar( a.id );
         }
     }
@@ -427,12 +429,17 @@ FGMetarEnvironmentCtrl::reinit ()
 void
 FGMetarEnvironmentCtrl::update(double delta_time_sec)
 {
+    FGMetarResult result;
+
     static const SGPropertyNode *longitude
         = fgGetNode( "/position/longitude-deg", true );
     static const SGPropertyNode *latitude
         = fgGetNode( "/position/latitude-deg", true );
     search_elapsed += delta_time_sec;
     fetch_elapsed += delta_time_sec;
+
+    // if time for a new search request, push it onto the request
+    // queue
     if ( search_elapsed > search_interval_sec ) {
         FGAirport a = globals->get_airports()
             ->search( longitude->getDoubleValue(),
@@ -441,29 +448,55 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         if ( last_apt.id != a.id
              || fetch_elapsed > same_station_interval_sec )
         {
-            if ( fetch_data( a.id ) ) {
-                cout << "closest station w/ metar = " << a.id << endl;
-                last_apt = a;
-                _icao = a.id;
-                search_elapsed = 0.0;
-                fetch_elapsed = 0.0;
-                update_env_config();
-                env->reinit();
-            } else {
-                // mark as no metar so it doesn't show up in subsequent
-                // searches.
-                cout << "no metar at metar = " << a.id << endl;
-                globals->get_airports()->no_metar( a.id );
-            }
+            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = " << a.id);
+            request_queue.push( a.id );
+            last_apt = a;
+            _icao = a.id;
+            search_elapsed = 0.0;
+            fetch_elapsed = 0.0;
         } else {
             search_elapsed = 0.0;
-            // cout << "same station, waiting = "
-            //      << same_station_interval_sec - fetch_elapsed << endl;
+            SG_LOG( SG_GENERAL, SG_INFO, "same station, waiting = "
+                 << same_station_interval_sec - fetch_elapsed );
+        }
+    }
+
+#ifndef ENABLE_THREADS
+    // No loader thread running so manually fetch the data
+    string id = "";
+    while ( !request_queue.empty() ) {
+        id = request_queue.front();
+        request_queue.pop();
+    }
+    if ( !id.empty() ) {
+        SG_LOG( SG_GENERAL, SG_INFO, "inline fetching = " << id );
+        result = fetch_data( id );
+        result_queue.push( result );
+    }
+#endif // ENABLE_THREADS
+
+    // process any results from the loader.
+    while ( !result_queue.empty() ) {
+        result = result_queue.front();
+        result_queue.pop();
+        if ( result.m != NULL ) {
+            update_metar_properties( result.m );
+            delete result.m;
+            update_env_config();
+            env->reinit();
+        } else {
+            // mark as no metar so it doesn't show up in subsequent
+            // searches, and signal an immediate re-search.
+            SG_LOG( SG_GENERAL, SG_WARN,
+                    "no metar at station = " << result.icao );
+            globals->get_airports()->no_metar( result.icao );
+            search_elapsed = 9999.0;
         }
     }
 
     env->update(delta_time_sec);
 }
+
 
 void
 FGMetarEnvironmentCtrl::setEnvironment (FGEnvironment * environment)
@@ -471,174 +504,144 @@ FGMetarEnvironmentCtrl::setEnvironment (FGEnvironment * environment)
     env->setEnvironment(environment);
 }
 
-bool
-FGMetarEnvironmentCtrl::fetch_data (const string &icao)
+FGMetarResult
+FGMetarEnvironmentCtrl::fetch_data( const string &icao )
 {
-    char s[128];
-    double d, dt;
-    int i;
-
-    if ((icao == "") && (_icao == "")) {
-        _icao = fgGetString("/sim/presets/airport-id");
-
-    } else if (icao != "") {
-        _icao = icao;
-    }
+    FGMetarResult result;
+    result.icao = icao;
 
     // fetch station elevation if exists
-    FGAirport a = globals->get_airports()->search( _icao );
+    FGAirport a = globals->get_airports()->search( icao );
     station_elevation_ft = a.elevation;
 
     // fetch current metar data
-    SGMetar *m = NULL;
-#ifdef ENABLE_THREADS
-
-    // We are only interested in the latest metar report
-    // FIXME: Do we want to keep the latest valid report instead?
-    while (!metar_queue.empty()) {
- 
-        if (m != NULL)
-            delete m;
-
-        m = metar_queue.pop();
-    }
-
-    if ( m != NULL ) {
-
-#else
     try {
         string host = proxy_host->getStringValue();
         string auth = proxy_auth->getStringValue();
         string port = proxy_port->getStringValue();
-        m = new SGMetar( _icao, host, port, auth);
-
-#endif // ENABLE_THREADS
-
-        d = m->getMinVisibility().getVisibility_m();
-        d = (d != SGMetarNaN) ? d : 10000;
-        fgSetDouble("/environment/metar/min-visibility-m", d);
-
-        dt =  m->getMaxVisibility().getVisibility_m();
-        d = (dt != SGMetarNaN) ? dt : d;
-        fgSetDouble("/environment/metar/max-visibility-m", d);
-
-        SGMetarVisibility *dirvis = m->getDirVisibility();
-        for (i = 0; i < 8; i++, dirvis++) {
-            const char *min = "/environment/metar/visibility[%d]/min-m";
-            const char *max = "/environment/metar/visibility[%d]/max-m";
-            char s[128];
-
-            d = dirvis->getVisibility_m();
-            d = (d != SGMetarNaN) ? d : 10000;
-
-            snprintf(s, 128, min, i);
-            fgSetDouble(s, d);
-            snprintf(s, 128, max, i);
-            fgSetDouble(s, d);
-        }
-
-        i = m->getWindDir();
-        if ( i == -1 ) {
-            fgSetInt("/environment/metar/base-wind-range-from",
-                        m->getWindRangeFrom() );
-            fgSetInt("/environment/metar/base-wind-range-to",
-                        m->getWindRangeTo() );
-        } else {
-            fgSetInt("/environment/metar/base-wind-range-from", i);
-            fgSetInt("/environment/metar/base-wind-range-to", i);
-        }
-        fgSetDouble("/environment/metar/base-wind-speed-kt",
-                    m->getWindSpeed_kt() );
-
-        d = m->getGustSpeed_kt();
-        d = (d != SGMetarNaN) ? d : 0.0;
-        fgSetDouble("/environment/metar/gust-wind-speed-kt", d);
-
-        d = m->getTemperature_C();
-        if (d != SGMetarNaN) {
-            dt = m->getDewpoint_C();
-            dt = (dt != SGMetarNaN) ? dt : 0.0;
-            fgSetDouble("/environment/metar/dewpoint-degc", dt);
-            fgSetDouble("/environment/metar/rel-humidity-norm",
-                        m->getRelHumidity() );
-        }   
-        d = (d != SGMetarNaN) ? d : 15.0;
-        fgSetDouble("/environment/metar/temperature-degc", d);
-
-        d = m->getPressure_inHg();
-        d = (d != SGMetarNaN) ? d : 30.0;
-        fgSetDouble("/environment/metar/pressure-inhg", d);
-
-        vector<SGMetarCloud> cv = m->getClouds();
-        vector<SGMetarCloud>::iterator cloud;
-
-        const char *cl = "/environment/clouds/layer[%i]";
-        for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {
-            const char *coverage_string[5] = 
-                          { "clear", "few", "scattered", "broken", "overcast" };
-            const double thickness[5] = { 0, 65, 600,750, 1000};
-            int q;
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/coverage", 128);
-            q = cloud->getCoverage();
-            q = (q != -1 ) ? q : 0;
-            fgSetString(s, coverage_string[q] );
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/elevation-ft", 128);
-            d = cloud->getAltitude_ft();
-            d = (d != SGMetarNaN) ? d : -9999;
-            fgSetDouble(s, d + station_elevation_ft);
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/thickness-ft", 128);
-            fgSetDouble(s, thickness[q]);
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/span-m", 128);
-            fgSetDouble(s, 40000.0);
-        }
-        for (; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-            snprintf(s, 128, cl, i);
-            strncat(s, "/coverage", 128);
-            fgSetString(s, "clear");
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/elevation-ft", 128);
-            fgSetDouble(s, -9999);
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/thickness-ft", 128);
-            fgSetDouble(s, 0);
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/span-m", 128);
-            fgSetDouble(s, 40000.0);
-        }
-
-        delete m;
-
-    }
-#ifdef ENABLE_THREADS
-
-    mutex.lock();
-    metar_cond.signal();
-    mutex.unlock();
-
-    if (m == NULL)
-        return false;
-
-#else
-    catch (const sg_io_exception& e) {
+        result.m = new SGMetar( icao, host, port, auth);
+    } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
-                                      << e.getFormattedMessage().c_str() );
-        return false;
+                << e.getFormattedMessage().c_str() );
+        result.m = NULL;
     }
-#endif // ENABLE_THREADS
 
-    return true;
+    return result;
 }
+
+
+void
+FGMetarEnvironmentCtrl::update_metar_properties( SGMetar *m )
+{
+    int i;
+    double d, dt;
+    char s[128];
+
+    d = m->getMinVisibility().getVisibility_m();
+    d = (d != SGMetarNaN) ? d : 10000;
+    fgSetDouble("/environment/metar/min-visibility-m", d);
+
+    dt =  m->getMaxVisibility().getVisibility_m();
+    d = (dt != SGMetarNaN) ? dt : d;
+    fgSetDouble("/environment/metar/max-visibility-m", d);
+
+    SGMetarVisibility *dirvis = m->getDirVisibility();
+    for (i = 0; i < 8; i++, dirvis++) {
+        const char *min = "/environment/metar/visibility[%d]/min-m";
+        const char *max = "/environment/metar/visibility[%d]/max-m";
+        char s[128];
+
+        d = dirvis->getVisibility_m();
+        d = (d != SGMetarNaN) ? d : 10000;
+
+        snprintf(s, 128, min, i);
+        fgSetDouble(s, d);
+        snprintf(s, 128, max, i);
+        fgSetDouble(s, d);
+    }
+
+    i = m->getWindDir();
+    if ( i == -1 ) {
+        fgSetInt("/environment/metar/base-wind-range-from",
+                 m->getWindRangeFrom() );
+        fgSetInt("/environment/metar/base-wind-range-to",
+                 m->getWindRangeTo() );
+    } else {
+        fgSetInt("/environment/metar/base-wind-range-from", i);
+        fgSetInt("/environment/metar/base-wind-range-to", i);
+    }
+    fgSetDouble("/environment/metar/base-wind-speed-kt",
+                m->getWindSpeed_kt() );
+
+    d = m->getGustSpeed_kt();
+    d = (d != SGMetarNaN) ? d : 0.0;
+    fgSetDouble("/environment/metar/gust-wind-speed-kt", d);
+
+    d = m->getTemperature_C();
+    if (d != SGMetarNaN) {
+        dt = m->getDewpoint_C();
+        dt = (dt != SGMetarNaN) ? dt : 0.0;
+        fgSetDouble("/environment/metar/dewpoint-degc", dt);
+        fgSetDouble("/environment/metar/rel-humidity-norm",
+                    m->getRelHumidity() );
+    }
+    d = (d != SGMetarNaN) ? d : 15.0;
+    fgSetDouble("/environment/metar/temperature-degc", d);
+
+    d = m->getPressure_inHg();
+    d = (d != SGMetarNaN) ? d : 30.0;
+    fgSetDouble("/environment/metar/pressure-inhg", d);
+
+    vector<SGMetarCloud> cv = m->getClouds();
+    vector<SGMetarCloud>::iterator cloud;
+
+    const char *cl = "/environment/clouds/layer[%i]";
+    for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {
+        const char *coverage_string[5] = 
+            { "clear", "few", "scattered", "broken", "overcast" };
+        const double thickness[5] = { 0, 65, 600,750, 1000};
+        int q;
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/coverage", 128);
+        q = cloud->getCoverage();
+        q = (q != -1 ) ? q : 0;
+        fgSetString(s, coverage_string[q] );
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/elevation-ft", 128);
+        d = cloud->getAltitude_ft();
+        d = (d != SGMetarNaN) ? d : -9999;
+        fgSetDouble(s, d + station_elevation_ft);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/thickness-ft", 128);
+        fgSetDouble(s, thickness[q]);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/span-m", 128);
+        fgSetDouble(s, 40000.0);
+    }
+
+    for (; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
+        snprintf(s, 128, cl, i);
+        strncat(s, "/coverage", 128);
+        fgSetString(s, "clear");
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/elevation-ft", 128);
+        fgSetDouble(s, -9999);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/thickness-ft", 128);
+        fgSetDouble(s, 0);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/span-m", 128);
+        fgSetDouble(s, 40000.0);
+    }
+}
+
 
 #ifdef ENABLE_THREADS
 /**
@@ -647,34 +650,18 @@ FGMetarEnvironmentCtrl::fetch_data (const string &icao)
 void
 FGMetarEnvironmentCtrl::MetarThread::run()
 {
-    SGMetar *m = NULL;
-
     // pthread_cleanup_push( metar_cleanup_handler, fetcher );
     while ( true )
     {
         set_cancel( SGThread::CANCEL_DISABLE );
-        try
-        {
-            cout << "Fetching ..." << endl;
-            // if (m != NULL)  m = NULL;
-            string host = fetcher->proxy_host->getStringValue();
-            string auth = fetcher->proxy_auth->getStringValue();
-            string port = fetcher->proxy_port->getStringValue();
-            m = new SGMetar( fetcher->_icao, host, port, auth );
 
-        } catch (const sg_io_exception& e) {
-            // SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
-            //                             << e.getFormattedMessage().c_str() );
-            m = NULL;
-        }
+        string icao = fetcher->request_queue.pop();
+        SG_LOG( SG_GENERAL, SG_INFO, "Thread: fetch metar data = " << icao );
+        FGMetarResult result = fetcher->fetch_data( icao );
+
         set_cancel( SGThread::CANCEL_DEFERRED );
 
-        fetcher->metar_queue.push( m );
-
-        // Wait for the next frame signal before we fetch the next metar data
-        fetcher->mutex.lock();
-        fetcher->metar_cond.wait( fetcher->mutex );
-        fetcher->mutex.unlock();
+        fetcher->result_queue.push( result );
     }
     // pthread_cleanup_pop(1);
 }

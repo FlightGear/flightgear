@@ -38,8 +38,10 @@
 #  include <math.h>
 #endif
 
+#include <queue>
 #include <vector>
 
+SG_USING_STD(queue);
 SG_USING_STD(vector);
 
 class SGPropertyNode;
@@ -139,6 +141,13 @@ private:
 };
 
 
+// A convenience wrapper around SGMetar
+struct FGMetarResult {
+    string icao;
+    SGMetar *m;
+};
+
+
 
 /**
  * Interplation controller using the SGMetar class
@@ -152,7 +161,6 @@ public:
     virtual void init ();
     virtual void reinit ();
     virtual void update (double delta_time_sec);
-
     virtual void setEnvironment (FGEnvironment * environment);
 
 private:
@@ -169,9 +177,9 @@ private:
     SGPropertyNode *proxy_port;
     SGPropertyNode *proxy_auth;
 
-    bool fetch_data (const string &icao);
+    FGMetarResult fetch_data( const string &icao );
+    virtual void update_metar_properties( SGMetar *m );
     void update_env_config();
-
 
 private:
 
@@ -179,8 +187,25 @@ private:
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
-    SGBlockingQueue< SGMetar * > metar_queue;
+    SGBlockingQueue < string > request_queue;
 
+    /**
+     * FIFO queue which holds a pointer to the fetched metar data.
+     */
+    SGBlockingQueue < FGMetarResult > result_queue;
+#else
+    /**
+     * FIFO queue which holds a pointer to the fetched metar data.
+     */
+    queue < string > request_queue;
+
+    /**
+     * FIFO queue which holds a pointer to the fetched metar data.
+     */
+    queue < FGMetarResult > result_queue;
+#endif
+
+#ifdef ENABLE_THREADS
     /**
      * This class represents the thread of execution responsible for
      * fetching the metar data.
@@ -192,7 +217,7 @@ private:
         ~MetarThread() {}
 
         /**
-         * Reads the tile from disk.
+         * Fetched the metar data from the NOAA.
          */
         void run();
 
