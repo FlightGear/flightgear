@@ -230,17 +230,17 @@ int fgInitSubsystems( void )
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    f->set_Local_Velocities( 0.0, 0.0, 0.0 );
+    f->set_Velocities_Local( 0.0, 0.0, 0.0 );
 
     // Initial Orientation
-    f->set_Euler_Orientation( current_options.get_roll() * DEG_TO_RAD,
-			      current_options.get_pitch() * DEG_TO_RAD,
-			      current_options.get_heading() * DEG_TO_RAD );
+    f->set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
+			 current_options.get_pitch() * DEG_TO_RAD,
+			 current_options.get_heading() * DEG_TO_RAD );
 
     // Initial Angular Body rates
-    f->set_Body_Rates( 7.206685E-05, 0.000000E+00, 9.492658E-05 );
+    f->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
 
-    f->set_Earth_position_angle( 0.000000E+00 );
+    f->set_Earth_position_angle( 0.0 );
 
     // Mass properties and geometry values
     f->set_Inertias( 8.547270E+01, 
@@ -369,6 +369,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.53  1998/12/03 04:25:05  curt
+// Working on fixing up new fgFLIGHT class.
+//
 // Revision 1.52  1998/12/03 01:17:17  curt
 // Converted fgFLIGHT to a class.
 //
