@@ -723,10 +723,10 @@ bool fgBinObjLoad( const string& path, const bool is_base,
             sgVec3 up;
             sgSetVec3( up, center->x(), center->y(), center->z() );
             // returns a transform -> lod -> leaf structure
-            ssgBranch *branch = gen_directional_lights( nodes, normals,
-                                                        pts_v[i], pts_n[i],
-                                                        matlib, pt_materials[i],
-                                                        up );
+            ssgBranch *branch = sgMakeDirectionalLights( nodes, normals,
+                                                         pts_v[i], pts_n[i],
+                                                         matlib,
+                                                         pt_materials[i], up );
             // branches don't honor callbacks as far as I know so I'm
             // commenting this out to avoid a plib runtime warning.
             branch->setTravCallback( SSG_CALLBACK_PRETRAV,

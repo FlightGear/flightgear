@@ -719,8 +719,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
                 obj_trans->setTransform( &obj_pos );
 
                 ssgBranch *custom_obj
-                    = gen_taxi_sign( globals->get_matlib(),
-                                     custom_path.str(), name );
+                    = sgMakeTaxiSign( globals->get_matlib(),
+                                      custom_path.str(), name );
 
                 // wire the pieces together
                 if ( custom_obj != NULL ) {
@@ -748,8 +748,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
                 obj_trans->setTransform( &obj_pos );
 
                 ssgBranch *custom_obj
-                    = gen_runway_sign( globals->get_matlib(),
-                                       custom_path.str(), name );
+                    = sgMakeRunwaySign( globals->get_matlib(),
+                                        custom_path.str(), name );
 
                 // wire the pieces together
                 if ( custom_obj != NULL ) {
