@@ -28,51 +28,10 @@ static const char *IdHdr = ID_MATRIX33;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-double** FGalloc(void)
-{
-  double **A;
-
-  A = new double *[4];
-  if (!A) return NULL;
-  
-  double *tmp;
-  tmp = new double [16];
-  
-  if (!tmp) {
-	  delete A;
-	  return NULL;
-  }
-  A[0] = tmp;
-  A[1] = tmp + 4;
-  A[2] = tmp + 8;
-  A[3] = tmp + 12;
-#if 0
-  A[0] = new double [4];
-  if (!A[0]) return NULL;
-  A[1] = new double [4];
-  if (!A[1]) return NULL;
-  A[2] = new double [4];
-  if (!A[2]) return NULL;
-  A[3] = new double [4];
-  if (!A[3]) return NULL;
-#endif
-  
-  return A;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void dealloc(double **A)
-{
-  delete[] A[0];
-  delete[] A;
-}
-
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGMatrix33::FGMatrix33(void)
 {
-  data=FGalloc();
   InitMatrix();
   rowCtr = colCtr = 1;
   
@@ -83,7 +42,6 @@ FGMatrix33::FGMatrix33(void)
 
 FGMatrix33::FGMatrix33(int r, int c)
 {
-  data=FGalloc();
   InitMatrix();
   rowCtr = colCtr = 1;
   
@@ -99,8 +57,6 @@ FGMatrix33::FGMatrix33(const FGMatrix33& M)
   prec   = M.prec;
   delim  = M.delim;
   origin = M.origin;
-
-  data=FGalloc();
 
   data[1][1] = M.data[1][1];
   data[1][2] = M.data[1][2];
@@ -119,7 +75,6 @@ FGMatrix33::FGMatrix33(const FGMatrix33& M)
 
 FGMatrix33::~FGMatrix33(void)
 {
-  dealloc(data);
   rowCtr = colCtr = 1;
 
   if (debug_lvl & 2) cout << "Destroyed:    FGMatrix33" << endl;
@@ -170,14 +125,10 @@ istream& operator>>(istream& is, FGMatrix33& M)
 FGMatrix33& FGMatrix33::operator=(const FGMatrix33& M)
 {
   if (&M != this) {
-    if (data != NULL) dealloc(data);
-
     width  = M.width;
     prec   = M.prec;
     delim  = M.delim;
     origin = M.origin;
-    
-    data=FGalloc();
     
     data[1][1] = M.data[1][1];
     data[1][2] = M.data[1][2];

@@ -108,12 +108,13 @@ public:
 
   friend ostream& operator<<(ostream& os, const FGColumnVector3& col);
 
-  inline double& operator()(int m) const { return data[m]; }
+  inline double operator()(int m) const { return data[m]; }
+  inline double& operator()(int m) { return data[m]; }
 
   FGColumnVector3 multElementWise(const FGColumnVector3& V);
 
 private:
-  double *data;
+  double data[4];
   int rowCtr;
   void Debug(void);
 };

@@ -92,7 +92,8 @@ public:
   ~FGMatrix33(void);
 
   FGMatrix33& operator=(const FGMatrix33& A);
-  inline double& operator()(unsigned int row, unsigned int col) const {return data[row][col];}
+  inline double operator()(unsigned int row, unsigned int col) const {return data[row][col];}
+  inline double& operator()(unsigned int row, unsigned int col) {return data[row][col];}
 
   FGColumnVector3 operator*(const FGColumnVector3& Col);
 
@@ -121,11 +122,10 @@ public:
   void operator*=(const double scalar);
   void operator/=(const double scalar);
 
-
   void SetOParams(char delim,int width,int prec, int origin=0);
 
 protected:
-  double **data;
+  double data[4][4];
 
 private:
   char delim;
