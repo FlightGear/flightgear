@@ -110,6 +110,13 @@ public:
 	FG_VIEW_FOLLOW  = 1
     };
 
+    enum fgAutoCoordMode
+    {
+	FG_AUTO_COORD_NOT_SPECIFIED = 0,
+	FG_AUTO_COORD_DISABLED = 1,
+	FG_AUTO_COORD_ENABLED = 2
+    };
+
 private:
 
     // The flight gear "root" directory
@@ -134,6 +141,7 @@ private:
     int mouse_pointer;  // show mouse pointer
     bool pause;         // pause intially enabled/disabled
     fgControlMode control_mode; // primary control mode
+    fgAutoCoordMode auto_coordination;	// enable auto coordination
 
     // Features
     bool hud_status;    // HUD on/off
@@ -221,6 +229,12 @@ public:
     inline bool get_pause() const { return pause; }
     inline fgControlMode get_control_mode() const { return control_mode; }
     inline void set_control_mode( fgControlMode mode ) { control_mode = mode; }
+    inline fgAutoCoordMode get_auto_coordination() const { 
+	return auto_coordination;
+    }
+    inline void set_auto_coordination(fgAutoCoordMode m) { 
+	auto_coordination = m;
+    }
     inline bool get_hud_status() const { return hud_status; }
     inline bool get_panel_status() const { return panel_status; }
     inline bool get_sound() const { return sound; }

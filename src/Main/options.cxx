@@ -153,6 +153,7 @@ fgOPTIONS::fgOPTIONS() :
     mouse_pointer(0),
     pause(0),
     control_mode(FG_JOYSTICK),
+    auto_coordination(FG_AUTO_COORD_NOT_SPECIFIED),
 
     // Features
     hud_status(1),
@@ -586,6 +587,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	pause = true;	
     } else if ( arg.find( "--control=") != string::npos ) {
 	parse_control( arg.substr(10) );
+    } else if ( arg == "--disable-auto-coordination" ) {
+	auto_coordination = FG_AUTO_COORD_DISABLED;	
+    } else if ( arg == "--enable-auto-coordination" ) {
+	auto_coordination = FG_AUTO_COORD_ENABLED;	
     } else if ( arg == "--disable-hud" ) {
 	hud_status = false;	
     } else if ( arg == "--enable-hud" ) {
