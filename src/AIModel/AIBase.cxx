@@ -78,8 +78,8 @@ FGAIBase::~FGAIBase() {
 }
 
 void FGAIBase::update(double dt) {
-    ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()/SG_RADIANS_TO_DEGREES);
-    ft_per_deg_lon = 365228.16 * cos(pos.lat() / SG_RADIANS_TO_DEGREES);
+    ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
+    ft_per_deg_lon = 365228.16 * cos(pos.lat()*SGD_DEGREES_TO_RADIANS);
 
     // Calculate rho at altitude, using standard atmosphere
     // For the temperature T and the pressure p,

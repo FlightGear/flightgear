@@ -84,9 +84,9 @@ void FGAIShip::Run(double dt) {
    } 
    
    // convert speed to degrees per second
-   speed_north_deg_sec = cos( hdg / SG_RADIANS_TO_DEGREES )
+   speed_north_deg_sec = cos( hdg / SGD_RADIANS_TO_DEGREES )
                           * speed * 1.686 / ft_per_deg_lat;
-   speed_east_deg_sec  = sin( hdg / SG_RADIANS_TO_DEGREES )
+   speed_east_deg_sec  = sin( hdg / SGD_RADIANS_TO_DEGREES )
                           * speed * 1.686 / ft_per_deg_lon;
 
    // set new position
