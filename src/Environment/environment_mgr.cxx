@@ -247,8 +247,17 @@ FGEnvironmentMgr::get_cloud_layer_elevation_ft (int index) const
 void
 FGEnvironmentMgr::set_cloud_layer_elevation_ft (int index, double elevation_ft)
 {
+  FGEnvironment env = *_environment;
+  env.set_elevation_ft(elevation_ft);
+
   thesky->get_cloud_layer(index)
     ->setElevation_m(elevation_ft * SG_FEET_TO_METER);
+
+  thesky->get_cloud_layer(index)
+    ->setSpeed(env.get_wind_speed_kt() * 0.5151);	// 1 kt = 0.5151 m/s
+
+  thesky->get_cloud_layer(index)
+    ->setDirection(env.get_wind_from_heading_deg());
 }
 
 double
