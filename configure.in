@@ -23,6 +23,10 @@ AM_MAINTAINER_MODE
 dnl Check to see if this `configure' is being run in the `Cygwin32' environment
 AM_CYGWIN32
 
+dnl Check for Linux style audio support
+AM_CONDITIONAL(HAVE_OSS_AUDIO, \
+	test -r /usr/include/soundcard.h -o -r /usr/include/linux/soundcard.h )
+
 AC_CHECK_HEADER(windows.h)
 
 dnl extra library and include directories

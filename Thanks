@@ -95,6 +95,12 @@ Alan Murta <amurta@cs.man.ac.uk>
   Created the Generic Polygon Clipping library
 
 
+Oscar <bigoc@premier.net>
+  Created single engine piston engine sounds as part of an F4U package
+  for FS98.  They are pretty cool and Oscar was happy to contribute
+  them to our little project.
+
+
 Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
   Author of the Triangle program.  Triangle is used to calculate the
   Delauney triangulation of our irregular terrain.
