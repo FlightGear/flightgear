@@ -11,6 +11,7 @@
 
 #include <plib/sg.h>
 #include <plib/ssg.h>
+#include <plib/ul.h>
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
@@ -253,7 +254,7 @@ fgLoad3DModel (const string &path)
                                 // Load the 3D aircraft object itself
   SGPath xmlpath;
   SGPath modelpath = path;
-  if ( path[ 0 ] == '/' || path[ 0 ] == '\\' || ( isalpha( path[ 0 ] ) && path[ 1 ] == ':' ) ) {
+  if ( ulIsAbsolutePathName( path.c_str() ) ) {
     xmlpath = modelpath;
   }
   else {
