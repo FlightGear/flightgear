@@ -391,7 +391,18 @@ gen_random_surface_objects (ssgLeaf *leaf,
 		sgPostMultMat4(OBJ, OBJ_pos);
 		ssgTransform * pos = new ssgTransform;
 		pos->setTransform(OBJ);
-		pos->addKid(mat->get_object(j));
+                float obj_range = mat->get_object_lod(j);
+                float range_div = (sg_random() * obj_range);
+                if (range_div < 0.0000001) {
+                    // avoid a divide by zero error
+                    range_div = 1.0;
+                }
+                float random_range = 160.0 * obj_range / range_div + obj_range;
+                float ranges[] = {0, random_range};
+                ssgRangeSelector *range = new ssgRangeSelector;
+                range->setRanges(ranges, 2);
+                range->addKid(mat->get_object(j));
+                pos->addKid(range);
 		location->addKid(pos);
 		num -= 1.0;
 	      }
@@ -407,9 +418,20 @@ gen_random_surface_objects (ssgLeaf *leaf,
 		  sgMakeTransMat4(OBJ_pos, result);
 		  sgCopyMat4(OBJ, ROT);
 		  sgPostMultMat4(OBJ, OBJ_pos);
-		  ssgTransform * pos = new ssgTransform;
-		  pos->setTransform(OBJ);
-		  pos->addKid(mat->get_object(j));
+ 		  ssgTransform * pos = new ssgTransform;
+ 		  pos->setTransform(OBJ);
+                  float obj_range = mat->get_object_lod(j);
+                  float range_div = (sg_random() * obj_range);
+                  if (range_div < 0.0000001) {
+                      // avoid a divide by zero error
+                      range_div = 1.0;
+                  }
+                  float random_range = 160.0 * obj_range / range_div + obj_range;
+                  float ranges[] = {0, random_range};
+                  ssgRangeSelector *range = new ssgRangeSelector;
+                  range->setRanges(ranges, 2);
+                  range->addKid(mat->get_object(j));
+		  pos->addKid(range);
 		  location->addKid(pos);
 		}
 	      }

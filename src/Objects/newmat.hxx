@@ -176,6 +176,14 @@ public:
 
 
   /**
+   * Get the target LOD range for a dynamic object for this material.
+   */
+  virtual double get_object_lod (int i) const {
+    return objects[i].lod;
+  }
+
+
+  /**
    * Get the current state.
    */
   virtual inline ssgStateSelector *get_state () const { return state; }
@@ -254,6 +262,7 @@ private:
     ssgEntity * model;
     double coverage;
     double group_lod;
+    double lod;
   };
 
   vector<Object> objects;
