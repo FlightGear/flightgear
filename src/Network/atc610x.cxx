@@ -1492,6 +1492,12 @@ bool FGATC610x::do_switches() {
     int switch_matrix[2][ATC_NUM_COLS][ATC_SWITCH_BYTES];
     update_switch_matrix( board, switch_data, switch_matrix );
 
+    // master switches
+    fgSetBool( "/controls/switches/master-bat", switch_matrix[board][4][1] );
+    fgSetBool( "/controls/switches/master-alt", switch_matrix[board][5][1] );
+    fgSetBool( "/controls/switches/master-avionics",
+               switch_matrix[board][0][3] );
+
     // magnetos and starter switch
     int magnetos = 0;
     bool starter = false;
@@ -1528,6 +1534,17 @@ bool FGATC610x::do_switches() {
     if ( start1 == start2 && start2 == start3 ) {
         fgSetBool( "/controls/starter[0]", starter );
     }
+
+    // other toggle switches
+    fgSetBool( "/controls/fuel-pump[0]", switch_matrix[board][0][2] );
+    fgSetBool( "/controls/switches/landing-light", switch_matrix[board][1][2] );
+    fgSetBool( "/controls/switches/flashing-beacon",
+               switch_matrix[board][2][2] );
+    fgSetBool( "/controls/switches/map-lights", switch_matrix[board][3][2] );
+    fgSetBool( "/controls/switches/instrument-lights",
+               switch_matrix[board][4][2] );
+    fgSetBool( "/controls/switches/strobe-lights", switch_matrix[board][5][2] );
+    fgSetBool( "/controls/switches/pitot-heat", switch_matrix[board][6][2] );
 
     // flaps
     float flaps = 0.0;
@@ -1575,6 +1592,24 @@ bool FGATC610x::do_switches() {
         fgSetBool( "/controls/fuel-selector[0]", (fuel & 0x01) > 0 );
         fgSetBool( "/controls/fuel-selector[1]", (fuel & 0x02) > 0 );
     }
+
+    // circuit breakers
+    fgSetBool( "/controls/circuit-breakers/cabin-lights-pwr",
+               switch_matrix[board][0][0] );
+    fgSetBool( "/controls/circuit-breakers/instr-ignition-switch",
+               switch_matrix[board][1][0] );
+    fgSetBool( "/controls/circuit-breakers/flaps",
+               switch_matrix[board][2][0] );
+    fgSetBool( "/controls/circuit-breakers/avn-bus-1",
+               switch_matrix[board][3][0] );
+    fgSetBool( "/controls/circuit-breakers/avn-bus-2",
+               switch_matrix[board][4][0] );
+    fgSetBool( "/controls/circuit-breakers/turn-coordinator",
+               switch_matrix[board][5][0] );
+    fgSetBool( "/controls/circuit-breakers/instrument-lights",
+               switch_matrix[board][6][0] );
+    fgSetBool( "/controls/circuit-breakers/annunciators",
+               switch_matrix[board][7][0] );
 
     return true;
 }
