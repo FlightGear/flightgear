@@ -895,14 +895,14 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         agl = globals->get_current_view()->getAltitudeASL_ft()
             * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev()
             - 30.0;
-        if ( agl < 30.0 ) {
+        if ( agl < 0.0 ) {
             agl = 0.0;
         }
         
         if ( general.get_glDepthBits() > 16 ) {
             sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
         } else {
-            sgScaleVec3( lift_vec, 1.0 + agl / 20.0 );
+            sgScaleVec3( lift_vec, 0.0 + agl / 20.0 );
         }
 
         sgVec3 lt_trans;
