@@ -43,15 +43,18 @@ void aircraft_debug(int type) {
 	   FG_RAD_2_DEG(FG_Longitude) * 3600.0, 
            FG_RAD_2_DEG(FG_Latitude) * 3600.0, 
 	   FG_Altitude, FG_Phi, FG_Theta, FG_Psi);
-    printf("Mach = %.2f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f  Power = %.2f\n", 
-	   FG_Mach_number, FG_Elevator, FG_Aileron, FG_Rudder, FG_Throttle[0]);
+    printf("Kts = %.0f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f  Power = %.2f\n", 
+	   FG_V_equiv_kts, FG_Elevator, FG_Aileron, FG_Rudder, FG_Throttle[0]);
 }
 
 
 /* $Log$
-/* Revision 1.6  1997/05/31 19:16:26  curt
-/* Elevator trim added.
+/* Revision 1.7  1997/06/02 03:01:39  curt
+/* Working on views (side, front, back, transitions, etc.)
 /*
+ * Revision 1.6  1997/05/31 19:16:26  curt
+ * Elevator trim added.
+ *
  * Revision 1.5  1997/05/30 19:30:14  curt
  * The LaRCsim flight model is starting to look like it is working.
  *

@@ -44,7 +44,7 @@ GLint mesh2GL(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 50;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 30;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -104,9 +104,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.14  1997/05/31 19:16:26  curt
-/* Elevator trim added.
+/* Revision 1.15  1997/06/02 03:01:38  curt
+/* Working on views (side, front, back, transitions, etc.)
 /*
+ * Revision 1.14  1997/05/31 19:16:26  curt
+ * Elevator trim added.
+ *
  * Revision 1.13  1997/05/31 04:13:53  curt
  * WE CAN NOW FLY!!!
  *

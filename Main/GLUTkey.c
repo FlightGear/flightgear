@@ -24,6 +24,7 @@
  **************************************************************************/
 
 
+#include <math.h>
 #include <stdio.h>
 
 #include <GL/glut.h>
@@ -32,6 +33,7 @@
 #include "../aircraft/aircraft.h"
 
 extern double fogDensity;
+extern double goal_view_offset;
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
@@ -41,54 +43,83 @@ void GLUTkey(unsigned char k, int x, int y) {
 
     printf("Key hit = %d\n", k);
 
-    switch (k) {
-    case 50: /* numeric keypad 2 */
-	fgElevMove(-0.01);
-	return;
-    case 56: /* numeric keypad 8 */
-	fgElevMove(0.01);
-	return;
-    case 49: /* numeric keypad 1 */
-	fgElevTrimMove(-0.001);
-	return;
-    case 55: /* numeric keypad 7 */
-	fgElevTrimMove(0.001);
-	return;
-    case 52: /* numeric keypad 4 */
-	fgAileronMove(-0.01);
-	return;
-    case 54: /* numeric keypad 6 */
-	fgAileronMove(0.01);
-	return;
-    case 48: /* numeric keypad Ins */
-	fgRudderMove(-0.01);
-	return;
-    case 13: /* numeric keypad Enter */
-	fgRudderMove(0.01);
-	return;
-    case 53: /* numeric keypad 5 */
-	fgAileronSet(0.0);
-	fgElevSet(0.0);
-	fgRudderSet(0.0);
-	return;
-    case 57: /* numeric keypad 9 (Pg Up) */
-	fgThrottleMove(0, 0.01);
-	return;
-    case 51: /* numeric keypad 3 (Pg Dn) */
-	fgThrottleMove(0, -0.01);
-	return;
-    case 122:
-	fogDensity *= 1.10;
-	glFogf(GL_FOG_END, fogDensity);
-	printf("Fog density = %.4f\n", fogDensity);
-	return;
-    case 90:
-	fogDensity /= 1.10;
-	glFogf(GL_FOG_END, fogDensity);
-	printf("Fog density = %.4f\n", fogDensity);
-	return;
-    case 27: /* ESC */
-	exit(0);
+    if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
+	switch (k) {
+	case 49: /* numeric keypad 1 */
+	    goal_view_offset = M_PI * 0.75;
+	    return;
+	case 50: /* numeric keypad 2 */
+	    goal_view_offset = M_PI;
+	    return;
+	case 51: /* numeric keypad 3 */
+	    goal_view_offset = M_PI * 1.25;
+	    return;
+	case 52: /* numeric keypad 4 */
+	    goal_view_offset = M_PI * 0.50;
+	    return;
+	case 54: /* numeric keypad 6 */
+	    goal_view_offset = M_PI * 1.50;
+	    return;
+	case 55: /* numeric keypad 7 */
+	    goal_view_offset = M_PI * 0.25;
+	    return;
+	case 56: /* numeric keypad 8 */
+	    goal_view_offset = 0.00;
+	    return;
+	case 57: /* numeric keypad 9 */
+	    goal_view_offset = M_PI * 1.75;
+	    return;
+	}
+    } else {
+	switch (k) {
+	case 50: /* numeric keypad 2 */
+	    fgElevMove(-0.01);
+	    return;
+	case 56: /* numeric keypad 8 */
+	    fgElevMove(0.01);
+	    return;
+	case 49: /* numeric keypad 1 */
+	    fgElevTrimMove(-0.001);
+	    return;
+	case 55: /* numeric keypad 7 */
+	    fgElevTrimMove(0.001);
+	    return;
+	case 52: /* numeric keypad 4 */
+	    fgAileronMove(-0.01);
+	    return;
+	case 54: /* numeric keypad 6 */
+	    fgAileronMove(0.01);
+	    return;
+	case 48: /* numeric keypad Ins */
+	    fgRudderMove(-0.01);
+	    return;
+	case 13: /* numeric keypad Enter */
+	    fgRudderMove(0.01);
+	    return;
+	case 53: /* numeric keypad 5 */
+	    fgAileronSet(0.0);
+	    fgElevSet(0.0);
+	    fgRudderSet(0.0);
+	    return;
+	case 57: /* numeric keypad 9 (Pg Up) */
+	    fgThrottleMove(0, 0.01);
+	    return;
+	case 51: /* numeric keypad 3 (Pg Dn) */
+	    fgThrottleMove(0, -0.01);
+	    return;
+	case 122:
+	    fogDensity *= 1.10;
+	    glFogf(GL_FOG_END, fogDensity);
+	    printf("Fog density = %.4f\n", fogDensity);
+	    return;
+	case 90:
+	    fogDensity /= 1.10;
+	    glFogf(GL_FOG_END, fogDensity);
+	    printf("Fog density = %.4f\n", fogDensity);
+	    return;
+	case 27: /* ESC */
+	    exit(0);
+	}
     }
 
 }
@@ -121,9 +152,12 @@ void GLUTspecialkey(unsigned char k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.7  1997/05/31 19:16:25  curt
-/* Elevator trim added.
+/* Revision 1.8  1997/06/02 03:01:38  curt
+/* Working on views (side, front, back, transitions, etc.)
 /*
+ * Revision 1.7  1997/05/31 19:16:25  curt
+ * Elevator trim added.
+ *
  * Revision 1.6  1997/05/31 04:13:52  curt
  * WE CAN NOW FLY!!!
  *

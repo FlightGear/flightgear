@@ -72,6 +72,8 @@ static GLint mesh;
 
 /* Another hack */
 double fogDensity = 2000.0;
+double view_offset = 0.0;
+double goal_view_offset = 0.0;
 
 /* Another hack */
 #define DEFAULT_MODEL_HZ 20
@@ -122,8 +124,8 @@ static void fgInitVisuals() {
 static void fgUpdateViewParams() {
     double pos_x, pos_y, pos_z;
     struct flight_params *f;
-    MAT3mat R, tmp;
-    MAT3vec vec, forward, up;
+    MAT3mat R, TMP;
+    MAT3vec vec, up, forward, fwrd_view;
 
     f = &current_aircraft.flight;
 
@@ -146,30 +148,61 @@ static void fgUpdateViewParams() {
     /* printf("Roll matrix\n"); */
     /* MAT3print(R, stdout); */
 
-    MAT3_SET_VEC(vec, 0.0, -1.0, 0.0);
-    MAT3rotate(tmp, vec, FG_Theta);
+    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
+    /* MAT3mult_vec(vec, vec, R); */
+    MAT3rotate(TMP, vec, -FG_Theta);
     /* printf("Pitch matrix\n"); */
-    /* MAT3print(tmp, stdout); */
-    MAT3mult(R, R, tmp);
+    /* MAT3print(TMP, stdout); */
+    MAT3mult(R, R, TMP);
 
     MAT3_SET_VEC(vec, 0.0, 0.0, -1.0);
-    MAT3rotate(tmp, vec, M_PI + M_PI_2 + FG_Psi );
+    /* MAT3mult_vec(vec, vec, R); */
+    /* MAT3rotate(TMP, vec, M_PI + M_PI_2 + FG_Psi + view_offset); */
+    MAT3rotate(TMP, vec, FG_Psi - M_PI_2);
     /* printf("Yaw matrix\n");
-    MAT3print(tmp, stdout); */
-    MAT3mult(R, R, tmp);
+    MAT3print(TMP, stdout); */
+    MAT3mult(R, R, TMP);
 
     /* MAT3print(R, stdout); */
 
-    /* generate the current forward and up vectors */
+    /* generate the current up, forward, and fwrd-view vectors */
+    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
+    MAT3mult_vec(up, vec, R);
+
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
     MAT3mult_vec(forward, vec, R);
     printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
 	   forward[2]);
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3mult_vec(up, vec, R);
+
+    if ( fabs(goal_view_offset - view_offset) < 0.09 ) {
+	view_offset = goal_view_offset;
+    } else {
+	/* move view_offset towards goal_view_offset */
+	if ( goal_view_offset > view_offset ) {
+	    if ( goal_view_offset - view_offset < M_PI ) {
+		view_offset += 0.05;
+	    } else {
+		view_offset -= 0.05;
+	    }
+	} else {
+	    if ( view_offset - goal_view_offset < M_PI ) {
+		view_offset -= 0.05;
+	    } else {
+		view_offset += 0.05;
+	    }
+	}
+	if ( view_offset > PI2 ) {
+	    view_offset -= PI2;
+	} else if ( view_offset < 0 ) {
+	    view_offset += PI2;
+	}
+    }
+
+    MAT3rotate(TMP, up, view_offset);
+    MAT3mult_vec(fwrd_view, forward, TMP);
 
     gluLookAt(pos_x, pos_y, pos_z,
-	      pos_x + forward[0], pos_y + forward[1], pos_z + forward[2],
+	      pos_x + fwrd_view[0], pos_y + fwrd_view[1], pos_z + fwrd_view[2],
 	      up[0], up[1], up[2]);
 
     glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
@@ -375,7 +408,7 @@ int main( int argc, char *argv[] ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  102.0 * DEG_TO_RAD;
+    FG_Psi   =  282.0 * DEG_TO_RAD;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -450,9 +483,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.11  1997/05/31 19:16:25  curt
-/* Elevator trim added.
+/* Revision 1.12  1997/06/02 03:01:38  curt
+/* Working on views (side, front, back, transitions, etc.)
 /*
+ * Revision 1.11  1997/05/31 19:16:25  curt
+ * Elevator trim added.
+ *
  * Revision 1.10  1997/05/31 04:13:52  curt
  * WE CAN NOW FLY!!!
  *
