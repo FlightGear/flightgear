@@ -119,12 +119,12 @@ inline gzofstream &setcompressionstrategy( gzofstream &s, int l ) {
 
 inline gzomanip<int> setcompressionlevel(int l)
 {
-  return gzomanip<int>(&setcompressionlevel,l);
+  return gzomanip<int>( /* & */ setcompressionlevel,l);     // & superfluous
 }
 
 inline gzomanip<int> setcompressionstrategy(int l)
 {
-  return gzomanip<int>(&setcompressionstrategy,l);
+  return gzomanip<int>( /* & */ setcompressionstrategy,l);  // & superfluous
 }
 
 #endif // _zfstream_hxx
