@@ -1263,6 +1263,7 @@ struct OptionDesc {
     {"enable-clouds3d",              false, OPTION_BOOL,   "/sim/rendering/clouds3d", true, "", 0 },
 #endif
     {"fov",                          true,  OPTION_FUNC,   "", false, "", fgOptFov },
+    {"aspect-ratio-multiplier",      true,  OPTION_DOUBLE, "/sim/current-view/aspect-ratio-multiplier", false, "", 0 },
     {"disable-fullscreen",           false, OPTION_BOOL,   "/sim/startup/fullscreen", false, "", 0 },
     {"enable-fullscreen",            false, OPTION_BOOL,   "/sim/startup/fullscreen", true, "", 0 },
     {"shading-flat",                 false, OPTION_BOOL,   "/sim/rendering/shading", false, "", 0 },

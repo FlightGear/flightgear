@@ -797,6 +797,9 @@ FGRenderer::resize( int width, int height ) {
 
       setFOV( viewmgr->get_current_view()->get_h_fov(),
               viewmgr->get_current_view()->get_v_fov() );
+      // cout << "setFOV(" << viewmgr->get_current_view()->get_h_fov()
+      //      << ", " << viewmgr->get_current_view()->get_v_fov() << ")"
+      //      << endl;
 
 #ifdef FG_USE_CLOUDS_3D
       sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
@@ -843,7 +846,10 @@ static void fgHackFrustum() {
 // interface to the display callback system.  There's probably a
 // better way, there has to be a better way, but I'm not seeing it
 // right now.
-static float width, height, near, far;
+static float width = 55.0;
+static float height = 42.0;
+static float near = 1.0;
+static float far = 1000.0;
 
 
 /** FlightGear code should use this routine to set the FOV rather than

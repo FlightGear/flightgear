@@ -54,6 +54,7 @@ FGViewMgr::init ()
   // double damp_alt;
   double damp_roll = 0.0, damp_pitch = 0.0, damp_heading = 0.0;
   double x_offset_m, y_offset_m, z_offset_m, fov_deg;
+  double aspect_ratio_multiplier = 1.0;
   double heading_offset_deg, pitch_offset_deg, roll_offset_deg;
   double target_x_offset_m, target_y_offset_m, target_z_offset_m;
   double near_m;
@@ -161,7 +162,7 @@ FGViewMgr::init ()
                               damp_roll, damp_pitch, damp_heading,
                               x_offset_m, y_offset_m,z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
-                              roll_offset_deg, fov_deg,
+                              roll_offset_deg, fov_deg, aspect_ratio_multiplier,
                               target_x_offset_m, target_y_offset_m,
                               target_z_offset_m, near_m, internal ));
     else
@@ -169,8 +170,8 @@ FGViewMgr::init ()
                               false, 0, 0.0, 0.0, 0.0,
                               x_offset_m, y_offset_m, z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
-                              roll_offset_deg, fov_deg, 0, 0, 0, near_m,
-                              internal ));
+                              roll_offset_deg, fov_deg, aspect_ratio_multiplier,
+                              0, 0, 0, near_m, internal ));
   }
 
   copyToCurrent();
@@ -297,6 +298,10 @@ FGViewMgr::bind ()
 	&FGViewMgr::getFOV_deg, &FGViewMgr::setFOV_deg);
   fgSetArchivable("/sim/current-view/field-of-view");
 
+  fgTie("/sim/current-view/aspect-ratio-multiplier", this,
+	&FGViewMgr::getARM_deg, &FGViewMgr::setARM_deg);
+  fgSetArchivable("/sim/current-view/field-of-view");
+
   fgTie("/sim/current-view/ground-level-nearplane-m", this,
 	&FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
   fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
@@ -312,7 +317,8 @@ FGViewMgr::unbind ()
   fgUntie("/sim/current-view/goal-heading-offset-deg");
   fgUntie("/sim/current-view/pitch-offset-deg");
   fgUntie("/sim/current-view/goal-pitch-offset-deg");
-  fgUntie("/sim/field-of-view");
+  fgUntie("/sim/current-view/field-of-view");
+  fgUntie("/sim/current-view/aspect-ratio-multiplier");
   fgUntie("/sim/current-view/view-number");
   fgUntie("/sim/current-view/axes/long");
   fgUntie("/sim/current-view/axes/lat");
@@ -732,6 +738,21 @@ FGViewMgr::setFOV_deg (double fov)
   FGViewer * view = get_current_view();
   if (view != 0)
     view->set_fov(fov);
+}
+
+double
+FGViewMgr::getARM_deg () const
+{
+  const FGViewer * view = get_current_view();
+  return (view == 0 ? 0 : view->get_aspect_ratio_multiplier());
+}
+
+void
+FGViewMgr::setARM_deg (double aspect_ratio_multiplier)
+{
+  FGViewer * view = get_current_view();
+  if (view != 0)
+    view->set_aspect_ratio_multiplier(aspect_ratio_multiplier);
 }
 
 double

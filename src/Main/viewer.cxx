@@ -176,7 +176,8 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
                     double damp_roll, double damp_pitch, double damp_heading,
                     double x_offset_m, double y_offset_m, double z_offset_m,
                     double heading_offset_deg, double pitch_offset_deg,
-                    double roll_offset_deg, double fov_deg,
+                    double roll_offset_deg,
+                    double fov_deg, double aspect_ratio_multiplier,
                     double target_x_offset_m, double target_y_offset_m,
                     double target_z_offset_m, double near_m, bool internal ):
     _dirty(true),
@@ -225,6 +226,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     } else {
       _fov_deg = 55;
     }
+    _aspect_ratio_multiplier = aspect_ratio_multiplier;
     _target_x_offset_m = target_x_offset_m;
     _target_y_offset_m = target_y_offset_m;
     _target_z_offset_m = target_z_offset_m;
@@ -840,8 +842,10 @@ FGViewer::get_h_fov()
 	    return _fov_deg;
 	} else {
 	    // v_fov == fov
-	    return atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS) / _aspect_ratio) *
-		SG_RADIANS_TO_DEGREES * 2;
+	    return
+                atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS)
+                     / (_aspect_ratio*_aspect_ratio_multiplier))
+                * SG_RADIANS_TO_DEGREES * 2;
 	}
     default:
 	assert(false);
@@ -856,13 +860,17 @@ FGViewer::get_v_fov()
 {
     switch (_scaling_type) {
     case FG_SCALING_WIDTH:  // h_fov == fov
-	return atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS) * _aspect_ratio) *
-	    SG_RADIANS_TO_DEGREES * 2;
+	return 
+            atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS)
+                 * (_aspect_ratio*_aspect_ratio_multiplier))
+            * SG_RADIANS_TO_DEGREES * 2;
     case FG_SCALING_MAX:
 	if (_aspect_ratio < 1.0) {
 	    // h_fov == fov
-	    return atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS) * _aspect_ratio) *
-		SG_RADIANS_TO_DEGREES * 2;
+	    return
+                atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS)
+                     * (_aspect_ratio*_aspect_ratio_multiplier))
+                * SG_RADIANS_TO_DEGREES * 2;
 	} else {
 	    // v_fov == fov
 	    return _fov_deg;

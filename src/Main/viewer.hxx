@@ -65,7 +65,8 @@ public:
               double damp_roll, double damp_pitch, double damp_heading,
               double x_offset_m, double y_offset_m, double z_offset_m,
               double heading_offset_deg, double pitch_offset_deg,
-              double roll_offset_deg, double fov_deg,
+              double roll_offset_deg,
+              double fov_deg, double aspect_ratio_multiplier,
               double target_x_offset_m, double target_y_offset_m,
               double target_z_offset_m, double near_m, bool internal );
 
@@ -245,6 +246,13 @@ public:
     }
     virtual double get_aspect_ratio() const { return _aspect_ratio; }
 
+    virtual void set_aspect_ratio_multiplier( double m ) {
+	_aspect_ratio_multiplier = m;
+    }
+    virtual double get_aspect_ratio_multiplier() const {
+        return _aspect_ratio_multiplier;
+    }
+
     virtual double getNear_m () const { return _ground_level_nearplane_m; }
     inline void setNear_m (double near_m) {
         _ground_level_nearplane_m = near_m;
@@ -343,8 +351,14 @@ private:
     // the nominal field of view (angle, in degrees)
     double _fov_deg; 
 
-    // ratio of window width and height; height = width * aspect_ratio
-    double _aspect_ratio;
+    // Ratio of window width and height; height = width *
+    // aspect_ratio.  This value is automatically calculated based on
+    // window dimentions.
+    double _aspect_ratio;       
+
+    // default = 1.0, this value is user configurable and is
+    // multiplied into the aspect_ratio to get the actual vertical fov
+    double _aspect_ratio_multiplier;
 
     bool _reverse_view_offset;
 
