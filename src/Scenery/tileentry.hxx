@@ -93,7 +93,6 @@ public:
     // ssg tree structure for this tile is as follows:
     // ssgRoot(scene)
     //     - ssgBranch(terrain)
-    //      - ssgSelector(tile)
     //        - ssgTransform(tile)
     //           - ssgRangeSelector(tile)
     //              - ssgEntity(tile)
@@ -102,14 +101,13 @@ public:
     //                   ...
     //                 - kidn(fan)
 
-    // selector (turn tile on/off)
-    ssgSelector *select_ptr;
-
     // pointer to ssg transform for this tile
-    ssgTransform *transform_ptr;
+    ssgTransform *terra_transform;
+    ssgTransform *lights_transform;
 
     // pointer to ssg range selector for this tile
-    ssgRangeSelector *range_ptr;
+    ssgRangeSelector *terra_range;
+    ssgRangeSelector *lights_range;
 
 public:
 
@@ -134,28 +132,7 @@ public:
 
     // Update the ssg transform node for this tile so it can be
     // properly drawn relative to our (0,0,0) point
-    inline void prep_ssg_node( const Point3D& p, float vis) {
-        SetOffset( p );
-
-// #define USE_UP_AND_COMING_PLIB_FEATURE
-#ifdef USE_UP_AND_COMING_PLIB_FEATURE
-        range_ptr->setRange( 0, SG_ZERO );
-        range_ptr->setRange( 1, vis + bounding_radius );
-#else
-        float ranges[2];
-        ranges[0] = SG_ZERO;
-        ranges[1] = vis + bounding_radius;
-        range_ptr->setRanges( ranges, 2 );
-#endif
-        sgVec3 sgTrans;
-        sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
-        transform_ptr->setTransform( sgTrans );
-    }
-
-    // when a tile is still in the cache, but not in the immediate
-    // draw l ist, it can still remain in the scene graph, but we use
-    // a range selector to disable it from ever being drawn.
-    void ssg_disable();
+    void prep_ssg_node( const Point3D& p, float vis);
 };
 
 

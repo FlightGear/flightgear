@@ -36,21 +36,26 @@
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
 #include <Main/globals.hxx>
+#include <Objects/matlib.hxx>
+#include <Objects/newmat.hxx>
 #include <Objects/obj.hxx>
 #include <Scenery/scenery.hxx>  // for scenery.center
 
 #include "newcache.hxx"
 #include "tileentry.hxx"
+#include "tilemgr.hxx"		// temp, need to delete later
 
 FG_USING_NAMESPACE(std);
 
 // a cheesy hack (to be fixed later)
 extern ssgBranch *terrain;
-extern ssgEntity *penguin;
+extern ssgBranch *ground;
 
 
 // the tile cache
@@ -128,6 +133,70 @@ static void print_refs( ssgSelector *sel, ssgTransform *trans,
 #endif
 
 
+static ssgLeaf *gen_lights( const FGBucket &b ) {
+
+    FGTileEntry *t = global_tile_cache.get_tile( b );
+    Point3D center = t->get_offset() + scenery.center;
+
+    double lon, lat, elev;
+    double w = b.get_width();
+    double h = b.get_height();
+
+    double area = b.get_width_m() * b.get_height_m();
+    int num = (int)(area / 1000000); // number of point lights to create
+    cout << "generating " << num << " lights" << endl;
+
+    if ( num <= 0 ) {
+	return NULL;
+    }
+
+    // Allocate ssg structure
+    ssgVertexArray   *vl = new ssgVertexArray( num );
+    ssgNormalArray   *nl = NULL;
+    ssgTexCoordArray *tl = NULL;
+    ssgColourArray   *cl = new ssgColourArray( 1 );
+
+    // default to white lights for now
+    sgVec4 color;
+    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+    cl->add( color );
+
+    for ( int i = 0; i < num; ++i ) {
+	lon = b.get_center_lon() - w * 0.5 + sg_random() * w;
+	lat = b.get_center_lat() - h * 0.5 + sg_random() * h;
+
+	Point3D geod = Point3D( lon * DEG_TO_RAD, lat * DEG_TO_RAD, 0.0);
+	Point3D tmp = sgGeodToCart( geod );
+	sgdVec3 cart;
+	sgdSetVec3( cart, tmp.x(), tmp.y(), tmp.z() );
+
+	if ( ! global_tile_mgr.current_elev_ssg( cart, &elev ) ) {
+	    elev = 0.0;
+	}
+	// cout << " lon = " << lon << "  lat = " << lat << "  elev = " << elev 
+	//      << endl;
+
+	geod.setz( elev + 8.0 + sg_random() * 4);
+	tmp = sgGeodToCart( geod ) - center;
+	sgVec3 p;
+	sgSetVec3( p, tmp.x(), tmp.y(), tmp.z() );
+	// cout << " x = " << cart[0] << "  y = " << cart[1]
+	//      << "  z = " << cart[2] << endl;
+	vl->add( p );
+    }
+
+    // create ssg leaf
+    ssgLeaf *leaf = 
+	new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
+
+    // assign state
+    FGNewMat *newmat = material_lib.find( "LIGHTS" );
+    leaf->setState( newmat->get_state() );
+
+    return leaf;
+}
+
+
 // Fill in a tile cache entry with real data for the specified bucket
 void FGNewCache::fill_in( const FGBucket& b ) {
     FG_LOG( FG_TERRAIN, FG_INFO, "FILL IN CACHE ENTRY = " << b.gen_index() );
@@ -151,9 +220,10 @@ void FGNewCache::fill_in( const FGBucket& b ) {
 	exit(-1);
     }
 
-    e->select_ptr = new ssgSelector;
-    e->transform_ptr = new ssgTransform;
-    e->range_ptr = new ssgRangeSelector;
+    e->terra_transform = new ssgTransform;
+    e->terra_range = new ssgRangeSelector;
+    e->lights_transform = new ssgTransform;
+    e->lights_range = new ssgRangeSelector;
     e->tile_bucket = b;
 
     FGPath tile_path;
@@ -171,7 +241,7 @@ void FGNewCache::fill_in( const FGBucket& b ) {
     ssgBranch *new_tile = fgObjLoad( tile_base.str(), e, true );
 
     if ( new_tile != NULL ) {
-	e->range_ptr->addKid( new_tile );
+	e->terra_range->addKid( new_tile );
     }
   
     // load custom objects
@@ -207,7 +277,7 @@ void FGNewCache::fill_in( const FGBucket& b ) {
 	}
     }
 
-    e->transform_ptr->addKid( e->range_ptr );
+    e->terra_transform->addKid( e->terra_range );
 
     // calculate initial tile offset
     e->SetOffset( scenery.center );
@@ -215,12 +285,19 @@ void FGNewCache::fill_in( const FGBucket& b ) {
     sgSetCoord( &sgcoord,
 		e->offset.x(), e->offset.y(), e->offset.z(),
 		0.0, 0.0, 0.0 );
-    e->transform_ptr->setTransform( &sgcoord );
+    e->terra_transform->setTransform( &sgcoord );
+    terrain->addKid( e->terra_transform );
 
-    e->select_ptr->addKid( e->transform_ptr );
-    terrain->addKid( e->select_ptr );
-
-    e->select_ptr->select(1);
+    e->lights_transform = NULL;
+    /* uncomment this section for testing ground lights
+    ssgLeaf *lights = gen_lights( b );
+    if ( lights ) {
+	e->lights_range->addKid( lights );
+	e->lights_transform->addKid( e->lights_range );
+	e->lights_transform->setTransform( &sgcoord );
+	ground->addKid( e->lights_transform );
+    }
+    */
 }
 
 

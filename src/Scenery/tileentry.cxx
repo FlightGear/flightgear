@@ -33,6 +33,10 @@
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
 
+#include <Aircraft/aircraft.hxx>
+#include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
+
 #include "tileentry.hxx"
 
 FG_USING_STD(for_each);
@@ -44,7 +48,6 @@ FGTileEntry::FGTileEntry ()
     : ncount(0)
 {
     nodes.clear();
-    select_ptr = NULL;
 }
 
 
@@ -112,16 +115,15 @@ void FGTileEntry::free_tile() {
     }
     index_ptrs.clear();
 
-    // delete the ssg branch
-
-    int pcount = select_ptr->getNumParents();
+    // delete the terrain branch
+    int pcount = terra_transform->getNumParents();
     if ( pcount > 0 ) {
 	// find the first parent (should only be one)
-	ssgBranch *parent = select_ptr->getParent( 0 ) ;
+	ssgBranch *parent = terra_transform->getParent( 0 ) ;
 	if( parent ) {
 	    // my_remove_branch( select_ptr );
-	    parent->removeKid( select_ptr );
-	    select_ptr = NULL;
+	    parent->removeKid( terra_transform );
+	    terra_transform = NULL;
 	} else {
 	    FG_LOG( FG_TERRAIN, FG_ALERT,
 		    "parent pointer is NULL!  Dying" );
@@ -132,12 +134,77 @@ void FGTileEntry::free_tile() {
 		"Parent count is zero for an ssg tile!  Dying" );
 	exit(-1);
     }
+
+    if ( lights_transform ) {
+	// delete the terrain lighting branch
+	pcount = lights_transform->getNumParents();
+	if ( pcount > 0 ) {
+	    // find the first parent (should only be one)
+	    ssgBranch *parent = lights_transform->getParent( 0 ) ;
+	    if( parent ) {
+		parent->removeKid( lights_transform );
+		lights_transform = NULL;
+	    } else {
+		FG_LOG( FG_TERRAIN, FG_ALERT,
+			"parent pointer is NULL!  Dying" );
+		exit(-1);
+	    }
+	} else {
+	    FG_LOG( FG_TERRAIN, FG_ALERT,
+		    "Parent count is zero for an ssg light tile!  Dying" );
+	    exit(-1);
+	}
+    }
 }
 
 
-// when a tile is still in the cache, but not in the immediate draw
-// list, it can still remain in the scene graph, but we use a range
-// selector to disable it from ever being drawn.
-void FGTileEntry::ssg_disable() {
-    select_ptr->select(0);
+// Update the ssg transform node for this tile so it can be
+// properly drawn relative to our (0,0,0) point
+void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
+    SetOffset( p );
+
+// #define USE_UP_AND_COMING_PLIB_FEATURE
+#ifdef USE_UP_AND_COMING_PLIB_FEATURE
+    terra_range->setRange( 0, SG_ZERO );
+    terra_range->setRange( 1, vis + bounding_radius );
+    lights_range->setRange( 0, SG_ZERO );
+    lights_range->setRange( 1, vis + bounding_radius );
+#else
+    float ranges[2];
+    ranges[0] = SG_ZERO;
+    ranges[1] = vis + bounding_radius;
+    terra_range->setRanges( ranges, 2 );
+    lights_range->setRanges( ranges, 2 );
+#endif
+    sgVec3 sgTrans;
+    sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
+    terra_transform->setTransform( sgTrans );
+
+    if ( lights_transform ) {
+	// we need to lift the lights above the terrain to avoid
+	// z-buffer fighting.  We do this based on our altitude and
+	// the distance this tile is away from scenery center.
+
+	sgVec3 up;
+	sgCopyVec3( up, globals->get_current_view()->get_world_up() );
+
+	double agl;
+	if ( current_aircraft.fdm_state ) {
+	    agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+		- scenery.cur_elev;
+	} else {
+	    agl = 0.0;
+	}
+
+	// sgTrans just happens to be the
+	// vector from scenery center to the center of this tile which
+	// is what we want to calculate the distance of
+	sgVec3 to;
+	sgCopyVec3( to, sgTrans );
+	double dist = sgLengthVec3( to );
+
+	sgScaleVec3( up, agl / 20.0 + dist / 10000 );
+	sgAddVec3( sgTrans, up );
+	lights_transform->setTransform( sgTrans );
+    }
 }

@@ -102,6 +102,7 @@ private:
     FGTileEntry *current_tile;
 	
     // x and y distance of tiles to load/draw
+    float vis;
     int xrange, yrange;
 	
     // current longitude latitude
@@ -137,9 +138,7 @@ public:
 		     const sgdVec3 p, const sgdVec3 dir,
 		     FGHitList *list );
 
-    bool current_elev_ssg( sgdVec3 abs_view_pos, 
-			   sgVec3 view_pos,
-			   double *terrain_elev );
+    bool current_elev_ssg( sgdVec3 abs_view_pos, double *terrain_elev );
 	
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current

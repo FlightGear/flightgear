@@ -30,7 +30,8 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl/xgl.h>
+
+#include <plib/ssg.h>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -70,7 +71,8 @@ static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
 
 // Constructor
 FGTileMgr::FGTileMgr():
-    state( Start )
+    state( Start ),
+    vis( 16000 )
 {
 }
 
@@ -113,11 +115,7 @@ void FGTileMgr::sched_tile( const FGBucket& b ) {
     // see if tile already exists in the cache
     FGTileEntry *t = global_tile_cache.get_tile( b );
 
-    if ( t != NULL ) {
-        // tile exists in cache, reenable it.
-        // cout << "REENABLING DISABLED TILE" << endl;
-        t->select_ptr->select( 1 );
-    } else {
+    if ( t == NULL ) {
         // register a load request
         load_queue.push_back( b );
     }
@@ -132,6 +130,8 @@ void FGTileMgr::load_tile( const FGBucket& b ) {
     if ( t == NULL ) {
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
 	global_tile_cache.fill_in( b );
+	FGTileEntry *t = global_tile_cache.get_tile( b );
+	t->prep_ssg_node( scenery.center, vis);
     } else {
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Tile already in cache " << b );
     }
@@ -153,11 +153,14 @@ static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
 // explicitely.  lat & lon are in radians.  view_pos in current world
 // coordinate translated near (0,0,0) (in meters.)  Returns result in
 // meters.
-bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos,
-				  double *terrain_elev ) {
-    sgdVec3 orig, dir;
+bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, double *terrain_elev ) {
+    sgdVec3 view_pos;
+    sgdVec3 sc;
+    sgdSetVec3( sc, scenery.center.x(), scenery.center.y(), scenery.center.z());
+    sgdSubVec3( view_pos, abs_view_pos, sc );
 
-    sgdSetVec3(orig, view_pos );
+    sgdVec3 orig, dir;
+    sgdCopyVec3(orig, view_pos );
     sgdCopyVec3(dir, abs_view_pos );
 
     hit_list.Intersect( terrain, orig, dir );
@@ -201,8 +204,6 @@ bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos,
 
 // schedule a needed buckets for loading
 void FGTileMgr::schedule_needed() {
-    double vis;
-
 #ifndef FG_OLD_WEATHER
     if ( WeatherDatabase != NULL ) {
 	vis = WeatherDatabase->getWeatherVisibility();
@@ -214,31 +215,8 @@ void FGTileMgr::schedule_needed() {
 #endif
     cout << "visibility = " << vis << endl;
 
-    double clat = (int)current_bucket.get_center_lat();
-    if ( clat > 0 ) {
-	clat = (int)clat + 0.5;
-    } else {
-	clat = (int)clat - 0.5;
-    }
-    double clat_rad = clat * DEG_TO_RAD;
-    double cos_lat = cos( clat_rad );
-    double local_radius = cos_lat * EQUATORIAL_RADIUS_M;
-    double local_perimeter = 2.0 * local_radius * FG_PI;
-    double degree_width = local_perimeter / 360.0;
-
-    // cout << "clat = " << clat << endl;
-    // cout << "clat (radians) = " << clat_rad << endl;
-    // cout << "cos(lat) = " << cos_lat << endl;
-    // cout << "local_radius = " << local_radius << endl;
-    // cout << "local_perimeter = " << local_perimeter << endl;
-    cout << "degree_width = " << degree_width << endl;
-
-    double perimeter = 2.0 * EQUATORIAL_RADIUS_M * FG_PI;
-    double degree_height = perimeter / 360.0;
-    cout << "degree_height = " << degree_height << endl;
-
-    double tile_width = current_bucket.get_width() * degree_width;
-    double tile_height = current_bucket.get_height() * degree_height;
+    double tile_width = current_bucket.get_width_m();
+    double tile_height = current_bucket.get_height_m();
     cout << "tile width = " << tile_width << "  tile_height = " << tile_height
 	 << endl;
 
@@ -371,7 +349,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	prep_ssg_nodes();
 	sgSetVec3( tmp_view_pos, 0.0, 0.0, 0.0 );
 	double tmp_elev;
-	if ( current_elev_ssg(tmp_abs_view_pos, tmp_view_pos, &tmp_elev) ) {
+	if ( current_elev_ssg(tmp_abs_view_pos, &tmp_elev) ) {
 	    scenery.cur_elev = tmp_elev;
 	} else {
 	    scenery.cur_elev = 0.0;
@@ -381,7 +359,6 @@ int FGTileMgr::update( double lon, double lat ) {
 	//      << " view pos = " << current_view.view_pos << endl;
 	double tmp_elev;
 	if ( current_elev_ssg(globals->get_current_view()->get_abs_view_pos(),
-			      globals->get_current_view()->get_view_pos(),
 			      &tmp_elev) )
 	{
 	    scenery.cur_elev = tmp_elev;
@@ -418,13 +395,12 @@ void FGTileMgr::prep_ssg_nodes() {
     // selector and transform
 
     FGTileEntry *e;
-    Point3D p = scenery.center;
     global_tile_cache.reset_traversal();
 
     while ( ! global_tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
         if ( (e = global_tile_cache.get_current()) ) {
-	    e->prep_ssg_node( p, vis);
+	    e->prep_ssg_node( scenery.center, vis);
         } else {
             cout << "warning ... empty tile in cache" << endl;
         }
