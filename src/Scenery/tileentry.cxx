@@ -790,8 +790,11 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	// z-buffer fighting.  We do this based on our altitude and
 	// the distance this tile is away from scenery center.
 
-//	sgVec3 up;
-//	sgCopyVec3( up, globals->get_current_view()->get_world_up() );
+        // we expect 'up' to be a unit vector coming in, but since we
+        // modify the value of lift_vec, we need to create a local
+        // copy.
+	sgVec3 lift_vec;
+	sgCopyVec3( lift_vec, up );
 
 	double agl;
 	if ( current_aircraft.fdm_state ) {
@@ -809,15 +812,15 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	double dist = sgLengthVec3( to );
 
 	if ( general.get_glDepthBits() > 16 ) {
-	    sgScaleVec3( up, 10.0 + agl / 100.0 + dist / 10000 );
+	    sgScaleVec3( lift_vec, 10.0 + agl / 100.0 + dist / 10000 );
 	} else {
-	    sgScaleVec3( up, 10.0 + agl / 20.0 + dist / 5000 );
+	    sgScaleVec3( lift_vec, 10.0 + agl / 20.0 + dist / 5000 );
 	}
 
 	sgVec3 lt_trans;
 	sgCopyVec3( lt_trans, sgTrans );
 
-	sgAddVec3( lt_trans, up );
+	sgAddVec3( lt_trans, lift_vec );
 	gnd_lights_transform->setTransform( lt_trans );
 
 	// select which set of lights based on sun angle
@@ -838,8 +841,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	// z-buffer fighting.  We do this based on our altitude and
 	// the distance this tile is away from scenery center.
 
-	sgVec3 up;
-	sgCopyVec3( up, globals->get_current_view()->get_world_up() );
+	sgVec3 lift_vec;
+	sgCopyVec3( lift_vec, up );
 
 	double agl;
 	if ( current_aircraft.fdm_state ) {
@@ -857,15 +860,15 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	double dist = sgLengthVec3( to );
 
 	if ( general.get_glDepthBits() > 16 ) {
-	    sgScaleVec3( up, 0.0 + agl / 100.0 + dist / 10000 );
+	    sgScaleVec3( lift_vec, 0.0 + agl / 100.0 + dist / 10000 );
 	} else {
-	    sgScaleVec3( up, 1.0 + agl / 20.0 + dist / 5000 );
+	    sgScaleVec3( lift_vec, 1.0 + agl / 20.0 + dist / 5000 );
 	}
 
 	sgVec3 lt_trans;
 	sgCopyVec3( lt_trans, sgTrans );
 
-	sgAddVec3( lt_trans, up );
+	sgAddVec3( lt_trans, lift_vec );
 	rwy_lights_transform->setTransform( lt_trans );
 
 	// select which set of lights based on sun angle
@@ -893,8 +896,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             // using GL_EXT_point_parameters
 		
             // This part is same as ground-lights code above by Curt
-            sgVec3 up1;
-            sgCopyVec3( up1, globals->get_current_view()->get_world_up() );
+            sgVec3 lift_vec;
+            sgCopyVec3( lift_vec, up );
             
             double agl1;
             if ( current_aircraft.fdm_state ) {
@@ -912,11 +915,11 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             double dist1 = sgLengthVec3( to1 );
 
             if ( general.get_glDepthBits() > 16 ) {
-                sgScaleVec3( up1, 0.0 + agl1 / 2000.0 + dist1 / 10000 );
+                sgScaleVec3( lift_vec, 0.0 + agl1 / 2000.0 + dist1 / 10000 );
             } else {
-                sgScaleVec3( up1, 0.0 + agl1 / 20.0 + dist1 / 5000 );
+                sgScaleVec3( lift_vec, 0.0 + agl1 / 20.0 + dist1 / 5000 );
             }
-            sgAddVec3( sgTrans, up1 );
+            sgAddVec3( sgTrans, lift_vec );
             lightmaps_transform->setTransform( sgTrans );
 
             float sun_angle1 = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
