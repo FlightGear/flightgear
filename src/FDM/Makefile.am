@@ -11,12 +11,12 @@ libFlight_a_SOURCES = \
 	LaRCsim.cxx LaRCsim.hxx \
 	MagicCarpet.cxx MagicCarpet.hxx
 
-bin_PROGRAMS = engine ps
+bin_PROGRAMS = engine pstest
 
 engine_SOURCES = engine.cxx
 
 engine_LDADD = libFlight.a
 
-ps_SOURCES = ps-10520c.cxx
+pstest_SOURCES = ps-10520c.cxx
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
