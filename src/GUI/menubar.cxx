@@ -279,7 +279,24 @@ FGMenuBar::FGMenuBar ()
 FGMenuBar::~FGMenuBar ()
 {
     hide();
-    delete _menuBar;            // FIXME: check if PUI owns the pointer
+    puDeleteObject(_menuBar);
+
+    int i;
+
+                                // Delete all the character arrays
+                                // we were forced to keep around for
+                                // plib.
+    for (i = 0; i < _char_arrays.size(); i++) {
+        for (int j = 0; _char_arrays[i][j] != 0; j++)
+            free(_char_arrays[i][j]); // added with strdup
+        delete _char_arrays[i];
+    }
+
+                                // Delete all the callback arrays
+                                // we were forced to keep around for
+                                // plib.
+    for (i = 0; i < _callback_arrays.size(); i++)
+        delete _callback_arrays[i];
 
                                 // Delete all those bindings
     map<string,vector<FGBinding *> >::iterator it;
@@ -340,10 +357,10 @@ FGMenuBar::make_menu (SGPropertyNode_ptr node)
     const char * name = strdup(node->getStringValue("label"));
     vector<SGPropertyNode_ptr> item_nodes = node->getChildren("item");
 
-    int array_size = item_nodes.size() + 1;
+    int array_size = item_nodes.size();
 
-    char ** items = new char*[array_size];
-    puCallback * callbacks = new puCallback[array_size];
+    char ** items = make_char_array(array_size);
+    puCallback * callbacks = make_callback_array(array_size);
 
     for (int i = 0, j = item_nodes.size() - 1;
          i < item_nodes.size();
@@ -360,9 +377,6 @@ FGMenuBar::make_menu (SGPropertyNode_ptr node)
         for (int k = 0; k < binding_nodes.size(); k++)
             _bindings[items[j]].push_back(new FGBinding(binding_nodes[k]));
     }
-
-    items[item_nodes.size()] = 0;
-    callbacks[item_nodes.size()] = 0;
 
     _menuBar->add_submenu(name, items, callbacks);
 }
@@ -383,6 +397,26 @@ FGMenuBar::make_menubar ()
         _menuBar->reveal();
     else
         _menuBar->hide();
+}
+
+char **
+FGMenuBar::make_char_array (int size)
+{
+    char ** list = new char*[size+1];
+    for (int i = 0; i <= size; i++)
+        list[i] = 0;
+    _char_arrays.push_back(list);
+    return list;
+}
+
+puCallback *
+FGMenuBar::make_callback_array (int size)
+{
+    puCallback * list = new puCallback[size+1];
+    for (int i = 0; i <= size; i++)
+        list[i] = 0;
+    _callback_arrays.push_back(list);
+    return list;
 }
 
 // end of menubar.cxx

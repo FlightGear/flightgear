@@ -1,3 +1,5 @@
+// menubar.hxx - XML-configured menu bar.
+
 #ifndef __MENUBAR_HXX
 #define __MENUBAR_HXX 1
 
@@ -23,6 +25,14 @@ class FGBinding;
 
 /**
  * XML-configured PUI menu bar.
+ *
+ * This class creates a menu bar from a tree of XML properties.  These
+ * properties are not part of the main FlightGear property tree, but
+ * are read from a separate file ($FG_ROOT/gui/menubar.xml).
+ *
+ * WARNING: because PUI provides no easy way to attach user data to a
+ * menu item, all menu item strings must be unique; otherwise, this
+ * class will always use the first binding with any given name.
  */
 class FGMenuBar
 {
@@ -77,12 +87,29 @@ public:
 
 private:
 
+    // Make a single menu.
     void make_menu (SGPropertyNode_ptr node);
+
+    // Make the top-level menubar.
     void make_menubar ();
 
+    // Is the menu visible?
     bool _visible;
+
+    // The top-level menubar itself.
     puMenuBar * _menuBar;
+
+    // A map of bindings for the menubar.
     map<string,vector<FGBinding *> > _bindings;
+
+    // These are hoops that we have to jump through because PUI doesn't
+    // do memory management for lists.  We have to allocate the arrays,
+    // hang onto pointers, and then delete them when the menubar is
+    // freed.
+    char ** make_char_array (int size);
+    puCallback * make_callback_array (int size);
+    vector<char **> _char_arrays;
+    vector<puCallback *> _callback_arrays;
 };
 
 #endif // __MENUBAR_HXX
