@@ -147,9 +147,14 @@ void FGAIManager::update(double dt) {
                 if ((*ai_list_itr)->getDie()) {      
                    freeID((*ai_list_itr)->getID());
                    delete (*ai_list_itr);
-                   ai_list.erase(ai_list_itr);
-                   --ai_list_itr;
                    --numObjects;
+                   if ( ai_list_itr == ai_list.begin() ) {
+                       ai_list.erase(ai_list_itr);
+                       ai_list_itr = ai_list.begin();
+                       continue;
+                   } else {
+                       ai_list.erase(ai_list_itr--);
+                   }
                 } else {
                    fetchUserState();
                    if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
