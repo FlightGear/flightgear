@@ -128,6 +128,10 @@ Michael I. Gold <gold@puck.asd.sgi.com>
   His effort alone has made me a great SGI fan.
 
 
+Habibie <habibie@MailandNews.com>
+  RedHat package building changes for SimGear.
+
+
 Charlie Hotchkiss <clhotch@pacbell.net> 
   Worked on improving and enhancing the HUD code.
   Lots of code style tips and code tweaks ...
@@ -198,6 +202,11 @@ Anders Morken <amrken@online.no>
 Alan Murta <amurta@cs.man.ac.uk>
   http://www.cs.man.ac.uk/aig/staff/alan/software/
   Created the Generic Polygon Clipping library
+
+
+Phil Nelson  <phil@cs.wwu.edu>
+  Author of GNU dbm.  gdbm is a set of database routines that use
+  extendible hashing and works similar to the standard UNIX dbm routines.
 
 
 Alexei Novikov <anovikov@heron.itep.ru>
@@ -358,6 +367,13 @@ Darrell Walisser <dwaliss1@purdue.edu>
   to get a pile of code written by a bunch of people who've never seen
   a Mac to compile and run on said platform.
   Provides MacOS-specific info in the docs.
+
+
+Ed Williams <Ed_Williams@compuserve.com>
+  Contributed magnetic variation code (impliments Nima WMM 2000)
+  We've also borrowed from Ed's wonderful aviation formulary at various
+  times as well.
+  http://www.best.com/~williams/index.html
 
 
 WoodSoup Project  http://www.woodsoup.org

@@ -63,8 +63,12 @@ double FGSteam::get_VSI_fps() { _CatchUp(); return the_VSI_fps; }
 double FGSteam::the_VACUUM_inhg = 0.0;
 double FGSteam::get_VACUUM_inhg() { _CatchUp(); return the_VACUUM_inhg; }
 
-double FGSteam::get_MH_deg () { return FGBFI::getHeading () - VARY_E; }
-double FGSteam::get_DG_deg () { return FGBFI::getHeading () - VARY_E; }
+double FGSteam::get_MH_deg () {
+    return FGBFI::getHeading () - FGBFI::getMagVar ();
+}
+double FGSteam::get_DG_deg () {
+    return FGBFI::getHeading () - FGBFI::getMagVar ();
+}
 
 double FGSteam::get_TC_rad   () { return FGBFI::getSideSlip (); }
 double FGSteam::get_TC_radps () { return FGBFI::getRoll (); }
@@ -246,7 +250,7 @@ double FGSteam::get_HackVOR1_deg ()
 	y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
 	x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
 	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-	r = atan2 ( x, y ) * RAD_TO_DEG - NAV1_Rad - VARY_E;
+	r = atan2 ( x, y ) * RAD_TO_DEG - NAV1_Rad - FGBFI::getMagVar();
 	if (r> 180.0) r-=360.0; else
 	if (r<-180.0) r+=360.0;
 	if ( fabs(r) > 90.0 )
@@ -262,7 +266,7 @@ double FGSteam::get_HackVOR2_deg ()
 	y = 60.0 * ( NAV2_Lat - FGBFI::getLatitude () );
 	x = 60.0 * ( NAV2_Lon - FGBFI::getLongitude() )
 	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
-	r = atan2 ( x, y ) * RAD_TO_DEG - NAV2_Rad - VARY_E;
+	r = atan2 ( x, y ) * RAD_TO_DEG - NAV2_Rad - FGBFI::getMagVar();
 	if (r> 180.0) r-=360.0; else
 	if (r<-180.0) r+=360.0;
 	if ( fabs(r) > 90.0 )
