@@ -54,6 +54,9 @@ class FGConstruct {
 
 private:
 
+    // minimum interior angle for triangulation
+    string angle;
+
     // paths
     string work_base;
     string output_base;
@@ -101,6 +104,10 @@ public:
     // Destructor
     ~FGConstruct();
     
+    // minimum interior angle for triangulation
+    inline string get_angle() const { return angle; }
+    inline void set_angle( const string s ) { angle = s; }
+
     // paths
     inline string get_work_base() const { return work_base; }
     inline void set_work_base( const string s ) { work_base = s; }

@@ -91,7 +91,7 @@ public:
     // generates extra nodes for a better triangulation.  2 = second
     // pass after split/reassem where we don't want any extra nodes
     // generated.
-    int run_triangulate( int pass );
+    int run_triangulate( const string& angle, const int pass );
 
     inline FGTriNodes get_out_nodes() const { return out_nodes; }
     inline size_t get_out_nodes_size() const { return out_nodes.size(); }

@@ -273,7 +273,7 @@ static void write_out_data(struct triangulateio *out) {
 // generates extra nodes for a better triangulation.  2 = second pass
 // after split/reassem where we don't want any extra nodes generated.
 
-int FGTriangle::run_triangulate( int pass ) {
+int FGTriangle::run_triangulate( const string& angle, const int pass ) {
     FGPolygon poly;
     Point3D p;
     struct triangulateio in, out, vorout;
@@ -414,7 +414,11 @@ int FGTriangle::run_triangulate( int pass ) {
 	// use a quality value of 10 (q10) meaning no interior
 	// triangle angles less than 10 degrees
 	// tri_options = "pczAen";
-	tri_options = "pczq10Aen";
+	if ( angle == "0" ) {
+	    tri_options = "pczAen";
+	} else {
+	    tri_options = "pczq" + angle + "Aen";
+	}
 	// // string tri_options = "pzAen";
 	// // string tri_options = "pczq15S400Aen";
     } else if ( pass == 2 ) {

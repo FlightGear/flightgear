@@ -167,7 +167,7 @@ void first_triangulate( FGConstruct& c, const FGArray& array,
     cout << "done building node list and polygons" << endl;
 
     cout << "ready to do triangulation" << endl;
-    t.run_triangulate( 1 );
+    t.run_triangulate( c.get_angle(), 1 );
     cout << "finished triangulation" << endl;
 }
 
@@ -179,7 +179,7 @@ void second_triangulate( FGConstruct& c, FGTriangle& t ) {
     cout << "done re building node list and polygons" << endl;
 
     cout << "ready to do second triangulation" << endl;
-    t.run_triangulate( 2 );
+    t.run_triangulate( c.get_angle(), 2 );
     cout << "finished second triangulation" << endl;
 }
 
@@ -461,9 +461,9 @@ void construct_tile( FGConstruct& c ) {
 // display usage and exit
 void usage( const string name ) {
     cout << "Usage: " << name
-	 << " <work_base> <output_base> tile_id" << endl;
+	 << " <min_tri_angle> <work_base> <output_base> tile_id" << endl;
     cout << "Usage: " << name
-	 << " <work_base> <output_base> center_lon center_lat xdist ydist"
+	 << " <min_tri_angle> <work_base> <output_base> center_lon center_lat xdist ydist"
 	 << endl;
     exit(-1);
 }
@@ -474,15 +474,16 @@ main(int argc, char **argv) {
 
     fglog().setLogLevels( FG_ALL, FG_DEBUG );
 
-    if ( argc < 3 ) {
+    if ( argc < 4 ) {
 	usage( argv[0] );
     }
 
     // main construction data management class
     FGConstruct c;
 
-    c.set_work_base( argv[1] );
-    c.set_output_base( argv[2] );
+    c.set_angle( argv[1] );
+    c.set_work_base( argv[2] );
+    c.set_output_base( argv[3] );
 
     c.set_min_nodes( 50 );
     c.set_max_nodes( (int)(FG_MAX_NODES * 0.8) );
@@ -506,20 +507,20 @@ main(int argc, char **argv) {
     // lon = -76.201239; lat = 36.894606;      // KORF (Norfolk, Virginia)
     // lon = -147.166; lat = 60.9925;          // Hale-bop test
 
-    if ( argc == 4 ) {
+    if ( argc == 5 ) {
 	// construct a specific tile and exit
 
-	long index = atoi( argv[3] );
+	long index = atoi( argv[4] );
 	FGBucket b( index );
 	c.set_bucket( b );
 	construct_tile( c );
-    } else if ( argc == 7 ) {
+    } else if ( argc == 8 ) {
 	// build all the tiles in an area
 
-	lon = atof( argv[3] );
-	lat = atof( argv[4] );
-	double xdist = atof( argv[5] );
-	double ydist = atof( argv[6] );
+	lon = atof( argv[4] );
+	lat = atof( argv[5] );
+	double xdist = atof( argv[6] );
+	double ydist = atof( argv[7] );
 
 	double min_x = lon - xdist;
 	double min_y = lat - ydist;

@@ -110,25 +110,42 @@ long int get_next_task( const string& host, int port, long int last_tile ) {
 // successfully
 bool construct_tile( const string& work_base, const string& output_base, 
 		     const FGBucket& b, const string& result_file ) {
-    string command = "../Main/construct " + work_base + " " + output_base + " "
-	+ b.gen_index_str() + " > " + result_file + " 2>&1";
-    cout << command << endl;
+    double angle = 10.0;
+    bool still_trying = true;
 
-    system( command.c_str() );
-
-    FILE *fp = fopen( result_file.c_str(), "r" );
-    char line[256];
-    while ( fgets( line, 256, fp ) != NULL ) {
-	string line_str = line;
-	line_str = line_str.substr(0, line_str.length() - 1);
- 	cout << line_str << endl;
- 	if ( line_str == "[Finished successfully]" ) {
-	    fclose(fp);
-	    return true;
+    while ( still_trying ) {
+	still_trying = false; 
+	char angle_str[256];
+	sprintf(angle_str, "%.0f", angle);
+	string command = "../Main/construct ";
+	command += angle_str;
+	command += " " + work_base + " " + output_base + " "
+	    + b.gen_index_str() + " > " + result_file + " 2>&1";
+	cout << command << endl;
+	
+	system( command.c_str() );
+	
+	FILE *fp = fopen( result_file.c_str(), "r" );
+	char line[256];
+	while ( fgets( line, 256, fp ) != NULL ) {
+	    string line_str = line;
+	    line_str = line_str.substr(0, line_str.length() - 1);
+	    cout << line_str << endl;
+	    if ( line_str == "[Finished successfully]" ) {
+		fclose(fp);
+		return true;
+	    } else if ( line_str == "Error:  Ran out of precision at" ) {
+		if ( angle > 9.0 ) {
+		    angle = 5.0;
+		    still_trying = true;
+		} else if ( angle > 4.0 ) {
+		    angle = 0.0;
+		    still_trying = true;
+		}
+	    }
 	}
+	fclose(fp);
     }
-
-    fclose(fp);
     return false;
 }
 

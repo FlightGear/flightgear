@@ -37,7 +37,7 @@
 #include <Main/construct_types.hxx>
 
 
-#define FG_PROXIMITY_EPSILON 0.000001
+#define FG_PROXIMITY_EPSILON 0.00002
 #define FG_COURSE_EPSILON 0.0003
 
 
