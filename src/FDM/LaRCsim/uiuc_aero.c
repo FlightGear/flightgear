@@ -70,7 +70,6 @@ void uiuc_init_2_wrapper()
     {
       init = -1; 
       uiuc_initial_init();
-      //      uiuc_init_aeromodel();
     }
 }
 

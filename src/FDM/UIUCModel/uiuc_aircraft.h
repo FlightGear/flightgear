@@ -2709,18 +2709,6 @@ struct AIRCRAFT
  
   int Fog;
   
-  AIRCRAFT()
-  {
-    fog_field = 0;
-    fog_segments = 0;
-    fog_point_index = -1;
-    fog_time = NULL;
-    fog_value = NULL;
-    fog_next_time = 0.0;
-    fog_current_segment = 0;
-    Fog = 0;
-  };
-
 #define fog_field	aircraft_->fog_field
 #define fog_segments	aircraft_->fog_segments
 #define fog_point_index	aircraft_->fog_point_index

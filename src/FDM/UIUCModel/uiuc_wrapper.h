@@ -9,3 +9,4 @@ void uiuc_network_recv_routine();
 void uiuc_network_send_routine();
 void uiuc_vel_init ();
 void uiuc_initial_init ();
+void uiuc_defaults_inits ();

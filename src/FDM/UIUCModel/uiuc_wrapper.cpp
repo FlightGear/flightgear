@@ -108,6 +108,7 @@ SG_USING_STD(cout);
 SG_USING_STD(endl);
 
 extern "C" void uiuc_initial_init ();
+extern "C" void uiuc_defaults_inits ();
 extern "C" void uiuc_vel_init ();
 extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);
@@ -133,6 +134,9 @@ AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
 
 void uiuc_initial_init ()
 {
+  // This function called from both ls_step and ls_model(uiuc model side).
+  // Apply brute force initializations, which override ls_step and ls_aux values
+  // for the first time step.
   if (P_body_init_true)
     P_body = P_body_init;
   if (Q_body_init_true)
@@ -153,6 +157,113 @@ void uiuc_initial_init ()
     V_body = V_body_init;
   if (W_body_init_true)
     W_body = W_body_init;
+}
+
+void uiuc_defaults_inits ()
+{
+  // set defaults and initialize (called from ls_step.c at Simtime=0)
+
+  //fog inits 
+  fog_field = 0;
+  fog_segments = 0;
+  fog_point_index = -1;
+  fog_time = NULL;
+  fog_value = NULL;
+  fog_next_time = 0.0;
+  fog_current_segment = 0;
+  Fog = 0;
+
+  use_V_rel_wind_2U = 0;
+  nondim_rate_V_rel_wind = 0;
+  use_abs_U_body_2U = 0;
+  use_dyn_on_speed_curve1 = 0;
+  use_Alpha_dot_on_speed = 0;
+  use_gamma_horiz_on_speed = 0;
+  b_downwashMode = 0;
+  P_body_init_true = 0;
+  Q_body_init_true = 0;
+  R_body_init_true = 0;
+  Phi_init_true = 0;
+  Theta_init_true = 0;
+  Psi_init_true = 0;
+  Alpha_init_true = 0;
+  Beta_init_true = 0;
+  U_body_init_true = 0;
+  V_body_init_true = 0;
+  W_body_init_true = 0;
+  trim_case_2 = 0;
+  use_uiuc_network = 0;
+  old_flap_routine = 0;
+  icing_demo = 0;
+  outside_control = 0;
+  set_Long_trim = 0;
+  zero_Long_trim = 0;
+  elevator_step = 0;
+  elevator_singlet = 0;
+  elevator_doublet = 0;
+  elevator_input = 0;
+  aileron_input = 0;
+  rudder_input = 0;
+  pilot_elev_no = 0;
+  pilot_elev_no_check = 0;
+  pilot_ail_no = 0;
+  pilot_ail_no_check = 0;
+  pilot_rud_no = 0;
+  pilot_rud_no_check = 0;
+  use_flaps = 0;
+  use_spoilers = 0;
+  flap_pos_input = 0;
+  use_elevator_sas_type1 = 0;
+  use_elevator_sas_max = 0;
+  use_elevator_sas_min = 0;
+  use_elevator_stick_gain = 0;
+  use_aileron_sas_type1 = 0;
+  use_aileron_sas_max = 0;
+  use_aileron_stick_gain = 0;
+  use_rudder_sas_type1 = 0;
+  use_rudder_sas_max = 0;
+  use_rudder_stick_gain = 0;
+  simpleSingleModel = 0;
+  Throttle_pct_input = 0;
+  gyroForce_Q_body = 0;
+  gyroForce_R_body = 0;
+  b_slipstreamEffects = 0;
+  Xp_input = 0;
+  Zp_input = 0;
+  Mp_input = 0;
+  b_CLK = 0;
+  //  gear_model[MAX_GEAR] = 0;
+  use_gear = 0;
+  ice_model = 0;
+  ice_on = 0;
+  beta_model = 0;
+  //  bootTrue[20] = 0;
+  eta_from_file = 0;
+  eta_wing_left_input = 0;
+  eta_wing_right_input = 0;
+  eta_tail_input = 0;
+  demo_eps_alpha_max = 0;
+  demo_eps_pitch_max = 0;
+  demo_eps_pitch_min = 0;
+  demo_eps_roll_max = 0;
+  demo_eps_thrust_min = 0;
+  demo_eps_airspeed_max = 0;
+  demo_eps_airspeed_min = 0;
+  demo_eps_flap_max = 0;
+  demo_boot_cycle_tail = 0;
+  demo_boot_cycle_wing_left = 0;
+  demo_boot_cycle_wing_right = 0;
+  demo_eps_pitch_input = 0;
+  tactilefadef = 0;
+  demo_ap_pah_on = 0;
+  demo_ap_Theta_ref_deg = 0;
+  demo_tactile = 0;
+  demo_ice_tail = 0;
+  demo_ice_left = 0;
+  demo_ice_right = 0;
+  flapper_model = 0;
+  ignore_unknown_keywords = 0;
+  pilot_throttle_no = 0;
 
 }
 

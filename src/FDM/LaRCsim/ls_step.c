@@ -50,6 +50,9 @@
 
 $Header$
 $Log$
+Revision 1.3  2003/06/09 02:50:23  mselig
+mods made to setup for some initializations in uiuc code
+
 Revision 1.2  2003/05/25 12:14:46  ehofman
 Rename some defines to prevent a namespace clash
 
@@ -355,7 +358,10 @@ void ls_step( SCALAR dt, int Initialize ) {
 
 /* Initialize quaternions and transformation matrix from Euler angles */
 	if (current_model == UIUC && Simtime == 0) {
-	    uiuc_init_vars();
+	  if (inited == 0) {
+	    uiuc_defaults_inits();
+	  }
+	  uiuc_init_vars();
         }
 
 	    e_0 = cos(Psi*0.5)*cos(Theta*0.5)*cos(Phi*0.5) 
