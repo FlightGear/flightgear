@@ -27,6 +27,7 @@ extern bool fgLoadFlight (istream &input);
  *
  * @param path The path of the node, relative to root.
  * @param create true to create the node if it doesn't exist.
+ * @return The node, or 0 if none exists and none was created.
  */
 inline SGPropertyNode * 
 fgGetNode (const string &path, bool create = false)
@@ -35,24 +36,18 @@ fgGetNode (const string &path, bool create = false)
 }
 
 
-#if 0
 /**
- * Get an SGValue pointer that can be queried repeatedly.
+ * Test whether a given node exists.
  *
- * If the property value is going to be accessed within the loop,
- * it is best to use this method for maximum efficiency.
+ * @param path The path of the node, relative to root.
+ * @return true if the node exists, false otherwise.
  */
-inline SGPropertyNode * 
-fgGetNode (const string &name, bool create = false)
+inline bool
+fgHasNode (const string &path)
 {
-  return globals->get_props()->getNode(name, create);
+  return (fgGetNode(path, false) != 0);
 }
-#endif
 
-inline bool fgHasNode (const string &name)
-{
-  return globals->get_props()->getNode(name) != NULL;
-}
 
 inline bool fgGetBool (const string &name, bool defaultValue = false)
 {
