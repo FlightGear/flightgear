@@ -30,6 +30,8 @@
 #  include <windows.h>                     
 #endif
 
+#include <math.h>
+
 #include <string>
 
 #include <simgear/misc/props.hxx>

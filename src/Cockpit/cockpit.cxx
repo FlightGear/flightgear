@@ -319,66 +319,69 @@ char *dmshh_format(double degrees)
 }
 #endif // 0
 
-/****************************************************************************/
-/* Convert degrees to dd mm'ss.s'' (DMS-Format)                              */
-/****************************************************************************/
-static char *toDMS(float a)
-{
-  int        neg = 0;
-  float       d, m, s;
-  static char  dms[16];
 
-  if (a < 0.0f) {
-    a   = -a;
-    neg = 1;
-  }
-  d = (float) ((int) a); 
-  a = (a - d) * 60.0f;
-  m = (float) ((int) a);
-  s = (a - m) * 60.0f;
-  
-  if (s > 59.5f) {
-    s  = 0.0f;
-    m += 1.0f;
-  }
-  if (m > 59.5f) {
-    m  = 0.0f;
-    d += 1.0f;
-  }
-  if (neg)
-    d = -d;
-  
-  sprintf(dms, "%.0f*%02.0f %04.1f", d, m, s);
-  return dms;
+/************************************************************************
+ Convert degrees to dd mm.mmm' (DMM-Format)
+ Description: Converts using a round-off factor tailored to the required
+ precision of the minutes field (three decimal places).  Round-off
+ prevents function from returning a minutes value of 60.
+
+ Input arguments: Coordinate value in decimal degrees
+
+************************************************************************/
+static char *toDM(float dd)
+{
+    static char  dm[16];
+    double tempdd;
+    double mn;
+    double sign = 1;
+    int deg;
+
+    if (dd < 0) {
+	sign = -1;
+    }
+    /* round for minutes expressed to three decimal places */
+    tempdd = fabs(dd) + (5.0E-4 / 60.0);
+    deg = (int)tempdd;
+    mn = fabs( (tempdd - (double)(deg)) * 60.0 - 4.999E-4 );
+    deg *= (int)sign;
+    sprintf(dm, "%d*%06.3f", deg, mn);
+    return dm;
 }
 
 
-/****************************************************************************/
-/* Convert degrees to dd mm.mmm' (DMM-Format)                               */
-/****************************************************************************/
-static char *toDM(float a)
-{
-  int        neg = 0;
-  float       d, m;
-  static char  dm[16];
-  
-  if (a < 0.0f) {
-    a = -a;
-    neg = 1;
-  }
+/************************************************************************
+ Convert degrees to dd mm'ss.s'' (DMS-Format)
+ Description: Converts using a round-off factor tailored to the required
+ precision of the seconds field (one decimal place).  Round-off
+ prevents function from returning a seconds value of 60.
 
-  d = (float) ( (int) a);
-  m = (a - d) * 60.0f;
-  
-  if (m > 59.5f) {
-    m  = 0.0f;
-    d += 1.0f;
-  }
-  if (neg) d = -d;
-  
-  sprintf(dm, "%.0f*%06.3f", d, m);
-  return dm;
+ Input arguments: Coordinate value in decimal degrees
+
+************************************************************************/
+static char *toDMS(float dd)
+{
+    static char  dms[16];
+    double tempdd, tempmin;
+    int deg;
+    int mn;
+    double sec;
+    double sign = 1;
+
+    if(dd < 0) {
+	sign = -1;
+    }
+    /* round up for seconds expressed to one decimal place */
+    tempdd = fabs(dd) + (0.05 / 3600.0);
+    deg = (int)tempdd;
+    tempmin =  (tempdd - (double)(deg)) * 60.0;
+    mn = (int)tempmin;
+    sec = fabs( (tempmin - (double)(mn)) * 60.0 - 0.049 );
+    deg *= (int)sign;
+    sprintf(dms, "%d*%02d %04.1f", deg, mn, sec);
+    return dms;
 }
+
 
 // Have to set the LatLon display type
 //static char *(*fgLatLonFormat)(float) = toDM;
