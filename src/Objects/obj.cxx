@@ -266,7 +266,8 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     int vncount, vtcount;
     int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
     int tex;
-    int last1 = 0, last2 = 0, odd = 0;
+    int last1 = 0, last2 = 0;
+    bool odd = false;
     point_list nodes;
     Point3D node;
     Point3D center;
@@ -513,7 +514,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// xglBegin(GL_TRIANGLE_STRIP);
 		// printf("xglBegin(tristrip) %d %d %d\n", n1, n2, n3);
 
-		odd = 1; 
+		odd = true; 
 		// scale = 1.0;
 
 		if ( shading ) {
@@ -563,7 +564,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		}
 		// printf("some normals, texcoords, and vertices\n");
 
-		odd = 1 - odd;
+		odd = !odd;
 		last1 = n2;
 		last2 = n3;
 
@@ -597,7 +598,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // xglTexCoord2f(pp.lon(), pp.lat());
 		    // xglVertex3dv(nodes[n4].get_n());		
 		    
-		    odd = 1 - odd;
+		    odd = !odd;
 		    last1 = n3;
 		    last2 = n4;
 		    // printf("a normal, texcoord, and vertex (4th)\n");
@@ -608,6 +609,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
 		fan_vertices.clear();
 		fan_tex_coords.clear();
+		odd = true;
 
 		// xglBegin(GL_TRIANGLE_FAN);
 
@@ -698,7 +700,14 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // xglTexCoord2f(pp.x(), pp.y());
 		    // xglVertex3dv(nodes[n3].get_n());
 
-		    fragment.add_face(n1, n2, n3);
+		    if ( odd ) {
+			fragment.add_face(n1, n2, n3);
+		    } else {
+			fragment.add_face(n2, n1, n3);
+		    }
+
+		    odd = !odd;
+		    n1 = n2;
 		    n2 = n3;
 		}
 
@@ -816,7 +825,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// xglVertex3dv(nodes[n1].get_n());
 		// printf("a normal, texcoord, and vertex (4th)\n");
    
-		odd = 1 - odd;
+		odd = !odd;
 		last1 = last2;
 		last2 = n1;
 
@@ -850,7 +859,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // xglVertex3dv(nodes[n2].get_n());		
 		    // printf("a normal, texcoord, and vertex (4th)\n");
 
-		    odd = 1 -odd;
+		    odd = !odd;
 		    last1 = last2;
 		    last2 = n2;
 		}
