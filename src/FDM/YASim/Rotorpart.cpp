@@ -347,7 +347,7 @@ void Rotorpart::calcForce(float* v, float rho, float* out, float* torque)
         
         float fcw;
         if(_c2==0)
-          fcw==0;
+          fcw=0;
         else
           //fcw=vz/_c2*_maxpitchforce*_omega/_omegan;
           fcw=vz*(_c2-1)*_maxpitchforce*_omega/(_omegan*_omegan*_len*_maxpitch);
