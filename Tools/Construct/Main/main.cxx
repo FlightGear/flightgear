@@ -113,6 +113,12 @@ int load_polys( FGConstruct& c ) {
     result = actual_load_polys( poly_path, c, clipper );
     cout << "  loaded " << result << " polys" << endl;
 
+    // load urban areas
+    poly_path = c.get_work_base() + ".urban" + "/Scenery/" + base;
+    cout << "poly_path = " << poly_path << endl;
+    result = actual_load_polys( poly_path, c, clipper );
+    cout << "  loaded " << result << " polys" << endl;
+
     point2d min, max;
     min.x = c.get_bucket().get_center_lon() - 0.5 * c.get_bucket().get_width();
     min.y = c.get_bucket().get_center_lat() - 0.5 * c.get_bucket().get_height();
