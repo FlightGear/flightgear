@@ -41,8 +41,8 @@
 static double _fg_inv(double v)   { return (v == 0) ? 1e99 : 1/v; };
 static double _fg_abs(double v)   { return (v >= 0) ? v : -v; };
 static double _fg_sqrt(double v)  { return (v < 0) ? sqrt(-v) : sqrt(v); };
-static double _fg_log10(double v) { return (v < 1) ? 0 : log10(v+1); };
-static double _fg_log(double v)   { return (v < 1) ? 0 : log(v+1); };
+static double _fg_log10(double v) { return (v < 1) ? 0 : log10(v); };
+static double _fg_log(double v)   { return (v < 1) ? 0 : log(v); };
 // static double _fg_sqr(double v)   { return pow(v, 2); };
 // static double _fg_pow3(double v)  { return pow(v, 3); };
 
@@ -61,43 +61,39 @@ static const struct {
 	{"", NULL}
 };
 
-FGSound::FGSound(const SGPropertyNode * node)
-  : _node(node),
+FGSound::FGSound()
+  : _condition(NULL),
+    _property(NULL),
     _sample(NULL),
-    _active(false),
     _mode(FGSound::ONCE),
-    _type(FGSound::LEVEL),
-    _name(""),  
-    _factor(1.0)
+    _prev_value(0),
+    _name("")
 {
 }
 
 FGSound::~FGSound()
 {
+   delete _condition;
    delete _sample;
 }
 
 void
-FGSound::init()
+FGSound::init(SGPropertyNode *node)
 {
-
-   _property = fgGetNode(_node->getStringValue("property"), true);
 
    //
    // set global sound properties
    //
-   _name = _node->getStringValue("name");
-
-   if ((_factor = _node->getDoubleValue("factor")) == 0.0)
-      _factor = 1.0;
-
-   _offset = _node->getDoubleValue("offset");
-
+   
+   _name = node->getStringValue("name");
    SG_LOG(SG_GENERAL, SG_INFO, "Loading sound information for: " << _name );
 
-   const char *mode_str = _node->getStringValue("mode");
-   if ( !strcmp(mode_str,"looped") ) {
+   const char *mode_str = node->getStringValue("mode");
+   if ( !strcmp(mode_str, "looped") ) {
        _mode = FGSound::LOOPED;
+
+   } else if ( !strcmp(mode_str, "in-transit") ) {
+       _mode = FGSound::IN_TRANSIT;
 
    } else {
       _mode = FGSound::ONCE;
@@ -106,41 +102,21 @@ FGSound::init()
          SG_LOG(SG_GENERAL,SG_INFO, "  Unknown sound mode, default to 'once'");
    }
 
-   const char *type_str = _node->getStringValue("type");
-   if ( !strcmp(type_str, "flipflop") ) {
-      _type = FGSound::FLIPFLOP;
+   _property = fgGetNode(node->getStringValue("property"), true);
+   SGPropertyNode *condition = node->getChild("condition");
+   if (condition != NULL)
+      _condition = fgReadCondition(condition);
 
-   } else if ( !strcmp(type_str, "inverted") ) {
-      _type = FGSound::INVERTED;
-
-   } else if ( !strcmp(type_str, "raise") ) {
-      _type = FGSound::RAISE;
-
-   } else if ( !strcmp(type_str, "fall") ) {
-      _type = FGSound::FALL;
-
-   } else {
-      _type = FGSound::LEVEL;
-
-      if ( strcmp(type_str, "") )
-         SG_LOG(SG_GENERAL,SG_INFO, "  Unknown sound type, default to 'level'");
-   }
-
-#if 0
-   //
-   // set position properties
-   //
-   _pos.dist = _node->getDoubleValue("dist");
-   _pos.hor = _node->getDoubleValue("pos_hor");
-   _pos.vert = _node->getDoubleValue("pos_vert"); 
-#endif
+   if (!_property && !_condition)
+      SG_LOG(SG_GENERAL, SG_WARN,
+             "  Neither a condition nor a property specified");
 
    //
    // set volume properties
    //
    unsigned int i;
    float v = 0.0;
-   vector<const SGPropertyNode *> kids = _node->getChildren("volume");
+   vector<SGPropertyNode *> kids = node->getChildren("volume");
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop volume;
 
@@ -199,7 +175,7 @@ FGSound::init()
    // set pitch properties
    //
    float p = 0.0;
-   kids = _node->getChildren("pitch");
+   kids = node->getChildren("pitch");
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop pitch;
 
@@ -256,9 +232,9 @@ FGSound::init()
    //
    // Initialize the sample
    //
-   FGSoundMgr * mgr = globals->get_soundmgr();
-   if ((_sample = mgr->find(_name)) == NULL)
-      _sample = mgr->add(_name, _node->getStringValue("path"));
+   _mgr = globals->get_soundmgr();
+   if ((_sample = _mgr->find(_name)) == NULL)
+      _sample = _mgr->add(_name, node->getStringValue("path"));
 
    _sample->set_volume(v);
    _sample->set_pitch(p);
@@ -277,150 +253,129 @@ FGSound::unbind ()
 void
 FGSound::update (int dt)
 {
-   FGSoundMgr * mgr = globals->get_soundmgr();
+   double curr_value = 0.0;
 
    //
-   // Do we have something to do?
+   // If the state changes to false, stop playing.
    //
+   if (_property)
+      curr_value = _property->getDoubleValue();
 
-   // if (!_property)
-   //   return;
+   if (							// Lisp, anyone?
+         (_condition && !_condition->test()) ||
+         (_property &&
+            (
+               !curr_value ||
+               ( (_mode == FGSound::IN_TRANSIT) && (curr_value == _prev_value) )
+            )
+         )
+      )
+   {
 
-   if ((_type == FGSound::LEVEL)  || (_type == FGSound::INVERTED)) {
-
-      //
-      // use an integer to get false when:  -1 < check < 1
-      //
-      bool check = (int)(_offset + _property->getDoubleValue() * _factor);
-      if (_type == FGSound::INVERTED)
-         check = !check;
-
-      //
-      // If the state changes to false, stop playing.
-      //
-      if (!check) {
-         if (_active) {
-            SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
-            _sample->stop( mgr->get_scheduler(), false );
-            _active = false;
-         }
-
-         return;
-      }
-
-      //
-      // If the sound is already playing we have nothing to do.
-      //
-      if (_active && (_mode == FGSound::ONCE))
-         return;
-
-   } else {		// FLIPFLOP, RAISE, FALL
-
-      bool check = (int)(_offset + _property->getDoubleValue() * _factor);
-      if (check == _active)
-            return;
-
-      //
-      // Check for state changes.
-      // If the state changed, and the sound is still playing: stop playing.
-      //
+      _active = false;
       if (_sample->is_playing()) {
          SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
-         _sample->stop( mgr->get_scheduler() );
+         _sample->stop( _mgr->get_scheduler() );
       }
 
-      if ( ((_type == FGSound::RAISE) && !check) ||
-           ((_type == FGSound::FALL) && check) )
-         return;
+      return;
 
    }
 
-   {
-      int i, max;
+   //
+   // If the mode is ONCE and the sound is still playing,
+   //  we have nothing to do anymore.
+   //
+   if (_active && (_mode == FGSound::ONCE))
+      return;
 
-      //
-      // Update the volume
-      //
-      max = _volume.size();
-      double volume = 1.0;
-      double volume_offset = 0.0;
+   //
+   // Cache current value;
+   //
+   _prev_value = curr_value;
 
-      for(i = 0; i < max; i++) {
-         double v = _volume[i].prop->getDoubleValue();
+   //
+   // Update the volume
+   //
+   int i;
+   int max = _volume.size();
+   double volume = 1.0;
+   double volume_offset = 0.0;
 
-         if (_volume[i].fn)
-            v = _volume[i].fn(v);
+   for(i = 0; i < max; i++) {
+      double v = _volume[i].prop->getDoubleValue();
 
-         v *= _volume[i].factor;
+      if (_volume[i].fn)
+         v = _volume[i].fn(v);
 
-         if (!_volume[i].max && (v > _volume[i].max))
-            v = _volume[i].max;
+      v *= _volume[i].factor;
 
-         else if (!_volume[i].min && (v < _volume[i].min))
-            v = _volume[i].min;
+      if (_volume[i].max && (v > _volume[i].max))
+         v = _volume[i].max;
 
-         if (_volume[i].subtract)				// Hack!
-            volume = _volume[i].offset - v;
-         else {
-            volume_offset += _volume[i].offset;
-            volume *= v;
-         }
+      else if (v < _volume[i].min)
+         v = _volume[i].min;
+
+      if (_volume[i].subtract)				// Hack!
+         volume = _volume[i].offset - v;
+
+      else {
+         volume_offset += _volume[i].offset;
+         volume *= v;
       }
-
-      //
-      // Update the pitch
-      //
-      max = _pitch.size();
-      double pitch = 1.0;
-      double pitch_offset = 0.0;
-
-      for(i = 0; i < max; i++) {
-         double p = _pitch[i].prop->getDoubleValue();
-
-         if (_pitch[i].fn)
-            p = _pitch[i].fn(p);
-
-         p *= _pitch[i].factor;
-
-         if (!_pitch[i].max && (p > _pitch[i].max))
-            p = _pitch[i].max;
-
-         else if (!_pitch[i].min && (p < _pitch[i].min))
-            p = _pitch[i].min;
-
-         if (_pitch[i].subtract)				// Hack!
-            pitch = _pitch[i].offset - p;
-         else {
-            pitch_offset += _pitch[i].offset;
-            pitch *= p;
-         }
-      }
-
-      //
-      // Change sample state
-      //
-      _sample->set_pitch( pitch_offset + pitch );
-      _sample->set_volume( volume_offset + volume );
    }
+
+   //
+   // Update the pitch
+   //
+   max = _pitch.size();
+   double pitch = 1.0;
+   double pitch_offset = 0.0;
+
+   for(i = 0; i < max; i++) {
+      double p = _pitch[i].prop->getDoubleValue();
+
+      if (_pitch[i].fn)
+         p = _pitch[i].fn(p);
+
+      p *= _pitch[i].factor;
+
+      if (_pitch[i].max && (p > _pitch[i].max))
+         p = _pitch[i].max;
+
+      else if (p < _pitch[i].min)
+         p = _pitch[i].min;
+
+      if (_pitch[i].subtract)				// Hack!
+         pitch = _pitch[i].offset - p;
+
+      else {
+         pitch_offset += _pitch[i].offset;
+         pitch *= p;
+      }
+   }
+
+   //
+   // Change sample state
+   //
+   _sample->set_pitch( pitch_offset + pitch );
+   _sample->set_volume( volume_offset + volume );
+
 
    //
    // Do we need to start playing the sample?
    //
-   if (_active && ((_type == FGSound::LEVEL) || (_type == FGSound::INVERTED)))
-         return;
+   if (!_active) {
 
-   //
-   // This is needed for FGSound::FLIPFLOP and it works for 
-   // FGSound::LEVEl. Doing it this way saves an extra 'if'.
-   //
-   _active = !_active;
+      _active = true;
+      if (_mode == FGSound::ONCE)
+         _sample->play(_mgr->get_scheduler(), false);
 
-   if (_mode == FGSound::ONCE)
-      _sample->play(mgr->get_scheduler(), false);
-   else
-      _sample->play(mgr->get_scheduler(), true);
+      else
+         _sample->play(_mgr->get_scheduler(), true);
 
-   SG_LOG(SG_GENERAL, SG_INFO, "Starting audio playback for: " << _name);
-   SG_LOG(SG_GENERAL, SG_BULK,
-    "Playing " << ((_mode == ONCE) ? "once" : "looped"));
+      SG_LOG(SG_GENERAL, SG_INFO, "Starting audio playback for: " << _name);
+      SG_LOG(SG_GENERAL, SG_BULK,
+                         "Playing " << ((_mode == ONCE) ? "once" : "looped"));
+   }
 }

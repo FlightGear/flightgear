@@ -57,7 +57,6 @@ private:
     slEnvelope *volume_envelope;
     double pitch;
     double volume;
-    int requests;
 
 public:
 

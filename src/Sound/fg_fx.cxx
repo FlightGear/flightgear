@@ -52,7 +52,7 @@ FGFX::~FGFX ()
 void
 FGFX::init()
 {
-   const SGPropertyNode * node = fgGetNode("/sim/sound", true);
+   SGPropertyNode * node = fgGetNode("/sim/sound", true);
    int i;
 
    string path_str = node->getStringValue("path");
@@ -77,13 +77,10 @@ FGFX::init()
 
    node = root.getNode("fx");
    for (i = 0; i < node->nChildren(); i++) {
-      FGSound * sound;
-      sound = new FGSound(node->getChild(i));
-      _sound.push_back(sound);
-   }
+      FGSound *sound = new FGSound();
+      sound->init(node->getChild(i));
 
-   for (i = 0; i < (int)_sound.size(); i++ ) {
-      _sound[i]->init();
+      _sound.push_back(sound);
    }
 }
 

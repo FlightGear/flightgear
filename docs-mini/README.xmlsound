@@ -1,5 +1,5 @@
 Users Guide to FlightGear sound configuration
-Version 0.7.10, Mar 02 2002
+Version 0.7.11, apr 27 2002
 Author: Erik Hofman <erik@ehofman.com>
 
 This document is an attempt to describe the configuration of
@@ -44,7 +44,9 @@ A limited sound configuration file would look something like this:
    <name>engine</name>
    <path>Sounds/wasp.wav</path>
    <mode>looped</mode>
-   <property>/engines/engine/running</property>
+   <condition>
+    <property>/engines/engine/running</property>
+   </condition>
    <volume>
     <property>/engines/engine/mp-osi</property>
     <factor>0.005</factor>
@@ -81,7 +83,7 @@ Configuration description:
  < ... >
  	This is the event seperator. The text inside the brackets
  	can be anything. Bit it is adviced to give it a meaningfull name
-        like: crank, engine, rumble, gear, squeal, flap, wind or stall
+	like: crank, engine, rumble, gear, squeal, flap, wind or stall
  
  	The value can be defined multiple times, thus anything which is
  	related may have the same name (grouping them together).
@@ -89,7 +91,7 @@ Configuration description:
    <name>
  	This defines the name of the event. This name is used internally
  	and, although it can me defined multiple times in the same file,
-        should normally have an unique value.
+	should normally have an unique value.
  
 	Multiple definitions of the same name will allow multiple sections
 	to interfere in the starting and stopping of the sample.
@@ -104,7 +106,7 @@ Configuration description:
 	Using the type "fall" will stop playback when the event turns true.
 
 	IMPORTANT:
-        If the trigger is used for anything else but stopping the sound
+	If the trigger is used for anything else but stopping the sound
  	at a certain event, all sections with the same name *should* have
 	exactly the same sections for everything but property and type.
 
@@ -114,43 +116,21 @@ Configuration description:
    <path>
  	This defined th path to the sound file. The path is relative to the
  	FlightGear root directory but could be specified absolute.
+
+   <condition>
+	Define a condition that triggers the event.
+	For a complete description of the FlightGear conditions,
+	please read docs-mini/README.conditions
+
+	An event should define either a condition or a property.
  
    <property>
  	Define which property triggers the event, and reffers to a node
- 	in the FlightGear property tree.
- 	 
- 	The value is converted to an integer value (anything less than 0.5 is
- 	is considered to be 0) and handled if it were a boolean value
- 	(0 = false, anything else = true).
- 
- 	The triger depends on the value of <type>.
- 
-   <type>
- 	This specifies how the event is triggered. When an event is triggered
-	the sample will start playing. Since the effects scheduler can have
-	multiple events controll a single sound event, it depends on the
-	situation if an event actually stops playing the sound.
+ 	in the FlightGear property tree. Action is taken when the property
+	is non zero.
 
-	Basically the following is true:
-		The first event requesting to start playback, triggers playback.
-		The last event requesting to stop playback, will stop playback.
-
- 	There are multiple options:
- 
- 	level: 		events are active if the value is true.
- 			this is the default behaviour.
- 
- 	inverted:	events are active if the value is false.
- 
- 	flipflop:	events are triggered on state changes.
- 			this is only usefull for samples which are played
- 			once.
-
-	raise:		start playing at the raise of the event.
-			explicitly stop playing when the event turns false.
-
-	fall:		start playing at the fall of the event.
-			explicitly stop playing when the event turns true.
+	A more sophisticated mechanism to trigger the event is described
+	in <condition>
  
    <mode>
  	This defines how the sample should be played:
@@ -160,7 +140,9 @@ Configuration description:
  
  	looped:		the sample plays continuesly,
  			until the event turns false.
- 
+
+ 	in-transit:	the sample plays continuesly,
+			while the property is changing its value.
    
    <volume> / <pitch>
  	Volume or Pitch definition. Currently there may be up to 5
@@ -183,10 +165,12 @@ Configuration description:
  			this is the default.
  
  	ln:		convert the property value to a natural logarithmic
- 			value before scaling it.
+ 			value before scaling it. Anything below 1 will return
+			zero.
  
  	log:		convert the property value to a true logarithmic
- 			value before scaling it.
+ 			value before scaling it. Anything below 1 will return
+			zero.
 
 	inv:		inverse lineair handling (1/x).
 
@@ -211,7 +195,6 @@ Configuration description:
  	will be truncated to this value.
  
      <max>
- 
  	Maximum allowed value.
  	This is usefull if sounds gets to loud. Anything higher will be
  	truncated to this value.
@@ -227,7 +210,7 @@ Default values are:
 type:	lin
 factor:	1.0
 offset:	0.0 for volume, 1.0 for pitch
-min:	0.0 (don't check)
+min:	0.0
 max:	0.0 (don't check)
 
  
@@ -240,12 +223,12 @@ Calculations are made the following way (for both pitch and volume):
    for (n = 0;  n < max; n++) {
       if (factor < 0)
       {
-         value += offset[n] - abs(factor[n]) * function(property[n]);
+	 value += offset[n] - abs(factor[n]) * function(property[n]);
       }
       else
       {
-         value += factor[n] * function(property[n]);
-         offs += offset[n];
+	 value += factor[n] * function(property[n]);
+	 offs += offset[n];
       }
    }
 

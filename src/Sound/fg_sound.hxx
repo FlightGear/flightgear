@@ -34,18 +34,18 @@
 #include "soundmgr.hxx"
 
 /**
- * Class for handling one sound.
+ * Class for handling one sound event.
  *
  */
-class FGSound : public FGSubsystem
+class FGSound
 {
 
 public:
 
-  FGSound(const SGPropertyNode *);
+  FGSound();
   virtual ~FGSound();
 
-  virtual void init ();
+  virtual void init (SGPropertyNode *);
   virtual void bind ();
   virtual void unbind ();
   virtual void update (int dt);
@@ -53,13 +53,13 @@ public:
 protected:
 
   enum { MAXPROP=5 };
-  enum { ONCE=0, LOOPED };
-  enum { LEVEL=0, INVERTED, FLIPFLOP, RAISE, FALL };
+  enum { ONCE=0, LOOPED, IN_TRANSIT };
+  enum { LEVEL=0, INVERTED, FLIPFLOP };
 
 
   // Sound properties
   typedef struct {
-        const SGPropertyNode * prop;
+        SGPropertyNode * prop;
         double (*fn)(double);
         double factor;
         double offset;
@@ -68,30 +68,18 @@ protected:
         bool subtract;
   } _snd_prop;
 
-#if 0
-  // Sound source (distance, horizontal position in degrees and
-  // vertical position in degrees)
-  typedef struct {
-        float dist;
-        float hor;
-        float vert;
-  } _pos_prop;
-#endif
-
 private:
 
-  const SGPropertyNode * _node;
-
+  FGSoundMgr * _mgr;
   FGSimpleSound * _sample;
-  const SGPropertyNode * _property;
+  FGCondition * _condition;
+
+  SGPropertyNode * _property;
+  double _prev_value;
 
   bool _active;
-
-  int _mode;
-  int _type;
   string _name;
-  double _factor;
-  double _offset;
+  int _mode;
 
   vector<_snd_prop> _volume;
   vector<_snd_prop> _pitch;
