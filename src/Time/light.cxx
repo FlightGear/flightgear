@@ -52,6 +52,7 @@ SG_USING_STD(string);
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/sky/sky.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
@@ -60,6 +61,7 @@ SG_USING_STD(string);
 #include "light.hxx"
 #include "sunpos.hxx"
 
+extern SGSky *thesky;           // FIXME: from main.cxx
 
 fgLIGHT cur_light_params;
 
@@ -110,7 +112,6 @@ void fgLIGHT::Update( void ) {
 #else // default
     GLfloat base_sky_color[4] = { 0.336, 0.406, 0.574, 1.0 };
 #endif
-    // base fog color
     GLfloat base_fog_color[4] = { 0.80, 0.83, 1.0, 1.0 };
     double deg, ambient, diffuse, specular, sky_brightness;
 
@@ -120,6 +121,13 @@ void fgLIGHT::Update( void ) {
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
+
+    // base fog color
+    float *sun_color = thesky->get_sun_color();
+    base_fog_color[0] *= (0.75 + sun_color[0]/4);
+    base_fog_color[1] *= (0.5 + sun_color[1]/2);
+    base_fog_color[2] *= sun_color[2];
+
 
     deg = sun_angle * SGD_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_INFO, "  Sun angle = " << deg );
