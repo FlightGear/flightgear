@@ -39,6 +39,7 @@
 #include <GL/glut.h>
 #include <plib/ssg.h>
 
+#include <simgear/math/interpolater.hxx>
 #include <simgear/misc/props.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -47,7 +48,6 @@
 #include <plib/fnt.h>
 
 #include <Main/fgfs.hxx>
-
 
 SG_USING_STD(vector);
 SG_USING_STD(map);
@@ -383,6 +383,7 @@ public:
   float max;
   float factor;
   float offset;
+  SGInterpTable * table;
 };
 
 

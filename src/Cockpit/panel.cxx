@@ -476,6 +476,7 @@ FGToggleAction::doAction ()
 ////////////////////////////////////////////////////////////////////////
 
 FGPanelTransformation::FGPanelTransformation ()
+  : table(0)
 {
 }
 
@@ -664,7 +665,11 @@ FGInstrumentLayer::transform () const
     } else if (val > t->max) {
       val = t->max;
     }
-    val = val * t->factor + t->offset;
+    if(t->table==0) {
+	val = val * t->factor + t->offset;
+    } else {
+	val = t->table->interpolate(val) * t->factor + t->offset;
+    }
 
     switch (t->type) {
     case FGPanelTransformation::XSHIFT:
