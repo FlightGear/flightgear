@@ -205,7 +205,7 @@ FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
     return FGPhysicalProperty(database->Evaluate(p), p[3]);
 }
 
-#ifdef MACOS
+#ifdef macintosh
     /* fix a problem with mw compilers in that they don't know the
        difference between the next two methods. Since the first one
        doesn't seem to be used anywhere, I commented it out. This is

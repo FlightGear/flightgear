@@ -44,7 +44,7 @@
 #  include <cmath>
 #  include <cstdio>
 #  include <ctime>
-#  ifdef MACOS
+#  ifdef macintosh
      FG_USING_STD(time_t);
 #  endif
 #else

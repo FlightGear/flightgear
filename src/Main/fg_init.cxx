@@ -695,7 +695,7 @@ bool fgInitSubsystems( void ) {
     NewAltitudeInit();
 
     // Initialize I/O channels
-#if ! defined( MACOS )
+#if ! defined( macintosh )
     fgIOInit();
 #endif
 

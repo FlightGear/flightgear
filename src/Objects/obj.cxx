@@ -338,7 +338,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
     while ( ! in.eof() ) {
 #endif
 
-#if defined( MACOS )
+#if defined( macintosh )
 	in >> ::skipws;
 #else
 	in >> skipws;
@@ -572,7 +572,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		
 		// read all subsequent numbers until next thing isn't a number
 		while ( true ) {
-#if defined( MACOS )
+#if defined( macintosh )
 		    in >> ::skipws;
 #else
 		    in >> skipws;
@@ -673,7 +673,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 
 	    // eat white space before start of while loop so if we are
 	    // done with useful input it is noticed before hand.
-#if defined( MACOS )
+#if defined( macintosh )
 	    in >> ::skipws;
 #else
 	    in >> skipws;

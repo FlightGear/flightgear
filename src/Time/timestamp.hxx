@@ -57,7 +57,7 @@
 #endif
 
 // -dw- want to use metrowerks time.h
-#ifdef MACOS
+#ifdef macintosh
 #  include <time.h>
 #  include <timer.h>
 #endif
@@ -143,7 +143,7 @@ inline void FGTimeStamp::stamp() {
     seconds = current.time;
     usec = current.millitm * 1000;
 // -dw- uses time manager
-#elif defined( MACOS )
+#elif defined( macintosh )
     UnsignedWide ms;
     Microseconds(&ms);
 	

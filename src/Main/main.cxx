@@ -113,7 +113,7 @@
 
 
 // -dw- use custom sioux settings so I can see output window
-#ifdef MACOS
+#ifdef macintosh
 #  ifndef FG_NDEBUG
 #    include <sioux.h> // settings for output window
 #  endif
@@ -874,7 +874,7 @@ static void fgMainLoop( void ) {
 	}
     }
 
-#if ! defined( MACOS )
+#if ! defined( macintosh )
     // Do any I/O channel work that might need to be done
     fgIOProcess();
 #endif
@@ -1152,7 +1152,7 @@ void fgReshape( int width, int height ) {
 // Initialize GLUT and define a main window
 int fgGlutInit( int *argc, char **argv ) {
 
-#if !defined( MACOS )
+#if !defined( macintosh )
     // GLUT will extract all glut specific options so later on we only
     // need wory about our own.
     glutInit(argc, argv);
@@ -1265,7 +1265,7 @@ int fgGlutInitEvents( void ) {
 // Main ...
 int main( int argc, char **argv ) {
 
-#if defined( MACOS )
+#if defined( macintosh )
     freopen ("stdout.txt", "w", stdout );
     freopen ("stderr.txt", "w", stderr );
     argc = ccommand( &argv );

@@ -48,7 +48,7 @@
 
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <ctime>
-#  ifdef MACOS
+#  ifdef macintosh
      FG_USING_STD(time_t);
 #  endif
 #else

@@ -51,7 +51,7 @@ public:
     int Evaluate (const double x, const double y, const double z, T& f) const;
     int Evaluate (const double thetaAngle, const double phiAngle, T& f) const;
 
-#ifndef MACOS
+#ifndef macintosh
     // CodeWarrior doesn't know the differece between sgVec2 and
     // sgVec3, so I commented this out for Mac builds. This change is
     // related to a similar change in FGLocalWeatherDatabase module.

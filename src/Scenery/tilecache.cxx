@@ -205,7 +205,7 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 	while ( ! in.eof() ) {
 	    in >> token;
 	    in >> name;
-#if defined ( MACOS ) || defined ( _MSC_VER )
+#if defined ( macintosh ) || defined ( _MSC_VER )
 	    in >> ::skipws;
 #else
 	    in >> skipws;

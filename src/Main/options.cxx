@@ -214,7 +214,7 @@ fgOPTIONS::fgOPTIONS() :
 
 #if defined( WIN32 )
 	fg_root = "\\FlightGear";
-#elif defined( MACOS )
+#elif defined( macintosh )
 	fg_root = "";
 #else
 	fg_root = PKGLIBDIR;
@@ -899,7 +899,7 @@ int fgOPTIONS::parse_config_file( const string& path ) {
 
 #ifdef GETLINE_NEEDS_TERMINATOR
         getline( in, line, '\n' );
-#elif defined (MACOS)
+#elif defined( macintosh )
 	getline( in, line, '\r' );
 #else
         getline( in, line );
