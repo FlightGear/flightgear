@@ -47,6 +47,7 @@ SG_USING_STD(string);
 
 // Lock the ATC hardware
 static int ATCLock( int fd ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     // rewind
     lseek( fd, 0, SEEK_SET );
 
@@ -57,11 +58,15 @@ static int ATCLock( int fd ) {
     }
 
     return result;
+#else
+    return -1;
+#endif
 }
 
 
 // Release the ATC hardware
 static int ATCRelease( int fd ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     // rewind
     lseek( fd, 0, SEEK_SET );
 
@@ -74,6 +79,9 @@ static int ATCRelease( int fd ) {
     }
 
     return result;
+#else
+    return -1;
+#endif
 }
 
 
@@ -93,6 +101,7 @@ FGATCOutput::FGATCOutput( const int _board, const SGPath &_config_file ) :
 
 // Write a radios command
 static int ATCSetRadios( int fd, unsigned char data[ATC_RADIO_DISPLAY_BYTES] ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     // rewind
     lseek( fd, 0, SEEK_SET );
 
@@ -103,6 +112,9 @@ static int ATCSetRadios( int fd, unsigned char data[ATC_RADIO_DISPLAY_BYTES] ) {
     }
 
     return result;
+#else
+    return -1;
+#endif
 }
 
 
@@ -110,6 +122,7 @@ static int ATCSetRadios( int fd, unsigned char data[ATC_RADIO_DISPLAY_BYTES] ) {
 static int ATCSetStepper( int fd, unsigned char channel,
 			      unsigned char value )
 {
+#if defined( unix ) || defined( __CYGWIN__ )
     // rewind
     lseek( fd, 0, SEEK_SET );
 
@@ -125,11 +138,15 @@ static int ATCSetStepper( int fd, unsigned char channel,
     SG_LOG( SG_IO, SG_DEBUG,
 	    "Sent cmd = " << (int)channel << " value = " << (int)value );
     return result;
+#else
+    return -1;
+#endif
 }
 
 
 // Read status of last stepper written to
 static unsigned char ATCReadStepper( int fd ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     int result;
 
     // rewind
@@ -145,11 +162,15 @@ static unsigned char ATCReadStepper( int fd ) {
     SG_LOG( SG_IO, SG_DEBUG, "Read result = " << (int)buf[0] );
 
     return buf[0];
+#else
+    return 0;
+#endif
 }
 
 
 // Turn a lamp on or off
 void ATCSetLamp( int fd, int channel, bool value ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     // lamp channels 0-63 are written to LampPort0, channels 64-127
     // are written to LampPort1
 
@@ -168,6 +189,7 @@ void ATCSetLamp( int fd, int channel, bool value ) {
         SG_LOG( SG_IO, SG_ALERT,  "Write failed" );
         exit( -1 );
     }
+#endif
 }
 
 
