@@ -86,8 +86,8 @@ fgPolarPoint3d calc_tex_coords(double *node, fgCartesianPoint3d *ref) {
 
     pp = fgCartToPolar3d(cp);
 
-    pp.lon = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lon, 15.0);
-    pp.lat = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lat, 15.0);
+    pp.lon = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lon, 25.0);
+    pp.lat = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lat, 25.0);
 
     return(pp);
 }
@@ -448,9 +448,12 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.2  1998/05/02 01:52:14  curt
-/* Playing around with texture coordinates.
+/* Revision 1.3  1998/05/03 00:48:01  curt
+/* Updated texture coordinate fmod() parameter.
 /*
+ * Revision 1.2  1998/05/02 01:52:14  curt
+ * Playing around with texture coordinates.
+ *
  * Revision 1.1  1998/04/30 12:35:28  curt
  * Added a command line rendering option specify smooth/flat shading.
  *
