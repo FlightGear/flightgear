@@ -31,6 +31,7 @@
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Math/vector.hxx>
 #include <Scenery/scenery.hxx>
@@ -216,31 +217,31 @@ void fgVIEW::UpdateViewParams( void ) {
     xglLoadIdentity();
     
     // set up our view volume (default)
-    LookAt(view_pos.x, view_pos.y, view_pos.z,
-	   view_pos.x + view_forward[0], 
-	       view_pos.y + view_forward[1], 
-	       view_pos.z + view_forward[2],
+    LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
+	   view_pos.x() + view_forward[0], 
+	       view_pos.y() + view_forward[1], 
+	       view_pos.z() + view_forward[2],
 	       view_up[0], view_up[1], view_up[2]);
 
     // look almost straight up (testing and eclipse watching)
-    /* LookAt(view_pos.x, view_pos.y, view_pos.z,
-	       view_pos.x + view_up[0] + .001, 
-	       view_pos.y + view_up[1] + .001, 
-	       view_pos.z + view_up[2] + .001,
+    /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
+	       view_pos.x() + view_up[0] + .001, 
+	       view_pos.y() + view_up[1] + .001, 
+	       view_pos.z() + view_up[2] + .001,
 	       view_up[0], view_up[1], view_up[2]); */
 
     // lock view horizontally towards sun (testing)
-    /* LookAt(view_pos.x, view_pos.y, view_pos.z,
-	       view_pos.x + surface_to_sun[0], 
-	       view_pos.y + surface_to_sun[1], 
-	       view_pos.z + surface_to_sun[2],
+    /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
+	       view_pos.x() + surface_to_sun[0], 
+	       view_pos.y() + surface_to_sun[1], 
+	       view_pos.z() + surface_to_sun[2],
 	       view_up[0], view_up[1], view_up[2]); */
 
     // lock view horizontally towards south (testing)
-    /* LookAt(view_pos.x, view_pos.y, view_pos.z,
-	       view_pos.x + surface_south[0], 
-	       view_pos.y + surface_south[1], 
-	       view_pos.z + surface_south[2],
+    /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
+	       view_pos.x() + surface_south[0], 
+	       view_pos.y() + surface_south[1], 
+	       view_pos.z() + surface_south[2],
 	       view_up[0], view_up[1], view_up[2]); */
 
     // set the sun position
@@ -250,7 +251,7 @@ void fgVIEW::UpdateViewParams( void ) {
 
 // Update the view parameters
 void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
-    fgPoint3d p;
+    Point3D p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
@@ -261,44 +262,36 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
 	update_fov = false;
     }
 		
-    scenery.center.x = scenery.next_center.x;
-    scenery.center.y = scenery.next_center.y;
-    scenery.center.z = scenery.next_center.z;
+    scenery.center = scenery.next_center;
 
     // printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x,
     //        scenery.center.y, scenery.center.z);
 
     // calculate the cartesion coords of the current lat/lon/0 elev
-    p.lon = FG_Longitude;
-    p.lat = FG_Lat_geocentric;
-    p.radius = FG_Sea_level_radius * FEET_TO_METER;
+    p.setvals(
+	      FG_Longitude, 
+	      FG_Lat_geocentric, 
+	      FG_Sea_level_radius * FEET_TO_METER );
 
-    cur_zero_elev = fgPolarToCart3d(p);
-
-    cur_zero_elev.x -= scenery.center.x;
-    cur_zero_elev.y -= scenery.center.y;
-    cur_zero_elev.z -= scenery.center.z;
+    cur_zero_elev = fgPolarToCart3d(p) - scenery.center;
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
     if ( FG_Altitude * FEET_TO_METER > 
 	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
-	p.radius += FG_Altitude * FEET_TO_METER;
+	p.setz( p.radius() + FG_Altitude * FEET_TO_METER );
     } else {
-	p.radius += scenery.cur_elev + 0.5 * METER_TO_FEET;
+	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
 
     abs_view_pos = fgPolarToCart3d(p);
-
-    view_pos.x = abs_view_pos.x - scenery.center.x;
-    view_pos.y = abs_view_pos.y - scenery.center.y;
-    view_pos.z = abs_view_pos.z - scenery.center.z;
+    view_pos = abs_view_pos - scenery.center;
 
     fgPrintf( FG_VIEW, FG_DEBUG, "Absolute view pos = %.4f, %.4f, %.4f\n", 
-	   abs_view_pos.x, abs_view_pos.y, abs_view_pos.z);
+	   abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z());
     fgPrintf( FG_VIEW, FG_DEBUG, "Relative view pos = %.4f, %.4f, %.4f\n", 
-	   view_pos.x, view_pos.y, view_pos.z);
+	   view_pos.x(), view_pos.y(), view_pos.z());
 
     // Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw)
     // from FG_T_local_to_body[3][3]
@@ -396,7 +389,7 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
     MAT3mult_vec(view_forward, forward, TMP);
 
     // make a vector to the current view position
-    MAT3_SET_VEC(v0, view_pos.x, view_pos.y, view_pos.z);
+    MAT3_SET_VEC(v0, view_pos.x(), view_pos.y(), view_pos.z());
 
     // Given a vector pointing straight down (-Z), map into onto the
     // local plane representing "horizontal".  This should give us the
@@ -477,7 +470,7 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
     // MAT3print(AIRCRAFT, stdout);
 
     // View position in scenery centered coordinates
-    MAT3_SET_HVEC(vec, view_pos.x, view_pos.y, view_pos.z, 1.0);
+    MAT3_SET_HVEC(vec, view_pos.x(), view_pos.y(), view_pos.z(), 1.0);
     MAT3translate(T_view, vec);
     // printf("\nTranslation matrix\n");
     // MAT3print(T_view, stdout);
@@ -543,8 +536,7 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
 // Olson curt@me.umn.edu and Norman Vine nhv@yahoo.com with 'gentle
 // guidance' from Steve Baker sbaker@link.com
 int
-fgVIEW::SphereClip( const fgPoint3d *cp,
-			const double radius )
+fgVIEW::SphereClip( const Point3D& cp, const double radius )
 {
     double x1, y1;
 
@@ -593,6 +585,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.22  1998/10/16 00:54:03  curt
+// Converted to Point3D class.
+//
 // Revision 1.21  1998/09/17 18:35:33  curt
 // Added F8 to toggle fog and F9 to toggle texturing.
 //

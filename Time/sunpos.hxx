@@ -47,8 +47,6 @@
 
 #include <time.h>
 
-#include <Include/fg_types.h>
-
 /* update the cur_time_params structure with the current sun position */
 void fgUpdateSunPos( void );
 

@@ -54,6 +54,7 @@ using namespace std;
 #include <Main/options.hxx>
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
+#include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Misc/stopwatch.hxx>
 #include <Misc/fgstream.hxx>
@@ -88,25 +89,25 @@ static void calc_normal(double p1[3], double p2[3],
 
 
 // Calculate texture coordinates for a given point.
-fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
-    fgPoint3d cp;
-    fgPoint3d pp;
+Point3D calc_tex_coords(double *node, const Point3D& ref) {
+    Point3D cp;
+    Point3D pp;
 
-    cp.x = node[0] + ref->x; 
-    cp.y = node[1] + ref->y;
-    cp.z = node[2] + ref->z;
+    cp.setvals( node[0] + ref.x(),
+		node[1] + ref.y(),
+		node[2] + ref.z() );
 
     pp = fgCartToPolar3d(cp);
 
-    pp.lon = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lon, 25.0);
-    pp.lat = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lat, 25.0);
+    pp.setx( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.x(), 25.0) );
+    pp.sety( fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.y(), 25.0) );
 
-    if ( pp.lon < 0.0 ) {
-	pp.lon += 25.0;
+    if ( pp.x() < 0.0 ) {
+	pp.setx( pp.x() + 25.0 );
     }
 
-    if ( pp.lat < 0.0 ) {
-	pp.lat += 25.0;
+    if ( pp.y() < 0.0 ) {
+	pp.sety( pp.y() + 25.0 );
     }
 
     return(pp);
@@ -116,7 +117,7 @@ fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
 // Load a .obj file and build the GL fragment list
 int fgObjLoad( const string& path, fgTILE *t) {
     fgFRAGMENT fragment;
-    fgPoint3d pp;
+    Point3D pp;
     double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
@@ -125,7 +126,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
     int in_fragment, in_faces, vncount, n1, n2, n3, n4;
     int last1, last2, odd;
     double (*nodes)[3];
-    fgPoint3d *center;
+    Point3D center;
 
     // printf("loading %s\n", path.c_str() );
 
@@ -150,7 +151,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
     vncount = 1;
     t->bounding_radius = 0.0;
     nodes = t->nodes;
-    center = &t->center;
+    center = t->center;
 
     StopWatch stopwatch;
     stopwatch.start();
@@ -169,18 +170,18 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	if ( token == "gbs" )
 	{
 	    // reference point (center offset)
-	    in.stream() >> t->center.x
-			>> t->center.y
-			>> t->center.z
-			>> t->bounding_radius;
+	    in.stream() >> t->center >> t->bounding_radius;
 	}
 	else if ( token == "bs" )
 	{
 	    // reference point (center offset)
+	    /*
 	    in.stream() >> fragment.center.x
 			>> fragment.center.y
 			>> fragment.center.z
-			>> fragment.bounding_radius;
+	    */
+	    in.stream() >> fragment.center;
+	    in.stream() >> fragment.bounding_radius;
 	}
 	else if ( token == "vn" )
 	{
@@ -283,21 +284,21 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
 		pp = calc_tex_coords(nodes[n1], center);
-		xglTexCoord2f(pp.lon, pp.lat);
+		xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3d(t->nodes[n1][0],t->nodes[n1][1],t->nodes[n1][2]);
 		xglVertex3dv(nodes[n1]);		
 
 		MAT3_SCALE_VEC(normal, normals[n2], scale);
 		xglNormal3dv(normal);
 		pp = calc_tex_coords(nodes[n2], center);
-		xglTexCoord2f(pp.lon, pp.lat);
+		xglTexCoord2f(pp.lon(), pp.lat());
 		//xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
 		xglVertex3dv(nodes[n2]);				
 
 		MAT3_SCALE_VEC(normal, normals[n3], scale);
 		xglNormal3dv(normal);
                 pp = calc_tex_coords(nodes[n3], center);
-                xglTexCoord2f(pp.lon, pp.lat);
+                xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
 		xglVertex3dv(nodes[n3]);
 	    } else {
@@ -314,17 +315,17 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		xglNormal3dv(normal);
 
 		pp = calc_tex_coords(nodes[n1], center);
-		xglTexCoord2f(pp.lon, pp.lat);
+		xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3d(t->nodes[n1][0],t->nodes[n1][1],t->nodes[n1][2]);
 		xglVertex3dv(nodes[n1]);		
 
 		pp = calc_tex_coords(nodes[n2], center);
-		xglTexCoord2f(pp.lon, pp.lat);
+		xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
 		xglVertex3dv(nodes[n2]);		
 
 		pp = calc_tex_coords(nodes[n3], center);
-		xglTexCoord2f(pp.lon, pp.lat);
+		xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
 		xglVertex3dv(nodes[n3]);		
 	    }
@@ -363,7 +364,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		}
 		xglNormal3dv(normal);
 		pp = calc_tex_coords(nodes[n4], center);
-                xglTexCoord2f(pp.lon, pp.lat);
+                xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3d(t->nodes[n4][0],t->nodes[n4][1],t->nodes[n4][2]);
 		xglVertex3dv(nodes[n4]);		
 
@@ -388,21 +389,21 @@ int fgObjLoad( const string& path, fgTILE *t) {
             // xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
 	    xglNormal3dv(normals[n1]);
 	    pp = calc_tex_coords(nodes[n1], center);
-	    xglTexCoord2f(pp.lon, pp.lat);
+	    xglTexCoord2f(pp.lon(), pp.lat());
  	    // xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
  	    xglVertex3dv(nodes[n1]);
 
             // xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
 	    xglNormal3dv(normals[n2]);
             pp = calc_tex_coords(nodes[n2], center);
-            xglTexCoord2f(pp.lon, pp.lat);
+            xglTexCoord2f(pp.lon(), pp.lat());
 	    // xglVertex3d(t->nodes[n2][0], t->nodes[n2][1], t->nodes[n2][2]);
 	    xglVertex3dv(nodes[n2]);
 		
             // xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
 	    xglNormal3dv(normals[n3]);
             pp = calc_tex_coords(nodes[n3], center);
-            xglTexCoord2f(pp.lon, pp.lat);
+            xglTexCoord2f(pp.lon(), pp.lat());
 	    // xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
 	    xglVertex3dv(nodes[n3]);
 	    // printf("some normals, texcoords, and vertices (tris)\n");
@@ -453,7 +454,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    xglNormal3dv(normal);
 
             pp = calc_tex_coords(nodes[n1], center);
-            xglTexCoord2f(pp.lon, pp.lat);
+            xglTexCoord2f(pp.lon(), pp.lat());
 	    // xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
 	    xglVertex3dv(nodes[n1]);
 	    // printf("a normal, texcoord, and vertex (4th)\n");
@@ -488,7 +489,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		xglNormal3dv(normal);
 		
 		pp = calc_tex_coords(nodes[n2], center);
-		xglTexCoord2f(pp.lon, pp.lat);
+		xglTexCoord2f(pp.lon(), pp.lat());
 		// xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
 		xglVertex3dv(nodes[n2]);		
 		// printf("a normal, texcoord, and vertex (4th)\n");
@@ -546,6 +547,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.5  1998/10/16 00:54:39  curt
+// Converted to Point3D class.
+//
 // Revision 1.4  1998/09/15 01:35:07  curt
 // cleaned up my fragment.num_faces hack :-) to use the STL (no need in
 // duplicating work.)

@@ -49,6 +49,7 @@
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Math/vector.hxx>
 #include <Scenery/scenery.hxx>
@@ -328,7 +329,7 @@ void fgUpdateSunPos( void ) {
     fgTIME *t;
     fgVIEW *v;
     MAT3vec nup, nsun, v0;
-    fgPoint3d p;
+    Point3D p, rel_sunpos;
     double dot, east_dot;
     double sun_gd_lat, sl_radius;
     double ntmp;
@@ -345,9 +346,7 @@ void fgUpdateSunPos( void ) {
 
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
 
-    p.lon = l->sun_lon;
-    p.lat = l->sun_gc_lat;
-    p.radius = sl_radius;
+    p.setvals( l->sun_lon, l->sun_gc_lat, sl_radius );
     l->fg_sunpos = fgPolarToCart3d(p);
 
     printf( "    t->cur_time = %ld\n", t->cur_time);
@@ -355,9 +354,9 @@ void fgUpdateSunPos( void ) {
 	    sun_gd_lat, l->sun_gc_lat);
 
     // I think this will work better for generating the sun light vector
-    l->sun_vec[0] = l->fg_sunpos.x;
-    l->sun_vec[1] = l->fg_sunpos.y;
-    l->sun_vec[2] = l->fg_sunpos.z;
+    l->sun_vec[0] = l->fg_sunpos.x();
+    l->sun_vec[1] = l->fg_sunpos.y();
+    l->sun_vec[2] = l->fg_sunpos.z();
     MAT3_NORMALIZE_VEC(l->sun_vec, ntmp);
     MAT3_SCALE_VEC(l->sun_vec_inv, l->sun_vec, -1.0);
 
@@ -370,9 +369,9 @@ void fgUpdateSunPos( void ) {
 
     // calculate the sun's relative angle to local up
     MAT3_COPY_VEC(nup, v->local_up);
-    nsun[0] = l->fg_sunpos.x; 
-    nsun[1] = l->fg_sunpos.y;
-    nsun[2] = l->fg_sunpos.z;
+    nsun[0] = l->fg_sunpos.x(); 
+    nsun[1] = l->fg_sunpos.y();
+    nsun[2] = l->fg_sunpos.z();
     MAT3_NORMALIZE_VEC(nup, ntmp);
     MAT3_NORMALIZE_VEC(nsun, ntmp);
 
@@ -381,14 +380,15 @@ void fgUpdateSunPos( void ) {
     //        l->sun_angle);
     
     // calculate vector to sun's position on the earth's surface
-    v->to_sun[0] = l->fg_sunpos.x - (v->view_pos.x + scenery.center.x);
-    v->to_sun[1] = l->fg_sunpos.y - (v->view_pos.y + scenery.center.y);
-    v->to_sun[2] = l->fg_sunpos.z - (v->view_pos.z + scenery.center.z);
+    rel_sunpos = l->fg_sunpos - (v->view_pos + scenery.center);
+    v->to_sun[0] = rel_sunpos.x();
+    v->to_sun[1] = rel_sunpos.y();
+    v->to_sun[2] = rel_sunpos.z();
     // printf( "Vector to sun = %.2f %.2f %.2f\n",
     //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);
 
     // make a vector to the current view position
-    MAT3_SET_VEC(v0, v->view_pos.x, v->view_pos.y, v->view_pos.z);
+    MAT3_SET_VEC(v0, v->view_pos.x(), v->view_pos.y(), v->view_pos.z());
 
     // Given a vector from the view position to the point on the
     // earth's surface the sun is directly over, map into onto the
@@ -423,6 +423,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/10/16 00:56:12  curt
+// Converted to Point3D class.
+//
 // Revision 1.12  1998/09/15 04:27:50  curt
 // Changes for new astro code.
 //

@@ -43,7 +43,7 @@ extern "C" void *memset(void *, int, size_t);
 
 #include "Include/fg_stl_config.h"
 
-#ifdef _FG_NEED_AUTO_PTR
+#ifdef FG_NEED_AUTO_PTR
 #  include "Include/auto_ptr.hxx"
 #else
 #  include <memory>
@@ -169,6 +169,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.12  1998/10/16 00:56:08  curt
+// Converted to Point3D class.
+//
 // Revision 1.11  1998/09/15 02:09:30  curt
 // Include/fg_callback.hxx
 //   Moved code inline to stop g++ 2.7 from complaining.

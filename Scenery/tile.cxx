@@ -23,7 +23,6 @@
 
 
 #include <Include/fg_constants.h>
-#include <Include/fg_types.h>
 #include <Math/mat3.h>
 
 #include "tile.hxx"
@@ -161,8 +160,8 @@ static double fg_max3 (double a, double b, double c)
 // intersection found, 0 otherwise.  If it intesects, result is the
 // point of intersection
 
-int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
-			   fgPoint3d *result)
+int fgFRAGMENT::intersect( const Point3D& end0, Point3D& end1, int side_flag,
+			   Point3D& result)
 {
     fgTILE *t;
     fgFACE face;
@@ -225,9 +224,9 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	// printf("p3(d) = %.2f\n", a * p3[0] + b * p3[1] + c * p3[2]);
 
 	// calculate the line coefficients for the specified line
-	x0 = end0->x;  x1 = end1->x;
-	y0 = end0->y;  y1 = end1->y;
-	z0 = end0->z;  z1 = end1->z;
+	x0 = end0.x();  x1 = end1.x();
+	y0 = end0.y();  y1 = end1.y();
+	z0 = end0.z();  z1 = end1.z();
 
 	if ( fabs(x1 - x0) > FG_EPSILON ) {
 	    a1 = 1.0 / (x1 - x0);
@@ -449,6 +448,9 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/10/16 00:55:45  curt
+// Converted to Point3D class.
+//
 // Revision 1.11  1998/09/02 14:37:08  curt
 // Use erase() instead of while ( size() ) pop_front();
 //

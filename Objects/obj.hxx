@@ -43,8 +43,6 @@
 
 #include <string>
 
-#include <Include/fg_types.h>
-
 #include <Scenery/tile.hxx>
 
 
@@ -56,6 +54,9 @@ int fgObjLoad(const string& path, fgTILE *tile);
 
 
 // $Log$
+// Revision 1.3  1998/10/16 00:54:41  curt
+// Converted to Point3D class.
+//
 // Revision 1.2  1998/09/01 19:03:10  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.

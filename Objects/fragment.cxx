@@ -23,8 +23,9 @@
 
 
 #include <Include/fg_constants.h>
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 #include <Scenery/tile.hxx>
 
 #include "fragment.hxx"
@@ -92,10 +93,10 @@ fgFRAGMENT & fgFRAGMENT::operator = ( const fgFRAGMENT & rhs )
 // intersection found, 0 otherwise.  If it intesects, result is the
 // point of intersection
 
-int fgFRAGMENT::intersect( const fgPoint3d *end0,
-			   const fgPoint3d *end1,
+int fgFRAGMENT::intersect( const Point3D& end0,
+			   const Point3D& end1,
 			   int side_flag,
-			   fgPoint3d *result) const
+			   Point3D& result) const
 {
     fgTILE *t;
     MAT3vec v1, v2, n, center;
@@ -120,9 +121,9 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 	// printf(".");
 
 	// get face vertex coordinates
-	center[0] = t->center.x;
-	center[1] = t->center.y;
-	center[2] = t->center.z;
+	center[0] = t->center.x();
+	center[1] = t->center.y();
+	center[2] = t->center.z();
 
 	MAT3_ADD_VEC(p1, t->nodes[(*current).n1], center);
 	MAT3_ADD_VEC(p2, t->nodes[(*current).n2], center);
@@ -152,9 +153,9 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 	// printf("p3(d) = %.2f\n", a * p3[0] + b * p3[1] + c * p3[2]);
 
 	// calculate the line coefficients for the specified line
-	x0 = end0->x;  x1 = end1->x;
-	y0 = end0->y;  y1 = end1->y;
-	z0 = end0->z;  z1 = end1->z;
+	x0 = end0.x();  x1 = end1.x();
+	y0 = end0.y();  y1 = end1.y();
+	z0 = end0.z();  z1 = end1.z();
 
 	if ( fabs(x1 - x0) > FG_EPSILON ) {
 	    a1 = 1.0 / (x1 - x0);
@@ -201,9 +202,7 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 		// everything is too close together to tell the difference
 		// so the current intersection point should work as good
 		// as any
-		result->x = x;
-		result->y = y;
-		result->z = z;
+		result.setvals(x, y, z);
 		return(1);
 	    }
 	    side1 = FG_SIGN (t1 - t2);
@@ -283,9 +282,7 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 	} else {
 	    // all dimensions are really small so lets call it close
 	    // enough and return a successful match
-	    result->x = x;
-	    result->y = y;
-	    result->z = z;
+	    result.setvals(x, y, z);
 	    return(1);
 	}
 
@@ -317,9 +314,7 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 	}
 
 	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
-	result->x = x;
-	result->y = y;
-	result->z = z;
+	result.setvals(x, y, z);
 	return(1);
     }
 
@@ -329,6 +324,9 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 }
 
 // $Log$
+// Revision 1.5  1998/10/16 00:54:37  curt
+// Converted to Point3D class.
+//
 // Revision 1.4  1998/09/15 01:35:03  curt
 // cleaned up my fragment.num_faces hack :-) to use the STL (no need in
 // duplicating work.)

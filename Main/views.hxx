@@ -32,9 +32,10 @@
 #endif                                   
 
 
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
 #include <Flight/flight.h>
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
@@ -91,14 +92,14 @@ public:
     int tris_rendered;
 
     // absolute view position
-    fgPoint3d abs_view_pos;
+    Point3D abs_view_pos;
 
     // view position translated to scenery.center
-    fgPoint3d view_pos;
+    Point3D view_pos;
 
     // cartesion coordinates of current lon/lat if at sea level
     // translated to scenery.center*/
-    fgPoint3d cur_zero_elev;
+    Point3D cur_zero_elev;
 
     // vector in cartesian coordinates from current position to the
     // postion on the earth's surface the sun is directly over
@@ -181,6 +182,9 @@ extern fgVIEW current_view;
 
 
 // $Log$
+// Revision 1.14  1998/10/16 00:54:04  curt
+// Converted to Point3D class.
+//
 // Revision 1.13  1998/09/08 15:04:36  curt
 // Optimizations by Norman Vine.
 //

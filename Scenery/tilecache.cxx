@@ -172,8 +172,9 @@ int
 fgTILECACHE::next_avail( void )
 {
     fgVIEW *v;
+    Point3D delta;
     int i;
-    float dx, dy, dz, max, med, min, tmp;
+    float max, med, min, tmp;
     float dist, max_dist;
     int max_index;
     
@@ -189,17 +190,16 @@ fgTILECACHE::next_avail( void )
 	    // calculate approximate distance from view point
 	    fgPrintf( FG_TERRAIN, FG_DEBUG,
 		      "DIST Abs view pos = %.4f, %.4f, %.4f\n", 
-		      v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z );
+		      v->abs_view_pos.x(), v->abs_view_pos.y(),
+		      v->abs_view_pos.z() );
 	    fgPrintf( FG_TERRAIN, FG_DEBUG,
 		      "    ref point = %.4f, %.4f, %.4f\n", 
-		      tile_cache[i].center.x, tile_cache[i].center.y,
-		      tile_cache[i].center.z);
+		      tile_cache[i].center.x(), tile_cache[i].center.y(),
+		      tile_cache[i].center.z());
 
-	    dx = fabs(tile_cache[i].center.x - v->abs_view_pos.x);
-	    dy = fabs(tile_cache[i].center.y - v->abs_view_pos.y);
-	    dz = fabs(tile_cache[i].center.z - v->abs_view_pos.z);
+	    delta = tile_cache[i].center - v->abs_view_pos;
 
-	    max = dx; med = dy; min = dz;
+	    max = delta.x(); med = delta.y(); min = delta.z();
 	    if ( max < med ) {
 		tmp = max; max = med; med = tmp;
 	    }
@@ -232,6 +232,9 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.17  1998/10/16 00:55:48  curt
+// Converted to Point3D class.
+//
 // Revision 1.16  1998/09/14 12:45:23  curt
 // minor tweaks.
 //

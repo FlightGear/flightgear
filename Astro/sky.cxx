@@ -291,7 +291,9 @@ void fgSkyRender( void ) {
     xglPushMatrix();
 
     /* Translate to view position */
-    xglTranslatef( v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z );
+    xglTranslatef( v->cur_zero_elev.x(), 
+		   v->cur_zero_elev.y(),
+		   v->cur_zero_elev.z() );
     /* printf("  Translated to %.2f %.2f %.2f\n", 
 	   v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z ); */
 
@@ -368,9 +370,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.10  1998/08/29 13:07:16  curt
-/* Rewrite of event manager thanks to Bernie Bright.
+/* Revision 1.11  1998/10/16 00:52:19  curt
+/* Converted to Point3D class.
 /*
+ * Revision 1.10  1998/08/29 13:07:16  curt
+ * Rewrite of event manager thanks to Bernie Bright.
+ *
  * Revision 1.9  1998/08/22 01:18:59  curt
  * Minor tweaks to avoid using unitialized memory.
  *

@@ -43,7 +43,6 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Include/fg_types.h>
 #include <Misc/fgstream.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -63,7 +62,7 @@ static GLint stars[FG_STAR_LEVELS];
 
 // Initialize the Star Management Subsystem
 int fgStarsInit( void ) {
-    fgPoint3d starlist[FG_MAX_STARS];
+    Point3D starlist[FG_MAX_STARS];
     // struct CelestialCoord pltPos;
     double right_ascension, declination, magnitude;
     double min_magnitude[FG_STAR_LEVELS];
@@ -97,13 +96,8 @@ int fgStarsInit( void ) {
     {
 	in.eat_comments();
 	string name;
-	char c = 0;
 	getline( in.stream(), name, ',' );
-	in.stream() >> starlist[starcount].x >> c;
-	in.stream() >> starlist[starcount].y >> c;
-	// in.stream() >> starlist[starcount].x; in.get(c);
-	// in.stream() >> starlist[starcount].y; in.get(c);
-	in.stream() >> starlist[starcount].z;
+	in.stream() >> starlist[starcount];
 	++starcount;
     }
 
@@ -130,12 +124,12 @@ int fgStarsInit( void ) {
 	count = 0;
 
 	for ( j = 0; j < starcount; j++ ) {
-	    magnitude = starlist[j].z;
+	    magnitude = starlist[j].z();
 	    // printf("magnitude = %.2f\n", magnitude);
 
 	    if ( magnitude < min_magnitude[i] ) {
-		right_ascension = starlist[j].x;
-		declination = starlist[j].y;
+		right_ascension = starlist[j].x();
+		declination = starlist[j].y();
 
 		count++;
 
@@ -258,6 +252,9 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/10/16 00:52:20  curt
+// Converted to Point3D class.
+//
 // Revision 1.17  1998/09/24 15:36:19  curt
 // Converted to c++ style comments.
 //

@@ -56,6 +56,7 @@
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
 #include <Math/fg_random.h>
+#include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -154,9 +155,9 @@ int fgInitGeneral( void ) {
 
 // convert a geodetic point lon(radians), lat(radians), elev(meter) to
 // a cartesian point
-fgPoint3d geod_to_cart(double geod[3]) {
-    fgPoint3d cp;
-    fgPoint3d pp;
+static Point3D geod_to_cart(double geod[3]) {
+    Point3D cp;
+    Point3D pp;
     double gc_lon, gc_lat, sl_radius;
 
     // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
@@ -168,9 +169,7 @@ fgPoint3d geod_to_cart(double geod[3]) {
     // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
     //        gc_lat, sl_radius+geod[2]);
 
-    pp.lon = gc_lon;
-    pp.lat = gc_lat;
-    pp.radius = sl_radius + geod[2];
+    pp.setvals( gc_lon, gc_lat, sl_radius + geod[2] );
     cp = fgPolarToCart3d(pp);
     
     // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
@@ -190,7 +189,7 @@ int fgInitSubsystems( void )
     fgTIME *t;
     fgVIEW *v;
     double geod_pos[3];
-    fgPoint3d abs_view_pos;
+    Point3D abs_view_pos;
 
     l = &cur_light_params;
     t = &cur_time_params;
@@ -236,7 +235,7 @@ int fgInitSubsystems( void )
 
     // Calculate ground elevation at starting point
     scenery.cur_elev = 
-	fgTileMgrCurElev( FG_Longitude, FG_Latitude, &abs_view_pos );
+	fgTileMgrCurElev( FG_Longitude, FG_Latitude, abs_view_pos );
     FG_Runway_altitude = scenery.cur_elev * METER_TO_FEET;
 
     // Reset our altitude if we are below ground
@@ -394,6 +393,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.41  1998/10/16 00:54:01  curt
+// Converted to Point3D class.
+//
 // Revision 1.40  1998/10/02 12:46:49  curt
 // Added an "auto throttle"
 //

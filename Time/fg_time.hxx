@@ -43,7 +43,6 @@
 #include <GL/glut.h>
 #include <time.h>
 
-#include <Include/fg_types.h>
 #include <Flight/flight.h>
 
 
@@ -118,6 +117,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.7  1998/10/16 00:56:09  curt
+// Converted to Point3D class.
+//
 // Revision 1.6  1998/07/27 18:42:22  curt
 // Added a pause option.
 //

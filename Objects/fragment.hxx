@@ -49,9 +49,10 @@ extern "C" void *memset(void *, int, size_t);
 #include <vector>
 
 #include <Bucket/bucketutils.h>
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
 #include "Include/fg_constants.h"
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
@@ -84,7 +85,7 @@ private:
 
 public:
     // culling data for this object fragment (fine grain culling)
-    fgPoint3d center;
+    Point3D center;
     double bounding_radius;
 
     // variable offset data for this object fragment for this frame
@@ -128,10 +129,10 @@ public:
     // to see that end points are on opposite sides of face.  Returns
     // 1 if it intersection found, 0 otherwise.  If it intesects,
     // result is the point of intersection
-    int intersect( const fgPoint3d *end0,
-		   const fgPoint3d *end1,
+    int intersect( const Point3D& end0,
+		   const Point3D& end1,
 		   int side_flag,
-		   fgPoint3d *result) const;
+		   Point3D& result) const;
 
     // Constructors
     fgFRAGMENT () { /*faces.reserve(512);*/}
@@ -166,9 +167,7 @@ operator == ( const fgFRAGMENT::fgFACE& lhs,
 
 inline bool
 operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
-    return (( lhs.center.x - rhs.center.x ) < FG_EPSILON &&
-	    ( lhs.center.y - rhs.center.y ) < FG_EPSILON &&
-	    ( lhs.center.z - rhs.center.z ) < FG_EPSILON    );
+    return lhs.center == rhs.center;
 }
 
 
@@ -176,6 +175,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.6  1998/10/16 00:54:38  curt
+// Converted to Point3D class.
+//
 // Revision 1.5  1998/09/15 01:35:04  curt
 // cleaned up my fragment.num_faces hack :-) to use the STL (no need in
 // duplicating work.)

@@ -32,9 +32,10 @@ using namespace std;
 #endif
 
 #include <Debug/fg_debug.h>
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Misc/fgstream.hxx>
 #include <Objects/material.hxx>
@@ -44,45 +45,46 @@ using namespace std;
 #include "genapt.hxx"
 
 
-typedef vector < fgPoint3d > container;
+typedef vector < Point3D > container;
 typedef container::iterator iterator;
 typedef container::const_iterator const_iterator;
 
 
-// Calculate distance between to fgPoint3d's
-static double calc_dist(const fgPoint3d& p1, const fgPoint3d& p2) {
+/*
+// Calculate distance between to Point3D's
+static double calc_dist(const Point3D& p1, const Point3D& p2) {
     double x, y, z;
-    x = p1.x - p2.x;
-    y = p1.y - p2.y;
-    z = p1.z - p2.z;
+    x = p1.x() - p2.x();
+    y = p1.y() - p2.y();
+    z = p1.z() - p2.z();
     return sqrt(x*x + y*y + z*z);
 }
+*/
 
 
-// convert a geodetic point lon(degrees), lat(degrees), elev(meter) to a
-// cartesian point
-static fgPoint3d geod_to_cart(fgPoint3d geod) {
-    fgPoint3d cart;
-    fgPoint3d geoc;
-    double sl_radius;
+// convert a geodetic point lon(radians), lat(radians), elev(meter) to
+// a cartesian point
+static Point3D geod_to_cart(const Point3D& geod) {
+    Point3D cp;
+    Point3D pp;
+    double gc_lon, gc_lat, sl_radius;
 
-    // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", geod[0],
-    //        geod[1], geod[2]);
+    // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
+    //        geod[0], geod[1], geod[2]);
 
-    geoc.lon = geod.lon*DEG_TO_RAD;
-    fgGeodToGeoc(geod.lat*DEG_TO_RAD, geod.radius, &sl_radius, &geoc.lat);
+    gc_lon = geod.lon();
+    fgGeodToGeoc(geod.lat(), geod.radius(), &sl_radius, &gc_lat);
 
     // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
-    //        gc_lat, sl_radius+geod[2]); */
+    //        gc_lat, sl_radius+geod[2]);
 
-    geoc.radius = sl_radius + geod.radius;
-    cart = fgPolarToCart3d(geoc);
+    pp.setvals(gc_lon, gc_lat, sl_radius + geod.radius());
+    cp = fgPolarToCart3d(pp);
     
     // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
 
-    return cart;
+    return(cp);
 }
-
 
 #define FG_APT_BASE_TEX_CONSTANT 2000.0
 
@@ -115,25 +117,23 @@ calc_tex_coords(const fgPoint3d& p) {
 
 
 // Calculate texture coordinates for a given point.
-static fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
-    fgPoint3d cp;
-    fgPoint3d pp;
+static Point3D calc_tex_coords(double *node, const Point3D& ref) {
+    Point3D cp;
+    Point3D pp;
 
-    cp.x = node[0] + ref->x; 
-    cp.y = node[1] + ref->y;
-    cp.z = node[2] + ref->z;
+    cp.setvals( node[0] + ref.x(), node[1] + ref.y(), node[2] + ref.z() );
 
     pp = fgCartToPolar3d(cp);
 
-    pp.lon = fmod(FG_APT_BASE_TEX_CONSTANT * pp.lon, 10.0);
-    pp.lat = fmod(FG_APT_BASE_TEX_CONSTANT * pp.lat, 10.0);
+    pp.setx( fmod(FG_APT_BASE_TEX_CONSTANT * pp.x(), 10.0) );
+    pp.sety( fmod(FG_APT_BASE_TEX_CONSTANT * pp.y(), 10.0) );
 
-    if ( pp.lon < 0.0 ) {
-	pp.lon += 10.0;
+    if ( pp.x() < 0.0 ) {
+	pp.setx( pp.x() + 10.0 );
     }
 
-    if ( pp.lat < 0.0 ) {
-	pp.lat += 10.0;
+    if ( pp.y() < 0.0 ) {
+	pp.sety( pp.y() + 10.0 );
     }
 
     return(pp);
@@ -142,10 +142,10 @@ static fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
 
 // generate the actual base area for the airport
 static void
-gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
+gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 {
     GLint display_list;
-    fgPoint3d cart, cart_trans, tex;
+    Point3D cart, cart_trans, tex;
     MAT3vec normal;
     double dist, max_dist, temp;
     int center_num, i;
@@ -167,16 +167,14 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
     }
 
     printf(" tile center = %.2f %.2f %.2f\n", 
-	   t->center.x, t->center.y, t->center.z);
+	   t->center.x(), t->center.y(), t->center.z() );
     printf(" airport center = %.2f %.2f %.2f\n", 
-	   average.x, average.y, average.z);
-    fragment.center.x = average.x;
-    fragment.center.y = average.y;
-    fragment.center.z = average.z;
+	   average.x(), average.y(), average.z());
+    fragment.center = average;
 
-    normal[0] = average.x;
-    normal[1] = average.y;
-    normal[2] = average.z;
+    normal[0] = average.x();
+    normal[1] = average.y();
+    normal[2] = average.z();
     MAT3_NORMALIZE_VEC(normal, temp);
     
     display_list = xglGenLists(1);
@@ -184,38 +182,34 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
     xglBegin(GL_TRIANGLE_FAN);
 
     // first point center of fan
-    cart_trans.x = average.x - t->center.x;
-    cart_trans.y = average.y - t->center.y;
-    cart_trans.z = average.z - t->center.z;
-    t->nodes[t->ncount][0] = cart_trans.x;
-    t->nodes[t->ncount][1] = cart_trans.y;
-    t->nodes[t->ncount][2] = cart_trans.z;
+    cart_trans = average - t->center;
+    t->nodes[t->ncount][0] = cart_trans.x();
+    t->nodes[t->ncount][1] = cart_trans.y();
+    t->nodes[t->ncount][2] = cart_trans.z();
     center_num = t->ncount;
     t->ncount++;
 
-    tex = calc_tex_coords( t->nodes[t->ncount-1], &(t->center) );
-    xglTexCoord2f(tex.x, tex.y);
+    tex = calc_tex_coords( t->nodes[t->ncount-1], t->center );
+    xglTexCoord2f(tex.x(), tex.y());
     xglNormal3dv(normal);
     xglVertex3dv(t->nodes[t->ncount-1]);
 
     // first point on perimeter
-    iterator current = perimeter.begin();
+    const_iterator current = perimeter.begin();
     cart = geod_to_cart( *current );
-    cart_trans.x = cart.x - t->center.x;
-    cart_trans.y = cart.y - t->center.y;
-    cart_trans.z = cart.z - t->center.z;
-    t->nodes[t->ncount][0] = cart_trans.x;
-    t->nodes[t->ncount][1] = cart_trans.y;
-    t->nodes[t->ncount][2] = cart_trans.z;
+    cart_trans = cart - t->center;
+    t->nodes[t->ncount][0] = cart_trans.x();
+    t->nodes[t->ncount][1] = cart_trans.y();
+    t->nodes[t->ncount][2] = cart_trans.z();
     t->ncount++;
 
     i = 1;
-    tex = calc_tex_coords( t->nodes[i], &(t->center) );
-    dist = calc_dist(average, cart);
+    tex = calc_tex_coords( t->nodes[i], t->center );
+    dist = distance3D(average, cart);
     if ( dist > max_dist ) {
 	max_dist = dist;
     }
-    xglTexCoord2f(tex.x, tex.y);
+    xglTexCoord2f(tex.x(), tex.y());
     xglVertex3dv(t->nodes[i]);
     ++current;
     ++i;
@@ -223,21 +217,19 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
     const_iterator last = perimeter.end();
     for ( ; current != last; ++current ) {
 	cart = geod_to_cart( *current );
-	cart_trans.x = cart.x - t->center.x;
-	cart_trans.y = cart.y - t->center.y;
-	cart_trans.z = cart.z - t->center.z;
-	t->nodes[t->ncount][0] = cart_trans.x;
-	t->nodes[t->ncount][1] = cart_trans.y;
-	t->nodes[t->ncount][2] = cart_trans.z;
+	cart_trans = cart - t->center;
+	t->nodes[t->ncount][0] = cart_trans.x();
+	t->nodes[t->ncount][1] = cart_trans.y();
+	t->nodes[t->ncount][2] = cart_trans.z();
 	t->ncount++;
 	fragment.add_face(center_num, i - 1, i);
 
-	tex = calc_tex_coords( t->nodes[i], &(t->center) );
-	dist = calc_dist(average, cart);
+	tex = calc_tex_coords( t->nodes[i], t->center );
+	dist = distance3D(average, cart);
 	if ( dist > max_dist ) {
 	    max_dist = dist;
 	}
-	xglTexCoord2f(tex.x, tex.y);
+	xglTexCoord2f(tex.x(), tex.y());
 	xglVertex3dv(t->nodes[i]);
 	i++;
     }
@@ -245,13 +237,11 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
     // last point (first point in perimeter list)
     current = perimeter.begin();
     cart = geod_to_cart( *current );
-    cart_trans.x = cart.x - t->center.x;
-    cart_trans.y = cart.y - t->center.y;
-    cart_trans.z = cart.z - t->center.z;
+    cart_trans = cart - t->center;
     fragment.add_face(center_num, i - 1, 1);
 
-    tex = calc_tex_coords( t->nodes[1], &(t->center) );
-    xglTexCoord2f(tex.x, tex.y);
+    tex = calc_tex_coords( t->nodes[1], t->center );
+    xglTexCoord2f(tex.x(), tex.y());
     xglVertex3dv(t->nodes[1]);
 
     xglEnd();
@@ -276,7 +266,8 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
     // face list (this indexes into the master tile vertex list)
     container perimeter;
-    fgPoint3d p, average;
+    Point3D p, average;
+    double avex = 0.0, avey = 0.0, avez = 0.0;
     int size;
 
     // gpc_vertex p_2d, list_2d[MAX_PERIMETER];
@@ -310,7 +301,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    in.stream() >> apt_id;
 	    apt_name = "";
 	    i = 1;
-	    average.lon = average.lat = average.radius = 0.0;
+	    avex = avey = avez = 0.0;
 	    perimeter.erase( perimeter.begin(), perimeter.end() );
 	    // skip to end of line.
 	    while ( in.get(c) && c != '\n' ) {
@@ -323,10 +314,10 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    // out of the base terrain.  The points are given in
 	    // counter clockwise order and are specified in lon/lat
 	    // degrees.
-	    in.stream() >> p.lon >> p.lat >> p.radius;
-	    average.x += tile->nodes[i][0];
-	    average.y += tile->nodes[i][1];
-	    average.z += tile->nodes[i][2];
+	    in.stream() >> p;
+	    avex += tile->nodes[i][0];
+	    avey += tile->nodes[i][1];
+	    avez += tile->nodes[i][2];
 	    perimeter.push_back(p);
 	    ++i;
 	} else if ( token == "r" ) {
@@ -343,9 +334,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	// we have just finished reading and airport record.
 	// process the info
 	size = perimeter.size();
-	average.x = average.x / (double)size + tile->center.x;
-	average.y = average.y / (double)size + tile->center.y;
-	average.z = average.z / (double)size + tile->center.z;
+	average.setvals( avex / (double)size + tile->center.x(),
+			 avey / (double)size + tile->center.y(),
+			 avez / (double)size + tile->center.z() );
 
 	gen_base(average, perimeter, tile);
     }
@@ -355,6 +346,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.4  1998/10/16 00:51:46  curt
+// Converted to Point3D class.
+//
 // Revision 1.3  1998/09/21 20:55:00  curt
 // Used the cartesian form of the airport area coordinates to determine the
 // center.

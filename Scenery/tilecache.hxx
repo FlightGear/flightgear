@@ -43,7 +43,8 @@
 #include <XGL/xgl.h>
 
 #include <Bucket/bucketutils.h>
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
+#include <Math/point3d.hxx>
 
 #include "tile.hxx"
 
@@ -108,6 +109,9 @@ extern fgTILECACHE global_tile_cache;
 
 
 // $Log$
+// Revision 1.12  1998/10/16 00:55:49  curt
+// Converted to Point3D class.
+//
 // Revision 1.11  1998/09/14 12:45:25  curt
 // minor tweaks.
 //

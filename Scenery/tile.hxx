@@ -49,8 +49,9 @@ extern "C" void *memset(void *, int, size_t);
 #include <list>         // STL list
 
 #include <Bucket/bucketutils.h>
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
 #include <Math/mat3.h>
+#include <Math/point3d.hxx>
 #include <Objects/fragment.hxx>
 
 #ifdef NEEDNAMESPACESTD
@@ -68,9 +69,9 @@ public:
     int ncount;
 
     // culling data for whole tile (course grain culling)
-    fgPoint3d center;
+    Point3D center;
     double bounding_radius;
-    fgPoint3d offset;
+    Point3D offset;
     GLdouble model_view[16];
 
     // this tile's official location in the world
@@ -89,11 +90,9 @@ public:
 
     // Calculate this tile's offset
     void
-    fgTILE::SetOffset( fgPoint3d *off)
+    fgTILE::SetOffset( const Point3D& off)
     {
-	offset.x = center.x - off->x;
-	offset.y = center.y - off->y;
-	offset.z = center.z - off->z;
+	offset = center - off;
     }
 
 
@@ -109,12 +108,12 @@ public:
 #endif
 	
 	// This is equivalent to doing a glTranslatef(x, y, z);
-	model_view[12] += (model_view[0]*offset.x + model_view[4]*offset.y +
-			   model_view[8]*offset.z);
-	model_view[13] += (model_view[1]*offset.x + model_view[5]*offset.y +
-			   model_view[9]*offset.z);
-	model_view[14] += (model_view[2]*offset.x + model_view[6]*offset.y +
-			   model_view[10]*offset.z);
+	model_view[12] += (model_view[0]*offset.x() + model_view[4]*offset.y() +
+			   model_view[8]*offset.z());
+	model_view[13] += (model_view[1]*offset.x() + model_view[5]*offset.y() +
+			   model_view[9]*offset.z());
+	model_view[14] += (model_view[2]*offset.x() + model_view[6]*offset.y() +
+			   model_view[10]*offset.z() );
 	// m[15] += (m[3]*x + m[7]*y + m[11]*z);
 	// m[3] m7[] m[11] are 0.0 see LookAt() in views.cxx
 	// so m[15] is unchanged
@@ -127,6 +126,9 @@ public:
 
 
 // $Log$
+// Revision 1.20  1998/10/16 00:55:46  curt
+// Converted to Point3D class.
+//
 // Revision 1.19  1998/09/17 18:36:17  curt
 // Tweaks and optimizations by Norman Vine.
 //

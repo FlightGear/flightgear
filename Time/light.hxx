@@ -41,8 +41,9 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
 #include <Math/interpolater.hxx>
+#include <Math/point3d.hxx>
 
 
 // Define a structure containing the global lighting parameters
@@ -62,7 +63,7 @@ public:
     double sun_lon, sun_gc_lat;
 
     // in cartesian coordiantes
-    fgPoint3d fg_sunpos;
+    Point3D fg_sunpos;
 
     // (in view coordinates)
     GLfloat sun_vec[4];
@@ -122,6 +123,9 @@ extern fgLIGHT cur_light_params;
 
 
 // $Log$
+// Revision 1.8  1998/10/16 00:56:10  curt
+// Converted to Point3D class.
+//
 // Revision 1.7  1998/08/29 13:11:33  curt
 // Bernie Bright writes:
 //   I've created some new classes to enable pointers-to-functions and

@@ -300,7 +300,7 @@ static void fgRenderFrame( void ) {
 	// setup transformation for drawing astronomical objects
 	xglPushMatrix();
 	// Translate to view position
-	xglTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
+	xglTranslatef( v->view_pos.x(), v->view_pos.y(), v->view_pos.z() );
 	// Rotate based on gst (sidereal time)
 	// note: constant should be 15.041085, Curt thought it was 15
 	angle = t->gst * 15.041085;
@@ -894,6 +894,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.57  1998/10/16 00:54:00  curt
+// Converted to Point3D class.
+//
 // Revision 1.56  1998/10/02 12:46:47  curt
 // Added an "auto throttle"
 //

@@ -33,16 +33,17 @@
 #endif                                   
 
 
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
+#include <Math/point3d.hxx>
 
 
 /* Define a structure containing global scenery parameters */
 struct fgSCENERY {
     /* center of current scenery chunk */
-    fgPoint3d center;
+    Point3D center;
 
     /* next center of current scenery chunk */
-    fgPoint3d next_center;
+    Point3D next_center;
 
     /* angle of sun relative to current local horizontal */
     double sun_angle;
@@ -72,14 +73,17 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.4  1998/07/12 03:18:28  curt
-/* Added ground collision detection.  This involved:
-/* - saving the entire vertex list for each tile with the tile records.
-/* - saving the face list for each fragment with the fragment records.
-/* - code to intersect the current vertical line with the proper face in
-/*   an efficient manner as possible.
-/* Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+/* Revision 1.5  1998/10/16 00:55:44  curt
+/* Converted to Point3D class.
 /*
+ * Revision 1.4  1998/07/12 03:18:28  curt
+ * Added ground collision detection.  This involved:
+ * - saving the entire vertex list for each tile with the tile records.
+ * - saving the face list for each fragment with the fragment records.
+ * - code to intersect the current vertical line with the proper face in
+ *   an efficient manner as possible.
+ * Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+ *
  * Revision 1.3  1998/07/08 14:47:22  curt
  * Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
  * polare3d.h renamed to polar3d.hxx
