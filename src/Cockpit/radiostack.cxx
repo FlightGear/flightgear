@@ -238,6 +238,7 @@ FGRadioStack::update()
 	    nav1_gs_dist = 0.0;
 	}
 	
+	nav1_effective_range = kludgeRange(nav1_elev, elev, nav1_range);
 	if ( nav1_loc_dist < nav1_effective_range * NM_TO_METER ) {
 	    nav1_inrange = true;
 	    
@@ -313,6 +314,7 @@ FGRadioStack::update()
 	    nav2_gs_dist = 0.0;
 	}
 
+	nav2_effective_range = kludgeRange(nav2_elev, elev, nav2_range);
 	if ( nav2_loc_dist < nav2_effective_range * NM_TO_METER ) {
 	    nav2_inrange = true;
 
@@ -343,6 +345,7 @@ FGRadioStack::update()
 	station = Point3D( adf_x, adf_y, adf_z );
 	adf_dist = aircraft.distance3D( station );
 
+	adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
 	if ( adf_dist < adf_effective_range * NM_TO_METER ) {
 	    adf_inrange = true;
 
@@ -397,7 +400,8 @@ void FGRadioStack::search()
 	    nav1_dmelat = ils.get_dmelat();
 	    nav1_elev = ils.get_gselev();
 	    nav1_magvar = 0;
-	    nav1_effective_range = FG_ILS_DEFAULT_RANGE;
+	    nav1_range = FG_ILS_DEFAULT_RANGE;
+	    nav1_effective_range = nav1_range;
 	    nav1_target_gs = ils.get_gsangle();
 	    nav1_radial = ils.get_locheading();
 	    while ( nav1_radial <   0.0 ) { nav1_radial += 360.0; }
@@ -435,8 +439,8 @@ void FGRadioStack::search()
 		 << " nav1_last_time = " << nav1_last_time << " current time = "
 		 << globals->get_time_params()->get_cur_time() << endl;
 
-	    // cout << "Found an ils station in range" << endl;
-	    // cout << " id = " << ils.get_locident() << endl;
+	    cout << "Found an ils station in range" << endl;
+	    cout << " id = " << ils.get_locident() << endl;
 	}
     } else if ( current_navlist->query( lon, lat, elev, nav1_freq, &nav ) ) {
 	nav1_ident = nav.get_ident();
@@ -452,8 +456,8 @@ void FGRadioStack::search()
 	    nav1_loclat = nav.get_lat();
 	    nav1_elev = nav.get_elev();
 	    nav1_magvar = nav.get_magvar();
-	    nav1_effective_range
-		= kludgeRange(nav1_elev, elev, nav.get_range());
+	    nav1_range = nav.get_range();
+	    nav1_effective_range = kludgeRange(nav1_elev, elev, nav1_range);
 	    nav1_target_gs = 0.0;
 	    nav1_radial = nav1_sel_radial;
 	    nav1_x = nav1_dme_x = nav.get_x();
@@ -483,8 +487,8 @@ void FGRadioStack::search()
 		 << " nav1_last_time = " << nav1_last_time << " current time = "
 		 << globals->get_time_params()->get_cur_time() << endl;
 
-	    // cout << "Found a vor station in range" << endl;
-	    // cout << " id = " << nav.get_ident() << endl;
+	    cout << "Found a vor station in range" << endl;
+	    cout << " id = " << nav.get_ident() << endl;
 	}
     } else {
 	nav1_valid = false;
@@ -493,7 +497,7 @@ void FGRadioStack::search()
 	nav1_dme_dist = 0;
 	globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	globals->get_soundmgr()->remove( "nav1-dme-ident" );
-	// cout << "not picking up vor1. :-(" << endl;
+	cout << "not picking up vor1. :-(" << endl;
     }
 
     if ( current_ilslist->query( lon, lat, elev, nav2_freq, &ils ) ) {
@@ -511,7 +515,8 @@ void FGRadioStack::search()
 	    nav2_loclat = ils.get_loclat();
 	    nav2_elev = ils.get_gselev();
 	    nav2_magvar = 0;
-	    nav2_effective_range = FG_ILS_DEFAULT_RANGE;
+	    nav2_range = FG_ILS_DEFAULT_RANGE;
+	    nav2_effective_range = nav2_range;
 	    nav2_target_gs = ils.get_gsangle();
 	    nav2_radial = ils.get_locheading();
 	    while ( nav2_radial <   0.0 ) { nav2_radial += 360.0; }
@@ -542,8 +547,8 @@ void FGRadioStack::search()
 	    nav2_loclat = nav.get_lat();
 	    nav2_elev = nav.get_elev();
 	    nav2_magvar = nav.get_magvar();
-	    nav2_effective_range
-		= kludgeRange(nav2_elev, elev, nav.get_range());
+	    nav2_range = nav.get_range();
+	    nav2_effective_range = kludgeRange(nav2_elev, elev, nav2_range);
 	    nav2_target_gs = 0.0;
 	    nav2_radial = nav2_sel_radial;
 	    nav2_x = nav2_dme_x = nav.get_x();
@@ -567,7 +572,8 @@ void FGRadioStack::search()
 	adf_lon = nav.get_lon();
 	adf_lat = nav.get_lat();
 	adf_elev = nav.get_elev();
-	adf_effective_range = kludgeRange(adf_elev, elev, nav.get_range());
+	adf_range = nav.get_range();
+	adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
 	adf_x = nav.get_x();
 	adf_y = nav.get_y();
 	adf_z = nav.get_z();

@@ -75,6 +75,7 @@ class FGRadioStack : public FGSubsystem
     double nav1_dme_z;
     double nav1_dme_dist;
     double nav1_elev;
+    double nav1_range;
     double nav1_effective_range;
     double nav1_heading;
     double nav1_target_gs;
@@ -112,6 +113,7 @@ class FGRadioStack : public FGSubsystem
     double nav2_dme_z;
     double nav2_dme_dist;
     double nav2_elev;
+    double nav2_range;
     double nav2_effective_range;
     double nav2_heading;
     double nav2_target_gs;
@@ -127,6 +129,7 @@ class FGRadioStack : public FGSubsystem
     double adf_lon;
     double adf_lat;
     double adf_elev;
+    double adf_range;
     double adf_effective_range;
     double adf_dist;
     double adf_heading;
