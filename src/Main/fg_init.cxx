@@ -739,7 +739,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
 
         SG_LOG( SG_GENERAL, SG_INFO,
                 "Attempting to set starting position for "
-                << id << ":" << runway );
+                << id << ":" << rwy );
 
         if ( ! runways.search( id, rwy, &r ) ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
