@@ -103,6 +103,11 @@ void fgSplashUpdate ( double progress ) {
     ymin = (480 - ysize) / 2;
     ymax = ymin + ysize;
 
+    // first clear the screen;
+    xglClearColor(0.0, 0.0, 0.0, 1.0);
+    xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+
+    // now draw the logo
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
@@ -144,6 +149,9 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.5  1998/09/26 13:17:29  curt
+// Clear screen to "black" before drawing splash screen.
+//
 // Revision 1.4  1998/08/27 17:02:08  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return
