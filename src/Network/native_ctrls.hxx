@@ -60,6 +60,14 @@ public:
 };
 
 
+// Helper functions which may be useful outside this class
+
+// Populate the FGNetCtrls structure from the property tree.
+void FGProps2NetCtrls( FGNetCtrls *net );
+
+// Update the property tree from the FGNetCtrls structure.
+void FGNetCtrls2Props( FGNetCtrls *net );
+
 #endif // _FG_NATIVE_CTRLS_HXX
 
 
