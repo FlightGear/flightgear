@@ -233,7 +233,7 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
     /* get current Unix calendar time (in seconds) */
     warp += 60; 
     /* warp = 0; */
-    t->cur_time = time(NULL) + (0) * 60 * 60;
+    t->cur_time = time(NULL) + (12) * 60 * 60;
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
@@ -285,9 +285,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.12  1997/12/09 04:25:37  curt
-/* Working on adding a global lighting params structure.
+/* Revision 1.13  1997/12/09 05:11:56  curt
+/* Working on tweaking lighting.
 /*
+ * Revision 1.12  1997/12/09 04:25:37  curt
+ * Working on adding a global lighting params structure.
+ *
  * Revision 1.11  1997/11/25 19:25:40  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

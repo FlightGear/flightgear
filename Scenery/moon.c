@@ -31,10 +31,10 @@
 #include "../Main/views.h"
 #include "../Time/fg_time.h"
 
-struct CelestialCoord
-    moonPos;
+struct CelestialCoord moonPos;
 
 float xMoon, yMoon, zMoon;
+GLint moon;
 
 /*
 static GLfloat vdata[12][3] =
@@ -51,8 +51,6 @@ static GLuint tindices[20][3] =
    {7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6},
    {6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11}
 };*/
-
-GLint moon;
 
 /* -------------------------------------------------------------
       This section contains the code that generates a yellow
@@ -226,57 +224,53 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 }
 
 
-void fgMoonInit()
-{
+void fgMoonInit() {
 //   int i;
-//   moon = glGenLists(1);
-//   glNewList(moon, GL_COMPILE );
+    moon = glGenLists(1);
+    glNewList(moon, GL_COMPILE );
 
-   fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
-   moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], cur_time_params);
-   #ifdef DEBUG
-   printf("Moon found at %f (ra), %f (dec)\n", moonPos.RightAscension, moonPos.Declination);
-   #endif
-   glColor3f(1.0, 1.0, 0.0);
+    fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
+    moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
+			      cur_time_params);
+#ifdef DEBUG
+    printf("Moon found at %f (ra), %f (dec)\n", moonPos.RightAscension, 
+	   moonPos.Declination);
+#endif
 
-   /* xMoon = 90000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
-   yMoon = 90000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
-   zMoon = 90000.0 * sin(moonPos.Declination); */
+    /* xMoon = 90000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
+       yMoon = 90000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
+       zMoon = 90000.0 * sin(moonPos.Declination); */
 
-   xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
-   yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
-   zMoon = 60000.0 * sin(moonPos.Declination);
+    xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
+    yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
+    zMoon = 60000.0 * sin(moonPos.Declination);
 
-//   glPushMatrix();
-//   glBegin(GL_TRIANGLES);
-   /*
-   for (i = 0; i < 20; i++)
-      subdivide(&vdata[tindices[i][0]][0],
-                &vdata[tindices[i][1]][0],
-                &vdata[tindices[i][2]][0], 3);*/
-//     glutSolidSphere(1.0, 25, 25);
+    glColor3f(1.0, 1.0, 1.0);
+    glutSolidSphere(1.0, 10, 10);
 
-//   glEnd();
-//   glPopMatrix();
-//   glEndList();
+    glEndList();
 }
 
 
 /* Draw the moon */
 void fgMoonRender() {
+    struct fgLIGHT *l;
     GLfloat color[4] = { 1.0, 1.0, 1.0, 1.0 };
 
+    l = &cur_light_params;
+
     /* set lighting parameters */
-    glLightfv(GL_LIGHT0, GL_AMBIENT, color );
+    glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_clear );
     glLightfv(GL_LIGHT0, GL_DIFFUSE, color );
-    glMaterialfv(GL_FRONT, GL_AMBIENT, fgClearColor);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, color);
 
     glPushMatrix();
     glTranslatef(xMoon, yMoon, zMoon);
     glScalef(1400, 1400, 1400);
+
+    /* glColor3fv(color); */
     /* glutSolidSphere(1.0, 25, 25); */
-    glutSolidSphere(1.0, 15, 15);
+    glCallList(moon);
+
     glPopMatrix();
 }
 

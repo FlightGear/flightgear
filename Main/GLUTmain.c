@@ -144,10 +144,11 @@ static void fgUpdateViewParams() {
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct VIEW *v;
+
     double x_2, x_4, x_8, x_10;
     double ambient, diffuse, sky;
     GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
-    GLfloat amb[3], diff[3], fog[4], clear[4];
+    /* GLfloat amb[3], diff[3], fog[4], clear[4]; */
 
     f = &current_aircraft.flight;
     l = &cur_light_params;
@@ -203,31 +204,32 @@ static void fgUpdateViewParams() {
 
     if ( sky < 0.0 ) { sky = 0.0; }
 
-    amb[0] = color[0] * ambient;
-    amb[1] = color[1] * ambient;
-    amb[2] = color[2] * ambient;
+    l->scene_ambient[0] = color[0] * ambient;
+    l->scene_ambient[1] = color[1] * ambient;
+    l->scene_ambient[2] = color[2] * ambient;
 
-    diff[0] = color[0] * diffuse;
-    diff[1] = color[1] * diffuse;
-    diff[2] = color[2] * diffuse;
+    l->scene_diffuse[0] = color[0] * diffuse;
+    l->scene_diffuse[1] = color[1] * diffuse;
+    l->scene_diffuse[2] = color[2] * diffuse;
 
     /* set lighting parameters */
-    glLightfv(GL_LIGHT0, GL_AMBIENT, amb );
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diff );
+    glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
 
     /* set fog color */
-    fog[0] = fgFogColor[0] * (ambient + diffuse);
-    fog[1] = fgFogColor[1] * (ambient + diffuse);
-    fog[2] = fgFogColor[2] * (ambient + diffuse);
-    fog[3] = fgFogColor[3];
-    glFogfv (GL_FOG_COLOR, fog);
+    l->scene_fog[0] = fgFogColor[0] * (ambient + diffuse);
+    l->scene_fog[1] = fgFogColor[1] * (ambient + diffuse);
+    l->scene_fog[2] = fgFogColor[2] * (ambient + diffuse);
+    l->scene_fog[3] = fgFogColor[3];
+    glFogfv (GL_FOG_COLOR, l->scene_fog);
 
     /* set sky color */
-    clear[0] = fgClearColor[0] * sky;
-    clear[1] = fgClearColor[1] * sky;
-    clear[2] = fgClearColor[2] * sky;
-    clear[3] = fgClearColor[3];
-    glClearColor(clear[0], clear[1], clear[2], clear[3]);
+    l->scene_clear[0] = fgClearColor[0] * sky;
+    l->scene_clear[1] = fgClearColor[1] * sky;
+    l->scene_clear[2] = fgClearColor[2] * sky;
+    l->scene_clear[3] = fgClearColor[3];
+    glClearColor(l->scene_clear[0], l->scene_clear[1], 
+		 l->scene_clear[2], l->scene_clear[3]);
 }
 
 
@@ -581,9 +583,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.26  1997/12/09 04:25:29  curt
-/* Working on adding a global lighting params structure.
+/* Revision 1.27  1997/12/09 05:11:54  curt
+/* Working on tweaking lighting.
 /*
+ * Revision 1.26  1997/12/09 04:25:29  curt
+ * Working on adding a global lighting params structure.
+ *
  * Revision 1.25  1997/12/08 22:54:09  curt
  * Enabled GL_CULL_FACE.
  *

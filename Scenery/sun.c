@@ -30,8 +30,7 @@
 
 GLint sun;
 
-static struct CelestialCoord
-    sunPos;
+static struct CelestialCoord sunPos;
 
 float xSun, ySun, zSun;
 
@@ -95,15 +94,20 @@ struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 void fgSunInit()
 {
 //   int i;
-//   sun = glGenLists(1);
-//   glNewList(sun, GL_COMPILE );
+
+    sun = glGenLists(1);
+    glNewList(sun, GL_COMPILE );
+
 //	glBegin( GL_POINTS );
-   fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
-   sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
-   #ifdef DEBUG
-   printf("Sun found at %f (ra), %f (dec)\n", sunPos.RightAscension, sunPos.Declination);
-   #endif
-   /* give the moon a temporary color, for testing purposes */
+
+    fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
+    sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
+#ifdef DEBUG
+    printf("Sun found at %f (ra), %f (dec)\n", sunPos.RightAscension, 
+	   sunPos.Declination);
+#endif
+
+    /* give the moon a temporary color, for testing purposes */
 //   glColor3f( 0.0, 1.0, 0.0);
 //   glVertex3f( 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination),
  //              190000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination),
@@ -114,6 +118,7 @@ void fgSunInit()
    //xMoon = 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
    //yMoon = 190000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
    //zMoon = 190000.0 * sin(moonPos.Declination);
+
    xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
    ySun = 60000.0 * sin(sunPos.RightAscension) * cos(sunPos.Declination);
    zSun = 60000.0 * sin(sunPos.Declination);
@@ -129,8 +134,12 @@ void fgSunInit()
 //     glutSolidSphere(1.0, 25, 25);
 
 //     glEnd();
-   //glPopMatrix();
-//   glEndList();
+    //glPopMatrix();
+
+    glColor3f(0.85, 0.65, 0.05);
+    glutSolidSphere(1.0, 10, 10);
+
+    glEndList();
 }
 
 
@@ -176,22 +185,28 @@ void fgSunRender() {
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diff); */
 
     glDisable( GL_LIGHTING );
+
     glPushMatrix();
     glTranslatef(xSun, ySun, zSun);
     glScalef(1400, 1400, 1400);
-    glColor3fv( color );
+
+    /* glColor3fv( color ); */
     /* glutSolidSphere(1.0, 25, 25); */
-    glutSolidSphere(1.0, 10, 10);
-    //glCallList(sun);
+    glCallList(sun);
+
     glPopMatrix();
+
     glEnable( GL_LIGHTING );
 }
 
 
 /* $Log$
-/* Revision 1.2  1997/11/25 19:25:39  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.3  1997/12/09 05:11:56  curt
+/* Working on tweaking lighting.
 /*
+ * Revision 1.2  1997/11/25 19:25:39  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.1  1997/10/25 03:16:11  curt
  * Initial revision of code contributed by Durk Talsma.
  *
