@@ -44,6 +44,17 @@ enum PatternLeg {
 	LEG_UNKNOWN
 };
 
+ostream& operator << (ostream& os, PatternLeg pl);
+
+enum LandingType {
+	FULL_STOP,
+	STOP_AND_GO,
+	TOUCH_AND_GO,
+	AIP_LT_UNKNOWN
+};
+
+ostream& operator << (ostream& os, LandingType lt);
+
 /*****************************************************************
 *
 *  FGAIPlane - this class is derived from FGAIEntity and adds the 
@@ -69,6 +80,9 @@ public:
 	
 	// Return the current pattern leg the plane is flying.
 	inline PatternLeg GetLeg() {return leg;}
+	
+	// Return what type of landing we're doing on this circuit
+	LandingType GetLandingOption();
 
 protected:
 	PlaneRec plane;

@@ -74,3 +74,40 @@ void FGAIPlane::Transmit(string msg) {
 
 void FGAIPlane::RegisterTransmission(int code) {
 }
+
+
+// Return what type of landing we're doing on this circuit
+LandingType FGAIPlane::GetLandingOption() {
+	return(FULL_STOP);
+}
+
+
+ostream& operator << (ostream& os, PatternLeg pl) {
+	switch(pl) {
+	case(TAKEOFF_ROLL):   return(os << "TAKEOFF ROLL");
+	case(CLIMBOUT):       return(os << "CLIMBOUT");
+	case(TURN1):          return(os << "TURN1");
+	case(CROSSWIND):      return(os << "CROSSWIND");
+	case(TURN2):          return(os << "TURN2");
+	case(DOWNWIND):       return(os << "DOWNWIND");
+	case(TURN3):          return(os << "TURN3");
+	case(BASE):           return(os << "BASE");
+	case(TURN4):          return(os << "TURN4");
+	case(FINAL):          return(os << "FINAL");
+	case(LANDING_ROLL):   return(os << "LANDING ROLL");
+	case(LEG_UNKNOWN):    return(os << "UNKNOWN");
+	}
+	return(os << "ERROR - Unknown switch in PatternLeg operator << ");
+}
+
+
+ostream& operator << (ostream& os, LandingType lt) {
+	switch(lt) {
+	case(FULL_STOP):      return(os << "FULL STOP");
+	case(STOP_AND_GO):    return(os << "STOP AND GO");
+	case(TOUCH_AND_GO):   return(os << "TOUCH AND GO");
+	case(AIP_LT_UNKNOWN): return(os << "UNKNOWN");
+	}
+	return(os << "ERROR - Unknown switch in LandingType operator << ");
+}
+
