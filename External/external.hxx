@@ -33,6 +33,7 @@
 
 
 #include <Time/fg_time.hxx>
+#include <Time/timestamp.hxx>
 
 
 class fgFDM_EXTERNAL {
@@ -96,6 +97,9 @@ void fgExternalUpdate( fgFLIGHT& f, int multiloop );
 
 
 // $Log$
+// Revision 1.2  1998/12/05 14:18:47  curt
+// added an fgTIMESTAMP to define when this record is valid.
+//
 // Revision 1.1  1998/12/04 01:28:49  curt
 // Initial revision.
 //
