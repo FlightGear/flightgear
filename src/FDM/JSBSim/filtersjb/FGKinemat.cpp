@@ -91,7 +91,8 @@ FGKinemat::FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       OutputNode = PropertyManager->GetNode(sOutputIdx);
     }
   }
-  FGFCSComponent::bind( PropertyManager->GetNode("fcs/components") );
+  FGFCSComponent::bind();
+  treenode->Tie("output-norm", this, &FGKinemat::GetOutputPct );
 
   Debug(0);
 }

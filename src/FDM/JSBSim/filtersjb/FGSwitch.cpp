@@ -53,7 +53,7 @@ FGSwitch::FGSwitch(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
   Type = AC_cfg->GetValue("TYPE");
   Name = AC_cfg->GetValue("NAME");
 
-  FGFCSComponent::bind( PropertyManager->GetNode("fcs/components",true) );
+  FGFCSComponent::bind();
 
   Debug(0);
 }

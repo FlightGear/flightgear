@@ -83,6 +83,7 @@ FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 
 FGAuxiliary::~FGAuxiliary()
 {
+  unbind();
   Debug(1);
 }
 

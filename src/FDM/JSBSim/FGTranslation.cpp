@@ -258,6 +258,7 @@ void FGTranslation::unbind(void)
   PropertyManager->Untie("velocities/mach-norm");
   PropertyManager->Untie("aero/alphadot-rad_sec");
   PropertyManager->Untie("aero/betadot-rad_sec");
+  PropertyManager->Untie("aero/mag-beta-rad");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

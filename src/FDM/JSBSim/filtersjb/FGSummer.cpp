@@ -81,7 +81,7 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
     }
   }
  
-  FGFCSComponent::bind( PropertyManager->GetNode("fcs/components",true) );
+  FGFCSComponent::bind();
 
   Debug(0);
 }

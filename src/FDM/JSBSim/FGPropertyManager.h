@@ -111,6 +111,12 @@ class FGPropertyManager : public SGPropertyNode {
      * Get the name of a node
      */
     string GetName( void );
+    
+    /**
+     * Get the fully qualified name of a node
+     * This function is very slow, so is probably useful for debugging only.
+     */
+    string GetFullyQualifiedName(void);
 
     /**
      * Get a bool value for a property.

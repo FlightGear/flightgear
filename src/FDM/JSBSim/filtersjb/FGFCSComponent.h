@@ -108,8 +108,7 @@ public:
   inline string GetType(void) const { return Type; }
   virtual double GetOutputPct(void) const { return 0; }
   
-  virtual void bind(FGPropertyManager *node);
-  virtual void unbind( void );
+  virtual void bind();
   FGPropertyManager* resolveSymbol(string token);
   
 protected:
@@ -117,6 +116,7 @@ protected:
   enum eInputType {itPilotAC, itFCS, itAP, itBias} InputType;
   FGFCS* fcs;
   FGPropertyManager* PropertyManager;
+  FGPropertyManager* treenode;
   string Type;
   string Name;
   int ID;

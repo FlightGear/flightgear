@@ -72,7 +72,7 @@ public:
   FGGain(FGFCS* fcs, FGConfigFile* AC_cfg);
   ~FGGain();
   
-  double GetOutputPct() { return OutputPct; }
+  double GetOutputPct() const { return OutputPct; }
   
   bool Run (void);
 

@@ -72,8 +72,7 @@ FGJSBsim::FGJSBsim( double dt )
 {
     bool result;
    
-    //fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
-    fdmex = new FGFDMExec();
+    fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
     
     State           = fdmex->GetState();
     Atmosphere      = fdmex->GetAtmosphere();
@@ -185,7 +184,7 @@ FGJSBsim::FGJSBsim( double dt )
 }
 /******************************************************************************/
 FGJSBsim::~FGJSBsim(void) {
-    delete fdmex;
+        delete fdmex;
 }
 
 /******************************************************************************/

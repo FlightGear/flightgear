@@ -37,7 +37,7 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGGain.h"            
+#include "FGGain.h" 
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_GAIN;
@@ -107,7 +107,9 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
     }
   }
   
-  FGFCSComponent::bind( PropertyManager->GetNode("fcs/components",true) );
+  FGFCSComponent::bind();
+  if (Type == "AEROSURFACE_SCALE")
+    treenode->Tie( "output-norm", this, &FGGain::GetOutputPct );
 
   Debug(0);
 }

@@ -129,7 +129,7 @@ FGFilter::FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       cerr << "Unknown filter type" << endl;
     break;
   }
-  FGFCSComponent::bind( PropertyManager->GetNode("fcs/components",true) );
+  FGFCSComponent::bind();
 
   Debug(0);
 }

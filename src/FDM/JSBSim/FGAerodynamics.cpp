@@ -347,6 +347,7 @@ void FGAerodynamics::unbind(void)
   PropertyManager->Untie("aero/bi2vel");
   PropertyManager->Untie("aero/ci2vel");
   PropertyManager->Untie("aero/alpha-wing-rad");
+  PropertyManager->Untie("aero/stall-hyst-norm");
   PropertyManager->Untie("systems/stall-warn-norm");
 
   for ( i=0; i<NAxes; i++ ) {

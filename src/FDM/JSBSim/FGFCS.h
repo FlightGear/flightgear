@@ -613,7 +613,7 @@ public:
   
   void bind(void);
   void bindModel(void);
-  void unbind(void);
+  void unbind(FGPropertyManager *node);
   
 private:
   double DaCmd, DeCmd, DrCmd, DfCmd, DsbCmd, DspCmd;

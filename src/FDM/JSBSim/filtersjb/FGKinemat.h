@@ -71,7 +71,7 @@ public:
   FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg);
   ~FGKinemat();
   
-  double GetOutputPct() { return OutputPct; }
+  double GetOutputPct() const { return OutputPct; }
     
   bool Run (void );
   
