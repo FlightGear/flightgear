@@ -777,7 +777,7 @@ public:
     inline double get_V_rel_wind() const { return v_rel_wind; }
     // inline void set_V_rel_wind(double wind) { v_rel_wind = wind; }
 
-    // inline double get_V_true_kts() const { return v_true_kts; }
+    inline double get_V_true_kts() const { return v_true_kts; }
     // inline void set_V_true_kts(double kts) { v_true_kts = kts; }
 
     // inline double get_V_rel_ground() const { return v_rel_ground; }
@@ -913,9 +913,9 @@ public:
 
     inline double get_Alpha() const { return alpha; }
     inline double get_Beta() const { return beta; }
-    // inline double get_Alpha_dot() const { return alpha_dot; }
+    inline double get_Alpha_dot() const { return alpha_dot; }
     // inline void set_Alpha_dot( double ad ) { alpha_dot = ad; }
-    // inline double get_Beta_dot() const { return beta_dot; }
+    inline double get_Beta_dot() const { return beta_dot; }
     // inline void set_Beta_dot( double bd ) { beta_dot = bd; }
 
     // inline double get_Cos_alpha() const { return cos_alpha; }
@@ -950,15 +950,15 @@ public:
     inline double get_Mach_number() const { return mach_number; }
 
     inline double get_Static_pressure() const { return static_pressure; }
-    // inline double get_Total_pressure() const { return total_pressure; }
+    inline double get_Total_pressure() const { return total_pressure; }
     // inline void set_Total_pressure( double tp ) { total_pressure = tp; }
     // inline double get_Impact_pressure() const { return impact_pressure; }
     // inline void set_Impact_pressure( double ip ) { impact_pressure = ip; }
-    // inline double get_Dynamic_pressure() const { return dynamic_pressure; }
+    inline double get_Dynamic_pressure() const { return dynamic_pressure; }
     // inline void set_Dynamic_pressure( double dp ) { dynamic_pressure = dp; }
 
     inline double get_Static_temperature() const { return static_temperature; }
-    // inline double get_Total_temperature() const { return total_temperature; }
+    inline double get_Total_temperature() const { return total_temperature; }
     // inline void set_Total_temperature( double t ) { total_temperature = t; }
 
     inline double get_Sea_level_radius() const { return sea_level_radius; }
