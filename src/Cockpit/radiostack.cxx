@@ -25,6 +25,7 @@
 #include <Main/bfi.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
+#include <Time/event.hxx>
 
 #include "radiostack.hxx"
 
@@ -56,6 +57,11 @@ kludgeRange (double stationElev, double aircraftElev, double nominalRange)
 FGRadioStack *current_radiostack;
 
 
+// periodic radio station search wrapper
+static void fgRadioSearch( void ) {
+    current_radiostack->search();
+}
+
 // Constructor
 FGRadioStack::FGRadioStack() {
     nav1_radial = 0.0;
@@ -63,16 +69,114 @@ FGRadioStack::FGRadioStack() {
     nav2_radial = 0.0;
     nav2_dme_dist = 0.0;
     need_update = true;
+    longitudeVal = globals->get_props()->getValue("/position/longitude");
+    latitudeVal = globals->get_props()->getValue("/position/latitude");
+    altitudeVal = globals->get_props()->getValue("/position/altitude");
 }
 
 
 // Destructor
-FGRadioStack::~FGRadioStack() {
+FGRadioStack::~FGRadioStack() 
+{
+    unbind();			// FIXME: should be called externally
 }
 
 
+void
+FGRadioStack::init ()
+{
+    search();
+    update();
+
+    // Search radio database once per second
+    global_events.Register( "fgRadioSearch()", fgRadioSearch,
+			    fgEVENT::FG_EVENT_READY, 1000);
+}
+
+void
+FGRadioStack::bind ()
+{
+				// User inputs
+    fgTie("/radios/nav1/frequencies/selected", this,
+	  &FGRadioStack::get_nav1_freq, &FGRadioStack::set_nav1_freq);
+    fgTie("/radios/nav1/frequencies/standby", this,
+	  &FGRadioStack::get_nav1_alt_freq, &FGRadioStack::set_nav1_alt_freq);
+    fgTie("/radios/nav1/radials/selected", this,
+	  &FGRadioStack::get_nav1_sel_radial,
+	  &FGRadioStack::set_nav1_sel_radial);
+
+				// Radio outputs
+    fgTie("/radios/nav1/radials/actual", this, &FGRadioStack::get_nav1_radial);
+    fgTie("/radios/nav1/to-flag", this, &FGRadioStack::get_nav1_to_flag);
+    fgTie("/radios/nav1/from-flag", this, &FGRadioStack::get_nav1_from_flag);
+    fgTie("/radios/nav1/in-range", this, &FGRadioStack::get_nav1_inrange);
+    fgTie("/radios/nav1/dme/distance", this, &FGRadioStack::get_nav1_dme_dist);
+    fgTie("/radios/nav1/dme/in-range", this,
+	  &FGRadioStack::get_nav1_dme_inrange);
+
+				// User inputs
+    fgTie("/radios/nav2/frequencies/selected", this,
+	  &FGRadioStack::get_nav2_freq, &FGRadioStack::set_nav2_freq);
+    fgTie("/radios/nav2/frequencies/standby", this,
+	  &FGRadioStack::get_nav2_alt_freq, &FGRadioStack::set_nav2_alt_freq);
+    fgTie("/radios/nav2/radials/selected", this,
+	  &FGRadioStack::get_nav2_sel_radial,
+	  &FGRadioStack::set_nav2_sel_radial);
+
+				// Radio outputs
+    fgTie("/radios/nav2/radials/actual", this, &FGRadioStack::get_nav2_radial);
+    fgTie("/radios/nav2/to-flag", this, &FGRadioStack::get_nav2_to_flag);
+    fgTie("/radios/nav2/from-flag", this, &FGRadioStack::get_nav2_from_flag);
+    fgTie("/radios/nav2/in-range", this, &FGRadioStack::get_nav2_inrange);
+    fgTie("/radios/nav2/dme/distance", this, &FGRadioStack::get_nav2_dme_dist);
+    fgTie("/radios/nav2/dme/in-range", this,
+	  &FGRadioStack::get_nav2_dme_inrange);
+
+				// User inputs
+    fgTie("/radios/adf/frequencies/selected", this,
+	  &FGRadioStack::get_adf_freq, &FGRadioStack::set_adf_freq);
+    fgTie("/radios/adf/frequencies/standby", this,
+	  &FGRadioStack::get_adf_alt_freq, &FGRadioStack::set_adf_alt_freq);
+    fgTie("/radios/adf/rotation", this,
+	  &FGRadioStack::get_adf_rotation, &FGRadioStack::set_adf_rotation);
+}
+
+void
+FGRadioStack::unbind ()
+{
+    fgUntie("/radios/nav1/frequencies/selected");
+    fgUntie("/radios/nav1/frequencies/standby");
+    fgUntie("/radios/nav1/radials/actual");
+    fgUntie("/radios/nav1/radials/selected");
+    fgUntie("/radios/nav1/to-flag");
+    fgUntie("/radios/nav1/from-flag");
+    fgUntie("/radios/nav1/in-range");
+    fgUntie("/radios/nav1/dme/distance");
+    fgUntie("/radios/nav1/dme/in-range");
+
+    fgUntie("/radios/nav2/frequencies/selected");
+    fgUntie("/radios/nav2/frequencies/standby");
+    fgUntie("/radios/nav2/radials/actual");
+    fgUntie("/radios/nav2/radials/selected");
+    fgUntie("/radios/nav2/to-flag");
+    fgUntie("/radios/nav2/from-flag");
+    fgUntie("/radios/nav2/in-range");
+    fgUntie("/radios/nav2/dme/distance");
+    fgUntie("/radios/nav2/dme/in-range");
+
+    fgUntie("/radios/adf/frequencies/selected");
+    fgUntie("/radios/adf/frequencies/standby");
+    fgUntie("/radios/adf/rotation");
+}
+
 // Search the database for the current frequencies given current location
-void FGRadioStack::update( double lon, double lat, double elev ) {
+void 
+FGRadioStack::update() 
+{
+    double lon = longitudeVal->getDoubleValue() * DEG_TO_RAD;
+    double lat = latitudeVal->getDoubleValue() * DEG_TO_RAD;
+    double elev = altitudeVal->getDoubleValue() * FEET_TO_METER;
+
     need_update = false;
 
     Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
@@ -194,7 +298,12 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 
 
 // Update current nav/adf radio stations based on current postition
-void FGRadioStack::search( double lon, double lat, double elev ) {
+void FGRadioStack::search () 
+{
+    double lon = longitudeVal->getDoubleValue() * DEG_TO_RAD;
+    double lat = latitudeVal->getDoubleValue() * DEG_TO_RAD;
+    double elev = altitudeVal->getDoubleValue() * FEET_TO_METER;
+
     // nav1
     FGILS ils;
     FGNav nav;
@@ -249,7 +358,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
     } else {
 	nav1_valid = false;
 	nav1_radial = 0;
-	nav2_dme_dist = 0;
+	nav1_dme_dist = 0;
 	// cout << "not picking up vor1. :-(" << endl;
     }
 
@@ -323,9 +432,75 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 }
 
 
-// periodic radio station search wrapper
-void fgRadioSearch( void ) {
-    current_radiostack->search( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude() * FEET_TO_METER );
+/**
+ * Return true if the NAV1 TO flag should be active.
+ */
+bool 
+FGRadioStack::get_nav1_to_flag () const
+{
+  if (nav1_inrange) {
+    double offset = fabs(nav1_heading - nav1_radial);
+    if (nav1_loc)
+      return (offset <= 8.0 || offset >= 352.0);
+    else
+      return (offset <= 20.0 || offset >= 340.0);
+  } else {
+    return false;
+  }
 }
+
+
+/**
+ * Return true if the NAV1 FROM flag should be active.
+ */
+bool
+FGRadioStack::get_nav1_from_flag () const
+{
+  if (nav1_inrange) {
+    double offset = fabs(nav1_heading - nav1_radial);
+    if (nav1_loc)
+      return (offset >= 172.0 && offset <= 188.0);
+    else
+      return (offset >= 160.0 && offset <= 200.0);
+  } else {
+    return false;
+  }
+}
+
+
+/**
+ * Return true if the NAV2 TO flag should be active.
+ */
+bool 
+FGRadioStack::get_nav2_to_flag () const
+{
+  if (nav2_inrange) {
+    double offset = fabs(nav2_heading - nav2_radial);
+    if (nav2_loc)
+      return (offset <= 8.0 || offset >= 352.0);
+    else
+      return (offset <= 20.0 || offset >= 340.0);
+  } else {
+    return false;
+  }
+}
+
+
+/**
+ * Return true if the NAV2 FROM flag should be active.
+ */
+bool
+FGRadioStack::get_nav2_from_flag () const
+{
+  if (nav2_inrange) {
+    double offset = fabs(nav2_heading - nav2_radial);
+    if (nav2_loc)
+      return (offset >= 172.0 && offset <= 188.0);
+    else
+      return (offset >= 160.0 && offset <= 200.0);
+  } else {
+    return false;
+  }
+}
+
+

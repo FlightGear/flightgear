@@ -33,7 +33,9 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
+
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Objects/texload.h>
 #include <Time/light.hxx>
 
@@ -143,6 +145,7 @@ FGPanel::FGPanel (int window_x, int window_y, int window_w, int window_h)
  */
 FGPanel::~FGPanel ()
 {
+  unbind();
   for (instrument_list_type::iterator it = _instruments.begin();
        it != _instruments.end();
        it++) {
@@ -163,10 +166,44 @@ FGPanel::addInstrument (FGPanelInstrument * instrument)
 
 
 /**
+ * Initialize the panel.
+ */
+void
+FGPanel::init ()
+{
+  // NO-OP
+}
+
+
+/**
+ * Bind panel properties.
+ */
+void
+FGPanel::bind ()
+{
+  fgTie("/sim/panel/visibility", &_visibility);
+  fgTie("/sim/panel/x-offset", &_x_offset);
+  fgTie("/sim/panel/y-offset", &_y_offset);
+}
+
+
+/**
+ * Unbind panel properties.
+ */
+void
+FGPanel::unbind ()
+{
+  fgUntie("/sim/panel/visibility");
+  fgUntie("/sim/panel/x-offset");
+  fgUntie("/sim/panel/y-offset");
+}
+
+
+/**
  * Update the panel.
  */
 void
-FGPanel::update () const
+FGPanel::update ()
 {
 				// Do nothing if the panel isn't visible.
   if (!fgPanelVisible())

@@ -4,6 +4,8 @@
 //
 // Copyright (C) 2000  David Megginson - david@megginson.com
 //
+// THIS CLASS IS DEPRECATED; USE THE PROPERTY MANAGER INSTEAD.
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -84,13 +86,6 @@ reinit ()
   FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI reinit");
 
 				// TODO: add more AP stuff
-  double elevator = FGBFI::getElevator();
-  double aileron = FGBFI::getAileron();
-  double rudder = FGBFI::getRudder();
-  double throttle = FGBFI::getThrottle();
-  double elevator_trim = FGBFI::getElevatorTrim();
-  double flaps = FGBFI::getFlaps();
-  double brake = FGBFI::getBrakes();
   bool apHeadingLock = FGBFI::getAPHeadingLock();
   double apHeadingMag = FGBFI::getAPHeadingMag();
   bool apAltitudeLock = FGBFI::getAPAltitudeLock();
@@ -113,16 +108,9 @@ reinit ()
   cur_light_params.Update();
   fgUpdateLocalTime();
   fgUpdateWeatherDatabase();
-  fgRadioSearch();
+  current_radiostack->search();
 
 				// Restore all of the old states.
-  FGBFI::setElevator(elevator);
-  FGBFI::setAileron(aileron);
-  FGBFI::setRudder(rudder);
-  FGBFI::setThrottle(throttle);
-  FGBFI::setElevatorTrim(elevator_trim);
-  FGBFI::setFlaps(flaps);
-  FGBFI::setBrakes(brake);
   FGBFI::setAPHeadingLock(apHeadingLock);
   FGBFI::setAPHeadingMag(apHeadingMag);
   FGBFI::setAPAltitudeLock(apAltitudeLock);
@@ -229,9 +217,6 @@ FGBFI::init ()
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgTie("/sim/time/gmt-string", getGMTString);
   fgTie("/sim/hud/visibility", getHUDVisible, setHUDVisible);
-  fgTie("/sim/panel/visibility", getPanelVisible, setPanelVisible);
-  fgTie("/sim/panel/x-offset", getPanelXOffset, setPanelXOffset);
-  fgTie("/sim/panel/y-offset", getPanelYOffset, setPanelYOffset);
 
 				// Position
   fgTie("/position/airport-id", getTargetAirport, setTargetAirport);
@@ -260,22 +245,6 @@ FGBFI::init ()
   fgTie("/velocities/speed-east", getSpeedEast);
   fgTie("/velocities/speed-down", getSpeedDown);
 
-				// Controls
-#if 0
-  fgTie("/controls/throttle", getThrottle, setThrottle);
-  fgTie("/controls/mixture", getMixture, setMixture);
-  fgTie("/controls/propellor-pitch", getPropAdvance, setPropAdvance);
-  fgTie("/controls/flaps", getFlaps, setFlaps);
-  fgTie("/controls/aileron", getAileron, setAileron);
-  fgTie("/controls/rudder", getRudder, setRudder);
-  fgTie("/controls/elevator", getElevator, setElevator);
-  fgTie("/controls/elevator-trim", getElevatorTrim, setElevatorTrim);
-  fgTie("/controls/brakes/all", getBrakes, setBrakes);
-  fgTie("/controls/brakes/left", getLeftBrake, setLeftBrake);
-  fgTie("/controls/brakes/right", getRightBrake, setRightBrake);
-  fgTie("/controls/brakes/center", getRightBrake, setCenterBrake);
-#endif
-
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
   fgTie("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
@@ -284,34 +253,6 @@ FGBFI::init ()
   fgTie("/autopilot/settings/heading-magnetic",
              getAPHeadingMag, setAPHeadingMag);
   fgTie("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);
-
-				// Radio navigation
-  fgTie("/radios/nav1/frequencies/selected", getNAV1Freq, setNAV1Freq);
-  fgTie("/radios/nav1/frequencies/standby", getNAV1AltFreq, setNAV1AltFreq);
-  fgTie("/radios/nav1/radials/actual", getNAV1Radial);
-  fgTie("/radios/nav1/radials/selected",
-             getNAV1SelRadial, setNAV1SelRadial);
-  fgTie("/radios/nav1/dme/distance", getNAV1DistDME);
-  fgTie("/radios/nav1/to-flag", getNAV1TO);
-  fgTie("/radios/nav1/from-flag", getNAV1FROM);
-  fgTie("/radios/nav1/in-range", getNAV1InRange);
-  fgTie("/radios/nav1/dme/in-range", getNAV1DMEInRange);
-			       
-  fgTie("/radios/nav2/frequencies/selected", getNAV2Freq, setNAV2Freq);
-  fgTie("/radios/nav2/frequencies/standby",
-             getNAV2AltFreq, setNAV2AltFreq);
-  fgTie("/radios/nav2/radials/actual", getNAV2Radial);
-  fgTie("/radios/nav2/radials/selected",
-             getNAV2SelRadial, setNAV2SelRadial);
-  fgTie("/radios/nav2/dme/distance", getNAV2DistDME);
-  fgTie("/radios/nav2/to-flag", getNAV2TO);
-  fgTie("/radios/nav2/from-flag", getNAV2FROM);
-  fgTie("/radios/nav2/in-range", getNAV2InRange);
-  fgTie("/radios/nav2/dme/in-range", getNAV2DMEInRange);
-
-  fgTie("/radios/adf/frequencies/selected", getADFFreq, setADFFreq);
-  fgTie("/radios/adf/frequencies/standby", getADFAltFreq, setADFAltFreq);
-  fgTie("/radios/adf/rotation", getADFRotation, setADFRotation);
 
 				// Weather
   fgTie("/environment/visibility", getVisibility, setVisibility);
@@ -529,78 +470,6 @@ FGBFI::setHUDVisible (bool visible)
 {
   globals->get_options()->set_hud_status(visible);
 }
-
-
-/**
- * Return true if the 2D panel is visible.
- */
-bool
-FGBFI::getPanelVisible ()
-{
-  return globals->get_options()->get_panel_status();
-}
-
-
-/**
- * Ensure that the 2D panel is visible or hidden.
- */
-void
-FGBFI::setPanelVisible (bool visible)
-{
-  if (globals->get_options()->get_panel_status() != visible) {
-    globals->get_options()->toggle_panel();
-  }
-}
-
-
-/**
- * Get the panel's current x-shift.
- */
-int
-FGBFI::getPanelXOffset ()
-{
-  if (current_panel != 0)
-    return current_panel->getXOffset();
-  else
-    return 0;
-}
-
-
-/**
- * Set the panel's current x-shift.
- */
-void
-FGBFI::setPanelXOffset (int offset)
-{
-  if (current_panel != 0)
-    current_panel->setXOffset(offset);
-}
-
-
-/**
- * Get the panel's current y-shift.
- */
-int
-FGBFI::getPanelYOffset ()
-{
-  if (current_panel != 0)
-    return current_panel->getYOffset();
-  else
-    return 0;
-}
-
-
-/**
- * Set the panel's current y-shift.
- */
-void
-FGBFI::setPanelYOffset (int offset)
-{
-  if (current_panel != 0)
-    current_panel->setYOffset(offset);
-}
-
-
 
 
 
@@ -969,6 +838,7 @@ FGBFI::getSpeedDown ()
 // Controls
 ////////////////////////////////////////////////////////////////////////
 
+#if 0
 
 /**
  * Get the throttle setting, from 0.0 (none) to 1.0 (full).
@@ -1226,7 +1096,7 @@ FGBFI::setRightBrake (double brake)
 }
 
 
-
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1374,255 +1244,6 @@ FGBFI::setAPNAV1Lock (bool lock)
 	     FGAutopilot::FG_HEADING_NAV1) {
     current_autopilot->set_HeadingEnabled(false);
   }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Radio navigation.
-////////////////////////////////////////////////////////////////////////
-
-double
-FGBFI::getNAV1Freq ()
-{
-  return current_radiostack->get_nav1_freq();
-}
-
-double
-FGBFI::getNAV1AltFreq ()
-{
-  return current_radiostack->get_nav1_alt_freq();
-}
-
-double
-FGBFI::getNAV1Radial ()
-{
-  return current_radiostack->get_nav1_radial();
-}
-
-double
-FGBFI::getNAV1SelRadial ()
-{
-  return current_radiostack->get_nav1_sel_radial();
-}
-
-double
-FGBFI::getNAV1DistDME ()
-{
-  return current_radiostack->get_nav1_dme_dist();
-}
-
-bool 
-FGBFI::getNAV1TO ()
-{
-  if (current_radiostack->get_nav1_inrange()) {
-    double heading = current_radiostack->get_nav1_heading();
-    double radial = current_radiostack->get_nav1_radial();
-//     double var = FGBFI::getMagVar();
-    if (current_radiostack->get_nav1_loc()) {
-      double offset = fabs(heading - radial);
-      return (offset<= 8.0 || offset >= 352.0);
-    } else {
-//       double offset =
-// 	fabs(heading - var - radial);
-      double offset = fabs(heading - radial);
-      return (offset <= 20.0 || offset >= 340.0);
-    }
-  } else {
-    return false;
-  }
-}
-
-bool
-FGBFI::getNAV1FROM ()
-{
-  if (current_radiostack->get_nav1_inrange()) {
-    double heading = current_radiostack->get_nav1_heading();
-    double radial = current_radiostack->get_nav1_radial();
-//     double var = FGBFI::getMagVar();
-    if (current_radiostack->get_nav1_loc()) {
-      double offset = fabs(heading - radial);
-      return (offset >= 172.0 && offset<= 188.0);
-    } else {
-//       double offset =
-// 	fabs(heading - var - radial);
-      double offset = fabs(heading - radial);
-      return (offset >= 160.0 && offset <= 200.0);
-    }
-  } else {
-    return false;
-  }
-}
-
-bool
-FGBFI::getNAV1InRange ()
-{
-  return current_radiostack->get_nav1_inrange();
-}
-
-bool
-FGBFI::getNAV1DMEInRange ()
-{
-  return (current_radiostack->get_nav1_inrange() &&
-	  current_radiostack->get_nav1_has_dme());
-}
-
-double
-FGBFI::getNAV2Freq ()
-{
-  return current_radiostack->get_nav2_freq();
-}
-
-double
-FGBFI::getNAV2AltFreq ()
-{
-  return current_radiostack->get_nav2_alt_freq();
-}
-
-double
-FGBFI::getNAV2Radial ()
-{
-  return current_radiostack->get_nav2_radial();
-}
-
-double
-FGBFI::getNAV2SelRadial ()
-{
-  return current_radiostack->get_nav2_sel_radial();
-}
-
-double
-FGBFI::getNAV2DistDME ()
-{
-  return current_radiostack->get_nav2_dme_dist();
-}
-
-bool 
-FGBFI::getNAV2TO ()
-{
-  if (current_radiostack->get_nav2_inrange()) {
-    double heading = current_radiostack->get_nav2_heading();
-    double radial = current_radiostack->get_nav2_radial();
-//     double var = FGBFI::getMagVar();
-    if (current_radiostack->get_nav2_loc()) {
-      double offset = fabs(heading - radial);
-      return (offset<= 8.0 || offset >= 352.0);
-    } else {
-//       double offset =
-// 	fabs(heading - var - radial);
-      double offset = fabs(heading - radial);
-      return (offset <= 20.0 || offset >= 340.0);
-    }
-  } else {
-    return false;
-  }
-}
-
-bool 
-FGBFI::getNAV2FROM ()
-{
-  if (current_radiostack->get_nav2_inrange()) {
-    double heading = current_radiostack->get_nav2_heading();
-    double radial = current_radiostack->get_nav2_radial();
-//     double var = FGBFI::getMagVar();
-    if (current_radiostack->get_nav2_loc()) {
-      double offset = fabs(heading - radial);
-      return (offset >= 172.0 && offset<= 188.0);
-    } else {
-//       double offset =
-// 	fabs(heading - var - radial);
-      double offset = fabs(heading - radial);
-      return (offset >= 160.0 && offset <= 200.0);
-    }
-  } else {
-    return false;
-  }
-}
-
-
-bool
-FGBFI::getNAV2InRange ()
-{
-  return current_radiostack->get_nav2_inrange();
-}
-
-bool
-FGBFI::getNAV2DMEInRange ()
-{
-  return (current_radiostack->get_nav2_inrange() &&
-	  current_radiostack->get_nav2_has_dme());
-}
-
-double
-FGBFI::getADFFreq ()
-{
-  return current_radiostack->get_adf_freq();
-}
-
-double
-FGBFI::getADFAltFreq ()
-{
-  return current_radiostack->get_adf_alt_freq();
-}
-
-double
-FGBFI::getADFRotation ()
-{
-  return current_radiostack->get_adf_rotation();
-}
-
-void
-FGBFI::setNAV1Freq (double freq)
-{
-  current_radiostack->set_nav1_freq(freq);
-}
-
-void
-FGBFI::setNAV1AltFreq (double freq)
-{
-  current_radiostack->set_nav1_alt_freq(freq);
-}
-
-void
-FGBFI::setNAV1SelRadial (double radial)
-{
-  current_radiostack->set_nav1_sel_radial(radial);
-}
-
-void
-FGBFI::setNAV2Freq (double freq)
-{
-  current_radiostack->set_nav2_freq(freq);
-}
-
-void
-FGBFI::setNAV2AltFreq (double freq)
-{
-  current_radiostack->set_nav2_alt_freq(freq);
-}
-
-void
-FGBFI::setNAV2SelRadial (double radial)
-{
-  current_radiostack->set_nav2_sel_radial(radial);
-}
-
-void
-FGBFI::setADFFreq (double freq)
-{
-  current_radiostack->set_adf_freq(freq);
-}
-
-void
-FGBFI::setADFAltFreq (double freq)
-{
-  current_radiostack->set_adf_alt_freq(freq);
-}
-
-void
-FGBFI::setADFRotation (double rot)
-{
-  current_radiostack->set_adf_rotation(rot);
 }
 
 

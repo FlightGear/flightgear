@@ -456,6 +456,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    return;
 	  }
 	  FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from " << panel_path);
+	  current_panel->unbind();
 	  delete current_panel;
 	  current_panel = new_panel;
 	  return;

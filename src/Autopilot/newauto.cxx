@@ -184,10 +184,10 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 
 
 void FGAutopilot::update_old_control_values() {
-    old_aileron = FGBFI::getAileron();
-    old_elevator = FGBFI::getElevator();
-    old_elevator_trim = FGBFI::getElevatorTrim();
-    old_rudder = FGBFI::getRudder();
+    old_aileron = controls.get_aileron();
+    old_elevator = controls.get_elevator();
+    old_elevator_trim = controls.get_elevator_trim();
+    old_rudder = controls.get_rudder();
 }
 
 

@@ -755,6 +755,4 @@ void fgCockpitUpdate( void ) {
 		globals->get_options()->get_xsize(),
 		globals->get_options()->get_ysize() );
 
-    if (current_panel != 0)
-      current_panel->update();
 }

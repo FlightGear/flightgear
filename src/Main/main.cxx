@@ -642,7 +642,7 @@ void fgRenderFrame( void ) {
 
 	    // set up moving parts
 	    if (flaps_selector != NULL) {
-	      flaps_selector->select( (FGBFI::getFlaps() > 0.5f) ? 1 : 2 );
+	      flaps_selector->select( (controls.get_flaps() > 0.5f) ? 1 : 2 );
 	    }
 
 	    if (prop_selector != NULL) {
@@ -708,8 +708,16 @@ void fgRenderFrame( void ) {
 	glDisable( GL_DEPTH_TEST );
 	// glDisable( GL_CULL_FACE );
 	// glDisable( GL_TEXTURE_2D );
+
+	// update the controls subsystem
+	controls.update();
+
 	hud_and_panel->apply();
 	fgCockpitUpdate();
+
+	// update the panel subsystem
+	if (current_panel != 0)
+	  current_panel->update();
 
 	// We can do translucent menus, so why not. :-)
 	menus->apply();
@@ -823,9 +831,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 				  cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
-    current_radiostack->update( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude() * FEET_TO_METER );
+    current_radiostack->update();
 }
 
 

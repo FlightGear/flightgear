@@ -663,21 +663,10 @@ bool fgInitSubsystems( void ) {
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
 
-    // Initialize the underlying radio stack model
+    // Radio stack subsystem.
     current_radiostack = new FGRadioStack;
-
-    current_radiostack->search( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude() * FEET_TO_METER );
-
-    current_radiostack->update( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude() * FEET_TO_METER );
-
-    // Search radio database once per second
-    global_events.Register( "fgRadioSearch()", fgRadioSearch,
-			    fgEVENT::FG_EVENT_READY, 1000);
-
+    current_radiostack->init();
+    current_radiostack->bind();
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
@@ -746,6 +735,8 @@ bool fgInitSubsystems( void ) {
 		"Error reading new panel from " << panel_path );
     } else {
 	FG_LOG( FG_INPUT, FG_INFO, "Loaded new panel from " << panel_path );
+	current_panel->init();
+	current_panel->bind();
     }
 
     // Initialize the BFI

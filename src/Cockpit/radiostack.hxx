@@ -25,13 +25,22 @@
 #define _FG_RADIOSTACK_HXX
 
 
+#include <Main/fgfs.hxx>
+#include <Main/fg_props.hxx>
+
 #include <simgear/compiler.h>
 
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
 
 
-class FGRadioStack {
+
+class FGRadioStack : public FGSubsystem
+{
+
+    SGValue * latitudeVal;
+    SGValue * longitudeVal;
+    SGValue * altitudeVal;
 
     bool need_update;
 
@@ -121,11 +130,13 @@ public:
     FGRadioStack();
     ~FGRadioStack();
 
-    // Update nav/adf radios based on current postition
-    void search( double lon, double lat, double elev );
+    void init ();
+    void bind ();
+    void unbind ();
+    void update ();
 
     // Update nav/adf radios based on current postition
-    void update( double lon, double lat, double elev );
+    void search ();
 
     // NAV1 Setters
     inline void set_nav1_freq( double freq ) {
@@ -170,7 +181,12 @@ public:
 
     // Calculated values.
     inline bool get_nav1_inrange() const { return nav1_inrange; }
+    bool get_nav1_to_flag () const;
+    bool get_nav1_from_flag () const;
     inline bool get_nav1_has_dme() const { return nav1_has_dme; }
+    inline bool get_nav1_dme_inrange () const {
+	return nav1_inrange && nav1_has_dme;
+    }
     inline bool get_nav1_has_gs() const { return nav1_has_gs; }
     inline bool get_nav1_loc() const { return nav1_loc; }
     inline double get_nav1_loclon() const { return nav1_loclon; }
@@ -188,7 +204,12 @@ public:
     inline double get_nav1_target_gs() const { return nav1_target_gs; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
+    bool get_nav2_to_flag () const;
+    bool get_nav2_from_flag () const;
     inline bool get_nav2_has_dme() const { return nav2_has_dme; }
+    inline bool get_nav2_dme_inrange () const {
+	return nav2_inrange && nav2_has_dme;
+    }
     inline bool get_nav2_has_gs() const { return nav2_has_gs; }
     inline bool get_nav2_loc() const { return nav2_loc; }
     inline double get_nav2_loclon() const { return nav2_loclon; }
@@ -213,10 +234,5 @@ public:
 
 
 extern FGRadioStack *current_radiostack;
-
-
-// periodic radio station search wrapper
-void fgRadioSearch( void );
-
 
 #endif // _FG_RADIOSTACK_HXX

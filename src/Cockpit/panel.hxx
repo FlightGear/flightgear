@@ -46,6 +46,8 @@
 #include <map>
 #include <plib/fnt.h>
 
+#include <Main/fgfs.hxx>
+
 
 FG_USING_STD(vector);
 FG_USING_STD(map);
@@ -119,18 +121,21 @@ private:
 // the appropriate instruments for processing.
 ////////////////////////////////////////////////////////////////////////
 
-class FGPanel
+class FGPanel : public FGSubsystem
 {
 public:
 
   FGPanel (int window_x, int window_y, int window_w, int window_h);
   virtual ~FGPanel ();
 
+				// Update the panel (every frame).
+  virtual void init ();
+  virtual void bind ();
+  virtual void unbind ();
+  virtual void update ();
+
 				// transfer pointer ownership!!!
   virtual void addInstrument (FGPanelInstrument * instrument);
-
-				// Update the panel (every frame).
-  virtual void update () const;
 
 				// Background texture.
   virtual void setBackground (ssgTexture * texture);

@@ -4,6 +4,8 @@
 //
 // Copyright (C) 2000  David Megginson - david@megginson.com
 //
+// THIS INTERFACE IS DEPRECATED; USE THE PROPERTY MANAGER INSTEAD.
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -73,16 +75,6 @@ public:
   static bool getHUDVisible ();
   static void setHUDVisible (bool hudVisible);
 
-  static bool getPanelVisible ();
-  static void setPanelVisible (bool panelVisible);
-
-  static int getPanelXOffset (); // pixels
-  static void setPanelXOffset (int i); // pixels
-
-  static int getPanelYOffset (); // pixels
-  static void setPanelYOffset (int i); // pixels
-
-
 				// Position
   static double getLatitude ();	// degrees
   static void setLatitude (double latitude); // degrees
@@ -135,6 +127,7 @@ public:
 //   static void setSpeedDown (double speed);
 
 
+#if 0
 				// Controls
   static double getThrottle ();	// 0.0:1.0
   static void setThrottle (double throttle); // 0.0:1.0
@@ -172,6 +165,7 @@ public:
   static double getCenterBrake (); // 0.0:1.0
   static void setCenterBrake (double brake); // 0.0:1.0
 
+#endif
 
 				// Autopilot
   static bool getAPAltitudeLock ();
@@ -192,57 +186,6 @@ public:
   static bool getAPNAV1Lock ();
   static void setAPNAV1Lock (bool lock);
 
-				// Radio Navigation
-  static double getNAV1Freq ();
-  static void setNAV1Freq (double freq);
-
-  static double getNAV1AltFreq ();
-  static void setNAV1AltFreq (double freq);
-
-  static double getNAV1Radial (); // degrees
-
-  static double getNAV1SelRadial (); // degrees
-  static void setNAV1SelRadial (double radial);	// degrees
-
-  static double getNAV1DistDME (); // nautical miles
-
-  static bool getNAV1TO ();
-
-  static bool getNAV1FROM ();
-
-  static bool getNAV1InRange ();
-
-  static bool getNAV1DMEInRange ();
-
-  static double getNAV2Freq ();
-  static void setNAV2Freq (double freq);
-
-  static double getNAV2AltFreq ();
-  static void setNAV2AltFreq (double freq);
-
-  static double getNAV2Radial (); // degrees
-
-  static double getNAV2SelRadial (); // degrees
-  static void setNAV2SelRadial (double radial);	// degrees
-
-  static double getNAV2DistDME (); // nautical miles
-
-  static bool getNAV2TO ();
-
-  static bool getNAV2FROM ();
-
-  static bool getNAV2InRange ();
-
-  static bool getNAV2DMEInRange ();
-
-  static double getADFFreq ();
-  static void setADFFreq (double freq);
-
-  static double getADFAltFreq ();
-  static void setADFAltFreq (double freq);
-
-  static double getADFRotation (); // degrees
-  static void setADFRotation (double rot); // degrees
 
 				// GPS
   static string getTargetAirport ();
