@@ -10331,6 +10331,36 @@ SOURCE=.\src\Systems\vacuum.hxx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\Systems\submodel.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Systems"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Systems"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Systems\submodel.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Systems"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Systems"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Time"
 

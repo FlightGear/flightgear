@@ -1,3 +1,21 @@
+New in 0.9.6-pre1
+* September 10, 2004
+
+* Added some initial support for "submodels" which can be used to
+  impliment things like contrails, flares, tracers, etc.
+* Make real world weather fetching a bit more robust and network friendly.
+* Ensure the entire world is initially loaded before initializing the
+  flight dynamics (avoids wildly varying frame rates at a time when
+  the FDM might be trying to do various initialization steps that
+  might benefit from consistent and fast frame rates.)
+* Other various (and minor) code cleanups, tweaks, and fixes.
+* Fixed ATIS voice file.
+* Updated aircraft: MD11, Spitfire, Bo-105, adjust C172 cockpit sound levels,
+  F16, Fokker-50, Fokker-100, and Sgs-233.
+* Updated joystick configs: CH pro yoke usb, Cyborg Evo, Thrustmaster FCS.
+* Fix a bug in the nasal fuel tank management code.
+
+
 New in 0.9.5
 * July 29, 2004
 
