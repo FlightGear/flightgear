@@ -544,11 +544,6 @@ void FGApproach::get_active_runway() {
         ->getEnvironment(lat, lon, elev);
 #endif
 
-  SGPath path( globals->get_fg_root() );
-  path.append( "Airports" );
-  path.append( "runways.mk4" );
-  FGRunways runways( path.c_str() );
-  
 #ifdef FG_WEATHERCM
   //Set the heading to into the wind
   double wind_x = stationweather.Wind[0];
@@ -573,7 +568,7 @@ void FGApproach::get_active_runway() {
 #endif
   
   FGRunway runway;
-  if ( runways.search( ident, int(hdg), &runway) ) {
+  if ( globals->get_runways()->search( ident, int(hdg), &runway) ) {
     active_runway = runway.rwy_no;
     active_rw_hdg = runway.heading;
     active_rw_lon = runway.lon;

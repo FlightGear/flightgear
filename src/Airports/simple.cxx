@@ -33,8 +33,6 @@
 #include <simgear/misc/sgstream.hxx>
 
 #include STL_STRING
-#include STL_FUNCTIONAL
-#include STL_ALGORITHM
 #include STL_IOSTREAM
 
 #include "simple.hxx"
@@ -71,8 +69,8 @@ FGAirportList::FGAirportList( const string& file ) {
     // skip header line
     in >> skipeol;
 
+    FGAirport a;
     while ( in ) {
-        FGAirport a;
         in >> a;
         airports[a.id] = a;
     }

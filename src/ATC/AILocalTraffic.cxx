@@ -97,13 +97,9 @@ void FGAILocalTraffic::GetRwyDetails() {
 	
 	// Now we need to get the threshold position and rwy heading
 	
-	SGPath path( globals->get_fg_root() );
-	path.append( "Airports" );
-	path.append( "runways.mk4" );
-	FGRunways runways( path.c_str() );
-
 	FGRunway runway;
-	bool rwyGood = runways.search(airportID, rwy.rwyID, &runway);
+	bool rwyGood = globals->get_runways()->search(airportID, rwy.rwyID,
+                                                      &runway);
 	if(rwyGood) {
 		// Get the threshold position
     	hdg = runway.heading;	// TODO - check - is this our heading we are setting here, and if so should we be?

@@ -564,7 +564,7 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 
         if ( result.id.empty() ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
-                    "Failed to find " << id << " in simple.apt.gz" );
+                    "Failed to find " << id << " in basic.dat.gz" );
             return false;
         }
     } else {
@@ -656,16 +656,11 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     if ( id.length() ) {
         // set initial position from runway and heading
 
-        SGPath path( globals->get_fg_root() );
-        path.append( "Airports" );
-        path.append( "runways.mk4" );
-        FGRunways runways( path.c_str() );
-
         SG_LOG( SG_GENERAL, SG_INFO,
                 "Attempting to set starting position from airport code "
                 << id << " heading " << tgt_hdg );
 		
-        if ( ! runways.search( id, (int)tgt_hdg, &r ) ) {
+        if ( ! globals->get_runways()->search( id, (int)tgt_hdg, &r ) ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
                     "Failed to find a good runway for " << id << '\n' );
             return false;
@@ -730,16 +725,11 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
     if ( id.length() ) {
         // set initial position from airport and runway number
 
-        SGPath path( globals->get_fg_root() );
-        path.append( "Airports" );
-        path.append( "runways.mk4" );
-        FGRunways runways( path.c_str() );
-
         SG_LOG( SG_GENERAL, SG_INFO,
                 "Attempting to set starting position for "
                 << id << ":" << rwy );
 
-        if ( ! runways.search( id, rwy, &r ) ) {
+        if ( ! globals->get_runways()->search( id, rwy, &r ) ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
                     "Failed to find runway " << rwy << 
                     " at airport " << id );
@@ -951,9 +941,15 @@ fgInitNav ()
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Simple Airport List");
     SGPath p_simple( globals->get_fg_root() );
-    p_simple.append( "Airports/simple.apt" );
+    p_simple.append( "Airports/basic.dat" );
     FGAirportList *airports = new FGAirportList( p_simple.str() );
     globals->set_airports( airports );
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading Runway List");
+    SGPath p_runway( globals->get_fg_root() );
+    p_runway.append( "Airports/runways.dat" );
+    FGRunwayList *runways = new FGRunwayList( p_runway.str() );
+    globals->set_runways( runways );
 
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
 

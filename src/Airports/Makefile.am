@@ -1,13 +1,10 @@
 noinst_LIBRARIES = libAirports.a
 
-noinst_PROGRAMS = genrunways calc_loc
+noinst_PROGRAMS = calc_loc
 
 libAirports_a_SOURCES = \
 	runways.cxx runways.hxx \
 	simple.cxx simple.hxx
-
-genrunways_SOURCES = genrunways.cxx
-genrunways_LDADD = libAirports.a -lsgdebug -lsgmisc -lsgxml -lmk4 -lz
 
 calc_loc_SOURCES = calc_loc.cxx
 calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lz

@@ -45,9 +45,7 @@ SG_USING_STD(string);
 SG_USING_STD(map);
 
 
-class FGAirport {
-
-public:
+struct FGAirport {
 
     string id;
     double longitude;
@@ -55,18 +53,6 @@ public:
     double elevation;
     string code;
     string name;
-
-public:
-
-    FGAirport( const string& name = "",
-	       double lon = 0.0,
-	       double lat = 0.0,
-	       double ele = 0.0 )
-	: id(name), longitude(lon), latitude(lat), elevation(ele) {}
-
-    bool operator < ( const FGAirport& a ) const {
-	return id < a.id;
-    }
 
 };
 

@@ -214,11 +214,7 @@ void FGATIS::UpdateTransmission() {
 	
 	// Based on the airport-id and wind get the active runway
 	//FGRunway *r;
-	SGPath path( globals->get_fg_root() );
-	path.append( "Airports" );
-	path.append( "runways.mk4" );
-	FGRunways runways( path.c_str() );
-	
+
 	#ifdef FG_WEATHERCM
 	//Set the heading to into the wind
 	double wind_x = stationweather.Wind[0];
@@ -269,7 +265,7 @@ void FGATIS::UpdateTransmission() {
 	}
 	#endif
 	
-	string rwy_no = runways.search(ident, int(hdg));
+	string rwy_no = globals->get_runways()->search(ident, int(hdg));
 	if(rwy_no != (string)"NN") {
 		transmission += " / Landing_and_departing_runway ";
 		transmission += ConvertRwyNumToSpokenString(atoi(rwy_no.c_str()));

@@ -356,10 +356,6 @@ void FGGround::DoRwyDetails() {
 	//cout << "GetRwyDetails called" << endl;
 	
 	// Based on the airport-id and wind get the active runway
-	SGPath path( globals->get_fg_root() );
-	path.append( "Airports" );
-	path.append( "runways.mk4" );
-	FGRunways r_ways( path.c_str() );
 	
 	//wind
 	double hdg = wind_from_hdg->getDoubleValue();
@@ -368,7 +364,7 @@ void FGGround::DoRwyDetails() {
 	//cout << "Heading = " << hdg << '\n';
 	
 	FGRunway runway;
-	bool rwyGood = r_ways.search(ident, int(hdg), &runway);
+	bool rwyGood = globals->get_runways()->search(ident, int(hdg), &runway);
 	if(rwyGood) {
 		activeRwy = runway.rwy_no;
 		rwy.rwyID = runway.rwy_no;

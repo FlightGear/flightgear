@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _RUNWAYS_HXX
-#define _RUNWAYS_HXX
+#ifndef _FG_RUNWAYS_HXX
+#define _FG_RUNWAYS_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -37,20 +37,22 @@
 #include <simgear/compiler.h>
 
 #include STL_STRING
-#include <vector>
-
-// Forward declarations.
-class c4_Storage;
-class c4_View;
+#include <map>
 
 SG_USING_STD(string);
-SG_USING_STD(vector);
+SG_USING_STD(multimap);
 
 
-class FGRunway {
+struct ltstr {
+    bool operator()(const string s1, const string s2) const {
+        return s1 < s2;
+    }
+};
 
-public:
 
+struct FGRunway {
+
+    string type;
     string id;
     string rwy_no;
 
@@ -64,28 +66,32 @@ public:
     string end1_flags;
     string end2_flags;
 
-public:
+    double end1_displaced_threshold;
+    double end2_displaced_threshold;
 
-    FGRunway() {}
-    ~FGRunway() {}
+    double end1_stopway;
+    double end2_stopway;
 
 };
 
-class FGRunways {
+typedef multimap < string, FGRunway, ltstr > runway_map;
+typedef runway_map::iterator runway_map_iterator;
+typedef runway_map::const_iterator const_runway_map_iterator;
+
+class FGRunwayList {
 
 private:
 
-    c4_Storage *storage;
-    c4_View *vRunway;
-    int next_index;
+    runway_map runways;
+    runway_map_iterator current;
 
 public:
 
     // Constructor
-    FGRunways( const string& file );
+    FGRunwayList( const string& file );
 
     // Destructor
-    ~FGRunways();
+    ~FGRunwayList();
 
     // search for the specified apt id.
     // Returns true if successful, otherwise returns false.
@@ -106,36 +112,4 @@ public:
 };
 
 
-class FGRunwaysUtil {
-public:
-    typedef vector< FGRunway > container;
-    typedef container::iterator iterator;
-    typedef container::const_iterator const_iterator;
-
-private:
-    container runways;
-
-public:
-
-    // Constructor
-    FGRunwaysUtil();
-
-    // Destructor
-    ~FGRunwaysUtil();
-
-    // load the data
-    int load( const string& file );
-
-    // save the data in metakit format
-    bool dump_mk4( const string& file );
-
-    // search for the specified id.
-    // Returns true if successful, otherwise returns false.
-    // On success, runway data is returned thru "runway" pointer.
-    // "runway" is not changed if "id" is not found.
-    // bool search( const string& id, FGRunway* runway ) const;
-    // FGRunway search( const string& id ) const;
-};
-
-
-#endif // _RUNWAYS_HXX
+#endif // _FG_RUNWAYS_HXX

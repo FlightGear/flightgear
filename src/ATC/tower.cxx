@@ -524,10 +524,6 @@ void FGTower::DoRwyDetails() {
 	//cout << "GetRwyDetails called" << endl;
 	
 	// Based on the airport-id and wind get the active runway
-	SGPath path( globals->get_fg_root() );
-	path.append( "Airports" );
-	path.append( "runways.mk4" );
-	FGRunways runways( path.c_str() );
 	
 	//wind
 	double hdg = wind_from_hdg->getDoubleValue();
@@ -536,7 +532,7 @@ void FGTower::DoRwyDetails() {
 	//cout << "Heading = " << hdg << '\n';
 	
 	FGRunway runway;
-	bool rwyGood = runways.search(ident, int(hdg), &runway);
+	bool rwyGood = globals->get_runways()->search(ident, int(hdg), &runway);
 	if(rwyGood) {
 		activeRwy = runway.rwy_no;
 		rwy.rwyID = runway.rwy_no;
@@ -605,16 +601,12 @@ bool FGTower::OnAnyRunway(Point3D pt) {
 		return(false);
 	}
 	// Based on the airport-id, go through all the runways and check for a point in them
-	SGPath spath( globals->get_fg_root() );
-	spath.append( "Airports" );
-	spath.append( "runways.mk4" );
-	FGRunways runways( spath.c_str() );
 	
 	// TODO - do we actually need to search for the airport - surely we already know our ident and
 	// can just search runways of our airport???
 	//cout << "Airport ident is " << ad.ident << '\n';
 	FGRunway runway;
-	bool rwyGood = runways.search(ad.ident, &runway);
+	bool rwyGood = globals->get_runways()->search(ad.ident, &runway);
 	if(!rwyGood) {
 		SG_LOG(SG_ATC, SG_WARN, "Unable to find any runways for airport ID " << ad.ident << " in FGTower");
 	}
@@ -623,7 +615,7 @@ bool FGTower::OnAnyRunway(Point3D pt) {
 		on = OnRunway(pt, runway);
 		//cout << "Runway " << runway.rwy_no << ": On = " << (on ? "true\n" : "false\n");
 		if(on) return(true);
-		runways.next(&runway);		
+		globals->get_runways()->next(&runway);		
 	}
 	return(on);
 }

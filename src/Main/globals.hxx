@@ -60,6 +60,7 @@ class SGTime;
 class SGSoundMgr;
 
 class FGAirportList;
+class FGRunwayList;
 class FGAIMgr;
 class FGATCMgr;
 class FGATCDisplay;
@@ -137,6 +138,9 @@ private:
 
     // Simple Airport List
     FGAirportList *airports;
+
+    // Runway List
+    FGRunwayList *runways;
 
     // ATC manager
     FGATCMgr *ATC_mgr;
@@ -246,6 +250,9 @@ public:
 
     inline FGAirportList *get_airports() const { return airports; }
     inline void set_airports( FGAirportList *a ) {airports = a; }
+
+    inline FGRunwayList *get_runways() const { return runways; }
+    inline void set_runways( FGRunwayList *r ) {runways = r; }
 
     inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }

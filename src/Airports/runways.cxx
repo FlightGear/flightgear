@@ -34,59 +34,53 @@
 #include <simgear/misc/sgstream.hxx>
 
 #include STL_STRING
-#include STL_FUNCTIONAL
-#include STL_ALGORITHM
+#include STL_IOSTREAM
+#include <map>
 
 #include "runways.hxx"
 
 SG_USING_NAMESPACE(std);
-
-#ifndef _MSC_VER
-#define NDEBUG			// MSVC needs this
-#endif // !_MSC_VER
-
-#include <mk4.h>
-#include <mk4str.h>
-
-#ifndef _MSC_VER
-#undef NDEBUG
-#endif // !_MSC_VER
-
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <istream>
-#elif defined( __BORLANDC__ ) || defined (__APPLE__)
-#  include <iostream>
-#else
-#  include <istream.h>
-#endif
-
 SG_USING_STD(istream);
+SG_USING_STD(multimap);
 
 inline istream&
 operator >> ( istream& in, FGRunway& a )
 {
+    string type;
     int tmp;
 
-    return in >> a.rwy_no >> a.lat >> a.lon >> a.heading >> a.length >> a.width
-	      >> a.surface_flags >> a.end1_flags >> tmp >> tmp >> a.end2_flags
-	      >> tmp >> tmp;
+    in >> a.type;
+    if ( a.type == "R" ) {
+        in >> a.id >> a.rwy_no >> a.lat >> a.lon >> a.heading
+           >> a.length >> a.width >> a.surface_flags >> a.end1_flags
+           >> tmp >> tmp >> a.end2_flags >> tmp >> tmp;
+    } else {
+        in >> a.id >> a.rwy_no >> a.lat >> a.lon >> a.heading
+           >> a.length >> a.width >> a.surface_flags;
+    }
+
+    return in;
 }
 
 
-FGRunways::FGRunways( const string& file ) {
-    // open the specified database readonly
-    storage = new c4_Storage( file.c_str(), false );
+FGRunwayList::FGRunwayList( const string& file ) {
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Reading runway list: " << file );
 
-    if ( !storage->Strategy().IsValid() ) {
-	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
+    // open the specified file for reading
+    sg_gzifstream in( file );
+    if ( !in.is_open() ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
 	exit(-1);
     }
 
-    vRunway = new c4_View;
-    *vRunway = 
-	storage->GetAs("runway[ID:S,Rwy:S,Longitude:F,Latitude:F,Heading:F,Length:F,Width:F,SurfaceFlags:S,End1Flags:S,End2Flags:S]");
+    // skip header line
+    in >> skipeol;
 
-    next_index = 0;
+    FGRunway rwy;
+    while ( in ) {
+        in >> rwy;
+        runways.insert(pair<const string, FGRunway>(rwy.id, rwy));
+    }
 }
 
 
@@ -131,183 +125,74 @@ static string GetReverseRunwayNo(string rwyno) {
 }
 
 
-// search for the specified apt id
-bool FGRunways::search( const string& aptid, FGRunway* r ) {
-    c4_StringProp pID ("ID");
-    c4_StringProp pRwy ("Rwy");
-    c4_FloatProp pLon ("Longitude");
-    c4_FloatProp pLat ("Latitude");
-    c4_FloatProp pHdg ("Heading");
-    c4_FloatProp pLen ("Length");
-    c4_FloatProp pWid ("Width");
-    c4_StringProp pSurf ("SurfaceFlags");
-    c4_StringProp pEnd1 ("End1Flags");
-    c4_StringProp pEnd2 ("End2Flags");
+// search for the specified apt id (wierd!)
+bool FGRunwayList::search( const string& aptid, FGRunway* r ) {
+    runway_map_iterator pos;
 
-    int index = vRunway->Find(pID[aptid.c_str()]);
-    c4_RowRef row = vRunway->GetAt(index);
-
-    // cout << "index = " << index " row = " << row << endl;
-
-    // explicitly check if we got what we were asking for
-    // because metakit is canse insensitive!
-    if ( strcmp(aptid.c_str(), pID(row)) ) {
-	return false;
+    pos = runways.lower_bound(aptid);
+    if ( pos != runways.end() ) {
+        current = pos;
+        *r = pos->second;
+        return true;
+    } else {
+        return false;
     }
-
-    next_index = index + 1;
-
-    r->id =      (const char *) pID(row);
-    r->rwy_no =  (const char *) pRwy(row);
-    r->lon =     (double) pLon(row);
-    r->lat =     (double) pLat(row);
-    r->heading = (double) pHdg(row);
-    r->length =  (double) pLen(row);
-    r->width =   (double) pWid(row);
-    r->surface_flags = (const char *) pSurf(row);
-    r->end1_flags =    (const char *) pEnd1(row);
-    r->end2_flags =    (const char *) pEnd2(row);
-
-    return true;
 }
 
 
 // search for the specified apt id and runway no
-bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
+bool FGRunwayList::search( const string& aptid, const string& rwyno,
+                           FGRunway *r )
 {
-    string runwayno = rwyno;
-    c4_StringProp pID ("ID");
-    c4_StringProp pRwy ("Rwy");
-    c4_FloatProp pLon ("Longitude");
-    c4_FloatProp pLat ("Latitude");
-    c4_FloatProp pHdg ("Heading");
-    c4_FloatProp pLen ("Length");
-    c4_FloatProp pWid ("Width");
-    c4_StringProp pSurf ("SurfaceFlags");
-    c4_StringProp pEnd1 ("End1Flags");
-    c4_StringProp pEnd2 ("End2Flags");
-
-    int index = vRunway->Find(pID[aptid.c_str()]);
-    c4_RowRef row = vRunway->GetAt(index);
-    // cout << "index = " << index " row = " << row << endl;
-
-    // explicitly check if we got what we were asking for
-    // because metakit is canse insensitive!
-    if ( strcmp(aptid.c_str(), pID(row)) ) {
-        return false;
-    }
-    
     // standardize input number
+    string runwayno = rwyno;
     string tmp = runwayno.substr(1, 1);
     if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (runwayno.size() == 1)) {
 	tmp = runwayno;
 	runwayno = "0" + tmp;
-        SG_LOG(SG_GENERAL, SG_INFO, "Standardising rwy number from " << tmp
-                                     << " to " << runwayno );
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Standardising rwy number from " << tmp << " to " << runwayno );
     }
+    string revrwyno = GetReverseRunwayNo(runwayno);
 
-    string rowid = (const char *) pID(row);
-    string rowrwyno = (const char *) pRwy(row);
-    while ( rowid == aptid ) {
-        next_index = index + 1;
-
-        if ( rowrwyno == runwayno ) {
-            r->id =      (const char *) pID(row);
-            r->rwy_no =  (const char *) pRwy(row);
-            r->lon =     (double) pLon(row);
-            r->lat =     (double) pLat(row);
-            r->heading = (double) pHdg(row);
-            r->length =  (double) pLen(row);
-            r->width =   (double) pWid(row);
-            r->surface_flags = (const char *) pSurf(row);
-            r->end1_flags =    (const char *) pEnd1(row);
-            r->end2_flags =    (const char *) pEnd2(row);
-
+    runway_map_iterator pos;
+    for ( pos = runways.lower_bound( aptid );
+          pos != runways.upper_bound( aptid ); ++pos)
+    {
+        if ( pos->second.rwy_no == runwayno ) {
+            current = pos;
+            *r = pos->second;
+            return true;
+        } else if ( pos->second.rwy_no == revrwyno ) {
+            // Search again with the other-end runway number.
+            // Remember we have to munge the heading and rwy_no
+            // results if this one matches
+            current = pos;
+            *r = pos->second;
+	    r->rwy_no = revrwyno;
+            r->heading += 180.0;
+            string tmp = r->end1_flags;
+            r->end1_flags = r->end2_flags;
+            r->end2_flags = tmp;
             return true;
         }
-	
-	// Search again with the other-end runway number
-	// Remember we have to munge the heading and rwy_no results if this one matches
-	rowrwyno = GetReverseRunwayNo(rowrwyno);
-	// cout << "New rowrwyno = " << rowrwyno << '\n';
-	if ( rowrwyno == runwayno ) {
-	    r->id =      (const char *) pID(row);
-	    r->rwy_no =  rowrwyno;
-	    r->lon =     (double) pLon(row);
-	    r->lat =     (double) pLat(row);
-	    r->heading = (double) pHdg(row) + 180.0;
-	    r->length =  (double) pLen(row);
-	    r->width =   (double) pWid(row);
-	    r->surface_flags = (const char *) pSurf(row);
-	    r->end1_flags =    (const char *) pEnd2(row);
-	    r->end2_flags =    (const char *) pEnd1(row);
-	    // I've swapped the end flags as well 
-	    
-	    return true;
-	}
-
-        index++;
-        row = vRunway->GetAt(index);
-        rowid = (const char *) pID(row);
-        rowrwyno = (const char *) pRwy(row);
     }
 
     return false;
 }
 
 
-FGRunway FGRunways::search( const string& aptid ) {
+// (wierd!)
+FGRunway FGRunwayList::search( const string& aptid ) {
     FGRunway a;
     search( aptid, &a );
     return a;
 }
 
 
-// search for the specified id
-bool FGRunways::next( FGRunway* r ) {
-    c4_StringProp pID ("ID");
-    c4_StringProp pRwy ("Rwy");
-    c4_FloatProp pLon ("Longitude");
-    c4_FloatProp pLat ("Latitude");
-    c4_FloatProp pHdg ("Heading");
-    c4_FloatProp pLen ("Length");
-    c4_FloatProp pWid ("Width");
-    c4_StringProp pSurf ("SurfaceFlags");
-    c4_StringProp pEnd1 ("End1Flags");
-    c4_StringProp pEnd2 ("End2Flags");
-
-    int size = vRunway->GetSize();
-    // cout << "total records = " << size << endl;
-
-    int index = next_index;
-    // cout << "index = " << index << endl;
-
-    if ( index == -1 || index >= size ) {
-	return false;
-    }
-
-    next_index = index + 1;
-
-    c4_RowRef row = vRunway->GetAt(index);
-
-    r->id =      (const char *) pID(row);
-    r->rwy_no =  (const char *) pRwy(row);
-    r->lon =     (double) pLon(row);
-    r->lat =     (double) pLat(row);
-    r->heading = (double) pHdg(row);
-    r->length =  (double) pLen(row);
-    r->width =   (double) pWid(row);
-    r->surface_flags = (const char *) pSurf(row);
-    r->end1_flags =    (const char *) pEnd1(row);
-    r->end2_flags =    (const char *) pEnd2(row);
-
-    return true;
-}
-
-
 // Return the runway closest to a given heading
-bool FGRunways::search( const string& aptid, const int tgt_hdg,
-                        FGRunway* runway )
+bool FGRunwayList::search( const string& aptid, const int tgt_hdg,
+                           FGRunway *runway )
 {
     string rwyNo = search(aptid, tgt_hdg);
     return(rwyNo == "NN" ? false : search(aptid, rwyNo, runway));
@@ -315,7 +200,7 @@ bool FGRunways::search( const string& aptid, const int tgt_hdg,
 
 
 // Return the runway number of the runway closest to a given heading
-string FGRunways::search( const string& aptid, const int tgt_hdg ) {
+string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
     FGRunway r;
     FGRunway tmp_r;	
     string rn;
@@ -378,160 +263,29 @@ string FGRunways::search( const string& aptid, const int tgt_hdg ) {
 }
 
 
-// Destructor
-FGRunways::~FGRunways( void ) {
-    delete storage;
-}
-
-
-// Constructor
-FGRunwaysUtil::FGRunwaysUtil() {
-}
-
-
-// load the data
-int FGRunwaysUtil::load( const string& file ) {
-    FGRunway r;
-    string apt_id;
-
-    runways.erase( runways.begin(), runways.end() );
-
-    sg_gzifstream in( file );
-    if ( !in.is_open() ) {
-	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
-	exit(-1);
-    }
-
-    // skip first line of file
-    char tmp[2048];
-    in.getline( tmp, 2048 );
-
-    // read in each line of the file
-
-#ifdef __MWERKS__
-
-    in >> ::skipws;
-    char c = 0;
-    while ( in.get(c) && c != '\0' ) {
-	if ( c == 'A' ) {
-	    in >> apt_id;
-	    in >> skipeol;
-	} else if ( c == 'R' ) {
-	    in >> r;
-	    r.id = apt_id;
-	    runways.push_back(r);
-	} else {
-	    in >> skipeol;
-	}
-	in >> ::skipws;
-    }
-
-#else
-
-    in >> ::skipws;
-    while ( ! in.eof() ) {
-	char c = 0;
- 	in.get(c);
-	if ( c == 'A' ) {
-	    in >> apt_id;
-	    in >> skipeol;
-	} else if ( c == 'R' ) {
-	    in >> r;
-	    r.id = apt_id;
-	    // cout << apt_id << " " << r.rwy_no << endl;
-	    runways.push_back(r);
-	} else {
-	    in >> skipeol;
-	}
-	in >> ::skipws;
-    }
-
-#endif
-
-    return 1;
-}
-
-
-// save the data in gdbm format
-bool FGRunwaysUtil::dump_mk4( const string& file ) {
-    // open database for writing
-    c4_Storage storage( file.c_str(), true );
-
-    // need to do something about error handling here!
-
-    // define the properties
-    c4_StringProp pID ("ID");
-    c4_StringProp pRwy ("Rwy");
-    c4_FloatProp pLon ("Longitude");
-    c4_FloatProp pLat ("Latitude");
-    c4_FloatProp pHdg ("Heading");
-    c4_FloatProp pLen ("Length");
-    c4_FloatProp pWid ("Width");
-    c4_StringProp pSurf ("SurfaceFlags");
-    c4_StringProp pEnd1 ("End1Flags");
-    c4_StringProp pEnd2 ("End2Flags");
-
-    // Start with an empty view of the proper structure.
-    c4_View vRunway =
-	storage.GetAs("runway[ID:S,Rwy:S,Longitude:F,Latitude:F,Heading:F,Length:F,Width:F,SurfaceFlags:S,End1Flags:S,End2Flags:S]");
-
-    c4_Row row;
-
-    iterator current = runways.begin();
-    const_iterator end = runways.end();
-    while ( current != end ) {
-	// add each runway record
-	pID (row) = current->id.c_str();
-	pRwy (row) = current->rwy_no.c_str();
-	pLon (row) = current->lon;
-	pLat (row) = current->lat;
-	pHdg (row) = current->heading;
-	pLen (row) = current->length;
-	pWid (row) = current->width;
-	pSurf (row) = current->surface_flags.c_str();
-	pEnd1 (row) = current->end1_flags.c_str();
-	pEnd2 (row) = current->end2_flags.c_str();
-	vRunway.Add(row);
-
-	++current;
-    }
-
-    // commit our changes
-    storage.Commit();
-
-    return true;
-}
-
-
-#if 0
-// search for the specified id
-bool
-FGRunwaysUtil::search( const string& id, FGRunway* a ) const
-{
-    const_iterator it = runways.find( FGRunway(id) );
-    if ( it != runways.end() )
-    {
-	*a = *it;
-	return true;
-    }
-    else
-    {
-	return false;
+bool FGRunwayList::next( FGRunway* runway ) {
+    ++current;
+    if ( current != runways.end() ) {
+        *runway = current->second;
+        return true;
+    } else {
+        return false;
     }
 }
 
 
-FGRunway
-FGRunwaysUtil::search( const string& id ) const
-{
-    FGRunway a;
-    this->search( id, &a );
-    return a;
+FGRunway FGRunwayList::next() {
+    FGRunway result;
+
+    ++current;
+    if ( current != runways.end() ) {
+        result = current->second;
+    }
+
+    return result;
 }
-#endif
+
 
 // Destructor
-FGRunwaysUtil::~FGRunwaysUtil( void ) {
+FGRunwayList::~FGRunwayList( void ) {
 }
-
-
