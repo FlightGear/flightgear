@@ -86,7 +86,8 @@ fgfs_LDADD = \
 	$(CLOUD3D_LIBS) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
-	-lsgmagvar -lsgmisc -lnasal -lsgxml -lsgsound -lsgserial -lsgstructure \
+	-lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound -lsgserial \
+	-lsgstructure \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
