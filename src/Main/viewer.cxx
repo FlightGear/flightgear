@@ -37,11 +37,11 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-
-#include <Scenery/scenery.hxx>
-
+#include <simgear/scene/model/location.hxx>
 #include <simgear/math/vector.hxx>
+
 #include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
 #include <Model/acmodel.hxx>
 #include <Model/placement.hxx>
 
@@ -655,9 +655,12 @@ FGViewer::recalcLookAt ()
   sgAddVec3( eye_pos, eye_pos, position_offset );
 
   // add target offsets to at_position...
-  sgSetVec3(target_position_offset, _target_z_offset_m,  _target_x_offset_m, _target_y_offset_m );
+  sgSetVec3(target_position_offset, _target_z_offset_m,  _target_x_offset_m,
+                                    _target_y_offset_m );
   sgXformVec3(target_position_offset, target_position_offset, ATLOCAL);
   sgAddVec3( at_pos, at_pos, target_position_offset);
+
+  sgAddVec3( eye_pos, eye_pos, target_position_offset);
 
   // Make the VIEW matrix for a "LOOKAT".
   sgMakeLookAtMat4( VIEW, eye_pos, at_pos, _view_up );
