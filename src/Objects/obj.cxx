@@ -267,6 +267,35 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 }
 
 
+static float sgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
+    /* 
+       From comp.graph.algorithms FAQ
+       2A(P) = abs(N.(sum_{i=0}^{n-1}(v_i x v_{i+1})))
+     */
+    sgVec3 sum;
+    sgZeroVec3( sum );
+	
+    sgVec3 norm;
+    sgMakeNormal( norm, p0, p1, p2 );
+	
+    float *vv[3];
+    vv[0] = p0;
+    vv[1] = p1;
+    vv[2] = p2;
+	
+    for( int i=0; i<3; i++ ) {
+	int ii = (i+1) % 3;
+	sum[0] += (vv[i][1] * vv[ii][2] - vv[i][2] * vv[ii][1]) ;
+	sum[1] += (vv[i][2] * vv[ii][0] - vv[i][0] * vv[ii][2]) ;
+	sum[2] += (vv[i][0] * vv[ii][1] - vv[i][1] * vv[ii][0]) ;
+    }
+
+    return( sgAbs(sgScalarProductVec3( norm, sum )) * SG_HALF );
+}
+
+
+#if 0
+// this works too, but Norman claims sgTriArea() is more efficient :-)
 static double triangle_area_3d( float *p1, float *p2, float *p3 ) {
     // Heron's formula: A^2 = s(s-a)(s-b)(s-c) where A is the area,
     // a,b,c are the side lengths, s=(a+b+c)/2. In R^3 you can compute
@@ -280,6 +309,7 @@ static double triangle_area_3d( float *p1, float *p2, float *p3 ) {
 
     return sqrt( s * ( s - a ) * ( s - b ) * ( s - c ) );
 }
+#endif
 
 
 static void random_pt_inside_tri( float *res,
@@ -316,7 +346,7 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 	p1 = leaf->getVertex(n1);
 	p2 = leaf->getVertex(n2);
 	p3 = leaf->getVertex(n3);
-	double area = triangle_area_3d( p1, p2, p3 );
+	double area = sgTriArea( p1, p2, p3 );
 	double num = area / factor;
 
 	// generate a light point for each unit of area

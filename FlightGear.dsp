@@ -2663,7 +2663,7 @@ SOURCE=.\src\Scenery\hitlist.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Scenery\scenery.cxx
+SOURCE=.\src\Scenery\newcache.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2678,7 +2678,7 @@ SOURCE=.\src\Scenery\scenery.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Scenery\tilecache.cxx
+SOURCE=.\src\Scenery\scenery.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
