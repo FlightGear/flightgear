@@ -52,7 +52,7 @@ TransPar FGTransmission::Parse() {
   for ( i=0; i < msglen; ++i ) {
     if ( TransText.c_str()[i] != ' ' ) {
       if ( TransText.c_str()[i] != ',' ) tokens[tkn] += TransText.c_str()[i];
-    } else if ( tokens[tkn] != "" ) {
+    } else if ( !tokens[tkn].empty() ) {
       if ( tkn <= 20 ) {
 	tkn += 1;
       } else {
@@ -71,7 +71,7 @@ TransPar FGTransmission::Parse() {
     } else if ( tokens[i] == "landing"  ) { 
       tpar.intention = "landing";
       for ( j=i+1; j<=i+2; ++j ) {
-	if ( tokens[j] != "" ) {
+	if ( !tokens[j].empty() ) {
 	  toklen = strlen( tokens[j].c_str() );
 	  bool aid = true;
 	  for ( k=0; k<toklen; ++k )

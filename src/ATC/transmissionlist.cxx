@@ -26,6 +26,8 @@
 #  include <config.h>
 #endif
 
+#include <strings.h>	// bcopy()
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
