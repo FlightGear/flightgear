@@ -1,3 +1,11 @@
+New in 0.54
+* More optimizations and code cleanups.  (Norman Vine, Bernie Bright, Charlie
+  Hotchkiss.)
+* Bug fixed that was causing odd display artifacts due to a degenerate
+  fragment being created for every tile.
+* Bug fixed that caused scenery generation to go bad (misplaced fclose on an
+  invalid file descriptor.)
+
 New in 0.53
 * Some initial "GameGLUT" support contributed by Gary R. Van Sickle
   (tiberius@braemarinc.com)
