@@ -171,12 +171,12 @@ static void print_sgMat4( sgMat4 &in) {
 // Update the view parameters
 void FGViewer::update() {
 
-    sgVec3 v0, minus_z, forward;
+    sgVec3 minus_z, forward;
     sgMat4 VIEWo;
 
     // calculate the cartesion coords of the current lat/lon/0 elev
-    Point3D p = Point3D( geod_view_pos.lon(), 
-			 geod_view_pos.lat(), 
+    Point3D p = Point3D( geod_view_pos[0], 
+			 geod_view_pos[1], 
 			 sea_level_radius );
 
     cur_zero_elev = sgPolarToCart3d(p) - scenery.center;
@@ -184,20 +184,30 @@ void FGViewer::update() {
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
-    if ( geod_view_pos.elev() > (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
-	p.setz( p.radius() + geod_view_pos.elev() );
+    if ( geod_view_pos[2] > (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
+	p.setz( p.radius() + geod_view_pos[2] );
     } else {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
 
-    abs_view_pos = sgPolarToCart3d(p);
-	
-    view_pos = abs_view_pos - scenery.center;
+    Point3D tmp = sgPolarToCart3d(p);
+    sgdSetVec3( abs_view_pos, tmp[0], tmp[1], tmp[2] );
+
+    sgdVec3 sc;
+    sgdSetVec3( sc, scenery.center.x(), scenery.center.y(), scenery.center.z());
+    sgdVec3 vp;
+    sgdSubVec3( vp, abs_view_pos, sc );
+    sgSetVec3( view_pos, vp );
+    // view_pos = abs_view_pos - scenery.center;
 
     FG_LOG( FG_VIEW, FG_DEBUG, "sea level radius = " << sea_level_radius );
     FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = " << abs_view_pos );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = " << view_pos );
+    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = "
+	    << abs_view_pos[0] << ","
+	    << abs_view_pos[1] << ","
+	    << abs_view_pos[2] );
+    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = "
+	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
 
     // code to calculate LOCAL matrix calculated from Phi, Theta, and
     // Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
@@ -205,19 +215,19 @@ void FGViewer::update() {
 	
 #ifdef USE_FAST_LOCAL
 	
-    fgMakeLOCAL( LOCAL, hpr[1], hpr[2], -hpr[0] );
+    fgMakeLOCAL( LOCAL, rph[1], rph[0], -rph[2] );
 	
 #else // USE_TEXT_BOOK_METHOD
 	
     sgVec3 rollvec;
     sgSetVec3( rollvec, 0.0, 0.0, 1.0 );
     sgMat4 PHI;		// roll
-    sgMakeRotMat4( PHI, hpr[2] * RAD_TO_DEG, rollvec );
+    sgMakeRotMat4( PHI, rph[0] * RAD_TO_DEG, rollvec );
 
     sgVec3 pitchvec;
     sgSetVec3( pitchvec, 0.0, 1.0, 0.0 );
     sgMat4 THETA;		// pitch
-    sgMakeRotMat4( THETA, hpr[1] * RAD_TO_DEG, pitchvec );
+    sgMakeRotMat4( THETA, rph[1] * RAD_TO_DEG, pitchvec );
 
     // ROT = PHI * THETA
     sgMat4 ROT;
@@ -228,7 +238,7 @@ void FGViewer::update() {
     sgVec3 yawvec;
     sgSetVec3( yawvec, 1.0, 0.0, 0.0 );
     sgMat4 PSI;		// heading
-    sgMakeRotMat4( PSI, -hpr[0] * RAD_TO_DEG, yawvec );
+    sgMakeRotMat4( PSI, -rph[2] * RAD_TO_DEG, yawvec );
 
     // LOCAL = ROT * PSI
     // sgMultMat4( LOCAL, ROT, PSI );
@@ -241,9 +251,9 @@ void FGViewer::update() {
     // print_sgMat4( LOCAL );
 	
     sgMakeRotMat4( UP, 
-		   geod_view_pos.lon() * RAD_TO_DEG,
+		   geod_view_pos[0] * RAD_TO_DEG,
 		   0.0,
-		   -geod_view_pos.lat() * RAD_TO_DEG );
+		   -geod_view_pos[1] * RAD_TO_DEG );
 
     sgSetVec3( local_up, UP[0][0], UP[0][1], UP[0][2] );
     // sgXformVec3( local_up, UP );
@@ -299,10 +309,7 @@ void FGViewer::update() {
     // print_sgMat4( VIEW_ROT );
 
     sgVec3 trans_vec;
-    sgSetVec3( trans_vec, 
-	       view_pos.x() + pilot_offset_world[0],
-	       view_pos.y() + pilot_offset_world[1],
-	       view_pos.z() + pilot_offset_world[2] );
+    sgAddVec3( trans_vec, view_pos, pilot_offset_world );
 
     // VIEW = VIEW_ROT * TRANS
     sgCopyMat4( VIEW, VIEW_ROT );
@@ -316,15 +323,13 @@ void FGViewer::update() {
     sgPreMultMat4( VIEW, quat_mat);
     // !!!!!!!!!! testing	
 
-    // make a vector to the current view position
-    sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
-
     // Given a vector pointing straight down (-Z), map into onto the
     // local plane representing "horizontal".  This should give us the
     // local direction for moving "south".
     sgSetVec3( minus_z, 0.0, 0.0, -1.0 );
 
-    sgmap_vec_onto_cur_surface_plane(local_up, v0, minus_z, surface_south);
+    sgmap_vec_onto_cur_surface_plane(local_up, view_pos, minus_z,
+				     surface_south);
     sgNormalizeVec3(surface_south);
     // cout << "Surface direction directly south " << surface_south[0] << ","
     //      << surface_south[1] << "," << surface_south[2] << endl;

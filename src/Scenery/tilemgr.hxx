@@ -164,8 +164,8 @@ public:
 		     const sgdVec3 p, const sgdVec3 dir,
 		     FGHitList *list );
 
-    bool current_elev_ssg( const Point3D& abs_view_pos, 
-			   const Point3D& view_pos );
+    bool current_elev_ssg( sgdVec3 abs_view_pos, 
+			   sgVec3 view_pos );
 	
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current

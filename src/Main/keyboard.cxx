@@ -79,7 +79,6 @@ extern void fgReshape( int width, int height );
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
     FGInterface *f;
-    SGTime *t;
     FGViewer *v;
     float fov, tmp;
     static bool winding_ccw = true;

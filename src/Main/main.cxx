@@ -331,9 +331,9 @@ void fgRenderFrame( void ) {
 	    set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
 				  FEET_TO_METER ); 
 	globals->get_current_view()->
-	    set_hpr( cur_fdm_state->get_Psi(),
+	    set_rph( cur_fdm_state->get_Phi(),
 		     cur_fdm_state->get_Theta(),
-		     cur_fdm_state->get_Phi() );
+		     cur_fdm_state->get_Psi() );
 
 	// update view volume parameters
 	// cout << "before pilot_view update" << endl;
@@ -442,12 +442,6 @@ void fgRenderFrame( void ) {
  
 	// update the sky dome
 	if ( globals->get_options()->get_skyblend() ) {
-	    sgVec3 view_pos;
-	    sgSetVec3( view_pos,
-		       globals->get_current_view()->get_view_pos().x(),
-		       globals->get_current_view()->get_view_pos().y(),
-		       globals->get_current_view()->get_view_pos().z() );
-
 	    sgVec3 zero_elev;
 	    sgSetVec3( zero_elev,
 		       globals->get_current_view()->get_cur_zero_elev().x(),
@@ -489,7 +483,8 @@ void fgRenderFrame( void ) {
 		 << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
 		 << " moon dec = " << globals->get_ephem()->getMoonDeclination() << endl; */
 
-	    thesky->reposition( view_pos, zero_elev,
+	    thesky->reposition( globals->get_current_view()->get_view_pos(),
+				zero_elev,
 				globals->get_current_view()->get_local_up(),
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
@@ -566,9 +561,7 @@ void fgRenderFrame( void ) {
 
 	    sgMat4 sgTRANS;
 	    sgMakeTransMat4( sgTRANS, 
-			     globals->get_current_view()->get_view_pos().x(),
-			     globals->get_current_view()->get_view_pos().y(),
-			     globals->get_current_view()->get_view_pos().z() );
+			     globals->get_current_view()->get_view_pos() );
 
 	    sgVec3 ownship_up;
 	    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);

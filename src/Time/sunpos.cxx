@@ -243,7 +243,7 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
     FGViewer *v;
-    sgVec3 nup, nsun, v0, surface_to_sun;
+    sgVec3 nup, nsun, surface_to_sun;
     Point3D p, rel_sunpos;
     double dot, east_dot;
     double sun_gd_lat, sl_radius;
@@ -293,21 +293,20 @@ void fgUpdateSunPos( void ) {
     cout << "sun angle relative to current location = " << l->sun_angle << endl;
     
     // calculate vector to sun's position on the earth's surface
-    rel_sunpos = l->fg_sunpos - (v->get_view_pos() + scenery.center);
+    Point3D vp( v->get_view_pos()[0],
+		v->get_view_pos()[1],
+		v->get_view_pos()[1] );
+    rel_sunpos = l->fg_sunpos - ( vp + scenery.center );
     v->set_to_sun( rel_sunpos.x(), rel_sunpos.y(), rel_sunpos.z() );
     // printf( "Vector to sun = %.2f %.2f %.2f\n",
     //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);
-
-    // make a vector to the current view position
-    Point3D view_pos = v->get_view_pos();
-    sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
 
     // Given a vector from the view position to the point on the
     // earth's surface the sun is directly over, map into onto the
     // local plane representing "horizontal".
 
-    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v0, v->get_to_sun(), 
-				      surface_to_sun );
+    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v->get_view_pos(),
+				      v->get_to_sun(), surface_to_sun );
     sgNormalizeVec3(surface_to_sun);
     v->set_surface_to_sun( surface_to_sun[0], surface_to_sun[1], 
 			   surface_to_sun[2] );

@@ -65,25 +65,25 @@ private:
     double goal_view_offset;
 
     // geodetic view position
-    Point3D geod_view_pos;
+    sgdVec3 geod_view_pos;
 
     // radius to sea level from center of the earth (m)
     double sea_level_radius;
 
     // absolute view position in earth coordinates
-    Point3D abs_view_pos;
+    sgdVec3 abs_view_pos;
 
     // view position in opengl world coordinates (this is the
     // abs_view_pos translated to scenery.center)
-    Point3D view_pos;
+    sgVec3 view_pos;
 
     // pilot offset from center of gravity.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // Distances in meters of course.
     sgVec3 pilot_offset;
 
-    // view orientation (heading, pitch, roll)
-    sgVec3 hpr;
+    // view orientation (roll, pitch, heading)
+    sgVec3 rph;
 
     // cartesion coordinates of current lon/lat if at sea level
     // translated to scenery.center
@@ -153,17 +153,17 @@ public:
 	dirty = true;
 	// cout << "set_geod_view_pos = " << lon << ", " << lat << ", " << alt
 	//      << endl;
-	geod_view_pos = Point3D( lon, lat, alt );
+	sgdSetVec3( geod_view_pos, lon, lat, alt );
     }
     inline void set_sea_level_radius( double r ) {
 	// data should be in meters from the center of the earth
 	dirty = true;
 	sea_level_radius = r;
     }
-    inline void set_hpr( double h, double p, double r ) {
+    inline void set_rph( double r, double p, double h ) {
 	// data should be in radians
 	dirty = true;
-	sgSetVec3( hpr, h, p, r );
+	sgSetVec3( rph, r, p, h );
     }
     inline void set_pilot_offset( float x, float y, float z ) {
 	dirty = true;
@@ -189,16 +189,16 @@ public:
     inline double get_goal_view_offset() const { return goal_view_offset; }
     inline float *get_pilot_offset() { return pilot_offset; }
     inline double get_sea_level_radius() const { return sea_level_radius; }
-    inline float *get_hpr() { return hpr; }
+    inline float *get_rph() { return rph; }
 
     //////////////////////////////////////////////////////////////////////
     // derived values accessor functions
     //////////////////////////////////////////////////////////////////////
-    inline Point3D get_abs_view_pos() {
+    inline double *get_abs_view_pos() {
 	if ( dirty ) { update(); }
 	return abs_view_pos;
     }
-    inline Point3D get_view_pos() {
+    inline float *get_view_pos() {
 	if ( dirty ) { update(); }
 	return view_pos;
     }

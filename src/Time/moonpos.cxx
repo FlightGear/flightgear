@@ -1,5 +1,6 @@
-// moonpos.cxx (basically, this is a slightly modified version of the 'sunpos.cxx' file, adapted from XEarth)
-
+// moonpos.cxx (basically, this is a slightly modified version of the
+// 'sunpos.cxx' file, adapted from XEarth)
+//
 // kirk johnson
 // july 1993
 //
@@ -334,7 +335,7 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 void fgUpdateMoonPos( void ) {
     fgLIGHT *l;
     FGViewer *v;
-    sgVec3 nup, nmoon, v0, surface_to_moon;
+    sgVec3 nup, nmoon, surface_to_moon;
     Point3D p, rel_moonpos;
     double dot, east_dot;
     double moon_gd_lat, sl_radius;
@@ -386,20 +387,19 @@ void fgUpdateMoonPos( void ) {
 	 << l->moon_angle << endl;
     
     // calculate vector to moon's position on the earth's surface
-    rel_moonpos = l->fg_moonpos - (v->get_view_pos() + scenery.center);
+    Point3D vp( v->get_view_pos()[0],
+		v->get_view_pos()[1],
+		v->get_view_pos()[1] );
+    rel_moonpos = l->fg_moonpos - ( vp + scenery.center );
     v->set_to_moon( rel_moonpos.x(), rel_moonpos.y(), rel_moonpos.z() );
     // printf( "Vector to moon = %.2f %.2f %.2f\n",
     //         v->to_moon[0], v->to_moon[1], v->to_moon[2]);
-
-    // make a vector to the current view position
-    Point3D view_pos = v->get_view_pos();
-    sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
 
     // Given a vector from the view position to the point on the
     // earth's surface the moon is directly over, map into onto the
     // local plane representing "horizontal".
 
-    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v0, 
+    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v->get_view_pos(), 
 				      v->get_to_moon(), surface_to_moon );
     sgNormalizeVec3(surface_to_moon);
     v->set_surface_to_moon( surface_to_moon[0], surface_to_moon[1], 

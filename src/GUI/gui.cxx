@@ -887,8 +887,8 @@ GLubyte *hiResScreenCapture( int multiplier )
     FGViewer *v = globals->get_current_view();
     globals->get_options()->set_fov(fov);
     fgInitVisuals();
-    int cur_width = globals->get_current_view()->get_winWidth( );
-    int cur_height = globals->get_current_view()->get_winHeight( );
+    int cur_width = globals->get_options()->get_xsize( );
+    int cur_height = globals->get_options()->get_ysize( );
     if (b1) delete( b1 );
     // New empty (mostly) bitmap
     b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
@@ -924,8 +924,8 @@ void printScreen ( puObject *obj ) {
     mainMenuBar->hide();
 
     CGlPrinter p( CGlPrinter::PRINT_BITMAP );
-    int cur_width = globals->get_current_view()->get_winWidth( );
-    int cur_height = globals->get_current_view()->get_winHeight( );
+    int cur_width = globals->get_options()->get_xsize( );
+    int cur_height = globals->get_options()->get_ysize( );
     p.Begin( "FlightGear", cur_width*3, cur_height*3 );
 	p.End( hiResScreenCapture(3) );
 

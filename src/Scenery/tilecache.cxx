@@ -263,7 +263,7 @@ int
 FGTileCache::next_avail( void )
 {
     // Point3D delta;
-    Point3D abs_view_pos;
+    sgdVec3 abs_view_pos;
     int i;
     // float max, med, min, tmp;
     float dist, max_dist;
@@ -282,10 +282,13 @@ FGTileCache::next_avail( void )
 	    return(i);
 	} else if ( tile_cache[i].is_loaded() || tile_cache[i].is_cached() ) {
 	    // calculate approximate distance from view point
-	    abs_view_pos = globals->get_current_view()->get_abs_view_pos();
+	    sgdCopyVec3( abs_view_pos,
+			 globals->get_current_view()->get_abs_view_pos() );
 
-	    FG_LOG( FG_TERRAIN, FG_DEBUG,
-		    "DIST Abs view pos = " << abs_view_pos );
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, "DIST Abs view pos = " 
+		    << abs_view_pos[0] << ","
+		    << abs_view_pos[1] << ","
+		    << abs_view_pos[2] );
 	    FG_LOG( FG_TERRAIN, FG_DEBUG,
 		    "    ref point = " << tile_cache[i].center );
 
@@ -304,7 +307,12 @@ FGTileCache::next_avail( void )
 	    dist = max + (med + min) / 4;
 	    */
 
-	    dist = tile_cache[i].center.distance3D( abs_view_pos );
+	    sgdVec3 center;
+	    sgdSetVec3( center,
+			tile_cache[i].center[0],
+			tile_cache[i].center[1],
+			tile_cache[i].center[2] );
+	    dist = sgdDistanceVec3( center, abs_view_pos );
 
 	    FG_LOG( FG_TERRAIN, FG_DEBUG, "    distance = " << dist );
 

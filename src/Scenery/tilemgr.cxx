@@ -160,13 +160,13 @@ void FGTileMgr::load_tile( const FGBucket& b, int cache_index) {
 // meters.
 
 bool
-FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos, 
-			     const Point3D& view_pos )
+FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, 
+			     sgVec3 view_pos )
 {
     sgdVec3 orig, dir;
 
-    sgdSetVec3(orig, view_pos.x(), view_pos.y(), view_pos.z() );
-    sgdSetVec3(dir, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
+    sgdSetVec3(orig, view_pos );
+    sgdCopyVec3(dir, abs_view_pos );
 
     hit_list.Intersect( terrain, orig, dir );
 
@@ -460,15 +460,20 @@ int FGTileMgr::update( double lon, double lat ) {
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
 	// cout << "initializing ... " << endl;
+	sgdVec3 tmp_abs_view_pos;
+	sgVec3 tmp_view_pos;
+
 	Point3D geod_pos = Point3D( longitude * DEG_TO_RAD,
 				    latitude * DEG_TO_RAD,
 				    0.0);
-	Point3D tmp_abs_view_pos = sgGeodToCart( geod_pos );
-	scenery.center = tmp_abs_view_pos;
+	Point3D tmp = sgGeodToCart( geod_pos );
+	scenery.center = tmp;
+	sgdSetVec3( tmp_abs_view_pos, tmp.x(), tmp.y(), tmp.z() );
+
 	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
 	prep_ssg_nodes();
-	current_elev_ssg( tmp_abs_view_pos,
-			  Point3D( 0.0 ) );
+	sgSetVec3( tmp_view_pos, 0.0, 0.0, 0.0 );
+	current_elev_ssg( tmp_abs_view_pos, tmp_view_pos );
     } else {
 	// cout << "abs view pos = " << current_view.abs_view_pos
 	//      << " view pos = " << current_view.view_pos << endl;
