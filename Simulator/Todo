@@ -1,0 +1,113 @@
+--------------------------------------------------------------------------
+| Done
+--------------------------------------------------------------------------
+
+9/16/97 -  Released version 0.11
+
+9/22/97 -  Released version 0.12
+
+10/24/97 - Released version 0.13
+
+11/25/97 - Released version 0.14
+
+12/9/97 -  Released version 0.15
+
+12/9/97 -  Released demtools version 0.01
+
+12/10/97 - Released version 0.16
+
+12/12/97 - Released verison 0.17
+
+12/17/97 - Fix sun/moon initialization code so display lists aren't 
+           re-created at every Init().
+
+12/17/97 - Released version 0.18
+
+12/23/97 - First stab at a reasonable sky ... I'm going to probably
+           leave this for now so I don't spend the rest of my life
+           trying to tweak it.
+
+12/30/97 - Event manager
+
+12/30/97 - Released version 0.19
+
+12/30/97 - Released version 0.20
+
+12/31/97 - remove Unix dependencies from .../Time/fg_time.c
+
+1/5/98 -   Released version 0.21
+
+1/6/98 -   Added FGwin32.mak (a MSVC++ Makefile for building win32 versions)
+
+1/16/98 -  Release verison 0.23
+
+
+--------------------------------------------------------------------------
+| Todo 
+--------------------------------------------------------------------------
+
+12/29/97 - Scenery area manager
+
+12/29/97 - View frustum culling
+
+1/17/98 -  See about building with C++ compiler
+
+1/5/98 -   Create a development "roadmap"
+
+1/5/98 -   remove Scenery/geometry.c and Scenery/mesh.c
+   
+12/30/97 - fix winding problem with tri-strips in obj.c (invert normals)
+
+12/29/97 - Unify sun position render code with existing sunpos
+           calculations so the sun doesn't do it's little jump every
+           hour.
+
+12/29/97 - Add a mechanism to parse command line options
+    * A simple clear-screen sky.
+    * No fog.
+    * No astronomy.
+    * Less detailed terrain.
+    * Texture - but no MIP-mapping.
+    * Texture - but no bilinear blending.
+    * No texture.
+
+12/29/97 - sky tweaking
+  Steve Baker writes:
+    So, by building the sky in the flattened shape, we can have it be
+    very foggy at the horizon and clear blue overhead.
+
+    The other important feature of this model is the colours. We
+    colour each vertex of the dish individually to allow for cute
+    sunsets, a darker blue overhead than at the horizon in daylight, a
+    gradual darkening of the sky as a function of altitude for very
+    high altitude flight - into space. Also we tint the horizon more
+    in the direction of the sun so that sunset starts where the sun
+    goes down - and the sky remains blue on the opposite side of the
+    sky - then as the sun gets lower, the colour spreads outwards all
+    around the sky and the black of night creeps in slowly from the
+    opposite side of the sky from the sunset.
+
+    We also like to tint the bottom edge of the sky with white - even
+    in broad daylight - so it looks fuzzy - even when there is very
+    little fog to achieve that effect.
+
+    We use a text file that contains a lookup table relating the sun
+    angle relative to the horizon to:
+
+    *  The colour at the top of the sky dome,
+    *  The colour of the horizon nearest to the sun
+    *  The colour of the horizon farthest from the sun
+    *  The colour of the texture environment blend for the clouds.
+    *  The fog colour.
+
+    We can then tweak that file to set up all the conditions. The
+    realtime system interpolates the horizon colours all around the edge
+    of the sky.
+
+12/29/97 - Ground collision detection
+
+12/29/97 - glut windows or something for panel area - consider 3d
+           panels, careful of texture memory problems.
+
+1/5/98 -   bzflag sound code might be able to work for us.
+
