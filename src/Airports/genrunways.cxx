@@ -1,10 +1,23 @@
 // dump out a gdbm version of the simple airport file
 
+#include <simgear/compiler.h>
+
+#include STL_IOSTREAM
+
+#include <simgear/debug/logstream.hxx>
+
 #include "runways.hxx"
+
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
+SG_USING_STD(cout);
+SG_USING_STD(endl);
+#endif
 
 int main( int argc, char **argv ) {
     FGRunwaysUtil runways;
     FGRunway r;
+
+    sglog().setLogLevels( SG_ALL, SG_INFO );
 
     if ( argc == 3 ) {
 	runways.load( argv[1] );
