@@ -274,12 +274,17 @@ void fgEventProcess( void ) {
     /* get the current time */
     timestamp(&current);
 
+    fgPrintf(FG_EVENT, FG_DEBUG, "  Current timestamp = %ld\n", current.seconds);
+
     /* printf("Checking if anything is ready to move to the run queue\n"); */
 
     /* see if anything else is ready to be placed on the run queue */
     for ( i = 0; i < event_ptr; i++ ) {
 	if ( events[i].status == FG_EVENT_READY ) {
-	    if ( 0 > timediff(&current,&(events[i].next_run)) ) {
+	    fgPrintf(FG_EVENT, FG_DEBUG, 
+		     "  Item %d, current %d, next run @ %ld\n", 
+		     i, current.seconds, events[i].next_run.seconds);
+	    if ( timediff(&current, &(events[i].next_run)) <= 0) {
 	        addq(i);
 	    }
 	}
@@ -296,10 +301,18 @@ void fgEventProcess( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1998/04/03 22:12:55  curt
-/* Converting to Gnu autoconf system.
-/* Centralized time handling differences.
+/* Revision 1.12  1998/04/09 18:40:13  curt
+/* We had unified some of the platform disparate time handling code, and
+/* there was a bug in timesum() which calculated a new time stamp based on
+/* the current time stamp + offset.  This hosed the periodic event processing
+/* logic because you'd never arrive at the time the event was scheduled for.
+/* Sky updates and lighting changes are handled via this event mechanism so
+/* they never changed ... it is fixed now.
 /*
+ * Revision 1.11  1998/04/03 22:12:55  curt
+ * Converting to Gnu autoconf system.
+ * Centralized time handling differences.
+ *
  * Revision 1.10  1998/03/14 00:28:34  curt
  * replaced a printf() with an fgPrintf().
  *

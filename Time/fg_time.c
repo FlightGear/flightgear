@@ -100,13 +100,9 @@ long timediff(fg_timestamp *first, fg_timestamp *last) {
 
 /* Return new timestamp given a time stamp and an interval to add in */
 void timesum(fg_timestamp *res, fg_timestamp *start, long millis) {
-    res->millis = start->millis + millis;
-    if (1000 < res->millis) {
-	res->seconds = start->millis + 1;
-	res->millis -= 1000;
-    } else {
-	res->seconds = start->millis;
-    }
+    res->seconds = start->seconds + 
+	( start->millis + millis ) / 1000;
+    res->millis = ( start->millis + millis ) % 1000;
 }
 
 
@@ -372,9 +368,17 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.38  1998/04/08 23:35:40  curt
-/* Tweaks to Gnu automake/autoconf system.
+/* Revision 1.39  1998/04/09 18:40:14  curt
+/* We had unified some of the platform disparate time handling code, and
+/* there was a bug in timesum() which calculated a new time stamp based on
+/* the current time stamp + offset.  This hosed the periodic event processing
+/* logic because you'd never arrive at the time the event was scheduled for.
+/* Sky updates and lighting changes are handled via this event mechanism so
+/* they never changed ... it is fixed now.
 /*
+ * Revision 1.38  1998/04/08 23:35:40  curt
+ * Tweaks to Gnu automake/autoconf system.
+ *
  * Revision 1.37  1998/04/03 22:12:55  curt
  * Converting to Gnu autoconf system.
  * Centralized time handling differences.
