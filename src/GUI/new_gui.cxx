@@ -28,12 +28,8 @@ action_callback (puObject * object)
         (NewGUI *)globals->get_subsystem_mgr()
           ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
     gui->setCurrentWidget(info->widget);
-    for (int i = 0; i < info->bindings.size(); i++) {
-        std::cerr << "Firing binding " << i << ": " << info->bindings[i]->getCommandName() << std::endl;
+    for (int i = 0; i < info->bindings.size(); i++)
         info->bindings[i]->fire();
-        std::cerr << "done\n";
-    }
-    std::cerr << "All bindings fired\n";
     gui->setCurrentWidget(0);
 }
 
@@ -70,7 +66,6 @@ GUIWidget::GUIWidget (SGPropertyNode_ptr props)
 
 GUIWidget::~GUIWidget ()
 {
-    std::cerr << "Destroying widget\n";
     delete _object;
 
     int i;
