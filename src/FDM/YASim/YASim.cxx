@@ -2,7 +2,7 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/easyxml.hxx>
+#include <simgear/xml/easyxml.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>

@@ -1,7 +1,7 @@
 #ifndef _FGFDM_HPP
 #define _FGFDM_HPP
 
-#include <simgear/easyxml.hxx>
+#include <simgear/xml/easyxml.hxx>
 
 #include "Airplane.hpp"
 #include "Vector.hpp"
