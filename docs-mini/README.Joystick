@@ -54,7 +54,7 @@ In case you were wondering, XML stands for eXtensible Markup Language.
 It looks a lot like HTML, except you get to define your own tags. Well,
 in the case of FGFS we defined the tags you need to configure things.
 It is well suited for describing hierarchically organized structures, such as
-the property tree FGFS uses to expose the it's innards to external applications.
+the property tree FGFS uses to expose it's innards to external applications.
 Your XML configuration files for FGFS must start and end with the following
 pair of tags.
      <PropertyList>

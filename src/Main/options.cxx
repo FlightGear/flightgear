@@ -797,6 +797,8 @@ parse_option (const string& arg)
         fgSetString("/sim/hud/frame-stat-type", "tris");
     } else if ( arg == "--hud-culled" ) {
         fgSetString("/sim/hud/frame-stat-type", "culled");
+    } else if ( arg.find( "--atc610x" ) == 0 ) {
+	add_channel( "atc610x", "dummy" );
     } else if ( arg.find( "--atlas=" ) == 0 ) {
 	add_channel( "atlas", arg.substr(8) );
     } else if ( arg.find( "--httpd=" ) == 0 ) {

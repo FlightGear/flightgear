@@ -275,7 +275,7 @@ void FGSteam::_CatchUp()
 	AccE = current_aircraft.fdm_state->get_V_dot_east();
 	AccU = current_aircraft.fdm_state->get_V_dot_down()
 	     - 9.81 / 0.3;
-	if ( fabs(the_TC_rad) > 0.2 )
+	if ( fabs(the_TC_rad) > 0.2 /* 2.0 */ )
 	{       /* Massive sideslip jams it; it stops turning */
 	        the_MH_degps = 0.0;
 	        the_MH_err   = fgGetDouble("/orientation/heading-deg") - the_MH_deg;

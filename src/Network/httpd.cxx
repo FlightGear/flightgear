@@ -1,4 +1,4 @@
-// httpd.hxx -- FGFS http property manager interface / external script
+// httpd.cxx -- FGFS http property manager interface / external script
 //              and control class
 //
 // Written by Curtis Olson, started June 2001.

@@ -517,25 +517,6 @@ void fgRenderFrame( void ) {
 	fgReshape( fgGetInt("/sim/startup/xsize"),
 		   fgGetInt("/sim/startup/ysize") );
 
-#if 0
-	// swing and a miss
-
-	if ( ! fgPanelVisible() ) {
-	    xglViewport( 0, 0 ,
-			 (GLint)(fgGetInt("/sim/startup/xsize")),
-			 (GLint)(fgGetInt("/sim/startup/ysize")) );
-	} else {
-	    int view_h =
-		int( (current_panel->getViewHeight() -
-		      current_panel->getYOffset())
-		     * (fgGetInt("/sim/startup/ysize") / 768.0) );
-	    glViewport( 0, 
-			(GLint)(fgGetInt("/sim/startup/ysize") - view_h),
-			(GLint)(fgGetInt("/sim/startup/xsize")),
-			(GLint)(view_h) );
-	}
-#endif
-
 	// set the sun position
 	glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 

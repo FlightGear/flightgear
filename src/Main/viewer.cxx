@@ -50,12 +50,6 @@ FGViewer::FGViewer( void ):
 }
 
 
-// Update the view parameters
-void FGViewer::update() {
-    SG_LOG( SG_VIEW, SG_ALERT, "Shouldn't ever see this" );
-}
-
-
 // Destructor
 FGViewer::~FGViewer( void ) {
 }

@@ -125,7 +125,7 @@ public:
 
 
     // is audio working?
-    inline bool is_working() const { return !audio_sched->not_working(); }
+    inline bool is_working() const { return !audio_sched->notWorking(); }
 
     // add a sound effect, return true if successful
     bool add( FGSimpleSound *sound, const string& refname );

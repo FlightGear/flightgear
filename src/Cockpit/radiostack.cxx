@@ -244,7 +244,7 @@ FGRadioStack::bind ()
 
 				// User inputs
     fgTie("/radios/dme/frequencies/selected-khz", this,
-	  &FGRadioStack::get_dme_freq, &FGRadioStack::set_adf_freq);
+	  &FGRadioStack::get_dme_freq, &FGRadioStack::set_dme_freq);
 
 				// Radio outputs
     fgTie("/radios/dme/in-range", this, &FGRadioStack::get_dme_inrange);

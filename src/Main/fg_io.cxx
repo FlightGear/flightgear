@@ -37,6 +37,7 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <Network/protocol.hxx>
+#include <Network/atc610x.hxx>
 #include <Network/atlas.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
@@ -85,7 +86,12 @@ static FGProtocol *parse_port_config( const string& config )
     SG_LOG( SG_IO, SG_INFO, "  protocol = " << protocol );
 
     FGProtocol *io;
-    if ( protocol == "atlas" ) {
+    if ( protocol == "atc610x" ) {
+	FGATC610x *atc610x = new FGATC610x;
+	io = atc610x;
+        short_circuit = true;
+	cout << "here ..." << endl;
+    } else if ( protocol == "atlas" ) {
 	FGAtlas *atlas = new FGAtlas;
 	io = atlas;
     } else if ( protocol == "opengc" ) {

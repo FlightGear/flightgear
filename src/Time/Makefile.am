@@ -7,10 +7,6 @@ libTime_a_SOURCES = \
 	moonpos.cxx moonpos.hxx \
 	sunpos.cxx sunpos.hxx \
 	tmp.cxx tmp.hxx
-	# fg_time.cxx fg_time.hxx \
-	# geocoord.cxx geocoord.h \
-	# lowleveltime.cxx lowleveltime.h \
-	# timezone.cxx timezone.h
 
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

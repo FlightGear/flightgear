@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_FDM_VERSION = 0x0104;
+const int FG_NET_FDM_VERSION = 0x0004;
 
 // Define a structure containing the top level flight dynamics model
 // parameters
