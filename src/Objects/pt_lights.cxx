@@ -359,6 +359,114 @@ ssgTransform *gen_reil_lights( const point_list &nodes,
 }
 
 
+ssgTransform *gen_odals_lights( const point_list &nodes,
+                                const point_list &normals,
+                                const int_list &pnt_i,
+                                const int_list &nml_i,
+                                const string &material,
+                                sgVec3 up )
+{
+    sgVec3 center;
+    calc_center_point( nodes, pnt_i, center );
+    cout << center[0] << "," << center[1] << "," << center[2] << endl;
+    cout << "points = " << pnt_i.size() << endl;
+
+    ssgTimedSelector *odals = new ssgTimedSelector;
+
+    sgVec4 color;
+    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+
+    // center line strobes
+    int i;
+    sgVec3 pt;
+    for ( i = (int)pnt_i.size() - 1; i >= 2; --i ) {
+        ssgVertexArray   *vl = new ssgVertexArray( 1 );
+        ssgColourArray   *cl = new ssgColourArray( 1 );
+     
+        sgSetVec3( pt, nodes[pnt_i[i]][0], nodes[pnt_i[i]][1],
+                   nodes[pnt_i[i]][2] );
+        sgSubVec3( pt, center );
+        vl->add( pt );
+
+        cl->add( color );
+
+        ssgLeaf *leaf = 
+            new ssgVtxTable ( GL_POINTS, vl, NULL, NULL, cl );
+
+        // we don't want directional lights here
+        FGNewMat *newmat = material_lib.find( "GROUND_LIGHTS" );
+
+        if ( newmat != NULL ) {
+            leaf->setState( newmat->get_state() );
+        } else {
+            SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
+                    << material );
+        }
+
+        leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
+        leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
+
+        odals->addKid( leaf );
+    }
+
+    // runway end strobes
+    ssgVertexArray   *vl = new ssgVertexArray( 2 );
+    ssgColourArray   *cl = new ssgColourArray( 2 );
+     
+    sgSetVec3( pt, nodes[pnt_i[0]][0], nodes[pnt_i[0]][1],
+               nodes[pnt_i[0]][2] );
+    sgSubVec3( pt, center );
+    vl->add( pt );
+    cl->add( color );
+
+    sgSetVec3( pt, nodes[pnt_i[1]][0], nodes[pnt_i[1]][1],
+               nodes[pnt_i[1]][2] );
+    sgSubVec3( pt, center );
+    vl->add( pt );
+    cl->add( color );
+
+    ssgLeaf *leaf = 
+        new ssgVtxTable ( GL_POINTS, vl, NULL, NULL, cl );
+
+    // we don't want directional lights here
+    FGNewMat *newmat = material_lib.find( "GROUND_LIGHTS" );
+
+    if ( newmat != NULL ) {
+        leaf->setState( newmat->get_state() );
+    } else {
+        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
+                << material );
+    }
+
+    leaf->setCallback( SSG_CALLBACK_PREDRAW, StrobePreDraw );
+    leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
+
+    odals->addKid( leaf );
+
+    // setup animition
+
+    odals->setDuration( 10 );
+    odals->setLimits( 0, pnt_i.size() - 1 );
+    odals->setMode( SSG_ANIM_SHUTTLE );
+    odals->control( SSG_ANIM_START );
+   
+    // put an LOD on each lighting component
+    ssgRangeSelector *lod = new ssgRangeSelector;
+    lod->setRange( 0, SG_ZERO );
+    lod->setRange( 1, 12000 );
+    lod->addKid( odals );
+
+    // create the transformation.
+    sgCoord coord;
+    sgSetCoord( &coord, center[0], center[1], center[2], 0.0, 0.0, 0.0 );
+    ssgTransform *trans = new ssgTransform;
+    trans->setTransform( &coord );
+    trans->addKid( lod );
+
+    return trans;
+}
+
+
 ssgTransform *gen_rabbit_lights( const point_list &nodes,
                                  const point_list &normals,
                                  const int_list &pnt_i,
@@ -499,6 +607,11 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
         ssgTransform *reil = gen_reil_lights( nodes, normals, pnt_i, nml_i,
                                               material, up );
         return reil;
+    } else if ( material == "RWY_ODALS_LIGHTS" ) {
+        cout << "found a odals" << endl;
+        ssgTransform *odals = gen_odals_lights( nodes, normals, pnt_i, nml_i,
+                                                material, up );
+        return odals;
     } else if ( material == "RWY_SEQUENCED_LIGHTS" ) {
         // cout << "found a rabbit" << endl;
         ssgTransform *rabbit = gen_rabbit_lights( nodes, normals,
