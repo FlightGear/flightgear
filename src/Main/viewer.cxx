@@ -130,8 +130,14 @@ static void MakeVIEW_OFFSET( sgMat4 dst,
 // Implementation of FGViewer.
 ////////////////////////////////////////////////////////////////////////
 
-// Constructor
-FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool at_model, int at_model_index, double x_offset_m, double y_offset_m, double z_offset_m, double near_m ):
+// Constructor...
+FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, 
+                    bool at_model, int at_model_index,
+                    double x_offset_m, double y_offset_m, double z_offset_m, 
+                    double heading_offset_deg, double pitch_offset_deg,
+                    double roll_offset_deg, double fov_deg,
+                    double target_x_offset_m, double target_y_offset_m,
+                    double target_z_offset_m, double near_m ):
     _dirty(true),
     _lon_deg(0),
     _lat_deg(0),
@@ -142,13 +148,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
-    _roll_offset_deg(0),
-    _pitch_offset_deg(0),
-    _heading_offset_deg(0),
-    _goal_pitch_offset_deg(0.0),
-    _goal_heading_offset_deg(0.0),
-    _scaling_type(FG_SCALING_MAX),
-    _fov_deg(55.0)
+    _scaling_type(FG_SCALING_MAX)
 {
     sgdZeroVec3(_absolute_view_pos);
     _type = Type;
@@ -159,8 +159,22 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool
     _x_offset_m = x_offset_m;
     _y_offset_m = y_offset_m;
     _z_offset_m = z_offset_m;
+    _heading_offset_deg = heading_offset_deg;
+    _pitch_offset_deg = pitch_offset_deg;
+    _roll_offset_deg = roll_offset_deg;
+    _goal_heading_offset_deg = heading_offset_deg;
+    _goal_pitch_offset_deg = pitch_offset_deg;
+    _goal_roll_offset_deg = roll_offset_deg;
+    if (fov_deg > 0) {
+      _fov_deg = fov_deg;
+    } else {
+      _fov_deg = 55;
+    }
+    _target_x_offset_m = target_x_offset_m;
+    _target_y_offset_m = target_y_offset_m;
+    _target_z_offset_m = target_z_offset_m;
     _ground_level_nearplane_m = near_m;
-    //a reasonable guess for init, so that the math doesn't blow up
+    // a reasonable guess for init, so that the math doesn't blow up
 }
 
 
@@ -345,6 +359,27 @@ FGViewer::setZOffset_m (double z_offset_m)
 }
 
 void
+FGViewer::setTargetXOffset_m (double target_x_offset_m)
+{
+  _dirty = true;
+  _target_x_offset_m = target_x_offset_m;
+}
+
+void
+FGViewer::setTargetYOffset_m (double target_y_offset_m)
+{
+  _dirty = true;
+  _target_y_offset_m = target_y_offset_m;
+}
+
+void
+FGViewer::setTargetZOffset_m (double target_z_offset_m)
+{
+  _dirty = true;
+  _target_z_offset_m = target_z_offset_m;
+}
+
+void
 FGViewer::setPositionOffsets (double x_offset_m, double y_offset_m, double z_offset_m)
 {
   _dirty = true;
@@ -448,6 +483,12 @@ FGViewer::updateFromModelLocation (FGLocation * location)
 }
 
 void
+FGViewer::updateAtModelLocation (FGLocation * location)
+{
+  sgCopyMat4(ATLOCAL, location->getCachedTransformMatrix());
+}
+
+void
 FGViewer::recalcOurOwnLocation (FGLocation * location, double lon_deg, double lat_deg, double alt_ft, 
                         double roll_deg, double pitch_deg, double heading_deg)
 {
@@ -517,7 +558,7 @@ FGViewer::recalcLookFrom ()
   sgSetVec4(VIEW[2], _view_up[0], _view_up[1], _view_up[2],SG_ZERO);
   sgSetVec4(VIEW[3], SG_ZERO, SG_ZERO, SG_ZERO,SG_ONE);
 
-  // rotate matrix to get a matrix to apply Eye Position Offsets
+  // rotate model or local matrix to get a matrix to apply Eye Position Offsets
   sgMat4 VIEW_UP; // L0 forward L1 right L2 up
   sgCopyVec4(VIEW_UP[0], LOCAL[1]); 
   sgCopyVec4(VIEW_UP[1], LOCAL[2]);
@@ -546,6 +587,7 @@ FGViewer::recalcLookAt ()
   sgVec3 right;
   sgVec3 eye_pos, at_pos;
   sgVec3 position_offset; // eye position offsets (xyz)
+  sgVec3 target_position_offset; // target position offsets (xyz)
 
   // The position vectors originate from the view point or target location
   // depending on the type of view.
@@ -555,7 +597,7 @@ FGViewer::recalcLookAt ()
   // Update location data for target...
   if ( _at_model ) {
     // update or data from model location
-    updateFromModelLocation(_target_location);
+    updateAtModelLocation(_target_location);
   } else {
     // if not model then calculate our own target position...
     recalcOurOwnLocation( _target_location, _target_lon_deg, _target_lat_deg, _target_alt_ft, 
@@ -586,23 +628,32 @@ FGViewer::recalcLookAt ()
   sgSetVec3( _view_up, LOCAL[2][0], LOCAL[2][1], LOCAL[2][2] );
   sgSetVec3( right, LOCAL[1][0], LOCAL[1][1], LOCAL[1][2] );
 
-  // Note that when in "lookat" view the "world up" vector is always applied
-  // to the viewer.  World up is based on verticle at a given lon/lat (see
-  // matrix "UP" above).
+  // rotate model or local matrix to get a matrix to apply Eye Position Offsets
+  sgMat4 VIEW_UP; // L0 forward L1 right L2 up
+  sgCopyVec4(VIEW_UP[0], LOCAL[1]); 
+  sgCopyVec4(VIEW_UP[1], LOCAL[2]);
+  sgCopyVec4(VIEW_UP[2], LOCAL[0]);
+  sgZeroVec4(VIEW_UP[3]);
 
-  // Orientation Offsets matrix
+  // get Orientation Offsets matrix
   MakeVIEW_OFFSET( VIEW_OFFSET,
-    (_heading_offset_deg -_heading_deg) * SG_DEGREES_TO_RADIANS, _world_up,
+    (_heading_offset_deg - 180) * SG_DEGREES_TO_RADIANS, _view_up,
     _pitch_offset_deg * SG_DEGREES_TO_RADIANS, right );
-   
-  // add in the Orientation Offsets here
-  sgSetVec3( position_offset, _x_offset_m, _y_offset_m, _z_offset_m );
-  sgXformVec3( position_offset, position_offset, UP);
 
+  // add in the position offsets
+  sgSetVec3( position_offset, _y_offset_m, _x_offset_m, _z_offset_m );
+  sgXformVec3( position_offset, position_offset, VIEW_UP);
+
+  // apply the Orientation offsets
   sgXformVec3( position_offset, position_offset, VIEW_OFFSET );
 
   // add the Position offsets from object to the eye position
   sgAddVec3( eye_pos, eye_pos, position_offset );
+
+  // add target offsets to at_position...
+  sgSetVec3(target_position_offset, _target_z_offset_m,  _target_x_offset_m, _target_y_offset_m );
+  sgXformVec3(target_position_offset, target_position_offset, ATLOCAL);
+  sgAddVec3( at_pos, at_pos, target_position_offset);
 
   // Make the VIEW matrix for a "LOOKAT".
   sgMakeLookAtMat4( VIEW, eye_pos, at_pos, _view_up );

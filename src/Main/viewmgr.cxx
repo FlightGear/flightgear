@@ -51,7 +51,9 @@ FGViewMgr::init ()
   bool at_model = false;
   int from_model_index = 0;
   int at_model_index = 0;
-  double x_offset_m, y_offset_m, z_offset_m;
+  double x_offset_m, y_offset_m, z_offset_m, fov_deg;
+  double heading_offset_deg, pitch_offset_deg, roll_offset_deg;
+  double target_x_offset_m, target_y_offset_m, target_z_offset_m;
   double near_m;
 
   for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
@@ -102,6 +104,32 @@ FGViewMgr::init ()
     nodepath = viewpath;
     nodepath += "/config/z-offset-m";
     z_offset_m = fgGetDouble(nodepath.c_str());
+    nodepath = viewpath;
+    nodepath += "/config/pitch-offset-deg";
+    pitch_offset_deg = fgGetDouble(nodepath.c_str());
+    fgSetDouble(nodepath.c_str(),pitch_offset_deg);
+    nodepath = viewpath;
+    nodepath += "/config/heading-offset-deg";
+    heading_offset_deg = fgGetDouble(nodepath.c_str());
+    fgSetDouble(nodepath.c_str(),heading_offset_deg);
+    nodepath = viewpath;
+    nodepath += "/config/roll-offset-deg";
+    roll_offset_deg = fgGetDouble(nodepath.c_str());
+    fgSetDouble(nodepath.c_str(),roll_offset_deg);
+    nodepath = viewpath;
+    nodepath += "/config/default-field-of-view-deg";
+    fov_deg = fgGetDouble(nodepath.c_str());
+
+    // target offsets for lookat mode only...
+    nodepath = viewpath;
+    nodepath += "/config/target-x-offset-m";
+    target_x_offset_m = fgGetDouble(nodepath.c_str());
+    nodepath = viewpath;
+    nodepath += "/config/target-y-offset-m";
+    target_y_offset_m = fgGetDouble(nodepath.c_str());
+    nodepath = viewpath;
+    nodepath += "/config/target-z-offset-m";
+    target_z_offset_m = fgGetDouble(nodepath.c_str());
 
     nodepath = viewpath;
     nodepath += "/config/ground-level-nearplane-m";
@@ -110,16 +138,94 @@ FGViewMgr::init ()
     // supporting two types now "lookat" = 1 and "lookfrom" = 0
     if ( strcmp("lookat",strdata.c_str()) == 0 )
       add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index,
-                              at_model, at_model_index, x_offset_m, y_offset_m,
-                              z_offset_m, near_m ));
+                              at_model, at_model_index, x_offset_m,
+                              y_offset_m,z_offset_m,
+                              heading_offset_deg, pitch_offset_deg,
+                              roll_offset_deg, fov_deg,
+                              target_x_offset_m, target_y_offset_m,
+                              target_z_offset_m, near_m ));
     else
       add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index, false,
-                              0, x_offset_m, y_offset_m, z_offset_m, near_m ));
-
+                              0, x_offset_m, y_offset_m, z_offset_m,
+                              heading_offset_deg, pitch_offset_deg,
+                              roll_offset_deg, fov_deg, 0, 0, 0, near_m ));
   }
 
   copyToCurrent();
   
+}
+
+void
+FGViewMgr::reinit ()
+{
+  char stridx [ 20 ];
+  string viewpath, nodepath, strdata;
+  double fov_deg;
+
+  // reset offsets and fov to configuration defaults
+
+  for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
+    viewpath = "/sim/view";
+    sprintf(stridx, "[%d]", i);
+    viewpath += stridx;
+
+    setView(i);
+
+    nodepath = viewpath;
+    nodepath += "/config/x-offset-m";
+    fgSetDouble("/sim/current-view/x-offset-m",fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/y-offset-m";
+    fgSetDouble("/sim/current-view/y-offset-m",fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/z-offset-m";
+    fgSetDouble("/sim/current-view/z-offset-m",fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/pitch-offset-deg";
+    fgSetDouble("/sim/current-view/pitch-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/heading-offset-deg";
+    fgSetDouble("/sim/current-view/heading-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/roll-offset-deg";
+    fgSetDouble("/sim/current-view/roll-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/default-field-of-view-deg";
+    fov_deg = fgGetDouble(nodepath.c_str());
+    if (fov_deg < 10.0) {
+      fov_deg = 55.0;
+    }
+    fgSetDouble("/sim/current-view/field-of-view",fov_deg);
+
+    // target offsets for lookat mode only...
+    nodepath = viewpath;
+    nodepath += "/config/target-x-offset-m";
+    fgSetDouble("/sim/current-view/target-x-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/target-y-offset-m";
+    fgSetDouble("/sim/current-view/target-y-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/target-z-offset-m";
+    fgSetDouble("/sim/current-view/target-z-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+ }
+
+    setView(0);
+
 }
 
 typedef double (FGViewMgr::*double_getter)() const;
@@ -129,22 +235,33 @@ FGViewMgr::bind ()
 {
   // these are bound to the current view properties
   fgTie("/sim/current-view/heading-offset-deg", this,
-	&FGViewMgr::getViewOffset_deg, &FGViewMgr::setViewOffset_deg);
+	&FGViewMgr::getViewHeadingOffset_deg,
+        &FGViewMgr::setViewHeadingOffset_deg);
   fgSetArchivable("/sim/current-view/heading-offset-deg");
   fgTie("/sim/current-view/goal-heading-offset-deg", this,
-	&FGViewMgr::getGoalViewOffset_deg, &FGViewMgr::setGoalViewOffset_deg);
+	&FGViewMgr::getViewGoalHeadingOffset_deg,
+        &FGViewMgr::setViewGoalHeadingOffset_deg);
   fgSetArchivable("/sim/current-view/goal-heading-offset-deg");
   fgTie("/sim/current-view/pitch-offset-deg", this,
-	&FGViewMgr::getViewTilt_deg, &FGViewMgr::setViewTilt_deg);
+	&FGViewMgr::getViewPitchOffset_deg,
+        &FGViewMgr::setViewPitchOffset_deg);
   fgSetArchivable("/sim/current-view/pitch-offset-deg");
   fgTie("/sim/current-view/goal-pitch-offset-deg", this,
-	&FGViewMgr::getGoalViewTilt_deg, &FGViewMgr::setGoalViewTilt_deg);
+	&FGViewMgr::getGoalViewPitchOffset_deg,
+        &FGViewMgr::setGoalViewPitchOffset_deg);
   fgSetArchivable("/sim/current-view/goal-pitch-offset-deg");
+
+  fgTie("/sim/current-view/view-number", this, 
+                      &FGViewMgr::getView, &FGViewMgr::setView);
+  fgSetArchivable("/sim/current-view/view-number", FALSE);
 
   fgTie("/sim/current-view/axes/long", this,
 	(double_getter)0, &FGViewMgr::setViewAxisLong);
+  fgSetArchivable("/sim/current-view/axes/long");
+
   fgTie("/sim/current-view/axes/lat", this,
 	(double_getter)0, &FGViewMgr::setViewAxisLat);
+  fgSetArchivable("/sim/current-view/axes/lat");
 
   fgTie("/sim/current-view/field-of-view", this,
 	&FGViewMgr::getFOV_deg, &FGViewMgr::setFOV_deg);
@@ -166,8 +283,10 @@ FGViewMgr::unbind ()
   fgUntie("/sim/current-view/pitch-offset-deg");
   fgUntie("/sim/current-view/goal-pitch-offset-deg");
   fgUntie("/sim/field-of-view");
+  fgUntie("/sim/current-view/view-number");
   fgUntie("/sim/current-view/axes/long");
   fgUntie("/sim/current-view/axes/lat");
+  fgUntie("/sim/current-view/ground-level-nearplane-m");
 }
 
 void
@@ -186,7 +305,6 @@ FGViewMgr::update (double dt)
   viewpath = "/sim/view";
   sprintf(stridx, "[%d]", i);
   viewpath += stridx;
-
 
   FGViewer *loop_view = (FGViewer *)get_view( i );
 
@@ -243,16 +361,21 @@ FGViewMgr::update (double dt)
       nodepath = viewpath;
       nodepath += "/config/target-heading-deg-path";
       heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-     
+  
       loop_view ->setTargetPosition(lon_deg, lat_deg, alt_ft);
       loop_view->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
     } else {
       loop_view->set_dirty();
     }
   }
-  setPilotXOffset_m(fgGetDouble("/sim/current-view/x-offset-m"));
-  setPilotYOffset_m(fgGetDouble("/sim/current-view/y-offset-m"));
-  setPilotZOffset_m(fgGetDouble("/sim/current-view/z-offset-m"));
+
+  setViewXOffset_m(fgGetDouble("/sim/current-view/x-offset-m"));
+  setViewYOffset_m(fgGetDouble("/sim/current-view/y-offset-m"));
+  setViewZOffset_m(fgGetDouble("/sim/current-view/z-offset-m"));
+
+  setViewTargetXOffset_m(fgGetDouble("/sim/current-view/target-x-offset-m"));
+  setViewTargetYOffset_m(fgGetDouble("/sim/current-view/target-y-offset-m"));
+  setViewTargetZOffset_m(fgGetDouble("/sim/current-view/target-z-offset-m"));
 
   			        // Update the current view
   do_axes();
@@ -262,21 +385,69 @@ FGViewMgr::update (double dt)
 void
 FGViewMgr::copyToCurrent()
 {
-    fgSetDouble("/sim/current-view/x-offset-m", getPilotXOffset_m());
-    fgSetDouble("/sim/current-view/y-offset-m", getPilotYOffset_m());
-    fgSetDouble("/sim/current-view/z-offset-m", getPilotZOffset_m());
+    char stridx [20];
+    string viewpath, nodepath;
+
+    int i = current;
+    viewpath = "/sim/view";
+    sprintf(stridx, "[%d]", i);
+    viewpath += stridx;
+
+    // copy certain view config data for default values
+    nodepath = viewpath;
+    nodepath += "/config/default-heading-offset-deg";
+    fgSetDouble("/sim/current-view/config/heading-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/pitch-offset-deg";
+    fgSetDouble("/sim/current-view/config/pitch-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/roll-offset-deg";
+    fgSetDouble("/sim/current-view/config/roll-offset-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    nodepath = viewpath;
+    nodepath += "/config/default-field-of-view-deg";
+    fgSetDouble("/sim/current-view/config/default-field-of-view-deg",
+                fgGetDouble(nodepath.c_str()));
+
+    // copy view data
+    fgSetDouble("/sim/current-view/x-offset-m", getViewXOffset_m());
+    fgSetDouble("/sim/current-view/y-offset-m", getViewYOffset_m());
+    fgSetDouble("/sim/current-view/z-offset-m", getViewZOffset_m());
+    fgSetDouble("/sim/current-view/goal-heading-offset-deg",
+                get_current_view()->getGoalHeadingOffset_deg());
+    fgSetDouble("/sim/current-view/goal-pitch-offset-deg",
+                get_current_view()->getGoalPitchOffset_deg());
+    fgSetDouble("/sim/current-view/goal-roll-offset-deg",
+                get_current_view()->getRollOffset_deg());
+    fgSetDouble("/sim/current-view/heading-offset-deg",
+                get_current_view()->getHeadingOffset_deg());
+    fgSetDouble("/sim/current-view/pitch-offset-deg",
+                get_current_view()->getPitchOffset_deg());
+    fgSetDouble("/sim/current-view/roll-offset-deg",
+                get_current_view()->getRollOffset_deg());
+    fgSetDouble("/sim/current-view/target-x-offset-m",
+                get_current_view()->getTargetXOffset_m());
+    fgSetDouble("/sim/current-view/target-y-offset-m",
+                get_current_view()->getTargetYOffset_m());
+    fgSetDouble("/sim/current-view/target-z-offset-m",
+                get_current_view()->getTargetZOffset_m());
 }
 
 
 double
-FGViewMgr::getViewOffset_deg () const
+FGViewMgr::getViewHeadingOffset_deg () const
 {
   const FGViewer * view = get_current_view();
   return (view == 0 ? 0 : view->getHeadingOffset_deg());
 }
 
 void
-FGViewMgr::setViewOffset_deg (double offset)
+FGViewMgr::setViewHeadingOffset_deg (double offset)
 {
   FGViewer * view = get_current_view();
   if (view != 0) {
@@ -286,14 +457,14 @@ FGViewMgr::setViewOffset_deg (double offset)
 }
 
 double
-FGViewMgr::getGoalViewOffset_deg () const
+FGViewMgr::getViewGoalHeadingOffset_deg () const
 {
   const FGViewer * view = get_current_view();
   return (view == 0 ? 0 : view->getGoalHeadingOffset_deg());
 }
 
 void
-FGViewMgr::setGoalViewOffset_deg (double offset)
+FGViewMgr::setViewGoalHeadingOffset_deg (double offset)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
@@ -301,14 +472,14 @@ FGViewMgr::setGoalViewOffset_deg (double offset)
 }
 
 double
-FGViewMgr::getViewTilt_deg () const
+FGViewMgr::getViewPitchOffset_deg () const
 {
   const FGViewer * view = get_current_view();
   return (view == 0 ? 0 : view->getPitchOffset_deg());
 }
 
 void
-FGViewMgr::setViewTilt_deg (double tilt)
+FGViewMgr::setViewPitchOffset_deg (double tilt)
 {
   FGViewer * view = get_current_view();
   if (view != 0) {
@@ -318,14 +489,14 @@ FGViewMgr::setViewTilt_deg (double tilt)
 }
 
 double
-FGViewMgr::getGoalViewTilt_deg () const
+FGViewMgr::getGoalViewPitchOffset_deg () const
 {
   const FGViewer * view = get_current_view();
   return (view == 0 ? 0 : view->getGoalPitchOffset_deg());
 }
 
 void
-FGViewMgr::setGoalViewTilt_deg (double tilt)
+FGViewMgr::setGoalViewPitchOffset_deg (double tilt)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
@@ -333,7 +504,7 @@ FGViewMgr::setGoalViewTilt_deg (double tilt)
 }
 
 double
-FGViewMgr::getPilotXOffset_m () const
+FGViewMgr::getViewXOffset_m () const
 {
   const FGViewer * view = get_current_view();
   if (view != 0) {
@@ -344,7 +515,7 @@ FGViewMgr::getPilotXOffset_m () const
 }
 
 void
-FGViewMgr::setPilotXOffset_m (double x)
+FGViewMgr::setViewXOffset_m (double x)
 {
   FGViewer * view = get_current_view();
   if (view != 0) {
@@ -353,7 +524,7 @@ FGViewMgr::setPilotXOffset_m (double x)
 }
 
 double
-FGViewMgr::getPilotYOffset_m () const
+FGViewMgr::getViewYOffset_m () const
 {
   const FGViewer * view = get_current_view();
   if (view != 0) {
@@ -364,7 +535,7 @@ FGViewMgr::getPilotYOffset_m () const
 }
 
 void
-FGViewMgr::setPilotYOffset_m (double y)
+FGViewMgr::setViewYOffset_m (double y)
 {
   FGViewer * view = get_current_view();
   if (view != 0) {
@@ -373,7 +544,7 @@ FGViewMgr::setPilotYOffset_m (double y)
 }
 
 double
-FGViewMgr::getPilotZOffset_m () const
+FGViewMgr::getViewZOffset_m () const
 {
   const FGViewer * view = get_current_view();
   if (view != 0) {
@@ -384,13 +555,92 @@ FGViewMgr::getPilotZOffset_m () const
 }
 
 void
-FGViewMgr::setPilotZOffset_m (double z)
+FGViewMgr::setViewZOffset_m (double z)
 {
   FGViewer * view = get_current_view();
   if (view != 0) {
     view->setZOffset_m(z);
   }
 }
+
+double
+FGViewMgr::getViewTargetXOffset_m () const
+{
+  const FGViewer * view = get_current_view();
+  if (view != 0) {
+    return ((FGViewer *)view)->getTargetXOffset_m();
+  } else {
+    return 0;
+  }
+}
+
+void
+FGViewMgr::setViewTargetXOffset_m (double x)
+{
+  FGViewer * view = get_current_view();
+  if (view != 0) {
+    view->setTargetXOffset_m(x);
+  }
+}
+
+double
+FGViewMgr::getViewTargetYOffset_m () const
+{
+  const FGViewer * view = get_current_view();
+  if (view != 0) {
+    return ((FGViewer *)view)->getTargetYOffset_m();
+  } else {
+    return 0;
+  }
+}
+
+void
+FGViewMgr::setViewTargetYOffset_m (double y)
+{
+  FGViewer * view = get_current_view();
+  if (view != 0) {
+    view->setTargetYOffset_m(y);
+  }
+}
+
+double
+FGViewMgr::getViewTargetZOffset_m () const
+{
+  const FGViewer * view = get_current_view();
+  if (view != 0) {
+    return ((FGViewer *)view)->getTargetZOffset_m();
+  } else {
+    return 0;
+  }
+}
+
+void
+FGViewMgr::setViewTargetZOffset_m (double z)
+{
+  FGViewer * view = get_current_view();
+  if (view != 0) {
+    view->setTargetZOffset_m(z);
+  }
+}
+
+int
+FGViewMgr::getView () const
+{
+  return ( current );
+}
+
+void
+FGViewMgr::setView (int newview )
+{
+  if ( newview < 0 || newview > (int)views.size() ) {
+    newview = 0;
+  }
+  // set new view
+  set_view( newview );
+  // copy in view data
+  copyToCurrent ();
+}
+
 
 double
 FGViewMgr::getFOV_deg () const

@@ -60,6 +60,7 @@ public:
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double dt);
+    virtual void reinit ();
 
     // getters
     inline int size() const { return views.size(); }
@@ -121,26 +122,35 @@ private:
 
     void do_axes ();
 
-    double getViewOffset_deg () const;
-    void setViewOffset_deg (double offset);
-    double getGoalViewOffset_deg () const;
-    void setGoalViewOffset_deg (double offset);
-    double getViewTilt_deg () const;
-    void setViewTilt_deg (double tilt);
-    double getGoalViewTilt_deg () const;
-    void setGoalViewTilt_deg (double tilt);
-    double getPilotXOffset_m () const;
-    void setPilotXOffset_m (double x);
-    double getPilotYOffset_m () const;
-    void setPilotYOffset_m (double y);
-    double getPilotZOffset_m () const;
-    void setPilotZOffset_m (double z);
+    //  callbacks in manager to access viewer methods
+    double getViewHeadingOffset_deg () const;
+    void setViewHeadingOffset_deg (double offset);
+    double getViewGoalHeadingOffset_deg () const;
+    void setViewGoalHeadingOffset_deg (double offset);
+    double getViewPitchOffset_deg () const;
+    void setViewPitchOffset_deg (double tilt);
+    double getGoalViewPitchOffset_deg () const;
+    void setGoalViewPitchOffset_deg (double tilt);
+    double getViewXOffset_m () const;
+    void setViewXOffset_m (double x);
+    double getViewYOffset_m () const;
+    void setViewYOffset_m (double y);
+    double getViewZOffset_m () const;
+    void setViewZOffset_m (double z);
+    double getViewTargetXOffset_m () const;
+    void setViewTargetXOffset_m (double x);
+    double getViewTargetYOffset_m () const;
+    void setViewTargetYOffset_m (double y);
+    double getViewTargetZOffset_m () const;
+    void setViewTargetZOffset_m (double z);
     double getFOV_deg () const;
     void setFOV_deg (double fov);
     double getNear_m () const;
     void setNear_m (double near_m);
     void setViewAxisLong (double axis);
     void setViewAxisLat (double axis);
+    int getView () const;
+    void setView (int newview);
 
     typedef vector < FGViewer * > viewer_list;
     viewer_list views;

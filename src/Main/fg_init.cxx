@@ -1796,8 +1796,8 @@ void fgReInitSubsystems()
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
 
-    // copy viewer settings into current-view path
-    globals->get_viewmgr()->copyToCurrent();
+    // reload offsets from config defaults
+    globals->get_viewmgr()->reinit();
 
     fgInitView();
 

@@ -63,8 +63,12 @@ public:
 
     // Constructor
     FGViewer( fgViewType Type, bool from_model, int from_model_index,
-              bool at_model, int at_model_index, double x_offset_m,
-              double y_offset_m, double z_offset_m, double near_m );
+              bool at_model, int at_model_index,
+              double x_offset_m, double y_offset_m, double z_offset_m,
+              double heading_offset_deg, double pitch_offset_deg,
+              double roll_offset_deg, double fov_deg,
+              double target_x_offset_m, double target_y_offset_m,
+              double target_z_offset_m, double near_m );
 
     // Destructor
     virtual ~FGViewer( void );
@@ -126,9 +130,15 @@ public:
     virtual double getXOffset_m () const { return _x_offset_m; }
     virtual double getYOffset_m () const { return _y_offset_m; }
     virtual double getZOffset_m () const { return _z_offset_m; }
+    virtual double getTargetXOffset_m () const { return _target_x_offset_m; }
+    virtual double getTargetYOffset_m () const { return _target_y_offset_m; }
+    virtual double getTargetZOffset_m () const { return _target_z_offset_m; }
     virtual void setXOffset_m (double x_offset_m);
     virtual void setYOffset_m (double y_offset_m);
     virtual void setZOffset_m (double z_offset_m);
+    virtual void setTargetXOffset_m (double x_offset_m);
+    virtual void setTargetYOffset_m (double y_offset_m);
+    virtual void setTargetZOffset_m (double z_offset_m);
     virtual void setPositionOffsets (double x_offset_m,
 				     double y_offset_m,
 				     double z_offset_m);
@@ -276,12 +286,20 @@ private:
     double _target_pitch_deg;
     double _target_heading_deg;
 
-    // Position offsets from center of gravity.  The X axis is positive
+    // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // distance in meters
     double _x_offset_m;
     double _y_offset_m;
     double _z_offset_m;
+
+    // Target offsets from FDM origin (for "lookat" targets) The X
+    // axis is positive out the tail, Y is out the right wing, and Z
+    // is positive up.  distance in meters
+    double _target_x_offset_m;
+    double _target_y_offset_m;
+    double _target_z_offset_m;
+
 
     // orientation offsets from reference (_goal* are for smoothed transitions)
     double _roll_offset_deg;
@@ -341,7 +359,7 @@ private:
 
     // sg versions of our friendly matrices
     sgMat4 VIEW, UP;
-    sgMat4 LOCAL, TRANS, LARC_TO_SSG;
+    sgMat4 LOCAL, ATLOCAL, TRANS, LARC_TO_SSG;
 
     // Transformation matrix for the view direction offset relative to
     // the AIRCRAFT matrix
@@ -356,6 +374,7 @@ private:
     void recalcLookAt();
     void copyLocationData();
     void updateFromModelLocation (FGLocation * location);
+    void updateAtModelLocation (FGLocation * location);
     void recalcOurOwnLocation (FGLocation * location, double lon_deg, double lat_deg, double alt_ft,
                  double roll_deg, double pitch_deg, double heading_deg);
 
