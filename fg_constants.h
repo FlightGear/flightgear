@@ -64,6 +64,10 @@
 #define FG_PI_4     0.78539816339744830961
 
 
+/* ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator */
+#define ONE_SECOND 4.848136811E-6
+
+
 /* Radius of Earth in kilometers at the equator.  Another source had
  * 6378.165 but this is probably close enough */
 #define EARTH_RAD 6378.155
@@ -149,9 +153,12 @@
 
 
 /* $Log$
-/* Revision 1.8  1998/07/12 03:07:13  curt
-/* Added #ifdef HAVE_CONFIG_H ...
+/* Revision 1.9  1998/08/24 20:02:35  curt
+/* Added ONE_SECOND (in radians)
 /*
+ * Revision 1.8  1998/07/12 03:07:13  curt
+ * Added #ifdef HAVE_CONFIG_H ...
+ *
  * Revision 1.7  1998/07/08 14:36:29  curt
  * Changed name of EQUATORIAL_RADIUS_KM and RESQ_KM to "M" since they were
  * in meters anyways.
