@@ -48,7 +48,7 @@
 #define WIN_W 1024
 #define WIN_H 768
 
-#ifdef defined( NONE ) && defined( _MSC_VER )
+#if defined( NONE ) && defined( _MSC_VER )
 #  pragma message( "A sloppy coder has defined NONE as a macro!!!" )
 #  undef NONE
 #elif defined( NONE )
