@@ -415,6 +415,9 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
 
 
 // $Log$
+// Revision 1.1  1998/10/16 20:16:44  curt
+// Renamed flight.[ch] to flight.[ch]xx
+//
 // Revision 1.20  1998/09/29 14:57:39  curt
 // c++-ified comments.
 //
