@@ -21,8 +21,6 @@
 // $Id$
 
 
-#include "LaRCsim.hxx"
-
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 
@@ -33,10 +31,22 @@
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_interface.h>
 
+#include "10520d.hxx"
+#include "LaRCsim.hxx"
+
+
+FGEngine eng;
+
 
 // Initialize the LaRCsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 int FGLaRCsim::init( double dt ) {
+
+#ifdef USE_NEW_ENGINE_CODE
+    // Initialize our little engine that hopefully might
+    eng.init();
+#endif
+
     // cout << "FGLaRCsim::init()" << endl;
 
     double save_alt = 0.0;
@@ -74,6 +84,17 @@ int FGLaRCsim::init( double dt ) {
 int FGLaRCsim::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
+#ifdef USE_NEW_ENGINE_CODE
+    // update simple engine model
+    eng.set_IAS( V_calibrated_kts );
+    eng.set_Throttle_Lever_Pos( Throttle_pct * 100.0 );
+    eng.set_Propeller_Lever_Pos( 95 );
+    eng.set_Mixture_Lever_Pos( 100 );
+    eng.update();
+    cout << "  Thrust = " << eng.get_FGProp1_Thrust() << endl;
+    F_X_engine = eng.get_FGProp1_Thrust() * 7;
+#endif
+
     double save_alt = 0.0;
     double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
     double start_elev = get_Altitude();
@@ -90,7 +111,11 @@ int FGLaRCsim::update( int multiloop ) {
     Long_trim = controls.get_elevator_trim();
     Rudder_pedal = controls.get_rudder() / current_options.get_speed_up();
     Flap_handle = 30.0 * controls.get_flaps();
+#ifdef USE_NEW_ENGINE_CODE
+    Throttle_pct = -1.0;	// tells engine model to use propellor thrust
+#else
     Throttle_pct = controls.get_throttle( 0 ) * 1.0;
+#endif
     Brake_pct[0] = controls.get_brake( 1 );
     Brake_pct[1] = controls.get_brake( 0 );
 
