@@ -68,7 +68,8 @@ enum
 {
     FG_OPTIONS_OK = 0,
     FG_OPTIONS_HELP = 1,
-    FG_OPTIONS_ERROR = 2
+    FG_OPTIONS_ERROR = 2,
+    FG_OPTIONS_VERBOSE_HELP = 3
 };
 
 static double
@@ -594,6 +595,9 @@ parse_option (const string& arg)
     if ( (arg == "--help") || (arg == "-h") ) {
 	// help/usage request
 	return(FG_OPTIONS_HELP);
+    } else if ( (arg == "--verbose") || (arg == "-v") ) {
+        // verbose help/usage request
+        return(FG_OPTIONS_VERBOSE_HELP);
     } else if ( arg == "--disable-game-mode") {
 	fgSetBool("/sim/startup/game-mode", false);
     } else if ( arg == "--enable-game-mode" ) {
@@ -1061,6 +1065,8 @@ void
 fgParseArgs (int argc, char **argv)
 {
     bool in_options = true;
+    bool verbose = false;
+    bool help = false;
 
     SG_LOG(SG_GENERAL, SG_INFO, "Processing command line arguments");
 
@@ -1072,11 +1078,11 @@ fgParseArgs (int argc, char **argv)
 	    in_options = false;
 	  } else {
 	    int result = parse_option(arg);
-	    if ( (result == FG_OPTIONS_HELP) ||
-		 (result == FG_OPTIONS_ERROR) ) {
-	      fgUsage();
-	      exit(-1);
-	    }
+	    if ((result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR))
+              help = true;
+
+            else if (result == FG_OPTIONS_VERBOSE_HELP)
+              verbose = true;
 	  }
 	} else {
 	  in_options = false;
@@ -1084,6 +1090,11 @@ fgParseArgs (int argc, char **argv)
 		 "Reading command-line property file " << arg);
 	  readProperties(arg, globals->get_props());
 	}
+    }
+
+    if (help) {
+       fgUsage(verbose);
+       exit(0);
     }
 
     SG_LOG(SG_GENERAL, SG_INFO, "Finished command line arguments");
@@ -1135,7 +1146,7 @@ fgParseOptions (const string& path) {
 
 // Print usage message
 void 
-fgUsage ()
+fgUsage (bool verbose)
 {
     SGPropertyNode options_root;
     SGPath opath( globals->get_fg_root() );
@@ -1168,11 +1179,7 @@ fgUsage ()
 
     vector<SGPropertyNode_ptr>section = options->getChildren("section");
     for (unsigned int j = 0; j < section.size(); j++) {
-
-        SGPropertyNode *name = section[j]->getNode("name");
-        if (name) {
-            cout << endl << name->getStringValue() << ":" << endl;
-        }
+        string msg = "";
 
         vector<SGPropertyNode_ptr>option = section[j]->getChildren("option");
         for (unsigned int k = 0; k < option.size(); k++) {
@@ -1181,8 +1188,9 @@ fgUsage ()
             SGPropertyNode *short_name = option[k]->getNode("short");
             SGPropertyNode *key = option[k]->getNode("key");
             SGPropertyNode *arg = option[k]->getNode("arg");
+            bool brief = option[k]->getNode("brief");
 
-            if (name) {
+            if ((brief || verbose) && name) {
                 string tmp = name->getStringValue();
 
                 if (key){
@@ -1204,8 +1212,8 @@ fgUsage ()
                 } else {
                     snprintf(cstr, 96, "\n   --%s\n%32c", tmp.c_str(), ' ');
                 }
-                string msg = cstr;
 
+                msg += cstr;
                 SGPropertyNode *desc = option[k]->getNode("description");
                 if (desc) {
                     msg += desc->getStringValue();
@@ -1218,9 +1226,21 @@ fgUsage ()
                                  desc->getStringValue());
                         msg += cstr;
                     }
+                    msg += '\n';
                 }
-                cout << msg << endl;
             }
         }
+
+        SGPropertyNode *name = section[j]->getNode("name");
+        if (!msg.empty() && name) {
+           cout << endl << name->getStringValue() << ":" << endl;
+           cout << msg;
+           msg.erase();
+        }
+    }
+
+    if ( !verbose ) {
+        cout << endl;
+        cout << "For a complete list of options use --help --verbose" << endl;
     }
 }
