@@ -54,6 +54,7 @@ class FGNav {
     bool has_dme;
     string ident;		// to avoid a core dump with corrupt data
     double magvar;		// magvar from true north (negative = W)
+    string name;
 
     // for failure modeling
     string trans_ident;		// transmitted ident
@@ -78,6 +79,7 @@ public:
     inline const char *get_ident() { return ident.c_str(); }
     inline string get_trans_ident() { return trans_ident; }
     inline double get_magvar () const { return magvar; }
+    inline string get_name () { return name; }
 
     friend istream& operator>> ( istream&, FGNav& );
 };
@@ -94,6 +96,7 @@ FGNav::FGNav(void) :
     has_dme(false),
     ident(""),
     magvar(0.0),
+    name(""),
     trans_ident(""),
     nav_failed(false),
     dme_failed(false)
@@ -123,6 +126,12 @@ operator >> ( istream& in, FGNav& n )
 
     in >> n.lat >> n.lon >> n.elev_ft >> f >> n.range 
        >> c >> n.ident >> magvar_s;
+
+    getline(in,n.name);
+    // Remove the space before the name
+    if ( n.name.substr(0,1) == " " ) {
+        n.name = n.name.erase(0,1);
+    }
 
     n.freq = (int)(f*100.0 + 0.5);
     if ( c == 'Y' ) {
@@ -176,7 +185,7 @@ operator >> ( istream& in, FGNav& n )
     n.trans_ident = n.ident;
     n.nav_failed = n.dme_failed = false;
 
-    return in >> skipeol;
+    return in;
 }
 
 

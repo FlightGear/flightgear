@@ -50,9 +50,12 @@ operator >> ( istream& in, FGAirport& a )
     in >> junk >> a.id >> a.latitude >> a.longitude >> a.elevation
        >> a.code;
 
-    char name[256];             // should never be longer than this, right? :-)
-    in.getline( name, 256 );
-    a.name = name;
+    getline( in,a.name );
+
+    // Remove the space before the name
+    if ( a.name.substr(0,1) == " " ) {
+        a.name = a.name.erase(0,1);
+    }
 
     a.has_metar = false;
 
