@@ -431,7 +431,7 @@ int FGTriangle::run_triangulate( int pass ) {
     triangulate(tri_options.c_str(), &in, &out, &vorout);
 
     // TEMPORARY
-    write_out_data(&out);
+    // write_out_data(&out);
 
     // now copy the results back into the corresponding FGTriangle
     // structures

@@ -89,7 +89,7 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
     if ( fabs(p0.x() - p1.x()) > 3 * FG_EPSILON ) {
 	// use y = mx + b
 
-	// sort these in a sensable order
+	// sort these in a sensible order
 	if ( p0.x() > p1.x() ) {
 	    Point3D tmp = p0;
 	    p0 = p1;
@@ -116,7 +116,7 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 
 		y_err = fabs(current->y() - (m * current->x() + b));
 
-		if ( y_err < 10 * FG_EPSILON ) {
+		if ( y_err < 20 * FG_EPSILON ) {
 		    // cout << "FOUND EXTRA SEGMENT NODE (Y)" << endl;
 		    // cout << p0 << " < " << *current << " < "
 		    //      << p1 << endl;
@@ -151,7 +151,7 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 		x_err = fabs(current->x() - p0.x());
 		// cout << "  found a potential point, x err = " 
 		//      << x_err << endl;
-		if ( x_err < 10*FG_EPSILON ) {
+		if ( x_err < 20 * FG_EPSILON ) {
 		    // cout << "FOUND EXTRA SEGMENT NODE (X)" << endl;
 		    // cout << p0 << " < " << *current << " < "
 		    //      << p1 << endl;
