@@ -243,6 +243,7 @@ AC_OUTPUT( \
 	Lib/DEM/Makefile \
 	Lib/gpc/Makefile \
 	Lib/Math/Makefile \
+	Lib/Misc/Makefile \
 	Lib/PUI/Makefile \
 	Lib/XGL/Makefile \
 	Lib/zlib/Makefile \
