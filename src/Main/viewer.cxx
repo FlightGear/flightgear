@@ -44,6 +44,7 @@
 #include <simgear/math/vector.hxx>
 #include <Main/globals.hxx>
 #include <Model/acmodel.hxx>
+#include <Model/model.hxx>
 
 #include "viewer.hxx"
 
