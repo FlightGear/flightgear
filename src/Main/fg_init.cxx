@@ -817,6 +817,11 @@ void fgReInitSubsystems( void )
     controls.reset_all();
     current_autopilot->reset();
 
+    fgUpdateSunPos();
+    fgUpdateMoonPos();
+    cur_light_params.Update();
+    fgUpdateLocalTime();
+
     if( !freeze )
         globals->set_freeze( false );
 }
