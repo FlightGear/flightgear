@@ -171,7 +171,6 @@ FGViewMgr::setViewOffset_deg (double offset)
   FGViewer * view = get_current_view();
   if (view != 0)
     view->set_view_offset(offset * SGD_DEGREES_TO_RADIANS);
-  std::cout << "View offset is now " << offset << std::endl;
 }
 
 double
@@ -187,7 +186,6 @@ FGViewMgr::setGoalViewOffset_deg (double offset)
   FGViewer * view = get_current_view();
   if (view != 0)
     view->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
-  std::cout << "Goal view offset is now " << offset << std::endl;
 }
 
 double
