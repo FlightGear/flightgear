@@ -331,9 +331,9 @@ void FGGround::Update(double dt) {
 			// NOTE - we don't need to do the contact tower bit unless we have separate tower and ground
 			string trns = g->plane.callsign;
 			trns += " contact Tower ";
-			double f = globals->get_ATC_mgr()->GetFrequency(ident, TOWER);
+			double f = globals->get_ATC_mgr()->GetFrequency(ident, TOWER) / 100.0;
 			char buf[10];
-			sprintf(buf, "%f", f);
+			sprintf(buf, "%.2f", f);
 			trns += buf;
 			if(display) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
@@ -345,6 +345,9 @@ void FGGround::Update(double dt) {
 		}				
 		++ground_traffic_itr;
 	}
+	
+	// Call the base class update for the response time handling.
+	FGATC::Update(dt);
 }
 
 // Figure out which runways are active.
