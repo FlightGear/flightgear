@@ -11,8 +11,11 @@ WEATHER_LIBS =	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a \
 		$(top_builddir)/Lib/Voronoi/libVoronoi.a
 endif
 
-
+if OLD_AUTOMAKE
+CXXFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
+else
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
+endif
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
