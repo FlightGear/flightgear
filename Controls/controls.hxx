@@ -37,11 +37,17 @@ class FGControls {
 
 public:
 
-    static const int ALL_ENGINES = -1;
-    static const int MAX_ENGINES = 10;
+    enum
+    {
+	ALL_ENGINES = -1,
+	MAX_ENGINES = 10
+    };
 
-    static const int ALL_WHEELS = -1;
-    static const int MAX_WHEELS = 3;
+    enum
+    {
+	ALL_WHEELS = -1,
+	MAX_WHEELS = 3
+    };
 
 private:
 
@@ -176,6 +182,9 @@ extern FGControls controls;
 
 
 // $Log$
+// Revision 1.4  1999/01/27 04:48:13  curt
+// C++ style refinements by Bernie Bright.
+//
 // Revision 1.3  1998/12/05 16:13:13  curt
 // Renamed class fgCONTROLS to class FGControls.
 //
