@@ -168,14 +168,6 @@ public:
 
 
   /**
-   * Get the group LOD range for a dynamic object for this material.
-   */
-  virtual double get_object_group_lod (int i) const {
-    return objects[i].group_lod;
-  }
-
-
-  /**
    * Get the target LOD range for a dynamic object for this material.
    */
   virtual double get_object_lod (int i) const {
@@ -261,7 +253,6 @@ private:
   {
     ssgEntity * model;
     double coverage;
-    double group_lod;
     double lod;
   };
 

@@ -456,19 +456,49 @@ out_of_range_callback (ssgEntity * entity, int mask)
 
 
 /**
- * ssgEntity pre-traversal callback to skip a culling test.
+ * Singleton ssgEntity with a dummy bounding sphere, to fool culling.
  *
- * This is necessary so that the in-range/out-of-range callbacks will
- * be reached even when there is no leaf data underneath.
- *
- * @param entity The entity originating the callback (not used).
- * @param mask The entity's traversal mask (not used).
- * @return Always 2 to allow traversal without a cull test.
+ * This forces the in-range and out-of-range branches to be visited
+ * when appropriate, even if they have no children.  It's ugly, but
+ * it works and seems fairly efficient (since branches can still
+ * be culled when they're out of the view frustum).
  */
-static int
-notest_callback (ssgEntity * entity, int mask)
+class DummyBSphereEntity : public ssgEntity
 {
-  return 2;
+public:
+  virtual ~DummyBSphereEntity () {}
+  virtual void recalcBSphere () { bsphere_is_invalid = false; }
+  virtual void cull (sgFrustum *f, sgMat4 m, int test_needed) {}
+  virtual void isect (sgSphere *s, sgMat4 m, int test_needed) {}
+  virtual void hot (sgVec3 s, sgMat4 m, int test_needed) {}
+  virtual void los (sgVec3 s, sgMat4 m, int test_needed) {}
+  static ssgEntity * get_entity ();
+private:
+  DummyBSphereEntity ()
+  {
+    bsphere.setCenter(0, 0, 0);
+    bsphere.setRadius(10);
+  }
+  static DummyBSphereEntity * entity;
+};
+
+
+DummyBSphereEntity * DummyBSphereEntity::entity = 0;
+
+
+/**
+ * Ensure that only one copy of the dummy entity exists.
+ *
+ * @return The singleton copy of the DummyBSphereEntity.
+ */
+ssgEntity *
+DummyBSphereEntity::get_entity ()
+{
+  if (entity == 0) {
+    entity = new DummyBSphereEntity;
+    entity->ref();
+  }
+  return entity;
 }
 
 
@@ -503,7 +533,6 @@ setup_triangle (float * p1, float * p2, float * p3,
     sgMat4 TRANS;
     sgMakeTransMat4(TRANS, center);
     location->setTransform(TRANS);
-    location->setTravCallback(SSG_CALLBACK_PRETRAV, notest_callback);
     branch->addKid(location);
 
 				// Calculate the triangle area.
@@ -519,7 +548,6 @@ setup_triangle (float * p1, float * p2, float * p3,
 	float ranges[] = {0, mat->get_object_lod(i), 9999999};
 	ssgRangeSelector * lod = new ssgRangeSelector;
 	lod->setRanges(ranges, 3);
-	lod->setTravCallback(SSG_CALLBACK_PRETRAV, notest_callback);
 	location->addKid(lod);
 
 				// Create the in-range and out-of-range
@@ -550,6 +578,7 @@ setup_triangle (float * p1, float * p2, float * p3,
 	out_of_range->setUserData(data);
 	out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
 				      out_of_range_callback);
+	out_of_range->addKid(DummyBSphereEntity::get_entity());
 	lod->addKid(out_of_range);
     }
 }
