@@ -78,42 +78,43 @@ void
 FGControls::bind ()
 {
   fgTie("/controls/aileron", this,
-		    &FGControls::get_aileron, &FGControls::set_aileron);
+	&FGControls::get_aileron, &FGControls::set_aileron);
+  fgSetArchivable("/controls/aileron");
   fgTie("/controls/elevator", this,
        &FGControls::get_elevator, &FGControls::set_elevator);
+  fgSetArchivable("/controls/elevator");
   fgTie("/controls/elevator-trim", this,
        &FGControls::get_elevator_trim, &FGControls::set_elevator_trim);
+  fgSetArchivable("/controls/elevator-trim");
   fgTie("/controls/rudder", this,
        &FGControls::get_rudder, &FGControls::set_rudder);
+  fgSetArchivable("/controls/rudder");
   fgTie("/controls/flaps", this,
        &FGControls::get_flaps, &FGControls::set_flaps);
+  fgSetArchivable("/controls/flaps");
   int index;
   for (index = 0; index < MAX_ENGINES; index++) {
     char name[32];
     sprintf(name, "/controls/throttle[%d]", index);
     fgTie(name, this, index,
 	  &FGControls::get_throttle, &FGControls::set_throttle);
+    fgSetArchivable(name);
     sprintf(name, "/controls/mixture[%d]", index);
     fgTie(name, this, index,
 	 &FGControls::get_mixture, &FGControls::set_mixture);
+    fgSetArchivable(name);
     sprintf(name, "/controls/propellor-pitch[%d]", index);
     fgTie(name, this, index,
 	 &FGControls::get_prop_advance, &FGControls::set_prop_advance);
+    fgSetArchivable(name);
   }
-//   fgTie("/controls/throttle/all", this, ALL_ENGINES,
-// 	&FGControls::get_throttle, &FGControls::set_throttle);
-//   fgTie("/controls/mixture/all", this, ALL_ENGINES,
-// 	&FGControls::get_mixture, &FGControls::set_mixture);
-//   fgTie("/controls/propellor-pitch/all", this, ALL_ENGINES,
-// 	&FGControls::get_prop_advance, &FGControls::set_prop_advance);
   for (index = 0; index < MAX_WHEELS; index++) {
     char name[32];
     sprintf(name, "/controls/brakes[%d]", index);
     fgTie(name, this, index,
 	 &FGControls::get_brake, &FGControls::set_brake);
+    fgSetArchivable(name);
   }
-  fgTie("/controls/brakes/all", this, ALL_WHEELS,
-	&FGControls::get_brake, &FGControls::set_brake);
 }
 
 
