@@ -1186,6 +1186,8 @@ struct OptionDesc {
     {"enable-mouse-pointer",         false, OPTION_STRING, "/sim/startup/mouse-pointer", false, "enabled", 0 },
     {"disable-random-objects",       false, OPTION_BOOL,   "/sim/rendering/random-objects", false, "", 0 },
     {"enable-random-objects",        false, OPTION_BOOL,   "/sim/rendering/random-objects", true, "", 0 },
+    {"disable-ai-models",            false, OPTION_BOOL,   "/sim/ai/enabled", false, "", 0 },
+    {"enable-ai-models",             false, OPTION_BOOL,   "/sim/ai/enabled", true, "", 0 },
     {"disable-freeze",               false, OPTION_BOOL,   "/sim/freeze/master", false, "", 0 },
     {"enable-freeze",                false, OPTION_BOOL,   "/sim/freeze/master", true, "", 0 },
     {"disable-fuel-freeze",          false, OPTION_BOOL,   "/sim/freeze/fuel", false, "", 0 },

@@ -379,8 +379,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
   if (dt_count < 0.1) {
     return;
   } else {
-    while (dt_count > 0.1)
-      dt_count -= dt;
+    dt_count = 0;
 
     // check to see if we've reached the lead point for our next turn
     double dist_to_go = fp->getDistanceToGo(pos.lat(), pos.lon(), curr); 

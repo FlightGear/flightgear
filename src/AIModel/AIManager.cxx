@@ -56,6 +56,12 @@ FGAIManager::~FGAIManager() {
 void FGAIManager::init() {
   int rval;
   root = fgGetNode("sim/ai", true);
+
+  enabled = root->getNode("enabled", true)->getStringValue();
+  if (!enabled)
+      return;
+
+
   wind_from_down = fgGetNode("/environment/wind-from-down-fps", true);
 
   for (int i = 0; i < root->nChildren(); i++) {
@@ -139,6 +145,9 @@ void FGAIManager::update(double dt) {
         // initialize these for finding nearest thermals
         range_nearest = 10000.0;
         strength = 0.0;
+
+        if (!enabled)
+            return;
 
         _dt = dt;	
 

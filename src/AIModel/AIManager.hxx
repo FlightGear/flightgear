@@ -125,6 +125,7 @@ public:
 private:
 
     bool initDone;
+    bool enabled;
     int numObjects;
     SGPropertyNode* root;
     SGPropertyNode* wind_from_down;
