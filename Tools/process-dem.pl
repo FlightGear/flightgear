@@ -255,7 +255,20 @@ sub triangle_2 {
 	print $file;
 	chop($file);
 	if ( ($file =~ m/\.node$/) && ($file !~ m/\.\d\.node$/) ) {
-	    $command = "Triangle/triangle $subdir/$file";
+	    $base = $file;
+	    $base =~ s/\.node$//;
+	    print("Test for $subdir/$base.q\n");
+	    if ( -r "$subdir/$base.q" ) {
+
+		# if triangle hangs, we can create a filebase.q for
+		# the file it hung on.  Then, we test for that file
+		# here which causes the incremental algorithm to run
+		# (which shouldn't ever hang.)
+
+		$command = "Triangle/triangle -i $subdir/$file";
+	    } else {
+		$command = "Triangle/triangle $subdir/$file";
+	    }
 	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
@@ -375,6 +388,11 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.17  1998/04/28 01:23:25  curt
+# Added a work around so that we can get past the "triangle" program
+# hanging, by aborting and rerunning with that tile marked to use the "-i"
+# option.
+#
 # Revision 1.16  1998/04/18 03:57:53  curt
 # Added zlib library support.
 #
