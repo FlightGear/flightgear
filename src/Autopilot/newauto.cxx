@@ -256,6 +256,7 @@ void FGAutopilot::init ()
     altitude_hold = false ;     // turn the altitude hold off
     auto_throttle = false ;	// turn the auto throttle off
     heading_mode = DEFAULT_AP_HEADING_LOCK;
+    altitude_mode = DEFAULT_AP_ALTITUDE_LOCK;
 
     DGTargetHeading = fgGetDouble("/autopilot/settings/heading-bug-deg");
     TargetHeading = fgGetDouble("/autopilot/settings/heading-bug-deg");
