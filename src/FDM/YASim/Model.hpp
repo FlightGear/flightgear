@@ -17,6 +17,9 @@ class Rotorpart;
 class Rotorblade;
 class Rotor;
 class Gear;
+class Ground;
+class Hook;
+class Launchbar;
 
 class Model : public BodyEnvironment {
 public:
@@ -44,11 +47,15 @@ public:
     int addRotorblade(Rotorblade* rblade);
     int addRotor(Rotor* rotor);
     int addGear(Gear* gear);
+    void addHook(Hook* hook);
+    void addLaunchbar(Launchbar* launchbar);
     Surface* getSurface(int handle);
     Rotorpart* getRotorpart(int handle);
     Rotorblade* getRotorblade(int handle);
     Rotor* getRotor(int handle);
     Gear* getGear(int handle);
+    Hook* getHook(void);
+    Launchbar* getLaunchbar(void);
 
     // Semi-private methods for use by the Airplane solver.
     int numThrusters();
@@ -57,13 +64,17 @@ public:
     void initIteration();
     void getThrust(float* out);
 
+    void setGroundCallback(Ground* ground_cb);
+    Ground* getGroundCallback(void);
+
     //
     // Per-iteration settables
     //
-    void setGroundPlane(double* planeNormal, double fromOrigin);
     void setGroundEffect(float* pos, float span, float mul);
     void setWind(float* wind);
     void setAir(float pressure, float temp, float density);
+
+    void updateGround(State* s);
 
     // BodyEnvironment callbacks
     virtual void calcForces(State* s);
@@ -73,7 +84,6 @@ private:
     void initRotorIteration();
     void calcGearForce(Gear* g, float* v, float* rot, float* ground);
     float gearFriction(float wgt, float v, Gear* g);
-    float localGround(State* s, float* out);
     void localWind(float* pos, State* s, float* out, float alt);
 
     Integrator _integrator;
@@ -87,12 +97,15 @@ private:
     Vector _rotorblades;
     Vector _rotors;
     Vector _gears;
+    Hook* _hook;
+    Launchbar* _launchbar;
 
     float _groundEffectSpan;
     float _groundEffect;
     float _wingCenter[3];
 
-    double _ground[4];
+    Ground* _ground_cb;
+    double _global_ground[4];
     float _pressure;
     float _temp;
     float _rho;

@@ -137,6 +137,16 @@ Gear* Airplane::getGear(int g)
     return ((GearRec*)_gears.get(g))->gear;
 }
 
+Hook* Airplane::getHook()
+{
+    return _model.getHook();
+}
+
+Launchbar* Airplane::getLaunchbar()
+{
+    return _model.getLaunchbar();
+}
+
 void Airplane::updateGearState()
 {
     for(int i=0; i<_gears.size(); i++) {
@@ -283,6 +293,16 @@ void Airplane::addGear(Gear* gear)
     g->gear = gear;
     g->surf = 0;
     _gears.add(g);
+}
+
+void Airplane::addHook(Hook* hook)
+{
+    _model.addHook(hook);
+}
+
+void Airplane::addLaunchbar(Launchbar* launchbar)
+{
+    _model.addLaunchbar(launchbar);
 }
 
 void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
@@ -595,10 +615,6 @@ void Airplane::compileContactPoints()
 
 void Airplane::compile()
 {
-    double ground[3];
-    ground[0] = 0; ground[1] = 0; ground[2] = 1;
-    _model.setGroundPlane(ground, -100000);
-
     RigidBody* body = _model.getBody();
     int firstMass = body->numMasses();
 

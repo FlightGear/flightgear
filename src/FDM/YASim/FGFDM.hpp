@@ -27,6 +27,8 @@ public:
     // XML parsing callback from XMLVisitor
     virtual void startElement(const char* name, const XMLAttributes &atts);
 
+    float getVehicleRadius(void) const { return _vehicle_radius; }
+
 private:
     struct AxisRec { char* name; int handle; };
     struct EngRec { char* prefix; Thruster* eng; };
@@ -71,6 +73,9 @@ private:
 
     // Output properties for the ControlMap
     Vector _controlProps;
+
+    // Radius of the vehicle, for intersection testing.
+    float _vehicle_radius;
 
     // Parsing temporaries
     void* _currObj;

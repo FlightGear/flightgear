@@ -7,6 +7,8 @@
 #include "Jet.hpp"
 #include "SimpleJet.hpp"
 #include "Gear.hpp"
+#include "Hook.hpp"
+#include "Launchbar.hpp"
 #include "Atmosphere.hpp"
 #include "PropEngine.hpp"
 #include "Propeller.hpp"
@@ -46,6 +48,8 @@ static const float NM2FTLB = (1/(LBS2N*FT2M));
 
 FGFDM::FGFDM()
 {
+    _vehicle_radius = 0.0f;
+
     _nextEngine = 0;
 
     // Map /controls/flight/elevator to the approach elevator control.  This
@@ -231,6 +235,9 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	g->setPosition(v);
+        float nrm = Math::mag3(v);
+        if (_vehicle_radius < nrm)
+            _vehicle_radius = nrm;
 	v[0] = 0;
 	v[1] = 0;
 	v[2] = attrf(a, "compression", 1);
@@ -242,7 +249,36 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         g->setDamping(attrf(a, "damp", 1));
 	_airplane.addGear(g);
     } else if(eq(name, "hook")) {
+	Hook* h = new Hook();
+	_currObj = h;
+	v[0] = attrf(a, "x");
+	v[1] = attrf(a, "y");
+	v[2] = attrf(a, "z");
+	h->setPosition(v);
+        float length = attrf(a, "length", 1.0);
+        h->setLength(length);
+        float nrm = length+Math::mag3(v);
+        if (_vehicle_radius < nrm)
+            _vehicle_radius = nrm;
+        h->setDownAngle(attrf(a, "down-angle", 70) * DEG2RAD);
+        h->setUpAngle(attrf(a, "up-angle", 0) * DEG2RAD);
+ 	_airplane.addHook(h);
     } else if(eq(name, "launchbar")) {
+	Launchbar* l = new Launchbar();
+	_currObj = l;
+	v[0] = attrf(a, "x");
+	v[1] = attrf(a, "y");
+	v[2] = attrf(a, "z");
+	l->setLaunchbarMount(v);
+	v[0] = attrf(a, "holdback-x", v[0]);
+	v[1] = attrf(a, "holdback-y", v[1]);
+	v[2] = attrf(a, "holdback-z", v[2]);
+	l->setHoldbackMount(v);
+        float length = attrf(a, "length", 1.0);
+        l->setLength(length);
+        l->setDownAngle(attrf(a, "down-angle", 30) * DEG2RAD);
+        l->setUpAngle(attrf(a, "up-angle", -30) * DEG2RAD);
+ 	_airplane.addLaunchbar(l);
     } else if(eq(name, "fuselage")) {
 	float b[3];
 	v[0] = attrf(a, "ax");

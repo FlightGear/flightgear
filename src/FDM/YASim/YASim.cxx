@@ -16,6 +16,9 @@
 #include "Integrator.hpp"
 #include "Glue.hpp"
 #include "Gear.hpp"
+#include "Hook.hpp"
+#include "Launchbar.hpp"
+#include "FGGround.hpp"
 #include "PropEngine.hpp"
 #include "PistonEngine.hpp"
 
@@ -43,6 +46,7 @@ YASim::YASim(double dt)
 
     _dt = dt;
 
+    _fdm->getAirplane()->getModel()->setGroundCallback( new FGGround(this) );
     _fdm->getAirplane()->getModel()->getIntegrator()->setInterval(_dt);
 }
 
@@ -185,12 +189,32 @@ void YASim::update(double dt)
         return;
     }
 
+    // ground.  Calculate a cartesian coordinate for the ground under
+    // us, find the (geodetic) up vector normal to the ground, then
+    // use that to find the final (radius) term of the plane equation.
+    float v[3] = { get_uBody()*FT2M, get_vBody()*FT2M, get_wBody()*FT2M };
+    float lat = get_Latitude(); float lon = get_Longitude();
+    double xyz[3];
+    sgGeodToCart(lat, lon, 0.0, xyz);
+    // build the environment cache.
+    float vr = _fdm->getVehicleRadius();
+    vr += 2.0*dt*Math::mag3(v);
+    prepare_ground_cache_m( 0.0, xyz, vr );
+
+    // Track time increments.
+    FGGround* gr
+      = (FGGround*)_fdm->getAirplane()->getModel()->getGroundCallback();
+
     int i;
     for(i=0; i<iterations; i++) {
+        gr->setTimeOffset(iterations*_dt);
         copyToYASim(false);
         _fdm->iterate(_dt);
         copyFromYASim();
     }
+
+    // Reset the time increment.
+    gr->setTimeOffset(0.0);
 }
 
 void YASim::copyToYASim(bool copyState)
@@ -208,10 +232,6 @@ void YASim::copyToYASim(bool copyState)
     wind[0] = get_V_north_airmass() * FT2M * -1.0;
     wind[1] = get_V_east_airmass() * FT2M * -1.0;
     wind[2] = get_V_down_airmass() * FT2M * -1.0;
-
-    // Get ground elevation
-    double ground = fgGetDouble("/position/ground-elev-m");
-    // cout << "YASIM: ground = " << ground << endl;
 
     float pressure = fgGetFloat("/environment/pressure-inhg") * INHG2PA;
     float temp = fgGetFloat("/environment/temperature-degc") + 273.15;
@@ -279,19 +299,16 @@ void YASim::copyToYASim(bool copyState)
     Math::tmul33(xyz2ned, wind, wind);
     model->setWind(wind);
 
-    // ground.  Calculate a cartesian coordinate for the ground under
-    // us, find the (geodetic) up vector normal to the ground, then
-    // use that to find the final (radius) term of the plane equation.
-    double xyz[3], gplane[3]; float up[3];
-    sgGeodToCart(lat, lon, ground, xyz);
-    Glue::geodUp(lat, lon, up); // FIXME, needless reverse computation...
-    int i;
-    for(i=0; i<3; i++) gplane[i] = up[i];
-    double rad = gplane[0]*xyz[0] + gplane[1]*xyz[1] + gplane[2]*xyz[2];
-    model->setGroundPlane(gplane, rad);
-
     // air
     model->setAir(pressure, temp, dens);
+
+    // Query a ground plane for each gear/hook/launchbar and
+    // write that value into the corresponding class.
+    _fdm->getAirplane()->getModel()->updateGround(&s);
+
+    Launchbar* l = model->getLaunchbar();
+    if (l)
+        l->setLaunchCmd(0.0<fgGetFloat("/controls/gear/catapult-launch-cmd"));
 }
 
 // All the settables:
@@ -442,5 +459,17 @@ void YASim::copyFromYASim()
 	node->setBoolValue("has-brake", g->getBrake() != 0);
 	node->setBoolValue("wow", g->getCompressFraction() != 0);
 	node->setFloatValue("compression-norm", g->getCompressFraction());
+    }
+
+    Hook* h = airplane->getHook();
+    if(h) {
+	SGPropertyNode * node = fgGetNode("gear/tailhook", 0, true);
+	node->setFloatValue("position-norm", h->getCompressFraction());
+    }
+
+    Launchbar* l = airplane->getLaunchbar();
+    if(l) {
+	SGPropertyNode * node = fgGetNode("gear/launchbar", 0, true);
+	node->setFloatValue("position-norm", l->getCompressFraction());
     }
 }

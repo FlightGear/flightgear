@@ -10,6 +10,8 @@
 namespace yasim {
 
 class Gear;
+class Hook;
+class Launchbar;
 class Thruster;
 
 class Airplane {
@@ -42,6 +44,8 @@ public:
                      float taper=1, float mid=0.5);
     int addTank(float* pos, float cap, float fuelDensity);
     void addGear(Gear* g);
+    void addHook(Hook* h);
+    void addLaunchbar(Launchbar* l);
     void addThruster(Thruster* t, float mass, float* cg);
     void addBallast(float* pos, float mass);
 
@@ -59,6 +63,8 @@ public:
 
     int numGear();
     Gear* getGear(int g);
+    Hook* getHook();
+    Launchbar* getLaunchbar();
 
     int numThrusters() { return _thrusters.size(); }
     Thruster* getThruster(int n) {

@@ -14,6 +14,9 @@ SHARED_SOURCE_FILES = \
         FGFDM.cpp FGFDM.hpp \
         Gear.cpp Gear.hpp \
         Glue.cpp Glue.hpp \
+        Ground.cpp Ground.hpp \
+        Hook.cpp Hook.hpp \
+        Launchbar.cpp Launchbar.hpp \
         Integrator.cpp Integrator.hpp \
         Jet.cpp Jet.hpp \
         Math.cpp Math.hpp \
@@ -36,7 +39,7 @@ SHARED_SOURCE_FILES = \
 
 noinst_LIBRARIES = libYASim.a
 
-libYASim_a_SOURCES = YASim.cxx YASim.hxx $(SHARED_SOURCE_FILES)
+libYASim_a_SOURCES = YASim.cxx YASim.hxx FGGround.cpp FGGround.hpp $(SHARED_SOURCE_FILES)
 
 bin_PROGRAMS = yasim
 noinst_PROGRAMS = proptest

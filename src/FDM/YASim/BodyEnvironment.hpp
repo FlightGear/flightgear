@@ -2,6 +2,7 @@
 #define _BODYENVIRONMENT_HPP
 
 #include "RigidBody.hpp"
+#include "Math.hpp"
 
 namespace yasim {
 
@@ -29,6 +30,39 @@ struct State {
                 orient[3*i+j] = i==j ? 1.0f : 0.0f;
         }
     }
+
+    void posLocalToGlobal(float* lpos, double *gpos) {
+        float tmp[3];
+        Math::tmul33(orient, lpos, tmp);
+        gpos[0] = tmp[0] + pos[0];
+        gpos[1] = tmp[1] + pos[1];
+        gpos[2] = tmp[2] + pos[2];
+    }
+    void posGlobalToLocal(double* gpos, float *lpos) {
+        lpos[0] = gpos[0] - pos[0];
+        lpos[1] = gpos[1] - pos[1];
+        lpos[2] = gpos[2] - pos[2];
+        Math::vmul33(orient, lpos, lpos);
+    }
+    void velLocalToGlobal(float* lvel, float *gvel) {
+        Math::tmul33(orient, lvel, gvel);
+    }
+    void velGlobalToLocal(float* gvel, float *lvel) {
+        Math::vmul33(orient, gvel, lvel);
+    }
+
+    void planeGlobalToLocal(double* gplane, float *lplane) {
+      // First the normal vector transformed to local coordinates.
+      lplane[0] = -gplane[0];
+      lplane[1] = -gplane[1];
+      lplane[2] = -gplane[2];
+      Math::vmul33(orient, lplane, lplane);
+
+      // Then the distance from the plane to the Aircraft's origin.
+      lplane[3] = (float)(pos[0]*gplane[0] + pos[1]*gplane[1]
+                          + pos[2]*gplane[2] - gplane[3]);
+    }
+
 };
 
 //

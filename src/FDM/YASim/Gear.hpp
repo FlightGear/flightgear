@@ -4,6 +4,7 @@
 namespace yasim {
 
 class RigidBody;
+class State;
 
 // A landing gear has the following parameters:
 //
@@ -38,9 +39,11 @@ public:
     void setRotation(float rotation);
     void setExtension(float extension);
     void setCastering(bool castering);
+    void setGlobalGround(double* global_ground, float* global_vel);
 
     void getPosition(float* out);
     void getCompression(float* out);
+    void getGlobalGround(double* global_ground);
     float getSpring();
     float getDamping();
     float getStaticFriction();
@@ -54,7 +57,7 @@ public:
     // vector, and a ground plane (all specified in local coordinates)
     // and make a force and point of application (i.e. ground contact)
     // available via getForce().
-    void calcForce(RigidBody* body, float* v, float* rot, float* ground);
+    void calcForce(RigidBody* body, State* s, float* v, float* rot);
 
     // Computed values: total force, weight-on-wheels (force normal to
     // ground) and compression fraction.
@@ -79,6 +82,8 @@ private:
     float _contact[3];
     float _wow;
     float _frac;
+    double _global_ground[4];
+    float _global_vel[3];
 };
 
 }; // namespace yasim

@@ -4,6 +4,8 @@
 #include "PistonEngine.hpp"
 #include "TurbineEngine.hpp"
 #include "Gear.hpp"
+#include "Hook.hpp"
+#include "Launchbar.hpp"
 #include "Wing.hpp"
 #include "Rotor.hpp"
 #include "Math.hpp"
@@ -198,6 +200,8 @@ void ControlMap::applyControls(float dt)
 	case BRAKE:    ((Gear*)obj)->setBrake(lval);               break;
 	case STEER:    ((Gear*)obj)->setRotation(lval);            break;
 	case EXTEND:   ((Gear*)obj)->setExtension(lval);           break;
+	case HEXTEND:  ((Hook*)obj)->setExtension(lval);           break;
+	case LEXTEND:  ((Launchbar*)obj)->setExtension(lval);      break;
 	case CASTERING:((Gear*)obj)->setCastering(lval != 0);      break;
 	case SLAT:     ((Wing*)obj)->setSlat(lval);                break;
 	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);         break;

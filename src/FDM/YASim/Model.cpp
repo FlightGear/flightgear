@@ -6,11 +6,14 @@
 #include "Propeller.hpp"
 #include "PistonEngine.hpp"
 #include "Gear.hpp"
+#include "Hook.hpp"
+#include "Launchbar.hpp"
 #include "Surface.hpp"
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
 #include "Rotorblade.hpp"
 #include "Glue.hpp"
+#include "Ground.hpp"
 
 #include "Model.hpp"
 namespace yasim {
@@ -54,11 +57,17 @@ Model::Model()
     _agl = 0;
     _crashed = false;
     _turb = 0;
+    _ground_cb = new Ground();
+    _hook = 0;
+    _launchbar = 0;
 }
 
 Model::~Model()
 {
     // FIXME: who owns these things?  Need a policy
+    delete _ground_cb;
+    delete _hook;
+    delete _launchbar;
 }
 
 void Model::getThrust(float* out)
@@ -81,8 +90,9 @@ void Model::initIteration()
 	_gyro[i] = _torque[i] = 0;
 
     // Need a local altitude for the wind calculation
-    float dummy[3];
-    float alt = Math::abs(localGround(_s, dummy));
+    float lground[4];
+    _s->planeGlobalToLocal(_global_ground, lground);
+    float alt = Math::abs(lground[3]);
 
     for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = (Thruster*)_thrusters.get(i);
@@ -109,6 +119,8 @@ void Model::initIteration()
         Math::mul3(_integrator.getInterval(), _wind, toff);
         _turb->offset(toff);
     }
+
+    
 }
 
 // FIXME: This method looks to me like it's doing *integration*, not
@@ -205,6 +217,16 @@ int Model::addThruster(Thruster* t)
     return _thrusters.add(t);
 }
 
+Hook* Model::getHook(void)
+{
+    return _hook;
+}
+
+Launchbar* Model::getLaunchbar(void)
+{
+    return _launchbar;
+}
+
 int Model::numThrusters()
 {
     return _thrusters.size();
@@ -243,21 +265,32 @@ int Model::addGear(Gear* gear)
     return _gears.add(gear);
 }
 
+void Model::addHook(Hook* hook)
+{
+    _hook = hook;
+}
+
+void Model::addLaunchbar(Launchbar* launchbar)
+{
+    _launchbar = launchbar;
+}
+
+void Model::setGroundCallback(Ground* ground_cb)
+{
+    delete _ground_cb;
+    _ground_cb = ground_cb;
+}
+
+Ground* Model::getGroundCallback(void)
+{
+    return _ground_cb;
+}
+
 void Model::setGroundEffect(float* pos, float span, float mul)
 {
     Math::set3(pos, _wingCenter);
     _groundEffectSpan = span;
     _groundEffect = mul;
-}
-
-// The first three elements are a unit vector pointing from the global
-// origin to the plane, the final element is the distance from the
-// origin (the radius of the earth, in most implementations).  So
-// (v dot _ground)-_ground[3] gives the distance AGL.
-void Model::setGroundPlane(double* planeNormal, double fromOrigin)
-{
-    for(int i=0; i<3; i++) _ground[i] = planeNormal[i];
-    _ground[3] = fromOrigin;
 }
 
 void Model::setAir(float pressure, float temp, float density)
@@ -270,6 +303,54 @@ void Model::setAir(float pressure, float temp, float density)
 void Model::setWind(float* wind)
 {
     Math::set3(wind, _wind);
+}
+
+void Model::updateGround(State* s)
+{
+    float dummy[3];
+    _ground_cb->getGroundPlane(s->pos, _global_ground, dummy);
+
+    int i;
+    // The landing gear
+    for(i=0; i<_gears.size(); i++) {
+	Gear* g = (Gear*)_gears.get(i);
+
+	// Get the point of ground contact
+        float pos[3], cmpr[3];
+	g->getPosition(pos);
+	g->getCompression(cmpr);
+
+	Math::mul3(g->getCompressFraction(), cmpr, cmpr);
+	Math::add3(cmpr, pos, pos);
+        // Transform the local coordinates of the contact point to
+        // global coordinates.
+        double pt[3];
+        s->posLocalToGlobal(pos, pt);
+
+        // Ask for the ground plane in the global coordinate system
+        double global_ground[4];
+        float global_vel[3];
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel);
+        g->setGlobalGround(global_ground, global_vel);
+    }
+
+    // The arrester hook
+    if(_hook) {
+        double pt[3];
+        _hook->getTipGlobalPosition(s, pt);
+        double global_ground[4];
+        _ground_cb->getGroundPlane(pt, global_ground, dummy);
+        _hook->setGlobalGround(global_ground);
+    }
+
+    // The launchbar/holdback
+    if(_launchbar) {
+        double pt[3];
+        _launchbar->getTipGlobalPosition(s, pt);
+        double global_ground[4];
+        _ground_cb->getGroundPlane(pt, global_ground, dummy);
+        _launchbar->setGlobalGround(global_ground);
+    }
 }
 
 void Model::calcForces(State* s)
@@ -295,7 +376,7 @@ void Model::calcForces(State* s)
     // from the local origin along that vector to the ground plane
     // (negative for objects "above" the ground)
     float ground[4];
-    ground[3] = localGround(s, ground);
+    s->planeGlobalToLocal(_global_ground, ground);
     float alt = Math::abs(ground[3]);
 
     // Gravity, convert to a force, then to local coordinates
@@ -380,9 +461,28 @@ void Model::calcForces(State* s)
     for(i=0; i<_gears.size(); i++) {
 	float force[3], contact[3];
 	Gear* g = (Gear*)_gears.get(i);
-	g->calcForce(&_body, lv, lrot, ground);
+
+	g->calcForce(&_body, s, lv, lrot);
 	g->getForce(force, contact);
 	_body.addForce(contact, force);
+    }
+
+    // The arrester hook
+    if(_hook) {
+	float v[3], rot[3], glvel[3], ground[3];
+        _hook->calcForce(_ground_cb, &_body, s, lv, lrot);
+	float force[3], contact[3];
+        _hook->getForce(force, contact);
+        _body.addForce(contact, force);
+    }
+
+    // The launchbar/holdback
+    if(_launchbar) {
+	float v[3], rot[3], glvel[3], ground[3];
+        _launchbar->calcForce(_ground_cb, &_body, s, lv, lrot);
+	float force[3], contact[3];
+        _launchbar->getForce(force, contact);
+        _body.addForce(contact, force);
     }
 }
 
@@ -392,17 +492,22 @@ void Model::newState(State* s)
 
     // Some simple collision detection
     float min = 1e8;
-    float ground[4], pos[3], cmpr[3];
-    ground[3] = localGround(s, ground);
     int i;
     for(i=0; i<_gears.size(); i++) {
 	Gear* g = (Gear*)_gears.get(i);
 
 	// Get the point of ground contact
+        float pos[3], cmpr[3];
 	g->getPosition(pos);
 	g->getCompression(cmpr);
 	Math::mul3(g->getCompressFraction(), cmpr, cmpr);
 	Math::add3(cmpr, pos, pos);
+
+        // The plane transformed to local coordinates.
+        double global_ground[4];
+        g->getGlobalGround(global_ground);
+        float ground[4];
+        s->planeGlobalToLocal(global_ground, ground);
 	float dist = ground[3] - Math::dot3(pos, ground);
 
 	// Find the lowest one
@@ -412,28 +517,6 @@ void Model::newState(State* s)
     _agl = min;
     if(_agl < -1) // Allow for some integration slop
 	_crashed = true;
-}
-
-// Returns a unit "down" vector for the ground in out, and the
-// distance from the local origin to the ground as the return value.
-// So for a given position V, "dist - (V dot out)" will be the height
-// AGL.
-float Model::localGround(State* s, float* out)
-{
-    // Get the ground's "down" vector, this can be in floats, because
-    // we don't need positioning accuracy.  The direction has plenty
-    // of accuracy after truncation.
-    out[0] = -(float)_ground[0];
-    out[1] = -(float)_ground[1];
-    out[2] = -(float)_ground[2];
-    Math::vmul33(s->orient, out, out);
-
-    // The distance from the ground to the Aircraft's origin:
-    double dist = (s->pos[0]*_ground[0]
-                   + s->pos[1]*_ground[1]
-                   + s->pos[2]*_ground[2] - _ground[3]);
-
-    return (float)dist;
 }
 
 // Calculates the airflow direction at the given point and for the
@@ -449,8 +532,8 @@ void Model::localWind(float* pos, State* s, float* out, float alt)
         Math::tmul33(s->orient, pos, tmp);
         for(int i=0; i<3; i++) {
             gpos[i] = s->pos[i] + tmp[i];
-            up[i] = _ground[i];
         }
+        Glue::geodUp(gpos, up);
         _turb->getTurbulence(gpos, alt, up, lwind);
         Math::add3(_wind, lwind, lwind);
     } else {

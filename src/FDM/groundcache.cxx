@@ -143,14 +143,16 @@ FGGroundCache::addAndFlattenLeaf(GLenum ty, ssgLeaf *l, ssgIndexArray *ia,
 {
   // Extract data from the leaf which is just copied.
   ssgVertexArray *va = ((ssgVtxTable *)l)->getVertices();
+  ssgNormalArray *na = ((ssgVtxTable *)l)->getNormals();
   // Create a new leaf.
-  ssgVtxArray *vtxa = new ssgVtxArray( ty, va, 0, 0, 0, ia );
+  ssgVtxArray *vtxa = new ssgVtxArray( ty, va, na, 0, 0, ia );
   // Clones data ...
   vtxa->removeUnusedVertices();
   // Apply transform. We won't store transforms in our cache.
   vtxa->transform( xform );
   // Check for magic texture names object names and such ...
   vtxa->setUserData( extractGroundProperty( l ) );
+  vtxa->setCullFace( l->getCullFace() );
   // Finally append to cache.
   cache_root.addKid((ssgEntity*)vtxa);
 }
@@ -528,10 +530,18 @@ FGGroundCache::get_agl(double t, const double dpt[3],
       sgVec3 isecpoint;
       if ( sgIsectInfLinePlane( isecpoint, pt, dir, plane ) &&
            sgPointInTriangle3( isecpoint, tri ) ) {
+        // Only accept surfaces with the normal pointing upwards.
+        // For double sided surfaces flip the normal in this case.
+        float dirDot = sgScalarProductVec3(plane, dir);
+        if ( dirDot >= 0 && va->getCullFace() == 1 ) {
+          sgScaleVec4( plane, -1 );
+          dirDot = -dirDot;
+        }
+
         // Check for the closest intersection point.
         // FIXME: is this the right one?
         double newSqdist = sgDistanceSquaredVec3( isecpoint, pt );
-        if ( newSqdist < sqdist ) {
+        if ( newSqdist < sqdist && dirDot < 0 ) {
           sqdist = newSqdist;
           ret = true;
           // Save the new potential intersection point.

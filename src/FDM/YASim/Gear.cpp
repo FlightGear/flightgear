@@ -1,4 +1,5 @@
 #include "Math.hpp"
+#include "BodyEnvironment.hpp"
 #include "RigidBody.hpp"
 
 #include "Gear.hpp"
@@ -17,6 +18,12 @@ Gear::Gear()
     _rot = 0;
     _extension = 1;
     _castering = false;
+    _frac = 0;
+
+    for(i=0; i<3; i++)
+	_global_ground[i] = _global_vel[i] = 0;
+    _global_ground[2] = 1;
+    _global_ground[3] = -1e3;
 }
 
 void Gear::setPosition(float* position)
@@ -71,6 +78,13 @@ void Gear::setCastering(bool c)
     _castering = c;
 }
 
+void Gear::setGlobalGround(double *global_ground, float* global_vel)
+{
+    int i;
+    for(i=0; i<4; i++) _global_ground[i] = global_ground[i];
+    for(i=0; i<3; i++) _global_vel[i] = global_vel[i];
+}
+
 void Gear::getPosition(float* out)
 {
     int i;
@@ -81,6 +95,12 @@ void Gear::getCompression(float* out)
 {
     int i;
     for(i=0; i<3; i++) out[i] = _cmpr[i];    
+}
+
+void Gear::getGlobalGround(double* global_ground)
+{
+    int i;
+    for(i=0; i<4; i++) global_ground[i] = _global_ground[i];
 }
 
 float Gear::getSpring()
@@ -139,7 +159,7 @@ bool Gear::getCastering()
     return _castering;
 }
 
-void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
+void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
 {
     // Init the return values
     int i;
@@ -149,7 +169,13 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     if(_extension < 1)
 	return;
 
-    float tmp[3];
+    // The ground plane transformed to the local frame.
+    float ground[4];
+    s->planeGlobalToLocal(_global_ground, ground);
+        
+    // The velocity of the contact patch transformed to local coordinates.
+    float glvel[3];
+    s->velGlobalToLocal(_global_vel, glvel);
 
     // First off, make sure that the gear "tip" is below the ground.
     // If it's not, there's no force.
@@ -164,6 +190,7 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     // distance from the base to ground.  We can get the fraction
     // (0-1) of compression from a/(a-b). Note the minus sign -- stuff
     // above ground is negative.
+    float tmp[3];
     Math::add3(_cmpr, _pos, tmp);
     float b = ground[3] - Math::dot3(tmp, ground);
 
@@ -182,6 +209,7 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     float cv[3];
     body->pointVelocity(_contact, rot, cv);
     Math::add3(cv, v, cv);
+    Math::sub3(cv, glvel, cv);
 
     // Finally, we can start adding up the forces.  First the spring
     // compression.   (note the clamping of _frac to 1):
@@ -226,11 +254,18 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     Math::cross3(skid, gup, steer); // skid cross up == steer
 
     if(_rot != 0) {
-	// Correct for a (small) rotation
-	Math::mul3(_rot, steer, tmp);
-	Math::add3(tmp, skid, skid);
-	Math::unit3(skid, skid);
-	Math::cross3(skid, gup, steer);
+	// Correct for a rotation
+        float srot = Math::sin(_rot);
+        float crot = Math::cos(_rot);
+        float tx = steer[0];
+        float ty = steer[1];
+        steer[0] =  crot*tx + srot*ty;
+        steer[1] = -srot*tx + crot*ty;
+
+        tx = skid[0];
+        ty = skid[1];
+        skid[0] =  crot*tx + srot*ty;
+        skid[1] = -srot*tx + crot*ty;
     }
 
     float vsteer = Math::dot3(cv, steer);
