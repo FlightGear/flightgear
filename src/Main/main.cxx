@@ -25,23 +25,12 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
+
 #if defined(__linux__) && defined(__i386__)
 #  include <fpu_control.h>
 #  include <signal.h>
 #endif
-
-#include <simgear/compiler.h>
-
-#include STL_IOSTREAM
-SG_USING_STD(cerr);
-SG_USING_STD(endl);
-
-#include <simgear/misc/exception.hxx>
-#include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/route/route.hxx>
-#include <simgear/screen/extensions.hxx>
-
-#include <Environment/environment_mgr.hxx>
 
 #ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -52,65 +41,53 @@ SG_USING_STD(endl);
 #  include <float.h>
 #endif
 
-#include GLUT_H
-
-#include <stdio.h>
-#include <string.h>		// for strcmp()
-#include <string>
-
-#ifdef HAVE_STDLIB_H
-#   include <stdlib.h>
-#endif
-
-#ifdef HAVE_SYS_STAT_H
-#  include <sys/stat.h>		// for stat()
-#endif
-
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>		// for stat()
-#endif
-
-#include <plib/netChat.h>
-#include <plib/pu.h>
-#include <plib/sg.h>
 #include <plib/ssg.h>
+#include <plib/pu.h>
 
-#include <simgear/constants.h>  // for VERSION
-#include <simgear/debug/logstream.hxx>
-#include <simgear/math/polar3d.hxx>
-#include <simgear/math/sg_random.h>
-#include <simgear/misc/sg_path.hxx>
+#include <simgear/screen/extensions.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/scene/sky/sky.hxx>
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/scene/model/animation.hxx>
-#include <simgear/scene/model/location.hxx>
-#include <simgear/scene/model/model.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
+#include <simgear/scene/model/placement.hxx>
+#include <simgear/math/sg_random.h>
+#include <simgear/route/route.hxx>
 #include <simgear/scene/model/modellib.hxx>
+
 #ifdef FG_USE_CLOUDS_3D
 #  include <simgear/scene/sky/clouds3d/SkySceneLoader.hpp>
 #  include <simgear/scene/sky/clouds3d/SkyUtil.hpp>
 #endif
-#include <simgear/scene/sky/sky.hxx>
-#include <simgear/timing/sg_time.hxx>
 
 #include <Include/general.hxx>
-
+#include <Scenery/tileentry.hxx>
+#include <Time/FGEventMgr.hxx>
+#include <Time/light.hxx>
+#include <Time/light.hxx>
 #include <Aircraft/aircraft.hxx>
-
-#include <ATC/ATCmgr.hxx>
-#include <ATC/ATCdisplay.hxx>
-#include <ATC/AIMgr.hxx>
-
-#include <Autopilot/newauto.hxx>
-
-#include <Cockpit/hud.hxx>
+#include <Cockpit/panel.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
-
-#include <FDM/UIUCModel/uiuc_aircraftdir.h>
-#include <GUI/gui.h>
-#include <Model/acmodel.hxx>
-#include <Model/modelmgr.hxx>
+#include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
+#include <Model/modelmgr.hxx>
+#include <Model/acmodel.hxx>
+#include <Scenery/scenery.hxx>
+#include <Scenery/tilemgr.hxx>
+#include <FDM/flight.hxx>
+#include <FDM/UIUCModel/uiuc_aircraftdir.h>
+#include <FDM/ADA.hxx>
+#include <ATC/ATCdisplay.hxx>
+#include <ATC/ATCmgr.hxx>
+#include <ATC/AIMgr.hxx>
+#include <Autopilot/newauto.hxx>
+#include <Replay/replay.hxx>
+#include <Time/tmp.hxx>
+#include <Time/fg_timer.hxx>
+#include <Environment/environment_mgr.hxx>
+
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -120,29 +97,10 @@ SG_USING_STD(endl);
 #include <MultiPlayer/multiplayrxmgr.hxx>
 #endif
 
-#include <Replay/replay.hxx>
-#include <Scenery/scenery.hxx>
-#include <Scenery/tilemgr.hxx>
-#ifdef ENABLE_AUDIO_SUPPORT
-#  include <Sound/fg_fx.hxx>
-#  include <Sound/morse.hxx>
-#endif
-#include <Systems/system_mgr.hxx>
-#include <Instrumentation/instrument_mgr.hxx>
-#include <Time/FGEventMgr.hxx>
-#include <Time/fg_timer.hxx>
-#include <Time/light.hxx>
-#include <Time/sunpos.hxx>
-#include <Time/tmp.hxx>
-
-// ADA
-#include <simgear/misc/sgstream.hxx>
-#include <simgear/math/point3d.hxx>
-#include <FDM/flight.hxx>
-#include <FDM/ADA.hxx>
-#include <Scenery/tileentry.hxx>
-
+#include "splash.hxx"
 #include "fg_commands.hxx"
+#include "fg_io.hxx"
+
 
 glPointParameterfProc glPointParameterfPtr = 0;
 glPointParameterfvProc glPointParameterfvPtr = 0;
@@ -173,21 +131,9 @@ static double delta_time_sec = 0.0;
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #endif
 
-#include "version.h"
-
-#include "fg_init.hxx"
-#include "fg_io.hxx"
-#include "fg_props.hxx"
-#include "globals.hxx"
-#include "splash.hxx"
-#include "viewmgr.hxx"
-#include "options.hxx"
-#include "logger.hxx"
-
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
 #endif
-
 
 FGEventMgr global_events;
 
@@ -1592,7 +1538,7 @@ static bool fgGlutInitEvents( void ) {
 }
 
 // Main top level initialization
-static bool fgMainInit( int argc, char **argv ) {
+bool fgMainInit( int argc, char **argv ) {
 
 #if defined( macintosh )
     freopen ("stdout.txt", "w", stdout );
@@ -1858,100 +1804,6 @@ static bool fgMainInit( int argc, char **argv ) {
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //         - added Venky         , 12 Nov 2K
-
-#if defined(__linux__) && defined(__i386__)
-
-static void handleFPE (int);
-
-static void
-initFPE ()
-{
-    fpu_control_t fpe_flags = 0;
-    _FPU_GETCW(fpe_flags);
-//     fpe_flags &= ~_FPU_MASK_IM;	// invalid operation
-//     fpe_flags &= ~_FPU_MASK_DM;	// denormalized operand
-//     fpe_flags &= ~_FPU_MASK_ZM;	// zero-divide
-//     fpe_flags &= ~_FPU_MASK_OM;	// overflow
-//     fpe_flags &= ~_FPU_MASK_UM;	// underflow
-//     fpe_flags &= ~_FPU_MASK_PM;	// precision (inexact result)
-    _FPU_SETCW(fpe_flags);
-    signal(SIGFPE, handleFPE);
-}
-
-static void
-handleFPE (int num)
-{
-  initFPE();
-  SG_LOG(SG_GENERAL, SG_ALERT, "Floating point interrupt (SIGFPE)");
-}
-#endif
-
-#ifdef __APPLE__
-
-typedef struct
-{
-  int  lo;
-  int  hi;
-} PSN;
-
-extern "C" {
-  short CPSGetCurrentProcess(PSN *psn);
-  short CPSSetProcessName (PSN *psn, char *processname);
-  short CPSEnableForegroundOperation(PSN *psn, int _arg2, int _arg3, int _arg4, int _arg5);
-  short CPSSetFrontProcess(PSN *psn);
-};
-
-#define CPSEnableFG(psn) CPSEnableForegroundOperation(psn,0x03,0x3C,0x2C,0x1103)
-
-#endif
-
-// Main entry point; catch any exceptions that have made it this far.
-int main ( int argc, char **argv ) {
-
-    // Enable floating-point exceptions for Linux/x86
-#if defined(__linux__) && defined(__i386__)
-    initFPE();
-#endif
-
-    // Enable floating-point exceptions for Windows
-#if defined( _MSC_VER ) && defined( DEBUG )
-    // Christian, we should document what this does
-    _control87( _EM_INEXACT, _MCW_EM );
-#endif
-
-#if defined( HAVE_BC5PLUS )
-    _control87(MCW_EM, MCW_EM);  /* defined in float.h */
-#endif
-
-    // Keyboard focus hack
-#ifdef __APPLE__
-    {
-      PSN psn;
-
-      glutInit (&argc, argv);
-
-      CPSGetCurrentProcess(&psn);
-      CPSSetProcessName(&psn, "FlightGear");
-      CPSEnableFG(&psn);
-      CPSSetFrontProcess(&psn);
-    }
-#endif
-
-    // FIXME: add other, more specific
-    // exceptions.
-    try {
-        fgMainInit(argc, argv);
-    } catch (sg_throwable &t) {
-                            // We must use cerr rather than
-                            // logging, since logging may be
-                            // disabled.
-        cerr << "Fatal error: " << t.getFormattedMessage()
-             << "\n (received from " << t.getOrigin() << ')' << endl;
-        exit(1);
-    }
-
-    return 0;
-}
 
 
 void fgLoadDCS(void) {

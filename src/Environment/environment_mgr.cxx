@@ -23,14 +23,13 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/sky/sky.hxx>
 
+#include <Main/main.hxx>
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 
 #include "environment.hxx"
 #include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
-
-extern SGSky *thesky;		// FIXME: from main.cxx
 
 
 FGEnvironmentMgr::FGEnvironmentMgr ()

@@ -42,6 +42,7 @@
 #include <plib/pu.h>
 
 #include <Include/general.hxx>
+#include <Main/main.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
@@ -50,10 +51,6 @@
 #include "net_dlg.hxx"
 #include "preset_dlg.hxx"
 
-
-// main.cxx hack, should come from an include someplace
-extern void fgInitVisuals( void );
-extern void fgRenderFrame( void );
 
 extern void initDialog (void);
 extern void mkDialogInit (void);

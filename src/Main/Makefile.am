@@ -16,7 +16,6 @@ else
 NETWORK_LIBS =
 endif
 
-
 if WITH_THREADS
 THREAD_LIBS = -lsgthreads $(thread_LIBS)
 else
@@ -45,10 +44,12 @@ bin_PROGRAMS = fgfs
 
 noinst_SCRIPTS = runfgfs.bat runfgfs
 
+noinst_LIBRARIES = libMain.a
+
 # bin_SCRIPTS = runfgfs
 
-fgfs_SOURCES = \
-	main.cxx \
+libMain_a_SOURCES = \
+	main.cxx main.hxx \
 	fg_commands.cxx fg_commands.hxx \
 	fg_init.cxx fg_init.hxx \
 	fg_io.cxx fg_io.hxx \
@@ -62,7 +63,10 @@ fgfs_SOURCES = \
 	viewer.cxx viewer.hxx \
 	viewmgr.cxx viewmgr.hxx
 
+fgfs_SOURCES = bootstrap.cxx
+
 fgfs_LDADD = \
+	$(top_builddir)/src/Main/libMain.a \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
 	$(top_builddir)/src/ATC/libATC.a \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \

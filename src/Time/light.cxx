@@ -55,6 +55,7 @@ SG_USING_STD(string);
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/screen/colors.hxx>
 
+#include <Main/main.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewer.hxx>
@@ -62,7 +63,6 @@ SG_USING_STD(string);
 #include "light.hxx"
 #include "sunpos.hxx"
 
-extern SGSky *thesky;           // FIXME: from main.cxx
 fgLIGHT cur_light_params;
 
 

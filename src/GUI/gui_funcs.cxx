@@ -73,6 +73,7 @@
 #include <Cockpit/panel.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
+#include <Main/main.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
@@ -97,10 +98,6 @@
 
 SG_USING_STD(string);
 SG_USING_STD(cout);
-
-// main.cxx hack, should come from an include someplace
-extern void fgInitVisuals( void );
-extern void fgRenderFrame( void );
 
 extern void fgHUDalphaAdjust( puObject * );
 
