@@ -30,6 +30,9 @@ VerticalSpeedIndicator::init ()
     _speed_node =
         fgGetNode("/instrumentation/vertical-speed-indicator/indicated-speed-fpm",
                   true);
+
+                                // Initialize at ambient pressure
+    _internal_pressure_inhg = _pressure_node->getDoubleValue();
 }
 
 void
