@@ -43,16 +43,19 @@ extern int new_tris[MAX_TRIS][3];
 
 
 /* Initialize a new mesh structure */
-void triload(char *basename);
+void triload(char *basename, char *basepath);
 
 
 #endif /* TRI2OBJ_H */
 
 
 /* $Log$
-/* Revision 1.3  1997/11/15 18:05:06  curt
-/* minor tweaks ...
+/* Revision 1.4  1998/01/17 01:25:40  curt
+/* Added support for shared normals.
 /*
+ * Revision 1.3  1997/11/15 18:05:06  curt
+ * minor tweaks ...
+ *
  * Revision 1.2  1997/11/14 00:29:13  curt
  * Transform scenery coordinates at this point in pipeline when scenery is
  * being translated to .obj format, not when it is being loaded into the end

@@ -26,7 +26,7 @@
 
 TARGET = tri2obj
 
-CFILES = tri2obj.c
+CFILES = tri2obj.c ../../Src/Scenery/tileutils.c
 OFILES = $(CFILES:.c=.o)
 
 
@@ -66,6 +66,9 @@ tri2obj.o: tri2obj.c
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1998/01/17 01:25:39  curt
+# Added support for shared normals.
+#
 # Revision 1.3  1997/12/02 13:13:32  curt
 # Fixed problem with averaged vertex normals.
 #

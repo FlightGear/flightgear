@@ -25,7 +25,10 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>   /* for atoi() */
 #include <string.h>
+#include <sys/stat.h> /* for stat() */
+#include <unistd.h>   /* for stat() */
 
 #include "tri2obj.h"
 
@@ -34,13 +37,20 @@
 #include "../../Src/Math/fg_geodesy.h"
 #include "../../Src/Math/mat3.h"
 #include "../../Src/Math/polar.h"
+#include "../../Src/Scenery/tileutils.h"
 
 
 int nodecount, tricount;
+int normalcount = 0;
 struct fgCartesianPoint nodes[MAX_NODES];
 int tris[MAX_TRIS][3];
 int new_tris[MAX_TRIS][3];
 
+float normals[MAX_NODES][3];
+
+struct bucket my_index;
+struct bucket ne_index, nw_index, sw_index, se_index;
+struct bucket north_index, south_index, east_index, west_index;
 
 /* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
  * a cartesian point */
@@ -108,13 +118,325 @@ void find_tris(int n, int *t1, int *t2, int *t3, int *t4, int *t5) {
 }
 
 
+/* return the file base name ( foo/bar/file.ext = file.ext ) */
+void extract_file(char *in, char *base) {
+    int len, i;
+
+    len = strlen(in);
+
+    i = len - 1;
+    while ( (i >= 0) && (in[i] != '/') ) {
+	i--;
+    }
+
+    in += (i + 1);
+    strcpy(base, in);
+}
+
+
+/* return the file path name ( foo/bar/file.ext = foo/bar ) */
+void extract_path(char *in, char *base) {
+    int len, i;
+
+    len = strlen(in);
+    strcpy(base, in);
+
+    i = len - 1;
+    while ( (i >= 0) && (in[i] != '/') ) {
+	i--;
+    }
+
+    base[i] = '\0';
+}
+
+
+/* check if a file exists */
+int file_exists(char *file) {
+    struct stat stat_buf;
+    int result;
+
+    printf("checking %s ... ", file);
+
+    result = stat(file, &stat_buf);
+
+    if ( result != 0 ) {
+	/* stat failed, no file */
+	printf("not found.\n");
+	return(0);
+    } else {
+	/* stat succeeded, file exists */
+	printf("exists.\n");
+	return(1);
+    }
+}
+
+
+/* check to see if a shared object exists */
+int shared_object_exists(char *basepath, char *ext, char *file) {
+    char scene_path[256];
+    long int index;
+
+    if ( strcmp(ext, ".sw") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&sw_index, scene_path);
+	index = gen_index(&sw_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".se") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&se_index, scene_path);
+	index = gen_index(&se_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".ne") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&ne_index, scene_path);
+	index = gen_index(&ne_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".nw") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&nw_index, scene_path);
+	index = gen_index(&nw_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".south") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.south", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.north", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".north") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.north", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.south", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".west") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.west", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.east", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".east") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.east", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.west", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".body") == 0 ) {
+	gen_base_path(&my_index, scene_path);
+	index = gen_index(&my_index);
+	sprintf(file, "%s/%s/%ld.1.body", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    return(0);
+}
+
+
+/* given a file pointer, read all the vn (normals from it) */
+void read_normals(FILE *fp) {
+    char line[256];
+
+    while ( fgets(line, 250, fp) != NULL ) {
+	if ( strncmp(line, "vn ", 3) == 0 ) {
+	    sscanf(line, "vn %f %f %f\n", &normals[normalcount][0], 
+		   &normals[normalcount][1], &normals[normalcount][2]);
+	    /*
+	    printf("read_normals(%d) %.2f %.2f %.2f %s", normalcount, 
+		   normals[normalcount][0], normals[normalcount][1], 
+		   normals[normalcount][2], line);
+		   */
+	    normalcount++;
+	}
+    }
+}
+
+
+/* my custom file opening routine ... don't open if a shared edge or
+ * vertex alread exists */
+FILE *my_open(char *basename, char *basepath, char *ext) {
+    FILE *fp;
+    char filename[256];
+
+    /* check if a shared object already exists */
+    if ( shared_object_exists(basepath, ext, filename) ) {
+	/* not an actual file open error, but we've already got the
+         * shared edge, so we don't want to create another one */
+	fp = fopen(filename, "r");
+	printf("Opening %s\n", filename);
+	return(fp);
+    } else {
+	/* open the file */
+	printf("not opening\n");
+	return(NULL);
+    }
+}
+
+
 /* Initialize a new mesh structure */
-void triload(char *basename) {
+void triload(char *basename, char *basepath) {
     char nodename[256], elename[256];
     double n[3];
+    FILE *ne, *nw, *se, *sw, *north, *south, *east, *west;
     FILE *node, *ele;
     int dim, junk1, junk2;
     int i;
+
+    ne = my_open(basename, basepath, ".ne");
+    read_normals(ne);
+    fclose(ne);
+
+    nw = my_open(basename, basepath, ".nw");
+    read_normals(nw);
+    fclose(nw);
+
+    se = my_open(basename, basepath, ".se");
+    read_normals(se);
+    fclose(se);
+
+    sw = my_open(basename, basepath, ".sw");
+    read_normals(sw);
+    fclose(sw);
+
+    north = my_open(basename, basepath, ".north");
+    read_normals(north);
+    fclose(north);
+
+    south = my_open(basename, basepath, ".south");
+    read_normals(south);
+    fclose(south);
+
+    east = my_open(basename, basepath, ".east");
+    read_normals(east);
+    fclose(east);
+
+    west = my_open(basename, basepath, ".west");
+    read_normals(west);
+    fclose(west);
 
     strcpy(nodename, basename);
     strcat(nodename, ".node");
@@ -194,58 +516,69 @@ void dump_obj(char *basename) {
     }
 
     printf("  calculating and writing normals\n");
+    printf("  First %d normals taken from shared files.\n", normalcount);
+						     
     /* calculate and generate normals */
     for ( i = 1; i <= nodecount; i++ ) {
-/* 	printf("Finding normal\n"); */
 
-	find_tris(i, &t1, &t2, &t3, &t4, &t5);
+	if ( i <= normalcount ) {
+	    /* use precalculated (shared) normal */
+	    norm[0] = normals[i-1][0];
+	    norm[1] = normals[i-1][1];
+	    norm[2] = normals[i-1][2];
+	} else {
+	    /* printf("Finding normal\n"); */
 
-	n1[0] = n1[1] = n1[2] = 0.0;
-	n2[0] = n2[1] = n2[2] = 0.0;
-	n3[0] = n3[1] = n3[2] = 0.0;
-	n4[0] = n4[1] = n4[2] = 0.0;
-	n5[0] = n5[1] = n5[2] = 0.0;
+	    find_tris(i, &t1, &t2, &t3, &t4, &t5);
 
-	count = 1;
-	calc_normal(nodes[tris[t1][0]], nodes[tris[t1][1]], nodes[tris[t1][2]], 
-		    n1);
+	    n1[0] = n1[1] = n1[2] = 0.0;
+	    n2[0] = n2[1] = n2[2] = 0.0;
+	    n3[0] = n3[1] = n3[2] = 0.0;
+	    n4[0] = n4[1] = n4[2] = 0.0;
+	    n5[0] = n5[1] = n5[2] = 0.0;
 
-	if ( t2 > 0 ) {
-	    calc_normal(nodes[tris[t2][0]], nodes[tris[t2][1]], 
-			nodes[tris[t2][2]], n2);
-	    count = 2;
-	}
+	    count = 1;
+	    calc_normal(nodes[tris[t1][0]], nodes[tris[t1][1]], 
+			nodes[tris[t1][2]], n1);
 
-	if ( t3 > 0 ) {
-	    calc_normal(nodes[tris[t3][0]], nodes[tris[t3][1]],
-			nodes[tris[t3][2]], n3);
-	    count = 3;
-	}
+	    if ( t2 > 0 ) {
+		calc_normal(nodes[tris[t2][0]], nodes[tris[t2][1]], 
+			    nodes[tris[t2][2]], n2);
+		count = 2;
+	    }
 
-	if ( t4 > 0 ) {
-	    calc_normal(nodes[tris[t4][0]], nodes[tris[t4][1]],
-			nodes[tris[t4][2]], n4);
-	    count = 4;
-	}
+	    if ( t3 > 0 ) {
+		calc_normal(nodes[tris[t3][0]], nodes[tris[t3][1]],
+			    nodes[tris[t3][2]], n3);
+		count = 3;
+	    }
 
-	if ( t5 > 0 ) {
-	    calc_normal(nodes[tris[t5][0]], nodes[tris[t5][1]],
-			nodes[tris[t5][2]], n5);
-	    count = 5;
-	}
+	    if ( t4 > 0 ) {
+		calc_normal(nodes[tris[t4][0]], nodes[tris[t4][1]],
+			    nodes[tris[t4][2]], n4);
+		count = 4;
+	    }
 
-/* 	printf("  norm[2] = %.2f %.2f %.2f\n", n1[2], n2[2], n3[2]); */
+	    if ( t5 > 0 ) {
+		calc_normal(nodes[tris[t5][0]], nodes[tris[t5][1]],
+			    nodes[tris[t5][2]], n5);
+		count = 5;
+	    }
 
-	norm[0] = ( n1[0] + n2[0] + n3[0] + n4[0] + n5[0] ) / (double)count;
-	norm[1] = ( n1[1] + n2[1] + n3[1] + n4[1] + n5[1] ) / (double)count;
-	norm[2] = ( n1[2] + n2[2] + n3[2] + n4[2] + n5[2] ) / (double)count;
+	    /* printf("  norm[2] = %.2f %.2f %.2f\n", n1[2], n2[2], n3[2]); */
+
+	    norm[0] = ( n1[0] + n2[0] + n3[0] + n4[0] + n5[0] ) / (double)count;
+	    norm[1] = ( n1[1] + n2[1] + n3[1] + n4[1] + n5[1] ) / (double)count;
+	    norm[2] = ( n1[2] + n2[2] + n3[2] + n4[2] + n5[2] ) / (double)count;
 	
-/* 	printf("  count = %d\n", count); */
-/* 	printf("  Ave. normal = %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);*/
-	MAT3_NORMALIZE_VEC(norm, temp);
-/* 	printf("  Normalized ave. normal = %.4f %.4f %.4f\n",  */
-/* 	       norm[0], norm[1], norm[2]); */
-	
+	    /* 	printf("  count = %d\n", count); */
+	    /* 	printf("  Ave. normal = %.4f %.4f %.4f\n", 
+		       norm[0], norm[1], norm[2]);*/
+	    MAT3_NORMALIZE_VEC(norm, temp);
+	    /* 	printf("  Normalized ave. normal = %.4f %.4f %.4f\n",  */
+	    /* 	       norm[0], norm[1], norm[2]); */
+	}
+	/* printf("%d vn %.4f %.4f %.4f\n", i, norm[0], norm[1], norm[2]); */
 	fprintf(obj, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
     }
 
@@ -259,12 +592,43 @@ void dump_obj(char *basename) {
 }
 
 int main(int argc, char **argv) {
-    char basename[256];
+    char basename[256], basepath[256], temp[256];
+    long int tmp_index;
+    int len;
 
     strcpy(basename, argv[1]);
 
+    /* find the base path of the file */
+    extract_path(basename, basepath);
+    extract_path(basepath, basepath);
+    extract_path(basepath, basepath);
+    printf("%s\n", basepath);
+
+    /* find the index of the current file */
+    extract_file(basename, temp);
+    len = strlen(temp);
+    if ( len >= 2 ) {
+	temp[len-2] = '\0';
+    }
+    tmp_index = atoi(temp);
+    printf("%ld\n", tmp_index);
+    parse_index(tmp_index, &my_index);
+
+    printf("bucket = %d %d %d %d\n", 
+	   my_index.lon, my_index.lat, my_index.x, my_index.y);
+    /* generate the indexes of the neighbors */
+    offset_bucket(&my_index, &ne_index,  1,  1);
+    offset_bucket(&my_index, &nw_index, -1,  1);
+    offset_bucket(&my_index, &se_index,  1, -1);
+    offset_bucket(&my_index, &sw_index, -1, -1);
+
+    offset_bucket(&my_index, &north_index,  0,  1);
+    offset_bucket(&my_index, &south_index,  0, -1);
+    offset_bucket(&my_index, &east_index,  1,  0);
+    offset_bucket(&my_index, &west_index, -1,  0);
+
     /* load the input data files */
-    triload(basename);
+    triload(basename, basepath);
 
     /* dump in WaveFront .obj format */
     dump_obj(basename);
@@ -274,9 +638,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.7  1998/01/12 02:42:00  curt
-/* Average up to five triangles per vertex instead of three.
+/* Revision 1.8  1998/01/17 01:25:39  curt
+/* Added support for shared normals.
 /*
+ * Revision 1.7  1998/01/12 02:42:00  curt
+ * Average up to five triangles per vertex instead of three.
+ *
  * Revision 1.6  1998/01/09 23:03:15  curt
  * Restructured to split 1deg x 1deg dem's into 64 subsections.
  *
