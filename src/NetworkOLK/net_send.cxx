@@ -53,11 +53,11 @@ int result;
 
 #if defined( __CYGWIN__ )
 #include <errno.h>
+const char *const *sys_errlist = _sys_errlist;
 #else
+extern const char *const sys_errlist[];
 extern int errno;
 #endif
-
-extern const char *const sys_errlist[];
 
 int current_port  = 10000; 
 u_short base_port = 10000;
@@ -196,7 +196,7 @@ int list_not_in( char name[16]) {
      test = test->next;
      if (verbose != 0) printf("list_not_in : %d\n",i);
    }
-   return(i);
+   return i;
 }
 
 void fgd_print_Mat4( sgMat4 m ) {
@@ -268,7 +268,7 @@ void fgd_init(void){
           } else if (verbose == 2) printf(" address valid\n");
    
    if ((base_port > end_port) || ((short)base_port < 0)) { 
-     fprintf(stderr,"Bad port range : start=%d end=%d !\n");
+     fprintf(stderr,"Bad port range : start=%d end=%d !\n",base_port,end_port);
    // exit(1);
    } else if (verbose == 2) {
             printf("     Port range: %d to %d\n",base_port,end_port);
@@ -290,24 +290,25 @@ char *fgd_ip_check;
             printf(" FGD: resolved\nFGD: running on HOST : %s", fgd_host_check);
             printf("   IP : %s\n", fgd_ip_check);
             strcpy( fgd_host, fgd_host_check);
-//            return(0);
+//            return 0;
             }
    } else if ((address.sin_addr.s_addr = inet_addr( fgd_host)) == INADDR_NONE) {
             fprintf(stderr,"FGD:  Could not get %s host entry !\n", fgd_host_check);
             printf(" FGD: NOT resolved !!!\n");
             net_r = -1;
-            return(-1);
+            return -1;
             // exit(1);
           } else if (verbose == 2) printf(" address valid\n");
    
    if ((base_port > end_port) || ((short)base_port < 0)) { 
-     fprintf(stderr,"Bad port range : start=%d end=%d !\n");
+     fprintf(stderr,"Bad port range : start=%d end=%d !\n",base_port,end_port);
      // exit(1);
         net_r = -2;
-        return(-2);
+        return -2;
    } else if (verbose == 2) {
             printf("     Port range: %d to %d\n",base_port,end_port);
             }
+   return 0;
 }
 
 
