@@ -55,7 +55,7 @@ typedef struct {
     double sun_lon, sun_gc_lat;
 
     // in cartesian coordiantes
-    struct fgCartesianPoint fg_sunpos;
+    fgCartesianPoint3d fg_sunpos;
 
     // (in view coordinates)
     GLfloat sun_vec[4];
@@ -98,6 +98,10 @@ void fgLightUpdate( void);
 
 
 // $Log$
+// Revision 1.3  1998/05/02 01:53:18  curt
+// Fine tuning mktime() support because of varying behavior on different
+// platforms.
+//
 // Revision 1.2  1998/04/24 00:52:31  curt
 // Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
 // Fog color fixes.

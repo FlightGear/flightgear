@@ -217,7 +217,11 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     long int offset;
     double diff, part, days, hours, lst;
 
-#ifdef __CYGWIN32__
+    // I believe the following is Unix vs. Win32 behavior difference.
+    // If you are having problems with incorrectly positioned
+    // astronomical bodies, this is a really good place to start
+    // looking.
+#ifdef WIN32
     int daylight;       // not used but need to keep the compiler happy
     long int timezone;  // not used but need to keep the compiler happy
     int mktime_is_gmt = 1;
@@ -375,6 +379,10 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.6  1998/05/02 01:53:17  curt
+// Fine tuning mktime() support because of varying behavior on different
+// platforms.
+//
 // Revision 1.5  1998/04/28 21:45:34  curt
 // Fixed a horible bug that cause the time to be *WAY* off when compiling
 // with the CygWin32 compiler.  This may not yet completely address other

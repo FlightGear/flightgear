@@ -50,7 +50,7 @@
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
-#include <Math/polar.h>
+#include <Math/polar3d.h>
 #include <Math/vector.h>
 #include <Scenery/scenery.hxx>
 
@@ -276,6 +276,7 @@ void fgUpdateSunPos( void ) {
     fgTIME *t;
     fgVIEW *v;
     MAT3vec nup, nsun, v0;
+    fgPolarPoint3d p;
     double sun_gd_lat, sl_radius;
     double ntmp;
 
@@ -290,7 +291,10 @@ void fgUpdateSunPos( void ) {
 
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
 
-    l->fg_sunpos = fgPolarToCart(l->sun_lon, l->sun_gc_lat, sl_radius);
+    p.lon = l->sun_lon;
+    p.lat = l->sun_gc_lat;
+    p.radius = sl_radius;
+    l->fg_sunpos = fgPolarToCart3d(p);
 
     printf( "    t->cur_time = %ld\n", t->cur_time);
     printf( "    Sun Geodetic lat = %.5f Geocentric lat = %.5f\n",
@@ -346,6 +350,10 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/05/02 01:53:18  curt
+// Fine tuning mktime() support because of varying behavior on different
+// platforms.
+//
 // Revision 1.7  1998/04/30 12:36:05  curt
 // C++-ifying a couple source files.
 //
