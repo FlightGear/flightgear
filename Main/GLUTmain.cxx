@@ -300,7 +300,8 @@ static void fgRenderFrame( void ) {
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
-	
+    GLbitfield clear_mask;
+
     f = current_aircraft.flight;
     l = &cur_light_params;
     o = &current_options;
@@ -327,14 +328,18 @@ static void fgRenderFrame( void ) {
 	// update view volume parameters
 	fgUpdateViewParams();
 
+	clear_mask = GL_DEPTH_BUFFER_BIT;
+	if ( o->wireframe ) {
+	    clear_mask |= GL_COLOR_BUFFER_BIT;
+	}
 	if ( o->skyblend ) {
 	    glClearColor(black[0], black[1], black[2], black[3]);
-	    xglClear( GL_DEPTH_BUFFER_BIT );
 	} else {
 	    glClearColor(l->sky_color[0], l->sky_color[1], 
 			 l->sky_color[2], l->sky_color[3]);
-	    xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
+	xglClear( clear_mask );
 
 	// Tell GL we are switching to model view parameters
 	xglMatrixMode(GL_MODELVIEW);
@@ -520,11 +525,11 @@ static void fgMainLoop( void ) {
 
     if ( scenery.cur_elev > -9990 ) {
 	if ( FG_Altitude * FEET_TO_METER < 
-	     (scenery.cur_elev + 3.758099 * FEET_TO_METER - 1.0) ) {
+	     (scenery.cur_elev + 3.758099 * FEET_TO_METER - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("Current Altitude = %.2f < %.2f forcing to %.2f\n", 
 		   FG_Altitude * FEET_TO_METER,
-		   scenery.cur_elev + 3.758099 * FEET_TO_METER - 1.0,
+		   scenery.cur_elev + 3.758099 * FEET_TO_METER - 3.0,
 		   scenery.cur_elev + 3.758099 * FEET_TO_METER);
 	    fgFlightModelSetAltitude( FG_LARCSIM, f, 
 				      scenery.cur_elev + 
@@ -898,6 +903,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.34  1998/07/13 15:32:37  curt
+// Clear color buffer if drawing wireframe.
+// When specifying and airport, start elevation at -1000 and let the system
+// position you at ground level.
+//
 // Revision 1.33  1998/07/12 03:14:42  curt
 // Added ground collision detection.
 // Did some serious horsing around to be able to "hug" the ground properly

@@ -154,7 +154,7 @@ int fgInitPosition( void ) {
 	} else {
 	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
 	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
-	    FG_Runway_altitude = ( a.elevation );
+	    FG_Runway_altitude = ( -1000 /* a.elevation */ );
 	    FG_Altitude = FG_Runway_altitude + 3.758099;
 	}
     }
@@ -395,6 +395,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.24  1998/07/13 15:32:39  curt
+// Clear color buffer if drawing wireframe.
+// When specifying and airport, start elevation at -1000 and let the system
+// position you at ground level.
+//
 // Revision 1.23  1998/07/12 03:14:43  curt
 // Added ground collision detection.
 // Did some serious horsing around to be able to "hug" the ground properly
