@@ -120,8 +120,8 @@ FGMatrix& FGMatrix::operator=(const FGMatrix& A)
       data = A.data;
     } else {
       data = alloc(rows,cols);
-      for (int i=0; i<=rows; i++) {
-	      for (int j=0; j<=cols; j++) {
+      for (unsigned int i=0; i<=rows; i++) {
+	      for (unsigned int j=0; j<=cols; j++) {
 		      data[i][j] = A.data[i][j];
 	      }
       }
@@ -161,8 +161,8 @@ void FGMatrix::SetOParams(char delim,int width,int prec,int origin)
 void FGMatrix::InitMatrix(double value)
 {
   if (data) {
-    for (int i=0;i<=rows;i++) {
-			for (int j=0;j<=cols;j++) {
+    for (unsigned int i=0;i<=rows;i++) {
+			for (unsigned int j=0;j<=cols;j++) {
     		operator()(i,j) = value;
 			}
 		}
@@ -187,8 +187,8 @@ FGMatrix operator-(FGMatrix& A, FGMatrix& B)
 
   FGMatrix Diff(A.Rows(),A.Cols());
   Diff.keep=true;
-  for (int i=1;i<=A.Rows();i++) {
-		for (int j=1;j<=A.Cols();j++) {
+  for (unsigned int i=1;i<=A.Rows();i++) {
+		for (unsigned int j=1;j<=A.Cols();j++) {
 			Diff(i,j)=A(i,j)-B(i,j);
 		}
 	}
@@ -205,8 +205,8 @@ void operator-=(FGMatrix &A,FGMatrix &B)
 		exit(1);
 	}
 
-  for (int i=1;i<=A.Rows();i++) {
-		for (int j=1;j<=A.Cols();j++) {
+  for (unsigned int i=1;i<=A.Rows();i++) {
+		for (unsigned int j=1;j<=A.Cols();j++) {
 			A(i,j)-=B(i,j);
 		}
 	}
@@ -224,8 +224,8 @@ FGMatrix operator+(FGMatrix& A, FGMatrix& B)
 
   FGMatrix Sum(A.Rows(),A.Cols());
   Sum.keep = true;
-	for (int i=1;i<=A.Rows();i++) {
-		for (int j=1;j<=A.Cols();j++) {
+	for (unsigned int i=1;i<=A.Rows();i++) {
+		for (unsigned int j=1;j<=A.Cols();j++) {
 			Sum(i,j)=A(i,j)+B(i,j);
 		}
 	}
@@ -241,8 +241,8 @@ void operator+=(FGMatrix &A,FGMatrix &B)
     cout << endl;
 		exit(1);
 	}
-  for (int i=1;i<=A.Rows();i++) {
-		for (int j=1;j<=A.Cols();j++) {
+  for (unsigned int i=1;i<=A.Rows();i++) {
+		for (unsigned int j=1;j<=A.Cols();j++) {
 			A(i,j)+=B(i,j);
 		}
 	}
@@ -253,8 +253,8 @@ FGMatrix operator*(double scalar,FGMatrix &A)
 {
 	FGMatrix Product(A.Rows(),A.Cols());
   Product.keep = true;
-	for (int i=1;i<=A.Rows();i++) {
-		for (int j=1;j<=A.Cols();j++) {
+	for (unsigned int i=1;i<=A.Rows();i++) {
+		for (unsigned int j=1;j<=A.Cols();j++) {
     	Product(i,j) = scalar*A(i,j);
     }
 	}
@@ -264,8 +264,8 @@ FGMatrix operator*(double scalar,FGMatrix &A)
 
 void operator*=(FGMatrix &A,double scalar)
 {
-	for (int i=1;i<=A.Rows();i++) {
-		for (int j=1;j<=A.Cols();j++) {
+	for (unsigned int i=1;i<=A.Rows();i++) {
+		for (unsigned int j=1;j<=A.Cols();j++) {
     	A(i,j)*=scalar;
     }
   }
@@ -284,10 +284,10 @@ FGMatrix operator*(FGMatrix &Left, FGMatrix &Right)
 
 	FGMatrix Product(Left.Rows(),Right.Cols());
 	Product.keep = true;
-	for (int i=1;i<=Left.Rows();i++) {
-		for (int j=1;j<=Right.Cols();j++)	{
+	for (unsigned int i=1;i<=Left.Rows();i++) {
+		for (unsigned int j=1;j<=Right.Cols();j++)	{
     	Product(i,j) = 0;
-      for (int k=1;k<=Left.Cols();k++) {
+      for (unsigned int k=1;k<=Left.Cols();k++) {
 	   		Product(i,j)+=Left(i,k)*Right(k,j);
       }
 		}
@@ -309,10 +309,10 @@ void operator*=(FGMatrix &Left,FGMatrix &Right)
 	double **prod;
 
 		prod=alloc(Left.Rows(),Right.Cols());
-		for (int i=1;i<=Left.Rows();i++) {
-			for (int j=1;j<=Right.Cols();j++) {
+		for (unsigned int i=1;i<=Left.Rows();i++) {
+			for (unsigned int j=1;j<=Right.Cols();j++) {
       	prod[i][j] = 0;
-				for (int k=1;k<=Left.Cols();k++) {
+				for (unsigned int k=1;k<=Left.Cols();k++) {
         	prod[i][j]+=Left(i,k)*Right(k,j);
 				}
 			}
@@ -327,8 +327,8 @@ FGMatrix operator/(FGMatrix& A, double scalar)
 {
 	FGMatrix Quot(A.Rows(),A.Cols());
 	A.keep = true;
-	for (int i=1;i<=A.Rows();i++) {
-		for (int j=1;j<=A.Cols();j++)	{
+	for (unsigned int i=1;i<=A.Rows();i++) {
+		for (unsigned int j=1;j<=A.Cols();j++)	{
 	   	Quot(i,j)=A(i,j)/scalar;
 		}
 	}
@@ -338,8 +338,8 @@ FGMatrix operator/(FGMatrix& A, double scalar)
 
 void operator/=(FGMatrix &A,double scalar)
 {
-	for (int i=1;i<=A.Rows();i++)	{
-		for (int j=1;j<=A.Cols();j++) {
+	for (unsigned int i=1;i<=A.Rows();i++)	{
+		for (unsigned int j=1;j<=A.Cols();j++) {
 			A(i,j)/=scalar;
 		}
 	}
@@ -357,8 +357,8 @@ void FGMatrix::T(void)
 
 void FGMatrix::TransposeSquare(void)
 {
-	for (int i=1;i<=rows;i++) {
-		for (int j=i+1;j<=cols;j++) {
+	for (unsigned int i=1;i<=rows;i++) {
+		for (unsigned int j=i+1;j<=cols;j++) {
 			double tmp=data[i][j];
 			data[i][j]=data[j][i];
  			data[j][i]=tmp;
@@ -372,8 +372,8 @@ void FGMatrix::TransposeNonSquare(void)
 	double **tran;
 
 	tran=alloc(rows,cols);
-	for (int i=1;i<=rows;i++) {
-		for (int j=1;j<=cols;j++) {
+	for (unsigned int i=1;i<=rows;i++) {
+		for (unsigned int j=1;j<=cols;j++) {
 			tran[j][i]=data[i][j];
 		}
 	}

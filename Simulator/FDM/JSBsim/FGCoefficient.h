@@ -75,7 +75,8 @@ using namespace std;
 #define FG_RUDDER    8192
 #define FG_MACH     16384
 #define FG_ALTITUDE 32768L
-#define FG_I2VEL    65536L
+#define FG_BI2VEL   65536L
+#define FG_CI2VEL  131072L
 
 /*******************************************************************************
 FORWARD DECLARATIONS
@@ -114,7 +115,8 @@ FG_AILERON   4096
 FG_RUDDER    8192
 FG_MACH     16384
 FG_ALTITUDE 32768L
-FG_I2VEL    65536L
+FG_BI2VEL   65536L
+FG_CI2VEL  131072L
 
 ********************************************************************************
 CLASS DECLARATION

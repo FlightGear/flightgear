@@ -190,9 +190,9 @@ void FGOutput::DelimitedOutput(void)
     cout << "Latitude,";
     cout << "Longitude,";
     cout << "QBar,";
-    cout << "Alpha";
-    cout << "L";
-    cout << "M";
+    cout << "Alpha,";
+    cout << "L,";
+    cout << "M,";
     cout << "N";
     cout << endl;
     FirstPass = false;

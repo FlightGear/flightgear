@@ -51,8 +51,8 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.5  1999/06/21 03:02:05  curt
-// Updates to JSBsim.
+// Revision 1.6  1999/06/29 15:30:33  curt
+// Updated contributed by Jon Berndt.
 //
 // Revision 1.1  1999/02/13 01:12:03  curt
 // Initial Revision.

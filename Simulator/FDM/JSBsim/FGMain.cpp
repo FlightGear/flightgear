@@ -38,9 +38,9 @@ void main(int argc, char** argv)
 //
 
 		if (FDMExec->GetState()->Getsim_time() > 5.0) {
-			FDMExec->GetFCS()->SetDa(0.05);
+			FDMExec->GetFCS()->SetDe(0.05);
 //			FDMExec->GetFCS()->SetDr(0.05);
-//			FDMExec->GetFCS()->SetDe(0.05);
+//			FDMExec->GetFCS()->SetDa(0.05);
 		}
 		
     FDMExec->Run();

@@ -177,8 +177,8 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.5  1999/06/21 03:02:06  curt
-// Updates to JSBsim.
+// Revision 1.6  1999/06/29 15:30:35  curt
+// Updated contributed by Jon Berndt.
 //
 // Revision 1.1  1999/02/13 01:12:03  curt
 // Initial Revision.
