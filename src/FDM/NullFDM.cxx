@@ -41,6 +41,7 @@ FGNullFDM::~FGNullFDM() {
 // for each subsequent iteration through the EOM
 void FGNullFDM::init() {
     // cout << "FGNullFDM::init()" << endl;
+    set_inited( true );
 }
 
 
