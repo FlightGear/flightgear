@@ -602,12 +602,12 @@ void FGFCS::bind(void)
                        &FGFCS::SetPitchTrimCmd,
                        true);
   PropertyManager->Tie("fcs/roll-trim-cmd-norm", this,
-                       &FGFCS::GetYawTrimCmd,
-                       &FGFCS::SetYawTrimCmd,
-                       true);
-  PropertyManager->Tie("fcs/yaw-trim-cmd-norm", this,
                        &FGFCS::GetRollTrimCmd,
                        &FGFCS::SetRollTrimCmd,
+                       true);
+  PropertyManager->Tie("fcs/yaw-trim-cmd-norm", this,
+                       &FGFCS::GetYawTrimCmd,
+                       &FGFCS::SetYawTrimCmd,
                        true);
   PropertyManager->Tie("gear/gear-cmd-norm", this,
                        &FGFCS::GetGearCmd,
