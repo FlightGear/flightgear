@@ -15,6 +15,18 @@ namespace yasim {
 inline float norm(float f) { return f<1 ? 1/f : f; }
 inline float abs(float f) { return f<0 ? -f : f; }
 
+// Solver threshold.  How close to the solution are we trying
+// to get?  Trying too hard can result in oscillations about
+// the correct solution, which is bad.  Stick this in as a
+// compile time constant for now, and consider making it
+// settable per-model.
+const float STHRESH = 1;
+
+// How slowly do we change values in the solver.  Too slow, and
+// the solution converges very slowly.  Too fast, and it can
+// oscillate.
+const float SOLVE_TWEAK = 0.3226;
+
 Airplane::Airplane()
 {
     _emptyWeight = 0;
@@ -787,7 +799,7 @@ void Airplane::runApproach()
 
 void Airplane::applyDragFactor(float factor)
 {
-    float applied = Math::sqrt(factor);
+    float applied = Math::pow(factor, SOLVE_TWEAK);
     _dragFactor *= applied;
     _wing->setDragScale(_wing->getDragScale() * applied);
     _tail->setDragScale(_tail->getDragScale() * applied);
@@ -804,7 +816,7 @@ void Airplane::applyDragFactor(float factor)
 
 void Airplane::applyLiftRatio(float factor)
 {
-    float applied = Math::sqrt(factor);
+    float applied = Math::pow(factor, SOLVE_TWEAK);
     _liftRatio *= applied;
     _wing->setLiftRatio(_wing->getLiftRatio() * applied);
     _tail->setLiftRatio(_tail->getLiftRatio() * applied);
@@ -929,13 +941,6 @@ void Airplane::solve()
 	applyDragFactor(dragFactor);
 	applyLiftRatio(liftFactor);
 
-	// Solver threshold.  How close to the solution are we trying
-	// to get?  Trying too hard can result in oscillations about
-	// the correct solution, which is bad.  Stick this in as a
-	// compile time constant for now, and consider making it
-	// settable per-model.
-	float STHRESH = 1.6;
-
 	// DON'T do the following until the above are sane
 	if(normFactor(dragFactor) > STHRESH*1.0001
 	   || normFactor(liftFactor) > STHRESH*1.0001)
@@ -944,8 +949,8 @@ void Airplane::solve()
 	}
 
 	// OK, now we can adjust the minor variables:
-	_cruiseAoA += 0.5f*aoaDelta;
-	_tailIncidence += 0.5f*tailDelta;
+	_cruiseAoA += SOLVE_TWEAK*aoaDelta;
+	_tailIncidence += SOLVE_TWEAK*tailDelta;
 	
 	_cruiseAoA = clamp(_cruiseAoA, -0.175f, 0.175f);
 	_tailIncidence = clamp(_tailIncidence, -0.175f, 0.175f);
@@ -960,7 +965,7 @@ void Airplane::solve()
                 break;
 
             // Otherwise, adjust and do the next iteration
-            _approachElevator.val += 0.8 * elevDelta;
+            _approachElevator.val += SOLVE_TWEAK * elevDelta;
             if(abs(_approachElevator.val) > 1) {
                 _failureMsg = "Insufficient elevator to trim for approach";
                 break;
