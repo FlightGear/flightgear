@@ -42,6 +42,7 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
+    renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
@@ -95,6 +96,7 @@ FGGlobals::~FGGlobals()
     delete props;
     delete commands;
     delete io;
+    delete renderer;
   
     // make sure only to delete the initial waypoints list if it acually
     // still exists. 
@@ -156,6 +158,12 @@ void FGGlobals::set_fg_scenery (const string &scenery) {
     }
 }
 
+
+FGRenderer *
+FGGlobals::get_renderer () const
+{
+   return renderer;
+}
 
 SGSubsystemMgr *
 FGGlobals::get_subsystem_mgr () const

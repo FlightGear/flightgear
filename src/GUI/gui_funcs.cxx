@@ -532,15 +532,16 @@ void fgHiResDump()
         puHideCursor();
     }
 
-    fgInitVisuals();
-    fgReshape( fgGetInt("/sim/startup/xsize"),
-               fgGetInt("/sim/startup/ysize") );
+    FGRenderer *rendrer = globals->get_renderer();
+    renderer->init();
+    renderer->resize( fgGetInt("/sim/startup/xsize"),
+                      fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
-    fgRenderFrame();
-    fgRenderFrame();
+    renderer->update( 0.0 );
+    renderer->update( 0.0 );
 
     // Make sure we have SSG projection primed for current view
     glMatrixMode(GL_MODELVIEW);
