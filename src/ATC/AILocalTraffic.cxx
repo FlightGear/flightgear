@@ -266,13 +266,13 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 		_pos = ourGate->pos;
 		_pos.setelev(aptElev);
 		_hdg = ourGate->heading;
+		Transform();
 		
 		// Now we've set the position we can do the ground elev
 		elevInitGood = false;
 		inAir = false;
 		DoGroundElev();
 		
-		Transform();
 		break;
 	case TAXIING:
 		//tuned_station = ground;
@@ -295,8 +295,9 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 		slope = 0.0;
 		elevInitGood = false;
 		inAir = false;
-		DoGroundElev();
 		Transform();
+		DoGroundElev();
+		//Transform();
 		
 		responseCounter = 0.0;
 		contactTower = false;
@@ -335,6 +336,7 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 			descending = false;
 			_aip.setVisible(true);
 			tower->RegisterAIPlane(plane, this, CIRCUIT, DOWNWIND);
+			Transform();
 		} else {			
 			// Default to initial position on threshold for now
 			_pos.setlat(rwy.threshold_pos.lat());
@@ -346,18 +348,19 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 			// This might not always be necessary if we implement in-air start
 			elevInitGood = false;
 			inAir = false;
-			DoGroundElev();
 			
 			_pitch = 0.0;
 			_roll = 0.0;
 			leg = TAKEOFF_ROLL;
 			vel = 0.0;
 			slope = 0.0;
+			
+			Transform();
+			DoGroundElev();
 		}
 	
 		operatingState = IN_PATTERN;
 		
-		Transform();
 		break;
 	case EN_ROUTE:
 		// This implies we're being init'd by AIGAVFRTraffic - simple return now
@@ -691,6 +694,8 @@ void FGAILocalTraffic::Update(double dt) {
 		break;
 	}
 	//cout << "I " << flush;
+	
+	//cout << "Update _pos = " << _pos << ", vis = " << _aip.getVisible() << '\n';
 	
 	// Convienience output for AI debugging using the property logger
 	//fgSetDouble("/AI/Local1/ortho-x", (ortho.ConvertToLocal(_pos)).x());
