@@ -40,6 +40,7 @@
 #include <Network/garmin.hxx>
 #include <Network/nmea.hxx>
 #include <Network/pve.hxx>
+#include <Network/ray.hxx>
 #include <Network/rul.hxx>
 #include <Network/joyclient.hxx>
 
@@ -84,6 +85,9 @@ static FGProtocol *parse_port_config( const string& config )
     } else if ( protocol == "pve" ) {
 	FGPVE *pve = new FGPVE;
 	io = pve;
+    } else if ( protocol == "ray" ) {
+	FGRAY *ray = new FGRAY;
+	io = ray;
     } else if ( protocol == "rul" ) {
 	FGRUL *rul = new FGRUL;
 	io = rul;
