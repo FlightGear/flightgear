@@ -138,11 +138,11 @@ void FGKT_70::unbind () {
 
 // Update the various nav values based on position and valid tuned in navs
 void FGKT_70::update( double dt ) {
-    double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
-
-    Point3D aircraft = sgGeodToCart( Point3D( acft_lon, acft_lat, acft_elev ) );
+    // double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    // double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    // double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+    // Point3D aircraft = sgGeodToCart( Point3D( acft_lon, acft_lat,
+    //                                           acft_elev ) );
 
     // sanity checks
     if ( digit1 < 0 ) { digit1 = 0; }
