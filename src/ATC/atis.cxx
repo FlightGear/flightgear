@@ -143,7 +143,7 @@ string FGATIS::get_transmission() {
 	sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
 	transmission += "  Temperature ";
 	transmission += buf;
-	transmission += " degrees Celcius";
+	transmission += " degrees Celsius";
 
 	// Get the pressure / altimeter
         // pressure is: stationweather.AirPressure in Pascal
@@ -197,7 +197,7 @@ string FGATIS::get_transmission() {
 	    transmission += buf2;
 	}
 
-	string rwy_no = runways.search(ident, hdg);
+	string rwy_no = runways.search(ident, int(hdg));
 	if(rwy_no != (string)"NN") {
 	    transmission += "  Landing and departing runway ";
 	    transmission += rwy_no;
