@@ -173,7 +173,7 @@ DME::search (double frequency_mhz, double longitude_rad,
         _transmitter = Point3D(nav->get_x(),
                                nav->get_y(),
                                nav->get_z());
-        _transmitter_elevation_ft = nav->get_elev() * SG_METER_TO_FEET;
+        _transmitter_elevation_ft = nav->get_elev_ft();
         _transmitter_range_nm = nav->get_range(); // fixme
         return;
     }
