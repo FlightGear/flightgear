@@ -32,7 +32,7 @@ FGControls::FGControls() :
     aileron( 0.0 ),
     aileron_trim( 0.0 ),
     elevator( 0.0 ),
-    elevator_trim( 1.969572E-03 ),
+    elevator_trim( 0.0 ),
     rudder( 0.0 ),
     rudder_trim( 0.0 ),
     throttle_idle( true )
