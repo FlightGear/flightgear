@@ -74,7 +74,9 @@ void calc_normal(double p1[3], double p2[3], double p3[3], double normal[3])
 
 float calc_lon(double x, double y, double z) {
     float tmp;
-    tmp = (RAD_TO_DEG*atan2(y, x)) * FG_TEX_CONSTANT;
+    tmp = fmod(
+	       (RAD_TO_DEG*atan2(y, x)) * FG_TEX_CONSTANT, 
+	       10.0);
 
     // printf("lon = %.2f\n", (float)tmp);
     return (float)tmp;
@@ -84,7 +86,10 @@ float calc_lon(double x, double y, double z) {
 float calc_lat(double x, double y, double z) {
     float tmp;
 
-    tmp = (90.0 - RAD_TO_DEG*atan2( sqrt(x*x + y*y), z )) * FG_TEX_CONSTANT;
+    tmp = fmod(
+	       (90.0 - RAD_TO_DEG * 
+		atan2( sqrt(x*x + y*y), z )) * FG_TEX_CONSTANT,
+	       10.0);
 
     // printf("lat = %.2f\n", (float)tmp);
     return (float)tmp;
@@ -472,9 +477,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.33  1998/04/27 15:58:15  curt
-/* Screwing around with texture coordinate generation ... still needs work.
+/* Revision 1.34  1998/04/28 01:21:42  curt
+/* Tweaked texture parameter calculations to keep the number smaller.  This
+/* avoids the "swimming" problem.
+/* Type-ified fgTIME and fgVIEW.
 /*
+ * Revision 1.33  1998/04/27 15:58:15  curt
+ * Screwing around with texture coordinate generation ... still needs work.
+ *
  * Revision 1.32  1998/04/27 03:30:13  curt
  * Minor transformation adjustments to try to keep scenery tiles closer to
  * (0, 0, 0)  GLfloats run out of precision at the distances we need to model

@@ -144,7 +144,7 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 /* Return index of next available slot in tile cache */
 int fgTileCacheNextAvail( void ) {
-    struct fgVIEW *v;
+    fgVIEW *v;
     int i;
     float dx, dy, dz, max, med, min, tmp;
     float dist, max_dist;
@@ -200,9 +200,14 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:32  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/28 01:21:43  curt
+/* Tweaked texture parameter calculations to keep the number smaller.  This
+/* avoids the "swimming" problem.
+/* Type-ified fgTIME and fgVIEW.
 /*
+ * Revision 1.3  1998/04/25 22:06:32  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:51:08  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Tweaked the scenery file extentions to be "file.obj" (uncompressed)
