@@ -73,6 +73,8 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 				   const DatabaseWorkingType type,
 				   const string &root )
 {
+    FGPhysicalProperties f[2];  //make an standard weather that's the same at the whole world
+
     cerr << "Initializing FGLocalWeatherDatabase\n";
     cerr << "-----------------------------------\n";
 
@@ -145,7 +147,6 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 	    double x[2] = {0.0,  0.0};	//make an standard weather that's the same at the whole world
 	    double y[2] = {0.0,  0.0};	//make an standard weather that's the same at the whole world
 	    double z[2] = {1.0, -1.0};	//make an standard weather that's the same at the whole world
-	    FGPhysicalProperties f[2];	//make an standard weather that's the same at the whole world
 	    database = new SphereInterpolate<FGPhysicalProperties>(2,x,y,z,f);
 	}
 	break;
