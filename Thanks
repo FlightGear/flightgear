@@ -132,6 +132,10 @@ Thomas Gellekum <tg@ihf.rwth-aachen.de>
   Changes and updates for compiling on FreeBSD
 
 
+Neetha Girish <neethagirish@usa.net>
+  Contributed the xml configurable HUD changes.
+
+
 Jeff Goeke-Smith <jgoeke@voyager.net>
   Contributed our first autopilot.  (Heading Hold)
   Better autoconf check for external timezone/daylight variables in 
