@@ -1,8 +1,8 @@
-// native_fdm.cxx -- FGFS "Native" flight dynamics protocal class
+// native_gui.cxx -- FGFS external gui data export class
 //
-// Written by Curtis Olson, started September 2001.
+// Written by Curtis Olson, started January 2002.
 //
-// Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
+// Copyright (C) 2002  Curtis L. Olson - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -35,7 +35,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
-#include "mini_fdm.hxx"
+#include "native_gui.hxx"
 
 // FreeBSD works better with this included last ... (?)
 #if defined(WIN32) && !defined(__CYGWIN__)
@@ -71,15 +71,15 @@ static void htond (double &x)
 }
 
 
-FGMiniFDM::FGMiniFDM() {
+FGNativeGUI::FGNativeGUI() {
 }
 
-FGMiniFDM::~FGMiniFDM() {
+FGNativeGUI::~FGNativeGUI() {
 }
 
 
 // open hailing frequencies
-bool FGMiniFDM::open() {
+bool FGNativeGUI::open() {
     if ( is_enabled() ) {
 	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
@@ -100,11 +100,11 @@ bool FGMiniFDM::open() {
 }
 
 
-void FGProps2NetMiniFDM( FGNetMiniFDM *net ) {
+void FGProps2NetGUI( FGNetGUI *net ) {
     int i;
 
     // Version sanity checking
-    net->version = FG_NET_FDM_MINI_VERSION;
+    net->version = FG_NET_GUI_VERSION;
 
     // Aero parameters
     net->longitude = cur_fdm_state->get_Longitude();
@@ -119,7 +119,7 @@ void FGProps2NetMiniFDM( FGNetMiniFDM *net ) {
     net->climb_rate = cur_fdm_state->get_Climb_Rate();
 
     // Consumables
-    net->num_tanks = FGNetMiniFDM::FG_MAX_TANKS;
+    net->num_tanks = FGNetGUI::FG_MAX_TANKS;
     for ( i = 0; i < net->num_tanks; ++i ) {
         SGPropertyNode *node = fgGetNode("/consumables/fuel/tank", i, true);
         net->fuel_quantity[i] = node->getDoubleValue("level-gal_us");
@@ -151,7 +151,7 @@ void FGProps2NetMiniFDM( FGNetMiniFDM *net ) {
 }
 
 
-void FGNetMiniFDM2Props( FGNetMiniFDM *net ) {
+void FGNetGUI2Props( FGNetGUI *net ) {
     int i;
 
     // Convert to the net buffer from network format
@@ -174,7 +174,7 @@ void FGNetMiniFDM2Props( FGNetMiniFDM *net ) {
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
 
-    if ( net->version == FG_NET_FDM_MINI_VERSION ) {
+    if ( net->version == FG_NET_GUI_VERSION ) {
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;
         // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius()
 	//      << endl;
@@ -202,9 +202,9 @@ void FGNetMiniFDM2Props( FGNetMiniFDM *net ) {
         globals->set_warp( net->warp );
     } else {
 	SG_LOG( SG_IO, SG_ALERT,
-                "Error: version mismatch in FGNetMiniFDM2Props()" );
+                "Error: version mismatch in FGNetNativeGUI2Props()" );
 	SG_LOG( SG_IO, SG_ALERT,
-		"\tread " << net->version << " need " << FG_NET_FDM_MINI_VERSION );
+		"\tread " << net->version << " need " << FG_NET_GUI_VERSION );
 	SG_LOG( SG_IO, SG_ALERT,
 		"\tNeed to upgrade net_fdm.hxx and recompile." );
     }
@@ -212,13 +212,13 @@ void FGNetMiniFDM2Props( FGNetMiniFDM *net ) {
 
 
 // process work for this port
-bool FGMiniFDM::process() {
+bool FGNativeGUI::process() {
     SGIOChannel *io = get_io_channel();
     int length = sizeof(buf);
 
     if ( get_direction() == SG_IO_OUT ) {
 	// cout << "size of cur_fdm_state = " << length << endl;
-	FGProps2NetMiniFDM( &buf );
+	FGProps2NetGUI( &buf );
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
@@ -227,12 +227,12 @@ bool FGMiniFDM::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetMiniFDM2Props( &buf );
+		FGNetGUI2Props( &buf );
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetMiniFDM2Props( &buf );
+		FGNetGUI2Props( &buf );
 	    }
 	}
     }
@@ -242,7 +242,7 @@ bool FGMiniFDM::process() {
 
 
 // close the channel
-bool FGMiniFDM::close() {
+bool FGNativeGUI::close() {
     SGIOChannel *io = get_io_channel();
 
     set_enabled( false );

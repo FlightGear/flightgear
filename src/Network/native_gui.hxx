@@ -1,4 +1,4 @@
-// mini_fdm.hxx -- FGFS "mini" flight dynamics protocal class
+// native_gui.hxx -- FGFS external gui data export class
 //
 // Written by Curtis Olson, started January 2002.
 //
@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _FG_MINI_FDM_HXX
-#define _FG_MINI_FDM_HXX
+#ifndef _FG_NATIVE_GUI_HXX
+#define _FG_NATIVE_GUI_HXX
 
 
 #include <simgear/compiler.h>
@@ -30,18 +30,18 @@
 #include <FDM/flight.hxx>
 
 #include "protocol.hxx"
-#include "net_fdm_mini.hxx"
+#include "net_gui.hxx"
 
 
-class FGMiniFDM : public FGProtocol, public FGInterface {
+class FGNativeGUI : public FGProtocol, public FGInterface {
 
-    FGNetMiniFDM buf;
+    FGNetGUI buf;
     int length;
 
 public:
 
-    FGMiniFDM();
-    ~FGMiniFDM();
+    FGNativeGUI();
+    ~FGNativeGUI();
 
     // open hailing frequencies
     bool open();
@@ -56,13 +56,13 @@ public:
 
 // Helper functions which may be useful outside this class
 
-// Populate the FGNetMiniFDM structure from the property tree.
-void FGProps2NetMiniFDM( FGNetMiniFDM *net );
+// Populate the FGNetGUI structure from the property tree.
+void FGProps2NetGUI( FGNetGUI *net );
 
-// Update the property tree from the FGNetMiniFDM structure.
-void FGNetMiniFDM2Props( FGNetMiniFDM *net );
+// Update the property tree from the FGNetGUI structure.
+void FGNetGUI2Props( FGNetGUI *net );
 
 
-#endif // _FG_MINI_FDM_HXX
+#endif // _FG_NATIVE_GUI_HXX
 
 

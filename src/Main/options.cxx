@@ -915,8 +915,8 @@ parse_option (const string& arg)
 	add_channel( "native_ctrls", arg.substr(15) );
     } else if ( arg.find( "--native-fdm=" ) == 0 ) {
 	add_channel( "native_fdm", arg.substr(13) );
-    } else if ( arg.find( "--mini-fdm=" ) == 0 ) {
-	add_channel( "mini_fdm", arg.substr(11) );
+    } else if ( arg.find( "--native-gui=" ) == 0 ) {
+	add_channel( "native_gui", arg.substr(13) );
     } else if ( arg.find( "--opengc=" ) == 0 ) {
 	// char stop;
 	// cout << "Adding channel for OpenGC Display" << endl; cin >> stop;
