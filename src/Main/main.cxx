@@ -279,11 +279,14 @@ void fgRenderFrame( void ) {
     FGTime *t = FGTime::cur_time_params;
     // FGView *v = &current_view;
     static double last_visibility = -9999;
+
+#if 0
     static bool in_puff = false;
     static double puff_length = 0;
     static double puff_progression = 0;
     const double ramp_up = 0.15;
     const double ramp_down = 0.15;
+#endif
 
     double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
@@ -359,7 +362,42 @@ void fgRenderFrame( void ) {
 	// set the opengl state to known default values
 	default_state->force();
 
-	// draw sky dome
+	// update fog params if visibility has changed
+#ifndef FG_OLD_WEATHER
+	thesky->set_visibility( WeatherDatabase->getWeatherVisibility() );
+#else
+	thesky->set_visibility( current_weather.get_visibility() );
+#endif
+
+	thesky->modify_vis( cur_fdm_state->get_Altitude()
+			    * FEET_TO_METER,
+				
+			    ( global_multi_loop * 
+			      current_options.get_speed_up() ) /
+			    (double)current_options.get_model_hz() );
+
+	double actual_visibility = thesky->get_visibility();
+	// cout << "actual visibility = " << actual_visibility << endl;
+
+	if ( actual_visibility != last_visibility ) {
+	    last_visibility = actual_visibility;
+
+	    // cout << "----> updating fog params" << endl;
+		
+	    GLfloat fog_exp_density;
+	    GLfloat fog_exp2_density;
+    
+	    // for GL_FOG_EXP
+	    fog_exp_density = -log(0.01 / actual_visibility);
+    
+	    // for GL_FOG_EXP2
+	    fog_exp2_density = sqrt( -log(0.01) ) / actual_visibility;
+    
+	    // Set correct opengl fog density
+	    glFogf (GL_FOG_DENSITY, fog_exp2_density);
+	}
+ 
+	// update the sky dome
 	if ( current_options.get_skyblend() ) {
 	    sgVec3 view_pos;
 	    sgSetVec3( view_pos,
@@ -410,6 +448,7 @@ void fgRenderFrame( void ) {
 				current_view.get_local_up(),
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
+				cur_fdm_state->get_Altitude() * FEET_TO_METER,
 				cur_light_params.sun_rotation,
 				FGTime::cur_time_params->getGst(),
 				ephem->getSunRightAscension(),
@@ -425,98 +464,6 @@ void fgRenderFrame( void ) {
 	    glFogfv( GL_FOG_COLOR, l->adj_fog_color );
 	}
 
-	// update fog params if visibility has changed
-#ifndef FG_OLD_WEATHER
-	double cur_visibility = WeatherDatabase->getWeatherVisibility();
-#else
-	double cur_visibility = current_weather.get_visibility();
-#endif
-	double actual_visibility = cur_visibility;
-
-	if ( current_options.get_clouds() ) {
-	    double diff = fabs( cur_fdm_state->get_Altitude() * FEET_TO_METER -
-				current_options.get_clouds_asl() );
-	    // cout << "altitude diff = " << diff << endl;
-	    if ( diff < 75 ) {
-		if ( ! in_puff ) {
-		    // calc chance of entering cloud puff
-		    double rnd = fg_random();
-		    double chance = rnd * rnd * rnd;
-		    if ( chance > 0.95 /* * (diff - 25) / 50.0 */ ) {
-			in_puff = true;
-			do {
-			    puff_length = fg_random() * 2.0; // up to 2 seconds
-			} while ( puff_length <= 0.0 );
-			puff_progression = 0.0;
-		    }
-		}
-
-		actual_visibility = cur_visibility * (diff - 25) / 50.0;
-
-		if ( in_puff ) {
-		    // modify actual_visibility based on puff envelope
-
-		    if ( puff_progression <= ramp_up ) {
-			double x = FG_PI_2 * puff_progression / ramp_up;
-			double factor = 1.0 - sin( x );
-			actual_visibility = actual_visibility * factor;
-		    } else if ( puff_progression >= ramp_up + puff_length ) {
-			double x = FG_PI_2 * 
-			    (puff_progression - (ramp_up + puff_length)) /
-			    ramp_down;
-			double factor = sin( x );
-			actual_visibility = actual_visibility * factor;
-		    } else {
-			actual_visibility = 0.0;
-		    }
-
-		    /* cout << "len = " << puff_length
-			 << "  x = " << x 
-			 << "  factor = " << factor
-			 << "  actual_visibility = " << actual_visibility 
-			 << endl; */
-
-		    puff_progression += ( global_multi_loop * 
-					  current_options.get_speed_up() ) /
-			(double)current_options.get_model_hz();
-
-		    /* cout << "gml = " << global_multi_loop 
-			 << "  speed up = " << current_options.get_speed_up()
-			 << "  hz = " << current_options.get_model_hz() << endl;
-			 */ 
-
-		    if ( puff_progression > puff_length + ramp_up + ramp_down) {
-			in_puff = false; 
-		    }
-		}
-
-		// never let visibility drop below zero
-		if ( actual_visibility < 0 ) {
-		    actual_visibility = 0;
-		}
-	    }
-	}
-
-	// cout << "actual visibility = " << actual_visibility << endl;
-
-	if ( actual_visibility != last_visibility ) {
-	    last_visibility = actual_visibility;
-
-	    // cout << "----> updating fog params" << endl;
-		
-	    GLfloat fog_exp_density;
-	    GLfloat fog_exp2_density;
-    
-	    // for GL_FOG_EXP
-	    fog_exp_density = -log(0.01 / actual_visibility);
-    
-	    // for GL_FOG_EXP2
-	    fog_exp2_density = sqrt( -log(0.01) ) / actual_visibility;
-    
-	    // Set correct opengl fog density
-	    glFogf (GL_FOG_DENSITY, fog_exp2_density);
-	}
- 
 	// set lighting parameters
 	GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, l->scene_ambient );
@@ -641,7 +588,7 @@ void fgRenderFrame( void ) {
 	ssgCullAndDraw( scene );
 
 	// draw the sky cloud layers
-	thesky->draw_scene();
+	thesky->draw_scene( cur_fdm_state->get_Altitude() * FEET_TO_METER );
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -1409,8 +1356,9 @@ int main( int argc, char **argv ) {
 		   ephem->getPlanets(), 60000.0,
 		   ephem->getNumStars(),
 		   ephem->getStars(), 60000.0 );
-    thesky->add_cloud_layer( 1500.0 );
-    thesky->add_cloud_layer( 2100.0 );
+    thesky->add_cloud_layer( 1000.0, 200.0, 50.0 );
+    thesky->add_cloud_layer( 1800.0, 400.0, 100.0 );
+    thesky->add_cloud_layer( 4000.0, 20.0, 10.0 );
 
     // Terrain branch
     terrain = new ssgBranch;
