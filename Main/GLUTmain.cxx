@@ -69,7 +69,7 @@
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
+#include <Math/polar3d.hxx>
 #include <PUI/pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -99,8 +99,8 @@ int use_signals = 0;
 
 // Global structures for the Audio library
 #ifdef HAVE_AUDIO_SUPPORT
-slScheduler audio_sched ( 8000 );
-smMixer audio_mixer;
+slScheduler *audio_sched;
+smMixer *audio_mixer;
 slSample *s1;
 slSample *s2;
 #endif
@@ -390,6 +390,8 @@ static void fgRenderFrame( void ) {
 	if ( o->textures ) {
 	    // texture parameters
 	    xglEnable( GL_TEXTURE_2D );
+	    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+	    xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 	    // set base color (I don't think this is doing anything here)
 	    xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
 	    xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
@@ -581,7 +583,7 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef HAVE_AUDIO_SUPPORT
-    audio_sched . update();
+    audio_sched -> update();
 #endif
 
     // redraw display
@@ -625,7 +627,7 @@ static void fgIdleFunction ( void ) {
 	    strcat(mp3file, "/Sounds/");
 	    strcat(mp3file, "intro.mp3");
 	    sprintf(command, 
-		    "(touch %s; ampg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
+		    "(touch %s; mpg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
 		    lockfile, mp3file, lockfile );
 	    fgPrintf( FG_GENERAL, FG_INFO, 
 		      "Starting intro music: %s\n", mp3file);
@@ -695,10 +697,10 @@ static void fgIdleFunction ( void ) {
 	}
 #endif // WIN32
 
-	// audio_sched = new slScheduler ( 8000 );
-	// audio_mixer = new smMixer;
-	audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
-	audio_sched . setSafetyMargin ( 1.0 ) ;
+	audio_sched = new slScheduler ( 8000 );
+	audio_mixer = new smMixer;
+	audio_mixer -> setMasterVolume ( 30 ) ;  /* 50% of max volume. */
+	audio_sched -> setSafetyMargin ( 1.0 ) ;
 	strcpy(path, o->fg_root);
 	strcat(path, "/Sounds/");
 
@@ -706,10 +708,10 @@ static void fgIdleFunction ( void ) {
 	strcat(slfile, "prpidle.wav");
 	// s1 = new slSample ( slfile );
 	s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", 
-			    &audio_sched );
+			    audio_sched );
 	printf("Rate = %d  Bps = %d  Stereo = %d\n", 
 	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
-	audio_sched . loopSample ( s1 );
+	audio_sched -> loopSample ( s1 );
 	
 	// strcpy(slfile, path);
 	// strcat(slfile, "thunder.wav");
@@ -869,6 +871,12 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.32  1998/07/08 14:45:07  curt
+// polar3d.h renamed to polar3d.hxx
+// vector.h renamed to vector.hxx
+// updated audio support so it waits to create audio classes (and tie up
+//   /dev/dsp) until the mpg123 player is finished.
+//
 // Revision 1.31  1998/07/06 21:34:17  curt
 // Added an enable/disable splash screen option.
 // Added an enable/disable intro music option.

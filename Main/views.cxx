@@ -31,8 +31,8 @@
 #include <Flight/flight.h>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
-#include <Math/polar3d.h>
-#include <Math/vector.h>
+#include <Math/polar3d.hxx>
+#include <Math/vector.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_time.hxx>
 
@@ -89,7 +89,7 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
 // Update the view parameters
 void fgVIEW::Update( fgFLIGHT *f ) {
     fgOPTIONS *o;
-    fgPolarPoint3d p;
+    fgPoint3d p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
@@ -455,6 +455,12 @@ void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 
 // $Log$
+// Revision 1.14  1998/07/08 14:45:08  curt
+// polar3d.h renamed to polar3d.hxx
+// vector.h renamed to vector.hxx
+// updated audio support so it waits to create audio classes (and tie up
+//   /dev/dsp) until the mpg123 player is finished.
+//
 // Revision 1.13  1998/07/04 00:52:27  curt
 // Add my own version of gluLookAt() (which is nearly identical to the
 // Mesa/glu version.)  But, by calculating the Model View matrix our selves

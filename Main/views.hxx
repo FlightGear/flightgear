@@ -87,14 +87,14 @@ public:
     double vfc_ratio;
 
     // absolute view position
-    fgCartesianPoint3d abs_view_pos;
+    fgPoint3d abs_view_pos;
 
     // view position translated to scenery.center
-    fgCartesianPoint3d view_pos;
+    fgPoint3d view_pos;
 
     // cartesion coordinates of current lon/lat if at sea level
     // translated to scenery.center*/
-    fgCartesianPoint3d cur_zero_elev;
+    fgPoint3d cur_zero_elev;
 
     // vector in cartesian coordinates from current position to the
     // postion on the earth's surface the sun is directly over
@@ -173,6 +173,12 @@ void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 
 // $Log$
+// Revision 1.10  1998/07/08 14:45:09  curt
+// polar3d.h renamed to polar3d.hxx
+// vector.h renamed to vector.hxx
+// updated audio support so it waits to create audio classes (and tie up
+//   /dev/dsp) until the mpg123 player is finished.
+//
 // Revision 1.9  1998/07/04 00:52:27  curt
 // Add my own version of gluLookAt() (which is nearly identical to the
 // Mesa/glu version.)  But, by calculating the Model View matrix our selves
