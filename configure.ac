@@ -137,7 +137,7 @@ case "${host}" in
     if test -d /opt/X11R6 ; then
         EXTRA_DIR2="/opt/X11R6"
     fi
-    EXTRA_DIRS="$EXTRA_DIR1 $EXTRA_DIR2"
+    EXTRA_DIRS="${EXTRA_DIRS} $EXTRA_DIR1 $EXTRA_DIR2"
     ;;
 
 esac
