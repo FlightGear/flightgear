@@ -396,9 +396,11 @@ bool FGATC610x::open() {
 
     mag_compass = fgGetNode( "/instrumentation/magnetic-compass/indicated-heading-deg", true );
 
-    dme_min = fgGetNode( "/radios/dme/ete-min", true );
-    dme_kt = fgGetNode( "/radios/dme/speed-kt", true );
-    dme_nm = fgGetNode( "/radios/dme/distance-nm", true );
+    dme_min = fgGetNode( "/instrumentation/dme/indicated-time-min", true );
+    dme_kt = fgGetNode( "/instrumentation/dme/indicated-ground-speed-kt",
+                        true );
+    dme_nm = fgGetNode( "/instrumentation/dme/indicated-distance-nm", true );
+    dme_in_range = fgGetNode( "/instrumentation/dme/in-range", true );
 
     adf_bus_power = fgGetNode( "/systems/electrical/outputs/adf", true );
     dme_bus_power = fgGetNode( "/systems/electrical/outputs/dme", true );
@@ -863,13 +865,21 @@ bool FGATC610x::do_radio_switches() {
     dme_switch = (radio_switch_data[7] >> 4) & 0x03;
     if ( dme_switch == 0 ) {
 	// off
-	fgSetInt( "/radios/dme/switch-position", 0 );
+	fgSetInt( "/instrumentation/dme/switch-position", 0 );
     } else if ( dme_switch == 2 ) {
 	// nav1
-	fgSetInt( "/radios/dme/switch-position", 1 );
+	fgSetInt( "/instrumentation/dme/switch-position", 1 );
+        fgSetString( "/instrumentation/dme/frequencies/source",
+                     "/radios/nav[0]/frequencies/selected-mhz" );
+	freq = fgGetFloat( "/radios/nav[0]/frequencies/selected-mhz", true );
+        fgSetFloat( "/instrumentation/dme/frequencies/selected-mhz", freq );
     } else if ( dme_switch == 1 ) {
 	// nav2
-	fgSetInt( "/radios/dme/switch-position", 3 );
+	fgSetInt( "/instrumentation/dme/switch-position", 3 );
+        fgSetString( "/instrumentation/dme/frequencies/source",
+                     "/radios/nav[1]/frequencies/selected-mhz" );
+	freq = fgGetFloat( "/radios/nav[1]/frequencies/selected-mhz", true );
+        fgSetFloat( "/instrumentation/dme/frequencies/selected-mhz", freq );
     }
 
     // NavCom1 Power
@@ -1325,43 +1335,50 @@ bool FGATC610x::do_radio_display() {
     int i;
 
     if ( dme_has_power() && dme_servicable->getBoolValue() ) {
-	// DME minutes
-	float minutes = dme_min->getFloatValue();
-	if ( minutes > 999 ) {
-	    minutes = 999.0;
-	}
-	snprintf(digits, 7, "%03.0f", minutes);
-	for ( i = 0; i < 6; ++i ) {
-	    digits[i] -= '0';
-	}
-	radio_display_data[0] = digits[1] << 4 | digits[2];
-	radio_display_data[1] = 0xf0 | digits[0];
+        if ( dme_in_range->getBoolValue() ) {
+            // DME minutes
+            float minutes = dme_min->getFloatValue();
+            if ( minutes > 999 ) {
+                minutes = 999.0;
+            }
+            snprintf(digits, 7, "%03.0f", minutes);
+            for ( i = 0; i < 6; ++i ) {
+                digits[i] -= '0';
+            }
+            radio_display_data[0] = digits[1] << 4 | digits[2];
+            radio_display_data[1] = 0xf0 | digits[0];
 	
-	// DME knots
-	float knots = dme_kt->getFloatValue();
-	if ( knots > 999 ) {
-	    knots = 999.0;
-	}
-	snprintf(digits, 7, "%03.0f", knots);
-	for ( i = 0; i < 6; ++i ) {
-	    digits[i] -= '0';
-	}
-	radio_display_data[2] = digits[1] << 4 | digits[2];
-	radio_display_data[3] = 0xf0 | digits[0];
+            // DME knots
+            float knots = dme_kt->getFloatValue();
+            if ( knots > 999 ) {
+                knots = 999.0;
+            }
+            snprintf(digits, 7, "%03.0f", knots);
+            for ( i = 0; i < 6; ++i ) {
+                digits[i] -= '0';
+            }
+            radio_display_data[2] = digits[1] << 4 | digits[2];
+            radio_display_data[3] = 0xf0 | digits[0];
 
-	// DME distance (nm)
-	float nm = dme_nm->getFloatValue();
-	if ( nm > 99 ) {
-	    nm = 99.0;
-	}
-	snprintf(digits, 7, "%04.1f", nm);
-	for ( i = 0; i < 6; ++i ) {
-	    digits[i] -= '0';
-	}
-	radio_display_data[4] = digits[1] << 4 | digits[3];
-	radio_display_data[5] = 0x00 | digits[0];
-	// the 0x00 in the upper nibble of the 6th byte of each
-	// display turns on the decimal point
+            // DME distance (nm)
+            float nm = dme_nm->getFloatValue();
+            if ( nm > 99 ) {
+                nm = 99.0;
+            }
+            snprintf(digits, 7, "%04.1f", nm);
+            for ( i = 0; i < 6; ++i ) {
+                digits[i] -= '0';
+            }
+            radio_display_data[4] = digits[1] << 4 | digits[3];
+            radio_display_data[5] = 0x00 | digits[0];
+            // the 0x00 in the upper nibble of the 6th byte of each
+            // display turns on the decimal point
+        } else {
+            // out of range
+            for ( i = 0; i < 6; ++i ) {
+                radio_display_data[i] = 0xee;
+            }
+        }
     } else {
 	// blank dem display
 	for ( i = 0; i < 6; ++i ) {
