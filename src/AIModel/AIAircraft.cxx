@@ -28,6 +28,7 @@
 #include <Scenery/scenery.hxx>
 #include <string>
 #include <math.h>
+#include <time.h>
 
 SG_USING_STD(string);
 
