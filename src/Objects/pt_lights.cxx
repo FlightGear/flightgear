@@ -288,8 +288,6 @@ ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
                                      const string &material,
                                      sgVec3 up )
 {
-    bool first = true;
-
     sgVec3 nup;
     sgNormalizeVec3( nup, up );
 
@@ -353,11 +351,6 @@ ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
         leaf->setCallback( SSG_CALLBACK_POSTDRAW, StrobePostDraw );
 
         rabbit->addKid( leaf );
-        if ( first ) {
-            // ssg bug where first entry in animation is ignored.
-            rabbit->addKid( leaf );
-        }
-            
     }
 
     rabbit->setDuration( 10 );
