@@ -45,11 +45,10 @@
 
 GLint planets = 0;
 
-struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
-                                        struct OrbElements theSun,
-                                        fgTIME t, int idx)
+void fgCalculatePlanet(struct OrbElements planet, struct OrbElements theSun,
+		       fgTIME t, int idx, struct CelestialCoord *result)
 {
-    struct CelestialCoord result;
+    // struct CelestialCoord result;
 
     fgSUNPOS SolarPosition;
 
@@ -86,8 +85,8 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
     ye = yg * cos(ecl) - zg * sin(ecl);
     ze = yg * sin(ecl) + zg * cos(ecl);
 
-    result.RightAscension = atan2(ye,xe);
-    result.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
+    result->RightAscension = atan2(ye,xe);
+    result->Declination = atan2(ze, sqrt(xe*xe + ye*ye));
 	 
     /* Let's calculate the brightness of the planet */
     R = sqrt ( xg*xg + yg*yg + zg*zg);
@@ -97,47 +96,48 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
     switch(idx)
       {
       case 2: /* mercury */
-	result.magnitude = -0.36 + 5*log10( r*R ) + 0.027 * FV + 2.2E-13 * pow(FV, 6);
+	result->magnitude = -0.36 + 5*log10( r*R ) + 0.027 * FV + 2.2E-13 * pow(FV, 6);
 	break;
       case 3: /*venus */
-	result.magnitude = -4.34 + 5*log10( r*R ) + 0.013 * FV + 4.2E-07 * pow(FV,3);
+	result->magnitude = -4.34 + 5*log10( r*R ) + 0.013 * FV + 4.2E-07 * pow(FV,3);
 	break;
       case 4: /* mars */
-	result.magnitude = -1.51 + 5*log10( r*R ) + 0.016 * FV;
+	result->magnitude = -1.51 + 5*log10( r*R ) + 0.016 * FV;
 	break;
       case 5: /* Jupiter */
-	result.magnitude = -9.25 + 5*log10( r*R ) + 0.014 * FV;
+	result->magnitude = -9.25 + 5*log10( r*R ) + 0.014 * FV;
 	break;
       case 6: /* Saturn */
 	
 	ir = 0.4897394;
 	Nr = 2.9585076 + 6.6672E-7*actTime;
 	
-	B = asin (sin (result.Declination) * cos (ir) -
-		  cos (result.Declination) * sin (ir) *
-		  sin (result.RightAscension - Nr));
+	B = asin (sin (result->Declination) * cos (ir) -
+		  cos (result->Declination) * sin (ir) *
+		  sin (result->RightAscension - Nr));
 	ring_magn = -2.6 * sin (fabs(B)) + 1.2 * pow(sin(B),2);
-	result.magnitude = -9.0 + 5*log10( r*R ) + 0.044 * FV + ring_magn;
+	result->magnitude = -9.0 + 5*log10( r*R ) + 0.044 * FV + ring_magn;
 	break;
       case 7: /* Uranus */
-	result.magnitude = -7.15 + 5*log10( r*R) + 0.001 * FV;
+	result->magnitude = -7.15 + 5*log10( r*R) + 0.001 * FV;
 	break;
       case 8:  /* Neptune */
-	result.magnitude = -6.90 + 5*log10 (r*R) + 0.001 *FV;
+	result->magnitude = -6.90 + 5*log10 (r*R) + 0.001 *FV;
 	break;
       default:
 	fgPrintf( FG_ASTRO, FG_ALERT, "index %d out of range !!!!\n", idx);
       }
     fgPrintf( FG_ASTRO, FG_DEBUG,
 	      "    Planet found at %f (ra), %f (dec)\n",
-	      result.RightAscension, result.Declination);
+	      result->RightAscension, result->Declination);
     fgPrintf( FG_ASTRO, FG_DEBUG,
 	      "      Geocentric dist     %f\n"
 	      "      Heliocentric dist   %f\n"
 	      "      Distance to the sun %f\n"
 	      "      Phase angle         %f\n"
-	      "      Brightness          %f\n", R, r, s, FV, result.magnitude);
-    return result;
+	      "      Brightness          %f\n", R, r, s, FV, result->magnitude);
+
+    // return result;
 }
 
 
@@ -164,8 +164,8 @@ void fgPlanetsInit( void )
   /* Add the planets to all four display lists */
   for ( i = 2; i < 9; i++ ) {
     fgSolarSystemUpdate(&(pltOrbElements[i]), cur_time_params);
-    pltPos = fgCalculatePlanet(pltOrbElements[i], 
-			       pltOrbElements[0], cur_time_params, i);
+    fgCalculatePlanet(pltOrbElements[i], pltOrbElements[0], 
+		      cur_time_params, i, &pltPos);
     
     magnitude = (0.0 - pltPos.magnitude) / 5.0 + 1.0;
     
@@ -210,9 +210,13 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/28 01:19:01  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.6  1998/06/27 16:51:54  curt
+/* In fgCalculatePlanet() pass a pointer to a structure to be modified, rather
+/* than returning the entire structure.
 /*
+ * Revision 1.5  1998/04/28 01:19:01  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.4  1998/04/26 05:10:01  curt
  * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
  *

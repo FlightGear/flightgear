@@ -32,10 +32,8 @@
 #endif                                   
 
 
-struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
-					struct OrbElements theSun,
-					fgTIME t, int idx);
-
+void fgCalculatePlanet(struct OrbElements planet, struct OrbElements theSun,
+		       fgTIME t, int idx, struct CelestialCoord *result);
 
 void fgPlanetsInit( void );
 void fgPlanetsRender( void );
@@ -45,9 +43,13 @@ void fgPlanetsRender( void );
 
 
 /* $Log$
-/* Revision 1.2  1998/04/28 01:19:02  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.3  1998/06/27 16:51:54  curt
+/* In fgCalculatePlanet() pass a pointer to a structure to be modified, rather
+/* than returning the entire structure.
 /*
+ * Revision 1.2  1998/04/28 01:19:02  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.1  1998/04/22 13:21:32  curt
  * C++ - ifing the code a bit.
  *
