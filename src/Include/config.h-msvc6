@@ -162,6 +162,8 @@
 
 #define HAVE_MEMCPY 1
 
+#ifndef ENABLE_AUDIO_SUPPORT
 #define  ENABLE_AUDIO_SUPPORT
+#endif
 
 // eof - config.h-msvc6 - single flightgear config.h file
