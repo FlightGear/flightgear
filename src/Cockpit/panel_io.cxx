@@ -765,12 +765,8 @@ fgReadPanel (istream &input)
 
   try {
     readProperties(input, &root);
-  } catch (const sg_io_exception &e) {
-    string message = e.getMessage();
-    message += "\n at ";
-    message += e.getLocation().asString();
-    SG_LOG(SG_INPUT, SG_ALERT, message);
-    mkDialog(message.c_str());
+  } catch (const sg_exception &e) {
+    guiErrorMessage("Error reading panel: ", e);
     return 0;
   }
   return readPanel(&root);
@@ -792,12 +788,8 @@ fgReadPanel (const string &relative_path)
 
   try {
     readProperties(path.str(), &root);
-  } catch (const sg_io_exception &e) {
-    string message = e.getMessage();
-    message += "\n at ";
-    message += e.getLocation().asString();
-    SG_LOG(SG_INPUT, SG_ALERT, message);
-    mkDialog(message.c_str());
+  } catch (const sg_exception &e) {
+    guiErrorMessage("Error reading panel: ", e);
     return 0;
   }
   return readPanel(&root);

@@ -648,13 +648,8 @@ int readHud( istream &input )
 
     try {
       readProperties(input, &root);
-    } catch (const sg_io_exception &e) {
-      string message = "Error reading HUD: ";
-      message += e.getMessage();
-      message += "\n at ";
-      message += e.getLocation().asString();
-      SG_LOG(SG_INPUT, SG_ALERT, message);
-      mkDialog(message.c_str());
+    } catch (const sg_exception &e) {
+      guiErrorMessage("Error reading HUD: ", e);
       return 0;
     }
   
@@ -687,13 +682,8 @@ int readHud( istream &input )
         SGPropertyNode root2;
 	try {
 	  readProperties(path.str(), &root2);
-	} catch (const sg_io_exception &e) {
-	  string message = "Error reading HUD instrument: ";
-	  message += e.getMessage();
-	  message += "\n at ";
-	  message += e.getLocation().asString();
-	  SG_LOG(SG_INPUT, SG_ALERT, message);
-	  mkDialog(message.c_str());
+	} catch (const sg_exception &e) {
+	  guiErrorMessage("Error reading HUD instrument: ", e);
 	  continue;
 	}
 	readInstrument(&root2);

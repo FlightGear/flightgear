@@ -212,13 +212,8 @@ do_preferences_load (const SGPropertyNode * arg, SGCommandState ** state)
 	 << props_path.str());
   try {
     readProperties(props_path.str(), globals->get_props());
-  } catch (const sg_io_exception &e) {
-    string message = "Error reading global preferences: ";
-    message += e.getMessage();
-    message += "\n at ";
-    message += e.getLocation().asString();
-    SG_LOG(SG_INPUT, SG_ALERT, message);
-    mkDialog(message.c_str());
+  } catch (const sg_exception &e) {
+    guiErrorMessage("Error reading global preferences: ", e);
     return false;
   }
   SG_LOG(SG_INPUT, SG_INFO, "Successfully read global preferences.");
