@@ -999,6 +999,8 @@ static void fgMainLoop( void ) {
 	= fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
 	= fgGetNode("/position/altitude-ft");
+    static const SGPropertyNode *cur_time_override
+	= fgGetNode("/sim/time/cur-time-override", true);
 
     static long remainder = 0;
     long elapsed;
@@ -1081,6 +1083,7 @@ static void fgMainLoop( void ) {
 
     t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
 	       latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
+	       cur_time_override->getLongValue(),
 	       globals->get_warp() );
 
     if ( globals->get_warp_delta() != 0 ) {
