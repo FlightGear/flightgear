@@ -990,40 +990,42 @@ static void fgIdleFunction ( void ) {
 	}
 #endif // WIN32
 
-	audio_sched = new slScheduler ( 8000 );
-	audio_mixer = new smMixer;
-	audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
-	audio_sched -> setSafetyMargin ( 1.0 ) ;
+	if ( current_options.get_sound() ) {
+	    audio_sched = new slScheduler ( 8000 );
+	    audio_mixer = new smMixer;
+	    audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
+	    audio_sched -> setSafetyMargin ( 1.0 ) ;
 
-	FGPath slfile( current_options.get_fg_root() );
-	slfile.append( "Sounds/wasp.wav" );
+	    FGPath slfile( current_options.get_fg_root() );
+	    slfile.append( "Sounds/wasp.wav" );
 
-	s1 = new slSample ( (char *)slfile.c_str() );
-	FG_LOG( FG_GENERAL, FG_INFO,
-		"Rate = " << s1 -> getRate()
-		<< "  Bps = " << s1 -> getBps()
-		<< "  Stereo = " << s1 -> getStereo() );
-	audio_sched -> loopSample ( s1 );
+	    s1 = new slSample ( (char *)slfile.c_str() );
+	    FG_LOG( FG_GENERAL, FG_INFO,
+		    "Rate = " << s1 -> getRate()
+		    << "  Bps = " << s1 -> getBps()
+		    << "  Stereo = " << s1 -> getStereo() );
+	    audio_sched -> loopSample ( s1 );
 
-	if ( audio_sched->not_working() ) {
-	    // skip
-	} else {
-	    pitch_envelope.setStep  ( 0, 0.01, 0.6 );
-	    volume_envelope.setStep ( 0, 0.01, 0.6 );
+	    if ( audio_sched->not_working() ) {
+		// skip
+	    } else {
+		pitch_envelope.setStep  ( 0, 0.01, 0.6 );
+		volume_envelope.setStep ( 0, 0.01, 0.6 );
 
-	    audio_sched -> addSampleEnvelope( s1, 0, 0, 
-					      &pitch_envelope,
-					      SL_PITCH_ENVELOPE );
-	    audio_sched -> addSampleEnvelope( s1, 0, 1, 
-					      &volume_envelope,
-					      SL_VOLUME_ENVELOPE );
+		audio_sched -> addSampleEnvelope( s1, 0, 0, 
+						  &pitch_envelope,
+						  SL_PITCH_ENVELOPE );
+		audio_sched -> addSampleEnvelope( s1, 0, 1, 
+						  &volume_envelope,
+						  SL_VOLUME_ENVELOPE );
+	    }
+
+	    // strcpy(slfile, path);
+	    // strcat(slfile, "thunder.wav");
+	    // s2 -> loadFile ( slfile );
+	    // s2 -> adjustVolume(0.5);
+	    // audio_sched -> playSample ( s2 );
 	}
-
-	// strcpy(slfile, path);
-	// strcat(slfile, "thunder.wav");
-	// s2 -> loadFile ( slfile );
-	// s2 -> adjustVolume(0.5);
-	// audio_sched -> playSample ( s2 );
 #endif
 
 	// sleep(1);
