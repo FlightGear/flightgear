@@ -376,12 +376,14 @@ void FGRadioStack::search()
 
     static string last_nav1_ident = "";
     static string last_nav2_ident = "";
-
+    static bool last_nav1_vor = false;
+    static bool last_nav2_vor = false;
     if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
 	nav1_ident = ils.get_locident();
-	if ( last_nav1_ident != nav1_ident ) {
+	if ( last_nav1_ident != nav1_ident || last_nav1_vor ) {
 	    nav1_trans_ident = ils.get_trans_ident();
 	    last_nav1_ident = nav1_ident;
+	    last_nav1_vor = false;
 	    nav1_valid = true;
 	    nav1_loc = true;
 	    nav1_has_dme = ils.get_has_dme();
@@ -438,8 +440,9 @@ void FGRadioStack::search()
 	}
     } else if ( current_navlist->query( lon, lat, elev, nav1_freq, &nav ) ) {
 	nav1_ident = nav.get_ident();
-	if ( last_nav1_ident != nav1_ident ) {
+	if ( last_nav1_ident != nav1_ident || !last_nav1_vor ) {
 	    last_nav1_ident = nav1_ident;
+	    last_nav1_vor = true;
 	    nav1_trans_ident = nav.get_trans_ident();
 	    nav1_valid = true;
 	    nav1_loc = false;
@@ -495,8 +498,9 @@ void FGRadioStack::search()
 
     if ( current_ilslist->query( lon, lat, elev, nav2_freq, &ils ) ) {
 	nav2_ident = ils.get_locident();
-	if ( last_nav2_ident != nav2_ident ) {
+	if ( last_nav2_ident != nav2_ident || last_nav2_vor ) {
 	    last_nav2_ident = nav2_ident;
+	    last_nav2_vor = false;
 	    nav2_trans_ident = ils.get_trans_ident();
 	    nav2_valid = true;
 	    nav2_loc = true;
@@ -526,8 +530,9 @@ void FGRadioStack::search()
 	}
     } else if ( current_navlist->query( lon, lat, elev, nav2_freq, &nav ) ) {
 	nav2_ident = nav.get_ident();
-	if ( last_nav2_ident != nav2_ident ) {
+	if ( last_nav2_ident != nav2_ident || !last_nav2_vor ) {
 	    last_nav2_ident = nav2_ident;
+	    last_nav2_vor = true;
 	    nav2_trans_ident = nav.get_trans_ident();
 	    nav2_valid = true;
 	    nav2_loc = false;
