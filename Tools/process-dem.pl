@@ -81,7 +81,11 @@ if ( $error < 0.5 ) {
 #     irregularly fitted vertices
 
 if ( $do_demfit ) {
-    $command = "./Dem2node/demfit $ENV{FG_ROOT} $dem_file $error";
+    if ( $dem_file =~ m/.gz$/ ) {
+	$command = "gzip -dc $dem_file | ./Dem2node/demfit $ENV{FG_ROOT} - $error";
+    } else {
+	$command = "./Dem2node/demfit $ENV{FG_ROOT} $dem_file $error";
+    }
 
     print "Running '$command'\n";
 
@@ -132,7 +136,11 @@ if ( $do_triangle_1 ) {
 #     fixed file.1.node
 
 if ( $do_fixnode ) {
-    $command = "./FixNode/fixnode $dem_file $subdir";
+    if ( $dem_file =~ m/.gz$/ ) {
+	$command = "gzip -dc $dem_file | ./FixNode/fixnode - $subdir";
+    } else {
+	$command = "./FixNode/fixnode $dem_file $subdir";
+    }
     print "Running '$command'\n";
     open(OUT, "$command |");
     while ( <OUT> ) {
@@ -329,6 +337,9 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1998/02/01 03:42:26  curt
+# Modifications to handle compressed dem files.
+#
 # Revision 1.9  1998/01/27 18:36:54  curt
 # Lots of updates to get back in sync with changes made over in .../Src/
 #
