@@ -25,13 +25,14 @@
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/structure/exception.hxx>
 #include <simgear/environment/metar.hxx>
+#include <simgear/structure/exception.hxx>
 
 using namespace std;
 
 // text color
-#if defined(__linux__) || defined( __sun__ ) ||defined(__CYGWIN__) || defined( __FreeBSD__ ) || defined ( sgi )
+#if defined(__linux__) || defined( __sun__ ) || defined(__CYGWIN__) \
+    || defined( __FreeBSD__ ) || defined ( sgi )
 #	define R "\033[31;1m"		// red
 #	define G "\033[32;1m"		// green
 #	define Y "\033[33;1m"		// yellow
@@ -133,9 +134,7 @@ void printReport(SGMetar *m)
 	// date/time
 	int year = m->getYear();
 	int month = m->getMonth();
-	cout << "Report time:\t\t";
-	if (year != -1 && month != -1)
-		cout << year << '/' << month << '/' << m->getDay();
+	cout << "Report time:\t\t" << year << '/' << month << '/' << m->getDay();
 	cout << ' ' << m->getHour() << ':';
 	cout << setw(2) << setfill('0') << m->getMinute() << " UTC" << endl;
 
@@ -460,7 +459,7 @@ void getproxy(string& host, string& port)
 }
 
 
-void help()
+void usage()
 {
 	printf(
 		"Usage: metar [-v] [-e elevation] [-r|-c] <list of ICAO airport ids or METAR strings>\n"
@@ -493,7 +492,7 @@ int main(int argc, char *argv[])
 	double elevation = 0.0;
 
 	if (argc <= 1) {
-		help();
+		usage();
 		return 0;
 	}
 
@@ -502,7 +501,7 @@ int main(int argc, char *argv[])
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
-			help();
+			usage();
 		else if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose"))
 			verbose = true;
 		else if (!strcmp(argv[i], "-r") || !strcmp(argv[i], "--report"))
@@ -518,13 +517,13 @@ int main(int argc, char *argv[])
 		} else {
 			static bool shown = false;
 			if (verbose && !shown) {
-				cout << "Proxy host: '" << proxy_host << "'" << endl;
-				cout << "Proxy port: '" << proxy_port << "'" << endl << endl;
+				cerr << "Proxy host: '" << proxy_host << "'" << endl;
+				cerr << "Proxy port: '" << proxy_port << "'" << endl << endl;
 				shown = true;
 			}
 
 			try {
-				SGMetar *m = new SGMetar(argv[i], proxy_host, proxy_port);
+				SGMetar *m = new SGMetar(argv[i], proxy_host, proxy_port, "", time(0));
 				//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
 
 				if (verbose) {
@@ -533,7 +532,6 @@ int main(int argc, char *argv[])
 					const char *unused = m->getUnusedData();
 					if (*unused)
 						cerr << R"UNUSED: " << unused << ""N << endl;
-
 				}
 
 				if (report)
