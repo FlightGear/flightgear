@@ -82,7 +82,7 @@ private:
   float U, V, W;
   float Vn, Ve, Vd, Vee;
   float invMass, invRadius;
-  float Radius;
+  double Radius;
   float AccelN, AccelE, AccelD;
   float lastAccelN, lastAccelE, lastAccelD;
   float LatitudeDot, LongitudeDot, RadiusDot;
