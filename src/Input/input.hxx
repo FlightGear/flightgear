@@ -62,6 +62,12 @@ public:
 
 
   /**
+   * Copy constructor.
+   */
+  FGBinding (const FGBinding &binding);
+
+
+  /**
    * Convenience constructor.
    *
    * @param node The binding will be built from this node.
@@ -126,10 +132,11 @@ public:
 
 
 private:
-  void _fire (const SGPropertyNode *arg) const;
   string _command_name;
   SGCommandMgr::command_t _command;
-  const SGPropertyNode * _arg;
+  mutable SGPropertyNode * _arg;
+  mutable SGPropertyNode * _setting;
+  mutable SGCommandState * _command_state;
 };
 
 
