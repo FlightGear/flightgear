@@ -143,8 +143,8 @@ operator >> ( istream& in, FGNav& n )
 	int var;
 	sscanf(magvar_s.c_str(), "%d%c", &var, &direction);
 	n.magvar = var;
-	if (direction == 'E')
-	    n.magvar = 0 - n.magvar;
+	if (direction == 'W')
+	    n.magvar = -n.magvar;
 	// cout << "Explicit magvar of " << n.magvar << endl;
     }
     // cout << n.ident << " " << n.magvar << endl;
