@@ -217,9 +217,6 @@ FGInput::makeDefault (bool status)
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
-  // static SGPropertyNode *heading_enabled
-  //     = fgGetNode("/autopilot/locks/heading", true);
-
                                 // Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
     SG_LOG(SG_INPUT, SG_WARN, "Key value " << k << " out of range");
@@ -259,10 +256,29 @@ FGInput::doKey (int k, int modifiers, int x, int y)
       }
     }
   }
-
-
                                 // Use the old, default actions.
   SG_LOG( SG_INPUT, SG_DEBUG, "(No user binding.)" );
+
+  if (modifiers & KEYMOD_RELEASED)
+    return;
+  
+  // Hard-coded legacy key handlers.
+  // These need to be turned into FGCommand bindings and mapped via
+  // the input configuration...
+  switch (k) {
+  case 'H':
+    HUD_brightkey( true );
+    break;
+  case 'h':
+    HUD_masterswitch( true );
+    break;
+  case 'I':
+    fgHUDInit2(&current_aircraft); // Minimal Hud
+    break;
+  case 'i':
+    fgHUDInit(&current_aircraft);  // normal HUD
+    break;
+  }
 }
 
 void
