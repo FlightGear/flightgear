@@ -453,10 +453,11 @@ int
 fgJoystickRead()
 {
     int buttons;
+    float *axis_values = new float[MAX_AXES];
 
     for (int i = 0; i < MAX_JOYSTICKS; i++) {
 	jsJoystick * js = joysticks[i].js;
-	float *axis_values = new float[joysticks[i].naxes];
+	// float *axis_values = new float[joysticks[i].naxes];
 	if (js->notWorking()) {
 	    continue;
 	}
@@ -555,14 +556,12 @@ fgJoystickRead()
 		FG_LOG(FG_INPUT, FG_ALERT, "Failed to set value for "
 		       << jsNames[i] << ' ' << buttonNames[j]);
 	}
-
-	// -dw- cleanup 
-	delete axis_values;
-
     }
+
+    // -dw- cleanup 
+    delete axis_values;
 
     return true;
 }
 
 // end of joystick.cxx
-
