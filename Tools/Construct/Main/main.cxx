@@ -402,6 +402,7 @@ void construct_tile( FGConstruct& c ) {
     // match tile edges with any neighbor tiles that have already been
     // generated
     FGMatch m;
+    m.load_neighbor_shared( c );
     m.extract_shared( c );
     m.write_shared( c );
 
