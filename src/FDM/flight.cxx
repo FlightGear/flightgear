@@ -86,7 +86,7 @@ int fgFDMInit(int model, FGInterface& f, double dt) {
 	// fgSlewInit(dt);
 #ifndef __MWERKS__   // -dw- 04/22/99 JSB sim not ported yet
     } else if ( model == FGInterface::FG_JSBSIM ) {
-	fgJSBsimInit(dt);
+	fgJSBsimInit(dt, f);
 	fgJSBsim_2_FGInterface(base_fdm_state);
 #endif
     } else if ( model == FGInterface::FG_LARCSIM ) {

@@ -31,7 +31,7 @@
 
 
 // reset flight params to a specific position 
-int fgJSBsimInit(double dt);
+int fgJSBsimInit(double dt, FGInterface& f);
 
 // update position based on inputs, positions, velocities, etc.
 int fgJSBsimUpdate(FGInterface& f, int multiloop);

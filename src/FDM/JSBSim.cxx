@@ -54,7 +54,7 @@ FGFDMExec FDMExec;
 
 // Initialize the JSBsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
-int fgJSBsimInit(double dt) {
+int fgJSBsimInit(double dt, FGInterface& f) {
     FG_LOG( FG_FLIGHT, FG_INFO, "Starting initializing JSBsim" );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  created FDMExec" );
@@ -69,7 +69,27 @@ int fgJSBsimInit(double dt) {
 					  engine_path.str(), "X15");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" );
 
-    FDMExec.GetState()->Reset(aircraft_path.str(), "Reset00");
+//    FDMExec.GetState()->Reset(aircraft_path.str(), "Reset00");
+
+    FDMExec.GetState()->Initialize(
+      current_options.get_uBody(),
+      current_options.get_vBody(),
+      current_options.get_wBody(),
+      f.get_Phi(),
+      f.get_Theta(),
+      f.get_Psi(),
+      f.get_Latitude() * RAD_TO_DEG,
+      f.get_Longitude() * RAD_TO_DEG,
+      f.get_Altitude()
+    );
+
+//    FDMExec.GetState()->Setlatitude(f.get_Latitude());
+//    FDMExec.GetState()->Setlongitude(f.get_Longitude());
+//    FDMExec.GetState()->Seth(f.get_Altitude());
+//    FDMExec.GetRotation()->Setphi(f.get_Phi());
+//    FDMExec.GetRotation()->Settht(f.get_Theta());
+//    FDMExec.GetRotation()->Setpsi(f.get_Psi());
+
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded initial conditions" );
 
     FDMExec.GetState()->Setdt(dt);
