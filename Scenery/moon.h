@@ -35,8 +35,8 @@
 void fgMoonInit();
 
 /* Draw the Stars */
-
 void fgMoonRender();
+
 struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
                                       struct OrbElements sunParams,
                                       struct fgTIME t);
@@ -48,7 +48,10 @@ extern struct OrbElements pltOrbElements[9];
 
 
 /* $Log$
-/* Revision 1.1  1997/10/25 03:16:09  curt
-/* Initial revision of code contributed by Durk Talsma.
+/* Revision 1.2  1997/10/25 03:24:23  curt
+/* Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
 /*
+ * Revision 1.1  1997/10/25 03:16:09  curt
+ * Initial revision of code contributed by Durk Talsma.
+ *
  */

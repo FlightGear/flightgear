@@ -38,6 +38,8 @@
 #include "../Joystick/joystick.h"
 #include "../Math/fg_random.h"
 #include "../Scenery/mesh.h"
+#include "../Scenery/moon.h"
+#include "../Scenery/orbits.h"
 #include "../Scenery/scenery.h"
 #include "../Scenery/stars.h"
 #include "../Time/fg_time.h"
@@ -174,6 +176,12 @@ void fgInitSubsystems( void ) {
     	exit( 1 );
     }
 
+    /* Initialize the orbital elements of sun, moon and mayor planets */
+    fgSolarSystemInit(*t);
+ 
+    /* Intialize the moon's position */                      
+    fgMoonInit();                                                   
+ 
     /* Initialize the Stars subsystem  */
     fgStarsInit();
 
@@ -216,9 +224,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1997/09/23 00:29:39  curt
-/* Tweaks to get things to compile with gcc-win32.
+/* Revision 1.10  1997/10/25 03:24:23  curt
+/* Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
 /*
+ * Revision 1.9  1997/09/23 00:29:39  curt
+ * Tweaks to get things to compile with gcc-win32.
+ *
  * Revision 1.8  1997/09/22 14:44:20  curt
  * Continuing to try to align stars correctly.
  *

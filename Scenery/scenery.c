@@ -34,8 +34,9 @@
 
 #include "../general.h"
 
-#include "scenery.h"
+#include "moon.h"
 #include "parsevrml.h"
+#include "scenery.h"
 #include "stars.h"
 
 
@@ -89,10 +90,13 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.20  1997/10/25 03:18:27  curt
-/* Incorporated sun, moon, and planet position and rendering code contributed
-/* by Durk Talsma.
+/* Revision 1.21  1997/10/25 03:24:24  curt
+/* Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
 /*
+ * Revision 1.20  1997/10/25 03:18:27  curt
+ * Incorporated sun, moon, and planet position and rendering code contributed
+ * by Durk Talsma.
+ *
  * Revision 1.19  1997/09/05 14:17:30  curt
  * More tweaking with stars.
  *

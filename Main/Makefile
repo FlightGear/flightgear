@@ -70,9 +70,18 @@ GLUTkey.o:
 GLTKkey.o:
 	$(CC) $(CFLAGS) -c GLTKkey.c -o $@
 
+fg_init.o:
+	$(CC) $(CFLAGS) -c fg_init.c -o $@
+
+views.o:
+	$(CC) $(CFLAGS) -c views.c -o $@
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.34  1997/10/25 03:24:21  curt
+# Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
+#
 # Revision 1.33  1997/09/04 02:17:35  curt
 # Shufflin' stuff.
 #
