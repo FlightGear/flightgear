@@ -29,6 +29,7 @@
 # error This library requires C++
 #endif                                   
 
+#include <sg.h>			// plib include
 
 #include <FDM/flight.hxx>
 #include <Math/mat3.h>
@@ -151,6 +152,8 @@ public:
 
     // Current model view matrix;
     GLfloat MODEL_VIEW[16];
+
+    sgMat4 sgLOCAL, sgUP, sgVIEW, sgLARC_TO_SSG;
 
 public:
 

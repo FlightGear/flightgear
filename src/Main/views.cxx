@@ -508,8 +508,6 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
 
-    sgMat4 sgLOCAL, sgUP, sgVIEW;
-
     if ( update_fov ) {
 	// printf("Updating fov\n");
 	UpdateFOV( current_options );
@@ -603,53 +601,85 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
     } else {
 
+	// calculate the transformation matrix to go from LaRCsim to ssg
+	sgVec3 vec1;
+	sgSetVec3( vec1, 0.0, 1.0, 0.0 );
+	sgMat4 mat1;
+	sgMakeRotMat4( mat1, 90, vec1 );
+
+	sgVec3 vec2;
+	sgSetVec3( vec2, 1.0, 0.0, 0.0 );
+	sgMat4 mat2;
+	sgMakeRotMat4( mat2, 90, vec2 );
+
+	sgMultMat4( sgLARC_TO_SSG, mat1, mat2 );
+
+	cout << "LaRCsim to SSG:" << endl;
+	MAT3mat print;
+	int i;
+	int j;
+	for ( i = 0; i < 4; i++ ) {
+	    for ( j = 0; j < 4; j++ ) {
+		print[i][j] = sgLARC_TO_SSG[i][j];
+	    }
+	}
+	MAT3print( print, stdout);
+
 	// code to calculate LOCAL matrix calculated from Phi, Theta, and
 	// Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
 	// flight model
 
 	MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
 	MAT3rotate(R, vec, f->get_Phi());
-	/* printf("Roll matrix\n"); */
-	/* MAT3print(R, stdout); */
+	// cout << "Roll matrix" << endl;
+	// MAT3print(R, stdout);
+
+	sgVec3 sgrollvec;
+	sgSetVec3( sgrollvec, 0.0, 0.0, 1.0 );
+	sgMat4 sgPHI;		// roll
+	sgMakeRotMat4( sgPHI, f->get_Phi() * RAD_TO_DEG, sgrollvec );
+
 
 	MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-	/* MAT3mult_vec(vec, vec, R); */
 	MAT3rotate(TMP, vec, f->get_Theta());
-	/* printf("Pitch matrix\n"); */
-	/* MAT3print(TMP, stdout); */
+	// cout << "Pitch matrix" << endl;;
+	// MAT3print(TMP, stdout);
 	MAT3mult(R, R, TMP);
+	// cout << "tmp rotation matrix, R:" << endl;;
+	// MAT3print(R, stdout);
+
+	sgVec3 sgpitchvec;
+	sgSetVec3( sgpitchvec, 0.0, 1.0, 0.0 );
+	sgMat4 sgTHETA;		// pitch
+	sgMakeRotMat4( sgTHETA, f->get_Theta() * RAD_TO_DEG,
+		       sgpitchvec );
+
+	sgMat4 sgROT;
+	sgMultMat4( sgROT, sgPHI, sgTHETA );
+
 
 	MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-	/* MAT3mult_vec(vec, vec, R); */
-	/* MAT3rotate(TMP, vec, FG_Psi - FG_PI_2); */
 	MAT3rotate(TMP, vec, -f->get_Psi());
-	/* printf("Yaw matrix\n");
-	   MAT3print(TMP, stdout); */
+	// cout << "Yaw matrix" << endl;
+	// MAT3print(TMP, stdout);
 	MAT3mult(LOCAL, R, TMP);
-	// cout << "FG derived LOCAL matrix using MAT3 routines" << endl;
+	// cout << "LOCAL matrix:" << endl;
 	// MAT3print(LOCAL, stdout);
 
-	sgMakeRotMat4( sgLOCAL, 
-		       f->get_Psi() * RAD_TO_DEG,
-		       f->get_Phi() * RAD_TO_DEG,
-		       f->get_Theta() * RAD_TO_DEG );
+	sgVec3 sgyawvec;
+	sgSetVec3( sgyawvec, 1.0, 0.0, 0.0 );
+	sgMat4 sgPSI;		// pitch
+	sgMakeRotMat4( sgPSI, -f->get_Psi() * RAD_TO_DEG, sgyawvec );
+
+	sgMultMat4( sgLOCAL, sgROT, sgPSI );
+
 	/*
-	cout << "FG derived LOCAL matrix using sg routines" << endl;
 	MAT3mat print;
 	int i;
 	int j;
 	for ( i = 0; i < 4; i++ ) {
 	    for ( j = 0; j < 4; j++ ) {
 		print[i][j] = sgLOCAL[i][j];
-	    }
-	}
-	MAT3print( print, stdout);
-
-	sgMat4 sgIDENT;
-	sgMakeIdentMat4( sgIDENT );
-	for ( i = 0; i < 4; i++ ) {
-	    for ( j = 0; j < 4; j++ ) {
-		print[i][j] = sgIDENT[i][j];
 	    }
 	}
 	MAT3print( print, stdout);
@@ -709,7 +739,10 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     cout << "VIEW matrix" << endl;;
     MAT3print(VIEW, stdout);
 
-    sgMultMat4( sgVIEW, sgLOCAL, sgUP );
+    sgMat4 sgTMP;
+    sgMultMat4( sgTMP, sgLOCAL, sgUP );
+    sgMultMat4( sgVIEW, sgLARC_TO_SSG, sgTMP );
+
     cout << "FG derived VIEW matrix using sg routines" << endl;
     MAT3mat print;
     int i;
@@ -720,6 +753,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	}
     }
     MAT3print( print, stdout);
+
 
     // generate the current up, forward, and fwrd-view vectors
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);

@@ -401,24 +401,33 @@ static void fgRenderFrame( void ) {
 	xglLoadIdentity();
 	ssgSetFOV(60.0f, 0.0f);
 	ssgSetNearFar(1.0f, 700.0f);
+	sgMat4 sgTRANS;
+
+	sgMakeTransMat4( sgTRANS, 
+			 current_view.view_pos.x() 
+			 + current_view.view_forward[0] * 20,
+			 current_view.view_pos.y() 
+			 + current_view.view_forward[1] * 20,
+			 current_view.view_pos.z() 
+			 + current_view.view_forward[2] * 20 );
+
+	sgMat4 sgTMP;
+	sgMat4 sgTUX;
+	sgMultMat4( sgTMP, current_view.sgUP, sgTRANS );
+	sgMultMat4( sgTUX, current_view.sgLARC_TO_SSG, sgTMP );
+	
 	sgCoord tuxpos;
-	sgSetCoord( &tuxpos, 
-		    current_view.view_pos.x() + current_view.view_forward[0] 
-		    * 20, 
-		    current_view.view_pos.y() + current_view.view_forward[1]
-		    * 20,
-		    current_view.view_pos.z() + current_view.view_forward[2]
-		    * 20, 
-		    0.0, 0.0, 0.0 );
+	sgSetCoord( &tuxpos, sgTUX );
 	penguin->setTransform( &tuxpos );
 
-	sgCoord campos;
-	sgSetCoord( &campos, 
-		    current_view.view_pos.x(), 
-		    current_view.view_pos.y(),
-		    current_view.view_pos.z(), 
-		    0, 0, 0 );
-	ssgSetCamera( &campos );
+	sgMakeTransMat4( sgTRANS, 
+			 current_view.view_pos.x(),
+			 current_view.view_pos.y(),
+			 current_view.view_pos.z() );
+	sgMat4 sgVIEW;
+	sgMultMat4( sgVIEW, current_view.sgVIEW, sgTRANS );
+	ssgSetCamera( sgVIEW );
+	// ssgSetCamera( current_view.sgVIEW );
 	ssgCullAndDraw( scene );
 
     }
@@ -1058,8 +1067,8 @@ int main( int argc, char **argv ) {
     // distribution) specifically from the ssg tux example
     //
 
-    ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
 
     scene = new ssgRoot;
     penguin = new ssgTransform;
