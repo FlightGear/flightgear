@@ -8,7 +8,6 @@ libCockpit_a_SOURCES = \
 	hud_lat.cxx hud_lon.cxx \
 	hud_rwy.cxx \
 	hud_scal.cxx hud_tbi.cxx \
-	navcom.cxx navcom.hxx \
 	panel.cxx panel.hxx \
         panel_io.cxx panel_io.hxx
 

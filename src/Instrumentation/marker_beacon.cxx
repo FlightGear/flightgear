@@ -100,7 +100,7 @@ FGMarkerBeacon::init ()
     lon_node = fgGetNode("/position/longitude-deg", true);
     lat_node = fgGetNode("/position/latitude-deg", true);
     alt_node = fgGetNode("/position/altitude-ft", true);
-    bus_power = fgGetNode("/systems/electrical/outputs/navcom[0]", true);
+    bus_power = fgGetNode("/systems/electrical/outputs/nav[0]", true);
     power_btn = node->getChild("power-btn", 0, true);
     audio_btn = node->getChild("audio-btn", 0, true);
     serviceable = node->getChild("serviceable", 0, true);

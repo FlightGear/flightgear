@@ -359,9 +359,9 @@ bool FGATC610x::open() {
 
     adf_bus_power = fgGetNode( "/systems/electrical/outputs/adf", true );
     dme_bus_power = fgGetNode( "/systems/electrical/outputs/dme", true );
-    navcom1_bus_power = fgGetNode( "/systems/electrical/outputs/navcom[0]",
+    navcom1_bus_power = fgGetNode( "/systems/electrical/outputs/nav[0]",
                                    true );
-    navcom2_bus_power = fgGetNode( "/systems/electrical/outputs/navcom[1]",
+    navcom2_bus_power = fgGetNode( "/systems/electrical/outputs/nav[1]",
                                    true );
     xpdr_bus_power = fgGetNode( "/systems/electrical/outputs/transponder",
                                  true );
