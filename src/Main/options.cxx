@@ -754,10 +754,10 @@ parse_option (const string& arg)
         fgSetInt("/sim/startup/time-offset",
 			   parse_time_offset( (arg.substr(14)) ));
     } else if ( arg.find( "--time-match-real") != string::npos ) {
-        fgSetString("/sim/startup/time-offset_type",
+        fgSetString("/sim/startup/time-offset-type",
 			      "system-offset");
     } else if ( arg.find( "--time-match-local") != string::npos ) {
-        fgSetString("/sim/startup/time-offset_type",
+        fgSetString("/sim/startup/time-offset-type",
 			      "latitude-offset");
     } else if ( arg.find( "--start-date-sys=") != string::npos ) {
         fgSetInt("/sim/startup/time-offset",
