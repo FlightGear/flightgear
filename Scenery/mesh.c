@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <malloc.h>
+#ifndef __CYGWIN32__
+#  include <malloc.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>  /* atof(), atoi() */
 #include <string.h>
@@ -249,10 +251,13 @@ double mesh_altitude(double lon, double lat) {
 
 
 /* $Log$
-/* Revision 1.12  1997/07/11 03:23:19  curt
-/* Solved some scenery display/orientation problems.  Still have a positioning
-/* (or transformation?) problem.
+/* Revision 1.13  1997/07/12 02:27:11  curt
+/* Looking at potential scenery transformation/coordinate system problems.
 /*
+ * Revision 1.12  1997/07/11 03:23:19  curt
+ * Solved some scenery display/orientation problems.  Still have a positioning
+ * (or transformation?) problem.
+ *
  * Revision 1.11  1997/07/11 01:30:02  curt
  * More tweaking of terrian floor.
  *

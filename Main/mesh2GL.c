@@ -33,6 +33,39 @@
 #include "../Math/polar.h"
 
 
+/* The following routine is a real hack used for testing puposes only
+ * and should probably be removed. */
+void mesh_make_test_object(double lon, double lat) {
+    struct fgCartesianPoint origin;
+    double elev;
+    double b = 0.25;
+    double h = 0.50;
+    static GLfloat color[4] = { 1.0, 0.25, 0.25, 1.0 };
+
+    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color );
+
+    elev = mesh_altitude(lon, lat) * 0.001;
+    printf("Elevation of test structure is:  %.2f\n", elev);
+
+    printf("Center of structure geodetic:  (%.2f, %.2f\n", lon, lat);
+    origin = fgGeodetic2Cartesian(lon*ARCSEC_TO_RAD, lat*ARCSEC_TO_RAD);
+    printf("Center (unit circle) is (%.8f, %.8f, %.8f)\n", origin.x, origin.y, 
+	   origin.z);
+
+    origin = fgRotateCartesianPoint(origin);
+    printf("Center of structure is:  (%.4f, %.4f\n", origin.y, origin.z);
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex3d(origin.y + b, origin.z-b, elev);
+    glVertex3d(origin.y - b, origin.z-b, elev);
+    glVertex3d(origin.y, origin.z, elev+h);
+    glVertex3d(origin.y - b, origin.z+b, elev);
+    glVertex3d(origin.y + b, origin.z+b, elev);
+    glVertex3d(origin.y + b, origin.z-b, elev);
+    glEnd();
+
+}
+
 /* walk through mesh and make ogl calls */
 GLint mesh2GL(struct mesh *m) {
     GLint mesh;
@@ -48,7 +81,10 @@ GLint mesh2GL(struct mesh *m) {
 
     printf("In mesh2GL(), generating GL call list.\n");
 
-    istep = jstep = cur_scenery_params.terrain_skip ;  /* Detail level */
+    /* Detail level.  This is how big a step we take as we walk
+     * through the DEM data set.  This value is initialized in
+     * .../Scenery/scenery.c:fgSceneryInit() */
+    istep = jstep = cur_scenery_params.terrain_skip ;
 
     /* setup the batch transformation */
     fgRotateBatchInit(-m->originx * ARCSEC_TO_RAD, -m->originy * ARCSEC_TO_RAD);
@@ -125,6 +161,9 @@ GLint mesh2GL(struct mesh *m) {
 	y2 += m->col_step * istep;
     }
 
+    /* this will go, it's only here for testing/debugging */
+    mesh_make_test_object(-398391.28, 120070.41);
+
     glEndList();
 
     return(mesh);
@@ -133,10 +172,13 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.30  1997/07/11 03:23:18  curt
-/* Solved some scenery display/orientation problems.  Still have a positioning
-/* (or transformation?) problem.
+/* Revision 1.31  1997/07/12 02:27:07  curt
+/* Looking at potential scenery transformation/coordinate system problems.
 /*
+ * Revision 1.30  1997/07/11 03:23:18  curt
+ * Solved some scenery display/orientation problems.  Still have a positioning
+ * (or transformation?) problem.
+ *
  * Revision 1.29  1997/07/11 01:29:58  curt
  * More tweaking of terrian floor.
  *

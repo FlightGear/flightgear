@@ -1,6 +1,6 @@
 common.o: common.c common.h
 geometry.o: geometry.c geometry.h mesh.h
-mesh.o: mesh.c mesh.h common.h
+mesh.o: mesh.c scenery.h mesh.h common.h
 parser.o: parser.c parsevrml.h geometry.h common.h mesh.h scenery.h
 scanner.o: scanner.c parser.h
 scenery.o: scenery.c scenery.h parsevrml.h
