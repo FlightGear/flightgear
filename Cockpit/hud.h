@@ -48,6 +48,7 @@
 #define RIGHT              6
 #define LIMIT              7
 #define NOLIMIT            8
+#define ROUNDROB           9
 
 /* Label constants */
 #define SMALL              1
@@ -247,6 +248,7 @@ Hptr fgHUDAddScale  ( Hptr hud,                    \
                       int orientation,             \
                       int with_min,                \
                       int min_value,               \
+                      int max_value,               \
                       int width_units,             \
                       double (*load_value)( void ) );
 
@@ -314,10 +316,13 @@ void fgUpdateHUD2( Hptr hud ); // Future use?
 
 
 /* $Log$
-/* Revision 1.8  1998/02/07 15:29:35  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.9  1998/02/11 02:50:22  curt
+/* Added changes submitted by Michele America.
 /*
+ * Revision 1.8  1998/02/07 15:29:35  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.7  1998/02/03 23:20:15  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

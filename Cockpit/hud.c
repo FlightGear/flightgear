@@ -160,9 +160,9 @@ static void drawscale( HUD_scale * pscale )
   char TextScale[80];
   int condition;
   double cur_value = (*(pscale->load_value))();
-
-  vmin = cur_value - pscale->maximum_value / 2;
-  vmax = cur_value + pscale->maximum_value / 2;
+  
+  vmin = cur_value - pscale->width_units / 2;
+  vmax = cur_value + pscale->width_units / 2;
 
   mid_scr = pscale->scr_min+(pscale->scr_max-pscale->scr_min)/2;
 
@@ -214,7 +214,7 @@ static void drawscale( HUD_scale * pscale )
                      mid_scr );
         }
 
-    factor = (pscale->scr_max - pscale->scr_min)/pscale->maximum_value;
+    factor = (pscale->scr_max - pscale->scr_min)/pscale->width_units;
 
     for( i=vmin; i<=vmax; i+=1 )
       {
@@ -304,7 +304,7 @@ static void drawscale( HUD_scale * pscale )
                      pscale->scr_pos+6 );
         }
 
-    factor = (pscale->scr_max - pscale->scr_min)/pscale->maximum_value;
+    factor = (pscale->scr_max - pscale->scr_min)/pscale->width_units;
 
     for( i=vmin; i<=vmax; i+=1 )
       {
@@ -772,12 +772,12 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   // aircraft information came from.
 
   fgHUDAddHorizon( hud, 590, 50, 40, 20, get_roll );
-  fgHUDAddScale  ( hud, VERTICAL, NOLIMIT, 220, 100, 280, 5, 10,
-                   LEFT, LEFT, 0, 100, get_speed );
+  fgHUDAddScale  ( hud, VERTICAL, LIMIT, 220, 100, 280, 5, 10,
+                   LEFT, LEFT, 0, 100, 50, get_speed );
   fgHUDAddScale  ( hud, VERTICAL, NOLIMIT, 440, 100, 280, 1, 5,
-                   RIGHT, RIGHT, -400, 25, get_aoa );
+                   RIGHT, RIGHT, -400, 50, 25, get_aoa );
   fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 280, 220, 440, 5, 10,
-                   TOP, TOP, 0, 50, get_heading );
+                   TOP, TOP, 0, 50, 50, get_heading );
   fgHUDAddLabel  ( hud, 180, 85, SMALL, NOBLINK,
                    RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
   fgHUDAddLabel  ( hud, 180, 73, SMALL, NOBLINK,
@@ -795,7 +795,8 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
 // This is a stand in for linked list code that will get replaced later
 // by some more elegant list handling code.
 
-void add_instrument( Hptr hud, HIptr pinstrument ) {
+void add_instrument( Hptr hud, HIptr pinstrument )
+{
     if( !hud || !pinstrument ) {
 	return;
     }
@@ -843,7 +844,7 @@ Hptr fgHUDAddHorizon( Hptr hud,     \
     phorizon->load_value = load_value;
     //  Install the horizon in the parent.
     pinstrument->instr   = phorizon;
-                                      //  Install the instrument into hud.
+    //  Install the instrument into hud.
     add_instrument( hud, pinstrument);
 
     return( hud );
@@ -865,6 +866,7 @@ Hptr fgHUDAddScale( Hptr hud,        \
                     int orientation, \
                     int with_min,    \
                     int min_value,   \
+                    int max_value,   \
                     int width_units, \
                     double (*load_value)() )
 {
@@ -880,14 +882,14 @@ Hptr fgHUDAddScale( Hptr hud,        \
      return( NULL );
      }
 
-  pinstrument->type = SCALE;
+  pinstrument->type = HUDscale;
 
   pscale = ( HUD_scale *)calloc(sizeof(HUD_scale),1);
   if( pscale == NULL )   {
      return( NULL );
     }
   pscale->type          = type;
-  pscale->type          = sub_type;
+  pscale->sub_type      = sub_type;
   pscale->scr_pos       = scr_pos;
   pscale->scr_min       = scr_min;
   pscale->scr_max       = scr_max;
@@ -896,6 +898,7 @@ Hptr fgHUDAddScale( Hptr hud,        \
   pscale->orientation   = orientation;
   pscale->with_minimum  = with_min;
   pscale->minimum_value = min_value;
+  pscale->maximum_value = max_value;
   pscale->width_units   = width_units;
   pscale->load_value    = load_value;
                                      // Install the scale
@@ -932,7 +935,7 @@ Hptr fgHUDAddLabel( Hptr hud,       \
 	if( pinstrument == NULL ) {
     return NULL;
     }
-	pinstrument->type = LABEL;
+	pinstrument->type = HUDlabel;
 
 	plabel = (HUD_label *)calloc(sizeof(HUD_label),1);
 	if( plabel == NULL ){
@@ -984,7 +987,7 @@ Hptr fgHUDAddLadder( Hptr hud,        \
 	if( pinstrument == NULL )
 		return( NULL );
 
-	pinstrument->type = LADDER;
+	pinstrument->type = HUDladder;
 
 	pladder = (HUD_ladder *)calloc(sizeof(HUD_ladder),1);
 	if( pladder == NULL )
@@ -1078,7 +1081,7 @@ void fgUpdateHUD( Hptr hud ) {
     while( phud_instr ) {
 	/* printf("Drawing Instrument %d\n", phud_instr->type); */
 
-	switch (phud_instr->type){
+	switch (phud_instr->type) {
 	case HUDhorizon:   // ARTIFICIAL HORIZON
 	    drawhorizon( (pHUDhorizon)phud_instr->instr );
 	    break;
@@ -1091,7 +1094,7 @@ void fgUpdateHUD( Hptr hud ) {
 	    drawlabel (  (pHUDlabel)  phud_instr->instr  );
 	    break;
 
-	case HUDladder:
+    	case HUDladder:
 	    drawladder(  (pHUDladder) phud_instr->instr  );
 	    break;
 
@@ -1114,9 +1117,12 @@ void fgUpdateHUD( Hptr hud ) {
 
 
 /* $Log$
-/* Revision 1.12  1998/02/09 15:07:48  curt
-/* Minor tweaks.
+/* Revision 1.13  1998/02/11 02:50:19  curt
+/* Added changes submitted by Michele America.
 /*
+ * Revision 1.12  1998/02/09 15:07:48  curt
+ * Minor tweaks.
+ *
  * Revision 1.11  1998/02/07 15:29:34  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
