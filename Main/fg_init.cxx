@@ -37,7 +37,6 @@
 #  define _G_NO_EXTERN_TEMPLATES
 #endif
 
-#include <string.h>
 #include <string>
 
 #include <Include/fg_constants.h>
@@ -113,7 +112,7 @@ int fgInitPosition( void ) {
     FG_Altitude = current_options.get_altitude() * METER_TO_FEET;
     FG_Runway_altitude = FG_Altitude - 3.758099;
 
-    fgPrintf( FG_GENERAL, FG_INFO, 
+    fgPrintf( FG_GENERAL, FG_INFO,
 	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
 	      FG_Altitude * FEET_TO_METER);
@@ -138,7 +137,7 @@ int fgInitGeneral( void ) {
     g->glVersion = (char *)glGetString ( GL_VERSION );
 
     root = current_options.get_fg_root();
-    if ( ! root.length() ) { 
+    if ( ! root.length() ) {
 	// No root path set? Then bail ...
 	fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
 		  "Cannot continue without environment variable FG_ROOT",
@@ -186,7 +185,8 @@ fgPoint3d geod_to_cart(double geod[3]) {
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
-int fgInitSubsystems( void ) {
+int fgInitSubsystems( void )
+{
     fgFLIGHT *f;
     fgLIGHT *l;
     fgTIME *t;
@@ -392,6 +392,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.36  1998/09/08 21:40:08  curt
+// Fixes by Charlie Hotchkiss.
+//
 // Revision 1.35  1998/08/29 13:09:26  curt
 // Changes to event manager from Bernie Bright.
 //

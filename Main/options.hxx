@@ -27,12 +27,19 @@
 #define _OPTIONS_HXX
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
 #endif                                   
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <string>
-#include <string.h>
+
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 class fgOPTIONS {
 public:
@@ -50,8 +57,8 @@ public:
 	FG_FOG_NICEST   = 2
     };
 
-    const int FG_RADIUS_MIN = 1;
-    const int FG_RADIUS_MAX = 4;
+    static const int FG_RADIUS_MIN = 1;
+    static const int FG_RADIUS_MAX = 4;
 
 private:
 
@@ -175,6 +182,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.17  1998/09/08 21:40:10  curt
+// Fixes by Charlie Hotchkiss.
+//
 // Revision 1.16  1998/08/27 17:02:08  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return
