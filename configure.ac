@@ -340,8 +340,29 @@ int main() {
 dnl If we get here then plib is available, so force use of plib
 dnl joystick lib
 AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
-AC_DEFINE([FG_PLIB_JOYSTICK_GETNAME], 1,
-          [Define to enable plib joystick name support])
+
+
+dnl Compiling an in-memory PSL script is available only in the CVS
+dnl version of plib, so check for it.
+AC_MSG_CHECKING([for plib PSL in-memory script compilation support])
+AC_COMPILE_IFELSE([
+#include <plib/psl.h>
+
+int main() {
+  // not for running...
+  pslProgram program((pslExtension *)0);
+  program.compile("int main () {}", "");
+  return 0;
+}
+],
+  [AC_MSG_RESULT(yes);
+   fg_psl_string_compile=yes],
+  AC_MSG_RESULT(no)
+)
+if test "x$fg_psl_string_compile" = "xyes"; then
+  AC_DEFINE([FG_PSL_STRING_COMPILE], 1,
+            [Support for compiling PSL scripts from an in-memory string.])
+fi
 
 dnl Check for MetaKit
 AC_CHECK_HEADER(mk4.h)
@@ -546,6 +567,7 @@ AC_CONFIG_FILES([ \
 	src/NetworkOLK/Makefile \
 	src/Objects/Makefile \
 	src/Scenery/Makefile \
+	src/Scripting/Makefile \
 	src/Sound/Makefile \
 	src/Systems/Makefile \
 	src/Time/Makefile \
@@ -564,6 +586,15 @@ echo "================="
 
 echo "Prefix: $prefix"
 
+if test "x$fg_psl_string_compile" = "xyes"; then
+    echo "Scripts for input bindings: yes"
+else
+    echo "Scripts for input bindings: $fg_psl_string_compile"
+    echo "  PSL scripts attached to input bindings will not"
+    echo "  work.  Download the latest CVS version of plib"
+    echo "  if you would like to enable them."
+fi
+
 if test "x$with_logging" != "x"; then
     echo "Debug messages: $with_logging"
 else
@@ -572,8 +603,6 @@ fi
 
 echo -n "Automake version: "
 automake --version | head -1
-
-echo "New plib joystick name support: $plib_js_has_getname"
 
 if test "x$with_weathercm" != "x"; then
     echo "WeatherCM instead of FGEnvironment: $with_weathercm"

@@ -19,6 +19,7 @@
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Scripting/scriptmgr.hxx>
 #include <Time/tmp.hxx>
 
 #include "fg_init.hxx"
@@ -126,6 +127,18 @@ static bool
 do_null (const SGPropertyNode * arg)
 {
   return true;
+}
+
+/**
+ * Built-in command: run a PSL script.
+ */
+static bool
+do_script (const SGPropertyNode * arg)
+{
+    FGScriptMgr * mgr = (FGScriptMgr *)globals->get_subsystem_mgr()
+        ->get_group(FGSubsystemMgr::GENERAL)->get_subsystem("scripting");
+
+    return mgr->run(arg->getStringValue("script"));
 }
 
 
@@ -641,6 +654,7 @@ static struct {
   SGCommandMgr::command_t command;
 } built_ins [] = {
     { "null", do_null },
+    { "script", do_script },
     { "exit", do_exit },
     { "load", do_load },
     { "save", do_save },

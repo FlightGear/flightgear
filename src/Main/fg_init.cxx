@@ -109,6 +109,7 @@
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Scripting/scriptmgr.hxx>
 #include <Sound/fg_fx.hxx>
 #include <Sound/soundmgr.hxx>
 #include <Systems/system_mgr.hxx>
@@ -1477,6 +1478,15 @@ bool fgInitSubsystems() {
     globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
                                       "logger",
                                       new FGLogger);
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Create and register the script manager.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
+                                      "scripting",
+                                      new FGScriptMgr);
 
 
     ////////////////////////////////////////////////////////////////////

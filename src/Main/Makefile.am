@@ -66,6 +66,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Model/libModel.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
+	$(top_builddir)/src/Scripting/libScripting.a \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
         $(NETWORK_LIBS) \
@@ -77,7 +78,7 @@ fgfs_LDADD = \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	-lsgserial \
 	$(THREAD_LIBS) \
-	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
+	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul -lplibpsl \
 	-lmk4 -lz \
 	$(opengl_LIBS) \
 	$(audio_LIBS)

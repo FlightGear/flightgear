@@ -27,6 +27,7 @@ SUBDIRS = \
         $(NETWORK_DIRS) \
         Objects \
         Scenery \
+        Scripting \
         Sound \
         Systems \
         Time \
