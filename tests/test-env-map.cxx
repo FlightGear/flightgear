@@ -98,6 +98,8 @@ void init(void)
   glGenTextures(1, &texName);
   glBindTexture(GL_TEXTURE_2D, texName);
   
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXRES_X, TEXRES_Y, 0, GL_RGBA, GL_UNSIGNED_BYTE, env_map);
@@ -149,12 +151,20 @@ void display()
   glEnable(GL_TEXTURE_GEN_S);
   glEnable(GL_TEXTURE_GEN_T);
 
+  /*
   glBegin(GL_QUADS);
   glNormal3f(0.0, 0.0, 1.0);
   glVertex3f(1.0, 1.0, 0.0);
   glVertex3f(-1.0, 1.0, 0.0);
   glVertex3f(-1.0, -1.0, 0.0);
   glVertex3f(1.0, -1.0, 0.0);
+  glEnd();
+  */
+
+  glPointSize(48.0);
+  glBegin(GL_POINTS);
+  glNormal3f(0.0, 0.0, 1.0);
+  glVertex3f(0.0, 0.0, 0.0);
   glEnd();
 
   glDisable(GL_TEXTURE_GEN_S);

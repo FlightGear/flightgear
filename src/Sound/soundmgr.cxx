@@ -39,7 +39,11 @@
 //
 
 // constructor
-FGSimpleSound::FGSimpleSound( string file ) {
+FGSimpleSound::FGSimpleSound( string file )
+  : requests(0),
+    volume(1.0),
+    pitch(1.0)
+{
     SGPath slfile( globals->get_fg_root() );
     slfile.append( file );
     sample = new slSample ( (char *)slfile.c_str() );
@@ -49,7 +53,11 @@ FGSimpleSound::FGSimpleSound( string file ) {
     volume_envelope->setStep ( 0, 0.01, 1.0 );
 }
 
-FGSimpleSound::FGSimpleSound( unsigned char *buffer, int len ) {
+FGSimpleSound::FGSimpleSound( unsigned char *buffer, int len )
+  : requests(0),
+    volume(1.0),
+    pitch(1.0)
+{
     sample = new slSample ( buffer, len );
     pitch_envelope = new slEnvelope( 1, SL_SAMPLE_ONE_SHOT );
     volume_envelope = new slEnvelope( 1, SL_SAMPLE_ONE_SHOT );
@@ -64,17 +72,34 @@ FGSimpleSound::~FGSimpleSound() {
     delete sample;
 }
 
-void FGSimpleSound::play_once( slScheduler *sched ) {
-    sched->stopSample(sample);
-    sched->playSample(sample);
+void FGSimpleSound::play( slScheduler *sched, bool looped ) {
+    
+    requests++;
+    if (requests > 1)
+       return;
+
+    // sched->stopSample(sample);
+    if (looped)
+       sched->loopSample(sample);
+    else
+       sched->playSample(sample);
+    
     sched->addSampleEnvelope(sample, 0, 0, pitch_envelope, SL_PITCH_ENVELOPE);
     sched->addSampleEnvelope(sample, 0, 1, volume_envelope, SL_VOLUME_ENVELOPE);
 }
 
-void FGSimpleSound::play_looped( slScheduler *sched ) {
-    sched->loopSample(sample);
-    sched->addSampleEnvelope(sample, 0, 0, pitch_envelope, SL_PITCH_ENVELOPE);
-    sched->addSampleEnvelope(sample, 0, 1, volume_envelope, SL_VOLUME_ENVELOPE);
+void FGSimpleSound::stop( slScheduler *sched, bool quick ) {
+
+    if (quick)
+       requests = 0;
+    else
+       if (--requests < 0)
+          requests = 0;
+
+    if (requests > 0)
+       return;
+
+    sched->stopSample( sample );
 }
 
 //

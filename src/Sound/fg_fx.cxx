@@ -41,6 +41,8 @@ FGFX::FGFX ()
 
 FGFX::~FGFX ()
 {
+   for (unsigned int i = 0; i < _sound.size(); i++ )
+      delete _sound[i];
 }
 
 void

@@ -49,7 +49,7 @@ static double _fg_log(double v)   { return (v < 1) ? 0 : log(v+1); };
 // static double _fg_pow3(double v)  { return pow(v, 3); };
 
 static const struct {
-	string name;
+	char *name;
 	double (*fn)(double);
 } __fg_snd_fn[] = {
 //	{"lin", _fg_lin},
@@ -124,7 +124,6 @@ FGSound::init()
       if (_node->getStringValue("type") != (string)"level")
         SG_LOG( SG_GENERAL, SG_INFO, "Unknown sound type, default to 'level'");
    }
-
 
 #if 0
    //
@@ -236,16 +235,11 @@ FGSound::init()
    // Initialize the sample
    //
    FGSoundMgr * mgr = globals->get_soundmgr();
-   if (mgr->find(_name) == NULL) {
+   if ((_sample = mgr->find(_name)) == NULL)
       _sample = mgr->add(_name, _node->getStringValue("path"));
-      _sample->set_volume(v);
-      _sample->set_pitch(p);
 
-   } else {
-      _sample = mgr->find(_name);
-      _sample->set_volume(_sample->get_volume() + v);
-      _sample->set_pitch(_sample->get_pitch() + p);
-   }
+   _sample->set_volume(v);
+   _sample->set_pitch(p);
 }
 
 void
@@ -280,10 +274,10 @@ FGSound::update (int dt)
       // If the state changes to false, stop playing.
       //
       if (!check) {
-         _active = false;
-         if (mgr->is_playing(_name)) {
+         if (_active) {
             SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
-            mgr->stop(_name);
+            _sample->stop( mgr->get_scheduler(), false );
+            _active = false;
          }
 
          return;
@@ -305,83 +299,84 @@ FGSound::update (int dt)
       // Check for state changes.
       // If the state changed, and the sound is still playing: stop playing.
       //
-      if (mgr->is_playing(_name)) {
+      if (_sample->is_playing()) {
          SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
-         mgr->stop(_name);
+         _sample->stop( mgr->get_scheduler() );
       }
 
       if ( ((_type == FGSound::RAISE) && !check) ||
            ((_type == FGSound::FALL) && check) )
          return;
+
    }
 
-   //
-   // Update the volume
-   //
-   int max = _volume.size();
+      //
+      // Update the volume
+      //
+      int max = _volume.size();
 
-   int i;
-   double volume = 1.0, volume_offset = 0.0;
-   for(i = 0; i < max; i++) {
-      double v = _volume[i].prop->getDoubleValue();
+      int i;
+      double volume = 1.0, volume_offset = 0.0;
+      for(i = 0; i < max; i++) {
+         double v = _volume[i].prop->getDoubleValue();
 
-      if (_volume[i].fn)
-         v = _volume[i].fn(v);
+         if (_volume[i].fn)
+            v = _volume[i].fn(v);
 
-      v *= _volume[i].factor;
+         v *= _volume[i].factor;
 
-      if (v > _volume[i].max)
-         v = _volume[i].max;
-      else
-         if (v < _volume[i].min) 
-            v = 0;  // v = _volume[i].min;
+         if (v > _volume[i].max)
+            v = _volume[i].max;
+         else
+            if (v < _volume[i].min) 
+               v = 0;  // v = _volume[i].min;
 
-      if (_volume[i].subtract)				// Hack!
-         volume = _volume[i].offset - v;
-      else {
-         volume_offset += _volume[i].offset;
-         volume *= v;
+         if (_volume[i].subtract)				// Hack!
+            volume = _volume[i].offset - v;
+         else {
+            volume_offset += _volume[i].offset;
+            volume *= v;
+         }
       }
-   }
 
-   //
-   // Update the pitch
-   //
-   max = _pitch.size();
-   double pitch = 1.0, pitch_offset = 0.0;
-   for(i = 0; i < max; i++) {
-      double p = _pitch[i].prop->getDoubleValue();
+      //
+      // Update the pitch
+      //
+      max = _pitch.size();
+      double pitch = 1.0, pitch_offset = 0.0;
+      for(i = 0; i < max; i++) {
+         double p = _pitch[i].prop->getDoubleValue();
 
-      if (_pitch[i].fn)
-         p = _pitch[i].fn(p);
+         if (_pitch[i].fn)
+            p = _pitch[i].fn(p);
 
-      p *= _pitch[i].factor;
+         p *= _pitch[i].factor;
 
-      if (p > _pitch[i].max)
-         p = _pitch[i].max;
-      else
-         if (p < _pitch[i].min) 
-            p = _pitch[i].min;
+         if (p > _pitch[i].max)
+            p = _pitch[i].max;
+         else
+            if (p < _pitch[i].min) 
+               p = _pitch[i].min;
 
-      if (_pitch[i].subtract)				// Hack!
-         pitch = _pitch[i].offset - p;
-      else {
-         pitch_offset += _pitch[i].offset;
-         pitch *= p;
+         if (_pitch[i].subtract)				// Hack!
+            pitch = _pitch[i].offset - p;
+         else {
+            pitch_offset += _pitch[i].offset;
+            pitch *= p;
+         }
       }
-   }
 
-   //
-   // Change sample state
-   //
-   _sample->set_pitch( pitch_offset + pitch );
-   _sample->set_volume( volume_offset + volume );
+      //
+      // Change sample state
+      //
+      _sample->set_pitch( pitch_offset + pitch );
+      _sample->set_volume( volume_offset + volume );
 
    //
    // Do we need to start playing the sample?
    //
-   if (_active && ((_type == FGSound::LEVEL) || (_type == FGSound::INVERTED)))
-      return;
+   if (_active && (_type == FGSound::LEVEL) || (_type == FGSound::INVERTED))
+         return;
 
    //
    // This is needed for FGSound::FLIPFLOP and it works for 
@@ -397,6 +392,4 @@ FGSound::update (int dt)
    SG_LOG(SG_GENERAL, SG_INFO, "Starting audio playback for: " << _name);
    SG_LOG(SG_GENERAL, SG_BULK,
     "Playing " << ((_mode == ONCE) ? "once" : "looped"));
-   SG_LOG(SG_GENERAL, SG_BULK, "Initial volume: " << volume_offset);
-   SG_LOG(SG_GENERAL, SG_BULK, "Initial pitch: " << pitch_offset);
 }

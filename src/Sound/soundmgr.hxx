@@ -57,7 +57,7 @@ private:
     slEnvelope *volume_envelope;
     double pitch;
     double volume;
-    int clients;
+    int requests;
 
 public:
 
@@ -65,19 +65,12 @@ public:
     FGSimpleSound( unsigned char *buffer, int len );
     ~FGSimpleSound();
 
-    void play_once( slScheduler *sched );
-    void play_looped( slScheduler *sched );
+    void play( slScheduler *sched, bool looped );
+    void stop( slScheduler *sched, bool quick = true );
 
-    inline void play( slScheduler *sched, bool looped ) {
-       if (looped) play_looped( sched );
-       else play_once( sched );
-    }
-    inline void stop( slScheduler *sched ) {
-        sched->stopSample( sample );
-    }
-    inline bool is_playing( ) {
-       return (sample->getPlayCount() > 0 );
-    }
+    inline void play_once( slScheduler *sched ) { play( sched, false); }
+    inline void play_looped( slScheduler *sched ) { play( sched, true); }
+    inline bool is_playing( ) { return (requests > 0 ); }
 
     inline double get_pitch() const { return pitch; }
     inline void set_pitch( double p ) {
