@@ -75,8 +75,18 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
+#ifdef FGFS
+#include <Include/compiler.h>
+#include STL_IOSTREAM
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <ctime>
+#  else
+#    include <time.h>
+#  endif
+#else
 #include <iostream>
 #include <ctime>
+#endif
 
 int main(int argc, char** argv)
 {
@@ -114,6 +124,8 @@ int main(int argc, char** argv)
   return 0;
 }
 
+#ifndef FGFS
 WinMain()
 {
 }
+#endif

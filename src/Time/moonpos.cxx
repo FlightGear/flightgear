@@ -51,9 +51,8 @@
 #endif
 
 
-//#include <Astro/orbits.hxx>
-#include <Astro/solarsystem.hxx>
 #include <Debug/logstream.hxx>
+#include <Astro/solarsystem.hxx>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.hxx>

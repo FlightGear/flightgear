@@ -57,6 +57,7 @@
 #      define STL_FUNCTIONAL <functional>
 #      define STL_IOMANIP    <iomanip.h>
 #      define STL_IOSTREAM   <iostream.h>
+#      define STL_FSTREAM    <fstream.h>
 #      define STL_STDEXCEPT  <stdexcept>
 #      define STL_STRING     <string>
 #      define STL_STRSTREAM  <strstream.h>
@@ -81,6 +82,7 @@
 #      define STL_FUNCTIONAL <functional>
 #      define STL_IOMANIP    <iomanip>
 #      define STL_IOSTREAM   <iostream>
+#      define STL_FSTREAM    <fstream>
 #      define STL_STDEXCEPT  <stdexcept>
 #      define STL_STRING     <string>
 #      define STL_STRSTREAM  <strstream>
@@ -107,6 +109,7 @@
 #  define STL_FUNCTIONAL <functional>
 #  define STL_IOMANIP    <iomanip>
 #  define STL_IOSTREAM   <iostream>
+#  define STL_FSTREAM    <fstream>
 #  define STL_STDEXCEPT  <stdexcept>
 #  define STL_STRING     <string>
 
@@ -134,6 +137,7 @@
 #    define STL_FUNCTIONAL <functional>
 #    define STL_IOMANIP    <iomanip>
 #    define STL_IOSTREAM   <iostream>
+#    define STL_FSTREAM    <fstream>
 #    define STL_STDEXCEPT  <stdexcept>
 #    define STL_STRING     <string>
 #    define STL_STRSTREAM  <strstream>
@@ -172,6 +176,7 @@
 # endif // HAVE_SGI_STL_PORT
 
 #  define STL_IOSTREAM   <iostream>
+#  define STL_FSTREAM    <fstream>
 #  define STL_STRING     <string>
 #  define FG_NO_DEFAULT_TEMPLATE_ARGS
 #  define FG_NAMESPACES
@@ -195,8 +200,9 @@
 
 #  define STL_ALGORITHM  <algorithm>
 #  define STL_FUNCTIONAL <functional>
-#  define STL_IOMANIP    <iomanip>
+#  define STL_IOMANIP    <iomanip.h>
 #  define STL_IOSTREAM   <iostream.h>
+#  define STL_FSTREAM    <fstream.h>
 #  define STL_STDEXCEPT  <stdexcept>
 #  define STL_STRING     <string>
 #  define STL_STRSTREAM  <strstream>

@@ -38,12 +38,12 @@ bool global_fullscreen = true;
 
 #include STL_STRING
 
+#include <Debug/logstream.hxx>
+#include <Misc/fgstream.hxx>
 #include <Include/fg_constants.h>
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Debug/logstream.hxx>
 #include <FDM/flight.hxx>
-#include <Misc/fgstream.hxx>
 #ifdef FG_NETWORK_OLK
 #  include <Network/network.h>
 #endif

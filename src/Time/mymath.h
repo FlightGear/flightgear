@@ -36,11 +36,14 @@
 
 #ifndef _MY_MATH_H_
 #define _MY_MATH_H__
-#include <math.h>
-#include <fstream>
-#include <iomanip>
 
-using namespace std;
+#include <Include/compiler.h>
+
+#include <math.h>
+#include STL_FSTREAM
+#include STL_IOMANIP
+
+// FG_USING_NAMESPACE(std);
 
 #include <fg_constants.h>
 extern const  double PiOver180;

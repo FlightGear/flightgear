@@ -32,17 +32,17 @@
 #ifndef _GEOCOORD_H_
 #define _GEOCOORD_H_
 
-//#include <stl.h>
+#include <Include/compiler.h>
 
 
 #include <math.h>
 #include <string>
-#include <iostream>
+#include STL_IOSTREAM
 //#include <streambuf> // looks like streambuf does not exist on linux.
 // But it looks like it isn't used anyways -:)
 #include <vector>
 
-using namespace std;
+FG_USING_NAMESPACE(std);
 
 #include "mymath.h"
 

@@ -168,7 +168,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   while (!aircraftfile.fail()) {
   	holding_string.erase();
     aircraftfile >> holding_string;
-#ifdef __BORLANDC__
+#if defined(__BORLANDC__) || defined(FG_HAVE_NATIVE_SGI_COMPILERS)
     if (holding_string.compare(0, 2, "//") != 0) {
 #else
     if (holding_string.compare("//",0,2) != 0) {
@@ -273,8 +273,8 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   	    aircraftfile >> tag;
     	  gpos = aircraftfile.tellg();
 				aircraftfile >> tag;
-				if (tag != "}" ) {
-					while (tag != "}") {
+				if ( !(tag == "}") ) {
+					while ( !(tag == "}") ) {
 						aircraftfile.seekg(gpos);
     		    Coeff[axis][coeff_ctr[axis]] = new FGCoefficient(FDMExec, aircraftfile);
  		    	  coeff_ctr[axis]++;
@@ -321,6 +321,7 @@ void FGAircraft::MassChange()
 {
   float Xt, Xw, Yt, Yw, Zt, Zw, Tw;
   float IXXt, IYYt, IZZt, IXZt;
+  int t;
 
   // UPDATE TANK CONTENTS
   //
@@ -335,7 +336,7 @@ void FGAircraft::MassChange()
 
   for (int e=0; e<numEngines; e++) {
     Fshortage = Oshortage = 0.0;
-    for (int t=0; t<numTanks; t++) {
+    for (t=0; t<numTanks; t++) {
       switch(Engine[e]->GetType()) {
       case FGEngine::etRocket:
 
@@ -371,7 +372,7 @@ void FGAircraft::MassChange()
   }
 
   Weight = EmptyWeight;
-  for (int t=0; t<numTanks; t++)
+  for (t=0; t<numTanks; t++)
     Weight += Tank[t]->GetContents();
 
   Mass = Weight / GRAVITY;
@@ -380,7 +381,7 @@ void FGAircraft::MassChange()
 
   Xt = Yt = Zt = 0;
   Xw = Yw = Zw = 0;
-  for (int t=0; t<numTanks; t++) {
+  for (t=0; t<numTanks; t++) {
     Xt += Tank[t]->GetX()*Tank[t]->GetContents();
     Yt += Tank[t]->GetY()*Tank[t]->GetContents();
     Zt += Tank[t]->GetZ()*Tank[t]->GetContents();
@@ -395,7 +396,7 @@ void FGAircraft::MassChange()
   // Calculate new moments of inertia here
 
   IXXt = IYYt = IZZt = IXZt = 0.0;
-  for (int t=0; t<numTanks; t++) {
+  for (t=0; t<numTanks; t++) {
     IXXt += ((Tank[t]->GetX()-Xcg)/12.0)*((Tank[t]->GetX() - Xcg)/12.0)*Tank[t]->GetContents()/GRAVITY;
     IYYt += ((Tank[t]->GetY()-Ycg)/12.0)*((Tank[t]->GetY() - Ycg)/12.0)*Tank[t]->GetContents()/GRAVITY;
     IZZt += ((Tank[t]->GetZ()-Zcg)/12.0)*((Tank[t]->GetZ() - Zcg)/12.0)*Tank[t]->GetContents()/GRAVITY;
