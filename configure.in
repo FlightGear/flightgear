@@ -193,6 +193,7 @@ AC_OUTPUT( \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Tools/Makefile \
+	Tools/Areas/Makefile \
 	Tools/AssemTris/Makefile \
 	Tools/Dem2node/Makefile \
 	Tools/DemInfo/Makefile \
