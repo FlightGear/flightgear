@@ -94,6 +94,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.1  1998/10/16 19:30:42  curt
+Renamed .c -> .h so we can start adding c++ supporting routines.
+
 Revision 1.4  1998/07/08 14:40:08  curt
 polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
 Updated fg_geodesy comments to reflect that routines expect and produce
@@ -165,11 +168,14 @@ Initial Flight Gear revision.
 
 
 /* $Log$
-/* Revision 1.4  1998/07/08 14:40:08  curt
-/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
-/* Updated fg_geodesy comments to reflect that routines expect and produce
-/*   meters.
+/* Revision 1.1  1998/10/16 19:30:42  curt
+/* Renamed .c -> .h so we can start adding c++ supporting routines.
 /*
+ * Revision 1.4  1998/07/08 14:40:08  curt
+ * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+ * Updated fg_geodesy comments to reflect that routines expect and produce
+ *   meters.
+ *
  * Revision 1.3  1998/04/21 17:03:48  curt
  * Prepairing for C++ integration.
  *
