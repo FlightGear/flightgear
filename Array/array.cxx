@@ -78,18 +78,18 @@ int
 FGArray::open( const string& file ) {
     // open input file (or read from stdin)
     if ( file ==  "-" ) {
-	cout << "Opening array data pipe from stdin" << endl;
+	cout << "  Opening array data pipe from stdin" << endl;
 	// fd = stdin;
 	// fd = gzdopen(STDIN_FILENO, "r");
-	cout << "Not yet ported ..." << endl;
+	cout << "  Not yet ported ..." << endl;
 	return 0;
     } else {
 	in = new fg_gzifstream( file );
 	if ( !(*in) ) {
-	    cout << "Cannot open " << file << endl;
+	    cout << "  Cannot open " << file << endl;
 	    return 0;
 	}
-	cout << "Opening array data file: " << file << endl;
+	cout << "  Opening array data file: " << file << endl;
     }
 
     return 1;
@@ -160,7 +160,7 @@ void FGArray::outputmesh_set_pt( int i, int j, double value ) {
 
 
 // Use least squares to fit a simpler data set to dem data
-void FGArray::fit( FGBucket& p, double error ) {
+void FGArray::fit( double error ) {
     double x[ARRAY_SIZE_1], y[ARRAY_SIZE_1];
     double m, b, max_error, error_sq;
     double x1, y1;
@@ -173,7 +173,7 @@ void FGArray::fit( FGBucket& p, double error ) {
 
     error_sq = error * error;
 
-    cout << "Initializing output mesh structure" << endl;
+    cout << "  Initializing output mesh structure" << endl;
     outputmesh_init();
 
     // determine dimensions
@@ -181,7 +181,7 @@ void FGArray::fit( FGBucket& p, double error ) {
     colmax = cols;
     rowmin = 0;
     rowmax = rows;
-    cout << "Fitting region = " << colmin << "," << rowmin << " to " 
+    cout << "  Fitting region = " << colmin << "," << rowmin << " to " 
 	 << colmax << "," << rowmax << endl;;
     
     // include the corners explicitly
@@ -190,7 +190,7 @@ void FGArray::fit( FGBucket& p, double error ) {
     outputmesh_set_pt(colmax, rowmax, in_data[colmax][rowmax]);
     outputmesh_set_pt(colmax, rowmin, in_data[colmax][rowmin]);
 
-    cout << "Beginning best fit procedure" << endl;
+    cout << "  Beginning best fit procedure" << endl;
 
     for ( row = rowmin; row < rowmax; row++ ) {
 	// fit  = fopen("fit.dat",  "w");
@@ -456,15 +456,15 @@ void FGArray::outputmesh_output_nodes( const string& fg_root, FGBucket& p )
 
     // generate the base directory
     string base_path = p.gen_base_path();
-    cout << "fg_root = " << fg_root << "  Base Path = " << base_path << endl;
+    cout << "  fg_root = " << fg_root << "  Base Path = " << base_path << endl;
     dir = fg_root + "/Scenery/" + base_path;
-    cout << "Dir = " << dir << endl;
+    cout << "  Dir = " << dir << endl;
     
     // stat() directory and create if needed
     errno = 0;
     result = stat(dir.c_str(), &stat_buf);
     if ( result != 0 && errno == ENOENT ) {
-	cout << "Creating directory\n";
+	cout << "  Creating directory\n";
 
 	command = "mkdir -p " + dir + "\n";
 	system( command.c_str() );
@@ -552,6 +552,9 @@ FGArray::~FGArray( void ) {
 
 
 // $Log$
+// Revision 1.2  1999/03/13 23:50:26  curt
+// Tweaked output formatting a bit.
+//
 // Revision 1.1  1999/03/13 18:45:02  curt
 // Initial revision. (derived from libDEM.a code.)
 //

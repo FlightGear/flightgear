@@ -33,5 +33,5 @@ main(int argc, char **argv) {
     lat *= 3600;
     cout << a.interpolate_altitude(lon, lat) << endl;
 
-    a.fit(b, 100);
+    a.fit( 100 );
 }

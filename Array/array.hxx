@@ -110,7 +110,7 @@ public:
     int parse();
 
     // Use least squares to fit a simpler data set to dem data
-    void fit( FGBucket& p, double error );
+    void fit( double error );
 
     // return the current altitude based on grid data.  We should
     // rewrite this to interpolate exact values, but for now this is
@@ -131,6 +131,9 @@ public:
 
 
 // $Log$
+// Revision 1.2  1999/03/13 23:50:27  curt
+// Tweaked output formatting a bit.
+//
 // Revision 1.1  1999/03/13 18:45:02  curt
 // Initial revision. (derived from libDEM.a code.)
 //
