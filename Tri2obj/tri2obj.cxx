@@ -52,8 +52,8 @@ fgBUCKET north_index, south_index, east_index, west_index;
 
 
 // given three points defining a triangle, calculate the normal
-void calc_normal(Point3D p1, Point3D p2, 
-		 Point3D p3, double normal[3])
+void calc_normal(const Point3D& p1, const Point3D& p2, 
+		 const Point3D& p3, double normal[3])
 {
     double v1[3], v2[3];
     double temp;
@@ -623,6 +623,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.5  1998/10/21 14:56:50  curt
+// Minor parameter passing tweak.
+//
 // Revision 1.4  1998/10/20 15:52:46  curt
 // Fixed a units conversion bug introduced when converting to Point3D class.
 //
