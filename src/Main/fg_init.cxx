@@ -268,8 +268,27 @@ bool fgInitFGRoot ( int argc, char **argv ) {
         root = "/FlightGear";
 #elif defined( WIN32 )
         root = "\\FlightGear";
-#elif defined( macintosh )
-        root = "";
+#elif defined(OSX_BUNDLE) 
+        /* the following code looks for the base package directly inside
+            the application bundle. This can be changed fairly easily by
+            fiddling with the code below. And yes, I know it's ugly and verbose.
+        */
+        CFBundleRef appBundle = CFBundleGetMainBundle();
+        CFURLRef appUrl = CFBundleCopyBundleURL(appBundle);
+        CFRelease(appBundle);
+
+        // look for a 'data' subdir directly inside the bundle : is there
+        // a better place? maybe in Resources? I don't know ...
+        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, appUrl, CFSTR("data"), true);
+
+        // now convert down to a path, and the a c-string
+        CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
+        root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
+
+        // tidy up.
+        CFRelease(appBundle);
+        CFRelease(dataDir);
+        CFRelease(path);
 #else
         root = PKGLIBDIR;
 #endif

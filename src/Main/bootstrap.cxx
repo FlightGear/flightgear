@@ -120,7 +120,7 @@ int main ( int argc, char **argv ) {
 #endif
 
     // Keyboard focus hack
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(OSX_BUNDLE)
     {
       PSN psn;
 
