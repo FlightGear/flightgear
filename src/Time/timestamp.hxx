@@ -154,7 +154,7 @@ inline void FGTimeStamp::stamp() {
 #endif
 }
 
-// difference between time stamps in microseconds (usec)
+// increment the time stamp by the number of microseconds (usec)
 inline FGTimeStamp operator + (const FGTimeStamp& t, const long& m) {
 #ifdef WIN32
     return FGTimeStamp( 0, t.usec + m );

@@ -103,6 +103,7 @@ int fgGetTimeInterval( void ) {
     static FGTimeStamp last;
     FGTimeStamp current;
 
+    
     if ( ! inited ) {
 	inited = 1;
 	last.stamp();
@@ -113,7 +114,7 @@ int fgGetTimeInterval( void ) {
 	last = current;
     }
 
-    return(interval);
+    return interval;
 }
 
 

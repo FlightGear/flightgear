@@ -23,8 +23,8 @@
 // $Id$
 
 
-#ifndef _AIRPORTS_HXX
-#define _AIRPORTS_HXX
+#ifndef _SIMPLE_HXX
+#define _SIMPLE_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -34,12 +34,6 @@
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
-#endif
-
-#ifdef HAVE_GDBM
-#  include <gdbm.h>
-#else
-#  include <simgear/gdbm/gdbm.h>
 #endif
 
 #include <simgear/compiler.h>
@@ -56,6 +50,11 @@
 
 #include STL_STRING
 #include <set>
+
+#define NDEBUG			// she don't work without it.
+#include <mk4.h>
+#include <mk4str.h>
+#undef NDEBUG
 
 FG_USING_STD(string);
 FG_USING_STD(set);
@@ -99,7 +98,8 @@ class FGAirports {
 
 private:
 
-    GDBM_FILE dbf;
+    c4_Storage *storage;
+    c4_View *vAirport;
 
 public:
 
@@ -112,7 +112,7 @@ public:
     // search for the specified id.
     // Returns true if successful, otherwise returns false.
     // On success, airport data is returned thru "airport" pointer.
-    // "airport" is not changed if "id" is not found.
+    // "airport" is not changed if "apt" is not found.
     bool search( const string& id, FGAirport* airport ) const;
     FGAirport search( const string& id ) const;
 };
@@ -142,8 +142,8 @@ public:
     // load the data
     int load( const string& file );
 
-    // save the data in gdbm format
-    bool dump_gdbm( const string& file );
+    // save the data in metakit format
+    bool dump_mk4( const string& file );
 
     // search for the specified id.
     // Returns true if successful, otherwise returns false.
@@ -154,6 +154,6 @@ public:
 };
 
 
-#endif /* _AIRPORTS_HXX */
+#endif // _SIMPLE_HXX
 
 

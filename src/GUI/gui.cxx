@@ -756,7 +756,7 @@ void reInit(puObject *cb)
 
 static void toggleClouds(puObject *cb)
 {
-    FGBFI::setClouds(!FGBFI::getClouds());
+    FGBFI::setClouds( !FGBFI::getClouds() );
 }
 	
 // This is the accessor function
@@ -1034,8 +1034,9 @@ void AptDialog_OK (puObject *)
 {
     FGPath path( current_options.get_fg_root() );
     path.append( "Airports" );
-    path.append( "simple.gdbm" );
+    path.append( "simple.mk4" );
     FGAirports airports( path.c_str() );
+
     FGAirport a;
     
     FGTime *t = FGTime::cur_time_params;

@@ -28,14 +28,14 @@
 #  include <config.h>
 #endif
 
-#include <sys/types.h>		// for gdbm open flags
-#include <sys/stat.h>		// for gdbm open flags
+// #include <sys/types.h>		// for gdbm open flags
+// #include <sys/stat.h>		// for gdbm open flags
 
-#ifdef HAVE_GDBM
-#  include <gdbm.h>
-#else
-#  include <simgear/gdbm/gdbm.h>
-#endif
+// #ifdef HAVE_GDBM
+// #  include <gdbm.h>
+// #else
+// #  include <simgear/gdbm/gdbm.h>
+// #endif
 
 #include <simgear/compiler.h>
 
@@ -53,13 +53,14 @@
 FG_USING_NAMESPACE(std);
 
 FGAirports::FGAirports( const string& file ) {
-    dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_READER, 0, NULL );
-    if ( dbf == NULL ) {
-	cout << "Error opening " << file << endl;
-	exit(-1);
-    } else {
-	cout << "successfully opened " << file << endl;
-    }
+    // open the specified database readonly
+    storage = new c4_Storage( file.c_str(), false );
+
+    // need to do something about error handling here!
+
+    vAirport = new c4_View;
+    *vAirport = 
+	storage->GetAs("airport[ID:S,Longitude:F,Latitude:F,Elevation:F]");
 }
 
 
@@ -67,30 +68,23 @@ FGAirports::FGAirports( const string& file ) {
 bool
 FGAirports::search( const string& id, FGAirport* a ) const
 {
-    FGAirport *tmp;
-    datum content;
-    datum key;
+    c4_StringProp pID ("ID");
+    c4_FloatProp pLon ("Longitude");
+    c4_FloatProp pLat ("Latitude");
+    c4_FloatProp pElev ("Elevation");
 
-    key.dptr = (char *)id.c_str();
-    key.dsize = id.length();
+    int idx = vAirport->Find(pID[id.c_str()]);
+    cout << "idx = " << idx << endl;
 
-    content = gdbm_fetch( dbf, key );
-
-    cout << "gdbm_fetch() finished" << endl;
-
-    if ( content.dptr != NULL ) {
-	tmp = (FGAirport *)content.dptr;
-
-	// a->id = tmp->id;
-	a->longitude = tmp->longitude;
-	a->latitude = tmp->latitude;
-	a->elevation = tmp->elevation;
-
-	free( content.dptr );
-
-    } else {
+    if ( idx == -1 ) {
 	return false;
     }
+
+    c4_RowRef r = vAirport->GetAt(idx);
+
+    a->longitude = (double) pLon(r);
+    a->latitude =  (double) pLat(r);
+    a->elevation = (double) pElev(r);
 
     return true;
 }
@@ -99,27 +93,15 @@ FGAirports::search( const string& id, FGAirport* a ) const
 FGAirport
 FGAirports::search( const string& id ) const
 {
-    FGAirport a, *tmp;
-    datum content;
-    datum key;
-
-    key.dptr = (char *)id.c_str();
-    key.dsize = id.length();
-
-    content = gdbm_fetch( dbf, key );
-
-    if ( content.dptr != NULL ) {
-	tmp = (FGAirport *)content.dptr;
-	a = *tmp;
-    }
-
+    FGAirport a;
+    search( id, &a );
     return a;
 }
 
 
 // Destructor
 FGAirports::~FGAirports( void ) {
-    gdbm_close( dbf );
+    // gdbm_close( dbf );
 }
 
 
@@ -177,44 +159,40 @@ int FGAirportsUtil::load( const string& file ) {
 
 
 // save the data in gdbm format
-bool FGAirportsUtil::dump_gdbm( const string& file ) {
+bool FGAirportsUtil::dump_mk4( const string& file ) {
 
-    GDBM_FILE dbf;
+    // open database for writing
+    c4_Storage storage( file.c_str(), true );
 
-#if defined( MACOS ) || defined( _MSC_VER )
-    dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_NEWDB | GDBM_FAST,
-		     NULL, NULL );
-#else
-    dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_NEWDB | GDBM_FAST, 
-		     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
-		     NULL );
-#endif
+    // need to do something about error handling here!
 
-    if ( dbf == NULL ) {
-	cout << "Error opening " << file << endl;
-	exit(-1);
-    } else {
-	cout << "successfully opened " << file << endl;
-    }
+    // define the properties
+    c4_StringProp pID ("ID");
+    c4_FloatProp pLon ("Longitude");
+    c4_FloatProp pLat ("Latitude");
+    c4_FloatProp pElev ("Elevation");
+
+    // Start with an empty view of the proper structure.
+    c4_View vAirport =
+	storage.GetAs("airport[ID:S,Longitude:F,Latitude:F,Elevation:F]");
+
+    c4_Row row;
 
     iterator current = airports.begin();
     const_iterator end = airports.end();
     while ( current != end ) {
-	datum key;
-	key.dptr = (char *)current->id.c_str();
-	key.dsize = current->id.length();
-
-	datum content;
-	FGAirport tmp = *current;
-	content.dptr = (char *)(& tmp);
-	content.dsize = sizeof( *current );
-
-	gdbm_store( dbf, key, content, GDBM_REPLACE );
+	// add each airport record
+	pID (row) = current->id.c_str();
+	pLon (row) = current->longitude;
+	pLat (row) = current->latitude;
+	pElev (row) = current->elevation;
+	vAirport.Add(row);
 
 	++current;
     }
 
-    gdbm_close( dbf );
+    // commit our changes
+    storage.Commit();
 
     return true;
 }

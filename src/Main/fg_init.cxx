@@ -146,7 +146,7 @@ bool fgInitPosition( void ) {
 
 	FGPath path( current_options.get_fg_root() );
 	path.append( "Airports" );
-	path.append( "simple.gdbm" );
+	path.append( "simple.mk4" );
 	FGAirports airports( path.c_str() );
 	FGAirport a;
 

@@ -8,6 +8,6 @@ libAirports_a_SOURCES = \
 
 buildsimple_SOURCES = buildsimple.cxx
 
-buildsimple_LDADD = libAirports.a -lsgdebug -lsgmisc -lgdbm -lz
+buildsimple_LDADD = libAirports.a -lsgdebug -lsgmisc -lmk4 -lz
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/src

@@ -22,8 +22,7 @@ Currently, for JSBSim only the X-15 is available, and possibly the C-172.
 Here is an example command line used to start up FlightGear using JSBSim as
 the FDM:
 
-fgfs --fdm=jsb --aircraft=X15 --units-feet --altitude=60000 --uBody=2000 --w
-Body=120
+fgfs --fdm=jsb --aircraft=X15 --units-feet --altitude=60000 --uBody=2000 --wBody=120
 
 [Note: uBody is the forward velocity of the aircraft, wBody is the downward
 velocity - from the aircraft point of view. This essentially means that the
