@@ -388,6 +388,11 @@ void YASim::copyFromYASim()
     _fdm->getAirplane()->getPilotAccel(v);
     _set_Accels_Pilot_Body(M2FT*v[0], M2FT*v[1], -M2FT*v[2]);
 
+    // There is no property for pilot G's, but I need it for a panel
+    // instrument.  Hack this in here, and REMOVE IT WHEN IT FINDS A
+    // REAL HOME!
+    fgSetFloat("/accelerations/pilot-g", -v[2]/9.8);
+
     // The one appears (!) to want inverted pilot acceleration
     // numbers, in G's...
     Math::mul3(1.0/9.8, v, v);
@@ -429,10 +434,6 @@ void YASim::copyFromYASim()
 
 	node->setBoolValue("running", t->isRunning());
 	node->setBoolValue("cranking", t->isCranking());
-
-        // Note: assumes all tanks have the same fuel density!
-	node->setDoubleValue("fuel-flow-gph", CM2GALS * t->getFuelFlow()
-			     / airplane->getFuelDensity(0));
 
         float tmp[3];
         t->getThrust(tmp);
