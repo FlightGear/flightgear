@@ -68,8 +68,7 @@ fgFRAGMENT::fgFRAGMENT ( const fgFRAGMENT & rhs ) :
     material_ptr   ( rhs.material_ptr    ),
     tile_ptr       ( rhs.tile_ptr        ),
     display_list   ( rhs.display_list    ),
-    faces          ( rhs.faces           ),
-    num_faces      ( rhs.num_faces       )
+    faces          ( rhs.faces           )
 {
 }
 
@@ -330,6 +329,12 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 }
 
 // $Log$
+// Revision 1.4  1998/09/15 01:35:03  curt
+// cleaned up my fragment.num_faces hack :-) to use the STL (no need in
+// duplicating work.)
+// Tweaked fgTileMgrRender() do not calc tile matrix unless necessary.
+// removed some unneeded stuff from fgTileMgrCurElev()
+//
 // Revision 1.3  1998/09/08 21:40:42  curt
 // Updates from Bernie Bright.
 //

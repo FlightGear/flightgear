@@ -101,6 +101,14 @@ fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
     pp.lon = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lon, 25.0);
     pp.lat = fmod(RAD_TO_DEG * FG_TEX_CONSTANT * pp.lat, 25.0);
 
+    if ( pp.lon < 0.0 ) {
+	pp.lon += 25.0;
+    }
+
+    if ( pp.lat < 0.0 ) {
+	pp.lat += 25.0;
+    }
+
     return(pp);
 }
 
@@ -538,6 +546,12 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.4  1998/09/15 01:35:07  curt
+// cleaned up my fragment.num_faces hack :-) to use the STL (no need in
+// duplicating work.)
+// Tweaked fgTileMgrRender() do not calc tile matrix unless necessary.
+// removed some unneeded stuff from fgTileMgrCurElev()
+//
 // Revision 1.3  1998/09/03 21:27:03  curt
 // Fixed a serious bug caused by not-quite-correct comment/white space eating
 // which resulted in mismatched glBegin() glEnd() pairs, incorrect display lists,

@@ -114,12 +114,13 @@ public:
     container faces;
 
     // number of faces in this fragment
-    int num_faces;
+    int num_faces() {
+	return faces.size();
+    }
 
     // Add a face to the face list
     void add_face(int n1, int n2, int n3) {
 	faces.push_back( fgFACE(n1,n2,n3) );
-	num_faces++;
     }
 
     // test if line intesects with this fragment.  p0 and p1 are the
@@ -133,7 +134,7 @@ public:
 		   fgPoint3d *result) const;
 
     // Constructors
-    fgFRAGMENT () : num_faces(0) { /*faces.reserve(512);*/}
+    fgFRAGMENT () { /*faces.reserve(512);*/}
     fgFRAGMENT ( const fgFRAGMENT &image );
 
     // Destructor
@@ -149,7 +150,6 @@ public:
 
     void init() {
 	faces.erase( faces.begin(), faces.end() );
-	num_faces = 0;
     }
 
     int deleteDisplayList() {
@@ -176,6 +176,12 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.5  1998/09/15 01:35:04  curt
+// cleaned up my fragment.num_faces hack :-) to use the STL (no need in
+// duplicating work.)
+// Tweaked fgTileMgrRender() do not calc tile matrix unless necessary.
+// removed some unneeded stuff from fgTileMgrCurElev()
+//
 // Revision 1.4  1998/09/10 19:07:09  curt
 // /Simulator/Objects/fragment.hxx
 //   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.

@@ -34,6 +34,7 @@
 #include <XGL/xgl.h>
 
 #include <string.h>
+#include <string>
 
 #include "Include/fg_stl_config.h"
 #include <Debug/fg_debug.h>
@@ -231,6 +232,8 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 void
 fgMATERIAL::render_fragments()
 {
+    // cout << "rendering " + texture_name + " = " << list_size << "\n";
+
     if ( empty() )
 	return;
 
@@ -252,17 +255,17 @@ fgMATERIAL::render_fragments()
     for ( size_t i = 0; i < list_size; ++i )
     {
 	fgFRAGMENT* frag_ptr = list[i];
-	current_view.tris_rendered += frag_ptr->num_faces;
+	current_view.tris_rendered += frag_ptr->num_faces();
 	if ( frag_ptr->tile_ptr != last_tile_ptr )
 	{
 	    // new tile, new translate
+	    last_tile_ptr = frag_ptr->tile_ptr;
 	    xglLoadMatrixd( frag_ptr->tile_ptr->model_view );
 	}
 
 	// Woohoo!!!  We finally get to draw something!
 	// printf("  display_list = %d\n", frag_ptr->display_list);
 	xglCallList( frag_ptr->display_list );
-	last_tile_ptr = frag_ptr->tile_ptr;
     }
 }
 
@@ -348,6 +351,12 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.6  1998/09/15 01:35:05  curt
+// cleaned up my fragment.num_faces hack :-) to use the STL (no need in
+// duplicating work.)
+// Tweaked fgTileMgrRender() do not calc tile matrix unless necessary.
+// removed some unneeded stuff from fgTileMgrCurElev()
+//
 // Revision 1.5  1998/09/10 19:07:11  curt
 // /Simulator/Objects/fragment.hxx
 //   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.

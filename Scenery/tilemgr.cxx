@@ -416,7 +416,7 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
     double dist, min_dist, lat_geod, alt, sea_level_r;
-    double x, y, z;
+    // double x, y, z;
     int index, tile_diameter, i;
 
     c = &global_tile_cache;
@@ -431,10 +431,10 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
     index = c->exists(&p);
     t = c->get_tile(index);
 
-    scenery.next_center.x = t->center.x;
-    scenery.next_center.y = t->center.y;
-    scenery.next_center.z = t->center.z;
-
+    // scenery.next_center.x = t->center.x;
+    // scenery.next_center.y = t->center.y;
+    // scenery.next_center.z = t->center.z;
+    
     earth_center.x = 0.0;
     earth_center.y = 0.0;
     earth_center.z = 0.0;
@@ -445,10 +445,10 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
 	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
 
     // calculate tile offset
-    x = (t->offset.x = t->center.x - scenery.center.x);
-    y = (t->offset.y = t->center.y - scenery.center.y);
-    z = (t->offset.z = t->center.z - scenery.center.z);
-
+    // x = (t->offset.x = t->center.x - scenery.center.x);
+    // y = (t->offset.y = t->center.y - scenery.center.y);
+    // z = (t->offset.z = t->center.z - scenery.center.z);
+    
     // calc current terrain elevation calculate distance from
     // vertical tangent line at current position to center of
     // tile.
@@ -592,18 +592,6 @@ void fgTileMgrRender( void ) {
 	y = (t->offset.y = t->center.y - scenery.center.y);
 	z = (t->offset.z = t->center.z - scenery.center.z);
 
-	m = t->model_view;
-	for ( j = 0; j < 16; j++ ) {
-	    m[j] = v->MODEL_VIEW[j];
-	}
-
-	// Calculate the model_view transformation matrix for this tile
-	// This is equivalent to doing a glTranslatef(x, y, z);
-	m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
-	m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
-	m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
-	m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
-
 #if defined( TEST_FOV_CLIP )
 	if( viewable(&(t->offset), t->bounding_radius) !=
 	    viewable2(&(t->offset), t->bounding_radius) )
@@ -617,6 +605,18 @@ void fgTileMgrRender( void ) {
 	if ( viewable(&(t->offset), t->bounding_radius) ) {
 	    // at least a portion of this tile could be viewable
 	    
+	    m = t->model_view;
+	    for ( j = 0; j < 16; j++ ) {
+		m[j] = v->MODEL_VIEW[j];
+	    }
+	    
+	    // Calculate the model_view transformation matrix for this tile
+	    // This is equivalent to doing a glTranslatef(x, y, z);
+	    m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
+	    m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
+	    m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
+	    m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
+
 	    // xglPushMatrix();
 	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
 
@@ -690,6 +690,12 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.37  1998/09/15 01:36:45  curt
+// cleaned up my fragment.num_faces hack :-) to use the STL (no need in
+// duplicating work.)
+// Tweaked fgTileMgrRender() do not calc tile matrix unless necessary.
+// removed some unneeded stuff from fgTileMgrCurElev()
+//
 // Revision 1.36  1998/09/14 12:45:26  curt
 // minor tweaks.
 //
