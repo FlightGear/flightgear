@@ -37,12 +37,13 @@
 
 FGSound::FGSound(const SGPropertyNode * node)
   : _name(""),
+    _sample(0),
     _factor(1.0),
     _active(false),
     _mode(FGSound::ONCE),
-    _type(FGSound::LEVEL)
+    _type(FGSound::LEVEL),
+    _node(node)
 {
-   _node = node;
 }
 
 FGSound::~FGSound()
@@ -53,7 +54,6 @@ FGSound::~FGSound()
 void
 FGSound::init()
 {
-   FGSoundMgr * mgr = globals->get_soundmgr();
    vector<const SGPropertyNode *> kids;
    float p = 0.0;
    float v = 0.0;
@@ -204,12 +204,10 @@ FGSound::init()
    //
    // Initialize the sample
    //
-   _sample = new FGSimpleSound(_node->getStringValue("path"));
+   FGSoundMgr * mgr = globals->get_soundmgr();
+   _sample = mgr->add(_name, _node->getStringValue("path"));
    _sample->set_volume(v);
    _sample->set_pitch(p);
-
-   if (!mgr->exists(_name))
-      mgr->add(_sample, _name);
 }
 
 void
@@ -235,12 +233,22 @@ FGSound::update (int dt)
    // if (!_property)
    //   return;
 
-   i = _property->getFloatValue() * _factor;
-   if (_type == FGSound::INVERTED)
-      i = !i;
- 
    if ((_type == FGSound::LEVEL)  || (_type == FGSound::INVERTED)) {
-      if (i == 0) {
+
+      //
+      // If the sound is already playing we have nothing to do.
+      //
+      if (_active && (_mode == FGSound::ONCE))
+         return;
+
+      int check = _property->getFloatValue() * _factor;
+      if (_type == FGSound::INVERTED)
+         check = !check;
+
+      //
+      // If the state changes to false, stop playing.
+      //
+      if (check == 0) {
          _active = false;
          if (mgr->is_playing(_name)) {
             SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
@@ -250,12 +258,10 @@ FGSound::update (int dt)
          return;
       }
 
-      if (_active && (_mode == FGSound::ONCE))
-         return;
-
    } else {		// FGSound::FLIPFLOP
 
-      if ((bool)i == _active)
+      bool check = _property->getFloatValue() * _factor;
+      if (check == _active)
          return;
 
       //
@@ -272,6 +278,7 @@ FGSound::update (int dt)
    // Update the volume
    //
    int max = _volume.size();
+
    double volume = 1.0, volume_offset = 0.0;
    for(i = 0; i < max; i++) {
       double v = _volume[i].prop->getDoubleValue();

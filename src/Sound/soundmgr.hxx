@@ -79,6 +79,16 @@ public:
 };
 
 
+typedef struct {
+	int n;
+	slSample *sample;
+} sample_ref;
+
+typedef map < string, sample_ref * > sample_map;
+typedef sample_map::iterator sample_map_iterator;
+typedef sample_map::const_iterator const_sample_map_iterator;
+
+
 typedef map < string, FGSimpleSound * > sound_map;
 typedef sound_map::iterator sound_map_iterator;
 typedef sound_map::const_iterator const_sound_map_iterator;
@@ -89,7 +99,9 @@ class FGSoundMgr : public FGSubsystem
 
     slScheduler *audio_sched;
     smMixer *audio_mixer;
+
     sound_map sounds;
+    sample_map samples;
 
     SGTimeStamp last;
     double safety;
@@ -128,7 +140,10 @@ public:
     inline bool is_working() const { return !audio_sched->notWorking(); }
 
     // add a sound effect, return true if successful
-    bool add( FGSimpleSound *sound, const string& refname );
+    bool add( FGSimpleSound *sound, const string& refname);
+
+    // add a sound file, return the sample if successful, else return NULL
+    FGSimpleSound *add( const string& refname, const string& file = "" );
 
     // remove a sound effect, return true if successful
     bool remove( const string& refname );

@@ -81,12 +81,26 @@ FGSoundMgr::FGSoundMgr() {
 // destructor
 
 FGSoundMgr::~FGSoundMgr() {
-    sound_map_iterator current = sounds.begin();
-    sound_map_iterator end = sounds.end();
-    for ( ; current != end; ++current ) {
-	FGSimpleSound *s = current->second;
-	delete s->get_sample();
-	delete s;
+
+    //
+    // Remove the samples from the sample manager.
+    //
+    sample_map_iterator sample_current = samples.begin();
+    sample_map_iterator sample_end = samples.end();
+    for ( ; sample_current != sample_end; ++sample_current ) {
+	sample_ref *sr = sample_current->second;
+	delete sr->sample;
+	delete sr;
+    }
+
+    //
+    // Remove the sounds from the sound manager.
+    //
+    sound_map_iterator sound_current = sounds.begin();
+    sound_map_iterator sound_end = sounds.end();
+    for ( ; sound_current != sound_end; ++sound_current ) {
+        FGSimpleSound *s = sound_current->second;
+        delete s;
     }
 
     delete audio_sched;
@@ -102,10 +116,26 @@ void FGSoundMgr::init() {
     // audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
     audio_sched -> setSafetyMargin ( FG_SOUND_SAFETY_MULT * safety ) ;
 
-    sound_map_iterator current = sounds.begin();
-    sound_map_iterator end = sounds.end();
-    for ( ; current != end; ++current ) {
-	FGSimpleSound *s = current->second;
+
+    //
+    // Remove the samples from the sample manager.
+    //
+    sample_map_iterator sample_current = samples.begin();
+    sample_map_iterator sample_end = samples.end();
+    for ( ; sample_current != sample_end; ++sample_current ) {
+        sample_ref *sr = sample_current->second;
+        delete sr->sample;
+        delete sr;
+    }
+    samples.clear();
+ 
+    //
+    // Remove the sounds from the sound manager.
+    //
+    sound_map_iterator sound_current = sounds.begin();
+    sound_map_iterator sound_end = sounds.end();
+    for ( ; sound_current != sound_end; ++sound_current ) {
+	FGSimpleSound *s = sound_current->second;
 	delete s->get_sample();
 	delete s;
     }
@@ -149,12 +179,53 @@ void FGSoundMgr::update(int dt) {
 
 
 // add a sound effect, return true if successful
-bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname  ) {
+bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname ) {
+
+    sample_map_iterator it = samples.find(refname);
+    if (it != samples.end())
+       return false;
+
+    sample_ref *sr = new sample_ref;
+
+    sr->n=1;
+    sr->sample = sound->get_sample();
+    samples[refname] = sr;
+
     sounds[refname] = sound;
 
     return true;
 }
 
+// add a sound from a file, return the sample if successful, else return NULL
+FGSimpleSound *FGSoundMgr::add( const string& refname, const string &file ) {
+     FGSimpleSound *sound;
+
+    if (file == (string)"")
+       return NULL;
+
+    sample_map_iterator it = samples.find(file);
+    if (it == samples.end()) {
+       sound = new FGSimpleSound(file);
+       sounds[refname] = sound;
+
+       sample_ref *sr = new sample_ref;
+
+       sr->n=1;
+       sr->sample = sound->get_sample();
+       samples[file] = sr;
+
+    } else {
+       sample_ref *sr = it->second;
+
+       sr->n++;
+       sound =
+           new FGSimpleSound(sr->sample->getBuffer(), sr->sample->getLength());
+       sounds[refname] = sound;
+
+    }
+
+    return sound;
+}
 
 // remove a sound effect, return true if successful
 bool FGSoundMgr::remove( const string& refname ) {
@@ -182,7 +253,12 @@ bool FGSoundMgr::remove( const string& refname ) {
 	// cout << "Still playing " << sample->get_sample()->getPlayCount()
 	//      << " instances!" << endl;
 
-	delete sample;
+        //
+        // FIXME:
+        // Due to the change in the sound manager, samples live
+	// until the sound manager gets removed.
+        //
+	// delete sample;
         sounds.erase( it );
 
 	return true;
