@@ -206,7 +206,8 @@ main(int argc, char **argv) {
     // lon = -112.012175; lat = 41.195944;     // KOGD
     // lon = -90.757128; lat = 46.790212;      // WI32
     // lon = -122.220717; lat = 37.721291;     // KOAK
-    lon = -111.721477; lat = 40.215641;     // KPVU
+    // lon = -111.721477; lat = 40.215641;     // KPVU
+    lon = -122.309313; lat = 47.448982;     // KSEA
 
     double min_x = lon - 1;
     double min_y = lat - 1;
@@ -214,6 +215,7 @@ main(int argc, char **argv) {
     FGBucket b_max( lon + 1, lat + 1 );
 
     FGBucket b_omit(550314L);
+    // FGBucket b(942698L);
     // FGBucket b(-146.248360, 61.133950);
     // construct_tile( work_base, output_base, b );
     // exit(0);
@@ -243,6 +245,11 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.17  1999/04/03 05:22:57  curt
+// Found a bug in dividing and adding unique verticle segments which could
+// cause the triangulator to end up in an infinite loop.  Basically the code
+// was correct, but the verticle line test was a bit to selective.
+//
 // Revision 1.16  1999/04/01 13:52:12  curt
 // Version 0.6.0
 // Shape name tweak.

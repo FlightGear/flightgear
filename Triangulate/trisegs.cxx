@@ -87,7 +87,7 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
     //   temp = true;
     // }
 
-    if ( fabs(p0.x() - p1.x()) > FG_EPSILON ) {
+    if ( fabs(p0.x() - p1.x()) > 3 * FG_EPSILON ) {
 	// use y = mx + b
 
 	// sort these in a sensable order
@@ -131,6 +131,8 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
     } else {
 	// use x = constant
 
+	// cout << "FOUND VERTICLE SEGMENT" << endl;
+
 	// sort these in a sensable order
 	if ( p0.y() > p1.y() ) {
 	    Point3D tmp = p0;
@@ -138,15 +140,22 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 	    p1 = tmp;
 	}
 
+	// cout << " p0 = " << p0 << " p1 = " << p1 << endl;
+
 	current = nodes.begin();
 	last = nodes.end();
 	counter = 0;
 	for ( ; current != last; ++current ) {
 	    // cout << counter << endl;
-	    if ( (current->y() > p0.y()) && (current->y() < p1.y()) ) {
+	    if ( (current->y() > (p0.y() + FG_EPSILON))
+		 && (current->y() < (p1.y() - FG_EPSILON)) ) {
 		x_err = fabs(current->x() - p0.x());
+		// cout << "  found a potential point, x err = " 
+		//      << x_err << endl;
 		if ( x_err < 10*FG_EPSILON ) {
 		    cout << "FOUND EXTRA SEGMENT NODE (X)" << endl;
+		    cout << p0 << " < " << *current << " < "
+			 << p1 << endl;
 		    found_extra = true;
 		    extra_index = counter;
 		    break;
@@ -170,6 +179,11 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 
 
 // $Log$
+// Revision 1.6  1999/04/03 05:22:59  curt
+// Found a bug in dividing and adding unique verticle segments which could
+// cause the triangulator to end up in an infinite loop.  Basically the code
+// was correct, but the verticle line test was a bit to selective.
+//
 // Revision 1.5  1999/03/29 13:11:13  curt
 // Shuffled stl type names a bit.
 // Began adding support for tri-fanning (or maybe other arrangments too.)

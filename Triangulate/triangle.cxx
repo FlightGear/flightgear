@@ -328,7 +328,7 @@ int FGTriangle::run_triangulate() {
     vorout.normlist = (REAL *) NULL;      // Needed only if -v switch used.
     
     // TEMPORARY
-    // write_out_data(&in);
+    write_out_data(&in);
 
     // Triangulate the points.  Switches are chosen to read and write
     // a PSLG (p), preserve the convex hull (c), number everything
@@ -343,7 +343,7 @@ int FGTriangle::run_triangulate() {
     triangulate(tri_options.c_str(), &in, &out, &vorout);
 
     // TEMPORARY
-    write_out_data(&out);
+    // write_out_data(&out);
 
     // now copy the results back into the corresponding FGTriangle
     // structures
@@ -398,6 +398,11 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.15  1999/04/03 05:22:58  curt
+// Found a bug in dividing and adding unique verticle segments which could
+// cause the triangulator to end up in an infinite loop.  Basically the code
+// was correct, but the verticle line test was a bit to selective.
+//
 // Revision 1.14  1999/03/31 23:47:09  curt
 // Debugging output tweaks.
 //
