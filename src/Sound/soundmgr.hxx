@@ -50,11 +50,14 @@ SG_USING_STD(string);
 // manages everything we need to know for an individual sound sample
 class FGSimpleSound {
 
+private:
+
     slSample *sample;
     slEnvelope *pitch_envelope;
     slEnvelope *volume_envelope;
     double pitch;
     double volume;
+    int clients;
 
 public:
 
@@ -62,15 +65,29 @@ public:
     FGSimpleSound( unsigned char *buffer, int len );
     ~FGSimpleSound();
 
+    void play_once( slScheduler *sched );
+    void play_looped( slScheduler *sched );
+
+    inline void play( slScheduler *sched, bool looped ) {
+       if (looped) play_looped( sched );
+       else play_once( sched );
+    }
+    inline void stop( slScheduler *sched ) {
+        sched->stopSample( sample );
+    }
+    inline bool is_playing( ) {
+       return (sample->getPlayCount() > 0 );
+    }
+
     inline double get_pitch() const { return pitch; }
     inline void set_pitch( double p ) {
-	pitch = p;
-	pitch_envelope->setStep( 0, 0.01, pitch );
+       pitch = p;
+       pitch_envelope->setStep( 0, 0.01, pitch );
     }
     inline double get_volume() const { return volume; }
     inline void set_volume( double v ) {
-	volume = v;
-	volume_envelope->setStep( 0, 0.01, volume );
+       volume = v;
+       volume_envelope->setStep( 0, 0.01, volume );
     }
 
     inline slSample *get_sample() { return sample; }
@@ -167,6 +184,9 @@ public:
 
     // immediate stop playing the sound
     bool stop( const string& refname );
+
+    // return the audio scheduler 
+    inline slScheduler *get_scheduler( ) { return audio_sched; };
 };
 
 

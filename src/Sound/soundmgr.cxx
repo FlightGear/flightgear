@@ -34,6 +34,10 @@
 #define FG_SOUND_SAFETY_MULT 3
 #define FG_MAX_SOUND_SAFETY ( 1.0 / FG_SOUND_SAFETY_MULT )
 
+//
+// SimpleSound
+//
+
 // constructor
 FGSimpleSound::FGSimpleSound( string file ) {
     SGPath slfile( globals->get_fg_root() );
@@ -60,6 +64,22 @@ FGSimpleSound::~FGSimpleSound() {
     delete sample;
 }
 
+void FGSimpleSound::play_once( slScheduler *sched ) {
+    sched->stopSample(sample);
+    sched->playSample(sample);
+    sched->addSampleEnvelope(sample, 0, 0, pitch_envelope, SL_PITCH_ENVELOPE);
+    sched->addSampleEnvelope(sample, 0, 1, volume_envelope, SL_VOLUME_ENVELOPE);
+}
+
+void FGSimpleSound::play_looped( slScheduler *sched ) {
+    sched->loopSample(sample);
+    sched->addSampleEnvelope(sample, 0, 0, pitch_envelope, SL_PITCH_ENVELOPE);
+    sched->addSampleEnvelope(sample, 0, 1, volume_envelope, SL_VOLUME_ENVELOPE);
+}
+
+//
+// Sound Manager
+//
 
 // constructor
 FGSoundMgr::FGSoundMgr() {
@@ -294,66 +314,46 @@ FGSimpleSound *FGSoundMgr::find( const string& refname ) {
 // tell the scheduler to play the indexed sample in a continuous
 // loop
 bool FGSoundMgr::play_looped( const string& refname ) {
-    sound_map_iterator it = sounds.find( refname );
-    if ( it != sounds.end() ) {
-	FGSimpleSound *sample = it->second;
-	audio_sched->loopSample( sample->get_sample() );
-	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 0, 
-					sample->get_pitch_envelope(),
-					SL_PITCH_ENVELOPE );
-	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 1, 
-					sample->get_volume_envelope(),
-					SL_VOLUME_ENVELOPE );
-	
-	return true;
-    } else {
-	return false;
-    }
+   FGSimpleSound *sample;
+
+    if ((sample = find( refname )) == NULL)
+       return false;
+
+    sample->play(audio_sched, true);
+    return true;
 }
 
 
 // tell the scheduler to play the indexed sample once
 bool FGSoundMgr::play_once( const string& refname ) {
-    sound_map_iterator it = sounds.find( refname );
-    if ( it != sounds.end() ) {
-	FGSimpleSound *sample = it->second;
-	audio_sched->stopSample( sample->get_sample() );
-	audio_sched->playSample( sample->get_sample() );
-	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 0, 
-					sample->get_pitch_envelope(),
-					SL_PITCH_ENVELOPE );
-	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 1, 
-					sample->get_volume_envelope(),
-					SL_VOLUME_ENVELOPE );
-	
-	return true;
-    } else {
-	return false;
-    }
+    FGSimpleSound *sample;
+
+    if ((sample = find( refname )) == NULL)
+       return false;
+
+    sample->play(audio_sched, false);
+    return true;
 }
 
 
 // return true of the specified sound is currently being played
 bool FGSoundMgr::is_playing( const string& refname ) {
-    sound_map_iterator it = sounds.find( refname );
-    if ( it != sounds.end() ) {
-	FGSimpleSound *sample = it->second;
-	return (sample->get_sample()->getPlayCount() > 0 );
-	return true;
-    } else {
-	return false;
-    }
+    FGSimpleSound *sample;
+
+    if ((sample = find( refname )) == NULL)
+       return false;
+
+    return sample->is_playing();
 }
 
 
 // immediate stop playing the sound
 bool FGSoundMgr::stop( const string& refname ) {
-    sound_map_iterator it = sounds.find( refname );
-    if ( it != sounds.end() ) {
-	FGSimpleSound *sample = it->second;
-	audio_sched->stopSample( sample->get_sample() );
-	return true;
-    } else {
-	return false;
-    }
+    FGSimpleSound *sample;
+
+    if ((sample = find( refname )) == NULL)
+       return false;
+
+    audio_sched->stopSample( sample->get_sample() );
+    return true;
 }

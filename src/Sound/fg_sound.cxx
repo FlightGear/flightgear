@@ -279,7 +279,7 @@ FGSound::update (int dt)
       //
       // If the state changes to false, stop playing.
       //
-      if (check == 0) {
+      if (!check) {
          _active = false;
          if (mgr->is_playing(_name)) {
             SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
@@ -298,7 +298,7 @@ FGSound::update (int dt)
    } else {		// FLIPFLOP, RAISE, FALL
 
       bool check = (int)(_offset + _property->getFloatValue() * _factor);
-      if ((bool)check == _active)
+      if (check == _active)
             return;
 
       //
@@ -390,9 +390,9 @@ FGSound::update (int dt)
    _active = !_active;
 
    if (_mode == FGSound::ONCE)
-      mgr->play_once(_name);
+      _sample->play(mgr->get_scheduler(), false);
    else
-      mgr->play_looped(_name);
+      _sample->play(mgr->get_scheduler(), true);
 
    SG_LOG(SG_GENERAL, SG_INFO, "Starting audio playback for: " << _name);
    SG_LOG(SG_GENERAL, SG_BULK,
