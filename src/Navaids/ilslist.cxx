@@ -137,7 +137,7 @@ FGILS *FGILSList::findByFreq( double freq,
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
     Point3D station;
     double d2;
-    for ( unsigned int i = 1; i < stations.size(); ++i ) {
+    for ( unsigned int i = 0; i < stations.size(); ++i ) {
 	// cout << "  testing " << current->get_locident() << endl;
 	station = Point3D(stations[i]->get_x(), 
 			  stations[i]->get_y(),
