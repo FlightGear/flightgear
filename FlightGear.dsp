@@ -103,6 +103,36 @@ SOURCE=.\src\Aircraft\aircraft.hxx
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\src\Airports\apt_loader.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Airports"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Airports"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Airports\apt_loader.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Airports"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Airports"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Airports\runways.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -9402,6 +9432,36 @@ SOURCE=.\src\Network\protocol.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\ATC-Main.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\ATC-Main.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\ATC-Inputs.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -9432,7 +9492,7 @@ SOURCE=.\src\Network\ATC-Inputs.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Network\atc610x.cxx
+SOURCE=.\src\Network\ATC-Outputs.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -9447,7 +9507,7 @@ SOURCE=.\src\Network\atc610x.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Network\atc610x.hxx
+SOURCE=.\src\Network\ATC-Outputs.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
