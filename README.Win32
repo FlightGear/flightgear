@@ -1,93 +1,99 @@
-June 15, 1998
+May 10, 1999
 =============
 
 Here is a quick outline of *one* way you can build FG for Win32 using
 a completely free development environment.
 
 
-1.  Install and configure the Cygnus Gnu-Win32  development
-    environment. The latest version is Beta 19. The main 
-    Cygnus Gnu-Win32 page is at: 
+1.  Install cygwin (latest is version 20.1)
 
-        http://www.cygnus.com/misc/gnu-win32/
+    http://sourceware.cygnus.com/cygwin/
 
-    You can download the Cygnus Gnu-Win32 compiler from:
+    Now called "full.exe"
 
-        ftp://ftp.cygnus.com/pub/gnu-win32/latest/cdk.exe
-
-    To install, just run the file: "cdk.exe" by double-clicking in 
-    windows explorer. Be sure to read this package's README :
-
-        http://www.cygnus.com/misc/gnu-win32/readme_toc.html
-
-    After installing the cygnus compiler and the usertools you should
-    find a program group "Cygnus" in your start menu.
+    (I believe "user.exe" is included in full.exe so you don't need to
+    install those separately)
 
 
-2.  Compiling Flightgear requires two updates of the Cygnus environment. 
-    First, install Cygwin32 beta 19.1 upgrade which is available from:
+2.  This step may now be optional.  I haven't tried without, but
+    cygwin is now egcs-1.1 (which should work I think.)  This step
+    just upgrades to the latest greatest version of egcs.
 
-        ftp://ftp.cygnus.com/pub/gnu-win32/latest/b19.1-update/
+    Install egcs binary release for cygwin-20.x (latest egcs is version 1.1.2)
 
-    Make sure to follow the directions you find there (it's less than
-    200Kb to download). Make sure you subsitute all the cygwinb19.dll's
-    around (particularly the one in \windows\system in case you put it 
-    there)
+    http://www.xraylith.wisc.edu/~khan/software/gnu-win32/egcs.html
 
-    Next, install the EGCS upgrade which is available from:
+    For instance, if you've downloaded egcs to /tmp:
 
-        http://www.xraylith.wisc.edu/~khan/software/gnu-win32/egcs.html
+    cd //c/cygnus/cygwin-b20
+    tar xzvf //c/tmp/egcs-1.1.2-cygb20.tar.gz
 
-    Again, make sure you follow the directions.  (This is several
-    megabytes to download.)  It is recommended that you unroll the egcs
-    stuff over top of your cygwin32 installation.  It will replace many of
-    the files.
+3.  Install the free win32 api library (latest version is 0.1.5) from:
 
+    http://www.acc.umu.se/~anorland/gnu-win32/w32api.html
 
-3.  Install the OpenGL dynamic link libraries. 
+    (Recommend you install in /usr/local)
 
-    If you have an accelerated 3d card, it is highly recommended you
-    install the hardware OpenGL drivers for your specific card.
-
-    If you do not have an accelerated 3d card, you can install the SGI
-    software optimized drivers.  For this purpose, get the file
-    sgi-opengl2.exe from the flight gear project site. This is a
-    win95/winnt self extracting installation program. Install it by
-    double-clicking in windows explorer.
-       
-
-4.  Fetch the Flight Gear code and special Win32 libraries.  These can
-    be found at:
-
-        http://www.menet.umn.edu/~curt/fgfs/Downloads/Source/
-
-    Grab the latest "FlightGear-X.XX.zip" and "win32-libs-X.XX.zip"
-    files.
+    Run "make; make install"
 
 
-5.  Unpack the FG source code.  Run:
+4.  Also download glut import libraries from extra section at:
+
+    http://www.acc.umu.se/~anorland/gnu-win32/w32api.html
+
+    copy these libs to /usr/local/lib/lib*.a
+
+
+5.  Install the Mesa-3.0 includes:
+
+    Feel free to download mesa from www.mesa3d.org and grab them from
+    there.  Line #453 of glut.h needs to be edited to look like the
+    following:
+
+    GLUTAPI int APIENTRY glutCreateMenu(void (GLUTCALLBACK * func)(int));
+
+    Or you can grab just these headers from the fgfs ftp site.
+
+    ftp:://ftp.flightgear.org/pub/fgfs/Win32/Mesa-3.0-includes.zip
+
+    Copy these includes to /usr/local/include/gl/*.h
+
+
+6.  Install the glut dll's somewhere in your path:
+
+    You can fetch these from the fgfs site:
+
+    ftp:://ftp.flightgear.org/pub/fgfs/Win32/glut-dll-3.7.zip
+
+
+7.  Build and install plib (latest version is 1.0.5/6?) from:
+
+    http://www.woodsoup.org/~sjbaker/plib (check url)
+
+    Recommend you run configure as follows:
+
+    CFLAGS="-O2 -Wall" CXXFLAGS="-O2 -Wall" CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib ./configure --prefix=/usr/local --includedir=/usr/local/include/plib
+
+    make; make install
+
+
+8.  Fetch the Flight Gear code which can be found at:
+
+        ftp://ftp.flightgear.org/pub/fgfs/Downloads/Source/
+
+    Grab the latest "FlightGear-X.XX.zip" or if you want to live on the 
+    edge you can try one of the nightly snapshots in:
+
+        ftp://ftp.flightgear.org/pub/fgfs/Downloads/Source/Snapshots
+
+
+9.  Unpack the FG source code.  Run:
 
         pkunzip -d FlightGear-X.XX.zip
 
     Be sure to use the -d option.  This will create all the needed
     subdirectories.  Otherwise you will have one big mess!  Trust me!
 
-
-6.  Change to the newly created FlightGear-X.XX directory and unpack
-    the Win32 libraries.  Run:
-
-	cd FlightGear-X.XX	
-        pkunzip -d win32-libs-X.XX.zip
-
-
-7.  You will find a file called "install.exe" In the Win32 directory 
-    created when you unzip the win32-libs-X.XX.zip file.
-
-    This version of install.exe should replace the one in your 
-    H-i386-cygwin32\bin directory - it's sole claim to fame is that it 
-    "understands" that when many calls to it say "install foo" they 
-    mean "install foo.exe".  If you skip this step, and attempt an 
-    install with the older version present, "make install" will fail.
 
 Side Note: we need to make a distinction between the "build tree" and
     the "install tree."  The "build tree" is what we've been talking
@@ -108,7 +114,7 @@ Side Note: we need to make a distinction between the "build tree" and
     umount it) even through reboots and switching off the machine.
 
 
-8.  Configure the make system for your environment and your "install
+10. Configure the make system for your environment and your "install
     tree".  Tell the configure script where you would like to install
     the exectuables and all the scenery and textures by using the
     "--prefix" option.  In the following example the base of the
@@ -125,12 +131,12 @@ Side Note: the make procedure is designed to link against opengl.dll,
     make file where these files are listed.
 
 
-9.  Build the executable.  Run:
+11. Build the executable.  Run:
 
         make
 
 
-10. Assuming you have installed the updated version of install.exe (see
+12. Assuming you have installed the updated version of install.exe (see
     earlier instructions) you can now create and populate the install 
     tree.  Run:
 
@@ -147,19 +153,19 @@ Important Note: so far you've built and installed the simulator and
     and unzip'ed in your "install tree".
 
 
-11. Download and install the (most recent!) scenery and texture files.
+13. Download and install the (most recent!) scenery and texture files.
 
 
-12. In Windows explorer, change to /FlightGear/bin within your install tree.
+14. In Windows explorer, change to /FlightGear/bin within your install tree.
     Call runfg.bat which will set the environment variable FG_ROOT and
     call the executable.
 
 
-13. Try it out!  There are several ways to run flight gear once it has
+15. Try it out!  There are several ways to run flight gear once it has
     been installed. The simplest is as follows.  Run:
 
         \FlightGear\bin\runfg.bat     (command shell)
 
 
-14. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
+16. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
     what went wrong.  My email is curt@me.umn.edu
