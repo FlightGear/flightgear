@@ -31,6 +31,10 @@ Paul Bleisch <pbleisch@acm.org>
   system.
 
 
+Bernie Bright <bbright@c031.aone.net.au>
+  Many C++ style, usage, and implimentation improvements.
+
+
 Gene Buckle <geneb@nwlink.com>
   Gene has done a lot of work getting FG to compile with the MSVC++
   compiler.  Also, he has pushed, proded, and bugged me endlessly to
