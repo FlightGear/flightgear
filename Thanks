@@ -27,13 +27,17 @@ Michael Basler <pmb@knUUt.de>
   Author of the Getting Started guide.
 
 
-Jon S. Berndt <jsb@hal-pc.org>
-  Working on a complete C++ rewrite/reimplimentation of the core FDM.
-  Initially he is using X15 data to test his code, but once things are
-  all in place we should be able to simulator arbitrary aircraft.
-  Maintains a page dealing with Flight Dynamics at:
-  http://www.hal-pc.org/~jsb/flightsim.html
-  Special attention to X15 is paid in seperate pages.
+Jon S. Berndt <jon@jsbsim.org>
+  Chief architect of JSBSim, the default flight dynamics model (FDM)
+  for FlightGear. Jon's professional work has involved simulation and
+  prototyping for vehicles ranging from the F-16 to his current work
+  on the space shuttle and future manned launch vehicles. Since 1998
+  Jon has been working on creating JSBSim together with co-author Tony
+  Peden. JSBSim is an object-oriented, multi-platform aerospace
+  vehicle simulator that can be integrated with broader flight
+  simulation programs (since it provides no visual model), or run in a
+  standalone mode for batch runs. For more information, see the JSBSim
+  home page at:  http://www.jsbsim.org
 
 
 Paul Bleisch <pbleisch@acm.org>
