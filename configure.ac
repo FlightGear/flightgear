@@ -163,6 +163,10 @@ case "${host}" in
 
 esac
 AC_SUBST(audio_LIBS)
+
+dnl ENABLE_AUDIO_SUPPORT could be depricated at any time in favor of
+dnl just assuming we have audio support on all platform.  We can
+dnl depend on plib to hide the details.
 AC_DEFINE([ENABLE_AUDIO_SUPPORT], 1, [Define for audio support])
 
 dnl X11 might be installed on Mac OS X or cygwin/mingwin, we don't want

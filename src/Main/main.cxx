@@ -428,7 +428,7 @@ void trRenderFrame( void ) {
     ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
 
     if (fgGetBool("/environment/clouds/status"))
-      thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+        thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
     globals->get_model_mgr()->draw();
     globals->get_aircraft_model()->draw();
@@ -751,7 +751,7 @@ void fgRenderFrame() {
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
             glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
 	}
-        glPointSize(2.0);
+        glPointSize(4.0);
 
         // blending function for runway lights
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
@@ -1683,8 +1683,8 @@ static bool fgMainInit( int argc, char **argv ) {
     texture_path.append("Textures");
     texture_path.append("Sky");
     for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-      SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
-      thesky->add_cloud_layer(layer);
+        SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
+        thesky->add_cloud_layer(layer);
     }
 
 

@@ -40,31 +40,6 @@
 SG_USING_STD(string);
 
 
-/**
- * Boy, this is ugly!  Make the VOR range vary by altitude difference.
- */
-static double kludgeRange ( double stationElev, double aircraftElev,
-			    double nominalRange)
-{
-				// Assume that the nominal range (usually
-				// 50nm) applies at a 5,000 ft difference.
-				// Just a wild guess!
-  double factor = ((aircraftElev*SG_METER_TO_FEET) - stationElev) / 5000.0;
-  double range = fabs(nominalRange * factor);
-
-				// Clamp the range to keep it sane; for
-				// now, never less than 25% or more than
-				// 500% of nominal range.
-  if (range < nominalRange/4.0) {
-    range = nominalRange/4.0;
-  } else if (range > nominalRange*5.0) {
-    range = nominalRange*5.0;
-  }
-
-  return range;
-}
-
-
 // Constructor
 FGMarkerBeacon::FGMarkerBeacon() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
