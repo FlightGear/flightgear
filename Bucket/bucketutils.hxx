@@ -29,6 +29,8 @@
 
 #include <string>
 
+FG_USING_NAMESPACE(std);
+
 #include "bucketutils.h"
 
 #include <Include/compiler.h>
@@ -69,6 +71,9 @@ operator<< ( ostream& out, const fgBUCKET& b )
 
 
 // $Log$
+// Revision 1.2  1999/01/19 20:56:53  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.1  1998/11/09 23:42:12  curt
 // Initial revision.
 //

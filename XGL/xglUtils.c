@@ -8,7 +8,8 @@
 #include <string.h>
 
 #if !defined( __CYGWIN__ ) && !defined( __CYGWIN32__ )
-#  if !defined( HAVE_STL_SGI_PORT )    // Avoid malloc with STLport
+#  if !defined( HAVE_STL_SGI_PORT ) && !defined( __MWERKS__ )
+//   Avoid malloc with STLport and MSL
 #    include <malloc.h>
 #  endif
 #endif

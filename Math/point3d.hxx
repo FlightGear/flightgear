@@ -39,6 +39,11 @@
 #  include <math.h>
 #endif
 
+// -rp- assert.h is buggy under MWCWP3, as multiple #include undef assert !
+#ifdef __MWERKS__
+#  define assert(x)
+#endif
+
 const double fgPoint3_Epsilon = 0.0000001;
 
 enum {PX, PY, PZ};		    // axes
@@ -298,6 +303,9 @@ Point3D::distance3D(const Point3D& a ) const
 
 
 // $Log$
+// Revision 1.7  1999/01/19 20:56:58  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.6  1998/11/23 21:46:37  curt
 // Borland portability tweaks.
 //
