@@ -133,9 +133,24 @@ SG_USING_STD(endl);
 #include <FDM/ADA.hxx>
 #include <Scenery/tileentry.hxx>
 
-#if ( WIN32 )
+
+// #define FG_EXPERIMENTAL_LIGHTING
+#ifdef WIN32
+  typedef void (APIENTRY * PFNGLPOINTPARAMETERFEXTPROC)(GLenum pname,
+                                                        GLfloat param);
+  typedef void (APIENTRY * PFNGLPOINTPARAMETERFVEXTPROC)(GLenum pname,
+                                                         const GLfloat *params);
+
   PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
   PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
+#elif linux
+  #include <GL/glx.h>
+
+  typedef void (* OpenGLFuncExt)(GLenum pname, GLfloat param);
+  typedef void (* OpenGLFuncExtv)(GLenum pname, const GLfloat *params);
+
+  OpenGLFuncExt glPointParameterfEXT = 0;
+  OpenGLFuncExtv glPointParameterfvEXT = 0;
 #endif
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
@@ -719,31 +734,23 @@ void fgRenderFrame() {
 	// Set punch through fog density
 	glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
 
-// #define FG_EXPERIMENTAL_LIGHTING
+        ssgSetNearFar( scene_nearplane, scene_farplane );
+	ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
+
 #ifdef FG_EXPERIMENTAL_LIGHTING
         // Enable states for drawing points with GL_extension
 	if (glutExtensionSupported("GL_EXT_point_parameters")) {
             glEnable(GL_POINT_SMOOTH);
-            float quadratic[3] = {1.0, 0.01, 0.00001};
-            // get the address of our OpenGL extensions
-#if defined(WIN32)
-            glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
-                wglGetProcAddress("glPointParameterfEXT");
-            glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
-                wglGetProcAddress("glPointParameterfvEXT");
-#endif
+            float quadratic[3] = {1.0, 0.001, 0.0000001};
             // makes the points fade as they move away
             glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
             glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
-            glPointSize(8.0);
+            glPointSize(4.0);
 	}
 
         // blending function for runway lights
         glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
 #endif
-
-        ssgSetNearFar( scene_nearplane, scene_farplane );
-	ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
 
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
         glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
@@ -772,6 +779,7 @@ void fgRenderFrame() {
 	}
 
         glPointSize(1.0);
+        glDisable(GL_POINT_SMOOTH);
 #endif
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
@@ -1565,6 +1573,21 @@ int mainLoop( int argc, char **argv ) {
 
 #ifdef GL_EXT_texture_lod_bias
     glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
+#endif
+
+#ifdef FG_EXPERIMENTAL_LIGHTING
+            // get the address of our OpenGL extensions
+#  ifdef WIN32
+    glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
+        wglGetProcAddress("glPointParameterfEXT");
+    glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
+        wglGetProcAddress("glPointParameterfvEXT");
+#  elif linux
+    glPointParameterfEXT = (OpenGLFuncExt) 
+        glXGetProcAddressARB((GLubyte *)"glPointParameterfEXT");
+    glPointParameterfvEXT = (OpenGLFuncExtv) 
+        glXGetProcAddressARB((GLubyte *)"glPointParameterfvEXT");
+#  endif
 #endif
 
     // Set position relative to glide slope if requested
