@@ -6,8 +6,266 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
+#include <Input/input.hxx>
+
 #include "new_gui.hxx"
 #include "menubar.hxx"
+
+
+
+////////////////////////////////////////////////////////////////////////
+// FIXME!!
+//
+// Deprecated wrappers for old menu commands.
+//
+// DO NOT ADD TO THESE.  THEY WILL BE DELETED SOON!
+//
+// These are defined in gui_funcs.cxx.  They should be replaced with
+// user-configured dialogs and new commands where necessary.
+////////////////////////////////////////////////////////////////////////
+
+extern void saveFlight (puObject *);
+static bool
+do_save_dialog (const SGPropertyNode * arg)
+{
+    saveFlight(0);
+    return true;
+}
+
+extern void loadFlight (puObject *);
+static bool
+do_load_dialog (const SGPropertyNode * arg)
+{
+    loadFlight(0);
+    return true;
+}
+
+extern void reInit (puObject *);
+static bool
+do_reinit_dialog (const SGPropertyNode * arg)
+{
+    reInit(0);
+    return true;
+}
+
+#if defined(TR_HIRES_SNAP)
+extern void dumpHiResSnapShot (puObject *);
+static bool
+do_hires_snapshot_dialog (const SGPropertyNode * arg)
+{
+    dumpHiResSnapShot(0);
+    return true;
+}
+#endif // TR_HIRES_SNAP
+
+extern void dumpSnapShot (puObject *);
+static bool
+do_snapshot_dialog (const SGPropertyNode * arg)
+{
+    dumpSnapShot(0);
+    return true;
+}
+
+
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
+extern void printScreen (puObject *);
+static bool
+do_print_dialog (const SGPropertyNode * arg)
+{
+    printScreen(0);
+    return true;
+}
+#endif
+
+extern void PilotOffsetAdjust (puObject *);
+static bool
+do_pilot_offset_dialog (const SGPropertyNode * arg)
+{
+    PilotOffsetAdjust(0);
+    return true;
+}
+
+extern void fgHUDalphaAdjust (puObject *);
+static bool
+do_hud_alpha_dialog (const SGPropertyNode * arg)
+{
+    fgHUDalphaAdjust(0);
+    return true;
+}
+
+extern void prop_pickerView (puObject *);
+static bool
+do_properties_dialog (const SGPropertyNode * arg)
+{
+    prop_pickerView(0);
+    return true;
+}
+
+extern void fgPresetAirport (puObject *);
+static bool
+do_preset_airport_dialog (const SGPropertyNode * arg)
+{
+    fgPresetAirport(0);
+    return true;
+}
+
+extern void fgPresetRunway (puObject *);
+static bool
+do_preset_runway_dialog (const SGPropertyNode * arg)
+{
+    fgPresetRunway(0);
+    return true;
+}
+
+extern void fgPresetOffsetDistance (puObject *);
+static bool
+do_preset_offset_distance_dialog (const SGPropertyNode * arg)
+{
+    fgPresetOffsetDistance(0);
+    return true;
+}
+
+extern void fgPresetAltitude (puObject *);
+static bool
+do_preset_altitude_dialog (const SGPropertyNode * arg)
+{
+    fgPresetAltitude(0);
+    return true;
+}
+
+extern void fgPresetGlideslope (puObject *);
+static bool
+do_preset_glideslope_dialog (const SGPropertyNode * arg)
+{
+    fgPresetGlideslope(0);
+    return true;
+}
+
+extern void fgPresetAirspeed (puObject *);
+static bool
+do_preset_airspeed_dialog (const SGPropertyNode * arg)
+{
+    fgPresetAirspeed(0);
+    return true;
+}
+
+extern void fgPresetCommit (puObject *);
+static bool
+do_preset_commit_dialog (const SGPropertyNode * arg)
+{
+    fgPresetCommit(0);
+    return true;
+}
+
+extern void NewAltitude (puObject *);
+static bool
+do_ap_altitude_dialog (const SGPropertyNode * arg)
+{
+    NewAltitude(0);
+    return true;
+}
+
+extern void NewHeading (puObject *);
+static bool
+do_ap_heading_dialog (const SGPropertyNode * arg)
+{
+    NewHeading(0);
+    return true;
+}
+
+extern void AddWayPoint (puObject *);
+static bool
+do_ap_add_waypoint_dialog (const SGPropertyNode * arg)
+{
+    AddWayPoint(0);
+    return true;
+}
+
+extern void PopWayPoint (puObject *);
+static bool
+do_ap_pop_waypoint_dialog (const SGPropertyNode * arg)
+{
+    PopWayPoint(0);
+    return true;
+}
+
+extern void ClearRoute (puObject *);
+static bool
+do_ap_clear_route_dialog (const SGPropertyNode * arg)
+{
+    ClearRoute(0);
+    return true;
+}
+
+extern void fgAPAdjust (puObject *);
+static bool
+do_ap_adjust_dialog (const SGPropertyNode * arg)
+{
+    fgAPAdjust(0);
+    return true;
+}
+
+extern void fgLatLonFormatToggle (puObject *);
+static bool
+do_lat_lon_format_dialog (const SGPropertyNode * arg)
+{
+    fgLatLonFormatToggle(0);
+    return true;
+}
+
+extern void helpCb (puObject *);
+static bool
+do_help_dialog (const SGPropertyNode * arg)
+{
+    helpCb(0);
+    return true;
+}
+
+static struct {
+    const char * name;
+    SGCommandMgr::command_t command;
+} deprecated_dialogs [] = {
+    { "old-save-dialog", do_save_dialog },
+    { "old-load-dialog", do_load_dialog },
+    { "old-reinit_dialog", do_reinit_dialog },
+#if defined(TR_HIRES_SNAP)
+    { "old-hires-snapshot-dialog", do_hires_snapshot_dialog },
+#endif
+    { "old-snapshot-dialog", do_snapshot_dialog },
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
+    { "old-print-dialog", do_print_dialog },
+#endif
+    { "old-pilot-offset-dialog", do_pilot_offset_dialog },
+    { "old-hud-alpha-dialog", do_hud_alpha_dialog },
+    { "old-properties-dialog", do_properties_dialog },
+    { "old-preset-airport-dialog", do_preset_airport_dialog },
+    { "old-preset-runway-dialog", do_preset_runway_dialog },
+    { "old-preset-offset-distance-dialog", do_preset_offset_distance_dialog },
+    { "old-preset-altitude-dialog", do_preset_altitude_dialog },
+    { "old-preset-glideslope-dialog", do_preset_glideslope_dialog },
+    { "old-preset-airspeed-dialog", do_preset_airspeed_dialog },
+    { "old-preset-commit-dialog", do_preset_commit_dialog },
+    { "old-ap-altitude-dialog", do_ap_altitude_dialog },
+    { "old-ap-heading-dialog", do_ap_heading_dialog },
+    { "old-ap-add-waypoint-dialog", do_ap_add_waypoint_dialog },
+    { "old-ap-pop-waypoint-dialog", do_ap_pop_waypoint_dialog },
+    { "old-ap-clear-route-dialog", do_ap_clear_route_dialog },
+    { "old-ap-adjust-dialog", do_ap_adjust_dialog },
+    { "old-lat-lon-format-dialog", do_lat_lon_format_dialog },
+    { "old-help-dialog", do_help_dialog },
+    { 0, 0 }
+};
+
+static void
+add_deprecated_dialogs ()
+{
+  SG_LOG(SG_GENERAL, SG_INFO, "Initializing old dialog commands:");
+  for (int i = 0; deprecated_dialogs[i].name != 0; i++) {
+    SG_LOG(SG_GENERAL, SG_INFO, "  " << deprecated_dialogs[i].name);
+    globals->get_commands()->addCommand(deprecated_dialogs[i].name,
+					deprecated_dialogs[i].command);
+  }
+}
 
 
 
@@ -56,6 +314,10 @@ FGMenuBar::init ()
     if (_menuBar != 0)          // FIXME: check if PUI owns the pointer
         delete _menuBar;
     make_menubar();
+
+                                // FIXME: temporary commands to get at
+                                // old, hard-coded dialogs.
+    add_deprecated_dialogs();
 }
 
 void
