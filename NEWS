@@ -1,3 +1,12 @@
+New in 0.9.1
+* December 5, 2002
+
+* Fixes a problem with a missing file in the source distribution of 0.9.0
+* Updates to AI aircraft subsystem (this is a work in progress)
+* Added a canned ATC voice handling class (using prerecorded voice snippets.)
+* Added voice ATIS
+
+
 New in 0.9.0
 * December 3, 2002
 

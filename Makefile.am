@@ -9,7 +9,6 @@ EXTRA_DIST = \
 	Thanks \
 	acinclude.m4 \
 	autogen.sh \
-	irix-hack.sh \
 	FlightGear.dsp \
 	FlightGear.dsw
 
