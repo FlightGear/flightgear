@@ -529,385 +529,121 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 
 int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 {
-  instr_item *HIptr;
-  int index;
+    instr_item *HIptr;
+    int index;
 
-  fgPrintf( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD\n" );
+    fgPrintf( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD\n" );
 
-  HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());  // empty the HUD deque
+    HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());
 
-//  hud->code = 1;
-//  hud->status = 0;
+    //  hud->code = 1;
+    //  hud->status = 0;
 
-  // For now lets just hardcode the hud here.
-  // In the future, hud information has to come from the same place
-  // aircraft information came from.
+    // For now lets just hardcode the hud here.
+    // In the future, hud information has to come from the same place
+    // aircraft information came from.
 
-//  fgHUDSetTimeMode( hud, NIGHT );
-//  fgHUDSetBrightness( hud, BRT_LIGHT );
+    //  fgHUDSetTimeMode( hud, NIGHT );
+    //  fgHUDSetBrightness( hud, BRT_LIGHT );
 
-//  index = 0;
-  index = 19;  
+    //  index = 0;
+    index = 19;  
 
-  do {
-    switch ( index ) {
-      case 0:     // TBI
-        HIptr = (instr_item *) new fgTBI_instr( 270, 100, 60, 10 );
-        break;
+    instr_item* p;
 
-      case 1:     // Artificial Horizon
-        HIptr = (instr_item *) new HudLadder( 240, 195, 120, 180 );
-        break;
+    p = new instr_label( 10, 10, 60, 10,
+			 get_frame_rate,
+			 "%.1f",
+			 "Frame rate = ",
+			 NULL,
+			 1.0,
+			 HUDS_TOP,
+			 RIGHT_JUST,
+			 SMALL,
+			 0,
+			 TRUE );
+    HUD_deque.push_front( p );
 
-      case 2:    // KIAS
-        HIptr = (instr_item *) new hud_card( 130,
-                                             170,
-                                              28,
-                                             200,
-                                             get_speed,
-                                             HUDS_LEFT | HUDS_VERT,
-                                             200.0, 0.0,
-                                             1.0,
-                                             10,  5,
-                                             0,
-                                             0,
-                                             50.0,
-                                             true);
+    if ( current_options.get_tris_or_culled() == 0 )
+	p = new instr_label( 10, 25, 90, 10,
+			     get_vfc_tris_drawn,
+			     "%.0f",
+			     "Tris Rendered = ",
+			     NULL,
+			     1.0,
+			     HUDS_TOP,
+			     RIGHT_JUST,
+			     SMALL,
+			     0,
+			     TRUE );
+    else
+	p = new instr_label( 10, 25, 90, 10,
+			     get_vfc_ratio,
+			     "%.2f",
+			     "VFC Ratio = ",
+			     NULL,
+			     1.0,
+			     HUDS_TOP,
+			     RIGHT_JUST,
+			     SMALL,
+			     0,
+			     TRUE );
+    HUD_deque.push_front( p );
 
-        break;
+    p = new instr_label( 10, 40, 90, 10,
+			 get_fov,
+			 "%.1f",
+			 "FOV = ",
+			 NULL,
+			 1.0,
+			 HUDS_TOP,
+			 RIGHT_JUST,
+			 SMALL,
+			 0,
+			 TRUE );
+    HUD_deque.push_front( p );
 
-      case 3:    // Radio Altimeter
-        HIptr = (instr_item *) new hud_card( 420,
-                                             195,
-                                              25,
-                                             150,
-                                             get_agl,
-                                             HUDS_LEFT | HUDS_VERT,
-                                             1000, 0,
-                                             1.0,
-                                             25,    5,
-                                             0,
-                                             0,
-                                             200.0,
-                                             true);
-        break;
+    const int x_pos = 480;
+    p = new instr_label( x_pos, 40, 40, 30,
+			 get_speed,
+			 "%5.0f",
+			 "Airspeed ",
+			 " Kts",
+			 1.0,
+			 HUDS_TOP,
+			 RIGHT_JUST,
+			 SMALL,
+			 0,
+			 TRUE );
+    HUD_deque.push_front( p );
 
-      case 4:    // GYRO COMPASS
-        HIptr = (instr_item *) new hud_card( 200,
-                                             375,
-                                             200,
-                                              28,
-                                             get_heading,
-                                             HUDS_TOP,
-                                             360, 0,
-                                               1.0,
-                                               5,   1,
-                                             360,
-                                               0,
-                                              25,
-                                             true);
-        break;
+    p = new instr_label( x_pos, 25, 40, 10,
+			 get_altitude,
+			 "%5.0f",
+			 "Altitude ",
+			 " m",
+			 1.0,
+			 HUDS_TOP,
+			 RIGHT_JUST,
+			 SMALL,
+			 0,
+			 TRUE );
+    HUD_deque.push_front( p );
 
-      case 5:    // AMSL
-        HIptr = (instr_item *) new hud_card( 460,
-                                             170,
-                                              35,
-                                             200,
-                                             get_altitude,
-                                             HUDS_RIGHT | HUDS_VERT,
-                                             15000, 0,
-                                             1.0,
-                                             100,  25,
-                                             0,
-                                             0,
-                                             250,
-                                             true);
-        break;
+    p = new instr_label( x_pos, 10, 60, 10,
+			 get_heading,
+			 "%5.1f",
+			 "Heading  ",
+			 " Deg",
+			 1.0,
+			 HUDS_TOP,
+			 RIGHT_JUST,
+			 SMALL,
+			 0,
+			 TRUE );
+    HUD_deque.push_front( p );
 
-      case 6:
-        HIptr = (instr_item *) new  guage_instr( 250,            // x
-                                                 350,            // y
-                                                 100,            // width
-                                                  20,            // height
-                                                 get_aileronval, // data source
-                                                 HUDS_BOTTOM | HUDS_NOTEXT,
-                                                 100.0,
-                                                 +1.0,
-                                                 -1.0);
-        break;
-
-      case 7:
-        HIptr = (instr_item *) new  guage_instr( 170,             // x
-                                                 225,             // y
-                                                  20,             // width
-                                                 100,             // height
-                                                 get_elevatorval, // data source
-                                                 HUDS_RIGHT | HUDS_VERT | HUDS_NOTEXT,
-                                                -100.0,           // Scale data
-                                                  +1.0,           // Data Range
-                                                  -1.0);
-        break;
-
-      case 8:
-        HIptr = (instr_item *) new  guage_instr( 250,             // x
-                                                 200,             // y
-                                                 100,             // width
-                                                  20,             // height
-                                                 get_rudderval,   // data source
-                                                 HUDS_TOP | HUDS_NOTEXT,
-                                                 100.0,
-                                                 +1.0,
-                                                 -1.0);
-        break;
-
-      case 9:
-        HIptr = (instr_item *) new  guage_instr( 100,             // x
-                                                 190,
-                                                  20,
-                                                 160,             // height
-                                                 get_throttleval, // data source
-                                                 HUDS_VERT | HUDS_RIGHT | HUDS_NOTEXT,
-                                                 100.0,
-                                                   1.0,
-                                                   0.0);
-        break;
-
-      case 10:    // Digital KIAS
-        HIptr = (instr_item *) new instr_label ( 110,
-                                                 150,
-                                                  40,
-                                                  30,
-                                                 get_speed,
-                                                 "%5.0f",
-                                                 NULL,
-                                                 " Kts",
-                                                 1.0,
-                                                 HUDS_TOP,
-                                                 RIGHT_JUST,
-                                                 SMALL,
-                                                 0,
-                                                 TRUE );
-        break;
-
-      case 11:    // Digital Rate of Climb
-        HIptr = (instr_item *) new instr_label ( 110,
-                                                 135,
-                                                  40,
-                                                  10,
-                                                 get_altitude,
-                                                 "Climb  %5.0f",
-                                                 NULL,
-                                                 " m",
-                                                 1.0,
-                                                 HUDS_TOP,
-                                                 LEFT_JUST,
-                                                 SMALL,
-                                                 0,
-                                                 TRUE );
-        break;
-
-      case 12:    // Roll indication diagnostic
-        HIptr = (instr_item *) new instr_label ( 110,
-                                                 120,
-                                                  40,
-                                                  10,
-                                                 get_roll,
-                                                 "%5.2f",
-                                                 " Roll",
-                                                 " Deg",
-                                                 1.0,
-                                                 HUDS_TOP,
-                                                 RIGHT_JUST,
-                                                 SMALL,
-                                                 0,
-                                                 TRUE );
-        break;
-
-      case 13:    // Angle of attack diagnostic
-        HIptr = (instr_item *) new instr_label ( 440,
-                                                 150,
-                                                  60,
-                                                  10,
-                                                 get_aoa,
-                                                 "      %5.2f",
-                                                 "AOA",
-                                                 " Deg",
-                                                 1.0,
-                                                 HUDS_TOP,
-                                                 RIGHT_JUST,
-                                                 SMALL,
-                                                 0,
-                                                 TRUE );
-        break;
-
-      case 14:
-        HIptr = (instr_item *) new instr_label ( 440,
-                                                 135,
-                                                  60,
-                                                  10,
-                                                 get_heading,
-                                                 " %5.1f",
-                                                 "Heading ",
-                                                 " Deg",
-                                                 1.0,
-                                                 HUDS_TOP,
-                                                 RIGHT_JUST,
-                                                 SMALL,
-                                                 0,
-                                                 TRUE );
-        break;
-
-      case 15:
-        HIptr = (instr_item *) new instr_label ( 440,
-                                                 120,
-                                                  60,
-                                                  10,
-                                                 get_sideslip,
-                                                 "%5.2f",
-                                                 "Sideslip ",
-                                                 NULL,
-                                                 1.0,
-                                                 HUDS_TOP,
-                                                 RIGHT_JUST,
-                                                 SMALL,
-                                                 0,
-                                                 TRUE );
-        break;
-
-      case 16:
-        HIptr = (instr_item *) new instr_label( 440,
-                                                100,
-                                                 60,
-                                                 10,
-                                                get_throttleval,
-                                                "%5.2f",
-                                                "Throttle ",
-                                                NULL,
-                                                 1.0,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-      case 17:
-        HIptr = (instr_item *) new instr_label( 440,
-                                                 85,
-                                                 60,
-                                                 10,
-                                                get_elevatorval,
-                                                "%5.2f",
-                                                "Elevator ",
-                                                NULL,
-                                                 1.0,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-      case 18:
-        HIptr = (instr_item *) new instr_label( 440,
-                                                 60,
-                                                 60,
-                                                 10,
-                                                get_aileronval,
-                                                "%5.2f",
-                                                "Aileron  ",
-                                                NULL,
-                                                 1.0,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-
-      case 19:
-        HIptr = (instr_item *) new instr_label( 10,
-                                                10,
-                                                60,
-                                                10,
-                                                 get_frame_rate,
-                                                "%.1f",
-                                                "Frame rate = ",
-                                                NULL,
-                                                 1.0,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-      case 20:
-		  switch( current_options.get_tris_or_culled() ) {
-			  case 0:
-				  HIptr = (instr_item *) new instr_label( 10,
-					  25,
-					  90,
-					  10,
-					  get_vfc_tris_drawn,												
-					  "%.0f",
-					  "Tris Rendered = ",
-					  NULL,
-					  1.0,
-					  HUDS_TOP,
-					  RIGHT_JUST,
-					  SMALL,
-					  0,
-					  TRUE );
-				  break;
-			  case 1:
-				  HIptr = (instr_item *) new instr_label( 10,
-					  25,
-					  90,
-					  10,
-					  get_vfc_ratio,
-					  "%.2f",
-					  "VFC Ratio = ",
-					  NULL,
-					  1.0,
-					  HUDS_TOP,
-					  RIGHT_JUST,
-					  SMALL,
-					  0,
-					  TRUE );
-				  break;
-		  }
-		  break;
-		
-      case 21:
-        HIptr = (instr_item *) new instr_label( 10,
-                                                40,
-                                                90,
-                                                10,
-                                                get_fov,
-                                                "%.1f",
-                                                "FOV = ",
-                                                NULL,
-                                                 1.0,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-      default:
-        HIptr = 0;;
-      }
-    if( HIptr ) {                   // Anything to install?
-      HUD_deque.insert( HUD_deque.begin(), HIptr);
-      }
-    index++;
-    }
-  while( HIptr );
-
-  return 0;  // For now. Later we may use this for an error code.
+    return 0;  // For now. Later we may use this for an error code.
 }
 
 int global_day_night_switch = DAY;
@@ -1023,14 +759,11 @@ void fgUpdateHUD( void ) {
 
   glLineWidth(1);
 
-  deque < instr_item * > :: iterator current;
-  deque < instr_item * > :: iterator last;
+  deque < instr_item * > :: iterator current = HUD_deque.begin();
+  deque < instr_item * > :: iterator last = HUD_deque.end();
 
-  current = HUD_deque.begin();
-  last = HUD_deque.end();
-  while ( current != last ) {
+  for ( ; current != last; ++current ) {
     pHUDInstr = *current;
-    current++;
 
     // for( i = hud_displays; i; --i) { // Draw everything
     // if( HUD_deque.at(i)->enabled()) {
@@ -1097,6 +830,9 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.23  1998/10/16 00:53:00  curt
+// Mods to display a bit more info when mini-hud is active.
+//
 // Revision 1.22  1998/09/29 14:56:31  curt
 // c++-ified comments.
 //
