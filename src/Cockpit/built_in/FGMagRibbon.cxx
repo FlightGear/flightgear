@@ -33,7 +33,7 @@ FGMagRibbon::FGMagRibbon (int w, int h)
 void
 FGMagRibbon::draw ()
 {
-  double heading = FGSteam::get_MH_deg();
+  double heading = globals->get_steam()->get_MH_deg();
   double xoffset, yoffset;
 
   while (heading >= 360.0) {

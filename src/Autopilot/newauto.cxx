@@ -481,7 +481,8 @@ FGAutopilot::update (double dt)
     // heading hold
     if ( heading_hold == true ) {
 	if ( heading_mode == FG_DG_HEADING_LOCK ) {
-	    TargetHeading = DGTargetHeading + FGSteam::get_DG_err();
+	    TargetHeading = DGTargetHeading +
+	      globals->get_steam()->get_DG_err();
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
 	    MakeTargetHeadingStr( TargetHeading );
@@ -603,7 +604,7 @@ FGAutopilot::update (double dt)
 
 	if ( heading_mode == FG_TC_HEADING_LOCK ) {
 	    // drive the turn coordinator to zero
-	    double turn = FGSteam::get_TC_std();
+	    double turn = globals->get_steam()->get_TC_std();
 	    double AileronSet = -turn / 2.0;
             SG_CLAMP_RANGE( AileronSet, -1.0, 1.0 );
 	    globals->get_controls()->set_aileron( AileronSet );
@@ -689,7 +690,8 @@ FGAutopilot::update (double dt)
 
 	if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	    climb_rate =
-		( TargetAltitude - FGSteam::get_ALT_ft() * SG_FEET_TO_METER ) * 8.0;
+		( TargetAltitude -
+		  globals->get_steam()->get_ALT_ft() * SG_FEET_TO_METER ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	    double x = current_radiostack->get_nav1_gs_dist();
 	    double y = (altitude_node->getDoubleValue()

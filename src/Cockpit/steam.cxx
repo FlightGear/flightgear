@@ -30,6 +30,8 @@
 #include <simgear/constants.h>
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
+
+#include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 #ifdef FG_WEATHERCM
 # include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -48,93 +50,176 @@ static bool isTied = false;
 
 
 ////////////////////////////////////////////////////////////////////////
+// Constructor and destructor.
+////////////////////////////////////////////////////////////////////////
+
+FGSteam::FGSteam ()
+  : the_STATIC_inhg(29.92),
+    the_ALT_ft(0.0),
+    the_ALT_datum_mb(1013.0),
+    the_VSI_case(29.92),
+    the_VSI_fps(0.0),
+    the_VACUUM_inhg(0.0),
+    the_MH_err(0.0),
+    the_MH_deg(0.0),
+    the_MH_degps(0.0),
+    the_DG_err(0.0),
+    the_DG_deg(0.0),
+    the_DG_degps(0.0),
+    the_DG_inhg(0.0),
+    the_TC_rad(0.0),
+    the_TC_std(0.0),
+    _UpdateTimePending(1000000)
+{
+}
+
+FGSteam::~FGSteam ()
+{
+}
+
+void
+FGSteam::init ()
+{
+  _heading_deg_node = fgGetNode("/orientation/heading-deg", true);
+  _mag_var_deg_node = fgGetNode("/environment/magnetic-variation-deg", true);
+  _mag_dip_deg_node = fgGetNode("/environment/magnetic-dip-deg", true);
+  _engine_0_rpm_node = fgGetNode("/engines/engine[0]/rpm", true);
+  _pressure_inhg_node = fgGetNode("environment/pressure-inhg", true);
+}
+
+void
+FGSteam::update (double dt_sec)
+{
+  _UpdateTimePending += dt_sec;
+  _CatchUp();
+}
+
+void
+FGSteam::bind ()
+{
+  fgTie("/steam/airspeed-kt", this, &FGSteam::get_ASI_kias);
+  fgSetArchivable("/steam/airspeed-kt");
+  fgTie("/steam/altitude-ft", this, &FGSteam::get_ALT_ft);
+  fgSetArchivable("/steam/altitude-ft");
+  fgTie("/steam/altimeter-datum-mb", this,
+	&FGSteam::get_ALT_datum_mb, &FGSteam::set_ALT_datum_mb,
+	false);  /* don't modify the value */
+  fgSetArchivable("/steam/altimeter-datum-mb");
+  fgTie("/steam/turn-rate", this, &FGSteam::get_TC_std);
+  fgSetArchivable("/steam/turn-rate");
+  fgTie("/steam/slip-skid",this, &FGSteam::get_TC_rad);
+  fgSetArchivable("/steam/slip-skid");
+  fgTie("/steam/vertical-speed-fps", this, &FGSteam::get_VSI_fps);
+  fgSetArchivable("/steam/vertical-speed-fps");
+  fgTie("/steam/gyro-compass-deg", this, &FGSteam::get_DG_deg);
+  fgSetArchivable("/steam/gyro-compass-deg");
+  // fgTie("/steam/adf-deg", FGSteam::get_HackADF_deg);
+  // fgSetArchivable("/steam/adf-deg");
+  fgTie("/steam/gyro-compass-error-deg", this,
+	&FGSteam::get_DG_err, &FGSteam::set_DG_err,
+  	false);  /* don't modify the value */
+  fgSetArchivable("/steam/gyro-compass-error-deg");
+  fgTie("/steam/mag-compass-deg", this, &FGSteam::get_MH_deg);
+  fgSetArchivable("/steam/mag-compass-deg");
+}
+
+void
+FGSteam::unbind ()
+{
+  fgUntie("/steam/airspeed-kt");
+  fgUntie("/steam/altitude-ft");
+  fgUntie("/steam/altimeter-datum-mb");
+  fgUntie("/steam/turn-rate");
+  fgUntie("/steam/slip-skid");
+  fgUntie("/steam/vertical-speed-fps");
+  fgUntie("/steam/gyro-compass-deg");
+  fgUntie("/steam/gyro-compass-error-deg");
+  fgUntie("/steam/mag-compass-deg");
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Declare the functions that read the variables
 ////////////////////////////////////////////////////////////////////////
 
-double FGSteam::the_STATIC_inhg = 29.92;
-double FGSteam::the_ALT_ft = 0.0;  // Indicated altitude
-double FGSteam::get_ALT_ft() { _CatchUp(); return the_ALT_ft; }
+double
+FGSteam::get_ALT_ft () const
+{
+  return the_ALT_ft;
+}
 
-double FGSteam::the_ALT_datum_mb = 1013.0;
-double FGSteam::get_ALT_datum_mb() { return the_ALT_datum_mb; }
+double
+FGSteam::get_ALT_datum_mb () const
+{
+  return the_ALT_datum_mb;
+}
 
-void FGSteam::set_ALT_datum_mb ( double datum_mb ) {
+void
+FGSteam::set_ALT_datum_mb (double datum_mb)
+{
     the_ALT_datum_mb = datum_mb;
 }
 
-double FGSteam::get_ASI_kias() { return fgGetDouble("/velocities/airspeed-kt"); }
-
-double FGSteam::the_VSI_case = 29.92;
-double FGSteam::the_VSI_fps = 0.0;
-double FGSteam::get_VSI_fps() { _CatchUp(); return the_VSI_fps; }
-
-double FGSteam::the_VACUUM_inhg = 0.0;
-double FGSteam::get_VACUUM_inhg() { _CatchUp(); return the_VACUUM_inhg; }
-
-double FGSteam::the_MH_err   = 0.0;
-double FGSteam::the_MH_deg   = 0.0;
-double FGSteam::the_MH_degps = 0.0;
-double FGSteam::get_MH_deg () { _CatchUp(); return the_MH_deg; }
-
-double FGSteam::the_DG_err   = 0.0;
-double FGSteam::the_DG_deg   = 0.0;
-double FGSteam::the_DG_degps = 0.0;
-double FGSteam::the_DG_inhg  = 0.0;
-double FGSteam::get_DG_deg () { _CatchUp(); return the_DG_deg; }
-double FGSteam::get_DG_err () { _CatchUp(); return the_DG_err; }
-
-void FGSteam::set_DG_err ( double approx_magvar ) {
-    the_DG_err = approx_magvar;
+double
+FGSteam::get_ASI_kias () const
+{
+  return fgGetDouble("/velocities/airspeed-kt");
 }
 
-double FGSteam::the_TC_rad   = 0.0;
-double FGSteam::the_TC_std   = 0.0;
-double FGSteam::get_TC_rad () { _CatchUp(); return the_TC_rad; }
-double FGSteam::get_TC_std () { _CatchUp(); return the_TC_std; }
+double
+FGSteam::get_VSI_fps () const
+{
+  return the_VSI_fps;
+}
+
+double
+FGSteam::get_VACUUM_inhg () const
+{
+  return the_VACUUM_inhg;
+}
+
+double
+FGSteam::get_MH_deg () const
+{
+  return the_MH_deg;
+}
+
+double
+FGSteam::get_DG_deg () const
+{
+  return the_DG_deg;
+}
+
+double
+FGSteam::get_DG_err () const
+{
+  return the_DG_err;
+}
+
+void
+FGSteam::set_DG_err (double approx_magvar)
+{
+  the_DG_err = approx_magvar;
+}
+
+double
+FGSteam::get_TC_rad () const
+{
+  return the_TC_rad;
+}
+
+double
+FGSteam::get_TC_std () const
+{
+  return the_TC_std;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
 // Recording the current time
 ////////////////////////////////////////////////////////////////////////
-
-
-double FGSteam::_UpdateTimePending = 1000000;  /* Forces filters to reset */
-
-
-				// FIXME: no need to use static
-				// functions any longer.
-
-void FGSteam::update (double dt)
-{
-    if (!isTied) {
-        isTied = true;
-        fgTie("/steam/airspeed-kt", FGSteam::get_ASI_kias);
-	fgSetArchivable("/steam/airspeed-kt");
-        fgTie("/steam/altitude-ft", FGSteam::get_ALT_ft);
-	fgSetArchivable("/steam/altitude-ft");
-        fgTie("/steam/altimeter-datum-mb",
-              FGSteam::get_ALT_datum_mb, FGSteam::set_ALT_datum_mb,
-              false);  /* don't modify the value */
-	fgSetArchivable("/steam/altimeter-datum-mb");
-        fgTie("/steam/turn-rate", FGSteam::get_TC_std);
-	fgSetArchivable("/steam/turn-rate");
-        fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
-	fgSetArchivable("/steam/slip-skid");
-        fgTie("/steam/vertical-speed-fps", FGSteam::get_VSI_fps);
-	fgSetArchivable("/steam/vertical-speed-fps");
-        fgTie("/steam/gyro-compass-deg", FGSteam::get_DG_deg);
-	fgSetArchivable("/steam/gyro-compass-deg");
-        // fgTie("/steam/adf-deg", FGSteam::get_HackADF_deg);
-	// fgSetArchivable("/steam/adf-deg");
-        fgTie("/steam/gyro-compass-error-deg",
-              FGSteam::get_DG_err, FGSteam::set_DG_err,
-              false);  /* don't modify the value */
-	fgSetArchivable("/steam/gyro-compass-error-deg");
-        fgTie("/steam/mag-compass-deg", FGSteam::get_MH_deg);
-	fgSetArchivable("/steam/mag-compass-deg");
-    }
-    _UpdateTimePending += dt;
-}
 
 
 /* tc should be (elapsed_time_between_updates / desired_smoothing_time) */
@@ -206,11 +291,6 @@ double altFtToPressInHg(double alt_ft)
 
 void FGSteam::_CatchUp()
 {
-  static const SGPropertyNode *heading_deg_node = fgGetNode("/orientation/heading-deg", true);
-  static const SGPropertyNode *mag_var_deg_node = fgGetNode("/environment/magnetic-variation-deg", true);
-  static const SGPropertyNode *mag_dip_deg_node = fgGetNode("/environment/magnetic-dip-deg", true);
-  static const SGPropertyNode *enginge_0_rpm_node = fgGetNode("/engines/engine[0]/rpm", true);
-
   if ( _UpdateTimePending != 0 )
   {
         double dt = _UpdateTimePending;
@@ -267,16 +347,16 @@ void FGSteam::_CatchUp()
 	if ( fabs(the_TC_rad) > 0.2 /* 2.0 */ )
 	{       /* Massive sideslip jams it; it stops turning */
 	        the_MH_degps = 0.0;
-	        the_MH_err   = heading_deg_node->getDoubleValue() - the_MH_deg;
+	        the_MH_err   = _heading_deg_node->getDoubleValue() - the_MH_deg;
 	} else
 	{       double MagDip, MagVar, CosDip;
 	        double FrcN, FrcE, FrcU, AccTot;
 	        double EdgN, EdgE, EdgU;
 	        double TrqN, TrqE, TrqU, Torque;
 	        /* Find a force vector towards exact magnetic north */
-	        MagVar = mag_var_deg_node->getDoubleValue() 
+	        MagVar = _mag_var_deg_node->getDoubleValue() 
                     / SGD_RADIANS_TO_DEGREES;
-	        MagDip = mag_var_deg_node->getDoubleValue()
+	        MagDip = _mag_var_deg_node->getDoubleValue()
                     / SGD_RADIANS_TO_DEGREES;
 	        CosDip = cos ( MagDip );
 	        FrcN = CosDip * cos ( MagVar );
@@ -307,7 +387,7 @@ void FGSteam::_CatchUp()
 	        }
 	        if ( the_MH_err >  180.0 ) the_MH_err -= 360.0; else
 	        if ( the_MH_err < -180.0 ) the_MH_err += 360.0;
-	        the_MH_deg  = heading_deg_node->getDoubleValue() - the_MH_err;
+	        the_MH_deg  = _heading_deg_node->getDoubleValue() - the_MH_err;
 	}
 
 	/**************************
@@ -315,7 +395,7 @@ void FGSteam::_CatchUp()
 	scaling capability for the vacuum pump later on.
 	When we have a real engine model, we can ask it.
 	*/
-	the_ENGINE_rpm = enginge_0_rpm_node->getDoubleValue();
+	the_ENGINE_rpm = _engine_0_rpm_node->getDoubleValue();
 
 	/**************************
 	First, we need to know what the static line is reporting,
@@ -330,7 +410,7 @@ void FGSteam::_CatchUp()
 	double static_inhg = WeatherDatabase->get(plane_pos).AirPressure *
 	    (0.01 / INHG_TO_MB);
 #else
-	double static_inhg = fgGetDouble("/environment/pressure-inhg");
+	double static_inhg = _pressure_inhg_node->getDoubleValue();
 #endif
 
 	set_lowpass ( & the_STATIC_inhg, static_inhg, dt ); 
@@ -395,7 +475,7 @@ void FGSteam::_CatchUp()
 	    the_DG_err = fgGetDouble("/environment/magnetic-variation-deg");
  	the_DG_degps = 0.01; /* HACK! */
  	if (dt<1.0) the_DG_err += dt * the_DG_degps;
- 	the_DG_deg = heading_deg_node->getDoubleValue() - the_DG_err;
+ 	the_DG_deg = _heading_deg_node->getDoubleValue() - the_DG_err;
 
 	/**************************
 	Finished updates, now clear the timer 
@@ -411,11 +491,13 @@ void FGSteam::_CatchUp()
 // Everything below is a transient hack; expect it to disappear
 ////////////////////////////////////////////////////////////////////////
 
-double FGSteam::get_HackOBS1_deg () {
-    return current_radiostack->get_nav1_radial(); 
+double FGSteam::get_HackOBS1_deg () const
+{
+  return current_radiostack->get_nav1_radial(); 
 }
 
-double FGSteam::get_HackOBS2_deg () {
+double FGSteam::get_HackOBS2_deg () const
+{
     return current_radiostack->get_nav2_radial(); 
 }
 

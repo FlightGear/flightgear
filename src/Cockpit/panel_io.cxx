@@ -45,7 +45,6 @@
 #include <GUI/gui.h>
 
 #include "panel.hxx"
-#include "steam.hxx"
 #include "panel_io.hxx"
 
 //built-in layers

@@ -80,6 +80,7 @@
 #include <Autopilot/newauto.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
+#include <Cockpit/steam.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include <FDM/ADA.hxx>
@@ -1059,6 +1060,14 @@ bool fgInitSubsystems( void ) {
 
     globals->get_controls()->init();
     globals->get_controls()->bind();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the steam subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->get_steam()->init();
+    globals->get_steam()->bind();
 
 
     ////////////////////////////////////////////////////////////////////

@@ -798,7 +798,7 @@ void fgUpdateTimeDepCalcs() {
 
 	globals->get_autopilot()->update(delta_time_sec);
 	cur_fdm_state->update(delta_time_sec);
-	FGSteam::update(delta_time_sec);
+	globals->get_steam()->update(delta_time_sec);
     }
 
     if ( !strcmp(fgGetString("/sim/view-mode"), "pilot") ) {
@@ -1410,6 +1410,9 @@ int mainLoop( int argc, char **argv ) {
 
     FGControls *controls = new FGControls;
     globals->set_controls( controls );
+
+    FGSteam *steam = new FGSteam;
+    globals->set_steam( steam );
 
     string_list *col = new string_list;
     globals->set_channel_options_list( col );

@@ -31,6 +31,8 @@
 
 #include <simgear/compiler.h>
 
+#include <Main/fgfs.hxx>
+
 #include <time.h>
 #include STL_STRING
 
@@ -49,54 +51,70 @@ SG_USING_NAMESPACE(std);
  * and autopilot features where these are slaved thus.
  * They should not be used for other simulation purposes.
  */
-class FGSteam
+class FGSteam : public FGSubsystem
 {
 public:
 
-  static void update ( double dt );
+  FGSteam ();
+  virtual ~FGSteam ();
+
+  virtual void init ();
+
+  virtual void update (double dt_sec);
+
+  virtual void bind ();
+
+  virtual void unbind ();
 
 				// Position
-  static double get_ALT_ft ();
-  static double get_TC_rad ();
-  static double get_MH_deg ();
-  static double get_DG_deg ();
-  static double get_DG_err ();
-  static void set_DG_err(double approx_magvar);
+  virtual double get_ALT_ft () const;
+  virtual double get_TC_rad () const;
+  virtual double get_MH_deg () const;
+  virtual double get_DG_deg () const;
+  virtual double get_DG_err () const;
+  virtual void set_DG_err(double approx_magvar);
 
 				// Velocities
-  static double get_ASI_kias ();
-  static double get_TC_std ();
-  static double get_VSI_fps ();
+  virtual double get_ASI_kias () const;
+  virtual double get_TC_std () const;
+  virtual double get_VSI_fps () const;
 
 				// Engine Gauges
-  static double get_VACUUM_inhg ();
+  virtual double get_VACUUM_inhg () const;
 
 				// Atmosphere
-  static double get_ALT_datum_mb ();
-  static void set_ALT_datum_mb(double datum_mb);
+  virtual double get_ALT_datum_mb () const;
+  virtual void set_ALT_datum_mb(double datum_mb);
 
 				// Hacks ... temporary stuff
   // static double get_HackVOR1_deg ();
-  static double get_HackOBS1_deg ();
+  virtual double get_HackOBS1_deg () const;
   // static double get_HackGS_deg ();
   // static double get_HackVOR2_deg ();
-  static double get_HackOBS2_deg ();
+  virtual double get_HackOBS2_deg () const;
 
 
 private:
-	static double	the_ALT_ft;
-        static double	the_ALT_datum_mb;
-        static double   the_TC_rad, the_TC_std;
-	static double	the_STATIC_inhg, the_VACUUM_inhg;
-	static double	the_VSI_fps, the_VSI_case;
-        static double   the_MH_deg, the_MH_degps, the_MH_err;
-        static double   the_DG_deg, the_DG_degps, the_DG_inhg, the_DG_err;
 
-	static double	_UpdateTimePending;
-	static void	_CatchUp ();
+  void	_CatchUp ();
+  void	set_lowpass ( double *outthe, double inthe, double tc );
 
-	static void	set_lowpass ( double *outthe, 
-				double inthe, double tc );
+  double the_ALT_ft;
+  double the_ALT_datum_mb;
+  double the_TC_rad, the_TC_std;
+  double the_STATIC_inhg, the_VACUUM_inhg;
+  double the_VSI_fps, the_VSI_case;
+  double the_MH_deg, the_MH_degps, the_MH_err;
+  double the_DG_deg, the_DG_degps, the_DG_inhg, the_DG_err;
+
+  double	_UpdateTimePending;
+
+  SGPropertyNode_ptr _heading_deg_node;
+  SGPropertyNode_ptr _mag_var_deg_node;
+  SGPropertyNode_ptr _mag_dip_deg_node;
+  SGPropertyNode_ptr _engine_0_rpm_node;
+  SGPropertyNode_ptr _pressure_inhg_node;
+
 };
 
 
