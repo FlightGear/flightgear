@@ -177,7 +177,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
     }
     if ( globals->get_current_view()->get_view_offset() < -2.0 * SGD_2PI ||
 	 globals->get_current_view()->get_view_offset() > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "Psi rotation bad = " 
+	SG_LOG( SG_EVENT, SG_ALERT, "current view()->view offset bad = " 
 		<< globals->get_current_view()->get_view_offset() );
 	exit(-1);
     }

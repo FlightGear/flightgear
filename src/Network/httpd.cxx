@@ -147,7 +147,7 @@ void HttpdChannel::foundTerminator (void) {
         response += "<HEAD>";
         response += getTerminator();
 
-        response += "<TITLE>HUD - ";
+        response += "<TITLE>FlightGear - ";
         response += request;
         response += "</TITLE>";
         response += getTerminator();

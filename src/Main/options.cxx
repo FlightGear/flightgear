@@ -191,8 +191,8 @@ fgSetDefaults ()
                                 // Freeze options
     fgSetBool("/sim/freeze/master", false);
     fgSetBool("/sim/freeze/position", false);
-    fgSetBool("/sim/freeze/fuel", false);
     fgSetBool("/sim/freeze/time-of-day", false);
+    fgSetBool("/sim/freeze/fuel", false);
 }
 
 
@@ -561,6 +561,10 @@ parse_option (const string& arg)
         fgSetBool("/sim/freeze/fuel", false);
     } else if ( arg == "--enable-fuel-freeze" ) {
         fgSetBool("/sim/freeze/fuel", true);
+    } else if ( arg == "--disable-tod-freeze" ) {
+        fgSetBool("/sim/freeze/time-of-day", false);
+    } else if ( arg == "--enable-tod-freeze" ) {
+        fgSetBool("/sim/freeze/time-of-day", true);
     } else if ( arg == "--disable-anti-alias-hud" ) {
 	fgSetBool("/sim/hud/antialiased", false);
     } else if ( arg == "--enable-anti-alias-hud" ) {
@@ -1110,6 +1114,8 @@ fgUsage ()
          << "    --enable-freeze               Start in a frozen state" << endl
          << "    --disable-fuel-freeze         Fuel is consumed normally" << endl
          << "    --enable-fuel-freeze          Fuel tank quantity forced to remain constant" << endl
+         << "    --disable-tod-freeze          Time of day advances normally" << endl
+         << "    --enable-tod-freeze           Do not advance time of day" << endl
          << "    --control=mode                Primary control mode (joystick, keyboard," << endl
          << "                                  mouse)" << endl
          << "    --enable-auto-coordination    Enable auto coordination" << endl
