@@ -189,7 +189,9 @@ fgOPTIONS::fgOPTIONS() :
     tris_or_culled(0),
 	
     // Time options
-    time_offset(0)
+    time_offset(0),
+
+    network_olk(false)
 {
     // set initial values/defaults
     time_offset_type=FG_TIME_SYS_OFFSET;
@@ -762,6 +764,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg.find( "--rul=" ) != string::npos ) {
 	parse_channel( "rul", arg.substr(6) );
 #ifdef FG_NETWORK_OLK
+    } else if ( arg == "--disable-network-olk" ) {
+	network_olk = false;	
+    } else if ( arg== "--enable-network-olk") {
+	network_olk = true;	
     } else if ( arg == "--net-hud" ) {
 	net_hud_display = 1;	
     } else if ( arg.find( "--net-id=") != string::npos ) {

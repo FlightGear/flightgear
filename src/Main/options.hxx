@@ -194,6 +194,7 @@ private:
     string_list channel_options_list;
 
     // Network options
+    bool network_olk;
     string net_id;
     
 public:
@@ -271,6 +272,8 @@ public:
     inline string_list get_channel_options_list() const { 
 	return channel_options_list;
     }
+
+    inline bool get_network_olk() const { return network_olk; }
     inline string get_net_id() const { return net_id; }
 
     // Update functions
@@ -332,6 +335,7 @@ public:
 	}
     }
 
+    inline void set_network_olk( bool net ) { network_olk = net; }
     inline void set_net_id( const string id ) { net_id = id; }
 
 private:

@@ -742,7 +742,9 @@ void goodBye(puObject *)
     cout << "Program exiting normally at user request." << endl;
 
 #ifdef FG_NETWORK_OLK    
-    if ( net_is_registered == 0 ) fgd_send_com( "8", FGFS_host);
+    if ( current_options.get_network_olk() ) {
+	if ( net_is_registered == 0 ) fgd_send_com( "8", FGFS_host);
+    }
 #endif
 
     //  if(gps_bug)

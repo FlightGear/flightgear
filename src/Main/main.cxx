@@ -553,22 +553,24 @@ void fgRenderFrame( void ) {
 	}
 
 # ifdef FG_NETWORK_OLK
-	sgCoord fgdpos;
-	other = head->next;             /* put listpointer to start  */
-	while ( other != tail) {        /* display all except myself */
-	    if ( strcmp( other->ipadr, fgd_mcp_ip) != 0) {
-		other->fgd_sel->select(1);
-		sgSetCoord( &fgdpos, other->sgFGD_COORD );
-		other->fgd_pos->setTransform( &fgdpos );
+	if ( current_options.get_network_olk() ) {
+	    sgCoord fgdpos;
+	    other = head->next;             /* put listpointer to start  */
+	    while ( other != tail) {        /* display all except myself */
+		if ( strcmp( other->ipadr, fgd_mcp_ip) != 0) {
+		    other->fgd_sel->select(1);
+		    sgSetCoord( &fgdpos, other->sgFGD_COORD );
+		    other->fgd_pos->setTransform( &fgdpos );
+		}
+		other = other->next;
 	    }
-	    other = other->next;
-	}
 
-	// fgd_sel->select(1);
-	// sgCopyMat4( sgTUX, current_view.sgVIEW);
-	// sgCoord fgdpos;
-	// sgSetCoord( &fgdpos, sgFGD_VIEW );
-	// fgd_pos->setTransform( &fgdpos);
+	    // fgd_sel->select(1);
+	    // sgCopyMat4( sgTUX, current_view.sgVIEW);
+	    // sgCoord fgdpos;
+	    // sgSetCoord( &fgdpos, sgFGD_VIEW );
+	    // fgd_pos->setTransform( &fgdpos);
+	}
 # endif
 
 	ssgSetCamera( current_view.VIEW );
@@ -734,10 +736,12 @@ static void fgMainLoop( void ) {
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
 
 #ifdef FG_NETWORK_OLK
-    if ( net_is_registered == 0 ) {           // We first have to reg. to fgd
-        // printf("FGD: Netupdate\n");
-        fgd_send_com( "A", FGFS_host);   // Send Mat4 data
-        fgd_send_com( "B", FGFS_host);   // Recv Mat4 data
+    if ( current_options.get_network_olk() ) {
+	if ( net_is_registered == 0 ) {	     // We first have to reg. to fgd
+	    // printf("FGD: Netupdate\n");
+	    fgd_send_com( "A", FGFS_host);   // Send Mat4 data
+	    fgd_send_com( "B", FGFS_host);   // Recv Mat4 data
+	}
     }
 #endif
 
@@ -1318,7 +1322,9 @@ int main( int argc, char **argv ) {
 
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
-    printf("Multipilot mode %s\n", fg_net_init( scene ) );
+    if ( current_options.get_network_olk() ) {
+	printf("Multipilot mode %s\n", fg_net_init( scene ) );
+    }
 #endif
 
     scene->addKid( terrain );
