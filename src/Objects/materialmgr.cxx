@@ -76,6 +76,10 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 void
 FGMaterialSlot::render_fragments()
 {
+    FG_LOG( FG_GENERAL, FG_ALERT, 
+	    "FGMaterialSlot::render_fragments() is depricated ... " <<
+	    "we shouldn't be here!" );
+
     int tris_rendered = current_view.get_tris_rendered();
 
     // cout << "rendering " + texture_name + " = " << list_size << "\n";
@@ -117,7 +121,7 @@ FGMaterialSlot::render_fragments()
 
 	// Woohoo!!!  We finally get to draw something!
 	// printf("  display_list = %d\n", frag_ptr->display_list);
-	xglCallList( frag_ptr->display_list );
+	// xglCallList( frag_ptr->display_list );
     }
 
     current_view.set_tris_rendered( tris_rendered );

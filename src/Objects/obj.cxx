@@ -29,14 +29,14 @@
 #  include <math.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
+// #ifdef HAVE_WINDOWS_H
+// #  include <windows.h>
+// #endif
 
 #include <stdio.h>
 #include <string.h>
-#include <GL/glut.h>
-#include <XGL/xgl.h>
+// #include <GL/glut.h>
+// #include <XGL/xgl.h>
 
 // #if defined ( __sun__ )
 // extern "C" void *memmove(void *, const void *, size_t);
@@ -134,14 +134,14 @@ static Point3D calc_tex_coords(const Point3D& node, const Point3D& ref) {
 }
 
 
-// Load a .obj file and build the GL fragment list
+// Load a .obj file and build the fragment list
 ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     fgFRAGMENT fragment;
     Point3D pp;
-    double approx_normal[3], normal[3] /*, scale = 0.0 */;
+    double approx_normal[3] /*, normal[3], scale = 0.0 */;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
-    GLint display_list = 0;
+    // GLint display_list = 0;
     int shading;
     bool in_fragment = false, in_faces = false;
     int vncount, vtcount;
@@ -228,7 +228,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// shared_done true and build the ssg shared lists
 		if ( ! shared_done ) {
 		    // sanity check
-		    if ( nodes.size() != vncount ) {
+		    if ( (int)nodes.size() != vncount ) {
 			FG_LOG( FG_TERRAIN, FG_ALERT, 
 				"Tile has mismatched nodes and normals: " 
 				<< path );
@@ -257,18 +257,18 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		}
 
 		// series of individual triangles
-		if ( in_faces ) {
-		    xglEnd();
-		}
+		// if ( in_faces ) {
+		//     xglEnd();
+	        // }
 
 		// this also signals the start of a new fragment
 		if ( in_fragment ) {
 		    // close out the previous structure and start the next
-		    xglEndList();
+		    // xglEndList();
 		    // printf("xglEnd(); xglEndList();\n");
 
 		    // update fragment
-		    fragment.display_list = display_list;
+		    // fragment.display_list = display_list;
 
 		    // push this fragment onto the tile's object list
 		    t->fragment_list.push_back(fragment);
@@ -278,8 +278,8 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
 		// printf("start of fragment (usemtl)\n");
 
-		display_list = xglGenLists(1);
-		xglNewList(display_list, GL_COMPILE);
+		// display_list = xglGenLists(1);
+		// xglNewList(display_list, GL_COMPILE);
 		// printf("xglGenLists(); xglNewList();\n");
 		in_faces = false;
 
@@ -383,7 +383,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
 		// fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = ");
 
-		xglBegin(GL_TRIANGLE_STRIP);
+		// xglBegin(GL_TRIANGLE_STRIP);
 		// printf("xglBegin(tristrip) %d %d %d\n", n1, n2, n3);
 
 		odd = 1; 
@@ -393,22 +393,22 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // Shading model is "GL_SMOOTH" so use precalculated
 		    // (averaged) normals
 		    // MAT3_SCALE_VEC(normal, normals[n1], scale);
-		    xglNormal3dv(normal);
+		    // xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n1], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n1].get_n());		
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n1].get_n());		
 
 		    // MAT3_SCALE_VEC(normal, normals[n2], scale);
-		    xglNormal3dv(normal);
+		    // xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n2], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n2].get_n());				
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n2].get_n());				
 
 		    // MAT3_SCALE_VEC(normal, normals[n3], scale);
-		    xglNormal3dv(normal);
+		    // xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n3], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n3].get_n());
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n3].get_n());
 		} else {
 		    // Shading model is "GL_FLAT" so calculate per face
 		    // normals on the fly.
@@ -420,19 +420,19 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 				    nodes[n3], approx_normal);
 		    }
 		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
-		    xglNormal3dv(normal);
+		    // xglNormal3dv(normal);
 
 		    pp = calc_tex_coords(nodes[n1], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n1].get_n());		
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n1].get_n());		
 
 		    pp = calc_tex_coords(nodes[n2], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n2].get_n());		
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n2].get_n());		
 		    
 		    pp = calc_tex_coords(nodes[n3], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n3].get_n());		
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n3].get_n());		
 		}
 		// printf("some normals, texcoords, and vertices\n");
 
@@ -465,10 +465,10 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 				    approx_normal);
 			// MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    }
-		    xglNormal3dv(normal);
+		    // xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n4], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n4].get_n());		
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n4].get_n());		
 		    
 		    odd = 1 - odd;
 		    last1 = n3;
@@ -482,11 +482,11 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		fan_vertices.clear();
 		fan_tex_coords.clear();
 
-		xglBegin(GL_TRIANGLE_FAN);
+		// xglBegin(GL_TRIANGLE_FAN);
 
 		in >> n1;
 		fan_vertices.push_back( n1 );
-		xglNormal3dv(normals[n1]);
+		// xglNormal3dv(normals[n1]);
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
 		    fan_tex_coords.push_back( tex );
@@ -496,12 +496,12 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    in.putback( c );
 		    pp = calc_tex_coords(nodes[n1], center);
 		}
-		xglTexCoord2f(pp.x(), pp.y());
-		xglVertex3dv(nodes[n1].get_n());
+		// xglTexCoord2f(pp.x(), pp.y());
+		// xglVertex3dv(nodes[n1].get_n());
 
 		in >> n2;
 		fan_vertices.push_back( n2 );
-		xglNormal3dv(normals[n2]);
+		// xglNormal3dv(normals[n2]);
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
 		    fan_tex_coords.push_back( tex );
@@ -511,8 +511,8 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    in.putback( c );
 		    pp = calc_tex_coords(nodes[n2], center);
 		}
-		xglTexCoord2f(pp.x(), pp.y());
-		xglVertex3dv(nodes[n2].get_n());
+		// xglTexCoord2f(pp.x(), pp.y());
+		// xglVertex3dv(nodes[n2].get_n());
 		
 		// read all subsequent numbers until next thing isn't a number
 		while ( true ) {
@@ -534,7 +534,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // cout << "  triangle = " 
 		    //      << n1 << "," << n2 << "," << n3 
 		    //      << endl;
-		    xglNormal3dv(normals[n3]);
+		    // xglNormal3dv(normals[n3]);
 		    if ( in.get( c ) && c == '/' ) {
 			in >> tex;
 			fan_tex_coords.push_back( tex );
@@ -544,14 +544,14 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 			in.putback( c );
 			pp = calc_tex_coords(nodes[n3], center);
 		    }
-		    xglTexCoord2f(pp.x(), pp.y());
-		    xglVertex3dv(nodes[n3].get_n());
+		    // xglTexCoord2f(pp.x(), pp.y());
+		    // xglVertex3dv(nodes[n3].get_n());
 
 		    fragment.add_face(n1, n2, n3);
 		    n2 = n3;
 		}
 
-		xglEnd();
+		// xglEnd();
 
 		// build the ssg entity
 		unsigned short *vindex = 
@@ -578,7 +578,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// unoptimized face
 
 		if ( !in_faces ) {
-		    xglBegin(GL_TRIANGLES);
+		    // xglBegin(GL_TRIANGLES);
 		    // printf("xglBegin(triangles)\n");
 		    in_faces = true;
 		}
@@ -588,20 +588,20 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		fragment.add_face(n1, n2, n3);
 
 		// xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-		xglNormal3dv(normals[n1]);
+		// xglNormal3dv(normals[n1]);
 		pp = calc_tex_coords(nodes[n1], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n1].get_n());
+		// xglTexCoord2f(pp.lon(), pp.lat());
+		// xglVertex3dv(nodes[n1].get_n());
 
-		xglNormal3dv(normals[n2]);
+		// xglNormal3dv(normals[n2]);
 		pp = calc_tex_coords(nodes[n2], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n2].get_n());
+		// xglTexCoord2f(pp.lon(), pp.lat());
+		// xglVertex3dv(nodes[n2].get_n());
 		
-		xglNormal3dv(normals[n3]);
+		// xglNormal3dv(normals[n3]);
 		pp = calc_tex_coords(nodes[n3], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n3].get_n());
+		// xglTexCoord2f(pp.lon(), pp.lat());
+		// xglVertex3dv(nodes[n3].get_n());
 		// printf("some normals, texcoords, and vertices (tris)\n");
 	    } else if ( token == "q" ) {
 		// continue a triangle strip
@@ -646,11 +646,11 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    }
 		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
-		xglNormal3dv(normal);
+		// xglNormal3dv(normal);
 
 		pp = calc_tex_coords(nodes[n1], center);
-		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n1].get_n());
+		// xglTexCoord2f(pp.lon(), pp.lat());
+		// xglVertex3dv(nodes[n1].get_n());
 		// printf("a normal, texcoord, and vertex (4th)\n");
    
 		odd = 1 - odd;
@@ -680,11 +680,11 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 			}
 			// MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    }
-		    xglNormal3dv(normal);
+		    // xglNormal3dv(normal);
 		
 		    pp = calc_tex_coords(nodes[n2], center);
-		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n2].get_n());		
+		    // xglTexCoord2f(pp.lon(), pp.lat());
+		    // xglVertex3dv(nodes[n2].get_n());		
 		    // printf("a normal, texcoord, and vertex (4th)\n");
 
 		    odd = 1 -odd;
@@ -708,12 +708,12 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
     if ( in_fragment ) {
 	// close out the previous structure and start the next
-	xglEnd();
-	xglEndList();
+	// xglEnd();
+	// xglEndList();
 	// printf("xglEnd(); xglEndList();\n");
 	
 	// update fragment
-	fragment.display_list = display_list;
+	// fragment.display_list = display_list;
 	
 	// push this fragment onto the tile's object list
 	t->fragment_list.push_back(fragment);

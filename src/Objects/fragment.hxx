@@ -104,7 +104,7 @@ public:
     FGTileEntry *tile_ptr;
 
     // OpenGL display list for fragment data
-    GLint display_list;
+    // GLint display_list;
 
     // face list (this indexes into the master tile vertex list)
     typedef vector < fgFACE > container;
@@ -154,9 +154,9 @@ public:
 	faces.erase( faces.begin(), faces.end() );
     }
 
-    int deleteDisplayList() {
-	xglDeleteLists( display_list, 1 ); return 0;
-    }
+    // int deleteDisplayList() {
+    //    xglDeleteLists( display_list, 1 ); return 0;
+    // }
 
     friend bool operator== ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs );
 };

@@ -197,7 +197,7 @@ gen_base( const Point3D& average, const container& perimeter, FGTileEntry *t)
     xglEndList();
 
     fragment.bounding_radius = sqrt(max_dist);
-    fragment.display_list = display_list;
+    // fragment.display_list = display_list;
 
     t->fragment_list.push_back(fragment);
 }

@@ -845,6 +845,9 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 
 // Render the local tiles
 void FGTileMgr::render( void ) {
+    FG_LOG( FG_TERRAIN, FG_ALERT,
+	    "FGTileMgr::render() is depricated.  We shouldn't be here!" );
+
     FGInterface *f;
     FGTileCache *c;
     FGTileEntry *t;
@@ -901,7 +904,7 @@ void FGTileMgr::render( void ) {
 		for ( ; current != last; ++current ) {
 		    frag_ptr = &(*current);
 		
-		    if ( frag_ptr->display_list >= 0 ) {
+		    if ( false /* frag_ptr->display_list >= 0 */ ) {
 			// Fine (fragment based) culling
 			frag_offset = frag_ptr->center - scenery.center;
 

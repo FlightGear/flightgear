@@ -66,7 +66,7 @@ fgFRAGMENT::fgFRAGMENT ( const fgFRAGMENT & rhs ) :
     bounding_radius( rhs.bounding_radius ),
     material_ptr   ( rhs.material_ptr    ),
     tile_ptr       ( rhs.tile_ptr        ),
-    display_list   ( rhs.display_list    ),
+    /* display_list   ( rhs.display_list    ), */
     faces          ( rhs.faces           )
 {
 }

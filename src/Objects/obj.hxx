@@ -36,11 +36,11 @@
 
 #include <Include/compiler.h>
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
+// #ifdef HAVE_WINDOWS_H
+// #  include <windows.h>
+// #endif
 
-#include <GL/glut.h>
+// #include <GL/glut.h>
 
 #include STL_STRING
 
@@ -51,7 +51,7 @@
 FG_USING_STD(string);
 
 
-// Load a .obj file and build the GL fragment list
+// Load a .obj file and build the fragment list
 ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile);
 
 

@@ -73,8 +73,8 @@ FGTileEntry::free_tile()
     // delete fragment list
     FG_LOG( FG_TERRAIN, FG_INFO,
 	    "  deleting " << fragment_list.size() << " fragments" );
-    for_each( begin(), end(),
-	      mem_fun_ref( &fgFRAGMENT::deleteDisplayList ));
+    // for_each( begin(), end(),
+    //           mem_fun_ref( &fgFRAGMENT::deleteDisplayList ));
     fragment_list.erase( begin(), end() );
 
     // delete the ssg used structures
