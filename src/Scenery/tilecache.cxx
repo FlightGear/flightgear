@@ -133,7 +133,7 @@ FGTileCache::exists( const FGBucket& p )
 void
 FGTileCache::fill_in( int index, const FGBucket& p )
 {
-    cout << "FILL IN CACHE ENTRY = " << index << endl;
+    // cout << "FILL IN CACHE ENTRY = " << index << endl;
 
     // Force some values in case the tile fails to load (i.e. fill
     // doesn't exist)
@@ -163,13 +163,13 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     terrain->addKid( tile_cache[index].select_ptr );
 
     if ( tile_cache[index].is_scheduled_for_cache() ) {
-	cout << "FOUND ONE SCHEDULED FOR CACHE" << endl;
+	// cout << "FOUND ONE SCHEDULED FOR CACHE" << endl;
 	// load, but not needed now so disable
 	tile_cache[index].mark_loaded();
 	tile_cache[index].ssg_disable();
 	tile_cache[index].select_ptr->select(0);
     } else {
-	cout << "FOUND ONE READY TO LOAD" << endl;
+	// cout << "FOUND ONE READY TO LOAD" << endl;
 	tile_cache[index].mark_loaded();
 	tile_cache[index].select_ptr->select(1);
     }
@@ -180,7 +180,7 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 void
 FGTileCache::entry_free( int cache_index )
 {
-    cout << "FREEING CACHE ENTRY = " << cache_index << endl;
+    // cout << "FREEING CACHE ENTRY = " << cache_index << endl;
     tile_cache[cache_index].free_tile();
 }
 
@@ -247,8 +247,8 @@ FGTileCache::next_avail( void )
     // index.
 
     if ( max_index >=0 ) {
-	FG_LOG( FG_TERRAIN, FG_INFO, "    max_dist = " << max_dist );
-	FG_LOG( FG_TERRAIN, FG_INFO, "    index = " << max_index );
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "    max_dist = " << max_dist );
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "    index = " << max_index );
 	entry_free( max_index );
 	return( max_index );
     } else {

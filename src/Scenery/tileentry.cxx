@@ -64,33 +64,34 @@ FGTileEntry::~FGTileEntry ( void ) {
 void
 FGTileEntry::free_tile()
 {
-    FG_LOG( FG_TERRAIN, FG_INFO,
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "FREEING TILE = (" << tile_bucket << ")" );
 
     // mark tile unused
     mark_unused();
 
-    // delete fragment list
-    FG_LOG( FG_TERRAIN, FG_INFO,
+    // delete fragment list and node list
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "  deleting " << fragment_list.size() << " fragments" );
-    // for_each( begin(), end(),
-    //           mem_fun_ref( &fgFRAGMENT::deleteDisplayList ));
-    fragment_list.erase( begin(), end() );
+    fragment_list.clear();
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
+	    "  deleting " << nodes.size() << " nodes" );
+    nodes.clear();
 
-    // delete the ssg used structures
-    FG_LOG( FG_TERRAIN, FG_INFO,
+    // delete the ssg structures
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "  deleting vertex, normal, and texture coordinate arrays" );
-    FG_LOG( FG_TERRAIN, FG_INFO,
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "    deleting vertex array" );
     if ( vtlist != NULL ) {
 	delete vtlist;
     }
-    FG_LOG( FG_TERRAIN, FG_INFO,
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "    deleting normal array" );
     if ( vnlist != NULL ) {
 	delete vnlist;
     }
-    FG_LOG( FG_TERRAIN, FG_INFO,
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "    deleting texture coordinate array" );
     if ( tclist != NULL ) {
 	delete tclist;
@@ -110,7 +111,7 @@ FGTileEntry::free_tile()
 	for ( int i = 0; i < kcount; ++i ) {
 	    ssgEntity *kid = parent->getKid( i );
 	    if ( kid == select_ptr ) {
-		FG_LOG( FG_TERRAIN, FG_INFO,
+		FG_LOG( FG_TERRAIN, FG_DEBUG,
 			"Found a kid to delete " << kid);
 		found_kid = true;
 	    }
