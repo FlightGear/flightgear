@@ -233,12 +233,17 @@ getFreeze ()
 static void
 setFreeze (bool f)
 {
-  frozen = f;
-				// Stop sound on a pause
-  if (f)
-    globals->get_soundmgr()->pause();
-  else
-    globals->get_soundmgr()->resume();
+    frozen = f;
+
+    // Stop sound on a pause
+    FGSoundMgr *s = globals->get_soundmgr();
+    if ( s != NULL ) {
+        if ( f ) {
+            s->pause();
+        } else {
+            s->resume();
+        }
+    }
 }
 
 

@@ -190,6 +190,20 @@ dnl Thread related checks
 AC_CHECK_LIB(pthread, pthread_exit)
 AC_CHECK_LIB(socket, socket)
 
+dnl check for glut location
+AC_CHECK_HEADER(GL/glut.h)
+if test "x$ac_cv_header_GL_glut_h" = "xyes"; then
+    AC_DEFINE([GLUT_H], "GL/glut.h", [Define as glut.h include location])
+else
+    AC_CHECK_HEADER(GLUT/glut.h)
+    if test "x$ac_cv_header_GLUT_glut_h" = "xyes"; then
+        AC_DEFINE([GLUT_H], "GLUT/glut.h", [Define as glut.h include location])
+    else
+        echo "Neither GL/glut.h nor GLUT/glut.h found.  Cannot continue"
+        exit
+    fi
+fi
+
 dnl check for OpenGL related libraries
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
@@ -265,20 +279,6 @@ case "${host}" in
     ;;
 
 esac
-
-dnl check for glut location
-AC_CHECK_HEADER(GL/glut.h)
-if test "x$ac_cv_header_GL_glut_h" = "xyes"; then
-    AC_DEFINE([GLUT_H], "GL/glut.h", [Define as glut.h include location])
-else
-    AC_CHECK_HEADER(GLUT/glut.h)
-    if test "x$ac_cv_header_GLUT_glut_h" = "xyes"; then
-        AC_DEFINE([GLUT_H], "GLUT/glut.h", [Define as glut.h include location])
-    else
-        echo "Neither GL/glut.h nor GLUT/glut.h found.  Cannot continue"
-        exit
-    fi
-fi
 
 opengl_LIBS="$LIBS"
 LIBS="$base_LIBS"

@@ -42,18 +42,40 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
-    subsystem_mgr(new FGSubsystemMgr),
-    sim_time_sec(0.0),
+    subsystem_mgr( new FGSubsystemMgr ),
+    sim_time_sec( 0.0 ),
+    fg_root( "" ),
+    fg_scenery( "" ),
 #if defined(FX) && defined(XMESA)
     fullscreen( true ),
 #endif
     warp( 0 ),
     warp_delta( 0 ),
-    props(new SGPropertyNode),
-    initial_state(0),
-    locale(NULL),
-    commands(new SGCommandMgr),
-    io(new FGIO)
+    time_params( NULL ),
+    ephem( NULL ),
+    mag( NULL ),
+    autopilot( NULL ),
+    route( NULL ),
+    soundmgr( NULL ),
+    environment_mgr( NULL ),
+    ATC_mgr( NULL ),
+    ATC_display( NULL ),
+    AI_mgr( NULL ),
+    controls( NULL ),
+    steam( NULL ),
+    viewmgr( NULL ),
+    props( new SGPropertyNode ),
+    initial_state( NULL ),
+    locale( NULL ),
+    commands( new SGCommandMgr ),
+    model_loader( NULL ),
+    texture_loader( NULL ),
+    acmodel( NULL ),
+    model_mgr( NULL ),
+    channel_options_list( NULL ),
+    scenery( NULL ),
+    tile_mgr( NULL ),
+    io( new FGIO )
 {
 }
 
