@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "Atmosphere.hpp"
 #include "ControlMap.hpp"
 #include "Gear.hpp"
@@ -891,13 +889,6 @@ void Airplane::solve()
 	_cruiseAoA = clamp(_cruiseAoA, -0.174f, 0.174f);
 	_tailIncidence = clamp(_tailIncidence, -0.174f, 0.174f);
         _approachElevator.val = clamp(_approachElevator.val, -1.f, 1.f);
-
-        fprintf(stderr, "p0 %6f p1 %6f e %5f d %5f\n",
-                apitch0, apitch1, _approachElevator.val, elevDelta); // DEBUG
-
-        fprintf(stderr, "l %5f d %5f aoa %5f inc %5f ele %5f\n",
-                _liftRatio, _dragFactor, _cruiseAoA, _tailIncidence,
-                _approachElevator.val);
 
         if(norm(dragFactor) < 1.00001 &&
            norm(liftFactor) < 1.00001 &&
