@@ -12,10 +12,8 @@ endif
 
 if ENABLE_MSERVER_AS
 MSERVER_LIBS = $(top_builddir)/src/Server/libServer.a
-MSERVER_BINS = fgmp
 else
 MSERVER_LIBS = 
-MSERVER_BINS = 
 endif
 
 if ENABLE_NETWORK_OLK
@@ -48,7 +46,7 @@ AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
-bin_PROGRAMS = fgfs $(MSERVER_BINS)
+bin_PROGRAMS = fgfs
 
 noinst_SCRIPTS = runfgfs.bat runfgfs
 
@@ -100,6 +98,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
+	$(MSERVER_LIBS) \
         $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \
 	$(top_builddir)/src/Replay/libReplay.a \
@@ -117,13 +116,5 @@ fgfs_LDADD = \
 	-lz \
 	$(opengl_LIBS) \
 	$(audio_LIBS)
-
-if ENABLE_MSERVER_AS
-
-fgmp_SOURCES = bootstrap.cxx
-
-fgmp_LDADD = $(fgfs_LDADD) $(MSERVER_LIBS)
-
-endif
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
