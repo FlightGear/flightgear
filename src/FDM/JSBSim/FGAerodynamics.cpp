@@ -157,12 +157,7 @@ bool FGAerodynamics::Run(void)
 
     vForces = State->GetTs2b()*vFs;
 
-    vDXYZcg(eX) = -(Aircraft->GetXYZrp(eX) 
-                      - MassBalance->GetXYZcg(eX))*inchtoft;
-    vDXYZcg(eY) =  (Aircraft->GetXYZrp(eY) 
-                      - MassBalance->GetXYZcg(eY))*inchtoft;
-    vDXYZcg(eZ) = -(Aircraft->GetXYZrp(eZ) 
-                      - MassBalance->GetXYZcg(eZ))*inchtoft;
+    vDXYZcg = MassBalance->StructuralToBody(Aircraft->GetXYZrp());
 
     vMoments = vDXYZcg*vForces; // M = r X F
 

@@ -66,9 +66,9 @@ const double FGJSBBase::fpstokts = 0.592484;
 const double FGJSBBase::ktstofps = 1.68781;
 const double FGJSBBase::inchtoft = 0.08333333;
 const double FGJSBBase::in3tom3 = 1.638706E-5;
-const double FGJSBBase::Reng = 1716.0;
+double FGJSBBase::Reng = 1716.0;
 const double FGJSBBase::SHRatio = 1.40;
-const string FGJSBBase::needed_cfg_version = "1.60";
+const string FGJSBBase::needed_cfg_version = "1.61";
 const string FGJSBBase::JSBSim_version = "0.9.5";
 
 std::queue <FGJSBBase::Message*> FGJSBBase::Messages;

@@ -84,6 +84,14 @@ public:
   inline FGColumnVector3& GetXYZcg(void) {return vXYZcg;}
   inline double GetXYZcg(int axis) const  {return vXYZcg(axis);}
 
+  /** Conversion from the structural frame to the body frame.
+   * Converts the argument \parm r given in the reference frame
+   * coordinate system to the body frame. The units of the structural
+   * frame are assumed to be in inches. The unit of the result is in
+   * ft.
+   */
+  FGColumnVector3 StructuralToBody(const FGColumnVector3& r) const;
+
   inline void SetEmptyWeight(double EW) { EmptyWeight = EW;}
   inline void SetBaseIxx(double bixx)   { baseIxx = bixx;}
   inline void SetBaseIyy(double biyy)   { baseIyy = biyy;}

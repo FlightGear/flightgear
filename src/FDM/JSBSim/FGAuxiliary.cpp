@@ -103,7 +103,7 @@ bool FGAuxiliary::Run()
     tatc=RankineToCelsius(tat);
     
     if (mach < 1) {   //calculate total pressure assuming isentropic flow
-      pt=p*pow((1 + 0.2*machU*machU),3.5);
+      pt = p*pow((1 + 0.2*machU*machU),3.5);
     } else {
       // shock in front of pitot tube, we'll assume its normal and use
       // the Rayleigh Pitot Tube Formula, i.e. the ratio of total
@@ -167,11 +167,10 @@ bool FGAuxiliary::Run()
     vPilotAccel.InitMatrix();   
     if ( Translation->GetVt() > 1 ) {
        vPilotAccel =  Aerodynamics->GetForces() 
-                  +  Propulsion->GetForces()
-                  +  GroundReactions->GetForces();
+                      +  Propulsion->GetForces()
+                      +  GroundReactions->GetForces();
        vPilotAccel /= MassBalance->GetMass();
-       vToEyePt = Aircraft->GetXYZep() - MassBalance->GetXYZcg();
-       vToEyePt *= inchtoft;
+       vToEyePt = MassBalance->StructuralToBody(Aircraft->GetXYZep());
        vPilotAccel += Rotation->GetPQRdot() * vToEyePt;
        vPilotAccel += Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt);
     } else {
@@ -179,8 +178,7 @@ bool FGAuxiliary::Run()
     }   
 
     vPilotAccelN = vPilotAccel/Inertial->gravity();
-      
-    
+
     earthPosAngle += State->Getdt()*Inertial->omega();
     return false;
   } else {

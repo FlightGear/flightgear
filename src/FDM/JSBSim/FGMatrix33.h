@@ -47,7 +47,6 @@ INCLUDES
 #    else
 #      include <cmath>
 #    endif
-#    include <iostream>
      using std::ostream;
      using std::istream;
      using std::cerr;

@@ -111,7 +111,6 @@ FGFCS::~FGFCS()
   PropAdvanceCmd.clear();
   PropAdvance.clear();
 
-
   unsigned int i;
 
   for (i=0;i<APComponents.size();i++) delete APComponents[i];

@@ -83,9 +83,7 @@ FGColumnVector3& FGForce::GetBodyForces(void)
   // needs to be done like this to convert from structural to body coords.
   // CG and RP values are in inches
 
-  vDXYZ(eX) = -(vActingXYZn(eX) - fdmex->GetMassBalance()->GetXYZcg(eX))*inchtoft;
-  vDXYZ(eY) =  (vActingXYZn(eY) - fdmex->GetMassBalance()->GetXYZcg(eY))*inchtoft;
-  vDXYZ(eZ) = -(vActingXYZn(eZ) - fdmex->GetMassBalance()->GetXYZcg(eZ))*inchtoft;
+  vDXYZ = fdmex->GetMassBalance()->StructuralToBody(vActingXYZn);
 
   vM = vMn + vDXYZ*vFb;
 

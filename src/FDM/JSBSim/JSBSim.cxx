@@ -105,7 +105,7 @@ FGJSBsim::FGJSBsim( double dt )
     }
 
     fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
-
+    
     State           = fdmex->GetState();
     Atmosphere      = fdmex->GetAtmosphere();
     FCS             = fdmex->GetFCS();
@@ -156,8 +156,7 @@ FGJSBsim::FGJSBsim( double dt )
          SG_LOG( SG_FLIGHT, SG_ALERT, "Halting the sim now, and hoping a solution will present itself soon!");
          exit(-1);
     }
-        
-    
+
     init_gear();
 
     // Set initial fuel levels if provided.

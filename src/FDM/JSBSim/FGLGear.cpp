@@ -115,9 +115,7 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
   MaximumStrutForce = MaximumStrutTravel = 0.0;
   SinkRate = GroundSpeed = 0.0;
 
-  vWhlBodyVec     = (vXYZ - MassBalance->GetXYZcg()) / 12.0;
-  vWhlBodyVec(eX) = -vWhlBodyVec(eX);
-  vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
+  vWhlBodyVec = MassBalance->StructuralToBody(vXYZ);
   
   vLocalGear = State->GetTb2l() * vWhlBodyVec;
 
@@ -233,9 +231,7 @@ FGColumnVector3& FGLGear::Force(void)
       
   if (GearDown) {
 
-    vWhlBodyVec     = (vXYZ - MassBalance->GetXYZcg()) / 12.0;
-    vWhlBodyVec(eX) = -vWhlBodyVec(eX);
-    vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
+    vWhlBodyVec = MassBalance->StructuralToBody(vXYZ);
 
 // vWhlBodyVec now stores the vector from the cg to this wheel
 
@@ -402,13 +398,6 @@ FGColumnVector3& FGLGear::Force(void)
       } else {
         FCoeff = dynamicFCoeff*fabs(WheelSlip)/WheelSlip;
       }
-
-#if 0
-      // A negative force coefficient will result in a force pulling the wheel(s)
-      // back instead of trying to stop them from moving.
-      if (FCoeff < 0.0)
-          FCoeff = 0.0;
-#endif
 
 // Compute the vertical force on the wheel using square-law damping (per comment
 // in paper AIAA-2000-4303 - see header prologue comments). We might consider

@@ -131,6 +131,7 @@ double FGSimTurbine::Off(void)
   OilPressure_psi = N2 * 0.62;
   NozzlePosition = Seek(&NozzlePosition, 1.0, 0.8, 0.8);
   EPR = Seek(&EPR, 1.0, 0.2, 0.2);
+  Augmentation = false;
   return 0.0; 
 }
 

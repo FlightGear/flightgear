@@ -184,8 +184,7 @@ bool FGPosition::Run(void)
 
     h = Radius - SeaLevelRadius;           // Geocentric
 
-    vVRPoffset = State->GetTb2l() * (vVRP - MassBalance->GetXYZcg());
-    vVRPoffset /= 12.0; // converted to feet
+    vVRPoffset = State->GetTb2l() * MassBalance->StructuralToBody(Aircraft->GetXYZvrp());
 
     // vVRP  - the vector to the Visual Reference Point - now contains the 
     // offset from the CG to the VRP, in units of feet, in the Local coordinate
@@ -196,19 +195,17 @@ bool FGPosition::Run(void)
       LongitudeVRP = vVRPoffset(eEast) / (Radius * cosLat) + Longitude;
 
     LatitudeVRP = vVRPoffset(eNorth) / Radius + Latitude;
-    hVRP = vVRPoffset(eDown) + h;
+    hVRP = h - vVRPoffset(eDown);
 /*
 cout << "Lat/Lon/Alt : " << Latitude << " / " << Longitude << " / " << h << endl;
 cout << "Lat/Lon/Alt VRP: " << LatitudeVRP << " / " << LongitudeVRP << " / " << hVRP << endl << endl;
 */
     DistanceAGL = Radius - RunwayRadius;   // Geocentric
-    
+
     hoverbcg = DistanceAGL/b;
-    
-    vMac = State->GetTb2l()*Aircraft->GetXYZrp();
-    
-    vMac *= inchtoft;
-    hoverbmac = (DistanceAGL + vMac(3))/b;
+
+    vMac = State->GetTb2l()*MassBalance->StructuralToBody(Aircraft->GetXYZrp());
+    hoverbmac = (DistanceAGL + vMac(3)) / b;
 
     if (Vt > 0) {
       hdot_Vt = RadiusDot/Vt;
