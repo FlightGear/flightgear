@@ -224,6 +224,8 @@ void FGJSBsim::init() {
       Atmosphere->SetTurbGain(tmp * tmp * 100.0);
 
       tmp = turbulence_rate->getDoubleValue();
+      if (tmp <= 0)
+          tmp = 1.0;
       Atmosphere->SetTurbRate(tmp);
 
     } else {
@@ -424,7 +426,10 @@ bool FGJSBsim::copy_to_JSBsim() {
     tmp = turbulence_gain->getDoubleValue();
     Atmosphere->SetTurbGain(tmp * tmp * 100.0);
 
-    tmp = turbulence_rate->getDoubleValue();
+    if (turbulence_rate->hasValue())
+        tmp = turbulence_rate->getDoubleValue();
+    else
+        tmp = 1.0;
     Atmosphere->SetTurbRate(tmp);
 
     Atmosphere->SetWindNED( wind_from_north->getDoubleValue(),

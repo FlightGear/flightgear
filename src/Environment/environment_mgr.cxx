@@ -110,10 +110,10 @@ FGEnvironmentMgr::bind ()
         &FGEnvironment::get_turbulence_magnitude_norm,
         &FGEnvironment::set_turbulence_magnitude_norm);
   fgSetArchivable("/environment/turbulence/magnitude-norm");
-  fgTie("/environment/turbulence/rate_hz", _environment,
+  fgTie("/environment/turbulence/rate-hz", _environment,
         &FGEnvironment::get_turbulence_rate_hz,
         &FGEnvironment::set_turbulence_rate_hz);
-  fgSetArchivable("/environment/turbulence/rate_hz");
+  fgSetArchivable("/environment/turbulence/rate-hz");
 
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
     char buf[128];

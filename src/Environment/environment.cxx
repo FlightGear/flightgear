@@ -169,7 +169,8 @@ maybe_copy_value (FGEnvironment * env, const SGPropertyNode * node,
     const SGPropertyNode * child = node->getNode(name);
                                 // fragile: depends on not being typed
                                 // as a number
-    if (child != 0 && child->getStringValue()[0] != '\0') {
+    if (child != 0 && child->hasValue() &&
+        child->getStringValue()[0] != '\0') {
         (env->*setter)(child->getDoubleValue());
         return true;
     } else {
