@@ -123,19 +123,19 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     static SGPropertyNode *nav_freq
 	= fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
     static SGPropertyNode *nav_target_radial
-	= fgGetNode("/instrumentation/nav/radials/target-radial2-deg", true);
+	= fgGetNode("/instrumentation/nav/radials/target-radial-deg", true);
     static SGPropertyNode *nav_inrange
-	= fgGetNode("instrumentation/nav/in-range", true);
+	= fgGetNode("/instrumentation/nav/in-range", true);
     static SGPropertyNode *nav_loc
-	= fgGetNode("instrumentation/nav/nav-loc", true);
+	= fgGetNode("/instrumentation/nav/nav-loc", true);
     static SGPropertyNode *nav_gs_dist_signed
-	= fgGetNode("instrumentation/nav/gs-distance", true);
+	= fgGetNode("/instrumentation/nav/gs-distance", true);
     static SGPropertyNode *nav_loc_dist
-	= fgGetNode("instrumentation/nav/nav-distance", true);
+	= fgGetNode("/instrumentation/nav/nav-distance", true);
     static SGPropertyNode *nav_reciprocal_radial
-	= fgGetNode("instrumentation/nav/reciprocal-radial-deg", true);
+	= fgGetNode("/instrumentation/nav/radials/reciprocal-radial-deg", true);
     static SGPropertyNode *nav_gs_deflection
-	= fgGetNode("instrumentation/nav/gs-needle-deflection", true);
+	= fgGetNode("/instrumentation/nav/gs-needle-deflection", true);
     int i;
 
     // Version sanity checking
