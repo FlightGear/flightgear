@@ -540,10 +540,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     } else {
         // no .stg file so this must be old scenery
 
-        // fgObjLoad will generate ground lighting for us ...
-        ssgVertexArray *light_pts = new ssgVertexArray( 100 );
-
-        new_tile = obj_load( basename.str(), light_pts, is_base );
+        new_tile = obj_load( basename.str(), light_pts, true );
 
         // load custom objects
         SG_LOG( SG_TERRAIN, SG_DEBUG, "Checking for custom objects ..." );
