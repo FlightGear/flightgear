@@ -24,10 +24,9 @@
 #ifndef __FGFX_HXX
 #define __FGFX_HXX 1
 
-#include <simgear/compiler.h>
+#include <Main/fgfs.hxx>
 
-#include "fg_sound.hxx"
-
+class FGSound;
 
 /**
  * Generator for FlightGear sound effects.
