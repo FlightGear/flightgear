@@ -24,16 +24,156 @@
  **************************************************************************/
 
 
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
 #include "fg_time.h"
+#include "../constants.h"
+#include "../Flight/flight.h"
+
+
+#define DEGHR(x)        ((x)/15.)
+#define RADHR(x)        DEGHR(x*RAD_TO_DEG)
 
 
 struct fgTIME cur_time_params;
 
 
+/* given a date in months, mn, days, dy, years, yr, return the
+ * modified Julian date (number of days elapsed since 1900 jan 0.5),
+ * mjd.  Adapted from Xephem.  */
+
+double cal_mjd (int mn, double dy, int yr) {
+    static double last_mjd, last_dy;
+    double mjd;
+    static int last_mn, last_yr;
+    int b, d, m, y;
+    long c;
+
+    if (mn == last_mn && yr == last_yr && dy == last_dy) {
+	mjd = last_mjd;
+	return(mjd);
+    }
+
+    m = mn;
+    y = (yr < 0) ? yr + 1 : yr;
+    if (mn < 3) {
+	m += 12;
+	y -= 1;
+    }
+
+    if (yr < 1582 || (yr == 1582 && (mn < 10 || (mn == 10 && dy < 15)))) {
+	b = 0;
+    } else {
+	int a;
+	a = y/100;
+	b = 2 - a + a/4;
+    }
+
+    if (y < 0) {
+	c = (long)((365.25*y) - 0.75) - 694025L;
+    } else {
+	c = (long)(365.25*y) - 694025L;
+    }
+    
+    d = 30.6001*(m+1);
+
+    mjd = b + c + d + dy - 0.5;
+
+    last_mn = mn;
+    last_dy = dy;
+    last_yr = yr;
+    last_mjd = mjd;
+
+    return(mjd);
+}
+
+
+/* given an mjd, return greenwich mean siderial time, gst */
+
+double utc_gst (double mjd) {
+    double gst;
+    double day = floor(mjd-0.5)+0.5;
+    double hr = (mjd-day)*24.0;
+    double T, x;
+
+    T = ((int)(mjd - 0.5) + 0.5 - J2000)/36525.0;
+    x = 24110.54841 + (8640184.812866 + (0.093104 - 6.2e-6 * T) * T) * T;
+    x /= 3600.0;
+    gst = (1.0/SIDRATE)*hr + x;
+
+    return(gst);
+}
+
+
+/* given Julian Date and Longitude (decimal degrees West) compute and
+ * return Local Sidereal Time, in decimal hours.
+ *
+ * Provided courtesy of ecdowney@noao.edu (Elwood Downey) 
+ */
+
+double sidereal (double mjd, double lng) {
+    double gst;
+    double lst;
+
+    printf ("Current Lst on JD %13.5f at %8.4f degrees West: ", 
+	    mjd + MJD0, lng);
+
+    /* convert to required internal units */
+    lng *= DEG_TO_RAD;
+
+    /* compute LST and print */
+    gst = utc_gst (mjd);
+    lst = gst - RADHR (lng);
+    lst -= 24.0*floor(lst/24.0);
+    printf ("%7.4f\n", lst);
+
+    /* that's all */
+    return (lst);
+}
+
+
+/* Update the time dependent variables */
+
+void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
+    /* get current Unix calendar time (in seconds) */
+    t->cur_time = time(NULL);
+    printf("Current Unix calendar time = %ld\n", t->cur_time);
+
+    /* get GMT break down for current time */
+    t->gmt = gmtime(&t->cur_time);
+    printf("Current GMT = %d/%d/%2d %d:%02d:%02d\n", 
+           t->gmt->tm_mon+1, t->gmt->tm_mday, t->gmt->tm_year,
+           t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec);
+
+    /* calculate modified Julian date */
+    t->mjd = cal_mjd ((int)(t->gmt->tm_mon+1), (double)t->gmt->tm_mday, 
+	     (int)(t->gmt->tm_year + 1900));
+
+    /* add in partial day */
+    t->mjd += (t->gmt->tm_hour / 24.0) + (t->gmt->tm_min / (24.0 * 60.0)) +
+	   (t->gmt->tm_sec / (24.0 * 60.0 * 60.0));
+
+    /* convert "back" to Julian date + partial day (as a fraction of one) */
+    t->jd = t->mjd + MJD0;
+    printf("Current Julian Date = %.5f\n", t->jd);
+
+    /* Calculate local side real time */
+    t->lst = sidereal(t->mjd, -(FG_Longitude * RAD_TO_DEG));
+    printf("Current Sidereal Time = %.3f\n", t->lst);
+}
+
+
 /* $Log$
-/* Revision 1.2  1997/08/27 03:30:35  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.3  1997/09/13 02:00:08  curt
+/* Mostly working on stars and generating sidereal time for accurate star
+/* placement.
 /*
+ * Revision 1.2  1997/08/27 03:30:35  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.1  1997/08/13 21:55:59  curt
  * Initial revision.
  *

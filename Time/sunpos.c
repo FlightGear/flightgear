@@ -272,7 +272,7 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
     time_warp += 0; /* increase this to make the world spin real fast */
 
-    fgSunPosition(time(NULL) + time_warp, &t->sun_lon, &sun_gd_lat);
+    fgSunPosition(t->cur_time + time_warp, &t->sun_lon, &sun_gd_lat);
 
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &t->sun_gc_lat);
 
@@ -303,9 +303,13 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
 
 /* $Log$
-/* Revision 1.9  1997/09/05 14:17:31  curt
-/* More tweaking with stars.
+/* Revision 1.10  1997/09/13 02:00:09  curt
+/* Mostly working on stars and generating sidereal time for accurate star
+/* placement.
 /*
+ * Revision 1.9  1997/09/05 14:17:31  curt
+ * More tweaking with stars.
+ *
  * Revision 1.8  1997/09/05 01:36:04  curt
  * Working on getting stars right.
  *

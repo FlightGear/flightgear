@@ -1,5 +1,6 @@
 fg_time.o: fg_time.c fg_time.h ../types.h
 fg_timer.o: fg_timer.c fg_timer.h
+sidereal.o: sidereal.c
 sunpos.o: sunpos.c sunpos.h ../types.h fg_time.h ../constants.h \
  ../GLUT/views.h ../GLUT/../types.h ../GLUT/../Flight/flight.h \
  ../GLUT/../Flight/Slew/slew.h \
@@ -7,3 +8,4 @@ sunpos.o: sunpos.c sunpos.h ../types.h fg_time.h ../constants.h \
  ../GLUT/../Flight/LaRCsim/../flight.h ../GLUT/../Math/mat3.h \
  ../Math/fg_geodesy.h ../Math/mat3.h ../Math/polar.h \
  ../Math/../types.h
+ttest.o: ttest.c

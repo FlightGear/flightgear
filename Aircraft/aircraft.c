@@ -31,12 +31,12 @@
 
 
 /* Display various parameters to stdout */
-void aircraft_debug(int type) {
+void fgAircraftOutputCurrent(struct AIRCRAFT *a) {
     struct FLIGHT *f;
     struct CONTROLS *c;
 
-    f = &current_aircraft.flight;
-    c = &current_aircraft.controls;
+    f = &a->flight;
+    c = &a->controls;
 
     printf("Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
 	   FG_Longitude * 3600.0 * RAD_TO_DEG, 
@@ -48,9 +48,13 @@ void aircraft_debug(int type) {
 
 
 /* $Log$
-/* Revision 1.10  1997/08/27 03:29:56  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.11  1997/09/13 02:00:05  curt
+/* Mostly working on stars and generating sidereal time for accurate star
+/* placement.
 /*
+ * Revision 1.10  1997/08/27 03:29:56  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.9  1997/07/19 22:39:08  curt
  * Moved PI to ../constants.h
  *

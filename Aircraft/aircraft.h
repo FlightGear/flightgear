@@ -44,16 +44,20 @@ extern struct AIRCRAFT current_aircraft;
 
 
 /* Display various parameters to stdout */
-void aircraft_debug(int type);
+void fgAircraftOutputCurrent(struct AIRCRAFT *a);
 
 
 #endif /* AIRCRAFT_H */
 
 
 /* $Log$
-/* Revision 1.5  1997/08/27 03:29:58  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.6  1997/09/13 02:00:06  curt
+/* Mostly working on stars and generating sidereal time for accurate star
+/* placement.
 /*
+ * Revision 1.5  1997/08/27 03:29:58  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.4  1997/07/23 21:52:17  curt
  * Put comments around the text after an #endif for increased portability.
  *

@@ -396,9 +396,16 @@ static void fgMainLoop( void ) {
     double cur_elev;
     double joy_x, joy_y;
     int joy_b1, joy_b2;
+    struct AIRCRAFT *a;
     struct FLIGHT *f;
+    struct fgTIME *t;
 
-    f = &current_aircraft.flight;
+    a = &current_aircraft;
+    f = &a->flight;
+    t = &cur_time_params;
+
+    /* update "time" */
+    fgTimeUpdate(f, t);
 
     /* Read joystick */
     /* fgJoystickRead( &joy_x, &joy_y, &joy_b1, &joy_b2 );
@@ -447,7 +454,7 @@ static void fgMainLoop( void ) {
 	       FG_Altitude * FEET_TO_METER);
     }
 
-    aircraft_debug(1);
+    fgAircraftOutputCurrent(a);
 
     /* redraw display */
     fgUpdateVisuals();
@@ -555,9 +562,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.15  1997/09/05 14:17:27  curt
-/* More tweaking with stars.
+/* Revision 1.16  1997/09/13 02:00:06  curt
+/* Mostly working on stars and generating sidereal time for accurate star
+/* placement.
 /*
+ * Revision 1.15  1997/09/05 14:17:27  curt
+ * More tweaking with stars.
+ *
  * Revision 1.14  1997/09/05 01:35:53  curt
  * Working on getting stars right.
  *

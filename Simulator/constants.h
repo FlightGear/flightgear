@@ -80,6 +80,13 @@
 #define INVG  0.031080997
 
 
+/* Time Related Parameters */
+
+#define MJD0  2415020.0
+#define J2000 (2451545.0 - MJD0)
+#define SIDRATE         .9972695677
+
+
 /* Conversions */
 
 /* Degrees to Radians */
@@ -115,9 +122,13 @@
 
 
 /* $Log$
-/* Revision 1.9  1997/08/22 21:34:32  curt
-/* Doing a bit of reorganizing and house cleaning.
+/* Revision 1.10  1997/09/13 01:59:45  curt
+/* Mostly working on stars and generating sidereal time for accurate star
+/* placement.
 /*
+ * Revision 1.9  1997/08/22 21:34:32  curt
+ * Doing a bit of reorganizing and house cleaning.
+ *
  * Revision 1.8  1997/07/31 22:52:22  curt
  * Working on redoing internal coordinate systems & scenery transformations.
  *

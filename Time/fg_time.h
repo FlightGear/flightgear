@@ -33,14 +33,24 @@
 #endif
 
 #include <GL/glut.h>
+#include <time.h>
 
 #include "../types.h"
+#include "../Flight/flight.h"
 
 
 /* Define a structure containing global time parameters */
 struct fgTIME {
-    /* the point on the earth's surface above which the sun is directly 
-     * overhead */
+    /* the date/time in various forms */
+    time_t cur_time;                    /* Unix "calendar" time in seconds */
+    struct tm *gmt;                     /* Break down of GMT time */
+
+    double jd;                          /* Julian date */
+    double mjd;                         /* modified Julian date */
+
+    double lst;                         /* local side real time */
+
+    /* position of the sun in various forms */
     double sun_lon, sun_gc_lat;         /* in geocentric coordinates */
     struct fgCartesianPoint fg_sunpos;  /* in cartesian coordiantes */
     GLfloat sun_vec[4];                 /* in view coordinates */
@@ -51,13 +61,21 @@ struct fgTIME {
 extern struct fgTIME cur_time_params;
 
 
+/* Update the time dependent variables */
+void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t);
+
+
 #endif /* FG_TIME_H */
 
 
 /* $Log$
-/* Revision 1.3  1997/09/04 02:17:39  curt
-/* Shufflin' stuff.
+/* Revision 1.4  1997/09/13 02:00:08  curt
+/* Mostly working on stars and generating sidereal time for accurate star
+/* placement.
 /*
+ * Revision 1.3  1997/09/04 02:17:39  curt
+ * Shufflin' stuff.
+ *
  * Revision 1.2  1997/08/27 03:30:36  curt
  * Changed naming scheme of basic shared structures.
  *
