@@ -251,9 +251,9 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
   float fov, tmp;
   static bool winding_ccw = true;
-  int speed;
+  // int speed;
   FGInterface *f = current_aircraft.fdm_state;
-  FGViewer *v = globals->get_current_view();
+  // FGViewer *v = globals->get_current_view();
   
   // everything after here will be removed sooner or later...
 
@@ -632,7 +632,7 @@ FGInput::_update_joystick ()
 {
   int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
   int buttons;
-  float js_val, diff;
+  // float js_val, diff;
   float axis_values[MAX_AXES];
 
   int i;
@@ -681,7 +681,7 @@ FGInput::_update_joystick ()
 				// The release event is never repeated.
 	if (b.last_state)
 // 	  SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been released");
-	  for (int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
+	  for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
 	    b.bindings[modifiers|FG_MOD_UP][k].fire();
       }
 	  
