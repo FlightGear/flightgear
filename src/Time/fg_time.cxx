@@ -53,7 +53,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
-#include <Astro/solarsystem.hxx>
 #include <FDM/flight.hxx>
 #include <Main/options.hxx>
 #include <Time/light.hxx>
