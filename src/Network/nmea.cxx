@@ -27,6 +27,7 @@
 #include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flight.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include "nmea.hxx"
@@ -65,7 +66,7 @@ static char calc_nmea_cksum(char *sentence) {
 bool FGNMEA::gen_message() {
     // cout << "generating nmea message" << endl;
 
-    char rmc[256], gga[256];
+    char rmc[256], gga[256], gsa[256];
     char rmc_sum[10], gga_sum[10];
     char dir;
     int deg;
@@ -77,29 +78,31 @@ bool FGNMEA::gen_message() {
     sprintf( utc, "%02d%02d%02d", 
 	     t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
-    char lat[20];
+    char gga_lat[20], rmc_lat[20];
     double latd = cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     if ( latd < 0.0 ) {
-	latd *= -1.0;
+	latd = -latd;
 	dir = 'S';
     } else {
 	dir = 'N';
     }
     deg = (int)(latd);
     min = (latd - (double)deg) * 60.0;
-    sprintf( lat, "%02d%06.3f,%c", abs(deg), min, dir);
+    sprintf( gga_lat, "%02d%06.3f,%c", abs(deg), min, dir);
+    sprintf( rmc_lat, "%02d%07.4f,%c", abs(deg), min, dir);
 
-    char lon[20];
+    char gga_lon[20], rmc_lon[20];
     double lond = cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
     if ( lond < 0.0 ) {
-	lond *= -1.0;
+	lond = -lond;
 	dir = 'W';
     } else {
 	dir = 'E';
     }
     deg = (int)(lond);
     min = (lond - (double)deg) * 60.0;
-    sprintf( lon, "%03d%06.3f,%c", abs(deg), min, dir);
+    sprintf( gga_lon, "%03d%06.3f,%c", abs(deg), min, dir);
+    sprintf( rmc_lon, "%03d%07.4f,%c", abs(deg), min, dir);
 
     char speed[10];
     sprintf( speed, "%05.1f", cur_fdm_state->get_V_equiv_kts() );
@@ -111,25 +114,36 @@ bool FGNMEA::gen_message() {
     sprintf( altitude_m, "%02d", 
 	     (int)(cur_fdm_state->get_Altitude() * SG_FEET_TO_METER) );
 
-    char altitude_ft[10];
-    sprintf( altitude_ft, "%02d", (int)cur_fdm_state->get_Altitude() );
-
     char date[10];
+    int year = t->getGmt()->tm_year;
+    while ( year >= 100 ) { year -= 100; }
     sprintf( date, "%02d%02d%02d", t->getGmt()->tm_mday, 
-	     t->getGmt()->tm_mon+1, t->getGmt()->tm_year );
+	     t->getGmt()->tm_mon+1, year );
 
-    // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
-    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,0.000,E",
-	     utc, lat, lon, speed, heading, date );
+    char magvar[10];
+    float magdeg = fgGetDouble( "/environment/magnetic-variation-deg" );
+    if ( magdeg < 0.0 ) {
+	magdeg = -magdeg;
+	dir = 'W';
+    } else {
+	dir = 'E';
+    }
+    sprintf( magvar, "%05.1f,%c", magdeg, dir );
+ 
+    // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
+    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,%s",
+	     utc, rmc_lat, rmc_lon, speed, heading, date, magvar );
     sprintf( rmc_sum, "%02X", calc_nmea_cksum(rmc) );
 
-    sprintf( gga, "GPGGA,%s,%s,%s,1,,,%s,F,,,,",
-	     utc, lat, lon, altitude_ft );
+    sprintf( gga, "GPGGA,%s,%s,%s,1,08,0.9,%s,M, , ",
+	     utc, gga_lat, gga_lon, altitude_m );
     sprintf( gga_sum, "%02X", calc_nmea_cksum(gga) );
-
+    sprintf( gsa, "%s",
+             "$GPGSA,A,3,01,02,03,,05,,07,,09,,11,12,0.9,0.9,2.0*38" );
 
     SG_LOG( SG_IO, SG_DEBUG, rmc );
     SG_LOG( SG_IO, SG_DEBUG, gga );
+    SG_LOG( SG_IO, SG_DEBUG, gsa );
 
     string nmea_sentence;
 
@@ -138,14 +152,18 @@ bool FGNMEA::gen_message() {
     nmea_sentence += rmc;
     nmea_sentence += "*";
     nmea_sentence += rmc_sum;
-    nmea_sentence += "\n";
+    nmea_sentence += "\r\n";
 
     // GGA sentence
     nmea_sentence += "$";
     nmea_sentence += gga;
     nmea_sentence += "*";
     nmea_sentence += gga_sum;
-    nmea_sentence += "\n";
+    nmea_sentence += "\r\n";
+
+    // GSA sentence (totally faked)
+    nmea_sentence += gsa;
+    nmea_sentence += "\r\n";
 
     cout << nmea_sentence;
 
