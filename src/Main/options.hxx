@@ -33,6 +33,6 @@ extern void fgSetDefaults ();
 extern void fgParseArgs (int argc, char ** argv);
 extern void fgParseOptions (const string &file_path);
 extern void fgUsage (bool verbose = false);
-extern void fgShowAircraft();
+extern void fgShowAircraft(const SGPath &path, bool recursive = true);
 
 #endif /* _OPTIONS_HXX */

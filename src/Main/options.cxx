@@ -1518,7 +1518,9 @@ fgParseArgs (int argc, char **argv)
               verbose = true;
 
             else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
-               fgShowAircraft();
+               SGPath path( globals->get_fg_root() );
+               path.append("Aircraft");
+               fgShowAircraft(path);
                exit(0);
             }
 	  }
@@ -1711,17 +1713,19 @@ fgUsage (bool verbose)
     }
 }
 
-// Show available aircraft types
-void fgShowAircraft(void) {
-   vector<string> aircraft;
-
-   SGPath path( globals->get_fg_root() );
-   path.append("Aircraft");
+/*
+ * Search in the current directory, and in on directory deeper
+ * for <aircraft>-set.xml configuration files and show the aircaft name
+ * and the contents of the<description> tag in a sorted manner.
+ *
+ * @parampath the directory to search for configuration files
+ * @param recursive defines whether the directory should be searched recursively
+ */
+void fgShowAircraft(const SGPath &path, bool recursive) {
+   static vector<string> aircraft;
 
    ulDirEnt* dire;
-   ulDir *dirp;
-
-   dirp = ulOpenDir(path.c_str());
+   ulDir *dirp = ulOpenDir(path.str().c_str());
    if (dirp == NULL) {
       cerr << "Unable to open aircraft directory." << endl;
       exit(-1);
@@ -1730,7 +1734,17 @@ void fgShowAircraft(void) {
    while ((dire = ulReadDir(dirp)) != NULL) {
       char *ptr;
 
-      if ((ptr = strstr(dire->d_name, "-set.xml")) && ptr[8] == '\0' ) {
+      if (dire->d_isdir) {
+          if (recursive && strcmp("CVS", dire->d_name)
+              && strcmp(".", dire->d_name) && strcmp("..", dire->d_name))
+          {
+              SGPath next = path;
+              next.append(dire->d_name);
+
+              fgShowAircraft(next, false);
+          }
+      } else if ((ptr = strstr(dire->d_name, "-set.xml")) && (ptr[8] == '\0')) {
+
           SGPath afile = path;
           afile.append(dire->d_name);
 
@@ -1750,24 +1764,27 @@ void fgShowAircraft(void) {
           }
 
           char cstr[96];
-          if (strlen(dire->d_name) <= 27)
+          if (strlen(dire->d_name) <= 27) {
              snprintf(cstr, 96, "   %-27s  %s", dire->d_name,
                       (desc) ? desc->getStringValue() : "" );
 
-          else
+          } else {
              snprintf(cstr, 96, "   %-27s\n%32c%s", dire->d_name, ' ',
                       (desc) ? desc->getStringValue() : "" );
+          }
 
           aircraft.push_back(cstr);
       }
    }
 
-   sort(aircraft.begin(), aircraft.end());
-   cout << "Available aircraft:" << endl;
-   for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
-       cout << aircraft[i] << endl;
-   }
+   if (recursive) {
+       sort(aircraft.begin(), aircraft.end());
+       cout << "Available aircraft:" << endl;
+       for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
+           cout << aircraft[i] << endl;
+       }
 
-   aircraft.clear();
-   ulCloseDir(dirp);
+       aircraft.clear();
+    }
+    ulCloseDir(dirp);
 }
