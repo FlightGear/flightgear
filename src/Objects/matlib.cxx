@@ -130,8 +130,14 @@ bool FGMaterialLib::load( const string& mpath ) {
 	    in >> token;
 
 	    if ( token == '{' ) {
+                // Read the data into a temporary but stack allocated
+                // copy of the structure
+                FGNewMat tmp;
+		in >> tmp;
+
+                // create a pointer to a heap allocated copy of the structure
 		FGNewMat *m = new FGNewMat;
-		in >> *m;
+                *m = tmp;
 
 		// build the ssgSimpleState
 		SGPath tex_path( globals->get_fg_root() );

@@ -200,7 +200,6 @@ void FGNewMat::dump_info () {
 FGNewMat::~FGNewMat ( void ) {
 }
 
-
 istream&
 operator >> ( istream& in, FGNewMat& m )
 {
