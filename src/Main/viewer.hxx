@@ -68,6 +68,7 @@ protected:
     // the current view offset angle from forward (rotated about the
     // view_up vector)
     double view_offset;
+    bool reverse_view_offset;
 
     // the goal view offset angle  (used for smooth view changes)
     double goal_view_offset;
@@ -142,6 +143,9 @@ public:
 	set_dirty();
 	goal_view_offset = a;
     }
+    inline void set_reverse_view_offset( bool val ) {
+	reverse_view_offset = val;
+    }
     inline void set_geod_view_pos( double lon, double lat, double alt ) {
 	// data should be in radians and meters asl
 	set_dirty();
@@ -168,6 +172,7 @@ public:
     inline double get_fov() const { return fov; }
     inline double get_win_ratio() const { return win_ratio; }
     inline double get_view_offset() const { return view_offset; }
+    inline bool get_reverse_view_offset() const { return reverse_view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }
     inline double *get_geod_view_pos() { return geod_view_pos; }
     inline float *get_pilot_offset() { return pilot_offset; }

@@ -45,6 +45,7 @@
 // Constructor
 FGViewerLookAt::FGViewerLookAt( void )
 {
+    set_reverse_view_offset(true);
 }
 
 

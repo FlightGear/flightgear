@@ -46,6 +46,7 @@
 // Constructor
 FGViewerRPH::FGViewerRPH( void )
 {
+    set_reverse_view_offset(false);
 #ifndef USE_FAST_VIEWROT
     // This never changes -- NHV
     LARC_TO_SSG[0][0] = 0.0; 
