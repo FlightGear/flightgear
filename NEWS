@@ -1,4 +1,20 @@
 New in 0.50
+* HUD updates from Charlie Hotchkiss (ladder number rotate w/ ladder, control
+  position indicators are back)
+* Only draw the PUI cursor if Mesa/Glide/Fullscreen.
+* Added mipmapping.
+* Calculate the model view transformation matrix once per tile per iteration.
+  Then glLoadMatrixd() it for each fragment rather than calling push(), 
+  translate(), pop().
+* Added a basic splash screen.
+* Added support for switching between fullscreen and window mode for 
+  Mesa/3dfx/glide.
+* added an enable/disable splash screen option
+* added an enable/disable intro music option
+* added an enable/disable instrument panel option
+* added an enable/disable mouse pointer option
+* Ground collision detection.  You can now land or test for collision with
+  any scenery surface.
 
 New in 0.49
 * Managment of multiple textures
