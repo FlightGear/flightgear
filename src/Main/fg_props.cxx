@@ -574,6 +574,7 @@ setFDMDataLogging (bool state)
 void
 fgInitProps ()
 {
+  cout << "start of fgInitProps()" << endl;
 				// Simulation
   fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
@@ -611,7 +612,8 @@ fgInitProps ()
   fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
   fgTie("/sim/temp/full-screen", getFullScreen, setFullScreen);
   fgTie("/sim/temp/fdm-data-logging", getFDMDataLogging, setFDMDataLogging);
-	
+
+  cout << "end of fgInitProps()" << endl;
 }
 
 

@@ -181,6 +181,29 @@ static void ATC610xReadSwitches( int fd, unsigned char *switch_bytes ) {
 }
 
 
+// Turn a lamp on or off
+void ATC610xSetLamp( int fd, int channel, bool value ) {
+    // lamp channels 0-63 are written to LampPort0, channels 64-127
+    // are written to LampPort1
+
+    // bits 0-6 are the lamp address
+    // bit 7 is the value (on/off)
+
+    int result;
+
+    // Write the value
+    unsigned char buf[3];
+    buf[0] = channel;
+    buf[1] = value;
+    buf[2] = 0;
+    result = write( fd, buf, 2 );
+    if ( result != 2 ) {
+        cout << "Write failed" << endl;
+        exit( -1 );
+    }
+}
+
+
 // Open and initialize ATC 610x hardware
 bool FGATC610x::open() {
     if ( is_enabled() ) {
@@ -199,6 +222,7 @@ bool FGATC610x::open() {
 
     snprintf( lock_file, 256, "/proc/atc610x/board%d/lock", board );
     snprintf( analog_in_file, 256, "/proc/atc610x/board%d/analog_in", board );
+    snprintf( lamps_file, 256, "/proc/atc610x/board%d/lamps", board );
     snprintf( radios_file, 256, "/proc/atc610x/board%d/radios", board );
     snprintf( stepper_file, 256, "/proc/atc610x/board%d/steppers", board );
     snprintf( switches_file, 256, "/proc/atc610x/board%d/switches", board );
@@ -221,6 +245,15 @@ bool FGATC610x::open() {
 	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
 	char msg[256];
 	snprintf( msg, 256, "Error opening %s", analog_in_file );
+	perror( msg );
+	exit( -1 );
+    }
+
+    lamps_fd = ::open( lamps_file, O_WRONLY );
+    if ( lamps_fd == -1 ) {
+	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
+	char msg[256];
+	snprintf( msg, 256, "Error opening %s", lamps_file );
 	perror( msg );
 	exit( -1 );
     }
@@ -273,7 +306,7 @@ bool FGATC610x::open() {
 
     bool home = false;
     int timeout = 900;          // about 30 seconds
-    while ( ! home ) {
+    while ( ! home && timeout > 0 ) {
         if ( timeout % 150 == 0 ) {
             SG_LOG( SG_IO, SG_INFO, "waiting for compass = " << timeout );
         } else {
@@ -324,6 +357,14 @@ bool FGATC610x::open() {
     ATC610xRelease( lock_fd );
 
     /////////////////////////////////////////////////////////////////////
+    // Blank the lamps
+    /////////////////////////////////////////////////////////////////////
+
+    for ( int i = 0; i < 128; ++i ) {
+        ATC610xSetLamp( lamps_fd, i, false );
+    }
+
+    /////////////////////////////////////////////////////////////////////
     // Finished initing hardware
     /////////////////////////////////////////////////////////////////////
 
@@ -357,6 +398,10 @@ bool FGATC610x::open() {
 
     adf_freq = fgGetNode( "/radios/adf/frequencies/selected-khz", true );
     adf_stby_freq = fgGetNode( "/radios/adf/frequencies/standby-khz", true );
+
+    inner = fgGetNode( "/radios/marker-beacon/inner", true );
+    middle = fgGetNode( "/radios/marker-beacon/middle", true );
+    outer = fgGetNode( "/radios/marker-beacon/outer", true );
 
     return true;
 }
@@ -435,11 +480,25 @@ bool FGATC610x::do_analog_in() {
 
 
 /////////////////////////////////////////////////////////////////////
+// Write the lights
+/////////////////////////////////////////////////////////////////////
+
+bool FGATC610x::do_lights() {
+
+    ATC610xSetLamp( lamps_fd, 4, inner->getBoolValue() );
+    ATC610xSetLamp( lamps_fd, 5, middle->getBoolValue() );
+    ATC610xSetLamp( lamps_fd, 3, outer->getBoolValue() );
+
+    return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////
 // Read radio switches 
 /////////////////////////////////////////////////////////////////////
 
 bool FGATC610x::do_radio_switches() {
-    float freq, inc;
+    float freq, coarse_freq, fine_freq, inc;
 
     ATC610xReadRadios( radios_fd, radio_switch_data );
 
@@ -511,7 +570,7 @@ bool FGATC610x::do_radio_switches() {
 	if ( com1_tuner_fine == 0x0c && last_com1_tuner_fine == 0x01 ) {
 	    inc = -0.025;
 	} else if ( com1_tuner_fine == 0x01 && last_com1_tuner_fine == 0x0c ) {
-	    inc = -0.025;
+	    inc = 0.025;
 	} else if ( com1_tuner_fine > last_com1_tuner_fine ) {
 	    inc = 0.025;
 	} else {
@@ -523,7 +582,7 @@ bool FGATC610x::do_radio_switches() {
 	    inc = -1.0;
 	} else if ( com1_tuner_course == 0x01
 		    && last_com1_tuner_course == 0x0c ) {
-	    inc = -1.0;
+	    inc = 1.0;
 	} else if ( com1_tuner_course > last_com1_tuner_course ) {
 	    inc = 1.0;
 	} else {
@@ -552,7 +611,7 @@ bool FGATC610x::do_radio_switches() {
 	if ( com2_tuner_fine == 0x0c && last_com2_tuner_fine == 0x01 ) {
 	    inc = -0.025;
 	} else if ( com2_tuner_fine == 0x01 && last_com2_tuner_fine == 0x0c ) {
-	    inc = -0.025;
+	    inc = 0.025;
 	} else if ( com2_tuner_fine > last_com2_tuner_fine ) {
 	    inc = 0.025;
 	} else {
@@ -564,7 +623,7 @@ bool FGATC610x::do_radio_switches() {
 	    inc = -1.0;
 	} else if ( com2_tuner_course == 0x01
 		    && last_com2_tuner_course == 0x0c ) {
-	    inc = -1.0;
+	    inc = 1.0;
 	} else if ( com2_tuner_course > last_com2_tuner_course ) {
 	    inc = 1.0;
 	} else {
@@ -588,41 +647,54 @@ bool FGATC610x::do_radio_switches() {
     int nav1_tuner_course = radio_switch_data[9] & 0x0f;
     static int last_nav1_tuner_fine = nav1_tuner_fine;
     static int last_nav1_tuner_course = nav1_tuner_course;
+
+    freq = nav1_stby_freq->getFloatValue();
+    coarse_freq = (int)freq;
+    fine_freq = freq - coarse_freq;
+
     inc = 0.0;
     if ( nav1_tuner_fine != last_nav1_tuner_fine ) {
 	if ( nav1_tuner_fine == 0x0c && last_nav1_tuner_fine == 0x01 ) {
-	    inc = -0.05;
+	  fine_freq -= 0.05;
 	} else if ( nav1_tuner_fine == 0x01 && last_nav1_tuner_fine == 0x0c ) {
-	    inc = -0.05;
+	  fine_freq += 0.05;
 	} else if ( nav1_tuner_fine > last_nav1_tuner_fine ) {
-	    inc = 0.05;
+	  fine_freq += 0.05;
 	} else {
-	    inc = -0.05;
+	  fine_freq -= 0.05;
 	}
     }
+    if ( fine_freq < 0.0 ) {
+	fine_freq = 0.95;
+    }
+    if ( fine_freq > 0.95 ) {
+	fine_freq = 0.0;
+    }
+
     if ( nav1_tuner_course != last_nav1_tuner_course ) {
 	if ( nav1_tuner_course == 0x0c && last_nav1_tuner_course == 0x01 ) {
-	    inc = -1.0;
+	  coarse_freq -= 1.0;
 	} else if ( nav1_tuner_course == 0x01
 		    && last_nav1_tuner_course == 0x0c ) {
-	    inc = -1.0;
+	  coarse_freq += 1.0;
 	} else if ( nav1_tuner_course > last_nav1_tuner_course ) {
-	    inc = 1.0;
+	  coarse_freq += 1.0;
 	} else {
-	    inc = -1.0;
+	  coarse_freq -= 1.0;
 	}
     }
+    if ( coarse_freq < 108.0 ) {
+	coarse_freq = 117.0;
+    }
+    if ( coarse_freq > 117.0 ) {
+	coarse_freq = 108.0;
+    }
+
     last_nav1_tuner_fine = nav1_tuner_fine;
     last_nav1_tuner_course = nav1_tuner_course;
 
-    freq = nav1_stby_freq->getFloatValue() + inc;
-    if ( freq < 108.0 ) {
-	freq = 117.95;
-    }
-    if ( freq > 117.95 ) {
-	freq = 108.0;
-    }
-    fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz", freq );
+    fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz",
+		coarse_freq + fine_freq );
 
     // Nav2 Tuner
     int nav2_tuner_fine = (radio_switch_data[17] >> 4) & 0x0f;
@@ -634,7 +706,7 @@ bool FGATC610x::do_radio_switches() {
 	if ( nav2_tuner_fine == 0x0c && last_nav2_tuner_fine == 0x01 ) {
 	    inc = -0.05;
 	} else if ( nav2_tuner_fine == 0x01 && last_nav2_tuner_fine == 0x0c ) {
-	    inc = -0.05;
+	    inc = 0.05;
 	} else if ( nav2_tuner_fine > last_nav2_tuner_fine ) {
 	    inc = 0.05;
 	} else {
@@ -646,7 +718,7 @@ bool FGATC610x::do_radio_switches() {
 	    inc = -1.0;
 	} else if ( nav2_tuner_course == 0x01
 		    && last_nav2_tuner_course == 0x0c ) {
-	    inc = -1.0;
+	    inc = 1.0;
 	} else if ( nav2_tuner_course > last_nav2_tuner_course ) {
 	    inc = 1.0;
 	} else {
@@ -989,9 +1061,9 @@ bool FGATC610x::do_switches() {
     if ( switch_matrix[board][6][3] == 1 ) {
 	fgSetFloat( "/controls/flaps", 1.0 );
     } else if ( switch_matrix[board][5][3] == 1 ) {
-	fgSetFloat( "/controls/flaps", 0.66 );
+	fgSetFloat( "/controls/flaps", 2.0 / 3.0 );
     } else if ( switch_matrix[board][4][3] == 1 ) {
-	fgSetFloat( "/controls/flaps", 0.33 );
+	fgSetFloat( "/controls/flaps", 1.0 / 3.0 );
     } else if ( switch_matrix[board][4][3] == 0 ) {
 	fgSetFloat( "/controls/flaps", 0.0 );
     }
@@ -1006,6 +1078,7 @@ bool FGATC610x::process() {
     if ( ATC610xLock( lock_fd ) > 0 ) {
 
 	do_analog_in();
+	do_lights();
 	do_radio_switches();
 	do_radio_display();
 	do_steppers();

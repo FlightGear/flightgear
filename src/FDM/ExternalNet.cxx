@@ -78,7 +78,14 @@ static void global2raw( FGRawCtrls *raw ) {
 	raw->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
 	raw->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
 	raw->magnetos[i] = node->getIntValue( "magnetos", 0 );
+	if ( i == 0 ) {
+	  // cout << "Magnetos -> " << node->getIntValue( "magnetos", 0 );
+	}
 	raw->starter[i] = node->getBoolValue( "starter", false );
+	if ( i == 0 ) {
+	  // cout << " Starter -> " << node->getIntValue( "stater", false )
+	  //      << endl;
+	}
     }
     for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	raw->brake[i] = node->getDoubleValue( "brakes", 0.0 );
@@ -214,6 +221,15 @@ static void net2global( FGNetFDM *net ) {
 	}
 
         fgSetDouble("/surface-positions/flap-pos-norm", net->flap_deflection);
+	SGPropertyNode * node = fgGetNode("/controls", true);
+        fgSetDouble("/surface-positions/elevator-pos-norm", 
+		    node->getDoubleValue( "elevator" ));
+        fgSetDouble("/surface-positions/rudder-pos-norm", 
+		    node->getDoubleValue( "rudder" ));
+        fgSetDouble("/surface-positions/left-aileron-pos-norm", 
+		    node->getDoubleValue( "aileron" ));
+        fgSetDouble("/surface-positions/right-aileron-pos-norm", 
+		    -node->getDoubleValue( "aileron" ));
 
 	/* these are ignored for now  ... */
 	/*
@@ -329,9 +345,7 @@ void FGExternalNet::init() {
 }
 
 
-// Run an iteration of the EOM.  This is a NOP here because the flight
-// model values are getting filled in elsewhere (most likely from some
-// external source.)
+// Run an iteration of the EOM.
 void FGExternalNet::update( double dt ) {
     int length;
     int result;
@@ -348,7 +362,7 @@ void FGExternalNet::update( double dt ) {
 
     // Read next set of FDM data (blocking enabled to maintain 'sync')
     length = sizeof(fdm);
-    if ( (result = data_server.recv( (char *)(& fdm), length, 0)) >= 0 ) {
+    while ( (result = data_server.recv( (char *)(& fdm), length, 0)) >= 0 ) {
 	SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
 	net2global( &fdm );
     }

@@ -51,12 +51,14 @@ class FGATC610x : public FGProtocol {
 
     int lock_fd;
     int analog_in_fd;
+    int lamps_fd;
     int radios_fd;
     int stepper_fd;
     int switches_fd;
 
     char lock_file[256];
     char analog_in_file[256];
+    char lamps_file[256];
     char radios_file[256];
     char stepper_file[256];
     char switches_file[256];
@@ -75,10 +77,12 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *nav1_freq, *nav1_stby_freq;
     SGPropertyNode *nav2_freq, *nav2_stby_freq;
     SGPropertyNode *adf_freq, *adf_stby_freq;
+    SGPropertyNode *inner, *middle, *outer;
 
     int dme_switch;
 
     bool do_analog_in();
+    bool do_lights();
     bool do_radio_switches();
     bool do_radio_display();
     bool do_steppers();
