@@ -84,6 +84,11 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *adf_ant_ann, *adf_adf_ann, *adf_bfo_ann, *adf_frq_ann;
     SGPropertyNode *adf_flt_ann, *adf_et_ann;
     SGPropertyNode *inner, *middle, *outer;
+    SGPropertyNode *xpdr_ident_btn;
+    SGPropertyNode *xpdr_digit1, *xpdr_digit2, *xpdr_digit3, *xpdr_digit4;
+    SGPropertyNode *xpdr_func_knob, *xpdr_id_code, *xpdr_flight_level;
+    SGPropertyNode *xpdr_fl_ann, *xpdr_alt_ann, *xpdr_gnd_ann, *xpdr_on_ann;
+    SGPropertyNode *xpdr_sby_ann, *xpdr_reply_ann;
 
     int dme_switch;
 
