@@ -173,7 +173,9 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         net->fuel_flow[i] = node->getDoubleValue( "fuel-flow-gph" );
         net->egt[i] = node->getDoubleValue( "egt-degf" );
         // cout << "egt = " << aero->EGT << endl;
+        net->cht[i] = node->getDoubleValue( "cht-degf" );
         net->mp_osi[i] = node->getDoubleValue( "mp-osi" );
+        net->tit[i] = node->getDoubleValue( "tit" );
         net->oil_temp[i] = node->getDoubleValue( "oil-temperature-degf" );
         net->oil_px[i] = node->getDoubleValue( "oil-pressure-psi" );
     }
@@ -253,7 +255,9 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
             htonf(net->rpm[i]);
             htonf(net->fuel_flow[i]);
             htonf(net->egt[i]);
+            htonf(net->cht[i]);
             htonf(net->mp_osi[i]);
+            htonf(net->tit[i]);
             htonf(net->oil_temp[i]);
             htonf(net->oil_px[i]);
         }
@@ -332,7 +336,9 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
             htonf(net->rpm[i]);
             htonf(net->fuel_flow[i]);
             htonf(net->egt[i]);
+            htonf(net->cht[i]);
             htonf(net->mp_osi[i]);
+            htonf(net->tit[i]);
             htonf(net->oil_temp[i]);
             htonf(net->oil_px[i]);
         }
@@ -428,7 +434,9 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 	    node->setDoubleValue( "rpm", net->rpm[i] );
 	    node->setDoubleValue( "fuel-flow-gph", net->fuel_flow[i] );
 	    node->setDoubleValue( "egt-degf", net->egt[i] );
+	    node->setDoubleValue( "cht-degf", net->cht[i] );
 	    node->setDoubleValue( "mp-osi", net->mp_osi[i] );
+	    node->setDoubleValue( "tit", net->tit[i] );
 	    node->setDoubleValue( "oil-temperature-degf", net->oil_temp[i] );
 	    node->setDoubleValue( "oil-pressure-psi", net->oil_px[i] );		
 	}

@@ -18,7 +18,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 19;
+const int FG_NET_FDM_VERSION = 20;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -84,7 +84,9 @@ public:
     float rpm[FG_MAX_ENGINES];	     // Engine RPM rev/min
     float fuel_flow[FG_MAX_ENGINES]; // Fuel flow gallons/hr
     float egt[FG_MAX_ENGINES];	     // Exhuast gas temp deg F
+    float cht[FG_MAX_ENGINES];	     // Cylinder head temp deg F
     float mp_osi[FG_MAX_ENGINES];    // Manifold pressure
+    float tit[FG_MAX_ENGINES];	     // Turbine Inlet Temperature
     float oil_temp[FG_MAX_ENGINES];  // Oil temp deg F
     float oil_px[FG_MAX_ENGINES];    // Oil pressure psi
 
