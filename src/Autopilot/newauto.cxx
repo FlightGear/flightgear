@@ -305,6 +305,9 @@ void FGAutopilot::init ()
     // 25% max control variablilty  0.5 / 2.0
     disengage_threshold = 1.0;
 
+    // set default aileron max deflection
+    MaxAileron = 0.5;
+
 #if !defined( USING_SLIDER_CLASS )
     MaxRollAdjust = 2 * MaxRoll;
     RollOutAdjust = 2 * RollOut;
