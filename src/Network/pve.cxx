@@ -38,7 +38,16 @@ FGPVE::~FGPVE() {
 }
 
 
-// generate Garmin message
+// "PVE" (ProVision Entertainment) output format (for some sort of
+// motion platform)
+//
+// Outputs a 5-byte data packet defined as follows:
+//
+// First bite:  ASCII character "P" ( 0x50 or 80 decimal )
+// Second byte:  "roll" value (1-255) 1 being 0* and 255 being 359*
+// Third byte:  "pitch" value (1-255) 1 being 0* and 255 being 359*
+// Fourth byte:  "heave" value (or vertical acceleration?)
+
 bool FGPVE::gen_message() {
     // cout << "generating pve message" << endl;
     FGInterface *f = cur_fdm_state;

@@ -39,7 +39,21 @@ FGRUL::~FGRUL() {
 }
 
 
-// generate Garmin message
+// "RUL" output format (for some sort of motion platform)
+//
+// The Baud rate is 2400 , one start bit, eight data bits, 1 stop bit,
+// no parity.
+//
+// For position it requires a 3-byte data packet defined as follows:
+//
+// First bite: ascII character "P" ( 0x50 or 80 decimal )
+// Second byte X pos. (1-255) 1 being 0* and 255 being 359*
+// Third byte Y pos.( 1-255) 1 being 0* and 255 359*
+//
+// So sending 80 127 127 to the two axis motors will position on 180*
+// The RS- 232 port is a nine pin connector and the only pins used are
+// 3&5.
+
 bool FGRUL::gen_message() {
     // cout << "generating rul message" << endl;
     FGInterface *f = cur_fdm_state;

@@ -27,14 +27,6 @@
 
 #include "Include/compiler.h"
 
-// #include <string>
-
-// #ifdef FG_HAVE_STD_INCLUDES
-// #  include <ctime>
-// #else
-// #  include <time.h>
-// #endif
-
 #include <Network/iochannel.hxx>
 
 
