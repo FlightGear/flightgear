@@ -668,10 +668,12 @@ FGInput::_update_mouse ()
   _current_mouse_mode = fgGetInt("/input/mice/mouse[0]/mode");
   if (_current_mouse_mode != _last_mouse_mode) {
     _last_mouse_mode = _current_mouse_mode;
-    if (mode >= 0 && mode < _mouse_bindings[0].nModes) {
-      glutSetCursor(_mouse_bindings[0].cursors[mode]);
+    if (_current_mouse_mode >= 0
+	&& _current_mouse_mode < _mouse_bindings[0].nModes) {
+      glutSetCursor(_mouse_bindings[0].cursors[_current_mouse_mode]);
     } else {
-      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
+      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode "
+	     << _current_mouse_mode << " out of range");
       glutSetCursor(GLUT_CURSOR_INHERIT);
     }
   }
