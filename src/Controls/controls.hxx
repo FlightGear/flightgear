@@ -26,7 +26,6 @@
 
 #include <simgear/misc/props.hxx>
 
-#include <Sound/soundmgr.hxx>
 #include <Main/fgfs.hxx>
 #include <Main/globals.hxx>
 
@@ -158,16 +157,10 @@ public:
 	CLAMP( &rudder, -1.0, 1.0 );
     }
     inline void set_flaps( double pos ) {
-	if ( flaps != pos ) {
-	    globals->get_soundmgr()->play_once( "flaps" );
-	}
 	flaps = pos;
 	CLAMP( &flaps, 0.0, 1.0 );
     }
     inline void move_flaps( double amt ) {
-	if ( fabs(amt) > 0.0 ) {
-	    globals->get_soundmgr()->play_once( "flaps" );
-	}
 	flaps += amt;
 	CLAMP( &flaps, 0.0, 1.0 );
     }
