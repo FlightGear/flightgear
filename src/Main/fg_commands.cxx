@@ -314,20 +314,20 @@ static struct {
   const char * name;
   SGCommandMgr::command_t command;
 } built_ins [] = {
-  "null", do_null,
-  "exit", do_exit,
-  "load", do_load,
-  "save", do_save,
-  "panel-load", do_panel_load,
-  "preferences-load", do_preferences_load,
-  "view-cycle", do_view_cycle,
-  "screen-capture", do_screen_capture,
-  "property-toggle", do_property_toggle,
-  "property-assign", do_property_assign,
-  "property-adjust", do_property_adjust,
-  "property-swap", do_property_swap,
-  "property-scale", do_property_scale,
-  0, 0				// zero-terminated
+    { "null", do_null },
+    { "exit", do_exit },
+    { "load", do_load },
+    { "save", do_save },
+    { "panel-load", do_panel_load },
+    { "preferences-load", do_preferences_load },
+    { "view-cycle", do_view_cycle },
+    { "screen-capture", do_screen_capture },
+    { "property-toggle", do_property_toggle },
+    { "property-assign", do_property_assign },
+    { "property-adjust", do_property_adjust },
+    { "property-swap", do_property_swap },
+    { "property-scale", do_property_scale },
+    { 0, 0 }			// zero-terminated
 };
 
 

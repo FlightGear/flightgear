@@ -139,6 +139,7 @@ inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
 #endif
 
 
+#if 0
 // convert sgMat4 to MAT3 and print
 static void print_sgMat4( sgMat4 &in) {
     int i, j;
@@ -149,6 +150,7 @@ static void print_sgMat4( sgMat4 &in) {
 	cout << endl;
     }
 }
+#endif
 
 
 // Update the view parameters

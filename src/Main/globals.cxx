@@ -39,9 +39,9 @@ FGGlobals::FGGlobals() :
     freeze( false ),
     warp( 0 ),
     warp_delta( 0 ),
-    commands(new SGCommandMgr),
     props(new SGPropertyNode),
-    initial_state(0)
+    initial_state(0),
+    commands(new SGCommandMgr)
 {
 }
 
