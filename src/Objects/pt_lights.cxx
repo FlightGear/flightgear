@@ -28,6 +28,9 @@
 
 #include "pt_lights.hxx"
 
+SG_USING_STD(cout);
+SG_USING_STD(endl);
+
 
 // strobe pre-draw (we want a larger point size)
 static int StrobePreDraw( ssgEntity *e ) {
