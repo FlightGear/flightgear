@@ -61,7 +61,7 @@ FGRunways::FGRunways( const string& file ) {
 
     vRunway = new c4_View;
     *vRunway = 
-	storage->GetAs("runway[ID:S,Rwy:S,Longitude:F,Latitude:F,Heading:F,Length:F,Width:F,SurfaceFlags:S,End1Flags:F,End2Flags:F]");
+	storage->GetAs("runway[ID:S,Rwy:S,Longitude:F,Latitude:F,Heading:F,Length:F,Width:F,SurfaceFlags:S,End1Flags:S,End2Flags:S]");
 
     next_index = 0;
 }
@@ -410,7 +410,6 @@ int FGRunwaysUtil::load( const string& file ) {
 
 // save the data in gdbm format
 bool FGRunwaysUtil::dump_mk4( const string& file ) {
-
     // open database for writing
     c4_Storage storage( file.c_str(), true );
 
@@ -430,7 +429,7 @@ bool FGRunwaysUtil::dump_mk4( const string& file ) {
 
     // Start with an empty view of the proper structure.
     c4_View vRunway =
-	storage.GetAs("runway[ID:S,Rwy:S,Longitude:F,Latitude:F,Heading:F,Length:F,Width:F,SurfaceFlags:S,End1Flags:F,End2Flags:F]");
+	storage.GetAs("runway[ID:S,Rwy:S,Longitude:F,Latitude:F,Heading:F,Length:F,Width:F,SurfaceFlags:S,End1Flags:S,End2Flags:S]");
 
     c4_Row row;
 
