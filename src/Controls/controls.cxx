@@ -62,6 +62,7 @@ FGControls::FGControls() :
     flaps( 0.0 ),
     parking_brake( 0.0 ),
     throttle_idle( true ),
+    fuel_selector( FUEL_BOTH ),
     gear_down( false )
 {
 }
@@ -69,16 +70,17 @@ FGControls::FGControls() :
 
 void FGControls::reset_all()
 {
-    set_aileron(0.0);
-    set_aileron_trim(0.0);
-    set_elevator(0.0);
-    set_elevator_trim(0.0);
-    set_rudder(0.0);
-    set_rudder_trim(0.0);
-    set_throttle(FGControls::ALL_ENGINES, 0.0);
-    set_starter(FGControls::ALL_ENGINES, false);
-    set_magnetos(FGControls::ALL_ENGINES, 0);
+    set_aileron( 0.0 );
+    set_aileron_trim( 0.0 );
+    set_elevator( 0.0 );
+    set_elevator_trim( 0.0 );
+    set_rudder( 0.0 );
+    set_rudder_trim( 0.0 );
+    set_throttle( ALL_ENGINES, 0.0 );
+    set_starter( ALL_ENGINES, false );
+    set_magnetos( ALL_ENGINES, 0 );
     throttle_idle = true;
+    fuel_selector = FUEL_BOTH;
     gear_down = true;
 }
 
@@ -165,6 +167,9 @@ FGControls::bind ()
 	 &FGControls::get_brake, &FGControls::set_brake);
     fgSetArchivable(name);
   }
+  fgTie("/controls/fuel-selector", this,
+	&FGControls::get_fuel_selector, &FGControls::set_fuel_selector);
+  fgSetArchivable("/controls/gear-down");
   fgTie("/controls/gear-down", this,
 	&FGControls::get_gear_down, &FGControls::set_gear_down);
   fgSetArchivable("/controls/gear-down");
@@ -201,6 +206,7 @@ FGControls::unbind ()
     sprintf(name, "/controls/brakes[%d]", index);
     fgUntie(name);
   }
+  fgUntie("/controls/fuel-selector");
   fgUntie("/controls/gear-down");
 }
 

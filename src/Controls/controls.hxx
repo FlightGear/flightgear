@@ -41,16 +41,21 @@ class FGControls : public FGSubsystem
 
 public:
 
-    enum
-    {
+    enum {
 	ALL_ENGINES = -1,
 	MAX_ENGINES = 10
     };
 
-    enum
-    {
+    enum {
 	ALL_WHEELS = -1,
 	MAX_WHEELS = 3
+    };
+
+    enum {
+        FUEL_OFF = 0,
+        FUEL_LEFT = 1,
+        FUEL_RIGHT = 2,
+        FUEL_BOTH = 3
     };
 
 private:
@@ -70,6 +75,7 @@ private:
     int magnetos[MAX_ENGINES];
     bool throttle_idle;
     bool starter[MAX_ENGINES];
+    int fuel_selector;
     bool gear_down;
 
     SGPropertyNode * auto_coordination;
@@ -105,6 +111,7 @@ public:
     inline double get_brake(int wheel) const { return brake[wheel]; }
     inline int get_magnetos(int engine) const { return magnetos[engine]; }
     inline bool get_starter(int engine) const { return starter[engine]; }
+    inline int get_fuel_selector() const { return fuel_selector; }
     inline bool get_gear_down() const { return gear_down; }
 
     // Update functions
@@ -131,6 +138,7 @@ public:
     void set_magnetos( int engine, int pos );
     void move_magnetos( int engine, int amt );
     void set_starter( int engine, bool flag );
+    void set_fuel_selector( int pos ) { fuel_selector = pos; }
     void set_parking_brake( double pos );
     void set_brake( int wheel, double pos );
     void move_brake( int wheel, double amt );
