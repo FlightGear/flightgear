@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 10;
+const int FG_RAW_CTRLS_VERSION = 11;
 
 
 // Define a structure containing the control parameters
@@ -53,14 +53,15 @@ public:
     double elevator_trim;	         // -1 ... 1
     double rudder;		         // -1 ... 1
     double flaps;		         //  0 ... 1
+    bool flaps_power;                    //  true = power available
 
     // Engine controls
     int num_engines;		         // number of valid engines
     int magnetos[FG_MAX_ENGINES];
-    bool starter[FG_MAX_ENGINES];        // true = starter engauged
+    bool starter_power[FG_MAX_ENGINES];  // true = starter power
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
-    bool fuel_pump[FG_MAX_ENGINES];      // true = on
+    bool fuel_pump_power[FG_MAX_ENGINES];// true = on
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
 
     // Fuel management

@@ -398,8 +398,13 @@ bool FGATC610x::open() {
     dme_kt = fgGetNode( "/radios/dme/speed-kt", true );
     dme_nm = fgGetNode( "/radios/dme/distance-nm", true );
 
-    navcom1_power = fgGetNode( "/radios/comm[0]/inputs/power-btn", true );
-    navcom2_power = fgGetNode( "/radios/comm[1]/inputs/power-btn", true );
+    navcom1_bus_power = fgGetNode( "/systems/electrical/outputs/navcomm[0]",
+                                   true );
+    navcom2_bus_power = fgGetNode( "/systems/electrical/outputs/navcomm[1]",
+                                   true );
+
+    navcom1_power_btn = fgGetNode( "/radios/comm[0]/inputs/power-btn", true );
+    navcom2_power_btn = fgGetNode( "/radios/comm[1]/inputs/power-btn", true );
 
     com1_freq = fgGetNode( "/radios/comm[0]/frequencies/selected-mhz", true );
     com1_stby_freq
@@ -674,7 +679,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetBool( "/radios/comm[0]/inputs/power-btn",
                radio_switch_data[7] & 0x01 );
 
-    if ( navcom1_power->getBoolValue() ) {
+    if ( navcom1_has_power() ) {
         // Com1 Swap
         int com1_swap = !((radio_switch_data[7] >> 1) & 0x01);
         static int last_com1_swap;
@@ -691,7 +696,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetBool( "/radios/comm[1]/inputs/power-btn",
                radio_switch_data[15] & 0x01 );
 
-    if ( navcom2_power->getBoolValue() ) {
+    if ( navcom2_has_power() ) {
         // Com2 Swap
         int com2_swap = !((radio_switch_data[15] >> 1) & 0x01);
         static int last_com2_swap;
@@ -704,7 +709,7 @@ bool FGATC610x::do_radio_switches() {
         last_com2_swap = com2_swap;
     }
 
-    if ( navcom1_power->getBoolValue() ) {
+    if ( navcom1_has_power() ) {
         // Nav1 Swap
         int nav1_swap = radio_switch_data[11] & 0x01;
         static int last_nav1_swap;
@@ -717,7 +722,7 @@ bool FGATC610x::do_radio_switches() {
         last_nav1_swap = nav1_swap;
     }
 
-    if ( navcom2_power->getBoolValue() ) {
+    if ( navcom2_has_power() ) {
         // Nav2 Swap
         int nav2_swap = !(radio_switch_data[19] & 0x01);
         static int last_nav2_swap;
@@ -730,7 +735,7 @@ bool FGATC610x::do_radio_switches() {
         last_nav2_swap = nav2_swap;
     }
 
-    if ( navcom1_power->getBoolValue() ) {
+    if ( navcom1_has_power() ) {
         // Com1 Tuner
         int com1_tuner_fine = ((radio_switch_data[5] >> 4) & 0x0f) - 1;
         int com1_tuner_coarse = (radio_switch_data[5] & 0x0f) - 1;
@@ -782,7 +787,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 40.0 );
     }
 
-    if ( navcom2_power->getBoolValue() ) {
+    if ( navcom2_has_power() ) {
         // Com2 Tuner
         int com2_tuner_fine = ((radio_switch_data[13] >> 4) & 0x0f) - 1;
         int com2_tuner_coarse = (radio_switch_data[13] & 0x0f) - 1;
@@ -834,7 +839,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 40.0 );
     }
 
-    if ( navcom1_power->getBoolValue() ) {
+    if ( navcom1_has_power() ) {
         // Nav1 Tuner
         int nav1_tuner_fine = ((radio_switch_data[9] >> 4) & 0x0f) - 1;
         int nav1_tuner_coarse = (radio_switch_data[9] & 0x0f) - 1;
@@ -886,7 +891,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 20.0 );
     }
 
-    if ( navcom2_power->getBoolValue() ) {
+    if ( navcom2_has_power() ) {
         // Nav2 Tuner
         int nav2_tuner_fine = ((radio_switch_data[17] >> 4) & 0x0f) - 1;
         int nav2_tuner_coarse = (radio_switch_data[17] & 0x0f) - 1;
@@ -1152,7 +1157,7 @@ bool FGATC610x::do_radio_display() {
 	}
     }
 
-    if ( navcom1_power->getBoolValue() ) {
+    if ( navcom1_has_power() ) {
         // Com1 standby frequency
         float com1_stby = com1_stby_freq->getFloatValue();
         if ( fabs(com1_stby) > 999.99 ) {
@@ -1189,7 +1194,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[11] = 0xff;
     }
 
-    if ( navcom2_power->getBoolValue() ) {
+    if ( navcom2_has_power() ) {
         // Com2 standby frequency
         float com2_stby = com2_stby_freq->getFloatValue();
         if ( fabs(com2_stby) > 999.99 ) {
@@ -1226,7 +1231,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[23] = 0xff;
     }
 
-    if ( navcom1_power->getBoolValue() ) {
+    if ( navcom1_has_power() ) {
         // Nav1 standby frequency
         float nav1_stby = nav1_stby_freq->getFloatValue();
         if ( fabs(nav1_stby) > 999.99 ) {
@@ -1263,7 +1268,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[17] = 0xff;
     }
 
-    if ( navcom2_power->getBoolValue() ) {
+    if ( navcom2_has_power() ) {
         // Nav2 standby frequency
         float nav2_stby = nav2_stby_freq->getFloatValue();
         if ( fabs(nav2_stby) > 999.99 ) {
@@ -1537,11 +1542,11 @@ bool FGATC610x::do_switches() {
 
     // other toggle switches
     fgSetBool( "/controls/fuel-pump[0]", switch_matrix[board][0][2] );
-    fgSetBool( "/controls/switches/landing-light", switch_matrix[board][1][2] );
     fgSetBool( "/controls/switches/flashing-beacon",
-               switch_matrix[board][2][2] );
-    fgSetBool( "/controls/switches/map-lights", switch_matrix[board][3][2] );
-    fgSetBool( "/controls/switches/instrument-lights",
+               switch_matrix[board][1][2] );
+    fgSetBool( "/controls/switches/landing-light", switch_matrix[board][2][2] );
+    fgSetBool( "/controls/switches/taxi-lights", switch_matrix[board][3][2] );
+    fgSetBool( "/controls/switches/nav-lights",
                switch_matrix[board][4][2] );
     fgSetBool( "/controls/switches/strobe-lights", switch_matrix[board][5][2] );
     fgSetBool( "/controls/switches/pitot-heat", switch_matrix[board][6][2] );
