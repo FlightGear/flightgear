@@ -12,6 +12,8 @@
 SG_USING_STD(setprecision);
 
 //#include <string.h>
+#include <stdio.h>
+
 namespace yasim {
 
 const float pi=3.14159;
