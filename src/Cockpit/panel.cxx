@@ -256,8 +256,9 @@ void
 FGPanel::update ()
 {
 				// Do nothing if the panel isn't visible.
-    if (!fgPanelVisible())
+    if ( !fgPanelVisible() ) {
         return;
+    }
 
 				// If the mouse is down, do something
     if (_mouseDown) {
