@@ -25,6 +25,7 @@
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 #include <Sound/soundmgr.hxx>
+#include <GUI/gui.h>
 
 #include <string>
 #include <list>
@@ -101,6 +102,9 @@ private:
     // Type of ATC control that the user's radios are tuned to.
     atc_type comm1_type;
     atc_type comm2_type;
+	
+	// Pointer to the ATC station that the user is currently tuned into.
+	FGATC* tuned_atc_ptr;
 
     double comm1_freq;
     double comm2_freq;
@@ -181,6 +185,12 @@ public:
 	// Cease rendering a transmission.
 	// At the moment this can handle one transmission active at a time only.
 	void NoRender();
+	
+	// Display a dialog box with options relevant to the currently tuned ATC service.
+	void doStandardDialog();
+	
+	atc_type GetCurrentATCType() { return(comm1_type); }
+	FGATC* GetCurrentATCPointer() { return(tuned_atc_ptr); }
 	
 private:
 

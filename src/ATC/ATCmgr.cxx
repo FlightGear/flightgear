@@ -21,6 +21,7 @@
 //#include <Time/event.hxx>
 
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/commands.hxx>
 #include <simgear/debug/logstream.hxx>
 
 #include "ATCmgr.hxx"
@@ -37,6 +38,124 @@ static void fgATCSearch( void ) {
 }
 */ //This wouldn't compile - including Time/event.hxx breaks it :-(
 
+static char* t0 = "Request landing clearance";
+static char* t1 = "Request departure clearance";
+static char* t2 = "Report Runway vacated";
+static char** towerOptions = new char*[4];
+static char* a0 = "Request vectors";
+static char** approachOptions = new char*[2];
+
+// For the ATC dialog - copied from the Autopilot new heading dialog code!
+static puDialogBox*		atcDialog;
+static puFrame*			atcDialogFrame;
+static puText*			atcDialogMessage;
+//static puInput*			atcDialogInput;
+static puOneShot*		atcDialogOkButton;
+static puOneShot*		atcDialogCancelButton;
+static puButtonBox*		atcDialogCommunicationOptions;
+
+static void ATCDialogCancel(puObject *)
+{
+    //ATCDialogInput->rejectInput();
+    FG_POP_PUI_DIALOG( atcDialog );
+}
+
+static void ATCDialogOK (puObject *me)
+{
+	switch(globals->get_ATC_mgr()->GetCurrentATCType()) {
+	case INVALID:
+		break;
+	case ATIS:
+		break;
+	case TOWER: {
+		FGTower* twr = (FGTower*)globals->get_ATC_mgr()->GetCurrentATCPointer();
+		switch(atcDialogCommunicationOptions->getValue()) {
+		case 0:
+			cout << "Option 0 chosen\n";
+			twr->RequestLandingClearance("golf bravo echo");
+			break;
+		case 1:
+			cout << "Option 1 chosen\n";
+			twr->RequestDepartureClearance("golf bravo echo");
+			break;
+		case 2:
+			cout << "Option 2 chosen\n";
+			twr->ReportRunwayVacated("golf bravo echo");
+			break;
+		default:
+			break;
+		}
+		break;
+	}
+	case GROUND:
+		break;
+	case APPROACH:
+		break;
+	default:
+		break;
+	}
+
+    ATCDialogCancel(me);
+    //if(error) mkDialog(s.c_str());
+}
+
+static void ATCDialog(puObject *cb)
+{
+    //ApHeadingDialogInput   ->    setValue ( heading );
+    //ApHeadingDialogInput    -> acceptInput();
+    FG_PUSH_PUI_DIALOG(atcDialog);
+}
+
+static void ATCDialogInit()
+{
+	char defaultATCLabel[] = "Enter desired option to communicate with ATC:";
+	char *s;
+
+	// Option lists hardwired per ATC type	
+	towerOptions[0] = new char[strlen(t0)];
+	strcpy(towerOptions[0], t0);
+	towerOptions[1] = new char[strlen(t1)];
+	strcpy(towerOptions[1], t1);
+	towerOptions[2] = new char[strlen(t2)];
+	strcpy(towerOptions[2], t2);
+	towerOptions[3] = NULL;
+	
+	approachOptions[0] = new char[strlen(a0)];
+	strcpy(approachOptions[0], a0);
+	approachOptions[1] = NULL;
+
+	atcDialog = new puDialogBox (150, 50);
+	{
+		atcDialogFrame   = new puFrame (0, 0, 500, 250);
+		
+		atcDialogMessage = new puText          (250, 220);
+		atcDialogMessage    -> setDefaultValue (defaultATCLabel);
+		atcDialogMessage    -> getDefaultValue (&s);
+		atcDialogMessage    -> setLabel        (s);
+		atcDialogMessage    -> setLabelPlace   (PUPLACE_TOP_CENTERED);
+
+		atcDialogCommunicationOptions = new puButtonBox (50, 50, 450, 210, NULL, true);
+		
+		atcDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+		atcDialogOkButton     ->     setLegend         (gui_msg_OK);
+		atcDialogOkButton     ->     makeReturnDefault (TRUE);
+		atcDialogOkButton     ->     setCallback       (ATCDialogOK);
+		
+		atcDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+		atcDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
+		atcDialogCancelButton ->     setCallback       (ATCDialogCancel);
+		
+	}
+	FG_FINALIZE_PUI_DIALOG(atcDialog);
+}
+
+// For the command manager - maybe eventually this should go in the built in command list
+static bool do_ATC_dialog(const SGPropertyNode* arg) {
+	globals->get_ATC_mgr()->doStandardDialog();
+	return(true);
+}
+
+
 FGATCMgr::FGATCMgr() {
 	comm1_ident = "";
 	comm1_atis_ident = "";
@@ -51,6 +170,8 @@ FGATCMgr::FGATCMgr() {
 	comm1_atis_valid = false;
 	comm1_tower_valid = false;
 	comm1_approach_valid = false;
+	comm1_type = INVALID;
+	tuned_atc_ptr = NULL;
 }
 
 FGATCMgr::~FGATCMgr() {
@@ -101,6 +222,12 @@ void FGATCMgr::init() {
 #else
 	voice = false;
 #endif
+
+	// Initialise the ATC Dialogs
+	ATCDialogInit();
+	
+	// Add ATC-dialog to the command list
+	globals->get_commands()->addCommand("ATC-dialog", do_ATC_dialog);
 }
 
 void FGATCMgr::update(double dt) {
@@ -291,6 +418,51 @@ void FGATCMgr::NoRender() {
 	}
 }
 
+
+// Display a dialog box with options relevant to the currently tuned ATC service.
+void FGATCMgr::doStandardDialog() {
+	/* DCL 2002/12/06 - This function currently in development 
+	   and dosen't display anything usefull to the end-user */
+	//cout << "FGATCMgr::doStandardDialog called..." << endl;
+	
+	// First - need to determine which ATC service (if any) the user is tuned to.
+	//cout << "comm1_type = " << comm1_type << endl;
+	
+	// Second - customise the dialog box
+	switch(comm1_type) {
+	case INVALID:
+		atcDialogCommunicationOptions->newList(NULL);
+		atcDialogMessage->setLabel("Not tuned in to any ATC service.");
+		break;
+	case ATIS:
+		atcDialogCommunicationOptions->newList(NULL);
+		atcDialogMessage->setLabel("Tuned in to ATIS: no communication possible.");
+		break;
+	case TOWER: 
+		atcDialogCommunicationOptions->newList(towerOptions);
+		atcDialogMessage->setLabel("Tuned in to Tower - select communication to transmit:");
+		break;
+	case GROUND:
+		atcDialogCommunicationOptions->newList(NULL);
+		atcDialogMessage->setLabel("Tuned in to Ground - select communication to transmit:");
+		break;
+	case APPROACH:
+		atcDialogCommunicationOptions->newList(approachOptions);
+		atcDialogMessage->setLabel("Tuned in to Approach - select communication to transmit:");
+		break;
+	default:
+		atcDialogCommunicationOptions->newList(NULL);
+		atcDialogMessage->setLabel("Tuned in to unknown ATC service - enter transmission:");
+		break;
+	}
+	
+	// Third - display the dialog without pausing sim.
+	ATCDialog(NULL);
+	
+	// Forth - need to direct input back from the dialog to the relevant ATC service.
+	// This is in ATCDialogOK()
+}
+
 void FGATCMgr::Search() {
 	
 	////////////////////////////////////////////////////////////////////////
@@ -331,6 +503,7 @@ void FGATCMgr::Search() {
 			comm1_z = atis.get_z();
 			FGATIS* a = new FGATIS;
 			*a = atis;
+			tuned_atc_ptr = a;
 			a->SetDisplay();
 			atc_list.push_back(a);
 			//cout << "Found a new atis station in range" << endl;
@@ -348,6 +521,7 @@ void FGATCMgr::Search() {
 			comm1_atis_ident = "";
 			//comm1_trans_ident = "";
 			last_comm1_atis_ident = "";
+			tuned_atc_ptr = NULL;
 		}
 		//cout << "not picking up atis" << endl;
 	}
@@ -373,6 +547,7 @@ void FGATCMgr::Search() {
 			comm1_z = tower.get_z();
 			FGTower* t = new FGTower;
 			*t = tower;
+			tuned_atc_ptr = t;
 			t->SetDisplay();
 			atc_list.push_back(t);
 			//cout << "Found a new tower station in range" << endl;
@@ -390,6 +565,7 @@ void FGATCMgr::Search() {
 			comm1_tower_valid = false;
 			comm1_tower_ident = "";
 			last_comm1_tower_ident = "";
+			tuned_atc_ptr = NULL;
 			//comm1_ident = "";
 			//comm1_trans_ident = "";
 			//last_comm1_ident = "";
@@ -476,6 +652,7 @@ void FGATCMgr::Search() {
 				a->AddPlane(pid);
 				a->Update();
 				a->SetDisplay();
+				tuned_atc_ptr = a;
 				atc_list.push_back(a);
 				//cout << "Found a new approach station in range: Id = " 
 				//     << approaches[i].GetIdent() << endl;
