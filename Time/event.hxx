@@ -68,7 +68,8 @@ public:
 	FG_EVENT_QUEUED = 2
     };
 
-public:
+    fgEVENT(); // Required by deque<>.
+
     fgEVENT( const string& desc,
 	     const fgCallback& cb,
 	     EventState _status,
@@ -167,6 +168,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.10  1998/09/08 21:41:06  curt
+// Added constructor for fgEVENT.
+//
 // Revision 1.9  1998/09/02 14:37:45  curt
 // Renamed struct -> class.
 //
