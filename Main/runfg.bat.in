@@ -1,0 +1,23 @@
+REM @ECHO OFF
+
+REM Skip ahead to CONT1 if FG_ROOT has a value
+IF NOT %FG_ROOT%.==. GOTO CONT1
+
+SET FG_ROOT=@prefix@
+
+:CONT1
+
+REM Check for the existance of the executable
+IF NOT EXIST %FG_ROOT%/BIN/FG.EXE GOTO ERROR1
+
+REM Now that FG_ROOT has been set, run the program
+ECHO FG_ROOT = %FG_ROOT%
+%FG_ROOT%/BIN/FG.EXE
+
+GOTO END
+
+:ERROR1
+ECHO Cannot find %FG_ROOT%/BIN/FG.EXE
+GOTO END
+
+:END

@@ -1,0 +1,104 @@
+#!/usr/bin/perl
+#
+# runfg -- front end for setting up the FG_ROOT env variable and launching 
+#          the fg executable.
+#
+# Written by Curtis Olson, started September 1997.
+#
+# Copyright (C) 1997 - 1998  Curtis L. Olson  - curt@me.umn.edu
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+# $Id$
+# (Log is kept at end of this file)
+#---------------------------------------------------------------------------
+
+
+$prefix = "@prefix@";
+# print "-> $prefix\n";
+
+# potential names of Flight Gear executable to try
+@files = ( "fg", "fg.exe" );
+
+# potential paths where the executable may be found
+@paths = ( ".", "Simulator/Main", $prefix );
+
+# search for the executable
+$savepath = "";
+$savefile = "";
+
+foreach $path (@paths) {
+    foreach $file (@files) {
+	# print "'$savepath'\n";
+	if ( $savepath eq "" ) {
+	    # don't search again if we've already found one
+	    # print "checking $path" . "bin/$file and $path" . "$file\n";
+	    if ( -x "$path/bin/$file" ) {
+		$savepath = "$path/bin";
+		$savefile = "$file";
+	    } elsif ( -x "$path/$file" ) {
+		$savepath = "$path";
+		$savefile = "$file";
+	    }
+	} else {
+	    # print "skipping $path/bin/$file and $path/$file\n";
+	}
+    }
+}
+
+die "Cannot locate program.\n" if ( $savepath eq "" );
+
+
+# set the FG_ROOT environment variable if it hasn't already been set.
+if ( $ENV{FG_ROOT} eq "" ) {
+    $ENV{FG_ROOT} = $prefix;
+}
+
+# set the LD_LIBRARY_PATH environment variable if running the
+# installed version
+if ( $savepath eq "@prefix@/bin" ) {
+    print "(installed version)\n";
+    if ( $ENV{LD_LIBRARY_PATH} eq "" ) {
+	$ENV{LD_LIBRARY_PATH} = "$prefix/lib";
+    } else {
+	$ENV{LD_LIBRARY_PATH} = "$prefix/lib:$ENV{LD_LIBRARY_PATH}";
+    }
+} else {
+    print "(development version)\n";
+}
+
+# run Flight Gear
+print "Running $savepath/$savefile @ARGV\n";
+exec("$savepath/$savefile @ARGV");
+
+
+#---------------------------------------------------------------------------
+# $Log$
+# Revision 1.1  1998/04/09 01:45:31  curt
+# Moved to Main/ and incorperated with automake
+#
+# Revision 1.4  1998/03/09 22:52:38  curt
+# Mod's to better support win32 if perl exists.
+#
+# Revision 1.3  1998/02/16 16:17:34  curt
+# Minor tweaks.
+#
+# Revision 1.2  1998/01/27 00:47:43  curt
+# Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+# system and commandline/config file processing code.
+#
+# Revision 1.1  1997/10/28 18:47:27  curt
+# Initial revision.
+#
