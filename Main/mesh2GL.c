@@ -59,7 +59,7 @@ GLint mesh2GL(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 5;  /* Detail level 1 - 1200 ... */
+    istep = jstep = 4;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -119,10 +119,14 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.6  1997/05/27 17:44:32  curt
-/* Renamed & rearranged variables and routines.   Added some initial simple
-/* timer/alarm routines so the flight model can be updated on a regular interval.
+/* Revision 1.7  1997/05/29 02:33:24  curt
+/* Updated to reflect changing interfaces in other "modules."
 /*
+ * Revision 1.6  1997/05/27 17:44:32  curt
+ * Renamed & rearranged variables and routines.   Added some initial simple
+ * timer/alarm routines so the flight model can be updated on a regular 
+ * interval.
+ *
  * Revision 1.5  1997/05/24 01:45:32  curt
  * Fixed surface normals for triangle mesh.
  *

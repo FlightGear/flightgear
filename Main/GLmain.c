@@ -61,7 +61,7 @@ static GLint mesh;
 double fogDensity = 2000.0;
 
 /* Another hack */
-#define DEFAULT_MODEL_HZ 120
+#define DEFAULT_MODEL_HZ 20
 double Simtime;
 int Overrun;
 int model_dt;
@@ -224,7 +224,7 @@ static void fgSceneryDraw() {
  * ready for the next move?*/
 static void fgMainLoop( void )
 {
-    slew_update();
+    fgSlewUpdate();
     aircraft_debug(1);
 
     fgUpdateVisuals();
@@ -288,9 +288,9 @@ int main( int argc, char *argv[] ) {
     fgInitVisuals();
 
     /* Set initial position and slew parameters */
-    /* slew_init(-398391.3, 120070.4, 244, 3.1415); */ /* GLOBE Airport */
-    /* slew_init(-335340,162540, 15, 4.38); */
-    slew_init(-398673.28,120625.64, 53, 4.38);
+    /* fgSlewInit(-398391.3, 120070.4, 244, 3.1415); */ /* GLOBE Airport */
+    /* fgSlewInit(-335340,162540, 15, 4.38); */
+    fgSlewInit(-398673.28,120625.64, 53, 4.38);
 
     /* build all objects */
     fgSceneryInit();
@@ -339,10 +339,14 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.4  1997/05/27 17:44:31  curt
-/* Renamed & rearranged variables and routines.   Added some initial simple
-/* timer/alarm routines so the flight model can be updated on a regular interval.
+/* Revision 1.5  1997/05/29 02:33:23  curt
+/* Updated to reflect changing interfaces in other "modules."
 /*
+ * Revision 1.4  1997/05/27 17:44:31  curt
+ * Renamed & rearranged variables and routines.   Added some initial simple
+ * timer/alarm routines so the flight model can be updated on a regular 
+ * interval.
+ *
  * Revision 1.3  1997/05/23 15:40:25  curt
  * Added GNU copyright headers.
  * Fog now works!

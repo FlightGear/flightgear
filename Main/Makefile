@@ -66,7 +66,8 @@ LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
-AFILES = ../flight/libflight.a ../aircraft/libaircraft.a ../scenery/libscenery.a
+AFILES = ../flight/libflight.a ../flight/slew/libslew.a \
+	../aircraft/libaircraft.a ../scenery/libscenery.a
 
 
 
@@ -102,6 +103,9 @@ mesh2GL.o: mesh2GL.c ../scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1997/05/29 02:33:23  curt
+# Updated to reflect changing interfaces in other "modules."
+#
 # Revision 1.5  1997/05/27 17:44:32  curt
 # Renamed & rearranged variables and routines.   Added some initial simple
 # timer/alarm routines so the flight model can be updated on a regular interval.
