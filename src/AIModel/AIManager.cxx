@@ -57,7 +57,7 @@ void FGAIManager::init() {
   int rval;
   root = fgGetNode("sim/ai", true);
 
-  enabled = root->getNode("enabled", true)->getStringValue();
+  enabled = root->getNode("enabled", true)->getBoolValue();
   if (!enabled)
       return;
 
