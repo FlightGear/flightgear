@@ -572,7 +572,7 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( current_options.get_sound() ) {
+    if ( current_options.get_sound() && !audio_sched->not_working() ) {
 	double param = c->throttle[0] * 2.0 + 1.0;
 
 	pitch_envelope.setStep  ( 0, 0.01, param );
@@ -693,16 +693,18 @@ static void fgIdleFunction ( void ) {
 	printf("Rate = %d  Bps = %d  Stereo = %d\n", 
 	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
 	audio_sched -> loopSample ( s1 );
-	
-	pitch_envelope.setStep  ( 0, 0.01, 0.6 );
-	volume_envelope.setStep ( 0, 0.01, 0.6 );
 
-	audio_sched -> addSampleEnvelope( s1, 0, 0, &
-					  pitch_envelope,
-					  SL_PITCH_ENVELOPE );
-	audio_sched -> addSampleEnvelope( s1, 0, 1, 
-					  &volume_envelope,
-					  SL_VOLUME_ENVELOPE );
+	if ( !audio_sched->not_working() ) {
+	    pitch_envelope.setStep  ( 0, 0.01, 0.6 );
+	    volume_envelope.setStep ( 0, 0.01, 0.6 );
+
+	    audio_sched -> addSampleEnvelope( s1, 0, 0, &
+					      pitch_envelope,
+					      SL_PITCH_ENVELOPE );
+	    audio_sched -> addSampleEnvelope( s1, 0, 1, 
+					      &volume_envelope,
+					      SL_VOLUME_ENVELOPE );
+	}
 
 	// strcpy(slfile, path);
 	// strcat(slfile, "thunder.wav");
@@ -888,6 +890,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.53  1998/09/26 13:18:35  curt
+// Check if audio "working()" before doing audio manipulations.
+//
 // Revision 1.52  1998/09/25 16:02:07  curt
 // Added support for pitch and volume envelopes and tied them to the
 // throttle setting.
