@@ -1506,14 +1506,22 @@ int mainLoop( int argc, char **argv ) {
     if ( fgGetBool("/environment/clouds/status") ) {
 	// thesky->add_cloud_layer( 2000.0, 200.0, 50.0, 40000.0,
         //                          SG_CLOUD_OVERCAST );
-	thesky->add_cloud_layer( fgGetDouble("/environment/clouds/altitude-ft") *
-				 SG_FEET_TO_METER,
-				 200.0, 50.0, 40000.0,
-				 SG_CLOUD_MOSTLY_CLOUDY );
-	// thesky->add_cloud_layer( 3000.0, 200.0, 50.0, 40000.0,
-	//                          SG_CLOUD_MOSTLY_SUNNY );
-	thesky->add_cloud_layer( 6000.0, 20.0, 10.0, 40000.0,
-				 SG_CLOUD_CIRRUS );
+        SGCloudLayer * layer = new SGCloudLayer(sky_tex_path.str());
+	layer->setElevation_m(fgGetDouble("/environment/clouds/altitude-ft")
+			       * SG_FEET_TO_METER);
+	layer->setThickness_m(200.0);
+	layer->setTransition_m(50.0);
+	layer->setSpan_m(40000.0);
+	layer->setType(SGCloudLayer::SG_CLOUD_MOSTLY_SUNNY);
+	thesky->add_cloud_layer(layer);
+
+	layer = new SGCloudLayer(sky_tex_path.str());
+	layer->setElevation_m(6000.0);
+	layer->setThickness_m(20.0);
+	layer->setTransition_m(10.0);
+	layer->setSpan_m(40000.0);
+	layer->setType(SGCloudLayer::SG_CLOUD_CIRRUS);
+	thesky->add_cloud_layer(layer);
     }
 
     // Initialize MagVar model
