@@ -1,3 +1,66 @@
+New in 0.7.7
+* June 22, 2001 (01/04/05)
+
+* Cleaned up various warning messages
+* Various Cygwin fixes.
+* Various MSVC fixes.
+* Various Irix Mips fixes.
+
+* Check for null panel before passing mouse events to panel object.
+* Fixed panel edge artifacts (due to unwanted texture wrapping.)
+* Fixed a typo in the base/materials file.
+* Various property manager fixes.
+* Various property manager lookup optimizations.
+* Fixed a bug in the autopilot altitude hold that crept in.
+
+* Converted from hardcoded to configurable keyboard bindings.
+* Added an FGSubsystem base class so subsystems can be managed with a
+  common api.
+* Keyboard commands are now completely remapable.  Removed BFI and
+  keyboard in place of remapable inputs.
+* Started to impliment a command manager.  This along with the
+  property manager will go a long ways toward building infrastructure
+  for scripting.
+* Started laying infrastructure for creating ultra-high-res tiled
+  screen shots suitable for printers.
+* Synced with a recent version of JSBSim.
+* GUI code split into smaller logical subcomponents.
+* FGOptions converted to use property manager directly.
+* "delta-t" and fdm interface timing fixes and tweaks.
+* Added a sound effect manager class at the FlightGear level.
+
+* Support for setting a starting position as and offset distance (and /
+  or radial) from your specified starting postition.  This allows you to
+  initialize on final x miles out at y altitude.
+* Many updates to make a much more realistic single engine and prop model
+  with atmospheric and velocity dependencies.  Fuel flow now modeled.
+* Straightened out magnetic offset issues with VOR stations so we can
+  navigate properly from real avaition charts.
+* Added a direct network interface support for the "Atlas" moving map
+  program.  (Output radio stack settings so current VOR and OBS can be
+  visualized.)
+* Autopilot made to work more like a real world autopilot (rather than
+  based on perfect values.)  Autopilot wing leveler is slaved off the
+  turn coordinator.  Heading hold is slaved from the DG (which drifts).
+  Nav and ILS holds slave off the needle position.
+* Backcorse ILS needle should move in correct direction now.
+* Identing of NAV radios (and individual volume control) now work.
+* Don't play DME ident if no colocated DME.
+* VOR/ILS/ADF range pickup realistically modeled as per AIM.
+* Added support for marker beacons.
+* Support for loading and saving the current 'simulator state' using
+  an xml formated file.
+* Added threaded tile paging for systems with pthread support.
+* Added high level support for creating airport taxiway and runway signs.
+* Many updates and fixes to the "installation and getting started" manual.
+* Support for adding static objects to the scenery.
+* Many updates and new features for the xml configurable panel engine.
+  Many corresponding improvements to the default instrument panel.
+* Support added for incrementally numbering screen snapshots.
+* Added support for a new, smaller, faster binary scenery format.
+* Added an xml configurable HUD engine.
+* Added interface glue to propogate wind values to LaRCsim.
+
 New in 0.7.6
 * December 15, 2000
 * Added night ground cover lights with user controllable densities on
