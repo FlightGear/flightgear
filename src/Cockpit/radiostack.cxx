@@ -31,8 +31,6 @@
 #include <simgear/math/sg_random.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Navaids/ilslist.hxx>
-#include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "radiostack.hxx"
