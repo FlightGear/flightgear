@@ -89,8 +89,10 @@ AM_CONDITIONAL(ENABLE_IRIX_AUDIO, test -r /usr/include/audio.h)
 AM_CONDITIONAL(ENABLE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
 
 dnl Check for (currently Linux only style) joystick support
-
 AM_CONDITIONAL(ENABLE_LINUX_JOYSTICK, test -r /usr/include/linux/joystick.h )
+
+dnl Enable serial support on Unix type systems
+AM_CONDITIONAL(ENABLE_UNIX_SERIAL, test "x$ac_cv_header_windows_h" != "xyes")
 
 dnl extra library and include directories
 EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"
@@ -294,6 +296,7 @@ AC_OUTPUT( \
 	Simulator/Makefile \
 	Simulator/Objects/Makefile \
 	Simulator/Scenery/Makefile \
+	Simulator/Serial/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Tools/Makefile \
