@@ -61,8 +61,6 @@
 FGJSBsim::FGJSBsim( double dt ) {
     bool result;
    
-    runcount=0;
-   
     fdmex=new FGFDMExec;
     fgic=new FGInitialCondition(fdmex);
     needTrim=true;
@@ -117,7 +115,6 @@ void FGJSBsim::init() {
     result = fdmex->LoadModel( aircraft_path.str(),
 			       engine_path.str(),
 			       fgGetString("/sim/aircraft") );
-#endif
 
     if (result) {
 	FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << fgGetString("/sim/aircraft") );
@@ -127,7 +124,8 @@ void FGJSBsim::init() {
 		<< " does not exist" );
 	exit(-1);
     }
-    
+#endif    
+
     fdmex->GetAtmosphere()->UseInternal();
   
     FG_LOG( FG_FLIGHT, FG_INFO, "  Initializing JSBSim with:" );
