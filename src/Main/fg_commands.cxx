@@ -194,18 +194,22 @@ do_reinit (const SGPropertyNode * arg)
     bool result = true;
 
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
-    if (subsystems.size() == 0)
+    if (subsystems.size() == 0) {
         globals->get_subsystem_mgr()->reinit();
-    else for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
-        const char * name = subsystems[i]->getStringValue();
-        FGSubsystem * subsystem = globals->get_subsystem(name);
-        if (subsystem == 0) {
-            result = false;
-            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");
-        } else {
-            subsystem->reinit();
+    } else {
+        for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
+            const char * name = subsystems[i]->getStringValue();
+            FGSubsystem * subsystem = globals->get_subsystem(name);
+            if (subsystem == 0) {
+                result = false;
+                SG_LOG( SG_GENERAL, SG_ALERT,
+                        "Subsystem " << name << "not found" );
+            } else {
+                subsystem->reinit();
+            }
         }
     }
+
     return result;
 }
 

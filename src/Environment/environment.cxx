@@ -148,7 +148,9 @@ FGEnvironment::copy (const FGEnvironment &env)
     elevation_ft = env.elevation_ft;
     visibility_m = env.visibility_m;
     temperature_sea_level_degc = env.temperature_sea_level_degc;
+    temperature_degc = env.temperature_degc;
     dewpoint_sea_level_degc = env.dewpoint_sea_level_degc;
+    dewpoint_degc = env.dewpoint_degc;
     pressure_sea_level_inhg = env.pressure_sea_level_inhg;
     wind_from_heading_deg = env.wind_from_heading_deg;
     wind_speed_kt = env.wind_speed_kt;
@@ -179,14 +181,14 @@ FGEnvironment::read (const SGPropertyNode * node)
     maybe_copy_value(this, node, "visibility-m",
                      &FGEnvironment::set_visibility_m);
 
-    if (!maybe_copy_value(this, node, "temperature-sea-level-degc",
+    if (!maybe_copy_value(this, node, "temperature-degc",
                           &FGEnvironment::set_temperature_sea_level_degc))
-        maybe_copy_value(this, node, "temperature-degc",
+        maybe_copy_value(this, node, "temperature-sea-level-degc",
                          &FGEnvironment::set_temperature_degc);
 
-    if (!maybe_copy_value(this, node, "dewpoint-sea-level-degc",
+    if (!maybe_copy_value(this, node, "dewpoint-degc",
                           &FGEnvironment::set_dewpoint_sea_level_degc))
-        maybe_copy_value(this, node, "dewpoint-degc",
+        maybe_copy_value(this, node, "dewpoint-sea-level-degc",
                          &FGEnvironment::set_dewpoint_degc);
 
     if (!maybe_copy_value(this, node, "pressure-sea-level-inhg",
@@ -556,14 +558,14 @@ interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
                    env2->get_visibility_m(),
                    fraction));
 
-    result->set_temperature_sea_level_degc
-        (do_interp(env1->get_temperature_sea_level_degc(),
-                   env2->get_temperature_sea_level_degc(),
+    result->set_temperature_degc
+        (do_interp(env1->get_temperature_degc(),
+                   env2->get_temperature_degc(),
                    fraction));
 
-    result->set_dewpoint_sea_level_degc
-        (do_interp(env1->get_dewpoint_sea_level_degc(),
-                   env2->get_dewpoint_sea_level_degc(),
+    result->set_dewpoint_degc
+        (do_interp(env1->get_dewpoint_degc(),
+                   env2->get_dewpoint_degc(),
                    fraction));
 
     result->set_pressure_sea_level_inhg
