@@ -85,14 +85,10 @@ FGJSBsim::FGJSBsim( double dt )
 	add_engine( FGEngInterface() );
     }  
     
-    fgSetDouble("/fdm/trim/pitch-trim",
-		fdmex->GetFCS()->GetPitchTrimCmd());
-    fgSetDouble("/fdm/trim/throttle",
-		fdmex->GetFCS()->GetThrottleCmd(0)/100.0);
-    fgSetDouble("/fdm/trim/aileron",
-		fdmex->GetFCS()->GetDaCmd());
-    fgSetDouble("/fdm/trim/rudder",
-		fdmex->GetFCS()->GetDrCmd());
+    fgSetDouble("/fdm/trim/pitch-trim", fdmex->GetFCS()->GetPitchTrimCmd());
+    fgSetDouble("/fdm/trim/throttle", fdmex->GetFCS()->GetThrottleCmd(0));
+    fgSetDouble("/fdm/trim/aileron", fdmex->GetFCS()->GetDaCmd());
+    fgSetDouble("/fdm/trim/rudder", fdmex->GetFCS()->GetDrCmd());
 
     trimmed = fgGetValue("/fdm/trim/trimmed",true);
     trimmed->setBoolValue(false);
@@ -242,19 +238,16 @@ bool FGJSBsim::update( int multiloop ) {
   
 	needTrim=false;
   
-  	fgSetDouble("/fdm/trim/pitch-trim",
-		fdmex->GetFCS()->GetPitchTrimCmd());
-	fgSetDouble("/fdm/trim/throttle",
-		fdmex->GetFCS()->GetThrottleCmd(0)/100.0);
-	fgSetDouble("/fdm/trim/aileron",
-		fdmex->GetFCS()->GetDaCmd());
-	fgSetDouble("/fdm/trim/rudder",
-		fdmex->GetFCS()->GetDrCmd());
+  	fgSetDouble("/fdm/trim/pitch-trim", fdmex->GetFCS()->GetPitchTrimCmd());
+	fgSetDouble("/fdm/trim/throttle", fdmex->GetFCS()->GetThrottleCmd(0));
+	fgSetDouble("/fdm/trim/aileron", fdmex->GetFCS()->GetDaCmd());
+	fgSetDouble("/fdm/trim/rudder", fdmex->GetFCS()->GetDrCmd());
   
   	controls.set_elevator_trim(fdmex->GetFCS()->GetPitchTrimCmd());
 	controls.set_elevator(fdmex->GetFCS()->GetDeCmd());
 	controls.set_throttle(FGControls::ALL_ENGINES,
-			      fdmex->GetFCS()->GetThrottleCmd(0)/100.0);
+			      fdmex->GetFCS()->GetThrottleCmd(0));
+
 	controls.set_aileron(fdmex->GetFCS()->GetDaCmd());
 	controls.set_rudder(fdmex->GetFCS()->GetDrCmd());
     
@@ -304,8 +297,7 @@ bool FGJSBsim::copy_to_JSBsim() {
     fdmex->GetFCS()->SetDsbCmd( 0.0 ); //speedbrakes
     fdmex->GetFCS()->SetDspCmd( 0.0 ); //spoilers
     fdmex->GetFCS()->SetThrottleCmd( FGControls::ALL_ENGINES,
-				     controls.get_throttle( 0 ) * 100.0 );
-
+				     controls.get_throttle( 0 ));
     fdmex->GetFCS()->SetLBrake( controls.get_brake( 0 ) );
     fdmex->GetFCS()->SetRBrake( controls.get_brake( 1 ) );
     fdmex->GetFCS()->SetCBrake( controls.get_brake( 2 ) );
@@ -625,3 +617,4 @@ void FGJSBsim::set_Velocities_Local_Airmass (double wnorth,
     if(fdmex->GetAtmosphere()->External() == true)
         needTrim=true;
 }     
+
