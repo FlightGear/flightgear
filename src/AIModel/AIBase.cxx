@@ -203,6 +203,7 @@ void FGAIBase::bind() {
                SGRawValueFunctions<bool>(_isNight));
    props->setBoolValue("controls/lighting/beacon", true);
    props->setBoolValue("controls/lighting/strobe", true);
+   props->setBoolValue("controls/glide-path", true);
 }
 
 void FGAIBase::unbind() {

@@ -163,6 +163,8 @@ FGAIManager::createAircraft( FGAIModelEntity *entity ) {
 
 void*
 FGAIManager::createShip( FGAIModelEntity *entity ) {
+    
+     //cout << "creating ship" << endl;    
 
         FGAIShip* ai_ship = new FGAIShip(this);
         ai_list.push_back(ai_ship);
@@ -187,6 +189,8 @@ FGAIManager::createShip( FGAIModelEntity *entity ) {
 
 void*
 FGAIManager::createCarrier( FGAIModelEntity *entity ) {
+    
+    //cout << "creating carrier" << endl;
 
         FGAIShip* ai_carrier = new FGAICarrier(this);
         ai_list.push_back(ai_carrier);
@@ -199,6 +203,7 @@ FGAIManager::createCarrier( FGAIModelEntity *entity ) {
         ai_carrier->setLongitude(entity->longitude);
         ai_carrier->setLatitude(entity->latitude);
         ai_carrier->setBank(entity->rudder);
+        ai_carrier->setRadius(entity->radius);
 
         if ( entity->fp ) {
            ai_carrier->setFlightPlan(entity->fp);

@@ -52,8 +52,8 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
       readProperties(path.str(), &root);
   } catch (const sg_exception &e) {
       SG_LOG(SG_GENERAL, SG_ALERT,
-       "Error reading AI flight plan: ");
-       cout << path.str() << endl;
+       "Error reading AI flight plan: " << path.str());
+       // cout << path.str() << endl;
       return;
   }
 

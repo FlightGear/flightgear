@@ -67,6 +67,8 @@ typedef struct {
    bool wind;                 // if true, model reacts to parent wind
    double mass;               // in slugs
    bool aero_stabilised;      // if true, ballistic object aligns with trajectory
+   double radius;             // used by ship ojects, in feet
+    
 } FGAIModelEntity;
 
 
@@ -94,6 +96,7 @@ public:
     void setLatitude( double latitude );
     void setLongitude( double longitude );
     void setBank( double bank );
+    void setRadius ( double radius );
 
     void* getID();
     void setDie( bool die );
@@ -111,7 +114,8 @@ protected:
     double pitch;	// degrees, nose-down is negative
     double speed;       // knots true airspeed
     double altitude;    // meters above sea level
-    double vs;          // vertical speed, feet per minute   
+    double vs;          // vertical speed, feet per minute  
+    double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
 
     double ft_per_deg_lon;
     double ft_per_deg_lat;
@@ -204,6 +208,10 @@ inline void FGAIBase::setPath( const char* model ) {
 
 inline void FGAIBase::setSpeed( double speed_KTAS ) {
   speed = tgt_speed = speed_KTAS;
+}
+
+inline void FGAIBase::setRadius( double radius ) {
+  turn_radius_ft = radius;
 }
 
 inline void FGAIBase::setHeading( double heading ) {
