@@ -37,11 +37,6 @@ FGAIManager::FGAIManager() {
 }
 
 FGAIManager::~FGAIManager() {
-  ai_list_itr = ai_list.begin();
-  while(ai_list_itr != ai_list.end()) {
-    delete (*ai_list_itr);
-    ++ai_list_itr;
-  }
   ai_list.clear();
 }
 
@@ -123,8 +118,6 @@ void FGAIManager::update(double dt) {
         ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
                 if ((*ai_list_itr)->getDie()) {
-                // FIXME: delete object itself before removing it from the list.
-                //   delete (*ai_list_itr);
                    ai_list.erase(ai_list_itr, ai_list_itr);
                 } else {
                    (*ai_list_itr)->update(dt);
