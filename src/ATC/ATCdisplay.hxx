@@ -71,7 +71,7 @@ public:
     void unbind();
 
     // Display any registered messages
-    void update(int dt);
+    void update(double dt);
 
     // Register a single message for display after a delay of delay seconds
     // Will automatically stop displaying after a suitable interval.

@@ -87,7 +87,7 @@ public:
     void init();
 
     // update the fdm
-    void update( int multiloop );
+    void update( double dt );
 
 };
 

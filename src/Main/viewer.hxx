@@ -76,7 +76,7 @@ public:
     virtual void init ();
     virtual void bind ();
     virtual void unbind ();
-    void update (int dt);
+    void update (double dt);
 
 
     //////////////////////////////////////////////////////////////////////

@@ -57,7 +57,7 @@ void YASim::printDEBUG()
 
 YASim::YASim(double dt)
 {
-    set_delta_t(dt);
+//     set_delta_t(dt);
     _fdm = new FGFDM();
 
     _dt = dt;
@@ -194,8 +194,13 @@ void YASim::init()
     set_inited(true);
 }
 
-void YASim::update(int iterations)
+void YASim::update(double dt)
 {
+    if (is_suspended())
+      return;
+
+    int iterations = _calc_multiloop(dt);
+
     // If we're crashed, then we don't care
     if(_fdm->getAirplane()->getModel()->isCrashed())
       return;

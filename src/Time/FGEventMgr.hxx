@@ -129,9 +129,9 @@ public:
 
     /*
      * Update the elapsed time for all events.
-     * @param dt elapsed time in milliseconds.
+     * @param dt elapsed time in seconds.
      */
-    void update( int dt );
+    void update( double dt );
 
     /**
      * Register a free standing function to be executed some time in the future.

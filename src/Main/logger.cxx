@@ -77,13 +77,13 @@ FGLogger::unbind ()
 }
 
 void
-FGLogger::update (int dt)
+FGLogger::update (double dt)
 {
-  double sim_time_ms = globals->get_sim_time_ms();
+  double sim_time_ms = globals->get_sim_time_sec() * 1000;
   for (unsigned int i = 0; i < _logs.size(); i++) {
     if ((sim_time_ms - _logs[i].last_time_ms) >= _logs[i].interval_ms) {
       _logs[i].last_time_ms = sim_time_ms;
-      (*_logs[i].output) << globals->get_sim_time_ms();
+      (*_logs[i].output) << sim_time_ms;
       for (unsigned int j = 0; j < _logs[i].nodes.size(); j++) {
 	(*_logs[i].output) << _logs[i].delimiter
 			   << _logs[i].nodes[j]->getStringValue();

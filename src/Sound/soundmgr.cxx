@@ -191,7 +191,8 @@ void FGSoundMgr::unbind ()
 
 
 // run the audio scheduler
-void FGSoundMgr::update(int dt) {
+void FGSoundMgr::update(double dt) {
+				// FIXME: use dt supplied (seconds)
     SGTimeStamp current;
     current.stamp();
 

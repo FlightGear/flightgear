@@ -83,7 +83,7 @@ public:
     void init ();
     void bind ();
     void unbind ();
-    void update (int dt);
+    void update (double dt);
 
     // Reset function
     void reset_all(void);

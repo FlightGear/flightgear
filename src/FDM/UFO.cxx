@@ -40,7 +40,7 @@ FGUFO::FGUFO( double dt )
     Aileron(0.0),
     Elevator(0.0)
 {
-    set_delta_t( dt );
+//     set_delta_t( dt );
 }
 
 
@@ -56,10 +56,15 @@ void FGUFO::init() {
 
 
 // Run an iteration of the EOM (equations of motion)
-void FGUFO::update( int multiloop ) {
+void FGUFO::update( double dt ) {
     // cout << "FGLaRCsim::update()" << endl;
 
-    double time_step = get_delta_t() * multiloop;
+    if (is_suspended())
+      return;
+
+    int multiloop = _calc_multiloop(dt);
+
+    double time_step = dt * multiloop;
 
     // read the throttle
     double th = globals->get_controls()->get_throttle( 0 );

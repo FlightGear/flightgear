@@ -152,7 +152,7 @@ public:
     void init ();
     void bind ();
     void unbind ();
-    void update (int dt);
+    void update (double dt);
 
     // Reset the autopilot system
     void reset(void);

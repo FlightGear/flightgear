@@ -97,7 +97,7 @@ FGModelMgr::unbind ()
 }
 
 void
-FGModelMgr::update (int dt)
+FGModelMgr::update (double dt)
 {
   for (int i = 0; i < _instances.size(); i++) {
     Instance * instance = _instances[i];

@@ -38,7 +38,7 @@ public:
     void init();
 
     // update position based on inputs, positions, velocities, etc.
-    void update( int multiloop );
+    void update( double dt );
 };
 
 

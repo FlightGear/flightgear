@@ -95,7 +95,7 @@ FGEnvironmentMgr::unbind ()
 }
 
 void
-FGEnvironmentMgr::update (int dt)
+FGEnvironmentMgr::update (double dt)
 {
   _controller->update(dt);
 				// FIXME: the FDMs should update themselves

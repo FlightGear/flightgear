@@ -242,7 +242,7 @@ FG3DModel::init (const string &path)
 }
 
 void
-FG3DModel::update (int dt)
+FG3DModel::update (double dt)
 {
   unsigned int i;
 
@@ -412,7 +412,7 @@ FG3DModel::NullAnimation::init (ssgEntity * object,
 }
 
 void
-FG3DModel::NullAnimation::update (int dt)
+FG3DModel::NullAnimation::update (double dt)
 {
 }
 
@@ -445,7 +445,7 @@ FG3DModel::RangeAnimation::init (ssgEntity * object,
 }
 
 void
-FG3DModel::RangeAnimation::update (int dt)
+FG3DModel::RangeAnimation::update (double dt)
 {
 }
 
@@ -477,7 +477,7 @@ FG3DModel::BillboardAnimation::init (ssgEntity * object,
 }
 
 void
-FG3DModel::BillboardAnimation::update (int dt)
+FG3DModel::BillboardAnimation::update (double dt)
 {
 }
 
@@ -512,7 +512,7 @@ FG3DModel::SelectAnimation::init (ssgEntity * object,
 }
 
 void
-FG3DModel::SelectAnimation::update (int dt)
+FG3DModel::SelectAnimation::update (double dt)
 {
   if (_condition != 0 && _condition->test()) 
     _selector->select(0xffff);
@@ -559,9 +559,9 @@ FG3DModel::SpinAnimation::init (ssgEntity * object,
 }
 
 void
-FG3DModel::SpinAnimation::update (int dt)
+FG3DModel::SpinAnimation::update (double dt)
 {
-  float velocity_rpms = (_prop->getDoubleValue() * _factor / 60000.0);
+  float velocity_rpms = (_prop->getDoubleValue() * _factor / 60.0);
   _position_deg += (dt * velocity_rpms * 360);
   while (_position_deg < 0)
     _position_deg += 360.0;
@@ -627,7 +627,7 @@ FG3DModel::RotateAnimation::init (ssgEntity * object,
 }
 
 void
-FG3DModel::RotateAnimation::update (int dt)
+FG3DModel::RotateAnimation::update (double dt)
 {
   if (_table == 0) {
     _position_deg = (_prop->getDoubleValue() + _offset_deg) * _factor;
@@ -695,7 +695,7 @@ FG3DModel::TranslateAnimation::init (ssgEntity * object,
 }
 
 void
-FG3DModel::TranslateAnimation::update (int dt)
+FG3DModel::TranslateAnimation::update (double dt)
 {
   if (_table == 0) {
     _position_m = (_prop->getDoubleValue() + _offset_m) * _factor;

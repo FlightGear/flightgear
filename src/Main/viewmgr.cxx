@@ -172,7 +172,7 @@ FGViewMgr::unbind ()
 }
 
 void
-FGViewMgr::update (int dt)
+FGViewMgr::update (double dt)
 {
   char stridx [20];
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;

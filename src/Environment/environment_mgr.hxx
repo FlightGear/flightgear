@@ -51,7 +51,7 @@ public:
   virtual void init ();
   virtual void bind ();
   virtual void unbind ();
-  virtual void update (int dt);
+  virtual void update (double dt);
 
   /**
    * Get the environment information for the plane's current position.

@@ -95,7 +95,7 @@ FGFX::unbind ()
 }
 
 void
-FGFX::update (int dt)
+FGFX::update (double dt)
 {
    for (unsigned int i = 0; i < _sound.size(); i++ )
       _sound[i]->update(dt);

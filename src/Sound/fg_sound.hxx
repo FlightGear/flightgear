@@ -48,7 +48,7 @@ public:
   virtual void init (SGPropertyNode *);
   virtual void bind ();
   virtual void unbind ();
-  virtual void update (int dt);
+  virtual void update (double dt);
 
 protected:
 

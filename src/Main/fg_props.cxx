@@ -265,9 +265,9 @@ setAircraftDir (const char * dir)
  * Return the number of milliseconds elapsed since simulation started.
  */
 static double
-getElapsedTime_ms ()
+getElapsedTime_sec ()
 {
-  return globals->get_sim_time_ms();
+  return globals->get_sim_time_sec();
 }
 
 
@@ -580,7 +580,7 @@ fgInitProps ()
   fgTie("/sim/freeze/master", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
 
-  fgTie("/sim/time/elapsed-ms", getElapsedTime_ms);
+  fgTie("/sim/time/elapsed-sec", getElapsedTime_sec);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
   fgTie("/sim/time/gmt-string", getGMTString);

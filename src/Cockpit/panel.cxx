@@ -269,7 +269,7 @@ FGPanel::unbind ()
  * Update the panel.
  */
 void
-FGPanel::update (int dt)
+FGPanel::update (double dt)
 {
 				// TODO: cache the nodes
     _visibility = fgGetBool("/sim/panel/visibility");

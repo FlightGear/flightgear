@@ -206,7 +206,7 @@ FGControls::unbind ()
 
 
 void
-FGControls::update (int dt)
+FGControls::update (double dt)
 {
 }
 

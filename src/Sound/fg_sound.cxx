@@ -251,7 +251,7 @@ FGSound::unbind ()
 }
 
 void
-FGSound::update (int dt)
+FGSound::update (double dt)
 {
    double curr_value = 0.0;
 

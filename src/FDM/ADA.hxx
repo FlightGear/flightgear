@@ -79,7 +79,7 @@ public:
     void init();
 
     // update position based on inputs, positions, velocities, etc.
-    void update(int dt);
+    void update(double dt);
 
 };
 

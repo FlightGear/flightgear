@@ -62,7 +62,7 @@ public:
   virtual double getElevationFt () const { return _elev_ft; }
 
   virtual void init () = 0;
-  virtual void update (int dt) = 0;
+  virtual void update (double dt) = 0;
 
 protected:
 
@@ -85,7 +85,7 @@ public:
   virtual ~FGUserDefEnvironmentCtrl ();
 
   virtual void init ();
-  virtual void update (int dt);
+  virtual void update (double dt);
 
 private:
 

@@ -25,7 +25,7 @@
 
 
 FGNullFDM::FGNullFDM( double dt ) {
-    set_delta_t( dt );
+//     set_delta_t( dt );
 }
 
 
@@ -43,6 +43,6 @@ void FGNullFDM::init() {
 // Run an iteration of the EOM.  This is a NOP here because the flight
 // model values are getting filled in elsewhere (most likely from some
 // external source.)
-void FGNullFDM::update( int multiloop ) {
+void FGNullFDM::update( double dt ) {
     // cout << "FGNullFDM::update()" << endl;
 }

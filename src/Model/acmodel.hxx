@@ -34,7 +34,7 @@ public:
   virtual void init ();
   virtual void bind ();
   virtual void unbind ();
-  virtual void update (int dt);
+  virtual void update (double dt);
   virtual void draw ();
   virtual FG3DModel * get3DModel() { return _aircraft; }
 

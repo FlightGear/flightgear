@@ -53,7 +53,7 @@ class FGSteam
 {
 public:
 
-  static void update ( int timesteps );
+  static void update ( double dt );
 
 				// Position
   static double get_ALT_ft ();

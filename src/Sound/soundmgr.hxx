@@ -144,7 +144,7 @@ public:
     /**
      * Run the audio scheduler.
      */
-    void update(int dt);
+    void update(double dt);
 
 
     /**

@@ -98,8 +98,9 @@ int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 				// FIXME: no need to use static
 				// functions any longer.
 
-void FGSteam::update ( int timesteps )
+void FGSteam::update (double dt)
 {
+    int timesteps = int(dt * 1000);
     if (!isTied) {
         isTied = true;
         fgTie("/steam/airspeed-kt", FGSteam::get_ASI_kias);

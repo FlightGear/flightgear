@@ -142,9 +142,11 @@ FGEventMgr::unbind()
 }
 
 void
-FGEventMgr::update( int dt )
+FGEventMgr::update( double dt )
 {
-    if (dt < 0)
+    int dt_ms = int(dt * 1000);
+
+    if (dt_ms < 0)
     {
 	SG_LOG( SG_GENERAL, SG_ALERT,
 		"FGEventMgr::update() called with negative delta T" );
@@ -159,7 +161,7 @@ FGEventMgr::update( int dt )
     // Scan all events.  Run one whose interval has expired.
     while (first != last)
     {
-	if (first->update( dt ))
+	if (first->update( dt_ms ))
 	{
 	    if (first->value() < min_value)
 	    {

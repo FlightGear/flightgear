@@ -70,7 +70,7 @@ FGAircraftModel::unbind ()
 }
 
 void
-FGAircraftModel::update (int dt)
+FGAircraftModel::update (double dt)
 {
   int view_number = globals->get_viewmgr()->get_current();
 

@@ -41,7 +41,7 @@
 #include "LaRCsim.hxx"
 
 FGLaRCsim::FGLaRCsim( double dt ) {
-    set_delta_t( dt );
+//     set_delta_t( dt );
 
     speed_up = fgGetNode("/sim/speed-up", true);
     aero = fgGetNode("/sim/aero", true);
@@ -60,10 +60,10 @@ FGLaRCsim::FGLaRCsim( double dt ) {
         I_xz = 0.000000E+00;
     }
 
-    ls_set_model_dt( get_delta_t() );
+    ls_set_model_dt(dt);
 
             // Initialize our little engine that hopefully might
-    eng.init( get_delta_t() );
+    eng.init(dt);
     // dcl - in passing dt to init rather than update I am assuming
     // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
 }
@@ -84,7 +84,12 @@ void FGLaRCsim::init() {
 
 
 // Run an iteration of the EOM (equations of motion)
-void FGLaRCsim::update( int multiloop ) {
+void FGLaRCsim::update( double dt ) {
+
+    if (is_suspended())
+      return;
+
+    int multiloop = _calc_multiloop(dt);
 
     if ( !strcmp(aero->getStringValue(), "c172") ) {
 	// set control inputs
@@ -142,11 +147,11 @@ void FGLaRCsim::update( int multiloop ) {
 	    fgSetDouble("/consumables/fuel/tank[0]/level-gal_us",
 			fgGetDouble("/consumables/fuel/tank[0]/level-gal_us")
 			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			* get_delta_t());
+			* dt);
 	    fgSetDouble("/consumables/fuel/tank[1]/level-gal_us",
 			fgGetDouble("/consumables/fuel/tank[1]/level-gal_us")
 			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			* get_delta_t());
+			* dt);
 	}
 
         F_X_engine = eng.get_prop_thrust_lbs();

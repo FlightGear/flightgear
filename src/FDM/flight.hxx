@@ -90,7 +90,7 @@
 #include <string>
 
 #include <simgear/constants.h>
-#include <simgear/timing/timestamp.hxx>
+// #include <simgear/timing/timestamp.hxx>
 
 #include <Main/fgfs.hxx>
 
@@ -124,11 +124,11 @@ private:
     // next elapsed time.  This yields a small amount of temporal
     // jitter ( < dt ) but in practice seems to work well.
 
-    double delta_t;		// delta "t"
-    SGTimeStamp time_stamp;	// time stamp of last run
-    long elapsed;		// time elapsed since last run
-    long remainder;		// remainder time from last run
-    int multi_loop;		// number of iterations of "delta_t" to run
+//     double delta_t;		// delta "t"
+//     SGTimeStamp time_stamp;	// time stamp of last run
+//     long elapsed;		// time elapsed since last run
+    double remainder;		// remainder time from last run
+//     int multi_loop;		// number of iterations of "delta_t" to run
 
     // Pilot location rel to ref pt
     FG_VECTOR_3 d_pilot_rp_body_v;
@@ -224,7 +224,10 @@ private:
     // SGTimeStamp valid_stamp;          // time this record is valid
     // SGTimeStamp next_stamp;           // time this record is valid
 
-// protected:
+protected:
+
+    int _calc_multiloop (double dt);
+
 public:
 
 				// deliberately not virtual so that
@@ -400,7 +403,7 @@ public:
     virtual void init ();
     virtual void bind ();
     virtual void unbind ();
-    virtual void update(int dt);
+    virtual void update(double dt);
     virtual bool ToggleDataLogging(bool state) { return false; }
     virtual bool ToggleDataLogging(void) { return false; }
 
@@ -443,17 +446,17 @@ public:
     void common_init();
 
     // time and update management values
-    inline double get_delta_t() const { return delta_t; }
-    inline void set_delta_t( double dt ) { delta_t = dt; }
-    inline SGTimeStamp get_time_stamp() const { return time_stamp; }
-    inline void set_time_stamp( SGTimeStamp s ) { time_stamp = s; }
-    inline void stamp() { time_stamp.stamp(); }
-    inline long get_elapsed() const { return elapsed; }
-    inline void set_elapsed( long e ) { elapsed = e; }
-    inline long get_remainder() const { return remainder; }
-    inline void set_remainder( long r ) { remainder = r; }
-    inline int get_multi_loop() const { return multi_loop; }
-    inline void set_multi_loop( int ml ) { multi_loop = ml; }
+//     inline double get_delta_t() const { return delta_t; }
+//     inline void set_delta_t( double dt ) { delta_t = dt; }
+//     inline SGTimeStamp get_time_stamp() const { return time_stamp; }
+//     inline void set_time_stamp( SGTimeStamp s ) { time_stamp = s; }
+//     inline void stamp() { time_stamp.stamp(); }
+//     inline long get_elapsed() const { return elapsed; }
+//     inline void set_elapsed( long e ) { elapsed = e; }
+//     inline long get_remainder() const { return remainder; }
+//     inline void set_remainder( long r ) { remainder = r; }
+//     inline int get_multi_loop() const { return multi_loop; }
+//     inline void set_multi_loop( int ml ) { multi_loop = ml; }
 
     // Positions
     virtual void set_Latitude(double lat);       // geocentric

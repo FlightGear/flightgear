@@ -25,7 +25,7 @@
 
 
 FGExternal::FGExternal( double dt ) {
-    set_delta_t( dt );
+//     set_delta_t( dt );
 }
 
 
@@ -47,7 +47,7 @@ void FGExternal::init() {
 // Run an iteration of the EOM.  This is essentially a NOP here
 // because these values are getting filled in elsewhere based on
 // external input.
-void FGExternal::update( int multiloop ) {
+void FGExternal::update( double dt ) {
     // cout << "FGExternal::update()" << endl;
 
     // double time_step = (1.0 / fgGetInt("/sim/model-hz"))

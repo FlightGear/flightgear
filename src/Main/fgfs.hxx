@@ -38,6 +38,8 @@
 #  include <float.h>                    
 #endif
 
+#include <simgear/misc/props.hxx>
+
 
 
 /**
@@ -91,7 +93,7 @@
  *   _errorNode = fgGetNode("/display/error-margin-pct", true);
  * }
  *
- * void MySubsystem::update ()
+ * void MySubsystem::update (double delta_time_sec)
  * {
  *   do_something(_errorNode.getFloatValue());
  * }
@@ -100,10 +102,22 @@
  * <p>The node returned will always be a pointer to SGPropertyNode,
  * and the subsystem should <em>not</em> delete it in its destructor
  * (the pointer belongs to the property tree, not the subsystem).</p>
+ *
+ * <p>The program may ask the subsystem to suspend or resume
+ * sim-time-dependent operations; by default, the suspend() and
+ * resume() methods set the protected variable <var>_suspended</var>,
+ * which the subsystem can reference in its update() method, but
+ * subsystems may also override the suspend() and resume() methods to
+ * take different actions.</p>
  */
 class FGSubsystem
 {
 public:
+
+  /**
+   * Default constructor.
+   */
+  FGSubsystem ();
 
   /**
    * Virtual destructor to ensure that subclass destructors are called.
@@ -147,10 +161,61 @@ public:
    * Update the subsystem.
    *
    * <p>FlightGear invokes this method every time the subsystem should
-   * update its state.  If the subsystem requires delta time information,
-   * it should track it itself.</p>
+   * update its state.</p>
+   *
+   * @param delta_time_sec The delta time, in seconds, since the last
+   * update.  On first update, delta time will be 0.
    */
-  virtual void update (int dt) = 0;
+  virtual void update (double delta_time_sec) = 0;
+
+
+  /**
+   * Suspend operation of this subsystem.
+   *
+   * <p>This method instructs the subsystem to suspend
+   * sim-time-dependent operations until asked to resume.  The update
+   * method will still be invoked so that the subsystem can take any
+   * non-time-dependent actions, such as updating the display.</p>
+   *
+   * <p>It is not an error for the suspend method to be invoked when
+   * the subsystem is already suspended; the invocation should simply
+   * be ignored.</p>
+   */
+  virtual void suspend ();
+
+
+  /**
+   * Suspend or resum operation of this subsystem.
+   *
+   * @param suspended true if the subsystem should be suspended, false
+   * otherwise.
+   */
+  virtual void suspend (bool suspended);
+
+
+  /**
+   * Resume operation of this subsystem.
+   *
+   * <p>This method instructs the subsystem to resume
+   * sim-time-depended operations.  It is not an error for the resume
+   * method to be invoked when the subsystem is not suspended; the
+   * invocation should simply be ignored.</p>
+   */
+  virtual void resume ();
+
+
+  /**
+   * Test whether this subsystem is suspended.
+   *
+   * @return true if the subsystem is suspended, false if it is not.
+   */
+  virtual bool is_suspended () const;
+
+
+protected:
+
+  mutable SGPropertyNode_ptr _freeze_master_node;
+  bool _suspended;
 
 };
 

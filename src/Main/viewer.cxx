@@ -722,10 +722,11 @@ FGViewer::get_v_fov()
 }
 
 void
-FGViewer::update (int dt)
+FGViewer::update (double dt)
 {
   int i;
-  for ( i = 0; i < dt; i++ ) {
+  int dt_ms = int(dt * 1000);
+  for ( i = 0; i < dt_ms; i++ ) {
     if ( fabs( _goal_heading_offset_deg - _heading_offset_deg) < 1 ) {
       setHeadingOffset_deg( _goal_heading_offset_deg );
       break;
@@ -754,7 +755,7 @@ FGViewer::update (int dt)
     }
   }
 
-  for ( i = 0; i < dt; i++ ) {
+  for ( i = 0; i < dt_ms; i++ ) {
     if ( fabs( _goal_pitch_offset_deg - _pitch_offset_deg ) < 1 ) {
       setPitchOffset_deg( _goal_pitch_offset_deg );
       break;

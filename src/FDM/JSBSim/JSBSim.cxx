@@ -98,7 +98,6 @@ FGJSBsim::FGJSBsim( double dt )
 
     SGPath engine_path( globals->get_fg_root() );
     engine_path.append( "Engine" );
-    set_delta_t( dt );
     State->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path.str(),
@@ -261,7 +260,12 @@ void FGJSBsim::init() {
 // Run an iteration of the EOM (equations of motion)
 
 void
-FGJSBsim::update( int multiloop ) {
+FGJSBsim::update( double dt ) {
+
+    if (is_suspended())
+      return;
+
+    int multiloop = _calc_multiloop(dt);
 
     int i;
 

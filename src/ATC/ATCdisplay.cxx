@@ -54,7 +54,7 @@ void FGATCDisplay::unbind() {
 }
 
 // update - this actually draws the visuals and should be called from the main Flightgear rendering loop.
-void FGATCDisplay::update(int dt) {
+void FGATCDisplay::update(double dt) {
 
     // These strings are used for temporary storage of the transmission string in order
     // that the string we view only changes when the next repetition starts scrolling

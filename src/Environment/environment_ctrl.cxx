@@ -116,7 +116,7 @@ FGUserDefEnvironmentCtrl::init ()
 }
 
 void
-FGUserDefEnvironmentCtrl::update (int dt)
+FGUserDefEnvironmentCtrl::update (double dt)
 {
   double base_wind_speed = _base_wind_speed_node->getDoubleValue();
   double gust_wind_speed = _gust_wind_speed_node->getDoubleValue();

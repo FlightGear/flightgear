@@ -421,7 +421,7 @@ static double LinearExtrapolate( double x, double x1, double y1, double x2, doub
 
 
 void
-FGAutopilot::update (int dt)
+FGAutopilot::update (double dt)
 {
     // Remove the following lines when the calling funcitons start
     // passing in the data pointer

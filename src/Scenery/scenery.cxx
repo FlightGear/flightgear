@@ -61,7 +61,7 @@ FGScenery::~FGScenery() {
 void FGScenery::init() {
 }
 
-void FGScenery::update(int dt) {
+void FGScenery::update(double dt) {
 }
 
 void FGScenery::bind() {

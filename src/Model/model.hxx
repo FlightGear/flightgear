@@ -47,7 +47,7 @@ public:
   virtual ~FG3DModel ();
 
   virtual void init (const string &path);
-  virtual void update (int dt);
+  virtual void update (double dt);
 
   virtual bool getVisible () const;
   virtual void setVisible (bool visible);
@@ -130,9 +130,9 @@ private:
     /**
      * Update the animation.
      *
-     * @param dt The elapsed time in milliseconds since the last call.
+     * @param dt The elapsed time in seconds since the last call.
      */
-    virtual void update (int dt) = 0;
+    virtual void update (double dt) = 0;
 
   };
 
@@ -146,7 +146,7 @@ private:
     NullAnimation ();
     virtual ~NullAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (int dt);
+    virtual void update (double dt);
   private:
     ssgBranch * _branch;
   };
@@ -161,7 +161,7 @@ private:
     RangeAnimation ();
     virtual ~RangeAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (int dt);
+    virtual void update (double dt);
   private:
     ssgRangeSelector * _branch;
   };
@@ -176,7 +176,7 @@ private:
     BillboardAnimation ();
     virtual ~BillboardAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (int dt);
+    virtual void update (double dt);
   private:
     ssgCutout * _branch;
   };
@@ -191,7 +191,7 @@ private:
     SelectAnimation ();
     virtual ~SelectAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (int dt);
+    virtual void update (double dt);
   private:
     FGCondition * _condition;
     ssgSelector * _selector;
@@ -209,7 +209,7 @@ private:
     SpinAnimation ();
     virtual ~SpinAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (int dt);
+    virtual void update (double dt);
   private:
     SGPropertyNode * _prop;
     double _factor;
@@ -232,7 +232,7 @@ private:
     RotateAnimation ();
     virtual ~RotateAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (int dt);
+    virtual void update (double dt);
   private:
     SGPropertyNode * _prop;
     double _offset_deg;
@@ -259,7 +259,7 @@ private:
     TranslateAnimation ();
     virtual ~TranslateAnimation ();
     virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (int dt);
+    virtual void update (double dt);
   private:
     SGPropertyNode * _prop;
     double _offset_m;

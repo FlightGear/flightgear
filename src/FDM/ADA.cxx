@@ -156,7 +156,7 @@ struct {
 
 
 FGADA::FGADA( double dt ) {
-    set_delta_t( dt );
+//     set_delta_t( dt );
 }
 
 
@@ -198,8 +198,11 @@ void FGADA::init() {
 // Run an iteration of the EOM.  This is essentially a NOP here
 // because these values are getting filled in elsewhere based on
 // external input.
-void FGADA::update( int multiloop ) {
+void FGADA::update( double dt ) {
     // cout << "FGADA::update()" << endl;
+
+    if (is_suspended())
+      return;
 
     char Buffer[numberofbytes];
     char OutBuffer[nbytes];

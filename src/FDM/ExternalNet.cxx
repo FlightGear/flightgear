@@ -234,7 +234,7 @@ static void net2global( FGNetFDM *net ) {
 
 FGExternalNet::FGExternalNet( double dt, string host, int dop, int dip, int cp )
 {
-    set_delta_t( dt );
+//     set_delta_t( dt );
 
     valid = true;
 
@@ -330,9 +330,12 @@ void FGExternalNet::init() {
 // Run an iteration of the EOM.  This is a NOP here because the flight
 // model values are getting filled in elsewhere (most likely from some
 // external source.)
-void FGExternalNet::update( int multiloop ) {
+void FGExternalNet::update( double dt ) {
     int length;
     int result;
+
+    if (is_suspended())
+      return;
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);

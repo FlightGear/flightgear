@@ -154,7 +154,7 @@ public:
 
     void unbind();
 
-    void update(int dt);
+    void update(double dt);
 
     // Returns true if the airport is found in the map
     bool GetAirportATCDetails(string icao, AirportATC* a);

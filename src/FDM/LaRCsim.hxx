@@ -58,7 +58,7 @@ public:
     void init();
 
     // update position based on inputs, positions, velocities, etc.
-    void update( int multiloop );
+    void update( double dt );
     
     // Positions
     void set_Latitude(double lat);  //geocentric

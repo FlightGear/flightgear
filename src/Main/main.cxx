@@ -148,6 +148,8 @@ sgVec3 rway_ols;
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
 
+static double delta_time_sec = 0;
+
 
 #ifndef FG_NEW_ENVIRONMENT
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -391,16 +393,10 @@ void trRenderFrame( void ) {
 
 
 // Update all Visuals (redraws anything graphics related)
-void fgRenderFrame( void ) {
+void fgRenderFrame() {
   
-    // Update the elapsed time.
-    current_time_stamp.stamp();
-    int dt_ms = (current_time_stamp - last_time_stamp) / 1000L;
-    globals->inc_sim_time_ms( dt_ms );
-    last_time_stamp = current_time_stamp;
-
     // Process/manage pending events
-    global_events.update( dt_ms );
+    global_events.update( delta_time_sec );
 
     static const SGPropertyNode *longitude
 	= fgGetNode("/position/longitude-deg");
@@ -442,7 +438,7 @@ void fgRenderFrame( void ) {
 	    fgSplashUpdate(0.0);
 	}
         // Keep resetting sim time while the sim is initializing
-	globals->set_sim_time_ms( 0.0 );
+	globals->set_sim_time_sec( 0.0 );
     } else {
 	// idle_state is now 1000 meaning we've finished all our
 	// initializations and are running the main loop, so this will
@@ -722,21 +718,21 @@ void fgRenderFrame( void ) {
 	// glDisable( GL_TEXTURE_2D );
 
 	// update the input subsystem
-	current_input.update(dt_ms);
+	current_input.update(delta_time_sec);
 
 	// update the controls subsystem
-	globals->get_controls()->update(dt_ms);
+	globals->get_controls()->update(delta_time_sec);
 
 	hud_and_panel->apply();
 	fgCockpitUpdate();
 
 	// Use the hud_and_panel ssgSimpleState for rendering the ATC output
 	// This only works properly if called before the panel call
-	globals->get_ATC_display()->update(dt_ms);
+	globals->get_ATC_display()->update(delta_time_sec);
 
 	// update the panel subsystem
 	if ( current_panel != NULL ) {
-	    current_panel->update(dt_ms);
+	    current_panel->update(delta_time_sec);
 	}
 
 	// We can do translucent menus, so why not. :-)
@@ -747,7 +743,7 @@ void fgRenderFrame( void ) {
 
 	// glEnable( GL_FOG );
 
-	globals->get_logger()->update(dt_ms);
+	globals->get_logger()->update(delta_time_sec);
     }
 
     glutSwapBuffers();
@@ -787,51 +783,45 @@ void fgUpdateTimeDepCalcs() {
     // instance ...
     if ( !cur_fdm_state->get_inited() ) {
 	// do nothing, fdm isn't inited yet
-    } else if ( master_freeze->getBoolValue() ) {
-	// we are frozen, run the fdm's with 0 time slices in case
-	// they want to do something with that.
-
-	cur_fdm_state->update( 0 );
-	FGSteam::update( 0 );
     } else {
-	// we have been inited, and we are not frozen, we are good to go ...
+	// we have been inited, and  we are good to go ...
 
 	if ( !inited ) {
-	    cur_fdm_state->stamp();
+// 	    cur_fdm_state->stamp();
 	    inited = true;
 	}
 
-	SGTimeStamp current;
-	current.stamp();
-	long elapsed = current - cur_fdm_state->get_time_stamp();
-	cur_fdm_state->set_time_stamp( current );
-	elapsed += cur_fdm_state->get_remainder();
-	// cout << "elapsed = " << elapsed << endl;
-	// cout << "dt = " << cur_fdm_state->get_delta_t() << endl;
-	multi_loop = (long)(((double)elapsed * 0.000001) /
-			       cur_fdm_state->get_delta_t() );
-	cur_fdm_state->set_multi_loop( multi_loop );
-	long remainder = elapsed - (long)( (multi_loop*1000000) *
-				     cur_fdm_state->get_delta_t() );
-	cur_fdm_state->set_remainder( remainder );
-	// cout << "remainder = " << remainder << endl;
+// 	SGTimeStamp current;
+// 	current.stamp();
+// 	long elapsed = current - cur_fdm_state->get_time_stamp();
+// 	cur_fdm_state->set_time_stamp( current );
+// 	elapsed += cur_fdm_state->get_remainder();
+// 	// cout << "elapsed = " << elapsed << endl;
+// 	// cout << "dt = " << cur_fdm_state->get_delta_t() << endl;
+// 	multi_loop = (long)(((double)elapsed * 0.000001) /
+// 			       cur_fdm_state->get_delta_t() );
+// 	cur_fdm_state->set_multi_loop( multi_loop );
+// 	long remainder = elapsed - (long)( (multi_loop*1000000) *
+// 				     cur_fdm_state->get_delta_t() );
+// 	cur_fdm_state->set_remainder( remainder );
+// 	// cout << "remainder = " << remainder << endl;
 
-	// chop max interations to something reasonable if the sim was
-	// delayed for an excesive amount of time
-	if ( multi_loop > 2.0 / cur_fdm_state->get_delta_t() ) {
-	    multi_loop = (int)(2.0 / cur_fdm_state->get_delta_t());
-	    cur_fdm_state->set_remainder( 0 );
-	}
+// 	// chop max interations to something reasonable if the sim was
+// 	// delayed for an excesive amount of time
+// 	if ( multi_loop > 2.0 / cur_fdm_state->get_delta_t() ) {
+// 	    multi_loop = (int)(2.0 / cur_fdm_state->get_delta_t());
+// 	    cur_fdm_state->set_remainder( 0 );
+// 	}
 
-	// cout << "multi_loop = " << multi_loop << endl;
-	for ( i = 0; i < multi_loop * fgGetInt("/sim/speed-up"); ++i ) {
-	    // run Autopilot system
-	    globals->get_autopilot()->update(0); // FIXME: use real dt
+// 	// cout << "multi_loop = " << multi_loop << endl;
+// 	for ( i = 0; i < multi_loop * fgGetInt("/sim/speed-up"); ++i ) {
+// 	    // run Autopilot system
+	    globals->get_autopilot()->update(delta_time_sec);
 
 	    // update FDM
-	    cur_fdm_state->update( 1 );
-	}
-	FGSteam::update( multi_loop * fgGetInt("/sim/speed-up") );
+	    cur_fdm_state->update(delta_time_sec);
+// 	}
+	FGSteam::update(delta_time_sec);
     }
 
     if ( !strcmp(fgGetString("/sim/view-mode"), "pilot") ) {
@@ -840,11 +830,11 @@ void fgUpdateTimeDepCalcs() {
     }
 
 
-    globals->get_model_mgr()->update(multi_loop);
-    globals->get_aircraft_model()->update(multi_loop);
+    globals->get_model_mgr()->update(delta_time_sec);
+    globals->get_aircraft_model()->update(delta_time_sec);
 
     // update the view angle
-    globals->get_viewmgr()->update(multi_loop);
+    globals->get_viewmgr()->update(delta_time_sec);
 
     l->UpdateAdjFog();
 
@@ -854,7 +844,7 @@ void fgUpdateTimeDepCalcs() {
 				  cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
-    current_radiostack->update(multi_loop);
+    current_radiostack->update(delta_time_sec);
 }
 
 
@@ -870,6 +860,13 @@ static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
+
+    // Update the elapsed time.
+    current_time_stamp.stamp();
+    delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
+    last_time_stamp = current_time_stamp;
+    globals->inc_sim_time_sec( delta_time_sec );
+
     static const SGPropertyNode *longitude
 	= fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
@@ -1035,10 +1032,10 @@ static void fgMainLoop( void ) {
 #endif
 
     // Run ATC subsystem
-    globals->get_ATC_mgr()->update(1);	// FIXME - use real dt.
+    globals->get_ATC_mgr()->update(delta_time_sec);
 
     // Run the AI subsystem
-    // globals->get_AI_mgr()->update(1);	// FIXME - use real dt.
+    // globals->get_AI_mgr()->update(delta_time_sec);
 
     // Run flight model
 

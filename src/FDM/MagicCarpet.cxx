@@ -33,7 +33,7 @@
 
 
 FGMagicCarpet::FGMagicCarpet( double dt ) {
-    set_delta_t( dt );
+//     set_delta_t( dt );
 }
 
 
@@ -49,10 +49,15 @@ void FGMagicCarpet::init() {
 
 
 // Run an iteration of the EOM (equations of motion)
-void FGMagicCarpet::update( int multiloop ) {
+void FGMagicCarpet::update( double dt ) {
     // cout << "FGLaRCsim::update()" << endl;
 
-    double time_step = get_delta_t() * multiloop;
+    if (is_suspended())
+      return;
+
+    int multiloop = _calc_multiloop(dt);
+
+    double time_step = dt * multiloop;
 
     // speed and distance traveled
     double speed = globals->get_controls()->get_throttle( 0 ) * 2000; // meters/sec

@@ -67,7 +67,7 @@ public:
     void init ();
     void bind ();
     void unbind ();
-    void update (int dt);
+    void update (double dt);
 
     inline double get_cur_elev() const { return cur_elev; }
     inline void set_cur_elev( double e ) { cur_elev = e; }

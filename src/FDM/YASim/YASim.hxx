@@ -14,7 +14,7 @@ public:
     virtual void bind();
 
     // Run an iteration
-    virtual void update(int iterations);
+    virtual void update(double dt);
 
  private:
     void report();

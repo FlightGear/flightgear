@@ -143,7 +143,7 @@ FGRadioStack::init ()
     blink.stamp();
 
     search();
-    update(1);			// FIXME: use dt
+    update(0);			// FIXME: use dt
 
     // Search radio database once per second
     global_events.Register( "fgRadioSearch()",
@@ -404,7 +404,7 @@ double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
 
 // Update the various nav values based on position and valid tuned in navs
 void 
-FGRadioStack::update(int dt) 
+FGRadioStack::update(double dt) 
 {
     double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;

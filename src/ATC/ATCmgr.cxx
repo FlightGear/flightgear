@@ -88,7 +88,7 @@ void FGATCMgr::init() {
     airport_atc_map[(string)"KEMT"] = a;
 }
 
-void FGATCMgr::update(int dt) {
+void FGATCMgr::update(double dt) {
     //Traverse the list of active stations.
     //Only update one class per update step to avoid the whole ATC system having to calculate between frames.
     //Eventually we should only update every so many steps.

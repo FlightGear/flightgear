@@ -57,13 +57,29 @@ FGInterface::FGInterface() {
 
 FGInterface::FGInterface( double dt ) {
     _setup();
-    delta_t = dt;
-    remainder = elapsed = multi_loop = 0;
+//     delta_t = dt;
+//     remainder = elapsed = multi_loop = 0;
+    remainder = 0;
 }
 
 // Destructor
 FGInterface::~FGInterface() {
     // unbind();                   // FIXME: should be called explicitly
+}
+
+
+int
+FGInterface::_calc_multiloop (double dt)
+{
+  int hz = fgGetInt("/sim/model-hz");
+  int speedup = fgGetInt("/sim/speed-up");
+
+  dt += remainder;
+  remainder = 0;
+  double ml = dt * hz;
+  int multiloop = int(floor(ml));
+  remainder = (ml - multiloop) / hz;
+  return (multiloop * speedup);
 }
 
 
@@ -163,8 +179,8 @@ FGInterface::common_init ()
 
     set_inited( true );
 
-    stamp();
-    set_remainder( 0 );
+//     stamp();
+//     set_remainder( 0 );
 
     // Set initial position
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing position..." );
@@ -254,14 +270,14 @@ FGInterface::bind ()
   bound = true;
 
                                 // Time management (read-only)
-  fgTie("/fdm/time/delta_t", this,
-        &FGInterface::get_delta_t); // read-only
-  fgTie("/fdm/time/elapsed", this,
-        &FGInterface::get_elapsed); // read-only
-  fgTie("/fdm/time/remainder", this,
-        &FGInterface::get_remainder); // read-only
-  fgTie("/fdm/time/multi_loop", this,
-        &FGInterface::get_multi_loop); // read-only
+//   fgTie("/fdm/time/delta_t", this,
+//         &FGInterface::get_delta_t); // read-only
+//   fgTie("/fdm/time/elapsed", this,
+//         &FGInterface::get_elapsed); // read-only
+//   fgTie("/fdm/time/remainder", this,
+//         &FGInterface::get_remainder); // read-only
+//   fgTie("/fdm/time/multi_loop", this,
+//         &FGInterface::get_multi_loop); // read-only
 
 			// Aircraft position
   fgTie("/position/latitude-deg", this,
@@ -405,7 +421,7 @@ FGInterface::unbind ()
  * Update the state of the FDM (i.e. run the equations of motion).
  */
 void
-FGInterface::update (int dt)
+FGInterface::update (double dt)
 {
     SG_LOG(SG_FLIGHT, SG_ALERT, "dummy update() ... SHOULDN'T BE CALLED!");
 }
