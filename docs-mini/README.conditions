@@ -1,0 +1,206 @@
+CONDITIONS IN FLIGHTGEAR PROPERTY FILES
+
+Written by David Megginson, david@megginson.com
+Last modified: $Date$
+
+This document is in the Public Domain and comes with NO WARRANTY!
+
+
+1. Introduction
+---------------
+
+Some FlightGear property files contain conditions, affecting whether
+bindings or animations are applied.  For example, the following
+binding will apply only when the /sim/input/selected/engine[0]
+property is true:
+
+  <binding>
+   <condition>
+    <property>/sim/input/selected/engine[0]</property>
+   </condition>
+   <command>property-assign</command>
+   <property>/controls/starter[0]</property>
+   <value type="bool">true</value>
+  </binding>
+
+Conditions always occur within a property subtree named "condition",
+which is equivalent to an "and" condition.
+
+
+2. Comparison Operators
+-----------------------
+
+The simplest condition is "property".  It resolves as true when the
+specified property has a boolean value of true (i.e. non-zero, etc.)
+and false otherwise.  Here is an example:
+
+  <condition>
+   <property>/sim/input/selected/engine[0]</property>
+  </condition>
+
+For more sophisticated tests, you can use the "less-than",
+"less-than-equals", "greater-than", "greater-than-equals", "equals",
+and "not-equals" comparison operators.  These all take two operands,
+either two "property" operands or one "property" and one "value"
+operand, and return true or false depending on the result of the
+comparison.  The value of the second operand is always forced to the
+type of the first; for example, if you compare a string and a double,
+the double will be forced to a string and lexically compared.  If one
+of the operands is a property, it is always assumed to be first.  Here
+is an example of a comparison that is true only if the RPM of the
+engine is less than 1500:
+
+  <condition>
+   <less-than>
+    <property>/engines/engine[0]/rpm</property>
+    <value>1500</value>
+   </less-than>
+  </condition>
+
+
+3. Boolean Operators
+--------------------
+
+Finally, there are the regular boolean operators "and", "or", and
+"not".  Each one surrounds a group of other conditions, and these can
+be nested to arbitrary depths.  Here is an example:
+
+  <condition>
+   <and>
+    <or>
+     <less-than>
+      <property>/engines/engine[0]/rpm</property>
+      <value>1500</value>
+     </less-than>
+     <greater-than>
+      <property>/engines/engine[0]/rpm</property>
+      <value>2500</value>
+     </greater-than>
+    <or>
+    <property>/engines/engine[0]/running</property>
+   </and>
+  </condition>
+
+The top-level "condition" is an implicit "and".
+
+
+4. Approximating if...else
+--------------------------
+
+There is no equivalent to the regular programming 'else' statement in
+FlightGear conditions; instead, each condition separately must take
+the others into account.  For example, the equivalent of
+
+  if (x == 3) ... else if (y == 5) ... else ...
+
+in FlightGear conditions is
+
+  <condition>
+   <equals>
+    <property>/x</property>
+    <value>3</value>
+   </equals>
+   <not>
+    <equals>
+     <property>/y</property>
+     <value>5</value>
+   </not>
+  </condition>
+
+and then
+
+  <condition>
+   <equals>
+    <property>/y</property>
+    <value>5</value>
+   </equals>
+   <not>
+    <equals>
+     <property>/x</property>
+     <value>3</value>
+   </not>
+  </condition>
+
+and then
+
+  <condition>
+   <not>
+    <equals>
+     <property>/x</property>
+     <value>3</value>
+    </equals>
+   </not>
+   <not>
+    <equals>
+     <property>/y</property>
+     <value>5</value>
+   </not>
+  </condition>
+
+It's verbose, but it works nicely within existing property-based
+formats and provides a lot of flexiblity.
+
+
+5. Syntax Summary
+-----------------
+
+Here's a quick syntax summary:
+
+* <and>...</and>
+
+  Contains one or more subconditions, all of which must be true.
+
+* <condition>...</condition>
+
+  The top-level container for conditions, equivalent to an "and" group
+
+* <equals>...</equals>
+
+  Contains two properties or a property and value, and is true if the
+  properties have equivalent values.
+
+* <greater-than>...</greater-than>
+
+  Contains two properties or a property and a value, and is true if
+  the second property or the value has a value greater than the first
+  property.
+
+* <greater-than-equals>...</greater-than-equals>
+
+  Contains two properties or a property and a value, and is true if
+  the second property or the value has a value greater than or equal
+  to the first property.
+
+* <less-than>...</less-than>
+
+  Contains two properties or a property and a value, and is true if
+  the second property or the value has a value less than the first
+  property.
+
+* <less-than-equals>...</less-than-equals>
+
+  Contains two properties or a property and a value, and is true if
+  the second property or the value has a value less than or equal
+  to the first property.
+
+* <not>...</not>
+
+  Contains one subcondition, which must not be true.
+
+* <not-equals>...</not-equals>
+
+  Contains two properties or a property and value, and is true if the
+  properties do not have equivalent values.
+
+* <or>...</or>
+
+  Contains one or more subconditions, at least one of which must be
+  true.
+
+* <property>...</property>
+
+  The name of a property to test.
+
+* <value>...</value>
+
+  A literal value in a comparison.
