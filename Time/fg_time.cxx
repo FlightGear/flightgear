@@ -217,16 +217,39 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     long int offset;
     double diff, part, days, hours, lst;
 
-    // I believe the following is Unix vs. Win32 behavior difference.
+    // I believe the mktime() has a SYSV vs. BSD behavior difference.
+
+    // The BSD style mktime() is nice because it returns its result
+    // assuming you have specified the input time in GMT
+
+    // The SYSV style mktime() is a pain because it returns its result
+    // assuming you have specified the input time in your local
+    // timezone.  Therefore you have to go to extra trouble to convert
+    // back to GMT.
+
     // If you are having problems with incorrectly positioned
     // astronomical bodies, this is a really good place to start
     // looking.
-#ifdef WIN32
-    int daylight;       // not used but need to keep the compiler happy
-    long int timezone;  // not used but need to keep the compiler happy
+
+#if !defined(HAVE_DAYLIGHT)
+    // For now we assume that if daylight is not defined in
+    // /usr/include/time.h that we have a machine with a BSD behaving
+    // mktime()
     int mktime_is_gmt = 1;
+
+    // only used for systems with SYSV style mktime() to compensate
+    // for mktime() assuming local timezone but we need to define this
+    // to keep the compiler happy
+    int daylight;
 #else
     int mktime_is_gmt = 0;
+#endif
+
+#if !defined(HAVE_TIMEZONE)
+    // only used for systems with SYSV style mktime() to compensate
+    // for mktime() assuming local timezone but we need to define this
+    // to keep the compiler happy
+    long int timezone;
 #endif
 
     // ftime() needs a little extra help finding the current timezone
@@ -379,6 +402,12 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.8  1998/06/05 18:18:13  curt
+// Incorporated some automake conditionals to try to support mktime() correctly
+// on a wider variety of platforms.
+// Added the declaration of memmove needed by the stl which apparently
+// solaris only defines for cc compilations and not for c++ (__STDC__)
+//
 // Revision 1.7  1998/05/30 01:57:25  curt
 // misc updates.
 //

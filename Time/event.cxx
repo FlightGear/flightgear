@@ -44,6 +44,13 @@
 #include "event.hxx"
 
 
+#ifdef __sun__
+extern "C" {
+  extern void *memmove(void *, const void *, size_t);
+}
+#endif
+
+
 fgEVENT_MGR global_events;
 
 
@@ -235,6 +242,12 @@ void fgEventPrintStats( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/06/05 18:18:12  curt
+// Incorporated some automake conditionals to try to support mktime() correctly
+// on a wider variety of platforms.
+// Added the declaration of memmove needed by the stl which apparently
+// solaris only defines for cc compilations and not for c++ (__STDC__)
+//
 // Revision 1.3  1998/05/22 21:14:53  curt
 // Rewrote event.cxx in C++ as a class using STL for the internal event list
 // and run queue this removes the arbitrary list sizes and makes things much

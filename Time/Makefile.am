@@ -1,3 +1,11 @@
+if HAVE_DAYLIGHT
+DEFS += -DHAVE_DAYLIGHT
+endif
+
+if HAVE_TIMEZONE
+DEFS += -DHAVE_TIMEZONE
+endif
+
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libTime.la
