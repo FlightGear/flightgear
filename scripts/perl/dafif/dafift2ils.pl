@@ -18,96 +18,18 @@ die "Usage: $0 " .
        || !defined($dafift_ils_file) || !defined($fgfs_ils_file)
        || !defined($output_file);
 
-my( %Airports );
+my( %CODES );
+my( %CodesByICAO );
 my( %ILS );
+my( %AIRPORTS );
 
 
 &load_dafift( $dafift_arpt_file, $dafift_ils_file );
 &load_faa( $faa_ils_file );
-# &load_fgfs( $fgfs_ils_file );
+&load_fgfs( $fgfs_ils_file );
 &write_result( $output_file );
 
 exit;
-
-
-########################################################################
-# Process FAA data
-########################################################################
-
-sub load_faa() {
-    my( $file ) = shift;
-
-    open( FAA_ILS, "<$file" ) || die "Cannot open FAA data: $file\n";
-
-    <FAA_ILS>;                          # skip header line
-
-    while ( <FAA_ILS> ) {
-        chomp;
-
-        my ( $rec_type, $faa_id, $rwy, $type, $faa_date,
-             $faa_apt_name, $faa_city, $faa_st, $faa_state,
-             $faa_region, $id, $faa_len, $faa_wid, $faa_cat,
-             $faa_owner, $faa_operator, $faa_bearing, $faa_magvar,
-             $loc_type, $loc_id, $loc_freq, $faa_loc_latd,
-             $faa_loc_lats, $faa_loc_lond, $faa_loc_lons, $loc_width,
-             $faa_stop_dist, $faa_app_dist, $faa_gs_type, $gs_angle,
-             $faa_gs_freq, $faa_gs_latd, $faa_gs_lats, $faa_gs_lond,
-             $faa_gs_lons, $faa_gs_dist, $gs_elev, $faa_im_type,
-             $faa_im_latd, $faa_im_lats, $faa_im_lond, $faa_im_lons,
-             $faa_im_dist, $faa_mm_type, $faa_mm_id, $faa_mm_name,
-             $faa_mm_freq, $faa_mm_latd, $faa_mm_lats, $faa_mm_lond,
-             $faa_mm_lons, $faa_mm_dist, $faa_om_type, $faa_om_id,
-             $faa_om_name, $faa_om_freq, $faa_om_latd, $faa_om_lats,
-             $faa_om_lond, $faa_om_lons, $faa_om_dist,
-             $faa_om_backcourse, $faa_dme_channel, $faa_dme_latd,
-             $faa_dme_lats, $faa_dme_lond, $faa_dme_lons, $faa_dme_app_dist,
-             $faa_dme_stop_dist, $blank)
-            = $_ =~
-            m/^(.{4})(.{11})(.{3})(.{10})(.{10})(.{42})(.{26})(.{2})(.{20})(.{3})(.{4})(.{5})(.{4})(.{9})(.{50})(.{50})(.{3})(.{3})(.{15})(.{5})(.{6})(.{14})(.{11})(.{14})(.{11})(.{5})(.{5})(.{6})(.{15})(.{4})(.{6})(.{14})(.{11})(.{14})(.{11})(.{6})(.{7})(.{15})(.{14})(.{11})(.{14})(.{11})(.{6})(.{15})(.{2})(.{5})(.{3})(.{14})(.{11})(.{14})(.{11})(.{6})(.{15})(.{2})(.{5})(.{3})(.{14})(.{11})(.{14})(.{11})(.{6})(.{9})(.{4})(.{14})(.{11})(.{14})(.{11})(.{6})(.{5})(.{34})/;
-
-        $id = &strip_ws( $id );
-        $rwy = &strip_ws( $rwy );
-        $loc_id =~ s/I-//;
-        my( $loc_hdg ) = $faa_bearing + make_dmagvar($faa_magvar);
-        my( $loc_lat ) = make_dcoord($faa_loc_lats) / 3600.0;
-        my( $loc_lon ) = make_dcoord($faa_loc_lons) / 3600.0;
-        print "$loc_lon $loc_lat $faa_loc_lons $faa_loc_lats\n";
-        my( $gs_lat ) = make_dcoord($faa_gs_lats) / 3600.0;
-        my( $gs_lon ) = make_dcoord($faa_gs_lons) / 3600.0;
-        my( $im_lat ) = make_dcoord($faa_im_lats) / 3600.0;
-        my( $im_lon ) = make_dcoord($faa_im_lons) / 3600.0;
-        my( $mm_lat ) = make_dcoord($faa_mm_lats) / 3600.0;
-        my( $mm_lon ) = make_dcoord($faa_mm_lons) / 3600.0;
-        my( $om_lat ) = make_dcoord($faa_om_lats) / 3600.0;
-        my( $om_lon ) = make_dcoord($faa_om_lons) / 3600.0;
-        my( $dme_lat ) = make_dcoord($faa_dme_lats) / 3600.0;
-        my( $dme_lon ) = make_dcoord($faa_dme_lons) / 3600.0;
-
-        # my( $key );
-        # print "$id - $rwy\n";
-        # $key = $id . $rwy;
-        # print "-> $key -> $ILS{$key}\n";
-        # $key = "K" . $id . $rwy;
-        # print "-> $key -> $ILS{$key}\n";
-
-        if ( $rec_type eq "ILS1" ) {
-            if ( $ILS{$id . $rwy} ne "" ) {
-                print "FAA updating: $id - $rwy $type\n";
-                &update_type( $id, $rwy, $type );
-            } elsif ( $ILS{ "K" . $id . $rwy} ne "" ) {
-                print "FAA updating: [K]$id - $rwy $type\n";
-                &update_type( "K" . $id, $rwy, $type );
-            } else {
-                print "FAA adding: $id - $rwy\n";
-                &safe_add_record( $id, $rwy, $type, $loc_freq, $loc_id,
-                                  $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
-                                  $gs_angle, $gs_lat, $gs_lon, $dme_lat,
-                                  $dme_lon, $om_lat, $om_lon, $mm_lat,
-                                  $mm_lon, $im_lat, $im_lon );
-            }
-        }
-    }
-}
 
 
 ########################################################################
@@ -145,7 +67,8 @@ sub load_dafift() {
                 $icao = "[none]";
             }
         }
-        $Airports{$F[0]} = $icao;
+        $CODES{$F[0]} = $icao;
+        $CodesByICAO{$icao} = 1;
         # print "$F[0] - $icao\n";
     }
 
@@ -181,9 +104,9 @@ sub load_dafift() {
             if ( ! $has_im ) {
                 ( $im_lat, $im_lon ) = ( 0, 0 );
             }
-            if ( $ILS{$Airports{$last_id} . $last_rwy} eq "" ) {
-                print "DAFIFT adding: $Airports{$last_id} - $last_rwy\n";
-                &safe_add_record( $Airports{$last_id}, $last_rwy, "ILS", 
+            if ( $ILS{$CODES{$last_id} . $last_rwy} eq "" ) {
+                print "DAFIFT adding: $CODES{$last_id} - $last_rwy\n";
+                &safe_add_record( $CODES{$last_id}, $last_rwy, "ILS", 
                                   $loc_freq, $loc_id, $loc_hdg, $loc_lat,
                                   $loc_lon, $gs_elev, $gs_angle, $gs_lat,
                                   $gs_lon, $dme_lat, $dme_lon, $om_lat,
@@ -288,13 +211,96 @@ sub load_dafift() {
     if ( ! $has_im ) {
         ( $im_lat, $im_lon ) = ( 0, 0 );
     }
-    if ( $ILS{$Airports{$last_id} . $last_rwy} eq "" ) {
-        print "DAFIFT adding (last): $Airports{$last_id} - $last_rwy\n";
-        &safe_add_record( $Airports{$last_id}, $last_rwy, "ILS", $loc_freq,
+    if ( $ILS{$CODES{$last_id} . $last_rwy} eq "" ) {
+        print "DAFIFT adding (last): $CODES{$last_id} - $last_rwy\n";
+        &safe_add_record( $CODES{$last_id}, $last_rwy, "ILS", $loc_freq,
                           $loc_id, $loc_hdg, $loc_lat, $loc_lon,
                           $gs_elev, $gs_angle, $gs_lat, $gs_lon,
                           $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat,
                           $mm_lon, $im_lat, $im_lon );
+    }
+}
+
+
+########################################################################
+# Process FAA data
+########################################################################
+
+sub load_faa() {
+    my( $file ) = shift;
+
+    open( FAA_ILS, "<$file" ) || die "Cannot open FAA data: $file\n";
+
+    <FAA_ILS>;                          # skip header line
+
+    while ( <FAA_ILS> ) {
+        chomp;
+
+        my ( $rec_type, $faa_id, $rwy, $type, $faa_date,
+             $faa_apt_name, $faa_city, $faa_st, $faa_state,
+             $faa_region, $id, $faa_len, $faa_wid, $faa_cat,
+             $faa_owner, $faa_operator, $faa_bearing, $faa_magvar,
+             $loc_type, $loc_id, $loc_freq, $faa_loc_latd,
+             $faa_loc_lats, $faa_loc_lond, $faa_loc_lons, $loc_width,
+             $faa_stop_dist, $faa_app_dist, $faa_gs_type, $gs_angle,
+             $faa_gs_freq, $faa_gs_latd, $faa_gs_lats, $faa_gs_lond,
+             $faa_gs_lons, $faa_gs_dist, $gs_elev, $faa_im_type,
+             $faa_im_latd, $faa_im_lats, $faa_im_lond, $faa_im_lons,
+             $faa_im_dist, $faa_mm_type, $faa_mm_id, $faa_mm_name,
+             $faa_mm_freq, $faa_mm_latd, $faa_mm_lats, $faa_mm_lond,
+             $faa_mm_lons, $faa_mm_dist, $faa_om_type, $faa_om_id,
+             $faa_om_name, $faa_om_freq, $faa_om_latd, $faa_om_lats,
+             $faa_om_lond, $faa_om_lons, $faa_om_dist,
+             $faa_om_backcourse, $faa_dme_channel, $faa_dme_latd,
+             $faa_dme_lats, $faa_dme_lond, $faa_dme_lons, $faa_dme_app_dist,
+             $faa_dme_stop_dist, $blank)
+            = $_ =~
+            m/^(.{4})(.{11})(.{3})(.{10})(.{10})(.{42})(.{26})(.{2})(.{20})(.{3})(.{4})(.{5})(.{4})(.{9})(.{50})(.{50})(.{3})(.{3})(.{15})(.{5})(.{6})(.{14})(.{11})(.{14})(.{11})(.{5})(.{5})(.{6})(.{15})(.{4})(.{6})(.{14})(.{11})(.{14})(.{11})(.{6})(.{7})(.{15})(.{14})(.{11})(.{14})(.{11})(.{6})(.{15})(.{2})(.{5})(.{3})(.{14})(.{11})(.{14})(.{11})(.{6})(.{15})(.{2})(.{5})(.{3})(.{14})(.{11})(.{14})(.{11})(.{6})(.{9})(.{4})(.{14})(.{11})(.{14})(.{11})(.{6})(.{5})(.{34})/;
+
+        $id = &strip_ws( $id );
+        $rwy = &strip_ws( $rwy );
+        $rwy =~ s/\/$//;
+        $loc_id =~ s/^I-//;
+        my( $loc_hdg ) = $faa_bearing + make_dmagvar($faa_magvar);
+        my( $loc_lat ) = make_dcoord($faa_loc_lats) / 3600.0;
+        my( $loc_lon ) = make_dcoord($faa_loc_lons) / 3600.0;
+        # print "$loc_lon $loc_lat $faa_loc_lons $faa_loc_lats\n";
+        my( $gs_lat ) = make_dcoord($faa_gs_lats) / 3600.0;
+        my( $gs_lon ) = make_dcoord($faa_gs_lons) / 3600.0;
+        my( $im_lat ) = make_dcoord($faa_im_lats) / 3600.0;
+        my( $im_lon ) = make_dcoord($faa_im_lons) / 3600.0;
+        my( $mm_lat ) = make_dcoord($faa_mm_lats) / 3600.0;
+        my( $mm_lon ) = make_dcoord($faa_mm_lons) / 3600.0;
+        my( $om_lat ) = make_dcoord($faa_om_lats) / 3600.0;
+        my( $om_lon ) = make_dcoord($faa_om_lons) / 3600.0;
+        my( $dme_lat ) = make_dcoord($faa_dme_lats) / 3600.0;
+        my( $dme_lon ) = make_dcoord($faa_dme_lons) / 3600.0;
+
+        # my( $key );
+        # print "$id - $rwy\n";
+        # $key = $id . $rwy;
+        # print "-> $key -> $ILS{$key}\n";
+        # $key = "K" . $id . $rwy;
+        # print "-> $key -> $ILS{$key}\n";
+
+        if ( $rec_type eq "ILS1" ) {
+            if ( length( $id ) < 4 ) {
+                if ( $CodesByICAO{"K" . $id} ) {
+                    $id = "K" . $id;
+                }
+            }
+            if ( $ILS{$id . $rwy} ne "" ) {
+                print "FAA updating: $id - $rwy $type\n";
+                &update_type( $id, $rwy, $type );
+            } else {
+                print "FAA adding: $id - $rwy\n";
+                &safe_add_record( $id, $rwy, $type, $loc_freq, $loc_id,
+                                  $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
+                                  $gs_angle, $gs_lat, $gs_lon, $dme_lat,
+                                  $dme_lon, $om_lat, $om_lon, $mm_lat,
+                                  $mm_lon, $im_lat, $im_lon );
+            }
+        }
     }
 }
 
@@ -318,7 +324,18 @@ sub load_fgfs() {
                 $loc_hdg, $loc_lat, $loc_lon, $gs_elev, $gs_angle, $gs_lat,
                 $gs_lon, $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat, $mm_lon,
                 $im_lat, $im_lon ) = split(/\s+/);
-            if ( $ILS{$icao . $rwy} eq "" ) {
+            my( $code ) = $icao;
+            $code =~ s/^K//;
+            if ( $ILS{$icao . $rwy} ne "" ) {
+                # skip approaches already in FAA or DAFIFT data
+            } elsif ( $AIRPORTS{$icao} != 1 && $AIRPORTS{$code} != 1 ) {
+                # skip approaches if the FAA or DAFIFT data has any other
+                # approach already for this airport.  (Avoids carrying over
+                # extraneous data if an approach was deactivated or runway
+                # numbers were changed.)
+            } elsif ( length( $icao ) < 4 || $icao =~ m/^K/ ) {
+                # skip USA approaches not found in FAA or DAFIFT data
+            } else {
                 print "FGFS adding: $icao $rwy\n";
                 $ILS{$icao . $rwy} = $_;
             }
@@ -443,6 +460,7 @@ sub update_record() {
 
     # print "Updating (common): $apt_id - $rwy\n";
     $ILS{$apt_id . $rwy} = $record;
+    $AIRPORTS{$apt_id} = 1;
 }
 
 
@@ -459,7 +477,7 @@ sub update_type() {
             $loc_hdg, $loc_lat, $loc_lon, $gs_elev, $gs_angle, $gs_lat,
             $gs_lon, $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat, $mm_lon,
             $im_lat, $im_lon ) = split( /\s+/, $ILS{$apt_id . $rwy} );
-        print "Updating type: $apt_id $rwy: $type_name -> $new_type\n";
+        # print "Updating type: $apt_id $rwy: $type_name -> $new_type\n";
         $type_name = $new_type;
         &update_record( $apt_id, $rwy, $type_name, $loc_freq, $loc_id,
                         $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
