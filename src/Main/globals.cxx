@@ -145,7 +145,7 @@ FGGlobals::add_event (const char * name,
 
 void
 FGGlobals::add_event (const char * name,
-                      const SGSubsystem * subsystem,
+                      SGSubsystem * subsystem,
                       int repeat_value,
                       int initial_value)
 {

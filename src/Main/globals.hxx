@@ -220,7 +220,7 @@ public:
                             int initial_value = -1 );
 
     virtual void add_event (const char * name,
-                            const SGSubsystem * subsystem,
+                            SGSubsystem * subsystem,
                             int repeat_value,
                             int initial_value = -1 );
 
@@ -236,7 +236,7 @@ public:
 
     template< typename Fun >
     inline void add_event( const char * name,
-                           const SGSubsystem * subsystem,
+                           SGSubsystem * subsystem,
                            const Fun& func,
                            SGEvent::interval_type repeat_value,
                            SGEvent::interval_type initial_value = -1 )
