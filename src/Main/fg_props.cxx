@@ -1155,12 +1155,12 @@ fgInitProps ()
 #if !defined(FG_NEW_ENVIRONMENT)
   fgTie("/environment/visibility-m", getVisibility, setVisibility);
   fgSetArchivable("/environment/visibility-m");
-  fgTie("/environment/wind-north-fps", getWindNorth, setWindNorth);
-  fgSetArchivable("/environment/wind-north-fps");
-  fgTie("/environment/wind-east-fps", getWindEast, setWindEast);
-  fgSetArchivable("/environment/wind-east-fps");
-  fgTie("/environment/wind-down-fps", getWindDown, setWindDown);
-  fgSetArchivable("/environment/wind-down-fps");
+  fgTie("/environment/wind-from-north-fps", getWindNorth, setWindNorth);
+  fgSetArchivable("/environment/wind-from-north-fps");
+  fgTie("/environment/wind-from-east-fps", getWindEast, setWindEast);
+  fgSetArchivable("/environment/wind-from-east-fps");
+  fgTie("/environment/wind-from-down-fps", getWindDown, setWindDown);
+  fgSetArchivable("/environment/wind-from-down-fps");
 #endif
 
   fgTie("/environment/magnetic-variation-deg", getMagVar);
