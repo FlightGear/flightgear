@@ -6,3 +6,4 @@ config.cache
 config.log
 config.status
 configure
+gmon.out
