@@ -28,6 +28,54 @@ action_callback (puObject * object)
 
 
 ////////////////////////////////////////////////////////////////////////
+// Static helper functions.
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * Copy a property value to a PUI object.
+ */
+static void
+copy_to_pui (SGPropertyNode * node, puObject * object)
+{
+    switch (node->getType()) {
+    case SGPropertyNode::BOOL:
+    case SGPropertyNode::INT:
+    case SGPropertyNode::LONG:
+        object->setValue(node->getIntValue());
+        break;
+    case SGPropertyNode::FLOAT:
+    case SGPropertyNode::DOUBLE:
+        object->setValue(node->getFloatValue());
+        break;
+    default:
+        object->setValue(node->getStringValue());
+        break;
+    }
+}
+
+
+static void
+copy_from_pui (puObject * object, SGPropertyNode * node)
+{
+    switch (node->getType()) {
+    case SGPropertyNode::BOOL:
+    case SGPropertyNode::INT:
+    case SGPropertyNode::LONG:
+        node->setIntValue(object->getIntegerValue());
+        break;
+    case SGPropertyNode::FLOAT:
+    case SGPropertyNode::DOUBLE:
+        node->setFloatValue(object->getFloatValue());
+        break;
+    default:
+        node->setStringValue(object->getStringValue());
+        break;
+    }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Implementation of GUIInfo.
 ////////////////////////////////////////////////////////////////////////
 
@@ -76,9 +124,10 @@ void
 FGDialog::updateValue (const char * objectName)
 {
     for (int i = 0; i < _propertyObjects.size(); i++) {
-        if (_propertyObjects[i]->name == objectName)
-            _propertyObjects[i]->object
-                ->setValue(_propertyObjects[i]->node->getStringValue());
+        const string &name = _propertyObjects[i]->name;
+        if (name == objectName)
+            copy_to_pui(_propertyObjects[i]->node,
+                        _propertyObjects[i]->object);
     }
 }
 
@@ -87,30 +136,24 @@ FGDialog::applyValue (const char * objectName)
 {
     for (int i = 0; i < _propertyObjects.size(); i++) {
         if (_propertyObjects[i]->name == objectName)
-            _propertyObjects[i]->node
-                ->setStringValue(_propertyObjects[i]
-                                 ->object->getStringValue());
+            copy_from_pui(_propertyObjects[i]->object,
+                          _propertyObjects[i]->node);
     }
 }
 
 void
 FGDialog::updateValues ()
 {
-    for (int i = 0; i < _propertyObjects.size(); i++) {
-        puObject * object = _propertyObjects[i]->object;
-        SGPropertyNode_ptr node = _propertyObjects[i]->node;
-        object->setValue(node->getStringValue());
-    }
+    for (int i = 0; i < _propertyObjects.size(); i++)
+        copy_to_pui(_propertyObjects[i]->node, _propertyObjects[i]->object);
 }
 
 void
 FGDialog::applyValues ()
 {
-    for (int i = 0; i < _propertyObjects.size(); i++) {
-        puObject * object = _propertyObjects[i]->object;
-        SGPropertyNode_ptr node = _propertyObjects[i]->node;
-        node->setStringValue(object->getStringValue());
-    }
+    for (int i = 0; i < _propertyObjects.size(); i++)
+        copy_from_pui(_propertyObjects[i]->object,
+                      _propertyObjects[i]->node);
 }
 
 void
@@ -169,6 +212,11 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puText * text = new puText(x, y);
         setupObject(text, props);
         return text;
+    } else if (type == "checkbox") {
+        puButton * b;
+        b = new puButton(x, y, x + width, y + height, PUBUTTON_CIRCLE);
+        setupObject(b, props);
+        return b;
     } else if (type == "button") {
         puButton * b;
         const char * legend = props->getStringValue("legend", "[none]");
@@ -198,7 +246,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
             name = "";
         const char * propname = props->getStringValue("property");
         SGPropertyNode_ptr node = fgGetNode(propname, true);
-        object->setValue(node->getStringValue());
+        copy_to_pui(node, object);
         if (name != 0)
             _propertyObjects.push_back(new PropertyObject(name, object, node));
     }
