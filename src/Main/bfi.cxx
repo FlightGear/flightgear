@@ -42,7 +42,10 @@
 #include <Scenery/scenery.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
+#include <Time/event.hxx>
+#include <Time/sunpos.hxx>
 #include <Cockpit/radiostack.hxx>
+#include <Ephemeris/ephemeris.hxx>
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
@@ -54,12 +57,6 @@
 #include "fg_init.hxx"
 
 FG_USING_NAMESPACE(std);
-
-				// FIXME: these are not part of the
-				// published interface!!!
-// extern fgAPDataPtr APDataGlobal;
-// extern void fgAPAltitudeSet (double new_altitude);
-// extern void fgAPHeadingSet (double new_heading);
 
 
 #include "bfi.hxx"
@@ -117,7 +114,7 @@ FGBFI::reinit ()
   setLatitude(getLatitude());
   setLongitude(getLongitude());
   setAltitude(getAltitude());
-  setTargetAirport("");
+
 				// TODO: add more AP stuff
   double elevator = getElevator();
   double aileron = getAileron();
@@ -135,9 +132,20 @@ FGBFI::reinit ()
   double gpsLatitude = getGPSTargetLatitude();
   double gpsLongitude = getGPSTargetLongitude();
 
+  setTargetAirport("");
+  cout << "Target airport is " << current_options.get_airport_id() << endl;
   fgReInitSubsystems();
-  // solarSystemRebuild();
+
+				// FIXME: this is wrong.
+				// All of these are scheduled events,
+				// and it should be possible to force
+				// them all to run once.
+  fgUpdateSunPos();
+  fgUpdateMoonPos();
   cur_light_params.Update();
+  FGTime::cur_time_params->updateLocal();
+  fgUpdateWeatherDatabase();
+  fgRadioSearch();
 
 				// Restore all of the old states.
   setElevator(elevator);
@@ -331,6 +339,7 @@ void
 FGBFI::setLatitude (double latitude)
 {
   current_options.set_lat(latitude);
+  current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
   needReinit();
 }
 
@@ -352,6 +361,7 @@ void
 FGBFI::setLongitude (double longitude)
 {
   current_options.set_lon(longitude);
+  current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
   needReinit();
 }
 
@@ -385,6 +395,7 @@ void
 FGBFI::setAltitude (double altitude)
 {
   current_options.set_altitude(altitude * FEET_TO_METER);
+  current_aircraft.fdm_state->set_Altitude(altitude);
   needReinit();
 }
 
@@ -422,6 +433,9 @@ void
 FGBFI::setHeading (double heading)
 {
   current_options.set_heading(heading);
+  current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
+					       getPitch() * DEG_TO_RAD,
+					       heading * DEG_TO_RAD);
   needReinit();
 }
 
@@ -444,6 +458,9 @@ FGBFI::setPitch (double pitch)
 {
 
   current_options.set_pitch(pitch);
+  current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
+					       pitch * DEG_TO_RAD,
+					       getHeading() * DEG_TO_RAD);
   needReinit();
 }
 
@@ -465,6 +482,9 @@ void
 FGBFI::setRoll (double roll)
 {
   current_options.set_roll(roll);
+  current_aircraft.fdm_state->set_Euler_Angles(roll * DEG_TO_RAD,
+					       getPitch() * DEG_TO_RAD,
+					       getHeading() * DEG_TO_RAD);
   needReinit();
 }
 
@@ -524,6 +544,9 @@ void
 FGBFI::setSpeedNorth (double speed)
 {
   current_options.set_uBody(speed);
+  current_aircraft.fdm_state->set_Velocities_Local(speed,
+						   getSpeedEast(),
+						   getSpeedDown());
   needReinit();
 }
 
@@ -545,6 +568,9 @@ void
 FGBFI::setSpeedEast (double speed)
 {
   current_options.set_vBody(speed);
+  current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
+						   speed,
+						   getSpeedDown());
   needReinit();
 }
 
@@ -566,6 +592,9 @@ void
 FGBFI::setSpeedDown (double speed)
 {
   current_options.set_wBody(speed);
+  current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
+						   getSpeedEast(),
+						   speed);
   needReinit();
 }
 
