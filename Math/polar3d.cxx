@@ -39,11 +39,11 @@ Point3D fgPolarToCart3d(const Point3D& p) {
 
     tmp = cos( p.lat() ) * p.radius();
 
-    pnew.setvals( cos( p.lon() ) * tmp,
-		  sin( p.lon() ) * tmp,
-		  sin( p.lat() ) * p.radius() );
+    pnew = Point3D ( cos( p.lon() ) * tmp,
+		     sin( p.lon() ) * tmp,
+		     sin( p.lat() ) * p.radius() );
 
-    return(pnew);
+    return pnew;
 }
 
 
@@ -52,14 +52,15 @@ Point3D fgPolarToCart3d(const Point3D& p) {
 Point3D fgCartToPolar3d(const Point3D& cp) {
     Point3D pp;
 
-    pp.setvals( atan2( cp.y(), cp.x() ),
-		FG_PI_2 - atan2( sqrt(cp.x()*cp.x() + cp.y()*cp.y()), cp.z() ),
-		sqrt(cp.x()*cp.x() + cp.y()*cp.y() + cp.z()*cp.z()) );
+    pp = Point3D( atan2( cp.y(), cp.x() ),
+		  FG_PI_2 - 
+		  atan2( sqrt(cp.x()*cp.x() + cp.y()*cp.y()), cp.z() ),
+		  sqrt(cp.x()*cp.x() + cp.y()*cp.y() + cp.z()*cp.z()) );
 
     // printf("lon = %.2f  lat = %.2f  radius = %.2f\n", 
     //        pp.lon, pp.lat, pp.radius);
 
-    return(pp);
+    return pp;
 }
 
 
@@ -94,6 +95,9 @@ double fgGeodAltFromCart(const Point3D& cp)
 
 
 // $Log$
+// Revision 1.5  1998/10/18 01:17:13  curt
+// Point3D tweaks.
+//
 // Revision 1.4  1998/10/16 19:30:09  curt
 // C++-ified the comments.
 //

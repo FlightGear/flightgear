@@ -27,6 +27,8 @@
 
 #include "strutils.hxx"
 
+const string whitespace = " \n\r\t";
+
 //
 string
 trimleft( const string& s, const string& trimmings )
@@ -69,6 +71,9 @@ trim( const string& s, const string& trimmings )
 }
 
 // $Log$
+// Revision 1.2  1998/10/18 01:17:15  curt
+// Point3D tweaks.
+//
 // Revision 1.1  1998/09/01 19:06:30  curt
 // Initial revision.
 //

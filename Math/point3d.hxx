@@ -38,12 +38,6 @@
 using namespace std;
 #endif
 
-/*
-#include <stdlib.h>
-#include <yvals.h>
-#include <math.h>
-*/
-
 #include <assert.h>
 
 #include <Include/fg_constants.h>
@@ -80,7 +74,7 @@ public:
     Point3D& operator -= ( const Point3D& p );	 // decrementation by a Point3D
     Point3D& operator *= ( const double d );	 // multiplication by a constant
     Point3D& operator /= ( const double d );	 // division by a constant
-    void setvals(const double x, const double y, const double z);
+
     void setx(const double x);
     void sety(const double y);
     void setz(const double z);
@@ -115,6 +109,21 @@ public:
 };
 
 
+// output to stream
+inline ostream&
+operator << ( ostream& out, Point3D& p)
+{
+    double x, y, z;
+
+    x = p.x();
+    y = p.y();
+    z = p.z();
+
+    out << x << " " << y << " " << z;
+
+    return out;
+}
+
 // input from stream
 inline istream&
 operator >> ( istream& in, Point3D& p)
@@ -146,7 +155,7 @@ operator >> ( istream& in, Point3D& p)
 	
     in >> z;
 
-    p.setvals(x, y, z);
+    p = Point3D(x, y, z);
 
     return in;
 }
@@ -202,10 +211,6 @@ inline Point3D& Point3D::operator /= ( const double d )
 {
     double d_inv = 1./d; n[PX] *= d_inv; n[PY] *= d_inv; n[PZ] *= d_inv;
     return *this;
-}
-
-inline void Point3D::setvals(const double x, const double y, const double z) {
-    n[PX] = x; n[PY] = y; n[PZ] = z;
 }
 
 inline void Point3D::setx(const double x) {
@@ -312,6 +317,9 @@ inline double distance3D(const Point3D& a, const Point3D& b)
 
 
 // $Log$
+// Revision 1.2  1998/10/18 01:17:12  curt
+// Point3D tweaks.
+//
 // Revision 1.1  1998/10/16 00:50:29  curt
 // Added point3d.hxx to replace cheezy fgPoint3d struct.
 //

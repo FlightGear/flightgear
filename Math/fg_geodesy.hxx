@@ -69,7 +69,7 @@ inline Point3D fgGeodToCart(const Point3D& geod) {
     // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
     //        gc_lat, sl_radius+geod[2]);
 
-    pp.setvals(gc_lon, gc_lat, sl_radius + geod.radius());
+    pp = Point3D(gc_lon, gc_lat, sl_radius + geod.radius());
     cp = fgPolarToCart3d(pp);
     
     // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
@@ -120,6 +120,9 @@ inline Point3D fgGeodToCart(const Point3D& geod) {
 
 $Header$
 $Log$
+Revision 1.3  1998/10/18 01:17:11  curt
+Point3D tweaks.
+
 Revision 1.2  1998/10/16 23:36:37  curt
 c++-ifying.
 
@@ -193,6 +196,9 @@ Initial Flight Gear revision.
 
 
 // $Log$
+// Revision 1.3  1998/10/18 01:17:11  curt
+// Point3D tweaks.
+//
 // Revision 1.2  1998/10/16 23:36:37  curt
 // c++-ifying.
 //
