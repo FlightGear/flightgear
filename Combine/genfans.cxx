@@ -68,7 +68,8 @@ static int_list make_best_fan( const triele_list& master_tris,
 {
     int_list best_result;
 
-    // try starting with local triangle to find the best fan arrangement
+    // try starting with each of local_tris to find the best fan
+    // arrangement
     for ( int start = 0; start < (int)local_tris.size(); ++start ) {
 	// cout << "trying with first triangle = " << local_tris[start] << endl;
 
@@ -138,6 +139,7 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
     fans.clear();
 
     while ( ! tris.empty() ) {
+	// cout << "building reverse_list" << endl;
 	reverse_list by_node;
 	by_node.clear();
 
@@ -157,6 +159,8 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	// find the node in the tris list that attaches to the most
 	// triangles
 
+	// cout << "find most connected node" << endl;
+
 	int_list biggest_group;
 	reverse_list_iterator r_current = by_node.begin();
 	reverse_list_iterator r_last = by_node.end();
@@ -174,7 +178,9 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	// cout << "center node = " << index << endl;
 
 	// make the best fan we can out of this group
+	// cout << "before make_best_fan()" << endl;
 	int_list best_fan = make_best_fan( tris, index, biggest_group );
+	// cout << "after make_best_fan()" << endl;
 
 	// generate point form of best_fan
 	int_list node_list;
@@ -225,7 +231,7 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 
 // report average fan size
 double FGGenFans::ave_size() {
-    double sum;
+    double sum = 0.0;
 
     fan_list_iterator current = fans.begin();
     fan_list_iterator last = fans.end();
@@ -238,6 +244,9 @@ double FGGenFans::ave_size() {
 
 
 // $Log$
+// Revision 1.6  1999/04/05 02:16:02  curt
+// Fixed a compiler warning.
+//
 // Revision 1.5  1999/03/31 23:46:49  curt
 // Debugging output tweaks.
 //
