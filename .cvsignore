@@ -1,5 +1,6 @@
 Makefile
 Makefile.in
+TODO.gui
 aclocal.m4
 autom4te.cache
 confdefs.h
@@ -7,5 +8,7 @@ config.cache
 config.log
 config.status
 configure
+confstatKYCAXU
 do-config.sh
 gmon.out
+www
