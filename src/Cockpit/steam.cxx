@@ -303,7 +303,7 @@ double FGSteam::get_HackVOR2_deg () {
 
     if ( current_radiostack->get_nav2_inrange() ) {
 	r = current_radiostack->get_nav2_radial() -
-	    current_radiostack->get_nav2_heading() + 180.0;
+	    current_radiostack->get_nav2_heading();
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	// << "  Bearing = " << current_radiostack->get_nav1_heading() << endl;
     

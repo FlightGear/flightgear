@@ -38,15 +38,12 @@
 #include <Main/views.hxx>
 #include <Main/bfi.hxx>
 #include <Objects/texload.h>
-#include <Autopilot/autopilot.hxx>
 #include <Time/fg_time.hxx>
 
 #include "cockpit.hxx"
 #include "panel.hxx"
 #include "hud.hxx"
 #include "steam.hxx"
-
-extern fgAPDataPtr APDataGlobal;
 
 #define SIX_X 200
 #define SIX_Y 345

@@ -48,6 +48,7 @@
 #include <simgear/math/polar3d.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <Autopilot/newauto.hxx>
 #include <GUI/gui.h>
 #include <Main/options.hxx>
 #ifdef FG_NETWORK_OLK
@@ -1284,30 +1285,35 @@ void fgUpdateHUD( void ) {
 
 
   // temporary
-  extern bool fgAPAltitudeEnabled( void );
-  extern bool fgAPHeadingEnabled( void );
-  extern bool fgAPWayPointEnabled( void );
-  extern char *fgAPget_TargetDistanceStr( void );
-  extern char *fgAPget_TargetHeadingStr( void );
-  extern char *fgAPget_TargetAltitudeStr( void );
-  extern char *fgAPget_TargetLatLonStr( void );
+  // extern bool fgAPAltitudeEnabled( void );
+  // extern bool fgAPHeadingEnabled( void );
+  // extern bool fgAPWayPointEnabled( void );
+  // extern char *fgAPget_TargetDistanceStr( void );
+  // extern char *fgAPget_TargetHeadingStr( void );
+  // extern char *fgAPget_TargetAltitudeStr( void );
+  // extern char *fgAPget_TargetLatLonStr( void );
 
   int apY = 480 - 80;
 //  char scratch[128];
 //  HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
 //  apY -= 15;
-  if( fgAPHeadingEnabled() ) {
-	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetHeadingStr()) );	  
+  if( current_autopilot->get_HeadingEnabled() ) {
+	  HUD_TextList.add( fgText( 40, apY, 
+			    current_autopilot->get_TargetHeadingStr()) );
 	  apY -= 15;
   }
-  if( fgAPAltitudeEnabled() ) {
-	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetAltitudeStr()) );	  
+  if( current_autopilot->get_AltitudeEnabled() ) {
+	  HUD_TextList.add( fgText( 40, apY, 
+			    current_autopilot->get_TargetAltitudeStr()) );
 	  apY -= 15;
   }
-  if( fgAPWayPointEnabled() ) {
-	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetLatLonStr()) );
+  if( current_autopilot->get_HeadingMode() == 
+      FGAutopilot::FG_HEADING_WAYPOINT ) {
+	  HUD_TextList.add( fgText( 40, apY, 
+			    current_autopilot->get_TargetLatLonStr()) );
 	  apY -= 15;
-	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetDistanceStr() ) );	  
+	  HUD_TextList.add( fgText( 40, apY,
+			    current_autopilot->get_TargetDistanceStr() ) );
 	  apY -= 15;
   }
   

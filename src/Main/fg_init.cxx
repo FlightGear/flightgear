@@ -57,7 +57,8 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
-#include <Autopilot/autopilot.hxx>
+#include <Autopilot/auto_gui.hxx>
+#include <Autopilot/newauto.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <FDM/Balloon.h>
@@ -527,8 +528,15 @@ bool fgInitSubsystems( void ) {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Joystick initialization!" );
     }
 
-    // Autopilot init added here, by Jeff Goeke-Smith
-    fgAPInit(&current_aircraft);
+    // Autopilot init
+    current_autopilot = new FGAutopilot;
+    current_autopilot->init();
+
+    // initialize the gui parts of the autopilot
+    NewTgtAirportInit();
+    fgAPAdjustInit() ;
+    NewHeadingInit();
+    NewAltitudeInit();
 
     // Initialize I/O channels
 #if ! defined( MACOS )
@@ -632,7 +640,7 @@ void fgReInitSubsystems( void )
     }
 
     controls.reset_all();
-    fgAPReset();
+    current_autopilot->reset();
 
     if( !toggle_pause )
         t->togglePauseMode();

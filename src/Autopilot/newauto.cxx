@@ -1,0 +1,802 @@
+// newauto.cxx -- autopilot defines and prototypes (very alpha)
+// 
+// Started April 1998  Copyright (C) 1998
+//
+// Contributions by Jeff Goeke-Smith <jgoeke@voyager.net>
+//                  Norman Vine <nhv@cape.com>
+//                  Curtis Olson <curt@flightgear.org>
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <stdio.h>		// sprintf()
+
+#include <simgear/constants.h>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
+
+#include <Controls/controls.hxx>
+#include <FDM/flight.hxx>
+#include <Main/bfi.hxx>
+#include <Main/options.hxx>
+#include <Scenery/scenery.hxx>
+
+#include "newauto.hxx"
+
+
+FGAutopilot *current_autopilot;
+
+
+// Climb speed constants
+const double min_climb = 70.0;	// kts
+const double best_climb = 75.0;	// kts
+const double ideal_climb_rate = 500.0; // fpm
+
+/// These statics will eventually go into the class
+/// they are just here while I am experimenting -- NHV :-)
+// AutoPilot Gain Adjuster members
+static double MaxRollAdjust;        // MaxRollAdjust       = 2 * APData->MaxRoll;
+static double RollOutAdjust;        // RollOutAdjust       = 2 * APData->RollOut;
+static double MaxAileronAdjust;     // MaxAileronAdjust    = 2 * APData->MaxAileron;
+static double RollOutSmoothAdjust;  // RollOutSmoothAdjust = 2 * APData->RollOutSmooth;
+
+#if 0
+static float MaxRollValue;          // 0.1 -> 1.0
+static float RollOutValue;
+static float MaxAileronValue;
+static float RollOutSmoothValue;
+
+static float TmpMaxRollValue;       // for cancel operation
+static float TmpRollOutValue;
+static float TmpMaxAileronValue;
+static float TmpRollOutSmoothValue;
+#endif
+
+static char NewTgtAirportId[16];
+// static char NewTgtAirportLabel[] = "Enter New TgtAirport ID"; 
+
+extern char *coord_format_lat(float);
+extern char *coord_format_lon(float);
+			
+
+void FGAutopilot::MakeTargetLatLonStr( double lat, double lon ) {
+    sprintf( TargetLatitudeStr , "%s", coord_format_lat(TargetLatitude) );
+    sprintf( TargetLongitudeStr, "%s", coord_format_lon(TargetLongitude) );
+    sprintf( TargetLatLonStr, "%s  %s", TargetLatitudeStr, TargetLongitudeStr );
+}
+
+
+void FGAutopilot::MakeTargetAltitudeStr( double altitude ) {
+    sprintf( TargetAltitudeStr, "APAltitude  %6.0f", altitude );
+}
+
+
+void FGAutopilot::MakeTargetHeadingStr( double bearing ) {
+    if( bearing < 0. ) {
+	bearing += 360.;
+    } else if (bearing > 360. ) {
+	bearing -= 360.;
+    }
+    sprintf( TargetHeadingStr, "APHeading  %6.1f", bearing );
+}
+
+
+void FGAutopilot::update_old_control_values() {
+    old_aileron = FGBFI::getAileron();
+    old_elevator = FGBFI::getElevator();
+    old_elevator_trim = FGBFI::getElevatorTrim();
+    old_rudder = FGBFI::getRudder();
+}
+
+
+// Initialize autopilot subsystem
+void FGAutopilot::init() {
+    FG_LOG( FG_AUTOPILOT, FG_INFO, "Init AutoPilot Subsystem" );
+
+    heading_hold = false ;      // turn the heading hold off
+    altitude_hold = false ;     // turn the altitude hold off
+    auto_throttle = false ;	// turn the auto throttle off
+
+    // Initialize target location to startup location
+    old_lat = TargetLatitude = FGBFI::getLatitude();
+    old_lon = TargetLongitude = FGBFI::getLongitude();
+
+    MakeTargetLatLonStr( TargetLatitude, TargetLongitude);
+	
+    TargetHeading = 0.0;	// default direction, due north
+    TargetAltitude = 3000;	// default altitude in meters
+    alt_error_accum = 0.0;
+
+    MakeTargetAltitudeStr( 3000.0);
+    MakeTargetHeadingStr( 0.0 );
+	
+    // These eventually need to be read from current_aircaft somehow.
+
+    // the maximum roll, in Deg
+    MaxRoll = 20;
+
+    // the deg from heading to start rolling out at, in Deg
+    RollOut = 20;
+
+    // how far can I move the aleron from center.
+    MaxAileron = .2;
+
+    // Smoothing distance for alerion control
+    RollOutSmooth = 10;
+
+    // Hardwired for now should be in options
+    // 25% max control variablilty  0.5 / 2.0
+    disengage_threshold = 1.0;
+
+#if !defined( USING_SLIDER_CLASS )
+    MaxRollAdjust = 2 * MaxRoll;
+    RollOutAdjust = 2 * RollOut;
+    MaxAileronAdjust = 2 * MaxAileron;
+    RollOutSmoothAdjust = 2 * RollOutSmooth;
+#endif  // !defined( USING_SLIDER_CLASS )
+
+    update_old_control_values();
+	
+    // Initialize GUI components of autopilot
+    // NewTgtAirportInit();
+    // fgAPAdjustInit() ;
+    // NewHeadingInit();
+    // NewAltitudeInit();
+};
+
+
+// Reset the autopilot system
+void FGAutopilot::reset() {
+
+    heading_hold = false ;      // turn the heading hold off
+    altitude_hold = false ;     // turn the altitude hold off
+    auto_throttle = false ;	// turn the auto throttle off
+
+    TargetHeading = 0.0;	// default direction, due north
+    MakeTargetHeadingStr( TargetHeading );			
+	
+    TargetAltitude = 3000;   // default altitude in meters
+    MakeTargetAltitudeStr( TargetAltitude );
+	
+    alt_error_accum = 0.0;
+	
+    update_old_control_values();
+
+    sprintf( NewTgtAirportId, "%s", current_options.get_airport_id().c_str() );
+	
+    TargetLatitude = FGBFI::getLatitude();
+    TargetLongitude = FGBFI::getLongitude();
+    MakeTargetLatLonStr( TargetLatitude, TargetLongitude );
+}
+
+
+static inline double get_speed( void ) {
+    return( cur_fdm_state->get_V_equiv_kts() );
+}
+
+static inline double get_ground_speed() {
+    // starts in ft/s so we convert to kts
+    double ft_s = cur_fdm_state->get_V_ground_speed() 
+	* current_options.get_speed_up();;
+    double kts = ft_s * FEET_TO_METER * 3600 * METER_TO_NM;
+
+    return kts;
+}
+
+
+void FGAutopilot::MakeTargetDistanceStr( double distance ) {
+    double eta = distance*METER_TO_NM / get_ground_speed();
+    if ( eta >= 100.0 ) { eta = 99.999; }
+    int major, minor;
+    if ( eta < (1.0/6.0) ) {
+	// within 10 minutes, bump up to min/secs
+	eta *= 60.0;
+    }
+    major = (int)eta;
+    minor = (int)((eta - (int)eta) * 60.0);
+    sprintf( TargetDistanceStr, "APDistance %.2f NM  ETA %d:%02d",
+	     distance*METER_TO_NM, major, minor );
+    // cout << "distance = " << distance*METER_TO_NM
+    //      << "  gndsp = " << get_ground_speed() 
+    //      << "  time = " << eta
+    //      << "  major = " << major
+    //      << "  minor = " << minor
+    //      << endl;
+}
+
+
+static double NormalizeDegrees( double Input ) {
+    // normalize the input to the range (-180,180]
+    // Input should not be greater than -360 to 360.
+    // Current rules send the output to an undefined state.
+    if ( Input > 180 )
+	while(Input > 180 )
+	    Input -= 360;
+    else if ( Input <= -180 )
+	while ( Input <= -180 )
+	    Input += 360;
+    return ( Input );
+};
+
+static double LinearExtrapolate( double x, double x1, double y1, double x2, double y2 ) {
+    // This procedure extrapolates the y value for the x posistion on a line defined by x1,y1; x2,y2
+    //assert(x1 != x2); // Divide by zero error.  Cold abort for now
+
+	// Could be
+	// static double y = 0.0;
+	// double dx = x2 -x1;
+	// if( (dx < -FG_EPSILON ) || ( dx > FG_EPSILON ) )
+	// {
+
+    double m, b, y;          // the constants to find in y=mx+b
+    // double m, b;
+
+    m = ( y2 - y1 ) / ( x2 - x1 );   // calculate the m
+
+    b = y1 - m * x1;       // calculate the b
+
+    y = m * x + b;       // the final calculation
+
+    // }
+
+    return ( y );
+
+};
+
+
+int FGAutopilot::run() {
+    // Remove the following lines when the calling funcitons start
+    // passing in the data pointer
+
+    // get control settings 
+    // double aileron = FGBFI::getAileron();
+    // double elevator = FGBFI::getElevator();
+    // double elevator_trim = FGBFI::getElevatorTrim();
+    // double rudder = FGBFI::getRudder();
+	
+    double lat = FGBFI::getLatitude();
+    double lon = FGBFI::getLongitude();
+
+#ifdef FG_FORCE_AUTO_DISENGAGE
+    // see if somebody else has changed them
+    if( fabs(aileron - old_aileron) > disengage_threshold ||
+	fabs(elevator - old_elevator) > disengage_threshold ||
+	fabs(elevator_trim - old_elevator_trim) > 
+	disengage_threshold ||		
+	fabs(rudder - old_rudder) > disengage_threshold )
+    {
+	// if controls changed externally turn autopilot off
+	waypoint_hold = false ;	  // turn the target hold off
+	heading_hold = false ;	  // turn the heading hold off
+	altitude_hold = false ;	  // turn the altitude hold off
+	terrain_follow = false;	  // turn the terrain_follow hold off
+	// auto_throttle = false; // turn the auto_throttle off
+
+	// stash this runs control settings
+	old_aileron = aileron;
+	old_elevator = elevator;
+	old_elevator_trim = elevator_trim;
+	old_rudder = rudder;
+	
+	return 0;
+    }
+#endif
+	
+    // heading hold enabled?
+    if ( heading_hold == true ) {
+
+	if ( heading_mode == FG_HEADING_LOCK ) {
+	    // leave target heading alone
+	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
+	    // update target heading to waypoint
+
+	    double wp_course, wp_reverse, wp_distance;
+
+#ifdef DO_fgAP_CORRECTED_COURSE
+	    // compute course made good
+	    // this needs lots of special casing before use
+	    double course, reverse, distance, corrected_course;
+	    // need to test for iter
+	    geo_inverse_wgs_84( 0, //fgAPget_altitude(),
+				old_lat,
+				old_lon,
+				lat,
+				lon,
+				&course,
+				&reverse,
+				&distance );
+#endif // DO_fgAP_CORRECTED_COURSE
+
+	    // compute course to way_point
+	    // need to test for iter
+	    if( ! geo_inverse_wgs_84( 0, //fgAPget_altitude(),
+				      lat,
+				      lon,
+				      TargetLatitude,
+				      TargetLongitude,
+				      &wp_course,
+				      &wp_reverse,
+				      &wp_distance ) ) {
+		
+#ifdef DO_fgAP_CORRECTED_COURSE
+		corrected_course = course - wp_course;
+		if( fabs(corrected_course) > 0.1 )
+		    printf("fgAP: course %f  wp_course %f  %f  %f\n",
+			   course, wp_course, fabs(corrected_course),
+			   distance );
+#endif // DO_fgAP_CORRECTED_COURSE
+		
+		if ( wp_distance > 100 ) {
+		    // corrected_course = course - wp_course;
+		    TargetHeading = NormalizeDegrees(wp_course);
+		} else {
+		    printf("distance(%f) to close\n", wp_distance);
+		    // Real Close -- set heading hold to current heading
+		    // and Ring the arival bell !!
+		    heading_mode = FG_HEADING_LOCK;
+		    // use current heading
+		    TargetHeading = FGBFI::getHeading();
+		}
+		MakeTargetHeadingStr( TargetHeading );
+		// Force this just in case
+		TargetDistance = wp_distance;
+		MakeTargetDistanceStr( wp_distance );
+	    }
+	}
+
+	double RelHeading;
+	double TargetRoll;
+	double RelRoll;
+	double AileronSet;
+
+	RelHeading = NormalizeDegrees( TargetHeading - FGBFI::getHeading() );
+	// figure out how far off we are from desired heading
+
+	// Now it is time to deterime how far we should be rolled.
+	FG_LOG( FG_AUTOPILOT, FG_DEBUG, "RelHeading: " << RelHeading );
+
+
+	// Check if we are further from heading than the roll out point
+	if ( fabs( RelHeading ) > RollOut ) {
+	    // set Target Roll to Max in desired direction
+	    if ( RelHeading < 0 ) {
+		TargetRoll = 0 - MaxRoll;
+	    } else {
+		TargetRoll = MaxRoll;
+	    }
+	} else {
+	    // We have to calculate the Target roll
+
+	    // This calculation engine thinks that the Target roll
+	    // should be a line from (RollOut,MaxRoll) to (-RollOut,
+	    // -MaxRoll) I hope this works well.  If I get ambitious
+	    // some day this might become a fancier curve or
+	    // something.
+
+	    TargetRoll = LinearExtrapolate( RelHeading, -RollOut,
+					    -MaxRoll, RollOut,
+					    MaxRoll );
+	}
+
+	// Target Roll has now been Found.
+
+	// Compare Target roll to Current Roll, Generate Rel Roll
+
+	FG_LOG( FG_COCKPIT, FG_BULK, "TargetRoll: " << TargetRoll );
+
+	RelRoll = NormalizeDegrees( TargetRoll - FGBFI::getRoll() );
+
+	// Check if we are further from heading than the roll out smooth point
+	if ( fabs( RelRoll ) > RollOutSmooth ) {
+	    // set Target Roll to Max in desired direction
+	    if ( RelRoll < 0 ) {
+		AileronSet = 0 - MaxAileron;
+	    } else {
+		AileronSet = MaxAileron;
+	    }
+	} else {
+	    AileronSet = LinearExtrapolate( RelRoll, -RollOutSmooth,
+					    -MaxAileron,
+					    RollOutSmooth,
+					    MaxAileron );
+	}
+
+	controls.set_aileron( AileronSet );
+	controls.set_rudder( AileronSet / 4.0 );
+	// controls.set_rudder( 0.0 );
+    }
+
+    // altitude hold?
+    if ( altitude_hold ) {
+	double speed, max_climb, error;
+	double prop_error, int_error;
+	double prop_adj, int_adj, total_adj;
+
+	if ( altitude_mode == FG_ALTITUDE_LOCK ) {
+	    // normal altitude hold
+	    // cout << "TargetAltitude = " << TargetAltitude
+	    //      << "Altitude = " << FGBFI::getAltitude() * FEET_TO_METER
+	    //      << endl;
+	    TargetClimbRate =
+		( TargetAltitude - FGBFI::getAltitude() * FEET_TO_METER ) * 8.0;
+	} else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
+	    // brain dead ground hugging with no look ahead
+	    TargetClimbRate =
+		( TargetAGL - FGBFI::getAGL()*FEET_TO_METER ) * 16.0;
+	    // cout << "target agl = " << TargetAGL 
+	    //      << "  current agl = " << fgAPget_agl() 
+	    //      << "  target climb rate = " << TargetClimbRate 
+	    //      << endl;
+	} else {
+	    // just try to zero out rate of climb ...
+	    TargetClimbRate = 0.0;
+	}
+
+	speed = get_speed();
+
+	if ( speed < min_climb ) {
+	    max_climb = 0.0;
+	} else if ( speed < best_climb ) {
+	    max_climb = ((best_climb - min_climb) - (best_climb - speed)) 
+		* ideal_climb_rate 
+		/ (best_climb - min_climb);
+	} else {			
+	    max_climb = ( speed - best_climb ) * 10.0 + ideal_climb_rate;
+	}
+
+	// this first one could be optional if we wanted to allow
+	// better climb performance assuming we have the airspeed to
+	// support it.
+	if ( TargetClimbRate > ideal_climb_rate ) {
+	    TargetClimbRate = ideal_climb_rate;
+	}
+
+	if ( TargetClimbRate > max_climb ) {
+	    TargetClimbRate = max_climb;
+	}
+
+	if ( TargetClimbRate < -ideal_climb_rate ) {
+	    TargetClimbRate = -ideal_climb_rate;
+	}
+
+	error = FGBFI::getVerticalSpeed() * FEET_TO_METER - TargetClimbRate;
+	// cout << "climb rate = " << fgAPget_climb() 
+	//      << "  error = " << error << endl;
+
+	// accumulate the error under the curve ... this really should
+	// be *= delta t
+	alt_error_accum += error;
+
+	// calculate integral error, and adjustment amount
+	int_error = alt_error_accum;
+	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
+	int_adj = int_error / 8000.0;
+
+	// caclulate proportional error
+	prop_error = error;
+	prop_adj = prop_error / 2000.0;
+
+	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
+	// if ( total_adj > 0.6 ) {
+	//     total_adj = 0.6;
+	// } else if ( total_adj < -0.2 ) {
+	//     total_adj = -0.2;
+	// }
+	if ( total_adj > 1.0 ) {
+	    total_adj = 1.0;
+	} else if ( total_adj < -1.0 ) {
+	    total_adj = -1.0;
+	}
+
+	controls.set_elevator( total_adj );
+    }
+
+    // auto throttle enabled?
+    if ( auto_throttle ) {
+	double error;
+	double prop_error, int_error;
+	double prop_adj, int_adj, total_adj;
+
+	error = TargetSpeed - get_speed();
+
+	// accumulate the error under the curve ... this really should
+	// be *= delta t
+	speed_error_accum += error;
+	if ( speed_error_accum > 2000.0 ) {
+	    speed_error_accum = 2000.0;
+	}
+	else if ( speed_error_accum < -2000.0 ) {
+	    speed_error_accum = -2000.0;
+	}
+
+	// calculate integral error, and adjustment amount
+	int_error = speed_error_accum;
+
+	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
+	int_adj = int_error / 200.0;
+
+	// caclulate proportional error
+	prop_error = error;
+	prop_adj = 0.5 + prop_error / 50.0;
+
+	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
+	if ( total_adj > 1.0 ) {
+	    total_adj = 1.0;
+	}
+	else if ( total_adj < 0.0 ) {
+	    total_adj = 0.0;
+	}
+
+	controls.set_throttle( FGControls::ALL_ENGINES, total_adj );
+    }
+
+#ifdef THIS_CODE_IS_NOT_USED
+    if (Mode == 2) // Glide slope hold
+	{
+	    double RelSlope;
+	    double RelElevator;
+
+	    // First, calculate Relative slope and normalize it
+	    RelSlope = NormalizeDegrees( TargetSlope - get_pitch());
+
+	    // Now calculate the elevator offset from current angle
+	    if ( abs(RelSlope) > SlopeSmooth )
+		{
+		    if ( RelSlope < 0 )     //  set RelElevator to max in the correct direction
+			RelElevator = -MaxElevator;
+		    else
+			RelElevator = MaxElevator;
+		}
+
+	    else
+		RelElevator = LinearExtrapolate(RelSlope,-SlopeSmooth,-MaxElevator,SlopeSmooth,MaxElevator);
+
+	    // set the elevator
+	    fgElevMove(RelElevator);
+
+	}
+#endif // THIS_CODE_IS_NOT_USED
+
+    // stash this runs control settings
+    //	update_old_control_values();
+    old_aileron = controls.get_aileron();
+    old_elevator = controls.get_elevator();
+    old_elevator_trim = controls.get_elevator_trim();
+    old_rudder = controls.get_rudder();
+
+    // for cross track error
+    old_lat = lat;
+    old_lon = lon;
+	
+	// Ok, we are done
+    return 0;
+}
+
+
+void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
+    heading_mode = mode;
+
+    if ( heading_mode == FG_HEADING_LOCK ) {
+	// set heading hold to current heading
+	TargetHeading = FGBFI::getHeading();
+    } else if ( heading_mode == FG_HEADING_WAYPOINT ) {
+	double course, reverse, distance;
+	// turn on location hold
+	// turn on heading hold
+	old_lat = FGBFI::getLatitude();
+	old_lon = FGBFI::getLongitude();
+			
+	// need to test for iter
+	if( !geo_inverse_wgs_84( FGBFI::getAltitude() * FEET_TO_METER,
+				 FGBFI::getLatitude(),
+				 FGBFI::getLongitude(),
+				 TargetLatitude,
+				 TargetLongitude,
+				 &course,
+				 &reverse,
+				 &distance ) ) {
+	    TargetHeading = course;
+	    TargetDistance = distance;
+	    MakeTargetDistanceStr( distance );
+	}
+
+	FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetLocation: ( "
+		<< TargetLatitude  << " "
+		<< TargetLongitude << " ) "
+		);
+    }
+	
+    MakeTargetHeadingStr( TargetHeading );			
+    update_old_control_values();
+}
+
+
+void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
+    altitude_mode = mode;
+
+    if ( altitude_mode == FG_ALTITUDE_LOCK ) {
+	// lock at current altitude
+	TargetAltitude = FGBFI::getAltitude() * FEET_TO_METER;
+	alt_error_accum = 0.0;
+
+	MakeTargetAltitudeStr( TargetAltitude );
+    } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
+	TargetAGL = FGBFI::getAGL() * FEET_TO_METER;
+	alt_error_accum = 0.0;
+    }
+    
+    update_old_control_values();
+    FG_LOG( FG_COCKPIT, FG_INFO, " set_AltitudeMode():" );
+}
+
+
+#if 0
+static inline double get_aoa( void ) {
+    return( cur_fdm_state->get_Gamma_vert_rad() * RAD_TO_DEG );
+}
+
+static inline double fgAPget_latitude( void ) {
+    return( cur_fdm_state->get_Latitude() * RAD_TO_DEG );
+}
+
+static inline double fgAPget_longitude( void ) {
+    return( cur_fdm_state->get_Longitude() * RAD_TO_DEG );
+}
+
+static inline double fgAPget_roll( void ) {
+    return( cur_fdm_state->get_Phi() * RAD_TO_DEG );
+}
+
+static inline double get_pitch( void ) {
+    return( cur_fdm_state->get_Theta() );
+}
+
+double fgAPget_heading( void ) {
+    return( cur_fdm_state->get_Psi() * RAD_TO_DEG );
+}
+
+static inline double fgAPget_altitude( void ) {
+    return( cur_fdm_state->get_Altitude() * FEET_TO_METER );
+}
+
+static inline double fgAPget_climb( void ) {
+    // return in meters per minute
+    return( cur_fdm_state->get_Climb_Rate() * FEET_TO_METER * 60 );
+}
+
+static inline double get_sideslip( void ) {
+    return( cur_fdm_state->get_Beta() );
+}
+
+static inline double fgAPget_agl( void ) {
+    double agl;
+
+    agl = cur_fdm_state->get_Altitude() * FEET_TO_METER
+	- scenery.cur_elev;
+
+    return( agl );
+}
+#endif
+
+
+void FGAutopilot::AltitudeSet( double new_altitude ) {
+    double target_alt = new_altitude;
+
+    // cout << "new altitude = " << new_altitude << endl;
+
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	target_alt = new_altitude * FEET_TO_METER;
+    }
+
+    if( target_alt < scenery.cur_elev ) {
+	target_alt = scenery.cur_elev;
+    }
+
+    TargetAltitude = target_alt;
+    altitude_mode = FG_ALTITUDE_LOCK;
+
+    // cout << "TargetAltitude = " << TargetAltitude << endl;
+
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	target_alt *= METER_TO_FEET;
+    }
+    // ApAltitudeDialogInput->setValue((float)target_alt);
+    MakeTargetAltitudeStr( target_alt );
+	
+    update_old_control_values();
+}
+
+
+void FGAutopilot::AltitudeAdjust( double inc )
+{
+    double target_alt, target_agl;
+
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	target_alt = TargetAltitude * METER_TO_FEET;
+	target_agl = TargetAGL * METER_TO_FEET;
+    } else {
+	target_alt = TargetAltitude;
+	target_agl = TargetAGL;
+    }
+
+    target_alt = ( int ) ( target_alt / inc ) * inc + inc;
+    target_agl = ( int ) ( target_agl / inc ) * inc + inc;
+
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	target_alt *= FEET_TO_METER;
+	target_agl *= FEET_TO_METER;
+    }
+
+    TargetAltitude = target_alt;
+    TargetAGL = target_agl;
+	
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET )
+	target_alt *= METER_TO_FEET;
+    // ApAltitudeDialogInput->setValue((float)target_alt);
+    MakeTargetAltitudeStr( target_alt );
+
+    update_old_control_values();
+}
+
+
+void FGAutopilot::HeadingAdjust( double inc ) {
+    heading_mode = FG_HEADING_LOCK;
+	
+    double target = ( int ) ( TargetHeading / inc ) * inc + inc;
+
+    TargetHeading = NormalizeDegrees( target );
+    // following cast needed ambiguous plib
+    // ApHeadingDialogInput -> setValue ((float)TargetHeading );
+    MakeTargetHeadingStr( TargetHeading );			
+    update_old_control_values();
+}
+
+
+void FGAutopilot::HeadingSet( double new_heading ) {
+    heading_mode = FG_HEADING_LOCK;
+	
+    new_heading = NormalizeDegrees( new_heading );
+    TargetHeading = new_heading;
+    // following cast needed ambiguous plib
+    // ApHeadingDialogInput -> setValue ((float)APData->TargetHeading );
+    MakeTargetHeadingStr( TargetHeading );			
+    update_old_control_values();
+}
+
+void FGAutopilot::AutoThrottleAdjust( double inc ) {
+    double target = ( int ) ( TargetSpeed / inc ) * inc + inc;
+
+    TargetSpeed = target;
+}
+
+
+void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
+    auto_throttle = value;
+
+    if ( auto_throttle = true ) {
+	TargetSpeed = FGBFI::getAirspeed();
+	speed_error_accum = 0.0;
+    }
+
+    update_old_control_values();
+    FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetAutoThrottle: ("
+	    << auto_throttle << ") " << TargetSpeed );
+}

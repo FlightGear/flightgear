@@ -58,6 +58,8 @@
 #include <Include/general.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
+#include <Autopilot/auto_gui.hxx>
+#include <Autopilot/newauto.hxx>
 #include <Cockpit/panel.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
@@ -169,15 +171,15 @@ char *gui_msg_RESET;  // "RESET"
 static char global_dialog_string[256];
 
 // from autopilot.cxx
-extern void NewAltitude( puObject *cb );
-extern void NewHeading( puObject *cb );
-extern void fgAPAdjust( puObject * );
-extern void NewTgtAirport( puObject *cb );
-bool fgAPTerrainFollowEnabled( void );
-bool fgAPAltitudeEnabled( void );
-bool fgAPHeadingEnabled( void );
-bool fgAPWayPointEnabled( void );
-bool fgAPAutoThrottleEnabled( void );
+// extern void NewAltitude( puObject *cb );
+// extern void NewHeading( puObject *cb );
+// extern void fgAPAdjust( puObject * );
+// extern void NewTgtAirport( puObject *cb );
+// bool fgAPTerrainFollowEnabled( void );
+// bool fgAPAltitudeEnabled( void );
+// bool fgAPHeadingEnabled( void );
+// bool fgAPWayPointEnabled( void );
+// bool fgAPAutoThrottleEnabled( void );
 
 // from cockpit.cxx
 extern void fgLatLonFormatToggle( puObject *);
@@ -398,20 +400,20 @@ void guiMotionFunc ( int x, int y )
                         offset = (_mY - y) * throttle_sensitivity;
                         controls.move_throttle(FGControls::ALL_ENGINES, offset);
                     } else if ( right_button() ) {
-                        if( !fgAPHeadingEnabled() ) {
+                        if( ! current_autopilot->get_HeadingEnabled() ) {
                             offset = (x - _mX) * rudder_sensitivity;
                             controls.move_rudder(offset);
                         }
-                        if( !fgAPAltitudeEnabled() ) {
+                        if( ! current_autopilot->get_AltitudeEnabled() ) {
                             offset = (_mY - y) * trim_sensitivity;
                             controls.move_elevator_trim(offset);
                         }
                     } else {
-                        if( !fgAPHeadingEnabled() ) {
+                        if( ! current_autopilot->get_HeadingEnabled() ) {
                             offset = (x - _mX) * aileron_sensitivity;
                             controls.move_aileron(offset);
                         }
-                        if( !fgAPAltitudeEnabled() ) {
+                        if( ! current_autopilot->get_AltitudeEnabled() ) {
                             offset = (_mY - y) * elevator_sensitivity;
                             controls.move_elevator(offset);
                         }

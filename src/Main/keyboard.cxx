@@ -46,7 +46,7 @@
 #include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Autopilot/autopilot.hxx>
+#include <Autopilot/newauto.hxx>
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
 #include <Scenery/tilemgr.hxx>
@@ -97,10 +97,18 @@ void GLUTkey(unsigned char k, int x, int y) {
 	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
 	switch (k) {
 	case 1: // Ctrl-A key
-	    fgAPToggleAltitude();
+	    current_autopilot->set_AltitudeMode( 
+                  FGAutopilot::FG_ALTITUDE_LOCK );
+	    current_autopilot->set_AltitudeEnabled(
+		  ! current_autopilot->get_AltitudeEnabled()
+	        );
 	    return;
 	case 8: // Ctrl-H key
-	    fgAPToggleHeading();
+	    current_autopilot->set_HeadingMode( 
+                  FGAutopilot::FG_HEADING_LOCK );
+	    current_autopilot->set_HeadingEnabled(
+		  ! current_autopilot->get_HeadingEnabled()
+	        );
 	    return;
 	case 18: // Ctrl-R key
 	    // temporary
@@ -112,10 +120,16 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    }
 	    return;
 	case 19: // Ctrl-S key
-	    fgAPToggleAutoThrottle();
+	    current_autopilot->set_AutoThrottleEnabled(
+		  ! current_autopilot->get_AutoThrottleEnabled()
+	        );
 	    return;
 	case 20: // Ctrl-T key
-	    fgAPToggleTerrainFollow();
+	    current_autopilot->set_AltitudeMode( 
+                  FGAutopilot::FG_ALTITUDE_TERRAIN );
+	    current_autopilot->set_AltitudeEnabled(
+		  ! current_autopilot->get_AltitudeEnabled()
+	        );
 	    return;
 	case 21: // Ctrl-U key
 	    // add 1000' of emergency altitude.  Possibly good for 
@@ -212,15 +226,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	FG_LOG( FG_INPUT, FG_DEBUG, "" );
 	switch (k) {
 	case 50: // numeric keypad 2
-	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
-		fgAPAltitudeAdjust( 100 );
+	    if ( current_autopilot->get_AltitudeEnabled() ) {
+		current_autopilot->AltitudeAdjust( 100 );
 	    } else {
 		controls.move_elevator(-0.05);
 	    }
 	    return;
 	case 56: // numeric keypad 8
-	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
-		fgAPAltitudeAdjust( -100 );
+	    if ( current_autopilot->get_AltitudeEnabled() ) {
+		current_autopilot->AltitudeAdjust( -100 );
 	    } else {
 		controls.move_elevator(0.05);
 	    }
@@ -238,15 +252,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    controls.move_aileron(0.05);
 	    return;
 	case 48: // numeric keypad Ins
-	    if( fgAPHeadingEnabled() ) {
-		fgAPHeadingAdjust( -1 );
+	    if ( current_autopilot->get_HeadingEnabled() ) {
+		current_autopilot->HeadingAdjust( -1 );
 	    } else {
 		controls.move_rudder(-0.05);
 	    }
 	    return;
 	case 13: // numeric keypad Enter
-	    if( fgAPHeadingEnabled() ) {
-		fgAPHeadingAdjust( 1 );
+	    if ( current_autopilot->get_HeadingEnabled() ) {
+		current_autopilot->HeadingAdjust( 1 );
 	    } else {
 		controls.move_rudder(0.05);
 	    }
@@ -257,15 +271,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    controls.set_rudder(0.0);
 	    return;
 	case 57: // numeric keypad 9 (Pg Up)
-	    if( fgAPAutoThrottleEnabled() ) {
-		fgAPAutoThrottleAdjust( 5 );
+	    if ( current_autopilot->get_AutoThrottleEnabled() ) {
+		current_autopilot->AutoThrottleAdjust( 5 );
 	    } else {
 		controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
 	    }
 	    return;
 	case 51: // numeric keypad 3 (Pg Dn)
-	    if( fgAPAutoThrottleEnabled() ) {
-		fgAPAutoThrottleAdjust( -5 );
+	    if ( current_autopilot->get_AutoThrottleEnabled() ) {
+		current_autopilot->AutoThrottleAdjust( -5 );
 	    } else {
 		controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
 	    }
@@ -455,7 +469,14 @@ void GLUTspecialkey(int k, int x, int y) {
 	    fgDumpSnapShot();
 	    return;
         case GLUT_KEY_F6: // F6 toggles Autopilot target location
-	    fgAPToggleWayPoint();
+	    if ( current_autopilot->get_HeadingMode() !=
+		 FGAutopilot::FG_HEADING_WAYPOINT ) {
+		current_autopilot->set_HeadingMode(
+		    FGAutopilot::FG_HEADING_WAYPOINT );
+	    } else {
+		current_autopilot->set_HeadingMode(
+		    FGAutopilot::FG_HEADING_LOCK );
+	    }
 	    return;
 	case GLUT_KEY_F8: // F8 toggles fog ... off fastest nicest...
 	    current_options.cycle_fog();
@@ -503,15 +524,15 @@ void GLUTspecialkey(int k, int x, int y) {
 	    NewHeading( NULL );
 	    return;
 	case GLUT_KEY_UP:
-	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
-		fgAPAltitudeAdjust( -100 );
+	    if ( current_autopilot->get_AltitudeEnabled() ) {
+		current_autopilot->AltitudeAdjust( -100 );
 	    } else {
 		controls.move_elevator(0.05);
 	    }
 	    return;
 	case GLUT_KEY_DOWN:
-	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
-		fgAPAltitudeAdjust( 100 );
+	    if ( current_autopilot->get_AltitudeEnabled() ) {
+		current_autopilot->AltitudeAdjust( 100 );
 	    } else {
 		controls.move_elevator(-0.05);
 	    }
@@ -529,15 +550,15 @@ void GLUTspecialkey(int k, int x, int y) {
 	    controls.move_elevator_trim(-0.001);
 	    return;
 	case GLUT_KEY_INSERT: // numeric keypad Ins
-	    if( fgAPHeadingEnabled() ) {
-		fgAPHeadingAdjust( -1 );
+	    if ( current_autopilot->get_HeadingEnabled() ) {
+		current_autopilot->HeadingAdjust( -1 );
 	    } else {
 		controls.move_rudder(-0.05);
 	    }
 	    return;
 	case 13: // numeric keypad Enter
-	    if( fgAPHeadingEnabled() ) {
-		fgAPHeadingAdjust( 1 );
+	    if ( current_autopilot->get_HeadingEnabled() ) {
+		current_autopilot->HeadingAdjust( 1 );
 	    } else {
 		controls.move_rudder(0.05);
 	    }
@@ -548,15 +569,15 @@ void GLUTspecialkey(int k, int x, int y) {
 	    controls.set_rudder(0.0);
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9 (Pg Up)
-	    if( fgAPAutoThrottleEnabled() ) {
-		fgAPAutoThrottleAdjust( 5 );
+	    if ( current_autopilot->get_AutoThrottleEnabled() ) {
+		current_autopilot->AutoThrottleAdjust( 5 );
 	    } else {
 		controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
 	    }
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3 (Pg Dn)
-	    if( fgAPAutoThrottleEnabled() ) {
-		fgAPAutoThrottleAdjust( -5 );
+	    if ( current_autopilot->get_AutoThrottleEnabled() ) {
+		current_autopilot->AutoThrottleAdjust( -5 );
 	    } else {
 		controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
 	    }

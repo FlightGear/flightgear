@@ -76,7 +76,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Ephemeris/ephemeris.hxx>
 
-#include <Autopilot/autopilot.hxx>
+#include <Autopilot/newauto.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/steam.hxx>
@@ -664,7 +664,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 
     if ( !t->getPause() ) {
 	// run Autopilot system
-	fgAPRun();
+	current_autopilot->run();
 
 	// printf("updating flight model x %d\n", multi_loop);
 	/* fgFDMUpdate( current_options.get_flight_model(), 

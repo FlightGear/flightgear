@@ -36,7 +36,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Autopilot/autopilot.hxx>
+#include <Autopilot/newauto.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
@@ -55,9 +55,9 @@ FG_USING_NAMESPACE(std);
 
 				// FIXME: these are not part of the
 				// published interface!!!
-extern fgAPDataPtr APDataGlobal;
-extern void fgAPAltitudeSet (double new_altitude);
-extern void fgAPHeadingSet (double new_heading);
+// extern fgAPDataPtr APDataGlobal;
+// extern void fgAPAltitudeSet (double new_altitude);
+// extern void fgAPHeadingSet (double new_heading);
 
 
 #include "bfi.hxx"
@@ -671,7 +671,7 @@ FGBFI::setBrake (double brake)
 bool
 FGBFI::getAPAltitudeLock ()
 {
-  return fgAPAltitudeEnabled();
+    return current_autopilot->get_AltitudeEnabled();
 }
 
 
@@ -681,7 +681,8 @@ FGBFI::getAPAltitudeLock ()
 void
 FGBFI::setAPAltitudeLock (bool lock)
 {
-  APDataGlobal->altitude_hold = lock;
+    current_autopilot->set_AltitudeEnabled( true );
+    current_autopilot->set_AltitudeMode( FGAutopilot::FG_ALTITUDE_LOCK );
 }
 
 
@@ -691,7 +692,7 @@ FGBFI::setAPAltitudeLock (bool lock)
 double
 FGBFI::getAPAltitude ()
 {
-  return fgAPget_TargetAltitude() * METER_TO_FEET;
+  return current_autopilot->get_TargetAltitude() * METER_TO_FEET;
 }
 
 
@@ -701,7 +702,7 @@ FGBFI::getAPAltitude ()
 void
 FGBFI::setAPAltitude (double altitude)
 {
-  fgAPAltitudeSet(altitude);
+    current_autopilot->set_TargetAltitude( altitude );
 }
 
 
@@ -711,7 +712,7 @@ FGBFI::setAPAltitude (double altitude)
 bool
 FGBFI::getAPHeadingLock ()
 {
-  return fgAPHeadingEnabled();
+    return current_autopilot->get_HeadingEnabled();
 }
 
 
@@ -721,7 +722,8 @@ FGBFI::getAPHeadingLock ()
 void
 FGBFI::setAPHeadingLock (bool lock)
 {
-  APDataGlobal->heading_hold = lock;
+    current_autopilot->set_HeadingEnabled( true );
+    current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_LOCK );
 }
 
 
@@ -731,7 +733,7 @@ FGBFI::setAPHeadingLock (bool lock)
 double
 FGBFI::getAPHeading ()
 {
-  return fgAPget_TargetHeading();
+  return current_autopilot->get_TargetHeading();
 }
 
 
@@ -741,7 +743,7 @@ FGBFI::getAPHeading ()
 void
 FGBFI::setAPHeading (double heading)
 {
-  fgAPHeadingSet(heading);
+  current_autopilot->set_TargetHeading( heading );
 }
 
 
@@ -883,7 +885,10 @@ FGBFI::setADFRotation (double rot)
 bool
 FGBFI::getGPSLock ()
 {
-  return fgAPWayPointEnabled();
+    return ( current_autopilot->get_HeadingEnabled() &&
+	     ( current_autopilot->get_HeadingMode() == 
+	       FGAutopilot::FG_HEADING_WAYPOINT )
+	   );
 }
 
 
@@ -893,7 +898,8 @@ FGBFI::getGPSLock ()
 void
 FGBFI::setGPSLock (bool lock)
 {
-  APDataGlobal->waypoint_hold = lock;
+    current_autopilot->set_HeadingEnabled( true );
+    current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
 }
 
 
@@ -923,7 +929,7 @@ FGBFI::setTargetAirport (const string &airportId)
 double
 FGBFI::getGPSTargetLatitude ()
 {
-  return fgAPget_TargetLatitude();
+    return current_autopilot->get_TargetLatitude();
 }
 
 
@@ -933,7 +939,7 @@ FGBFI::getGPSTargetLatitude ()
 void
 FGBFI::setGPSTargetLatitude (double latitude)
 {
-  APDataGlobal->TargetLatitude = latitude;
+  current_autopilot->set_TargetLatitude( latitude );
 }
 
 
@@ -943,7 +949,7 @@ FGBFI::setGPSTargetLatitude (double latitude)
 double
 FGBFI::getGPSTargetLongitude ()
 {
-  return fgAPget_TargetLongitude();
+  return current_autopilot->get_TargetLongitude();
 }
 
 
@@ -953,7 +959,7 @@ FGBFI::getGPSTargetLongitude ()
 void
 FGBFI::setGPSTargetLongitude (double longitude)
 {
-  APDataGlobal->TargetLongitude = longitude;
+  current_autopilot->set_TargetLongitude( longitude );
 }
 
 
