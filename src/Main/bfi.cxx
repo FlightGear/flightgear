@@ -190,6 +190,11 @@ FGBFI::init ()
   fgTie("/engines/engine0/egt", getEGT);
   fgTie("/engines/engine0/cht", getCHT);
   fgTie("/engines/engine0/mp", getMP);
+  fgTie("/engines/engine0/fuel-flow", getFuelFlow);
+
+  //consumables
+  fgTie("/consumables/fuel/tank1/level", getTank1Fuel, setTank1Fuel, false);
+  fgTie("/consumables/fuel/tank2/level", getTank2Fuel, setTank2Fuel, false);
 
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
@@ -322,7 +327,7 @@ FGBFI::setDateString (string date_string)
     mktime(&new_time) - mktime(current_time) + globals->get_warp();
   double lon = current_aircraft.fdm_state->get_Longitude();
   double lat = current_aircraft.fdm_state->get_Latitude();
-  double alt = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER;
+  // double alt = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER;
   globals->set_warp(warp);
   st->update(lon, lat, warp);
   fgUpdateSkyAndLightingParams();
@@ -560,7 +565,7 @@ FGBFI::getCHT ()
 
 
 /**
- * Return the current engine0 CHT.
+ * Return the current engine0 Manifold Pressure.
  */
 double
 FGBFI::getMP ()
@@ -572,6 +577,52 @@ FGBFI::getMP ()
   }
 }
 
+/**
+ * Return the current engine0 fuel flow
+ */
+double
+FGBFI::getFuelFlow ()
+{
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      return current_aircraft.fdm_state->get_engine(0)->get_Fuel_Flow();
+  } else {
+      return 0.0;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+// Consumables
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * Return the fuel level in tank 1
+ */
+double
+FGBFI::getTank1Fuel ()
+{
+  return current_aircraft.fdm_state->get_Tank1Fuel();
+}
+
+void
+FGBFI::setTank1Fuel ( double gals )
+{
+  current_aircraft.fdm_state->set_Tank1Fuel( gals );
+}
+
+/**
+ * Return the fuel level in tank 2
+ */
+double
+FGBFI::getTank2Fuel ()
+{
+  return current_aircraft.fdm_state->get_Tank2Fuel();
+}
+
+void
+FGBFI::setTank2Fuel ( double gals )
+{
+  current_aircraft.fdm_state->set_Tank2Fuel( gals );
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1292,7 +1343,7 @@ FGBFI::setWindDown (double speed)
 double
 FGBFI::getFOV ()
 {
-  globals->get_current_view()->get_fov();
+  return globals->get_current_view()->get_fov();
 }
 
 void

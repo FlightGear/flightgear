@@ -51,6 +51,10 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     I_yy = 3.000000E+03;
     I_zz = 3.530000E+03;
     I_xz = 0.000000E+00;
+    //current_aircraft.fdm_state->set_Tank1Fuel(15.0);
+    //current_aircraft.fdm_state->set_Tank2Fuel(15.0);
+    //Tank1Fuel = 15.0;
+    //Tank2Fuel = 15.0;
 }
 
 FGLaRCsim::~FGLaRCsim(void) {
@@ -74,7 +78,13 @@ void FGLaRCsim::init() {
     // update the engines interface
     FGEngInterface e;
     add_engine( e );
-	
+
+    // Fill the fuel tanks
+    // Hardwired to C172 full tanks for now - need to fix this sometime
+    // Also note that this is the max quantity - the usable quantity
+    // is slightly less
+    set_Tank1Fuel(28.0);
+    set_Tank2Fuel(28.0);  
 
     // FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::init()"  );
 
@@ -134,6 +144,13 @@ bool FGLaRCsim::update( int multiloop ) {
 	e->set_EGT( eng.get_EGT() );
 	e->set_CHT( eng.get_CHT() );
 	e->set_prop_thrust( eng.get_prop_thrust_SI() );
+	e->set_Fuel_Flow( eng.get_fuel_flow_gals_hr() );
+
+        //Assume we are using both tanks equally for now
+	reduce_Tank1Fuel( (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+			  * get_delta_t() );
+	reduce_Tank2Fuel( (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+			  * get_delta_t() ); 
 
 #if 0
 	FG_LOG( FG_FLIGHT, FG_INFO, "Throttle = "

@@ -69,8 +69,8 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
 	$(top_builddir)/src/Joystick/libJoystick.a \
-	-lsgroute -lsgsky -lsgephem -lsgtiming -lsgio -lsgscreen -lsgmath \
-	-lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
+	-lsgroute -lsgsky -lsgephem -lsgmetar -lsgtiming -lsgio -lsgscreen \
+	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	$(SERIAL_LIBS) \
 	-lplibpu -lplibfnt -lplibssg -lplibsg \
 	-lmk4 -lz \

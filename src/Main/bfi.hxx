@@ -101,9 +101,16 @@ public:
   static double getRPM ();	// revolutions/minute
   static void setRPM ( double rpm ); // revolutions/minute
 
-  static double getEGT ();	// [unit??]
-  static double getCHT ();	// [unit??]
-  static double getMP ();	// [unit??]
+  static double getEGT ();	// deg Fahrenheit
+  static double getCHT ();	// deg Fahrenheit
+  static double getMP ();	// inches mercury
+  static double getFuelFlow (); // gals/hr
+
+                                 // Consumables
+  static double getTank1Fuel (); // gals
+  static void setTank1Fuel( double gals );
+  static double getTank2Fuel (); // gals
+  static void setTank2Fuel( double gals );
 
 				// Velocities
   static double getAirspeed ();	// knots

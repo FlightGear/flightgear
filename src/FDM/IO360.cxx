@@ -73,7 +73,10 @@
 // DCL 27/10/00 - Added first stab at cylinder head temperature model
 //		  See the comment block in the code for details
 //
-// DCL 02/11/00 - Modified EGT code to reduce values to those more representative of a sensor downstream  
+// DCL 02/11/00 - Modified EGT code to reduce values to those more representative of a sensor downstream 
+//
+// DCL 02/02/01 - Changed the prop model to one based on efficiency and co-efficient of power curves from McCormick instead of the
+//		  blade element method we were using previously.  This works much better, and is similar to how Jon is doing it in JSBSim. 
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -97,8 +100,7 @@ float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
     float factor;
 
     int i;
-    int j;
-    j = NUM_ELEMENTS;  //This must be equal to the number of elements in the lookup table arrays
+    int j = NUM_ELEMENTS;  //This must be equal to the number of elements in the lookup table arrays
 
     for(i=0;i<j;i++)
     {
@@ -224,6 +226,7 @@ void FGNewEngine::init(double dt) {
     Cp_air = 1005;	// J/KgK
     Cp_fuel = 1700;	// J/KgK
     calorific_value_fuel = 47.3e6;  // W/Kg  Note that this is only an approximate value
+    rho_fuel = 800;	// kg/m^3 - an estimate for now
     R_air = 287.3;
 
     // Control and environment inputs
@@ -260,7 +263,7 @@ void FGNewEngine::init(double dt) {
     Percentage_Power = 0;
     Manifold_Pressure = 29.00; // Inches
     RPM = 600;
-    Fuel_Flow = 0;	// lbs/hour
+    Fuel_Flow_gals_hr = 0;
     Torque = 0;
     Torque_SI = 0;
     CHT = 298.0;	//deg Kelvin
@@ -372,12 +375,14 @@ void FGNewEngine::update() {
     //calculate ideal engine volume inducted per second
     swept_volume = (displacement_SI * (RPM / 60)) / 2;  //This equation is only valid for a four stroke engine
     //calculate volumetric efficiency - for now we will just use 0.8, but actually it is a function of engine speed and the exhaust to manifold pressure ratio
+    //Note that this is cylinder vol eff - the throttle drop is already accounted for in the MAP calculation
     volumetric_efficiency = 0.8;
     //Now use volumetric efficiency to calculate actual air volume inducted per second
     v_dot_air = swept_volume * volumetric_efficiency;
     //Now calculate mass flow rate of air into engine
     m_dot_air = v_dot_air * rho_air_manifold;
 
+    //cout << "air = " << m_dot_air;
     // cout << "rho air manifold " << rho_air_manifold << '\n';
     // cout << "Swept volume " << swept_volume << '\n';
 
@@ -385,13 +390,15 @@ void FGNewEngine::update() {
 
     //DCL - now calculate fuel flow into engine based on air flow and mixture lever position
     //assume lever runs from no flow at fully out to thi = 1.6 at fully in at sea level
+    //***TODO*** - MUST try and get some real idea of the actual full rich sea level mixture - this is important !!!
     //also assume that the injector linkage is ideal - hence the set mixture is maintained at a given altitude throughout the speed and load range
     thi_sea_level = 1.6 * ( Mixture_Lever_Pos / 100.0 );
     equivalence_ratio = thi_sea_level * p_amb_sea_level / p_amb; //ie as we go higher the mixture gets richer for a given lever position
     m_dot_fuel = m_dot_air / 14.7 * equivalence_ratio;
+    Fuel_Flow_gals_hr = (m_dot_fuel / rho_fuel) * 264.172 * 3600.0;  // Note this assumes US gallons
 
-    // cout << "fuel " << m_dot_fuel;
-    // cout << " air " << m_dot_air << '\n';
+    //cout << "fuel " << m_dot_fuel; << "kg/s  " << Fuel_Flow_gals_hr << "gals/hr"
+    //cout << "  air " << m_dot_air << '\n';
 
 //***********************************************************************
 //Engine power and torque calculations
@@ -450,7 +457,7 @@ void FGNewEngine::update() {
 
 //***DCL - FIXME - this needs altering - for instance going richer than full power mixture decreases the %power but increases the fuel flow
     // Now Calculate Fuel Flow based on % Power Best Power Mixture
-    Fuel_Flow = Percentage_Power * Max_Fuel_Flow / 100.0;
+//    Fuel_Flow = Percentage_Power * Max_Fuel_Flow / 100.0;
     // cout << Fuel_Flow << " lbs/hr"<< endl;
 
     // Now Derate engine for the effects of Bad/Switched off magnetos

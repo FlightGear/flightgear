@@ -96,7 +96,7 @@ private:
     float Percentage_Power;	// Power output as percentage of maximum power output
     float Manifold_Pressure;	// Inches
     float RPM;
-    float Fuel_Flow;		// lbs/hour
+    float Fuel_Flow_gals_hr;	// gals/hour
     float Torque;
     float CHT;			// Cylinder head temperature deg K
     float CHT_degF;		// Ditto in deg Fahrenheit
@@ -128,6 +128,7 @@ private:
     float p_amb;		// Pascals
     float T_amb;		// deg Kelvin
     float calorific_value_fuel;
+    float rho_fuel;		// kg/m^3
     float thi_sea_level;
     float delta_T_exhaust;
     float displacement;		// Engine displacement in cubic inches - to be read in from config file for each engine
@@ -232,6 +233,7 @@ public:
     inline float get_CHT() const { return CHT_degF; }    // Note this returns CHT in Fahrenheit
     inline float get_prop_thrust_SI() const { return prop_thrust; }
     inline float get_prop_thrust_lbs() const { return (prop_thrust * 0.2248); }
+    inline float get_fuel_flow_gals_hr() const { return (Fuel_Flow_gals_hr); }
 };
 
 

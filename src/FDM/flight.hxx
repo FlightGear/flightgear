@@ -113,12 +113,13 @@ private:
 
     // outputs
     double RPM;
-    double Manifold_Pressure;
+    double Manifold_Pressure;     //inches
     double MaxHP;
-    double Percentage_Power;
-    double EGT;
-    double CHT;
-    double prop_thrust;
+    double Percentage_Power;      //HP
+    double EGT;                   //deg F
+    double CHT;                   //deg F
+    double prop_thrust;           //lbs
+    double Fuel_Flow;             //Gals/hr
     
     /* others...
     double PercentN1,N1;  //GE,CFM
@@ -145,6 +146,7 @@ public:
     inline double get_EGT() const { return EGT; }
     inline double get_CHT() const { return CHT; }
     inline double get_prop_thrust() const { return prop_thrust; }
+    inline double get_Fuel_Flow() const { return Fuel_Flow; }
 
     inline void set_Throttle( double t ) { Throttle = t; }
     inline void set_Mixture( double m ) { Mixture = m; }
@@ -156,6 +158,7 @@ public:
     inline void set_EGT( double e ) { EGT = e; }
     inline void set_CHT( double c ) { CHT = c; }
     inline void set_prop_thrust( double t ) { prop_thrust = t; }
+    inline void set_Fuel_Flow( double f ) { Fuel_Flow = f; }
 
 };
 
@@ -269,6 +272,8 @@ private:
     double sin_longitude, cos_longitude;
     double sin_latitude, cos_latitude;
     double altitude_agl;
+    double Tank1Fuel;             // Gals
+    double Tank2Fuel;             // Gals
     
     // Engine list
     engine_list engines;
@@ -541,7 +546,22 @@ public:
     virtual void set_Velocities_Local_Airmass (double wnorth, 
 					       double weast, 
 					       double wdown );
-    
+
+    // Consumables
+    inline void set_Tank1Fuel( double f ) { Tank1Fuel = f; }
+    inline void set_Tank2Fuel( double f ) { Tank2Fuel = f; }
+
+    inline void reduce_Tank1Fuel( double f ) { 
+        Tank1Fuel -= f;
+        if(Tank1Fuel < 0)
+	    Tank1Fuel = 0;
+    }
+    inline void reduce_Tank2Fuel( double f ) { 
+        Tank2Fuel -= f;
+        if(Tank2Fuel < 0)
+	    Tank2Fuel = 0;
+    }  
+
     
     // ========== Mass properties and geometry values ==========
 
@@ -1078,6 +1098,10 @@ public:
     inline double get_cos_latitude(void) const {
 	return cos_latitude;
     }
+
+    // Consumables
+    inline double get_Tank1Fuel() const { return Tank1Fuel; }
+    inline double get_Tank2Fuel() const { return Tank2Fuel; }
 
     // engines
     inline double get_num_engines() const {
