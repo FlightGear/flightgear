@@ -97,7 +97,7 @@ int is_extra_node(double *n) {
 	// along the way
 	if ( (fabs(n[0] - exnodes[i][0]) < FG_EPSILON) &&
 	     (fabs(n[1] - exnodes[i][1]) < FG_EPSILON) ) {
-	    return(1);
+	    return(i);
 	}
     }
 
@@ -372,6 +372,7 @@ FILE *my_open(char *basename, char *basepath, char *ext) {
 void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
     double n[3];
     char line[256];
+    int ex_index;
 
     offset_lon = offset_lat = 0.0;
 
@@ -379,7 +380,10 @@ void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
 	if ( strncmp(line, "gdn ", 4) == 0 ) {
 	    sscanf(line, "gdn %lf %lf %lf\n", &n[0], &n[1], &n[2]);
 
-	    if ( ! is_extra_node(n) ) {
+	    ex_index = is_extra_node(n);
+
+	    if ( ex_index == 0 ) {
+		// not an extra node
 		nodes[nodecount][0] = n[0] + offset_lon;
 		nodes[nodecount][1] = n[1] + offset_lat;
 		nodes[nodecount][2] = n[2];
@@ -392,7 +396,10 @@ void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
 
 		nodecount++;
 	    } else {
+		// is an extra node
 		printf("found extra node %.2f %.2f %.2f\n", n[0], n[1], n[2]);
+		// preserve the DEM altitude for now
+		exnodes[ex_index][2] = n[2];
 	    }
 	}
     }
@@ -539,11 +546,16 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.12  1998/09/09 16:24:51  curt
-/* Fixed a bug in the handling of exclude files which was causing
-/*   a crash by calling fclose() on an invalid file handle.
-/* Removed overlapping offsets.
+/* Revision 1.13  1998/09/21 20:56:30  curt
+/* Changes to avoid setting airport area nodes back to their original
+/* elevations if they have been changed.
 /*
+ *
+ * Revision 1.12  1998/09/09 16:24:51  curt
+ * Fixed a bug in the handling of exclude files which was causing
+ *   a crash by calling fclose() on an invalid file handle.
+ * Removed overlapping offsets.
+ *
  * Revision 1.11  1998/08/06 12:47:59  curt
  * Removed overlap in tiles as a test.
  *
