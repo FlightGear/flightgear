@@ -268,6 +268,18 @@ static double scale( int min, int max, int value ) {
 }
 
 
+static double clamp( double min, double max, double value ) {
+    double result = value;
+
+    if ( result < min ) result = min;
+    if ( result > max ) result = max;
+
+    // cout << result << endl;
+
+    return result;   
+}
+
+
 static int tony_magic( int raw, int obs[3] ) {
     int result = 0;
 
@@ -407,6 +419,7 @@ bool FGATCInput::do_analog_in() {
             int min = 0;
             int max = 1023;
 	    int deadband = 0;
+            float offset = 0.0;
             float factor = 1.0;
             if ( cname == "channel" ) {
                 SGPropertyNode *prop;
@@ -445,6 +458,10 @@ bool FGATCInput::do_analog_in() {
                 if ( prop != NULL ) {
                     deadband = prop->getIntValue();
                 }
+                prop = child->getChild( "offset" );
+                if ( prop != NULL ) {
+                    offset = prop->getFloatValue();
+                }
                 prop = child->getChild( "factor" );
                 if ( prop != NULL ) {
                     factor = prop->getFloatValue();
@@ -472,6 +489,14 @@ bool FGATCInput::do_analog_in() {
                             scaled_value = scale( min, max, raw_value );
                         }
                         scaled_value *= factor;
+                        scaled_value += offset;
+
+                        // final sanity clamp
+                        if ( center >= 0 ) {
+                            scaled_value = clamp( -1.0, 1.0, scaled_value );
+                        } else {
+                            scaled_value = clamp( 0.0, 1.0, scaled_value );
+                        }
 
                         // update the property tree values
                         for ( j = 0; j < (int)output_nodes.size(); ++j ) {
@@ -488,6 +513,14 @@ bool FGATCInput::do_analog_in() {
                         scaled_value = scale( min, max, raw_value );
                     }
                     scaled_value *= factor;
+                    scaled_value += offset;
+
+                    // final sanity clamp
+                    if ( center >= 0 ) {
+                        scaled_value = clamp( -1.0, 1.0, scaled_value );
+                    } else {
+                        scaled_value = clamp( 0.0, 1.0, scaled_value );
+                    }
 
                     // update the property tree values
                     for ( j = 0; j < (int)output_nodes.size(); ++j ) {
