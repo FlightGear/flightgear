@@ -51,9 +51,9 @@ FGGlobals::FGGlobals() :
     warp_delta( 0 ),
     props(new SGPropertyNode),
     initial_state(0),
+    locale(NULL),
     commands(new SGCommandMgr),
-    io(new FGIO),
-    locale(NULL)
+    io(new FGIO)
 {
 }
 
@@ -84,14 +84,34 @@ FGGlobals::saveInitialState ()
 void
 FGGlobals::restoreInitialState ()
 {
-  if (initial_state == 0) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "No initial state available to restore!!!");
-  } else if (!copyProperties(initial_state, props)) {
-    SG_LOG(SG_GENERAL, SG_INFO,
-	   "Some errors restoring initial state (probably just read-only props)");
-  } else {
-    SG_LOG(SG_GENERAL, SG_INFO, "Initial state restored successfully");
-  }
+    if ( initial_state == 0 ) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "No initial state available to restore!!!");
+        return;
+    }
+
+    SGPropertyNode *currentPresets = new SGPropertyNode;
+    SGPropertyNode *targetNode = fgGetNode( "/sim/presets" );
+
+    // stash the /sim/presets tree
+    if ( !copyProperties(targetNode, currentPresets) ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to save /sim/presets subtree" );
+    }
+    
+    if ( copyProperties(initial_state, props) ) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Initial state restored successfully" );
+    } else {
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Some errors restoring initial state (read-only props?)" );
+    }
+
+    // recover the /sim/presets tree
+    if ( !copyProperties(currentPresets, targetNode) ) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to restore /sim/presets subtree" );
+    }
+
+   delete currentPresets;
 }
 
 FGViewer *

@@ -895,7 +895,8 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
 
 
 static void fgSetDistOrAltFromGlideSlope() {
-    double gs = fgGetDouble("/sim/presets/glideslope");
+    double gs = fgGetDouble("/sim/presets/glideslope-deg")
+        * SG_DEGREES_TO_RADIANS ;
     double od = fgGetDouble("/sim/presets/offset-distance");
     double alt = fgGetDouble("/sim/presets/altitude-ft");
     
@@ -917,7 +918,7 @@ static void fgSetDistOrAltFromGlideSlope() {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Glideslope given but not altitude or offset-distance." );
         SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
-        fgSetDouble("/sim/presets/glideslope", 0);
+        fgSetDouble("/sim/presets/glideslope-deg", 0);
     }                              
 }                       
 
@@ -1196,7 +1197,7 @@ SGTime *fgInitTime() {
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
-bool fgInitSubsystems( void ) {
+bool fgInitSubsystems() {
     static const SGPropertyNode *longitude
         = fgGetNode("/sim/presets/longitude-deg");
     static const SGPropertyNode *latitude
@@ -1611,7 +1612,7 @@ bool fgInitSubsystems( void ) {
 }
 
 
-void fgReInitSubsystems( void )
+void fgReInitSubsystems()
 {
     static const SGPropertyNode *longitude
         = fgGetNode("/sim/presets/longitude-deg");
@@ -1630,12 +1631,8 @@ void fgReInitSubsystems( void )
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", true);
     }
-    
-    // Initialize the Scenery Management subsystem
-    // FIXME, what really needs to get initialized here, at the time
-    // this was commented out, scenery.init() was a noop
-    // scenery.init();
 
+    // Initialize the FDM
     fgInitFDM();
     
     // allocates structures so must happen before any of the flight

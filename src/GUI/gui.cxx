@@ -47,8 +47,8 @@
 
 #include "gui.h"
 #include "gui_local.hxx"
-#include "apt_dlg.hxx"
 #include "net_dlg.hxx"
+#include "preset_dlg.hxx"
 
 
 // main.cxx hack, should come from an include someplace
@@ -229,7 +229,7 @@ void guiInit()
 
     // Set up our Dialog Boxes
     ConfirmExitDialogInit();
-    NewAirportInit();
+    fgPresetInit();
 	
 #ifdef FG_NETWORK_OLK
     NewNetIdInit();

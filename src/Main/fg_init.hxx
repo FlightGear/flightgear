@@ -63,17 +63,17 @@ SGPropertyNode *fgInitLocale(const char *language);
 
 
 // General house keeping initializations
-bool fgInitGeneral ( void );
+bool fgInitGeneral ();
 
 
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
-bool fgInitSubsystems( void );
+bool fgInitSubsystems();
 
 
 // Reset
-void fgReInitSubsystems( void );
+void fgReInitSubsystems();
 
 
 // find basic airport location info from airport database

@@ -73,6 +73,9 @@ void reInit(puObject *cb)
 
     globals->restoreInitialState();
 
+    // update our position based on current presets
+    fgInitPosition();
+
     SGTime *t = globals->get_time_params();
     delete t;
     t = fgInitTime();

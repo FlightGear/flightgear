@@ -763,8 +763,8 @@ parse_option (const string& arg)
     } else if ( arg.find( "--pitch=" ) == 0 ) {
 	fgSetDouble("/sim/presets/pitch-deg", atof(arg.substr(8)));
     } else if ( arg.find( "--glideslope=" ) == 0 ) {
-	fgSetDouble("/sim/presets/glideslope",
-                    atof(arg.substr(13)) * SG_DEGREES_TO_RADIANS );
+	fgSetDouble("/sim/presets/glideslope-deg",
+                    atof(arg.substr(13)));
     }  else if ( arg.find( "--roc=" ) == 0 ) {
 	fgSetDouble("/velocities/vertical-speed-fps", atof(arg.substr(6))/60);
     } else if ( arg.find( "--fg-root=" ) == 0 ) {

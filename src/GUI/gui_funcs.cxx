@@ -91,10 +91,10 @@
 
 #include "gui.h"
 #include "gui_local.hxx"
-#include "apt_dlg.hxx"
 #include "net_dlg.hxx"
-#include "sgVec3Slider.hxx"
+#include "preset_dlg.hxx"
 #include "prop_picker.hxx"
+#include "sgVec3Slider.hxx"
 
 SG_USING_STD(string);
 
@@ -172,7 +172,13 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"prop_pickerView", prop_pickerView},
 
         // Environment
-        {"NewAirport", NewAirport},
+        {"fgPresetAirport", fgPresetAirport},
+        {"fgPresetRunway", fgPresetRunway},
+        {"fgPresetOffsetDistance", fgPresetOffsetDistance},
+        {"fgPresetAltitude", fgPresetAltitude},
+        {"fgPresetGlideslope", fgPresetGlideslope},
+        {"fgPresetAirspeed", fgPresetAirspeed},
+        {"fgPresetCommit", fgPresetCommit},
 
         // Network
 #ifdef FG_NETWORK_OLK
