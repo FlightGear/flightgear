@@ -37,7 +37,7 @@
 
 $Header$
 $Log$
-Revision 1.4  1999/08/07 16:23:55  curt
+Revision 1.5  1999/08/07 17:18:45  curt
 Updates to Tony's c172 model.
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
@@ -93,6 +93,7 @@ Initial Flight Gear revision.
 #include "ls_generic.h"
 #include "ls_cockpit.h"
 
+/* SCALAR Brake_pct; */
 void sub3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] - v2[0];

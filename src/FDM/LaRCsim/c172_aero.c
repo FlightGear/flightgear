@@ -219,8 +219,8 @@ void aero( SCALAR dt, int Initialize ) {
   else
   	elevator=(Long_control+long_trim)*23*DEG_TO_RAD;
   
-  aileron  = Lat_control*17.5*DEG_TO_RAD;
-  rudder   = Rudder_pedal*16*DEG_TO_RAD; 
+  aileron  = -1*Lat_control*17.5*DEG_TO_RAD;
+  rudder   = -1*Rudder_pedal*16*DEG_TO_RAD; 
   /*
     The aileron travel limits are 20 deg. TEU and 15 deg TED
     but since we don't distinguish between left and right we'll
@@ -293,3 +293,5 @@ void aero( SCALAR dt, int Initialize ) {
  *//*  printf("Maero: %7.4f Naero: %7.4f Raero: %7.4f\n",M_m_aero,M_n_aero,M_l_aero);
  */  
 }
+
+
