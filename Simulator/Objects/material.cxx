@@ -209,6 +209,7 @@ FGMaterial::load_texture( const string& root )
 
 	if ( gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, width, height, 
 				GL_RGB, GL_UNSIGNED_BYTE, texbuf ) != 0 )
+	{
 	    FG_LOG( FG_GENERAL, FG_ALERT, "Error building mipmaps");
 	    exit(-1);
 	}
