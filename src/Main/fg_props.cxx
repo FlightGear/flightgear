@@ -867,8 +867,11 @@ fgInitProps ()
   fgTie("/sim/freeze", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
   fgTie("/sim/view/offset-deg", getViewOffset, setViewOffset);
+  fgSetArchivable("/sim/view/offset-deg");
   fgTie("/sim/view/goal-offset-deg", getGoalViewOffset, setGoalViewOffset);
+  fgSetArchivable("/sim/view/goal-offset-deg");
   fgTie("/sim/time/gmt", getDateString, setDateString);
+  fgSetArchivable("/sim/time/gmt");
   fgTie("/sim/time/gmt-string", getGMTString);
   fgTie("/sim/rendering/textures", getTextures, setTextures);
 
@@ -883,39 +886,62 @@ fgInitProps ()
   fgTie("/engines/engine[0]/fuel-flow-gph", getFuelFlow);
 
   //consumables
-  fgTie("/consumables/fuel/tank[0]/level-gal_us", getTank1Fuel, setTank1Fuel, false);
-  fgTie("/consumables/fuel/tank[1]/level-gal_us", getTank2Fuel, setTank2Fuel, false);
+  fgTie("/consumables/fuel/tank[0]/level-gal_us",
+	getTank1Fuel, setTank1Fuel, false);
+  fgSetArchivable("/consumables/fuel/tank[0]/level-gal_us");
+  fgTie("/consumables/fuel/tank[1]/level-gal_us",
+	getTank2Fuel, setTank2Fuel, false);
+  fgSetArchivable("/consumables/fuel/tank[1]/level-gal_us");
 
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
+  fgSetArchivable("/autopilot/locks/altitude");
   fgTie("/autopilot/settings/altitude-ft", getAPAltitude, setAPAltitude);
+  fgSetArchivable("/autopilot/settings/altitude-ft");
   fgTie("/autopilot/locks/glide-slope", getAPGSLock, setAPGSLock);
+  fgSetArchivable("/autopilot/locks/glide-slope");
   fgTie("/autopilot/locks/terrain", getAPTerrainLock, setAPTerrainLock);
+  fgSetArchivable("/autopilot/locks/terrain");
   fgTie("/autopilot/settings/climb-rate-fpm", getAPClimb, setAPClimb, false);
+  fgSetArchivable("/autopilot/settings/climb-rate-fpm");
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
-  fgTie("/autopilot/settings/heading-bug-deg", getAPHeadingBug, setAPHeadingBug,
-	false);
+  fgSetArchivable("/autopilot/locks/heading");
+  fgTie("/autopilot/settings/heading-bug-deg",
+	getAPHeadingBug, setAPHeadingBug, false);
+  fgSetArchivable("/autopilot/settings/heading-bug-deg");
   fgTie("/autopilot/locks/wing-leveler", getAPWingLeveler, setAPWingLeveler);
+  fgSetArchivable("/autopilot/locks/wing-leveler");
   fgTie("/autopilot/locks/nav[0]", getAPNAV1Lock, setAPNAV1Lock);
+  fgSetArchivable("/autopilot/locks/nav[0]");
   fgTie("/autopilot/locks/auto-throttle",
 	getAPAutoThrottleLock, setAPAutoThrottleLock);
+  fgSetArchivable("/autopilot/locks/auto-throttle");
   fgTie("/autopilot/control-overrides/rudder",
 	getAPRudderControl, setAPRudderControl);
+  fgSetArchivable("/autopilot/control-overrides/rudder");
   fgTie("/autopilot/control-overrides/elevator",
 	getAPElevatorControl, setAPElevatorControl);
+  fgSetArchivable("/autopilot/control-overrides/elevator");
   fgTie("/autopilot/control-overrides/throttle",
 	getAPThrottleControl, setAPThrottleControl);
+  fgSetArchivable("/autopilot/control-overrides/throttle");
 
 				// Environment
   fgTie("/environment/visibility-m", getVisibility, setVisibility);
+  fgSetArchivable("/environment/visibility-m");
   fgTie("/environment/wind-north-fps", getWindNorth, setWindNorth);
+  fgSetArchivable("/environment/wind-north-fps");
   fgTie("/environment/wind-east-fps", getWindEast, setWindEast);
+  fgSetArchivable("/environment/wind-east-fps");
   fgTie("/environment/wind-down-fps", getWindDown, setWindDown);
+  fgSetArchivable("/environment/wind-down-fps");
+
   fgTie("/environment/magnetic-variation-deg", getMagVar);
   fgTie("/environment/magnetic-dip-deg", getMagDip);
 
 				// View
   fgTie("/sim/field-of-view", getFOV, setFOV);
+  fgSetArchivable("/sim/field-of-view");
   fgTie("/sim/time/warp", getWarp, setWarp, false);
   fgTie("/sim/time/warp-delta", getWarpDelta, setWarpDelta);
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
