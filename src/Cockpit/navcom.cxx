@@ -507,17 +507,17 @@ void FGNavCom::search()
             double tlon, tlat, taz;
             geo_direct_wgs_84 ( 0.0, nav_gslat, nav_gslon, nav_radial + 90,  
                                 100.0, &tlat, &tlon, &taz );
-            cout << nav_gslon << "," << nav_gslat << "  "
-                 << tlon << "," << tlat << "  (" << nav_elev << ")" << endl;
+            // cout << nav_gslon << "," << nav_gslat << "  "
+            //      << tlon << "," << tlat << "  (" << nav_elev << ")" << endl;
             Point3D p1 = sgGeodToCart( Point3D(tlon*SGD_DEGREES_TO_RADIANS,
                                                tlat*SGD_DEGREES_TO_RADIANS,
                                                nav_elev*SG_FEET_TO_METER) );
-            cout << nav_gs_x << "," << nav_gs_y << "," << nav_gs_z << endl;
-            cout << p1 << endl;
+            // cout << nav_gs_x << "," << nav_gs_y << "," << nav_gs_z << endl;
+            // cout << p1 << endl;
             sgdSetVec3( gs_base_vec,
                         p1.x()-nav_gs_x, p1.y()-nav_gs_y, p1.z()-nav_gs_z );
-            cout << gs_base_vec[0] << "," << gs_base_vec[1] << ","
-                 << gs_base_vec[2] << endl;
+            // cout << gs_base_vec[0] << "," << gs_base_vec[1] << ","
+            //      << gs_base_vec[2] << endl;
 
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
