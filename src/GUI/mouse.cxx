@@ -224,11 +224,11 @@ static inline float get_elevator() {
 }
 
 static inline bool AP_HeadingEnabled() {
-	return current_autopilot->get_HeadingEnabled();
+	return globals->get_autopilot()->get_HeadingEnabled();
 }
 
 static inline bool AP_AltitudeEnabled() {
-	return current_autopilot->get_AltitudeEnabled();
+	return globals->get_autopilot()->get_AltitudeEnabled();
 }
 
 void TurnCursorOn( void )

@@ -964,10 +964,12 @@ bool fgInitSubsystems( void ) {
     // Initialize the autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    current_autopilot = new FGAutopilot;
-    current_autopilot->init();
+    globals->set_autopilot(new FGAutopilot);
+    globals->get_autopilot()->init();
+    globals->get_autopilot()->bind();
 
-    // initialize the gui parts of the autopilot
+				// FIXME: these should go in the
+				// GUI initialization code, not here.
     fgAPAdjustInit();
     NewTgtAirportInit();
     NewHeadingInit();
@@ -1074,7 +1076,7 @@ void fgReInitSubsystems( void )
     fgInitView();
 
     globals->get_controls()->reset_all();
-    current_autopilot->reset();
+    globals->get_autopilot()->reset();
 
     fgUpdateSunPos();
     fgUpdateMoonPos();

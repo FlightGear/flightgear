@@ -45,9 +45,6 @@
 #include "newauto.hxx"
 
 
-FGAutopilot *current_autopilot;
-
-
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
 // AutoPilot Gain Adjuster members
@@ -148,12 +145,6 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 	sprintf( TargetWP1Str, "%s %.2f NM  ETA %d:%02d",
 		 wp1.get_id().c_str(),
 		 accum*SG_METER_TO_NM, major, minor );
-	// cout << "distance = " << distance*SG_METER_TO_NM
-	//      << "  gndsp = " << get_ground_speed() 
-	//      << "  time = " << eta
-	//      << "  major = " << major
-	//      << "  minor = " << minor
-	//      << endl;
     }
 
     // next route
@@ -208,44 +199,10 @@ void FGAutopilot::update_old_control_values() {
 
 
 // Initialize autopilot subsystem
-void FGAutopilot::init() {
+
+void FGAutopilot::init ()
+{
     SG_LOG( SG_AUTOPILOT, SG_INFO, "Init AutoPilot Subsystem" );
-
-    // Autopilot control property static get/set bindings
-    fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
-    fgSetArchivable("/autopilot/locks/altitude");
-    fgTie("/autopilot/settings/altitude-ft", getAPAltitude, setAPAltitude);
-    fgSetArchivable("/autopilot/settings/altitude-ft");
-    fgTie("/autopilot/locks/glide-slope", getAPGSLock, setAPGSLock);
-    fgSetDouble("/autopilot/settings/altitude-ft", 3000.0f);
-    fgSetArchivable("/autopilot/locks/glide-slope");
-    fgTie("/autopilot/locks/terrain", getAPTerrainLock, setAPTerrainLock);
-    fgSetArchivable("/autopilot/locks/terrain");
-    fgTie("/autopilot/settings/climb-rate-fpm", getAPClimb, setAPClimb, false);
-    fgSetArchivable("/autopilot/settings/climb-rate-fpm");
-    fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
-    fgSetArchivable("/autopilot/locks/heading");
-    fgTie("/autopilot/settings/heading-bug-deg",
-	getAPHeadingBug, setAPHeadingBug);
-    fgSetArchivable("/autopilot/settings/heading-bug-deg");
-    fgSetDouble("/autopilot/settings/heading-bug-deg", 0.0f);
-    fgTie("/autopilot/locks/wing-leveler", getAPWingLeveler, setAPWingLeveler);
-    fgSetArchivable("/autopilot/locks/wing-leveler");
-    fgTie("/autopilot/locks/nav[0]", getAPNAV1Lock, setAPNAV1Lock);
-    fgSetArchivable("/autopilot/locks/nav[0]");
-    fgTie("/autopilot/locks/auto-throttle",
-  	getAPAutoThrottleLock, setAPAutoThrottleLock);
-    fgSetArchivable("/autopilot/locks/auto-throttle");
-    fgTie("/autopilot/control-overrides/rudder",
-	getAPRudderControl, setAPRudderControl);
-    fgSetArchivable("/autopilot/control-overrides/rudder");
-    fgTie("/autopilot/control-overrides/elevator",
-	getAPElevatorControl, setAPElevatorControl);
-    fgSetArchivable("/autopilot/control-overrides/elevator");
-    fgTie("/autopilot/control-overrides/throttle",
-	getAPThrottleControl, setAPThrottleControl);
-    fgSetArchivable("/autopilot/control-overrides/throttle");
-
 
     // bind data input property nodes...
     latitude_node = fgGetNode("/position/latitude-deg", true);
@@ -341,9 +298,63 @@ void FGAutopilot::init() {
 #endif  // !defined( USING_SLIDER_CLASS )
 
     update_old_control_values();
-	
 };
 
+void
+FGAutopilot::bind ()
+{
+    // Autopilot control property get/set bindings
+    fgTie("/autopilot/locks/altitude", this,
+	  &FGAutopilot::getAPAltitudeLock, &FGAutopilot::setAPAltitudeLock);
+    fgSetArchivable("/autopilot/locks/altitude");
+    fgTie("/autopilot/settings/altitude-ft", this,
+	  &FGAutopilot::getAPAltitude, &FGAutopilot::setAPAltitude);
+    fgSetArchivable("/autopilot/settings/altitude-ft");
+    fgTie("/autopilot/locks/glide-slope", this,
+	  &FGAutopilot::getAPGSLock, &FGAutopilot::setAPGSLock);
+    fgSetArchivable("/autopilot/locks/glide-slope");
+    fgSetDouble("/autopilot/settings/altitude-ft", 3000.0f);
+    fgTie("/autopilot/locks/terrain", this,
+	  &FGAutopilot::getAPTerrainLock, &FGAutopilot::setAPTerrainLock);
+    fgSetArchivable("/autopilot/locks/terrain");
+    fgTie("/autopilot/settings/climb-rate-fpm", this,
+	  &FGAutopilot::getAPClimb, &FGAutopilot::setAPClimb, false);
+    fgSetArchivable("/autopilot/settings/climb-rate-fpm");
+    fgTie("/autopilot/locks/heading", this,
+	  &FGAutopilot::getAPHeadingLock, &FGAutopilot::setAPHeadingLock);
+    fgSetArchivable("/autopilot/locks/heading");
+    fgTie("/autopilot/settings/heading-bug-deg", this,
+	  &FGAutopilot::getAPHeadingBug, &FGAutopilot::setAPHeadingBug);
+    fgSetArchivable("/autopilot/settings/heading-bug-deg");
+    fgSetDouble("/autopilot/settings/heading-bug-deg", 0.0f);
+    fgTie("/autopilot/locks/wing-leveler", this,
+	  &FGAutopilot::getAPWingLeveler, &FGAutopilot::setAPWingLeveler);
+    fgSetArchivable("/autopilot/locks/wing-leveler");
+    fgTie("/autopilot/locks/nav[0]", this,
+	  &FGAutopilot::getAPNAV1Lock, &FGAutopilot::setAPNAV1Lock);
+    fgSetArchivable("/autopilot/locks/nav[0]");
+    fgTie("/autopilot/locks/auto-throttle", this,
+	  &FGAutopilot::getAPAutoThrottleLock,
+	  &FGAutopilot::setAPAutoThrottleLock);
+    fgSetArchivable("/autopilot/locks/auto-throttle");
+    fgTie("/autopilot/control-overrides/rudder", this,
+	  &FGAutopilot::getAPRudderControl,
+	  &FGAutopilot::setAPRudderControl);
+    fgSetArchivable("/autopilot/control-overrides/rudder");
+    fgTie("/autopilot/control-overrides/elevator", this,
+	  &FGAutopilot::getAPElevatorControl,
+	  &FGAutopilot::setAPElevatorControl);
+    fgSetArchivable("/autopilot/control-overrides/elevator");
+    fgTie("/autopilot/control-overrides/throttle", this,
+	  &FGAutopilot::getAPThrottleControl,
+	  &FGAutopilot::setAPThrottleControl);
+    fgSetArchivable("/autopilot/control-overrides/throttle");
+}
+
+void
+FGAutopilot::unbind ()
+{
+}
 
 // Reset the autopilot system
 void FGAutopilot::reset() {
@@ -406,7 +417,9 @@ static double LinearExtrapolate( double x, double x1, double y1, double x2, doub
 };
 
 
-int FGAutopilot::run() {
+void
+FGAutopilot::update (int dt)
+{
     // Remove the following lines when the calling funcitons start
     // passing in the data pointer
 
@@ -447,9 +460,6 @@ int FGAutopilot::run() {
     // heading hold
     if ( heading_hold == true ) {
 	if ( heading_mode == FG_DG_HEADING_LOCK ) {
-	    // cout << "DG heading = " << FGSteam::get_DG_deg()
-	    //      << " DG error = " << FGSteam::get_DG_err() << endl;
-
 	    TargetHeading = DGTargetHeading + FGSteam::get_DG_err();
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
@@ -503,7 +513,6 @@ int FGAutopilot::run() {
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
 
 	    MakeTargetHeadingStr( TargetHeading );
-	    // cout << "target course (true) = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	    // update target heading to waypoint
 
@@ -542,9 +551,6 @@ int FGAutopilot::run() {
 		// corrected_course = course - wp_course;
 		TargetHeading = NormalizeDegrees(wp_course);
 	    } else {
-		cout << "Reached waypoint within " << wp_distance << "meters"
-		     << endl;
-
 		// pop off this waypoint from the list
 		if ( globals->get_route()->size() ) {
 		    globals->get_route()->delete_first();
@@ -570,7 +576,6 @@ int FGAutopilot::run() {
 	if ( heading_mode == FG_TC_HEADING_LOCK ) {
 	    // drive the turn coordinator to zero
 	    double turn = FGSteam::get_TC_std();
-	    // cout << "turn rate = " << turn << endl;
 	    double AileronSet = -turn / 2.0;
             SG_CLAMP_RANGE( AileronSet, -1.0, 1.0 );
 	    globals->get_controls()->set_aileron( AileronSet );
@@ -660,25 +665,18 @@ int FGAutopilot::run() {
 	    double y = (altitude_node->getDoubleValue()
 			- current_radiostack->get_nav1_elev()) * SG_FEET_TO_METER;
 	    double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-	    // cout << "current angle = " << current_angle << endl;
 
 	    double target_angle = current_radiostack->get_nav1_target_gs();
-	    // cout << "target angle = " << target_angle << endl;
 
 	    double gs_diff = target_angle - current_angle;
-	    // cout << "difference from desired = " << gs_diff << endl;
 
 	    // convert desired vertical path angle into a climb rate
 	    double des_angle = current_angle - 10 * gs_diff;
-	    // cout << "desired angle = " << des_angle << endl;
 
 	    // convert to meter/min
-	    // cout << "raw ground speed = " << cur_fdm_state->get_V_ground_speed() << endl;
 	    double horiz_vel = cur_fdm_state->get_V_ground_speed()
 		* SG_FEET_TO_METER * 60.0;
-	    // cout << "Horizontal vel = " << horiz_vel << endl;
 	    climb_rate = -sin( des_angle * SGD_DEGREES_TO_RADIANS ) * horiz_vel;
-	    // cout << "climb_rate = " << climb_rate << endl;
 	    /* climb_error_accum += gs_diff * 2.0; */
 	    /* climb_rate = gs_diff * 200.0 + climb_error_accum; */
 	} else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
@@ -686,10 +684,6 @@ int FGAutopilot::run() {
 	    climb_rate =
 		( TargetAGL - altitude_agl_node->getDoubleValue()
                   * SG_FEET_TO_METER ) * 16.0;
-	    // cout << "target agl = " << TargetAGL 
-	    //      << "  current agl = " << fgAPget_agl() 
-	    //      << "  target climb rate = " << climb_rate 
-	    //      << endl;
 	} else {
 	    // just try to zero out rate of climb ...
 	    climb_rate = 0.0;
@@ -729,13 +723,6 @@ int FGAutopilot::run() {
                 = -fabs(TargetDescentRate->getFloatValue() * SG_FEET_TO_METER);
 	}
 
-	// cout << "Target climb rate = " << TargetClimbRate->getFloatValue() << endl;
-	// cout << "given our speed, modified desired climb rate = "
-	//      << climb_rate * SG_METER_TO_FEET 
-	//      << " fpm" << endl;
-        // cout << "Current climb rate = "
-        //      << vertical_speed_node->getDoubleValue() * 60 << " fpm" << endl;
-
 	error = vertical_speed_node->getDoubleValue() * 60
             - climb_rate * SG_METER_TO_FEET;
 
@@ -752,11 +739,6 @@ int FGAutopilot::run() {
 	prop_error = error;
 	prop_adj = prop_error / elevator_adj_factor->getDoubleValue();
 
-        // cout << "Error=" << error << endl;
-        // cout << "integral_error=" << int_error << endl;
-        // cout << "integral_contrib=" << integral_contrib->getFloatValue() << endl;
-        // cout << "Proportional Adj=" << prop_adj << endl;
-        // cout << "Integral Adj" << int_adj << endl;
 	total_adj = ((double) 1.0 - (double) integral_contrib->getFloatValue()) * prop_adj
             + (double) integral_contrib->getFloatValue() * int_adj;
 
@@ -771,8 +753,6 @@ int FGAutopilot::run() {
         total_adj += ((current_throttle->getFloatValue() - zero_pitch_throttle->getFloatValue())
                      / (1 - zero_pitch_throttle->getFloatValue()))
                      * zero_pitch_trim_full_throttle->getFloatValue();
-
-        // cout << "Total Adj" << total_adj << endl;
 
 	globals->get_controls()->set_elevator_trim( total_adj );
     }
@@ -857,8 +837,6 @@ int FGAutopilot::run() {
 	
     // Ok, we are done
     SG_LOG( SG_ALL, SG_DEBUG, "FGAutopilot::run( returns )" );
-
-    return 0;
 }
 
 
@@ -950,59 +928,8 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
 }
 
 
-#if 0
-static inline double get_aoa( void ) {
-    return( cur_fdm_state->get_Gamma_vert_rad() * SGD_RADIANS_TO_DEGREES );
-}
-
-static inline double fgAPget_latitude( void ) {
-    return( cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
-}
-
-static inline double fgAPget_longitude( void ) {
-    return( cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES );
-}
-
-static inline double fgAPget_roll( void ) {
-    return( cur_fdm_state->get_Phi() * SGD_RADIANS_TO_DEGREES );
-}
-
-static inline double get_pitch( void ) {
-    return( cur_fdm_state->get_Theta() );
-}
-
-double fgAPget_heading( void ) {
-    return( cur_fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES );
-}
-
-static inline double fgAPget_altitude( void ) {
-    return( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
-}
-
-static inline double fgAPget_climb( void ) {
-    // return in meters per minute
-    return( cur_fdm_state->get_Climb_Rate() * SG_FEET_TO_METER * 60 );
-}
-
-static inline double get_sideslip( void ) {
-    return( cur_fdm_state->get_Beta() );
-}
-
-static inline double fgAPget_agl( void ) {
-    double agl;
-
-    agl = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
-	- scenery.get_cur_elev();
-
-    return( agl );
-}
-#endif
-
-
 void FGAutopilot::AltitudeSet( double new_altitude ) {
     double target_alt = new_altitude;
-
-    // cout << "new altitude = " << new_altitude << endl;
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
 	target_alt = new_altitude * SG_FEET_TO_METER;
@@ -1014,8 +941,6 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
 
     TargetAltitude = target_alt;
     altitude_mode = FG_ALTITUDE_LOCK;
-
-    // cout << "TargetAltitude = " << TargetAltitude << endl;
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
 	target_alt *= SG_METER_TO_FEET;
@@ -1038,10 +963,6 @@ void FGAutopilot::AltitudeAdjust( double inc )
 	target_alt = TargetAltitude;
 	target_agl = TargetAGL;
     }
-
-    // cout << "target_agl = " << target_agl << endl;
-    // cout << "target_agl / inc = " << target_agl / inc << endl;
-    // cout << "(int)(target_agl / inc) = " << (int)(target_agl / inc) << endl;
 
     if ( fabs((int)(target_alt / inc) * inc - target_alt) < SG_EPSILON ) {
 	target_alt += inc;
@@ -1133,3 +1054,311 @@ void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
     SG_LOG( SG_COCKPIT, SG_INFO, " fgAPSetAutoThrottle: ("
 	    << auto_throttle << ") " << TargetSpeed );
 }
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Kludged methods for tying to properties.
+//
+// These should change eventually; they all used to be static
+// functions.
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * Get the autopilot altitude lock (true=on).
+ */
+bool
+FGAutopilot::getAPAltitudeLock () const
+{
+    return (get_AltitudeEnabled() &&
+	    get_AltitudeMode()
+	    == FGAutopilot::FG_ALTITUDE_LOCK);
+}
+
+
+/**
+ * Set the autopilot altitude lock (true=on).
+ */
+void
+FGAutopilot::setAPAltitudeLock (bool lock)
+{
+  if (lock)
+    set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
+  if (get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_LOCK)
+    set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot target altitude in feet.
+ */
+double
+FGAutopilot::getAPAltitude () const
+{
+  return get_TargetAltitude() * SG_METER_TO_FEET;
+}
+
+
+/**
+ * Set the autopilot target altitude in feet.
+ */
+void
+FGAutopilot::setAPAltitude (double altitude)
+{
+  set_TargetAltitude( altitude * SG_FEET_TO_METER );
+}
+
+/**
+ * Get the autopilot altitude lock (true=on).
+ */
+bool
+FGAutopilot::getAPGSLock () const
+{
+    return (get_AltitudeEnabled() &&
+	    (get_AltitudeMode()
+	     == FGAutopilot::FG_ALTITUDE_GS1));
+}
+
+
+/**
+ * Set the autopilot altitude lock (true=on).
+ */
+void
+FGAutopilot::setAPGSLock (bool lock)
+{
+  if (lock)
+    set_AltitudeMode(FGAutopilot::FG_ALTITUDE_GS1);
+  if (get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_GS1)
+    set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot terrain lock (true=on).
+ */
+bool
+FGAutopilot::getAPTerrainLock () const
+{
+    return (get_AltitudeEnabled() &&
+	    (get_AltitudeMode()
+	     == FGAutopilot::FG_ALTITUDE_TERRAIN));
+}
+
+
+/**
+ * Set the autopilot terrain lock (true=on).
+ */
+void
+FGAutopilot::setAPTerrainLock (bool lock)
+{
+  if (lock) {
+    set_AltitudeMode(FGAutopilot::FG_ALTITUDE_TERRAIN);
+    set_TargetAGL(fgGetFloat("/position/altitude-agl-ft") *
+		  SG_FEET_TO_METER);
+  }
+  if (get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_TERRAIN)
+    set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot target altitude in feet.
+ */
+double
+FGAutopilot::getAPClimb () const
+{
+  return get_TargetClimbRate() * SG_METER_TO_FEET;
+}
+
+
+/**
+ * Set the autopilot target altitude in feet.
+ */
+void
+FGAutopilot::setAPClimb (double rate)
+{
+    set_TargetClimbRate( rate * SG_FEET_TO_METER );
+}
+
+
+/**
+ * Get the autopilot heading lock (true=on).
+ */
+bool
+FGAutopilot::getAPHeadingLock () const
+{
+    return
+      (get_HeadingEnabled() &&
+       get_HeadingMode() == DEFAULT_AP_HEADING_LOCK);
+}
+
+
+/**
+ * Set the autopilot heading lock (true=on).
+ */
+void
+FGAutopilot::setAPHeadingLock (bool lock)
+{
+  if (lock)
+    set_HeadingMode(DEFAULT_AP_HEADING_LOCK);
+  if (get_HeadingMode() == DEFAULT_AP_HEADING_LOCK)
+    set_HeadingEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot heading bug in degrees.
+ */
+double
+FGAutopilot::getAPHeadingBug () const
+{
+  return get_DGTargetHeading();
+}
+
+
+/**
+ * Set the autopilot heading bug in degrees.
+ */
+void
+FGAutopilot::setAPHeadingBug (double heading)
+{
+  set_DGTargetHeading( heading );
+}
+
+
+/**
+ * Get the autopilot wing leveler lock (true=on).
+ */
+bool
+FGAutopilot::getAPWingLeveler () const
+{
+    return
+      (get_HeadingEnabled() &&
+       get_HeadingMode() == FGAutopilot::FG_TC_HEADING_LOCK);
+}
+
+
+/**
+ * Set the autopilot wing leveler lock (true=on).
+ */
+void
+FGAutopilot::setAPWingLeveler (bool lock)
+{
+    if (lock)
+	set_HeadingMode(FGAutopilot::FG_TC_HEADING_LOCK);
+    if (get_HeadingMode() == FGAutopilot::FG_TC_HEADING_LOCK)
+      set_HeadingEnabled(lock);
+}
+
+/**
+ * Return true if the autopilot is locked to NAV1.
+ */
+bool
+FGAutopilot::getAPNAV1Lock () const
+{
+  return
+    (get_HeadingEnabled() &&
+     get_HeadingMode() == FGAutopilot::FG_HEADING_NAV1);
+}
+
+
+/**
+ * Set the autopilot NAV1 lock.
+ */
+void
+FGAutopilot::setAPNAV1Lock (bool lock)
+{
+  if (lock)
+    set_HeadingMode(FGAutopilot::FG_HEADING_NAV1);
+  if (get_HeadingMode() == FGAutopilot::FG_HEADING_NAV1)
+    set_HeadingEnabled(lock);
+}
+
+/**
+ * Get the autopilot autothrottle lock.
+ */
+bool
+FGAutopilot::getAPAutoThrottleLock () const
+{
+  return get_AutoThrottleEnabled();
+}
+
+
+/**
+ * Set the autothrottle lock.
+ */
+void
+FGAutopilot::setAPAutoThrottleLock (bool lock)
+{
+  set_AutoThrottleEnabled(lock);
+}
+
+
+// kludge
+double
+FGAutopilot::getAPRudderControl () const
+{
+    if (getAPHeadingLock())
+        return get_TargetHeading();
+    else
+        return globals->get_controls()->get_rudder();
+}
+
+// kludge
+void
+FGAutopilot::setAPRudderControl (double value)
+{
+    if (getAPHeadingLock()) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "setAPRudderControl " << value );
+        value -= get_TargetHeading();
+        HeadingAdjust(value < 0.0 ? -1.0 : 1.0);
+    } else {
+        globals->get_controls()->set_rudder(value);
+    }
+}
+
+// kludge
+double
+FGAutopilot::getAPElevatorControl () const
+{
+  if (getAPAltitudeLock())
+      return get_TargetAltitude();
+  else
+    return globals->get_controls()->get_elevator();
+}
+
+// kludge
+void
+FGAutopilot::setAPElevatorControl (double value)
+{
+    if (value != 0 && getAPAltitudeLock()) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "setAPElevatorControl " << value );
+        value -= get_TargetAltitude();
+        AltitudeAdjust(value < 0.0 ? 100.0 : -100.0);
+    } else {
+        globals->get_controls()->set_elevator(value);
+    }
+}
+
+// kludge
+double
+FGAutopilot::getAPThrottleControl () const
+{
+  if (getAPAutoThrottleLock())
+    return 0.0;			// always resets
+  else
+    return globals->get_controls()->get_throttle(0);
+}
+
+// kludge
+void
+FGAutopilot::setAPThrottleControl (double value)
+{
+  if (getAPAutoThrottleLock())
+    AutoThrottleAdjust(value < 0.0 ? -0.01 : 0.01);
+  else
+    globals->get_controls()->set_throttle(FGControls::ALL_ENGINES, value);
+}
+
+// end of newauto.cxx

@@ -868,7 +868,7 @@ void fgUpdateTimeDepCalcs() {
 	// cout << "multi_loop = " << multi_loop << endl;
 	for ( i = 0; i < multi_loop * fgGetInt("/sim/speed-up"); ++i ) {
 	    // run Autopilot system
-	    current_autopilot->run();
+	    globals->get_autopilot()->update(0); // FIXME: use real dt
 
 	    // update FDM
 	    cur_fdm_state->update( 1 );

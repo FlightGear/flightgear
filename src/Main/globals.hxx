@@ -49,6 +49,7 @@ class FGEnvironmentMgr;
 class FGEnvironment;
 class FGControls;
 class FGSoundMgr;
+class FGAutopilot;
 class FGFX;
 class FGViewMgr;
 class FGViewer;
@@ -97,6 +98,9 @@ private:
 
     // Magnetic Variation
     SGMagVar *mag;
+
+    // Current autopilot
+    FGAutopilot *autopilot;
 
     // Global autopilot "route"
     SGRoute *route;
@@ -177,6 +181,9 @@ public:
 
     inline SGMagVar *get_mag() const { return mag; }
     inline void set_mag( SGMagVar *m ) { mag = m; }
+
+    inline FGAutopilot *get_autopilot() const { return autopilot; }
+    inline void set_autopilot( FGAutopilot *ap) { autopilot = ap; }
 
     inline SGRoute *get_route() const { return route; }
     inline void set_route( SGRoute *r ) { route = r; }

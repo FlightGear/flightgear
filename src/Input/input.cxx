@@ -283,13 +283,13 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 // START SPECIALS
 
         case 256+GLUT_KEY_F6: // F6 toggles Autopilot target location
-	    if ( current_autopilot->get_HeadingMode() !=
+	    if ( globals->get_autopilot()->get_HeadingMode() !=
 		 FGAutopilot::FG_HEADING_WAYPOINT ) {
-		current_autopilot->set_HeadingMode(
+		globals->get_autopilot()->set_HeadingMode(
 		    FGAutopilot::FG_HEADING_WAYPOINT );
-		current_autopilot->set_HeadingEnabled( true );
+		globals->get_autopilot()->set_HeadingEnabled( true );
 	    } else {
-		current_autopilot->set_HeadingMode(
+		globals->get_autopilot()->set_HeadingMode(
 		    FGAutopilot::FG_TC_HEADING_LOCK );
 	    }
 	    return;

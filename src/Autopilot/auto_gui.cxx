@@ -206,10 +206,10 @@ void ApHeadingDialog_OK (puObject *me)
 	double NewHeading;
 	if( scan_number( c, &NewHeading ) )
 	    {
-		if ( !current_autopilot->get_HeadingEnabled() ) {
-		    current_autopilot->set_HeadingEnabled( true );
+		if ( !globals->get_autopilot()->get_HeadingEnabled() ) {
+		    globals->get_autopilot()->set_HeadingEnabled( true );
 		}
-		current_autopilot->HeadingSet( NewHeading );
+		globals->get_autopilot()->HeadingSet( NewHeading );
 	    } else {
 		error = 1;
 		s = c;
@@ -224,7 +224,7 @@ void NewHeading(puObject *cb)
 {
     //	string ApHeadingLabel( "Enter New Heading" );
     //	ApHeadingDialogMessage  -> setLabel(ApHeadingLabel.c_str());
-    float heading = current_autopilot->get_DGTargetHeading();
+    float heading = globals->get_autopilot()->get_DGTargetHeading();
     while ( heading < 0.0 ) { heading += 360.0; }
     ApHeadingDialogInput   ->    setValue ( heading );
     ApHeadingDialogInput    -> acceptInput();
@@ -283,10 +283,10 @@ void ApAltitudeDialog_OK (puObject *me)
 	double NewAltitude;
 	if( scan_number( c, &NewAltitude) )
 	    {
-		if ( !current_autopilot->get_AltitudeEnabled() ) {
-		    current_autopilot->set_AltitudeEnabled( true );
+		if ( !globals->get_autopilot()->get_AltitudeEnabled() ) {
+		    globals->get_autopilot()->set_AltitudeEnabled( true );
 		}
-		current_autopilot->AltitudeSet( NewAltitude );
+		globals->get_autopilot()->AltitudeSet( NewAltitude );
 	    } else {
 		error = 1;
 		s = c;
@@ -299,7 +299,7 @@ void ApAltitudeDialog_OK (puObject *me)
 
 void NewAltitude(puObject *cb)
 {
-    float altitude = current_autopilot->get_TargetAltitude() * SG_METER_TO_FEET;
+    float altitude = globals->get_autopilot()->get_TargetAltitude() * SG_METER_TO_FEET;
     ApAltitudeDialogInput -> setValue( altitude );
     ApAltitudeDialogInput -> acceptInput();
     FG_PUSH_PUI_DIALOG( ApAltitudeDialog );
@@ -359,8 +359,8 @@ static void maxroll_adj( puObject *hs ) {
     hs-> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "maxroll_adj( %p ) %f %f\n", hs, val, MaxRollAdjust * val ) ;
-    current_autopilot->set_MaxRoll( MaxRollAdjust * val );
-    sprintf( SliderText[ 0 ], "%05.2f", current_autopilot->get_MaxRoll() );
+    globals->get_autopilot()->set_MaxRoll( MaxRollAdjust * val );
+    sprintf( SliderText[ 0 ], "%05.2f", globals->get_autopilot()->get_MaxRoll() );
     APAdjustMaxRollText -> setLabel ( SliderText[ 0 ] ) ;
 }
 
@@ -370,8 +370,8 @@ static void rollout_adj( puObject *hs ) {
     hs-> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "rollout_adj( %p ) %f %f\n", hs, val, RollOutAdjust * val ) ;
-    current_autopilot->set_RollOut( RollOutAdjust * val );
-    sprintf( SliderText[ 1 ], "%05.2f", current_autopilot->get_RollOut() );
+    globals->get_autopilot()->set_RollOut( RollOutAdjust * val );
+    sprintf( SliderText[ 1 ], "%05.2f", globals->get_autopilot()->get_RollOut() );
     APAdjustRollOutText -> setLabel ( SliderText[ 1 ] );
 }
 
@@ -381,8 +381,8 @@ static void maxaileron_adj( puObject *hs ) {
     hs-> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "maxaileron_adj( %p ) %f %f\n", hs, val, MaxAileronAdjust * val ) ;
-    current_autopilot->set_MaxAileron( MaxAileronAdjust * val );
-    sprintf( SliderText[ 3 ], "%05.2f", current_autopilot->get_MaxAileron() );
+    globals->get_autopilot()->set_MaxAileron( MaxAileronAdjust * val );
+    sprintf( SliderText[ 3 ], "%05.2f", globals->get_autopilot()->get_MaxAileron() );
     APAdjustMaxAileronText -> setLabel ( SliderText[ 3 ] );
 }
 
@@ -392,8 +392,8 @@ static void rolloutsmooth_adj( puObject *hs ) {
     hs -> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "rolloutsmooth_adj( %p ) %f %f\n", hs, val, RollOutSmoothAdjust * val ) ;
-    current_autopilot->set_RollOutSmooth( RollOutSmoothAdjust * val );
-    sprintf( SliderText[ 2 ], "%5.2f", current_autopilot->get_RollOutSmooth() );
+    globals->get_autopilot()->set_RollOutSmooth( RollOutSmoothAdjust * val );
+    sprintf( SliderText[ 2 ], "%5.2f", globals->get_autopilot()->get_RollOutSmooth() );
     APAdjustRollOutSmoothText-> setLabel ( SliderText[ 2 ] );
 
 }
@@ -404,19 +404,19 @@ static void goAwayAPAdjust (puObject *)
 }
 
 void cancelAPAdjust( puObject *self ) {
-    current_autopilot->set_MaxRoll( TmpMaxRollValue );
-    current_autopilot->set_RollOut( TmpRollOutValue );
-    current_autopilot->set_MaxAileron( TmpMaxAileronValue );
-    current_autopilot->set_RollOutSmooth( TmpRollOutSmoothValue );
+    globals->get_autopilot()->set_MaxRoll( TmpMaxRollValue );
+    globals->get_autopilot()->set_RollOut( TmpRollOutValue );
+    globals->get_autopilot()->set_MaxAileron( TmpMaxAileronValue );
+    globals->get_autopilot()->set_RollOutSmooth( TmpRollOutSmoothValue );
 
     goAwayAPAdjust(self);
 }
 
 void resetAPAdjust( puObject *self ) {
-    current_autopilot->set_MaxRoll( MaxRollAdjust / 2 );
-    current_autopilot->set_RollOut( RollOutAdjust / 2 );
-    current_autopilot->set_MaxAileron( MaxAileronAdjust / 2 );
-    current_autopilot->set_RollOutSmooth( RollOutSmoothAdjust / 2 );
+    globals->get_autopilot()->set_MaxRoll( MaxRollAdjust / 2 );
+    globals->get_autopilot()->set_RollOut( RollOutAdjust / 2 );
+    globals->get_autopilot()->set_MaxAileron( MaxAileronAdjust / 2 );
+    globals->get_autopilot()->set_RollOutSmooth( RollOutSmoothAdjust / 2 );
 
     FG_POP_PUI_DIALOG( APAdjustDialog );
 
@@ -424,15 +424,15 @@ void resetAPAdjust( puObject *self ) {
 }
 
 void fgAPAdjust( puObject *self ) {
-    TmpMaxRollValue       = current_autopilot->get_MaxRoll();
-    TmpRollOutValue       = current_autopilot->get_RollOut();
-    TmpMaxAileronValue    = current_autopilot->get_MaxAileron();
-    TmpRollOutSmoothValue = current_autopilot->get_RollOutSmooth();
+    TmpMaxRollValue       = globals->get_autopilot()->get_MaxRoll();
+    TmpRollOutValue       = globals->get_autopilot()->get_RollOut();
+    TmpMaxAileronValue    = globals->get_autopilot()->get_MaxAileron();
+    TmpRollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth();
 
-    MaxRollValue       = current_autopilot->get_MaxRoll() / MaxRollAdjust;
-    RollOutValue       = current_autopilot->get_RollOut() / RollOutAdjust;
-    MaxAileronValue    = current_autopilot->get_MaxAileron() / MaxAileronAdjust;
-    RollOutSmoothValue = current_autopilot->get_RollOutSmooth()
+    MaxRollValue       = globals->get_autopilot()->get_MaxRoll() / MaxRollAdjust;
+    RollOutValue       = globals->get_autopilot()->get_RollOut() / RollOutAdjust;
+    MaxAileronValue    = globals->get_autopilot()->get_MaxAileron() / MaxAileronAdjust;
+    RollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth()
 	/ RollOutSmoothAdjust;
 
     APAdjustHS0-> setValue ( MaxRollValue ) ;
@@ -468,20 +468,20 @@ void fgAPAdjustInit() {
     int slider_value_x = 160;
     float slider_delta = 0.1f;
 
-    TmpMaxRollValue       = current_autopilot->get_MaxRoll();
-    TmpRollOutValue       = current_autopilot->get_RollOut();
-    TmpMaxAileronValue    = current_autopilot->get_MaxAileron();
-    TmpRollOutSmoothValue = current_autopilot->get_RollOutSmooth();
+    TmpMaxRollValue       = globals->get_autopilot()->get_MaxRoll();
+    TmpRollOutValue       = globals->get_autopilot()->get_RollOut();
+    TmpMaxAileronValue    = globals->get_autopilot()->get_MaxAileron();
+    TmpRollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth();
 
-    MaxRollAdjust = 2 * current_autopilot->get_MaxRoll();
-    RollOutAdjust = 2 * current_autopilot->get_RollOut();
-    MaxAileronAdjust = 2 * current_autopilot->get_MaxAileron();
-    RollOutSmoothAdjust = 2 * current_autopilot->get_RollOutSmooth();
+    MaxRollAdjust = 2 * globals->get_autopilot()->get_MaxRoll();
+    RollOutAdjust = 2 * globals->get_autopilot()->get_RollOut();
+    MaxAileronAdjust = 2 * globals->get_autopilot()->get_MaxAileron();
+    RollOutSmoothAdjust = 2 * globals->get_autopilot()->get_RollOutSmooth();
 
-    MaxRollValue       = current_autopilot->get_MaxRoll() / MaxRollAdjust;
-    RollOutValue       = current_autopilot->get_RollOut() / RollOutAdjust;
-    MaxAileronValue    = current_autopilot->get_MaxAileron() / MaxAileronAdjust;
-    RollOutSmoothValue = current_autopilot->get_RollOutSmooth()
+    MaxRollValue       = globals->get_autopilot()->get_MaxRoll() / MaxRollAdjust;
+    RollOutValue       = globals->get_autopilot()->get_RollOut() / RollOutAdjust;
+    MaxAileronValue    = globals->get_autopilot()->get_MaxAileron() / MaxAileronAdjust;
+    RollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth()
 	/ RollOutSmoothAdjust;
 
     puGetDefaultFonts (  &APAdjustLegendFont,  &APAdjustLabelFont );
@@ -508,7 +508,7 @@ void fgAPAdjustInit() {
 	APAdjustHS0-> setCBMode ( PUSLIDER_DELTA ) ;
 	APAdjustHS0-> setCallback ( maxroll_adj ) ;
 
-	sprintf( SliderText[ 0 ], "%05.2f", current_autopilot->get_MaxRoll() );
+	sprintf( SliderText[ 0 ], "%05.2f", globals->get_autopilot()->get_MaxRoll() );
 	APAdjustMaxRollTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustMaxRollTitle-> setDefaultValue ( "MaxRoll" ) ;
 	APAdjustMaxRollTitle-> getDefaultValue ( &s ) ;
@@ -525,7 +525,7 @@ void fgAPAdjustInit() {
 	APAdjustHS1-> setCBMode ( PUSLIDER_DELTA ) ;
 	APAdjustHS1-> setCallback ( rollout_adj ) ;
 
-	sprintf( SliderText[ 1 ], "%05.2f", current_autopilot->get_RollOut() );
+	sprintf( SliderText[ 1 ], "%05.2f", globals->get_autopilot()->get_RollOut() );
 	APAdjustRollOutTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustRollOutTitle-> setDefaultValue ( "AdjustRollOut" ) ;
 	APAdjustRollOutTitle-> getDefaultValue ( &s ) ;
@@ -543,7 +543,7 @@ void fgAPAdjustInit() {
 	APAdjustHS2-> setCallback ( rolloutsmooth_adj ) ;
 
 	sprintf( SliderText[ 2 ], "%5.2f", 
-		 current_autopilot->get_RollOutSmooth() );
+		 globals->get_autopilot()->get_RollOutSmooth() );
 	APAdjustRollOutSmoothTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustRollOutSmoothTitle-> setDefaultValue ( "RollOutSmooth" ) ;
 	APAdjustRollOutSmoothTitle-> getDefaultValue ( &s ) ;
@@ -561,7 +561,7 @@ void fgAPAdjustInit() {
 	APAdjustHS3-> setCallback ( maxaileron_adj ) ;
 
 	sprintf( SliderText[ 3 ], "%05.2f", 
-		 current_autopilot->get_MaxAileron() );
+		 globals->get_autopilot()->get_MaxAileron() );
 	APAdjustMaxAileronTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustMaxAileronTitle-> setDefaultValue ( "MaxAileron" ) ;
 	APAdjustMaxAileronTitle-> getDefaultValue ( &s ) ;
@@ -636,8 +636,8 @@ void TgtAptDialog_OK (puObject *)
 	 globals->get_route()->add_waypoint( wp );
 
          /* and turn on the autopilot */
-         current_autopilot->set_HeadingEnabled( true );
-         current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
+         globals->get_autopilot()->set_HeadingEnabled( true );
+         globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
 
     } else if ( current_fixlist->query( TgtAptId, 0.0, 0.0, 0.0,
 					&f, &t1, &t2 ) )
@@ -652,8 +652,8 @@ void TgtAptDialog_OK (puObject *)
 	 globals->get_route()->add_waypoint( wp );
 
          /* and turn on the autopilot */
-         current_autopilot->set_HeadingEnabled( true );
-         current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
+         globals->get_autopilot()->set_HeadingEnabled( true );
+         globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
     } else {
 	TgtAptId  += " not in database.";
 	mkDialog(TgtAptId.c_str());
@@ -755,13 +755,13 @@ void PopWayPoint(puObject *cb)
     // see if there are more waypoints on the list
     if ( globals->get_route()->size() ) {
 	// more waypoints
-	current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
+	globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
     } else {
 	// end of the line
-	current_autopilot->set_HeadingMode( FGAutopilot::FG_TC_HEADING_LOCK );
+	globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_TC_HEADING_LOCK );
 
 	// use current heading
-	current_autopilot
+	globals->get_autopilot()
             ->set_TargetHeading(fgGetDouble("/orientation/heading-deg"));
     }
 }
