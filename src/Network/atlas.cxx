@@ -451,6 +451,56 @@ bool FGAtlas::parse_message() {
     
  	    FG_LOG( FG_IO, FG_INFO, " altitude  = " << altitude );
 
+	} else if ( sentence == "PATLA" ) {
+	    // nav1 freq
+	    end = msg.find(",", begin);
+	    if ( end == string::npos ) {
+		return false;
+	    }
+    
+	    string nav1_freq = msg.substr(begin, end - begin);
+	    begin = end + 1;
+	    FG_LOG( FG_IO, FG_INFO, "  nav1_freq = " << nav1_freq );
+
+	    // nav1 selected radial
+	    end = msg.find(",", begin);
+	    if ( end == string::npos ) {
+		return false;
+	    }
+    
+	    string nav1_rad = msg.substr(begin, end - begin);
+	    begin = end + 1;
+	    FG_LOG( FG_IO, FG_INFO, "  nav1_rad = " << nav1_rad );
+
+	    // nav2 freq
+	    end = msg.find(",", begin);
+	    if ( end == string::npos ) {
+		return false;
+	    }
+    
+	    string nav2_freq = msg.substr(begin, end - begin);
+	    begin = end + 1;
+	    FG_LOG( FG_IO, FG_INFO, "  nav2_freq = " << nav2_freq );
+
+	    // nav2 selected radial
+	    end = msg.find(",", begin);
+	    if ( end == string::npos ) {
+		return false;
+	    }
+    
+	    string nav2_rad = msg.substr(begin, end - begin);
+	    begin = end + 1;
+	    FG_LOG( FG_IO, FG_INFO, "  nav2_rad = " << nav2_rad );
+
+	    // adf freq
+	    end = msg.find("*", begin);
+	    if ( end == string::npos ) {
+		return false;
+	    }
+    
+	    string adf_freq = msg.substr(begin, end - begin);
+	    begin = end + 1;
+	    FG_LOG( FG_IO, FG_INFO, "  adf_freq = " << adf_freq );
 	}
 
 	// printf("%.8f %.8f\n", lon, lat);

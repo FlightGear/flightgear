@@ -765,6 +765,8 @@ parse_option (const string& arg)
         fgSetString("/sim/hud/frame-stat-type", "tris");
     } else if ( arg == "--hud-culled" ) {
         fgSetString("/sim/hud/frame-stat-type", "culled");
+    } else if ( arg.find( "--atlas=" ) != string::npos ) {
+	parse_channel( "atlas", arg.substr(8) );
     } else if ( arg.find( "--native=" ) != string::npos ) {
 	parse_channel( "native", arg.substr(9) );
     } else if ( arg.find( "--garmin=" ) != string::npos ) {

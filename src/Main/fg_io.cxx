@@ -34,14 +34,15 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <Network/protocol.hxx>
-#include <Network/native.hxx>
+#include <Network/atlas.hxx>
 #include <Network/garmin.hxx>
+#include <Network/joyclient.hxx>
+#include <Network/native.hxx>
 #include <Network/nmea.hxx>
 #include <Network/props.hxx>
 #include <Network/pve.hxx>
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
-#include <Network/joyclient.hxx>
 
 #include "globals.hxx"
 
@@ -72,12 +73,18 @@ static FGProtocol *parse_port_config( const string& config )
     FG_LOG( FG_IO, FG_INFO, "  protocol = " << protocol );
 
     FGProtocol *io;
-    if ( protocol == "native" ) {
-	FGNative *native = new FGNative;
-	io = native;
+    if ( protocol == "atlas" ) {
+	FGAtlas *atlas = new FGAtlas;
+	io = atlas;
     } else if ( protocol == "garmin" ) {
 	FGGarmin *garmin = new FGGarmin;
 	io = garmin;
+    } else if ( protocol == "joyclient" ) {
+	FGJoyClient *joyclient = new FGJoyClient;
+	io = joyclient;
+    } else if ( protocol == "native" ) {
+	FGNative *native = new FGNative;
+	io = native;
     } else if ( protocol == "nmea" ) {
 	FGNMEA *nmea = new FGNMEA;
 	io = nmea;
@@ -93,9 +100,6 @@ static FGProtocol *parse_port_config( const string& config )
     } else if ( protocol == "rul" ) {
 	FGRUL *rul = new FGRUL;
 	io = rul;
-    } else if ( protocol == "joyclient" ) {
-	FGJoyClient *joyclient = new FGJoyClient;
-	io = joyclient;
     } else {
 	return NULL;
     }
