@@ -40,14 +40,10 @@
 
 #include "options.hxx"
 
-#ifndef BOOL
-#define BOOL int
-#endif
 
-#ifndef TRUE
-#define FALSE 0
-#define TRUE 1
-#endif
+// used in views.cxx and tilemgr.cxx
+#define USE_FAST_FOV_CLIP 
+
 
 // Define a structure containing view information
 class fgVIEW {
@@ -61,7 +57,7 @@ public:
     double goal_view_offset;
 
     // flag forcing update of fov related stuff
-    BOOL update_fov;
+    bool update_fov;
 	
     // fov of view is specified in the y direction, win_ratio is used to
     // calculate the fov in the X direction = width/height
@@ -82,6 +78,10 @@ public:
 
     // slope of view frustum edge in eye space X axis
     double slope_x;
+
+#if defined( USE_FAST_FOV_CLIP )
+    double fov_x_clip, fov_y_clip;
+#endif // USE_FAST_FOV_CLIP
 
     // View frustum cull ratio (% of tiles culled ... used for
     // reporting purposes)
@@ -181,6 +181,9 @@ extern fgVIEW current_view;
 
 
 // $Log$
+// Revision 1.13  1998/09/08 15:04:36  curt
+// Optimizations by Norman Vine.
+//
 // Revision 1.12  1998/08/24 20:11:15  curt
 // Added i/I to toggle full vs. minimal HUD.
 // Added a --hud-tris vs --hud-culled option.

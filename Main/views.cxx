@@ -59,7 +59,7 @@ void fgVIEW::Init( void ) {
     winWidth = 640;  // FG_DEFAULT_WIN_WIDTH
     winHeight = 480; // FG_DEFAULT_WIN_HEIGHT
     win_ratio = (double) winWidth / (double) winHeight;
-    update_fov = TRUE;
+    update_fov = true;
 }
 
 
@@ -75,9 +75,12 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
     // printf("theta_x = %.2f\n", theta_x);
     sin_fov_x = sin(theta_x);
     cos_fov_x = cos(theta_x);
-    slope_x =  - cos_fov_x / sin_fov_x;
-    // (HUH?) sin_fov_x /= slope_x;
+    slope_x =  -cos_fov_x / sin_fov_x;
     // printf("slope_x = %.2f\n", slope_x);
+
+#if defined( USE_FAST_FOV_CLIP )
+    fov_x_clip = slope_x*cos_fov_x - sin_fov_x;
+#endif // defined( USE_FAST_FOV_CLIP )
 
     // calculate sin() and cos() of fov / 2 in Y direction;
     theta_y = (fov * DEG_TO_RAD) / 2.0;
@@ -85,8 +88,11 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
     sin_fov_y = sin(theta_y);
     cos_fov_y = cos(theta_y);
     slope_y = cos_fov_y / sin_fov_y;
-    // (HUH?) sin_fov_y /= slope_y;
     // printf("slope_y = %.2f\n", slope_y);
+
+#if defined( USE_FAST_FOV_CLIP )
+    fov_y_clip = -(slope_y*cos_fov_y + sin_fov_y);	
+#endif // defined( USE_FAST_FOV_CLIP )
 }
 
 
@@ -249,10 +255,10 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
 
-    if(update_fov == TRUE) {
+    if(update_fov == true) {
 	// printf("Updating fov\n");
 	UpdateFOV(&current_options);
-	update_fov = FALSE;
+	update_fov = false;
     }
 		
     scenery.center.x = scenery.next_center.x;
@@ -538,6 +544,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/09/08 15:04:35  curt
+// Optimizations by Norman Vine.
+//
 // Revision 1.19  1998/08/20 20:32:34  curt
 // Reshuffled some of the code in and around views.[ch]xx
 //

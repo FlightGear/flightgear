@@ -511,8 +511,8 @@ void fgOPTIONS::usage ( void ) {
     printf("General Options:\n");
     printf("\t--help -h:  print usage\n");
     printf("\t--fg-root=path:  specify the root path for all the data files\n");
-    printf("\t--disable-gamemode:  disable full-screen game mode\n");
-    printf("\t--enable-gamemode:  enable full-screen game mode\n");
+    printf("\t--disable-game-mode:  disable full-screen game mode\n");
+    printf("\t--enable-game-mode:  enable full-screen game mode\n");
     printf("\t--disable-splash-screen:  disable splash screen\n");
     printf("\t--enable-splash-screen:  enable splash screen\n");
     printf("\t--disable-intro-music:  disable introduction music\n");
@@ -579,6 +579,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.24  1998/09/08 15:04:33  curt
+// Optimizations by Norman Vine.
+//
 // Revision 1.23  1998/08/27 17:02:07  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return
