@@ -157,16 +157,25 @@ fgDebugClass fgDebugStrToClass( char *str ) {
     }
 
     /* Check for 0xXXXXXX notation */
-    if( (p = strstr( str, "0x")) ) {
+    p = strstr( str, "0x");
+    if( p ) {
 	p++; p++;
 	while (*p) {
-	    if( (ph = strchr(hex,*p)) || (ph = strchr(hexl,*p)) ){
-		val <<= 4;
+	    ph = strchr(hex,*p);
+	    if ( ph ) {
+ 		val <<= 4;
 		val += ph-hex;
 		p++;
 	    } else {
-		// fprintf( stderr, "Error in hex string '%s'\n", str ); 
-		return FG_NONE;
+		ph = strchr(hexl,*p);
+		if ( ph ) {
+		    val <<= 4;
+		    val += ph-hex;
+		    p++;
+		} else {
+		    // fprintf( stderr, "Error in hex string '%s'\n", str ); 
+		    return FG_NONE;
+		}
 	    }
 	}
     } else {
@@ -273,9 +282,12 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/05/07 23:03:54  curt
-/* Added an entry for AUTOPILOT.
+/* Revision 1.4  1998/06/01 17:49:44  curt
+/* Rewrote a slightly ambiguous code fragment (contributed by Charlie Hotchkiss)
 /*
+ * Revision 1.3  1998/05/07 23:03:54  curt
+ * Added an entry for AUTOPILOT.
+ *
  * Revision 1.2  1998/04/21 17:03:45  curt
  * Prepairing for C++ integration.
  *
