@@ -71,7 +71,7 @@ void fgSlewUpdate() {
     f = &current_aircraft.flight;
     c = &current_aircraft.controls;
 
-    f->Psi += c->aileron;
+    f->Psi += ( c->aileron / 8 );
     if ( f->Psi > PI2 ) {
 	f->Psi -= PI2;
     } else if ( f->Psi < 0 ) {
@@ -86,9 +86,12 @@ void fgSlewUpdate() {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/29 02:29:42  curt
-/* Moved to their own directory.
+/* Revision 1.2  1997/05/29 12:30:19  curt
+/* Some initial mods to work better in a timer environment.
 /*
+ * Revision 1.1  1997/05/29 02:29:42  curt
+ * Moved to their own directory.
+ *
  * Revision 1.2  1997/05/23 15:40:37  curt
  * Added GNU copyright headers.
  *
