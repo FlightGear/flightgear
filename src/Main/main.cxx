@@ -175,7 +175,7 @@ sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
 
 
 // fgInitVisuals() -- Initialize various GL/view parameters
-static void fgInitVisuals( void ) {
+void fgInitVisuals( void ) {
     fgLIGHT *l;
 
     l = &cur_light_params;
@@ -224,7 +224,7 @@ static void fgInitVisuals( void ) {
 
 
 // Update all Visuals (redraws anything graphics related)
-static void fgRenderFrame( void ) {
+void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
     // FGView *v = &current_view;

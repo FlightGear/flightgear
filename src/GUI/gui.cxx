@@ -61,7 +61,12 @@
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
 #include <Network/network.h>
+#include <Screen/screen-dump.hxx>
 #include <Time/fg_time.hxx>
+
+#ifdef WIN32
+#  include <Screen/win32-printer.h>
+#endif
 
 #include "gui.h"
 
@@ -70,6 +75,11 @@ FG_USING_STD(string);
 #ifndef FG_HAVE_NATIVE_SGI_COMPILERS
 FG_USING_STD(cout);
 #endif
+
+// hack, should come from an include someplace
+extern void fgInitVisuals( void );
+extern void fgReshape( int width, int height );
+extern void fgRenderFrame( void );
 
 puFont guiFnt = 0;
 fntTexFont *guiFntHandle = 0;
@@ -539,6 +549,73 @@ void helpCb (puObject *)
     mkDialog ("Help started in netscape window.");
 }
 
+
+
+#ifdef WIN32
+// win32 print screen function
+void printScreen ( puObject *obj ) {
+    bool show_pu_cursor = false;
+    TurnCursorOff();
+    if ( !puCursorIsHidden() ) {
+	show_pu_cursor = true;
+	puHideCursor();
+    }
+    BusyCursor( 0 );
+    mainMenuBar->hide();
+
+    CGlPrinter p;
+    p.Begin( "FlightGear" );
+    fgInitVisuals();
+    fgReshape( p.GetHorzRes(), p.GetVertRes() );
+    fgRenderFrame();
+    p.End();
+
+    if( menu_on ) {
+	mainMenuBar->reveal();
+    }
+    BusyCursor(1);
+    if ( show_pu_cursor ) {
+	puShowCursor();
+    }
+    TurnCursorOn();
+}
+#endif // #ifdef WIN32
+
+
+// do a screen dump
+void dumpScreen ( puObject *obj ) {
+    bool show_pu_cursor = false;
+
+    mainMenuBar->hide();
+    TurnCursorOff();
+    if ( !puCursorIsHidden() ) {
+	show_pu_cursor = true;
+	puHideCursor();
+    }
+
+    fgInitVisuals();
+    fgReshape( current_options.get_xsize(), current_options.get_ysize() );
+    fgRenderFrame();
+    fgRenderFrame();
+
+    my_glDumpWindow( "fgfs-screen.ppm", 
+		     current_options.get_xsize(), 
+		     current_options.get_ysize() );
+    
+    mkDialog ("Screen dump saved to fgfs-screen.ppm");
+
+    if ( show_pu_cursor ) {
+	puShowCursor();
+    }
+
+    TurnCursorOn();
+    if( menu_on ) {
+	mainMenuBar->reveal();
+    }
+
+}
+
+
 /// The beginnings of teleportation :-)
 //  Needs cleaning up but works
 //  These statics should disapear when this is a class
@@ -750,11 +827,22 @@ static void net_blaster_toggle( puObject *cb)
 The menu stuff 
 ---------------------------------------------------------------------*/
 char *fileSubmenu               [] = {
-    "Exit", /* "Close", "---------", "Print", "---------", "Save", */ 
+    "Exit", /* "Close", "---------", */
+#ifdef WIN32
+    "Print",
+#endif
+    "Screen Dump",
+    /* "---------", "Save", */ 
     "Reset", NULL
 };
 puCallback fileSubmenuCb        [] = {
-    MayBeGoodBye, /* hideMenuCb, NULL, notCb, NULL, notCb, */ reInit, NULL
+    MayBeGoodBye, /* hideMenuCb, NULL, */
+#ifdef WIN32
+    printScreen, 
+#endif
+    /* NULL, notCb, */
+    dumpScreen,
+    reInit, NULL
 };
 
 /*

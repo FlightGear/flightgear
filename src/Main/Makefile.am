@@ -48,6 +48,7 @@ fgfs_LDADD = \
 	$(WEATHER_LIBS) \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \
 	$(SERIAL_LIBS) \
+	$(top_builddir)/Lib/Screen/libScreen.a \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Voronoi/libVoronoi.a \
