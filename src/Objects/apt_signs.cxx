@@ -21,6 +21,7 @@
 // $Id$
 
 
+#include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_types.hxx>
 
 #include "apt_signs.hxx"
@@ -55,7 +56,8 @@ ssgBranch *gen_taxi_sign( const string path, const string content ) {
 	    material += c;
 	    material += ".rgb";
 	} else {
-	    cout << "Unknown taxi sign code = '" << item << "' !!!!" << endl;
+	    SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "Unknown taxi sign code = '" << item << "' !!!!" );
 	    return NULL;
 	}
 
