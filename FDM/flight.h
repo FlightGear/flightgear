@@ -1,27 +1,25 @@
-/**************************************************************************
- * flight.h -- define shared flight model parameters
- *
- * Written by Curtis Olson, started May 1997.
- *
- * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
- * (Log is kept at end of this file)
- **************************************************************************/
+// flight.h -- define shared flight model parameters
+//
+// Written by Curtis Olson, started May 1997.
+//
+// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #ifndef _FLIGHT_H
@@ -416,69 +414,71 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
 #endif /* _FLIGHT_H */
 
 
-/* $Log$
-/* Revision 1.19  1998/09/29 02:02:41  curt
-/* Added a rate of climb calculation.
-/*
- * Revision 1.18  1998/07/30 23:44:36  curt
- * Beginning to add support for multiple flight models.
- *
- * Revision 1.17  1998/07/12 03:08:28  curt
- * Added fgFlightModelSetAltitude() to force the altitude to something
- * other than the current altitude.  LaRCsim doesn't let you do this by just
- * changing FG_Altitude.
- *
- * Revision 1.16  1998/04/22 13:26:20  curt
- * C++ - ifing the code a bit.
- *
- * Revision 1.15  1998/04/21 16:59:33  curt
- * Integrated autopilot.
- * Prepairing for C++ integration.
- *
- * Revision 1.14  1998/02/07 15:29:37  curt
- * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
- * <chotchkiss@namg.us.anritsu.com>
- *
- * Revision 1.13  1998/01/24 00:04:59  curt
- * misc. tweaks.
- *
- * Revision 1.12  1998/01/22 02:59:32  curt
- * Changed #ifdef FILE_H to #ifdef _FILE_H
- *
- * Revision 1.11  1998/01/19 19:27:03  curt
- * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
- * This should simplify things tremendously.
- *
- * Revision 1.10  1997/12/10 22:37:43  curt
- * Prepended "fg" on the name of all global structures that didn't have it yet.
- * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
- *
- * Revision 1.9  1997/09/04 02:17:33  curt
- * Shufflin' stuff.
- *
- * Revision 1.8  1997/08/27 03:30:06  curt
- * Changed naming scheme of basic shared structures.
- *
- * Revision 1.7  1997/07/23 21:52:19  curt
- * Put comments around the text after an #endif for increased portability.
- *
- * Revision 1.6  1997/06/21 17:52:22  curt
- * Continue directory shuffling ... everything should be compilable/runnable
- * again.
- *
- * Revision 1.5  1997/06/21 17:12:49  curt
- * Capitalized subdirectory names.
- *
- * Revision 1.4  1997/05/29 22:39:57  curt
- * Working on incorporating the LaRCsim flight model.
- *
- * Revision 1.3  1997/05/29 02:32:25  curt
- * Starting to build generic flight model interface.
- *
- * Revision 1.2  1997/05/23 15:40:37  curt
- * Added GNU copyright headers.
- *
- * Revision 1.1  1997/05/16 16:04:45  curt
- * Initial revision.
- *
- */
+// $Log$
+// Revision 1.20  1998/09/29 14:57:39  curt
+// c++-ified comments.
+//
+// Revision 1.19  1998/09/29 02:02:41  curt
+// Added a rate of climb calculation.
+//
+// Revision 1.18  1998/07/30 23:44:36  curt
+// Beginning to add support for multiple flight models.
+//
+// Revision 1.17  1998/07/12 03:08:28  curt
+// Added fgFlightModelSetAltitude() to force the altitude to something
+// other than the current altitude.  LaRCsim doesn't let you do this by just
+// changing FG_Altitude.
+//
+// Revision 1.16  1998/04/22 13:26:20  curt
+// C++ - ifing the code a bit.
+//
+// Revision 1.15  1998/04/21 16:59:33  curt
+// Integrated autopilot.
+// Prepairing for C++ integration.
+//
+// Revision 1.14  1998/02/07 15:29:37  curt
+// Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+// <chotchkiss@namg.us.anritsu.com>
+//
+// Revision 1.13  1998/01/24 00:04:59  curt
+// misc. tweaks.
+//
+// Revision 1.12  1998/01/22 02:59:32  curt
+// Changed #ifdef FILE_H to #ifdef _FILE_H
+//
+// Revision 1.11  1998/01/19 19:27:03  curt
+// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+// This should simplify things tremendously.
+//
+// Revision 1.10  1997/12/10 22:37:43  curt
+// Prepended "fg" on the name of all global structures that didn't have it yet.
+// i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+//
+// Revision 1.9  1997/09/04 02:17:33  curt
+// Shufflin' stuff.
+//
+// Revision 1.8  1997/08/27 03:30:06  curt
+// Changed naming scheme of basic shared structures.
+//
+// Revision 1.7  1997/07/23 21:52:19  curt
+// Put comments around the text after an #endif for increased portability.
+//
+// Revision 1.6  1997/06/21 17:52:22  curt
+// Continue directory shuffling ... everything should be compilable/runnable
+// again.
+//
+// Revision 1.5  1997/06/21 17:12:49  curt
+// Capitalized subdirectory names.
+//
+// Revision 1.4  1997/05/29 22:39:57  curt
+// Working on incorporating the LaRCsim flight model.
+//
+// Revision 1.3  1997/05/29 02:32:25  curt
+// Starting to build generic flight model interface.
+//
+// Revision 1.2  1997/05/23 15:40:37  curt
+// Added GNU copyright headers.
+//
+// Revision 1.1  1997/05/16 16:04:45  curt
+// Initial revision.
+//
