@@ -40,12 +40,12 @@
 class fg_Cockpit  {
   private:
     int  Code;
-    int  Status;
+    int  cockpitStatus;
 
   public:
-    fg_Cockpit   () : Code(1), Status(0) {};
+    fg_Cockpit   () : Code(1), cockpitStatus(0) {};
     int   code  ( void ) { return Code; }
-    int   status( void ) { return Status; }
+    int   status( void ) { return cockpitStatus; }
 };
 
 

@@ -225,6 +225,9 @@
 /* Define if you have the m library (-lm).  */
 #undef HAVE_LIBM
 
+/* Define if you have the pthread library (-lpthread).  */
+#undef HAVE_LIBPTHREAD
+
 /* Define if you have the socket library (-lsocket).  */
 #undef HAVE_LIBSOCKET
 

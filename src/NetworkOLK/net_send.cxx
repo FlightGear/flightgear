@@ -90,8 +90,8 @@ extern char *FGFS_host, *net_callsign;
 
 /* List-stuff */
 
-const int True  = 0;
-const int False= -1;
+const int listTrue  = 0;
+const int listFalse= -1;
 
 struct list_ele {
    /* unsigned */ char ipadr[16], callsign[16];
@@ -198,10 +198,10 @@ struct list_ele *clr_ele;
 
 int list_not_in( char name[16]) {
    
-   i = True;
+   i = listTrue;
    test = head->next;
-   while ((test != tail) && (i==True)) {
-     i = (strcmp(test->ipadr, name) ? True : False);
+   while ((test != tail) && (i==listTrue)) {
+     i = (strcmp(test->ipadr, name) ? listTrue : listFalse);
      test = test->next;
      if (verbose != 0) printf("list_not_in : %d\n",i);
    }
