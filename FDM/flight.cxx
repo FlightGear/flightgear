@@ -97,8 +97,10 @@ int fgFlightModelUpdate(int model, FGState& f, int multiloop) {
 
     end_elev = f.get_Altitude();
 
-    // feet per second
-    f.set_Climb_Rate( (end_elev - start_elev) / time_step );
+    if ( time_step > 0.0 ) {
+	// feet per second
+	f.set_Climb_Rate( (end_elev - start_elev) / time_step );
+    }
 
     result = 1;
 
@@ -127,6 +129,12 @@ void fgFlightModelSetAltitude(int model, FGState& f, double alt_meters) {
 
 
 // $Log$
+// Revision 1.7  1998/12/18 23:37:07  curt
+// Collapsed out the FGState variables not currently needed.  They are just
+// commented out and can be readded easily at any time.  The point of this
+// exersize is to determine which variables were or were not currently being
+// used.
+//
 // Revision 1.6  1998/12/05 15:54:11  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //
