@@ -26,7 +26,7 @@
 
 TARGET = libScenery.a
 
-CFILES = common.c mesh.c scenery.c
+CFILES = common.c mesh.c scenery.c scanner.c parser.c geometry.c
 HFILES = 
 OFILES = $(CFILES:.c=.o)
 
@@ -41,7 +41,7 @@ CFLAGS = $(FG_CFLAGS)
 # Primary Targets
 #---------------------------------------------------------------------------
 
-$(TARGET): $(OFILES) $(HFILES)
+$(TARGET): $(OFILES) $(HFILES) 
 	$(AR) rv $(TARGET) $(OFILES)
 
 all: $(TARGET)
@@ -49,12 +49,30 @@ all: $(TARGET)
 clean:
 	rm -f *.o $(TARGET) lib*.a *~ core
 
+realclean: clean
+	rm -f scanner.c parser.c parser.h parser.output
+
 
 #---------------------------------------------------------------------------
 # Secondary Targets
 #---------------------------------------------------------------------------
 
 include depend
+
+scanner.c: scanner.l parser.h
+	$(FLEX) -oscanner.c scanner.l
+
+parser.h: parser.y
+	$(BISON) -o parser.c -d parser.y
+
+parser.c: parser.y 
+	$(BISON) -o parser.c parser.y
+
+scanner.o: scanner.c
+	$(CC) $(CFLAGS) -c scanner.c
+
+parser.o: parser.c
+	$(CC) $(CFLAGS) -c parser.c
 
 common.o:
 	$(CC) $(CFLAGS) -c common.c
@@ -65,9 +83,14 @@ mesh.o:
 scenery.o:
 	$(CC) $(CFLAGS) -c scenery.c
 
+geometry.o:
+	$(CC) $(CFLAGS) -c geometry.c
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.14  1997/06/29 21:16:47  curt
+# More twiddling with the Scenery Management system.
+#
 # Revision 1.13  1997/06/27 21:38:10  curt
 # Working on Makefile structure.
 #

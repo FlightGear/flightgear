@@ -29,8 +29,14 @@
 #include <stdlib.h>  /* atof(), atoi() */
 #include <string.h>
 
+#include <GL/glut.h>
+
 #include "mesh.h"
 #include "common.h"
+
+
+/* Temporary hack until we get the scenery management system running */
+extern GLint mesh_hack;
 
 
 /* initialize the non-array mesh values */
@@ -140,14 +146,17 @@ void mesh_set_option_value(struct mesh *m, char *value) {
 /* do whatever needs to be done with the mesh now that it's been
    loaded, such as generating the OpenGL call list. */
 void mesh_do_it(struct mesh *m) {
-    mesh2GL(m);
+    mesh_hack = mesh2GL(m);
 }
 
 
 /* $Log$
-/* Revision 1.5  1997/06/22 21:44:41  curt
-/* Working on intergrating the VRML (subset) parser.
+/* Revision 1.6  1997/06/29 21:16:49  curt
+/* More twiddling with the Scenery Management system.
 /*
+ * Revision 1.5  1997/06/22 21:44:41  curt
+ * Working on intergrating the VRML (subset) parser.
+ *
  * Revision 1.4  1997/05/30 19:30:17  curt
  * The LaRCsim flight model is starting to look like it is working.
  *

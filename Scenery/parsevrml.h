@@ -1,7 +1,7 @@
 /**************************************************************************
- * scenery.c -- data structures and routines for managing scenery.
+ * parsevrml.h -- top level include file for accessing the vrml parser
  *
- * Written by Curtis Olson, started May 1997.
+ * Written by Curtis Olson, started June 1997.
  *
  * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
  *
@@ -24,49 +24,21 @@
  **************************************************************************/
 
 
-#include <GL/glut.h>
-
-#include "scenery.h"
-#include "parsevrml.h"
+#ifndef PARSEVRML_H
+#define PARSEVRML_H
 
 
-/* Temporary hack until we get the scenery management system running */
-GLint mesh_hack;
+/* parse a VRML scenery file */
+int fgParseVRML(char *file);
 
-
-/* Initialize the Scenery Management system */
-void fgSceneryInit() {
-    /* nothing to do here yet */
-}
-
-
-/* Tell the scenery manager where we are so it can load the proper data, and
- * build the proper structures. */
-void fgSceneryUpdate(double lon, double lat, double elev) {
-    /* a hardcoded hack follows */
-
-    /* this routine should parse the file, and make calls back to the
-     * scenery management system to build the appropriate structures */
-    fgParseVRML("mesa-e.wrl");
-}
-
-
-/* Render out the current scene */
-void fgSceneryRender() {
-    glPushMatrix();
-    glCallList(mesh_hack);
-    glPopMatrix();
-}
+#endif PARSEVRML_H
 
 
 /* $Log$
-/* Revision 1.3  1997/06/29 21:16:50  curt
+/* Revision 1.1  1997/06/29 21:16:49  curt
 /* More twiddling with the Scenery Management system.
 /*
- * Revision 1.2  1997/06/27 20:03:37  curt
- * Working on Makefile structure.
- *
- * Revision 1.1  1997/06/27 02:26:30  curt
+ * Revision 1.1  1997/06/27 02:25:13  curt
  * Initial revision.
  *
  */
