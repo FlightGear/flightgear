@@ -114,7 +114,7 @@ public:
 
     void init( const WeatherPrecision visibility,
 	       const DatabaseWorkingType type,
-	       const string& root );
+	       const string &root );
 
     /************************************************************************/
     /* Constructor and Destructor					    */

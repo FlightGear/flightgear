@@ -42,6 +42,10 @@ HISTORY
                                 Eberly's spherical interpolation code. This
 				stops our dependancy on the (ugly) voronoi
 				code and simplyfies the code structure a lot.
+07.05.2000 Tony Peden           Added functionality to get the weather data
+                                on 'the bus'
+18.05.2000 Christian Mayer      Minor clean-ups. Changed the code to use 
+                                FGWeatherUtils.h for unit conversion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -49,13 +53,14 @@ HISTORY
 /****************************************************************************/
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
-#include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
 
 #include "FGLocalWeatherDatabase.h"
 
 #include "FGWeatherParse.h"
+
+#include "FGWeatherUtils.h"
 
 /****************************************************************************/
 /********************************** CODE ************************************/
@@ -66,7 +71,7 @@ FGLocalWeatherDatabase *WeatherDatabase;
 
 void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 				   const DatabaseWorkingType type,
-				   const string& root )
+				   const string &root )
 {
     cerr << "Initializing FGLocalWeatherDatabase\n";
     cerr << "-----------------------------------\n";
@@ -98,10 +103,7 @@ void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
 	{
 	    FGWeatherParse *parsed_data = new FGWeatherParse();
 
-	    FGPath file( root );
-	    file.append( "Weather" );
-	    file.append( "current.txt.gz" );
-	    parsed_data->input( file.c_str() );
+	    parsed_data->input( "weather/current.gz" );
 	    unsigned int n = parsed_data->stored_stations();
 
 	    sgVec2               *p = new sgVec2              [n];
@@ -251,33 +253,29 @@ void FGLocalWeatherDatabase::setProperties(const FGPhysicalProperties2D& x)
 void fgUpdateWeatherDatabase(void)
 {
     sgVec3 position;
-	sgVec3 wind;
+    sgVec3 wind;
     
-	
-	sgSetVec3(position, 
-	current_aircraft.fdm_state->get_Latitude(),
-	current_aircraft.fdm_state->get_Longitude(),
-	current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER);
-
+    
+    sgSetVec3(position, 
+        current_aircraft.fdm_state->get_Latitude(),
+        current_aircraft.fdm_state->get_Longitude(),
+        current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER);
+    
     WeatherDatabase->update( position );
-	
-	#define rho0 1.293 /*for air in normal altitudes*/
-    #define PATOPSF  0.02089    // Pascals to psf
-	#define KTOR     1.8        // Kelvin to degree Rankine
-	#define KGMTOSGF 0.0019403  // kg/m^3 to slug/ft^3
+       
+    // get the data on 'the bus' for the FDM
 
+    FGPhysicalProperty porperty = WeatherDatabase->get(position);
 
-    FGPhysicalProperty my_value = WeatherDatabase->get(position);
-    current_aircraft.fdm_state->set_Static_temperature(my_value.Temperature*KTOR);
-    current_aircraft.fdm_state->set_Static_pressure(my_value.AirPressure*PATOPSF);
-    float density=rho0 * 273.15 * my_value.AirPressure / (101300 *my_value.Temperature )*KGMTOSGF;
-    current_aircraft.fdm_state->set_Density(density*KGMTOSGF);
-	
-#define KPHTOFPS 0.9113 //km/hr to ft/s
+    current_aircraft.fdm_state->set_Static_temperature( Kelvin2Rankine(porperty.Temperature) );
+    current_aircraft.fdm_state->set_Static_pressure( Pascal2psf(porperty.AirPressure) );
+
+    current_aircraft.fdm_state->set_Density( SIdensity2JSBsim( Density(porperty.AirPressure, porperty.Temperature) ) );
+    
 #define MSTOFPS  3.2808 //m/s to ft/s
-    current_aircraft.fdm_state->set_Velocities_Local_Airmass(my_value.Wind[1]*KPHTOFPS,
-							     my_value.Wind[0]*KPHTOFPS,
-							     my_value.Wind[2]*KPHTOFPS);
-	
+    current_aircraft.fdm_state->set_Velocities_Local_Airmass(porperty.Wind[1]*MSTOFPS,
+        porperty.Wind[0]*MSTOFPS,
+        porperty.Wind[2]*MSTOFPS);
+    
 }
 

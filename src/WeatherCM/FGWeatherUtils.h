@@ -39,6 +39,8 @@ HISTORY
 				and lots of wee code cleaning
 17.01.2000 Christian Mayer	Added conversion routines make it easier for
 				JSBsim to use the weather database.
+18.05.2000 Christian Mayer      Added function for geting the density when
+                                temperature and pressure are given
 *****************************************************************************/
 
 /****************************************************************************/
@@ -71,7 +73,7 @@ HISTORY
 /* dp:	    dew point in °C						    */
 /* wb:	    approximate wetbulp in °C					    */
 /*									    */
-/* NOTE: Pascal is the SI unit for preasure and is defined as Pa = N/m^2    */
+/* NOTE: Pascal is the SI unit for pressure and is defined as Pa = N/m^2    */
 /*       1 mbar = 1 hPa = 100 Pa					    */
 /* NOTE: °C isn't a SI unit, so I should use °K instead. But as all	    */
 /*       formulas are given in °C and the weather database only uses	    */
@@ -141,24 +143,32 @@ inline WeatherPrecision wb(const WeatherPrecision t, const WeatherPrecision p, c
 
 }
 
+// Assume that we've got an ideal gas in normal altitudes
+inline WeatherPrecision Density(const WeatherPrecision AirPressure, const WeatherPrecision Temperature )
+{
+    const float rho0 = 1.293; /*density for air in normal altitudes at 0°C and 1013 mbar*/
+
+    return rho0 * 273.15 * AirPressure / (101300.0 * Temperature);
+}
+
 inline WeatherPrecision Celsius		    (const WeatherPrecision celsius)
 {
-    return celsius + 273.16;				//Kelvin
+    return celsius + 273.15;				//Kelvin
 }
 
 inline WeatherPrecision Fahrenheit	    (const WeatherPrecision fahrenheit)
 {
-    return (fahrenheit * 9.0 / 5.0) + 32.0 + 273.16;	//Kelvin
+    return (fahrenheit * 9.0 / 5.0) + 32.0 + 273.15;	//Kelvin
 }
 
 inline WeatherPrecision Kelvin2Celsius	    (const WeatherPrecision kelvin)
 {
-    return kelvin - 273.16;				//Celsius
+    return kelvin - 273.15;				//Celsius
 }
 
 inline WeatherPrecision Kelvin2Fahrenheit   (const WeatherPrecision kelvin)
 {
-    return ((kelvin - 273.16) * 9.0 / 5.0) + 32.0;	//Fahrenheit
+    return ((kelvin - 273.15) * 9.0 / 5.0) + 32.0;	//Fahrenheit
 }
 
 inline WeatherPrecision Celsius2Fahrenheit  (const WeatherPrecision celsius)
