@@ -78,6 +78,7 @@ void FGControls::reset_all()
     set_throttle( ALL_ENGINES, 0.0 );
     set_starter( ALL_ENGINES, false );
     set_magnetos( ALL_ENGINES, 0 );
+    set_fuel_pump( ALL_ENGINES, false );
     throttle_idle = true;
     set_fuel_selector( ALL_TANKS, true );
     gear_down = true;
@@ -95,6 +96,7 @@ FGControls::init ()
     for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
 	throttle[engine] = 0.0;
 	mixture[engine] = 1.0;
+	fuel_pump[engine] = false;
 	prop_advance[engine] = 1.0;
 	magnetos[engine] = 0;
 	starter[engine] = false;
@@ -142,6 +144,10 @@ FGControls::bind ()
     sprintf(name, "/controls/mixture[%d]", index);
     fgTie(name, this, index,
 	 &FGControls::get_mixture, &FGControls::set_mixture);
+    fgSetArchivable(name);
+    sprintf(name, "/controls/fuel-pump[%d]", index);
+    fgTie(name, this, index,
+	 &FGControls::get_fuel_pump, &FGControls::set_fuel_pump);
     fgSetArchivable(name);
     sprintf(name, "/controls/propeller-pitch[%d]", index);
     fgTie(name, this, index,
@@ -196,6 +202,8 @@ FGControls::unbind ()
     sprintf(name, "/controls/throttle[%d]", index);
     fgUntie(name);
     sprintf(name, "/controls/mixture[%d]", index);
+    fgUntie(name);
+    sprintf(name, "/controls/fuel-pump[%d]", index);
     fgUntie(name);
     sprintf(name, "/controls/propeller-pitch[%d]", index);
     fgUntie(name);
@@ -393,6 +401,20 @@ FGControls::move_mixture( int engine, double amt )
 	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 	    mixture[engine] += amt;
 	    CLAMP( &mixture[engine], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::set_fuel_pump( int engine, bool val )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    fuel_pump[i] = val;
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    fuel_pump[engine] = val;
 	}
     }
 }

@@ -67,6 +67,7 @@ private:
     double flaps;
     double throttle[MAX_ENGINES];
     double mixture[MAX_ENGINES];
+    bool fuel_pump[MAX_ENGINES];
     double prop_advance[MAX_ENGINES];
     double parking_brake;
     double brake[MAX_WHEELS];
@@ -102,6 +103,7 @@ public:
     inline double get_flaps() const { return flaps; }
     inline double get_throttle(int engine) const { return throttle[engine]; }
     inline double get_mixture(int engine) const { return mixture[engine]; }
+    inline bool get_fuel_pump(int engine) const { return fuel_pump[engine]; }
     inline double get_prop_advance(int engine) const {
 	return prop_advance[engine];
     }
@@ -133,6 +135,7 @@ public:
     void move_throttle( int engine, double amt );
     void set_mixture( int engine, double pos );
     void move_mixture( int engine, double amt );
+    void set_fuel_pump( int engine, bool val );
     void set_prop_advance( int engine, double pos );
     void move_prop_advance( int engine, double amt );
     void set_magnetos( int engine, int pos );
