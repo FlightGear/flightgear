@@ -40,7 +40,7 @@ GLint mesh_to_ogl(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 150;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 4;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -57,10 +57,10 @@ GLint mesh_to_ogl(struct mesh *m) {
 	x1 = m->originx;
 	x2 = x1 + (m->row_step * jstep);
 	for ( j = 0; j < jend; j += jstep ) {
-	    z11 = 0.12 * m->mesh_data[j         * m->rows + i        ];
-	    z12 = 0.12 * m->mesh_data[j         * m->rows + (i+istep)];
-	    z21 = 0.12 * m->mesh_data[(j+jstep) * m->rows + i        ];
-	    z22 = 0.12 * m->mesh_data[(j+jstep) * m->rows + (i+istep)];
+	    z11 = 0.03 * m->mesh_data[j         * m->rows + i        ];
+	    z12 = 0.03 * m->mesh_data[j         * m->rows + (i+istep)];
+	    z21 = 0.03 * m->mesh_data[(j+jstep) * m->rows + i        ];
+	    z22 = 0.03 * m->mesh_data[(j+jstep) * m->rows + (i+istep)];
 
 	    /* printf("x1 = %f  y1 = %f\n", x1, y1);
 	    printf("x2 = %f  y2 = %f\n", x2, y2);
@@ -109,9 +109,12 @@ GLint mesh_to_ogl(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.2  1997/05/17 00:17:35  curt
-/* Trying to stub in support for standard OpenGL.
+/* Revision 1.3  1997/05/19 18:22:42  curt
+/* Parameter tweaking ... starting to stub in fog support.
 /*
+ * Revision 1.2  1997/05/17 00:17:35  curt
+ * Trying to stub in support for standard OpenGL.
+ *
  * Revision 1.1  1997/05/16 16:05:52  curt
  * Initial revision.
  *

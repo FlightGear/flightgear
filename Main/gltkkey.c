@@ -25,10 +25,10 @@ GLenum key(int k, GLenum mask) {
 
     switch (k) {
     case TK_UP:
-	c->elev -= 0.01;
+	c->elev -= 0.1;
 	return GL_TRUE;
     case TK_DOWN:
-	c->elev += 0.01;
+	c->elev += 0.1;
 	return GL_TRUE;
     case TK_LEFT:
 	c->aileron += 0.01;
@@ -58,7 +58,10 @@ GLenum key(int k, GLenum mask) {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/16 16:05:51  curt
-/* Initial revision.
+/* Revision 1.2  1997/05/19 18:22:41  curt
+/* Parameter tweaking ... starting to stub in fog support.
 /*
+ * Revision 1.1  1997/05/16 16:05:51  curt
+ * Initial revision.
+ *
  */

@@ -47,16 +47,27 @@ static GLint mesh;
 /* init_view() -- Setup view parameters */
 static void init_view() {
     /* if the 4th field is 0.0, this specifies a direction ... */
-    static GLfloat pos[4] = {2.0, 2.0, 3.0, 0.0 };
+    static GLfloat pos[4] = {-3.0, 1.0, 3.0, 0.0 };
+    static GLfloat fogColor[4] = {0.5, 0.5, 0.5, 1.0};
+    static GLfloat local_view[] = { 0.0 };
     
     glLightfv( GL_LIGHT0, GL_POSITION, pos );
     glEnable( GL_CULL_FACE );
     glEnable( GL_LIGHTING );
     glEnable( GL_LIGHT0 );
+/**/glLightModelfv(GL_LIGHT_MODEL_LOCAL_VIEWER, local_view);
     glEnable( GL_DEPTH_TEST );
-    /* glEnable( GL_FOG );
-    glFog( GL_FOG_MODE, GL_LINEAR );
-    glFogf( GL_FOG_END, 1000.0 ); */
+/**/glDepthFunc(GL_LEQUAL);
+
+/*  glEnable( GL_FOG );
+    glFogi (GL_FOG_MODE, GL_LINEAR);
+    glFogf (GL_FOG_START, 1.0);
+    glFogf (GL_FOG_END, 100.0);
+    glFogfv (GL_FOG_COLOR, fogColor);
+    glFogf (GL_FOG_DENSITY, 0.35);
+    glHint (GL_FOG_HINT, GL_DONT_CARE);
+    */
+    
     glClearColor(0.6, 0.6, 0.9, 1.0);
 }
 
@@ -137,9 +148,9 @@ static void update_view() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(80.0, 1.0/win_ratio, 1.0, 6000.0);
+    gluPerspective(45.0, 1.0/win_ratio, 1.0, 6000.0);
     gluLookAt(f->pos_x, f->pos_y, f->pos_z,
-	      f->pos_x + cos(f->Psi), f->pos_y + sin(f->Psi), f->pos_z - 0.5,
+	      f->pos_x + cos(f->Psi), f->pos_y + sin(f->Psi), f->pos_z,
 	      0.0, 0.0, 1.0);
 }
 
@@ -229,7 +240,8 @@ int main( int argc, char *argv[] ) {
     init_scene();
 
     /* Set initial position and slew parameters */
-    slew_init(-406658.0, 129731.0, 344, 0.79);
+    /* slew_init(-398391.3, 120070.4, 244, 3.1415); */ /* GLOBE Airport */
+    slew_init(-398673.28,120625.64, 53, 4.38);
 
     /* call reshape() on expose events */
     tkExposeFunc( reshape );
@@ -254,9 +266,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.2  1997/05/17 00:17:34  curt
-/* Trying to stub in support for standard OpenGL.
+/* Revision 1.3  1997/05/19 18:22:42  curt
+/* Parameter tweaking ... starting to stub in fog support.
 /*
+ * Revision 1.2  1997/05/17 00:17:34  curt
+ * Trying to stub in support for standard OpenGL.
+ *
  * Revision 1.1  1997/05/16 16:05:52  curt
  * Initial revision.
  *
