@@ -270,22 +270,22 @@ FGSound::update (double dt)
       )
    {
 
-      if (_sample->is_playing()) {
+      if ((_mode != FGSound::IN_TRANSIT) || (_stopping < MAX_TRANSIT_TIME)) {
 
-         if ((_mode != FGSound::IN_TRANSIT) || (_stopping < MAX_TRANSIT_TIME)) {
-
-            _active = false;
-            _sample->stop( _mgr->get_scheduler() );
-
+         if (_sample->is_playing()) {
             SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
                                         << " sec: " << _name );
 
-         } else
-            _stopping += dt;
-      }
+            _sample->stop( _mgr->get_scheduler() );
+         }
 
-      _dt_stop += dt;
-      _dt_play = 0.0;
+         _active = false;
+         _dt_stop += dt;
+         _dt_play = 0.0;
+
+
+      } else
+         _stopping += dt;
 
       return;
 
@@ -308,10 +308,12 @@ FGSound::update (double dt)
    }
 
    //
-   // Update playing time and cache the current value.
+   // Update the playing time, cache the current value and
+   // clear the delay timer.
    //
-    _dt_play += dt;
+   _dt_play += dt;
    _prev_value = curr_value;
+   _stopping = 0.0;
 
    //
    // Update the volume
