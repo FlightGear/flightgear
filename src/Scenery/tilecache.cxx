@@ -140,7 +140,7 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     ssgBranch *new_tile = fgObjLoad( tile_path.str(), &tile_cache[index] );
     tile_cache[index].branch_ptr = new ssgTransform;
     tile_cache[index].branch_ptr->addKid( new_tile );
-    tile_cache[index].branch_ptr->addKid( penguin );
+    // tile_cache[index].branch_ptr->addKid( penguin );
     terrain->addKid( tile_cache[index].branch_ptr );
 
     // cout << " ncount before = " << tile_cache[index].ncount << "\n";
