@@ -47,13 +47,20 @@ fgSERIAL::fgSERIAL(const string& device, int baud) {
 }
 
 fgSERIAL::~fgSERIAL() {
-    close(fd);
+    // closing the port here screws us up because if we would even so
+    // much as make a copy of an fgSERIAL object and then delete it,
+    // the file descriptor gets closed.  Doh!!!
+
+    // close(fd);
 }
 
 bool fgSERIAL::open_port(const string& device) {
     struct termios config;
 
-    if ( (fd = open(device.c_str(), O_RDWR | O_NONBLOCK)) == -1 ) {
+    fd = open(device.c_str(), O_RDWR | O_NONBLOCK);
+    cout << "Serial fd created = " << fd << endl;
+
+    if ( fd  == -1 ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Cannot open " << device
 		<< " for serial I/O" );
 	return false;
@@ -72,11 +79,13 @@ bool fgSERIAL::open_port(const string& device) {
     // cout << "config.c_iflag = " << config.c_iflag << endl;
 
     // software flow control on
-    // config.c_iflag |= IXON;
-    // config.c_iflag |= IXOFF;
+    config.c_iflag |= IXON;
+    config.c_iflag |= IXOFF;
+
+    // config.c_cflag |= CLOCAL;
 
     // disable hardware flow control
-    // config.c_cflag |= CRTSCTS;
+    config.c_cflag &= ~(CRTSCTS);
 
     // cout << "config.c_iflag = " << config.c_iflag << endl;
 
@@ -87,6 +96,13 @@ bool fgSERIAL::open_port(const string& device) {
 
     return true;
 }
+
+
+bool fgSERIAL::close_port() {
+    close(fd);
+    return true;
+}
+
 
 bool fgSERIAL::set_baud(int baud) {
     struct termios config;
@@ -174,8 +190,13 @@ int fgSERIAL::write_port(const string& value) {
     // cout << "write '" << value << "'  " << count << " bytes" << endl;
 
     if ( (int)count != (int)value.length() ) {
-	FG_LOG( FG_SERIAL, FG_ALERT,
-		"Serial I/O on write, error number = " << errno );
+	if ( errno == EAGAIN ) {
+	    // ok ... in our context we don't really care if we can't
+	    // write a string, we'll just get it the next time around
+	} else {
+	    FG_LOG( FG_SERIAL, FG_ALERT,
+		    "Serial I/O on write, error number = " << errno );
+	}
     }
 
     return count;
@@ -183,6 +204,11 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.6  1998/11/30 17:15:29  curt
+// Having the class destructor close the fd was a bad idea ... especially if you
+// ever make a copy of the instance and then subsequently destroy either.
+// close_port() is now a separate member function.
+//
 // Revision 1.5  1998/11/25 01:33:23  curt
 // Remove call to cfmakeraw()
 //

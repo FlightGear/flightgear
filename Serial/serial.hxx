@@ -34,7 +34,7 @@
 #include <string>
 
 // if someone know how to do this all with C++ streams let me know
-#include <stdio.h>
+// #include <stdio.h>
 
 
 class fgSERIAL
@@ -66,6 +66,11 @@ public:
 
 
 // $Log$
+// Revision 1.2  1998/11/30 17:15:30  curt
+// Having the class destructor close the fd was a bad idea ... especially if you
+// ever make a copy of the instance and then subsequently destroy either.
+// close_port() is now a separate member function.
+//
 // Revision 1.1  1998/11/16 13:53:02  curt
 // Initial revision.
 //
