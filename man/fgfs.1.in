@@ -45,6 +45,9 @@ Specify starting postion by airport ID.
 .BI "--altitude=" "value"
 Specify starting altitude (in feet unless --units-meters specified).
 .TP
+.BI "--atc610x"
+Enable atc610x interface.
+.TP
 .BI "--atlas=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection using the Atlas protocol.
 .TP
@@ -53,9 +56,6 @@ Specify the bits per pixel for the renderer.
 .TP
 .BI "--browser-app=" "path"
 Specify location of your web browser.
-.TP
-.BI "--clouds-asl=" "altitude"
-Specify altitude of cloud layer above sea level.
 .TP
 .BI "--config=" "path"
 Load additional properties from path.  Multiple instances of this
@@ -99,6 +99,9 @@ Disable Multi-pilot mode.
 .TP
 .B "--disable-panel"
 Disable instrument panel.
+.TP
+.B "--disable-random-objects"
+Disable random scenery objects (buildings, trees, etc).
 .TP
 .B "--disable-skyblend"
 Disable sky blending.
@@ -151,6 +154,9 @@ Enable Multi-pilot mode.
 .TP
 .B "--enable-panel"
 Enable instrument panel.
+.TP
+.B "--enable-random-objects"
+Enable random scenery objects (buildings, trees, etc).
 .TP
 .B "--enable-skyblend"
 Enable sky blending.
@@ -307,6 +313,9 @@ Specify a starting date/time with respect to Local Aircraft Time.
 .BI "--start-date-sys=" "yyyy:mm:dd:hh:mm:ss"
 Specify a starting date/time with respect to your local system time.
 .TP
+.BI "--telnet=" "port"
+Start a telnet interface to the property manager on the specified port.
+.TP
 .B "--time-match-local"
 Synchronize time with local real-world time.
 .TP
@@ -357,7 +366,8 @@ Specify velocity along the body Z axis (feet per second unless
 --units-meters specified).
 .TP
 .BI "--wind=" "DIR@SPEED"
-Specify wind coming from DIR (degrees) at SPEED (knots).
+Specify wind coming from DIR (degrees) at SPEED (knots).  Values may be
+specified as a range by using a colon separator; for example, 180:220@10:15.
 .TP
 .BI "--wp=" "ID[@alt]"
 Specify a waypoint for the GC autopilot.  Multiple instances of this
