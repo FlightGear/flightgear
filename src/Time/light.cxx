@@ -186,9 +186,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
     // direction to the sun
     rotation = -(sun_rotation + SGD_PI) 
 	- (f->get_Psi() - globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS);
-    if ( globals->get_current_view()->get_reverse_view_offset() ) {
-	rotation += SGD_PI;
-    }
     while ( rotation < 0 ) {
 	rotation += SGD_2PI;
     }
@@ -239,6 +236,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
 // Destructor
 fgLIGHT::~fgLIGHT( void ) {
 }
+
 
 
 

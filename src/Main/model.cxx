@@ -25,6 +25,8 @@ extern ssgRoot * scene;		// FIXME: from main.cxx
 FGAircraftModel current_model;	// FIXME: add to globals
 
 
+
+
 static ssgEntity *
 find_named_node (ssgEntity * node, const string &name)
 {
@@ -42,6 +44,7 @@ find_named_node (ssgEntity * node, const string &name)
   } 
   return 0;
 }
+
 
 FGAircraftModel::FGAircraftModel ()
   : _model(0),
@@ -148,7 +151,8 @@ FGAircraftModel::unbind ()
 void
 FGAircraftModel::update (int dt)
 {
-  sgMat4 VIEW_ROT;
+  sgMat4 MODEL_ROT, LOCAL;
+  sgMat4 sgTRANS;
 
   _current_timestamp.stamp();
   long elapsed_ms = (_current_timestamp - _last_timestamp) / 1000;
@@ -163,65 +167,41 @@ FGAircraftModel::update (int dt)
       do_animation(_animations[i], elapsed_ms);
 
     _selector->select(true);
-    FGViewer *pilot_view =
-      (FGViewer *)globals->get_viewmgr()->get_view( 0 );
+    FGViewer *current_view = 
+      (FGViewer *)globals->get_viewmgr()->get_view( view_number );
     
-    sgMat4 sgTRANS;
-    // FIXME: this needs to be unlinked from the viewer
-    //        The lon/lat/alt should come from properties and the
-    //        calculation for relative position should probably be 
-    //        added to SimGear.
-    sgMakeTransMat4( sgTRANS, pilot_view->getRelativeViewPos() );
-    
-    sgVec3 ownship_up;
-    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
-    
-    sgMat4 sgROT;
-    sgMakeRotMat4( sgROT, -90.0, ownship_up );
-    
-    sgMat4 sgTUX;
-    sgCopyMat4( sgTUX, sgROT );
+    // FIXME: this class needs to be unlinked from the viewer
+    // get transform for current position in the world...
+    sgMakeTransMat4( sgTRANS, current_view->getRelativeViewPos() );
 
-    if (view_number == 0) {
+    // get a copy of the LOCAL rotation from the current view...
+    sgCopyMat4( LOCAL, current_view->get_LOCAL_ROT() );
 
-      // FIXME: This needs to be unlinked from the viewer
-      //        The lon/lat/alt should come from properties and the
-      //        calculation for relative position should probably be 
-      //        added to SimGear.
-      //        Note that the function for building the LOCAL matrix 
-      //        or redone using plib. Should probably be moved to Simgear.
-      //        (cockpit_ROT = LOCAL from viewer).
-      sgMat4 tmpROT;
-      sgCopyMat4( tmpROT, pilot_view->get_COCKPIT_ROT() );
-      sgMat4 cockpit_ROT;
-      sgCopyMat4( cockpit_ROT, tmpROT );
+    // Make the MODEL Rotation (just reordering the LOCAL matrix
+    //  and flipping the model over on its feet)...
+    MODEL_ROT[0][0] = -LOCAL[2][0];
+    MODEL_ROT[0][1] = -LOCAL[2][1];
+    MODEL_ROT[0][2] = -LOCAL[2][2];
+    MODEL_ROT[0][3] = SG_ZERO;
+    MODEL_ROT[1][0] = LOCAL[1][0];
+    MODEL_ROT[1][1] = LOCAL[1][1];
+    MODEL_ROT[1][2] = LOCAL[1][2];
+    MODEL_ROT[1][3] = SG_ZERO;
+    MODEL_ROT[2][0] = LOCAL[0][0];
+    MODEL_ROT[2][1] = LOCAL[0][1];
+    MODEL_ROT[2][2] = LOCAL[0][2];
+    MODEL_ROT[2][3] = SG_ZERO;
 
-      // Make the Cockpit rotation matrix (just juggling the vectors).
-      cockpit_ROT[0][0] = tmpROT[1][0]; // right
-      cockpit_ROT[0][1] = tmpROT[1][1];
-      cockpit_ROT[0][2] = tmpROT[1][2];
-      cockpit_ROT[1][0] = tmpROT[2][0]; // forward
-      cockpit_ROT[1][1] = tmpROT[2][1];
-      cockpit_ROT[1][2] = tmpROT[2][2];
-      cockpit_ROT[2][0] = tmpROT[0][0]; // view_up
-      cockpit_ROT[2][1] = tmpROT[0][1];
-      cockpit_ROT[2][2] = tmpROT[0][2];
+    // add the position data to the matrix
+    MODEL_ROT[3][0] = SG_ZERO;
+    MODEL_ROT[3][1] = SG_ZERO;
+    MODEL_ROT[3][2] = SG_ZERO;
+    MODEL_ROT[3][3] = SG_ONE;
 
-      sgPostMultMat4( sgTUX, cockpit_ROT );
-      sgPostMultMat4( sgTUX, sgTRANS );
-
-    } else {
-      // FIXME: Model rotation need to be unlinked from the viewer.
-      //        When the cockpit rotation gets removed from viewer
-      //        then it'll be easy to apply offsets and get the equivelant
-      //        of this "VIEW_ROT" thing.
-      sgCopyMat4( VIEW_ROT, pilot_view->get_VIEW_ROT());
-      sgPostMultMat4( sgTUX, VIEW_ROT );
-      sgPostMultMat4( sgTUX, sgTRANS );
-    }
+    sgPostMultMat4( MODEL_ROT, sgTRANS );
 
     sgCoord tuxpos;
-    sgSetCoord( &tuxpos, sgTUX );
+    sgSetCoord( &tuxpos, MODEL_ROT );
     _position->setTransform( &tuxpos );
   }
 }
@@ -404,4 +384,6 @@ FGAircraftModel::Animation::setRotation()
 }
 
 // end of model.cxx
+
+
 

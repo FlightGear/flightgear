@@ -208,11 +208,8 @@ public:
     // Matrices...
     virtual const sgVec4 *get_VIEW() { if ( _dirty ) { recalc(); } return VIEW; }
     virtual const sgVec4 *get_VIEW_ROT() { if ( _dirty ) { recalc(); }	return VIEW_ROT; }
-    virtual const sgVec4 *get_COCKPIT_ROT() { if ( _dirty ) { recalc(); }	return COCKPIT_ROT; }
+    virtual const sgVec4 *get_LOCAL_ROT() { if ( _dirty ) { recalc(); }	return LOCAL_ROT; }
     virtual const sgVec4 *get_UP() { if ( _dirty ) { recalc(); } return UP; }
-
-    // Public flags...
-    virtual bool get_reverse_view_offset() const { return _reverse_view_offset; }
 
     //////////////////////////////////////////////////////////////////////
     // Part 4: frustrum data setters and getters
@@ -307,7 +304,7 @@ private:
 //    sgVec3 _view_forward;
 
     // sg versions of our friendly matrices
-    sgMat4 VIEW, VIEW_ROT, UP, COCKPIT_ROT;
+    sgMat4 VIEW, VIEW_ROT, UP, LOCAL_ROT;
     sgMat4 LOCAL, TRANS, LARC_TO_SSG;
 
     // Transformation matrix for the view direction offset relative to
@@ -323,16 +320,6 @@ private:
 
     inline void set_dirty() { _dirty = true; }
     inline void set_clean() { _dirty = false; }
-
-    // from lookat
-    void fgMakeLookAtMat4 ( sgMat4 dst, const sgVec3 eye, const sgVec3 center,
-			const sgVec3 up );
-
-    // from rph
-    void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 );
-    void fgMakeLOCAL( sgMat4 dst, const double Theta,
-				const double Phi, const double Psi);
-
 
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {
@@ -350,37 +337,15 @@ private:
 	_reverse_view_offset = val;
     }
 
-
-// public:
-
-
-    //////////////////////////////////////////////////////////////////////
-    // setter functions
-    //////////////////////////////////////////////////////////////////////
-
-//    inline void set_sea_level_radius( double r ) {
-//	// data should be in meters from the center of the earth
-//	set_dirty();
-//	sea_level_radius = r;
-//    }
-
-
-    //////////////////////////////////////////////////////////////////////
-    // accessor functions
-    //////////////////////////////////////////////////////////////////////
-//    inline int get_type() const { return _type ; }
-//    inline int is_a( int t ) const { return get_type() == t ; }
-//    inline bool is_dirty() const { return _dirty; }
-//    inline double get_sea_level_radius() const { return sea_level_radius; }
-
-    //////////////////////////////////////////////////////////////////////
-    // derived values accessor functions
-    //////////////////////////////////////////////////////////////////////
-
 };
 
 
 #endif // _VIEWER_HXX
+
+
+
+
+
 
 
 

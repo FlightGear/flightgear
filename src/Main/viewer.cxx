@@ -46,6 +46,150 @@
 #include "viewer.hxx"
 
 
+//////////////////////////////////////////////////////////////////
+// Norman's Optimized matrix rotators!                          //
+//////////////////////////////////////////////////////////////////
+
+static void fgMakeLOCAL( sgMat4 dst, const double Theta,
+				const double Phi, const double Psi)
+{
+    SGfloat cosTheta = (SGfloat) cos(Theta);
+    SGfloat sinTheta = (SGfloat) sin(Theta);
+    SGfloat cosPhi   = (SGfloat) cos(Phi);
+    SGfloat sinPhi   = (SGfloat) sin(Phi);
+    SGfloat sinPsi   = (SGfloat) sin(Psi) ;
+    SGfloat cosPsi   = (SGfloat) cos(Psi) ;
+	
+    dst[0][0] = cosPhi * cosTheta;
+    dst[0][1] =	sinPhi * cosPsi + cosPhi * -sinTheta * -sinPsi;
+    dst[0][2] =	sinPhi * sinPsi + cosPhi * -sinTheta * cosPsi;
+    dst[0][3] =	SG_ZERO;
+
+    dst[1][0] = -sinPhi * cosTheta;
+    dst[1][1] =	cosPhi * cosPsi + -sinPhi * -sinTheta * -sinPsi;
+    dst[1][2] =	cosPhi * sinPsi + -sinPhi * -sinTheta * cosPsi;
+    dst[1][3] = SG_ZERO ;
+	
+    dst[2][0] = sinTheta;
+    dst[2][1] =	cosTheta * -sinPsi;
+    dst[2][2] =	cosTheta * cosPsi;
+    dst[2][3] = SG_ZERO;
+	
+    dst[3][0] = SG_ZERO;
+    dst[3][1] = SG_ZERO;
+    dst[3][2] = SG_ZERO;
+    dst[3][3] = SG_ONE ;
+}
+
+
+// Since these are pure rotation matrices we can save some bookwork
+// by considering them to be 3x3 until the very end -- NHV
+static void MakeVIEW_OFFSET( sgMat4 dst,
+                      const float angle1, const sgVec3 axis1,
+                      const float angle2, const sgVec3 axis2 )
+{
+    // make rotmatrix1 from angle and axis
+    float s = (float) sin ( angle1 ) ;
+    float c = (float) cos ( angle1 ) ;
+    float t = SG_ONE - c ;
+
+    sgMat3 mat1;
+    float tmp = t * axis1[0];
+    mat1[0][0] = tmp * axis1[0] + c ;
+    mat1[0][1] = tmp * axis1[1] + s * axis1[2] ;
+    mat1[0][2] = tmp * axis1[2] - s * axis1[1] ;
+
+    tmp = t * axis1[1];
+    mat1[1][0] = tmp * axis1[0] - s * axis1[2] ;
+    mat1[1][1] = tmp * axis1[1] + c ;
+    mat1[1][2] = tmp * axis1[2] + s * axis1[0] ;
+
+    tmp = t * axis1[2];
+    mat1[2][0] = tmp * axis1[0] + s * axis1[1] ;
+    mat1[2][1] = tmp * axis1[1] - s * axis1[0] ;
+    mat1[2][2] = tmp * axis1[2] + c ;
+
+    // make rotmatrix2 from angle and axis
+    s = (float) sin ( angle2 ) ;
+    c = (float) cos ( angle2 ) ;
+    t = SG_ONE - c ;
+
+    sgMat3 mat2;
+    tmp = t * axis2[0];
+    mat2[0][0] = tmp * axis2[0] + c ;
+    mat2[0][1] = tmp * axis2[1] + s * axis2[2] ;
+    mat2[0][2] = tmp * axis2[2] - s * axis2[1] ;
+
+    tmp = t * axis2[1];
+    mat2[1][0] = tmp * axis2[0] - s * axis2[2] ;
+    mat2[1][1] = tmp * axis2[1] + c ;
+    mat2[1][2] = tmp * axis2[2] + s * axis2[0] ;
+
+    tmp = t * axis2[2];
+    mat2[2][0] = tmp * axis2[0] + s * axis2[1] ;
+    mat2[2][1] = tmp * axis2[1] - s * axis2[0] ;
+    mat2[2][2] = tmp * axis2[2] + c ;
+
+    // multiply matrices
+    for ( int j = 0 ; j < 3 ; j++ ) {
+        dst[0][j] = mat2[0][0] * mat1[0][j] +
+                    mat2[0][1] * mat1[1][j] +
+                    mat2[0][2] * mat1[2][j];
+
+        dst[1][j] = mat2[1][0] * mat1[0][j] +
+                    mat2[1][1] * mat1[1][j] +
+                    mat2[1][2] * mat1[2][j];
+
+        dst[2][j] = mat2[2][0] * mat1[0][j] +
+                    mat2[2][1] * mat1[1][j] +
+                    mat2[2][2] * mat1[2][j];
+    }
+    // fill in 4x4 matrix elements
+    dst[0][3] = SG_ZERO; 
+    dst[1][3] = SG_ZERO; 
+    dst[2][3] = SG_ZERO;
+    dst[3][0] = SG_ZERO;
+    dst[3][1] = SG_ZERO;
+    dst[3][2] = SG_ZERO;
+    dst[3][3] = SG_ONE;
+}
+
+// Taking advantage of the 3x3 nature of this -- NHV
+inline static void MakeWithWorldUp( sgMat4 dst, const sgMat4 UP, const sgMat4 LOCAL )
+{
+    sgMat4 tmp;
+
+    float a = UP[0][0];
+    float b = UP[1][0];
+    float c = UP[2][0];
+    tmp[0][0] = a*LOCAL[0][0] + b*LOCAL[0][1] + c*LOCAL[0][2] ;
+    tmp[1][0] = a*LOCAL[1][0] + b*LOCAL[1][1] + c*LOCAL[1][2] ;
+    tmp[2][0] = a*LOCAL[2][0] + b*LOCAL[2][1] + c*LOCAL[2][2] ;
+    tmp[3][0] = SG_ZERO ;
+
+    a = UP[0][1];
+    b = UP[1][1];
+    c = UP[2][1];
+    tmp[0][1] = a*LOCAL[0][0] + b*LOCAL[0][1] + c*LOCAL[0][2] ;
+    tmp[1][1] = a*LOCAL[1][0] + b*LOCAL[1][1] + c*LOCAL[1][2] ;
+    tmp[2][1] = a*LOCAL[2][0] + b*LOCAL[2][1] + c*LOCAL[2][2] ;
+    tmp[3][1] = SG_ZERO ;
+
+    a = UP[0][2];
+    c = UP[2][2];
+    tmp[0][2] = a*LOCAL[0][0] + c*LOCAL[0][2] ;
+    tmp[1][2] = a*LOCAL[1][0] + c*LOCAL[1][2] ;
+    tmp[2][2] = a*LOCAL[2][0] + c*LOCAL[2][2] ;
+    tmp[3][2] = SG_ZERO ;
+
+    tmp[0][3] = SG_ZERO ;
+    tmp[1][3] = SG_ZERO ;
+    tmp[2][3] = SG_ZERO ;
+    tmp[3][3] = SG_ONE ;
+    sgCopyMat4(dst, tmp);
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGViewer.
 ////////////////////////////////////////////////////////////////////////
@@ -85,13 +229,6 @@ FGViewer::~FGViewer( void ) {
 void
 FGViewer::init ()
 {
-  if ( _type == FG_LOOKAT ) {
-      set_reverse_view_offset(true);
-  }
-
-  if ( _type == FG_RPH ) {
-      set_reverse_view_offset(false);
-  }
 }
 
 void
@@ -370,7 +507,10 @@ FGViewer::recalc ()
                       _roll_deg * SG_DEGREES_TO_RADIANS,
                       -_heading_deg * SG_DEGREES_TO_RADIANS);
   // Adjust LOCAL to current world_up vector (adjustment for planet location)
-  sgPostMultMat4( LOCAL, UP );
+  MakeWithWorldUp( LOCAL, UP, LOCAL );
+  // copy the LOCAL matrix to COCKPIT_ROT for publication...
+  sgCopyMat4( LOCAL_ROT, LOCAL );
+
   // make sg vectors view up, right and forward vectors from LOCAL
   sgSetVec3( _view_up, LOCAL[0][0], LOCAL[0][1], LOCAL[0][2] );
   sgSetVec3( right, LOCAL[1][0], LOCAL[1][1], LOCAL[1][2] );
@@ -384,32 +524,32 @@ FGViewer::recalc ()
 
 
 
-  // generate the heading offset matrix using heading_offset angle(s)
+  // Eye rotations.  
+  // Looking up/down left/right in pilot view (lookfrom mode)
+  // or Floating Rotatation around the object in chase view (lookat mode).
+  // Generate the offset matrix to be applied using offset angles:
   if (_type == FG_LOOKAT) {
     // Note that when in "chase view" the offset is in relation to the 
     // orientation heading (_heading_deg) of the model being looked at as 
     // it is used to rotate around the model.
-    sgMakeRotMat4( VIEW_HEADINGOFFSET, _heading_offset_deg -_heading_deg, _world_up );
+    MakeVIEW_OFFSET( VIEW_OFFSET,
+      (_heading_offset_deg - _heading_deg) * SG_DEGREES_TO_RADIANS, _world_up,
+      _pitch_offset_deg * SG_DEGREES_TO_RADIANS, right );
   }
   if (_type == FG_RPH) {
-    // generate the view offset matrix using orientation offset (heading)
-    sgMakeRotMat4( VIEW_HEADINGOFFSET, _heading_offset_deg, _view_up );
+    // generate the view offset matrix using orientation offsets
+    MakeVIEW_OFFSET( VIEW_OFFSET,
+      _heading_offset_deg  * SG_DEGREES_TO_RADIANS, _view_up,
+      _pitch_offset_deg  * SG_DEGREES_TO_RADIANS, right );
   }
 
-
-  // create a tilt matrix using orientation offset (pitch)
-  sgMakeRotMat4( VIEW_PITCHOFFSET, _pitch_offset_deg, right );
-
-  sgCopyMat4(VIEW_OFFSET, VIEW_HEADINGOFFSET);
-  sgPreMultMat4(VIEW_OFFSET, VIEW_PITCHOFFSET);
 
 
   if (_type == FG_LOOKAT) {
    
     // transfrom "offset" and "orientation offset" to vector
     sgXformVec3( position_offset, position_offset, UP );
-    sgXformVec3( position_offset, position_offset, VIEW_HEADINGOFFSET );
-    sgXformPnt3( position_offset, position_offset, VIEW_PITCHOFFSET );
+    sgXformVec3( position_offset, position_offset, VIEW_OFFSET );
 
     sgVec3 object_pos, eye_pos;
     // copy to coordinates to object...
@@ -447,9 +587,6 @@ FGViewer::recalc ()
     VIEW[3][2] = _view_pos[2];
     VIEW[3][3] = 1.0f;
 
-
-    // copy the LOCAL matrix to COCKPIT_ROT for publication...
-    sgCopyMat4( COCKPIT_ROT, LOCAL );
   }
 
   // the VIEW matrix includes both rotation and translation.  Let's
@@ -612,37 +749,6 @@ FGViewer::update (int dt)
       }
     }
   }
-}
-
-void FGViewer::fgMakeLOCAL( sgMat4 dst, const double Theta,
-				const double Phi, const double Psi)
-{
-    SGfloat cosTheta = (SGfloat) cos(Theta);
-    SGfloat sinTheta = (SGfloat) sin(Theta);
-    SGfloat cosPhi   = (SGfloat) cos(Phi);
-    SGfloat sinPhi   = (SGfloat) sin(Phi);
-    SGfloat sinPsi   = (SGfloat) sin(Psi) ;
-    SGfloat cosPsi   = (SGfloat) cos(Psi) ;
-	
-    dst[0][0] = cosPhi * cosTheta;
-    dst[0][1] =	sinPhi * cosPsi + cosPhi * -sinTheta * -sinPsi;
-    dst[0][2] =	sinPhi * sinPsi + cosPhi * -sinTheta * cosPsi;
-    dst[0][3] =	SG_ZERO;
-
-    dst[1][0] = -sinPhi * cosTheta;
-    dst[1][1] =	cosPhi * cosPsi + -sinPhi * -sinTheta * -sinPsi;
-    dst[1][2] =	cosPhi * sinPsi + -sinPhi * -sinTheta * cosPsi;
-    dst[1][3] = SG_ZERO ;
-	
-    dst[2][0] = sinTheta;
-    dst[2][1] =	cosTheta * -sinPsi;
-    dst[2][2] =	cosTheta * cosPsi;
-    dst[2][3] = SG_ZERO;
-	
-    dst[3][0] = SG_ZERO;
-    dst[3][1] = SG_ZERO;
-    dst[3][2] = SG_ZERO;
-    dst[3][3] = SG_ONE ;
 }
 
 

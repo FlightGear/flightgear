@@ -148,18 +148,20 @@ FGViewMgr::update (int dt)
   sgVec3 *pPO = PilotOffsetGet();
   sgVec3 zPO;
   sgCopyVec3( zPO, *pPO );
-  chase_view->setPositionOffsets(zPO[0], zPO[1], zPO[2] );
+  chase_view->setPositionOffsets(zPO[1], zPO[0], zPO[2] );
 
   chase_view->setOrientation(
 	fgGetDouble("/orientation/roll-deg"),
 	fgGetDouble("/orientation/pitch-deg"),
 	fgGetDouble("/orientation/heading-deg"));
-
+  chase_view ->setPosition(
+	fgGetDouble("/position/longitude-deg"),
+	fgGetDouble("/position/latitude-deg"),
+	fgGetDouble("/position/altitude-ft"));
   chase_view ->setTargetPosition(
 	fgGetDouble("/position/longitude-deg"),
 	fgGetDouble("/position/latitude-deg"),
 	fgGetDouble("/position/altitude-ft"));
-  chase_view->setPositionOffsets(zPO[0], zPO[1], zPO[2] );
 
 				// Update the current view
   do_axes();
@@ -366,6 +368,8 @@ FGViewMgr::do_axes ()
 
   get_current_view()->setGoalHeadingOffset_deg(viewDir);
 }
+
+
 
 
 
