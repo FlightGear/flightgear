@@ -599,20 +599,36 @@ setup_triangle (float * p1, float * p2, float * p3,
  * @param lon_deg The longitude in degrees.
  * @param lat_deg The latitude in degrees.
  */
-static void
+void
 makeWorldUpRotationMatrix (sgMat4 ROT, double hdg_deg,
 			   double lon_deg, double lat_deg)
 {
-    sgVec3 obj_right, obj_up;
-    sgSetVec3(obj_right, 0.0, 1.0, 0.0); // Y axis
-    sgSetVec3(obj_up, 0.0, 0.0, 1.0); // Z axis
-    sgMat4 ROT_lon, ROT_lat, ROT_hdg;
-    sgMakeRotMat4(ROT_lon, lon_deg, obj_up);
-    sgMakeRotMat4(ROT_lat, 90 - lat_deg, obj_right);
-    sgMakeRotMat4(ROT_hdg, hdg_deg, obj_up);
-    sgCopyMat4(ROT, ROT_hdg);
-    sgPostMultMat4(ROT, ROT_lat);
-    sgPostMultMat4(ROT, ROT_lon);
+	SGfloat sin_lat = sin( lat_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat cos_lat = cos( lat_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat sin_lon = sin( lon_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat cos_lon = cos( lon_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat sin_hdg = sin( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
+	SGfloat cos_hdg = cos( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
+
+	ROT[0][0] =  cos_hdg * sin_lat * cos_lon - sin_hdg * sin_lon;
+	ROT[0][1] =  cos_hdg * sin_lat * sin_lon + sin_hdg * cos_lon;
+	ROT[0][2] = -cos_hdg * cos_lat;
+	ROT[0][3] =  SG_ZERO;
+
+	ROT[1][0] = -sin_hdg * sin_lat * cos_lon - cos_hdg * sin_lon;
+	ROT[1][1] = -sin_hdg * sin_lat * sin_lon + cos_hdg * cos_lon;
+	ROT[1][2] =  sin_hdg * cos_lat;
+	ROT[1][3] =  SG_ZERO;
+
+	ROT[2][0] = cos_lat * cos_lon;
+	ROT[2][1] = cos_lat * sin_lon;
+	ROT[2][2] = sin_lat;
+	ROT[2][3] = SG_ZERO;
+
+	ROT[3][0] = SG_ZERO;
+	ROT[3][1] = SG_ZERO;
+	ROT[3][2] = SG_ZERO;
+	ROT[3][3] = SG_ONE ;
 }
 
 
