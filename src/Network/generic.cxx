@@ -267,7 +267,7 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         _serial_prot chunk;
 
      // chunk.name = chunks[i]->getStringValue("name");
-        chunk.format = chunks[i]->getStringValue("format", "%d");
+        chunk.format = chunks[i]->getStringValue("format", "%f");
         chunk.offset = chunks[i]->getDoubleValue("offset");
         chunk.factor = chunks[i]->getDoubleValue("offset", 1.0);
 
