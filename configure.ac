@@ -123,7 +123,7 @@ AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
 
 dnl Used to controll whether clouds3d should be compiled in or not
 AC_DEFINE([FG_USE_CLOUDS_3D], 1, [Define to use 3D cloud support])
-AM_CONDITIONAL(FG_USE_CLOUDS_3D, test "x$FG_USE_CLOUDS_3D" != "x")
+AM_CONDITIONAL(FG_USE_CLOUDS_3D, test "x" = "x")
 
 # Check for MS Windows environment
 AC_CHECK_HEADER(windows.h)
