@@ -36,5 +36,6 @@
 using std::istream;
 
 extern FGPanel * fgReadPanel (istream &input);
+extern FGPanel * fgReadPanel (const string &relative_path);
 
 #endif // __PANEL_IO_HXX

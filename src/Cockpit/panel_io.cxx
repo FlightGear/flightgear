@@ -27,17 +27,22 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/misc/fgpath.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/props.hxx>
 
 #include <iostream>
+#include <fstream>
 #include <string>
+
+#include <Main/options.hxx>
 
 #include "panel.hxx"
 #include "steam.hxx"
 #include "panel_io.hxx"
 
 using std::istream;
+using std::ifstream;
 using std::string;
 
 
@@ -622,7 +627,7 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
 
 
 /**
-pp * Read a panel from a property list.
+ * Read a panel from a property list.
  *
  * Each panel instrument will appear in its own, separate
  * property list.  The top level simply names the panel and
@@ -672,12 +677,13 @@ fgReadPanel (istream &input)
     SGPropertyList props2;
     SGPropertyNode node = instrument_group.getChild(i);
 
-    string path = node.getStringValue("path");
+    FGPath path(current_options.get_fg_root());
+    path.append(node.getStringValue("path"));
 
     FG_LOG(FG_INPUT, FG_INFO, "Reading instrument "
 	   << node.getName()
 	   << " from "
-	   << path);
+	   << path.str());
 
     int x = node.getIntValue("x", -1);
     int y = node.getIntValue("y", -1);
@@ -690,7 +696,7 @@ fgReadPanel (istream &input)
       return 0;
     }
 
-    if (!readPropertyList(path, &props2)) {
+    if (!readPropertyList(path.str(), &props2)) {
       delete panel;
       return 0;
     }
@@ -712,6 +718,30 @@ fgReadPanel (istream &input)
   //
   return panel;
 }
+
+
+/**
+ * Read a panel from a property list.
+ *
+ * This function opens a stream to a file, then invokes the
+ * main fgReadPanel() function.
+ */
+FGPanel *
+fgReadPanel (const string &relative_path)
+{
+  FGPath path(current_options.get_fg_root());
+  path.append(relative_path);
+  ifstream input(path.c_str());
+  if (!input.good()) {
+    FG_LOG(FG_INPUT, FG_ALERT,
+	   "Cannot read panel configuration from " << path.str());
+    return 0;
+  }
+  FGPanel * panel = fgReadPanel(input);
+  input.close();
+  return panel;
+}
+
 
 
 // end of panel_io.cxx
