@@ -29,6 +29,7 @@
 
 #include <Array/array.hxx>
 #include <Clipper/clipper.hxx>
+#include <GenOutput/genobj.hxx>
 #include <Triangulate/triangle.hxx>
 
 
@@ -185,10 +186,16 @@ main(int argc, char **argv) {
     // triangulate the data for each polygon
     FGTriangle t;
     do_triangulate( array, clipper, t );
+
+    // generate the output
+    fgGenOutput( t );
 }
 
 
 // $Log$
+// Revision 1.7  1999/03/22 23:48:29  curt
+// Added GenOutput/
+//
 // Revision 1.6  1999/03/21 15:48:01  curt
 // Removed Dem2node from the Tools fold.
 // Tweaked the triangulator options to add quality mesh refinement.
