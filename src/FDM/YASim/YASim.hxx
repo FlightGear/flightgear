@@ -22,8 +22,6 @@ public:
     void copyFromYASim();
     void copyToYASim(bool copyState);
 
-    void printDEBUG();
-
     yasim::FGFDM* _fdm;
     float _dt;
     enum {

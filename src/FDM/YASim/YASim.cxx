@@ -37,32 +37,6 @@ static const float W2HP = 1.3416e-3;
 static const float INHG2PA = 3386.389;
 static const float SLUG2KG = 14.59390;
 
-void YASim::printDEBUG()
-{
-    static int debugCount = 0;
-    
-    debugCount++;
-    if(debugCount >= 3) {
-	debugCount = 0;
-
-//  	printf("N1 %5.1f N2 %5.1f FF %7.1f EPR %4.2f EGT %6.1f\n",
-//  	       fgGetFloat("/engines/engine[0]/n1"),
-//  	       fgGetFloat("/engines/engine[0]/n2"),
-//  	       fgGetFloat("/engines/engine[0]/fuel-flow-gph"),
-//  	       fgGetFloat("/engines/engine[0]/epr"),
-//  	       fgGetFloat("/engines/engine[0]/egt"));
-
-// 	printf("gear: %f\n", fgGetFloat("/controls/gear/gear-down"));
-
-//    	printf("alpha %5.1f beta %5.1f\n", get_Alpha()*57.3, get_Beta()*57.3);
-
-// 	printf("pilot: %f %f %f\n",
-// 	       fgGetDouble("/sim/view/pilot/x-offset-m"),
-// 	       fgGetDouble("/sim/view/pilot/y-offset-m"),
-// 	       fgGetDouble("/sim/view/pilot/z-offset-m"));
-    }
-}
-
 YASim::YASim(double dt)
 {
 //     set_delta_t(dt);
@@ -219,21 +193,22 @@ void YASim::init()
 void YASim::update(double dt)
 {
     if (is_suspended())
-      return;
+        return;
 
     int iterations = _calc_multiloop(dt);
 
     // If we're crashed, then we don't care
-    if(_fdm->getAirplane()->getModel()->isCrashed())
-      return;
+    if(_fdm->getAirplane()->getModel()->isCrashed()) {
+        if(!fgGetBool("/sim/crashed"))
+            fgSetBool("/sim/crashed", true);
+        return;
+    }
 
     int i;
     for(i=0; i<iterations; i++) {
-	    copyToYASim(false);
-	    _fdm->iterate(_dt);
-	    copyFromYASim();
-
-	    printDEBUG();
+        copyToYASim(false);
+        _fdm->iterate(_dt);
+        copyFromYASim();
     }
 }
 
