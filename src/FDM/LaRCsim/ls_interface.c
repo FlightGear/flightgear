@@ -575,6 +575,9 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.1  1999/06/17 18:07:33  curt
+ * Initial revision
+ *
  * Revision 1.2  1999/04/27 19:28:04  curt
  * Changes for the MacOS port contributed by Darrell Walisser.
  *

@@ -2,6 +2,9 @@
 //  Alterations: Copyright C. Hotchkiss 1996
 //
 // $Log$
+// Revision 1.1  1999/06/17 18:07:30  curt
+// Initial revision
+//
 // Revision 1.2  1999/04/22 18:45:42  curt
 // Borland tweaks.
 //

@@ -109,10 +109,6 @@ void fgSplashUpdate ( double progress ) {
     int xsize = 480;
     int ysize = 380;
 
-    if ( !current_view.get_winWidth() || !current_view.get_winHeight() ) {
-	return;
-    }
-
     xmin = (current_view.get_winWidth() - xsize) / 2;
     xmax = xmin + xsize;
 

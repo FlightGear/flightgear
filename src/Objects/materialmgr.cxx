@@ -134,18 +134,12 @@ fgMATERIAL_MGR::load_lib ( void )
     mpath.append( "materials" );
 
     fg_gzifstream in( mpath.str() );
-    if ( ! in.is_open() ) {
+    if ( ! in ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << mpath.str() );
 	exit(-1);
     }
 
-#ifndef __MWERKS__
     while ( ! in.eof() ) {
-#else
-    char c = '\0';
-    while ( in.get(c) && c != '\0' ) {
-	in.putback(c);
-#endif
         // printf("%s", line);
 
 	// strip leading white space and comments

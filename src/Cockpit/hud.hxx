@@ -57,7 +57,6 @@
 
 FG_USING_STD(deque);
 FG_USING_STD(vector);
-FG_USING_NAMESPACE(std);
 
 #ifndef WIN32
   typedef struct {
@@ -234,9 +233,12 @@ extern float HUD_matrix[16];
 
 class fgText {
 private:
-    float x, y;
     char msg[32];
+    float x, y;
 public:
+    fgText( char *c = NULL, float x = 0, float y =0 )
+        : x(x), y(y) {strncpy(msg,c,32-1);}
+
     fgText( float x = 0, float y = 0, char *c = NULL )
         : x(x), y(y) {strncpy(msg,c,32-1);}
 
@@ -432,7 +434,7 @@ class instr_item {  // An Abstract Base Class (ABC)
     }
     void TextString( char *msg, float x, float y )
     {
-        HUD_TextList.add(fgText(x, y, msg));        
+        HUD_TextList.add(fgText(msg, x, y));        
     }
     int getStringWidth ( char *str )
     {

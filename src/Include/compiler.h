@@ -98,26 +98,33 @@
 /*
   CodeWarrior compiler from Metrowerks, Inc.
 */
-#  define FG_HAVE_TRAITS
-#  define FG_HAVE_STD_INCLUDES
-#  define FG_HAVE_STD
-#  define FG_NAMESPACES
+#  if (__MWERKS__ < 0x0900) //|| macintosh
+#    define FG_HAVE_TRAITS
+#    define FG_HAVE_STD_INCLUDES
+#    define FG_HAVE_STD
+#    define FG_NAMESPACES
 
-#  define STL_ALGORITHM  <algorithm>
-#  define STL_FUNCTIONAL <functional>
-#  define STL_IOMANIP    <iomanip>
-#  define STL_IOSTREAM   <iostream>
-#  define STL_STDEXCEPT  <stdexcept>
-#  define STL_STRING     <string>
+#    define STL_ALGORITHM  <algorithm>
+#    define STL_FUNCTIONAL <functional>
+#    define STL_IOMANIP    <iomanip>
+#    define STL_IOSTREAM   <iostream>
+#    define STL_STDEXCEPT  <stdexcept>
+#    define STL_STRING     <string>
 
 // Temp:
-#  define bcopy(from, to, n) memcpy(to, from, n)
+#    define bcopy(from, to, n) memcpy(to, from, n)
 
 // -rp- please use FG_MEM_COPY everywhere !
-#  define FG_MEM_COPY(to,from,n) memcpy(to, from, n)
+#    define FG_MEM_COPY(to,from,n) memcpy(to, from, n)
 
 // -dw- currently used glut has no game mode stuff
-#  define GLUT_WRONG_VERSION
+#    define GLUT_WRONG_VERSION
+
+#  elif (__MWERKS__ >= 0x0900) && __INTEL__
+#    error still to be supported...
+#  else
+#    error unknown Metrowerks compiler
+#  endif
 #endif
 
 //

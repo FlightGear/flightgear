@@ -64,10 +64,6 @@
 
 FG_USING_STD(string);
 
-#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_STD(cout);
-#endif
-
 puFont guiFnt = 0;
 fntTexFont *guiFntHandle = 0;
 
@@ -599,7 +595,7 @@ void guiInit()
     // Install our fast fonts
     fntpath.append( "typewriter.txf" );
     guiFntHandle = new fntTexFont ;
-    guiFntHandle -> load ( (char *)fntpath.c_str() ) ;
+    guiFntHandle -> load ( fntpath.c_str() ) ;
     puFont GuiFont ( guiFntHandle, 15 ) ;
     puSetDefaultFonts( GuiFont, GuiFont ) ;
     guiFnt = puGetDefaultLabelFont();

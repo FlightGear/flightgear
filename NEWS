@@ -1,35 +1,3 @@
-New in 0.6.2
-* MSVC++ and FreeBSD portability enhancements.
-* MACos fixes.
-* JSBsim updates.
-* c172 updates.
-
-New in 0.6.1
-* Tony Peden contributed a c172 flight model replacement for the
-  Navion.  Still needs to be debugged a bit before it is usable.
-* More MacOS portability fixes.
-* More Borland C++ fixes.
-* More IRIX fixes.
-* Fixed a bug in handling windows drive letter, colon "C:" notation.
-* Minor tweaks to the Astro sub section contributed by Durk Talsma.
-* GUI updated contributed by Norman Vine.
-* Fixed a problem with ambiguous constructors in the fgText class.
-* Updates to JSBsim contributed by Jon Berndt.
-* Created a tile load queue so that we only load one tile per frame.
-  This isn't entirely satisfactory, but it reduces the length of the
-  pause when crossing a tile boundary with several shorter pauses.
-* Fixed bug with passing PUI keystrokes on to glut.
-* Fixed a bug in tilecache size which caused occasional tiles to drop
-  out when more than one row is scheduled "simultaneously".
-* Changes to scenery building tools to handle sliver detection and
-  resolution.
-* Fixed several other minor bugs in the scenery creation tools.
-* Added urban area support to scenery creation tools.
-* Made the parallel scenery building tools a bit more robust if a
-  requested client machine happens to be offline by pinging it first
-  to see if it is alive.
-* Added support for libgpc's new hole tracking interface.
-
 New in 0.6.0
 * Tons of improvements with scenery creation.  Inter-tile gaps have been
   fixed, distorted textures have been fixed, real coastlines have been added,

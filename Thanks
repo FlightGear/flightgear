@@ -136,7 +136,7 @@ Bob Kuehne <rpk@sgi.com>
   Redid the Makefile system so it is simpler and more robust.
 
 
-WoodSoup Project  http://www.woodsoup.org
+Vasily Lewis <vlewis@woodsoup.org>  http://www.woodsoup.org
   Provided computing resources and services so that the Flight Gear 
   project could have real home.  This includes, web services, ftp services
   shell accounts, email lists, dns services, etc.

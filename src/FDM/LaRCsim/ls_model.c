@@ -37,8 +37,11 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
-Revision 1.1  1999/04/05 21:32:45  curt
+Revision 1.1  1999/06/17 18:07:33  curt
 Initial revision
+
+Revision 1.1.1.1  1999/04/05 21:32:45  curt
+Start of 0.6.x branch.
 
 Revision 1.3  1998/08/06 12:46:39  curt
 Header change.

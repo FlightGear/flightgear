@@ -35,6 +35,9 @@
 
 $Header$
 $Log$
+Revision 1.1  1999/06/17 18:07:34  curt
+Initial revision
+
 Revision 1.2  1999/04/22 18:47:25  curt
 Wrap with extern "C" { } if building with __cplusplus compiler.
 
