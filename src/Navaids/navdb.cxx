@@ -121,8 +121,9 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
 // Given a localizer record and it's corresponding runway record,
 // adjust the localizer position so it is in perfect alignment with
 // the runway.
-static void update_loc_position( FGNavRecord *loc, FGRunway *rwy ) {
-
+static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
+                                 double threshold )
+{
     double hdg = rwy->heading;
     hdg += 180.0;
     if ( hdg > 360.0 ) {
@@ -155,12 +156,23 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy ) {
                         &az1, &az2, &dist_m );
     // cout << "Distance moved = " << dist_m << endl;
 
-    loc->set_lat( nloc_lat );
-    loc->set_lon( nloc_lon );
-    loc->set_multiuse( rwy->heading );
-
     // cout << "orig heading = " << loc->get_multiuse() << endl;
     // cout << "new heading = " << rwy->heading << endl;
+
+    double hdg_diff = loc->get_multiuse() - rwy->heading;
+
+    // clamp to [-180.0 ... 180.0]
+    if ( hdg_diff < -180.0 ) {
+        hdg_diff += 360.0;
+    } else if ( hdg_diff > 180.0 ) {
+        hdg_diff -= 360.0;
+    }
+
+    if ( fabs(hdg_diff) <= threshold ) {
+        loc->set_lat( nloc_lat );
+        loc->set_lon( nloc_lon );
+        loc->set_multiuse( rwy->heading );
+    }
 }
 
 
@@ -169,7 +181,8 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy ) {
 // it then "moves" the localizer and updates it's heading so it
 // *perfectly* aligns with the runway, but is still the same distance
 // from the runway threshold.
-void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist ) {
+void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist,
+                                double threshold ) {
     nav_map_type navmap = loclist->get_navaids();
 
     nav_map_iterator freq = navmap.begin();
@@ -186,7 +199,7 @@ void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist ) {
 
             FGRunway r;
             if ( runways->search(id, rwy, &r) ) {
-                update_loc_position( (*loc), &r );
+                update_loc_position( (*loc), &r, threshold );
             }
             ++loc;
         }

@@ -50,7 +50,8 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
 // it then "moves" the localizer and updates it's heading so it
 // *perfectly* aligns with the runway, but is still the same distance
 // from the runway threshold.
-void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist );
+void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist,
+                                double threshold );
 
 
 #endif // _FG_NAVDB_HXX
