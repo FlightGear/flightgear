@@ -8,6 +8,7 @@ endif
 
 libGUI_a_SOURCES = \
         new_gui.cxx new_gui.hxx \
+        dialog.cxx dialog.hxx \
 	menubar.cxx menubar.hxx \
 	gui.cxx gui.h gui_funcs.cxx \
 	gui_local.cxx gui_local.hxx \
