@@ -588,8 +588,10 @@ getAPAltitudeLock ()
 static void
 setAPAltitudeLock (bool lock)
 {
-  current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
-  current_autopilot->set_AltitudeEnabled(lock);
+  if (lock)
+    current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
+  if (current_autopilot->get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_LOCK)
+    current_autopilot->set_AltitudeEnabled(lock);
 }
 
 
@@ -609,7 +611,7 @@ getAPAltitude ()
 static void
 setAPAltitude (double altitude)
 {
-    current_autopilot->set_TargetAltitude( altitude * SG_FEET_TO_METER );
+  current_autopilot->set_TargetAltitude( altitude * SG_FEET_TO_METER );
 }
 
 /**
@@ -630,8 +632,10 @@ getAPGSLock ()
 static void
 setAPGSLock (bool lock)
 {
-  current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_GS1);
-  current_autopilot->set_AltitudeEnabled(lock);
+  if (lock)
+    current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_GS1);
+  if (current_autopilot->get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_GS1)
+    current_autopilot->set_AltitudeEnabled(lock);
 }
 
 
@@ -653,14 +657,17 @@ getAPTerrainLock ()
 static void
 setAPTerrainLock (bool lock)
 {
-  current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_TERRAIN);
-  current_autopilot->set_AltitudeEnabled(lock);
-  current_autopilot->set_TargetAGL(
-      current_aircraft.fdm_state->get_Altitude_AGL() * SG_FEET_TO_METER
-    );
-  cout << "Target AGL = "
-       << current_aircraft.fdm_state->get_Altitude_AGL() * SG_FEET_TO_METER
-       << endl;
+  if (lock) {
+    current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_TERRAIN);
+    current_autopilot
+      ->set_TargetAGL(current_aircraft.fdm_state->get_Altitude_AGL() *
+		      SG_FEET_TO_METER);
+    cout << "Target AGL = "
+	 << current_aircraft.fdm_state->get_Altitude_AGL() * SG_FEET_TO_METER
+	 << endl;
+  }
+  if (current_autopilot->get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_TERRAIN)
+    current_autopilot->set_AltitudeEnabled(lock);
 }
 
 
@@ -702,12 +709,10 @@ getAPHeadingLock ()
 static void
 setAPHeadingLock (bool lock)
 {
-    if (lock) {
-	current_autopilot->set_HeadingMode(DEFAULT_AP_HEADING_LOCK);
-	current_autopilot->set_HeadingEnabled(true);
-    } else {
-	current_autopilot->set_HeadingEnabled(false);
-    }
+  if (lock)
+    current_autopilot->set_HeadingMode(DEFAULT_AP_HEADING_LOCK);
+  if (current_autopilot->get_HeadingMode() == DEFAULT_AP_HEADING_LOCK)
+    current_autopilot->set_HeadingEnabled(lock);
 }
 
 
@@ -749,12 +754,10 @@ getAPWingLeveler ()
 static void
 setAPWingLeveler (bool lock)
 {
-    if (lock) {
+    if (lock)
 	current_autopilot->set_HeadingMode(FGAutopilot::FG_TC_HEADING_LOCK);
-	current_autopilot->set_HeadingEnabled(true);
-    } else {
-	current_autopilot->set_HeadingEnabled(false);
-    }
+    if (current_autopilot->get_HeadingMode() == FGAutopilot::FG_TC_HEADING_LOCK)
+      current_autopilot->set_HeadingEnabled(lock);
 }
 
 /**
@@ -775,13 +778,10 @@ getAPNAV1Lock ()
 static void
 setAPNAV1Lock (bool lock)
 {
-  if (lock) {
+  if (lock)
     current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_NAV1);
-    current_autopilot->set_HeadingEnabled(true);
-  } else if (current_autopilot->get_HeadingMode() ==
-	     FGAutopilot::FG_HEADING_NAV1) {
-    current_autopilot->set_HeadingEnabled(false);
-  }
+  if (current_autopilot->get_HeadingMode() == FGAutopilot::FG_HEADING_NAV1)
+    current_autopilot->set_HeadingEnabled(lock);
 }
 
 /**
@@ -841,7 +841,7 @@ getAPElevatorControl ()
 static void
 setAPElevatorControl (double value)
 {
-    if (getAPAltitudeLock()) {
+    if (value != 0 && getAPAltitudeLock()) {
         SG_LOG(SG_GENERAL, SG_DEBUG, "setAPElevatorControl " << value );
         value -= current_autopilot->get_TargetAltitude();
         current_autopilot->AltitudeAdjust(value < 0.0 ? 100.0 : -100.0);
@@ -1136,20 +1136,20 @@ fgInitProps ()
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
   fgSetArchivable("/autopilot/locks/altitude");
+  std::cout << "[AP] altitude = " << fgGetDouble("/autopilot/settings/altitude-ft") << std::endl;
   fgTie("/autopilot/settings/altitude-ft", getAPAltitude, setAPAltitude);
   fgSetArchivable("/autopilot/settings/altitude-ft");
+  std::cout << "[AP] altitude = " << fgGetDouble("/autopilot/settings/altitude-ft") << std::endl;
   fgTie("/autopilot/locks/glide-slope", getAPGSLock, setAPGSLock);
   fgSetArchivable("/autopilot/locks/glide-slope");
   fgTie("/autopilot/locks/terrain", getAPTerrainLock, setAPTerrainLock);
   fgSetArchivable("/autopilot/locks/terrain");
-  fgTie("/autopilot/settings/agl-ft", getAPAltitude, setAPAltitude);
-  fgSetArchivable("/autopilot/settings/agl-ft");
   fgTie("/autopilot/settings/climb-rate-fpm", getAPClimb, setAPClimb, false);
   fgSetArchivable("/autopilot/settings/climb-rate-fpm");
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
   fgSetArchivable("/autopilot/locks/heading");
   fgTie("/autopilot/settings/heading-bug-deg",
-	getAPHeadingBug, setAPHeadingBug, false);
+	getAPHeadingBug, setAPHeadingBug);
   fgSetArchivable("/autopilot/settings/heading-bug-deg");
   fgTie("/autopilot/locks/wing-leveler", getAPWingLeveler, setAPWingLeveler);
   fgSetArchivable("/autopilot/locks/wing-leveler");
