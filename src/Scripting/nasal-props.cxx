@@ -25,6 +25,7 @@ naGhostType PropNodeGhostType = { propNodeGhostDestroy };
 
 static naRef propNodeGhostCreate(naContext c, SGPropertyNode* n)
 {
+    if(!n) return naNil();
     SGPropertyNode_ptr* ghost = new SGPropertyNode_ptr(n);
     return naNewGhost(c, &PropNodeGhostType, ghost);
 }

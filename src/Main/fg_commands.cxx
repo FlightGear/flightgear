@@ -857,6 +857,28 @@ do_data_logging_commit (const SGPropertyNode * arg)
     return true;
 }
 
+/**
+ * Built-in command: Add a dialog to the GUI system.  Does *not*
+ * display the dialog.  The property node should have the same format
+ * as a dialog XML configuration.  It must include:
+ *
+ * name: the name of the GUI dialog for future reference.
+ */
+static bool
+do_dialog_new (const SGPropertyNode * arg)
+{
+    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+
+    // Note the casting away of const: this is *real*.  Doing a
+    // "dialog-apply" command later on will mutate this property node.
+    // I'm not convinced that this isn't the Right Thing though; it
+    // allows client to create a node, pass it to dialog-new, and get
+    // the values back from the dialog by reading the same node.
+    // Perhaps command arguments are not as "const" as they would
+    // seem?
+    gui->newDialog((SGPropertyNode*)arg);
+    return true;
+}
 
 /**
  * Built-in command: Show an XML-configured dialog.
@@ -879,6 +901,8 @@ static bool
 do_dialog_close (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    if(arg->hasValue("dialog-name"))
+        return gui->closeDialog(arg->getStringValue("dialog-name"));
     return gui->closeActiveDialog();
 }
 
@@ -1066,6 +1090,7 @@ static struct {
     { "property-cycle", do_property_cycle },
     { "property-randomize", do_property_randomize },
     { "data-logging-commit", do_data_logging_commit },
+    { "dialog-new", do_dialog_new },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
     { "dialog-show", do_dialog_show },

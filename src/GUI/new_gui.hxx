@@ -81,6 +81,18 @@ public:
     virtual void update (double delta_time_sec);
 
     /**
+     * Creates a new dialog box, using the same property format as the
+     * gui/dialogs configuration files.  Does not display the
+     * resulting dialog.  If a pre-existing dialog of the same name
+     * exists, it will be deleted.  The node argument will be stored
+     * in the GUI subsystem using SGPropertNode_ptr reference counting.
+     * It should not be deleted by user code.
+     *
+     * @param node A property node containing the dialog definition
+     */
+    virtual void newDialog (SGPropertyNode* node);
+
+    /**
      * Display a dialog box.
      *
      * At initialization time, the subsystem reads all of the XML
@@ -96,12 +108,22 @@ public:
 
 
     /**
-     * Close the currently-active dialog, if any.
+     * Close the currenty active dialog.  This function is intended to
+     * be called from code (pui callbacks, for instance) that registers
+     * its dialog object as active via setActiveDialog().  Other
+     * user-level code should use the closeDialog(name) API.
      *
-     * @return true if a dialog was active, false otherwise.
+     * @return true if a dialog was active, false otherwise
      */
     virtual bool closeActiveDialog ();
 
+    /**
+     * Close a named dialog, if it is open.
+     *
+     * @param name The name of the dialog box.
+     * @return true if the dialog was active, false otherwise.
+     */
+    virtual bool closeDialog (const string &name);
 
     /**
      * Return a pointer to the current menubar.
@@ -151,7 +173,8 @@ private:
 
     FGMenuBar * _menubar;
     FGDialog * _active_dialog;
-    map<string,SGPropertyNode *> _dialog_props;
+    map<string,FGDialog *> _active_dialogs;
+    map<string,SGPropertyNode_ptr> _dialog_props;
 
 };
 

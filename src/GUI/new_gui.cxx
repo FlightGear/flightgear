@@ -79,7 +79,8 @@ NewGUI::showDialog (const string &name)
         SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
         return false;
     } else {
-        new FGDialog(_dialog_props[name]); // it will be deleted by a callback
+        if(!_active_dialogs[name])
+            _active_dialogs[name] = new FGDialog(_dialog_props[name]);
         return true;
     }
 }
@@ -87,13 +88,33 @@ NewGUI::showDialog (const string &name)
 bool
 NewGUI::closeActiveDialog ()
 {
-    if (_active_dialog == 0) {
+    if (_active_dialog == 0)
         return false;
-    } else {
-        delete _active_dialog;
-        _active_dialog = 0;
+
+    // Kill any entries in _active_dialogs...  Is there an STL
+    // algorithm to do (delete map entries by value, not key)?  I hate
+    // the STL :) -Andy
+    map<string,FGDialog *>::iterator iter = _active_dialogs.begin();
+    for(/**/; iter != _active_dialogs.end(); iter++)
+        if(iter->second == _active_dialog)
+            _active_dialogs.erase(iter);
+
+    delete _active_dialog;
+    _active_dialog = 0;
+    return true;
+}
+
+bool
+NewGUI::closeDialog (const string& name)
+{
+    if(_active_dialogs.find(name) != _active_dialogs.end()) {
+        if(_active_dialog == _active_dialogs[name])
+            _active_dialog = 0;
+        delete _active_dialogs[name];
+        _active_dialogs.erase(name);
         return true;
     }
+    return false; // dialog wasn't open...
 }
 
 void
@@ -134,10 +155,6 @@ NewGUI::clear ()
 {
     delete _menubar;
     _menubar = 0;
-
-    map<string,SGPropertyNode *>::iterator it;
-    for (it = _dialog_props.begin(); it != _dialog_props.end(); it++)
-        delete it->second;
     _dialog_props.clear();
 }
 
@@ -152,6 +169,18 @@ test_extension (const char * path, const char * ext)
             return false;
     }
     return true;
+}
+
+void
+NewGUI::newDialog (SGPropertyNode* props)
+{
+    const char* cname = props->getStringValue("name");
+    if(!cname) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "New dialog has no <name> property");
+        return;
+    }
+    string name = props->getStringValue("name");
+    _dialog_props[name] = props;
 }
 
 void
@@ -189,11 +218,7 @@ NewGUI::readDir (const char * path)
                 delete props;
                 continue;
             }
-            string name = props->getStringValue("name");
-            SG_LOG(SG_INPUT, SG_BULK, "Saving dialog " << name);
-            if (_dialog_props[name] != 0)
-                delete _dialog_props[name];
-            _dialog_props[name] = props;
+            newDialog(props);
         }
     }
     ulCloseDir(dir);
