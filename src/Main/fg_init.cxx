@@ -350,7 +350,7 @@ bool fgInitSubsystems( void ) {
 			    fgEVENT::FG_EVENT_READY, 60000 );
 
     // Initialize the time dependent variables
-    t->init();
+    t->init(f);
     t->update(f);
 
     // Initialize view parameters

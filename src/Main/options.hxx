@@ -87,6 +87,16 @@ public:
 	FG_RADIUS_MAX = 4
     };
 
+    enum
+    {
+      FG_TIME_SYS_OFFSET   = 1,
+      FG_TIME_GMT_OFFSET   = 2,
+      FG_TIME_LAT_OFFSET   = 3,
+      FG_TIME_SYS_ABSOLUTE = 4,
+      FG_TIME_GMT_ABSOLUTE = 5,
+      FG_TIME_LAT_ABSOLUTE = 6
+    };
+
     enum fgControlMode
     {
 	FG_JOYSTICK = 0,
@@ -152,9 +162,9 @@ private:
     int tris_or_culled;
 
     // Time options
-    int time_offset;   // Offset true time by this many seconds
-    long int start_gst;     // Specify a greenwich sidereal time (gst)
-    long int start_lst;     // Specify a local sidereal time (lst)
+    int time_offset;		// Use this value to change time.
+    int time_offset_type;	// Will be set to one of the FG_TIME_* enums,
+				// To deterine how time_offset should be used 
 
     // Serial Ports, we currently support up to four channels
     // fgSerialPortKind port_a_kind;  // Port a kind
@@ -228,8 +238,7 @@ public:
     inline int get_tris_or_culled() const { return tris_or_culled; }
 
     inline int get_time_offset() const { return time_offset; }
-    inline long int get_start_gst() const { return start_gst; };
-    inline long int get_start_lst() const { return start_lst; }
+    inline int get_time_offset_type() const { return time_offset_type; };
 
     inline str_container get_port_options_list() const { 
 	return port_options_list;

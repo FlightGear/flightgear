@@ -183,12 +183,10 @@ fgOPTIONS::fgOPTIONS() :
     tris_or_culled(0),
 	
     // Time options
-    time_offset(0),
-    start_gst(0),
-    start_lst(0)
-
+    time_offset(0)
 {
     // set initial values/defaults
+    time_offset_type=FG_TIME_SYS_OFFSET;
     char* envp = ::getenv( "FG_ROOT" );
 
     if ( envp != NULL ) {
@@ -336,7 +334,7 @@ long int fgOPTIONS::parse_date( const string& date)
     gmt.tm_mday = 0;
     gmt.tm_mon = 0;
     gmt.tm_year = 0;
-    gmt.tm_isdst = 0; // ignore daylight savingtime for the moment
+    gmt.tm_isdst = 0; // ignore daylight savings time for the moment
     date_str = (char *)date.c_str();
     // get year
     if ( strlen(date_str) ) {
@@ -703,12 +701,25 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg.find( "--tile-radius=" ) != string::npos ) {
 	tile_radius = parse_tile_radius( arg.substr(14) );
 	tile_diameter = tile_radius * 2 + 1;
-    } else if ( arg.find( "--time-offset=" ) != string::npos ) {
-	time_offset = parse_time_offset( (arg.substr(14)) );
-    } else if (arg.find( "--start-date-gmt=") != string::npos ) {
-        start_gst = parse_date( (arg.substr(17)) );
-    } else if (arg.find( "--start-data-lst=") != string::npos ) {
-        start_lst = parse_date( (arg.substr(17)) );
+    } else if ( arg.find( "--time-offset-sys=" ) != string::npos ) {
+	time_offset = parse_time_offset( (arg.substr(18)) );
+	time_offset_type = FG_TIME_SYS_OFFSET;
+    } else if ( arg.find( "--time-offset-lat=") != string::npos ) {
+        time_offset = parse_time_offset(arg.substr(18));
+	time_offset_type = FG_TIME_LAT_OFFSET;
+    } else if ( arg.find( "--time-offset-gmt=") != string::npos ) {
+        time_offset = parse_time_offset(arg.substr(18));
+	time_offset_type = FG_TIME_GMT_OFFSET;
+    } else if ( arg.find( "--start-date-sys=") != string::npos ) {
+        time_offset = parse_date( (arg.substr(17)) );
+	time_offset_type = FG_TIME_SYS_ABSOLUTE;
+    } else if ( arg.find( "--start-date-lat=") != string::npos ) {
+        time_offset = parse_date( (arg.substr(17)) );
+	time_offset_type = FG_TIME_LAT_ABSOLUTE;
+    } else if ( arg.find( "--start-date-gmt=") != string::npos ) {
+        time_offset = parse_date( (arg.substr(17)) );
+	time_offset_type = FG_TIME_GMT_ABSOLUTE;
+
     } else if ( arg == "--hud-tris" ) {
 	tris_or_culled = 0;	
     } else if ( arg == "--hud-culled" ) {
@@ -791,95 +802,118 @@ int fgOPTIONS::parse_config_file( const string& path ) {
 
 // Print usage message
 void fgOPTIONS::usage ( void ) {
-    printf("Usage: fg [ options ... ]\n");
-    printf("\n");
+    cout << "Usage: fg [ options ... ]" << endl;
+    cout << endl;
 
-    printf("General Options:\n");
-    printf("\t--help -h:  print usage\n");
-    printf("\t--fg-root=path:  specify the root path for all the data files\n");
-    printf("\t--disable-game-mode:  disable full-screen game mode\n");
-    printf("\t--enable-game-mode:  enable full-screen game mode\n");
-    printf("\t--disable-splash-screen:  disable splash screen\n");
-    printf("\t--enable-splash-screen:  enable splash screen\n");
-    printf("\t--disable-intro-music:  disable introduction music\n");
-    printf("\t--enable-intro-music:  enable introduction music\n");
-    printf("\t--disable-mouse-pointer:  disable extra mouse pointer\n");
-    printf("\t--enable-mouse-pointer:  enable extra mouse pointer (i.e. for\n");
-    printf("\t\tfull screen voodoo/voodoo-II based cards.)\n");
-    printf("\t--disable-pause:  start out in an active state\n");
-    printf("\t--enable-pause:  start out in a paused state\n");
-    printf("\t--control=mode:  primary control mode (joystick, keyboard, mouse)\n");
-    printf("\n");
+    cout << "General Options:" << endl;
+    cout << "\t--help -h:  print usage" << endl;
+    cout << "\t--fg-root=path:  specify the root path for all the data files"
+	 << endl;
+    cout << "\t--disable-game-mode:  disable full-screen game mode" << endl;
+    cout << "\t--enable-game-mode:  enable full-screen game mode" << endl;
+    cout << "\t--disable-splash-screen:  disable splash screen" << endl;
+    cout << "\t--enable-splash-screen:  enable splash screen" << endl;
+    cout << "\t--disable-intro-music:  disable introduction music" << endl;
+    cout << "\t--enable-intro-music:  enable introduction music" << endl;
+    cout << "\t--disable-mouse-pointer:  disable extra mouse pointer" << endl;
+    cout << "\t--enable-mouse-pointer:  enable extra mouse pointer (i.e. for"
+	 << endl;
+    cout << "\t\tfull screen voodoo/voodoo-II based cards.)" << endl;
+    cout << "\t--disable-pause:  start out in an active state" << endl;
+    cout << "\t--enable-pause:  start out in a paused state" << endl;
+    cout << "\t--control=mode:  primary control mode " 
+	 << "(joystick, keyboard, mouse)" << endl;
+    cout << endl;
 
-    printf("Features:\n");
-    printf("\t--disable-hud:  disable heads up display\n");
-    printf("\t--enable-hud:  enable heads up display\n");
-    printf("\t--disable-panel:  disable instrument panel\n");
-    printf("\t--enable-panel:  enable instrumetn panel\n");
-    printf("\t--disable-sound:  disable sound effects\n");
-    printf("\t--enable-sound:  enable sound effects\n");
-    printf("\n");
+    cout << "Features:" << endl;
+    cout << "\t--disable-hud:  disable heads up display" << endl;
+    cout << "\t--enable-hud:  enable heads up display" << endl;
+    cout << "\t--disable-panel:  disable instrument panel" << endl;
+    cout << "\t--enable-panel:  enable instrumetn panel" << endl;
+    cout << "\t--disable-sound:  disable sound effects" << endl;
+    cout << "\t--enable-sound:  enable sound effects" << endl;
+    cout << endl;
  
-    printf("Flight Model:\n");
-    printf("\t--fdm=abcd:  one of slew, jsb, larcsim, or external\n");
-    printf("\t--model-hz=n:  run the FDM this rate (iterations per second)\n");
-    printf("\t--speed=n:  run the FDM this much faster than real time\n");
-    printf("\n");
+    cout << "Flight Model:" << endl;
+    cout << "\t--fdm=abcd:  one of slew, jsb, larcsim, or external" << endl;
+    cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
+	 << endl;
+    cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
+    cout << endl;
 
-    printf("Initial Position and Orientation:\n");
-    printf("\t--airport-id=ABCD:  specify starting postion by airport id\n");
-    printf("\t--lon=degrees:  starting longitude in degrees (west = -)\n");
-    printf("\t--lat=degrees:  starting latitude in degrees (south = -)\n");
-    printf("\t--altitude=feet:  starting altitude in feet\n");
-    printf("\t\t(unless --units-meters specified\n");
-    printf("\t--heading=degrees:  heading (yaw) angle in degress (Psi)\n");
-    printf("\t--roll=degrees:  roll angle in degrees (Phi)\n");
-    printf("\t--pitch=degrees:  pitch angle in degrees (Theta)\n");
-    printf("\t--uBody=feet per second:  velocity along the body X axis\n");
-    printf("\t--vBody=feet per second:  velocity along the body Y axis\n");
-    printf("\t--wBody=feet per second:  velocity along the body Z axis\n");
-    printf("\t\t(unless --units-meters specified\n");
-    printf("\n");
+    cout << "Initial Position and Orientation:" << endl;
+    cout << "\t--airport-id=ABCD:  specify starting postion by airport id" 
+	 << endl;
+    cout << "\t--lon=degrees:  starting longitude in degrees (west = -)" 
+	 << endl;
+    cout << "\t--lat=degrees:  starting latitude in degrees (south = -)"
+	 << endl;
+    cout << "\t--altitude=feet:  starting altitude in feet" << endl;
+    cout << "\t\t(unless --units-meters specified" << endl;
+    cout << "\t--heading=degrees:  heading (yaw) angle in degress (Psi)"
+	 << endl;
+    cout << "\t--roll=degrees:  roll angle in degrees (Phi)" << endl;
+    cout << "\t--pitch=degrees:  pitch angle in degrees (Theta)" << endl;
+    cout << "\t--uBody=feet per second:  velocity along the body X axis"
+	 << endl;
+    cout << "\t--vBody=feet per second:  velocity along the body Y axis"
+	 << endl;
+    cout << "\t--wBody=feet per second:  velocity along the body Z axis"
+	 << endl;
+    cout << "\t\t(unless --units-meters specified" << endl;
+    cout << endl;
 
-    printf("Rendering Options:\n");
-    printf("\t--fog-disable:  disable fog/haze\n");
-    printf("\t--fog-fastest:  enable fastest fog/haze\n");
-    printf("\t--fog-nicest:  enable nicest fog/haze\n");
-    printf("\t--fov=xx.x:  specify initial field of view angle in degrees\n");
-    printf("\t--disable-fullscreen:  disable fullscreen mode\n");
-    printf("\t--enable-fullscreen:  enable fullscreen mode\n");
-    printf("\t--shading-flat:  enable flat shading\n");
-    printf("\t--shading-smooth:  enable smooth shading\n");
-    printf("\t--disable-skyblend:  disable sky blending\n");
-    printf("\t--enable-skyblend:  enable sky blending\n");
-    printf("\t--disable-textures:  disable textures\n");
-    printf("\t--enable-textures:  enable textures\n");
-    printf("\t--disable-wireframe:  disable wireframe drawing mode\n");
-    printf("\t--enable-wireframe:  enable wireframe drawing mode\n");
-    printf("\t--geometry=WWWxHHH:  window geometry: 640x480, 800x600, etc.\n");
-    printf("\n");
+    cout << "Rendering Options:" << endl;
+    cout << "\t--fog-disable:  disable fog/haze" << endl;
+    cout << "\t--fog-fastest:  enable fastest fog/haze" << endl;
+    cout << "\t--fog-nicest:  enable nicest fog/haze" << endl;
+    cout << "\t--fov=xx.x:  specify initial field of view angle in degrees"
+	 << endl;
+    cout << "\t--disable-fullscreen:  disable fullscreen mode" << endl;
+    cout << "\t--enable-fullscreen:  enable fullscreen mode" << endl;
+    cout << "\t--shading-flat:  enable flat shading" << endl;
+    cout << "\t--shading-smooth:  enable smooth shading" << endl;
+    cout << "\t--disable-skyblend:  disable sky blending" << endl;
+    cout << "\t--enable-skyblend:  enable sky blending" << endl;
+    cout << "\t--disable-textures:  disable textures" << endl;
+    cout << "\t--enable-textures:  enable textures" << endl;
+    cout << "\t--disable-wireframe:  disable wireframe drawing mode" << endl;
+    cout << "\t--enable-wireframe:  enable wireframe drawing mode" << endl;
+    cout << "\t--geometry=WWWxHHH:  window geometry: 640x480, 800x600, etc."
+	 << endl;
+    cout << endl;
 
-    printf("Scenery Options:\n");
-    printf("\t--tile-radius=n:  specify tile radius, must be 1 - 4\n");
-    printf("\n");
+    cout << "Scenery Options:" << endl;
+    cout << "\t--tile-radius=n:  specify tile radius, must be 1 - 4" << endl;
+    cout << endl;
 
-    printf("Hud Options:\n");
-    printf("\t--units-feet:  Hud displays units in feet\n");
-    printf("\t--units-meters:  Hud displays units in meters\n");
-    printf("\t--hud-tris:  Hud displays number of triangles rendered\n");
-    printf("\t--hud-culled:  Hud displays percentage of triangles culled\n");
-    printf("\n");
+    cout << "Hud Options:" << endl;
+    cout << "\t--units-feet:  Hud displays units in feet" << endl;
+    cout << "\t--units-meters:  Hud displays units in meters" << endl;
+    cout << "\t--hud-tris:  Hud displays number of triangles rendered" << endl;
+    cout << "\t--hud-culled:  Hud displays percentage of triangles culled"
+	 << endl;
+    cout << endl;
 	
-    printf("Time Options:\n");
-    printf("\t--time-offset=[+-]hh:mm:ss:  offset local time by this amount\n");
-    printf("\t--start-date-gmt=yyyy:mm:dd:hh:mm:ss: specify a starting date/time. Time is Greenwich Mean Time\n");
-    printf("\t--start-date-lst=yyyy:mm:dd:hh:mm:ss: specify a starting date/time. Uses local sidereal time\n");
+    cout << "Time Options:" << endl;
+    cout << "\t--time-offset-sys=[+-]hh:mm:ss: add this time offset to" << endl
+	 << "\t\tyour system time" << endl;
+    cout << "\t--time-offset-gmt:[+-]hh:mm:ss: add this time offset to" << endl
+	 << "\t\tGreenwich Mean Time (GMT)" << endl;
+    cout << "\t--time-offset-lat:[+-]hh:mm:ss: add this time offset to" << endl
+	 << "\t\tLocal Aircraft Time (LAT)" << endl;   
+    cout << "\t--start-date-sys=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
+	 << "\t\tdate/time. Uses your system time " << endl;
+    cout << "\t--start-date-gmt=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
+	 << "\t\tdate/time. Uses Greenwich Mean Time" << endl;
+    cout << "\t--start-date-lat=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
+	 << "\t\tdate/time. Uses Local Aircraft Time" << endl;
 #ifdef FG_NETWORK_OLK
-    printf("\n");
+    cout << "" << endl;
 
-    printf("Network Options:\n");
-    printf("\t--net-hud:  Hud displays network info\n");
-    printf("\t--net-id=name:  specify your own callsign\n");
+    cout << "Network Options:" << endl;
+    cout << "\t--net-hud:  Hud displays network info" << endl;
+    cout << "\t--net-id=name:  specify your own callsign" << endl;
 #endif
 }
 
