@@ -17,7 +17,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 23;
+const int FG_NET_CTRLS_VERSION = 24;
 
 
 // Define a structure containing the control parameters
@@ -37,8 +37,10 @@ public:
     // Aero controls
     double aileron;		         // -1 ... 1
     double elevator;		         // -1 ... 1
-    double elevator_trim;	         // -1 ... 1
     double rudder;		         // -1 ... 1
+    double aileron_trim;	         // -1 ... 1
+    double elevator_trim;	         // -1 ... 1
+    double rudder_trim;		         // -1 ... 1
     double flaps;		         //  0 ... 1
 
     // Aero control faults

@@ -111,8 +111,10 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     net->version = FG_NET_CTRLS_VERSION;
     net->aileron = node->getDoubleValue( "aileron" );
     net->elevator = node->getDoubleValue( "elevator" );
-    net->elevator_trim = node->getDoubleValue( "elevator-trim" );
     net->rudder = node->getDoubleValue( "rudder" );
+    net->aileron_trim = node->getDoubleValue( "aileron-trim" );
+    net->elevator_trim = node->getDoubleValue( "elevator-trim" );
+    net->rudder_trim = node->getDoubleValue( "rudder-trim" );
     net->flaps = node->getDoubleValue( "flaps" );
     net->flaps_power
         = fgGetDouble( "/systems/electrical/outputs/flaps", 1.0 ) >= 1.0;
@@ -233,8 +235,10 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         net->version = htonl(net->version);
         htond(net->aileron);
         htond(net->elevator);
-        htond(net->elevator_trim);
         htond(net->rudder);
+        htond(net->aileron_trim);
+        htond(net->elevator_trim);
+        htond(net->rudder_trim);
         htond(net->flaps);
         net->flaps_power = htonl(net->flaps_power);
         net->flap_motor_ok = htonl(net->flap_motor_ok);
@@ -294,8 +298,10 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         net->version = htonl(net->version);
         htond(net->aileron);
         htond(net->elevator);
-        htond(net->elevator_trim);
         htond(net->rudder);
+        htond(net->aileron_trim);
+        htond(net->elevator_trim);
+        htond(net->rudder_trim);
         htond(net->flaps);
         net->flaps_power = htonl(net->flaps_power);
         net->flap_motor_ok = htonl(net->flap_motor_ok);
@@ -350,8 +356,10 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     node = fgGetNode("/controls/flight", true);
     node->setDoubleValue( "aileron", net->aileron );
     node->setDoubleValue( "elevator", net->elevator );
-    node->setDoubleValue( "elevator-trim", net->elevator_trim );
     node->setDoubleValue( "rudder", net->rudder );
+    node->setDoubleValue( "aileron-trim", net->aileron_trim );
+    node->setDoubleValue( "elevator-trim", net->elevator_trim );
+    node->setDoubleValue( "rudder-trim", net->rudder_trim );
     node->setDoubleValue( "flaps", net->flaps );
     fgSetBool( "/systems/electrical/outputs/flaps", net->flaps_power );
     node->setBoolValue( "flaps-serviceable", net->flap_motor_ok );
