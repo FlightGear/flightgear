@@ -42,21 +42,23 @@
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 
-int nodecount, tricount;
+// int nodecount, tricount;
 double xmin, xmax, ymin, ymax;
 
-static double nodes_orig[MAX_NODES][3];
-static int tris[MAX_TRIS][3];
-// static int new_tris[MAX_TRIS][3];
+// static double nodes_orig[MAX_NODES][3];
+// static fgPoint3d nodes_cart[MAX_NODES];
+// static int tris[MAX_TRIS][3];
 
-static fgPoint3d nodes_cart[MAX_NODES];
+container_3d nodes_orig;
+container_3d nodes_cart;
+container_tri tri_list;
 
 fgBUCKET ne_index, nw_index, sw_index, se_index;
 fgBUCKET north_index, south_index, east_index, west_index;
 
 // convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to a
 // cartesian point
-fgPoint3d geod_to_cart(double geod[3]) {
+fgPoint3d geod_to_cart(fgPoint3d geod) {
     fgPoint3d cp;
     fgPoint3d pp;
     double gc_lon, gc_lat, sl_radius;
@@ -64,15 +66,15 @@ fgPoint3d geod_to_cart(double geod[3]) {
     // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
     //        geod[0], geod[1], geod[2]);
 
-    gc_lon = geod[0]*ARCSEC_TO_RAD;
-    fgGeodToGeoc(geod[1]*ARCSEC_TO_RAD, geod[2], &sl_radius, &gc_lat);
+    gc_lon = geod.lon * ARCSEC_TO_RAD;
+    fgGeodToGeoc(geod.lat * ARCSEC_TO_RAD, geod.radius, &sl_radius, &gc_lat);
 
     // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
     //        gc_lat, sl_radius+geod[2]);
 
     pp.lon = gc_lon;
     pp.lat = gc_lat;
-    pp.radius = sl_radius + geod[2];
+    pp.radius = sl_radius + geod.radius;
     cp = fgPolarToCart3d(pp);
     
     // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
@@ -99,34 +101,23 @@ void calc_normal(fgPoint3d p1, fgPoint3d p2,
 
 
 // return the file base name ( foo/bar/file.ext = file.ext )
-void extract_file(char *in, char *base) {
-    int len, i;
+string extract_file(const string& input) {
+    int pos;
 
-    len = strlen(in);
+    pos = input.rfind("/");
+    ++pos;
 
-    i = len - 1;
-    while ( (i >= 0) && (in[i] != '/') ) {
-	i--;
-    }
-
-    in += (i + 1);
-    strcpy(base, in);
+    return input.substr(pos);
 }
 
 
 // return the file path name ( foo/bar/file.ext = foo/bar )
-void extract_path(char *in, char *base) {
-    int len, i;
+string extract_path(const string& input) {
+    int pos;
 
-    len = strlen(in);
-    strcpy(base, in);
+    pos = input.rfind("/");
 
-    i = len - 1;
-    while ( (i >= 0) && (in[i] != '/') ) {
-	i--;
-    }
-
-    base[i] = '\0';
+    return input.substr(0, pos);
 }
 
 
@@ -137,8 +128,17 @@ void find_tris(int n, int *t1, int *t2, int *t3, int *t4, int *t5) {
     *t1 = *t2 = *t3 = *t4 = *t5 = 0;
 
     i = 1;
-    while ( i <= tricount ) {
-        if ( (n == tris[i][0]) || (n == tris[i][1]) || (n == tris[i][2]) ) {
+    iterator_tri last = tri_list.end();
+    iterator_tri current = tri_list.begin();
+
+    // skip first null record
+    ++current;
+
+    for ( ; current != last; ++current )
+    {
+        if ( (n == (*current).n1) || (n == (*current).n2) || 
+	     (n == (*current).n3) )
+	{
             if ( *t1 == 0 ) {
 		*t1 = i;
             } else if ( *t2 == 0 ) {
@@ -151,89 +151,86 @@ void find_tris(int n, int *t1, int *t2, int *t3, int *t4, int *t5) {
 		*t5 = i;
 	    }
         }
-        i++;
+        ++i;
     }
 }
 
 
 // Initialize a new mesh structure
-void triload(char *basename) {
-    char nodename[256], elename[256];
-    FILE *node, *ele;
-    int dim, junk1, junk2;
+void triload(const string& basename) {
+    string nodename, elename;
+    fgPoint3d node1, node2;
+    triangle tri;
+    FILE *node_file, *ele_file;
+    int nodecount, tricount, dim, junk1, junk2;
     int i;
 
-    strcpy(nodename, basename);
-    strcat(nodename, ".node");
-    strcpy(elename, basename);
-    strcat(elename, ".ele");
+    nodename = basename + ".node";
+    elename  = basename + ".ele";
 
-    printf("Loading node file:  %s ...\n", nodename);
-    if ( (node = fopen(nodename, "r")) == NULL ) {
-	printf("Cannot open file '%s'\n", nodename);
+    cout << "Loading node file:  " + nodename + " ...\n";
+    if ( (node_file = fopen(nodename.c_str(), "r")) == NULL ) {
+	cout << "Cannot open file " + nodename + "\n";
 	exit(-1);
     }
 
-    fscanf(node, "%d %d %d %d", &nodecount, &dim, &junk1, &junk2);
+    // the triangle program starts counting at 1 by default which is
+    // pretty obnoxious.  Let's just push null record zero's onto our
+    // list to compensate
+    nodes_orig.push_back(node1);
+    nodes_cart.push_back(node1);
+    tri_list.push_back(tri);
 
-    if ( nodecount > MAX_NODES - 1 ) {
-	printf("Error, too many nodes, need to increase array size\n");
-	exit(-1);
-    } else {
-	printf("    Expecting %d nodes\n", nodecount);
-    }
+    fscanf(node_file, "%d %d %d %d", &nodecount, &dim, &junk1, &junk2);
+    cout << "    Expecting " << nodecount << " nodes\n";
 
     for ( i = 1; i <= nodecount; i++ ) {
-	fscanf(node, "%d %lf %lf %lf %d\n", &junk1, 
-	       &nodes_orig[i][0], &nodes_orig[i][1], &nodes_orig[i][2], &junk2);
-	// printf("%d %.2f %.2f %.2f\n", junk1, n[0], n[1], n[2]);
-	nodes_cart[i] = geod_to_cart(nodes_orig[i]);
-	// printf("%d %.2f %.2f %.2f\n", 
-	//        junk1, nodes_cart[i].x, nodes_cart[i].y, nodes_cart[i].z);
+	fscanf(node_file, "%d %lf %lf %lf %d\n", &junk1, 
+	       &(node1.x), &(node1.y), &(node1.z), &junk2);
+	printf("%d %.2f %.2f %.2f\n", junk1, node1.x, node1.y, node1.z);
+	nodes_orig.push_back(node1);
+	node2 = geod_to_cart(node1);
+	nodes_cart.push_back(node2);
+	printf("%d %.2f %.2f %.2f\n", junk1, node2.x, node2.y, node2.z);
 
 	if ( i == 1 ) {
-	    xmin = xmax = nodes_orig[i][0];
-	    ymin = ymax = nodes_orig[i][1];
+	    xmin = xmax = node1.x;
+	    ymin = ymax = node1.y;
 	} else {
-	    if ( nodes_orig[i][0] < xmin ) {
-		xmin = nodes_orig[i][0];
+	    if ( node1.x < xmin ) {
+		xmin = node1.x;
 	    }
-	    if ( nodes_orig[i][0] > xmax ) {
-		xmax = nodes_orig[i][0];
+	    if ( node1.x > xmax ) {
+		xmax = node1.x;
 	    }
-	    if ( nodes_orig[i][1] < ymin ) {
-		ymin = nodes_orig[i][1];
+	    if ( node1.y < ymin ) {
+		ymin = node1.y;
 	    }
-	    if ( nodes_orig[i][1] > ymax ) {
-		ymax = nodes_orig[i][1];
+	    if ( node1.y > ymax ) {
+		ymax = node1.y;
 	    }
 	}
     }
 
-    fclose(node);
+    fclose(node_file);
 
-    printf("Loading element file:  %s ...\n", elename);
-    if ( (ele = fopen(elename, "r")) == NULL ) {
-	printf("Cannot open file '%s'\n", elename);
+    cout << "Loading element file:  " + elename + " ...\n";
+    if ( (ele_file = fopen(elename.c_str(), "r")) == NULL ) {
+	cout << "Cannot open file " + elename + "\n";
 	exit(-1);
     }
 
-    fscanf(ele, "%d %d %d", &tricount, &junk1, &junk2);
-
-    if ( tricount > MAX_TRIS - 1 ) {
-	printf("Error, too many elements, need to increase array size\n");
-	exit(-1);
-    } else {
-	printf("    Expecting %d elements\n", tricount);
-    }
+    fscanf(ele_file, "%d %d %d", &tricount, &junk1, &junk2);
+    cout << "    Expecting " << tricount << " elements\n";
 
     for ( i = 1; i <= tricount; i++ ) {
-	fscanf(ele, "%d %d %d %d\n", &junk1, 
-	       &tris[i][0], &tris[i][1], &tris[i][2]);
-	// printf("%d %d %d %d\n", junk1, tris[i][0], tris[i][1], tris[i][2]);
+	fscanf(ele_file, "%d %d %d %d\n", &junk1, 
+	       &(tri.n1), &(tri.n2), &(tri.n3));
+	printf("%d %d %d %d\n", junk1, tri.n1, tri.n2, tri.n3);
+	tri_list.push_back(tri);
     }
 
-    fclose(ele);
+    fclose(ele_file);
 }
 
 
@@ -242,28 +239,28 @@ int file_exists(char *file) {
     struct stat stat_buf;
     int result;
 
-    printf("checking %s ... ", file);
+    cout << "checking " << file << " ... ";
 
     result = stat(file, &stat_buf);
 
     if ( result != 0 ) {
 	// stat failed, no file
-	printf("not found.\n");
-	return(0);
+	cout << "not found.\n";
+	return 0;
     } else {
 	// stat succeeded, file exists
-	printf("exists.\n");
-	return(1);
+	cout << "exists.\n";
+	return 1;
     }
 }
 
 
 // check to see if a shared object exists
-int shared_object_exists(char *basepath, char *ext) {
+int shared_object_exists(const char *basepath, const string& ext) {
     char file[256], scene_path[256];
     long int index;
 
-    if ( strcmp(ext, ".sw") == 0 ) {
+    if ( ext == ".sw" ) {
 	fgBucketGenBasePath(&west_index, scene_path);
 	index = fgBucketGenIndex(&west_index);
 	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
@@ -284,7 +281,7 @@ int shared_object_exists(char *basepath, char *ext) {
 	}
     }
 
-    if ( strcmp(ext, ".se") == 0 ) {
+    if ( ext == ".se" ) {
 	fgBucketGenBasePath(&east_index, scene_path);
 	index = fgBucketGenIndex(&east_index);
 	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
@@ -305,7 +302,7 @@ int shared_object_exists(char *basepath, char *ext) {
 	}
     }
 
-    if ( strcmp(ext, ".ne") == 0 ) {
+    if ( ext == ".ne" ) {
 	fgBucketGenBasePath(&east_index, scene_path);
 	index = fgBucketGenIndex(&east_index);
 	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
@@ -326,7 +323,7 @@ int shared_object_exists(char *basepath, char *ext) {
 	}
     }
 
-    if ( strcmp(ext, ".nw") == 0 ) {
+    if ( ext == ".nw" ) {
 	fgBucketGenBasePath(&west_index, scene_path);
 	index = fgBucketGenIndex(&west_index);
 	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
@@ -347,7 +344,7 @@ int shared_object_exists(char *basepath, char *ext) {
 	}
     }
 
-    if ( strcmp(ext, ".south") == 0 ) {
+    if ( ext == ".south" ) {
 	fgBucketGenBasePath(&south_index, scene_path);
 	index = fgBucketGenIndex(&south_index);
 	sprintf(file, "%s/%s/%ld.1.north", basepath, scene_path, index);
@@ -356,7 +353,7 @@ int shared_object_exists(char *basepath, char *ext) {
 	}
     }
 
-    if ( strcmp(ext, ".north") == 0 ) {
+    if ( ext == ".north" ) {
 	fgBucketGenBasePath(&north_index, scene_path);
 	index = fgBucketGenIndex(&north_index);
 	sprintf(file, "%s/%s/%ld.1.south", basepath, scene_path, index);
@@ -365,7 +362,7 @@ int shared_object_exists(char *basepath, char *ext) {
 	}
     }
 
-    if ( strcmp(ext, ".west") == 0 ) {
+    if ( ext == ".west" ) {
 	fgBucketGenBasePath(&west_index, scene_path);
 	index = fgBucketGenIndex(&west_index);
 	sprintf(file, "%s/%s/%ld.1.east", basepath, scene_path, index);
@@ -374,7 +371,7 @@ int shared_object_exists(char *basepath, char *ext) {
 	}
     }
 
-    if ( strcmp(ext, ".east") == 0 ) {
+    if ( ext == ".east" ) {
 	fgBucketGenBasePath(&east_index, scene_path);
 	index = fgBucketGenIndex(&east_index);
 	sprintf(file, "%s/%s/%ld.1.west", basepath, scene_path, index);
@@ -389,35 +386,37 @@ int shared_object_exists(char *basepath, char *ext) {
 
 // my custom file opening routine ... don't open if a shared edge or
 // vertex alread exists
-FILE *my_open(char *basename, char *basepath, char *ext) {
+FILE *my_open(const string& basename, const string& basepath, 
+	      const string& ext)
+{
     FILE *fp;
-    char filename[256];
+    string filename;
 
     // create the output file name
-    strcpy(filename, basename);
-    strcat(filename, ext);
+    filename = basename + ext;
 
     // check if a shared object already exist from a different tile
 
-    if ( shared_object_exists(basepath, ext) ) {
+    if ( shared_object_exists(basepath.c_str(), ext) ) {
 	// not an actual file open error, but we've already got the
         // shared edge, so we don't want to create another one
-	printf("not opening\n");
+	cout << "not opening\n";
 	return(NULL);
     } else {
 	// open the file
-	fp = fopen(filename, "w");
-	printf("Opening %s\n", filename);
+	fp = fopen(filename.c_str(), "w");
+	cout << "Opening " + filename + "\n";
 	return(fp);
     }
 }
 
 
 // dump in WaveFront .obj format
-void dump_obj(char *basename, char *basepath) {
+void dump_obj(const string& basename, const string& basepath) {
+    fgPoint3d node;
     double n1[3], n2[3], n3[3], n4[3], n5[3], norm[3], temp;
     FILE *fp, *sw, *se, *ne, *nw, *north, *south, *east, *west, *body;
-    int i, t1, t2, t3, t4, t5, count;
+    int i, t1, t2, t3, t4, t5, count, size;
 
     sw = my_open(basename, basepath, ".sw");
     se = my_open(basename, basepath, ".se");
@@ -431,45 +430,51 @@ void dump_obj(char *basename, char *basepath) {
 
     body = my_open(basename, basepath, ".body");
 
-    printf("Dumping edges file basename:  %s ...\n", basename);
+    cout << "Dumping edges file basename:  " + basename + " ...\n";
 
     // dump vertices
-    printf("  writing vertices\n");
-    for ( i = 1; i <= nodecount; i++ ) {
+    cout << "  writing vertices\n";
 
-	if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) && 
-	     (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
+    iterator_3d last = nodes_orig.end();
+    iterator_3d current = nodes_orig.begin();
+    ++current;
+    for ( ; current != last; ++current) {
+	node = *current;
+
+	if ( (fabs(node.y - ymin) < FG_EPSILON) && 
+	     (fabs(node.x - xmin) < FG_EPSILON) ) {
 	    fp = sw;
-	} else if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON) ) {
+	} else if ( (fabs(node.y - ymin) < FG_EPSILON) &&
+		    (fabs(node.x - xmax) < FG_EPSILON) ) {
 	    fp = se;
-	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON)) {
+	} else if ( (fabs(node.y - ymax) < FG_EPSILON) &&
+		    (fabs(node.x - xmax) < FG_EPSILON)) {
 	    fp = ne;
-	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
+	} else if ( (fabs(node.y - ymax) < FG_EPSILON) &&
+		    (fabs(node.x - xmin) < FG_EPSILON) ) {
 	    fp = nw;
-	} else if ( fabs(nodes_orig[i][0] - xmin) < FG_EPSILON ) {
+	} else if ( fabs(node.x - xmin) < FG_EPSILON ) {
 	    fp = west;
-	} else if ( fabs(nodes_orig[i][0] - xmax) < FG_EPSILON ) {
+	} else if ( fabs(node.x - xmax) < FG_EPSILON ) {
 	    fp = east;
-	} else if ( fabs(nodes_orig[i][1] - ymin) < FG_EPSILON ) {
+	} else if ( fabs(node.y - ymin) < FG_EPSILON ) {
 	    fp = south;
-	} else if ( fabs(nodes_orig[i][1] - ymax) < FG_EPSILON ) {
+	} else if ( fabs(node.y - ymax) < FG_EPSILON ) {
 	    fp = north;
 	} else {
 	    fp = body;
 	}
 
 	if ( fp != NULL ) {
-	    fprintf(fp, "gdn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fprintf(fp, "gdn %.2f %.2f %.2f\n", node.x, node.y, node.z);
 	}
     }
 
-    printf("  calculating and writing normals\n");
+    cout << "  calculating and writing normals\n";
+
     // calculate and generate normals
-    for ( i = 1; i <= nodecount; i++ ) {
+    size = nodes_orig.size();
+    for ( i = 1; i < size; i++ ) {
 	// printf("Finding normal\n");
 
 	find_tris(i, &t1, &t2, &t3, &t4, &t5);
@@ -481,30 +486,40 @@ void dump_obj(char *basename, char *basepath) {
 	n5[0] = n5[1] = n5[2] = 0.0;
 
 	count = 1;
-	calc_normal(nodes_cart[tris[t1][0]], nodes_cart[tris[t1][1]], 
-		    nodes_cart[tris[t1][2]], n1);
+	calc_normal(nodes_cart[tri_list[t1].n1],
+		    nodes_cart[tri_list[t1].n2], 
+		    nodes_cart[tri_list[t1].n3],
+		    n1);
 
 	if ( t2 > 0 ) {
-	    calc_normal(nodes_cart[tris[t2][0]], nodes_cart[tris[t2][1]], 
-			nodes_cart[tris[t2][2]], n2);
+	    calc_normal(nodes_cart[tri_list[t2].n1], 
+			nodes_cart[tri_list[t2].n2], 
+			nodes_cart[tri_list[t2].n3],
+			n2);
 	    count = 2;
 	}
 
 	if ( t3 > 0 ) {
-	    calc_normal(nodes_cart[tris[t3][0]], nodes_cart[tris[t3][1]],
-			nodes_cart[tris[t3][2]], n3);
+	    calc_normal(nodes_cart[tri_list[t3].n1],
+			nodes_cart[tri_list[t3].n2],
+			nodes_cart[tri_list[t3].n3],
+			n3);
 	    count = 3;
 	}
 
 	if ( t4 > 0 ) {
-	    calc_normal(nodes_cart[tris[t4][0]], nodes_cart[tris[t4][1]],
-			nodes_cart[tris[t4][2]], n4);
+	    calc_normal(nodes_cart[tri_list[t4].n1],
+			nodes_cart[tri_list[t4].n2],
+			nodes_cart[tri_list[t4].n3],
+			n4);
 	    count = 4;
 	}
 
 	if ( t5 > 0 ) {
-	    calc_normal(nodes_cart[tris[t5][0]], nodes_cart[tris[t5][1]],
-			nodes_cart[tris[t5][2]], n5);
+	    calc_normal(nodes_cart[tri_list[t5].n1],
+			nodes_cart[tri_list[t5].n2],
+			nodes_cart[tri_list[t5].n3],
+			n5);
 	    count = 5;
 	}
 
@@ -523,25 +538,25 @@ void dump_obj(char *basename, char *basepath) {
 	
 	fp = NULL;
 
-	if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) && 
-	     (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
+	if ( (fabs(nodes_orig[i].y - ymin) < FG_EPSILON) && 
+	     (fabs(nodes_orig[i].x - xmin) < FG_EPSILON) ) {
 	    fp = sw;
-	} else if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON) ) {
+	} else if ( (fabs(nodes_orig[i].y - ymin) < FG_EPSILON) &&
+		    (fabs(nodes_orig[i].x - xmax) < FG_EPSILON) ) {
 	    fp = se;
-	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON)) {
+	} else if ( (fabs(nodes_orig[i].y - ymax) < FG_EPSILON) &&
+		    (fabs(nodes_orig[i].x - xmax) < FG_EPSILON)) {
 	    fp = ne;
-	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
-		    (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
+	} else if ( (fabs(nodes_orig[i].y - ymax) < FG_EPSILON) &&
+		    (fabs(nodes_orig[i].x - xmin) < FG_EPSILON) ) {
 	    fp = nw;
-	} else if ( fabs(nodes_orig[i][0] - xmin) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].x - xmin) < FG_EPSILON ) {
 	    fp = west;
-	} else if ( fabs(nodes_orig[i][0] - xmax) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].x - xmax) < FG_EPSILON ) {
 	    fp = east;
-	} else if ( fabs(nodes_orig[i][1] - ymin) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].y - ymin) < FG_EPSILON ) {
 	    fp = south;
-	} else if ( fabs(nodes_orig[i][1] - ymax) < FG_EPSILON ) {
+	} else if ( fabs(nodes_orig[i].y - ymax) < FG_EPSILON ) {
 	    fp = north;
 	}
 	if ( fp != NULL ) {
@@ -564,30 +579,32 @@ void dump_obj(char *basename, char *basepath) {
 
 
 int main(int argc, char **argv) {
-    char basename[256], basepath[256], temp[256];
+    string basename, basepath, temp;
     fgBUCKET p;
     long int index;
     int len;
 
-    strcpy(basename, argv[1]);
+    basename = argv[1];
 
     // find the base path of the file
-    extract_path(basename, basepath);
-    extract_path(basepath, basepath);
-    extract_path(basepath, basepath);
-    printf("%s\n", basepath);
+    basepath = extract_path(basename);
+    basepath = extract_path(basepath);
+    basepath = extract_path(basepath);
+    cout << "basepath = " + basepath + "\n";
 
     // find the index of the current file
-    extract_file(basename, temp);
-    len = strlen(temp);
+    temp = extract_file(basename);
+    len = temp.length();
     if ( len >= 2 ) {
-	temp[len-2] = '\0';
+	temp = temp.substr(0, len-2);
     }
-    index = atoi(temp);
-    printf("%ld\n", index);
+    index = atoi( temp.c_str() );
+    cout << "index = " << index << "\n";
     fgBucketParseIndex(index, &p);
 
-    printf("bucket = %d %d %d %d\n", p.lon, p.lat, p.x, p.y);
+    cout << "bucket = " << p.lon << " " << p.lat << " " << 
+	p.x << " " << p.y << "\n";
+
     // generate the indexes of the neighbors
     fgBucketOffset(&p, &ne_index,  1,  1);
     fgBucketOffset(&p, &nw_index, -1,  1);
@@ -616,6 +633,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.3  1998/09/22 23:49:56  curt
+// C++-ified, STL-ified, and string-ified.
+//
 // Revision 1.2  1998/09/21 23:16:23  curt
 // Converted to c++ style comments.
 //

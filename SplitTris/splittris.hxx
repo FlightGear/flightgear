@@ -30,23 +30,44 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <string>
+
+#include <vector>
+#include "Include/fg_stl_config.h"
+
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
+
+#include <Include/fg_types.h>
 
 
-#define MAX_NODES 200000
-#define MAX_TRIS  400000
+// A triangle (indices of the three nodes)
+typedef struct {
+    int n1, n2, n3;
+} triangle;
 
 
-extern int nodecount, tricount;
+typedef vector < fgPoint3d > container_3d;
+typedef container_3d::iterator iterator_3d;
+typedef container_3d::const_iterator const_iterator_3d;
+
+typedef vector < triangle > container_tri;
+typedef container_tri::iterator iterator_tri;
+typedef container_tri::const_iterator const_iterator_tri;
 
 
 // Initialize a new mesh structure
-void triload(char *basename);
+void triload(const string& basename);
 
 
 #endif // SPLITTRIS_HXX
 
 
 // $Log$
+// Revision 1.3  1998/09/22 23:49:58  curt
+// C++-ified, STL-ified, and string-ified.
+//
 // Revision 1.2  1998/09/21 23:16:24  curt
 // Converted to c++ style comments.
 //
