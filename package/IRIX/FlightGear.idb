@@ -1,0 +1,23 @@
+d 0755 erik user opt/FlightGear-0.9.4/bin opt/FlightGear-0.9.4/bin FlightGear.sw.base_R10k
+d 0755 erik user opt/FlightGear-0.9.4/bin opt/FlightGear-0.9.4/bin FlightGear.sw.base_R4k
+f 0755 erik user opt/FlightGear-0.9.4/bin/est-epsilon opt/FlightGear-0.9.4/bin/est-epsilon FlightGear.sw.optional
+f 0755 erik user opt/FlightGear-0.9.4/bin/fgadmin opt/FlightGear-0.9.4/bin/fgadmin FlightGear.sw.admin removeop("if [ -x $rbase/usr/sbin/iconcatalogedit ]; then chroot $rbase /usr/sbin/iconcatalogedit -remove 'Category:File Name:/opt/FlightGear-0.9.4/bin/fgadmin'  -syspage Freeware;  fi;") exitop("if [ -x $rbase/usr/sbin/iconcatalogedit ]; then chroot $rbase /usr/sbin/iconcatalogedit -add 'Category:File Name:/opt/FlightGear-0.9.4/bin/fgadmin'  -syspage Freeware;  fi;")
+f 0755 erik user opt/FlightGear-0.9.4/bin/fgfs opt/FlightGear-0.9.4/bin/fgfs FlightGear.sw.base_R4k
+f 0755 erik user opt/FlightGear-0.9.4/bin/fgfs opt/FlightGear-0.9.4/bin/fgfs.10k FlightGear.sw.base_R10k
+f 0755 erik user opt/FlightGear-0.9.4/bin/fgjs opt/FlightGear-0.9.4/bin/fgjs FlightGear.sw.optional
+f 0755 erik user opt/FlightGear-0.9.4/bin/fgrun opt/FlightGear-0.9.4/bin/fgrun FlightGear.sw.admin removeop("if [ -x $rbase/usr/sbin/iconcatalogedit ]; then chroot $rbase /usr/sbin/iconcatalogedit -remove 'Category:File Name:/opt/FlightGear-0.9.4/bin/fgrun'  -syspage Freeware;  fi;") exitop("if [ -x $rbase/usr/sbin/iconcatalogedit ]; then chroot $rbase /usr/sbin/iconcatalogedit -add 'Category:File Name:/opt/FlightGear-0.9.4/bin/fgrun'  -syspage Freeware;  fi;")
+f 0755 erik user opt/FlightGear-0.9.4/bin/gl-info opt/FlightGear-0.9.4/bin/gl-info FlightGear.sw.optional
+f 0755 erik user opt/FlightGear-0.9.4/bin/js_demo opt/FlightGear-0.9.4/bin/js_demo FlightGear.sw.optional
+f 0755 erik user opt/FlightGear-0.9.4/bin/metar opt/FlightGear-0.9.4/bin/metar FlightGear.sw.optional
+f 0755 erik user opt/FlightGear-0.9.4/bin/terrasync opt/FlightGear-0.9.4/bin/terrasync FlightGear.sw.terrasync
+f 0755 erik user opt/FlightGear-0.9.4/bin/yasim opt/FlightGear-0.9.4/bin/yasim FlightGear.sw.optional
+d 0755 erik user opt/FlightGear-0.9.4/man opt/FlightGear-0.9.4/man FlightGear.man.manpages
+d 0755 erik user opt/FlightGear-0.9.4/man/man1 opt/FlightGear-0.9.4/man/man1 FlightGear.man.manpages
+f 0644 erik user opt/FlightGear-0.9.4/man/man1/est-epsilon.1 opt/FlightGear-0.9.4/man/man1/est-epsilon.1 FlightGear.man.manpages
+f 0644 erik user opt/FlightGear-0.9.4/man/man1/fgfs.1 opt/FlightGear-0.9.4/man/man1/fgfs.1 FlightGear.man.manpages
+f 0644 erik user opt/FlightGear-0.9.4/man/man1/fgjs.1 opt/FlightGear-0.9.4/man/man1/fgjs.1 FlightGear.man.manpages
+f 0644 erik user opt/FlightGear-0.9.4/man/man1/gl-info.1 opt/FlightGear-0.9.4/man/man1/gl-info.1 FlightGear.man.manpages
+f 0644 erik user opt/FlightGear-0.9.4/man/man1/js_demo.1 opt/FlightGear-0.9.4/man/man1/js_demo.1 FlightGear.man.manpages
+f 0644 erik user opt/FlightGear-0.9.4/man/man1/pstest.1 opt/FlightGear-0.9.4/man/man1/pstest.1 FlightGear.man.manpages
+d 0755 erik user opt/FlightGear-0.9.4/sbin opt/FlightGear-0.9.4/sbin FlightGear.sw.servers
+f 0755 erik user opt/FlightGear-0.9.4/sbin/js_server opt/FlightGear-0.9.4/sbin/js_server FlightGear.sw.servers
