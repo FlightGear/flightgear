@@ -30,13 +30,13 @@ deminfo_SOURCES = \
 	deminfo.cxx
 
 deminfo_LDADD = \
-	$(top_builddir)/Tools/DEM/libDEM.a \
+	$(top_builddir)/Tools/Lib/DEM/libDEM.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(base_LIBS)
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools/Lib
 
 # We can't build this with "-O2" (optimization) since this causes a seg fault
 # I haven't found a way to strip this out of the CXXFLAGS, so I'm just
@@ -46,6 +46,9 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1999/03/08 22:00:46  curt
+# Lots of directory layout reorganization.
+#
 # Revision 1.5  1999/02/01 21:09:27  curt
 # Moving location of Lib/DEM/ to Tools/DEM/
 #

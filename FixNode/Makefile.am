@@ -31,13 +31,13 @@ fixnode_SOURCES = \
 	main.cxx
 
 fixnode_LDADD = \
-	$(top_builddir)/Tools/DEM/libDEM.a \
+	$(top_builddir)/Tools/Lib/DEM/libDEM.a \
         $(top_builddir)/Lib/Bucket/libBucket.a \
         $(top_builddir)/Lib/Misc/libMisc.a \
         $(top_builddir)/Lib/zlib/libz.a \
 	$(base_LIBS)
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools/Lib
 
 # We can't build this with "-O2" (optimization) since this causes a seg fault
 # I haven't found a way to strip this out of the CXXFLAGS, so I'm just
@@ -47,6 +47,9 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1999/03/08 22:00:45  curt
+# Lots of directory layout reorganization.
+#
 # Revision 1.8  1999/02/01 21:09:30  curt
 # Moving location of Lib/DEM/ to Tools/DEM/
 #

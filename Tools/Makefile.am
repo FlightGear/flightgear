@@ -1,20 +1,15 @@
 EXTRA_DIST = process-dem.pl
 
 SUBDIRS = \
-	DEM \
+	Lib \
+	Prep \
+	Utils \
 	Areas \
 	AssemTris \
-	DEM \
-	Polygon \
 	Clipper \
 	Dem2node \
-	DemInfo \
-	DemRaw2ascii \
 	FixNode \
 	FixObj \
-	GenAirports \
-	Makedir \
-	ShapeFile \
 	SplitTris \
 	Stripe_w \
 	Tri2obj \

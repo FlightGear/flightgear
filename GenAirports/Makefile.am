@@ -33,18 +33,21 @@ genapts_SOURCES = \
 	point2d.cxx point2d.hxx
 
 genapts_LDADD = \
-	$(top_builddir)/Tools/Polygon/libPolygon.a \
+	$(top_builddir)/Tools/Lib/Polygon/libPolygon.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(base_LIBS)
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1999/03/08 22:00:47  curt
+# Lots of directory layout reorganization.
+#
 # Revision 1.5  1999/02/25 21:32:47  curt
 # Modified to adhere to new polygon naming convention, and also to read the
 # new Robin Peel aiport format.
