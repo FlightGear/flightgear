@@ -226,7 +226,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 			FG_LOG( FG_TERRAIN, FG_ALERT, 
 				"Tile has mismatched nodes and normals: " 
 				<< path );
-			exit(-1);
+			// exit(-1);
 		    }
 		    shared_done = true;
 
