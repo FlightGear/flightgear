@@ -221,10 +221,18 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    controls.set_rudder(0.0);
 	    return;
 	case 57: // numeric keypad 9 (Pg Up)
-	    controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
+	    if( fgAPAutoThrottleEnabled() ) {
+		fgAPAutoThrottleAdjust( 5 );
+	    } else {
+		controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
+	    }
 	    return;
 	case 51: // numeric keypad 3 (Pg Dn)
-	    controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
+	    if( fgAPAutoThrottleEnabled() ) {
+		fgAPAutoThrottleAdjust( -5 );
+	    } else {
+		controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
+	    }
 	    return;
 	case 98: // b key
 	    int b_ret;
@@ -407,10 +415,18 @@ void GLUTspecialkey(int k, int x, int y) {
 	    controls.set_rudder(0.0);
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9 (Pg Up)
-	    controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
+	    if( fgAPAutoThrottleEnabled() ) {
+		fgAPAutoThrottleAdjust( 5 );
+	    } else {
+		controls.move_throttle( FGControls::ALL_ENGINES, 0.01 );
+	    }
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3 (Pg Dn)
-	    controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
+	    if( fgAPAutoThrottleEnabled() ) {
+		fgAPAutoThrottleAdjust( -5 );
+	    } else {
+		controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
+	    }
 	    return;
 	}
     }
@@ -418,6 +434,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.41  1999/02/12 23:22:43  curt
+// Allow auto-throttle adjustment while active.
+//
 // Revision 1.40  1999/02/12 22:17:59  curt
 // Changes to allow adjustment of the autopilot settings while it is activated.
 //

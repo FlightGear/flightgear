@@ -116,21 +116,31 @@ bool fgAPHeadingEnabled( void )
     fgAPDataPtr APData;
 	
     APData = APDataGlobal;
-    // end section
 	        
     // heading hold enabled?
-    return( APData->heading_hold );
+    return APData->heading_hold;
 }
+
 bool fgAPAltitudeEnabled( void )
 {
     fgAPDataPtr APData;
 	
     APData = APDataGlobal;
-    // end section
 	        
     // altitude hold or terrain follow enabled?
-    return( APData->altitude_hold || APData->terrain_follow );
+    return APData->altitude_hold || APData->terrain_follow ;
 }
+
+bool fgAPAutoThrottleEnabled( void )
+{
+    fgAPDataPtr APData;
+	
+    APData = APDataGlobal;
+
+    // autothrottle enabled?
+    return APData->auto_throttle;
+}
+
 void fgAPAltitudeAdjust( double inc )
 {
     // Remove at a later date
@@ -156,19 +166,28 @@ void fgAPAltitudeAdjust( double inc )
 	target_agl *= FEET_TO_METER;
     }
 
-    // heading hold enabled?
     APData->TargetAltitude = target_alt;
     APData->TargetAGL = target_agl;
 }
+
 void fgAPHeadingAdjust( double inc )
 {
     fgAPDataPtr APData;
-	
     APData = APDataGlobal;
-    // end section
-	        
-    // heading hold enabled?
-    APData->TargetHeading = NormalizeDegrees(APData->TargetHeading + inc);
+
+    double target = (int)(APData->TargetHeading / inc) * inc + inc;
+
+    APData->TargetHeading = NormalizeDegrees(target);
+}
+
+void fgAPAutoThrottleAdjust( double inc )
+{
+    fgAPDataPtr APData;
+    APData = APDataGlobal;
+
+    double target = (int)(APData->TargetSpeed / inc) * inc + inc;
+
+    APData->TargetSpeed = target;
 }
 
 void fgAPInit( fgAIRCRAFT *current_aircraft )
@@ -562,6 +581,9 @@ double NormalizeDegrees(double Input)
 
 
 // $Log$
+// Revision 1.15  1999/02/12 23:22:35  curt
+// Allow auto-throttle adjustment while active.
+//
 // Revision 1.14  1999/02/12 22:17:14  curt
 // Changes contributed by Norman Vine to allow adjustment of the autopilot
 // while it is activated.
