@@ -44,6 +44,7 @@ FGLogger::init ()
     SGPropertyNode * child = children[i];
     string filename = child->getStringValue("filename", "fg_log.csv");
     log.interval_ms = child->getLongValue("interval-ms", 0);
+    log.delimiter = child->getStringValue("delimiter", ",")[0];
     log.output = new ofstream(filename.c_str());
     if (!log.output) {
       SG_LOG(SG_INPUT, SG_ALERT, "Cannot write log to " << filename);
@@ -56,7 +57,7 @@ FGLogger::init ()
       SGPropertyNode * node =
 	fgGetNode(entry->getStringValue("property"), true);
       log.nodes.push_back(node);
-      (*log.output) << ',' 
+      (*log.output) << log.delimiter
 		    << entry->getStringValue("title", node->getPath());
     }
     (*log.output) << endl;
@@ -82,7 +83,8 @@ FGLogger::update (int dt)
       _logs[i].last_time_ms = elapsed_ms;
       (*_logs[i].output) << globals->get_elapsed_time_ms();
       for (int j = 0; j < _logs[i].nodes.size(); j++) {
-	(*_logs[i].output) << ',' << _logs[i].nodes[j]->getStringValue();
+	(*_logs[i].output) << _logs[i].delimiter
+			   << _logs[i].nodes[j]->getStringValue();
       }
       (*_logs[i].output) << endl;
     }
@@ -98,7 +100,8 @@ FGLogger::update (int dt)
 FGLogger::Log::Log ()
   : output(0),
     interval_ms(0),
-    last_time_ms(-99999999999999L)
+    last_time_ms(-999999L),
+    delimiter(',')
 {
 }
 

@@ -56,6 +56,7 @@ private:
     ostream * output;
     long interval_ms;
     long last_time_ms;
+    char delimiter;
   };
 
   vector<Log> _logs;
