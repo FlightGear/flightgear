@@ -108,6 +108,7 @@ static float texCoord[180][2];
 static arthor myarthor;
 static int n1;
 static int n2;
+
 static GLfloat Wings[] = {-1.25, -28.125, 1.255, -28.125, 1.255, 28.125,                                  -1.25, 28.125};
 static GLfloat Elevator[] = { 3.0, -10.9375, 4.5, -10.9375, 4.5, 10.9375,                                  3.0, 10.9375};
 static GLfloat Rudder[] = {2.0, -0.45, 10.625, -0.45, 10.625, 0.55,                                           2.0, 0.55};
@@ -452,7 +453,7 @@ fgInitTurnCoordinator(&Turny);
     xglPushMatrix();
     xglLoadIdentity();
     xglViewport(0, 0, 640, 480);
-    glOrtho(0, 640, 0, 480, 1, -1);
+    xglOrtho(0, 640, 0, 480, 1, -1);
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
@@ -507,28 +508,26 @@ fgInitTurnCoordinator(&Turny);
 }
 
 void fgPanelReInit( int x, int y, int finx, int finy){
-    // fgVIEW *v;
     fgOPTIONS *o;
     int i;
     GLint buffer;
     
     o = &current_options;
-    // v = &current_view;
     
     Xzoom = (float)((float)(current_view.get_winWidth())/1024);
     Yzoom = (float)((float)(current_view.get_winHeight())/768);
     
     // save the current buffer state
-    glGetIntegerv(GL_DRAW_BUFFER, &buffer);
+    xglGetIntegerv(GL_DRAW_BUFFER, &buffer);
     
     // and enable both buffers for writing
-    glDrawBuffer(GL_FRONT_AND_BACK);
+    xglDrawBuffer(GL_FRONT_AND_BACK);
     
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
     xglViewport(0, 0, 640, 480);
-    glOrtho(0, 640, 0, 480, 1, -1);
+    xglOrtho(0, 640, 0, 480, 1, -1);
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
@@ -543,7 +542,7 @@ void fgPanelReInit( int x, int y, int finx, int finy){
     xglDrawPixels(finx - x, finy - y, GL_RGB, GL_UNSIGNED_BYTE,                     (GLvoid *)(img2->data));
     
     // restore original buffer state
-    glDrawBuffer(buffer);
+    xglDrawBuffer( buffer );
 }
 
 void fgPanelUpdate ( void ) {
@@ -564,7 +563,7 @@ void fgPanelUpdate ( void ) {
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
-    glOrtho(0, 640, 0, 480, 10, -10);
+    xglOrtho(0, 640, 0, 480, 10, -10);
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
@@ -580,23 +579,25 @@ void fgPanelUpdate ( void ) {
     for(i=0;i<NumPoint;i++){
     xglLoadIdentity();
     xglTranslatef(pointer[i].XPos, pointer[i].YPos, 0.0);
-    xglRotatef(-pointer[i].hist, 0.0, 0.0, 1.0);
+    xglRotatef(-pointer[i].tape[0], 0.0, 0.0, 1.0);
     fgEraseArea(pointer[i].vertices, 20, (GLfloat)(pointer[i].teXpos),                          (GLfloat)(pointer[i].texYpos), (GLfloat)(pointer[i].XPos),                      (GLfloat)(pointer[i].YPos), 0);
     xglLoadIdentity();
     }
 
-    glDisable(GL_LIGHTING);
+    xglDisable(GL_LIGHTING);
     for(i=0;i<NumPoint;i++){
-    pointer[i].hist = UpdatePointer( pointer[i]);
+    UpdatePointer( &pointer[i]);
     xglPopMatrix();
     xglPushMatrix();
     }
     
     fgUpdateTurnCoordinator(&Turny);
     
-    glEnable(GL_LIGHTING);
+    xglEnable(GL_LIGHTING);
             
     horizon(myarthor);  
+
+  //  DrawScale(200, 200, 25, 28, 10, 270, 2, 3.0, 1.0, 0.1, 0.1); 
 
     xglDisable(GL_TEXTURE_2D);
     xglPopMatrix();   
@@ -645,7 +646,7 @@ void horizon(arthor hor){
     
     roll = get_roll() * RAD_TO_DEG;
     
-    glEnable(GL_NORMALIZE);
+    xglEnable(GL_NORMALIZE);
     xglEnable(GL_LIGHTING);
     xglEnable(GL_TEXTURE_2D);
     xglEnable(GL_LIGHT1);
@@ -656,7 +657,7 @@ void horizon(arthor hor){
     xglTranslatef(hor.XPos, hor.YPos, 0);
     xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     xglMatrixMode(GL_TEXTURE);
-    glPushMatrix();
+    xglPushMatrix();
         
     // computations for the non-textured parts of the AH
     
@@ -691,11 +692,11 @@ void horizon(arthor hor){
     light_position[1] = 0.0; 
     light_position[2] = 1.5;
     light_position[3] = 0.0;
-    glLightfv(GL_LIGHT1, GL_POSITION, light_position);
-    glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);  
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
-    glLightfv(GL_LIGHT1, GL_SPECULAR, light_specular);
-    glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
+    xglLightfv(GL_LIGHT1, GL_POSITION, light_position);
+    xglLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient);  
+    xglLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+    xglLightfv(GL_LIGHT1, GL_SPECULAR, light_specular);
+    xglLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
 
     #ifdef GL_VERSION_1_1
     xglBindTexture(GL_TEXTURE_2D, panel_tex_id[1]);
@@ -713,25 +714,26 @@ void horizon(arthor hor){
 
     // the following loop draws the textured part of the AH
     
-   glMaterialf(GL_FRONT, GL_SHININESS, 85.0);
+   xglMaterialf(GL_FRONT, GL_SHININESS, 85.0);
     
-   glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material4);
-   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material5);
-   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material3);
+   xglMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material4);
+   xglMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material5);
+   xglMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material3);
    
-    glMatrixMode(GL_MODELVIEW);
+    xglMatrixMode(GL_MODELVIEW);
     xglBegin(GL_TRIANGLES);
 	   for(i=45;i<225;i++){
-                     glTexCoord2f(0.0, 0.0);
-                     glNormal3f(0.0, 0.0, 0.6);
-                     glVertex3f(0.0, 0.0, 0.0);
-	       	     glTexCoord2f(texCoord[i % 180][0], texCoord[i % 180][1]);
-	             glNormal3f(normals[i % 180][0], normals[i % 180][1], 0.6);
-		     glVertex3f(vertices[i % 180][0], vertices[i % 180][1], 0.0);
+                     xglTexCoord2f(0.0, 0.0);
+                     xglNormal3f(0.0, 0.0, 0.6);
+                     xglVertex3f(0.0, 0.0, 0.0);
+	       	     xglTexCoord2f(texCoord[i % 180][0], texCoord[i % 180][1]);
+	             xglNormal3f(normals[i % 180][0], normals[i % 180][1], 0.6);
+		     xglVertex3f(vertices[i % 180][0], vertices[i % 180][1],
+				 0.0);
 		     n = (i + 1) % 180;
-		     glTexCoord2f(texCoord[n][0], texCoord[n][1]);
-		     glNormal3f(normals[n][0], normals[n][1], 0.6);
-		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);
+		     xglTexCoord2f(texCoord[n][0], texCoord[n][1]);
+		     xglNormal3f(normals[n][0], normals[n][1], 0.6);
+		     xglVertex3f(vertices[n][0], vertices[n][1], 0.0);
       		}
      xglEnd();
     
@@ -743,9 +745,9 @@ light_ambient2[0] = a;
 light_ambient2[1] = a;
 light_ambient2[2] = a;
     
- glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2);
- glLightfv(GL_LIGHT1, GL_DIFFUSE, light_ambient2); 
- glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient2);
+ xglLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2);
+ xglLightfv(GL_LIGHT1, GL_DIFFUSE, light_ambient2); 
+ xglLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient2);
         
     xglBegin(GL_TRIANGLES);
     
@@ -753,18 +755,18 @@ light_ambient2[2] = a;
         
 	    for(i = tmp1; i < tmp2 + 1; i++){
 	             n = i % 180;
-            glNormal3f(0.0, 0.0, 1.5);
-              glTexCoord2f((56 / 256), (140 / 256));
-            glVertex3f(((vertices[n1 % 180][0] + vertices[n2 % 180][0]) / 2),                            ((vertices[n1 % 180][1] + vertices[n2 % 180][1]) / 2),                             0.0);
+            xglNormal3f(0.0, 0.0, 1.5);
+              xglTexCoord2f((56 / 256), (140 / 256));
+            xglVertex3f(((vertices[n1 % 180][0] + vertices[n2 % 180][0]) / 2),                            ((vertices[n1 % 180][1] + vertices[n2 % 180][1]) / 2),                             0.0);
                                                 
-             glTexCoord2f((57 / 256), (139 / 256));        
-	     glNormal3f(normals[n][0], normals[n][1], normals[n][3]);
-		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);
+             xglTexCoord2f((57 / 256), (139 / 256));        
+	     xglNormal3f(normals[n][0], normals[n][1], normals[n][3]);
+		     xglVertex3f(vertices[n][0], vertices[n][1], 0.0);
 		     
 		     n = (i + 1) % 180;
-	glTexCoord2f((57 / 256), (139 / 256));	     
-	glNormal3f(normals[n][0], normals[n][1], normals[n][3]);
-		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);	     
+	xglTexCoord2f((57 / 256), (139 / 256));	     
+	xglNormal3f(normals[n][0], normals[n][1], normals[n][3]);
+		     xglVertex3f(vertices[n][0], vertices[n][1], 0.0);	     
       		}
      xglEnd();
     }
@@ -775,58 +777,58 @@ light_ambient2[0] = a;
 light_ambient2[1] = a;
 light_ambient2[2] = a;
      
- glLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2);
- glLightfv(GL_LIGHT1, GL_DIFFUSE, light_ambient2); 
- glLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient2);
- glMaterialf(GL_FRONT, GL_SHININESS, a * 85);
+ xglLightfv(GL_LIGHT1, GL_AMBIENT, light_ambient2);
+ xglLightfv(GL_LIGHT1, GL_DIFFUSE, light_ambient2); 
+ xglLightfv(GL_LIGHT1, GL_SPECULAR, light_ambient2);
+ xglMaterialf(GL_FRONT, GL_SHININESS, a * 85);
     xglBegin(GL_TRIANGLES);
     tmp1 = n1; tmp2 = n2;
 	    for(i = tmp1; i <= tmp2; i++){
 	             n = i % 180;
-          glNormal3f(0.0, 0.0, 1.5);
-          glTexCoord2f((73 / 256), (237 / 256));
-          glVertex3f(((vertices[n1 % 180][0] + vertices[n2 % 180][0]) / 2),                            ((vertices[n1 % 180][1] + vertices[n2 % 180][1]) / 2),                             0.0); 
+          xglNormal3f(0.0, 0.0, 1.5);
+          xglTexCoord2f((73 / 256), (237 / 256));
+          xglVertex3f(((vertices[n1 % 180][0] + vertices[n2 % 180][0]) / 2),                            ((vertices[n1 % 180][1] + vertices[n2 % 180][1]) / 2),                             0.0); 
                       
-                     glTexCoord2f((73 / 256), (236 / 256));
-		     glNormal3f(normals[n][0], normals[n][1], normals[n][2]);
-		     glVertex3f(vertices[n][0], vertices[n][1], 0.0);
+                     xglTexCoord2f((73 / 256), (236 / 256));
+		     xglNormal3f(normals[n][0], normals[n][1], normals[n][2]);
+		     xglVertex3f(vertices[n][0], vertices[n][1], 0.0);
 		     
 		     n = (i + 1) % 180;
-		    glTexCoord2f((73 / 256), (236 / 256)); 
-		    glNormal3f(normals[n][0], normals[n][1], normals[n][2]);
-		    glVertex3f(vertices[n][0], vertices[n][1], 0.0); 
+		    xglTexCoord2f((73 / 256), (236 / 256)); 
+		    xglNormal3f(normals[n][0], normals[n][1], normals[n][2]);
+		    xglVertex3f(vertices[n][0], vertices[n][1], 0.0); 
       		}
      xglEnd();
     }
     
     // Now we will have to draw the small triangle indicating the roll value
 
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
+    xglDisable(GL_LIGHTING);
+    xglDisable(GL_TEXTURE_2D);
     
-    glRotatef(roll, 0.0, 0.0, 1.0);
+    xglRotatef(roll, 0.0, 0.0, 1.0);
     
-    glBegin(GL_TRIANGLES);
-    glColor3f(1.0, 1.0, 1.0);
-    glVertex3f(0.0, hor.radius, 0.0);
-    glVertex3f(-3.0, (hor.radius - 7.0), 0.0);
-    glVertex3f(3.0, (hor.radius - 7.0), 0.0);    
-    glEnd();
+    xglBegin(GL_TRIANGLES);
+    xglColor3f(1.0, 1.0, 1.0);
+    xglVertex3f(0.0, hor.radius, 0.0);
+    xglVertex3f(-3.0, (hor.radius - 7.0), 0.0);
+    xglVertex3f(3.0, (hor.radius - 7.0), 0.0);    
+    xglEnd();
     
-    glLoadIdentity();
+    xglLoadIdentity();
 
-    glBegin(GL_POLYGON);
-    glColor3f(0.2109375, 0.23046875, 0.203125);
-    glVertex2f(275.625, 135.0);
-    glVertex2f(275.625, 148.125);
-    glVertex2f(258.125, 151.25);
-    glVertex2f(246.875, 151.25);
-    glVertex2f(226.875, 147.5);
-    glVertex2f(226.875, 135.0);
-    glVertex2f(275.625, 135.0);
-    glEnd();
+    xglBegin(GL_POLYGON);
+    xglColor3f(0.2109375, 0.23046875, 0.203125);
+    xglVertex2f(275.625, 138.0);
+    xglVertex2f(275.625, 148.125);
+    xglVertex2f(258.125, 151.25);
+    xglVertex2f(246.875, 151.25);
+    xglVertex2f(226.875, 147.5);
+    xglVertex2f(226.875, 138.0);
+    xglVertex2f(275.625, 138.0);
+    xglEnd();
 
-    glLoadIdentity();
+    xglLoadIdentity();
     
     xglMatrixMode(GL_TEXTURE);
     xglPopMatrix();
@@ -850,35 +852,36 @@ for(n=0;n<180;n++){
 	   vertices[n][1] = sin(n * step) * hor.radius;
            texCoord[n][0] = (cos(n * step) * hor.radius)/256;
            texCoord[n][1] = (sin(n * step) * hor.radius)/256;
-         normals[n][0] = cos(n * step) * hor.radius + sin(n * step) * 50;
-         normals[n][1] = sin(n * step) * hor.radius + cos(n * step) * 50;
-           normals[n][2] = 0.1;
+         normals[n][0] = cos(n * step) * hor.radius + sin(n * step);
+         normals[n][1] = sin(n * step) * hor.radius + cos(n * step);
+           normals[n][2] = 0.0;
            }
 }
 
-float UpdatePointer(Pointer pointer){
+void UpdatePointer(Pointer *pointer){
     double pitch;
     double roll;
     float alpharad;
     double speed;    
     glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, pointer.vertices);
+    glVertexPointer(2, GL_FLOAT, 0, pointer->vertices);
 
-    alpha=((((float)((var[pointer.variable]) - (pointer.value1))) /                       (pointer.value2 - pointer.value1))*(pointer.alpha2 - pointer.alpha1)            + pointer.alpha1);
+    alpha=((((float)((var[pointer->variable]) - (pointer->value1))) /                       (pointer->value2 - pointer->value1))*                                           (pointer->alpha2 - pointer->alpha1)                                            + pointer->alpha1);
     
-    	if (alpha < pointer.alpha1)
-       		alpha = pointer.alpha1;
-    	if (alpha > pointer.alpha2)
-    	        alpha = pointer.alpha2;
+    	if (alpha < pointer->alpha1)
+       		alpha = pointer->alpha1;
+    	if (alpha > pointer->alpha2)
+    	        alpha = pointer->alpha2;
     xglMatrixMode(GL_MODELVIEW);  
     xglPushMatrix();
     xglLoadIdentity();
     xglDisable(GL_TEXTURE_2D);
-    xglTranslatef(pointer.XPos, pointer.YPos, 0);
+    xglTranslatef(pointer->XPos, pointer->YPos, 0);
     xglRotatef(-alpha, 0.0, 0.0, 1.0);
     xglColor4f(1.0, 1.0, 1.0, 1.0);
     glDrawArrays(GL_POLYGON, 0, 10);
-    return alpha;
+    pointer->tape[0] = pointer->tape[1];
+    pointer->tape[1] = alpha;
     xglEnable(GL_TEXTURE_2D);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
@@ -886,9 +889,9 @@ float UpdatePointer(Pointer pointer){
 // fgEraseArea - 'Erases' a drawn Polygon by overlaying it with a textured 
 //                 area. Shall be a method of a panel class once.
 
-void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,
-		 GLfloat texYPos, GLfloat XPos, GLfloat YPos,
-		 int Texid, float ScaleFactor)
+void fgEraseArea( GLfloat *array, int NumVerti, GLfloat texXPos,
+		  GLfloat texYPos, GLfloat XPos, GLfloat YPos,
+		  int Texid, float ScaleFactor = 1)
 {
 int i, j;
 int n;
@@ -975,88 +978,95 @@ pointer->vertices[19] = pointer->vertices[3];
 void fgUpdateTurnCoordinator(TurnCoordinator *turn){
 int n;
 
-glDisable(GL_LIGHTING);
-glDisable(GL_BLEND);
-glEnable(GL_TEXTURE_2D);
+xglDisable(GL_LIGHTING);
+xglDisable(GL_BLEND);
+xglEnable(GL_TEXTURE_2D);
 
- turn->alpha = (get_sideslip() / 1.5) * 56;
+ turn->alpha = (get_sideslip() / 1.5) * 560;
+ if(turn->alpha > 56){
+ turn->alpha = 56;
+ }
+ if(turn->alpha < -56){
+ turn->alpha = -56;
+ }
+ 
  turn->PlaneAlpha = get_roll();
 
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-glMatrixMode(GL_MODELVIEW);
-glLoadIdentity();
-glTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
-glTranslatef(0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31,                                  0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD) * 39)),                          0.0);
+xglMatrixMode(GL_MODELVIEW);
+xglLoadIdentity();
+xglTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
+xglTranslatef(0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31,                                  0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD) * 39)),                          0.0);
 fgEraseArea(turn->vertices, 72,                                                 turn->BallTexXPos + ((0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31) / 0.625),  turn->BallTexYPos + ((0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD)                                  * 39))) / 0.625),                                                   turn->BallXPos + (0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31),               turn->BallYPos + (0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD)                                  * 39))), 1);
-glDisable(GL_TEXTURE_2D);
-glEnable(GL_BLEND);
-glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
-glMatrixMode(GL_MODELVIEW);
-glLoadIdentity();
-glTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
-glTranslatef(0.75 * sin(turn->alpha * DEG_TO_RAD) * 31,                                      0.3 * (39 - (cos(turn->alpha * DEG_TO_RAD) * 39)), 0.0);
-glBegin(GL_POLYGON);
-glColor3f(0.8, 0.8, 0.8);
+xglDisable(GL_TEXTURE_2D);
+xglEnable(GL_BLEND);
+xglBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
+xglMatrixMode(GL_MODELVIEW);
+xglLoadIdentity();
+xglTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
+xglTranslatef(0.75 * sin(turn->alpha * DEG_TO_RAD) * 31,                                      0.3 * (39 - (cos(turn->alpha * DEG_TO_RAD) * 39)), 0.0);
+xglBegin(GL_POLYGON);
+xglColor3f(0.8, 0.8, 0.8);
 for(i=0;i<36;i++){
-glVertex2f(turn->vertices[2 * i],                                                          turn->vertices[(2 * i) + 1]);
+xglVertex2f(turn->vertices[2 * i],                                                          turn->vertices[(2 * i) + 1]);
 }
-glEnd(); 
+xglEnd(); 
 
-glDisable(GL_TEXTURE_2D);
-glDisable(GL_BLEND);
+xglDisable(GL_TEXTURE_2D);
+xglDisable(GL_BLEND);
 
-glMatrixMode(GL_MODELVIEW);
-glLoadIdentity();
-glTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
-glRotatef(turn->rollhist * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
+xglMatrixMode(GL_MODELVIEW);
+xglLoadIdentity();
+xglTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
+xglRotatef(turn->rollhist * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
 
 fgEraseArea(Wings, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
 fgEraseArea(Elevator, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
 fgEraseArea(Rudder, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
 
-glLoadIdentity();
-glTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
-glRotatef(-get_roll() * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
+xglLoadIdentity();
+xglTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
+xglRotatef(-get_roll() * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
 
-glBegin(GL_POLYGON);
-glColor3f(1.0, 1.0, 1.0);
+xglBegin(GL_POLYGON);
+xglColor3f(1.0, 1.0, 1.0);
 for(i=0;i<90;i++){
-glVertex2f(cos(i * 4 * DEG_TO_RAD) * 5, sin(i * 4 * DEG_TO_RAD) * 5);
+xglVertex2f(cos(i * 4 * DEG_TO_RAD) * 5, sin(i * 4 * DEG_TO_RAD) * 5);
 }
-glEnd();
+xglEnd();
 
-glBegin(GL_POLYGON);
-glVertex2f(Wings[0], Wings[1]);
-glVertex2f(Wings[2], Wings[3]);
-glVertex2f(Wings[4], Wings[5]);
-glVertex2f(Wings[6], Wings[7]);
-glVertex2f(Wings[0], Wings[1]);
-glEnd();
+xglBegin(GL_POLYGON);
+xglVertex2f(Wings[0], Wings[1]);
+xglVertex2f(Wings[2], Wings[3]);
+xglVertex2f(Wings[4], Wings[5]);
+xglVertex2f(Wings[6], Wings[7]);
+xglVertex2f(Wings[0], Wings[1]);
+xglEnd();
 
-glBegin(GL_POLYGON);
-glVertex2f(Elevator[0], Elevator[1]);
-glVertex2f(Elevator[2], Elevator[3]);
-glVertex2f(Elevator[4], Elevator[5]);
-glVertex2f(Elevator[6], Elevator[7]);
-glVertex2f(Elevator[0], Elevator[1]);
-glEnd();
+xglBegin(GL_POLYGON);
+xglVertex2f(Elevator[0], Elevator[1]);
+xglVertex2f(Elevator[2], Elevator[3]);
+xglVertex2f(Elevator[4], Elevator[5]);
+xglVertex2f(Elevator[6], Elevator[7]);
+xglVertex2f(Elevator[0], Elevator[1]);
+xglEnd();
 
-glBegin(GL_POLYGON);
-glVertex2f(Rudder[0], Rudder[1]);
-glVertex2f(Rudder[2], Rudder[3]);
-glVertex2f(Rudder[4], Rudder[5]);
-glVertex2f(Rudder[6], Rudder[7]);
-glVertex2f(Rudder[0], Rudder[1]);
-glEnd();
+xglBegin(GL_POLYGON);
+xglVertex2f(Rudder[0], Rudder[1]);
+xglVertex2f(Rudder[2], Rudder[3]);
+xglVertex2f(Rudder[4], Rudder[5]);
+xglVertex2f(Rudder[6], Rudder[7]);
+xglVertex2f(Rudder[0], Rudder[1]);
+xglEnd();
 
 
 turn->alphahist = turn->alpha;
 turn->PlaneAlphaHist = turn->PlaneAlpha;
 turn->rollhist = -get_roll();
 
-glDisable(GL_BLEND);
+xglDisable(GL_BLEND);
 }
 
 void fgInitTurnCoordinator(TurnCoordinator *turn){
@@ -1068,10 +1078,33 @@ turn->vertices[(2 * n) + 1] = sin(10 * n * DEG_TO_RAD) * turn->BallRadius;
 	}	
 }
 
+void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue){
+     int i;
+     float diff = (alpha2 - alpha1) / (float)(steps);
+
+     xglMatrixMode(GL_MODELVIEW);
+     xglLoadIdentity();
+     
+     xglTranslatef(XPos, YPos, 0.0);
+     xglRotatef(-alpha1, 0.0, 0.0, 1.0);
+     
+     xglLineWidth(LineWidth);
+     xglColor3f(red, green, blue);
+     
+     xglBegin(GL_LINES);
+     for(i=0;i < steps; i++){
+     xglVertex3f(sin(i * diff * DEG_TO_RAD) * OuterRadius,                                       cos(i * diff * DEG_TO_RAD) * OuterRadius, 0.0);
+     xglVertex3f(sin(i * diff * DEG_TO_RAD) * InnerRadius,                                       cos(i * diff * DEG_TO_RAD) * InnerRadius, 0.0);
+        }
+     xglEnd();
+     
+     xglLoadIdentity();
+     }
+
 // PrintMatrix - routine to print the current modelview matrix.                 
 
 void PrintMatrix( void){
-glGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
+xglGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
 printf("matrix2 = %f %f %f %f \n", mvmatrix[0], mvmatrix[1], mvmatrix[2], mvmatrix[3]);
 printf("         %f %f %f %f \n", mvmatrix[4], mvmatrix[5], mvmatrix[6], mvmatrix[7]);
 printf("         %f %f %f %f \n", mvmatrix[8], mvmatrix[9], mvmatrix[10], mvmatrix[11]);
@@ -1079,6 +1112,9 @@ printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvma
 }
 
 // $Log$
+// Revision 1.15  1999/02/12 01:46:29  curt
+// Updates and fixes from Friedemann.
+//
 // Revision 1.14  1999/02/02 20:13:33  curt
 // MSVC++ portability changes by Bernie Bright:
 //

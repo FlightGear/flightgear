@@ -58,7 +58,7 @@ typedef struct {
     float length;
     float width;
     float angle;
-    float hist;
+    float tape[2];
     float value1;
     float value2;
     float alpha1;
@@ -103,10 +103,15 @@ void fgPanelUpdate( void);
 void horizon( arthor hor);
 void fgHorizonInit( arthor hor);
 void CreatePointer(Pointer *pointer);
-float UpdatePointer(Pointer pointer);
-void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor = 1);
+void UpdatePointer(Pointer *pointer);
+void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,
+		 GLfloat texYPos, GLfloat XPos, GLfloat YPos,
+		 int Texid, float ScaleFactor = 1);
 void fgUpdateTurnCoordinator(TurnCoordinator *turn); 
 void fgInitTurnCoordinator(TurnCoordinator *turn);
+void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,
+	       float alpha1, float alpha2, int steps, float LineWidth,
+	       float red, float green, float blue);
 
 void PrintMatrix( void);
 
@@ -115,6 +120,9 @@ void PrintMatrix( void);
 
 
 // $Log$
+// Revision 1.6  1999/02/12 01:46:30  curt
+// Updates and fixes from Friedemann.
+//
 // Revision 1.5  1999/01/07 19:25:55  curt
 // Updates from Friedemann Reinhard.
 //
