@@ -1,0 +1,64 @@
+You need to have the GPC library installed on your system to build
+some of the scenery generation tools, otherwise you won't be able to
+create scenery.
+
+You can get the library from:
+
+    http://www.cs.man.ac.uk/aig/staff/alan/software/
+
+Unfortunately, because of some of the wording in the GPC licensing
+terms we are unable to include the GPC library with the Flight Gear
+distribution.
+
+This library comes as a single source file and header with no build
+directions.  So, here are some directions contributed by Riley Rainey
+<riley.rainey@websimulations.com>:
+
+
+1. Download the GPC library source code from URL:
+
+	http://www.cs.man.ac.uk/aig/staff/alan/software
+
+2. Unpack it; the current version seems to be 2.22:
+
+	$ zcat gpc222.tar.Z | tar xvf -
+
+3. Copy in the Makefile attached to this message:
+
+	$ cp Makefile ./gpc222
+
+4. Check install paths.  Edit the Makefile and make sure the install
+   paths are satisfactory.  Also make sure that all the make commands
+   have leading tabs (i.e. that the tabs aren't expanded out into 8
+   spaces) otherwise the make will fail.
+
+5. Build and install it:
+
+	$ cd ./gpc222
+	$ make
+	$ su
+	Password:
+        # make install
+
+
+-------------------------- snip ------------------------------
+
+# Unix/Linux makefile for GPC 2.22
+#
+# Riley Rainey  (riley.rainey@websimulations.com)
+
+CFLAGS = -O -g
+
+libgpc.a: gpc.o
+	rm -f $@
+	ar cr $@ $<
+	ranlib $@
+
+clean:
+	rm -f libgpc.a *.o core *~
+
+install: libgpc.a
+	-mkdir -p /usr/local/lib
+	-mkdir -p /usr/local/include
+	install libgpc.a /usr/local/lib/libgpc.a
+	install gpc.h /usr/local/include/gpc.h
