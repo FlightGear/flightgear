@@ -348,7 +348,8 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
             kid != NULL;
             kid = branch->getNextKid() )
     {
-        if ( kid->getTraversalMask() & SSGTRAV_HOT )
+        if ( kid->getTraversalMask() & SSGTRAV_HOT
+             && !kid->getBSphere()->isEmpty() )
         {
             sgdVec3 center;
             sgdSetVec3( center,
