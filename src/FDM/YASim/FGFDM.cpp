@@ -308,6 +308,8 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 
 void FGFDM::getExternalInput(float dt)
 {
+    char buf[256];
+
     // The control axes
     ControlMap* cm = _airplane.getControlMap();
     cm->reset();
@@ -323,6 +325,17 @@ void FGFDM::getExternalInput(float dt)
     for(i=0; i<_weights.size(); i++) {
 	WeightRec* wr = (WeightRec*)_weights.get(i);
 	_airplane.setWeight(wr->handle, LBS2KG * fgGetFloat(wr->prop));
+    }
+
+    for(i=0; i<_thrusters.size(); i++) {
+	EngRec* er = (EngRec*)_thrusters.get(i);
+        Thruster* t = er->eng;
+
+	if(t->getPropEngine()) {
+            PropEngine* p = t->getPropEngine();
+            sprintf(buf, "%s/rpm", er->prefix);
+            p->setOmega(fgGetFloat(buf) * RPM2RAD);
+        }
     }
 }
 
