@@ -155,8 +155,9 @@ public:
   inline float GetIyy(void) { return Iyy; }
   inline float GetIzz(void) { return Izz; }
   inline float GetIxz(void) { return Ixz; }
-  inline int   GetNumEngines(void) { return numEngines; }
+  inline unsigned int GetNumEngines(void) { return numEngines; }
   inline FGColumnVector GetXYZcg(void) { return vXYZcg; }
+  inline FGColumnVector GetXYZrp(void) { return vXYZrp; }
   inline float GetNlf(void) { return nlf; }
   inline float GetAlphaCLMax(void) { return alphaclmax; }
   inline float GetAlphaCLMin(void) { return alphaclmin; }
@@ -199,7 +200,6 @@ private:
   FGColumnVector vEuler;
   float baseIxx, baseIyy, baseIzz, baseIxz, EmptyMass, Mass;
   float Ixx, Iyy, Izz, Ixz;
-  float rho, qbar, Vt;
   float alpha, beta;
   float WingArea, WingSpan, cbar;
   float Weight, EmptyWeight;

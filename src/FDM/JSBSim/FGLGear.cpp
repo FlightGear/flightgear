@@ -57,6 +57,10 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   Rotation    = Exec->GetRotation();
 
   WOW = false;
+  FirstContact = false;
+  Reported = false;
+  DistanceTraveled = 0.0;
+  MaximumStrutForce = MaximumStrutTravel = 0.0;
 }
 
 
@@ -87,10 +91,16 @@ FGColumnVector FGLGear::Force(void)
   if (compressLength > 0.00) {
 
     WOW = true;
-
     vWhlVelVec      =  State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
     vWhlVelVec     +=  Position->GetVel();
+
     compressSpeed   =  vWhlVelVec(eZ);
+
+    if (!FirstContact) {
+      FirstContact  = true;
+      SinkRate      =  compressSpeed;
+      GroundSpeed   =  Position->GetVel().Magnitude();
+    }
 
     vWhlVelVec      = -1.0 * vWhlVelVec.Normalize();
     vWhlVelVec(eZ)  =  0.00;
@@ -99,19 +109,53 @@ FGColumnVector FGLGear::Force(void)
     vLocalForce(eX) =  fabs(vLocalForce(eZ) * statFCoeff) * vWhlVelVec(eX);
     vLocalForce(eY) =  fabs(vLocalForce(eZ) * statFCoeff) * vWhlVelVec(eY);
 
+    MaximumStrutForce = max(MaximumStrutForce, fabs(vLocalForce(eZ)));
+    MaximumStrutTravel = max(MaximumStrutTravel, fabs(compressLength));
+
     vForce  = State->GetTl2b() * vLocalForce ;
     vMoment = vWhlBodyVec * vForce;
 
   } else {
 
     WOW = false;
+
+    if (Position->GetDistanceAGL() > 200.0) {
+      FirstContact = false;
+      Reported = false;
+      DistanceTraveled = 0.0;
+      MaximumStrutForce = MaximumStrutTravel = 0.0;
+    }
+
     vForce.InitMatrix();
     vMoment.InitMatrix();
   }
 
+  if (FirstContact) {
+    DistanceTraveled += Position->GetVel().Magnitude()*State->Getdt()*Aircraft->GetRate();
+  }
+
+  if (Position->GetVel().Magnitude() <= 0.05 && !Reported) {
+    Report();
+  }
 
   return vForce;
 }
 
 /******************************************************************************/
+
+void FGLGear::Report(void)
+{
+  cout << endl << "Touchdown report for " << name << endl;
+  cout << "  Sink rate at contact:  " << SinkRate                << " fps,    "
+                              << SinkRate*0.3408          << " mps"     << endl;
+  cout << "  Contact ground speed:  " << GroundSpeed*.5925       << " knots,  "
+                              << GroundSpeed*0.3408       << " mps"     << endl;
+  cout << "  Maximum contact force: " << MaximumStrutForce       << " lbs,    "
+                              << MaximumStrutForce*4.448  << " Newtons" << endl;
+  cout << "  Maximum strut travel:  " << MaximumStrutTravel*12.0 << " inches, "
+                              << MaximumStrutTravel*30.48 << " cm"      << endl;
+  cout << "  Distance traveled:     " << DistanceTraveled        << " ft,     "
+                              << DistanceTraveled*0.3408  << " meters"  << endl;
+  Reported = true;
+}
 

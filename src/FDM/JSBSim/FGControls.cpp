@@ -51,9 +51,8 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.12  2000/05/30 14:48:53  curt
-// 05/30/2000 updates from Jon Berdnt.  Landing gear code now is beginning to
-// work.
+// Revision 1.13  2000/07/06 19:02:46  curt
+// Updates from Jon's official CVS tree.
 //
 // Revision 1.3  2000/04/26 10:55:57  jsb
 // Made changes as required by Curt to install JSBSim into FGFS

@@ -36,11 +36,13 @@ class FGControls {
 
 public:
 
-    static const int ALL_ENGINES = -1;
-    static const int MAX_ENGINES = 10;
+    enum {
+      ALL_ENGINES = -1,
+      MAX_ENGINES = 10,
 
-    static const int ALL_WHEELS = -1;
-    static const int MAX_WHEELS = 3;
+      ALL_WHEELS = -1,
+      MAX_WHEELS = 3
+    };
 
 private:
 
@@ -175,9 +177,11 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.11  2000/05/30 14:48:53  curt
-// 05/30/2000 updates from Jon Berdnt.  Landing gear code now is beginning to
-// work.
+// Revision 1.12  2000/07/06 19:02:46  curt
+// Updates from Jon's official CVS tree.
+//
+// Revision 1.6  2000/06/03 13:59:52  jsb
+// Changes for compatibility with MSVC
 //
 // Revision 1.5  2000/05/12 22:45:35  jsb
 // Removed extraneous namespace identifiers and header files
