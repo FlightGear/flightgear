@@ -34,8 +34,8 @@ clean:
 	rm -f $(OBJECTS) $(TARGET) $(DIRT)
 
 clobber: clean
-	rm -f *.d *.o *.a *.os2 *~ core $(MAKEDEPENDFILE)
+	rm -f *.d *.o *.a *.os2 *~ core # $(MAKEDEPENDFILE)
 
-#include $(MAKEDEPENDFILE)
+include $(MAKEDEPENDFILE)
 
 

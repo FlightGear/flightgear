@@ -123,7 +123,7 @@ void fgInitSubsystems( void ) {
     /* Initial Position at (E81) Superior, AZ */
     /* FG_Longitude = ( -111.1270650 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  33.2778339 ) * DEG_TO_RAD; */
-    /* FG_Runway_altitude = (2646 + 500); */
+    /* FG_Runway_altitude = (2646 + 1000); */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
     /* Initial Position at (TUS) Tucson, AZ */
@@ -178,6 +178,12 @@ void fgInitSubsystems( void ) {
     /* FG_Longitude = ( -112.5 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  36.5 ) * DEG_TO_RAD; */
     /* FG_Runway_altitude = 5000.0; */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+
+    /* Initial Position: (GCN) Grand Canyon Airport, AZ */
+    /* FG_Longitude = ( -112.1469647 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD; */
+    /* FG_Runway_altitude = 6606.0; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
     /* A random test position */
@@ -328,9 +334,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.41  1998/02/09 15:07:50  curt
-/* Minor tweaks.
+/* Revision 1.42  1998/02/09 22:56:58  curt
+/* Removed "depend" files from cvs control.  Other minor make tweaks.
 /*
+ * Revision 1.41  1998/02/09 15:07:50  curt
+ * Minor tweaks.
+ *
  * Revision 1.40  1998/02/07 15:29:44  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -1,2 +1,0 @@
-cockpit.o: cockpit.c
-hud.o: hud.c hud.h

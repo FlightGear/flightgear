@@ -1,6 +1,0 @@
-moon.o: moon.c
-orbits.o: orbits.c
-planets.o: planets.c
-sky.o: sky.c
-stars.o: stars.c
-sun.o: sun.c

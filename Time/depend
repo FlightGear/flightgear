@@ -1,6 +1,0 @@
-event.o: event.c
-fg_time.o: fg_time.c
-fg_timer.o: fg_timer.c
-sunpos.o: sunpos.c
-test_event.o: test_event.c event.h
-ttest.o: ttest.c

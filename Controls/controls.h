@@ -28,7 +28,7 @@
 #define _CONTROLS_H
 
 
-#include "../Include/fg_limits.h"
+#include <Include/fg_limits.h>
 
 
 /* Define a structure containing the control parameters */
@@ -82,10 +82,13 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.11  1998/02/07 15:29:36  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.12  1998/02/09 22:56:48  curt
+/* Removed "depend" files from cvs control.  Other minor make tweaks.
 /*
+ * Revision 1.11  1998/02/07 15:29:36  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.10  1998/01/27 00:47:52  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

@@ -140,7 +140,7 @@ EXT =
 #---------------------------------------------------------------------------
 
 OBJECTS = $(CFILES:.c=.o) $(CXXFILES:.cxx=.o)
-DEPENDS = $(CFILES:.c=.d) $(CXXFILES:.cxx=.d)
+# DEPENDS = $(CFILES:.c=.d) $(CXXFILES:.cxx=.d)
 
 MAKEDEPENDFILE = depend
 

@@ -40,7 +40,7 @@ all:
 depend:
 	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making depend in $$dir"; \
-	      cd $$dir; $(CC) $(CFLAGS) -MM *.c > depend ) ; \
+	      cd $$dir; $(CC) $(CFLAGS) -M *.c > depend ) ; \
 	done
 
 Makefile-os2:
@@ -59,7 +59,7 @@ clean:
 
 clobber:
 	for dir in $(ORDEREDDIRS); do \
-	    (cd $$dir; $(MAKE) clean) ; \
+	    (cd $$dir; $(MAKE) clobber) ; \
 	done
 
 source-tar: clean
@@ -104,6 +104,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.41  1998/02/09 22:56:28  curt
+# Removed "depend" files from cvs control.  Other minor make tweaks.
+#
 # Revision 1.40  1998/02/01 03:39:53  curt
 # Minor tweaks.
 #

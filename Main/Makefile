@@ -45,13 +45,16 @@ include $(FG_ROOT_SRC)/commondefs
 
 $(TARGET)$(EXT): $(OBJECTS) $(FG_ROOT_LIB)/stamp_libs
 	$(CC) -o $(TARGET)$(EXT) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
-	$(RM) fg$(FG_VERSION_MAJOR)$(EXT)
+	$(RM) -f fg$(FG_VERSION_MAJOR)$(EXT)
 	$(LN) $(TARGET)$(EXT) fg$(FG_VERSION_MAJOR)$(EXT)
 
 include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.47  1998/02/09 22:56:56  curt
+# Removed "depend" files from cvs control.  Other minor make tweaks.
+#
 # Revision 1.46  1998/02/03 23:20:24  curt
 # Lots of little tweaks to fix various consistency problems discovered by
 # Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

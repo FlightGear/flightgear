@@ -286,7 +286,7 @@ static void fgRenderFrame( void ) {
     xglPopMatrix();
 
     /* draw scenery */
-    xglShadeModel( GL_FLAT /* GL_SMOOTH */ ); 
+    xglShadeModel( /* GL_FLAT */ GL_SMOOTH ); 
     xglEnable( GL_DEPTH_TEST );
     xglEnable( GL_FOG );
     xglFogfv (GL_FOG_COLOR, l->fog_color);
@@ -647,9 +647,12 @@ int main( int argc, char *argv[] ) {
 #endif
 
 /* $Log$
-/* Revision 1.58  1998/02/09 15:07:49  curt
-/* Minor tweaks.
+/* Revision 1.59  1998/02/09 22:56:54  curt
+/* Removed "depend" files from cvs control.  Other minor make tweaks.
 /*
+ * Revision 1.58  1998/02/09 15:07:49  curt
+ * Minor tweaks.
+ *
  * Revision 1.57  1998/02/07 15:29:40  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
