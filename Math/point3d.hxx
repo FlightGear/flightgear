@@ -33,6 +33,8 @@
 
 #include <iostream>
 #include <assert.h>
+#include <math.h>
+
 
 const double fgPoint3_Epsilon = 0.0000001;
 
@@ -293,6 +295,10 @@ Point3D::distance3D(const Point3D& a ) const
 
 
 // $Log$
+// Revision 1.5  1998/11/20 01:00:38  curt
+// Patch in fgGeoc2Geod() to avoid a floating explosion.
+// point3d.hxx include math.h for FreeBSD
+//
 // Revision 1.4  1998/11/11 00:18:38  curt
 // Check for domain error in fgGeoctoGeod()
 //

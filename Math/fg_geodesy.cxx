@@ -48,7 +48,9 @@ void fgGeocToGeod( double lat_geoc, double radius, double
     } else {
 	t_lat = tan(lat_geoc);
 	x_alpha = E*EQUATORIAL_RADIUS_M/sqrt(t_lat*t_lat + E*E);
-	mu_alpha = atan2(sqrt(RESQ_M - x_alpha*x_alpha),E*x_alpha);
+	double tmp = RESQ_M - x_alpha * x_alpha;
+	if ( tmp < 0.0 ) { tmp = 0.0; }
+	mu_alpha = atan2(sqrt(tmp),E*x_alpha);
 	if (lat_geoc < 0) mu_alpha = - mu_alpha;
 	sin_mu_a = sin(mu_alpha);
 	delt_lambda = mu_alpha - lat_geoc;
@@ -154,6 +156,10 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.4  1998/11/20 01:00:36  curt
+Patch in fgGeoc2Geod() to avoid a floating explosion.
+point3d.hxx include math.h for FreeBSD
+
 Revision 1.3  1998/11/11 00:18:36  curt
 Check for domain error in fgGeoctoGeod()
 
@@ -236,6 +242,10 @@ Initial Flight Gear revision.
 
 
 // $Log$
+// Revision 1.4  1998/11/20 01:00:36  curt
+// Patch in fgGeoc2Geod() to avoid a floating explosion.
+// point3d.hxx include math.h for FreeBSD
+//
 // Revision 1.3  1998/11/11 00:18:36  curt
 // Check for domain error in fgGeoctoGeod()
 //
