@@ -234,7 +234,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->A_Z_pilot);
 
         for ( i = 0; i < net->num_engines; ++i ) {
-            htonl(net->eng_state[i]);
+            net->eng_state[i] = htonl(net->eng_state[i]);
             htonf(net->rpm[i]);
             htonf(net->fuel_flow[i]);
             htonf(net->EGT[i]);
@@ -249,7 +249,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         net->num_tanks = htonl(net->num_tanks);
 
         for ( i = 0; i < net->num_wheels; ++i ) {
-            htonl(net->wow[i]);
+            net->wow[i] = htonl(net->wow[i]);
             htonf(net->gear_pos[i]);
             htonf(net->gear_steer[i]);
             htonf(net->gear_compression[i]);
@@ -305,7 +305,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 
         net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < net->num_engines; ++i ) {
-            htonl(net->eng_state[i]);
+            net->eng_state[i] = htonl(net->eng_state[i]);
             htonf(net->rpm[i]);
             htonf(net->fuel_flow[i]);
             htonf(net->EGT[i]);
@@ -320,7 +320,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 
         net->num_wheels = htonl(net->num_wheels);
         for ( i = 0; i < net->num_wheels; ++i ) {
-            htonl(net->wow[i]);
+            net->wow[i] = htonl(net->wow[i]);
             htonf(net->gear_pos[i]);
             htonf(net->gear_steer[i]);
             htonf(net->gear_compression[i]);
