@@ -35,6 +35,8 @@
 #include <Include/fg_constants.h>
 #include <Debug/logstream.hxx>
 #include <Main/options.hxx>
+#include <Cockpit/panel.hxx>
+#include <Main/views.hxx>
 
 #include <plib/pu.h>
 
@@ -328,10 +330,18 @@ static void rolloutsmooth_adj( puObject *hs )
 
 static void goAwayAPAdjust (puObject *)
 {
+    FGView *v = &current_view;
     puPopLiveInterface ( ) ;
-    //	puPopInterface ( ) ;
     puPopGroup ( ) ;	
     APAdjustDialog -> hide();
+    if ( current_options.get_panel_status() ) {
+	// this seems to be the only way to do this :-(
+	// problem is the viewport has been mucked with
+	// current_options.toggle_panel();
+	// current_options.toggle_panel();
+	xglViewport(0, 0, (GLint)(v->winWidth), (GLint)(v->winHeight) );
+	FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
+    }
 }
 
 void cancelAPAdjust(puObject *)

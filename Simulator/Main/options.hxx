@@ -227,6 +227,7 @@ public:
 	    xglHint ( GL_FOG_HINT, GL_FASTEST );
 	}
     }
+    void toggle_panel();
     inline void set_xsize( int x ) { xsize= x; }
     inline void set_ysize( int y ) { xsize= y; }
 

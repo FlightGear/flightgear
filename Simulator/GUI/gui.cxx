@@ -48,9 +48,11 @@
 #include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
+#include <Cockpit/panel.hxx>
 #include <FDM/flight.hxx>
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/views.hxx>
 #include <Time/fg_time.hxx>
 
 #include "gui.h"
@@ -114,7 +116,17 @@ void guiGetMouse(int *x, int *y)
 
 void reInit(puObject *cb)
 {
+    FGView *v = &current_view;
     fgReInitSubsystems();
+    if ( current_options.get_panel_status() ) {
+	// this seems to be the only way to do this :-(
+	// problem is the viewport has been mucked with
+	//		current_options.toggle_panel();
+	//		current_options.toggle_panel();
+	xglViewport(0, 0 ,
+		    (GLint)(v->winWidth), (GLint)(v->winHeight) );
+	FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
+    }
 }
 
 void guiToggleMenu(void)
@@ -124,7 +136,11 @@ void guiToggleMenu(void)
     hideMenuButton -> invokeCallback();
 }
 	
-
+void guiTogglePanel(puObject *cb)
+{
+    current_options.toggle_panel();
+}
+	
 void MenuHideMenuCb(puObject *cb)
 {
     mainMenuBar -> hide  ();
@@ -133,34 +149,37 @@ void MenuHideMenuCb(puObject *cb)
 #if defined ( WIN32 ) || defined(__CYGWIN32__)
     glutSetCursor(GLUT_CURSOR_NONE);
 #else  // I guess this is what we want to do ??
-    //	puHideCursor(); // does not work with VooDoo
+#if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
+    glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+#endif
 #endif
 }
 
 void hideMenuCb (puObject *cb)
 {
-    if (cb -> getValue () )
-	{
-	    mainMenuBar -> reveal();
-	    // printf("Showing Menu\n");
-	    hideMenuButton -> setLegend ("Hide Menu");
+    if (cb -> getValue () ) {
+	mainMenuBar -> reveal();
+	// printf("Showing Menu\n");
+	hideMenuButton -> setLegend ("Hide Menu");
 #if defined ( WIN32 ) || defined(__CYGWIN32__)
-	    glutSetCursor(GLUT_CURSOR_INHERIT);
+	glutSetCursor(GLUT_CURSOR_INHERIT);
 #else  // I guess this is what we want to do ??
-	    //	  puShowCursor(); // does not work with VooDoo
+	glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH)/2, 
+			 glutGet(GLUT_SCREEN_HEIGHT)/2 );
 #endif
-	}
-    else
-	{
-	    mainMenuBar -> hide  ();
-	    // printf("Hiding Menu\n");
-	    hideMenuButton -> setLegend ("Show Menu");
+    } else{
+	mainMenuBar -> hide  ();
+	// printf("Hiding Menu\n");
+	hideMenuButton -> setLegend ("Show Menu");
 #if defined ( WIN32 ) || defined(__CYGWIN32__)
-	    glutSetCursor(GLUT_CURSOR_NONE);
+	glutSetCursor(GLUT_CURSOR_NONE);
 #else  // I guess this is what we want to do ??
-	    //	  puHideCursor(); // does not work with VooDoo
+#if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
+	glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH), 
+			 glutGet(GLUT_SCREEN_HEIGHT));
 #endif
-	}
+#endif
+    }
 }
 
 void goodBye(puObject *)
@@ -191,7 +210,7 @@ void goAwayCb (puObject *me)
     dialogBox = NULL;
 }
 
-void mkDialog (char *txt)
+void mkDialog (const char *txt)
 {
     dialogBox = new puDialogBox (150, 50);
     {
@@ -301,7 +320,18 @@ static void validateApt (puObject *inpApt)
 void AptDialog_Cancel(puObject *)
 {
     FGTime *t = FGTime::cur_time_params;
+    FGView *v = &current_view;
 	
+    if ( current_options.get_panel_status() ) {
+	// this seems to be the only way to do this :-(
+	// problem is the viewport has been mucked with
+	//		current_options.toggle_panel();
+	//		current_options.toggle_panel();
+	xglViewport(0, 0 ,
+		    (GLint)(v->winWidth), (GLint)(v->winHeight) );
+	FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
+    }
+
     delete AptDialogResetButton;
     AptDialogResetButton = NULL;
 
@@ -391,30 +421,41 @@ void NewAirportInit(puObject *cb)
 /* -----------------------------------------------------------------------
    The menu stuff 
    ---------------------------------------------------------------------*/
-char *fileSubmenu        [] = {
+char *fileSubmenu               [] = {
     "Exit", "Close", "---------", "Print", "---------", "Save", "Reset", NULL };
-char *editSubmenu        [] = {
+puCallback fileSubmenuCb        [] = {
+    goodBye, MenuHideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL};
+	
+char *editSubmenu               [] = {
     "Edit text", NULL };
-char *viewSubmenu        [] = {
-    "Cockpit View > ", "View >","------------", "View options...", NULL };
-char *aircraftSubmenu    [] = {
+puCallback editSubmenuCb        [] = {
+    notCb, NULL };
+	
+char *viewSubmenu               [] = {
+    "Cockpit View > ", "View >","------------", "Toggle Panel...", NULL };
+puCallback viewSubmenuCb        [] = {
+    notCb, notCb, NULL, guiTogglePanel, NULL };
+	
+char *aircraftSubmenu           [] = {
     "Autopilot ...", "Engine ...", "Navigation", "Communication", NULL};
-char *environmentSubmenu [] = {
+puCallback aircraftSubmenuCb    [] = {
+    fgAPAdjust, notCb, notCb, notCb, NULL };
+
+char *environmentSubmenu        [] = {
     "Airport", "Terrain", "Weather", NULL};
-char *optionsSubmenu     [] = {
+puCallback environmentSubmenuCb [] = {
+    NewAirportInit, notCb, notCb, NULL };
+
+char *optionsSubmenu            [] = {
     "Preferences", "Realism & Reliablity...", NULL};
-char *helpSubmenu        [] = {
+puCallback optionsSubmenuCb     [] = {
+    notCb, notCb, NULL};
+
+char *helpSubmenu               [] = {
     "About...", "Help", NULL };
+puCallback helpSubmenuCb        [] = {
+    notCb, helpCb, NULL };
 
-puCallback fileSubmenuCb        [] = { goodBye, MenuHideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL};
-puCallback editSubmenuCb        [] = { notCb, NULL };
-puCallback viewSubmenuCb        [] = { notCb, notCb, NULL, notCb, NULL };
-puCallback aircraftSubmenuCb    [] = { fgAPAdjust, notCb, notCb, notCb, NULL };
-puCallback environmentSubmenuCb [] = { NewAirportInit, notCb, notCb, NULL };
-puCallback optionsSubmenuCb     [] = { notCb, notCb, NULL};
-puCallback helpSubmenuCb        [] = { notCb, helpCb, NULL };
-
- 
 
 /* -------------------------------------------------------------------------
    init the gui

@@ -38,18 +38,22 @@ bool global_fullscreen = true;
 
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
-#include <Misc/fgstream.hxx>
-#include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
+#include <Include/general.hxx>
+#include <Cockpit/cockpit.hxx>
+#include <Debug/logstream.hxx>
+#include <FDM/flight.hxx>
+#include <Misc/fgstream.hxx>
 #include <Time/fg_time.hxx>
-#include <Main/options.hxx>
 
+#include "options.hxx"
 #include "fg_serial.hxx"
 
 FG_USING_STD(string);
 FG_USING_NAMESPACE(std);
 
+// from GLUTmain.cxx
+extern void fgReshape( int width, int height );
 
 inline double
 atof( const string& str )
@@ -203,6 +207,23 @@ fgOPTIONS::fgOPTIONS() :
 			      port_options_list.end() );
 }
 
+void 
+fgOPTIONS::toggle_panel() {
+	
+    if( panel_status ) {
+	panel_status = false;
+    } else {
+	panel_status = true;
+    }
+    if ( panel_status ) {
+	if( FGPanel::OurPanel == 0)
+	    new FGPanel;
+	fov *= 0.4232;
+    } else {
+	fov *= (1.0 /0.4232);
+    }
+    fgReshape( xsize, ysize);
+}
 
 double
 fgOPTIONS::parse_time(const string& time_in) {

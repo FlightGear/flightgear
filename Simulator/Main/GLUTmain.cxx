@@ -803,9 +803,9 @@ static void fgIdleFunction ( void ) {
     }
 }
 
-
+// options.cxx needs to see this for toggle_panel()
 // Handle new window size or exposure
-static void fgReshape( int width, int height ) {
+void fgReshape( int width, int height ) {
     // Do this so we can call fgReshape(0,0) ourselves without having
     // to know what the values of width & height are.
     if ( (height > 0) && (width > 0) ) {
@@ -859,7 +859,7 @@ int fgGlutInit( int *argc, char **argv ) {
     } else {
 	// Open the cool new 'game mode' window
 	char game_mode_str[256];
-	sprintf( game_mode_str, "width=%d height=%d bpp=16",
+	sprintf( game_mode_str, "width=%d height=%d bpp=32",
 		 current_options.get_xsize(),
 		 current_options.get_ysize() );
 

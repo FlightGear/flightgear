@@ -144,6 +144,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    t->adjust_warp(-60);
 	    local_update_sky_and_lighting_params();
 	    return;
+	case 80: // P key
+		current_options.toggle_panel();
+		break;
 	case 84: // T key
 	    t->adjust_warp_delta(-30);
 	    local_update_sky_and_lighting_params();

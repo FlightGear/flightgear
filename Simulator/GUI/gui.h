@@ -31,8 +31,6 @@ extern void guiMotionFunc ( int x, int y );
 extern void guiMouseFunc(int button, int updown, int x, int y);
 extern void guiInit();
 extern void guiToggleMenu(void);
-extern void mkDialog (char *txt);
-
-extern void mkDialog (char *txt);
+void mkDialog (const char *txt);
 
 #endif // _GUI_H_
