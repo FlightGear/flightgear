@@ -102,6 +102,22 @@ void FGLaRCsim::update( int multiloop ) {
 	// update engine model
 	eng.update();
 
+	// Fake control-surface positions
+	fgSetDouble("/surface-positions/flap-pos-norm",
+		    fgGetDouble("/controls/flaps"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/elevator-pos-norm",
+		    fgGetDouble("/controls/elevator"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/left-aileron-pos-norm",
+		    fgGetDouble("/controls/aileron"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/right-aileron-pos-norm",
+		    -1 * fgGetDouble("/controls/aileron"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/rudder-pos-norm",
+		    fgGetDouble("/controls/rudder"));
+
 	// copy engine state values onto "bus"
 	fgSetDouble("/engines/engine/rpm", eng.get_RPM());
 	fgSetDouble("/engines/engine/mp-osi", eng.get_Manifold_Pressure());
