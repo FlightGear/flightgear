@@ -165,11 +165,11 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _internal = internal;
 
     if (damp_roll > 0.0)
-      _damp_roll = 1.0 / pow(10, fabs(damp_roll));
+      _damp_roll = 1.0 / pow(10.0, fabs(damp_roll));
     if (damp_pitch > 0.0)
-      _damp_pitch = 1.0 / pow(10, fabs(damp_pitch));
+      _damp_pitch = 1.0 / pow(10.0, fabs(damp_pitch));
     if (damp_heading > 0.0)
-      _damp_heading = 1.0 / pow(10, fabs(damp_heading));
+      _damp_heading = 1.0 / pow(10.0, fabs(damp_heading));
 
     _x_offset_m = x_offset_m;
     _y_offset_m = y_offset_m;
