@@ -52,53 +52,6 @@ SG_USING_STD(string);
 
 
 ////////////////////////////////////////////////////////////////////////
-// Default panel, instrument, and layer for when things go wrong...
-////////////////////////////////////////////////////////////////////////
-
-static FGCroppedTexture defaultTexture("Textures/default.rgb");
-
-
-/**
- * Default layer: the default texture.
- */
-class DefaultLayer : public FGTexturedLayer
-{
-public:
-  DefaultLayer () : FGTexturedLayer(defaultTexture)
-  {
-  }
-  
-};
-
-/**
- * Default instrument: a single default layer.
- */
-class DefaultInstrument : public FGLayeredInstrument
-{
-public:
-  DefaultInstrument (int x, int y, int w, int h)
-    : FGLayeredInstrument(x, y, w, h)
-  {
-    addLayer(new DefaultLayer());
-  }
-};
-
-
-/**
- * Default panel: the default texture.
- */
-class DefaultPanel : public FGPanel
-{
-public:
-  DefaultPanel (int x, int y, int w, int h) : FGPanel(x, y, w, h)
-  {
-    setBackground(defaultTexture.getTexture());
-  }
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
 // Built-in layer for the magnetic compass ribbon layer.
 //
 // TODO: move this out into a special directory for built-in
@@ -734,7 +687,7 @@ readPanel (const SGPropertyNode * root)
   SG_LOG( SG_COCKPIT, SG_INFO, "Reading properties for panel " <<
           root->getStringValue("name", "[Unnamed Panel]") );
 
-  FGPanel * panel = new FGPanel(0, 0, 1024, 768);
+  FGPanel * panel = new FGPanel();
   panel->setWidth(root->getIntValue("w", 1024));
   panel->setHeight(root->getIntValue("h", 443));
 
