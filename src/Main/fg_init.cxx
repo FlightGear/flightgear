@@ -487,6 +487,13 @@ bool fgInitGeneral( void ) {
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems( void ) {
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *altitude
+	= fgGetNode("/position/altitude-ft");
+
     fgLIGHT *l = &cur_light_params;
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
@@ -600,12 +607,12 @@ bool fgInitSubsystems( void ) {
     FGViewerRPH *pilot_view =
 	(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
 
-    pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-				   cur_fdm_state->get_Lat_geocentric(), 
-				   cur_fdm_state->get_Altitude() *
-				   SG_FEET_TO_METER );
-    pilot_view->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-				      SG_FEET_TO_METER ); 
+    pilot_view->set_geod_view_pos( longitude->getDoubleValue()
+				     * SGD_DEGREES_TO_RADIANS, 
+				   latitude->getDoubleValue()
+				     * SGD_DEGREES_TO_RADIANS,
+				   altitude->getDoubleValue()
+				     * SG_FEET_TO_METER );
     pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			 cur_fdm_state->get_Theta(),
 			 cur_fdm_state->get_Psi() );

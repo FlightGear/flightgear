@@ -1095,7 +1095,7 @@ static void fgMainLoop( void ) {
 	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
 	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
-    if ( scenery.get_cur_elev() > -9990 ) {
+    if ( scenery.get_cur_elev() > -9990 && cur_fdm_state->get_inited() ) {
 	if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
 	     (scenery.get_cur_elev() + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground

@@ -251,7 +251,8 @@ void FGTileMgr::initialize_queue()
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
 int FGTileMgr::update( double lon, double lat ) {
-    SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update() for " << lon << " " << lat );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
+	    << lon << " " << lat );
 
     longitude = lon;
     latitude = lat;
@@ -381,7 +382,8 @@ int FGTileMgr::update( double lon, double lat ) {
 	    scenery.set_cur_normal( tmp_normal );
 	} else {
 	    scenery.set_cur_elev( -9999.0 );
-	}  
+	}
+	// cout << "Current elevation = " << scenery.get_cur_elev() << endl;
 #if 0
     }
 #endif
