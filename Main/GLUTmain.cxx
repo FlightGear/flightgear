@@ -714,10 +714,11 @@ int main( int argc, char **argv ) {
 
     strcpy(slfile, path);
     strcat(slfile, "prpidle.wav");
-    s1 = new slSample ( slfile );
+    // s1 = new slSample ( slfile );
+    s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", &audio_sched );
     printf("Rate = %d  Bps = %d  Stereo = %d\n", 
 	   s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
-    audio_sched . playSample ( s1 );
+    audio_sched . loopSample ( s1 );
 
     // strcpy(slfile, path);
     // strcat(slfile, "thunder.wav");
@@ -735,6 +736,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.23  1998/06/08 17:57:04  curt
+// Minor sound/startup position tweaks.
+//
 // Revision 1.22  1998/06/05 18:18:40  curt
 // A bit of fiddling with audio ...
 //

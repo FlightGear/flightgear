@@ -154,7 +154,7 @@ int fgInitPosition( void ) {
 	} else {
 	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
 	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
-	    FG_Runway_altitude = ( a.elevation + 300 );
+	    FG_Runway_altitude = ( a.elevation + 200 );
 	    FG_Altitude = FG_Runway_altitude + 3.758099;
 	}
     }
@@ -386,6 +386,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/06/08 17:57:05  curt
+// Minor sound/startup position tweaks.
+//
 // Revision 1.18  1998/06/03 00:47:14  curt
 // Updated to compile in audio support if OSS available.
 // Updated for new version of Steve's audio library.
