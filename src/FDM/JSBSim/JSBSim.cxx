@@ -166,7 +166,9 @@ FGJSBsim::FGJSBsim( double dt )
     right_aileron_pos_pct
         =fgGetNode("/surface-positions/right-aileron-pos-norm",true);
     rudder_pos_pct=fgGetNode("/surface-positions/rudder-pos-norm",true);
-    
+    speed_brake_pos_pct
+        =fgGetNode("/surface-positions/speed-brake-pos-norm",true);
+    spoiler_pos_pct=fgGetNode("/surface-positions/spoiler-pos-norm",true);
     
 
     elevator_pos_pct->setDoubleValue(0);
@@ -174,6 +176,8 @@ FGJSBsim::FGJSBsim( double dt )
     right_aileron_pos_pct->setDoubleValue(0);
     rudder_pos_pct->setDoubleValue(0);
     flap_pos_pct->setDoubleValue(0);
+    speed_brake_pos_pct->setDoubleValue(0);
+    spoiler_pos_pct->setDoubleValue(0);
 
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
@@ -574,6 +578,8 @@ bool FGJSBsim::copy_from_JSBsim() {
     right_aileron_pos_pct->setDoubleValue( -1*FCS->GetDaLPos(ofNorm) );
     rudder_pos_pct->setDoubleValue( -1*FCS->GetDrPos(ofNorm) );
     flap_pos_pct->setDoubleValue( FCS->GetDfPos(ofNorm) );
+    speed_brake_pos_pct->setDoubleValue( FCS->GetDsbPos(ofNorm) );
+    spoiler_pos_pct->setDoubleValue( FCS->GetDspPos(ofNorm) );
 
     
     return true;
