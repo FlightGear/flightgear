@@ -82,7 +82,7 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 // find the shortest distance from the point to the line
 double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d) {
     MAT3vec u, u1, v;
-    double ud, dd, tmp, dist;
+    double ud, dd, tmp;
     
     // u = p - p0
     MAT3_SUB_VEC(u, p, p0);
@@ -99,9 +99,7 @@ double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d) {
     // original point, p.
     MAT3_SUB_VEC(v, u, u1);
 
-    dist = sqrt(MAT3_DOT_PRODUCT(v, v));
-
-    return( dist );
+    return sqrt(MAT3_DOT_PRODUCT(v, v));
 }
 
 
@@ -131,6 +129,9 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d) {
 
 
 // $Log$
+// Revision 1.6  1999/03/25 19:02:28  curt
+// Minor optimization tweaks.
+//
 // Revision 1.5  1998/10/16 23:36:38  curt
 // c++-ifying.
 //
