@@ -32,6 +32,7 @@
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
+#include <Include/fg_zlib.h>
 #include <Main/options.hxx>
 #include <Time/fg_time.hxx>
 
@@ -39,6 +40,8 @@
 
 
 struct OrbElements pltOrbElements[9];
+
+static fgFile data;
 
 
 double fgCalcActTime(fgTIME t)
@@ -77,28 +80,23 @@ double fgCalcEccAnom(double M, double e)
    of, other than feof(FILE*)? That's currently the only check I can
    think of (Durk) */
 
-int fgReadOrbElements(struct OrbElements *dest, FILE *src)
-{
-	char line[256];
+int fgReadOrbElements(struct OrbElements *dest, gzFile src) {
+    char line[256];
     int i,j;
     j = 0;
-    do
-    {
- 	if (feof (src)) {
+    do {
+    	if ( fggets(src, line, 256) == NULL ) {
 	    fgPrintf (FG_ASTRO, FG_ALERT,
 		      "End of file found while reading planetary positions:\n");
  	    return 0;
  	}
- 
-    	fgets(line, 256,src);
-        for (i = 0; i < 256; i++)
-        {
-        	if (line[i] == '#')
+        for (i = 0; i < 256; i++) {
+	    if (line[i] == '#')
             	line[i] = 0;
        	}
-       	/*printf("Reading line %d\n", j++); */
-    }
-    while (!(strlen(line)));
+       	// printf("Reading line %d = %s\n", j++, line);
+    } while (!(strlen(line)));
+
     sscanf(line, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
            &dest->NFirst, &dest->NSec,
            &dest->iFirst, &dest->iSec,
@@ -114,10 +112,8 @@ int fgReadOrbElements(struct OrbElements *dest, FILE *src)
 int fgSolarSystemInit(fgTIME t)
 {
     fgOPTIONS *o;
-    char path[80];
-    int i;
-    FILE *data;
-    int ret_val = 0;
+    char path[256], gzpath[256];
+    int i, ret_val;
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing solar system\n");
 
@@ -126,29 +122,33 @@ int fgSolarSystemInit(fgTIME t)
     path[0] = '\0';
     strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
-    strcat(path, "Planets.dat");
+    strcat(path, "Planets");
 
-    if ( (data = fopen(path, "r")) == NULL )
-    {
-	    fgPrintf( FG_ASTRO, FG_ALERT,
+    if ( (data = fgopen(path, "rb")) == NULL ) {
+	strcpy(gzpath, path);
+	strcat(gzpath, ".gz");
+	if ( (data = fgopen(gzpath, "rb")) == NULL ) {
+	    fgPrintf( FG_ASTRO, FG_EXIT,
 		      "Cannot open data file: '%s'\n", path);
-    } else {
-	/* printf("  reading datafile %s\n", path); */
-	fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
-
-	/* for all the objects... */
-	for (i = 0; i < 9; i ++)
-	    {
-		/* ...read from the data file ... */
-		if (!(fgReadOrbElements (&pltOrbElements[i], data))) {
-		    ret_val = 0;
-		}
-		/* ...and calculate the actual values */
-		fgSolarSystemUpdate(&pltOrbElements[i], t);
-	    }
-	ret_val = 1;
+	}
     }
-    return ret_val;
+
+    /* printf("  reading datafile %s\n", path); */
+    fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
+
+    /* for all the objects... */
+    for (i = 0; i < 9; i ++) {
+	/* ...read from the data file ... */
+	if (!(fgReadOrbElements (&pltOrbElements[i], data))) {
+	    ret_val = 0;
+	}
+	/* ...and calculate the actual values */
+	fgSolarSystemUpdate(&pltOrbElements[i], t);
+    }
+
+    fgclose(data);
+
+    return ( 1 );
 }
 
 
@@ -170,9 +170,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, fgTIME t)
 
 
 /* $Log$
-/* Revision 1.5  1998/05/13 18:25:34  curt
-/* Root path info moved to fgOPTIONS.
+/* Revision 1.6  1998/05/29 20:35:41  curt
+/* Added zlib support for reading in compressed data files.
 /*
+ * Revision 1.5  1998/05/13 18:25:34  curt
+ * Root path info moved to fgOPTIONS.
+ *
  * Revision 1.4  1998/04/28 01:19:00  curt
  * Type-ified fgTIME and fgVIEW
  *

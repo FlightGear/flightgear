@@ -43,6 +43,7 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
+#include <Include/fg_zlib.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Time/fg_time.hxx>
@@ -62,10 +63,10 @@
 
 /* Initialize the Star Management Subsystem */
 int fgStarsInit( void ) {
-    FILE *fd;
+    fgFile fd;
     fgOPTIONS *o;
     /* struct CelestialCoord pltPos; */
-    char path[1024];
+    char path[256], gzpath[256];
     char line[256], name[256];
     char *front, *end;
     double right_ascension, declination, magnitude;
@@ -81,7 +82,7 @@ int fgStarsInit( void ) {
     path[0] = '\0';
     strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
-    strcat(path, "Stars.dat");
+    strcat(path, "Stars");
 
     max_stars = FG_MAX_STARS;
 
@@ -89,10 +90,14 @@ int fgStarsInit( void ) {
 	fgPrintf( FG_ASTRO, FG_INFO,
 		  "  Loading %d Stars: %s\n", max_stars, path);
 
-	if ( (fd = fopen(path, "r")) == NULL ) {
-	    fgPrintf( FG_ASTRO, FG_ALERT,
-		      "Cannot open star file: '%s'\n", path);
-	    return 0; // Oops, lets not even try to continue. This is critical.
+	if ( (fd = fgopen(path, "rb")) == NULL ) {
+	    strcpy(gzpath, path);
+	    strcat(gzpath, ".gz");
+	    if ( (fd = fgopen(gzpath, "rb")) == NULL ) {
+		// Oops, lets not even try to continue. This is critical.
+		fgPrintf( FG_ASTRO, FG_EXIT,
+			  "Cannot open star file: '%s'\n", path);
+	    }
 	}
 
 	stars[i] = xglGenLists(1);
@@ -101,7 +106,7 @@ int fgStarsInit( void ) {
 
 	/* read in each line of the file */
 	count = 0;
-	while ( (fgets(line, 256, fd) != NULL) && (count < max_stars) ) {
+	while ( (fggets(fd, line, 256) != NULL) && (count < max_stars) ) {
 	    front = line;
 
 	    /* printf("  Read line = %s", front); */
@@ -171,7 +176,7 @@ int fgStarsInit( void ) {
 
 	} /* while */
 
-	fclose(fd);
+	fgclose(fd);
 
 	xglEnd();
 
@@ -260,9 +265,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/05/13 18:25:35  curt
-/* Root path info moved to fgOPTIONS.
+/* Revision 1.7  1998/05/29 20:35:42  curt
+/* Added zlib support for reading in compressed data files.
 /*
+ * Revision 1.6  1998/05/13 18:25:35  curt
+ * Root path info moved to fgOPTIONS.
+ *
  * Revision 1.5  1998/04/28 01:19:03  curt
  * Type-ified fgTIME and fgVIEW
  *
