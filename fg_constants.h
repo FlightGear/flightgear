@@ -109,7 +109,7 @@
 
 
 /* For divide by zero avoidance, this will be close enough to zero */
-#define FG_EPSILON 0.000001
+#define FG_EPSILON 0.0000001
 
 
 /* Timing constants for Flight Model updates */
@@ -122,10 +122,13 @@
 
 
 /* $Log$
-/* Revision 1.1  1998/01/27 00:46:50  curt
-/* prepended "fg_" on the front of these to avoid potential conflicts with
-/* system include files.
+/* Revision 1.2  1998/03/23 21:18:37  curt
+/* Made FG_EPSILON smaller.
 /*
+ * Revision 1.1  1998/01/27 00:46:50  curt
+ * prepended "fg_" on the front of these to avoid potential conflicts with
+ * system include files.
+ *
  * Revision 1.3  1998/01/22 02:59:35  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *
