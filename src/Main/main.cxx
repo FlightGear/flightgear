@@ -224,7 +224,7 @@ static void fgInitVisuals( void ) {
 static void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
-    FGView *v = &current_view;
+    // FGView *v = &current_view;
 
     double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
@@ -251,7 +251,7 @@ static void fgRenderFrame( void ) {
 	// end of hack
 
 	// update view volume parameters
-	v->UpdateViewParams();
+	current_view.UpdateViewParams(cur_fdm_state);
 
 	// set the sun position
 	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
@@ -285,7 +285,7 @@ static void fgRenderFrame( void ) {
 	xglMatrixMode(GL_MODELVIEW);
 	xglLoadIdentity();
 	sgMat4 vm_tmp, view_mat;
-	sgTransposeNegateMat4 ( vm_tmp, v->sgVIEW ) ;
+	sgTransposeNegateMat4 ( vm_tmp, current_view.sgVIEW ) ;
 	sgCopyMat4( view_mat, copy_of_ssgOpenGLAxisSwapMatrix ) ;
 	sgPreMultMat4( view_mat, vm_tmp ) ;
 	xglLoadMatrixf( (float *)view_mat );
@@ -303,7 +303,7 @@ static void fgRenderFrame( void ) {
 	// setup transformation for drawing astronomical objects
 	xglPushMatrix();
 	// Translate to view position
-	Point3D view_pos = v->get_view_pos();
+	Point3D view_pos = current_view.get_view_pos();
 	xglTranslatef( view_pos.x(), view_pos.y(), view_pos.z() );
 	// Rotate based on gst (sidereal time)
 	// note: constant should be 15.041085, Curt thought it was 15
@@ -376,22 +376,25 @@ static void fgRenderFrame( void ) {
 	    ssgSetNearFar( 0.5f, 100000.0f );
 	}
 
-	sgMat4 sgVIEW;
+	// sgMat4 sgVIEW;
+	// while ( current_view.follow.size() > 25 ) {
+	//    current_view.follow.pop_front();
+	// }
 
-	while ( current_view.follow.size() > 400 ) {
-	    current_view.follow.pop_front();
-	}
-
-	if ( current_view.view_mode == FGView::FG_VIEW_FIRST_PERSON ) {
+	if ( current_options.get_view_mode() == 
+	     fgOPTIONS::FG_VIEW_FIRST_PERSON )
+        {
 	    // select current view matrix
-	    sgCopyMat4( sgVIEW, current_view.sgVIEW );
+	    // sgCopyMat4( sgVIEW, current_view.sgVIEW );
 
 	    // disable TuX
 	    penguin_sel->select(0);
-	} else if ( current_view.view_mode == FGView::FG_VIEW_FOLLOW ) {
+	} else if ( current_options.get_view_mode() == 
+		    fgOPTIONS::FG_VIEW_FOLLOW )
+        {
 	    // select view matrix from front of view matrix queue
-	    FGMat4Wrapper tmp = current_view.follow.front();
-	    sgCopyMat4( sgVIEW, tmp.m );
+	    // FGMat4Wrapper tmp = current_view.follow.front();
+	    // sgCopyMat4( sgVIEW, tmp.m );
 
 	    // enable TuX and set up his position and orientation
 	    penguin_sel->select(1);
@@ -418,7 +421,7 @@ static void fgRenderFrame( void ) {
 	    penguin_pos->setTransform( &tuxpos );
 	}
 
-	ssgSetCamera( sgVIEW );
+	ssgSetCamera( current_view.sgVIEW );
 
 	// position tile nodes and update range selectors
 	global_tile_mgr.prep_ssg_nodes();
@@ -455,10 +458,11 @@ static void fgRenderFrame( void ) {
 
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
-    FGInterface *f = current_aircraft.fdm_state;
+    static fdm_state_list fdm_list;
+    FGInterface fdm_state;
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
-    FGView *v = &current_view;
+    // FGView *v = &current_view;
     int i;
 
     // update the flight model
@@ -466,50 +470,71 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	multi_loop = 1;
     }
 
+    fdm_state = cur_fdm_state;
+
     if ( !t->getPause() ) {
 	// run Autopilot system
 	fgAPRun();
 
 	// printf("updating flight model x %d\n", multi_loop);
 	fgFDMUpdate( current_options.get_flight_model(), 
-		     cur_fdm_state, 
+		     fdm_state, 
 		     multi_loop * current_options.get_speed_up(),
 		     remainder );
     } else {
 	fgFDMUpdate( current_options.get_flight_model(), 
-		     cur_fdm_state, 0, remainder );
+		     fdm_state, 0, remainder );
+    }
+
+    fdm_list.push_back( fdm_state );
+    while ( fdm_list.size() > 25 ) {
+	fdm_list.pop_front();
+    }
+
+    if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FIRST_PERSON ) {
+	cur_fdm_state = fdm_state;
+    } else if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW ) {
+	cur_fdm_state = fdm_list.front();
     }
 
     // update the view angle
     for ( i = 0; i < multi_loop; i++ ) {
-	if ( fabs(v->get_goal_view_offset() - v->get_view_offset()) < 0.05 ) {
-	    v->set_view_offset( v->get_goal_view_offset() );
+	if ( fabs(current_view.get_goal_view_offset() - 
+		  current_view.get_view_offset()) < 0.05 )
+	{
+	    current_view.set_view_offset( current_view.get_goal_view_offset() );
 	    break;
 	} else {
-	    // move v->view_offset towards v->goal_view_offset
-	    if ( v->get_goal_view_offset() > v->get_view_offset() ) {
-		if ( v->get_goal_view_offset() - v->get_view_offset() < FG_PI ){
-		    v->inc_view_offset( 0.01 );
+	    // move current_view.view_offset towards current_view.goal_view_offset
+	    if ( current_view.get_goal_view_offset() > 
+		 current_view.get_view_offset() )
+            {
+		if ( current_view.get_goal_view_offset() - 
+		     current_view.get_view_offset() < FG_PI )
+                {
+		    current_view.inc_view_offset( 0.01 );
 		} else {
-		    v->inc_view_offset( -0.01 );
+		    current_view.inc_view_offset( -0.01 );
 		}
 	    } else {
-		if ( v->get_view_offset() - v->get_goal_view_offset() < FG_PI ){
-		    v->inc_view_offset( -0.01 );
+		if ( current_view.get_view_offset() - 
+		     current_view.get_goal_view_offset() < FG_PI )
+                {
+		    current_view.inc_view_offset( -0.01 );
 		} else {
-		    v->inc_view_offset( 0.01 );
+		    current_view.inc_view_offset( 0.01 );
 		}
 	    }
-	    if ( v->get_view_offset() > FG_2PI ) {
-		v->inc_view_offset( -FG_2PI );
-	    } else if ( v->get_view_offset() < 0 ) {
-		v->inc_view_offset( FG_2PI );
+	    if ( current_view.get_view_offset() > FG_2PI ) {
+		current_view.inc_view_offset( -FG_2PI );
+	    } else if ( current_view.get_view_offset() < 0 ) {
+		current_view.inc_view_offset( FG_2PI );
 	    }
 	}
     }
 
     double tmp = -(l->sun_rotation + FG_PI) 
-	- (f->get_Psi() - v->get_view_offset() );
+	- (cur_fdm_state.get_Psi() - current_view.get_view_offset() );
     while ( tmp < 0.0 ) {
 	tmp += FG_2PI;
     }
@@ -517,7 +542,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	tmp -= FG_2PI;
     }
     /* printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
-	   FG_Psi * RAD_TO_DEG, v->view_offset * RAD_TO_DEG, 
+	   FG_Psi * RAD_TO_DEG, current_view.view_offset * RAD_TO_DEG, 
 	   -(l->sun_rotation+FG_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG); */
     l->UpdateAdjFog();
 }
@@ -540,7 +565,6 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    FGInterface *f;
     FGTime *t;
     static long remainder = 0;
     long elapsed, multi_loop;
@@ -552,7 +576,6 @@ static void fgMainLoop( void ) {
     static int frames = 0;
 #endif // FANCY_FRAME_COUNTER
 
-    f = current_aircraft.fdm_state;
     t = FGTime::cur_time_params;
 
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
@@ -578,15 +601,15 @@ static void fgMainLoop( void ) {
 
     /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
-	   f->get_Runway_altitude() * FEET_TO_METER,
-	   f->get_Altitude() * FEET_TO_METER); */
+	   cur_fdm_state.get_Runway_altitude() * FEET_TO_METER,
+	   cur_fdm_state.get_Altitude() * FEET_TO_METER); */
 
     if ( scenery.cur_elev > -9990 ) {
-	if ( f->get_Altitude() * FEET_TO_METER < 
+	if ( cur_fdm_state.get_Altitude() * FEET_TO_METER < 
 	     (scenery.cur_elev + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("Current Altitude = %.2f < %.2f forcing to %.2f\n", 
-		   f->get_Altitude() * FEET_TO_METER,
+		   cur_fdm_state.get_Altitude() * FEET_TO_METER,
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
 	    fgFDMForceAltitude( current_options.get_flight_model(), 
@@ -594,7 +617,7 @@ static void fgMainLoop( void ) {
 
 	    FG_LOG( FG_ALL, FG_DEBUG, 
 		    "<*> resetting altitude to " 
-		    << f->get_Altitude() * FEET_TO_METER << " meters" );
+		    << cur_fdm_state.get_Altitude() * FEET_TO_METER << " meters" );
 	}
 	fgFDMSetGroundElevation( current_options.get_flight_model(),
 				 scenery.cur_elev );  // meters
@@ -602,11 +625,11 @@ static void fgMainLoop( void ) {
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
-	   f->get_Runway_altitude() * FEET_TO_METER,
-	   f->get_Altitude() * FEET_TO_METER); */
+	   cur_fdm_state.get_Runway_altitude() * FEET_TO_METER,
+	   cur_fdm_state.get_Altitude() * FEET_TO_METER); */
 
     // update "time"
-    t->update(f);
+    t->update(cur_fdm_state);
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -695,16 +718,16 @@ static void fgMainLoop( void ) {
 
 	double pitch = log((controls.get_throttle(0) * 14.0) + 1.0);
 	//fprintf(stderr, "pitch1: %f ", pitch);
-	if (controls.get_throttle(0) > 0.0 || f->v_rel_wind > 40.0) {
-	    //fprintf(stderr, "rel_wind: %f ", f->v_rel_wind);
+	if (controls.get_throttle(0) > 0.0 || cur_fdm_state.v_rel_wind > 40.0) {
+	    //fprintf(stderr, "rel_wind: %f ", cur_fdm_state.v_rel_wind);
 	    // only add relative wind and AoA if prop is moving
 	    // or we're really flying at idle throttle
 	    if (pitch < 5.4) {  // this needs tuning
 		// prop tips not breaking sound barrier
-		pitch += log(f->v_rel_wind + 0.8)/2;
+		pitch += log(cur_fdm_state.v_rel_wind + 0.8)/2;
 	    } else {
 		// prop tips breaking sound barrier
-		pitch += log(f->v_rel_wind + 0.8)/10;
+		pitch += log(cur_fdm_state.v_rel_wind + 0.8)/10;
 	    }
 	    //fprintf(stderr, "pitch2: %f ", pitch);
 	    //fprintf(stderr, "AoA: %f ", FG_Gamma_vert_rad);
@@ -712,7 +735,7 @@ static void fgMainLoop( void ) {
 	    // Angle of Attack next... -x^3(e^x) is my best guess Just
 	    // need to calculate some reasonable scaling factor and
 	    // then clamp it on the positive aoa (neg adj) side
-	    double aoa = f->get_Gamma_vert_rad() * 2.2;
+	    double aoa = cur_fdm_state.get_Gamma_vert_rad() * 2.2;
 	    double tmp = 3.0;
 	    double aoa_adj = pow(-aoa, tmp) * pow(M_E, aoa);
 	    if (aoa_adj < -0.8) aoa_adj = -0.8;
@@ -726,7 +749,7 @@ static void fgMainLoop( void ) {
 	//fprintf(stderr, "pitch4: %f\n", pitch);
 
 	double volume = controls.get_throttle(0) * 1.15 + 0.3 +
-	    log(f->v_rel_wind + 1.0)/14.0;
+	    log(cur_fdm_state.v_rel_wind + 1.0)/14.0;
 	// fprintf(stderr, "volume: %f\n", volume);
 
 	pitch_envelope.setStep  ( 0, 0.01, pitch );
@@ -920,7 +943,7 @@ void fgReshape( int width, int height ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
 	// the system.
-	current_view.UpdateViewParams();
+	current_view.UpdateViewParams(cur_fdm_state);
 	if ( current_options.get_panel_status() ) {
 	    FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
 	}

@@ -81,9 +81,16 @@
  */
 
 
+#include <Include/compiler.h>
+
 #include <math.h>
 
+#include <list>
+
 #include <Time/timestamp.hxx>
+
+FG_USING_STD(list);
+
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
@@ -837,6 +844,11 @@ public:
 	return cos_latitude;
     }
 };
+
+
+typedef list < FGInterface > fdm_state_list;
+typedef fdm_state_list::iterator fdm_state_list_iterator;
+typedef fdm_state_list::const_iterator const_fdm_state_list_iterator;
 
 
 extern FGInterface cur_fdm_state;

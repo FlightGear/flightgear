@@ -218,7 +218,6 @@ bool fgInitGeneral( void ) {
 bool fgInitSubsystems( void ) {
     FGTime::cur_time_params = new FGTime();
 
-    FGInterface *f; // assigned later
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
     FGView *v = &current_view;
@@ -229,7 +228,6 @@ bool fgInitSubsystems( void ) {
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
-    f = current_aircraft.fdm_state;
 
     // set the initial position
     fgInitPosition();
@@ -265,13 +263,13 @@ bool fgInitSubsystems( void ) {
     // now handled inside of the fgTileMgrUpdate()
 
     /*
-    geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
+    geod_pos = Point3D( cur_fdm_state.get_Longitude(), cur_fdm_state.get_Latitude(), 0.0);
     tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
     FG_LOG( FG_GENERAL, FG_DEBUG,
     	    "Initial abs_view_pos = " << tmp_abs_view_pos );
     scenery.cur_elev =
-	fgTileMgrCurElev( f->get_Longitude(), f->get_Latitude(),
+	fgTileMgrCurElev( cur_fdm_state.get_Longitude(), cur_fdm_state.get_Latitude(),
 			  tmp_abs_view_pos );
     FG_LOG( FG_GENERAL, FG_DEBUG,
 	    "Altitude after update " << scenery.cur_elev );
@@ -281,19 +279,19 @@ bool fgInitSubsystems( void ) {
 			     scenery.cur_elev );
 
     // Reset our altitude if we are below ground
-    FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << f->get_Altitude() );
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << cur_fdm_state.get_Altitude() );
     FG_LOG( FG_GENERAL, FG_DEBUG, "Current runway altitude = " <<
-	    f->get_Runway_altitude() );
+	    cur_fdm_state.get_Runway_altitude() );
 
-    if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
-	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
+    if ( cur_fdm_state.get_Altitude() < cur_fdm_state.get_Runway_altitude() + 3.758099) {
+	cur_fdm_state.set_Altitude( cur_fdm_state.get_Runway_altitude() + 3.758099 );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (f->get_Latitude() * RAD_TO_DEG) << ", "
-	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
-	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
+	    << (cur_fdm_state.get_Latitude() * RAD_TO_DEG) << ", "
+	    << (cur_fdm_state.get_Longitude() * RAD_TO_DEG) << ", "
+	    << (cur_fdm_state.get_Altitude() * FEET_TO_METER) << ")" );
 
     // We need to calculate a few more values here that would normally
     // be calculated by the FDM so that the v->UpdateViewMath()
@@ -302,43 +300,43 @@ bool fgInitSubsystems( void ) {
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
-    fgGeodToGeoc( f->get_Latitude(), f->get_Altitude(),
+    fgGeodToGeoc( cur_fdm_state.get_Latitude(), cur_fdm_state.get_Altitude(),
 		  &sea_level_radius_meters, &lat_geoc);
-    f->set_Geocentric_Position( lat_geoc, f->get_Longitude(),
-				f->get_Altitude() +
+    cur_fdm_state.set_Geocentric_Position( lat_geoc, cur_fdm_state.get_Longitude(),
+				cur_fdm_state.get_Altitude() +
 				(sea_level_radius_meters * METER_TO_FEET) );
-    f->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
+    cur_fdm_state.set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
 
-    f->set_sin_cos_longitude(f->get_Longitude());
-    f->set_sin_cos_latitude(f->get_Latitude());
+    cur_fdm_state.set_sin_cos_longitude(cur_fdm_state.get_Longitude());
+    cur_fdm_state.set_sin_cos_latitude(cur_fdm_state.get_Latitude());
 	
-    f->set_sin_lat_geocentric(sin(lat_geoc));
-    f->set_cos_lat_geocentric(cos(lat_geoc));
+    cur_fdm_state.set_sin_lat_geocentric(sin(lat_geoc));
+    cur_fdm_state.set_cos_lat_geocentric(cos(lat_geoc));
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    f->set_Velocities_Local( current_options.get_uBody(),
+    cur_fdm_state.set_Velocities_Local( current_options.get_uBody(),
                              current_options.get_vBody(),
                              current_options.get_wBody());
 
     // Initial Orientation
-    f->set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
+    cur_fdm_state.set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
 			 current_options.get_pitch() * DEG_TO_RAD,
 			 current_options.get_heading() * DEG_TO_RAD );
 
     // Initial Angular Body rates
-    f->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
+    cur_fdm_state.set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
 
-    f->set_Earth_position_angle( 0.0 );
+    cur_fdm_state.set_Earth_position_angle( 0.0 );
 
     // Mass properties and geometry values
-    f->set_Inertias( 8.547270E+01,
+    cur_fdm_state.set_Inertias( 8.547270E+01,
 		     1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
 
     // CG position w.r.t. ref. point
-    f->set_CG_Position( 0.0, 0.0, 0.0 );
+    cur_fdm_state.set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize the event manager
     global_events.Init();
@@ -350,14 +348,14 @@ bool fgInitSubsystems( void ) {
 			    fgEVENT::FG_EVENT_READY, 60000 );
 
     // Initialize the time dependent variables
-    t->init(f);
-    t->update(f);
+    t->init(cur_fdm_state);
+    t->update(cur_fdm_state);
 
     // Initialize view parameters
     FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
     v->Init();
     FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
-    v->UpdateViewMath(f);
+    v->UpdateViewMath(cur_fdm_state);
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
     // v->UpdateWorldToEye(f);
 
@@ -448,17 +446,17 @@ bool fgInitSubsystems( void ) {
 
     // I'm just sticking this here for now, it should probably move
     // eventually
-    scenery.cur_elev = f->get_Runway_altitude() * FEET_TO_METER;
+    scenery.cur_elev = cur_fdm_state.get_Runway_altitude() * FEET_TO_METER;
 
-    if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
-	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
+    if ( cur_fdm_state.get_Altitude() < cur_fdm_state.get_Runway_altitude() + 3.758099) {
+	cur_fdm_state.set_Altitude( cur_fdm_state.get_Runway_altitude() + 3.758099 );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (f->get_Latitude() * RAD_TO_DEG) << ", "
-	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
-	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
+	    << (cur_fdm_state.get_Latitude() * RAD_TO_DEG) << ", "
+	    << (cur_fdm_state.get_Longitude() * RAD_TO_DEG) << ", "
+	    << (cur_fdm_state.get_Altitude() * FEET_TO_METER) << ")" );
     // end of thing that I just stuck in that I should probably move
 
     // Joystick support
@@ -484,7 +482,6 @@ bool fgInitSubsystems( void ) {
 
 void fgReInitSubsystems( void )
 {
-    FGInterface *f = current_aircraft.fdm_state;
     FGView *v = &current_view;
     FGTime *t = FGTime::cur_time_params;
     
@@ -505,69 +502,69 @@ void fgReInitSubsystems( void )
 			     scenery.cur_elev );
 
     // Reset our altitude if we are below ground
-    FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << f->get_Altitude() );
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << cur_fdm_state.get_Altitude() );
     FG_LOG( FG_GENERAL, FG_DEBUG, "Current runway altitude = " << 
-	    f->get_Runway_altitude() );
+	    cur_fdm_state.get_Runway_altitude() );
 
-    if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
-	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
+    if ( cur_fdm_state.get_Altitude() < cur_fdm_state.get_Runway_altitude() + 3.758099) {
+	cur_fdm_state.set_Altitude( cur_fdm_state.get_Runway_altitude() + 3.758099 );
     }
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
-    fgGeodToGeoc( f->get_Latitude(), f->get_Altitude(), 
+    fgGeodToGeoc( cur_fdm_state.get_Latitude(), cur_fdm_state.get_Altitude(), 
 		  &sea_level_radius_meters, &lat_geoc);
-    f->set_Geocentric_Position( lat_geoc, f->get_Longitude(), 
-				f->get_Altitude() + 
+    cur_fdm_state.set_Geocentric_Position( lat_geoc, cur_fdm_state.get_Longitude(), 
+				cur_fdm_state.get_Altitude() + 
 				(sea_level_radius_meters * METER_TO_FEET) );
-    f->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
+    cur_fdm_state.set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
 	
-    f->set_sin_cos_longitude(f->get_Longitude());
-    f->set_sin_cos_latitude(f->get_Latitude());
+    cur_fdm_state.set_sin_cos_longitude(cur_fdm_state.get_Longitude());
+    cur_fdm_state.set_sin_cos_latitude(cur_fdm_state.get_Latitude());
 	
-    f->set_sin_lat_geocentric(sin(lat_geoc));
-    f->set_cos_lat_geocentric(cos(lat_geoc));
+    cur_fdm_state.set_sin_lat_geocentric(sin(lat_geoc));
+    cur_fdm_state.set_cos_lat_geocentric(cos(lat_geoc));
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    f->set_Velocities_Local( current_options.get_uBody(),
+    cur_fdm_state.set_Velocities_Local( current_options.get_uBody(),
                              current_options.get_vBody(),
                              current_options.get_wBody());
 
     // Initial Orientation
-    f->set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
+    cur_fdm_state.set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
 			 current_options.get_pitch() * DEG_TO_RAD,
 			 current_options.get_heading() * DEG_TO_RAD );
 
     // Initial Angular Body rates
-    f->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
+    cur_fdm_state.set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
 
-    f->set_Earth_position_angle( 0.0 );
+    cur_fdm_state.set_Earth_position_angle( 0.0 );
 
     // Mass properties and geometry values
-    f->set_Inertias( 8.547270E+01, 
+    cur_fdm_state.set_Inertias( 8.547270E+01, 
 		     1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
 
     // CG position w.r.t. ref. point
-    f->set_CG_Position( 0.0, 0.0, 0.0 );
+    cur_fdm_state.set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize view parameters
     FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
     v->Init();
     FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
-    v->UpdateViewMath(f);
+    v->UpdateViewMath(cur_fdm_state);
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
     // v->UpdateWorldToEye(f);
 
     fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
 	       1.0 / current_options.get_model_hz() );
 
-    scenery.cur_elev = f->get_Runway_altitude() * FEET_TO_METER;
+    scenery.cur_elev = cur_fdm_state.get_Runway_altitude() * FEET_TO_METER;
 
-    if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
-	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
+    if ( cur_fdm_state.get_Altitude() < cur_fdm_state.get_Runway_altitude() + 3.758099) {
+	cur_fdm_state.set_Altitude( cur_fdm_state.get_Runway_altitude() + 3.758099 );
     }
 
     controls.reset_all();

@@ -46,14 +46,14 @@
 FG_USING_STD(list);
 
 
-class FGMat4Wrapper {
-public:
-    sgMat4 m;
-};
+// class FGMat4Wrapper {
+// public:
+//     sgMat4 m;
+// };
 
-typedef list < FGMat4Wrapper > sgMat4_list;
-typedef sgMat4_list::iterator sgMat4_list_iterator;
-typedef sgMat4_list::const_iterator const_sgMat4_list_iterator;
+// typedef list < FGMat4Wrapper > sgMat4_list;
+// typedef sgMat4_list::iterator sgMat4_list_iterator;
+// typedef sgMat4_list::const_iterator const_sgMat4_list_iterator;
 
 
 // used in views.cxx and tilemgr.cxx
@@ -64,12 +64,6 @@ typedef sgMat4_list::const_iterator const_sgMat4_list_iterator;
 class FGView {
 
 public:
-
-    enum fgViewMode
-    {
-	FG_VIEW_FIRST_PERSON = 0,
-	FG_VIEW_FOLLOW  = 1
-    };
 
     // the current offset from forward for viewing
     double view_offset;
@@ -166,14 +160,11 @@ public:
     // Current model view matrix;
     GLfloat MODEL_VIEW[16];
 
-    // view mode
-    fgViewMode view_mode;
-
     // sg versions of our friendly matrices
     sgMat4 sgLOCAL, sgUP, sgVIEW_ROT, sgTRANS, sgVIEW, sgLARC_TO_SSG;
 
     // queue of view matrices so we can have a follow view
-    sgMat4_list follow;
+    // sgMat4_list follow;
 
 public:
 
@@ -187,20 +178,17 @@ public:
     void Init( void );
 
     // Update the view volume, position, and orientation
-    void UpdateViewParams( void );
+    void UpdateViewParams( const FGInterface& f );
 
     // Flag to request that UpdateFOV() be called next time
     // UpdateViewMath() is run.
     inline void force_update_fov_math() { update_fov = true; }
 
     // Update the view parameters
-    void UpdateViewMath( FGInterface *f );
+    void UpdateViewMath( const FGInterface& f );
 
     // Update the field of view coefficients
     void UpdateFOV( const fgOPTIONS& o );
-
-    // Cycle view mode
-    void cycle_view_mode();
 
     // accessor functions
     inline double get_view_offset() const { return view_offset; }
@@ -261,6 +249,7 @@ public:
 };
 
 
+extern FGView pilot_view;
 extern FGView current_view;
 
 

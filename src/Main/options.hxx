@@ -104,6 +104,12 @@ public:
 	FG_MOUSE = 2
     };
 
+    enum fgViewMode
+    {
+	FG_VIEW_FIRST_PERSON = 0,
+	FG_VIEW_FOLLOW  = 1
+    };
+
 private:
 
     // The flight gear "root" directory
@@ -148,6 +154,7 @@ private:
     bool textures;      // Textures enabled/disabled
     bool wireframe;     // Wireframe mode enabled/disabled
     int xsize, ysize;   // window size derived from geometry string
+    fgViewMode view_mode; // view mode
 
     // Scenery options
     int tile_radius;   // Square radius of rendered tiles (around center 
@@ -231,6 +238,7 @@ public:
     inline bool get_wireframe() const { return wireframe; }
     inline int get_xsize() const { return xsize; }
     inline int get_ysize() const { return ysize; }
+    inline fgViewMode get_view_mode() const { return view_mode; }
     inline int get_tile_radius() const { return tile_radius; }
     inline int get_tile_diameter() const { return tile_diameter; }
 
@@ -262,8 +270,16 @@ public:
 	}
     }
     void toggle_panel();
-    inline void set_xsize( int x ) { xsize= x; }
-    inline void set_ysize( int y ) { xsize= y; }
+    inline void set_xsize( int x ) { xsize = x; }
+    inline void set_ysize( int y ) { ysize = y; }
+    inline void cycle_view_mode() { 
+	if ( view_mode == FG_VIEW_FIRST_PERSON ) {
+	    view_mode = FG_VIEW_FOLLOW;
+	} else if ( view_mode == FG_VIEW_FOLLOW ) {
+	    view_mode = FG_VIEW_FIRST_PERSON;
+	}
+    }
+
     inline void set_net_id( const string id ) { net_id = id; }
 
 private:

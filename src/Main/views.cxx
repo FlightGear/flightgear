@@ -62,7 +62,12 @@ static int panel_hist = 0;
 static const bool use_larcsim_local_to_body = false;
 
 
-// This is a record containing current view parameters
+// This is a record containing current view parameters for the current
+// aircraft position
+FGView pilot_view;
+
+// This is a record containing current view parameters for the current
+// view position
 FGView current_view;
 
 
@@ -75,7 +80,6 @@ FGView::FGView( void ) {
 void FGView::Init( void ) {
     FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
 
-    view_mode = FG_VIEW_FIRST_PERSON;
     view_offset = 0.0;
     goal_view_offset = 0.0;
 
@@ -131,20 +135,8 @@ void FGView::UpdateFOV( const fgOPTIONS& o ) {
 }
 
 
-// Cycle view mode
-void FGView::cycle_view_mode() {
-    if ( view_mode == FG_VIEW_FIRST_PERSON ) {
-	view_mode = FG_VIEW_FOLLOW;
-    } else if ( view_mode == FG_VIEW_FOLLOW ) {
-	view_mode = FG_VIEW_FIRST_PERSON;
-    }
-}
-
-
 // Update the view volume, position, and orientation
-void FGView::UpdateViewParams( void ) {
-    FGInterface *f = current_aircraft.fdm_state;
-
+void FGView::UpdateViewParams( const FGInterface& f ) {
     UpdateViewMath(f);
     
     if ((current_options.get_panel_status() != panel_hist) &&                          (current_options.get_panel_status()))
@@ -281,7 +273,7 @@ void getRotMatrix(double* out, MAT3vec vec, double radians)
 
 
 // Update the view parameters
-void FGView::UpdateViewMath( FGInterface *f ) {
+void FGView::UpdateViewMath( const FGInterface& f ) {
     Point3D p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
@@ -300,18 +292,18 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     //        scenery.center.y, scenery.center.z);
 
     // calculate the cartesion coords of the current lat/lon/0 elev
-    p = Point3D( f->get_Longitude(), 
-		 f->get_Lat_geocentric(), 
-		 f->get_Sea_level_radius() * FEET_TO_METER );
+    p = Point3D( f.get_Longitude(), 
+		 f.get_Lat_geocentric(), 
+		 f.get_Sea_level_radius() * FEET_TO_METER );
 
     cur_zero_elev = fgPolarToCart3d(p) - scenery.center;
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
-    if ( f->get_Altitude() * FEET_TO_METER > 
+    if ( f.get_Altitude() * FEET_TO_METER > 
 	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
-	p.setz( p.radius() + f->get_Altitude() * FEET_TO_METER );
+	p.setz( p.radius() + f.get_Altitude() * FEET_TO_METER );
     } else {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
@@ -320,26 +312,26 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	
 #else // FG_VIEW_INLINE_OPTIMIZATIONS
 	
-    double tmp_radius = f->get_Sea_level_radius() * FEET_TO_METER;
-    double tmp = f->get_cos_lat_geocentric() * tmp_radius;
+    double tmp_radius = f.get_Sea_level_radius() * FEET_TO_METER;
+    double tmp = f.get_cos_lat_geocentric() * tmp_radius;
 	
-    cur_zero_elev.setx(f->get_cos_longitude()*tmp - scenery.center.x());
-    cur_zero_elev.sety(f->get_sin_longitude()*tmp - scenery.center.y());
-    cur_zero_elev.setz(f->get_sin_lat_geocentric()*tmp_radius - scenery.center.z());
+    cur_zero_elev.setx(f.get_cos_longitude()*tmp - scenery.center.x());
+    cur_zero_elev.sety(f.get_sin_longitude()*tmp - scenery.center.y());
+    cur_zero_elev.setz(f.get_sin_lat_geocentric()*tmp_radius - scenery.center.z());
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
-    if ( f->get_Altitude() * FEET_TO_METER > 
+    if ( f.get_Altitude() * FEET_TO_METER > 
 	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
-	tmp_radius += f->get_Altitude() * FEET_TO_METER;
+	tmp_radius += f.get_Altitude() * FEET_TO_METER;
     } else {
 	tmp_radius += scenery.cur_elev + 0.5 * METER_TO_FEET ;
     }
-    tmp = f->get_cos_lat_geocentric() * tmp_radius;
-    abs_view_pos.setx(f->get_cos_longitude()*tmp);
-    abs_view_pos.sety(f->get_sin_longitude()*tmp);
-    abs_view_pos.setz(f->get_sin_lat_geocentric()*tmp_radius);
+    tmp = f.get_cos_lat_geocentric() * tmp_radius;
+    abs_view_pos.setx(f.get_cos_longitude()*tmp);
+    abs_view_pos.sety(f.get_sin_longitude()*tmp);
+    abs_view_pos.setz(f.get_sin_lat_geocentric()*tmp_radius);
 	
 #endif // FG_VIEW_INLINE_OPTIMIZATIONS
 	
@@ -360,17 +352,17 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	// Answer (I think): The LaRCsim matrix is generated in a
 	// different reference frame than we've set up for our world
 
-	LOCAL[0][0] = f->get_T_local_to_body_33();
-	LOCAL[0][1] = -f->get_T_local_to_body_32();
-	LOCAL[0][2] = -f->get_T_local_to_body_31();
+	LOCAL[0][0] = f.get_T_local_to_body_33();
+	LOCAL[0][1] = -f.get_T_local_to_body_32();
+	LOCAL[0][2] = -f.get_T_local_to_body_31();
 	LOCAL[0][3] = 0.0;
-	LOCAL[1][0] = -f->get_T_local_to_body_23();
-	LOCAL[1][1] = f->get_T_local_to_body_22();
-	LOCAL[1][2] = f->get_T_local_to_body_21();
+	LOCAL[1][0] = -f.get_T_local_to_body_23();
+	LOCAL[1][1] = f.get_T_local_to_body_22();
+	LOCAL[1][2] = f.get_T_local_to_body_21();
 	LOCAL[1][3] = 0.0;
-	LOCAL[2][0] = -f->get_T_local_to_body_13();
-	LOCAL[2][1] = f->get_T_local_to_body_12();
-	LOCAL[2][2] = f->get_T_local_to_body_11();
+	LOCAL[2][0] = -f.get_T_local_to_body_13();
+	LOCAL[2][1] = f.get_T_local_to_body_12();
+	LOCAL[2][2] = f.get_T_local_to_body_11();
 	LOCAL[2][3] = 0.0;
 	LOCAL[3][0] = LOCAL[3][1] = LOCAL[3][2] = LOCAL[3][3] = 0.0;
 	LOCAL[3][3] = 1.0;
@@ -411,18 +403,18 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	// flight model
 
 	MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-	MAT3rotate(R, vec, f->get_Phi());
+	MAT3rotate(R, vec, f.get_Phi());
 	// cout << "Roll matrix" << endl;
 	// MAT3print(R, stdout);
 
 	sgVec3 sgrollvec;
 	sgSetVec3( sgrollvec, 0.0, 0.0, 1.0 );
 	sgMat4 sgPHI;		// roll
-	sgMakeRotMat4( sgPHI, f->get_Phi() * RAD_TO_DEG, sgrollvec );
+	sgMakeRotMat4( sgPHI, f.get_Phi() * RAD_TO_DEG, sgrollvec );
 
 
 	MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-	MAT3rotate(TMP, vec, f->get_Theta());
+	MAT3rotate(TMP, vec, f.get_Theta());
 	// cout << "Pitch matrix" << endl;;
 	// MAT3print(TMP, stdout);
 	MAT3mult(R, R, TMP);
@@ -432,7 +424,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	sgVec3 sgpitchvec;
 	sgSetVec3( sgpitchvec, 0.0, 1.0, 0.0 );
 	sgMat4 sgTHETA;		// pitch
-	sgMakeRotMat4( sgTHETA, f->get_Theta() * RAD_TO_DEG,
+	sgMakeRotMat4( sgTHETA, f.get_Theta() * RAD_TO_DEG,
 		       sgpitchvec );
 
 	sgMat4 sgROT;
@@ -440,7 +432,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
 
 	MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-	MAT3rotate(TMP, vec, -f->get_Psi());
+	MAT3rotate(TMP, vec, -f.get_Psi());
 	// cout << "Yaw matrix" << endl;
 	// MAT3print(TMP, stdout);
 	MAT3mult(LOCAL, R, TMP);
@@ -450,7 +442,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	sgVec3 sgyawvec;
 	sgSetVec3( sgyawvec, 1.0, 0.0, 0.0 );
 	sgMat4 sgPSI;		// pitch
-	sgMakeRotMat4( sgPSI, -f->get_Psi() * RAD_TO_DEG, sgyawvec );
+	sgMakeRotMat4( sgPSI, -f.get_Psi() * RAD_TO_DEG, sgyawvec );
 
 	sgMultMat4( sgLOCAL, sgROT, sgPSI );
 
@@ -472,13 +464,13 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     // Derive the local UP transformation matrix based on *geodetic*
     // coordinates
     MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3rotate(R, vec, f->get_Longitude());     // R = rotate about Z axis
+    MAT3rotate(R, vec, f.get_Longitude());     // R = rotate about Z axis
     // printf("Longitude matrix\n");
     // MAT3print(R, stdout);
 
     MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
     MAT3mult_vec(vec, vec, R);
-    MAT3rotate(TMP, vec, -f->get_Latitude());  // TMP = rotate about X axis
+    MAT3rotate(TMP, vec, -f.get_Latitude());  // TMP = rotate about X axis
     // printf("Latitude matrix\n");
     // MAT3print(TMP, stdout);
 
@@ -487,9 +479,9 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     // MAT3print(UP, stdout);
 
     sgMakeRotMat4( sgUP, 
-		   f->get_Longitude() * RAD_TO_DEG,
+		   f.get_Longitude() * RAD_TO_DEG,
 		   0.0,
-		   -f->get_Latitude() * RAD_TO_DEG );
+		   -f.get_Latitude() * RAD_TO_DEG );
     /*
     cout << "FG derived UP matrix using sg routines" << endl;
     MAT3mat print;
@@ -551,9 +543,9 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
     sgMultMat4( sgVIEW, sgVIEW_ROT, sgTRANS );
 
-    FGMat4Wrapper tmp;
-    sgCopyMat4( tmp.m, sgVIEW );
-    follow.push_back( tmp );
+    // FGMat4Wrapper tmp;
+    // sgCopyMat4( tmp.m, sgVIEW );
+    // follow.push_back( tmp );
 
     // generate the current up, forward, and fwrd-view vectors
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
@@ -603,10 +595,10 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 #else // FG_VIEW_INLINE_OPTIMIZATIONS
 	 
     //	// Build spherical to cartesian transform matrix directly
-    double cos_lat = f->get_cos_latitude(); // cos(-f->get_Latitude());
-    double sin_lat = -f->get_sin_latitude(); // sin(-f->get_Latitude());
-    double cos_lon = f->get_cos_longitude(); //cos(f->get_Longitude());
-    double sin_lon = f->get_sin_longitude(); //sin(f->get_Longitude());
+    double cos_lat = f.get_cos_latitude(); // cos(-f.get_Latitude());
+    double sin_lat = -f.get_sin_latitude(); // sin(-f.get_Latitude());
+    double cos_lon = f.get_cos_longitude(); //cos(f.get_Longitude());
+    double sin_lon = f.get_sin_longitude(); //sin(f.get_Longitude());
 
     double *mat = (double *)UP;
 	

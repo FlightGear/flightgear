@@ -38,7 +38,7 @@
 
 // Define a structure containing all the parameters for an aircraft
 typedef struct{
-    FGInterface   *fdm_state;
+    FGInterface *fdm_state;
     FGControls *controls;
 } fgAIRCRAFT ;
 
