@@ -678,7 +678,7 @@ static int tony_magic( int raw, int obs[3] ) {
 
 static double instr_pot_filter( double ave, double val ) {
     if ( fabs(ave - val) < 200 || fabs(val) < fabs(ave) ) {
-        return 0.66 * ave + 0.34 * val;
+        return 0.5 * ave + 0.5 * val;
     } else {
         return ave;
     }
@@ -776,7 +776,7 @@ bool FGATC610x::do_analog_in() {
 
     int diff1 = tony_magic( analog_in_data[11], obs1 );
     int diff2 = tony_magic( analog_in_data[28], obs2 );
-    int diff3 = tony_magic( analog_in_data[39], obs3 );
+    int diff3 = tony_magic( analog_in_data[29], obs3 );
     int diff4 = tony_magic( analog_in_data[30], obs4 );
     int diff5 = tony_magic( analog_in_data[31], obs5 );
 
@@ -786,15 +786,15 @@ bool FGATC610x::do_analog_in() {
     diff4_ave = instr_pot_filter( diff4_ave, diff4 );
     diff5_ave = instr_pot_filter( diff5_ave, diff5 );
 
-    tmp = ati_bird->getDoubleValue() + (diff1_ave * (20.0/880.0) );
-    if ( tmp < -10.0 ) { tmp = -10.0; }
-    if ( tmp > 10.0 ) { tmp = 10.0; }
-    fgSetFloat( "/instrumentation/attitude-indicator/horizon-offset-deg", tmp );
-
-    tmp = alt_press->getDoubleValue() + (diff2_ave * (1.125/880.0) );
+    tmp = alt_press->getDoubleValue() + (diff1_ave * (0.25/880.0) );
     if ( tmp < 27.9 ) { tmp = 27.9; }
     if ( tmp > 31.4 ) { tmp = 31.4; }
     fgSetFloat( "/instrumentation/altimeter/setting-inhg", tmp );
+
+    tmp = ati_bird->getDoubleValue() + (diff2_ave * (20.0/880.0) );
+    if ( tmp < -10.0 ) { tmp = -10.0; }
+    if ( tmp > 10.0 ) { tmp = 10.0; }
+    fgSetFloat( "/instrumentation/attitude-indicator/horizon-offset-deg", tmp );
 
     tmp = nav1_obs->getDoubleValue() + (diff3_ave * (72.0/880.0) );
     while ( tmp >= 360.0 ) { tmp -= 360.0; }
