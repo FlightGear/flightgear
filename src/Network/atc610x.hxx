@@ -76,7 +76,9 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *com2_freq, *com2_stby_freq;
     SGPropertyNode *nav1_freq, *nav1_stby_freq;
     SGPropertyNode *nav2_freq, *nav2_stby_freq;
-    SGPropertyNode *adf_freq, *adf_stby_freq;
+    SGPropertyNode *adf_on_off_vol;
+    SGPropertyNode *adf_freq, *adf_stby_freq, *adf_stby_mode, *adf_timer_mode;
+    SGPropertyNode *adf_count_mode, *adf_flight_timer, *adf_elapsed_timer;
     SGPropertyNode *inner, *middle, *outer;
 
     int dme_switch;

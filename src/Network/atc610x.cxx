@@ -396,8 +396,14 @@ bool FGATC610x::open() {
     nav2_stby_freq
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
 
+    adf_on_off_vol = fgGetNode( "/radios/adf/on-off-volume", true );
     adf_freq = fgGetNode( "/radios/adf/frequencies/selected-khz", true );
     adf_stby_freq = fgGetNode( "/radios/adf/frequencies/standby-khz", true );
+    adf_stby_mode = fgGetNode( "/radios/adf/stby-mode", true );
+    adf_timer_mode = fgGetNode( "/radios/adf/timer-mode", true );
+    adf_count_mode = fgGetNode( "/radios/adf/count-mode", true );
+    adf_flight_timer = fgGetNode( "/radios/adf/flight-timer", true );
+    adf_elapsed_timer = fgGetNode( "/radios/adf/elapsed-timer", true );
 
     inner = fgGetNode( "/radios/marker-beacon/inner", true );
     middle = fgGetNode( "/radios/marker-beacon/middle", true );
@@ -464,7 +470,7 @@ bool FGATC610x::do_analog_in() {
 
     // adf volume
     tmp = (float)analog_in_data[26] / 1024.0f;
-    fgSetFloat( "/radios/adf/volume", tmp );
+    fgSetFloat( "/radios/adf/on-off-volume", tmp );
 
     // nav2 obs tuner
     tmp = (float)analog_in_data[29] * 360.0f / 1024.0f;
@@ -498,7 +504,7 @@ bool FGATC610x::do_lights() {
 /////////////////////////////////////////////////////////////////////
 
 bool FGATC610x::do_radio_switches() {
-    float freq, coarse_freq, fine_freq;
+    double freq, coarse_freq, fine_freq, value;
     int diff;
 
     ATC610xReadRadios( radios_fd, radio_switch_data );
@@ -543,7 +549,7 @@ bool FGATC610x::do_radio_switches() {
     static int last_nav1_swap;
     if ( nav1_swap && (last_nav1_swap != nav1_swap) ) {
 	float tmp = nav1_freq->getFloatValue();
-	fgSetFloat( "/radios/nav[0]/frequencies/selected-mhz",
+	fgSetFloat( "/radios/nav[0]/freqencies/selected-mhz",
 		   nav1_stby_freq->getFloatValue() );
 	fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz", tmp );
     }
@@ -766,7 +772,17 @@ bool FGATC610x::do_radio_switches() {
     static int last_adf_tuner_fine = adf_tuner_fine;
     static int last_adf_tuner_coarse = adf_tuner_coarse;
 
-    freq = adf_stby_freq->getFloatValue();
+    if ( adf_count_mode->getIntValue() == 2 ) {
+        // tune count down timer
+        value = adf_elapsed_timer->getDoubleValue();
+    } else {
+        // tune frequency
+        if ( adf_stby_mode->getIntValue() == 1 ) {
+            value = adf_freq->getFloatValue();
+        } else {
+            value = adf_stby_freq->getFloatValue();
+        }
+    }
 
     if ( adf_tuner_fine != last_adf_tuner_fine ) {
         diff = adf_tuner_fine - last_adf_tuner_fine;
@@ -780,7 +796,7 @@ bool FGATC610x::do_radio_switches() {
                 diff = adf_tuner_fine - 12 - last_adf_tuner_fine;
             }
         }
-        freq += diff;
+        value += diff;
     }
 
     if ( adf_tuner_coarse != last_adf_tuner_coarse ) {
@@ -795,15 +811,45 @@ bool FGATC610x::do_radio_switches() {
                 diff = adf_tuner_coarse - 12 - last_adf_tuner_coarse;
             }
         }
-        freq += 25 * diff;
+        if ( adf_count_mode->getIntValue() == 2 ) {
+            value += 60 * diff;
+        } else {
+            value += 25 * diff;
+        }
     }
-    if ( freq < 100 ) { freq += 1200; }
-    if ( freq > 1299 ) { freq -= 1200; }
+    if ( adf_count_mode->getIntValue() == 2 ) {
+        if ( value < 0 ) { value += 3600; }
+        if ( value > 3599 ) { value -= 3600; }
+    } else {
+        if ( value < 200 ) { value += 1600; }
+        if ( value > 1799 ) { value -= 1600; }
+    }
  
     last_adf_tuner_fine = adf_tuner_fine;
     last_adf_tuner_coarse = adf_tuner_coarse;
 
-    fgSetFloat( "/radios/adf/frequencies/selected-khz", freq );
+    if ( adf_count_mode->getIntValue() == 2 ) {
+        fgSetFloat( "/radios/adf/elapsed-timer", value );
+    } else {
+        if ( adf_stby_mode->getIntValue() == 1 ) {
+            fgSetFloat( "/radios/adf/frequencies/selected-khz", value );
+        } else {
+            fgSetFloat( "/radios/adf/frequencies/standby-khz", value );
+        }
+    }
+
+    // ADF Modes 
+    fgSetInt( "/radios/adf/adf-btn", !(radio_switch_data[23] & 0x01) );
+    fgSetInt( "/radios/adf/bfo-btn", !(radio_switch_data[23] >> 1 & 0x01) );
+    fgSetInt( "/radios/adf/frq-btn", !(radio_switch_data[23] >> 2 & 0x01) );
+    fgSetInt( "/radios/adf/flt-et-btn", !(radio_switch_data[23] >> 3 & 0x01) );
+    fgSetInt( "/radios/adf/set-rst-btn", !(radio_switch_data[23] >> 4 & 0x01) );
+    /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
+         << " bfo = " << !(radio_switch_data[23] >> 1 & 0x01)
+         << " stby = " << !(radio_switch_data[23] >> 2 & 0x01)
+         << " timer = " << !(radio_switch_data[23] >> 3 & 0x01)
+         << " set/rst = " << !(radio_switch_data[23] >> 4 & 0x01)
+         << endl; */
 
     return true;
 }
@@ -975,29 +1021,87 @@ bool FGATC610x::do_radio_display() {
     // the 0x00 in the upper nibble of the 6th byte of each display
     // turns on the decimal point
 
-    // ADF standby frequency
-    float adf_stby = adf_stby_freq->getFloatValue();
-    if ( fabs(adf_stby) > 999.99 ) {
-	adf_stby = 0.0;
-    }
-    sprintf(digits, "%03.0f", adf_stby);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[30] = digits[2] << 4 | 0x0f;
-    radio_display_data[31] = digits[0] << 4 | digits[1];
+    // ADF standby frequency / timer
+    if ( adf_on_off_vol->getDoubleValue() >= 0.01 ) {
+        if ( adf_stby_mode->getIntValue() == 0 ) {
+            // frequency
+            float adf_stby = adf_stby_freq->getFloatValue();
+            if ( fabs(adf_stby) > 1799 ) {
+                adf_stby = 1799;
+            }
+            sprintf(digits, "%04.0f", adf_stby);
+            for ( i = 0; i < 6; ++i ) {
+                digits[i] -= '0';
+            }
+            radio_display_data[30] = digits[3] << 4 | 0x0f;
+            radio_display_data[31] = digits[1] << 4 | digits[2];
+            if ( digits[0] == 0 ) {
+                radio_display_data[32] = 0xff;
+            } else {
+                radio_display_data[32] = 0xf0 | digits[0];
+            }
+        } else {
+            // timer
+            double time;
+            int hours, min, sec;
+            if ( adf_timer_mode->getIntValue() == 0 ) {
+                time = adf_flight_timer->getDoubleValue();
+            } else {
+                time = adf_elapsed_timer->getDoubleValue();
+            }
+            // cout << time << endl;
+            hours = (int)(time / 3600.0);
+            time -= hours * 3600.00;
+            min = (int)(time / 60.0);
+            time -= min * 60.0;
+            sec = (int)time;
+            int big, small;
+            if ( hours > 0 ) {
+                big = hours;
+                if ( big > 99 ) {
+                    big = 99;
+                }
+                small = min;
+            } else {
+                big = min;
+                small = sec;
+            }
+            if ( big > 99 ) {
+                big = 99;
+            }
+            // cout << big << ":" << small << endl;
+            sprintf(digits, "%02d%02d", big, small);
+            for ( i = 0; i < 6; ++i ) {
+                digits[i] -= '0';
+            }
+            radio_display_data[30] = digits[3] << 4 | 0x0f;
+            radio_display_data[31] = digits[1] << 4 | digits[2];
+            radio_display_data[32] = 0xf0 | digits[0];
+        }
 
-    // ADF in use frequency
-    float adf = adf_freq->getFloatValue();
-    if ( fabs(adf) > 999.99 ) {
-	adf = 0.0;
+        // ADF in use frequency
+        float adf = adf_freq->getFloatValue();
+        if ( fabs(adf) > 1799 ) {
+            adf = 1799;
+        }
+        sprintf(digits, "%04.0f", adf);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[33] = digits[2] << 4 | digits[3];
+        if ( digits[0] == 0 ) {
+            radio_display_data[34] = 0xf0 | digits[1];
+        } else {
+            radio_display_data[34] = digits[0] << 4 | digits[1];
+        }
+    } else {
+        radio_display_data[30] = 0xff;
+        radio_display_data[31] = 0xff;
+        radio_display_data[32] = 0xff;
+        radio_display_data[33] = 0xff;
+        radio_display_data[34] = 0xff;
     }
-    sprintf(digits, "%03.0f", adf);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[33] = digits[1] << 4 | digits[2];
-    radio_display_data[34] = 0xf0 | digits[0];
+    
 
     ATC610xSetRadios( radios_fd, radio_display_data );
 
