@@ -135,6 +135,7 @@ SG_USING_STD(endl);
 
 #include "fg_commands.hxx"
 
+#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
 #ifdef WIN32
   typedef void (APIENTRY * PFNGLPOINTPARAMETERFEXTPROC)(GLenum pname,
                                                         GLfloat param);
@@ -151,6 +152,7 @@ SG_USING_STD(endl);
 
   OpenGLFuncExt glPointParameterfEXT = 0;
   OpenGLFuncExtv glPointParameterfvEXT = 0;
+#endif
 #endif
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
