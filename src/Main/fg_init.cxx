@@ -63,6 +63,8 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/sky/SkySceneLoader.hpp>
+#include <simgear/sky/SkyUtil.hpp>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 
@@ -135,6 +137,7 @@ SG_USING_STD(string);
 
 extern const char *default_root;
 
+SkySceneLoader *sgCloud3d;
 
 // Read in configuration (file and command line) and just set fg_root
 bool fgInitFGRoot ( int argc, char **argv ) {
@@ -889,6 +892,19 @@ bool fgInitSubsystems( void ) {
     globals->get_environment_mgr()->init();
     globals->get_environment_mgr()->bind();
 #endif
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the 3D cloud subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    if ( fgGetBool("/sim/rendering/clouds3d") ) {
+        SGPath cloud_path(globals->get_fg_root());
+        cloud_path.append("large.sky");
+        if ( !sgCloud3d->Load( cloud_path.str() ) ) {
+            fgSetBool("/sim/rendering/clouds3d", false);
+        }
+    }
+
 
     ////////////////////////////////////////////////////////////////////
     // Initialize vor/ndb/ils/fix list management and query systems

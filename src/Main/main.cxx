@@ -80,6 +80,8 @@ SG_USING_STD(endl);
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/sky/SkySceneLoader.hpp>
+#include <simgear/sky/SkyUtil.hpp>
 #include <simgear/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
 
@@ -207,6 +209,10 @@ ssgTransform *fgd_pos = NULL;
 
 // Sky structures
 SGSky *thesky;
+SkySceneLoader *sgClouds3d;
+bool _bcloud_orig = true;
+Point3D posit;
+Point3D *_posit = &posit;
 
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
@@ -356,7 +362,7 @@ void trRenderFrame( void ) {
     // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
     // explicitely to black.
     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
-    // glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE );
+    glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE );
 
     ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
 
@@ -448,6 +454,17 @@ void fgRenderFrame() {
 	// calculate our current position in cartesian space
 	globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
 
+	if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            posit =  globals->get_scenery()->get_center();
+            if ( _bcloud_orig ) {
+                sgClouds3d->Set_Cloud_Orig( _posit );
+                _bcloud_orig = false;
+            }
+            /* sgClouds3d->Update( (sgVec4 *)current__view->get_cloud_VIEW(),
+                                _posit );
+            */
+        }
+		
 	// update view port
 	fgReshape( fgGetInt("/sim/startup/xsize"),
 		   fgGetInt("/sim/startup/ysize") );
@@ -738,13 +755,18 @@ void fgRenderFrame() {
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky cloud layers
-	  if (fgGetBool("/environment/clouds/status"))
-	    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+            if (fgGetBool("/environment/clouds/status")) {
+                thesky->postDraw( cur_fdm_state->get_Altitude()
+                                  * SG_FEET_TO_METER );
+            }
 	}
 
 	globals->get_model_mgr()->draw();
 	globals->get_aircraft_model()->draw();
 
+	// draw the 3D clouds
+	if ( fgGetBool("/sim/rendering/clouds3d") ) sgClouds3d->Draw();
+	
 	// display HUD && Panel
 	glDisable( GL_FOG );
 	glDisable( GL_DEPTH_TEST );
@@ -1296,6 +1318,8 @@ void fgReshape( int width, int height ) {
 	       viewmgr->get_current_view()->get_v_fov() );
 
     fgHUDReshape();
+    sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
+                        viewmgr->get_current_view()->get_v_fov() );
 }
 
 // Initialize GLUT and define a main window
@@ -1308,7 +1332,7 @@ int fgGlutInit( int *argc, char **argv ) {
 #endif
 
     // Define Display Parameters
-    glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
+    glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_ALPHA);
 
     SG_LOG( SG_GENERAL, SG_INFO, "Opening a window: " <<
 	    fgGetInt("/sim/startup/xsize") << "x"
