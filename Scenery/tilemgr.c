@@ -177,6 +177,8 @@ void fgTileMgrUpdate( void ) {
 
 /* Render the local tiles */
 void fgTileMgrRender( void ) {
+    fgFLIGHT *f;
+    struct fgBUCKET p;
     static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
     static GLfloat terrain_ambient[4];
     static GLfloat terrain_diffuse[4];
@@ -184,6 +186,8 @@ void fgTileMgrRender( void ) {
     GLint display_list;
     int i;
     int index;
+
+    f = current_aircraft.flight;
 
     for ( i = 0; i < 4; i++ ) {
 	terrain_ambient[i] = terrain_color[i] * 0.5;
@@ -193,6 +197,11 @@ void fgTileMgrRender( void ) {
     xglMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
     xglMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
 
+    /* Find current translation offset */
+    fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
+    index = fgTileCacheExists(&p);
+    fgTileCacheEntryInfo(index, &display_list, &scenery.center );
+
     for ( i = 0; i < FG_LOCAL_X_Y; i++ ) {
 	index = tiles[i];
 	/* fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index); */
@@ -200,9 +209,11 @@ void fgTileMgrRender( void ) {
 
 	if ( display_list >= 0 ) {
 	    xglPushMatrix();
-	    xglTranslatef(local_ref.x - scenery.center.x,
+	    /* xglTranslatef(local_ref.x - scenery.center.x,
 			  local_ref.y - scenery.center.y,
-			  local_ref.z - scenery.center.z);
+			  local_ref.z - scenery.center.z); */
+	    xglTranslatef(-scenery.center.x, -scenery.center.y, 
+			  -scenery.center.z);
 	    xglCallList(display_list);
 	    xglPopMatrix();
 	}
@@ -211,10 +222,13 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.13  1998/02/07 15:29:46  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.14  1998/02/09 21:30:19  curt
+/* Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.
 /*
+ * Revision 1.13  1998/02/07 15:29:46  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.12  1998/02/01 03:39:55  curt
  * Minor tweaks.
  *

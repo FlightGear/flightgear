@@ -71,7 +71,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     GLint tile;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
-    static int use_vertex_norms = 0;
+    static int use_per_vertex_norms = 1;
     int winding;
     int last1, last2, odd;
 
@@ -118,14 +118,6 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		if ( y > ymax ) ymax = y;
 		if ( z < zmin ) zmin = z;
 		if ( z > zmax ) zmax = z;		
-
-		/* reference point is the "center" */
-		/* this is overkill to calculate it everytime we get a
-                 * new node, but it's hard to know with the .obj
-                 * format when we are done with vertices */
-		ref->x = (xmin + xmax) / 2;
-		ref->y = (ymin + ymax) / 2;
-		ref->z = (zmin + zmax) / 2;
 
 		ncount++;
 	    } else {
@@ -187,21 +179,18 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		scale = 1.0;
 	    }
 
-	    if ( use_vertex_norms ) {
+	    if ( use_per_vertex_norms ) {
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
-			    nodes[n1][2] - ref->z);
+		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n2], scale);
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
-			    nodes[n2][2] - ref->z);
+		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n3], scale);
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n3][0] - ref->x, nodes[n3][1] - ref->y, 
-			    nodes[n3][2] - ref->z);
+		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    } else {
 		if ( odd ) {
 		    calc_normal(nodes[n1], nodes[n2], nodes[n3], approx_normal);
@@ -211,12 +200,9 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
 		xglNormal3dv(normal);
 
-		xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
-			    nodes[n1][2] - ref->z);
-		xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
-			    nodes[n2][2] - ref->z);
-		xglVertex3d(nodes[n3][0] - ref->x, nodes[n3][1] - ref->y, 
-			    nodes[n3][2] - ref->z);
+		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
+		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
+		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    }
 
 	    odd = 1 - odd;
@@ -224,15 +210,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    last2 = n3;
 
 	    if ( n4 > 0 ) {
-		if ( use_vertex_norms ) {
+		if ( use_per_vertex_norms ) {
 		    MAT3_SCALE_VEC(normal, normals[n4], scale);
 		} else {
 		    calc_normal(nodes[n3], nodes[n2], nodes[n4], approx_normal);
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
-		xglVertex3d(nodes[n4][0] - ref->x, nodes[n4][1] - ref->y, 
-			    nodes[n4][2] - ref->z);
+		xglVertex3d(nodes[n4][0], nodes[n4][1], nodes[n4][2]);
 
 		odd = 1 - odd;
 		last1 = n3;
@@ -254,16 +239,13 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
             xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
-			nodes[n1][2] - ref->z);
+	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
             xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-	    xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
-			nodes[n2][2] - ref->z);
+	    xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
             xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-	    xglVertex3d(nodes[n3][0] - ref->x, nodes[n3][1] - ref->y, 
-			nodes[n3][2] - ref->z);
+	    xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
 	    n1 = n2 = 0;
@@ -273,7 +255,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    sscanf(line, "q %d %d\n", &n1, &n2);
 	    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "read %d %d\n", n1, n2); */
 
-	    if ( use_vertex_norms ) {
+	    if ( use_per_vertex_norms ) {
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
 	    } else {
@@ -288,8 +270,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		xglNormal3dv(normal);
 	    }
 
-	    xglVertex3d(nodes[n1][0] - ref->x, nodes[n1][1] - ref->y, 
-			nodes[n1][2] - ref->z);
+	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 	    
 	    odd = 1 - odd;
 	    last1 = last2;
@@ -298,7 +279,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    if ( n2 > 0 ) {
 		/* fgPrintf( FG_TERRAIN, FG_DEBUG, " (cont)\n"); */
 
-		if ( use_vertex_norms ) {
+		if ( use_per_vertex_norms ) {
 		    MAT3_SCALE_VEC(normal, normals[n2], scale);
 		    xglNormal3dv(normal);
 		} else {
@@ -313,8 +294,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		    xglNormal3dv(normal);
 		}
 
-		xglVertex3d(nodes[n2][0] - ref->x, nodes[n2][1] - ref->y, 
-			    nodes[n2][2] - ref->z);
+		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
 		odd = 1 -odd;
 		last1 = last2;
@@ -333,12 +313,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     xglBegin(GL_LINES);
     xglColor3f(0.0, 0.0, 0.0);
     for ( i = 0; i < ncount; i++ ) {
-        xglVertex3d(nodes[i][0] - ref->x,
- 		    nodes[i][1] - ref->y,
- 		    nodes[i][2] - ref->z);
- 	xglVertex3d(nodes[i][0] - ref->x + 500*normals[i][0],
- 		    nodes[i][1] - ref->y + 500*normals[i][1],
- 		    nodes[i][2] - ref->z + 500*normals[i][2]);
+        xglVertex3d(nodes[i][0],
+ 		    nodes[i][1] ,
+ 		    nodes[i][2]);
+ 	xglVertex3d(nodes[i][0] + 500*normals[i][0],
+ 		    nodes[i][1] + 500*normals[i][1],
+ 		    nodes[i][2] + 500*normals[i][2]);
     } 
     xglEnd();
     */
@@ -349,14 +329,22 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
     fclose(f);
 
+    /* reference point is the "center" */
+    ref->x = (xmin + xmax) / 2.0;
+    ref->y = (ymin + ymax) / 2.0;
+    ref->z = (zmin + zmax) / 2.0;
+
     return(tile);
 }
 
 
 /* $Log$
-/* Revision 1.23  1998/02/09 15:07:52  curt
-/* Minor tweaks.
+/* Revision 1.24  1998/02/09 21:30:18  curt
+/* Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.
 /*
+ * Revision 1.23  1998/02/09 15:07:52  curt
+ * Minor tweaks.
+ *
  * Revision 1.22  1998/02/01 03:39:54  curt
  * Minor tweaks.
  *
