@@ -145,6 +145,7 @@ SG_USING_STD(endl);
 
 glPointParameterfProc glPointParameterfPtr = 0;
 glPointParameterfvProc glPointParameterfvPtr = 0;
+bool glPointParameterIsSupported = false;
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 //Required for using GL_extensions
@@ -768,8 +769,7 @@ void fgRenderFrame() {
             glEnable(GL_POINT_SMOOTH);
 
             if ( fgGetBool("/sim/rendering/distance-attenuation") &&
-                 ( SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ||
-                   SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) )
+                 glPointParameterIsSupported )
             {
                 // Enable states for drawing points with GL_extension
                 glEnable(GL_POINT_SMOOTH);
@@ -823,8 +823,7 @@ void fgRenderFrame() {
 
         if (fgGetBool("/sim/rendering/enhanced-lighting")) {
             if ( fgGetBool("/sim/rendering/distance-attenuation") &&
-                 ( SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ||
-                   SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) )
+                 glPointParameterIsSupported )
             {
                 glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT,
                                       default_attenuation);
@@ -1657,17 +1656,20 @@ static bool fgMainInit( int argc, char **argv ) {
     if ( fgGetBool("/sim/rendering/distance-attenuation") )
     {
         if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
+            glPointParameterIsSupported = true;
             glPointParameterfPtr = (glPointParameterfProc)
                                    SGLookupFunction("glPointParameterfEXT");
             glPointParameterfvPtr = (glPointParameterfvProc)
                                     SGLookupFunction("glPointParameterfvEXT");
 
         } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
+            glPointParameterIsSupported = true;
             glPointParameterfPtr = (glPointParameterfProc)
                                    SGLookupFunction("glPointParameterfARB");
             glPointParameterfvPtr = (glPointParameterfvProc)
                                     SGLookupFunction("glPointParameterfvARB");
-        } 
+        } else
+            glPointParameterIsSupported = false;
    }
 
     // based on the requested presets, calculate the true starting
