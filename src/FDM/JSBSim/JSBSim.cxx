@@ -529,7 +529,7 @@ bool FGJSBsim::copy_from_JSBsim() {
     
     elevator_pos_pct->setDoubleValue( FCS->GetDePosN() );
     left_aileron_pos_pct->setDoubleValue( FCS->GetDaLPosN() );
-    right_aileron_pos_pct->setDoubleValue( FCS->GetDaRPosN() );
+    right_aileron_pos_pct->setDoubleValue( -1*FCS->GetDaLPosN() );
     rudder_pos_pct->setDoubleValue( FCS->GetDrPosN() );
     flap_pos_pct->setDoubleValue( FCS->GetDfPosN() );
 
@@ -737,7 +737,7 @@ void FGJSBsim::init_gear(void ) {
 			   gr->GetGearUnit(i)->GetBodyLocation()(3));
       node->setBoolValue("wow", gr->GetGearUnit(i)->GetWOW());
       node->setBoolValue("has-brake", gr->GetGearUnit(i)->GetBrakeGroup() > 0);
-      node->setDoubleValue("position", FCS->GetGearPos());
+      node->setDoubleValue("position-norm", FCS->GetGearPos());
     }  
 }
 
@@ -749,7 +749,7 @@ void FGJSBsim::update_gear(void) {
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
       node->getChild("wow", 0, true)
 	->setBoolValue(gr->GetGearUnit(i)->GetWOW());
-      node->getChild("position", 0, true)
+      node->getChild("position-norm", 0, true)
 	->setDoubleValue(FCS->GetGearPos());
     }  
 }
