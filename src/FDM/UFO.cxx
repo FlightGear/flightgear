@@ -34,11 +34,13 @@
 const double throttle_damp = 0.2;
 const double aileron_damp = 0.05;
 const double elevator_damp = 0.05;
+const double rudder_damp = 0.4;
 
 FGUFO::FGUFO( double dt )
   : Throttle(0.0),
     Aileron(0.0),
-    Elevator(0.0)
+    Elevator(0.0),
+    Rudder(0.0)
 {
 //     set_delta_t( dt );
 }
@@ -76,6 +78,8 @@ void FGUFO::update( double dt ) {
                + Aileron * (1 - aileron_damp);
     Elevator = globals->get_controls()->get_elevator() * elevator_damp
                + Elevator * (1 - elevator_damp);
+    Rudder = globals->get_controls()->get_rudder() * rudder_damp
+               + Rudder * (1 - rudder_damp);
 
     // the velocity of the aircraft
     double velocity = Throttle * 2000; // meters/sec
@@ -154,6 +158,7 @@ void FGUFO::update( double dt ) {
     // angle of turn
     double turn_rate = sin(roll) * SGD_PI_4; // radians/sec
     double turn = turn_rate * time_step;
+    double yaw = fabs(Rudder) < .2 ? 0.0 : Rudder / (10 + fabs(speed) * .1);
 
     // update (lon/lat) position
     double lat2, lon2, az2;
@@ -177,7 +182,7 @@ void FGUFO::update( double dt ) {
 
     // update euler angles
     _set_Euler_Angles( roll, pitch,
-                       fmod(get_Psi() + turn, SGD_2PI) );
+                       fmod(get_Psi() + turn + yaw, SGD_2PI) );
     _set_Euler_Rates(0,0,0);
 
     _set_Geocentric_Position( lat_geoc, get_Longitude(), 
