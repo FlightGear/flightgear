@@ -236,6 +236,7 @@ $Original log: LaRCsim.c,v $
 #include "ls_cockpit.h"
 #include "ls_interface.h"
 #include "../flight.h"
+#include "../../aircraft/aircraft.h"
 
 /* global variable declarations */
 
@@ -494,6 +495,13 @@ int initialize;
 
 
 int ls_cockpit() {
+    struct control_params *c;
+
+    c = &current_aircraft.controls;
+
+    Lat_control = -c->aileron;
+    Long_control = -c->elev;
+
     sim_control_.paused = 0;
 
     Throttle_pct = 0.95;
@@ -900,6 +908,9 @@ int fgLaRCsim_2_Flight (struct flight_params *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.5  1997/05/30 23:26:25  curt
+ * Added elevator/aileron controls.
+ *
  * Revision 1.4  1997/05/30 19:30:15  curt
  * The LaRCsim flight model is starting to look like it is working.
  *

@@ -43,10 +43,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 
     switch (k) {
     case GLUT_KEY_UP:
-	c->elev -= 0.1;
+	c->elev -= 0.01;
 	return;
     case GLUT_KEY_DOWN:
-	c->elev += 0.1;
+	c->elev += 0.01;
 	return;
     case GLUT_KEY_LEFT:
 	c->aileron += 0.01;
@@ -84,10 +84,13 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.4  1997/05/27 17:44:31  curt
-/* Renamed & rearranged variables and routines.   Added some initial simple
-/* timer/alarm routines so the flight model can be updated on a regular interval.
+/* Revision 1.5  1997/05/30 23:26:19  curt
+/* Added elevator/aileron controls.
 /*
+ * Revision 1.4  1997/05/27 17:44:31  curt
+ * Renamed & rearranged variables and routines.   Added some initial simple
+ * timer/alarm routines so the flight model can be updated on a regular interval.
+ *
  * Revision 1.3  1997/05/23 15:40:25  curt
  * Added GNU copyright headers.
  * Fog now works!

@@ -44,7 +44,7 @@ GLint mesh2GL(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 10;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 4;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -104,9 +104,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.11  1997/05/30 19:27:02  curt
-/* The LaRCsim flight model is starting to look like it is working.
+/* Revision 1.12  1997/05/30 23:26:20  curt
+/* Added elevator/aileron controls.
 /*
+ * Revision 1.11  1997/05/30 19:27:02  curt
+ * The LaRCsim flight model is starting to look like it is working.
+ *
  * Revision 1.10  1997/05/30 03:54:11  curt
  * Made a bit more progress towards integrating the LaRCsim flight model.
  *
