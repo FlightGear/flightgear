@@ -308,7 +308,7 @@ FGColumnVector3& FGLGear::Force(void)
 
       switch (eSteerType) {
       case stSteer:
-        SteerAngle = SteerGain*FCS->GetDrCmd();
+        SteerAngle = SteerGain*FCS->GetDrCmd()*0.349; // 20 deg
         break;
       case stFixed:
         SteerAngle = 0.0;
