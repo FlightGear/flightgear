@@ -32,7 +32,7 @@
 #include <XGL/xgl.h>
 #include <stdio.h>
 
-#ifdef __sparc__
+#ifdef __sun
 #   include <stdlib.h>
 #else
 #   include <getopt.h>
@@ -212,7 +212,7 @@ static void fgInitVisuals( void ) {
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     xglFogi (GL_FOG_MODE, GL_LINEAR);
-    /* xglFogf (GL_FOG_START, 1.0); */
+    xglFogf (GL_FOG_START, 10.0);
     xglFogf (GL_FOG_END, w->visibility);
     /* xglFogf (GL_FOG_DENSITY, w->visibility); */
     xglHint (GL_FOG_HINT, GL_NICEST /* GL_FASTEST */ );
@@ -265,6 +265,13 @@ static void fgUpdateViewParams( void ) {
 	       v->view_pos.y + v->view_forward[1], 
 	       v->view_pos.z + v->view_forward[2],
 	       v->view_up[0], v->view_up[1], v->view_up[2]);
+
+    /* look almost straight up (testing and eclipse watching) */
+    /* gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+	       v->view_pos.x + v->view_up[0] + .001, 
+	       v->view_pos.y + v->view_up[1] + .001, 
+	       v->view_pos.z + v->view_up[2] + .001,
+	       v->view_up[0], v->view_up[1], v->view_up[2]); */
 
     /* lock view horizontally towards sun (testing) */
     /* gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
@@ -793,9 +800,12 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.64  1998/02/20 00:16:23  curt
-/* Thursday's tweaks.
+/* Revision 1.65  1998/03/09 22:45:57  curt
+/* Minor tweaks for building on sparc platform.
 /*
+ * Revision 1.64  1998/02/20 00:16:23  curt
+ * Thursday's tweaks.
+ *
  * Revision 1.63  1998/02/16 16:17:39  curt
  * Minor tweaks.
  *
