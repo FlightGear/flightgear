@@ -36,7 +36,8 @@ SG_USING_STD(list);
 
 FGAIManager::FGAIManager() {
   initDone = false;
-  numObjects = 0;
+  for (int i=0; i < FGAIBase::MAX_OBJECTS; i++)
+     numObjects[i] = 0;
   _dt = 0.0;
   dt_count = 9;
   scenario_filename = "";
@@ -73,7 +74,7 @@ void FGAIManager::init() {
 
 void FGAIManager::bind() {
    root = globals->get_props()->getNode("ai/models", true);
-   root->tie("count", SGRawValuePointer<int>(&numObjects));
+   root->tie("count", SGRawValuePointer<int>(&numObjects[0]));
 }
 
 
@@ -98,7 +99,8 @@ void FGAIManager::update(double dt) {
                 if ((*ai_list_itr)->getDie()) {      
                    freeID((*ai_list_itr)->getID());
                    delete (*ai_list_itr);
-                   --numObjects;
+                   --numObjects[(*ai_list_itr)->getType()];
+                   --numObjects[0];
                    if ( ai_list_itr == ai_list.begin() ) {
                        ai_list.erase(ai_list_itr);
                        ai_list_itr = ai_list.begin();
@@ -160,7 +162,8 @@ int FGAIManager::createAircraft( FGAIModelEntity *entity ) {
         FGAIAircraft* ai_plane = new FGAIAircraft(this);
         ai_list.push_back(ai_plane);
         ai_plane->setID( assignID() );
-        ++numObjects;
+        ++numObjects[0];
+        ++numObjects[FGAIBase::otAircraft];
         if (entity->m_class == "light") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
         } else if (entity->m_class == "ww2_fighter") {
@@ -197,7 +200,8 @@ int FGAIManager::createShip( FGAIModelEntity *entity ) {
         FGAIShip* ai_ship = new FGAIShip(this);
         ai_list.push_back(ai_ship);
         ai_ship->setID( assignID() );
-        ++numObjects;
+        ++numObjects[0];
+        ++numObjects[FGAIBase::otShip];
         ai_ship->setHeading(entity->heading);
         ai_ship->setSpeed(entity->speed);
         ai_ship->setPath(entity->path);
@@ -220,7 +224,8 @@ int FGAIManager::createBallistic( FGAIModelEntity *entity ) {
         FGAIBallistic* ai_ballistic = new FGAIBallistic(this);
         ai_list.push_back(ai_ballistic);
         ai_ballistic->setID( assignID() );    
-        ++numObjects;
+        ++numObjects[0];
+        ++numObjects[FGAIBase::otBallistic];
         ai_ballistic->setAzimuth(entity->azimuth);
         ai_ballistic->setElevation(entity->elevation);
         ai_ballistic->setSpeed(entity->speed);
@@ -244,7 +249,8 @@ int FGAIManager::createStorm( FGAIModelEntity *entity ) {
         FGAIStorm* ai_storm = new FGAIStorm(this);
         ai_list.push_back(ai_storm);
         ai_storm->setID( assignID() );
-        ++numObjects;
+        ++numObjects[0];
+        ++numObjects[FGAIBase::otStorm];
         ai_storm->setHeading(entity->heading);
         ai_storm->setSpeed(entity->speed);
         ai_storm->setPath(entity->path);
@@ -261,7 +267,8 @@ int FGAIManager::createThermal( FGAIModelEntity *entity ) {
         FGAIThermal* ai_thermal = new FGAIThermal(this);
         ai_list.push_back(ai_thermal);
         ai_thermal->setID( assignID() );
-        ++numObjects;
+        ++numObjects[0];
+        ++numObjects[FGAIBase::otThermal];
         ai_thermal->setLongitude(entity->longitude);
         ai_thermal->setLatitude(entity->latitude);
         ai_thermal->setMaxStrength(entity->strength);
@@ -276,10 +283,11 @@ void FGAIManager::destroyObject( int ID ) {
         while(ai_list_itr != ai_list.end()) {
             if ((*ai_list_itr)->getID() == ID) {
               freeID( ID );
+              --numObjects[0];
+              --numObjects[(*ai_list_itr)->getType()];
               delete (*ai_list_itr);
               ai_list.erase(ai_list_itr);
               --ai_list_itr;
-              --numObjects;
               return;
             }
             ++ai_list_itr;
@@ -346,14 +354,6 @@ void FGAIManager::processScenario( string filename ) {
 }
 
 int FGAIManager::getNum( FGAIBase::object_type ot ) {
-  ai_list_iterator itr = ai_list.begin();
-  int count = 0;
-  while(itr != ai_list.end()) {
-      if ((*itr)->getType() == ot) {
-         ++count;
-      }
-      ++itr;
-  }  
-  return count;
+  return numObjects[ot];
 }
 

@@ -75,8 +75,9 @@ public:
     virtual void update(double dt);
     inline Point3D GetPos() { return(pos); }
 
-    enum object_type { otNull, otAircraft, otShip, otBallistic,
-                       otRocket, otStorm, otThermal };
+    enum object_type { otNull = 0, otAircraft, otShip, otBallistic,
+                       otRocket, otStorm, otThermal, 
+                       MAX_OBJECTS };	// Needs to be last!!!
 
     virtual bool init();
     virtual void bind();

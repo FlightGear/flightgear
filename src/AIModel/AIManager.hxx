@@ -93,7 +93,7 @@ private:
 
     bool initDone;
     bool enabled;
-    int numObjects;
+    int numObjects[FGAIBase::MAX_OBJECTS];
     SGPropertyNode* root;
     SGPropertyNode* wind_from_down_node;
     string scenario_filename;
