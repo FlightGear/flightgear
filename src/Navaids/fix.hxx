@@ -45,6 +45,9 @@ SG_USING_STD(istream);
 #include STL_STRING
 SG_USING_STD(string);
 
+// SG_USING_STD(cout);
+// SG_USING_STD(endl);
+
 
 class FGFix {
 
@@ -76,12 +79,12 @@ FGFix::FGFix()
 inline istream&
 operator >> ( istream& in, FGFix& f )
 {
-    in >> f.ident;
+    in >> f.lat;
 
-    if ( f.ident[0] == '[' )
+    if ( f.lat > 95.0 ) {
         return in >> skipeol;
-
-    in >> f.lat >> f.lon;
+    }
+    in >> f.lon >> f.ident;
 
     // cout << "id = " << f.ident << endl;
 

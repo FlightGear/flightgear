@@ -56,10 +56,11 @@ bool FGFixList::init( SGPath path ) {
         exit(-1);
     }
 
-    // read in each line of the file
-
+    // toss the first two lines of the file
     in >> skipeol;
-    in >> skipcomment;
+    in >> skipeol;
+
+    // read in each remaining line of the file
 
 #ifdef __MWERKS__
     char c = 0;
@@ -71,7 +72,7 @@ bool FGFixList::init( SGPath path ) {
 
         FGFix fix;
         in >> fix;
-        if ( fix.get_ident() == "[End]" ) {
+        if ( fix.get_lat() > 95.0 ) {
             break;
         }
 

@@ -1065,7 +1065,7 @@ fgInitNav ()
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
     current_fixlist = new FGFixList;
     SGPath p_fix( globals->get_fg_root() );
-    p_fix.append( "Navaids/default.fix" );
+    p_fix.append( "Navaids/fix.dat" );
     current_fixlist->init( p_fix );
 
     return true;
