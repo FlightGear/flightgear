@@ -277,6 +277,7 @@ void fgUpdateSunPos( void ) {
     fgVIEW *v;
     MAT3vec nup, nsun, v0;
     fgPoint3d p;
+    double dot, east_dot;
     double sun_gd_lat, sl_radius;
     double ntmp;
 
@@ -311,8 +312,8 @@ void fgUpdateSunPos( void ) {
     l->sun_vec[3] = 0.0;
     l->sun_vec_inv[3] = 0.0;
 
-    printf("  l->sun_vec = %.2f %.2f %.2f\n", l->sun_vec[0], l->sun_vec[1],
-	   l->sun_vec[2]);
+    // printf("  l->sun_vec = %.2f %.2f %.2f\n", l->sun_vec[0], l->sun_vec[1],
+    //        l->sun_vec[2]);
 
     // calculate the sun's relative angle to local up
     MAT3_COPY_VEC(nup, v->local_up);
@@ -323,8 +324,8 @@ void fgUpdateSunPos( void ) {
     MAT3_NORMALIZE_VEC(nsun, ntmp);
 
     l->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
-    printf("  SUN ANGLE relative to current location = %.3f rads.\n", 
-	   l->sun_angle);
+    // printf("  SUN ANGLE relative to current location = %.3f rads.\n", 
+    //        l->sun_angle);
     
     // calculate vector to sun's position on the earth's surface
     v->to_sun[0] = l->fg_sunpos.x - (v->view_pos.x + scenery.center.x);
@@ -346,10 +347,39 @@ void fgUpdateSunPos( void ) {
     //        v->surface_to_sun[0], v->surface_to_sun[1], v->surface_to_sun[2]);
     // printf("Should be close to zero = %.2f\n", 
     //        MAT3_DOT_PRODUCT(v->local_up, v->surface_to_sun));
+
+    // calculate the angle between v->surface_to_sun and
+    // v->surface_east.  We do this so we can sort out the acos()
+    // ambiguity.  I wish I could think of a more efficient way ... :-(
+    east_dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_east);
+    // printf("  East dot product = %.2f\n", east_dot);
+
+    // calculate the angle between v->surface_to_sun and
+    // v->surface_south.  this is how much we have to rotate the sky
+    // for it to align with the sun
+    dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_south);
+    // printf("  Dot product = %.2f\n", dot);
+    if ( east_dot >= 0 ) {
+	l->sun_rotation = acos(dot);
+    } else {
+	l->sun_rotation = -acos(dot);
+    }
+    // printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
+    //        angle, angle * RAD_TO_DEG); */
 }
 
 
 // $Log$
+// Revision 1.10  1998/07/22 21:45:39  curt
+// fg_time.cxx: Removed call to ctime() in a printf() which should be harmless
+//   but seems to be triggering a bug.
+// light.cxx: Added code to adjust fog color based on sunrise/sunset effects
+//   and view orientation.  This is an attempt to match the fog color to the
+//   sky color in the center of the screen.  You see discrepancies at the
+//   edges, but what else can be done?
+// sunpos.cxx: Caculate local direction to sun here.  (what compass direction
+//   do we need to face to point directly at sun)
+//
 // Revision 1.9  1998/07/08 14:48:39  curt
 // polar3d.h renamed to polar3d.hxx
 //

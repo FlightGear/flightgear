@@ -268,7 +268,9 @@ time_t get_start_gmt(int year) {
     long int start = mktime(&mt);
 
     fgPrintf( FG_EVENT, FG_DEBUG, "start1 = %ld\n", start);
-    fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
+    // the ctime() call can screw up time progression on some versions
+    // of Linux
+    // fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
     fgPrintf( FG_EVENT, FG_DEBUG, "(tm_isdst = %d)\n", mt.tm_isdst);
 
     timezone = fix_up_timezone( timezone );
@@ -407,6 +409,16 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.11  1998/07/22 21:45:37  curt
+// fg_time.cxx: Removed call to ctime() in a printf() which should be harmless
+//   but seems to be triggering a bug.
+// light.cxx: Added code to adjust fog color based on sunrise/sunset effects
+//   and view orientation.  This is an attempt to match the fog color to the
+//   sky color in the center of the screen.  You see discrepancies at the
+//   edges, but what else can be done?
+// sunpos.cxx: Caculate local direction to sun here.  (what compass direction
+//   do we need to face to point directly at sun)
+//
 // Revision 1.10  1998/07/13 21:02:07  curt
 // Wrote access functions for current fgOPTIONS.
 //

@@ -35,6 +35,7 @@
 
 #include <string.h>
 
+#include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
@@ -89,6 +90,7 @@ void fgLIGHT::Init( void ) {
 
 // update lighting parameters based on current sun position
 void fgLIGHT::Update( void ) {
+    fgFLIGHT *f;
     fgTIME *t;
     fgVIEW *v;
     // if the 4th field is 0.0, this specifies a direction ...
@@ -99,6 +101,7 @@ void fgLIGHT::Update( void ) {
     GLfloat base_fog_color[4] = {0.90, 0.90, 1.00, 1.0};
     double deg, ambient, diffuse, sky_brightness;
 
+    f = current_aircraft.flight;
     t = &cur_time_params;
     v = &current_view;
 
@@ -132,17 +135,80 @@ void fgLIGHT::Update( void ) {
     scene_diffuse[1] = white[1] * diffuse;
     scene_diffuse[2] = white[2] * diffuse;
 
-    // set fog color
-    fog_color[0] = base_fog_color[0] * sky_brightness;
-    fog_color[1] = base_fog_color[1] * sky_brightness;
-    fog_color[2] = base_fog_color[2] * sky_brightness;
-    fog_color[3] = base_fog_color[3];
-
     // set sky color
     sky_color[0] = base_sky_color[0] * sky_brightness;
     sky_color[1] = base_sky_color[1] * sky_brightness;
     sky_color[2] = base_sky_color[2] * sky_brightness;
     sky_color[3] = base_sky_color[3];
+
+    // set fog color
+    fog_color[0] = base_fog_color[0] * sky_brightness;
+    fog_color[1] = base_fog_color[1] * sky_brightness;
+    fog_color[2] = base_fog_color[2] * sky_brightness;
+    fog_color[3] = base_fog_color[3];
+}
+
+
+// calculate fog color adjusted for sunrise/sunset effects
+void fgLIGHT::UpdateAdjFog( void ) {
+    fgFLIGHT *f;
+    fgVIEW *v;
+    double sun_angle_deg, rotation, param1[3], param2[3];
+
+    f = current_aircraft.flight;
+    v = &current_view;
+
+    fgPrintf( FG_EVENT, FG_DEBUG, "Updating adjusted fog parameters.\n" );
+
+    // set fog color (we'll try to match the sunset color in the
+    // direction we are looking
+
+    // first determine the difference between our view angle and local
+    // direction to the sun
+    rotation = -(sun_rotation + FG_PI) - (FG_Psi - v->view_offset) ;
+    while ( rotation < 0 ) {
+	rotation += FG_2PI;
+    }
+    while ( rotation > FG_2PI ) {
+	rotation -= FG_2PI;
+    }
+    rotation *= RAD_TO_DEG;
+    fgPrintf( FG_EVENT, FG_INFO, 
+	      "  View to sun difference in degrees = %.2f\n", rotation);
+
+    // next check if we are in a sunset/sunrise situation
+    sun_angle_deg = sun_angle * RAD_TO_DEG;
+    if ( (sun_angle_deg > 80.0) && (sun_angle_deg < 100.0) ) {
+	/* 0.0 - 0.4 */
+	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 25.0;
+	param1[1] = (10.0 - fabs(90.0 - sun_angle_deg)) / 35.0;
+	param1[2] = 0.0;
+    } else {
+	param1[0] = param1[1] = param1[2] = 0.0;
+    }
+
+    if ( rotation - 180.0 <= 0.0 ) {
+	param2[0] = param1[0] * (180.0 - rotation) / 180.0;
+	param2[1] = param1[1] * (180.0 - rotation) / 180.0;
+	param2[2] = param1[2] * (180.0 - rotation) / 180.0;
+	printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
+    } else {
+	param2[0] = param1[0] * (rotation - 180.0) / 180.0;
+	param2[1] = param1[1] * (rotation - 180.0) / 180.0;
+	param2[2] = param1[2] * (rotation - 180.0) / 180.0;
+	printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
+    }
+
+    adj_fog_color[0] = fog_color[0] + param2[0];
+    if ( adj_fog_color[0] > 1.0 ) { adj_fog_color[0] = 1.0; }
+
+    adj_fog_color[1] = fog_color[1] + param2[1];
+    if ( adj_fog_color[1] > 1.0 ) { adj_fog_color[1] = 1.0; }
+
+    adj_fog_color[2] = fog_color[2] + param2[2];
+    if ( adj_fog_color[2] > 1.0 ) { adj_fog_color[2] = 1.0; }
+
+    adj_fog_color[3] = fog_color[3];
 }
 
 
@@ -161,6 +227,16 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/07/22 21:45:38  curt
+// fg_time.cxx: Removed call to ctime() in a printf() which should be harmless
+//   but seems to be triggering a bug.
+// light.cxx: Added code to adjust fog color based on sunrise/sunset effects
+//   and view orientation.  This is an attempt to match the fog color to the
+//   sky color in the center of the screen.  You see discrepancies at the
+//   edges, but what else can be done?
+// sunpos.cxx: Caculate local direction to sun here.  (what compass direction
+//   do we need to face to point directly at sun)
+//
 // Revision 1.11  1998/07/13 21:02:08  curt
 // Wrote access functions for current fgOPTIONS.
 //

@@ -70,8 +70,14 @@ public:
     // inverse (in view coordinates)
     GLfloat sun_vec_inv[4];
 
-    // the angle between the sun and the local horizontal
+    // the angle between the sun and the local horizontal (in radians)
     double sun_angle;
+
+    // the rotation around our vertical axis of the sun (relative to
+    // due south with positive numbers going in the counter clockwise
+    // direction.)  This is the direction we'd need to face if we
+    // wanted to travel towards the sun.
+    double sun_rotation;
 
     ///////////////////////////////////////////////////////////
     // Derived lighting values
@@ -85,6 +91,9 @@ public:
     // fog color
     GLfloat fog_color[4];
 
+    // fog color adjusted for sunset effects
+    GLfloat adj_fog_color[4];
+
     // clear screen color
     GLfloat sky_color[4];
 
@@ -96,6 +105,9 @@ public:
 
     // update lighting parameters based on current sun position
     void Update( void);
+
+    // calculate fog color adjusted for sunrise/sunset effects
+    void UpdateAdjFog( void );
 
     // Destructor
     ~fgLIGHT( void );
@@ -114,6 +126,16 @@ void fgLightUpdate ( void );
 
 
 // $Log$
+// Revision 1.6  1998/07/22 21:45:39  curt
+// fg_time.cxx: Removed call to ctime() in a printf() which should be harmless
+//   but seems to be triggering a bug.
+// light.cxx: Added code to adjust fog color based on sunrise/sunset effects
+//   and view orientation.  This is an attempt to match the fog color to the
+//   sky color in the center of the screen.  You see discrepancies at the
+//   edges, but what else can be done?
+// sunpos.cxx: Caculate local direction to sun here.  (what compass direction
+//   do we need to face to point directly at sun)
+//
 // Revision 1.5  1998/07/08 14:48:39  curt
 // polar3d.h renamed to polar3d.hxx
 //
