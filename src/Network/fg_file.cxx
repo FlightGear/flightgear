@@ -37,6 +37,7 @@ FG_USING_STD(string);
 
 
 FGFile::FGFile() {
+    set_type( fgFileType );
 }
 
 

@@ -54,6 +54,7 @@ FG_USING_STD(string);
 FGSocket::FGSocket() :
     save_len(0)
 {
+    set_type( fgSocketType );
 }
 
 

@@ -71,9 +71,16 @@ bool FGNative::process() {
 	    return false;
 	}
     } else if ( get_direction() == in ) {
-	while ( io->read( (char *)(& buf), length ) == length ) {
-	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
-	    *cur_fdm_state = buf;
+	if ( io->get_type() == fgFileType ) {
+	    if ( io->read( (char *)(& buf), length ) == length ) {
+		FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
+		*cur_fdm_state = buf;
+	    }
+	} else {
+	    while ( io->read( (char *)(& buf), length ) == length ) {
+		FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
+		*cur_fdm_state = buf;
+	    }
 	}
     }
 

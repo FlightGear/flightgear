@@ -67,21 +67,42 @@ bool FGJoyClient::process() {
 	return false;
     } else if ( get_direction() == in ) {
 	FG_LOG( FG_IO, FG_DEBUG, "Searching for data." );
-	while ( io->read( (char *)(& buf), length ) == length ) {
-	    FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
-	    int *msg;
-	    msg = (int *)buf;
-	    FG_LOG( FG_IO, FG_DEBUG, "X = " << msg[0] << " Y = " << msg[1] );
-	    double aileron = ((double)msg[0] / 2048.0) - 1.0;
-	    double elevator = ((double)msg[1] / 2048.0) - 1.0;
-	    if ( fabs(aileron) < 0.05 ) {
-		aileron = 0.0;
+	if ( io->get_type() == fgFileType ) {
+	    if ( io->read( (char *)(& buf), length ) == length ) {
+		FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
+		int *msg;
+		msg = (int *)buf;
+		FG_LOG( FG_IO, FG_DEBUG, "X = " << msg[0] << " Y = "
+			<< msg[1] );
+		double aileron = ((double)msg[0] / 2048.0) - 1.0;
+		double elevator = ((double)msg[1] / 2048.0) - 1.0;
+		if ( fabs(aileron) < 0.05 ) {
+		    aileron = 0.0;
+		}
+		if ( fabs(elevator) < 0.05 ) {
+		    elevator = 0.0;
+		}
+		controls.set_aileron( aileron );
+		controls.set_elevator( -elevator );
 	    }
-	    if ( fabs(elevator) < 0.05 ) {
-		elevator = 0.0;
+	} else {
+	    while ( io->read( (char *)(& buf), length ) == length ) {
+		FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
+		int *msg;
+		msg = (int *)buf;
+		FG_LOG( FG_IO, FG_DEBUG, "X = " << msg[0] << " Y = "
+			<< msg[1] );
+		double aileron = ((double)msg[0] / 2048.0) - 1.0;
+		double elevator = ((double)msg[1] / 2048.0) - 1.0;
+		if ( fabs(aileron) < 0.05 ) {
+		    aileron = 0.0;
+		}
+		if ( fabs(elevator) < 0.05 ) {
+		    elevator = 0.0;
+		}
+		controls.set_aileron( aileron );
+		controls.set_elevator( -elevator );
 	    }
-	    controls.set_aileron( aileron );
-	    controls.set_elevator( -elevator );
 	}
     }
 

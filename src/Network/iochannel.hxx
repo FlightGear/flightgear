@@ -40,7 +40,15 @@ FG_USING_STD(string);
 class FGProtocol;
 
 
+enum FGChannelType {
+    fgFileType = 0,
+    fgSerialType = 1,
+    fgSocketType = 2
+};
+
 class FGIOChannel {
+
+    FGChannelType type;
 
 public:
 
@@ -53,6 +61,9 @@ public:
     virtual int write( char *buf, int length );
     virtual int writestring( char *str );
     virtual bool close();
+
+    virtual void set_type( FGChannelType t ) { type = t; }
+    virtual FGChannelType get_type() const { return type; }
 };
 
 

@@ -38,6 +38,7 @@ FG_USING_STD(string);
 FGSerial::FGSerial() :
     save_len(0)
 {
+    set_type( fgSerialType );
 }
 
 
