@@ -37,12 +37,10 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
 
-#include <Aircraft/aircraft.hxx>
-#include <Cockpit/panel.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "globals.hxx"
-#include "viewer.hxx"
+#include "viewer_rph.hxx"
 
 
 // Constructor
@@ -257,12 +255,12 @@ void FGViewerRPH::update() {
 		   0.0,
 		   -geod_view_pos[1] * RAD_TO_DEG );
 
-    sgSetVec3( local_up, UP[0][0], UP[0][1], UP[0][2] );
-    // sgXformVec3( local_up, UP );
-    // cout << "Local Up = " << local_up[0] << "," << local_up[1] << ","
-    //      << local_up[2] << endl;
+    sgSetVec3( world_up, UP[0][0], UP[0][1], UP[0][2] );
+    // sgXformVec3( world_up, UP );
+    // cout << "World Up = " << world_up[0] << "," << world_up[1] << ","
+    //      << world_up[2] << endl;
     
-    // Alternative method to Derive local up vector based on
+    // Alternative method to Derive world up vector based on
     // *geodetic* coordinates
     // alt_up = sgPolarToCart(FG_Longitude, FG_Latitude, 1.0);
     // printf( "    Alt Up = (%.4f, %.4f, %.4f)\n", 
@@ -330,7 +328,7 @@ void FGViewerRPH::update() {
     // local direction for moving "south".
     sgSetVec3( minus_z, 0.0, 0.0, -1.0 );
 
-    sgmap_vec_onto_cur_surface_plane(local_up, view_pos, minus_z,
+    sgmap_vec_onto_cur_surface_plane(world_up, view_pos, minus_z,
 				     surface_south);
     sgNormalizeVec3(surface_south);
     // cout << "Surface direction directly south " << surface_south[0] << ","
@@ -339,16 +337,11 @@ void FGViewerRPH::update() {
     // now calculate the surface east vector
 #define USE_FAST_SURFACE_EAST
 #ifdef USE_FAST_SURFACE_EAST
-    sgVec3 local_down;
-    sgNegateVec3(local_down, local_up);
-    sgVectorProductVec3(surface_east, surface_south, local_down);
+    sgVec3 world_down;
+    sgNegateVec3(world_down, world_up);
+    sgVectorProductVec3(surface_east, surface_south, world_down);
 #else
-#define USE_LOCAL_UP
-#ifdef USE_LOCAL_UP
-    sgMakeRotMat4( TMP, FG_PI_2 * RAD_TO_DEG, local_up );
-#else
-    sgMakeRotMat4( TMP, FG_PI_2 * RAD_TO_DEG, view_up );
-#endif // USE_LOCAL_UP
+    sgMakeRotMat4( TMP, FG_PI_2 * RAD_TO_DEG, world_up );
     // cout << "sgMat4 TMP" << endl;
     // print_sgMat4( TMP );
     sgXformVec3(surface_east, surface_south, TMP);

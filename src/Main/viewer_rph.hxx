@@ -40,9 +40,6 @@ class FGViewerRPH: public FGViewer {
 
 private:
 
-    // geodetic view position
-    sgdVec3 geod_view_pos;
-
     // view orientation (roll, pitch, heading)
     sgVec3 rph;
 
@@ -77,13 +74,6 @@ public:
     //////////////////////////////////////////////////////////////////////
     // setter functions
     //////////////////////////////////////////////////////////////////////
-    inline void set_geod_view_pos( double lon, double lat, double alt ) {
-	// data should be in radians and meters asl
-	set_dirty();
-	// cout << "set_geod_view_pos = " << lon << ", " << lat << ", " << alt
-	//      << endl;
-	sgdSetVec3( geod_view_pos, lon, lat, alt );
-    }
     inline void set_rph( double r, double p, double h ) {
 	// data should be in radians
 	set_dirty();
@@ -93,8 +83,9 @@ public:
     //////////////////////////////////////////////////////////////////////
     // accessor functions
     //////////////////////////////////////////////////////////////////////
-    inline double *get_geod_view_pos() { return geod_view_pos; }
     inline float *get_rph() { return rph; }
+    inline float *get_view_forward() { return view_forward; }
+    inline float *get_view_up() { return view_up; }
 
     //////////////////////////////////////////////////////////////////////
     // derived values accessor functions

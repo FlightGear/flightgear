@@ -28,15 +28,8 @@
 #  include <config.h>
 #endif
 
-#include <plib/ssg.h>		// plib include
-
-#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/point3d.hxx>
-#include <simgear/math/polar3d.hxx>
-#include <simgear/math/vector.hxx>
 
-#include "globals.hxx"
 #include "viewer.hxx"
 
 
@@ -44,38 +37,6 @@
 FGViewer::FGViewer( void )
 {
 }
-
-
-#define USE_FAST_VIEWROT
-#ifdef USE_FAST_VIEWROT
-// VIEW_ROT = LARC_TO_SSG * ( VIEWo * VIEW_OFFSET )
-// This takes advantage of the fact that VIEWo and VIEW_OFFSET
-// only have entries in the upper 3x3 block
-// and that LARC_TO_SSG is just a shift of rows   NHV
-inline static void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 )
-{
-    for ( int j = 0 ; j < 3 ; j++ ) {
-	dst[2][j] = m2[0][0] * m1[0][j] +
-	    m2[0][1] * m1[1][j] +
-	    m2[0][2] * m1[2][j];
-
-	dst[0][j] = m2[1][0] * m1[0][j] +
-	    m2[1][1] * m1[1][j] +
-	    m2[1][2] * m1[2][j];
-
-	dst[1][j] = m2[2][0] * m1[0][j] +
-	    m2[2][1] * m1[1][j] +
-	    m2[2][2] * m1[2][j];
-    }
-    dst[0][3] = 
-	dst[1][3] = 
-	dst[2][3] = 
-	dst[3][0] = 
-	dst[3][1] = 
-	dst[3][2] = SG_ZERO;
-    dst[3][3] = SG_ONE;
-}
-#endif
 
 
 // Initialize a view structure

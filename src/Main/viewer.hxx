@@ -31,7 +31,6 @@
 #endif                                   
 
 #include <simgear/compiler.h>
-#include <simgear/timing/sg_time.hxx>
 
 #include <plib/sg.h>		// plib include
 
@@ -52,6 +51,9 @@ protected:
 
     // the goal view offset angle  (used for smooth view changes)
     double goal_view_offset;
+
+    // geodetic view position
+    sgdVec3 geod_view_pos;
 
     // absolute view position in earth coordinates
     sgdVec3 abs_view_pos;
@@ -93,9 +95,9 @@ protected:
     // with sun)
     sgVec3 surface_east;
 
-    // local up vector (normal to the plane tangent to the earth's
+    // world up vector (normal to the plane tangent to the earth's
     // surface at the spot we are directly above
-    sgVec3 local_up;
+    sgVec3 world_up;
 
     // sg versions of our friendly matrices
     sgMat4 VIEW, VIEW_ROT, UP;
@@ -132,6 +134,13 @@ public:
 	set_dirty();
 	goal_view_offset = a;
     }
+    inline void set_geod_view_pos( double lon, double lat, double alt ) {
+	// data should be in radians and meters asl
+	set_dirty();
+	// cout << "set_geod_view_pos = " << lon << ", " << lat << ", " << alt
+	//      << endl;
+	sgdSetVec3( geod_view_pos, lon, lat, alt );
+    }
     inline void set_pilot_offset( float x, float y, float z ) {
 	set_dirty();
 	sgSetVec3( pilot_offset, x, y, z );
@@ -148,6 +157,7 @@ public:
     inline bool is_dirty() const { return dirty; }
     inline double get_view_offset() const { return view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }
+    inline double *get_geod_view_pos() { return geod_view_pos; }
     inline float *get_pilot_offset() { return pilot_offset; }
     inline double get_sea_level_radius() const { return sea_level_radius; }
 
@@ -174,9 +184,9 @@ public:
 	if ( dirty ) { update(); }
 	return surface_east;
     }
-    inline float *get_local_up() {
+    inline float *get_world_up() {
 	if ( dirty ) { update(); }
-	return local_up;
+	return world_up;
     }
     inline const sgVec4 *get_VIEW() {
 	if ( dirty ) { update(); }

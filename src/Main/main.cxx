@@ -118,6 +118,9 @@ ssgTransform *ship_pos = NULL;
 #include "keyboard.hxx"
 #include "splash.hxx"
 
+// temporary?
+#include "viewer_lookat.hxx"
+FGViewerLookAt *tv;
 
 // -dw- use custom sioux settings so I can see output window
 #ifdef macintosh
@@ -336,6 +339,38 @@ void fgRenderFrame( void ) {
 		     cur_fdm_state->get_Theta(),
 		     cur_fdm_state->get_Psi() );
 
+	// this is a test, we are trying to match RPH and LookAt
+	// matrices
+	tv->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+			       cur_fdm_state->get_Lat_geocentric(), 
+			       cur_fdm_state->get_Altitude() *
+			       FEET_TO_METER );
+	tv->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
+				  FEET_TO_METER );
+	tv->set_view_forward( globals->get_current_view()->get_view_forward() );
+	tv->set_view_up( globals->get_current_view()->get_view_up() );
+
+	sgMat4 rph;
+	sgCopyMat4( rph, globals->get_current_view()->get_VIEW() );
+	cout << "RPH Matrix = " << endl;
+	int i, j;
+	for ( i = 0; i < 4; i++ ) {
+	    for ( j = 0; j < 4; j++ ) {
+		printf("%10.4f ", rph[i][j]);
+	    }
+	    cout << endl;
+	}
+	sgMat4 la;
+	sgCopyMat4( la, tv->get_VIEW() );
+	cout << "LookAt Matrix = " << endl;
+	for ( i = 0; i < 4; i++ ) {
+	    for ( j = 0; j < 4; j++ ) {
+		printf("%10.4f ", la[i][j]);
+	    }
+	    cout << endl;
+	}
+
+
 	// update view volume parameters
 	// cout << "before pilot_view update" << endl;
         if ( globals->get_options()->get_view_mode() ==
@@ -480,7 +515,7 @@ void fgRenderFrame( void ) {
 
 	    thesky->reposition( globals->get_current_view()->get_view_pos(),
 				globals->get_current_view()->get_zero_elev(),
-				globals->get_current_view()->get_local_up(),
+				globals->get_current_view()->get_world_up(),
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
 				cur_fdm_state->get_Altitude() * FEET_TO_METER,
@@ -1181,13 +1216,6 @@ void fgReshape( int width, int height ) {
     ssgSetFOV(fov, fov * globals->get_options()->get_win_ratio());
 
     fgHUDReshape();
-
-    if ( idle_state == 1000 ) {
-	// yes we've finished all our initializations and are running
-	// the main loop, so this will now work without seg faulting
-	// the system.
-	// globals->get_current_view()->UpdateViewParams();
-    }
 }
 
 
@@ -1342,8 +1370,8 @@ int main( int argc, char **argv ) {
 
     FGViewerRPH *pv = new FGViewerRPH;
     globals->set_current_view( pv );
-    // FGViewer *cv = new FGViewer;
-    // globals->set_current_view( cv );
+    tv = new FGViewerLookAt;
+    tv->init();
     
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)
@@ -1581,14 +1609,6 @@ int main( int argc, char **argv ) {
 void fgLoadDCS(void) {
 
     string obj_filename;
-
-    FGPath tile_path( globals->get_options()->get_fg_root());
-    tile_path.append( "Scenery" );
-    tile_path.append( "Objects.txt" );
-    fg_gzifstream in( tile_path.str() );
-    if ( ! in.is_open() ) {
-	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << tile_path.str() );
-    }
 
     FGPath modelpath( globals->get_options()->get_fg_root() );
     modelpath.append( "Models" );

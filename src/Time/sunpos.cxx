@@ -281,7 +281,7 @@ void fgUpdateSunPos( void ) {
     //      << ","<< l->sun_vec[2] << endl;
 
     // calculate the sun's relative angle to local up
-    sgCopyVec3( nup, v->get_local_up() );
+    sgCopyVec3( nup, v->get_world_up() );
     sgSetVec3( nsun, l->fg_sunpos.x(), l->fg_sunpos.y(), l->fg_sunpos.z() );
     sgNormalizeVec3(nup);
     sgNormalizeVec3(nsun);
@@ -306,7 +306,7 @@ void fgUpdateSunPos( void ) {
     // earth's surface the sun is directly over, map into onto the
     // local plane representing "horizontal".
 
-    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v->get_view_pos(),
+    sgmap_vec_onto_cur_surface_plane( v->get_world_up(), v->get_view_pos(),
 				      v->get_to_sun(), surface_to_sun );
     sgNormalizeVec3(surface_to_sun);
     v->set_surface_to_sun( surface_to_sun[0], surface_to_sun[1], 

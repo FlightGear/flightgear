@@ -206,7 +206,7 @@ bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos ) {
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
 	scenery.cur_elev = 0.0;
-	float *up = globals->get_current_view()->get_local_up();
+	float *up = globals->get_current_view()->get_world_up();
 	sgdSetVec3(scenery.cur_normal, up[0], up[1], up[2]);
 	return false;
     }

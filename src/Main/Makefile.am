@@ -44,6 +44,7 @@ fgfs_SOURCES = \
 	save.cxx save.hxx \
 	splash.cxx splash.hxx \
 	viewer.cxx viewer.hxx \
+	viewer_lookat.cxx viewer_lookat.hxx \
 	viewer_rph.cxx viewer_rph.hxx
 
 fgfs_LDADD = \

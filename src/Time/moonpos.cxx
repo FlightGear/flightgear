@@ -374,7 +374,7 @@ void fgUpdateMoonPos( void ) {
     //      << ","<< l->moon_vec[2] << endl;
 
     // calculate the moon's relative angle to local up
-    sgCopyVec3( nup, v->get_local_up() );
+    sgCopyVec3( nup, v->get_world_up() );
     sgSetVec3( nmoon, l->fg_moonpos.x(), l->fg_moonpos.y(), l->fg_moonpos.z() );
     sgNormalizeVec3(nup);
     sgNormalizeVec3(nmoon);
@@ -400,7 +400,7 @@ void fgUpdateMoonPos( void ) {
     // earth's surface the moon is directly over, map into onto the
     // local plane representing "horizontal".
 
-    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v->get_view_pos(), 
+    sgmap_vec_onto_cur_surface_plane( v->get_world_up(), v->get_view_pos(), 
 				      v->get_to_moon(), surface_to_moon );
     sgNormalizeVec3(surface_to_moon);
     v->set_surface_to_moon( surface_to_moon[0], surface_to_moon[1], 
