@@ -46,6 +46,9 @@ FGAIEntity::~FGAIEntity() {
 void FGAIEntity::Update(double dt) {
 }
 
+void FGAIEntity::RegisterTransmission(int code) {
+}
+
 // Run the internal calculations
 //void FGAIEntity::Update() {
 void FGAIEntity::Transform() {

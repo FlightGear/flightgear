@@ -18,14 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-/*****************************************************************
-*
-* WARNING - Curt has some ideas about AI traffic so anything in here
-* may get rewritten or scrapped.  Contact Curt curt@flightgear.org 
-* before spending any time or effort on this code!!!
-*
-******************************************************************/
-
 #ifndef _FG_AIEntity_HXX
 #define _FG_AIEntity_HXX
 
@@ -51,6 +43,10 @@ public:
 
     // Run the internal calculations
     virtual void Update(double dt);
+	
+	// Send a transmission *TO* the AIEntity.
+	// FIXME int code is a hack - eventually this will receive Alexander's coded messages.
+	virtual void RegisterTransmission(int code);
 
 protected:
 
