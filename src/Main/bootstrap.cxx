@@ -101,6 +101,15 @@ extern "C" {
 
 #endif
 
+#ifdef _MSC_VER
+int main ( int argc, char **argv );
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                             LPSTR lpCmdLine, int nCmdShow) {
+
+  main( __argc, __argv );
+}
+#endif
+
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 
