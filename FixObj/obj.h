@@ -30,10 +30,6 @@
 
 #define MAXNODES 100000
 
-extern double nodes[MAXNODES][3];
-extern double normals[MAXNODES][3];
-extern int stack[MAXNODES];
-
 
 /* Load a .obj file */
 void obj_fix(char *infile, char *outfile);
@@ -43,9 +39,12 @@ void obj_fix(char *infile, char *outfile);
 
 
 /* $Log$
-/* Revision 1.3  1998/01/31 00:41:25  curt
-/* Made a few changes converting floats to doubles.
+/* Revision 1.4  1998/03/03 15:36:13  curt
+/* Tweaks for compiling with g++
 /*
+ * Revision 1.3  1998/01/31 00:41:25  curt
+ * Made a few changes converting floats to doubles.
+ *
  * Revision 1.2  1998/01/09 23:03:13  curt
  * Restructured to split 1deg x 1deg dem's into 64 subsections.
  *

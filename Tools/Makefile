@@ -27,8 +27,8 @@
 include $(FG_ROOT_SRC)/commondefs
 
 
-SUBDIRS = AssemTris Dem2node DemRaw2Ascii FixNode FixObj SplitTris Stripe_u \
-	Tri2obj Triangle
+SUBDIRS = AssemTris Dem2node DemRaw2Ascii FixNode FixObj SplitTris \
+	Stripe_u Tri2obj Triangle
 ORDEREDDIRS = $(SUBDIRS)
 
 
@@ -90,6 +90,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.10  1998/03/03 15:36:11  curt
+# Tweaks for compiling with g++
+#
 # Revision 1.9  1998/03/03 01:21:17  curt
 # Added DemRaw2Ascii
 #

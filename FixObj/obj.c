@@ -33,13 +33,13 @@
 
 
 /* what do ya' know, here's some global variables */
-double nodes[MAXNODES][3];
-double normals[MAXNODES][3];
+static double nodes[MAXNODES][3];
+static double normals[MAXNODES][3];
 
-int ccw_list[MAXNODES];
+static int ccw_list[MAXNODES];
 int ccw_list_ptr;
 
-int cw_list[MAXNODES];
+static int cw_list[MAXNODES];
 int cw_list_ptr;
 
 FILE *in, *out;
@@ -288,9 +288,12 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.5  1998/03/03 03:37:03  curt
-/* Cumulative tweaks.
+/* Revision 1.6  1998/03/03 15:36:12  curt
+/* Tweaks for compiling with g++
 /*
+ * Revision 1.5  1998/03/03 03:37:03  curt
+ * Cumulative tweaks.
+ *
  * Revision 1.4  1998/01/31 00:41:25  curt
  * Made a few changes converting floats to doubles.
  *

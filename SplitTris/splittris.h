@@ -37,9 +37,6 @@
 
 
 extern int nodecount, tricount;
-extern struct fgCartesianPoint nodes[MAX_NODES];
-extern int tris[MAX_TRIS][3];
-extern int new_tris[MAX_TRIS][3];
 
 
 /* Initialize a new mesh structure */
@@ -50,9 +47,12 @@ void triload(char *basename);
 
 
 /* $Log$
-/* Revision 1.2  1998/01/15 02:49:25  curt
-/* Misc. housekeeping.
+/* Revision 1.3  1998/03/03 15:36:13  curt
+/* Tweaks for compiling with g++
 /*
+ * Revision 1.2  1998/01/15 02:49:25  curt
+ * Misc. housekeeping.
+ *
  * Revision 1.1  1998/01/14 02:11:32  curt
  * Initial revision.
  *

@@ -45,11 +45,11 @@
 int nodecount, tricount;
 double xmin, xmax, ymin, ymax;
 
-double nodes_orig[MAX_NODES][3];
-int tris[MAX_TRIS][3];
-int new_tris[MAX_TRIS][3];
+static double nodes_orig[MAX_NODES][3];
+static int tris[MAX_TRIS][3];
+/* static int new_tris[MAX_TRIS][3]; */
 
-struct fgCartesianPoint nodes_cart[MAX_NODES];
+static struct fgCartesianPoint nodes_cart[MAX_NODES];
 
 struct fgBUCKET ne_index, nw_index, sw_index, se_index;
 struct fgBUCKET north_index, south_index, east_index, west_index;
@@ -612,9 +612,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.5  1998/03/03 03:37:04  curt
-/* Cumulative tweaks.
+/* Revision 1.6  1998/03/03 15:36:13  curt
+/* Tweaks for compiling with g++
 /*
+ * Revision 1.5  1998/03/03 03:37:04  curt
+ * Cumulative tweaks.
+ *
  * Revision 1.4  1998/01/31 00:41:26  curt
  * Made a few changes converting floats to doubles.
  *
