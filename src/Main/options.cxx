@@ -901,8 +901,9 @@ parse_option (const string& arg)
 	} else {
 	    default_view_offset = atof( woffset.c_str() ) * SGD_DEGREES_TO_RADIANS;
 	}
-	FGViewer *pilot_view =
-	    (FGViewer *)globals->get_viewmgr()->get_view( 0 );
+	/* apparently not used (CLO, 11 Jun 2002) 
+           FGViewer *pilot_view =
+	      (FGViewer *)globals->get_viewmgr()->get_view( 0 ); */
         // this will work without calls to the viewer...
 	fgSetDouble( "/sim/current-view/heading-offset-deg",
                      default_view_offset  * SGD_RADIANS_TO_DEGREES );
@@ -1125,18 +1126,16 @@ fgParseOptions (const string& path) {
 void 
 fgUsage ()
 {
-    // *** FIXME ***
-    // Began the process of converting output from printf() to
-    // SG_LOG() but this needs to be finished.
-
     SGPropertyNode options_root;
     SGPath opath( globals->get_fg_root() );
     opath.append( "options.xml" );
 
+    SG_LOG( SG_GENERAL, SG_ALERT, "" );
+
     try {
         readProperties(opath.c_str(), &options_root);
     } catch (const sg_exception &ex) {
-        SG_LOG( SG_GENERAL, SG_ALERT, endl << "Unable to read the help file." );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Unable to read the help file." );
         SG_LOG( SG_GENERAL, SG_ALERT, "Make sure the file options.xml is located in the FlightGear base directory." );
         exit(-1);
     }
@@ -1170,37 +1169,38 @@ fgUsage ()
             SGPropertyNode *arg = option[k]->getNode("arg");
 
             if (name) {
-                string str = name->getStringValue();
+                string tmp = name->getStringValue();
+
                 if (short_name) {
-                    str.append(", -");
-                    str.append(short_name->getStringValue());
+                    tmp.append(", -");
+                    tmp.append(short_name->getStringValue());
                 }
                 if (arg) {
-                    str.append("=");
-                    str.append(arg->getStringValue());
+                    tmp.append("=");
+                    tmp.append(arg->getStringValue());
                 }
 
-                if (str.size() <= 25) {
-                    fprintf(stderr, "   --%-27s", str.c_str());
+                char cstr[255];
+                if (tmp.size() <= 25) {
+                    sprintf(cstr, "   --%-27s", tmp.c_str());
                 } else {
-                    fprintf(stderr, "\n   --%s\n%32c", str.c_str(), ' ');
+                    sprintf(cstr, "\n   --%s\n%32c", tmp.c_str(), ' ');
                 }
+                string msg = cstr;
 
-                str.erase();
                 SGPropertyNode *desc = option[k]->getNode("description");
                 if (desc) {
-                    SG_LOG( SG_GENERAL, SG_ALERT, desc->getStringValue() );
+                    msg += desc->getStringValue();
 
-                    for ( int l = 1;
-                          (desc = option[k]->getNode("desc", l, false));
+                    for ( unsigned int l = 1;
+                          (desc = option[k]->getNode("description", l, false));
                           l++ )
                     {
-                        fprintf(stderr, "%32c%s\n", ' ',
-                                desc->getStringValue());
+                        sprintf(cstr, "\n%32c%s", ' ', desc->getStringValue());
+                        msg += cstr;
                     }
-                } else {
-                    SG_LOG( SG_GENERAL, SG_ALERT, "" );
                 }
+                SG_LOG( SG_GENERAL, SG_ALERT, msg );
             }
         }
     }
