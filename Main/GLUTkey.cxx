@@ -106,6 +106,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 87: /* W key */
 	    displayInstruments = !displayInstruments;
 	    return;
+	case 88: /* X key */
+	    o->fov *= 1.05;
+	    return;
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
 	    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
@@ -168,6 +171,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 116: /* t key */
 	    t->warp_delta += 30;
 	    return;
+	case 120: /* X key */
+	    o->fov /= 1.05;
+	    return;
 	case 122: /* z key */
 	    w->visibility *= 1.10;
 	    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
@@ -179,7 +185,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // if( fg_DebugOutput ) {
 	    //   fclose( fg_DebugOutput );
 	    // }
-	    exit(0);
+	    fgPrintf( FG_INPUT, FG_EXIT, 
+		      "Program exiting normally at user request.\n");
 	}
     }
 }
@@ -267,12 +274,19 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.7  1998/05/07 23:14:14  curt
-/* Added "D" key binding to set autopilot heading.
-/* Made frame rate calculation average out over last 10 frames.
-/* Borland C++ floating point exception workaround.
-/* Added a --tile-radius=n option.
+/* Revision 1.8  1998/05/13 18:29:56  curt
+/* Added a keyboard binding to dynamically adjust field of view.
+/* Added a command line option to specify fov.
+/* Adjusted terrain color.
+/* Root path info moved to fgOPTIONS.
+/* Added ability to parse options out of a config file.
 /*
+ * Revision 1.7  1998/05/07 23:14:14  curt
+ * Added "D" key binding to set autopilot heading.
+ * Made frame rate calculation average out over last 10 frames.
+ * Borland C++ floating point exception workaround.
+ * Added a --tile-radius=n option.
+ *
  * Revision 1.6  1998/04/28 01:20:20  curt
  * Type-ified fgTIME and fgVIEW.
  * Added a command line option to disable textures.

@@ -169,26 +169,23 @@ int fgInitPosition( void ) {
 // General house keeping initializations
 int fgInitGeneral( void ) {
     fgGENERAL *g;
+    fgOPTIONS *o;
     int i;
 
     g = &general;
+    o = &current_options;
 
     fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
     fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
 
-    // determine the fg root path.  
-    if( !(g->root_dir) ) { 
-	// If not set by command line test for environmental var..
-	g->root_dir = getenv("FG_ROOT");
-	if ( !g->root_dir ) { 
-	    // No root path set? Then assume, we will exit if this is
-	    // wrong when looking for support files.
-	    fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
-                      "Cannot continue without environment variable FG_ROOT",
-		      "being defined.");
-	}
+    if ( !strlen(o->fg_root) ) { 
+	// No root path set? Then assume, we will exit if this is
+	// wrong when looking for support files.
+	fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
+		  "Cannot continue without environment variable FG_ROOT",
+		  "being defined.");
     }
-    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
+    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", o->fg_root);
 
     // prime the frame rate counter pump
     for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
@@ -387,6 +384,13 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/05/13 18:29:58  curt
+// Added a keyboard binding to dynamically adjust field of view.
+// Added a command line option to specify fov.
+// Adjusted terrain color.
+// Root path info moved to fgOPTIONS.
+// Added ability to parse options out of a config file.
+//
 // Revision 1.11  1998/05/07 23:14:15  curt
 // Added "D" key binding to set autopilot heading.
 // Made frame rate calculation average out over last 10 frames.

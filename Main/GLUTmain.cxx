@@ -225,10 +225,12 @@ static void fgInitVisuals( void ) {
 static void fgUpdateViewParams( void ) {
     fgFLIGHT *f;
     fgLIGHT *l;
+    fgOPTIONS *o;
     fgVIEW *v;
 
     f = current_aircraft.flight;
     l = &cur_light_params;
+    o = &current_options;
     v = &current_view;
 
     fgViewUpdate(f, v, l);
@@ -239,13 +241,13 @@ static void fgUpdateViewParams( void ) {
 	// Tell GL we are about to modify the projection parameters
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(65.0, 2.0/win_ratio, 1.0, 100000.0);
+	gluPerspective(o->fov, 2.0/win_ratio, 1.0, 100000.0);
     } else {
 	xglViewport(0, 0 , (GLint)winWidth, (GLint) winHeight);
 	// Tell GL we are about to modify the projection parameters
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(65.0, 1.0/win_ratio, 10.0, 100000.0);
+	gluPerspective(o->fov, 1.0/win_ratio, 10.0, 100000.0);
     }
 
     xglMatrixMode(GL_MODELVIEW);
@@ -332,8 +334,8 @@ static void fgRenderFrame( void ) {
     double angle;
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-    GLfloat color[4] = { 0.54, 0.44, 0.29, 1.0 };
-
+    GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
+	
     l = &cur_light_params;
     o = &current_options;
     t = &cur_time_params;
@@ -425,8 +427,8 @@ static void fgRenderFrame( void ) {
 	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
     } else {
 	xglDisable( GL_TEXTURE_2D );
-	xglMaterialfv (GL_FRONT, GL_AMBIENT, color);
-	xglMaterialfv (GL_FRONT, GL_DIFFUSE, color);
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
+	xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
     }
 
     fgTileMgrRender();
@@ -675,9 +677,12 @@ int fgGlutInitEvents( void ) {
 // Main ...
 int main( int argc, char **argv ) {
     fgFLIGHT *f;
+    fgOPTIONS *o;
+    char config[256];
     int result;  // Used in command line argument.
 
     f = current_aircraft.flight;
+    o = &current_options;
 
 #ifdef HAVE_BC5PLUS
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
@@ -693,14 +698,27 @@ int main( int argc, char **argv ) {
 	fgPrintf( FG_GENERAL, FG_EXIT, "GLUT initialization failed ...\n" );
     }
 
-    // Parse remaining command line options
-    result = current_options.parse(argc, argv);
+    // Attempt to locate and parse a config file
+    // First check fg_root
+    strcpy(config, o->fg_root);
+    strcat(config, "/system.fgfsrc");
+    result = o->parse_config_file(config);
 
+    // Next check home directory
+    if ( getenv("HOME") != NULL ) {
+	strcpy(config, getenv("HOME"));
+	strcat(config, "/.fgfsrc");
+	result = o->parse_config_file(config);
+    }
+
+    // Parse remaining command line options
+    // These will override anything specified in a config file
+    result = o->parse_command_line(argc, argv);
     if ( result != FG_OPTIONS_OK ) {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
-	current_options.usage();
-	fgPrintf( FG_GENERAL, FG_EXIT, "\nShutting down ...\n");
+	o->usage();
+	fgPrintf( FG_GENERAL, FG_EXIT, "\nExiting ...\n");
     }
 
     // These are a few miscellaneous things that aren't really
@@ -750,6 +768,13 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.14  1998/05/13 18:29:57  curt
+// Added a keyboard binding to dynamically adjust field of view.
+// Added a command line option to specify fov.
+// Adjusted terrain color.
+// Root path info moved to fgOPTIONS.
+// Added ability to parse options out of a config file.
+//
 // Revision 1.13  1998/05/11 18:18:15  curt
 // For flat shading use "glHint (GL_FOG_HINT, GL_FASTEST )"
 //

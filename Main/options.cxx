@@ -33,6 +33,7 @@
 #include <string.h>
 
 #include <Debug/fg_debug.h>
+#include <Include/fg_zlib.h>
 
 #include "options.hxx"
 
@@ -45,6 +46,24 @@ fgOPTIONS current_options;
 fgOPTIONS::fgOPTIONS( void ) {
     // set initial values/defaults
 
+    if ( getenv("FG_ROOT") != NULL ) {
+	// fg_root could be anywhere, so default to environmental
+	// variable $FG_ROOT if it is set.
+
+	strcpy(fg_root, getenv("FG_ROOT"));
+    } else {
+	// Otherwise, default to a random compiled in location if
+	// $FG_ROOT is not set.  This can still be overridden from the
+	// command line or a config file.
+
+#if defined(WIN32)
+	strcpy(fg_root, "\\FlightGear");
+#else
+	strcpy(fg_root, "/usr/local/lib/FlightGear");
+#endif
+    }
+
+    // default airport id
     strcpy(airport_id, "");
 
     // Features
@@ -52,6 +71,7 @@ fgOPTIONS::fgOPTIONS( void ) {
 
     // Rendering options
     fog = 1;
+    fov = 65.0;
     fullscreen = 0;
     shading = 1;
     skyblend = 1;
@@ -63,6 +83,52 @@ fgOPTIONS::fgOPTIONS( void ) {
 
     // Time options
     time_offset = 0;
+}
+
+
+// Parse an int out of a --foo-bar=n type option 
+static int parse_int(char *arg) {
+    int result;
+
+    // advance past the '='
+    while ( (arg[0] != '=') && (arg[0] != '\0') ) {
+	arg++;
+    }
+
+    if ( arg[0] == '=' ) {
+	arg++;
+    }
+
+    printf("parse_int(): arg = %s\n", arg);
+
+    result = atoi(arg);
+
+    printf("parse_int(): result = %d\n", result);
+
+    return(result);
+}
+
+
+// Parse an int out of a --foo-bar=n type option 
+static double parse_double(char *arg) {
+    double result;
+
+    // advance past the '='
+    while ( (arg[0] != '=') && (arg[0] != '\0') ) {
+	arg++;
+    }
+
+    if ( arg[0] == '=' ) {
+	arg++;
+    }
+
+    printf("parse_double(): arg = %s\n", arg);
+
+    result = atof(arg);
+
+    printf("parse_double(): result = %.4f\n", result);
+
+    return(result);
 }
 
 
@@ -163,87 +229,161 @@ static int parse_time_offset(char *time_str) {
 }
 
 
-// Parse an int out of a --foo-bar=n type option 
-static int parse_int(char *arg, int min, int max) {
-    int result;
+// Parse --tile-radius=n type option 
 
-    // advance past the '='
-    while ( (arg[0] != '=') && (arg[0] != '\0') ) {
-	arg++;
+#define FG_RADIUS_MIN 3
+#define FG_RADIUS_MAX 9
+
+static int parse_tile_radius(char *arg) {
+    int radius, tmp;
+
+    radius = parse_int(arg);
+
+    // radius must be odd
+    tmp = radius / 2;
+    if ( radius == ( tmp * 2 ) ) {
+	radius -= 1;
     }
 
-    if ( arg[0] == '=' ) {
-	arg++;
+    if ( radius < FG_RADIUS_MIN ) { radius = FG_RADIUS_MIN; }
+    if ( radius > FG_RADIUS_MAX ) { radius = FG_RADIUS_MAX; }
+
+    printf("parse_tile_radius(): radius = %d\n", radius);
+
+    return(radius);
+}
+
+
+// Parse --fov=x.xx type option 
+
+#define FG_FOV_MIN 0.1
+#define FG_FOV_MAX 179.9
+
+static double parse_fov(char *arg) {
+    double fov;
+
+    fov = parse_double(arg);
+
+    if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
+    if ( fov > FG_FOV_MAX ) { fov = FG_FOV_MAX; }
+
+    printf("parse_fov(): result = %.4f\n", fov);
+
+    return(fov);
+}
+
+
+// Parse a single option
+int fgOPTIONS::parse_option( char *arg ) {
+    // General Options
+    if ( (strcmp(arg, "--help") == 0) ||
+	 (strcmp(arg, "-h") == 0) ) {
+	// help/usage request
+	return(FG_OPTIONS_HELP);
+    } else if ( strcmp(arg, "--disable-hud") == 0 ) {
+	hud_status = 0;	
+    } else if ( strcmp(arg, "--enable-hud") == 0 ) {
+	hud_status = 1;	
+    } else if ( strncmp(arg, "--airport-id=", 13) == 0 ) {
+	arg += 13;
+	strncpy(airport_id, arg, 4);
+    } else if ( strncmp(arg, "--fg-root=", 10) == 0 ) {
+	arg += 10;
+	strcpy(fg_root, arg);
+    } else if ( strcmp(arg, "--disable-fog") == 0 ) {
+	fog = 0;	
+    } else if ( strcmp(arg, "--enable-fog") == 0 ) {
+	fog = 1;	
+    } else if ( strncmp(arg, "--fov=", 6) == 0 ) {
+	fov = parse_fov(arg);
+    } else if ( strcmp(arg, "--disable-fullscreen") == 0 ) {
+	fullscreen = 0;	
+    } else if ( strcmp(arg, "--enable-fullscreen") == 0 ) {
+	fullscreen = 1;	
+    } else if ( strcmp(arg, "--shading-flat") == 0 ) {
+	shading = 0;	
+    } else if ( strcmp(arg, "--shading-smooth") == 0 ) {
+	shading = 1;	
+    } else if ( strcmp(arg, "--disable-skyblend") == 0 ) {
+	skyblend = 0;	
+    } else if ( strcmp(arg, "--enable-skyblend") == 0 ) {
+	skyblend = 1;	
+    } else if ( strcmp(arg, "--disable-textures") == 0 ) {
+	textures = 0;	
+    } else if ( strcmp(arg, "--enable-textures") == 0 ) {
+	textures = 1;	
+    } else if ( strcmp(arg, "--disable-wireframe") == 0 ) {
+	wireframe = 0;	
+    } else if ( strcmp(arg, "--enable-wireframe") == 0 ) {
+	wireframe = 1;	
+    } else if ( strncmp(arg, "--tile-radius=", 14) == 0 ) {
+	tile_radius = parse_tile_radius(arg);
+    } else if ( strncmp(arg, "--time-offset=", 14) == 0 ) {
+	time_offset = parse_time_offset(arg);
+    } else {
+	return(FG_OPTIONS_ERROR);
     }
-
-    printf("parse_int(): arg = %s\n", arg);
-
-    result = atoi(arg);
-
-    if ( result < min ) { result = min; }
-    if ( result > max ) { result = max; }
-
-    printf("parse_int(): result = %d\n", result);
-    return(result);
+    
+    return(FG_OPTIONS_OK);
 }
 
 
 // Parse the command line options
-int fgOPTIONS::parse( int argc, char **argv ) {
+int fgOPTIONS::parse_command_line( int argc, char **argv ) {
     int i = 1;
+    int result;
 
-    fgPrintf(FG_GENERAL, FG_INFO, "Processing arguments\n");
+    fgPrintf(FG_GENERAL, FG_INFO, "Processing command line arguments\n");
 
     while ( i < argc ) {
 	fgPrintf(FG_GENERAL, FG_INFO, "argv[%d] = %s\n", i, argv[i]);
 
-	// General Options
-	if ( (strcmp(argv[i], "--help") == 0) ||
-	     (strcmp(argv[i], "-h") == 0) ) {
-	    // help/usage request
-	    return(FG_OPTIONS_HELP);
-	} else if ( strcmp(argv[i], "--disable-hud") == 0 ) {
-	    hud_status = 0;	
-	} else if ( strcmp(argv[i], "--enable-hud") == 0 ) {
-	    hud_status = 1;	
-	} else if ( strncmp(argv[i], "--airport-id=", 13) == 0 ) {
-	    argv[i] += 13;
-	    strncpy(airport_id, argv[i], 4);
-	} else if ( strcmp(argv[i], "--disable-fog") == 0 ) {
-	    fog = 0;	
-	} else if ( strcmp(argv[i], "--enable-fog") == 0 ) {
-	    fog = 1;	
-	} else if ( strcmp(argv[i], "--disable-fullscreen") == 0 ) {
-	    fullscreen = 0;	
-	} else if ( strcmp(argv[i], "--enable-fullscreen") == 0 ) {
-	    fullscreen = 1;	
-	} else if ( strcmp(argv[i], "--shading-flat") == 0 ) {
-	    shading = 0;	
-	} else if ( strcmp(argv[i], "--shading-smooth") == 0 ) {
-	    shading = 1;	
-	} else if ( strcmp(argv[i], "--disable-skyblend") == 0 ) {
-	    skyblend = 0;	
-	} else if ( strcmp(argv[i], "--enable-skyblend") == 0 ) {
-	    skyblend = 1;	
-	} else if ( strcmp(argv[i], "--disable-textures") == 0 ) {
-	    textures = 0;	
-	} else if ( strcmp(argv[i], "--enable-textures") == 0 ) {
-	    textures = 1;	
-	} else if ( strcmp(argv[i], "--disable-wireframe") == 0 ) {
-	    wireframe = 0;	
-	} else if ( strcmp(argv[i], "--enable-wireframe") == 0 ) {
-	    wireframe = 1;	
-	} else if ( strncmp(argv[i], "--tile-radius=", 14) == 0 ) {
-	    tile_radius = parse_int(argv[i], 3, 9);
-	} else if ( strncmp(argv[i], "--time-offset=", 14) == 0 ) {
-	    time_offset = parse_time_offset(argv[i]);
-	} else {
-	    return(FG_OPTIONS_ERROR);
+	result = parse_option(argv[i]);
+	if ( (result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR) ) {
+	    return(result);
 	}
 
 	i++;
     }
     
+    return(FG_OPTIONS_OK);
+}
+
+
+// Parse the command line options
+int fgOPTIONS::parse_config_file( char *path ) {
+    char fgpath[256], line[256];
+    fgFile f;
+    int len, result;
+
+    strcpy(fgpath, path);
+    strcat(fgpath, ".gz");
+
+    // first try "path.gz"
+    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
+	// next try "path"
+        if ( (f = fgopen(path, "rb")) == NULL ) {
+	    return(FG_OPTIONS_ERROR);
+	}
+    }
+
+    fgPrintf(FG_GENERAL, FG_INFO, "Processing config file: %s\n", path);
+
+    while ( fggets(f, line, 250) != NULL ) {
+	// strip trailing newline if it exists
+	len = strlen(line);
+	if ( line[len-1] == '\n' ) {
+	    line[len-1] = '\0';
+	}
+
+	result = parse_option(line);
+	if ( result == FG_OPTIONS_ERROR ) {
+	    fgPrintf( FG_GENERAL, FG_EXIT, 
+		      "Config file parse error: %s '%s'\n", path, line );
+	}
+    }
+
+    fgclose(f);
     return(FG_OPTIONS_OK);
 }
 
@@ -255,6 +395,7 @@ void fgOPTIONS::usage ( void ) {
 
     printf("General Options:\n");
     printf("\t--help -h:  print usage\n");
+    printf("\t--fg-root=path:  specify the root path for all the data files\n");
     printf("\n");
 
     printf("Features:\n");
@@ -269,6 +410,7 @@ void fgOPTIONS::usage ( void ) {
     printf("Rendering Options:\n");
     printf("\t--disable-fog:  disable fog/haze\n");
     printf("\t--enable-fog:  enable fog/haze\n");
+    printf("\t--fov=xx.x:  specify the field of view angle in degrees\n");
     printf("\t--disable-fullscreen:  disable fullscreen mode\n");
     printf("\t--enable-fullscreen:  enable fullscreen mode\n");
     printf("\t--shading-flat:  enable flat shading\n");
@@ -296,6 +438,13 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/05/13 18:29:59  curt
+// Added a keyboard binding to dynamically adjust field of view.
+// Added a command line option to specify fov.
+// Adjusted terrain color.
+// Root path info moved to fgOPTIONS.
+// Added ability to parse options out of a config file.
+//
 // Revision 1.8  1998/05/07 23:14:16  curt
 // Added "D" key binding to set autopilot heading.
 // Made frame rate calculation average out over last 10 frames.

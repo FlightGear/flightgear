@@ -40,6 +40,8 @@
 class fgOPTIONS {
 
 public:
+    // The flight gear "root" directory
+    char fg_root[256];
 
     // ID of initial starting airport
     char airport_id[5];
@@ -49,6 +51,7 @@ public:
 
     // Rendering options
     int fog;           // Fog enabled/disabled
+    double fov;        // Field of View
     int fullscreen;    // Full screen mode enabled/disabled
     int shading;       // shading method, 0 = Flat, 1 = Smooth
     int skyblend;      // Blend sky to haze (using polygons) or just clear
@@ -67,8 +70,14 @@ public:
     // Constructor
     fgOPTIONS( void );
 
+    // Parse a single option
+    int parse_option( char *arg );
+
     // Parse the command line options
-    int parse( int argc, char **argv );
+    int parse_command_line( int argc, char **argv );
+
+    // Parse the command line options
+    int parse_config_file( char *path );
 
     // Print usage message
     void usage ( void );
@@ -86,6 +95,13 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.7  1998/05/13 18:29:59  curt
+// Added a keyboard binding to dynamically adjust field of view.
+// Added a command line option to specify fov.
+// Adjusted terrain color.
+// Root path info moved to fgOPTIONS.
+// Added ability to parse options out of a config file.
+//
 // Revision 1.6  1998/05/06 03:16:26  curt
 // Added an averaged global frame rate counter.
 // Added an option to control tile radius.
