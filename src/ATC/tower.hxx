@@ -27,9 +27,11 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <plib/sg.h>
 
+#include <iostream>
 #include <string>
 
 SG_USING_STD(string);
+SG_USING_STD(ios);
 
 #include "ATC.hxx"
 

@@ -69,3 +69,4 @@ protected:
 };
 
 #endif  // _FG_AIEntity_HXX
+

@@ -22,8 +22,13 @@
 #ifndef _FG_ATC_HXX
 #define _FG_ATC_HXX
 
+#include <simgear/compiler.h>
+
 #include <iostream>
 #include <string>
+
+SG_USING_STD(ostream);
+SG_USING_STD(string);
 
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.

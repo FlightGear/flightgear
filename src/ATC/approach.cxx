@@ -185,7 +185,10 @@ void FGApproach::Update() {
 void FGApproach::get_active_runway() {
 
   sgVec3 position = { lat, lon, elev };
+
+#ifndef FG_NEW_ENVIRONMENT
   FGPhysicalProperty stationweather = WeatherDatabase->get(position);
+#endif
 
   SGPath path( globals->get_fg_root() );
   path.append( "Airports" );
@@ -193,8 +196,13 @@ void FGApproach::get_active_runway() {
   FGRunways runways( path.c_str() );
   
   //Set the heading to into the wind
+#ifndef FG_NEW_ENVIRONMENT
   double wind_x = stationweather.Wind[0];
   double wind_y = stationweather.Wind[1];
+#else
+  double wind_x = 0;
+  double wind_y = 0;		// FIXME
+#endif
   
   double speed = sqrt( wind_x*wind_x + wind_y*wind_y ) * SG_METER_TO_NM / (60.0*60.0);
   double hdg;
