@@ -28,6 +28,7 @@
 #include "ATCDialog.hxx"
 #include "ATC.hxx"
 #include "ATCmgr.hxx"
+#include "ATCdisplay.hxx"
 #include "commlist.hxx"
 #include "ATCutils.hxx"
 #include <Airports/simple.hxx>
@@ -67,12 +68,12 @@ static void atcUppercase(string &s) {
 }
 
 // ----------------------- Popup Dialog Statics------------------
-static puDialogBox*		atcDialog;
-static puFrame*			atcDialogFrame;
-static puText*			atcDialogMessage;
-static puOneShot*		atcDialogOkButton;
-static puOneShot*		atcDialogCancelButton;
-static puButtonBox*		atcDialogCommunicationOptions;
+static puDialogBox*     atcDialog;
+static puFrame*         atcDialogFrame;
+static puText*          atcDialogMessage;
+static puOneShot*       atcDialogOkButton;
+static puOneShot*       atcDialogCancelButton;
+static puButtonBox*     atcDialogCommunicationOptions;
 // --------------------------------------------------------------
 
 // ----------------------- Freq Dialog Statics-------------------
@@ -93,33 +94,12 @@ static puText*          atcFreqDisplayText[ATC_MAX_FREQ_DISPLAY];
 // --------------------------------------------------------------
 
 //////////////// Popup callbacks ///////////////////
-static void ATCDialogOK(puObject *)
-{
-	switch(atcDialogCommunicationOptions->getValue()) {
-	case 0:
-		//cout << "Option 0 chosen\n";
-		fgSetBool("/sim/atc/opt0",true);
-		break;
-	case 1:
-		//cout << "Option 1 chosen\n";
-		fgSetBool("/sim/atc/opt1",true);
-		break;
-	case 2:
-		//cout << "Option 2 chosen\n";
-		fgSetBool("/sim/atc/opt2",true);
-		break;
-	case 3:
-		//cout << "Option 2 chosen\n";
-		fgSetBool("/sim/atc/opt3",true);
-		break;
-	default:
-		break;
-	}
+static void ATCDialogOK(puObject*) {
+	current_atcdialog->PopupCallback();
 	FG_POP_PUI_DIALOG( atcDialog );
 }
 
-static void ATCDialogCancel(puObject *)
-{
+static void ATCDialogCancel(puObject*) {
     FG_POP_PUI_DIALOG( atcDialog );
 }
 //////////////////////////////////////////////////
@@ -143,6 +123,11 @@ static void FreqDisplayOK(puObject*) {
 
 
 FGATCDialog::FGATCDialog() {
+	_callbackPending = false;
+	_callbackTimer = 0.0;
+	_callbackWait = 0.0;
+	_callbackPtr = NULL;
+	_callbackCode = 0;
 }
 
 FGATCDialog::~FGATCDialog() {
@@ -245,6 +230,18 @@ void FGATCDialog::Init() {
 		atcDialogCancelButton ->     setCallback       (ATCDialogCancel);
 	}
 	FG_FINALIZE_PUI_DIALOG(atcDialog);
+}
+
+void FGATCDialog::Update(double dt) {
+	if(_callbackPending) {
+		if(_callbackTimer > _callbackWait) {
+			_callbackPtr->ReceiveUserCallback(_callbackCode);
+			_callbackPtr->NotifyTransmissionFinished(fgGetString("/sim/user/callsign"));
+			_callbackPending = false;
+		} else {
+			_callbackTimer += dt;
+		}
+	}
 }
 
 // Add an entry
@@ -389,7 +386,39 @@ void FGATCDialog::PopupDialog() {
 	FG_PUSH_PUI_DIALOG(atcDialog);
 }
 
+void FGATCDialog::PopupCallback() {
+	FGATC* atcptr = globals->get_ATC_mgr()->GetComm1ATCPointer();	// FIXME - Hardwired to comm1 at the moment
 
+	if(atcptr) {
+		if(atcptr->GetType() == APPROACH) {
+			switch(atcDialogCommunicationOptions->getValue()) {
+			case 0:
+				fgSetBool("/sim/atc/opt0",true);
+				break;
+			case 1:
+				fgSetBool("/sim/atc/opt1",true);
+				break;
+			case 2:
+				fgSetBool("/sim/atc/opt2",true);
+				break;
+			case 3:
+				fgSetBool("/sim/atc/opt3",true);
+				break;
+			default:
+				break;
+			}
+		} else if(atcptr->GetType() == TOWER) {
+			ATCMenuEntry a = ((available_dialog[TOWER])[(string)atcptr->get_ident()])[atcDialogCommunicationOptions->getValue()];
+			atcptr->SetFreqInUse();
+			globals->get_ATC_display()->RegisterSingleMessage(atcptr->GenText(a.transmission, a.callback_code));
+			_callbackPending = true;
+			_callbackTimer = 0.0;
+			_callbackWait = 5.0;
+			_callbackPtr = atcptr;
+			_callbackCode = a.callback_code;
+		}
+	}
+}
 
 void FGATCDialog::FreqDialog() {
 

@@ -54,8 +54,10 @@ enum tower_traffic_type {
 ostream& operator << (ostream& os, tower_traffic_type ttt);
 
 enum tower_callback_type {
-	USER_REQUEST_DEPARTURE = 1,
-	USER_REQUEST_ARRIVAL = 2
+	USER_REQUEST_VFR_DEPARTURE = 1,
+	USER_REQUEST_VFR_ARRIVAL = 2,
+	USER_REQUEST_VFR_ARRIVAL_FULL_STOP = 3,
+	USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO = 4
 };
 
 // TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
@@ -90,6 +92,9 @@ public:
 	bool instructedToGoAround;	// set true if told by tower to go around
 	bool onRwy;		// is physically on the runway
 	bool nextOnRwy;		// currently projected by tower to be the next on the runway
+	
+	bool vfrArrivalReported;
+	bool vfrArrivalAcknowledged;
 
 	// Type of operation the plane is doing
 	tower_traffic_type opType;
@@ -121,7 +126,11 @@ public:
 	
 	void ReceiveUserCallback(int code);
 
-	void RequestLandingClearance(string ID);
+	// Contact tower for VFR approach
+	// eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
+	// This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
+	void VFRArrivalContact(string ID, LandingType opt = AIP_LT_UNKNOWN);
+	
 	void RequestDepartureClearance(string ID);	
 	void ReportFinal(string ID);
 	void ReportLongFinal(string ID);
@@ -158,6 +167,8 @@ public:
 	bool GetCrosswindConstraint(double& cpos);
 	bool GetDownwindConstraint(double& dpos);
 	bool GetBaseConstraint(double& bpos);
+	
+	string GenText(const string& m, int c);
 
 private:
 	FGATCMgr* ATCmgr;	

@@ -60,7 +60,11 @@ public:
 	
 	void Init();
 	
+	void Update(double dt);
+	
 	void PopupDialog();
+	
+	void PopupCallback();
 	
 	void add_entry( string station, string transmission, string menutext, atc_type type, int code);
 	
@@ -68,8 +72,10 @@ public:
 	
 	void remove_entry( const string &station, int code, atc_type type );
 	
+	// query the database whether the transmission is already registered; 
 	bool trans_reg( const string &station, const string &trans, atc_type type );
 	
+	// query the database whether the transmission is already registered; 
 	bool trans_reg( const string &station, int code, atc_type type );
 	
 	// Display a frequency search dialog for nearby stations
@@ -86,6 +92,11 @@ private:
 	int  freq;
 	bool reset;
 	
+	bool _callbackPending;
+	double _callbackTimer;
+	double _callbackWait;
+	FGATC* _callbackPtr;
+	int _callbackCode;
 };
 	
 extern FGATCDialog *current_atcdialog;	

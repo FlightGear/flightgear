@@ -65,8 +65,9 @@ void FGATC::SetResponseReqd(string rid) {
 	respond = false;	// TODO - this ignores the fact that more than one plane could call this before response
 						// Shouldn't happen with AI only, but user could confuse things??
 	responseID = rid;
+	runResponseCounter = true;
 	responseCounter = 0.0;
-	responseTime = 2.5;		// TODO - randomize this slightly.
+	responseTime = 1.8;		// TODO - randomize this slightly.
 }
 
 void FGATC::NotifyTransmissionFinished(string rid) {
@@ -75,7 +76,7 @@ void FGATC::NotifyTransmissionFinished(string rid) {
 	if(responseReqd) {
 		runResponseCounter = true;
 		responseCounter = 0.0;
-		responseTime = 2.5;		// TODO - randomize this slightly.
+		responseTime = 1.8;		// TODO - randomize this slightly.
 	} else {
 		freqClear = true;
 	}
@@ -163,6 +164,11 @@ void FGATC::NoRender(string refname) {
 		}
 		playing = false;
 	}
+}
+
+// Generate the text of a message from its parameters and the current context.
+string FGATC::GenText(const string& m, int c) {
+	return("");
 }
 
 ostream& operator << (ostream& os, atc_type atc) {

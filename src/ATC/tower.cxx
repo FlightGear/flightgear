@@ -27,6 +27,7 @@
 #include "ATCdisplay.hxx"
 #include "ATCmgr.hxx"
 #include "ATCutils.hxx"
+#include "ATCDialog.hxx"
 #include "commlist.hxx"
 #include "AILocalTraffic.hxx"
 
@@ -35,86 +36,94 @@ SG_USING_STD(cout);
 // TowerPlaneRec
 
 TowerPlaneRec::TowerPlaneRec() :
-clearedToLand(false),
-clearedToLineUp(false),
-clearedToTakeOff(false),
-holdShortReported(false),
-downwindReported(false),
-longFinalReported(false),
-longFinalAcknowledged(false),
-finalReported(false),
-finalAcknowledged(false),
-instructedToGoAround(false),
-onRwy(false),
-nextOnRwy(false),
-opType(TTT_UNKNOWN),
-leg(LEG_UNKNOWN),
-landingType(AIP_LT_UNKNOWN),
-isUser(false)
+	clearedToLand(false),
+	clearedToLineUp(false),
+	clearedToTakeOff(false),
+	holdShortReported(false),
+	downwindReported(false),
+	longFinalReported(false),
+	longFinalAcknowledged(false),
+	finalReported(false),
+	finalAcknowledged(false),
+	instructedToGoAround(false),
+	onRwy(false),
+	nextOnRwy(false),
+	vfrArrivalReported(false),
+	vfrArrivalAcknowledged(false),
+	opType(TTT_UNKNOWN),
+	leg(LEG_UNKNOWN),
+	landingType(AIP_LT_UNKNOWN),
+	isUser(false) 
 {
 	plane.callsign = "UNKNOWN";
 }
 
 TowerPlaneRec::TowerPlaneRec(PlaneRec p) :
-clearedToLand(false),
-clearedToLineUp(false),
-clearedToTakeOff(false),
-holdShortReported(false),
-downwindReported(false),
-longFinalReported(false),
-longFinalAcknowledged(false),
-finalReported(false),
-finalAcknowledged(false),
-instructedToGoAround(false),
-onRwy(false),
-nextOnRwy(false),
-opType(TTT_UNKNOWN),
-leg(LEG_UNKNOWN),
-landingType(AIP_LT_UNKNOWN),
-isUser(false)
+	clearedToLand(false),
+	clearedToLineUp(false),
+	clearedToTakeOff(false),
+	holdShortReported(false),
+	downwindReported(false),
+	longFinalReported(false),
+	longFinalAcknowledged(false),
+	finalReported(false),
+	finalAcknowledged(false),
+	instructedToGoAround(false),
+	onRwy(false),
+	nextOnRwy(false),
+	vfrArrivalReported(false),
+	vfrArrivalAcknowledged(false),
+	opType(TTT_UNKNOWN),
+	leg(LEG_UNKNOWN),
+	landingType(AIP_LT_UNKNOWN),
+	isUser(false)
 {
 	plane = p;
 }
 
 TowerPlaneRec::TowerPlaneRec(Point3D pt) :
-clearedToLand(false),
-clearedToLineUp(false),
-clearedToTakeOff(false),
-holdShortReported(false),
-downwindReported(false),
-longFinalReported(false),
-longFinalAcknowledged(false),
-finalReported(false),
-finalAcknowledged(false),
-instructedToGoAround(false),
-onRwy(false),
-nextOnRwy(false),
-opType(TTT_UNKNOWN),
-leg(LEG_UNKNOWN),
-landingType(AIP_LT_UNKNOWN),
-isUser(false)
+	clearedToLand(false),
+	clearedToLineUp(false),
+	clearedToTakeOff(false),
+	holdShortReported(false),
+	downwindReported(false),
+	longFinalReported(false),
+	longFinalAcknowledged(false),
+	finalReported(false),
+	finalAcknowledged(false),
+	instructedToGoAround(false),
+	onRwy(false),
+	nextOnRwy(false),
+	vfrArrivalReported(false),
+	vfrArrivalAcknowledged(false),
+	opType(TTT_UNKNOWN),
+	leg(LEG_UNKNOWN),
+	landingType(AIP_LT_UNKNOWN),
+	isUser(false)
 {
 	plane.callsign = "UNKNOWN";
 	pos = pt;
 }
 
 TowerPlaneRec::TowerPlaneRec(PlaneRec p, Point3D pt) :
-clearedToLand(false),
-clearedToLineUp(false),
-clearedToTakeOff(false),
-holdShortReported(false),
-downwindReported(false),
-longFinalReported(false),
-longFinalAcknowledged(false),
-finalReported(false),
-finalAcknowledged(false),
-instructedToGoAround(false),
-onRwy(false),
-nextOnRwy(false),
-opType(TTT_UNKNOWN),
-leg(LEG_UNKNOWN),
-landingType(AIP_LT_UNKNOWN),
-isUser(false)
+	clearedToLand(false),
+	clearedToLineUp(false),
+	clearedToTakeOff(false),
+	holdShortReported(false),
+	downwindReported(false),
+	longFinalReported(false),
+	longFinalAcknowledged(false),
+	finalReported(false),
+	finalAcknowledged(false),
+	instructedToGoAround(false),
+	onRwy(false),
+	nextOnRwy(false),
+	vfrArrivalReported(false),
+	vfrArrivalAcknowledged(false),
+	opType(TTT_UNKNOWN),
+	leg(LEG_UNKNOWN),
+	landingType(AIP_LT_UNKNOWN),
+	isUser(false)
 {
 	plane = p;
 	pos = pt;
@@ -127,8 +136,6 @@ isUser(false)
                TODO List
 			   
 Currently user is assumed to have taken off again when leaving the runway - check speed/elev for taxiing-in.
-
-AI plane lands even when user on rwy - make it go-around instead.
 
 Tell AI plane to contact ground when taxiing in.
 
@@ -242,8 +249,8 @@ void FGTower::Init() {
 	if(rwyOccupied) {
 		// Assume the user is started at the threshold ready to take-off
 		TowerPlaneRec* t = new TowerPlaneRec;
-		t->plane.callsign = "Charlie Foxtrot Sierra";	// C-FGFS !!! - fixme - this is a bit hardwired
-		t->plane.type = GA_SINGLE;
+		t->plane.callsign = fgGetString("/sim/user/callsign");
+		t->plane.type = GA_SINGLE;	// FIXME - hardwired!!
 		t->opType = TTT_UNKNOWN;	// We don't know if the user wants to do circuits or a departure...
 		t->landingType = AIP_LT_UNKNOWN;
 		t->leg = TAKEOFF_ROLL;
@@ -252,6 +259,10 @@ void FGTower::Init() {
 		t->clearedToTakeOff = true;
 		rwyList.push_back(t);
 		departed = false;
+	} else {
+		// For now assume that this means the user is not at the airport and is in the air.
+		// TODO FIXME - this will break when user starts on apron, at hold short, etc.
+		current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
 	}
 }
 
@@ -274,6 +285,7 @@ void FGTower::Update(double dt) {
 		cout << update_count << "\ttL: " << trafficList.size() << "  cL: " << circuitList.size() << "  hL: " << holdList.size() << "  aL: " << appList.size() << '\n';
 	}
 	*/
+	//if(ident == "EGNX") cout << display << '\n';
 	
 	if(departed != false) {
 		timeSinceLastDeparture += dt;
@@ -368,17 +380,36 @@ void FGTower::Update(double dt) {
 }
 
 void FGTower::ReceiveUserCallback(int code) {
-	if(code == (int)USER_REQUEST_DEPARTURE) {
+	if(code == (int)USER_REQUEST_VFR_DEPARTURE) {
 		cout << "User requested departure\n";
+	} else if(code == (int)USER_REQUEST_VFR_ARRIVAL) {
+		VFRArrivalContact("USER");
+	} else if(code == (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP) {
+		VFRArrivalContact("USER", FULL_STOP);
+	} else if(code == (int)USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO) {
+		VFRArrivalContact("USER", TOUCH_AND_GO);
 	}
 }
 
 void FGTower::Respond() {
-	//cout << "Entering Respond..." << endl;
+	cout << "Entering Respond, responseID = " << responseID << endl;
 	TowerPlaneRec* t = FindPlane(responseID);
 	if(t) {
 		// This will grow!!!
-		if(t->downwindReported) {
+		if(t->vfrArrivalReported && !t->vfrArrivalAcknowledged) {
+			// Testing - hardwire straight in for now
+			string trns = t->plane.callsign;
+			trns += " ";
+			trns += name;
+			trns += " tower Report three mile straight in for runway ";
+			trns += ConvertRwyNumToSpokenString(activeRwy);
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+			} else {
+				cout << "Not displaying, trns was " << trns << '\n';
+			}
+			t->vfrArrivalAcknowledged = true;
+		} else if(t->downwindReported) {
 			t->downwindReported = false;
 			int i = 1;
 			for(tower_plane_rec_list_iterator twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
@@ -1384,28 +1415,51 @@ void FGTower::RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type 
 	doThresholdUseOrder();
 }
 
-void FGTower::RequestLandingClearance(string ID) {
+// Contact tower for VFR approach
+// eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
+// This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
+// opt defaults to AIP_LT_UNKNOWN
+void FGTower::VFRArrivalContact(string ID, LandingType opt) {
 	//cout << "Request Landing Clearance called...\n";
 	
-	// Assume this comes from the user - have another function taking a pointer to the AIplane for the AI traffic.
-	// For now we'll also assume that the user is a light plane and can get him/her to join the circuit if necessary.
-	
-	TowerPlaneRec* t = new TowerPlaneRec;
-	t->isUser = true;
-	t->clearedToLand = false;
-	t->pos.setlon(user_lon_node->getDoubleValue());
-	t->pos.setlat(user_lat_node->getDoubleValue());
-	t->pos.setelev(user_elev_node->getDoubleValue());
+	// For now we'll assume that the user is a light plane and can get him/her to join the circuit if necessary.
+
+	TowerPlaneRec* t;	
+	string usercall = fgGetString("/sim/user/callsign");
+	if(ID == "USER" || ID == usercall) {
+		t = FindPlane(usercall);
+		if(!t) {
+			cout << "NOT t\n";
+			t = new TowerPlaneRec;
+			t->isUser = true;
+			t->pos.setlon(user_lon_node->getDoubleValue());
+			t->pos.setlat(user_lat_node->getDoubleValue());
+			t->pos.setelev(user_elev_node->getDoubleValue());
+		} else {
+			cout << "IS t\n";
+			// Oops - the plane is already registered with this tower - maybe we took off and flew a giant circuit without
+			// quite getting out of tower airspace - just ignore for now and treat as new arrival.
+			// TODO - Maybe should remove from departure and circuit list if in there though!!
+		}
+	} else {
+		// Oops - something has gone wrong - put out a warning
+		cout << "WARNING - FGTower::VFRContact(string ID, LandingType lt) called with ID " << ID << " which does not appear to be the user.\n";
+		return;
+	}
+		
 	
 	// TODO
-	// Calculate where the user is in relation to the active runway and it's circuit
+	// Calculate where the plane is in relation to the active runway and it's circuit
 	// and set the op-type as appropriate.
 	
 	// HACK - to get up and running I'm going to assume that the user contacts tower on a staight-in final for now.
 	t->opType = STRAIGHT_IN;
 	
 	t->plane.type = GA_SINGLE;	// FIXME - Another assumption!
-	t->plane.callsign = ID;
+	t->plane.callsign = usercall;
+	
+	t->vfrArrivalReported = true;
+	responseReqd = true;
 	
 	appList.push_back(t);	// Not necessarily permanent
 	AddToTrafficList(t);
@@ -1466,6 +1520,159 @@ void FGTower::ReportDownwind(string ID) {
 	} else {
 		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportDownwind(...)");
 	}
+}
+
+string FGTower::GenText(const string& m, int c) {
+	const int cmax = 300;
+	//string message;
+	char tag[4];
+	char crej = '@';
+	char mes[cmax];
+	char dum[cmax];
+	//char buf[10];
+	char *pos;
+	int len;
+	//FGTransmission t;
+	string usercall = fgGetString("/sim/user/callsign");
+	
+	//transmission_list_type     tmissions = transmissionlist_station[station];
+	//transmission_list_iterator current   = tmissions.begin();
+	//transmission_list_iterator last      = tmissions.end();
+	
+	//for ( ; current != last ; ++current ) {
+	//	if ( current->get_code().c1 == code.c1 &&  
+	//		current->get_code().c2 == code.c2 &&
+	//	    current->get_code().c3 == code.c3 ) {
+			
+			//if ( ttext ) message = current->get_transtext();
+			//else message = current->get_menutext();
+			strcpy( &mes[0], m.c_str() ); 
+			
+			// Replace all the '@' parameters with the actual text.
+			int check = 0;	// If mes gets overflowed the while loop can go infinite
+			while ( strchr(&mes[0], crej) != NULL  ) {	// ie. loop until no more occurances of crej ('@') found
+				pos = strchr( &mes[0], crej );
+				bcopy(pos, &tag[0], 3);
+				tag[3] = '\0';
+				int i;
+				len = 0;
+				for ( i=0; i<cmax; i++ ) {
+					if ( mes[i] == crej ) {
+						len = i; 
+						break;
+					}
+				}
+				strncpy( &dum[0], &mes[0], len );
+				dum[len] = '\0';
+				
+				if ( strcmp ( tag, "@ST" ) == 0 )
+					//strcat( &dum[0], tpars.station.c_str() );
+					strcat(&dum[0], ident.c_str());
+				else if ( strcmp ( tag, "@AP" ) == 0 )
+					//strcat( &dum[0], tpars.airport.c_str() );
+					strcat(&dum[0], name.c_str());
+				else if ( strcmp ( tag, "@CS" ) == 0 ) 
+					//strcat( &dum[0], tpars.callsign.c_str() );
+					strcat(&dum[0], usercall.c_str());
+				else if ( strcmp ( tag, "@TD" ) == 0 ) {
+					/*
+					if ( tpars.tdir == 1 ) {
+						char buf[] = "left";
+						strcat( &dum[0], &buf[0] );
+					}
+					else {
+						char buf[] = "right";
+						strcat( &dum[0], &buf[0] );
+					}
+					*/
+				}
+				else if ( strcmp ( tag, "@HE" ) == 0 ) {
+					/*
+					char buf[10];
+					sprintf( buf, "%i", (int)(tpars.heading) );
+					strcat( &dum[0], &buf[0] );
+					*/
+				}
+				else if ( strcmp ( tag, "@VD" ) == 0 ) {
+					/*
+					if ( tpars.VDir == 1 ) {
+						char buf[] = "Descend and maintain";
+						strcat( &dum[0], &buf[0] );
+					}
+					else if ( tpars.VDir == 2 ) {
+						char buf[] = "Maintain";
+						strcat( &dum[0], &buf[0] );
+					}
+					else if ( tpars.VDir == 3 ) {
+						char buf[] = "Climb and maintain";
+						strcat( &dum[0], &buf[0] );
+					} 
+					*/
+				}
+				else if ( strcmp ( tag, "@AL" ) == 0 ) {
+					/*
+					char buf[10];
+					sprintf( buf, "%i", (int)(tpars.alt) );
+					strcat( &dum[0], &buf[0] );
+					*/
+				}
+				else if ( strcmp ( tag, "@MI" ) == 0 ) {
+					char buf[10];
+					//sprintf( buf, "%3.1f", tpars.miles );
+					int dist_miles = dclGetHorizontalSeparation(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue())) / 1600;
+					sprintf(buf, "%i", dist_miles);
+					strcat( &dum[0], &buf[0] );
+				}
+				else if ( strcmp ( tag, "@FR" ) == 0 ) {
+					/*
+					char buf[10];
+					sprintf( buf, "%6.2f", tpars.freq );
+					strcat( &dum[0], &buf[0] );
+					*/
+				}
+				else if ( strcmp ( tag, "@RW" ) == 0 ) {
+					strcat(&dum[0], ConvertRwyNumToSpokenString(activeRwy).c_str());
+				} else if(strcmp(tag, "@CD") == 0) {	// @CD = compass direction
+					double h = GetHeadingFromTo(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
+					while(h < 0.0) h += 360.0;
+					while(h > 360.0) h -= 360.0;
+					if(h < 22.5 || h > 337.5) {
+						strcat(&dum[0], "North");
+					} else if(h < 67.5) {
+						strcat(&dum[0], "North-East");
+					} else if(h < 112.5) {
+						strcat(&dum[0], "East");
+					} else if(h < 157.5) {
+						strcat(&dum[0], "South-East");
+					} else if(h < 202.5) {
+						strcat(&dum[0], "South");
+					} else if(h < 247.5) {
+						strcat(&dum[0], "South-West");
+					} else if(h < 292.5) {
+						strcat(&dum[0], "West");
+					} else {
+						strcat(&dum[0], "North-West");
+					}
+				} else {
+					cout << "Tag " << tag << " not found" << endl;
+					break;
+				}
+				strcat( &dum[0], &mes[len+3] );
+				strcpy( &mes[0], &dum[0] );
+				
+				++check;
+				if(check > 10) {
+					SG_LOG(SG_ATC, SG_WARN, "WARNING: Possibly endless loop terminated in FGTransmissionlist::gen_text(...)"); 
+					break;
+				}
+			}
+			
+			//cout << mes  << endl;  
+			//break;
+		//}
+	//}
+	if ( mes != "" ) return mes;
+	else return "No transmission found";
 }
 
 ostream& operator << (ostream& os, tower_traffic_type ttt) {

@@ -126,6 +126,9 @@ public:
 	// Indicate that this instance should not output to the display
 	virtual void SetNoDisplay();
 	
+	// Generate the text of a message from its parameters and the current context.
+	virtual string GenText(const string& m, int c);
+	
 	// Returns true if OK to transmit on this frequency
 	inline bool GetFreqClear() { return freqClear; }
 	// Indicate that the frequency is in use
@@ -242,15 +245,15 @@ operator >> ( istream& fin, ATCData& a )
 	
 	a.name = "";
 	fin >> ch;
-	a.name += ch;
+	if(ch != '"') a.name += ch;
 	while(1) {
 		//in >> noskipws
 		fin.unsetf(ios::skipws);
 		fin >> ch;
-		a.name += ch;
 		if((ch == '"') || (ch == 0x0A)) {
 			break;
 		}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
+		a.name += ch;
 	}
 	fin.setf(ios::skipws);
 	//cout << "Comm name = " << a.name << '\n';
