@@ -177,6 +177,12 @@ extern FGControls controls;
 
 
 // $Log$
+// Revision 1.8  2000/04/28 17:59:46  curt
+// 0429 updates from Jon.
+//
+// Revision 1.4  2000/04/26 10:55:57  jsb
+// Made changes as required by Curt to install JSBSim into FGFS
+//
 // Revision 1.7  2000/04/24 21:49:07  curt
 // Updated JSBsim code.
 //

@@ -217,12 +217,12 @@ int FGJSBsim::copy_from_JSBsim() {
 
     // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 	
-    set_Mach_number( FDMExec.GetState()->GetMach());
+    set_Mach_number( FDMExec.GetTranslation()->GetMach());
 
     // Positions
-    double lat_geoc = FDMExec.GetState()->Getlatitude();
-    double lon = FDMExec.GetState()->Getlongitude();
-    double alt = FDMExec.GetState()->Geth();
+    double lat_geoc = FDMExec.GetPosition()->GetLatitude();
+    double lon = FDMExec.GetPosition()->GetLongitude();
+    double alt = FDMExec.GetPosition()->Geth();
     double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
     fgGeocToGeod( lat_geoc, EQUATORIAL_RADIUS_M + alt * FEET_TO_METER,
 		  &lat_geod, &tmp_alt, &sl_radius1 );

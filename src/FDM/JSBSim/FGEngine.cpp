@@ -134,7 +134,7 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
   }
 
   EngineNumber = num;
-  Thrust = 0.0;
+  Thrust = PctPower = 0.0;
   Starved = Flameout = false;
 }
 
@@ -173,9 +173,9 @@ float FGEngine::CalcPistonThrust(void)
 
   Throttle = FCS->GetThrottlePos(EngineNumber);
   Throttle /= 100;
- 
-  v=State->GetVt();
-  h=State->Geth();
+
+  v=Translation->GetVt();
+  h=Position->Geth();
   if(v < 10)
     v=10;
   if(h < 0)
