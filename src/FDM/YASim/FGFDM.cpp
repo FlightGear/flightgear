@@ -623,6 +623,8 @@ void FGFDM::parsePropeller(XMLAttributes* a)
 	prop->setManualPitch();
     }
 
+    thruster->setGearRatio(attrf(a, "gear-ratio", 1));
+
     char buf[64];
     sprintf(buf, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();

@@ -17,6 +17,7 @@ public:
     void setAdvance(float advance);
     void setPropPitch(float proppitch);
     void setVariableProp(float min, float max);
+    void setGearRatio(float ratio) { _gearRatio = ratio; }
 
     virtual PropEngine* getPropEngine() { return this; }
     virtual PistonEngine* getPistonEngine() { return _eng; }
@@ -45,6 +46,7 @@ private:
 
     bool _variable;
     int _magnetos;  // 0=off, 1=right, 2=left, 3=both
+    float _gearRatio;
     float _advance; // control input, 0-1
     float _maxOmega;
     float _minOmega;

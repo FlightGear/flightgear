@@ -11,6 +11,7 @@ PropEngine::PropEngine(Propeller* prop, PistonEngine* eng, float moment)
     _dir[0] = 1; _dir[1] = 0; _dir[2] = 0;
 
     _variable = false;
+    _gearRatio = 1;
 
     _prop = prop;
     _eng = eng;
@@ -154,7 +155,7 @@ void PropEngine::integrate(float dt)
     _eng->setMixture(_mixture);
     _eng->setFuelState(_fuel);
     
-    _prop->calc(_rho, speed, _omega, &thrust, &propTorque);
+    _prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &propTorque);
     _eng->calc(_pressure, _temp, _omega);
     engTorque = _eng->getTorque();
     _fuelFlow = _eng->getFuelFlow();
