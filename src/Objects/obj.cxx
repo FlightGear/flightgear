@@ -337,32 +337,39 @@ static void random_pt_inside_tri( float *res,
 static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 				       double factor ) {
     int num = leaf->getNumTriangles();
-    short int n1, n2, n3;
-    float *p1, *p2, *p3;
-    sgVec3 result;
+    if ( num > 0 ) {
+	short int n1, n2, n3;
+	float *p1, *p2, *p3;
+	sgVec3 result;
 
-    for ( int i = 0; i < num; ++i ) {
-	leaf->getTriangle( i, &n1, &n2, &n3 );
-	p1 = leaf->getVertex(n1);
-	p2 = leaf->getVertex(n2);
-	p3 = leaf->getVertex(n3);
-	double area = sgTriArea( p1, p2, p3 );
-	double num = area / factor;
+	// generate a repeatable random seed
+	p1 = leaf->getVertex( 0 );
+	unsigned int *seed = (unsigned int *)p1;
+	sg_srandom( *seed );
 
-	// generate a light point for each unit of area
-	while ( num > 1.0 ) {
-	    random_pt_inside_tri( result, p1, p2, p3 );
-	    lights->add( result );
-	    num -= 1.0;
-	}
-	// for partial units of area, use a zombie door method to
-	// create the proper random chance of a light being created
-	// for this triangle
-	if ( num > 0.0 ) {
-	    if ( sg_random() <= num ) {
-		// a zombie made it through our door
+	for ( int i = 0; i < num; ++i ) {
+	    leaf->getTriangle( i, &n1, &n2, &n3 );
+	    p1 = leaf->getVertex(n1);
+	    p2 = leaf->getVertex(n2);
+	    p3 = leaf->getVertex(n3);
+	    double area = sgTriArea( p1, p2, p3 );
+	    double num = area / factor;
+
+	    // generate a light point for each unit of area
+	    while ( num > 1.0 ) {
 		random_pt_inside_tri( result, p1, p2, p3 );
 		lights->add( result );
+		num -= 1.0;
+	    }
+	    // for partial units of area, use a zombie door method to
+	    // create the proper random chance of a light being created
+	    // for this triangle
+	    if ( num > 0.0 ) {
+		if ( sg_random() <= num ) {
+		    // a zombie made it through our door
+		    random_pt_inside_tri( result, p1, p2, p3 );
+		    lights->add( result );
+		}
 	    }
 	}
     }

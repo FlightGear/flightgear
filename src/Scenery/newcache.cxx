@@ -134,6 +134,11 @@ static void print_refs( ssgSelector *sel, ssgTransform *trans,
 
 
 static ssgLeaf *gen_lights( ssgVertexArray *lights, int inc, float bright ) {
+    // generate a repeatable random seed
+    float *p1 = lights->get( 0 );
+    unsigned int *seed = (unsigned int *)p1;
+    sg_srandom( *seed );
+
     int size = lights->getNum() / inc;
 
     // Allocate ssg structure
@@ -143,25 +148,31 @@ static ssgLeaf *gen_lights( ssgVertexArray *lights, int inc, float bright ) {
     ssgColourArray   *cl = new ssgColourArray( size + 1 );
 
     sgVec4 color;
-    for ( int i = 0; i < lights->getNum(); i += inc ) {
-	vl->add( lights->get(i) );
-
-	// yellow = 1,1,0
+    for ( int i = 0; i < lights->getNum(); ++i ) {
+	// this loop is slightly less efficient than it otherwise
+	// could be, but we want a red light to always be red, and a
+	// yellow light to always be yellow, etc. so we are trying to
+	// preserve the random sequence.
 	float zombie = sg_random();
-	if ( zombie > 0.5 ) {
-	    // 50% chance of yellowish
-	    sgSetVec4( color, 0.9, 0.9, 0.3, bright );
-	} else if ( zombie > 0.15 ) {
-	    // 35% chance of whitish
-	    sgSetVec4( color, 0.9, 0.9, 0.6, bright );
-	} else if ( zombie > 0.05 ) {
-	    // 10% chance of orangish
-	    sgSetVec4( color, 0.9, 0.6, 0.2, bright );
-	} else {
-	    // 5% chance of redish
-	    sgSetVec4( color, 0.9, 0.2, 0.2, bright );
+	if ( i % inc == 0 ) {
+	    vl->add( lights->get(i) );
+
+	    // yellow = 1,1,0
+	    if ( zombie > 0.5 ) {
+		// 50% chance of yellowish
+		sgSetVec4( color, 0.9, 0.9, 0.3, bright );
+	    } else if ( zombie > 0.15 ) {
+		// 35% chance of whitish
+		sgSetVec4( color, 0.9, 0.9, 0.8, bright );
+	    } else if ( zombie > 0.05 ) {
+		// 10% chance of orangish
+		sgSetVec4( color, 0.9, 0.6, 0.2, bright );
+	    } else {
+		// 5% chance of redish
+		sgSetVec4( color, 0.9, 0.2, 0.2, bright );
+	    }
+	    cl->add( color );
 	}
-	cl->add( color );
     }
 
     // create ssg leaf

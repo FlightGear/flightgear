@@ -1363,7 +1363,7 @@ int main( int argc, char **argv ) {
 	    << FLIGHTGEAR_VERSION << endl );
 
     // seed the random number generater
-    sg_srandom();
+    sg_srandom_time();
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
