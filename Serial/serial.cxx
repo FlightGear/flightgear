@@ -80,12 +80,14 @@ bool fgSERIAL::open_port(const string& device) {
 
     // software flow control on
     config.c_iflag |= IXON;
-    config.c_iflag |= IXOFF;
+    // config.c_iflag |= IXOFF;
 
     // config.c_cflag |= CLOCAL;
 
+#if ! defined( sgi )    
     // disable hardware flow control
     config.c_cflag &= ~(CRTSCTS);
+#endif
 
     // cout << "config.c_iflag = " << config.c_iflag << endl;
 
@@ -204,6 +206,9 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.7  1998/12/04 01:24:35  curt
+// Tweak for SGI portability.
+//
 // Revision 1.6  1998/11/30 17:15:29  curt
 // Having the class destructor close the fd was a bad idea ... especially if you
 // ever make a copy of the instance and then subsequently destroy either.
