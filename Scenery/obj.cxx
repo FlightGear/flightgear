@@ -103,16 +103,14 @@ static double calc_dist(double *p) {
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
     fgOPTIONS *o;
-    fgCartesianPoint3d cp;
     fgPolarPoint3d pp;
-    char fgpath[256], line[256], winding_str[256];
-    double approx_normal[3], normal[3], scale, dist;
+    char fgpath[256], line[256], material[256];
+    double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
     fgFile f;
     int first, ncount, vncount, n1, n2, n3, n4;
-    int winding;
     int last1, last2, odd;
 
     o = &current_options;
@@ -140,17 +138,6 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
     tile = xglGenLists(1);
     xglNewList(tile, GL_COMPILE);
 
-    /*
-    xglTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-    xglTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-    xglTexGenfv(GL_S, GL_OBJECT_PLANE, sgenparams);
-    xglTexGenfv(GL_T, GL_OBJECT_PLANE, sgenparams);
-    // xglTexGenfv(GL_S, GL_SPHERE_MAP, 0);
-    // xglTexGenfv(GL_T, GL_SPHERE_MAP, 0);
-    xglEnable(GL_TEXTURE_GEN_S);
-    xglEnable(GL_TEXTURE_GEN_T);
-    */
-
     first = 1;
     ncount = 1;
     vncount = 1;
@@ -161,9 +148,10 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 	    /* comment -- ignore */
 	} else if ( line[0] == '\n' ) {
 	    /* empty line -- ignore */
-	} else if ( strncmp(line, "ref ", 4) == 0 ) {
+	} else if ( strncmp(line, "gb ", 3) == 0 ) {
 	    /* reference point (center offset) */
-	    sscanf(line, "ref %lf %lf %lf\n", &ref->x, &ref->y, &ref->z);
+	    sscanf(line, "gb %lf %lf %lf %lf\n", &ref->x, &ref->y, &ref->z, 
+		   radius);
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
@@ -173,13 +161,13 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		       &nodes[ncount][2]);
 
 		// temporary code to calculate bounding radius
-		dist = calc_dist(nodes[ncount]);
+		// dist = calc_dist(nodes[ncount]);
 		// printf("node = %.2f %.2f %.2f dist = %.2f\n", 
 		//        nodes[ncount][0], nodes[ncount][1], nodes[ncount][2],
 		//        dist);
-		if ( (dist > *radius) && (dist < 100000.0) ) {
-		    *radius = dist;
-		}
+		// if ( (dist > *radius) && (dist < 100000.0) ) {
+		//    *radius = dist;
+		// }
 
 		ncount++;
 	    } else {
@@ -198,21 +186,9 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		fgPrintf( FG_TERRAIN, FG_EXIT, 
 			  "Read too many vertex normals ... dying :-(\n");
 	    }
-	} else if ( strncmp(line, "winding ", 8) == 0 ) {
-	    sscanf(line+8, "%s", winding_str);
-	    fgPrintf( FG_TERRAIN, FG_DEBUG, "    WINDING = %s\n", winding_str);
-
-	    /* can't call xglFrontFace() between xglBegin() & xglEnd() */
-	    xglEnd();
-	    first = 1;
-
-	    if ( strcmp(winding_str, "cw") == 0 ) {
-		xglFrontFace( GL_CW );
-		winding = 0;
-	    } else {
-		glFrontFace ( GL_CCW );
-		winding = 1;
-	    }
+	} else if ( strncmp(line, "usemtl ", 7) == 0 ) {
+	    /* material property specification */
+	    sscanf(line, "usemtl %s\n", material);
 	} else if ( line[0] == 't' ) {
 	    /* start a new triangle strip */
 
@@ -233,13 +209,8 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 
 	    xglBegin(GL_TRIANGLE_STRIP);
 
-	    if ( winding ) {
-		odd = 1; 
-		scale = 1.0;
-	    } else {
-		odd = 0;
-		scale = 1.0;
-	    }
+	    odd = 1; 
+	    scale = 1.0;
 
 	    if ( o->shading ) {
 		// Shading model is "GL_SMOOTH" so use precalculated
@@ -423,11 +394,6 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
     xglEnd();
     */
 
-    // xglDisable(GL_TEXTURE_GEN_S);
-    // xglDisable(GL_TEXTURE_GEN_T);
-
-    xglFrontFace ( GL_CCW );
-
     xglEndList();
 
     fgclose(f);
@@ -444,11 +410,18 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.4  1998/05/16 13:09:57  curt
-/* Beginning to add support for view frustum culling.
-/* Added some temporary code to calculate bouding radius, until the
-/*   scenery generation tools and scenery can be updated.
+/* Revision 1.5  1998/05/20 20:53:53  curt
+/* Moved global ref point and radius (bounding sphere info, and offset) to
+/* data file rather than calculating it on the fly.
+/* Fixed polygon winding problem in scenery generation stage rather than
+/* compensating for it on the fly.
+/* Made a fgTILECACHE class.
 /*
+ * Revision 1.4  1998/05/16 13:09:57  curt
+ * Beginning to add support for view frustum culling.
+ * Added some temporary code to calculate bouding radius, until the
+ *   scenery generation tools and scenery can be updated.
+ *
  * Revision 1.3  1998/05/03 00:48:01  curt
  * Updated texture coordinate fmod() parameter.
  *
