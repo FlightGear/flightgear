@@ -44,6 +44,7 @@ FGAIPlane::FGAIPlane() {
 	playing = false;
 	voiceOK = false;
 	vPtr = NULL;
+	track = 0.0;
 	_tgtTrack = 0.0;
 	_trackSet = false;
 	_tgtRoll = 0.0;
@@ -124,6 +125,7 @@ void FGAIPlane::Update(double dt) {
 		while((track - _tgtTrack) > 180.0) track -= 360.0;
 		double turn_time = 60.0;
 		track += (360.0 / turn_time) * dt * (_tgtTrack > track ? 1.0 : -1.0);
+		// TODO - bank a bit less for small turns.
 		Bank(25.0 * (_tgtTrack > track ? 1.0 : -1.0));
 		if(fabs(track - _tgtTrack) < 2.0) {		// TODO - might need to optimise the delta there - it's on the large (safe) side atm.
 			track = _tgtTrack;

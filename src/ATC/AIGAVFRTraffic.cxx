@@ -84,7 +84,9 @@ bool FGAIGAVFRTraffic::Init(Point3D pt, string destID, const string& callsign) {
 	_pos.setelev(_cruise_alt);
 	// initially set waypoint as airport location
 	_wp = _destPos;
-	//_hdg = GetHeadingFromTo(_pos, _wp);
+	// Set the initial track
+	track = GetHeadingFromTo(_pos, _wp);
+	// And set the plane to keep following it.
 	SetTrack(GetHeadingFromTo(_pos, _wp));
 	_roll = 0.0;
 	_pitch = 0.0;
