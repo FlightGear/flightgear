@@ -39,6 +39,11 @@
 #include <Math/point3d.hxx>
 #include <Polygon/names.hxx>
 
+#define REAL double
+extern "C" {
+#include <Triangle/triangle.h>
+}
+
 #include "trinodes.hxx"
 
 FG_USING_STD(vector);
@@ -66,8 +71,17 @@ public:
     FGTriangle( void );
     ~FGTriangle( void );
 
+    // add nodes from the dem fit
+    int add_nodes();
+
     // populate this class based on the specified gpc_polys list
     int build( const FGgpcPolyList& gpc_polys );
+
+    // do actual triangulation
+    int do_triangulate( const tripoly& poly );
+
+    // front end triangulator for polygon list
+    int triangulate();
 };
 
 
@@ -75,6 +89,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/03/19 22:29:05  curt
+// Working on preparationsn for triangulation.
+//
 // Revision 1.3  1999/03/19 00:27:11  curt
 // Continued work on triangulation preparation.
 //

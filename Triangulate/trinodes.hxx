@@ -67,6 +67,9 @@ public:
     // Add a point to the point list if it doesn't already exist.
     // Returns the index (starting at zero) of the point in the list.
     int unique_add( const Point3D& p );
+
+    // return the master node list
+    inline point_container get_node_list() const { return point_list; }
 };
 
 
@@ -74,6 +77,9 @@ public:
 
 
 // $Log$
+// Revision 1.2  1999/03/19 22:29:06  curt
+// Working on preparationsn for triangulation.
+//
 // Revision 1.1  1999/03/17 23:52:00  curt
 // Initial revision.
 //

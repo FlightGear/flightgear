@@ -68,7 +68,8 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 
 	    if (gpc_poly->num_contours > 1 ) {
 		cout << "FATAL ERROR! no multi-contour support" << endl;
-		exit(-1);
+		sleep(5);
+		// exit(-1);
 	    }
 
 	    for ( int j = 0; j < gpc_poly->num_contours; j++ ) {
@@ -86,13 +87,64 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
     }
 
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	cout << "polylist[" << i << "] = " << polylist[i].size() << endl;
+	if ( polylist[i].size() ) {
+	    cout << get_area_name((AreaType)i) << " = " 
+		 << polylist[i].size() << endl;
+	}
     }
     return 0;
 }
 
 
+// do actual triangulation
+int FGTriangle::do_triangulate( const tripoly& poly ) {
+    point_container node_list;
+    struct triangulateio in, mid, out, vorout;
+    int counter;
+
+    // define input points
+    node_list = trinodes.get_node_list();
+
+    in.numberofpoints = node_list.size();
+    in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
+
+    point_iterator current, last;
+    current = node_list.begin();
+    last = node_list.end();
+    counter = 0;
+    for ( ; current != last; ++current ) {
+	in.pointlist[counter++] = current->x();
+	in.pointlist[counter++] = current->y();
+    }
+}
+
+
+// triangulate each of the polygon areas
+int FGTriangle::triangulate() {
+    tripoly poly;
+
+    tripoly_list_iterator current, last;
+
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	cout << "area type = " << i << endl;
+	current = polylist[i].begin();
+	last = polylist[i].end();
+	for ( ; current != last; ++current ) {
+	    poly = *current;
+	    cout << "triangulating a polygon, size = " << poly.size() << endl;
+
+	    do_triangulate( poly );
+	}
+    }
+
+    return 0;
+}
+
+
 // $Log$
+// Revision 1.4  1999/03/19 22:29:04  curt
+// Working on preparationsn for triangulation.
+//
 // Revision 1.3  1999/03/19 00:27:10  curt
 // Continued work on triangulation preparation.
 //
