@@ -138,8 +138,6 @@ static void fgUpdateViewParams() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
-
     /* calculate view position in current FG view coordinate system */
     view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
 			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
@@ -222,6 +220,8 @@ static void fgUpdateViewParams() {
 	      view_pos.x + view_forward[0], view_pos.y + view_forward[1], 
 	      view_pos.z + view_forward[2],
 	      view_up[0], view_up[1], view_up[2]);
+
+    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
 }
 
 
@@ -257,6 +257,7 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     struct fgCartesianPoint sunpos;
     double sun_lon, sun_gd_lat, sun_gc_lat, sl_radius;
     int i;
+    static int time_warp = 0;
 
     f = &current_aircraft.flight;
 
@@ -269,7 +270,8 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
 
     /* refresh sun position */
-    fgSunPosition(time(NULL), &sun_lon, &sun_gd_lat);
+    time_warp += 600;
+    fgSunPosition(time(NULL) + time_warp, &sun_lon, &sun_gd_lat);
     fgGeodToGeoc(sun_gd_lat, 0, &sl_radius, &sun_gc_lat);
     sunpos = fgPolarToCart(sun_lon, sun_gc_lat, sl_radius);
     printf("Sun position is (%.2f, %.2f, %.2f)\n", 
@@ -643,9 +645,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.3  1997/08/06 00:24:22  curt
-/* Working on correct real time sun lighting.
+/* Revision 1.4  1997/08/06 15:41:26  curt
+/* Working on correct sun position.
 /*
+ * Revision 1.3  1997/08/06 00:24:22  curt
+ * Working on correct real time sun lighting.
+ *
  * Revision 1.2  1997/08/04 20:25:15  curt
  * Organizational tweaking.
  *
