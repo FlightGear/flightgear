@@ -48,6 +48,7 @@
 #include "../Math/polar.h"
 #include "../Timer/fg_timer.h"
 #include "../Utils/fg_random.h"
+#include "../Weather/weather.h"
 
 
 /* This is a record containing all the info for the aircraft currently
@@ -387,8 +388,8 @@ static void fgMainLoop( void ) {
 
     /* I'm just sticking this here for now, it should probably move 
      * eventually */
-    rough_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
-			       FG_Latitude  * RAD_TO_DEG * 3600.0);
+    rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
+			       FG_Latitude  * RAD_TO_ARCSEC);
     printf("Ground elevation is about %.2f meters here.\n", rough_elev);
     /* FG_Runway_altitude = rough_elev * METER_TO_FEET; */
 
@@ -403,9 +404,10 @@ static void fgMainLoop( void ) {
 	       FG_Altitude * FEET_TO_METER);
     }
 
-    FG_U_gust = fg_random() * 1.0 - 0.5;
-    FG_V_gust = fg_random() * 1.0 - 0.5;
-    FG_W_gust = fg_random() * 1.0 - 0.5;
+    /* update the weather for our current position */
+    fgWeatherUpdate(FG_Longitude * RAD_TO_ARCSEC, 
+		    FG_Latitude * RAD_TO_ARCSEC, 
+		    FG_Altitude * FEET_TO_METER);
 }
 
 
@@ -439,9 +441,6 @@ int main( int argc, char *argv[] ) {
 
     f = &current_aircraft.flight;
 
-    /* might as well do this first thing ... seed the random number generater */
-    fg_srandom();
-
     printf("Flight Gear: prototype code to test OpenGL, LaRCsim, and VRML\n\n");
 
 
@@ -473,6 +472,9 @@ int main( int argc, char *argv[] ) {
 	  tkQuit();
       }
     #endif
+
+    /* seed the random number generater */
+    fg_srandom();
 
     /* setup view parameters, only makes GL calls */
     fgInitVisuals();
@@ -530,9 +532,6 @@ int main( int argc, char *argv[] ) {
     FG_Dy_cg = 0.000000E+00;
     FG_Dz_cg = 0.000000E+00;
 
-    /* Configure some wind & turbulance */
-    FG_V_north_airmass = 15; /* ft/s =~ 10mph */
-
     /* Set initial position and slew parameters */
     /* fgSlewInit(-398391.3, 120070.41, 244, 3.1415); */ /* GLOBE Airport */
     /* fgSlewInit(-335340,162540, 15, 4.38); */
@@ -565,6 +564,9 @@ int main( int argc, char *argv[] ) {
 	   signal to be generated, etc. */
 	fgInitTimeDepCalcs();
     }
+
+    /* Initialize the weather modeling subsystem */
+    fgWeatherInit();
 
     /**********************************************************************
      * Initialize the Event Handlers.
@@ -619,10 +621,13 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.37  1997/07/19 22:34:02  curt
-/* Moved PI definitions to ../constants.h
-/* Moved random() stuff to ../Utils/ and renamed fg_random()
+/* Revision 1.38  1997/07/19 23:04:47  curt
+/* Added an initial weather section.
 /*
+ * Revision 1.37  1997/07/19 22:34:02  curt
+ * Moved PI definitions to ../constants.h
+ * Moved random() stuff to ../Utils/ and renamed fg_random()
+ *
  * Revision 1.36  1997/07/18 23:41:25  curt
  * Tweaks for building with Cygnus Win32 compiler.
  *

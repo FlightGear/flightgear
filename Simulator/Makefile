@@ -28,7 +28,7 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Controls Flight Math Scenery Timer Utils
+SUBDIRS = Aircraft Controls Flight Math Scenery Timer Utils Weather
 MAIN = OpenGL
 
 
@@ -63,6 +63,9 @@ zip: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.19  1997/07/19 23:04:46  curt
+# Added an initial weather section.
+#
 # Revision 1.18  1997/07/19 22:36:28  curt
 # Added Utils/ subdirectory
 #

@@ -61,6 +61,9 @@
 /* Arc seconds to radians */                  /* (arcsec*pi)/(3600*180) = rad */
 #define ARCSEC_TO_RAD 4.84813681109535993589e-06 
 
+/* Radians to arc seconds */                  /* (rad*3600*180)/pi = arcsec */
+#define RAD_TO_ARCSEC 2035752.03952618601852
+
 /* Feet to Meters */
 #define FEET_TO_METER    0.3048
 
@@ -76,9 +79,12 @@
 
 
 /* $Log$
-/* Revision 1.4  1997/07/19 22:37:03  curt
-/* Added various PI definitions.
+/* Revision 1.5  1997/07/19 23:04:46  curt
+/* Added an initial weather section.
 /*
+ * Revision 1.4  1997/07/19 22:37:03  curt
+ * Added various PI definitions.
+ *
  * Revision 1.3  1997/07/14 16:26:03  curt
  * Testing/playing -- placed objects randomly across the entire terrain.
  *

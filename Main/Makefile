@@ -32,7 +32,7 @@ AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../Math/libMath.a \
 	../Scenery/libScenery.a \
-	../Timer/libTimer.a ../Utils/libUtils.a
+	../Timer/libTimer.a ../Utils/libUtils.a ../Weather/libWeather.a
 
 
 include ../make.inc
@@ -76,6 +76,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.24  1997/07/19 23:04:47  curt
+# Added an initial weather section.
+#
 # Revision 1.23  1997/07/19 22:34:03  curt
 # Moved PI definitions to ../constants.h
 # Moved random() stuff to ../Utils/ and renamed fg_random()
