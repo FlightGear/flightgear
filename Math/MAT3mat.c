@@ -8,6 +8,10 @@
 #include <string.h>
 #include "mat3defs.h"
 
+#ifdef WIN32
+#include <memory.h>      /* required for memset() and memcpy() */
+#endif
+
 /* #include "macros.h" */
 
 /* --------------------------  Static Routines	---------------------------- */
@@ -26,7 +30,12 @@ MAT3identity (register MAT3mat mat)
 {
    register int i;
 
+#ifdef WIN32
+   memset(mat,0x00, sizeof(MAT3mat));
+#else
    bzero (mat, sizeof(MAT3mat));
+#endif
+
    for (i = 0; i < 4; i++)
       mat[i][i] = 1.0;
 }
@@ -38,7 +47,11 @@ MAT3identity (register MAT3mat mat)
 void
 MAT3zero (MAT3mat mat)
 {
+#ifdef WIN32
+   memset(mat,0x00, sizeof(MAT3mat));
+#else
    bzero (mat, sizeof(MAT3mat));
+#endif
 }
 
 
@@ -49,7 +62,11 @@ MAT3zero (MAT3mat mat)
 void
 MAT3copy(MAT3mat to, MAT3mat from)
 {
-   bcopy (from, to, sizeof(MAT3mat));
+#ifdef WIN32
+    memcpy(to, from, sizeof(MAT3mat));
+#else
+    bcopy(from, to, sizeof(MAT3mat));
+#endif
 }
 
 /*
