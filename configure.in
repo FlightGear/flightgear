@@ -263,6 +263,7 @@ if test "x$ac_cv_header_gpc_h" != "xyes"; then
     echo
     echo "(pausing 2 seconds)"
     sleep 2
+    echo
 fi
 
 dnl Check if  Geographic Foundation Classes library is installed
@@ -284,6 +285,7 @@ if test "x$ac_cv_header_gfc_gdbf_h" != "xyes"; then
     echo
     echo "(pausing 5 seconds)"
     sleep 5
+    echo
 fi
 
 dnl Checks for header files.
