@@ -1,27 +1,25 @@
-/**************************************************************************
- * autopilot.cxx -- autopilot subsystem
- *
- * Written by Jeff Goeke-Smith, started April 1998.
- *
- * Copyright (C) 1998  Jeff Goeke-Smith, jgoeke@voyager.net
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * 
- *
- **************************************************************************/
+// autopilot.cxx -- autopilot subsystem
+//
+// Written by Jeff Goeke-Smith, started April 1998.
+//
+// Copyright (C) 1998  Jeff Goeke-Smith, jgoeke@voyager.net
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -37,6 +35,7 @@
 
 #include <Include/fg_constants.h>
 #include <Debug/logstream.hxx>
+#include <Main/options.hxx>
 
 
 // The below routines were copied right from hud.c ( I hate reinventing
@@ -112,6 +111,65 @@ fgAPDataPtr APDataGlobal; 	// global variable holding the AP info
 				// I want this gone.  Data should be in aircraft structure
 
 
+bool fgAPHeadingEnabled( void )
+{
+    fgAPDataPtr APData;
+	
+    APData = APDataGlobal;
+    // end section
+	        
+    // heading hold enabled?
+    return( APData->heading_hold );
+}
+bool fgAPAltitudeEnabled( void )
+{
+    fgAPDataPtr APData;
+	
+    APData = APDataGlobal;
+    // end section
+	        
+    // altitude hold or terrain follow enabled?
+    return( APData->altitude_hold || APData->terrain_follow );
+}
+void fgAPAltitudeAdjust( double inc )
+{
+    // Remove at a later date
+    fgAPDataPtr APData;
+    APData = APDataGlobal;
+    // end section
+
+    double target_alt, target_agl;
+
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	target_alt = APData->TargetAltitude * METER_TO_FEET;
+	target_agl = APData->TargetAGL * METER_TO_FEET;
+    } else {
+	target_alt = APData->TargetAltitude;
+	target_agl = APData->TargetAGL;
+    }
+
+    target_alt = (int)(target_alt / inc) * inc + inc;
+    target_agl = (int)(target_agl / inc) * inc + inc;
+
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	target_alt *= FEET_TO_METER;
+	target_agl *= FEET_TO_METER;
+    }
+
+    // heading hold enabled?
+    APData->TargetAltitude = target_alt;
+    APData->TargetAGL = target_agl;
+}
+void fgAPHeadingAdjust( double inc )
+{
+    fgAPDataPtr APData;
+	
+    APData = APDataGlobal;
+    // end section
+	        
+    // heading hold enabled?
+    APData->TargetHeading = NormalizeDegrees(APData->TargetHeading + inc);
+}
 
 void fgAPInit( fgAIRCRAFT *current_aircraft )
 {
@@ -127,20 +185,39 @@ void fgAPInit( fgAIRCRAFT *current_aircraft )
 	    exit(-1);
 	}
 		
-	APData->heading_hold = 0 ;     // turn the heading hold off
-	APData->altitude_hold = 0 ;    // turn the altitude hold off
+	APData->heading_hold = false ;     // turn the heading hold off
+	APData->altitude_hold = false ;    // turn the altitude hold off
 
 	APData->TargetHeading = 0.0;    // default direction, due north
 	APData->TargetAltitude = 3000;  // default altitude in meters
 	APData->alt_error_accum = 0.0;
 
 	// These eventually need to be read from current_aircaft somehow.
-	
-	APData->MaxRoll = 7;		// the maximum roll, in Deg
-	APData->RollOut = 30;		// the deg from heading to start rolling out at, in Deg
-	APData->MaxAileron= .1;		// how far can I move the aleron from center.
-	APData->RollOutSmooth = 10;	// Smoothing distance for alerion control
-	
+
+#if 0
+	// Original values
+	// the maximum roll, in Deg
+	APData->MaxRoll = 7;
+	// the deg from heading to start rolling out at, in Deg
+	APData->RollOut = 30;
+	// how far can I move the aleron from center.
+	APData->MaxAileron= .1;
+	// Smoothing distance for alerion control
+	APData->RollOutSmooth = 10;
+#endif
+
+	// the maximum roll, in Deg
+	APData->MaxRoll = 20;
+
+	// the deg from heading to start rolling out at, in Deg
+	APData->RollOut = 20;
+
+	// how far can I move the aleron from center.
+	APData->MaxAileron= .2;
+
+	// Smoothing distance for alerion control
+	APData->RollOutSmooth = 10;
+
 	//Remove at a later date
 	APDataGlobal = APData;
 	
@@ -157,7 +234,7 @@ int fgAPRun( void )
     // end section
 	        
     // heading hold enabled?
-    if ( APData->heading_hold == 1 ) {
+    if ( APData->heading_hold == true ) {
 	double RelHeading;
 	double TargetRoll;
 	double RelRoll;
@@ -221,16 +298,16 @@ int fgAPRun( void )
     }
 
     // altitude hold or terrain follow enabled?
-    if ( (APData->altitude_hold == 1) || (APData->terrain_follow == 1) ) {
+    if ( APData->altitude_hold || APData->terrain_follow ) {
 	double speed, max_climb, error;
 	double prop_error, int_error;
 	double prop_adj, int_adj, total_adj;
 
-	if (APData->altitude_hold == 1) {
+	if ( APData->altitude_hold ) {
 	    // normal altitude hold
 	    APData->TargetClimbRate = 
 		(APData->TargetAltitude - fgAPget_altitude()) * 8.0;
-	} else if (APData->terrain_follow == 1) {
+	} else if ( APData->terrain_follow ) {
 	    // brain dead ground hugging with no look ahead
 	    APData->TargetClimbRate = 
 		( APData->TargetAGL - fgAPget_agl() ) * 16.0;
@@ -280,7 +357,7 @@ int fgAPRun( void )
     }
 
     // auto throttle enabled?
-    if ( APData->auto_throttle == 1 ) {
+    if ( APData->auto_throttle ) {
 	double error;
 	double prop_error, int_error;
 	double prop_adj, int_adj, total_adj;
@@ -371,10 +448,10 @@ void fgAPToggleHeading( void )
 
     if ( APData->heading_hold ) {
 	// turn off heading hold
-	APData->heading_hold = 0;
+	APData->heading_hold = false;
     } else {
 	// turn on heading hold, lock at current heading
-	APData->heading_hold = 1;
+	APData->heading_hold = true;
 	APData->TargetHeading = fgAPget_heading();
     }
 
@@ -393,11 +470,11 @@ void fgAPToggleAltitude( void )
 
     if ( APData->altitude_hold ) {
 	// turn off altitude hold
-	APData->altitude_hold = 0;
+	APData->altitude_hold = false;
     } else {
 	// turn on altitude hold, lock at current altitude
-	APData->altitude_hold = 1;
-	APData->terrain_follow = 0;
+	APData->altitude_hold = true;
+	APData->terrain_follow = false;
 	APData->TargetAltitude = fgAPget_altitude();
 	APData->alt_error_accum = 0.0;
 	// alt_error_queue.erase( alt_error_queue.begin(), 
@@ -419,10 +496,10 @@ void fgAPToggleAutoThrottle ( void )
 
     if ( APData->auto_throttle ) {
 	// turn off altitude hold
-	APData->auto_throttle = 0;
+	APData->auto_throttle = false;
     } else {
 	// turn on terrain follow, lock at current agl
-	APData->auto_throttle = 1;
+	APData->auto_throttle = true;
 	APData->TargetSpeed = get_speed();
 	APData->speed_error_accum = 0.0;
     }
@@ -441,11 +518,11 @@ void fgAPToggleTerrainFollow( void )
 
     if ( APData->terrain_follow ) {
 	// turn off altitude hold
-	APData->terrain_follow = 0;
+	APData->terrain_follow = false;
     } else {
 	// turn on terrain follow, lock at current agl
-	APData->terrain_follow = 1;
-	APData->altitude_hold = 0;
+	APData->terrain_follow = true;
+	APData->altitude_hold = false;
 	APData->TargetAGL = fgAPget_agl();
 	APData->alt_error_accum = 0.0;
     }
@@ -482,3 +559,10 @@ double NormalizeDegrees(double Input)
     
     return (Input);
 };
+
+
+// $Log$
+// Revision 1.14  1999/02/12 22:17:14  curt
+// Changes contributed by Norman Vine to allow adjustment of the autopilot
+// while it is activated.
+//
