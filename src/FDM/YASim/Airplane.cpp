@@ -650,6 +650,14 @@ void Airplane::solveGear()
     }
 }
 
+void Airplane::initEngines()
+{
+    for(int i=0; i<_thrusters.size(); i++) {
+        ThrustRec* tr = (ThrustRec*)_thrusters.get(i);
+	tr->thruster->init();
+    }
+}
+
 void Airplane::stabilizeThrust()
 {
     int i;

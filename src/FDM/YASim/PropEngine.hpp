@@ -30,6 +30,7 @@ public:
     virtual float getFuelFlow();
 
     // Runtime instructions
+    virtual void init();
     virtual void integrate(float dt);
     virtual void stabilize();
 

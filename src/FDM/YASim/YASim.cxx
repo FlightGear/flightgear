@@ -189,7 +189,7 @@ void YASim::init()
     copyToYASim(true);
 
     _fdm->getExternalInput();
-    _fdm->getAirplane()->stabilizeThrust();
+    _fdm->getAirplane()->initEngines();
 
     set_inited(true);
 }

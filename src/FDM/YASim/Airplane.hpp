@@ -59,6 +59,7 @@ public:
     float getFuelDensity(int tank); // kg/m^3
 
     void compile(); // generate point masses & such, then solve
+    void initEngines();
     void stabilizeThrust();
 
     // Solution output values

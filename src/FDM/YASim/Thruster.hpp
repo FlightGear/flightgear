@@ -43,6 +43,7 @@ public:
     // Runtime instructions
     void setWind(float* wind);
     void setAir(float pressure, float temp);
+    virtual void init() {}
     virtual void integrate(float dt)=0;
     virtual void stabilize()=0;
 

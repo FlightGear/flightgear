@@ -123,6 +123,13 @@ void PropEngine::stabilize()
     _eng->setRunning(false);
 }
 
+void PropEngine::init()
+{
+    _omega = 0.01;
+    _eng->setStarter(false);
+    _eng->setMagnetos(0);
+}
+
 void PropEngine::integrate(float dt)
 {
     float speed = -Math::dot3(_wind, _dir);
