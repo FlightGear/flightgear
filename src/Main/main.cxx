@@ -25,7 +25,7 @@
 #  include <config.h>
 #endif
 
-#if defined(__linux__) && defined(__386__)
+#if defined(__linux__) && defined(__i386__)
 #  include <fpu_control.h>
 #endif
 
@@ -1774,14 +1774,15 @@ int mainLoop( int argc, char **argv ) {
 int main ( int argc, char **argv ) {
 
     // Enable floating-point exceptions for Linux/x86
-#if defined(__linux__) && defined(__386__)
-    int fpe_flags = 0;
-//      fpe_flags |= _FPU_MASK_IM;	// invalid operation
-//      fpe_flags |= _FPU_MASK_DM;	// denormalized operand
-    fpe_flags |= _FPU_MASK_ZM;	// zero-divide
-//      fpe_flags |= _FPU_MASK_OM;	// overflow
-//      fpe_flags |= _FPU_MASK_UM;	// underflow
-//      fpe_flags |= _FPU_MASK_PM;	// precision (inexact result)
+#if defined(__linux__) && defined(__i386__)
+    fpu_control_t fpe_flags;
+    _FPU_GETCW(fpe_flags);
+//      fpe_flags &= ~_FPU_MASK_IM;	// invalid operation
+//      fpe_flags &= ~_FPU_MASK_DM;	// denormalized operand
+    fpe_flags &= ~_FPU_MASK_ZM;	// zero-divide
+//      fpe_flags &= ~_FPU_MASK_OM;	// overflow
+//      fpe_flags &= ~_FPU_MASK_UM;	// underflow
+//      fpe_flags &= ~_FPU_MASK_PM;	// precision (inexact result)
     _FPU_SETCW(fpe_flags);
 #endif
 
