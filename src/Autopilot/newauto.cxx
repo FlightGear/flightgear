@@ -871,7 +871,7 @@ FGAutopilot::update (double dt)
                       double lookahead;
 
                        // estimate speed in 10 seconds
-                      lookahead =  airspeed_node->getFloatValue() + ( airspeed_node->getFloatValue() - previous_speed) * (10/dt);
+                      lookahead =  airspeed_node->getFloatValue() + ( airspeed_node->getFloatValue() - previous_speed) * (10/(dt + 0.000001));
 	previous_speed =  airspeed_node->getFloatValue();
 
                       // compare targetspeed to anticipated airspeed
