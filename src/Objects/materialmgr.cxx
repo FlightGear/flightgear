@@ -88,15 +88,6 @@ FGMaterialSlot::render_fragments()
 
 	if ( !m.is_loaded() ) {
 	    m.load_texture( current_options.get_fg_root() );
-
-	    // build the ssgSimpleState
-	    GLuint tex_id = m.get_texture_id();
-	    state.setTexture( tex_id );
-	    state.enable( GL_TEXTURE_2D );
-	    state.enable( GL_LIGHTING );
-	    state.setShadeModel( GL_SMOOTH );
-	    state.enable ( GL_CULL_FACE      ) ;
-	    state.setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
 	}
 
 #ifdef GL_VERSION_1_1
@@ -167,12 +158,24 @@ fgMATERIAL_MGR::load_lib ( void )
 	    FGMaterial m;
 	    in >> m;
 
-	    // if ( current_options.get_textures() ) {
-	    //    m.load_texture( current_options.get_fg_root() );
-	    // }
-
 	    FGMaterialSlot m_slot;
 	    m_slot.set_m( m );
+
+	    // build the ssgSimpleState
+	    FGPath tex_file( current_options.get_fg_root() );
+	    tex_file.append( "Textures" );
+	    tex_file.append( m.get_texture_name() );
+	    tex_file.concat( ".rgb" );
+
+	    ssgSimpleState *state = new ssgSimpleState;
+	    state->setTexture( tex_file.c_str() );
+	    state->enable( GL_TEXTURE_2D );
+	    state->enable( GL_LIGHTING );
+	    state->setShadeModel( GL_SMOOTH );
+	    state->enable ( GL_CULL_FACE      ) ;
+	    state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
+	    m_slot.set_state( state );
+
 	    material_mgr.material_map[material_name] = m_slot;
 	}
     }

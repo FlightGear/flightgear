@@ -88,6 +88,7 @@ public:
 
     inline bool is_loaded() const { return loaded; }
     inline GLuint get_texture_id() const { return texture_id; }
+    inline string get_texture_name() const { return texture_name; }
     inline double get_xsize() const { return xsize; }
     inline double get_ysize() const { return ysize; }
     inline GLfloat *get_ambient() { return ambient; }

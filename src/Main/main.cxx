@@ -381,26 +381,12 @@ static void fgRenderFrame( void ) {
 
 	global_tile_mgr.render();
 
-	xglDisable( GL_TEXTURE_2D );
-	xglDisable( GL_FOG );
-
-	// display HUD && Panel
-	xglDisable( GL_CULL_FACE );
-	fgCockpitUpdate();
-
-	// We can do translucent menus, so why not. :-)
-	xglEnable    ( GL_BLEND ) ;
-	xglBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-	puDisplay();
-	xglDisable   ( GL_BLEND ) ;
-	xglEnable( GL_FOG );
-
 	// ssg test
 
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
 	ssgSetFOV(60.0f, 0.0f);
-	ssgSetNearFar(1.0f, 14000.0f);
+	ssgSetNearFar(10.0f, 14000.0f);
 	sgMat4 sgTRANS;
 
 	sgMakeTransMat4( sgTRANS, 
@@ -429,6 +415,20 @@ static void fgRenderFrame( void ) {
 	ssgSetCamera( sgVIEW );
 	// ssgSetCamera( current_view.sgVIEW );
 	ssgCullAndDraw( scene );
+
+	xglDisable( GL_TEXTURE_2D );
+	xglDisable( GL_FOG );
+
+	// display HUD && Panel
+	xglDisable( GL_CULL_FACE );
+	fgCockpitUpdate();
+
+	// We can do translucent menus, so why not. :-)
+	xglEnable    ( GL_BLEND ) ;
+	xglBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+	puDisplay();
+	xglDisable   ( GL_BLEND ) ;
+	xglEnable( GL_FOG );
 
     }
 

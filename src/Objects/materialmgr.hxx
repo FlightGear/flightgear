@@ -83,7 +83,7 @@ private:
     // size_t list_size;
 
     // ssg stage structure
-    ssgSimpleState state;
+    ssgSimpleState *state;
     bool state_valid;
 
 public:
@@ -115,8 +115,8 @@ public:
     inline void set_m( FGMaterial new_m ) { m = new_m; }
 
     // ssg state
-    inline ssgSimpleState *get_state() { return &state; }
-    inline void set_state( ssgSimpleState s ) { state = s; }
+    inline ssgSimpleState *get_state() { return state; }
+    inline void set_state( ssgSimpleState *s ) { state = s; }
     inline bool get_state_valid() const { return state_valid; }
     inline void set_state_valid( bool flag ) { state_valid = flag; }
 };
