@@ -28,19 +28,38 @@
 #define CONSTANTS_H
 
 
-/* Radius of Earth in meters at the equator.  Another source had
- * 6378165 but this is probably close enough */
+#include <math.h>
+
+
+/* Make sure PI is defined in its various forms */
+#ifdef M_PI
+#  define  FG_PI  M_PI
+#else
+#  define  FG_PI  3.14159265358979323846      /* pi */
+#endif
+
+#ifdef M_PI_2
+#  define  FG_PI_2  M_PI_2
+#else
+#  define  FG_PI_2  1.57079632679489661923    /* pi/2 */
+#endif
+
+#define FG_2PI (FG_PI + FG_PI)                /* 2*pi */
+
+
+/* Radius of Earth in kilometers at the equator.  Another source had
+ * 6378.165 but this is probably close enough */
 #define EARTH_RAD 6378.155
 
 
 /* Degrees to Radians */
-#define DEG_TO_RAD       0.017453292
+#define DEG_TO_RAD       0.017453292          /* deg*pi/180 = rad */
 
 /* Radians to Degrees */
-#define RAD_TO_DEG       57.29577951
+#define RAD_TO_DEG       57.29577951          /* rad*180/pi = deg */
 
-/* Arc seconds to radians */
-#define ARCSEC_TO_RAD 4.84813681109535993589e-06
+/* Arc seconds to radians */                  /* (arcsec*pi)/(3600*180) = rad */
+#define ARCSEC_TO_RAD 4.84813681109535993589e-06 
 
 /* Feet to Meters */
 #define FEET_TO_METER    0.3048
@@ -57,9 +76,12 @@
 
 
 /* $Log$
-/* Revision 1.3  1997/07/14 16:26:03  curt
-/* Testing/playing -- placed objects randomly across the entire terrain.
+/* Revision 1.4  1997/07/19 22:37:03  curt
+/* Added various PI definitions.
 /*
+ * Revision 1.3  1997/07/14 16:26:03  curt
+ * Testing/playing -- placed objects randomly across the entire terrain.
+ *
  * Revision 1.2  1997/07/08 18:20:11  curt
  * Working on establishing a hard ground.
  *
