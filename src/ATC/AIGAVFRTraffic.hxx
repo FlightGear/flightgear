@@ -22,8 +22,6 @@
 #ifndef _FG_AIGAVFRTraffic_HXX
 #define _FG_AIGAVFRTraffic_HXX
 
-#include <plib/sg.h>
-#include <plib/ssg.h>
 #include <simgear/math/point3d.hxx>
 #include <Main/fg_props.hxx>
 

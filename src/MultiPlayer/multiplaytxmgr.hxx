@@ -38,7 +38,6 @@
 SG_USING_STD(string);
 
 #include <simgear/compiler.h>
-#include <plib/ssg.h>
 #include <plib/netSocket.h>
 
 // Maximum number of players that can exist at any time

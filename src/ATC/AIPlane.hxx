@@ -21,8 +21,6 @@
 #ifndef _FG_AI_PLANE_HXX
 #define _FG_AI_PLANE_HXX
 
-#include <plib/sg.h>
-#include <plib/ssg.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/model.hxx>
 

@@ -14,9 +14,6 @@
 
 SG_USING_STD(vector);
 
-#include <plib/sg.h>
-#include <plib/ssg.h>
-
 #include <simgear/math/point3d.hxx>
 #include <simgear/props/props.hxx>
 

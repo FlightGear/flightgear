@@ -34,7 +34,6 @@
 #  include <windows.h>
 #endif
 
-#include <plib/ssg.h>
 #include <plib/fnt.h>
 
 #include <simgear/compiler.h>
@@ -53,6 +52,8 @@
 SG_USING_STD(vector);
 SG_USING_STD(map);
 
+
+class ssgTexture;
 class FGPanelInstrument;
 
 
