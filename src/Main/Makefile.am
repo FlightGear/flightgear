@@ -73,7 +73,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
-	-lsgroute -lsgsky -lsgclouds3d -lsgephem -lsgtiming -lsgio -lsgscreen \
+	-lsgroute -lsgsky -lsgephem -lsgtiming -lsgio -lsgscreen \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	-lsgserial \
 	$(THREAD_LIBS) \

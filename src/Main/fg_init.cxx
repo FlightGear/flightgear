@@ -63,8 +63,10 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/sky/clouds3d/SkySceneLoader.hpp>
-#include <simgear/sky/clouds3d/SkyUtil.hpp>
+#ifdef FG_USE_CLOUDS_3D
+#  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
+#  include <simgear/sky/clouds3d/SkyUtil.hpp>
+#endif
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 
@@ -139,7 +141,9 @@ SG_USING_STD(string);
 
 extern const char *default_root;
 
-SkySceneLoader *sgCloud3d;
+#ifdef FG_USE_CLOUDS_3D
+  SkySceneLoader *sgCloud3d;
+#endif
 
 
 // Scan the command line options for the specified option and return
@@ -1405,6 +1409,7 @@ bool fgInitSubsystems() {
     globals->get_environment_mgr()->bind();
 #endif
 
+#ifdef FG_USE_CLOUDS_3D
     ////////////////////////////////////////////////////////////////////
     // Initialize the 3D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
@@ -1421,6 +1426,7 @@ bool fgInitSubsystems() {
         }
         SG_LOG(SG_GENERAL, SG_INFO, "CLOUDS3d Loaded: ");
     }
+#endif
 
     ////////////////////////////////////////////////////////////////////
     // Initialize vor/ndb/ils/fix list management and query systems

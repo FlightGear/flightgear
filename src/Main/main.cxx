@@ -80,8 +80,10 @@ SG_USING_STD(endl);
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/sky/clouds3d/SkySceneLoader.hpp>
-#include <simgear/sky/clouds3d/SkyUtil.hpp>
+#ifdef FG_USE_CLOUDS_3D
+#  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
+#  include <simgear/sky/clouds3d/SkyUtil.hpp>
+#endif
 #include <simgear/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
 
@@ -231,8 +233,11 @@ ssgTransform *fgd_pos = NULL;
 
 // Sky structures
 SGSky *thesky;
-SkySceneLoader *sgClouds3d;
-bool _bcloud_orig = true;
+
+#ifdef FG_USE_CLOUDS_3D
+  SkySceneLoader *sgClouds3d;
+  bool _bcloud_orig = true;
+#endif
 
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
@@ -513,20 +518,14 @@ void fgRenderFrame() {
             glEnable(GL_BLEND);
             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
 
-            /*
-            glEnable( GL_TEXTURE_2D );
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            */
-
+#ifdef FG_USE_CLOUDS_3D
             if ( _bcloud_orig ) {
                 Point3D c = globals->get_scenery()->get_center();
                 sgClouds3d->Set_Cloud_Orig( &c );
                 _bcloud_orig = false;
             }
             sgClouds3d->Update( current__view->get_absolute_view_pos() );
+#endif
             glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
             glDisable(GL_DEPTH_TEST);
         }
@@ -826,7 +825,9 @@ void fgRenderFrame() {
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             */
 
+#ifdef FG_USE_CLOUDS_3D
             sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
+#endif
             glEnable( GL_FOG );
             glEnable( GL_LIGHTING );
             glEnable( GL_DEPTH_TEST );
@@ -1377,8 +1378,12 @@ void fgReshape( int width, int height ) {
 	       viewmgr->get_current_view()->get_v_fov() );
 
     fgHUDReshape();
+
+#ifdef FG_USE_CLOUDS_3D
     sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
                         viewmgr->get_current_view()->get_v_fov() );
+#endif
+
 }
 
 // Initialize GLUT and define a main window
