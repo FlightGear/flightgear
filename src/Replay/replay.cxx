@@ -267,7 +267,8 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
         result.fdm.rpm[i] = weight( fdm1.rpm[i], fdm2.rpm[i], ratio );
         result.fdm.fuel_flow[i]
             = weight( fdm1.fuel_flow[i], fdm2.fuel_flow[i], ratio );
-        result.fdm.EGT[i] = weight( fdm1.EGT[i], fdm2.EGT[i], ratio );
+        result.fdm.egt[i] = weight( fdm1.egt[i], fdm2.egt[i], ratio );
+        result.fdm.mp_osi[i] = weight( fdm1.mp_osi[i], fdm2.mp_osi[i], ratio );
         result.fdm.oil_temp[i]
             = weight( fdm1.oil_temp[i], fdm2.oil_temp[i], ratio );
         result.fdm.oil_px[i] = weight( fdm1.oil_px[i], fdm2.oil_px[i], ratio );
@@ -321,6 +322,8 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
 
     // Engine controls
     for ( i = 0; i < ctrls1.num_engines; ++i ) {
+        result.ctrls.master_bat[i] = ctrls1.master_bat[i];
+        result.ctrls.master_alt[i] = ctrls1.master_alt[i];
         result.ctrls.magnetos[i] = ctrls1.magnetos[i];
         result.ctrls.starter_power[i] = ctrls1.starter_power[i];
         result.ctrls.throttle[i]
@@ -355,8 +358,6 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
     result.ctrls.gear_handle = ctrls1.gear_handle;
 
     // Switches
-    result.ctrls.master_bat = ctrls1.master_bat;
-    result.ctrls.master_alt = ctrls1.master_alt;
     result.ctrls.turbulence_norm = ctrls1.turbulence_norm;
 
     // wind and turbulance
