@@ -61,8 +61,14 @@ Jean-loup Gailly and Mark Adler <zlib@quest.jpl.nasa.gov>
   http://www.cdrom.com/pub/infozip/zlib/
 
 
+Thomas Gellekum <tg@ihf.rwth-aachen.de>
+  Changes and updates for compiling on FreeBSD
+
+
 Jeff Goeke-Smith <jgoeke@voyager.net>
   Contributed our first autopilot.  (Heading Hold)
+  Better autoconf check for external timezone/daylight variables in 
+  #include <time.h>
 
 
 Michael I. Gold <gold@puck.asd.sgi.com> -- Patiently answered my endless
@@ -74,10 +80,10 @@ Charlie Hotchkiss <chotchkiss@namg.us.anritsu.com> -- Worked on improving
   and enhancing the HUD code.  Lots of code style tips and code tweaks ...
 
 
-Bruce Jackson <e.b.jackson@larc.nasa.gov> 
+Bruce Jackson of NASA <e.b.jackson@larc.nasa.gov> 
   http://agcbwww.larc.nasa.gov/People/ebj.html -- Developed the
-  LaRCsim code which we use to provide the flight model.  Also
-  patiently answered my many, many questions.
+  LaRCsim code under funding by NASA which we use to provide the 
+  flight model.  Bruce has patiently answered my many, many questions.
 
 
 Tom Knienieder <knienieder@ms.netwing.at>
@@ -108,6 +114,10 @@ Alan Murta <amurta@cs.man.ac.uk>
 Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
   Author of the Triangle program.  Triangle is used to calculate the
   Delauney triangulation of our irregular terrain.
+
+
+Michael Smith <msmith99@flash.net>
+  Contributed cockpit graphics, 3d models, logos, and other images.
 
 
 U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
