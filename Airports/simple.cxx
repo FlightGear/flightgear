@@ -65,12 +65,12 @@ int fgAIRPORTS::load( const string& file ) {
     */
 
     // read in each line of the file
-    in.eat_comments();
+    in >> skipcomment;
     while ( ! in.eof() )
     {
-	in.stream() >> a;
+	in >> a;
 	airports.insert(a);
-	in.eat_comments();
+	in >> skipcomment;
     }
 
     return 1;
@@ -109,6 +109,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/11/06 14:47:01  curt
+// Changes to track Bernie's updates to fgstream.
+//
 // Revision 1.7  1998/09/08 21:38:41  curt
 // Changes by Bernie Bright.
 //

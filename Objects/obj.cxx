@@ -167,35 +167,35 @@ int fgObjLoad( const string& path, fgTILE *t) {
     stopwatch.start();
 
     // ignore initial comments and blank lines. (priming the pump)
-    in.eat_comments();
+    in >> skipcomment;
 
     while ( ! in.eof() )
     {
 
 	string token;
-	in.stream() >> token;
+	in >> token;
 
 	// printf("token = %s\n", token.c_str() );
 
 	if ( token == "gbs" )
 	{
 	    // reference point (center offset)
-	    in.stream() >> t->center >> t->bounding_radius;
+	    in >> t->center >> t->bounding_radius;
 	    center = t->center;
 	}
 	else if ( token == "bs" )
 	{
 	    // reference point (center offset)
-	    in.stream() >> fragment.center;
-	    in.stream() >> fragment.bounding_radius;
+	    in >> fragment.center;
+	    in >> fragment.bounding_radius;
 	}
 	else if ( token == "vn" )
 	{
 	    // vertex normal
 	    if ( vncount < MAX_NODES ) {
-		in.stream() >> normals[vncount][0]
-			    >> normals[vncount][1]
-			    >> normals[vncount][2];
+		in >> normals[vncount][0]
+		   >> normals[vncount][1]
+		   >> normals[vncount][2];
 		vncount++;
 	    } else {
 		fgPrintf( FG_TERRAIN, FG_EXIT, 
@@ -206,9 +206,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	{
 	    // node (vertex)
 	    if ( t->ncount < MAX_NODES ) {
-		in.stream() >> t->nodes[t->ncount][0]
-			    >> t->nodes[t->ncount][1]
-			    >> t->nodes[t->ncount][2];
+		in >> t->nodes[t->ncount][0]
+		   >> t->nodes[t->ncount][1]
+		   >> t->nodes[t->ncount][2];
 		t->ncount++;
 	    } else {
 		fgPrintf( FG_TERRAIN, FG_EXIT, 
@@ -249,7 +249,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 	    // scan the material line
 	    string material;
-	    in.stream() >> material;
+	    in >> material;
 	    fragment.tile_ptr = t;
 
 	    // find this material in the properties list
@@ -273,7 +273,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    n1 = n2 = n3 = n4 = 0;
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "    new tri strip = %s", line);
-	    in.stream() >> n1 >> n2 >> n3;
+	    in >> n1 >> n2 >> n3;
 	    fragment.add_face(n1, n2, n3);
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = ");
@@ -351,7 +351,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		if ( isdigit(c) )
 		{
 		    in.putback(c);
-		    in.stream() >> n4;
+		    in >> n4;
 		    break;
 		}
 	    }
@@ -389,7 +389,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    }
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "new triangle = %s", line);*/
-	    in.stream() >> n1 >> n2 >> n3;
+	    in >> n1 >> n2 >> n3;
 	    fragment.add_face(n1, n2, n3);
 
             // xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
@@ -419,7 +419,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "continued tri strip = %s ", 
 	    //           line);
-	    in.stream() >> n1;
+	    in >> n1;
 
 	    // There can be one or two values 
 	    char c;
@@ -431,7 +431,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		if ( isdigit(c) )
 		{
 		    in.putback(c);
-		    in.stream() >> n2;
+		    in >> n2;
 		    break;
 		}
 	    }
@@ -511,7 +511,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 	// eat comments and blank lines before start of while loop so
 	// if we are done with useful input it is noticed before hand.
-	in.eat_comments();
+	in >> skipcomment;
     }
 
     if ( in_fragment ) {
@@ -553,6 +553,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.9  1998/11/06 14:47:06  curt
+// Changes to track Bernie's updates to fgstream.
+//
 // Revision 1.8  1998/10/20 18:33:55  curt
 // Tweaked texture coordinates, but we still have some problems. :-(
 //

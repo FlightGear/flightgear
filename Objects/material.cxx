@@ -286,18 +286,18 @@ fgMATERIAL_MGR::load_lib ( void )
         // printf("%s", line);
 
 	// strip leading white space and comments
-	in.eat_comments();
+	in >> skipcomment;
 
 	// set to zero to prevent its value accidently being '{'
 	// after a failed >> operation.
 	char token = 0;
 
-	in.stream() >> material_name >> token;
+	in >> material_name >> token;
 
 	if ( token == '{' ) {
 	    printf( "  Loading material %s\n", material_name.c_str() );
 	    fgMATERIAL m;
-	    in.stream() >> m;
+	    in >> m;
 
 	    if ( current_options.get_textures() ) {
 		m.load_texture();
@@ -357,6 +357,9 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.9  1998/11/06 14:47:05  curt
+// Changes to track Bernie's updates to fgstream.
+//
 // Revision 1.8  1998/10/12 23:49:17  curt
 // Changes from NHV to make the code more dynamic with fewer hard coded limits.
 //

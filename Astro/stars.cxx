@@ -94,10 +94,10 @@ int fgStarsInit( void ) {
     // read in each line of the file
     while ( ! in.eof() && starcount < FG_MAX_STARS )
     {
-	in.eat_comments();
+	in >> skipcomment;
 	string name;
-	getline( in.stream(), name, ',' );
-	in.stream() >> starlist[starcount];
+	getline( in, name, ',' );
+	in >> starlist[starcount];
 	++starcount;
     }
 
@@ -252,6 +252,9 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/11/06 14:47:02  curt
+// Changes to track Bernie's updates to fgstream.
+//
 // Revision 1.19  1998/10/16 23:27:21  curt
 // C++-ifying.
 //

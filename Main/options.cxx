@@ -477,18 +477,18 @@ int fgOPTIONS::parse_config_file( const string& path ) {
     fgPrintf( FG_GENERAL, FG_INFO, "Processing config file: %s\n",
 	      path.c_str() );
 
-    in.eat_comments();
+    in >> skipcomment;
     while ( !in.eof() )
     {
 	string line;
-	getline( in.stream(), line );
+	getline( in, line );
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
 		      "Config file parse error: %s '%s'\n",
 		      path.c_str(), line.c_str() );
 	}
-	in.eat_comments();
+	in >> skipcomment;
     }
 
     return FG_OPTIONS_OK;
@@ -573,6 +573,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.28  1998/11/06 14:47:03  curt
+// Changes to track Bernie's updates to fgstream.
+//
 // Revision 1.27  1998/11/02 23:04:04  curt
 // HUD units now display in feet by default with meters being a command line
 // option.

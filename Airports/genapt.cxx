@@ -219,10 +219,10 @@ fgAptGenerate(const string& path, fgTILE *tile)
     apt_id = "";
 
     // read in each line of the file
-    in.eat_comments();
+    in >> skipcomment;
     while ( ! in.eof() )
     {
-	in.stream() >> token;
+	in >> token;
 
 	if ( token == "a" ) {
 	    // airport info record (start of airport)
@@ -234,7 +234,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    }
 
 	    cout << "Reading airport record\n";
-	    in.stream() >> apt_id;
+	    in >> apt_id;
 	    apt_name = "";
 	    i = 1;
 	    avex = avey = avez = 0.0;
@@ -250,7 +250,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    // out of the base terrain.  The points are given in
 	    // counter clockwise order and are specified in lon/lat
 	    // degrees.
-	    in.stream() >> p;
+	    in >> p;
 	    avex += tile->nodes[i][0];
 	    avey += tile->nodes[i][1];
 	    avez += tile->nodes[i][2];
@@ -262,8 +262,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    while ( in.get(c) && c != '\n' );
 	}
 
-	// airports.insert(a);
-	in.eat_comments();
+	in >> skipcomment;
     }
 
     if ( apt_id != "" ) {
@@ -282,6 +281,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.8  1998/11/06 14:46:59  curt
+// Changes to track Bernie's updates to fgstream.
+//
 // Revision 1.7  1998/10/20 18:26:06  curt
 // Updates to point3d.hxx
 //
