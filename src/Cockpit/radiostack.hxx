@@ -77,12 +77,8 @@ class FGRadioStack : public FGSubsystem
     double nav1_gs_y;
     double nav1_gs_z;
     double nav1_gs_dist;
-    double nav1_dmelon;
-    double nav1_dmelat;
-    double nav1_dme_x;
-    double nav1_dme_y;
-    double nav1_dme_z;
-    double nav1_dme_dist;
+    SGTimeStamp prev_time;
+    SGTimeStamp curr_time;
     double nav1_elev;
     double nav1_range;
     double nav1_effective_range;
@@ -115,12 +111,6 @@ class FGRadioStack : public FGSubsystem
     double nav2_gs_y;
     double nav2_gs_z;
     double nav2_gs_dist;
-    double nav2_dmelon;
-    double nav2_dmelat;
-    double nav2_dme_x;
-    double nav2_dme_y;
-    double nav2_dme_z;
-    double nav2_dme_dist;
     double nav2_elev;
     double nav2_range;
     double nav2_effective_range;
@@ -129,6 +119,23 @@ class FGRadioStack : public FGSubsystem
     double nav2_magvar;
     double nav2_vol_btn;
     bool nav2_ident_btn;
+
+    bool dme_valid;
+    bool dme_inrange;
+    double dme_freq;
+    double dme_lon;
+    double dme_lat;
+    double dme_elev;
+    double dme_range;
+    double dme_effective_range;
+    double dme_x;
+    double dme_y;
+    double dme_z;
+    double dme_dist;
+    double dme_prev_dist;
+    double dme_spd;
+    double dme_ete;
+    SGTimeStamp dme_last_time;
 
     bool outer_marker;
     bool middle_marker;
@@ -210,6 +217,11 @@ public:
     }
     inline void set_nav2_ident_btn( bool val ) { nav2_ident_btn = val; }
 
+    // DME Setters
+    inline void set_dme_freq (double freq) {
+        dme_freq = freq; need_update = true;
+    }
+
     // ADF Setters
     inline void set_adf_freq( double freq ) {
 	adf_freq = freq; need_update = true;
@@ -233,6 +245,9 @@ public:
     inline double get_nav2_freq () const { return nav2_freq; }
     inline double get_nav2_alt_freq () const { return nav2_alt_freq; }
     inline double get_nav2_sel_radial() const { return nav2_sel_radial; }
+
+    // DME Accessors
+    inline double get_dme_freq () const { return dme_freq; }
 
     // ADF Accessors
     inline double get_adf_freq () const { return adf_freq; }
@@ -260,9 +275,6 @@ public:
     inline double get_nav1_gslon() const { return nav1_gslon; }
     inline double get_nav1_gslat() const { return nav1_gslat; }
     inline double get_nav1_gs_dist() const { return nav1_gs_dist; }
-    inline double get_nav1_dmelon() const { return nav1_dmelon; }
-    inline double get_nav1_dmelat() const { return nav1_dmelat; }
-    inline double get_nav1_dme_dist() const { return nav1_dme_dist; }
     inline double get_nav1_elev() const { return nav1_elev; }
     inline double get_nav1_heading() const { return nav1_heading; }
     inline double get_nav1_radial() const { return nav1_radial; }
@@ -288,9 +300,6 @@ public:
     inline double get_nav2_gslon() const { return nav2_gslon; }
     inline double get_nav2_gslat() const { return nav2_gslat; }
     inline double get_nav2_gs_dist() const { return nav2_gs_dist; }
-    inline double get_nav2_dmelon() const { return nav2_dmelon; }
-    inline double get_nav2_dmelat() const { return nav2_dmelat; }
-    inline double get_nav2_dme_dist() const { return nav2_dme_dist; }
     inline double get_nav2_elev() const { return nav2_elev; }
     inline double get_nav2_heading() const { return nav2_heading; }
     inline double get_nav2_radial() const { return nav2_radial; }
@@ -300,6 +309,11 @@ public:
     double get_nav2_gs_needle_deflection() const;
     inline double get_nav2_vol_btn() const { return nav2_vol_btn; }
     inline bool get_nav2_ident_btn() const { return nav2_ident_btn; }
+
+    inline bool get_dme_inrange () const { return dme_inrange; }
+    inline double get_dme_dist () const { return dme_dist; }
+    inline double get_dme_spd () const { return dme_spd; }
+    inline double get_dme_ete () const { return dme_ete; }
 
     inline bool get_adf_inrange() const { return adf_inrange; }
     inline double get_adf_lon() const { return adf_lon; }
