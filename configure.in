@@ -5,20 +5,6 @@ dnl
 
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
-dnl specify the compiled flight model
-AC_ARG_WITH(flight-model, [  --with-flight-model=xxx Specify the flight model (navion, cherokee)])
-
-if test "x$with_flight_model" = "xcherokee" ; then
-    echo "Building with cherokee flight model"
-else 
-    echo "Building with navion flight model"
-fi
-AM_CONDITIONAL(ENABLE_CHEROKEE, test "x$with_flight_model" = "xcherokee")
-
-dnl Let the Win32 user specify if they want to build with the SGI
-dnl opengl.dll as opposed to the more standard openg32.dll
-AC_ARG_WITH(sgi-opengl, [  --with-sgi-opengl       Build against SGI's opengl.dll glu.dll and glut.dll])
-
 dnl Initialize the automake stuff
 AM_INIT_AUTOMAKE(FlightGear, 0.53)
 
@@ -41,6 +27,28 @@ dnl AC_ISC_POSIX
 
 dnl Check to see if this `configure' is being run in the `Cygwin32' environment
 dnl AM_CYGWIN32
+
+dnl specify if we are building with "checker"
+AC_ARG_WITH(efence, [  --with-efence           Specify if we are building with "electric-fence"])
+
+if test "x$with_efence" = "xyes" ; then
+    echo "Building with efence"
+    LIBS= "$LIBS -lefence"
+fi
+
+dnl specify the compiled flight model
+AC_ARG_WITH(flight-model, [  --with-flight-model=xxx Specify the flight model (navion, cherokee)])
+
+if test "x$with_flight_model" = "xcherokee" ; then
+    echo "Building with cherokee flight model"
+else 
+    echo "Building with navion flight model"
+fi
+AM_CONDITIONAL(ENABLE_CHEROKEE, test "x$with_flight_model" = "xcherokee")
+
+dnl Let the Win32 user specify if they want to build with the SGI
+dnl opengl.dll as opposed to the more standard openg32.dll
+AC_ARG_WITH(sgi-opengl, [  --with-sgi-opengl       Build against SGI's opengl.dll glu.dll and glut.dll])
 
 dnl Check for MS Windows environment
 AC_CHECK_HEADER(windows.h)
@@ -233,6 +241,7 @@ AC_OUTPUT( \
 	Lib/Bucket/Makefile \
 	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
+	Lib/gpc/Makefile \
 	Lib/Math/Makefile \
 	Lib/PUI/Makefile \
 	Lib/XGL/Makefile \
