@@ -29,7 +29,7 @@ $prefix = "@prefix@";
 # print "-> $prefix\n";
 
 # potential names of Flight Gear executable to try
-@files = ( "fg", "fg.exe" );
+@files = ( "fgfs", "fgfs.exe" );
 
 # search for the executable
 # potential paths where the executable may be found
