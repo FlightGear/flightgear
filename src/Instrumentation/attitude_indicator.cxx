@@ -74,7 +74,7 @@ AttitudeIndicator::update (double dt)
 
                                 // Next, calculate the indicated roll
                                 // and pitch, introducing errors.
-    double factor = 1.0 - ((1.0 - spin) * (1.0 - spin));
+    double factor = 1.0 - ((1.0 - spin) * (1.0 - spin) * (1.0 - spin));
     double roll = _roll_in_node->getDoubleValue();
     double pitch = _pitch_in_node->getDoubleValue();
     roll = 35 + (factor * (roll - 35));
