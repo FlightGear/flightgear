@@ -26,11 +26,13 @@
 
 #include <Bucket/newbucket.hxx>
 #include <Include/fg_constants.h>
+#include <Math/mat3.h>
 
 #include <Debug/logstream.hxx>
 #include <Array/array.hxx>
 #include <Clipper/clipper.hxx>
 #include <GenOutput/genobj.hxx>
+#include <Match/match.hxx>
 #include <Triangulate/triangle.hxx>
 
 #include "construct.hxx"
@@ -163,42 +165,158 @@ void do_triangulate( FGConstruct& c, const FGArray& array,
 }
 
 
-// build the wgs-84 point list
-static point_list gen_wgs84_points( FGConstruct& c, const FGArray& array ) {
+// build the wgs-84 point list (and fix the elevations of the geodetic
+// nodes)
+static void fix_point_heights( FGConstruct& c, const FGArray& array ) {
+    point_list geod_nodes;
     point_list wgs84_nodes;
-    cout << "calculating wgs84 point" << endl;
+
+    cout << "fixing node heights and generating wgs84 list" << endl;
     Point3D geod, radians, cart;
 
-    point_list geod_nodes = c.get_tri_nodes().get_node_list();
-    const_point_list_iterator current = geod_nodes.begin();
-    const_point_list_iterator last = geod_nodes.end();
-
-    double real_z;
+    point_list raw_nodes = c.get_tri_nodes().get_node_list();
+    point_list_iterator current = raw_nodes.begin();
+    point_list_iterator last = raw_nodes.end();
 
     for ( ; current != last; ++current ) {
 	geod = *current;
 
-	real_z = array.interpolate_altitude( geod.x() * 3600.0, 
-					      geod.y() * 3600.0 );
+	geod.setz( array.interpolate_altitude( geod.x() * 3600.0, 
+					       geod.y() * 3600.0 ) );
 
 	// convert to radians
 	radians = Point3D( geod.x() * DEG_TO_RAD,
 			   geod.y() * DEG_TO_RAD,
-			   real_z );
+			   geod.z() );
 
         cart = fgGeodToCart(radians);
 	// cout << cart << endl;
+
+	geod_nodes.push_back(geod);
         wgs84_nodes.push_back(cart);
     }
 
-    return wgs84_nodes;
+    c.set_geod_nodes( geod_nodes );
+    c.set_wgs84_nodes( wgs84_nodes );
+}
+
+
+// build the node -> element (triangle) reverse lookup table.  there
+// is an entry for each point containing a list of all the triangles
+// that share that point.
+static belongs_to_list gen_node_ele_lookup_table( FGConstruct& c ) {
+    belongs_to_list reverse_ele_lookup;
+    reverse_ele_lookup.clear();
+
+    int_list ele_list;
+    ele_list.clear();
+
+    // initialize reverse_ele_lookup structure by creating an empty
+    // list for each point
+    point_list wgs84_nodes = c.get_wgs84_nodes();
+    const_point_list_iterator w_current = wgs84_nodes.begin();
+    const_point_list_iterator w_last = wgs84_nodes.end();
+    for ( ; w_current != w_last; ++w_current ) {
+	reverse_ele_lookup.push_back( ele_list );
+    }
+
+    // traverse triangle structure building reverse lookup table
+    triele_list tri_elements = c.get_tri_elements();
+    const_triele_list_iterator current = tri_elements.begin();
+    const_triele_list_iterator last = tri_elements.end();
+    int counter = 0;
+    for ( ; current != last; ++current ) {
+	reverse_ele_lookup[ current->get_n1() ].push_back( counter );
+	reverse_ele_lookup[ current->get_n2() ].push_back( counter );
+	reverse_ele_lookup[ current->get_n3() ].push_back( counter );
+	++counter;
+    }
+
+    return reverse_ele_lookup;
+}
+
+
+// caclulate the normal for the specified triangle face
+static Point3D calc_normal( FGConstruct& c, int i ) {
+    double v1[3], v2[3], normal[3];
+    double temp;
+
+    point_list wgs84_nodes = c.get_wgs84_nodes();
+    triele_list tri_elements = c.get_tri_elements();
+
+    Point3D p1 = wgs84_nodes[ tri_elements[i].get_n1() ];
+    Point3D p2 = wgs84_nodes[ tri_elements[i].get_n2() ];
+    Point3D p3 = wgs84_nodes[ tri_elements[i].get_n3() ];
+
+    v1[0] = p2.x() - p1.x(); v1[1] = p2.y() - p1.y(); v1[2] = p2.z() - p1.z();
+    v2[0] = p3.x() - p1.x(); v2[1] = p3.y() - p1.y(); v2[2] = p3.z() - p1.z();
+
+    MAT3cross_product(normal, v1, v2);
+    MAT3_NORMALIZE_VEC(normal,temp);
+
+    return Point3D( normal[0], normal[1], normal[2] );
+}
+
+
+// build the face normal list
+static point_list gen_face_normals( FGConstruct& c ) {
+    point_list face_normals;
+
+    // traverse triangle structure building the face normal table
+
+    cout << "calculating face normals" << endl;
+
+    triele_list tri_elements = c.get_tri_elements();
+    for ( int i = 0; i < (int)tri_elements.size(); i++ ) {
+	// cout << calc_normal( i ) << endl;
+	face_normals.push_back( calc_normal( c, i ) );
+    }
+
+    return face_normals;
+}
+
+
+// calculate the normals for each point in wgs84_nodes
+static point_list gen_point_normals( FGConstruct& c ) {
+    point_list point_normals;
+
+    Point3D normal;
+    cout << "caculating node normals" << endl;
+
+    point_list wgs84_nodes = c.get_wgs84_nodes();
+    belongs_to_list reverse_ele_lookup = c.get_reverse_ele_lookup();
+    point_list face_normals = c.get_face_normals();
+
+    // for each node
+    for ( int i = 0; i < (int)wgs84_nodes.size(); ++i ) {
+	int_list tri_list = reverse_ele_lookup[i];
+
+	int_list_iterator current = tri_list.begin();
+	int_list_iterator last = tri_list.end();
+
+	Point3D average( 0.0 );
+
+	// for each triangle that shares this node
+	for ( ; current != last; ++current ) {
+	    normal = face_normals[ *current ];
+	    average += normal;
+	    // cout << normal << endl;
+	}
+
+	average /= tri_list.size();
+	// cout << "average = " << average << endl;
+
+	point_normals.push_back( average );
+    }
+
+    return point_normals;
 }
 
 
 // generate the flight gear scenery file
 void do_output( FGConstruct& c, const FGTriangle& t, 
 		const FGArray& array, FGGenOutput& output ) {
-    output.build( c, array );
+    output.build( c );
     output.write( c );
 }
 
@@ -267,10 +385,26 @@ void construct_tile( FGConstruct& c ) {
     // save the results of the triangulation
     c.set_tri_nodes( t.get_out_nodes() );
     c.set_tri_elements( t.get_elelist() );
+    c.set_tri_segs( t.get_out_segs() );
 
     // calculate wgs84 (cartesian) form of node list
-    c.set_wgs84_nodes( gen_wgs84_points( c, array ) );
+    fix_point_heights( c, array );
     
+    // build the node -> element (triangle) reverse lookup table
+    c.set_reverse_ele_lookup( gen_node_ele_lookup_table( c ) );
+
+    // build the face normal list
+    c.set_face_normals( gen_face_normals( c ) );
+
+    // calculate the normals for each point in wgs84_nodes
+    c.set_point_normals( gen_point_normals( c ) );
+
+    // match tile edges with any neighbor tiles that have already been
+    // generated
+    FGMatch m;
+    m.extract_shared( c );
+    m.write_shared( c );
+
     // generate the output
     FGGenOutput output;
     do_output( c, t, array, output );
@@ -296,11 +430,11 @@ main(int argc, char **argv) {
     c.set_min_nodes( 50 );
     c.set_max_nodes( (int)(FG_MAX_NODES * 0.8) );
 
-    // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
+    lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
     // lon = -92.486188; lat = 44.590190;      // KRGK
-    // lon = -89.744682312011719; lat= 29.314495086669922;
+    // lon = -89.7446823; lat= 29.314495;
     // lon = -122.488090; lat = 42.743183;     // 64S
     // lon = -114.861097; lat = 35.947480;     // 61B
     // lon = -112.012175; lat = 41.195944;     // KOGD
@@ -312,14 +446,14 @@ main(int argc, char **argv) {
     // lon = -92.5; lat = 47.5;                // Marsh test (northern MN)
     // lon = -111.977773; lat = 40.788388;     // KSLC
     // lon = -121.914; lat = 42.5655;          // TEST (Oregon SW of Crater)
-    lon = -76.201239; lat = 36.894606;      // KORF (Norfolk, Virginia)
+    // lon = -76.201239; lat = 36.894606;      // KORF (Norfolk, Virginia)
 
     double min_x = lon - 3;
     double min_y = lat - 1;
     FGBucket b_min( min_x, min_y );
     FGBucket b_max( lon + 3, lat + 1 );
 
-    FGBucket b_start(1662962L);
+    FGBucket b_start(566777L);
     bool do_tile = false;
 
     // FGBucket b_omit(-1L);
