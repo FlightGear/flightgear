@@ -410,6 +410,8 @@ Norman Vine <nhv@yahoo.com>
   Many other GUI, HUD, and autopilot contributions.
   Contributed a patch to allow mouse input to control view direction.
   Ultra hires tiled screen dumps.
+  Contributed the initial 'goto airport' and 'reset' functions
+  Contributed the initial http image server code
 
 
 Roland Voegtli <voegtli@sanw.unibe.ch>
