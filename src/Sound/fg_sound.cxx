@@ -318,7 +318,7 @@ FGSound::update (double dt)
    double volume_offset = 0.0;
 
    for(i = 0; i < max; i++) {
-      double v;
+      double v = 1.0;
 
       if (_volume[i].prop)
          v = _volume[i].prop->getDoubleValue();
@@ -354,7 +354,7 @@ FGSound::update (double dt)
    double pitch_offset = 0.0;
 
    for(i = 0; i < max; i++) {
-      double p;
+      double p = 1.0;
 
       if (_pitch[i].prop)
          p = _pitch[i].prop->getDoubleValue();
