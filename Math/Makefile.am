@@ -9,6 +9,7 @@ libMath_a_SOURCES = \
 	fg_random.c fg_random.h \
 	interpolater.cxx interpolater.hxx \
 	mat3.h mat3defs.h mat3err.h \
+	point3d.hxx \
 	polar3d.cxx polar3d.hxx \
 	vector.cxx vector.hxx
 
