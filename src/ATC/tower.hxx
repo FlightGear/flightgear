@@ -77,6 +77,7 @@ public:
 	bool clearedToTakeOff;
 	// ought to add time cleared to depart so we can nag if necessary
 	bool holdShortReported;
+	bool downwindReported;
 	bool longFinalReported;
 	bool longFinalAcknowledged;
 	bool finalReported;
@@ -152,6 +153,9 @@ private:
 	FGATCMgr* ATCmgr;	
 	// This is purely for synactic convienience to avoid writing globals->get_ATC_mgr()-> all through the code!
 	
+	// Respond to a transmission
+	void Respond();
+	
 	void CheckHoldList(double dt);
 
 	void CheckCircuitList(double dt);
@@ -159,7 +163,10 @@ private:
 	void CheckRunwayList(double dt);
 
 	void CheckApproachList(double dt);
-
+	
+	// Find a pointer to plane of callsign ID within the internal data structures
+	TowerPlaneRec* FindPlane(string ID);
+	
 	// Figure out if a given position lies on the active runway
 	// Might have to change when we consider more than one active rwy.
 	bool OnActiveRunway(Point3D pt);

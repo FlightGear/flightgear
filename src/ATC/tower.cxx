@@ -39,6 +39,7 @@ clearedToLand(false),
 clearedToLineUp(false),
 clearedToTakeOff(false),
 holdShortReported(false),
+downwindReported(false),
 longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
@@ -58,6 +59,7 @@ clearedToLand(false),
 clearedToLineUp(false),
 clearedToTakeOff(false),
 holdShortReported(false),
+downwindReported(false),
 longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
@@ -77,6 +79,7 @@ clearedToLand(false),
 clearedToLineUp(false),
 clearedToTakeOff(false),
 holdShortReported(false),
+downwindReported(false),
 longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
@@ -97,6 +100,7 @@ clearedToLand(false),
 clearedToLineUp(false),
 clearedToTakeOff(false),
 holdShortReported(false),
+downwindReported(false),
 longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
@@ -250,6 +254,13 @@ void FGTower::Update(double dt) {
 		//	cout << "  dt = " << dt << "  timeSinceLastDeparture = " << timeSinceLastDeparture << '\n';
 	}
 	
+	if(respond) {
+		if(!responseReqd) SG_LOG(SG_ATC, SG_ALERT, "ERROR - respond is true and responseReqd is false in FGTower::Update(...)");
+		Respond();
+		respond = false;
+		responseReqd = false;
+	}
+	
 	// Calculate the eta of each plane to the threshold.
 	// For ground traffic this is the fastest they can get there.
 	// For air traffic this is the middle approximation.
@@ -326,6 +337,33 @@ void FGTower::Update(double dt) {
 	}
 }
 
+void FGTower::Respond() {
+	//cout << "Respond() called\n";
+	TowerPlaneRec* t = FindPlane(responseID);
+	if(t) {
+		// This will grow!!!
+		if(t->downwindReported) {
+			t->downwindReported = false;
+			int i = 1;
+			for(tower_plane_rec_list_iterator twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+				if((*twrItr)->plane.callsign == responseID) break;
+				++i;
+			}			
+			string trns = "Number ";
+			trns += ConvertNumToSpokenDigits(i);
+			trns += " ";
+			trns += t->plane.callsign;
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+			}
+			freqClear = true;	// FIXME - set this to come true after enough time to render the message
+			if(t->isUser && t->opType == TTT_UNKNOWN) {
+				t->opType = CIRCUIT;
+			}
+		}
+	}
+}
+
 // Do one plane from the hold list
 void FGTower::CheckHoldList(double dt) {
 	//cout << "ug\n";
@@ -388,7 +426,8 @@ void FGTower::CheckHoldList(double dt) {
 									trns += " Military";
 									break;
 								}
-								if(trfc->opType == STRAIGHT_IN || trfc->opType == TTT_UNKNOWN) {
+								//if(trfc->opType == STRAIGHT_IN || trfc->opType == TTT_UNKNOWN) {
+								if(trfc->opType == STRAIGHT_IN) {
 									double miles_out = CalcDistOutMiles(trfc);
 									if(miles_out < 2) {
 										trns += " on final";
@@ -398,6 +437,7 @@ void FGTower::CheckHoldList(double dt) {
 										trns += " mile final";
 									}
 								} else if(trfc->opType == CIRCUIT) {
+									cout << "Getting leg of " << trfc->plane.callsign << '\n';
 									switch(trfc->leg) {
 									case FINAL:
 										trns += " on final";
@@ -412,7 +452,7 @@ void FGTower::CheckHoldList(double dt) {
 										trns += " turning base";
 										break;
 									case DOWNWIND:
-										trns += " in circuit";
+										trns += " in circuit";	// At the moment the user plane is generally flagged as unknown opType when downwind incase its a downwind departure which means we won't get here.
 										break;
 									// And to eliminate compiler warnings...
 									case TAKEOFF_ROLL: break;
@@ -552,7 +592,7 @@ void FGTower::CheckCircuitList(double dt) {
 			// Need to figure out which leg he's on
 			//cout << "rwy.hdg = " << rwy.hdg << " user hdg = " << user_hdg_node->getDoubleValue();
 			double ho = GetAngleDiff_deg(user_hdg_node->getDoubleValue(), rwy.hdg);
-			//cout << " ho = " << ho << '\n';
+			//cout << " ho = " << ho << " abs(ho = " << abs(ho) << '\n';
 			// TODO FIXME - get the wind and convert this to track, or otherwise use track somehow!!!
 			// If it's gusty might need to filter the value, although we are leaving 30 degrees each way leeway!
 			if(abs(ho) < 30) {
@@ -1266,8 +1306,34 @@ void FGTower::ReportRunwayVacated(string ID) {
 	//cout << "Report Runway Vacated Called...\n";
 }
 
+TowerPlaneRec* FGTower::FindPlane(string ID) {
+	tower_plane_rec_list_iterator twrItr;
+	// Do the approach list first
+	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) return(*twrItr);
+	}	
+	// Then the circuit list
+	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) return(*twrItr);
+	}
+	// And finally the hold list
+	for(twrItr = holdList.begin(); twrItr != holdList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) return(*twrItr);
+	}
+	SG_LOG(SG_ATC, SG_WARN, "Unable to find " << ID << " in FGTower::FindPlane(...)");
+	return(NULL);
+}
+
 void FGTower::ReportDownwind(string ID) {
+	//cout << "ReportDownwind(...) called\n";
 	// Tell the plane reporting what number she is in the circuit
+	TowerPlaneRec* t = FindPlane(ID);
+	if(t) {
+		t->downwindReported = true;
+		responseReqd = true;
+	} else {
+		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportDownwind(...)");
+	}
 }
 
 ostream& operator << (ostream& os, tower_traffic_type ttt) {
