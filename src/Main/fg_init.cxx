@@ -57,7 +57,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
-#include <Astro/skydome.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
@@ -71,6 +70,7 @@
 #include <Joystick/joystick.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Sky/skydome.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>

@@ -197,7 +197,7 @@ fgMATERIAL_MGR::load_lib ( void )
 		textured->setShadeModel( GL_FLAT );
 	    }
 
-	    textured->enable ( GL_CULL_FACE      ) ;
+	    textured->enable ( GL_CULL_FACE ) ;
 	    textured->enable( GL_TEXTURE_2D );
 	    textured->setTexture( (char *)tex_file.c_str() );
 	    textured->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;

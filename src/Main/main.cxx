@@ -74,7 +74,6 @@
 #include <Include/general.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Astro/skydome.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/solarsystem.hxx>
 
@@ -88,6 +87,8 @@
 #include <Objects/materialmgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Sky/skydome.hxx>
+#include <Sky/sphere.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
@@ -145,10 +146,6 @@ ssgBranch *terrain = NULL;
 ssgSelector *penguin_sel = NULL;
 ssgTransform *penguin_pos = NULL;
 
-// the sky needs to be drawn in a specific order, thus we use several
-// "roots" so we can explicitely control this.
-ssgRoot *sky = NULL;
-
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
 ssgTransform *fgd_pos = NULL;
@@ -186,6 +183,31 @@ sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
 // option parser wants only initial characters followed by numbers
 // or pathnames.
 //
+
+
+ssgSimpleState *default_state;
+ssgSimpleState *hud_and_panel;
+ssgSimpleState *menus;
+
+void fgBuildRenderStates( void ) {
+    default_state = new ssgSimpleState;
+    default_state->disable( GL_TEXTURE_2D );
+    default_state->enable( GL_CULL_FACE );
+    default_state->disable( GL_COLOR_MATERIAL );
+    default_state->disable( GL_BLEND );
+    default_state->disable( GL_ALPHA_TEST );
+    default_state->disable( GL_LIGHTING );
+
+    hud_and_panel = new ssgSimpleState;
+    hud_and_panel->disable( GL_CULL_FACE );
+    hud_and_panel->disable( GL_TEXTURE_2D );
+    hud_and_panel->disable( GL_LIGHTING );
+
+    menus = new ssgSimpleState;
+    menus->disable( GL_CULL_FACE );
+    menus->disable( GL_TEXTURE_2D );
+    menus->enable( GL_BLEND );
+}
 
 
 // fgInitVisuals() -- Initialize various GL/view parameters
@@ -310,6 +332,7 @@ void fgRenderFrame( void ) {
 	// ssg does to set up the model view matrix
 	xglMatrixMode(GL_MODELVIEW);
 	xglLoadIdentity();
+	ssgSetCamera( current_view.VIEW );
 
 	/*
 	sgMat4 vm_tmp, view_mat;
@@ -319,42 +342,48 @@ void fgRenderFrame( void ) {
 	xglLoadMatrixf( (float *)view_mat );
 	*/
 
+	// set the opengl state to known default values
+	default_state->force();
+
 	// draw sky
 	xglDisable( GL_DEPTH_TEST );
-	// xglDisable( GL_LIGHTING );
-	xglDisable( GL_CULL_FACE );
 	xglDisable( GL_FOG );
-	xglDisable( GL_TEXTURE_2D );
+	// xglDisable( GL_TEXTURE_2D );
+	// xglDisable( GL_LIGHTING );
+	// xglDisable( GL_CULL_FACE );
+	// xglShadeModel( GL_SMOOTH );
+
 	/* if ( current_options.get_fog() > 0 ) {
 	    xglEnable( GL_FOG );
 	    xglFogi( GL_FOG_MODE, GL_EXP2 );
 	    xglFogfv( GL_FOG_COLOR, l->adj_fog_color );
 	} */
 
-	xglShadeModel( GL_SMOOTH );
 
-	// if ( current_options.get_skyblend() ) {
-	//    fgSkyRender();
-	// }
-	sgVec3 zero_elev;
-	sgSetVec3( zero_elev,
-		   current_view.get_cur_zero_elev().x(),
-		   current_view.get_cur_zero_elev().y(),
-		   current_view.get_cur_zero_elev().z() );
+	if ( current_options.get_skyblend() ) {
+	    // fgSkyRender();
 
-	current_sky.repaint( cur_light_params.sky_color,
-			     cur_light_params.fog_color,
-			     cur_light_params.sun_angle );
+	    sgVec3 zero_elev;
+	    sgSetVec3( zero_elev,
+		       current_view.get_cur_zero_elev().x(),
+		       current_view.get_cur_zero_elev().y(),
+		       current_view.get_cur_zero_elev().z() );
 
-	current_sky.reposition( zero_elev, 
-				cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude(),
-				cur_light_params.sun_rotation );
+	    current_sky.repaint( cur_light_params.sky_color,
+				 cur_light_params.fog_color,
+				 cur_light_params.sun_angle );
 
-	xglPushMatrix();
-	ssgSetCamera( current_view.VIEW );
-	ssgCullAndDraw( sky );
-	xglPopMatrix();
+	    current_sky.reposition( zero_elev, 
+				    cur_fdm_state->get_Longitude(),
+				    cur_fdm_state->get_Latitude(),
+				    cur_light_params.sun_rotation );
+
+	    xglPushMatrix();
+
+	    current_sky.draw();
+
+	    xglPopMatrix();
+	}
 
 	// xglDisable( GL_FOG );
 
@@ -385,11 +414,11 @@ void fgRenderFrame( void ) {
 	*/
 
 	// draw scenery
-	if ( current_options.get_shading() ) {
+	/* if ( current_options.get_shading() ) {
 	    xglShadeModel( GL_SMOOTH ); 
 	} else {
 	    xglShadeModel( GL_FLAT ); 
-	}
+	} */
 	xglEnable( GL_DEPTH_TEST );
 	if ( current_options.get_fog() > 0 ) {
 	    xglEnable( GL_FOG );
@@ -495,7 +524,7 @@ void fgRenderFrame( void ) {
 	// xglLightfv(GL_LIGHT0, GL_SPECULAR, white );
 
 	// texture parameters
-	xglEnable( GL_TEXTURE_2D );
+	// xglEnable( GL_TEXTURE_2D );
 	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
 	xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 	// set base color (I don't think this is doing anything here)
@@ -503,26 +532,6 @@ void fgRenderFrame( void ) {
 	//  (GL_FRONT, GL_DIFFUSE, white);
 	// xglMaterialfv (GL_FRONT, GL_SPECULAR, white);
 	// xglMaterialfv (GL_FRONT, GL_SHININESS, mat_shininess);
-
-#if 0	
-	if ( current_options.get_textures() ) {
-	    // texture parameters
-	    xglEnable( GL_TEXTURE_2D );
-	    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
-	    xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
-	    // set base color (I don't think this is doing anything here)
-	    xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
-	    xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
-	    // xglMaterialfv (GL_FRONT, GL_SPECULAR, white);
-	    // xglMaterialfv (GL_FRONT, GL_SHININESS, mat_shininess);
-	} else {
-	    xglDisable( GL_TEXTURE_2D );
-	    xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
-	    xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
-	    // xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
-	    // xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
-	}
-#endif
 
 	sgVec3 sunpos;
 	sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
@@ -619,20 +628,23 @@ void fgRenderFrame( void ) {
 	// draw the ssg scene
 	ssgCullAndDraw( scene );
 
-	xglDisable( GL_TEXTURE_2D );
-	xglDisable( GL_FOG );
 
 	// display HUD && Panel
-	xglDisable( GL_CULL_FACE );
+	xglDisable( GL_FOG );
+	xglDisable( GL_DEPTH_TEST );
+	// xglDisable( GL_CULL_FACE );
+	// xglDisable( GL_TEXTURE_2D );
+	hud_and_panel->apply();
 	fgCockpitUpdate();
 
 	// We can do translucent menus, so why not. :-)
-	xglEnable    ( GL_BLEND ) ;
+	// xglEnable ( GL_BLEND ) ;
+	menus->apply();
 	xglBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 	puDisplay();
-	xglDisable   ( GL_BLEND ) ;
-	xglEnable( GL_FOG );
+	// xglDisable ( GL_BLEND ) ;
 
+	// xglEnable( GL_FOG );
     }
 
     xglutSwapBuffers();
@@ -1345,16 +1357,16 @@ int main( int argc, char **argv ) {
     terrain->setName( "Terrain" );
     scene->addKid( terrain );
 
-    // Sky branch
-    sky = new ssgRoot;
-    sky->setName( "Sky" );
-    current_sky.initialize( sky );
+    // Initialize the sky
+    current_sky.initialize();
 
     // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;
     penguin_pos = new ssgTransform;
-    ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
+    ssgBranch *tux_obj = ssgMakeSphere( 10.0, 10, 10 );
+    // ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
     // ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
+
     penguin_pos->addKid( tux_obj );
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
@@ -1368,6 +1380,9 @@ int main( int argc, char **argv ) {
 	printf("Multipilot mode %s\n", fg_net_init( scene ) );
     }
 #endif
+
+    // build our custom render states
+    fgBuildRenderStates();
 
     // pass control off to the master GLUT event handler
     glutMainLoop();
