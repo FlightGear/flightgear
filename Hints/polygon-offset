@@ -267,3 +267,92 @@ the message BODY, include a line containing: UNSUB OPENGL-GAMEDEV-L
 (or the name of mailing list you want to be removed from).  You may
 also send the HELP command for other information (like subscribing).
 
+From sjbaker@hti.com  Mon Jun 14 08:52:00 1999
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["2439" "Mon" "14" "June" "1999" "08:51:06" "-0500" "Stephen J Baker" "sjbaker@hti.com" "<Pine.SGI.3.96.990614083347.20686H-100000@samantha.bgm.link.com>" "65" "Re: glPolygonOffset()" "^From:" nil nil "6" nil nil nil nil nil]
+	nil)
+Received: from issun6.hti.com (sunmgr.hti.com [130.210.206.69])
+	by meserv.me.umn.edu (8.9.1a/8.9.1) with ESMTP id IAA24327
+	for <curt@me.umn.edu>; Mon, 14 Jun 1999 08:51:59 -0500 (CDT)
+Received: from issun5.hti.com ([130.210.202.3]) by issun6.hti.com
+          (Netscape Messaging Server 3.6)  with ESMTP id AAA3DCD
+          for <curt@me.umn.edu>; Mon, 14 Jun 1999 08:51:27 -0500
+Received: from samantha.bgm.link.com ([130.210.66.11]) by issun5.hti.com
+          (Netscape Messaging Server 3.6)  with SMTP id AAA4A5D
+          for <curt@me.umn.edu>; Mon, 14 Jun 1999 08:51:26 -0500
+X-Sender: steve@samantha.bgm.link.com
+Reply-To: Steve Baker <sjbaker@hti.com>
+In-Reply-To: <14177.35403.456685.793490@kenai.me.umn.edu>
+Message-ID: <Pine.SGI.3.96.990614083347.20686H-100000@samantha.bgm.link.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "Stephen J Baker" <sjbaker@hti.com>
+To: "Curtis L. Olson" <curt@me.umn.edu>
+Subject: Re: glPolygonOffset()
+Date: Mon, 14 Jun 1999 08:51:06 -0500 (CDT)
+
+On Fri, 11 Jun 1999, Curtis L. Olson wrote:
+
+> What's the current recommendation for doing glPolygonOffset() type
+> stuff.
+ 
+It doesn't work on 3Dfx hardware at all.
+
+I have been trying to get David B. to implement it in the FXMesa
+driver - but I'm not sure if he plans to do it in Mesa 3.1 or not.
+
+> I think I'm going to need to do something with this in the forseeable
+> future.  Either with roads and streams, or with runway markings, or
+> night lighting ...
+ 
+Yep.
+
+I have been using the kludge of moving the near/far clip planes
+just a tad. This has a similar effect to glPolygonOffset and it
+works on 3Dfx hardware.
+
+Under Mesa 3.0, doing this trick is pretty fast too.
+
+Unfortunately, I kindof screwed myself on this one though.
+
+I found a Mesa bug in the fog code - and part of the fix
+increased the cost of doing fog density changes (so what!).
+Then both David B and I noticed that there was a bug that
+prevented the fog density from being recomputed when the
+near/far clip range was changed....and the fix for *that*
+makes my near/far kludge run pretty slowly.
+
+So, I'm working on the basis that I'll use the near/far
+hack on Mesa 3.0 and switch to glPolygonOffset for 3.1.
+
+Of course glPolygonOffset might well work for Mesa 3.0
+on non-3Dfx machines - and it certainly should work under
+Windoze with the OpenGL's supplied by the hardware vendors.
+
+Regrettably, the value of the two parameters to glPolygonOffset
+are likely to vary from card to card. Also, the older SGI
+machines (running OpenGL 1.0) don't have glPolygonOffset, and
+their glPolygonOffsetEXT has a different definition for the
+two glPolygonOffset parameters.
+
+Ugh!
+
+> I want to handle some tile paging issues.  I want to try drawing
+> all the terrain in immediate mode rather than doing display lists.
+
+That's probably not such a bad idea. Compiled Vertex arrays (in
+immediate mode) are the trendy solution (ie that's what Quake III does),
+you might want to investigate that.
+
+> Anyways, assuming I get that stuff handled, the next major thing I
+> hope to do would be along the lines of airports, or roads, or ground
+> lights ...
+ 
+Yep. Light aircraft pilots often navigate by roads/rivers/railroads
+and having those in the scene will certainly help.
+
+Steve Baker                (817)619-2657 (Vox/Vox-Mail)
+Raytheon Systems Inc.      (817)619-2466 (Fax)
+Work: sjbaker@hti.com      http://www.hti.com
+Home: sjbaker1@airmail.net http://web2.airmail.net/sjbaker1
+
