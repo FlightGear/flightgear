@@ -22,6 +22,7 @@
 #ifndef _FG_ATC_HXX
 #define _FG_ATC_HXX
 
+#include <simgear/constants.h>
 #include <simgear/compiler.h>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>

@@ -25,6 +25,7 @@
 #include "ATCDialog.hxx"
 
 #include <Airports/runways.hxx>
+#include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #ifdef FG_WEATHERCM

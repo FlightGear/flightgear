@@ -2,15 +2,6 @@
 #include "Glue.hpp"
 namespace yasim {
 
-// WGS84 numbers
-static const double EQURAD = 6378137;         // equatorial radius
-static const double STRETCH = 1.003352810665; // equ./polar radius
-
-// Derived from the above
-static const double SQUASH = 0.99665839311;      // 1/STRETCH
-static const double POLRAD = 6356823.77346;      // EQURAD*SQUASH
-static const double iPOLRAD = 1.57311266701e-07; // 1/POLRAD
-
 void Glue::calcAlphaBeta(State* s, float* alpha, float* beta)
 {
     // Convert the velocity to the aircraft frame.
@@ -45,78 +36,6 @@ void Glue::calcEulerRates(State* s, float* roll, float* pitch, float* hdg)
     Math::cross3(s->orient, up, pitchAxis);
     Math::unit3(pitchAxis, pitchAxis);
     *pitch = Math::dot3(pitchAxis, s->rot);
-}
-
-void Glue::xyz2geoc(double* xyz, double* lat, double* lon, double* alt)
-{
-    double x=xyz[0], y=xyz[1], z=xyz[2];
-
-    // Cylindrical radius from the polar axis
-    double rcyl = Math::sqrt(x*x + y*y);
-
-    // In geocentric coordinates, these are just the angles in
-    // cartesian space.
-    *lon = Math::atan2(y, x);
-    *lat = Math::atan2(z, rcyl);
-
-    // To get XYZ coordinate of "ground", we "squash" the cylindric
-    // radius into a coordinate system where the earth is a sphere,
-    // find the fraction of the xyz vector that is above ground.
-    double rsquash = SQUASH * rcyl;
-    double frac = POLRAD/Math::sqrt(rsquash*rsquash + z*z);
-    double len = Math::sqrt(x*x + y*y + z*z);
-
-    *alt = len * (1-frac);
-}
-
-void Glue::geoc2xyz(double lat, double lon, double alt, double* out)
-{
-    // Generate a unit vector
-    double rcyl = Math::cos(lat);
-    double x = rcyl*Math::cos(lon);
-    double y = rcyl*Math::sin(lon);
-    double z = Math::sin(lat);
-
-    // Convert to "squashed" space, renormalize the unit vector,
-    // multiply by the polar radius, and back convert to get us the
-    // point of intersection of the unit vector with the surface.
-    // Then just add the altitude.
-    double rtmp = rcyl*SQUASH;
-    double renorm = POLRAD/Math::sqrt(rtmp*rtmp + z*z);
-    double ztmp = z*renorm;
-    rtmp *= renorm*STRETCH;
-    double len = Math::sqrt(rtmp*rtmp + ztmp*ztmp);
-    len += alt;
-    
-    out[0] = x*len;
-    out[1] = y*len;
-    out[2] = z*len;
-}
-
-double Glue::geod2geocLat(double lat)
-{
-    double r = Math::cos(lat)*STRETCH*STRETCH;
-    double z = Math::sin(lat);
-    return Math::atan2(z, r);    
-}
-
-double Glue::geoc2geodLat(double lat)
-{
-    double r = Math::cos(lat)*SQUASH*SQUASH;
-    double z = Math::sin(lat);
-    return Math::atan2(z, r);
-}
-
-void Glue::xyz2geod(double* xyz, double* lat, double* lon, double* alt)
-{
-    xyz2geoc(xyz, lat, lon, alt);
-    *lat = geoc2geodLat(*lat);
-}
-
-void Glue::geod2xyz(double lat, double lon, double alt, double* out)
-{
-    lat = geod2geocLat(lat);
-    geoc2xyz(lat, lon, alt, out);
 }
 
 void Glue::xyz2nedMat(double lat, double lon, float* out)
@@ -228,18 +147,26 @@ void Glue::orient2euler(float* o, float* roll, float* pitch, float* hdg)
     *roll = Math::atan2(pz, py);
 }
 
-void Glue::geodUp(double* pos, float* out)
+void Glue::geodUp(double lat, double lon, float* up)
 {
-    double lat, lon, alt;
-    xyz2geod(pos, &lat, &lon, &alt);
-	
-    float slat = (float)Math::sin(lat);
-    float clat = (float)Math::cos(lat);
-    float slon = (float)Math::sin(lon);
-    float clon = (float)Math::cos(lon);
-    out[0] = clon * clat;
-    out[1] = slon * clat;
-    out[2] = slat;    
+    double coslat = Math::cos(lat);
+    up[0] = (float)(Math::cos(lon) * coslat);
+    up[1] = (float)(Math::sin(lon) * coslat);
+    up[2] = (float)(Math::sin(lat));
+}
+
+// FIXME: Hardcoded WGS84 numbers...
+void Glue::geodUp(double* pos, float* up)
+{
+    const double SQUASH  = 0.9966471893352525192801545;
+    const double STRETCH = 1.0033640898209764189003079;
+    float x = (float)(pos[0] * SQUASH);
+    float y = (float)(pos[1] * SQUASH);
+    float z = (float)(pos[2] * STRETCH);
+    float norm = 1/Math::sqrt(x*x + y*y + z*z);
+    up[0] = x * norm;
+    up[1] = y * norm;
+    up[2] = z * norm;
 }
 
 }; // namespace yasim

@@ -1,4 +1,5 @@
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/placement.hxx>
@@ -268,7 +269,7 @@ void YASim::copyToYASim(bool copyState)
     Glue::xyz2nedMat(lat, lon, xyz2ned);
 
     // position
-    Glue::geod2xyz(lat, lon, alt, s.pos);
+    sgGeodToCart(lat, lon, alt, s.pos);
 
     // orientation
     Glue::euler2orient(roll, pitch, hdg, s.orient);
@@ -326,8 +327,8 @@ void YASim::copyToYASim(bool copyState)
     // us, find the (geodetic) up vector normal to the ground, then
     // use that to find the final (radius) term of the plane equation.
     double xyz[3], gplane[3]; float up[3];
-    Glue::geod2xyz(lat, lon, ground, xyz);
-    Glue::geodUp(xyz, up); // FIXME, needless reverse computation...
+    sgGeodToCart(lat, lon, ground, xyz);
+    Glue::geodUp(lat, lon, up); // FIXME, needless reverse computation...
     int i;
     for(i=0; i<3; i++) gplane[i] = up[i];
     double rad = gplane[0]*xyz[0] + gplane[1]*xyz[1] + gplane[2]*xyz[2];
@@ -390,7 +391,7 @@ void YASim::copyFromYASim()
 
     // position
     double lat, lon, alt;
-    Glue::xyz2geod(s->pos, &lat, &lon, &alt);
+    sgCartToGeod(s->pos, &lat, &lon, &alt);
     _set_Geodetic_Position(lat, lon, alt*M2FT);
 
     // UNUSED

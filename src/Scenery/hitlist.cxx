@@ -537,10 +537,11 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
     int hitcount = hit_list->num_hits();
     // cout << "hits = " << hitcount << endl;
     for ( int i = 0; i < hitcount; ++i ) {
-        geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
-        double lat_geod, alt, sea_level_r;
-        sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
-                     &alt, &sea_level_r);
+        // FIXME: sgCartToGeod is slow.  Call it just once for the
+        // "sc" point, and then handle the rest with a geodetic "up"
+        // vector approximation.  Across one tile, this will be
+        // acceptable.
+        double alt = sgCartToGeod( sc + hit_list->get_point(i) ).elev();
         // cout << "hit " << i << " lon = " << geoc.lon() << " lat = "
         //      << lat_geod << " alt = " << alt << "  max alt = " << max_alt_m
         //      << endl;
@@ -629,10 +630,11 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
     int hitcount = hit_list->num_hits();
     // cout << "hits = " << hitcount << endl;
     for ( int i = 0; i < hitcount; ++i ) {
-        geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
-        double lat_geod, alt, sea_level_r;
-        sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
-                     &alt, &sea_level_r);
+        // FIXME: sgCartToGeod is slow.  Call it just once for the
+        // "sc" point, and then handle the rest with a geodetic "up"
+        // vector approximation.  Across one tile, this will be
+        // acceptable.
+        double alt = sgCartToGeod( sc + hit_list->get_point(i) ).elev();
         // cout << "hit " << i << " lon = " << geoc.lon() << " lat = "
         //      << lat_geod << " alt = " << alt << "  max alt = " << max_alt_m
         //      << endl;

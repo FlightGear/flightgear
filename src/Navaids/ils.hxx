@@ -26,6 +26,7 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/constants.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sgstream.hxx>
 

@@ -970,6 +970,10 @@ static void fgMainLoop( void ) {
     globals->inc_sim_time_sec( delta_time_sec );
     SGAnimation::set_sim_time_sec( globals->get_sim_time_sec() );
 
+    // These are useful, especially for Nasal scripts.
+    fgSetDouble("/sim/time/delta-realtime-sec", real_delta_time_sec);
+    fgSetDouble("/sim/time/delta-sec", delta_time_sec);
+
     static long remainder = 0;
     long elapsed;
 #ifdef FANCY_FRAME_COUNTER

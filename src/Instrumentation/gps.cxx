@@ -4,6 +4,7 @@
 // This file is in the Public Domain and comes with no warranty.
 
 #include <simgear/compiler.h>
+#include <simgear/constants.h>
 #include <simgear/math/sg_geodesy.hxx>
 
 #include <Main/fg_props.hxx>

@@ -17,18 +17,6 @@ public:
     static void calcEulerRates(State* s,
 			       float* roll, float* pitch, float* hdg);
 
-    static void xyz2geoc(double* xyz,
-                         double* lat, double* lon, double* alt);
-    static void geoc2xyz(double lat, double lon, double alt,
-                         double* out);
-    static void xyz2geod(double* xyz,
-                         double* lat, double* lon, double* alt);
-    static void geod2xyz(double lat, double lon, double alt,
-                         double* out);
-
-    static double geod2geocLat(double lat);
-    static double geoc2geodLat(double lat);
-
     // Returns a global to "local" (north, east, down) matrix.  Note
     // that the latitude passed in is geoDETic.
     static void xyz2nedMat(double lat, double lon, float* out);
@@ -40,9 +28,8 @@ public:
     static void orient2euler(float* o,
                              float* roll, float* pitch, float* hdg);
 
-    // Returns a geodetic (i.e. gravitational, "level", etc...) "up"
-    // vector for the specified xyz position.
-    static void geodUp(double* pos, float* out);
+    static void geodUp(double lat, double lon, float* up);
+    static void geodUp(double* pos, float* up);
 };
 
 }; // namespace yasim

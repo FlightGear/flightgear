@@ -47,18 +47,13 @@ static double sun_angle( const SGTime &t, sgVec3 world_up,
     SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t.getGst() );
 
-    double sun_lon, sun_gd_lat, sun_gc_lat, sl_radius;
+    double sun_lon, sun_gd_lat;
     fgSunPositionGST( t.getGst(), &sun_lon, &sun_gd_lat );
-
-    sgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &sun_gc_lat);
-
-    p = Point3D( sun_lon, sun_gc_lat, sl_radius );
-    Point3D sunpos = sgPolarToCart3d(p);
+    Point3D sunpos = sgGeodToCart(Point3D(sun_lon, sun_gd_lat, 0));
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t.cur_time = " << t.get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG, 
-	    "    Sun Geodetic lat = " << sun_gd_lat
-	    << " Geocentric lat = " << sun_gc_lat );
+	    "    Sun Geodetic lat = " << sun_gd_lat );
 
     // calculate the sun's relative angle to local up
     sgCopyVec3( nup, world_up );
