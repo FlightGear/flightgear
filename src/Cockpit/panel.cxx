@@ -171,6 +171,7 @@ FGPanel::FGPanel ()
     _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
     _x_offset(0), _y_offset(0), _view_height(int(WIN_H * 0.4232)),
     _bound(false),
+    _jitter(0.0),
     _xsize_node(fgGetNode("/sim/startup/xsize", true)),
     _ysize_node(fgGetNode("/sim/startup/ysize", true))
 {
@@ -226,6 +227,8 @@ FGPanel::bind ()
   fgSetArchivable("/sim/panel/x-offset");
   fgTie("/sim/panel/y-offset", &_y_offset);
   fgSetArchivable("/sim/panel/y-offset");
+  fgTie("/sim/panel/jitter", &_jitter);
+  fgSetArchivable("/sim/panel/jitter");
   _bound = true;
 }
 
@@ -275,6 +278,31 @@ FGPanel::update ()
 void
 FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
 {
+				// Calculate accelerations
+				// and jiggle the panel accordingly
+				// The factors and bounds are just
+				// initial guesses; using sqrt smooths
+				// out the spikes.
+  double x_offset = _x_offset;
+  double y_offset = _y_offset;
+
+  if (_jitter != 0.0) {
+    double a_x_pilot = current_aircraft.fdm_state->get_A_X_pilot();
+    double a_y_pilot = current_aircraft.fdm_state->get_A_Y_pilot();
+    double a_z_pilot = current_aircraft.fdm_state->get_A_Z_pilot();
+
+    double a_zx_pilot = a_z_pilot - a_x_pilot;
+    
+    int x_adjust = int(sqrt(fabs(a_y_pilot) * _jitter)) *
+		   (a_y_pilot < 0 ? -1 : 1);
+    int y_adjust = int(sqrt(fabs(a_zx_pilot) * _jitter)) *
+		   (a_zx_pilot < 0 ? -1 : 1);
+
+				// adjustments in screen coordinates
+    x_offset += x_adjust;
+    y_offset += y_adjust;
+  }
+
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -285,7 +313,7 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   glPushMatrix();
   glLoadIdentity();
 
-  glTranslated(_x_offset, _y_offset, 0);
+  glTranslated(x_offset, y_offset, 0);
 
 				// Draw the background
   glEnable(GL_TEXTURE_2D);
@@ -317,7 +345,7 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
     glLoadIdentity();
-    glTranslated(_x_offset, _y_offset, 0);
+    glTranslated(x_offset, y_offset, 0);
     glTranslated(instr->getXPos(), instr->getYPos(), 0);
     instr->draw();
   }
