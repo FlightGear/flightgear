@@ -42,10 +42,8 @@
 
 #include "props.hxx"
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(strstream);
 SG_USING_STD(ends);
-#endif
 
 /**
  * Props connection class.

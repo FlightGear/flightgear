@@ -11,6 +11,8 @@
 #include "modelmgr.hxx"
 #include "model.hxx"
 
+SG_USING_STD(find);
+
 
 FGModelMgr::FGModelMgr ()
   : _selector(new ssgSelector)

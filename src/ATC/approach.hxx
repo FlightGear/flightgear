@@ -36,8 +36,6 @@
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
 #include <iomanip>
-#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <iostream.h>
 #elif defined( __BORLANDC__ ) || (__APPLE__)
 #  include <iostream>
 #else
@@ -45,10 +43,7 @@
 #include <iomanip.h>
 #endif
 
-#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 SG_USING_STD(istream);
-#endif
-
 SG_USING_STD(string);
 
 #include "ATC.hxx"

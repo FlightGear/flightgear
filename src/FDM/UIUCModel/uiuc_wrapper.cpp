@@ -99,10 +99,8 @@
 //#include "uiuc_network.h"
 //#include "uiuc_get_flapper.h"
 
-#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(endl);
-#endif
 
 extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);

@@ -24,10 +24,8 @@
 #include "fg_commands.hxx"
 
 SG_USING_STD(string);
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(ifstream);
 SG_USING_STD(ofstream);
-#endif
 
 #include "fg_props.hxx"
 #include "fg_io.hxx"

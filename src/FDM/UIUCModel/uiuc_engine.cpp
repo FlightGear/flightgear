@@ -73,9 +73,7 @@
 
 #include "uiuc_engine.h"
 
-#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cerr);
-#endif
 
 void uiuc_engine() 
 {

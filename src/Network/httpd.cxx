@@ -48,10 +48,8 @@
 #include "httpd.hxx"
 
 SG_USING_STD(string);
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(istrstream);
-#endif
 
 
 bool FGHttpd::open() {

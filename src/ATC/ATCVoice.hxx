@@ -23,13 +23,7 @@
 
 #include <simgear/compiler.h>
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <fstream>
-#  include <iostream>
-#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <fstream.h>
-#  include <iostream.h>
-#elif defined( __BORLANDC__ ) || (__APPLE__)
+#if defined( SG_HAVE_STD_INCLUDES ) || defined( __BORLANDC__ ) || (__APPLE__)
 #  include <fstream>
 #  include <iostream>
 #else
@@ -45,12 +39,10 @@ SG_USING_STD(map);
 SG_USING_STD(list);
 SG_USING_STD(string);
 
-#if !defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 SG_USING_STD(cout);
 SG_USING_STD(ios);
 SG_USING_STD(ofstream);
 SG_USING_STD(ifstream);
-#endif
 
 
 struct WordData {

@@ -31,17 +31,13 @@
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
-#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <iostream.h>
 #elif defined( __BORLANDC__ ) || (__APPLE__)
 #  include <iostream>
 #else
 #  include <istream.h>
 #endif
 
-#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 SG_USING_STD(istream);
-#endif
 
 
 #define FG_ILS_DEFAULT_RANGE 18

@@ -37,10 +37,8 @@
 #include <stdlib.h>
 #include "linintp2.h"
 
-#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 SG_USING_NAMESPACE(std);
 SG_USING_STD(cout);
-#endif
 
 //---------------------------------------------------------------------------
 mgcLinInterp2D::mgcLinInterp2D (int _numPoints, double* x, double* y, 

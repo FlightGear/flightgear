@@ -51,11 +51,9 @@ INCLUDES
 #  include <simgear/compiler.h>
 #  include STL_STRING
   SG_USING_STD(string);
-# if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
-   SG_USING_STD(cerr);
-   SG_USING_STD(endl);
-   SG_USING_STD(cout);
-# endif
+  SG_USING_STD(cerr);
+  SG_USING_STD(endl);
+  SG_USING_STD(cout);
 #else
 # include <string>
   using std::string;

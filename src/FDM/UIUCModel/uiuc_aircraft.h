@@ -143,10 +143,8 @@
 //#include "uiuc_flapdata.h"
 
 SG_USING_STD(map);
-#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(iostream);
 SG_USING_STD(ofstream);
-#endif
 
 
 typedef stack :: iterator LIST;

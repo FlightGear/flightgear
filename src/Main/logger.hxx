@@ -14,17 +14,15 @@
 #  include <config.h>
 #endif
 
+#include <iostream>
+#include <vector>
+
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/props.hxx>
 
-#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
-#include <iostream>
 SG_USING_STD(ostream);
-#endif
-
-#include <vector>
 SG_USING_STD(vector);
 
 #include "fgfs.hxx"

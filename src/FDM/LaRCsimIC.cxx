@@ -38,10 +38,8 @@
 #include <FDM/LaRCsim/ls_constants.h>
 #include <FDM/LaRCsim/ls_geodesy.h>
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(endl);
-#endif
 
 
 LaRCsimIC::LaRCsimIC(void) {

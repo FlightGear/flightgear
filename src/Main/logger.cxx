@@ -6,12 +6,10 @@
 #include "logger.hxx"
 
 #include STL_FSTREAM
-#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
+#include <string>
+
 SG_USING_STD(ofstream);
 SG_USING_STD(endl);
-#endif
-
-#include <string>
 SG_USING_STD(string);
 
 #include <simgear/debug/logstream.hxx>

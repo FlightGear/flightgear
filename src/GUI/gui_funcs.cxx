@@ -96,10 +96,7 @@
 #include "sgVec3Slider.hxx"
 
 SG_USING_STD(string);
-
-#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 SG_USING_STD(cout);
-#endif
 
 // main.cxx hack, should come from an include someplace
 extern void fgInitVisuals( void );

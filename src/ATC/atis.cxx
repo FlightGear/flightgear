@@ -32,9 +32,7 @@
 SG_USING_STD(string);
 
 #include STL_IOSTREAM
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
-#endif
 
 //#include <simgear/debug/logstream.hxx>
 //#include <simgear/misc/sgstream.hxx>

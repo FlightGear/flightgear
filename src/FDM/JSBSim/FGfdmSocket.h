@@ -49,10 +49,8 @@ INCLUDES
 #  include STL_STRING
 #  include STL_IOSTREAM
 #  include STL_FSTREAM
-#  if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
-     SG_USING_STD(cout);
-     SG_USING_STD(endl);
-#  endif
+   SG_USING_STD(cout);
+   SG_USING_STD(endl);
 #else
 #  include <string>
 #  if defined(sgi) && !defined(__GNUC__)

@@ -71,10 +71,7 @@
 #include "gui_local.hxx"
 
 SG_USING_STD(string);
-
-#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 SG_USING_STD(cout);
-#endif
 
 /* --------------------------------------------------------------------
 Mouse stuff

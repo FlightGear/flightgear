@@ -33,10 +33,8 @@
 #include <simgear/compiler.h>
 
 #include STL_IOSTREAM
-#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 SG_USING_STD(cerr);
 SG_USING_STD(endl);
-#endif
 
 #include <simgear/misc/exception.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>

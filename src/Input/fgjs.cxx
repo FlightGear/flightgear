@@ -28,12 +28,10 @@
 
 #include <jsinput.h>
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(fstream);
 SG_USING_STD(cout);
 SG_USING_STD(endl);
 SG_USING_STD(ios);
-#endif
 SG_USING_STD(string);
 
 string axes_humannames[8] = { "elevator", "ailerons", "rudder", "throttle", 

@@ -26,9 +26,7 @@
 #include STL_FSTREAM
 #include STL_IOSTREAM
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
-#endif
 
 #include "IO360.hxx"
 #include "LaRCsim/ls_constants.h"

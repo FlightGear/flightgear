@@ -50,10 +50,8 @@
 //built-in layers
 #include "built_in/FGMagRibbon.hxx"
 
-#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istream);
 SG_USING_STD(ifstream);
-#endif
 SG_USING_STD(string);
 
 

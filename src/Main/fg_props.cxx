@@ -49,10 +49,8 @@
 #include "fgfs.hxx"
 #include "fg_props.hxx"
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istream);
 SG_USING_STD(ostream);
-#endif
 
 #ifdef FG_WEATHERCM
 static double getWindNorth ();

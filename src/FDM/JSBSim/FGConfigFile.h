@@ -44,15 +44,13 @@ INCLUDES
 #  include STL_FSTREAM
 #  include STL_IOSTREAM
    SG_USING_STD(string);
-#  if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
-     SG_USING_STD(ostream);
-     SG_USING_STD(istream);
-     SG_USING_STD(ifstream);
-     SG_USING_STD(cerr);
-     SG_USING_STD(endl);
-     SG_USING_STD(ios);
-     SG_USING_STD(cout);
-#  endif
+   SG_USING_STD(ostream);
+   SG_USING_STD(istream);
+   SG_USING_STD(ifstream);
+   SG_USING_STD(cerr);
+   SG_USING_STD(endl);
+   SG_USING_STD(ios);
+   SG_USING_STD(cout);
 #else
 #  include <string>
 #  if defined(sgi) && !defined(__GNUC__)

@@ -8,9 +8,7 @@
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
 
-#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istrstream);
-#endif
 
 int uiuc_1DdataFileReader( string file_name, 
                             double x[100], 

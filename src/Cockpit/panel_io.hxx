@@ -33,9 +33,7 @@
 
 #include STL_IOSTREAM
 
-#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istream);
-#endif
 
 extern FGPanel * fgReadPanel (istream &input);
 extern FGPanel * fgReadPanel (const string &relative_path);

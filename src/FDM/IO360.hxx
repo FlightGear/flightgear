@@ -30,9 +30,7 @@
 #include STL_IOSTREAM
 #include STL_FSTREAM
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(ofstream);
-#endif
 
 class FGNewEngine {
 

@@ -8,10 +8,8 @@
 
 #include "simple.hxx"
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(endl);
-#endif
 
 int main( int argc, char **argv ) {
     FGAirportsUtil airports;
