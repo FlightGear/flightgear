@@ -176,6 +176,8 @@ void PropEngine::integrate(float dt)
     _eng->setFuelState(_fuel);
     
     _prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &propTorque);
+    if(_omega == 0.0)
+        _omega = 0.001; // hack to get around reports of NaNs somewhere...
     propTorque *= _gearRatio;
     _eng->calc(_pressure, _temp, _omega);
     _eng->integrate(dt);
