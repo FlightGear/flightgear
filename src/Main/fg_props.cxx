@@ -529,112 +529,6 @@ getHeadingMag ()
 
 
 /**
- * Return the current engine0 rpm
- */
-static double
-getRPM ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_RPM();
-  } else {
-      return 0.0;
-  }
-}
-
-
-/**
- * Return the current engine0 EGT.
- */
-static double
-getEGT ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_EGT();
-  } else {
-      return 0.0;
-  }
-}
-
-/**
- * Return the current engine0 CHT.
- */
-static double
-getCHT ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_CHT();
-  } else {
-      return 0.0;
-  }
-}
-
-/**
- * Return the current engine0 Oil Temp.
- */
-static double
-getOilTemp ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_Oil_Temp();
-  } else {
-      return 0.0;
-  }
-}
-
-/**
- * Return the current engine0 Manifold Pressure.
- */
-static double
-getMP ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_Manifold_Pressure();
-  } else {
-      return 0.0;
-  }
-}
-
-
-/**
- * Return the current engine0 fuel flow
- */
-static double
-getFuelFlow ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_Fuel_Flow();
-  } else {
-      return 0.0;
-  }
-}
-
-/**
- * Return the current engine0 running flag
- */
-static bool
-getRunningFlag ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_Running_Flag();
-  } else {
-      return false;
-  }
-}
-
-/**
- * Return the current engine0 cranking flag
- */
-static bool
-getCrankingFlag ()
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-      return current_aircraft.fdm_state->get_engine(0)->get_Cranking_Flag();
-  } else {
-      return false;
-  }
-}
-
-/**
  * Return the fuel level in tank 1
  */
 static double
@@ -1219,16 +1113,6 @@ fgInitProps ()
 
 				// Orientation
   fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
-
-				// Engine
-  fgTie("/engines/engine[0]/rpm", getRPM);
-  fgTie("/engines/engine[0]/egt-degf", getEGT);
-  fgTie("/engines/engine[0]/cht-degf", getCHT);
-  fgTie("/engines/engine[0]/oil-temperature-degf", getOilTemp);
-  fgTie("/engines/engine[0]/mp-osi", getMP);
-  fgTie("/engines/engine[0]/fuel-flow-gph", getFuelFlow);
-  fgTie("/engines/engine[0]/running", getRunningFlag, setRunningFlag);
-  fgTie("/engines/engine[0]/cranking", getCrankingFlag, setCrankingFlag);
 
   //consumables
   fgTie("/consumables/fuel/tank[0]/level-gal_us",

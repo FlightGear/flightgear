@@ -47,6 +47,11 @@ class FGFX : public FGSubsystem
 
 public:
 
+  enum {
+    MAX_ENGINES = 2,		// TODO: increase later
+    MAX_GEAR = 20,
+  };
+
   FGFX ();
   virtual ~FGFX ();
 
@@ -59,17 +64,13 @@ private:
 
   void set_playing (const char * soundName, bool state = true);
 
-  enum {
-    MAX_GEAR = 20
-  };
-
   double _old_flap_position;
 
   bool _gear_on_ground[MAX_GEAR];
 
 				// looped sounds
-  FGSimpleSound * _engine;
-  FGSimpleSound * _crank;
+  FGSimpleSound * _engine[MAX_ENGINES];
+  FGSimpleSound * _crank[MAX_ENGINES];
   FGSimpleSound * _wind;
   FGSimpleSound * _stall;
   FGSimpleSound * _rumble;
@@ -80,8 +81,8 @@ private:
   FGSimpleSound * _click;
 
 				// Cached property nodes.
-  const SGPropertyNode * _engine_running_prop;
-  const SGPropertyNode * _engine_cranking_prop;
+  const SGPropertyNode * _engine_running_prop[MAX_ENGINES];
+  const SGPropertyNode * _engine_cranking_prop[MAX_ENGINES];
   const SGPropertyNode * _stall_warning_prop;
   const SGPropertyNode * _flaps_prop;
 

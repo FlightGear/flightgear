@@ -520,6 +520,7 @@ FGPanelTransformation::FGPanelTransformation ()
 
 FGPanelTransformation::~FGPanelTransformation ()
 {
+  delete table;
 }
 
 

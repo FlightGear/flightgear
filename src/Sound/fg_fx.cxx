@@ -27,30 +27,44 @@
 // FIXME: remove direct dependencies
 #include <FDM/flight.hxx>
 
+static const char * engine_names[FGFX::MAX_ENGINES] = {
+  "engine0",
+  "engine1"
+};
+
+static const char * crank_names[FGFX::MAX_ENGINES] = {
+  "crank0",
+  "crank1"
+};
+
 
 FGFX::FGFX ()
   : _old_flap_position(0),
-    _engine(0),
-    _crank(0),
     _wind(0),
     _stall(0),
     _rumble(0),
     _flaps(0),
     _squeal(0),
     _click(0),
-    _engine_running_prop(0),
-    _engine_cranking_prop(0),
     _stall_warning_prop(0),
     _flaps_prop(0)
 {
+  for (int i = 0; i < MAX_ENGINES; i++) {
+    _engine[i] = 0;
+    _crank[i] = 0;
+    _engine_running_prop[i] = 0;
+    _engine_cranking_prop[i] = 0;
+  }
 }
 
 FGFX::~FGFX ()
 {
 				// FIXME: is this right, or does the
 				// sound manager assume pointer ownership?
-  delete _engine;
-  delete _crank;
+  for (int i = 0; i < MAX_ENGINES; i++) {
+    delete _engine[i];
+    delete _crank[i];
+  }
   delete _wind;
   delete _stall;
   delete _rumble;
@@ -67,20 +81,21 @@ FGFX::init ()
   FGSoundMgr * mgr = globals->get_soundmgr();
 
   //
-  // Create and add the engine sound
+  // Create and add engine-related sounds.
   //
-  _engine =
-    new FGSimpleSound(fgGetString("/sim/sounds/engine", "Sounds/wasp.wav"));
-  mgr->add(_engine, "engine");
+  for (int i = 0; i < MAX_ENGINES; i++) {
+				// Engine
+    _engine[i] =
+      new FGSimpleSound(fgGetString("/sim/sounds/engine", "Sounds/wasp.wav"));
+    mgr->add(_engine[i], engine_names[i]);
 
-  //
-  // Create and add the cranking sound.
-  //
-  _crank = new FGSimpleSound(fgGetString("/sim/sounds/cranking",
-					 "Sounds/cranking.wav"));
-  _crank->set_pitch(1.25);
-  _crank->set_volume(0.175);
-  mgr->add(_crank, "crank");
+				// Starter
+    _crank[i] = new FGSimpleSound(fgGetString("/sim/sounds/cranking",
+					      "Sounds/cranking.wav"));
+    _crank[i]->set_pitch(1.25);
+    _crank[i]->set_volume(0.175);
+    mgr->add(_crank[i], crank_names[i]);
+  }
 
 
   //
@@ -132,8 +147,13 @@ FGFX::init ()
   // Grab some properties.
   ////////////////////////////////////////////////////////////////////
 
-  _engine_running_prop = fgGetNode("/engines/engine[0]/running", true);
-  _engine_cranking_prop = fgGetNode("/engines/engine[0]/cranking", true);
+  for (int i = 0; i < MAX_ENGINES; i++) {
+    char buf[100];
+    sprintf(buf, "/engines/engine[%d]/running", i);
+    _engine_running_prop[i] = fgGetNode(buf, true);
+    sprintf(buf, "/engines/engine[%d]/cranking", i);
+    _engine_cranking_prop[i] = fgGetNode(buf, true);
+  }
   _stall_warning_prop = fgGetNode("/sim/aircraft/alarms/stall-warning", true);
   _flaps_prop = fgGetNode("/controls/flaps", true);
 }
@@ -157,53 +177,53 @@ FGFX::update ()
   ////////////////////////////////////////////////////////////////////
   // Update the engine sound.
   ////////////////////////////////////////////////////////////////////
+  
+  for (int i = 0; i < MAX_ENGINES; i++) {
 
-  if (cur_fdm_state->get_num_engines() > 0 && _engine_running_prop->getBoolValue()) {
+    if (cur_fdm_state->get_num_engines() > 0 &&
+	_engine_running_prop[i]->getBoolValue()) {
 	  // pitch corresponds to rpm
 	  // volume corresponds to manifold pressure
 
-    double rpm_factor;
-    if ( cur_fdm_state->get_num_engines() > 0 )
-      rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
-    else
-      rpm_factor = 1.0;
+      double rpm_factor;
+      if ( cur_fdm_state->get_num_engines() > 0 )
+	rpm_factor = cur_fdm_state->get_engine(i)->get_RPM() / 2500.0;
+      else
+	rpm_factor = 1.0;
 
-    double pitch = 0.3 + rpm_factor * 3.0;
+      double pitch = 0.3 + rpm_factor * 3.0;
 
-    // don't run at absurdly slow rates -- not realistic
-    // and sounds bad to boot.  :-)
-    if (pitch < 0.7)
-      pitch = 0.7;
-    if (pitch > 5.0)
-      pitch = 5.0;
+      // don't run at absurdly slow rates -- not realistic
+      // and sounds bad to boot.  :-)
+      if (pitch < 0.7)
+	pitch = 0.7;
+      if (pitch > 5.0)
+	pitch = 5.0;
 
-    double mp_factor;
-    if ( cur_fdm_state->get_num_engines() > 0 )
-      mp_factor = cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 100;
-    else
-      mp_factor = 0.3;
+      double mp_factor;
+      if ( cur_fdm_state->get_num_engines() > 0 )
+	mp_factor =
+	  cur_fdm_state->get_engine(i)->get_Manifold_Pressure() / 100;
+      else
+	mp_factor = 0.3;
 
-    double volume = 0.15 + mp_factor / 2.0;
+      double volume = 0.15 + mp_factor / 2.0;
 
-    if (volume < 0.15)
-      volume = 0.15;
-    if (volume > 0.5)
-      volume = 0.5;
+      if (volume < 0.15)
+	volume = 0.15;
+      if (volume > 0.5)
+	volume = 0.5;
 
-    _engine->set_pitch( pitch );
-    _engine->set_volume( volume );
-    set_playing("engine", true);
-  } else {
-    set_playing("engine", false);
-  }
-
-
-  ////////////////////////////////////////////////////////////////////
-  // Update the cranking sound.
-  ////////////////////////////////////////////////////////////////////
+      _engine[i]->set_pitch( pitch );
+      _engine[i]->set_volume( volume );
+      set_playing(engine_names[i], true);
+    } else {
+      set_playing(engine_names[i], false);
+    }
 
 				// FIXME
-  set_playing("crank", _engine_cranking_prop->getBoolValue());
+    set_playing(crank_names[i], _engine_cranking_prop[i]->getBoolValue());
+  }
 
 
   ////////////////////////////////////////////////////////////////////

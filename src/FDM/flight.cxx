@@ -386,6 +386,36 @@ FGInterface::bind ()
 	&FGInterface::get_Climb_Rate); // read-only
   fgTie("/velocities/side-slip-rad", this,
 	&FGInterface::get_Beta); // read-only
+
+				// Powerplant
+  for (int i = 0; i < get_num_engines(); i++) {
+    char buf[64];
+
+    sprintf(buf, "/engines/engine[%d]/rpm", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_RPM);
+
+    sprintf(buf, "/engines/engine[%d]/egt-degf", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_EGT);
+
+    sprintf(buf, "/engines/engine[%d]/cht-degf", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_CHT);
+
+    sprintf(buf, "/engines/engine[%d]/oil-temperature-degf", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_Oil_Temp);
+
+    sprintf(buf, "/engines/engine[%d]/mp-osi", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_Manifold_Pressure);
+
+    sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_Fuel_Flow);
+
+    sprintf(buf, "/engines/engine[%d]/running", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_Running_Flag);
+
+    sprintf(buf, "/engines/engine[%d]/cranking", i);
+    fgTie(buf, get_engine(i), &FGEngInterface::get_Cranking_Flag);
+
+  }
 }
 
 
@@ -420,6 +450,25 @@ FGInterface::unbind ()
   fgUntie("/velocities/wBody-fps");
   fgUntie("/velocities/vertical-speed-fps");
   fgUntie("/velocities/side-slip-rad");
+  for (int i = 0; i < get_num_engines(); i++) {
+    char buf[64];
+    sprintf(buf, "/engines/engine[%d]/rpm", i);
+    fgUntie(buf);
+    sprintf(buf, "/engines/engine[%d]/egt-degf", i);
+    fgUntie(buf);
+    sprintf(buf, "/engines/engine[%d]/cht-degf", i);
+    fgUntie(buf);
+    sprintf(buf, "/engines/engine[%d]/oil-temperature-degf", i);
+    fgUntie(buf);
+    sprintf(buf, "/engines/engine[%d]/mp-osi", i);
+    fgUntie(buf);
+    sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i);
+    fgUntie(buf);
+    sprintf(buf, "/engines/engine[%d]/running", i);
+    fgUntie(buf);
+    sprintf(buf, "/engines/engine[%d]/cranking", i);
+    fgUntie(buf);
+  }
 }
 
 
