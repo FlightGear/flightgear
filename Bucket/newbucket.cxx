@@ -33,7 +33,7 @@
 
 
 // Build the path name for this bucket
-string FGBucket::gen_base_path() {
+string FGBucket::gen_base_path() const {
     // long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
@@ -146,6 +146,9 @@ void fgBucketDiff( const FGBucket& b1, const FGBucket& b2, int *dx, int *dy ) {
 
 
 // $Log$
+// Revision 1.4  1999/03/27 05:34:05  curt
+// Elimitated some const warnings from the compiler.
+//
 // Revision 1.3  1999/02/26 22:07:54  curt
 // Added initial support for native SGI compilers.
 //

@@ -82,10 +82,10 @@ public:
 
     // Generate the unique scenery tile index for this bucket
     long int gen_index();
-    string gen_index_str();
+    string gen_index_str() const;
 
     // Build the path name for this bucket
-    string gen_base_path();
+    string gen_base_path() const;
 
     // return the center lon of a tile
     double get_center_lon() const;
@@ -256,9 +256,10 @@ inline long int FGBucket::gen_index() {
     return ((lon + 180) << 14) + ((lat + 90) << 6) + (y << 3) + x;
 }
 
-inline string FGBucket::gen_index_str() {
+inline string FGBucket::gen_index_str() const {
     char tmp[20];
-    sprintf(tmp, "%ld", (((long)lon + 180) << 14) + ((lat + 90) << 6) + (y << 3) + x);
+    sprintf(tmp, "%ld", 
+	    (((long)lon + 180) << 14) + ((lat + 90) << 6) + (y << 3) + x);
     return (string)tmp;
 }
 
@@ -329,6 +330,9 @@ operator== ( const FGBucket& b1, const FGBucket& b2 )
 
 
 // $Log$
+// Revision 1.8  1999/03/27 05:34:06  curt
+// Elimitated some const warnings from the compiler.
+//
 // Revision 1.7  1999/03/25 19:01:51  curt
 // Jettisoned old bucketutils.[ch] for newbucket.[ch]xx
 //
