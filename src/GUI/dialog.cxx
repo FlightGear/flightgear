@@ -385,6 +385,20 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         dial->setWrap(props->getBoolValue("wrap", true));
         setupObject(dial, props);
         return dial;
+    } else if (type == "textbox") {
+       int slider_width = props->getIntValue("slider", parentHeight);
+       if (slider_width==0) slider_width=20;
+       puLargeInput * puTextBox =
+                     new puLargeInput(x, y, x+width, x+height, 2, slider_width);
+       if  (props->hasValue("editable"))
+       {
+          if (props->getBoolValue("editable")==false)
+             puTextBox->disableInput();
+          else
+             puTextBox->enableInput();
+       }
+       setupObject(puTextBox,props);
+       return puTextBox; 
     } else if (type == "select") {
         vector<SGPropertyNode_ptr> value_nodes;
         SGPropertyNode * selection_node =
