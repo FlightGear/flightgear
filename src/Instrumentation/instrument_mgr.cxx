@@ -23,32 +23,20 @@
 #include "attitude_indicator.hxx"
 #include "clock.hxx"
 #include "dme.hxx"
+#include "encoder.hxx"
 #include "gps.hxx"
 #include "heading_indicator.hxx"
 #include "kr_87.hxx"
 #include "mag_compass.hxx"
 #include "slip_skid_ball.hxx"
+#include "transponder.hxx"
 #include "turn_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
 {
-    //set_subsystem("asi", new AirspeedIndicator(0));
-    //set_subsystem("asi-backup", new AirspeedIndicator(1, 1, 1));
     set_subsystem("annunciator", new Annunciator);
-    //set_subsystem("ai", new AttitudeIndicator);
-    //set_subsystem("alt", new Altimeter);
-    //set_subsystem("ti", new TurnIndicator);
-    //set_subsystem("ball", new SlipSkidBall);
-    //set_subsystem("hi", new HeadingIndicator);
-    //set_subsystem("vsi", new VerticalSpeedIndicator);
-    //set_subsystem("compass", new MagCompass);
-    //set_subsystem("dme", new DME, 1.0);
-    //set_subsystem("adf", new ADF, 0.15);
-    //set_subsystem("gps", new GPS, 0.45);
-    //set_subsystem("clock", new Clock, 0.25);
-    //set_subsystem("nhi", new NewHeadingIndicator);
 
     config_props = new SGPropertyNode;
 
@@ -120,6 +108,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "dme" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new DME( node ), 1.0 );
+        } else if ( name == "encoder" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new Encoder( node ) );
         } else if ( name == "heading-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new HeadingIndicator( node ) );
@@ -132,6 +123,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "slip-skid-ball" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new SlipSkidBall( node ) );
+        } else if ( name == "transponder" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new Transponder( node ) );
         } else if ( name == "turn-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new TurnIndicator( node ) );
