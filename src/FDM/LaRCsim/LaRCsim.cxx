@@ -286,7 +286,7 @@ void FGLaRCsim::update( double dt ) {
 
     // Inform LaRCsim of the local terrain altitude
     // Runway_altitude = get_Runway_altitude();
-    Runway_altitude = getACModel()->get3DModel()->getSGLocation()->get_cur_elev_m() * SG_METER_TO_FEET;
+    Runway_altitude = fgGetDouble("/position/ground-elev-m") * SG_METER_TO_FEET;
     // Weather
     /* V_north_airmass = get_V_north_airmass();
        V_east_airmass =  get_V_east_airmass();

@@ -223,9 +223,6 @@ private:
     // SGTimeStamp valid_stamp;          // time this record is valid
     // SGTimeStamp next_stamp;           // time this record is valid
 
-    // Model tied to FDM
-    FGAircraftModel * _acmodel;
-
 protected:
 
     int _calc_multiloop (double dt);
@@ -1079,9 +1076,6 @@ public:
     inline double get_daux( int n ) const { return daux[n]; }
     inline float  get_faux( int n ) const { return faux[n]; }
     inline int    get_iaux( int n ) const { return iaux[n]; }
-
-    // Model tied to FDM
-    FGAircraftModel * getACModel() const { return _acmodel; }
 
     // Note that currently this is the "same" value runway altitude...
     inline double get_ground_elev_ft() const { return runway_altitude; }
