@@ -78,9 +78,9 @@ void FGACMS::update( double dt ) {
     sgSetVec3(accel_ned, acc_lon, acc_lat, acc_down);
     double accel = sgLengthVec3 (accel_ned) * SG_FEET_TO_METER;
 
-    double velocity = (_speed->getDoubleValue() * SG_FEET_TO_METER) * accel;
+    double velocity = (_speed->getDoubleValue() * SG_KT_TO_MPS) * accel * dt;
     double dist = cos (pitch) * velocity * dt;
-    double kts = velocity * SG_MPS_TO_KMH * SG_KMH_TO_MPS * SG_MPS_TO_KT;
+    double kts = velocity * SG_MPS_TO_KT;
     _set_V_equiv_kts( kts );
     _set_V_calibrated_kts( kts );
     _set_V_ground_speed( kts );
