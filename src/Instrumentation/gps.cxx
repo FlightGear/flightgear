@@ -32,7 +32,16 @@ GPS::GPS ( SGPropertyNode *node)
       _last_longitude_deg(0),
       _last_latitude_deg(0),
       _last_altitude_m(0),
-      _last_speed_kts(0)
+      _last_speed_kts(0),
+      _wp0_latitude_deg(0),
+      _wp0_longitude_deg(0),
+      _wp0_altitude_m(0),
+      _wp1_latitude_deg(0),
+      _wp1_longitude_deg(0),
+      _wp1_altitude_m(0),
+      _alt_dist_ratio(0),
+      _distance_m(0),
+      _course_deg(0)
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -57,7 +66,16 @@ GPS::GPS ()
       _last_longitude_deg(0),
       _last_latitude_deg(0),
       _last_altitude_m(0),
-      _last_speed_kts(0)
+      _last_speed_kts(0),
+      _wp0_latitude_deg(0),
+      _wp0_longitude_deg(0),
+      _wp0_altitude_m(0),
+      _wp1_latitude_deg(0),
+      _wp1_longitude_deg(0),
+      _wp1_altitude_m(0),
+      _alt_dist_ratio(0),
+      _distance_m(0),
+      _course_deg(0)
 {
 }
 
@@ -90,7 +108,7 @@ GPS::init ()
 
     _wp0_longitude_node = wp0_node->getChild("longitude-deg", 0, true);
     _wp0_latitude_node = wp0_node->getChild("latitude-deg", 0, true);
-    _wp0_altitude_node = wp0_node->getChild("altitude-deg", 0, true);
+    _wp0_altitude_node = wp0_node->getChild("altitude-ft", 0, true);
     _wp0_ID_node = wp0_node->getChild("ID", 0, true);
     _wp0_name_node = wp0_node->getChild("name", 0, true);
     _wp0_course_node = wp0_node->getChild("desired-course-deg", 0, true);
@@ -110,7 +128,7 @@ GPS::init ()
 
     _wp1_longitude_node = wp1_node->getChild("longitude-deg", 0, true);
     _wp1_latitude_node = wp1_node->getChild("latitude-deg", 0, true);
-    _wp1_altitude_node = wp1_node->getChild("altitude-deg", 0, true);
+    _wp1_altitude_node = wp1_node->getChild("altitude-ft", 0, true);
     _wp1_ID_node = wp1_node->getChild("ID", 0, true);
     _wp1_name_node = wp1_node->getChild("name", 0, true);
     _wp1_course_node = wp1_node->getChild("desired-course-deg", 0, true);

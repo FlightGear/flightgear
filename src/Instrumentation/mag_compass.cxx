@@ -86,7 +86,7 @@ MagCompass::update (double delta_time_sec)
                                 // This is the real magnetic
                                 // which would be displayed
                                 // if the compass had no errors.
-    double heading_mag_deg = _heading_node->getDoubleValue();
+    //double heading_mag_deg = _heading_node->getDoubleValue();
 
 
                                 // don't update if the compass
@@ -146,7 +146,7 @@ MagCompass::update (double delta_time_sec)
     */
     double x_accel_g = _x_accel_node->getDoubleValue() / 32;
     double y_accel_g = _y_accel_node->getDoubleValue() / 32;
-    double z_accel_g = _z_accel_node->getDoubleValue() / 32;
+    //double z_accel_g = _z_accel_node->getDoubleValue() / 32;
 
     theta -= 0.07 * x_accel_g;
     phi -= 0.07 * y_accel_g;

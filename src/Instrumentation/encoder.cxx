@@ -62,10 +62,10 @@ int round (double value, int nearest=1)
 
 Encoder::Encoder(SGPropertyNode *node)
     :
-    altitudeTable(new SGInterpTable),
     name("encoder"),
     num(0),
-    staticPort("/systems/static")
+    staticPort("/systems/static"),
+    altitudeTable(new SGInterpTable)
 {
     int i;
     for ( i = 0; altitude_data[i][0] != -1; i++ )

@@ -46,10 +46,10 @@ static double altitude_data[][2] = {
 
 
 Altimeter::Altimeter ( SGPropertyNode *node )
-    : _altitude_table(new SGInterpTable),
-      name("altimeter"),
+    : name("altimeter"),
       num(0),
-      static_port("/systems/static")
+      static_port("/systems/static"),
+      _altitude_table(new SGInterpTable)
 {
     int i;
     for (i = 0; altitude_data[i][0] != -1; i++)
