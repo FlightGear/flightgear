@@ -184,10 +184,11 @@ fgSetDefaults ()
     fgSetInt("/sim/log-level", SG_WARN);
 
 				// Features
+    fgSetBool("/sim/hud/antialiased", false);
+    fgSetBool("/sim/hud/enable3d", true);
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
     fgSetBool("/sim/sound/audible", true);
-    fgSetBool("/sim/hud/antialiased", false);
 
 				// Flight Model options
     fgSetString("/sim/flight-model", "jsb");
@@ -1085,6 +1086,8 @@ struct OptionDesc {
     {"enable-fuel-freeze",           false, OPTION_BOOL,   "/sim/freeze/fuel", true, "", 0 },
     {"disable-clock-freeze",         false, OPTION_BOOL,   "/sim/freeze/clock", false, "", 0 },
     {"enable-clock-freeze",          false, OPTION_BOOL,   "/sim/freeze/clock", true, "", 0 },
+    {"disable-hud-3d",               false, OPTION_BOOL,   "/sim/hud/enable3d", false, "", 0 },
+    {"enable-hud-3d",                false, OPTION_BOOL,   "/sim/hud/enable3d", true, "", 0 },
     {"disable-anti-alias-hud",       false, OPTION_BOOL,   "/sim/hud/antialiased", false, "", 0 },
     {"enable-anti-alias-hud",        false, OPTION_BOOL,   "/sim/hud/antialiased", true, "", 0 },
     {"control",                      true,  OPTION_STRING, "/sim/control-mode", false, "", 0 },

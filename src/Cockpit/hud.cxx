@@ -242,11 +242,13 @@ readLadder(const SGPropertyNode * node)
     // The factor assumes a base of 55 degrees per 640 pixels.
     // Invert to convert the "compression" factor to a
     // pixels-per-degree number.
-    if( HUD_style == 1)
+    if(fgGetBool("/sim/hud/enable3d", true))
     {
-//        if(factor == 0)
+        if (HUD_style == 1)
+        {
             factor = 1;
-        factor = (640./55.) / factor;
+            factor = (640./55.) / factor;
+        }
     }
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
@@ -993,7 +995,8 @@ static void set_hud_color(float r, float g, float b) {
 //
 void fgUpdateHUD( void ) {
 	
-    if( HUD_style == 1)
+    static const SGPropertyNode *enable3d_node = fgGetNode("/sim/hud/enable3d");
+    if( HUD_style == 1 && enable3d_node->getBoolValue() )
     {
         fgUpdateHUDVirtual();
         return;
