@@ -53,7 +53,7 @@
 // my hardware/driver requires many more.
 #define POFF_UNITS 4
 
-#ifdef __FreeBSD__	// no truncf on FreeBSD
+#if defined( __FreeBSD__ ) || defined( _MSC_VER )	// no truncf on FreeBSD nor in MSVC
 inline float truncf (float d) {
     return (d < 0) ? -floorf(-d) : floorf(d);
 }

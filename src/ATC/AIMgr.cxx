@@ -121,7 +121,7 @@ void FGAIMgr::init() {
 					if(facilities.find(idx) != facilities.end()) {
 						facilities[idx]->push_back(f_ident);
 					} else {
-						aptID_list_type* apts = new aptID_list_type;
+						ID_list_type* apts = new ID_list_type;
 						apts->push_back(f_ident);
 						facilities[idx] = apts;
 					}
