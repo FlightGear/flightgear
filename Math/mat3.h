@@ -131,11 +131,11 @@ int			MAT3invert (MAT3mat result, MAT3mat);
 void		MAT3print (MAT3mat, FILE *fp);
 void		MAT3print_formatted (MAT3mat, FILE *fp, 
 			 	     char *title, char *head, char *format, char *tail);
-extern int		MAT3equal();
-extern double		MAT3trace();
-extern int		MAT3power();
-extern int		MAT3column_reduce();
-extern int		MAT3kernel_basis();
+extern int		MAT3equal( void );
+extern double		MAT3trace( void );
+extern int		MAT3power( void );
+extern int		MAT3column_reduce( void );
+extern int		MAT3kernel_basis( void );
 
 /* In MAT3vec.c */
 void		MAT3mult_vec(MAT3vec result_vec, MAT3vec vec, MAT3mat mat);

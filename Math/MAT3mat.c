@@ -75,9 +75,7 @@ MAT3copy(MAT3mat to, MAT3mat from)
  */
 
 void
-MAT3mult (result_mat, mat1, mat2)
-MAT3mat result_mat;
-register MAT3mat mat1, mat2;
+MAT3mult (double (*result_mat)[4], register double (*mat1)[4], register double (*mat2)[4])
 {
    register int i, j;
    MAT3mat	tmp_mat;
@@ -97,9 +95,7 @@ register MAT3mat mat1, mat2;
  */
 
 void
-MAT3transpose (result_mat, mat)
-MAT3mat result_mat;
-register MAT3mat mat;
+MAT3transpose (double (*result_mat)[4], register double (*mat)[4])
 {
    register int i, j;
    MAT3mat	tmp_mat;
@@ -117,9 +113,7 @@ register MAT3mat mat;
  */
 
 void
-MAT3print(mat, fp)
-MAT3mat mat;
-FILE	*fp;
+MAT3print(double (*mat)[4], FILE *fp)
 {
    MAT3print_formatted(mat, fp, CNULL, CNULL, CNULL, CNULL);
 }
@@ -131,10 +125,7 @@ FILE	*fp;
  */
 
 void
-MAT3print_formatted(mat, fp, title, head, format, tail)
-MAT3mat mat;
-FILE	*fp;
-char	*title, *head, *format, *tail;
+MAT3print_formatted(double (*mat)[4], FILE *fp, char *title, char *head, char *format, char *tail)
 {
    register int i, j;
 

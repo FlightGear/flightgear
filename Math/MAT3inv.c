@@ -260,8 +260,7 @@ MAT3_inv4_pivot (register MAT3mat src, MAT3vec r, double *s, int *swap)
  */
 
 int
-MAT3invert(result_mat, mat)
-MAT3mat result_mat, mat;
+MAT3invert(double (*result_mat)[4], double (*mat)[4])
 {
    MAT3mat		src, inv;
    register int 	i, j, simple;

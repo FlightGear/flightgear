@@ -31,10 +31,7 @@
 
 
 void
-MAT3mult_vec(result_vec, vec, mat)
-MAT3vec 	 result_vec;
-register MAT3vec vec;
-register MAT3mat mat;
+MAT3mult_vec(double *result_vec, register double *vec, register double (*mat)[4])
 {
    MAT3vec		tempvec;
    register double	*temp = tempvec;
@@ -59,10 +56,7 @@ register MAT3mat mat;
  */
 
 int
-MAT3mult_hvec(result_vec, vec, mat, normalize)
-MAT3hvec          result_vec;
-register MAT3hvec vec;
-register MAT3mat  mat;
+MAT3mult_hvec(double *result_vec, register double *vec, register double (*mat)[4], int normalize)
 {
    MAT3hvec             tempvec;
    double		norm_fac;
@@ -103,9 +97,7 @@ register MAT3mat  mat;
  */
 
 void
-MAT3cross_product(result_vec, vec1, vec2)
-MAT3vec 	 result_vec;
-register MAT3vec vec1, vec2;
+MAT3cross_product(double *result_vec, register double *vec1, register double *vec2)
 {
    MAT3vec		tempvec;
    register double	*temp = tempvec;
@@ -129,9 +121,7 @@ register MAT3vec vec1, vec2;
 #define SELECT	.7071	/* selection constant (roughly .5*sqrt(2) */
 
 void
-MAT3perp_vec(result_vec, vec, is_unit)
-MAT3vec result_vec, vec;
-int	is_unit;
+MAT3perp_vec(double *result_vec, double *vec, int is_unit)
 {
    MAT3vec	norm;
    double	dot;

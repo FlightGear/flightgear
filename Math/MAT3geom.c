@@ -20,8 +20,7 @@
  */
 
 void
-MAT3direction_matrix(result_mat, mat)
-register MAT3mat result_mat, mat;
+MAT3direction_matrix(register double (*result_mat)[4], register double (*mat)[4])
 {
    register int i;
 
@@ -45,8 +44,7 @@ register MAT3mat result_mat, mat;
  */
 
 int
-MAT3normal_matrix(result_mat, mat)
-register MAT3mat result_mat, mat;
+MAT3normal_matrix(register double (*result_mat)[4], register double (*mat)[4])
 {
    register int ret;
    MAT3mat	tmp_mat;
@@ -66,9 +64,7 @@ register MAT3mat result_mat, mat;
  */
 
 void
-MAT3scale(result_mat, scale)
-MAT3mat result_mat;
-MAT3vec scale;
+MAT3scale(double (*result_mat)[4], double *scale)
 {
    MAT3identity(result_mat);
 
@@ -86,10 +82,7 @@ MAT3vec scale;
 #define SELECT	.7071	/* selection constant (roughly .5*sqrt(2) */
 
 void
-MAT3rotate(result_mat, axis, angle_in_radians)
-MAT3mat result_mat;
-MAT3vec axis;
-double	angle_in_radians;
+MAT3rotate(double (*result_mat)[4], double *axis, double angle_in_radians)
 {
    MAT3vec	naxis,	/* Axis of rotation, normalized 		*/
 		base2,	/* 2nd unit basis vec, perp to axis		*/
@@ -150,9 +143,7 @@ double	angle_in_radians;
  */
 
 void
-MAT3translate(result_mat, trans)
-MAT3mat result_mat;
-MAT3vec trans;
+MAT3translate(double (*result_mat)[4], double *trans)
 {
    MAT3identity(result_mat);
 
@@ -167,9 +158,7 @@ MAT3vec trans;
  */
 
 void
-MAT3shear(result_mat, xshear, yshear)
-MAT3mat result_mat;
-double	xshear, yshear;
+MAT3shear(double (*result_mat)[4], double xshear, double yshear)
 {
    MAT3identity(result_mat);
 
