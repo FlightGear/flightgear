@@ -1,0 +1,91 @@
+// adf.hxx - automatic direction finder.
+// Written by David Megginson, started 2003.
+//
+// This file is in the Public Domain and comes with no warranty.
+
+
+#ifndef __INSTRUMENTS_ADF_HXX
+#define __INSTRUMENTS_ADF_HXX 1
+
+#ifndef __cplusplus
+# error This library requires C++
+#endif
+
+#include <string>
+
+#include <simgear/math/point3d.hxx>
+#include <simgear/props/props.hxx>
+
+#include <simgear/structure/subsystem_mgr.hxx>
+
+SG_USING_STD(string);
+
+
+/**
+ * Model an ADF radio.
+ *
+ * Input properties:
+ *
+ * /position/longitude-deg
+ * /position/latitude-deg
+ * /position/altitude-ft
+ * /orientation/heading-deg
+ * /systems/electrical/outputs/adf
+ * /instrumentation/adf/serviceable
+ * /instrumentation/adf/error-deg
+ * /instrumentation/adf/frequencies/selected-khz
+ * /instrumentation/adf/mode
+ *
+ * Output properties:
+ *
+ * /instrumentation/adf/in-range
+ * /instrumentation/adf/indicated-bearing-deg
+ * /instrumentation/adf/ident
+ */
+class ADF : public SGSubsystem
+{
+
+public:
+
+    ADF ();
+    virtual ~ADF ();
+
+    virtual void init ();
+    virtual void update (double delta_time_sec);
+
+private:
+
+    void set_bearing (double delta_time_sec, double bearing);
+
+    void search (double frequency, double longitude_rad,
+                 double latitude_rad, double altitude_m);
+
+    SGPropertyNode_ptr _longitude_node;
+    SGPropertyNode_ptr _latitude_node;
+    SGPropertyNode_ptr _altitude_node;
+    SGPropertyNode_ptr _heading_node;
+    SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _error_node;
+    SGPropertyNode_ptr _electrical_node;
+    SGPropertyNode_ptr _frequency_node;
+    SGPropertyNode_ptr _mode_node;
+
+    SGPropertyNode_ptr _in_range_node;
+    SGPropertyNode_ptr _bearing_node;
+    SGPropertyNode_ptr _ident_node;
+
+    double _time_before_search_sec;
+
+    int _last_frequency_khz;
+    bool _transmitter_valid;
+    string _last_ident;
+    Point3D _transmitter;
+    double _transmitter_lon_deg;
+    double _transmitter_lat_deg;
+    double _transmitter_elevation_ft;
+    double _transmitter_range_nm;
+
+};
+
+
+#endif // __INSTRUMENTS_ADF_HXX

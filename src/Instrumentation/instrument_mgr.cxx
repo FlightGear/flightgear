@@ -16,6 +16,7 @@
 #include "mag_compass.hxx"
 
 #include "dme.hxx"
+#include "adf.hxx"
 #include "gps.hxx"
 #include "clock.hxx"
 
@@ -32,6 +33,7 @@ FGInstrumentMgr::FGInstrumentMgr ()
     set_subsystem("vsi", new VerticalSpeedIndicator);
     set_subsystem("compass", new MagCompass);
     set_subsystem("dme", new DME, 1.0);
+    set_subsystem("adf", new ADF, 0.15);
     set_subsystem("gps", new GPS, 0.45);
     set_subsystem("clock", new Clock, 0.25);
 }

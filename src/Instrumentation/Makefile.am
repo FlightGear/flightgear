@@ -5,6 +5,7 @@ libInstrumentation_a_SOURCES = \
 	annunciator.cxx annunciator.hxx \
         dme.cxx dme.hxx \
         gps.cxx gps.hxx \
+	adf.cxx adf.hxx \
         gyro.cxx gyro.hxx \
         airspeed_indicator.cxx airspeed_indicator.hxx \
         attitude_indicator.cxx attitude_indicator.hxx \
