@@ -911,8 +911,6 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 
     if ( ! obj.read_bin( path ) ) {
 	return false;
-    } else {
-        cout << "succeeded: " << path << endl;
     }
 
     // cout << "fans size = " << obj.get_fans_v().size()
