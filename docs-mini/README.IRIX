@@ -44,23 +44,21 @@ or PLib) can be compiled on Irix:
         FlightGear:	http://www.flightgear.org
         SimGear:	http://www.simgear.org
         Plib:		http://plib.sourceforge.net
-        MetaKit:	http://www.equi4.com/metakit/
-
 
 
 2. Compiling and Installation
+
+
+NOTE: Make sure automake version 1.8.1 or later is installed !!!
 
 To create a set of binaries it is important to follow these steps. This
 will build a statically linked executable /opt/bin/fgfs
 
    1. Install GLUT and Zlib
-   2. Extract, configure and install MetaKit, Plib, SimGear and FlightGear
-
-The irix-hack.sh script fixes some compiler specific problems which were 
-introduced after the adoption of the C++ Standard Template Library.
-
-The "automake -a -i" command is required because automake with automatic
-dependency building breaks the native Irix compilers.
+   2. Configure and install  plib
+   3. After extracting SimGear and FlightGear make sure to run autogen.sh first.
+      This will fix a linker problem for MipsPro compilers.
+   4. Configure and install SimGear and then FlightGear
 
 
 3. Running
