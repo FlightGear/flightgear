@@ -224,6 +224,34 @@ Configuration description:
      <z>
         Z dimension offset
 
+
+   <orientation>
+        Specify the orientation of the sounds source.
+
+        The zero vector is default, indicating that a Source is not directional.
+        Specifying a non-zero vector will make the Source directional.
+
+     <x>
+        X dimension angle (0.0 - 360.0)
+
+     <y>
+        Y dimension angle (0.0 - 360.0)
+
+     <z>
+        Z dimension angle (0.0 - 360.0)
+
+     <inner-cone>
+        The inner edge of the audio cone in degrees (0.0 - 360.0).
+        Any sound withing that angle will be played at the current gain.
+
+     <outer-cone>
+        The outer edge of the audio cone in degrees (0.0 - 360.0).
+        Any sound beyond the outer cone will be played at "outer-gain" volume.
+
+     <outer-gain>
+        The gain at the outer edge of the cone.
+
+
    <reference-dist>
         Set a reference distance of sound in meters.  This is the
         distance where the gain/volume will be halved.  This can be
