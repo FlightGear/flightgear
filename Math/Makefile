@@ -24,7 +24,7 @@
 #---------------------------------------------------------------------------
 
 ARLIBRARY = libMath.a
-TARGETS = $(ARLIBRARY) geotest
+TARGETS = $(ARLIBRARY)
 
 CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c fg_geodesy.c fg_random.c polar.c vector.c
 CXXFILES = 
@@ -32,8 +32,5 @@ CXXFILES =
 LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
 
 include $(FG_ROOT_SRC)/commondefs
-
-geotest: geotest.o $(ARLIBRARY)
-	$(CC) $(LDFLAGS) -o $@ $< -lMath -lm -lc
 
 include $(COMMONRULES)

@@ -1,8 +1,9 @@
-MAT3geom.o: MAT3geom.c mat3defs.h mat3.h
-MAT3inv.o: MAT3inv.c mat3defs.h mat3.h
-MAT3mat.o: MAT3mat.c mat3defs.h mat3.h
-MAT3vec.o: MAT3vec.c mat3.h
-fg_geodesy.o: fg_geodesy.c fg_geodesy.h ../Include/constants.h
+MAT3geom.o: MAT3geom.c
+MAT3inv.o: MAT3inv.c
+MAT3mat.o: MAT3mat.c
+MAT3vec.o: MAT3vec.c
+fg_geodesy.o: fg_geodesy.c
 fg_random.o: fg_random.c fg_random.h
-polar.o: polar.c polar.h ../Include/types.h ../Include/constants.h
-vector.o: vector.c vector.h ../Math/mat3.h
+geotest.o: geotest.c
+polar.o: polar.c
+vector.o: vector.c
