@@ -450,23 +450,23 @@ FGViewMgr::do_axes ()
   /* Do all the quick and easy cases */
   if (axis_long < 0) {		// Longitudinal axis forward
     if (axis_lat == axis_long)
-      viewDir = 45;
+      viewDir = fgGetDouble("/sim/view/config/front-left-direction-deg");
     else if (axis_lat == - axis_long)
-      viewDir = 315;
+      viewDir = fgGetDouble("/sim/view/config/front-right-direction-deg");
     else if (axis_lat == 0)
-      viewDir = 0;
+      viewDir = fgGetDouble("/sim/view/config/front-direction-deg");
   } else if (axis_long > 0) {	// Longitudinal axis backward
     if (axis_lat == - axis_long)
-      viewDir = 135;
+      viewDir = fgGetDouble("/sim/view/config/back-left-direction-deg");
     else if (axis_lat == axis_long)
-      viewDir = 225;
+      viewDir = fgGetDouble("/sim/view/config/back-right-direction-deg");
     else if (axis_lat == 0)
-      viewDir = 180;
+      viewDir = fgGetDouble("/sim/view/config/back-direction-deg");
   } else if (axis_long == 0) {	// Longitudinal axis neutral
     if (axis_lat < 0)
-      viewDir = 90;
+      viewDir = fgGetDouble("/sim/view/config/left-direction-deg");
     else if (axis_lat > 0)
-      viewDir = 270;
+      viewDir = fgGetDouble("/sim/view/config/right-direction-deg");
     else return; /* And assertion failure maybe? */
   }
 
