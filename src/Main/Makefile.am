@@ -42,6 +42,7 @@ fgfs_SOURCES = \
         fgfs.cxx fgfs.hxx \
 	globals.cxx globals.hxx \
 	keyboard.cxx keyboard.hxx \
+	morse.cxx morse.hxx \
 	options.cxx options.hxx \
 	soundmgr.cxx soundmgr.hxx \
 	splash.cxx splash.hxx \

@@ -1,0 +1,147 @@
+// morse.hxx -- Morse code generation class
+//
+// Written by Curtis Olson, started March 2001.
+//
+// Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+
+#ifndef _MORSE_HXX
+#define _MORSE_HXX
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <simgear/compiler.h>
+
+#include <plib/sl.h>
+#include <plib/sm.h>
+
+
+// Quoting from http://www.kluft.com/~ikluft/ham/morse-intro.html by
+// Ian Kluft KO6YQ <ikluft@kluft.com>
+//
+// [begin quote]
+//
+// What is the Standard for Measuring Morse Code Speed?
+// 
+// [This was adapted from the Ham Radio FAQ which used to be posted on UseNet.] 
+// 
+// The word PARIS was chosen as the standard length for CW code
+// speed. Each dit counts for one count, each dah counts for three
+// counts, intra-character spacing is one count, inter-character
+// spacing is three counts and inter-word spacing is seven counts, so
+// the word PARIS is exactly 50 counts:
+// 
+// PPPPPPPPPPPPPP    AAAAAA    RRRRRRRRRR    IIIIII    SSSSSSSSSS
+// di  da  da  di    di  da    di  da  di    di  di    di  di  di
+// 1 1 3 1 3 1 1  3  1 1 3  3  1 1 3 1 1  3  1 1 1  3  1 1 1 1 1  7 = 50
+//   ^                      ^                                     ^
+//   ^Intra-character       ^Inter-character            Inter-word^
+// 
+// So 5 words-per-minute = 250 counts-per-minute / 50 counts-per-word
+// or one count every 240 milliseconds. 13 words-per-minute is one
+// count every ~92.3 milliseconds. This method of sending code is
+// sometimes called "Slow Code", because at 5 wpm it sounds VERY SLOW.
+// 
+// The "Farnsworth" method is accomplished by sending the dits and
+// dahs and intra-character spacing at a higher speed, then increasing
+// the inter-character and inter-word spacing to slow the sending
+// speed down to the desired speed. For example, to send at 5 wpm with
+// 13 wpm characters in Farnsworth method, the dits and
+// intra-character spacing would be 92.3 milliseconds, the dah would
+// be 276.9 milliseconds, the inter-character spacing would be 1.443
+// seconds and inter-word spacing would be 3.367 seconds.
+//
+// [end quote]
+
+// Ok, back to Curt 
+
+// My formulation is based dit = 1 count, dah = 3 counts, 1 count for
+// intRA-character space, 3 counts for intER-character space.  Target
+// is 5 wpm which by the above means 1 count = 240 milliseconds.
+// 
+// AIM 1-1-7 (f) states that the frequency of the tone should be 1020
+// Hz for the VOR ident.
+
+
+static const char DI = '1';
+static const char DIT = '1';
+static const char DA = '2';
+static const char DAH = '2';
+static const char end = '0';
+
+static const int BYTES_PER_SECOND = 8000;
+static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
+static const int TRANSITION_BYTES = 40;
+static const int COUNT_SIZE = BYTES_PER_SECOND * BEAT_LENGTH / 1000;
+static const int DIT_SIZE = 2 * COUNT_SIZE;   // 2 counts
+static const int DAH_SIZE = 4 * COUNT_SIZE;   // 4 counts
+static const int SPACE_SIZE = 3 * COUNT_SIZE; // 3 counts
+static const int FREQUENCY = 1020;	 // AIM 1-1-7 (f) specified in Hz
+
+static char alphabet[26][4] = {
+    { DI, DAH, end, end },	/* A */ 
+    { DA, DI, DI, DIT },	/* B */ 
+    { DA, DI, DA, DIT },	/* C */ 
+    { DA, DI, DIT, end },	/* D */ 
+    { DIT, end, end, end },	/* E */ 
+    { DI, DI, DA, DIT },	/* F */ 
+    { DA, DA, DIT, end },	/* G */ 
+    { DI, DI, DI, DIT },	/* H */ 
+    { DI, DIT, end, end },	/* I */ 
+    { DI, DA, DA, DAH },	/* J */ 
+    { DA, DI, DAH, end },	/* K */ 
+    { DI, DA, DI, DIT },	/* L */ 
+    { DA, DAH, end, end },	/* M */ 
+    { DA, DIT, end, end },	/* N */ 
+    { DA, DA, DAH, end },	/* O */ 
+    { DI, DA, DA, DIT },	/* P */ 
+    { DA, DA, DI, DAH },	/* Q */ 
+    { DI, DA, DIT, end },	/* R */ 
+    { DI, DI, DIT, end },	/* S */ 
+    { DAH, end, end, end },	/* T */ 
+    { DI, DI, DAH, end },	/* U */ 
+    { DI, DI, DI, DAH },	/* V */ 
+    { DI, DA, DAH, end },	/* W */ 
+    { DA, DI, DI, DAH },	/* X */ 
+    { DA, DI, DA, DAH },	/* Y */ 
+    { DA, DA, DI, DIT }		/* Z */ 
+};
+
+// manages everything we need to know for an individual sound sample
+class FGMorse {
+
+    unsigned char dit[ DIT_SIZE ] ;
+    unsigned char dah[ DAH_SIZE ] ;
+    unsigned char space[ SPACE_SIZE ] ;
+
+public:
+
+    FGMorse();
+    ~FGMorse();
+
+    // allocate and initialize sound samples
+    bool init();
+};
+
+
+#endif // _MORSE_HXX
+
+

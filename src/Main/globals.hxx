@@ -81,7 +81,7 @@ private:
     // sound manager
     FGSoundMgr *soundmgr;
 
-    // viewer maneger
+    // viewer manager
     FGViewMgr *viewmgr;
     FGViewer *current_view;
 
