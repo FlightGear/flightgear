@@ -242,37 +242,6 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 }
 
 
-#if defined ( PLIB_1_2_X )
-static float fgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
-    /* 
-       From comp.graph.algorithms FAQ
-       2A(P) = abs(N.(sum_{i=0}^{n-1}(v_i x v_{i+1})))
-     */
-    sgVec3 sum;
-    sgZeroVec3( sum );
-	
-    sgVec3 norm;
-    sgMakeNormal( norm, p0, p1, p2 );
-	
-    float *vv[3];
-    vv[0] = p0;
-    vv[1] = p1;
-    vv[2] = p2;
-	
-    for( int i=0; i<3; i++ ) {
-	int ii = (i+1) % 3;
-	sum[0] += (vv[i][1] * vv[ii][2] - vv[i][2] * vv[ii][1]) ;
-	sum[1] += (vv[i][2] * vv[ii][0] - vv[i][0] * vv[ii][2]) ;
-	sum[2] += (vv[i][0] * vv[ii][1] - vv[i][1] * vv[ii][0]) ;
-    }
-
-    return( sgAbs(sgScalarProductVec3( norm, sum )) * SG_HALF );
-}
-#else
-#  define fgTriArea(p0,p1,p2) sgTriArea(p0,p1,p2)
-#endif
-
-
 static void random_pt_inside_tri( float *res,
 				  float *n1, float *n2, float *n3 )
 {
@@ -305,15 +274,15 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 
 	// generate a repeatable random seed
 	p1 = leaf->getVertex( 0 );
-	unsigned int *seed = (unsigned int *)p1;
-	sg_srandom( *seed );
+	unsigned int seed = (unsigned int)p1[0];
+	sg_srandom( seed );
 
 	for ( int i = 0; i < num; ++i ) {
 	    leaf->getTriangle( i, &n1, &n2, &n3 );
 	    p1 = leaf->getVertex(n1);
 	    p2 = leaf->getVertex(n2);
 	    p3 = leaf->getVertex(n3);
-	    double area = fgTriArea( p1, p2, p3 );
+	    double area = sgTriArea( p1, p2, p3 );
 	    double num = area / factor;
 
 	    // generate a light point for each unit of area
@@ -842,10 +811,22 @@ static ssgLeaf *gen_leaf( const string& path,
 	coverage = -1;
     }
 
+    // cout << "before list allocs" << endl;
+
     int size = node_index.size();
+
+    if ( size < 1 ) {
+	SG_LOG( SG_TERRAIN, SG_ALERT, "Woh! list size < 1" );
+	exit(-1);
+    }
+
+    // cout << "before vl, size = " << size << endl;
     ssgVertexArray   *vl = new ssgVertexArray( size );
+    // cout << "before nl" << endl;
     ssgNormalArray   *nl = new ssgNormalArray( size );
+    // cout << "before tl" << endl;
     ssgTexCoordArray *tl = new ssgTexCoordArray( size );
+    // cout << "before cl" << endl;
     ssgColourArray   *cl = new ssgColourArray( 1 );
 
     sgVec4 color;
