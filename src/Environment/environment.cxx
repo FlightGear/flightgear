@@ -29,21 +29,12 @@
 #  include <windows.h>                     
 #endif
 
-#include <GL/glut.h>
-#include <GL/gl.h>
-
 #include <math.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_random.h>
 
 #include <Main/fg_props.hxx>
-#include <Aircraft/aircraft.hxx>
 #include "environment.hxx"
-
-
-// This is a record containing current environment info
-FGEnvironment current_environment;
 
 
 FGEnvironment::FGEnvironment()
@@ -52,9 +43,7 @@ FGEnvironment::FGEnvironment()
     wind_speed_kt(0),
     wind_from_north_fps(0),
     wind_from_east_fps(0),
-    wind_from_down_fps(0),
-    fog_exp_density(0),
-    fog_exp2_density(0)
+    wind_from_down_fps(0)
 {
 }
 
@@ -64,78 +53,10 @@ FGEnvironment::~FGEnvironment()
 }
 
 
-// Initialize the environment modeling subsystem
-void FGEnvironment::init ()
-{
-    SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
-}
-
-
-void
-FGEnvironment::bind ()
-{
-  fgTie("/environment/visibility-m", this,
-	&FGEnvironment::get_visibility_m, &FGEnvironment::set_visibility_m);
-  fgSetArchivable("/environment/visibility-m");
-  fgTie("/environment/wind-from-heading-deg", this,
-	&FGEnvironment::get_wind_from_heading_deg,
-	&FGEnvironment::set_wind_from_heading_deg);
-  fgTie("/environment/wind-speed-kt", this,
-	&FGEnvironment::get_wind_speed_kt, &FGEnvironment::set_wind_speed_kt);
-  fgTie("/environment/wind-from-north-fps", this,
-	&FGEnvironment::get_wind_from_north_fps,
-	&FGEnvironment::set_wind_from_north_fps);
-  fgSetArchivable("/environment/wind-from-north-fps");
-  fgTie("/environment/wind-from-east-fps", this,
-	&FGEnvironment::get_wind_from_east_fps,
-	&FGEnvironment::set_wind_from_east_fps);
-  fgSetArchivable("/environment/wind-from-east-fps");
-  fgTie("/environment/wind-from-down-fps", this,
-	&FGEnvironment::get_wind_from_down_fps,
-	&FGEnvironment::set_wind_from_down_fps);
-  fgSetArchivable("/environment/wind-from-down-fps");
-}
-
-void
-FGEnvironment::unbind ()
-{
-  fgUntie("/environment/visibility-m");
-  fgUntie("/environment/wind-from-heading-deg");
-  fgUntie("/environment/wind-speed-kt");
-  fgUntie("/environment/wind-from-north-fps");
-  fgUntie("/environment/wind-from-east-fps");
-  fgUntie("/environment/wind-from-down-fps");
-}
-
-void FGEnvironment::update (int dt)
-{
-				// FIXME: the FDMs should update themselves
-  current_aircraft.fdm_state
-    ->set_Velocities_Local_Airmass(wind_from_north_fps,
-				   wind_from_east_fps,
-				   wind_from_down_fps);
-}
-
 void
 FGEnvironment::set_visibility_m (double v)
 {
-	glMatrixMode(GL_MODELVIEW);
-	// in meters
-	visibility_m = v;
-
-        // for GL_FOG_EXP
-	fog_exp_density = -log(0.01 / visibility_m);
-
-	// for GL_FOG_EXP2
-	fog_exp2_density = sqrt( -log(0.01) ) / visibility_m;
-
-	// Set correct opengl fog density
-	glFogf (GL_FOG_DENSITY, fog_exp2_density);
-	glFogi( GL_FOG_MODE, GL_EXP2 );
-
-	// SG_LOG( SG_INPUT, SG_DEBUG, "Fog density = " << fog_density );
-	// SG_LOG( SG_INPUT, SG_INFO, 
-	//     	   "Fog exp2 density = " << fog_exp2_density );
+  visibility_m = v;
 }
 
 void

@@ -4,7 +4,8 @@
 
 noinst_LIBRARIES = libEnvironment.a
 
-libEnvironment_a_SOURCES = environment.cxx environment.hxx
+libEnvironment_a_SOURCES = environment.cxx environment.hxx \
+	environment_mgr.cxx environment_mgr.hxx
 
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

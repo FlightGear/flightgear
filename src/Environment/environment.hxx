@@ -26,8 +26,6 @@
 
 #include <simgear/compiler.h>
 
-#include <GL/gl.h>
-
 #include <Main/fgfs.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
@@ -45,7 +43,7 @@
  *
  * This class should eventually move to SimGear.
  */
-class FGEnvironment : public FGSubsystem
+class FGEnvironment
 {
 
 public:
@@ -53,11 +51,6 @@ public:
   FGEnvironment();
   virtual ~FGEnvironment();
   
-  virtual void init ();
-  virtual void bind ();
-  virtual void unbind ();
-  virtual void update (int dt);
-    
   inline virtual double get_visibility_m () const { return visibility_m; }
   inline virtual double get_wind_from_heading_deg () const {
     return wind_from_heading_deg;
@@ -95,12 +88,11 @@ private:
   double wind_from_down_fps;
 
 				// Do these belong here?
+#if 0
   GLfloat fog_exp_density;
   GLfloat fog_exp2_density;
+#endif
 
 };
-
-// FIXME: move to FGGlobals.
-extern FGEnvironment current_environment;
 
 #endif // _ENVIRONMENT_HXX

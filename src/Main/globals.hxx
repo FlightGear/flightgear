@@ -42,8 +42,12 @@ SG_USING_STD( string );
 
 typedef vector<string> string_list;
 
+#include <Environment/environment_mgr.hxx>
+
 
 // Forward declarations
+class FGEnvironmentMgr;
+class FGEnvironment;
 class FGControls;
 class FGSoundMgr;
 class FGFX;
@@ -95,6 +99,9 @@ private:
 
     // sound-effects manager
     FGFX *fx;
+
+    // environment information
+    FGEnvironmentMgr * environment_mgr;
 
     // control input state
     FGControls *controls;
@@ -154,6 +161,20 @@ public:
 
     inline SGRoute *get_route() const { return route; }
     inline void set_route( SGRoute *r ) { route = r; }
+
+    inline FGEnvironmentMgr * get_environment_mgr() {
+      return environment_mgr;
+    }
+    inline void set_environment_mgr(FGEnvironmentMgr * mgr) {
+      environment_mgr = mgr;
+    }
+    inline const FGEnvironment * get_environment() const {
+      return environment_mgr->getEnvironment();
+    }
+    inline const FGEnvironment * get_environment(double lat, double lon,
+						 double alt) const {
+      return environment_mgr->getEnvironment(lat, lon, alt);
+    }
 
     inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }

@@ -41,6 +41,7 @@
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/viewer.hxx>
 #include <Objects/obj.hxx>
 
@@ -169,16 +170,7 @@ void FGTileMgr::schedule_needed() {
    SG_LOG( SG_TERRAIN, SG_INFO,
            "scheduling needed tiles for " << longitude << " " << latitude );
 
-#ifndef FG_NEW_ENVIRONMENT
-    if ( WeatherDatabase != NULL ) {
-	vis = WeatherDatabase->getWeatherVisibility();
-    } else {
-	vis = 16000;
-    }
-#else
-    vis = current_environment.get_visibility_m();
-#endif
-    // cout << "visibility = " << vis << endl;
+   vis = fgGetDouble("/environment/visibility-m");
 
     double tile_width = current_bucket.get_width_m();
     double tile_height = current_bucket.get_height_m();
@@ -439,16 +431,7 @@ int FGTileMgr::update( double lon, double lat ) {
 void FGTileMgr::prep_ssg_nodes() {
     float vis = 0.0;
 
-#ifndef FG_NEW_ENVIRONMENT
-    if ( WeatherDatabase ) {
-	vis = WeatherDatabase->getWeatherVisibility();
-    } else {
-	vis = 16000;
-    }
-#else
-    vis = current_environment.get_visibility_m();
-#endif
-    // cout << "visibility = " << vis << endl;
+    vis = fgGetDouble("/environment/visibility-m");
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
