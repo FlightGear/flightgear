@@ -25,12 +25,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <GL/glut.h>
-
 #include <plib/ssg.h>
 
 #include <simgear/constants.h>

@@ -34,17 +34,11 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
 #include <simgear/compiler.h>
 #include <simgear/misc/props.hxx>
-
-#include <GL/glut.h>
 
 #include STL_STRING      // Standard C++ string library
 

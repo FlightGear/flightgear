@@ -33,13 +33,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <GL/glut.h>
-#include <GL/gl.h>
-
 #include <simgear/compiler.h>
 
 #include <vector>

@@ -51,8 +51,7 @@ SG_USING_STD(endl);
 #  include <float.h>
 #endif
 
-#include <GL/glut.h>
-#include <GL/gl.h>
+#include GLUT_H
 
 #include <stdio.h>
 #include <string.h>		// for strcmp()

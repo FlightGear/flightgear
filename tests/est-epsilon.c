@@ -1,5 +1,15 @@
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
 #include <stdio.h>
-#include <GL/glut.h>
+
+#include GLUT_H
+
 
 int main() {
     GLfloat a, t;

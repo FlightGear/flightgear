@@ -34,12 +34,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <GL/glut.h>
-
 #include <map>
 
 #include <simgear/bucket/newbucket.hxx>

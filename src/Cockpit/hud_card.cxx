@@ -9,7 +9,6 @@
 
 //========== Top of hud_card class member definitions =============
 //begin suma
-#include<GL/glut.h> 
 #include<math.h>
 #include <stdlib.h>
 #include <stdio.h>

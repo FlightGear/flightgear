@@ -36,7 +36,8 @@
 #endif
 #include <math.h>
 
-#include <GL/glut.h>
+#include GLUT_H
+
 #include <stdlib.h>
 #include <stdio.h>		// char related functions
 #include <string.h>		// strcmp()

@@ -1,10 +1,20 @@
-#include <GL/glut.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
+#include GLUT_H
+
 #define TEXRES_X 256
 #define TEXRES_Y 256
+
 
 unsigned char env_map[TEXRES_X][TEXRES_Y][4];
 GLuint texName;

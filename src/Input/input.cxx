@@ -37,7 +37,7 @@
 #include STL_STRING
 #include <vector>
 
-#include <GL/glut.h>
+#include GLUT_H
 
 #include <plib/pu.h>
 

@@ -38,8 +38,7 @@
 #  include <windows.h>
 #endif
 
-#include <GL/glut.h>
-#include <GL/gl.h>
+#include GLUT_H
 
 #if defined(FX) && defined(XMESA)
 #  include <GL/xmesa.h>

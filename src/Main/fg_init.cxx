@@ -35,7 +35,7 @@
 #  include <windows.h>
 #endif
 
-#include <GL/glut.h>
+#include GLUT_H
 
 #include <stdio.h>
 #include <stdlib.h>

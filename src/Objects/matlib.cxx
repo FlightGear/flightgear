@@ -33,8 +33,7 @@
 #  include <windows.h>
 #endif
 
-#include <GL/glut.h>
-#include <GL/gl.h>
+#include GLUT_H
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>

@@ -36,7 +36,7 @@
 #endif
 #include <math.h>
 
-#include <GL/glut.h>
+#include GLUT_H
 #include <stdlib.h>
 #include <string.h>
 
