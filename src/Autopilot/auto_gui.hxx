@@ -37,7 +37,7 @@ SG_USING_STD( string );
 // prototypes
 
 class puObject;
-void fgAPAdjust( puObject * );
+// void fgAPAdjust( puObject * );
 void NewHeading(puObject *cb);
 void NewAltitude(puObject *cb);
 void AddWayPoint(puObject *cb);

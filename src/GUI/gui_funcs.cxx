@@ -166,7 +166,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"AddWayPoint", AddWayPoint},
         {"PopWayPoint", PopWayPoint},
         {"ClearRoute", ClearRoute},
-        {"fgAPAdjust", fgAPAdjust},
         {"fgLatLonFormatToggle", fgLatLonFormatToggle},
 
         // Help

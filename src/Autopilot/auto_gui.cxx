@@ -62,56 +62,56 @@ SG_USING_STD(string);
 #define mySlider puSlider
 
 // Climb speed constants
-const double min_climb = 70.0;	// kts
-const double best_climb = 75.0;	// kts
-const double ideal_climb_rate = 500.0; // fpm
+// const double min_climb = 70.0;	// kts
+// const double best_climb = 75.0;	// kts
+// const double ideal_climb_rate = 500.0; // fpm
 
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
 // AutoPilot Gain Adjuster members
-static double MaxRollAdjust;        // MaxRollAdjust       = 2 * APData->MaxRoll;
-static double RollOutAdjust;        // RollOutAdjust       = 2 * APData->RollOut;
-static double MaxAileronAdjust;     // MaxAileronAdjust    = 2 * APData->MaxAileron;
-static double RollOutSmoothAdjust;  // RollOutSmoothAdjust = 2 * APData->RollOutSmooth;
+// static double MaxRollAdjust;        // MaxRollAdjust       = 2 * APData->MaxRoll;
+// static double RollOutAdjust;        // RollOutAdjust       = 2 * APData->RollOut;
+// static double MaxAileronAdjust;     // MaxAileronAdjust    = 2 * APData->MaxAileron;
+// static double RollOutSmoothAdjust;  // RollOutSmoothAdjust = 2 * APData->RollOutSmooth;
 
-static float MaxRollValue;          // 0.1 -> 1.0
-static float RollOutValue;
-static float MaxAileronValue;
-static float RollOutSmoothValue;
+// static float MaxRollValue;          // 0.1 -> 1.0
+// static float RollOutValue;
+// static float MaxAileronValue;
+// static float RollOutSmoothValue;
 
-static float TmpMaxRollValue;       // for cancel operation
-static float TmpRollOutValue;
-static float TmpMaxAileronValue;
-static float TmpRollOutSmoothValue;
+// static float TmpMaxRollValue;       // for cancel operation
+// static float TmpRollOutValue;
+// static float TmpMaxAileronValue;
+// static float TmpRollOutSmoothValue;
 
-static puDialogBox *APAdjustDialog;
-static puFrame     *APAdjustFrame;
-static puText      *APAdjustDialogMessage;
-static puFont      APAdjustLegendFont;
-static puFont      APAdjustLabelFont;
+// static puDialogBox *APAdjustDialog;
+// static puFrame     *APAdjustFrame;
+// static puText      *APAdjustDialogMessage;
+// static puFont      APAdjustLegendFont;
+// static puFont      APAdjustLabelFont;
 
-static puOneShot *APAdjustOkButton;
-static puOneShot *APAdjustResetButton;
-static puOneShot *APAdjustCancelButton;
+// static puOneShot *APAdjustOkButton;
+// static puOneShot *APAdjustResetButton;
+// static puOneShot *APAdjustCancelButton;
 
-//static puButton        *APAdjustDragButton;
+// static puButton        *APAdjustDragButton;
 
-static puText *APAdjustMaxRollTitle;
-static puText *APAdjustRollOutTitle;
-static puText *APAdjustMaxAileronTitle;
-static puText *APAdjustRollOutSmoothTitle;
+// static puText *APAdjustMaxRollTitle;
+// static puText *APAdjustRollOutTitle;
+// static puText *APAdjustMaxAileronTitle;
+// static puText *APAdjustRollOutSmoothTitle;
 
-static puText *APAdjustMaxAileronText;
-static puText *APAdjustMaxRollText;
-static puText *APAdjustRollOutText;
-static puText *APAdjustRollOutSmoothText;
+// static puText *APAdjustMaxAileronText;
+// static puText *APAdjustMaxRollText;
+// static puText *APAdjustRollOutText;
+// static puText *APAdjustRollOutSmoothText;
 
-static mySlider *APAdjustHS0;
-static mySlider *APAdjustHS1;
-static mySlider *APAdjustHS2;
-static mySlider *APAdjustHS3;
+// static mySlider *APAdjustHS0;
+// static mySlider *APAdjustHS1;
+// static mySlider *APAdjustHS2;
+// static mySlider *APAdjustHS3;
 
-static char SliderText[ 4 ][ 8 ];
+// static char SliderText[ 4 ][ 8 ];
 
 ///////// AutoPilot New Heading Dialog
 
@@ -139,7 +139,7 @@ static puOneShot       *ApAltitudeDialogCancelButton = 0;
 //  These statics should disapear when this is a class
 static puDialogBox     *TgtAptDialog = 0;
 static puFrame         *TgtAptDialogFrame = 0;
-static puText          *TgtAptDialogMessage = 0;
+// static puText          *TgtAptDialogMessage = 0;
 static puInput         *TgtAptDialogInput = 0;
 static puListBox       *TgtAptDialogWPList = 0;
 static puSlider        *TgtAptDialogSlider = 0;
@@ -350,6 +350,7 @@ void NewAltitudeInit()
 }
 
 
+#if 0
 static void maxroll_adj( puObject *hs ) {
     float val ;
     
@@ -597,6 +598,7 @@ void fgAPAdjustInit() {
 
 #undef HORIZONTAL
 }
+#endif
 
 // Simple Dialog to input Target Airport
 void TgtAptDialog_Cancel(puObject *)

@@ -116,6 +116,7 @@ do_ap_clear_route_dialog (const SGPropertyNode * arg)
     return true;
 }
 
+#if 0
 extern void fgAPAdjust (puObject *);
 static bool
 do_ap_adjust_dialog (const SGPropertyNode * arg)
@@ -123,6 +124,7 @@ do_ap_adjust_dialog (const SGPropertyNode * arg)
     fgAPAdjust(0);
     return true;
 }
+#endif
 
 extern void fgLatLonFormatToggle (puObject *);
 static bool
@@ -159,7 +161,6 @@ static struct {
     { "old-ap-add-waypoint-dialog", do_ap_add_waypoint_dialog },
     { "old-ap-pop-waypoint-dialog", do_ap_pop_waypoint_dialog },
     { "old-ap-clear-route-dialog", do_ap_clear_route_dialog },
-    { "old-ap-adjust-dialog", do_ap_adjust_dialog },
     { "old-lat-lon-format-dialog", do_lat_lon_format_dialog },
     { "old-help-dialog", do_help_dialog },
     { 0, 0 }

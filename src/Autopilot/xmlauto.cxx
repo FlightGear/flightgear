@@ -64,13 +64,13 @@ FGPIDController::FGPIDController( SGPropertyNode *node, bool old ):
         if ( cname == "name" ) {
             name = cval;
         } else if ( cname == "enable" ) {
-            cout << "parsing enable" << endl;
+            // cout << "parsing enable" << endl;
             SGPropertyNode *prop = child->getChild( "prop" );
             if ( prop != NULL ) {
-                cout << "prop = " << prop->getStringValue() << endl;
+                // cout << "prop = " << prop->getStringValue() << endl;
                 enable_prop = fgGetNode( prop->getStringValue(), true );
             } else {
-                cout << "no prop child" << endl;
+                // cout << "no prop child" << endl;
             }
             SGPropertyNode *val = child->getChild( "value" );
             if ( val != NULL ) {
@@ -110,13 +110,13 @@ FGPIDController::FGPIDController( SGPropertyNode *node, bool old ):
                 tmp = prop->getChild( "min" );
                 if ( tmp != NULL ) {
                     u_min = tmp->getDoubleValue();
-                    cout << "min = " << u_min << endl;
+                    // cout << "min = " << u_min << endl;
                 }
 
                 tmp = prop->getChild( "max" );
                 if ( tmp != NULL ) {
                     u_max = tmp->getDoubleValue();
-                    cout << "max = " << u_max << endl;
+                    // cout << "max = " << u_max << endl;
                 }
             }
         } else if ( cname == "proportional" ) {
@@ -142,12 +142,12 @@ FGPIDController::FGPIDController( SGPropertyNode *node, bool old ):
                 SGPropertyNode *sub = prop->getChild( "prop" );
                 if ( sub != NULL ) {
                     offset_prop = fgGetNode( sub->getStringValue(), true );
-                    cout << "offset prop = " << sub->getStringValue() << endl;
+                    // cout << "offset prop = " << sub->getStringValue() << endl;
                 } else {
                     sub = prop->getChild( "value" );
                     if ( sub != NULL ) {
                         offset_value = sub->getDoubleValue();
-                        cout << "offset value = " << offset_value << endl;
+                        // cout << "offset value = " << offset_value << endl;
                     }
                 }
             }
@@ -202,13 +202,13 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
         } else if ( cname == "debug" ) {
             debug = child->getBoolValue();
         } else if ( cname == "enable" ) {
-            cout << "parsing enable" << endl;
+            // cout << "parsing enable" << endl;
             SGPropertyNode *prop = child->getChild( "prop" );
             if ( prop != NULL ) {
-                cout << "prop = " << prop->getStringValue() << endl;
+                // cout << "prop = " << prop->getStringValue() << endl;
                 enable_prop = fgGetNode( prop->getStringValue(), true );
             } else {
-                cout << "no prop child" << endl;
+                // cout << "no prop child" << endl;
             }
             SGPropertyNode *val = child->getChild( "value" );
             if ( val != NULL ) {
@@ -281,6 +281,9 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
             }
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
         }
     }   
 }
