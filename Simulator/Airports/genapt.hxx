@@ -40,7 +40,7 @@
 #  define exception c_exception
 #endif
 
-#include <Scenery/tile.hxx>
+#include <Scenery/tileentry.hxx>
 
 FG_USING_STD(string);
 FG_USING_STD(set);
@@ -57,7 +57,7 @@ FG_USING_STD(set);
 // Load a .apt file and register the GL fragments with the
 // corresponding tile
 int
-fgAptGenerate(const string& path, fgTILE *tile);
+fgAptGenerate(const string& path, FGTileEntry *tile);
 
 
 #endif /* _AIRPORTS_HXX */

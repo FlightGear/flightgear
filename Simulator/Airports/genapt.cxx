@@ -61,7 +61,7 @@ typedef container::const_iterator const_iterator;
 #define FG_APT_BASE_TEX_CONSTANT 2000.0
 
 // Calculate texture coordinates for a given point.
-static Point3D calc_tex_coords(double *node, const Point3D& ref) {
+static Point3D calc_tex_coords(const Point3D& node, const Point3D& ref) {
     Point3D cp;
     Point3D pp;
 
@@ -86,7 +86,7 @@ static Point3D calc_tex_coords(double *node, const Point3D& ref) {
 
 // generate the actual base area for the airport
 static void
-gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
+gen_base( const Point3D& average, const container& perimeter, FGTileEntry *t)
 {
     GLint display_list;
     Point3D cart, cart_trans, tex;
@@ -139,7 +139,9 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
     tex = calc_tex_coords( t->nodes[t->ncount-1], t->center );
     xglTexCoord2f(tex.x(), tex.y());
     xglNormal3dv(normal);
-    xglVertex3dv(t->nodes[t->ncount-1]);
+    xglVertex3d(t->nodes[t->ncount-1][0],
+		t->nodes[t->ncount-1][1],
+		t->nodes[t->ncount-1][2]);
 
     // first point on perimeter
     const_iterator current = perimeter.begin();
@@ -157,7 +159,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 	max_dist = dist;
     }
     xglTexCoord2f(tex.x(), tex.y());
-    xglVertex3dv(t->nodes[i]);
+    xglVertex3dv(t->nodes[i].get_n());
     ++current;
     ++i;
 
@@ -177,7 +179,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 	    max_dist = dist;
 	}
 	xglTexCoord2f(tex.x(), tex.y());
-	xglVertex3dv(t->nodes[i]);
+	xglVertex3dv(t->nodes[i].get_n());
 	i++;
     }
 
@@ -189,7 +191,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     tex = calc_tex_coords( t->nodes[1], t->center );
     xglTexCoord2f(tex.x(), tex.y());
-    xglVertex3dv(t->nodes[1]);
+    xglVertex3dv(t->nodes[1].get_n());
 
     xglEnd();
     xglEndList();
@@ -204,7 +206,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 // Load a .apt file and register the GL fragments with the
 // corresponding tile
 int
-fgAptGenerate(const string& path, fgTILE *tile)
+fgAptGenerate(const string& path, FGTileEntry *tile)
 {
     string token;
     string apt_id, apt_name;
