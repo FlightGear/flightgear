@@ -176,16 +176,6 @@ public:
     void set_Gamma_vert_rad( double gamma);
     //@}
 
-    /// @name Earth Parameter Set
-    //@{
-    /** Sets the sea level radius in feet.
-        @param slr Sea Level Radius in feet */
-    void set_Sea_level_radius(double slr);
-
-    /** Sets the runway altitude in feet above sea level.
-        @param ralt Runway altitude in feet above sea level. */
-    void set_Runway_altitude(double ralt);
-    //@}
 
     /// @name Atmospheric Parameter Set
     //@{
@@ -219,6 +209,7 @@ public:
     bool ToggleDataLogging(bool state);
     bool ToggleDataLogging(void);
     void do_trim(void);
+    void update_ic(void);
 
 private:
     FGFDMExec *fdmex;

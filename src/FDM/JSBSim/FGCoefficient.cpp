@@ -246,7 +246,7 @@ void FGCoefficient::DisplayCoeffFactors(void)
     cout << "none" << endl;
   } else {
     for (i=0; i<multipliers.size(); i++) 
-        cout << FDMExec->GetState()->paramdef[multipliers[i]];
+      cout << State->GetParameterName(multipliers[i]);
   }
   cout << endl;
 }

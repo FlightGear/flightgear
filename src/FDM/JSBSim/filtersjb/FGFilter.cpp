@@ -213,7 +213,15 @@ void FGFilter::Debug(int from)
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
       cout << "      ID: " << ID << endl;
-      cout << "      INPUT: " << InputIdx << endl;
+      switch(InputType) {
+      case itPilotAC:
+        cout << "      INPUT: " << fcs->GetState()->GetParameterName(InputIdx) << endl;
+        break;
+      case itFCS:
+        cout << "      INPUT: FCS Component " << InputIdx << " (" << 
+                                        fcs->GetComponentName(InputIdx) << ")" << endl;
+        break;
+      }
       cout << "      C1: " << C1 << endl;
       cout << "      C2: " << C2 << endl;
       cout << "      C3: " << C3 << endl;

@@ -146,7 +146,7 @@ bool FGKinemat::Run(void ) {
           else
             output_transit_rate=(Detents[fi] - Detents[fi+1])/5;
         }
-        if(fabs(OutputPos - InputCmd) > dt*output_transit_rate)
+        if(fabs(OutputPos - InputCmd) > fabs(dt*output_transit_rate) )
           OutputPos+=output_transit_rate*dt;
         else {
           InTransit=0;

@@ -168,7 +168,18 @@ void FGSummer::Debug(int from)
       cout << "      ID: " << ID << endl;
       cout << "      INPUTS: " << endl;
       for (unsigned i=0;i<InputIndices.size();i++) {
-        cout << "        " << InputIndices[i] << endl;
+        switch (InputTypes[i]) {
+        case itPilotAC:
+          cout << "       " << fcs->GetState()->GetParameterName(InputIndices[i]) << endl;
+          break;
+        case itFCS:
+          cout << "        FCS Component " << InputIndices[i] << " (" << 
+                              fcs->GetComponentName(InputIndices[i]) << ")" << endl;
+          break;
+        case itBias:
+          cout << "        " << "Bias of " << Bias << endl;
+          break;
+        }
       }
       if (clipmax > clipmin) cout << "      CLIPTO: " << clipmin 
                                   << ", " << clipmax << endl;

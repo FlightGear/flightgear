@@ -256,7 +256,7 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
   while ((token = AC_cfg->GetValue()) != string("/FLIGHT_CONTROL")) {
     if (token == "COMPONENT") {
       token = AC_cfg->GetValue("TYPE");
-      if (debug_lvl > 0) cout << "    Loading Component \""
+      if (debug_lvl > 0) cout << endl << "    Loading Component \""
                               << AC_cfg->GetValue("NAME")
                               << "\" of type: " << token << endl;
       if ((token == "LAG_FILTER") ||

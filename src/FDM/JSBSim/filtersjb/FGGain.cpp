@@ -166,7 +166,15 @@ void FGGain::Debug(int from)
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
       cout << "      ID: " << ID << endl;
-      cout << "      INPUT: " << InputIdx << endl;
+      switch(InputType) {
+      case itPilotAC:
+        cout << "      INPUT: " << State->GetParameterName(InputIdx) << endl;
+        break;
+      case itFCS:
+        cout << "      INPUT: FCS Component " << InputIdx << " (" << 
+                                        fcs->GetComponentName(InputIdx) << ")" << endl;
+        break;
+      }
       cout << "      GAIN: " << Gain << endl;
       if (IsOutput) cout << "      OUTPUT: " << sOutputIdx << endl;
       cout << "      MIN: " << Min << endl;

@@ -338,14 +338,14 @@ void FGScript::Debug(int from)
 
         for (i=0; i<iterConditions->TestValue.size(); i++) {
           if (i>0) cout << " and" << endl << "        ";
-          cout << "(" << State->paramdef[iterConditions->TestParam[i]]
+          cout << "(" << State->GetParameterName(iterConditions->TestParam[i])
                       << iterConditions->Comparison[i] << " "
                       << iterConditions->TestValue[i] << ")";
         }
         cout << ") then {";
 
         for (i=0; i<iterConditions->SetValue.size(); i++) {
-          cout << endl << "      set" << State->paramdef[iterConditions->SetParam[i]]
+          cout << endl << "      set" << State->GetParameterName(iterConditions->SetParam[i])
                << "to " << iterConditions->SetValue[i];
 
           switch (iterConditions->Type[i]) {
