@@ -462,6 +462,8 @@ void FGTower::ReceiveUserCallback(int code) {
 	}
 }
 
+// **************** RESPONSE FUNCTIONS ****************
+
 void FGTower::Respond() {
 	//cout << "\nEntering Respond, responseID = " << responseID << endl;
 	TowerPlaneRec* t = FindPlane(responseID);
@@ -511,32 +513,8 @@ void FGTower::Respond() {
 			t->vfrArrivalAcknowledged = true;
 		} else if(t->downwindReported) {
 			//cout << "Tower " << ident << " is responding to downwind reported...\n";
+			ProcessDownwindReport(t);
 			t->downwindReported = false;
-			int i = 1;
-			for(tower_plane_rec_list_iterator twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
-				if((*twrItr)->plane.callsign == responseID) break;
-				++i;
-			}
-			string trns = t->plane.callsign;
-			trns += " Number ";
-			trns += ConvertNumToSpokenDigits(i);
-			trns += " ";
-			if((i == 1) && (!rwyList.size()) && (t->nextOnRwy)) {
-				trns += "Cleared to land";	// TODO - clear for the option if appropriate
-				t->clearedToLand = true;
-				if(!t->isUser) t->planePtr->RegisterTransmission(7);
-			}
-			if(_display) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns);
-			}
-			if(t->isUser) {
-				if(t->opType == TTT_UNKNOWN) t->opType = CIRCUIT;
-				//cout << "ADD VACATED A\n";
-				// Put going around at the top (and hence default) since that'll be more desperate,
-				// or put rwy vacated at the top since that'll be more common?
-				current_atcdialog->add_entry(ident, "@CS Going Around", "Report going around", TOWER, USER_REPORT_GOING_AROUND);
-				current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
-			}
 		} else if(t->holdShortReported) {
 			//cout << "Tower " << ident << " is reponding to holdShortReported...\n";
 			if(t->nextOnRwy) {
@@ -616,6 +594,78 @@ void FGTower::Respond() {
 	//cout << "Done Respond\n" << endl;
 }
 
+void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
+	int i = 1;
+	int a = 0;	// Count of preceding planes on approach
+	bool cf = false;	// conflicting traffic on final
+	bool cc = false;	// preceding traffic in circuit
+	for(tower_plane_rec_list_iterator twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == responseID) break;
+		++i;
+	}
+	if(i > 1) { cc = true; }
+	doThresholdETACalc();
+	TowerPlaneRec* tt;
+	for(tower_plane_rec_list_iterator twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+		if((*twrItr)->eta < (t->eta + 45)) {
+			a++;
+			tt = *twrItr;
+			cf = true;
+			// This should set the flagged plane to be the last conflicting one, and hence the one to follow.
+			// It ignores the fact that we might have problems slotting into the approach traffic behind it - 
+			// eventually we'll need some fancy algorithms for that!
+		}
+	}
+	string trns = t->plane.callsign;
+	trns += " Number ";
+	trns += ConvertNumToSpokenDigits(i + a);
+	// This assumes that the number spoken is landing position, not circuit position, since some of the traffic might be on straight-in final.
+	trns += " ";
+	if((i == 1) && (!rwyList.size()) && (t->nextOnRwy) && (!cf)) {	// Unfortunately nextOnRwy currently doesn't handle circuit/straight-in ordering properly at present, hence the cf check below.
+		trns += "Cleared to land";	// TODO - clear for the option if appropriate
+		t->clearedToLand = true;
+		if(!t->isUser) t->planePtr->RegisterTransmission(7);
+	} else if((i+a) > 1) {
+		trns += "Follow the ";
+		string s = tt->plane.callsign;
+		int p = s.find('-');
+		s = s.substr(0,p);
+		trns += s;
+		if((tt->opType) == CIRCUIT) {
+			if(tt->planePtr->GetLeg() == FINAL) {
+				trns += " on final";
+			} else if(tt->planePtr->GetLeg() == TURN4) {
+				trns += " turning final";
+			} else if(tt->planePtr->GetLeg() == BASE) {
+				trns += " on base";
+			} else if(tt->planePtr->GetLeg() == TURN3) {
+				trns += " turning base";
+			}
+		} else {
+			double miles_out = CalcDistOutMiles(tt);
+			if(miles_out < 2) {
+				trns += " on short final";
+			} else {
+				trns += " on ";
+				trns += ConvertNumToSpokenDigits((int)miles_out);
+				trns += " mile final";
+			}
+		}
+	}
+	if(_display) {
+		globals->get_ATC_display()->RegisterSingleMessage(trns);
+	}
+	if(t->isUser) {
+		if(t->opType == TTT_UNKNOWN) t->opType = CIRCUIT;
+		//cout << "ADD VACATED A\n";
+		// Put going around at the top (and hence default) since that'll be more desperate,
+		// or put rwy vacated at the top since that'll be more common?
+		//cout << "ident = " << ident << ", adding go-around option\n";
+		current_atcdialog->add_entry(ident, "@CS Going Around", "Report going around", TOWER, USER_REPORT_GOING_AROUND);
+		current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
+	}
+}
+
 void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 	//cout << "Processing rwy vacated...\n";
 	current_atcdialog->remove_entry(ident, USER_REPORT_GOING_AROUND, TOWER);
@@ -639,6 +689,8 @@ void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 	}
 	// Maybe we should check that the plane really *has* vacated the runway!
 }
+
+// *********** END RESPONSE FUNCTIONS *****************
 
 // Currently this assumes we *are* next on the runway and doesn't check for planes about to land - 
 // this should be done prior to calling this function.
@@ -950,28 +1002,53 @@ void FGTower::CheckCircuitList(double dt) {
 		}
 		
 		if(t->leg == FINAL && !(t->instructedToGoAround)) {
+			doThresholdETACalc();
+			doThresholdUseOrder();
+			/*
+			if(t->isUser) {
+				cout << "Checking USER on final... ";
+				cout << "eta " << t->eta;
+				if(t->clearedToLand) cout << " cleared to land\n";
+			}
+			*/
 			//cout << "YES FINAL, t->eta = " << t->eta << ", rwyList.size() = " << rwyList.size() << '\n';
 			if(t->landingType == FULL_STOP) {
 				t->opType = INBOUND;
 				//cout << "\n******** SWITCHING TO INBOUND AT POINT AAA *********\n\n";
-				if(t->eta < 12 && rwyList.size()) {
-					// TODO - need to make this more sophisticated 
-					// eg. is the plane accelerating down the runway taking off [OK],
-					// or stationary near the start [V. BAD!!].
-					// For now this should stop the AI plane landing on top of the user.
-					string trns = t->plane.callsign;
-					trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
-					pending_transmission = trns;
-					ImmediateTransmit();
-					t->instructedToGoAround = true;
-					t->clearedToLand = false;
-					// Assume it complies!!!
-					t->opType = CIRCUIT;
-					t->leg = CLIMBOUT;
-					if(t->planePtr) {
-						//cout << "Registering Go-around transmission with AI plane\n";
-						t->planePtr->RegisterTransmission(13);
+			}
+			if(t->eta < 12 && rwyList.size()) {
+				// TODO - need to make this more sophisticated 
+				// eg. is the plane accelerating down the runway taking off [OK],
+				// or stationary near the start [V. BAD!!].
+				// For now this should stop the AI plane landing on top of the user.
+				string trns = t->plane.callsign;
+				trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
+				pending_transmission = trns;
+				ImmediateTransmit();
+				t->instructedToGoAround = true;
+				t->clearedToLand = false;
+				// Assume it complies!!!
+				t->opType = CIRCUIT;
+				t->leg = CLIMBOUT;
+				if(t->planePtr) {
+					//cout << "Registering Go-around transmission with AI plane\n";
+					t->planePtr->RegisterTransmission(13);
+				}
+			} else if(!t->clearedToLand) {
+				if(t->nextOnRwy) {
+					if(!rwyList.size()) {
+						string trns = t->plane.callsign;
+						trns += " Cleared to land";
+						pending_transmission = trns;
+						Transmit();
+						//if(t->isUser) cout << "Transmitting cleared to Land!!!\n";
+						t->clearedToLand = true;
+						if(!t->isUser) {
+							t->planePtr->RegisterTransmission(7);
+						}
 					}
+				} else {
+					//if(t->isUser) cout << "Not next\n";
 				}
 			}
 		} else if(t->leg == LANDING_ROLL) {
@@ -1452,6 +1529,8 @@ bool FGTower::AddToTrafficList(TowerPlaneRec* t, bool holding) {
 	if(!trafficList.size()) {
 		t->nextOnRwy = true;
 		// conflict and firstTime should be false and true respectively in this case anyway.
+	} else {
+		t->nextOnRwy = false;
 	}
 	trafficList.push_back(t);
 	//cout << "\tE\t" << trafficList.size() << endl;
@@ -1687,15 +1766,17 @@ bool FGTower::doThresholdUseOrder() {
 	
 	tower_plane_rec_list_iterator twrItr;
 	// Do the approach list first
-	//cout << "A" << flush;
+	//if(ident == "KRHV") cout << "A" << flush;
 	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
+		//if(ident == "KRHV") cout << tpr->plane.callsign << '\n';
 		conflict = AddToTrafficList(tpr);
 	}	
 	// Then the circuit list
-	//cout << "C" << flush;
+	//if(ident == "KRHV") cout << "C" << flush;
 	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
+		//if(ident == "KRHV") cout << tpr->plane.callsign << '\n';
 		conflict = AddToTrafficList(tpr);
 	}
 	// And finally the hold list
@@ -1705,8 +1786,10 @@ bool FGTower::doThresholdUseOrder() {
 		AddToTrafficList(tpr, true);
 	}
 	
+	
 	if(0) {
-	//if(ident == "KEMT") {
+	//if(ident == "KRHV") {
+		cout << "T\n";
 		for(twrItr = trafficList.begin(); twrItr != trafficList.end(); twrItr++) {
 			TowerPlaneRec* tpr = *twrItr;
 			cout << tpr->plane.callsign << '\t' << tpr->eta << '\t';

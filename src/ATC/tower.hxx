@@ -188,6 +188,7 @@ private:
 	void Respond();
 	
 	void ProcessRunwayVacatedReport(TowerPlaneRec* t);
+	void ProcessDownwindReport(TowerPlaneRec* t);
 	
 	// Remove all options from the user dialog choice
 	void RemoveAllUserDialogOptions();
