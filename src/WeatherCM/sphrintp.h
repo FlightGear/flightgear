@@ -33,13 +33,15 @@
 #define SPHRINTP_H
 
 #include <simgear/compiler.h>
-#include <iostream>
+#include STL_IOSTREAM
 
 #include "linintp2.h"
 #include <plib/sg.h>
 
+#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 SG_USING_NAMESPACE(std);
 SG_USING_STD(cout);
+#endif
 
 
 class SphereInterpolate

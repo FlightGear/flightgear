@@ -30,13 +30,15 @@
 */
 
 #include <simgear/compiler.h>
-#include <iostream>
+#include STL_IOSTREAM
 
 #include <math.h>
 #include "sphrintp.h"
 
+#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 SG_USING_NAMESPACE(std);
 SG_USING_STD(cout);
+#endif
 
 
 static const double PI = 4.0*atan(1.0);
