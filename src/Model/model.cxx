@@ -142,7 +142,7 @@ set_translation (sgMat4 &matrix, double position_m, sgVec3 &axis)
  */
 static void
 make_offsets_matrix (sgMat4 * result, double h_rot, double p_rot, double r_rot,
-		     double x_off, double y_off, double z_off)
+                     double x_off, double y_off, double z_off)
 {
   sgMat4 rot_matrix;
   sgMat4 pos_matrix;
@@ -164,7 +164,7 @@ read_interpolation_table (SGPropertyNode_ptr props)
     vector<SGPropertyNode_ptr> entries = table_node->getChildren("entry");
     for (unsigned int i = 0; i < entries.size(); i++)
       table->addEntry(entries[i]->getDoubleValue("ind", 0.0),
-		      entries[i]->getDoubleValue("dep", 0.0));
+                      entries[i]->getDoubleValue("dep", 0.0));
     return table;
   } else {
     return 0;
@@ -190,6 +190,8 @@ make_animation (ssgBranch * model,
     animation = new SelectAnimation(node);
   } else if (!strcmp("spin", type)) {
     animation = new SpinAnimation(node);
+  } else if (!strcmp("timed", type)) {
+    animation = new TimedAnimation(node);
   } else if (!strcmp("rotate", type)) {
     animation = new RotateAnimation(node);
   } else if (!strcmp("translate", type)) {
@@ -231,6 +233,7 @@ make_animation (ssgBranch * model,
       oldParent->removeKid(object);
   }
 
+  animation->init();
   branch->setUserData(animation);
   branch->setTravCallback(SSG_CALLBACK_PRETRAV, animation_callback);
 }
@@ -266,7 +269,7 @@ fgLoad3DModel (const string &path)
       modelpath.append(props.getStringValue("/path"));
     } else {
       if (model == 0)
-	model = new ssgBranch;
+        model = new ssgBranch;
     }
   }
 
@@ -284,12 +287,12 @@ fgLoad3DModel (const string &path)
   align->addKid(model);
   sgMat4 res_matrix;
   make_offsets_matrix(&res_matrix,
-		      props.getFloatValue("/offsets/heading-deg", 0.0),
-		      props.getFloatValue("/offsets/roll-deg", 0.0),
-		      props.getFloatValue("/offsets/pitch-deg", 0.0),
-		      props.getFloatValue("/offsets/x-m", 0.0),
-		      props.getFloatValue("/offsets/y-m", 0.0),
-		      props.getFloatValue("/offsets/z-m", 0.0));
+                      props.getFloatValue("/offsets/heading-deg", 0.0),
+                      props.getFloatValue("/offsets/roll-deg", 0.0),
+                      props.getFloatValue("/offsets/pitch-deg", 0.0),
+                      props.getFloatValue("/offsets/x-m", 0.0),
+                      props.getFloatValue("/offsets/y-m", 0.0),
+                      props.getFloatValue("/offsets/z-m", 0.0));
   align->setTransform(res_matrix);
 
                                 // Load animations
@@ -310,19 +313,19 @@ fgLoad3DModel (const string &path)
     model->addKid(panel);
   }
 
-				// Load sub-models
+                                // Load sub-models
   vector<SGPropertyNode_ptr> model_nodes = props.getChildren("model");
   for (i = 0; i < model_nodes.size(); i++) {
     SGPropertyNode_ptr node = model_nodes[i];
     ssgTransform * align = new ssgTransform;
     sgMat4 res_matrix;
     make_offsets_matrix(&res_matrix,
-			node->getFloatValue("offsets/heading-deg", 0.0),
-			node->getFloatValue("offsets/roll-deg", 0.0),
-			node->getFloatValue("offsets/pitch-deg", 0.0),
-			node->getFloatValue("offsets/x-m", 0.0),
-			node->getFloatValue("offsets/y-m", 0.0),
-			node->getFloatValue("offsets/z-m", 0.0));
+                        node->getFloatValue("offsets/heading-deg", 0.0),
+                        node->getFloatValue("offsets/roll-deg", 0.0),
+                        node->getFloatValue("offsets/pitch-deg", 0.0),
+                        node->getFloatValue("offsets/x-m", 0.0),
+                        node->getFloatValue("offsets/y-m", 0.0),
+                        node->getFloatValue("offsets/z-m", 0.0));
     align->setTransform(res_matrix);
 
     ssgBranch * kid = fgLoad3DModel(node->getStringValue("path"));
@@ -349,6 +352,16 @@ Animation::~Animation ()
 {
 }
 
+void
+Animation::init ()
+{
+}
+
+void
+Animation::update ()
+{
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -361,11 +374,6 @@ NullAnimation::NullAnimation (SGPropertyNode_ptr props)
 }
 
 NullAnimation::~NullAnimation ()
-{
-}
-
-void
-NullAnimation::update ()
 {
 }
 
@@ -388,11 +396,6 @@ RangeAnimation::~RangeAnimation ()
 {
 }
 
-void
-RangeAnimation::update ()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -405,11 +408,6 @@ BillboardAnimation::BillboardAnimation (SGPropertyNode_ptr props)
 }
 
 BillboardAnimation::~BillboardAnimation ()
-{
-}
-
-void
-BillboardAnimation::update ()
 {
 }
 
@@ -483,6 +481,38 @@ SpinAnimation::update ()
     _position_deg -= 360.0;
   set_rotation(_matrix, _position_deg, _center, _axis);
   ((ssgTransform *)_branch)->setTransform(_matrix);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of TimedAnimation
+////////////////////////////////////////////////////////////////////////
+
+TimedAnimation::TimedAnimation (SGPropertyNode_ptr props)
+  : Animation(props, new ssgSelector),
+    _duration_sec(props->getDoubleValue("duration-sec", 1.0)),
+    _last_time_sec(0),
+    _step(-1)
+{
+}
+
+TimedAnimation::~TimedAnimation ()
+{
+}
+
+void
+TimedAnimation::update ()
+{
+    float sim_time_sec = globals->get_sim_time_sec();
+    if ((sim_time_sec - _last_time_sec) >= _duration_sec) {
+        _last_time_sec = sim_time_sec;
+        if (_step >= getBranch()->getNumKids())
+            _step = 0;
+        else
+            _step++;
+        ((ssgSelector *)getBranch())->selectStep(_step);
+    }
 }
 
 
@@ -690,7 +720,7 @@ FGModelPlacement::setHeadingDeg (double heading_deg)
 
 void
 FGModelPlacement::setOrientation (double roll_deg, double pitch_deg,
-				  double heading_deg)
+                                  double heading_deg)
 {
   _roll_deg = roll_deg;
   _pitch_deg = pitch_deg;

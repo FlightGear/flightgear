@@ -76,9 +76,14 @@ public:
   virtual ssgBranch * getBranch () { return _branch; }
 
   /**
+   * Initialize the animation, after children have been added.
+   */
+  virtual void init ();
+
+  /**
    * Update the animation.
    */
-  virtual void update () = 0;
+  virtual void update ();
 
 protected:
 
@@ -95,7 +100,6 @@ class NullAnimation : public Animation
 public:
   NullAnimation (SGPropertyNode_ptr props);
   virtual ~NullAnimation ();
-  virtual void update ();
 };
 
 
@@ -107,7 +111,6 @@ class RangeAnimation : public Animation
 public:
   RangeAnimation (SGPropertyNode_ptr props);
   virtual ~RangeAnimation ();
-  virtual void update ();
 };
 
 
@@ -119,7 +122,6 @@ class BillboardAnimation : public Animation
 public:
   BillboardAnimation (SGPropertyNode_ptr props);
   virtual ~BillboardAnimation ();
-  virtual void update ();
 };
 
 
@@ -156,6 +158,22 @@ private:
   sgMat4 _matrix;
   sgVec3 _center;
   sgVec3 _axis;
+};
+
+
+/**
+ * Animation to draw objects for a specific amount of time each.
+ */
+class TimedAnimation : public Animation
+{
+public:
+    TimedAnimation (SGPropertyNode_ptr props);
+    virtual ~TimedAnimation ();
+    virtual void update ();
+private:
+    double _duration_sec;
+    double _last_time_sec;
+    int _step;
 };
 
 
