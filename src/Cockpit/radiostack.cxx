@@ -791,7 +791,7 @@ void FGRadioStack::search()
 				// FIXME: the panel should handle this
 				// don't worry about overhead for now,
 				// since this is handled only periodically
-    int dme_switch_pos = fgGetInt("/panel/dme/switch-position");
+    int dme_switch_pos = fgGetInt("/radios/dme/switch-position");
     if (dme_switch_pos == 0) {
       dme_freq = 0;
       dme_inrange = false;
