@@ -205,68 +205,6 @@ FGRadioStack::unbind ()
 }
 
 
-// model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
-double FGRadioStack::adjustNavRange( double stationElev, double aircraftElev,
-			      double nominalRange )
-{
-    // extend out actual usable range to be 1.3x the published safe range
-    const double usability_factor = 1.3;
-
-    // assumptions we model the standard service volume, plus
-    // ... rather than specifying a cylinder, we model a cone that
-    // contains the cylinder.  Then we put an upside down cone on top
-    // to model diminishing returns at too-high altitudes.
-
-    // altitude difference
-    double alt = ( aircraftElev * SG_METER_TO_FEET - stationElev );
-    // cout << "aircraft elev = " << aircraftElev * SG_METER_TO_FEET
-    //      << " station elev = " << stationElev << endl;
-
-    if ( nominalRange < 25.0 + SG_EPSILON ) {
-	// Standard Terminal Service Volume
-	return term_tbl->interpolate( alt ) * usability_factor;
-    } else if ( nominalRange < 50.0 + SG_EPSILON ) {
-	// Standard Low Altitude Service Volume
-	// table is based on range of 40, scale to actual range
-	return low_tbl->interpolate( alt ) * nominalRange / 40.0
-	    * usability_factor;
-    } else {
-	// Standard High Altitude Service Volume
-	// table is based on range of 130, scale to actual range
-	return high_tbl->interpolate( alt ) * nominalRange / 130.0
-	    * usability_factor;
-    }
-}
-
-
-// model standard ILS service volumes as per AIM 1-1-9
-double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
-				     double offsetDegrees, double distance )
-{
-    // assumptions we model the standard service volume, plus
-
-    // altitude difference
-    // double alt = ( aircraftElev * SG_METER_TO_FEET - stationElev );
-    double offset = fabs( offsetDegrees );
-
-    if ( offset < 10 ) {
-	return FG_ILS_DEFAULT_RANGE;
-    } else if ( offset < 35 ) {
-	return 10 + (35 - offset) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
-    } else if ( offset < 45 ) {
-	return (45 - offset);
-    } else if ( offset > 170 ) {
-        return FG_ILS_DEFAULT_RANGE;
-    } else if ( offset > 145 ) {
-	return 10 + (offset - 145) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
-    } else if ( offset > 135 ) {
-        return (offset - 135);
-    } else {
-	return 0;
-    }
-}
-
-
 // Update the various nav values based on position and valid tuned in navs
 void 
 FGRadioStack::update(double dt) 
@@ -287,46 +225,48 @@ FGRadioStack::update(double dt)
     // DME.
     ////////////////////////////////////////////////////////////////////////
 
-    if (dme_valid) {
+    if ( dme_valid ) {
 	station = Point3D( dme_x, dme_y, dme_z );
 	dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
 	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
 	if (dme_dist < dme_effective_range * SG_NM_TO_METER) {
-	  dme_inrange = true;
+            dme_inrange = true;
 	} else if (dme_dist < 2 * dme_effective_range * SG_NM_TO_METER) {
-	  dme_inrange = sg_random() <
-	    (2 * dme_effective_range * SG_NM_TO_METER - dme_dist) /
-	    (dme_effective_range * SG_NM_TO_METER);
+            dme_inrange = sg_random() <
+                (2 * dme_effective_range * SG_NM_TO_METER - dme_dist) /
+                (dme_effective_range * SG_NM_TO_METER);
 	} else {
-	  dme_inrange = false;
+            dme_inrange = false;
 	}
-	if (dme_inrange) {
-	  SGTimeStamp current_time;
-	  station = Point3D( dme_x, dme_y, dme_z );
-	  dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
-	  current_time.stamp();
-	  long dMs = (current_time - dme_last_time) / 1000;
+	if ( dme_inrange ) {
+            SGTimeStamp current_time;
+            station = Point3D( dme_x, dme_y, dme_z );
+            dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
+            current_time.stamp();
+            long dMs = (current_time - dme_last_time) / 1000;
 				// Update every second
-	  if (dMs >= 1000) {
-	    double dDist = dme_dist - dme_prev_dist;
-	    dme_spd = fabs((dDist/dMs) * 3600000);
+            if (dMs >= 1000) {
+                double dDist = dme_dist - dme_prev_dist;
+                dme_spd = fabs((dDist/dMs) * 3600000);
 				// FIXME: the panel should be able to
 				// handle this!!!
-	    if (dme_spd > 999.0)
-	      dme_spd = 999.0;
-	    dme_ete = fabs((dme_dist/dme_spd) * 60.0);
+                if (dme_spd > 999.0)
+                    dme_spd = 999.0;
+                dme_ete = fabs((dme_dist/dme_spd) * 60.0);
 				// FIXME: the panel should be able to
 				// handle this!!!
-	    if (dme_ete > 99.0)
-	      dme_ete = 99.0;
-	    dme_prev_dist = dme_dist;
-	    dme_last_time.stamp();
-	  }
+                if (dme_ete > 99.0)
+                    dme_ete = 99.0;
+                dme_prev_dist = dme_dist;
+                dme_last_time.stamp();
+            }
 	}
     } else {
-      dme_inrange = false;
-      dme_dist = 0.0;
-      dme_prev_dist = 0.0;
+        dme_inrange = false;
+        dme_dist = 0.0;
+        dme_prev_dist = 0.0;
+        dme_spd = 0.0;
+        dme_ete = 0.0;
     }
 
     // marker beacon blinking
@@ -380,19 +320,19 @@ void FGRadioStack::search()
 				// don't worry about overhead for now,
 				// since this is handled only periodically
     int dme_switch_pos = fgGetInt("/radios/dme/switch-position");
-    if (dme_switch_pos == 0) {
-      dme_freq = 0;
-      dme_inrange = false;
-    } else if (dme_switch_pos == 1) {
-      if (dme_freq != navcom1.get_nav_freq()) {
-	dme_freq = navcom1.get_nav_freq();
-	need_update = true;
-      }
-    } else if (dme_switch_pos == 3) {
-      if (dme_freq != navcom2.get_nav_freq()) {
-	dme_freq = navcom2.get_nav_freq();
-	need_update = true;
-      }
+    if ( dme_switch_pos == 1 && navcom1.get_power_btn() ) {
+        if ( dme_freq != navcom1.get_nav_freq() ) {
+            dme_freq = navcom1.get_nav_freq();
+            need_update = true;
+        }
+    } else if ( dme_switch_pos == 3 && navcom2.get_power_btn() ) {
+        if ( dme_freq != navcom2.get_nav_freq() ) {
+            dme_freq = navcom2.get_nav_freq();
+            need_update = true;
+        }
+    } else {
+        dme_freq = 0;
+        dme_inrange = false;
     }
 
     FGILS ils;

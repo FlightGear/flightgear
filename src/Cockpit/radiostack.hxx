@@ -88,14 +88,6 @@ class FGRadioStack : public FGSubsystem
     FGNavCom navcom1;
     FGNavCom navcom2;
 
-    // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
-    double adjustNavRange( double stationElev, double aircraftElev,
-			   double nominalRange );
-
-    // model standard ILS service volumes as per AIM 1-1-9
-    double adjustILSRange( double stationElev, double aircraftElev,
-			   double offsetDegrees, double distance );
-
 public:
 
     FGRadioStack();

@@ -51,7 +51,7 @@ class FGNavCom : public FGSubsystem
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
 
-    string last_nav_ident;
+    string last_nav_id;
     bool last_nav_vor;
     int nav_play_count;
     time_t nav_last_time;
@@ -62,7 +62,8 @@ class FGNavCom : public FGSubsystem
 
     bool need_update;
 
-    string comm_ident;
+    bool power_btn;
+
     bool comm_valid;
     bool comm_inrange;
     double comm_freq;
@@ -77,7 +78,7 @@ class FGNavCom : public FGSubsystem
     double comm_range;
     double comm_effective_range;
 
-    string nav_ident;
+    string nav_id;
     string nav_trans_ident;
     bool nav_valid;
     bool nav_inrange;
@@ -138,6 +139,12 @@ public:
         sprintf( dme_fx_name, "dme%d-vor-ident", index );
     }
 
+    // NavCom Setters
+    inline void set_power_btn( bool val ) {
+        power_btn = val;
+
+    }
+ 
     // COMM Setters
     inline void set_comm_freq( double freq ) {
 	comm_freq = freq; need_update = true;
@@ -164,6 +171,9 @@ public:
 	nav_vol_btn = val;
     }
     inline void set_nav_ident_btn( bool val ) { nav_ident_btn = val; }
+
+    // NavCom Accessors
+    inline bool get_power_btn() const { return power_btn; }
 
     // COMM Accessors
     inline double get_comm_freq () const { return comm_freq; }

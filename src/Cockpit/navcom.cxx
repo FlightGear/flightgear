@@ -70,18 +70,20 @@ FGNavCom::FGNavCom() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
-    last_nav_ident(""),
+    last_nav_id(""),
     last_nav_vor(false),
     nav_play_count(0),
     nav_last_time(0),
     need_update(true),
+    power_btn(true),
     comm_freq(0.0),
     comm_alt_freq(0.0),
     comm_vol_btn(0.0),
     nav_freq(0.0),
     nav_alt_freq(0.0),
     nav_radial(0.0),
-    nav_vol_btn(0.0)
+    nav_vol_btn(0.0),
+    nav_ident_btn(true)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -124,6 +126,11 @@ FGNavCom::bind ()
     char propname[256];
 
 				// User inputs
+    sprintf( propname, "/radios/comm[%d]/inputs/power-btn", index );
+    fgTie( propname, this,
+           &FGNavCom::get_power_btn, &FGNavCom::set_power_btn );
+    fgSetArchivable( propname );
+
     sprintf( propname, "/radios/comm[%d]/frequencies/selected-mhz", index );
     fgTie( propname, this, &FGNavCom::get_comm_freq, &FGNavCom::set_comm_freq );
     fgSetArchivable( propname );
@@ -136,11 +143,6 @@ FGNavCom::bind ()
     sprintf( propname, "/radios/comm[%d]/volume", index );
     fgTie( propname, this,
            &FGNavCom::get_comm_vol_btn, &FGNavCom::set_comm_vol_btn );
-    fgSetArchivable( propname );
-
-    sprintf( propname, "/radios/comm[%d]/ident", index );
-    fgTie( propname, this,
-	  &FGNavCom::get_comm_ident_btn, &FGNavCom::set_comm_ident_btn );
     fgSetArchivable( propname );
 
     sprintf( propname, "/radios/nav[%d]/frequencies/selected-mhz", index );
@@ -194,13 +196,11 @@ FGNavCom::unbind ()
 {
     char propname[256];
 
+    sprintf( propname, "/radios/comm[%d]/inputs/power-btn", index );
+    fgUntie( propname );
     sprintf( propname, "/radios/comm[%d]/frequencies/selected-mhz", index );
     fgUntie( propname );
     sprintf( propname, "/radios/comm[%d]/frequencies/standby-mhz", index );
-    fgUntie( propname );
-    sprintf( propname, "/radios/comm[%d]/on", index );
-    fgUntie( propname );
-    sprintf( propname, "/radios/comm[%d]/ident", index );
     fgUntie( propname );
 
     sprintf( propname, "/radios/nav[%d]/frequencies/selected-mhz", index );
@@ -210,8 +210,6 @@ FGNavCom::unbind ()
     sprintf( propname, "/radios/nav[%d]/radials/actual-deg", index );
     fgUntie( propname );
     sprintf( propname, "/radios/nav[%d]/radials/selected-deg", index );
-    fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/on", index );
     fgUntie( propname );
     sprintf( propname, "/radios/nav[%d]/ident", index );
     fgUntie( propname );
@@ -308,7 +306,7 @@ FGNavCom::update(double dt)
     // Nav.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( nav_valid ) {
+    if ( nav_valid && power_btn ) {
 	station = Point3D( nav_x, nav_y, nav_z );
 	nav_loc_dist = aircraft.distance3D( station );
 
@@ -363,7 +361,7 @@ FGNavCom::update(double dt)
     if ( nav_valid && nav_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if ( nav_vol_btn > 0.1 && nav_ident_btn ) {
+	if ( power_btn && nav_ident_btn ) {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( nav_fx_name );
             if ( sound != NULL ) {
@@ -429,11 +427,11 @@ void FGNavCom::search()
     ////////////////////////////////////////////////////////////////////////
 
     if ( current_ilslist->query( lon, lat, elev, nav_freq, &ils ) ) {
-	nav_ident = ils.get_locident();
+	nav_id = ils.get_locident();
 	nav_valid = true;
-	if ( last_nav_ident != nav_ident || last_nav_vor ) {
+	if ( last_nav_id != nav_id || last_nav_vor ) {
 	    nav_trans_ident = ils.get_trans_ident();
-	    last_nav_ident = nav_ident;
+	    last_nav_id = nav_id;
 	    last_nav_vor = false;
 	    nav_loc = true;
 	    nav_has_dme = ils.get_has_dme();
@@ -489,10 +487,10 @@ void FGNavCom::search()
 	    // cout << " id = " << ils.get_locident() << endl;
 	}
     } else if ( current_navlist->query( lon, lat, elev, nav_freq, &nav ) ) {
-	nav_ident = nav.get_ident();
+	nav_id = nav.get_ident();
 	nav_valid = true;
-	if ( last_nav_ident != nav_ident || !last_nav_vor ) {
-	    last_nav_ident = nav_ident;
+	if ( last_nav_id != nav_id || !last_nav_vor ) {
+	    last_nav_id = nav_id;
 	    last_nav_vor = true;
 	    nav_trans_ident = nav.get_trans_ident();
 	    nav_loc = false;
@@ -545,10 +543,10 @@ void FGNavCom::search()
 	}
     } else {
 	nav_valid = false;
-	nav_ident = "";
+	nav_id = "";
 	nav_radial = 0;
 	nav_trans_ident = "";
-	last_nav_ident = "";
+	last_nav_id = "";
 #ifdef ENABLE_AUDIO_SUPPORT
 	if ( ! globals->get_soundmgr()->remove( nav_fx_name ) ) {
             cout << "Failed to remove nav-vor-ident sound" << endl;

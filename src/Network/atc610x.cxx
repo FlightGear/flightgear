@@ -398,9 +398,13 @@ bool FGATC610x::open() {
     dme_kt = fgGetNode( "/radios/dme/speed-kt", true );
     dme_nm = fgGetNode( "/radios/dme/distance-nm", true );
 
+    navcom1_power = fgGetNode( "/radios/comm[0]/inputs/power-btn", true );
+    navcom2_power = fgGetNode( "/radios/comm[1]/inputs/power-btn", true );
+
     com1_freq = fgGetNode( "/radios/comm[0]/frequencies/selected-mhz", true );
     com1_stby_freq
 	= fgGetNode( "/radios/comm[0]/frequencies/standby-mhz", true );
+
     com2_freq = fgGetNode( "/radios/comm[1]/frequencies/selected-mhz", true );
     com2_stby_freq
 	= fgGetNode( "/radios/comm[1]/frequencies/standby-mhz", true );
@@ -666,328 +670,346 @@ bool FGATC610x::do_radio_switches() {
 	fgSetInt( "/radios/dme/switch-position", 3 );
     }
 
-    // Com1 Power
+    // NavCom1 Power
     fgSetBool( "/radios/comm[0]/inputs/power-btn",
                radio_switch_data[7] & 0x01 );
 
-    // Com1 Swap
-    int com1_swap = !((radio_switch_data[7] >> 1) & 0x01);
-    static int last_com1_swap;
-    if ( com1_swap && (last_com1_swap != com1_swap) ) {
-	float tmp = com1_freq->getFloatValue();
-	fgSetFloat( "/radios/comm[0]/frequencies/selected-mhz",
-		   com1_stby_freq->getFloatValue() );
-	fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", tmp );
+    if ( navcom1_power->getBoolValue() ) {
+        // Com1 Swap
+        int com1_swap = !((radio_switch_data[7] >> 1) & 0x01);
+        static int last_com1_swap;
+        if ( com1_swap && (last_com1_swap != com1_swap) ) {
+            float tmp = com1_freq->getFloatValue();
+            fgSetFloat( "/radios/comm[0]/frequencies/selected-mhz",
+                        com1_stby_freq->getFloatValue() );
+            fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", tmp );
+        }
+        last_com1_swap = com1_swap;
     }
-    last_com1_swap = com1_swap;
 
-    // Com2 Power
+    // NavCom2 Power
     fgSetBool( "/radios/comm[1]/inputs/power-btn",
                radio_switch_data[15] & 0x01 );
 
-    // Com2 Swap
-    int com2_swap = !((radio_switch_data[15] >> 1) & 0x01);
-    static int last_com2_swap;
-    if ( com2_swap && (last_com2_swap != com2_swap) ) {
-	float tmp = com2_freq->getFloatValue();
-	fgSetFloat( "/radios/comm[1]/frequencies/selected-mhz",
-		   com2_stby_freq->getFloatValue() );
-	fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz", tmp );
-    }
-    last_com2_swap = com2_swap;
-
-    // Nav1 Swap
-    int nav1_swap = radio_switch_data[11] & 0x01;
-    static int last_nav1_swap;
-    if ( nav1_swap && (last_nav1_swap != nav1_swap) ) {
-	float tmp = nav1_freq->getFloatValue();
-	fgSetFloat( "/radios/nav[0]/frequencies/selected-mhz",
-		   nav1_stby_freq->getFloatValue() );
-	fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz", tmp );
-    }
-    last_nav1_swap = nav1_swap;
-
-    // Nav2 Swap
-    int nav2_swap = !(radio_switch_data[19] & 0x01);
-    static int last_nav2_swap;
-    if ( nav2_swap && (last_nav2_swap != nav2_swap) ) {
-	float tmp = nav2_freq->getFloatValue();
-	fgSetFloat( "/radios/nav[1]/frequencies/selected-mhz",
-		   nav2_stby_freq->getFloatValue() );
-	fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", tmp );
-    }
-    last_nav2_swap = nav2_swap;
-
-    // Com1 Tuner
-    int com1_tuner_fine = ((radio_switch_data[5] >> 4) & 0x0f) - 1;
-    int com1_tuner_coarse = (radio_switch_data[5] & 0x0f) - 1;
-    static int last_com1_tuner_fine = com1_tuner_fine;
-    static int last_com1_tuner_coarse = com1_tuner_coarse;
-
-    freq = com1_stby_freq->getFloatValue();
-    coarse_freq = (int)freq;
-    fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
-
-    if ( com1_tuner_fine != last_com1_tuner_fine ) {
-        diff = com1_tuner_fine - last_com1_tuner_fine;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( com1_tuner_fine < last_com1_tuner_fine ) {
-                // going up
-                diff = 12 - last_com1_tuner_fine + com1_tuner_fine;
-            } else {
-                // going down
-                diff = com1_tuner_fine - 12 - last_com1_tuner_fine;
-            }
+    if ( navcom2_power->getBoolValue() ) {
+        // Com2 Swap
+        int com2_swap = !((radio_switch_data[15] >> 1) & 0x01);
+        static int last_com2_swap;
+        if ( com2_swap && (last_com2_swap != com2_swap) ) {
+            float tmp = com2_freq->getFloatValue();
+            fgSetFloat( "/radios/comm[1]/frequencies/selected-mhz",
+                        com2_stby_freq->getFloatValue() );
+            fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz", tmp );
         }
-        fine_freq += diff;
+        last_com2_swap = com2_swap;
     }
-    while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
-    while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
 
-    if ( com1_tuner_coarse != last_com1_tuner_coarse ) {
-        diff = com1_tuner_coarse - last_com1_tuner_coarse;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( com1_tuner_coarse < last_com1_tuner_coarse ) {
-                // going up
-                diff = 12 - last_com1_tuner_coarse + com1_tuner_coarse;
-            } else {
-                // going down
-                diff = com1_tuner_coarse - 12 - last_com1_tuner_coarse;
-            }
+    if ( navcom1_power->getBoolValue() ) {
+        // Nav1 Swap
+        int nav1_swap = radio_switch_data[11] & 0x01;
+        static int last_nav1_swap;
+        if ( nav1_swap && (last_nav1_swap != nav1_swap) ) {
+            float tmp = nav1_freq->getFloatValue();
+            fgSetFloat( "/radios/nav[0]/frequencies/selected-mhz",
+                        nav1_stby_freq->getFloatValue() );
+            fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz", tmp );
         }
-        coarse_freq += diff;
+        last_nav1_swap = nav1_swap;
     }
-    if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
-    if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
 
-    last_com1_tuner_fine = com1_tuner_fine;
-    last_com1_tuner_coarse = com1_tuner_coarse;
-
-    fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", 
-                coarse_freq + fine_freq / 40.0 );
-
-    // Com2 Tuner
-    int com2_tuner_fine = ((radio_switch_data[13] >> 4) & 0x0f) - 1;
-    int com2_tuner_coarse = (radio_switch_data[13] & 0x0f) - 1;
-    static int last_com2_tuner_fine = com2_tuner_fine;
-    static int last_com2_tuner_coarse = com2_tuner_coarse;
-
-    freq = com2_stby_freq->getFloatValue();
-    coarse_freq = (int)freq;
-    fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
-
-    if ( com2_tuner_fine != last_com2_tuner_fine ) {
-        diff = com2_tuner_fine - last_com2_tuner_fine;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( com2_tuner_fine < last_com2_tuner_fine ) {
-                // going up
-                diff = 12 - last_com2_tuner_fine + com2_tuner_fine;
-            } else {
-                // going down
-                diff = com2_tuner_fine - 12 - last_com2_tuner_fine;
-            }
+    if ( navcom2_power->getBoolValue() ) {
+        // Nav2 Swap
+        int nav2_swap = !(radio_switch_data[19] & 0x01);
+        static int last_nav2_swap;
+        if ( nav2_swap && (last_nav2_swap != nav2_swap) ) {
+            float tmp = nav2_freq->getFloatValue();
+            fgSetFloat( "/radios/nav[1]/frequencies/selected-mhz",
+                        nav2_stby_freq->getFloatValue() );
+            fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", tmp );
         }
-        fine_freq += diff;
+        last_nav2_swap = nav2_swap;
     }
-    while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
-    while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
 
-    if ( com2_tuner_coarse != last_com2_tuner_coarse ) {
-        diff = com2_tuner_coarse - last_com2_tuner_coarse;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( com2_tuner_coarse < last_com2_tuner_coarse ) {
-                // going up
-                diff = 12 - last_com2_tuner_coarse + com2_tuner_coarse;
-            } else {
-                // going down
-                diff = com2_tuner_coarse - 12 - last_com2_tuner_coarse;
+    if ( navcom1_power->getBoolValue() ) {
+        // Com1 Tuner
+        int com1_tuner_fine = ((radio_switch_data[5] >> 4) & 0x0f) - 1;
+        int com1_tuner_coarse = (radio_switch_data[5] & 0x0f) - 1;
+        static int last_com1_tuner_fine = com1_tuner_fine;
+        static int last_com1_tuner_coarse = com1_tuner_coarse;
+
+        freq = com1_stby_freq->getFloatValue();
+        coarse_freq = (int)freq;
+        fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
+
+        if ( com1_tuner_fine != last_com1_tuner_fine ) {
+            diff = com1_tuner_fine - last_com1_tuner_fine;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( com1_tuner_fine < last_com1_tuner_fine ) {
+                    // going up
+                    diff = 12 - last_com1_tuner_fine + com1_tuner_fine;
+                } else {
+                    // going down
+                    diff = com1_tuner_fine - 12 - last_com1_tuner_fine;
+                }
             }
+            fine_freq += diff;
         }
-        coarse_freq += diff;
-    }
-    if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
-    if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
+        while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
+        while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
 
-    last_com2_tuner_fine = com2_tuner_fine;
-    last_com2_tuner_coarse = com2_tuner_coarse;
-
-    fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz",
-                coarse_freq + fine_freq / 40.0 );
-
-    // Nav1 Tuner
-    int nav1_tuner_fine = ((radio_switch_data[9] >> 4) & 0x0f) - 1;
-    int nav1_tuner_coarse = (radio_switch_data[9] & 0x0f) - 1;
-    static int last_nav1_tuner_fine = nav1_tuner_fine;
-    static int last_nav1_tuner_coarse = nav1_tuner_coarse;
-
-    freq = nav1_stby_freq->getFloatValue();
-    coarse_freq = (int)freq;
-    fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
-
-    if ( nav1_tuner_fine != last_nav1_tuner_fine ) {
-        diff = nav1_tuner_fine - last_nav1_tuner_fine;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( nav1_tuner_fine < last_nav1_tuner_fine ) {
-                // going up
-                diff = 12 - last_nav1_tuner_fine + nav1_tuner_fine;
-            } else {
-                // going down
-                diff = nav1_tuner_fine - 12 - last_nav1_tuner_fine;
+        if ( com1_tuner_coarse != last_com1_tuner_coarse ) {
+            diff = com1_tuner_coarse - last_com1_tuner_coarse;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( com1_tuner_coarse < last_com1_tuner_coarse ) {
+                    // going up
+                    diff = 12 - last_com1_tuner_coarse + com1_tuner_coarse;
+                } else {
+                    // going down
+                    diff = com1_tuner_coarse - 12 - last_com1_tuner_coarse;
+                }
             }
+            coarse_freq += diff;
         }
-        fine_freq += diff;
-    }
-    while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
-    while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
+        if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
+        if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
 
-    if ( nav1_tuner_coarse != last_nav1_tuner_coarse ) {
-        diff = nav1_tuner_coarse - last_nav1_tuner_coarse;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( nav1_tuner_coarse < last_nav1_tuner_coarse ) {
-                // going up
-                diff = 12 - last_nav1_tuner_coarse + nav1_tuner_coarse;
-            } else {
-                // going down
-                diff = nav1_tuner_coarse - 12 - last_nav1_tuner_coarse;
+        last_com1_tuner_fine = com1_tuner_fine;
+        last_com1_tuner_coarse = com1_tuner_coarse;
+
+        fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", 
+                    coarse_freq + fine_freq / 40.0 );
+    }
+
+    if ( navcom2_power->getBoolValue() ) {
+        // Com2 Tuner
+        int com2_tuner_fine = ((radio_switch_data[13] >> 4) & 0x0f) - 1;
+        int com2_tuner_coarse = (radio_switch_data[13] & 0x0f) - 1;
+        static int last_com2_tuner_fine = com2_tuner_fine;
+        static int last_com2_tuner_coarse = com2_tuner_coarse;
+
+        freq = com2_stby_freq->getFloatValue();
+        coarse_freq = (int)freq;
+        fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
+
+        if ( com2_tuner_fine != last_com2_tuner_fine ) {
+            diff = com2_tuner_fine - last_com2_tuner_fine;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( com2_tuner_fine < last_com2_tuner_fine ) {
+                    // going up
+                    diff = 12 - last_com2_tuner_fine + com2_tuner_fine;
+                } else {
+                    // going down
+                    diff = com2_tuner_fine - 12 - last_com2_tuner_fine;
+                }
             }
+            fine_freq += diff;
         }
-        coarse_freq += diff;
-    }
-    if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
-    if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
+        while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
+        while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
 
-    last_nav1_tuner_fine = nav1_tuner_fine;
-    last_nav1_tuner_coarse = nav1_tuner_coarse;
-
-    fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz",
-                coarse_freq + fine_freq / 20.0 );
-
-    // Nav2 Tuner
-    int nav2_tuner_fine = ((radio_switch_data[17] >> 4) & 0x0f) - 1;
-    int nav2_tuner_coarse = (radio_switch_data[17] & 0x0f) - 1;
-    static int last_nav2_tuner_fine = nav2_tuner_fine;
-    static int last_nav2_tuner_coarse = nav2_tuner_coarse;
-
-    freq = nav2_stby_freq->getFloatValue();
-    coarse_freq = (int)freq;
-    fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
-
-    if ( nav2_tuner_fine != last_nav2_tuner_fine ) {
-        diff = nav2_tuner_fine - last_nav2_tuner_fine;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( nav2_tuner_fine < last_nav2_tuner_fine ) {
-                // going up
-                diff = 12 - last_nav2_tuner_fine + nav2_tuner_fine;
-            } else {
-                // going down
-                diff = nav2_tuner_fine - 12 - last_nav2_tuner_fine;
+        if ( com2_tuner_coarse != last_com2_tuner_coarse ) {
+            diff = com2_tuner_coarse - last_com2_tuner_coarse;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( com2_tuner_coarse < last_com2_tuner_coarse ) {
+                    // going up
+                    diff = 12 - last_com2_tuner_coarse + com2_tuner_coarse;
+                } else {
+                    // going down
+                    diff = com2_tuner_coarse - 12 - last_com2_tuner_coarse;
+                }
             }
+            coarse_freq += diff;
         }
-        fine_freq += diff;
-    }
-    while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
-    while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
+        if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
+        if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
 
-    if ( nav2_tuner_coarse != last_nav2_tuner_coarse ) {
-        diff = nav2_tuner_coarse - last_nav2_tuner_coarse;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( nav2_tuner_coarse < last_nav2_tuner_coarse ) {
-                // going up
-                diff = 12 - last_nav2_tuner_coarse + nav2_tuner_coarse;
-            } else {
-                // going down
-                diff = nav2_tuner_coarse - 12 - last_nav2_tuner_coarse;
+        last_com2_tuner_fine = com2_tuner_fine;
+        last_com2_tuner_coarse = com2_tuner_coarse;
+
+        fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz",
+                    coarse_freq + fine_freq / 40.0 );
+    }
+
+    if ( navcom1_power->getBoolValue() ) {
+        // Nav1 Tuner
+        int nav1_tuner_fine = ((radio_switch_data[9] >> 4) & 0x0f) - 1;
+        int nav1_tuner_coarse = (radio_switch_data[9] & 0x0f) - 1;
+        static int last_nav1_tuner_fine = nav1_tuner_fine;
+        static int last_nav1_tuner_coarse = nav1_tuner_coarse;
+
+        freq = nav1_stby_freq->getFloatValue();
+        coarse_freq = (int)freq;
+        fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
+
+        if ( nav1_tuner_fine != last_nav1_tuner_fine ) {
+            diff = nav1_tuner_fine - last_nav1_tuner_fine;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( nav1_tuner_fine < last_nav1_tuner_fine ) {
+                    // going up
+                    diff = 12 - last_nav1_tuner_fine + nav1_tuner_fine;
+                } else {
+                    // going down
+                    diff = nav1_tuner_fine - 12 - last_nav1_tuner_fine;
+                }
             }
+            fine_freq += diff;
         }
-        coarse_freq += diff;
+        while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
+        while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
+
+        if ( nav1_tuner_coarse != last_nav1_tuner_coarse ) {
+            diff = nav1_tuner_coarse - last_nav1_tuner_coarse;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( nav1_tuner_coarse < last_nav1_tuner_coarse ) {
+                    // going up
+                    diff = 12 - last_nav1_tuner_coarse + nav1_tuner_coarse;
+                } else {
+                    // going down
+                    diff = nav1_tuner_coarse - 12 - last_nav1_tuner_coarse;
+                }
+            }
+            coarse_freq += diff;
+        }
+        if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
+        if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
+
+        last_nav1_tuner_fine = nav1_tuner_fine;
+        last_nav1_tuner_coarse = nav1_tuner_coarse;
+
+        fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz",
+                    coarse_freq + fine_freq / 20.0 );
     }
-    if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
-    if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
 
-    last_nav2_tuner_fine = nav2_tuner_fine;
-    last_nav2_tuner_coarse = nav2_tuner_coarse;
+    if ( navcom2_power->getBoolValue() ) {
+        // Nav2 Tuner
+        int nav2_tuner_fine = ((radio_switch_data[17] >> 4) & 0x0f) - 1;
+        int nav2_tuner_coarse = (radio_switch_data[17] & 0x0f) - 1;
+        static int last_nav2_tuner_fine = nav2_tuner_fine;
+        static int last_nav2_tuner_coarse = nav2_tuner_coarse;
 
-    fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", 
-                coarse_freq + fine_freq / 20.0);
+        freq = nav2_stby_freq->getFloatValue();
+        coarse_freq = (int)freq;
+        fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
 
-    // ADF Tuner
-    int adf_tuner_fine = ((radio_switch_data[21] >> 4) & 0x0f) - 1;
-    int adf_tuner_coarse = (radio_switch_data[21] & 0x0f) - 1;
-    static int last_adf_tuner_fine = adf_tuner_fine;
-    static int last_adf_tuner_coarse = adf_tuner_coarse;
+        if ( nav2_tuner_fine != last_nav2_tuner_fine ) {
+            diff = nav2_tuner_fine - last_nav2_tuner_fine;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( nav2_tuner_fine < last_nav2_tuner_fine ) {
+                    // going up
+                    diff = 12 - last_nav2_tuner_fine + nav2_tuner_fine;
+                } else {
+                    // going down
+                    diff = nav2_tuner_fine - 12 - last_nav2_tuner_fine;
+                }
+            }
+            fine_freq += diff;
+        }
+        while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
+        while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
 
-    // cout << "adf_stby_mode = " << adf_stby_mode->getIntValue() << endl;
-    if ( adf_count_mode->getIntValue() == 2 ) {
-        // tune count down timer
-        value = adf_elapsed_timer->getDoubleValue();
-    } else {
-        // tune frequency
-        if ( adf_stby_mode->getIntValue() == 1 ) {
-            value = adf_freq->getFloatValue();
+        if ( nav2_tuner_coarse != last_nav2_tuner_coarse ) {
+            diff = nav2_tuner_coarse - last_nav2_tuner_coarse;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( nav2_tuner_coarse < last_nav2_tuner_coarse ) {
+                    // going up
+                    diff = 12 - last_nav2_tuner_coarse + nav2_tuner_coarse;
+                } else {
+                    // going down
+                    diff = nav2_tuner_coarse - 12 - last_nav2_tuner_coarse;
+                }
+            }
+            coarse_freq += diff;
+        }
+        if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
+        if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
+
+        last_nav2_tuner_fine = nav2_tuner_fine;
+        last_nav2_tuner_coarse = nav2_tuner_coarse;
+
+        fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", 
+                    coarse_freq + fine_freq / 20.0);
+    }
+
+    if ( adf_power->getBoolValue() ) {
+        // ADF Tuner
+        int adf_tuner_fine = ((radio_switch_data[21] >> 4) & 0x0f) - 1;
+        int adf_tuner_coarse = (radio_switch_data[21] & 0x0f) - 1;
+        static int last_adf_tuner_fine = adf_tuner_fine;
+        static int last_adf_tuner_coarse = adf_tuner_coarse;
+
+        // cout << "adf_stby_mode = " << adf_stby_mode->getIntValue() << endl;
+        if ( adf_count_mode->getIntValue() == 2 ) {
+            // tune count down timer
+            value = adf_elapsed_timer->getDoubleValue();
         } else {
-            value = adf_stby_freq->getFloatValue();
-        }
-    }
-
-    if ( adf_tuner_fine != last_adf_tuner_fine ) {
-        diff = adf_tuner_fine - last_adf_tuner_fine;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( adf_tuner_fine < last_adf_tuner_fine ) {
-                // going up
-                diff = 12 - last_adf_tuner_fine + adf_tuner_fine;
+            // tune frequency
+            if ( adf_stby_mode->getIntValue() == 1 ) {
+                value = adf_freq->getFloatValue();
             } else {
-                // going down
-                diff = adf_tuner_fine - 12 - last_adf_tuner_fine;
+                value = adf_stby_freq->getFloatValue();
             }
         }
-        value += diff;
-    }
 
-    if ( adf_tuner_coarse != last_adf_tuner_coarse ) {
-        diff = adf_tuner_coarse - last_adf_tuner_coarse;
-        if ( abs(diff) > 4 ) {
-            // roll over
-            if ( adf_tuner_coarse < last_adf_tuner_coarse ) {
-                // going up
-                diff = 12 - last_adf_tuner_coarse + adf_tuner_coarse;
+        if ( adf_tuner_fine != last_adf_tuner_fine ) {
+            diff = adf_tuner_fine - last_adf_tuner_fine;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( adf_tuner_fine < last_adf_tuner_fine ) {
+                    // going up
+                    diff = 12 - last_adf_tuner_fine + adf_tuner_fine;
+                } else {
+                    // going down
+                    diff = adf_tuner_fine - 12 - last_adf_tuner_fine;
+                }
+            }
+            value += diff;
+        }
+
+        if ( adf_tuner_coarse != last_adf_tuner_coarse ) {
+            diff = adf_tuner_coarse - last_adf_tuner_coarse;
+            if ( abs(diff) > 4 ) {
+                // roll over
+                if ( adf_tuner_coarse < last_adf_tuner_coarse ) {
+                    // going up
+                    diff = 12 - last_adf_tuner_coarse + adf_tuner_coarse;
+                } else {
+                    // going down
+                    diff = adf_tuner_coarse - 12 - last_adf_tuner_coarse;
+                }
+            }
+            if ( adf_count_mode->getIntValue() == 2 ) {
+                value += 60 * diff;
             } else {
-                // going down
-                diff = adf_tuner_coarse - 12 - last_adf_tuner_coarse;
+                value += 25 * diff;
             }
         }
         if ( adf_count_mode->getIntValue() == 2 ) {
-            value += 60 * diff;
+            if ( value < 0 ) { value += 3600; }
+            if ( value > 3599 ) { value -= 3600; }
         } else {
-            value += 25 * diff;
+            if ( value < 200 ) { value += 1600; }
+            if ( value > 1799 ) { value -= 1600; }
         }
-    }
-    if ( adf_count_mode->getIntValue() == 2 ) {
-        if ( value < 0 ) { value += 3600; }
-        if ( value > 3599 ) { value -= 3600; }
-    } else {
-        if ( value < 200 ) { value += 1600; }
-        if ( value > 1799 ) { value -= 1600; }
-    }
  
-    last_adf_tuner_fine = adf_tuner_fine;
-    last_adf_tuner_coarse = adf_tuner_coarse;
+        last_adf_tuner_fine = adf_tuner_fine;
+        last_adf_tuner_coarse = adf_tuner_coarse;
 
-    if ( adf_count_mode->getIntValue() == 2 ) {
-        fgSetFloat( "/radios/kr-87/outputs/elapsed-timer", value );
-    } else {
-        if ( adf_stby_mode->getIntValue() == 1 ) {
-            fgSetFloat( "/radios/kr-87/outputs/selected-khz", value );
+        if ( adf_count_mode->getIntValue() == 2 ) {
+            fgSetFloat( "/radios/kr-87/outputs/elapsed-timer", value );
         } else {
-            fgSetFloat( "/radios/kr-87/outputs/standby-khz", value );
+            if ( adf_stby_mode->getIntValue() == 1 ) {
+                fgSetFloat( "/radios/kr-87/outputs/selected-khz", value );
+            } else {
+                fgSetFloat( "/radios/kr-87/outputs/standby-khz", value );
+            }
         }
     }
 
@@ -999,7 +1021,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetInt( "/radios/kr-87/inputs/frq-btn",
               (radio_switch_data[23] >> 2 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
-	      !(radio_switch_data[23] >> 3 & 0x01) );
+                  !(radio_switch_data[23] >> 3 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
               !(radio_switch_data[23] >> 4 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/power-btn",
@@ -1130,117 +1152,153 @@ bool FGATC610x::do_radio_display() {
 	}
     }
 
-    // Com1 standby frequency
-    float com1_stby = com1_stby_freq->getFloatValue();
-    if ( fabs(com1_stby) > 999.99 ) {
-	com1_stby = 0.0;
-    }
-    snprintf(digits, 7, "%06.3f", com1_stby);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[6] = digits[4] << 4 | digits[5];
-    radio_display_data[7] = digits[1] << 4 | digits[2];
-    radio_display_data[8] = 0xf0 | digits[0];
+    if ( navcom1_power->getBoolValue() ) {
+        // Com1 standby frequency
+        float com1_stby = com1_stby_freq->getFloatValue();
+        if ( fabs(com1_stby) > 999.99 ) {
+            com1_stby = 0.0;
+        }
+        snprintf(digits, 7, "%06.3f", com1_stby);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[6] = digits[4] << 4 | digits[5];
+        radio_display_data[7] = digits[1] << 4 | digits[2];
+        radio_display_data[8] = 0xf0 | digits[0];
 
-    // Com1 in use frequency
-    float com1 = com1_freq->getFloatValue();
-    if ( fabs(com1) > 999.99 ) {
-	com1 = 0.0;
+        // Com1 in use frequency
+        float com1 = com1_freq->getFloatValue();
+        if ( fabs(com1) > 999.99 ) {
+            com1 = 0.0;
+        }
+        snprintf(digits, 7, "%06.3f", com1);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[9] = digits[4] << 4 | digits[5];
+        radio_display_data[10] = digits[1] << 4 | digits[2];
+        radio_display_data[11] = 0x00 | digits[0];
+        // the 0x00 in the upper nibble of the 6th byte of each display
+        // turns on the decimal point
+    } else {
+        radio_display_data[6] = 0xff;
+        radio_display_data[7] = 0xff;
+        radio_display_data[8] = 0xff;
+        radio_display_data[9] = 0xff;
+        radio_display_data[10] = 0xff;
+        radio_display_data[11] = 0xff;
     }
-    snprintf(digits, 7, "%06.3f", com1);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[9] = digits[4] << 4 | digits[5];
-    radio_display_data[10] = digits[1] << 4 | digits[2];
-    radio_display_data[11] = 0x00 | digits[0];
-    // the 0x00 in the upper nibble of the 6th byte of each display
-    // turns on the decimal point
 
-    // Com2 standby frequency
-    float com2_stby = com2_stby_freq->getFloatValue();
-    if ( fabs(com2_stby) > 999.99 ) {
-	com2_stby = 0.0;
-    }
-    snprintf(digits, 7, "%06.3f", com2_stby);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[18] = digits[4] << 4 | digits[5];
-    radio_display_data[19] = digits[1] << 4 | digits[2];
-    radio_display_data[20] = 0xf0 | digits[0];
+    if ( navcom2_power->getBoolValue() ) {
+        // Com2 standby frequency
+        float com2_stby = com2_stby_freq->getFloatValue();
+        if ( fabs(com2_stby) > 999.99 ) {
+            com2_stby = 0.0;
+        }
+        snprintf(digits, 7, "%06.3f", com2_stby);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[18] = digits[4] << 4 | digits[5];
+        radio_display_data[19] = digits[1] << 4 | digits[2];
+        radio_display_data[20] = 0xf0 | digits[0];
 
-    // Com2 in use frequency
-    float com2 = com2_freq->getFloatValue();
-    if ( fabs(com2) > 999.99 ) {
+        // Com2 in use frequency
+        float com2 = com2_freq->getFloatValue();
+        if ( fabs(com2) > 999.99 ) {
 	com2 = 0.0;
+        }
+        snprintf(digits, 7, "%06.3f", com2);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[21] = digits[4] << 4 | digits[5];
+        radio_display_data[22] = digits[1] << 4 | digits[2];
+        radio_display_data[23] = 0x00 | digits[0];
+        // the 0x00 in the upper nibble of the 6th byte of each display
+        // turns on the decimal point
+    } else {
+        radio_display_data[18] = 0xff;
+        radio_display_data[19] = 0xff;
+        radio_display_data[20] = 0xff;
+        radio_display_data[21] = 0xff;
+        radio_display_data[22] = 0xff;
+        radio_display_data[23] = 0xff;
     }
-    snprintf(digits, 7, "%06.3f", com2);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[21] = digits[4] << 4 | digits[5];
-    radio_display_data[22] = digits[1] << 4 | digits[2];
-    radio_display_data[23] = 0x00 | digits[0];
-    // the 0x00 in the upper nibble of the 6th byte of each display
-    // turns on the decimal point
 
-    // Nav1 standby frequency
-    float nav1_stby = nav1_stby_freq->getFloatValue();
-    if ( fabs(nav1_stby) > 999.99 ) {
+    if ( navcom1_power->getBoolValue() ) {
+        // Nav1 standby frequency
+        float nav1_stby = nav1_stby_freq->getFloatValue();
+        if ( fabs(nav1_stby) > 999.99 ) {
 	nav1_stby = 0.0;
-    }
-    snprintf(digits, 7, "%06.2f", nav1_stby);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[12] = digits[4] << 4 | digits[5];
-    radio_display_data[13] = digits[1] << 4 | digits[2];
-    radio_display_data[14] = 0xf0 | digits[0];
+        }
+        snprintf(digits, 7, "%06.2f", nav1_stby);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[12] = digits[4] << 4 | digits[5];
+        radio_display_data[13] = digits[1] << 4 | digits[2];
+        radio_display_data[14] = 0xf0 | digits[0];
 
-    // Nav1 in use frequency
-    float nav1 = nav1_freq->getFloatValue();
-    if ( fabs(nav1) > 999.99 ) {
-	nav1 = 0.0;
+        // Nav1 in use frequency
+        float nav1 = nav1_freq->getFloatValue();
+        if ( fabs(nav1) > 999.99 ) {
+            nav1 = 0.0;
+        }
+        snprintf(digits, 7, "%06.2f", nav1);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[15] = digits[4] << 4 | digits[5];
+        radio_display_data[16] = digits[1] << 4 | digits[2];
+        radio_display_data[17] = 0x00 | digits[0];
+        // the 0x00 in the upper nibble of the 6th byte of each display
+        // turns on the decimal point
+    } else {
+        radio_display_data[12] = 0xff;
+        radio_display_data[13] = 0xff;
+        radio_display_data[14] = 0xff;
+        radio_display_data[15] = 0xff;
+        radio_display_data[16] = 0xff;
+        radio_display_data[17] = 0xff;
     }
-    snprintf(digits, 7, "%06.2f", nav1);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[15] = digits[4] << 4 | digits[5];
-    radio_display_data[16] = digits[1] << 4 | digits[2];
-    radio_display_data[17] = 0x00 | digits[0];
-    // the 0x00 in the upper nibble of the 6th byte of each display
-    // turns on the decimal point
 
-    // Nav2 standby frequency
-    float nav2_stby = nav2_stby_freq->getFloatValue();
-    if ( fabs(nav2_stby) > 999.99 ) {
-	nav2_stby = 0.0;
-    }
-    snprintf(digits, 7, "%06.2f", nav2_stby);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[24] = digits[4] << 4 | digits[5];
-    radio_display_data[25] = digits[1] << 4 | digits[2];
-    radio_display_data[26] = 0xf0 | digits[0];
+    if ( navcom2_power->getBoolValue() ) {
+        // Nav2 standby frequency
+        float nav2_stby = nav2_stby_freq->getFloatValue();
+        if ( fabs(nav2_stby) > 999.99 ) {
+            nav2_stby = 0.0;
+        }
+        snprintf(digits, 7, "%06.2f", nav2_stby);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[24] = digits[4] << 4 | digits[5];
+        radio_display_data[25] = digits[1] << 4 | digits[2];
+        radio_display_data[26] = 0xf0 | digits[0];
 
-    // Nav2 in use frequency
-    float nav2 = nav2_freq->getFloatValue();
-    if ( fabs(nav2) > 999.99 ) {
-	nav2 = 0.0;
+        // Nav2 in use frequency
+        float nav2 = nav2_freq->getFloatValue();
+        if ( fabs(nav2) > 999.99 ) {
+            nav2 = 0.0;
+        }
+        snprintf(digits, 7, "%06.2f", nav2);
+        for ( i = 0; i < 6; ++i ) {
+            digits[i] -= '0';
+        }
+        radio_display_data[27] = digits[4] << 4 | digits[5];
+        radio_display_data[28] = digits[1] << 4 | digits[2];
+        radio_display_data[29] = 0x00 | digits[0];
+        // the 0x00 in the upper nibble of the 6th byte of each display
+        // turns on the decimal point
+    } else {
+        radio_display_data[24] = 0xff;
+        radio_display_data[25] = 0xff;
+        radio_display_data[26] = 0xff;
+        radio_display_data[27] = 0xff;
+        radio_display_data[28] = 0xff;
+        radio_display_data[29] = 0xff;
     }
-    snprintf(digits, 7, "%06.2f", nav2);
-    for ( i = 0; i < 6; ++i ) {
-	digits[i] -= '0';
-    }
-    radio_display_data[27] = digits[4] << 4 | digits[5];
-    radio_display_data[28] = digits[1] << 4 | digits[2];
-    radio_display_data[29] = 0x00 | digits[0];
-    // the 0x00 in the upper nibble of the 6th byte of each display
-    // turns on the decimal point
 
     // ADF standby frequency / timer
     if ( adf_power->getBoolValue() ) {

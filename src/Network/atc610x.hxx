@@ -73,6 +73,7 @@ class FGATC610x : public FGProtocol {
 
     SGPropertyNode *mag_compass;
     SGPropertyNode *dme_min, *dme_kt, *dme_nm;
+    SGPropertyNode *navcom1_power, *navcom2_power;
     SGPropertyNode *com1_freq, *com1_stby_freq;
     SGPropertyNode *com2_freq, *com2_stby_freq;
     SGPropertyNode *nav1_freq, *nav1_stby_freq;

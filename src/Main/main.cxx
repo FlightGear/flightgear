@@ -499,8 +499,8 @@ void fgRenderFrame() {
             glEnable(GL_BLEND);
             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
             if ( _bcloud_orig ) {
-                sgClouds3d->Set_Cloud_Orig( &(globals->get_scenery()->
-                                              get_center()) );
+                Point3D c = globals->get_scenery()->get_center();
+                sgClouds3d->Set_Cloud_Orig( &c );
                 _bcloud_orig = false;
             }
             sgClouds3d->Update( current__view->get_absolute_view_pos() );
