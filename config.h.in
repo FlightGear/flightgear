@@ -115,6 +115,9 @@
 /* Define if you have the <getopt.h> header file.  */
 #undef HAVE_GETOPT_H
 
+/* Define if you have the <gpc.h> header file.  */
+#undef HAVE_GPC_H
+
 /* Define if you have the <malloc.h> header file.  */
 #undef HAVE_MALLOC_H
 

@@ -184,6 +184,12 @@
 
 #endif // __BORLANDC__
 
+#if defined ( sun )
+  extern "C" {
+      extern void *memmove(void *, const void *, size_t);
+  }
+#endif
+
 //
 // No user modifiable definitions beyond here.
 //
@@ -264,6 +270,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.6  1999/01/27 04:45:17  curt
+// Tweak for solaris.
+//
 // Revision 1.5  1999/01/19 20:41:25  curt
 // Added support for MacOS (Metrowerks)
 //

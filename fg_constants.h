@@ -32,8 +32,17 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
+#include "Include/compiler.h"
 
+#ifdef FG_MATCH_EXCEPTION_CLASH
+#  define exception C_exception
+#endif
+
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
+#else
+#  include <math.h>
+#endif
 
 /* This should be defined via autoconf in configure.in */
 #ifndef VERSION
@@ -63,6 +72,9 @@
 // PI / 4
 #define FG_PI_4     0.78539816339744830961
 
+#ifndef M_E
+#  define M_E     2.7182818284590452354
+#endif
 
 /* ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator */
 #define ONE_SECOND 4.848136811E-6
@@ -93,7 +105,6 @@
 #define E     0.996647186
 #define EPS   0.081819221
 #define INVG  0.031080997
-
 
 /* Time Related Parameters */
 
@@ -153,9 +164,12 @@
 
 
 /* $Log$
-/* Revision 1.9  1998/08/24 20:02:35  curt
-/* Added ONE_SECOND (in radians)
+/* Revision 1.10  1999/01/27 04:45:19  curt
+/* Tweak for solaris.
 /*
+ * Revision 1.9  1998/08/24 20:02:35  curt
+ * Added ONE_SECOND (in radians)
+ *
  * Revision 1.8  1998/07/12 03:07:13  curt
  * Added #ifdef HAVE_CONFIG_H ...
  *
