@@ -6,7 +6,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.cxx)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.59)
+AM_INIT_AUTOMAKE(FlightGear, 0.6.0)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -353,7 +353,6 @@ AC_OUTPUT( \
 	Tools/Utils/Makedir/Makefile \
 	Tools/Areas/Makefile \
 	Tools/AssemTris/Makefile \
-	Tools/FixNode/Makefile \
 	Tools/FixObj/Makefile \
 	Tools/SplitTris/Makefile \
 	Tools/Stripe_w/Makefile \
