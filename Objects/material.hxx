@@ -41,18 +41,15 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#if defined ( __sun__ )
-extern "C" void *memmove(void *, const void *, size_t);
-extern "C" void *memset(void *, int, size_t);
-#endif
-
 #include <string>        // Standard C++ string library
 #include <map>           // STL associative "array"
 #include <vector>        // STL "array"
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+#include "Include/compiler.h"
+FG_USING_STD(string);
+FG_USING_STD(map);
+FG_USING_STD(vector);
+FG_USING_STD(less);
 
 // forward decl.
 class fgFRAGMENT;
@@ -66,6 +63,9 @@ typedef frag_list_type::const_iterator frag_list_const_iterator;
 
 // #define FG_MAX_MATERIAL_FRAGS 800
 
+// MSVC++ 6.0 kuldge - Need forward declaration of friends.
+class fgMATERIAL;
+istream& operator >> ( istream& in, fgMATERIAL& m );
 
 // Material property class
 class fgMATERIAL {
@@ -117,7 +117,6 @@ public:
     friend istream& operator >> ( istream& in, fgMATERIAL& m );
 };
 
-istream& operator >> ( istream& in, fgMATERIAL& m );
 
 // Material management class
 class fgMATERIAL_MGR {
@@ -170,6 +169,22 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.6  1999/02/02 20:13:39  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.5  1998/10/12 23:49:18  curt
 // Changes from NHV to make the code more dynamic with fewer hard coded limits.
 //

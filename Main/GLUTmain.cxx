@@ -85,6 +85,7 @@
 #include "options.hxx"
 #include "splash.hxx"
 #include "views.hxx"
+#include "fg_serial.hxx"
 
 
 // This is a record containing a bit of global housekeeping information
@@ -739,7 +740,7 @@ static void fgIdleFunction ( void ) {
 
 	audio_sched = new slScheduler ( 8000 );
 	audio_mixer = new smMixer;
-	audio_mixer -> setMasterVolume ( 50 ) ;  /* 80% of max volume. */
+	audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
 	audio_sched -> setSafetyMargin ( 1.0 ) ;
 	string slfile = current_options.get_fg_root() + "/Sounds/wasp.wav";
 
@@ -968,8 +969,8 @@ int main( int argc, char **argv ) {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
 	current_options.usage();
-	// FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
-	cout << endl << "Exiting ..." << endl;
+	FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
+	// cout << endl << "Exiting ..." << endl;
 	exit(-1);
     }
     
@@ -1006,6 +1007,22 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.84  1999/02/02 20:13:34  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.83  1999/01/27 04:49:17  curt
 // Game mode fixes from Norman Vine.
 // Initial altitude setting tweaks and fixes (especially for when starting

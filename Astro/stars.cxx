@@ -31,12 +31,20 @@
 #  include <windows.h>
 #endif
 
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
+#  include <cstdio>
+#  include <cstring>
+#  include <ctime>
+#else
+#  include <math.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include <time.h>
+#endif
 
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
 #include <string>
-#include <time.h>
 
 #include <GL/glut.h>
 #include <XGL/xgl.h>
@@ -49,9 +57,11 @@
 #include <Main/views.hxx>
 #include <Misc/stopwatch.hxx>
 #include <Time/fg_time.hxx>
+#include "Misc/stopwatch.hxx"
 
 #include "stars.hxx"
 
+FG_USING_STD(getline);
 
 #define EpochStart           (631065600)
 #define DaysSinceEpoch(secs) (((secs)-EpochStart)*(1.0/(24*3600)))
@@ -254,6 +264,22 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.26  1999/02/02 20:13:30  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.25  1998/12/09 18:50:15  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

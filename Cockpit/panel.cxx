@@ -35,11 +35,21 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cstdlib>
+#  include <cstdio>
+#  include <cstring>
+#  include <cmath>
+#else
+#  include <stdlib.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include <math.h>
+#endif
+
 #include <string>
-#include <math.h>
+FG_USING_STD(string);
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
@@ -302,7 +312,7 @@ static IMAGE *ImageLoad(char *fileName)
       exit(-1);
     }
 
-  ImageGetRawData(image, final->data);
+  ImageGetRawData(image, (char*)final->data);
   ImageClose(image);
   return final;
 }
@@ -876,7 +886,10 @@ float UpdatePointer(Pointer pointer){
 // fgEraseArea - 'Erases' a drawn Polygon by overlaying it with a textured 
 //                 area. Shall be a method of a panel class once.
 
-void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor = 1){
+void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,
+		 GLfloat texYPos, GLfloat XPos, GLfloat YPos,
+		 int Texid, float ScaleFactor)
+{
 int i, j;
 int n;
 float a;
@@ -1066,6 +1079,22 @@ printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvma
 }
 
 // $Log$
+// Revision 1.14  1999/02/02 20:13:33  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.13  1999/01/07 19:25:53  curt
 // Updates from Friedemann Reinhard.
 //
@@ -1094,4 +1123,3 @@ printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvma
 // Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
 // first pass at an isntrument panel.
 //
-

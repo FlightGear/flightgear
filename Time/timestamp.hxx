@@ -66,6 +66,10 @@
 #  include <mmsystem.h>
 #endif
 
+// MSVC++ 6.0 kuldge - Need forward declaration of friends.
+class FGTimeStamp;
+FGTimeStamp operator + (const FGTimeStamp& t, const long& m);
+long operator - (const FGTimeStamp& a, const FGTimeStamp& b);
 
 class FGTimeStamp {
 
@@ -163,6 +167,22 @@ inline long operator - (const FGTimeStamp& a, const FGTimeStamp& b)
 
 
 // $Log$
+// Revision 1.5  1999/02/02 20:13:43  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.4  1999/01/09 13:37:46  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //

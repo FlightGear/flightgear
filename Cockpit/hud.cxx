@@ -39,10 +39,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_VALUES_H
-#  include <values.h>  // for MAXINT
-#endif
-
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
@@ -69,7 +65,10 @@ static char units[5];
 // They should eventually be member functions of the aircraft.
 //
 
-deque< instr_item * > HUD_deque;
+typedef deque< instr_item * > HudContainerType;
+typedef HudContainerType::iterator HudIterator;
+
+HudContainerType HUD_deque;
 
 class locRECT {
   public:
@@ -534,7 +533,6 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 
 int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 {
-    instr_item *HIptr;
     int index;
 
     FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
@@ -769,8 +767,8 @@ void fgUpdateHUD( void ) {
 
   glLineWidth(1);
 
-  deque < instr_item * > :: iterator current = HUD_deque.begin();
-  deque < instr_item * > :: iterator last = HUD_deque.end();
+  HudIterator current = HUD_deque.begin();
+  HudIterator last = HUD_deque.end();
 
   for ( ; current != last; ++current ) {
     pHUDInstr = *current;
@@ -840,6 +838,22 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.31  1999/02/02 20:13:31  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.30  1999/01/27 04:47:52  curt
 // Make lower end of altitude = -500 so the altimeter is guaged below zero (such
 // as in death valley.)

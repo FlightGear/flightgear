@@ -22,8 +22,12 @@
 // (Log is kept at end of this file)
 
 
-// #include <Include/fg_constants.h>
-// #include <Math/mat3.h>
+#include "Include/compiler.h"
+#include STL_FUNCTIONAL
+#include STL_ALGORITHM
+FG_USING_STD(for_each);
+FG_USING_STD(mem_fun_ref);
+
 #include <Debug/logstream.hxx>
 #include <Scenery/tile.hxx>
 #include "Bucket/bucketutils.hxx"
@@ -61,6 +65,22 @@ fgTILE::release_fragments()
 
 
 // $Log$
+// Revision 1.14  1999/02/02 20:13:40  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.13  1998/11/09 23:40:46  curt
 // Bernie Bright <bbright@c031.aone.net.au> writes:
 // I've made some changes to the Scenery handling.  Basically just tidy ups.

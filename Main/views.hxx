@@ -47,6 +47,8 @@
 // Define a structure containing view information
 class FGView {
 
+public:
+
     // the current offset from forward for viewing
     double view_offset;
 
@@ -218,7 +220,7 @@ public:
     inline double *get_surface_south() { return surface_south; }
     inline double *get_surface_east() { return surface_east; }
     inline double *get_local_up() { return local_up; }
-    inline MAT3mat *get_WORLD_TO_EYE() const { return &WORLD_TO_EYE; }
+    inline const MAT3mat *get_WORLD_TO_EYE() const { return &WORLD_TO_EYE; }
     inline GLdouble *get_MODEL_VIEW() { return MODEL_VIEW; }
 };
 
@@ -230,6 +232,22 @@ extern FGView current_view;
 
 
 // $Log$
+// Revision 1.20  1999/02/02 20:13:38  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.19  1999/02/01 21:33:36  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

@@ -46,12 +46,11 @@
 #include STL_STRING
 FG_USING_STD(string);
 
-#include <vector>                                                               
-#include "Include/fg_stl_config.h"                                              
-
-FG_USING_NAMESPACE(std);
-
-#include "fg_serial.hxx"
+#include <vector>
+#include "Include/compiler.h"
+FG_USING_STD(vector);
+FG_USING_STD(string);
+// #include "fg_serial.hxx"
 
 
 typedef vector < string > str_container;
@@ -246,6 +245,22 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.26  1999/02/02 20:13:37  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.25  1999/01/19 20:57:06  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

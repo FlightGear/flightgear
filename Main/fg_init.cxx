@@ -65,6 +65,7 @@
 #include "fg_init.hxx"
 #include "options.hxx"
 #include "views.hxx"
+#include "fg_serial.hxx"
 
 
 extern const char *default_root;
@@ -391,6 +392,22 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.65  1999/02/02 20:13:36  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.64  1999/02/01 21:15:43  curt
 // Removed unused variables.
 //
