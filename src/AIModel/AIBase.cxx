@@ -117,18 +117,22 @@ void FGAIBase::bind() {
    props->tie("id", SGRawValuePointer<int>(&id));
    props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
    props->tie("velocities/vertical-speed-fps",
-               SGRawValueFunctions<double>(FGAIBase::_getVS_fps,
-                                           FGAIBase::_setVS_fps, this));
+               SGRawValueMethods<FGAIBase,double>(*this,
+                                         FGAIBase::_getVS_fps,
+                                         FGAIBase::_setVS_fps));
 
    props->tie("position/altitude-ft",
-               SGRawValueFunctions<double>(FGAIBase::_getAltitude,
-                                           FGAIBase::_setAltitude, this));
+               SGRawValueMethods<FGAIBase,double>(*this,
+                                         FGAIBase::_getAltitude,
+                                         FGAIBase::_setAltitude));
    props->tie("position/latitude-deg",
-               SGRawValueFunctions<double>(FGAIBase::_getLatitude,
-                                           FGAIBase::_setLatitude, this));
+               SGRawValueMethods<FGAIBase,double>(*this,
+                                         FGAIBase::_getLatitude,
+                                         FGAIBase::_setLatitude));
    props->tie("position/longitude-deg",
-               SGRawValueFunctions<double>(FGAIBase::_getLongitude,
-                                           FGAIBase::_setLongitude, this));
+               SGRawValueMethods<FGAIBase,double>(*this,
+                                         FGAIBase::_getLongitude,
+                                         FGAIBase::_setLongitude));
 
    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
@@ -144,7 +148,7 @@ void FGAIBase::bind() {
    props->tie("radar/rotation", SGRawValuePointer<double>(&rotation));
 
    props->tie("controls/lighting/nav-lights",
-               SGRawValueFunctions<bool>(FGAIBase::_isNight));
+               SGRawValueMethods<FGAIBase,bool>(*this, _isNight));
    props->setBoolValue("controls/lighting/beacon", true);
    props->setBoolValue("controls/lighting/strobe", true);
 }
@@ -178,46 +182,37 @@ void FGAIBase::unbind() {
 /*
  * getters and Setters
  */
-void FGAIBase::_setLongitude( double longitude, void *p ) {
-    FGAIBase *self = (FGAIBase *)p;
-    self->pos.setlon(longitude);
+void FGAIBase::_setLongitude( double longitude ) {
+    pos.setlon(longitude);
 }
-void FGAIBase::_setLatitude ( double latitude, void *p )  {
-    FGAIBase *self = (FGAIBase *)p;
-    self->pos.setlat(latitude);
+void FGAIBase::_setLatitude ( double latitude )  {
+    pos.setlat(latitude);
 }
 
-double FGAIBase::_getLongitude(void *p) {
-    FGAIBase *self = (FGAIBase *)p;
-    return self->pos.lon();
+double FGAIBase::_getLongitude() const {
+    return pos.lon();
 }
-double FGAIBase::_getLatitude (void *p) {
-    FGAIBase *self = (FGAIBase *)p;
-    return self->pos.lat();
+double FGAIBase::_getLatitude () const {
+    return pos.lat();
 }
-double FGAIBase::_getRdot(void *p)      {
-    FGAIBase *self = (FGAIBase *)p;
-    return self->rdot;
+double FGAIBase::_getRdot() const {
+    return rdot;
 }
-double FGAIBase::_getVS_fps(void *p) {
-    FGAIBase *self = (FGAIBase *)p;
-    return self->vs*60.0;
+double FGAIBase::_getVS_fps() const {
+    return vs*60.0;
 }
-void FGAIBase::_setVS_fps( double _vs, void *p ) {
-    FGAIBase *self = (FGAIBase *)p;
-    self->vs = _vs/60.0;
+void FGAIBase::_setVS_fps( double _vs ) {
+    vs = _vs/60.0;
 }
 
-double FGAIBase::_getAltitude(void *p) {
-    FGAIBase *self = (FGAIBase *)p;
-    return self->altitude;
+double FGAIBase::_getAltitude() const {
+    return altitude;
 }
-void FGAIBase::_setAltitude( double _alt, void *p ) {
-    FGAIBase *self = (FGAIBase *)p;
-    self->setAltitude( _alt );
+void FGAIBase::_setAltitude( double _alt ) {
+    setAltitude( _alt );
 }
 
-bool FGAIBase::_isNight() {
+bool FGAIBase::_isNight() const {
     return (fgGetFloat("/sim/time/sun-angle-rad") > 1.57);
 }
 

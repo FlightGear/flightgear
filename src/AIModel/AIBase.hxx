@@ -115,32 +115,30 @@ public:
     object_type getType();
     bool isa( object_type otype );
 
-    static double _getVS_fps(void *p);
-    static void _setVS_fps( double _vs, void *p );
+    double _getVS_fps() const;
+    void _setVS_fps( double _vs );
 
-    static double _getAltitude(void *p);
-    static void _setAltitude( double _alt, void *p );
+    double _getAltitude() const;
+    void _setAltitude( double _alt );
 
-    static void _setLongitude( double longitude, void *p );
-    static void _setLatitude ( double latitude, void *p );
+    void _setLongitude( double longitude );
+    void _setLatitude ( double latitude );
 
-    static double _getLongitude(void *p);
-    static double _getLatitude (void *p);
+    double _getLongitude() const;
+    double _getLatitude () const;
 
-    static double _getBearing(void *p);
-    static double _getElevation(void *p);
+    double _getBearing() const;
+    double _getElevation() const;
+    double _getRdot() const;
+    double _getH_offset() const;
+    double _getV_offset() const;
+    double _getX_shift() const;
+    double _getY_shift() const;
+    double _getRotation() const;
+
     inline double _getRange() { return range; };
-    static double _getRdot(void *p);
-    static double _getH_offset(void *p);
-    static double _getV_offset(void *p);
-    static double _getX_shift(void *p);
-    static double _getY_shift(void *p);
-    static double _getRotation(void *p);
 
-    static bool _isNight();
-
-private:
-    FGAIBase *self;
+    bool _isNight() const;
 };
 
 
