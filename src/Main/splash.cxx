@@ -58,11 +58,11 @@ void fgSplashInit ( const char *splash_texture ) {
     splash.bind();
 
     SGPath tpath( globals->get_fg_root() );
-    if (splash_texture == NULL) {
+    if (splash_texture == NULL || !strcmp(splash_texture, "")) {
         // load in the texture data
         int num = (int)(sg_random() * 5.0 + 1.0);
-        char num_str[256];
-        sprintf(num_str, "%d", num);
+        char num_str[5];
+        snprintf(num_str, 4, "%d", num);
 
         tpath.append( "Textures/Splash" );
         tpath.concat( num_str );
