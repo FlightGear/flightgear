@@ -18,7 +18,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-#include <strings.h>		// bcopy()
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_STRINGS_H
+#  include <strings.h>   // bcopy()
+#else
+#  include <string.h>    // MSVC doesn't have strings.h
+#endif
 
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
