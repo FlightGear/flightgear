@@ -142,6 +142,9 @@ private:
 	double stall_speed_landing_config;
 	double nominal_taxi_speed;
 	
+	// Physical/rendering stuff
+	double wheelOffset;		// Height above ground at which we need to render the plane whilst taxiing
+	
 	// environment - some of this might get moved into FGAIPlane
 	SGPropertyNode* wind_from_hdg;	//degrees
 	SGPropertyNode* wind_speed_knots;		//knots
@@ -183,6 +186,8 @@ private:
 	void Taxi(double dt);
 
 	void GetNextTaxiNode();
+	
+	void DoGroundElev();
 };
 
 #endif  // _FG_AILocalTraffic_HXX

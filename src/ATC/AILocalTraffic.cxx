@@ -26,6 +26,7 @@
 #include <Main/globals.hxx>
 #include <Main/location.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scenery/tilemgr.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -54,6 +55,7 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	//stall_speed_landing_config;
 	nominalTaxiSpeed = 8.0;
 	taxiTurnRadius = 8.0;
+	wheelOffset = 1.45;	// Warning - hardwired to the C172 - we need to read this in from file.
 	// Init the property nodes
 	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
 	wind_speed_knots = fgGetNode("/environment/wind-speed-kts", true);
@@ -150,10 +152,6 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 	vel = 0.0;
 	slope = 0.0;
 	
-	// Now set the position of the plane and then re-get the elevation!! (Didn't work - elev always returned as zero) :-(
-	//aip.setPosition(pos.lon(), pos.lat(), pos.elev() * SG_METER_TO_FEET);
-	//cout << "*********************** elev in FGAILocalTraffic = " << aip.getFGLocation()->get_cur_elev_m() << '\n';
-	
 	// Set the projection for the local area
 	ortho.Init(rwy.threshold_pos, rwy.hdg);	
 	rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
@@ -170,14 +168,13 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 
 // Run the internal calculations
 void FGAILocalTraffic::Update(double dt) {
-	//std::cout << "In FGAILocalTraffic::Update\n";
-	// Hardwire flying traffic pattern for now - eventually also needs to be able to taxi to and from runway and GA parking area.
 	switch(operatingState) {
 	case IN_PATTERN:
 		FlyTrafficPattern(dt);
 		Transform();
 		break;
 	case TAXIING:
+		DoGroundElev();
 		Taxi(dt);
 		Transform();
 		break;
@@ -187,8 +184,6 @@ void FGAILocalTraffic::Update(double dt) {
 	default:
 		break;
 	}
-	//cout << "elev in FGAILocalTraffic = " << aip.getFGLocation()->get_cur_elev_m() << '\n';
-	// This should become if(the plane has moved) then Transform()
 }
 
 // Fly a traffic pattern
@@ -512,11 +507,17 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 			++nItr;
 		}
 		in_dest = airport.GetGateNode();
-		// TODO - add a NULL pointer (no available gates) check for in_dest and have a fallback position
-		// (possibly taxi off runway and disappear?)
+		if(in_dest == NULL) {
+			// Implies no available gates - what shall we do?
+			// For now just vanish the plane - possibly we can make this more elegant in the future
+			SG_LOG(SG_GENERAL, SG_ALERT, "No gate found by FGAILocalTraffic whilst landing at " << airportID << '\n');
+			aip.setVisible(false);
+			operatingState = PARKED;
+			return;
+		}
 		path = airport.GetPath(rwyExit, in_dest);
-		//cout << "path returned was:" << endl;
 		/*
+		cout << "path returned was:" << endl;
 		for(unsigned int i=0; i<path.size(); ++i) {
 			switch(path[i]->struct_type) {
 			case NODE:
@@ -595,7 +596,7 @@ void FGAILocalTraffic::Taxi(double dt) {
 	// If we have reached turning point then get next point and turn onto that heading
 	// Look out for the finish!!
 
-	Point3D orthopos = ortho.ConvertToLocal(pos);	// ortho position of the plane
+	//Point3D orthopos = ortho.ConvertToLocal(pos);	// ortho position of the plane
 	desiredTaxiHeading = GetHeadingFromTo(pos, nextTaxiNode->pos);
 
 	// HACK ALERT! - for now we will taxi at constant speed for straights and turns
@@ -644,9 +645,9 @@ void FGAILocalTraffic::Taxi(double dt) {
 		double slope = 0.0;
 		pos = dclUpdatePosition(pos, track, slope, dist);
 		//cout << "Updated position...\n";
-		// FIXME - HACK in absense of proper ground elevation determination
-		// Linearly interpolate altitude when taxiing between N and S extremes of orthopos
-		pos.setelev((287.5 + ((299.3 - 287.5) * fabs(orthopos.y() / 1000.0))) * SG_FEET_TO_METER);
+		if(aip.getFGLocation()->get_cur_elev_m() > -9990) {
+			pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+		} // else don't change the elev until we get a valid ground elev again!
 	} else {
 		// Time to turn (we've already checked it's not the end we're heading for).
 		// set the target node to be the next node which will prompt automatically turning onto
@@ -657,3 +658,33 @@ void FGAILocalTraffic::Taxi(double dt) {
 	}
 }
 
+
+// Warning - ground elev determination is CPU intensive
+// Either this function or the logic of how often it is called
+// will almost certainly change.
+void FGAILocalTraffic::DoGroundElev() {
+
+	// It would be nice if we could set the correct tile center here in order to get a correct
+	// answer with one call to the function, but what I tried in the two commented-out lines
+	// below only intermittently worked, and I haven't quite groked why yet.
+	//SGBucket buck(pos.lon(), pos.lat());
+	//aip.getFGLocation()->set_tile_center(Point3D(buck.get_center_lon(), buck.get_center_lat(), 0.0));
+	
+	double visibility_meters = fgGetDouble("/environment/visibility-m");
+	//globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
+	globals->get_tile_mgr()->prep_ssg_nodes( aip.getFGLocation(),	visibility_meters );
+	globals->get_tile_mgr()->update( aip.getFGLocation(), visibility_meters, (aip.getFGLocation())->get_absolute_view_pos() );
+	// save results of update in FGLocation for fdm...
+	
+	//if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
+	//	acmodel_location->
+	//	set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+	//}
+	
+	// The need for this here means that at least 2 consecutive passes are needed :-(
+	aip.getFGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
+	
+	//cout << "Transform Elev is " << globals->get_scenery()->get_cur_elev() << '\n';
+	aip.getFGLocation()->set_cur_elev_m(globals->get_scenery()->get_cur_elev());
+	//return(globals->get_scenery()->get_cur_elev());
+}
