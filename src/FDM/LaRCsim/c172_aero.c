@@ -152,9 +152,11 @@ void aero( SCALAR dt, int Initialize ) {
 
  /*Note that CLo,Cdo,Cmo will likely change with flap setting so 
   they may not be declared static in the future */
-   if (Initialize != 0)
-    {
-	   CLadot=1.7;
+   /* printf("Initialize= %d\n",Initialize); */
+   /* if (Initialize != 0)
+    { */
+/* 	   printf("Initializing aero model...Initialize= %d\n", Initialize);
+ */	   CLadot=1.7;
 	   CLq=3.9;
 	   CLde=0.43;
 	   CLo=0;
@@ -194,7 +196,7 @@ void aero( SCALAR dt, int Initialize ) {
 	   b=35.8; /*wing span ft */
 	   Sw=174; /*wing planform surface area ft^2*/
 	   rPiARe=0.054; /*reciprocal of Pi*AR*e*/
-    }
+    /* } */
   
   /*
   LaRCsim uses:
@@ -249,9 +251,9 @@ void aero( SCALAR dt, int Initialize ) {
   qSb=qS*b;
   
   
-/*   printf("Wb: %7.4f, Ub: %7.4f, Alpha: %7.4f, elev: %7.4f, ail: %7.4f, rud: %7.4f, long_trim: %7.4f\n",W_body,U_body,Alpha*RAD_TO_DEG,elevator*RAD_TO_DEG,aileron*RAD_TO_DEG,rudder*RAD_TO_DEG,long_trim*RAD_TO_DEG);
-  printf("Theta: %7.4f, Gamma: %7.4f, Beta: %7.4f, Phi: %7.4f, Psi: %7.4f\n",Theta*RAD_TO_DEG,Gamma_vert_rad*RAD_TO_DEG,Beta*RAD_TO_DEG,Phi*RAD_TO_DEG,Psi*RAD_TO_DEG);
- */
+/*   printf("aero: Wb: %7.4f, Ub: %7.4f, Alpha: %7.4f, elev: %7.4f, ail: %7.4f, rud: %7.4f, long_trim: %7.4f\n",W_body,U_body,Alpha*RAD_TO_DEG,elevator*RAD_TO_DEG,aileron*RAD_TO_DEG,rudder*RAD_TO_DEG,long_trim*RAD_TO_DEG);
+ */  //printf("Theta: %7.4f, Gamma: %7.4f, Beta: %7.4f, Phi: %7.4f, Psi: %7.4f\n",Theta*RAD_TO_DEG,Gamma_vert_rad*RAD_TO_DEG,Beta*RAD_TO_DEG,Phi*RAD_TO_DEG,Psi*RAD_TO_DEG);
+ 
   
   /* sum coefficients */
   CLwbh = interp(CLtable,alpha_ind,NCL,Alpha);
@@ -263,7 +265,7 @@ void aero( SCALAR dt, int Initialize ) {
   cn = Cnbeta*Beta + (Cnp*P_body + Cnr*R_body)*b_2V + Cnda*aileron + Cndr*rudder; 
   croll=Clbeta*Beta + (Clp*P_body + Clr*R_body)*b_2V + Clda*aileron + Cldr*rudder;
   
-/*   printf("CL: %7.4f, Cd: %7.4f, Cm: %7.4f, Cy: %7.4f, Cn: %7.4f, Cl: %7.4f\n",CL,cd,cm,cy,cn,croll);
+/*   printf("aero: CL: %7.4f, Cd: %7.4f, Cm: %7.4f, Cy: %7.4f, Cn: %7.4f, Cl: %7.4f\n",CL,cd,cm,cy,cn,croll);
  */  /*calculate wind axes forces*/
   F_X_wind=-1*cd*qS;
   F_Y_wind=cy*qS;
@@ -291,4 +293,3 @@ void aero( SCALAR dt, int Initialize ) {
  *//*  printf("Maero: %7.4f Naero: %7.4f Raero: %7.4f\n",M_m_aero,M_n_aero,M_l_aero);
  */  
 }
-

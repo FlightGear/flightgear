@@ -37,8 +37,8 @@
 
 $Header$
 $Log$
-Revision 1.3  1999/07/31 02:57:36  curt
-Improvements to Tony's c172 model.
+Revision 1.4  1999/08/07 16:23:55  curt
+Updates to Tony's c172 model.
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
 Start of 0.6.x branch.
