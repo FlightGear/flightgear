@@ -26,6 +26,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/sg_random.h>
 
 #include "atislist.hxx"
 
@@ -146,4 +147,54 @@ bool FGATISList::query( double lon, double lat, double elev, double freq,
     }
 
     return false;
+}
+
+
+int FGATISList::GetCallSign( string apt_id, int hours, int mins )
+{
+    atis_transmission_type tran;
+
+    if(atislog.find(apt_id) == atislog.end()) {
+	// This station has not transmitted yet - return a random identifier
+	// and add the transmission to the log
+	tran.hours = hours;
+	tran.mins = mins;
+	sg_srandom_time();
+	tran.callsign = int(sg_random() * 25) + 1;	// This *should* give a random int between 1 and 26
+	//atislog[apt_id].push_back(tran);
+	atislog[apt_id] = tran;
+    } else {
+	// This station has transmitted - calculate the appropriate identifier
+	// and add the transmission to the log if it has changed
+	tran = atislog[apt_id];
+	// This next bit assumes that no-one comes back to the same ATIS station
+	// after running FlightGear for more than 24 hours !!
+	if((tran.hours == hours) && (tran.mins == mins)) {
+	    return(tran.callsign);
+	} else {
+	    if(tran.hours == hours) {
+		// The minutes must have changed
+		tran.mins = mins;
+		tran.callsign++;
+	    } else {
+		if(hours < tran.hours) {
+		    hours += 24;
+		}
+		tran.callsign += (hours - tran.hours);
+		if(mins != 0) {
+		    // Assume transmissions were made on every hour
+		    tran.callsign++;
+		}
+		tran.hours = hours;
+		tran.mins = mins;
+	    }
+	    // Wrap if we've exceeded Zulu
+	    if(tran.callsign > 26) {
+		tran.callsign -= 26;
+	    }
+	    // And write the new transmission to the log
+	    atislog[apt_id] = tran;
+	}
+    }
+    return(tran.callsign);
 }

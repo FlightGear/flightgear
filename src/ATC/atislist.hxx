@@ -28,11 +28,13 @@
 
 #include <map>
 #include <vector>
+#include <string>
 
 #include "atis.hxx"
 
 SG_USING_STD(map);
 SG_USING_STD(vector);
+SG_USING_STD(string);
 
 
 class FGATISList {
@@ -49,6 +51,21 @@ class FGATISList {
 
     atis_map_type atislist;
 
+    // Add structure and map for storing a log of atis transmissions
+    // made in this session of FlightGear.  This allows the callsign
+    // to be allocated correctly wrt time.
+    typedef struct {
+	int hours;
+	int mins;
+	int callsign;
+    } atis_transmission_type;
+
+    typedef map < string, atis_transmission_type > atis_log_type;
+    typedef atis_log_type::iterator atis_log_iterator;
+    typedef atis_log_type::const_iterator atis_log_const_iterator;
+
+    atis_log_type atislog;
+
 public:
 
     FGATISList();
@@ -60,6 +77,9 @@ public:
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters
     bool query( double lon, double lat, double elev, double freq, FGATIS *a );
+
+    // Return the callsign for a transmission given transmission time and airpord id
+    int GetCallSign( string apt_id, int hours, int mins );
 };
 
 

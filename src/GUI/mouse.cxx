@@ -270,12 +270,12 @@ void guiMotionFunc ( int x, int y )
 
     if (mouse_mode == MOUSE_POINTER) {
         // TURN MENU ON IF MOUSE AT TOP
-        if( y < 2 ) {
+        if( y == 0 ) {
             if( !gui_menu_on )
                 guiToggleMenu();			
         }
         // TURN MENU OFF IF MOUSE AT BOTTOM
-        else if( y > wh-2 ) {
+        else if( y > wh-1 ) {
             if( gui_menu_on )
                 guiToggleMenu();			
         }

@@ -37,6 +37,7 @@ FGATCDisplay *current_atcdisplay;
 // Constructor
 FGATCDisplay::FGATCDisplay( void ) {
     rep_msg = false;
+    change_msg_flag = false;
     dsp_offset1 = 0;
     dsp_offset2 = 0;
 }
@@ -53,7 +54,30 @@ void FGATCDisplay::init( void ) {
 // update - this actually draws the visuals and should be called from the main Flightgear rendering loop.
 void FGATCDisplay::update() {
 
+    // These strings are used for temporary storage of the transmission string in order
+    // that the string we view only changes when the next repitition starts scrolling
+    // even though the master string (rep_msg_str) may change at any time.
+    static string msg1 = "";
+    static string msg2 = "";
+
     if(rep_msg) {
+	//cout << "dsp_offset1 = " << dsp_offset1 << " dsp_offset2 = " << dsp_offset2 << endl;
+	if(dsp_offset1 == 0) {
+	    msg1 = rep_msg_str;
+	}
+	if(dsp_offset2 == 0) {
+	    msg2 = rep_msg_str;
+	}
+	// Check for the situation where one offset is negative and the message is changed
+	if(change_msg_flag) {
+	    if(dsp_offset1 < 0) {
+	    	msg1 = rep_msg_str;
+	    } else if(dsp_offset2 < 0) {
+	    	msg2 = rep_msg_str;
+	    }
+	    change_msg_flag = false;
+	}
+
 	float fps = general.get_frame_rate();
 	
 	//cout << "In FGATC::update()" << endl;
@@ -61,13 +85,6 @@ void FGATCDisplay::update() {
 	SGPropertyNode *ysize_node = fgGetNode("/sim/startup/ysize");
 	int iwidth   = xsize_node->getIntValue();
 	int iheight  = ysize_node->getIntValue();
-	
-	//TODO - if the string is bigger than the buffer the program exits - we really ought to have a robust check here
-	char buf[256];
-	//float fps = visibility/1600;
-	//      sprintf(buf,"%-4.1f  %7.0f  %7.0f", fps, tris, culled);
-//	sprintf(buf,"%s %-5.1f", "visibility ", visibility);
-	sprintf(buf,"%s", rep_msg_str.c_str());
 	
 	glMatrixMode( GL_PROJECTION );
 	glPushMatrix();
@@ -82,13 +99,13 @@ void FGATCDisplay::update() {
 	
 	glColor3f( 0.9, 0.4, 0.2 );
 	
-//	guiFnt.drawString( buf,
+//	guiFnt.drawString( rep_msg_str.c_str(),
 //	    int(iwidth - guiFnt.getStringWidth(buf) - 10 - (int)dsp_offset),
 //	    (iheight - 20) );
-	guiFnt.drawString( buf,
+	guiFnt.drawString( msg1.c_str(),
 	    int(iwidth - 10 - dsp_offset1),
 	    (iheight - 20) );
-    	guiFnt.drawString( buf,
+    	guiFnt.drawString( msg2.c_str(),
 	    int(iwidth - 10 - dsp_offset2),
 	    (iheight - 20) );
 	glEnable( GL_DEPTH_TEST );
@@ -123,7 +140,8 @@ void FGATCDisplay::RegisterRepeatingMessage(string msg) {
 }
 
 void FGATCDisplay::ChangeRepeatingMessage(string newmsg) {
-    //Not implemented yet
+    rep_msg_str = newmsg;
+    change_msg_flag = true;
     return;
 }
 

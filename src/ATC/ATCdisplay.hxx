@@ -47,6 +47,7 @@ class FGATCDisplay {
 
 private:
     bool rep_msg;		// Flag to indicate there is a repeating transmission to display
+    bool change_msg_flag;	// Flag to indicate that the repeating message has changed
     float dsp_offset1;		// Used to set the correct position of scrolling display
     float dsp_offset2;	
     string rep_msg_str;		// The repeating transmission to play

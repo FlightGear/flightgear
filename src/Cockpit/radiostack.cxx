@@ -429,14 +429,14 @@ FGRadioStack::update()
 	    // TODO - only get the transmission and register every now and then
 	    if(dcl_i == 0) {
 		transmission = atis.get_transmission();
-		//ChangeRepeatingMessage(transmission);
+		current_atcdisplay->ChangeRepeatingMessage(transmission);
 	    }
 	    if(!repeating_message_registered) {
-		current_atcdisplay->RegisterRepeatingMessage( transmission );
+		current_atcdisplay->RegisterRepeatingMessage(transmission);
 		repeating_message_registered = true;
 	    }
 	    dcl_i++;
-	    if(dcl_i == 3000) {
+	    if(dcl_i == 2000) {
 		dcl_i = 0;
 	    }
 	} else {

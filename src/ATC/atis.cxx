@@ -25,17 +25,17 @@
 
 #include <simgear/compiler.h>
 
+#include <stdlib.h>	// atoi()
 #include <string>
 SG_USING_STD(string);
 
-//#include STL_IOSTREAM
-//#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
-//SG_USING_STD(cout);
-//#endif
+#include STL_IOSTREAM
+#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
+SG_USING_STD(cout);
+#endif
 
 //#include <simgear/debug/logstream.hxx>
 //#include <simgear/misc/sgstream.hxx>
-//#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 //#ifndef FG_OLD_WEATHER
@@ -48,6 +48,41 @@ SG_USING_STD(string);
 #include <Airports/runways.hxx>
 
 #include "atis.hxx"
+#include "atislist.hxx"
+
+string GetPhoneticIdent(int i) {
+// TODO - Check i is between 1 and 26 and wrap if necessary
+    switch(i) {
+    case 1 : return("Alpha");
+    case 2 : return("Bravo");
+    case 3 : return("Charlie");
+    case 4 : return("Delta");
+    case 5 : return("Echo");
+    case 6 : return("Foxtrot");
+    case 7 : return("Golf");
+    case 8 : return("Hotel");
+    case 9 : return("Indigo");
+    case 10 : return("Juliet");
+    case 11 : return("Kilo");
+    case 12 : return("Lima");
+    case 13 : return("Mike");
+    case 14 : return("November");
+    case 15 : return("Oscar");
+    case 16 : return("Papa");
+    case 17 : return("Quebec");
+    case 18 : return("Romeo");
+    case 19 : return("Sierra");
+    case 20 : return("Tango");
+    case 21 : return("Uniform");
+    case 22 : return("Victor");
+    case 23 : return("Whiskey");
+    case 24 : return("X-ray");
+    case 25 : return("Yankee");
+    case 26 : return("Zulu");
+    }
+    // We shouldn't get here
+    return("Error");
+}
 
 // Constructor
 FGATIS::FGATIS() {
@@ -64,6 +99,11 @@ string FGATIS::get_transmission() {
     double visibility;
     double temperature;
     char buf[10];
+    int phonetic_id;
+    string phonetic_id_string;
+    string time_str = fgGetString("sim/time/gmt-string");
+    int hours;
+    int minutes;
 
 // Only update every so-many loops - FIXME - possibly register this with the event scheduler
 // Ack this doesn't work since the static counter is shared between all instances of FGATIS
@@ -76,25 +116,34 @@ string FGATIS::get_transmission() {
 	// Start with the transmitted station name.
 	transmission += name;
 
+	//cout << "In atis.cxx, time_str = " << time_str << '\n';
 	// Add the recording identifier
-	// TODO - this is hardwired for now - ultimately we need to start with a random one and then increment it with each recording
-	transmission += " Charlie";
+	// For now we will assume we only transmit every hour
+	hours = atoi((time_str.substr(1,2)).c_str());	//Warning - this is fragile if the 
+							//time string format changes
+	//cout << "In atis.cxx, hours = " << hours << endl;
+	phonetic_id = current_atislist->GetCallSign(ident, hours, 0);
+	phonetic_id_string = GetPhoneticIdent(phonetic_id);
+	transmission += " ";
+	transmission += phonetic_id_string;
 
 	// Output the recording time. - we'll just output the last whole hour for now.
-	string time_str = fgGetString("sim/time/gmt-string");
 	// FIXME - this only gets GMT time but that appears to be all the clock outputs for now
 	//cout << "in atis.cxx, time = " << time_str << endl;
 	transmission = transmission + "  Weather " + time_str.substr(0,3) + "00 hours Zulu";
 
 	// Get the temperature
-	// Hardwire the temperature for now - is the local weather database running yet?
-	transmission += "  Temperature 25 degrees Celcius";
+	temperature = fgGetDouble("/environment/weather/temperature-K");
+	sprintf(buf, "%i", int(temperature - 273.15));
+	transmission += "  Temperature ";
+	transmission += buf;
+	transmission += " degrees Celcius";
 
 	// Get the pressure / altimeter
 
 	// Get the visibility
 	visibility = fgGetDouble("/environment/visibility-m");
-	sprintf(buf, "%d", int(visibility/1600));
+	sprintf(buf, "%i", int(visibility/1600));
 	transmission += "  Visibility ";
 	transmission += buf;
 	transmission += " miles";
@@ -128,7 +177,7 @@ string FGATIS::get_transmission() {
 	    transmission += "  Winds light and variable";
 	} else {
 	    //add a description of the wind to the transmission
-	    char buf2[48];
+	    char buf2[72];
 	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed), " knots from ", int(hdg), " degrees");
 	    transmission += buf2;
 	}
@@ -143,7 +192,8 @@ string FGATIS::get_transmission() {
 	// Anything else?
 
 	// TODO - unhardwire the identifier
-	transmission += "  Advise controller on initial contact you have Charlie";
+	transmission += "  Advise controller on initial contact you have ";
+	transmission += phonetic_id_string;
 
     //}
 
