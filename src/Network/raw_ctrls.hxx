@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 3;
+const int FG_RAW_CTRLS_VERSION = 4;
 
 const int FG_MAX_ENGINES = 4;
 const int FG_MAX_WHEELS = 3;
@@ -58,6 +58,8 @@ public:
 
     // Other interesting/useful values
     double hground;		         // ground elevation (meters)
+    double magvar;		         // local magnetic variation in degrees.
+    int speedup;		         // integer speedup multiplier
 };
 
 

@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_FDM_VERSION = 0x0004;
+const int FG_NET_FDM_VERSION = 5;
 
 // Define a structure containing the top level flight dynamics model
 // parameters
@@ -55,8 +55,16 @@ public:
     double psi;			// yaw or true heading (radians)
 
     // Velocities
+    double phidot;		// roll rate (radians/sec)
+    double thetadot;		// pitch rate (radians/sec)
+    double psidot;		// yaw rate (radians/sec)
     double vcas;		// calibrated airspeed
     double climb_rate;		// feet per second
+
+    // Accelerations
+    double A_X_pilot;		// X accel in body frame ft/sec^2
+    double A_Y_pilot;		// Y accel in body frame ft/sec^2
+    double A_Z_pilot;		// Z accel in body frame ft/sec^2
 
     // Environment
     time_t cur_time;            // current unix time
