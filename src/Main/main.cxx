@@ -366,7 +366,7 @@ void fgRenderFrame( void ) {
 
 	sgVec3 po;		// chase view pilot_offset
 	sgVec3 wup;		// chase view world up
-	sgSetVec3( po, 0.0, 0.0, 50.0 );
+	sgSetVec3( po, 0.0, 0.0, 100.0 );
 	sgCopyVec3( wup, pilot_view->get_world_up() );
 	sgMat4 CXFM;		// chase view + pilot offset xform
 	sgMakeRotMat4( CXFM,

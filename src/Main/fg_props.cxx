@@ -61,6 +61,8 @@ fgLoadFlight (istream &input)
     SG_LOG(SG_INPUT, SG_ALERT, "Error restoring flight; aborted");
     return false;
   }
+
+  return true;
 }
 
 // end of fg_props.cxx
