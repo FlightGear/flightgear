@@ -19,7 +19,32 @@
 
 
 #include <math.h>
+
+#include <simgear/debug/logstream.hxx>
+
+#include "fg_io.hxx"
+#include "fg_props.hxx"
+#include "globals.hxx"
 #include "util.hxx"
+
+#if defined(FG_NETWORK_OLK)
+#include <NetworkOLK/network.h>
+#endif
+
+
+void
+fgExit (int status)
+{
+    SG_LOG(SG_GENERAL, SG_INFO, "Exiting FlightGear with status " << status);
+
+#if defined(FG_NETWORK_OLK)
+    if (fgGetBool("/sim/networking/network-olk"))
+	fgd_send_com("8", FGFS_host);
+#endif
+
+    globals->get_io()->shutdown_all();
+    exit(status);
+}
 
 
 // Originally written by Alex Perry.

@@ -35,6 +35,7 @@ SG_USING_STD(ofstream);
 #include "fg_props.hxx"
 #include "fg_io.hxx"
 #include "globals.hxx"
+#include "util.hxx"
 #include "viewmgr.hxx"
 
 
@@ -169,13 +170,13 @@ do_script (const SGPropertyNode * arg)
 /**
  * Built-in command: exit FlightGear.
  *
- * TODO: show a confirm dialog.
+ * status: the exit status to return to the operating system (defaults to 0)
  */
 static bool
 do_exit (const SGPropertyNode * arg)
 {
-  SG_LOG(SG_INPUT, SG_ALERT, "Program exit requested.");
-  ConfirmExitDialog();
+  SG_LOG(SG_INPUT, SG_INFO, "Program exit requested.");
+  fgExit(arg->getIntValue("status", 0));
   return true;
 }
 
