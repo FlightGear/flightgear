@@ -537,7 +537,7 @@ bool FGATCInput::do_analog_in() {
                             if ( value > max ) { value = max; }
                         }
 
-                        prop = child ->getChild( "compass-heading" );
+                        prop = child->getChild( "compass-heading" );
                         if ( prop != NULL ) {
                             bool compass = prop->getBoolValue();
                             if ( compass ) {
