@@ -16,7 +16,7 @@
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
 .Id $Id$
-.TH FGFS 1 "September 2002" "@VERSION@" "@PACKAGE@"
+.TH FGFS 1 "October 2003" "@VERSION@" "@PACKAGE@"
 .SH NAME
 fgfs \- FlightGear Flight Simulator
 .SH SYNOPSIS
@@ -28,6 +28,10 @@ is a free, open-source, multi-platform, and sophisticated flight
 simulator framework for the development and pursuit of interesting
 flight simulator ideas.
 .SH OPTIONS
+.TP
+.BI "--adf=" "[rotation:]frequency"
+Specify the initial ADF radio frequency.  Optionally may be preceded by a
+card rotation.
 .TP
 .BI "--aero=" "name"
 Specify aerodynamics model to load.
@@ -60,6 +64,16 @@ Specify location of your web browser.
 .BI "--callsign=" "value"
 Specify a unique name for multiplayer play.
 .TP
+.BI "--ceiling=" "value[:thickness]"
+Create an overcast ceiling (feet above sea level).  May optionally specify
+a thickness (feet) which defaults to 2000.
+.TP
+.BI "--com1=" "frequency"
+Set the initial COM1 radio frequency.
+.TP
+.BI "--com2=" "frequency"
+Set the initial COM2 radio frequency.
+.TP
 .BI "--config=" "path"
 Load additional properties from path.  Multiple instances of this
 option are recognized.
@@ -67,17 +81,27 @@ option are recognized.
 .BI "--control=" "mode"
 Primary control mode (joystick, keyboard, mouse).
 .TP
+.BI "--dme=" "{nav1|nav2|frequency}"
+Specify the NAV radio from which to slave the ADF or set its internal
+frequency.
+.TP
 .B "--disable-anti-alias-hud"
 Disable anti-aliased HUD.
 .TP
 .B "--disable-auto-coordination"
 Disable auto coordination between aileron and rudder.
 .TP
+.B "--disable-clock-freeze"
+Disable clock freezing so that time advances normally.
+.TP
 .B "--disable-clouds"
 Disable cloud rendering.
 .TP
 .B "--disable-distance-attenuation"
 Disable runway light distance attenuation.
+.TP
+.B "--disable-enhanced-lighting"
+Disable enhanced runway lighting.
 .TP
 .B "--disable-freeze"
 Start out in a running state.
@@ -91,8 +115,14 @@ Disable fullscreen mode.
 .B "--disable-game-mode"
 Disable fullscreen game mode.
 .TP
+.B "--disable-horizon-effect"
+Disable celestial body growth illusion near the horizon..
+.TP
 .B "--disable-hud"
-Disable HUD.
+Disable 2D HUD.
+.TP
+.B "--disable-hud-3d"
+Disable 3D HUD.
 .TP
 .B "--disable-intro-music"
 Disable introduction music.
@@ -115,6 +145,9 @@ Disable sky blending.
 .B "--disable-sound"
 Disable sound effects.
 .TP
+.B "--disable-specular-highlight"
+Disable specular reflections on textured objects.
+.TP
 .B "--disable-splash-screen"
 Disable splash screen.
 .TP
@@ -130,11 +163,17 @@ Enable anti-aliased HUD.
 .B "--enable-auto-coordination"
 Enable auto coordination between aileron and rudder.
 .TP
+.B "--enable-clock-freeze"
+Enable clock freezing so that time does not advance.
+.TP
 .B "--enable-clouds"
 Enable cloud rendering.
 .TP
 .B "--enable-distance-attenuation"
 Enable runway light distance attenuation.
+.TP
+.B "--enable-enhanced-lighting"
+Enable enhanced runway lighting.
 .TP
 .B "--enable-freeze"
 Start out in a frozen state.
@@ -148,8 +187,14 @@ Enable fullscreen mode.
 .B "--enable-game-mode"
 Enable fullscreen game mode.
 .TP
+.B "--enable-horizon-effect"
+Enable celestial body growth illusion near the horizon.
+.TP
 .B "--enable-hud"
-Enable HUD.
+Enable 2D HUD.
+.TP
+.B "--enable-hud-3d"
+Enable 3D HUD.
 .TP
 .B "--enable-intro-music"
 Enable introduction music.
@@ -173,6 +218,9 @@ Enable sky blending.
 .B "--enable-sound"
 Enable sound effects.
 .TP
+.B "--enable-specular-highlight"
+Enable specular reflections on textured objects.
+.TP
 .B "--enable-splash-screen"
 Enable splash screen.
 .TP
@@ -182,9 +230,13 @@ Enable textures.
 .B "--enable-wireframe"
 Enable wireframe drawing mode.
 .TP
+.BI "--failure=" "system"
+Fail a system on the aircraft.  System may be one of pitot, static, vacuum,
+or electrical.  Multiple instances allowed.
+.TP
 .BI "--fdm=" "name"
-Specify the flight dynamics model to use.  Can be one of jsb, larcsim, yasim,
-magic, balloon, ada, external, or null.
+Specify the flight dynamics model to use.  Name may be one of jsb, larcsim,
+yasim, magic, balloon, ada, external, or null.
 .TP
 .BI "--fg-root=" "path"
 Specify the root path for data files.
@@ -271,6 +323,14 @@ Open an IO connection using the FlightGear Native FDM protocol.
 .BI "--native=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection using the FlightGear Native protocol.
 .TP
+.BI "--nav1=" "[radial:]frequency"
+Specify the initial NAV1 radio frequency.  Optionally may be preceded by a
+radial value.
+.TP
+.BI "--nav2=" "[radial:]frequency"
+Specify the initial NAV2 radio frequency.  Optionally may be preceded by a
+radial value.
+.TP
 .BI "--ndb=" "ID"
 Specify starting position relative to an NDB.
 .TP
@@ -345,6 +405,9 @@ Specify a starting date/time with respect to your local system time.
 .TP
 .BI "--telnet=" "port"
 Start a telnet interface to the property manager on the specified port.
+.TP
+.BI "--timeofday=" "value"
+Specify a time of day.  Value may be one of dawn, dusk, noon, or midnight.
 .TP
 .B "--time-match-local"
 Synchronize time with local real-world time.
