@@ -474,7 +474,7 @@ FGInput::_init_joystick ()
     for (j = 0; j < (int)nb_axes; j++) {
       const SGPropertyNode * axis_node = axes[j];
       const SGPropertyNode * num_node = axis_node->getChild("number");
-      size_t n_axis = axis_node->getIndex();
+      int n_axis = axis_node->getIndex();
       if (num_node != 0) {
           n_axis = num_node->getIntValue(TGT_PLATFORM, -1);
 
