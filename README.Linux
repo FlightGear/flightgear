@@ -1,0 +1,141 @@
+Aug 27, 1998
+============
+
+This is a short description of the things I had to do to get
+FlightGear up and running under Linux.
+
+1. Prerequisites:
+
+Linux (of any Flavour), a 3DFX-card (Voodoo1 in my case). 3D
+operations without hardware support can force even the fastest PII to
+its knees.... To make use of the accelerator board you need
+
+- the GLIDE library installed. Grab it at:
+
+	http://www.3dfx.com/software/download_glidel.html
+
+and install. There is even an install script contained that will do
+things for you. The canonical place for GLIDE is /usr/local/glide, if
+you prefer another location, you'll have to edit the Makefile for
+FlightGear by hand. Be sure to read and understand the file
+/usr/local/glide/README.
+
+- the MESA library version 2.6 (or greater) installed.
+
+Grab it at"
+
+	ftp://iris.ssec.wisc.edu/pub/Mesa
+
+unpack it and run "make linux-glide" in the Mesa directory. Follow the
+instructions in the README file, take a close look at README.3DFX and
+play with the demo programs. Relax, rejoice :-)
+
+- the GLUT library version 3.7 (or greater, aka GameGLUT) installed.
+
+Grab it at:
+
+	http://reality.sgi.com/opengl/glut3/glut3.html
+
+  Note: glut-3.7 is included with Mesa 3.0 so if you've already
+grabbed the latest version of mesa, you should have everything you
+need.
+
+2. Build FlightGear:
+
+You will need the following files:
+
+	FlightGear-x.xx.tar.gz 
+	az-patch-x.xx.tar.gz
+	base-x.xx.tar.gz 
+	textures-x.xx.tar.gz
+
+to get started. Sound is optional.
+
+	sounds-x.xx.tar.gz
+
+Unpack FlightGear-x.xx.tar.gz using :
+
+	tar xvfz FlightGear-x.xx.tar.gz
+
+and cd info FlightGear-x.xx. Run:
+
+	./configure
+
+and wait a few minutes. configure knows about a lot of options. Have a
+look at the file INSTALL in the FlightGear source directory to learn
+about them. If run without options, configure assumes that you will
+install the data files under /usr/local/lib/FlightGear. Assuming
+configure finished successfully, simply run
+
+	make
+
+and wait for the make process to finish. Now become root (for example
+by using the su command) and type
+
+	make install
+
+This will install the binaries in /usr/local/bin. Notice that the name
+of the FlightGear binary is "fg", so simply typing "fg" at the prompt
+will give you
+
+	fg: No such job
+
+since fg is a shell internal. Use the "runfg" script instead! Later
+versions of FlightGear will be named "fgfs", so watch out!
+
+Another problem with Linux/Glide is permission-related. All programs
+accessing the Accelerator board need root permissions. The solution is
+either to play as root or make the /usr/local/bin/fg binary "setuid
+root", i.e. when this binary is run root priviledges are given. Do
+this by issuing (as root)
+
+	chmod +s /usr/local/bin/fg
+
+A solution for this problem is upcoming, keep an eye on the 3Dfx
+website.
+
+3. Install the data files
+
+Change to /usr/local/lib/FlightGear and unpack the data files:
+
+	tar xvfz WHERE_YOUDOWNLOADED_THE_FILES/az-patch-x.xx.tar.gz 
+	tar xvfzWHERE_YOU DOWNLOADED_THE_FILES/base-x.xx.tar.gz 
+	tar xvfz WHERE_YOU DOWNLOADED_THE_FILES/textures-x.xx.tar.gz
+
+That's it...
+
+4. Fly!
+
+If everything went ok, simply type
+
+	runfg
+
+at the prompt. You should see the FlightGear splash-screen and a few
+seconds later you'll find youself somewhere in the desert, ready for
+take-off.
+
+5. Strange things happen...
+
+A note on the behaviour of Voodoo boards:
+
+Your card comes packaged with a loop-through-cable. If you have only
+one monitor, then the Voodoo will take it over when used. This means
+that all the applications on your desktop will continue running but
+you'll only see the FlightGear screen. If your window manager uses a
+focus-follows-mouse policy, don't move the mouse. If you lose the
+focus, there's no way to shut down FlightGear graciously! Better
+solution: Use two monitors, one for your desktop, connect the other
+one to your accelerator. You'll then get a window on your desktop
+which manages all keyboard events and you're still able to see your
+desktop.
+
+Enjoy!
+
+6. Conclusion
+
+I hope this document provides some help. If it does, send virtual/real
+beer to me, if not flame me!
+
+Bernhard H. Buckel
+<buckel@wmad95.mathematik.uni-wuerzburg.de>
+
