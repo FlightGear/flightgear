@@ -27,7 +27,6 @@
 #ifndef _FG_DEBUG_H
 #define _FG_DEBUG_H
 
-
 #ifdef __cplusplus                                                          
 extern "C" {                            
 #endif                                   
