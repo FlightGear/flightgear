@@ -77,9 +77,12 @@ void gen_idx_array(struct bucket *p1, struct bucket *tiles,
 
 
 /* $Log$
-/* Revision 1.6  1998/01/22 02:59:42  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.1  1998/01/23 20:06:52  curt
+/* tileutils.* renamed to bucketutils.*
 /*
+ * Revision 1.6  1998/01/22 02:59:42  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.5  1998/01/14 02:19:05  curt
  * Makde offset_bucket visible to outside.
  *

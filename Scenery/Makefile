@@ -27,8 +27,8 @@
 ARLIBRARY = libScenery.a
 TARGETS = $(ARLIBRARY)
 
-CFILES = common.c geometry.c mesh.c obj.c scenery.c texload.c \
-	tilemgr.c tileutils.c
+CFILES =  bucketutils.c common.c geometry.c mesh.c obj.c scenery.c texload.c \
+	tilemgr.c
 CXXFILES = 
 
 LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)
