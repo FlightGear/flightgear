@@ -301,10 +301,10 @@ void FGElectricalSystem::update (double dt) {
         connectors[i]->set_value( 0.0 );
     }
 
-    // for each supplier, propogate the electrical current
+    // for each supplier, propagate the electrical current
     for ( i = 0; i < suppliers.size(); ++i ) {
         // cout << " Updating: " << suppliers[i]->get_name() << endl;
-        propogate( suppliers[i], 0.0, " " );
+        propagate( suppliers[i], 0.0, " " );
     }
 
 }
@@ -346,8 +346,8 @@ bool FGElectricalSystem::build () {
 }
 
 
-// propogate the electrical current through the network
-void FGElectricalSystem::propogate( FGElectricalComponent *node, double val,
+// propagate the electrical current through the network
+void FGElectricalSystem::propagate( FGElectricalComponent *node, double val,
                                     string s ) {
     s += " ";
 
@@ -388,9 +388,9 @@ void FGElectricalSystem::propogate( FGElectricalComponent *node, double val,
     }
     // cout << s << node->get_name() << " -> " << node->get_value() << endl;
 
-    // propogate to all children
+    // propagate to all children
     for ( i = 0; i < node->get_num_outputs(); ++i ) {
-        propogate( node->get_output(i), current, s );
+        propagate( node->get_output(i), current, s );
     }
 }
 

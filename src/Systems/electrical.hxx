@@ -204,7 +204,7 @@ public:
     virtual void update (double dt);
 
     bool build ();
-    void propogate( FGElectricalComponent *node, double val, string s = "" );
+    void propagate( FGElectricalComponent *node, double val, string s = "" );
     FGElectricalComponent *find ( const string &name );
 
 protected:
