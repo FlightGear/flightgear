@@ -191,7 +191,7 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
 {
     int mode = GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE;
     if(alpha) mode |= GLUT_ALPHA;
-    if(stencil) mode |= GLUT_STENCIL;
+    if(stencil && bpp > 16) mode |= GLUT_STENCIL;
 
     glutInitDisplayMode(mode);
     glutInitWindowSize(w, h);
