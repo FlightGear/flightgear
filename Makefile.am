@@ -7,7 +7,7 @@ EXTRA_DIST = FG-FAQ.v3 README.Unix README.Linux README.MacOS README.Win32 \
 	README.running Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
 
 dist-hook:
-	tar cf - hints | (cd $(distdir); tar xvf -)
+	tar cf - docs-mini hints | (cd $(distdir); tar xvf -)
 	# tar cf - Simulator/FDM/JSBsim/aircraft Simulator/FDM/JSBsim/engine | (cd $(distdir); tar xvf -)
 
 
