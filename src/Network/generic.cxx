@@ -59,11 +59,13 @@ FGGeneric::FGGeneric(string& config) {
 
     _out_message.clear();
     SGPropertyNode *output = root.getNode("generic/output");
-    read_config(output, _out_message);
+    if (output)
+        read_config(output, _out_message);
 
     _in_message.clear();
     SGPropertyNode *input = root.getNode("generic/input");
-    read_config(input, _in_message);
+    if (input)
+        read_config(input, _in_message);
 }
 
 FGGeneric::~FGGeneric() {
@@ -126,13 +128,16 @@ bool FGGeneric::gen_message() {
 bool FGGeneric::parse_message() {
     char *p2, *p1 = buf;
     double val;
-    int i = 0;
+    int i = -1;
 
-    while (p1 && strcmp(p1, line_separator.c_str())) {
+    while ((++i < _in_message.size()) &&
+           p1 && strcmp(p1, line_separator.c_str())) {
 
         p2 = strstr(p1, var_separator.c_str());
-        if (p2)
-            *(p2++) = 0;
+        if (p2) {
+            *p2 = 0;
+            p2 += var_separator.length();
+        }
 
         switch (_in_message[i].type) {
         case FG_INT:
@@ -141,7 +146,7 @@ bool FGGeneric::parse_message() {
             break;
 
         case FG_BOOL:
-            _in_message[i].prop->setBoolValue( atoi(p1) != 0 );
+            _in_message[i].prop->setBoolValue( atof(p1) != 0.0 );
             break;
 
         case FG_DOUBLE:
@@ -154,7 +159,6 @@ bool FGGeneric::parse_message() {
         }
 
         p1 = p2;
-        i++;
     }
     
     return true;
