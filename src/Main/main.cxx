@@ -81,7 +81,7 @@
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <GUI/sgVec3Slider.hxx>
-#include <Joystick/joystick.hxx>
+// #include <Joystick/joystick.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -97,6 +97,8 @@
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
 #include <Time/tmp.hxx>
+
+#include <Input/input.hxx>
 
 // begin - added Venky
 //    $$$ begin - added VS Renganathan
@@ -717,6 +719,9 @@ void fgRenderFrame( void ) {
 	// glDisable( GL_CULL_FACE );
 	// glDisable( GL_TEXTURE_2D );
 
+	// update the input subsystem
+	current_input.update();
+
 	// update the controls subsystem
 	controls.update();
 
@@ -901,10 +906,10 @@ static void fgMainLoop( void ) {
 
 #if defined( ENABLE_PLIB_JOYSTICK )
     // Read joystick and update control settings
-    if ( fgGetString("/sim/control-mode") == "joystick" )
-    {
-	fgJoystickRead();
-    }
+    // if ( fgGetString("/sim/control-mode") == "joystick" )
+    // {
+    //    fgJoystickRead();
+    // }
 #elif defined( ENABLE_GLUT_JOYSTICK )
     // Glut joystick support works by feeding a joystick handler
     // function to glut.  This is taken care of once in the joystick
@@ -1342,8 +1347,10 @@ int fgGlutInitEvents( void ) {
     glutReshapeFunc( fgReshape );
 
     // call GLUTkey() on keyboard event
-    glutKeyboardFunc( GLUTkey );
-    glutSpecialFunc( GLUTspecialkey );
+    glutKeyboardFunc(GLUTkey);
+    glutKeyboardUpFunc(GLUTkeyup);
+    glutSpecialFunc(GLUTspecialkey);
+    glutSpecialUpFunc(GLUTspecialkeyup);
 
     // call guiMouseFunc() whenever our little rodent is used
     glutMouseFunc ( guiMouseFunc );
