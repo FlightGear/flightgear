@@ -10,6 +10,7 @@ libNetwork_a_SOURCES = \
 	garmin.cxx garmin.hxx \
 	nmea.cxx nmea.hxx \
 	pve.cxx pve.hxx \
-	rul.cxx rul.hxx
+	rul.cxx rul.hxx \
+	joyclient.cxx joyclient.hxx
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/src

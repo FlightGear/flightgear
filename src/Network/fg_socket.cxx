@@ -106,6 +106,8 @@ int FGSocket::make_client_socket () {
     struct sockaddr_in name;
     struct hostent *hp;
      
+    FG_LOG( FG_IO, FG_INFO, "Make client socket()" );
+
     // Create the socket.
     sock = socket (PF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
