@@ -154,12 +154,10 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	//cout << "FGAILocalTraffic.Init(...) called" << endl;
 	// Hack alert - Hardwired path!!
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
-	SGPath path = globals->get_fg_root();
-	path.append(planepath);
-        ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
-                                          planepath.c_str(),
-                                          globals->get_props(),
-                                          globals->get_sim_time_sec() );
+	ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
+	                                  planepath.c_str(),
+	                                  globals->get_props(),
+	                                  globals->get_sim_time_sec() );
 	aip.init( model );
 	aip.setVisible(false);		// This will be set to true once a valid ground elevation has been determined
 	globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
