@@ -40,7 +40,6 @@
 #include <string>
 
 #include <Include/fg_constants.h>
-#include <Include/general.h>
 
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
@@ -49,7 +48,6 @@
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
-// #include <Debug/fg_debug.h>
 #include <Debug/logstream.hxx>
 #include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
@@ -381,6 +379,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.60  1999/01/07 20:25:09  curt
+// Updated struct fgGENERAL to class FGGeneral.
+//
 // Revision 1.59  1998/12/18 23:40:57  curt
 // New frame rate counting mechanism.
 //

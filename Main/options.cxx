@@ -617,6 +617,7 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--units-meters:  Hud displays units in meters\n");
     printf("\t--hud-tris:  Hud displays number of triangles rendered\n");
     printf("\t--hud-culled:  Hud displays percentage of triangles culled\n");
+    printf("\n");
 	
     printf("Time Options:\n");
     printf("\t--time-offset=[+-]hh:mm:ss:  offset local time by this amount\n");
@@ -629,6 +630,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.36  1999/01/07 20:25:10  curt
+// Updated struct fgGENERAL to class FGGeneral.
+//
 // Revision 1.35  1998/12/06 14:52:57  curt
 // Fixed a problem with the initial starting altitude.  "v->abs_view_pos" wasn't
 // being calculated correctly at the beginning causing the first terrain

@@ -49,7 +49,7 @@
 #endif
 
 #include <Include/fg_constants.h>  // for VERSION
-#include <Include/general.h>
+#include <Include/general.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Astro/sky.hxx>
@@ -85,8 +85,8 @@
 #include "views.hxx"
 
 
-// This is a record containing global housekeeping information
-fgGENERAL general;
+// This is a record containing a bit of global housekeeping information
+FGGeneral general;
 
 // Specify our current idle function state.  This is used to run all
 // our initializations out of the glutIdleLoop() so that we can get a
@@ -450,7 +450,6 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // for the next move and update the display?
 static void fgMainLoop( void ) {
     FGState *f;
-    fgGENERAL *g;
     fgTIME *t;
     static int remainder = 0;
     int elapsed, multi_loop;
@@ -460,7 +459,6 @@ static void fgMainLoop( void ) {
     static int frames = 0;
 
     f = current_aircraft.fdm_state;
-    g = &general;
     t = &cur_time_params;
 
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
@@ -520,7 +518,7 @@ static void fgMainLoop( void ) {
 
     // Calculate frame rate average
     if ( (t->cur_time != last_time) && (last_time > 0) ) {
-	g->frame_rate = frames;
+	general.set_frame_rate( frames );
 	frames = 0;
     }
     last_time = t->cur_time;
@@ -546,7 +544,7 @@ static void fgMainLoop( void ) {
     if ( ! use_signals ) {
 	// Calculate model iterations needed for next frame
 	FG_LOG( FG_ALL, FG_DEBUG, 
-		"--> Frame rate is = " << g->frame_rate );
+		"--> Frame rate is = " << general.get_frame_rate() );
 	elapsed += remainder;
 
 	multi_loop = (int)(((float)elapsed * 0.001) * DEFAULT_MODEL_HZ);
@@ -655,9 +653,6 @@ static void fgMainLoop( void ) {
 // then on.
 
 static void fgIdleFunction ( void ) {
-    fgGENERAL *g;
-    g = &general;
-
     // printf("idle state == %d\n", idle_state);
 
     if ( idle_state == 0 ) {
@@ -688,7 +683,7 @@ static void fgIdleFunction ( void ) {
 	// "subsystems" but still need to be initialized.
 
 #ifdef USE_GLIDE
-	if ( strstr ( g->glRenderer, "Glide" ) ) {
+	if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
 	    grTexLodBiasValue ( GR_TMU0, 1.0 ) ;
 	}
 #endif
@@ -854,11 +849,11 @@ int fgGlutInit( int *argc, char **argv ) {
     // This seems to be the absolute earliest in the init sequence
     // that these calls will return valid info.  Too bad it's after
     // we've already created and sized out window. :-(
-    general.glVendor = (char *)glGetString ( GL_VENDOR );
-    general.glRenderer = (char *)glGetString ( GL_RENDERER );
-    general.glVersion = (char *)glGetString ( GL_VERSION );
+    general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
+    general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
+    general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
 
-    FG_LOG ( FG_GENERAL, FG_INFO, general.glRenderer );
+    FG_LOG ( FG_GENERAL, FG_INFO, general.get_glRenderer() );
 
 #if 0
     // try to determine if we should adjust the initial default
@@ -1007,6 +1002,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.78  1999/01/07 20:25:08  curt
+// Updated struct fgGENERAL to class FGGeneral.
+//
 // Revision 1.77  1998/12/18 23:40:55  curt
 // New frame rate counting mechanism.
 //

@@ -42,6 +42,10 @@
 #include "views.hxx"
 
 
+// temporary (hopefully) hack
+static int panel_hist = 0;
+
+
 // specify code paths ... these are done as variable rather than
 // #define's because down the road we may want to choose between them
 // on the fly for different flight models ... this way magic carpet
@@ -599,6 +603,9 @@ FGView::~FGView( void ) {
 
 
 // $Log$
+// Revision 1.32  1999/01/07 20:25:12  curt
+// Updated struct fgGENERAL to class FGGeneral.
+//
 // Revision 1.31  1998/12/11 20:26:28  curt
 // Fixed view frustum culling accuracy bug so we can look out the sides and
 // back without tri-stripes dropping out.

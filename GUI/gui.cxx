@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <Include/general.h>
+#include <Include/general.hxx>
 #include <Main/options.hxx>
 
 #include "gui.h"
@@ -132,10 +132,7 @@ puCallback helpSubmenuCb        [] = { notCb, notCb, NULL };
 
 void guiInit()
 {
-    fgGENERAL *g;
     char *mesa_win_state;
-
-    g = &general;
 
     // Initialize PUI
     puInit();
@@ -144,7 +141,7 @@ void guiInit()
 	// no preference specified for mouse pointer, attempt to autodetect...
 	// Determine if we need to render the cursor, or if the windowing
 	// system will do it.  First test if we are rendering with glide.
-	if ( strstr ( g->glRenderer, "Glide" ) ) {
+	if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
 	    // Test for the MESA_GLX_FX env variable
 	    if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
 		// test if we are fullscreen mesa/glide
