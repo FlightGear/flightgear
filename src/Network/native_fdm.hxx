@@ -39,7 +39,6 @@ class FGNativeFDM : public FGProtocol, public FGInterface {
 
     FGNetFDM buf;
     int length;
-    SGTimeStamp last_time;
 
 public:
 

@@ -1019,10 +1019,24 @@ static void fgMainLoop( void ) {
         last_time_stamp.stamp();
         first_time = false;
     }
-    current_time_stamp.stamp();
+
+    double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
+    if ( throttle_hz > 0.0 ) {
+        // simple frame rate throttle
+        double dt = 1000000.0 / throttle_hz;
+        current_time_stamp.stamp();
+        while ( current_time_stamp - last_time_stamp < dt ) {
+            current_time_stamp.stamp();
+        }
+    } else {
+        // run as fast as the app will go
+        current_time_stamp.stamp();
+    }
+
     delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
-    if (clock_freeze->getBoolValue())
+    if ( clock_freeze->getBoolValue() ) {
         delta_time_sec = 0;
+    }
     last_time_stamp = current_time_stamp;
     globals->inc_sim_time_sec( delta_time_sec );
     SGAnimation::set_sim_time_sec( globals->get_sim_time_sec() );

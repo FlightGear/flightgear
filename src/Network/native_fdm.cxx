@@ -406,23 +406,15 @@ bool FGNativeFDM::process() {
 		FGNetFDM2Props( &buf );
 	    }
 	} else {
-            // double dt = 1000000.0 / 30.0;
-            // SGTimeStamp current; current.stamp();
             int result;
             result = io->read( (char *)(& buf), length );
-            if ( result == length ) {
-                SG_LOG( SG_IO, SG_DEBUG, "  Success reading data." );
-                FGNetFDM2Props( &buf );
-            }
-	    while ( result == length /* || current - last_time < dt */ ) {
-                result = io->read( (char *)(& buf), length );
+	    while ( result == length ) {
                 if ( result == length ) {
                     SG_LOG( SG_IO, SG_DEBUG, "  Success reading data." );
                     FGNetFDM2Props( &buf );
                 }
-                // current.stamp();
+                result = io->read( (char *)(& buf), length );
 	    }
-            // last_time = current;
 	}
     }
 
