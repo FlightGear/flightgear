@@ -1093,9 +1093,9 @@ fgInitProps ()
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
   fgTie("/sim/freeze", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
-  fgTie("/sim/view/offset-deg", getViewOffset, setViewOffset);
+  fgTie("/sim/view/offset-deg", getViewOffset, setViewOffset, false);
   fgSetArchivable("/sim/view/offset-deg");
-  fgTie("/sim/view/goal-offset-deg", getGoalViewOffset, setGoalViewOffset);
+  fgTie("/sim/view/goal-offset-deg", getGoalViewOffset, setGoalViewOffset, false);
   fgSetArchivable("/sim/view/goal-offset-deg");
   fgTie("/sim/view/pilot/x-offset-m",
 	getPilotPositionXOffset, setPilotPositionXOffset);
