@@ -25,10 +25,14 @@
 #define STRUTILS_H
 
 #include <string>
-#include <cstdlib>
+// #include <cstdlib>
+#include <stdlib.h>
+
+#include "Include/fg_stl_config.h"
+_FG_USING_NAMESPACE(std);
 
 // Default characters to remove.
-const string whitespace = " \n\r\t";
+extern const string whitespace;
 
 // Returns a string with trailing characters removed.
 string trimleft( const string& s, const string& trimmings = whitespace );
@@ -56,6 +60,9 @@ atoi( const string& str )
 #endif // STRUTILS_H
 
 // $Log$
+// Revision 1.2  1998/10/13 00:10:07  curt
+// More portability changes to help with windoze compilation problems.
+//
 // Revision 1.1  1998/09/01 19:06:31  curt
 // Initial revision.
 //

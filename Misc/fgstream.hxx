@@ -34,6 +34,9 @@
 
 #include <string>
 
+#include "Include/fg_stl_config.h"
+_FG_USING_NAMESPACE(std);
+
 #include "zfstream.hxx"
 
 //-----------------------------------------------------------------------------
@@ -102,6 +105,9 @@ istream& skipcomment( istream& in );
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.3  1998/10/13 00:10:06  curt
+// More portability changes to help with windoze compilation problems.
+//
 // Revision 1.2  1998/09/24 15:22:18  curt
 // Additional enhancements.
 //
