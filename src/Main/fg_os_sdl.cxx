@@ -88,6 +88,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
     // we may want to port the input maps to specify <mod-shift>
     // explicitly, and will turn this off.
     SDL_EnableUNICODE(1);
+    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
     initCursors();
     fgSetMouseCursor(MOUSE_CURSOR_POINTER);
@@ -134,15 +135,16 @@ static void handleKey(int key, int keyup)
     case SDLK_F11:      key = PU_KEY_F11;       break;
     case SDLK_F12:      key = PU_KEY_F12;       break;
     }
+    int keymod = 0;
     if(keyup) {
         CurrentModifiers &= ~modmask;
-        CurrentModifiers |= KEYMOD_RELEASED;
+        keymod = CurrentModifiers | KEYMOD_RELEASED;
     } else {
         CurrentModifiers |= modmask;
-        CurrentModifiers &= ~KEYMOD_RELEASED;
+        keymod = CurrentModifiers & ~KEYMOD_RELEASED;
     }
     if(modmask == 0 && KeyHandler)
-        (*KeyHandler)(key, CurrentModifiers, CurrentMouseX, CurrentMouseY);
+        (*KeyHandler)(key, keymod, CurrentMouseX, CurrentMouseY);
 }
 
 // FIXME: need to export this and get the rest of FlightGear to use
@@ -158,6 +160,7 @@ void fgOSMainLoop()
 {
     while(1) {
         SDL_Event e;
+        int key;
         while(SDL_PollEvent(&e)) {
             switch(e.type) {
             case SDL_QUIT:
@@ -165,7 +168,9 @@ void fgOSMainLoop()
                 break;
             case SDL_KEYDOWN:
             case SDL_KEYUP:
-                handleKey(e.key.keysym.unicode, e.key.state == SDL_RELEASED);
+                key = e.key.keysym.unicode;
+                if(key == 0) key = e.key.keysym.sym;
+                handleKey(key, e.key.state == SDL_RELEASED);
                 break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
