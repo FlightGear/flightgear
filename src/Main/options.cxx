@@ -230,9 +230,7 @@ fgOPTIONS::fgOPTIONS() :
 	fg_scenery = envp;
     } else {
 	// Otherwise, default to Scenery being in $FG_ROOT/Scenery
-	FGPath tmp( fg_root );
-	tmp.append( "Scenery" );
-	fg_scenery = tmp.str();
+	fg_scenery = "";
     }
 
     airport_id = "";		// default airport id

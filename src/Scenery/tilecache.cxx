@@ -169,7 +169,13 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     tile_cache[index].range_ptr = new ssgRangeSelector;
     tile_cache[index].tile_bucket = p;
 
-    FGPath tile_path( current_options.get_fg_scenery() );
+    FGPath tile_path;
+    if ( current_options.get_fg_scenery() != "" ) {
+	tile_path.set( current_options.get_fg_scenery() );
+    } else {
+	tile_path.set( current_options.get_fg_root() );
+	tile_path.append( "Scenery" );
+    }
     tile_path.append( p.gen_base_path() );
     
     // Load the appropriate data file

@@ -972,6 +972,10 @@ void dumpSnapShot ( puObject *obj ) {
 void fgDumpSnapShot () {
     bool show_pu_cursor = false;
 
+    int freeze = globals->get_freeze();
+    if(!freeze)
+        globals->set_freeze( true );
+
     mainMenuBar->hide();
     TurnCursorOff();
     if ( !puCursorIsHidden() ) {
@@ -980,7 +984,7 @@ void fgDumpSnapShot () {
     }
 
     fgInitVisuals();
-    fgReshape( current_options.get_xsize(), current_options.get_ysize() );
+    fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgFenderFrame() shoulnd't
@@ -1003,6 +1007,8 @@ void fgDumpSnapShot () {
 	mainMenuBar->reveal();
     }
 
+    if(!freeze)
+        globals->set_freeze( false );
 }
 
 

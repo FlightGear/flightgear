@@ -780,8 +780,21 @@ void FGAutopilot::AltitudeAdjust( double inc )
 	target_agl = TargetAGL;
     }
 
-    target_alt = ( int ) ( target_alt / inc ) * inc + inc;
-    target_agl = ( int ) ( target_agl / inc ) * inc + inc;
+    // cout << "target_agl = " << target_agl << endl;
+    // cout << "target_agl / inc = " << target_agl / inc << endl;
+    // cout << "(int)(target_agl / inc) = " << (int)(target_agl / inc) << endl;
+
+    if ( fabs((int)(target_alt / inc) * inc - target_alt) < FG_EPSILON ) {
+	target_alt += inc;
+    } else {
+	target_alt = ( int ) ( target_alt / inc ) * inc + inc;
+    }
+
+    if ( fabs((int)(target_agl / inc) * inc - target_agl) < FG_EPSILON ) {
+	target_agl += inc;
+    } else {
+	target_agl = ( int ) ( target_agl / inc ) * inc + inc;
+    }
 
     if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
 	target_alt *= FEET_TO_METER;

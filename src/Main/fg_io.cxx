@@ -132,31 +132,29 @@ static FGProtocol *parse_port_config( const string& config )
     FG_LOG( FG_IO, FG_INFO, "  hertz = " << hertz );
 
     if ( medium == "serial" ) {
-	SGSerial *ch = new SGSerial;
-	io->set_io_channel( ch );
-
 	// device name
 	end = config.find(",", begin);
 	if ( end == string::npos ) {
 	    return NULL;
 	}
     
-	ch->set_device( config.substr(begin, end - begin) );
+	string device = config.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_INFO, "  device = " << ch->get_device() );
+	FG_LOG( FG_IO, FG_INFO, "  device = " << device );
 
 	// baud
-	ch->set_baud( config.substr(begin) );
-	FG_LOG( FG_IO, FG_INFO, "  baud = " << ch->get_baud() );
+	string baud = config.substr(begin);
+	FG_LOG( FG_IO, FG_INFO, "  baud = " << baud );
 
+	SGSerial *ch = new SGSerial( device, baud );
 	io->set_io_channel( ch );
     } else if ( medium == "file" ) {
-	SGFile *ch = new SGFile;
-	io->set_io_channel( ch );
-
 	// file name
-	ch->set_file_name( config.substr(begin) );
-	FG_LOG( FG_IO, FG_INFO, "  file name = " << ch->get_file_name() );
+	string file = config.substr(begin);
+	FG_LOG( FG_IO, FG_INFO, "  file name = " << file );
+
+	SGFile *ch = new SGFile( file );
+	io->set_io_channel( ch );
     } else if ( medium == "socket" ) {
 	// hostname
 	end = config.find(",", begin);
