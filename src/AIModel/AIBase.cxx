@@ -63,6 +63,7 @@ bool FGAIBase::init() {
    } 
 
    tgt_roll = tgt_pitch = tgt_yaw = tgt_vs = vs = roll = pitch = 0.0;
+   setDie(false);
 }
 
 
