@@ -202,6 +202,7 @@ static int viewable( fgCartesianPoint3d *cp, double radius ) {
     fgVIEW *v;
     MAT3hvec world, eye;
     int viewable = 1; // start by assuming it's viewable
+    double x0, x1, y1, slope;
 
     v = &current_view;
 
@@ -209,16 +210,69 @@ static int viewable( fgCartesianPoint3d *cp, double radius ) {
     MAT3mult_vec(eye, world, v->WORLD_TO_EYE);
     // printf( "\nworld -> eye = %.2f %.2f %.2f  radius = %.2f\n", 
     //         eye[0], eye[1], eye[2], radius);
-    
+
+    // Check near clip plane
     if ( eye[2] - radius > 0.0 ) {
-	// Check near clip plane
-	viewable = 0;
-    } else if ( eye[1] < -(v->slope_x) * (eye[0] + radius) ) {
-	// Check left edge
-	// y = m * (x - x0) = equation of a line intercepting X axis at x0
-	printf( "eye[1] = %.2f  slope_x = %.2f  radius = %.2f\n", 
-		eye[1], v->slope_x, radius);
-	viewable = 0;
+	return(0);
+    }
+
+    // check right clip plane (from eye perspective)
+    // y = m * (x - x0) = equation of a line intercepting X axis at x0
+    x1 = v->cos_fov_x * radius;
+    y1 = v->sin_fov_x * radius;
+    slope = -1.0 / v->slope_x;
+    x0 = x1 - y1 / slope;
+
+    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
+    // printf("eye[0] = %.2f  eye[2] = %.2f\n", eye[0], eye[2]);
+    // printf("(r) x0 = %.2f  slope_x = %.2f  radius = %.2f\n", 
+    //        x0, slope, radius);
+
+    if ( eye[2] > slope * (eye[0] - x0) ) {
+	return(0);
+    }
+
+    // check left clip plane (from eye perspective)
+    x1 = -x1;
+    slope = -slope;
+    x0 = x1 - y1 / slope;
+
+    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
+    // printf("eye[0] = %.2f  eye[2] = %.2f\n", eye[0], eye[2]);
+    // printf("(r) x0 = %.2f  slope_x = %.2f  radius = %.2f\n", 
+    //        x0, slope, radius);
+
+    if ( eye[2] > slope * (eye[0] - x0) ) {
+	return(0);
+    }
+
+    // check bottom clip plane (from eye perspective)
+    x1 = -(v->cos_fov_y) * radius;
+    y1 = v->sin_fov_y * radius;
+    slope = 1.0 / v->slope_y;
+    x0 = x1 - y1 / slope;
+
+    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
+    // printf("eye[1] = %.2f  eye[2] = %.2f\n", eye[1], eye[2]);
+    // printf("(r) x0 = %.2f  slope_y = %.2f  radius = %.2f\n", 
+    //       x0, slope, radius);
+
+    if ( eye[2] > slope * (eye[1] - x0) ) {
+	return(0);
+    }
+
+    // check top clip plane (from eye perspective)
+    x1 = -x1;
+    slope = -slope;
+    x0 = x1 - y1 / slope;
+
+    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
+    // printf("eye[1] = %.2f  eye[2] = %.2f\n", eye[1], eye[2]);
+    // printf("(r) x0 = %.2f  slope_y = %.2f  radius = %.2f\n", 
+    //        x0, slope, radius);
+
+    if ( eye[2] > slope * (eye[1] - x0) ) {
+	return(0);
     }
 
     return(viewable);
@@ -229,6 +283,7 @@ static int viewable( fgCartesianPoint3d *cp, double radius ) {
 void fgTileMgrRender( void ) {
     fgFLIGHT *f;
     fgOPTIONS *o;
+    fgVIEW *v;
     struct fgBUCKET p;
     fgCartesianPoint3d local_ref, offset;
     GLint display_list;
@@ -240,6 +295,7 @@ void fgTileMgrRender( void ) {
 
     f = current_aircraft.flight;
     o = &current_options;
+    v = &current_view;
 
     /* Find current translation offset */
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
@@ -274,18 +330,21 @@ void fgTileMgrRender( void ) {
 	}
     }
 
-    printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
-	   (double)culled / (double)(drawn + culled));
-
+    v->vfc_ratio = (double)culled / (double)(drawn + culled);
+    // printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
+    //        v->vfc_ratio);
 }
 
 
 /* $Log$
-/* Revision 1.9  1998/05/16 13:09:58  curt
-/* Beginning to add support for view frustum culling.
-/* Added some temporary code to calculate bouding radius, until the
-/*   scenery generation tools and scenery can be updated.
+/* Revision 1.10  1998/05/17 16:59:34  curt
+/* Frist pass at view frustum culling now operational.
 /*
+ * Revision 1.9  1998/05/16 13:09:58  curt
+ * Beginning to add support for view frustum culling.
+ * Added some temporary code to calculate bouding radius, until the
+ *   scenery generation tools and scenery can be updated.
+ *
  * Revision 1.8  1998/05/07 23:15:21  curt
  * Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
  * Added support for --tile-radius=n option.
