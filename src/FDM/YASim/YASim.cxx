@@ -179,9 +179,9 @@ void YASim::init()
     // The pilot's eyepoint
     float pilot[3];
     a->getPilotPos(pilot);
-    fgSetFloat("/sim/view/pilot/x-offset-m", -pilot[0]);
-    fgSetFloat("/sim/view/pilot/y-offset-m", -pilot[1]);
-    fgSetFloat("/sim/view/pilot/z-offset-m", pilot[2]);
+//     fgSetFloat("/sim/view/pilot/x-offset-m", -pilot[0]);
+//     fgSetFloat("/sim/view/pilot/y-offset-m", -pilot[1]);
+//     fgSetFloat("/sim/view/pilot/z-offset-m", pilot[2]);
 
     // Blank the state, and copy in ours
     State s;
