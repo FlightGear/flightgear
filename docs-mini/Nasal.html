@@ -1,0 +1,488 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Using Nasal with FlightGear</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<link rel="stylesheet" href="nasal.css">
+</head>
+<body>
+
+<h1>Using Nasal with FlightGear</h1>
+
+<p>This document is a tutorial on how to interface Nasal scripts
+with FlightGear.  It is not an introduction to the Nasal language
+itself.  For that, see Andy's <a
+href="http://www.plausible.org/nasal/">Nasal website</a> at <a
+href="http://www.plausible.org/nasal/">http://www.plausible.org/nasal</a>.
+The information there is sparse, but you should have it ready for
+reference while reading this document.
+
+<h2>Basic Nasal/FlightGear Integration</h2>
+
+<h3>Calling Nasal from Configuration File Bindings</h3>
+
+Nasal scripts can be used as FGBinding objects, and can therefore
+appear anywhere in a configuration file (keyboard, mouse and joystick
+bindings, etc...) that accepts a <code>&lt;binding&gt;</code> tag.
+The relevant command type is "nasal", and you place your Nasal code
+inside of the <code>&lt;script&gt;</code> tag:
+
+<pre>
+&lt;binding&gt;
+ &lt;command&gt;nasal&lt;/command&gt;
+ &lt;script&gt;
+  print("Binding Invoked!");
+ &lt;/script&gt;
+&lt;/binding&gt;
+</pre>
+
+<p>The code above invokes the <code>print()</code> function.  This is
+a simple extension function that simply prints out its arguments, in
+order, to the FlightGear console as a single-line log entry.  It is
+useful for debugging, but little else.
+
+<p>Some command have SGPropertyNode arguments.  This argument is
+available as a <code>props.Node</code> object and is returned from the
+built-in <code>cmdarg()</code> function.  See below for full
+documentation, but as an example the following "joystick axis" binding
+will print the current axis value to the console:
+
+<pre>
+&lt;binding&gt;
+ &lt;command&gt;nasal&lt;/command&gt;
+ &lt;script&gt;print(cmdarg().getNode("value").getValue());&lt;/script&gt;
+&lt;/binding&gt;
+</pre>
+
+<p>Note that the current implementation parses the Nasal code inside
+the <code>&lt;script&gt;</code> tag each time it is run.  This means
+that you should avoid placing large code blocks inside a
+<code>&lt;script&gt;</code> tag for performance reasons.  It also
+means that any local variables you set inside the script will be lost
+the next time it is run.  See the discussion about namespaces and
+Nasal source files below for more information.
+
+<h3>Setting and Inspecting FlightGear Properties</h3>
+
+<h4>getprop() and setprop()</h4>
+
+<p>You can use <code>getprop()</code> and <code>setprop()</code>
+functions to interact with the global property tree.  They work as you
+would expect.  For example, the following Nasal code copies the value
+of the "/sim/foo" property to the "/sim/bar" property:
+
+<pre>setprop("/sim/bar", getprop("/sim/foo"));</pre>
+
+<p>Note that Nasal's notion of "type" is coarser than that of the
+SGPropertyNode class.  Numers and strings come out of
+<code>getprop()</code> as Nasal scalars, of course, and boolean
+properties are converted to a numeric 1 or 0 by
+<code>getprop()</code>.  But <b>all</b> non-string values passed to
+<code>setprop()</code> become doubles in the property tree.  The
+props.Node interface (see below) provides the ability to set explicit
+types in the property tree.
+
+<p>A useful feature of getprop and setprop that you should be aware of
+is that they both accept variable numbers of arguments.  These are
+concatenated together to form a property tree path internally within
+the function.  This avoids the need for extensive string concatenation
+in the script for the common case where you are acting on a variable
+property root.  That is, you can do:
+
+<pre>
+ThisAircraft = "/sim/my/aircraft/properties";
+setprop(ThisAircraft, "crashed", 0);
+</pre>
+
+to set the property "/sim/my/aircraft/properties/crashed" to false.
+This feature is useful for writing Nasal functions that will work on
+parameterized property trees.
+
+<h4>The props module</h4>
+
+<p>Think of the <code>getprop()</code> and <code>setprop()</code>
+functions as equivalents of the <code>fgGet*()</code> and
+<code>fgSet*()</code> C++ functions.  They provide simple and easy
+access to the global property tree.
+
+<p>For some situations, however, you need finer control over the
+property nodes.  For these situations you can use the props module,
+which provides a <code>Node</code> class similar to the SimGear
+<code>SGPropertyNode</code> class.  The global tree is available as a
+<code>Node</code> object named <code>props.globals</code>.  You can
+use the <code>getNode()</code> method on it to retrieve an arbitrary
+sub-node.  The children of any given node can be inspected with
+<code>getChild()</code> and <code>getChildren()</code> methods.  And
+of course its name, index, and value can be accessed with appropriate
+methods.  See the reference below for complete documentation.
+
+<p>As seen above in the discussion on <code>fgcommand()</code>, you
+can also create new, "rootless" <code>Node</code> objects using
+<code>props.Node.new()</code>.
+
+<p>The most powerful method on a Node object is
+<code>setValues()</code>.  This takes a Nasal hash table as its only
+argument, and initializes properties under the node using the
+key/value pairs in the hash.  This works with vectors (i.e. indexed
+properties) and recursively, essentially making a deep copy of a Nasal
+object in the property tree.
+
+<p>For debugging (and amusement) purposes, the <code>props</code>
+modules also defines a <code>dump()</code> function which recursively
+prints the state of a property node to the console.  Try
+<code>props.dump(props.globals)</code> to see it walk the entire tree.
+
+<h3>Invoking FlightGear Commands from Nasal</h3>
+
+<p>Just as Nasal code can be run as a command binding from the
+property tree, existing FlightGear commands can be invoked by Nasal
+code using the <code>fgcommand()</code> function.  The first argument
+to this function is a string, equivalent to what you would place
+inside the <code>&lt;command&gt;</code> tag in a property binding.
+
+The second argument specifies the property tree that will be passed as
+the "arguments" to the command.  It can be a either a string
+specifying a path in the global property tree or a props.Node object.
+Example:
+
+<pre>
+# Use a temporary property in the global tree
+ShowDialog = func {
+    setprop("/nasal/tmp/dialog-args/dialog-name", arg[0];
+    fgcommand("dialog-show", "/nasal/tmp/dialog-args");
+}
+
+# Does the same thing, but with a rootless Node object
+ShowDialog = func {
+    fgcommand("dialog-show", props.Node.new({dialog-name : arg[0]});
+}
+</pre>
+
+These both define a <code>ShowDialog()</code> function, which pops up
+a named dialog from the <fgroot>/gui/dialogs directory.  Calling
+<code>ShowDialog("autopilot")</code> will therefore pop up the
+autopilot dialog just as if it had been bound to a key.
+
+<p>The first variant uses a "temporary" property tree in the global
+property space to hold the arguments.  The second creates a new
+<code>props.Node</code> object instead.  Note that
+<code>props.Node.new()</code> accepts a hash table as its argument and
+uses that to initialize the returned property tree.
+
+<h3>Writing extended Nasal code in source files</h3>
+
+<p>Nasal is a "real" language, with real namespaces and modules.  What
+"really" happens when you run a script binding is that the script is
+treated as a function body and bound (lexically, in the functional
+programming sense) to a single global namespace.  It is as if it were
+enclosed in a <code>func { ... }</code> expression and executed inside
+a "file" containing all the global symbols.
+
+<p>Some symbols in the global namespace are built-in extension
+functions, like the print/getprop/setprop we have already seen.
+Others are objects (or hash tables -- they are the same thing in
+Nasal).  These objects act as namespaces and can contain code of their
+own.  One such example is the math library.  The built-in math
+functions live in their own namespace and are accessible as
+<code>math.sin()</code>, <code>math.cos()</code>, etc...
+
+<p>The global namespace itself is available as a module named
+"globals".  This allows you to create new symbols in the global
+namespace if you desire (be careful!) and to otherwise inspect its
+contents.  It's just a hash table, after all.  The following code will
+print all the symbols found in the global namespace:
+
+<pre>
+print("These are the symbols found in the global namespace:");
+foreach(i; keys(globals)) { print("  ", i); }
+</pre>
+
+<p>You can write your own modules, too.  The mechanism is very simple:
+merely create a file with a ".nas" extension in the Nasal directory of
+your FlightGear base package.  FlightGear will read, parse and execute
+these files during initialization, and create a module of the same
+name for use by your scripts.  So you can write, say, a "mouse.nas"
+script.  Functions defined therein are available to your script
+bindings (and any other nasal code on the system) as members of the
+global "mouse" object.  So you can define bindings that do things like
+<code>mouse.handleXAxis(offset)</code> to call functions defined in
+the mouse.nas file (remember that "offset" is an automatically
+initialized variable containing the binding's offset argument).
+
+<h3>Including Nasal Code from Configuration Files</h3>
+
+<p>Nasal modules can also be imported from the property tree at
+initialization.  This is useful for applications like
+aircraft-specific scripts that need to be loaded only when that
+aircraft is active.  The usage is simple: the Nasal interpreter
+creates a module for every property node child of "/nasal" that it
+finds at initialization time.  Example:
+
+<pre>
+&lt;nasal&gt;
+ &lt;c172&gt;
+  &lt;file&gt;Aircraft/c172/c172.nas&lt;/file&gt;
+ &lt;/c172&gt;
+&lt;/nasal&gt;
+</pre>
+
+This creates a module named "c172" and loads the contents of the
+Aircraft/c172/c172.nas file into it.  The module name is, by default,
+the same as the property node.  But this can be overridden with the
+<code>&lt;module&gt;</code> tag.  This trick can be useful if you need
+to load extra script source into a previously-initialized module.
+
+<p>You can also write literal Nasal scripts inside the property files
+by including it in a <code>&lt;script&gt;</code> tag.  This sample
+uses the <code>&lt;module&gt;</code> tag to add an extra function to
+the math library.
+
+<pre>
+&lt;nasal&gt;
+ &lt;c172-tmp1&gt; &lt;!-- Use a unique, dummy name --&gt;
+  &lt;module&gt;math&lt;/module&gt;
+  &lt;script&gt;&lt;[CDATA[
+
+   # The math library doesn't include this, because Andy is a pedant
+   # and thinks it's dangerous.  But the c172 code just *has* to have
+   # it.
+   atan = func { return atan2(arg[0], 1) }
+
+  ]]&gt;&lt;/script&gt;
+ &lt;/c172-tmp1&gt;
+&lt;/nasal&gt;
+</pre>
+
+Note the use of a CDATA declaration.  This is required to properly
+escape XML special characters like "<code>&lt;</code>".  As it
+happens, this code doesn't use them.  But the CDATA is good practice
+nonetheless.
+
+<h3>Function Reference</h3>
+
+<p>These are the built-in extension functions available to all Nasal
+code in FlightGear.  Be sure to examine the <a
+href="http://www.plausible.org/nasal/doc.html">core Nasal
+documentation</a> at the <a
+href="http://www.plausible.org/nasal">Nasal site</a> as well.  Only
+FlightGear-specific library code is documented here:
+
+<h4>Global Functions</h4>
+
+<dl>
+
+<dt>rand()
+<dd>Returns a random number in the range [0:1) (that is, 0.0 is a
+    possible return value, but 1.0 is not).
+
+<dt>getprop()
+<dd>The arguments are concatenated to form a path to a global
+    property node.  Returns the value of that node, or nil if it does
+    not exist.
+
+<dt>setprop()
+<dd>The final argument specifies a value to set.  The remaining
+    arguments are concatenated to form a property path as in
+    getprop().
+
+<dt>print()
+<dd>The arguments are printed, in order, to the FlightGear console.
+    A newline is appended by the logging code, none is
+    required.
+
+<dt>fgcommand()
+<dd>The first argument is a string specifying a FlightGear command to
+    execute (e.g. "show-dialog").  The second is a property sub-tree
+    (either a global path string or a props.Node object) which will be
+    passed to the command as arguments.
+
+<dt>settimer()
+<dd>The first argument is a Nasal expression which evaluates to a
+    Nasal function object (it can be either a symbol name for a
+    function or a literal <code>func&nbsp;{&nbsp;...&nbsp;}</code>
+    expression.  The second argument is a (floating point) number
+    specifying a delta time in seconds.  Some time after that delta
+    time has elapsed, the specified function will be invoked.  Exact
+    timing will depend on the frame rate of the simulator.
+
+<dt>interpolate()
+<dd>The first argument specifies a property.  It can be either a
+    string representing a global property name or a
+    <code>props.Node</code> object.  The remaining arguments specify
+    pairs of value/delta-time numbers.  The property is interpolated
+    smoothly from its current value to the new value over the
+    specified time delta, in seconds.  Multiple value pairs can be
+    used to indicate successive values or to acheive a piecewise
+    linear approximation to a non-linear function.  This function
+    cancels any preexisting interpolation for that property, so
+    <code>interpolate("/sim/countdown",&nbsp;0,&nbsp;0)</code> has the
+    effect of cancelling interpolation of "/sim/countdown" and setting
+    its value to zero.
+</dl>
+
+<h4>Property Module</h4>
+
+<dl>
+<dt>Node
+<dd>The <code>props.Node</code> class wraps a SGPropertyNode object,
+    either in or outside of the global property tree.  It supports the
+    following methods:
+<dl>
+<dt>getType()
+<dd>Returns the "type" of the SGPropertyNode object.  The return value
+is a string; one of: NONE, ALIAS, BOOL, INT, LONG, FLOAT, DOUBLE,
+STRING or UNSPECIFIED.
+<dt>getName()
+<dd>Returns the name of the property node.
+<dt>getIndex()
+<dd>Returns the child index of the property node.
+<dt>getValue()
+<dd>Returns the current value of the node, or nil if it has none.
+<dt>setValue()
+<dd>Sets the current value as either a string or a double, depending
+on the internal type of the argument.
+<dt>setIntValue()
+<dd>Sets the current value, forcing the type to INT
+<dt>setBoolValue()
+<dd>Sets the current value, forcing the type to BOOL
+<dt>setDoubleValue()
+<dd>Sets the current value, forcing the type to DOUBLE
+<dt>getParent()
+<dd>Returns a Node object representing this node's parent, or nil if
+it has none.
+<dt>getChild()
+<dd>Returns a named child, or nil if it does not exist.  If multiple
+children with that name exist, returns the one with an index of zero.
+<dt>getChildren()
+<dd>Returns a vector containing all the node's children.
+<dt>removeChild()
+<dd>Removes a child by name (first argument) and index (second argument).
+<dt>getNode()
+<dd>Returns a Node specified by its "relative path" to this node, or
+nil if none exists.  The optional second argument, if true, causes the
+node to be created if it does not exist.
+<dt>setValues()
+<dd>Takes a hash as argument, and sets all the key/value pairs in the
+hash as property subnodes of the object.  This works recursively, with
+sub-hashes and vectors; thus making a deep copy of the Nasal hash in
+the property tree.
+</dl>
+
+<dt>props.Node.new()
+<dd>Static "constructor" function returning a new, rootless
+    <code>Node</code> object.  Takes a hash argument to initialize the
+    new node via setValues().
+
+<dt>props.globals
+<dd>This is a <code>Node</code> object representing the root of the
+    global property tree; the Nasal equivalent of
+    <code>globals->get_props()</code>
+
+<dt>props.dump()
+<dd>This method prints out a "dump" of the state of a single
+    <code>Node</code> object and all of its children to the console.
+    Very useful for debugging and exploration.
+
+</dl>
+
+<h2>Integrating C++ code and Nasal</h2>
+
+<h3>Calling Nasal from C++</h3>
+
+<p>The FGNasalSys object has a <code>parseAndRun()</code> method to
+which you can pass arbitrary Nasal source code for immediate
+execution:
+
+<pre>
+FGNasalSys n = (FGNasalSys*)globals->get_subsystem("nasal");
+if(! n->parseAndRun("print('This script was called from C++!')")) 
+  SG_LOG(SG_GENERAL, SG_ALERT, "My Nasal code failed :(");
+</pre>
+
+<p>You can also use <code>parseScript()</code> to get a pointer to a
+<code>FGNasalScript</code> object.  This object supports a
+<code>call()</code> method which you can use to invoke the script
+later on, at a time of your choosing.  If you will be invoking the
+script multiple times, this mechanism can be more efficient because it
+avoids the parsing and code generation overhead for the successive
+calls.
+
+<pre>
+FGNasalSys n = (FGNasalSys*)globals->get_subsystem("nasal");
+FGNasalScript* script = n->parseScript("print('Spam!')")) 
+if(!script) SG_LOG(SG_GENERAL, SG_ALERT, "My Nasal code failed :(");
+
+...
+
+for(int i=0; i<1000; i++)
+    script->call();       // Spam the console
+</pre>
+
+<p>Note that there is no way to inspect the return value of the
+function that you called.  It simply returns a boolean indicating
+successful execution.  Handling of "native" Nasal data structures has
+to be done via the Nasal extension API.  See below.
+
+<h3>Calling C++ from Nasal</h3>
+
+<p>You have three options for invoking C++ code from Nasal.  The first
+two take advantage of pre-existing FlightGear mechanisms for
+registering "callback" handlers for specific events.
+
+<p>If your task is sufficiently general, you should consider defining
+it as a new FGCommand using the existing interface.  This can be
+invoked efficiently from both Nasal code (using the fgcommand()
+function) and existing property bindings, and is very easy to do.
+Simply define a handler function which takes a property tree as an
+argument and returns a bool (to indicate successful execution), and
+register it during initialization with the global command manager:
+
+<pre>
+// Define your handler function:
+bool my_new_command(SGPropertyNode* arg) { ... }
+
+    ...
+    // And register it in your initialization code:
+    globals->get_commands()->addCommand("my-new-command", my_new_command);
+    ...
+</pre>
+
+<p>This mechanism works well when your C++ code is a "global" function
+that you will want to call from many locations with potentially
+differing data.  For some applications, however, you want to register
+a handler that will be called only by code involved with computations
+on a single data set.
+
+<p>For this, there is the property listener interface.  You can create
+a subclass of SGPropertyChangeListener which implements the
+valueChange, childAdded and/or childRemoved methods and associate it
+with a specific property node in the global tree.  You can then
+"invoke" this handler from Nasal code (or from anywhere else) by
+simply setting the property value.
+
+<p>I haven't tested the property listener interface, and it requires
+somewhat more typing to implement; so I will include no example here.
+It is also rather rarely used by existing FlightGear code (the
+property picker GUI is the only significant application I could find).
+
+<h3>Extending Nasal</h3>
+
+<p>This is the third mechanism for invoking C++ (strictly C, in this
+case) code from Nasal.  This is the API you must use if you want to
+inspect and/or modify Nasal data structures, or create a function
+object that will be visible to Nasal scripts as a callable function.
+Unfortunately, there really isn't space here to document this API
+fully.  For now, examin the <code>nasal.h</code> header which defines
+it, and the <code>lib.c</code> and <code>mathlib.c</code> source files
+which implement the existing built-in library functions.  The
+FlightGear-specific extension functions in <code>NasalSys.cxx</code>
+and <code>nasal-props.cxx</code> are also good examples.
+
+<p>But for most purposes, consider the first two mechanisms instead.
+FlightGear's general inter-module communication mechanism is the
+property tree, which is exposed from both Nasal and C++ code already.
+A Nasal extension function, by definition, is useful only to Nasal
+code.  Even worse, data structures definied by a Nasal interface are
+completely invisible to the C++ world.
+</body>
+</html>
