@@ -5,6 +5,7 @@ construct_SOURCES = construct.cxx
 construct_LDADD = \
 	$(top_builddir)/Tools/Construct/Array/libArray.a \
 	$(top_builddir)/Tools/Construct/Clipper/libClipper.a \
+	$(top_builddir)/Tools/Construct/Triangulate/libTriangulate.a \
 	$(top_builddir)/Tools/Lib/Polygon/libPolygon.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Math/libMath.a \

@@ -29,6 +29,7 @@
 
 #include <Array/array.hxx>
 #include <Clipper/clipper.hxx>
+#include <Triangulate/triangle.hxx>
 
 
 // load regular grid of elevation data (dem based)
@@ -52,28 +53,23 @@ int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
 }
 
 
-// load all 2d polygons matching the specified base path and clip
-// against each other to resolve any overlaps
-int load_polys( const string& work_base, FGBucket& b, FGClipper& clipper) {
+// do actual scan of directory and loading of files
+int actual_load_polys( const string& dir, FGBucket& b, FGClipper& clipper ) {
+    int counter = 0;
     char tile_char[256];
     string base = b.gen_base_path();
     long int b_index = b.gen_index();
     sprintf(tile_char, "%ld", b_index);
     string tile_str = tile_char;
-
-    string poly_path = work_base + ".shapes" + "/Scenery/" + base;
-    cout << "poly_path = " << poly_path << endl;
+    string ext;
 
     DIR *d;
     struct dirent *de;
 
-    if ( (d = opendir( poly_path.c_str() )) == NULL ) {
-        cout << "cannot open directory " << poly_path << "\n";
+    if ( (d = opendir( dir.c_str() )) == NULL ) {
+        cout << "cannot open directory " << dir << "\n";
 	return 0;
     }
-
-    // initialize clipper
-    clipper.init();
 
     // load all matching polygon files
     string file, f_index, full_path;
@@ -84,11 +80,43 @@ int load_polys( const string& work_base, FGBucket& b, FGClipper& clipper) {
 	f_index = file.substr(0, pos);
 
 	if ( tile_str == f_index ) {
-	    cout << file << "  " << f_index << endl;
-	    full_path = poly_path + "/" + file;
-	    clipper.load_polys( full_path );
+	    ext = file.substr(pos + 1);
+	    cout << file << "  " << f_index << "  '" << ext << "'" << endl;
+	    full_path = dir + "/" + file;
+	    if ( (ext == "dem") || (ext == "dem.gz") ) {
+		// skip
+	    } else {
+		cout << "ext = '" << ext << "'" << endl;
+		clipper.load_polys( full_path );
+		++counter;
+	    }
 	}
     }
+
+    return counter;
+}
+
+
+// load all 2d polygons matching the specified base path and clip
+// against each other to resolve any overlaps
+int load_polys( const string& work_base, FGBucket& b, FGClipper& clipper) {
+    string base = b.gen_base_path();
+    int result;
+
+    // initialize clipper
+    clipper.init();
+
+    // load airports
+    string poly_path = work_base + ".apt" + "/Scenery/" + base;
+    cout << "poly_path = " << poly_path << endl;
+    result = actual_load_polys( poly_path, b, clipper );
+    cout << "  loaded " << result << " polys" << endl;
+
+    // load hydro
+    poly_path = work_base + ".hydro" + "/Scenery/" + base;
+    cout << "poly_path = " << poly_path << endl;
+    result = actual_load_polys( poly_path, b, clipper );
+    cout << "  loaded " << result << " polys" << endl;
 
     point2d min, max;
     min.x = b.get_center_lon() - 0.5 * b.get_width();
@@ -97,9 +125,23 @@ int load_polys( const string& work_base, FGBucket& b, FGClipper& clipper) {
     max.y = b.get_center_lat() + 0.5 * b.get_height();
 
     // do clipping
+    cout << "clipping polygons" << endl;
     clipper.clip_all(min, max);
 
     return 1;
+}
+
+
+// triangulate the data for each polygon
+void triangulate( const FGArray& array, const FGClipper& clipper,
+		  FGTriangle& t ) {
+    // first we need to consolidate the points of all the polygons
+    // into a more "Triangle" friendly format
+    FGgpcPolyList gpc_polys;
+
+    gpc_polys = clipper.get_polys_clipped();
+
+    t.build( gpc_polys );
 }
 
 
@@ -124,10 +166,17 @@ main(int argc, char **argv) {
     // load and clip 2d polygon data
     FGClipper clipper;
     load_polys( work_base, b, clipper );
+
+    // triangulate the data for each polygon
+    FGTriangle t;
+    triangulate( array, clipper, t );
 }
 
 
 // $Log$
+// Revision 1.2  1999/03/17 23:49:52  curt
+// Started work on Triangulate/ section.
+//
 // Revision 1.1  1999/03/14 00:03:24  curt
 // Initial revision.
 //
