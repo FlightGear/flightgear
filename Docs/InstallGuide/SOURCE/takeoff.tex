@@ -20,7 +20,8 @@
 %% along with this program; if not, write to the Free Software
 %% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 %%
-%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% $Id: getstart.tex,v 0.20 1999/06/04 michael
+%% (Log is kept at end of this file)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,14 +36,14 @@ Under Linux, \FlightGear is invoked by
   \texttt{fgfs -$\!$-option1 -$\!$-option2\dots},
 
 \noindent
- where the options are described in section \ref{options} below.
+ where the options are described in Section \ref{options} below.
 
 \section{Starting under \Index{Windows 98/NT}}
 
-In Windows explorer, change to \texttt{$\backslash$FlightGear$\backslash$}. Call
-\texttt{runfgfs.bat} by double-clicking if you want to invoke the hardware accelerated
-version of \FlightGear \texttt{fgfs.exe}, or \texttt{runfgfs-sgi.bat} if you installed
-SGI's software \Index{OpenGL} support.
+In Windows explorer, change to the \texttt{$\backslash$FlightGear$\backslash$} directory.
+Call \texttt{runfgfs.bat} by double-clicking if you want to invoke the hardware
+accelerated version of \FlightGear \texttt{fgfs.exe}, or \texttt{runfgfs-sgi.bat} if you
+installed SGI's software \Index{OpenGL} support.
 
 Alternatively, if for one or the other reason the batch does not work, you can open an
 MS-DOS shell, change to the directory where your binary resides (typically something like
@@ -66,6 +67,7 @@ minimize (iconize) the non-graphics window while running
 \includegraphics[clip,width=12.5cm]{arizona.eps}
 }
 
+\smallskip
  \noindent
 Fig.\,2: \textit{Ready for takeoff. We are at the default startup
 position in Arizona.}
@@ -81,7 +83,7 @@ of Windows 98/NT it is recommended to include these in \texttt{runfgfs.bat}.
 
 \begin{itemize}
 
-\item{\texttt{-$\!$-help}}: gives a small help text, kind of a short version of this section.
+\item{\texttt{-$\!$-help}}: gives a small help text, kind of a short version of this Section.
 
 \item{\texttt{-$\!$-fg-root={\it path}}}: tells \FlightGear where to look for its data
   files if you didn't compile it with the default settings.
@@ -130,14 +132,24 @@ logo} when the accelerator board gets initialized.
 \item{\texttt{-$\!$-enable-hud}}: Turns the  \Index{HUD} on. This is the default.
 
 \item{\texttt{-$\!$-disable-panel}}: Turns off the \Index{instrument panel}. This is the
-  default, as the instrument panel is still in its early beginnings -- but in our opinion
-  you should give it a try.
+  default, as the instrument panel is not yet complete -- but in our opinion
+  should be given at least a try.
 
 \item{\texttt{-$\!$-enable-panel}}: This will give you the look of a real \Index{cockpit}.
 
 \item{\texttt{-$\!$-disable-sound}}: Pretty self explaining, isn't it?
 
 \item{\texttt{-$\!$-enable-sound}}:
+
+\end{itemize}
+
+
+\subsection{Flight model\index{flight model}}
+
+\begin{itemize}
+
+\item{\texttt{-$\!$-fdm=abcd}} There are four allowed values for abcd: \texttt{slew, jsb, larcsim,
+external}, which you might want to try. Default value is \texttt{larcsim}.
 
 \end{itemize}
 
@@ -204,6 +216,46 @@ The value is displayed on the HUD. Default is 55.0.
 
 \item{\texttt{-$\!$-enable-wireframe}}: If you want to know how the world of \FlightGear internally looks like, try this!
 
+\item{\texttt{-$\!$-geometry=WWWxHHH}}: Defines the size of the window used, i.e.
+\texttt{WWWxHHH} can be \texttt{640x480}, \texttt{800x600}, or \texttt{1024x768}.
+
+\end{itemize}
+
+\subsection{Scenery Options Options\index{scenery options}}
+
+\begin{itemize}
+
+\item{\texttt{-$\!$-tile-radius=n}}: Specifies the tiles radius; allowed values for
+\texttt{n} are 1 -- 4.
+
+\end{itemize}
+
+\subsection{HUD Options\index{HUD}}
+
+\begin{itemize}
+
+\item{\texttt{-$\!$-units-feed}}: HUD displays units in feet.
+
+\item{\texttt{-$\!$-units-meters}}: HUD displays units in meters.
+
+\item{\texttt{-$\!$-hud-tris}}: HUD displays the number of triangles rendered.
+
+\item{\texttt{-$\!$-hud-culled}}: HUD displays percentage of triangles culled.
+
+\end{itemize}
+
+\subsection{Time options\index{time options}}
+
+\begin{itemize}
+
+\item{\texttt{-$\!$-time-offset=[+-]hh:mm:ss}}: Offset local time by this amount.
+
+\item{\texttt{-$\!$-start-date-gmt=yyyy:mm:dd:hh:mm:ss}}: Specify a starting time and
+date. Time is Greenwich Mean Time.
+
+\item{\texttt{-$\!$-start-date-lst=yyyy:mm:dd:hh:mm:ss}}: Specify a starting time and
+date. Uses local sidereal time.
+
 \end{itemize}
 
 %% Revision 0.02  1998/09/29  bernhard
@@ -211,3 +263,5 @@ The value is displayed on the HUD. Default is 55.0.
 %% final proofreading for release
 %% revision 0.11  1998/11/01  michael
 %% Added pic from Arizona takeoff
+%% revision 0.20  1999/06/04  michael
+%% added new options

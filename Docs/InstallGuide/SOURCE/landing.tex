@@ -21,7 +21,8 @@
 %% along with this program; if not, write to the Free Software
 %% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 %%
-%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% $Id: getstart.tex,v 0.20 1999/06/04 michael
+%% (Log is kept at end of this file)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Landing: Some further thoughts before leaving the plane\label{landing}}
@@ -42,7 +43,8 @@ your thoughts there. Instructions to do so can be found under
  \web{http://www.flightgear.org/mail.html}.
 
 Essentially there are two lists, one of which being mainly for the developers and the
-other one for users.
+other one for end users.
+\medskip
 
  \noindent
 These are the people who did the job (This information was
@@ -61,9 +63,8 @@ moon texture.
  \medskip
 
 \noindent Steve Baker\index{Baker, Steve} (\mail{sjbaker@hti.com})\\
-  Author of \Index{PUI} (a graphical interface written entirely on top of
-    \Index{OpenGL}/\-\Index{GLUT}). Author of the basic
-    \Index{audio library} used in \FlightGear. An immense amount of coaching and tutelage,
+  Author of \Index{PLIB}, a graphics/audio/joystick interface written entirely on top of
+    \Index{OpenGL}/\-\Index{GLUT} used in \FlightGear. An immense amount of coaching and tutelage,
     both on the subjects of flight simulation and \Index{OpenGL}.  It has been
     his comments and thoughts that have prompted the implementation of
     most of the more sophisticated features of \FlightGear{\hspace{-2mm}}.
@@ -82,7 +83,7 @@ moon texture.
 
 
 \noindent Paul Bleisch\index{Bleisch, Paul} (\mail{pbleisch@acm.org})\\
-  Paul redid the debug system so that it would be much more
+  Redid the debug system so that it would be much more
   flexible, so it could be easily disabled for production system, and
   so that messages for certain subsystems could be selectively
   enabled.
@@ -108,9 +109,13 @@ moon texture.
  \medskip
 
 \noindent Gene Buckle\index{Buckle, Gene} (\mail{geneb@nwlink.com})\\
-  Gene has done a lot of work getting \FlightGear to compile with the \Index{MSVC}++
+  A lot of work getting \FlightGear to compile with the \Index{MSVC}++
   compiler. Numerous hints on detailed improvements.
  \medskip
+
+\noindent Oliver Delise \index{Delise, Oliver} (\mail{delise@rp-plus.de})\\
+ FAQ Maintainer.
+\medskip
 
 \noindent Didier Chauveau\index{Chauveau, Didier} (\mail{chauveau@math.univ-mlv.fr})\\
   Provided some initial code to parse the 30 arcsec DEM files found at:
@@ -201,6 +206,12 @@ moon texture.
   services, shell accounts, email lists, dns services, etc.
  \medskip
 
+
+\noindent Christian Mayer\index{Mayer, Christian} (\mail{Vader@t-online.de})\\
+ Working on multi-lingual conversion tools for fgfs.\\
+ Contributed code to read msfs scenery textures.
+ \medskip
+
 \noindent Eric Mitchell\index{Mitchell, Eric} (\mail{mitchell@mars.ark.com})\\
   Contributed some topnotch scenery \Index{textures}.
  \medskip
@@ -223,6 +234,11 @@ moon texture.
  the pieces provided by others mainly concentrating on the \Index{scenery
  engine} as well as the graphics stuff.
  \medskip
+
+\noindent Robin Peel\index{Peel, Robin} (\mail{robinp@mindspring.com})\\
+  Maintains worldwide airport and runway database for \FlightGear as we as X-Plane.
+ \medskip
+
 
 \noindent Friedemann Reinhard\index{Reinhard, Friedemann}
 (\mail{mpt218@faupt212.physik.uni-erlangen.de})\\
@@ -280,7 +296,8 @@ moon texture.
 \noindent Durk Talsma\index{Talsma, Durk} (\mail{pn\_talsma@macmail.psy.uva.nl})\\
   Accurate Sun, Moon, and Planets.  Sun changes color based on
   position in sky. Moon has correct phase and blends well into the
-  sky.  Planets are correctly positioned and have proper magnitude.
+  sky.  Planets are correctly positioned and have proper magnitude. help with time
+  functions, GUI, and other things.
  \medskip
 
 \noindent Gary R. Van Sickle\index{van Sickle, Gary R.}
@@ -291,13 +308,24 @@ moon texture.
 \noindent Norman Vine\index{Vine, Norman} (\mail{nhv@laserplot.com})\\
   Many performance optimizations throughout the code.  Many contributions
   and much advice for the scenery generation section.  Lots of Windows
-  related contributions.
+  related contributions. Improved \Index{HUD}.
 \medskip
+
+\noindent Roland Voegtli\index{Voegtli, Roland} (\mail{webmaster@sanw.unibe.ch})\\
+ Contributed great photorealistic textures.
+\medskip
+
 
 \noindent Carmelo Volpe\index{Volpe, Carmelo} (\mail{carmelo.volpe@csb.ki.se})\\
   Porting \FlightGear to the \Index{Metro Works} development environment
   (PC/Mac).
  \medskip
+
+\noindent Darrell Walisser\index{Walisser, Darrell} (\mail{dwaliss1@purdue.edu})\\
+ Contributed a large number of changes to porting \FlightGear to the Metro Works
+ development environment (PC/Mac). Finally produced the first MacIntosh port.
+\medskip
+
 
 \noindent Robert Allan Zeh\index{Zeh, Allan} (\mail{raz@cmg.FCNBD.COM})\\
   Helped tremendously in figuring out the \Index{Cygnus} Win32 compiler and
@@ -314,26 +342,22 @@ scenery, texturing and simple controls.
 Despite, \FlightGear needs -- and gets -- further development. Except internal tweakings,
 there are several fields where \FlightGear needs basics improvement and development.
 
+A first direction is adding \Index{airports}, streets, and more things bringing Scenery
+to real life.
 
-A first direction is adding \Index{airports}, streets, rivers and
-all that bringing the Scenery to real life.
+Second, the \Index{panel} needs further improvement including more working gauges.
 
-Second, the \Index{panel} (being disabled by default at present)
-needs further improvement including more working gauges.
+Besides, there should be support for adding more \Index{planes} and for implementing
+corresponding flight models differing from the \Index{Navion}.
 
-Besides, there should be support for adding more \Index{planes}
-and for implementing corresponding flight models differing from
-the basic \Index{Navion}.
+Another task is further implementation of the \Index{menu system}, which should not be
+too hard with the basics being working now.
 
-Another major task is further implementation of the \Index{menu
-system}, which at its present state basically does nothing.
+A main stream of active development concerns weather. At present there is simply none: no
+clouds, no rain, no wind. But there sure will be.
 
-Another direction concerns \Index{audio support}. While the audio
-library itself is essentially complete there is a need for more
-sounds to play and for code to drive it.
-
-There are already people working in all of these directions. But if you're a programmer
-and think you can contribute, you are invited to do so.
+There are already people working in all of these directions. If you're a programmer and
+think you can contribute, you are invited to do so.
 
 \subsection*{Achnowledgements}
 Obviously this document could not have been written without all
@@ -344,16 +368,13 @@ Olson,\index{Olson, Curt} whose numerous scattered Readmes,
 Thanks, Webpages, and personal eMails were of special help to us
 and were freely exploited in the making of this booklet.
 
+Next, we gained a lot of help and support from Steve Baker \index{Baker, Steve} and
+Norman Vine\index{Vine, Norman}. Moreover, we would like to thank Steve
+Baker\index{Baker, Steve} for a careful reading and for numerous hints on the first draft
+of this guide.
+
 Further, we would like to thank Kai Troester\index{Troester, Kai} for donating the
-solution of some of his compile problems to our Chapter \ref{missed}.
-
-In addition, we would like to thank Steve Baker\index{Baker,
-Steve} for a careful reading and for numerous hints on the first
-draft of this guide.
-
-In addition we gained from hints given to Newcomers on the Mailing lists, notably from
-those given by Norman Vine \index{Vine, Norman}, to name only one.
-
+solution of some of his compile problems to Chapter \ref{missed}.
 
 %% Revision 0.00  1998/09/08  michael
 %% Initial revision for version 0.53.
@@ -365,3 +386,5 @@ those given by Norman Vine \index{Vine, Norman}, to name only one.
 %% corrections on audio library, getting started
 %% revision 0.12  1999/03/07  michael
 %% Updated Credits
+%% revision 0.20  1999/06/04  michael
+%% added O. Delise, Ch. Mayer, R. Peel, R. Voegtli, several updates

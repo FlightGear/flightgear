@@ -21,7 +21,8 @@
 %% along with this program; if not, write to the Free Software
 %% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 %%
-%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% $Id: getstart.tex,v 0.20 1999/06/04 michael
+%% (Log is kept at end of this file)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Missed approach: If anything refuses to work\label{missed}}
@@ -29,9 +30,11 @@
 \markboth{\thechapter.\hspace*{1mm} MISSED APPROACH
 }{\thesection\hspace*{1mm} ???}
 
-We tried to sort \Index{problems} according to operating system to
-a certain extent , but if you encounter a problem it may be a wise
-idea to look beyond ''your'' operating system -- just in case.
+We tried to sort \Index{problems} according to operating system to a certain extent , but
+if you encounter a problem it may be a wise idea to look beyond ''your'' operating system
+-- just in case. Besides, if anything fails, it is definitely a good idea to check
+the FAQ maintained by Oliver Delise (\mail{delise@rp-plus.de}) being distributed
+along with the source code.
 
 \section{General problems}
 \begin{itemize}
@@ -44,7 +47,7 @@ idea to look beyond ''your'' operating system -- just in case.
 
  Second, check if your drivers are properly installed. Several
  cards need additional OpenGL support drivers besides the
- ''native'' windows ones. For more detail check chapter
+ ''native'' windows ones. For more detail check Chapter
  \ref{opengl}.
 
  Third, check if your hardware driver is called \texttt{opengl32.dll}
@@ -52,7 +55,7 @@ idea to look beyond ''your'' operating system -- just in case.
  \texttt{open} \texttt{gl32.dll}. If you require the non-32 version,
  consider rebuilding \FlightGear with the libraries \texttt{opengl32.dll},
  \texttt{glut32.dll}, and \texttt{glu32.dll} replaced by their
- non-32 counterparts. For more details check chapter
+ non-32 counterparts. For more details check Chapter
  \ref{building}.
 
  If you installed the pre-compiled binaries \texttt{runfgfs.bat} invokes
@@ -61,15 +64,12 @@ idea to look beyond ''your'' operating system -- just in case.
 
  Usually, hardware accelerated drivers use the 32-libraries.
 
-\item{The menu items do not work}\\
- No wonder -- they are not implemented yet.
-
  \end{itemize}
 
 \section{Potential problems under Linux}
 
 Since we don't have access to all possible flavors of Linux distributions, here are some
-thoughts on possible causes of problems. (This section includes contributions by Kai
+thoughts on possible causes of problems. (This Section includes contributions by Kai
 Troester \mail{Kai.Troester@rz.tu-ilmenau.de}.)
 
 \begin{itemize}
@@ -147,10 +147,9 @@ insert the following lines to \texttt{/usr/share/autoconf/} \texttt{acconfig.h}:
   to compile the program.
   %%
 
-
 \end{itemize}
 
-\section{Potential problems under Windows95/NT}
+\section{Potential problems under Windows 98/NT}
 
 \begin{itemize}
 \item{The executable refuses to run.}\\
@@ -159,20 +158,20 @@ insert the following lines to \texttt{/usr/share/autoconf/} \texttt{acconfig.h}:
  in a MS-DOS shell. Double-clicking via explorer does never work
  (except you set the environment variable \texttt{FG\_ROOT}
  in the autoexec.bat or otherwise). Rather double-click \texttt{runfgfs.bat} or
- \texttt{runfgfs-sgi.bat}  For more detail, check chapter \ref{takeoff}.
+ \texttt{runfgfs-sgi.bat}  For more detail, check Chapter \ref{takeoff}.
 
  Another potential problem might be you did not download the
  most recent versions of scenery and textures required by \FlightGear, or
  you did not load any scenery or texture at all. Have a close look
  at this, as the scenery/texture format is still under development and may
- change frequently. For more detail, check chapter \ref{prefligh}.
+ change frequently. For more detail, check Chapter \ref{prefligh}.
 
  A further potential source of trouble are so-called
  \Index{mini-OpenGL} drivers provided by some manufacturers. In this case,
  {\FlightGear}'s typically hangs while opening the graphics window.
  In this case, either replace the \Index{mini-OpenGL} driver by a
  full OpenGL driver or or in case such is not available install
- software OpenGL support (see section \ref{softrend}).
+ software OpenGL support (see Section \ref{softrend}).
 
 \item{\FlightGear ignores the command line parameters.}\\
  There is a problem with passing command line options containing a
@@ -186,14 +185,26 @@ Make sure you change to the Main FlightGear directory, e.\,g. with
 
 \texttt{cd //D/FlightGear-X.XX}
 
-before running \texttt{Configure} and \texttt{Make}.
+before running \texttt{Configure} and \texttt{Make}. Do not forget the win32 library
+package.
 
 \item{I am unable to build \FlightGear under \Index{MSVC}/\Index{MS DevStudio}}\\
- By default, \FlightGear is bild with GNU C++, i.\,e. the
+ By default, \FlightGear is build with GNU C++, i.\,e. the
  \Index{Cygnus} compiler for Win32. For hints or Makefiles
  required for MSVC for MSC DevStudio have a look into
 
  \web{http://www.flightgear.org/Downloads/Source}.
+
+In principle, \FlightGear should be buildable with the project files provided.
+
+\item{Compilation of \FlightGear dies not finding \texttt{gfc}}.
+
+The library \texttt{gfc} cannot be build with the Cygnus compiler at present. It us
+supposed to be substituted by something else in the future.
+
+As the simulator is already built at this point, you simply can forget about that problem
+as long as you don't intend to build the \Index{scenery creation tools}. Just go on with
+\texttt{make install}.
 
 \end{itemize}
 
@@ -202,7 +213,7 @@ before running \texttt{Configure} and \texttt{Make}.
 %% added win stuff michael
 %% final proofreading for release
 %% revision 0.11  1998/11/01  michael
-%% Remark on mini-OpenGL drivers, new general section
+%% Remark on mini-OpenGL drivers, new general Section
 %% Access violation error under win32 added
 %% Command line problem in win32 added
 %% revision 0.12  1999/03/07  bernhard
@@ -210,3 +221,5 @@ before running \texttt{Configure} and \texttt{Make}.
 %% revision 0.12  1999/03/07  michael
 %% Added Contribution by Kai Troester
 %% Reworked Win32 Stuff
+%% revision 0.20  1999/06/04  michael
+%% added hint to FAQ, gfc problem

@@ -21,7 +21,8 @@
 %% along with this program; if not, write to the Free Software
 %% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 %%
-%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% $Id: getstart.tex,v 0.20 1999/06/04 michael
+%% (Log is kept at end of this file)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Getting the engine: Installing \Index{OpenGL} \Index{graphics drivers}\label{opengl}}
@@ -35,17 +36,16 @@ written with \Index{OpenGL} support can be compiled and executed on several plat
 given the proper drivers having been installed in advance. Thus, independent of if you
 want to run the binaries only or if you want to compile the program yourself you must
 install some sort of \Index{OpenGL} support for your \Index{video card}. Naturally, you
-can skip this chapter in case you already did (maybe for Quake or some other game).
+can skip this Chapter in case you already did (maybe for Quake or some other game).
 
-Unfortunately, there are so many graphics boards, graphics chips and
-drivers that we are unable to provide a complete description for all
-systems at present, but we hope to be able to extend that section with
-the help of others soon. To give beginners a hand, we just describe
-what we did to install drivers on our systems.
+Unfortunately, there are so many graphics boards, graphics chips and drivers that we are
+unable to provide a complete description for all systems. To give beginners a hand, we
+just describe what we did to install drivers on our systems, which might be not too
+exotic.
 
-By any means, should you try getting hardware \Index{OpenGL} drivers for your system,
-which is exemplary described in sections \ref{3dfxlinux} to \ref{3DFXwin98}, resp. If you
-are unable to locate any such drivers you can try software support\index{OpenGL!software
+By any means, try getting hardware \Index{OpenGL} drivers for your system, which is
+exemplary described in Sections \ref{3dfxlinux} to \ref{3DFXwin98}, resp. If you are
+unable to locate any such drivers you can try software support\index{OpenGL!software
 support} as detailed under \ref{softrend}.
 
 \section{\Index{3DFX} under \Index{Linux}\label{3dfxlinux}}
@@ -134,8 +134,8 @@ important are:
 
 \end{itemize}
 
-This completes preparing your \Index{3DFX} equipped Linux PC for
-running \FlightGear\hspace{-2mm}.
+This completes preparing your \Index{3DFX} equipped Linux PC for running
+\FlightGear\hspace{-1mm}.
 %%B.B 21.2.99
 Now proceed and install the support files as described later in this document.
 %%
@@ -143,10 +143,10 @@ Now proceed and install the support files as described later in this document.
 \section{Rendition Chipset\index{Rendition chipset} under
  \Index{Windows 98/NT}\label{renditionwin}}
 
-This section serves as an example for installing \Index{OpenGL}
-drivers under \Index{Windows 98/NT}. The \Index{Rendition 2100
-chipset} is, for instance, part of the \Index{Diamond Stealth II}
-card performing especially well in somewhat weaker machines.
+This Section serves as an example for installing \Index{OpenGL} drivers under
+\Index{Windows 98/NT}. The \Index{Rendition 2100 chipset} is, for instance, included in
+the \Index{Diamond Stealth II} card performing especially well in somewhat weaker
+machines.
 
 Diamond itself does not provide any \Index{OpenGL} driver support for that board.
 However, Rendition, who make the graphics chip, do. Go to their Web site and grab the
@@ -172,9 +172,9 @@ least, Rendition's \Index{mini-OpenGL} driver definitely does not.
 
 Because of its high performance, the RIVA TNT is one of the most popular chipsets today.
 The \Index{Diamond Viper 550},  ELSA Erazor-2, \Index{Creative Graphics Blaster}, and
-more cards are equipped with this chip. At least the default Viper 550 drivers are known
+more cards come equipped with this chip. At least the default Viper 550 drivers are known
 to us having native built-in OpenGL support making any add-on OpenGL drivers obsolete.
-Similar things should apply to the other RIVA TNT based cards. In any case, NVIDIA's
+Similar things should apply to the other RIVA TNT based boards. In any case, NVIDIA's
 reference drivers being available from
 
     \web{http://www.nvidia.com/}
@@ -197,8 +197,8 @@ Demos} and grab them there.
 
 First, make sure you have the file \texttt{glu32.dll} either under
 \texttt{$\backslash$Windows$\backslash$System} or elsewhere in your path. If not, install
-the MS OpenGL kit \texttt{opengl95} available from Microsoft or elsewhere on the net.
-(Which by itself only provides software rendering.)
+the MS OpenGL kit \texttt{opengl95} available from Microsoft or elsewhere on the net
+(which by itself only provides software rendering).
 
 Next, locate the file \texttt{3dfxopengl.dll}. in the 3DFX driver package, rename it to
 \texttt{opengl32.dll} and copy it into \texttt{$\backslash$Windows$\backslash$System}
@@ -216,7 +216,7 @@ want to try \FlightGear despite this you can install SGI software
 \Index{OpenGL} rendering. For this purpose, get the file
 \texttt{sgi-opengl2.exe} from
 
-\web{http://www.flightgear.org/Downloads/}.
+\web{ftp://ftp.flightgear.org/pub/fgfs/Misc/}.
 
  \noindent
 This is a \Index{Windows 98/NT} self extracting installation
@@ -239,3 +239,5 @@ them from the Start menu.
 %% revision 0.12  1999/03/07  michael
 %% Added Riva TNT Win95
 %% Added 3DFX Win95
+%% revision 0.20  1999/06/04  michael
+%% corrections of links

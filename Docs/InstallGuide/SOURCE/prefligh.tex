@@ -21,7 +21,8 @@
 %% along with this program; if not, write to the Free Software
 %% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 %%
-%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% $Id: getstart.tex,v 0.20 1999/06/04 michael
+%% (Log is kept at end of this file)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Preflight: Installing \FlightGear \label{prefligh}}
@@ -29,25 +30,23 @@
 \markboth{\thechapter.\hspace*{1mm}
 PREFLIGHT}{\thesection\hspace*{1mm} INSTALLING THE BINARIES}
 
-\section{Installing the Binaries}\index{binaries!installation}
-You can skip this section and go to the installation of scenery in
-case you built \FlightGear along the lines describes during the
-previous chapter. If you did not and you're jumping in here your
-first step consists in installing the binaries. At present, there
-are only pre-compiled \Index{binaries} available for
-\Index{Windows 98/NT} while in principle it might be possible to
-create (statically linked) binaries for \Index{Linux} as well.
+\section{Installing the Binaries on a Windows system}\index{binaries!installation}
+You can skip this Section and go to the installation of scenery in case you built
+\FlightGear along the lines describes during the previous Chapter. If you did not and
+you're jumping in here your first step consists in installing the binaries. At present,
+there are only pre-compiled \Index{binaries} available for \Index{Windows 98/NT} while in
+principle it might be possible to create (statically linked) binaries for \Index{Linux}
+as well.
 
-The following supposes you are on a Windows 98 or Windows
-NT\index{Windows 98/NT} system. Installing the binaries is quite
-simple. Go to the \FlightGear downloads page
+The following supposes you are on a Windows 98 or Windows NT\index{Windows 98/NT} system.
+Installing the binaries is quite simple. Go to
 
- \web{http://www.flightgear.org/Downloads/}
+ \web{ftp://ftp.flightgear.org/pub/fgfs/Win32/}
 
  \noindent
-and get the latest binaries from the binaries subdirectory named
+get the latest binaries from that subdirectory named
 
-\texttt{fg-win32-bin-X.XX.exe}
+\texttt{fgfs-win32-bin-X.XX.exe}
 
  \noindent
 and unpack them via double clicking. This will create a directory \texttt{FlightGear}
@@ -55,11 +54,10 @@ with several subdirectories. You are done.
 
 \section{Installing \Index{Support files}}
 
-Independent on your operating system and independent on if you
-built the binaries yourself or installed the precompiled ones as
-described above you will need \Index{scenery}, \Index{texture},
-and \Index{sound} files. A basic package of all these is contained
-in the binaries directory mentioned above as
+Independent on your operating system and independent on if you built the binaries
+yourself or installed the precompiled ones as described above you will need
+\Index{scenery}, \Index{texture}, \Index{sound}, and some more support files. A basic
+package of all these is contained in the binaries directory mentioned above as
 
  \texttt{fgfs-base-X.XX}.
 
@@ -71,14 +69,14 @@ are under \Index{Windows 98/NT}. Make sure you get the \textbf{most recent} vers
 If you're working under \Index{Linux} or \Index{UNIX}, unpack the
 previously downloaded file with
 
-        \texttt{tar xvfz fgfs-base-X.XX.tar.gz},
+        \texttt{tar xvfz fgfs-base-X.XX.tar.gz}
 
  \noindent
 while under \Index{Windows 98/NT} just double click on the file (being situated in the
 root of your \FlightGear drive.).
 
-This already completes installing \FlightGear and should enable
-you to invoke the program.
+This already completes installing \FlightGear and should you enable to invoke the
+program.
 
 Some more scenery which, however, is not a substitute for the
 package mentioned above but rather is based on it can be found in
@@ -94,7 +92,7 @@ In addition, there is a complete set of \Index{USA Scenery files}
 available created by Curt Olson\index{Olson, Curt} which can be
 downloaded from
 
-\web{ftp://ftp.kingmont.com/pub/kingmont/index.html}.
+\web{ftp://ftp.kingmont.com/pub/kingmont/}
 
  \noindent
 The complete set covers several 100's of MBytes. Thus, Curt
@@ -102,17 +100,19 @@ provides the complete set on CD-ROM for those who really would
 like to fly over all of the USA. For more detail, check the
 remarks in the downloads page above.
 
-Finally, the binaries directory mentioned contain the complete
-\FlightGear documentation including a .pdf version of this
-\textit{Installation and Getting Started} guide intended for
-pretty printing using Adobe's Acrobat reader being available from
+Finally, the binaries directory mentioned contains the complete \FlightGear documentation
+as
 
+\texttt{fgfs-manual-X.XX.exe}.
 
+It includes a .pdf version of this \textit{Installation and Getting Started} guide
+intended for pretty printing using Adobe's Acrobat reader being available from
 
-\web{http://www.adobe.com/acrobat}.
+\web{http://www.adobe.com/acrobat}
 
-\noindent
- on any printer.
+Moreover, if properly installed the .html version can be accessed via \FlightGear's
+\texttt{help} menu entry.
+
 
 %% Revision 0.00  1998/09/08  michael
 %% Initial revision for version 0.53.
@@ -121,4 +121,6 @@ pretty printing using Adobe's Acrobat reader being available from
 %% revision 0.10  1998/10/01  michael
 %% final proofreading for release
 %% revision 0.11  1998/11/01  michael
-%% support files section completely re-written
+%% support files Section completely re-written
+%% revision 0.20  1999/06/04  michael
+%% some updates and corrections, corrected links
