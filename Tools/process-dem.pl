@@ -41,20 +41,17 @@ $do_tri2obj =    1;
 $do_strips =     1;
 $do_fixobj =     1;
 
-
-# set the FG_ROOT environment variable if it hasn't already been set.
-if ( $ENV{FG_ROOT} eq "" ) {
-    # look for a file called fgtop as a place marker
-    die "You must remember to set the FG_ROOT environment variable!\n";
-}
+$do_install =    1;
 
 
-if ( $#ARGV < 1 ) {
-    die "Usage: $0 <error^2> dem-file1 [ dem-file2 dem-file3 ... ]\n";
+if ( $#ARGV < 3 ) {
+    die "Usage: $0 <fg-root-dir> <work-dir> <error^2> dem-file(s)\n";
 }
 
 # Start with file.dem
 
+$fg_root = shift(@ARGV);
+$work_dir = shift(@ARGV);
 $error = shift(@ARGV);
 $error += 0.0;
 
@@ -70,7 +67,7 @@ while ( $dem_file = shift(@ARGV) ) {
     if ( $do_dem2node ) {
 	dem2node() ;
     } else {
-	$subdir = "../Scenery/w120n030/w111n033";
+	$subdir = "./work/Scenery/e010n080/e019n084";
 	print "WARNING:  Hardcoding subdir = $subdir\n";
     }
 
@@ -82,6 +79,7 @@ while ( $dem_file = shift(@ARGV) ) {
     tri2obj() if ( $do_tri2obj );
     strips() if ( $do_strips );
     fixobj() if ( $do_fixobj );
+    install() if ( $do_install );
 }
 
 
@@ -114,7 +112,7 @@ sub file_root {
 }
 
 
-# 1.  dem2node $FG_ROOT dem_file tolerance^2 (meters)
+# 1.  dem2node work_dir dem_file tolerance^2 (meters)
 # 
 #     - dem2node .. dem_file 160000
 #
@@ -122,7 +120,7 @@ sub file_root {
 #     irregularly fitted vertices
 
 sub dem2node {
-    $command = "Dem2node/dem2node $ENV{FG_ROOT} $dem_file $error";
+    $command = "Dem2node/dem2node $work_dir $dem_file $error";
     $command = fix_command($command);
     print "Running '$command'\n";
 
@@ -382,7 +380,40 @@ sub fixobj {
 	    }
 	    close(OUT);
 
-	    # unlink("$subdir/$file");
+	    unlink("$subdir/$file");
+	}
+    }
+}
+
+
+# 9.  install
+#
+#     rename, compress, and install scenery files
+
+sub install {
+    $tmp = $subdir;
+    $tmp =~ s/$work_dir//;
+    # print "Temp dir = $tmp\n";
+    $install_dir = "$fg_root/$tmp";
+    print "Install dir = $install_dir\n";
+    system("mkdir -p $install_dir");
+
+    @FILES = `ls $subdir`;
+    foreach $file ( @FILES ) {
+	chop($file);
+	if ( $file =~ m/\d\d.obj$/ ) {
+	    $new_file = file_root($file);
+	    
+	    $command = "gzip -v --best < $subdir/$file > $install_dir/$new_file.gz";
+	    # $command = fix_command($command);
+	    print "Running '$command'\n";
+	    open(OUT, "$command |");
+	    while ( <OUT> ) {
+		print $_;
+	    }
+	    close(OUT);
+
+	    unlink("$subdir/$file");
 	}
     }
 }
@@ -390,6 +421,11 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.20  1998/06/05 18:20:24  curt
+# Added DemInfo to dump out "A" record DEM info.
+# Modified process-dem.pl to work in a temp directory and compress/copy the
+# result to the final destination.
+#
 # Revision 1.19  1998/05/27 02:25:26  curt
 # Added a flag to the first run of "triangle" to impose a maximum triangle
 # size.  This forces really flat areas to be subdivided a certain amount
