@@ -1459,6 +1459,56 @@ void uiuc_recorder( double dt )
 	      }
 
               /******************** Ice Detection ********************/
+	    case CL_clean_record:
+	      {
+		fout << CL_clean << " ";
+		break;
+	      }
+	    case CL_iced_record:
+	      {
+		fout << CL_iced << " ";
+		break;
+	      }
+	    case CD_clean_record:
+	      {
+		fout << CD_clean << " ";
+		break;
+	      }
+	    case CD_iced_record:
+	      {
+		fout << CD_iced << " ";
+		break;
+	      }
+	    case Cm_clean_record:
+	      {
+		fout << Cm_clean << " ";
+		break;
+	      }
+	    case Cm_iced_record:
+	      {
+		fout << Cm_iced << " ";
+		break;
+	      }
+	    case Ch_clean_record:
+	      {
+		fout << Ch_clean << " ";
+		break;
+	      }
+	    case Ch_iced_record:
+	      {
+		fout << Ch_iced << " ";
+		break;
+	      }
+	    case Cl_clean_record:
+	      {
+		fout << Cl_clean << " ";
+		break;
+	      }
+	    case Cl_iced_record:
+	      {
+		fout << Cl_iced << " ";
+		break;
+	      }
             case CLclean_wing_record:
               {
                 fout << CLclean_wing << " ";
@@ -1629,6 +1679,11 @@ void uiuc_recorder( double dt )
                 fout << pct_beta_flow_tail << " ";
                 break;
               }
+	    case eta_ice_record:
+	      {
+	        fout << eta_ice << " ";
+		break;
+	      }	
 
               /************************ Forces ***********************/
             case F_X_wind_record:
@@ -1783,6 +1838,43 @@ void uiuc_recorder( double dt )
                 fout << M_n_rp << " ";
                 break;
               }
+
+              /*********************** Moments ***********************/
+/*	    case flapper_freq_record:
+	      {
+		fout << flapper_freq << " ";
+		break;
+	      }
+	    case flapper_phi_record:
+	      {
+		fout << flapper_phi << " ";
+		break;
+	      }
+	    case flapper_phi_deg_record:
+	      {
+		fout << flapper_phi*RAD_TO_DEG << " ";
+		break;
+	      }
+	    case flapper_Lift_record:
+	      {
+		fout << flapper_Lift << " ";
+		break;
+	      }
+	    case flapper_Thrust_record:
+	      {
+		fout << flapper_Thrust << " ";
+		break;
+	      }
+	    case flapper_Inertia_record:
+	      {
+		fout << flapper_Inertia << " ";
+		break;
+	      }
+	    case flapper_Moment_record:
+	      {
+		fout << flapper_Moment << " ";
+		break;
+		} */
             };
         } // end record map
     }

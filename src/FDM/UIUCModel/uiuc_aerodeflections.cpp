@@ -82,6 +82,8 @@ void uiuc_aerodeflections( double dt )
   double prevFlapHandle = 0.0f;
   double flap_transit_rate;
   bool flaps_in_transit = false;
+  double demax_remain;
+  double demin_remain;
 
   if (zero_Long_trim)
     {
@@ -94,10 +96,31 @@ void uiuc_aerodeflections( double dt )
   else
     aileron = - Lat_control * damax * DEG_TO_RAD;
 
-  if ((Long_control+Long_trim) <= 0)
-    elevator = (Long_control + Long_trim) * demax * DEG_TO_RAD;
+  if (Long_trim <= 0)
+    {
+      elevator = Long_trim * demax * DEG_TO_RAD;
+      demax_remain = demax + Long_trim * demax;
+      demin_remain = -1*Long_trim * demax + demin;
+      if (Long_control <= 0)
+	elevator += Long_control * demax_remain * DEG_TO_RAD;
+      else
+	elevator += Long_control * demin_remain * DEG_TO_RAD;
+    }
   else
-    elevator = (Long_control + Long_trim) * demin * DEG_TO_RAD;
+    {
+      elevator = Long_trim * demin * DEG_TO_RAD;
+      demin_remain = demin - Long_trim * demin;
+      demax_remain = Long_trim * demin + demax;
+      if (Long_control >=0)
+	elevator += Long_control * demin_remain * DEG_TO_RAD;
+      else
+	elevator += Long_control * demax_remain * DEG_TO_RAD;
+    }
+
+  //if ((Long_control+Long_trim) <= 0)
+  //  elevator = (Long_control + Long_trim) * demax * DEG_TO_RAD;
+  //else
+  //  elevator = (Long_control + Long_trim) * demin * DEG_TO_RAD;
 
   if (Rudder_pedal <= 0)
     rudder = - Rudder_pedal * drmin * DEG_TO_RAD;

@@ -33,13 +33,14 @@
 			    Added pilot_elev_no, pilot_ail_no, and
 			    pilot_rud_no.
 	       07/05/2001   (RD) Added pilot_(elev,ail,rud)_no=false
-
+	       01/11/2002   (AP) Added call to uiuc_bootTime()
+	       
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
 	       Robert Deters      <rdeters@uiuc.edu>
-
+	       Ann Peedikayil     <peedikay@uiuc.edu>
 ----------------------------------------------------------------------
 
  VARIABLES:
@@ -97,7 +98,7 @@
 #include "uiuc_coefficients.h"
 
 
-void uiuc_coefficients()
+void uiuc_coefficients(double dt)
 {
   double l_trim, l_defl;
   double V_rel_wind_dum, U_body_dum;
@@ -181,6 +182,7 @@ void uiuc_coefficients()
   // check to see if icing model engaged
   if (ice_model)
     {
+      uiuc_iceboot(dt);
       uiuc_ice_eta();
     }
 
@@ -204,6 +206,19 @@ void uiuc_coefficients()
   uiuc_coef_sideforce();
   uiuc_coef_roll();
   uiuc_coef_yaw();
+  if (ice_case)
+    {
+      eta_tail = sublimation(OATemperature_F, eta_tail, dt);
+      eta_wing_left = sublimation(OATemperature_F, eta_wing_left, dt);
+      eta_wing_right = sublimation(OATemperature_F, eta_wing_right, dt);
+      //removed shed until new model is created
+      //eta_tail = shed(0.0, eta_tail, OATemperature_F, 0.0, dt);
+      //eta_wing_left = shed(0.0, eta_wing_left, OATemperature_F, 0.0, dt);
+      //eta_wing_right = shed(0.0, eta_wing_right, OATemperature_F, 0.0, dt);
+      
+      Calc_Iced_Forces();
+      add_ice_effects();
+    }
 
   if (pilot_ail_no)
     {

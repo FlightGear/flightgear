@@ -120,6 +120,15 @@ void uiuc_map_record5()
   record_map["M_l_rp"]            =      M_l_rp_record              ;
   record_map["M_m_rp"]            =      M_m_rp_record              ;
   record_map["M_n_rp"]            =      M_n_rp_record              ;
+
+  /***********************Flapper Data********************/
+  /* record_map["flapper_freq"]       =      flapper_freq_record        ;
+ record_map["flapper_phi"]        =      flapper_phi_record         ;
+ record_map["flapper_phi_deg"]    =      flapper_phi_deg_record     ;
+ record_map["flapper_Lift"]       =      flapper_Lift_record        ;
+ record_map["flapper_Thrust"]     =      flapper_Thrust_record      ;
+ record_map["flapper_Inertia"]    =      flapper_Inertia_record     ;
+ record_map["flapper_Moment"]     =      flapper_Moment_record      ;*/
 }
 
 // end uiuc_map_record5.cpp

@@ -137,6 +137,7 @@ void uiuc_map_ice()
   ice_map["kCn_b3"]               =      kCn_b3_flag                ;
   ice_map["beta_probe_wing"]      =      beta_probe_wing_flag       ;
   ice_map["beta_probe_tail"]      =      beta_probe_tail_flag       ;
+  ice_map["bootTime"]             =      bootTime_flag              ;
 }
 
 // end uiuc_map_ice.cpp

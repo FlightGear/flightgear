@@ -198,43 +198,6 @@ void uiuc_map_record4()
   record_map["Cn_dr_save"]        =      Cn_dr_save_record          ;
   record_map["Cn_q_save"]         =      Cn_q_save_record           ;
   record_map["Cn_b3_save"]        =      Cn_b3_save_record          ;
-
-
-  /******************** Ice Detection ********************/
-  record_map["CLclean_wing"]            = CLclean_wing_record            ;
-  record_map["CLiced_wing"]             = CLiced_wing_record             ;
-  record_map["CLclean_tail"]            = CLclean_tail_record            ;
-  record_map["CLiced_tail"]             = CLiced_tail_record             ;
-  record_map["Lift_clean_wing"]         = Lift_clean_wing_record         ;
-  record_map["Lift_iced_wing"]          = Lift_iced_wing_record          ;
-  record_map["Lift_clean_tail"]         = Lift_clean_tail_record         ;
-  record_map["Lift_iced_tail"]          = Lift_iced_tail_record          ;
-  record_map["Gamma_clean_wing"]        = Gamma_clean_wing_record        ;
-  record_map["Gamma_iced_wing"]         = Gamma_iced_wing_record         ;
-  record_map["Gamma_clean_tail"]        = Gamma_clean_tail_record        ;
-  record_map["Gamma_iced_tail"]         = Gamma_iced_tail_record         ;
-  record_map["w_clean_wing"]            = w_clean_wing_record            ;
-  record_map["w_iced_wing"]             = w_iced_wing_record             ;
-  record_map["w_clean_tail"]            = w_clean_tail_record            ;
-  record_map["w_iced_tail"]             = w_iced_tail_record             ;
-  record_map["V_total_clean_wing"]      = V_total_clean_wing_record      ;
-  record_map["V_total_iced_wing"]       = V_total_iced_wing_record       ;
-  record_map["V_total_clean_tail"]      = V_total_clean_tail_record      ;
-  record_map["V_total_iced_tail"]       = V_total_iced_tail_record       ;
-  record_map["beta_flow_clean_wing"]    = beta_flow_clean_wing_record    ;
-  record_map["beta_flow_clean_wing_deg"]= beta_flow_clean_wing_deg_record;
-  record_map["beta_flow_iced_wing"]     = beta_flow_iced_wing_record     ;
-  record_map["beta_flow_iced_wing_deg"] = beta_flow_iced_wing_deg_record ;
-  record_map["beta_flow_clean_tail"]    = beta_flow_clean_tail_record    ;
-  record_map["beta_flow_clean_tail_deg"]= beta_flow_clean_tail_deg_record;
-  record_map["beta_flow_iced_tail"]     = beta_flow_iced_tail_record     ;
-  record_map["beta_flow_iced_tail_deg"] = beta_flow_iced_tail_deg_record ;
-  record_map["Dbeta_flow_wing"]         = Dbeta_flow_wing_record         ;
-  record_map["Dbeta_flow_wing_deg"]     = Dbeta_flow_wing_deg_record     ;
-  record_map["Dbeta_flow_tail"]         = Dbeta_flow_tail_record         ;
-  record_map["Dbeta_flow_tail_deg"]     = Dbeta_flow_tail_deg_record     ;
-  record_map["pct_beta_flow_wing"]      = pct_beta_flow_wing_record      ;
-  record_map["pct_beta_flow_tail"]      = pct_beta_flow_tail_record      ;
 }
 
 // end uiuc_map_record4.cpp

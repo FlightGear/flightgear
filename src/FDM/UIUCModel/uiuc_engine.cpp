@@ -172,6 +172,39 @@ void uiuc_engine()
             F_Z_engine = 0.0;
             break;
           }
+	case forcemom_flag:
+	  {
+	    double Xp_input_endTime = Xp_input_timeArray[Xp_input_ntime];
+	    if (Simtime >= Xp_input_startTime && 
+		Simtime <= (Xp_input_startTime + Xp_input_endTime))
+	      {
+		double time = Simtime - Xp_input_startTime;
+		F_X_engine = uiuc_1Dinterpolation(Xp_input_timeArray,
+						  Xp_input_XpArray,
+						  Xp_input_ntime,
+						  time);
+	      }
+	    double Zp_input_endTime = Zp_input_timeArray[Zp_input_ntime];
+	    if (Simtime >= Zp_input_startTime && 
+		Simtime <= (Zp_input_startTime + Zp_input_endTime))
+	      {
+		double time = Simtime - Zp_input_startTime;
+		F_Z_engine = uiuc_1Dinterpolation(Zp_input_timeArray,
+						  Zp_input_ZpArray,
+						  Zp_input_ntime,
+						  time);
+	      }
+	    double Mp_input_endTime = Mp_input_timeArray[Mp_input_ntime];
+	    if (Simtime >= Mp_input_startTime && 
+		Simtime <= (Mp_input_startTime + Mp_input_endTime))
+	      {
+		double time = Simtime - Mp_input_startTime;
+		M_m_engine = uiuc_1Dinterpolation(Mp_input_timeArray,
+						  Mp_input_MpArray,
+						  Mp_input_ntime,
+						  time);
+	      }
+	  }
         };
     }
   return;

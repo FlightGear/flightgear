@@ -93,6 +93,7 @@
 //#include "Main/simple_udp.h"
 #include "uiuc_fog.h" //321654
 //#include "uiuc_network.h"
+//#include "uiuc_get_flapper.h"
 
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
@@ -104,7 +105,7 @@ extern "C" void uiuc_force_moment(double dt);
 extern "C" void uiuc_engine_routine();
 extern "C" void uiuc_gear_routine();
 extern "C" void uiuc_record_routine(double dt);
-//extern "C" void uiuc_network_routine();
+extern "C" void uiuc_network_routine();
 extern "C" void uiuc_vel_init ();
 extern "C" void uiuc_initial_init ();
 
@@ -188,7 +189,11 @@ void uiuc_force_moment(double dt)
   double qSb = qS * bw;
 
   uiuc_aerodeflections(dt);
-  uiuc_coefficients();
+  uiuc_coefficients(dt);
+  //if (flapper_model)
+  //  {
+  //    uiuc_get_flapper(dt);
+  //  }
 
   /* Calculate the forces */
   if (CX && CZ)
@@ -232,6 +237,13 @@ void uiuc_force_moment(double dt)
     M_m_aero += -I_yy_appMass * Q_dot_body;
   if (I_zz_appMass)
     M_m_aero += -I_zz_appMass * R_dot_body;
+
+  //if (flapper_model)
+  //  {
+  //    F_X_aero += F_X_aero_flapper;
+  //    F_Z_aero += F_Z_aero_flapper;
+  //    M_m_aero += flapper_Moment;
+  //  }
 
   // fog field update
    Fog = 0;
@@ -288,7 +300,7 @@ void uiuc_record_routine(double dt)
     uiuc_recorder(dt);
 }
 
-//void uiuc_network_routine ()
+//void uiuc_network_routine()
 //{
 //  uiuc_network();
 //}

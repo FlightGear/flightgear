@@ -24,6 +24,9 @@ libUIUCModel_a_SOURCES = \
 			uiuc_fog.cpp uiuc_fog.h \
 			uiuc_gear.cpp uiuc_gear.h\
                         uiuc_ice.cpp uiuc_ice.h \
+			uiuc_iceboot.cpp uiuc_iceboot.h \
+			uiuc_ice_rates.cpp uiuc_ice_rates.h \
+			uiuc_iced_nonlin.cpp uiuc_iced_nonlin.h \
                         uiuc_initializemaps.cpp uiuc_initializemaps.h \
 			uiuc_map_CD.cpp uiuc_map_CD.h \
 			uiuc_map_CL.cpp uiuc_map_CL.h \
@@ -46,6 +49,7 @@ libUIUCModel_a_SOURCES = \
 			uiuc_map_record3.cpp uiuc_map_record3.h \
 			uiuc_map_record4.cpp uiuc_map_record4.h \
 			uiuc_map_record5.cpp uiuc_map_record5.h \
+			uiuc_map_record6.cpp uiuc_map_record6.h \
                         uiuc_menu.cpp uiuc_menu.h \
                         uiuc_parsefile.cpp uiuc_parsefile.h \
                         uiuc_recorder.cpp uiuc_recorder.h \

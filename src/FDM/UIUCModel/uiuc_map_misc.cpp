@@ -70,6 +70,8 @@ void uiuc_map_misc()
 {
   misc_map["simpleHingeMomentCoef"] =    simpleHingeMomentCoef_flag ;
   misc_map["dfTimefdf"]             =    dfTimefdf_flag             ;
+  //misc_map["flapper"]               =    flapper_flag               ;
+  //misc_map["flapper_phi_init"]      =    flapper_phi_init_flag      ;
 }
 
 // end uiuc_map_misc.cpp

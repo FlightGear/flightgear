@@ -101,6 +101,7 @@ void uiuc_map_init()
   init_map["U_body"]              =      U_body_flag                ;
   init_map["V_body"]              =      V_body_flag                ;
   init_map["W_body"]              =      W_body_flag                ;
+  init_map["ignore_unknown"]       =      ignore_unknown_flag        ;
 }
 
 // end uiuc_map_init.cpp

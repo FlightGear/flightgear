@@ -420,7 +420,7 @@ void uiuc_coef_drag()
           }
         case CXfabetaf_flag:
           {
-	    if (CXfabetaf_nice == 1)
+	    if (CXfabetaf_nice == 1) {
 	      CXfabetafI = uiuc_3Dinterp_quick(CXfabetaf_fArray,
 					       CXfabetaf_aArray_nice,
 					       CXfabetaf_bArray_nice,
@@ -431,7 +431,19 @@ void uiuc_coef_drag()
 					       flap_pos,
 					       Alpha,
 					       Beta);
-	    else
+	      // temp until Jim's code works
+	      //CXo = uiuc_3Dinterp_quick(CXfabetaf_fArray,
+	      //			 CXfabetaf_aArray_nice,
+	      //			 CXfabetaf_bArray_nice,
+	      //			 CXfabetaf_CXArray,
+	      //			 CXfabetaf_na_nice,
+	      //			 CXfabetaf_nb_nice,
+	      //			 CXfabetaf_nf,
+	      //			 flap_pos,
+	      //			 0.0,
+	      //			 Beta); 
+	    }
+	    else {
 	      CXfabetafI = uiuc_3Dinterpolation(CXfabetaf_fArray,
 						CXfabetaf_aArray,
 						CXfabetaf_betaArray,
@@ -442,6 +454,18 @@ void uiuc_coef_drag()
 						flap_pos,
 						Alpha,
 						Beta);
+	      // temp until Jim's code works
+	      //CXo = uiuc_3Dinterpolation(CXfabetaf_fArray,
+	      //			  CXfabetaf_aArray,
+	      //			  CXfabetaf_betaArray,
+	      //			  CXfabetaf_CXArray,
+	      //			  CXfabetaf_nAlphaArray,
+	      //			  CXfabetaf_nbeta,
+	      //			  CXfabetaf_nf,
+	      //			  flap_pos,
+	      //			  0.0,
+	      //			  Beta); 
+	    }
 	    CX += CXfabetafI;
             break;
           }

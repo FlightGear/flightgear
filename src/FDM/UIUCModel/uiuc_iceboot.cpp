@@ -1,83 +1,89 @@
-/********************************************************************** 
- 
- FILENAME:     uiuc_map_engine.cpp 
+/**********************************************************************
 
----------------------------------------------------------------------- 
-
- DESCRIPTION:  initializes the engine map
+ FILENAME:     uiuc_iceboot.cpp
 
 ----------------------------------------------------------------------
- 
+
+ DESCRIPTION:  checks if the iceboot is on, if so then eta ice will equal 
+               zero
+
+----------------------------------------------------------------------
+
  STATUS:       alpha version
 
 ----------------------------------------------------------------------
- 
+
  REFERENCES:   
- 
-----------------------------------------------------------------------
- 
- HISTORY:      04/08/2000   initial release
-               06/18/2001   (RD) Added Throttle_pct_input
 
 ----------------------------------------------------------------------
- 
- AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
-               Jeff Scott         <jscott@mail.com>
-	       Robert Deters      <rdeters@uiuc.edu>
- 
+
+ HISTORY:      01/11/2002   initial release
+               
 ----------------------------------------------------------------------
- 
+
+ AUTHOR(S):    Robert Deters       <rdeters@uiuc.edu>
+   	       Ann Peedikayil	   <peedikay@uiuc.edu>
+
+----------------------------------------------------------------------
+
  VARIABLES:
- 
+
 ----------------------------------------------------------------------
- 
- INPUTS:       none
- 
+
+ INPUTS:       -Simtime
+               -icing times
+               -dt
+	       -bootTime 
+              
 ----------------------------------------------------------------------
- 
- OUTPUTS:      none
- 
+
+ OUTPUTS:      -icing severity (eta_ice)
+
 ----------------------------------------------------------------------
- 
- CALLED BY:    uiuc_initializemaps.cpp
- 
+
+ CALLED BY:    uiuc_coefficients
+              
 ----------------------------------------------------------------------
- 
+
  CALLS TO:     none
- 
+
 ----------------------------------------------------------------------
- 
- COPYRIGHT:    (C) 2000 by Michael Selig
- 
+
+ COPYRIGHT:    (C) 2002 by Michael Selig
+
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
  as published by the Free Software Foundation.
- 
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
  USA or view http://www.gnu.org/copyleft/gpl.html.
- 
+
 **********************************************************************/
 
-#include "uiuc_map_engine.h"
+#include "uiuc_iceboot.h"
 
 
-void uiuc_map_engine()
-{
-  engine_map["simpleSingle"]      =      simpleSingle_flag         ;
-  engine_map["c172"]              =      c172_flag                 ;
-  engine_map["cherokee"]          =      cherokee_flag             ;
-  engine_map["Throttle_pct_input"]=      Throttle_pct_input_flag   ;
-  engine_map["forcemom"]          =      forcemom_flag             ;
-  engine_map["Xp_input"]          =      Xp_input_flag             ;
-  engine_map["Zp_input"]          =      Zp_input_flag             ;
-  engine_map["Mp_input"]          =      Mp_input_flag             ;
+void uiuc_iceboot(double dt)
+{ 
+    	    
+  if (bootTrue[bootindex])
+    {
+      if (bootTime[bootindex]- dt <Simtime && bootTime[bootindex]+ dt >Simtime)
+      // checks if the boot is on
+       { 
+         eta_ice = 0;	      
+	 // drops the eta ice to zero
+	   
+	 if (bootTime [bootindex] > iceTime)
+	   iceTime = bootTime[bootindex];
+	 bootindex++;
+       }
+    }
 }
-
-// end uiuc_map_engine.cpp

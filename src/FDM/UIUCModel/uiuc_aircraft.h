@@ -59,6 +59,7 @@
 	       11/12/2001   (RD) Added variables needed for Twin Otter
 	                    non-linear model with flaps (Cxfxxf). 
 			    Zero flap variables removed.
+               01/11/2002   (AP) Added keywords for bootTime
 	       02/13/2002   (RD) Added variables so linear aero model
 	                    values can be recorded
 	       02/18/2002   (RD) Added variables necessary to use the
@@ -75,6 +76,7 @@
                Jeff Scott         <jscott@mail.com>
 	       Robert Deters      <rdeters@uiuc.edu>
                David Megginson    <david@megginson.com>
+	       Ann Peedikayil	  <peedikay@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -136,6 +138,7 @@
 #include <math.h>
 
 #include "uiuc_parsefile.h"
+//#include "uiuc_flapdata.h"
 
 SG_USING_STD(map);
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
@@ -162,7 +165,7 @@ enum {Dx_pilot_flag = 2000, Dy_pilot_flag, Dz_pilot_flag,
       use_abs_U_body_2U_flag,
       dyn_on_speed_flag, dyn_on_speed_zero_flag, 
       use_dyn_on_speed_curve1_flag, Alpha_flag, 
-      Beta_flag, U_body_flag, V_body_flag, W_body_flag};
+      Beta_flag, U_body_flag, V_body_flag, W_body_flag, ignore_unknown_flag};
 
 // geometry === Aircraft-specific geometric quantities
 enum {bw_flag = 3000, cbar_flag, Sw_flag, ih_flag, bh_flag, ch_flag, Sh_flag};
@@ -188,7 +191,7 @@ enum {Weight_flag = 6000,
 
 // engine ===== Propulsion data
 enum {simpleSingle_flag = 7000, c172_flag, cherokee_flag, 
-      Throttle_pct_input_flag};
+      Throttle_pct_input_flag, forcemom_flag, Xp_input_flag, Zp_input_flag, Mp_input_flag};
 
 // CD ========= Aerodynamic x-force quantities (longitudinal)
 enum {CDo_flag = 8000, CDK_flag, CD_a_flag, CD_adot_flag, CD_q_flag, CD_ih_flag, CD_de_flag, 
@@ -245,7 +248,7 @@ enum {iceTime_flag = 15000, transientTime_flag, eta_ice_final_flag,
       kClo_flag, kCl_beta_flag, kCl_p_flag, kCl_r_flag, kCl_da_flag, 
       kCl_dr_flag, kCl_daa_flag, 
       kCno_flag, kCn_beta_flag, kCn_p_flag, kCn_r_flag, kCn_da_flag, 
-      kCn_dr_flag, kCn_q_flag, kCn_b3_flag};
+      kCn_dr_flag, kCn_q_flag, kCn_b3_flag, bootTime_flag};
 
 // record ===== Record desired quantites to file
 enum {Simtime_record = 16000, dt_record, 
@@ -362,6 +365,11 @@ enum {Simtime_record = 16000, dt_record,
       M_l_gear_record, M_m_gear_record, M_n_gear_record, 
       M_l_rp_record, M_m_rp_record, M_n_rp_record,
 
+      CL_clean_record, CL_iced_record,
+      CD_clean_record, CD_iced_record,
+      Cm_clean_record, Cm_iced_record,
+      Ch_clean_record, Ch_iced_record,
+      Cl_clean_record, Cl_iced_record,
       CLclean_wing_record, CLiced_wing_record, 
       CLclean_tail_record, CLiced_tail_record, 
       Lift_clean_wing_record, Lift_iced_wing_record, 
@@ -378,10 +386,15 @@ enum {Simtime_record = 16000, dt_record,
       beta_flow_iced_tail_record, beta_flow_iced_tail_deg_record, 
       Dbeta_flow_wing_record, Dbeta_flow_wing_deg_record, 
       Dbeta_flow_tail_record, Dbeta_flow_tail_deg_record, 
-      pct_beta_flow_wing_record, pct_beta_flow_tail_record};
+      pct_beta_flow_wing_record, pct_beta_flow_tail_record, eta_ice_record,
+
+      flapper_freq_record, flapper_phi_record,
+      flapper_phi_deg_record, flapper_Lift_record, flapper_Thrust_record,
+      flapper_Inertia_record, flapper_Moment_record};
 
 // misc ======= Miscellaneous inputs
-enum {simpleHingeMomentCoef_flag = 17000, dfTimefdf_flag};
+enum {simpleHingeMomentCoef_flag = 17000, dfTimefdf_flag/*, flapper_flag,
+							  flapper_phi_init_flag*/};
 
 //321654
 // fog ======== Fog field quantities
@@ -517,7 +530,6 @@ struct AIRCRAFT
   double W_body_init;
 #define W_body_init_true       aircraft_->W_body_init_true
 #define W_body_init            aircraft_->W_body_init
-
 
   /* Variables (token2) ===========================================*/
   /* geometry ====== Aircraft-specific geometric quantities =======*/
@@ -701,6 +713,42 @@ struct AIRCRAFT
 #define Throttle_pct_input_dTArray    aircraft_->Throttle_pct_input_dTArray
 #define Throttle_pct_input_ntime      aircraft_->Throttle_pct_input_ntime
 #define Throttle_pct_input_startTime  aircraft_->Throttle_pct_input_startTime
+  bool Xp_input;
+  string Xp_input_file;
+  double Xp_input_timeArray[5400];
+  double Xp_input_XpArray[5400];
+  int Xp_input_ntime;
+  double Xp_input_startTime;
+#define Xp_input            aircraft_->Xp_input
+#define Xp_input_file       aircraft_->Xp_input_file
+#define Xp_input_timeArray  aircraft_->Xp_input_timeArray
+#define Xp_input_XpArray    aircraft_->Xp_input_XpArray
+#define Xp_input_ntime      aircraft_->Xp_input_ntime
+#define Xp_input_startTime  aircraft_->Xp_input_startTime
+  bool Zp_input;
+  string Zp_input_file;
+  double Zp_input_timeArray[5400];
+  double Zp_input_ZpArray[5400];
+  int Zp_input_ntime;
+  double Zp_input_startTime;
+#define Zp_input            aircraft_->Zp_input
+#define Zp_input_file       aircraft_->Zp_input_file
+#define Zp_input_timeArray  aircraft_->Zp_input_timeArray
+#define Zp_input_ZpArray    aircraft_->Zp_input_ZpArray
+#define Zp_input_ntime      aircraft_->Zp_input_ntime
+#define Zp_input_startTime  aircraft_->Zp_input_startTime
+  bool Mp_input;
+  string Mp_input_file;
+  double Mp_input_timeArray[5400];
+  double Mp_input_MpArray[5400];
+  int Mp_input_ntime;
+  double Mp_input_startTime;
+#define Mp_input            aircraft_->Mp_input
+#define Mp_input_file       aircraft_->Mp_input_file
+#define Mp_input_timeArray  aircraft_->Mp_input_timeArray
+#define Mp_input_MpArray    aircraft_->Mp_input_MpArray
+#define Mp_input_ntime      aircraft_->Mp_input_ntime
+#define Mp_input_startTime  aircraft_->Mp_input_startTime
 
 
   /* Variables (token2) ===========================================*/
@@ -1932,7 +1980,12 @@ struct AIRCRAFT
 #define Cn_dr_clean    aircraft_->Cn_dr_clean
 #define Cn_q_clean     aircraft_->Cn_q_clean
 #define Cn_b3_clean    aircraft_->Cn_b3_clean
-
+  double bootTime[20];
+  int    bootindex;
+  bool   bootTrue[20];
+#define bootTime       aircraft_->bootTime  
+#define bootindex      aircraft_->bootindex 
+#define bootTrue       aircraft_->bootTrue
 
   //321654
   /* Variables (token2) ===========================================*/
@@ -2069,8 +2122,27 @@ struct AIRCRAFT
 #define dfTimefdf_dfArray      aircraft_->dfTimefdf_dfArray
 #define dfTimefdf_TimeArray    aircraft_->dfTimefdf_TimeArray
 #define dfTimefdf_ndf          aircraft_->dfTimefdf_ndf
-
-
+  /*
+  FlapData *flapper_data;
+#define flapper_data           aircraft_->flapper_data
+  bool flapper_model;
+#define flapper_model          aircraft_->flapper_model
+  double flapper_phi_init;
+#define flapper_phi_init       aircraft_->flapper_phi_init
+  double flapper_freq, flapper_cycle_pct, flapper_phi;
+  double flapper_Lift, flapper_Thrust, flapper_Inertia;
+  double flapper_Moment;
+#define flapper_freq           aircraft_->flapper_freq
+#define flapper_cycle_pct      aircraft_->flapper_cycle_pct
+#define flapper_phi            aircraft_->flapper_phi
+#define flapper_Lift           aircraft_->flapper_Lift
+#define flapper_Thrust         aircraft_->flapper_Thrust
+#define flapper_Inertia        aircraft_->flapper_Inertia
+#define flapper_Moment         aircraft_->flapper_Moment
+  double F_X_aero_flapper, F_Z_aero_flapper;
+#define F_X_aero_flapper       aircraft_->F_X_aero_flapper
+#define F_Z_aero_flapper       aircraft_->F_Z_aero_flapper
+  */
   /* Other variables (not tokens) =================================*/
 
   double convert_x, convert_y, convert_z;
@@ -2096,11 +2168,47 @@ struct AIRCRAFT
 #define flap_moving_rate aircraft_->flap_moving_rate
 #define flap_pos         aircraft_->flap_pos
 
+  double delta_CL, delta_CD, delta_Cm, delta_Ch, delta_Cl;
+#define delta_CL         aircraft_->delta_CL
+#define delta_CD         aircraft_->delta_CD
+#define delta_Cm         aircraft_->delta_Cm
+#define delta_Ch         aircraft_->delta_Ch
+#define delta_Cl         aircraft_->delta_Cl
+
+  int ice_case;
+  double eta_wing_left, eta_wing_right, eta_tail;
+  double OATemperature_F;
+#define ice_case         aircraft_->ice_case
+#define eta_wing_left    aircraft_->eta_wing_left
+#define eta_wing_right   aircraft_->eta_wing_right
+#define eta_tail         aircraft_->eta_tail
+#define OATemperature_F  aircraft_->OATemperature_F
+
+  double Ch;
+#define Ch   aircraft_->Ch;
+
+  double CL_clean, CL_iced;
+  double CD_clean, CD_iced;
+  double Cm_clean, Cm_iced;
+  double Cl_clean, Cl_iced;
+  double Ch_clean, Ch_iced;
+#define CL_clean         aircraft_->CL_clean
+#define CD_clean         aircraft_->CD_clean
+#define Cm_clean         aircraft_->Cm_clean
+#define Cl_clean         aircraft_->Cl_clean
+#define Ch_clean         aircraft_->Ch_clean
+#define CL_iced          aircraft_->CL_iced
+#define CD_iced          aircraft_->CD_iced
+#define Cm_iced          aircraft_->Cm_iced
+#define Cl_iced          aircraft_->Cl_iced
+#define Ch_iced          aircraft_->Ch_iced
 
   ofstream fout;
   
 #define fout aircraft_->fout
   
+  bool dont_ignore;
+#define dont_ignore            aircraft_->dont_ignore
   
 };
 

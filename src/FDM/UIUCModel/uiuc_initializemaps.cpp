@@ -91,6 +91,7 @@ void uiuc_initializemaps()
   uiuc_map_record3();
   uiuc_map_record4();
   uiuc_map_record5();
+  uiuc_map_record6();
   uiuc_map_misc();
 }
 

@@ -9,11 +9,14 @@
 #include "uiuc_coef_sideforce.h"
 #include "uiuc_coef_roll.h"
 #include "uiuc_coef_yaw.h"
+#include "uiuc_iceboot.h"
+#include "uiuc_iced_nonlin.h"
+#include "uiuc_ice_rates.h"
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_cockpit.h>     /*Long_control,Lat_control,Rudder_pedal */
 #include <FDM/LaRCsim/ls_constants.h>   /* RAD_TO_DEG, DEG_TO_RAD*/
 
 
-void uiuc_coefficients();
+void uiuc_coefficients(double dt);
 
 #endif // _COEFFICIENTS_H_

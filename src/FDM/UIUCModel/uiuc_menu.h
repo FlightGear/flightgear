@@ -12,8 +12,9 @@
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_cockpit.h>    /* Long_trim defined */
 #include <FDM/LaRCsim/ls_constants.h>  /* INVG defined */
+//#include "uiuc_flapdata.h"
 
-bool check_float(string  &token); // To check whether the token is a float or not
+bool check_float(const string &token); // To check whether the token is a float or not
 void uiuc_menu (string aircraft);
 
 #endif //_MENU_H_

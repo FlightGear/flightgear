@@ -22,6 +22,7 @@
 #include "uiuc_map_record3.h"
 #include "uiuc_map_record4.h"
 #include "uiuc_map_record5.h"
+#include "uiuc_map_record6.h"
 #include "uiuc_map_misc.h"
 
 void uiuc_initializemaps();
