@@ -131,13 +131,13 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "native" ) {
 	    FGNative *native = new FGNative;
 	    io = native;
-	} else if ( protocol == "native_ctrls" ) {
+	} else if ( protocol == "native-ctrls" ) {
 	    FGNativeCtrls *native_ctrls = new FGNativeCtrls;
 	    io = native_ctrls;
-	} else if ( protocol == "native_fdm" ) {
+	} else if ( protocol == "native-fdm" ) {
 	    FGNativeFDM *native_fdm = new FGNativeFDM;
 	    io = native_fdm;
-	} else if ( protocol == "native_gui" ) {
+	} else if ( protocol == "native-gui" ) {
 	    FGNativeGUI *net_gui = new FGNativeGUI;
 	    io = net_gui;
 	} else if ( protocol == "nmea" ) {
