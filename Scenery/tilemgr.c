@@ -193,7 +193,9 @@ void fgTileMgrRender( void ) {
     index = fgTileCacheExists(&p);
     fgTileCacheEntryInfo(index, &display_list, &scenery.next_center );
 
-    printf("Current bucket = %d %d %d %d\n", p.lon, p.lat, p.x, p.y );
+    printf("Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
+	   FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG,
+	   p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
 
     for ( i = 0; i < FG_LOCAL_X_Y; i++ ) {
 	index = tiles[i];
@@ -215,9 +217,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.20  1998/03/14 00:30:51  curt
-/* Beginning initial terrain texturing experiments.
+/* Revision 1.21  1998/03/23 21:23:05  curt
+/* Debugging output tweaks.
 /*
+ * Revision 1.20  1998/03/14 00:30:51  curt
+ * Beginning initial terrain texturing experiments.
+ *
  * Revision 1.19  1998/02/20 00:16:25  curt
  * Thursday's tweaks.
  *

@@ -75,8 +75,6 @@ int fgSceneryInit( void ) {
 	return(0);
     } 
 
-    /* xglTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, height, width, 0,
-		  GL_LUMINANCE, GL_UNSIGNED_BYTE, texbuf); */
     xglTexImage2D(GL_TEXTURE_2D, 0, 3, height, width, 0,
 		  GL_RGB, GL_UNSIGNED_BYTE, texbuf);
 
@@ -114,9 +112,12 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.36  1998/03/14 00:30:50  curt
-/* Beginning initial terrain texturing experiments.
+/* Revision 1.37  1998/03/23 21:23:05  curt
+/* Debugging output tweaks.
 /*
+ * Revision 1.36  1998/03/14 00:30:50  curt
+ * Beginning initial terrain texturing experiments.
+ *
  * Revision 1.35  1998/01/31 00:43:26  curt
  * Added MetroWorks patches from Carmen Volpe.
  *
