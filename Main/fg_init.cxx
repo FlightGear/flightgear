@@ -140,9 +140,9 @@ int fgInitGeneral( void ) {
     FG_LOG( FG_GENERAL, FG_INFO, "FG_ROOT = " << root << endl );
 
     // prime the frame rate counter pump
-    for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
-	general.frames[i] = 0.0;
-    }
+    // for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
+    //    general.frames[i] = 0.0;
+    // }
 
     return ( 1 ); 
 }
@@ -381,6 +381,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.59  1998/12/18 23:40:57  curt
+// New frame rate counting mechanism.
+//
 // Revision 1.58  1998/12/09 18:50:25  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

@@ -454,8 +454,10 @@ static void fgMainLoop( void ) {
     fgTIME *t;
     static int remainder = 0;
     int elapsed, multi_loop;
-    int i;
-    double accum;
+    // int i;
+    // double accum;
+    static time_t last_time = 0;
+    static int frames = 0;
 
     f = current_aircraft.fdm_state;
     g = &general;
@@ -463,6 +465,15 @@ static void fgMainLoop( void ) {
 
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
+
+#if defined( ENABLE_LINUX_JOYSTICK )
+    // Read joystick and update control settings
+    fgJoystickRead();
+#elif defined( ENABLE_GLUT_JOYSTICK )
+    // Glut joystick support works by feeding a joystick handler
+    // function to glut.  This is taken care of once in the joystick
+    // init routine and we don't have to worry about it again.
+#endif
 
     current_weather.Update();
 
@@ -501,15 +512,6 @@ static void fgMainLoop( void ) {
     // update "time"
     fgTimeUpdate(f, t);
 
-#if defined( ENABLE_LINUX_JOYSTICK )
-    // Read joystick and update control settings
-    fgJoystickRead();
-#elif defined( ENABLE_GLUT_JOYSTICK )
-    // Glut joystick support works by feeding a joystick handler
-    // function to glut.  This is taken care of once in the joystick
-    // init routine and we don't have to worry about it again.
-#endif
-
     // Get elapsed time for this past frame
     elapsed = fgGetTimeInterval();
     FG_LOG( FG_ALL, FG_BULK, 
@@ -517,7 +519,15 @@ static void fgMainLoop( void ) {
 	    << ", previous remainder is = " << remainder );
 
     // Calculate frame rate average
-    if ( elapsed > 0.0 ) {
+    if ( (t->cur_time != last_time) && (last_time > 0) ) {
+	g->frame_rate = frames;
+	frames = 0;
+    }
+    last_time = t->cur_time;
+    ++frames;
+
+    /* old fps calculation
+    if ( elapsed > 0 ) {
 	accum = 0.0;
 	for ( i = FG_FRAME_RATE_HISTORY - 2; i >= 0; i-- ) {
 	    accum += g->frames[i];
@@ -530,33 +540,28 @@ static void fgMainLoop( void ) {
 	g->frame_rate = accum / (float)FG_FRAME_RATE_HISTORY;
 	// printf("ave = %.2f\n", g->frame_rate);
     }
-
-    // Calculate model iterations needed for next frame
-    FG_LOG( FG_ALL, FG_DEBUG, 
-	    "--> Frame rate is = " << g->frame_rate );
-    elapsed += remainder;
-
-    multi_loop = (int)(((float)elapsed * 0.001) * DEFAULT_MODEL_HZ);
-    remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
-    FG_LOG( FG_ALL, FG_BULK, 
-	    "Model iterations needed = " << multi_loop
-	    << ", new remainder = " << remainder );
-	
-    /* printf("right before fm - ground = %.2f  runway = %.2f  alt = %.2f\n",
-	   scenery.cur_elev,
-	   FG_Runway_altitude * FEET_TO_METER,
-	   FG_Altitude * FEET_TO_METER); */
+    */
 
     // Run flight model
     if ( ! use_signals ) {
-	// flight model
-	fgUpdateTimeDepCalcs(multi_loop);
-    }
+	// Calculate model iterations needed for next frame
+	FG_LOG( FG_ALL, FG_DEBUG, 
+		"--> Frame rate is = " << g->frame_rate );
+	elapsed += remainder;
 
-    /* printf("After fm - ground = %.2f  runway = %.2f  alt = %.2f\n",
-	   scenery.cur_elev,
-	   FG_Runway_altitude * FEET_TO_METER,
-	   FG_Altitude * FEET_TO_METER); */
+	multi_loop = (int)(((float)elapsed * 0.001) * DEFAULT_MODEL_HZ);
+	remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
+	FG_LOG( FG_ALL, FG_BULK, 
+		"Model iterations needed = " << multi_loop
+		<< ", new remainder = " << remainder );
+	
+	// flight model
+	if ( multi_loop > 0 ) {
+	    fgUpdateTimeDepCalcs(multi_loop);
+	} else {
+	    FG_LOG( FG_ALL, FG_INFO, "Elapsed time is zero ... we're zinging" );
+	}
+    }
 
     // Do any serial port work that might need to be done
     fgSerialProcess();
@@ -1002,6 +1007,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.77  1998/12/18 23:40:55  curt
+// New frame rate counting mechanism.
+//
 // Revision 1.76  1998/12/11 20:26:26  curt
 // Fixed view frustum culling accuracy bug so we can look out the sides and
 // back without tri-stripes dropping out.
