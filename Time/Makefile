@@ -56,12 +56,21 @@ clean:
 
 include depend
 
+fg_time.o:
+	$(CC) $(CFLAGS) -c fg_time.c -o $@
+
 fg_timer.o:
 	$(CC) $(CFLAGS) -c fg_timer.c -o $@
+
+sunpos.o:
+	$(CC) $(CFLAGS) -c sunpos.c -o $@
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.13  1997/09/22 14:44:22  curt
+# Continuing to try to align stars correctly.
+#
 # Revision 1.12  1997/08/06 00:24:31  curt
 # Working on correct real time sun lighting.
 #

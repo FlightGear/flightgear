@@ -18,13 +18,3 @@ hud.o: hud.c hud.h ../Aircraft/aircraft.h \
  ../Scenery/scenery.h ../Scenery/../types.h ../Math/mat3.h \
  ../Math/polar.h ../Math/../types.h ../Time/fg_timer.h \
  ../Math/fg_random.h ../Weather/weather.h
-test.o: test.c test.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
- ../Aircraft/../Flight/LaRCsim/ls_interface.h \
- ../Aircraft/../Flight/LaRCsim/../flight.h \
- ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h ../Flight/flight.h \
- ../Controls/controls.h ../constants.h ../Scenery/mesh.h \
- ../Scenery/scenery.h ../Scenery/../types.h ../Math/mat3.h \
- ../Math/polar.h ../Math/../types.h ../Time/fg_timer.h \
- ../Math/fg_random.h ../Weather/weather.h

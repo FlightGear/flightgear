@@ -76,7 +76,7 @@ void fgInitSubsystems( void ) {
     double cur_elev;
 
     struct FLIGHT *f;
-    struct TIME *t;
+    struct fgTIME *t;
     struct VIEW *v;
 
     f = &current_aircraft.flight;
@@ -90,29 +90,32 @@ void fgInitSubsystems( void ) {
      ****************************************************************/
 
     /* Globe Aiport, AZ */
-    FG_Runway_altitude = 3234.5;
-    FG_Runway_latitude = 120070.41;
     FG_Runway_longitude = -398391.28;
+    FG_Runway_latitude = 120070.41;
+    FG_Runway_altitude = 3234.5;
     FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
     /* Initial Position at GLOBE airport */
-    FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
+    FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Altitude = FG_Runway_altitude + 3.758099;
     /* FG_Altitude = 20000; */
     
     /* Initial Position north of the city of Globe */
-    /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Altitude = 0.0 + 3.758099; */
 
     /* Initial Position: 10125 Jewell St. NE */
-    /* FG_Latitude  = (  45.15 ) * DEG_TO_RAD; */
     /* FG_Longitude = ( -93.15 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  45.15 ) * DEG_TO_RAD; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
+    FG_Longitude = ( -583200.00 / 3600.0 ) * DEG_TO_RAD;
+    FG_Latitude  = (  110808.41 / 3600.0 ) * DEG_TO_RAD;
+
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
-	   FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG, 
+	   FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
 	   FG_Altitude * FEET_TO_METER);
 
       /* Initial Velocity */
@@ -212,9 +215,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1997/09/16 15:50:30  curt
-/* Working on star alignment and time issues.
+/* Revision 1.8  1997/09/22 14:44:20  curt
+/* Continuing to try to align stars correctly.
 /*
+ * Revision 1.7  1997/09/16 15:50:30  curt
+ * Working on star alignment and time issues.
+ *
  * Revision 1.6  1997/09/05 14:17:30  curt
  * More tweaking with stars.
  *

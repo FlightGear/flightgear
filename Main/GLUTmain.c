@@ -192,6 +192,8 @@ static void fgUpdateViewParams() {
 
     sky = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
 
+    sky = 0.15; /* force a dark sky (for testing) */
+
     if ( ambient < 0.1 ) { ambient = 0.1; }
     if ( diffuse < 0.0 ) { diffuse = 0.0; }
 
@@ -575,9 +577,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.19  1997/09/18 16:20:08  curt
-/* At dusk/dawn add/remove stars in stages.
+/* Revision 1.20  1997/09/22 14:44:19  curt
+/* Continuing to try to align stars correctly.
 /*
+ * Revision 1.19  1997/09/18 16:20:08  curt
+ * At dusk/dawn add/remove stars in stages.
+ *
  * Revision 1.18  1997/09/16 22:14:51  curt
  * Tweaked time of day lighting equations.  Don't draw stars during the day.
  *

@@ -121,13 +121,13 @@ void fgStarsInit() {
 		sscanf(front, "%lf,%lf,%lf\n", 
 		       &right_ascension, &declination, &magnitude);
 
-		if ( strcmp(name, "Hamal") == 0 ) {
+		if ( strcmp(name, "Betelgeuse") == 0 ) {
 		    printf("  *** Marking %s\n", name);
 		    ra_save = right_ascension;
 		    decl_save = declination;
 		}
 
-		if ( strcmp(name, "Algenib") == 0 ) {
+		if ( strcmp(name, "Alnilam") == 0 ) {
 		    printf("  *** Marking %s\n", name);
 		    ra_save1 = right_ascension;
 		    decl_save1 = declination;
@@ -141,12 +141,12 @@ void fgStarsInit() {
 		if ( magnitude < 0.0 ) { magnitude = 0.0; }
 		magnitude = 
 		    magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1);
-		printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
-		   name, right_ascension, declination, magnitude);
+		/* printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
+		       name, right_ascension, declination, magnitude); */
 
 		glColor3f( magnitude, magnitude, magnitude );
-		glVertex3f( 190000.0 * sin(right_ascension) * cos(declination),
-			    -190000.0 * cos(right_ascension) * cos(declination),
+		glVertex3f( 190000.0 * cos(right_ascension) * cos(declination),
+			    190000.0 * sin(right_ascension) * cos(declination),
 			    190000.0 * sin(declination) );
 
 		count++;
@@ -161,33 +161,33 @@ void fgStarsInit() {
 
 	glBegin(GL_LINE_LOOP);
         glColor3f(1.0, 0.0, 0.0);
-	glVertex3f( 190000.0 * sin(ra_save-0.2) * cos(decl_save-0.2),
-		    -190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
+	glVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
+		    190000.0 * sin(ra_save-0.2) * cos(decl_save-0.2),
 		    190000.0 * sin(decl_save-0.2) );
-	glVertex3f( 190000.0 * sin(ra_save+0.2) * cos(decl_save-0.2),
-		    -190000.0 * cos(ra_save+0.2) * cos(decl_save-0.2),
+	glVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save-0.2),
+		    190000.0 * sin(ra_save+0.2) * cos(decl_save-0.2),
 		    190000.0 * sin(decl_save-0.2) );
- 	glVertex3f( 190000.0 * sin(ra_save+0.2) * cos(decl_save+0.2),
-		    -190000.0 * cos(ra_save+0.2) * cos(decl_save+0.2),
+ 	glVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save+0.2),
+		    190000.0 * sin(ra_save+0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(decl_save+0.2) );
- 	glVertex3f( 190000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
-		    -190000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
+ 	glVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
+		    190000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(decl_save+0.2) );
 	glEnd();
 
 	glBegin(GL_LINE_LOOP);
         glColor3f(0.0, 1.0, 0.0);
-	glVertex3f( 190000.0 * sin(ra_save1-0.2) * cos(decl_save1-0.2),
-		    -190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
+	glVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
+		    190000.0 * sin(ra_save1-0.2) * cos(decl_save1-0.2),
 		    190000.0 * sin(decl_save1-0.2) );
-	glVertex3f( 190000.0 * sin(ra_save1+0.2) * cos(decl_save1-0.2),
-		    -190000.0 * cos(ra_save1+0.2) * cos(decl_save1-0.2),
+	glVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1-0.2),
+		    190000.0 * sin(ra_save1+0.2) * cos(decl_save1-0.2),
 		    190000.0 * sin(decl_save1-0.2) );
- 	glVertex3f( 190000.0 * sin(ra_save1+0.2) * cos(decl_save1+0.2),
-		    -190000.0 * cos(ra_save1+0.2) * cos(decl_save1+0.2),
+ 	glVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1+0.2),
+		    190000.0 * sin(ra_save1+0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(decl_save1+0.2) );
- 	glVertex3f( 190000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
-		    -190000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
+ 	glVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
+		    190000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(decl_save1+0.2) );
 	glEnd();
        
@@ -213,6 +213,8 @@ void fgStarsRender() {
 
     /* FG_PI_2 + 0.1 is about 6 degrees after sundown and before sunrise */
 
+    t->sun_angle = 3.0; /* force stars (for testing) */
+
     if ( t->sun_angle > (FG_PI_2 + 5 * DEG_TO_RAD ) ) {
 	/* determine which star structure to draw */
 	if ( t->sun_angle > (FG_PI_2 + 7.25 * DEG_TO_RAD ) ) {
@@ -237,8 +239,8 @@ void fgStarsRender() {
 	/* warp += 1.0; */
 	/* warp = 15.0; */
 	warp = 0.0;
-	glRotatef( -(angle+warp), 0.0, 0.0, 1.0 );
-	printf("Rotating stars by %.2f degrees + %.2f degrees\n",-angle,-warp);
+	glRotatef( (angle+warp), 0.0, 0.0, -1.0 );
+	printf("Rotating stars by %.2f degrees + %.2f degrees\n",angle,warp);
 
 	glCallList(stars[i]);
 
@@ -252,9 +254,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.10  1997/09/20 03:34:32  curt
-/* Still trying to get those durned stars aligned properly.
+/* Revision 1.11  1997/09/22 14:44:21  curt
+/* Continuing to try to align stars correctly.
 /*
+ * Revision 1.10  1997/09/20 03:34:32  curt
+ * Still trying to get those durned stars aligned properly.
+ *
  * Revision 1.9  1997/09/18 16:20:09  curt
  * At dusk/dawn add/remove stars in stages.
  *

@@ -90,11 +90,17 @@ mesh2GL.o:
 scenery.o:
 	$(CC) $(CFLAGS) -c scenery.c -o $@
 
+stars.c:
+	$(CC) $(CFLAGS) -c starts.c -o $@
+
 geometry.o:
 	$(CC) $(CFLAGS) -c geometry.c -o $@
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.20  1997/09/22 14:44:21  curt
+# Continuing to try to align stars correctly.
+#
 # Revision 1.19  1997/08/27 03:30:23  curt
 # Changed naming scheme of basic shared structures.
 #
