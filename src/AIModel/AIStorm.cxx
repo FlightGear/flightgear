@@ -40,6 +40,7 @@ FGAIStorm::FGAIStorm(FGAIManager* mgr) {
    manager = mgr;   
    _self = this;
    _type_str = "thunderstorm";
+   _otype = otStorm;
 }
 
 

@@ -29,9 +29,11 @@
 
 FGAIShip::FGAIShip(FGAIManager* mgr) {
    manager = mgr;
+   _type_str = "ship";
+   _otype = otShip;
+
    hdg_lock = false;
    rudder = 0.0;
-   _type_str = "ship";
 }
 
 FGAIShip::~FGAIShip() {

@@ -54,11 +54,12 @@ FGAIAircraft *FGAIAircraft::_self = NULL;
 FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
    manager = mgr;   
    _self = this;
+   _type_str = "aircraft";
+   _otype = otAircraft;
 
    // set heading and altitude locks
    hdg_lock = false;
    alt_lock = false;
-   _type_str = "aircraft";
 }
 
 

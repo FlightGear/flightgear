@@ -40,8 +40,10 @@ FGAIThermal::FGAIThermal(FGAIManager* mgr) {
    manager = mgr;   
    _self = this;
    _type_str = "thermal";
-   strength = 6.0;
+   _otype = otThermal;
+   max_strength = 6.0;
    diameter = 0.5;
+   strength = factor = 0.0;
 }
 
 
@@ -51,8 +53,7 @@ FGAIThermal::~FGAIThermal() {
 
 
 bool FGAIThermal::init() {
-   wind_from_down = fgGetNode("/environment/wind-from-down-fps", true);
-   scaler = 8.0 * strength / (diameter * diameter * diameter);
+   factor = 8.0 * max_strength / (diameter * diameter * diameter);
    return FGAIBase::init();
 }
 
@@ -100,13 +101,13 @@ void FGAIThermal::Run(double dt) {
    double range_ft = sqrt( lat_range*lat_range + lon_range*lon_range );
    range = range_ft / 6076.11549;
 
-   // Set rising air if within range. 
+   // Calculate speed of rising air if within range. 
    // Air vertical speed is maximum at center of thermal,
    // and decreases to zero at the edge (as distance cubed).
    if (range < (diameter * 0.5)) {
-     wind_from_down->setDoubleValue( strength - (range * range * range * scaler) );
+     strength = max_strength - ( range * range * range * factor );
    } else {
-     wind_from_down->setDoubleValue( 0.0 );
+     strength = 0.0;
    }
 }
 

@@ -37,6 +37,7 @@ SG_USING_STD(list);
 FGAIManager::FGAIManager() {
   initDone = false;
   numObjects = 0;
+  _dt = 0.0;
   dt_count = 9;
 }
 
@@ -54,6 +55,7 @@ FGAIManager::~FGAIManager() {
 void FGAIManager::init() {
   int rval;
   root = fgGetNode("sim/ai", true);
+  wind_from_down = fgGetNode("/environment/wind-from-down-fps", true);
 
   for (int i = 0; i < root->nChildren(); i++) {
     const SGPropertyNode * entry = root->getChild(i);
@@ -127,10 +129,16 @@ void FGAIManager::unbind() {
 
 
 void FGAIManager::update(double dt) {
-	
+
+        // initialize these for finding nearest thermals
+        range_nearest = 10000.0;
+        strength = 0.0;
+
+        _dt = dt;	
+
         ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
-                if ((*ai_list_itr)->getDie()) {
+                if ((*ai_list_itr)->getDie()) {      
                    freeID((*ai_list_itr)->getID());
                    delete (*ai_list_itr);
                    ai_list.erase(ai_list_itr);
@@ -138,10 +146,15 @@ void FGAIManager::update(double dt) {
                    --numObjects;
                 } else {
                    fetchUserState();
-                   (*ai_list_itr)->update(dt);
+                   if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
+                       processThermal((FGAIThermal*)*ai_list_itr); 
+                   } else { 
+                      (*ai_list_itr)->update(_dt);
+                   }
                 }
                 ++ai_list_itr;
         }
+        wind_from_down->setDoubleValue( strength );
 }
 
 
@@ -277,7 +290,7 @@ int FGAIManager::createThermal( double latitude, double longitude,
         ++numObjects;
         ai_thermal->setLongitude(longitude);
         ai_thermal->setLatitude(latitude);
-        ai_thermal->setStrength(strength);
+        ai_thermal->setMaxStrength(strength);
         ai_thermal->setDiameter(diameter / 6076.11549);
         ai_thermal->init();
         ai_thermal->bind();
@@ -312,4 +325,14 @@ void FGAIManager::fetchUserState( void ) {
      user_speed     = fgGetDouble("/velocities/uBody-fps") * 0.592484;
      dt_count = 0;
    }
+}
+
+
+// only keep the results from the nearest thermal
+void FGAIManager::processThermal( FGAIThermal* thermal ) {
+  thermal->update(_dt);
+  if ( thermal->_getRange() < range_nearest ) {
+     range_nearest = thermal->_getRange();
+     strength = thermal->getStrength();
+  }
 }

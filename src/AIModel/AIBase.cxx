@@ -52,6 +52,7 @@ FGAIBase::FGAIBase() {
     x_shift = y_shift = rotation = 0.0;
     invisible = true;
     model_path = "";
+    _otype = otNull;
 }
 
 FGAIBase::~FGAIBase() {
@@ -102,6 +103,12 @@ bool FGAIBase::init() {
 
    return true;
 }
+
+bool FGAIBase::isa( object_type otype ) {
+ if ( otype == _otype ) { return true; }
+ else { return false; } 
+}
+
 
 void FGAIBase::bind() {
    props->tie("id", SGRawValuePointer<int>(&id));

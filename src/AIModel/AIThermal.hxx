@@ -40,8 +40,10 @@ public:
         virtual void unbind();
 	void update(double dt);
 
-        inline void setStrength( double s ) { strength = s; };
+        inline void setMaxStrength( double s ) { max_strength = s; };
         inline void setDiameter( double d ) { diameter = d; };
+        inline double getStrength() const { return strength; };
+        inline double getDiameter() const { return diameter; };
 
 protected:
         static FGAIThermal *_self;
@@ -50,10 +52,10 @@ private:
 
         double dt; 
 	void Run(double dt);
-        SGPropertyNode* wind_from_down;
+        double max_strength;
         double strength;
         double diameter;
-        double scaler;
+        double factor;
 };
 
 

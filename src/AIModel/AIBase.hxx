@@ -41,6 +41,9 @@ public:
     virtual void update(double dt);
     inline Point3D GetPos() { return(pos); }
 
+    enum object_type { otNull, otAircraft, otShip, otBallistic,
+                       otRocket, otStorm, otThermal };
+
     virtual bool init();
     virtual void bind();
     virtual void unbind();
@@ -103,6 +106,7 @@ protected:
 
     static FGAIBase *_self;
     const char *_type_str;
+    object_type _otype;
 
 public:
 
@@ -129,6 +133,7 @@ public:
     static double _getRotation();
 
     static bool _isNight();
+    bool isa( object_type otype );
 };
 
 

@@ -30,6 +30,7 @@
 FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     manager = mgr;
     _type_str = "ballistic";
+    _otype = otBallistic;
 }
 
 FGAIBallistic::~FGAIBallistic() {

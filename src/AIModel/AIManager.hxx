@@ -29,6 +29,7 @@
 #include "AIBase.hxx"
 
 SG_USING_STD(list);
+class FGAIThermal;
 
 
 class FGAIManager : public SGSubsystem
@@ -52,8 +53,6 @@ private:
     id_vector_type::iterator id_itr;
 
 public:
-
-    enum object_type { otAircraft, otShip, otBallistic, otRocket, otStorm, otThermal };
 
     FGAIManager();
     ~FGAIManager();
@@ -120,6 +119,7 @@ private:
     bool initDone;
     int numObjects;
     SGPropertyNode* root;
+    SGPropertyNode* wind_from_down;
 
     double user_latitude;
     double user_longitude;
@@ -128,8 +128,14 @@ private:
     double user_pitch;
     double user_yaw;
     double user_speed;
+    double _dt;
     int dt_count;
     void fetchUserState( void );
+
+    // used by thermals
+    double range_nearest;
+    double strength;
+    void processThermal( FGAIThermal* thermal ); 
 
 };
 
