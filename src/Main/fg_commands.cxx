@@ -168,9 +168,10 @@ static bool
 do_save (const SGPropertyNode * arg, SGCommandState ** state)
 {
   const string &file = arg->getStringValue("file", "fgfs.sav");
+  bool write_all = arg->getBoolValue("write-all", false);
   SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
   ofstream output(file.c_str());
-  if (output.good() && fgSaveFlight(output)) {
+  if (output.good() && fgSaveFlight(output, write_all)) {
     output.close();
     SG_LOG(SG_INPUT, SG_INFO, "Saved flight to " << file);
     return true;

@@ -864,10 +864,10 @@ fgUpdateProps ()
  * Save the current state of the simulator to a stream.
  */
 bool
-fgSaveFlight (ostream &output)
+fgSaveFlight (ostream &output, bool write_all)
 {
   try {
-    writeProperties(output, globals->get_props());
+    writeProperties(output, globals->get_props(), write_all);
   } catch (const sg_exception &e) {
     guiErrorMessage("Error saving flight: ", e);
     return false;

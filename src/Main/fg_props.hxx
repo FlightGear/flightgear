@@ -43,9 +43,11 @@ extern void fgUpdateProps ();
  * so that the current flight can be restored later.
  *
  * @param output The output stream to write the XML save file to.
+ * @param write_all If true, write all properties rather than
+ *        just the ones flagged as archivable.
  * @return true if the flight was saved successfully.
  */
-extern bool fgSaveFlight (ostream &output);
+extern bool fgSaveFlight (ostream &output, bool write_all = false);
 
 
 /**
