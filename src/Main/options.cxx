@@ -67,6 +67,8 @@ SG_USING_NAMESPACE(std);
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
+string_list waypoints;
+
 enum
 {
     FG_OPTIONS_OK = 0,
@@ -534,36 +536,41 @@ add_channel( const string& type, const string& channel_str ) {
     return true;
 }
 
+// The parse wp and parse flight-plan options don't work anymore, because 
+// the route manager and the airport subsystems have not yet been initialized
+// at this stage. 
 
 // Parse --wp=ID[@alt]
 static bool 
 parse_wp( const string& arg ) {
-    string id, alt_str;
-    double alt = 0.0;
-
-    string::size_type pos = arg.find( "@" );
-    if ( pos != string::npos ) {
-	id = arg.substr( 0, pos );
-	alt_str = arg.substr( pos + 1 );
-	// cout << "id str = " << id << "  alt str = " << alt_str << endl;
-	alt = atof( alt_str.c_str() );
-	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
-	    alt *= SG_FEET_TO_METER;
-	}
-    } else {
-	id = arg;
-    }
-
-    FGAirport a;
-    if ( fgFindAirportID( id, &a ) ) {
-        FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
-	SGWayPoint wp( a.longitude, a.latitude, alt, SGWayPoint::WGS84, id );
-	rm->add_waypoint( wp );
-
-	return true;
-    } else {
-	return false;
-    }
+  //string id, alt_str;
+  //double alt = 0.0;
+  //
+  //string::size_type pos = arg.find( "@" );
+  //if ( pos != string::npos ) {
+  //id = arg.substr( 0, pos );
+  //alt_str = arg.substr( pos + 1 );
+  //// cout << "id str = " << id << "  alt str = " << alt_str << endl;
+  //alt = atof( alt_str.c_str() );
+  //if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
+  //    alt *= SG_FEET_TO_METER;
+  //}
+  //} else {
+  //id = arg;
+  //}
+  //
+  //FGAirport a;
+  //if ( fgFindAirportID( id, &a ) ) {
+  //    FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
+  //SGWayPoint wp( a.longitude, a.latitude, alt, SGWayPoint::WGS84, id );
+  //rm->add_waypoint( wp );
+  //
+  //return true;
+  //} else {
+  //return false;
+  //}
+  //}
+  waypoints.push_back(arg);
 }
 
 
@@ -592,7 +599,8 @@ parse_flightplan(const string& arg)
 	if ( in.eof() ) {
 	    break;
 	}
-	parse_wp(line);
+	//parse_wp(line);
+	waypoints.push_back(line);
     }
 
     return true;
