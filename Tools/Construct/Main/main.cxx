@@ -24,6 +24,10 @@
 #include <sys/types.h>  // for directory reading
 #include <dirent.h>     // for directory reading
 
+#include <sys/time.h>		// set mem allocation limit
+#include <sys/resource.h>	// set mem allocation limit
+#include <unistd.h>		// set mem allocation limit
+
 #include <Bucket/newbucket.hxx>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
@@ -393,23 +397,34 @@ void construct_tile( FGConstruct& c ) {
 		 << endl;
 	}
 
-	if ( (count > c.get_max_nodes()) && (error <= 1000.0) ) {
-	    // increase error tolerance until number of points drops below
-	    // the maximum threshold
-	    cout << "produced too many nodes ..." << endl;
+	if ( count > c.get_max_nodes() ) {
+	    if ( error <= 1000.0 ) {
+		// increase error tolerance until number of points drops below
+		// the maximum threshold
+		cout << "produced too many nodes ..." << endl;
 	    
-	    acceptable = false;
-	    shrinking = true;
+		acceptable = false;
+		shrinking = true;
 
-	    if ( growing ) {
-		error *= 1.25;
-		growing = false;
+		if ( growing ) {
+		    error *= 1.25;
+		    growing = false;
+		} else {
+		    error *= 1.5;
+		}
+
+		cout << "Setting error to " << error << " and retrying fit." 
+		     << endl;
 	    } else {
-		error *= 1.5;
+		// we tried, but can't seem to get down to a
+		// reasonable number of points even with a huge error
+		// tolerance.  This could be related to the triangle()
+		// call which might be having trouble with our input
+		// set.  Let's just die hope that our parent can try
+		// again with a smaller interior triangle angle.
+		cout << "Error:  Too many nodes." << endl;
+		exit(-1);
 	    }
-
-	    cout << "Setting error to " << error << " and retrying fit." 
-		 << endl;
 	}
     }
 
@@ -478,6 +493,30 @@ main(int argc, char **argv) {
 	usage( argv[0] );
     }
 
+    // set mem allocation limit.  Reason: occasionally the triangle()
+    // routine can blow up and allocate memory forever.  We'd like
+    // this process to die before things get out of hand so we can try
+    // again with a smaller interior angle limit.
+    int result;
+    struct rlimit limit;
+    limit.rlim_cur = 20000000;
+    limit.rlim_max = 20000000;
+    result = setrlimit( RLIMIT_DATA, &limit );
+    cout << "result of setting mem limit = " << result << endl;
+    result = setrlimit( RLIMIT_STACK, &limit );
+    cout << "result of setting mem limit = " << result << endl;
+    result = setrlimit( RLIMIT_CORE, &limit );
+    cout << "result of setting mem limit = " << result << endl;
+    result = setrlimit( RLIMIT_RSS, &limit );
+    cout << "result of setting mem limit = " << result << endl;
+
+    // cpu time limit since occassionally the triangulator can go into
+    // and infinite loop.
+    limit.rlim_cur = 120;
+    limit.rlim_max = 120;
+    result = setrlimit( RLIMIT_CPU, &limit );
+    cout << "result of setting mem limit = " << result << endl;
+   
     // main construction data management class
     FGConstruct c;
 

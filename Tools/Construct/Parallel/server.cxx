@@ -133,11 +133,13 @@ long int get_next_tile( const string& work_base )
 
 	// reset lat
 	// lat = -89.0 + (shift_up*dy) - (dy*0.5);
+	// lat = 27.0 + (0*dy) + (dy*0.5);
 	lat = 15.0 + (shift_up*dy) + (dy*0.5);
 
 	// reset lon
 	FGBucket tmp( 0.0, lat );
 	double dx = tmp.get_width();
+	// lon = -82 + (shift_over*dx) + (dx*0.5);
 	lon = -180 + (shift_over*dx) + (dx*0.5);
 
 	cout << "starting pass = " << pass 

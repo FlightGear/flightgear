@@ -134,7 +134,10 @@ bool construct_tile( const string& work_base, const string& output_base,
 	    if ( line_str == "[Finished successfully]" ) {
 		fclose(fp);
 		return true;
-	    } else if ( line_str == "Error:  Ran out of precision at" ) {
+	    } else if 
+		( (line_str.substr(0, 31) == "Error:  Ran out of precision at")
+		  || (line_str.substr(0, 22) == "Error:  Out of memory.")
+		  || (line_str.substr(0, 23) == "Error:  Too many nodes.") ) {
 		if ( angle > 9.0 ) {
 		    angle = 5.0;
 		    still_trying = true;
@@ -143,8 +146,16 @@ bool construct_tile( const string& work_base, const string& output_base,
 		    still_trying = true;
 		}
 	    }
+
 	}
 	fclose(fp);
+
+	if ( !still_trying && ( angle > 0.0 ) ) {
+	    // build died for some reason ... lets try one last time
+	    // with an interior angle restriction of 0
+	    angle = 0.0;
+	    still_trying = true;
+	}
     }
     return false;
 }
