@@ -800,6 +800,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		break;
 	case LANDING_ROLL:
 		//inAir = false;
+		descending = false;
 		if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
 			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		}
