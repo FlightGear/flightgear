@@ -45,6 +45,7 @@
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
+#include <Main/options.hxx>
 
 
 #define FG_LOCAL_X           7   /* should be odd */
@@ -83,15 +84,17 @@ void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
  * the chunk isn't already in the cache, then read it from disk. */
 int fgTileMgrUpdate( void ) {
     fgFLIGHT *f;
+    fgOPTIONS *o;
     struct fgBUCKET p1, p2;
     static struct fgBUCKET p_last = {-1000, 0, 0, 0};
     int i, j, dw, dh;
 
     f = current_aircraft.flight;
+    o = &current_options;
 
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p1);
-    dw = FG_LOCAL_X / 2;
-    dh = FG_LOCAL_Y / 2;
+    dw = o->tile_radius / 2;
+    dh = o->tile_radius / 2;
 
     if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) &&
 	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
@@ -109,10 +112,10 @@ int fgTileMgrUpdate( void ) {
 	fgTileCacheInit();
 
 	/* build the local area list and update cache */
-	for ( j = 0; j < FG_LOCAL_Y; j++ ) {
-	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
+	for ( j = 0; j < o->tile_radius; j++ ) {
+	    for ( i = 0; i < o->tile_radius; i++ ) {
 		fgBucketOffset(&p1, &p2, i - dw, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + i]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + i]);
 	    }
 	}
     } else {
@@ -125,47 +128,50 @@ int fgTileMgrUpdate( void ) {
 
 	if ( (p1.lon > p_last.lon) ||
 	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
-	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
+	    for ( j = 0; j < o->tile_radius; j++ ) {
 		/* scrolling East */
-		for ( i = 0; i < FG_LOCAL_X - 1; i++ ) {
-		    tiles[(j*FG_LOCAL_Y) + i] = tiles[(j*FG_LOCAL_Y) + i + 1];
+		for ( i = 0; i < o->tile_radius - 1; i++ ) {
+		    tiles[(j*o->tile_radius) + i] = 
+			tiles[(j*o->tile_radius) + i + 1];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + FG_LOCAL_X - 1]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + 
+					     o->tile_radius - 1]);
 	    }
 	} else if ( (p1.lon < p_last.lon) ||
 		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
-	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
+	    for ( j = 0; j < o->tile_radius; j++ ) {
 		/* scrolling West */
-		for ( i = FG_LOCAL_X - 1; i > 0; i-- ) {
-		    tiles[(j*FG_LOCAL_Y) + i] = tiles[(j*FG_LOCAL_Y) + i - 1];
+		for ( i = o->tile_radius - 1; i > 0; i-- ) {
+		    tiles[(j*o->tile_radius) + i] = 
+			tiles[(j*o->tile_radius) + i - 1];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + 0]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + 0]);
 	    }
 	}
 
 	if ( (p1.lat > p_last.lat) ||
 	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
-	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
+	    for ( i = 0; i < o->tile_radius; i++ ) {
 		/* scrolling North */
-		for ( j = 0; j < FG_LOCAL_Y - 1; j++ ) {
-		    tiles[(j * FG_LOCAL_Y) + i] =
-			tiles[((j+1) * FG_LOCAL_Y) + i];
+		for ( j = 0; j < o->tile_radius - 1; j++ ) {
+		    tiles[(j * o->tile_radius) + i] =
+			tiles[((j+1) * o->tile_radius) + i];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
-		fgTileMgrLoadTile(&p2, &tiles[((FG_LOCAL_Y-1)*FG_LOCAL_Y) + i]);
+		fgTileMgrLoadTile(&p2, &tiles[((o->tile_radius-1)*o->tile_radius) + i]);
 	    }
 	} else if ( (p1.lat < p_last.lat) ||
 		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
-	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
+	    for ( i = 0; i < o->tile_radius; i++ ) {
 		/* scrolling South */
-		for ( j = FG_LOCAL_Y - 1; j > 0; j-- ) {
-		    tiles[(j * FG_LOCAL_Y) + i] = 
-			tiles[((j-1) * FG_LOCAL_Y) + i];
+		for ( j = o->tile_radius - 1; j > 0; j-- ) {
+		    tiles[(j * o->tile_radius) + i] = 
+			tiles[((j-1) * o->tile_radius) + i];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
@@ -184,6 +190,7 @@ int fgTileMgrUpdate( void ) {
 /* Render the local tiles */
 void fgTileMgrRender( void ) {
     fgFLIGHT *f;
+    fgOPTIONS *o;
     struct fgBUCKET p;
     fgCartesianPoint3d local_ref;
     GLint display_list;
@@ -191,17 +198,19 @@ void fgTileMgrRender( void ) {
     int index;
 
     f = current_aircraft.flight;
+    o = &current_options;
 
     /* Find current translation offset */
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
     index = fgTileCacheExists(&p);
     fgTileCacheEntryInfo(index, &display_list, &scenery.next_center );
 
-    printf("Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
-	   FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG,
-	   p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
+    fgPrintf( FG_TERRAIN, FG_DEBUG, 
+              "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
+	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG,
+	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
 
-    for ( i = 0; i < FG_LOCAL_X_Y; i++ ) {
+    for ( i = 0; i < 2 * o->tile_radius; i++ ) {
 	index = tiles[i];
 	/* fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index); */
 	fgTileCacheEntryInfo(index, &display_list, &local_ref );
@@ -221,9 +230,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/05/02 01:52:18  curt
-/* Playing around with texture coordinates.
+/* Revision 1.7  1998/05/06 03:16:42  curt
+/* Added an option to control square tile radius.
 /*
+ * Revision 1.6  1998/05/02 01:52:18  curt
+ * Playing around with texture coordinates.
+ *
  * Revision 1.5  1998/04/30 12:35:32  curt
  * Added a command line rendering option specify smooth/flat shading.
  *
