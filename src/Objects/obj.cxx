@@ -314,25 +314,80 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 
 
 /**
+ * Create a rotation matrix to align an object for the current lat/lon.
+ *
+ * By default, objects are aligned for the north pole.  This code
+ * calculates a matrix to rotate them for the surface of the earth in
+ * the current location.
+ *
+ * TODO: there should be a single version of this method somewhere
+ * for all of SimGear.
+ *
+ * @param ROT The resulting rotation matrix.
+ * @param hdg_deg The object heading in degrees.
+ * @param lon_deg The longitude in degrees.
+ * @param lat_deg The latitude in degrees.
+ */
+static void
+makeWorldUpRotationMatrix (sgMat4 ROT, double hdg_deg,
+			   double lon_deg, double lat_deg)
+{
+	SGfloat sin_lat = sin( lat_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat cos_lat = cos( lat_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat sin_lon = sin( lon_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat cos_lon = cos( lon_deg * SGD_DEGREES_TO_RADIANS );
+	SGfloat sin_hdg = sin( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
+	SGfloat cos_hdg = cos( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
+
+	ROT[0][0] =  cos_hdg * sin_lat * cos_lon - sin_hdg * sin_lon;
+	ROT[0][1] =  cos_hdg * sin_lat * sin_lon + sin_hdg * cos_lon;
+	ROT[0][2] = -cos_hdg * cos_lat;
+	ROT[0][3] =  SG_ZERO;
+
+	ROT[1][0] = -sin_hdg * sin_lat * cos_lon - cos_hdg * sin_lon;
+	ROT[1][1] = -sin_hdg * sin_lat * sin_lon + cos_hdg * cos_lon;
+	ROT[1][2] =  sin_hdg * cos_lat;
+	ROT[1][3] =  SG_ZERO;
+
+	ROT[2][0] = cos_lat * cos_lon;
+	ROT[2][1] = cos_lat * sin_lon;
+	ROT[2][2] = sin_lat;
+	ROT[2][3] = SG_ZERO;
+
+	ROT[3][0] = SG_ZERO;
+	ROT[3][1] = SG_ZERO;
+	ROT[3][2] = SG_ZERO;
+	ROT[3][3] = SG_ONE ;
+}
+
+
+/**
  * Add an object to a random location inside a triangle.
  *
  * @param p1 The first vertex of the triangle.
  * @param p2 The second vertex of the triangle.
  * @param p3 The third vertex of the triangle.
  * @param center The center of the triangle.
- * @param ROT The world-up rotation matrix.
- * @param mat The material object.
- * @param object_index The index of the dynamically-placed object in
- *        the material.
+ * @param lon_deg The longitude of the surface center, in degrees.
+ * @param lat_deg The latitude of the surface center, in degrees.
+ * @param object The randomly-placed object.
  * @param branch The branch where the object should be added to the
  *        scene graph.
  */
 static void
 add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
-			sgMat4 ROT, FGNewMat::Object * object,
-			ssgBranch * branch)
+			double lon_deg, double lat_deg,
+			FGNewMat::Object * object, ssgBranch * branch)
 {
+				// Set up the random heading if required.
+    double hdg_deg = 0;
+    if (object->get_heading_type() == FGNewMat::Object::HEADING_RANDOM)
+      hdg_deg = sg_random() * 360;
+
     sgVec3 result;
+
+    sgMat4 ROT;
+    makeWorldUpRotationMatrix(ROT, hdg_deg, lon_deg, lat_deg);
 
     random_pt_inside_tri(result, p1, p2, p3);
     sgSubVec3(result, center);
@@ -342,7 +397,7 @@ add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
     sgPostMultMat4(OBJ, OBJ_pos);
     ssgTransform * pos = new ssgTransform;
     pos->setTransform(OBJ);
-    pos->addKid(object->get_model());
+    pos->addKid(object->get_random_model());
     branch->addKid(pos);
 }
 
@@ -353,9 +408,10 @@ public:
   float * p1;
   float * p2;
   float * p3;
-  FGNewMat::Object * object;
+  FGNewMat::ObjectGroup * object_group;
   ssgBranch * branch;
-  sgMat4 ROT;
+  double lon_deg;
+  double lat_deg;
 };
 
 
@@ -371,33 +427,40 @@ public:
  * @param mat The triangle's material.
  * @param object_index The index of the random object in the triangle.
  * @param branch The branch where the objects should be added.
- * @param ROT The rotation matrix to align objects with the earth's
- *        surface.
+ * @param lon_deg The longitude of the surface center, in degrees.
+ * @param lat_deg The latitude of the surface center, in degrees.
  */
 static void
 fill_in_triangle (float * p1, float * p2, float * p3,
-		  FGNewMat::Object *object, ssgBranch * branch, sgMat4 ROT)
+		  FGNewMat::ObjectGroup * object_group, ssgBranch * branch,
+		  double lon_deg, double lat_deg)
 {
-    sgVec3 center;
-    sgSetVec3(center,
-	      (p1[0] + p2[0] + p3[0]) / 3.0,
-	      (p1[1] + p2[1] + p3[1]) / 3.0,
-	      (p1[2] + p2[2] + p3[2]) / 3.0);
-    double area = sgTriArea(p1, p2, p3);
-    double num = area / object->get_coverage_m2();
+    int nObjects = object_group->get_object_count();
+    for (int i = 0; i < nObjects; i++) {
+      FGNewMat::Object * object = object_group->get_object(i);
+      sgVec3 center;
+      sgSetVec3(center,
+		(p1[0] + p2[0] + p3[0]) / 3.0,
+		(p1[1] + p2[1] + p3[1]) / 3.0,
+		(p1[2] + p2[2] + p3[2]) / 3.0);
+      double area = sgTriArea(p1, p2, p3);
+      double num = area / object->get_coverage_m2();
 
-    // place an object each unit of area
-    while ( num > 1.0 ) {
-      add_object_to_triangle(p1, p2, p3, center, ROT, object, branch);
-      num -= 1.0;
-    }
-    // for partial units of area, use a zombie door method to
-    // create the proper random chance of an object being created
-    // for this triangle
-    if ( num > 0.0 ) {
-      if ( sg_random() <= num ) {
-	// a zombie made it through our door
-	add_object_to_triangle(p1, p2, p3, center, ROT, object, branch);
+      // place an object each unit of area
+      while ( num > 1.0 ) {
+	add_object_to_triangle(p1, p2, p3, center, lon_deg, lat_deg,
+			       object, branch);
+	num -= 1.0;
+      }
+      // for partial units of area, use a zombie door method to
+      // create the proper random chance of an object being created
+      // for this triangle
+      if ( num > 0.0 ) {
+	if ( sg_random() <= num ) {
+	  // a zombie made it through our door
+	  add_object_to_triangle(p1, p2, p3, center, lon_deg, lat_deg,
+				 object, branch);
+	}
       }
     }
 }
@@ -420,8 +483,8 @@ in_range_callback (ssgEntity * entity, int mask)
 {
   RandomObjectUserData * data = (RandomObjectUserData *)entity->getUserData();
   if (!data->is_filled_in) {
-    fill_in_triangle(data->p1, data->p2, data->p3, data->object,
-		     data->branch, data->ROT);
+    fill_in_triangle(data->p1, data->p2, data->p3, data->object_group,
+		     data->branch, data->lon_deg, data->lat_deg);
     data->is_filled_in = true;
   }
   return 1;
@@ -474,7 +537,7 @@ private:
   DummyBSphereEntity ()
   {
     bsphere.setCenter(0, 0, 0);
-    bsphere.setRadius(10);
+    bsphere.setRadius(1000);
   }
   static DummyBSphereEntity * entity;
 };
@@ -532,12 +595,13 @@ get_bounding_radius (sgVec3 center, float *p1, float *p2, float *p3)
  * @param mat The material data for the triangle.
  * @param branch The branch to which the randomly-placed objects
  *        should be added.
- * @param ROT A rotation matrix to align the objects with the earth's
- *        surface at the current lat/lon.
+ * @param lon_deg The longitude of the surface center, in degrees.
+ * @param lat_deg The latitude of the surface center, in degrees.
  */
 static void
 setup_triangle (float * p1, float * p2, float * p3,
-		FGNewMat * mat, ssgBranch * branch, sgMat4 ROT)
+		FGNewMat * mat, ssgBranch * branch,
+		double lon_deg, double lat_deg)
 {
 				// Set up a single center point for LOD
     sgVec3 center;
@@ -559,17 +623,17 @@ setup_triangle (float * p1, float * p2, float * p3,
     branch->addKid(location);
 
 				// Iterate through all the object types.
-    int num_objects = mat->get_object_count();
-    for (int i = 0; i < num_objects; i++) {
+    int num_groups = mat->get_object_group_count();
+    for (int i = 0; i < num_groups; i++) {
 				// Look up the random object.
-        FGNewMat::Object * object = mat->get_object(i);
+        FGNewMat::ObjectGroup * group = mat->get_object_group(i);
 
 				// Set up the range selector for the entire
 				// triangle; note that we use the object
 				// range plus the bounding radius here, to
 				// allow for objects far from the center.
 	float ranges[] = {0,
-			  object->get_range_m() + bounding_radius,
+			  group->get_range_m() + bounding_radius,
                           500000};
 	ssgRangeSelector * lod = new ssgRangeSelector;
 	lod->setRanges(ranges, 3);
@@ -588,9 +652,10 @@ setup_triangle (float * p1, float * p2, float * p3,
 	data->p1 = p1;
 	data->p2 = p2;
 	data->p3 = p3;
-	data->object = object;
+	data->object_group = group;
 	data->branch = in_range;
-	sgCopyMat4(data->ROT, ROT);
+	data->lon_deg = lon_deg;
+	data->lat_deg = lat_deg;
 
 				// Set up the in-range node.
 	in_range->setUserData(data);
@@ -605,54 +670,6 @@ setup_triangle (float * p1, float * p2, float * p3,
 	out_of_range->addKid(DummyBSphereEntity::get_entity());
 	lod->addKid(out_of_range);
     }
-}
-
-
-/**
- * Create a rotation matrix to align an object for the current lat/lon.
- *
- * By default, objects are aligned for the north pole.  This code
- * calculates a matrix to rotate them for the surface of the earth in
- * the current location.
- *
- * TODO: there should be a single version of this method somewhere
- * for all of SimGear.
- *
- * @param ROT The resulting rotation matrix.
- * @param hdg_deg The object heading in degrees.
- * @param lon_deg The longitude in degrees.
- * @param lat_deg The latitude in degrees.
- */
-void
-makeWorldUpRotationMatrix (sgMat4 ROT, double hdg_deg,
-			   double lon_deg, double lat_deg)
-{
-	SGfloat sin_lat = sin( lat_deg * SGD_DEGREES_TO_RADIANS );
-	SGfloat cos_lat = cos( lat_deg * SGD_DEGREES_TO_RADIANS );
-	SGfloat sin_lon = sin( lon_deg * SGD_DEGREES_TO_RADIANS );
-	SGfloat cos_lon = cos( lon_deg * SGD_DEGREES_TO_RADIANS );
-	SGfloat sin_hdg = sin( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
-	SGfloat cos_hdg = cos( hdg_deg * SGD_DEGREES_TO_RADIANS ) ;
-
-	ROT[0][0] =  cos_hdg * sin_lat * cos_lon - sin_hdg * sin_lon;
-	ROT[0][1] =  cos_hdg * sin_lat * sin_lon + sin_hdg * cos_lon;
-	ROT[0][2] = -cos_hdg * cos_lat;
-	ROT[0][3] =  SG_ZERO;
-
-	ROT[1][0] = -sin_hdg * sin_lat * cos_lon - cos_hdg * sin_lon;
-	ROT[1][1] = -sin_hdg * sin_lat * sin_lon + cos_hdg * cos_lon;
-	ROT[1][2] =  sin_hdg * cos_lat;
-	ROT[1][3] =  SG_ZERO;
-
-	ROT[2][0] = cos_lat * cos_lon;
-	ROT[2][1] = cos_lat * sin_lon;
-	ROT[2][2] = sin_lat;
-	ROT[2][3] = SG_ZERO;
-
-	ROT[3][0] = SG_ZERO;
-	ROT[3][1] = SG_ZERO;
-	ROT[3][2] = SG_ZERO;
-	ROT[3][3] = SG_ONE ;
 }
 
 
@@ -677,8 +694,6 @@ gen_random_surface_objects (ssgLeaf *leaf,
 			    float lat_deg,
 			    const string &material_name)
 {
-    float hdg_deg = 0.0;	// do something here later
-
 				// First, look up the material
 				// for this surface.
     FGNewMat * mat = material_lib.find(material_name);
@@ -689,8 +704,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
 
 				// If the material has no randomly-placed
 				// objects, return now.
-    int num_objects = mat->get_object_count();
-    if (num_objects < 1)
+    if (mat->get_object_group_count() < 1)
       return;
 
 				// If the surface has no triangles, return
@@ -698,12 +712,6 @@ gen_random_surface_objects (ssgLeaf *leaf,
     int num_tris = leaf->getNumTriangles();
     if (num_tris < 1)
       return;
-
-				// Make a rotation matrix to align the
-				// object for this point on the earth's
-				// surface.
-    sgMat4 ROT;
-    makeWorldUpRotationMatrix(ROT, hdg_deg, lon_deg, lat_deg);
 
 				// generate a repeatable random seed
     sg_srandom((unsigned int)(leaf->getVertex(0)[0]));
@@ -716,7 +724,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
       setup_triangle(leaf->getVertex(n1),
 		     leaf->getVertex(n2),
 		     leaf->getVertex(n3),
-		     mat, branch, ROT);
+		     mat, branch, lon_deg, lat_deg);
     }
 }
 

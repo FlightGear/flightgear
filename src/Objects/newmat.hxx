@@ -66,9 +66,10 @@ public:
 
 
   //////////////////////////////////////////////////////////////////////
-  // Inner class.
+  // Inner classes.
   //////////////////////////////////////////////////////////////////////
 
+  class ObjectGroup;
 
   /**
    * A randomly-placeable object.
@@ -83,22 +84,44 @@ public:
       HEADING_RANDOM
     };
 
-    const string &get_path () const;
-    ssgEntity * get_model () const;
+    int get_model_count () const;
+    ssgEntity * get_model (int index) const;
+    ssgEntity * get_random_model () const;
     double get_coverage_m2 () const;
-    double get_range_m () const;
     HeadingType get_heading_type () const;
   protected:
-    friend class FGNewMat;
-    Object (const SGPropertyNode * node);
+    friend class ObjectGroup;
+    Object (const SGPropertyNode * node, double range_m);
     virtual ~Object ();
   private:
-    string _path;
-    mutable ssgEntity * _model;
+    void load_models () const;
+    vector<string> _paths;
+    mutable vector<ssgEntity *> _models;
+    mutable bool _models_loaded;
     double _coverage_m2;
     double _range_m;
     HeadingType _heading_type;
   };
+
+
+  /**
+   * A collection of related objects with the same visual range.
+   */
+  class ObjectGroup
+  {
+  public:
+    virtual ~ObjectGroup ();
+    double get_range_m () const;
+    int get_object_count () const;
+    Object * get_object (int index) const;
+  protected:
+    friend class FGNewMat;
+    ObjectGroup (SGPropertyNode * node);
+  private:
+    double _range_m;
+    vector<Object *> _objects;
+  };
+
 
 
 
@@ -187,13 +210,15 @@ public:
   /**
    * Get the number of randomly-placed objects defined for this material.
    */
-  virtual int get_object_count () const { return objects.size(); }
+  virtual int get_object_group_count () const { return object_groups.size(); }
 
 
   /**
    * Get a randomly-placed object for this material.
    */
-  virtual Object * get_object (int index) const { return objects[index]; }
+  virtual ObjectGroup * get_object_group (int index) const {
+    return object_groups[index];
+  }
 
 
   /**
@@ -270,7 +295,7 @@ private:
   // true if texture loading deferred, and not yet loaded
   bool texture_loaded;
 
-  vector<Object *> objects;
+  vector<ObjectGroup *> object_groups;
 
   // ref count so we can properly delete if we have multiple
   // pointers to this record

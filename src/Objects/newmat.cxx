@@ -37,6 +37,7 @@ SG_USING_STD(map);
 #endif
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sgstream.hxx>
 
@@ -95,12 +96,17 @@ local_file_exists( const string& path ) {
 // Implementation of FGNewMat::Object.
 ////////////////////////////////////////////////////////////////////////
 
-FGNewMat::Object::Object (const SGPropertyNode * node)
-  : _path(node->getStringValue("path")),
-    _model(0),
+FGNewMat::Object::Object (const SGPropertyNode * node, double range_m)
+  : _models_loaded(false),
     _coverage_m2(node->getDoubleValue("coverage-m2", 100000)),
-    _range_m(node->getDoubleValue("range-m", 2000))
+    _range_m(range_m)
 {
+				// Note all the model paths
+  vector <SGPropertyNode_ptr> path_nodes = node->getChildren("path");
+  for (int i = 0; i < path_nodes.size(); i++)
+    _paths.push_back(path_nodes[i]->getStringValue());
+
+				// Note the heading type
   string hdg = node->getStringValue("heading-type", "fixed");
   if (hdg == "fixed") {
     _heading_type = HEADING_FIXED;
@@ -117,41 +123,67 @@ FGNewMat::Object::Object (const SGPropertyNode * node)
 
 FGNewMat::Object::~Object ()
 {
-  _model->deRef();
+  for (int i = 0; i < _models.size(); i++) {
+    if (_models[i] != 0) {
+      _models[i]->deRef();
+      _models[i] = 0;
+    }
+  }
 }
 
-const string &
-FGNewMat::Object::get_path () const
+int
+FGNewMat::Object::get_model_count () const
 {
-  return _path;
+  return _models.size();
+}
+
+inline void
+FGNewMat::Object::load_models () const
+{
+				// Load model only on demand
+  if (!_models_loaded) {
+    for (int i = 0; i < _paths.size(); i++) {
+      SGPath path = globals->get_fg_root();
+      path.append(_paths[i]);
+      ssgTexturePath((char *)path.dir().c_str());
+      ssgEntity * entity = load_object((char *)path.c_str());
+      if (entity != 0) {
+	float ranges[] = {0, _range_m};
+	ssgRangeSelector * lod = new ssgRangeSelector;
+	lod->setRanges(ranges, 2);
+	if (_heading_type == HEADING_BILLBOARD) {
+	  ssgCutout * cutout = new ssgCutout(false);
+	  cutout->addKid(entity);
+	  lod->addKid(cutout);
+	} else {
+	  lod->addKid(entity);
+	}
+	lod->ref();
+	_models.push_back(lod);
+      } else {
+	SG_LOG(SG_INPUT, SG_ALERT, "Failed to load object " << path.str());
+      }
+    }
+  }
+  _models_loaded = true;
 }
 
 ssgEntity *
-FGNewMat::Object::get_model () const
+FGNewMat::Object::get_model (int index) const
 {
-				// Load model only on demand
-  if (_model == 0) {
-    SGPath path = globals->get_fg_root();
-    path.append(_path);
-    ssgTexturePath((char *)path.dir().c_str());
-    ssgEntity * entity = load_object((char *)path.c_str());
-    if (entity != 0) {
-      float ranges[] = {0, _range_m};
-      _model = new ssgRangeSelector;
-      ((ssgRangeSelector *)_model)->setRanges(ranges, 2);
-      if (_heading_type == HEADING_BILLBOARD) {
-	ssgCutout * cutout = new ssgCutout(false);
-	cutout->addKid(entity);
-	((ssgBranch *)_model)->addKid(cutout);
-      } else {
-	((ssgBranch *)_model)->addKid(entity);
-      }
-      _model->ref();
-    } else {
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed to load object " << path.str());
-    }
-  }
-  return _model;
+  load_models();
+  return _models[index];
+}
+
+ssgEntity *
+FGNewMat::Object::get_random_model () const
+{
+  load_models();
+  int nModels = _models.size();
+  int index = int(sg_random() * nModels);
+  if (index >= nModels)
+    index = 0;
+  return _models[index];
 }
 
 double
@@ -160,10 +192,57 @@ FGNewMat::Object::get_coverage_m2 () const
   return _coverage_m2;
 }
 
+FGNewMat::Object::HeadingType
+FGNewMat::Object::get_heading_type () const
+{
+  return _heading_type;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGNewMat::ObjectGroup.
+////////////////////////////////////////////////////////////////////////
+
+FGNewMat::ObjectGroup::ObjectGroup (SGPropertyNode * node)
+  : _range_m(node->getDoubleValue("range-m", 2000))
+{
+				// Load the object subnodes
+  vector<SGPropertyNode_ptr> object_nodes =
+    ((SGPropertyNode *)node)->getChildren("object");
+  for (unsigned int i = 0; i < object_nodes.size(); i++) {
+    const SGPropertyNode * object_node = object_nodes[i];
+    if (object_node->hasChild("path"))
+      _objects.push_back(new Object(object_node, _range_m));
+    else
+      SG_LOG(SG_INPUT, SG_ALERT, "No path supplied for object");
+  }
+}
+
+FGNewMat::ObjectGroup::~ObjectGroup ()
+{
+  for (int i = 0; i < _objects.size(); i++) {
+    delete _objects[i];
+    _objects[i] = 0;
+  }
+}
+
 double
-FGNewMat::Object::get_range_m () const
+FGNewMat::ObjectGroup::get_range_m () const
 {
   return _range_m;
+}
+
+int
+FGNewMat::ObjectGroup::get_object_count () const
+{
+  return _objects.size();
+}
+
+FGNewMat::Object *
+FGNewMat::ObjectGroup::get_object (int index) const
+{
+  return _objects[index];
 }
 
 
@@ -195,9 +274,9 @@ FGNewMat::FGNewMat (ssgSimpleState * s)
 
 FGNewMat::~FGNewMat (void)
 {
-  for (unsigned int i = 0; i < objects.size(); i++) {
-    delete objects[i];
-    objects[i] = 0;
+  for (unsigned int i = 0; i < object_groups.size(); i++) {
+    delete object_groups[i];
+    object_groups[i] = 0;
   }
 }
 
@@ -249,15 +328,10 @@ FGNewMat::read_properties (const SGPropertyNode * props)
   emission[2] = props->getDoubleValue("emissive/b", 0.0);
   emission[3] = props->getDoubleValue("emissive/a", 0.0);
 
-  vector<SGPropertyNode_ptr> object_nodes =
-    ((SGPropertyNode *)props)->getChildren("object");
-  for (unsigned int i = 0; i < object_nodes.size(); i++) {
-    const SGPropertyNode * object_node = object_nodes[i];
-    if (object_node->hasChild("path"))
-      objects.push_back(new Object(object_node));
-    else
-      SG_LOG(SG_INPUT, SG_ALERT, "No path supplied for object");
-  }
+  vector<SGPropertyNode_ptr> object_group_nodes =
+    ((SGPropertyNode *)props)->getChildren("object-group");
+  for (unsigned int i = 0; i < object_group_nodes.size(); i++)
+    object_groups.push_back(new ObjectGroup(object_group_nodes[i]));
 }
 
 
