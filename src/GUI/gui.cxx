@@ -488,7 +488,8 @@ void AptDialog_Cancel(puObject *)
 
 void AptDialog_OK (puObject *)
 {
-    string AptId;
+	fgAIRPORTS airports;
+	fgAIRPORT a;
     
     FGTime *t = FGTime::cur_time_params;
     int PauseMode = t->getPause();
@@ -497,18 +498,17 @@ void AptDialog_OK (puObject *)
 
     char *s;
     AptDialogInput->getValue(&s);
-    AptId = s;
+    string AptId(s);
+
+	cout << "AptDialog_OK " << AptId << " " << AptId.length() << endl;
     
     AptDialog_Cancel( NULL );
     
     if ( AptId.length() ) {
         // set initial position from airport id
-        fgAIRPORTS airports;
-        fgAIRPORT a;
-
         FG_LOG( FG_GENERAL, FG_INFO,
                 "Attempting to set starting position from airport code "
-                << s );
+                << AptId );
 
         airports.load("apt_simple");
         if ( airports.search( AptId, &a ) )
@@ -538,6 +538,7 @@ void NewAirport(puObject *cb)
 {
     //  strncpy( NewAirportId, current_options.get_airport_id().c_str(), 16 );
     sprintf( NewAirportId, "%s", current_options.get_airport_id().c_str() );
+//	cout << "NewAirport " << NewAirportId << endl;
     AptDialogInput->setValue( NewAirportId );
 
     FG_PUSH_PUI_DIALOG( AptDialog );
@@ -572,6 +573,7 @@ static void NewAirportInit(void)
         AptDialogResetButton  ->     setLegend   (gui_msg_RESET);
         AptDialogResetButton  ->     setCallback (AptDialog_Reset);
     }
+	cout << "NewAirportInit " << NewAirportId << endl;
     FG_FINALIZE_PUI_DIALOG( AptDialog );
 }
 
