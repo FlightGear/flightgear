@@ -1,27 +1,25 @@
-/**************************************************************************
- * panel.cxx -- routines to draw an instrument panel
- *
- * Written by Friedemann Reinhard, started June 1998.
- *
- * Copyright(C)1998 Friedemann Reinhard-reinhard@theorie2.physik.uni-erlangen.de
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
- * (Log is kept at end of this file)
- **************************************************************************/
+// panel.cxx -- routines to draw an instrument panel
+//
+// Written by Friedemann Reinhard, started June 1998.
+//
+// Copyright(C)1998 Friedemann Reinhard-reinhard@theorie2.physik.uni-erlangen.de
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -94,7 +92,7 @@ static double var[20];
 static double offset;
 static float alpha;
 
-/* image.c THIS FILE WAS COPIED FROM THE MESA GRAPHICS LIBRARY */
+// image.c THIS FILE WAS COPIED FROM THE MESA GRAPHICS LIBRARY
 
 
 static Image *ImageOpen(char *fileName)
@@ -140,7 +138,7 @@ static Image *ImageOpen(char *fileName)
 	}
     }
 
-  if ((image->type & 0xFF00) == 0x0100) /* RLE image */
+  if ((image->type & 0xFF00) == 0x0100) // RLE image
     {
       x = image->sizeY * image->sizeZ * sizeof(long);
       image->rowStart = (unsigned long *)malloc(x);
@@ -186,7 +184,7 @@ static void ImageGetRow( Image *image, unsigned char *buf, int y, int z)
   unsigned char *iPtr, *oPtr, pixel;
   int count;
 
-  if ((image->type & 0xFF00) == 0x0100)  /* RLE image */
+  if ((image->type & 0xFF00) == 0x0100)  // RLE image
     {
       fseek(image->file, image->rowStart[y+z*image->sizeY], SEEK_SET);
       fread(image->tmp[0], 1, (unsigned int)image->rowSize[y+z*image->sizeY],
@@ -217,7 +215,7 @@ static void ImageGetRow( Image *image, unsigned char *buf, int y, int z)
 	    }
 	}
     }
-  else /* verbatim image */
+  else // verbatim image
     {
       fseek(image->file, 512+(y*image->sizeX)+(z*image->sizeX*image->sizeY),
 	    SEEK_SET);
@@ -299,7 +297,7 @@ static IMAGE *ImageLoad(char *fileName)
   return final;
 }
 
-/* Beginning of the "panel-code" */
+// Beginning of the "panel-code"
 void fgPanelInit ( void ) {
     fgVIEW *v;
     string tpath;
@@ -395,7 +393,7 @@ CreatePointer(&pointer[i]);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    /* load in the texture data */
+    // load in the texture data
     
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
     tpath = current_options.get_fg_root() + "/Textures/gauges.rgb";
@@ -672,27 +670,30 @@ printf("         %f %f %f %f \n", mvmatrix[8], mvmatrix[9], mvmatrix[10], mvmatr
 printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvmatrix[15]);
 }
 
-/* $Log$
-/* Revision 1.10  1998/11/09 23:38:52  curt
-/* Panel updates from Friedemann.
-/*
-/* Revision 1.9  1998/11/06 21:18:01  curt
-/* Converted to new logstream debugging facility.  This allows release
-/* builds with no messages at all (and no performance impact) by using
-/* the -DFG_NDEBUG flag.
-/*
-/* Revision 1.8  1998/10/16 23:27:37  curt
-/* C++-ifying.
-/*
- * Revision 1.7  1998/08/31 20:45:31  curt
- * Tweaks from Friedemann.
- *
- * Revision 1.6  1998/08/28 18:14:40  curt
- * Added new cockpit code from Friedemann Reinhard
- * <mpt218@faupt212.physik.uni-erlangen.de>
- *
- * Revision 1.1  1998/06/27 16:47:54  curt
- * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
- * first pass at an isntrument panel.
- *
- */
+// $Log$
+// Revision 1.11  1998/11/11 00:19:27  curt
+// Updated comment delimeter to C++ style.
+//
+// Revision 1.10  1998/11/09 23:38:52  curt
+// Panel updates from Friedemann.
+//
+// Revision 1.9  1998/11/06 21:18:01  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
+// Revision 1.8  1998/10/16 23:27:37  curt
+// C++-ifying.
+//
+// Revision 1.7  1998/08/31 20:45:31  curt
+// Tweaks from Friedemann.
+//
+// Revision 1.6  1998/08/28 18:14:40  curt
+// Added new cockpit code from Friedemann Reinhard
+// <mpt218@faupt212.physik.uni-erlangen.de>
+//
+// Revision 1.1  1998/06/27 16:47:54  curt
+// Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
+// first pass at an isntrument panel.
+//
+
