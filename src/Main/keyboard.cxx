@@ -432,7 +432,7 @@ void GLUTspecialkey(int k, int x, int y) {
 		    t->togglePauseMode();
 		return;
 	    }
-	case GLUT_KEY_F3: // F2 Take a screen shot
+	case GLUT_KEY_F3: // F3 Take a screen shot
 	    fgDumpSnapShot();
 	    return;
         case GLUT_KEY_F6: // F6 toggles Autopilot target location
