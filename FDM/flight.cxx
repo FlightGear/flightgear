@@ -34,60 +34,77 @@
 #include <Math/fg_geodesy.hxx>
 
 
+// base_fdm_state is the internal state that is updated in integer
+// multiples of "dt".  This leads to "jitter" with respect to the real
+// world time, so we introduce cur_fdm_state which is extrapolated by
+// the difference between sim time and real world time
+
 FGState cur_fdm_state;
+FGState base_fdm_state;
 
 
 // Initialize the flight model parameters
 int fgFlightModelInit(int model, FGState& f, double dt) {
     double save_alt = 0.0;
-    int result;
 
     FG_LOG( FG_FLIGHT ,FG_INFO, "Initializing flight model" );
+
+    base_fdm_state = f;
 
     if ( model == FGState::FG_SLEW ) {
 	// fgSlewInit(dt);
     } else if ( model == FGState::FG_LARCSIM ) {
+
 	// lets try to avoid really screwing up the LaRCsim model
-	if ( f.get_Altitude() < -9000.0 ) {
-	    save_alt = f.get_Altitude();
-	    f.set_Altitude( 0.0 );
+	if ( base_fdm_state.get_Altitude() < -9000.0 ) {
+	    save_alt = base_fdm_state.get_Altitude();
+	    base_fdm_state.set_Altitude( 0.0 );
 	}
 
-	FGState_2_LaRCsim(f);  // translate FG to LaRCsim structure
+	// translate FG to LaRCsim structure
+	FGState_2_LaRCsim(base_fdm_state);
+
+	// initialize LaRCsim
 	fgLaRCsimInit(dt);
-	FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << f.get_Latitude() );
-	fgLaRCsim_2_FGState(f);  // translate LaRCsim back to FG structure
+
+	FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << 
+		base_fdm_state.get_Latitude() );
+
+	// translate LaRCsim back to FG structure
+	fgLaRCsim_2_FGState(base_fdm_state);
 
 	// but lets restore our original bogus altitude when we are done
 	if ( save_alt < -9000.0 ) {
-	    f.set_Altitude( save_alt );
+	    base_fdm_state.set_Altitude( save_alt );
 	}
     } else if ( model == FGState::FG_EXTERNAL ) {
-	fgExternalInit(f, dt);
+	fgExternalInit(base_fdm_state, dt);
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
 		  "Unimplemented flight model == " << model );
     }
 
-    result = 1;
+    f = base_fdm_state;
 
-    return(result);
+    return 1;
 }
 
 
 // Run multiloop iterations of the flight model
-int fgFlightModelUpdate(int model, FGState& f, int multiloop) {
+int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter) {
     double time_step, start_elev, end_elev;
-    int result;
+
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
 
+    // base_fdm_state = f;
+
     time_step = (1.0 / DEFAULT_MODEL_HZ) * multiloop;
-    start_elev = f.get_Altitude();
+    start_elev = base_fdm_state.get_Altitude();
 
     if ( model == FGState::FG_SLEW ) {
 	// fgSlewUpdate(f, multiloop);
     } else if ( model == FGState::FG_LARCSIM ) {
-	fgLaRCsimUpdate(f, multiloop);
+	fgLaRCsimUpdate(base_fdm_state, multiloop);
     } else if ( model == FGState::FG_EXTERNAL ) {
 	// fgExternalUpdate(f, multiloop);
     } else {
@@ -95,40 +112,44 @@ int fgFlightModelUpdate(int model, FGState& f, int multiloop) {
 		"Unimplemented flight model == " <<  model );
     }
 
-    end_elev = f.get_Altitude();
+    end_elev = base_fdm_state.get_Altitude();
 
     if ( time_step > 0.0 ) {
 	// feet per second
-	f.set_Climb_Rate( (end_elev - start_elev) / time_step );
+	base_fdm_state.set_Climb_Rate( (end_elev - start_elev) / time_step );
     }
 
-    result = 1;
+    f = base_fdm_state;
 
-    return(result);
+    return 1;
 }
 
 
 // Set the altitude (force)
-void fgFlightModelSetAltitude(int model, FGState& f, double alt_meters) {
+void fgFlightModelSetAltitude(int model, double alt_meters) {
     double sea_level_radius_meters;
     double lat_geoc;
+
     // Set the FG variables first
-    fgGeodToGeoc( f.get_Latitude(), alt_meters, 
+    fgGeodToGeoc( base_fdm_state.get_Latitude(), alt_meters, 
 		  &sea_level_radius_meters, &lat_geoc);
 
-    f.set_Altitude( alt_meters * METER_TO_FEET );
-    f.set_Radius_to_vehicle( f.get_Altitude() + 
-			      (sea_level_radius_meters * METER_TO_FEET) );
+    base_fdm_state.set_Altitude( alt_meters * METER_TO_FEET );
+    base_fdm_state.set_Radius_to_vehicle( base_fdm_state.get_Altitude() + 
+					  (sea_level_radius_meters * 
+					   METER_TO_FEET) );
 
     // additional work needed for some flight models
     if ( model == FGState::FG_LARCSIM ) {
-	ls_ForceAltitude( f.get_Altitude() );
+	ls_ForceAltitude( base_fdm_state.get_Altitude() );
     }
-
 }
 
 
 // $Log$
+// Revision 1.8  1999/01/08 03:23:51  curt
+// Beginning work on compensating for sim time vs. real world time "jitter".
+//
 // Revision 1.7  1998/12/18 23:37:07  curt
 // Collapsed out the FGState variables not currently needed.  They are just
 // commented out and can be readded easily at any time.  The point of this

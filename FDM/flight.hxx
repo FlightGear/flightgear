@@ -781,16 +781,19 @@ extern FGState cur_fdm_state;
 int fgFlightModelInit(int model, FGState& f, double dt);
 
 // Run multiloop iterations of the flight model
-int fgFlightModelUpdate(int model, FGState& f, int multiloop);
+int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter);
 
 // Set the altitude (force)
-void fgFlightModelSetAltitude(int model, FGState& f, double alt_meters);
+void fgFlightModelSetAltitude(int model, double alt_meters);
 
 
 #endif // _FLIGHT_HXX
 
 
 // $Log$
+// Revision 1.8  1999/01/08 03:23:52  curt
+// Beginning work on compensating for sim time vs. real world time "jitter".
+//
 // Revision 1.7  1998/12/18 23:37:09  curt
 // Collapsed out the FGState variables not currently needed.  They are just
 // commented out and can be readded easily at any time.  The point of this

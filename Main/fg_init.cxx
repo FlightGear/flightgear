@@ -122,7 +122,7 @@ int fgInitPosition( void ) {
 // General house keeping initializations
 int fgInitGeneral( void ) {
     string root;
-    int i;
+    // int i;
 
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
@@ -379,6 +379,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.61  1999/01/08 03:23:57  curt
+// Beginning work on compensating for sim time vs. real world time "jitter".
+//
 // Revision 1.60  1999/01/07 20:25:09  curt
 // Updated struct fgGENERAL to class FGGeneral.
 //

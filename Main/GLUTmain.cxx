@@ -367,7 +367,7 @@ static void fgRenderFrame( void ) {
 
 
 // Update internal time dependent calculations (i.e. flight model)
-void fgUpdateTimeDepCalcs(int multi_loop) {
+void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     FGState *f = current_aircraft.fdm_state;
     fgLIGHT *l = &cur_light_params;
     fgTIME *t = &cur_time_params;
@@ -385,10 +385,10 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 
 	// printf("updating flight model x %d\n", multi_loop);
 	fgFlightModelUpdate( current_options.get_flight_model(), 
-			     cur_fdm_state, multi_loop );
+			     cur_fdm_state, multi_loop, remainder );
     } else {
 	fgFlightModelUpdate( current_options.get_flight_model(), 
-			     cur_fdm_state, 0 );
+			     cur_fdm_state, 0, remainder );
     }
 
     // update the view angle
@@ -437,10 +437,9 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 void fgInitTimeDepCalcs( void ) {
     // initialize timer
 
-#ifdef HAVE_SETITIMER
-    fgTimerInit( 1.0 / DEFAULT_TIMER_HZ, fgUpdateTimeDepCalcs );
-#endif HAVE_SETITIMER
-
+    // #ifdef HAVE_SETITIMER
+    //   fgTimerInit( 1.0 / DEFAULT_TIMER_HZ, fgUpdateTimeDepCalcs );
+    // #endif HAVE_SETITIMER
 }
 
 static const double alt_adjust_ft = 3.758099;
@@ -492,7 +491,6 @@ static void fgMainLoop( void ) {
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
 	    fgFlightModelSetAltitude( current_options.get_flight_model(), 
-				      cur_fdm_state, 
 				      scenery.cur_elev + alt_adjust_m );
 
 	    FG_LOG( FG_ALL, FG_DEBUG, 
@@ -555,7 +553,7 @@ static void fgMainLoop( void ) {
 	
 	// flight model
 	if ( multi_loop > 0 ) {
-	    fgUpdateTimeDepCalcs(multi_loop);
+	    fgUpdateTimeDepCalcs(multi_loop, remainder);
 	} else {
 	    FG_LOG( FG_ALL, FG_INFO, "Elapsed time is zero ... we're zinging" );
 	}
@@ -1002,6 +1000,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.79  1999/01/08 03:23:56  curt
+// Beginning work on compensating for sim time vs. real world time "jitter".
+//
 // Revision 1.78  1999/01/07 20:25:08  curt
 // Updated struct fgGENERAL to class FGGeneral.
 //
