@@ -153,9 +153,7 @@
 
 
 // Timing constants for Flight Model updates
-#define DEFAULT_TIMER_HZ 20
-#define DEFAULT_MULTILOOP 6
-#define DEFAULT_MODEL_HZ (DEFAULT_TIMER_HZ * DEFAULT_MULTILOOP)
+#define NEW_DEFAULT_MODEL_HZ 120
 
 
 // Field of view limits

@@ -161,6 +161,7 @@ fgOPTIONS::fgOPTIONS() :
 
     // Flight Model options
     flight_model( FGInterface::FG_LARCSIM ),
+    model_hz( NEW_DEFAULT_MODEL_HZ ),
     speed_up( 1 ),
 
     // Rendering options
@@ -639,6 +640,9 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	fg_root = arg.substr( 10 );
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
 	flight_model = parse_fdm( arg.substr(6) );
+    } else if ( arg.find( "--model-hz=" ) != string::npos ) {
+	model_hz = atoi( arg.substr(11) );
+	cout << "model hz = " << model_hz << endl;
     } else if ( arg.find( "--speed=" ) != string::npos ) {
 	speed_up = atoi( arg.substr(8) );
     } else if ( arg == "--fog-disable" ) {
@@ -819,6 +823,7 @@ void fgOPTIONS::usage ( void ) {
  
     printf("Flight Model:\n");
     printf("\t--fdm=abcd:  one of slew, jsb, larcsim, or external\n");
+    printf("\t--model-hz=n:  run the FDM this rate (iterations per second)\n");
     printf("\t--speed=n:  run the FDM this much faster than real time\n");
     printf("\n");
 

@@ -27,6 +27,7 @@
 #include <FDM/External/external.hxx>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Include/fg_constants.h>
+#include <Main/options.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Time/timestamp.hxx>
 
@@ -137,7 +138,7 @@ int fgFDMUpdate(int model, FGInterface& f, int multiloop, int time_offset) {
     // set valid time for this record
     base_fdm_state.stamp_time();
 
-    time_step = (1.0 / DEFAULT_MODEL_HZ) * multiloop;
+    time_step = (1.0 / current_options.get_model_hz()) * multiloop;
     start_elev = base_fdm_state.get_Altitude();
 
     if ( model == FGInterface::FG_SLEW ) {

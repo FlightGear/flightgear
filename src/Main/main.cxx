@@ -463,7 +463,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 
     // update the flight model
     if ( multi_loop < 0 ) {
-	multi_loop = DEFAULT_MULTILOOP;
+	multi_loop = 1;
     }
 
     if ( !t->getPause() ) {
@@ -527,12 +527,15 @@ void fgInitTimeDepCalcs( void ) {
     // initialize timer
 
     // #ifdef HAVE_SETITIMER
-    //   fgTimerInit( 1.0 / DEFAULT_TIMER_HZ, fgUpdateTimeDepCalcs );
+    //   fgTimerInit( 1.0 / current_options.get_model_hz(), 
+    //                fgUpdateTimeDepCalcs );
     // #endif HAVE_SETITIMER
 }
 
+
 static const double alt_adjust_ft = 3.758099;
 static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
+
 
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
@@ -646,8 +649,10 @@ static void fgMainLoop( void ) {
 	// Calculate model iterations needed for next frame
 	elapsed += remainder;
 
-	multi_loop = (int)(((double)elapsed * 0.000001) * DEFAULT_MODEL_HZ);
-	remainder = elapsed - ((multi_loop*1000000) / DEFAULT_MODEL_HZ);
+	multi_loop = (int)(((double)elapsed * 0.000001) * 
+			   current_options.get_model_hz());
+	remainder = elapsed - ( (multi_loop*1000000) / 
+				current_options.get_model_hz() );
 	FG_LOG( FG_ALL, FG_DEBUG, 
 		"Model iterations needed = " << multi_loop
 		<< ", new remainder = " << remainder );
@@ -656,7 +661,8 @@ static void fgMainLoop( void ) {
 	if ( multi_loop > 0 ) {
 	    fgUpdateTimeDepCalcs(multi_loop, remainder);
 	} else {
-	    FG_LOG( FG_ALL, FG_INFO, "Elapsed time is zero ... we're zinging" );
+	    FG_LOG( FG_ALL, FG_DEBUG, 
+		    "Elapsed time is zero ... we're zinging" );
 	}
     }
 

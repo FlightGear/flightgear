@@ -444,7 +444,7 @@ bool fgInitSubsystems( void ) {
     // above values
 
     fgFDMInit( current_options.get_flight_model(), cur_fdm_state,
-	       1.0 / DEFAULT_MODEL_HZ );
+	       1.0 / current_options.get_model_hz() );
 
     // I'm just sticking this here for now, it should probably move
     // eventually
@@ -562,7 +562,7 @@ void fgReInitSubsystems( void )
     // v->UpdateWorldToEye(f);
 
     fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
-	       1.0 / DEFAULT_MODEL_HZ );
+	       1.0 / current_options.get_model_hz() );
 
     scenery.cur_elev = f->get_Runway_altitude() * FEET_TO_METER;
 
