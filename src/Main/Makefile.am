@@ -107,7 +107,7 @@ fgfs_LDADD = \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
         $(PSL_LIBS) \
-	-lmk4 -lz \
+	-lz \
 	$(opengl_LIBS) \
 	$(audio_LIBS)
 
