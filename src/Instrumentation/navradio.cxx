@@ -148,6 +148,10 @@ FGNavRadio::bind ()
     branch = "/instrumentation/" + name + "[" + temp.str() + "]";
 
 				// User inputs
+    fgTie( (branch + "power-btn").c_str(), this,
+           &FGNavRadio::get_power_btn, &FGNavRadio::set_power_btn );
+    fgSetArchivable( (branch + "power-btn").c_str() );
+
     fgTie( (branch + "/frequencies/selected-mhz").c_str() , this,
 	  &FGNavRadio::get_nav_freq, &FGNavRadio::set_nav_freq );
     fgSetArchivable( (branch + "/frequencies/selected-mhz").c_str() );
@@ -351,6 +355,12 @@ FGNavRadio::update(double dt)
     ////////////////////////////////////////////////////////////////////////
     // Nav.
     ////////////////////////////////////////////////////////////////////////
+
+    // cout << "nav_valid = " << nav_valid
+    //      << " power_btn = " << power_btn
+    //      << " bus_power = " << bus_power->getDoubleValue()
+    //      << " nav_serviceable = " << nav_serviceable->getBoolValue()
+    //      << endl;
 
     if ( nav_valid && power_btn && (bus_power->getDoubleValue() > 1.0)
          && nav_serviceable->getBoolValue() )
