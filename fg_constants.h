@@ -118,13 +118,21 @@
 #define DEFAULT_MODEL_HZ (DEFAULT_TIMER_HZ * DEFAULT_MULTILOOP)
 
 
+/* Field of view limits */
+#define FG_FOV_MIN 0.1
+#define FG_FOV_MAX 179.9
+
+
 #endif /* _FG_CONSTANTS_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/04/08 23:35:32  curt
-/* Tweaks to Gnu automake/autoconf system.
+/* Revision 1.4  1998/05/16 13:03:10  curt
+/* Defined field of view max/min limits.
 /*
+ * Revision 1.3  1998/04/08 23:35:32  curt
+ * Tweaks to Gnu automake/autoconf system.
+ *
  * Revision 1.2  1998/03/23 21:18:37  curt
  * Made FG_EPSILON smaller.
  *
