@@ -21,11 +21,11 @@
 //
 // $Id$
 
-#include "fg_fx.hxx"
+#include <FDM/flight.hxx>	// FIXME: remove direct dependencies
 #include <Main/fg_props.hxx>
 
-// FIXME: remove direct dependencies
-#include <FDM/flight.hxx>
+#include "fg_fx.hxx"
+
 
 static const char * engine_names[FGFX::MAX_ENGINES] = {
   "engine0",
