@@ -40,6 +40,11 @@
 #define _SUNPOS_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <time.h>
 
 #include <Include/fg_types.h>
@@ -48,6 +53,11 @@
 void fgUpdateSunPos( void );
 
 void fgSunPosition(time_t ssue, double *lon, double *lat);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* _SUNPOS_H */

@@ -28,6 +28,11 @@
 #define _EVENT_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #define FG_EVENT_SUSP 0
 #define FG_EVENT_READY 1
 #define FG_EVENT_QUEUED 2
@@ -61,13 +66,25 @@ void fgEventPrintStats( void );
 void fgEventProcess( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _EVENT_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:43  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.4  1998/04/21 17:01:43  curt
+/* Fixed a problems where a pointer to a function was being passed around.  In
+/* one place this functions arguments were defined as ( void ) while in another
+/* place they were defined as ( int ).  The correct answer was ( int ).
 /*
+/* Prepairing for C++ integration.
+/*
+ * Revision 1.3  1998/01/22 02:59:43  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/19 18:40:39  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

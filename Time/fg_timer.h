@@ -28,25 +28,42 @@
 #define _FG_TIMER_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 extern unsigned long int fgSimTime;
 
 /* this routine initializes the interval timer to generate a SIGALRM
  * after the specified interval (dt) the function f() will be called
  * at each signal */
-void fgTimerInit( float dt, void (*f)( void ) );
+void fgTimerInit( float dt, void (*f)( int ) );
 
 /* This function returns the number of milleseconds since the last
    time it was called. */
 int fgGetTimeInterval( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _FG_TIMER_H */
 
 
 /* $Log$
-/* Revision 1.4  1998/01/22 02:59:43  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.5  1998/04/21 17:01:45  curt
+/* Fixed a problems where a pointer to a function was being passed around.  In
+/* one place this functions arguments were defined as ( void ) while in another
+/* place they were defined as ( int ).  The correct answer was ( int ).
 /*
+/* Prepairing for C++ integration.
+/*
+ * Revision 1.4  1998/01/22 02:59:43  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.3  1998/01/19 18:40:40  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

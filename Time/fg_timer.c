@@ -61,7 +61,7 @@ void fgTimerCatch( void ) {
 
 /* this routine initializes the interval timer to generate a SIGALRM after
  * the specified interval (dt) */
-void fgTimerInit(float dt, void (*f)()) {
+void fgTimerInit(float dt, void (*f)( int )) {
     int terr;
     int isec;
     float usec;
@@ -110,10 +110,17 @@ int fgGetTimeInterval( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1998/04/03 22:12:56  curt
-/* Converting to Gnu autoconf system.
-/* Centralized time handling differences.
+/* Revision 1.12  1998/04/21 17:01:44  curt
+/* Fixed a problems where a pointer to a function was being passed around.  In
+/* one place this functions arguments were defined as ( void ) while in another
+/* place they were defined as ( int ).  The correct answer was ( int ).
 /*
+/* Prepairing for C++ integration.
+/*
+ * Revision 1.11  1998/04/03 22:12:56  curt
+ * Converting to Gnu autoconf system.
+ * Centralized time handling differences.
+ *
  * Revision 1.10  1998/01/31 00:43:45  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

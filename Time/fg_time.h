@@ -28,6 +28,11 @@
 #define _FG_TIME_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <config.h>
 
 #ifdef HAVE_WINDOWS_H
@@ -111,13 +116,25 @@ void fgTimeInit(struct fgTIME *t);
 void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _FG_TIME_H */
 
 
 /* $Log$
-/* Revision 1.18  1998/04/08 23:35:40  curt
-/* Tweaks to Gnu automake/autoconf system.
+/* Revision 1.19  1998/04/21 17:01:44  curt
+/* Fixed a problems where a pointer to a function was being passed around.  In
+/* one place this functions arguments were defined as ( void ) while in another
+/* place they were defined as ( int ).  The correct answer was ( int ).
 /*
+/* Prepairing for C++ integration.
+/*
+ * Revision 1.18  1998/04/08 23:35:40  curt
+ * Tweaks to Gnu automake/autoconf system.
+ *
  * Revision 1.17  1998/04/03 22:12:56  curt
  * Converting to Gnu autoconf system.
  * Centralized time handling differences.
