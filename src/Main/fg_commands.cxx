@@ -58,6 +58,8 @@ public:
     { return _wrap ? _wrap : &_dummy_0; }
   virtual const SGPropertyNode * getFactor () const 
     { return _factor ? _factor : &_dummy_1; }
+  virtual const SGPropertyNode * getSquared () const 
+    { return _squared ? _squared : &_dummy_1; }
   virtual const SGPropertyNode * getSetting () const 
     { return _setting ? _setting : &_dummy_0; }
   virtual const SGPropertyNode * getOffset () const
@@ -73,6 +75,7 @@ private:
   const SGPropertyNode * _max;
   const SGPropertyNode * _wrap;
   const SGPropertyNode * _factor;
+  const SGPropertyNode * _squared;
   const SGPropertyNode * _setting;
   const SGPropertyNode * _offset;
 };
@@ -90,6 +93,7 @@ PropertyCommandState::PropertyCommandState (const SGPropertyNode * arg)
     _max(arg->getNode("max")),
     _wrap(arg->getNode("wrap")),
     _factor(arg->getNode("factor")),
+    _squared(arg->getNode("squared")),
     _setting(arg->getNode("setting")),
     _offset(arg->getNode("offset"))
 {
@@ -536,8 +540,14 @@ do_property_scale (const SGPropertyNode * arg, SGCommandState ** state)
     ((PropertyCommandState *)(*state))->getOffset()->getDoubleValue();
   double factor =
     ((PropertyCommandState *)(*state))->getFactor()->getDoubleValue();
+  bool squared =
+    ((PropertyCommandState *)(*state))->getSquared()->getBoolValue();
 
-  return prop->setDoubleValue((setting + offset) * factor);
+  double result = (setting + offset) * factor;
+  if (squared)
+    result = (result < 0 ? -1 : 1) * result * result;
+
+  return prop->setDoubleValue(result);
 }
 
 
