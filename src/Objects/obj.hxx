@@ -1,4 +1,5 @@
-// obj.hxx -- routines to handle WaveFront .obj-ish format files.
+// obj.hxx -- routines to handle loading scenery and building the plib
+//            scene graph.
 //
 // Written by Curtis Olson, started October 1997.
 //
@@ -40,9 +41,8 @@
 
 #include <plib/ssg.h>           // plib include
 
+#include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/sg_types.hxx>
-
-#include <Scenery/tileentry.hxx>
 
 SG_USING_STD(string);
 
@@ -59,10 +59,6 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                    ssgBranch* rwy_lights,
                    ssgBranch* taxi_lights,
                    ssgVertexArray *ground_lights );
-
-// Load an ascii object file
-ssgBranch *fgAsciiObjLoad(const string& path, FGTileEntry *tile,
-                          ssgVertexArray *lights, const bool is_base);
 
 // Generate an ocean tile
 bool fgGenTile( const string& path, SGBucket b,
