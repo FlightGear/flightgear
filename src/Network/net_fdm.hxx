@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 10;
+const int FG_NET_FDM_VERSION = 11;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -72,6 +72,12 @@ public:
     double v_north;             // north velocity in local/body frame, fps
     double v_east;              // east velocity in local/body frame, fps
     double v_down;              // down/vertical velocity in local/body frame, fps
+    double v_wind_body_north;   // north velocity in local/body frame
+                                // relative to local airmass, fps
+    double v_wind_body_east;    // east velocity in local/body frame
+                                // relative to local airmass, fps
+    double v_wind_body_down;    // down/vertical velocity in local/body
+                                // frame relative to local airmass, fps
 
     // Stall
     double stall_warning;        // 0.0 - 1.0 indicating the amount of stall
@@ -81,6 +87,8 @@ public:
     double A_Y_pilot;		// Y accel in body frame ft/sec^2
     double A_Z_pilot;		// Z accel in body frame ft/sec^2
 
+    // Pressure
+    
     // Engine status
     int num_engines;		// Number of valid engines
     int eng_state[FG_MAX_ENGINES]; // Engine state (off, cranking, running)
