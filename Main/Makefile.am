@@ -7,6 +7,7 @@ bin_SCRIPTS = runfg runfg.bat
 fg_SOURCES = \
 	GLUTkey.cxx GLUTkey.hxx \
 	GLUTmain.cxx \
+	airports.cxx airports.hxx \
 	fg_config.h \
 	fg_init.cxx fg_init.hxx \
 	options.cxx options.hxx \

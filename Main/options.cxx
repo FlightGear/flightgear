@@ -41,6 +41,7 @@ fgOPTIONS current_options;
 fgOPTIONS::fgOPTIONS( void ) {
     // set initial values/defaults
 
+    strcpy(airport_id, "");
     hud_status = 0;
     time_offset = 0;
 }
@@ -149,7 +150,10 @@ int fgOPTIONS::parse( int argc, char **argv ) {
     while ( i < argc ) {
 	fgPrintf(FG_GENERAL, FG_INFO, "argv[%d] = %s\n", i, argv[i]);
 
-	if ( strcmp(argv[i], "--disable-hud") == 0 ) {
+	if ( strncmp(argv[i], "--airport-id=", 13) == 0 ) {
+	    argv[i] += 13;
+	    strncpy(airport_id, argv[i], 4);
+	} else if ( strcmp(argv[i], "--disable-hud") == 0 ) {
 	    hud_status = 0;	
 	} else if ( strcmp(argv[i], "--enable-hud") == 0 ) {
 	    hud_status = 1;	
@@ -173,6 +177,7 @@ int fgOPTIONS::parse( int argc, char **argv ) {
 // Print usage message
 void fgOPTIONS::usage ( void ) {
     printf("Usage: fg [ options ... ]\n");
+    printf("\t--airport-id=ABCD:  specify starting postion by airport id\n");
     printf("\t--disable-hud:  disable heads up display\n");
     printf("\t--enable-hud:  enable heads up display\n");
     printf("\t--help -h:  print usage\n");
@@ -186,6 +191,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/04/25 15:11:12  curt
+// Added an command line option to set starting position based on airport ID.
+//
 // Revision 1.1  1998/04/24 00:49:21  curt
 // Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
 // Trying out some different option parsing code.

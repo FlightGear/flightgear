@@ -1,29 +1,27 @@
-/* -*- Mode: C++ -*-
- *
- * fg_init.c -- Flight Gear top level initialization routines
- *
- * Written by Curtis Olson, started August 1997.
- *
- * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- *
- * $Id$
- * (Log is kept at end of this file)
- **************************************************************************/
+//
+// fg_init.cxx -- Flight Gear top level initialization routines
+//
+// Written by Curtis Olson, started August 1997.
+//
+// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #ifdef HAVE_CONFIG_H
@@ -55,74 +53,23 @@
 #include <Time/sunpos.hxx>
 #include <Weather/weather.h>
 
+#include "airports.hxx"
 #include "fg_init.hxx"
+#include "options.hxx"
 #include "views.hxx"
 
-extern int show_hud;             /* HUD state */
+// extern int show_hud;             // HUD state
 extern int displayInstruments;
 extern const char *default_root;
 
-/* General house keeping initializations */
 
-int fgInitGeneral( void ) {
-    fgGENERAL *g;
-
-    g = &general;
-
-    // determine the fg root path.  
-    if( !(g->root_dir) ) { 
-	// If not set by command line test for environmental var..
-	g->root_dir = getenv("FG_ROOT");
-	if ( !g->root_dir ) { 
-	    // No root path set? Then assume, we will exit if this is
-	    // wrong when looking for support files.
-	    fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
-                      "Cannot continue without environment variable FG_ROOT",
-		      "being defined.");
-	}
-    }
-    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
-
-    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
-    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
-
-    // seed the random number generater
-    fg_srandom();
-
-    return ( 1 ); 
-}
-
-
-// This is the top level init routine which calls all the other
-// initialization routines.  If you are adding a subsystem to flight
-// gear, its initialization call should located in this routine.
-// Returns non-zero if a problem encountered.
-
-int fgInitSubsystems( void ) {
-    double cur_elev;
-
+// Set initial position
+int fgInitPosition( void ) {
     fgFLIGHT *f;
-    struct fgLIGHT *l;
-    struct fgTIME *t;
-    struct fgVIEW *v;
+    fgOPTIONS *o;
 
-    l = &cur_light_params;
-    t = &cur_time_params;
-    v = &current_view;
-
-    fgPrintf( FG_GENERAL, FG_INFO, "Initialize Subsystems\n");
-    fgPrintf( FG_GENERAL, FG_INFO, "========== ==========\n");
-
-    /****************************************************************
-     * The following section sets up the flight model EOM parameters and
-     * should really be read in from one or more files.
-     ****************************************************************/
-
-    // Must happen before any of the flight model or control
-    // parameters are set
-
-    fgAircraftInit();   // In the future this might not be the case.
     f = current_aircraft.flight;
+    o = &current_options;
 
     // Initial Position at (P13) Globe, AZ
     FG_Longitude = ( -110.6642444 ) * DEG_TO_RAD;
@@ -230,15 +177,99 @@ int fgInitSubsystems( void ) {
     // FG_Runway_altitude = (2646 + 2000);
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
+    if ( strlen(o->airport_id) ) {
+	fgAIRPORTS airports;
+	fgAIRPORT a;
+
+	fgPrintf( FG_GENERAL, FG_INFO, 
+		  "Attempting to set starting position from airport code %s.\n",
+		  o->airport_id);
+
+	airports.load("Airports");
+	a = airports.search(o->airport_id);
+	if ( strcmp(a.id, "none") == 0 ) {
+	    fgPrintf( FG_GENERAL, FG_INFO, 
+		      "Failed to find %s in database.\n", o->airport_id);
+	} else {
+	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
+	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
+	    FG_Runway_altitude = ( a.elevation + 300 );
+	    FG_Altitude = FG_Runway_altitude + 3.758099;
+	}	    
+    }
+    
     fgPrintf( FG_GENERAL, FG_INFO, 
 	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
 	      FG_Altitude * FEET_TO_METER);
+}
+
+
+// General house keeping initializations
+int fgInitGeneral( void ) {
+    fgGENERAL *g;
+
+    g = &general;
+
+    // determine the fg root path.  
+    if( !(g->root_dir) ) { 
+	// If not set by command line test for environmental var..
+	g->root_dir = getenv("FG_ROOT");
+	if ( !g->root_dir ) { 
+	    // No root path set? Then assume, we will exit if this is
+	    // wrong when looking for support files.
+	    fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
+                      "Cannot continue without environment variable FG_ROOT",
+		      "being defined.");
+	}
+    }
+    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
+
+    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
+    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
+
+    // seed the random number generater
+    fg_srandom();
+
+    return ( 1 ); 
+}
+
+
+// This is the top level init routine which calls all the other
+// initialization routines.  If you are adding a subsystem to flight
+// gear, its initialization call should located in this routine.
+// Returns non-zero if a problem encountered.
+int fgInitSubsystems( void ) {
+    double cur_elev;
+
+    fgFLIGHT *f;
+    struct fgLIGHT *l;
+    struct fgTIME *t;
+    struct fgVIEW *v;
+
+    l = &cur_light_params;
+    t = &cur_time_params;
+    v = &current_view;
+
+    fgPrintf( FG_GENERAL, FG_INFO, "Initialize Subsystems\n");
+    fgPrintf( FG_GENERAL, FG_INFO, "========== ==========\n");
+
+    // The following section sets up the flight model EOM parameters
+    // and should really be read in from one or more files.
+
+    // Must happen before any of the flight model or control
+    // parameters are set
+
+    fgAircraftInit();   // In the future this might not be the case.
+    f = current_aircraft.flight;
+
+    // set the initial position
+    fgInitPosition();
 
     // Initial Velocity
-    FG_V_north = 0.0 /*  7.287719E+00 */;
-    FG_V_east  = 0.0 /*  1.521770E+03 */;
-    FG_V_down  = 0.0 /* -1.265722E-05 */;
+    FG_V_north = 0.0;   //  7.287719E+00
+    FG_V_east  = 0.0;   //  1.521770E+03
+    FG_V_down  = 0.0;   // -1.265722E-05
 
     // Initial Orientation
     FG_Phi   = -2.658474E-06;
@@ -403,201 +434,204 @@ int fgInitSubsystems( void ) {
 }
 
 
-/* $Log$
-/* Revision 1.2  1998/04/24 00:49:20  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Trying out some different option parsing code.
-/* Some code reorganization.
-/*
- * Revision 1.1  1998/04/22 13:25:44  curt
- * C++ - ifing the code.
- * Starting a bit of reorganization of lighting code.
- *
- * Revision 1.56  1998/04/18 04:11:28  curt
- * Moved fg_debug to it's own library, added zlib support.
- *
- * Revision 1.55  1998/04/14 02:21:03  curt
- * Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
- * <jgoeke@voyager.net>
- *
- * Revision 1.54  1998/04/08 23:35:36  curt
- * Tweaks to Gnu automake/autoconf system.
- *
- * Revision 1.53  1998/04/03 22:09:06  curt
- * Converting to Gnu autoconf system.
- *
- * Revision 1.52  1998/03/23 21:24:38  curt
- * Source code formating tweaks.
- *
- * Revision 1.51  1998/03/14 00:31:22  curt
- * Beginning initial terrain texturing experiments.
- *
- * Revision 1.50  1998/03/09 22:46:19  curt
- * Minor tweaks.
- *
- * Revision 1.49  1998/02/23 19:07:59  curt
- * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
- * calculation code between sun display, and other FG sections that use this
- * for things like lighting.
- *
- * Revision 1.48  1998/02/21 14:53:15  curt
- * Added Charlie's HUD changes.
- *
- * Revision 1.47  1998/02/19 13:05:53  curt
- * Incorporated some HUD tweaks from Michelle America.
- * Tweaked the sky's sunset/rise colors.
- * Other misc. tweaks.
- *
- * Revision 1.46  1998/02/18 15:07:06  curt
- * Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
- * drivers will work.)
- *
- * Revision 1.45  1998/02/16 13:39:43  curt
- * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
- * tiles to occasionally be missing.
- *
- * Revision 1.44  1998/02/12 21:59:50  curt
- * Incorporated code changes contributed by Charlie Hotchkiss
- * <chotchkiss@namg.us.anritsu.com>
- *
- * Revision 1.43  1998/02/11 02:50:40  curt
- * Minor changes.
- *
- * Revision 1.42  1998/02/09 22:56:58  curt
- * Removed "depend" files from cvs control.  Other minor make tweaks.
- *
- * Revision 1.41  1998/02/09 15:07:50  curt
- * Minor tweaks.
- *
- * Revision 1.40  1998/02/07 15:29:44  curt
- * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
- * <chotchkiss@namg.us.anritsu.com>
- *
- * Revision 1.39  1998/02/03 23:20:25  curt
- * Lots of little tweaks to fix various consistency problems discovered by
- * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
- * passed arguments along to the real printf().  Also incorporated HUD changes
- * by Michele America.
- *
- * Revision 1.38  1998/02/02 20:53:58  curt
- * Incorporated Durk's changes.
- *
- * Revision 1.37  1998/02/01 03:39:54  curt
- * Minor tweaks.
- *
- * Revision 1.36  1998/01/31 00:43:13  curt
- * Added MetroWorks patches from Carmen Volpe.
- *
- * Revision 1.35  1998/01/27 00:47:57  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
- * system and commandline/config file processing code.
- *
- * Revision 1.34  1998/01/22 02:59:37  curt
- * Changed #ifdef FILE_H to #ifdef _FILE_H
- *
- * Revision 1.33  1998/01/21 21:11:34  curt
- * Misc. tweaks.
- *
- * Revision 1.32  1998/01/19 19:27:08  curt
- * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
- * This should simplify things tremendously.
- *
- * Revision 1.31  1998/01/19 18:40:32  curt
- * Tons of little changes to clean up the code and to remove fatal errors
- * when building with the c++ compiler.
- *
- * Revision 1.30  1998/01/13 00:23:09  curt
- * Initial changes to support loading and management of scenery tiles.  Note,
- * there's still a fair amount of work left to be done.
- *
- * Revision 1.29  1998/01/08 02:22:08  curt
- * Beginning to integrate Tile management subsystem.
- *
- * Revision 1.28  1998/01/07 03:18:58  curt
- * Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
- *
- * Revision 1.27  1998/01/05 18:44:35  curt
- * Add an option to advance/decrease time from keyboard.
- *
- * Revision 1.26  1997/12/30 23:09:04  curt
- * Tweaking initialization sequences.
- *
- * Revision 1.25  1997/12/30 22:22:33  curt
- * Further integration of event manager.
- *
- * Revision 1.24  1997/12/30 20:47:44  curt
- * Integrated new event manager with subsystem initializations.
- *
- * Revision 1.23  1997/12/30 16:36:50  curt
- * Merged in Durk's changes ...
- *
- * Revision 1.22  1997/12/19 23:34:05  curt
- * Lot's of tweaking with sky rendering and lighting.
- *
- * Revision 1.21  1997/12/19 16:45:00  curt
- * Working on scene rendering order and options.
- *
- * Revision 1.20  1997/12/18 23:32:33  curt
- * First stab at sky dome actually starting to look reasonable. :-)
- *
- * Revision 1.19  1997/12/17 23:13:36  curt
- * Began working on rendering a sky.
- *
- * Revision 1.18  1997/12/15 23:54:49  curt
- * Add xgl wrappers for debugging.
- * Generate terrain normals on the fly.
- *
- * Revision 1.17  1997/12/15 20:59:09  curt
- * Misc. tweaks.
- *
- * Revision 1.16  1997/12/12 19:52:48  curt
- * Working on lightling and material properties.
- *
- * Revision 1.15  1997/12/11 04:43:55  curt
- * Fixed sun vector and lighting problems.  I thing the moon is now lit
- * correctly.
- *
- * Revision 1.14  1997/12/10 22:37:47  curt
- * Prepended "fg" on the name of all global structures that didn't have it yet.
- * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
- *
- * Revision 1.13  1997/11/25 19:25:32  curt
- * Changes to integrate Durk's moon/sun code updates + clean up.
- *
- * Revision 1.12  1997/11/15 18:16:35  curt
- * minor tweaks.
- *
- * Revision 1.11  1997/10/30 12:38:42  curt
- * Working on new scenery subsystem.
- *
- * Revision 1.10  1997/10/25 03:24:23  curt
- * Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
- *
- * Revision 1.9  1997/09/23 00:29:39  curt
- * Tweaks to get things to compile with gcc-win32.
- *
- * Revision 1.8  1997/09/22 14:44:20  curt
- * Continuing to try to align stars correctly.
- *
- * Revision 1.7  1997/09/16 15:50:30  curt
- * Working on star alignment and time issues.
- *
- * Revision 1.6  1997/09/05 14:17:30  curt
- * More tweaking with stars.
- *
- * Revision 1.5  1997/09/04 02:17:36  curt
- * Shufflin' stuff.
- *
- * Revision 1.4  1997/08/27 21:32:26  curt
- * Restructured view calculation code.  Added stars.
- *
- * Revision 1.3  1997/08/27 03:30:19  curt
- * Changed naming scheme of basic shared structures.
- *
- * Revision 1.2  1997/08/25 20:27:23  curt
- * Merged in initial HUD and Joystick code.
- *
- * Revision 1.1  1997/08/23 01:46:20  curt
- * Initial revision.
- *
- */
+// $Log$
+// Revision 1.3  1998/04/25 15:11:11  curt
+// Added an command line option to set starting position based on airport ID.
+//
+// Revision 1.2  1998/04/24 00:49:20  curt
+// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+// Trying out some different option parsing code.
+// Some code reorganization.
+//
+// Revision 1.1  1998/04/22 13:25:44  curt
+// C++ - ifing the code.
+// Starting a bit of reorganization of lighting code.
+//
+// Revision 1.56  1998/04/18 04:11:28  curt
+// Moved fg_debug to it's own library, added zlib support.
+//
+// Revision 1.55  1998/04/14 02:21:03  curt
+// Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
+// <jgoeke@voyager.net>
+//
+// Revision 1.54  1998/04/08 23:35:36  curt
+// Tweaks to Gnu automake/autoconf system.
+//
+// Revision 1.53  1998/04/03 22:09:06  curt
+// Converting to Gnu autoconf system.
+//
+// Revision 1.52  1998/03/23 21:24:38  curt
+// Source code formating tweaks.
+//
+// Revision 1.51  1998/03/14 00:31:22  curt
+// Beginning initial terrain texturing experiments.
+//
+// Revision 1.50  1998/03/09 22:46:19  curt
+// Minor tweaks.
+//
+// Revision 1.49  1998/02/23 19:07:59  curt
+// Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+// calculation code between sun display, and other FG sections that use this
+// for things like lighting.
+//
+// Revision 1.48  1998/02/21 14:53:15  curt
+// Added Charlie's HUD changes.
+//
+// Revision 1.47  1998/02/19 13:05:53  curt
+// Incorporated some HUD tweaks from Michelle America.
+// Tweaked the sky's sunset/rise colors.
+// Other misc. tweaks.
+//
+// Revision 1.46  1998/02/18 15:07:06  curt
+// Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
+// drivers will work.)
+//
+// Revision 1.45  1998/02/16 13:39:43  curt
+// Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
+// tiles to occasionally be missing.
+//
+// Revision 1.44  1998/02/12 21:59:50  curt
+// Incorporated code changes contributed by Charlie Hotchkiss
+// <chotchkiss@namg.us.anritsu.com>
+//
+// Revision 1.43  1998/02/11 02:50:40  curt
+// Minor changes.
+//
+// Revision 1.42  1998/02/09 22:56:58  curt
+// Removed "depend" files from cvs control.  Other minor make tweaks.
+//
+// Revision 1.41  1998/02/09 15:07:50  curt
+// Minor tweaks.
+//
+// Revision 1.40  1998/02/07 15:29:44  curt
+// Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+// <chotchkiss@namg.us.anritsu.com>
+//
+// Revision 1.39  1998/02/03 23:20:25  curt
+// Lots of little tweaks to fix various consistency problems discovered by
+// Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+// passed arguments along to the real printf().  Also incorporated HUD changes
+// by Michele America.
+//
+// Revision 1.38  1998/02/02 20:53:58  curt
+// Incorporated Durk's changes.
+//
+// Revision 1.37  1998/02/01 03:39:54  curt
+// Minor tweaks.
+//
+// Revision 1.36  1998/01/31 00:43:13  curt
+// Added MetroWorks patches from Carmen Volpe.
+//
+// Revision 1.35  1998/01/27 00:47:57  curt
+// Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+// system and commandline/config file processing code.
+//
+// Revision 1.34  1998/01/22 02:59:37  curt
+// Changed #ifdef FILE_H to #ifdef _FILE_H
+//
+// Revision 1.33  1998/01/21 21:11:34  curt
+// Misc. tweaks.
+//
+// Revision 1.32  1998/01/19 19:27:08  curt
+// Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+// This should simplify things tremendously.
+//
+// Revision 1.31  1998/01/19 18:40:32  curt
+// Tons of little changes to clean up the code and to remove fatal errors
+// when building with the c++ compiler.
+//
+// Revision 1.30  1998/01/13 00:23:09  curt
+// Initial changes to support loading and management of scenery tiles.  Note,
+// there's still a fair amount of work left to be done.
+//
+// Revision 1.29  1998/01/08 02:22:08  curt
+// Beginning to integrate Tile management subsystem.
+//
+// Revision 1.28  1998/01/07 03:18:58  curt
+// Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
+//
+// Revision 1.27  1998/01/05 18:44:35  curt
+// Add an option to advance/decrease time from keyboard.
+//
+// Revision 1.26  1997/12/30 23:09:04  curt
+// Tweaking initialization sequences.
+//
+// Revision 1.25  1997/12/30 22:22:33  curt
+// Further integration of event manager.
+//
+// Revision 1.24  1997/12/30 20:47:44  curt
+// Integrated new event manager with subsystem initializations.
+//
+// Revision 1.23  1997/12/30 16:36:50  curt
+// Merged in Durk's changes ...
+//
+// Revision 1.22  1997/12/19 23:34:05  curt
+// Lot's of tweaking with sky rendering and lighting.
+//
+// Revision 1.21  1997/12/19 16:45:00  curt
+// Working on scene rendering order and options.
+//
+// Revision 1.20  1997/12/18 23:32:33  curt
+// First stab at sky dome actually starting to look reasonable. :-)
+//
+// Revision 1.19  1997/12/17 23:13:36  curt
+// Began working on rendering a sky.
+//
+// Revision 1.18  1997/12/15 23:54:49  curt
+// Add xgl wrappers for debugging.
+// Generate terrain normals on the fly.
+//
+// Revision 1.17  1997/12/15 20:59:09  curt
+// Misc. tweaks.
+//
+// Revision 1.16  1997/12/12 19:52:48  curt
+// Working on lightling and material properties.
+//
+// Revision 1.15  1997/12/11 04:43:55  curt
+// Fixed sun vector and lighting problems.  I thing the moon is now lit
+// correctly.
+//
+// Revision 1.14  1997/12/10 22:37:47  curt
+// Prepended "fg" on the name of all global structures that didn't have it yet.
+// i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+//
+// Revision 1.13  1997/11/25 19:25:32  curt
+// Changes to integrate Durk's moon/sun code updates + clean up.
+//
+// Revision 1.12  1997/11/15 18:16:35  curt
+// minor tweaks.
+//
+// Revision 1.11  1997/10/30 12:38:42  curt
+// Working on new scenery subsystem.
+//
+// Revision 1.10  1997/10/25 03:24:23  curt
+// Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
+//
+// Revision 1.9  1997/09/23 00:29:39  curt
+// Tweaks to get things to compile with gcc-win32.
+//
+// Revision 1.8  1997/09/22 14:44:20  curt
+// Continuing to try to align stars correctly.
+//
+// Revision 1.7  1997/09/16 15:50:30  curt
+// Working on star alignment and time issues.
+//
+// Revision 1.6  1997/09/05 14:17:30  curt
+// More tweaking with stars.
+//
+// Revision 1.5  1997/09/04 02:17:36  curt
+// Shufflin' stuff.
+//
+// Revision 1.4  1997/08/27 21:32:26  curt
+// Restructured view calculation code.  Added stars.
+//
+// Revision 1.3  1997/08/27 03:30:19  curt
+// Changed naming scheme of basic shared structures.
+//
+// Revision 1.2  1997/08/25 20:27:23  curt
+// Merged in initial HUD and Joystick code.
+//
+// Revision 1.1  1997/08/23 01:46:20  curt
+// Initial revision.
+//
+

@@ -80,6 +80,7 @@ bin_SCRIPTS = runfg runfg.bat
 fg_SOURCES = \
 	GLUTkey.cxx GLUTkey.hxx \
 	GLUTmain.cxx \
+	airports.cxx airports.hxx \
 	fg_config.h \
 	fg_init.cxx fg_init.hxx \
 	options.cxx options.hxx \
@@ -116,7 +117,8 @@ X_CFLAGS = @X_CFLAGS@
 X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
-fg_OBJECTS =  GLUTkey.o GLUTmain.o fg_init.o options.o views.o
+fg_OBJECTS =  GLUTkey.o GLUTmain.o airports.o fg_init.o options.o \
+views.o
 fg_DEPENDENCIES =  $(top_builddir)/Simulator/Aircraft/libAircraft.la \
 $(top_builddir)/Simulator/Astro/libAstro.la \
 $(top_builddir)/Simulator/Autopilot/libAutopilot.la \
@@ -146,8 +148,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP = --best
-DEP_FILES =  .deps/GLUTkey.P .deps/GLUTmain.P .deps/fg_init.P \
-.deps/options.P .deps/views.P
+DEP_FILES =  .deps/GLUTkey.P .deps/GLUTmain.P .deps/airports.P \
+.deps/fg_init.P .deps/options.P .deps/views.P
 CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(fg_SOURCES)
 OBJECTS = $(fg_OBJECTS)

@@ -1,5 +1,7 @@
 //
-// options.hxx -- class to handle command line options
+// airports.hxx -- a really simplistic class to manage airport ID,
+//                 lat, lon of the center of one of it's runways, and 
+//                 elevation in feet.
 //
 // Written by Curtis Olson, started April 1998.
 //
@@ -23,8 +25,8 @@
 // (Log is kept at end of this file)
 
 
-#ifndef _OPTIONS_HXX
-#define _OPTIONS_HXX
+#ifndef _AIRPORTS_HXX
+#define _AIRPORTS_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -32,52 +34,41 @@
 #endif                                   
 
 
-#define FG_OPTIONS_OK 0
-#define FG_OPTIONS_HELP 1
-#define FG_OPTIONS_ERROR 2
+#define MAX_AIRPORTS 10000
 
 
-class fgOPTIONS {
+typedef struct {
+    char id[5];
+    double longitude, latitude, elevation;
+} fgAIRPORT;
+
+
+class fgAIRPORTS {
+    fgAIRPORT airports[MAX_AIRPORTS];
+    int size;
 
 public:
 
-    // ID of initial starting airport
-    char airport_id[5];
-
-    // HUD on/off
-    int hud_status;
-
-    // Offset true time by this many seconds
-    int time_offset;
-
     // Constructor
-    fgOPTIONS( void );
+    fgAIRPORTS( void );
 
-    // Parse the command line options
-    int parse( int argc, char **argv );
+    // load the data
+    int load( char *file );
 
-    // Print usage message
-    void usage ( void );
+    // search for the specified id
+    fgAIRPORT search( char *id );
 
     // Destructor
-    ~fgOPTIONS( void );
+    ~fgAIRPORTS( void );
 
 };
 
 
-extern fgOPTIONS current_options;
-
-
-#endif /* _OPTIONS_HXX */
+#endif /* _AIRPORTS_HXX */
 
 
 // $Log$
-// Revision 1.2  1998/04/25 15:11:13  curt
+// Revision 1.1  1998/04/25 15:11:11  curt
 // Added an command line option to set starting position based on airport ID.
-//
-// Revision 1.1  1998/04/24 00:49:21  curt
-// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-// Trying out some different option parsing code.
-// Some code reorganization.
 //
 //
