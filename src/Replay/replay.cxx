@@ -329,6 +329,12 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
         result.ctrls.fuel_pump_power[i] = ctrls1.fuel_pump_power[i];
         result.ctrls.prop_advance[i]
             = weight( ctrls1.prop_advance[i], ctrls2.prop_advance[i], ratio );
+        result.ctrls.engine_ok[i] = ctrls1.engine_ok[i];
+        result.ctrls.mag_left_ok[i] = ctrls1.mag_left_ok[i];
+        result.ctrls.mag_right_ok[i] = ctrls1.mag_right_ok[i];
+        result.ctrls.spark_plugs_ok[i] = ctrls1.spark_plugs_ok[i];
+        result.ctrls.oil_press_status[i] = ctrls1.oil_press_status[i];
+        result.ctrls.fuel_pump_ok[i] = ctrls1.fuel_pump_ok[i];
     }
 
     // Fuel management
