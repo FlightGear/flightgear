@@ -1477,6 +1477,7 @@ void fgInitTimeOffset() {
             << globals->get_warp() );
 }
 
+
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -1496,8 +1497,8 @@ bool fgInitSubsystems() {
     // Initialize the event manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
-     globals->get_event_mgr()->init();
-     globals->get_event_mgr()->setFreezeProperty(fgGetNode("/sim/freeze/clock"));
+    globals->get_event_mgr()->init();
+    globals->get_event_mgr()->setFreezeProperty(fgGetNode("/sim/freeze/clock"));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem
