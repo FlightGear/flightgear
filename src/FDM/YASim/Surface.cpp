@@ -171,10 +171,10 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // Airfoil lift (pre-stall and zero-alpha) torques "up" (negative
     // torque) around the Y axis, while flap lift pushes down.  Both
     // forces are considered to act at one third chord from the
-    // center.  Convert to local (i.e. airplane) coordiantes and store
+    // edge.  Convert to local (i.e. airplane) coordiantes and store
     // into "torque".
     torque[0] = 0;
-    torque[1] = 0.33 * _chord * (flapLift - (_cz*_cz0 + stallLift));
+    torque[1] = 0.1667 * _chord * (flapLift - (_cz*_cz0 + stallLift));
     torque[2] = 0;
     Math::tmul33(_orient, torque, torque);
 
