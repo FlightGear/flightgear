@@ -713,7 +713,7 @@ FGInput::_update_joystick ()
 	a.last_value = axis_values[j];
 // 	SG_LOG(SG_INPUT, SG_INFO, "There are "
 // 	       << a.bindings[modifiers].size() << " bindings");
-	for (int k = 0; k < a.bindings[modifiers].size(); k++)
+	for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
 	  a.bindings[modifiers][k].fire(axis_values[j]);
       }
     }
@@ -727,7 +727,7 @@ FGInput::_update_joystick ()
 				// The press event may be repeated.
 	if (!b.last_state || b.is_repeatable) {
 // 	  SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been pressed");
-	  for (int k = 0; k < b.bindings[modifiers].size(); k++)
+	  for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
 	    b.bindings[modifiers][k].fire();
 	}
       } else {
