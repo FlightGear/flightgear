@@ -36,6 +36,6 @@ bin_PROGRAMS = yasim
 
 yasim_SOURCES = yasim-test.cpp $(SHARED_SOURCES)
 
-yasim_LDADD = -lsgxml -lsgprops -lsgmisc -lsgdebug $(base_LIBS)
+yasim_LDADD = -lsgxml -lsgprops -lsgdebug -lsgstructure  $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
