@@ -83,7 +83,7 @@ batch_cart_to_polar_2d( list < point2d > in_list)
     while ( current != last ) {
 	p = cart_to_polar_2d( *current );
 	out_list.push_back(p);
-	current++;
+	++current;
     }
 
     return out_list;
@@ -116,7 +116,7 @@ gen_area(point2d origin, double angle, list < point2d > cart_list)
     last = rad_list.end();
     while ( current != last ) {
 	printf("(%.2f, %.2f)\n", current->theta, current->dist);
-	current++;
+	++current;
     }
     printf("\n");
     */
@@ -131,7 +131,7 @@ gen_area(point2d origin, double angle, list < point2d > cart_list)
 	    current->theta -= FG_2PI;
 	}
 	// printf("(%.2f, %.2f)\n", current->theta, current->dist);
-	current++;
+	++current;
     }
     // printf("\n");
 
@@ -147,7 +147,7 @@ gen_area(point2d origin, double angle, list < point2d > cart_list)
 	p.lat *= RAD_TO_DEG;
 	// printf("(%.8f, %.8f)\n", p.lon, p.lat);
 	result_list.push_back(p);
-	current++;
+	++current;
     }
     // printf("\n");
 
@@ -193,7 +193,7 @@ gen_runway_area( double lon, double lat, double heading,
     last = tmp_list.end();
     while ( current != last ) {
 	printf("(%.2f, %.2f)\n", current->x, current->y);
-	current++;
+	++current;
     }
     printf("\n");
     */
@@ -208,7 +208,7 @@ gen_runway_area( double lon, double lat, double heading,
     last = result_list.end();
     while ( current != last ) {
 	printf("(%.8f, %.8f)\n", current->lon, current->lat);
-	current++;
+	++current;
     }
     printf("\n");
     */
@@ -218,6 +218,9 @@ gen_runway_area( double lon, double lat, double heading,
 
 
 // $Log$
+// Revision 1.3  1998/09/09 16:26:31  curt
+// Continued progress in implementing the convex hull algorithm.
+//
 // Revision 1.2  1998/09/04 23:04:48  curt
 // Beginning of convex hull genereration routine.
 //

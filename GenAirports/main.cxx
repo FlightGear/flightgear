@@ -45,16 +45,25 @@
 
 
 // process and airport + runway list
-void process_airport( string last_airport, list < string > & runway_list ) {
-    list < point2d > rwy_list, apt_list;
-    list < point2d > :: iterator current;                          
-    list < point2d > :: iterator last;                    
+void process_airport( string last_airport, list < string > & runway_list,
+		      const string& root ) {
+    list_container rwy_list, apt_list, hull_list;
+    list_iterator current, last;
 
     string line_str;
     double lon, lat;
     int len, width, hdg, label_hdg, elev;
     char codes[10];
     char side;
+    point2d average;
+    double sum_x, sum_y;
+
+    FILE *fd;
+    fgBUCKET b;
+    long int index;
+    char base[256], tmp[256];
+    string path, command, exfile, file;
+    int i, count;
 
     printf( "(apt) %s", last_airport.c_str() );
 
@@ -76,21 +85,100 @@ void process_airport( string last_airport, list < string > & runway_list ) {
 	last = rwy_list.end();
 	while ( current != last ) {
 	    apt_list.push_back(*current);
-	    current++;
+	    ++current;
 	}
     }
 
-    printf("Final results in degrees\n");
+    printf("Runway points in degrees\n");
     current = apt_list.begin();
     last = apt_list.end();
     while ( current != last ) {
 	// printf( "(%.4f, %.4f)\n", 
 	printf( "%.5f %.5f\n", current->lon, current->lat );
-	current++;
+	++current;
     }
     printf("\n");
 
-    convex_hull(apt_list);
+    // generate convex hull
+    hull_list = convex_hull(apt_list);
+
+    // find average center point of convex hull
+    count = hull_list.size();
+
+    current = hull_list.begin();
+    last = hull_list.end();
+    sum_x = sum_y = 0.0;
+    while ( current != last ) {
+	sum_x += (*current).x;
+	sum_y += (*current).y;
+
+	++current;
+    }
+
+    average.x = sum_x / count;
+    average.y = sum_y / count;
+
+    // find bucket based on first point in hull list.  Eventually
+    // we'll need to handle cases where the area crosses bucket
+    // boundaries.
+    fgBucketFind( (*current).lon, (*current).lat, &b);
+    printf( "Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
+	    b.lon, b.lat, b.x, b.y);
+
+    index = fgBucketGenIndex(&b);
+    fgBucketGenBasePath(&b, base);
+    path = root + "/Scenery/" + base;
+    command = "mkdir -p " + path;
+    system( command.c_str() );
+
+    sprintf(tmp, "%ld", index);
+    exfile = path + "/" + tmp + ".node.ex";
+    file =   path + "/" + tmp + ".poly";
+    printf( "extra node file = %s\n", exfile.c_str() );
+    printf( "poly file = %s\n", file.c_str() );
+
+    // output exclude nodes
+    printf("Output exclude nodes\n");
+    if ( (fd = fopen(exfile.c_str(), "w")) == NULL ) {
+        printf("Cannot open file: %s\n", exfile.c_str());
+        exit(-1);
+    }
+
+    fprintf( fd, "%d 2 0 0\n", count );
+
+    current = hull_list.begin();
+    last = hull_list.end();
+    i = 1;
+    while ( current != last ) {
+	// printf( "(%.4f, %.4f)\n", 
+	fprintf( fd, "%d %.2f %.2f %.2f\n", i, 
+		 (*current).lon * 3600.0, (*current).lat * 3600.0, elev);
+	++current;
+	++i;
+    }
+    fclose(fd);
+
+    // output poly
+    if ( (fd = fopen(file.c_str(), "w")) == NULL ) {
+        printf("Cannot open file: %s\n", file.c_str());
+        exit(-1);
+    }
+
+    // output empty node list
+    fprintf(fd, "0 2 0 0\n");
+
+    // output segments
+    fprintf( fd, "%d 0\n", count );
+    for ( i = 1; i < count; i++ ) {
+	fprintf( fd, "%d %d %d\n", i, i, i + 1 );
+    }
+    fprintf( fd, "%d %d %d\n", count, count, 1 );
+
+    // output hole center
+    fprintf( fd, "1\n");
+    fprintf( fd, "1 %.2f %.2f\n", average.x * 3600.0, average.y * 3600);
+
+    fclose(fd);
 }
 
 
@@ -142,7 +230,7 @@ int main( int argc, char **argv ) {
 
 	    if ( last_airport.length() ) {
 		// process previous record
-		process_airport(last_airport, runway_list);
+		process_airport(last_airport, runway_list, argv[2]);
 	    }
 
 	    last_airport = airport;
@@ -151,7 +239,7 @@ int main( int argc, char **argv ) {
 
     if ( last_airport.length() ) {
 	// process previous record
-	process_airport(last_airport, runway_list);
+	process_airport(last_airport, runway_list, argv[2]);
     }
 
     fgclose(f);

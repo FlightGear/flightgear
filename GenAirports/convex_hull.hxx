@@ -28,7 +28,6 @@
 
 
 #include <list>
-#include <map>
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
@@ -41,13 +40,10 @@ using namespace std;
 typedef list < point2d > list_container;
 typedef list_container::iterator list_iterator;
 
-// stl mapp typedefs
-typedef map < double, double, less<double> > map_container;
-typedef map_container::iterator map_iterator;
-
 
 // calculate the convex hull of a set of points, return as a list of
-// point2d
+// point2d.  The algorithm description can be found at:
+// http://riot.ieor.berkeley.edu/riot/Applications/ConvexHull/CHDetails.html
 list_container convex_hull( list_container input_list );
 
 
@@ -55,6 +51,9 @@ list_container convex_hull( list_container input_list );
 
 
 // $Log$
+// Revision 1.2  1998/09/09 16:26:33  curt
+// Continued progress in implementing the convex hull algorithm.
+//
 // Revision 1.1  1998/09/04 23:04:51  curt
 // Beginning of convex hull genereration routine.
 //
