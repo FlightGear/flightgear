@@ -56,9 +56,11 @@ public:
 private:
 
     double aileron;
+    double aileron_trim;
     double elevator;
     double elevator_trim;
     double rudder;
+    double rudder_trim;
     double flaps;
     double throttle[MAX_ENGINES];
     double mixture[MAX_ENGINES];
@@ -97,9 +99,11 @@ public:
 	
     // Query functions
     inline double get_aileron() const { return aileron; }
+    inline double get_aileron_trim() const { return aileron_trim; }
     inline double get_elevator() const { return elevator; }
     inline double get_elevator_trim() const { return elevator_trim; }
     inline double get_rudder() const { return rudder; }
+    inline double get_rudder_trim() const { return rudder_trim; }
     inline double get_flaps() const { return flaps; }
     inline double get_throttle(int engine) const { return throttle[engine]; }
     inline double get_mixture(int engine) const { return mixture[engine]; }
@@ -132,6 +136,14 @@ public:
 	    set_rudder( aileron / 2.0 );
 	}
     }
+    inline void set_aileron_trim( double pos ) {
+	aileron_trim = pos;
+	CLAMP( &aileron_trim, -1.0, 1.0 );
+    }
+    inline void move_aileron_trim( double amt ) {
+	aileron_trim += amt;
+	CLAMP( &aileron_trim, -1.0, 1.0 );
+    }
     inline void set_elevator( double pos ) {
 	elevator = pos;
 	CLAMP( &elevator, -1.0, 1.0 );
@@ -155,6 +167,14 @@ public:
     inline void move_rudder( double amt ) {
 	rudder += amt;
 	CLAMP( &rudder, -1.0, 1.0 );
+    }
+    inline void set_rudder_trim( double pos ) {
+	rudder_trim = pos;
+	CLAMP( &rudder_trim, -1.0, 1.0 );
+    }
+    inline void move_rudder_trim( double amt ) {
+	rudder_trim += amt;
+	CLAMP( &rudder_trim, -1.0, 1.0 );
     }
     inline void set_flaps( double pos ) {
 	flaps = pos;

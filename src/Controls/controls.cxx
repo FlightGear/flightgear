@@ -30,9 +30,11 @@
 // Constructor
 FGControls::FGControls() :
     aileron( 0.0 ),
+    aileron_trim( 0.0 ),
     elevator( 0.0 ),
     elevator_trim( 1.969572E-03 ),
     rudder( 0.0 ),
+    rudder_trim( 0.0 ),
     throttle_idle( true )
 {
 }
@@ -41,9 +43,11 @@ FGControls::FGControls() :
 void FGControls::reset_all()
 {
     set_aileron(0.0);
+    set_aileron_trim(0.0);
     set_elevator(0.0);
     set_elevator_trim(0.0);
     set_rudder(0.0);
+    set_rudder_trim(0.0);
     set_throttle(FGControls::ALL_ENGINES, 0.0);
     set_starter(FGControls::ALL_ENGINES, false);
     set_magnetos(FGControls::ALL_ENGINES, 0);
@@ -82,6 +86,9 @@ FGControls::bind ()
   fgTie("/controls/aileron", this,
 	&FGControls::get_aileron, &FGControls::set_aileron);
   fgSetArchivable("/controls/aileron");
+  fgTie("/controls/aileron-trim", this,
+       &FGControls::get_aileron_trim, &FGControls::set_aileron_trim);
+  fgSetArchivable("/controls/aileron-trim");
   fgTie("/controls/elevator", this,
        &FGControls::get_elevator, &FGControls::set_elevator);
   fgSetArchivable("/controls/elevator");
@@ -91,6 +98,9 @@ FGControls::bind ()
   fgTie("/controls/rudder", this,
        &FGControls::get_rudder, &FGControls::set_rudder);
   fgSetArchivable("/controls/rudder");
+  fgTie("/controls/rudder-trim", this,
+       &FGControls::get_rudder_trim, &FGControls::set_rudder_trim);
+  fgSetArchivable("/controls/rudder-trim");
   fgTie("/controls/flaps", this,
        &FGControls::get_flaps, &FGControls::set_flaps);
   fgSetArchivable("/controls/flaps");
@@ -136,9 +146,11 @@ FGControls::unbind ()
 {
 				// Tie control properties.
   fgUntie("/controls/aileron");
+  fgUntie("/controls/aileron-trim");
   fgUntie("/controls/elevator");
   fgUntie("/controls/elevator-trim");
   fgUntie("/controls/rudder");
+  fgUntie("/controls/rudder-trim");
   fgUntie("/controls/flaps");
   int index;
   for (index = 0; index < MAX_ENGINES; index++) {
