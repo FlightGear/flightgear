@@ -102,8 +102,8 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
                        bool net_byte_order )
 {
     int i;
-    SGPropertyNode * node;
-    SGPropertyNode * tempnode;
+    SGPropertyNode *node;
+    SGPropertyNode *tempnode;
 
     // fill in values
     node  = fgGetNode("/controls/flight", true);
@@ -119,6 +119,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
                                     1.0 ) >= 1.0;
     net->num_engines = FGNetCtrls::FG_MAX_ENGINES;
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+        // Controls
         node = fgGetNode("/controls/engines/engine", i );
 	net->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	net->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
@@ -131,7 +132,6 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
 	  // cout << "Starter -> " << node->getIntValue( "starter", false )
 	  //      << endl;
 	}
-        node = fgGetNode("/controls", true);
 	net->fuel_pump_power[i]
             = node->getDoubleValue( "/systems/electrical/outputs/fuel-pump",
                                     1.0 ) >= 1.0;
@@ -139,6 +139,20 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
 	net->starter_power[i]
             = node->getDoubleValue( "/systems/electrical/outputs/starter",
                                     1.0 ) >= 1.0;
+
+	// Faults
+	SGPropertyNode *faults = node->getChild( "faults", 0, true );
+	net->engine_ok[i] = faults->getBoolValue( "serviceable", true );
+	net->mag_left_ok[i]
+	  = faults->getBoolValue( "left-magneto-serviceable", true );
+	net->mag_right_ok[i]
+	  = faults->getBoolValue( "right-magneto-serviceable", true);
+	net->spark_plugs_ok[i]
+	  = faults->getBoolValue( "spark-plugs-serviceable", true );
+	net->oil_press_status[i]
+	  = faults->getIntValue( "oil-pressure-status", 0 );
+	net->fuel_pump_ok[i]
+	  = faults->getBoolValue( "fuel-pump-serviceable", true );
     }
     net->num_tanks = FGNetCtrls::FG_MAX_TANKS;
     for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
@@ -216,12 +230,18 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         htond(net->flaps);
         net->flaps_power = htonl(net->flaps_power);
         for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+            net->magnetos[i] = htonl(net->magnetos[i]);
+            net->starter_power[i] = htonl(net->starter_power[i]);
             htond(net->throttle[i]);
             htond(net->mixture[i]);
             net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
             htond(net->prop_advance[i]);
-            net->magnetos[i] = htonl(net->magnetos[i]);
-            net->starter_power[i] = htonl(net->starter_power[i]);
+	    net->engine_ok[i] = htonl(net->engine_ok[i]);
+	    net->mag_left_ok[i] = htonl(net->mag_left_ok[i]);
+	    net->mag_right_ok[i] = htonl(net->mag_right_ok[i]);
+	    net->spark_plugs_ok[i] = htonl(net->spark_plugs_ok[i]);
+	    net->oil_press_status[i] = htonl(net->oil_press_status[i]);
+	    net->fuel_pump_ok[i] = htonl(net->fuel_pump_ok[i]);
         }
         net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
@@ -272,6 +292,12 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
             htond(net->mixture[i]);
             net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
             htond(net->prop_advance[i]);
+	    net->engine_ok[i] = htonl(net->engine_ok[i]);
+	    net->mag_left_ok[i] = htonl(net->mag_left_ok[i]);
+	    net->mag_right_ok[i] = htonl(net->mag_right_ok[i]);
+	    net->spark_plugs_ok[i] = htonl(net->spark_plugs_ok[i]);
+	    net->oil_press_status[i] = htonl(net->oil_press_status[i]);
+	    net->fuel_pump_ok[i] = htonl(net->fuel_pump_ok[i]);
         }
         net->num_tanks = htonl(net->num_tanks);
         for ( i = 0; i < net->num_tanks; ++i ) {
@@ -311,12 +337,25 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     fgSetBool( "/systems/electrical/outputs/flaps", net->flaps_power );
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+        // Controls
         node = fgGetNode("/controls/engines/engine", i);
         node->getChild( "throttle" )->setDoubleValue( net->throttle[i] );
         node->getChild( "mixture" )->setDoubleValue( net->mixture[i] );
         node->getChild( "propeller-pitch" )
             ->setDoubleValue( net->prop_advance[i] );
         node->getChild( "magnetos" )->setDoubleValue( net->magnetos[i] );
+
+	// Faults
+	SGPropertyNode *faults = node->getNode( "faults", true );
+	faults->setBoolValue( "serviceable", net->engine_ok[i] );
+	faults->setBoolValue( "left-magneto-serviceable",
+			      net->mag_left_ok[i] );
+	faults->setBoolValue( "right-magneto-serviceable",
+			      net->mag_right_ok[i]);
+	faults->setBoolValue( "spark-plugs-serviceable",
+			      net->spark_plugs_ok[i] );
+	faults->setIntValue( "oil-pressure-status", net->oil_press_status[i] );
+	faults->setBoolValue( "fuel-pump-serviceable", net->fuel_pump_ok[i] );
     }
 
     fgSetBool( "/systems/electrical/outputs/fuel-pump",

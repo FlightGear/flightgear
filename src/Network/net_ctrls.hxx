@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 14;
+const int FG_NET_CTRLS_VERSION = 15;
 
 
 // Define a structure containing the control parameters
@@ -53,6 +53,8 @@ public:
     double elevator_trim;	         // -1 ... 1
     double rudder;		         // -1 ... 1
     double flaps;		         //  0 ... 1
+
+    // Aero control faults
     bool flaps_power;                    //  true = power available
 
     // Engine controls
@@ -63,6 +65,14 @@ public:
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
     bool fuel_pump_power[FG_MAX_ENGINES];// true = on
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
+
+    // Engine faults
+    bool engine_ok[FG_MAX_ENGINES];
+    bool mag_left_ok[FG_MAX_ENGINES];
+    bool mag_right_ok[FG_MAX_ENGINES];
+    bool spark_plugs_ok[FG_MAX_ENGINES]; // false = fouled plugs
+    int oil_press_status[FG_MAX_ENGINES]; // 0 = normal, 1 = low, 2 = full fail
+    bool fuel_pump_ok[FG_MAX_ENGINES];
 
     // Fuel management
     int num_tanks;                       // number of valid tanks
