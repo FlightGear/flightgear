@@ -60,7 +60,7 @@ FGGround::FGGround() {
 	
 	// Init the property nodes - TODO - need to make sure we're getting surface winds.
 	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
-	wind_speed_knots = fgGetNode("/environment/wind-speed-kts", true);
+	wind_speed_knots = fgGetNode("/environment/wind-speed-kt", true);
 	
 	// TODO - get the actual airport elevation
 	aptElev = 0.0;
@@ -76,7 +76,7 @@ FGGround::FGGround(string id) {
 	
 	// Init the property nodes - TODO - need to make sure we're getting surface winds.
 	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
-	wind_speed_knots = fgGetNode("/environment/wind-speed-kts", true);
+	wind_speed_knots = fgGetNode("/environment/wind-speed-kt", true);
 	
 	// TODO - get the actual airport elevation
 	aptElev = 0.0;

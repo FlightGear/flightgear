@@ -71,7 +71,7 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	elevInitGood = false;
 	// Init the property nodes
 	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
-	wind_speed_knots = fgGetNode("/environment/wind-speed-kts", true);
+	wind_speed_knots = fgGetNode("/environment/wind-speed-kt", true);
 	circuitsToFly = 0;
 	liningUp = false;
 	taxiRequestPending = false;
