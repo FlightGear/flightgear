@@ -25,7 +25,6 @@
 #include <string.h>		// strdup
 
 #include <plib/ul.h>
-#include <plib/ssg.h>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
