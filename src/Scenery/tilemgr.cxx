@@ -521,5 +521,5 @@ bool FGTileMgr::set_tile_filter( bool f ) {
 
 int FGTileMgr::tile_filter_cb( ssgEntity *, int )
 {
-  return tile_filter;
+  return tile_filter ? 1 : 0;
 }
