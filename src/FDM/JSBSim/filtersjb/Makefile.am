@@ -12,10 +12,6 @@ libfiltersjb_a_SOURCES = \
 	FGSummer.cpp FGSummer.h \
 	FGSwitch.cpp FGSwitch.h
 
-if OLD_AUTOMAKE
-DEFS += -DFGFS
-else
 AM_CXXFLAGS = -DFGFS
-endif
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

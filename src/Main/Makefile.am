@@ -19,11 +19,7 @@ else
 THREAD_LIBS =
 endif
 
-if ANCIENT_AUTOMAKE
-# nothing CXXFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
-else
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
-endif
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 

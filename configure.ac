@@ -53,9 +53,11 @@ AM_CONDITIONAL(IS_CYGWIN, test "x$is_cygwin" = "xyes")
 
 # Determine version of automake ... important becuase of
 # incompatibilities between versions
-AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\-p[[0-9]]$//' | sed -e 's/\.//'`
-AM_CONDITIONAL(ANCIENT_AUTOMAKE, test $AUTO_MAKE_VERSION -lt 14)
-AM_CONDITIONAL(OLD_AUTOMAKE, test $AUTO_MAKE_VERSION -lt 15)
+AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\-p[[0-9]]$//' | sed -e 's/\.//g'`
+if test $AUTO_MAKE_VERSION -lt 15; then
+    echo "You need to upgrade your automake to version 1.5 or newer"
+    exit 1
+fi
 
 # Used by JSBSim
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
@@ -369,6 +371,12 @@ AC_SUBST(opengl_LIBS)
 
 AM_CONDITIONAL(HAVE_XWINDOWS, test "x$ac_cv_lib_X11_XCreateWindow" = "xyes" )
 
+# The following are C++ items that need to be tested for with the c++
+# compiler
+
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+
 # Check for "plib" without which we cannot go on
 AC_CHECK_HEADER(plib/pu.h)
 if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
@@ -382,8 +390,6 @@ if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
     exit
 fi
 
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
 # needed for plib 1.3.x and later
 AC_CHECK_LIB(plibul, ulInit,,,)
 
@@ -393,8 +399,6 @@ if test "x$ac_cv_lib_plibul_ulInit" != "xyes"; then
     echo "plib-1.4.2"
     exit
 fi
-
-AC_LANG_RESTORE
 
 # If we get here then plib is available, so force use of plib joystick lib
 AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
@@ -425,6 +429,8 @@ fi
 AC_MSG_CHECKING(for proper simgear version)
 
 AC_TRY_RUN([
+#include <stdio.h>
+
 #include <simgear/version.h>
 
 #define STRINGIFY(X) XSTRINGIFY(X)
@@ -474,6 +480,30 @@ if test "x$ac_cv_header_mk4_h" != "xyes"; then
     echo "configure aborted."
     exit
 fi
+
+AC_TRY_RUN([
+#include <mk4.h>
+
+#define MIN_MK4_VERSION 243
+
+int main() {
+    int major, minor, micro;
+
+    if ( d4_MetaKitLibraryVersion < MIN_MK4_VERSION ) {
+	 return -1;
+    }
+
+    return 0;
+}
+
+],
+  AC_MSG_RESULT(yes),
+  [AC_MSG_RESULT(wrong version);
+   AC_MSG_ERROR([Install metakit 2.4.3 or later first...])],
+  AC_MSG_RESULT(yes)
+)
+
+AC_LANG_RESTORE
 
 # Check for system installed zlib
 AC_CHECK_HEADER(zlib.h)

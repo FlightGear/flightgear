@@ -535,12 +535,12 @@ void helpCb (puObject *)
     }
     command += " &";
 #else // WIN32
-	command = "start ";
-	command += path.str();
+    command = "start ";
+    command += path.str();
 #endif
 	
     system( command.c_str() );
-    mkDialog ("Help started in netscape window.");
+    mkDialog ("Help started in your web browser window.");
 }
 
 #if defined( TR_HIRES_SNAP)
