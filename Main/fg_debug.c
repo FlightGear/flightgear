@@ -227,10 +227,18 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
     // If no action to take, then don't bother with the semaphore
     // activity Slight speed benefit.
 
-    if( !(dbg_class & fg_DebugClass) || (prio < fg_DebugPriority) ) {
-	// Its zero anyway. But we might think about changing
-	// it upon some error condition?
-	return ret;
+    // printf("dbg_class = %d  fg_DebugClass = %d\n", dbg_class, fg_DebugClass);
+    // printf("prio = %d  fg_DebugPriority = %d\n", prio, fg_DebugPriority);
+
+    if( !(dbg_class & fg_DebugClass) ) {
+	// Failed to match a specific debug class
+	if ( prio < fg_DebugPriority ) {
+	    // priority is less than requested
+
+	    // "ret" is zero anyway. But we might think about changing
+	    // it upon some error condition?
+	    return ret;
+	}
     }
 
     FG_GRABDEBUGSEM;
@@ -257,9 +265,12 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/03/09 22:11:00  curt
-/* Processed through the format-o-matic.
+/* Revision 1.9  1998/03/09 22:44:58  curt
+/* Modified so that you can specify FG_DEBUGCLASS ***or*** FG_DEBUG_PRIORITY
 /*
+ * Revision 1.8  1998/03/09 22:11:00  curt
+ * Processed through the format-o-matic.
+ *
  * Revision 1.7  1998/02/16 13:39:43  curt
  * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
  * tiles to occasionally be missing.

@@ -47,7 +47,7 @@ typedef enum {
     FG_AIRCRAFT= 0x00000400,
     FG_UNDEFD  = 0x00001000, // For range checking
 
-    FG_ALL     = 0xFFFFFFFFL  // -1!
+    FG_ALL     = 0xFFFFFFFF
 } fgDebugClass;
 
 /* NB: To add a priority, add it here. */
