@@ -31,8 +31,8 @@
 #endif                                   
 
 
-#include <deque.h>      // STL double ended queue
-#include <list.h>       // STL list
+#include <deque>        // STL double ended queue
+#include <list>         // STL list
 
 #include "fg_time.hxx"
 
@@ -115,6 +115,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.3  1998/06/03 00:48:12  curt
+// No .h for STL includes.
+//
 // Revision 1.2  1998/05/22 21:14:54  curt
 // Rewrote event.cxx in C++ as a class using STL for the internal event list
 // and run queue this removes the arbitrary list sizes and makes things much
