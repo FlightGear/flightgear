@@ -37,29 +37,31 @@ FG_USING_STD(map);
 FG_USING_STD(vector);
 
 
-// convenience types
-typedef vector < FGNavAid > nav_list_type;
-typedef nav_list_type::iterator nav_list_iterator;
-typedef nav_list_type::const_iterator nav_list_const_iterator;
+class FGNavaids {
 
-typedef map < int, nav_list_type, less<int> > nav_map_type;
-typedef nav_map_type::iterator nav_map_iterator;
-typedef nav_map_type::const_iterator nav_map_const_iterator;
+    // convenience types
+    typedef vector < FGNavaid > nav_list_type;
+    typedef nav_list_type::iterator nav_list_iterator;
+    typedef nav_list_type::const_iterator nav_list_const_iterator;
 
-class FGNavAids {
+    typedef map < int, nav_list_type, less<int> > nav_map_type;
+    typedef nav_map_type::iterator nav_map_iterator;
+    typedef nav_map_type::const_iterator nav_map_const_iterator;
 
     nav_map_type navaids;
 
 public:
 
-    FGNavAids();
-    ~FGNavAids();
+    FGNavaids();
+    ~FGNavaids();
 
     // load the navaids and build the map
     bool init( FGPath path );
 
-    // query the database for the specified frequency
-    FGNavAid query( double lon, double lat, int freq );
+    // query the database for the specified frequency, lon and lat are
+    // in degrees, elev is in meters
+    bool query( double lon, double lat, double elev, double freq,
+		FGNavaid *n, double *heading, double *dist);
 };
 
 

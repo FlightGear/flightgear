@@ -21,25 +21,26 @@
 // $Id$
 
 
-#include <simgear/misc/fgstream.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgstream.hxx>
+#include <simgear/math/fg_geodesy.hxx>
 
 #include "navaids.hxx"
 
 
 // Constructor
-FGNavAids::FGNavAids( void ) {
+FGNavaids::FGNavaids( void ) {
 }
 
 
 // Destructor
-FGNavAids::~FGNavAids( void ) {
+FGNavaids::~FGNavaids( void ) {
 }
 
 
 // load the navaids and build the map
-bool FGNavAids::init( FGPath path ) {
-    FGNavAid n;
+bool FGNavaids::init( FGPath path ) {
+    FGNavaid n;
 
     navaids.erase( navaids.begin(), navaids.end() );
 
@@ -86,4 +87,33 @@ bool FGNavAids::init( FGPath path ) {
 #endif
 
     return true;
+}
+
+
+// query the database for the specified frequency, lon and lat are in
+// degrees, elev is in meters
+bool FGNavaids::query( double lon, double lat, double elev, double freq,
+		       FGNavaid *n, double *heading, double *dist )
+{
+    nav_list_type stations = navaids[(int)(freq*100.0)];
+
+    nav_list_iterator current = stations.begin();
+    nav_list_iterator last = stations.end();
+
+    double az1, az2, s;
+    for ( ; current != last ; ++current ) {
+	// cout << "testing " << current->get_ident() << endl;
+	geo_inverse_wgs_84( elev, lat, lon, 
+			    current->get_lat(), current->get_lon(),
+			    &az1, &az2, &s );
+	// cout << "  dist = " << s << endl;
+	if ( s < ( current->get_range() * NM_TO_METER ) ) {
+	    *n = *current;
+	    *heading = az2;
+	    *dist = s;
+	    return true;
+	}
+    }
+
+    return false;
 }

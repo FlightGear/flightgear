@@ -43,7 +43,7 @@ FG_USING_STD(istream);
 #endif
 
 
-class FGNavAid {
+class FGNavaid {
 
     char type;
     double lon, lat;
@@ -55,8 +55,8 @@ class FGNavAid {
 
 public:
 
-    inline FGNavAid(void) {}
-    inline ~FGNavAid(void) {}
+    inline FGNavaid(void) {}
+    inline ~FGNavaid(void) {}
 
     inline char get_type() const { return type; }
     inline double get_lon() const { return lon; }
@@ -76,16 +76,16 @@ public:
     inline void set_dme( bool b ) { dme = b; }
     inline void set_ident( char *i ) { strncpy( ident, i, 5 ); }
 
-    friend istream& operator>> ( istream&, FGNavAid& );
+    friend istream& operator>> ( istream&, FGNavaid& );
 };
 
 
 inline istream&
-operator >> ( istream& in, FGNavAid& n )
+operator >> ( istream& in, FGNavaid& n )
 {
     double f;
     char c;
-    in >> n.type >> n.lon >> n.lat >> n.elev >> f >> n.range 
+    in >> n.type >> n.lat >> n.lon >> n.elev >> f >> n.range 
        >> c >> n.ident;
 
     n.freq = (int)(f * 100.0);
