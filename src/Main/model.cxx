@@ -20,8 +20,6 @@
 #include "viewmgr.hxx"
 #include "model.hxx"
 
-extern unsigned long int fgSimTime; // FIXME: this is ugly
-
 extern ssgRoot * scene;		// FIXME: from main.cxx
 
 FGAircraftModel current_model;	// FIXME: add to globals
