@@ -238,9 +238,6 @@ void Star::newImage(void)
 	  glEnable(GL_TEXTURE_2D);                                             // TEXTURE ENABLED
 	  glEnable(GL_BLEND);                                                  // BLEND ENABLED
 	  
-	  //glEnable(GL_TEXTURE_2D);
-	  //glEnable(GL_BLEND);
-	  //glDisable(GL_LIGHTING);
 	  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  
 	  glBindTexture(GL_TEXTURE_2D, sun_texid);
@@ -252,30 +249,15 @@ void Star::newImage(void)
 	  glTexCoord2f(0.0f, 1.0f); glVertex3f(-5000, 0.0,  5000);
 	  glEnd();
 	}
-      xglDisable(GL_TEXTURE_2D);    // TEXTURE DISABLED
-      glDisable(GL_BLEND);          // BLEND DISABLED
+      xglDisable(GL_TEXTURE_2D); // TEXTURE DISABLED
+      xglDisable(GL_BLEND);	// BLEND DISABLED
     }
 
     glPopMatrix();
-    glDisable(GL_LIGHTING);
-    /*glPushMatrix(); // Draw a black object, that serves as the moon's shadow.
-    {
-      xglRotatef(((RAD_TO_DEG * rightAscension)- 90.0), 0.0, 0.0, 1.0);
-      xglRotatef((RAD_TO_DEG * declination), 1.0, 0.0, 0.0);
-      xglTranslatef(0,60000,0);
-      //xglTranslatef(0,58600,0);
-      //gluSphere( SunObject,  sun_size, 10, 10 );
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_ZERO, GL_ZERO);
-      xglColor4f(0.0, 0.0, 0.0, 0.0);
-      gluSphere( SunObject,  sun_size, 10, 10 );
-    }
-    glPopMatrix();*/
-    glDisable(GL_BLEND);
+    glDisable(GL_LIGHTING);	//LIGHTING DISABLED
+    glDisable(GL_BLEND);	//BLEND DISABLED
     glPushMatrix();
     {     
-      //xglEnable(GL_BLEND);
-      //xglBlendFunc(GL_SRC_ALPHA, GL_ONE);
       xglRotatef(((RAD_TO_DEG * rightAscension)- 90.0), 0.0, 0.0, 1.0);
       xglRotatef((RAD_TO_DEG * declination), 1.0, 0.0, 0.0);
       xglColor4fv(amb);
@@ -285,78 +267,5 @@ void Star::newImage(void)
     glPopMatrix();
     glDisable(GL_TEXTURE_2D);                                             // TEXTURE DISABLED
     glDisable(GL_BLEND);                                                  // BLEND DISABLED  
-  }
-}
-
-  
-void Star::drawHalo(void)
-{
-  /*static float stars[3];
-  stars[0] = 0.0;
-  stars[1] = 0.0;
-  stars[2] = 1.0;*/
-  
-  fgLIGHT *l = &cur_light_params;
-  float sun_angle = l->sun_angle;
-  
-  if( sun_angle*RAD_TO_DEG < 100 ) { // else no need to draw sun
-    
-    
-    double x_2, x_4, x_8, x_10;
-    GLfloat ambient;
-    GLfloat amb[4];
-    int sun_size = 750;
-    
-    // daily variation sun gets larger near horizon
-    /*if(sun_angle*RAD_TO_DEG > 84.0 && sun_angle*RAD_TO_DEG < 95)
-      {
-      double sun_grow = 9*fabs(94-sun_angle*RAD_TO_DEG);
-      sun_size = (int)(sun_size + sun_size * cos(sun_grow*DEG_TO_RAD));
-      }*/
-    x_2 = sun_angle * sun_angle;
-    x_4 = x_2 * x_2;
-    x_8 = x_4 * x_4;
-    x_10 = x_8 * x_2;
-    ambient = (float)(0.4 * pow (1.1, - x_10 / 30.0));
-    if (ambient < 0.3) ambient = 0.3;
-    if (ambient > 1.0) ambient = 1.0;
-    
-    amb[0] = ((ambient * 6.0)  - 1.0); // minimum value = 0.8
-    amb[1] = ((ambient * 11.0) - 3.0); // minimum value = 0.3
-    amb[2] = ((ambient * 12.0) - 3.6); // minimum value = 0.0
-    amb[3] = 1.00;
-    
-    if (amb[0] > 1.0) amb[0] = 1.0;
-    if (amb[1] > 1.0) amb[1] = 1.0;
-    if (amb[2] > 1.0) amb[2] = 1.0;
-    xglColor3fv(amb);
-    glPushMatrix();
-    {
-      xglRotatef(((RAD_TO_DEG * rightAscension)- 90.0), 0.0, 0.0, 1.0);
-      xglRotatef((RAD_TO_DEG * declination), 1.0, 0.0, 0.0);
-      xglTranslatef(0,60000,0);
-      if (current_options.get_textures())
-	{
-	  glEnable(GL_TEXTURE_2D);                                             // TEXTURE ENABLED
-	  glEnable(GL_BLEND);                                                  // BLEND ENABLED
-	  
-	  //glEnable(GL_TEXTURE_2D);
-	  //glEnable(GL_BLEND);
-	  //glDisable(GL_LIGHTING);
-	  //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	  //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  
-	  glBindTexture(GL_TEXTURE_2D, sun_texid);
-	  
-	  glBegin(GL_QUADS);
-	  glTexCoord2f(0.0f, 0.0f); glVertex3f(-5000, 0.0, -5000);
-	  glTexCoord2f(1.0f, 0.0f); glVertex3f( 5000, 0.0, -5000);
-	  glTexCoord2f(1.0f, 1.0f); glVertex3f( 5000, 0.0,  5000);
-	  glTexCoord2f(0.0f, 1.0f); glVertex3f(-5000, 0.0,  5000);
-	  glEnd();
-	}
-      xglDisable(GL_TEXTURE_2D);                                             // TEXTURE DISABLED
-      glDisable(GL_BLEND);                                                   // BLEND DISABLED
-    }
-    glPopMatrix();
   }
 }

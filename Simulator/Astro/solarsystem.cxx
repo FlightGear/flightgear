@@ -135,16 +135,11 @@ void SolarSystem::rebuild()
     // Step 2a: Add the moon...
     // Not that it is preferred to draw the moon first, and the sun next, in order to mime a
     // solar eclipse. This is yet untested though...
+    // Euhh, actually the ecplise doesn't work...
 
     earthsMoon->newImage();
     // Step 2b:  Add the sun
-    //xglPushMatrix();
-    //{
-    //ourSun->drawHalo();
-    //earthsMoon->castShadow();
     ourSun->newImage();
-      //}
-    //xglPopMatrix();
     // Step 2c: Add the planets
     xglBegin(GL_POINTS);
     mercury->getPos(&ra, &dec, &magnitude);addPlanetToList(ra, dec, magnitude);

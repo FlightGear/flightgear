@@ -51,7 +51,6 @@ public:
   double getys();
   double getDistance();
   void newImage();
-  void drawHalo();
 };
 
 
