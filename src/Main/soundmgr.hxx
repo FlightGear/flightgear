@@ -55,6 +55,7 @@ class FGSimpleSound {
 public:
 
     FGSimpleSound( string file );
+    FGSimpleSound( unsigned char *buffer, int len );
     ~FGSimpleSound();
 
     inline double get_pitch() const { return pitch; }

@@ -33,6 +33,8 @@
 #include <plib/sl.h>
 #include <plib/sm.h>
 
+#include "soundmgr.hxx"
+
 
 // Quoting from http://www.kluft.com/~ikluft/ham/morse-intro.html by
 // Ian Kluft KO6YQ <ikluft@kluft.com>
@@ -139,6 +141,9 @@ public:
 
     // allocate and initialize sound samples
     bool init();
+
+    // make a FGSimpleSound morse code transmission for the specified string
+    FGSimpleSound make_ident( const string& id );
 };
 
 

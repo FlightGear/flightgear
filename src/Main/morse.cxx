@@ -111,3 +111,8 @@ bool FGMorse::init() {
 
     return true;
 }
+
+
+// make a FGSimpleSound morse code transmission for the specified string
+FGSimpleSound FGMorse::make_ident( const string& id ) {
+}

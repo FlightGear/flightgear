@@ -41,6 +41,14 @@ FGSimpleSound::FGSimpleSound( string file ) {
     volume_envelope->setStep ( 0, 0.01, 1.0 );
 }
 
+FGSimpleSound::FGSimpleSound( unsigned char *buffer, int len ) {
+    sample = new slSample ( buffer, len );
+    pitch_envelope = new slEnvelope( 1, SL_SAMPLE_ONE_SHOT );
+    volume_envelope = new slEnvelope( 1, SL_SAMPLE_ONE_SHOT );
+    pitch_envelope->setStep ( 0, 0.01, 1.0 );
+    volume_envelope->setStep ( 0, 0.01, 1.0 );
+}
+
 // destructor
 FGSimpleSound::~FGSimpleSound() {
     delete pitch_envelope;
