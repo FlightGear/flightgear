@@ -32,9 +32,10 @@ $do_demfit =     0;
 $do_triangle_1 = 0;
 $do_fixnode =    0;
 $do_splittris =  0;
-$do_assemtris =  1;
+$do_assemtris =  0;
+$do_triangle_2 = 0;
 
-$do_tri2obj =    0;
+$do_tri2obj =    1;
 $do_strips =     0;
 $do_fixobj =     0;
 
@@ -202,12 +203,39 @@ if ( $do_assemtris ) {
 }
 
 
-# 4.3 Retriangulate fixed up files (without -q option)
+# 4.3 Retriangulate reassembled files (without -q option) so no new
+#     nodes are generated.
+
+if ( $do_triangle_2 ) {
+    @FILES = `ls $subdir`;
+    foreach $file ( @FILES ) {
+	print $file;
+	chop($file);
+	if ( ($file =~ m/\.node$/) && ($file !~ m/\.\d\.node$/) ) {
+	    $command = "./Triangle/triangle $subdir/$file";
+	    print "Running '$command'\n";
+	    open(OUT, "$command |");
+	    while ( <OUT> ) {
+		print $_;
+	    }
+	    close(OUT);
+
+	    # remove input file.node
+	    unlink("$subdir/$file");
+	}
+    }
+}
 
 
 # 5.  tri2obj file (.1.node) (.1.ele)
 #
 #     Take the file.1.node and file.1.ele and produce file.1.obj
+#
+#     Extracts normals out of the shared edge/vertex files, and uses
+#     the precalcuated normals for these nodes instead of calculating
+#     new ones.  By sharing normals as well as vertices, not only are
+#     the gaps between tiles eliminated, but the colors and lighting
+#     transition smoothly across tile boundaries.
 
 if ( $do_tri2obj ) {
     @FILES = `ls $subdir`;
@@ -224,9 +252,9 @@ if ( $do_tri2obj ) {
 	    }
 	    close(OUT);
 	    
-	    unlink("$subdir/$file.node");
-	    unlink("$subdir/$file.node.orig");
-	    unlink("$subdir/$file.ele");
+	    # unlink("$subdir/$file.node");
+	    # unlink("$subdir/$file.node.orig");
+	    # unlink("$subdir/$file.ele");
 	}
     }
 }
@@ -299,6 +327,11 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1998/01/15 21:33:33  curt
+# Assembling triangles and building a new .node file with the proper shared
+# vertices now works.  Now we just have to use the shared normals and we'll
+# be all set.
+#
 # Revision 1.5  1998/01/15 02:50:08  curt
 # Tweaked to add next stage.
 #

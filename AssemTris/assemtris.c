@@ -372,25 +372,31 @@ void build_node_list(char *basename, char *basepath) {
 
 
 /* dump in WaveFront .obj format */
-void dump_nodes(char *basename, char *basepath) {
+void dump_nodes(char *basename) {
+    char file[256];
     FILE *fp;
-    int i;
+    int i, len;
 
+    /* generate output file name */
+    strcpy(file, basename);
+    len = strlen(file);
+    file[len-2] = '\0';
+    strcat(file, ".node");
+    
     /* dump vertices */
-    printf("  writing vertices in .node format\n");
-    /* printf("Creating node file:  %s\n", file);
-    fd = fopen(file, "w"); */
+    printf("Creating node file:  %s\n", file);
+    printf("  writing vertices in .node format.\n");
+    fp = fopen(file, "w");
 
-    printf("%d 2 1 0\n", nodecount);
+    fprintf(fp, "%d 2 1 0\n", nodecount);
 
     /* now write out actual node data */
     for ( i = 0; i < nodecount; i++ ) {
-	printf("%d %.2f %.2f %.2f 0\n", i + 1,
+	fprintf(fp, "%d %.2f %.2f %.2f 0\n", i + 1,
 	       nodes[i][0], nodes[i][1], nodes[i][2]);
     }
 
-    /* fclose(fd); */
-
+    fclose(fp);
 }
 
 
@@ -441,14 +447,19 @@ int main(int argc, char **argv) {
     build_node_list(basename, basepath);
 
     /* dump in WaveFront .obj format */
-    dump_nodes(basename, basepath);
+    dump_nodes(basename);
 
     return(0);
 }
 
 
 /* $Log$
-/* Revision 1.1  1998/01/15 02:45:26  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/15 21:33:36  curt
+/* Assembling triangles and building a new .node file with the proper shared
+/* vertices now works.  Now we just have to use the shared normals and we'll
+/* be all set.
 /*
+ * Revision 1.1  1998/01/15 02:45:26  curt
+ * Initial revision.
+ *
  */
