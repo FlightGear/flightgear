@@ -259,7 +259,7 @@ void fgd_init(void){
 /* determinating the source/sending host */
    if (uname(&myname) == 0) strcpy(src_host , myname.nodename);   
    printf("MCP: I'm running on HOST : %s  ", src_host);
-   if (host_info = gethostbyname( src_host)) {
+   if ( (host_info = gethostbyname( src_host)) != NULL ) {
      bcopy(host_info->h_addr, (char *)&address.sin_addr,host_info->h_length);
      strcpy((char *) fgd_mcp_ip, (char *) inet_ntoa(address.sin_addr));
      }
@@ -267,7 +267,7 @@ void fgd_init(void){
    FGFS_host = src_host;
 /* resolving the destination host, here fgd's host */   
    if (verbose == 2) printf("     Resolving default DEAMON: %s ->", fgd_host);
-   if (host_info = gethostbyname( fgd_host)) {
+   if ( (host_info = gethostbyname( fgd_host)) != NULL ) {
      bcopy(host_info->h_addr, (char *)&address.sin_addr,host_info->h_length);
      strcpy((char *) fgd_ip, (char *) inet_ntoa(address.sin_addr));
      if (verbose == 2) {
@@ -295,7 +295,7 @@ int net_resolv_fgd( char *fgd_host_check ) {
 /* resolving the destination host, here fgd's host */   
    net_r = 0;
    if (verbose == 2) printf("     Resolving default DEAMON: %s ->", fgd_host_check);
-   if (host_info = gethostbyname( fgd_host_check)) {
+   if ( (host_info = gethostbyname( fgd_host_check)) != NULL ) {
      bcopy(host_info->h_addr, (char *)&address.sin_addr,host_info->h_length);
      strcpy((char *) fgd_ip_check, (char *) inet_ntoa(address.sin_addr));
      fgd_ip = fgd_ip_check;
