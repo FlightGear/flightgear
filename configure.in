@@ -23,8 +23,10 @@ AM_MAINTAINER_MODE
 dnl Check to see if this `configure' is being run in the `Cygwin32' environment
 AM_CYGWIN32
 
+AC_CHECK_HEADER(windows.h)
+
 dnl extra library and include directories
-if test "x$am_cv_cygwin32" = "xyes" ; then
+if test "x$am_cv_header_windows_h" = "xyes" ; then
     wi_EXTRA_DIRS(no, /store /usr/local /local /user/local /usr/share \
 	/usr/X11R6 /opt/X11R6 `pwd`/Win32)
 else
@@ -68,10 +70,10 @@ fi
 
 AC_CHECK_LIB(glut, glutGetModifiers)
 	
-dnl cygwin32 is a little wierd because it has to try to handle the various
+dnl Win32 is a little wierd because it has to try to handle the various
 dnl winbloze-isms.  We'll just do this manually for now.
-if test "x$am_cv_cygwin32" = "xyes" ; then
-    echo Cygnus Win32 specific hacks...
+if test "x$ac_cv_header_windows_h" = "xyes" ; then
+    echo Win32 specific hacks...
     AC_DEFINE(WIN32)
 
     dnl Note, the double square brackets are required becuase single brackets

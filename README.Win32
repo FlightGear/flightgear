@@ -132,3 +132,46 @@ Important Note: so far you've built and installed the simulator and
 
 13. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
     what went wrong.  My email is curt@me.umn.edu
+
+
+===========================================================================
+
+!!!IMPORTANT ADDENDUM FOR FlightGear 0.48 and UP!!!
+
+For those using Cygwin32 to build from source on win95/NT ... I've
+run into a show stopping bug with the cygnus compiler where it can't
+compile legit C++ code that includes the string class as a part of a
+structure built from the STL.  Fortunately, EGCS fixes this and many
+other problems with the cygwin32 compiler.  If you are a cygwin32 user
+and want to be able to compile FG 0.48 you will have to upgrade your
+Cygnus installation from beta 19 to beta 19.1, and overlay the EGCS
+update over top of the Cygnus installation.
+
+If anyone is interested I can send them a small test program that
+exercises this bug in the cygwin32 compiler, but passes with flying
+colors through EGCS.
+
+The Cygwin32 beta 19.1 upgrade is available from:
+
+    ftp://ftp.cygnus.com/pub/gnu-win32/latest/b19.1-update/
+
+Make sure to follow the directions you find there (it's less than
+200Kb to download.)
+
+The EGCS upgrade is available from:
+
+    http://www.xraylith.wisc.edu/~khan/software/gnu-win32/egcs.html
+
+Again, make sure you follow the directions.  (This is several
+megabytes to download.)  It is recommended that you unroll the egcs
+stuff over top of your cygwin32 installation.  It will replace many of
+the files.  I did this today and if you carefully follow the
+directions you shouldn't have any trouble. :-)
+
+Note: you don't have to wait for FG 0.48 to be released to upgrade to
+EGCS, it should build earlier versions of FG just fine.  I hope
+... :-) I've gone through the process once myself, so I guess that
+makes me the expert.  Feel free to forward questions to me at:
+
+    <curt@me.umn.edu>
+

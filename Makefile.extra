@@ -11,7 +11,8 @@ clean-deps:
 	rm -rf .deps \
 	Lib/.deps Simulator/.deps Tools/.deps Test/.deps \
 	Lib/*/.deps Simulator/*/.deps Tools/*/.deps \
-	Lib/*/*/.deps Simulator/*/*/.deps Tools/*/*/.deps
+	Lib/*/*/.deps Simulator/*/*/.deps Tools/*/*/.deps \
+	Tests/.deps
 
 clean-libs:
 	rm -rf .libs Lib/.libs Simulator/.libs Tools/.libs \

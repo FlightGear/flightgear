@@ -41,6 +41,11 @@ Didier Chauveau <chauveau@math.univ-mlv.fr>
   http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html
 
 
+Francine Evans <evans@cs.sunysb.edu>
+  http://www.cs.sunysb.edu/~evans/stripe.html
+  Wrote the @#$@#$@% GPL'd tri-striper we use and "love". :-)
+
+
 Jean-loup Gailly and Mark Adler <zlib@quest.jpl.nasa.gov>
   Authors of the zlib library.  Used for on-the-fly compression and
   decompression routines.
@@ -82,6 +87,11 @@ Anders Morken <amrken@online.no>
   Maintains the European mirror of the FG web pages.
 
 
+Alan Murta <amurta@cs.man.ac.uk>
+  http://www.cs.man.ac.uk/aig/staff/alan/software/
+  Created the Generic Polygon Clipping library
+
+
 Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
   Author of the Triangle program.  Triangle is used to calculate the
   Delauney triangulation of our irregular terrain.
@@ -96,6 +106,12 @@ Petter Reinholdtsen <pere@games.no>
   This should streamline and standardize the build process for all
   Unix-like platforms.  It should have little effect on IDE type 
   environments since the don't use the Unix make system.
+
+
+Chris Schoeneman <crs@millpond.engr.sgi.com>
+  Contributed some 3d sound playing code for Irix, Win32, and Linux
+  It is unclear if this code will be used directly, but it certainly
+  will have an influence on the development of our own audio library.
 
 
 Durk Talsma <pn_talsma@macmail.psy.uva.nl>
