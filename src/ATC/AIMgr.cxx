@@ -47,11 +47,12 @@ FGAIMgr::~FGAIMgr() {
 }
 
 void FGAIMgr::init() {
-    // Hard wire some local traffic for now.
-    // This is regardless of location and hence *very* ugly but it is a start.
-    FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
-    local_traffic->Init();
-    ai_list.push_back(local_traffic);
+	// Hard wire some local traffic for now.
+	// This is regardless of location and hence *very* ugly but it is a start.
+	FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
+	local_traffic->Init();
+	local_traffic->FlyCircuits(1, true);	// Fly 2 circuits with touch & go in between
+	ai_list.push_back(local_traffic);
 }
 
 void FGAIMgr::bind() {
@@ -61,17 +62,17 @@ void FGAIMgr::unbind() {
 }
 
 void FGAIMgr::update(double dt) {
-    // Don't update any planes for first 50 runs through - this avoids some possible initialisation anomalies
-    static int i = 0;
-    i++;
-    if(i < 50) {
-	return;
-    }
-
-    // Traverse the list of active planes and run all their update methods
-    ai_list_itr = ai_list.begin();
-    while(ai_list_itr != ai_list.end()) {
-	(*ai_list_itr)->Update(dt);
-	++ai_list_itr;
-    }
+	// Don't update any planes for first 50 runs through - this avoids some possible initialisation anomalies
+	static int i = 0;
+	i++;
+	if(i < 50) {
+		return;
+	}
+	
+	// Traverse the list of active planes and run all their update methods
+	ai_list_itr = ai_list.begin();
+	while(ai_list_itr != ai_list.end()) {
+		(*ai_list_itr)->Update(dt);
+		++ai_list_itr;
+	}
 }
