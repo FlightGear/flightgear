@@ -165,9 +165,13 @@ void fgTimerCatch() {
 
     Overrun = (lastSimtime == Simtime);
 
+    /* add this back in when you get simtime working */
     /* if ( Overrun ) {
 	printf("OVERRUN!!!\n");
     } */
+
+    /* update the flight model */
+    fgSlewUpdate();
 
     lastSimtime = Simtime;
     signal(SIGALRM, fgTimerCatch);
@@ -339,9 +343,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.5  1997/05/29 02:33:23  curt
-/* Updated to reflect changing interfaces in other "modules."
+/* Revision 1.6  1997/05/29 12:31:39  curt
+/* Minor tweaks, moving towards general flight model integration.
 /*
+ * Revision 1.5  1997/05/29 02:33:23  curt
+ * Updated to reflect changing interfaces in other "modules."
+ *
  * Revision 1.4  1997/05/27 17:44:31  curt
  * Renamed & rearranged variables and routines.   Added some initial simple
  * timer/alarm routines so the flight model can be updated on a regular 
