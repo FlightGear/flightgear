@@ -219,11 +219,9 @@ bool fgInitConfig ( int argc, char **argv ) {
     SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
     try {
       readProperties(props_path.str(), globals->get_props());
-    } catch (const sg_io_exception &e) {
+    } catch (const sg_exception &e) {
       string message = "Error reading global preferences: ";
-      message += e.getMessage();
-      message += "\n at ";
-      message += e.getLocation().asString();
+      message += e.getFormattedMessage();
       SG_LOG(SG_INPUT, SG_ALERT, message);
       exit(2);
     }

@@ -883,11 +883,9 @@ parse_option (const string& arg)
         string file = arg.substr(9);
 	try {
 	  readProperties(file, globals->get_props());
-	} catch (const sg_io_exception &e) {
+	} catch (const sg_exception &e) {
 	  string message = "Error loading config file: ";
-	  message += e.getMessage();
-	  message += "\n at ";
-	  message += e.getLocation().asString();
+	  message += e.getFormattedMessage();
 	  SG_LOG(SG_INPUT, SG_ALERT, message);
 	  exit(2);
 	}
