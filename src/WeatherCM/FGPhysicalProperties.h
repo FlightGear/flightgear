@@ -38,6 +38,10 @@ HISTORY
 				suggestion
 19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
 				and lots of wee code cleaning
+15.12.1999 Christian Mayer	changed the air pressure calculation to a much
+				more realistic formula. But as I need for that
+				the temperature I moved the code to 
+				FGPhysicalProperties
 *****************************************************************************/
 
 /****************************************************************************/
@@ -63,7 +67,7 @@ HISTORY
 #include <vector>
 #include <map>
 
-#include "sg.h"
+#include <sg.h>
 
 #include "FGWeatherDefs.h"
 
@@ -107,7 +111,7 @@ public:
     void	     WindAt         (sgVec3 ret, const WeatherPrecision a) const;
     void	     TurbulenceAt   (sgVec3 ret, const WeatherPrecision a) const;
     WeatherPrecision TemperatureAt  (const WeatherPrecision a) const;
-    WeatherPrecision AirPressureAt  (const WeatherPrecision a) const;
+    WeatherPrecision AirPressureAt  (const WeatherPrecision x) const;	//x is used here instead of a on purpose
     WeatherPrecision VaporPressureAt(const WeatherPrecision a) const;
 
     //for easier access to the cloud stuff:
@@ -214,7 +218,7 @@ inline FGPhysicalProperties& FGPhysicalProperties::operator += (const FGPhysical
 	if (!Temperature.insert(*TemperatureIt).second)	
 	    Temperature[TemperatureIt->first] += TemperatureIt->second;
 	    
-    AirPressure += p.AirPressure.getValue(0.0);
+    AirPressure += p.AirPressure.getValue();
 	    
     for (scalar_iterator     VaporPressureIt = p.VaporPressure.begin(); 
                              VaporPressureIt != p.VaporPressure.end(); 
@@ -249,7 +253,7 @@ inline FGPhysicalProperties& FGPhysicalProperties::operator -= (const FGPhysical
 	if (!Temperature.insert( make_pair(TemperatureIt->first, -TemperatureIt->second) ).second)	
 	    Temperature[TemperatureIt->first] -= TemperatureIt->second;
 	    
-    AirPressure -= p.AirPressure.getValue(0.0);
+    AirPressure -= p.AirPressure.getValue();
 	    
     for (scalar_iterator     VaporPressureIt = p.VaporPressure.begin(); 
                              VaporPressureIt != p.VaporPressure.end(); 
@@ -260,7 +264,6 @@ inline FGPhysicalProperties& FGPhysicalProperties::operator -= (const FGPhysical
 
     return *this;
 }
-
 
 inline void FGPhysicalProperties::WindAt(sgVec3 ret, const WeatherPrecision a) const
 {
@@ -302,10 +305,8 @@ inline WeatherPrecision FGPhysicalProperties::TemperatureAt(const WeatherPrecisi
     return ( (it2->second - it->second)/(it2->first - it->first) ) * (a - it2->first) + it2->second; 
 }
 
-inline WeatherPrecision FGPhysicalProperties::AirPressureAt(const WeatherPrecision a) const
-{
-    return AirPressure.getValue(a);
-}
+//inline WeatherPrecision FGPhysicalProperties::AirPressureAt(const WeatherPrecision x) const
+//moved to FGPhysicalProperties.cpp as it got too complex to inline
 
 inline WeatherPrecision FGPhysicalProperties::VaporPressureAt(const WeatherPrecision a) const
 {

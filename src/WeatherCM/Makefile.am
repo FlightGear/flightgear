@@ -3,9 +3,7 @@ noinst_LIBRARIES = libWeatherCM.a
 libWeatherCM_a_SOURCES = \
 	FGAirPressureItem.cpp FGAirPressureItem.h \
 	FGCloud.h FGCloudItem.cpp FGCloudItem.h \
-	FGGlobalWeatherDatabase.cpp FGGlobalWeatherDatabase.h \
 	FGLocalWeatherDatabase.cpp FGLocalWeatherDatabase.h \
-	FGMicroWeather.cpp FGMicroWeather.h \
 	FGPhysicalProperties.cpp FGPhysicalProperties.h \
 	FGPhysicalProperty.cpp FGPhysicalProperty.h \
 	FGSnowRain.h \
@@ -13,7 +11,6 @@ libWeatherCM_a_SOURCES = \
 	FGThunderstorm.cpp FGThunderstorm.h \
 	FGTurbulenceItem.cpp FGTurbulenceItem.h \
 	FGVaporPressureItem.cpp FGVaporPressureItem.h \
-	FGVoronoi.cpp FGVoronoi.h \
 	FGWeatherDefs.h FGWeatherFeature.h FGWeatherUtils.h \
 	FGWeatherParse.cpp FGWeatherParse.h \
 	FGWeatherVectorWrap.h \

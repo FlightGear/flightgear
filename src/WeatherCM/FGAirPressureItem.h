@@ -37,6 +37,10 @@ HISTORY
 				suggestion
 19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
 				and lots of wee code cleaning
+15.12.1999 Christian Mayer	changed the air pressure calculation to a much
+				more realistic formula. But as I need for that
+				the temperature I moved the code to 
+				FGPhysicalProperties
 *****************************************************************************/
 
 /****************************************************************************/
@@ -62,25 +66,23 @@ FGAirPressureItem operator-(const FGAirPressureItem& arg);
 /* CLASS DECLARATION							    */
 /* NOTE: The value stored in 'value' is the air preasure that we'd have at  */
 /*       an altitude of 0.0 The correct airpreasure at the stored altitude  */
-/*       gets calulated when getValue() is called.			    */
+/*       gets  calulated in  FGPhyiscalProperties  as  I need  to know  the */
+/*       temperatures at the different altitudes for that.		    */
 /****************************************************************************/
 class FGAirPressureItem
 {
 private:
-    WeatherPrecision value;
+    WeatherPrecision value; //that's the airpressure at 0 metres
 
 protected:
 public:
 
-    FGAirPressureItem(const WeatherPrecision v)	{value = v;}
+    FGAirPressureItem(const WeatherPrecision v)	{value = v;                             }
     FGAirPressureItem()				{value = FG_WEATHER_DEFAULT_AIRPRESSURE;}
 
-    WeatherPrecision getValue(const WeatherPrecision& alt) const
+    WeatherPrecision getValue(void) const
     { 
-	return (WeatherPrecision)((value / 101325.0) *
-	    (
-	    1.01325e5 + alt * (-1.19459535223623e1 + alt * (5.50461110007561e-4 + alt * (-1.13574703113648e-8 + alt * 8.61601726143988e-14)))
-	    ));
+	return value;
     };
    
     FGAirPressureItem& operator*=(const WeatherPrecision   arg);

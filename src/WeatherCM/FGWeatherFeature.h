@@ -51,7 +51,7 @@ HISTORY
 /****************************************************************************/
 #include <Include/compiler.h>
 
-#include "sg.h"
+#include <sg.h>
 
 #include "FGWeatherDefs.h"
 		

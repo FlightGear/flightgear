@@ -38,6 +38,10 @@ HISTORY
 				suggestion
 19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
 				and lots of wee code cleaning
+14.12.1999 Christian Mayer	Changed the internal structure to use Dave
+                                Eberly's spherical interpolation code. This
+				stops our dependancy on the (ugly) voronoi
+				code and simplyfies the code structure a lot.
 *****************************************************************************/
 
 /****************************************************************************/
@@ -49,21 +53,16 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-//This is only here for smoother code change. In the end the WD should be clean
-//of *any* OpenGL:
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-#include <GL/glut.h>
-#include <XGL/xgl.h>
-
 #include <vector>
 
-#include "sg.h"
+#include <sg.h>
+
+#include <Math/sphrintp.h>
 
 #include "FGPhysicalProperties.h"
-#include "FGGlobalWeatherDatabase.h"
-#include "FGMicroWeather.h"
+#include "FGPhysicalProperty.h"
+
+
 #include "FGWeatherFeature.h"
 #include "FGWeatherDefs.h"
 #include "FGThunderstorm.h"
@@ -81,10 +80,7 @@ class FGLocalWeatherDatabase
 {
 private:
 protected:
-    FGGlobalWeatherDatabase *global;	//point to the global database
-
-    typedef vector<FGMicroWeather>       FGMicroWeatherList;
-    typedef FGMicroWeatherList::iterator FGMicroWeatherListIt;
+    SphereInterpolate<FGPhysicalProperties> *database;
 
     typedef vector<sgVec2>      pointVector;
     typedef vector<pointVector> tileVector;
@@ -92,10 +88,6 @@ protected:
     /************************************************************************/
     /* make tiles out of points on a 2D plane				    */
     /************************************************************************/
-    void tileLocalWeather(const FGPhysicalProperties2DVector& EntryList);
-
-    FGMicroWeatherList WeatherAreas;
-
     WeatherPrecision WeatherVisibility;	//how far do I need to simulate the
 					//local weather? Unit: metres
     sgVec3 last_known_position;
@@ -103,23 +95,11 @@ protected:
     bool Thunderstorm;			//is there a thunderstorm near by?
     FGThunderstorm *theThunderstorm;	//pointer to the thunderstorm.
 
-    /************************************************************************/
-    /* return the index of the area with point p			    */
-    /************************************************************************/
-    unsigned int AreaWith(const sgVec2& p) const;
-    unsigned int AreaWith(const sgVec3& p) const
-    {
-	sgVec2 temp;
-	sgSetVec2(temp, p[0], p[1]);
-
-	return AreaWith(temp);
-    }
-
 public:
     static FGLocalWeatherDatabase *theFGLocalWeatherDatabase;  
     
     enum DatabaseWorkingType {
-	use_global,	//use global database for data
+	use_global,	//use global database for data !!obsolete!!
 	use_internet,   //use the weather data that came from the internet
 	manual,		//use only user inputs
 	distant,	//use distant information, e.g. like LAN when used in
@@ -186,19 +166,12 @@ public:
     /************************************************************************/
     /* Add a weather feature at the point p and surrounding area	    */
     /************************************************************************/
-
-    void addWind         (const WeatherPrecision alt, const sgVec3& x,          const sgVec2& p);
-    void addTurbulence   (const WeatherPrecision alt, const sgVec3& x,          const sgVec2& p);
-    void addTemperature  (const WeatherPrecision alt, const WeatherPrecision x, const sgVec2& p);
-    void addAirPressure  (const WeatherPrecision alt, const WeatherPrecision x, const sgVec2& p);
-    void addVaporPressure(const WeatherPrecision alt, const WeatherPrecision x, const sgVec2& p);
-    void addCloud        (const WeatherPrecision alt, const FGCloudItem& x,     const sgVec2& p);
+    // !! Adds aren't supported anymore !!
 
     void setSnowRainIntensity   (const WeatherPrecision x, const sgVec2& p);
     void setSnowRainType        (const SnowRainType x,     const sgVec2& p);
     void setLightningProbability(const WeatherPrecision x, const sgVec2& p);
 
-    void addProperties(const FGPhysicalProperties2D& x);    //add a property
     void setProperties(const FGPhysicalProperties2D& x);    //change a property
 
     /************************************************************************/
@@ -231,34 +204,10 @@ void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecision 
 	WeatherVisibility = visibility;
     else
 	WeatherVisibility = MINIMUM_WEATHER_VISIBILITY;
-
-#if 0
-    //This code doesn't belong here as this is the optical visibility and not
-    //the visibility of the weather database (that should be bigger...). The
-    //optical visibility should be calculated from the vapor pressure e.g.
-    //But for the sake of a smoother change from the old way to the new one...
-
-    GLfloat fog_exp_density;
-    GLfloat fog_exp2_density;
-    
-    // for GL_FOG_EXP
-    fog_exp_density = -log(0.01 / WeatherVisibility);
-    
-    // for GL_FOG_EXP2
-    fog_exp2_density = sqrt( -log(0.01) ) / WeatherVisibility;
-    
-    // Set correct opengl fog density
-    xglFogf (GL_FOG_DENSITY, fog_exp2_density);
-    
-    // FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << w->fog_density );
-    //cerr << "FGLocalWeatherDatabase::setWeatherVisibility(" << visibility << "):\n";
-    //cerr << "Fog density = " << fog_exp_density << "\n";
-#endif
 }
 
 WeatherPrecision inline FGLocalWeatherDatabase::getWeatherVisibility(void) const
 {
-    //cerr << "FGLocalWeatherDatabase::getWeatherVisibility() = " << WeatherVisibility << "\n";
     return WeatherVisibility;
 }
 

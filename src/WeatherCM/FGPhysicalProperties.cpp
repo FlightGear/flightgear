@@ -71,7 +71,7 @@ FGPhysicalProperties::FGPhysicalProperties()
 
     AirPressure = FGAirPressureItem(101325.0);	
 
-    VaporPressure[    0.0] = FG_WEATHER_DEFAULT_VAPORPRESSURE;   //in Pa (I *only* accept SI!)
+    VaporPressure[-1000.0] = FG_WEATHER_DEFAULT_VAPORPRESSURE;   //in Pa (I *only* accept SI!)
     VaporPressure[10000.0] = FG_WEATHER_DEFAULT_VAPORPRESSURE;   //in Pa (I *only* accept SI!)
 
     //Clouds.insert(FGCloudItem())    => none
@@ -126,7 +126,7 @@ ostream& operator<< ( ostream& out, const FGPhysicalProperties2D& p )
     out << "\n";
 
     out << "Stored AirPressure: ";
-    out << p.AirPressure.getValue(0)/100.0 << " hPa at " << 0.0 << "m; ";
+    out << p.AirPressure.getValue()/100.0 << " hPa at " << 0.0 << "m; ";
     out << "\n";
 
     out << "Stored VaporPressure: ";
@@ -139,5 +139,155 @@ ostream& operator<< ( ostream& out, const FGPhysicalProperties2D& p )
     return out << "\n";
 }
 
+
+inline double F(const WeatherPrecision factor, const WeatherPrecision a, const WeatherPrecision b, const WeatherPrecision r, const WeatherPrecision x)
+{
+    const double c = 1.0 / (-b + a * r);
+    return factor * c * ( 1.0 / (r + x) + a * c * log(abs((r + x) * (b + a * x))) );
+}
+
+WeatherPrecision FGPhysicalProperties::AirPressureAt(const WeatherPrecision x) const
+{
+    const double rho0 = (AirPressure.getValue()*FG_WEATHER_DEFAULT_AIRDENSITY*FG_WEATHER_DEFAULT_TEMPERATURE)/(TemperatureAt(0)*FG_WEATHER_DEFAULT_AIRPRESSURE);
+    const double G = 6.673e-11;    //Gravity; in m^3 kg^-1 s^-2
+    const double m = 5.977e24;	    //mass of the earth in kg
+    const double r = 6368e3;	    //radius of the earth in metres
+    const double factor = -(rho0 * TemperatureAt(0) * G * m) / AirPressure.getValue();
+
+    double a, b, FF = 0.0;
+
+    //ok, integrate from 0 to a now.
+    if (Temperature.size() < 2)
+    {	//take care of the case that there aren't enough points
+	//actually this should be impossible...
+
+	if (Temperature.size() == 0)
+	{
+	    cerr << "ERROR in FGPhysicalProperties: Air pressure at " << x << " metres altiude requested,\n";
+	    cerr << "      but there isn't enough data stored! No temperature is aviable!\n";
+	    return FG_WEATHER_DEFAULT_AIRPRESSURE;
+	}
+
+	//ok, I've got only one point. So I'm assuming that that temperature is
+	//the same for all altitudes. 
+	a = 1;
+	b = TemperatureAt(0);
+	FF += F(factor, a, b, r, x  );
+	FF -= F(factor, a, b, r, 0.0);
+    }
+    else
+    {	//I've got at least two entries now
+	
+	//integrate 'backwards' by integrating the strip ]n,x] first, then ]n-1,n] ... to [0,n-m]
+	
+	if (x>=0.0)
+	{
+	    map<WeatherPrecision, WeatherPrecision>::const_iterator temp2 = Temperature.upper_bound(x);
+	    map<WeatherPrecision, WeatherPrecision>::const_iterator temp1 = temp2; temp1--;
+	    
+	    if (temp1->first == x)
+	    {	//ignore that interval
+		temp1--; temp2--;
+	    }
+
+	    bool first_pass = true;
+	    while(true)
+	    {
+		if (temp2 == Temperature.end())
+		{
+		    //temp2 doesn't exist. So cheat by assuming that the slope is the
+		    //same as between the two earlier temperatures
+		    temp1--; temp2--;
+		    a = (temp2->second - temp1->second)/(temp2->first - temp1->first);
+		    b = temp1->second - a * temp1->first;
+		    temp1++; temp2++;
+		}
+		else
+		{
+		    a = (temp2->second - temp1->second)/(temp2->first - temp1->first);
+		    b = temp1->second - a * temp1->first;
+		}
+		
+		if (first_pass)
+		{
+		    
+		    FF += F(factor, a, b, r, x);
+		    first_pass = false;
+		}
+		else
+		{
+		    FF += F(factor, a, b, r, temp2->first);
+		}
+
+		if (temp1->first>0.0)
+		{
+		    FF -= F(factor, a, b, r, temp1->first);
+		    temp1--; temp2--;
+		}
+		else
+		{
+		    FF -= F(factor, a, b, r, 0.0);
+		    return AirPressure.getValue() * exp(FF);
+		}
+	    }
+	}
+	else
+	{   //ok x is smaller than 0.0, so do everything in reverse
+	    map<WeatherPrecision, WeatherPrecision>::const_iterator temp2 = Temperature.upper_bound(x);
+	    map<WeatherPrecision, WeatherPrecision>::const_iterator temp1 = temp2; temp1--;
+	    
+	    bool first_pass = true;
+	    while(true)
+	    {
+		if (temp2 == Temperature.begin())
+		{
+		    //temp1 doesn't exist. So cheat by assuming that the slope is the
+		    //same as between the two earlier temperatures
+		    temp1 = Temperature.begin(); temp2++;
+		    a = (temp2->second - temp1->second)/(temp2->first - temp1->first);
+		    b = temp1->second - a * temp1->first;
+		    temp2--;
+		}
+		else
+		{
+		    a = (temp2->second - temp1->second)/(temp2->first - temp1->first);
+		    b = temp1->second - a * temp1->first;
+		}
+		
+		if (first_pass)
+		{
+		    
+		    FF += F(factor, a, b, r, x);
+		    first_pass = false;
+		}
+		else
+		{
+		    FF += F(factor, a, b, r, temp2->first);
+		}
+		
+		if (temp2->first<0.0)
+		{
+		    FF -= F(factor, a, b, r, temp1->first);
+		    
+		    if (temp2 == Temperature.begin())
+		    {
+			temp1 = Temperature.begin(); temp2++;
+		    }
+		    else
+		    {
+			temp1++; temp2++;
+		    }
+		}
+		else
+		{
+		    FF -= F(factor, a, b, r, 0.0);
+		    return AirPressure.getValue() * exp(FF);
+		}
+	    }
+	}
+    }
+    
+    return AirPressure.getValue() * exp(FF);
+}
 
 

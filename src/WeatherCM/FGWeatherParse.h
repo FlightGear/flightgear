@@ -49,6 +49,7 @@ You can also visit his homepage at http://www.wetterzentrale.de
 HISTORY
 ------------------------------------------------------------------------------
 18.10.1999 Christian Mayer	Created
+14.12.1999 Christian Mayer	minor internal changes
 *****************************************************************************/
 
 /****************************************************************************/
@@ -121,7 +122,8 @@ public:
 	return weather_station[nr];
     }
 
-    FGPhysicalProperties2D getFGPhysicalProperties2D(const unsigned int nr) const;
+    FGPhysicalProperties getFGPhysicalProperties(const unsigned int nr) const;
+    void getPosition(const unsigned int nr, sgVec2 pos) const;
 };
 
 /****************************************************************************/

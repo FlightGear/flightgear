@@ -1,0 +1,212 @@
+The formula p(x) for calculating the air pressure at a given altitude
+---------------------------------------------------------------------
+
+Well known is the baromertic(?) formula
+
+                   rho0
+                  ------ * g * x
+                    p0
+    p(x) = p0 * e
+
+with p0 being the airpressure and rho0 being the air density at an altitude of
+0 metres above sea level and g being the gravity constant of 9.81 m/sq. sec
+
+This formula can easily be derivated when you know, that:
+
+ * the pressure difference is
+
+    dp = - rho * g * dx
+
+ * Boyle-Mariotte says:
+
+    p0 : p = rho0 : rho
+
+Combinig the terms and changing them around I get:
+
+    dp                 [  rho0         ]
+	-- = - rho * g = - [ ------ * p(x) ] * g
+	dx                 [   p0          ]
+
+               rho0
+	p'(x) = - ------ * p(x) * g
+	            p0
+
+Solving that differential equation and knowing that p(0) = p0 I get:
+
+                     rho0
+                  - ------ * g * x
+                      p0
+    p(x) = p0 * e
+
+q.e.d.
+
+-------------------------------------------------------------------------------
+
+The problem with that equation is that it doesn't take different temperatures
+at different altitudes into account. And the inaccuracies due to it are huge.
+That's why this formula is only used in very low altitudes.
+
+So to get a usefull formula for FlightGear I need to extend it. And as I'm
+already 'recreating' that formula I'm taking the change in g into account, too.
+This doesn't make such a dramatic difference to the result as the inclusion of
+temperature change does, but it doesn't complicate the final formula too much.
+
+So I get three formulas that I'm combining in the end:
+
+ * the change of g with the altitude:
+
+               G * m
+     g(x) = -----------
+             (x + r)^2
+    G is the universal gravity constant(?) and is 6.673e-11 m^3 kg^-1 s^-2
+	m is the mass of the earth and is             5.977e24 kg
+	r is the radius of the earth and is           6368 km
+
+ * The pressure difference stays the same:
+
+    dp = - rho * g(x) * dx
+
+ * If I combine Boyle-Mariotte with Gay-Lussac I get:
+
+           rho0 * T0     p
+    rho = ----------- * ---
+               p0        T
+
+Combining the terms again I get this time:
+
+    dp                    [  rho0 * T0     p(x)  ]
+	-- = - rho * g(x) = - [ ----------- * ------ ] * g(x)
+	dx                    [      p0        T(x)  ]
+
+               rho0 * T0     p(x) * g(x)
+	p'(x) = - ----------- * -------------
+	               p0           T(x)
+
+This DE isn't that easy to solve as the one above, it by looking into the right
+books you'll see the general solution for:
+
+    y' + f(x)*y = 0
+
+is
+                 x
+                 /\
+              -  |  f(x) dx
+                \/
+                 n
+    y = m * e 
+
+and P(m,n) will be a point on the graph.
+
+For q = n = 0 metres altitude we get y = m. As y is p(x) we know that m has to
+be p0.
+
+So our final formuala is
+
+              ho0 * T0     g(x)
+	f1(x) = ----------- * ------
+	             p0        T(x)
+
+
+                     x                     x
+                     /\                    /\
+                  -  |  f1(x) dx           |  f(x) dx
+                    \/                    \/
+                     0                     0                   F(x) - F(0)
+    p(x) = p0 * e                = p0 * e             = p0 * e
+
+The only disturbing thing we've got left is the integral. Luckily there is a
+great service at http://integrals.wolfram.com/ that helps me doing it :-)
+
+But the f(x) is still too general so I'm substituting:
+
+                rho0 * T0 * G * m
+	f(x) = - -----------------------
+	          p0 * (x + r)^2 * T(x)
+
+but even that isn't good enough. But as I'm linearily interpolating between
+two different temperatures I can say that T(x) = a*x + b for the x inbetween 
+two different stored temperatures. So I just need to integrate every pice
+independandly. But anyway, I get:
+   
+                    rho0 * T0 * G * m
+	f(x) = - ------------------------------
+	          p0 * (x + r)^2 * (a * x + b)
+
+Integrating that I get:
+
+              rho0 * T0 * G * m    [            1
+    F(x) = - ------------------- * [ ------------------------ -
+	                  p0           [  (-b + a * r) * (r + x) 
+
+
+					   a * log|r + x|     a * log|b + a * x|  ]
+					  ---------------- + -------------------- ]
+					   (b - a * r)^2        (b - a * r)^2     ]
+
+To lower the computional cost I can transfere the equation.
+
+ * I'm defining
+
+                rho0 * T0 * G * m    
+    factor = - ------------------- 
+	                    p0 
+               1
+	c = --------------
+	     (-b + a * r)
+
+ * now I can write
+
+                    [     c                                                 ]
+	F(x) = factor * [ --------- - a * c * c * [log|r + x| + log|b + a * x|] ]
+	                [  (r + x)                                              ]
+
+ * and simplyfy it to
+
+                        [     1                                          ]
+	F(x) = factor * c * [ --------- - a * c * log|(r + x) * (b + a * x)| ]
+	                    [  (r + x)                                       ]
+
+-------------------------------------------------------------------------------
+The following table shows quite nicely how accurate my formula is:
+
+ Altitude[m] | Airpressure [hPa]             | Error [%]
+             |    Official   |   My formula  |
+ ------------+---------------+---------------+---------------
+      -200   | 1037.51       | 1037.24       |  0.0260     
+      -100   | 1025.32       | 1025.19       |  0.0127    
+         0   | 1013.25       | 1013.25       |  0.0   
+       500   |  954.59       |  955.224      |  0.0664     
+      1000   |  898.70       |  899.912      |  0.1349     
+      2000   |  794.88       |  797.042      |  0.2720     
+      3000   |  700.99       |  703.885      |  0.4130     
+      4000   |  616.28       |  619.727      |  0.5593     
+      5000   |  540.07       |  543.89       |  0.7073    
+      6000   |  471.67       |  475.731      |  0.8610     
+      7000   |  410.46       |  414.643      |  1.0191     
+      8000   |  355.84       |  360.054      |  1.1842     
+      9000   |  307.27       |  311.422      |  1.3513     
+     10000   |  264.21       |  268.238      |  1.5245     
+     20000   |   54.670/55.3 |   55.7971     |  2.0616/0.8989      
+     30000   |   11.8        |   11.3149     |  1.5441      
+     40000   |    3.0        |    2.74665    | 18.9703       
+     50000   |    0.88       |    0.753043   | 41.9183
+     60000   |    0.257      |    0.221907   | 57.9802
+     70000   |    0.0602     |    0.0530785  | 61.9153
+     80000   |    0.0101     |    0.00905461 | 51.5725
+    100000   |    2.14e-4    |    2.03984e-4 |  5.5131
+
+The official values are from the CINA atmosphere which assumes a air pressure
+of 1013.25 hPa and a temperature of 15 degC at sea level and a temperature
+gradient of -6.5 deg/km. The CINA atmosphere gives only values for altiudes 
+up to 20 km. The values for 20 km and above are from the 1959 ARDC atmosphere.
+That's why I've got two values at 20000 metres.
+The temperature changes dramtically in the altitudes over 20 km which I didn't
+take care of in my calculations which explains the huge errors at that altitude
+range. But you can see nicely that the values are at least quite close to the
+official values.
+Using a better temperature model for the altitudes above 20 km should
+dramatically increase the accuracy there.
+
+
+
+

@@ -58,7 +58,7 @@ HISTORY
 #  include <windows.h>
 #endif
 
-#include "sg.h"
+#include <sg.h>
 
 #include "FGWeatherDefs.h"
 
