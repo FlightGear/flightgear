@@ -65,8 +65,8 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #ifdef FG_USE_CLOUDS_3D
-#  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
-#  include <simgear/sky/clouds3d/SkyUtil.hpp>
+#  include <simgear/scene/sky/clouds3d/SkySceneLoader.hpp>
+#  include <simgear/scene/sky/clouds3d/SkyUtil.hpp>
 #endif
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
@@ -1481,6 +1481,13 @@ bool fgInitSubsystems() {
     // Initialize the 3D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
     if ( fgGetBool("/sim/rendering/clouds3d") ) {
+        static const SGPropertyNode *longitude
+           = fgGetNode("/sim/presets/longitude-deg");
+        static const SGPropertyNode *latitude
+           = fgGetNode("/sim/presets/latitude-deg");
+        static const SGPropertyNode *altitude
+           = fgGetNode("/sim/presets/altitude-ft");
+
         SGPath cloud_path(globals->get_fg_root());
         cloud_path.append("large.sky");
         SG_LOG(SG_GENERAL, SG_INFO, "Loading CLOUDS3d from: " << cloud_path.c_str());
