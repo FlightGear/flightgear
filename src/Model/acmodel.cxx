@@ -52,7 +52,14 @@ void
 FGAircraftModel::init ()
 {
   _aircraft = new FG3DModel;
-  _aircraft->init(fgGetString("/sim/model/path", "Models/Geometry/glider.ac"));
+  string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
+  try {
+    _aircraft->init(path);
+  } catch (const sg_exception &ex) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load aircraft from " << path);
+    SG_LOG(SG_GENERAL, SG_ALERT, "(Falling back to glider.ac.)");
+    _aircraft->init("Models/Geometry/glider.ac");
+  }
   _scene->addKid(_aircraft->getSceneGraph());
   _selector->addKid(_aircraft->getSceneGraph());
   globals->get_scenery()->get_aircraft_branch()->addKid(_selector);
