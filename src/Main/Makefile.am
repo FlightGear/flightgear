@@ -99,9 +99,10 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
-	-lsgroute -lsgclouds3d -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
+	$(CLOUD3D_LIBS) \
+	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
-	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial $(CLOUD3D_LIBS) \
+	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \
