@@ -400,8 +400,13 @@ int FGAutopilot::run() {
 
 	    // determine our current radial position relative to the
 	    // navaid in "true" heading.
-	    double cur_radial = current_radiostack->get_nav1_heading() +
-		current_radiostack->get_nav1_magvar();
+	    double cur_radial = current_radiostack->get_nav1_heading();
+	    if ( current_radiostack->get_nav1_loc() ) {
+		// ILS localizers radials are already "true" in our
+		// database
+	    } else {
+		cur_radial += current_radiostack->get_nav1_magvar();
+	    }
 	    if ( current_radiostack->get_nav1_from_flag() ) {
 		cur_radial += 180.0;
 		while ( cur_radial >= 360.0 ) { cur_radial -= 360.0; }

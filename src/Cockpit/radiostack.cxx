@@ -455,14 +455,19 @@ double FGRadioStack::get_nav1_heading_needle_deflection() const {
 	// cout << "Radial = " << nav1_radial 
 	//      << "  Bearing = " << nav1_heading << endl;
     
-	while (r> 180.0) r-=360.0;
-	while (r<-180.0) r+=360.0;
-	if ( fabs(r) > 90.0 )
+	while ( r >  180.0 ) { r -= 360.0;}
+	while ( r < -180.0 ) { r += 360.0;}
+	if ( fabs(r) > 90.0 ) {
 	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+	    if ( nav1_loc ) {
+		r = -r;
+	    }
+	}
+
 	// According to Robin Peel, the ILS is 4x more sensitive than a vor
-	if ( nav1_loc ) r *= 4.0;
-	if ( r < -10.0 ) r = -10.0;
-	if ( r > 10.0 ) r = 10.0;
+	if ( nav1_loc ) { r *= 4.0; }
+	if ( r < -10.0 ) { r = -10.0; }
+	if ( r >  10.0 ) { r = 10.0; }
     } else {
 	r = 0.0;
     }
