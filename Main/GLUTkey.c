@@ -126,7 +126,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 
 /* Handle "special" keyboard events */
-void GLUTspecialkey(unsigned char k, int x, int y) {
+void GLUTspecialkey(int k, int x, int y) {
     struct control_params *c;
 
     c = &current_aircraft.controls;
@@ -152,9 +152,12 @@ void GLUTspecialkey(unsigned char k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.8  1997/06/02 03:01:38  curt
-/* Working on views (side, front, back, transitions, etc.)
+/* Revision 1.9  1997/06/02 03:40:06  curt
+/* A tiny bit more view tweaking.
 /*
+ * Revision 1.8  1997/06/02 03:01:38  curt
+ * Working on views (side, front, back, transitions, etc.)
+ *
  * Revision 1.7  1997/05/31 19:16:25  curt
  * Elevator trim added.
  *

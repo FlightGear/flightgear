@@ -37,19 +37,22 @@
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y);
-void GLUTspecialkey(unsigned char k, int x, int y);
+void GLUTspecialkey(int k, int x, int y);
 
 
 #endif GLUTKEY_H
 
 
 /* $Log$
-/* Revision 1.3  1997/05/31 04:13:52  curt
-/* WE CAN NOW FLY!!!
+/* Revision 1.4  1997/06/02 03:40:06  curt
+/* A tiny bit more view tweaking.
 /*
-/* Continuing work on the LaRCsim flight model integration.
-/* Added some MSFS-like keyboard input handling.
-/*
+ * Revision 1.3  1997/05/31 04:13:52  curt
+ * WE CAN NOW FLY!!!
+ *
+ * Continuing work on the LaRCsim flight model integration.
+ * Added some MSFS-like keyboard input handling.
+ *
  * Revision 1.2  1997/05/23 15:40:25  curt
  * Added GNU copyright headers.
  * Fog now works!

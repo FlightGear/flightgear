@@ -174,30 +174,6 @@ static void fgUpdateViewParams() {
     printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
 	   forward[2]);
 
-    if ( fabs(goal_view_offset - view_offset) < 0.09 ) {
-	view_offset = goal_view_offset;
-    } else {
-	/* move view_offset towards goal_view_offset */
-	if ( goal_view_offset > view_offset ) {
-	    if ( goal_view_offset - view_offset < M_PI ) {
-		view_offset += 0.05;
-	    } else {
-		view_offset -= 0.05;
-	    }
-	} else {
-	    if ( view_offset - goal_view_offset < M_PI ) {
-		view_offset -= 0.05;
-	    } else {
-		view_offset += 0.05;
-	    }
-	}
-	if ( view_offset > PI2 ) {
-	    view_offset -= PI2;
-	} else if ( view_offset < 0 ) {
-	    view_offset += PI2;
-	}
-    }
-
     MAT3rotate(TMP, up, view_offset);
     MAT3mult_vec(fwrd_view, forward, TMP);
 
@@ -262,6 +238,30 @@ void fgTimerCatch() {
 
     /* update the flight model */
     fgFlightModelUpdate(FG_LARCSIM, f, DEFAULT_MULTILOOP);
+
+    if ( fabs(goal_view_offset - view_offset) < 0.09 ) {
+	view_offset = goal_view_offset;
+    } else {
+	/* move view_offset towards goal_view_offset */
+	if ( goal_view_offset > view_offset ) {
+	    if ( goal_view_offset - view_offset < M_PI ) {
+		view_offset += 0.05;
+	    } else {
+		view_offset -= 0.05;
+	    }
+	} else {
+	    if ( view_offset - goal_view_offset < M_PI ) {
+		view_offset -= 0.05;
+	    } else {
+		view_offset += 0.05;
+	    }
+	}
+	if ( view_offset > PI2 ) {
+	    view_offset -= PI2;
+	} else if ( view_offset < 0 ) {
+	    view_offset += PI2;
+	}
+    }
 
     lastSimtime = Simtime;
     signal(SIGALRM, fgTimerCatch);
@@ -483,9 +483,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.12  1997/06/02 03:01:38  curt
-/* Working on views (side, front, back, transitions, etc.)
+/* Revision 1.13  1997/06/02 03:40:06  curt
+/* A tiny bit more view tweaking.
 /*
+ * Revision 1.12  1997/06/02 03:01:38  curt
+ * Working on views (side, front, back, transitions, etc.)
+ *
  * Revision 1.11  1997/05/31 19:16:25  curt
  * Elevator trim added.
  *
