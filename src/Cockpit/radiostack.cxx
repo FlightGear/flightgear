@@ -684,7 +684,7 @@ FGRadioStack::update(double dt)
 
     // cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
 
-    adf.update(0);
+    adf.update( dt );
 }
 
 

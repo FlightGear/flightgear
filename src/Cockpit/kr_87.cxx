@@ -39,8 +39,8 @@
 #include <string>
 SG_USING_STD(string);
 
-static int adf_play_count = 0;
-static time_t adf_last_time = 0;
+static int play_count = 0;
+static time_t last_time = 0;
 
 
 /**
@@ -74,10 +74,27 @@ FGKR_87::FGKR_87() :
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
     need_update(true),
-    adf_valid(false),
-    adf_freq(0.0),
-    adf_alt_freq(0.0),
-    adf_vol_btn(0.0)
+    valid(false),
+    freq(0.0),
+    stby_freq(0.0),
+    on_off_vol_btn(0.0),
+    adf_btn(false),
+    bfo_btn(false),
+    frq_btn(false),
+    last_frq_btn(false),
+    flt_et_btn(false),
+    last_flt_et_btn(false),
+    set_rst_btn(false),
+    last_set_rst_btn(false),
+    goal_needle_deg(0.0),
+    needle_deg(0.0),
+    flight_timer(0.0),
+    elapsed_timer(0.0),
+    tmp_timer(0.0),
+    ant_mode(0),
+    stby_mode(0),
+    timer_mode(0),
+    count_mode(0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -115,26 +132,53 @@ FGKR_87::bind ()
 {
 				// User inputs
     fgTie("/radios/adf/frequencies/selected-khz", this,
-	  &FGKR_87::get_adf_freq, &FGKR_87::set_adf_freq);
+	  &FGKR_87::get_freq, &FGKR_87::set_freq);
     fgSetArchivable("/radios/adf/frequencies/selected-khz");
     fgTie("/radios/adf/frequencies/standby-khz", this,
-	  &FGKR_87::get_adf_alt_freq, &FGKR_87::set_adf_alt_freq);
+	  &FGKR_87::get_stby_freq, &FGKR_87::set_stby_freq);
     fgSetArchivable("/radios/adf/frequencies/standby-khz");
     fgTie("/radios/adf/rotation-deg", this,
-	  &FGKR_87::get_adf_rotation, &FGKR_87::set_adf_rotation);
+	  &FGKR_87::get_rotation, &FGKR_87::set_rotation);
     fgSetArchivable("/radios/adf/rotation-deg");
-    fgTie("/radios/adf/volume", this,
-	  &FGKR_87::get_adf_vol_btn,
-	  &FGKR_87::set_adf_vol_btn);
-    fgSetArchivable("/radios/adf/volume");
+    fgTie("/radios/adf/needle-deg", this,
+	  &FGKR_87::get_needle_deg);
+    fgTie("/radios/adf/on-off-volume", this,
+	  &FGKR_87::get_on_off_vol_btn,
+	  &FGKR_87::set_on_off_vol_btn);
+    fgSetArchivable("/radios/adf/on-off-volume");
+    fgTie("/radios/adf/adf-btn", this,
+	  &FGKR_87::get_adf_btn,
+	  &FGKR_87::set_adf_btn);
+    fgTie("/radios/adf/bfo-btn", this,
+	  &FGKR_87::get_bfo_btn,
+	  &FGKR_87::set_bfo_btn);
+    fgTie("/radios/adf/frq-btn", this,
+	  &FGKR_87::get_frq_btn,
+	  &FGKR_87::set_frq_btn);
+    fgTie("/radios/adf/flt-et-btn", this,
+	  &FGKR_87::get_flt_et_btn,
+	  &FGKR_87::set_flt_et_btn);
+    fgTie("/radios/adf/set-rst-btn", this,
+	  &FGKR_87::get_set_rst_btn,
+	  &FGKR_87::set_set_rst_btn);
+    fgTie("/radios/adf/stby-mode", this,
+	  &FGKR_87::get_stby_mode);
+    fgTie("/radios/adf/timer-mode", this,
+	  &FGKR_87::get_timer_mode);
+    fgTie("/radios/adf/count-mode", this,
+	  &FGKR_87::get_count_mode);
     fgTie("/radios/adf/ident", this,
-	  &FGKR_87::get_adf_ident_btn,
-	  &FGKR_87::set_adf_ident_btn);
+	  &FGKR_87::get_ident_btn,
+	  &FGKR_87::set_ident_btn);
     fgSetArchivable("/radios/adf/ident");
 
                                 // calculated values
-    fgTie("/radios/adf/inrange", this, &FGKR_87::get_adf_inrange);
-    fgTie("/radios/adf/heading", this, &FGKR_87::get_adf_heading);
+    fgTie("/radios/adf/inrange", this, &FGKR_87::get_inrange);
+    fgTie("/radios/adf/heading", this, &FGKR_87::get_heading);
+    fgTie("/radios/adf/flight-timer", this, &FGKR_87::get_flight_timer);
+    fgTie("/radios/adf/elapsed-timer", this,
+          &FGKR_87::get_elapsed_timer,
+          &FGKR_87::set_elapsed_timer);
 }
 
 void
@@ -143,10 +187,20 @@ FGKR_87::unbind ()
     fgUntie("/radios/adf/frequencies/selected-khz");
     fgUntie("/radios/adf/frequencies/standby-khz");
     fgUntie("/radios/adf/rotation-deg");
-    fgUntie("/radios/adf/on");
+    fgUntie("/radios/adf/needle-deg");
+    fgUntie("/radios/adf/on-off-volume");
+    fgUntie("/radios/adf/adf-btn");
+    fgUntie("/radios/adf/bfo-btn");
+    fgUntie("/radios/adf/frq-btn");
+    fgUntie("/radios/adf/flt-et-btn");
+    fgUntie("/radios/adf/set-rst-btn");
+    fgUntie("/radios/adf/timer-mode");
+    fgUntie("/radios/adf/count-mode");
     fgUntie("/radios/adf/ident");
     fgUntie("/radios/adf/inrange");
     fgUntie("/radios/adf/heading");
+    fgUntie("/radios/adf/flight-timer");
+    fgUntie("/radios/adf/elapsed-timer");
 }
 
 
@@ -165,59 +219,149 @@ FGKR_87::update(double dt)
     double az1, az2, s;
 
     ////////////////////////////////////////////////////////////////////////
-    // ADF
+    // Radio
     ////////////////////////////////////////////////////////////////////////
 
-    if ( adf_valid ) {
-	// staightline distance
-	station = Point3D( adf_x, adf_y, adf_z );
-	adf_dist = aircraft.distance3D( station );
+    if ( on_off_vol_btn >= 0.01 ) {
+        // buttons
+        if ( adf_btn == 0 ) {
+            ant_mode = 1;
+        } else {
+            ant_mode = 0;
+        }
 
-	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES,
-                            lon * SGD_RADIANS_TO_DEGREES, 
-			    adf_lat, adf_lon,
-			    &az1, &az2, &s );
-	adf_heading = az1;
-	// cout << " heading = " << adf_heading
-        //      << " dist = " << adf_dist << endl;
+        if ( frq_btn && frq_btn != last_frq_btn && stby_mode == 0 ) {
+            double tmp = freq;
+            freq = stby_freq;
+            stby_freq = tmp;
+        } else if ( frq_btn ) {
+            stby_mode = 0;
+            count_mode = 0;
+        }
+        last_frq_btn = frq_btn;
 
-	adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
-	if ( adf_dist < adf_effective_range * SG_NM_TO_METER ) {
-	    adf_inrange = true;
-	} else if ( adf_dist < 2 * adf_effective_range * SG_NM_TO_METER ) {
-	    adf_inrange = sg_random() < 
-		( 2 * adf_effective_range * SG_NM_TO_METER - adf_dist ) /
-		(adf_effective_range * SG_NM_TO_METER);
-	} else {
-	    adf_inrange = false;
-	}
+        if ( flt_et_btn && flt_et_btn != last_flt_et_btn ) {
+            if ( stby_mode == 0 ) {
+                timer_mode = 0;
+            } else {
+                timer_mode = !timer_mode;
+            }
+            stby_mode = 1;
+        }
+        last_flt_et_btn = flt_et_btn;
+
+        if ( set_rst_btn == 1 && set_rst_btn != last_set_rst_btn ) {
+            // button depressed
+           tmp_timer = 0.0;
+        }
+        if ( set_rst_btn == 1 && set_rst_btn == last_set_rst_btn ) {
+            // button depressed and was last iteration too
+            tmp_timer += dt;
+            cout << "tmp_timer = " << tmp_timer << endl;
+        }
+        if ( set_rst_btn == 0 && set_rst_btn != last_set_rst_btn ) {
+            // button released
+            if ( tmp_timer > 2.0 ) {
+                // button held depressed for 2 seconds
+                cout << "entering elapsed count down mode" << endl;
+                timer_mode = 1;
+                count_mode = 2;
+                elapsed_timer = 0.0;
+            } else if ( count_mode == 2 ) {
+                count_mode = 1;
+            } else {
+                count_mode = 0;
+                elapsed_timer = 0.0;
+            }
+        }
+        last_set_rst_btn = set_rst_btn;
+
+        // timers
+        flight_timer += dt;
+
+        if ( set_rst_btn == 0 ) {
+            // only count if set/rst button not depressed
+            if ( count_mode == 0 ) {
+                elapsed_timer += dt;
+            } else if ( count_mode == 1 ) {
+                elapsed_timer -= dt;
+                if ( elapsed_timer < 1.0 ) {
+                    count_mode = 0;
+                    elapsed_timer = 0.0;
+                }
+            }
+        }
+
+        if ( valid ) {
+            // staightline distance
+            station = Point3D( x, y, z );
+            dist = aircraft.distance3D( station );
+
+            // wgs84 heading
+            geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES,
+                                lon * SGD_RADIANS_TO_DEGREES, 
+                                lat, lon,
+                                &az1, &az2, &s );
+            heading = az1;
+            // cout << " heading = " << heading
+            //      << " dist = " << dist << endl;
+
+            effective_range = kludgeRange(elev, elev, range);
+            if ( dist < effective_range * SG_NM_TO_METER ) {
+                inrange = true;
+            } else if ( dist < 2 * effective_range * SG_NM_TO_METER ) {
+                inrange = sg_random() < 
+                    ( 2 * effective_range * SG_NM_TO_METER - dist ) /
+                    (effective_range * SG_NM_TO_METER);
+            } else {
+                inrange = false;
+            }
+
+            if ( inrange ) {
+                goal_needle_deg = heading
+                    - fgGetDouble("/orientation/heading-deg");
+            }
+        } else {
+            inrange = false;
+        }
+
+        if ( ant_mode ) {
+            goal_needle_deg = 90.0;
+        }
     } else {
-	adf_inrange = false;
+        goal_needle_deg = 0.0;
+        flight_timer = 0.0;
+        elapsed_timer = 0.0;
     }
 
+    double diff = goal_needle_deg - needle_deg;
+    needle_deg += diff * dt * 4;
+
+    // cout << "flt = " << flight_timer << " et = " << elapsed_timer 
+    //      << " needle = " << needle_deg << endl;
+
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( adf_valid && adf_inrange ) {
+    if ( valid && inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if ( adf_vol_btn > 0.1 && adf_ident_btn ) {
+	if ( on_off_vol_btn >= 0.01 && ident_btn ) {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( "adf-ident" );
             if ( sound != NULL ) {
-                sound->set_volume( adf_vol_btn );
+                sound->set_volume( on_off_vol_btn );
             } else {
                 SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find adf-ident sound" );
             }
-	    if ( adf_last_time <
+	    if ( last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
-		adf_last_time = globals->get_time_params()->get_cur_time();
-		adf_play_count = 0;
+		last_time = globals->get_time_params()->get_cur_time();
+		play_count = 0;
 	    }
-	    if ( adf_play_count < 4 ) {
+	    if ( play_count < 4 ) {
 		// play ADF ident
 		if ( !globals->get_soundmgr()->is_playing("adf-ident") ) {
 		    globals->get_soundmgr()->play_once( "adf-ident" );
-		    ++adf_play_count;
+		    ++play_count;
 		}
 	    }
 	} else {
@@ -238,48 +382,48 @@ void FGKR_87::search()
 				// FIXME: the panel should handle this
     FGNav nav;
 
-    static string last_adf_ident = "";
+    static string last_ident = "";
 
     ////////////////////////////////////////////////////////////////////////
     // ADF.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( current_navlist->query( lon, lat, elev, adf_freq, &nav ) ) {
-	char freq[128];
-	snprintf( freq, 10, "%.0f", adf_freq );
-	adf_ident = freq;
-	adf_ident += nav.get_ident();
-	// cout << "adf ident = " << adf_ident << endl;
-	adf_valid = true;
-	if ( last_adf_ident != adf_ident ) {
-	    last_adf_ident = adf_ident;
+    if ( current_navlist->query( lon, lat, elev, freq, &nav ) ) {
+	char sfreq[128];
+	snprintf( sfreq, 10, "%.0f", freq );
+	ident = sfreq;
+	ident += nav.get_ident();
+	// cout << "adf ident = " << ident << endl;
+	valid = true;
+	if ( last_ident != ident ) {
+	    last_ident = ident;
 
-	    adf_trans_ident = nav.get_trans_ident();
-	    adf_lon = nav.get_lon();
-	    adf_lat = nav.get_lat();
-	    adf_elev = nav.get_elev();
-	    adf_range = nav.get_range();
-	    adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
-	    adf_x = nav.get_x();
-	    adf_y = nav.get_y();
-	    adf_z = nav.get_z();
+	    trans_ident = nav.get_trans_ident();
+	    lon = nav.get_lon();
+	    lat = nav.get_lat();
+	    elev = nav.get_elev();
+	    range = nav.get_range();
+	    effective_range = kludgeRange(elev, elev, range);
+	    x = nav.get_x();
+	    y = nav.get_y();
+	    z = nav.get_z();
 
 #ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );
 	    }
 	    FGSimpleSound *sound;
-	    sound = morse.make_ident( adf_trans_ident, LO_FREQUENCY );
+	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, "adf-ident" );
 
 	    int offset = (int)(sg_random() * 30.0);
-	    adf_play_count = offset / 4;
-	    adf_last_time = globals->get_time_params()->get_cur_time() -
+	    play_count = offset / 4;
+	    last_time = globals->get_time_params()->get_cur_time() -
 		offset;
 	    // cout << "offset = " << offset << " play_count = "
-	    //      << adf_play_count << " adf_last_time = "
-	    //      << adf_last_time << " current time = "
+	    //      << play_count << " last_time = "
+	    //      << last_time << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
 #endif
 
@@ -287,13 +431,26 @@ void FGKR_87::search()
 	    // cout << " id = " << nav.get_ident() << endl;
 	}
     } else {
-	adf_valid = false;
-	adf_ident = "";
-	adf_trans_ident = "";
+	valid = false;
+	ident = "";
+	trans_ident = "";
 #ifdef ENABLE_AUDIO_SUPPORT
 	globals->get_soundmgr()->remove( "adf-ident" );
 #endif
-	last_adf_ident = "";
+	last_ident = "";
 	// cout << "not picking up adf. :-(" << endl;
+    }
+}
+
+
+double FGKR_87::get_stby_freq() const {
+    if ( stby_mode == 0 ) {
+        return stby_freq;
+    } else {
+        if ( timer_mode == 0 ) {
+            return flight_timer;
+        } else {
+            return elapsed_timer;
+        }
     }
 }

@@ -53,25 +53,47 @@ class FGKR_87 : public FGSubsystem
 
     bool need_update;
 
-    string adf_ident;
-    string adf_trans_ident;
-    bool adf_valid;
-    bool adf_inrange;
-    double adf_freq;
-    double adf_alt_freq;
-    double adf_rotation;
-    double adf_lon;
-    double adf_lat;
-    double adf_elev;
-    double adf_range;
-    double adf_effective_range;
-    double adf_dist;
-    double adf_heading;
-    double adf_x;
-    double adf_y;
-    double adf_z;
-    double adf_vol_btn;
-    bool adf_ident_btn;
+    string ident;
+    string trans_ident;
+    bool valid;
+    bool inrange;
+    double freq;
+    double stby_freq;
+    double rotation;
+    double lon;
+    double lat;
+    double elev;
+    double range;
+    double effective_range;
+    double dist;
+    double heading;
+    double x;
+    double y;
+    double z;
+
+    double on_off_vol_btn;
+    bool adf_btn;               // 0 = normal, 1 = depressed
+    bool bfo_btn;               // 0 = normal, 1 = depressed
+    bool frq_btn;               // 0 = normal, 1 = depressed
+    bool last_frq_btn;
+    bool flt_et_btn;            // 0 = normal, 1 = depressed
+    bool last_flt_et_btn;
+    bool set_rst_btn;           // 0 = normal, 1 = depressed
+    bool last_set_rst_btn;           // 0 = normal, 1 = depressed
+    bool ident_btn;             // ???
+
+    double goal_needle_deg;
+    double needle_deg;
+    double flight_timer;
+    double elapsed_timer;
+    double tmp_timer;
+
+    int ant_mode;               // 0 = ADF mode (needle active), 1 = ANT mode
+                                // (needle turned to 90, improved audio rcpt)
+    int stby_mode;              // 0 = show stby freq, 1 = show timer
+    int timer_mode;             // 0 = flt, 1 = et
+    int count_mode;             // 0 = count up, 1 = count down, 2 = set et
+                                // count down
 
 public:
 
@@ -87,30 +109,49 @@ public:
     void search ();
 
     // ADF Setters
-    inline void set_adf_freq( double freq ) {
-	adf_freq = freq; need_update = true;
+    inline void set_freq( double f ) {
+	freq = f; need_update = true;
     }
-    inline void set_adf_alt_freq( double freq ) { adf_alt_freq = freq; }
-    inline void set_adf_rotation( double rot ) { adf_rotation = rot; }
-    inline void set_adf_vol_btn( double val ) {
+    inline void set_stby_freq( double freq ) { stby_freq = freq; }
+    inline void set_rotation( double rot ) { rotation = rot; }
+    inline void set_on_off_vol_btn( double val ) {
 	if ( val < 0.0 ) val = 0.0;
 	if ( val > 1.0 ) val = 1.0;
-	adf_vol_btn = val;
+	on_off_vol_btn = val;
     }
-    inline void set_adf_ident_btn( bool val ) { adf_ident_btn = val; }
+    inline void set_ident_btn( bool val ) { ident_btn = val; }
+    inline void set_adf_btn( bool val ) { adf_btn = val; }
+    inline void set_bfo_btn( bool val ) { bfo_btn = val; }
+    inline void set_frq_btn( bool val ) { frq_btn = val; }
+    inline void set_flt_et_btn( bool val ) { flt_et_btn = val; }
+    inline void set_set_rst_btn( bool val ) { set_rst_btn = val; }
+    inline void set_elapsed_timer( double val ) { elapsed_timer = val; }
 
     // ADF Accessors
-    inline double get_adf_freq () const { return adf_freq; }
-    inline double get_adf_alt_freq () const { return adf_alt_freq; }
-    inline double get_adf_rotation () const { return adf_rotation; }
+    inline double get_freq () const { return freq; }
+    double get_stby_freq () const;
+    inline double get_rotation () const { return rotation; }
 
     // Calculated values
-    inline bool get_adf_inrange() const { return adf_inrange; }
-    inline double get_adf_lon() const { return adf_lon; }
-    inline double get_adf_lat() const { return adf_lat; }
-    inline double get_adf_heading() const { return adf_heading; }
-    inline double get_adf_vol_btn() const { return adf_vol_btn; }
-    inline bool get_adf_ident_btn() const { return adf_ident_btn; }
+    inline bool get_inrange() const { return inrange; }
+    inline double get_lon() const { return lon; }
+    inline double get_lat() const { return lat; }
+    inline double get_heading() const { return heading; }
+    inline double get_needle_deg() const { return needle_deg; }
+    inline double get_flight_timer() const { return flight_timer; }
+    inline double get_elapsed_timer() const { return elapsed_timer; }
+    inline double get_on_off_vol_btn() const { return on_off_vol_btn; }
+    inline int get_stby_mode() const { return stby_mode; }
+    inline int get_timer_mode() const { return timer_mode; }
+    inline int get_count_mode() const { return count_mode; }
+
+    // physical inputs
+    inline bool get_ident_btn() const { return ident_btn; }
+    inline bool get_adf_btn() const { return adf_btn; }
+    inline bool get_bfo_btn() const { return bfo_btn; }
+    inline bool get_frq_btn() const { return frq_btn; }
+    inline bool get_flt_et_btn() const { return flt_et_btn; }
+    inline bool get_set_rst_btn() const { return set_rst_btn; }
 };
 
 

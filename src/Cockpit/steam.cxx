@@ -119,8 +119,8 @@ void FGSteam::update (double dt)
 	fgSetArchivable("/steam/vertical-speed-fps");
         fgTie("/steam/gyro-compass-deg", FGSteam::get_DG_deg);
 	fgSetArchivable("/steam/gyro-compass-deg");
-        fgTie("/steam/adf-deg", FGSteam::get_HackADF_deg);
-	fgSetArchivable("/steam/adf-deg");
+        // fgTie("/steam/adf-deg", FGSteam::get_HackADF_deg);
+	// fgSetArchivable("/steam/adf-deg");
         fgTie("/steam/gyro-compass-error-deg",
               FGSteam::get_DG_err, FGSteam::set_DG_err,
               false);  /* don't modify the value */
@@ -206,29 +206,6 @@ void FGSteam::_CatchUp()
         double AccN, AccE, AccU;
 	/* int i, j; */
 	double d, the_ENGINE_rpm;
-
-#if 0
-        /**************************
-	There is the possibility that this is the first call.
-	If this is the case, we will emit the feature registrations
-	just to be on the safe side.  Doing it more than once will
-	waste CPU time but doesn't hurt anything really.
-	*/
-	if ( _UpdatesPending > 999999 )
-	{ FGFeature::register_int (    "Avionics/NAV1/Localizer", &NAV1_LOC );
-	  FGFeature::register_double ( "Avionics/NAV1/Latitude",  &NAV1_Lat );
-	  FGFeature::register_double ( "Avionics/NAV1/Longitude", &NAV1_Lon );
-	  FGFeature::register_double ( "Avionics/NAV1/Radial",    &NAV1_Rad );
-	  FGFeature::register_double ( "Avionics/NAV1/Altitude",  &NAV1_Alt );
-	  FGFeature::register_int (    "Avionics/NAV2/Localizer", &NAV2_LOC );
-	  FGFeature::register_double ( "Avionics/NAV2/Latitude",  &NAV2_Lat );
-	  FGFeature::register_double ( "Avionics/NAV2/Longitude", &NAV2_Lon );
-	  FGFeature::register_double ( "Avionics/NAV2/Radial",    &NAV2_Rad );
-	  FGFeature::register_double ( "Avionics/NAV2/Altitude",  &NAV2_Alt );
-	  FGFeature::register_double ( "Avionics/ADF/Latitude",   &ADF_Lat );
-	  FGFeature::register_double ( "Avionics/ADF/Longitude",  &ADF_Lon );
-	}
-#endif
 
 	/**************************
 	Someone has called our update function and
@@ -490,6 +467,7 @@ double FGSteam::get_HackOBS2_deg () {
 }
 
 
+#if 0
 double FGSteam::get_HackADF_deg () {
     static SGPropertyNode *adf_inrange = fgGetNode("/radios/adf/inrange", true);
     static SGPropertyNode *adf_heading = fgGetNode("/radios/adf/heading", true);
@@ -507,6 +485,6 @@ double FGSteam::get_HackADF_deg () {
 	return last_r;
     }
 }
-
+#endif
 
 // end of steam.cxx
