@@ -7,7 +7,7 @@ dnl $Id$
 AC_INIT(Simulator/Aircraft/aircraft.cxx)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.6.0)
+AM_INIT_AUTOMAKE(FlightGear, 0.6.1)
 
 dnl configure other independant packages included with flight gear for
 dnl convenience
@@ -30,7 +30,7 @@ dnl AM_MAINTAINER_MODE
 dnl This is needed for AC_TRY_COMPILE later
 dnl AC_ISC_POSIX
 
-dnl Check to see if this `configure' is being run in the `Cygwin32' environmentplib-1.0_fgfs_a.tar.gz
+dnl Check to see if this `configure' is being run in the `Cygwin32' environment
 dnl AM_CYGWIN32
 
 dnl Specify if we want logging (testing build) or not (release build)
@@ -261,7 +261,7 @@ if test "x$ac_cv_header_gpc_h" != "xyes"; then
 fi
 
 dnl Check if  Geographic Foundation Classes library is installed
-dnl (from http://www.geog.psu.edu/~qian/gfc/index.html)
+dnl (from ftp://ftp.flightgear.org/pub/fgfs/Source/)
 AC_CHECK_HEADERS( gfc/gdbf.h )
 if test "x$ac_cv_header_gfc_gdbf_h" != "xyes"; then
     echo

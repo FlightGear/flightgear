@@ -2,13 +2,12 @@ You need to have the GFC library installed on your system to build
 some of the scenery generation tools, otherwise, some of the tools will fail
 to build.
 
-You can get the original library from:
+The original web page no longer exists, but the url *used* to be:
 
     http://www.geog.psu.edu/~qian/gfc/index.html
 
-However, until LJ rolls out the next release with a couple key fixes, 
-I recommend you grab a copy with a couple modifications I have made 
+I recommend you grab a copy with a couple modifications I have made
 which should eliminate several gfc build problems:
 
-    ftp://ftp.flightgear.org/pub/fgfs/Source/gfc-0.8.8.1a.tar.gz
+    ftp://ftp.flightgear.org/pub/fgfs/Source/gfc-0.8.8.1b.tar.gz
 
