@@ -7,8 +7,9 @@
 #include <Main/fg_props.hxx>
 
 
-VacuumSystem::VacuumSystem ()
+VacuumSystem::VacuumSystem( int i )
 {
+    num = i;
 }
 
 VacuumSystem::~VacuumSystem ()
@@ -16,14 +17,15 @@ VacuumSystem::~VacuumSystem ()
 }
 
 void
-VacuumSystem::init ()
+VacuumSystem::init()
 {
-                                // TODO: allow index of pump and engine
-                                // to be configured.
-    _serviceable_node = fgGetNode("/systems/vacuum[0]/serviceable", true);
+                                // TODO: allow index of engine to be
+                                // configured.
+    SGPropertyNode *node = fgGetNode("/systems/vacuum", num, true );
+    _serviceable_node = node->getChild("serviceable", 0, true);
     _rpm_node = fgGetNode("/engines/engine[0]/rpm", true);
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
-    _suction_node = fgGetNode("/systems/vacuum[0]/suction-inhg", true);
+    _suction_node = node->getChild("suction-inhg", 0, true);
 }
 
 void
@@ -48,9 +50,12 @@ VacuumSystem::update (double dt)
     } else {
         double rpm = _rpm_node->getDoubleValue();
         double pressure = _pressure_node->getDoubleValue();
-        suction = pressure * rpm / (rpm + 10000.0);
-        if (suction > 5.0)
-            suction = 5.0;
+        // suction = pressure * rpm / (rpm + 5000.0);
+        // This magic formula yields about 4.1 inhg at 700 rpm and
+        // about 6.0 inhg at 2200 rpm (numbers by observation)
+        suction = 5.39 - 1.0 / ( rpm * 0.00111 );
+        if ( suction < 0.0 ) suction = 0.0;
+        if ( suction > 5.0 ) suction = 5.0;
     }
     _suction_node->setDoubleValue(suction);
 }

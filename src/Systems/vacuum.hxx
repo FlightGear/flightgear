@@ -29,14 +29,14 @@
  *
  * Output properties:
  *
- * /systems/vacuum[0]/suction-inhg
+ * /systems/vacuum[n]/suction-inhg
  */
 class VacuumSystem : public FGSubsystem
 {
 
 public:
 
-    VacuumSystem ();
+    VacuumSystem( int i );
     virtual ~VacuumSystem ();
 
     virtual void init ();
@@ -46,6 +46,7 @@ public:
 
 private:
 
+    int num;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _rpm_node;
     SGPropertyNode_ptr _pressure_node;

@@ -13,10 +13,11 @@
 
 FGSystemMgr::FGSystemMgr ()
 {
-    set_subsystem("electrical", new FGElectricalSystem);
-    set_subsystem("pitot", new PitotSystem);
-    set_subsystem("static", new StaticSystem);
-    set_subsystem("vacuum", new VacuumSystem);
+    set_subsystem( "electrical", new FGElectricalSystem );
+    set_subsystem( "pitot", new PitotSystem );
+    set_subsystem( "static", new StaticSystem );
+    set_subsystem( "vacuum-l", new VacuumSystem(0) );
+    set_subsystem( "vacuum-r", new VacuumSystem(1) );
 }
 
 FGSystemMgr::~FGSystemMgr ()
