@@ -310,14 +310,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
                     FGAutopilot::FG_TC_HEADING_LOCK );
             }
             return;
-        case 256+GLUT_KEY_F11: // F11 Altitude Dialog.
-            SG_LOG(SG_INPUT, SG_INFO, "Invoking Altitude call back function");
-            NewAltitude( NULL );
-            return;
-        case 256+GLUT_KEY_F12: // F12 Heading Dialog...
-            SG_LOG(SG_INPUT, SG_INFO, "Invoking Heading call back function");
-            NewHeading( NULL );
-            return;
         }
 
 // END SPECIALS

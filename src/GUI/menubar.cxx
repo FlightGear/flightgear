@@ -157,22 +157,6 @@ do_preset_commit_dialog (const SGPropertyNode * arg)
     return true;
 }
 
-extern void NewAltitude (puObject *);
-static bool
-do_ap_altitude_dialog (const SGPropertyNode * arg)
-{
-    NewAltitude(0);
-    return true;
-}
-
-extern void NewHeading (puObject *);
-static bool
-do_ap_heading_dialog (const SGPropertyNode * arg)
-{
-    NewHeading(0);
-    return true;
-}
-
 extern void AddWayPoint (puObject *);
 static bool
 do_ap_add_waypoint_dialog (const SGPropertyNode * arg)
@@ -245,8 +229,6 @@ static struct {
     { "old-preset-glideslope-dialog", do_preset_glideslope_dialog },
     { "old-preset-airspeed-dialog", do_preset_airspeed_dialog },
     { "old-preset-commit-dialog", do_preset_commit_dialog },
-    { "old-ap-altitude-dialog", do_ap_altitude_dialog },
-    { "old-ap-heading-dialog", do_ap_heading_dialog },
     { "old-ap-add-waypoint-dialog", do_ap_add_waypoint_dialog },
     { "old-ap-pop-waypoint-dialog", do_ap_pop_waypoint_dialog },
     { "old-ap-clear-route-dialog", do_ap_clear_route_dialog },
