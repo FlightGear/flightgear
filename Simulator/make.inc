@@ -57,8 +57,7 @@ AR = ar
 #                much smoother.
 #---------------------------------------------------------------------------
 
-# FG_CFLAGS = -g -Wall -DUSE_ITIMER
-FG_CFLAGS = -g -Wall 
+FG_CFLAGS = -g -Wall
 
 
 #---------------------------------------------------------------------------
@@ -69,7 +68,9 @@ FG_CFLAGS = -g -Wall
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
-# SGI IRIX with the GLUT toolkit
+# SGI IRIX with the GLUT toolkit (surprisingly, this also works on our 
+#                                 SunOS 4.x machine with the way we have
+#                                 Mesa & Glut installed.)
 #
 # INTERFACE_FLAGS = -DGLUT
 # INTERFACE_LIBS = -lglut
@@ -100,6 +101,9 @@ GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/07/09 21:31:08  curt
+# Working on making the ground "hard."
+#
 # Revision 1.2  1997/07/07 20:59:48  curt
 # Working on scenery transformations to enable us to fly fluidly over the
 # poles with no discontinuity/distortion in scenery.

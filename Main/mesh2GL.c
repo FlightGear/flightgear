@@ -90,7 +90,7 @@ GLint mesh2GL(struct mesh *m) {
 	    z21 = 0.001 * m->mesh_data[(j+jstep) * m->rows + i        ];
 	    z22 = 0.001 * m->mesh_data[(j+jstep) * m->rows + (i+istep)];
 
-	    v1[0] = p21.y - p11.y; v1[1] = p21.z - p11.z; v1[2] = z21 - z11;
+	    v1[0] = p22.y - p11.y; v1[1] = p22.z - p11.z; v1[2] = z22 - z11;
 	    v2[0] = p12.y - p11.y; v2[1] = p12.z - p11.z; v2[2] = z12 - z11;
 	    MAT3cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
@@ -104,17 +104,16 @@ GLint mesh2GL(struct mesh *m) {
 		glVertex3d(p12.y, p12.z, z12);
 	    }
 	    
-	    glVertex3d(p21.y, p21.z, z21);
-	    
-	    v1[0] = p21.y - p12.y; v1[1] = p21.z - p12.z; v1[2] = z21 - z12;
-	    v2[0] = p22.y - p12.y; v2[1] = p22.z - p12.z; v2[2] = z22 - z12;
-	    MAT3cross_product(normal, v1, v2);
+	    glVertex3d(p22.y, p22.z, z22);
+    
+	    v2[0] = p21.y - p11.y; v2[1] = p21.z - p11.z; v2[2] = z21 - z11;
+	    MAT3cross_product(normal, v2, v1);
 	    MAT3_NORMALIZE_VEC(normal,temp);
 	    glNormal3d(normal[0], normal[1], normal[2]);
 	    /* printf("normal 2 = (%.2f %.2f %.2f\n", normal[0], normal[1], 
 		   normal[2]); */
 
-	    glVertex3d(p22.y, p22.z, z22);
+	    glVertex3d(p21.y, p21.z, z21);
 
 	    x1 = x2;
 	    x2 = x1 + (m->row_step * jstep);
@@ -133,9 +132,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.26  1997/07/08 18:20:13  curt
-/* Working on establishing a hard ground.
+/* Revision 1.27  1997/07/09 21:31:13  curt
+/* Working on making the ground "hard."
 /*
+ * Revision 1.26  1997/07/08 18:20:13  curt
+ * Working on establishing a hard ground.
+ *
  * Revision 1.25  1997/07/07 20:59:50  curt
  * Working on scenery transformations to enable us to fly fluidly over the
  * poles with no discontinuity/distortion in scenery.

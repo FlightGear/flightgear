@@ -153,10 +153,19 @@ void mesh_do_it(struct mesh *m) {
 /* return the current altitude based on mesh data.  We should rewrite
  * this to interpolate exact values, but for now this is good enough */
 double mesh_altitude(double lon, double lat) {
-    /* we expect things in arcsec for now */
+    /* we expect incoming (lon,lat) to be in arcsec for now */
 
     double xoffset, yoffset;
     int xindex, yindex;
+
+    /* determine if we are in the lower triangle or the upper triangle 
+       ______
+       |   /|
+       |  / |
+       | /  |
+       |/   |
+       ------
+     */
 
     xoffset = lon - eg.originx;
     yoffset = lat - eg.originy;
@@ -164,18 +173,49 @@ double mesh_altitude(double lon, double lat) {
     xindex = xoffset / eg.col_step;
     yindex = yoffset / eg.row_step;
 
+    if ( xindex > yindex ) {
+    }
     if ( (xindex >= 0) && (xindex < eg.cols) ) {
 	if ( (yindex >= 0) && (yindex < eg.rows) ) {
 	    return( eg.mesh_data[xindex * eg.rows + yindex] );
 	}
     }
+
+    /*
+      given (x1, y1, z1) (x2, y2, z2) and (x3, y3, z3) 
+      calculate z = ax + by + c (the equation of the plane intersecting the 
+      three given points
+
+      Then, given a position we can calculate the current ground elevation
+
+      tmp1 = (x2 * z1 / x1 - z2);
+      tmp2 = (y2 - x2 * y1 / x1);
+      tmp3 = (x2 * y1 / x1 - y2);
+      tmp4 = (1 - x2 / x1);
+      tmp5 = (x3*(z1 + y1*tmp1 / tmp2) / x1 - z3 + y3*tmp1 / tmp3);
+      tmp6 = x3*(y1*tmp4 / tmp2 - 1);
+      tmp7 = tmp5 / (y3*tmp4 / tmp2 - tmp6 / x1 - 1);
+      tmp8 = (tmp6 / x1 + y3*tmp4 / tmp3 + 1);
+      tmp9 = (z1 + tmp5 / tmp8);
+      tmp10 = (tmp7 + x2*tmp9 / x1 - z2);
+      
+      a = (tmp9 + y1*tmp10 / tmp2) / x1;
+      
+      b = tmp10 / tmp3;
+      
+      c = tmp7;
+     */
+
 }
 
 
 /* $Log$
-/* Revision 1.7  1997/07/08 18:20:13  curt
-/* Working on establishing a hard ground.
+/* Revision 1.8  1997/07/09 21:31:15  curt
+/* Working on making the ground "hard."
 /*
+ * Revision 1.7  1997/07/08 18:20:13  curt
+ * Working on establishing a hard ground.
+ *
  * Revision 1.6  1997/06/29 21:16:49  curt
  * More twiddling with the Scenery Management system.
  *

@@ -81,7 +81,7 @@ static GLfloat sun_vec[4] = {-3.0, 1.0, 2.0, 0.0 };
 /* static GLint scenery, runway; */
 
 /* Another hack */
-double fogDensity = 80.0; /* in meters = about 70 miles */
+double fogDensity = 60.0; /* in meters = about 70 miles */
 double view_offset = 0.0;
 double goal_view_offset = 0.0;
 
@@ -403,8 +403,15 @@ static void fgMainLoop( void ) {
     printf("Ground elevation is about %.2f meters here.\n", rough_elev);
     /* FG_Runway_altitude = rough_elev * METER_TO_FEET; */
 
-    if ( FG_Altitude < FG_Runway_altitude ) {
-	FG_Altitude = FG_Runway_altitude + 3.758099;
+    if ( FG_Altitude * FEET_TO_METER < rough_elev ) {
+	/* set this here, otherwise if we set runway height above our
+	   current height we get a really nasty bounce. */
+	FG_Runway_altitude = FG_Altitude - 3.758099;
+
+	/* now set aircraft altitude above ground */
+	FG_Altitude = rough_elev * METER_TO_FEET + 3.758099;
+	printf("<*> reseting altitude to %.0f meters\n", 
+	       FG_Altitude * FEET_TO_METER);
     }
 }
 
@@ -603,9 +610,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.28  1997/07/08 18:20:12  curt
-/* Working on establishing a hard ground.
+/* Revision 1.29  1997/07/09 21:31:12  curt
+/* Working on making the ground "hard."
 /*
+ * Revision 1.28  1997/07/08 18:20:12  curt
+ * Working on establishing a hard ground.
+ *
  * Revision 1.27  1997/07/07 20:59:49  curt
  * Working on scenery transformations to enable us to fly fluidly over the
  * poles with no discontinuity/distortion in scenery.
