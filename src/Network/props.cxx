@@ -384,12 +384,25 @@ FGProps::FGProps( const vector<string>& tokens )
     // tokens:
     //   props,port#
     //   props,medium,direction,hz,hostname,port#,style
-    if (tokens.size() == 2)
+    if (tokens.size() == 2) {
 	port = atoi( tokens[1].c_str() );
-    else if (tokens.size() == 7)
+        set_hz( 5 );                // default to processing requests @ 5Hz
+    } else if (tokens.size() == 7) {
+        char* endptr;
+        errno = 0;
+        int hz = strtol( tokens[3].c_str(), &endptr, 10 );
+        if (errno != 0) {
+           SG_LOG( SG_IO, SG_ALERT, "I/O poll frequency out of range" );
+           set_hz( 5 );           // default to processing requests @ 5Hz
+        } else {
+            SG_LOG( SG_IO, SG_INFO, "Setting I/O poll frequency to "
+                    << hz << " Hz");
+            set_hz( hz );
+        }
 	port = atoi( tokens[5].c_str() );
-    else
+    } else {
 	throw FGProtocolConfigError( "FGProps: incorrect number of configuration arguments" );
+    }
 }
 
 /**
@@ -417,7 +430,6 @@ FGProps::open()
     netChannel::listen( 5 );
     SG_LOG( SG_IO, SG_INFO, "Props server started on port " << port );
 
-    set_hz( 5 );                // default to processing requests @ 5Hz
     set_enabled( true );
     return true;
 }
