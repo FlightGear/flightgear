@@ -1,0 +1,161 @@
+# emacs make tag: -*- Mode: Makefile -*-
+
+#---------------------------------------------------------------------------
+# Define the version
+#---------------------------------------------------------------------------
+
+FG_VERSION_MAJOR = 0
+FG_VERSION_MINOR = 25
+FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
+
+
+#---------------------------------------------------------------------------
+# Choose your weapons
+#---------------------------------------------------------------------------
+
+CC = g++
+CXX = g++
+LD = ld
+AR = ar
+RANLIB = ranlib
+
+FLEX = flex -f -L
+BISON = bison -v --no-lines
+
+RM = rm
+MV = mv
+CP = cp
+LN = ln -sf
+TAR = tar
+
+
+#---------------------------------------------------------------------------
+# Global Compile Options
+#
+# You may set FG_CFLAGS to include any of the following options depending on 
+# your environment:
+#
+# -g           - Compile with debugging symbols
+# -Wall        - Enable full compiler warnings
+# -O2          - Enable compiler optimization
+# -O3 -fomit-frame-pointer -funroll-all-loops -ffast-math
+#              - Other potential compiler optimization flags
+#
+#---------------------------------------------------------------------------
+
+GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
+
+
+#---------------------------------------------------------------------------
+# Platform specific compile options, these should be set with FG_CFLAGS
+# below.  These have been predefined for the supported platforms below.
+#
+# -DNO_PRINTF -  Disable all printf()'s.  Works by replacing the printf
+#                fuction with an empty function.
+#
+# -DUSE_ITIMER - Use setitimer(), getitimer(), and signal() to mimic
+#                a real time system and call the flight model routines
+#                at a regular interval, rather than between screen updates
+#                which can be highly variable.  This can make the flight
+#                model calculations much smoother.
+#
+# -DUSE_FTIME -  Use ftime() to get an accurate current time instead of
+#                gettimeofday()
+#
+# -DUSE_RAND  -  Use rand() instead of random()
+#
+#---------------------------------------------------------------------------
+
+
+#---------------------------------------------------------------------------
+# Debugging options.
+#
+# Uncomment the following two lines to enable OpenGL function call tracing.
+# This mechanism is provided courtesy of Steve Baker <sbaker@link.com>
+#---------------------------------------------------------------------------
+
+# FG_DEBUG_FLAGS = -DXGL_TRACE
+# FG_DEBUG_LIBS = ../XGL/libXGL.a
+
+
+#---------------------------------------------------------------------------
+# Uncomment one of the following sections depending on your system
+#
+# You may set FG_GRAPHICS to include any of the following options depending
+# on your environment:
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Linux/Mesa with the GLUT toolkit
+#
+INTERFACE_FLAGS = -DGLUT
+INTERFACE_LIBS = -lglut
+INTERFACE_FILES = GLUTmain.c GLUTkey.c
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
+
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# SGI IRIX with the GLUT toolkit 
+#     (Surprisingly, this also works on our SunOS 4.x machine with the 
+#     way we have Mesa & Glut installed.)
+#
+# INTERFACE_FLAGS = -DGLUT
+# INTERFACE_LIBS = -lglut
+# INTERFACE_FILES = GLUTmain.c GLUTkey.c
+# GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
+# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
+# TAR = gtar
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Sun/Solaris with the GLUT toolkit
+#
+# VERSION=\"$(VERSION)\"
+# INTERFACE_FLAGS = -DGLUT
+# INTERFACE_LIBS = -lglut
+# INTERFACE_FILES = GLUTmain.c GLUTkey.c
+# GRAPHICS_LIBS =  -L/opt/X11R6/lib -lGLU -lGL -lXext -lXmu -lXi -lX11 -lsocket
+# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
+# TAR = gtar
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Cygnus Win32 (gcc based) with a static version of the GLUT toolkit
+#
+# INTERFACE_FLAGS = -DGLUT 
+# INTERFACE_LIBS = ../Win32/libglut.a
+# INTERFACE_FILES = GLUTmain.c GLUTkey.c
+# GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
+# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -DWIN32 -DUSE_RAND
+# LN = ren
+#---------------------------------------------------------------------------
+
+
+#---------------------------------------------------------------------------
+# do not modify anything below this line
+#---------------------------------------------------------------------------
+
+OBJECTS = $(CFILES:.c=.o) $(CXXFILES:.cxx=.o)
+DEPENDS = $(CFILES:.c=.d) $(CXXFILES:.cxx=.d)
+
+MAKEDEPENDFILE = depend
+
+CDEFS = $(LCDEFS)
+CFLAGS = $(FG_CFLAGS) -I$(FG_ROOT_SRC) $(LCFLAGS)
+
+CXXDEFS = $(LCXXDEFS)
+CXXFLAGS = $(FG_CFLAGS) $(LCXXFLAGS)
+
+LDDEFS = $(LLDDEFS)
+LDFLAGS = $(LLDFLAGS) -L$(FG_ROOT_LIB)
+
+DIRT = $(LDIRT)
+
+VPATH = $(FG_ROOT_LIB)
+
+COMMONRULES = $(FG_ROOT_SRC)/commonrules
+
