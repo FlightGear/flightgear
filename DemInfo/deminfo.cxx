@@ -37,7 +37,7 @@
 
 int main(int argc, char **argv) {
     // DEM data
-    fgDEM dem;
+    FGDem dem;
     string filename;
     double error;
     int i, j;
@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
 
     if ( dem.read_a_record() ) {
 	cout << "Results = " << filename << "  "
-	     << dem.info_originx() / 3600.0 << " "
-	     << dem.info_originy() / 3600.0 << "\n";
+	     << dem.get_originx() / 3600.0 << " "
+	     << dem.get_originy() / 3600.0 << "\n";
     } else {
 	cout << "Error parsing DEM file.\n";
     }
@@ -67,6 +67,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.3  1999/03/12 22:54:04  curt
+// Convert fgDEM to FGDem ...
+//
 // Revision 1.2  1998/09/19 18:01:22  curt
 // Support for changes to libDEM.a
 //
