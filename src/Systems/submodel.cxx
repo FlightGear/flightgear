@@ -26,7 +26,6 @@ void
 SubmodelSystem::init ()
 {
     _serviceable_node = fgGetNode("/systems/submodel/serviceable", true);
-    _serviceable_node->setBoolValue(false);
 	
     _trigger_node = fgGetNode("/systems/submodel/trigger", true);
     _trigger_node->setBoolValue(false);
