@@ -22,9 +22,13 @@
 // (Log is kept at end of this file)
 
 
-#define FDM_MAIN
 #include <FDM/JSBsim/FGFDMExec.h>
-#undef FDM_MAIN
+#include <FDM/JSBsim/FGAircraft.h>
+#include <FDM/JSBsim/FGFCS.h>
+#include <FDM/JSBsim/FGPosition.h>
+#include <FDM/JSBsim/FGRotation.h>
+#include <FDM/JSBsim/FGState.h>
+#include <FDM/JSBsim/FGTranslation.h>
 
 #include "JSBsim.hxx"
 
@@ -35,21 +39,24 @@
 #include <Math/fg_geodesy.hxx>
 
 
+// The default aircraft
+FGFDMExec FDMExec;
+
+
 // Initialize the JSBsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 int fgJSBsimInit(double dt) {
     FG_LOG( FG_FLIGHT, FG_INFO, "Starting initializing JSBsim" );
 
-    FDMExec = new FGFDMExec();
     FG_LOG( FG_FLIGHT, FG_INFO, "  created FDMExec" );
 
-    Aircraft->LoadAircraft("X15");
+    FDMExec.GetAircraft()->LoadAircraft("X15");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" );
 
-    State->Reset("reset00");
+    FDMExec.GetState()->Reset("reset00");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded initial conditions" );
 
-    State->Setdt(dt);
+    FDMExec.GetState()->Setdt(dt);
     FG_LOG( FG_FLIGHT, FG_INFO, "  set dt" );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing JSBsim" );
@@ -69,12 +76,14 @@ int fgJSBsimUpdate(FGInterface& f, int multiloop) {
     }
 
     // copy control positions into the JSBsim structure
-    FCS->SetDa( controls.get_aileron() );
-    FCS->SetDe( controls.get_elevator() + controls.get_elevator_trim() );
-    FCS->SetDr( controls.get_rudder() );
-    FCS->SetDf( 0.0 );
-    FCS->SetDs( 0.0 );
-    FCS->SetThrottle( controls.get_throttle( 0 ) );
+    FDMExec.GetFCS()->SetDa( controls.get_aileron() );
+    FDMExec.GetFCS()->SetDe( controls.get_elevator() 
+			     + controls.get_elevator_trim() );
+    FDMExec.GetFCS()->SetDr( controls.get_rudder() );
+    FDMExec.GetFCS()->SetDf( 0.0 );
+    FDMExec.GetFCS()->SetDs( 0.0 );
+    FDMExec.GetFCS()->SetThrottle( FGControls::ALL_ENGINES, 
+				   controls.get_throttle( 0 ) );
     // FCS->SetBrake( controls.get_brake( 0 ) );
 
     // Inform JSBsim of the local terrain altitude
@@ -87,8 +96,9 @@ int fgJSBsimUpdate(FGInterface& f, int multiloop) {
     // printf("Altitude = %.2f\n", Altitude * 0.3048);
     // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
 
-    State->Setsim_time(State->Getsim_time() + State->Getdt() * multiloop);
-    FDMExec->Run();
+    /* FDMExec.GetState()->Setsim_time(State->Getsim_time() 
+				    + State->Getdt() * multiloop); */
+    FDMExec.Run();
 
     // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
     // printf("%d Altitude = %.2f\n", i, Altitude * 0.3048);
@@ -119,7 +129,9 @@ int FGInterface_2_JSBsim (FGInterface& f) {
 int fgJSBsim_2_FGInterface (FGInterface& f) {
 
     // Velocities
-    f.set_Velocities_Local( State->GetVn(), State->GetVe(), State->GetVd() );
+    f.set_Velocities_Local( FDMExec.GetPosition()->GetVn(), 
+			    FDMExec.GetPosition()->GetVe(), 
+			    FDMExec.GetPosition()->GetVd() );
     // f.set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
     // 		     V_down_rel_ground );
     // f.set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
@@ -136,11 +148,13 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
     // f.set_V_ground_speed( V_ground_speed );
     // f.set_V_equiv( V_equiv );
 
-    /* ***FIXME*** */ f.set_V_equiv_kts( State->GetVt() );
+    /* ***FIXME*** */ f.set_V_equiv_kts( FDMExec.GetState()->GetVt() );
     // f.set_V_calibrated( V_calibrated );
     // f.set_V_calibrated_kts( V_calibrated_kts );
 
-    f.set_Omega_Body( State->GetP(), State->GetQ(), State->GetR() );
+    f.set_Omega_Body( FDMExec.GetRotation()->GetP(), 
+		      FDMExec.GetRotation()->GetQ(), 
+		      FDMExec.GetRotation()->GetR() );
     // f.set_Omega_Local( P_local, Q_local, R_local );
     // f.set_Omega_Total( P_total, Q_total, R_total );
     
@@ -148,9 +162,9 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
     // ***FIXME*** f.set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
     // Positions
-    double lat = State->Getlatitude();
-    double lon = State->Getlongitude();
-    double alt = State->Geth();
+    double lat = FDMExec.GetState()->Getlatitude();
+    double lon = FDMExec.GetState()->Getlongitude();
+    double alt = FDMExec.GetState()->Geth();
     double lat_geoc, sl_radius;
     fgGeodToGeoc( lat, alt * FEET_TO_METER, &sl_radius, &lat_geoc );
 
@@ -161,15 +175,17 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
 	    
     f.set_Geocentric_Position( lat_geoc, lon, sl_radius * METER_TO_FEET + alt );
     f.set_Geodetic_Position( lat, lon, alt );
-    f.set_Euler_Angles( State->Getphi(), State->Gettht(), State->Getpsi() );
+    f.set_Euler_Angles( FDMExec.GetRotation()->Getphi(), 
+			FDMExec.GetRotation()->Gettht(),
+			FDMExec.GetRotation()->Getpsi() );
 
     // Miscellaneous quantities
     // f.set_T_Local_to_Body(T_local_to_body_m);
     // f.set_Gravity( Gravity );
     // f.set_Centrifugal_relief( Centrifugal_relief );
 
-    f.set_Alpha( State->Getalpha() );
-    f.set_Beta( State->Getbeta() );
+    f.set_Alpha( FDMExec.GetTranslation()->Getalpha() );
+    f.set_Beta( FDMExec.GetTranslation()->Getbeta() );
     // f.set_Alpha_dot( Alpha_dot );
     // f.set_Beta_dot( Beta_dot );
 
@@ -222,6 +238,9 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
 
 
 // $Log$
+// Revision 1.2  1999/02/11 21:09:40  curt
+// Interface with Jon's submitted JSBsim changes.
+//
 // Revision 1.1  1999/02/05 21:29:38  curt
 // Incorporating Jon S. Berndt's flight model code.
 //

@@ -26,6 +26,7 @@
 #define _JSBSIM_HXX
 
 #include <FDM/JSBsim/FGFDMExec.h>
+#undef MAX_ENGINES
 
 #include <Aircraft/aircraft.hxx>
 
@@ -47,6 +48,9 @@ int fgJSBsim_2_FGInterface (FGInterface& f);
 
 
 // $Log$
+// Revision 1.2  1999/02/11 21:09:41  curt
+// Interface with Jon's submitted JSBsim changes.
+//
 // Revision 1.1  1999/02/05 21:29:38  curt
 // Incorporating Jon S. Berndt's flight model code.
 //
