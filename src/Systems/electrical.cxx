@@ -151,6 +151,10 @@ FGElectricalSwitch::FGElectricalSwitch( SGPropertyNode *node ) :
                 initial_state = false;
             }
             // cout << "initial state = " << initial_state << endl;
+        } else if ( cname == "rating-amps" ) {
+            rating_amps = atof( cval.c_str() );
+            circuit_breaker = true;
+            // cout << "initial state = " << initial_state << endl;
         }            
     }
 
