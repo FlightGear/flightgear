@@ -7,4 +7,4 @@ using std::string;
 
 // extract the specified tar file into the specified destination
 // directory
-extern "C" void tarextract( char *tarfile, char *destdir, int verbose, void (*step)(void*), void *data );
+extern "C" void tarextract( char *tarfile, char *destdir, int verbose, void (*step)(void*,int), void *data );
