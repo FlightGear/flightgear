@@ -67,9 +67,13 @@ int main( int argc, char **argv ) {
 
     FG_LOG( FG_GENERAL, FG_DEBUG, "Opening " << argv[1] << " for reading." );
 
+    // make work directory
+    string work_dir = argv[2];
+    string command = "mkdir -p " + work_dir;
+    system( command.c_str() );
+
     // initialize persistant polygon counter
-    string counter_file = argv[2];
-    counter_file += "/polygon.counter";
+    string counter_file = work_dir + "/polygon.counter";
     poly_index_init( counter_file );
 
     // initialize structure for building gpc polygons
@@ -261,6 +265,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.6  1999/03/02 01:04:28  curt
+// Don't crash when work directory doesn't exist ... create it.
+//
 // Revision 1.5  1999/03/01 15:36:28  curt
 // Tweaked a function call name in "names.hxx".
 //
