@@ -544,7 +544,7 @@ FGInput::_init_joystick ()
     //
     // Initialize the buttons.
     //
-    char buf[8];
+    char buf[32];
     for (j = 0; j < nbuttons; j++) {
       sprintf(buf, "%d", j);
       SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << j);
