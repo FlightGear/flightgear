@@ -62,6 +62,14 @@ bool FGAIAircraft::init() {
    return FGAIBase::init();
 }
 
+void FGAIAircraft::bind() {
+    FGAIBase::bind();
+}
+
+void FGAIAircraft::unbind() {
+    FGAIBase::unbind();
+}
+
 
 void FGAIAircraft::update(double dt) {
 

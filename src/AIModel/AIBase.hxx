@@ -20,6 +20,7 @@
 #ifndef _FG_AIBASE_HXX
 #define _FG_AIBASE_HXX
 
+#include <simgear/constants.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <string>
@@ -33,7 +34,10 @@ public:
     virtual ~FGAIBase();
     virtual void update(double dt);
     inline Point3D GetPos() { return(pos); }
+
     virtual bool init();
+    virtual void bind();
+    virtual void unbind();
 
     void setPath( const char* model );
     void setSpeed( double speed_KTAS );
@@ -41,12 +45,16 @@ public:
     void setLongitude( double longitude );
     void setLatitude( double latitude );
     void setHeading( double heading );
+
     void setDie( bool die );
-    inline bool getDie() { return delete_me; }
+    bool getDie();
 
 protected:
 
+    SGPropertyNode *props;
+
     Point3D pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
+    double lat, lon;	// As above, this is needed for the property bindings
     double hdg;		// True heading in degrees
     double roll;	// degrees, left is negative
     double pitch;	// degrees, nose-down is negative
@@ -68,7 +76,40 @@ protected:
     bool delete_me;
 
     void Transform();
+
 };
+
+
+inline void FGAIBase::setPath( const char* model ) {
+  model_path.append(model);
+}
+
+inline void FGAIBase::setSpeed( double speed_KTAS ) {
+  speed = tgt_speed = speed_KTAS;
+}
+
+inline void FGAIBase::setAltitude( double altitude_ft ) {
+  altitude = tgt_altitude = altitude_ft;
+  pos.setelev(altitude * SG_FEET_TO_METER);
+}
+
+
+inline void FGAIBase::setLongitude( double longitude ) {
+  lon = longitude;
+  pos.setlon(longitude);
+}
+
+inline void FGAIBase::setLatitude( double latitude ) {
+  lat = latitude;
+  pos.setlat(latitude);
+}
+
+inline void FGAIBase::setHeading( double heading ) {
+  hdg = tgt_heading = heading;
+}
+
+inline void FGAIBase::setDie( bool die ) { delete_me = die; }
+inline bool FGAIBase::getDie() { return delete_me; }
 
 #endif  // _FG_AIBASE_HXX
 

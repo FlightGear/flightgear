@@ -33,6 +33,8 @@ public:
 	~FGAIShip();
 	
 	bool init();
+        virtual void bind();
+        virtual void unbind();
 	void update(double dt);
 
         void AccelTo(double speed);

@@ -44,6 +44,13 @@ bool FGAIBallistic::init() {
    return true;
 }
 
+void FGAIBallistic::bind() {
+    FGAIBase::bind();
+}
+
+void FGAIBallistic::unbind() {
+    FGAIBase::unbind();
+}
 
 void FGAIBallistic::update(double dt) {
 

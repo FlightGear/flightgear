@@ -40,7 +40,13 @@ bool FGAIShip::init() {
    return FGAIBase::init();
 }
 
+void FGAIShip::bind() {
+    FGAIBase::bind();
+}
 
+void FGAIShip::unbind() {
+    FGAIBase::unbind();
+}
 
 void FGAIShip::update(double dt) {
 

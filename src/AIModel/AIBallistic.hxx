@@ -32,6 +32,8 @@ public:
     ~FGAIBallistic();
 	
     bool init();
+    virtual void bind();
+    virtual void unbind();
     void update(double dt);
 
     void setAzimuth( double az );

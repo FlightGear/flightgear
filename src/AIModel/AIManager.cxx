@@ -72,6 +72,7 @@ void FGAIManager::init() {
         ai_plane->setLongitude(entry->getDoubleValue("longitude"));
         ai_plane->setLatitude(entry->getDoubleValue("latitude"));
         ai_plane->init();
+        ai_plane->bind();
 
       } else if (!strcmp(entry->getStringValue("type", ""), "ship")) {
         FGAIShip* ai_ship = new FGAIShip;
@@ -83,6 +84,7 @@ void FGAIManager::init() {
         ai_ship->setLongitude(entry->getDoubleValue("longitude"));
         ai_ship->setLatitude(entry->getDoubleValue("latitude"));
         ai_ship->init();
+        ai_ship->bind();
 
       } else if (!strcmp(entry->getStringValue("type", ""), "ballistic")) {
         FGAIBallistic* ai_ballistic = new FGAIBallistic;
@@ -95,6 +97,7 @@ void FGAIManager::init() {
         ai_ballistic->setLongitude(entry->getDoubleValue("longitude"));
         ai_ballistic->setLatitude(entry->getDoubleValue("latitude"));
         ai_ballistic->init();
+        ai_ballistic->bind();
       } 
     }
   }
@@ -108,6 +111,11 @@ void FGAIManager::bind() {
 
 
 void FGAIManager::unbind() {
+    ai_list_itr = ai_list.begin();
+    while(ai_list_itr != ai_list.end()) {
+        (*ai_list_itr)->unbind();
+        ++ai_list_itr;
+    }
 }
 
 

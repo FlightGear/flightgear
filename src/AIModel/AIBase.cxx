@@ -22,16 +22,23 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
+
+#include STL_STRING
+
 #include <plib/sg.h>
 #include <plib/ssg.h>
-#include <Main/globals.hxx>
-#include <Scenery/scenery.hxx>
+
 #include <simgear/math/point3d.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/model.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <string>
+#include <simgear/props/props.hxx>
+
+#include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
+
 
 #include "AIBase.hxx"
 
@@ -50,9 +57,12 @@ void FGAIBase::Transform() {
 
 
 bool FGAIBase::init() {
+
+   props = globals->get_props()->getNode("ai/model", true);
+
    ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
 	                             model_path.c_str(),
-	                             globals->get_props(),
+                                     props,
 	                             globals->get_sim_time_sec() );
    if (model) {
      aip.init( model );
@@ -66,33 +76,28 @@ bool FGAIBase::init() {
    setDie(false);
 }
 
+void FGAIBase::bind() {
+   props->tie("velocities/airspeed-kt",  SGRawValuePointer<double>(&speed));
+   props->tie("velocities/vertical-speed-fps", SGRawValuePointer<double>(&vs));
 
-void FGAIBase::setPath( const char* model ) {
-  model_path.append(model);
+   props->tie("position/altitude-ft", SGRawValuePointer<double>(&altitude));
+   props->tie("position/latitude-deg", SGRawValuePointer<double>(&lat));
+   props->tie("position/longitude-deg", SGRawValuePointer<double>(&lon));
+
+   props->tie("orientation/pitch-deg", SGRawValuePointer<double>(&pitch));
+   props->tie("orientation/roll-deg", SGRawValuePointer<double>(&roll));
+   props->tie("orientation/heading-deg", SGRawValuePointer<double>(&hdg));
 }
 
-void FGAIBase::setSpeed( double speed_KTAS ) {
-  speed = tgt_speed = speed_KTAS;
-}
+void FGAIBase::unbind() {
+    props->untie("velocities/airspeed-kt");
+    props->untie("velocities/vertical-speed-fps");
 
-void FGAIBase::setAltitude( double altitude_ft ) {
-  altitude = tgt_altitude = altitude_ft;
-  pos.setelev(altitude * 0.3048);
-}
+    props->untie("position/altitude-ft");
+    props->untie("position/latitude-deg");
+    props->untie("position/longitude-deg");
 
-void FGAIBase::setLongitude( double longitude ) {
-  pos.setlon(longitude);
+    props->untie("orientation/pitch-deg");
+    props->untie("orientation/roll-deg");
+    props->untie("orientation/heading-deg");
 }
-
-void FGAIBase::setLatitude( double latitude ) {
-  pos.setlat(latitude);
-}
-
-void FGAIBase::setHeading( double heading ) {
-  hdg = tgt_heading = heading;
-}
-
-void FGAIBase::setDie( bool die ) {
-  delete_me = die;
-}
-

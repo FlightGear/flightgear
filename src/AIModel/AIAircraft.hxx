@@ -53,6 +53,8 @@ public:
 	~FGAIAircraft();
 	
 	bool init();
+        virtual void bind();
+        virtual void unbind();
 	void update(double dt);
 
         void SetPerformance(const PERF_STRUCT *ps);
