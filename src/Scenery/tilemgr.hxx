@@ -171,6 +171,8 @@ public:
     // transform and update it's range selector based on current
     // visibilty
     void prep_ssg_nodes( void );
+
+    inline int queue_size() const { return load_queue.size(); }
 };
 
 
