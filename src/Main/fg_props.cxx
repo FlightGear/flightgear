@@ -85,7 +85,7 @@ _set_view_from_axes ()
       viewDir = 225;
     else if (axisLat == 0)
       viewDir = 180;
-  } else if (axisLong = 0) {	// Longitudinal axis neutral
+  } else if (axisLong == 0) {	// Longitudinal axis neutral
     if (axisLat < 0)
       viewDir = 90;
     else if (axisLat > 0)

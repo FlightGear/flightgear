@@ -245,10 +245,10 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   if (modifiers&FG_MOD_UP)
     return;
 
-  float fov, tmp;
+  // float fov, tmp;
   static bool winding_ccw = true;
   // int speed;
-  FGInterface *f = current_aircraft.fdm_state;
+  // FGInterface *f = current_aircraft.fdm_state;
   // FGViewer *v = globals->get_current_view();
   
   // everything after here will be removed sooner or later...
