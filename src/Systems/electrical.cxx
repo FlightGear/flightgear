@@ -211,31 +211,36 @@ FGElectricalSystem::~FGElectricalSystem () {
 void FGElectricalSystem::init () {
     config_props = new SGPropertyNode;
 
-    SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path", true);
+    SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path");
 
-    SGPath config( globals->get_fg_root() );
-    config.append( path_n->getStringValue() );
+    if (path_n) {
+        SGPath config( globals->get_fg_root() );
+        config.append( path_n->getStringValue() );
 
-    SG_LOG( SG_ALL, SG_ALERT, "Reading electrical system model from "
-            << config.str() );
-    try {
-        readProperties( config.str(), config_props );
-
-        if ( build() ) {
-            enabled = true;
-        } else {
-            SG_LOG( SG_ALL, SG_ALERT,
-                    "Detected an internal inconsistancy in the electrical" );
-            SG_LOG( SG_ALL, SG_ALERT,
-                    " system specification file.  See earlier errors for" );
-            SG_LOG( SG_ALL, SG_ALERT,
-                    " details.");
-            exit(-1);
-        }        
-    } catch (const sg_exception& exc) {
-        SG_LOG( SG_ALL, SG_ALERT, "Failed to load electrical system model: "
+        SG_LOG( SG_ALL, SG_ALERT, "Reading electrical system model from "
                 << config.str() );
-    }
+        try {
+            readProperties( config.str(), config_props );
+
+            if ( build() ) {
+                enabled = true;
+            } else {
+                SG_LOG( SG_ALL, SG_ALERT,
+                        "Detected an internal inconsistancy in the electrical");
+                SG_LOG( SG_ALL, SG_ALERT,
+                        " system specification file.  See earlier errors for" );
+                SG_LOG( SG_ALL, SG_ALERT,
+                        " details.");
+                exit(-1);
+            }        
+        } catch (const sg_exception& exc) {
+            SG_LOG( SG_ALL, SG_ALERT, "Failed to load electrical system model: "
+                    << config.str() );
+        }
+
+    } else
+        SG_LOG( SG_ALL, SG_ALERT,
+                "No electrical model specified for this model!");
 
     delete config_props;
 }
