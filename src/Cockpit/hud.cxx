@@ -1106,6 +1106,7 @@ void drawHUD()
     static char hud_wp0_text[256];
     static char hud_wp1_text[256];
     static char hud_wp2_text[256];
+    static char hud_alt_text[256];
 
     if( antialiased_node->getBoolValue() ) {
         glEnable(GL_LINE_SMOOTH);
@@ -1213,7 +1214,14 @@ void drawHUD()
     }
   
     if ( strcmp( altitude_enabled->getStringValue(), "altitude-hold" ) == 0 ) {
-        HUD_TextList.add( fgText( 40, apY, (char *)fgGetString("/autopilot/settings/altitude-ft") ) );
+        snprintf( hud_alt_text, 256, "alt = %.0f\n",
+                  fgGetDouble("/autopilot/settings/target-altitude-ft") );
+        HUD_TextList.add( fgText( 40, apY, hud_alt_text ) );
+        apY -= 15;
+    } else if ( strcmp( altitude_enabled->getStringValue(), "agl-hold" ) == 0 ){
+        snprintf( hud_alt_text, 256, "agl = %.0f\n",
+                  fgGetDouble("/autopilot/settings/target-agl-ft") );
+        HUD_TextList.add( fgText( 40, apY, hud_alt_text ) );
         apY -= 15;
     }
 
