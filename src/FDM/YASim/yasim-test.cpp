@@ -14,6 +14,8 @@ bool fgSetBool(char const * name, bool val) { return false; }
 bool fgGetBool(char const * name, bool def) { return false; }
 SGPropertyNode* fgGetNode (const char * path, bool create) { return 0; }
 float fgGetFloat (const char * name, float defaultValue) { return 0; }
+float fgGetDouble (const char * name, double defaultValue) { return 0; }
+float fgSetDouble (const char * name, double defaultValue) { return 0; }
 
 static const float RAD2DEG = 57.2957795131;
 

@@ -78,32 +78,9 @@ void Airplane::iterate(float dt)
     _model.iterate();
 }
 
-void Airplane::consumeFuel(float dt)
+void Airplane::calcFuelWeights()
 {
-    // This is a really simple implementation that assumes all engines
-    // draw equally from all tanks in proportion to the amount of fuel
-    // stored there.  Needs to be fixed, but that has to wait for a
-    // decision as to what the property interface will look like.
-    int i, outOfFuel = 0;
-    float fuelFlow = 0, totalFuel = 0.00001; // <-- overflow protection
-    for(i=0; i<_thrusters.size(); i++)
-        fuelFlow += ((ThrustRec*)_thrusters.get(i))->thruster->getFuelFlow();
-    for(i=0; i<_tanks.size(); i++)
-        totalFuel += ((Tank*)_tanks.get(i))->fill;
-    for(i=0; i<_tanks.size(); i++) {
-        Tank* t = (Tank*)_tanks.get(i);
-        t->fill -= dt * fuelFlow * (t->fill/totalFuel);
-        if(t->fill <= 0) {
-            t->fill = 0;
-            outOfFuel = 1;
-        }
-    }
-    if(outOfFuel)
-        for(int i=0; i<_thrusters.size(); i++)
-            ((ThrustRec*)_thrusters.get(i))->thruster->setFuelState(false);
-
-    // Set the tank masses on the RigidBody
-    for(i=0; i<_tanks.size(); i++) {
+    for(int i=0; i<_tanks.size(); i++) {
         Tank* t = (Tank*)_tanks.get(i);
         _model.getBody()->setMass(t->handle, t->fill);
     }
@@ -231,6 +208,11 @@ int Airplane::numTanks()
 float Airplane::getFuel(int tank)
 {
     return ((Tank*)_tanks.get(tank))->fill;
+}
+
+float Airplane::setFuel(int tank, float fuel)
+{
+    ((Tank*)_tanks.get(tank))->fill = fuel;
 }
 
 float Airplane::getFuelDensity(int tank)

@@ -82,9 +82,24 @@ void FGFDM::iterate(float dt)
     getExternalInput(dt);
     _airplane.iterate(dt);
 
-    if(fgGetBool("/sim/freeze/fuel") != true)
-        _airplane.consumeFuel(dt);
+    // Do fuel stuff (FIXME: should stash SGPropertyNode objects here)
+    char buf[256];
+    for(int i=0; i<_airplane.numThrusters(); i++) {
+        Thruster* t = _airplane.getThruster(i);
 
+        sprintf(buf, "/engines/engine[%d]/out-of-fuel", i);
+        t->setFuelState(!fgGetBool(buf));
+
+        sprintf(buf, "/engines/engine[%d]/fuel-consumed-lbs", i);
+        double consumed = fgGetDouble(buf) + dt * t->getFuelFlow();
+        fgSetDouble(buf, consumed);
+    }
+    for(int i=0; i<_airplane.numTanks(); i++) {
+        sprintf(buf, "/consumables/fuel/tank[%d]/level-lbs", i);
+        _airplane.setFuel(i, LBS2KG * fgGetFloat(buf));
+    } 
+    _airplane.calcFuelWeights();
+    
     setOutputProperties();
 }
 
@@ -97,6 +112,23 @@ void FGFDM::init()
 {
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/sim/fuel-fraction", 1));
+
+    // Read out the resulting fuel state
+    char buf[256];
+    for(int i=0; i<_airplane.numTanks(); i++) {
+        sprintf(buf, "/consumables/fuel/tank[%d]/level-lbs", i);
+        fgSetDouble(buf, _airplane.getFuel(i) * KG2LBS);
+
+        double density = _airplane.getFuelDensity(i);
+        sprintf(buf, "/consumables/fuel/tank[%d]/density-ppg", i);
+        fgSetDouble(buf, density * (KG2LBS/CM2GALS));
+
+        sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
+        fgSetDouble(buf, _airplane.getFuel(i) * CM2GALS / density);
+
+        sprintf(buf, "/consumables/fuel/tank[%d]/capacity-gal_us", i);
+        fgSetDouble(buf, CM2GALS * _airplane.getTankCapacity(i)/density);
+    }    
 
     // This has a nasty habit of being false at startup.  That's not
     // good.
@@ -372,24 +404,6 @@ void FGFDM::setOutputProperties()
         p->prop->setFloatValue(val);
     }
 
-    float totalFuel = 0, totalCap = 0;
-    float fuelDensity = 720; // in kg/m^3, default to gasoline: ~6 lb/gal
-    for(i=0; i<_airplane.numTanks(); i++) {
-        fuelDensity = _airplane.getFuelDensity(i);
-	sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
-	fgSetFloat(buf, CM2GALS*_airplane.getFuel(i)/fuelDensity);
-	sprintf(buf, "/consumables/fuel/tank[%d]/level-lbs", i);
-	fgSetFloat(buf, KG2LBS*_airplane.getFuel(i));
-        totalFuel += _airplane.getFuel(i);
-        totalCap += _airplane.getTankCapacity(i);
-    }
-    if(totalCap != 0) {
-        fgSetFloat("/consumables/fuel/total-fuel-lbs", KG2LBS*totalFuel);
-        fgSetFloat("/consumables/fuel/total-fuel-gals",
-                   CM2GALS*totalFuel/fuelDensity);
-        fgSetFloat("/consumables/fuel/total-fuel-norm", totalFuel/totalCap);
-    }
-
     for(i=0; i<_airplane.getNumRotors(); i++) {
         Rotor*r=(Rotor*)_airplane.getRotor(i);
         int j = 0;
@@ -418,6 +432,7 @@ void FGFDM::setOutputProperties()
         }
     }
 
+    float fuelDensity = _airplane.getFuelDensity(0); // HACK
     for(i=0; i<_thrusters.size(); i++) {
 	EngRec* er = (EngRec*)_thrusters.get(i);
         Thruster* t = er->eng;

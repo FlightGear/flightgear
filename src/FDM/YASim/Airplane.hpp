@@ -18,7 +18,7 @@ public:
     ~Airplane();
 
     void iterate(float dt);
-    void consumeFuel(float dt);
+    void calcFuelWeights();
 
     ControlMap* getControlMap();
     Model* getModel();
@@ -60,9 +60,14 @@ public:
     int numGear();
     Gear* getGear(int g);
 
+    int numThrusters() { return _thrusters.size(); }
+    Thruster* getThruster(int n) {
+        return ((ThrustRec*)_thrusters.get(n))->thruster; }
+    
     int numTanks();
     void setFuelFraction(float frac); // 0-1, total amount of fuel
     float getFuel(int tank); // in kg!
+    float setFuel(int tank, float fuel); // in kg!
     float getFuelDensity(int tank); // kg/m^3
     float getTankCapacity(int tank);
 
