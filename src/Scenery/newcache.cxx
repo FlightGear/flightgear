@@ -133,61 +133,20 @@ static void print_refs( ssgSelector *sel, ssgTransform *trans,
 #endif
 
 
-static ssgLeaf *gen_lights( const FGBucket &b ) {
-
-    FGTileEntry *t = global_tile_cache.get_tile( b );
-    Point3D center = t->get_offset() + scenery.center;
-
-    double lon, lat, elev;
-    double w = b.get_width();
-    double h = b.get_height();
-
-    double area = b.get_width_m() * b.get_height_m();
-    int num = (int)(area / 1000000); // number of point lights to create
-    cout << "generating " << num << " lights" << endl;
-
-    if ( num <= 0 ) {
-	return NULL;
-    }
-
+static ssgLeaf *gen_lights( ssgVertexArray *lights ) {
     // Allocate ssg structure
-    ssgVertexArray   *vl = new ssgVertexArray( num );
     ssgNormalArray   *nl = NULL;
     ssgTexCoordArray *tl = NULL;
     ssgColourArray   *cl = new ssgColourArray( 1 );
 
-    // default to white lights for now
+    // default to slightly yellow lights for now
     sgVec4 color;
-    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+    sgSetVec4( color, 1.0, 1.0, 0.7, 1.0 );
     cl->add( color );
-
-    for ( int i = 0; i < num; ++i ) {
-	lon = b.get_center_lon() - w * 0.5 + sg_random() * w;
-	lat = b.get_center_lat() - h * 0.5 + sg_random() * h;
-
-	Point3D geod = Point3D( lon * DEG_TO_RAD, lat * DEG_TO_RAD, 0.0);
-	Point3D tmp = sgGeodToCart( geod );
-	sgdVec3 cart;
-	sgdSetVec3( cart, tmp.x(), tmp.y(), tmp.z() );
-
-	if ( ! global_tile_mgr.current_elev_ssg( cart, &elev ) ) {
-	    elev = 0.0;
-	}
-	// cout << " lon = " << lon << "  lat = " << lat << "  elev = " << elev 
-	//      << endl;
-
-	geod.setz( elev + 8.0 + sg_random() * 4);
-	tmp = sgGeodToCart( geod ) - center;
-	sgVec3 p;
-	sgSetVec3( p, tmp.x(), tmp.y(), tmp.z() );
-	// cout << " x = " << cart[0] << "  y = " << cart[1]
-	//      << "  z = " << cart[2] << endl;
-	vl->add( p );
-    }
 
     // create ssg leaf
     ssgLeaf *leaf = 
-	new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
+	new ssgVtxTable ( GL_POINTS, lights, nl, tl, cl );
 
     // assign state
     FGNewMat *newmat = material_lib.find( "LIGHTS" );
@@ -222,8 +181,6 @@ void FGNewCache::fill_in( const FGBucket& b ) {
 
     e->terra_transform = new ssgTransform;
     e->terra_range = new ssgRangeSelector;
-    e->lights_transform = new ssgTransform;
-    e->lights_range = new ssgRangeSelector;
     e->tile_bucket = b;
 
     FGPath tile_path;
@@ -235,10 +192,13 @@ void FGNewCache::fill_in( const FGBucket& b ) {
     }
     tile_path.append( b.gen_base_path() );
     
+    // fgObjLoad will generate ground lighting for us ...
+    ssgVertexArray *light_pts = new ssgVertexArray( 100 );
+
     // Load the appropriate data file
     FGPath tile_base = tile_path;
     tile_base.append( b.gen_index_str() );
-    ssgBranch *new_tile = fgObjLoad( tile_base.str(), e, true );
+    ssgBranch *new_tile = fgObjLoad( tile_base.str(), e, light_pts, true );
 
     if ( new_tile != NULL ) {
 	e->terra_range->addKid( new_tile );
@@ -270,7 +230,8 @@ void FGNewCache::fill_in( const FGBucket& b ) {
 
 	    FGPath custom_path = tile_path;
 	    custom_path.append( name );
-	    ssgBranch *custom_obj = fgObjLoad( custom_path.str(), e, false );
+	    ssgBranch *custom_obj = 
+		fgObjLoad( custom_path.str(), e, NULL, false );
 	    if ( (new_tile != NULL) && (custom_obj != NULL) ) {
 		new_tile -> addKid( custom_obj );
 	    }
@@ -289,15 +250,17 @@ void FGNewCache::fill_in( const FGBucket& b ) {
     terrain->addKid( e->terra_transform );
 
     e->lights_transform = NULL;
-    /* uncomment this section for testing ground lights
-    ssgLeaf *lights = gen_lights( b );
+    /* uncomment this section for testing ground lights */
+    ssgLeaf *lights = gen_lights( light_pts );
     if ( lights ) {
+	e->lights_transform = new ssgTransform;
+	e->lights_range = new ssgRangeSelector;
 	e->lights_range->addKid( lights );
 	e->lights_transform->addKid( e->lights_range );
 	e->lights_transform->setTransform( &sgcoord );
 	ground->addKid( e->lights_transform );
     }
-    */
+    /* end of ground light section */
 }
 
 

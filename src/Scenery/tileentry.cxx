@@ -168,12 +168,13 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
     terra_range->setRange( 0, SG_ZERO );
     terra_range->setRange( 1, vis + bounding_radius );
     lights_range->setRange( 0, SG_ZERO );
-    lights_range->setRange( 1, vis + bounding_radius );
+    lights_range->setRange( 1, vis * 1.5 + bounding_radius );
 #else
     float ranges[2];
     ranges[0] = SG_ZERO;
     ranges[1] = vis + bounding_radius;
     terra_range->setRanges( ranges, 2 );
+    ranges[1] = vis * 1.5 + bounding_radius;
     lights_range->setRanges( ranges, 2 );
 #endif
     sgVec3 sgTrans;
@@ -203,7 +204,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	sgCopyVec3( to, sgTrans );
 	double dist = sgLengthVec3( to );
 
-	sgScaleVec3( up, agl / 20.0 + dist / 10000 );
+	sgScaleVec3( up, 10.0 + agl / 100.0 + dist / 10000 );
 	sgAddVec3( sgTrans, up );
 	lights_transform->setTransform( sgTrans );
     }
