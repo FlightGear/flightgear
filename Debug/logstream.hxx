@@ -24,6 +24,11 @@
 #ifndef _LOGSTREAM_H
 #define _LOGSTREAM_H
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+
 #include "Include/compiler.h"
 
 #ifdef FG_HAVE_STD_INCLUDES
@@ -190,6 +195,11 @@ fglog()
 #endif // _LOGSTREAM_H
 
 // $Log$
+// Revision 1.2  1998/11/07 19:07:02  curt
+// Enable release builds using the --without-logging option to the configure
+// script.  Also a couple log message cleanups, plus some C to C++ comment
+// conversion.
+//
 // Revision 1.1  1998/11/06 21:20:42  curt
 // Initial revision.
 //
