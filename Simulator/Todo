@@ -2,8 +2,6 @@
 | Todo 
 --------------------------------------------------------------------------
 
-5/2/98  -  Option to go full screen.  call glutFullScreen()
-
 4/25/98 -  Roll all of Time/sunpos.cxx into Astro/sun.cxx
 
 4/25/98 -  Overhaul view parameter generation ... see if we can piggy
@@ -19,8 +17,6 @@
            Make sure all #ifdef _FILE_H or _FILE_HXX
 
 4/14/98 -  Convert gl__() calls in Cockpit/ to xgl__() calls
-
-3/18/98 -  Use win32 specific calls to get daylight savings time on windoze
 
 1/5/98 -   Create a development "roadmap"
 
