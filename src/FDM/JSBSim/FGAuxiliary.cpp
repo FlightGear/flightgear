@@ -41,6 +41,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGAuxiliary.h"
+#include "FGAerodynamics.h"
 #include "FGTranslation.h"
 #include "FGRotation.h"
 #include "FGAtmosphere.h"
@@ -72,6 +73,8 @@ FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
   earthPosAngle = 0.0;
   
   vPilotAccelN.InitMatrix();
+  
+  bind();
   
   Debug(0);
 }

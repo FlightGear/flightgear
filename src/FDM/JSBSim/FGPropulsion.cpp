@@ -150,7 +150,7 @@ bool FGPropulsion::GetSteadyState(void)
         } else {
           steady_count=0;
         }
-        j++;    
+        j++;
       }
       vForces  += Thrusters[i]->GetBodyForces();  // sum body frame forces
       vMoments += Thrusters[i]->GetMoments();     // sum body frame moments
@@ -173,7 +173,7 @@ bool FGPropulsion::ICEngineStart(void)
 
   vForces.InitMatrix();
   vMoments.InitMatrix();
-    
+
   for (unsigned int i=0; i<numEngines; i++) {
     Engines[i]->SetTrimMode(true);
     Thrusters[i]->SetdeltaT(dt*rate);
@@ -181,7 +181,7 @@ bool FGPropulsion::ICEngineStart(void)
     while (!Engines[i]->GetRunning() && j < 2000) {
       PowerAvailable = Engines[i]->Calculate(Thrusters[i]->GetPowerRequired());
       Thrusters[i]->Calculate(PowerAvailable);
-      j++;    
+      j++;
     }
     vForces  += Thrusters[i]->GetBodyForces();  // sum body frame forces
     vMoments += Thrusters[i]->GetMoments();     // sum body frame moments
@@ -225,6 +225,7 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
       if (Eng_cfg.IsOpen()) {
         Eng_cfg.GetNextConfigLine();
         engType = Eng_cfg.GetValue();
+        cout << engType << endl;
 
         FCS->AddThrottle();
         ThrottleAdded = true;
@@ -308,8 +309,10 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
         if (thrType == "FG_PROPELLER") {
           Thrusters.push_back(new FGPropeller(FDMExec, &Thruster_cfg));
         } else if (thrType == "FG_NOZZLE") {
-          Thrusters.push_back(new FGNozzle(FDMExec, &Thruster_cfg));
-        }
+          Thrusters.push_back(new FGNozzle(FDMExec, &Thruster_cfg ));
+        } else if (thrType == "FG_DIRECT") {
+          Thrusters.push_back(new FGThruster( FDMExec, &Thruster_cfg) );
+        }  
 
         AC_cfg->GetNextConfigLine();
         while ((token = AC_cfg->GetValue()) != string("/AC_THRUSTER")) {
@@ -402,7 +405,7 @@ string FGPropulsion::GetPropulsionStrings(void)
     default:
       PropulsionStrings += "INVALID THRUSTER TYPE";
       break;
-    }    
+    }
   }
 
   return PropulsionStrings;

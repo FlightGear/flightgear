@@ -419,6 +419,7 @@ double FGFCS::GetComponentOutput(int idx)
     cerr << "Unknown FCS mode" << endl;
     break;
   }
+  return 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -434,6 +435,7 @@ string FGFCS::GetComponentName(int idx)
     cerr << "Unknown FCS mode" << endl;
     break;
   }
+  return string("");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

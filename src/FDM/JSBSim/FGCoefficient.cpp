@@ -44,6 +44,8 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <stdio.h>
+
 #include "FGCoefficient.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
@@ -208,7 +210,7 @@ double FGCoefficient::Value(double rVal, double cVal)
 double FGCoefficient::Value(double Val)
 {
   double Value;
-
+  
   SD = Value = gain*Table->GetValue(Val) + bias;
   
   for (unsigned int midx=0; midx < multipliers.size(); midx++) 

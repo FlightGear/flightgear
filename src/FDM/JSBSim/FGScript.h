@@ -146,7 +146,7 @@ public:
       The language is the Simple Script Directives for JSBSim (SSDJ).
       @param script the filename (including path name, if any) for the script.
       @return true if successful */
-  bool LoadScript(string script);
+  bool LoadScript( string script );
 
   /** This function is called each pass through the executive Run() method IF
       scripting is enabled. 

@@ -301,6 +301,8 @@ public:
   Message* ProcessMessage(void);
   //@}
   string GetVersion(void) {return JSBSim_version;}
+  
+  void disableHighLighting(void);
 
 protected:
   static Message localMsg;

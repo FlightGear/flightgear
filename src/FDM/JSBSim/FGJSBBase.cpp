@@ -167,3 +167,20 @@ FGJSBBase::Message* FGJSBBase::ProcessMessage(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGJSBBase::disableHighLighting(void) {
+  highint[0]='\0';
+  halfint[0]='\0';
+  normint[0]='\0';
+  reset[0]='\0';
+  underon[0]='\0';
+  underoff[0]='\0';
+  fgblue[0]='\0';
+  fgcyan[0]='\0';
+  fgred[0]='\0';
+  fggreen[0]='\0';
+  fgdef[0]='\0';
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+

@@ -52,16 +52,6 @@ INCLUDES
 
 #include "FGFDMExec.h"
 #include "FGJSBBase.h"
-#include "FGRotation.h"
-#include "FGAtmosphere.h"
-#include "FGState.h"
-#include "FGFCS.h"
-#include "FGAircraft.h"
-#include "FGTranslation.h"
-#include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
-#include "FGTrim.h"
 #include "FGTrimAxis.h"
 
 #include <vector>
@@ -206,10 +196,8 @@ public:
   /** Initializes the trimming class
       @param FDMExec pointer to a JSBSim executive object.
       @param FGIC pointer to a FGInitialCondition object
-      @param TrimMode the set of axes to trim. Can be:
-             tLongitudinal, tFull, tGround, tCustom, or tNone
   */
-  FGTrim(FGFDMExec *FDMExec, FGInitialCondition *FGIC, TrimMode tt);
+  FGTrim(FGFDMExec *FDMExec, TrimMode tt=tGround );
 
     ~FGTrim(void);
 
@@ -227,6 +215,12 @@ public:
   /** Iteration statistics
   */
   void TrimStats();
+  
+  /** Clear all state-control pairs and set a predefined trim mode
+      @param TrimMode the set of axes to trim. Can be:
+             tLongitudinal, tFull, tGround, tCustom, or tNone
+  */
+  void SetMode(TrimMode tt);
 
   /** Clear all state-control pairs from the current configuration.
       The trimming routine must have at least one state-control pair

@@ -45,6 +45,8 @@ INCLUDES
 #include "FGTrimAxis.h"
 #include "FGAircraft.h"
 #include "FGPropulsion.h"
+#include "FGAerodynamics.h"
+
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TRIMAXIS;
@@ -321,7 +323,7 @@ bool FGTrimAxis::initTheta(void) {
   while(!level && (i < 100)) {
 	theta+=2.0*zDiff;
 	fgic->SetPitchAngleDegIC(theta);   
-	fdmex->RunIC(fgic);
+	fdmex->RunIC();
 	zAft=fdmex->GetGroundReactions()->GetGearUnit(1)->GetLocalGear(3);
         zForward=fdmex->GetGroundReactions()->GetGearUnit(0)->GetLocalGear(3);
         zDiff = zForward - zAft;
@@ -386,7 +388,7 @@ void FGTrimAxis::Run(void) {
   while(!stable) {
     i++;
     last_state_value=state_value;
-    fdmex->RunIC(fgic);
+    fdmex->RunIC();
     getState();
     if(i > 1) {
       if((fabs(last_state_value - state_value) < tolerance) || (i >= 100) )
@@ -409,7 +411,7 @@ void FGTrimAxis::setThrottlesPct(void) {
       //cout << "setThrottlespct: " << i << ", " << control_min << ", " << control_max << ", " << control_value;
       fdmex->GetFCS()->SetThrottleCmd(i,tMin+control_value*(tMax-tMin));
       //cout << "setThrottlespct: " << fdmex->GetFCS()->GetThrottleCmd(i) << endl;
-      fdmex->RunIC(fgic); //apply throttle change
+      fdmex->RunIC(); //apply throttle change
       fdmex->GetPropulsion()->GetSteadyState();
   }
 }

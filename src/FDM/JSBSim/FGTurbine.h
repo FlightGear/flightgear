@@ -42,8 +42,10 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <vector>
 #include "FGEngine.h"
 #include "FGConfigFile.h"
+#include "FGCoefficient.h"
 
 #define ID_TURBINE "$Id$"
 
@@ -58,8 +60,21 @@ public:
   ~FGTurbine();
 
   double Calculate(double);
-  
+
 private:
+  typedef vector<FGCoefficient*> CoeffArray;
+  CoeffArray ThrustTables;
+
+  string name;
+  double MaxMilThrust;
+  double MaxAugThrust;
+  
+  double PowerCommand;
+  
+  double ThrottleToPowerCommand(double throttle);
+  double PowerLag(double actual_power, double power_command);
+  double rtau(double delta_power);
+
   void doInlet(void);
   void doCompressor(void);
   void doBleedDuct(void);
@@ -69,7 +84,7 @@ private:
 
   void doTransition(void);
 
-  bool Load(FGConfigFile *AC_cfg);
+  bool Load(FGConfigFile *ENG_cfg);
 
   void Debug(int from);
 };

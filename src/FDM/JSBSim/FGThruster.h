@@ -69,12 +69,13 @@ class FGThruster : public FGForce {
 public:
   /// Constructor
   FGThruster(FGFDMExec *FDMExec);
+  FGThruster(FGFDMExec *FDMExec, FGConfigFile *Eng_cfg );
   /// Destructor
   virtual ~FGThruster();
 
   enum eType {ttNozzle, ttRotor, ttPropeller};
 
-  virtual double Calculate(double) {return 0.0;}
+  virtual double Calculate(double Thrust) { vFn(1)=Thrust; return 0.0; }
   void SetName(string name) {Name = name;}
   void SetThrusterNumber(int nn) {ThrusterNumber = nn;}
   virtual void SetRPM(double rpm) {};

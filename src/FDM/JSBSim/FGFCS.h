@@ -645,7 +645,6 @@ private:
   void Debug(int from);
 };
 
-#include "FGState.h"
 
 #endif
 

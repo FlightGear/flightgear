@@ -42,15 +42,7 @@ INCLUDES
 
 #include "FGFDMExec.h"
 #include "FGJSBBase.h"
-#include "FGRotation.h"
-#include "FGAtmosphere.h"
-#include "FGState.h"
-#include "FGFCS.h"
-#include "FGAircraft.h"
-#include "FGTranslation.h"
-#include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
+#include "FGInitialCondition.h"
 
 #define ID_TRIMAXIS "$Id$"
 
@@ -67,6 +59,8 @@ const string ControlNames[14]= { "Throttle","Sideslip","Angle of Attack",
                                  "Heading"
                                };
 
+class FGInitialCondition;
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -78,7 +72,9 @@ enum Control { tThrottle, tBeta, tAlpha, tElevator, tAileron, tRudder, tAltAGL,
 class FGTrimAxis : public FGJSBBase
 {
 public:
-  FGTrimAxis(FGFDMExec* fdmex, FGInitialCondition *ic, State st,
+  FGTrimAxis(FGFDMExec* fdmex, 
+             FGInitialCondition *ic, 
+             State st,
              Control ctrl );
   ~FGTrimAxis();
 

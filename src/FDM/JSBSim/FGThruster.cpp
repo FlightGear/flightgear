@@ -55,6 +55,16 @@ FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec),
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+FGThruster::FGThruster(FGFDMExec *FDMExec, 
+                       FGConfigFile *Eng_cfg ): FGForce(FDMExec) {
+   ThrusterNumber=0;                   
+   SetTransformType(FGForce::tCustom);
+   Name=Eng_cfg->GetValue();
+   Debug(0);
+}   
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 FGThruster::~FGThruster()
 {
   Debug(1);

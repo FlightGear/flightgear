@@ -252,7 +252,7 @@ public:
   inline speedset GetSpeedSet(void) { return lastSpeedSet; }
   inline windset GetWindSet(void) { return lastWindSet; }
   
-  bool Load(string acpath, string acname, string rstname);
+  bool Load(string rstname, bool useStoredPath = true );
   
   void bind(void);
   void unbind(void);

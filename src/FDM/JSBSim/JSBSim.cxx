@@ -87,7 +87,7 @@ FGJSBsim::FGJSBsim( double dt )
     Aerodynamics    = fdmex->GetAerodynamics();
     GroundReactions = fdmex->GetGroundReactions(); 
     
-    fgic=new FGInitialCondition(fdmex);
+    fgic=fdmex->GetIC();
     needTrim=true;
   
     SGPath aircraft_path( globals->get_fg_root() );
@@ -231,7 +231,7 @@ void FGJSBsim::init() {
     copy_to_JSBsim();
     
 
-    fdmex->RunIC(fgic); //loop JSBSim once w/o integrating
+    fdmex->RunIC(); //loop JSBSim once w/o integrating
     copy_from_JSBsim(); //update the bus
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  Initialized JSBSim with:" );
@@ -315,7 +315,7 @@ FGJSBsim::update( double dt ) {
         fgic->SetTerrainAltitudeFtIC( cur_fdm_state->get_ground_elev_ft() );
         do_trim();
       } else {
-        fdmex->RunIC(fgic);  //apply any changes made through the set_ functions
+        fdmex->RunIC();  //apply any changes made through the set_ functions
       }
       needTrim = false;  
     }    
@@ -756,9 +756,9 @@ void FGJSBsim::do_trim(void) {
         FGTrim *fgtrim;
         if( fgGetBool("/sim/startup/onground") ) {
             fgic->SetVcalibratedKtsIC(0.0);
-            fgtrim=new FGTrim(fdmex,fgic,tGround);
+            fgtrim=new FGTrim(fdmex,tGround);
         } else {
-            fgtrim=new FGTrim(fdmex,fgic,tLongitudinal);
+            fgtrim=new FGTrim(fdmex,tLongitudinal);
         }
         if( !fgtrim->DoTrim() ) {
             fgtrim->Report();
