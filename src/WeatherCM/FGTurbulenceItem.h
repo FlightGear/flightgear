@@ -36,6 +36,8 @@ HISTORY
 				suggestion
 19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
 				and lots of wee code cleaning
+21.12.1999 Christian Mayer	Added a fix for compatibility to gcc 2.8 which
+				suggested by Oliver Delise
 *****************************************************************************/
 
 /****************************************************************************/
@@ -68,6 +70,12 @@ HISTORY
 class FGTurbulenceItem;
 FGTurbulenceItem operator-(const FGTurbulenceItem& arg);
 
+#if ( __GNU_C__ == 2 && __GNU_MAJOR__ < 9 )
+#  define const_sgVec3 const sgVec3
+#else
+#  define const_sgVec3 const sgVec3&
+#endif
+
 /****************************************************************************/
 /* CLASS DECLARATION							    */
 /****************************************************************************/
@@ -78,7 +86,7 @@ private:
 
 protected:
 public:
-    FGTurbulenceItem(const sgVec3& v)	{ sgCopyVec3(value, v);}
+    FGTurbulenceItem(const_sgVec3 v)	{ sgCopyVec3(value, v);}
     FGTurbulenceItem()			{ sgZeroVec3(value);   }
 
     void          getValue(sgVec3 ret) const { sgCopyVec3(ret, value); };

@@ -32,6 +32,8 @@ HISTORY
 18.10.1999 Christian Mayer	Created
 19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
 				and lots of wee code cleaning
+21.12.1999 Christian Mayer	Added a fix for compatibility to gcc 2.8 which
+				suggested by Oliver Delise
 *****************************************************************************/
 
 /****************************************************************************/
@@ -48,12 +50,18 @@ HISTORY
 /****************************************************************************/
 /* DEFINES								    */
 /****************************************************************************/
+#if ( __GNU_C__ == 2 && __GNU_MAJOR__ < 9 )
+#  define const_sgVec2 const sgVec2
+#else
+#  define const_sgVec2 const sgVec2&
+#endif
+
 struct sgVec2Wrap
 {
     sgVec2 p;
 
     sgVec2Wrap();
-    sgVec2Wrap( const sgVec2& src ) { sgCopyVec2( p, src ); }
+    sgVec2Wrap( const_sgVec2 src ) { sgCopyVec2( p, src ); }
 };
 
 #endif /*FGWeatherVectorWrap_H*/
