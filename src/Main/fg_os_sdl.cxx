@@ -70,6 +70,7 @@ void fgOSOpenWindow(int w, int h, int bpp,
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) == -1)
         throw sg_throwable(string("Failed to initialize SDL: ")
                            + SDL_GetError());
+    atexit(SDL_Quit);
 
     SDL_WM_SetCaption("FlightGear", "FlightGear");
 
@@ -175,12 +176,9 @@ static void handleKey(int key, int raw, int keyup)
         (*KeyHandler)(key, keymod, CurrentMouseX, CurrentMouseY);
 }
 
-// FIXME: need to export this and get the rest of FlightGear to use
-// it, the SDL hook is required to do things like reset the video
-// mode and key repeat.  Integrate with existing fgExit() in util.cxx.
+// FIXME: Integrate with existing fgExit() in util.cxx.
 void fgOSExit(int code)
 {
-    SDL_Quit();
     exit(code);
 }
 
@@ -341,7 +339,7 @@ void fgSetMouseCursor(int cursor)
         return;
     }
     SDL_ShowCursor(SDL_ENABLE);
-    for(int i=0; i<NCURSORS; i++) {
+    for(unsigned int i=0; i<NCURSORS; i++) {
         if(cursor == cursors[i].name) {
             CurrentMouseCursor = cursor;
             SDL_SetCursor(cursors[i].sdlCursor);
@@ -361,8 +359,7 @@ int fgGetMouseCursor()
 static void initCursors()
 {
     unsigned char mask[128], img[128];
-    int i=0;
-    for(int i=0; i<NCURSORS; i++) {
+    for(unsigned int i=0; i<NCURSORS; i++) {
         if(cursors[i].name == MOUSE_CURSOR_NONE) break;
         for(int j=0; j<128; j++) mask[j] = img[j] = 0;
         for(int y=0; y<cursors[i].h; y++) {
