@@ -75,7 +75,7 @@ void FGAIMgr::init() {
 	path_str = dir + "\\*.*";
 	
 	if ( ( hfile = _findfirst( path.c_str(), &de ) ) == -1 ) {
-		cout << "cannot open directory " << dir << "\n";
+		SG_LOG(SG_ATC, SG_WARN, "cannot open directory " << dir);
 	} else {		
 		// load all .taxi files
 		do {
@@ -83,7 +83,6 @@ void FGAIMgr::init() {
 			pos = file.find(".");
 			ext = file.substr(pos + 1);
 			if(ext == "taxi") {
-				cout << "TAXI FILE FOUND!!!\n";
 				f_ident = file.substr(0, pos);
 				FGAirport a;
 				if(dclFindAirportID(f_ident, &a)) {
@@ -96,7 +95,7 @@ void FGAIMgr::init() {
 						apts->push_back(f_ident);
 						airports[idx] = apts;
 					}
-					cout << "Mapping " << f_ident << " to bucket " << idx << '\n'; 
+					SG_LOG(SG_ATC, SG_BULK, "Mapping " << f_ident << " to bucket " << idx); 
 				}
 			}
 		} while ( _findnext( hfile, &de ) == 0 );
@@ -107,19 +106,14 @@ void FGAIMgr::init() {
     struct dirent *de;
 
     if ( (d = opendir( dir.c_str() )) == NULL ) {
-		cout << "cannot open directory " << dir << "\n";
+		SG_LOG(SG_ATC, SG_WARN, "cannot open directory " << dir);
 	} else {
-		cout << "Opened directory " << dir << " OK :-)\n";
-		cout << "Contents are:\n";
 		// load all .taxi files
 		while ( (de = readdir(d)) != NULL ) {
 			file = de->d_name;
 			pos = file.find(".");
-			cout << file << '\n';
-
 			ext = file.substr(pos + 1);
 			if(ext == "taxi") {
-				cout << "TAXI FILE FOUND!!!\n";
 				f_ident = file.substr(0, pos);
 				FGAirport a;
 				if(dclFindAirportID(f_ident, &a)) {
@@ -132,7 +126,7 @@ void FGAIMgr::init() {
 						apts->push_back(f_ident);
 						airports[idx] = apts;
 					}
-					cout << "Mapping " << f_ident << " to bucket " << idx << '\n'; 
+					SG_LOG(SG_ATC, SG_BULK, "Mapping " << f_ident << " to bucket " << idx);
 				}
 			}
 		}		
