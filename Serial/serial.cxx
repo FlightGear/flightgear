@@ -67,7 +67,7 @@ bool fgSERIAL::open_port(const string& device) {
 	return false;
     }
 
-    cfmakeraw( &config );
+    // cfmakeraw( &config );
 
     // cout << "config.c_iflag = " << config.c_iflag << endl;
 
@@ -183,6 +183,9 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.5  1998/11/25 01:33:23  curt
+// Remove call to cfmakeraw()
+//
 // Revision 1.4  1998/11/23 21:47:00  curt
 // Cygnus tools compatibility tweaks.
 //
