@@ -1,8 +1,10 @@
-if ENABLE_CHEROKEE
-AIRCRAFT_MODEL = cherokee_aero.c cherokee_engine.c cherokee_gear.c cherokee_init.c navion_init.h
+if ENABLE_C172
+AIRCRAFT_MODEL = c172_aero.c c172_engine.c c172_gear.c c172_init.c navion_init.h
 else
 AIRCRAFT_MODEL = navion_aero.c navion_engine.c navion_gear.c navion_init.c navion_init.h
 endif
+
+# AIRCRAFT_MODEL = cherokee_aero.c cherokee_engine.c cherokee_gear.c cherokee_init.c navion_init.h
 
 noinst_LIBRARIES = libLaRCsim.a
 
