@@ -24,10 +24,10 @@
 //
 
 
+#include <sys/types.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
 
 #ifdef HAVE_STDLIB_H
 #  include <stdlib.h>
@@ -108,6 +108,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.4  1998/06/27 16:55:24  curt
+// Changed include order for <sys/types.h>
+//
 // Revision 1.3  1998/04/26 05:02:06  curt
 // Added #ifdef HAVE_STDLIB_H
 //
