@@ -307,14 +307,15 @@ FGExternalNet::FGExternalNet( double dt, string host, int dop, int dip, int cp )
 	valid = false;
     }
 
-    // we want to block for incoming data in order to syncronize frame
-    // rates.
-    data_server.setBlocking( false /* don't block while testing */ );
-    // data_server.setBlocking( true /* don't block while testing */ );
+    // disable blocking
+    data_server.setBlocking( false );
+
+    // allowed to read from a broadcast addr
+    data_server.setBroadcast( true );
 
     // if we bind to fdm_host = "" then we accept messages from
     // anyone.
-    if ( data_server.bind( fdm_host.c_str(), data_in_port ) == -1 ) {
+    if ( data_server.bind( "", data_in_port ) == -1 ) {
         printf("error binding to port %d\n", data_in_port);
 	valid = false;
     }
@@ -361,9 +362,13 @@ void FGExternalNet::init() {
     new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
     netChannel::loop(0);
 
+    SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
+
     sprintf( cmd, "/reset?value=ground" );
     new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
     netChannel::loop(0);
+
+    SG_LOG( SG_IO, SG_INFO, "Remote FDM init() finished." );
 }
 
 
@@ -387,7 +392,7 @@ void FGExternalNet::update( double dt ) {
     // Read next set of FDM data (blocking enabled to maintain 'sync')
     length = sizeof(fdm);
     while ( (result = data_server.recv( (char *)(& fdm), length, 0)) >= 0 ) {
-	SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
+	SG_LOG( SG_IO, SG_INFO, "Success reading data." );
 	net2global( &fdm );
     }
 }
