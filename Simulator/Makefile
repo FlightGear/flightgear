@@ -64,12 +64,12 @@ clobber:
 source-tar: clean
 	(cd ../..; \
 	$(TAR) cvzf source-$(FG_VERSION).tar.gz FlightGear/fgtop \
-	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Thanks)
+	FlightGear/COPYING FlightGear/Docs FlightGear/Src)
 
 source-zip: clean
 	(cd ../..; \
 	zip -r source-$(FG_VERSION).zip FlightGear/fgtop \
-	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Thanks)
+	FlightGear/COPYING FlightGear/Docs FlightGear/Src)
 
 scenery-tar:
 	(cd ../..; \
@@ -80,7 +80,7 @@ scenery-zip:
 	zip -r scenery-$(FG_VERSION).zip FlightGear/Scenery)
 
 bin-tar: all
-	cp Main/fg-$(FG_VERSION) README runfg ..
+	cp Main/fg-$(FG_VERSION) README Thanks runfg ..
 	$(RM) -f ../fg$(FG_VERSION_MAJOR)
 	$(LN) ../fg-$(FG_VERSION) ../fg$(FG_VERSION_MAJOR)
 	(cd ../..; \
@@ -90,7 +90,8 @@ bin-tar: all
 	FlightGear/Thanks)
 
 bin-zip: 
-	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll README runfg.bat ..
+	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll README Thanks \
+	runfg.bat ..
 	(cd ../..; \
 	zip -r bin-$(FG_VERSION).zip FlightGear/fgtop \
 	FlightGear/fg$(FG_VERSION_MAJOR).exe FlightGear/runfg.bat \
@@ -100,6 +101,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.38  1998/01/22 22:03:22  curt
+# Tweaks.
+#
 # Revision 1.37  1998/01/19 19:42:58  curt
 # More misc. tweaks for rpk make merge.
 #
