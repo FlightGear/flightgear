@@ -47,10 +47,6 @@ class FGAIEntity {
 
 public:
 
-    // We need some way for this class to display its radio transmissions if on the 
-    // same frequency and in the vicinity of the user's aircraft
-    // This may need to be done independently of ATC eg CTAF
-
     virtual ~FGAIEntity();
 
     // Run the internal calculations
@@ -59,9 +55,6 @@ public:
 protected:
 
     Point3D pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
-    //double lat;		//WGS84
-    //double lon;		//WGS84
-    //double elev;	//Meters
     double hdg;		//True heading in degrees
     double roll;	//degrees
     double pitch;	//degrees
@@ -69,15 +62,7 @@ protected:
     char* model_path;	//Path to the 3D model
     FGModelPlacement aip;
 
-    //ssgEntity* model;
-    //ssgTransform* position;
-
     void Transform();
-
-    //void WorldCoordinate(sgCoord *obj_pos, Point3D center);
-
-    //void FastWorldCoordinate(sgCoord *obj_pos, Point3D center);
-
 };
 
 #endif  // _FG_AIEntity_HXX
