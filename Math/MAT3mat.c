@@ -5,15 +5,14 @@
  * This file contains routines that operate solely on matrices.
  * -------------------------------------------------------------------------*/
 
+#ifdef WIN32
+#  include <memory.h>      /* required for memset() and memcpy() */
+#endif
+
 #include <string.h>
 #include <Math/mat3defs.h>
 
-#ifdef WIN32
-#  include <memory.h>      /* required for memset() and memcpy() */
-#elif __MWERKS__
-#  include <string.h>      /* MetroWerks CodeWarrior: memset() & memcpy() */
-#endif
-
+#define USE_MEM
 
 /* #include "macros.h" */
 
@@ -33,8 +32,8 @@ MAT3identity (register MAT3mat mat)
 {
    register int i;
 
-#ifdef WIN32
-   memset(mat,0x00, sizeof(MAT3mat));
+#ifdef USE_MEM /* WIN32 */
+   memset(mat, 0x00, sizeof(MAT3mat));
 #else
    bzero (mat, sizeof(MAT3mat));
 #endif
@@ -50,7 +49,7 @@ MAT3identity (register MAT3mat mat)
 void
 MAT3zero (MAT3mat mat)
 {
-#ifdef WIN32
+#ifdef USE_MEM /* WIN32 */
    memset(mat,0x00, sizeof(MAT3mat));
 #else
    bzero (mat, sizeof(MAT3mat));
@@ -65,7 +64,7 @@ MAT3zero (MAT3mat mat)
 void
 MAT3copy(MAT3mat to, MAT3mat from)
 {
-#ifdef WIN32
+#ifdef USE_MEM /* WIN32 */
     memcpy(to, from, sizeof(MAT3mat));
 #else
     bcopy(from, to, sizeof(MAT3mat));

@@ -38,6 +38,13 @@
 #  endif
 #endif
 
+#ifdef __SUNPRO_CC
+    extern "C" {
+	long int random(void);
+	void srandom(unsigned int seed);
+    }
+#endif
+
 
 /* Seed the random number generater with time() so we don't see the
  * same sequence every time */
@@ -63,10 +70,16 @@ double fg_random(void) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/27 00:47:59  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.4  1998/02/03 23:20:28  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.3  1998/01/27 00:47:59  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.2  1997/12/30 20:47:48  curt
  * Integrated new event manager with subsystem initializations.
  *

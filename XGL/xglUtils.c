@@ -12,6 +12,8 @@
 #  include <unistd.h>
 #endif
 
+#include <string.h>
+
 #include "xgl.h"
 
 #ifndef TRUE
