@@ -34,6 +34,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_types.hxx>
+#include <simgear/misc/props.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
@@ -74,6 +75,131 @@ bool FGBFI::_needReinit = false;
 ////////////////////////////////////////////////////////////////////////
 // Local functions
 ////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Initialize the BFI by binding its functions to properties.
+ *
+ * TODO: perhaps these should migrate into the individual modules
+ * (i.e. they should register themselves).
+ */
+void
+FGBFI::init ()
+{
+  FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI init");
+				// Simulation
+  current_properties.tieInt("/sim/flight-model",
+			    getFlightModel, setFlightModel);
+//   current_properties.tieString("/sim/aircraft",
+// 			       getAircraft, setAircraft);
+  // TODO: timeGMT
+  current_properties.tieBool("/sim/hud/visibility",
+			     getHUDVisible, setHUDVisible);
+  current_properties.tieBool("/sim/panel/visibility",
+			     getPanelVisible, setPanelVisible);
+
+				// Position
+  current_properties.tieDouble("/position/latitude",
+				getLatitude, setLatitude);
+  current_properties.tieDouble("/position/longitude",
+			       getLongitude, setLongitude);
+  current_properties.tieDouble("/position/altitude",
+			       getAltitude, setAltitude);
+  current_properties.tieDouble("/position/altitude-agl",
+			       getAGL, 0);
+
+				// Orientation
+  current_properties.tieDouble("/orientation/heading",
+			       getHeading, setHeading);
+  current_properties.tieDouble("/orientation/heading-magnetic",
+			       getHeadingMag, 0);
+  current_properties.tieDouble("/orientation/pitch",
+			       getPitch, setPitch);
+  current_properties.tieDouble("/orientation/roll",
+			       getRoll, setRoll);
+
+				// Velocities
+  current_properties.tieDouble("/velocities/airspeed",
+			       getAirspeed, 0);
+  current_properties.tieDouble("/velocities/side-slip",
+			       getSideSlip, 0);
+  current_properties.tieDouble("/velocities/vertical-speed",
+			       getVerticalSpeed, 0);
+  current_properties.tieDouble("/velocities/speed-north",
+			       getSpeedNorth, setSpeedNorth);
+  current_properties.tieDouble("/velocities/speed-east",
+			       getSpeedEast, setSpeedEast);
+  current_properties.tieDouble("/velocities/speed-down",
+			       getSpeedDown, setSpeedDown);
+
+				// Controls
+  current_properties.tieDouble("/controls/throttle",
+			       getThrottle, setThrottle);
+  current_properties.tieDouble("/controls/flaps",
+			       getFlaps, setFlaps);
+  current_properties.tieDouble("/controls/aileron",
+			       getAileron, setAileron);
+  current_properties.tieDouble("/controls/rudder",
+			       getRudder, setRudder);
+  current_properties.tieDouble("/controls/elevator",
+			       getElevator, setElevator);
+  current_properties.tieDouble("/controls/elevator-trim",
+			       getElevatorTrim, setElevatorTrim);
+  current_properties.tieDouble("/controls/brake",
+			       getBrake, setBrake);
+
+				// Autopilot
+  current_properties.tieBool("/autopilot/locks/altitude",
+			     getAPAltitudeLock, setAPAltitudeLock);
+  current_properties.tieDouble("/autopilot/settings/altitude",
+			       getAPAltitude, setAPAltitude);
+  current_properties.tieBool("/autopilot/locks/heading",
+			     getAPHeadingLock, setAPHeadingLock);
+  current_properties.tieDouble("/autopilot/settings/heading-magnetic",
+			       getAPHeadingMag, setAPHeadingMag);
+  current_properties.tieBool("/autopilot/locks/nav1",
+			     getAPNAV1Lock, setAPNAV1Lock);
+
+				// Radio navigation
+  current_properties.tieDouble("/radios/nav1/frequencies/selected",
+			       getNAV1Freq, setNAV1Freq);
+  current_properties.tieDouble("/radios/nav1/frequencies/standby",
+			       getNAV1AltFreq, setNAV1AltFreq);
+  current_properties.tieDouble("/radios/nav1/radials/actual",
+			       getNAV1Radial, 0);
+  current_properties.tieDouble("/radios/nav1/radials/selected",
+			       getNAV1SelRadial, setNAV1SelRadial);
+  current_properties.tieDouble("/radios/nav1/dme/distance",
+			       getNAV1DistDME, 0);
+  current_properties.tieBool("/radios/nav1/in-range",
+			     getNAV1InRange, 0);
+  current_properties.tieBool("/radios/nav1/dme/in-range",
+			     getNAV1DMEInRange, 0);
+			       
+  current_properties.tieDouble("/radios/nav2/frequencies/selected",
+			       getNAV2Freq, setNAV2Freq);
+  current_properties.tieDouble("/radios/nav2/frequencies/standby",
+			       getNAV2AltFreq, setNAV2AltFreq);
+  current_properties.tieDouble("/radios/nav2/radials/actual",
+			       getNAV2Radial, 0);
+  current_properties.tieDouble("/radios/nav2/radials/selected",
+			       getNAV2SelRadial, setNAV2SelRadial);
+  current_properties.tieDouble("/radios/nav2/dme/distance",
+			       getNAV2DistDME, 0);
+  current_properties.tieBool("/radios/nav2/in-range",
+			     getNAV2InRange, 0);
+  current_properties.tieBool("/radios/nav2/dme/in-range",
+			     getNAV2DMEInRange, 0);
+
+  current_properties.tieDouble("/radios/adf/frequencies/selected",
+			       getADFFreq, setADFFreq);
+  current_properties.tieDouble("/radios/adf/frequencies/standby",
+			       getADFAltFreq, setADFAltFreq);
+  current_properties.tieDouble("/radios/adf/rotation",
+			       getADFRotation, setADFRotation);
+
+  FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI init");
+}
 
 
 /**
@@ -134,6 +260,7 @@ FGBFI::reinit ()
 
   setTargetAirport("");
   cout << "Target airport is " << current_options.get_airport_id() << endl;
+
   fgReInitSubsystems();
 
 				// FIXME: this is wrong.
@@ -393,9 +520,10 @@ FGBFI::getAGL ()
 void
 FGBFI::setAltitude (double altitude)
 {
-  current_options.set_altitude(altitude * FEET_TO_METER);
-  current_aircraft.fdm_state->set_Altitude(altitude);
-  needReinit();
+  fgFDMForceAltitude(getFlightModel(), altitude * FEET_TO_METER);
+//   current_options.set_altitude(altitude * FEET_TO_METER);
+//   current_aircraft.fdm_state->set_Altitude(altitude);
+//   needReinit();
 }
 
 

@@ -92,6 +92,7 @@
 #include "fg_io.hxx"
 #include "options.hxx"
 #include "views.hxx"
+#include "bfi.hxx"
 
 #if defined(FX) && defined(XMESA)
 #include <GL/xmesa.h>
@@ -581,6 +582,9 @@ bool fgInitSubsystems( void ) {
 
     // Initialize the 2D panel.
     current_panel = fgCreateSmallSinglePropPanel(0, 0, 1024, 768);
+
+    // Initialize the BFI
+    FGBFI::init();
 
     FG_LOG( FG_GENERAL, FG_INFO, endl);
 

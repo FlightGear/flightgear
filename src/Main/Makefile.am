@@ -64,10 +64,9 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Objects/libObjects.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
-	$(top_builddir)/src/Sky/libSky.a \
 	$(top_builddir)/src/Joystick/libJoystick.a \
 	$(SERIAL_LIBS) \
-	-lsgscreen -lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc \
+	-lsgsky -lsgscreen -lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc \
 	-lplibpu -lplibfnt -lplibssg -lplibsg \
 	-lmk4 -lz \
 	$(opengl_LIBS) \

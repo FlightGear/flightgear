@@ -46,6 +46,9 @@ class FGBFI
 {
 public:
 
+				// Initialize before first use.
+  static void init ();
+
 				// Reinit if necessary.
   static void update ();
 

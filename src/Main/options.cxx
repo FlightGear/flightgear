@@ -41,6 +41,7 @@ bool global_fullscreen = true;
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/props.hxx>
 
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -821,6 +822,18 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg.find( "--net-id=") != string::npos ) {
 	net_id = arg.substr( 9 );
 #endif
+    } else if ( arg.find( "--prop:" ) == 0 ) {
+        string assign = arg.substr(7);
+	int pos = assign.find('=');
+	if (pos == arg.npos || pos == 0) {
+	    FG_LOG(FG_GENERAL, FG_ALERT, "Bad property assignment: " << arg);
+	    return FG_OPTIONS_ERROR;
+	}
+	string name = assign.substr(0, pos);
+	string value = assign.substr(pos + 1);
+	current_properties.setStringValue(name.c_str(), value);
+	FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
+	       << name << " to \"" << value << '"');
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;

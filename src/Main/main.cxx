@@ -70,6 +70,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/fg_random.h>
 #include <simgear/misc/fgpath.hxx>
+#include <simgear/sky/sky.hxx>
 
 #include <Include/general.hxx>
 
@@ -89,7 +90,6 @@
 #endif
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Sky/sky.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
