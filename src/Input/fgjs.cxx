@@ -26,7 +26,6 @@
 #include STL_FSTREAM
 #include STL_STRING
 
-#include <jssuper.h>
 #include <jsinput.h>
 
 SG_USING_STD(string);
@@ -119,7 +118,7 @@ int main(void) {
   jsSuper *jss=new jsSuper();
   jsInput *jsi=new jsInput(jss);
   jsi->displayValues(false);
-  int i;
+  // int i;
   int control=0;
   
   

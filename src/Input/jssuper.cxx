@@ -19,9 +19,6 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-#include <string.h>		// plib/js.h should really include this !!!!!!
-#include <plib/js.h>
-
 #include <jssuper.h>
 
 
@@ -51,7 +48,7 @@ jsSuper::jsSuper(void) {
 
 
 int jsSuper::nextJoystick(void) { 
-  int i;
+  // int i;
   if(!activeJoysticks) return 0;
   if(currentJoystick == last ) return 0; 
   currentJoystick++;
@@ -60,7 +57,7 @@ int jsSuper::nextJoystick(void) {
 }    
         
 int jsSuper::prevJoystick(void) { 
-  int i;
+  // int i;
   if(!activeJoysticks) return 0; 
   if(currentJoystick == first ) return 0; 
   currentJoystick--;

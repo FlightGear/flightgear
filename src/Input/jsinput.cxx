@@ -18,11 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-#include <jssuper.h>
 #include <jsinput.h>
-#include <plib/js.h>
-#include <plib/ul.h>
-
 
 jsInput::jsInput(jsSuper *j) {
   jss=j;
@@ -38,7 +34,7 @@ int jsInput::getInput(void){
       bool gotit=false;
       
       float delta;
-      int i,current_button=0,button_bits;       
+      int i, current_button = 0, button_bits = 0;
 
       joystick=axis=button=-1;
       
@@ -113,5 +109,7 @@ int jsInput::getInput(void){
           } 
         }    
       } 
+
+      return 0;
 }
   

@@ -24,7 +24,6 @@
 #define _JSINPUT_H
 
 #include <jssuper.h>
-#include <plib/js.h>
 
 class jsInput {
   private:

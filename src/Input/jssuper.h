@@ -21,6 +21,9 @@
 #ifndef _JSSUPER_H
 #define _JSSUPER_H
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
