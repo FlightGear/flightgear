@@ -95,7 +95,12 @@ bool FGNativeFDM::open() {
 
     set_enabled( true );
 
+    // initialize time stamp to something reasonably current
+    last_time.stamp();
+
+    // Is this really needed here ????
     cur_fdm_state->_set_Sea_level_radius( SG_EQUATORIAL_RADIUS_FT );
+
     return true;
 }
 
