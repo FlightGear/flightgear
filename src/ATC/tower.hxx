@@ -38,6 +38,7 @@ SG_USING_STD(ios);
 //#include "ATCmgr.hxx"
 #include "ground.hxx"
 #include "ATCProjection.hxx"
+#include "AIPlane.hxx"
 
 //DCL - a complete guess for now.
 #define FG_TOWER_DEFAULT_RANGE 30
@@ -46,20 +47,9 @@ enum tower_traffic_type {
 	CIRCUIT,
 	INBOUND,
 	OUTBOUND,
+	TTT_UNKNOWN,	// departure, but we don't know if for circuits or leaving properly
 	STRAIGHT_IN
 	// Umm - what's the difference between INBOUND and STRAIGHT_IN ?
-};
-
-// Much simplified compared to AILocalTraffic
-enum TwrPatternLeg {
-	TWR_LANDING_ROLL,
-	TWR_FINAL,
-	TWR_BASE,
-	TWR_DOWNWIND,
-	TWR_CROSSWIND,
-	TWR_CLIMBOUT,
-	TWR_TAKEOFF_ROLL,
-	TWR_UNKNOWN
 };
 
 // Structure for holding details of a plane under tower control.
@@ -73,7 +63,7 @@ public:
 	TowerPlaneRec(Point3D pt);
 	TowerPlaneRec(PlaneRec p, Point3D pt);
 	
-	FGAIEntity* planePtr;	// This might move to the planeRec eventually
+	FGAIPlane* planePtr;	// This might move to the planeRec eventually
 	PlaneRec plane;
 	
 	Point3D pos;
@@ -97,7 +87,7 @@ public:
 	tower_traffic_type opType;
 	
 	// Whereabouts in circuit if doing circuits
-	TwrPatternLeg leg;
+	PatternLeg leg;
 	
 	bool isUser;	// true if this plane is the user
 };
@@ -130,8 +120,8 @@ public:
 	void ReportRunwayVacated(string ID);
 	void ReportReadyForDeparture(string ID);
 	
-	// Contact tower when at a hold short for departure
-	void ContactAtHoldShort(PlaneRec plane, FGAIEntity* requestee, tower_traffic_type operation);
+	// Contact tower when at a hold short for departure - for now we'll assume plane - maybe vehicles might want to cross runway eventually?
+	void ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_traffic_type operation);
 	
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.
@@ -230,10 +220,17 @@ private:
 	string trans_ident;		// transmitted ident
 	bool tower_failed;		// tower failed?
 	
-    // Pointers to current users position
+    // Pointers to current users position and orientation
     SGPropertyNode* user_lon_node;
     SGPropertyNode* user_lat_node;
     SGPropertyNode* user_elev_node;
+	SGPropertyNode* user_hdg_node;
+	
+	// Details of the general traffic flow etc in the circuit
+	double crosswind_leg_pos;	// Distance from threshold crosswind leg is being turned to in meters (actual operation - *not* ideal circuit)
+	double downwind_leg_pos;	// Actual offset distance in meters from the runway that planes are flying the downwind leg
+	// Currently not sure whether the above should be always +ve or just take the natural orthopos sign (+ve for RH circuit, -ve for LH).
+	double base_leg_pos;		// Actual offset distance from the threshold (-ve) that planes are turning to base leg.
 	
 	friend istream& operator>> ( istream&, FGTower& );
 };

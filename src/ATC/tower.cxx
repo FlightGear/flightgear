@@ -28,6 +28,7 @@
 #include "ATCmgr.hxx"
 #include "ATCutils.hxx"
 #include "commlist.hxx"
+#include "AILocalTraffic.hxx"
 
 SG_USING_STD(cout);
 
@@ -42,7 +43,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
-leg(TWR_UNKNOWN),
+opType(TTT_UNKNOWN),
 isUser(false)
 {
 	plane.callsign = "UNKNOWN";
@@ -57,7 +58,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
-leg(TWR_UNKNOWN),
+opType(TTT_UNKNOWN),
 isUser(false)
 {
 	plane = p;
@@ -72,7 +73,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
-leg(TWR_UNKNOWN),
+opType(TTT_UNKNOWN),
 isUser(false)
 {
 	plane.callsign = "UNKNOWN";
@@ -88,7 +89,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
-leg(TWR_UNKNOWN),
+opType(TTT_UNKNOWN),
 isUser(false)
 {
 	plane = p;
@@ -126,6 +127,7 @@ void FGTower::Init() {
 	user_lon_node = fgGetNode("/position/longitude-deg", true);
 	user_lat_node = fgGetNode("/position/latitude-deg", true);
 	user_elev_node = fgGetNode("/position/altitude-ft", true);
+	user_hdg_node = fgGetNode("/orientation/heading-deg", true);
 	
 	// Need some way to initialise rwyOccupied flag correctly if the user is on the runway and to know its the user.
 	// I'll punt the startup issue for now though!!!
@@ -186,7 +188,8 @@ void FGTower::Init() {
 		// Assume the user is started at the threshold ready to take-off
 		TowerPlaneRec* t = new TowerPlaneRec;
 		t->plane.callsign = "Charlie Foxtrot Sierra";	// C-FGFS !!! - fixme - this is a bit hardwired
-		t->opType = OUTBOUND;	// How do we determine if the user actually wants to do circuits?
+		t->opType = TTT_UNKNOWN;	// We don't know if the user wants to do circuits or a departure...
+		t->leg = TAKEOFF_ROLL;
 		t->isUser = true;
 		t->planePtr = NULL;
 		t->clearedToTakeOff = true;
@@ -195,105 +198,234 @@ void FGTower::Init() {
 }
 
 void FGTower::Update(double dt) {
+	static int ii = 0;	// Counter for spreading the load
 	//cout << "T" << flush;
-    // Each time step, what do we need to do?
-    // We need to go through the list of outstanding requests and acknowedgements
-    // and process at least one of them.
-    // We need to go through the list of planes under our control and check if
-    // any need to be addressed.
-    // We need to check for planes not under our control coming within our 
-    // control area and address if necessary.
-
+	// Each time step, what do we need to do?
+	// We need to go through the list of outstanding requests and acknowedgements
+	// and process at least one of them.
+	// We need to go through the list of planes under our control and check if
+	// any need to be addressed.
+	// We need to check for planes not under our control coming within our 
+	// control area and address if necessary.
+	
 	// TODO - a lot of the below probably doesn't need to be called every frame and should be staggered.
 	
 	// Sort the arriving planes
-
+	
 	// Calculate the eta of each plane to the threshold.
 	// For ground traffic this is the fastest they can get there.
 	// For air traffic this is the middle approximation.
-	doThresholdETACalc();
+	if(ii == 1) {
+		doThresholdETACalc();
+	}
 	
 	// Order the list of traffic as per expected threshold use and flag any conflicts
-	bool conflicts = doThresholdUseOrder();
+	if(ii == 2) {
+		bool conflicts = doThresholdUseOrder();
+	}
 	
 	// sortConficts() !!!
 	
 	// Do one plane from the hold list
-	if(holdList.size()) {
-		//cout << "A" << endl;
-		//cout << "*holdListItr = " << *holdListItr << endl;
-		if(holdListItr == holdList.end()) {
-			holdListItr = holdList.begin();
-		}
-		//cout << "*holdListItr = " << *holdListItr << endl;
-		//Process(*holdListItr);
-		TowerPlaneRec* t = *holdListItr;
-		//cout << "t = " << t << endl;
-		if(t->holdShortReported) {
-			//cout << "B" << endl;
-			double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
-			if(t->clearanceCounter > responseTime) {
-				//cout << "C" << endl;
-				if(t->nextOnRwy) {
-					//cout << "D" << endl;
-					if(rwyOccupied) {
-						//cout << "E" << endl;
-						// Do nothing for now - consider acknowloging hold short eventually
-					} else {
-						// Lets Roll !!!!
-						string trns = t->plane.callsign;
-						//if(departed plane < some threshold in time away) {
-						if(0) {		// FIXME
-							trns += " line up";
-							t->clearedToLineUp = true;
-							t->planePtr->RegisterTransmission(3);	// cleared to line-up
-						//} else if(arriving plane < some threshold away) {
-						} else if(0) {	// FIXME
-							trns += " cleared immediate take-off";
-							// TODO - add traffic is... ?
-							t->clearedToTakeOff = true;
-							t->planePtr->RegisterTransmission(4);	// cleared to take-off - TODO differentiate between immediate and normal take-off
+	if(ii == 4) {
+		if(holdList.size()) {
+			//cout << "A" << endl;
+			//cout << "*holdListItr = " << *holdListItr << endl;
+			if(holdListItr == holdList.end()) {
+				holdListItr = holdList.begin();
+			}
+			//cout << "*holdListItr = " << *holdListItr << endl;
+			//Process(*holdListItr);
+			TowerPlaneRec* t = *holdListItr;
+			//cout << "t = " << t << endl;
+			if(t->holdShortReported) {
+				//cout << "B" << endl;
+				double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
+				if(t->clearanceCounter > responseTime) {
+					//cout << "C" << endl;
+					if(t->nextOnRwy) {
+						//cout << "D" << endl;
+						if(rwyOccupied) {
+							//cout << "E" << endl;
+							// Do nothing for now - consider acknowloging hold short eventually
 						} else {
-							trns += " cleared for take-off";
-							// TODO - add traffic is... ?
-							t->clearedToTakeOff = true;
-							t->planePtr->RegisterTransmission(4);	// cleared to take-off
+							// Lets Roll !!!!
+							string trns = t->plane.callsign;
+							//if(departed plane < some threshold in time away) {
+								if(0) {		// FIXME
+									trns += " line up";
+									t->clearedToLineUp = true;
+									t->planePtr->RegisterTransmission(3);	// cleared to line-up
+									t->leg = TAKEOFF_ROLL;
+							//} else if(arriving plane < some threshold away) {
+								} else if(0) {	// FIXME
+									trns += " cleared immediate take-off";
+									// TODO - add traffic is... ?
+									t->clearedToTakeOff = true;
+									t->planePtr->RegisterTransmission(4);	// cleared to take-off - TODO differentiate between immediate and normal take-off
+									t->leg = TAKEOFF_ROLL;
+								} else {
+									trns += " cleared for take-off";
+									// TODO - add traffic is... ?
+									t->clearedToTakeOff = true;
+									t->planePtr->RegisterTransmission(4);	// cleared to take-off
+									t->leg = TAKEOFF_ROLL;
+								}
+								if(display) {
+									globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+								}
+								t->holdShortReported = false;
+								t->clearanceCounter = 0;
+								rwyList.push_back(t);
+								rwyOccupied = true;
+								holdList.erase(holdListItr);
+								holdListItr = holdList.begin();
 						}
-						if(display) {
-							globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
-						}
-						t->holdShortReported = false;
-						t->clearanceCounter = 0;
-						rwyList.push_back(t);
-						rwyOccupied = true;
-						holdList.erase(holdListItr);
-						holdListItr = holdList.begin();
+					} else {
+						// possibly tell him to hold and what position he is?
 					}
 				} else {
-					// possibly tell him to hold and what position he is?
+					t->clearanceCounter += (dt * holdList.size());
 				}
-			} else {
-				t->clearanceCounter += (dt * holdList.size());
-			}
-		}				
-		++holdListItr;
+			}				
+			++holdListItr;
+		}
 	}
 	
 	// Do the runway list - we'll do the whole runway list since it's important and there'll never be many planes on the rwy at once!!
-	if(rwyOccupied) {
-		if(!rwyList.size()) {
-			rwyOccupied = false;
-		} else {
-			rwyListItr = rwyList.begin();
-			TowerPlaneRec* t = *rwyListItr;
+	if(ii == 5) {
+		if(rwyOccupied) {
+			if(!rwyList.size()) {
+				rwyOccupied = false;
+			} else {
+				rwyListItr = rwyList.begin();
+				TowerPlaneRec* t = *rwyListItr;
+				if(t->isUser) {
+					bool on_rwy = OnActiveRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0));
+					// TODO - how do we find the position when it's not the user?
+					if(!on_rwy) {
+						if((t->opType == INBOUND) || (t->opType == STRAIGHT_IN)) {
+							rwyList.pop_front();
+							delete t;
+							// TODO - tell it to taxi / contact ground / don't delete it etc!
+						} else if(t->opType == OUTBOUND) {
+							depList.push_back(t);
+							rwyList.pop_front();
+						} else if(t->opType == CIRCUIT) {
+							circuitList.push_back(t);
+							rwyList.pop_front();
+						} else if(t->opType == TTT_UNKNOWN) {
+							depList.push_back(t);
+							circuitList.push_back(t);
+							rwyList.pop_front();
+						} else {
+							// HELP - we shouldn't ever get here!!!
+						}
+					}
+				} // else TODO figure out what to do when it's not the user
+			}
+		}
+	}
+	
+	// do the ciruit list
+	if(ii == 6) {
+		// Clear the constraints - we recalculate here.
+		base_leg_pos = 0.0;
+		downwind_leg_pos = 0.0;
+		crosswind_leg_pos = 0.0;
+		if(circuitList.size()) {
+			circuitListItr = circuitList.begin();	// TODO - at the moment we're constraining plane 2 based on plane 1 - this won't work for 3 planes in the circuit!!
+			TowerPlaneRec* t = *circuitListItr;
+			Point3D tortho = ortho.ConvertToLocal(t->pos);
 			if(t->isUser) {
-				bool on_rwy = OnActiveRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0));
-				// TODO - how do we find the position when it's not the user?
-				if(!on_rwy) {
-					rwyList.pop_front();
-					delete t;
+				// Need to figure out which leg he's on
+				double ho = GetAngleDiff_deg(user_hdg_node->getDoubleValue(), rwy.hdg);
+				// TODO FIXME - get the wind and convert this to track, or otherwise use track somehow!!!
+				// If it's gusty might need to filter the value, although we are leaving 30 degrees each way leeway!
+				if(abs(ho) < 30) {
+					// could be either takeoff, climbout or landing - check orthopos.y
+					if((tortho.y() < 0) || (t->leg == TURN4) || (t->leg == LANDING_ROLL)) {
+						t->leg = LANDING_ROLL;
+						//cout << "Landing_roll\n";
+					} else {
+						t->leg = CLIMBOUT;	// TODO - check elev wrt. apt elev to differentiate takeoff roll and climbout
+						//cout << "Climbout\n";
+					}
+				} else if(abs(ho) < 60) {
+					// turn1 or turn 4
+					// TODO - either fix or doublecheck this hack by looking at heading and pattern direction
+					if((t->leg == CLIMBOUT) || (t->leg == TURN1)) {
+						t->leg = TURN1;
+						//cout << "Turn1\n";
+					} else {
+						t->leg = TURN4;
+						//cout << "Turn4\n";
+					}
+				} else if(abs(ho) < 120) {
+					// crosswind or base
+					// TODO - either fix or doublecheck this hack by looking at heading and pattern direction
+					if((t->leg == TURN1) || (t->leg == CROSSWIND)) {
+						t->leg = CROSSWIND;
+						//cout << "Crosswind\n";
+					} else {
+						t->leg = BASE;
+						//cout << "Base\n";
+					}
+				} else if(abs(ho) < 150) {
+					// turn2 or turn 3
+					// TODO - either fix or doublecheck this hack by looking at heading and pattern direction
+					if((t->leg == CROSSWIND) || (t->leg == TURN2)) {
+						t->leg = TURN2;
+						//cout << "Turn2\n";
+					} else {
+						t->leg = TURN3;
+						//cout << "Turn3\n";
+					}
+				} else {
+					// downwind
+					t->leg = DOWNWIND;
+					//cout << "Downwind\n";
 				}
-			} // else TODO figure out what to do when it's not the user
+			} else {
+				t->leg = t->planePtr->GetLeg();
+			}
+			switch(t->leg) {
+			case FINAL:
+				// Base leg must be at least as far out as the plane is - actually possibly not necessary for separation, but we'll use that for now.
+				base_leg_pos = tortho.y();
+				break;
+			case TURN4:
+				// Fall through to base
+			case BASE:
+				base_leg_pos = tortho.y();
+				break;
+			case TURN3:
+				// Fall through to downwind
+			case DOWNWIND:
+				// Only have the downwind leg pos as turn-to-base constraint if more negative than we already have.
+				base_leg_pos = (tortho.y() < base_leg_pos ? tortho.y() : base_leg_pos);
+				downwind_leg_pos = tortho.x();		// Assume that a following plane can simply be constrained by the immediately in front downwind plane
+				break;
+			case TURN2:
+				// Fall through to crosswind
+			case CROSSWIND:
+				crosswind_leg_pos = tortho.y();
+				break;
+			case TURN1:
+				// Fall through to climbout
+			case CLIMBOUT:
+				// Only use current by constraint as largest
+				crosswind_leg_pos = (tortho.y() > crosswind_leg_pos ? tortho.x() : crosswind_leg_pos);
+				break;
+			case TAKEOFF_ROLL:
+				break;
+			case LEG_UNKNOWN:
+				break;
+			case LANDING_ROLL:
+				break;
+			default:
+				break;
+			}
 		}
 	}
 	
@@ -310,7 +442,12 @@ void FGTower::Update(double dt) {
 		}
 		ground->Update(dt);
 	}
-	//cout << "R " << flush;
+	
+	++ii;
+	// How big should ii get - ie how long should the update cycle interval stretch?
+	if(ii >= 15) {
+		ii = 0;
+	}
 }
 
 
@@ -448,11 +585,11 @@ void FGTower::doThresholdETACalc() {
 		//cout << "Doing ETA calc for " << tpr->plane.callsign << '\n';
 		if(tpr->opType == CIRCUIT) {
 			// It's complicated - depends on if base leg is delayed or not
-			if(tpr->leg == TWR_LANDING_ROLL) {
+			if(tpr->leg == LANDING_ROLL) {
 				tpr->eta = 0;
-			} else if(tpr->leg == TWR_FINAL) {
+			} else if((tpr->leg == FINAL) || (tpr->leg == TURN4)) {
 				tpr->eta = fabs(dist_out_m) / final_ias;
-			} else if(tpr->leg == TWR_BASE) {
+			} else if((tpr->leg == BASE) || (tpr->leg == TURN3)) {
 				tpr->eta = (fabs(dist_out_m) / final_ias) + (dist_across_m / circuit_ias);
 			} else {
 				// Need to calculate where base leg is likely to be
@@ -463,10 +600,10 @@ void FGTower::doThresholdETACalc() {
 				double nominal_dist_across_m = 1000;	// Hardwired value from AILocalTraffic
 				double nominal_cross_dist_out_m = 1000;	// Bit of a guess - AI plane turns to crosswind at 600ft agl.
 				tpr->eta = fabs(current_base_dist_out_m) / final_ias;	// final
-				if(tpr->leg == TWR_DOWNWIND) {
+				if((tpr->leg == DOWNWIND) || (tpr->leg == TURN2)) {
 					tpr->eta += dist_across_m / circuit_ias;
 					tpr->eta += fabs(current_base_dist_out_m - dist_out_m) / circuit_ias;
-				} else if(tpr->leg == TWR_CROSSWIND) {
+				} else if((tpr->leg == CROSSWIND) || (tpr->leg == TURN1)) {
 					tpr->eta += nominal_dist_across_m / circuit_ias;	// should we use the dist across of the previous plane if there is previous still on downwind?
 					tpr->eta += fabs(current_base_dist_out_m - nominal_cross_dist_out_m) / circuit_ias;
 					tpr->eta += (nominal_dist_across_m - dist_across_m) / circuit_ias;
@@ -491,7 +628,7 @@ bool FGTower::doThresholdUseOrder() {
 void FGTower::doCommunication() {
 }
 
-void FGTower::ContactAtHoldShort(PlaneRec plane, FGAIEntity* requestee, tower_traffic_type operation) {
+void FGTower::ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_traffic_type operation) {
 	// HACK - assume that anything contacting at hold short is new for now - FIXME LATER
 	TowerPlaneRec* t = new TowerPlaneRec;
 	t->plane = plane;
