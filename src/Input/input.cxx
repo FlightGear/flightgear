@@ -454,7 +454,7 @@ FGInput::_init_joystick ()
     jsJoystick * js = new jsJoystick(i);
     _joystick_bindings[i].js = js;
     if (js->notWorking()) {
-      SG_LOG(SG_INPUT, SG_WARN, "Joystick " << i << " not found");
+      SG_LOG(SG_INPUT, SG_DEBUG, "Joystick " << i << " not found");
       continue;
     } else {
       bool found_js = false;

@@ -267,7 +267,7 @@ void FGElectricalSystem::init () {
         SGPath config( globals->get_fg_root() );
         config.append( path_n->getStringValue() );
 
-        SG_LOG( SG_ALL, SG_ALERT, "Reading electrical system model from "
+        SG_LOG( SG_ALL, SG_INFO, "Reading electrical system model from "
                 << config.str() );
         try {
             readProperties( config.str(), config_props );
@@ -289,7 +289,7 @@ void FGElectricalSystem::init () {
         }
 
     } else
-        SG_LOG( SG_ALL, SG_ALERT,
+        SG_LOG( SG_ALL, SG_WARN,
                 "No electrical model specified for this model!");
 
     delete config_props;

@@ -91,7 +91,7 @@ bool FGCommList::LoadComms(SGPath path) {
         ATCData a;
 		fin >> a;
 		if(a.type == INVALID) {
-			SG_LOG(SG_GENERAL, SG_ALERT, "WARNING - INVALID type found in " << path.str() << '\n');
+			SG_LOG(SG_GENERAL, SG_DEBUG, "WARNING - INVALID type found in " << path.str() << '\n');
 		} else {		
 			// Push all stations onto frequency map
 			commlist_freq[a.freq].push_back(a);

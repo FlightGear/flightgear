@@ -139,7 +139,7 @@ bool FGMultiplayTxMgr::init(void) {
         // If Tx port == zero then don't initialise
         } else {
 
-            SG_LOG( SG_NETWORK, SG_WARN, "FGMultiplayTxMgr::init - Tx Port is zero. Multiplay out disabled." );
+            SG_LOG( SG_NETWORK, SG_INFO, "FGMultiplayTxMgr::init - Tx Port is zero. Multiplay out disabled." );
             bSuccess = false;
 
         }
@@ -148,7 +148,7 @@ bool FGMultiplayTxMgr::init(void) {
         m_bInitialised = bSuccess;
 
     } else {
-        SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayTxMgr::init - Attempt to init object that is already opened" );
+        SG_LOG( SG_NETWORK, SG_WARN, "FGMultiplayTxMgr::init - Attempt to init object that is already opened" );
         bSuccess = false;
     }
 

@@ -850,7 +850,7 @@ void NewTgtAirportInit()
     }
 
     FG_FINALIZE_PUI_DIALOG( TgtAptDialog );
-    printf("leave NewTgtAirportInit()");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "leave NewTgtAirportInit()");
 }
 
 

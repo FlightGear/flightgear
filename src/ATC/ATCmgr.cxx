@@ -537,11 +537,11 @@ void FGATCMgr::FreqSearch(int channel) {
 			FGATC* app = FindInList(comm_ident[chan], TOWER);
 			if(app != NULL) {
 				// The station is already in the ATC list
-				cout << comm_ident[chan] << " is in list - flagging SetDisplay..." << endl;
+                                SG_LOG(SG_GENERAL, SG_DEBUG, comm_ident[chan] << " is in list - flagging SetDisplay...");
 				app->SetDisplay();
 			} else {
 				// Generate the station and put in the ATC list
-				cout << comm_ident[chan] << " is not in list - generating..." << endl;
+                                SG_LOG(SG_GENERAL, SG_DEBUG, comm_ident[chan] << " is not in list - generating...");
 				FGTower* t = new FGTower;
 				t->SetData(&data);
 				comm_atc_ptr[chan] = t;

@@ -843,7 +843,7 @@ FGTileEntry::load( const string &base_path, bool is_base )
                             << " codes = " << common << " "
                             << end1 << " " << end2 );
                 } else {
-                    SG_LOG( SG_TERRAIN, SG_ALERT,
+                    SG_LOG( SG_TERRAIN, SG_DEBUG,
                             "Unknown token " << token << " in "
                             << stg_name.str() );
                     in >> ::skipws;
