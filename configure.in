@@ -245,6 +245,20 @@ AC_SUBST(base_LIBS)
 AC_SUBST(opengl_LIBS)
 
 
+dnl Check if Generic Polygon Clipping library is installed
+dnl (from http://www.cs.man.ac.uk/aig/staff/alan/software/)
+AC_CHECK_HEADERS( gpc.h )
+if test "x$ac_cv_header_windows_h" != "xyes"; then
+    echo
+    echo "You need to have the GPC library installed on your system to build"
+    echo "the scenery generation tools, otherwise, the build will fail."
+    echo
+    echo "You can get the library from:"
+    echo 
+    echo "    http://www.cs.man.ac.uk/aig/staff/alan/software/"
+    echo
+fi
+
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( \
@@ -275,7 +289,6 @@ AC_OUTPUT( \
 	Lib/Audio/example/Makefile \
 	Lib/Bucket/Makefile \
 	Lib/Debug/Makefile \
-	Lib/DEM/Makefile \
 	Lib/Math/Makefile \
 	Lib/Misc/Makefile \
 	Lib/PUI/Makefile \
@@ -306,6 +319,7 @@ AC_OUTPUT( \
 	Tools/Makefile \
 	Tools/Areas/Makefile \
 	Tools/AssemTris/Makefile \
+	Tools/DEM/Makefile \
 	Tools/Dem2node/Makefile \
 	Tools/DemInfo/Makefile \
 	Tools/DemRaw2ascii/Makefile \

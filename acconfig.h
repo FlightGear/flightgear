@@ -83,6 +83,9 @@
 /* Define if you have the getmntent function.  */
 #undef HAVE_GETMNTENT
 
+/* Define if you have the gpc library and headers installed.  */
+#undef HAVE_GPC_H
+
 /* Define if the `long double' type works.  */
 #undef HAVE_LONG_DOUBLE
 
