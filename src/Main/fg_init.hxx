@@ -49,6 +49,10 @@ bool fgInitSubsystems( void );
 void fgReInitSubsystems( void );
 
 
+// Set current_options lon/lat given an airport id
+bool fgSetPosFromAirportID( const string& id );
+
+
 #endif // _FG_INIT_H
 
 

@@ -136,14 +136,11 @@ bool fgInitConfig ( int argc, char **argv ) {
 }
 
 
-// Set initial position and orientation
-bool fgInitPosition( void ) {
-    string id;
-    FGInterface *f;
+// Set current_options lon/lat given an airport id
+bool fgSetPosFromAirportID( const string& id ) {
+    FGAirport a;
+    double lon, lat;
 
-    f = current_aircraft.fdm_state;
-
-    id = current_options.get_airport_id();
     if ( id.length() ) {
 	// set initial position from airport id
 
@@ -151,7 +148,6 @@ bool fgInitPosition( void ) {
 	path.append( "Airports" );
 	path.append( "simple.mk4" );
 	FGAirports airports( path.c_str() );
-	FGAirport a;
 
 	FG_LOG( FG_GENERAL, FG_INFO,
 		"Attempting to set starting position from airport code "
@@ -170,17 +166,38 @@ bool fgInitPosition( void ) {
 	if ( ! airports.search( id, &a ) ) {
 	    FG_LOG( FG_GENERAL, FG_ALERT,
 		    "Failed to find " << id << " in database." );
-	    exit(-1);
+	    return false;
 	} else {
-	    f->set_Longitude( a.longitude * DEG_TO_RAD );
-	    f->set_Latitude( a.latitude * DEG_TO_RAD );
+	    current_options.set_lon( a.longitude );
+	    current_options.set_lat( a.latitude );
 	}
     } else {
-	// set initial position from default or command line coordinates
-
-	f->set_Longitude( current_options.get_lon() * DEG_TO_RAD );
-	f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
+	return false;
     }
+
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "Position for " << id << " is ("
+	    << a.longitude << ", "
+	    << a.latitude << ")" );
+
+    return true;
+}
+
+// Set initial position and orientation
+bool fgInitPosition( void ) {
+    FGInterface *f = current_aircraft.fdm_state;
+    string id = current_options.get_airport_id();
+
+    if ( id.length() ) {
+	// set initial position from airport id
+	if ( ! fgSetPosFromAirportID( id ) ) {
+	    exit(-1);
+	}
+    }
+
+    // set initial position from default or command line coordinates
+    f->set_Longitude( current_options.get_lon() * DEG_TO_RAD );
+    f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "starting altitude is = " << current_options.get_altitude() );

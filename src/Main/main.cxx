@@ -1312,6 +1312,11 @@ int main( int argc, char **argv ) {
     // fonts !!!
     guiInit();
 
+    // set current_options lon/lat if an airport id is specified
+    if ( current_options.get_airport_id().length() ) {
+	fgSetPosFromAirportID( current_options.get_airport_id() );
+    }
+
     // Initialize time
     FGPath zone( current_options.get_fg_root() );
     zone.append( "Timezone" );
