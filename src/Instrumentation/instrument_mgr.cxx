@@ -5,6 +5,7 @@
 
 
 #include "instrument_mgr.hxx"
+#include "airspeed_indicator.hxx"
 #include "altimeter.hxx"
 #include "attitude_indicator.hxx"
 #include "heading_indicator.hxx"
@@ -28,6 +29,7 @@ void
 FGInstrumentMgr::init ()
 {
                                 // TODO: replace with XML configuration
+    _instruments.push_back(new AirspeedIndicator);
     _instruments.push_back(new Altimeter);
     _instruments.push_back(new AttitudeIndicator);
     _instruments.push_back(new HeadingIndicator);
