@@ -410,6 +410,24 @@ void FGTower::Respond() {
 				// TODO - add some idea of what traffic is blocking him.
 			}
 			t->holdShortReported = false;
+		} else if(t->finalReported && !(t->finalAcknowledged)) {
+			string trns = t->plane.callsign;
+			if(t->nextOnRwy && !rwyOccupied) {
+				if(t->landingType == FULL_STOP) {
+					trns += " cleared to land ";
+				} else {
+					trns += " cleared for the option ";
+				}
+				// TODO - add winds
+				t->clearedToLand = true;
+			} else {
+				trns += " continue approach";
+				t->clearedToLand = false;
+			}
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+			}
+			t->finalAcknowledged = true;
 		}
 	}
 	freqClear = true;	// FIXME - set this to come true after enough time to render the message
@@ -719,6 +737,8 @@ void FGTower::CheckCircuitList(double dt) {
 			if(t->landingType == FULL_STOP) t->opType = INBOUND;
 		} else if(t->leg == LANDING_ROLL) {
 			rwyList.push_front(t);
+			// TODO - if(!clearedToLand) shout something!!
+			t->clearedToLand = false;
 			RemoveFromTrafficList(t->plane.callsign);
 			if(t->isUser) {
 				t->opType = TTT_UNKNOWN;
@@ -1297,13 +1317,27 @@ void FGTower::RequestLandingClearance(string ID) {
 
 void FGTower::RequestDepartureClearance(string ID) {
 	//cout << "Request Departure Clearance called...\n";
-}	
-//void FGTower::ReportFinal(string ID);
+}
+	
+void FGTower::ReportFinal(string ID) {
+	TowerPlaneRec* t = FindPlane(ID);
+	if(t) {
+		t->finalReported = true;
+		t->finalAcknowledged = false;
+		if(!(t->clearedToLand)) {
+			responseReqd = true;
+		} // possibly respond with wind even if already cleared to land?
+	} else {
+		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportFinal(...)");
+	}
+}
+
 //void FGTower::ReportLongFinal(string ID);
 //void FGTower::ReportOuterMarker(string ID);
 //void FGTower::ReportMiddleMarker(string ID);
 //void FGTower::ReportInnerMarker(string ID);
 //void FGTower::ReportGoingAround(string ID);
+
 void FGTower::ReportRunwayVacated(string ID) {
 	//cout << "Report Runway Vacated Called...\n";
 }
