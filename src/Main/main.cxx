@@ -127,8 +127,8 @@ extern int _bootstrap_OSInit;
 void fgUpdateTimeDepCalcs() {
     static bool inited = false;
 
-    static const SGPropertyNode *replay_master
-        = fgGetNode( "/sim/freeze/replay", true );
+    static const SGPropertyNode *replay_state
+        = fgGetNode( "/sim/freeze/replay-state", true );
     static SGPropertyNode *replay_time
         = fgGetNode( "/sim/replay/time", true );
     // static const SGPropertyNode *replay_end_time
@@ -162,15 +162,21 @@ void fgUpdateTimeDepCalcs() {
             inited = true;
         }
 
-        if ( ! replay_master->getBoolValue() ) {
+        if ( replay_state->getIntValue() == 0 ) {
+	    // replay off, run fdm
             cur_fdm_state->update( delta_time_sec );
         } else {
             FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
             r->replay( replay_time->getDoubleValue() );
-            replay_time->setDoubleValue( replay_time->getDoubleValue()
-                                         + ( delta_time_sec
-                                             * fgGetInt("/sim/speed-up") ) );
-        }
+  	    if ( replay_state->getIntValue() == 1 ) {
+                // normal playback
+                replay_time->setDoubleValue( replay_time->getDoubleValue()
+                                             + ( delta_time_sec
+                                               * fgGetInt("/sim/speed-up") ) );
+	    } else if ( replay_state->getIntValue() == 2 ) {
+	        // paused playback (don't advance replay time)
+	    }
+	}
     } else {
         // do nothing, fdm isn't inited yet
     }
@@ -213,8 +219,6 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
         = fgGetNode("/sim/time/cur-time-override", true);
-    // static const SGPropertyNode *replay_master
-    //     = fgGetNode("/sim/freeze/replay", true);
 
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
 
