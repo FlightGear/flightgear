@@ -36,6 +36,25 @@ SG_USING_STD(ostream);
 SG_USING_STD(string);
 SG_USING_STD(ios);
 
+enum plane_type {
+	UNKNOWN,
+	GA_SINGLE,
+	GA_HP_SINGLE,
+	GA_TWIN,
+	GA_JET,
+	MEDIUM,
+	HEAVY,
+	MIL_JET
+};
+
+// PlaneRec - a structure holding ATC-centric details of planes under control
+// This might move or change eventually
+struct PlaneRec {
+	plane_type type;
+	string callsign;
+	int squawkcode;
+};
+
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
 enum atc_type {
@@ -51,6 +70,9 @@ enum atc_type {
 // DCL - new experimental ATC data store
 struct ATCData {
 	atc_type type;
+	// I've deliberately used float instead of double here to keep the size down - we'll be storing thousands of these in memory.
+	// In fact, we could probably ditch x, y and z and generate on the fly as needed.
+	// On the other hand, we'll probably end up reading this data directly from the DAFIF eventually anyway!!
 	float lon, lat, elev;
 	float x, y, z;
 	//int freq;
@@ -70,7 +92,7 @@ public:
     virtual ~FGATC();
 
     // Run the internal calculations
-    virtual void Update();
+    virtual void Update(double dt);
 
     // Add plane to a stack
     virtual void AddPlane(string pid);

@@ -78,7 +78,7 @@ class FGATIS : public FGATC {
 	~FGATIS(void);
 	
 	//run the ATIS instance
-	void Update(void);
+	void Update(double dt);
 	
 	//Indicate that this instance should be outputting to the ATC display
 	inline void SetDisplay(void) {display = true;}

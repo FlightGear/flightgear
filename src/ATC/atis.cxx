@@ -75,7 +75,7 @@ FGATIS::~FGATIS() {
 }
 
 // Main update function - checks whether we are displaying or not the correct message.
-void FGATIS::Update() {
+void FGATIS::Update(double dt) {
 	if(display) {
 		if(displaying) {
 			// Check if we need to update the message

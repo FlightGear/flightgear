@@ -28,7 +28,7 @@
 FGATC::~FGATC() {
 }
 
-void FGATC::Update() {
+void FGATC::Update(double dt) {
 }
 
 void FGATC::AddPlane(string pid) {

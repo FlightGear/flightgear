@@ -82,7 +82,7 @@ void FGApproach::Init() {
 // ============================================================================
 // the main update function
 // ============================================================================
-void FGApproach::Update() {
+void FGApproach::Update(double dt) {
 	
 	const int max_trans = 20;
 	FGTransmission tmissions[max_trans];

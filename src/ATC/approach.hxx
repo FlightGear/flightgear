@@ -150,7 +150,7 @@ public:
 
   void Init();
 
-  void Update();
+  void Update(double dt);
 
   // Add new plane to stack if not already registered 
   // Input:  pid - id of plane (name) 
