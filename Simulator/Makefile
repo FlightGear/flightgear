@@ -78,25 +78,29 @@ scenery-zip:
 	zip -r scenery-$(FG_VERSION).zip FlightGear/Scenery)
 
 bin-tar: all
-	cp Main/fg-$(FG_VERSION) runfg ..
+	cp Main/fg-$(FG_VERSION) README runfg ..
 	$(RM) -f ../fg$(FG_VERSION_MAJOR)
 	$(LN) ../fg-$(FG_VERSION) ../fg$(FG_VERSION_MAJOR)
 	(cd ../..; \
 	$(TAR) cvzf bin-$(FG_VERSION).tar.gz FlightGear/fgtop \
 	FlightGear/fg-$(FG_VERSION) FlightGear/fg$(FG_VERSION_MAJOR) \
-	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/Thanks)
+	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/README \
+	FlightGear/Thanks)
 
 bin-zip: 
-	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll runfg.bat ..
+	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll README runfg.bat ..
 	(cd ../..; \
 	zip -r bin-$(FG_VERSION).zip FlightGear/fgtop \
 	FlightGear/fg$(FG_VERSION_MAJOR).exe FlightGear/runfg.bat \
 	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
-	FlightGear/Thanks)
+	FlightGear/README FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.34  1997/12/18 23:32:28  curt
+# First stab at sky dome actually starting to look reasonable. :-)
+#
 # Revision 1.33  1997/12/17 23:13:17  curt
 # Changes and tweaks to go to version 0.19 (Plus tweaks to Solaris support)
 #

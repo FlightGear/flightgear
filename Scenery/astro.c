@@ -91,7 +91,7 @@ void fgAstroRender() {
     xglDisable( GL_FOG );
 
     /* set the sun position */
-    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv );
+    /* xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv ); */
 
     xglPushMatrix();
 
@@ -122,10 +122,13 @@ void fgAstroRender() {
 
 
 /* $Log$
-/* Revision 1.8  1997/12/15 23:54:57  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.9  1997/12/18 23:32:35  curt
+/* First stab at sky dome actually starting to look reasonable. :-)
 /*
+ * Revision 1.8  1997/12/15 23:54:57  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.7  1997/12/15 20:59:09  curt
  * Misc. tweaks.
  *

@@ -221,7 +221,7 @@ static void fgUpdateVisuals( void ) {
     /* update view volume parameters */
     fgUpdateViewParams();
 
-    xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    xglClear( /* GL_COLOR_BUFFER_BIT | */ GL_DEPTH_BUFFER_BIT );
 
     /* Tell GL we are switching to model view parameters */
     xglMatrixMode(GL_MODELVIEW);
@@ -230,15 +230,15 @@ static void fgUpdateVisuals( void ) {
     /* draw sky */
     fgSkyRender();
 
+    /* draw astronomical objects */
+    /* fgAstroRender(); */
+    
     /* draw scenery */
     fgSceneryRender();
 
-    /* draw astronomical objects */
-    fgAstroRender();
-
     /* display HUD */
-    if( show_hud )
-     	fgCockpitUpdate();
+    /* if( show_hud )
+     	fgCockpitUpdate(); */
 
     #ifdef GLUT
       xglutSwapBuffers();
@@ -484,7 +484,7 @@ static void fgReshape( int width, int height ) {
 
     fgUpdateViewParams();
     
-    xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    /* xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); */
 }
 
 
@@ -569,9 +569,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.34  1997/12/17 23:13:34  curt
-/* Began working on rendering a sky.
+/* Revision 1.35  1997/12/18 23:32:32  curt
+/* First stab at sky dome actually starting to look reasonable. :-)
 /*
+ * Revision 1.34  1997/12/17 23:13:34  curt
+ * Began working on rendering a sky.
+ *
  * Revision 1.33  1997/12/15 23:54:45  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

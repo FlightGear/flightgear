@@ -171,11 +171,13 @@ void fgInitSubsystems( void ) {
     fgWeatherInit();
 
     /* Initialize the Cockpit subsystem */
+    /*
     if( fgCockpitInit( current_aircraft ) == NULL )
     {
     	printf( "Error in Cockpit initialization!\n" );
     	exit( 1 );
     }
+    */
 
     /* Initialize Astronomical Objects */
     fgAstroInit();
@@ -222,9 +224,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.19  1997/12/17 23:13:36  curt
-/* Began working on rendering a sky.
+/* Revision 1.20  1997/12/18 23:32:33  curt
+/* First stab at sky dome actually starting to look reasonable. :-)
 /*
+ * Revision 1.19  1997/12/17 23:13:36  curt
+ * Began working on rendering a sky.
+ *
  * Revision 1.18  1997/12/15 23:54:49  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

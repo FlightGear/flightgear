@@ -316,6 +316,8 @@ GLint fgObjLoad(char *path) {
     xglEnd();
     */
 
+    xglFrontFace ( GL_CCW );
+
     xglEndList();
 
     fclose(f);
@@ -325,9 +327,12 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.12  1997/12/17 23:13:47  curt
-/* Began working on rendering the sky.
+/* Revision 1.13  1997/12/18 23:32:36  curt
+/* First stab at sky dome actually starting to look reasonable. :-)
 /*
+ * Revision 1.12  1997/12/17 23:13:47  curt
+ * Began working on rendering the sky.
+ *
  * Revision 1.11  1997/12/15 23:55:01  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.
