@@ -40,7 +40,21 @@ INCLUDES
 
 #include "FGModel.h"
 
-using namespace std;
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <iostream>
+#    include <fstream>
+#  else
+#    include <iostream.h>
+#    include <fstream.h>
+#  endif
+#else
+#  include <iostream>
+#  include <fstream>
+#endif
+
+//using namespace std;
 
 /*******************************************************************************
 CLASS DECLARATION
@@ -54,13 +68,14 @@ public:
 
   bool Run(void);
 
-  void ConsoleOutput(void);
   void DelimitedOutput(void);
+  void DelimitedOutput(string);
 
 protected:
 
 private:
   bool FirstPass;
+  ofstream datafile;
 };
 
 /******************************************************************************/

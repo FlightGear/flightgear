@@ -39,21 +39,6 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#ifdef FGFS
-#  include <Include/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <iostream>
-#  else
-#    include <iostream.h>
-#  endif
-#else
-#  include <iostream>
-#endif
-
-#ifdef HAVE_CURSES
-  #include <ncurses.h>
-#endif
-
 #include "FGOutput.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
@@ -73,11 +58,6 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGOutput";
   FirstPass = true;
-#ifdef HAVE_CURSES
-  initscr();
-  cbreak();
-  noecho();
-#endif
 }
 
 
@@ -89,79 +69,10 @@ FGOutput::~FGOutput(void)
 bool FGOutput::Run(void)
 {
   if (!FGModel::Run()) {
-    DelimitedOutput();
-//    ConsoleOutput();
+    DelimitedOutput("JSBSimData.csv");
   } else {
   }
   return false;
-}
-
-
-void FGOutput::ConsoleOutput(void)
-{
-#ifdef HAVE_CURSES
-  string buffer;
-
-  clear();
-  move(1,1);  insstr("Quaternions");
-  move(2,5);  insstr("Q0");
-  move(2,16); insstr("Q1");
-  move(2,27); insstr("Q2");
-  move(2,38); insstr("Q3");
-
-  move(3,1);  buffer = Rotation->GetQ0(); insstr(buffer.c_str());
-  move(3,12); buffer = Rotation->GetQ1(); insstr(buffer.c_str());
-  move(3,23); buffer = Rotation->GetQ2(); insstr(buffer.c_str());
-  move(3,34); buffer = Rotation->GetQ3(); insstr(buffer.c_str());
-
-  move(0,0); insstr("Time: ");
-  move(0,6); insstr(gcvt(State->Getsim_time(),6,buffer));
-
-  move(2,46); insstr("Phi");
-  move(2,55); insstr("Tht");
-  move(2,64); insstr("Psi");
-
-  move(3,45); buffer = Rotation->Getphi(); insstr(buffer.c_str());
-  move(3,54); buffer = Rotation->Gettht(); insstr(buffer.c_str());
-  move(3,63); buffer = Rotation->Getpsi(); insstr(buffer.c_str());
-
-  move(5,47); insstr("U");
-  move(5,56); insstr("V");
-  move(5,65); insstr("W");
-
-  move(6,45); buffer = Translation->GetU(); insstr(buffer.c_str());
-  move(6,54); buffer = Translation->GetV(); insstr(buffer.c_str());
-  move(6,63); buffer = Translation->GetW(); insstr(buffer.c_str());
-
-  move(8,47); insstr("Fx");
-  move(8,56); insstr("Fy");
-  move(8,65); insstr("Fz");
-
-  move(9,45); buffer = Aircraft->GetFx(); insstr(buffer.c_str());
-  move(9,54); buffer = Aircraft->GetFy(); insstr(buffer.c_str());
-  move(9,63); buffer = Aircraft->GetFz(); insstr(buffer.c_str());
-
-  move(11,47); insstr("Fn");
-  move(11,56); insstr("Fe");
-  move(11,65); insstr("Fd");
-
-  move(12,45); buffer = Position->GetFn(); insstr(buffer.c_str());
-  move(12,54); buffer = Position->GetFe(); insstr(buffer.c_str());
-  move(12,63); buffer = Position->GetFd(); insstr(buffer.c_str());
-
-  move(14,47); insstr("Latitude");
-  move(14,57); insstr("Longitude");
-  move(14,67); insstr("Altitude");
-
-  move(15,47); buffer = State->Getlatitude(); insstr(buffer.c_str());
-  move(15,57); buffer = State->Getlongitude(); insstr(buffer.c_str());
-  move(15,67); buffer = State->Geth(); insstr(buffer.c_str());
-
-  refresh();
-
-  move(LINES-1,1);
-  refresh();
-#endif
 }
 
 
@@ -227,3 +138,69 @@ void FGOutput::DelimitedOutput(void)
   cout << endl;
 
 }
+
+
+void FGOutput::DelimitedOutput(string fname)
+{
+  if (FirstPass) {
+    datafile.open(fname.c_str());
+    datafile << "Time,";
+    datafile << "Altitude,";
+    datafile << "Phi,";
+    datafile << "Tht,";
+    datafile << "Psi,";
+    datafile << "Rho,";
+    datafile << "Vtotal,";
+    datafile << "U,";
+    datafile << "V,";
+    datafile << "W,";
+    datafile << "Vn,";
+    datafile << "Ve,";
+    datafile << "Vd,";
+    datafile << "Udot,";
+    datafile << "Vdot,";
+    datafile << "Wdot,";
+    datafile << "Fx,";
+    datafile << "Fy,";
+    datafile << "Fz,";
+    datafile << "Latitude,";
+    datafile << "Longitude,";
+    datafile << "QBar,";
+    datafile << "Alpha,";
+    datafile << "L,";
+    datafile << "M,";
+    datafile << "N";
+    datafile << endl;
+    FirstPass = false;
+  }
+
+  datafile << State->Getsim_time() << ",";
+  datafile << State->Geth() << ",";
+  datafile << Rotation->Getphi() << ",";
+  datafile << Rotation->Gettht() << ",";
+  datafile << Rotation->Getpsi() << ",";
+  datafile << Atmosphere->Getrho() << ",";
+  datafile << State->GetVt() << ",";
+  datafile << Translation->GetU() << ",";
+  datafile << Translation->GetV() << ",";
+  datafile << Translation->GetW() << ",";
+  datafile << Position->GetVn() << ",";
+  datafile << Position->GetVe() << ",";
+  datafile << Position->GetVd() << ",";
+  datafile << Translation->GetUdot() << ",";
+  datafile << Translation->GetVdot() << ",";
+  datafile << Translation->GetWdot() << ",";
+  datafile << Aircraft->GetFx() << ",";
+  datafile << Aircraft->GetFy() << ",";
+  datafile << Aircraft->GetFz() << ",";
+  datafile << State->Getlatitude() << ",";
+  datafile << State->Getlongitude() << ",";
+  datafile << State->Getqbar() << ",";
+  datafile << Translation->Getalpha() << ",";
+  datafile << Aircraft->GetL() << ",";
+  datafile << Aircraft->GetM() << ",";
+  datafile << Aircraft->GetN() << "";
+  datafile << endl;
+  datafile.flush();
+}
+

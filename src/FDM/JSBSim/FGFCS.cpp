@@ -72,3 +72,14 @@ bool FGFCS::Run(void)
   }
   return false;
 }
+
+
+void FGFCS::SetThrottle(int engineNum, float setting)
+{
+  if (engineNum < 0) {
+    for (int ctr=0;ctr<Aircraft->GetNumEngines();ctr++) Throttle[ctr] = setting;
+  } else {
+    Throttle[engineNum] = setting;
+  }
+}
+

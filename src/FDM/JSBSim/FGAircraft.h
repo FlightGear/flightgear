@@ -150,6 +150,7 @@ public:
   inline float GetIyy(void) {return Iyy;}
   inline float GetIzz(void) {return Izz;}
   inline float GetIxz(void) {return Ixz;}
+  inline int   GetNumEngines(void) {return numEngines;}
 
 private:
   void GetState(void);

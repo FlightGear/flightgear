@@ -31,6 +31,8 @@ See header file.
 HISTORY
 --------------------------------------------------------------------------------
 01/21/99   JSB   Created
+09/03/99   JSB   Changed Rocket thrust equation to correct -= Thrust instead of
+                 += Thrust (thanks to Tony Peden)
 
 ********************************************************************************
 INCLUDES
@@ -137,7 +139,7 @@ float FGEngine::CalcRocketThrust(void)
     Flameout = false;
   }
 
-  Thrust += 0.8*(Thrust - lastThrust); // actual thrust
+  Thrust -= 0.8*(Thrust - lastThrust); // actual thrust
 
   return Thrust;
 }

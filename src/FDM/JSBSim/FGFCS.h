@@ -66,7 +66,7 @@ public:
 	inline void SetDr(float tt) {Dr = tt;}
 	inline void SetDf(float tt) {Df = tt;}
 	inline void SetDs(float tt) {Ds = tt;}
-	inline void SetThrottle(int ii, float tt) {Throttle[ii] = tt;}
+	void SetThrottle(int ii, float tt);
 
 protected:
 

@@ -124,7 +124,7 @@ bool FGPosition:: Run(void)
     Ve = T[1][2]*U + T[2][2]*V + T[3][2]*W;
     Vd = T[1][3]*U + T[2][3]*V + T[3][3]*W;
 
-    AccelN = invMass * Fn + invRadius * (Vn*Vd - Ve*Ve*tanLat); // Eqn. 3.6
+/*    AccelN = invMass * Fn + invRadius * (Vn*Vd - Ve*Ve*tanLat); // Eqn. 3.6
     AccelE = invMass * Fe + invRadius * (Ve*Vd + Vn*Ve*tanLat); // From
     AccelD = invMass * Fd - invRadius * (Vn*Vn + Ve*Ve);        // Reference [3]
 
@@ -133,7 +133,7 @@ bool FGPosition:: Run(void)
     Vd += 0.5*dt*rate*(3.0*AccelD - lastAccelD);                // Reference [3]
 
     Vee = Ve - OMEGAEARTH * (Radius) * cosLat;                  // From Eq. 3.8
-                                                                // Reference [3]
+*/                                                                // Reference [3]
     lastLatitudeDot = LatitudeDot;
     lastLongitudeDot = LongitudeDot;
     lastRadiusDot = RadiusDot;

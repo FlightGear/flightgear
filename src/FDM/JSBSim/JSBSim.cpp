@@ -40,14 +40,13 @@ INCLUDES
 *******************************************************************************/
 
 #if __BCPLUSPLUS__	>= 0x0540   // If compiling under Borland C++Builder
+  //---------------------------------------------------------------------------
   #pragma hdrstop
   #include <condefs.h>
-  //---------------------------------------------------------------------------
   USEUNIT("FGAircraft.cpp");
   USEUNIT("FGAtmosphere.cpp");
   USEUNIT("FGAuxiliary.cpp");
   USEUNIT("FGCoefficient.cpp");
-  USEUNIT("FGControls.cpp");
   USEUNIT("FGEngine.cpp");
   USEUNIT("FGFCS.cpp");
   USEUNIT("FGFDMExec.cpp");
@@ -113,4 +112,8 @@ int main(int argc, char** argv)
   delete FDMExec;
   
   return 0;
+}
+
+WinMain()
+{
 }
