@@ -101,12 +101,18 @@ template<class T>
 void mgcLinInterp2D<T>::ComputeBarycenter (Vertex& v0, Vertex& v1, Vertex& v2, 
                                            Vertex& ver, double c[3])
 {
-    double A0 = v0.x-v2.x, B0 = v0.y-v2.y;
-    double A1 = v1.x-v2.x, B1 = v1.y-v2.y;
-    double A2 = ver.x-v2.x, B2 = ver.y-v2.y;
+    double A0 = v0.x-v2.x;
+    double B0 = v0.y-v2.y;
+    double A1 = v1.x-v2.x;
+    double B1 = v1.y-v2.y;
+    double A2 = ver.x-v2.x;
+    double B2 = ver.y-v2.y;
 
-    double m00 = A0*A0+B0*B0, m01 = A0*A1+B0*B1, m11 = A1*A1+B1*B1;
-    double r0 = A2*A0+B2*B0, r1 = A2*A1+B2*B1;
+    double m00 = A0*A0+B0*B0;
+    double m01 = A0*A1+B0*B1;
+    double m11 = A1*A1+B1*B1;
+    double r0 = A2*A0+B2*B0;
+    double r1 = A2*A1+B2*B1;
     double det = m00*m11-m01*m01;
 
     c[0] = (m11*r0-m01*r1)/det;

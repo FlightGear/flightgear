@@ -32,6 +32,7 @@
 /*************************************************************/
 
 #include <stdio.h>
+#include <strings.h>
 #include "fgd.h"
 
 /* I prefer NHV's decl. */
