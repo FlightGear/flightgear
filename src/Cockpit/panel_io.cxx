@@ -549,7 +549,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 static FGPanelInstrument *
 readInstrument (const SGPropertyNode * node)
 {
-  const string &name = node->getStringValue("name");
+  const string name = node->getStringValue("name");
   int x = node->getIntValue("x", -1);
   int y = node->getIntValue("y", -1);
   int real_w = node->getIntValue("w", -1);
