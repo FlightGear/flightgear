@@ -164,6 +164,10 @@ void FGAILocalTraffic::GetRwyDetails(string id) {
 	//cout << "GetRwyDetails called" << endl;
 	
 	rwy.rwyID = tower->GetActiveRunway();
+	//cout << "id = " << id << '\n';
+	//cout << "Returned id is " << tower->get_ident() << '\n';
+	//cout << "Returned name is " << tower->get_name() << '\n';
+	//cout << "rwy.rwyID = " << rwy.rwyID << '\n';
 	
 	// Now we need to get the threshold position and rwy heading
 	
@@ -201,7 +205,7 @@ void FGAILocalTraffic::GetRwyDetails(string id) {
 		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
 		rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
 	} else {
-		SG_LOG(SG_ATC, SG_ALERT, "Help  - can't get good runway in FGAILocalTraffic!!\n");
+		SG_LOG(SG_ATC, SG_ALERT, "Help  - can't get good runway at airport " << id << " in FGAILocalTraffic!!");
 	}
 }
 
@@ -328,7 +332,7 @@ bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState 
 			leg = DOWNWIND;
 			elevInitGood = false;
 			inAir = true;
-			track = rwy.hdg - (180 * patternDirection);	//should tend to bring track back into the 0->360 range
+			SetTrack(rwy.hdg - (180 * patternDirection));
 			slope = 0.0;
 			_pitch = 0.0;
 			_roll = 0.0;
@@ -383,7 +387,7 @@ void FGAILocalTraffic::DownwindEntry() {
 	leg = DOWNWIND;
 	elevInitGood = false;
 	inAir = true;
-	track = rwy.hdg - (180 * patternDirection);	//should tend to bring track back into the 0->360 range
+	SetTrack(rwy.hdg - (180 * patternDirection));
 	slope = 0.0;
 	_pitch = 0.0;
 	_roll = 0.0;
@@ -399,7 +403,7 @@ void FGAILocalTraffic::StraightInEntry(bool des) {
 	leg = FINAL;
 	elevInitGood = false;
 	inAir = true;
-	track = rwy.hdg;
+	SetTrack(rwy.hdg);
 	transmitted = true;	// TODO - fix this hack.
 	// TODO - set up the next 5 properly for a descent!
 	slope = -5.5;
@@ -702,7 +706,7 @@ void FGAILocalTraffic::Update(double dt) {
 	//fgSetDouble("/AI/Local1/ortho-y", (ortho.ConvertToLocal(_pos)).y());
 	//fgSetDouble("/AI/Local1/elev", _pos.elev() * SG_METER_TO_FEET);
 	
-	// And finally, call parent for transmission rendering
+	// And finally, call parent.
 	FGAIPlane::Update(dt);
 }
 
@@ -800,6 +804,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		IAS = vel + (cos((_hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
 		if(IAS >= 70) {
 			leg = CLIMBOUT;
+			SetTrack(rwy.hdg);	// Hands over control of turning to AIPlane
 			_pitch = 10.0;
 			IAS = best_rate_of_climb_speed;
 			//slope = 7.0;	
@@ -808,7 +813,6 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		break;
 	case CLIMBOUT:
-		track = rwy.hdg;
 		// Turn to crosswind if above 700ft AND if other traffic allows
 		// (decided in FGTower and accessed through GetCrosswindConstraint(...)).
 		// According to AIM, traffic should climb to within 300ft of pattern altitude before commencing crosswind turn.
@@ -843,16 +847,13 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}		
 		break;
 	case TURN1:
-		track += (360.0 / turn_time) * dt * patternDirection;
-		Bank(25.0 * patternDirection);
+		SetTrack(rwy.hdg + (90.0 * patternDirection));
 		if((track < (rwy.hdg - 89.0)) || (track > (rwy.hdg + 89.0))) {
 			leg = CROSSWIND;
 		}
 		break;
 	case CROSSWIND:
 		goAround = false;
-		LevelWings();
-		track = rwy.hdg + (90.0 * patternDirection);
 		if((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
 			slope = 0.0;
 			_pitch = 0.0;
@@ -873,8 +874,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		break;
 	case TURN2:
-		track += (360.0 / turn_time) * dt * patternDirection;
-		Bank(25.0 * patternDirection);
+		SetTrack(rwy.hdg - (180 * patternDirection));
 		// just in case we didn't make height on crosswind
 		if((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
 			slope = 0.0;
@@ -884,12 +884,9 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		if((track < (rwy.hdg - 179.0)) || (track > (rwy.hdg + 179.0))) {
 			leg = DOWNWIND;
 			transmitted = false;
-			//roll = 0.0;
 		}
 		break;
 	case DOWNWIND:
-		LevelWings();
-		track = rwy.hdg - (180 * patternDirection);	//should tend to bring track back into the 0->360 range
 		// just in case we didn't make height on crosswind
 		if(((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 995) && ((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET < 1015)) {
 			slope = 0.0;
@@ -947,14 +944,12 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		break;
 	case TURN3:
-		track += (360.0 / turn_time) * dt * patternDirection;
-		Bank(25.0 * patternDirection);
+		SetTrack(rwy.hdg - (90 * patternDirection));
 		if(fabs(rwy.hdg - track) < 91.0) {
 			leg = BASE;
 		}
 		break;
 	case BASE:
-		LevelWings();
 		if(!transmitted) {
 			// Base report should only be transmitted at uncontrolled airport - not towered.
 			if(!_controlled) TransmitPatternPositionReport();
@@ -977,8 +972,6 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			IAS = 70.0;
 		}
 		
-		track = rwy.hdg - (90 * patternDirection);
-
 		// Try and arrange to turn nicely onto final
 		turn_circumference = IAS * 0.514444 * turn_time;	
 		//Hmmm - this is an interesting one - ground vs airspeed in relation to turn radius
@@ -991,8 +984,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		break;
 	case TURN4:
-		track += (360.0 / turn_time) * dt * patternDirection;
-		Bank(25.0 * patternDirection);
+		SetTrack(rwy.hdg);
 		if(fabs(track - rwy.hdg) < 0.6) {
 			leg = FINAL;
 			vel = nominal_final_speed;
@@ -1062,7 +1054,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			}
 		}
 		// Try and track the extended centreline
-		track = rwy.hdg - (0.2 * orthopos.x());
+		SetTrack(rwy.hdg - (0.2 * orthopos.x()));
 		//cout << "orthopos.x() = " << orthopos.x() << " hdg = " << hdg << '\n';
 		if(_pos.elev() < (rwy.threshold_pos.elev()+20.0+wheelOffset)) {
 			DoGroundElev();	// Need to call it here expicitly on final since it's only called
@@ -1077,6 +1069,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 					_pitch = 0.0;
 					leg = LANDING_ROLL;
 					inAir = false;
+					LevelWings();
+					ClearTrack();	// Take over explicit track handling since AIPlane currently always banks when changing course 
 				}
 			}	// else need a fallback position based on arpt elev in case ground elev determination fails?
 		} else {

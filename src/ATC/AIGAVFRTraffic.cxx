@@ -84,7 +84,8 @@ bool FGAIGAVFRTraffic::Init(Point3D pt, string destID, const string& callsign) {
 	_pos.setelev(_cruise_alt);
 	// initially set waypoint as airport location
 	_wp = _destPos;
-	_hdg = GetHeadingFromTo(_pos, _wp);
+	//_hdg = GetHeadingFromTo(_pos, _wp);
+	SetTrack(GetHeadingFromTo(_pos, _wp));
 	_roll = 0.0;
 	_pitch = 0.0;
 	slope = 0.0;
@@ -201,7 +202,8 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 					_straightIn = true;
 					_incoming = true;
 					_wp = GetPatternApproachPos();
-					_hdg = GetHeadingFromTo(_pos, _wp);	// TODO - turn properly!
+					//_hdg = GetHeadingFromTo(_pos, _wp);	// TODO - turn properly!
+					SetTrack(GetHeadingFromTo(_pos, _wp));
 					slope = atan((_wp.elev() - _pos.elev()) / dclGetHorizontalSeparation(_wp, _pos)) * DCL_RADIANS_TO_DEGREES;
 					double thesh_offset = 0.0;
 					Point3D opos = ortho.ConvertToLocal(_pos);
@@ -221,7 +223,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 					_downwindEntry = true;
 					_incoming = true;
 					_wp = GetPatternApproachPos();
-					_hdg = GetHeadingFromTo(_pos, _wp);	// TODO - turn properly!
+					SetTrack(GetHeadingFromTo(_pos, _wp));
 					slope = atan((_wp.elev() - _pos.elev()) / dclGetHorizontalSeparation(_wp, _pos)) * DCL_RADIANS_TO_DEGREES;
 					//cout << "slope = " << slope << '\n';
 					pending_transmission = "Report ";
@@ -247,7 +249,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 		if(_straightIn) {
 			//cout << "A " << flush;
 			if(fabs(orthopos.x()) < 10.0 && !_established) {
-				_hdg = rwy.hdg;		// MEGA MEGA HACK - FIXME!!!!!!!
+				SetTrack(rwy.hdg);
 				_established = true;
 				//cout << "Established at " << orthopos << '\n';
 			}
@@ -279,15 +281,8 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 			if(_entering) {
 				//cout << "C" << flush;
 				if(_turning) {
-					double tgt_hdg = rwy.hdg + 180.0;
-					while((tgt_hdg - _hdg) > 180.0) _hdg += 360.0;
-					while((_hdg - tgt_hdg) > 180.0) _hdg -= 360.0;
-					double turn_time = 60.0;
-					_hdg += (360.0 / turn_time) * dt * (tgt_hdg > _hdg ? 1.0 : -1.0);
-					Bank(25.0 * (tgt_hdg > _hdg ? 1.0 : -1.0));
-					if(fabs(_hdg - tgt_hdg) < 2.0) {
+					if(fabs(_hdg - (rwy.hdg + 180)) < 2.0) {	// TODO - use track instead of _hdg?
 						//cout << "Going Local...\n";
-						_hdg = rwy.hdg + 180.0;	// TODO - FIX THIS UGLY HACK!!!!!!!
 						leg = DOWNWIND;
 						_local = true;
 						_aip.setVisible(true);	// HACK
@@ -300,6 +295,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 				if(fabs(orthopos.x() - (patternDirection == 1 ? 1000 : -1000)) < (_e45 ? 175 : 550)) {	// Caution - hardwired turn clearances.
 					//cout << "_turning...\n";
 					_turning = true;
+					SetTrack(rwy.hdg + 180.0);
 				}	// TODO - need to check for other traffic in the pattern and enter much more integilently than that!!!
 			} else {
 				//cout << "D" << flush;
@@ -318,12 +314,14 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 					slope = 0.0;
 					ConditionalTransmit(30);
 					if(_e45) {
-						_hdg = (patternDirection == 1 ? rwy.hdg - 135.0 : rwy.hdg + 135.0);
+						SetTrack(patternDirection == 1 ? rwy.hdg - 135.0 : rwy.hdg + 135.0);
 					} else {
-						_hdg = (patternDirection == 1 ? rwy.hdg + 90.0 : rwy.hdg - 90.0);
+						SetTrack(patternDirection == 1 ? rwy.hdg + 90.0 : rwy.hdg - 90.0);
 					}
-					if(_hdg < 0.0) _hdg += 360.0;
+					//if(_hdg < 0.0) _hdg += 360.0;
 					_entering = true;
+				} else {
+					SetTrack(GetHeadingFromTo(_pos, _wp));
 				}
 			}	
 		}
@@ -332,8 +330,8 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 		slope = 0.0;
 	}
 	// FIXME - lots of hackery in the next six lines!!!!
-	double track = _hdg;
-	double crab = 0.0;	
+	//double track = _hdg;
+	double crab = 0.0;	// This is a placeholder for when we take wind into account.	
 	_hdg = track + crab;
 	double vel = _cruise_ias;
 	double dist = vel * 0.514444 * dt;
@@ -410,7 +408,6 @@ int FGAIGAVFRTraffic::GetQuadrangleAltitude(int dir, int des_alt) {
 // 3/ At and appropriate point on non-circuit side of rwy at take-off end for perpendicular entry to circuit overflying end-of-rwy.
 Point3D FGAIGAVFRTraffic::GetPatternApproachPos() {
 	//cout << "\n\n";
-	//cout << "PPPPPPPPPPPPPPPPPPPPPPPppppppppppppppp\n";
 	//cout << "Calculating pattern approach pos for " << plane.callsign << '\n';
 	Point3D orthopos = ortho.ConvertToLocal(_pos);
 	Point3D tmp;

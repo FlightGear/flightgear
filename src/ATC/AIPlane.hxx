@@ -120,9 +120,12 @@ protected:
 	
 	// Transmit regardless of other dialog on the channel eg emergency
 	void ImmediateTransmit(int callback_code = 0);
+	
+	inline void SetTrack(double t) { _tgtTrack = t; _trackSet = true; }
+	inline void ClearTrack() { _trackSet = false; }
 
-    void Bank(double angle);
-    void LevelWings(void);
+    inline void Bank(double r) { _tgtRoll = r; }
+    inline void LevelWings(void) { _tgtRoll = 0.0; }
 	
 	virtual void ProcessCallback(int code);
 	
@@ -153,6 +156,12 @@ private:
 	bool playing;		// Indicates a message in progress	
 	bool voiceOK;		// Flag - true if at least one voice has loaded OK
 	FGATCVoice* vPtr;
+	
+	// Navigation
+	double _tgtTrack;	// Track to be following if _trackSet is true
+	bool _trackSet;		// Set true if tgtTrack is to be followed
+	double _tgtRoll;
+	bool _rollSuspended;	// Set true when a derived class has suspended AIPlane's roll control
 };
 
 #endif  // _FG_AI_PLANE_HXX

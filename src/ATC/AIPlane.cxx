@@ -44,6 +44,10 @@ FGAIPlane::FGAIPlane() {
 	playing = false;
 	voiceOK = false;
 	vPtr = NULL;
+	_tgtTrack = 0.0;
+	_trackSet = false;
+	_tgtRoll = 0.0;
+	_rollSuspended = false;
 }
 
 FGAIPlane::~FGAIPlane() {
@@ -113,20 +117,27 @@ void FGAIPlane::Update(double dt) {
 		}
 		_counter += dt;
 	}
-}
-
-void FGAIPlane::Bank(double angle) {
-	// This *should* bank us smoothly to any angle
-	if(fabs(_roll - angle) > 0.6) {
-		_roll -= ((_roll - angle)/fabs(_roll - angle));  
+	
+	// Fly the plane if necessary
+	if(_trackSet) {
+		while((_tgtTrack - track) > 180.0) track += 360.0;
+		while((track - _tgtTrack) > 180.0) track -= 360.0;
+		double turn_time = 60.0;
+		track += (360.0 / turn_time) * dt * (_tgtTrack > track ? 1.0 : -1.0);
+		Bank(25.0 * (_tgtTrack > track ? 1.0 : -1.0));
+		if(fabs(track - _tgtTrack) < 2.0) {		// TODO - might need to optimise the delta there - it's on the large (safe) side atm.
+			track = _tgtTrack;
+			LevelWings();
+		}
 	}
-}
-
-// Duplication of Bank(0.0) really - should I cut this?
-void FGAIPlane::LevelWings(void) {
-	// bring the plane back to level smoothly (this should work to come out of either bank)
-	if(fabs(_roll) > 0.6) {
-		_roll -= (_roll/fabs(_roll));
+	
+	if(!_rollSuspended) {
+		if(fabs(_roll - _tgtRoll) > 0.6) {
+			// This *should* bank us smoothly to any angle
+			_roll -= ((_roll - _tgtRoll)/fabs(_roll - _tgtRoll));
+		} else {
+			_roll = _tgtRoll;
+		}
 	}
 }
 
