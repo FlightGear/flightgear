@@ -220,6 +220,11 @@ public:
     double get_nav_gs_needle_deflection() const;
     inline double get_nav_vol_btn() const { return nav_vol_btn; }
     inline bool get_nav_ident_btn() const { return nav_ident_btn; }
+    inline const char * get_nav_id() const { return nav_id.c_str(); }
+    inline int get_nav_id_c1() const { return nav_id.c_str()[0]; }
+    inline int get_nav_id_c2() const { return nav_id.c_str()[1]; }
+    inline int get_nav_id_c3() const { return nav_id.c_str()[2]; }
+    inline int get_nav_id_c4() const { return nav_id.c_str()[3]; }
 };
 
 

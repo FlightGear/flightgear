@@ -95,29 +95,30 @@ FGNavCom::init ()
     // We assume that index is valid now (it must be set before init()
     // is called.)
     char propname[256];
+    // FIXME: Get rid of snprintf
 
-    sprintf( propname, "/systems/electrical/outputs/navcom[%d]", index );
+    snprintf(propname, 256, "/systems/electrical/outputs/navcom[%d]", index);
     // default to true in case no electrical system defined.
     fgSetDouble( propname, 60.0 );
     bus_power = fgGetNode( propname, true );
 
-    sprintf( propname, "/instrumentation/comm[%d]/servicable", index );
+    snprintf(propname, 256, "/instrumentation/comm[%d]/servicable", index);
     com_servicable = fgGetNode( propname, true );
     com_servicable->setBoolValue( true );
 
-    sprintf( propname, "/instrumentation/nav[%d]/servicable", index );
+    snprintf(propname, 256, "/instrumentation/nav[%d]/servicable", index);
     nav_servicable = fgGetNode( propname, true );
     nav_servicable->setBoolValue( true );
 
-    sprintf( propname, "/instrumentation/vor[%d]/cdi/servicable", index );
+    snprintf(propname, 256, "/instrumentation/vor[%d]/cdi/servicable", index);
     cdi_servicable = fgGetNode( propname, true );
     cdi_servicable->setBoolValue( true );
 
-    sprintf( propname, "/instrumentation/vor[%d]/gs/servicable", index );
+    snprintf(propname, 256, "/instrumentation/vor[%d]/gs/servicable", index);
     gs_servicable = fgGetNode( propname, true );
     gs_servicable->setBoolValue( true );
 
-    sprintf( propname, "/instrumentation/vor[%d]/to-from/servicable", index );
+    snprintf(propname, 256, "/instrumentation/vor[%d]/to-from/servicable", index);
     tofrom_servicable = fgGetNode( propname, true );
     tofrom_servicable->setBoolValue( true );
 }
@@ -126,78 +127,95 @@ void
 FGNavCom::bind ()
 {
     char propname[256];
+    // FIXME: Get rid of snprintf
 
 				// User inputs
-    sprintf( propname, "/radios/comm[%d]/inputs/power-btn", index );
+    snprintf(propname, 256, "/radios/comm[%d]/inputs/power-btn", index);
     fgTie( propname, this,
            &FGNavCom::get_power_btn, &FGNavCom::set_power_btn );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/comm[%d]/frequencies/selected-mhz", index );
+    snprintf(propname, 256, "/radios/comm[%d]/frequencies/selected-mhz", index);
     fgTie( propname, this, &FGNavCom::get_comm_freq, &FGNavCom::set_comm_freq );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/comm[%d]/frequencies/standby-mhz", index );
+    snprintf(propname, 256, "/radios/comm[%d]/frequencies/standby-mhz", index);
     fgTie( propname, this,
            &FGNavCom::get_comm_alt_freq, &FGNavCom::set_comm_alt_freq );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/comm[%d]/volume", index );
+    snprintf(propname, 256, "/radios/comm[%d]/volume", index);
     fgTie( propname, this,
            &FGNavCom::get_comm_vol_btn, &FGNavCom::set_comm_vol_btn );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/nav[%d]/frequencies/selected-mhz", index );
+    snprintf(propname, 256, "/radios/nav[%d]/frequencies/selected-mhz", index);
     fgTie( propname, this,
 	  &FGNavCom::get_nav_freq, &FGNavCom::set_nav_freq );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/nav[%d]/frequencies/standby-mhz", index );
+    snprintf(propname, 256, "/radios/nav[%d]/frequencies/standby-mhz", index);
     fgTie( propname , this,
            &FGNavCom::get_nav_alt_freq, &FGNavCom::set_nav_alt_freq);
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/nav[%d]/radials/selected-deg", index );
+    snprintf(propname, 256, "/radios/nav[%d]/radials/selected-deg", index);
     fgTie( propname, this,
            &FGNavCom::get_nav_sel_radial, &FGNavCom::set_nav_sel_radial );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/nav[%d]/volume", index );
+    snprintf(propname, 256, "/radios/nav[%d]/volume", index);
     fgTie( propname, this,
            &FGNavCom::get_nav_vol_btn, &FGNavCom::set_nav_vol_btn );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/nav[%d]/ident", index );
+    snprintf(propname, 256, "/radios/nav[%d]/ident", index);
     fgTie( propname, this,
            &FGNavCom::get_nav_ident_btn, &FGNavCom::set_nav_ident_btn );
     fgSetArchivable( propname );
 
 				// Radio outputs
-    sprintf( propname, "/radios/nav[%d]/audio-btn", index );
+    snprintf(propname, 256, "/radios/nav[%d]/audio-btn", index);
     fgTie( propname, this,
            &FGNavCom::get_audio_btn, &FGNavCom::set_audio_btn );
     fgSetArchivable( propname );
 
-    sprintf( propname, "/radios/nav[%d]/radials/actual-deg", index );
+    snprintf(propname, 256, "/radios/nav[%d]/radials/actual-deg", index);
     fgTie( propname,  this, &FGNavCom::get_nav_radial );
 
-    sprintf( propname, "/radios/nav[%d]/to-flag", index );
+    snprintf(propname, 256, "/radios/nav[%d]/to-flag", index);
     fgTie( propname, this, &FGNavCom::get_nav_to_flag );
 
-    sprintf( propname, "/radios/nav[%d]/from-flag", index );
+    snprintf(propname, 256, "/radios/nav[%d]/from-flag", index);
     fgTie( propname, this, &FGNavCom::get_nav_from_flag );
 
-    sprintf( propname, "/radios/nav[%d]/in-range", index );
+    snprintf(propname, 256, "/radios/nav[%d]/in-range", index);
     fgTie( propname, this, &FGNavCom::get_nav_inrange );
 
-    sprintf( propname, "/radios/nav[%d]/heading-needle-deflection", index );
+    snprintf(propname, 256, "/radios/nav[%d]/heading-needle-deflection", index);
     fgTie( propname, this, &FGNavCom::get_nav_heading_needle_deflection );
 
-    sprintf( propname, "/radios/nav[%d]/has-gs", index );
+    snprintf(propname, 256, "/radios/nav[%d]/has-gs", index);
     fgTie( propname, this, &FGNavCom::get_nav_has_gs );
 
-    sprintf( propname, "/radios/nav[%d]/gs-needle-deflection", index );
+    snprintf(propname, 256, "/radios/nav[%d]/gs-needle-deflection", index);
     fgTie( propname, this, &FGNavCom::get_nav_gs_needle_deflection );
+
+    snprintf(propname, 256, "/radios/nav[%d]/nav-id", index);
+    fgTie( propname, this, &FGNavCom::get_nav_id );
+
+    // put nav_id characters into seperate properties for instrument displays
+    snprintf(propname, 256, "/radios/nav[%d]/nav-id_asc1", index);
+    fgTie( propname, this, &FGNavCom::get_nav_id_c1 );
+
+    snprintf(propname, 256, "/radios/nav[%d]/nav-id_asc2", index);
+    fgTie( propname, this, &FGNavCom::get_nav_id_c2 );
+
+    snprintf(propname, 256, "/radios/nav[%d]/nav-id_asc3", index);
+    fgTie( propname, this, &FGNavCom::get_nav_id_c3 );
+
+    snprintf(propname, 256, "/radios/nav[%d]/nav-id_asc4", index);
+    fgTie( propname, this, &FGNavCom::get_nav_id_c4 );
 
     // end of binding
 }
@@ -207,33 +225,34 @@ void
 FGNavCom::unbind ()
 {
     char propname[256];
+    // FIXME: Get rid of snprintf
 
-    sprintf( propname, "/radios/comm[%d]/inputs/power-btn", index );
+    snprintf(propname, 256, "/radios/comm[%d]/inputs/power-btn", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/comm[%d]/frequencies/selected-mhz", index );
+    snprintf(propname, 256, "/radios/comm[%d]/frequencies/selected-mhz", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/comm[%d]/frequencies/standby-mhz", index );
+    snprintf(propname, 256, "/radios/comm[%d]/frequencies/standby-mhz", index);
     fgUntie( propname );
 
-    sprintf( propname, "/radios/nav[%d]/frequencies/selected-mhz", index );
+    snprintf(propname, 256, "/radios/nav[%d]/frequencies/selected-mhz", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/frequencies/standby-mhz", index );
+    snprintf(propname, 256, "/radios/nav[%d]/frequencies/standby-mhz", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/radials/actual-deg", index );
+    snprintf(propname, 256, "/radios/nav[%d]/radials/actual-deg", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/radials/selected-deg", index );
+    snprintf(propname, 256, "/radios/nav[%d]/radials/selected-deg", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/ident", index );
+    snprintf(propname, 256, "/radios/nav[%d]/ident", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/to-flag", index );
+    snprintf(propname, 256, "/radios/nav[%d]/to-flag", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/from-flag", index );
+    snprintf(propname, 256, "/radios/nav[%d]/from-flag", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/in-range", index );
+    snprintf(propname, 256, "/radios/nav[%d]/in-range", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/heading-needle-deflection", index );
+    snprintf(propname, 256, "/radios/nav[%d]/heading-needle-deflection", index);
     fgUntie( propname );
-    sprintf( propname, "/radios/nav[%d]/gs-needle-deflection", index );
+    snprintf(propname, 256, "/radios/nav[%d]/gs-needle-deflection", index);
     fgUntie( propname );
 }
 
