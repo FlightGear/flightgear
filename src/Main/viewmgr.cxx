@@ -25,8 +25,6 @@
 
 #include <plib/sg.h>
 
-#include <GUI/sgVec3Slider.hxx>	// FIXME: this should NOT be needed
-
 #include "viewmgr.hxx"
 #include "fg_props.hxx"
 

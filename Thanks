@@ -454,6 +454,8 @@ Ed Williams <Ed_Williams@compuserve.com>
 Jim Wilson <jimw@kelcomaine.com>
   Wrote a major overhaul of the viewer code to make it more flexible 
   and modular.  Contributed many small fixes and bug reports.
+  Contributed the the pui property browser.
+  Contributed to the autopilot.
 
 
 Jean-Claude Wippler <jcw@equi4.com>

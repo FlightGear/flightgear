@@ -530,8 +530,8 @@ void fgPropPicker::find_props ()
 
   // if non-empty list, adjust the size of the slider...
   if (num_files > 1) {
-    if ((11.0f/(num_files-1)) < 1) {
-      slider->setSliderFraction (11.0f/(num_files-1)) ;
+    if ((11.0f/(num_files)) < 1) {
+      slider->setSliderFraction (11.0f/(num_files)) ;
       slider->reveal();
       up_arrow->reveal();
       down_arrow->reveal();
@@ -607,5 +607,3 @@ fgPropEdit::fgPropEdit ( char *name, char *value, char *proppath ) : puDialogBox
         
     FG_FINALIZE_PUI_DIALOG( this );
 }
-
-
