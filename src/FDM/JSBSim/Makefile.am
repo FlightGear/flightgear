@@ -18,7 +18,6 @@ libJSBSim_a_SOURCES = \
 	FGAuxiliary.cpp FGAuxiliary.h \
 	FGCoefficient.cpp FGCoefficient.h \
 	FGConfigFile.cpp FGConfigFile.h \
-	FGControls.cpp FGControls.h \
 	FGDefs.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
