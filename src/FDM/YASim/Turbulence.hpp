@@ -6,7 +6,7 @@ public:
     ~Turbulence();
     void update(double dt, double rate);
     void setMagnitude(double mag);
-    void getTurbulence(double* loc, float* turbOut);
+    void getTurbulence(double* loc, float alt, float* up, float* turbOut);
     void offset(float* dist);
 
 private:

@@ -25,7 +25,7 @@ const double MAGNITUDE_EXP = 2.0;
 // bandwidth to the higher frequency components.  A turbulence field
 // will swing between maximal values over a distance of approximately
 // 2^(MEANINGFUL_GENS-1).
-const int MEANINGFUL_GENS = 8;
+const int MEANINGFUL_GENS = 7;
 
 static const float FT2M = 0.3048;
 
@@ -130,7 +130,8 @@ void Turbulence::offset(float* offset)
         _off[i] += offset[i];
 }
 
-void Turbulence::getTurbulence(double* loc, float* turbOut)
+void Turbulence::getTurbulence(double* loc, float alt, float* up,
+                               float* turbOut)
 {
     // Convert to integer 2D coordinates; wrap to [0:_sz].
     double a = (loc[0] + _off[0]) + (loc[2] + _off[2]);
@@ -157,6 +158,20 @@ void Turbulence::getTurbulence(double* loc, float* turbOut)
         float avg0 = (1-a)*turb00[i] + a*turb01[i];
         float avg1 = (1-a)*turb10[i] + a*turb11[i];
         turbOut[i] = mag * ((1-b)*avg0 + b*avg1);
+    }
+
+    // Adjust for altitude effects
+    if(alt < 300) {
+        float altmul = 0.5 + (1-0.5) * (alt*(1.0/300));
+        if(alt < 100) {
+            float vmul = alt * (1.0/100);
+            vmul = vmul / altmul; // pre-correct for the pending altmul
+            float dot = Math::dot3(turbOut, up);
+            float off[3];
+            Math::mul3(dot * (vmul-1), up, off);
+            Math::add3(turbOut, off, turbOut);
+        }
+        Math::mul3(altmul, turbOut, turbOut);
     }
 }
 

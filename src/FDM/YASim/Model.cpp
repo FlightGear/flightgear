@@ -79,13 +79,18 @@ void Model::initIteration()
     int i;
     for(i=0; i<3; i++)
 	_gyro[i] = _torque[i] = 0;
+
+    // Need a local altitude for the wind calculation
+    float dummy[3];
+    float alt = Math::abs(localGround(_s, dummy));
+
     for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = (Thruster*)_thrusters.get(i);
 	
         // Get the wind velocity at the thruster location
         float pos[3], v[3];
 	t->getPosition(pos);
-        localWind(pos, _s, v);
+        localWind(pos, _s, v, alt);
 
 	t->setWind(v);
 	t->setAir(_pressure, _temp, _rho);
@@ -251,8 +256,7 @@ void Model::setGroundEffect(float* pos, float span, float mul)
 // (v dot _ground)-_ground[3] gives the distance AGL.
 void Model::setGroundPlane(double* planeNormal, double fromOrigin)
 {
-    int i;
-    for(i=0; i<3; i++) _ground[i] = planeNormal[i];
+    for(int i=0; i<3; i++) _ground[i] = planeNormal[i];
     _ground[3] = fromOrigin;
 }
 
@@ -286,6 +290,14 @@ void Model::calcForces(State* s)
 	_body.addForce(pos, thrust);
     }
 
+    // Get a ground plane in local coordinates.  The first three
+    // elements are the normal vector, the final one is the distance
+    // from the local origin along that vector to the ground plane
+    // (negative for objects "above" the ground)
+    float ground[4];
+    ground[3] = localGround(s, ground);
+    float alt = Math::abs(ground[3]);
+
     // Gravity, convert to a force, then to local coordinates
     float grav[3];
     Glue::geodUp(s->pos, grav);
@@ -303,7 +315,7 @@ void Model::calcForces(State* s)
 	// Vsurf = wind - velocity + (rot cross (cg - pos))
 	float vs[3], pos[3];
 	sf->getPosition(pos);
-        localWind(pos, s, vs);
+        localWind(pos, s, vs, alt);
 
 	float force[3], torque[3];
 	sf->calcForce(vs, _rho, force, torque);
@@ -318,7 +330,7 @@ void Model::calcForces(State* s)
 	// Vsurf = wind - velocity + (rot cross (cg - pos))
 	float vs[3], pos[3];
 	sf->getPosition(pos);
-        localWind(pos, s, vs);
+        localWind(pos, s, vs, alt);
 
 	float force[3], torque[3];
 	sf->calcForce(vs, _rho, force, torque);
@@ -335,7 +347,7 @@ void Model::calcForces(State* s)
 	// Vsurf = wind - velocity + (rot cross (cg - pos))
 	float vs[3], pos[3];
 	sf->getPosition(pos);
-        localWind(pos, s, vs);
+        localWind(pos, s, vs, alt);
 
 	float force[3], torque[3];
 	sf->calcForce(vs, _rho, force, torque);
@@ -346,13 +358,6 @@ void Model::calcForces(State* s)
 	_body.addForce(pos, force);
 	_body.addTorque(torque);
     }
-
-    // Get a ground plane in local coordinates.  The first three
-    // elements are the normal vector, the final one is the distance
-    // from the local origin along that vector to the ground plane
-    // (negative for objects "above" the ground)
-    float ground[4];
-    ground[3] = localGround(s, ground);
 
     // Account for ground effect by multiplying the vertical force
     // component by an amount linear with the fraction of the wingspan
@@ -433,19 +438,20 @@ float Model::localGround(State* s, float* out)
 
 // Calculates the airflow direction at the given point and for the
 // specified aircraft velocity.
-void Model::localWind(float* pos, State* s, float* out)
+void Model::localWind(float* pos, State* s, float* out, float alt)
 {
     float tmp[3], lwind[3], lrot[3], lv[3];
 
     // Get a global coordinate for our local position, and calculate
     // turbulence.
-    // FIXME: modify turbulence for altitude, attenuating the vertical
-    // component near the ground.
     if(_turb) {
-        double gpos[3];
+        double gpos[3]; float up[3];
         Math::tmul33(s->orient, pos, tmp);
-        for(int i=0; i<3; i++) gpos[i] = s->pos[i] + tmp[i];
-        _turb->getTurbulence(gpos, lwind);
+        for(int i=0; i<3; i++) {
+            gpos[i] = s->pos[i] + tmp[i];
+            up[i] = _ground[i];
+        }
+        _turb->getTurbulence(gpos, alt, up, lwind);
         Math::add3(_wind, lwind, lwind);
     } else {
         Math::set3(_wind, lwind);

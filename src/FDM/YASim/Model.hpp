@@ -74,7 +74,7 @@ private:
     void calcGearForce(Gear* g, float* v, float* rot, float* ground);
     float gearFriction(float wgt, float v, Gear* g);
     float localGround(State* s, float* out);
-    void localWind(float* pos, State* s, float* out);
+    void localWind(float* pos, State* s, float* out, float alt);
 
     Integrator _integrator;
     RigidBody _body;
