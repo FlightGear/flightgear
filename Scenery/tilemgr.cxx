@@ -459,8 +459,12 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/06/06 01:09:32  curt
+// I goofed on the log message in the last commit ... now fixed.
+//
 // Revision 1.17  1998/06/06 01:07:18  curt
 // Increased per material fragment list size from 100 to 400.
+// Now correctly draw viewable fragments in per material order.
 //
 // Revision 1.16  1998/06/05 22:39:55  curt
 // Working on sorting by, and rendering by material properties.

@@ -422,8 +422,12 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.11  1998/06/06 01:09:31  curt
+// I goofed on the log message in the last commit ... now fixed.
+//
 // Revision 1.10  1998/06/06 01:07:17  curt
 // Increased per material fragment list size from 100 to 400.
+// Now correctly draw viewable fragments in per material order.
 //
 // Revision 1.9  1998/06/05 22:39:54  curt
 // Working on sorting by, and rendering by material properties.
