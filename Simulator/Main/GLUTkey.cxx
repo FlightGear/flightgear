@@ -176,14 +176,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 	FG_LOG( FG_INPUT, FG_DEBUG, "" );
 	switch (k) {
 	case 50: // numeric keypad 2
-	    if( fgAPAltitudeEnabled() ) {
+	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
 		fgAPAltitudeAdjust( 100 );
 	    } else {
 		controls.move_elevator(-0.05);
 	    }
 	    return;
 	case 56: // numeric keypad 8
-	    if( fgAPAltitudeEnabled() ) {
+	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
 		fgAPAltitudeAdjust( -100 );
 	    } else {
 		controls.move_elevator(0.05);
@@ -352,7 +352,7 @@ void GLUTspecialkey(int k, int x, int y) {
 
  	    return;
  	case GLUT_KEY_F9: // F9 toggles textures on and off...
-	    if ( material_mgr.get_textures_loaded() ) {
+	    if ( material_mgr.loaded() ) {
 		current_options.get_textures() ?
 		    current_options.set_textures(false) :
 		    current_options.set_textures(true);
@@ -370,14 +370,14 @@ void GLUTspecialkey(int k, int x, int y) {
 	    //exit(1);
 	    return;
 	case GLUT_KEY_UP:
-	    if( fgAPAltitudeEnabled() ) {
+	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
 		fgAPAltitudeAdjust( -100 );
 	    } else {
 		controls.move_elevator(0.05);
 	    }
 	    return;
 	case GLUT_KEY_DOWN:
-	    if( fgAPAltitudeEnabled() ) {
+	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {
 		fgAPAltitudeAdjust( 100 );
 	    } else {
 		controls.move_elevator(-0.05);

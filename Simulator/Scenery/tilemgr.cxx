@@ -56,8 +56,8 @@
 
 // to test clipping speedup in fgTileMgrRender()
 #if defined ( USE_FAST_FOV_CLIP )
-  // #define TEST_FOV_CLIP
-  // #define TEST_ELEV
+// #define TEST_FOV_CLIP
+// #define TEST_ELEV
 #endif
 
 
@@ -81,7 +81,9 @@ int fgTileMgrInit( void ) {
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem." );
 
     // load default material library
-    material_mgr.load_lib();
+    if ( ! material_mgr.loaded() ) {
+	material_mgr.load_lib();
+    }
 
     return 1;
 }
@@ -362,6 +364,7 @@ int fgTileMgrUpdate( void ) {
 
 	// wipe/initialize tile cache
 	c->init();
+	p_last.make_bad();
 
 	// build the local area list and update cache
 	for ( j = 0; j < tile_diameter; j++ ) {
@@ -471,9 +474,9 @@ static int viewable( const Point3D& cp, double radius ) {
     int viewable = 1; // start by assuming it's viewable
     double x1, y1;
 
-/********************************/
+    /********************************/
 #if defined( USE_FAST_FOV_CLIP ) // views.hxx
-/********************************/
+    /********************************/
 	
     MAT3vec eye;	
     double *mat;
@@ -490,9 +493,9 @@ static int viewable( const Point3D& cp, double radius ) {
     // Check near and far clip plane
     if( ( eye[2] > radius ) ||
 	( eye[2] + radius + current_weather.get_visibility() < 0) )
-    {
-	return(0);
-    }
+	{
+	    return(0);
+	}
 	
     eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12])
 	* current_view.get_slope_x();
@@ -500,9 +503,9 @@ static int viewable( const Point3D& cp, double radius ) {
     // check right and left clip plane (from eye perspective)
     x1 = radius * current_view.get_fov_x_clip();
     if( (eye[2] > -(eye[0]+x1)) || (eye[2] > (eye[0]-x1)) )
-    {
-	return(0);
-    }
+	{
+	    return(0);
+	}
 	
     eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) 
 	* current_view.get_slope_y();
@@ -510,13 +513,13 @@ static int viewable( const Point3D& cp, double radius ) {
     // check bottom and top clip plane (from eye perspective)
     y1 = radius * current_view.get_fov_y_clip();
     if( (eye[2] > -(eye[1]+y1)) || (eye[2] > (eye[1]-y1)) )
-    {
-	return(0);
-    }
+	{
+	    return(0);
+	}
 
-/********************************/	
+    /********************************/	
 #else // DO NOT USE_FAST_FOV_CLIP
-/********************************/	
+    /********************************/	
 
     fgVIEW *v;
     MAT3hvec world, eye;
@@ -628,7 +631,7 @@ inrange( const double radius, const Point3D& center, const Point3D& vp,
 static void
 update_tile_geometry( fgTILE *t, GLdouble *MODEL_VIEW)
 {
-    GLdouble *m;
+    GLfloat *m;
     double x, y, z;
 	
     // calculate tile offset
@@ -759,5 +762,3 @@ void fgTileMgrRender( void ) {
     material_mgr.render_fragments();
     xglPopMatrix();
 }
-
-

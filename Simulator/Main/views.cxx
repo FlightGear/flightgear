@@ -133,7 +133,7 @@ void FGView::UpdateFOV( const fgOPTIONS& o ) {
 void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 		     GLdouble centerx, GLdouble centery, GLdouble centerz,
 		     GLdouble upx, GLdouble upy, GLdouble upz ) {
-    GLdouble *m;
+    GLfloat *m;
     GLdouble x[3], y[3], z[3];
     GLdouble mag;
 
@@ -208,7 +208,7 @@ void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
     m[15] = 1.0 /* m[3] * -eyex + m[7] * -eyey + m[11] * -eyez + m[15] */;
 
     // xglMultMatrixd( m );
-    xglLoadMatrixd( m );
+    xglLoadMatrixf( m );
 }
 
 
@@ -279,7 +279,7 @@ void FGView::UpdateViewParams( void ) {
     //		     GLdouble centerx, GLdouble centery, GLdouble centerz,
     //		     GLdouble upx, GLdouble upy, GLdouble upz )
     {
-	GLdouble *m;
+	GLfloat *m;
 	GLdouble x[3], y[3], z[3];
 	//    GLdouble mag;
 
@@ -369,7 +369,7 @@ void FGView::UpdateViewParams( void ) {
 	m[15] = 1.0 /* m[3] * -view_pos.x() + m[7] * -view_pos.y() + m[11] * -view_pos.z() + m[15] */;
 
 	// xglMultMatrixd( m );
-	xglLoadMatrixd( m );
+	xglLoadMatrixf( m );
     }
 #endif // FG_VIEW_INLINE_OPTIMIZATIONS
 	

@@ -61,6 +61,10 @@ fgTILECACHE::init( void )
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing the tile cache." );
 
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+	if ( tile_cache[i].used ) {
+	    entry_free(i);
+	    tile_cache[i].tile_bucket.make_bad();
+	}
 	tile_cache[i].used = 0;
     }
 }

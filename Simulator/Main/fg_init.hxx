@@ -41,6 +41,10 @@ int fgInitGeneral ( void );
 int fgInitSubsystems( void );
 
 
+// Reset
+void fgReInitSubsystems( void );
+
+
 #endif // _FG_INIT_H
 
 

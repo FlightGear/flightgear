@@ -212,6 +212,7 @@ public:
     }
 
     // Update functions
+    inline void set_airport_id( const string id ) { airport_id = id; }
     inline void set_hud_status( bool status ) { hud_status = status; }
     inline void set_fov( double amount ) { fov = amount; }
     inline void set_textures( bool status ) { textures = status; }

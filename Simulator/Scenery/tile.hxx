@@ -76,7 +76,7 @@ public:
     Point3D center;
     double bounding_radius;
     Point3D offset;
-    GLdouble model_view[16];
+    GLfloat model_view[16];
 
     // this tile's official location in the world
     FGBucket tile_bucket;
@@ -122,16 +122,18 @@ public:
 	offset = center - off;
     }
 
+    // Return this tile's offset
+    inline Point3D GetOffset( void ) const { return offset; }
 
     // Calculate the model_view transformation matrix for this tile
     inline void
-    UpdateViewMatrix(GLdouble *MODEL_VIEW)
+    UpdateViewMatrix(GLfloat *MODEL_VIEW)
     {
 
 #if defined( USE_MEM ) || defined( WIN32 )
-	memcpy( model_view, MODEL_VIEW, 16*sizeof(GLdouble) );
+	memcpy( model_view, MODEL_VIEW, 16*sizeof(GLfloat) );
 #else 
-	bcopy( MODEL_VIEW, model_view, 16*sizeof(GLdouble) );
+	bcopy( MODEL_VIEW, model_view, 16*sizeof(GLfloat) );
 #endif
 	
 	// This is equivalent to doing a glTranslatef(x, y, z);
@@ -158,5 +160,3 @@ private:
 
 
 #endif // _TILE_HXX 
-
-

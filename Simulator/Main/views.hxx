@@ -150,7 +150,7 @@ public:
     MAT3mat WORLD_TO_EYE;
 
     // Current model view matrix;
-    GLdouble MODEL_VIEW[16];
+    GLfloat MODEL_VIEW[16];
 
 public:
 
@@ -242,7 +242,7 @@ public:
     inline double *get_surface_east() { return surface_east; }
     inline double *get_local_up() { return local_up; }
     inline const MAT3mat *get_WORLD_TO_EYE() const { return &WORLD_TO_EYE; }
-    inline GLdouble *get_MODEL_VIEW() { return MODEL_VIEW; }
+    inline GLfloat *get_MODEL_VIEW() { return MODEL_VIEW; }
 };
 
 
