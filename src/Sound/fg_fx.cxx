@@ -40,6 +40,8 @@
 
 
 FGFX::FGFX () :
+    _volume( fgGetNode("/sim/sound/volume") ),
+    _pause( fgGetNode("/sim/sound/pause") ),
     last_pause( true ),
     last_volume( 0.0 )
 {
@@ -108,7 +110,7 @@ void
 FGFX::update (double dt)
 {
     // command sound manger
-    bool pause = fgGetBool("/sim/sound/pause");
+    bool pause = _pause->getBoolValue();
     if ( pause != last_pause ) {
         if ( pause ) {
             globals->get_soundmgr()->pause();
@@ -118,7 +120,7 @@ FGFX::update (double dt)
         last_pause = pause;
     }
 
-    double volume = fgGetDouble("/sim/sound/volume");
+    double volume = _volume->getDoubleValue();
     if ( volume != last_volume ) {
         globals->get_soundmgr()->set_volume( volume );        
         last_volume = volume;
