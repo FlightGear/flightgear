@@ -326,7 +326,7 @@ private:
 
 	// Logical runway details - this might change in the future.
 	//runway_array_type runways;	// STL way
-	Rwy runways[36];	// quick hack!
+	Rwy runways[37];	// quick hack!
 	
 	// Physical runway details
 	double aptElev;		// Airport elevation
