@@ -326,6 +326,8 @@ parse_time(const string& time_in) {
 	result += seconds / 3600.0;
     }
 
+    cout << " parse_time() = " << sign * result << endl;
+
     return(sign * result);
 }
 
@@ -758,8 +760,8 @@ parse_option (const string& arg)
     } else if ( arg.find( "--pitch=" ) == 0 ) {
 	fgSetDouble("/sim/presets/pitch-deg", atof(arg.substr(8)));
     } else if ( arg.find( "--glideslope=" ) == 0 ) {
-	fgSetDouble("/velocities/glideslope", atof(arg.substr(13))
-                                          *SG_DEGREES_TO_RADIANS);
+	fgSetDouble("/sim/presets/glideslope",
+                    atof(arg.substr(13)) * SG_DEGREES_TO_RADIANS );
     }  else if ( arg.find( "--roc=" ) == 0 ) {
 	fgSetDouble("/velocities/vertical-speed-fps", atof(arg.substr(6))/60);
     } else if ( arg.find( "--fg-root=" ) == 0 ) {
@@ -1017,72 +1019,6 @@ parse_option (const string& arg)
     }
     
     return FG_OPTIONS_OK;
-}
-
-
-// Scan the command line options for an fg_root definition and set
-// just that.
-string
-fgScanForRoot (int argc, char **argv) 
-{
-    int i = 1;
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Scanning for root: command line");
-
-    while ( i < argc ) {
-	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
-
-	string arg = argv[i];
-	if ( arg.find( "--fg-root=" ) == 0 ) {
-	    return arg.substr( 10 );
-	}
-
-	i++;
-    }
-
-    return "";
-}
-
-
-// Scan the config file for an fg_root definition and set just that.
-string
-fgScanForRoot (const string& path)
-{
-    sg_gzifstream in( path );
-    if ( !in.is_open() )
-      return "";
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Scanning for root: " << path );
-
-    in >> skipcomment;
-#ifndef __MWERKS__
-    while ( ! in.eof() ) {
-#else
-    char c = '\0';
-    while ( in.get(c) && c != '\0' ) {
-	in.putback(c);
-#endif
-	string line;
-
-#if defined( macintosh )
-        getline( in, line, '\r' );
-#else
-	getline( in, line, '\n' );
-#endif
-
-        // catch extraneous (DOS) line ending character
-        if ( line[line.length() - 1] < 32 ) {
-            line = line.substr( 0, line.length()-1 );
-        }
-
-	if ( line.find( "--fg-root=" ) == 0 ) {
-	    return line.substr( 10 );
-	}
-
-	in >> skipcomment;
-    }
-
-    return "";
 }
 
 

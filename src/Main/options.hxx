@@ -30,8 +30,6 @@
 #endif
 
 extern void fgSetDefaults ();
-extern string fgScanForRoot (int argc, char ** argv);
-extern string fgScanForRoot (const string &file_path);
 extern void fgParseArgs (int argc, char ** argv);
 extern void fgParseOptions (const string &file_path);
 extern void fgUsage (bool verbose = false);

@@ -1384,7 +1384,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     *bounding_radius = obj.get_gbs_radius();
 
     point_list const& nodes = obj.get_wgs84_nodes();
-    point_list const& colors = obj.get_colors();
+    // point_list const& colors = obj.get_colors();
     point_list const& normals = obj.get_normals();
     point_list const& texcoords = obj.get_texcoords();
 

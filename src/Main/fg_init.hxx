@@ -45,7 +45,8 @@
 SG_USING_STD(string);
 
 
-// Read in configuration (file and command line) and just set fg_root
+// Read in configuration (files and command line optoins) but only set
+// fg_root
 bool fgInitFGRoot ( int argc, char **argv );
 
 

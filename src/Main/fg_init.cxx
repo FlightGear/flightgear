@@ -141,7 +141,72 @@ extern const char *default_root;
 
 SkySceneLoader *sgCloud3d;
 
-// Read in configuration (file and command line) and just set fg_root
+
+// Scan the command line options for an fg_root definition and set
+// just that.
+static string fgScanForRoot (int argc, char **argv) {
+    int i = 1;
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Scanning for root: command line");
+
+    while ( i < argc ) {
+	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
+
+	string arg = argv[i];
+	if ( arg.find( "--fg-root=" ) == 0 ) {
+	    return arg.substr( 10 );
+	}
+
+	i++;
+    }
+
+    return "";
+}
+
+
+// Scan the user config files for an fg_root definition and set just
+// that.
+static string fgScanForRoot (const string& path) {
+    sg_gzifstream in( path );
+    if ( !in.is_open() )
+      return "";
+
+    SG_LOG( SG_GENERAL, SG_INFO, "Scanning for root: " << path );
+
+    in >> skipcomment;
+#ifndef __MWERKS__
+    while ( ! in.eof() ) {
+#else
+    char c = '\0';
+    while ( in.get(c) && c != '\0' ) {
+	in.putback(c);
+#endif
+	string line;
+
+#if defined( macintosh )
+        getline( in, line, '\r' );
+#else
+	getline( in, line, '\n' );
+#endif
+
+        // catch extraneous (DOS) line ending character
+        if ( line[line.length() - 1] < 32 ) {
+            line = line.substr( 0, line.length()-1 );
+        }
+
+	if ( line.find( "--fg-root=" ) == 0 ) {
+	    return line.substr( 10 );
+	}
+
+	in >> skipcomment;
+    }
+
+    return "";
+}
+
+
+// Read in configuration (files and command line options) but only set
+// fg_root
 bool fgInitFGRoot ( int argc, char **argv ) {
     string root;
     char* envp;
@@ -200,6 +265,118 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 
     SG_LOG(SG_INPUT, SG_INFO, "fg_root = " << root );
     globals->set_fg_root(root);
+
+    return true;
+}
+
+
+// Scan the command line options for an aircraft definition and set
+// just that.
+static string fgScanForAircraft (int argc, char **argv) {
+    int i = 1;
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Scanning for aircraft: command line");
+
+    while ( i < argc ) {
+	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
+
+	string arg = argv[i];
+	if ( arg.find( "--aircraft=" ) == 0 ) {
+	    return arg.substr( 11 );
+	}
+
+	i++;
+    }
+
+    return "";
+}
+
+
+// Scan the user config files for an aircrafg definition and set just
+// that.
+static string fgScanForAircraft (const string& path) {
+    sg_gzifstream in( path );
+    if ( !in.is_open() ) {
+        return "";
+    }
+
+    SG_LOG( SG_GENERAL, SG_INFO, "Scanning for aircraft: " << path );
+
+    in >> skipcomment;
+#ifndef __MWERKS__
+    while ( ! in.eof() ) {
+#else
+    char c = '\0';
+    while ( in.get(c) && c != '\0' ) {
+	in.putback(c);
+#endif
+	string line;
+
+#if defined( macintosh )
+        getline( in, line, '\r' );
+#else
+	getline( in, line, '\n' );
+#endif
+
+        // catch extraneous (DOS) line ending character
+        if ( line[line.length() - 1] < 32 ) {
+            line = line.substr( 0, line.length()-1 );
+        }
+
+	if ( line.find( "--aircraft=" ) == 0 ) {
+	    return line.substr( 11 );
+	}
+
+	in >> skipcomment;
+    }
+
+    return "";
+}
+
+
+// Read in configuration (files and command line options) but only set
+// aircraft
+bool fgInitFGAircraft ( int argc, char **argv ) {
+    string aircraft;
+    char* envp;
+
+    // First parse command line options looking for --aircraft=, this
+    // will override anything specified in a config file
+    aircraft = fgScanForAircraft(argc, argv);
+
+#if defined( unix ) || defined( __CYGWIN__ )
+    // Next check home directory for .fgfsrc.hostname file
+    if ( aircraft.empty() ) {
+        envp = ::getenv( "HOME" );
+        if ( envp != NULL ) {
+            SGPath config( envp );
+            config.append( ".fgfsrc" );
+            char name[256];
+            gethostname( name, 256 );
+            config.concat( "." );
+            config.concat( name );
+            aircraft = fgScanForRoot(config.str());
+        }
+    }
+#endif
+
+    // Next check home directory for .fgfsrc file
+    if ( aircraft.empty() ) {
+        envp = ::getenv( "HOME" );
+        if ( envp != NULL ) {
+            SGPath config( envp );
+            config.append( ".fgfsrc" );
+            aircraft = fgScanForRoot(config.str());
+        }
+    }
+
+    // if an aircraft was specified, set the property name
+    if ( !aircraft.empty() ) {
+        SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
+        fgSetString("/sim/aircraft", aircraft.c_str() );
+    } else {
+        SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
+    }
 
     return true;
 }
@@ -386,7 +563,7 @@ do_options (int argc, char ** argv)
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
 
-                                // First, set some sane default values
+    // First, set some sane default values
     fgSetDefaults();
 
     // Read global preferences from $FG_ROOT/preferences.xml
@@ -395,31 +572,35 @@ bool fgInitConfig ( int argc, char **argv ) {
     SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
 
     // Detect the required language as early as possible
-    if (fgDetectLanguage() != true)
-       return false;
-
-    // Read the default aircraft config file.
-    do_options(argc, argv);     // preparse options for default aircraft
-    string aircraft = fgGetString("/sim/aircraft", "");
-    if (aircraft.size() > 0) {
-      SGPath aircraft_path(globals->get_fg_root());
-      aircraft_path.append("Aircraft");
-      aircraft_path.append(aircraft);
-      aircraft_path.concat("-set.xml");
-      SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
-             << " from " << aircraft_path.str());
-      try {
-        readProperties(aircraft_path.str(), globals->get_props());
-      } catch (const sg_exception &e) {
-        string message = "Error reading default aircraft: ";
-        message += e.getFormattedMessage();
-        SG_LOG(SG_INPUT, SG_ALERT, message);
-        exit(2);
-      }
-    } else {
-      SG_LOG(SG_INPUT, SG_ALERT, "No default aircraft specified");
+    if ( !fgDetectLanguage() ) {
+        return false;
     }
 
+    // Scan user config files and command line for a specified aircraft.
+    fgInitFGAircraft(argc, argv);
+
+    string aircraft = fgGetString("/sim/aircraft", "");
+    if ( aircraft.size() > 0 ) {
+        SGPath aircraft_path(globals->get_fg_root());
+        aircraft_path.append("Aircraft");
+        aircraft_path.append(aircraft);
+        aircraft_path.concat("-set.xml");
+        SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
+               << " from " << aircraft_path.str());
+        try {
+            readProperties(aircraft_path.str(), globals->get_props());
+        } catch (const sg_exception &e) {
+            string message = "Error reading default aircraft: ";
+            message += e.getFormattedMessage();
+            SG_LOG(SG_INPUT, SG_ALERT, message);
+            exit(2);
+        }
+    } else {
+        SG_LOG(SG_INPUT, SG_ALERT, "No default aircraft specified");
+    }
+
+    // parse options after loading aircraft to ensure any user
+    // overrides of defaults are honored.
     do_options(argc, argv);
 
     return true;
@@ -634,13 +815,13 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 }
 
 
-void fgSetPosFromGlideSlope(void) {
-    double gs = fgGetDouble("/velocities/glideslope");
+void fgSetPosFromGlideSlope() {
+    double gs = fgGetDouble("/sim/presets/glideslope");
     double od = fgGetDouble("/sim/presets/offset-distance");
     double alt = fgGetDouble("/sim/presets/altitude-ft");
     
-    //if glideslope and offset-distance are set and altitude is
-    //not, calculate the initial altitude
+    // if glideslope and offset-distance are set and altitude is not,
+    // calculate the initial altitude
     if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
         od *= SG_NM_TO_METER * SG_METER_TO_FEET;
         alt = fabs(od*tan(gs));
@@ -651,16 +832,16 @@ void fgSetPosFromGlideSlope(void) {
         od  = alt/tan(gs);
         od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
         fgSetDouble("/sim/presets/offset-distance",od);
-        SG_LOG(SG_GENERAL,SG_INFO, "Calculated offset distance as: " 
+        SG_LOG(SG_GENERAL, SG_INFO, "Calculated offset distance as: " 
                                        << od  << " nm");
     } else if( fabs(gs) > 0.01 ) {
-        SG_LOG(SG_GENERAL,SG_ALERT, "Glideslope given but not altitude" 
-                                  << " or offset-distance.  Resetting"
-                                  << " glideslope to zero" );
-        fgSetDouble("/velocities/glideslope",0);                                  
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Glideslope given but not altitude or offset-distance." );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
+        fgSetDouble("/sim/presets/glideslope",0);
     }                              
-                                      
 }                       
+
 
 // General house keeping initializations
 bool fgInitGeneral( void ) {

@@ -1388,7 +1388,7 @@ void fgReshape( int width, int height ) {
 }
 
 // Initialize GLUT and define a main window
-int fgGlutInit( int *argc, char **argv ) {
+static bool fgGlutInit( int *argc, char **argv ) {
 
 #if !defined( macintosh )
     // GLUT will extract all glut specific options so later on we only
@@ -1470,12 +1470,12 @@ int fgGlutInit( int *argc, char **argv ) {
     general.set_glDepthBits( tmp );
     SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
 
-    return 1;
+    return true;
 }
 
 
 // Initialize GLUT event handlers
-int fgGlutInitEvents( void ) {
+static bool fgGlutInitEvents( void ) {
     // call fgReshape() on window resizes
     glutReshapeFunc( fgReshape );
 
@@ -1488,11 +1488,11 @@ int fgGlutInitEvents( void ) {
     // draw the scene
     glutDisplayFunc( fgRenderFrame );
 
-    return 1;
+    return true;
 }
 
-// Main loop
-int mainLoop( int argc, char **argv ) {
+// Main top level initialization
+static bool fgMainInit( int argc, char **argv ) {
 
 #if defined( macintosh )
     freopen ("stdout.txt", "w", stdout );
@@ -1557,7 +1557,9 @@ int mainLoop( int argc, char **argv ) {
     // Initialize the Aircraft directory to "" (UIUC)
     aircraft_dir = "";
 
-    // Load the configuration parameters
+    // Load the configuration parameters.  (Command line options
+    // overrides config file options.  Config file options override
+    // defaults.)
     if ( !fgInitConfig(argc, argv) ) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
 	exit(-1);
@@ -1743,7 +1745,7 @@ int mainLoop( int argc, char **argv ) {
 
     // we never actually get here ... but to avoid compiler warnings,
     // etc.
-    return 0;
+    return false;
 }
 
 
@@ -1831,7 +1833,7 @@ int main ( int argc, char **argv ) {
     // FIXME: add other, more specific
     // exceptions.
     try {
-        mainLoop(argc, argv);
+        fgMainInit(argc, argv);
     } catch (sg_throwable &t) {
 				// We must use cerr rather than
 				// logging, since logging may be
