@@ -52,7 +52,7 @@ static fgDebugCallback fg_DebugCallback = NULL;
  */
 static struct {
   char *str;
-  fgDebugClass class;
+  fgDebugClass dbg_class;
 } fg_DebugClasses[] = {
   { "FG_NONE",    0x00000000 },
   { "FG_TERRAIN", 0x00000001 },
@@ -147,7 +147,7 @@ fgDebugClass fgDebugStrToClass( char *str )
       if( fg_DebugClasses[i].str == NULL ) {
 	fprintf( stderr, "fg_debug.c: Could not find message class '%s'\n", pt ); 
       } else {
-	val |= fg_DebugClasses[i].class;
+	val |= fg_DebugClasses[i].dbg_class;
       }
     }
   }
@@ -166,10 +166,10 @@ void fgSetDebugOutput( FILE *out )
 
 
 /* fgSetDebugLevels =======================================================*/
-void fgSetDebugLevels( fgDebugClass class, fgDebugPriority prio )
+void fgSetDebugLevels( fgDebugClass dbg_class, fgDebugPriority prio )
 {
   FG_GRABDEBUGSEM;
-  fg_DebugClass = class;
+  fg_DebugClass = dbg_class;
   fg_DebugPriority = prio;
   FG_RELEASEDEBUGSEM;
 }
@@ -188,20 +188,20 @@ fgDebugCallback fgRegisterDebugCallback( fgDebugCallback callback )
 
 
 /* fgPrintf ===============================================================*/
-int fgPrintf( fgDebugClass class, fgDebugPriority prio, char *fmt, ... )
+int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... )
 {
   char szOut[1024+1];
   int ret = 0;
 
   FG_GRABDEBUGSEM;
 
-  if( !(class & fg_DebugClass) || (prio < fg_DebugPriority) ) {
+  if( !(dbg_class & fg_DebugClass) || (prio < fg_DebugPriority) ) {
     FG_RELEASEDEBUGSEM;
     return 0;
   } 
   ret = vsprintf( szOut, fmt, (&fmt+1));
 
-  if( fg_DebugCallback!=NULL && fg_DebugCallback(class, prio, szOut) ) {
+  if( fg_DebugCallback!=NULL && fg_DebugCallback(dbg_class, prio, szOut) ) {
     FG_RELEASEDEBUGSEM;
     return ret;
   } 

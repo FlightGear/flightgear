@@ -28,7 +28,7 @@
 
 #include <stdio.h>
 
-/* NB:  To add a class, add it here, and add it to the structure
+/* NB:  To add a dbg_class, add it here, and add it to the structure
    in fg_debug.c
 */
 typedef enum {
@@ -81,16 +81,16 @@ void fgInitDebug( void );
    greater than or equal to fg_DebugPriority and in the current debug class 
    (fg_DebugClass) are printed.
 */
-int fgPrintf( fgDebugClass class, fgDebugPriority prio, char *fmt, ... ); 
+int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ); 
 
 
 /* fgSetDebugLevels()
 
    Expects:
-   class      Bitmask representing classes to display.
+   dbg_class      Bitmask representing classes to display.
    prio       Minimum priority of messages to display.
 */
-void fgSetDebugLevels( fgDebugClass class, fgDebugPriority prio );
+void fgSetDebugLevels( fgDebugClass dbg_class, fgDebugPriority prio );
 
 /* fgSetDebugOutput()
 
