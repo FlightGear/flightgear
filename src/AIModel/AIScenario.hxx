@@ -32,9 +32,11 @@ public:
 
   typedef struct {
    string callsign;
+   string aitype;       // can be aircraft, ship, storm, thermal
    string aircraft_class;
    string model_path;
    string flightplan;
+   double repeat;       // in seconds
   } entry;
 
    FGAIScenario(string filename);

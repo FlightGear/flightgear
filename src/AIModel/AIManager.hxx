@@ -128,6 +128,7 @@ private:
     int numObjects;
     SGPropertyNode* root;
     SGPropertyNode* wind_from_down;
+    string scenario_filename;
 
     double user_latitude;
     double user_longitude;

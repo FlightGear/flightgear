@@ -39,6 +39,7 @@ FGAIManager::FGAIManager() {
   numObjects = 0;
   _dt = 0.0;
   dt_count = 9;
+  scenario_filename = "";
 }
 
 FGAIManager::~FGAIManager() {
@@ -59,6 +60,10 @@ void FGAIManager::init() {
 
   for (int i = 0; i < root->nChildren(); i++) {
     const SGPropertyNode * entry = root->getChild(i);
+
+    if (!strcmp(entry->getName(), "scenario")){
+      scenario_filename = entry->getStringValue();
+    }
 
     if (!strcmp(entry->getName(), "entry")) {
       if (!strcmp(entry->getStringValue("type", ""), "aircraft")) { 
@@ -113,10 +118,7 @@ void FGAIManager::init() {
     }
   }
 
-  //**********  Flight Plan test code !!!! ****************
-  processScenario( "default_scenario" );
-  //******************************************************* 
-
+  if (scenario_filename != "") processScenario( scenario_filename );
   initDone = true;
 }
 
@@ -373,10 +375,12 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 void FGAIManager::processScenario( string filename ) {
   //cout << "AIManager: creating a scenario." << endl;
   FGAIScenario* s = new FGAIScenario( filename );
-  FGAIScenario::entry* en = s->getNextEntry();
-  if (en) {
-    FGAIFlightPlan* f = new FGAIFlightPlan( en->flightplan );
-    createAircraft("jet_transport", "Aircraft/737/Models/boeing733.xml", f);
+  for (int i=0;i<s->nEntries();i++) {
+    FGAIScenario::entry* en = s->getNextEntry();
+    if (en) {
+      FGAIFlightPlan* f = new FGAIFlightPlan( en->flightplan );
+      createAircraft("jet_transport", "Aircraft/737/Models/boeing733.xml", f);
+    }
   }
   delete s;
 }
