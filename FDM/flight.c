@@ -113,11 +113,14 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
 
 
 /* $Log$
-/* Revision 1.16  1998/08/22 14:49:55  curt
-/* Attempting to iron out seg faults and crashes.
-/* Did some shuffling to fix a initialization order problem between view
-/* position, scenery elevation.
+/* Revision 1.17  1998/08/24 20:09:07  curt
+/* .
 /*
+ * Revision 1.16  1998/08/22  14:49:55  curt
+ * Attempting to iron out seg faults and crashes.
+ * Did some shuffling to fix a initialization order problem between view
+ * position, scenery elevation.
+ *
  * Revision 1.15  1998/07/30 23:44:36  curt
  * Beginning to add support for multiple flight models.
  *
