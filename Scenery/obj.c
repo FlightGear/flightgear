@@ -111,8 +111,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	// Next try "path.obj" (uncompressed format)
 	strcat(path, ".obj");
 	if ( (f = gzopen(path, "r")) == NULL ) {
-	    fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
-	    return(-1);
+	    // Next try "path.obj.gz" (compressed format)
+	    strcat(path, ".gz");
+	    if ( (f = gzopen(path, "r")) == NULL ) {
+		fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
+		return(-1);
+	    }
 	}
     }
 
@@ -401,11 +405,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.29  1998/04/24 00:51:07  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
-/* or "file.obz" (compressed.)
+/* Revision 1.30  1998/04/24 14:21:08  curt
+/* Added "file.obj.gz" support.
 /*
+ * Revision 1.29  1998/04/24 00:51:07  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+ * or "file.obz" (compressed.)
+ *
  * Revision 1.28  1998/04/22 13:22:44  curt
  * C++ - ifing the code a bit.
  *
