@@ -38,7 +38,7 @@ INCLUDES
 #include "FGNozzle.h"
 
 static const char *IdSrc = "$Header$";
-static const char *IdHdr = ID_NOZZLE;
+static const char *IdHdr = "";
 
 /*******************************************************************************
 ************************************ CODE **************************************

@@ -32,10 +32,10 @@ class FGExternal: public FGInterface {
 
 public:
     // reset flight params to a specific position 
-    int init( double dt );
+    bool init( double dt );
 
     // update position based on inputs, positions, velocities, etc.
-    int update( int multiloop );
+    bool update( int multiloop );
 };
 
 

@@ -33,16 +33,16 @@
 
 // Initialize the Magic Carpet flight model, dt is the time increment
 // for each subsequent iteration through the EOM
-int FGMagicCarpet::init( double dt ) {
+bool FGMagicCarpet::init( double dt ) {
     // set valid time for this record
     stamp_time();
 
-    return 1;
+    return true;
 }
 
 
 // Run an iteration of the EOM (equations of motion)
-int FGMagicCarpet::update( int multiloop ) {
+bool FGMagicCarpet::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
     double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
@@ -93,5 +93,5 @@ int FGMagicCarpet::update( int multiloop ) {
     set_Sea_level_radius( sl_radius * METER_TO_FEET);
     set_Altitude( get_Altitude() + climb );
 
-    return 1;
+    return true;
 }

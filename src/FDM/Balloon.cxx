@@ -63,7 +63,7 @@ HISTORY
 
 // Initialize the BalloonSim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
-int FGBalloonSim::init( double dt ) {
+bool FGBalloonSim::init( double dt ) {
     sgVec3 temp;
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Starting initializing BalloonSim" );
@@ -96,12 +96,12 @@ int FGBalloonSim::init( double dt ) {
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing BalloonSim" );
 
-    return 1;
+    return true;
 }
 
 
 // Run an iteration of the EOM (equations of motion)
-int FGBalloonSim::update( int multiloop ) {
+bool FGBalloonSim::update( int multiloop ) {
     double save_alt = 0.0;
 
     // lets try to avoid really screwing up the BalloonSim model
@@ -151,18 +151,18 @@ int FGBalloonSim::update( int multiloop ) {
 	set_Altitude( save_alt );
     }
 
-    return 1;
+    return true;
 }
 
 
 // Convert from the FGInterface struct to the BalloonSim
-int FGBalloonSim::copy_to_BalloonSim() {
-    return 1;
+bool FGBalloonSim::copy_to_BalloonSim() {
+    return true;
 }
 
 
 // Convert from the BalloonSim to the FGInterface struct
-int FGBalloonSim::copy_from_BalloonSim() {
+bool FGBalloonSim::copy_from_BalloonSim() {
 
     sgVec3 temp;
 
@@ -213,7 +213,7 @@ int FGBalloonSim::copy_from_BalloonSim() {
     set_sin_cos_longitude( lon );
     set_sin_cos_latitude( lat_geod );
 
-    return 0;
+    return true;
 }
 
 

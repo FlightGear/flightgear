@@ -26,24 +26,24 @@
 
 // Initialize the External flight model, dt is the time increment
 // for each subsequent iteration through the EOM
-int FGExternal::init( double dt ) {
+bool FGExternal::init( double dt ) {
     // cout << "FGExternal::init()" << endl;
 
     // set valid time for this record
     stamp_time();
 
-    return 1;
+    return true;
 }
 
 
 // Run an iteration of the EOM.  This is essentially a NOP here
 // because these values are getting filled in elsewhere based on
 // external input.
-int FGExternal::update( int multiloop ) {
+bool FGExternal::update( int multiloop ) {
     // cout << "FGExternal::update()" << endl;
 
     // double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
 
 
-    return 1;
+    return true;
 }

@@ -74,16 +74,16 @@ class FGBalloonSim: public FGInterface {
 public:
 
     // copy FDM state to BalloonSim structures
-    int copy_to_BalloonSim();
+    bool copy_to_BalloonSim();
 
     // copy FDM state from BalloonSim structures
-    int copy_from_BalloonSim();
+    bool copy_from_BalloonSim();
 
     // reset flight params to a specific position 
-    int init( double dt );
+    bool init( double dt );
 
     // update position based on inputs, positions, velocities, etc.
-    int update( int multiloop );
+    bool update( int multiloop );
 };
 
 

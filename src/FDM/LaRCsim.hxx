@@ -38,16 +38,16 @@ class FGLaRCsim: public FGInterface {
 public:
 
     // copy FDM state to LaRCsim structures
-    int copy_to_LaRCsim();
+    bool copy_to_LaRCsim();
 
     // copy FDM state from LaRCsim structures
-    int copy_from_LaRCsim();
+    bool copy_from_LaRCsim();
 
     // reset flight params to a specific position 
-    int init( double dt );
+    bool init( double dt );
 
     // update position based on inputs, positions, velocities, etc.
-    int update( int multiloop );
+    bool update( int multiloop );
 };
 
 

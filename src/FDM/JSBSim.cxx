@@ -60,7 +60,7 @@
 // Initialize the JSBsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 
-int FGJSBsim::init( double dt ) {
+bool FGJSBsim::init( double dt ) {
 
   bool result;
 
@@ -83,9 +83,9 @@ int FGJSBsim::init( double dt ) {
   if (result) {
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << current_options.get_aircraft() );
   } else {
-    FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft" << current_options.get_aircraft()
-                                << " does not exist");
-    return 0;
+    FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft " << current_options.get_aircraft()
+	    << " does not exist" );
+    return false;
   }
 
   FDMExec.GetAtmosphere()->SetExTemperature(get_Static_temperature());
@@ -129,9 +129,6 @@ int FGJSBsim::init( double dt ) {
   fgic->SetLatitudeRadIC(get_Lat_geocentric());
   fgic->SetLongitudeRadIC(get_Longitude());
 
-  
-  
-  
   //FG_LOG( FG_FLIGHT, FG_INFO, "  gamma: " <<  current_options.get_Gamma());
   FG_LOG( FG_FLIGHT, FG_INFO, "  phi: " <<  get_Phi());
   //FG_LOG( FG_FLIGHT, FG_INFO, "  theta: " <<  get_Theta() );
@@ -184,14 +181,14 @@ int FGJSBsim::init( double dt ) {
 
   copy_from_JSBsim();
 
-  return 1;
+  return true;
 }
 
 /******************************************************************************/
 
 // Run an iteration of the EOM (equations of motion)
 
-int FGJSBsim::update( int multiloop ) {
+bool FGJSBsim::update( int multiloop ) {
   double save_alt = 0.0;
   double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
   double start_elev = get_Altitude();
@@ -237,14 +234,14 @@ int FGJSBsim::update( int multiloop ) {
 
   double end_elev = get_Altitude();
 
-  return 1;
+  return true;
 }
 
 /******************************************************************************/
 
 // Convert from the FGInterface struct to the JSBsim generic_ struct
 
-int FGJSBsim::copy_to_JSBsim() {
+bool FGJSBsim::copy_to_JSBsim() {
   // copy control positions into the JSBsim structure
 
   FDMExec.GetFCS()->SetDaCmd( controls.get_aileron());
@@ -273,14 +270,14 @@ int FGJSBsim::copy_to_JSBsim() {
                                       get_V_east_airmass(),
                                       get_V_down_airmass());
 
-  return 1;
+  return true;
 }
 
 /******************************************************************************/
 
 // Convert from the JSBsim generic_ struct to the FGInterface struct
 
-int FGJSBsim::copy_from_JSBsim() {
+bool FGJSBsim::copy_from_JSBsim() {
 
   set_Inertias( FDMExec.GetAircraft()->GetMass(),
                 FDMExec.GetAircraft()->GetIxx(),
@@ -391,5 +388,5 @@ int FGJSBsim::copy_from_JSBsim() {
   
   set_Climb_Rate(FDMExec.GetPosition()->Gethdot());
 
-  return 1;
+  return true;
 }

@@ -37,7 +37,7 @@
 
 // Initialize the LaRCsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
-int FGLaRCsim::init( double dt ) {
+bool FGLaRCsim::init( double dt ) {
 
     if ( current_options.get_aircraft() == "c172" ) {
 	// Initialize our little engine that hopefully might
@@ -79,12 +79,12 @@ int FGLaRCsim::init( double dt ) {
     // set valid time for this record
     stamp_time();
 
-    return 1;
+    return true;
 }
 
 
 // Run an iteration of the EOM (equations of motion)
-int FGLaRCsim::update( int multiloop ) {
+bool FGLaRCsim::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
     if ( current_options.get_aircraft() == "c172" ) {
@@ -191,12 +191,12 @@ int FGLaRCsim::update( int multiloop ) {
 	set_Climb_Rate( (end_elev - start_elev) / time_step );
     }
 
-    return 1;
+    return true;
 }
 
 
 // Convert from the FGInterface struct to the LaRCsim generic_ struct
-int FGLaRCsim::copy_to_LaRCsim () {
+bool FGLaRCsim::copy_to_LaRCsim () {
     Mass =      get_Mass();
     I_xx =      get_I_xx();
     I_yy =      get_I_yy();
@@ -367,12 +367,12 @@ int FGLaRCsim::copy_to_LaRCsim () {
     // Y_pilot_rwy =       get_Y_pilot_rwy();
     // H_pilot_rwy =       get_H_pilot_rwy();
 
-    return 1;
+    return true;
 }
 
 
 // Convert from the LaRCsim generic_ struct to the FGInterface struct
-int FGLaRCsim::copy_from_LaRCsim() {
+bool FGLaRCsim::copy_from_LaRCsim() {
 
     // Mass properties and geometry values
     set_Inertias( Mass, I_xx, I_yy, I_zz, I_xz );
@@ -515,5 +515,5 @@ int FGLaRCsim::copy_from_LaRCsim() {
     // printf("sin_lon     %f  cos_lon     %f\n",
     //        get_sin_longitude(), get_cos_longitude());
 
-    return 1;
+    return true;
 }

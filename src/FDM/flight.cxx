@@ -79,15 +79,15 @@ FGInterface::~FGInterface() {
 }
 
 
-int FGInterface::init( double dt ) {
+bool FGInterface::init( double dt ) {
     cout << "dummy init() ... SHOULDN'T BE CALLED!" << endl;
-    return 0;
+    return false;
 }
 
 
-int FGInterface::update( int multi_loop ) {
+bool FGInterface::update( int multi_loop ) {
     cout << "dummy update() ... SHOULDN'T BE CALLED!" << endl;
-    return 0;
+    return false;
 }
 
 

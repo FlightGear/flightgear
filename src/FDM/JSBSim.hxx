@@ -41,16 +41,16 @@ class FGJSBsim: public FGInterface {
 public:
 
     // copy FDM state to LaRCsim structures
-    int copy_to_JSBsim();
+    bool copy_to_JSBsim();
 
     // copy FDM state from LaRCsim structures
-    int copy_from_JSBsim();
+    bool copy_from_JSBsim();
 
     // reset flight params to a specific position 
-    int init( double dt );
+    bool init( double dt );
 
     // update position based on inputs, positions, velocities, etc.
-    int update( int multiloop );
+    bool update( int multiloop );
 };
 
 

@@ -243,8 +243,8 @@ public:
     FGInterface(void);
     virtual ~FGInterface();
 
-    virtual int init( double dt );
-    virtual int update( int multi_loop );
+    virtual bool init( double dt );
+    virtual bool update( int multi_loop );
 
     // Define the various supported flight models (many not yet implemented)
     enum {
