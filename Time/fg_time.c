@@ -303,17 +303,22 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
 	    + t->gst_diff;
     }
-    /* printf("  Current lon=0.00 Sidereal Time = %.3f\n", t->gst); */
-    /* printf("  Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", 
-           t->lst, sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
-	   t->gst_diff); */
+    fgPrintf( FG_EVENT, FG_DEBUG,
+	      "  Current lon=0.00 Sidereal Time = %.3f\n", t->gst);
+    fgPrintf( FG_EVENT, FG_DEBUG,
+	      "  Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", 
+	      t->lst, sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
+	      t->gst_diff);
 }
 
 
 /* $Log$
-/* Revision 1.35  1998/02/09 15:07:52  curt
-/* Minor tweaks.
+/* Revision 1.36  1998/03/09 22:48:09  curt
+/* Debug message tweaks.
 /*
+ * Revision 1.35  1998/02/09 15:07:52  curt
+ * Minor tweaks.
+ *
  * Revision 1.34  1998/02/07 15:29:47  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
