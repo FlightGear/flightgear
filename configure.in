@@ -248,8 +248,8 @@ AC_SUBST(opengl_LIBS)
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( \
-	fcntl.h getopt.h malloc.h memory.h stdlib.h sys/time.h sys/timeb.h \
-	unistd.h windows.h winbase.h values.h )
+	fcntl.h getopt.h malloc.h memory.h stdlib.h sys/stat.h sys/time.h \
+	sys/timeb.h unistd.h windows.h winbase.h values.h )
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
