@@ -93,6 +93,13 @@ action_callback (puObject * object)
 static void
 copy_to_pui (SGPropertyNode * node, puObject * object)
 {
+    // Treat puText objects specially, so their "values" can be set
+    // from properties.
+    if(object->getType() & PUCLASS_TEXT) {
+        object->setLabel(node->getStringValue());
+        return;
+    }
+
     switch (node->getType()) {
     case SGPropertyNode::BOOL:
     case SGPropertyNode::INT:
@@ -107,17 +114,16 @@ copy_to_pui (SGPropertyNode * node, puObject * object)
         object->setValue(node->getStringValue());
         break;
     }
-
-    // Treat puText objects specially, so their "values" can be set
-    // from properties.
-    if(object->getType() & PUCLASS_TEXT)
-        object->setLabel(node->getStringValue());
 }
 
 
 static void
 copy_from_pui (puObject * object, SGPropertyNode * node)
 {
+    // puText objects are immutable, so should not be copied out
+    if(object->getType() & PUCLASS_TEXT)
+        return;
+
     switch (node->getType()) {
     case SGPropertyNode::BOOL:
     case SGPropertyNode::INT:
