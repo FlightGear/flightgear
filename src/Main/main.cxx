@@ -54,7 +54,6 @@
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/route/route.hxx>
 #include <simgear/scene/model/modellib.hxx>
 
 #ifdef FG_USE_CLOUDS_3D
@@ -82,7 +81,6 @@
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>
-#include <Autopilot/newauto.hxx>
 #include <Replay/replay.hxx>
 #include <Time/tmp.hxx>
 #include <Time/fg_timer.hxx>
@@ -885,7 +883,6 @@ void fgUpdateTimeDepCalcs() {
         }
 
         if ( ! replay_master->getBoolValue() ) {
-            globals->get_autopilot()->update( delta_time_sec );
             cur_fdm_state->update( delta_time_sec );
         } else {
             FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
@@ -1500,9 +1497,6 @@ bool fgMainInit( int argc, char **argv ) {
 
     // seed the random number generater
     sg_srandom_time();
-
-    SGRoute *route = new SGRoute;
-    globals->set_route( route );
 
     FGControls *controls = new FGControls;
     globals->set_controls( controls );

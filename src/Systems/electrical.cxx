@@ -288,9 +288,10 @@ void FGElectricalSystem::init () {
                     << config.str() );
         }
 
-    } else
+    } else {
         SG_LOG( SG_ALL, SG_WARN,
                 "No electrical model specified for this model!");
+    }
 
     delete config_props;
 }

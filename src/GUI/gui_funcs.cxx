@@ -69,7 +69,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
 #include <Autopilot/auto_gui.hxx>
-#include <Autopilot/newauto.hxx>
 #include <Cockpit/panel.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>

@@ -48,8 +48,8 @@
 #include <simgear/props/props.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Autopilot/auto_gui.hxx>
-#include <Autopilot/newauto.hxx>
+// #include <Autopilot/auto_gui.hxx>
+#include <Autopilot/xmlauto.hxx>
 #include <Cockpit/hud.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -223,6 +223,9 @@ FGInput::makeDefault (bool status)
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
+    static SGPropertyNode *heading_enabled
+        = fgGetNode("/autopilot/locks/heading", true);
+
                                 // Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
     SG_LOG(SG_INPUT, SG_WARN, "Key value " << k << " out of range");
@@ -297,14 +300,11 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 // START SPECIALS
 
         case 256+GLUT_KEY_F6: // F6 toggles Autopilot target location
-            if ( globals->get_autopilot()->get_HeadingMode() !=
-                 FGAutopilot::FG_HEADING_WAYPOINT ) {
-                globals->get_autopilot()->set_HeadingMode(
-                    FGAutopilot::FG_HEADING_WAYPOINT );
-                globals->get_autopilot()->set_HeadingEnabled( true );
+            if ( strcmp( heading_enabled->getStringValue(),
+                         "true-heading-hold" ) != 0 ) {
+                heading_enabled->setStringValue( "true-heading-hold" );
             } else {
-                globals->get_autopilot()->set_HeadingMode(
-                    FGAutopilot::FG_TC_HEADING_LOCK );
+                heading_enabled->setStringValue( "" );
             }
             return;
         }

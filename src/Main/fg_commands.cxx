@@ -480,6 +480,43 @@ do_tile_cache_reload (const SGPropertyNode * arg)
 
 
 /**
+ * Set the sea level outside air temperature and assigning that to all
+ * boundary and aloft environment layers.
+ */
+static bool
+do_set_sea_level_degc (const SGPropertyNode * arg)
+{
+    double temp_sea_level_degc = arg->getDoubleValue("temp-degc", 15.0);
+
+    SGPropertyNode *node, *child;
+
+    // boundary layers
+    node = fgGetNode( "/environment/config/boundary" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "temperature-sea-level-degc",
+			       temp_sea_level_degc );
+	++i;
+      }
+    }
+
+    // aloft layers
+    node = fgGetNode( "/environment/config/aloft" );
+    if ( node != NULL ) {
+      int i = 0;
+      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
+	child->setDoubleValue( "temperature-sea-level-degc",
+			       temp_sea_level_degc );
+	++i;
+      }
+    }
+
+    return true;
+}
+
+
+/**
  * Set the outside air temperature at the "current" altitude by first
  * calculating the corresponding sea level temp, and assigning that to
  * all boundary and aloft environment layers.
@@ -1079,6 +1116,7 @@ static struct {
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
     { "tile-cache-reload", do_tile_cache_reload },
+    { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },
     { "timeofday", do_timeofday },
     { "property-toggle", do_property_toggle },

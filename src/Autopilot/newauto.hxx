@@ -22,6 +22,8 @@
 //
 // $Id$
                        
+
+#error choke me
                        
 #ifndef _NEWAUTO_HXX
 #define _NEWAUTO_HXX

@@ -330,6 +330,14 @@ PropsChannel::foundTerminator()
                             = args.getNode("subsystem", i-2, true);
                         node->setStringValue( tokens[i].c_str() );
                     }
+                } else if ( tokens[1] == "set-sea-level-air-temp-degc" ) {
+                    for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                        cout << "props: set-sl command = " << tokens[i]
+                             << endl;
+                        SGPropertyNode *node
+                            = args.getNode("temp-degc", i-2, true);
+                        node->setStringValue( tokens[i].c_str() );
+                    }
                 } else if ( tokens[1] == "set-outside-air-temp-degc" ) {
                     for ( unsigned int i = 2; i < tokens.size(); ++i ) {
                         cout << "props: set-oat command = " << tokens[i]

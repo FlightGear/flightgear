@@ -28,8 +28,6 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/route/route.hxx>
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -55,7 +53,8 @@
 #include <Navaids/fixlist.hxx>
 
 #include "auto_gui.hxx"
-#include "newauto.hxx"
+#include "route_mgr.hxx"
+#include "xmlauto.hxx"
 
 SG_USING_STD(string);
 
@@ -206,27 +205,25 @@ void ApHeadingDialog_OK (puObject *me)
 
     if( strlen(c) ) {
 	double NewHeading;
-	if( scan_number( c, &NewHeading ) )
-	    {
-		if ( !globals->get_autopilot()->get_HeadingEnabled() ) {
-		    globals->get_autopilot()->set_HeadingEnabled( true );
-		}
-		globals->get_autopilot()->HeadingSet( NewHeading );
-	    } else {
-		error = 1;
-		s = c;
-		s += " is not a valid number.";
-	    }
+	if( scan_number( c, &NewHeading ) ) {
+            fgSetString( "/autopilot/locks/heading", "dg-heading-hold" );
+            fgSetDouble( "/autopilot/settings/heading-bug-deg", 
+                         NewHeading );
+        } else {
+            error = 1;
+            s = c;
+            s += " is not a valid number.";
+        }
     }
     ApHeadingDialog_Cancel(me);
-    if( error )  mkDialog(s.c_str());
+    if ( error ) mkDialog(s.c_str());
 }
 
 void NewHeading(puObject *cb)
 {
     //	string ApHeadingLabel( "Enter New Heading" );
     //	ApHeadingDialogMessage  -> setLabel(ApHeadingLabel.c_str());
-    float heading = globals->get_autopilot()->get_DGTargetHeading();
+    float heading = fgGetDouble( "/autopilot/settings/heading-bug-deg" );
     while ( heading < 0.0 ) { heading += 360.0; }
     ApHeadingDialogInput   ->    setValue ( heading );
     ApHeadingDialogInput    -> acceptInput();
@@ -281,19 +278,16 @@ void ApAltitudeDialog_OK (puObject *me)
     char *c;
     ApAltitudeDialogInput->getValue( &c );
 
-    if( strlen( c ) ) {
+    if ( strlen( c ) ) {
 	double NewAltitude;
-	if( scan_number( c, &NewAltitude) )
-	    {
-		if ( !globals->get_autopilot()->get_AltitudeEnabled() ) {
-		    globals->get_autopilot()->set_AltitudeEnabled( true );
-		}
-		globals->get_autopilot()->AltitudeSet( NewAltitude );
-	    } else {
-		error = 1;
-		s = c;
-		s += " is not a valid number.";
-	    }
+	if ( scan_number( c, &NewAltitude) ) {
+            fgSetString( "/autopilot/locks/altitude", "altitude-hold" );
+            fgSetDouble( "/autopilot/settings/altitude-ft", NewAltitude );
+        } else {
+            error = 1;
+            s = c;
+            s += " is not a valid number.";
+        }
     }
     ApAltitudeDialog_Cancel(me);
     if( error )  mkDialog(s.c_str());
@@ -301,7 +295,8 @@ void ApAltitudeDialog_OK (puObject *me)
 
 void NewAltitude(puObject *cb)
 {
-    float altitude = globals->get_autopilot()->get_TargetAltitude() * SG_METER_TO_FEET;
+    float altitude = fgGetDouble("/autopilot/settings/altitude-ft")
+        * SG_METER_TO_FEET;
     ApAltitudeDialogInput -> setValue( altitude );
     ApAltitudeDialogInput -> acceptInput();
     FG_PUSH_PUI_DIALOG( ApAltitudeDialog );
@@ -361,8 +356,9 @@ static void maxroll_adj( puObject *hs ) {
     hs-> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "maxroll_adj( %p ) %f %f\n", hs, val, MaxRollAdjust * val ) ;
-    globals->get_autopilot()->set_MaxRoll( MaxRollAdjust * val );
-    sprintf( SliderText[ 0 ], "%05.2f", globals->get_autopilot()->get_MaxRoll() );
+    fgSetDouble( "/autopilot/config/max-roll-deg", MaxRollAdjust * val );
+    sprintf( SliderText[ 0 ], "%05.2f",
+             fgGetDouble("/autopilot/config/max-roll-deg") );
     APAdjustMaxRollText -> setLabel ( SliderText[ 0 ] ) ;
 }
 
@@ -372,8 +368,9 @@ static void rollout_adj( puObject *hs ) {
     hs-> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "rollout_adj( %p ) %f %f\n", hs, val, RollOutAdjust * val ) ;
-    globals->get_autopilot()->set_RollOut( RollOutAdjust * val );
-    sprintf( SliderText[ 1 ], "%05.2f", globals->get_autopilot()->get_RollOut() );
+    fgSetDouble( "/autopilot/config/roll-out-deg", RollOutAdjust * val );
+    sprintf( SliderText[ 1 ], "%05.2f",
+             fgGetDouble("/autopilot/config/roll-out-deg") );
     APAdjustRollOutText -> setLabel ( SliderText[ 1 ] );
 }
 
@@ -383,8 +380,9 @@ static void maxaileron_adj( puObject *hs ) {
     hs-> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "maxaileron_adj( %p ) %f %f\n", hs, val, MaxAileronAdjust * val ) ;
-    globals->get_autopilot()->set_MaxAileron( MaxAileronAdjust * val );
-    sprintf( SliderText[ 3 ], "%05.2f", globals->get_autopilot()->get_MaxAileron() );
+    fgSetDouble( "/autopilot/config/max-aileron", MaxAileronAdjust * val );
+    sprintf( SliderText[ 3 ], "%05.2f",
+             fgGetDouble("/autopilot/config/max-aileron") );
     APAdjustMaxAileronText -> setLabel ( SliderText[ 3 ] );
 }
 
@@ -394,8 +392,10 @@ static void rolloutsmooth_adj( puObject *hs ) {
     hs -> getValue ( &val ) ;
     SG_CLAMP_RANGE ( val, 0.1f, 1.0f ) ;
     //    printf ( "rolloutsmooth_adj( %p ) %f %f\n", hs, val, RollOutSmoothAdjust * val ) ;
-    globals->get_autopilot()->set_RollOutSmooth( RollOutSmoothAdjust * val );
-    sprintf( SliderText[ 2 ], "%5.2f", globals->get_autopilot()->get_RollOutSmooth() );
+    fgSetDouble( "/autopilot/config/roll-out-smooth-deg",
+                 RollOutSmoothAdjust * val );
+    sprintf( SliderText[ 2 ], "%5.2f",
+             fgGetDouble("/autopilot/config/roll-out-smooth-deg") );
     APAdjustRollOutSmoothText-> setLabel ( SliderText[ 2 ] );
 
 }
@@ -406,19 +406,21 @@ static void goAwayAPAdjust (puObject *)
 }
 
 void cancelAPAdjust( puObject *self ) {
-    globals->get_autopilot()->set_MaxRoll( TmpMaxRollValue );
-    globals->get_autopilot()->set_RollOut( TmpRollOutValue );
-    globals->get_autopilot()->set_MaxAileron( TmpMaxAileronValue );
-    globals->get_autopilot()->set_RollOutSmooth( TmpRollOutSmoothValue );
+    fgSetDouble( "/autopilot/config/max-roll-deg", TmpMaxRollValue );
+    fgSetDouble( "/autopilot/config/roll-out-deg", TmpRollOutValue );
+    fgSetDouble( "/autopilot/config/max-aileron", TmpMaxAileronValue );
+    fgSetDouble( "/autopilot/config/roll-out-smooth-deg",
+                 TmpRollOutSmoothValue );
 
     goAwayAPAdjust(self);
 }
 
 void resetAPAdjust( puObject *self ) {
-    globals->get_autopilot()->set_MaxRoll( MaxRollAdjust / 2 );
-    globals->get_autopilot()->set_RollOut( RollOutAdjust / 2 );
-    globals->get_autopilot()->set_MaxAileron( MaxAileronAdjust / 2 );
-    globals->get_autopilot()->set_RollOutSmooth( RollOutSmoothAdjust / 2 );
+    fgSetDouble( "/autopilot/config/max-roll-deg", MaxRollAdjust / 2 );
+    fgSetDouble( "/autopilot/config/roll-out-deg", RollOutAdjust / 2 );
+    fgSetDouble( "/autopilot/config/max-aileron", MaxAileronAdjust / 2 );
+    fgSetDouble( "/autopilot/config/roll-out-smooth-deg", 
+                 RollOutSmoothAdjust / 2 );
 
     FG_POP_PUI_DIALOG( APAdjustDialog );
 
@@ -426,15 +428,18 @@ void resetAPAdjust( puObject *self ) {
 }
 
 void fgAPAdjust( puObject *self ) {
-    TmpMaxRollValue       = globals->get_autopilot()->get_MaxRoll();
-    TmpRollOutValue       = globals->get_autopilot()->get_RollOut();
-    TmpMaxAileronValue    = globals->get_autopilot()->get_MaxAileron();
-    TmpRollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth();
+    TmpMaxRollValue       = fgGetDouble("/autopilot/config/max-roll-deg");
+    TmpRollOutValue       = fgGetDouble("/autopilot/config/roll-out-deg");
+    TmpMaxAileronValue    = fgGetDouble("/autopilot/config/max-aileron");
+    TmpRollOutSmoothValue = fgGetDouble("/autopilot/config/roll-out-smooth-deg");
 
-    MaxRollValue       = globals->get_autopilot()->get_MaxRoll() / MaxRollAdjust;
-    RollOutValue       = globals->get_autopilot()->get_RollOut() / RollOutAdjust;
-    MaxAileronValue    = globals->get_autopilot()->get_MaxAileron() / MaxAileronAdjust;
-    RollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth()
+    MaxRollValue = fgGetDouble("/autopilot/config/max-roll-deg")
+        / MaxRollAdjust;
+    RollOutValue = fgGetDouble("/autopilot/config/roll-out-deg")
+        / RollOutAdjust;
+    MaxAileronValue = fgGetDouble("/autopilot/config/max-aileron")
+        / MaxAileronAdjust;
+    RollOutSmoothValue =  fgGetDouble("/autopilot/config/roll-out-smooth-deg")
 	/ RollOutSmoothAdjust;
 
     APAdjustHS0-> setValue ( MaxRollValue ) ;
@@ -470,20 +475,22 @@ void fgAPAdjustInit() {
     int slider_value_x = 160;
     float slider_delta = 0.1f;
 
-    TmpMaxRollValue       = globals->get_autopilot()->get_MaxRoll();
-    TmpRollOutValue       = globals->get_autopilot()->get_RollOut();
-    TmpMaxAileronValue    = globals->get_autopilot()->get_MaxAileron();
-    TmpRollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth();
+    TmpMaxRollValue       = fgGetDouble("/autopilot/config/max-roll-deg");
+    TmpRollOutValue       = fgGetDouble("/autopilot/config/roll-out-deg");
+    TmpMaxAileronValue    = fgGetDouble("/autopilot/config/max-aileron");
+    TmpRollOutSmoothValue = fgGetDouble("/autopilot/config/roll-out-smooth-deg");
+    MaxRollAdjust = 2 * fgGetDouble("/autopilot/config/max-roll-deg");
+    RollOutAdjust = 2 * fgGetDouble("/autopilot/config/roll-out-deg");
+    MaxAileronAdjust = 2 * fgGetDouble("/autopilot/config/max-aileron");
+    RollOutSmoothAdjust = 2 * fgGetDouble("/autopilot/config/roll-out-smooth-deg");
 
-    MaxRollAdjust = 2 * globals->get_autopilot()->get_MaxRoll();
-    RollOutAdjust = 2 * globals->get_autopilot()->get_RollOut();
-    MaxAileronAdjust = 2 * globals->get_autopilot()->get_MaxAileron();
-    RollOutSmoothAdjust = 2 * globals->get_autopilot()->get_RollOutSmooth();
-
-    MaxRollValue       = globals->get_autopilot()->get_MaxRoll() / MaxRollAdjust;
-    RollOutValue       = globals->get_autopilot()->get_RollOut() / RollOutAdjust;
-    MaxAileronValue    = globals->get_autopilot()->get_MaxAileron() / MaxAileronAdjust;
-    RollOutSmoothValue = globals->get_autopilot()->get_RollOutSmooth()
+    MaxRollValue = fgGetDouble("/autopilot/config/max-roll-deg")
+        / MaxRollAdjust;
+    RollOutValue = fgGetDouble("/autopilot/config/roll-out-deg")
+        / RollOutAdjust;
+    MaxAileronValue = fgGetDouble("/autopilot/config/max-aileron")
+        / MaxAileronAdjust;
+    RollOutSmoothValue =  fgGetDouble("/autopilot/config/roll-out-smooth-deg")
 	/ RollOutSmoothAdjust;
 
     puGetDefaultFonts (  &APAdjustLegendFont,  &APAdjustLabelFont );
@@ -510,7 +517,8 @@ void fgAPAdjustInit() {
 	APAdjustHS0-> setCBMode ( PUSLIDER_DELTA ) ;
 	APAdjustHS0-> setCallback ( maxroll_adj ) ;
 
-	sprintf( SliderText[ 0 ], "%05.2f", globals->get_autopilot()->get_MaxRoll() );
+	sprintf( SliderText[ 0 ], "%05.2f",
+                 fgGetDouble("/autopilot/config/max-roll-deg") );
 	APAdjustMaxRollTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustMaxRollTitle-> setDefaultValue ( "MaxRoll" ) ;
 	APAdjustMaxRollTitle-> getDefaultValue ( &s ) ;
@@ -527,7 +535,8 @@ void fgAPAdjustInit() {
 	APAdjustHS1-> setCBMode ( PUSLIDER_DELTA ) ;
 	APAdjustHS1-> setCallback ( rollout_adj ) ;
 
-	sprintf( SliderText[ 1 ], "%05.2f", globals->get_autopilot()->get_RollOut() );
+	sprintf( SliderText[ 1 ], "%05.2f",
+                 fgGetDouble("/autopilot/config/roll-out-deg") );
 	APAdjustRollOutTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustRollOutTitle-> setDefaultValue ( "AdjustRollOut" ) ;
 	APAdjustRollOutTitle-> getDefaultValue ( &s ) ;
@@ -545,7 +554,7 @@ void fgAPAdjustInit() {
 	APAdjustHS2-> setCallback ( rolloutsmooth_adj ) ;
 
 	sprintf( SliderText[ 2 ], "%5.2f", 
-		 globals->get_autopilot()->get_RollOutSmooth() );
+		 fgGetDouble("/autopilot/config/roll-out-smooth-deg") );
 	APAdjustRollOutSmoothTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustRollOutSmoothTitle-> setDefaultValue ( "RollOutSmooth" ) ;
 	APAdjustRollOutSmoothTitle-> getDefaultValue ( &s ) ;
@@ -563,7 +572,7 @@ void fgAPAdjustInit() {
 	APAdjustHS3-> setCallback ( maxaileron_adj ) ;
 
 	sprintf( SliderText[ 3 ], "%05.2f", 
-		 globals->get_autopilot()->get_MaxAileron() );
+		 fgGetDouble("/autopilot/config/max-aileron") );
 	APAdjustMaxAileronTitle = new puText ( slider_title_x, slider_y ) ;
 	APAdjustMaxAileronTitle-> setDefaultValue ( "MaxAileron" ) ;
 	APAdjustMaxAileronTitle-> getDefaultValue ( &s ) ;
@@ -648,42 +657,40 @@ int NewWaypoint( string Tgt_Alt )
     TgtAptId = Tgt_Alt;
   }
 
+  FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
+
   if ( fgFindAirportID( TgtAptId, &a ) ) {
 
-    SG_LOG( SG_GENERAL, SG_INFO,
-                 "Adding waypoint (airport) = " << TgtAptId );
+      SG_LOG( SG_GENERAL, SG_INFO,
+              "Adding waypoint (airport) = " << TgtAptId );
 
-    sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
+      sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
 
-    SGWayPoint wp( a.longitude, a.latitude, alt,
-                        SGWayPoint::WGS84, TgtAptId );
-    globals->get_route()->add_waypoint( wp );
+      SGWayPoint wp( a.longitude, a.latitude, alt,
+                     SGWayPoint::WGS84, TgtAptId );
+      rm->add_waypoint( wp );
 
-         /* and turn on the autopilot */
-    globals->get_autopilot()->set_HeadingEnabled( true );
-    globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT
-);
+      /* and turn on the autopilot */
+      fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
 
-    return 1;
+      return 1;
 
-  } else if ( current_fixlist->query( TgtAptId, &f ) )
-  {
-   SG_LOG( SG_GENERAL, SG_INFO,
-                 "Adding waypoint (fix) = " << TgtAptId );
+  } else if ( current_fixlist->query( TgtAptId, &f ) ) {
+      SG_LOG( SG_GENERAL, SG_INFO,
+              "Adding waypoint (fix) = " << TgtAptId );
 
-    sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
+      sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
 
-    SGWayPoint wp( f.get_lon(), f.get_lat(), alt,
-                        SGWayPoint::WGS84, TgtAptId );
-    globals->get_route()->add_waypoint( wp );
+      SGWayPoint wp( f.get_lon(), f.get_lat(), alt,
+                     SGWayPoint::WGS84, TgtAptId );
+      rm->add_waypoint( wp );
 
-         /* and turn on the autopilot */
-   globals->get_autopilot()->set_HeadingEnabled( true );
-   globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
-   return 2;
-
+      /* and turn on the autopilot */
+      fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+      return 2;
+  } else {
+      return 0;
   }
-  else return 0;
 }
 
 
@@ -743,11 +750,16 @@ void AddWayPoint(puObject *cb)
         }
         delete [] WPList[i];
     }
-    if ( globals->get_route()->size() > 0 ) { 
-        WPListsize = globals->get_route()->size();
+    FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
+    WPListsize = rm->size();
+    if ( WPListsize > 0 ) { 
         WPList = new char* [ WPListsize + 1 ];
-        for (i = 0; i < globals->get_route()->size(); i++ ) {
-           sprintf(WPString, "%5s %3.2flon %3.2flat", globals->get_route()->get_waypoint(i).get_id().c_str(), globals->get_route()->get_waypoint(i).get_target_lon(), globals->get_route()->get_waypoint(i).get_target_lat());
+        for (i = 0; i < WPListsize; i++ ) {
+            SGWayPoint wp = rm->get_waypoint(i);
+            sprintf( WPString, "%5s %3.2flon %3.2flat",
+                     wp.get_id().c_str(),
+                     wp.get_target_lon(),
+                     wp.get_target_lat() );
            WPList [i] = new char[ strlen(WPString)+1 ];
            strcpy ( WPList [i], WPString );
         }
@@ -777,25 +789,14 @@ void AddWayPoint(puObject *cb)
 
 void PopWayPoint(puObject *cb)
 {
-    globals->get_route()->delete_first();
-
-    // see if there are more waypoints on the list
-    if ( globals->get_route()->size() ) {
-	// more waypoints
-	globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
-    } else {
-	// end of the line
-	globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_TC_HEADING_LOCK );
-
-	// use current heading
-	globals->get_autopilot()
-            ->set_TargetHeading(fgGetDouble("/orientation/heading-deg"));
-    }
+    FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
+    rm->pop_waypoint();
 }
 
 void ClearRoute(puObject *cb)
 {
-    globals->get_route()->clear();
+    FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
+    rm->init();
 }
 
 void NewTgtAirportInit()

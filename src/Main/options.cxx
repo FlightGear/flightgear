@@ -42,8 +42,6 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/route/route.hxx>
-#include <simgear/route/waypoint.hxx>
 
 // #include <Include/general.hxx>
 // #include <Airports/simple.hxx>
@@ -51,6 +49,7 @@
 // #include <FDM/flight.hxx>
 // #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 
+#include <Autopilot/route_mgr.hxx>
 #include <GUI/gui.h>
 
 #include "globals.hxx"
@@ -618,8 +617,9 @@ parse_wp( const string& arg ) {
 
     FGAirport a;
     if ( fgFindAirportID( id, &a ) ) {
+        FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
 	SGWayPoint wp( a.longitude, a.latitude, alt, SGWayPoint::WGS84, id );
-	globals->get_route()->add_waypoint( wp );
+	rm->add_waypoint( wp );
 
 	return true;
     } else {

@@ -76,7 +76,8 @@
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>
 #include <Autopilot/auto_gui.hxx>
-#include <Autopilot/newauto.hxx>
+#include <Autopilot/route_mgr.hxx>
+#include <Autopilot/xmlauto.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/panel.hxx>
@@ -1505,11 +1506,17 @@ bool fgInitSubsystems() {
 
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the XML Autopilot subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilot );
+    globals->add_subsystem( "route-manager", new FGRouteMgr );
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the view manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
     fgInitView();
-
 
     ////////////////////////////////////////////////////////////////////
     // Create and register the logger.
@@ -1703,13 +1710,9 @@ bool fgInitSubsystems() {
     // Initialize the autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->set_autopilot(new FGAutopilot);
-    globals->get_autopilot()->init();
-    globals->get_autopilot()->bind();
-
                                 // FIXME: these should go in the
                                 // GUI initialization code, not here.
-    fgAPAdjustInit();
+    // fgAPAdjustInit();
     NewTgtAirportInit();
     NewHeadingInit();
     NewAltitudeInit();
@@ -1842,7 +1845,6 @@ void fgReInitSubsystems()
     fgInitView();
 
     globals->get_controls()->reset_all();
-    globals->get_autopilot()->reset();
 
     fgUpdateLocalTime();
 

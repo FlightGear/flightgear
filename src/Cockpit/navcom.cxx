@@ -28,6 +28,7 @@
 #include <stdio.h>	// snprintf
 
 #include <simgear/compiler.h>
+#include <simgear/sg_inlines.h>
 #include <simgear/math/sg_random.h>
 #include <simgear/math/vector.hxx>
 
@@ -61,8 +62,12 @@ FGNavCom::FGNavCom() :
     nav_heading(0.0),
     nav_radial(0.0),
     nav_target_radial(0.0),
+    nav_target_radial_true(0.0),
+    nav_target_auto_hdg(0.0),
     nav_vol_btn(0.0),
-    nav_ident_btn(true)
+    nav_ident_btn(true),
+    horiz_vel(0.0),
+    last_x(0.0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -187,6 +192,13 @@ FGNavCom::bind ()
     snprintf(propname, 256, "/radios/nav[%d]/radials/actual-deg", index);
     fgTie( propname,  this, &FGNavCom::get_nav_radial );
 
+    snprintf(propname, 256, "/radios/nav[%d]/radials/target-radial-deg", index);
+    fgTie( propname,  this, &FGNavCom::get_nav_target_radial_true );
+
+    snprintf(propname, 256, "/radios/nav[%d]/radials/target-auto-hdg-deg",
+             index);
+    fgTie( propname,  this, &FGNavCom::get_nav_target_auto_hdg );
+
     snprintf(propname, 256, "/radios/nav[%d]/to-flag", index);
     fgTie( propname, this, &FGNavCom::get_nav_to_flag );
 
@@ -204,6 +216,9 @@ FGNavCom::bind ()
 
     snprintf(propname, 256, "/radios/nav[%d]/nav-loc", index);
     fgTie( propname, this, &FGNavCom::get_nav_loc );
+
+    snprintf(propname, 256, "/radios/nav[%d]/gs-rate-of-climb", index);
+    fgTie( propname, this, &FGNavCom::get_nav_gs_rate_of_climb );
 
     snprintf(propname, 256, "/radios/nav[%d]/gs-needle-deflection", index);
     fgTie( propname, this, &FGNavCom::get_nav_gs_deflection );
@@ -425,6 +440,92 @@ FGNavCom::update(double dt)
 	if ( !nav_loc ) {
 	    nav_target_radial = nav_sel_radial;
 	}
+
+        // Calculate some values for the nav/ils hold autopilot
+
+        double cur_radial = get_nav_reciprocal_radial();
+        if ( nav_loc ) {
+            // ILS localizers radials are already "true" in our
+            // database
+        } else {
+            cur_radial += nav_twist;
+        }
+        if ( get_nav_from_flag() ) {
+            cur_radial += 180.0;
+            while ( cur_radial >= 360.0 ) { cur_radial -= 360.0; }
+        }
+        
+        // AUTOPILOT HELPERS
+
+        // determine the target radial in "true" heading
+        nav_target_radial_true = nav_target_radial;
+        if ( nav_loc ) {
+            // ILS localizers radials are already "true" in our
+            // database
+        } else {
+            // VOR radials need to have that vor's offset added in
+            nav_target_radial_true += nav_twist;
+        }
+
+        while ( nav_target_radial_true < 0.0 ) {
+            nav_target_radial_true += 360.0;
+        }
+        while ( nav_target_radial_true > 360.0 ) {
+            nav_target_radial_true -= 360.0;
+        }
+
+        // determine the heading adjustment needed.
+        double adjustment = get_nav_cdi_deflection()
+            * (nav_loc_dist * SG_METER_TO_NM);
+        SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
+
+#if 0
+        // CLO - 01/24/2004 - This #ifdef'd out code makes no sense to
+        // me.  Someone please justify it and explain why it should be
+        // here if they want this reenabled.
+
+        // clamp closer when inside cone when beyond 5km...
+        if ( nav_loc_dist > 5000 ) {
+            double clamp_angle = fabs(get_nav_cdi_deflection()) * 3;
+            if (clamp_angle < 30)
+                SG_CLAMP_RANGE( adjustment, -clamp_angle, clamp_angle);
+        }
+#endif
+        
+        // determine the target heading to fly to intercept the
+        // tgt_radial
+        nav_target_auto_hdg = nav_target_radial_true + adjustment; 
+        while ( nav_target_auto_hdg <   0.0 ) { nav_target_auto_hdg += 360.0; }
+        while ( nav_target_auto_hdg > 360.0 ) { nav_target_auto_hdg -= 360.0; }
+
+        // cross track error
+        // ????
+
+        // Calculate desired rate of climb for intercepting the GS
+        double x = nav_gs_dist;
+        double y = (alt_node->getDoubleValue() - nav_elev)
+            * SG_FEET_TO_METER;
+        double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
+
+        double target_angle = nav_target_gs;
+        double gs_diff = target_angle - current_angle;
+
+        // convert desired vertical path angle into a climb rate
+        double des_angle = current_angle - 10 * gs_diff;
+
+        // estimate horizontal speed towards ILS in meters per minute
+        double dist = last_x - x;
+        last_x = x;
+        double new_vel = ( dist / dt );
+ 
+        horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
+        // double horiz_vel = cur_fdm_state->get_V_ground_speed()
+        //    * SG_FEET_TO_METER * 60.0;
+        // double horiz_vel = airspeed_node->getFloatValue()
+        //    * SG_FEET_TO_METER * 60.0;
+
+        nav_gs_rate_of_climb = -sin( des_angle * SGD_DEGREES_TO_RADIANS )
+            * horiz_vel * SG_METER_TO_FEET;
     } else {
 	nav_inrange = false;
 	// cout << "not picking up vor. :-(" << endl;

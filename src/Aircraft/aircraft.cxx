@@ -40,7 +40,6 @@
 #include <Cockpit/hud.hxx>
 #include <Cockpit/panel_io.hxx>
 #include <Model/acmodel.hxx>
-#include <Autopilot/newauto.hxx>
 
 #include "aircraft.hxx"
 
@@ -228,9 +227,9 @@ fgLoadAircraft (const SGPropertyNode * arg)
     //
     globals->get_viewmgr()->reinit();
     globals->get_controls()->reset_all();
-    globals->get_autopilot()->reset();
     globals->get_aircraft_model()->reinit();
     globals->get_subsystem("fx")->reinit();
+    globals->get_subsystem("xml-autopilot")->reinit();
 
     fgReInitSubsystems();
 

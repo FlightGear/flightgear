@@ -54,7 +54,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Main/libMain.a \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
 	$(top_builddir)/src/ATC/libATC.a \
-	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Cockpit/built_in/libBuilt_in.a \
 	$(top_builddir)/src/Controls/libControls.a \
@@ -68,6 +67,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
 	$(top_builddir)/src/GUI/libGUI.a \
+	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Input/libInput.a \
 	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	$(top_builddir)/src/Model/libModel.a \

@@ -3,10 +3,10 @@
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 
+#include <Autopilot/auto_gui.hxx>
+#include <Input/input.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-
-#include <Input/input.hxx>
 
 #include "new_gui.hxx"
 #include "menubar.hxx"

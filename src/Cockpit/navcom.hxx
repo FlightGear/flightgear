@@ -96,6 +96,8 @@ class FGNavCom : public SGSubsystem
                                 // exactly.)
     double nav_sel_radial;
     double nav_target_radial;
+    double nav_target_radial_true;
+    double nav_target_auto_hdg;
     double nav_loclon;
     double nav_loclat;
     double nav_x;
@@ -110,6 +112,7 @@ class FGNavCom : public SGSubsystem
     sgdVec3 gs_base_vec;
     double nav_gs_dist;
     double nav_gs_dist_signed;
+    double nav_gs_rate_of_climb;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
     double nav_elev;
@@ -119,6 +122,8 @@ class FGNavCom : public SGSubsystem
     double nav_twist;
     double nav_vol_btn;
     bool nav_ident_btn;
+    double horiz_vel;
+    double last_x;
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
     double adjustNavRange( double stationElev, double aircraftElev,
@@ -194,6 +199,12 @@ public:
     inline double get_nav_alt_freq () const { return nav_alt_freq; }
     inline double get_nav_sel_radial() const { return nav_sel_radial; }
     inline double get_nav_target_radial() const { return nav_target_radial; }
+    inline double get_nav_target_radial_true() const {
+        return nav_target_radial_true;
+    }
+    inline double get_nav_target_auto_hdg() const {
+        return nav_target_auto_hdg;
+    }
 
     // Calculated values.
     inline bool get_comm_inrange() const { return comm_inrange; }
@@ -216,6 +227,9 @@ public:
     inline double get_nav_gslat() const { return nav_gslat; }
     inline double get_nav_gs_dist() const { return nav_gs_dist; }
     inline double get_nav_gs_dist_signed() const { return nav_gs_dist_signed; }
+    inline double get_nav_gs_rate_of_climb() const {
+        return nav_gs_rate_of_climb;
+    }
     inline double get_nav_elev() const { return nav_elev; }
     double get_nav_heading() const;
     double get_nav_radial() const;

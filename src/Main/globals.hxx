@@ -59,7 +59,6 @@ class SGMagVar;
 class SGMaterialLib;
 class SGModelLib;
 class SGPropertyNode;
-class SGRoute;
 class SGTime;
 class SGSoundMgr;
 
@@ -69,11 +68,11 @@ class FGAIMgr;
 class FGATCMgr;
 class FGATCDisplay;
 class FGAircraftModel;
-class FGAutopilot;
 class FGControls;
 class FGIO;
 class FGLight;
 class FGModelMgr;
+class FGRouteMgr;
 class FGScenery;
 #ifdef FG_MPLAYER_AS
 class FGMultiplayRxMgr;
@@ -131,11 +130,8 @@ private:
     // Material properties library
     SGMaterialLib *matlib;
 
-    // Current autopilot
-    FGAutopilot *autopilot;
-
     // Global autopilot "route"
-    SGRoute *route;
+    FGRouteMgr *route_mgr;
 
     // 2D panel
     FGPanel *current_panel;
@@ -251,12 +247,6 @@ public:
 
     inline SGMaterialLib *get_matlib() const { return matlib; }
     inline void set_matlib( SGMaterialLib *m ) { matlib = m; }
-
-    inline FGAutopilot *get_autopilot() const { return autopilot; }
-    inline void set_autopilot( FGAutopilot *ap) { autopilot = ap; }
-
-    inline SGRoute *get_route() const { return route; }
-    inline void set_route( SGRoute *r ) { route = r; }
 
     inline FGAirportList *get_airports() const { return airports; }
     inline void set_airports( FGAirportList *a ) {airports = a; }

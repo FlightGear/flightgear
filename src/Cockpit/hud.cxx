@@ -50,7 +50,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Autopilot/newauto.hxx>
+#include <Autopilot/xmlauto.hxx>
 #include <GUI/gui.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -1095,8 +1095,17 @@ void drawHUD()
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
 
-    static const SGPropertyNode * antialiased_node
-        = fgGetNode("/sim/hud/antialiased");
+    static const SGPropertyNode *antialiased_node
+        = fgGetNode("/sim/hud/antialiased", true);
+    static const SGPropertyNode *heading_enabled
+        = fgGetNode("/autopilot/locks/heading", true);
+    static const SGPropertyNode *altitude_enabled
+        = fgGetNode("/autopilot/locks/altitude", true);
+
+    static char hud_hdg_text[256];
+    static char hud_wp0_text[256];
+    static char hud_wp1_text[256];
+    static char hud_wp2_text[256];
 
     if( antialiased_node->getBoolValue() ) {
         glEnable(GL_LINE_SMOOTH);
@@ -1164,35 +1173,50 @@ void drawHUD()
 
 
     int apY = 480 - 80;
-    // char scratch[128];
-    // HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
-    // apY -= 15;
-    FGAutopilot *AP = globals->get_autopilot();
     
-    if( AP->get_HeadingEnabled() ) {
-        HUD_TextList.add( fgText( 40, apY, AP->get_TargetHeadingStr()) );
+    
+    if (strcmp( heading_enabled->getStringValue(), "dg-heading-hold") == 0 ) {
+        snprintf( hud_hdg_text, 256, "hdg = %.1f\n",
+                  fgGetDouble("/autopilot/settings/heading-bug-deg") );
+        HUD_TextList.add( fgText( 40, apY, hud_hdg_text ) );
         apY -= 15;
-    }
-    if( AP->get_AltitudeEnabled() ) {
-        HUD_TextList.add( fgText( 40, apY, AP->get_TargetAltitudeStr()) );
+    } else if ( strcmp(heading_enabled->getStringValue(), "true-heading-hold") == 0 ) {
+        snprintf( hud_hdg_text, 256, "hdg = %.1f\n",
+                  fgGetDouble("/autopilot/settings/true-heading-deg") );
+        HUD_TextList.add( fgText( 40, apY, hud_hdg_text ) );
         apY -= 15;
-    }
-    if( AP->get_HeadingMode() == FGAutopilot::FG_HEADING_WAYPOINT )
-    {
-        if ( strlen( AP->get_TargetWP1Str() ) ) {
-            HUD_TextList.add( fgText( 40, apY, AP->get_TargetWP1Str() ) );
+
+        string wp0_id = fgGetString( "/autopilot/route-manager/wp[0]/id" );
+        if ( wp0_id.length() > 0 ) {
+            snprintf( hud_wp0_text, 256, "%5s %6.1fnm %s", wp0_id.c_str(), 
+                      fgGetDouble( "/autopilot/route-manager/wp[0]/dist" ),
+                      fgGetString( "/autopilot/route-manager/wp[0]/eta" ) );
+            HUD_TextList.add( fgText( 40, apY, hud_wp0_text ) );
             apY -= 15;
         }
-        if ( strlen( AP->get_TargetWP2Str() ) ) {
-            HUD_TextList.add( fgText( 40, apY, AP->get_TargetWP2Str() ) );
+        string wp1_id = fgGetString( "/autopilot/route-manager/wp[1]/id" );
+        if ( wp1_id.length() > 0 ) {
+            snprintf( hud_wp1_text, 256, "%5s %6.1fnm %s", wp1_id.c_str(), 
+                      fgGetDouble( "/autopilot/route-manager/wp[1]/dist" ),
+                      fgGetString( "/autopilot/route-manager/wp[1]/eta" ) );
+            HUD_TextList.add( fgText( 40, apY, hud_wp1_text ) );
             apY -= 15;
         }
-        if ( strlen( AP->get_TargetWP3Str() ) ) {
-            HUD_TextList.add( fgText( 40, apY, AP->get_TargetWP3Str() ) );
-                apY -= 15;
+        string wp2_id = fgGetString( "/autopilot/route-manager/wp-last/id" );
+        if ( wp2_id.length() > 0 ) {
+            snprintf( hud_wp2_text, 256, "%5s %6.1fnm %s", wp2_id.c_str(), 
+                      fgGetDouble( "/autopilot/route-manager/wp-last/dist" ),
+                      fgGetString( "/autopilot/route-manager/wp-last/eta" ) );
+            HUD_TextList.add( fgText( 40, apY, hud_wp2_text ) );
+            apY -= 15;
         }
     }
   
+    if ( strcmp( altitude_enabled->getStringValue(), "altitude-hold" ) == 0 ) {
+        HUD_TextList.add( fgText( 40, apY, (char *)fgGetString("/autopilot/settings/altitude-ft") ) );
+        apY -= 15;
+    }
+
     HUD_TextList.draw();
 
     HUD_LineList.draw();

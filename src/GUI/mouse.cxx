@@ -55,11 +55,9 @@
 #include <simgear/screen/screen-dump.hxx>
 
 #include <Include/general.hxx>
-//#include <Include/fg_memory.h>
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
-//#include <Autopilot/auto_gui.hxx>
-#include <Autopilot/newauto.hxx>
+#include <Autopilot/auto_gui.hxx>
 #include <Cockpit/panel.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
@@ -231,11 +229,15 @@ static inline float get_elevator() {
 }
 
 static inline bool AP_HeadingEnabled() {
-	return globals->get_autopilot()->get_HeadingEnabled();
+    static const SGPropertyNode *heading_enabled
+        = fgGetNode("/autopilot/locks/heading");
+    return ( strcmp( heading_enabled->getStringValue(), "" ) != 0 );
 }
 
 static inline bool AP_AltitudeEnabled() {
-	return globals->get_autopilot()->get_AltitudeEnabled();
+    static const SGPropertyNode *altitude_enabled
+        = fgGetNode("/autopilot/locks/altitude");
+    return ( strcmp( altitude_enabled->getStringValue(), "" ) != 0 );
 }
 
 void TurnCursorOn( void )

@@ -25,6 +25,12 @@
 #ifndef _AUTO_GUI_HXX
 #define _AUTO_GUI_HXX
 
+#include <simgear/compiler.h>
+
+#include STL_STRING
+
+SG_USING_STD( string );
+
 // Defines
 #define AP_CURRENT_HEADING -1
 
