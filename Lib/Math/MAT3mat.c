@@ -12,7 +12,11 @@
 
 #ifdef WIN32
 #  ifndef HAVE_STL_SGI_PORT
-#    include <memory.h>      /* required for memset() and memcpy() */
+#    ifdef __BORLANDC__
+#      include <mem.h>
+#    else
+#      include <memory.h>      /* required for memset() and memcpy() */
+#    endif
 #  endif
 #endif
 

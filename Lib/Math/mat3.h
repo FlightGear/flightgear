@@ -47,6 +47,32 @@ typedef double MAT3hvec[4];             /* Vector with homogeneous coord */
 
 extern MAT3mat identityMatrix;
 
+#if defined(i386)
+#define USE_X86_ASM
+#endif
+
+#if defined(USE_X86_ASM)
+static __inline__ int FloatToInt(float f)
+{
+   int r;
+   __asm__ ("fistpl %0" : "=m" (r) : "t" (f) : "st");
+   return r;
+}
+#elif  defined(__MSC__) && defined(__WIN32__)
+static __inline int FloatToInt(float f)
+{
+   int r;
+   _asm {
+     fld f
+     fistp r
+    }
+   return r;
+}
+#else
+#define FloatToInt(F) ((int) (F))
+#endif
+
+
 /* Tests if a number is within EPSILON of zero */
 #define MAT3_IS_ZERO(N) 	((N) < MAT3_EPSILON && (N) > -MAT3_EPSILON)
 
