@@ -102,7 +102,7 @@ void fgLightUpdate( void ) {
     /* base sky color */
     GLfloat base_sky_color[4] =        {0.60, 0.60, 0.90, 1.0};
     /* base fog color */
-    GLfloat base_fog_color[4] = {1.00, 1.00, 1.00, 1.0};
+    GLfloat base_fog_color[4] = {0.90, 0.90, 1.00, 1.0};
     double deg, ambient, diffuse, sky_brightness;
 
     l = &cur_light_params;
@@ -158,6 +158,9 @@ void fgLightUpdate( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/05/11 18:18:51  curt
+// Made fog color slightly bluish.
+//
 // Revision 1.5  1998/05/03 00:48:38  curt
 // polar.h -> polar3d.h
 //
