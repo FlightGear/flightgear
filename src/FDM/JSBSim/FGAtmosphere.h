@@ -66,18 +66,27 @@ public:
   ~FGAtmosphere(void);
   bool Run(void);
 
-  inline float Getrho(void) {return density;}
-  float CalcRho(float altitude);
-
   inline float GetTemperature(void){return temperature;}
   inline float GetDensity(void)    {return density;}     // use only after Run() has been called
   inline float GetPressure(void)   {return pressure;}
   inline float GetSoundSpeed(void) {return soundspeed;}
 
-  float GetTemperature(float altitude); //Rankine, altitude in feet
-  float GetDensity(float altitude);     //slugs/ft^3
-  float GetPressure(float altitude);    //lbs/ft^2
-  float GetSoundSpeed(float altitude);  //ft/s
+  inline float GetTemperatureSL(void) { return SLtemperature; }  //Rankine, altitude in feet
+  inline float GetDensitySL(void)     { return SLdensity; }      //slugs/ft^3
+  inline float GetPressureSL(void)    { return SLpressure; }     //lbs/ft^2
+  inline float GetSoundSpeedSL(void)  { return SLsoundspeed; }   //ft/s
+  
+  inline float GetPressureRatio(void)     { return temperature/SLtemperature; }
+  inline float GetDensityRatio(void) 	  { return density/SLdensity; }
+  inline float GetTemperatureRatio(void)  { return pressure/SLpressure; }
+  inline float GetSoundSpeedRatio(void)   { return soundspeed/SLsoundspeed; }
+  
+  inline void UseExternal(void)          { useExternal=true;  }
+  inline void UseInternal(void)          { useExternal=false; } //this is the default 
+  
+  inline void SetExTemperature(float t)  { exTemperature=t; }
+  inline void SetExDensity(float d)      { exDensity=d; }
+  inline void SetExPressure(float p)     { exPressure=p; }
 
 protected:
 
@@ -85,10 +94,10 @@ private:
   float rho;
 
   float h;
-  float temperature,T;
-  float pressure,p;
-  float density,rhos;
-  float soundspeed,a;
+  float SLtemperature,SLdensity,SLpressure,SLsoundspeed;
+  float temperature,density,pressure,soundspeed;
+  bool useExternal;
+  float exTemperature,exDensity,exPressure;
   void Calculate(float altitude);
 
 

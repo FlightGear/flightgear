@@ -39,18 +39,22 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#if __BCPLUSPLUS__	>= 0x0540   // If compiling under Borland C++Builder
-//---------------------------------------------------------------------------
+#if __BCPLUSPLUS__  >= 0x0540   // If compiling under Borland C++Builder
 #pragma hdrstop
 #include <condefs.h>
-USEUNIT("FGAircraft.cpp");
+USEUNIT("FGUtility.cpp");
 USEUNIT("FGAtmosphere.cpp");
 USEUNIT("FGAuxiliary.cpp");
 USEUNIT("FGCoefficient.cpp");
+USEUNIT("FGConfigFile.cpp");
+USEUNIT("FGControls.cpp");
 USEUNIT("FGEngine.cpp");
 USEUNIT("FGFCS.cpp");
 USEUNIT("FGFDMExec.cpp");
+USEUNIT("FGfdmSocket.cpp");
 USEUNIT("FGInitialCondition.cpp");
+USEUNIT("FGLGear.cpp");
+USEUNIT("FGMatrix.cpp");
 USEUNIT("FGModel.cpp");
 USEUNIT("FGOutput.cpp");
 USEUNIT("FGPosition.cpp");
@@ -58,10 +62,15 @@ USEUNIT("FGRotation.cpp");
 USEUNIT("FGState.cpp");
 USEUNIT("FGTank.cpp");
 USEUNIT("FGTranslation.cpp");
-USEUNIT("FGUtility.cpp");
+USEUNIT("FGAircraft.cpp");
 USERES("JSBSim.res");
-USEUNIT("FGLGear.cpp");
-USEUNIT("FGfdmSocket.cpp");
+USEUNIT("filtersjb\FGfcsComponent.cpp");
+USEUNIT("filtersjb\FGSwitch.cpp");
+USEUNIT("filtersjb\FGFilter.cpp");
+USEUNIT("filtersjb\FGGain.cpp");
+USEUNIT("filtersjb\FGGradient.cpp");
+USEUNIT("filtersjb\FGSummer.cpp");
+USEUNIT("filtersjb\FGDeadBand.cpp");
 //---------------------------------------------------------------------------
 #pragma argsused
 #endif
@@ -92,7 +101,7 @@ USEUNIT("FGfdmSocket.cpp");
 
 int main(int argc, char** argv)
 {
-	FGFDMExec* FDMExec;
+  FGFDMExec* FDMExec;
 
   if (argc != 3) {
     cout << endl
@@ -104,33 +113,37 @@ int main(int argc, char** argv)
   FDMExec = new FGFDMExec();
 
   FDMExec->GetAircraft()->LoadAircraft("aircraft", "engine", string(argv[1]));
-  FDMExec->GetState()->Reset("aircraft", string(argv[2]));
+  if ( ! FDMExec->GetState()->Reset("aircraft", string(argv[1]), string(argv[2])))
+    FDMExec->GetState()->Initialize(2000,0,0,0,0,0,0.5,0.5,40000);
 
-  while (FDMExec->GetState()->Getsim_time() <= 25.0)
+  float cmd = 0.0;
+
+  while (FDMExec->GetState()->Getsim_time() <= 5.0)
   {
-    //
-    // Fake an elevator kick here after 5 seconds
-    //
+    // Fake an elevator ramp here after 1 second, hold for one second, ramp down
 
-		if (FDMExec->GetState()->Getsim_time() > 5.0 &&
-        FDMExec->GetState()->Getsim_time() < 6.0)
+    if (FDMExec->GetState()->Getsim_time() >= 1.00 &&
+        FDMExec->GetState()->Getsim_time() < 2.0)
     {
-			FDMExec->GetFCS()->SetDe(0.05);
-		} else {
-			FDMExec->GetFCS()->SetDe(0.00);
+      cmd = FDMExec->GetState()->Getsim_time() - 1.00;
+    } else if (FDMExec->GetState()->Getsim_time() >= 2.00 &&
+        FDMExec->GetState()->Getsim_time() < 3.0)
+    {
+      cmd = 1.00;
+    } else if (FDMExec->GetState()->Getsim_time() >= 3.00 &&
+        FDMExec->GetState()->Getsim_time() < 4.0)
+    {
+      cmd = 4.0 - FDMExec->GetState()->Getsim_time();
+    } else {
+      cmd = 0.00;
     }
+    FDMExec->GetFCS()->SetDeCmd(cmd);    // input between -1 and 1
 
     FDMExec->Run();
   }
 
   delete FDMExec;
-  
+
   return 0;
 }
 
-#ifndef FGFS
-int WinMain()
-{
-  return 0;
-}
-#endif

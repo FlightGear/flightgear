@@ -28,7 +28,7 @@ HISTORY
 11/17/98   JSB   Created
 7/31/99     TP   Added RunIC function that runs the sim so that every frame
                  begins with the IC values from the given FGInitialCondition 
-				 object and dt=0. 
+	  	  	  	   object and dt=0. 
 
 ********************************************************************************
 SENTRY
@@ -64,8 +64,8 @@ class FGInitialCondition;
 class FGFDMExec
 {
 public:
-  FGFDMExec(void);
-  ~FGFDMExec(void);
+  FGFDMExec::FGFDMExec(void);
+  FGFDMExec::~FGFDMExec(void);
 
   FGModel* FirstModel;
 

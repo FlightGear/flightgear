@@ -68,10 +68,11 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGAtmosphere";
   h = 0;
   Calculate(h);
-  temperature = T;
-  pressure    = p;
-  density     = rho;
-  soundspeed  = a;
+  SLtemperature = temperature;
+  SLpressure    = pressure;
+  SLdensity     = density;
+  SLsoundspeed  = sqrt(SHRATIO*Reng*temperature);
+  useExternal=false;
 }
 
 
@@ -83,139 +84,104 @@ FGAtmosphere::~FGAtmosphere()
 bool FGAtmosphere::Run(void)
 {
   if (!FGModel::Run()) {                 // if false then execute this Run()
-    h = State->Geth();
-
-    Calculate(h);
-
-    temperature = T;
-    pressure    = p;
-    density     = rhos;
-    soundspeed  = a;
+    if (!useExternal) {
+      h = State->Geth();
+      Calculate(h);
+    } else {
+      density = exDensity;
+      pressure = exPressure;
+      temperature = exTemperature;
+    }
+    soundspeed = sqrt(SHRATIO*Reng*temperature);
     State->Seta(soundspeed);
   } else {                               // skip Run() execution this time
   }
   return false;
 }
 
-
-float FGAtmosphere::CalcRho(float altitude)
-{
-  //return (0.00237 - 7.0E-08*altitude
-  //      + 7.0E-13*altitude*altitude
-  //      - 2.0E-18*altitude*altitude*altitude);
-  return GetDensity(altitude);
-}
-
-
 void FGAtmosphere::Calculate(float altitude)
 {
   //see reference [1]
 
-  float slope,reftemp,refpress,refdens;
-  int i=0;
-  float htab[]={0,36089,82020,154198,173882,259183,295272,344484}; //ft.
 
-  if (altitude <= htab[0]) {
-    altitude=0;
-  } else if (altitude >= htab[7]){
-    i = 7;
-    altitude = htab[7];
-  } else {
-    while (htab[i+1] < altitude) {
-      i++;
+    float slope,reftemp,refpress,refdens;
+    int i=0;
+    float htab[]={0,36089,82020,154198,173882,259183,295272,344484}; //ft.
+//      cout << "Atmosphere:  h=" << altitude << " rho= " << density << endl;
+    if (altitude <= htab[0]) {
+      altitude=0;
+    } else if (altitude >= htab[7]){
+      i = 7;
+      altitude = htab[7];
+    } else {
+      while (htab[i+1] < altitude) {
+        i++;
+      }
     }
-  }
 
-  switch(i) {
-  case 0:     // sea level
-    slope     = -0.0035662; // R/ft.
-    reftemp   = 518.688;    // R
-    refpress  = 2116.17;    // psf
-    refdens   = 0.0023765;  // slugs/cubic ft.
-    break;
-  case 1:     // 36089 ft.
-    slope     = 0;
-    reftemp   = 389.988;
-    refpress  = 474.1;
-    refdens   = 0.0007078;
-    break;
-  case 2:     // 82020 ft.
-    slope     = 0.00164594;
-    reftemp   = 389.988;
-    refpress  = 52.7838;
-    refdens   = 7.8849E-5;
-    break;
-  case 3:     // 154198 ft.
-    slope     = 0;
-    reftemp   = 508.788;
-    refpress  = 2.62274;
-    refdens   = 3.01379E-6;
-    break;
-  case 4:     // 173882 ft.
-    slope     = -0.00246891;
-    reftemp   = 508.788;
-    refpress  = 1.28428;
-    refdens   = 1.47035e-06;
-    break;
-  case 5:     // 259183 ft.
-    slope     = 0;
-    reftemp   = 298.188;
-    refpress  = 0.0222008;
-    refdens   = 4.33396e-08;
-    break;
-  case 6:     // 295272 ft.
-    slope     = 0.00219459;
-    reftemp   = 298.188;
-    refpress  = 0.00215742;
-    refdens   = 4.21368e-09;
-    break;
-  case 7:     // 344484 ft.
-    slope     = 0;
-    reftemp   = 406.188;
-    refpress  = 0.000153755;
-    refdens   = 2.20384e-10;
-    break;
-  }
-
-
-  if (slope == 0) {
-    T = reftemp;
-    p = refpress*exp(-GRAVITY/(reftemp*Reng)*(altitude-htab[i]));
-    rhos = refdens*exp(-GRAVITY/(reftemp*Reng)*(altitude-htab[i]));
-  } else {
-    T = reftemp+slope*(altitude-htab[i]);
-    p = refpress*pow(T/reftemp,-GRAVITY/(slope*Reng));
-    rhos = refdens*pow(T/reftemp,-(GRAVITY/(slope*Reng)+1));
-  }
-
-  a = sqrt(SHRATIO*Reng*T);
-
-}
+    switch(i) {
+    case 0:     // sea level
+      slope     = -0.0035662; // R/ft.
+      reftemp   = 518.688;    // R
+      refpress  = 2116.17;    // psf
+      refdens   = 0.0023765;  // slugs/cubic ft.
+      break;
+    case 1:     // 36089 ft.
+      slope     = 0;
+      reftemp   = 389.988;
+      refpress  = 474.1;
+      refdens   = 0.0007078;
+      break;
+    case 2:     // 82020 ft.
+      slope     = 0.00164594;
+      reftemp   = 389.988;
+      refpress  = 52.7838;
+      refdens   = 7.8849E-5;
+      break;
+    case 3:     // 154198 ft.
+      slope     = 0;
+      reftemp   = 508.788;
+      refpress  = 2.62274;
+      refdens   = 3.01379E-6;
+      break;
+    case 4:     // 173882 ft.
+      slope     = -0.00246891;
+      reftemp   = 508.788;
+      refpress  = 1.28428;
+      refdens   = 1.47035e-06;
+      break;
+    case 5:     // 259183 ft.
+      slope     = 0;
+      reftemp   = 298.188;
+      refpress  = 0.0222008;
+      refdens   = 4.33396e-08;
+      break;
+    case 6:     // 295272 ft.
+      slope     = 0.00219459;
+      reftemp   = 298.188;
+      refpress  = 0.00215742;
+      refdens   = 4.21368e-09;
+      break;
+    case 7:     // 344484 ft.
+      slope     = 0;
+      reftemp   = 406.188;
+      refpress  = 0.000153755;
+      refdens   = 2.20384e-10;
+      break;
+    }
 
 
-float FGAtmosphere::GetTemperature(float altitude)
-{
-    Calculate(altitude);
-    return T;
-}
+    if (slope == 0) {
+      temperature = reftemp;
+      pressure = refpress*exp(-GRAVITY/(reftemp*Reng)*(altitude-htab[i]));
+      density = refdens*exp(-GRAVITY/(reftemp*Reng)*(altitude-htab[i]));
+    } else {
+      temperature = reftemp+slope*(altitude-htab[i]);
+      pressure = refpress*pow(temperature/reftemp,-GRAVITY/(slope*Reng));
+      density = refdens*pow(temperature/reftemp,-(GRAVITY/(slope*Reng)+1));
+    }
 
+   //cout << "Atmosphere:  h=" << altitude << " rho= " << density << endl;
 
-float FGAtmosphere::GetPressure(float altitude)
-{
-    Calculate(altitude);
-    return p;
-}
-
-float FGAtmosphere::GetDensity(float altitude)
-{
-    Calculate(altitude);
-    return rhos;
-}
-
-
-float FGAtmosphere::GetSoundSpeed(float altitude)
-{
-    Calculate(altitude);
-    return a;
 }
 

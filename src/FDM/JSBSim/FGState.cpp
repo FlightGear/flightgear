@@ -63,7 +63,10 @@ INCLUDES
 *******************************************************************************/
 
 
-FGState::FGState(FGFDMExec* fdex)
+FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
+                                    mTl2b(3,3),
+                                    mTs2b(3,3),
+                                    vQtrn(4)
 {
   FDMExec = fdex;
 
@@ -75,26 +78,58 @@ FGState::FGState(FGFDMExec* fdex)
   qbar = 0.0;
   sim_time = 0.0;
   dt = 1.0/120.0;
+
+  coeffdef["FG_QBAR"]          = 1           ;
+  coeffdef["FG_WINGAREA"]      = 2           ;
+  coeffdef["FG_WINGSPAN"]      = 4           ;
+  coeffdef["FG_CBAR"]          = 8           ;
+  coeffdef["FG_ALPHA"]         = 16          ;
+  coeffdef["FG_ALPHADOT"]      = 32          ;
+  coeffdef["FG_BETA"]          = 64          ;
+  coeffdef["FG_BETADOT"]       = 128         ;
+  coeffdef["FG_PITCHRATE"]     = 256         ;
+  coeffdef["FG_ROLLRATE"]      = 512         ;
+  coeffdef["FG_YAWRATE"]       = 1024        ;
+  coeffdef["FG_MACH"]          = 2048        ;
+  coeffdef["FG_ALTITUDE"]      = 4096        ;
+  coeffdef["FG_BI2VEL"]        = 8192        ;
+  coeffdef["FG_CI2VEL"]        = 16384       ;
+  coeffdef["FG_ELEVATOR_POS"]  = 32768L      ;
+  coeffdef["FG_AILERON_POS"]   = 65536L      ;
+  coeffdef["FG_RUDDER_POS"]    = 131072L     ;
+  coeffdef["FG_SPDBRAKE_POS"]  = 262144L     ;
+  coeffdef["FG_SPOILERS_POS"]  = 524288L     ;
+  coeffdef["FG_FLAPS_POS"]     = 1048576L    ;
+  coeffdef["FG_ELEVATOR_CMD"]  = 2097152L    ;
+  coeffdef["FG_AILERON_CMD"]   = 4194304L    ;
+  coeffdef["FG_RUDDER_CMD"]    = 8388608L    ;
+  coeffdef["FG_SPDBRAKE_CMD"]  = 16777216L   ;
+  coeffdef["FG_SPOILERS_CMD"]  = 33554432L   ;
+  coeffdef["FG_FLAPS_CMD"]     = 67108864L   ;
+  coeffdef["FG_SPARE3"]        = 134217728L  ;
+  coeffdef["FG_SPARE4"]        = 268435456L  ;
+  coeffdef["FG_SPARE5"]        = 536870912L  ;
+  coeffdef["FG_SPARE6"]        = 1073741824L ;
 }
 
+/******************************************************************************/
 
 FGState::~FGState(void)
 {
 }
-
 
 //***************************************************************************
 //
 // Reset: Assume all angles READ FROM FILE IN DEGREES !!
 //
 
-bool FGState::Reset(string path, string fname)
+bool FGState::Reset(string path, string acname, string fname)
 {
   string resetDef;
   float U, V, W;
   float phi, tht, psi;
 
-  resetDef = path + "/" + FDMExec->GetAircraft()->GetAircraftName() + "/" + fname;
+  resetDef = path + "/" + acname + "/" + fname;
 
   ifstream resetfile(resetDef.c_str());
 
@@ -129,13 +164,14 @@ void FGState::Initialize(float U, float V, float W,
                          float phi, float tht, float psi,
                          float Latitude, float Longitude, float H)
 {
+  FGColumnVector vUVW(3);
+  FGColumnVector vEuler(3);
   float alpha, beta, gamma;
-  float Q0, Q1, Q2, Q3;
-  float T[4][4];
 
   latitude = Latitude;
   longitude = Longitude;
   h = H;
+  FDMExec->GetAtmosphere()->Run();
 
   gamma = 0.0;
   if (W != 0.0)
@@ -147,36 +183,19 @@ void FGState::Initialize(float U, float V, float W,
   else
     beta = 0.0;
 
-  FDMExec->GetTranslation()->SetUVW(U, V, W);
-  FDMExec->GetRotation()->SetEuler(phi, tht, psi);
+  vUVW << U << V << W;
+  FDMExec->GetTranslation()->SetUVW(vUVW);
+  vEuler << phi << tht << psi;
+  FDMExec->GetRotation()->SetEuler(vEuler);
   FDMExec->GetTranslation()->SetABG(alpha, beta, gamma);
 
   Vt = sqrt(U*U + V*V + W*W);
-  qbar = 0.5*(U*U + V*V + W*W)*FDMExec->GetAtmosphere()->CalcRho(h);
+  qbar = 0.5*(U*U + V*V + W*W)*FDMExec->GetAtmosphere()->GetDensity();
 
-  Q0 =  sin(psi*0.5)*sin(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*cos(phi*0.5);
-  Q1 = -sin(psi*0.5)*sin(tht*0.5)*cos(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*sin(phi*0.5);
-  Q2 =  sin(psi*0.5)*cos(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*sin(tht*0.5)*cos(phi*0.5);
-  Q3 =  sin(psi*0.5)*cos(tht*0.5)*cos(phi*0.5) - cos(psi*0.5)*sin(tht*0.5)*sin(phi*0.5);
-
-  FDMExec->GetRotation()->SetQ0123(Q0, Q1, Q2, Q3);
-
-  T[1][1] = Q0*Q0 + Q1*Q1 - Q2*Q2 - Q3*Q3;
-  T[1][2] = 2*(Q1*Q2 + Q0*Q3);
-  T[1][3] = 2*(Q1*Q3 - Q0*Q2);
-  T[2][1] = 2*(Q1*Q2 - Q0*Q3);
-  T[2][2] = Q0*Q0 - Q1*Q1 + Q2*Q2 - Q3*Q3;
-  T[2][3] = 2*(Q2*Q3 + Q0*Q1);
-  T[3][1] = 2*(Q1*Q3 + Q0*Q2);
-  T[3][2] = 2*(Q2*Q3 - Q0*Q1);
-  T[3][3] = Q0*Q0 - Q1*Q1 - Q2*Q2 + Q3*Q3;
-
-  FDMExec->GetPosition()->SetT(T[1][1], T[1][2], T[1][3],
-                               T[2][1], T[2][2], T[2][3],
-                               T[3][1], T[3][2], T[3][3]);
-  DisplayData();
+  InitMatrices(phi, tht, psi);
 }
 
+/******************************************************************************/
 
 void FGState::Initialize(FGInitialCondition *FGIC)
 {
@@ -194,23 +213,24 @@ void FGState::Initialize(FGInitialCondition *FGIC)
   phi = FGIC->GetPhiRadIC();
   psi = FGIC->GetPsiRadIC();
 
-  Initialize(U, V, W, phi, tht, psi,latitude, longitude, h);
+  Initialize(U, V, W, phi, tht, psi, latitude, longitude, h);
 }
 
+/******************************************************************************/
 
 bool FGState::StoreData(string fname)
 {
   ofstream datafile(fname.c_str());
 
   if (datafile) {
-    datafile << FDMExec->GetTranslation()->GetU();
-    datafile << FDMExec->GetTranslation()->GetV();
-    datafile << FDMExec->GetTranslation()->GetW();
+    datafile << (FDMExec->GetTranslation()->GetUVW())(1);
+    datafile << (FDMExec->GetTranslation()->GetUVW())(2);
+    datafile << (FDMExec->GetTranslation()->GetUVW())(3);
     datafile << latitude;
     datafile << longitude;
-    datafile << FDMExec->GetRotation()->Getphi();
-    datafile << FDMExec->GetRotation()->Gettht();
-    datafile << FDMExec->GetRotation()->Getpsi();
+    datafile << (FDMExec->GetRotation()->GetEuler())(1);
+    datafile << (FDMExec->GetRotation()->GetEuler())(2);
+    datafile << (FDMExec->GetRotation()->GetEuler())(3);
     datafile << h;
     datafile.close();
     return true;
@@ -220,77 +240,242 @@ bool FGState::StoreData(string fname)
   }
 }
 
+/******************************************************************************/
 
-bool FGState::DumpData(string fname)
+float FGState::GetParameter(string val_string)
 {
-  ofstream datafile(fname.c_str());
+  return GetParameter(coeffdef[val_string]);
+}
 
-  if (datafile) {
-    datafile << "U: " << FDMExec->GetTranslation()->GetU() << endl;
-    datafile << "V: " << FDMExec->GetTranslation()->GetV() << endl;
-    datafile << "W: " << FDMExec->GetTranslation()->GetW() << endl;
-    datafile << "P: " << FDMExec->GetRotation()->GetP() << endl;
-    datafile << "Q: " << FDMExec->GetRotation()->GetQ() << endl;
-    datafile << "R: " << FDMExec->GetRotation()->GetR() << endl;
-    datafile << "L: " << FDMExec->GetAircraft()->GetL() << endl;
-    datafile << "M: " << FDMExec->GetAircraft()->GetM() << endl;
-    datafile << "N: " << FDMExec->GetAircraft()->GetN() << endl;
-    datafile << "latitude: " << latitude << endl;
-    datafile << "longitude: " << longitude << endl;
-    datafile << "alpha: " << FDMExec->GetTranslation()->Getalpha() << endl;
-    datafile << "beta: " << FDMExec->GetTranslation()->Getbeta() << endl;
-    datafile << "gamma: " << FDMExec->GetTranslation()->Getgamma() << endl;
-    datafile << "phi: " << FDMExec->GetRotation()->Getphi() << endl;
-    datafile << "tht: " << FDMExec->GetRotation()->Gettht() << endl;
-    datafile << "psi: " << FDMExec->GetRotation()->Getpsi() << endl;
-    datafile << "Pdot: " << FDMExec->GetRotation()->GetPdot() << endl;
-    datafile << "Qdot: " << FDMExec->GetRotation()->GetQdot() << endl;
-    datafile << "Rdot: " << FDMExec->GetRotation()->GetRdot() << endl;
-    datafile << "h: " << h << endl;
-    datafile << "a: " << a << endl;
-    datafile << "rho: " << FDMExec->GetAtmosphere()->Getrho() << endl;
-    datafile << "qbar: " << qbar << endl;
-    datafile << "sim_time: " << sim_time << endl;
-    datafile << "dt: " << dt << endl;
-    datafile << "m: " << FDMExec->GetAircraft()->GetMass() << endl;
-    datafile.close();
-    return true;
-  } else {
-    return false;
+/******************************************************************************/
+
+int FGState::GetParameterIndex(string val_string)
+{
+  return coeffdef[val_string];
+}
+
+/******************************************************************************/
+//
+// NEED WORK BELOW TO ADD NEW PARAMETERS !!!
+//
+float FGState::GetParameter(int val_idx)
+{
+  switch(val_idx) {
+  case FG_QBAR:
+    return Getqbar();
+  case FG_WINGAREA:
+    return FDMExec->GetAircraft()->GetWingArea();
+  case FG_WINGSPAN:
+    return FDMExec->GetAircraft()->GetWingSpan();
+  case FG_CBAR:
+    return FDMExec->GetAircraft()->Getcbar();
+  case FG_ALPHA:
+    return FDMExec->GetTranslation()->Getalpha();
+  case FG_ALPHADOT:
+    return Getadot();
+  case FG_BETA:
+    return FDMExec->GetTranslation()->Getbeta();
+  case FG_BETADOT:
+    return Getbdot();
+  case FG_PITCHRATE:
+    return (FDMExec->GetRotation()->GetPQR())(2);
+  case FG_ROLLRATE:
+    return (FDMExec->GetRotation()->GetPQR())(1);
+  case FG_YAWRATE:
+    return (FDMExec->GetRotation()->GetPQR())(3);
+  case FG_ELEVATOR_POS:
+    return FDMExec->GetFCS()->GetDePos();
+  case FG_AILERON_POS:
+    return FDMExec->GetFCS()->GetDaPos();
+  case FG_RUDDER_POS:
+    return FDMExec->GetFCS()->GetDrPos();
+  case FG_SPDBRAKE_POS:
+    return FDMExec->GetFCS()->GetDsbPos();
+  case FG_SPOILERS_POS:
+    return FDMExec->GetFCS()->GetDspPos();
+  case FG_FLAPS_POS:
+    return FDMExec->GetFCS()->GetDfPos();
+  case FG_ELEVATOR_CMD:
+    return FDMExec->GetFCS()->GetDeCmd();
+  case FG_AILERON_CMD:
+    return FDMExec->GetFCS()->GetDaCmd();
+  case FG_RUDDER_CMD:
+    return FDMExec->GetFCS()->GetDrCmd();
+  case FG_SPDBRAKE_CMD:
+    return FDMExec->GetFCS()->GetDsbCmd();
+  case FG_SPOILERS_CMD:
+    return FDMExec->GetFCS()->GetDspCmd();
+  case FG_FLAPS_CMD:
+    return FDMExec->GetFCS()->GetDfCmd();
+  case FG_MACH:
+    return GetMach();
+  case FG_ALTITUDE:
+    return Geth();
+  case FG_BI2VEL:
+    return FDMExec->GetAircraft()->GetWingSpan()/(2.0 * GetVt());
+  case FG_CI2VEL:
+    return FDMExec->GetAircraft()->Getcbar()/(2.0 * GetVt());
+  }
+  return 0;
+}
+
+/******************************************************************************/
+
+void FGState::SetParameter(int val_idx, float val)
+{
+  switch(val_idx) {
+  case FG_ELEVATOR_POS:
+    FDMExec->GetFCS()->SetDePos(val);
+    break;
+  case FG_AILERON_POS:
+    FDMExec->GetFCS()->SetDaPos(val);
+    break;
+  case FG_RUDDER_POS:
+    FDMExec->GetFCS()->SetDrPos(val);
+    break;
+  case FG_SPDBRAKE_POS:
+    FDMExec->GetFCS()->SetDrPos(val);
+    break;
+  case FG_SPOILERS_POS:
+    FDMExec->GetFCS()->SetDrPos(val);
+    break;
+  case FG_FLAPS_POS:
+    FDMExec->GetFCS()->SetDrPos(val);
+    break;
   }
 }
 
+/******************************************************************************/
 
-bool FGState::DisplayData(void)
+void FGState::InitMatrices(float phi, float tht, float psi)
 {
-  cout << "U: " << FDMExec->GetTranslation()->GetU() << endl;
-  cout << "V: " << FDMExec->GetTranslation()->GetV() << endl;
-  cout << "W: " << FDMExec->GetTranslation()->GetW() << endl;
-  cout << "P: " << FDMExec->GetRotation()->GetP()*RADTODEG << endl;
-  cout << "Q: " << FDMExec->GetRotation()->GetQ()*RADTODEG << endl;
-  cout << "R: " << FDMExec->GetRotation()->GetR()*RADTODEG << endl;
-  cout << "L: " << FDMExec->GetAircraft()->GetL() << endl;
-  cout << "M: " << FDMExec->GetAircraft()->GetM() << endl;
-  cout << "N: " << FDMExec->GetAircraft()->GetN() << endl;
-  cout << "Vt: " << Vt << endl;
-  cout << "latitude: " << latitude << endl;
-  cout << "longitude: " << longitude << endl;
-  cout << "alpha: " << FDMExec->GetTranslation()->Getalpha()*RADTODEG << endl;
-  cout << "beta: " << FDMExec->GetTranslation()->Getbeta()*RADTODEG << endl;
-  cout << "gamma: " << FDMExec->GetTranslation()->Getgamma()*RADTODEG << endl;
-  cout << "phi: " << FDMExec->GetRotation()->Getphi()*RADTODEG << endl;
-  cout << "tht: " << FDMExec->GetRotation()->Gettht()*RADTODEG << endl;
-  cout << "psi: " << FDMExec->GetRotation()->Getpsi()*RADTODEG << endl;
-  cout << "Pdot: " << FDMExec->GetRotation()->GetPdot()*RADTODEG << endl;
-  cout << "Qdot: " << FDMExec->GetRotation()->GetQdot()*RADTODEG << endl;
-  cout << "Rdot: " << FDMExec->GetRotation()->GetRdot()*RADTODEG << endl;
-  cout << "h: " << h << endl;
-  cout << "a: " << a << endl;
-  cout << "rho: " << FDMExec->GetAtmosphere()->Getrho() << endl;
-  cout << "qbar: " << qbar << endl;
-  cout << "sim_time: " << sim_time << endl;
-  cout << "dt: " << dt << endl;
-  cout << "m: " << FDMExec->GetAircraft()->GetMass() << endl;
+  float thtd2, psid2, phid2;
+  float Sthtd2, Spsid2, Sphid2;
+  float Cthtd2, Cpsid2, Cphid2;
+  float Cphid2Cthtd2;
+  float Cphid2Sthtd2;
+  float Sphid2Sthtd2;
+  float Sphid2Cthtd2;
 
-  return true;
+  thtd2 = tht/2.0;
+  psid2 = psi/2.0;
+  phid2 = phi/2.0;
+
+  Sthtd2 = sin(thtd2);
+  Spsid2 = sin(psid2);
+  Sphid2 = sin(phid2);
+
+  Cthtd2 = cos(thtd2);
+  Cpsid2 = cos(psid2);
+  Cphid2 = cos(phid2);
+
+  Cphid2Cthtd2 = Cphid2*Cthtd2;
+  Cphid2Sthtd2 = Cphid2*Sthtd2;
+  Sphid2Sthtd2 = Sphid2*Sthtd2;
+  Sphid2Cthtd2 = Sphid2*Cthtd2;
+
+  vQtrn(1) = Cphid2Cthtd2*Cpsid2 + Sphid2Sthtd2*Spsid2;
+  vQtrn(2) = Sphid2Cthtd2*Cpsid2 - Cphid2Sthtd2*Spsid2;
+  vQtrn(3) = Cphid2Sthtd2*Cpsid2 + Sphid2Cthtd2*Spsid2;
+  vQtrn(4) = Cphid2Cthtd2*Spsid2 - Sphid2Sthtd2*Cpsid2;
+
+  CalcMatrices();
 }
+
+/******************************************************************************/
+
+void FGState::CalcMatrices(void)
+{
+  float Q0Q0, Q1Q1, Q2Q2, Q3Q3;
+  float Q0Q1, Q0Q2, Q0Q3, Q1Q2;
+  float Q1Q3, Q2Q3;
+
+  Q0Q0 = vQtrn(1)*vQtrn(1);
+  Q1Q1 = vQtrn(2)*vQtrn(2);
+  Q2Q2 = vQtrn(3)*vQtrn(3);
+  Q3Q3 = vQtrn(4)*vQtrn(4);
+  Q0Q1 = vQtrn(1)*vQtrn(2);
+  Q0Q2 = vQtrn(1)*vQtrn(3);
+  Q0Q3 = vQtrn(1)*vQtrn(4);
+  Q1Q2 = vQtrn(2)*vQtrn(3);
+  Q1Q3 = vQtrn(2)*vQtrn(4);
+  Q2Q3 = vQtrn(3)*vQtrn(4);
+
+  mTb2l(1,1) = Q0Q0 + Q1Q1 - Q2Q2 - Q3Q3;
+  mTb2l(1,2) = 2*(Q1Q2 + Q0Q3);
+  mTb2l(1,3) = 2*(Q1Q3 - Q0Q2);
+  mTb2l(2,1) = 2*(Q1Q2 - Q0Q3);
+  mTb2l(2,2) = Q0Q0 - Q1Q1 + Q2Q2 - Q3Q3;
+  mTb2l(2,3) = 2*(Q2Q3 + Q0Q1);
+  mTb2l(3,1) = 2*(Q1Q3 + Q0Q2);
+  mTb2l(3,2) = 2*(Q2Q3 - Q0Q1);
+  mTb2l(3,3) = Q0Q0 - Q1Q1 - Q2Q2 + Q3Q3;
+
+  mTl2b = mTb2l;
+  mTl2b.T();
+}
+
+/******************************************************************************/
+
+void FGState::IntegrateQuat(FGColumnVector vPQR, int rate)
+{
+  static FGColumnVector vlastQdot(4);
+  static FGColumnVector vQdot(4);
+
+  vQdot(1) = -0.5*(vQtrn(2)*vPQR(eP) + vQtrn(3)*vPQR(eQ) + vQtrn(4)*vPQR(eR));
+  vQdot(2) =  0.5*(vQtrn(1)*vPQR(eP) + vQtrn(3)*vPQR(eR) - vQtrn(4)*vPQR(eQ));
+  vQdot(3) =  0.5*(vQtrn(1)*vPQR(eQ) + vQtrn(4)*vPQR(eP) - vQtrn(2)*vPQR(eR));
+  vQdot(4) =  0.5*(vQtrn(1)*vPQR(eR) + vQtrn(2)*vPQR(eQ) - vQtrn(3)*vPQR(eP));
+
+  vQtrn += 0.5*dt*rate*(vlastQdot + vQdot);
+
+  vQtrn.Normalize();
+
+  vlastQdot = vQdot;
+}
+
+/******************************************************************************/
+
+FGColumnVector FGState::CalcEuler(void)
+{
+  static FGColumnVector vEuler(3);
+
+  if (mTb2l(3,3) == 0)    vEuler(ePhi) = 0.0;
+  else                    vEuler(ePhi) = atan2(mTb2l(2,3), mTb2l(3,3));
+
+  vEuler(eTht) = asin(-mTb2l(1,3));
+
+  if (mTb2l(1,1) == 0.0)  vEuler(ePsi) = 0.0;
+  else                    vEuler(ePsi) = atan2(mTb2l(1,2), mTb2l(1,1));
+
+  if (vEuler(ePsi) < 0.0) vEuler(ePsi) += 2*M_PI;
+
+  return vEuler;
+}
+
+/******************************************************************************/
+
+FGMatrix FGState::GetTs2b(float alpha, float beta)
+{
+  float ca, cb, sa, sb;
+
+  ca = cos(alpha);
+  sa = sin(alpha);
+  cb = cos(beta);
+  sb = sin(beta);
+
+  mTs2b(1,1) = -ca*cb;
+  mTs2b(1,2) = -ca*sb;
+  mTs2b(1,3) = sa;
+  mTs2b(2,1) = sb;
+  mTs2b(2,2) = cb;
+  mTs2b(2,3) = 0.0;
+  mTs2b(3,1) = -sa*cb;
+  mTs2b(3,2) = -sa*sb;
+  mTs2b(3,3) = -ca;
+
+  return mTs2b;
+}
+
+/******************************************************************************/
+

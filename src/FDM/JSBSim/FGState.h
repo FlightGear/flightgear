@@ -58,8 +58,10 @@ INCLUDES
 #  include <fstream>
 #endif
 
+#include <map>
 #include "FGDefs.h"
 #include "FGInitialCondition.h"
+#include "FGMatrix.h"
 
 /*******************************************************************************
 DEFINES
@@ -79,12 +81,10 @@ public:
    FGState(FGFDMExec*);
   ~FGState(void);
 
-  bool Reset(string, string);
+  bool Reset(string, string, string);
   void Initialize(float, float, float, float, float, float, float, float, float);
   void Initialize(FGInitialCondition *FGIC);
   bool StoreData(string);
-  bool DumpData(string);
-  bool DisplayData(void);
 
   inline float GetVt(void) {return Vt;}
 
@@ -104,6 +104,9 @@ public:
   inline float Getdt(void) {return dt;}
 
   inline float Getqbar(void) {return qbar;}
+  float GetParameter(int val_idx);
+  float GetParameter(string val_string);
+  int GetParameterIndex(string val_string);
 
   inline void SetVt(float tt) {Vt = tt;}
 
@@ -124,8 +127,16 @@ public:
   inline float Setsim_time(float tt) {sim_time = tt; return sim_time;}
   inline void  Setdt(float tt) {dt = tt;}
 
-  inline float IncrTime(void) {sim_time+=dt;return sim_time;}
+  void SetParameter(int, float);
 
+  inline float IncrTime(void) {sim_time+=dt;return sim_time;}
+  void InitMatrices(float phi, float tht, float psi);
+  void CalcMatrices(void);
+  void IntegrateQuat(FGColumnVector vPQR, int rate);
+  FGColumnVector CalcEuler(void);
+  FGMatrix GetTs2b(float alpha, float beta);
+  FGMatrix GetTl2b(void) {return mTl2b;}
+  FGMatrix GetTb2l(void) {return mTb2l;}
 
 private:
 
@@ -140,9 +151,17 @@ private:
 
   FGFDMExec* FDMExec;
   float LocalAltitudeOverRunway;
+  FGMatrix mTb2l;
+  FGMatrix mTl2b;
+  FGMatrix mTs2b;
+  FGColumnVector vQtrn;
+
+  typedef map<string, long> CoeffMap;
+  CoeffMap coeffdef;
 
 protected:
-
+  enum {ePhi=1, eTht, ePsi};
+  enum {eP=1, eQ, eR};
 };
 
 /******************************************************************************/

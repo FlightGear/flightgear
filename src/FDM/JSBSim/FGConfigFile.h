@@ -1,8 +1,8 @@
 /*******************************************************************************
 
- Header:       FGPosition.h
- Author:       Jon S. Berndt
- Date started: 1/5/99
+ Header:       FGConfigFile.h
+ Author:       Jon Berndt
+ Date started: 03/29/00
 
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
@@ -25,58 +25,69 @@
 
 HISTORY
 --------------------------------------------------------------------------------
-01/05/99   JSB   Created
-
-********************************************************************************
-COMMENTS, REFERENCES,  and NOTES
-********************************************************************************
+03/29/00   JSB   Created
 
 ********************************************************************************
 SENTRY
 *******************************************************************************/
 
-#ifndef FGPOSITION_H
-#define FGPOSITION_H
+#ifndef FGCONFIGFILE_H
+#define FGCONFIGFILE_H
 
 /*******************************************************************************
 INCLUDES
 *******************************************************************************/
 
-#include "FGModel.h"
-#include "FGMatrix.h"
+#ifdef FGFS
+#  include <simgear/compiler.h>
+#  include STL_STRING
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
+#  else
+#    include <fstream.h>
+#  endif
+   FG_USING_STD(string);
+#else
+#  include <string>
+#  include <fstream>
+#endif
 
+/*******************************************************************************
+DEFINES
+*******************************************************************************/
+
+#ifndef FGFS
 using namespace std;
+#endif
 
 /*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/
 
-class FGPosition : public FGModel
+class FGConfigFile
 {
-  FGColumnVector vUVW;
-  FGColumnVector vVel;
-
-  float Vee, invMass, invRadius;
-  double Radius;
-  float LatitudeDot, LongitudeDot, RadiusDot;
-  float lastLatitudeDot, lastLongitudeDot, lastRadiusDot;
-  float Longitude, Latitude;
-  float dt;
-
-  void GetState(void);
-  void PutState(void);
-
 public:
-  FGPosition(FGFDMExec*);
-  ~FGPosition(void);
+  FGConfigFile(string);
+  ~FGConfigFile(void);
 
-  inline FGColumnVector GetVel(void) {return vVel;}
-  inline FGColumnVector GetUVW(void) {return vUVW;}
-  inline FGColumnVector GetVn(void)  {return vVel(1);}
-  inline FGColumnVector GetVe(void)  {return vVel(2);}
-  inline FGColumnVector GetVd(void)  {return vVel(3);}
+  string GetLine(void);
+  string GetNextConfigLine(void);
+  string GetValue(string);
+  string GetValue(void);
+  bool IsCommentLine(void);
+  FGConfigFile& operator>>(double&);
+  FGConfigFile& operator>>(float&);
+  FGConfigFile& operator>>(int&);
+  FGConfigFile& operator>>(string&);
+  void ResetLineIndexToZero(void);
 
-  bool Run(void);
+protected:
+
+private:
+  ifstream cfgfile;
+  string   CurrentLine;
+  bool     CommentsOn;
+  unsigned int      CurrentIndex;
 };
 
 /******************************************************************************/

@@ -51,6 +51,12 @@ FGControls::~FGControls() {
 
 
 // $Log$
+// Revision 1.8  2000/04/24 21:49:06  curt
+// Updated JSBsim code.
+//
+// Revision 1.2  2000/04/15 13:16:54  jsb
+// In good shape, now, changes to Coefficient and aircraft, mostly, with new commands added and inputs and outputs separated.
+//
 // Revision 1.7  1999/12/30 17:01:59  curt
 // Here is a wrap-up of the latest changes to JSBSim. It still is flaky, but
 // much less so due to returning the aero reference point stuff to the config

@@ -85,11 +85,7 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
   Output      = FDMExec->GetOutput();
 
   Name = engineName;
-#ifdef MACOS
-  fullpath = enginePath + ":" + engineName + ".dat";
-#else
   fullpath = enginePath + "/" + engineName + ".dat";
-#endif 
   ifstream enginefile(fullpath.c_str());
 
   if (enginefile) {
@@ -152,7 +148,7 @@ float FGEngine::CalcRocketThrust(void)
 {
   float lastThrust;
 
-  Throttle = FCS->GetThrottle(EngineNumber);
+  Throttle = FCS->GetThrottlePos(EngineNumber);
   lastThrust = Thrust;                 // last actual thrust
 
   if (Throttle < MinThrottle || Starved) {
@@ -160,7 +156,7 @@ float FGEngine::CalcRocketThrust(void)
     Flameout = true;
   } else {
     PctPower = Throttle / MaxThrottle;
-    Thrust = PctPower*((1.0 - Atmosphere->Getrho() / 0.002378)*(VacThrustMax - SLThrustMax) +
+    Thrust = PctPower*((1.0 - Atmosphere->GetDensityRatio())*(VacThrustMax - SLThrustMax) +
                        SLThrustMax); // desired thrust
     Flameout = false;
   }
@@ -175,7 +171,7 @@ float FGEngine::CalcPistonThrust(void)
 {
   float v,h,pa;
 
-  Throttle = FCS->GetThrottle(EngineNumber);
+  Throttle = FCS->GetThrottlePos(EngineNumber);
   Throttle /= 100;
  
   v=State->GetVt();

@@ -48,6 +48,13 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
+#include "filtersjb/FGFilter.h"
+#include "filtersjb/FGDeadBand.h"
+#include "filtersjb/FGGain.h"
+#include "filtersjb/FGGradient.h"
+#include "filtersjb/FGSwitch.h"
+#include "filtersjb/FGSummer.h"
+
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
@@ -58,28 +65,99 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGFCS";
 }
 
+/******************************************************************************/
 
 FGFCS::~FGFCS(void)
 {
 }
 
+/******************************************************************************/
 
 bool FGFCS::Run(void)
 {
   if (!FGModel::Run()) {
-    
+
+    for (unsigned int i=0; i<Components.size(); i++) Components[i]->Run();
+
   } else {
   }
   return false;
 }
 
+/******************************************************************************/
 
-void FGFCS::SetThrottle(int engineNum, float setting)
+void FGFCS::SetThrottleCmd(int engineNum, float setting)
 {
   if (engineNum < 0) {
-    for (int ctr=0;ctr<Aircraft->GetNumEngines();ctr++) Throttle[ctr] = setting;
+    for (int ctr=0;ctr<Aircraft->GetNumEngines();ctr++) ThrottleCmd[ctr] = setting;
   } else {
-    Throttle[engineNum] = setting;
+    ThrottlePos[engineNum] = setting;
   }
 }
+
+/******************************************************************************/
+
+void FGFCS::SetThrottlePos(int engineNum, float setting)
+{
+  if (engineNum < 0) {
+    for (int ctr=0;ctr<Aircraft->GetNumEngines();ctr++)
+      ThrottlePos[ctr] = ThrottleCmd[ctr];
+  } else {
+    ThrottlePos[engineNum] = setting;
+  }
+}
+
+/******************************************************************************/
+
+bool FGFCS::LoadFCS(FGConfigFile* AC_cfg)
+{
+  string token;
+
+  FCSName = AC_cfg->GetValue("NAME");
+  AC_cfg->GetNextConfigLine();
+  while ((token = AC_cfg->GetValue()) != "/FLIGHT_CONTROL") {
+    if (token == "COMPONENT") {
+
+      if (((token = AC_cfg->GetValue("TYPE")) == "LAG_FILTER") ||
+          (token == "RECT_LAG_FILTER") ||
+          (token == "LEAD_LAG_FILTER") ||
+          (token == "SECOND_ORDER_FILTER") ||
+          (token == "WASHOUT_FILTER") ||
+          (token == "INTEGRATOR") )
+      {
+       Components.push_back(new FGFilter(this, AC_cfg));
+      } else if ((token == "PURE_GAIN") ||
+                (token == "SCHEDULED_GAIN") ||
+                (token == "AEROSURFACE_SCALE") )
+      {
+       Components.push_back(new FGGain(this, AC_cfg));
+      } else if (token == "SUMMER") {
+       Components.push_back(new FGSummer(this, AC_cfg));
+      } else if (token == "DEADBAND") {
+       Components.push_back(new FGDeadBand(this, AC_cfg));
+      } else if (token == "GRADIENT") {
+       Components.push_back(new FGGradient(this, AC_cfg));
+      } else if (token == "SWITCH") {
+       Components.push_back(new FGSwitch(this, AC_cfg));
+      }
+      AC_cfg->GetNextConfigLine();
+    }
+  }
+  return true;
+}
+
+/******************************************************************************/
+
+float FGFCS::GetComponentOutput(int idx)
+{
+  return Components[idx]->GetOutput();
+}
+
+/******************************************************************************/
+
+string FGFCS::GetComponentName(int idx)
+{
+  return Components[idx]->GetName();
+}
+
 

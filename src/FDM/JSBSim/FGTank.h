@@ -43,24 +43,21 @@ SENTRY
 /*******************************************************************************
 INCLUDES
 *******************************************************************************/
+
 #ifdef FGFS
 #  include <simgear/compiler.h>
 #  include STL_STRING
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
    FG_USING_STD(string);
 #else
 #  include <string>
-#  include <fstream>
 #endif
+
+#include "FGConfigFile.h"
 
 /*******************************************************************************
 DEFINES
 *******************************************************************************/
- 
+
 using namespace std;
 
 /*******************************************************************************
@@ -70,7 +67,7 @@ CLASS DECLARATION
 class FGTank
 {
 public:
-  FGTank(ifstream&);
+  FGTank(FGConfigFile*);
   ~FGTank(void);
 
   float Reduce(float);
@@ -83,7 +80,7 @@ public:
   float inline GetZ(void) {return Z;}
 
   enum TankType {ttUNKNOWN, ttFUEL, ttOXIDIZER};
-  
+
 private:
   TankType Type;
   float X, Y, Z;

@@ -1,397 +1,536 @@
 /*******************************************************************************
 
 Module: FGMatrix.cpp
-Author: Tony Peden [formatted here by JSB]
-Date started: ??
+Author: Originally by Tony Peden [formatted here (and broken??) by JSB]
+Date started: 1998
 Purpose: FGMatrix class
 Called by: Various
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 
-
-ARGUMENTS
---------------------------------------------------------------------------------
-
-
 HISTORY
 --------------------------------------------------------------------------------
 ??/??/??   TP   Created
+03/16/2000 JSB  Added exception throwing
 
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
 
-#include <stdlib.h>
 #include "FGMatrix.h"
-#include <iostream.h>
-#include <iomanip.h>
-#include <fstream.h>
-
-/*******************************************************************************
-DEFINES
-*******************************************************************************/
-
-#pragma warn -use
-
-/*******************************************************************************
-CONSTANTS
-*******************************************************************************/
-
-
-/*******************************************************************************
-TYPEDEFS
-*******************************************************************************/
-
-
-/*******************************************************************************
-GLOBALS
-*******************************************************************************/
-
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
-double** alloc(int rows,int cols)
+double** FGalloc(int rows, int cols)
 {
   double **A;
 
   A = new double *[rows+1];
-  if (!A)	return NULL;
+  if (!A)  return NULL;
 
-  for (int i=0;i<=rows;i++){
-    A[i]=new double[cols+1];
+  for (int i=0; i <= rows; i++){
+    A[i] = new double [cols+1];
     if (!A[i]) return NULL;
   }
   return A;
 }
 
+/******************************************************************************/
 
-void dealloc(double **A, int rows, int cols)
+void dealloc(double **A, int rows)
 {
-  for(int i=0;i<=rows;i++){
-    delete[] A[i];
-  }
-
+  for(int i=0;i<= rows;i++) delete[] A[i];
   delete[] A;
 }
 
+/******************************************************************************/
 
-FGMatrix::FGMatrix(unsigned rows, unsigned cols)
+FGMatrix::FGMatrix(const unsigned int r, const unsigned int c) : rows(r), cols(c)
 {
-  this->rows=rows;
-  this->cols=cols;
-  keep=false;
-  data=alloc(rows,cols);
+  data = FGalloc(rows,cols);
+  rowCtr = colCtr = 1;
 }
 
+/******************************************************************************/
 
-FGMatrix::FGMatrix(const FGMatrix& A)
+FGMatrix::FGMatrix(const FGMatrix& M)
 {
-  data=NULL;
-  *this=A;
+  data  = NULL;
+  rowCtr = colCtr = 1;
+  *this = M;
 }
 
+/******************************************************************************/
 
 FGMatrix::~FGMatrix(void)
 {
-  if (keep == false) {
-    dealloc(data,rows,cols);
-    rows=cols=0;
-  }
+  dealloc(data,rows);
+  rowCtr = colCtr = 1;
+  rows = cols = 0;
 }
 
+/******************************************************************************/
 
-FGMatrix& FGMatrix::operator=(const FGMatrix& A)
+ostream& operator<<(ostream& os, const FGMatrix& M)
 {
-  if (&A != this) {
-    if (data != NULL) dealloc(data,rows,cols);
-    
-    width  = A.width;
-    prec   = A.prec;
-    delim  = A.delim;
-    origin = A.origin;
-    rows   = A.rows;
-    cols   = A.cols;
-    keep   = false;
-    
-    if (A.keep  == true) {
-      data = A.data;
-    } else {
-      data = alloc(rows,cols);
-      for (unsigned int i=0; i<=rows; i++) {
-	      for (unsigned int j=0; j<=cols; j++) {
-		      data[i][j] = A.data[i][j];
-	      }
+  for (unsigned int i=1; i<=M.Rows(); i++) {
+    for (unsigned int j=1; j<=M.Cols(); j++) {
+      if (i == M.Rows() && j == M.Cols())
+        os << M.data[i][j];
+      else
+        os << M.data[i][j] << ", ";
+    }
+  }
+  return os;
+}
+
+/******************************************************************************/
+
+FGMatrix& FGMatrix::operator<<(const float ff)
+{
+  data[rowCtr][colCtr] = ff;
+  if (++colCtr > Cols()) {
+    colCtr = 1;
+    if (++rowCtr > Rows())
+      rowCtr = 1;
+  }
+  return *this;
+}
+
+/******************************************************************************/
+
+istream& operator>>(istream& is, FGMatrix& M)
+{
+  for (unsigned int i=1; i<=M.Rows(); i++) {
+    for (unsigned int j=1; j<=M.Cols(); j++) {
+      is >> M.data[i][j];
+    }
+  }
+  return is;
+}
+
+/******************************************************************************/
+
+FGMatrix& FGMatrix::operator=(const FGMatrix& M)
+{
+  if (&M != this) {
+    if (data != NULL) dealloc(data,rows);
+
+    width  = M.width;
+    prec   = M.prec;
+    delim  = M.delim;
+    origin = M.origin;
+    rows   = M.rows;
+    cols   = M.cols;
+
+    data = FGalloc(rows,cols);
+    for (unsigned int i=0; i<=rows; i++) {
+      for (unsigned int j=0; j<=cols; j++) {
+        data[i][j] = M.data[i][j];
       }
     }
   }
   return *this;
 }
 
+/******************************************************************************/
 
-double& FGMatrix::operator()(unsigned row, unsigned col)
-{
-  return data[row][col];
-}
-
-
-unsigned FGMatrix::Rows(void) const
+unsigned int FGMatrix::Rows(void) const
 {
   return rows;
 }
 
+/******************************************************************************/
 
-unsigned FGMatrix::Cols(void) const
+unsigned int FGMatrix::Cols(void) const
 {
   return cols;
 }
 
+/******************************************************************************/
 
 void FGMatrix::SetOParams(char delim,int width,int prec,int origin)
 {
-  FGMatrix::delim=delim;
-  FGMatrix::width=width;
-  FGMatrix::prec=prec;
-  FGMatrix::origin=origin;
+  FGMatrix::delim  = delim;
+  FGMatrix::width  = width;
+  FGMatrix::prec   = prec;
+  FGMatrix::origin = origin;
 }
 
+/******************************************************************************/
 
 void FGMatrix::InitMatrix(double value)
 {
   if (data) {
     for (unsigned int i=0;i<=rows;i++) {
-			for (unsigned int j=0;j<=cols;j++) {
-    		operator()(i,j) = value;
-			}
-		}
-	}
-}
-
-
-void FGMatrix::InitMatrix(void)
-{
-	this->InitMatrix(0);
-}
-
-
-FGMatrix operator-(FGMatrix& A, FGMatrix& B)
-{
-	if ((A.Rows() != B.Rows()) || (A.Cols() != B.Cols())) {
-		cout << endl << "FGMatrix::operator-" << endl << '\t';
-		cout << "Subtraction not defined for matrices of different sizes";
-    cout << endl;
-		exit(1);
-	}
-
-  FGMatrix Diff(A.Rows(),A.Cols());
-  Diff.keep=true;
-  for (unsigned int i=1;i<=A.Rows();i++) {
-		for (unsigned int j=1;j<=A.Cols();j++) {
-			Diff(i,j)=A(i,j)-B(i,j);
-		}
-	}
-	return Diff;
-}
-
-
-void operator-=(FGMatrix &A,FGMatrix &B)
-{
-	if ((A.Rows() != B.Rows()) || (A.Cols() != B.Cols())) {
-		cout << endl << "FGMatrix::operator-" << endl << '\t';
-		cout << "Subtraction not defined for matrices of different sizes";
-    cout << endl;
-		exit(1);
-	}
-
-  for (unsigned int i=1;i<=A.Rows();i++) {
-		for (unsigned int j=1;j<=A.Cols();j++) {
-			A(i,j)-=B(i,j);
-		}
-	}
-}
-
-
-FGMatrix operator+(FGMatrix& A, FGMatrix& B)
-{
-	if ((A.Rows() != B.Rows()) || (A.Cols() != B.Cols())) {
-		cout << endl << "FGMatrix::operator+" << endl << '\t';
-		cout << "Addition not defined for matrices of different sizes";
-    cout << endl;
-		exit(1);
-	}
-
-  FGMatrix Sum(A.Rows(),A.Cols());
-  Sum.keep = true;
-	for (unsigned int i=1;i<=A.Rows();i++) {
-		for (unsigned int j=1;j<=A.Cols();j++) {
-			Sum(i,j)=A(i,j)+B(i,j);
-		}
-	}
-	return Sum;
-}
-
-
-void operator+=(FGMatrix &A,FGMatrix &B)
-{
-	if ((A.Rows() != B.Rows()) || (A.Cols() != B.Cols())) {
-		cout << endl << "FGMatrix::operator+" << endl << '\t';
-		cout << "Addition not defined for matrices of different sizes";
-    cout << endl;
-		exit(1);
-	}
-  for (unsigned int i=1;i<=A.Rows();i++) {
-		for (unsigned int j=1;j<=A.Cols();j++) {
-			A(i,j)+=B(i,j);
-		}
-	}
-}
-
-
-FGMatrix operator*(double scalar,FGMatrix &A)
-{
-	FGMatrix Product(A.Rows(),A.Cols());
-  Product.keep = true;
-	for (unsigned int i=1;i<=A.Rows();i++) {
-		for (unsigned int j=1;j<=A.Cols();j++) {
-    	Product(i,j) = scalar*A(i,j);
-    }
-	}
-	return Product;
-}
-
-
-void operator*=(FGMatrix &A,double scalar)
-{
-	for (unsigned int i=1;i<=A.Rows();i++) {
-		for (unsigned int j=1;j<=A.Cols();j++) {
-    	A(i,j)*=scalar;
+      for (unsigned int j=0;j<=cols;j++) {
+        operator()(i,j) = value;
+      }
     }
   }
 }
 
+/******************************************************************************/
 
-FGMatrix operator*(FGMatrix &Left, FGMatrix &Right)
+void FGMatrix::InitMatrix(void)
 {
-	if (Left.Cols() != Right.Rows()) {
-		cout << endl << "FGMatrix::operator*" << endl << '\t';
-		cout << "The number of rows in the right matrix must match the number";
-		cout << endl << '\t' << "of columns in the left." << endl;
-		cout << '\t' << "Multiplication not defined." << endl;
-		exit(1);
-	}
+  this->InitMatrix(0);
+}
 
-	FGMatrix Product(Left.Rows(),Right.Cols());
-	Product.keep = true;
-	for (unsigned int i=1;i<=Left.Rows();i++) {
-		for (unsigned int j=1;j<=Right.Cols();j++)	{
-    	Product(i,j) = 0;
-      for (unsigned int k=1;k<=Left.Cols();k++) {
-	   		Product(i,j)+=Left(i,k)*Right(k,j);
+// *****************************************************************************
+// binary operators ************************************************************
+// *****************************************************************************
+
+FGMatrix FGMatrix::operator-(const FGMatrix& M)
+{
+  if ((Rows() != M.Rows()) || (Cols() != M.Cols())) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Matrix operator -";
+    throw mE;
+  }
+
+  FGMatrix Diff(Rows(), Cols());
+
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=Cols(); j++) {
+      Diff(i,j) = (*this)(i,j) - M(i,j);
+    }
+  }
+  return Diff;
+}
+
+/******************************************************************************/
+
+void FGMatrix::operator-=(const FGMatrix &M)
+{
+  if ((Rows() != M.Rows()) || (Cols() != M.Cols())) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Matrix operator -=";
+    throw mE;
+  }
+
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=Cols(); j++) {
+      (*this)(i,j) -= M(i,j);
+    }
+  }
+}
+
+/******************************************************************************/
+
+FGMatrix FGMatrix::operator+(const FGMatrix& M)
+{
+  if ((Rows() != M.Rows()) || (Cols() != M.Cols())) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Matrix operator +";
+    throw mE;
+  }
+
+  FGMatrix Sum(Rows(), Cols());
+
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=Cols(); j++) {
+      Sum(i,j) = (*this)(i,j) + M(i,j);
+    }
+  }
+  return Sum;
+}
+
+/******************************************************************************/
+
+void FGMatrix::operator+=(const FGMatrix &M)
+{
+  if ((Rows() != M.Rows()) || (Cols() != M.Cols())) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Matrix operator +=";
+    throw mE;
+  }
+
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=Cols(); j++) {
+      (*this)(i,j)+=M(i,j);
+    }
+  }
+}
+
+/******************************************************************************/
+
+FGMatrix operator*(double scalar, FGMatrix &M)
+{
+  FGMatrix Product(M.Rows(), M.Cols());
+
+  for (unsigned int i=1; i<=M.Rows(); i++) {
+    for (unsigned int j=1; j<=M.Cols(); j++) {
+      Product(i,j) = scalar*M(i,j);
+    }
+  }
+  return Product;
+}
+
+/******************************************************************************/
+
+void FGMatrix::operator*=(const double scalar)
+{
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=Cols(); j++) {
+      (*this)(i,j) *= scalar;
+    }
+  }
+}
+
+/******************************************************************************/
+
+FGMatrix FGMatrix::operator*(const FGMatrix& M)
+{
+  if (Cols() != M.Rows()) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Matrix operator *";
+    throw mE;
+  }
+
+  FGMatrix Product(Rows(), M.Cols());
+
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=M.Cols(); j++)  {
+      Product(i,j) = 0;
+      for (unsigned int k=1; k<=Cols(); k++) {
+         Product(i,j) += (*this)(i,k) * M(k,j);
       }
-		}
-	}
-	return Product;
+    }
+  }
+  return Product;
 }
 
+/******************************************************************************/
 
-void operator*=(FGMatrix &Left,FGMatrix &Right)
+void FGMatrix::operator*=(const FGMatrix& M)
 {
-	if (Left.Cols() != Right.Rows()) {
-		cout << endl << "FGMatrix::operator*" << endl << '\t';
-		cout << "The number of rows in the right matrix must match the number";
-		cout << endl << '\t' << "of columns in the left." << endl;
-		cout << '\t' << "Multiplication not defined." << endl;
-		exit(1);
-	}
+  if (Cols() != M.Rows()) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Matrix operator *=";
+    throw mE;
+  }
 
-	double **prod;
+  double **prod;
 
-		prod=alloc(Left.Rows(),Right.Cols());
-		for (unsigned int i=1;i<=Left.Rows();i++) {
-			for (unsigned int j=1;j<=Right.Cols();j++) {
-      	prod[i][j] = 0;
-				for (unsigned int k=1;k<=Left.Cols();k++) {
-        	prod[i][j]+=Left(i,k)*Right(k,j);
-				}
-			}
-		}
-		dealloc(Left.data,Left.Rows(),Left.Cols());
-		Left.data=prod;
-		Left.cols=Right.cols;
+  prod = FGalloc(Rows(), M.Cols());
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=M.Cols(); j++) {
+      prod[i][j] = 0;
+      for (unsigned int k=1; k<=Cols(); k++) {
+        prod[i][j] += (*this)(i,k) * M(k,j);
+      }
+    }
+  }
+  dealloc(data, Rows());
+  data = prod;
+  cols = M.cols;
 }
 
+/******************************************************************************/
 
-FGMatrix operator/(FGMatrix& A, double scalar)
+FGMatrix FGMatrix::operator/(const double scalar)
 {
-	FGMatrix Quot(A.Rows(),A.Cols());
-	A.keep = true;
-	for (unsigned int i=1;i<=A.Rows();i++) {
-		for (unsigned int j=1;j<=A.Cols();j++)	{
-	   	Quot(i,j)=A(i,j)/scalar;
-		}
-	}
-	return Quot;
+  FGMatrix Quot(Rows(), Cols());
+
+  for (unsigned int i=1; i<=Rows(); i++) {
+    for (unsigned int j=1; j<=Cols(); j++)  {
+       Quot(i,j) = (*this)(i,j)/scalar;
+    }
+  }
+  return Quot;
 }
 
+/******************************************************************************/
 
-void operator/=(FGMatrix &A,double scalar)
+void FGMatrix::operator/=(const double scalar)
 {
-	for (unsigned int i=1;i<=A.Rows();i++)	{
-		for (unsigned int j=1;j<=A.Cols();j++) {
-			A(i,j)/=scalar;
-		}
-	}
+  for (unsigned int i=1; i<=Rows(); i++)  {
+    for (unsigned int j=1; j<=Cols(); j++) {
+      (*this)(i,j)/=scalar;
+    }
+  }
 }
 
+/******************************************************************************/
 
 void FGMatrix::T(void)
 {
-	if (rows==cols)
-		TransposeSquare();
-	else
-		TransposeNonSquare();
+  if (rows==cols)
+    TransposeSquare();
+  else
+    TransposeNonSquare();
 }
 
+/******************************************************************************/
+
+FGColumnVector FGMatrix::operator*(const FGColumnVector& Col)
+{
+  FGColumnVector Product(Col.Rows());
+
+  if (Cols() != Col.Rows()) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Column Vector operator *";
+    throw mE;
+  }
+
+  for (unsigned int i=1;i<=Rows();i++) {
+    Product(i) = 0.00;
+    for (unsigned int j=1;j<=Cols();j++) {
+      Product(i) += Col(j)*data[i][j];
+    }
+  }
+  return Product;
+}
+
+/******************************************************************************/
 
 void FGMatrix::TransposeSquare(void)
 {
-	for (unsigned int i=1;i<=rows;i++) {
-		for (unsigned int j=i+1;j<=cols;j++) {
-			double tmp=data[i][j];
-			data[i][j]=data[j][i];
- 			data[j][i]=tmp;
-		}
-	}
+  for (unsigned int i=1; i<=rows; i++) {
+    for (unsigned int j=i+1; j<=cols; j++) {
+      double tmp = data[i][j];
+      data[i][j] = data[j][i];
+      data[j][i] = tmp;
+    }
+  }
 }
 
+/******************************************************************************/
 
 void FGMatrix::TransposeNonSquare(void)
 {
-	double **tran;
+  double **tran;
 
-	tran=alloc(rows,cols);
-	for (unsigned int i=1;i<=rows;i++) {
-		for (unsigned int j=1;j<=cols;j++) {
-			tran[j][i]=data[i][j];
-		}
-	}
-	dealloc(data,rows,cols);
+  tran = FGalloc(rows,cols);
 
-	data=tran;
-	unsigned m=rows;
-	rows=cols;
-	cols=m;
+  for (unsigned int i=1; i<=rows; i++) {
+    for (unsigned int j=1; j<=cols; j++) {
+      tran[j][i] = data[i][j];
+    }
+  }
+
+  dealloc(data,rows);
+
+  data       = tran;
+  unsigned int m = rows;
+  rows       = cols;
+  cols       = m;
 }
 
+/******************************************************************************/
 
 FGColumnVector::FGColumnVector(void):FGMatrix(3,1) { }
 FGColumnVector::FGColumnVector(int m):FGMatrix(m,1) { }
-FGColumnVector::FGColumnVector(FGColumnVector& b):FGMatrix(b) { }
+FGColumnVector::FGColumnVector(const FGColumnVector& b):FGMatrix(b) { }
 FGColumnVector::~FGColumnVector() { }
-double& FGColumnVector::operator()(int m)
+
+/******************************************************************************/
+
+double& FGColumnVector::operator()(int m) const
 {
-	return FGMatrix::operator()(m,1);
+  return FGMatrix::operator()(m,1);
+}
+
+/******************************************************************************/
+
+FGColumnVector operator*(const FGMatrix& Mat, const FGColumnVector& Col)
+{
+  FGColumnVector Product(Col.Rows());
+
+  if (Mat.Cols() != Col.Rows()) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Column Vector operator *";
+    throw mE;
+  }
+
+  for (unsigned int i=1;i<=Mat.Rows();i++) {
+    Product(i) = 0.00;
+    for (unsigned int j=1;j<=Mat.Cols();j++) {
+      Product(i) += Col(j)*Mat(i,j);
+    }
+  }
+
+  return Product;
+}
+
+/******************************************************************************/
+
+FGColumnVector FGColumnVector::operator+(const FGColumnVector& C)
+{
+  if (Rows() != C.Rows()) {
+    MatrixException mE;
+    mE.Message = "Invalid row/column match in Column Vector operator *";
+    throw mE;
+  }
+
+  FGColumnVector Sum(C.Rows());
+
+  for (unsigned int i=1; i<=C.Rows(); i++) {
+    Sum(i) = C(i) + data[i][1];
+  }
+
+  return Sum;
+}
+
+/******************************************************************************/
+
+FGColumnVector FGColumnVector::operator*(const double scalar)
+{
+  FGColumnVector Product(Rows());
+
+  for (unsigned int i=1; i<=Rows(); i++) Product(i) = scalar * data[i][1];
+
+  return Product;
+}
+
+/******************************************************************************/
+
+FGColumnVector FGColumnVector::operator/(const double scalar)
+{
+  FGColumnVector Quotient(Rows());
+
+  for (unsigned int i=1; i<=Rows(); i++) Quotient(i) = data[i][1] / scalar;
+
+  return Quotient;
+}
+
+/******************************************************************************/
+
+FGColumnVector operator*(const double scalar, const FGColumnVector& C)
+{
+  FGColumnVector Product(C.Rows());
+
+  for (unsigned int i=1; i<=C.Rows(); i++) {
+     Product(i) = scalar * C(i);
+  }
+
+  return Product;
+}
+
+/******************************************************************************/
+float FGColumnVector::Magnitude(void)
+{
+  double num=0.0;
+
+  if ((data[1][1] == 0.00) &&
+      (data[2][1] == 0.00) &&
+      (data[3][1] == 0.00))
+  {
+    return 0.00;
+  } else {
+    for (unsigned int i = 1; i<=Rows(); i++) num += data[i][1]*data[i][1];
+    return sqrt(num);
+  }
+}
+
+/******************************************************************************/
+
+FGColumnVector FGColumnVector::Normalize(void)
+{
+  return *this/Magnitude();
 }
 

@@ -39,16 +39,16 @@ COMMENTS, REFERENCES,  and NOTES
 ********************************************************************************
 
 [1] Cooke, Zyda, Pratt, and McGhee, "NPSNET: Flight Simulation Dynamic Modeling
-	 Using Quaternions", Presence, Vol. 1, No. 4, pp. 404-420  Naval Postgraduate
-	 School, January 1994
+	   Using Quaternions", Presence, Vol. 1, No. 4, pp. 404-420  Naval Postgraduate
+	   School, January 1994
 [2] D. M. Henderson, "Euler Angles, Quaternions, and Transformation Matrices",
-	 JSC 12960, July 1977
+	   JSC 12960, July 1977
 [3] Richard E. McFarland, "A Standard Kinematic Model for Flight Simulation at
-	 NASA-Ames", NASA CR-2497, January 1975
+	   NASA-Ames", NASA CR-2497, January 1975
 [4] Barnes W. McCormick, "Aerodynamics, Aeronautics, and Flight Mechanics",
-	 Wiley & Sons, 1979 ISBN 0-471-03032-5
+	   Wiley & Sons, 1979 ISBN 0-471-03032-5
 [5] Bernard Etkin, "Dynamics of Flight, Stability and Control", Wiley & Sons,
-	 1982 ISBN 0-471-08936-2
+	   1982 ISBN 0-471-08936-2
 
 ********************************************************************************
 INCLUDES
@@ -57,16 +57,12 @@ INCLUDES
 #ifdef FGFS
 #  include <simgear/compiler.h>
 #  include STL_STRING
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
    FG_USING_STD(string);
 #else
-#  include <fstream>
 #  include <string>
 #endif
+
+#include "FGConfigFile.h"
 
 /*******************************************************************************
 DEFINITIONS
@@ -81,7 +77,7 @@ CLASS DECLARATION
 class FGLGear
 {
 public:
-  FGLGear(ifstream&);
+  FGLGear(FGConfigFile*);
   ~FGLGear(void);
 
   float Force(void);

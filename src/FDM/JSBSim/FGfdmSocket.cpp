@@ -47,7 +47,7 @@ FGfdmSocket::FGfdmSocket(string address, int port)
 {
   size = 0;
 
-  #if defined( __BORLANDC__ ) || defined( _MSC_VER )
+  #if defined(__BORLANDC__) || defined(_MSC_VER)
     WSADATA wsaData;
     int PASCAL FAR wsaReturnCode;
     wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
@@ -86,10 +86,6 @@ FGfdmSocket::FGfdmSocket(string address, int port)
   }
 }
 
-#ifdef MACOS
-/* commented out destructor method. shutdown method needs to link when
-   we don't have networking enabled */
-#else
 FGfdmSocket::~FGfdmSocket(void)
 {
   if (sckt) shutdown(sckt,2);
@@ -97,7 +93,6 @@ FGfdmSocket::~FGfdmSocket(void)
     WSACleanup();
   #endif
 }
-#endif
 
 void FGfdmSocket::Clear(void)
 {

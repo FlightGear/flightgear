@@ -1,14 +1,15 @@
 /*******************************************************************************
 
 Header: FGMatrix.h
-Author: Tony Peden [formatted here by Jon Berndt]
+Author: Originally by Tony Peden [formatted and adapted here by Jon Berndt]
 Date started: Unknown
 
 HISTORY
 --------------------------------------------------------------------------------
 ??/??/??   TP   Created
+03/16/2000 JSB  Added exception throwing
 
-/*******************************************************************************
+********************************************************************************
 SENTRY
 *******************************************************************************/
 
@@ -20,78 +21,113 @@ INCLUDES
 *******************************************************************************/
 
 #include <stdlib.h>
-#include <iostream.h>
-#include <fstream.h>
+#ifdef FGFS
+#  include <simgear/compiler.h>
+#  include STL_STRING
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
+#  else
+#    include <fstream.h>
+#  endif
+   FG_USING_STD(string);
+#else
+#  include <string>
+#  include <fstream>
+#endif
 
 /*******************************************************************************
-DEFINES
+FORWARD DECLARATIONS
 *******************************************************************************/
 
+class FGColumnVector;
 
 /*******************************************************************************
-CONSTANTS
+DECLARATION: MatrixException
 *******************************************************************************/
 
+using namespace std;
+
+class MatrixException /* :  public exception */  
+{
+public:
+  string Message;
+};
 
 /*******************************************************************************
-TYPEDEFS
-*******************************************************************************/
-
-
-/*******************************************************************************
-GLOBALS
+DECLARATION: FGMatrix
 *******************************************************************************/
 
 class FGMatrix
 {
-private:
+protected:
   double **data;
-  unsigned rows,cols;
-  bool keep;
+
+private:
+  unsigned int rows,cols;
   char delim;
   int width,prec,origin;
   void TransposeSquare(void);
   void TransposeNonSquare(void);
+  unsigned int rowCtr, colCtr;
 
 public:
-  FGMatrix(unsigned rows, unsigned cols);
+  FGMatrix(unsigned int r, unsigned int c);
   FGMatrix(const FGMatrix& A);
   ~FGMatrix(void);
 
-  FGMatrix& FGMatrix::operator=(const FGMatrix& A);
-  double& FGMatrix::operator()(unsigned row, unsigned col);
+  FGMatrix& operator=(const FGMatrix& A);
+  inline double& operator()(unsigned int row, unsigned int col) const {return data[row][col];}
 
-  unsigned FGMatrix::Rows(void) const;
-  unsigned FGMatrix::Cols(void) const;
+  FGColumnVector operator*(const FGColumnVector& Col);
 
-  void FGMatrix::T(void);
+  unsigned int Rows(void) const;
+  unsigned int Cols(void) const;
+
+  void T(void);
   void InitMatrix(void);
   void InitMatrix(double value);
 
-  friend FGMatrix operator-(FGMatrix& A, FGMatrix& B);
-  friend FGMatrix operator+(FGMatrix& A, FGMatrix& B);
-  friend FGMatrix operator*(double scalar,FGMatrix& A);
-  friend FGMatrix operator*(FGMatrix& Left, FGMatrix& Right);
-  friend FGMatrix operator/(FGMatrix& A, double scalar);
+  FGMatrix operator-(const FGMatrix& B);
+  FGMatrix operator+(const FGMatrix& B);
+  FGMatrix operator*(const FGMatrix& B);
+  FGMatrix operator/(const double scalar);
+  FGMatrix& operator<<(const float ff);
 
-  friend void operator-=(FGMatrix &A,FGMatrix &B);
-  friend void operator+=(FGMatrix &A,FGMatrix &B);
-  friend void operator*=(FGMatrix &A,FGMatrix &B);
-  friend void operator*=(FGMatrix &A,double scalar);
-  friend void operator/=(FGMatrix &A,double scalar);
+  friend ostream& operator<<(ostream& os, const FGMatrix& M);
+  friend istream& operator>>(istream& is, FGMatrix& M);
+
+  void operator-=(const FGMatrix &B);
+  void operator+=(const FGMatrix &B);
+  void operator*=(const FGMatrix &B);
+  void operator*=(const double scalar);
+  void operator/=(const double scalar);
+
+  friend FGMatrix operator*(double scalar,FGMatrix& A);
 
   void SetOParams(char delim,int width,int prec, int origin=0);
 };
+
+/*******************************************************************************
+DECLARATION: FGColumnVector
+*******************************************************************************/
 
 class FGColumnVector : public FGMatrix
 {
 public:
   FGColumnVector(void);
   FGColumnVector(int m);
-  FGColumnVector(FGColumnVector& b);
+  FGColumnVector(const FGColumnVector& b);
   ~FGColumnVector();
 
-  double& operator()(int m);
+  FGColumnVector operator*(const double scalar);
+  FGColumnVector operator/(const double scalar);
+  FGColumnVector operator+(const FGColumnVector& B);
+  float Magnitude(void); 
+  FGColumnVector Normalize(void);
+
+  friend FGColumnVector operator*(const double scalar, const FGColumnVector& A);
+
+  double& operator()(int m) const;
 };
 
 /******************************************************************************/

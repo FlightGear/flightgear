@@ -38,7 +38,24 @@ SENTRY
 INCLUDES
 *******************************************************************************/
 
+#ifdef FGFS
+#  include <simgear/compiler.h>
+#  include STL_STRING
+   FG_USING_STD(string);
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <vector>
+#  else
+#    include <vector.h>
+#  endif
+#else
+#  include <vector>
+#  include <string>
+#endif
+
+#include "filtersjb/FGFCSComponent.h"
 #include "FGModel.h"
+#include "FGConfigFile.h"
+
 
 /*******************************************************************************
 CLASS DECLARATION
@@ -48,32 +65,60 @@ using namespace std;
 
 class FGFCS : public FGModel
 {
+private:
+  float DaCmd, DeCmd, DrCmd, DfCmd, DsbCmd, DspCmd;
+  float DaPos, DePos, DrPos, DfPos, DsbPos, DspPos;
+  float ThrottleCmd[MAX_ENGINES];
+  float ThrottlePos[MAX_ENGINES];
+
+  vector <FGFCSComponent*> Components;
+
 public:
 	FGFCS(FGFDMExec*);
 	~FGFCS(void);
 
 	bool Run(void);
-  
-	inline float GetDa(void) {return Da;}
-	inline float GetDe(void) {return De;}
-	inline float GetDr(void) {return Dr;}
-	inline float GetDf(void) {return Df;}
-	inline float GetDs(void) {return Ds;}
-	inline float GetThrottle(int ii) {return Throttle[ii];}
 
-	inline void SetDa(float tt) {Da = tt*0.30;}
-	inline void SetDe(float tt) {De = tt*0.60;}
-	inline void SetDr(float tt) {Dr = -1*tt*0.50;}
-	inline void SetDf(float tt) {Df = tt;}
-	inline void SetDs(float tt) {Ds = tt;}
-	void SetThrottle(int ii, float tt);
+	inline float GetDaCmd(void) {return DaCmd;}
+	inline float GetDeCmd(void) {return DeCmd;}
+	inline float GetDrCmd(void) {return DrCmd;}
+	inline float GetDfCmd(void) {return DfCmd;}
+	inline float GetDsbCmd(void) {return DsbCmd;}
+	inline float GetDspCmd(void) {return DspCmd;}
+	inline float GetThrottleCmd(int ii) {return ThrottleCmd[ii];}
 
-protected:
+	inline float GetDaPos(void) {return DaPos;}
+	inline float GetDePos(void) {return DePos;}
+	inline float GetDrPos(void) {return DrPos;}
+	inline float GetDfPos(void) {return DfPos;}
+	inline float GetDsbPos(void) {return DsbPos;}
+	inline float GetDspPos(void) {return DspPos;}
+	inline float GetThrottlePos(int ii) {return ThrottlePos[ii];}
 
-private:
-  float Da, De, Dr, Df, Ds;
-  float Throttle[MAX_ENGINES];
+  inline FGState* GetState(void) {return State;}
+  float GetComponentOutput(int idx);
+  string GetComponentName(int idx);
+
+	inline void SetDaCmd(float tt) {DaCmd = tt;}
+	inline void SetDeCmd(float tt) {DeCmd = tt;}
+	inline void SetDrCmd(float tt) {DrCmd = tt;}
+	inline void SetDfCmd(float tt) {DfCmd = tt;}
+	inline void SetDsbCmd(float tt) {DsbCmd = tt;}
+	inline void SetDspCmd(float tt) {DspCmd = tt;}
+	void SetThrottleCmd(int ii, float tt);
+
+	inline void SetDaPos(float tt) {DaPos = tt;}
+	inline void SetDePos(float tt) {DePos = tt;}
+	inline void SetDrPos(float tt) {DrPos = tt;}
+	inline void SetDfPos(float tt) {DfPos = tt;}
+	inline void SetDsbPos(float tt) {DsbPos = tt;}
+	inline void SetDspPos(float tt) {DspPos = tt;}
+	void SetThrottlePos(int ii, float tt);
+
+  bool LoadFCS(FGConfigFile* AC_cfg);
+  string FCSName;
 };
 
-/******************************************************************************/
+#include "FGState.h"
+
 #endif

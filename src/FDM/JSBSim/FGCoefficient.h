@@ -40,43 +40,20 @@ INCLUDES
 #ifdef FGFS
 #  include <simgear/compiler.h>
 #  include STL_STRING
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
    FG_USING_STD(string);
 #else
 #  include <string>
-#  include <fstream>
 #endif
 
 #include <map>
+#include "FGConfigFile.h"
+#include "FGDefs.h"
 
 /*******************************************************************************
 DEFINES
 *******************************************************************************/
 
 using namespace std;
-
-#define FG_QBAR         1
-#define FG_WINGAREA     2
-#define FG_WINGSPAN     4
-#define FG_CBAR         8
-#define FG_ALPHA       16
-#define FG_ALPHADOT    32
-#define FG_BETA        64
-#define FG_BETADOT    128
-#define FG_PITCHRATE  256
-#define FG_ROLLRATE   512
-#define FG_YAWRATE   1024
-#define FG_ELEVATOR  2048
-#define FG_AILERON   4096
-#define FG_RUDDER    8192
-#define FG_MACH     16384
-#define FG_ALTITUDE 32768L
-#define FG_BI2VEL   65536L
-#define FG_CI2VEL  131072L
 
 /*******************************************************************************
 FORWARD DECLARATIONS
@@ -99,24 +76,39 @@ COMMENTS, REFERENCES,  and NOTES
 This class models the stability derivative coefficient lookup tables or 
 equations. Note that the coefficients need not be calculated each delta-t.
 
-FG_QBAR         1
-FG_WINGAREA     2
-FG_WINGSPAN     4
-FG_CBAR         8
-FG_ALPHA       16
-FG_ALPHADOT    32
-FG_BETA        64
-FG_BETADOT    128
-FG_PITCHRATE  256
-FG_ROLLRATE   512
-FG_YAWRATE   1024
-FG_ELEVATOR  2048
-FG_AILERON   4096
-FG_RUDDER    8192
-FG_MACH     16384
-FG_ALTITUDE 32768L
-FG_BI2VEL   65536L
-FG_CI2VEL  131072L
+FG_QBAR           1
+FG_WINGAREA       2
+FG_WINGSPAN       4
+FG_CBAR           8
+FG_ALPHA          16
+FG_ALPHADOT       32
+FG_BETA           64
+FG_BETADOT        128
+FG_PITCHRATE      256
+FG_ROLLRATE       512
+FG_YAWRATE        1024
+FG_MACH           2048
+FG_ALTITUDE       4096
+FG_BI2VEL         8192
+FG_CI2VEL         16384
+FG_ELEVATOR_POS   32768L
+FG_AILERON_POS    65536L
+FG_RUDDER_POS     131072L
+FG_SPDBRAKE_POS   262144L
+FG_FLAPS_POS      524288L
+FG_ELEVATOR_CMD   1048576L
+FG_AILERON_CMD    2097152L
+FG_RUDDER_CMD     4194304L
+FG_SPDBRAKE_CMD   8388608L
+FG_FLAPS_CMD      16777216L
+FG_SPARE1         33554432L
+FG_SPARE2         67108864L
+FG_SPARE3         134217728L
+FG_SPARE4         268435456L
+FG_SPARE5         536870912L
+FG_SPARE6         1073741824L
+
+The above definitions are found in FGDefs.h
 
 ********************************************************************************
 CLASS DECLARATION
@@ -125,7 +117,7 @@ CLASS DECLARATION
 class FGCoefficient
 {
 public:
-  FGCoefficient(FGFDMExec*, ifstream&);
+  FGCoefficient(FGFDMExec*, FGConfigFile*);
   ~FGCoefficient(void);
   bool Allocate(int);
   bool Allocate(int, int);
@@ -135,14 +127,14 @@ public:
   float TotalValue(void);
   inline float GetSDValue(void) {return SD;}
   inline void SetSDValue(float tt) {SD = tt;}
+  inline long int Getmultipliers(void) {return multipliers;}
   void DumpSD(void);
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
 
 protected:
 
 private:
-  typedef map<string, long> CoeffMap;
-  CoeffMap coeffdef;
+  int numInstances;
   string filename;
   string description;
   string name;
@@ -151,14 +143,12 @@ private:
   float *Table2D;
   float **Table3D;
   float LookupR, LookupC;
+  long int multipliers;
   long int mult_idx[10];
   int rows, columns;
   Type type;
-  int multipliers;
   int mult_count;
   float SD; // Actual stability derivative (or other coefficient) value
-
-  float GetCoeffVal(int);
 
   FGFDMExec*      FDMExec;
   FGState*        State;

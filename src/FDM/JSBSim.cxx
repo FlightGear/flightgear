@@ -119,13 +119,13 @@ int FGJSBsim::update( int multiloop ) {
     }
 
     // copy control positions into the JSBsim structure
-    FDMExec.GetFCS()->SetDa( controls.get_aileron());
-    FDMExec.GetFCS()->SetDe( controls.get_elevator() 
+    FDMExec.GetFCS()->SetDaCmd( controls.get_aileron());
+    FDMExec.GetFCS()->SetDeCmd( controls.get_elevator()
 			     + controls.get_elevator_trim() );
-    FDMExec.GetFCS()->SetDr( controls.get_rudder());
-    FDMExec.GetFCS()->SetDf( 0.0 );
-    FDMExec.GetFCS()->SetDs( 0.0 );
-    FDMExec.GetFCS()->SetThrottle( FGControls::ALL_ENGINES, 
+    FDMExec.GetFCS()->SetDrCmd( controls.get_rudder());
+    FDMExec.GetFCS()->SetDfCmd( 0.0 );
+    // FDMExec.GetFCS()->SetDsCmd( 0.0 );
+    FDMExec.GetFCS()->SetThrottleCmd( FGControls::ALL_ENGINES,
 				   controls.get_throttle( 0 ) * 100.0 );
     // FCS->SetBrake( controls.get_brake( 0 ) );
 
@@ -180,9 +180,9 @@ int FGJSBsim::copy_to_JSBsim() {
 int FGJSBsim::copy_from_JSBsim() {
 
     // Velocities
-    set_Velocities_Local( FDMExec.GetPosition()->GetVn(), 
-			  FDMExec.GetPosition()->GetVe(), 
-			  FDMExec.GetPosition()->GetVd() );
+    // set_Velocities_Local( FDMExec.GetPosition()->GetVn(),
+    //			  FDMExec.GetPosition()->GetVe(), 
+    //			  FDMExec.GetPosition()->GetVd() );
     // set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
     // 		     V_down_rel_ground );
     // set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
@@ -203,15 +203,16 @@ int FGJSBsim::copy_from_JSBsim() {
     //set_V_calibrated( FDMExec.GetAuxiliary()->GetVcalibratedFPS() );
     set_V_calibrated_kts( FDMExec.GetAuxiliary()->GetVcalibratedKTS() );
 
-    set_Omega_Body( FDMExec.GetRotation()->GetP(), 
-		    FDMExec.GetRotation()->GetQ(), 
-		    FDMExec.GetRotation()->GetR() );
+    set_Omega_Body( FDMExec.GetState()->GetParameter(FG_ROLLRATE),
+		    FDMExec.GetState()->GetParameter(FG_PITCHRATE),
+		    FDMExec.GetState()->GetParameter(FG_YAWRATE) );
     // set_Omega_Local( P_local, Q_local, R_local );
     // set_Omega_Total( P_total, Q_total, R_total );
-    
+
     set_Euler_Rates( FDMExec.GetRotation()->Getphi(),
 		     FDMExec.GetRotation()->Gettht(),
 		     FDMExec.GetRotation()->Getpsi() );
+
     // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 	
     set_Mach_number( FDMExec.GetState()->GetMach());
@@ -235,7 +236,7 @@ int FGJSBsim::copy_from_JSBsim() {
     set_Geocentric_Position( lat_geoc, lon, 
 			       sl_radius2 * METER_TO_FEET + alt );
     set_Geodetic_Position( lat_geod, lon, alt );
-    set_Euler_Angles( FDMExec.GetRotation()->Getphi(), 
+    set_Euler_Angles( FDMExec.GetRotation()->Getphi(),
 		      FDMExec.GetRotation()->Gettht(),
 		      FDMExec.GetRotation()->Getpsi() );
 

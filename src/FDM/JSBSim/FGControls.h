@@ -177,6 +177,12 @@ extern FGControls controls;
 
 
 // $Log$
+// Revision 1.7  2000/04/24 21:49:07  curt
+// Updated JSBsim code.
+//
+// Revision 1.3  2000/04/15 13:16:54  jsb
+// In good shape, now, changes to Coefficient and aircraft, mostly, with new commands added and inputs and outputs separated.
+//
 // Revision 1.6  1999/09/07 21:15:45  curt
 // Updates to get engine working.
 //

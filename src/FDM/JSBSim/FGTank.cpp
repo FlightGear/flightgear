@@ -42,22 +42,23 @@ INCLUDES
 *******************************************************************************/
 
 
-FGTank::FGTank(ifstream& acfile)
+FGTank::FGTank(FGConfigFile* AC_cfg)
 {
   string type;
 
-  acfile >> type;                              // Type = 0: fuel, 1: oxidizer
+  *AC_cfg >> type;                              // Type = 0: fuel, 1: oxidizer
+
   if (type == "FUEL") Type = ttFUEL;
   else if (type == "OXIDIZER") Type = ttOXIDIZER;
   else Type = ttUNKNOWN;
-  acfile >> X;                                 // inches
-  acfile >> Y;                                 // "
-  acfile >> Z;                                 // "
-  acfile >> Radius;                            // "
-  acfile >> Capacity;                          // pounds (amount it can hold)
-  acfile >> Contents;                          // pounds  (amount it is holding)
+  *AC_cfg >> X;                                 // inches
+  *AC_cfg >> Y;                                 // "
+  *AC_cfg >> Z;                                 // "
+  *AC_cfg >> Radius;                            // "
+  *AC_cfg >> Capacity;                          // pounds (amount it can hold)
+  *AC_cfg >> Contents;                          // pounds  (amount it is holding)
   Selected = true;
-  PctFull = 100.0*Contents/Capacity;           // percent full; 0 to 100.0
+  PctFull = 100.0*Contents/Capacity;            // percent full; 0 to 100.0
 }
 
 

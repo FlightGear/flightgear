@@ -69,9 +69,11 @@ class FGInitialCondition
     FGInitialCondition(FGFDMExec *fdmex);
     ~FGInitialCondition(void);
 
-    void SetVcalibratedKtsIC(float tt);
+    /* void SetVcalibratedKtsIC(float tt); */
+
     void SetVtrueKtsIC(float tt);
-    void SetMachIC(float tt);
+    /* void SetMachIC(float tt); */
+
     void SetAltitudeFtIC(float tt);
     void SetFlightPathAngleDegIC(float tt);  //"vertical" flight path, solve for alpha using speed
     //void SetClimbRateFpmIC(float tt);      //overwrite gamma

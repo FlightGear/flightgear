@@ -78,16 +78,15 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *fdmex)
 FGInitialCondition::~FGInitialCondition(void) {};
 
 
-void FGInitialCondition::SetVcalibratedKtsIC(float tt)
+/* void FGInitialCondition::SetVcalibratedKtsIC(float tt)
 {
   vc=tt*KTSTOFPS;
-  cout << "ic.vc: " << vc << endl;
-  cout << "ic.rhosl: " << atm->GetDensity(0) << endl;
-  cout << "ic.rho: "   << atm->GetDensity(altitude) << endl;
-  vt=sqrt(atm->GetDensity(0)/atm->GetDensity(altitude)*vc*vc);
-  cout << "ic.vt: "   << vt << endl;
+  
+ vt=sqrt(atm->GetDensity(0)/atm->GetDensity(altitude)*vc*vc);
+  
   //mach=vt*sqrt(SHRATIO*Reng*atm->GetTemperature(altitude));
 }
+ */
 
 
 void FGInitialCondition::SetVtrueKtsIC(float tt)
@@ -98,12 +97,13 @@ void FGInitialCondition::SetVtrueKtsIC(float tt)
 }
 
 
-void FGInitialCondition::SetMachIC(float tt)
+/* void FGInitialCondition::SetMachIC(float tt)
 {
   mach=tt;
   vt=mach*sqrt(SHRATIO*Reng*atm->GetTemperature(altitude));
   //vc=sqrt(atm->GetDensity(altitude)/atm->GetDensity(0)*vt*vt);
-}
+} */
+
 
 
 void FGInitialCondition::SetAltitudeFtIC(float tt)
