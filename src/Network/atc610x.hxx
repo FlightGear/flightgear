@@ -71,7 +71,7 @@ class FGATC610x : public FGProtocol {
 
     float compass_position;
 
-    SGPropertyNode *dme_bus_power;
+    SGPropertyNode *adf_bus_power, *dme_bus_power, *xpdr_bus_power;
     SGPropertyNode *navcom1_bus_power, *navcom2_bus_power;
 
     SGPropertyNode *mag_compass;
@@ -82,7 +82,7 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *nav1_freq, *nav1_stby_freq;
     SGPropertyNode *nav2_freq, *nav2_stby_freq;
     SGPropertyNode *adf_adf_btn, *adf_bfo_btn;
-    SGPropertyNode *adf_power, *adf_vol;
+    SGPropertyNode *adf_power_btn, *adf_vol;
     SGPropertyNode *adf_freq, *adf_stby_freq;
     SGPropertyNode *adf_stby_mode, *adf_timer_mode;
     SGPropertyNode *adf_count_mode, *adf_flight_timer, *adf_elapsed_timer;
@@ -115,6 +115,10 @@ class FGATC610x : public FGProtocol {
     bool do_switches();
 
     // convenience
+    inline bool adf_has_power() const {
+        return (adf_bus_power->getDoubleValue() > 1.0)
+            && adf_power_btn->getBoolValue();
+    }
     inline bool dme_has_power() const {
         return (dme_bus_power->getDoubleValue() > 1.0)
             && dme_switch;
@@ -126,6 +130,10 @@ class FGATC610x : public FGProtocol {
     inline bool navcom2_has_power() const {
         return (navcom2_bus_power->getDoubleValue() > 1.0)
             && navcom2_power_btn->getBoolValue();
+    }
+    inline bool xpdr_has_power() const {
+        return (xpdr_bus_power->getDoubleValue() > 1.0)
+            && (xpdr_func_knob->getIntValue() > 0);
     }
 
 public:

@@ -398,11 +398,14 @@ bool FGATC610x::open() {
     dme_kt = fgGetNode( "/radios/dme/speed-kt", true );
     dme_nm = fgGetNode( "/radios/dme/distance-nm", true );
 
+    adf_bus_power = fgGetNode( "/systems/electrical/outputs/adf", true );
     dme_bus_power = fgGetNode( "/systems/electrical/outputs/dme", true );
-    navcom1_bus_power = fgGetNode( "/systems/electrical/outputs/navcomm[0]",
+    navcom1_bus_power = fgGetNode( "/systems/electrical/outputs/navcom[0]",
                                    true );
-    navcom2_bus_power = fgGetNode( "/systems/electrical/outputs/navcomm[1]",
+    navcom2_bus_power = fgGetNode( "/systems/electrical/outputs/navcom[1]",
                                    true );
+    xpdr_bus_power = fgGetNode( "/systems/electrical/outputs/transponder",
+                                 true );
 
     navcom1_power_btn = fgGetNode( "/radios/comm[0]/inputs/power-btn", true );
     navcom2_power_btn = fgGetNode( "/radios/comm[1]/inputs/power-btn", true );
@@ -423,7 +426,7 @@ bool FGATC610x::open() {
     nav2_stby_freq
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
 
-    adf_power = fgGetNode( "/radios/kr-87/inputs/power-btn", true );
+    adf_power_btn = fgGetNode( "/radios/kr-87/inputs/power-btn", true );
     adf_vol = fgGetNode( "/radios/kr-87/inputs/volume", true );
     adf_adf_btn = fgGetNode( "/radios/kr-87/inputs/adf-btn", true );
     adf_bfo_btn = fgGetNode( "/radios/kr-87/inputs/bfo-btn", true );
@@ -944,13 +947,14 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 20.0);
     }
 
-    if ( adf_power->getBoolValue() ) {
-        // ADF Tuner
-        int adf_tuner_fine = ((radio_switch_data[21] >> 4) & 0x0f) - 1;
-        int adf_tuner_coarse = (radio_switch_data[21] & 0x0f) - 1;
-        static int last_adf_tuner_fine = adf_tuner_fine;
-        static int last_adf_tuner_coarse = adf_tuner_coarse;
+    // ADF Tuner
+    
+    int adf_tuner_fine = ((radio_switch_data[21] >> 4) & 0x0f) - 1;
+    int adf_tuner_coarse = (radio_switch_data[21] & 0x0f) - 1;
+    static int last_adf_tuner_fine = adf_tuner_fine;
+    static int last_adf_tuner_coarse = adf_tuner_coarse;
 
+    if ( adf_has_power() ) {
         // cout << "adf_stby_mode = " << adf_stby_mode->getIntValue() << endl;
         if ( adf_count_mode->getIntValue() == 2 ) {
             // tune count down timer
@@ -1005,9 +1009,6 @@ bool FGATC610x::do_radio_switches() {
             if ( value > 1799 ) { value -= 1600; }
         }
  
-        last_adf_tuner_fine = adf_tuner_fine;
-        last_adf_tuner_coarse = adf_tuner_coarse;
-
         if ( adf_count_mode->getIntValue() == 2 ) {
             fgSetFloat( "/radios/kr-87/outputs/elapsed-timer", value );
         } else {
@@ -1018,6 +1019,9 @@ bool FGATC610x::do_radio_switches() {
             }
         }
     }
+    last_adf_tuner_fine = adf_tuner_fine;
+    last_adf_tuner_coarse = adf_tuner_coarse;
+
 
     // ADF buttons 
     fgSetInt( "/radios/kr-87/inputs/adf-btn",
@@ -1042,13 +1046,13 @@ bool FGATC610x::do_radio_switches() {
     // Transponder Tuner
     int i;
     int digit_tuner[4];
-
     digit_tuner[0] = radio_switch_data[25] & 0x0f;
     digit_tuner[1] = ( radio_switch_data[25] >> 4 ) & 0x0f;
     digit_tuner[2] = radio_switch_data[29] & 0x0f;
     digit_tuner[3] = ( radio_switch_data[29] >> 4 ) & 0x0f;
-    static bool first_time = true;
+
     static int last_digit_tuner[4];
+    static bool first_time = true;
     if ( first_time ) {
         first_time = false;
         for ( i = 0; i < 4; ++i ) {
@@ -1056,39 +1060,43 @@ bool FGATC610x::do_radio_switches() {
         }
     }
 
-    int id_code = xpdr_id_code->getIntValue();
-    int digit[4];
-    int place = 1000;
-    for ( i = 0; i < 4; ++i ) {
-        digit[i] = id_code / place;
-        id_code -= digit[i] * place;
-        place /= 10;
-    }
-
-    for ( i = 0; i < 4; ++i ) {
-        if ( digit_tuner[i] != last_digit_tuner[i] ) {
-            diff = digit_tuner[i] - last_digit_tuner[i];
-            if ( abs(diff) > 4 ) {
-                // roll over
-                if ( digit_tuner[i] < last_digit_tuner[i] ) {
-                    // going up
-                    diff = 15 - last_digit_tuner[i] + digit_tuner[i];
-                } else {
-                    // going down
-                    diff = digit_tuner[i] - 15 - last_digit_tuner[i];
-                }
-            }
-            digit[i] += diff;
+    if ( xpdr_has_power() ) {
+        int id_code = xpdr_id_code->getIntValue();
+        int digit[4];
+        int place = 1000;
+        for ( i = 0; i < 4; ++i ) {
+            digit[i] = id_code / place;
+            id_code -= digit[i] * place;
+            place /= 10;
         }
-        while ( digit[i] >= 8 ) { digit[i] -= 8; }
-        while ( digit[i] < 0 )  { digit[i] += 8; }
+
+        for ( i = 0; i < 4; ++i ) {
+            if ( digit_tuner[i] != last_digit_tuner[i] ) {
+                diff = digit_tuner[i] - last_digit_tuner[i];
+                if ( abs(diff) > 4 ) {
+                    // roll over
+                    if ( digit_tuner[i] < last_digit_tuner[i] ) {
+                        // going up
+                        diff = 15 - last_digit_tuner[i] + digit_tuner[i];
+                    } else {
+                        // going down
+                        diff = digit_tuner[i] - 15 - last_digit_tuner[i];
+                    }
+                }
+                digit[i] += diff;
+            }
+            while ( digit[i] >= 8 ) { digit[i] -= 8; }
+            while ( digit[i] < 0 )  { digit[i] += 8; }
+        }
+
+        fgSetInt( "/radios/kt-70/inputs/digit1", digit[0] );
+        fgSetInt( "/radios/kt-70/inputs/digit2", digit[1] );
+        fgSetInt( "/radios/kt-70/inputs/digit3", digit[2] );
+        fgSetInt( "/radios/kt-70/inputs/digit4", digit[3] );
+    }
+    for ( i = 0; i < 4; ++i ) {
         last_digit_tuner[i] = digit_tuner[i];
     }
-
-    fgSetInt( "/radios/kt-70/inputs/digit1", digit[0] );
-    fgSetInt( "/radios/kt-70/inputs/digit2", digit[1] );
-    fgSetInt( "/radios/kt-70/inputs/digit3", digit[2] );
-    fgSetInt( "/radios/kt-70/inputs/digit4", digit[3] );
 
     int tmp = 0;
     for ( i = 0; i < 5; ++i ) {
@@ -1307,7 +1315,7 @@ bool FGATC610x::do_radio_display() {
     }
 
     // ADF standby frequency / timer
-    if ( adf_power->getBoolValue() ) {
+    if ( adf_has_power() ) {
         if ( adf_stby_mode->getIntValue() == 0 ) {
             // frequency
             float adf_stby = adf_stby_freq->getFloatValue();
@@ -1388,40 +1396,42 @@ bool FGATC610x::do_radio_display() {
     }
     
     // Transponder code and flight level
-    if ( xpdr_func_knob->getIntValue() == 2 ) {
-        // test mode
-        radio_display_data[36] = 8 << 4 | 8;
-        radio_display_data[37] = 8 << 4 | 8;
-        radio_display_data[38] = 0xff;
-        radio_display_data[39] = 8 << 4 | 0x0f;
-        radio_display_data[40] = 8 << 4 | 8;
-    } else if ( xpdr_func_knob->getIntValue() > 0 ) {
-        // other on modes
-        int id_code = xpdr_id_code->getIntValue();
-        int place = 1000;
-        for ( i = 0; i < 4; ++i ) {
-            digits[i] = id_code / place;
-            id_code -= digits[i] * place;
-            place /= 10;
-        }
-        radio_display_data[36] = digits[2] << 4 | digits[3];
-        radio_display_data[37] = digits[0] << 4 | digits[1];
-        radio_display_data[38] = 0xff;
-
-        if ( xpdr_func_knob->getIntValue() == 3 ||
-             xpdr_func_knob->getIntValue() == 5 )
-        {
-            // do flight level display
-            snprintf(digits, 7, "%03d", xpdr_flight_level->getIntValue() );
-            for ( i = 0; i < 6; ++i ) {
-                digits[i] -= '0';
-            }
-           radio_display_data[39] = digits[2] << 4 | 0x0f;
-           radio_display_data[40] = digits[0] << 4 | digits[1];
+    if ( xpdr_has_power() ) {
+        if ( xpdr_func_knob->getIntValue() == 2 ) {
+            // test mode
+            radio_display_data[36] = 8 << 4 | 8;
+            radio_display_data[37] = 8 << 4 | 8;
+            radio_display_data[38] = 0xff;
+            radio_display_data[39] = 8 << 4 | 0x0f;
+            radio_display_data[40] = 8 << 4 | 8;
         } else {
-            // blank flight level display
-            radio_display_data[39] = 0xff;
-            radio_display_data[40] = 0xff;
+            // other on modes
+            int id_code = xpdr_id_code->getIntValue();
+            int place = 1000;
+            for ( i = 0; i < 4; ++i ) {
+                digits[i] = id_code / place;
+                id_code -= digits[i] * place;
+                place /= 10;
+            }
+            radio_display_data[36] = digits[2] << 4 | digits[3];
+            radio_display_data[37] = digits[0] << 4 | digits[1];
+            radio_display_data[38] = 0xff;
+
+            if ( xpdr_func_knob->getIntValue() == 3 ||
+                 xpdr_func_knob->getIntValue() == 5 )
+            {
+                // do flight level display
+                snprintf(digits, 7, "%03d", xpdr_flight_level->getIntValue() );
+                for ( i = 0; i < 6; ++i ) {
+                    digits[i] -= '0';
+                }
+                radio_display_data[39] = digits[2] << 4 | 0x0f;
+                radio_display_data[40] = digits[0] << 4 | digits[1];
+            } else {
+                // blank flight level display
+                radio_display_data[39] = 0xff;
+                radio_display_data[40] = 0xff;
+            }
         }
     } else {
         // off
