@@ -39,21 +39,54 @@ FGLogger::init ()
 
   vector<SGPropertyNode_ptr> children = logging->getChildren("log");
   for (unsigned int i = 0; i < children.size(); i++) {
+
+    SGPropertyNode * child = children[i];
+
+    if (!child->getBoolValue("enabled", false))
+        continue;
+
     _logs.push_back(Log());
     Log &log = _logs[_logs.size()-1];
-    SGPropertyNode * child = children[i];
-    string filename = child->getStringValue("filename", "fg_log.csv");
-    log.interval_ms = child->getLongValue("interval-ms", 0);
-    log.delimiter = child->getStringValue("delimiter", ",")[0];
+    
+    string filename = child->getStringValue("filename");
+    if (filename.size() == 0) {
+        filename = "fg_log.csv";
+        child->setStringValue("filename", filename.c_str());
+    }
+
+    string delimiter = child->getStringValue("delimiter");
+    if (delimiter.size() == 0) {
+        delimiter = ",";
+        child->setStringValue("delimiter", delimiter.c_str());
+    }
+        
+    log.interval_ms = child->getLongValue("interval-ms");
+    log.delimiter = delimiter.c_str()[0];
     log.output = new ofstream(filename.c_str());
     if (!log.output) {
       SG_LOG(SG_INPUT, SG_ALERT, "Cannot write log to " << filename);
       continue;
     }
+
+    //
+    // Process the individual entries (Time is automatic).
+    //
     vector<SGPropertyNode_ptr> entries = child->getChildren("entry");
     (*log.output) << "Time";
     for (unsigned int j = 0; j < entries.size(); j++) {
       SGPropertyNode * entry = entries[j];
+
+      //
+      // Set up defaults.
+      //
+      if (!entry->hasValue("property")) {
+          entry->setBoolValue("enabled", false);
+          continue;
+      }
+
+      if (!entry->getBoolValue("enabled"))
+          continue;
+
       SGPropertyNode * node =
 	fgGetNode(entry->getStringValue("property"), true);
       log.nodes.push_back(node);
@@ -62,6 +95,13 @@ FGLogger::init ()
     }
     (*log.output) << endl;
   }
+}
+
+void
+FGLogger::reinit ()
+{
+    _logs.clear();
+    init();
 }
 
 void

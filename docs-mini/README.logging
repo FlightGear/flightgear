@@ -15,36 +15,40 @@ anyway) as the field delimiter:
 
  <logging>
   <log>
+   <enabled>true<enabled>
    <filename>steering.csv</filename>
    <interval-ms>1000</interval-ms>
    <delimiter>,</delimiter>
    <entry>
+    <enabled>true</enabled>
     <title>Rudder</title>
     <property>/controls/rudder</property>
    </entry>
    <entry>
+    <enabled>true</enabled>
     <title>Ailerons</title>
     <property>/controls/aileron</property>
    </entry>
   </log>
  </logging>
 
-Each 'log' subbranch contains an optional 'filename' property
-(defaults to "fg_log.csv"), an optional 'delimiter' property (defaults
-to a comma), an optional 'interval-ms' property (defaults to 0, which
-logs every frame), and a series of 'entry' subbranches.  The
-'delimiter' property uses only the first character of the property
-value as the delimiter.  Note that the logger does no escaping, so you
-must choose a delimiter that will not appear in the property values
-(that's not hard, since most of the values are numeric, but watch for
-commas in the titles).
+Each 'log' subbranch contains a required 'enabled' property, an
+optional 'filename' property (defaults to "fg_log.csv"), an optional
+'delimiter' property (defaults to a comma), an optional 'interval-ms'
+property (defaults to 0, which logs every frame), and a series of
+'entry' subbranches.  The 'delimiter' property uses only the first
+character of the property value as the delimiter.  Note that the
+logger does no escaping, so you must choose a delimiter that will not
+appear in the property values (that's not hard, since most of the
+values are numeric, but watch for commas in the titles).
 
-Each 'entry' subbranch contains a 'property' property specifying the
-name of the property to be logged, and an optional 'title' property
-specifying the title to use in the CSV file (defaults to the full path
-of the property).  The elapsed time in milliseconds since the start of
-the simulation is always included as the first entry with the title
-"Time", so there is no need to include it explicitly.
+Each 'entry' subbranch contains a required 'enabled' property, a
+'property' property specifying the name of the property to be logged,
+and an optional 'title' property specifying the title to use in the
+CSV file (defaults to the full path of the property).  The elapsed
+time in milliseconds since the start of the simulation is always
+included as the first entry with the title "Time", so there is no need
+to include it explicitly.
 
 Here's a sample of the logging output for the above log:
 
@@ -79,4 +83,4 @@ The output log files are always relative to the current directory.
 
 --
 
-David Megginson, 2002-03-12
+David Megginson, last updated 2002-02-01
