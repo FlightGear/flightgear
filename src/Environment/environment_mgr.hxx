@@ -69,6 +69,17 @@ private:
 
   void _update_fdm () const;
 
+  double get_cloud_layer_span_m (int index) const;
+  void set_cloud_layer_span_m (int index, double span_m);
+  double get_cloud_layer_elevation_ft (int index) const;
+  void set_cloud_layer_elevation_ft (int index, double elevation_ft);
+  double get_cloud_layer_thickness_ft (int index) const;
+  void set_cloud_layer_thickness_ft (int index, double thickness_ft);
+  double get_cloud_layer_transition_ft (int index) const;
+  void set_cloud_layer_transition_ft (int index, double transition_ft);
+  const char * get_cloud_layer_type (int index) const;
+  void set_cloud_layer_type (int index, const char * type);
+
   FGEnvironment * _environment;	// always the same, for now
   FGEnvironmentCtrl * _controller; // always the same, for now
 

@@ -21,6 +21,7 @@
 // $Id$
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/sky/sky.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
@@ -28,6 +29,10 @@
 #include "environment.hxx"
 #include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
+
+extern SGSky *thesky;		// FIXME: from main.cxx
+
+#define MAX_CLOUD_LAYERS 5
 
 
 FGEnvironmentMgr::FGEnvironmentMgr ()
@@ -49,6 +54,14 @@ FGEnvironmentMgr::init ()
   _controller->setEnvironment(_environment);
   _controller->init();
   _update_fdm();
+
+  SGPath texture_path(globals->get_fg_root());
+  texture_path.append("Textures");
+  texture_path.append("Sky");
+  for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
+    SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
+    thesky->add_cloud_layer(layer);
+  }
 }
 
 void
@@ -98,6 +111,30 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_wind_from_down_fps,
 	&FGEnvironment::set_wind_from_down_fps);
   fgSetArchivable("/environment/wind-from-down-fps");
+
+  for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
+    char buf[128];
+    sprintf(buf, "/environment/clouds/layer[%d]/span-m", i);
+    fgTie(buf, this, i,
+	  &FGEnvironmentMgr::get_cloud_layer_span_m,
+	  &FGEnvironmentMgr::set_cloud_layer_span_m);
+    sprintf(buf, "/environment/clouds/layer[%d]/elevation-ft", i);
+    fgTie(buf, this, i,
+	  &FGEnvironmentMgr::get_cloud_layer_elevation_ft,
+	  &FGEnvironmentMgr::set_cloud_layer_elevation_ft);
+    sprintf(buf, "/environment/clouds/layer[%d]/thickness-ft", i);
+    fgTie(buf, this, i,
+	  &FGEnvironmentMgr::get_cloud_layer_thickness_ft,
+	  &FGEnvironmentMgr::set_cloud_layer_thickness_ft);
+    sprintf(buf, "/environment/clouds/layer[%d]/transition-ft", i);
+    fgTie(buf, this, i,
+	  &FGEnvironmentMgr::get_cloud_layer_transition_ft,
+	  &FGEnvironmentMgr::set_cloud_layer_transition_ft);
+    sprintf(buf, "/environment/clouds/layer[%d]/type", i);
+    fgTie(buf, this, i,
+	  &FGEnvironmentMgr::get_cloud_layer_type,
+	  &FGEnvironmentMgr::set_cloud_layer_type);
+  }
 }
 
 void
@@ -162,5 +199,99 @@ FGEnvironmentMgr::_update_fdm () const
       ->set_Density(_environment->get_density_slugft3());
   }
 }
+
+double
+FGEnvironmentMgr::get_cloud_layer_span_m (int index) const
+{
+  return thesky->get_cloud_layer(index)->getSpan_m();
+}
+
+void
+FGEnvironmentMgr::set_cloud_layer_span_m (int index, double span_m)
+{
+  thesky->get_cloud_layer(index)->setSpan_m(span_m);
+}
+
+double
+FGEnvironmentMgr::get_cloud_layer_elevation_ft (int index) const
+{
+  return thesky->get_cloud_layer(index)->getElevation_m() * SG_METER_TO_FEET;
+}
+
+void
+FGEnvironmentMgr::set_cloud_layer_elevation_ft (int index, double elevation_ft)
+{
+  thesky->get_cloud_layer(index)
+    ->setElevation_m(elevation_ft * SG_FEET_TO_METER);
+}
+
+double
+FGEnvironmentMgr::get_cloud_layer_thickness_ft (int index) const
+{
+  return thesky->get_cloud_layer(index)->getThickness_m() * SG_METER_TO_FEET;
+}
+
+void
+FGEnvironmentMgr::set_cloud_layer_thickness_ft (int index, double thickness_ft)
+{
+  thesky->get_cloud_layer(index)
+    ->setThickness_m(thickness_ft * SG_FEET_TO_METER);
+}
+
+double
+FGEnvironmentMgr::get_cloud_layer_transition_ft (int index) const
+{
+  return thesky->get_cloud_layer(index)->getTransition_m() * SG_METER_TO_FEET;
+}
+
+void
+FGEnvironmentMgr::set_cloud_layer_transition_ft (int index,
+						 double transition_ft)
+{
+  thesky->get_cloud_layer(index)
+    ->setTransition_m(transition_ft * SG_FEET_TO_METER);
+}
+
+const char *
+FGEnvironmentMgr::get_cloud_layer_type (int index) const
+{
+  switch (thesky->get_cloud_layer(index)->getType()) {
+  case SGCloudLayer::SG_CLOUD_OVERCAST:
+    return "overcast";
+  case SGCloudLayer::SG_CLOUD_MOSTLY_CLOUDY:
+    return "mostly-cloudy";
+  case SGCloudLayer::SG_CLOUD_MOSTLY_SUNNY:
+    return "mostly-sunny";
+  case SGCloudLayer::SG_CLOUD_CIRRUS:
+    return "cirrus";
+  case SGCloudLayer::SG_CLOUD_CLEAR:
+    return "clear";
+  default:
+    return "unknown";
+  }
+}
+
+void
+FGEnvironmentMgr::set_cloud_layer_type (int index, const char * type_name)
+{
+  SGCloudLayer::Type type;
+  if (!strcmp(type_name, "overcast"))
+    type = SGCloudLayer::SG_CLOUD_OVERCAST;
+  else if (!strcmp(type_name, "mostly-cloudy"))
+    type = SGCloudLayer::SG_CLOUD_MOSTLY_CLOUDY;
+  else if (!strcmp(type_name, "mostly-sunny"))
+    type = SGCloudLayer::SG_CLOUD_MOSTLY_SUNNY;
+  else if (!strcmp(type_name, "cirrus"))
+    type = SGCloudLayer::SG_CLOUD_CIRRUS;
+  else if (!strcmp(type_name, "clear"))
+    type = SGCloudLayer::SG_CLOUD_CLEAR;
+  else {
+    SG_LOG(SG_INPUT, SG_WARN, "Unknown cloud type " << type_name);
+    type = SGCloudLayer::SG_CLOUD_CLEAR;
+  }
+  thesky->get_cloud_layer(index)->setType(type);
+}
+
+
 
 // end of environment-mgr.cxx
