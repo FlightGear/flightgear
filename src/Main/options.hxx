@@ -100,6 +100,9 @@ private:
     double heading;     // heading (yaw) angle in degress (Psi)
     double roll;        // roll angle in degrees (Phi)
     double pitch;       // pitch angle in degrees (Theta)
+    double uBody;       // Body axis X velocity (U)
+    double vBody;       // Body axis Y velocity (V)
+    double wBody;       // Body axis Z velocity (W)
 
     // Miscellaneous
     bool game_mode;     // Game mode enabled/disabled
@@ -181,6 +184,9 @@ public:
     inline double get_heading() const { return heading; }
     inline double get_roll() const { return roll; }
     inline double get_pitch() const { return pitch; }
+    inline double get_uBody() const {return uBody;}
+    inline double get_vBody() const {return vBody;}
+    inline double get_wBody() const {return wBody;}
     inline bool get_game_mode() const { return game_mode; }
     inline bool get_splash_screen() const { return splash_screen; }
     inline bool get_intro_music() const { return intro_music; }

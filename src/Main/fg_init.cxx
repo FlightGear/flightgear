@@ -314,7 +314,9 @@ bool fgInitSubsystems( void ) {
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    f->set_Velocities_Local( 0.0, 0.0, 0.0 );
+    f->set_Velocities_Local( current_options.get_uBody(),
+                             current_options.get_vBody(),
+                             current_options.get_wBody());
 
     // Initial Orientation
     f->set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
@@ -508,7 +510,9 @@ void fgReInitSubsystems( void )
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    f->set_Velocities_Local( 0.0, 0.0, 0.0 );
+    f->set_Velocities_Local( current_options.get_uBody(),
+                             current_options.get_vBody(),
+                             current_options.get_wBody());
 
     // Initial Orientation
     f->set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,

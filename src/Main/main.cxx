@@ -407,6 +407,10 @@ static void fgRenderFrame( void ) {
 
 	sgMat4 sgVIEW;
 
+	while ( current_view.follow.size() > 400 ) {
+	    current_view.follow.pop_front();
+	}
+
 	if ( current_view.view_mode == FGView::FG_VIEW_FIRST_PERSON ) {
 	    // select current view matrix
 	    sgCopyMat4( sgVIEW, current_view.sgVIEW );
@@ -417,9 +421,6 @@ static void fgRenderFrame( void ) {
 	    // select view matrix from front of view matrix queue
 	    FGMat4Wrapper tmp = current_view.follow.front();
 	    sgCopyMat4( sgVIEW, tmp.m );
-	    while ( current_view.follow.size() > 40 ) {
-		current_view.follow.pop_front();
-	    }
 
 	    // enable TuX and set up his position and orientation
 	    penguin_sel->select(1);
@@ -1129,7 +1130,8 @@ int main( int argc, char **argv ) {
     penguin_sel = new ssgSelector;
     penguin_pos = new ssgTransform;
 
-    ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
+    // ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
+    ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
     penguin_pos->addKid( tux_obj );
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );

@@ -138,6 +138,9 @@ fgOPTIONS::fgOPTIONS() :
     // if it is lower than the terrain
     altitude(-9999.0),
 
+    // Initialize current options velocities to 0.0
+    uBody(0.0), vBody(0.0), wBody(0.0),
+
     // Initial Orientation
     heading(270.0),      // heading (yaw) angle in degress (Psi)
     roll(0.0),           // roll angle in degrees (Phi)
@@ -592,6 +595,24 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	} else {
 	    altitude = atof( arg.substr(11) );
 	}
+    } else if ( arg.find( "--uBody=" ) != string::npos ) {
+	if ( units == FG_UNITS_FEET ) {
+	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
+	} else {
+	    uBody = atof( arg.substr(8) );
+	}
+    } else if ( arg.find( "--vBody=" ) != string::npos ) {
+	if ( units == FG_UNITS_FEET ) {
+	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
+	} else {
+	    vBody = atof( arg.substr(8) );
+	}
+    } else if ( arg.find( "--wBody=" ) != string::npos ) {
+	if ( units == FG_UNITS_FEET ) {
+	    wBody = atof( arg.substr(8) ) * FEET_TO_METER;
+	} else {
+	    wBody = atof( arg.substr(8) );
+	}
     } else if ( arg.find( "--heading=" ) != string::npos ) {
 	heading = atof( arg.substr(10) );
     } else if ( arg.find( "--roll=" ) != string::npos ) {
@@ -775,6 +796,10 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--heading=degrees:  heading (yaw) angle in degress (Psi)\n");
     printf("\t--roll=degrees:  roll angle in degrees (Phi)\n");
     printf("\t--pitch=degrees:  pitch angle in degrees (Theta)\n");
+    printf("\t--uBody=feet per second:  velocity along the body X axis\n");
+    printf("\t--vBody=feet per second:  velocity along the body Y axis\n");
+    printf("\t--wBody=feet per second:  velocity along the body Z axis\n");
+    printf("\t\t(unless --units-meters specified\n");
     printf("\n");
 
     printf("Rendering Options:\n");
