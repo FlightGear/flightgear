@@ -33,7 +33,7 @@ OFILES = $(CFILES:.c=.o)
 include ../make.inc
 
 
-CFLAGS = $(FG_CFLAGS)
+CFLAGS = $(FG_CFLAGS) -g
 
 
 #---------------------------------------------------------------------------
@@ -66,6 +66,9 @@ splittris.o: splittris.c
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/01/14 15:54:42  curt
+# Initial revision completed.
+#
 # Revision 1.1  1998/01/14 02:11:30  curt
 # Initial revision.
 #

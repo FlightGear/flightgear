@@ -51,8 +51,8 @@ int new_tris[MAX_TRIS][3];
 
 struct fgCartesianPoint nodes_cart[MAX_NODES];
 
-long int ne_index, nw_index, sw_index, se_index;
-long int north_index, south_index, east_index, west_index;
+struct bucket ne_index, nw_index, sw_index, se_index;
+struct bucket north_index, south_index, east_index, west_index;
 
 /* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
  * a cartesian point */
@@ -236,16 +236,150 @@ void triload(char *basename) {
 /* check if a file exists */
 int file_exists(char *file) {
     struct stat stat_buf;
+    int result;
+
+    printf("checking %s ... ", file);
 
     result = stat(file, &stat_buf);
 
     if ( result != 0 ) {
 	/* stat failed, no file */
+	printf("not found.\n");
 	return(0);
     } else {
 	/* stat succeeded, file exists */
+	printf("exists.\n");
 	return(1);
     }
+}
+
+
+/* check to see if a shared object exists */
+int shared_object_exists(char *basepath, char *ext) {
+    char file[256], scene_path[256];
+    long int index;
+
+    if ( strcmp(ext, ".sw") == 0 ) {
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&sw_index, scene_path);
+	index = gen_index(&sw_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".se") == 0 ) {
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&se_index, scene_path);
+	index = gen_index(&se_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".ne") == 0 ) {
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.nw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&ne_index, scene_path);
+	index = gen_index(&ne_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".nw") == 0 ) {
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.ne", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&nw_index, scene_path);
+	index = gen_index(&nw_index);
+	sprintf(file, "%s/%s/%ld.1.se", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.sw", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".south") == 0 ) {
+	gen_base_path(&south_index, scene_path);
+	index = gen_index(&south_index);
+	sprintf(file, "%s/%s/%ld.1.north", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".north") == 0 ) {
+	gen_base_path(&north_index, scene_path);
+	index = gen_index(&north_index);
+	sprintf(file, "%s/%s/%ld.1.south", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".west") == 0 ) {
+	gen_base_path(&west_index, scene_path);
+	index = gen_index(&west_index);
+	sprintf(file, "%s/%s/%ld.1.east", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    if ( strcmp(ext, ".east") == 0 ) {
+	gen_base_path(&east_index, scene_path);
+	index = gen_index(&east_index);
+	sprintf(file, "%s/%s/%ld.1.west", basepath, scene_path, index);
+	if ( file_exists(file) ) {
+	    return(1);
+	}
+    }
+
+    return(0);
 }
 
 
@@ -257,17 +391,19 @@ FILE *my_open(char *basename, char *basepath, char *ext) {
 
     /* create the output file name */
     strcpy(filename, basename);
-    strcpy(filename, ext);
+    strcat(filename, ext);
 
     /* check if a shared object already exist from a different tile */
 
-    if ( 0 ) {
+    if ( shared_object_exists(basepath, ext) ) {
 	/* not an actual file open error, but we've already got the
          * shared edge, so we don't want to create another one */
+	printf("not opening\n");
 	return(NULL);
     } else {
 	/* open the file */
 	fp = fopen(filename, "w");
+	printf("Opening %s\n", filename);
 	return(fp);
     }
 }
@@ -275,11 +411,8 @@ FILE *my_open(char *basename, char *basepath, char *ext) {
 
 /* dump in WaveFront .obj format */
 void dump_obj(char *basename, char *basepath) {
-    char sw_name[256], se_name[256], ne_name[256], nw_name[256];
-    char north_name[256], south_name[256], east_name[256], west_name[256];
-    char body_name[256];
     double n1[3], n2[3], n3[3], n4[3], n5[3], norm[3], temp;
-    FILE *sw, *se, *ne, *nw, *north, *south, *east, *west, *body;
+    FILE *fp, *sw, *se, *ne, *nw, *north, *south, *east, *west, *body;
     int i, t1, t2, t3, t4, t5, count;
 
     sw = my_open(basename, basepath, ".sw");
@@ -296,55 +429,35 @@ void dump_obj(char *basename, char *basepath) {
 
     printf("Dumping edges file basename:  %s ...\n", basename);
 
-    sw = fopen(sw_name, "w");
-    se = fopen(se_name, "w");
-    ne = fopen(ne_name, "w");
-    nw = fopen(nw_name, "w");
-
-    north = fopen(north_name, "w");
-    south = fopen(south_name, "w");
-    east = fopen(east_name, "w");
-    west = fopen(west_name, "w");
-
-    body = fopen(body_name, "w");
-
     /* dump vertices */
     printf("  writing vertices\n");
     for ( i = 1; i <= nodecount; i++ ) {
 
 	if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) && 
 	     (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
-	    fprintf(sw, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = sw;
 	} else if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) &&
 		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON) ) {
-	    fprintf(se, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = se;
 	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
 		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON)) {
-	    fprintf(ne, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = ne;
 	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
 		    (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
-	    fprintf(nw, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = nw;
 	} else if ( fabs(nodes_orig[i][0] - xmin) < FG_EPSILON ) {
-	    fprintf(west, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = west;
 	} else if ( fabs(nodes_orig[i][0] - xmax) < FG_EPSILON ) {
-	    fprintf(east, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = east;
 	} else if ( fabs(nodes_orig[i][1] - ymin) < FG_EPSILON ) {
-	    fprintf(south, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = south;
 	} else if ( fabs(nodes_orig[i][1] - ymax) < FG_EPSILON ) {
-	    fprintf(north, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = north;
 	} else {
-	    fprintf(body, "geodn %.2f %.2f %.2f\n", 
-		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	    fp = body;
 	}
-
+	fprintf(fp, "gdn %.2f %.2f %.2f\n", 
+		nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
     }
 
     printf("  calculating and writing normals\n");
@@ -400,26 +513,31 @@ void dump_obj(char *basename, char *basepath) {
 /* 	printf("  Normalized ave. normal = %.4f %.4f %.4f\n",  */
 /* 	       norm[0], norm[1], norm[2]); */
 	
+	fp = NULL;
+
 	if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) && 
 	     (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
-	    fprintf(sw, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = sw;
 	} else if ( (fabs(nodes_orig[i][1] - ymin) < FG_EPSILON) &&
 		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON) ) {
-	    fprintf(se, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = se;
 	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
 		    (fabs(nodes_orig[i][0] - xmax) < FG_EPSILON)) {
-	    fprintf(ne, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = ne;
 	} else if ( (fabs(nodes_orig[i][1] - ymax) < FG_EPSILON) &&
 		    (fabs(nodes_orig[i][0] - xmin) < FG_EPSILON) ) {
-	    fprintf(nw, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = nw;
 	} else if ( fabs(nodes_orig[i][0] - xmin) < FG_EPSILON ) {
-	    fprintf(west, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = west;
 	} else if ( fabs(nodes_orig[i][0] - xmax) < FG_EPSILON ) {
-	    fprintf(east, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = east;
 	} else if ( fabs(nodes_orig[i][1] - ymin) < FG_EPSILON ) {
-	    fprintf(south, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = south;
 	} else if ( fabs(nodes_orig[i][1] - ymax) < FG_EPSILON ) {
-	    fprintf(north, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
+	    fp = north;
+	}
+	if ( fp != NULL ) {
+	    fprintf(fp, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
 	}
     }
 
@@ -432,12 +550,14 @@ void dump_obj(char *basename, char *basepath) {
     fclose(south);
     fclose(east);
     fclose(west);
+
+    fclose(body);
 }
 
 
 int main(int argc, char **argv) {
     char basename[256], basepath[256], temp[256];
-    struct bucket p1, p2;
+    struct bucket p;
     long int index;
     int len;
 
@@ -457,23 +577,26 @@ int main(int argc, char **argv) {
     }
     index = atoi(temp);
     printf("%ld\n", index);
-    parse_index(index, &p1);
+    parse_index(index, &p);
 
+    printf("bucket = %d %d %d %d\n", p.lon, p.lat, p.x, p.y);
     /* generate the indexes of the neighbors */
-    offset_bucket(&p1, &p2,  1,  1); ne_index = gen_index(&p2);
-    offset_bucket(&p1, &p2,  1, -1); nw_index = gen_index(&p2);
-    offset_bucket(&p1, &p2, -1,  1); se_index = gen_index(&p2);
-    offset_bucket(&p1, &p2, -1, -1); sw_index = gen_index(&p2);
+    offset_bucket(&p, &ne_index,  1,  1);
+    offset_bucket(&p, &nw_index, -1,  1);
+    offset_bucket(&p, &se_index,  1, -1);
+    offset_bucket(&p, &sw_index, -1, -1);
 
-    offset_bucket(&p1, &p2,  0,  1); north_index = gen_index(&p2);
-    offset_bucket(&p1, &p2,  0, -1); south_index = gen_index(&p2);
-    offset_bucket(&p1, &p2,  1,  0); east_index  = gen_index(&p2);
-    offset_bucket(&p1, &p2, -1,  1); west_index  = gen_index(&p2);
+    offset_bucket(&p, &north_index,  0,  1);
+    offset_bucket(&p, &south_index,  0, -1);
+    offset_bucket(&p, &east_index,  1,  0);
+    offset_bucket(&p, &west_index, -1,  0);
 
+    /*
     printf("Corner indexes = %ld %ld %ld %ld\n", 
 	   ne_index, nw_index, sw_index, se_index);
     printf("Edge indexes = %ld %ld %ld %ld\n",
 	   north_index, south_index, east_index, west_index);
+	   */
 
     /* load the input data files */
     triload(basename);
@@ -486,7 +609,10 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/14 02:11:31  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/14 15:54:43  curt
+/* Initial revision completed.
 /*
+ * Revision 1.1  1998/01/14 02:11:31  curt
+ * Initial revision.
+ *
  */
