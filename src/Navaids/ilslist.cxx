@@ -155,6 +155,9 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
 	if ( d < (2* FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
 		  * 2 * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER) ) {
 
+	    *ils = *current;
+	    return true;
+#if 0
             // Get our bearing from this station.
             double reciprocal_bearing, dummy;
             double a_lat_deg = lat * SGD_RADIANS_TO_DEGREES;
@@ -175,6 +178,7 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
                 *ils = *current;
                 return true;
             }
+#endif
 	}
     }
 
