@@ -1,4 +1,4 @@
-//  panel.cxx - default, 2D single-engine prop instrument panel
+//  panel.hxx - default, 2D single-engine prop instrument panel
 //
 //  Written by David Megginson, started January 2000.
 //
@@ -35,9 +35,12 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl/xgl.h>
-
 #include <plib/ssg.h>
+
+#include <vector>
+#include <plib/fnt.h>
+
+FG_USING_STD(vector);
 
 class FGPanelInstrument;
 
@@ -50,6 +53,9 @@ class FGPanelInstrument;
 class FGPanel
 {
 public:
+
+  typedef vector<FGPanelInstrument *> instrument_list_type;
+
   FGPanel ();
   virtual ~FGPanel ();
 
@@ -65,14 +71,7 @@ private:
 
   ssgTexture * _bg;
 
-  const FGPanelInstrument * _airspeed;
-  const FGPanelInstrument * _horizon;
-  const FGPanelInstrument * _altimeter;
-  const FGPanelInstrument * _coordinator;
-  const FGPanelInstrument * _gyro;
-  const FGPanelInstrument * _vertical;
-  const FGPanelInstrument * _flaps;
-  const FGPanelInstrument * _rpm;
+  instrument_list_type _instruments;
 };
 
 
@@ -103,144 +102,149 @@ protected:
 
 
 ////////////////////////////////////////////////////////////////////////
+// A single layer of an instrument.
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * A single layer of a multi-layered instrument.
+ *
+ * Each layer can be subject to a series of transformations based
+ * on current FGFS instrument readings: for example, a texture
+ * representing a needle can rotate to show the airspeed.
+ */
+class FGInstrumentLayer
+{
+public:
+  typedef enum {
+    XSHIFT,
+    YSHIFT,
+    ROTATION
+  } transform_type;
+
+  typedef double (*transform_func)();
+
+
+  FGInstrumentLayer ();
+  FGInstrumentLayer (int w, int h, int z);
+  virtual ~FGInstrumentLayer ();
+
+  virtual void draw () const = 0;
+  virtual void transform () const;
+
+  virtual void addTransformation (transform_type type, transform_func func,
+				  double min, double max,
+				  double factor = 1.0, double offset = 0.0);
+
+protected:
+  int _w, _h, _z;
+
+  typedef struct {
+    transform_type type;
+    transform_func func;
+    double min;
+    double max;
+    double factor;
+    double offset;
+  } transformation;
+  typedef vector<transformation *> transformation_list;
+  transformation_list _transformations;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
 // An instrument composed of layered textures.
 ////////////////////////////////////////////////////////////////////////
 
-class FGTexturedInstrument : public FGPanelInstrument
+
+/**
+ * An instrument constructed of multiple layers.
+ *
+ * Each individual layer can be rotated or shifted to correspond
+ * to internal FGFS instrument readings.
+ */
+class FGLayeredInstrument : public FGPanelInstrument
 {
 public:
-  static const int MAX_LAYERS = 8;
-  FGTexturedInstrument (int x, int y, int w, int h);
-  virtual ~FGTexturedInstrument ();
-
-  virtual void addLayer (int layer, const char * textureName);
-  virtual void addLayer (int layer, ssgTexture * texture);
-  virtual void setLayerCenter (int layer, int x, int y);
-  virtual void setLayerRot (int layer, double rotation) const;
-  virtual void setLayerOffset (int layer, int xoffset, int yoffset) const;
-  virtual bool hasLayer (int layer) const;
+  typedef vector<FGInstrumentLayer *> layer_list;
+  FGLayeredInstrument (int x, int y, int w, int h);
+  virtual ~FGLayeredInstrument ();
 
   virtual void draw () const;
+
+  virtual void addLayer (FGInstrumentLayer *layer);
+  virtual void addLayer (int i, const char *textureName);
+  virtual void addTransformation (int layer,
+				  FGInstrumentLayer::transform_type type,
+				  FGInstrumentLayer::transform_func func,
+				  double min, double max,
+				  double factor = 1.0, double offset = 0.0);
+  virtual void addTransformation (int layer,
+				  FGInstrumentLayer::transform_type type,
+				  double offset) {
+    addTransformation(layer, type, 0, 0.0, 0.0, 1.0, offset);
+  }
+
 protected:
-  bool _layers[MAX_LAYERS];
-  mutable int _xcenter[MAX_LAYERS];
-  mutable int _ycenter[MAX_LAYERS];
-  mutable double _rotation[MAX_LAYERS];
-  mutable int _xoffset[MAX_LAYERS];
-  mutable int _yoffset[MAX_LAYERS];
-  ssgTexture * _textures[MAX_LAYERS];
+  layer_list _layers;
 };
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Airspeed indicator.
+// A textured layer of an instrument.
 ////////////////////////////////////////////////////////////////////////
 
-class FGAirspeedIndicator : public FGTexturedInstrument
+/**
+ * A textured layer of an instrument.
+ *
+ * This is a type of layer designed to hold a texture; normally,
+ * the texture's background should be transparent so that
+ * other layers or the panel background show through.
+ */
+class FGTexturedInstrumentLayer : public FGInstrumentLayer
 {
 public:
-  FGAirspeedIndicator (int x, int y);
-  virtual ~FGAirspeedIndicator ();
+  FGTexturedInstrumentLayer (const char * textureName,
+			     int w, int h, int z);
+  FGTexturedInstrumentLayer (ssgTexture * texture,
+			     int w, int h, int z);
+  virtual ~FGTexturedInstrumentLayer ();
+
   virtual void draw () const;
+
+  virtual void setTexture (const char *textureName);
+  virtual void setTexture (ssgTexture * texture) { _texture = texture; }
+
+private:
+  ssgTexture * _texture;
 };
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Artificial Horizon.
+// A text layer of an instrument.
 ////////////////////////////////////////////////////////////////////////
 
-class FGHorizon : public FGTexturedInstrument
+class FGCharInstrumentLayer : public FGInstrumentLayer
 {
 public:
-  FGHorizon (int x, int y);
-  virtual ~FGHorizon ();
+  typedef char * (*text_func)(char *);
+  FGCharInstrumentLayer (text_func func,
+			 int w, int h, int z);
+  virtual ~FGCharInstrumentLayer ();
+
   virtual void draw () const;
-};
+  virtual void setColor (float r, float g, float b);
+  virtual void setPointSize (float size);
+  virtual void setFont (fntFont * font);
 
-
-
-////////////////////////////////////////////////////////////////////////
-// Altimeter.
-////////////////////////////////////////////////////////////////////////
-
-class FGAltimeter : public FGTexturedInstrument
-{
-public:
-  FGAltimeter (int x, int y);
-  virtual ~FGAltimeter ();
-  virtual void draw () const;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Turn Co-ordinator.
-////////////////////////////////////////////////////////////////////////
-
-class FGTurnCoordinator : public FGTexturedInstrument
-{
-public:
-  FGTurnCoordinator (int x, int y);
-  virtual ~FGTurnCoordinator ();
-  virtual void draw () const;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Gyro Compass.
-////////////////////////////////////////////////////////////////////////
-
-class FGGyroCompass : public FGTexturedInstrument
-{
-public:
-  FGGyroCompass (int x, int y);
-  virtual ~FGGyroCompass ();
-  virtual void draw () const;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Vertical velocity indicator.
-////////////////////////////////////////////////////////////////////////
-
-class FGVerticalVelocity : public FGTexturedInstrument
-{
-public:
-  FGVerticalVelocity (int x, int y);
-  virtual ~FGVerticalVelocity ();
-  virtual void draw () const;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// RPM gauge.
-////////////////////////////////////////////////////////////////////////
-
-class FGRPMGauge : public FGTexturedInstrument
-{
-public:
-  FGRPMGauge (int x, int y);
-  virtual ~FGRPMGauge ();
-  virtual void draw () const;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Flap position indicator.
-////////////////////////////////////////////////////////////////////////
-
-class FGFlapIndicator : public FGTexturedInstrument
-{
-public:
-  FGFlapIndicator (int x, int y);
-  virtual ~FGFlapIndicator ();
-  virtual void draw () const;
+private:
+  text_func _func;
+  float _color[3];
+				// FIXME: need only one globally
+  mutable fntRenderer _renderer;
+  mutable char _buf[1024];
 };
 
 
