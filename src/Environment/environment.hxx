@@ -34,8 +34,6 @@
 #  include <math.h>
 #endif
 
-class SGInterpTable;
-
 
 /**
  * Model the natural environment.
@@ -53,6 +51,10 @@ public:
   FGEnvironment();
   FGEnvironment (const FGEnvironment &environment);
   virtual ~FGEnvironment();
+
+  virtual void copy (const FGEnvironment &environment);
+
+  virtual void read (const SGPropertyNode * node);
   
   virtual double get_visibility_m () const;
 
@@ -70,6 +72,8 @@ public:
   virtual double get_wind_from_east_fps () const;
   virtual double get_wind_from_down_fps () const;
 
+  virtual double get_turbulence_norm () const;
+
   virtual void set_visibility_m (double v);
 
   virtual void set_temperature_sea_level_degc (double t);
@@ -85,16 +89,12 @@ public:
   virtual void set_wind_from_east_fps (double e);
   virtual void set_wind_from_down_fps (double d);
 
-protected:
-
-  friend class FGEnvironmentMgr;
+  virtual void set_turbulence_norm (double t);
 
   virtual double get_elevation_ft () const;
   virtual void set_elevation_ft (double elevation_ft);
 
 private:
-
-  void _setup_tables ();
 
   void _recalc_hdgspd ();
   void _recalc_ne ();
@@ -106,9 +106,6 @@ private:
   void _recalc_sl_pressure ();
   void _recalc_alt_pressure ();
   void _recalc_density ();
-
-  SGInterpTable * _temperature_degc_table;
-  SGInterpTable * _pressure_inhg_table;
 
   double elevation_ft;
 
@@ -123,6 +120,8 @@ private:
   double pressure_inhg;
   double density_slugft3;
 
+  double turbulence_norm;
+
   double wind_from_heading_deg;
   double wind_speed_kt;
 
@@ -131,5 +130,8 @@ private:
   double wind_from_down_fps;
 
 };
+
+void interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
+                  double fraction, FGEnvironment * result);
 
 #endif // _ENVIRONMENT_HXX

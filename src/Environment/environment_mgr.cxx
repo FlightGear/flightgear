@@ -35,8 +35,10 @@ extern SGSky *thesky;		// FIXME: from main.cxx
 
 FGEnvironmentMgr::FGEnvironmentMgr ()
   : _environment(new FGEnvironment),
-    _controller(new FGUserDefEnvironmentCtrl)
+    _controller(new FGInterpolateEnvironmentCtrl)
 {
+  _controller->setEnvironment(_environment);
+  set_subsystem("controller", _controller, 0.5);
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
@@ -49,8 +51,15 @@ void
 FGEnvironmentMgr::init ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
-  _controller->setEnvironment(_environment);
-  _controller->init();
+  FGSubsystemGroup::init();
+  _update_fdm();
+}
+
+void
+FGEnvironmentMgr::reinit ()
+{
+  SG_LOG( SG_GENERAL, SG_INFO, "Reinitializing environment subsystem");
+  FGSubsystemGroup::reinit();
   _update_fdm();
 }
 
@@ -97,6 +106,10 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_wind_from_down_fps,
 	&FGEnvironment::set_wind_from_down_fps);
   fgSetArchivable("/environment/wind-from-down-fps");
+  fgTie("/environment/turbulence-norm", _environment,
+        &FGEnvironment::get_turbulence_norm,
+        &FGEnvironment::set_turbulence_norm);
+  fgSetArchivable("/environment/turbulence-norm");
 
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
     char buf[128];
@@ -160,7 +173,8 @@ FGEnvironmentMgr::unbind ()
 void
 FGEnvironmentMgr::update (double dt)
 {
-  _controller->update(dt);
+  FGSubsystemGroup::update(dt);
+
 				// FIXME: the FDMs should update themselves
   current_aircraft.fdm_state
     ->set_Velocities_Local_Airmass(_environment->get_wind_from_north_fps(),

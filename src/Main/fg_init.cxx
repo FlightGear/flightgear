@@ -1477,8 +1477,7 @@ bool fgInitSubsystems() {
     global_events.Register( "weather update", &fgUpdateWeatherDatabase,
                             30000);
 #else
-    globals->get_environment_mgr()->init();
-    globals->get_environment_mgr()->bind();
+    globals->add_subsystem("environment", new FGEnvironmentMgr);
 #endif
 
 #ifdef FG_USE_CLOUDS_3D

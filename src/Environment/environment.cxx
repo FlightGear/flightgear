@@ -41,10 +41,79 @@
 #include "environment.hxx"
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Atmosphere model.
+////////////////////////////////////////////////////////////////////////
+
+// Copied from YASim Atmosphere.cxx, with m converted to ft, degK
+// converted to degC, Pa converted to inHG, and kg/m^3 converted to
+// slug/ft^3; they were then converted to deltas from the sea-level
+// defaults (approx. 15degC, 29.92inHG, and 0.00237slugs/ft^3).
+
+// Original comment from YASim:
+
+// Copied from McCormick, who got it from "The ARDC Model Atmosphere"
+// Note that there's an error in the text in the first entry,
+// McCormick lists 299.16/101325/1.22500, but those don't agree with
+// R=287.  I chose to correct the temperature to 288.20, since 79F is
+// pretty hot for a "standard" atmosphere.
+
+// Elevation (ft), temperature factor (degK), pressure factor (inHG)
+static double atmosphere_data[][3] = {
+ { 0.00, 1.00, 1.000 },
+ { 2952.76, 0.98, 0.898 },
+ { 5905.51, 0.96, 0.804 },
+ { 8858.27, 0.94, 0.719 },
+ { 11811.02, 0.92, 0.641 },
+ { 14763.78, 0.90, 0.570 },
+ { 17716.54, 0.88, 0.506 },
+ { 20669.29, 0.86, 0.447 },
+ { 23622.05, 0.84, 0.394 },
+ { 26574.80, 0.82, 0.347 },
+ { 29527.56, 0.80, 0.304 },
+ { 32480.31, 0.78, 0.266 },
+ { 35433.07, 0.76, 0.231 },
+ { 38385.83, 0.75, 0.201 },
+ { 41338.58, 0.75, 0.174 },
+ { 44291.34, 0.75, 0.151 },
+ { 47244.09, 0.75, 0.131 },
+ { 50196.85, 0.75, 0.114 },
+ { 53149.61, 0.75, 0.099 },
+ { 56102.36, 0.75, 0.086 },
+ { 59055.12, 0.75, 0.075 },
+ { 62007.87, 0.75, 0.065 },
+ { -1, -1, -1 }
+};
+
+static SGInterpTable * _temperature_degc_table = 0;
+static SGInterpTable * _pressure_inhg_table = 0;
+
+static void
+_setup_tables ()
+{
+  if (_temperature_degc_table != 0)
+      return;
+
+  _temperature_degc_table = new SGInterpTable;
+  _pressure_inhg_table = new SGInterpTable;
+
+  for (int i = 0; atmosphere_data[i][0] != -1; i++) {
+    _temperature_degc_table->addEntry(atmosphere_data[i][0],
+				      atmosphere_data[i][1]);
+    _pressure_inhg_table->addEntry(atmosphere_data[i][0],
+				   atmosphere_data[i][2]);
+  }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGEnvironment.
+////////////////////////////////////////////////////////////////////////
+
 FGEnvironment::FGEnvironment()
-  : _temperature_degc_table(new SGInterpTable),
-    _pressure_inhg_table(new SGInterpTable),
-    elevation_ft(0),
+  : elevation_ft(0),
     visibility_m(32000),
     temperature_sea_level_degc(15),
     temperature_degc(15),
@@ -56,32 +125,85 @@ FGEnvironment::FGEnvironment()
     wind_speed_kt(0),
     wind_from_north_fps(0),
     wind_from_east_fps(0),
-    wind_from_down_fps(0)
+    wind_from_down_fps(0),
+    turbulence_norm(0)
 {
   _setup_tables();
 }
 
 FGEnvironment::FGEnvironment (const FGEnvironment &env)
-  : _temperature_degc_table(new SGInterpTable),
-    _pressure_inhg_table(new SGInterpTable),
-    elevation_ft(env.elevation_ft),
-    visibility_m(env.visibility_m),
-    temperature_sea_level_degc(env.temperature_sea_level_degc),
-    dewpoint_sea_level_degc(env.dewpoint_sea_level_degc),
-    pressure_sea_level_inhg(env.pressure_sea_level_inhg),
-    wind_from_heading_deg(env.wind_from_heading_deg),
-    wind_speed_kt(env.wind_speed_kt),
-    wind_from_north_fps(env.wind_from_north_fps),
-    wind_from_east_fps(env.wind_from_east_fps),
-    wind_from_down_fps(env.wind_from_down_fps)
 {
-  _setup_tables();
+    FGEnvironment();
+    copy(env);
 }
 
 FGEnvironment::~FGEnvironment()
 {
-  delete _temperature_degc_table;
-  delete _pressure_inhg_table;
+}
+
+void
+FGEnvironment::copy (const FGEnvironment &env)
+{
+    elevation_ft = env.elevation_ft;
+    visibility_m = env.visibility_m;
+    temperature_sea_level_degc = env.temperature_sea_level_degc;
+    dewpoint_sea_level_degc = env.dewpoint_sea_level_degc;
+    pressure_sea_level_inhg = env.pressure_sea_level_inhg;
+    wind_from_heading_deg = env.wind_from_heading_deg;
+    wind_speed_kt = env.wind_speed_kt;
+    wind_from_north_fps = env.wind_from_north_fps;
+    wind_from_east_fps = env.wind_from_east_fps;
+    wind_from_down_fps = env.wind_from_down_fps;
+    turbulence_norm = env.turbulence_norm;
+}
+
+static inline bool
+maybe_copy_value (FGEnvironment * env, const SGPropertyNode * node,
+                  const char * name, void (FGEnvironment::*setter)(double))
+{
+    const SGPropertyNode * child = node->getChild(name);
+                                // fragile: depends on not being typed
+                                // as a number
+    if (child != 0 && child->getStringValue()[0] != '\0') {
+        (env->*setter)(child->getDoubleValue());
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void
+FGEnvironment::read (const SGPropertyNode * node)
+{
+    maybe_copy_value(this, node, "visibility-m",
+                     &FGEnvironment::set_visibility_m);
+
+    if (!maybe_copy_value(this, node, "temperature-sea-level-degc",
+                          &FGEnvironment::set_temperature_sea_level_degc))
+        maybe_copy_value(this, node, "temperature-degc",
+                         &FGEnvironment::set_temperature_degc);
+
+    if (!maybe_copy_value(this, node, "dewpoint-sea-level-degc",
+                          &FGEnvironment::set_dewpoint_sea_level_degc))
+        maybe_copy_value(this, node, "dewpoint-degc",
+                         &FGEnvironment::set_dewpoint_degc);
+
+    if (!maybe_copy_value(this, node, "pressure-sea-level-inhg",
+                          &FGEnvironment::set_pressure_sea_level_inhg))
+        maybe_copy_value(this, node, "pressure-inhg",
+                         &FGEnvironment::set_pressure_inhg);
+
+    maybe_copy_value(this, node, "wind-from-heading-deg",
+                     &FGEnvironment::set_wind_from_heading_deg);
+
+    maybe_copy_value(this, node, "wind-speed-kt",
+                     &FGEnvironment::set_wind_speed_kt);
+
+    maybe_copy_value(this, node, "elevation-ft",
+                     &FGEnvironment::set_elevation_ft);
+
+    maybe_copy_value(this, node, "turbulence-norm",
+                     &FGEnvironment::set_turbulence_norm);
 }
 
 
@@ -161,6 +283,12 @@ double
 FGEnvironment::get_wind_from_down_fps () const
 {
   return wind_from_down_fps;
+}
+
+double
+FGEnvironment::get_turbulence_norm () const
+{
+  return turbulence_norm;
 }
 
 double
@@ -263,6 +391,12 @@ FGEnvironment::set_wind_from_down_fps (double d)
 }
 
 void
+FGEnvironment::set_turbulence_norm (double t)
+{
+  turbulence_norm = t;
+}
+
+void
 FGEnvironment::set_elevation_ft (double e)
 {
   elevation_ft = e;
@@ -270,59 +404,6 @@ FGEnvironment::set_elevation_ft (double e)
   _recalc_alt_dewpoint();
   _recalc_alt_pressure();
   _recalc_density();
-}
-
-// Atmosphere model.
-
-// Copied from YASim Atmosphere.cxx, with m converted to ft, degK
-// converted to degC, Pa converted to inHG, and kg/m^3 converted to
-// slug/ft^3; they were then converted to deltas from the sea-level
-// defaults (approx. 15degC, 29.92inHG, and 0.00237slugs/ft^3).
-
-// Original comment from YASim:
-
-// Copied from McCormick, who got it from "The ARDC Model Atmosphere"
-// Note that there's an error in the text in the first entry,
-// McCormick lists 299.16/101325/1.22500, but those don't agree with
-// R=287.  I chose to correct the temperature to 288.20, since 79F is
-// pretty hot for a "standard" atmosphere.
-
-// Elevation (ft), temperature factor (degK), pressure factor (inHG)
-static double atmosphere_data[][3] = {
- { 0.00, 1.00, 1.000 },
- { 2952.76, 0.98, 0.898 },
- { 5905.51, 0.96, 0.804 },
- { 8858.27, 0.94, 0.719 },
- { 11811.02, 0.92, 0.641 },
- { 14763.78, 0.90, 0.570 },
- { 17716.54, 0.88, 0.506 },
- { 20669.29, 0.86, 0.447 },
- { 23622.05, 0.84, 0.394 },
- { 26574.80, 0.82, 0.347 },
- { 29527.56, 0.80, 0.304 },
- { 32480.31, 0.78, 0.266 },
- { 35433.07, 0.76, 0.231 },
- { 38385.83, 0.75, 0.201 },
- { 41338.58, 0.75, 0.174 },
- { 44291.34, 0.75, 0.151 },
- { 47244.09, 0.75, 0.131 },
- { 50196.85, 0.75, 0.114 },
- { 53149.61, 0.75, 0.099 },
- { 56102.36, 0.75, 0.086 },
- { 59055.12, 0.75, 0.075 },
- { 62007.87, 0.75, 0.065 },
- { -1, -1, -1 }
-};
-
-void
-FGEnvironment::_setup_tables ()
-{
-  for (int i = 0; atmosphere_data[i][0] != -1; i++) {
-    _temperature_degc_table->addEntry(atmosphere_data[i][0],
-				      atmosphere_data[i][1]);
-    _pressure_inhg_table->addEntry(atmosphere_data[i][0],
-				   atmosphere_data[i][2]);
-  }
 }
 
 void
@@ -436,6 +517,78 @@ FGEnvironment::_recalc_density ()
   double virtual_temperature_degr = virtual_temperature_degk * 1.8;
 
   density_slugft3 = pressure_psf / (virtual_temperature_degr * 1718);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Functions.
+////////////////////////////////////////////////////////////////////////
+
+static inline double
+do_interp (double a, double b, double fraction)
+{
+    double retval = (a + ((b - a) * fraction));
+    return retval;
+}
+
+static inline double
+do_interp_deg (double a, double b, double fraction)
+{
+    a = fmod(a, 360);
+    b = fmod(b, 360);
+    if (fabs(b-a) > 180) {
+        if (a < b)
+            a += 360;
+        else
+            b += 360;
+    }
+    return fmod(do_interp(a, b, fraction), 360);
+}
+
+void
+interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
+             double fraction, FGEnvironment * result)
+{
+    result->set_visibility_m
+        (do_interp(env1->get_visibility_m(),
+                   env2->get_visibility_m(),
+                   fraction));
+
+    result->set_temperature_sea_level_degc
+        (do_interp(env1->get_temperature_sea_level_degc(),
+                   env2->get_temperature_sea_level_degc(),
+                   fraction));
+
+    result->set_dewpoint_sea_level_degc
+        (do_interp(env1->get_dewpoint_sea_level_degc(),
+                   env2->get_dewpoint_sea_level_degc(),
+                   fraction));
+
+    result->set_pressure_sea_level_inhg
+        (do_interp(env1->get_pressure_sea_level_inhg(),
+                   env2->get_pressure_sea_level_inhg(),
+                   fraction));
+
+    result->set_wind_from_heading_deg
+        (do_interp_deg(env1->get_wind_from_heading_deg(),
+                       env2->get_wind_from_heading_deg(),
+                       fraction));
+
+    result->set_wind_speed_kt
+        (do_interp(env1->get_wind_speed_kt(),
+                   env2->get_wind_speed_kt(),
+                   fraction));
+
+    result->set_elevation_ft
+        (do_interp(env1->get_elevation_ft(),
+                   env2->get_elevation_ft(),
+                   fraction));
+
+    result->set_turbulence_norm
+        (do_interp(env1->get_turbulence_norm(),
+                   env2->get_turbulence_norm(),
+                   fraction));
 }
 
 // end of environment.cxx

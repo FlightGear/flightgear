@@ -31,7 +31,13 @@
 #  include <math.h>
 #endif
 
+#include <vector>
+
+SG_USING_STD(vector);
+
 class SGPropertyNode;
+
+#include <Main/fgfs.hxx>
 
 #include "environment.hxx"
 
@@ -40,7 +46,7 @@ class SGPropertyNode;
 /**
  * Interface to control environment information for a specific location.
  */
-class FGEnvironmentCtrl
+class FGEnvironmentCtrl : public FGSubsystem
 {
 
 public:
@@ -60,9 +66,6 @@ public:
   virtual double getLongitudeDeg () const { return _lon_deg; }
   virtual double getLatitudeDeg () const { return _lat_deg; }
   virtual double getElevationFt () const { return _elev_ft; }
-
-  virtual void init () = 0;
-  virtual void update (double dt) = 0;
 
 protected:
 
@@ -96,5 +99,39 @@ private:
   double _delta_wind_speed_kt;
 
 };
+
+
+
+/**
+ * Interplation controller using user-supplied parameters.
+ */
+class FGInterpolateEnvironmentCtrl : public FGEnvironmentCtrl
+{
+public:
+    FGInterpolateEnvironmentCtrl ();
+    virtual ~FGInterpolateEnvironmentCtrl ();
+    
+    virtual void init ();
+    virtual void reinit ();
+    virtual void update (double delta_time_sec);
+
+private:
+    
+    struct bucket {
+        double altitude_ft;
+        FGEnvironment environment;
+        bool operator< (const bucket &b) const;
+    };
+
+    void read_table (const SGPropertyNode * node, vector<bucket *> &table);
+    void do_interpolate (vector<bucket *> &table, double altitude_ft,
+                         FGEnvironment * environment);
+
+    FGEnvironment env1, env2;   // temporaries
+
+    vector<bucket *> _boundary_table;
+    vector<bucket *> _aloft_table;
+};
+
 
 #endif // _ENVIRONMENT_CTRL_HXX

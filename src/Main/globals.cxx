@@ -24,8 +24,6 @@
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include <Environment/environment_mgr.hxx>
-
 #include "globals.hxx"
 #include "viewmgr.hxx"
 
@@ -59,7 +57,6 @@ FGGlobals::FGGlobals() :
     route( NULL ),
     current_panel( NULL ),
     soundmgr( NULL ),
-    environment_mgr( NULL ),
     ATC_mgr( NULL ),
     ATC_display( NULL ),
     AI_mgr( NULL ),

@@ -40,7 +40,7 @@ class FGEnvironmentCtrl;
 /**
  * Manage environment information.
  */
-class FGEnvironmentMgr : public FGSubsystem
+class FGEnvironmentMgr : public FGSubsystemGroup
 {
 
 public:
@@ -53,6 +53,7 @@ public:
   virtual ~FGEnvironmentMgr ();
 
   virtual void init ();
+  virtual void reinit ();
   virtual void bind ();
   virtual void unbind ();
   virtual void update (double dt);

@@ -113,7 +113,8 @@ void FGATIS::UpdateTransmission() {
 	FGPhysicalProperty stationweather = WeatherDatabase->get(position);
 	#else
 	FGEnvironment stationweather =
-	globals->get_environment_mgr()->getEnvironment(lat, lon, elev);
+            ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
+              ->getEnvironment(lat, lon, elev);
 	#endif
 	
 	transmission = "";

@@ -40,6 +40,8 @@ SG_USING_STD(endl);
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/route/route.hxx>
 
+#include <Environment/environment_mgr.hxx>
+
 #ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>
 #endif
@@ -183,8 +185,6 @@ static double delta_time_sec = 0;
 
 #ifdef FG_WEATHERCM
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-#  include <Environment/environment_mgr.hxx>
 #endif
 
 #include "version.h"
@@ -952,10 +952,6 @@ void fgUpdateTimeDepCalcs() {
         cur_fdm_state->bind();
     }
 
-#ifndef FG_WEATHERCM
-    globals->get_environment_mgr()->update(delta_time_sec);
-#endif
-
     // conceptually, the following block could be done for each fdm
     // instance ...
     if ( !cur_fdm_state->get_inited() ) {
@@ -1581,10 +1577,6 @@ static bool fgMainInit( int argc, char **argv ) {
     // we parse command line options
 
     globals = new FGGlobals;
-
-#ifndef FG_WEATHERCM
-    globals->set_environment_mgr(new FGEnvironmentMgr);
-#endif
 
     // seed the random number generater
     sg_srandom_time();

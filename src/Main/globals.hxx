@@ -65,8 +65,6 @@ class FGATCDisplay;
 class FGAircraftModel;
 class FGAutopilot;
 class FGControls;
-class FGEnvironment;
-class FGEnvironmentMgr;
 class FGIO;
 class FGModelMgr;
 class FGScenery;
@@ -135,9 +133,6 @@ private:
 
     // sound manager
     SGSoundMgr *soundmgr;
-
-    // environment information
-    FGEnvironmentMgr * environment_mgr;
 
     // ATC manager
     FGATCMgr *ATC_mgr;
@@ -244,13 +239,6 @@ public:
 
     inline SGRoute *get_route() const { return route; }
     inline void set_route( SGRoute *r ) { route = r; }
-
-    inline FGEnvironmentMgr * get_environment_mgr() {
-      return environment_mgr;
-    }
-    inline void set_environment_mgr(FGEnvironmentMgr * mgr) {
-      environment_mgr = mgr;
-    }
 
     inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
