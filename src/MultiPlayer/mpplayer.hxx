@@ -29,7 +29,13 @@
 /****************************************************************
 * @version $Id$
 *
-* Description:
+* Description: This class holds information about a player in a
+* multiplayer game. The model for a remote player is loaded and
+* added onto the aircraft branch of the scene on calling Open.
+* The model is unloaded from the scene when Close is called
+* or the object is deleted. The model's positioning transform is
+* updated by calling SetPosition. The updated position transform
+* is applied to the model on the scene by calling Draw.
 *
 ******************************************************************/
 
@@ -47,9 +53,6 @@ SG_USING_STD(string);
 // Number of seconds before a player is consider to be lost
 #define TIME_TO_LIVE 10
 
-#define PLAYER_DATA_NOT_AVAILABLE 0
-#define PLAYER_DATA_AVAILABLE 1
-#define PLAYER_DATA_EXPIRED 2
 
 class MPPlayer {
 public:
@@ -59,6 +62,12 @@ public:
 
     /** Destructor. */
     ~MPPlayer();
+
+    /** Enumeration of the states for the player's data */
+    enum PlayerDataState {PLAYER_DATA_NOT_AVAILABLE = 0, PLAYER_DATA_AVAILABLE, PLAYER_DATA_EXPIRED};
+
+    /** Player data state */
+    typedef enum PlayerDataState TPlayerDataState;
 
     /** Initialises the class.
     * @param sIP IP address or host name for sending data to the player
@@ -71,9 +80,6 @@ public:
     bool Open(const string &sIP, const int &iPort, const string &sCallsign,
               const string &sModelName, const bool bLocalPlayer);
 
-    /** Initialises the player count for all instances of this object to zero. */
-    static void ResetPlayerCnt(void);
-
     /** Closes the player connection */
     void Close(void);
 
@@ -84,7 +90,7 @@ public:
 
     /** Transform and place model for player
     */
-    int Draw(void);
+    TPlayerDataState Draw(void);
 
     /** Returns the callsign for the player
     * @return Aircraft's callsign
@@ -96,9 +102,6 @@ public:
     * @return True if callsign matches
     */
     bool CompareCallsign(const char *sCallsign) const;
-
-    /** Loads the model of the aircraft */
-    void LoadModel(void);
 
     /** Populates a position message for the player
     * @param MsgHdr Header to be populated
@@ -115,6 +118,9 @@ public:
 
 private:
 
+    /** Loads the model of the aircraft */
+    void LoadModel(void);
+
     /** True if object is initialised */
     bool m_bInitialised;
 
@@ -130,13 +136,13 @@ private:
     /** Player's callsign */
     string m_sCallsign;
 
-    /** Aircraft model for player */
+    /** Aircraft model name for player */
     string m_sModelName;
 
-    /** Simgear model selection */
-    ssgSelector *m_ModelSel;
+    /** The player's loaded model */
+    ssgEntity *m_Model;
 
-    /** Simgear model transform */
+    /** Model transform */
     ssgTransform *m_ModelTrans;
 
     /** True if this player is the local player */

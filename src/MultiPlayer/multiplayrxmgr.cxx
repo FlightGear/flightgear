@@ -332,16 +332,18 @@ void FGMultiplayRxMgr::ProcessData(void) {
 ******************************************************************/
 void FGMultiplayRxMgr::Update(void) {
 
-    int iPlayerDataState;
+    MPPlayer::TPlayerDataState ePlayerDataState;
     int iPlayerId;
 
     for (iPlayerId = 0; iPlayerId < MAX_PLAYERS; iPlayerId++) {
         if (m_Player[iPlayerId] != NULL) {
-            iPlayerDataState = m_Player[iPlayerId]->Draw();
+            ePlayerDataState = m_Player[iPlayerId]->Draw();
 
             // If the player has not received an update for some
             // time then assume that the player has quit.
-            if (iPlayerDataState == PLAYER_DATA_EXPIRED) {
+            if (ePlayerDataState == MPPlayer::PLAYER_DATA_EXPIRED) {
+                SG_LOG( SG_NETWORK, SG_BULK, "FGMultiplayRxMgr::Update - Deleting player from game. Callsign: "
+                        << m_Player[iPlayerId]->Callsign() );
                 delete m_Player[iPlayerId];
                 m_Player[iPlayerId] = NULL;
             }

@@ -123,7 +123,7 @@ bool FGMultiplayTxMgr::init(void) {
             // Create a player object for the local player
             if (bSuccess) {
                 mLocalPlayer = new MPPlayer();
-                if (!mLocalPlayer->Open(fgGetString("/sim/multiplay/rxaddress"), fgGetInt("/sim/multiplay/rxport"),
+                if (!mLocalPlayer->Open(fgGetString("/sim/multiplay/rxhost"), fgGetInt("/sim/multiplay/rxport"),
                                         fgGetString("/sim/multiplay/callsign"), fgGetString("/sim/model/path"), true)) {
                     cerr << "FGMultiplayTxMgr::init - Failed to create player object for local player" << endl;
                     bSuccess = false;
