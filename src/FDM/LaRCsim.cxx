@@ -20,6 +20,7 @@
 //
 // $Id$
 
+#include <string.h>		// strcmp()
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -48,7 +49,7 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     ls_toplevel_init( 0.0, (char *)(aero->getStringValue()) );
 
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
-    if ( string(aero->getStringValue()) == "c172" ) {
+    if ( !strcmp(aero->getStringValue(), "c172") ) {
         copy_to_LaRCsim(); // initialize all of LaRCsim's vars
 
         //this should go away someday -- formerly done in fg_init.cxx
@@ -85,7 +86,7 @@ void FGLaRCsim::init() {
 // Run an iteration of the EOM (equations of motion)
 void FGLaRCsim::update( int multiloop ) {
 
-    if ( string(aero->getStringValue()) == "c172" ) {
+    if ( !strcmp(aero->getStringValue(), "c172") ) {
 	// set control inputs
 	// cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
 	eng.set_IAS( V_calibrated_kts );
@@ -169,7 +170,7 @@ void FGLaRCsim::update( int multiloop ) {
         speed_up->getIntValue();
     Flap_handle = 30.0 * globals->get_controls()->get_flaps();
 
-    if ( string(aero->getStringValue()) == "c172" ) {
+    if ( !strcmp(aero->getStringValue(), "c172") ) {
         Use_External_Engine = 1;
     } else {
 	Use_External_Engine = 0;
@@ -539,7 +540,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Climb_Rate( -1 * V_down );
     // cout << "climb rate = " << -V_down * 60 << endl;
 
-    if ( string(aero->getStringValue()) == "uiuc" ) {
+    if ( !strcmp(aero->getStringValue(), "uiuc") ) {
 	if (pilot_elev_no) {
 	    globals->get_controls()->set_elevator(Long_control);
 	    globals->get_controls()->set_elevator_trim(Long_trim);

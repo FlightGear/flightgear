@@ -38,7 +38,8 @@
 
 #include <GL/glut.h>
 #include <stdlib.h>
-#include <stdio.h>	//char related functions
+#include <stdio.h>		// char related functions
+#include <string.h>		// strcmp()
 #include STL_STRING
 #include STL_FSTREAM
 
@@ -648,7 +649,7 @@ int readInstrument(const SGPropertyNode * node)
 
     instr_item *HIptr;
     
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( !strcmp("/sim/startup/units", "feet") ) {
         strcpy(units, " ft");
     } else {
         strcpy(units, " m");

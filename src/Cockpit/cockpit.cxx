@@ -183,7 +183,7 @@ float get_altitude( void )
 
     float altitude;
 
-    if ( string(startup_units_node->getStringValue()) == "feet" ) {
+    if ( !strcmp(startup_units_node->getStringValue(), "feet") ) {
         altitude = current_aircraft.fdm_state->get_Altitude();
     } else {
         altitude = (current_aircraft.fdm_state->get_Altitude()
@@ -197,7 +197,7 @@ float get_agl( void )
 {
     float agl;
 
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( !strcmp("/sim/startup/units", "feet") ) {
         agl = (current_aircraft.fdm_state->get_Altitude()
                - scenery.get_cur_elev() * SG_METER_TO_FEET);
     } else {
@@ -247,7 +247,7 @@ float get_vfc_tris_culled   ( void )
 float get_climb_rate( void )
 {
     float climb_rate;
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( !strcmp("/sim/startup/units", "feet") ) {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * 60.0;
     } else {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * SG_FEET_TO_METER * 60.0;

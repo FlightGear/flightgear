@@ -28,6 +28,7 @@
 #endif
 
 #include <stdio.h>		// sprintf()
+#include <string.h>		// strcmp()
 
 #include <simgear/constants.h>
 #include <simgear/sg_inlines.h>
@@ -906,7 +907,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
              * SG_FEET_TO_METER ) {
 	}
 
-	if ( fgGetString("/sim/startup/units") == "feet" ) {
+	if ( !strcmp("/sim/startup/units", "feet") ) {
 	    MakeTargetAltitudeStr( TargetAltitude * SG_METER_TO_FEET );
 	} else {
 	    MakeTargetAltitudeStr( TargetAltitude * SG_METER_TO_FEET );
@@ -917,7 +918,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	TargetAGL = altitude_agl_node->getDoubleValue() * SG_FEET_TO_METER;
 
-	if ( fgGetString("/sim/startup/units") == "feet" ) {
+	if ( !strcmp("/sim/startup/units", "feet") ) {
 	    MakeTargetAltitudeStr( TargetAGL * SG_METER_TO_FEET );
 	} else {
 	    MakeTargetAltitudeStr( TargetAGL * SG_METER_TO_FEET );
@@ -932,7 +933,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
 void FGAutopilot::AltitudeSet( double new_altitude ) {
     double target_alt = new_altitude;
 
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( !strcmp("/sim/startup/units", "feet") ) {
 	target_alt = new_altitude * SG_FEET_TO_METER;
     }
 
@@ -943,7 +944,7 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
     TargetAltitude = target_alt;
     altitude_mode = FG_ALTITUDE_LOCK;
 
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( !strcmp("/sim/startup/units", "feet") ) {
 	target_alt *= SG_METER_TO_FEET;
     }
     // ApAltitudeDialogInput->setValue((float)target_alt);
@@ -957,7 +958,7 @@ void FGAutopilot::AltitudeAdjust( double inc )
 {
     double target_alt, target_agl;
 
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( !strcmp("/sim/startup/units", "feet") ) {
 	target_alt = TargetAltitude * SG_METER_TO_FEET;
 	target_agl = TargetAGL * SG_METER_TO_FEET;
     } else {
@@ -977,7 +978,7 @@ void FGAutopilot::AltitudeAdjust( double inc )
 	target_agl = ( int ) ( target_agl / inc ) * inc + inc;
     }
 
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( !strcmp("/sim/startup/units", "feet") ) {
 	target_alt *= SG_FEET_TO_METER;
 	target_agl *= SG_FEET_TO_METER;
     }
@@ -985,9 +986,9 @@ void FGAutopilot::AltitudeAdjust( double inc )
     TargetAltitude = target_alt;
     TargetAGL = target_agl;
 	
-    if ( fgGetString("/sim/startup/units") == "feet" )
+    if ( !strcmp("/sim/startup/units", "feet") )
 	target_alt *= SG_METER_TO_FEET;
-    if ( fgGetString("/sim/startup/units") == "feet" )
+    if ( !strcmp("/sim/startup/units", "feet") )
 	target_agl *= SG_METER_TO_FEET;
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {

@@ -21,6 +21,8 @@
 //
 // $Id$
 
+#include <string.h>		// strcmp
+
 #include <plib/sg.h>
 
 #include <GUI/sgVec3Slider.hxx>	// FIXME: this should NOT be needed
@@ -130,7 +132,7 @@ FGViewMgr::update (int dt)
 	fgGetDouble("/orientation/roll-deg"),
 	fgGetDouble("/orientation/pitch-deg"),
 	fgGetDouble("/orientation/heading-deg"));
-  if (fgGetString("/sim/flight-model") == "ada") {
+  if (!strcmp("/sim/flight-model", "ada")) {
     //+ve x is aft, +ve z is up (see viewer.hxx)
     pilot_view->setPositionOffsets( -5.0, 0.0, 1.0 );
   }

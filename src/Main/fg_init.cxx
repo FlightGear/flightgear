@@ -39,6 +39,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>		// strcmp()
 
 
 #if defined( unix ) || defined( __CYGWIN__ )
@@ -791,7 +792,7 @@ bool fgInitSubsystems( void ) {
 
     FGLocalWeatherDatabase::DatabaseWorkingType working_type;
 
-    if (fgGetString("/environment/weather/working-type") == "internet")
+    if (!strcmp("/environment/weather/working-type", "internet"))
     {
       working_type = FGLocalWeatherDatabase::use_internet;
     } else {

@@ -1,5 +1,7 @@
 // fg_commands.cxx - internal FGFS commands.
 
+#include <string.h>		// strcmp()
+
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 
@@ -244,7 +246,7 @@ do_view_cycle (const SGPropertyNode * arg, SGCommandState ** state)
 {
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
-  if ( fgGetString("/sim/flight-model") == "ada" ) {
+  if ( !strcmp("/sim/flight-model", "ada") ) {
       globals->get_props()->setBoolValue( "/sim/hud/visibility", true );
       if ( globals->get_viewmgr()->get_current() == 1 ) {
           globals->get_props()->setBoolValue( "/sim/hud/visibility", false );

@@ -28,10 +28,10 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 
-#include <math.h>            // rint()
+#include <math.h>		// rint()
 #include <stdio.h>
-#include <stdlib.h>          // atof(), atoi()
-#include <string.h>
+#include <stdlib.h>		// atof(), atoi()
+#include <string.h>		// strcmp()
 
 #include STL_STRING
 
@@ -482,7 +482,7 @@ parse_wp( const string& arg ) {
 	alt_str = arg.substr( pos + 1 );
 	// cout << "id str = " << id << "  alt str = " << alt_str << endl;
 	alt = atof( alt_str.c_str() );
-	if ( fgGetString("/sim/startup/units") == "feet" ) {
+	if ( !strcmp("/sim/startup/units", "feet") ) {
 	    alt *= SG_FEET_TO_METER;
 	}
     } else {
@@ -610,49 +610,49 @@ parse_option (const string& arg)
 	fgSetString("/sim/startup/airport-id", "");
     } else if ( arg.find( "--altitude=" ) == 0 ) {
 	fgSetBool("/sim/startup/onground", false);
-	if ( fgGetString("/sim/startup/units") == "feet" )
+	if ( !strcmp("/sim/startup/units", "feet") )
 	    fgSetDouble("/position/altitude-ft", atof(arg.substr(11)));
 	else
 	    fgSetDouble("/position/altitude-ft",
 			atof(arg.substr(11)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--uBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
-	if ( fgGetString("/sim/startup/units") == "feet" )
+	if ( !strcmp("/sim/startup/units", "feet") )
 	  fgSetDouble("/velocities/uBody-fps", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/uBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
-	if ( fgGetString("/sim/startup/units") == "feet" )
+	if ( !strcmp("/sim/startup/units", "feet") )
 	  fgSetDouble("/velocities/vBody-fps", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/vBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--wBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
-	if ( fgGetString("/sim/startup/units") == "feet" )
+	if ( !strcmp("/sim/startup/units", "feet") )
 	  fgSetDouble("/velocities/wBody-fps", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/wBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vNorth=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
-	if ( fgGetString("/sim/startup/units") == "feet" )
+	if ( !strcmp("/sim/startup/units", "feet") )
 	  fgSetDouble("/velocities/speed-north-fps", atof(arg.substr(9)));
 	else
 	  fgSetDouble("/velocities/speed-north-fps",
 			       atof(arg.substr(9)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vEast=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
-	if ( fgGetString("/sim/startup/units") == "feet" )
+	if ( !strcmp("/sim/startup/units", "feet") )
 	  fgSetDouble("/velocities/speed-east-fps", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/speed-east-fps",
 		      atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vDown=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
-	if ( fgGetString("/sim/startup/units") == "feet" )
+	if ( !strcmp("/sim/startup/units", "feet") )
 	  fgSetDouble("/velocities/speed-down-fps", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/speed-down-fps",
@@ -708,7 +708,7 @@ parse_option (const string& arg)
         fgSetBool("/environment/clouds/status", true);
     } else if ( arg.find( "--clouds-asl=" ) == 0 ) {
 				// FIXME: check units
-        if ( fgGetString("/sim/startup/units") == "feet" )
+        if ( !strcmp("/sim/startup/units", "feet") )
 	  fgSetDouble("/environment/clouds/altitude-ft",
 				atof(arg.substr(13)));
 	else
