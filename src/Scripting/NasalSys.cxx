@@ -7,10 +7,13 @@
 
 #include <simgear/nasal/nasal.h>
 #include <simgear/props/props.hxx>
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/interpolator.hxx>
 #include <simgear/structure/commands.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "NasalSys.hxx"
 
@@ -46,8 +49,8 @@ FGNasalSys::FGNasalSys()
 {
     _context = 0;
     _globals = naNil();
-    _timerHash = naNil();
-    _nextTimerHashKey = 0; // Any value will do
+    _gcHash = naNil();
+    _nextGCKey = 0; // Any value will do
 }
 
 FGNasalSys::~FGNasalSys()
@@ -73,6 +76,28 @@ bool FGNasalSys::parseAndRun(const char* sourceCode)
     if(!naGetError(_context)) return true;
     logError();
     return false;
+}
+
+FGNasalScript* FGNasalSys::parseScript(const char* src, const char* name)
+{
+    FGNasalScript* script = new FGNasalScript();
+    script->_gcKey = -1; // important, if we delete it on a parse
+    script->_nas = this; // error, don't clobber a real handle!
+
+    char buf[256];
+    if(!name) {
+        sprintf(buf, "FGNasalScript@%8.8x", (int)script);
+        name = buf;
+    }
+
+    script->_code = parse(name, src);
+    if(naIsNil(script->_code)) {
+        delete script;
+        return 0;
+    }
+
+    script->_gcKey = gcSave(script->_code);
+    return script;
 }
 
 // Utility.  Sets a named key in a hash by C string, rather than nasal
@@ -215,6 +240,37 @@ static naRef f_cmdarg(naContext c, naRef args)
     return nasal->cmdArgGhost();
 }
 
+// Sets up a property interpolation.  The first argument is either a
+// ghost (SGPropertyNode_ptr*) or a string (global property path) to
+// interpolate.  The second argument is a vector of pairs of
+// value/delta numbers.
+static naRef f_interpolate(naContext c, naRef args)
+{
+    SGPropertyNode* node;
+    naRef prop = naVec_get(args, 0);
+    if(naIsString(prop)) node = fgGetNode(naStr_data(prop), true);
+    else if(naIsGhost(prop)) node = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+    else return naNil();
+
+    naRef curve = naVec_get(args, 1);
+    if(!naIsVector(curve)) return naNil();
+    int nPoints = naVec_size(curve) / 2;
+    double* values = new double[nPoints];
+    double* deltas = new double[nPoints];
+    for(int i=0; i<nPoints; i++) {
+        values[i] = naNumValue(naVec_get(curve, 2*i)).num;
+        deltas[i] = naNumValue(naVec_get(curve, 2*i+1)).num;
+    }
+
+    ((SGInterpolator*)globals->get_subsystem("interpolator"))
+        ->interpolate(node, nPoints, values, deltas);
+}
+
+static naRef f_rand(naContext c, naRef args)
+{
+    return naNum(sg_random());
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
@@ -223,6 +279,8 @@ static struct { char* name; naCFunction func; } funcs[] = {
     { "_fgcommand", f_fgcommand },
     { "settimer",  f_settimer },
     { "_cmdarg",  f_cmdarg },
+    { "_interpolate",  f_interpolate },
+    { "rand",  f_rand },
     { 0, 0 }
 };
 
@@ -256,10 +314,11 @@ void FGNasalSys::init()
     // And our SGPropertyNode wrapper
     hashset(_globals, "props", genPropsModule());
 
-    // Make a "__timers" hash to hold the settimer() handlers (to
-    // protect them from begin garbage-collected).
-    _timerHash = naNewHash(_context);
-    hashset(_globals, "__timers", _timerHash);
+    // Make a "__gcsave" hash to hold the naRef objects which get
+    // passed to handles outside the interpreter (to protect them from
+    // begin garbage-collected).
+    _gcHash = naNewHash(_context);
+    hashset(_globals, "__gcsave", _gcHash);
 
     // Now load the various source files in the Nasal directory
     SGPath p(globals->get_fg_root());
@@ -373,6 +432,7 @@ void FGNasalSys::initModule(const char* moduleName, const char* fileName,
 
 naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
 {
+    if(len == 0) len = strlen(buf);
     int errLine = -1;
     naRef srcfile = naNewString(_context);
     naStr_fromdata(srcfile, (char*)filename, strlen(filename));
@@ -395,7 +455,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     // location in the property tree.  arg->getPath() returns an empty
     // string.
     const char* nasal = arg->getStringValue("script");
-    naRef code = parse("<command>", nasal, strlen(nasal));
+    naRef code = parse("<command>", nasal);
     if(naIsNil(code)) return false;
     
     // Cache the command argument for inspection via cmdarg().  For
@@ -418,7 +478,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 // Implementation note: the FGTimer objects don't live inside the
 // garbage collector, so the Nasal handler functions have to be
 // "saved" somehow lest they be inadvertently cleaned.  In this case,
-// they are inserted into a globals._timers hash and removed on
+// they are inserted into a globals.__gcsave hash and removed on
 // expiration.
 void FGNasalSys::setTimer(naRef args)
 {
@@ -435,23 +495,30 @@ void FGNasalSys::setTimer(naRef args)
     // Generate and register a C++ timer handler
     NasalTimer* t = new NasalTimer;
     t->handler = handler;
-    t->hashKey = _nextTimerHashKey++;
+    t->gcKey = gcSave(handler);
     t->nasal = this;
 
     globals->get_event_mgr()->addEvent("NasalTimer",
                                        t, &NasalTimer::timerExpired,
                                        delta.num, simtime);
-
-
-    // Save the handler in the globals.__timers hash to prevent
-    // garbage collection.
-    naHash_set(_timerHash, naNum(t->hashKey), handler);
 }
 
 void FGNasalSys::handleTimer(NasalTimer* t)
 {
     naCall(_context, t->handler, naNil(), naNil(), naNil());
-    naHash_delete(_timerHash, naNum(t->hashKey));
+    gcRelease(t->gcKey);
+}
+
+int FGNasalSys::gcSave(naRef r)
+{
+    int key = _nextGCKey++;
+    naHash_set(_gcHash, naNum(key), r);
+    return key;
+}
+
+void FGNasalSys::gcRelease(int key)
+{
+    naHash_delete(_gcHash, naNum(key));
 }
 
 void FGNasalSys::NasalTimer::timerExpired()
