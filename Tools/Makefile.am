@@ -1,4 +1,4 @@
-EXTRA_DIST = process-dem.pl
+EXTRA_DIST = process-dem.pl scenery_version.hxx
 
 SUBDIRS = \
 	Lib \

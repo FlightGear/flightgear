@@ -1,7 +1,7 @@
 SUBDIRS = \
 	Array \
 	Clipper \
-	GenFans \
+	Combine \
 	GenOutput \
 	Triangulate \
 	Main
