@@ -119,7 +119,7 @@ PropsChannel::collectIncomingData( const char* s, int n )
 void
 PropsChannel::node_not_found_error( const string& node_name )
 {
-    string error = "ERR Node \"";
+    string error = "-ERR Node \"";
     error += node_name;
     error += "\" not found.";
     push( error.c_str() );
