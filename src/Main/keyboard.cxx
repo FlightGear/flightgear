@@ -445,27 +445,18 @@ void GLUTspecialkey(int k, int x, int y) {
  	    return;
  	}
 	case GLUT_KEY_F3: {
-	  ifstream input("panel.xml");
-	  if (!input.good()) {
-	    FG_LOG(FG_INPUT, FG_ALERT, 
-		   "Cannot read panel configuration from panel.xml");
-	    return;
-	  }
-	  FGPanel * new_panel = fgReadPanel(input);
+	  string panel_path =
+	    current_properties.getStringValue("/sim/panel",
+					      "Panels/Default/default.xml");
+	  FGPanel * new_panel = fgReadPanel(panel_path);
 	  if (new_panel == 0) {
 	    FG_LOG(FG_INPUT, FG_ALERT,
-		   "Error reading new panel from panel.xml");
+		   "Error reading new panel from " << panel_path);
 	    return;
 	  }
-	  FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from panel.xml");
+	  FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from " << panel_path);
 	  delete current_panel;
 	  current_panel = new_panel;
-	  return;
-	}
-	case GLUT_KEY_F4: {
-	  delete current_panel;
-	  current_panel = fgCreateSmallSinglePropPanel(0, 0, 1024, 768);
-	  FG_LOG(FG_INPUT, FG_INFO, "Reverted to built-in panel");
 	  return;
 	}
 	case GLUT_KEY_END: // numeric keypad 1
