@@ -177,7 +177,7 @@ private:
 public:
 
     FGGlobals();
-    ~FGGlobals();
+    virtual ~FGGlobals();
 
     virtual FGSubsystemMgr * get_subsystem_mgr () const;
 
