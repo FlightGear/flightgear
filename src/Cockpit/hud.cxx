@@ -762,7 +762,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 }
 //$$$ End - added, Neetha, 28 Nov 2k  
 
-int global_day_night_switch = DAY;
+static int global_day_night_switch = DAY;
 
 void HUD_masterswitch( bool incr )
 {
@@ -770,7 +770,7 @@ void HUD_masterswitch( bool incr )
 	if ( global_day_night_switch == DAY ) {
 	    global_day_night_switch = NIGHT;
 	} else {
-	    fgSetBool("/sim/hud/visiblity", false);
+	    fgSetBool("/sim/hud/visibility", false);
 	}
     } else {
         fgSetBool("/sim/hud/visibility", true);

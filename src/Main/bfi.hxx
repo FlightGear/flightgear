@@ -124,46 +124,6 @@ public:
 //   static void setSpeedDown (double speed);
 
 
-#if 0
-				// Controls
-  static double getThrottle ();	// 0.0:1.0
-  static void setThrottle (double throttle); // 0.0:1.0
-
-  static double getMixture ();	// 0.0:1.0
-  static void setMixture (double mixture); // 0.0:1.0
-
-  static double getPropAdvance (); // 0.0:1.0
-  static void setPropAdvance (double pitch); // 0.0:1.0
-
-  static double getFlaps ();	// 0.0:1.0
-  static void setFlaps (double flaps); // 0.0:1.0
-
-  static double getAileron ();	// -1.0:1.0
-  static void setAileron (double aileron); // -1.0:1.0
-
-  static double getRudder ();	// -1.0:1.0
-  static void setRudder (double rudder); // -1.0:1.0
-
-  static double getElevator ();	// -1.0:1.0
-  static void setElevator (double elevator); // -1.0:1.0
-
-  static double getElevatorTrim (); // -1.0:1.0
-  static void setElevatorTrim (double trim); // -1.0:1.0
-
-  static double getBrakes ();	// 0.0:1.0
-  static void setBrakes (double brake);	// 0.0:1.0
-
-  static double getLeftBrake (); // 0.0:1.0
-  static void setLeftBrake (double brake); // 0.0:1.0
-
-  static double getRightBrake (); // 0.0:1.0
-  static void setRightBrake (double brake); // 0.0:1.0
-
-  static double getCenterBrake (); // 0.0:1.0
-  static void setCenterBrake (double brake); // 0.0:1.0
-
-#endif
-
 				// Autopilot
   static bool getAPAltitudeLock ();
   static void setAPAltitudeLock (bool lock);

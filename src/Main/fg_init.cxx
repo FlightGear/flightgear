@@ -563,10 +563,10 @@ bool fgInitSubsystems( void ) {
     fgVelocityInit();
 
     // Initial Orientation
-    cur_fdm_state->
-	set_Euler_Angles( fgGetDouble("/orientation/roll") * DEG_TO_RAD,
-			  fgGetDouble("/orientation/pitch") * DEG_TO_RAD,
-			  fgGetDouble("/orientation/heading") * DEG_TO_RAD );
+//     cur_fdm_state->
+// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * DEG_TO_RAD,
+// 			  fgGetDouble("/orientation/pitch") * DEG_TO_RAD,
+// 			  fgGetDouble("/orientation/heading") * DEG_TO_RAD );
 
     // Initialize the event manager
     global_events.Init();
@@ -692,12 +692,14 @@ bool fgInitSubsystems( void ) {
     // Initialize the flight model subsystem data structures base on
     // above values
 
-    if ( cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") ) ) {
-	// fdm init successful
-    } else {
-	FG_LOG( FG_GENERAL, FG_ALERT, "FDM init() failed!  Cannot continue." );
-	exit(-1);
-    }
+    cur_fdm_state->init();
+    cur_fdm_state->bind();
+//     if ( cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") ) ) {
+// 	// fdm init successful
+//     } else {
+// 	FG_LOG( FG_GENERAL, FG_ALERT, "FDM init() failed!  Cannot continue." );
+// 	exit(-1);
+//     }
 
     // *ABCD* I'm just sticking this here for now, it should probably
     // move eventually
@@ -810,10 +812,10 @@ void fgReInitSubsystems( void )
     fgVelocityInit();
 
     // Initial Orientation
-    cur_fdm_state->
-	set_Euler_Angles( fgGetDouble("/orientation/roll") * DEG_TO_RAD,
-			  fgGetDouble("/orientation/pitch") * DEG_TO_RAD,
-			  fgGetDouble("/orientation/heading") * DEG_TO_RAD );
+//     cur_fdm_state->
+// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * DEG_TO_RAD,
+// 			  fgGetDouble("/orientation/pitch") * DEG_TO_RAD,
+// 			  fgGetDouble("/orientation/heading") * DEG_TO_RAD );
 
     // Initialize view parameters
     FGViewerRPH *pilot_view =
@@ -838,7 +840,9 @@ void fgReInitSubsystems( void )
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
 
-    cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") );
+    cur_fdm_state->init();
+    cur_fdm_state->bind();
+//     cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") );
 
     scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * FEET_TO_METER;
 

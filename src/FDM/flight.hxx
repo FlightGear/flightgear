@@ -89,7 +89,10 @@
 #include <vector>
 #include <string>
 
+#include <simgear/constants.h>
 #include <simgear/timing/timestamp.hxx>
+
+#include <Main/fgfs.hxx>
 
 FG_USING_STD(list);
 FG_USING_STD(vector);
@@ -160,7 +163,7 @@ typedef vector < FGEngInterface > engine_list;
 
 
 // This is based heavily on LaRCsim/ls_generic.h
-class FGInterface {
+class FGInterface : public FGSubsystem {
 
 private:
   
@@ -258,6 +261,8 @@ private:
     SGTimeStamp next_stamp;           // time this record is valid
 
 protected:
+    virtual bool init( double dt );
+
     void _busdump(void);
     void _updatePosition( double lat_geoc, double lon, double alt );
     void _updateWeather( void );
@@ -417,7 +422,10 @@ public:
     FGInterface(void);
     virtual ~FGInterface();
 
-    virtual bool init( double dt );
+    virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update ();
     virtual bool update( int multi_loop );
 
     // Define the various supported flight models (many not yet implemented)
@@ -454,15 +462,41 @@ public:
     virtual void set_Longitude(double lon);    
     virtual void set_Altitude(double alt);  // triggers re-calc of AGL altitude
     virtual void set_AltitudeAGL(double altagl); // and vice-versa
+    virtual void set_Latitude_deg (double lat) {
+      set_Latitude(lat * DEG_TO_RAD);
+    }
+    virtual void set_Longitude_deg (double lon) {
+      set_Longitude(lon * DEG_TO_RAD);
+    }
     
     // Speeds -- setting any of these will trigger a re-calc of the rest
     virtual void set_V_calibrated_kts(double vc);
     virtual void set_Mach_number(double mach);
     virtual void set_Velocities_Local( double north, double east, double down );
+    inline void set_V_north (double north) { v_local_v[0] = north; }
+    inline void set_V_east (double east) { v_local_v[1] = east; }
+    inline void set_V_down (double down) { v_local_v[2] = down; }
     virtual void set_Velocities_Wind_Body( double u, double v, double w);
+    virtual void set_uBody (double uBody) { v_wind_body_v[0] = uBody; }
+    virtual void set_vBody (double vBody) { v_wind_body_v[1] = vBody; }
+    virtual void set_wBody (double wBody) { v_wind_body_v[2] = wBody; }
     
     // Euler angles 
     virtual void set_Euler_Angles( double phi, double theta, double psi );
+    virtual void set_Phi (double phi) {
+      set_Euler_Angles(phi, get_Theta(), get_Psi());
+    }
+    virtual void set_Theta (double theta) {
+      set_Euler_Angles(get_Phi(), theta, get_Psi());
+    }
+    virtual void set_Psi (double psi) { 
+      set_Euler_Angles(get_Phi(), get_Theta(), psi);
+    }
+    virtual void set_Phi_deg (double phi) { set_Phi(phi * DEG_TO_RAD); }
+    virtual void set_Theta_deg (double theta) {
+      set_Theta(theta * DEG_TO_RAD); 
+    }
+    virtual void set_Psi_deg (double psi) { set_Psi(psi * DEG_TO_RAD); }
     
     // Flight Path
     virtual void set_Climb_Rate( double roc);
@@ -669,6 +703,9 @@ public:
     inline double get_V_north() const { return v_local_v[0]; }
     inline double get_V_east() const { return v_local_v[1]; }
     inline double get_V_down() const { return v_local_v[2]; }
+    inline double get_uBody () const { return v_wind_body_v[0]; }
+    inline double get_vBody () const { return v_wind_body_v[1]; }
+    inline double get_wBody () const { return v_wind_body_v[2]; }
 
     // inline double * get_V_local_rel_ground_v() {
     //     return v_local_rel_ground_v;
@@ -803,12 +840,22 @@ public:
     inline double get_Latitude() const { return geodetic_position_v[0]; }
     inline double get_Longitude() const { return geodetic_position_v[1]; }
     inline double get_Altitude() const { return geodetic_position_v[2]; }
-    inline double get_Altitude_AGL(void) { return altitude_agl; }
+    inline double get_Altitude_AGL(void) const { return altitude_agl; }
+
+    inline double get_Latitude_deg () const {
+      return get_Latitude() * RAD_TO_DEG;
+    }
+    inline double get_Longitude_deg () const {
+      return get_Longitude() * RAD_TO_DEG;
+    }
 
     // inline double * get_Euler_angles_v() { return euler_angles_v; }
     inline double get_Phi() const { return euler_angles_v[0]; }
     inline double get_Theta() const { return euler_angles_v[1]; }
     inline double get_Psi() const { return euler_angles_v[2]; }
+    inline double get_Phi_deg () const { return get_Phi() * RAD_TO_DEG; }
+    inline double get_Theta_deg () const { return get_Theta() * RAD_TO_DEG; }
+    inline double get_Psi_deg () const { return get_Psi() * RAD_TO_DEG; }
 
 
     // ========== Miscellaneous quantities ==========

@@ -212,16 +212,16 @@ FGBFI::init ()
   fgTie("/sim/time/gmt-string", getGMTString);
 
 				// Position
-  fgTie("/position/latitude", getLatitude, setLatitude);
-  fgTie("/position/longitude", getLongitude, setLongitude);
-  fgTie("/position/altitude", getAltitude, setAltitude);
-  fgTie("/position/altitude-agl", getAGL);
+//   fgTie("/position/latitude", getLatitude, setLatitude);
+//   fgTie("/position/longitude", getLongitude, setLongitude);
+//   fgTie("/position/altitude", getAltitude, setAltitude);
+//   fgTie("/position/altitude-agl", getAGL);
 
 				// Orientation
-  fgTie("/orientation/heading", getHeading, setHeading);
+//   fgTie("/orientation/heading", getHeading, setHeading);
   fgTie("/orientation/heading-magnetic", getHeadingMag);
-  fgTie("/orientation/pitch", getPitch, setPitch);
-  fgTie("/orientation/roll", getRoll, setRoll);
+//   fgTie("/orientation/pitch", getPitch, setPitch);
+//   fgTie("/orientation/roll", getRoll, setRoll);
 
 				// Engine
   fgTie("/engines/engine0/rpm", getRPM);
@@ -230,12 +230,12 @@ FGBFI::init ()
   fgTie("/engines/engine0/mp", getMP);
 
 				// Velocities
-  fgTie("/velocities/airspeed", getAirspeed, setAirspeed);
-  fgTie("/velocities/side-slip", getSideSlip);
-  fgTie("/velocities/vertical-speed", getVerticalSpeed);
-  fgTie("/velocities/speed-north", getSpeedNorth);
-  fgTie("/velocities/speed-east", getSpeedEast);
-  fgTie("/velocities/speed-down", getSpeedDown);
+//   fgTie("/velocities/airspeed", getAirspeed, setAirspeed);
+//   fgTie("/velocities/side-slip", getSideSlip);
+//   fgTie("/velocities/vertical-speed", getVerticalSpeed);
+//   fgTie("/velocities/speed-north", getSpeedNorth);
+//   fgTie("/velocities/speed-east", getSpeedEast);
+//   fgTie("/velocities/speed-down", getSpeedDown);
 
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
