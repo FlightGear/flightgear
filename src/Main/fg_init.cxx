@@ -340,15 +340,15 @@ bool fgInitFGAircraft ( int argc, char **argv ) {
         }
     }
 
+    if ( aircraft.empty() ) {
+        // Check for $fg_root/system.fgfsrc
+        SGPath sysconf( globals->get_fg_root() );
+        sysconf.append( "system.fgfsrc" );
+        aircraft = fgScanForOption( "--aircraft=", sysconf.str() );
+    }
     // if an aircraft was specified, set the property name
     if ( !aircraft.empty() ) {
         SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
-        if ( aircraft.empty() ) {
-            // Check for $fg_root/system.fgfsrc
-            SGPath sysconf( globals->get_fg_root() );
-            sysconf.append( "system.fgfsrc" );
-            aircraft = fgScanForOption( "--aircraft=", sysconf.str() );
-        } 
         fgSetString("/sim/aircraft", aircraft.c_str() );
     } else {
         SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
