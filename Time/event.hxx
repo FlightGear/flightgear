@@ -1,5 +1,5 @@
 /**************************************************************************
- * event.h -- Flight Gear periodic event scheduler
+ * event.hxx -- Flight Gear periodic event scheduler
  *
  * Written by Curtis Olson, started December 1997.
  *
@@ -24,12 +24,12 @@
  **************************************************************************/
 
 
-#ifndef _EVENT_H
-#define _EVENT_H
+#ifndef _EVENT_HXX
+#define _EVENT_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -66,22 +66,22 @@ void fgEventPrintStats( void );
 void fgEventProcess( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _EVENT_H */
+#endif /* _EVENT_HXX */
 
 
 /* $Log$
-/* Revision 1.4  1998/04/21 17:01:43  curt
-/* Fixed a problems where a pointer to a function was being passed around.  In
-/* one place this functions arguments were defined as ( void ) while in another
-/* place they were defined as ( int ).  The correct answer was ( int ).
+/* Revision 1.1  1998/04/24 00:52:26  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fog color fixes.
+/* Separated out lighting calcs into their own file.
 /*
-/* Prepairing for C++ integration.
-/*
+ * Revision 1.4  1998/04/21 17:01:43  curt
+ * Fixed a problems where a pointer to a function was being passed around.  In
+ * one place this functions arguments were defined as ( void ) while in another
+ * place they were defined as ( int ).  The correct answer was ( int ).
+ *
+ * Prepairing for C++ integration.
+ *
  * Revision 1.3  1998/01/22 02:59:43  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <string.h>
 #include <stdio.h>
@@ -39,10 +41,11 @@
                          /* contains milliseconds */
 #endif
 
-#include "fg_time.h"
-
 #include <Debug/fg_debug.h>
-#include <Time/event.h>
+
+#include "event.hxx"
+#include "fg_time.hxx"
+
 
 
 #define MAX_EVENTS 100    /* size of event table */
@@ -301,9 +304,14 @@ void fgEventProcess( void ) {
 
 
 /* $Log$
-/* Revision 1.13  1998/04/18 04:14:08  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/24 00:52:26  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fog color fixes.
+/* Separated out lighting calcs into their own file.
 /*
+ * Revision 1.13  1998/04/18 04:14:08  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.12  1998/04/09 18:40:13  curt
  * We had unified some of the platform disparate time handling code, and
  * there was a bug in timesum() which calculated a new time stamp based on

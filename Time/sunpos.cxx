@@ -39,6 +39,10 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
@@ -50,7 +54,7 @@
 #include <Math/mat3.h>
 #include <Math/polar.h>
 
-#include "fg_time.h"
+#include "fg_time.hxx"
 #include "sunpos.hxx"
 
 
@@ -332,57 +336,19 @@ void fgUpdateSunPos( void ) {
     l->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
     printf("  SUN ANGLE relative to current location = %.3f rads.\n", 
 	   l->sun_angle);
-
-    /* calculate lighting parameters based on sun's relative angle to
-     * local up */
-    /* ya kind'a have to plot this to see how it works */
-
-    /* x = t->sun_angle^8 */
-//     x_2 = l->sun_angle * l->sun_angle;
-//     x_4 = x_2 * x_2;
-//     x_8 = x_4 * x_4;
-//     x_10 = x_8 * x_2;
-
-//     light = pow(1.1, -x_10 / 30.0);
-//     ambient = 0.2 * light;
-//     diffuse = 1.0 * light;
-
-//     sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
-
-    /* sky_brightness = 0.15; */ /* to force a dark sky (for testing) */
-
-//     if ( ambient < 0.02 ) { ambient = 0.02; }
-//     if ( diffuse < 0.0 ) { diffuse = 0.0; }
-
-//     if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
-
-//     l->scene_ambient[0] = white[0] * ambient;
-//     l->scene_ambient[1] = white[1] * ambient;
-//     l->scene_ambient[2] = white[2] * ambient;
-
-//     l->scene_diffuse[0] = white[0] * diffuse;
-//     l->scene_diffuse[1] = white[1] * diffuse;
-//     l->scene_diffuse[2] = white[2] * diffuse;
-
-//     /* set fog color */
-//     l->fog_color[0] = base_fog_color[0] * (ambient + diffuse);
-//     l->fog_color[1] = base_fog_color[1] * (ambient + diffuse);
-//     l->fog_color[2] = base_fog_color[2] * (ambient + diffuse);
-//     l->fog_color[3] = base_fog_color[3];
-
-//     /* set sky color */
-//     l->sky_color[0] = base_sky_color[0] * sky_brightness;
-//     l->sky_color[1] = base_sky_color[1] * sky_brightness;
-//     l->sky_color[2] = base_sky_color[2] * sky_brightness;
-//     l->sky_color[3] = base_sky_color[3];
 }
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:24:07  curt
-/* C++ - ifiing the code a bit.
-/* Starting to reorginize some of the lighting calcs to use a table lookup.
+/* Revision 1.2  1998/04/24 00:52:31  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fog color fixes.
+/* Separated out lighting calcs into their own file.
 /*
+ * Revision 1.1  1998/04/22 13:24:07  curt
+ * C++ - ifiing the code a bit.
+ * Starting to reorginize some of the lighting calcs to use a table lookup.
+ *
  * Revision 1.27  1998/04/03 22:12:57  curt
  * Converting to Gnu autoconf system.
  * Centralized time handling differences.

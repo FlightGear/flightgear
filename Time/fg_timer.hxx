@@ -1,5 +1,5 @@
 /**************************************************************************
- * fg_timer.h -- time handling routines
+ * fg_timer.hxx -- time handling routines
  *
  * Written by Curtis Olson, started June 1997.
  *
@@ -24,12 +24,12 @@
  **************************************************************************/
 
 
-#ifndef _FG_TIMER_H
-#define _FG_TIMER_H
+#ifndef _FG_TIMER_HXX
+#define _FG_TIMER_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -45,22 +45,22 @@ void fgTimerInit( float dt, void (*f)( int ) );
 int fgGetTimeInterval( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _FG_TIMER_H */
+#endif /* _FG_TIMER_HXX */
 
 
 /* $Log$
-/* Revision 1.5  1998/04/21 17:01:45  curt
-/* Fixed a problems where a pointer to a function was being passed around.  In
-/* one place this functions arguments were defined as ( void ) while in another
-/* place they were defined as ( int ).  The correct answer was ( int ).
+/* Revision 1.1  1998/04/24 00:52:30  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fog color fixes.
+/* Separated out lighting calcs into their own file.
 /*
-/* Prepairing for C++ integration.
-/*
+ * Revision 1.5  1998/04/21 17:01:45  curt
+ * Fixed a problems where a pointer to a function was being passed around.  In
+ * one place this functions arguments were defined as ( void ) while in another
+ * place they were defined as ( int ).  The correct answer was ( int ).
+ *
+ * Prepairing for C++ integration.
+ *
  * Revision 1.4  1998/01/22 02:59:43  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

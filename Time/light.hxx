@@ -31,7 +31,9 @@
 #endif                                   
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -96,6 +98,11 @@ void fgLightUpdate( void);
 
 
 // $Log$
+// Revision 1.2  1998/04/24 00:52:31  curt
+// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+// Fog color fixes.
+// Separated out lighting calcs into their own file.
+//
 // Revision 1.1  1998/04/22 13:24:06  curt
 // C++ - ifiing the code a bit.
 // Starting to reorginize some of the lighting calcs to use a table lookup.

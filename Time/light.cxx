@@ -22,7 +22,9 @@
 // $Id$
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -30,6 +32,7 @@
 
 #include <GL/glut.h>
 #include <XGL/xgl.h>
+
 #include <string.h>
 
 #include <Debug/fg_debug.h>
@@ -41,7 +44,7 @@
 #include <Math/mat3.h>
 #include <Math/polar.h>
 
-#include "fg_time.h"
+#include "fg_time.hxx"
 #include "light.hxx"
 #include "sunpos.hxx"
 
@@ -99,7 +102,7 @@ void fgLightUpdate( void ) {
     /* base sky color */
     GLfloat base_sky_color[4] =        {0.60, 0.60, 0.90, 1.0};
     /* base fog color */
-    GLfloat base_fog_color[4] = {0.70, 0.70, 0.70, 1.0};
+    GLfloat base_fog_color[4] = {1.00, 1.00, 1.00, 1.0};
     double deg, ambient, diffuse, sky_brightness;
 
     l = &cur_light_params;
@@ -137,9 +140,13 @@ void fgLightUpdate( void ) {
     l->scene_diffuse[2] = white[2] * diffuse;
 
     /* set fog color */
-    l->fog_color[0] = base_fog_color[0] * (ambient + diffuse);
-    l->fog_color[1] = base_fog_color[1] * (ambient + diffuse);
-    l->fog_color[2] = base_fog_color[2] * (ambient + diffuse);
+    // l->fog_color[0] = base_fog_color[0] * (ambient + diffuse);
+    // l->fog_color[1] = base_fog_color[1] * (ambient + diffuse);
+    // l->fog_color[2] = base_fog_color[2] * (ambient + diffuse);
+    // l->fog_color[3] = base_fog_color[3];
+    l->fog_color[0] = base_fog_color[0] * sky_brightness;
+    l->fog_color[1] = base_fog_color[1] * sky_brightness;
+    l->fog_color[2] = base_fog_color[2] * sky_brightness;
     l->fog_color[3] = base_fog_color[3];
 
     /* set sky color */
@@ -151,6 +158,11 @@ void fgLightUpdate( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/04/24 00:52:30  curt
+// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+// Fog color fixes.
+// Separated out lighting calcs into their own file.
+//
 // Revision 1.1  1998/04/22 13:24:06  curt
 // C++ - ifiing the code a bit.
 // Starting to reorginize some of the lighting calcs to use a table lookup.

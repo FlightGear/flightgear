@@ -3,9 +3,9 @@ libdir	= ${exec_prefix}/lib
 lib_LTLIBRARIES = libTime.la
 
 libTime_la_SOURCES = \
-	event.c event.h \
-	fg_time.c fg_time.h \
-	fg_timer.c fg_timer.h \
+	event.cxx event.hxx \
+	fg_time.cxx fg_time.hxx \
+	fg_timer.cxx fg_timer.hxx \
 	light.cxx light.hxx \
 	sunpos.cxx sunpos.hxx
 

@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <signal.h>    /* for timer routines */
 #include <stdio.h>     /* for printf() */
@@ -33,8 +35,8 @@
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
 #endif
 
-#include <Time/fg_time.h>
-#include <Time/fg_timer.h>
+#include "fg_time.hxx"
+#include "fg_timer.hxx"
 
 
 unsigned long int fgSimTime;
@@ -45,7 +47,7 @@ unsigned long int fgSimTime;
 
 
 /* This routine catches the SIGALRM */
-void fgTimerCatch( void ) {
+void fgTimerCatch( int dummy ) {
     /* ignore any SIGALRM's until we come back from our EOM iteration */
     signal(SIGALRM, SIG_IGN);
 
@@ -64,19 +66,19 @@ void fgTimerCatch( void ) {
 void fgTimerInit(float dt, void (*f)( int )) {
     int terr;
     int isec;
-    float usec;
+    int usec;
 
     callbackfunc = f;
 
     isec = (int) dt;
-    usec = 1000000* (dt - (float) isec);
+    usec = 1000000 * ((int)dt - isec);
 
     t.it_interval.tv_sec = isec;
     t.it_interval.tv_usec = usec;
     t.it_value.tv_sec = isec;
     t.it_value.tv_usec = usec;
     /* printf("fgTimerInit() called\n"); */
-    fgTimerCatch();   /* set up for SIGALRM signal catch */
+    fgTimerCatch(0);   /* set up for SIGALRM signal catch */
     terr = setitimer( ITIMER_REAL, &t, &ot );
     if (terr) {
 	printf("Error returned from setitimer");
@@ -110,13 +112,18 @@ int fgGetTimeInterval( void ) {
 
 
 /* $Log$
-/* Revision 1.12  1998/04/21 17:01:44  curt
-/* Fixed a problems where a pointer to a function was being passed around.  In
-/* one place this functions arguments were defined as ( void ) while in another
-/* place they were defined as ( int ).  The correct answer was ( int ).
+/* Revision 1.1  1998/04/24 00:52:29  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fog color fixes.
+/* Separated out lighting calcs into their own file.
 /*
-/* Prepairing for C++ integration.
-/*
+ * Revision 1.12  1998/04/21 17:01:44  curt
+ * Fixed a problems where a pointer to a function was being passed around.  In
+ * one place this functions arguments were defined as ( void ) while in another
+ * place they were defined as ( int ).  The correct answer was ( int ).
+ *
+ * Prepairing for C++ integration.
+ *
  * Revision 1.11  1998/04/03 22:12:56  curt
  * Converting to Gnu autoconf system.
  * Centralized time handling differences.

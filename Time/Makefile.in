@@ -75,9 +75,9 @@ libdir	= ${exec_prefix}/lib
 lib_LTLIBRARIES = libTime.la
 
 libTime_la_SOURCES = \
-	event.c event.h \
-	fg_time.c fg_time.h \
-	fg_timer.c fg_timer.h \
+	event.cxx event.hxx \
+	fg_time.cxx fg_time.hxx \
+	fg_timer.cxx fg_timer.hxx \
 	light.cxx light.hxx \
 	sunpos.cxx sunpos.hxx
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -101,10 +101,6 @@ CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 CXXLINK = $(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@
-CFLAGS = @CFLAGS@
-COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
-LINK = $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LDFLAGS) -o $@
 DIST_COMMON =  Makefile.am Makefile.in
 
 
