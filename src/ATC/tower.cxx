@@ -199,6 +199,7 @@ void FGTower::Init() {
 
 void FGTower::Update(double dt) {
 	static int ii = 0;	// Counter for spreading the load
+	int ii_max = 15;
 	//cout << "T" << flush;
 	// Each time step, what do we need to do?
 	// We need to go through the list of outstanding requests and acknowedgements
@@ -285,7 +286,7 @@ void FGTower::Update(double dt) {
 						// possibly tell him to hold and what position he is?
 					}
 				} else {
-					t->clearanceCounter += (dt * holdList.size());
+					t->clearanceCounter += (dt * holdList.size() * ii_max);
 				}
 			}				
 			++holdListItr;
@@ -445,7 +446,7 @@ void FGTower::Update(double dt) {
 	
 	++ii;
 	// How big should ii get - ie how long should the update cycle interval stretch?
-	if(ii >= 15) {
+	if(ii >= ii_max) {
 		ii = 0;
 	}
 }
