@@ -2,7 +2,7 @@
 
 OSTYPE=`uname -s`
 MACHINE=`uname -m`
-AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\-p[0-9]$//' | sed -e 's/\.//'`
+AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\.\([0-9]*\).*/\1/'`
 
 echo "Host info: $OSTYPE $MACHINE"
 echo -n " automake: `automake --version | head -1 | awk '{print $4}'`"

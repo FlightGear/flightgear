@@ -53,9 +53,13 @@ AM_CONDITIONAL(IS_CYGWIN, test "x$is_cygwin" = "xyes")
 
 # Determine version of automake ... important becuase of
 # incompatibilities between versions
-AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\-p[[0-9]]$//' | sed -e 's/\.//g'`
+AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\.\([0-9]*\).*/\1/'`
 if test $AUTO_MAKE_VERSION -lt 15; then
-    echo "You need to upgrade your automake to version 1.5 or newer"
+    echo ""
+    echo "You need to upgrade to automake version 1.5 or greater."
+    echo "Most distributions have packages available to install or you can"
+    echo "find the source for the most recent version at"
+    echo "ftp://ftp.gnu.org/gnu/automake"
     exit 1
 fi
 
@@ -354,8 +358,8 @@ AM_CONDITIONAL(HAVE_XWINDOWS, test "x$ac_cv_lib_X11_XCreateWindow" = "xyes" )
 AC_LANG_PUSH(C++)
 
 # Check for "plib" without which we cannot go on
-AC_CHECK_HEADER(plib/pu.h)
-if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
+AC_CHECK_HEADER(plib/ul.h)
+if test "x$ac_cv_header_plib_ul_h" != "xyes"; then
     echo
     echo "You *must* have the plib library installed on your system to build"
     echo "the FGFS simulator!"
@@ -366,15 +370,28 @@ if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
     exit
 fi
 
-# needed for plib 1.3.x and later
-AC_CHECK_LIB(plibul, ulInit,,,)
+AC_MSG_CHECKING([for plib 1.6.0 or newer])
+AC_TRY_RUN([
+#include <plib/ul.h>
 
-if test "x$ac_cv_lib_plibul_ulInit" != "xyes"; then
-    echo
-    echo "You have an old version of plib, you need to upgrade to at least"
-    echo "plib-1.4.2"
-    exit
-fi
+#define MIN_PLIB_VERSION 160
+
+int main() {
+    int major, minor, micro;
+
+    if ( PLIB_VERSION < MIN_PLIB_VERSION ) {
+	 return -1;
+    }
+
+    return 0;
+}
+
+],
+  AC_MSG_RESULT(yes),
+  [AC_MSG_RESULT(wrong version);
+   AC_MSG_ERROR([Install plib 1.6.0 or later first...])],
+  AC_MSG_RESULT(yes)
+)
 
 # If we get here then plib is available, so force use of plib joystick lib
 AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
@@ -402,7 +419,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for proper simgear version])
+AC_MSG_CHECKING([for simgear 0.0.19 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -456,8 +473,7 @@ if test "x$ac_cv_header_mk4_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for proper metakit version])
-
+AC_MSG_CHECKING([for metakit 2.4.3 or newer])
 saved_LIBS="$LIBS"
 LIBS="$saved_LIBS -lmk4"
 AC_TRY_RUN([
