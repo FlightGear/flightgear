@@ -33,6 +33,7 @@ libJSBSim_a_SOURCES = \
         FGPropulsion.cpp FGPropulsion.h \
 	FGPosition.cpp FGPosition.h \
 	FGRotation.cpp FGRotation.h \
+ 	FGRotor.cpp FGRotor.h \
 	FGRocket.cpp FGRocket.h \
 	FGScript.cpp FGScript.h \
 	FGState.cpp FGState.h \

@@ -2393,6 +2393,36 @@ SOURCE=.\src\FDM\JSBSim\FGRotation.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGRotor.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGRotor.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGRocket.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -4235,6 +4265,36 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_alh_ap.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_auto_pilot.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_auto_pilot.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_betaprobe.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -4731,6 +4791,36 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_getwind.cpp
 # Begin Source File
 
 SOURCE=.\src\FDM\UIUCModel\uiuc_getwind.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_hh_ap.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_hh_ap.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -6141,6 +6231,36 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_parsefile.cpp
 # Begin Source File
 
 SOURCE=.\src\FDM\UIUCModel\uiuc_parsefile.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_rah_ap.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_rah_ap.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -8664,6 +8784,66 @@ SOURCE=.\src\AIModel\AIBallistic.cxx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\AIModel\AIStorm.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_AIModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_AIModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\AIModel\AIStorm.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_AIModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_AIModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\AIModel\AIThermal.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_AIModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_AIModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\AIModel\AIThermal.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_AIModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_AIModel"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_MultiPlayer"
 
@@ -10256,505 +10436,6 @@ SOURCE=.\src\Time\tmp.hxx
 !ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
 
 # PROP Intermediate_Dir "Debug\Lib_Time"
-
-!ENDIF 
-
-# End Source File
-# End Group
-# Begin Group "Lib_WeatherCM"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGAirPressureItem.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGAirPressureItem.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGCloud.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGCloudItem.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGCloudItem.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGLocalWeatherDatabase.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGLocalWeatherDatabase.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGPhysicalProperties.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGPhysicalProperties.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGPhysicalProperties_bind.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGPhysicalProperty.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGPhysicalProperty.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGSnowRain.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGTemperatureItem.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGTemperatureItem.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGThunderstorm.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGThunderstorm.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGTurbulenceItem.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGTurbulenceItem.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGVaporPressureItem.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGVaporPressureItem.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWeatherDefs.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWeatherFeature.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWeatherUtils.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWeatherParse.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWeatherParse.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWeatherVectorWrap.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWindItem.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\FGWindItem.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\linintp2.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\linintp2.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\sphrintp.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\WeatherCM\sphrintp.h
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_WeatherCM"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
 
 !ENDIF 
 

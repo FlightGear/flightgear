@@ -1,5 +1,5 @@
-New in 0.9.4
-* March 16, 2004
+New in 0.9.4.pre1
+* March 22, 2004
 
 * Impliment SimGear's (aka Andy's) Nasal scripting language in
   FlightGear and integrate with the FG property system.
@@ -39,6 +39,12 @@ New in 0.9.4
 
 * Added a number of basic 3d instruments to the instrument library
   that could be reused used for any general aviation cockpit.
+
+* Clean up much of the extraneous alias system entries for aircraft.
+  Generally this means that if there is only one version of an
+  aircraft, there is only one entry and no aliases.  If there are
+  multiple versions of an aircraft, we may still have an alias to
+  point to the prefered or default version.
 
 * Added RedHat packaging files.
 * Added some perl script utility functions which are useful when

@@ -1,7 +1,7 @@
-noinst_PROGRAMS = 3dconvert animassist
+noinst_PROGRAMS = threedconvert animassist
 
-3dconvert_SOURCES = 3dconvert.cxx
-3dconvert_LDADD = -lplibssg -lplibsg -lplibul $(opengl_LIBS) $(audio_LIBS)
+threedconvert_SOURCES = 3dconvert.cxx
+threedconvert_LDADD = -lplibssg -lplibsg -lplibul $(opengl_LIBS) $(audio_LIBS)
 
 animassist_SOURCES = animassist.c
 animassist_LDADD = $(base_LIBS)

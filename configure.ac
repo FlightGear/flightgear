@@ -10,7 +10,7 @@ dnl Require at least automake 2.52
 AC_PREREQ(2.52)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.9.4)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.4.pre1)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -320,11 +320,11 @@ if test "x$ac_cv_header_plib_ul_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for plib 1.6.0 or newer])
+AC_MSG_CHECKING([for plib 1.7.0 or newer])
 AC_TRY_RUN([
 #include <plib/ul.h>
 
-#define MIN_PLIB_VERSION 160
+#define MIN_PLIB_VERSION 170
 
 int main() {
     int major, minor, micro;
@@ -339,7 +339,7 @@ int main() {
 ],
   AC_MSG_RESULT(yes),
   [AC_MSG_RESULT(wrong version);
-   AC_MSG_ERROR([Install plib 1.6.0 or later first...])],
+   AC_MSG_ERROR([Install plib 1.8.0 or later first...])],
   AC_MSG_RESULT(yes)
 )
 
