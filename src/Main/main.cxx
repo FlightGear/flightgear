@@ -277,7 +277,7 @@ void fgBuildRenderStates( void ) {
     cloud3d_imposter_state->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
     cloud3d_imposter_state->enable( GL_BLEND );
     cloud3d_imposter_state->enable( GL_ALPHA_TEST );
-    cloud3d_imposter_state->enable( GL_LIGHTING );
+    cloud3d_imposter_state->disable( GL_LIGHTING );
 
     hud_and_panel = new ssgSimpleState;
     hud_and_panel->ref();
@@ -495,18 +495,10 @@ void fgRenderFrame() {
 
         cloud3d_imposter_state->force();
 	glDisable( GL_FOG );
-        glEnable( GL_LIGHTING );
-        glEnable( GL_LIGHT0 );
-        ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
-        glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
         glColor4f( 1.0, 1.0, 1.0, 1.0 );
-        glEnable(GL_COLOR_MATERIAL);
-        glEnable(GL_TEXTURE_2D);
         glEnable(GL_DEPTH_TEST);
-	glEnable(GL_ALPHA_TEST);
 	glEnable(GL_BLEND);
         glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
-        glEnable(GL_CULL_FACE);
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
             posit =  globals->get_scenery()->get_center();
             if ( _bcloud_orig ) {

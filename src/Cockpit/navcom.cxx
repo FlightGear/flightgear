@@ -101,8 +101,6 @@ FGNavCom::FGNavCom() :
 // Destructor
 FGNavCom::~FGNavCom() 
 {
-    unbind();		// FIXME: should be called externally
-
     delete term_tbl;
     delete low_tbl;
     delete high_tbl;
