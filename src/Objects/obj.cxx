@@ -930,18 +930,25 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     point_list normals = obj.get_normals();
     point_list texcoords = obj.get_texcoords();
 
-    string material;
+    string material, tmp_mat;
     int_list vertex_index;
     int_list tex_index;
 
     int i;
+    bool is_lighting = false;
 
     // generate points
     string_list pt_materials = obj.get_pt_materials();
     group_list pts_v = obj.get_pts_v();
     for ( i = 0; i < (int)pts_v.size(); ++i ) {
         cout << "pts_v.size() = " << pts_v.size() << endl;
-	material = pt_materials[i];
+	tmp_mat = pt_materials[i];
+	if ( tmp_mat.substr(0, 3) == "RWY" ) {
+	    material = "LIGHTS";
+	    is_lighting = true;
+	} else {
+	    material = tmp_mat;
+	}
 	vertex_index = pts_v[i];
 	tex_index.clear();
 	ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
@@ -949,7 +956,11 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  vertex_index, tex_index,
 				  false, ground_lights );
 
-	geometry->addKid( leaf );
+	if ( is_lighting ) {
+	    rwy_lights->addKid( leaf );
+	} else {
+	    geometry->addKid( leaf );
+	}
     }
 
     // generate triangles

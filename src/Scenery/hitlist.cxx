@@ -27,7 +27,7 @@
 #include "hitlist.hxx"
 
 
-extern ssgBranch *terrain;
+extern ssgBranch *terrain_branch;
 
 #if 0
 // check to see if the intersection point is
@@ -558,7 +558,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
     sgdCopyVec3(orig, view_pos );
     sgdCopyVec3(dir, abs_view_pos );
 
-    hit_list->Intersect( terrain, orig, dir );
+    hit_list->Intersect( terrain_branch, orig, dir );
 
     int this_hit=0;
     Point3D geoc;

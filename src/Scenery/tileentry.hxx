@@ -255,7 +255,9 @@ public:
     /**
      * Add terrain mesh and ground lighting to scene graph.
      */
-    void add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground );
+    void add_ssg_nodes( ssgBranch* terrain_branch,
+			ssgBranch* gnd_lights_branch,
+			ssgBranch* rwy_lights_branch );
 
     /**
      * disconnect terrain mesh and ground lighting nodes from scene

@@ -173,11 +173,12 @@ void fgReshape( int width, int height );
 
 // ssg variables
 ssgRoot *scene = NULL;
-ssgBranch *terrain = NULL;
+ssgBranch *terrain_branch = NULL;
+ssgBranch *gnd_lights_branch = NULL;
+ssgBranch *rwy_lights_branch = NULL;
 
 ssgRoot *lighting = NULL;
-ssgBranch *ground = NULL;
-ssgBranch *airport = NULL;
+// ssgBranch *airport = NULL;
 
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
@@ -1552,18 +1553,22 @@ int mainLoop( int argc, char **argv ) {
     globals->set_mag( magvar );
 
     // Terrain branch
-    terrain = new ssgBranch;
-    terrain->setName( "Terrain" );
-    scene->addKid( terrain );
+    terrain_branch = new ssgBranch;
+    terrain_branch->setName( "Terrain" );
+    scene->addKid( terrain_branch );
 
     // Lighting
-    ground = new ssgBranch;
-    ground->setName( "Ground Lighting" );
-    lighting->addKid( ground );
+    gnd_lights_branch = new ssgBranch;
+    gnd_lights_branch->setName( "Ground Lighting" );
+    lighting->addKid( gnd_lights_branch );
 
-    airport = new ssgBranch;
-    airport->setName( "Airport Lighting" );
-    lighting->addKid( airport );
+    rwy_lights_branch = new ssgBranch;
+    rwy_lights_branch->setName( "Runway Lighting" );
+    lighting->addKid( rwy_lights_branch );
+
+    // airport = new ssgBranch;
+    // airport->setName( "Airport Lighting" );
+    // lighting->addKid( airport );
 
     // ADA
     fgLoadDCS();
@@ -1812,7 +1817,7 @@ void fgLoadDCS(void) {
 						    //dummy_tile->lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
 							lightpoints_transform->addKid( dummy_tile->lightmaps_sequence );
 							lightpoints_transform->ref();
-							ground->addKid( lightpoints_transform );
+							gnd_lights_branch->addKid( lightpoints_transform );
 						} 
 					} //if in1 
                 } //if objc
@@ -1826,7 +1831,7 @@ void fgLoadDCS(void) {
 
         SG_LOG ( SG_TERRAIN, SG_ALERT, "Finished object processing." );
 
-        terrain->addKid( ship_sel ); //add selector node to root node 
+        terrain_branch->addKid( ship_sel ); //add selector node to root node 
     }
 
     return;

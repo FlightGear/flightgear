@@ -1029,6 +1029,10 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
     ssgBranch* new_tile = new ssgBranch;
 
+    // runway lights
+    rwy_lights_transform = NULL;
+    rwy_lights_range = NULL;
+
     // Check for master .stg (scene terra gear) file
     SGPath stg_name = basename;
     stg_name.concat( ".stg" );
@@ -1382,12 +1386,14 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
 
 void
-FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
+FGTileEntry::add_ssg_nodes( ssgBranch* terrain_branch,
+			    ssgBranch* gnd_lights_branch,
+			    ssgBranch* rwy_lights_branch )
 {
     // bump up the ref count so we can remove this later without
     // having ssg try to free the memory.
     terra_transform->ref();
-    terrain->addKid( terra_transform );
+    terrain_branch->addKid( terra_transform );
 
     SG_LOG( SG_TERRAIN, SG_DEBUG,
             "connected a tile into scene graph.  terra_transform = "
@@ -1395,11 +1401,18 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
     SG_LOG( SG_TERRAIN, SG_DEBUG, "num parents now = "
             << terra_transform->getNumParents() );
 
-    if ( gnd_lights_transform != 0 ) {
+    if ( gnd_lights_transform != NULL ) {
 	// bump up the ref count so we can remove this later without
 	// having ssg try to free the memory.
 	gnd_lights_transform->ref();
-	ground->addKid( gnd_lights_transform );
+	gnd_lights_branch->addKid( gnd_lights_transform );
+    }
+
+    if ( rwy_lights_transform != NULL ) {
+	// bump up the ref count so we can remove this later without
+	// having ssg try to free the memory.
+	rwy_lights_transform->ref();
+	rwy_lights_branch->addKid( rwy_lights_transform );
     }
 
     // ADA
@@ -1407,7 +1420,7 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
 	// bump up the ref count so we can remove this later without
 	// having ssg try to free the memory.
 	lightmaps_transform->ref();
-	ground->addKid( lightmaps_transform );
+	gnd_lights_branch->addKid( lightmaps_transform );
     }
     // ADA
 

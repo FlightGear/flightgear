@@ -52,8 +52,9 @@
 #define TEST_LAST_HIT_CACHE
 
 extern ssgRoot *scene;
-extern ssgBranch *terrain;
-extern ssgBranch *ground;
+extern ssgBranch *terrain_branch;      // branch that holds world geometry
+extern ssgBranch *gnd_lights_branch;   // branch that holds ground lighting
+extern ssgBranch *rwy_lights_branch;   // branch that holds runway lighting
 
 // the tile manager
 FGTileMgr global_tile_mgr;
@@ -333,7 +334,9 @@ int FGTileMgr::update( double lon, double lat ) {
 	FGTileEntry* e = attach_queue.front();
 	attach_queue.pop();
 #endif
-	e->add_ssg_nodes( terrain, ground );
+	e->add_ssg_nodes( terrain_branch,
+			  gnd_lights_branch,
+			  rwy_lights_branch );
 	// cout << "Adding ssg nodes for "
     }
 

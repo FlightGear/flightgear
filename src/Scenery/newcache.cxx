@@ -183,7 +183,7 @@ bool FGNewCache::make_space() {
 // Clear all completely loaded tiles (ignores partially loaded tiles)
 void FGNewCache::clear_cache() {
     // This is a hack that should really get cleaned up at some point
-    extern ssgBranch *terrain;
+    extern ssgBranch *terrain_branch;
 
     tile_map_iterator current = tile_cache.begin();
     tile_map_iterator end = tile_cache.end();
@@ -199,7 +199,7 @@ void FGNewCache::clear_cache() {
     }
 
     // and ... just in case we missed something ... 
-    terrain->removeAllKids();
+    terrain_branch->removeAllKids();
 }
 
 
