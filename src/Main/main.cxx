@@ -767,7 +767,7 @@ static void fgMainLoop( void ) {
 	if ( cur_fdm_state->get_Altitude() * FEET_TO_METER < 
 	     (scenery.cur_elev + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
-	    printf("Current Altitude = %.2f < %.2f forcing to %.2f\n", 
+	    printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
 		   cur_fdm_state->get_Altitude() * FEET_TO_METER,
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
@@ -1309,11 +1309,11 @@ int main( int argc, char **argv ) {
 
     ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
     // ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
-    tux_obj->clrTraversalMaskBits( SSGTRAV_HOT );
     penguin_pos->addKid( tux_obj );
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
     ssgStripify( penguin_sel );
+    penguin_sel->clrTraversalMaskBits( SSGTRAV_HOT );
 
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
