@@ -11,5 +11,4 @@ SUBDIRS = \
 	Misc \
 	$(SERIAL_DIRS) \
 	XGL\
-	plib \
 	zlib

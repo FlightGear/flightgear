@@ -59,8 +59,8 @@
 #include <Astro/solarsystem.hxx>
 
 #ifdef ENABLE_AUDIO_SUPPORT
-#  include <sl.h>
-#  include <sm.h>
+#  include <plib/sl.h>
+#  include <plib/sm.h>
 #endif
 
 #include <Autopilot/autopilot.hxx>
@@ -71,7 +71,7 @@
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 #include <Math/fg_random.h>
-#include <pu.h>
+#include <plib/pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>

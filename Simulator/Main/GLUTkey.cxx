@@ -48,7 +48,7 @@
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
 #include <Objects/material.hxx>
-#include <pu.h>
+#include <plib/pu.h>
 #include <Time/light.hxx>
 #include <Weather/weather.hxx>
 

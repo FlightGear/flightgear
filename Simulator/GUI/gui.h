@@ -25,7 +25,7 @@
 #ifndef _GUI_H_
 #define _GUI_H_
 
-#include <pu.h>
+#include <plib/pu.h>
 
 extern puMenuBar    *mainMenuBar;
 extern puButton     *hideMenuButton;

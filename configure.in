@@ -29,7 +29,7 @@ dnl AM_MAINTAINER_MODE
 dnl This is needed for AC_TRY_COMPILE later
 dnl AC_ISC_POSIX
 
-dnl Check to see if this `configure' is being run in the `Cygwin32' environment
+dnl Check to see if this `configure' is being run in the `Cygwin32' environmentplib-1.0_fgfs_a.tar.gz
 dnl AM_CYGWIN32
 
 dnl Specify if we want logging (testing build) or not (release build)
@@ -62,6 +62,26 @@ AM_CONDITIONAL(ENABLE_CHEROKEE, test "x$with_flight_model" = "xcherokee")
 dnl Let the Win32 user specify if they want to build with the SGI
 dnl opengl.dll as opposed to the more standard openg32.dll
 AC_ARG_WITH(sgi-opengl, [  --with-sgi-opengl       Build against SGI's opengl.dll glu.dll and glut.dll])
+
+dnl Check for "plib" without which we cannot go on
+AC_CHECK_HEADER(plib/pu.h)
+if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
+    echo
+    echo "You *must* have the plib library installed on your system to build"
+    echo "the FGFS simulator!"
+    echo
+    echo "You can get the original library from:"
+    echo 
+    echo "    http://www.woodsoup.org/projs/plib"
+    echo
+    echo "However, I recommend you grab a copy with a couple modifications I"
+    echo "have made which should eliminate a few plib-1.0 build problems:"
+    echo 
+    echo "    ftp://ftp.flightgear.org/pub/fgfs/Source/plib-1.0_fgfs_a.tar.gz"
+    echo
+    echo "configure aborted."
+    exit
+fi
 
 dnl Check for MS Windows environment
 AC_CHECK_HEADER(windows.h)
@@ -348,6 +368,7 @@ AC_OUTPUT( \
 	Tools/Construct/Clipper/Makefile \
 	Tools/Construct/Combine/Makefile \
 	Tools/Construct/GenOutput/Makefile \
+	Tools/Construct/Match/Makefile \
 	Tools/Construct/Triangulate/Makefile \
 	Tools/Construct/Main/Makefile \
 	Tools/Lib/Makefile \
