@@ -4,6 +4,7 @@ libNetwork_a_SOURCES = \
 	iochannel.cxx iochannel.hxx \
 	fg_file.cxx fg_file.hxx \
 	fg_serial.cxx fg_serial.hxx \
+	fg_socket.cxx fg_socket.hxx \
 	protocol.cxx protocol.hxx \
 	garmin.cxx garmin.hxx \
 	nmea.cxx nmea.hxx \

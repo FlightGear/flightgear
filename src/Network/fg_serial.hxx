@@ -53,6 +53,9 @@ class FGSerial : public FGIOChannel {
     string baud;
     FGSerialPort port;
 
+    char save_buf[ 2 * FG_MAX_MSG_SIZE ];
+    int save_len;
+
 public:
 
     FGSerial();
@@ -61,11 +64,14 @@ public:
     // open the serial port based on specified direction
     bool open( FGProtocol::fgProtocolDir dir );
 
-    // read data from port
-    bool read( char *buf, int *length );
+    // read a block of data of specified size
+    int read( char *buf, int length );
 
-    // write data to port
-    bool write( char *buf, int length );
+    // read a line of data, length is max size of input buffer
+    int readline( char *buf, int length );
+
+    // write data to a file
+    int write( char *buf, int length );
 
     // close port
     bool close();

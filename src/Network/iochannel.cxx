@@ -45,13 +45,19 @@ bool FGIOChannel::open( FGProtocol::fgProtocolDir dir ) {
 
 
 // dummy process routine
-bool FGIOChannel::read( char *buf, int *length ) {
-    return false;
+int FGIOChannel::read( char *buf, int length ) {
+    return 0;
 }
 
 
 // dummy process routine
-bool FGIOChannel::write( char *buf, int length ) {
+int FGIOChannel::readline( char *buf, int length ) {
+    return 0;
+}
+
+
+// dummy process routine
+int FGIOChannel::write( char *buf, int length ) {
     return false;
 }
 

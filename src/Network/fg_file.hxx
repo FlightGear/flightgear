@@ -57,11 +57,14 @@ public:
     // open the file based on specified direction
     bool open( FGProtocol::fgProtocolDir dir );
 
-    // read data from file
-    bool read( char *buf, int *length );
+    // read a block of data of specified size
+    int read( char *buf, int length );
+
+    // read a line of data, length is max size of input buffer
+    int readline( char *buf, int length );
 
     // write data to a file
-    bool write( char *buf, int length );
+    int write( char *buf, int length );
 
     // close file
     bool close();

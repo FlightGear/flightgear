@@ -48,8 +48,9 @@ public:
     virtual ~FGIOChannel();
 
     virtual bool open( FGProtocol::fgProtocolDir dir );
-    virtual bool read( char *buf, int *length );
-    virtual bool write( char *buf, int length );
+    virtual int read( char *buf, int length );
+    virtual int readline( char *buf, int length );
+    virtual int write( char *buf, int length );
     virtual bool close();
 };
 

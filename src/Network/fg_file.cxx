@@ -26,7 +26,6 @@
 #include STL_STRING
 
 #include <Debug/logstream.hxx>
-#include <Time/fg_time.hxx>
 
 #include "fg_file.hxx"
 
@@ -64,40 +63,48 @@ bool FGFile::open( FGProtocol::fgProtocolDir dir ) {
 }
 
 
-// read data from file
-bool FGFile::read( char *buf, int *length ) {
+// read a block of data of specified size
+int FGFile::read( char *buf, int length ) {
+    // read a chunk
+    int result = std::read( fp, buf, length );
+
+    return result;
+}
+
+
+// read a line of data, length is max size of input buffer
+int FGFile::readline( char *buf, int length ) {
     // save our current position
     int pos = lseek( fp, 0, SEEK_CUR );
 
     // read a chunk
-    int result = std::read( fp, buf, FG_MAX_MSG_SIZE );
+    int result = std::read( fp, buf, length );
 
     // find the end of line and reset position
     int i;
     for ( i = 0; i < result && buf[i] != '\n'; ++i );
     if ( buf[i] == '\n' ) {
-	*length = i + 1;
+	result = i + 1;
     } else {
-	*length = i;
+	result = i;
     }
-    lseek( fp, pos + *length, SEEK_SET );
+    lseek( fp, pos + result, SEEK_SET );
     
     // just in case ...
-    buf[ *length ] = '\0';
+    buf[ result ] = '\0';
 
-    return true;
+    return result;
 }
 
 
 // write data to a file
-bool FGFile::write( char *buf, int length ) {
+int FGFile::write( char *buf, int length ) {
     int result = std::write( fp, buf, length );
     if ( result != length ) {
 	FG_LOG( FG_IO, FG_ALERT, "Error writing data: " << file_name );
-	return false;
     }
 
-    return true;
+    return result;
 }
 
 
