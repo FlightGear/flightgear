@@ -55,6 +55,10 @@ fgSaveFlight (ostream &output)
   // Simulation
   //
   SAVE("flight-model", FGBFI::getFlightModel());
+  if (FGBFI::getAircraft().length() > 0)
+    SAVE("aircraft", FGBFI::getAircraft());
+  if (FGBFI::getAircraftDir().length() > 0)
+    SAVE("aircraft-dir", FGBFI::getAircraftDir());
   SAVE("time", FGBFI::getTimeGMT());
   SAVE("hud", FGBFI::getHUDVisible());
   SAVE("panel", FGBFI::getPanelVisible());
@@ -64,7 +68,13 @@ fgSaveFlight (ostream &output)
   //
   SAVE("latitude", FGBFI::getLatitude());
   SAVE("longitude", FGBFI::getLongitude());
-  SAVE("altitude", FGBFI::getAltitude());
+
+				// KLUDGE: deal with gear wierdness
+  if (FGBFI::getAGL() < 6) {
+    SAVE("altitude", FGBFI::getAltitude() - 6);
+  } else {
+    SAVE("altitude", FGBFI::getAltitude());
+  }
 
   //
   // Orientation
@@ -98,11 +108,23 @@ fgSaveFlight (ostream &output)
   SAVE("brake", FGBFI::getBrake());
 
   //
-  // Navigation.
+  // Radio navigation
   //
-  if (FGBFI::getTargetAirport().length() > 0) {
+  SAVE("nav1-active-frequency", FGBFI::getNAV1Freq());
+  SAVE("nav1-standby-frequency", FGBFI::getNAV1AltFreq());
+  SAVE("nav1-selected-radial", FGBFI::getNAV1SelRadial());
+  SAVE("nav2-active-frequency", FGBFI::getNAV2Freq());
+  SAVE("nav2-standby-frequency", FGBFI::getNAV2AltFreq());
+  SAVE("nav2-selected-radial", FGBFI::getNAV2SelRadial());
+  SAVE("adf-active-frequency", FGBFI::getADFFreq());
+  SAVE("adf-standby-frequency", FGBFI::getADFAltFreq());
+  SAVE("adf-rotation", FGBFI::getADFRotation());
+
+  //
+  // Autopilot and GPS
+  //
+  if (FGBFI::getTargetAirport().length() > 0)
     SAVE("target-airport", FGBFI::getTargetAirport());
-  }
   SAVE("autopilot-altitude-lock", FGBFI::getAPAltitudeLock());
   SAVE("autopilot-altitude", FGBFI::getAPAltitude());
   SAVE("autopilot-heading-lock", FGBFI::getAPHeadingLock());
@@ -115,6 +137,8 @@ fgSaveFlight (ostream &output)
   // Environment.
   //
   SAVE("visibility", FGBFI::getVisibility());
+  SAVE("clouds", FGBFI::getClouds());
+  SAVE("clouds-asl", FGBFI::getCloudsASL());
 
   return true;
 }
@@ -154,6 +178,18 @@ fgLoadFlight (istream &input)
       input >> i;
       cout << "flight model is " << i << endl;
       FGBFI::setFlightModel(i);
+    }
+
+    else if (text == "aircraft:") {
+      input >> text;
+      cout << "aircraft is " << text << endl;
+      FGBFI::setAircraft(text);
+    }
+
+    else if (text == "aircraft-dir:") {
+      input >> text;
+      cout << "aircraft-dir is " << text << endl;
+      FGBFI::setAircraftDir(text);
     }
 
     else if (text == "time:") {
@@ -290,8 +326,59 @@ fgLoadFlight (istream &input)
       FGBFI::setBrake(n);
     }
 
+
     //
-    // Navigation.
+    // Radio navigation
+    //
+
+    else if (text == "nav1-active-frequency:") {
+      input >> n;
+      FGBFI::setNAV1Freq(n);
+    }
+
+    else if (text == "nav1-standby-frequency:") {
+      input >> n;
+      FGBFI::setNAV1AltFreq(n);
+    }
+
+    else if (text == "nav1-selected-radial:") {
+      input >> n;
+      FGBFI::setNAV1SelRadial(n);
+    }
+
+    else if (text == "nav2-active-frequency:") {
+      input >> n;
+      FGBFI::setNAV2Freq(n);
+    }
+
+    else if (text == "nav2-standby-frequency:") {
+      input >> n;
+      FGBFI::setNAV2AltFreq(n);
+    }
+
+    else if (text == "nav2-selected-radial:") {
+      input >> n;
+      FGBFI::setNAV2SelRadial(n);
+    }
+
+    else if (text == "adf-active-frequency:") {
+      input >> n;
+      FGBFI::setADFFreq(n);
+    }
+
+    else if (text == "adf-standby-frequency:") {
+      input >> n;
+      FGBFI::setADFAltFreq(n);
+    }
+
+    else if (text == "adf-rotation:") {
+      input >> n;
+      FGBFI::setADFRotation(n);
+    }
+
+
+    //
+    // Autopilot and GPS
     //
 
     else if (text == "target-airport:") {
@@ -350,6 +437,18 @@ fgLoadFlight (istream &input)
       input >> n;
       cout << "visibility is " << n << endl;
       FGBFI::setVisibility(n);
+    }
+
+    else if (text == "clouds:") {
+      input >> i;
+      cout << "clouds is " << i << endl;
+      FGBFI::setClouds(i);
+    }
+
+    else if (text == "clouds-asl:") {
+      input >> n;
+      cout << "clouds-asl is " << n << endl;
+      FGBFI::setCloudsASL(n);
     }
 
     //

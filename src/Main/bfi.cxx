@@ -32,9 +32,11 @@
 #endif
 
 #include <simgear/constants.h>
+#include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_types.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <Controls/controls.hxx>
 #include <Autopilot/newauto.hxx>
 #include <Scenery/scenery.hxx>
@@ -104,6 +106,8 @@ FGBFI::reinit ()
 				// that's going to get clobbered
 				// when we reinit the subsystems.
 
+  cout << "BFI: start reinit\n";
+
 				// TODO: add more AP stuff
   double elevator = getElevator();
   double aileron = getAileron();
@@ -143,6 +147,8 @@ FGBFI::reinit ()
   setGPSTargetLongitude(gpsLongitude);
 
   _needReinit = false;
+
+  cout << "BFI: end reinit\n";
 }
 
 
@@ -165,6 +171,26 @@ FGBFI::getFlightModel ()
 
 
 /**
+ * Return the current aircraft as a string.
+ */
+const string
+FGBFI::getAircraft ()
+{
+  return current_options.get_aircraft();
+}
+
+
+/**
+ * Return the current aircraft directory (UIUC) as a string.
+ */
+const string
+FGBFI::getAircraftDir ()
+{
+  return aircraft_dir;
+}
+
+
+/**
  * Set the flight model as an integer.
  *
  * TODO: use a string instead.
@@ -173,6 +199,28 @@ void
 FGBFI::setFlightModel (int model)
 {
   current_options.set_flight_model(model);
+  needReinit();
+}
+
+
+/**
+ * Set the current aircraft.
+ */
+void
+FGBFI::setAircraft (const string &aircraft)
+{
+  current_options.set_aircraft(aircraft);
+  needReinit();
+}
+
+
+/**
+ * Set the current aircraft directory (UIUC).
+ */
+void
+FGBFI::setAircraftDir (const string &dir)
+{
+  aircraft_dir = dir;
   needReinit();
 }
 
@@ -724,10 +772,13 @@ FGBFI::getAPHeadingLock ()
 void
 FGBFI::setAPHeadingLock (bool lock)
 {
-  double heading = getAPHeading();
-  current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_LOCK);
-  current_autopilot->set_HeadingEnabled(lock);
-  setAPHeading(heading);
+  if (lock) {
+    current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_LOCK);
+    current_autopilot->set_HeadingEnabled(true);
+  } else if (current_autopilot->get_HeadingMode() ==
+	     FGAutopilot::FG_HEADING_LOCK) {
+    current_autopilot->set_HeadingEnabled(false);
+  }
 }
 
 
@@ -769,8 +820,13 @@ FGBFI::getAPNAV1Lock ()
 void
 FGBFI::setAPNAV1Lock (bool lock)
 {
-  current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_NAV1);
-  current_autopilot->set_HeadingEnabled(lock);
+  if (lock) {
+    current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_NAV1);
+    current_autopilot->set_HeadingEnabled(true);
+  } else if (current_autopilot->get_HeadingMode() ==
+	     FGAutopilot::FG_HEADING_NAV1) {
+    current_autopilot->set_HeadingEnabled(false);
+  }
 }
 
 
@@ -924,10 +980,9 @@ FGBFI::setADFRotation (double rot)
 bool
 FGBFI::getGPSLock ()
 {
-    return ( current_autopilot->get_HeadingEnabled() &&
-	     ( current_autopilot->get_HeadingMode() == 
-	       FGAutopilot::FG_HEADING_WAYPOINT )
-	   );
+  return (current_autopilot->get_HeadingEnabled() &&
+	  (current_autopilot->get_HeadingMode() ==
+	   FGAutopilot::FG_HEADING_WAYPOINT ));
 }
 
 
@@ -937,8 +992,13 @@ FGBFI::getGPSLock ()
 void
 FGBFI::setGPSLock (bool lock)
 {
-    current_autopilot->set_HeadingEnabled( true );
-    current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
+  if (lock) {
+    current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_WAYPOINT);
+    current_autopilot->set_HeadingEnabled(true);
+  } else if (current_autopilot->get_HeadingMode() ==
+	     FGAutopilot::FG_HEADING_WAYPOINT) {
+    current_autopilot->set_HeadingEnabled(false);
+  }
 }
 
 
@@ -1023,6 +1083,26 @@ FGBFI::getVisibility ()
 
 
 /**
+ * Check whether clouds are enabled.
+ */
+bool
+FGBFI::getClouds ()
+{
+  return current_options.get_clouds();
+}
+
+
+/**
+ * Check the height of the clouds ASL (units?).
+ */
+double
+FGBFI::getCloudsASL ()
+{
+  return current_options.get_clouds_asl();
+}
+
+
+/**
  * Set the current visibility (units??).
  */
 void
@@ -1033,6 +1113,28 @@ FGBFI::setVisibility (double visibility)
 #else
   current_weather.set_visibility(visibility);
 #endif
+}
+
+
+/**
+ * Switch clouds on or off.
+ */
+void
+FGBFI::setClouds (bool clouds)
+{
+  current_options.set_clouds(clouds);
+  needReinit();
+}
+
+
+/**
+ * Set the cloud height.
+ */
+void
+FGBFI::setCloudsASL (double cloudsASL)
+{
+  current_options.set_clouds_asl(cloudsASL);
+  needReinit();
 }
 
 

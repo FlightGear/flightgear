@@ -51,11 +51,15 @@ public:
 
 				// Simulation
   static int getFlightModel ();
+  static const string getAircraft ();
+  static const string getAircraftDir ();
   static time_t getTimeGMT ();
   static bool getHUDVisible ();
   static bool getPanelVisible ();
 
   static void setFlightModel (int flightModel);
+  static void setAircraft (const string &aircraft);
+  static void setAircraftDir (const string &aircraftDir);
   static void setTimeGMT (time_t time);
   static void setHUDVisible (bool hudVisible);
   static void setPanelVisible (bool panelVisible);
@@ -170,8 +174,13 @@ public:
 
 				// Weather
   static double getVisibility ();
+  static bool getClouds ();
+  static double getCloudsASL ();
 
   static void setVisibility (double visiblity);
+  static void setClouds (bool clouds);
+  static void setCloudsASL (double cloudsASL);
+
 
                                 // Time (this varies with time) huh, huh
   static double getMagVar (); 

@@ -296,6 +296,7 @@ public:
     inline void set_hud_status( bool status ) { hud_status = status; }
     inline void set_sound (bool value) { sound = value; }
     inline void set_flight_model (int value) { flight_model = value; }
+    inline void set_aircraft (const string &ac) { aircraft = ac; }
     inline void set_model_hz (int value) { model_hz = value; }
     inline void set_fog (fgFogKind value) { fog = value; }
     inline void set_clouds( bool value ) { clouds = value; }
