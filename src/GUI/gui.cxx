@@ -66,6 +66,7 @@
 #include <FDM/flight.hxx>
 #include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -759,10 +760,10 @@ void goodBye(puObject *)
     }
 #endif
 
-    //  if(gps_bug)
-    //      fclose(gps_bug);
+    // close all external I/O connections
+    fgIOShutdownAll();
 
-    exit(-1);
+    exit(0);
 }
 
 
