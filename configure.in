@@ -63,6 +63,23 @@ dnl Let the Win32 user specify if they want to build with the SGI
 dnl opengl.dll as opposed to the more standard openg32.dll
 AC_ARG_WITH(sgi-opengl, [  --with-sgi-opengl       Build against SGI's opengl.dll glu.dll and glut.dll])
 
+dnl Check for MS Windows environment
+AC_CHECK_HEADER(windows.h)
+
+dnl extra library and include directories
+EXTRA_DIRS="/usr/local /usr/X11R6"
+
+if test -d /opt/X11R6 ; then
+     EXTRA_DIRS="$EXTRA_DIRS /opt/X11R6"
+fi
+
+if test "x$ac_cv_header_windows_h" = "xyes" ; then
+    EXTRA_DIRS="${EXTRA_DIRS} `pwd`/Win32"
+# elif test `uname -s` = "SunOS" ; then
+#   EXTRA_DIRS="${EXTRA_DIRS} `pwd`/SunOS"
+fi
+wi_EXTRA_DIRS(no, ${EXTRA_DIRS})
+
 dnl Check for "plib" without which we cannot go on
 AC_CHECK_HEADER(plib/pu.h)
 if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
@@ -75,9 +92,6 @@ if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
     echo "configure aborted."
     exit
 fi
-
-dnl Check for MS Windows environment
-AC_CHECK_HEADER(windows.h)
 
 dnl Using AM_CONDITIONAL is a step out of the protected little 
 dnl automake fold so it is potentially dangerous.  But, we are
@@ -111,20 +125,6 @@ AM_CONDITIONAL(ENABLE_LINUX_JOYSTICK, test -r /usr/include/linux/joystick.h )
 dnl Enable serial support on Unix type systems
 AM_CONDITIONAL(ENABLE_UNIX_SERIAL, true)
 
-dnl extra library and include directories
-EXTRA_DIRS="/usr/local /usr/X11R6"
-
-if test -d /opt/X11R6 ; then
-     EXTRA_DIRS="$EXTRA_DIRS /opt/X11R6"
-fi
-
-if test "x$ac_cv_header_windows_h" = "xyes" ; then
-    EXTRA_DIRS="${EXTRA_DIRS} `pwd`/Win32"
-# elif test `uname -s` = "SunOS" ; then
-#   EXTRA_DIRS="${EXTRA_DIRS} `pwd`/SunOS"
-fi
-wi_EXTRA_DIRS(no, ${EXTRA_DIRS})
-
 dnl Check for X11 (fancy)
 AC_PATH_XTRA
 
@@ -148,7 +148,7 @@ AC_CHECK_LIB(Xmu, XmuLookupStandardColormap)
 dnl check for OpenGL related libraries
 
 if test "x$ac_cv_header_windows_h" != "xyes" ; then
-    dnl Reasonable stuff non-windoze variants ... :-)
+    dnl Reasonable stuff for non-windoze variants ... :-)
 
     AC_CHECK_LIB(GLcore, glNewList)
     if test "x$ac_cv_lib_GLcore_glNewList" = "xno" ; then
@@ -197,6 +197,10 @@ else
     dnl force a failed check since we will be building under windoze
     AM_CONDITIONAL(ENABLE_XMESA_FX, test "no" = "yes")
 
+    dnl just define these to true and hope for the best
+    ac_cv_lib_glut_glutGetModifiers="yes"
+    ac_cv_lib_glut_glutGameModeString="yes"
+
     if test "x$with_sgi_opengl" = "xyes" ; then
         echo "Building with glut.dll, glu.dll, and opengl.dll"
 	WIN32_GLUT=glut
@@ -209,34 +213,9 @@ else
 	WIN32_OPENGL=opengl32
     fi
 
-    if test -f `pwd`/Win32/${WIN32_GLUT}.dll; then
-	echo "    found ${WIN32_GLUT}.dll, adding -l${WIN32_GLUT}"
-	LIBS="$LIBS -l${WIN32_GLUT}"
-    else
-	echo "    Cannot find ${WIN32_GLUT}.dll"
-	exit 1
-    fi
-
-    if test -f `pwd`/Win32/${WIN32_GLU}.dll; then
-	echo "    found ${WIN32_GLU}.dll"
-    else
-	echo "    Can't find ${WIN32_GLU}.dll, assuming it's someplace"
-    fi
-    echo "    adding -l${WIN32_GLU}"
-    LIBS="$LIBS -l${WIN32_GLU}"
-
-    if test -f `pwd`/Win32/${WIN32_OPENGL}.dll; then
-	echo "    found ${WIN32_OPENGL}.dll"
-    else
-	echo "    Can't find ${WIN32_OPENGL}.dll, assuming it's somplace"
-    fi
-    echo "    adding -l${WIN32_OPENGL}"
-    LIBS="$LIBS -l${WIN32_OPENGL}"
-
-    echo "    adding -luser32 -lgdi32"
+    LIBS="$LIBS -l${WIN32_GLUT} -l${WIN32_GLU} -l${WIN32_OPENGL}"
     LIBS="$LIBS -luser32 -lgdi32"
-    ac_cv_lib_glut_glutGetModifiers="yes"
-    ac_cv_lib_glut_glutGameModeString="yes"
+    echo "Will link apps with $LIBS"
 fi
 
 if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then

@@ -1,12 +1,10 @@
-*** not much here yet ***
-
 If you are reading this in hopes that you will find the answer to a
-specific question, please send the question to curt@me.umn.edu and
+specific question, please send the question to curt@flightgear.org and
 suggest that I include the answer here.
 
 
-Compilers and Portability
-=========================
+I. Compilers and Portability
+============================
 
 Flight Gear is known to build with egcs-1.1 and higher, as well as
 gcc-2.8 and higher.  Your mileage may vary with earlier versions of
@@ -22,8 +20,8 @@ platforms, but I must depend on others to make sure their favorite
 platform and compiler is well supported.
 
 
-GLUT
-====
+II. GLUT
+========
 
 Flight Gear requires GLUT version 3.7 or later (aka GameGLUT._ GLUT
 needs to be installed on your system before you can build Flight Gear.
@@ -40,8 +38,8 @@ you can write a single OpenGL program that works on both Win32 PCs and
 X11 workstations.
 
 
-Joystick Support
-================
+III. Joystick Support
+=====================
 
 GLUT only has win32 joystick support but even at that, it is not well
 implimented.  So we use Steve Backer's joystick library when possible,
@@ -55,13 +53,82 @@ To make sure joystick support is included when building under Linux:
   - /usr/include/linux/joystick.h must exist on your system.
 
 
-Native SGI Irix Compilers
-=========================
+IV. Procedure to build FGFS with Native SGI Irix Compilers from CVS Sources
+===========================================================================
+
+(Contributed by Todd Smith <msmith@sikorsky.com>)
+
+Download the latest version of plib (1.0.3) from:
+
+    http://www.woodsoup.org/~sbaker/plib/
+
+Install it both in /usr/local/plib and /usr/local/include/plib.  I
+think that I am using it from /usr/local/include.
+
+Download the FlightGear-0.6 via anonymous cvs as usual, then do:
+
+> aclocal		# normal
+> automake -a -i	# added '-i' flag to avoid dependency calc
+			# that only sgi cc/CC doesn't support
+> autoconf		# normal
+
+Note the change in automake's command argument.
+
+Now set env variables to use native compilers (csh syntax).
+
+> setenv CC cc
+> setenv CXX CC
+> setenv CFLAGS '-Xcpluscomm -DEBUG:suppress=1001,1012,1014,
+                            1116,1172,1174,1401,1460,1551,1552'
+> setenv CXXFLAGS '-DEBUG:suppress=1001,1012,1014,1116,1172,
+                          1174,1401,1460,1551,1552,3303,3322'
+
+The '-DEBUG:suppress=' stuff just suppresses anonying warnings during
+compile.  The meaning of each one is shown later in this file.
+You can use all or none of these here.
+
+> setenv CPPFLAGS '-woff 1014'
+
+This is required so that configure will really believe that plib
+is installed.  ( Otherwise a compiler warning makes configure
+that plib/pu.h couldn't be found. )
+
+> ./configure
+> find . -name Makefile -exec irix-hack.pl {} \;	# normal irix hack
+> gmake
+
+Runs great.
+
+Todd
+msmith@sikorsky.com
+
+-------------------------------------------
+Warnings that I get. Ignore at your lesiure.
+
+C and C++:
+warning(1001): last line of file ends without a newline
+warning(1012): parsing restarts here after previous syntax error
+warning(1014): extra text after expected end of preprocessing directive		(breaks configure)
+warning(1116): non-void function "poly_index_init" should return a value
+warning(1172): subscript out of range
+warning(1174): variable "j" was declared but never referenced
+warning(1401): qualified name is not allowed in member declaration
+warning(1460): function "..." redeclared "inline" after being called
+warning(1551): variable "Altitude" is used before its value is set
+warning(1552): variable "last" was set but never used
+
+C++ only:
+warning(3303): type qualifier on return type is meaningless
+warning(3322): omission of explicit type is nonstandard ("int" assumed)
+
+
+V. Additional Native SGI Irix Compilers Notes
+=============================================
 
 If you are building with native SGI compilers try running configure like the
 following (assuming sh syntax):
 
-  CC=cc CXX=CC CFLAGS=-Xcpluscomm ./configure
+  CC=cc CXX=CC CFLAGS="-Xcpluscomm -woff 1014" ./configure
 
 Then (and this step is *VERY* important for your success) run the following 
 command:
@@ -100,3 +167,18 @@ Don't worry about the make failing in the Tools directory.  That's all
 under construction stuff right now (3/9/99) and if you get that far, 
 rejoice because it means the simulator was successfully built in the 
 Simulator/Main subdirectory.
+
+Special note for those Irix users using the native compilers *AND* checking
+out the current source tree via CVS:
+
+You will need to run "aclocal ; automake -a ; autoconf" as per 
+README.autoconf, but you need an additional flag for automake to disable
+automatic dependency building (which breaks the native Irix compilers.)
+You should instead run:
+
+    aclocal ; automake -a --include-deps; autoconf
+
+Then, proceed on to the configure step.  
+
+Questions?  I realize this section is a big heap of random information so
+if something isn't quite working for you, please ask.

@@ -1,6 +1,6 @@
 SUBDIRS = Include Lib Simulator Tools Tests
 
-EXTRA_DIST = README.Unix README.Linux README.MacOS README.Win32 \
+EXTRA_DIST = FG-FAQ.v3 README.Unix README.Linux README.MacOS README.Win32 \
 	README.autoconf README.gfc README.gpc README.plib README.running \
 	Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
 
