@@ -20,6 +20,7 @@ libNetwork_a_SOURCES = \
         httpd.cxx httpd.hxx \
         $(JPEG_SERVER) \
 	joyclient.cxx joyclient.hxx \
+	jsclient.cxx jsclient.hxx \
 	native.cxx native.hxx \
 	native_ctrls.cxx native_ctrls.hxx \
 	native_fdm.cxx native_fdm.hxx \

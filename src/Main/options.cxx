@@ -1367,6 +1367,7 @@ struct OptionDesc {
     {"ray",                          true,  OPTION_CHANNEL, "", false, "", 0 },
     {"rul",                          true,  OPTION_CHANNEL, "", false, "", 0 },
     {"joyclient",                    true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"jsclient",                     true,  OPTION_CHANNEL, "", false, "", 0 },
 #ifdef FG_NETWORK_OLK
     {"disable-network-olk",          false, OPTION_BOOL,   "/sim/networking/olk", false, "", 0 },
     {"enable-network-olk",           false, OPTION_BOOL,   "/sim/networking/olk", true, "", 0 },

@@ -553,6 +553,8 @@ AC_CONFIG_FILES([ \
 	tests/Makefile \
 	utils/Makefile \
 	utils/TerraSync/Makefile \
+	utils/js_server/Makefile \
+	utils/3dconvert/Makefile \
 ])
 AC_OUTPUT
 

@@ -46,6 +46,7 @@
 #  include <Network/jpg-httpd.hxx>
 #endif
 #include <Network/joyclient.hxx>
+#include <Network/jsclient.hxx>
 #include <Network/native.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
@@ -138,6 +139,9 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "joyclient" ) {
 	    FGJoyClient *joyclient = new FGJoyClient;
 	    io = joyclient;
+        } else if ( protocol == "jsclient" ) {
+            FGJsClient *jsclient = new FGJsClient;
+            io = jsclient;
 	} else if ( protocol == "native" ) {
 	    FGNative *native = new FGNative;
 	    io = native;
