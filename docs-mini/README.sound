@@ -1,0 +1,50 @@
+
+ALSA and Arts
+-------------------------------------
+
+I'm using kernel 2.6.5 with alsa, my sound module is snd-intel8x0. When I ran
+fgfs, I'd get quite 'choppy' sound (wasn't smooth, there'd be a couple of
+breaks in the sound every second or so). Running arts, and starting fgfs with
+"artsdsp fgfs" (from the artsdsp website: "When an application is run under
+artsdsp all accesses to the /dev/dsp audio device are intercepted and mapped
+into aRts API calls. While the device emulation is not perfect, most
+applications work this way, albeit with some degradation in performance and
+latency.") would improve the situation, but it seemed to still be choppy.
+
+This command:
+echo "fgfs 0 0 direct" >/proc/asound/card0/pcm0p/oss
+
+(from the alsa kernel OSS emulation website:
+  "The direct option is used, as mentioned above, to bypass the automatic
+   conversion and useful for MMAP-applications")
+
+made my sound work beautifully when fgfs was run with artsdsp. Running without
+artsdsp however (with artsd suspended or killed), would give me no sound at all
+(which I find a bit strange)
+
+The following websites might help people with similar troubles:
+http://www.alsa-project.org/~iwai/OSS-Emulation.html
+http://www.arts-project.org/doc/handbook/artsdsp.html
+
+Computer info:
+
+kernel 2.6.5
+
+flightgear 0.9.4
+simgear 0.3.5
+plib 1.8.3
+
+soundcard is onboard an asus p4p800-e deluxe mobo (using snd-intel8x0), alsa, related modules from lsmod:
+Module                  Size  Used by
+snd_pcm_oss            53252  1
+snd_mixer_oss          19968  1 snd_pcm_oss
+snd_intel8x0           33476  1
+snd_ac97_codec         63492  1 snd_intel8x0
+snd_pcm                97408  2 snd_pcm_oss,snd_intel8x0
+snd_timer              26112  1 snd_pcm
+snd_page_alloc         11396  2 snd_intel8x0,snd_pcm
+snd_mpu401_uart         7936  1 snd_intel8x0
+snd_rawmidi            24832  1 snd_mpu401_uart
+snd_seq_device          8324  1 snd_rawmidi
+snd                    53892  9 snd_pcm_oss,snd_mixer_oss,snd_intel8x0,snd_ac97_codec,snd_pcm,snd_timer,snd_mpu401_uart,snd_rawmidi,snd_seq_device
+soundcore              10208  2 snd 
