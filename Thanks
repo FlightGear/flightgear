@@ -141,6 +141,7 @@ Christian Mayer <Vader@t-online.de>
   Working on a multi-lingual conversion tools for fgfs.
   Contributed code to read msfs formated texture files.
   Contributed a completely new weather subsystem.
+  Contributed a balloon simulator.
 
 
 David Megginson <david@megginson.com>
@@ -240,6 +241,11 @@ Durk Talsma <pn_talsma@macmail.psy.uva.nl>
   position in sky.  Moon has correct phase and blends well into the
   sky.  Planets are correctly positioned and have proper magnitude.
   Help with time functions, gui, and other misc stuff.
+
+
+Mark Vallevand <Mark.Vallevand@UNISYS.com>
+  Contributed some METAR parsing code.
+  Contributed some win32 screen printing routines.
 
 
 Gary R. Van Sickle <tiberius@braemarinc.com>
