@@ -114,6 +114,8 @@ private:
 
     static const double lbs_to_slugs; //conversion factor
 
+    double contrail_altitude;
+
     SGPropertyNode* _serviceable_node;
     SGPropertyNode* _user_lat_node;
     SGPropertyNode* _user_lon_node;
@@ -129,6 +131,8 @@ private:
     SGPropertyNode* _user_speed_down_fps_node;
     SGPropertyNode* _user_speed_east_fps_node;
     SGPropertyNode* _user_speed_north_fps_node;
+    SGPropertyNode* _contrail_altitude_node;
+    SGPropertyNode* _contrail_trigger;
 
     FGAIManager* ai;
     IC_struct  IC;

@@ -80,7 +80,7 @@ void FGAIThermal::Run(double dt) {
    // copy values from the AIManager
    double user_latitude  = manager->get_user_latitude();
    double user_longitude = manager->get_user_longitude();
-   // double user_altitude  = manager->get_user_altitude();
+   double user_altitude  = manager->get_user_altitude();
 
    // calculate range to target in feet and nautical miles
    double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;
@@ -95,6 +95,17 @@ void FGAIThermal::Run(double dt) {
      strength = max_strength - ( range * range * range * factor );
    } else {
      strength = 0.0;
+   }
+
+   // Stop lift at the top of the thermal (smoothly)
+   if (user_altitude > (height + 100.0)) {
+     strength = 0.0;
+   }
+   else if (user_altitude < height) {
+     // do nothing
+   }
+   else {
+     strength -= (strength * (user_altitude - height) * 0.01);
    }
 }
 

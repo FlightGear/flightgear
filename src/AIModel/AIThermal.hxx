@@ -42,8 +42,10 @@ public:
 
         inline void setMaxStrength( double s ) { max_strength = s; };
         inline void setDiameter( double d ) { diameter = d; };
+        inline void setHeight( double h ) { height = h; };
         inline double getStrength() const { return strength; };
         inline double getDiameter() const { return diameter; };
+        inline double getHeight() const { return height; };
 
 private:
 
@@ -52,6 +54,7 @@ private:
         double max_strength;
         double strength;
         double diameter;
+        double height;
         double factor;
 };
 

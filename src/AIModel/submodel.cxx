@@ -26,6 +26,7 @@ FGSubmodelMgr::FGSubmodelMgr ()
   out[0] = out[1] = out[2] = 0;
   in[3] = out[3] = 1;
   string contents_node;
+  contrail_altitude = 30000.0;
 }
 
 FGSubmodelMgr::~FGSubmodelMgr ()
@@ -57,8 +58,12 @@ FGSubmodelMgr::init ()
     _user_speed_east_fps_node   = fgGetNode("/velocities/speed-east-fps",true);
     _user_speed_north_fps_node  = fgGetNode("/velocities/speed-north-fps",true);
 
-    ai = (FGAIManager*)globals->get_subsystem("ai_model");
+    _contrail_altitude_node = fgGetNode("/environment/params/contrail-altitude", true);
+    contrail_altitude = _contrail_altitude_node->getDoubleValue();
+    _contrail_trigger = fgGetNode("ai/submodels/contrails", true);
+    _contrail_trigger->setBoolValue(false);
 
+    ai = (FGAIManager*)globals->get_subsystem("ai_model");
 
 }
 
@@ -82,6 +87,11 @@ FGSubmodelMgr::update (double dt)
 {
   if (!(_serviceable_node->getBoolValue())) return;
   int i=-1;
+
+  if (_user_alt_node->getDoubleValue() > contrail_altitude) {
+     _contrail_trigger->setBoolValue(true);
+  }   
+
   submodel_iterator = submodels.begin();
   while(submodel_iterator != submodels.end()) {
     i++;

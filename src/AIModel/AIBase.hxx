@@ -57,6 +57,7 @@ typedef struct {
    double rudder;             // used by ship objects
    double strength;           // used by thermal objects
    double diameter;           // used by thermal objects
+   double height_msl;         // used by thermal objects
    double eda;                // used by ballistic objects
    double life;               // life span in seconds
    double buoyancy;           // acceleration in ft per sec2

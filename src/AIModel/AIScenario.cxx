@@ -74,6 +74,7 @@ FGAIScenario::FGAIScenario(string &filename)
      en->rudder         = entry_node->getDoubleValue("rudder", 0.0);
      en->strength       = entry_node->getDoubleValue("strength-fps", 0.0);
      en->diameter       = entry_node->getDoubleValue("diameter-ft", 0.0);
+     en->height_msl     = entry_node->getDoubleValue("height-msl", 5000.0);
      en->eda            = entry_node->getDoubleValue("eda", 0.007);
      en->life           = entry_node->getDoubleValue("life", 900.0);
      en->buoyancy       = entry_node->getDoubleValue("buoyancy", 0);
