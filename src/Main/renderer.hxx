@@ -15,6 +15,7 @@ extern glPointParameterfvProc glPointParameterfvPtr;
 extern bool glPointParameterIsSupported;
 
 void fgRenderFrame();
+void fgReshape(int width, int height);
 
 class FGRenderer {
 

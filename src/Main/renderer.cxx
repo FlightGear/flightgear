@@ -135,6 +135,10 @@ void fgRenderFrame() {
     globals->get_renderer()->update(delta_time_sec);
 }
 
+void fgReshape(int width, int height) {
+    globals->get_renderer()->resize(width,height);
+}
+
 void
 FGRenderer::build_states( void ) {
     default_state = new ssgSimpleState;
