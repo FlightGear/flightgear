@@ -587,12 +587,14 @@ bool fgInitSubsystems( void ) {
     // Initialize the view manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
+#if 0  /* As this wrongly does an integer division and gets x and y the wrong way around, I guess it's not needed.  JAF */
     // Initialize win_ratio parameters
     for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
 	globals->get_viewmgr()->get_view(i)->
 	    set_win_ratio( fgGetInt("/sim/startup/xsize") /
 			   fgGetInt("/sim/startup/ysize") );
     }
+#endif
 
     // Initialize pilot view
     FGViewerRPH *pilot_view =

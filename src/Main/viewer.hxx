@@ -62,8 +62,11 @@ protected:
     // the field of view in the x (width) direction
     double fov; 
 
-    // ratio of x and y fov's; fov(y) = fov(x) * win_ratio
-    double win_ratio;
+    // ratio of x and y fov's; fov(y) = fov(x) * fov_ratio
+    double fov_ratio;
+
+    // ratio of window width and height; height = width * aspect_ratio
+    double aspect_ratio;
 
     // the current view offset angle from forward (rotated about the
     // view_up vector)
@@ -130,7 +133,13 @@ public:
     // setter functions
     //////////////////////////////////////////////////////////////////////
     inline void set_fov( double amount ) { fov = amount; }
-    inline void set_win_ratio( double r ) { win_ratio = r; }
+    // Don't provide set_fov_ratio explicitely. Use set_aspect_ratio
+    // instead.
+    inline void set_aspect_ratio( double r ) {
+	aspect_ratio = r;
+	fov_ratio = atan(tan(fov/2 * SG_DEGREES_TO_RADIANS) * aspect_ratio) *
+	    SG_RADIANS_TO_DEGREES / (fov/2);
+    }
     inline void set_view_offset( double a ) {
 	set_dirty();
 	view_offset = a;
@@ -176,7 +185,8 @@ public:
     inline int is_a( int t ) const { return get_type() == t ; }
     inline bool is_dirty() const { return dirty; }
     inline double get_fov() const { return fov; }
-    inline double get_win_ratio() const { return win_ratio; }
+    inline double get_aspect_ratio() const { return aspect_ratio; }
+    inline double get_fov_ratio() const { return fov_ratio; }
     inline double get_view_offset() const { return view_offset; }
     inline bool get_reverse_view_offset() const { return reverse_view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }

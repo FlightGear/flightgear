@@ -952,7 +952,9 @@ getFOV ()
 static void
 setFOV (double fov)
 {
-  globals->get_current_view()->set_fov( fov );
+  if ( fov < 180 ) {
+      globals->get_current_view()->set_fov( fov );
+  }
 }
 
 static long

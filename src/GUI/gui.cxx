@@ -520,7 +520,7 @@ void fgHiResDump()
     glLoadIdentity();
     ssgSetCamera( (sgVec4 *)globals->get_current_view()->get_VIEW() );
     float fov = globals->get_current_view()->get_fov();
-    ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
+    ssgSetFOV(fov, fov * globals->get_current_view()->get_fov_ratio());
     // ssgSetNearFar( 10.0f, 120000.0f );
     ssgSetNearFar( 0.5f, 1200000.0f );
 

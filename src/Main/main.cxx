@@ -684,7 +684,7 @@ void fgRenderFrame( void ) {
 	// glMatrixMode( GL_PROJECTION );
 	// glLoadIdentity();
  	float fov = globals->get_current_view()->get_fov();
- 	ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
+ 	ssgSetFOV(fov, fov * globals->get_current_view()->get_fov_ratio());
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.cur_elev;
@@ -1391,36 +1391,28 @@ static void fgIdleFunction ( void ) {
 // options.cxx needs to see this for toggle_panel()
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
-    // for all views
-    for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
-	if ( ! fgPanelVisible() || idle_state != 1000 ) {
-	    globals->get_viewmgr()->get_view(i)->
-		set_win_ratio( (float)height / (float)width );
-	} else {
-	    int view_h =
-		int((current_panel->getViewHeight() -
-		     current_panel->getYOffset())
-		    * (height / 768.0)) + 1;
-	    globals->get_viewmgr()->get_view(i)->
-		set_win_ratio( (float)view_h / (float)width );
-	}
+    int view_h;
+
+    if ( fgPanelVisible() && idle_state == 1000 ) {
+	view_h = (int)(height * (current_panel->getViewHeight() -
+				 current_panel->getYOffset()) / 768.0);
+    } else {
+	view_h = height;
     }
 
-    if ( ! fgPanelVisible() || idle_state != 1000 ) {
-	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
-    } else {
-        int view_h =
-	    int((current_panel->getViewHeight() - current_panel->getYOffset())
-		* (height / 768.0)) + 1;
-	glViewport(0, (GLint)(height - view_h),
-		   (GLint)(width), (GLint)(view_h) );
+    // for all views
+    for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
+	globals->get_viewmgr()->get_view(i)->
+            set_aspect_ratio((float)view_h / (float)width);
     }
+
+    glViewport( 0, (GLint)(height - view_h), (GLint)(width), (GLint)(view_h) );
 
     fgSetInt("/sim/startup/xsize", width);
     fgSetInt("/sim/startup/ysize", height);
 
     float fov = globals->get_current_view()->get_fov();
-    ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
+    ssgSetFOV(fov, fov * globals->get_current_view()->get_fov_ratio());
 
     fgHUDReshape();
 }

@@ -1033,8 +1033,8 @@ static void set_hud_color(float r, float g, float b) {
 void fgUpdateHUD( void ) {
 	
     static const float normal_aspect = float(640) / float(480);
-    // note: win_ratio is Y/X
-    float current_aspect = 1.0f/globals->get_current_view()->get_win_ratio();
+    // note: aspect_ratio is Y/X
+    float current_aspect = 1.0f/globals->get_current_view()->get_aspect_ratio();
     if( current_aspect > normal_aspect ) {
         float aspect_adjust = current_aspect / normal_aspect;
         float adjust = 320.0f*aspect_adjust - 320.0f;

@@ -251,12 +251,12 @@ void HudLadder :: draw( void )
 	}
 
 	xvvr = (((atan2(Vyy,Vxx)*SGD_RADIANS_TO_DEGREES)-psi)*
-		(factor/globals->get_current_view()->get_win_ratio()));
+		(factor/globals->get_current_view()->get_aspect_ratio()));
 	drift = ((atan2(Vyy,Vxx)*SGD_RADIANS_TO_DEGREES)-psi);
 	yvvr = ((actslope - pitch_value)*factor);
 	vel_y = ((actslope -pitch_value) * cos(roll_value) + drift*sin(roll_value))*factor;
 	vel_x = (-(actslope -pitch_value)*sin(roll_value) + drift*cos(roll_value))*
-		(factor/globals->get_current_view()->get_win_ratio());
+		(factor/globals->get_current_view()->get_aspect_ratio());
 	//  printf("%f %f %f %f\n",vel_x,vel_y,drift,psi);
 	//****************************************************************    
 	// OBJECT MOVING RETICLE
