@@ -902,7 +902,6 @@ void FGRenderer::setFOV( float w, float h ) {
     // accumulate hacked effects
     ssgSetFOV( w, h );
     ssgSetNearFar( near, far );
-
     fgHackFrustum();
 }
 

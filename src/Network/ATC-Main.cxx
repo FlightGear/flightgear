@@ -211,10 +211,9 @@ bool FGATCMain::process() {
     // directly provide.
 
     FGNasalSys *n = (FGNasalSys*)globals->get_subsystem("nasal");
-    bool result = n->parseAndRun( "atcsim.do_hardware()" );
+    bool result = n->parseAndRun( "atcsim.update()" );
     if ( !result ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Nasal: atcsim.do_hardware() failed!" );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Nasal: atcsim.update() failed!" );
     }
 
     // process the ATC outputs
