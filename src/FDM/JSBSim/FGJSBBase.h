@@ -66,6 +66,17 @@ using std::queue;
 #  define M_PI SG_PI
 #endif
 
+#ifdef __FreeBSD__ // define gcvt on FreeBSD
+
+#include <stdio.h>
+
+static char *gcvt(double number, size_t ndigit, char *buf)
+{
+     sprintf(buf, "%f", number);
+     return buf;
+}
+#endif
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
