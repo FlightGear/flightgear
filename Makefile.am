@@ -4,8 +4,14 @@ SUBDIRS = \
         scripts \
 	man
 
-EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.sh \
-	FlightGear.dsp FlightGear.dsw
+EXTRA_DIST = \
+	Thanks \
+	acsite.m4 \
+	acconfig.h \
+	autogen.sh \
+	irix-hack.sh \
+	FlightGear.dsp \
+	FlightGear.dsw
 
 dist-hook:
 	(cd $(top_srcdir); $(HOME)/projects/FlightGear-0.7/admin/am2dsp.pl)
