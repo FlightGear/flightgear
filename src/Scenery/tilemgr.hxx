@@ -35,6 +35,8 @@
 
 #include <queue>
 
+#include <plib/ssg.h>
+
 #include <simgear/bucket/newbucket.hxx>
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
 #  include <simgear/threads/SGQueue.hxx>
@@ -54,8 +56,6 @@ SG_USING_STD( queue );
 
 
 // forward declaration
-class ssgBranch;
-class ssgEntity;
 class FGTileEntry;
 class FGDeferredModel;
 

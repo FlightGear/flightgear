@@ -31,6 +31,7 @@
 
 #include <GL/glu.h>
 
+#include <plib/ssg.h>
 #include <plib/fnt.h>
 
 #include <simgear/debug/logstream.hxx>
