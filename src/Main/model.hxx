@@ -11,6 +11,7 @@
 #endif
 
 #include "fgfs.hxx"
+#include <simgear/misc/props.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 class FGAircraftModel : public FGSubsystem
@@ -27,6 +28,7 @@ public:
 
 private:
 
+  SGPropertyNode * _props;
   ssgEntity * _object;
   ssgSelector * _selector;
   ssgTransform * _position;

@@ -13,6 +13,7 @@
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/exception.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
@@ -45,7 +46,8 @@ find_named_node (ssgEntity * node, const string &name)
 }
 
 FGAircraftModel::FGAircraftModel ()
-  : _object(0),
+  : _props(new SGPropertyNode),
+    _object(0),
     _selector(new ssgSelector),
     _position(new ssgTransform),
     _prop_position(0)
@@ -54,6 +56,7 @@ FGAircraftModel::FGAircraftModel ()
 
 FGAircraftModel::~FGAircraftModel ()
 {
+  delete _props;
   // since the nodes are attached to the scene graph, they'll be
   // deleted automatically
 }
@@ -67,6 +70,18 @@ FGAircraftModel::init ()
 				// Load the 3D aircraft object itself
   SGPath path = globals->get_fg_root();
   path.append(fgGetString("/sim/model/path", "Models/Geometry/glider.ac"));
+
+  if (path.str().substr(path.str().size() - 4, 4) == ".xml") {
+    readProperties(path.str(), _props);
+    if (_props->hasValue("/path")) {
+      path = path.dir();;
+      path.append(_props->getStringValue("/path"));
+    } else {
+      path = globals->get_fg_root();
+      path.append("Models/Geometry/glider.ac");
+    }
+  }
+
   ssgTexturePath((char *)path.dir().c_str());
   _object = ssgLoad((char *)path.c_str());
   if (_object == 0) {
@@ -93,12 +108,12 @@ FGAircraftModel::init ()
   sgMat4 rot_matrix;
   sgMat4 off_matrix;
   sgMat4 res_matrix;
-  float h_rot = fgGetFloat("/sim/model/heading-offset-deg", 0.0);
-  float p_rot = fgGetFloat("/sim/model/roll-offset-deg", 0.0);
-  float r_rot = fgGetFloat("/sim/model/pitch-offset-deg", 0.0);
-  float x_off = fgGetFloat("/sim/model/x-offset-m", 0.0);
-  float y_off = fgGetFloat("/sim/model/y-offset-m", 0.0);
-  float z_off = fgGetFloat("/sim/model/z-offset-m", 0.0);
+  float h_rot = _props->getFloatValue("/offsets/heading-deg", 0.0);
+  float p_rot = _props->getFloatValue("/offsets/roll-deg", 0.0);
+  float r_rot = _props->getFloatValue("/offsets/pitch-deg", 0.0);
+  float x_off = _props->getFloatValue("/offsets/x-m", 0.0);
+  float y_off = _props->getFloatValue("/offsets/y-m", 0.0);
+  float z_off = _props->getFloatValue("/offsets/z-m", 0.0);
   sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
   sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
   sgMultMat4(res_matrix, off_matrix, rot_matrix);
@@ -140,12 +155,9 @@ FGAircraftModel::update (int dt)
     prop_rotation -= 360;
   // END TEMPORARY KLUDGE
 
-  if (globals->get_viewmgr()->get_current() == 0
-      && !fgGetBool("/sim/model/enable-interior")) {
+  if (globals->get_viewmgr()->get_current() == 0) {
     _selector->select(false);
   } else {
-				// TODO: use correct alignment in pilot
-				// view.
     _selector->select(true);
     FGViewerRPH *pilot_view =
       (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
@@ -170,7 +182,7 @@ FGAircraftModel::update (int dt)
 
     // START TEMPORARY KLUDGE
     if (_prop_position != 0) {
-      double offset = fgGetDouble("/tmp/offset", -.75);
+      double offset = -.75;
       sgMat4 tmp;
       sgMakeTransMat4(prop_matrix, 0, 0, offset);
       sgMakeRotMat4(tmp, 0, 0, prop_rotation);
