@@ -56,7 +56,6 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
       terra_transform( new ssgTransform ),
       rwy_lights_transform( new ssgTransform ),
       terra_range( new ssgRangeSelector ),
-      rwy_lights_range( new ssgRangeSelector ),
       loaded(false),
       pending_models(0),
       free_tracker(0)
@@ -813,10 +812,6 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         gnd_lights_range->setRange( 0, SG_ZERO );
         gnd_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
     }
-    if ( rwy_lights_range ) {
-        rwy_lights_range->setRange( 0, SG_ZERO );
-        rwy_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
-    }
 
     sgVec3 sgTrans;
     sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
@@ -889,7 +884,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         double dist = sgLengthVec3( to );
 
         if ( general.get_glDepthBits() > 16 ) {
-            sgScaleVec3( lift_vec, 0.0 + agl / 100.0 + dist / 10000 );
+            sgScaleVec3( lift_vec, 0.0 + agl / 500.0 + dist / 10000 );
         } else {
             sgScaleVec3( lift_vec, 1.0 + agl / 20.0 + dist / 5000 );
         }
@@ -1172,7 +1167,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
                         delete geometry;
                     }
                     if ( rwy_lights -> getNumKids() > 0 ) {
-                        rwy_lights_range -> addKid( rwy_lights );
+                        rwy_lights_transform -> addKid( rwy_lights );
                     } else {
                         delete rwy_lights;
                     }
@@ -1347,9 +1342,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     }
 
     // Add runway lights to scene graph if any exist
-    if ( rwy_lights_range->getNumKids() > 0 ) {
+    if ( rwy_lights_transform->getNumKids() > 0 ) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "adding runway lights" );
-        rwy_lights_transform->addKid( rwy_lights_range );
         rwy_lights_transform->setTransform( &sgcoord );
     }
 

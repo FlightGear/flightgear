@@ -149,7 +149,6 @@ private:
 
     // pointer to ssg range selector for this tile
     ssgRangeSelector *terra_range;
-    ssgRangeSelector *rwy_lights_range;
     ssgRangeSelector *gnd_lights_range;
 
     // we create several preset brightness and can choose which one we
