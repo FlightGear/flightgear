@@ -288,7 +288,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 
     // Parse remaining command line options
     // These will override anything specified in a config file
-    fgParseOptions(argc, argv);
+    fgParseArgs(argc, argv);
 
     return true;
 }

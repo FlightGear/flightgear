@@ -1001,23 +1001,35 @@ fgScanForRoot (const string& path)
 
 // Parse the command line options
 void
-fgParseOptions (int argc, char **argv) {
-    int i = 1;
-    int result;
+fgParseArgs (int argc, char **argv)
+{
+    bool in_options = true;
 
     SG_LOG(SG_GENERAL, SG_INFO, "Processing command line arguments");
 
-    while ( i < argc ) {
-	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
+    for (int i = 1; i < argc; i++) {
+        string arg = argv[i];
 
-	result = parse_option(argv[i]);
-	if ( (result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR) ) {
-	    fgUsage();
-	    exit(-1);
+	if (in_options && (arg.find('-') == 0)) {
+	  if (arg == "--") {
+	    in_options = false;
+	  } else {
+	    int result = parse_option(arg);
+	    if ( (result == FG_OPTIONS_HELP) ||
+		 (result == FG_OPTIONS_ERROR) ) {
+	      fgUsage();
+	      exit(-1);
+	    }
+	  }
+	} else {
+	  in_options = false;
+	  SG_LOG(SG_GENERAL, SG_INFO,
+		 "Reading command-line property file " << arg);
+	  readProperties(arg, globals->get_props());
 	}
-
-	i++;
     }
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Finished command line arguments");
 }
 
 
