@@ -142,7 +142,7 @@ Bruce Finney <bfinney@gte.net>
   MSVC5 compatibility.
 
 
-Melchior Franz <a8603365@unet.univie.ac.at>
+Melchior Franz <mfranz@aon.at>
   Made that joystick high/low support for joystick hats.
   Nasal-ified the Saitek Cyborg Gold 3D (USB) joystick which now forms
   the basis of a lot of programmable joysticks.
