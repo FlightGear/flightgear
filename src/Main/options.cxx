@@ -535,8 +535,8 @@ add_channel( const string& type, const string& channel_str ) {
 }
 
 
-static void
-setup_wind (double min_hdg, double max_hdg, double speed, double gust)
+void
+fgSetupWind (double min_hdg, double max_hdg, double speed, double gust)
 {
                                 // Initialize to a reasonable state
   fgDefaultWeatherValue("wind-from-heading-deg", min_hdg);
@@ -1026,7 +1026,7 @@ fgOptRandomWind( const char *arg )
     double max_hdg = min_hdg + (20 - sqrt(sg_random() * 400));
     double speed = sg_random() * sg_random() * 40;
     double gust = speed + (10 - sqrt(sg_random() * 100));
-    setup_wind(min_hdg, max_hdg, speed, gust);
+    fgSetupWind(min_hdg, max_hdg, speed, gust);
     return FG_OPTIONS_OK;
 }
 
@@ -1038,7 +1038,7 @@ fgOptWind( const char *arg )
 	SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << arg );
 	return FG_OPTIONS_ERROR;
     }
-    setup_wind(min_hdg, max_hdg, speed, gust);
+    fgSetupWind(min_hdg, max_hdg, speed, gust);
     return FG_OPTIONS_OK;
 }
 

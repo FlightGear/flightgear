@@ -148,24 +148,13 @@ public:
     virtual void reinit ();
     virtual void update (double delta_time_sec);
 
-private:
+    virtual void setEnvironment (FGEnvironment * environment);
 
-    struct bucket {
-        double altitude_ft;
-        FGEnvironment environment;
-        bool operator< (const bucket &b) const;
-    };
+private:
+    FGInterpolateEnvironmentCtrl *env;
 
     char *_icao;
-    SGPropertyNode * _base_wind_speed_node;
-    SGPropertyNode * _gust_wind_speed_node;
-
-    double _current_wind_speed_kt;
-    double _delta_wind_speed_kt;
-
-    void read_table (const char *icao);
-    void do_interpolate (vector<bucket *> &table, double altitude_ft,
-                         FGEnvironment * environment);
+    void fetch_data (const char *icao);
 };
 
 #endif // _ENVIRONMENT_CTRL_HXX
