@@ -103,7 +103,7 @@ bool FGFixList::query( const string& ident, double lon, double lat, double elev,
 		       FGFix *fix, double *heading, double *dist )
 {
     *fix = fixlist[ident];
-    if ( fix->get_ident() == "" ) {
+    if ( fix->get_ident().empty() ) {
 	return false;
     }
 

@@ -140,7 +140,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
-    if ( root == "" ) {
+    if ( root.empty() ) {
 	envp = ::getenv( "HOME" );
 	if ( envp != NULL ) {
 	    SGPath config( envp );
@@ -155,7 +155,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 #endif
 
     // Next check home directory for .fgfsrc file
-    if ( root == "" ) {
+    if ( root.empty() ) {
 	envp = ::getenv( "HOME" );
 	if ( envp != NULL ) {
 	    SGPath config( envp );
@@ -165,7 +165,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     }
     
     // Next check if fg-root is set as an env variable
-    if ( root == "" ) {
+    if ( root.empty() ) {
 	envp = ::getenv( "FG_ROOT" );
 	if ( envp != NULL ) {
 	    root = envp;
@@ -174,7 +174,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 
     // Otherwise, default to a random compiled-in location if we can't
     // find fg-root any other way.
-    if ( root == "" ) {
+    if ( root.empty() ) {
 #if defined( __CYGWIN__ )
         root = "/FlightGear";
 #elif defined( WIN32 )

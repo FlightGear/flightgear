@@ -1076,7 +1076,7 @@ FGTextLayer::Chunk::Chunk (const string &text, const string &fmt)
   : _type(FGTextLayer::TEXT), _fmt(fmt)
 {
   _text = text;
-  if (_fmt == "") 
+  if (_fmt.empty()) 
     _fmt = "%s";
 }
 
@@ -1084,7 +1084,7 @@ FGTextLayer::Chunk::Chunk (ChunkType type, const SGPropertyNode * node,
 			   const string &fmt, float mult)
   : _type(type), _fmt(fmt), _mult(mult)
 {
-  if (_fmt == "") {
+  if (_fmt.empty()) {
     if (type == TEXT_VALUE)
       _fmt = "%s";
     else

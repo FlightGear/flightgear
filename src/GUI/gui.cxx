@@ -167,7 +167,7 @@ void guiErrorMessage (const char *txt, const sg_throwable &throwable)
     string msg = txt;
     msg += '\n';
     msg += throwable.getFormattedMessage();
-    if (throwable.getOrigin() != (string)"") {
+    if (!throwable.getOrigin().empty()) {
       msg += "\n (reported by ";
       msg += throwable.getOrigin();
       msg += ')';

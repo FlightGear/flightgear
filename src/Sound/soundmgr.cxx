@@ -40,9 +40,9 @@
 
 // constructor
 FGSimpleSound::FGSimpleSound( string file )
-  : requests(0),
+  : pitch(1.0),
     volume(1.0),
-    pitch(1.0)
+    requests(0)
 {
     SGPath slfile( globals->get_fg_root() );
     slfile.append( file );
@@ -54,9 +54,9 @@ FGSimpleSound::FGSimpleSound( string file )
 }
 
 FGSimpleSound::FGSimpleSound( unsigned char *buffer, int len )
-  : requests(0),
+  : pitch(1.0),
     volume(1.0),
-    pitch(1.0)
+    requests(0)
 {
     sample = new slSample ( buffer, len );
     pitch_envelope = new slEnvelope( 1, SL_SAMPLE_ONE_SHOT );
@@ -245,7 +245,7 @@ bool FGSoundMgr::add( FGSimpleSound *sound, const string& refname ) {
 FGSimpleSound *FGSoundMgr::add( const string& refname, const string &file ) {
      FGSimpleSound *sound;
 
-    if (file == (string)"")
+    if (file.empty())
        return NULL;
 
     sample_map_iterator it = samples.find(file);

@@ -53,7 +53,7 @@ FGFX::init()
 
    string path_str = node->getStringValue("path");
    SGPath path( globals->get_fg_root() );
-   if (path_str == "") {
+   if (path_str.empty()) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
       return;
    }

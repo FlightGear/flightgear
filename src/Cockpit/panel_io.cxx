@@ -295,7 +295,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
     type = "rotation";
   }
 
-  if (propName != (string)"") {
+  if (!propName.empty()) {
     target = fgGetNode(propName.c_str(), true);
   }
 
@@ -724,7 +724,7 @@ readPanel (const SGPropertyNode * root)
   // Get multibackground if any...
   //
   string mbgTexture = root->getStringValue("multibackground[0]");
-  if (mbgTexture != (string)"") {
+  if (!mbgTexture.empty()) {
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 0);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 

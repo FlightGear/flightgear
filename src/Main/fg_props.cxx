@@ -105,7 +105,7 @@ getLoggingClasses ()
   string result = "";
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
     if ((classes&log_class_mappings[i].c) > 0) {
-      if (result != (string)"")
+      if (!result.empty())
 	result += '|';
       result += log_class_mappings[i].name;
     }
@@ -142,7 +142,7 @@ setLoggingClasses (const char * c)
     return;
   }
 
-  if (classes == "" || classes == "all") { // default
+  if (classes.empty() || classes == "all") { // default
     logbuf::set_log_classes(SG_ALL);
     SG_LOG(SG_GENERAL, SG_INFO, "Enabled all logging classes: "
 	   << getLoggingClasses());
@@ -200,7 +200,7 @@ setLoggingPriority (const char * p)
     logbuf::set_log_priority(SG_BULK);
   } else if (priority == "debug") {
     logbuf::set_log_priority(SG_DEBUG);
-  } else if (priority == "" || priority == "info") { // default
+  } else if (priority.empty() || priority == "info") { // default
     logbuf::set_log_priority(SG_INFO);
   } else if (priority == "warn") {
     logbuf::set_log_priority(SG_WARN);

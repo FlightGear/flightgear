@@ -203,7 +203,7 @@ bool FGProps::process_command( const char *cmd ) {
 	}
     } else if ( command == "pwd" ) {
 	string ttt = node->getPath();
-	if ( ttt == "" ) {
+	if ( ttt.empty() ) {
 	    ttt = "/";
 	}
 	ttt += "\n";
@@ -269,7 +269,7 @@ bool FGProps::process_command( const char *cmd ) {
 
     if ( mode == PROMPT ) {
 	string prompt = node->getPath();
-	if ( prompt == "" ) {
+	if ( prompt.empty() ) {
 	    prompt = "/";
 	}
 	prompt += "> ";

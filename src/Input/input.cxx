@@ -110,7 +110,7 @@ FGBinding::read (const SGPropertyNode * node)
   }
 
   _command_name = node->getStringValue("command", "");
-  if (_command_name == "") {
+  if (_command_name.empty()) {
     SG_LOG(SG_INPUT, SG_ALERT, "No command supplied for binding.");
     _command = 0;
     return;
