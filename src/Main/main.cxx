@@ -767,6 +767,7 @@ void fgRenderFrame() {
             // Enable states for drawing points with GL_extension
             glEnable(GL_POINT_SMOOTH);
 
+#ifdef GL_EXT_point_parameters
             if ( fgGetBool("/sim/rendering/distance-attenuation")
                  && SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") )
             {
@@ -778,6 +779,7 @@ void fgRenderFrame() {
                 glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT, quadratic);
                 glPointParameterfPtr(GL_POINT_SIZE_MIN_EXT, 1.0); 
             }
+#endif
 
             glPointSize(4.0);
 
@@ -821,12 +823,14 @@ void fgRenderFrame() {
 
 
         if (fgGetBool("/sim/rendering/enhanced-lighting")) {
+#ifdef GL_EXT_point_parameters
             if ( fgGetBool("/sim/rendering/distance-attenuation")
                  && SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") )
             {
                 glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT,
                                       default_attenuation);
             }
+#endif
 
             glPointSize(1.0);
             glDisable(GL_POINT_SMOOTH);
