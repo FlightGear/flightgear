@@ -56,7 +56,7 @@ INTERFACE_FILES = GLUTkey.c
 # GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 
 # For Mesa
-MESA_LIBS = -L/usr/lib/mesa -lMesaaux -lMesatk -lMesaGLU -lMesaGL
+MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
 X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
 GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
@@ -102,6 +102,10 @@ mesh2GL.o: mesh2GL.c ../scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1997/05/27 17:44:32  curt
+# Renamed & rearranged variables and routines.   Added some initial simple
+# timer/alarm routines so the flight model can be updated on a regular interval.
+#
 # Revision 1.4  1997/05/23 15:40:26  curt
 # Added GNU copyright headers.
 # Fog now works!

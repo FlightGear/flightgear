@@ -27,7 +27,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
+#include <signal.h>    /* for timer routines */
+#include <sys/time.h>  /* for timer routines */
 
 #ifdef GLUT
     #include <GL/glut.h>
@@ -41,42 +42,50 @@
 #include "../aircraft/aircraft.h"
 #include "../scenery/scenery.h"
 
-
 /* This is a record containing all the info for the aircraft currently
    being operated */
 struct aircraft_params current_aircraft;
 
-/* temporary hack */
-extern struct mesh *mesh_ptr;
-
-/* Function prototypes */
-GLint make_mesh();
-static void draw_mesh();
-
-
 /* view parameters */
 static GLfloat win_ratio = 1.0;
 
+/* temporary hack */
+extern struct mesh *mesh_ptr;
+/* Function prototypes */
+GLint fgSceneryCompile();
+static void fgSceneryDraw();
 /* pointer to terrain mesh structure */
 static GLint mesh;
 
-double fogDensity = 0.001;
+/* Another hack */
+double fogDensity = 2000.0;
 
-/* init_view() -- Setup view parameters */
-static void init_view() {
+/* Another hack */
+#define DEFAULT_MODEL_HZ 120
+double Simtime;
+int Overrun;
+int model_dt;
+
+
+/**************************************************************************
+ * fgInitVisuals() -- Initialize various GL/view parameters
+ **************************************************************************/
+
+static void fgInitVisuals() {
     /* if the 4th field is 0.0, this specifies a direction ... */
-    static GLfloat pos[4] = {-3.0, 1.0, 3.0, 0.0 };
+    static GLfloat sun_vec[4] = {3.0, 1.0, 3.0, 0.0 };
     static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 };
-    static GLfloat fogColor[4] = {0.5, 0.5, 0.5, 1.0};
+    static GLfloat fogColor[4] = {0.65, 0.65, 0.85, 1.0};
     
     glEnable( GL_DEPTH_TEST );
+    glFrontFace(GL_CW);
     glEnable( GL_CULL_FACE );
 
     /* If enabled, normal vectors specified with glNormal are scaled
        to unit length after transformation.  See glNormal. */
     glEnable( GL_NORMALIZE );
 
-    glLightfv( GL_LIGHT0, GL_POSITION, pos );
+    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
     glEnable( GL_LIGHTING );
     glEnable( GL_LIGHT0 );
 
@@ -86,7 +95,7 @@ static void init_view() {
     glEnable( GL_FOG );
     glFogi (GL_FOG_MODE, GL_LINEAR);
     /* glFogf (GL_FOG_START, 1.0); */
-    glFogf (GL_FOG_END, 2000.0);
+    glFogf (GL_FOG_END, fogDensity);
     glFogfv (GL_FOG_COLOR, fogColor);
     /* glFogf (GL_FOG_DENSITY, fogDensity); */
     /* glHint (GL_FOG_HINT, GL_FASTEST); */
@@ -95,26 +104,11 @@ static void init_view() {
 }
 
 
-/* init_scene() -- build all objects */
-static void init_scene() {
+/**************************************************************************
+ * Update the view volume, position, and orientation
+ **************************************************************************/
 
-    /* make terrain mesh */
-    mesh = make_mesh();
-}
-
-
-/* create the terrain mesh */
-GLint make_mesh() {
-    GLint mesh;
-
-    mesh = mesh2GL(mesh_ptr);
-
-    return(mesh);
-}
-
-
-/* update the view volume */
-static void update_view() {
+static void fgUpdateViewParams() {
     struct flight_params *f;
 
     f = &current_aircraft.flight;
@@ -132,10 +126,13 @@ static void update_view() {
 }
 
 
-/* draw the scene */
-static void draw_scene( void ) {
+/**************************************************************************
+ * Update all Visuals (redraws anything graphics related)
+ **************************************************************************/
+
+static void fgUpdateVisuals( void ) {
     /* update view volume parameters */
-    update_view();
+    fgUpdateViewParams();
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -144,7 +141,7 @@ static void draw_scene( void ) {
     /* glLoadIdentity(); */
 
     /* draw terrain mesh */
-    draw_mesh();
+    fgSceneryDraw();
 
     #ifdef GLUT
       glutSwapBuffers();
@@ -154,26 +151,92 @@ static void draw_scene( void ) {
 }
 
 
+/**************************************************************************
+ * Timer management routines
+ **************************************************************************/
+
+static struct itimerval t, ot;
+
+/* This routine catches the SIGALRM */
+void fgTimerCatch() {
+    static double lastSimtime = -99.9;
+
+    /* printf("In fgTimerCatch()\n"); */
+
+    Overrun = (lastSimtime == Simtime);
+
+    /* if ( Overrun ) {
+	printf("OVERRUN!!!\n");
+    } */
+
+    lastSimtime = Simtime;
+    signal(SIGALRM, fgTimerCatch);
+}
+
+/* this routine initializes the interval timer to generate a SIGALRM after
+ * the specified interval (dt) */
+void fgTimerInit(float dt) {
+    int terr;
+    int isec;
+    float usec;
+
+    isec = (int) dt;
+    usec = 1000000* (dt - (float) isec);
+
+    t.it_interval.tv_sec = isec;
+    t.it_interval.tv_usec = usec;
+    t.it_value.tv_sec = isec;
+    t.it_value.tv_usec = usec;
+    /* printf("fgTimerInit() called\n"); */
+    fgTimerCatch();   /* set up for SIGALRM signal catch */
+    terr = setitimer( ITIMER_REAL, &t, &ot );
+    if (terr) perror("Error returned from setitimer");
+}
+
+
+/**************************************************************************
+ * Scenery management routines
+ **************************************************************************/
+
+static void fgSceneryInit() {
+    /* make terrain mesh */
+    mesh = fgSceneryCompile();
+}
+
+
+/* create the terrain mesh */
+GLint fgSceneryCompile() {
+    GLint mesh;
+
+    mesh = mesh2GL(mesh_ptr);
+
+    return(mesh);
+}
+
+
 /* draw the terrain mesh */
-static void draw_mesh() {
+static void fgSceneryDraw() {
     glCallList(mesh);
 }
 
 
 /* What should we do when we have nothing else to do?  How about get
  * ready for the next move?*/
-static void idle( void )
+static void fgMainLoop( void )
 {
     slew_update();
     aircraft_debug(1);
 
-    draw_scene();
+    fgUpdateVisuals();
 }
 
 
-/* new window size or exposure */
-static void reshape( int width, int height ) {
-    /* Do this so we can call reshape(0,0) ourselves without having to know
+/**************************************************************************
+ * Handle new window size or exposure
+ **************************************************************************/
+
+static void fgReshape( int width, int height ) {
+    /* Do this so we can call fgReshape(0,0) ourselves without having to know
      * what the values of width & height are. */
     if ( (height > 0) && (width > 0) ) {
 	win_ratio = (GLfloat) height / (GLfloat) width;
@@ -182,7 +245,7 @@ static void reshape( int width, int height ) {
     /* Inform gl of our view window size */
     glViewport(0, 0, (GLint)width, (GLint)height);
 
-    update_view();
+    fgUpdateViewParams();
     
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
@@ -222,46 +285,50 @@ int main( int argc, char *argv[] ) {
     #endif
 
     /* setup view parameters, only makes GL calls */
-    init_view();
-
-    /* build all objects */
-    init_scene();
+    fgInitVisuals();
 
     /* Set initial position and slew parameters */
     /* slew_init(-398391.3, 120070.4, 244, 3.1415); */ /* GLOBE Airport */
+    /* slew_init(-335340,162540, 15, 4.38); */
     slew_init(-398673.28,120625.64, 53, 4.38);
 
+    /* build all objects */
+    fgSceneryInit();
+
+    /* initialize timer */
+    fgTimerInit( 1.0 / DEFAULT_MODEL_HZ );
+
     #ifdef GLUT
-      /* call reshape() on window resizes */
-      glutReshapeFunc( reshape );
+      /* call fgReshape() on window resizes */
+      glutReshapeFunc( fgReshape );
 
       /* call key() on keyboard event */
       glutKeyboardFunc( GLUTkey );
       glutSpecialFunc( GLUTkey );
 
-      /* call idle() whenever there is nothing else to do */
-      glutIdleFunc( idle );
+      /* call fgMainLoop() whenever there is nothing else to do */
+      glutIdleFunc( fgMainLoop );
 
       /* draw the scene */
-      glutDisplayFunc( draw_scene );
+      glutDisplayFunc( fgUpdateVisuals );
 
       /* pass control off to the GLUT event handler */
       glutMainLoop();
     #elif MESA_TK
-      /* call reshape() on expose events */
-      tkExposeFunc( reshape );
+      /* call fgReshape() on expose events */
+      tkExposeFunc( fgReshape );
 
-      /* call reshape() on window resizes */
-      tkReshapeFunc( reshape );
+      /* call fgReshape() on window resizes */
+      tkReshapeFunc( fgReshape );
 
       /* call key() on keyboard event */
       tkKeyDownFunc( GLTKkey );
 
-      /* call idle() whenever there is nothing else to do */
-      tkIdleFunc( idle );
+      /* call fgMainLoop() whenever there is nothing else to do */
+      tkIdleFunc( fgMainLoop );
 
       /* draw the scene */
-      tkDisplayFunc( draw_scene );
+      tkDisplayFunc( fgUpdateVisuals );
 
       /* pass control off to the tk event handler */
       tkExec();
@@ -272,10 +339,14 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.3  1997/05/23 15:40:25  curt
-/* Added GNU copyright headers.
-/* Fog now works!
+/* Revision 1.4  1997/05/27 17:44:31  curt
+/* Renamed & rearranged variables and routines.   Added some initial simple
+/* timer/alarm routines so the flight model can be updated on a regular interval.
 /*
+ * Revision 1.3  1997/05/23 15:40:25  curt
+ * Added GNU copyright headers.
+ * Fog now works!
+ *
  * Revision 1.2  1997/05/23 00:35:12  curt
  * Trying to get fog to work ...
  *

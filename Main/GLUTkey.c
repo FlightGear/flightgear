@@ -68,12 +68,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	return;
     case 122:
 	fogDensity *= 1.10;
-	glFogf(GL_FOG_DENSITY, fogDensity);
+	glFogf(GL_FOG_END, fogDensity);
 	printf("Fog density = %.4f\n", fogDensity);
 	return;
     case 90:
 	fogDensity /= 1.10;
-	glFogf(GL_FOG_DENSITY, fogDensity);
+	glFogf(GL_FOG_END, fogDensity);
 	printf("Fog density = %.4f\n", fogDensity);
 	return;
     case 27: /* ESC */
@@ -84,10 +84,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.3  1997/05/23 15:40:25  curt
-/* Added GNU copyright headers.
-/* Fog now works!
+/* Revision 1.4  1997/05/27 17:44:31  curt
+/* Renamed & rearranged variables and routines.   Added some initial simple
+/* timer/alarm routines so the flight model can be updated on a regular interval.
 /*
+ * Revision 1.3  1997/05/23 15:40:25  curt
+ * Added GNU copyright headers.
+ * Fog now works!
+ *
  * Revision 1.2  1997/05/23 00:35:12  curt
  * Trying to get fog to work ...
  *
