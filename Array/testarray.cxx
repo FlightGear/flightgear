@@ -23,7 +23,7 @@ main(int argc, char **argv) {
     cout << "arrayfile = " << arrayfile << endl;
     
     FGArray a(arrayfile);
-    a.parse();
+    a.parse( b );
 
     lon *= 3600;
     lat *= 3600;

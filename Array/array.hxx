@@ -89,10 +89,11 @@ public:
     int close();
 
     // parse a Array file
-    int parse();
+    int parse( FGBucket& b );
 
-    // Use least squares to fit a simpler data set to dem data
-    void fit( double error );
+    // Use least squares to fit a simpler data set to dem data.
+    // Return the number of fitted nodes
+    int fit( double error );
 
     // add a node to the output corner node list
     void add_corner_node( int i, int j, double val );
@@ -122,6 +123,9 @@ public:
 
 
 // $Log$
+// Revision 1.6  1999/04/05 02:15:24  curt
+// Make dem fitting more robust in cases when no dem file available.
+//
 // Revision 1.5  1999/03/29 13:11:02  curt
 // Shuffled stl type names a bit.
 // Began adding support for tri-fanning (or maybe other arrangments too.)

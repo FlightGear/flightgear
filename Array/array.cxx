@@ -107,24 +107,55 @@ FGArray::close() {
 }
 
 
-// parse Array file
+// parse Array file, pass in the bucket so we can make up values when
+// the file wasn't found.
 int
-FGArray::parse() {
-    *in >> originx >> originy;
-    *in >> cols >> col_step;
-    *in >> rows >> row_step;
+FGArray::parse( FGBucket& b ) {
+    if ( in->is_open() ) {
+	// file open, parse
+	*in >> originx >> originy;
+	*in >> cols >> col_step;
+	*in >> rows >> row_step;
 
-    cout << "    origin  = " << originx << "  " << originy << endl;
-    cout << "    cols = " << cols << "  rows = " << rows << endl;
-    cout << "    col_step = " << col_step << "  row_step = " << row_step <<endl;
+	cout << "    origin  = " << originx << "  " << originy << endl;
+	cout << "    cols = " << cols << "  rows = " << rows << endl;
+	cout << "    col_step = " << col_step 
+	     << "  row_step = " << row_step <<endl;
 
-    for ( int i = 0; i < cols; i++ ) {
-	for ( int j = 0; j < rows; j++ ) {
-	    *in >> in_data[i][j];
+	for ( int i = 0; i < cols; i++ ) {
+	    for ( int j = 0; j < rows; j++ ) {
+		*in >> in_data[i][j];
+	    }
 	}
-    }
 
-    cout << "    Done parsing\n";
+	cout << "    Done parsing\n";
+    } else {
+	// file not open (not found?), fill with zero'd data
+
+	originx = ( b.get_center_lon() - 0.5 * b.get_width() ) * 3600.0;
+	originy = ( b.get_center_lat() - 0.5 * b.get_height() ) * 3600.0;
+
+	double max_x = ( b.get_center_lon() + 0.5 * b.get_width() ) * 3600.0;
+	double max_y = ( b.get_center_lat() + 0.5 * b.get_height() ) * 3600.0;
+
+	cols = 3;
+	col_step = (max_x - originx) / (cols - 1);
+	rows = 3;
+	row_step = (max_y - originy) / (rows - 1);
+
+	cout << "    origin  = " << originx << "  " << originy << endl;
+	cout << "    cols = " << cols << "  rows = " << rows << endl;
+	cout << "    col_step = " << col_step 
+	     << "  row_step = " << row_step <<endl;
+
+	for ( int i = 0; i < cols; i++ ) {
+	    for ( int j = 0; j < rows; j++ ) {
+		in_data[i][j] = 0.0;
+	    }
+	}
+
+	cout << "    File not open, so using zero'd data" << endl;
+    }
 
     return 1;
 }
@@ -132,9 +163,11 @@ FGArray::parse() {
 
 // add a node to the output corner node list
 void FGArray::add_corner_node( int i, int j, double val ) {
+    
     double x = (originx + i * col_step) / 3600.0;
     double y = (originy + j * row_step) / 3600.0;
-    // cout << Point3D(x, y, val) << endl;
+    // cout << "originx = " << originx << "  originy = " << originy << endl;
+    // cout << "corner = " << Point3D(x, y, val) << endl;
     corner_list.push_back( Point3D(x, y, val) );
 }
 
@@ -148,8 +181,9 @@ void FGArray::add_fit_node( int i, int j, double val ) {
 }
 
 
-// Use least squares to fit a simpler data set to dem data
-void FGArray::fit( double error ) {
+// Use least squares to fit a simpler data set to dem data.  Return
+// the number of fitted nodes
+int FGArray::fit( double error ) {
     double x[ARRAY_SIZE_1], y[ARRAY_SIZE_1];
     double m, b, max_error, error_sq;
     double x1, y1;
@@ -162,8 +196,9 @@ void FGArray::fit( double error ) {
 
     error_sq = error * error;
 
-    cout << "  Initializing output mesh structure" << endl;
-    // outputmesh_init();
+    cout << "  Initializing fitted node list" << endl;
+    corner_list.clear();
+    node_list.clear();
 
     // determine dimensions
     colmin = 0;
@@ -297,6 +332,9 @@ void FGArray::fit( double error ) {
     }
 
     // outputmesh_output_nodes(fg_root, p);
+
+    // return fit nodes + 4 corners
+    return node_list.size() + 4;
 }
 
 
@@ -539,6 +577,9 @@ FGArray::~FGArray( void ) {
 
 
 // $Log$
+// Revision 1.8  1999/04/05 02:15:23  curt
+// Make dem fitting more robust in cases when no dem file available.
+//
 // Revision 1.7  1999/03/27 14:05:10  curt
 // More sensible handling of the case where no dem file for this tile exists
 // (or has been generated).
