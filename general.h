@@ -31,21 +31,24 @@
 
 
 /* the general house keeping structure definition */
-struct fgGENERAL {
+typedef struct {
     /* The flight gear "root" directory */
     char *root_dir;
-};
+} fgGENERAL;
 
 /* general contains all the general house keeping parameters. */
-extern struct fgGENERAL general;
+extern fgGENERAL general;
 
 #endif /* _GENERAL_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/22 02:59:35  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.3  1998/03/14 00:27:58  curt
+/* Promoted fgGENERAL to a "type" of struct.
 /*
+ * Revision 1.2  1998/01/22 02:59:35  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.1  1997/12/15 21:02:16  curt
  * Moved to .../FlightGear/Src/Include/
  *
