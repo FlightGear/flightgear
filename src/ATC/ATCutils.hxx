@@ -59,7 +59,7 @@ string GetPhoneticIdent(int i);
 *
 ********************************/
 
-// Given two positions, get the HORIZONTAL separation (in meters)
+// Given two positions (lat & lon in degrees), get the HORIZONTAL separation (in meters)
 double dclGetHorizontalSeparation(Point3D pos1, Point3D pos2);
 
 // Given a point and a line, get the HORIZONTAL shortest distance from the point to a point on the line.
