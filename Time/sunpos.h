@@ -43,9 +43,8 @@
 #include <time.h>
 
 
-/* given a particular time (expressed in seconds since the unix
- * epoch), compute position on the earth (lat, lon) such that sun is
- * directly overhead.  (lat, lon are reported in radians */
+/* update the cur_time_params structure with the current sun position */
+void fgUpdateSunPos();
 
 void fgSunPosition(time_t ssue, double *lon, double *lat);
 

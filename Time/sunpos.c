@@ -44,7 +44,11 @@
 #include <time.h>
 
 #include "sunpos.h"
+#include "fg_time.h"
 #include "../constants.h"
+#include "../Math/fg_geodesy.h"
+#include "../Math/polar.h"
+
 #undef E
 
 
@@ -253,10 +257,32 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 }
 
 
+/* update the cur_time_params structure with the current sun position */
+void fgUpdateSunPos() {
+    struct time_params *t;
+    double sun_gd_lat, sl_radius;
+    static int time_warp = 0;
+
+    t = &cur_time_params;
+
+    time_warp += 600; /* increase this to make the world spin real fast */
+
+    fgSunPosition(time(NULL) + time_warp, &t->sun_lon, &sun_gd_lat);
+
+    fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &t->sun_gc_lat);
+
+    t->fg_sunpos = fgPolarToCart(t->sun_lon, t->sun_gc_lat, sl_radius);
+}
+
+
 /* $Log$
-/* Revision 1.2  1997/08/06 00:24:32  curt
-/* Working on correct real time sun lighting.
+/* Revision 1.3  1997/08/13 20:23:49  curt
+/* The interface to sunpos now updates a global structure rather than returning
+/* current sun position.
 /*
+ * Revision 1.2  1997/08/06 00:24:32  curt
+ * Working on correct real time sun lighting.
+ *
  * Revision 1.1  1997/08/01 15:27:56  curt
  * Initial revision.
  *
