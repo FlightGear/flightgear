@@ -46,8 +46,6 @@ public:
 
 private:
 
-    double _spin;
-
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _setting_node;
     SGPropertyNode_ptr _pressure_node;

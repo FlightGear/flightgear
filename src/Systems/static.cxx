@@ -5,6 +5,7 @@
 
 #include "static.hxx"
 #include <Main/fg_props.hxx>
+#include <Main/util.hxx>
 
 
 StaticSystem::StaticSystem ()
@@ -37,11 +38,11 @@ void
 StaticSystem::update (double dt)
 {
     if (_serviceable_node->getBoolValue()) {
+        
         double target = _pressure_in_node->getDoubleValue();
         double current = _pressure_out_node->getDoubleValue();
         double delta = target - current;
-        current += delta * dt;
-        _pressure_out_node->setDoubleValue(current);
+        _pressure_out_node->setDoubleValue(fgGetLowPass(current, target, dt));
     }
 }
 

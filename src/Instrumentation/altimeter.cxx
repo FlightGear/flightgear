@@ -7,6 +7,7 @@
 
 #include "altimeter.hxx"
 #include <Main/fg_props.hxx>
+#include <Main/util.hxx>
 
 
 // Altitude based on pressure difference from sea level.
@@ -82,8 +83,11 @@ Altimeter::update (double dt)
     if (_serviceable_node->getBoolValue()) {
         double pressure = _pressure_node->getDoubleValue();
         double setting = _setting_node->getDoubleValue();
-        _altitude_node
-            ->setDoubleValue(_altitude_table->interpolate(setting-pressure));
+        double altitude =
+            fgGetLowPass(_altitude_node->getDoubleValue(),
+                         _altitude_table->interpolate(setting - pressure),
+                         dt * 10);
+        _altitude_node->setDoubleValue(altitude);
     }
 }
 
