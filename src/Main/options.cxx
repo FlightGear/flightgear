@@ -50,7 +50,6 @@ bool global_fullscreen = true;
 #include <Time/fg_time.hxx>
 
 #include "options.hxx"
-#include "fg_serial.hxx"
 
 FG_USING_STD(string);
 FG_USING_NAMESPACE(std);
@@ -215,8 +214,7 @@ fgOPTIONS::fgOPTIONS() :
     net_id = "Johnney";		// default pilot's name
 
     // initialize port config string list
-    port_options_list.erase ( port_options_list.begin(), 
-			      port_options_list.end() );
+    channel_options_list.clear();
 }
 
 void 
@@ -533,31 +531,35 @@ fgOPTIONS::parse_fov( const string& arg ) {
 }
 
 
-// Parse serial port option --serial=/dev/ttyS1,nmea,4800,out
+// Parse I/O channel option
 //
-// Format is "--serial=device,format,baud,direction" where
+// Format is "--protocol=medium,direction,hz,medium_options,..."
+//
+//   protocol = { nmea, garmin, fgfs, rul, pve, etc. }
+//   medium = { serial, socket, file, etc. }
+//   direction = { in, out, bi }
+//   hz = number of times to process channel per second (floating
+//        point values are ok.
+//
+// Serial example "--nmea=serial,dir,hz,device,baud" where
 // 
-//  device = OS device name to be open()'ed
-//  format = {nmea, garmin,fgfs,rul,pve}
+//  device = OS device name of serial line to be open()'ed
 //  baud = {300, 1200, 2400, ..., 230400}
-//  direction = {in, out, bi}
+//
+// Socket exacmple "--fgfs=socket,dir,hz,machine,port" where
+// 
+//  machine = machine name or ip address if client, leave empty if server
+//  port = port, leave empty to let system choose
+//
+// File example "--garmin=file,dir,hz,filename" where
+// 
+//  filename = file system file name
 
 bool 
-fgOPTIONS::parse_serial( const string& serial_str ) {
-    string::size_type pos;
+fgOPTIONS::parse_channel( const string& type, const string& channel_str ) {
+    // cout << "Channel string = " << channel_str << endl;
 
-    // cout << "Serial string = " << serial_str << endl;
-
-    // a flailing attempt to see if the port config string has a
-    // chance at being valid
-    pos = serial_str.find(",");
-    if ( pos == string::npos ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, 
-		"Malformed serial port configure string" );
-	return false;
-    }
-    
-    port_options_list.push_back( serial_str );
+    channel_options_list.push_back( type + "," + channel_str );
 
     return true;
 }
@@ -744,8 +746,12 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	tris_or_culled = 0;	
     } else if ( arg == "--hud-culled" ) {
 	tris_or_culled = 1;
-    } else if ( arg.find( "--serial=" ) != string::npos ) {
-	parse_serial( arg.substr(9) );
+    } else if ( arg.find( "--fgfs=" ) != string::npos ) {
+	parse_channel( "fgfs", arg.substr(7) );
+    } else if ( arg.find( "--garmin=" ) != string::npos ) {
+	parse_channel( "garmin", arg.substr(9) );
+    } else if ( arg.find( "--nmea=" ) != string::npos ) {
+	parse_channel( "nmea", arg.substr(7) );
 #ifdef FG_NETWORK_OLK
     } else if ( arg == "--net-hud" ) {
 	net_hud_display = 1;	

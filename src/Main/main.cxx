@@ -99,11 +99,11 @@
 #endif
 
 #include "fg_init.hxx"
+#include "fg_io.hxx"
 #include "keyboard.hxx"
 #include "options.hxx"
 #include "splash.hxx"
 #include "views.hxx"
-#include "fg_serial.hxx"
 
 
 // -dw- use custom sioux settings so I can see output window
@@ -812,8 +812,8 @@ static void fgMainLoop( void ) {
     }
 
 #if ! defined( MACOS )
-    // Do any serial port work that might need to be done
-    fgSerialProcess();
+    // Do any I/O channel work that might need to be done
+    fgIOProcess();
 #endif
 
     // see if we need to load any new scenery tiles

@@ -57,6 +57,7 @@
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <FDM/Balloon.h>
+#include <FDM/External.hxx>
 #include <FDM/JSBsim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
@@ -82,9 +83,9 @@
 #endif
 
 #include "fg_init.hxx"
+#include "fg_io.hxx"
 #include "options.hxx"
 #include "views.hxx"
-#include "fg_serial.hxx"
 
 #if defined(FX) && defined(XMESA)
 #include <GL/xmesa.h>
@@ -181,7 +182,10 @@ bool fgInitPosition( void ) {
 // General house keeping initializations
 bool fgInitGeneral( void ) {
     string root;
+
+#if defined(FX) && defined(XMESA)
     char *mesa_win_state;
+#endif
 
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
@@ -238,6 +242,9 @@ bool fgInitSubsystems( void ) {
     } else if ( current_options.get_flight_model() == 
 		FGInterface::FG_MAGICCARPET ) {
 	cur_fdm_state = new FGMagicCarpet;
+    } else if ( current_options.get_flight_model() == 
+		FGInterface::FG_EXTERNAL ) {
+	cur_fdm_state = new FGExternal;
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT,
 		"No flight model, can't init aircraft" );
@@ -499,9 +506,9 @@ bool fgInitSubsystems( void ) {
     // Autopilot init added here, by Jeff Goeke-Smith
     fgAPInit(&current_aircraft);
 
-    // Initialize serial ports
+    // Initialize I/O channels
 #if ! defined( MACOS )
-    fgSerialInit();
+    fgIOInit();
 #endif
 
     FG_LOG( FG_GENERAL, FG_INFO, endl);

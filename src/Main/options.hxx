@@ -46,16 +46,13 @@
 extern bool global_fullscreen;
 #endif
 
+#include <Include/fg_types.hxx>
+
 #include STL_STRING
 #include <vector>
 
 FG_USING_STD(vector);
 FG_USING_STD(string);
-
-typedef vector < string > str_container;
-typedef str_container::iterator str_iterator;
-typedef str_container::const_iterator const_str_iterator;
-
 
 class fgOPTIONS {
 
@@ -189,14 +186,8 @@ private:
     int time_offset_type;	// Will be set to one of the FG_TIME_* enums,
 				// To deterine how time_offset should be used 
 
-    // Serial Ports, we currently support up to four channels
-    // fgSerialPortKind port_a_kind;  // Port a kind
-    // fgSerialPortKind port_b_kind;  // Port b kind
-    // fgSerialPortKind port_c_kind;  // Port c kind
-    // fgSerialPortKind port_d_kind;  // Port d kind
-
     // Serial port configuration strings
-    str_container port_options_list;
+    string_list channel_options_list;
 
     // Network options
     string net_id;
@@ -272,8 +263,8 @@ public:
     inline int get_time_offset() const { return time_offset; }
     inline int get_time_offset_type() const { return time_offset_type; };
 
-    inline str_container get_port_options_list() const { 
-	return port_options_list;
+    inline string_list get_channel_options_list() const { 
+	return channel_options_list;
     }
     inline string get_net_id() const { return net_id; }
 
@@ -318,7 +309,7 @@ private:
     int parse_tile_radius( const string& arg );
     int parse_fdm( const string& fm );
     double parse_fov( const string& arg );
-    bool parse_serial( const string& serial_str );
+    bool parse_channel( const string& type, const string& channel_str );
 };
 
 

@@ -25,12 +25,14 @@ bin_SCRIPTS = runfgfs runfgfs.bat
 
 fgfs_SOURCES = \
 	fg_init.cxx fg_init.hxx \
-	fg_serial.cxx fg_serial.hxx \
+	fg_io.cxx fg_io.hxx \
 	keyboard.cxx keyboard.hxx \
 	main.cxx \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
 	views.cxx views.hxx
+
+#	fg_serial.cxx fg_serial.hxx \
 
 fgfs_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.a \
@@ -40,7 +42,6 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Controls/libControls.a \
 	$(top_builddir)/Simulator/FDM/libFlight.a \
 	$(top_builddir)/Simulator/FDM/Balloon/libBalloon.a \
-	$(top_builddir)/Simulator/FDM/External/libExternal.a \
 	$(top_builddir)/Simulator/FDM/JSBsim/libJSBsim.a \
 	$(top_builddir)/Simulator/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/Simulator/GUI/libGUI.a \
@@ -56,7 +57,6 @@ fgfs_LDADD = \
 	$(top_builddir)/Lib/Screen/libScreen.a \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
-	$(top_builddir)/Lib/Voronoi/libVoronoi.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
 	-lpu -lfnt -lssg -lsg \
 	$(top_builddir)/Lib/Misc/libMisc.a \
