@@ -15,6 +15,13 @@
 #
 # This requires a copy of flightgear running with "--fdm=null" on the
 # specified "$server" host name, at the specified "$port".
+#
+# I highly recommend that you if you plan to feed a large number of
+# coordinates through this script that you presort your list by tile id #
+# That will minimize the load on the FG tile pager since you will process
+# all coordinates for a particular tile before moving on to the next.
+# Also, there is a chance the next tile will already be loaded if it is near
+# the previous (which it will tend to be if you sort by tile id.)
 
 use strict;
 
@@ -39,6 +46,10 @@ if ( !( $fgfs = &connect($server, $port, $timeout) ) ) {
 # doesn't affect the results
 set_prop( $fgfs, "/position/altitude-ft", "5000" );
 
+my( $last_lon ) = -1000.0;
+my( $last_lat ) = -1000.0;
+my( $last_elev ) = -1000.0;
+
 # iterate through the requested coordinates
 while ( <> ) {
     my( $lon, $lat ) = split;
@@ -51,7 +62,24 @@ while ( <> ) {
     # then fetch ground elevation
     my( $elev ) = get_prop( $fgfs, "/position/ground-elev-m" );
 
+    if ( $lon != $last_lon || $lat != $last_lat ) {
+        my($waitcount) = 0;
+        while ( $elev == $last_elev && $waitcount < 5 ) {
+            print "(WARNING: waiting an addition 1 second and requerying.)\n";
+            # same answer as last time, scenery is probably still loading,
+            # let's wait 1 more seconds and hope we get it right the next
+            # time, we bail after 5 seconds.
+            usleep(1000000);
+            $elev = get_prop( $fgfs, "/position/ground-elev-m" );
+            $waitcount++;
+        }
+    }
+
     print "$lon $lat $elev\n";
+
+    $last_elev = $elev;
+    $last_lon = $lon;
+    $last_lat = $lat;
 }
 
 
