@@ -201,7 +201,7 @@ void fgTileMgrRender( void ) {
     /* Find current translation offset */
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
     index = fgTileCacheExists(&p);
-    fgTileCacheEntryInfo(index, &display_list, &scenery.center );
+    fgTileCacheEntryInfo(index, &display_list, &scenery.next_center );
 
     printf("Current bucket = %d %d %d %d\n", p.lon, p.lat, p.x, p.y );
 
@@ -225,11 +225,14 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.18  1998/02/19 13:05:54  curt
-/* Incorporated some HUD tweaks from Michelle America.
-/* Tweaked the sky's sunset/rise colors.
-/* Other misc. tweaks.
+/* Revision 1.19  1998/02/20 00:16:25  curt
+/* Thursday's tweaks.
 /*
+ * Revision 1.18  1998/02/19 13:05:54  curt
+ * Incorporated some HUD tweaks from Michelle America.
+ * Tweaked the sky's sunset/rise colors.
+ * Other misc. tweaks.
+ *
  * Revision 1.17  1998/02/16 13:39:46  curt
  * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
  * tiles to occasionally be missing.

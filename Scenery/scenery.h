@@ -39,6 +39,9 @@ struct fgSCENERY {
     /* center of current scenery chunk */
     struct fgCartesianPoint center;
 
+    /* next center of current scenery chunk */
+    struct fgCartesianPoint next_center;
+
     /* angle of sun relative to current local horizontal */
     double sun_angle;
 };
@@ -63,10 +66,13 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.16  1998/01/27 00:48:03  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.17  1998/02/20 00:16:24  curt
+/* Thursday's tweaks.
 /*
+ * Revision 1.16  1998/01/27 00:48:03  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.15  1998/01/22 02:59:41  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -151,6 +151,15 @@ double get_altitude( void )
 	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
 }
 
+double get_sideslip( void )
+{
+        fgFLIGHT *f;
+        
+        f = current_aircraft.flight;
+        
+        return( FG_Beta );
+}
+
 //
 // The following code deals with painting the "instrument" on the display
 //
@@ -624,21 +633,53 @@ static void drawhorizon( HUD_horizon *horizon )
 {
   int x_inc1, y_inc1;
   int x_inc2, y_inc2;
+  int x_t_inc1, y_t_inc1;
+  
+  int d_bottom_x, d_bottom_y;
+  int d_right_x, d_right_y;
+  int d_top_x, d_top_y;
+  int d_left_x, d_left_y;
+  
 //	struct fgFLIGHT *f = &current_aircraft.flight;
   double sin_bank, cos_bank;
-  double bank_angle;
+  double bank_angle, sideslip_angle;
+  double sin_sideslip, cos_sideslip;
+  double ss_const; // sideslip angle pixels per rad
 
-  bank_angle = (*horizon->load_value)();
+  bank_angle = (*horizon->load_roll)();
+  sideslip_angle = (*horizon->load_sideslip)();
 
 	// sin_bank = sin( FG_2PI-FG_Phi );
 	// cos_bank = cos( FG_2PI-FG_Phi );
   sin_bank = sin(FG_2PI-bank_angle);
   cos_bank = cos(FG_2PI-bank_angle);
+  sin_sideslip = sin(sideslip_angle);
+  cos_sideslip = cos(sideslip_angle);
+  
   x_inc1 = (int)(horizon->scr_width * cos_bank);
   y_inc1 = (int)(horizon->scr_width * sin_bank);
   x_inc2 = (int)(horizon->scr_hole  * cos_bank);
   y_inc2 = (int)(horizon->scr_hole  * sin_bank);
+  
+  x_t_inc1 = (int)(horizon->tee_height * sin_bank);
+  y_t_inc1 = (int)(horizon->tee_height * cos_bank);
+  
+  d_bottom_x = horizon->x_pos;
+  d_bottom_y = horizon->y_pos-horizon->scr_hole;
+  d_right_x  = horizon->x_pos+horizon->scr_hole;
+  d_right_y  = horizon->y_pos;
+  d_top_x    = horizon->x_pos;
+  d_top_y    = horizon->y_pos+horizon->scr_hole;
+  d_left_x   = horizon->x_pos-horizon->scr_hole;
+  d_left_y   = horizon->y_pos;
+  
+  ss_const = (FG_PI_2/2)/(2*horizon->scr_width-2*horizon->scr_hole);
 
+  d_bottom_x += sideslip_angle*ss_const; // horizon->scr_width-horizon->scr_hole;
+  d_right_x  += sideslip_angle*ss_const; // horizon->scr_width-horizon->scr_hole;
+  d_left_x   += sideslip_angle*ss_const; // horizon->scr_width-horizon->scr_hole;
+  d_top_x    += sideslip_angle*ss_const; // horizon->scr_width-horizon->scr_hole;
+   
   if( horizon->scr_hole == 0 )
     {
     drawOneLine( horizon->x_pos - x_inc1, horizon->y_pos - y_inc1, \
@@ -651,6 +692,18 @@ static void drawhorizon( HUD_horizon *horizon )
     drawOneLine( horizon->x_pos + x_inc2, horizon->y_pos + y_inc2, \
                  horizon->x_pos + x_inc1, horizon->y_pos + y_inc1 );
     }
+    
+  // draw teemarks (?) 
+  drawOneLine( horizon->x_pos + x_inc2, horizon->y_pos + y_inc2, \
+               horizon->x_pos + x_inc2 + x_t_inc1, horizon->y_pos + y_inc2 - y_t_inc1 );
+  drawOneLine( horizon->x_pos - x_inc2, horizon->y_pos - y_inc2, \
+               horizon->x_pos - x_inc2 + x_t_inc1, horizon->y_pos - y_inc2 - y_t_inc1 );
+               
+  // draw sideslip diamond (it is not yet positioned correctly )
+  drawOneLine( d_bottom_x, d_bottom_y, d_right_x, d_right_y )
+  drawOneLine( d_right_x, d_right_y, d_top_x, d_top_y );
+  drawOneLine( d_top_x, d_top_y, d_left_x, d_left_y );
+  drawOneLine( d_left_x, d_left_y, d_bottom_x, d_bottom_y );
 }
 
 //  drawControlSurfaces()
@@ -861,7 +914,7 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   fgHUDSetBrightness( hud, BRT_LIGHT ); 
 
   // Small, original HUD configuration
-  // fgHUDAddHorizon( hud, 590, 50, 40, 20, get_roll );
+  // fgHUDAddHorizon( hud, 590, 50, 40, 5, 10, get_roll, get_sideslip );
   // fgHUDAddLadder ( hud, 330, 190, 90, 180, 70, 10,
   //                  NONE, 45, get_roll, get_pitch );
   // fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 220, 100, 280, 5, 10,
@@ -877,7 +930,7 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   // fgHUDAddControlSurfaces( hud, 10, 10, NULL );
   
   // Bigger and placed a bit higher HUD configuration
-  fgHUDAddHorizon( hud, 590, 50, 40, 20, get_roll );
+  fgHUDAddHorizon( hud, 590, 50, 40, 5, 10, get_roll, get_sideslip );
   fgHUDAddLadder ( hud, 330, 270, 120, 180, 70, 10,
                    NONE, 45, get_roll, get_pitch );
   fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 200, 180, 380, 5, 10,
@@ -920,12 +973,14 @@ void add_instrument( Hptr hud, HIptr pinstrument )
 // Constructs a HUD_horizon "object" and installs it into the hud instrument
 // list.
 
-Hptr fgHUDAddHorizon( Hptr hud,     \
-                      int x_pos,    \
-                      int y_pos,    \
-                      int length,   \
-                      int hole_len, \
-                      double (*load_value)() )
+Hptr fgHUDAddHorizon( Hptr hud,      \
+                      int x_pos,     \
+                      int y_pos,     \
+                      int length,    \
+                      int hole_len,  \
+                      int tee_height,\
+                      double (*load_roll)(),\
+                      double (*load_sideslip)() )
 {
     HUD_horizon *phorizon;
     HUD_instr   *pinstrument;
@@ -946,13 +1001,15 @@ Hptr fgHUDAddHorizon( Hptr hud,     \
 	return( NULL );
     }
 
-    phorizon->x_pos      = x_pos;
-    phorizon->y_pos      = y_pos;
-    phorizon->scr_width  = length;
-    phorizon->scr_hole   = hole_len;
-    phorizon->load_value = load_value;
+    phorizon->x_pos         = x_pos;
+    phorizon->y_pos         = y_pos;
+    phorizon->scr_width     = length;
+    phorizon->scr_hole      = hole_len;
+    phorizon->tee_height    = tee_height;
+    phorizon->load_roll     = load_roll;
+    phorizon->load_sideslip = load_sideslip;
     //  Install the horizon in the parent.
-    pinstrument->instr   = phorizon;
+    pinstrument->instr      = phorizon;
     //  Install the instrument into hud.
     add_instrument( hud, pinstrument);
 
@@ -1360,11 +1417,14 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.16  1998/02/19 13:05:49  curt
-/* Incorporated some HUD tweaks from Michelle America.
-/* Tweaked the sky's sunset/rise colors.
-/* Other misc. tweaks.
+/* Revision 1.17  1998/02/20 00:16:21  curt
+/* Thursday's tweaks.
 /*
+ * Revision 1.16  1998/02/19 13:05:49  curt
+ * Incorporated some HUD tweaks from Michelle America.
+ * Tweaked the sky's sunset/rise colors.
+ * Other misc. tweaks.
+ *
  * Revision 1.15  1998/02/16 13:38:39  curt
  * Integrated changes from Charlie Hotchkiss.
  *

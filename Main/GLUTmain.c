@@ -253,7 +253,7 @@ static void fgUpdateViewParams( void ) {
 	/* Tell GL we are about to modify the projection parameters */    
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(55.0, 1.0/win_ratio, 1.0, 100000.0);
+	gluPerspective(55.0, 1.0/win_ratio, 10.0, 100000.0);
       }
 
     xglMatrixMode(GL_MODELVIEW);
@@ -793,9 +793,12 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.63  1998/02/16 16:17:39  curt
-/* Minor tweaks.
+/* Revision 1.64  1998/02/20 00:16:23  curt
+/* Thursday's tweaks.
 /*
+ * Revision 1.63  1998/02/16 16:17:39  curt
+ * Minor tweaks.
+ *
  * Revision 1.62  1998/02/16 13:39:42  curt
  * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
  * tiles to occasionally be missing.

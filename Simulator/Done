@@ -2,6 +2,12 @@
 | Done
 --------------------------------------------------------------------------
 
+2/19/98 -  Fixed a problem with smooth view (scenery center) switch
+           when entering a new tile.
+
+2/18/98 -  Fixed a problem with terrain generation that was causing
+           some strips to be put in the wrong winding list.
+
 2/9/98 -   Fixed a problem with terrain tiles not quite matching up perfectly.
 
 2/2/98 -   Fix warning when compiling with c++ ... also successfully built 

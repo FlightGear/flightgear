@@ -55,6 +55,10 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
 
+    scenery.center.x = scenery.next_center.x;
+    scenery.center.y = scenery.next_center.y;
+    scenery.center.z = scenery.next_center.z;
+
     /* calculate the cartesion coords of the current lat/lon/0 elev */
     v->cur_zero_elev = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
 				     FG_Sea_level_radius * FEET_TO_METER);
@@ -184,9 +188,12 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.14  1998/02/09 15:07:50  curt
-/* Minor tweaks.
+/* Revision 1.15  1998/02/20 00:16:24  curt
+/* Thursday's tweaks.
 /*
+ * Revision 1.14  1998/02/09 15:07:50  curt
+ * Minor tweaks.
+ *
  * Revision 1.13  1998/02/07 15:29:45  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -187,7 +187,9 @@ typedef struct{
 	int y_pos;
 	int scr_width;
 	int scr_hole;
-	double (*load_value)( void );
+	int tee_height;
+	double (*load_roll)( void );
+	double (*load_sideslip)( void );
 } HUD_horizon, *pHUDhorizon;
 
 typedef struct {
@@ -264,7 +266,9 @@ Hptr fgHUDAddHorizon( Hptr hud,
                       int y_pos,
                       int length,
                       int hole_len,
-                      double (*load_value)( void ) );
+                      int tee_height,
+                      double (*load_roll)( void ),
+                      double (*load_sideslip)( void ) );
 
 Hptr fgHUDAddScale  ( Hptr hud,                    \
                       int type,                    \
@@ -353,11 +357,14 @@ void fgUpdateHUD2( Hptr hud ); // Future use?
 #endif // _HUD_H  
 
 /* $Log$
-/* Revision 1.12  1998/02/19 13:05:52  curt
-/* Incorporated some HUD tweaks from Michelle America.
-/* Tweaked the sky's sunset/rise colors.
-/* Other misc. tweaks.
+/* Revision 1.13  1998/02/20 00:16:22  curt
+/* Thursday's tweaks.
 /*
+ * Revision 1.12  1998/02/19 13:05:52  curt
+ * Incorporated some HUD tweaks from Michelle America.
+ * Tweaked the sky's sunset/rise colors.
+ * Other misc. tweaks.
+ *
  * Revision 1.11  1998/02/16 13:38:42  curt
  * Integrated changes from Charlie Hotchkiss.
  *
