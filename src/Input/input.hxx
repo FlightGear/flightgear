@@ -52,9 +52,9 @@ SG_USING_STD(vector);
 
 
 #if defined( UL_WIN32 )
-#define TGT_PLATFORM	"Windows"
+#define TGT_PLATFORM	"windows"
 #else
-#define TGT_PLATFORM	"UNIX"
+#define TGT_PLATFORM	"unix"
 #endif
 
 

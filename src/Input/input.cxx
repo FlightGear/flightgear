@@ -404,12 +404,6 @@ FGInput::_init_joystick ()
       vector<SGPropertyNode_ptr> nodes = js_nodes->getChildren("js-named");
       for (unsigned int i = 0; i < nodes.size(); i++) {
         SGPropertyNode_ptr node = nodes[i];
-        SGPropertyNode *tgt = node->getNode("target-platform", false);
-        if (tgt != NULL) {
-           if ((strcmp(tgt->getStringValue(), TGT_PLATFORM) != NULL) &&
-               (strcmp(tgt->getStringValue(), "All") != NULL))
-              continue;		// Different target platform
-        }
         vector<SGPropertyNode_ptr> name_nodes = node->getChildren("name");
         for (unsigned int j = 0; j < name_nodes.size(); j++) {
             const char * js_name = name_nodes[j]->getStringValue();
@@ -459,22 +453,25 @@ FGInput::_init_joystick ()
     //
     // Initialize the axes.
     //
+    vector<SGPropertyNode_ptr> axes = js_node->getChildren("axis");
+    size_t nb_axes = axes.size();
     int j;
-    for (j = 0; j < naxes; j++) {
-      const SGPropertyNode * axis_node = js_node->getChild("axis", j);
-      if (axis_node == 0) {
-        SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for axis " << j);
-        axis_node = js_node->getChild("axis", j, true);
+    for (j = 0; j < nb_axes; j++) {
+      const SGPropertyNode * axis_node = axes[j];
+      const SGPropertyNode * num_node = axis_node->getChild("number");
+      size_t n_axe = axis_node->getIndex();
+      if (num_node != 0) {
+          n_axe = num_node->getIntValue(TGT_PLATFORM,n_axe);
       }
-      
-      axis &a = _joystick_bindings[i].axes[j];
 
-      js->setDeadBand(j, axis_node->getDoubleValue("dead-band", 0.0));
+      axis &a = _joystick_bindings[i].axes[n_axe];
+
+      js->setDeadBand(n_axe, axis_node->getDoubleValue("dead-band", 0.0));
 
       a.tolerance = axis_node->getDoubleValue("tolerance", 0.002);
-      minRange[j] = axis_node->getDoubleValue("min-range", minRange[j]);
-      maxRange[j] = axis_node->getDoubleValue("max-range", maxRange[j]);
-      center[j] = axis_node->getDoubleValue("center", center[j]);
+      minRange[n_axe] = axis_node->getDoubleValue("min-range", minRange[n_axe]);
+      maxRange[n_axe] = axis_node->getDoubleValue("max-range", maxRange[n_axe]);
+      center[n_axe] = axis_node->getDoubleValue("center", center[n_axe]);
 
       _read_bindings(axis_node, a.bindings, KEYMOD_NONE);
 
@@ -491,17 +488,23 @@ FGInput::_init_joystick ()
     //
     // Initialize the buttons.
     //
+    vector<SGPropertyNode_ptr> buttons = js_node->getChildren("button");
     char buf[32];
     for (j = 0; j < nbuttons; j++) {
-      sprintf(buf, "%d", j);
-      SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << j);
-      _init_button(js_node->getChild("button", j),
-                   _joystick_bindings[i].buttons[j],
+      const SGPropertyNode * button_node = buttons[j];
+      const SGPropertyNode * num_node = button_node->getChild("number");
+      size_t n_but = button_node->getIndex();
+      if (num_node != 0) {
+          n_but = num_node->getIntValue(TGT_PLATFORM,n_but);
+      }
+      sprintf(buf, "%d", n_but);
+      SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << n_but);
+      _init_button(button_node,
+                   _joystick_bindings[i].buttons[n_but],
                    buf);
       
       // get interval-sec property             
-      button &b = _joystick_bindings[i].buttons[j];
-      const SGPropertyNode * button_node = js_node->getChild("button", j);
+      button &b = _joystick_bindings[i].buttons[n_but];
       if (button_node != 0) {
         b.interval_sec = button_node->getDoubleValue("interval-sec",0.0);
         b.last_dt = 0.0;
