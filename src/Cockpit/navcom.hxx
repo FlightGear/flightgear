@@ -32,7 +32,6 @@
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
-#include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
 #include <Sound/morse.hxx>
 

@@ -33,7 +33,6 @@
 #include <simgear/math/vector.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "navcom.hxx"
@@ -342,7 +341,7 @@ double FGNavCom::adjustILSRange( double stationElev, double aircraftElev,
 //     } else {
 // 	return 0;
 //     }
-    return FG_ILS_DEFAULT_RANGE;
+    return FG_LOC_DEFAULT_RANGE;
 }
 
 
