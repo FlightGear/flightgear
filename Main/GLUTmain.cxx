@@ -771,7 +771,12 @@ int fgGlutInit( int *argc, char **argv ) {
     xglutInit(argc, argv);
 
     // Define Display Parameters
-    xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
+    if ( ! current_options.get_panel_status() ) {
+	xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
+    } else {
+	xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | 
+			      GLUT_STENCIL);
+    }
 
     // Define initial window size
     xglutInitWindowSize(640, 480);
@@ -884,6 +889,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.49  1998/09/09 16:25:39  curt
+// Only use GLUT_STENCIL if the instument panel has been requested.
+//
 // Revision 1.48  1998/08/28 18:15:03  curt
 // Added new cockpit code from Friedemann Reinhard
 // <mpt218@faupt212.physik.uni-erlangen.de>
