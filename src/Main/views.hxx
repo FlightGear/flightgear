@@ -45,8 +45,6 @@
 FG_USING_STD(list);
 
 
-// used in views.cxx and tilemgr.cxx
-#define USE_FAST_FOV_CLIP 
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9
 
@@ -71,31 +69,6 @@ public:
 
     // width & height of window
     int winWidth, winHeight;
-
-    // sin and cos of (fov / 2) in Y axis
-    double sin_fov_y, cos_fov_y;
-    double sinlon, coslon;
-
-    // slope of view frustum edge in eye space Y axis
-    double slope_y;
-
-    // sin and cos of (fov / 2) in X axis
-    double sin_fov_x, cos_fov_x;
-
-    // slope of view frustum edge in eye space X axis
-    double slope_x;
-
-#if defined( USE_FAST_FOV_CLIP )
-    double fov_x_clip, fov_y_clip;
-#endif // USE_FAST_FOV_CLIP
-
-    // View frustum cull ratio (% of tiles culled ... used for
-    // reporting purposes)
-    double vfc_ratio;
-
-    // Number of triangles rendered;
-    int tris_rendered;
-    int tris_culled;
 
     // absolute view position
     Point3D abs_view_pos;
@@ -151,9 +124,6 @@ public:
     // the AIRCRAFT matrix
     sgMat4 VIEW_OFFSET;
 
-    // Current model view matrix;
-    GLfloat MODEL_VIEW[16];
-
     // sg versions of our friendly matrices
     sgMat4 LOCAL, UP, VIEW_ROT, TRANS, VIEW, LARC_TO_SSG;
 
@@ -193,18 +163,6 @@ public:
     inline void set_winWidth( int w ) { winWidth = w; }
     inline int get_winHeight() const { return winHeight; }
     inline void set_winHeight( int h ) { winHeight = h; }
-    inline double get_slope_y() const { return slope_y; }
-    inline double get_slope_x() const { return slope_x; }
-#if defined( USE_FAST_FOV_CLIP )
-    inline double get_fov_x_clip() const { return fov_x_clip; }
-    inline double get_fov_y_clip() const { return fov_y_clip; }
-#endif // USE_FAST_FOV_CLIP
-    inline double get_vfc_ratio() const { return vfc_ratio; }
-    inline void set_vfc_ratio(double r) { vfc_ratio = r; }
-    inline int get_tris_rendered() const { return tris_rendered; }
-    inline void set_tris_rendered( int tris) { tris_rendered = tris; }
-    inline int get_tris_culled() const { return tris_culled; }
-    inline void set_tris_culled( int tris) { tris_culled = tris; }
     inline Point3D get_abs_view_pos() const { return abs_view_pos; }
     inline Point3D get_view_pos() const { return view_pos; }
     inline float *get_pilot_offset() { return pilot_offset; }
@@ -232,7 +190,6 @@ public:
     inline float *get_surface_east() { return surface_east; }
     inline float *get_local_up() { return local_up; }
     inline float *get_view_forward() { return view_forward; }
-    inline GLfloat *get_MODEL_VIEW() { return MODEL_VIEW; }
 };
 
 

@@ -73,10 +73,10 @@ void FGView::Init( void ) {
     winHeight = current_options.get_ysize();
 
     if ( ! current_options.get_panel_status() ) {
-	current_view.set_win_ratio( (GLfloat) winWidth / (GLfloat) winHeight );
+	set_win_ratio( (GLfloat) winWidth / (GLfloat) winHeight );
     } else {
-	current_view.set_win_ratio( (GLfloat) winWidth / 
-				    ((GLfloat) (winHeight)*0.4232) );
+	set_win_ratio( (GLfloat) winWidth / 
+		       ((GLfloat) (winHeight)*0.4232) );
     }
 
     // This never changes -- NHV
@@ -102,6 +102,41 @@ void FGView::Init( void ) {
 	
     force_update_fov_math();
 }
+
+
+#define USE_FAST_LOCAL
+#ifdef USE_FAST_LOCAL
+inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
+				const double Phi, const double Psi)
+{
+    SGfloat cosTheta = (SGfloat) cos(Theta);
+    SGfloat sinTheta = (SGfloat) sin(Theta);
+    SGfloat cosPhi   = (SGfloat) cos(Phi);
+    SGfloat sinPhi   = (SGfloat) sin(Phi);
+    SGfloat sinPsi   = (SGfloat) sin(Psi) ;
+    SGfloat cosPsi   = (SGfloat) cos(Psi) ;
+	
+    dst[0][0] = cosPhi * cosTheta;
+    dst[0][1] =	sinPhi * cosPsi + cosPhi * -sinTheta * -sinPsi;
+    dst[0][2] =	sinPhi * sinPsi + cosPhi * -sinTheta * cosPsi;
+    dst[0][3] =	SG_ZERO;
+
+    dst[1][0] = -sinPhi * cosTheta;
+    dst[1][1] =	cosPhi * cosPsi + -sinPhi * -sinTheta * -sinPsi;
+    dst[1][2] =	cosPhi * sinPsi + -sinPhi * -sinTheta * cosPsi;
+    dst[1][3] = SG_ZERO ;
+	
+    dst[2][0] = sinTheta;
+    dst[2][1] =	cosTheta * -sinPsi;
+    dst[2][2] =	cosTheta * cosPsi;
+    dst[2][3] = SG_ZERO;
+	
+    dst[3][0] = SG_ZERO;
+    dst[3][1] = SG_ZERO;
+    dst[3][2] = SG_ZERO;
+    dst[3][3] = SG_ONE ;
+}
+#endif
 
 // Update the view volume, position, and orientation
 void FGView::UpdateViewParams( const FGInterface& f ) {
@@ -176,7 +211,13 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // code to calculate LOCAL matrix calculated from Phi, Theta, and
     // Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
     // flight model
-
+	
+#ifdef USE_FAST_LOCAL
+	
+    fgMakeLOCAL( LOCAL, f.get_Theta(), f.get_Phi(), -f.get_Psi() );
+	
+#else // USE_TEXT_BOOK_METHOD
+	
     sgVec3 rollvec;
     sgSetVec3( rollvec, 0.0, 0.0, 1.0 );
     sgMat4 PHI;		// roll
@@ -202,6 +243,9 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // sgMultMat4( LOCAL, ROT, PSI );
     sgCopyMat4( LOCAL, ROT );
     sgPostMultMat4( LOCAL, PSI );
+
+#endif // YIKES
+	
     // cout << "LOCAL matrix" << endl;
     // print_sgMat4( LOCAL );
 	
@@ -210,8 +254,8 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 		   0.0,
 		   -f.get_Latitude() * RAD_TO_DEG );
 
-    sgSetVec3( local_up, 1.0, 0.0, 0.0 );
-    sgXformVec3( local_up, UP );
+    sgSetVec3( local_up, UP[0][0], UP[0][1], UP[0][2] );
+    //    sgXformVec3( local_up, UP );
     // cout << "Local Up = " << local_up[0] << "," << local_up[1] << ","
     //      << local_up[2] << endl;
     
@@ -228,16 +272,19 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // cout << "VIEWo matrix" << endl;
     // print_sgMat4( VIEWo );
 
-    // generate the sg view up vector
-    sgVec3 vec1;
-    sgSetVec3( vec1, 1.0, 0.0, 0.0 );
-    sgXformVec3( view_up, vec1, VIEWo );
+    // generate the sg view up and forward vectors
+    sgSetVec3( view_up, VIEWo[0][0], VIEWo[0][1], VIEWo[0][2] );
+    // cout << "view = " << view[0] << ","
+    //      << view[1] << "," << view[2] << endl;
+    sgSetVec3( forward, VIEWo[2][0], VIEWo[2][1], VIEWo[2][2] );
+    // cout << "forward = " << forward[0] << ","
+    //      << forward[1] << "," << forward[2] << endl;
 
     // generate the pilot offset vector in world coordinates
     sgVec3 pilot_offset_world;
-    sgSetVec3( vec1, 
+    sgSetVec3( pilot_offset_world, 
 	       pilot_offset[2], pilot_offset[1], -pilot_offset[0] );
-    sgXformVec3( pilot_offset_world, vec1, VIEWo );
+    sgXformVec3( pilot_offset_world, pilot_offset_world, VIEWo );
 
     // generate the view offset matrix
     sgMakeRotMat4( VIEW_OFFSET, view_offset * RAD_TO_DEG, view_up );
@@ -251,31 +298,28 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     sgCopyMat4( VIEW_ROT, VIEWo );
     sgPostMultMat4( VIEW_ROT, VIEW_OFFSET );
     sgPreMultMat4( VIEW_ROT, LARC_TO_SSG );
+	
     // cout << "VIEW_ROT matrix" << endl;
     // print_sgMat4( VIEW_ROT );
 
-    sgMakeTransMat4( TRANS, 
-		     view_pos.x() + pilot_offset_world[0],
-		     view_pos.y() + pilot_offset_world[1],
-		     view_pos.z() + pilot_offset_world[2] );
+	
+    sgVec3 trans_vec;
+    sgSetVec3( trans_vec, 
+	       view_pos.x() + pilot_offset_world[0],
+	       view_pos.y() + pilot_offset_world[1],
+	       view_pos.z() + pilot_offset_world[2] );
 
     // VIEW = VIEW_ROT * TRANS
-    // sgMultMat4( VIEW, VIEW_ROT, TRANS );
     sgCopyMat4( VIEW, VIEW_ROT );
-    sgPostMultMat4( VIEW, TRANS );
+    sgPostMultMat4ByTransMat4( VIEW, trans_vec );
 
-//!!!!!!!!!!!!!!!!!!!	
+    //!!!!!!!!!!!!!!!!!!!	
     // THIS IS THE EXPERIMENTAL VIEWING ANGLE SHIFTER
     // THE MAJORITY OF THE WORK IS DONE IN GUI.CXX
     // this in gui.cxx for now just testing
-	extern float quat_mat[4][4];
-	sgPreMultMat4( VIEW, quat_mat);
-// !!!!!!!!!! testing	
-
-    sgSetVec3( sgvec, 0.0, 0.0, 1.0 );
-    sgXformVec3( forward, sgvec, VIEWo );
-    // cout << "forward = " << forward[0] << ","
-    //      << forward[1] << "," << forward[2] << endl;
+    extern float quat_mat[4][4];
+    sgPreMultMat4( VIEW, quat_mat);
+    // !!!!!!!!!! testing	
 
     sgMakeRotMat4( TMP, view_offset * RAD_TO_DEG, view_up );
     sgXformVec3( view_forward, forward, TMP );
