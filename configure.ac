@@ -1,7 +1,5 @@
 dnl Process this file with autoget.sh to produce a working configure
 dnl script.
-dnl
-dnl $Id$
 
 AC_INIT
 AC_CONFIG_SRCDIR([src/Aircraft/aircraft.cxx])
@@ -12,7 +10,7 @@ AC_PREREQ(2.52)
 dnl Initialize the automake stuff
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(FlightGear, 0.9.6)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.8-pre1)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -403,7 +401,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.3.7 or newer])
+AC_MSG_CHECKING([for simgear 0.3.8 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -414,7 +412,7 @@ AC_TRY_RUN([
 
 #define MIN_MAJOR 0
 #define MIN_MINOR 3
-#define MIN_MICRO 7
+#define MIN_MICRO 8
 
 int main() {
     int major, minor, micro;

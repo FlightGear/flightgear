@@ -1,3 +1,54 @@
+New in 0.9.8
+* December 20, 2004
+
+* Added an encoder and transponder to the available avionics modules.
+
+* Updates to the AI traffic manager.
+* Updates to the submodel system.  This allows things like contrails,
+  payload dropping, projectile firing, and aircraft carrier landings.
+* Added some controls for aircraft carrier operations.
+* Updated to sync with latest JSBSim developments.
+* YAsim adds support for contra-rotating propeller pairs as well as
+  crude models for ITT, Oil Temp and Oil Pressure in the jet turbine
+  engine model.
+* Instruments, avionics, and subsystems are now configurable per
+  aircraft.  You can assemble the correct componets available for each
+  particular aircraft.
+* Updates to the wet compass to make it behave much more like a real
+  wet compass including various errors and motion effects.
+* Make display list usage optional since these can be a net
+  performance loss on some older or low memory platforms.
+* Make sound inaudible until after the scenery is loaded.
+
+* Move radio stack and avionics code from cockpit library to
+  instrumentation library.
+* Added several digital filters to the autopilot: exponential, dobule
+  exponential, moving average, and noise spike.  These are available
+  to aircraft designers via the autopilot config file.
+
+* Fix a crash that could occur when the joystick config specified more
+  buttons or axes than the physical hardware provided.
+* Fixes to make FlightGear work with 16bpp visual depth.
+
+* Various FreeBSD fixes.
+* Various MSVC fixes.
+* Various Mac OS X fixes.
+* gcc 2.95 and 4.0 fixes.
+
+* Updated aircraft: 737, A-10, AN-225, B-52, BAC-TSR2, Concorde,
+  Spitfire, BO-105 Helicopter, F-15 (updated flight control system),
+  Fokker 50, Fokker 100, Seahawk made carrier capable (working
+  arresting hook), 
+
+* New aircraft: Cessna Citation-II (wip), Beech 1900D, DHC-2 Beaver
+  (on floats)
+
+* Updated KAP140 autopilot instrument (used in default C172.)
+
+* Updated Nimitz model (aircraft carrier), updated radio tower models,
+  added Oracle head quarters to bay area scenery, added Dumbarton
+  bridge at the south end of the SFO bay, added a model of Alcatraz, 
+
 New in 0.9.6
 * October 12, 2004
 
