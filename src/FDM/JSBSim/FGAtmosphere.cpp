@@ -69,7 +69,14 @@ CLASS IMPLEMENTATION
 
 
 FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
-                                               vWindNED(3)
+                                               vWindNED(3),
+                                               vDirectiondAccelDt(3),
+                                               vDirectionAccel(3),
+                                               vDirection(3),
+                                               vTurbulence(3),
+                                               vTurbulenceGrad(3),
+                                               vBodyTurbGrad(3),
+                                               vTurbPQR(3)
 {
   Name = "FGAtmosphere";
   lastIndex=0;
@@ -82,6 +89,11 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
   htab[5]=170603.675;
   htab[6]=200131.234;
   htab[7]=259186.352; //ft.
+
+  MagnitudedAccelDt = MagnitudeAccel = Magnitude = 0.0;
+//  turbType = ttNone;
+  turbType = ttBerndt; // temporarily disable turbulence until fully tested
+  TurbGain = 100.0;
 
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
@@ -128,6 +140,11 @@ bool FGAtmosphere::Run(void)
       temperature = exTemperature;
     }
 
+    if (turbType != ttNone) {
+      Turbulence();
+      vWindNED += vTurbulence;
+    }
+
     if (vWindNED(1) != 0.0) psiw = atan2( vWindNED(2), vWindNED(1) );
 
     if (psiw < 0) psiw += 2*M_PI;
@@ -135,6 +152,9 @@ bool FGAtmosphere::Run(void)
     soundspeed = sqrt(SHRatio*Reng*temperature);
 
     State->Seta(soundspeed);
+
+    if (debug_lvl > 1) Debug();
+
   } else {                               // skip Run() execution this time
   }
 
@@ -142,28 +162,31 @@ bool FGAtmosphere::Run(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// See reference 1
 
 void FGAtmosphere::Calculate(double altitude)
 {
-  //see reference [1]
+  double slope, reftemp, refpress;
+  int i = 0;
+  bool lookup = false;
 
-  double slope,reftemp,refpress;
-  int i=0; bool lookup = false;
-  // cout << "Atmosphere:  h=" << altitude << " rho= " << density << endl;
-  i=lastIndex;
-  if(altitude < htab[lastIndex]) {
+  i = lastIndex;
+  if (altitude < htab[lastIndex]) {
     if (altitude <= 0) { 
-      i=0; altitude=0;
+      i = 0;
+      altitude=0;
     } else {
-       i=lastIndex-1;
-       while (htab[i] > altitude) { i--; }
+       i = lastIndex-1;
+       while (htab[i] > altitude) i--;
     }   
   } else if (altitude > htab[lastIndex+1]){
     if (altitude >= htab[7]){
-      i = 7; altitude = htab[7];
+      i = 7;
+      altitude = htab[7];
     } else {
-      i=lastIndex+1;
-      while(htab[i+1] < altitude) { i++; } 
+      i = lastIndex+1;
+      while(htab[i+1] < altitude) i++;
     }  
   } 
 
@@ -235,8 +258,57 @@ void FGAtmosphere::Calculate(double altitude)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGAtmosphere::Turbulence(void)
+{
+  switch (turbType) {
+  case ttBerndt:
+    vDirectiondAccelDt(eX) = 1 - 2.0*(((double)(rand()))/RAND_MAX);
+    vDirectiondAccelDt(eY) = 1 - 2.0*(((double)(rand()))/RAND_MAX);
+    vDirectiondAccelDt(eZ) = 1 - 2.0*(((double)(rand()))/RAND_MAX);
+
+    MagnitudedAccelDt = 1 - 2.0*(((double)(rand()))/RAND_MAX);
+    MagnitudeAccel    += MagnitudedAccelDt*rate*State->Getdt();
+    Magnitude         += MagnitudeAccel*rate*State->Getdt();
+
+    vDirectiondAccelDt.Normalize();
+    vDirectionAccel += vDirectiondAccelDt*rate*State->Getdt();
+    vDirectionAccel.Normalize();
+    vDirection      += vDirectionAccel*rate*State->Getdt();
+    vDirection.Normalize();
+    
+    vTurbulence = TurbGain*Magnitude * vDirection;
+    vTurbulenceGrad = TurbGain*MagnitudeAccel * vDirection;
+
+    vBodyTurbGrad = State->GetTl2b()*vTurbulenceGrad;
+    vTurbPQR(eP) = vBodyTurbGrad(eY)/Aircraft->GetWingSpan();
+    if (Aircraft->GetHTailArm() != 0.0)
+      vTurbPQR(eQ) = vBodyTurbGrad(eZ)/Aircraft->GetHTailArm();
+    else
+      vTurbPQR(eQ) = vBodyTurbGrad(eZ)/10.0;
+
+    if (Aircraft->GetVTailArm())
+      vTurbPQR(eR) = vBodyTurbGrad(eX)/Aircraft->GetVTailArm();
+    else
+      vTurbPQR(eR) = vBodyTurbGrad(eX)/10.0;
+
+    break;
+  default:
+    break;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGAtmosphere::Debug(void)
 {
-    //TODO: Add your source code here
+  if (frame == 0) {
+    cout << "vTurbulence(X), vTurbulence(Y), vTurbulence(Z), "
+         << "vTurbulenceGrad(X), vTurbulenceGrad(Y), vTurbulenceGrad(Z), "
+         << "vDirection(X), vDirection(Y), vDirection(Z), "
+         << "Magnitude, "
+         << "vTurbPQR(P), vTurbPQR(Q), vTurbPQR(R), " << endl;
+  } else {
+    cout << vTurbulence << ", " << vTurbulenceGrad << ", " << vDirection << ", " << Magnitude << ", " << vTurbPQR << endl;
+  }
 }
 

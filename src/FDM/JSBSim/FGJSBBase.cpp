@@ -70,6 +70,7 @@ const string FGJSBBase::JSBSim_version = "0.9.1";
 queue <struct FGJSBBase::Message*> FGJSBBase::Messages;
 struct FGJSBBase::Message FGJSBBase::localMsg;
 unsigned int FGJSBBase::messageId = 0; 
+unsigned int FGJSBBase::frame = 0;
 
 short FGJSBBase::debug_lvl  = 0;
 

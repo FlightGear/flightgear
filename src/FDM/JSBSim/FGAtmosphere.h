@@ -142,8 +142,14 @@ public:
       increases counterclockwise. The wind heading is returned in radians.*/
   inline double GetWindPsi(void) { return psiw; }
   
+  inline void SetTurbGain(double tt) {TurbGain = tt;}
+  
+  inline double GetTurbPQR(int idx) {return vTurbPQR(idx);}
+  
 private:
   double rho;
+
+  enum tType {ttBerndt, ttNone} turbType;
 
   int lastIndex;
   double h;
@@ -154,10 +160,21 @@ private:
   bool useExternal;
   double exTemperature,exDensity,exPressure;
   
+  double MagnitudedAccelDt, MagnitudeAccel, Magnitude;
+  double TurbGain;
+  FGColumnVector3 vDirectiondAccelDt;
+  FGColumnVector3 vDirectionAccel;
+  FGColumnVector3 vDirection;
+  FGColumnVector3 vTurbulence;
+  FGColumnVector3 vTurbulenceGrad;
+  FGColumnVector3 vBodyTurbGrad;
+  FGColumnVector3 vTurbPQR;
+
   FGColumnVector3 vWindNED;
   double psiw;
 
   void Calculate(double altitude);
+  void Turbulence(void);
   void Debug(void);
 };
 

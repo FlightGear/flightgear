@@ -6,6 +6,7 @@ libFlight_a_SOURCES = \
 	ADA.cxx ADA.hxx \
 	Balloon.cxx Balloon.h \
 	External.cxx External.hxx \
+	ExternalNet.cxx ExternalNet.hxx \
 	flight.cxx flight.hxx \
 	IO360.cxx IO360.hxx \
 	JSBSim.cxx JSBSim.hxx \

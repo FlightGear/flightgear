@@ -211,7 +211,7 @@ FGFX::update ()
 
   float rel_wind = cur_fdm_state->get_V_rel_wind(); // FPS
   if (rel_wind > 60.0) {	// a little off 30kt
-    float volume = rel_wind/1200.0;	// FIXME!!!
+    float volume = rel_wind/600.0;	// FIXME!!!
     _wind->set_volume(volume);
     set_playing("wind", true);
   } else {
@@ -273,7 +273,7 @@ FGFX::update ()
 				// if the velocity is under 6kt.
   double speed = cur_fdm_state->get_V_equiv_kts();
   if (gearOnGround > 0 && speed >= 6.0) {
-    double volume = (gearOnGround/totalGear) * (speed/60.0);
+    double volume = 2.0 * (gearOnGround/totalGear) * (speed/60.0);
     _rumble->set_volume(volume);
     set_playing("rumble", true);
   } else {

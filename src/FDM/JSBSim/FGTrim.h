@@ -72,6 +72,10 @@ DEFINITIONS
 
 typedef enum { tLongitudinal, tFull, tGround, tCustom, tNone } TrimMode;
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/

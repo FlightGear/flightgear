@@ -88,6 +88,8 @@ public:
   double GetPowerAvailable(void) {return PowerAvailable;}
 
 private:
+  int crank_counter;
+
   double BrakeHorsePower;
   double SpeedSlope;
   double SpeedIntercept;

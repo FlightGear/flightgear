@@ -349,7 +349,7 @@ bool FGFDMExec::Run(void)
     if (model_iterator == 0L) break;
   }
 
-  Frame++;
+  frame = Frame++;
   State->IncrTime();
 
   return true;

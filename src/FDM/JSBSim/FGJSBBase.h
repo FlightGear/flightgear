@@ -94,6 +94,9 @@ enum eParam {
   FG_PITCHRATE,
   FG_ROLLRATE,
   FG_YAWRATE,
+  FG_AEROP,
+  FG_AEROQ,
+  FG_AEROR,
   FG_CL_SQRD,
   FG_MACH,
   FG_ALTITUDE,
@@ -260,7 +263,7 @@ protected:
   virtual void Debug(void) {};
 
   static short debug_lvl;
-  static int frame;
+  static unsigned int frame;
   static unsigned int messageId;
   
   static const double radtodeg;

@@ -32,8 +32,9 @@ CLASS IMPLEMENTATION
 FGColumnVector3::FGColumnVector3(void)
 {
   rowCtr = 1;
-  //cout << "Allocated: " <<  data << endl;
-  //if (debug_lvl & 2) cout << "Instantiated: FGColumnVector3" << endl;
+  data[0]=0; data[1]=0; data[2]=0; data[3]=0;
+
+  if (debug_lvl & 2) cout << "Instantiated: FGColumnVector3" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -41,16 +42,15 @@ FGColumnVector3::FGColumnVector3(void)
 FGColumnVector3::FGColumnVector3(int m)
 {
   rowCtr = 1;
-  data[1]=0;data[2]=0;data[3]=0;
-  //cout << "Allocated: " <<  data << endl;
-  //if (debug_lvl & 2) cout << "Instantiated: FGColumnVector3" << endl;
+  data[0]=0; data[1]=0; data[2]=0; data[3]=0;
+
+  if (debug_lvl & 2) cout << "Instantiated: FGColumnVector3" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGColumnVector3::~FGColumnVector3(void)
 {
-  //cout << "Freed: " << data << endl;
   if (debug_lvl & 2) cout << "Destroyed:    FGColumnVector3" << endl;
 }
 
