@@ -366,7 +366,7 @@ readTextChunk (const SGPropertyNode * node)
     string propName = node->getStringValue("property");
     float scale = node->getFloatValue("scale", 1.0);
     float offset = node->getFloatValue("offset", 0.0);
-    bool truncation = node->getFloatValue("truncate", false);
+    bool truncation = node->getBoolValue("truncate", false);
     SGPropertyNode * target = fgGetNode(propName.c_str(), true);
     chunk = new FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE, target,
 				   format, scale, offset, truncation);
