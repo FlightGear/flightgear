@@ -141,16 +141,14 @@ void YASim::init()
     int i;
     for(i=0; i<a->numGear(); i++) {
         Gear* g = a->getGear(i);
-        FGGearInterface fgg;
+	SGPropertyNode * node = fgGetNode("gear/gear", i, true);
         float pos[3];
         g->getPosition(pos);
-        fgg.SetX(pos[0]); fgg.SetY(-pos[1]); fgg.SetZ(-pos[2]);
-        add_gear_unit(fgg);
+	node->setDoubleValue("xoffset-in", pos[0]);
+	node->setDoubleValue("yoffset-in", pos[1]);
+	node->setDoubleValue("zoffset-in", pos[2]);
     }
     for(i=0; i<m->numThrusters(); i++) {
-        FGEngInterface fge;
-        add_engine(fge);
-
 	// Sanify the initial input conditions
 	char buf[64];
  	sprintf(buf, "/controls/throttle[%d]", i);        fgSetFloat(buf, 0);
@@ -402,43 +400,39 @@ void YASim::copyFromYASim()
 
     // Fill out our engine and gear objects
     int i;
-    for(i=0; i<get_num_gear(); i++) {
-        FGGearInterface* fgg = get_gear_unit(i);
+    for(i=0; i<airplane->numGear(); i++) {
         Gear* g = airplane->getGear(i);
-        if(g->getBrake() != 0)
-            fgg->SetBrake(true);
-        if(g->getCompressFraction() != 0)
-            fgg->SetWoW(true);
-	else
-	    fgg->SetWoW(false);
-        fgg->SetPosition(g->getExtension());
+	SGPropertyNode * node = fgGetNode("gear/gear", i, true);
+	node->setBoolValue("has-brake", g->getBrake() != 0);
+	node->setBoolValue("wow", g->getCompressFraction() != 0);
+	node->setBoolValue("position", g->getExtension());
     }
 
-    for(i=0; i<get_num_engines(); i++) {
-        FGEngInterface* fge = get_engine(i);
+    for(i=0; i<model->numThrusters(); i++) {
+        SGPropertyNode * node = fgGetNode("engines/engine", i, true);
         Thruster* t = model->getThruster(i);
 
-        fge->set_Running_Flag(true);
-        fge->set_Cranking_Flag(false);
+	node->setBoolValue("running", true);
+	node->setBoolValue("cranking", false);
 
         // Note: assumes all tanks have the same fuel density!
-        fge->set_Fuel_Flow(CM2GALS * t->getFuelFlow()
-                           / airplane->getFuelDensity(0));
+	node->setDoubleValue("fuel-flow-gph", CM2GALS * t->getFuelFlow()
+			     / airplane->getFuelDensity(0));
 
         float tmp[3];
         t->getThrust(tmp);
-        fge->set_prop_thrust(Math::mag3(tmp) * KG2LBS / 9.8);
+	node->setDoubleValue("prop-thrust", Math::mag3(tmp) * KG2LBS / 9.8);
 
         PropEngine* pe = t->getPropEngine();
         if(pe) {
-            fge->set_RPM(pe->getOmega() * RAD2RPM);
+	    node->setDoubleValue("rpm", pe->getOmega() * RAD2RPM);
 
             pe->getTorque(tmp);
             float power = Math::mag3(tmp) * pe->getOmega();
             float maxPower = pe->getPistonEngine()->getMaxPower();
 
-            fge->set_MaxHP(maxPower * W2HP);
-            fge->set_Percentage_Power(100 * power/maxPower);
+	    node->setDoubleValue("max-hp", maxPower * W2HP);
+	    node->setDoubleValue("power-pct", 100 * power/maxPower);
         }
     }
 }

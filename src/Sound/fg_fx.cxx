@@ -192,11 +192,9 @@ FGFX::init ()
   ////////////////////////////////////////////////////////////////////
 
   for (i = 0; i < MAX_ENGINES; i++) {
-    char buf[100];
-    sprintf(buf, "/engines/engine[%d]/running", i);
-    _engine_running_prop[i] = fgGetNode(buf, true);
-    sprintf(buf, "/engines/engine[%d]/cranking", i);
-    _engine_cranking_prop[i] = fgGetNode(buf, true);
+    SGPropertyNode * node = fgGetNode("engines/engine", i, true);
+    _engine_running_prop[i] = node->getChild("running", 0, true);
+    _engine_cranking_prop[i] = node->getChild("cranking", 0, true);
   }
   _stall_warning_prop = fgGetNode("/sim/aero/alarms/stall-warning", true);
   _vc_prop = fgGetNode("/velocities/airspeed-kt", true);
@@ -226,16 +224,14 @@ FGFX::update (int dt)
   
   for (i = 0; i < MAX_ENGINES; i++) {
 
-    if (cur_fdm_state->get_num_engines() > 0 &&
-	_engine_running_prop[i]->getBoolValue()) {
+    SGPropertyNode * node = fgGetNode("engines/engine", i, true);
+
+    if (_engine_running_prop[i]->getBoolValue()) {
 	  // pitch corresponds to rpm
 	  // volume corresponds to manifold pressure
 
       double rpm_factor;
-      if ( cur_fdm_state->get_num_engines() > 0 )
-	rpm_factor = cur_fdm_state->get_engine(i)->get_RPM() / 2500.0;
-      else
-	rpm_factor = 1.0;
+      rpm_factor = node->getDoubleValue("rpm") / 2500.0;
 
       double pitch = 0.3 + rpm_factor * 3.0;
 
@@ -247,11 +243,7 @@ FGFX::update (int dt)
 	pitch = 5.0;
 
       double mp_factor;
-      if ( cur_fdm_state->get_num_engines() > 0 )
-	mp_factor =
-	  cur_fdm_state->get_engine(i)->get_Manifold_Pressure() / 100;
-      else
-	mp_factor = 0.3;
+      mp_factor = node->getDoubleValue("mp-osi") / 100;
 
       double volume = 0.15 + mp_factor / 2.0;
 
@@ -311,7 +303,6 @@ FGFX::update (int dt)
   // Update the rumble.
   ////////////////////////////////////////////////////////////////////
 
-  float totalGear = min(cur_fdm_state->get_num_gear(), int(MAX_GEAR));
   float gearOnGround = 0;
 
 
@@ -324,10 +315,11 @@ FGFX::update (int dt)
 
 				// FIXME: take rotational velocities
 				// into account as well.
-  for (i = 0; i < totalGear; i++) {
+  for (i = 0; i < MAX_GEAR; i++) {
+    SGPropertyNode * node = fgGetNode("gear/gear", i, true);
     // cout << "air speed = " << cur_fdm_state->get_V_equiv_kts();
     // cout << "  wheel " << i << " speed = " << _wheel_spin[i];
-    if (cur_fdm_state->get_gear_unit(i)->GetWoW()) {
+    if (node->getBoolValue("wow")) {
       gearOnGround++;
       if (!_gear_on_ground[i]) {
           // wheel just touched down
@@ -377,7 +369,7 @@ FGFX::update (int dt)
 				// velocity is under ~0.25 kt.
   double speed = cur_fdm_state->get_V_equiv_kts();
   if (gearOnGround > 0  && speed > 0.5) {
-    double volume = 2.0 * (gearOnGround/totalGear) * log(speed)/12; //(speed/60.0);
+    double volume = 2.0 * (gearOnGround/MAX_GEAR) * log(speed)/12; //(speed/60.0);
     _rumble->set_volume(volume);
     set_playing("rumble", true);
   } else {

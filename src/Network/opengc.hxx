@@ -33,7 +33,7 @@
 #include "protocol.hxx"
 #include "opengc_data.hxx"
 
-class FGOpenGC : public FGProtocol, public FGInterface, public FGEngInterface  {
+class FGOpenGC : public FGProtocol, public FGInterface {
 
     ogcFGData buf;
     int length;

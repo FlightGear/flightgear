@@ -65,22 +65,10 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     eng.init( get_delta_t() );
     // dcl - in passing dt to init rather than update I am assuming
     // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
-
-    // update the engines interface
-    FGEngInterface e;
-    add_engine( e );
-
-    // Fill the fuel tanks
-    // Hardwired to C172 full tanks for now - need to fix this sometime
-    // Also note that this is the max quantity - the usable quantity
-    // is slightly less
-    set_Tank1Fuel(28.0);
-    set_Tank2Fuel(28.0);
 }
 
 FGLaRCsim::~FGLaRCsim(void) {
     if ( lsic != NULL ) {
-        free_engines();
         delete lsic;
         lsic = NULL;
     }
@@ -117,41 +105,30 @@ void FGLaRCsim::update( int multiloop ) {
 	eng.update();
 
 	// copy engine state values onto "bus"
-	FGEngInterface *e = get_engine( 0 );
-	e->set_Throttle( globals->get_controls()->get_throttle(0) * 100.0 );
-	e->set_Mixture( 80 );	// ???????
-	e->set_Prop_Advance( 100 );
-	e->set_RPM( eng.get_RPM() );
-	e->set_Manifold_Pressure( eng.get_Manifold_Pressure() );
-	e->set_MaxHP( eng.get_MaxHP() );
-	e->set_Percentage_Power( eng.get_Percentage_Power() );
-	e->set_EGT( eng.get_EGT() );
-	e->set_CHT( eng.get_CHT() );
-	e->set_prop_thrust( eng.get_prop_thrust_SI() );
-	e->set_Fuel_Flow( eng.get_fuel_flow_gals_hr() );
-	e->set_Oil_Temp( eng.get_oil_temp() );
-	e->set_Running_Flag( eng.getRunningFlag() );
-	e->set_Cranking_Flag( eng.getCrankingFlag() );
+	fgSetDouble("/engines/engine/rpm", eng.get_RPM());
+	fgSetDouble("/engines/engine/mp-osi", eng.get_Manifold_Pressure());
+	fgSetDouble("/engines/engine/max-hp", eng.get_MaxHP());
+	fgSetDouble("/engines/engine/power-pct", eng.get_Percentage_Power());
+	fgSetDouble("/engines/engine/egt-degf", eng.get_EGT());
+	fgSetDouble("/engines/engine/cht-degf", eng.get_CHT());
+	fgSetDouble("/engines/engine/prop-thrust", eng.get_prop_thrust_SI());
+	fgSetDouble("/engines/engine/fuel-flow-gph",
+		    eng.get_fuel_flow_gals_hr());
+	fgSetDouble("/engines/engine/oil-temperature-degf",
+		    eng.get_oil_temp());
+	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
+	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
 
         //Assume we are using both tanks equally for now
-	reduce_Tank1Fuel( (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			  * get_delta_t() );
-	reduce_Tank2Fuel( (eng.get_fuel_flow_gals_hr() / (2 * 3600))
-			  * get_delta_t() ); 
+	fgSetDouble("/consumables/fuel/tank[0]",
+		    fgGetDouble("/consumables/fuel/tank[0]")
+		    - (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+		    * get_delta_t());
+	fgSetDouble("/consumables/fuel/tank[1]",
+		    fgGetDouble("/consumables/fuel/tank[1]")
+		    - (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+		    * get_delta_t());
 
-#if 0
-	SG_LOG( SG_FLIGHT, SG_INFO, "Throttle = "
-		<< globals->get_controls()->get_throttle( 0 ) * 100.0);
-	SG_LOG( SG_FLIGHT, SG_INFO, " Mixture = " << 80);
-	SG_LOG( SG_FLIGHT, SG_INFO, " RPM = " << eng.get_RPM());
-	SG_LOG( SG_FLIGHT, SG_INFO, " MP = " << eng.get_Manifold_Pressure());
-	SG_LOG( SG_FLIGHT, SG_INFO, " HP = "
-	  	<< ( eng.get_MaxHP() * eng.get_Percentage_Power()/ 100.0) );
-	SG_LOG( SG_FLIGHT, SG_INFO, " EGT = " << eng.get_EGT());
-	SG_LOG( SG_FLIGHT, SG_INFO, " Thrust (N) "
-	  	<< eng.get_prop_thrust_SI());	// Thrust in Newtons
-	SG_LOG( SG_FLIGHT, SG_INFO, '\n');
-#endif
         F_X_engine = eng.get_prop_thrust_lbs();
 	// cout << "F_X_engine = " << F_X_engine << '\n';
     }

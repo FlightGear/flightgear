@@ -101,120 +101,6 @@ SG_USING_STD(string);
 
 typedef double FG_VECTOR_3[3];
 
-
-class FGEngInterface {
-
-private:
-
-    // inputs
-    double Throttle;
-    double Mixture;
-    double Prop_Advance;
-//    int Magnetos;			// 0=off, 1=left, 2=right, 3=both
-//    bool Starter;			// flag to indicate the starter switch is on	
-
-    // outputs
-    double RPM;
-    double Manifold_Pressure;   //inches
-    double MaxHP;
-    double Percentage_Power;    //HP
-    double EGT;                 //deg F
-    double CHT;                 //deg F
-    double prop_thrust;         //lbs
-    double Fuel_Flow;           //Gals/hr
-    double Oil_Temp;		//deg F
-    double Oil_Pressure;	//PSI
-    bool running;		//flag to indicate the engine is running self-sustained
-    bool cranking;		//flag to indicate the engine is being turned by the starter
-    
-    /* others...
-    double PercentN1,N1;  //GE,CFM
-    double PercentN2,N2;
-    double EPR;  //P&W, RR?
-    double FuelFlow;
-    bool AfterBurner;
-    double InletAngles[3];
-    double InletPosition[3];
-    double ThrustVector[3];
-    */
-
-public:
-    FGEngInterface(void);
-    ~FGEngInterface(void);
-    
-    inline double get_Throttle() const { return Throttle; }
-    inline double get_Mixture() const { return Mixture; }
-    inline double get_Prop_Advance() const { return Prop_Advance; }
-    inline double get_RPM() const { return RPM; }
-    inline double get_Manifold_Pressure() const { return Manifold_Pressure; }
-    inline double get_MaxHP() const { return MaxHP; }
-    inline double get_Percentage_Power() const { return Percentage_Power; }
-    inline double get_EGT() const { return EGT; }
-    inline double get_CHT() const { return CHT; }
-    inline double get_prop_thrust() const { return prop_thrust; }
-    inline double get_Fuel_Flow() const { return Fuel_Flow; }
-    inline double get_Oil_Temp() const { return Oil_Temp; }
-    inline double get_Oil_Pressure() const { return Oil_Pressure; }
-    inline bool get_Running_Flag() const { return running; }
-    inline bool get_Cranking_Flag() const { return cranking; }
-
-    inline void set_Throttle( double t ) { Throttle = t; }
-    inline void set_Mixture( double m ) { Mixture = m; }
-    inline void set_Prop_Advance( double p ) { Prop_Advance = p; }
-    inline void set_RPM( double r ) { RPM = r; }
-    inline void set_Manifold_Pressure( double mp ) { Manifold_Pressure = mp; }
-    inline void set_MaxHP( double hp ) { MaxHP = hp; }
-    inline void set_Percentage_Power( double p ) { Percentage_Power = p; }
-    inline void set_EGT( double e ) { EGT = e; }
-    inline void set_CHT( double c ) { CHT = c; }
-    inline void set_prop_thrust( double t ) { prop_thrust = t; }
-    inline void set_Fuel_Flow( double f ) { Fuel_Flow = f; }
-    inline void set_Oil_Temp (double o) { Oil_Temp = o; }
-    inline void set_Running_Flag (bool r) { running = r; }
-    inline void set_Cranking_Flag (bool c) { cranking = c; }
-
-};
-
-typedef vector < FGEngInterface > engine_list;
-
-class FGGearInterface {
-   private:
-   
-     string name;
-     float x,y,z;     // >0 forward of cg, >0 right, >0 down
-     bool brake;      // true if this gear unit has a brake mechanism
-     bool rolls;      // true if this gear unit has a wheel
-     bool WoW;        // true if this gear unit is touching the ground
-     float position;  // 0 if retracted, 1 if extended
-   
-   public:
-     FGGearInterface(void);
-     ~FGGearInterface(void);
-     inline string GetName(void)     { return name; }
-     inline void SetName(string nm)  { name=nm; }
-     inline float GetX(void)         { return x; }
-     inline void SetX(float xloc)    { x=xloc;   }
-     inline float GetY(void)         { return y; }
-     inline void SetY(float yloc)    { y=yloc;   }
-     inline float GetZ(void)         { return z; }
-     inline void SetZ(float zloc)    { z=zloc;   }
-     inline bool GetBrake(void)      { return brake; }
-     inline void SetBrake(bool brk) { brake=brk; }
-     
-     // no good way to implement these right now
-     //inline bool GetRolls(void)      { return rolls; }
-     //inline SetRolls(bool rl)        { rolls=rl; }
-     
-     inline bool GetWoW(void)        { return WoW; }        
-     inline void SetWoW(bool wow)         { WoW=wow;    }     
-     inline float GetPosition(void)  { return position; }
-     inline void SetPosition(float pos) { position=pos; }
-};
-
-typedef vector < FGGearInterface > gear_list;       
-           
-
-
 // This is based heavily on LaRCsim/ls_generic.h
 class FGInterface : public FGSubsystem {
 
@@ -330,18 +216,10 @@ private:
     double sin_longitude, cos_longitude;
     double sin_latitude, cos_latitude;
     double altitude_agl;
-    double Tank1Fuel;             // Gals
-    double Tank2Fuel;             // Gals
 
     double daux[16];		// auxilliary doubles
     float  faux[16];		// auxilliary floats
     int    iaux[16];		// auxilliary ints
-
-    // Engine list
-    engine_list engines;
-    
-    //gear list
-    gear_list gear;
 
     // SGTimeStamp valid_stamp;          // time this record is valid
     // SGTimeStamp next_stamp;           // time this record is valid
@@ -646,22 +524,6 @@ public:
 					       double weast, 
 					       double wdown );
 
-    // Consumables
-    inline void set_Tank1Fuel( double f ) { Tank1Fuel = f; }
-    inline void set_Tank2Fuel( double f ) { Tank2Fuel = f; }
-
-    inline void reduce_Tank1Fuel( double f ) { 
-        Tank1Fuel -= f;
-        if(Tank1Fuel < 0)
-	    Tank1Fuel = 0;
-    }
-    inline void reduce_Tank2Fuel( double f ) { 
-        Tank2Fuel -= f;
-        if(Tank2Fuel < 0)
-	    Tank2Fuel = 0;
-    }  
-
-    
     // ========== Mass properties and geometry values ==========
 
     // Inertias
@@ -1206,40 +1068,6 @@ public:
     inline float  get_faux( int n ) const { return faux[n]; }
     inline int    get_iaux( int n ) const { return iaux[n]; }
 
-    // Consumables
-    inline double get_Tank1Fuel() const { return Tank1Fuel; }
-    inline double get_Tank2Fuel() const { return Tank2Fuel; }
-
-    // engines
-    inline int get_num_engines() const {
-	return engines.size();
-    }
-
-    inline FGEngInterface* get_engine( int i ) {
-	return &engines[i];
-    }
-
-    inline void add_engine( FGEngInterface e ) {
-	engines.push_back( e );
-    }
-
-    void free_engines();
-    
-    //gear
-    inline int get_num_gear() const {
-      return gear.size();
-    }
-    
-    inline FGGearInterface* get_gear_unit( int i ) {
-       return &gear[i];
-    }
-    
-    inline void add_gear_unit( FGGearInterface fgi ) {
-       gear.push_back( fgi );
-    }
-
-    void free_gear_units();
-	
 };
 
 

@@ -81,6 +81,27 @@ fgGetNode (const string &path, bool create = false)
 
 
 /**
+ * Get a property node with separate index.
+ *
+ * This method separates the index from the path string, to make it
+ * easier to iterate through multiple components without using sprintf
+ * to add indices.  For example, fgGetNode("foo[1]/bar", 3) will
+ * return the same result as fgGetNode("foo[1]/bar[3]").
+ *
+ * @param path The path of the node, relative to root.
+ * @param index The index for the last member of the path (overrides
+ * any given in the string).
+ * @param create true to create the node if it doesn't exist.
+ * @return The node, or 0 if none exists and none was created.
+ */
+inline SGPropertyNode * 
+fgGetNode (const string &path, int index, bool create = false)
+{
+  return globals->get_props()->getNode(path, index, create);
+}
+
+
+/**
  * Test whether a given node exists.
  *
  * @param path The path of the node, relative to root.

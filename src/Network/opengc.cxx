@@ -61,11 +61,6 @@ bool FGOpenGC::open() {
 static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
     //static void collect_data( ogcFGData *data ) {
 
-    FGEngInterface 	*p_engine[4];  // four is enough unless you're a BUF
-
-    p_engine[0] = cur_fdm_state->get_engine(0);
-    p_engine[1] = cur_fdm_state->get_engine(1);
-
     data->version_id = 0x0011;
 
     data->latitude = fdm->get_Longitude_deg();   
@@ -80,17 +75,17 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
 
     data->magvar = globals->get_mag()->get_magvar();
 
-    data->rpm[0] = p_engine[0]->get_RPM();
-    data->rpm[1] = p_engine[1]->get_RPM();
+    data->rpm[0] = fgGetDouble("/engines/engine[0]/rpm");
+    data->rpm[1] = fgGetDouble("/engines/engine[1]/rpm");
 
-    data->epr[0] = p_engine[0]->get_Manifold_Pressure();
-    data->epr[1] = p_engine[1]->get_Manifold_Pressure();
+    data->epr[0] = fgGetDouble("/engines/engine[0]/mp-osi");
+    data->epr[1] = fgGetDouble("/engines/engine[1]/mp-osi");
 
-    data->egt[0] = p_engine[0]->get_EGT();
-    data->egt[1] = p_engine[1]->get_EGT();
+    data->egt[0] = fgGetDouble("/engines/engine[0]/egt-degf");
+    data->egt[1] = fgGetDouble("/engines/engine[1]/egt-degf");
 
-    data->oil_pressure[0] = p_engine[0]->get_Oil_Pressure();
-    data->oil_pressure[1] = p_engine[1]->get_Oil_Pressure();
+    data->oil_pressure[0] = fgGetDouble("/engines/engine[0]/oil-pressure-psi");
+    data->oil_pressure[1] = fgGetDouble("/engines/engine[1]/oil-pressure-psi");
 
 
 // navigation data

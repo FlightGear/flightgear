@@ -540,37 +540,6 @@ getHeadingMag ()
 
 
 /**
- * Return the fuel level in tank 1
- */
-static double
-getTank1Fuel ()
-{
-  return current_aircraft.fdm_state->get_Tank1Fuel();
-}
-
-static void
-setTank1Fuel ( double gals )
-{
-  current_aircraft.fdm_state->set_Tank1Fuel( gals );
-}
-
-/**
- * Return the fuel level in tank 2
- */
-static double
-getTank2Fuel ()
-{
-  return current_aircraft.fdm_state->get_Tank2Fuel();
-}
-
-static void
-setTank2Fuel ( double gals )
-{
-  current_aircraft.fdm_state->set_Tank2Fuel( gals );
-}
-
-
-/**
  * Get the autopilot altitude lock (true=on).
  */
 static bool
@@ -963,31 +932,6 @@ setWindDown (double speed)
 							   speed);
 }
 
-/*
- * Set the current engine0 running flag.
- */
-static void
-setRunningFlag (bool flag)
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-    current_aircraft.fdm_state->get_engine(0)->set_Running_Flag( flag );
-  }
-}
-
-/*
- * Set the current engine0 cranking flag.
- */
-//Although there is no real reason to want to tell the engine that it is cranking,
-//this is currently necessary to avoid the cranking sound being played 
-//before the engine inits.
-static void
-setCrankingFlag (bool flag)
-{
-  if ( current_aircraft.fdm_state->get_num_engines() > 0 ) {
-    current_aircraft.fdm_state->get_engine(0)->set_Cranking_Flag( flag );
-  }
-}
-
 static double
 getFOV ()
 {
@@ -1124,14 +1068,6 @@ fgInitProps ()
 
 				// Orientation
   fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
-
-  //consumables
-  fgTie("/consumables/fuel/tank[0]/level-gal_us",
-	getTank1Fuel, setTank1Fuel, false);
-  fgSetArchivable("/consumables/fuel/tank[0]/level-gal_us");
-  fgTie("/consumables/fuel/tank[1]/level-gal_us",
-	getTank2Fuel, setTank2Fuel, false);
-  fgSetArchivable("/consumables/fuel/tank[1]/level-gal_us");
 
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
