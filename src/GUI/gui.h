@@ -36,10 +36,14 @@
 #include <GL/glut.h>		// needed before pu.h
 #include <plib/pu.h>		// plib include
 
+#include <simgear/misc/exception.hxx>
+
 // gui.cxx
 extern void guiInit();
 extern void guiToggleMenu(void);
 extern void mkDialog(const char *txt);
+extern void guiErrorMessage(const char *txt);
+extern void guiErrorMessage(const char *txt, const sg_throwable &throwable);
 extern void ConfirmExitDialog(void);
 
 extern void fgDumpSnapShot();
