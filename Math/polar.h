@@ -57,11 +57,14 @@ void fgRotateBatchInit(double Theta, double Phi);
 struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
-#endif POLAR_H
+#endif /* POLAR_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/07/07 21:02:37  curt
-/* Initial revision.
+/* Revision 1.2  1997/07/23 21:52:21  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.1  1997/07/07 21:02:37  curt
+ * Initial revision.
+ *
  */
