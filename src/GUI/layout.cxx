@@ -63,8 +63,9 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
         *w = 17*UNIT;
         *h = 6*UNIT;
     } else if (isType("slider")) {
-        if(getBool("vertical")) *w = 3*UNIT;
-        else                    *h = 3*UNIT;
+        *w = *h = 17*UNIT;
+        if(getBool("vertical")) *w = 4*UNIT;
+        else                    *h = 4*UNIT;
     } else if (isType("list") || isType("airport-list") || isType("dial")) {
         *w = *h = 12*UNIT;
     }
@@ -152,8 +153,8 @@ void LayoutWidget::layout(int x, int y, int w, int h)
         w = h = 3*UNIT;
     } else if (isType("slider")) {
         // Fix the thickness to a constant
-        if(getBool("vertical")) { x += (w-3*UNIT)/2; w = 3*UNIT; }
-        else                    { y += (h-3*UNIT)/2; h = 3*UNIT; }
+        if(getBool("vertical")) { x += (w-4*UNIT)/2; w = 4*UNIT; }
+        else                    { y += (h-4*UNIT)/2; h = 4*UNIT; }
     }
 
     // Set out output geometry

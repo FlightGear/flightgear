@@ -91,6 +91,11 @@ public:
     virtual void applyValues ();
 
 
+    /**
+     * Update state.  Called on active dialogs before rendering.
+     */
+    virtual void update ();
+
 private:
 
     // Private copy constructor to avoid unpleasant surprises.
@@ -127,6 +132,7 @@ private:
         SGPropertyNode_ptr node;
     };
     vector<PropertyObject *> _propertyObjects;
+    vector<PropertyObject *> _liveObjects;
 
     // PUI doesn't copy arrays, so we have to allocate string arrays
     // and then keep pointers so that we can delete them when the

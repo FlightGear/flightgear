@@ -17,11 +17,10 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
     // superclass to indicate "handled by child object", but all it
     // tells us is that the pointer is inside the dialog.  So do the
     // intersection test (again) to make sure we don't start a drag
-    // when inside controls.  A further weirdness: plib inserts a
-    // "ghost" child which covers the whole control. (?)  Skip it.
+    // when inside controls.
     if(!result) return result;
     puObject* child = getFirstChild();
-    if(child) child = child->getNextObject();
+    if(child) child = child->getNextObject(); // Skip the puFrame
     while(child) {
         int cx, cy, cw, ch;
         child->getAbsolutePosition(&cx, &cy);
@@ -108,6 +107,11 @@ copy_to_pui (SGPropertyNode * node, puObject * object)
         object->setValue(node->getStringValue());
         break;
     }
+
+    // Treat puText objects specially, so their "values" can be set
+    // from properties.
+    if(object->getType() & PUCLASS_TEXT)
+        object->setLabel(node->getStringValue());
 }
 
 
@@ -229,6 +233,13 @@ FGDialog::applyValues ()
 }
 
 void
+FGDialog::update ()
+{
+    for (unsigned int i = 0; i < _liveObjects.size(); i++)
+        copy_to_pui(_liveObjects[i]->node, _liveObjects[i]->object);
+}
+
+void
 FGDialog::display (SGPropertyNode * props)
 {
     if (_object != 0) {
@@ -239,9 +250,14 @@ FGDialog::display (SGPropertyNode * props)
     int screenw = globals->get_props()->getIntValue("/sim/startup/xsize");
     int screenh = globals->get_props()->getIntValue("/sim/startup/ysize");
 
+    bool userx = props->hasValue("x");
+    bool usery = props->hasValue("y");
+    bool userw = props->hasValue("width");
+    bool userh = props->hasValue("height");
+
     LayoutWidget wid(props);
     int pw=0, ph=0;
-    if(!props->hasValue("width") || !props->hasValue("height"))
+    if(!userw || !userh)
         wid.calcPrefSize(&pw, &ph);
     pw = props->getIntValue("width", pw);
     ph = props->getIntValue("height", ph);
@@ -250,6 +266,13 @@ FGDialog::display (SGPropertyNode * props)
     wid.layout(px, py, pw, ph);
 
     _object = makeObject(props, screenw, screenh);
+
+    // Remove automatically generated properties, so the layout looks
+    // the same next time around.
+    if(!userx) props->removeChild("x");
+    if(!usery) props->removeChild("y");
+    if(!userw) props->removeChild("width");
+    if(!userh) props->removeChild("height");
 
     if (_object != 0) {
         _object->reveal();
@@ -346,6 +369,8 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         slider->setMinValue(props->getFloatValue("min", 0.0));
         slider->setMaxValue(props->getFloatValue("max", 1.0));
         setupObject(slider, props);
+        if(presetSize)
+            slider->setSize(width, height);
         return slider;
     } else if (type == "dial") {
         puDial * dial = new puDial(x, y, width);
@@ -394,8 +419,10 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
         const char * propname = props->getStringValue("property");
         SGPropertyNode_ptr node = fgGetNode(propname, true);
         copy_to_pui(node, object);
-        if (name != 0)
-            _propertyObjects.push_back(new PropertyObject(name, object, node));
+        PropertyObject* po = new PropertyObject(name, object, node);
+        _propertyObjects.push_back(po);
+        if(props->getBoolValue("live"))
+            _liveObjects.push_back(po);
     }
 
     vector<SGPropertyNode_ptr> nodes = props->getChildren("binding");
