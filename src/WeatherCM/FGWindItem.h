@@ -32,6 +32,9 @@ HISTORY
 28.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
+10.10.1999 Christian Mayer	added mutable for gcc 2.95 portability
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -45,6 +48,9 @@ HISTORY
 /****************************************************************************/
 #include <Math/point3d.hxx>
 #include "FGWeatherDefs.h"
+
+//for the case that mutable isn't supported:
+#include "Include/compiler.h"
 		
 /****************************************************************************/
 /* DEFINES								    */
@@ -58,7 +64,7 @@ FGWindItem operator-(const FGWindItem& arg);
 class FGWindItem
 {
 private:
-    Point3D value;
+    mutable Point3D value;
     WeatherPrecition alt;
 
 protected:

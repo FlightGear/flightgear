@@ -61,8 +61,8 @@
 /* Define to include Oliver's networking support */
 #undef FG_NETWORK_OLK
    
-/* Define to include Oliver's networking support */
-#undef FG_NEW_WEATHER
+/* Define to avoid Christian's new weather code */
+#undef FG_OLD_WEATHER
    
 /* Define if we are building FGFS (should always be defined) */
 #undef FGFS

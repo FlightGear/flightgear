@@ -33,6 +33,8 @@ HISTORY
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
 30.06.1999 Christian Mayer	STL portability
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -93,12 +95,12 @@ public:
     /************************************************************************/
     /* Add a feature to the micro weather				    */
     /************************************************************************/
-    void addWind(const FGWindItem& x);
-    void addTurbulence(const FGTurbulenceItem& x);
-    void addTemperature(const FGTemperatureItem& x);
-    void addAirPressure(const FGAirPressureItem& x);
-    void addVaporPressure(const FGVaporPressureItem& x);
-    void addCloud(const FGCloudItem& x);
+    void addWind(const WeatherPrecition alt, const Point3D& x);
+    void addTurbulence(const WeatherPrecition alt, const Point3D& x);
+    void addTemperature(const WeatherPrecition alt, const WeatherPrecition x);
+    void addAirPressure(const WeatherPrecition alt, const WeatherPrecition x);
+    void addVaporPressure(const WeatherPrecition alt, const WeatherPrecition x);
+    void addCloud(const WeatherPrecition alt, const FGCloudItem& x);
 
     void setSnowRainIntensity(const WeatherPrecition& x);
     void setSnowRainType(const SnowRainType& x);
@@ -114,6 +116,11 @@ public:
     inline FGPhysicalProperty get(const WeatherPrecition& altitude) const
     {
 	return FGPhysicalProperty(StoredWeather, altitude);
+    }
+
+    inline FGPhysicalProperties get(void) const
+    {
+	return FGPhysicalProperties();
     }
 
     /************************************************************************/

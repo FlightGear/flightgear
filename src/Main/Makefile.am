@@ -4,11 +4,11 @@ else
 SERIAL_LIBS =
 endif
 
-if ENABLE_NEW_WEATHER
+if ENABLE_OLD_WEATHER
+WEATHER_LIBS =	$(top_builddir)/Simulator/Weather/libWeather.a
+else
 WEATHER_LIBS =	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a \
 		$(top_builddir)/Lib/Voronoi/libVoronoi.a
-else
-WEATHER_LIBS =	$(top_builddir)/Simulator/Weather/libWeather.a
 endif
 
 

@@ -35,6 +35,8 @@ HISTORY
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
 30.06.1999 Christian Mayer	STL portability
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -48,6 +50,7 @@ HISTORY
 /****************************************************************************/
 #include "FGPhysicalProperties.h"
 #include "FGPhysicalProperty.h"
+#include "sg.h"
 #include <Include/compiler.h>
 #include <vector>
 #include STL_IOSTREAM
@@ -90,7 +93,9 @@ public:
     /* Get the physical properties on the specified point p		    */
     /************************************************************************/
     FGPhysicalProperties get(const Point2D& p) const;
+    FGPhysicalProperties get(const sgVec2& p) const {return get(Point2D(p[0], p[1]));}
     inline FGPhysicalProperty get(const Point3D& p) const {return FGPhysicalProperty(get(Point2D(p)), p.elev());}
+    inline FGPhysicalProperty get(const sgVec3& p) const {return FGPhysicalProperty(get(Point2D(p[0], p[1])), p[3]);}
 
     /************************************************************************/
     /* update the database. Since the last call we had dt seconds	    */

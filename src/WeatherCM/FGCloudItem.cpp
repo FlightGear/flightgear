@@ -33,6 +33,9 @@ HISTORY
 28.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
+09.10.1999 Christian Mayer	changed CloudItem on Durks request
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -43,8 +46,4 @@ HISTORY
 /****************************************************************************/
 /********************************** CODE ************************************/
 /****************************************************************************/
-bool operator<(const FGCloudItem& arg1, const FGCloudItem& arg2)
-{
-    return arg1.alt < arg2.alt;
-}
 

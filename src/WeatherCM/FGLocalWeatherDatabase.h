@@ -34,6 +34,8 @@ HISTORY
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
 30.06.1999 Christian Mayer	STL portability
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -141,6 +143,7 @@ public:
     /************************************************************************/
     FGPhysicalProperty get(const Point3D& p) const;
     FGPhysicalProperty get(const sgVec3& p) const;
+    FGPhysicalProperties get(const sgVec2& p) const;
 
     WeatherPrecition getAirDensity(const Point3D& p) const;
     WeatherPrecition getAirDensity(const sgVec3& p) const;
@@ -149,12 +152,12 @@ public:
     /* Add a weather feature at the point p and surrounding area	    */
     /************************************************************************/
 
-    void addWind(const FGWindItem& x, const Point2D& p);
-    void addTurbulence(const FGTurbulenceItem& x, const Point2D& p);
-    void addTemperature(const FGTemperatureItem& x, const Point2D& p);
-    void addAirPressure(const FGAirPressureItem& x, const Point2D& p);
-    void addVaporPressure(const FGVaporPressureItem& x, const Point2D& p);
-    void addCloud(const FGCloudItem& x, const Point2D& p);
+    void addWind(const WeatherPrecition alt, const Point3D& x, const Point2D& p);
+    void addTurbulence(const WeatherPrecition alt, const Point3D& x, const Point2D& p);
+    void addTemperature(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p);
+    void addAirPressure(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p);
+    void addVaporPressure(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p);
+    void addCloud(const WeatherPrecition alt, const FGCloudItem& x, const Point2D& p);
 
     void setSnowRainIntensity(const WeatherPrecition& x, const Point2D& p);
     void setSnowRainType(const SnowRainType& x, const Point2D& p);

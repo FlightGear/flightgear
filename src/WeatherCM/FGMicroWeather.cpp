@@ -33,6 +33,8 @@ HISTORY
 28.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -58,35 +60,35 @@ FGMicroWeather::~FGMicroWeather()
 /* Add the features to the micro weather				    */
 /* return succss							    */
 /****************************************************************************/
-void FGMicroWeather::addWind(const FGWindItem& x)
+void FGMicroWeather::addWind(const WeatherPrecition alt, const Point3D& x)
 {
-    StoredWeather.Wind.insert(x);
+    StoredWeather.Wind[alt] = x;
 }
 
-void FGMicroWeather::addTurbulence(const FGTurbulenceItem& x)
+void FGMicroWeather::addTurbulence(const WeatherPrecition alt, const Point3D& x)
 {
-    StoredWeather.Turbulence.insert(x);
+    StoredWeather.Turbulence[alt] = x;
 }
 
-void FGMicroWeather::addTemperature(const FGTemperatureItem& x)
+void FGMicroWeather::addTemperature(const WeatherPrecition alt, const WeatherPrecition x)
 {
-    StoredWeather.Temperature.insert(x);
+    StoredWeather.Temperature[alt] = x;
 }
 
-void FGMicroWeather::addAirPressure(const FGAirPressureItem& x)
+void FGMicroWeather::addAirPressure(const WeatherPrecition alt, const WeatherPrecition x)
 {
     cerr << "Error: caught attempt to add AirPressure which is logical wrong\n";
-    //StoredWeather.AirPressure.insert(x);
+    //StoredWeather.AirPressure[alt] = x;
 }
 
-void FGMicroWeather::addVaporPressure(const FGVaporPressureItem& x)
+void FGMicroWeather::addVaporPressure(const WeatherPrecition alt, const WeatherPrecition x)
 {
-    StoredWeather.VaporPressure.insert(x);
+    StoredWeather.VaporPressure[alt] = x;
 }
 
-void FGMicroWeather::addCloud(const FGCloudItem& x)
+void FGMicroWeather::addCloud(const WeatherPrecition alt, const FGCloudItem& x)
 {
-    StoredWeather.Clouds.insert(x);
+    StoredWeather.Clouds[alt] = x;
 }
 
 void FGMicroWeather::setSnowRainIntensity(const WeatherPrecition& x)

@@ -35,6 +35,8 @@ HISTORY
 28.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -232,7 +234,7 @@ FGPhysicalProperties2DVector FGGlobalWeatherDatabase::getAll(const Point2D& p, c
 	
 	if (ret_list.size()<min)
 	{
-	    for(i = 0; (i < (min - ret_list.size())) && (ret_list.size() < database.size()); i++)
+	    for(i = 0; (i < (int)(min - ret_list.size())) && (ret_list.size() < database.size()); i++)
 		ret_list.push_back(*it[i]);
 	}
 	

@@ -32,6 +32,9 @@ HISTORY
 28.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
+09.10.1999 Christian Mayer	changed CloudItem on Durks request
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -55,16 +58,17 @@ HISTORY
 class FGCloudItem
 {
 private:
+    WeatherPrecition thickness;
+    WeatherPrecition density;
+
 protected:
 public:
-    WeatherPrecition value;
-    WeatherPrecition alt;
 
-    FGCloudItem(const WeatherPrecition& a, const WeatherPrecition& v)	{alt = a; value = v;}
-    FGCloudItem(const WeatherPrecition& v)				{alt = 0.0; value = v;}
-    FGCloudItem()							{alt = 0.0; value = FG_WEATHER_DEFAULT_AIRPRESSURE;}
+    FGCloudItem(const WeatherPrecition& t, const WeatherPrecition& d)	{thickness = t; density = d;}
+    FGCloudItem()							{thickness = 0.0; density = 0.0;}
 
-    friend bool operator<(const FGCloudItem& arg1, const FGCloudItem& arg2);
+    WeatherPrecition getThickness(void) const { return thickness; }
+    WeatherPrecition getDensity  (void) const { return density;   }
 };
 
 /****************************************************************************/

@@ -55,7 +55,7 @@
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
-#ifdef FG_NEW_WEATHER
+#ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
 #  include <Weather/weather.hxx>
@@ -190,7 +190,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->force_update_fov_math();
 	    return;
 	case 90: // Z key
-#ifdef FG_NEW_WEATHER
+#ifndef FG_OLD_WEATHER
 	    tmp = WeatherDatabase->getWeatherVisibility();
 	    tmp /= 1.10;
 	    WeatherDatabase->setWeatherVisibility( tmp );
@@ -326,7 +326,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->force_update_fov_math();
 	    return;
 	case 122: // z key
-#ifdef FG_NEW_WEATHER
+#ifndef FG_OLD_WEATHER
 	    tmp = WeatherDatabase->getWeatherVisibility();
 	    tmp *= 1.10;
 	    WeatherDatabase->setWeatherVisibility( tmp );

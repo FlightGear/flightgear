@@ -47,7 +47,7 @@
 #include <Objects/materialmgr.hxx>
 #include <Objects/obj.hxx>
 
-#ifdef FG_NEW_WEATHER
+#ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
 #  include <Weather/weather.hxx>
@@ -695,7 +695,7 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 	if ( t->is_loaded() ) {
 	    // set range selector (LOD trick) to be distance to center
 	    // of tile + bounding radius
-#ifdef FG_NEW_WEATHER
+#ifndef FG_OLD_WEATHER
 	    ranges[1] = WeatherDatabase->getWeatherVisibility()
 		+ t->bounding_radius;
 #else

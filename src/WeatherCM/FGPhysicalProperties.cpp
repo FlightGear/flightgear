@@ -33,6 +33,8 @@ HISTORY
 29.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -50,27 +52,44 @@ FGPhysicalProperties::FGPhysicalProperties()
     /* This standart constructor fills the class with a standard weather    */
     /************************************************************************/
 
-    Wind.insert(FGWindItem(-1000.0, Point3D(0.0)));	//no Wind by default
-    Wind.insert(FGWindItem(10000.0, Point3D(0.0)));	//no Wind by default
+    Wind[-1000.0] = Point3D(0.0);	//no Wind by default
+    Wind[10000.0] = Point3D(0.0);	//no Wind by default
 
-    Turbulence.insert(FGTurbulenceItem(-1000.0, Point3D(0.0)));	//no Turbulence by default
-    Turbulence.insert(FGTurbulenceItem(10000.0, Point3D(0.0)));	//no Turbulence by default
+    Turbulence[-1000.0] = Point3D(0.0);	//no Turbulence by default
+    Turbulence[10000.0] = Point3D(0.0);	//no Turbulence by default
 
     //Initialice with the CINA atmosphere
-    Temperature.insert(FGTemperatureItem(    0.0, (+15.0+273.16)));  
-    Temperature.insert(FGTemperatureItem(11000.0, (-56.5+273.16)));			    
-    Temperature.insert(FGTemperatureItem(20000.0, (-56.5+273.16)));			    
+    Temperature[    0.0] = +15.0 + 273.16;  
+    Temperature[11000.0] = -56.5 + 273.16;			    
+    Temperature[20000.0] = -56.5 + 273.16;			    
 
     AirPressure = FGAirPressureItem(101325.0);	
 
-    VaporPressure.insert(FGVaporPressureItem(    0.0, FG_WEATHER_DEFAULT_VAPORPRESSURE));   //in Pa (I *only* accept SI!)
-    VaporPressure.insert(FGVaporPressureItem(10000.0, FG_WEATHER_DEFAULT_VAPORPRESSURE));   //in Pa (I *only* accept SI!)
+    VaporPressure[    0.0] = FG_WEATHER_DEFAULT_VAPORPRESSURE;   //in Pa (I *only* accept SI!)
+    VaporPressure[10000.0] = FG_WEATHER_DEFAULT_VAPORPRESSURE;   //in Pa (I *only* accept SI!)
 
     //Clouds.insert(FGCloudItem())    => none
     SnowRainIntensity = 0.0;     
     snowRainType = Rain;	    
     LightningProbability = 0.0;
 }
+
+unsigned int FGPhysicalProperties::getNumberOfCloudLayers(void) const
+{
+    return Clouds.size();
+}
+
+FGCloudItem FGPhysicalProperties::getCloudLayer(unsigned int nr) const
+{
+    map<WeatherPrecition,FGCloudItem>::const_iterator CloudsIt = Clouds.begin();
+
+    //set the iterator to the 'nr'th entry
+    for (; nr > 0; nr--)
+	CloudsIt++;
+
+    return CloudsIt->second;
+}
+
 
 
 

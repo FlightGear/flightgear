@@ -75,7 +75,7 @@
 #include <Time/sunpos.hxx>
 #include <Time/moonpos.hxx>
 
-#ifdef FG_NEW_WEATHER
+#ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
 #  include <Weather/weather.hxx>
@@ -429,7 +429,7 @@ bool fgInitSubsystems( void ) {
 			    fgEVENT::FG_EVENT_READY, 30000 );
 
     // Initialize the weather modeling subsystem
-#ifdef FG_NEW_WEATHER
+#ifndef FG_OLD_WEATHER
     // Initialize the WeatherDatabase
     FG_LOG(FG_GENERAL, FG_INFO, "Creating LocalWeatherDatabase");
     FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 

@@ -92,7 +92,7 @@
 #include <Time/fg_timer.hxx>
 #include <Time/sunpos.hxx>
 
-#ifndef FG_NEW_WEATHER
+#ifdef FG_OLD_WEATHER
 #  include <Weather/weather.hxx>
 #endif
 
@@ -593,7 +593,7 @@ static void fgMainLoop( void ) {
     // init routine and we don't have to worry about it again.
 #endif
 
-#ifndef FG_NEW_WEATHER
+#ifdef FG_OLD_WEATHER
     current_weather.Update();
 #endif
 

@@ -34,6 +34,8 @@ HISTORY
 20.06.1999 Christian Mayer	Changed struct to class 
 20.06.1999 Christian Mayer	added lots of consts
 30.06.1999 Christian Mayer	STL portability
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -47,21 +49,17 @@ HISTORY
 /****************************************************************************/
 #include <Include/compiler.h>
 #include <vector>
-#include <set>
+#include <map>
 
 FG_USING_STD(vector);
-FG_USING_STD(set);
+FG_USING_STD(map);
 FG_USING_NAMESPACE(std);
 
 #include <Math/point3d.hxx>
 #include <Voronoi/point2d.h>
 #include "FGWeatherDefs.h"
 
-#include "FGWindItem.h"
-#include "FGTurbulenceItem.h"
-#include "FGTemperatureItem.h"
 #include "FGAirPressureItem.h"
-#include "FGVaporPressureItem.h"
 
 #include "FGCloudItem.h"
 #include "FGSnowRain.h"
@@ -69,13 +67,16 @@ FG_USING_NAMESPACE(std);
 class FGPhysicalProperties
 {
 public:
-    set<FGWindItem> Wind;		    //all Wind vectors
-    set<FGTurbulenceItem> Turbulence;	    //all Turbulence vectors
-    set<FGTemperatureItem> Temperature;	    //in deg. Kelvin (I *only* accept SI!)
-    FGAirPressureItem AirPressure;	    //in Pascal (I *only* accept SI!)
-    set<FGVaporPressureItem> VaporPressure; //in Pascal (I *only* accept SI!)
+    typedef WeatherPrecition Altitude;  
 
-    set<FGCloudItem> Clouds;		    //amount of covering and type
+    map<Altitude,Point3D> Wind;			    //all Wind vectors
+    map<Altitude,Point3D> Turbulence;		    //all Turbulence vectors
+    map<Altitude,WeatherPrecition> Temperature;	    //in deg. Kelvin (I *only* accept SI!)
+    FGAirPressureItem AirPressure;		    //in Pascal (I *only* accept SI!)
+    map<Altitude,WeatherPrecition> VaporPressure;   //in Pascal (I *only* accept SI!)
+
+    map<Altitude,FGCloudItem> Clouds;		    //amount of covering and type
+
     WeatherPrecition SnowRainIntensity;     //this also stands for hail, snow,...
     SnowRainType     snowRainType;	    
     WeatherPrecition LightningProbability;
@@ -88,6 +89,10 @@ public:
     WeatherPrecition TemperatureAt(const WeatherPrecition& a) const;
     WeatherPrecition AirPressureAt(const WeatherPrecition& a) const;
     WeatherPrecition VaporPressureAt(const WeatherPrecition& a) const;
+
+    //for easier access to the cloud stuff:
+    unsigned int getNumberOfCloudLayers(void) const;
+    FGCloudItem getCloudLayer(unsigned int nr) const;
     
     FGPhysicalProperties& operator = ( const FGPhysicalProperties& p ); 
     FGPhysicalProperties& operator *= ( const WeatherPrecition& d ); 
@@ -123,32 +128,44 @@ typedef FGPhysicalProperties2DVector::const_iterator FGPhysicalProperties2DVecto
 
 inline ostream& operator<< ( ostream& out, const FGPhysicalProperties2D& p )
 {
-    out << "Position: " << p.p << "\nStored Wind: ";
-    for (set<FGWindItem>::const_iterator WindIt = p.Wind.begin(); WindIt != p.Wind.end(); WindIt++)
-	out << "(" << WindIt->getValue() << ") at " << WindIt->getAlt() << "m; ";
+    typedef map<FGPhysicalProperties::Altitude, Point3D         >::const_iterator vector_iterator;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecition>::const_iterator scalar_iterator;
 
-    out << "\nStored Turbulence: ";
-    for (set<FGTurbulenceItem>::const_iterator TurbulenceIt = p.Turbulence.begin(); 
-	                                       TurbulenceIt != p.Turbulence.end(); 
-	                                       TurbulenceIt++)
-	out << "(" << TurbulenceIt->getValue() << ") at " << TurbulenceIt->getAlt() << "m; ";
+    out << "Position: " << p.p << endl;
+    
+    out << "Stored Wind: ";
+    for (vector_iterator WindIt = p.Wind.begin(); 
+			 WindIt != p.Wind.end(); 
+			 WindIt++)
+	out << "(" << WindIt->first << ") at " << WindIt->second << "m; ";
+    out << endl;
 
-    out << "\nStored Temperature: ";
-    for (set<FGTemperatureItem>::const_iterator TemperatureIt = p.Temperature.begin(); 
-	                                        TemperatureIt != p.Temperature.end(); 
-	                                        TemperatureIt++)
-	out << TemperatureIt->getValue() << " at " << TemperatureIt->getAlt() << "m; ";
+    out << "Stored Turbulence: ";
+    for (vector_iterator TurbulenceIt = p.Turbulence.begin(); 
+			 TurbulenceIt != p.Turbulence.end(); 
+			 TurbulenceIt++)
+	out << "(" << TurbulenceIt->first << ") at " << TurbulenceIt->second << "m; ";
+    out << endl;
 
-    out << "\nStored AirPressure: ";
-    out << p.AirPressure.getValue(0) << " at " << 0 << "m; ";
+    out << "Stored Temperature: ";
+    for (scalar_iterator TemperatureIt = p.Temperature.begin(); 
+			 TemperatureIt != p.Temperature.end(); 
+			 TemperatureIt++)
+	out << TemperatureIt->first << " at " << TemperatureIt->second << "m; ";
+    out << endl;
 
-    out << "\nStored VaporPressure: ";
-    for (set<FGVaporPressureItem>::const_iterator VaporPressureIt = p.VaporPressure.begin(); 
-	                                          VaporPressureIt != p.VaporPressure.end(); 
-	                                          VaporPressureIt++)
-	out << VaporPressureIt->getValue() << " at " << VaporPressureIt->getAlt() << "m; ";
+    out << "Stored AirPressure: ";
+    out << p.AirPressure.getValue(0) << " at " << 0.0 << "m; ";
+    out << endl;
 
-    return out << "\n";
+    out << "Stored VaporPressure: ";
+    for (scalar_iterator VaporPressureIt = p.VaporPressure.begin(); 
+			 VaporPressureIt != p.VaporPressure.end(); 
+			 VaporPressureIt++)
+	out << VaporPressureIt->first << " at " << VaporPressureIt->second << "m; ";
+    out << endl;
+
+    return out << endl;
 }
 
 
@@ -164,107 +181,99 @@ inline FGPhysicalProperties& FGPhysicalProperties::operator = ( const FGPhysical
 
 inline FGPhysicalProperties& FGPhysicalProperties::operator *= ( const WeatherPrecition& d )
 {
+    typedef map<FGPhysicalProperties::Altitude, Point3D         >::iterator vector_iterator;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecition>::iterator scalar_iterator;
 
-    for (set<FGWindItem>::iterator WindIt = Wind.begin(); 
-	                           WindIt != Wind.end(); 
-	                           WindIt++)
-	*WindIt *= d;
+    for (vector_iterator WindIt = Wind.begin(); 
+	                 WindIt != Wind.end(); 
+	                 WindIt++)
+	WindIt->second *= d;
 
-    for (set<FGTurbulenceItem>::iterator TurbulenceIt = Turbulence.begin(); 
-                                         TurbulenceIt != Turbulence.end(); 
-                                         TurbulenceIt++)
-	*TurbulenceIt  *= d;
+    for (vector_iterator TurbulenceIt = Turbulence.begin(); 
+                         TurbulenceIt != Turbulence.end(); 
+                         TurbulenceIt++)
+	TurbulenceIt->second  *= d;
 
-    for (set<FGTemperatureItem>::iterator TemperatureIt = Temperature.begin(); 
-                                          TemperatureIt != Temperature.end(); 
-                                          TemperatureIt++)
-	*TemperatureIt *= d;
+    for (scalar_iterator TemperatureIt = Temperature.begin(); 
+                         TemperatureIt != Temperature.end(); 
+                         TemperatureIt++)
+	TemperatureIt->second *= d;
 
     AirPressure *= d;
 
-    for (set<FGVaporPressureItem>::iterator VaporPressureIt = VaporPressure.begin(); 
-                                            VaporPressureIt != VaporPressure.end(); 
-                                            VaporPressureIt++)
-	*VaporPressureIt *= d;
+    for (scalar_iterator VaporPressureIt = VaporPressure.begin(); 
+                         VaporPressureIt != VaporPressure.end(); 
+                         VaporPressureIt++)
+	VaporPressureIt->second *= d;
 
     return *this;
 }
 
 inline FGPhysicalProperties& FGPhysicalProperties::operator += (const FGPhysicalProperties& p)
 {
-    for (set<FGWindItem>::const_iterator WindIt = p.Wind.begin(); 
-					 WindIt != p.Wind.end(); 
-					 WindIt++ )
-	if (WindIt != Wind.upper_bound( FGWindItem(WindIt->getAlt(), Point3D(0)) ))
-	    Wind.insert(*WindIt);
-	else
-	    *(Wind.upper_bound( FGWindItem(WindIt->getAlt(), Point3D(0))) ) += WindIt->getValue();
+    typedef map<FGPhysicalProperties::Altitude, Point3D         >::const_iterator vector_iterator;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecition>::const_iterator scalar_iterator;
+
+    for (vector_iterator WindIt = p.Wind.begin(); 
+			 WindIt != p.Wind.end(); 
+			 WindIt++ )
+	if (!Wind.insert(*WindIt).second)	    //when it's not inserted => it's already existing
+	    Wind[WindIt->first] += WindIt->second;  //=> add the value
 	    
-    for (set<FGTurbulenceItem>::const_iterator TurbulenceIt = p.Turbulence.begin(); 
-					       TurbulenceIt != p.Turbulence.end(); 
-                                               TurbulenceIt++)
-	if (TurbulenceIt != Turbulence.upper_bound( FGTurbulenceItem(TurbulenceIt->getAlt(), Point3D(0)) ))
-	    Turbulence.insert(*TurbulenceIt);
-	else
-	    *(Turbulence.upper_bound( FGTurbulenceItem(TurbulenceIt->getAlt(), Point3D(0)) )) += TurbulenceIt->getValue();
+    for (vector_iterator TurbulenceIt = p.Turbulence.begin(); 
+			 TurbulenceIt != p.Turbulence.end(); 
+                         TurbulenceIt++)
+	if (!Turbulence.insert(*TurbulenceIt).second)	
+	    Turbulence[TurbulenceIt->first] += TurbulenceIt->second;
 	    
-    for (set<FGTemperatureItem>::const_iterator TemperatureIt = p.Temperature.begin(); 
-                                                TemperatureIt != p.Temperature.end(); 
-                                                TemperatureIt++)
-	if (TemperatureIt != Temperature.upper_bound( FGTemperatureItem(TemperatureIt->getAlt(), 0.0) ))
-	    Temperature.insert(*TemperatureIt);
-	else
-	    *(Temperature.upper_bound( FGTemperatureItem(TemperatureIt->getAlt(), 0.0) )) += TemperatureIt->getValue();
+    for (scalar_iterator TemperatureIt = p.Temperature.begin(); 
+                         TemperatureIt != p.Temperature.end(); 
+                         TemperatureIt++)
+	if (!Temperature.insert(*TemperatureIt).second)	
+	    Temperature[TemperatureIt->first] += TemperatureIt->second;
 	    
     AirPressure += p.AirPressure.getValue(0.0);
 	    
-    for (set<FGVaporPressureItem>::const_iterator VaporPressureIt = p.VaporPressure.begin(); 
-                                                  VaporPressureIt != p.VaporPressure.end(); 
-                                                  VaporPressureIt++)
-	if (VaporPressureIt != VaporPressure.upper_bound( FGVaporPressureItem(VaporPressureIt->getAlt(), 0.0) ))
-	    VaporPressure.insert(*VaporPressureIt);
-	else
-	    *(VaporPressure.upper_bound( FGVaporPressureItem(VaporPressureIt->getAlt(), 0.0) )) += VaporPressureIt->getValue();
+    for (scalar_iterator VaporPressureIt = p.VaporPressure.begin(); 
+                         VaporPressureIt != p.VaporPressure.end(); 
+                         VaporPressureIt++)
+	if (!VaporPressure.insert(*VaporPressureIt).second)	
+	    VaporPressure[VaporPressureIt->first] += VaporPressureIt->second;
 
     return *this;
 }
 
 inline FGPhysicalProperties& FGPhysicalProperties::operator -= (const FGPhysicalProperties& p)
 {
+    typedef map<FGPhysicalProperties::Altitude, Point3D         >::const_iterator vector_iterator;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecition>::const_iterator scalar_iterator;
 
-    for (set<FGWindItem>::const_iterator WindIt = p.Wind.begin(); 
-	                                 WindIt != p.Wind.end(); 
-	                                 WindIt++)
-	if (WindIt != Wind.upper_bound( FGWindItem(WindIt->getAlt(), Point3D(0)) ))
-	    Wind.insert(-(*WindIt));
-	else
-	    *(Wind.upper_bound( FGWindItem(WindIt->getAlt(), Point3D(0)) ))  -= WindIt->getValue();
+    for (vector_iterator WindIt = p.Wind.begin(); 
+			 WindIt != p.Wind.end(); 
+			 WindIt++ )
+	if (!Wind.insert( make_pair(WindIt->first, -WindIt->second) ).second)	//when it's not inserted => it's already existing
+	    Wind[WindIt->first] -= WindIt->second;				//=> substract the value
 	    
-    for (set<FGTurbulenceItem>::const_iterator TurbulenceIt = p.Turbulence.begin(); 
-                                               TurbulenceIt != p.Turbulence.end(); 
-                                               TurbulenceIt++)
-	if (TurbulenceIt != Turbulence.upper_bound( FGTurbulenceItem(TurbulenceIt->getAlt(), Point3D(0)) ))
-	    Turbulence.insert(-(*TurbulenceIt));
-	else
-	    *(Turbulence.upper_bound( FGTurbulenceItem(TurbulenceIt->getAlt(), Point3D(0)) )) -= TurbulenceIt->getValue();
+    for (vector_iterator TurbulenceIt = p.Turbulence.begin(); 
+			 TurbulenceIt != p.Turbulence.end(); 
+                         TurbulenceIt++)
+	if (!Turbulence.insert( make_pair(TurbulenceIt->first, -TurbulenceIt->second) ).second)	
+	    Turbulence[TurbulenceIt->first] -= TurbulenceIt->second;
 	    
-    for (set<FGTemperatureItem>::const_iterator TemperatureIt = p.Temperature.begin(); 
-	                                        TemperatureIt != p.Temperature.end(); 
-                                                TemperatureIt++)
-	if (TemperatureIt != Temperature.upper_bound( FGTemperatureItem(TemperatureIt->getAlt(), 0.0) ))
-	    Temperature.insert(-(*TemperatureIt));
-	else
-	    *(Temperature.upper_bound( FGTemperatureItem(TemperatureIt->getAlt(), 0.0) )) -= TemperatureIt->getValue();
+    for (scalar_iterator TemperatureIt = p.Temperature.begin(); 
+                         TemperatureIt != p.Temperature.end(); 
+                         TemperatureIt++)
+	if (!Temperature.insert( make_pair(TemperatureIt->first, -TemperatureIt->second) ).second)	
+	    Temperature[TemperatureIt->first] -= TemperatureIt->second;
 	    
     AirPressure -= p.AirPressure.getValue(0.0);
 	    
-    for (set<FGVaporPressureItem>::const_iterator VaporPressureIt = p.VaporPressure.begin(); 
-                                                  VaporPressureIt != p.VaporPressure.end(); 
-                                                  VaporPressureIt++)
-	if (VaporPressureIt != VaporPressure.upper_bound( FGVaporPressureItem(VaporPressureIt->getAlt(), 0.0) ))
-	    VaporPressure.insert(-(*VaporPressureIt));
-	else
-	    *(VaporPressure.upper_bound( FGVaporPressureItem(VaporPressureIt->getAlt(), 0.0) )) -= VaporPressureIt->getValue();
+    for (scalar_iterator VaporPressureIt = p.VaporPressure.begin(); 
+                         VaporPressureIt != p.VaporPressure.end(); 
+                         VaporPressureIt++)
+	if (!VaporPressure.insert( make_pair(VaporPressureIt->first, -VaporPressureIt->second) ).second)	
+	    VaporPressure[VaporPressureIt->first] -= VaporPressureIt->second;
+
 
     return *this;
 }
@@ -272,36 +281,38 @@ inline FGPhysicalProperties& FGPhysicalProperties::operator -= (const FGPhysical
 
 inline Point3D FGPhysicalProperties::WindAt(const WeatherPrecition& a) const
 {
-    set<FGWindItem>::const_iterator it = Wind.lower_bound(FGWindItem(a, Point3D(0)));
-    set<FGWindItem>::const_iterator it2 = it;
+    typedef map<FGPhysicalProperties::Altitude, Point3D>::const_iterator vector_iterator;
+
+    vector_iterator it = Wind.lower_bound(a);
+    vector_iterator it2 = it;
     it--;
 
     //now I've got it->alt < a < it2->alt so I can interpolate
-    return ( (it2->getValue() - it->getValue())/(it2->getAlt() - it->getAlt()) )*
-             (a - it2->getAlt()) + 
-              it2->getValue(); 
+    return ( (it2->second - it->second)/(it2->first - it->first) ) * (a - it2->first) + it2->second; 
 }
 
 inline Point3D FGPhysicalProperties::TurbulenceAt(const WeatherPrecition& a) const
 {
-    set<FGTurbulenceItem>::const_iterator it = Turbulence.lower_bound(FGTurbulenceItem(a, Point3D(0)));
-    set<FGTurbulenceItem>::const_iterator it2 = it;
+    typedef map<FGPhysicalProperties::Altitude, Point3D>::const_iterator vector_iterator;
+
+    vector_iterator it = Turbulence.lower_bound(a);
+    vector_iterator it2 = it;
     it--;
 
     //now I've got it->alt < a < it2->alt so I can interpolate
-    return ( (it2->getValue() - it->getValue() )/(it2->getAlt() - it->getAlt()) )*
-           (a - it2->getAlt())+ it2->getValue(); 
+    return ( (it2->second - it->second)/(it2->first - it->first) ) * (a - it2->first) + it2->second; 
 }
 
 inline WeatherPrecition FGPhysicalProperties::TemperatureAt(const WeatherPrecition& a) const
 {
-    set<FGTemperatureItem>::const_iterator it = Temperature.lower_bound(FGTemperatureItem(a, 0));
-    set<FGTemperatureItem>::const_iterator it2 = it;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecition>::const_iterator scalar_iterator;
+
+    scalar_iterator it = Temperature.lower_bound(a);
+    scalar_iterator it2 = it;
     it--;
 
     //now I've got it->alt < a < it2->alt so I can interpolate
-    return ( (it2->getValue() - it->getValue()) / (it2->getAlt() - it->getAlt()) )* 
-           (a - it2->getAlt() )+ it2->getValue(); 
+    return ( (it2->second - it->second)/(it2->first - it->first) ) * (a - it2->first) + it2->second; 
 }
 
 inline WeatherPrecition FGPhysicalProperties::AirPressureAt(const WeatherPrecition& a) const
@@ -311,34 +322,35 @@ inline WeatherPrecition FGPhysicalProperties::AirPressureAt(const WeatherPreciti
 
 inline WeatherPrecition FGPhysicalProperties::VaporPressureAt(const WeatherPrecition& a) const
 {
-    set<FGVaporPressureItem>::const_iterator it = VaporPressure.lower_bound(FGVaporPressureItem(a, 0));
-    set<FGVaporPressureItem>::const_iterator it2 = it;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecition>::const_iterator scalar_iterator;
+
+    scalar_iterator it = VaporPressure.lower_bound(a);
+    scalar_iterator it2 = it;
     it--;
 
     //now I've got it->alt < a < it2->alt so I can interpolate
-    return ( (it2->getValue() - it->getValue() ) / (it2->getAlt() - it->getAlt() ) ) *
-           (a - it2->getAlt() )+ it2->getValue(); 
+    return ( (it2->second - it->second)/(it2->first - it->first) ) * (a - it2->first) + it2->second; 
 }
 
 
-inline FGPhysicalProperties operator * (const FGPhysicalProperties& a, const WeatherPrecition& b)
+inline FGPhysicalProperties operator * (FGPhysicalProperties a, const WeatherPrecition& b)
 {
-    return FGPhysicalProperties(a) *= b;
+    return a *= b;
 }
 
-inline FGPhysicalProperties operator * (const WeatherPrecition& b, const FGPhysicalProperties& a)
+inline FGPhysicalProperties operator * (const WeatherPrecition& b, FGPhysicalProperties a)
 {
-    return FGPhysicalProperties(a) *= b;
+    return a *= b;
 }
 
-inline FGPhysicalProperties operator + (const FGPhysicalProperties& a, const FGPhysicalProperties& b)
+inline FGPhysicalProperties operator + (FGPhysicalProperties a, const FGPhysicalProperties& b)
 {
-    return FGPhysicalProperties(a) += (FGPhysicalProperties)b;
+    return a += b;
 }
 
-inline FGPhysicalProperties operator - (const FGPhysicalProperties& a, const FGPhysicalProperties& b)
+inline FGPhysicalProperties operator - (FGPhysicalProperties a, const FGPhysicalProperties& b)
 {
-    return FGPhysicalProperties(a) -= (FGPhysicalProperties)b;
+    return a -= b;
 }
 
 /****************************************************************************/

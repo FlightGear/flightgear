@@ -34,6 +34,8 @@ HISTORY
 28.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
@@ -212,6 +214,17 @@ FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
 	return global->get(temp);
 }
 
+FGPhysicalProperties FGLocalWeatherDatabase::get(const sgVec2& p) const
+{
+    Point3D temp(p[0], p[1], 0.0);
+
+    unsigned int a = AreaWith(temp);
+    if (a != 0)
+	return WeatherAreas[a-1].get();
+    else    //point is outside => ask GlobalWeatherDatabase
+	return global->get(p);
+}
+
 WeatherPrecition FGLocalWeatherDatabase::getAirDensity(const Point3D& p) const
 {
     FGPhysicalProperty dummy;
@@ -245,46 +258,46 @@ WeatherPrecition FGLocalWeatherDatabase::getAirDensity(const sgVec3& p) const
 /****************************************************************************/
 /* Add a weather feature at the point p and surrounding area		    */
 /****************************************************************************/
-void FGLocalWeatherDatabase::addWind(const FGWindItem& x, const Point2D& p)
+void FGLocalWeatherDatabase::addWind(const WeatherPrecition alt, const Point3D& x, const Point2D& p)
 {
     unsigned int a = AreaWith(p);
     if (a != 0)
-	WeatherAreas[a-1].addWind(x);
+	WeatherAreas[a-1].addWind(alt, x);
 }
 
-void FGLocalWeatherDatabase::addTurbulence(const FGTurbulenceItem& x, const Point2D& p)
+void FGLocalWeatherDatabase::addTurbulence(const WeatherPrecition alt, const Point3D& x, const Point2D& p)
 {
     unsigned int a = AreaWith(p);
     if (a != 0)
-	WeatherAreas[a-1].addTurbulence(x);
+	WeatherAreas[a-1].addTurbulence(alt, x);
 }
 
-void FGLocalWeatherDatabase::addTemperature(const FGTemperatureItem& x, const Point2D& p)
+void FGLocalWeatherDatabase::addTemperature(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p)
 {
     unsigned int a = AreaWith(p);
     if (a != 0)
-	WeatherAreas[a-1].addTemperature(x);
+	WeatherAreas[a-1].addTemperature(alt, x);
 }
 
-void FGLocalWeatherDatabase::addAirPressure(const FGAirPressureItem& x, const Point2D& p)
+void FGLocalWeatherDatabase::addAirPressure(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p)
 {
     unsigned int a = AreaWith(p);
     if (a != 0)
-	WeatherAreas[a-1].addAirPressure(x);
+	WeatherAreas[a-1].addAirPressure(alt, x);
 }
 
-void FGLocalWeatherDatabase::addVaporPressure(const FGVaporPressureItem& x, const Point2D& p)
+void FGLocalWeatherDatabase::addVaporPressure(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p)
 {
     unsigned int a = AreaWith(p);
     if (a != 0)
-	WeatherAreas[a-1].addVaporPressure(x);
+	WeatherAreas[a-1].addVaporPressure(alt, x);
 }
 
-void FGLocalWeatherDatabase::addCloud(const FGCloudItem& x, const Point2D& p)
+void FGLocalWeatherDatabase::addCloud(const WeatherPrecition alt, const FGCloudItem& x, const Point2D& p)
 {
     unsigned int a = AreaWith(p);
     if (a != 0)
-	WeatherAreas[a-1].addCloud(x);
+	WeatherAreas[a-1].addCloud(alt, x);
 }
 
 void FGLocalWeatherDatabase::setSnowRainIntensity(const WeatherPrecition& x, const Point2D& p)

@@ -34,6 +34,8 @@ HISTORY
 20.06.1999 Christian Mayer      Changed struct to class
 20.06.1999 Christian Mayer	added lots of consts
 30.06.1999 Christian Mayer	STL portability
+11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
+				suggestion
 *****************************************************************************/
 
 /****************************************************************************/
