@@ -458,11 +458,15 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 
 dnl Checks for library functions.
+old_LIBS=$LIBS
+LIBS="$base_LIBS $network_LIBS $opengl_LIBS"
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS( \
+AC_CHECK_FUNCS( [ \
         ftime gettimeofday timegm memcpy bcopy mktime strstr rand mkfifo \
-	random drand48 setitimer getitimer signal GetLocalTime rint getrusage )
+	random drand48 setitimer getitimer signal GetLocalTime rint getrusage \
+	truncf ] )
+LIBS=$old_LIBS
 
 AM_CONFIG_HEADER(src/Include/config.h)
 
