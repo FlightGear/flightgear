@@ -41,6 +41,10 @@ PitotSystem::unbind ()
 # define INHGTOPSF (2116.217/29.9212)
 #endif
 
+#ifndef PSFTOINHG
+# define PSFTOINHG (1/INHGTOPSF)
+#endif
+
 #ifndef KTTOFPS
 # define KTTOFPS 1.68781
 #endif
@@ -52,11 +56,11 @@ PitotSystem::update (double dt)
     if (_serviceable_node->getBoolValue()) {
                                 // The pitot tube sees the forward
                                 // velocity in the body axis.
-        double p = _pressure_node->getDoubleValue(); // static
+        double p = _pressure_node->getDoubleValue() * INHGTOPSF;
         double r = _density_node->getDoubleValue();
         double v = _velocity_node->getDoubleValue() * KTTOFPS;
-        double q = 0.5 * r * v * v / INHGTOPSF; // dynamic
-        _total_pressure_node->setDoubleValue(p + q);
+        double q = 0.5 * r * v * v; // dynamic
+        _total_pressure_node->setDoubleValue((p + q) * PSFTOINHG);
     }
 }
 

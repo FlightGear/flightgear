@@ -34,14 +34,11 @@ AirspeedIndicator::init ()
         fgGetNode("/systems/pitot/total-pressure-inhg", true);
     _static_pressure_node =
         fgGetNode("/systems/static/pressure-inhg", true);
+    _density_node = fgGetNode("/environment/density-slugft3", true);
     _speed_node =
         fgGetNode("/instrumentation/airspeed-indicator/indicated-speed-kt",
                   true);
 }
-
-#ifndef SEA_LEVEL_DENSITY_SLUGFG3
-# define SEA_LEVEL_DENSITY_SLUGFT3 0.002378
-#endif
 
 #ifndef FPSTOKTS
 # define FPSTOKTS 0.592484
@@ -55,14 +52,15 @@ void
 AirspeedIndicator::update (double dt)
 {
     if (_serviceable_node->getBoolValue()) {
-        double pt = _total_pressure_node->getDoubleValue();
-        double p = _static_pressure_node->getDoubleValue();
-        double q = ( pt - p ) * INHGTOPSF;      // dynamic pressure
+        double pt = _total_pressure_node->getDoubleValue() * INHGTOPSF;
+        double p = _static_pressure_node->getDoubleValue() * INHGTOPSF;
+        double r = _density_node->getDoubleValue();
+        double q = ( pt - p );  // dynamic pressure
 
         // Now, reverse the equation (normalize dynamic pressure to
         // avoid "nan" results from sqrt)
         if ( q < 0 ) { q = 0.0; }
-        double v_fps = sqrt((2 * q) / SEA_LEVEL_DENSITY_SLUGFT3);
+        double v_fps = sqrt((2 * q) / r);
 
                                 // Publish the indicated airspeed
         double last_speed_kt = _speed_node->getDoubleValue();

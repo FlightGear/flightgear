@@ -23,6 +23,7 @@
  * /instrumentation/airspeed-indicator/serviceable
  * /systems/pitot[0]/total-pressure-inhg
  * /systems/static[0]/pressure-inhg
+ * /environment/density-slugft3
  *
  * Output properties:
  *
@@ -44,6 +45,7 @@ private:
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _total_pressure_node;
     SGPropertyNode_ptr _static_pressure_node;
+    SGPropertyNode_ptr _density_node;
     SGPropertyNode_ptr _speed_node;
     
 };
