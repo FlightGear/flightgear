@@ -270,10 +270,12 @@ void FGTileMgr::initialize_queue()
 // given the current lon/lat (in degrees), fill in the array of local
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
-int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
+int FGTileMgr::update( double visibility_meters ) {
+    FGLocation *location = globals->get_current_view()->getFGLocation();
     sgdVec3 abs_pos_vector;
-    sgdCopyVec3(abs_pos_vector , globals->get_current_view()->get_absolute_view_pos());
-    return update( lon, lat, visibility_meters, abs_pos_vector,
+    sgdCopyVec3( abs_pos_vector,
+                 globals->get_current_view()->get_absolute_view_pos() );
+    return update( location, visibility_meters, abs_pos_vector,
                    current_bucket, previous_bucket,
                    globals->get_scenery()->get_center() );
 }
@@ -367,14 +369,14 @@ void FGTileMgr::update_queues()
 }
 
 
-int FGTileMgr::update( double lon, double lat, double visibility_meters,
+int FGTileMgr::update( FGLocation *location, double visibility_meters,
                        sgdVec3 abs_pos_vector, SGBucket p_current,
                        SGBucket p_previous, Point3D center ) {
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << lon << " " << lat );
 
-    longitude = lon;
-    latitude = lat;
+    longitude = location->getLongitude_deg();
+    latitude = location->getLatitude_deg();
     current_bucket = p_current;
     previous_bucket = p_previous;
 

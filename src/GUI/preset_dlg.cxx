@@ -279,11 +279,8 @@ void fgPresetCommit(puObject *)
     cout << "before tile_mgr init " << longitude->getDoubleValue() << " "
          << latitude->getDoubleValue() << endl;
 
-    double visibility_meters =
-        fgGetDouble("/environment/visibility-m");
-    global_tile_mgr.update( longitude->getDoubleValue(),
-                            latitude->getDoubleValue(),
-                            visibility_meters );
+    double visibility_meters = fgGetDouble("/environment/visibility-m");
+    global_tile_mgr.update( visibility_meters );
     // BusyCursor(1);
 
     if ( !freeze ) {

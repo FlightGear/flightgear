@@ -163,8 +163,10 @@ public:
     // given the current lon/lat (in degrees), fill in the array of
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
-    int update( double lon, double lat, double visibility_meters );
-    int update( double lon, double lat, double visibility_meters, sgdVec3 abs_pos_vector, SGBucket p_current, SGBucket p_previous, Point3D center );
+    int update( double visibility_meters );
+    int update( FGLocation *location, double visibility_meters,
+                sgdVec3 abs_pos_vector, SGBucket p_current,
+                SGBucket p_previous, Point3D center );
     void setCurrentTile( double longitude, double latitude );
     int updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center );
 

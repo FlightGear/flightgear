@@ -1209,14 +1209,12 @@ static void fgMainLoop( void ) {
     if( acmodel_location != current_view->getFGLocation() ) {
       if( acmodel_location != 0 ) {
         global_tile_mgr.prep_ssg_nodes( acmodel_location, visibility_meters );
-        global_tile_mgr.update( acmodel_location->getLongitude_deg(),
- 			    acmodel_location->getLatitude_deg(),
-                            visibility_meters,
-                            acmodel_location->get_absolute_view_pos(),
-                            acmodel_location->get_current_bucket(),
-                            acmodel_location->get_previous_bucket(),
-                            acmodel_location->get_tile_center()
-                            );
+        global_tile_mgr.update( acmodel_location, visibility_meters,
+                                acmodel_location->get_absolute_view_pos(),
+                                acmodel_location->get_current_bucket(),
+                                acmodel_location->get_previous_bucket(),
+                                acmodel_location->get_tile_center()
+                                );
         // save results of update in FGLocation for fdm...
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
           acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
@@ -1233,9 +1231,8 @@ static void fgMainLoop( void ) {
     // IMPORTANT!!! the tilemgr update for view location _must_ be done last 
     // after the FDM's until all of Flight Gear code references the viewer's location
     // for elevation instead of the "scenery's" current elevation.
-    global_tile_mgr.update( current_view->getLongitude_deg(),
-			    current_view->getLatitude_deg(),
-                            visibility_meters,
+    FGLocation *view_location = globals->get_current_view()->getFGLocation();
+    global_tile_mgr.update( view_location, visibility_meters,
                             current_view->get_absolute_view_pos(),
                             current_view->getFGLocation()->get_current_bucket(),
                             current_view->getFGLocation()->get_previous_bucket(),

@@ -83,9 +83,7 @@ void reInit(puObject *cb)
 
     fgReInitSubsystems();
 
-    global_tile_mgr.update( fgGetDouble("/position/longitude-deg"),
-                            fgGetDouble("/position/latitude-deg"),
-                            fgGetDouble("/environment/visibility-m") );
+    global_tile_mgr.update( fgGetDouble("/environment/visibility-m") );
     
     cur_light_params.Update();
 

@@ -289,9 +289,7 @@ do_tile_cache_reload (const SGPropertyNode * arg)
     if ( global_tile_mgr.init() ) {
 	// Load the local scenery data
         double visibility_meters = fgGetDouble("/environment/visibility-m");
-	global_tile_mgr.update(fgGetDouble("/position/longitude-deg"),
-			       fgGetDouble("/position/latitude-deg"),
-			       visibility_meters);
+	global_tile_mgr.update( visibility_meters );
     } else {
 	SG_LOG( SG_GENERAL, SG_ALERT, 
 		"Error in Tile Manager initialization!" );
