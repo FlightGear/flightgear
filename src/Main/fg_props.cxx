@@ -120,6 +120,146 @@ _set_view_from_axes ()
 // Default property bindings (not yet handled by any module).
 ////////////////////////////////////////////////////////////////////////
 
+struct LogClassMapping {
+  sgDebugClass c;
+  string name;
+};
+
+LogClassMapping log_class_mappings [] = {
+  {SG_NONE, "none"},
+  {SG_TERRAIN, "terrain"},
+  {SG_ASTRO, "astro"},
+  {SG_FLIGHT, "flight"},
+  {SG_INPUT, "input"},
+  {SG_GL, "gl"},
+  {SG_VIEW, "view"},
+  {SG_COCKPIT, "cockpit"},
+  {SG_GENERAL, "general"},
+  {SG_MATH, "math"},
+  {SG_EVENT, "event"},
+  {SG_AIRCRAFT, "aircraft"},
+  {SG_AUTOPILOT, "autopilot"},
+  {SG_IO, "io"},
+  {SG_CLIPPER, "clipper"},
+  {SG_NETWORK, "network"},
+  {SG_UNDEFD, ""}
+};
+
+
+/**
+ * Get the logging classes.
+ */
+static string
+getLoggingClasses ()
+{
+  sgDebugClass classes = logbuf::get_log_classes();
+  string result = "";
+  for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
+    if ((classes&log_class_mappings[i].c) > 0) {
+      if (result != "")
+	result += '|';
+      result += log_class_mappings[i].name;
+    }
+  }
+  return result;
+}
+
+
+static void addLoggingClass (const string &name)
+{
+  sgDebugClass classes = logbuf::get_log_classes();
+  for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
+    if (name == log_class_mappings[i].name) {
+      logbuf::set_log_classes(sgDebugClass(classes|log_class_mappings[i].c));
+      return;
+    }
+  }
+  SG_LOG(SG_GENERAL, SG_ALERT, "Unknown logging class: " << name);
+}
+
+
+/**
+ * Set the logging classes.
+ */
+static void
+setLoggingClasses (string classes)
+{
+  logbuf::set_log_classes(SG_NONE);
+
+  if (classes == "none") {
+    SG_LOG(SG_GENERAL, SG_INFO, "Disabled all logging classes");
+    return;
+  }
+
+  if (classes == "" || classes == "all") { // default
+    logbuf::set_log_classes(SG_ALL);
+    SG_LOG(SG_GENERAL, SG_INFO, "Enabled all logging classes: "
+	   << getLoggingClasses());
+    return;
+  }
+
+  string rest = classes;
+  string name = "";
+  int sep = rest.find('|');
+  while (sep > 0) {
+    name = rest.substr(0, sep);
+    rest = rest.substr(sep+1);
+    addLoggingClass(name);
+    sep = rest.find('|');
+  }
+  addLoggingClass(rest);
+  SG_LOG(SG_GENERAL, SG_INFO, "Set logging classes to "
+	 << getLoggingClasses());
+}
+
+
+/**
+ * Get the logging priority.
+ */
+static string
+getLoggingPriority ()
+{
+  switch (logbuf::get_log_priority()) {
+  case SG_BULK:
+    return "bulk";
+  case SG_DEBUG:
+    return "debug";
+  case SG_INFO:
+    return "info";
+  case SG_WARN:
+    return "warn";
+  case SG_ALERT:
+    return "alert";
+  default:
+    SG_LOG(SG_GENERAL, SG_WARN, "Internal: Unknown logging priority number: "
+	   << logbuf::get_log_priority());
+    return "unknown";
+  }
+}
+
+
+/**
+ * Set the logging priority.
+ */
+static void
+setLoggingPriority (string priority)
+{
+  if (priority == "bulk") {
+    logbuf::set_log_priority(SG_BULK);
+  } else if (priority == "debug") {
+    logbuf::set_log_priority(SG_DEBUG);
+  } else if (priority == "" || priority == "info") { // default
+    logbuf::set_log_priority(SG_INFO);
+  } else if (priority == "warn") {
+    logbuf::set_log_priority(SG_WARN);
+  } else if (priority == "alert") {
+    logbuf::set_log_priority(SG_ALERT);
+  } else {
+    SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
+  }
+  SG_LOG(SG_GENERAL, SG_INFO, "Logging priority is " << getLoggingPriority());
+}
+
 
 /**
  * Get the pause state of the sim.
@@ -1055,6 +1195,8 @@ void
 fgInitProps ()
 {
 				// Simulation
+  fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
+  fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
   fgTie("/sim/freeze", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
   fgTie("/sim/view/offset-deg", getViewOffset, setViewOffset);
