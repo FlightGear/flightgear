@@ -21,10 +21,12 @@
 
 #define MAXBUF 1024
 
+
 static double lat = 0.0;
 static double lon = 0.0;
 static double dy = 0.0;
 static int pass = 0;
+
 
 int make_socket (unsigned short int* port) {
     int sock;
@@ -103,7 +105,7 @@ void init_tile_count() {
 
 
 // return the next tile
-long int get_next_tile( const string& work_base, const string& output_base )
+long int get_next_tile( const string& work_base )
 {
     FGBucket b;
     static double shift_over = 0.0;
@@ -131,7 +133,7 @@ long int get_next_tile( const string& work_base, const string& output_base )
 
 	// reset lat
 	// lat = -89.0 + (shift_up*dy) - (dy*0.5);
-	lat = 0.0 + (shift_up*dy) + (dy*0.5);
+	lat = 15.0 + (shift_up*dy) + (dy*0.5);
 
 	// reset lon
 	FGBucket tmp( 0.0, lat );
@@ -174,6 +176,40 @@ long int get_next_tile( const string& work_base, const string& output_base )
 }
 
 
+// log a pending tile (has been given out as a taks for some client)
+void log_pending_tile( const string& path, long int tile ) {
+    FGBucket b(tile);
+
+    string pending_file = path + "/" + b.gen_index_str() + ".pending";
+
+    string command = "touch " + pending_file;
+    system( command.c_str() );
+}
+
+
+// a tile is finished (removed the .pending file)
+void log_finished_tile( const string& path, long int tile ) {
+    FGBucket b(tile);
+
+    string finished_file = path + "/" + b.gen_index_str() + ".pending";
+    // cout << "unlinking " << finished_file << endl;
+    unlink( finished_file.c_str() );
+}
+
+
+// make note of a failed tile
+void log_failed_tile( const string& path, long int tile ) {
+    FGBucket b(tile);
+
+    string failed_file = path + "/" + b.gen_index_str() + ".failed";
+
+    string command = "touch " + failed_file;
+    system( command.c_str() );
+
+    cout << "logged bad tile = " << tile << endl;
+}
+
+
 // display usage and exit
 void usage( const string name ) {
     cout << "Usage: " << name << " <work_base> <output_base>" << endl;
@@ -198,6 +234,11 @@ int main( int argc, char **argv ) {
     // initialize tile counter / incrementer
     init_tile_count();
 
+    // create the status directory
+    string status_dir = work_base + ".status";
+    string command = "mkdir -p " + status_dir;
+    system( command.c_str() );
+
     // setup socket to listen on
     sock = make_socket( &port );
     cout << "socket is connected to port = " << port << endl;
@@ -216,11 +257,12 @@ int main( int argc, char **argv ) {
 	    // printf("%d %d Incomming message --> ", getpid(), pid);
 
 	    // get the next tile to work on
-	    next_tile = get_next_tile( work_base, output_base );
+	    next_tile = get_next_tile( work_base );
 	    while ( ! has_data( work_base, FGBucket(next_tile) ) ) {
-		next_tile = get_next_tile( work_base, output_base );
+		next_tile = get_next_tile( work_base );
 	    }
 
+	    log_pending_tile( status_dir, next_tile );
 	    // cout << "next tile = " << next_tile << endl;;
 
 	    msgsock = accept(sock, 0, 0);
@@ -240,8 +282,8 @@ int main( int argc, char **argv ) {
 		// clean up all of our zombie children
 		int status;
 		while ( (pid = waitpid( WAIT_ANY, &status, WNOHANG )) > 0 ) {
-		    cout << "waitpid(): pid = " << pid 
-			 << " status = " << status << endl;
+		    // cout << "waitpid(): pid = " << pid 
+		    //      << " status = " << status << endl;
 		}
 	    } else {
 		// This is the child
@@ -249,16 +291,26 @@ int main( int argc, char **argv ) {
 		// cout << "new process started to handle new connection for "
 		//      << next_tile << endl;
 
-                // Read client's command
+                // Read client's message (which is the status of the
+                // last scenery creation task.)
 		char buf[MAXBUF];
                 if ( (length = read(msgsock, buf, MAXBUF)) < 0) {
                     perror("Cannot read command");
                     exit(-1);
                 }
-
 		buf[length] = '\0';
 		long int returned_tile = atoi(buf);
-		cout << "client replied with " << returned_tile << endl;
+		cout << "client returned = " << returned_tile << endl;
+
+		// record status
+		if ( returned_tile < 0 ) {
+		    // failure
+		    log_failed_tile( status_dir, -returned_tile );
+		    log_finished_tile( status_dir, -returned_tile );
+		} else {
+		    // success
+		    log_finished_tile( status_dir, returned_tile );
+		}
 
 		// reply to the client
 		char message[MAXBUF];
@@ -270,7 +322,7 @@ int main( int argc, char **argv ) {
 		close(msgsock);
 		// cout << "process for " << next_tile << " ended" << endl;
 
-		exit(returned_tile);
+		exit(0);
 	    }
 	}
     }

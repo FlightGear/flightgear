@@ -16,6 +16,11 @@
 #include <iostream>
 #include <string>
 
+#include <Bucket/newbucket.hxx>
+
+
+#define MAXBUF 1024
+
 
 int make_socket (char *host, unsigned short int port) {
     int sock;
@@ -103,8 +108,28 @@ long int get_next_task( const string& host, int port, long int last_tile ) {
 
 // build the specified tile, return true if contruction completed
 // successfully
-bool construct_tile( long int tile ) {
-    return true;
+bool construct_tile( const string& work_base, const string& output_base, 
+		     const FGBucket& b, const string& result_file ) {
+    string command = "../Main/construct " + work_base + " " + output_base + " "
+	+ b.gen_index_str() + " > " + result_file + " 2>&1";
+    cout << command << endl;
+
+    system( command.c_str() );
+
+    FILE *fp = fopen( result_file.c_str(), "r" );
+    char line[256];
+    while ( fgets( line, 256, fp ) != NULL ) {
+	string line_str = line;
+	line_str = line_str.substr(0, line_str.length() - 1);
+ 	cout << line_str << endl;
+ 	if ( line_str == "[Finished successfully]" ) {
+	    fclose(fp);
+	    return true;
+	}
+    }
+
+    fclose(fp);
+    return false;
 }
 
 
@@ -113,19 +138,31 @@ main(int argc, char *argv[]) {
     bool result;
 
     // Check usage
-    if ( argc < 3 ) {
-	printf("Usage: %s remote_machine port\n", argv[0]);
+    if ( argc < 5 ) {
+	printf("Usage: %s remote_machine port work_base output_base\n",
+	       argv[0]);
 	exit(1);
     }
 
     string host = argv[1];
     int port = atoi( argv[2] );
+    string work_base = argv[3];
+    string output_base = argv[4];
+
+    // get hostname and pid
+    char hostname[MAXBUF];
+    gethostname( hostname, MAXBUF );
+    pid_t pid = getpid();
+
+    char tmp[MAXBUF];
+    sprintf(tmp, "result.%s.%d", hostname, pid);
+    string result_file = work_base + ".status/" + tmp;
 
     last_tile = 0;
 
     while ( (tile = get_next_task( host, port, last_tile )) >= 0 ) {
-	result = construct_tile( tile );
-
+	result = construct_tile( work_base, output_base, 
+				 FGBucket(tile), result_file );
 	if ( result ) {
 	    last_tile = tile;
 	} else {
