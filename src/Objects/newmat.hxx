@@ -85,7 +85,7 @@ public:
    * @param texture_path A string containing an absolute path
    * to a texture file (usually RGB).
    */
-  FGNewMat (const string &texture_path);
+  FGNewMat (const string &texpath);
 
 
   /**

@@ -76,9 +76,10 @@ FGNewMat::FGNewMat (const SGPropertyNode * props)
     build_ssg_state(false);
 }
 
-FGNewMat::FGNewMat (const string &texture_path)
+FGNewMat::FGNewMat (const string &texpath)
 {
     init();
+    texture_path = texpath;
     build_ssg_state(true);
 }
 
