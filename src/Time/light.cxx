@@ -160,15 +160,19 @@ void fgLIGHT::Update( void ) {
     if (fgGetBool("/test/scene_lighting")) {
         float *sun_color = thesky->get_sun_color();
 
-        scene_ambient[0] = (sun_color[0]*0.1 + cloud_color[0]*0.9) * ambient;
-        scene_ambient[1] = (sun_color[1]*0.1 + cloud_color[1]*0.9) * ambient;
-        scene_ambient[2] = (sun_color[2]*0.1 + cloud_color[2]*0.9) * ambient;
-        scene_ambient[3] = 1.5;
+        // scene_ambient[0] = (sun_color[0]*0.1 + cloud_color[0]*0.9) * ambient;
+        // scene_ambient[1] = (sun_color[1]*0.1 + cloud_color[1]*0.9) * ambient;
+        // scene_ambient[2] = (sun_color[2]*0.1 + cloud_color[2]*0.9) * ambient;
+        // scene_ambient[3] = 1.5;
+        scene_ambient[0] = white[0] * ambient;
+        scene_ambient[1] = white[0] * ambient;
+        scene_ambient[2] = white[0] * ambient;
+        scene_ambient[3] = 1.0;
 
         scene_diffuse[0] = (sun_color[0]*0.25 + fog_color[0]*0.75) * diffuse;
         scene_diffuse[1] = (sun_color[1]*0.25 + fog_color[1]*0.75) * diffuse;
         scene_diffuse[2] = (sun_color[2]*0.25 + fog_color[2]*0.75) * diffuse;
-        scene_diffuse[3] = 1.5;
+        scene_diffuse[3] = 1.0;
 
         scene_specular[0] = sun_color[0] * specular;
         scene_specular[1] = sun_color[1] * specular;
