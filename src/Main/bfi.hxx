@@ -62,9 +62,12 @@ public:
   static const string &getAircraftDir ();
   static void setAircraftDir (const string &aircraftDir);
 
-  static time_t getTimeGMT ();
-  static void setTimeGMT (time_t time);
+//   static time_t getTimeGMT ();
+//   static void setTimeGMT (time_t time);
+  static const string &getDateString ();
+  static void setDateString (const string &time_string);
 
+				// deprecated
   static const string &getGMTString ();
 
   static bool getHUDVisible ();

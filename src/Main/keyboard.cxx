@@ -146,9 +146,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // add 1000' of emergency altitude.  Possibly good for 
 	    // unflipping yourself :-)
 	    {
-		double alt = cur_fdm_state->get_Altitude() + 1000;
-		fgFDMForceAltitude( globals->get_options()->get_flight_model(), 
-				    alt * FEET_TO_METER );
+		FGBFI::setAltitude(FGBFI::getAltitude() + 1000);
+// 		double alt = cur_fdm_state->get_Altitude() + 1000;
+// 		fgFDMForceAltitude( globals->get_options()->get_flight_model(), 
+// 				    alt * FEET_TO_METER );
 	    }
 	    return;
 	case 49: // numeric keypad 1
@@ -542,6 +543,8 @@ void GLUTspecialkey(int k, int x, int y) {
 	case GLUT_KEY_F3: // F3 Take a screen shot
 	    fgDumpSnapShot();
 	    return;
+        case GLUT_KEY_F4: // F4 Update lighting manually
+	    fgUpdateSkyAndLightingParams();
         case GLUT_KEY_F6: // F6 toggles Autopilot target location
 	    if ( current_autopilot->get_HeadingMode() !=
 		 FGAutopilot::FG_HEADING_WAYPOINT ) {

@@ -171,6 +171,8 @@ FGBFI::init ()
   current_properties.tieString("/sim/aircraft-dir",
 			       getAircraftDir, setAircraftDir);
   // TODO: timeGMT
+  current_properties.tieString("/sim/time/gmt",
+			       getDateString, setDateString);
   current_properties.tieString("/sim/time/gmt-string",
 			       getGMTString, 0);
   current_properties.tieBool("/sim/hud/visibility",
@@ -190,8 +192,8 @@ FGBFI::init ()
   current_properties.tieDouble("/position/longitude",
 			       getLongitude, setLongitude);
   current_properties.tieDouble("/position/altitude",
-			       // getAltitude, setAltitude);
-			       getAltitude, setAltitude, false);
+			       getAltitude, setAltitude);
+// 			       getAltitude, setAltitude, false);
   current_properties.tieDouble("/position/altitude-agl",
 			       getAGL, 0);
 
@@ -425,10 +427,17 @@ FGBFI::setAircraftDir (const string &dir)
 /**
  * Return the current Zulu time.
  */
-time_t
-FGBFI::getTimeGMT ()
+const string &
+FGBFI::getDateString ()
 {
-  return globals->get_time_params()->get_cur_time();
+  static string out;		// FIXME: not thread-safe
+  char buf[64];
+  struct tm * t = globals->get_time_params()->getGmt();
+  sprintf(buf, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d",
+	  t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+	  t->tm_hour, t->tm_min, t->tm_sec);
+  out = buf;
+  return out;
 }
 
 
@@ -436,18 +445,46 @@ FGBFI::getTimeGMT ()
  * Set the current Zulu time.
  */
 void
-FGBFI::setTimeGMT (time_t time)
+FGBFI::setDateString (const string &date_string)
+// FGBFI::setTimeGMT (time_t time)
 {
-  if (getTimeGMT() != time) {
-				// FIXME: need to update lighting
-				// and solar system
-    globals->get_options()->set_time_offset(time);
-    globals->get_options()->set_time_offset_type(FGOptions::FG_TIME_GMT_ABSOLUTE);
-    globals->get_time_params()->update( cur_fdm_state->get_Longitude(),
-					cur_fdm_state->get_Latitude(),
-					globals->get_warp() );
-    needReinit();
+  SGTime * st = globals->get_time_params();
+  struct tm * current_time = st->getGmt();
+  struct tm new_time;
+
+				// Scan for basic ISO format
+				// YYYY-MM-DDTHH:MM:SS
+  int ret = sscanf(date_string.c_str(), "%d-%d-%dT%d:%d:%d",
+		   &(new_time.tm_year), &(new_time.tm_mon),
+		   &(new_time.tm_mday), &(new_time.tm_hour),
+		   &(new_time.tm_min), &(new_time.tm_sec));
+
+				// Be pretty picky about this, so
+				// that strange things don't happen
+				// if the save file has been edited
+				// by hand.
+  if (ret != 6) {
+    FG_LOG(FG_INPUT, FG_ALERT, "Date/time string " << date_string
+	   << " not in YYYY-MM-DDTHH:MM:SS format; skipped");
+    return;
   }
+
+				// OK, it looks like we got six
+				// values, one way or another.
+  new_time.tm_year -= 1900;
+  new_time.tm_mon -= 1;
+
+				// Now, tell flight gear to use
+				// the new time.  This was far
+				// too difficult, by the way.
+  long int warp =
+    mktime(&new_time) - mktime(current_time) + globals->get_warp();
+  double lon = current_aircraft.fdm_state->get_Longitude();
+  double lat = current_aircraft.fdm_state->get_Latitude();
+  double alt = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER;
+  globals->set_warp(warp);
+  st->update(lon, lat, warp);
+  fgUpdateSkyAndLightingParams();
 }
 
 
@@ -582,6 +619,7 @@ void
 FGBFI::setLatitude (double latitude)
 {
   current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
+  fgUpdateSkyAndLightingParams();
 }
 
 
@@ -602,6 +640,7 @@ void
 FGBFI::setLongitude (double longitude)
 {
   current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
+  fgUpdateSkyAndLightingParams();
 }
 
 
@@ -634,6 +673,7 @@ void
 FGBFI::setAltitude (double altitude)
 {
   current_aircraft.fdm_state->set_Altitude(altitude);
+  fgUpdateSkyAndLightingParams();
 }
 
 
