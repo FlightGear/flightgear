@@ -422,6 +422,10 @@ void trRenderFrame( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame() {
+    bool draw_otw = fgGetBool("/sim/rendering/draw-otw");
+    bool skyblend = fgGetBool("/sim/rendering/skyblend");
+    bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
+    bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation");
 
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
@@ -520,7 +524,7 @@ void fgRenderFrame() {
             clear_mask |= GL_COLOR_BUFFER_BIT;
         }
 
-        if ( fgGetBool("/sim/rendering/skyblend") ) {
+        if ( skyblend ) {
             if ( fgGetBool("/sim/rendering/textures") ) {
             // glClearColor(black[0], black[1], black[2], black[3]);
             glClearColor(l->adj_fog_color[0], l->adj_fog_color[1],
@@ -559,7 +563,7 @@ void fgRenderFrame() {
         glFogf (GL_FOG_DENSITY, fog_exp2_density);
 
         // update the sky dome
-        if ( fgGetBool("/sim/rendering/skyblend") ) {
+        if ( skyblend ) {
             /*
              SG_LOG( SG_GENERAL, SG_BULK, "thesky->repaint() sky_color = "
              << cur_light_params.sky_color[0] << " "
@@ -710,8 +714,7 @@ void fgRenderFrame() {
         globals->get_multiplayer_rx_mgr()->Update();
 #endif
 
-        if ( fgGetBool("/sim/rendering/skyblend") &&
-             fgGetBool("/sim/rendering/draw-otw") )
+        if ( draw_otw && skyblend )
         {
             // draw the sky backdrop
 
@@ -733,7 +736,7 @@ void fgRenderFrame() {
             // draw wire frame
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         }
-        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+        if ( draw_otw ) {
             ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
         }
 
@@ -763,13 +766,12 @@ void fgRenderFrame() {
         glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-        if (fgGetBool("/sim/rendering/enhanced-lighting")) {
+        if ( enhanced_lighting ) {
 
             // Enable states for drawing points with GL_extension
             glEnable(GL_POINT_SMOOTH);
 
-            if ( fgGetBool("/sim/rendering/distance-attenuation") &&
-                 glPointParameterIsSupported )
+            if ( distance_attenuation && glPointParameterIsSupported )
             {
                 // Enable states for drawing points with GL_extension
                 glEnable(GL_POINT_SMOOTH);
@@ -793,7 +795,7 @@ void fgRenderFrame() {
         glPolygonMode(GL_FRONT, GL_POINT);
 
         // draw runway lighting
-        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+        if ( draw_otw ) {
             ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
         }
 
@@ -802,7 +804,7 @@ void fgRenderFrame() {
         // sgVec3 taxi_fog;
         // sgSetVec3( taxi_fog, 0.0, 0.0, 0.0 );
         // glFogfv ( GL_FOG_COLOR, taxi_fog );
-        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+        if ( draw_otw ) {
             ssgCullAndDraw( globals->get_scenery()->get_taxi_lights_root() );
         }
 
@@ -821,9 +823,8 @@ void fgRenderFrame() {
         //_frame_count++;
 
 
-        if (fgGetBool("/sim/rendering/enhanced-lighting")) {
-            if ( fgGetBool("/sim/rendering/distance-attenuation") &&
-                 glPointParameterIsSupported )
+        if ( enhanced_lighting ) {
+            if ( distance_attenuation && glPointParameterIsSupported )
             {
                 glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT,
                                       default_attenuation);
@@ -835,22 +836,20 @@ void fgRenderFrame() {
 
         // draw ground lighting
         glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
-        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+        if ( draw_otw ) {
             ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
         }
 
-        if ( fgGetBool("/sim/rendering/skyblend") ) {
+        if ( skyblend ) {
             // draw the sky cloud layers
-            if ( fgGetBool("/environment/clouds/status") &&
-                 fgGetBool("/sim/rendering/draw-otw") )
+            if ( draw_otw && fgGetBool("/environment/clouds/status") )
             {
                 thesky->postDraw( cur_fdm_state->get_Altitude()
                                   * SG_FEET_TO_METER );
             }
         }
 
-        if ( fgGetBool("/sim/rendering/clouds3d") &&
-             fgGetBool("/sim/rendering/draw-otw") )
+        if ( draw_otw && fgGetBool("/sim/rendering/clouds3d") )
         {
             glDisable( GL_FOG );
             glDisable( GL_LIGHTING );
@@ -877,7 +876,7 @@ void fgRenderFrame() {
             glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
         }
 
-        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+        if ( draw_otw ) {
             globals->get_model_mgr()->draw();
             globals->get_aircraft_model()->draw();
         }
@@ -999,6 +998,7 @@ static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
+    int model_hz = fgGetInt("/sim/model-hz");
 
     static const SGPropertyNode *longitude
         = fgGetNode("/position/longitude-deg");
@@ -1213,18 +1213,16 @@ static void fgMainLoop( void ) {
     // Calculate model iterations needed for next frame
     elapsed += remainder;
 
-    global_multi_loop = (long)(((double)elapsed * 0.000001) * 
-                          fgGetInt("/sim/model-hz"));
-    remainder = elapsed - ( (global_multi_loop*1000000) / 
-                        fgGetInt("/sim/model-hz") );
+    global_multi_loop = (long)(((double)elapsed * 0.000001) * model_hz );
+    remainder = elapsed - ( (global_multi_loop*1000000) / model_hz );
     SG_LOG( SG_ALL, SG_DEBUG, 
             "Model iterations needed = " << global_multi_loop
             << ", new remainder = " << remainder );
         
     // chop max interations to something reasonable if the sim was
     // delayed for an excesive amount of time
-    if ( global_multi_loop > 2.0 * fgGetInt("/sim/model-hz") ) {
-        global_multi_loop = (int)(2.0 * fgGetInt("/sim/model-hz") );
+    if ( global_multi_loop > 2.0 * model_hz ) {
+        global_multi_loop = (int)(2.0 * model_hz );
         remainder = 0;
     }
 
