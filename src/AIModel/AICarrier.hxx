@@ -90,9 +90,9 @@ private:
 
 	void update(double dt);
 	void mark_nohot(ssgEntity*);
-	bool mark_wires(ssgEntity*, const list<string>&);
-	bool mark_cat(ssgEntity*, const list<string>&);
-	bool mark_solid(ssgEntity*, const list<string>&, bool);
+	bool mark_wires(ssgEntity*, const list<string>&, bool = false);
+	bool mark_cat(ssgEntity*, const list<string>&, bool = false);
+	bool mark_solid(ssgEntity*, const list<string>&, bool = false);
 
 	list<string> solid_objects;       // List of solid object names
 	list<string> wire_objects;        // List of wire object names

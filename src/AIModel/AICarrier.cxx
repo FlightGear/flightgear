@@ -92,7 +92,7 @@ bool FGAICarrier::init() {
    // Attach a pointer to this carrier class to those objects.
    mark_wires(sel, wire_objects);
    mark_cat(sel, catapult_objects);
-   mark_solid(sel, solid_objects, false);
+   mark_solid(sel, solid_objects);
 
    return true;
 }
@@ -129,14 +129,18 @@ void FGAICarrier::mark_nohot(ssgEntity* e) {
   }
 }
 
-bool FGAICarrier::mark_wires(ssgEntity* e, const list<string>& wire_objects) {
+bool FGAICarrier::mark_wires(ssgEntity* e, const list<string>& wire_objects, bool mark) {
   bool found = false;
   if (e->isAKindOf(ssgTypeBranch())) {
-
     ssgBranch* br = (ssgBranch*)e;
     ssgEntity* kid;
+
+    list<string>::const_iterator it;
+    for (it = wire_objects.begin(); it != wire_objects.end(); ++it)
+      mark = mark || (e->getName() && (*it) == e->getName());
+
     for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
-      found = mark_wires(kid, wire_objects) || found;
+      found = mark_wires(kid, wire_objects, mark) || found;
 
     if (found)
       br->setTraversalMaskBits(SSGTRAV_HOT);
@@ -144,16 +148,31 @@ bool FGAICarrier::mark_wires(ssgEntity* e, const list<string>& wire_objects) {
   } else if (e->isAKindOf(ssgTypeLeaf())) {
     list<string>::const_iterator it;
     for (it = wire_objects.begin(); it != wire_objects.end(); ++it) {
-      if (e->getName() && (*it) == e->getName()) {
+      if (mark || (e->getName() && (*it) == e->getName())) {
         e->setTraversalMaskBits(SSGTRAV_HOT);
-        e->setUserData( FGAICarrierHardware::newWire( this ) );
-        ssgLeaf *l = (ssgLeaf*)e;
-        if ( l->getNumLines() != 1 ) {
-          SG_LOG(SG_GENERAL, SG_ALERT,
-                 "AICarrier: Found wires not modelled with exactly one line!");
+        ssgBase* ud = e->getUserData();
+        if (ud) {
+          FGAICarrierHardware* ch = dynamic_cast<FGAICarrierHardware*>(ud);
+          if (ch) {
+            SG_LOG(SG_GENERAL, SG_WARN,
+                   "AICarrier: Carrier hardware gets marked twice!\n"
+                   "           You have propably a whole branch marked as"
+                   " a wire which also includes other carrier hardware."
+                   );
+          } else {
+            SG_LOG(SG_GENERAL, SG_ALERT,
+                   "AICarrier: Found user data attached to a leaf node which "
+                   "should be marked as a wire!\n    ****Skipping!****");
+          }
+        } else {
+          e->setUserData( FGAICarrierHardware::newWire( this ) );
+          ssgLeaf *l = (ssgLeaf*)e;
+          if ( l->getNumLines() != 1 ) {
+            SG_LOG(SG_GENERAL, SG_ALERT,
+                   "AICarrier: Found wires not modelled with exactly one line!");
+          }
+          found = true;
         }
-
-        found = true;
       }
     }
   }
@@ -168,7 +187,7 @@ bool FGAICarrier::mark_solid(ssgEntity* e, const list<string>& solid_objects, bo
 
     list<string>::const_iterator it;
     for (it = solid_objects.begin(); it != solid_objects.end(); ++it)
-      mark = mark || e->getName() && (*it) == e->getName();
+      mark = mark || (e->getName() && (*it) == e->getName());
 
     for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
       found = mark_solid(kid, solid_objects, mark) || found;
@@ -181,21 +200,42 @@ bool FGAICarrier::mark_solid(ssgEntity* e, const list<string>& solid_objects, bo
     for (it = solid_objects.begin(); it != solid_objects.end(); ++it) {
       if (mark || (e->getName() && (*it) == e->getName())) {
         e->setTraversalMaskBits(SSGTRAV_HOT);
-        e->setUserData( FGAICarrierHardware::newSolid( this ) );
-        found = true;
+        ssgBase* ud = e->getUserData();
+        if (ud) {
+          FGAICarrierHardware* ch = dynamic_cast<FGAICarrierHardware*>(ud);
+          if (ch) {
+            SG_LOG(SG_GENERAL, SG_WARN,
+                   "AICarrier: Carrier hardware gets marked twice!\n"
+                   "           You have propably a whole branch marked solid"
+                   " which also includes other carrier hardware."
+                   );
+          } else {
+            SG_LOG(SG_GENERAL, SG_ALERT,
+                   "AICarrier: Found user data attached to a leaf node which "
+                   "should be marked solid!\n    ****Skipping!****");
+          }
+        } else {
+          e->setUserData( FGAICarrierHardware::newSolid( this ) );
+          found = true;
+        }
       }
     }
   }
   return found;
 }
 
-bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects) {
+bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool mark) {
   bool found = false;
   if (e->isAKindOf(ssgTypeBranch())) {
     ssgBranch* br = (ssgBranch*)e;
     ssgEntity* kid;
+
+    list<string>::const_iterator it;
+    for (it = cat_objects.begin(); it != cat_objects.end(); ++it)
+      mark = mark || (e->getName() && (*it) == e->getName());
+
     for ( kid = br->getKid(0); kid != NULL ; kid = br->getNextKid() )
-      found = mark_cat(kid, cat_objects) || found;
+      found = mark_cat(kid, cat_objects, mark) || found;
 
     if (found)
       br->setTraversalMaskBits(SSGTRAV_HOT);
@@ -203,33 +243,51 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects) {
   } else if (e->isAKindOf(ssgTypeLeaf())) {
     list<string>::const_iterator it;
     for (it = cat_objects.begin(); it != cat_objects.end(); ++it) {
-      if (e->getName() && (*it) == e->getName()) {
+      if (mark || (e->getName() && (*it) == e->getName())) {
         e->setTraversalMaskBits(SSGTRAV_HOT);
-        e->setUserData( FGAICarrierHardware::newCatapult( this ) );
-        ssgLeaf *l = (ssgLeaf*)e;
-        if ( l->getNumLines() != 1 ) {
-          SG_LOG(SG_GENERAL, SG_ALERT,
-                 "AICarrier: Found a cat not modelled with exactly one line!");
-        }
-        // Now some special code to make sure the cat points in the right
-        // direction. The 0 index must be the backward end, the 1 index
-        // the forward end.
-        // Forward is positive x-direction in our 3D model, also the model
-        // as such is flattened when it is loaded, so we do not need to care
-        // for transforms ...
-        short v[2];
-        l->getLine(0, v, v+1 );
-        sgVec3 ends[2];
-        for (int k=0; k<2; ++k)
-          sgCopyVec3( ends[k], l->getVertex( v[k] ) );
+        ssgBase* ud = e->getUserData();
+        if (ud) {
+          FGAICarrierHardware* ch = dynamic_cast<FGAICarrierHardware*>(ud);
+          if (ch) {
+            SG_LOG(SG_GENERAL, SG_WARN,
+                   "AICarrier: Carrier hardware gets marked twice!\n"
+                   "           You have propably a whole branch marked as"
+                   " a catapult which also includes other carrier hardware."
+                   );
+          } else {
+            SG_LOG(SG_GENERAL, SG_ALERT,
+                   "AICarrier: Found user data attached to a leaf node which "
+                   "should be marked as a catapult!\n    ****Skipping!****");
+          }
+        } else {
+          e->setUserData( FGAICarrierHardware::newCatapult( this ) );
+          ssgLeaf *l = (ssgLeaf*)e;
+          if ( l->getNumLines() != 1 ) {
+            SG_LOG(SG_GENERAL, SG_ALERT,
+                   "AICarrier: Found a cat not modelled with exactly "
+                   "one line!");
+          } else {
+            // Now some special code to make sure the cat points in the right
+            // direction. The 0 index must be the backward end, the 1 index
+            // the forward end.
+            // Forward is positive x-direction in our 3D model, also the model
+            // as such is flattened when it is loaded, so we do not need to
+            // care for transforms ...
+            short v[2];
+            l->getLine(0, v, v+1 );
+            sgVec3 ends[2];
+            for (int k=0; k<2; ++k)
+              sgCopyVec3( ends[k], l->getVertex( v[k] ) );
+            
+            // When the 1 end is behind the 0 end, swap the coordinates.
+            if (ends[0][0] < ends[1][0]) {
+              sgCopyVec3( l->getVertex( v[0] ), ends[1] );
+              sgCopyVec3( l->getVertex( v[1] ), ends[0] );
+            }
 
-        // When the 1 end is behind the 0 end, swap the coordinates.
-        if (ends[0][0] < ends[1][0]) {
-          sgCopyVec3( l->getVertex( v[0] ), ends[1] );
-          sgCopyVec3( l->getVertex( v[1] ), ends[0] );
+            found = true;
+          }
         }
-
-        found = true;
       }
     }
   }
