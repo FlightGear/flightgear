@@ -202,6 +202,8 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     // Control surface positions
     SGPropertyNode *node = fgGetNode("/surface-positions", true);
     net->elevator = node->getDoubleValue( "elevator-pos-norm" );
+    net->elevator_trim_tab
+        = node->getDoubleValue( "elevator-trim-tab-pos-norm" );
     net->flaps = node->getDoubleValue( "flap-pos-norm" );
     net->left_aileron = node->getDoubleValue( "left-aileron-pos-norm" );
     net->right_aileron = node->getDoubleValue( "right-aileron-pos-norm" );
@@ -271,6 +273,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->visibility);
 
         htonf(net->elevator);
+        htonf(net->elevator_trim_tab);
         htonf(net->flaps);
         htonf(net->left_aileron);
         htonf(net->right_aileron);
@@ -346,6 +349,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->visibility);
 
         htonf(net->elevator);
+        htonf(net->elevator_trim_tab);
         htonf(net->flaps);
         htonf(net->left_aileron);
         htonf(net->right_aileron);
@@ -447,6 +451,8 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 
         SGPropertyNode *node = fgGetNode("/surface-positions", true);
         node->setDoubleValue("elevator-pos-norm", net->elevator);
+        node->setDoubleValue("elevator-trim-tab-pos-norm",
+                             net->elevator_trim_tab);
         node->setDoubleValue("flap-pos-norm", net->flaps);
         node->setDoubleValue("left-aileron-pos-norm", net->left_aileron);
         node->setDoubleValue("right-aileron-pos-norm", net->right_aileron);

@@ -18,7 +18,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 16;
+const int FG_NET_FDM_VERSION = 17;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -105,6 +105,7 @@ public:
 
     // Control surface positions (normalized values)
     float elevator;
+    float elevator_trim_tab;
     float flaps;
     float left_aileron;
     float right_aileron;
