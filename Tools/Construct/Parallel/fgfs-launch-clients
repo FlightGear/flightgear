@@ -88,7 +88,12 @@ fi
 # launch a copy of the client process on each specified machine
 
 for i in $CLIENTS_RUDE; do
-    echo "Launching client process on $i"
+    if ping -c 1 -i 5 $i > /dev/null; then
+	echo "Launching client process on $i"
+    else
+	echo "client $i is currently down, skipping"
+	continue
+    fi
 
     LOG_FILE="${LOG_DIR}/client-$i.log"
 
@@ -104,7 +109,12 @@ for i in $CLIENTS_RUDE; do
 done
 
 for i in $CLIENTS_NICE; do
-    echo "Launching client process on $i"
+    if ping -c 1 -i 5 $i > /dev/null; then
+	echo "Launching client process on $i"
+    else
+	echo "client $i is currently down, skipping"
+	continue
+    fi
 
     LOG_FILE="${LOG_DIR}/client-$i.log"
 
