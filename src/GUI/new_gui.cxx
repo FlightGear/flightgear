@@ -20,7 +20,7 @@
 
 NewGUI::NewGUI ()
     : _menubar(new FGMenuBar),
-      _current_widget(0)
+      _active_dialog(0)
 {
 }
 
@@ -61,25 +61,40 @@ NewGUI::update (double delta_time_sec)
     // NO OP
 }
 
-void
-NewGUI::display (const string &name)
+bool
+NewGUI::showDialog (const string &name)
 {
-    if (_widgets.find(name) == _widgets.end())
+    if (_dialog_props.find(name) == _dialog_props.end()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
-    else
-        new FGDialog(_widgets[name]);
+        return false;
+    } else {
+        new FGDialog(_dialog_props[name]); // it will be deleted by a callback
+        return true;
+    }
+}
+
+bool
+NewGUI::closeActiveDialog ()
+{
+    if (_active_dialog == 0) {
+        return false;
+    } else {
+        delete _active_dialog;
+        _active_dialog = 0;
+        return true;
+    }
 }
 
 void
-NewGUI::setCurrentWidget (FGDialog * widget)
+NewGUI::setActiveDialog (FGDialog * dialog)
 {
-    _current_widget = widget;
+    _active_dialog = dialog;
 }
 
 FGDialog *
-NewGUI::getCurrentWidget ()
+NewGUI::getActiveDialog ()
 {
-    return _current_widget;
+    return _active_dialog;
 }
 
 FGMenuBar *
@@ -136,7 +151,7 @@ NewGUI::readDir (const char * path)
             } else {
                 string name = props->getStringValue("name");
                 SG_LOG(SG_INPUT, SG_BULK, "Saving GUI node " << name);
-                _widgets[name] = props;
+                _dialog_props[name] = props;
             }
         }
         dirEnt = ulReadDir(dir);

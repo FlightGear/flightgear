@@ -1,4 +1,4 @@
-// new_gui.hxx - XML-configurable GUI subsystem.
+// new_gui.hxx - XML-configured GUI subsystem.
 
 #ifndef __NEW_GUI_HXX
 #define __NEW_GUI_HXX 1
@@ -26,40 +26,126 @@ class FGDialog;
 class FGBinding;
 
 
+/**
+ * XML-configured GUI subsystem.
+ *
+ * This subsystem manages the graphical user interface for FlightGear.
+ * It creates a menubar from the XML configuration file in
+ * $FG_ROOT/gui/menubar.xml, then stores the configuration properties
+ * for XML-configured dialog boxes in $FG_ROOT/gui/dialogs/*.  It
+ * can show or hide the menubar, and can display any dialog by name.
+ */
 class NewGUI : public FGSubsystem
 {
 public:
 
+    /**
+     * Constructor.
+     */
     NewGUI ();
+
+    /**
+     * Destructor.
+     */
     virtual ~NewGUI ();
+
+    /**
+     * Initialize the GUI subsystem.
+     */
     virtual void init ();
+
+    /**
+     * Bind properties for the GUI subsystem.
+     *
+     * Currently, this method binds the properties for showing and
+     * hiding the menu.
+     */
     virtual void bind ();
+
+    /**
+     * Unbind properties for the GUI subsystem.
+     */
     virtual void unbind ();
+
+    /**
+     * Update the GUI subsystem.
+     *
+     * Currently, this method is a no-op, because nothing the GUI
+     * subsystem does is time-dependent.
+     */
     virtual void update (double delta_time_sec);
-    virtual void display (const string &name);
 
-    virtual void setCurrentWidget (FGDialog * widget);
-    virtual FGDialog * getCurrentWidget ();
+    /**
+     * Display a dialog box.
+     *
+     * At initialization time, the subsystem reads all of the XML
+     * configuration files from $FG_ROOT/gui/dialogs/*.  The
+     * configuration for each dialog specifies a name, and this method
+     * invokes the dialog with the name specified (if it exists).
+     *
+     * @param name The name of the dialog box.
+     * @return true if the dialog exists, false otherwise.
+     */
+    virtual bool showDialog (const string &name);
 
+
+    /**
+     * Close the currently-active dialog, if any.
+     *
+     * @return true if a dialog was active, false otherwise.
+     */
+    virtual bool closeActiveDialog ();
+
+
+    /**
+     * Return a pointer to the current menubar.
+     */
     virtual FGMenuBar * getMenuBar ();
+
+
+    /**
+     * Ignore this method.
+     *
+     * This method is for internal use only, but it has to be public
+     * so that a non-class callback can see it.
+     */
+    virtual void setActiveDialog (FGDialog * dialog);
+
+    /**
+     * Get the dialog currently active, if any.
+     *
+     * @return The active dialog, or 0 if none is active.
+     */
+    virtual FGDialog * getActiveDialog ();
 
 protected:
 
+    /**
+     * Test if the menubar is visible.
+     *
+     * This method exists only for binding.
+     */
     virtual bool getMenuBarVisible () const;
+
+    /**
+     * Show or hide the menubar.
+     *
+     * This method exists only for binding.
+     */
     virtual void setMenuBarVisible (bool visible);
 
 
 private:
 
+    // Read all the configuration files in a directory.
     void readDir (const char * path);
 
     FGMenuBar * _menubar;
-    FGDialog * _current_widget;
-    map<string,SGPropertyNode_ptr> _widgets;
+    FGDialog * _active_dialog;
+    map<string,SGPropertyNode_ptr> _dialog_props;
 
 };
 
 
 #endif // __NEW_GUI_HXX
 
-// end of new_gui.hxx
