@@ -2,6 +2,11 @@
 | Done
 --------------------------------------------------------------------------
 
+4/28/98 -  Physically check if airport list overruns array size when loading.
+
+4/28/98 -  Wrap up zlib so we can conditionally compile back in normal
+           behavior on systems that have trouble building zlib.
+
 4/27/98 -  Do a better job of translating scenery tiles towards (0,0,0)
 
 4/27/98 -  fgTIME fgVIEW struct -> typedef
