@@ -1196,7 +1196,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		    delete rwy_lights;
 		}
 
-	    } else if ( token == "OBJECT_STATIC" ) {
+	    } else if ( token == "OBJECT_STATIC" ||
+                        token == "OBJECT_SHARED" ) {
 		// load object info
 		double lon, lat, elev, hdg;
 		in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
@@ -1208,7 +1209,9 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
 		// object loading is deferred to main render thread,
 		// but lets figure out the paths right now.
-		SGPath custom_path = tile_path;
+		SGPath custom_path;
+                if ( token == "OBJECT_STATIC" )
+                    custom_path= tile_path;
 		custom_path.append( name );
 
 		sgCoord obj_pos;
