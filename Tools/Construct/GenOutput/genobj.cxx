@@ -60,13 +60,34 @@ void FGGenOutput::calc_gbs( FGConstruct& c ) {
 }
 
 
-#define FG_TEX_CONSTANT 69.0
+#define FG_STANDARD_TEXTURE_DIMENSION 1000.0 // meters
 
 // traverse the specified fan and attempt to calculate "none
 // stretching" texture coordinates
-int_list FGGenOutput::calc_tex_coords( point_list geod_nodes, int_list fan ) {
+int_list FGGenOutput::calc_tex_coords( FGConstruct& c, point_list geod_nodes,
+				       int_list fan )
+{
     // cout << "calculating texture coordinates for a specific fan of size = "
     //      << fan.size() << endl;
+
+    FGBucket b = c.get_bucket();
+    double clat = b.get_center_lat();
+    double clat_rad = clat * DEG_TO_RAD;
+    double cos_lat = cos( clat_rad );
+    double local_radius = cos_lat * EQUATORIAL_RADIUS_M;
+    double local_perimeter = 2.0 * local_radius * FG_PI;
+    double degree_width = local_perimeter / 360.0;
+
+    // cout << "clat = " << clat << endl;
+    // cout << "clat (radians) = " << clat_rad << endl;
+    // cout << "cos(lat) = " << cos_lat << endl;
+    // cout << "local_radius = " << local_radius << endl;
+    // cout << "local_perimeter = " << local_perimeter << endl;
+    // cout << "degree_width = " << degree_width << endl;
+
+    double perimeter = 2.0 * EQUATORIAL_RADIUS_M * FG_PI;
+    double degree_height = perimeter / 360.0;
+    // cout << "degree_height = " << degree_height << endl;
 
     // find min/max of fan
     Point3D min, max, p, t;
@@ -74,8 +95,8 @@ int_list FGGenOutput::calc_tex_coords( point_list geod_nodes, int_list fan ) {
 
     for ( int i = 0; i < (int)fan.size(); ++i ) {
 	p = geod_nodes[ fan[i] ];
-	t.setx( p.x() * FG_TEX_CONSTANT );
-	t.sety( p.y() * FG_TEX_CONSTANT );
+	t.setx( p.x() * ( degree_width / FG_STANDARD_TEXTURE_DIMENSION ) );
+	t.sety( p.y() * ( degree_height / FG_STANDARD_TEXTURE_DIMENSION ) );
 
 	if ( first ) {
 	    min = max = t;
@@ -106,8 +127,8 @@ int_list FGGenOutput::calc_tex_coords( point_list geod_nodes, int_list fan ) {
     tex.clear();
     for ( int i = 0; i < (int)fan.size(); ++i ) {
 	p = geod_nodes[ fan[i] ];
-	t.setx( p.x() * FG_TEX_CONSTANT );
-	t.sety( p.y() * FG_TEX_CONSTANT );
+	t.setx( p.x() * ( degree_width / FG_STANDARD_TEXTURE_DIMENSION ) );
+	t.sety( p.y() * ( degree_height / FG_STANDARD_TEXTURE_DIMENSION ) );
 	shifted_t = t - min;
 	if ( shifted_t.x() < FG_EPSILON ) {
 	    shifted_t.setx( 0.0 );
@@ -116,6 +137,7 @@ int_list FGGenOutput::calc_tex_coords( point_list geod_nodes, int_list fan ) {
 	    shifted_t.sety( 0.0 );
 	}
 	shifted_t.setz( 0.0 );
+	// cout << "shifted_t = " << shifted_t << endl;
 	index = tex_coords.unique_add( shifted_t );
 	tex.push_back( index );
     }
@@ -163,7 +185,7 @@ int FGGenOutput::build( FGConstruct& c ) {
 
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	for ( int j = 0; j < (int)fans[i].size(); ++j ) {
-	    int_list t_list = calc_tex_coords( geod_nodes, fans[i][j] );
+	    int_list t_list = calc_tex_coords( c, geod_nodes, fans[i][j] );
 	    // cout << fans[i][j].size() << " === " 
 	    //      << t_list.size() << endl; 
 	    textures[i].push_back( t_list );

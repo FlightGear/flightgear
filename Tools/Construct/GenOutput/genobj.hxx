@@ -89,7 +89,7 @@ private:
 
     // traverse the specified fan and attempt to calculate "none
     // stretching" texture coordinates
-    int_list calc_tex_coords( point_list geod_nodes, int_list fan );
+    int_list calc_tex_coords( FGConstruct& c, point_list geod_nodes, int_list fan );
 
 public:
 
