@@ -44,7 +44,7 @@
 FGExternalPipe::FGExternalPipe( double dt, string name ) {
     valid = true;
 
-    buf = new char[sizeof(ctrls) + 1];
+    buf = new char[sizeof(char) + sizeof(int) + sizeof(ctrls)];
 
 #ifdef HAVE_MKFIFO
     fifo_name_1 = name + "1";
