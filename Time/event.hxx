@@ -58,7 +58,7 @@ using namespace std;
 #include "fg_time.hxx"
 
 
-struct fgEVENT
+class fgEVENT
 {
 public:
     enum EventState
@@ -167,6 +167,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.9  1998/09/02 14:37:45  curt
+// Renamed struct -> class.
+//
 // Revision 1.8  1998/08/29 13:11:32  curt
 // Bernie Bright writes:
 //   I've created some new classes to enable pointers-to-functions and
