@@ -1,0 +1,15 @@
+1.  Start with file.dem
+
+2.  dem2node file tolerance^2 (meters)
+
+    - dem2node file 160000
+
+3.  fixnode file.1
+
+4.  tri2obj file.1
+
+5.  strip file.1.obj
+
+6.  cp bands.d file.new.obj
+
+7.  fixobj file.new
