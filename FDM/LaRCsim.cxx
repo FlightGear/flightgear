@@ -51,8 +51,20 @@ int fgLaRCsimUpdate(FGState& f, int multiloop) {
 	f.set_Altitude( 0.0 );
     }
 
+    // copy control positions into the LaRCsim structure
+    Lat_control = controls.get_aileron();
+    Long_control = controls.get_elevator();
+    Long_trim = controls.get_elevator_trim();
+    Rudder_pedal = controls.get_rudder();
+    Throttle_pct = controls.get_throttle( 0 );
+    Brake_pct = controls.get_brake( 0 );
+
+    // Inform LaRCsim of the local terrain altitude
+    Runway_altitude =   f.get_Runway_altitude();
+
+    // old -- FGstate_2_LaRCsim() not needed except for Init()
     // translate FG to LaRCsim structure
-    FGState_2_LaRCsim(f);
+    // FGState_2_LaRCsim(f);
     // printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
     // printf("Altitude = %.2f\n", Altitude * 0.3048);
     // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
@@ -78,13 +90,6 @@ int fgLaRCsimUpdate(FGState& f, int multiloop) {
 
 // Convert from the FGState struct to the LaRCsim generic_ struct
 int FGState_2_LaRCsim (FGState& f) {
-
-    Lat_control = controls.get_aileron();
-    Long_control = controls.get_elevator();
-    Long_trim = controls.get_elevator_trim();
-    Rudder_pedal = controls.get_rudder();
-    Throttle_pct = controls.get_throttle( 0 );
-    Brake_pct = controls.get_brake( 0 );
 
     Mass =      f.get_Mass();
     I_xx =      f.get_I_xx();
@@ -382,6 +387,15 @@ int fgLaRCsim_2_FGState (FGState& f) {
 
 
 // $Log$
+// Revision 1.7  1998/12/14 13:31:06  curt
+// LaRCsim maintains all it's variables internally.  I had been copying all of
+// them back and forth to the FG struture everytime I updated the flight model.
+// However, I have realized that this is not necessary.  I just need to copy
+// the control positions and environmental parameters into the LaRCsim structure
+// before updating the FDM, then copy every thing back out into the publick FGFS
+// structure afterwords.  This seems to solve (or at least help) a westward
+// drift problem some poeple had been observing.
+//
 // Revision 1.6  1998/12/05 15:54:08  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //
