@@ -25,23 +25,29 @@
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 
+#include "environment.hxx"
+#include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
 
 
 FGEnvironmentMgr::FGEnvironmentMgr ()
+  : _environment(new FGEnvironment),
+    _controller(new FGUserDefEnvironmentCtrl)
 {
-  _environment = new FGEnvironment();
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
 {
   delete _environment;
+  delete _controller;
 }
 
 void
 FGEnvironmentMgr::init ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
+  _controller->setEnvironment(_environment);
+  _controller->init();
 }
 
 void
@@ -91,6 +97,7 @@ FGEnvironmentMgr::unbind ()
 void
 FGEnvironmentMgr::update (int dt)
 {
+  _controller->update(dt);
 				// FIXME: the FDMs should update themselves
   current_aircraft.fdm_state
     ->set_Velocities_Local_Airmass(_environment->get_wind_from_north_fps(),

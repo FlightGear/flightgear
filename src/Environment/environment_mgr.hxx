@@ -33,7 +33,8 @@
 #  include <math.h>
 #endif
 
-#include "environment.hxx"
+class FGEnvironment;
+class FGEnvironmentCtrl;
 
 
 /**
@@ -67,6 +68,7 @@ public:
 private:
 
   FGEnvironment * _environment;	// always the same, for now
+  FGEnvironmentCtrl * _controller; // always the same, for now
 
 };
 

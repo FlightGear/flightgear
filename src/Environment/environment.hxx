@@ -85,12 +85,6 @@ private:
   double wind_from_east_fps;
   double wind_from_down_fps;
 
-				// Do these belong here?
-#if 0
-  GLfloat fog_exp_density;
-  GLfloat fog_exp2_density;
-#endif
-
 };
 
 #endif // _ENVIRONMENT_HXX
