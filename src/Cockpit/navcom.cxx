@@ -613,9 +613,9 @@ void FGNavCom::search()
         gs = globals->get_gslist()->findByFreq(nav_freq, lon, lat, elev);
     }
         
-
     if ( loc != NULL ) {
 	nav_id = loc->get_ident();
+        // cout << "localizer = " << nav_id << endl;
 	nav_valid = true;
 	if ( last_nav_id != nav_id || last_nav_vor ) {
 	    nav_trans_ident = loc->get_trans_ident();
@@ -701,6 +701,7 @@ void FGNavCom::search()
 	}
     } else if ( nav != NULL ) {
 	nav_id = nav->get_ident();
+        // cout << "nav = " << nav_id << endl;
 	nav_valid = true;
 	if ( last_nav_id != nav_id || !last_nav_vor ) {
 	    last_nav_id = nav_id;

@@ -43,9 +43,10 @@
 SG_USING_STD(istream);
 
 
-#define FG_NAV_DEFAULT_RANGE 50
-#define FG_LOC_DEFAULT_RANGE 18
-#define FG_DME_DEFAULT_RANGE 50
+#define FG_NAV_DEFAULT_RANGE 50 // nm
+#define FG_LOC_DEFAULT_RANGE 18 // nm
+#define FG_DME_DEFAULT_RANGE 50 // nm
+#define FG_NAV_MAX_RANGE 300    // nm
 
 
 class FGNavRecord {

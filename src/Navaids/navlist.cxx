@@ -182,31 +182,24 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
 {
     FGNavRecord *nav = NULL;
     Point3D station;
-    double d2;
-    double min_dist = 999999999.0;
+    double dist;
+    double min_dist = FG_NAV_MAX_RANGE * SG_NM_TO_METER;
 
-    // prime the pump with info from stations[0]
-    if ( stations.size() > 0 ) {
-        nav = stations[0];
-	station = Point3D( nav->get_x(), nav->get_y(), nav->get_z());
-	min_dist = aircraft.distance3Dsquared( station );
-    }
-
-    // check if any of the remaining stations are closer
-    for ( unsigned int i = 1; i < stations.size(); ++i ) {
+    // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
+    for ( unsigned int i = 0; i < stations.size(); ++i ) {
 	// cout << "testing " << current->get_ident() << endl;
 	station = Point3D( stations[i]->get_x(),
                            stations[i]->get_y(),
                            stations[i]->get_z() );
 
-	d2 = aircraft.distance3Dsquared( station );
+	dist = aircraft.distance3D( station );
 
 	// cout << "  dist = " << sqrt(d)
 	//      << "  range = " << current->get_range() * SG_NM_TO_METER
         //      << endl;
 
-        if ( d2 < min_dist ) {
-            min_dist = d2;
+        if ( dist < min_dist ) {
+            min_dist = dist;
             nav = stations[i];
         }
     }
