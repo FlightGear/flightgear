@@ -26,7 +26,7 @@
 
 bin_PROGRAMS = fixobj
 
-fixobj_SOURCES = main.c obj.c obj.h
+fixobj_SOURCES = main.cxx obj.cxx obj.hxx
 
 fixobj_LDADD = \
 	$(top_builddir)/Lib/Math/libMath.la \
@@ -38,6 +38,9 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1998/06/08 17:11:44  curt
+# Renamed *.[ch] to *.[ch]xx
+#
 # Revision 1.4  1998/04/24 00:44:05  curt
 # Added zlib support.
 #

@@ -1,38 +1,38 @@
-/**************************************************************************
- * obj.c -- routines to handle WaveFront .obj format files.
- *
- * Written by Curtis Olson, started October 1997.
- *
- * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- * $Id$
- * (Log is kept at end of this file)
- **************************************************************************/
+// obj.cxx -- routines to handle WaveFront .obj format files.
+//
+// Written by Curtis Olson, started October 1997.
+//
+// Copyright (C) 1997 - 1998  Curtis L. Olson - curt@me.umn.edu
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
 
 
 #include <stdio.h>
 #include <string.h>
 
-#include "obj.h"
+#include "obj.hxx"
 
 #include <Math/mat3.h>
 
 
-/* what do ya' know, here's some global variables */
+
+
+// what do ya' know, here's some global variables
 static double nodes[MAXNODES][3];
 static double normals[MAXNODES][3];
 static int faces[MAXNODES][3];
@@ -49,15 +49,15 @@ FILE *in, *out;
 double refx, refy, refz;
 
 
-/* some simple list routines */
+// some simple list routines
 
-/* reset the list */
+// reset the list
 void list_init(int *list_ptr) {
     *list_ptr = 0;
 }
 
 
-/* add to list */
+// add to list
 void list_add(int *list, int *list_ptr, int node) {
     if ( *list_ptr >= MAXNODES ) {
 	printf("ERROR: list overflow in list_add()\n");
@@ -67,11 +67,11 @@ void list_add(int *list, int *list_ptr, int node) {
     list[*list_ptr] = node;
     *list_ptr += 1;
 
-    /* printf("list pointer = %d  adding %d\n", *list_ptr, node); */
+    // printf("list pointer = %d  adding %d\n", *list_ptr, node);
 }
 
 
-/* fix the cw list and append to ccw_list */
+// fix the cw list and append to ccw_list
 void fix_cw_list(int *list, int list_ptr) {
     int i, j, len;
 
@@ -84,11 +84,11 @@ void fix_cw_list(int *list, int list_ptr) {
 
     i = 0;
     while ( i < list_ptr ) { 
-	/* do next strip */
+	// do next strip
 
-	/* find length */
+	// find length
 	len = 0;
-	/* scan rest of strip (until -1) */
+	// scan rest of strip (until -1)
 	while ( ((i+len) < list_ptr) && (list[i+len] != -1) ) { 
 	    // printf("len = %d item = %d\n", len, list[i+len] );
 	    len++;
@@ -96,8 +96,8 @@ void fix_cw_list(int *list, int list_ptr) {
 	// printf("          Final length = %d\n", len);
 
 	if ( (len % 2) != 0 ) {
-	    /* if length is odd, just reverse order of nodes to reverse
-	       winding */
+	    // if length is odd, just reverse order of nodes to
+	    // reverse winding
 	    if ( ccw_list_ptr ) {
 		list_add(ccw_list, &ccw_list_ptr, -1);
 	    }
@@ -106,9 +106,9 @@ void fix_cw_list(int *list, int list_ptr) {
 		list_add(ccw_list, &ccw_list_ptr, list[j]);
 	    }
 	} else {
-	    /* if length is even, reverse order of (n-1) nodes to
-	       reverse winding, and create an orphan triangle for the
-	       last "nth" node */
+	    // if length is even, reverse order of (n-1) nodes to
+	    // reverse winding, and create an orphan triangle for the
+	    // last "nth" node
 	    if ( ccw_list_ptr ) {
 		list_add(ccw_list, &ccw_list_ptr, -1);
 	    }
@@ -163,7 +163,7 @@ void dump_global_bounds( void ) {
 }
 
 
-/* dump nodes */
+// dump nodes
 void dump_nodes( void ) {
     int i;
 
@@ -175,7 +175,7 @@ void dump_nodes( void ) {
 }
 
 
-/* dump normals */
+// dump normals
 void dump_normals( void ) {
     int i;
 
@@ -187,7 +187,7 @@ void dump_normals( void ) {
 }
 
 
-/* dump faces */
+// dump faces
 void dump_faces( void ) {
     int i, n1, n2, n3;
     double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
@@ -198,7 +198,7 @@ void dump_faces( void ) {
 	n2 = faces[i][1];
 	n3 = faces[i][2];
 
-	/* calc center of face */
+	// calc center of face
 	xmin = xmax = nodes[n1][0];
 	ymin = ymax = nodes[n1][1];
 	zmin = zmax = nodes[n1][2];
@@ -221,7 +221,7 @@ void dump_faces( void ) {
 	y = (ymin + ymax) / 2.0;
 	z = (zmin + zmax) / 2.0;
 
-	/* calc bounding radius */
+	// calc bounding radius
 	radius = calc_dist(nodes[n1][0] - x, nodes[n1][1] - y, 
 			   nodes[n1][2] - z);
 
@@ -231,14 +231,14 @@ void dump_faces( void ) {
 	dist = calc_dist(nodes[n3][0] - x, nodes[n3][1] - y, nodes[n3][2] - z);
 	if ( dist > radius ) { radius = dist; }
 	
-	/* output data */
+	// output data
 	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", x, y, z, radius);
 	fprintf(out, "f %d %d %d\n", n1, n2, n3);
     }
 }
 
 
-/* dump list */
+// dump list
 void dump_list(int *list, int list_ptr) {
     double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
     int i, j, len, n;
@@ -252,7 +252,7 @@ void dump_list(int *list, int list_ptr) {
 
     i = 0;
     while ( i < list_ptr ) { 
-	/* do next strip */
+	// do next strip
 
 	if ( (i % 2) == 0 ) {
 	    fprintf(out, "\nusemtl desert1\n");
@@ -260,16 +260,16 @@ void dump_list(int *list, int list_ptr) {
 	    fprintf(out, "\nusemtl desert2\n");
 	}
 
-	/* find length of next tri strip */
+	// find length of next tri strip
 	len = 0;
-	/* scan rest of strip (until -1) */
+	// scan rest of strip (until -1)
 	while ( ((i+len) < list_ptr) && (list[i+len] != -1) ) { 
 	    // printf("len = %d item = %d\n", len, list[i+len] );
 	    len++;
 	}
 	// printf("strip length = %d\n", len);
 
-	/* calc center of face */
+	// calc center of face
 	n = list[i];
 	xmin = xmax = nodes[n][0];
 	ymin = ymax = nodes[n][1];
@@ -292,7 +292,7 @@ void dump_list(int *list, int list_ptr) {
 	z = (zmin + zmax) / 2.0;
 	// printf("center = %.2f %.2f %.2f\n", x, y, z);
 
-	/* calc bounding radius */
+	// calc bounding radius
 	n = list[i];
 	radius = calc_dist(nodes[n][0] - x, nodes[n][1] - y, nodes[n][2] - z);
 
@@ -304,13 +304,13 @@ void dump_list(int *list, int list_ptr) {
 	}
 	// printf("radius = %.2f\n", radius);
 
-	/* dump bounding sphere and header */
+	// dump bounding sphere and header
 	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", x, y, z, radius);
 	fprintf(out, "t %d %d %d\n", list[i], list[i+1], list[i+2]);
-	/* printf("t %d %d %d\n", list[i], list[i+1], list[i+2]); */
+	// printf("t %d %d %d\n", list[i], list[i+1], list[i+2]);
 	i += 3;
 
-	/* dump rest of strip (until -1) */
+	// dump rest of strip (until -1)
 	while ( (i < list_ptr) && (list[i] != -1) ) { 
 	    fprintf(out, "q %d", list[i]);
 	    i++;
@@ -326,16 +326,15 @@ void dump_list(int *list, int list_ptr) {
 }
 
 
-/* Check the direction the current triangle faces, compared to it's
- * pregenerated normal.  Returns the dot product between the target
- * normal and actual normal.  If the dot product is close to 1.0, they
- * nearly match.  If the are close to -1.0, the are nearly
- * opposite. */
+// Check the direction the current triangle faces, compared to it's
+// pregenerated normal.  Returns the dot product between the target
+// normal and actual normal.  If the dot product is close to 1.0, they
+// nearly match.  If the are close to -1.0, the are nearly opposite.
 double check_cur_face(int n1, int n2, int n3) {
     double v1[3], v2[3], approx_normal[3], dot_prod, temp;
 
-    /* check for the proper rotation by calculating an approximate
-     * normal and seeing if it is close to the precalculated normal */
+    // check for the proper rotation by calculating an approximate
+    // normal and seeing if it is close to the precalculated normal
     v1[0] = nodes[n2][0] - nodes[n1][0];
     v1[1] = nodes[n2][1] - nodes[n1][1];
     v1[2] = nodes[n2][2] - nodes[n1][2];
@@ -347,21 +346,21 @@ double check_cur_face(int n1, int n2, int n3) {
     MAT3_NORMALIZE_VEC(approx_normal,temp);
     dot_prod = MAT3_DOT_PRODUCT(normals[n1], approx_normal);
 
-    /* not first triangle */
-    /* if ( ((dot_prod < -0.5) && !is_backwards) ||
-	 ((dot_prod >  0.5) && is_backwards) ) {
-	printf("    Approx normal = %.2f %.2f %.2f\n", approx_normal[0], 
-	       approx_normal[1], approx_normal[2]);
-	printf("    Dot product = %.4f\n", dot_prod);
-    } */
-    /* angle = acos(dot_prod); */
-    /* printf("Normal ANGLE = %.3f rads.\n", angle); */
+    // not first triangle
+    // if ( ((dot_prod < -0.5) && !is_backwards) ||
+    //     ((dot_prod >  0.5) && is_backwards) ) {
+    //     printf("    Approx normal = %.2f %.2f %.2f\n", approx_normal[0], 
+    //            approx_normal[1], approx_normal[2]);
+    //     printf("    Dot product = %.4f\n", dot_prod);
+    // }
+    // angle = acos(dot_prod);
+    // printf("Normal ANGLE = %.3f rads.\n", angle);
 
     return(dot_prod);
 }
 
 
-/* Load a .obj file */
+// Load a .obj file
 void obj_fix(char *infile, char *outfile) {
     char line[256];
     double dot_prod;
@@ -382,8 +381,8 @@ void obj_fix(char *infile, char *outfile) {
     list_init(&ccw_list_ptr);
     list_init(&cw_list_ptr);
 
-    /* I start counting at one because that is how the triangle
-       program refers to nodes and normals */
+    // I start counting at one because that is how the triangle
+    // program refers to nodes and normals
     first = 1;
     ncount = 1;
     vncount = 1;
@@ -393,21 +392,21 @@ void obj_fix(char *infile, char *outfile) {
 
     while ( fgets(line, 250, in) != NULL ) {
 	if ( line[0] == '#' ) {
-	    /* pass along the comments verbatim */
+	    // pass along the comments verbatim
 	    fprintf(out, "%s", line);
 	} else if ( strlen(line) <= 1 ) {
-	    /* don't pass along empty lines */
+	    // don't pass along empty lines
 	    // fprintf(out, "%s", line);
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
-	    /* save vertex to memory and output to file */
+	    // save vertex to memory and output to file
             if ( ncount < MAXNODES ) {
-                /* printf("vertex = %s", line); */
+                // printf("vertex = %s", line);
                 sscanf(line, "v %lf %lf %lf\n", &x, &y, &z);
 		nodes[ncount][0] = x;
 		nodes[ncount][1] = y;
 		nodes[ncount][2] = z;
 
-		/* first time through set min's and max'es */
+		// first time through set min's and max'es
 		if ( ncount == 1 ) {
 		    xmin = x;
 		    xmax = x;
@@ -417,7 +416,7 @@ void obj_fix(char *infile, char *outfile) {
 		    zmax = z;
 		}
     
-		/* keep track of min/max vertex values */
+		// keep track of min/max vertex values
 		if ( x < xmin ) xmin = x;
 		if ( x > xmax ) xmax = x;
 		if ( y < ymin ) ymin = y;
@@ -433,9 +432,9 @@ void obj_fix(char *infile, char *outfile) {
                 exit(-1);
             }
 	} else if ( strncmp(line, "vn ", 3) == 0 ) {
-	    /* save vertex normals to memory and output to file */
+	    // save vertex normals to memory and output to file
             if ( vncount < MAXNODES ) {
-                /* printf("vertex normal = %s", line); */
+                // printf("vertex normal = %s", line);
                 sscanf(line, "vn %lf %lf %lf\n", 
                        &normals[vncount][0], &normals[vncount][1], 
                        &normals[vncount][2]);
@@ -447,7 +446,7 @@ void obj_fix(char *infile, char *outfile) {
                 exit(-1);
             }
 	} else if ( line[0] == 't' ) {
-	    /* starting a new triangle strip */
+	    // starting a new triangle strip
 
 	    printf("Starting a new triangle strip\n");
 
@@ -456,7 +455,7 @@ void obj_fix(char *infile, char *outfile) {
 	    printf("new tri strip = %s", line);
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
-	    /* special cases to handle bugs in our beloved tri striper */
+	    // special cases to handle bugs in our beloved tri striper
 	    if ( (n1 == 4) && (n2 == 2) && (n3 == 2) && (n4 == 1) ) {
 		n2 = 3;
 	    }
@@ -466,11 +465,11 @@ void obj_fix(char *infile, char *outfile) {
 
 	    dot_prod = check_cur_face(n1, n2, n3);
 	    if ( dot_prod < 0.0 ) {
-		/* this stripe is backwards (CW) */
+		// this stripe is backwards (CW)
 		is_ccw = 0;
 		printf(" -> Starting a backwards stripe\n");
 	    } else {
-		/* this stripe is normal (CCW) */
+		// this stripe is normal (CCW)
 		is_ccw = 1;
 	    }
 
@@ -501,7 +500,7 @@ void obj_fix(char *infile, char *outfile) {
 	    }
 	} else if ( line[0] == 'f' ) {
 	    if ( fcount < MAXNODES ) {
-		/* pass along the unoptimized faces verbatim */
+		// pass along the unoptimized faces verbatim
 		sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 		faces[fcount][0] = n1;
 		faces[fcount][1] = n2;
@@ -515,10 +514,10 @@ void obj_fix(char *infile, char *outfile) {
  
 	    // fprintf(out, "%s", line);
 	} else if ( line[0] == 'q' ) {
-	    /* continue a triangle strip */
+	    // continue a triangle strip
 	    n1 = n2 = 0;
 
-	    /* printf("continued tri strip = %s ", line); */
+	    // printf("continued tri strip = %s ", line);
 	    sscanf(line, "q %d %d\n", &n1, &n2);
 
 	    if ( is_ccw ) {
@@ -539,12 +538,12 @@ void obj_fix(char *infile, char *outfile) {
 	}
     }
 
-    /* reference point is the "center" */
+    // reference point is the "center"
     refx = (xmin + xmax) / 2.0;
     refy = (ymin + ymax) / 2.0;
     refz = (zmin + zmax) / 2.0;
 
-    /* convert the cw_list to ccw add append to ccw_list */
+    // convert the cw_list to ccw add append to ccw_list
     fix_cw_list(cw_list, cw_list_ptr);
 
     dump_global_bounds();
@@ -561,57 +560,60 @@ void obj_fix(char *infile, char *outfile) {
 }
 
 
-/* $Log$
-/* Revision 1.16  1998/05/27 02:27:22  curt
-/* Commented out a couple of debugging messages.
-/*
- * Revision 1.15  1998/05/24 02:47:47  curt
- * For each strip, specify a default material property and calculate a center
- * and bounding sphere.
- *
- * Revision 1.14  1998/05/23 15:19:49  curt
- * Output more digits after the decimal place.
- *
- * Revision 1.13  1998/05/20 20:55:19  curt
- * Fixed arbitrary polygon winding problem here so all tristrips are passed
- * to runtime simulator with a consistant counter clockwise winding.
- *
- * Revision 1.12  1998/05/16 13:11:26  curt
- * Fixed an off by one error in node, normal, and face counters.
- *
- * Revision 1.11  1998/04/27 15:59:24  curt
- * Fixed an off by one error.
- *
- * Revision 1.10  1998/04/27 03:33:11  curt
- * Code now calculates a center reference points and outputs everything
- * relative to that.  This is useful in the rendering engine to keep everything
- * close to (0, 0, 0) where we can avoid many GLfloat precision problems.
- *
- * Revision 1.9  1998/04/18 04:01:03  curt
- * Now use libMath rather than having local copies of math routines.
- *
- * Revision 1.8  1998/04/08 23:19:37  curt
- * Adopted Gnu automake/autoconf system.
- *
- * Revision 1.7  1998/03/19 02:51:41  curt
- * Added special case handling to compensate for bugs in our beloved tri striper
- *
- * Revision 1.6  1998/03/03 15:36:12  curt
- * Tweaks for compiling with g++
- *
- * Revision 1.5  1998/03/03 03:37:03  curt
- * Cumulative tweaks.
- *
- * Revision 1.4  1998/01/31 00:41:25  curt
- * Made a few changes converting floats to doubles.
- *
- * Revision 1.3  1998/01/19 19:51:07  curt
- * A couple final pre-release tweaks.
- *
- * Revision 1.2  1998/01/09 23:03:12  curt
- * Restructured to split 1deg x 1deg dem's into 64 subsections.
- *
- * Revision 1.1  1997/12/08 19:28:54  curt
- * Initial revision.
- *
- */
+// $Log$
+// Revision 1.1  1998/06/08 17:11:46  curt
+// Renamed *.[ch] to *.[ch]xx
+//
+// Revision 1.16  1998/05/27 02:27:22  curt
+// Commented out a couple of debugging messages.
+//
+// Revision 1.15  1998/05/24 02:47:47  curt
+// For each strip, specify a default material property and calculate a center
+// and bounding sphere.
+//
+// Revision 1.14  1998/05/23 15:19:49  curt
+// Output more digits after the decimal place.
+//
+// Revision 1.13  1998/05/20 20:55:19  curt
+// Fixed arbitrary polygon winding problem here so all tristrips are passed
+// to runtime simulator with a consistant counter clockwise winding.
+//
+// Revision 1.12  1998/05/16 13:11:26  curt
+// Fixed an off by one error in node, normal, and face counters.
+//
+// Revision 1.11  1998/04/27 15:59:24  curt
+// Fixed an off by one error.
+//
+// Revision 1.10  1998/04/27 03:33:11  curt
+// Code now calculates a center reference points and outputs everything
+// relative to that.  This is useful in the rendering engine to keep everything
+// close to (0, 0, 0) where we can avoid many GLfloat precision problems.
+//
+// Revision 1.9  1998/04/18 04:01:03  curt
+// Now use libMath rather than having local copies of math routines.
+//
+// Revision 1.8  1998/04/08 23:19:37  curt
+// Adopted Gnu automake/autoconf system.
+//
+// Revision 1.7  1998/03/19 02:51:41  curt
+// Added special case handling to compensate for bugs in our beloved tri striper
+//
+// Revision 1.6  1998/03/03 15:36:12  curt
+// Tweaks for compiling with g++
+//
+// Revision 1.5  1998/03/03 03:37:03  curt
+// Cumulative tweaks.
+//
+// Revision 1.4  1998/01/31 00:41:25  curt
+// Made a few changes converting floats to doubles.
+//
+// Revision 1.3  1998/01/19 19:51:07  curt
+// A couple final pre-release tweaks.
+//
+// Revision 1.2  1998/01/09 23:03:12  curt
+// Restructured to split 1deg x 1deg dem's into 64 subsections.
+//
+// Revision 1.1  1997/12/08 19:28:54  curt
+// Initial revision.
+//
+
