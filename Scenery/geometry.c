@@ -113,15 +113,19 @@ int vrmlFreeGeometry() {
          * because we need it to calculate current ground elevation
          * ... */
 	/* free(eg.mesh_data); */
+	;
     }
     return(vrmlGeometryType);
 }
 
 
 /* $Log$
-/* Revision 1.4  1997/08/27 03:30:26  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.5  1998/01/06 01:20:23  curt
+/* Tweaks to help building with MSVC++
 /*
+ * Revision 1.4  1997/08/27 03:30:26  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.3  1997/07/08 18:20:13  curt
  * Working on establishing a hard ground.
  *

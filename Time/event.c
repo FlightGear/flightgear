@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 #ifdef USE_FTIME
+#  include <stdlib.h>
 #  include <sys/timeb.h> /* for ftime() and struct timeb */
 #else
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
@@ -268,7 +269,7 @@ void fgEventPrintStats() {
 	printf("-----------\n");
 
 	for ( i = 0; i < event_ptr; i++ ) {
-	    printf("  %-20s  int=%.2fs cum=%d min=%d max=%d count=%d ave=%.2f\n",
+	    printf("  %-20s  int=%.2fs cum=%ld min=%ld max=%ld count=%ld ave=%.2f\n",
 		   events[i].description, 
 		   events[i].interval / 1000.0,
 		   events[i].cum_time, 
@@ -335,9 +336,12 @@ void fgEventProcess() {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/31 17:46:50  curt
-/* Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
+/* Revision 1.5  1998/01/06 01:20:27  curt
+/* Tweaks to help building with MSVC++
 /*
+ * Revision 1.4  1997/12/31 17:46:50  curt
+ * Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
+ *
  * Revision 1.3  1997/12/30 22:22:42  curt
  * Further integration of event manager.
  *

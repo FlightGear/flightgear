@@ -40,6 +40,9 @@
 
 $Header$
 $Log$
+Revision 1.2  1998/01/06 01:20:17  curt
+Tweaks to help building with MSVC++
+
 Revision 1.1  1997/05/29 00:09:59  curt
 Initial Flight Gear revision.
 
@@ -75,7 +78,9 @@ typedef struct {
   int run_number;	/* run number of this session			  */
   char date_string[7]; 	/* like "931220" */
   char time_stamp[9];  	/* like "13:00:00" */
+#ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
   char userid[L_cuserid]; /* who is running this sim */
+#endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
   long time_slices;	/* number of points that can be recorded (circ buff) */
   int write_av;		/* will be writing out an Agile_VU file after run */
   int write_mat;	/* will be writing out a matrix script of session */

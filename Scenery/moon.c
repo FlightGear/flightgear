@@ -29,6 +29,7 @@
 #include "moon.h"
 
 #include "../Aircraft/aircraft.h"
+#include "../Include/constants.h"
 #include "../Include/general.h"
 #include "../Main/views.h"
 #include "../Time/fg_time.h"
@@ -242,7 +243,7 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
   rho = 0.99883 + 0.00167 * cos(2 * fgDegToRad(FG_Latitude));
 
   if (geocCoord.RightAscension < 0)
-    geocCoord.RightAscension += (2*M_PI);
+    geocCoord.RightAscension += (2*FG_PI);
 
   HA = t.lst - (3.8197186 * geocCoord.RightAscension);
 
@@ -319,9 +320,12 @@ void fgMoonRender() {
 
 
 /* $Log$
-/* Revision 1.15  1998/01/05 18:44:35  curt
-/* Add an option to advance/decrease time from keyboard.
+/* Revision 1.16  1998/01/06 01:20:24  curt
+/* Tweaks to help building with MSVC++
 /*
+ * Revision 1.15  1998/01/05 18:44:35  curt
+ * Add an option to advance/decrease time from keyboard.
+ *
  * Revision 1.14  1997/12/30 20:47:50  curt
  * Integrated new event manager with subsystem initializations.
  *

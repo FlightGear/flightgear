@@ -291,8 +291,9 @@ void ls_stamp()
     sprintf(sim_control_.date_string, "%06d\0", date);
     sprintf(sim_control_.time_stamp, "%02d:%02d:%02d\0", 
 	nowtime->tm_hour, nowtime->tm_min, nowtime->tm_sec);
+#ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
     cuserid( sim_control_.userid );	/* set up user id */
-
+#endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
     return;
 }
 
@@ -912,6 +913,9 @@ int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.12  1998/01/06 01:20:16  curt
+ * Tweaks to help building with MSVC++
+ *
  * Revision 1.11  1998/01/05 22:19:26  curt
  * #ifdef'd out some unused code that was problematic for MSVC++ to compile.
  *

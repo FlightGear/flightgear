@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifdef WIN32
+#include <string.h>
+#endif
+
 #include "common.h"
 
 
@@ -44,9 +48,12 @@ char *strip_quotes(char *s) {
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 15:40:41  curt
-/* Added GNU copyright headers.
+/* Revision 1.3  1998/01/06 01:20:23  curt
+/* Tweaks to help building with MSVC++
 /*
+ * Revision 1.2  1997/05/23 15:40:41  curt
+ * Added GNU copyright headers.
+ *
  * Revision 1.1  1997/05/16 16:07:03  curt
  * Initial revision.
  *
