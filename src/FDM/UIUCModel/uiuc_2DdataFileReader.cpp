@@ -18,10 +18,13 @@
 ----------------------------------------------------------------------
 
  HISTORY:      02/29/2000   initial release
+               10/25/2001   (RD) Modified so that it recognizes a
+	                    blank line
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Jeff Scott         <jscott@mail.com>
+               Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -101,14 +104,17 @@ void uiuc_2DdataFileReader( string file_name,
       istrstream token1(linetoken1.c_str());
       istrstream token2(linetoken2.c_str());
 
-      //reset token_value2 for first if statement
+      //reset token_value1 and token_value2 for first if statement
+      token_value1 = -999;
       token_value2 = -999;
 
       token1 >> token_value1;
       token2 >> token_value2;
 
+      //chenk to see if it is a blank line
+      if (token_value1==-999 && token_value2==-999);
       //check to see if only one value on line (token2 blank)
-      if (token_value2 == -999)
+      else if (token_value2 == -999)
         {
           y[counter_y] = token_value1 * convert_y;
 

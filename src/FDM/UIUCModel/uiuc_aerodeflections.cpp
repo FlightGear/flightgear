@@ -22,10 +22,15 @@
 
  HISTORY:      01/30/2000   initial release
                04/05/2000   (JS) added zero_Long_trim command
+	       07/05/2001   (RD) removed elevator_tab addidtion to
+	                    elevator calculation
+	       11/12/2001   (RD) added new flap routine.  Needed for
+	                    Twin Otter non-linear model
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Jeff Scott         <jscott@mail.com>
+               Robert Deters      <rdeters@uiuc.edu>
                Michael Selig      <m-selig@uiuc.edu>
 
 ----------------------------------------------------------------------
@@ -90,16 +95,42 @@ void uiuc_aerodeflections( double dt )
     aileron = - Lat_control * damax * DEG_TO_RAD;
 
   if ((Long_control+Long_trim) <= 0)
-    elevator = (Long_control + Long_trim) * demax * DEG_TO_RAD + elevator_tab;
+    elevator = (Long_control + Long_trim) * demax * DEG_TO_RAD;
   else
-    elevator = (Long_control + Long_trim) * demin * DEG_TO_RAD + elevator_tab;
+    elevator = (Long_control + Long_trim) * demin * DEG_TO_RAD;
 
   if (Rudder_pedal <= 0)
     rudder = - Rudder_pedal * drmin * DEG_TO_RAD;
   else
     rudder = - Rudder_pedal * drmax * DEG_TO_RAD;
 
-  // flap routine
+
+  // new flap routine
+  // designed for the twin otter non-linear model
+  flap_percent     = Flap_handle / 30.0;       // percent of flaps desired
+  if (flap_percent>=0.31 && flap_percent<=0.35)
+    flap_percent = 1.0 / 3.0;
+  if (flap_percent>=0.65 && flap_percent<=0.69)
+    flap_percent = 2.0 / 3.0;
+  flap_goal        = flap_percent * flap_max;  // angle of flaps desired
+  flap_moving_rate = flap_rate * dt;           // amount flaps move per time step
+  
+  // determine flap position with respect to the flap goal
+  if (flap_pos < flap_goal)
+    {
+      flap_pos += flap_moving_rate;
+      if (flap_pos > flap_goal)
+	flap_pos = flap_goal;
+    }
+  else if (flap_pos > flap_goal)
+    {
+      flap_pos -= flap_moving_rate;
+      if (flap_pos < flap_goal)
+	flap_pos = flap_goal;
+    }
+
+
+  // old flap routine
   // check for lowest flap setting
   if (Flap_handle < dfArray[1])
     {

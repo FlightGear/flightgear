@@ -17,9 +17,10 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
-               06/18/2001   Added aileron_input, rudder_input,
+               06/18/2001   (RD) Added aileron_input, rudder_input,
 	                    pilot_elev_no, pilot_ail_no, and 
 			    pilot_rud_no
+	       11/12/2001   (RD) Added flap_max, flap_rate, and
 
 ----------------------------------------------------------------------
  
@@ -87,6 +88,8 @@ void uiuc_map_controlSurface()
   controlSurface_map["pilot_elev_no"]    = pilot_elev_no_flag       ;
   controlSurface_map["pilot_ail_no"]     = pilot_ail_no_flag        ;
   controlSurface_map["pilot_rud_no"]     = pilot_rud_no_flag        ;
+  controlSurface_map["flap_max"]         = flap_max_flag            ;
+  controlSurface_map["flap_rate"]        = flap_rate_flag           ;
 }
 
 // end uiuc_map_controlSurface.cpp

@@ -25,10 +25,22 @@
                             and rudder inputs to record map
                04/24/2000   (JS) added rest of variables in 
                             ls_generic.h
+	       07/06/2001   (RD) changed Flap handle output
+	       07/20/2001   (RD) fixed Lat_control and Rudder_pedal
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (Cxfxxf0I)
+               11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (CxfxxfI).  Removed zero flap variables.
+			    Added flap_pos and flap_goal.
+	       02/13/2002   (RD) Added variables so linear aero model
+	                    values can be recorded
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Jeff Scott         <jscott@mail.com>
+               Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -795,7 +807,7 @@ void uiuc_recorder( double dt )
               }
             case Lat_control_record:
               {
-                fout << Long_control << " ";
+                fout << Lat_control << " ";
                 break;
               }
             case aileron_record:
@@ -810,7 +822,7 @@ void uiuc_recorder( double dt )
               }
             case Rudder_pedal_record:
               {
-                fout << Long_control << " ";
+                fout << Rudder_pedal << " ";
                 break;
               }
             case rudder_record:
@@ -825,7 +837,7 @@ void uiuc_recorder( double dt )
               }
             case Flap_handle_record:
               {
-                fout << flap << " ";
+                fout << Flap_handle << " ";
                 break;
               }
             case flap_record:
@@ -836,6 +848,16 @@ void uiuc_recorder( double dt )
             case flap_deg_record:
               {
                 fout << flap * RAD_TO_DEG << " ";
+                break;
+              }
+            case flap_goal_record:
+              {
+                fout << flap_goal << " ";
+                break;
+              }
+            case flap_pos_record:
+              {
+                fout << flap_pos << " ";
                 break;
               }
 
@@ -875,6 +897,111 @@ void uiuc_recorder( double dt )
                 fout << CX << " ";
                 break;
               }
+            case CXfabetafI_record:
+              {
+                fout << CXfabetafI << " ";
+                break;
+              }
+            case CXfadefI_record:
+              {
+                fout << CXfadefI << " ";
+                break;
+              }
+            case CXfaqfI_record:
+              {
+                fout << CXfaqfI << " ";
+                break;
+              }
+            case CDo_save_record:
+              {
+                fout << CDo_save << " ";
+                break;
+              }
+            case CDK_save_record:
+              {
+                fout << CDK_save << " ";
+                break;
+              }
+            case CD_a_save_record:
+              {
+                fout << CD_a_save << " ";
+                break;
+              }
+            case CD_adot_save_record:
+              {
+                fout << CD_adot_save << " ";
+                break;
+              }
+            case CD_q_save_record:
+              {
+                fout << CD_q_save << " ";
+                break;
+              }
+            case CD_ih_save_record:
+              {
+                fout << CD_ih_save << " ";
+                break;
+              }
+            case CD_de_save_record:
+              {
+                fout << CD_de_save << " ";
+                break;
+              }
+            case CXo_save_record:
+              {
+                fout << CXo_save << " ";
+                break;
+              }
+            case CXK_save_record:
+              {
+                fout << CXK_save << " ";
+                break;
+              }
+            case CX_a_save_record:
+              {
+                fout << CX_a_save << " ";
+                break;
+              }
+            case CX_a2_save_record:
+              {
+                fout << CX_a2_save << " ";
+                break;
+              }
+            case CX_a3_save_record:
+              {
+                fout << CX_a3_save << " ";
+                break;
+              }
+            case CX_adot_save_record:
+              {
+                fout << CX_adot_save << " ";
+                break;
+              }
+            case CX_q_save_record:
+              {
+                fout << CX_q_save << " ";
+                break;
+              }
+            case CX_de_save_record:
+              {
+                fout << CX_de_save << " ";
+                break;
+              }
+            case CX_dr_save_record:
+              {
+                fout << CX_dr_save << " ";
+                break;
+              }
+            case CX_df_save_record:
+              {
+                fout << CX_df_save << " ";
+                break;
+              }
+            case CX_adf_save_record:
+              {
+                fout << CX_adf_save << " ";
+                break;
+              }
             case CL_record:
               {
                 fout << CL << " ";
@@ -905,6 +1032,106 @@ void uiuc_recorder( double dt )
                 fout << CZ << " ";
                 break;
               }
+            case CZfaI_record:
+              {
+                fout << CZfaI << " ";
+                break;
+              }
+            case CZfabetafI_record:
+	      {
+                fout << CZfabetafI << " ";
+                break;
+              }
+            case CZfadefI_record:
+              {
+                fout << CZfadefI << " ";
+                break;
+              }
+            case CZfaqfI_record:
+              {
+                fout << CZfaqfI << " ";
+                break;
+              }
+            case CLo_save_record:
+              {
+                fout << CLo_save << " ";
+                break;
+              }
+            case CL_a_save_record:
+              {
+                fout << CL_a_save << " ";
+                break;
+              }
+            case CL_adot_save_record:
+              {
+                fout << CL_adot_save << " ";
+                break;
+              }
+            case CL_q_save_record:
+              {
+                fout << CL_q_save << " ";
+                break;
+              }
+            case CL_ih_save_record:
+              {
+                fout << CL_ih_save << " ";
+                break;
+              }
+            case CL_de_save_record:
+              {
+                fout << CL_de_save << " ";
+                break;
+              }
+            case CZo_save_record:
+              {
+                fout << CZo_save << " ";
+                break;
+              }
+            case CZ_a_save_record:
+              {
+                fout << CZ_a_save << " ";
+                break;
+              }
+            case CZ_a2_save_record:
+              {
+                fout << CZ_a2_save << " ";
+                break;
+              }
+            case CZ_a3_save_record:
+              {
+                fout << CZ_a3_save << " ";
+                break;
+              }
+            case CZ_adot_save_record:
+              {
+                fout << CZ_adot_save << " ";
+                break;
+              }
+            case CZ_q_save_record:
+              {
+                fout << CZ_q_save << " ";
+                break;
+              }
+            case CZ_de_save_record:
+              {
+                fout << CZ_de_save << " ";
+                break;
+              }
+            case CZ_deb2_save_record:
+              {
+                fout << CZ_deb2_save << " ";
+                break;
+              }
+            case CZ_df_save_record:
+              {
+                fout << CZ_df_save << " ";
+                break;
+              }
+            case CZ_adf_save_record:
+              {
+                fout << CZ_adf_save << " ";
+                break;
+              }
             case Cm_record:
               {
                 fout << Cm << " ";
@@ -930,6 +1157,71 @@ void uiuc_recorder( double dt )
                 fout << CmfadfI << " ";
                 break;
               }
+            case CmfabetafI_record:
+              {
+                fout << CmfabetafI << " ";
+                break;
+              }
+            case CmfadefI_record:
+              {
+                fout << CmfadefI << " ";
+                break;
+              }
+            case CmfaqfI_record:
+              {
+                fout << CmfaqfI << " ";
+                break;
+              }
+            case Cmo_save_record:
+              {
+                fout << Cmo_save << " ";
+                break;
+              }
+            case Cm_a_save_record:
+              {
+                fout << Cm_a_save << " ";
+                break;
+              }
+            case Cm_a2_save_record:
+              {
+                fout << Cm_a2_save << " ";
+                break;
+              }
+            case Cm_adot_save_record:
+              {
+                fout << Cm_adot_save << " ";
+                break;
+              }
+            case Cm_q_save_record:
+              {
+                fout << Cm_q_save << " ";
+                break;
+              }
+            case Cm_ih_save_record:
+              {
+                fout << Cm_ih_save << " ";
+                break;
+              }
+            case Cm_de_save_record:
+              {
+                fout << Cm_de_save << " ";
+                break;
+              }
+            case Cm_b2_save_record:
+              {
+                fout << Cm_b2_save << " ";
+                break;
+              }
+            case Cm_r_save_record:
+              {
+                fout << Cm_r_save << " ";
+                break;
+              }
+            case Cm_df_save_record:
+              {
+                fout << Cm_df_save << " ";
+                break;
+              }
             case CY_record:
               {
                 fout << CY  << " ";
@@ -945,6 +1237,71 @@ void uiuc_recorder( double dt )
                 fout << CYfbetadrI << " ";
                 break;
               }
+	    case CYfabetafI_record:
+	      {
+		fout << CYfabetafI << " ";
+		break;
+	      }
+	    case CYfadafI_record:
+	      {
+		fout << CYfadafI << " ";
+		break;
+	      }
+	    case CYfadrfI_record:
+	      {
+		fout << CYfadrfI << " ";
+		break;
+	      }
+	    case CYfapfI_record:
+	      {
+		fout << CYfapfI << " ";
+		break;
+	      }
+	    case CYfarfI_record:
+	      {
+		fout << CYfarfI << " ";
+		break;
+	      }
+	    case CYo_save_record:
+	      {
+		fout << CYo_save << " ";
+		break;
+	      }
+	    case CY_beta_save_record:
+	      {
+		fout << CY_beta_save << " ";
+		break;
+	      }
+	    case CY_p_save_record:
+	      {
+		fout << CY_p_save << " ";
+		break;
+	      }
+	    case CY_r_save_record:
+	      {
+		fout << CY_r_save << " ";
+		break;
+	      }
+	    case CY_da_save_record:
+	      {
+		fout << CY_da_save << " ";
+		break;
+	      }
+	    case CY_dr_save_record:
+	      {
+		fout << CY_dr_save << " ";
+		break;
+	      }
+	    case CY_dra_save_record:
+	      {
+		fout << CY_dra_save << " ";
+		break;
+	      }
+	    case CY_bdot_save_record:
+	      {
+		fout << CY_bdot_save << " ";
+		break;
+	      }
             case Cl_record:
               {
                 fout << Cl << " ";
@@ -960,6 +1317,66 @@ void uiuc_recorder( double dt )
                 fout << ClfbetadrI << " ";
                 break;
               }
+	    case ClfabetafI_record:
+	      {
+		fout << ClfabetafI << " ";
+		break;
+	      }
+	    case ClfadafI_record:
+	      {
+		fout << ClfadafI << " ";
+		break;
+	      }
+	    case ClfadrfI_record:
+	      {
+		fout << ClfadrfI << " ";
+		break;
+	      }
+	    case ClfapfI_record:
+	      {
+		fout << ClfapfI << " ";
+		break;
+	      }
+	    case ClfarfI_record:
+	      {
+		fout << ClfarfI << " ";
+		break;
+	      }
+	    case Clo_save_record:
+	      {
+		fout << Clo_save << " ";
+		break;
+	      }
+	    case Cl_beta_save_record:
+	      {
+		fout << Cl_beta_save << " ";
+		break;
+	      }
+	    case Cl_p_save_record:
+	      {
+		fout << Cl_p_save << " ";
+		break;
+	      }
+	    case Cl_r_save_record:
+	      {
+		fout << Cl_r_save << " ";
+		break;
+	      }
+	    case Cl_da_save_record:
+	      {
+		fout << Cl_da_save << " ";
+		break;
+	      }
+	    case Cl_dr_save_record:
+	      {
+		fout << Cl_dr_save << " ";
+		break;
+	      }
+	    case Cl_daa_save_record:
+	      {
+		fout << Cl_daa_save << " ";
+		break;
+	      }
             case Cn_record:
               {
                 fout << Cn << " ";
@@ -975,6 +1392,71 @@ void uiuc_recorder( double dt )
                 fout << CnfbetadrI << " ";
                 break;
               }
+	    case CnfabetafI_record:
+	      {
+		fout << CnfabetafI << " ";
+		break;
+	      }
+	    case CnfadafI_record:
+	      {
+		fout << CnfadafI << " ";
+		break;
+	      }
+	    case CnfadrfI_record:
+	      {
+		fout << CnfadrfI << " ";
+		break;
+	      }
+	    case CnfapfI_record:
+	      {
+		fout << CnfapfI << " ";
+		break;
+	      }
+	    case CnfarfI_record:
+	      {
+		fout << CnfarfI << " ";
+		break;
+	      }
+	    case Cno_save_record:
+	      {
+		fout << Cno_save << " ";
+		break;
+	      }
+	    case Cn_beta_save_record:
+	      {
+		fout << Cn_beta_save << " ";
+		break;
+	      }
+	    case Cn_p_save_record:
+	      {
+		fout << Cn_p_save << " ";
+		break;
+	      }
+	    case Cn_r_save_record:
+	      {
+		fout << Cn_r_save << " ";
+		break;
+	      }
+	    case Cn_da_save_record:
+	      {
+		fout << Cn_da_save << " ";
+		break;
+	      }
+	    case Cn_dr_save_record:
+	      {
+		fout << Cn_dr_save << " ";
+		break;
+	      }
+	    case Cn_q_save_record:
+	      {
+		fout << Cn_q_save << " ";
+		break;
+	      }
+	    case Cn_b3_save_record:
+	      {
+		fout << Cn_b3_save << " ";
+		break;
+	      }
 
               /******************** Ice Detection ********************/
             case CLclean_wing_record:

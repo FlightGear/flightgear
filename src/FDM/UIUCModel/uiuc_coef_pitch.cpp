@@ -19,11 +19,23 @@
 ----------------------------------------------------------------------
 
  HISTORY:      04/15/2000   initial release
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (Cmfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (Cmfxxf).  Zero flap vairables removed.
+	       02/13/2002   (RD) Added variables so linear aero model
+	                    values can be recorded
+	       02/18/2002   (RD) Added uiuc_3Dinterp_quick() function
+	                    for a quicker 3D interpolation.  Takes
+			    advantage of "nice" data.
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -50,6 +62,8 @@
  CALLS TO:     uiuc_1Dinterpolation
                uiuc_2Dinterpolation
                uiuc_ice_filter
+	       uiuc_3Dinterpolation
+	       uiuc_3Dinterp_quick
 
 ----------------------------------------------------------------------
 
@@ -79,6 +93,8 @@ void uiuc_coef_pitch()
   string linetoken1;
   string linetoken2;
   stack command_list;
+
+  double q_nondim;
   
   command_list = aeroPitchParts -> getCommands();
   
@@ -95,6 +111,7 @@ void uiuc_coef_pitch()
               {
                 Cmo = uiuc_ice_filter(Cmo_clean,kCmo);
               }
+	    Cmo_save = Cmo;
             Cm += Cmo;
             break;
           }
@@ -104,6 +121,7 @@ void uiuc_coef_pitch()
               {
                 Cm_a = uiuc_ice_filter(Cm_a_clean,kCm_a);
               }
+	    Cm_a_save = Cm_a * Alpha;
             Cm += Cm_a * Alpha;
             break;
           }
@@ -113,6 +131,7 @@ void uiuc_coef_pitch()
               {
                 Cm_a2 = uiuc_ice_filter(Cm_a2_clean,kCm_a2);
               }
+	    Cm_a2_save = Cm_a2 * Alpha * Alpha;
             Cm += Cm_a2 * Alpha * Alpha;
             break;
           }
@@ -124,6 +143,7 @@ void uiuc_coef_pitch()
               }
             /* Cm_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    Cm_adot_save = Cm_adot * Alpha_dot * cbar_2U;
             Cm += Cm_adot * Alpha_dot * cbar_2U;
             break;
           }
@@ -135,11 +155,13 @@ void uiuc_coef_pitch()
               }
             /* Cm_q must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    Cm_q_save = Cm_q * Q_body * cbar_2U;
             Cm += Cm_q * Q_body * cbar_2U;
             break;
           }
         case Cm_ih_flag:
           {
+	    Cm_ih_save = Cm_ih * ih;
             Cm += Cm_ih * ih;
             break;
           }
@@ -149,6 +171,7 @@ void uiuc_coef_pitch()
               {
                 Cm_de = uiuc_ice_filter(Cm_de_clean,kCm_de);
               }
+	    Cm_de_save = Cm_de * elevator;
             Cm += Cm_de * elevator;
             break;
           }
@@ -158,6 +181,7 @@ void uiuc_coef_pitch()
               {
                 Cm_b2 = uiuc_ice_filter(Cm_b2_clean,kCm_b2);
               }
+	    Cm_b2_save = Cm_b2 * Beta * Beta;
             Cm += Cm_b2 * Beta * Beta;
             break;
           }
@@ -167,6 +191,7 @@ void uiuc_coef_pitch()
               {
                 Cm_r = uiuc_ice_filter(Cm_r_clean,kCm_r);
               }
+	    Cm_r_save = Cm_r * R_body * b_2U;
             Cm += Cm_r * R_body * b_2U;
             break;
           }
@@ -176,6 +201,7 @@ void uiuc_coef_pitch()
               {
                 Cm_df = uiuc_ice_filter(Cm_df_clean,kCm_df);
               }
+	    Cm_df_save = Cm_df * flap;
             Cm += Cm_df * flap;
             break;
           }
@@ -219,6 +245,88 @@ void uiuc_coef_pitch()
                                            Alpha,
                                            flap);
             Cm += CmfadfI;
+            break;
+          }
+        case Cmfabetaf_flag:
+          {
+	    if (Cmfabetaf_nice == 1)
+	      CmfabetafI = uiuc_3Dinterp_quick(Cmfabetaf_fArray,
+					       Cmfabetaf_aArray_nice,
+					       Cmfabetaf_bArray_nice,
+					       Cmfabetaf_CmArray,
+					       Cmfabetaf_na_nice,
+					       Cmfabetaf_nb_nice,
+					       Cmfabetaf_nf,
+					       flap_pos,
+					       Alpha,
+					       Beta);
+	    else
+	      CmfabetafI = uiuc_3Dinterpolation(Cmfabetaf_fArray,
+						Cmfabetaf_aArray,
+						Cmfabetaf_betaArray,
+						Cmfabetaf_CmArray,
+						Cmfabetaf_nAlphaArray,
+						Cmfabetaf_nbeta,
+						Cmfabetaf_nf,
+						flap_pos,
+						Alpha,
+						Beta);
+            Cm += CmfabetafI;
+            break;
+          }
+        case Cmfadef_flag:
+          {
+	    if (Cmfadef_nice == 1)
+	      CmfadefI = uiuc_3Dinterp_quick(Cmfadef_fArray,
+					     Cmfadef_aArray_nice,
+					     Cmfadef_deArray_nice,
+					     Cmfadef_CmArray,
+					     Cmfadef_na_nice,
+					     Cmfadef_nde_nice,
+					     Cmfadef_nf,
+					     flap_pos,
+					     Alpha,
+					     elevator);
+	    else
+	      CmfadefI = uiuc_3Dinterpolation(Cmfadef_fArray,
+					      Cmfadef_aArray,
+					      Cmfadef_deArray,
+					      Cmfadef_CmArray,
+					      Cmfadef_nAlphaArray,
+					      Cmfadef_nde,
+					      Cmfadef_nf,
+					      flap_pos,
+					      Alpha,
+					      elevator);
+	    Cm += CmfadefI;
+            break;
+          }
+        case Cmfaqf_flag:
+          {
+	    q_nondim = Q_body * cbar_2U;
+	    if (Cmfaqf_nice == 1)
+	      CmfaqfI = uiuc_3Dinterp_quick(Cmfaqf_fArray,
+					    Cmfaqf_aArray_nice,
+					    Cmfaqf_qArray_nice,
+					    Cmfaqf_CmArray,
+					    Cmfaqf_na_nice,
+					    Cmfaqf_nq_nice,
+					    Cmfaqf_nf,
+					    flap_pos,
+					    Alpha,
+					    q_nondim);
+	    else
+	      CmfaqfI = uiuc_3Dinterpolation(Cmfaqf_fArray,
+					     Cmfaqf_aArray,
+					     Cmfaqf_qArray,
+					     Cmfaqf_CmArray,
+					     Cmfaqf_nAlphaArray,
+					     Cmfaqf_nq,
+					     Cmfaqf_nf,
+					     flap_pos,
+					     Alpha,
+					     q_nondim);
+            Cm += CmfaqfI;
             break;
           }
         };

@@ -20,6 +20,17 @@
 
  HISTORY:      04/15/2000   initial release
                06/18/2001   (RD) Added CZfa
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (CZfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (CZfxxf).  Zero flap vairables removed.
+	       02/13/2002   (RD) Added variables so linear aero model
+	                    values can be recorded
+	       02/18/2002   (RD) Added uiuc_3Dinterp_quick() function
+	                    for a quicker 3D interpolation.  Takes
+			    advantage of "nice" data.
 
 ----------------------------------------------------------------------
 
@@ -52,6 +63,8 @@
  CALLS TO:     uiuc_1Dinterpolation
                uiuc_2Dinterpolation
                uiuc_ice_filter
+	       uiuc_3Dinterpolation
+	       uiuc_3Dinterp_quick
 
 ----------------------------------------------------------------------
 
@@ -75,13 +88,14 @@
 
 #include "uiuc_coef_lift.h"
 
-
 void uiuc_coef_lift()
 {
   string linetoken1;
   string linetoken2;
   stack command_list;
-  
+
+  double q_nondim;
+
   command_list = aeroLiftParts -> getCommands();
   
   for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
@@ -104,6 +118,7 @@ void uiuc_coef_lift()
                     CLiced_tail += CLo;
                   }
               }
+	    CLo_save = CLo;
             CL += CLo;
             break;
           }
@@ -120,6 +135,7 @@ void uiuc_coef_lift()
                     CLiced_tail += CL_a * Alpha;
                   }
               }
+	    CL_a_save = CL_a * Alpha;
             CL += CL_a * Alpha;
             break;
           }
@@ -138,6 +154,7 @@ void uiuc_coef_lift()
               }
             /* CL_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    CL_adot_save = CL_adot * Alpha_dot * cbar_2U;
             CL += CL_adot * Alpha_dot * cbar_2U;
             break;
           }
@@ -159,11 +176,13 @@ void uiuc_coef_lift()
             /* why multiply by Theta_dot instead of Q_body?
                that is what is done in c172_aero.c; assume it 
                has something to do with axes systems */
+	    CL_q_save = CL_q * Theta_dot * cbar_2U;
             CL += CL_q * Theta_dot * cbar_2U;
             break;
           }
         case CL_ih_flag:
           {
+	    CL_ih_save = CL_ih * ih;
             CL += CL_ih * ih;
             break;
           }
@@ -180,6 +199,7 @@ void uiuc_coef_lift()
                     CLiced_tail += CL_de * elevator;
                   }
               }
+	    CL_de_save = CL_de * elevator;
             CL += CL_de * elevator;
             break;
           }
@@ -238,6 +258,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZo;
                   }
               }
+	    CZo_save = CZo;
             CZ += CZo;
             break;
           }
@@ -254,6 +275,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZ_a * Alpha;
                   }
               }
+	    CZ_a_save = CZ_a * Alpha;
             CZ += CZ_a * Alpha;
             break;
           }
@@ -270,6 +292,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZ_a2 * Alpha * Alpha;
                   }
               }
+	    CZ_a2_save = CZ_a2 * Alpha * Alpha;
             CZ += CZ_a2 * Alpha * Alpha;
             break;
           }
@@ -286,6 +309,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZ_a3 * Alpha * Alpha * Alpha;
                   }
               }
+	    CZ_a3_save = CZ_a3 * Alpha * Alpha * Alpha;
             CZ += CZ_a3 * Alpha * Alpha * Alpha;
             break;
           }
@@ -304,6 +328,7 @@ void uiuc_coef_lift()
               }
             /* CZ_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    CZ_adot_save = CZ_adot * Alpha_dot * cbar_2U;
             CZ += CZ_adot * Alpha_dot * cbar_2U;
             break;
           }
@@ -322,6 +347,7 @@ void uiuc_coef_lift()
               }
             /* CZ_q must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    CZ_q_save = CZ_q * Q_body * cbar_2U;
             CZ += CZ_q * Q_body * cbar_2U;
             break;
           }
@@ -338,6 +364,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZ_de * elevator;
                   }
               }
+	    CZ_de_save = CZ_de * elevator;
             CZ += CZ_de * elevator;
             break;
           }
@@ -354,6 +381,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZ_deb2 * elevator * Beta * Beta;
                   }
               }
+	    CZ_deb2_save = CZ_deb2 * elevator * Beta * Beta;
             CZ += CZ_deb2 * elevator * Beta * Beta;
             break;
           }
@@ -370,6 +398,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZ_df * flap;
                   }
               }
+	    CZ_df_save = CZ_df * flap;
             CZ += CZ_df * flap;
             break;
           }
@@ -386,6 +415,7 @@ void uiuc_coef_lift()
                     CZiced_tail += CZ_adf * Alpha * flap;
                   }
               }
+	    CZ_adf_save = CZ_adf * Alpha * flap;
             CZ += CZ_adf * Alpha * flap;
             break;
           }
@@ -396,6 +426,88 @@ void uiuc_coef_lift()
                                          CZfa_nAlpha,
                                          Alpha);
             CZ += CZfaI;
+            break;
+          }
+        case CZfabetaf_flag:
+          {
+	    if (CZfabetaf_nice == 1)
+	      CZfabetafI = uiuc_3Dinterp_quick(CZfabetaf_fArray,
+					       CZfabetaf_aArray_nice,
+					       CZfabetaf_bArray_nice,
+					       CZfabetaf_CZArray,
+					       CZfabetaf_na_nice,
+					       CZfabetaf_nb_nice,
+					       CZfabetaf_nf,
+					       flap_pos,
+					       Alpha,
+					       Beta);
+	    else
+	      CZfabetafI = uiuc_3Dinterpolation(CZfabetaf_fArray,
+						CZfabetaf_aArray,
+						CZfabetaf_betaArray,
+						CZfabetaf_CZArray,
+						CZfabetaf_nAlphaArray,
+						CZfabetaf_nbeta,
+						CZfabetaf_nf,
+						flap_pos,
+						Alpha,
+						Beta);
+            CZ += CZfabetafI;
+            break;
+          }
+        case CZfadef_flag:
+          {
+	    if (CZfadef_nice == 1)
+	      CZfadefI = uiuc_3Dinterp_quick(CZfadef_fArray,
+					     CZfadef_aArray_nice,
+					     CZfadef_deArray_nice,
+					     CZfadef_CZArray,
+					     CZfadef_na_nice,
+					     CZfadef_nde_nice,
+					     CZfadef_nf,
+					     flap_pos,
+					     Alpha,
+					     elevator);
+	    else
+	      CZfadefI = uiuc_3Dinterpolation(CZfadef_fArray,
+					      CZfadef_aArray,
+					      CZfadef_deArray,
+					      CZfadef_CZArray,
+					      CZfadef_nAlphaArray,
+					      CZfadef_nde,
+					      CZfadef_nf,
+					      flap_pos,
+					      Alpha,
+					      elevator);
+            CZ += CZfadefI;
+            break;
+          }
+        case CZfaqf_flag:
+          {
+	    q_nondim = Q_body * cbar_2U;
+	    if (CZfaqf_nice == 1)
+	      CZfaqfI = uiuc_3Dinterp_quick(CZfaqf_fArray,
+					    CZfaqf_aArray_nice,
+					    CZfaqf_qArray_nice,
+					    CZfaqf_CZArray,
+					    CZfaqf_na_nice,
+					    CZfaqf_nq_nice,
+					    CZfaqf_nf,
+					    flap_pos,
+					    Alpha,
+					    q_nondim);
+	    else
+	      CZfaqfI = uiuc_3Dinterpolation(CZfaqf_fArray,
+					     CZfaqf_aArray,
+					     CZfaqf_qArray,
+					     CZfaqf_CZArray,
+					     CZfaqf_nAlphaArray,
+					     CZfaqf_nq,
+					     CZfaqf_nf,
+					     flap_pos,
+					     Alpha,
+					     q_nondim);
+            CZ += CZfaqfI;
             break;
           }
         };

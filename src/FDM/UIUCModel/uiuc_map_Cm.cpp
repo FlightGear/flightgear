@@ -17,12 +17,19 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (Cmfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (Cmfxxf).  Zero flap vairables removed.
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
- 
+	       Robert Deters      <rdeters@uiuc.edu>
+
 ----------------------------------------------------------------------
  
  VARIABLES:
@@ -82,6 +89,9 @@ void uiuc_map_Cm()
   Cm_map["Cmfade"]                =      Cmfade_flag                ;
   Cm_map["Cmfdf"]                 =      Cmfdf_flag                 ;
   Cm_map["Cmfadf"]                =      Cmfadf_flag                ;
+  Cm_map["Cmfabetaf"]             =      Cmfabetaf_flag             ;
+  Cm_map["Cmfadef"]               =      Cmfadef_flag               ;
+  Cm_map["Cmfaqf"]                =      Cmfaqf_flag                ;
 }
 
 // end uiuc_map_Cm.cpp

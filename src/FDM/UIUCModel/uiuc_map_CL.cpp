@@ -18,6 +18,12 @@
  
  HISTORY:      04/08/2000   initial release
                06/18/2001   Added CZfa
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (CZfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (CZfxxf).  Zero flap vairables removed.
 
 ----------------------------------------------------------------------
  
@@ -91,6 +97,9 @@ void uiuc_map_CL()
   CL_map["CZ_df"]                 =      CZ_df_flag                 ;
   CL_map["CZ_adf"]                =      CZ_adf_flag                ;
   CL_map["CZfa"]                  =      CZfa_flag                  ;
+  CL_map["CZfabetaf"]             =      CZfabetaf_flag             ;
+  CL_map["CZfadef"]               =      CZfadef_flag               ;
+  CL_map["CZfaqf"]                =      CZfaqf_flag                ;
 }
 
 // end uiuc_map_CL.cpp

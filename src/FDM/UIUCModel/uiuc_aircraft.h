@@ -53,6 +53,19 @@
 	                    P_body, Q_body, R_body, Phi, Theta, Psi,
 			    U_body, V_body, and W_body to help in
 			    starting the A/C at an initial condition.
+	       10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (Cxfxxf0).
+	       11/12/2001   (RD) Added variables needed for Twin Otter
+	                    non-linear model with flaps (Cxfxxf). 
+			    Zero flap variables removed.
+	       02/13/2002   (RD) Added variables so linear aero model
+	                    values can be recorded
+	       02/18/2002   (RD) Added variables necessary to use the
+	                    uiuc_3Dinterp_quick() function.  Takes
+			    advantage of data in a "nice" form (data
+			    that are in a rectangular matrix).
+
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
@@ -151,7 +164,10 @@ enum {bw_flag = 3000, cbar_flag, Sw_flag, ih_flag, bh_flag, ch_flag, Sh_flag};
 // controlSurface = Control surface deflections and properties
 enum {de_flag = 4000, da_flag, dr_flag, 
       set_Long_trim_flag, set_Long_trim_deg_flag, zero_Long_trim_flag, 
-      elevator_step_flag, elevator_singlet_flag, elevator_doublet_flag, elevator_input_flag, aileron_input_flag, rudder_input_flag, pilot_elev_no_flag, pilot_ail_no_flag, pilot_rud_no_flag};
+      elevator_step_flag, elevator_singlet_flag, elevator_doublet_flag,
+      elevator_input_flag, aileron_input_flag, rudder_input_flag, 
+      pilot_elev_no_flag, pilot_ail_no_flag, pilot_rud_no_flag, flap_max_flag,
+      flap_rate_flag};
 
 // controlsMixer == Controls mixer
 enum {nomix_flag = 5000};
@@ -160,36 +176,43 @@ enum {nomix_flag = 5000};
 enum {Weight_flag = 6000, Mass_flag, I_xx_flag, I_yy_flag, I_zz_flag, I_xz_flag};
 
 // engine ===== Propulsion data
-enum {simpleSingle_flag = 7000, c172_flag, cherokee_flag, Throttle_pct_input_flag};
+enum {simpleSingle_flag = 7000, c172_flag, cherokee_flag, 
+      Throttle_pct_input_flag};
 
 // CD ========= Aerodynamic x-force quantities (longitudinal)
 enum {CDo_flag = 8000, CDK_flag, CD_a_flag, CD_adot_flag, CD_q_flag, CD_ih_flag, CD_de_flag, 
       CDfa_flag, CDfCL_flag, CDfade_flag, CDfdf_flag, CDfadf_flag, 
       CXo_flag, CXK_flag, CX_a_flag, CX_a2_flag, CX_a3_flag, CX_adot_flag, 
-      CX_q_flag, CX_de_flag, CX_dr_flag, CX_df_flag, CX_adf_flag};
+      CX_q_flag, CX_de_flag, CX_dr_flag, CX_df_flag, CX_adf_flag, 
+      CXfabetaf_flag, CXfadef_flag, CXfaqf_flag};
 
 // CL ========= Aerodynamic z-force quantities (longitudinal)
 enum {CLo_flag = 9000, CL_a_flag, CL_adot_flag, CL_q_flag, CL_ih_flag, CL_de_flag, 
       CLfa_flag, CLfade_flag, CLfdf_flag, CLfadf_flag, 
       CZo_flag, CZ_a_flag, CZ_a2_flag, CZ_a3_flag, CZ_adot_flag, 
-      CZ_q_flag, CZ_de_flag, CZ_deb2_flag, CZ_df_flag, CZ_adf_flag, CZfa_flag};
+      CZ_q_flag, CZ_de_flag, CZ_deb2_flag, CZ_df_flag, CZ_adf_flag, 
+      CZfa_flag, CZfabetaf_flag, CZfadef_flag, CZfaqf_flag};
 
 // Cm ========= Aerodynamic m-moment quantities (longitudinal)
 enum {Cmo_flag = 10000, Cm_a_flag, Cm_a2_flag, Cm_adot_flag, Cm_q_flag, 
       Cm_ih_flag, Cm_de_flag, Cm_b2_flag, Cm_r_flag, Cm_df_flag, 
-      Cmfa_flag, Cmfade_flag, Cmfdf_flag, Cmfadf_flag};
+      Cmfa_flag, Cmfade_flag, Cmfdf_flag, Cmfadf_flag, 
+      Cmfabetaf_flag, Cmfadef_flag, Cmfaqf_flag};
 
 // CY ========= Aerodynamic y-force quantities (lateral)
 enum {CYo_flag = 11000, CY_beta_flag, CY_p_flag, CY_r_flag, CY_da_flag, 
-      CY_dr_flag, CY_dra_flag, CY_bdot_flag, CYfada_flag, CYfbetadr_flag};
+      CY_dr_flag, CY_dra_flag, CY_bdot_flag, CYfada_flag, CYfbetadr_flag, 
+      CYfabetaf_flag, CYfadaf_flag, CYfadrf_flag, CYfapf_flag, CYfarf_flag};
 
 // Cl ========= Aerodynamic l-moment quantities (lateral)
 enum {Clo_flag = 12000, Cl_beta_flag, Cl_p_flag, Cl_r_flag, Cl_da_flag, 
-      Cl_dr_flag, Cl_daa_flag, Clfada_flag, Clfbetadr_flag};
+      Cl_dr_flag, Cl_daa_flag, Clfada_flag, Clfbetadr_flag, Clfabetaf_flag,
+      Clfadaf_flag, Clfadrf_flag, Clfapf_flag, Clfarf_flag};
 
 // Cn ========= Aerodynamic n-moment quantities (lateral)
 enum {Cno_flag = 13000, Cn_beta_flag, Cn_p_flag, Cn_r_flag, Cn_da_flag, 
-      Cn_dr_flag, Cn_q_flag, Cn_b3_flag, Cnfada_flag, Cnfbetadr_flag};
+      Cn_dr_flag, Cn_q_flag, Cn_b3_flag, Cnfada_flag, Cnfbetadr_flag, 
+      Cnfabetaf_flag, Cnfadaf_flag, Cnfadrf_flag, Cnfapf_flag, Cnfarf_flag};
 
 // gear ======= Landing gear model quantities
 enum {Dx_gear_flag = 14000, Dy_gear_flag, Dz_gear_flag, cgear_flag,
@@ -270,15 +293,46 @@ enum {Simtime_record = 16000, dt_record,
       elevator_record, elevator_deg_record, 
       Lat_control_record, aileron_record, aileron_deg_record, 
       Rudder_pedal_record, rudder_record, rudder_deg_record, 
-      Flap_handle_record, flap_record, flap_deg_record, 
+      Flap_handle_record, flap_record, flap_deg_record, flap_goal_record,
+      flap_pos_record,
 
-      CD_record, CDfaI_record, CDfCLI_record, CDfadeI_record, CDfdfI_record, CDfadfI_record, CX_record,
-      CL_record, CLfaI_record, CLfadeI_record, CLfdfI_record, CLfadfI_record, CZ_record,
-      Cm_record, CmfaI_record, CmfadeI_record, CmfdfI_record, CmfadfI_record,
-      CY_record, CYfadaI_record, CYfbetadrI_record, 
-      Cl_record, ClfadaI_record, ClfbetadrI_record, 
-      Cn_record, CnfadaI_record, CnfbetadrI_record,
-
+      CD_record, CDfaI_record, CDfCLI_record, CDfadeI_record, CDfdfI_record, 
+      CDfadfI_record, CX_record, CXfabetafI_record, CXfadefI_record, 
+      CXfaqfI_record,
+      CDo_save_record, CDK_save_record, CD_a_save_record, CD_adot_save_record,
+      CD_q_save_record, CD_ih_save_record, CD_de_save_record, CXo_save_record,
+      CXK_save_record, CX_a_save_record, CX_a2_save_record, CX_a3_save_record,
+      CX_adot_save_record, CX_q_save_record, CX_de_save_record,
+      CX_dr_save_record, CX_df_save_record, CX_adf_save_record,
+      CL_record, CLfaI_record, CLfadeI_record, CLfdfI_record, CLfadfI_record, 
+      CZ_record, CZfaI_record, CZfabetafI_record, CZfadefI_record, 
+      CZfaqfI_record, 
+      CLo_save_record, CL_a_save_record, CL_adot_save_record, CL_q_save_record,
+      CL_ih_save_record, CL_de_save_record, CZo_save_record, CZ_a_save_record,
+      CZ_a2_save_record, CZ_a3_save_record, CZ_adot_save_record,
+      CZ_q_save_record, CZ_de_save_record, CZ_deb2_save_record,
+      CZ_df_save_record, CZ_adf_save_record,
+      Cm_record, CmfaI_record, CmfadeI_record, CmfdfI_record, CmfadfI_record, 
+      CmfabetafI_record, CmfadefI_record, CmfaqfI_record,
+      Cmo_save_record, Cm_a_save_record, Cm_a2_save_record,
+      Cm_adot_save_record, Cm_q_save_record, Cm_ih_save_record,
+      Cm_de_save_record, Cm_b2_save_record, Cm_r_save_record, 
+      Cm_df_save_record,
+      CY_record, CYfadaI_record, CYfbetadrI_record, CYfabetafI_record, 
+      CYfadafI_record, CYfadrfI_record, CYfapfI_record, CYfarfI_record, 
+      CYo_save_record, CY_beta_save_record, CY_p_save_record,
+      CY_r_save_record, CY_da_save_record, CY_dr_save_record, 
+      CY_dra_save_record, CY_bdot_save_record,
+      Cl_record, ClfadaI_record, ClfbetadrI_record, ClfabetafI_record, 
+      ClfadafI_record, ClfadrfI_record, ClfapfI_record, ClfarfI_record,
+      Clo_save_record, Cl_beta_save_record, Cl_p_save_record, Cl_r_save_record,
+      Cl_da_save_record, Cl_dr_save_record, Cl_daa_save_record,
+      Cn_record, CnfadaI_record, CnfbetadrI_record, CnfabetafI_record, 
+      CnfadafI_record, CnfadrfI_record, CnfapfI_record, CnfarfI_record, 
+      Cno_save_record, Cn_beta_save_record, Cn_p_save_record, Cn_r_save_record,
+      Cn_da_save_record, Cn_dr_save_record, Cn_q_save_record,
+      Cn_b3_save_record,
+      
       F_X_wind_record, F_Y_wind_record, F_Z_wind_record, 
       F_X_aero_record, F_Y_aero_record, F_Z_aero_record,
       F_X_engine_record, F_Y_engine_record, F_Z_engine_record, 
@@ -509,8 +563,8 @@ struct AIRCRAFT
 
   bool elevator_input;
   string elevator_input_file;
-  double elevator_input_timeArray[1000];
-  double elevator_input_deArray[1000];
+  double elevator_input_timeArray[1500];
+  double elevator_input_deArray[1500];
   int elevator_input_ntime;
   double elevator_input_startTime;
 #define elevator_input             aircraft_->elevator_input
@@ -522,8 +576,8 @@ struct AIRCRAFT
 
   bool aileron_input;
   string aileron_input_file;
-  double aileron_input_timeArray[1000];
-  double aileron_input_daArray[1000];
+  double aileron_input_timeArray[1500];
+  double aileron_input_daArray[1500];
   int aileron_input_ntime;
   double aileron_input_startTime;
 #define aileron_input             aircraft_->aileron_input
@@ -535,8 +589,8 @@ struct AIRCRAFT
 
   bool rudder_input;
   string rudder_input_file;
-  double rudder_input_timeArray[1000];
-  double rudder_input_drArray[1000];
+  double rudder_input_timeArray[1500];
+  double rudder_input_drArray[1500];
   int rudder_input_ntime;
   double rudder_input_startTime;
 #define rudder_input             aircraft_->rudder_input
@@ -561,7 +615,10 @@ struct AIRCRAFT
   bool pilot_rud_no_check;
 #define pilot_rud_no_check       aircraft_->pilot_rud_no_check
 
-  
+  double flap_max, flap_rate;
+#define flap_max                 aircraft_->flap_max
+#define flap_rate                aircraft_->flap_rate
+
   /* Variables (token2) ===========================================*/
   /* controlsMixer = Control mixer ================================*/
   
@@ -593,8 +650,8 @@ struct AIRCRAFT
   
   bool Throttle_pct_input;
   string Throttle_pct_input_file;
-  double Throttle_pct_input_timeArray[1000];
-  double Throttle_pct_input_dTArray[1000];
+  double Throttle_pct_input_timeArray[1500];
+  double Throttle_pct_input_dTArray[1500];
   int Throttle_pct_input_ntime;
   double Throttle_pct_input_startTime;
 #define Throttle_pct_input            aircraft_->Throttle_pct_input
@@ -690,7 +747,101 @@ struct AIRCRAFT
 #define CX_dr    aircraft_->CX_dr
 #define CX_df    aircraft_->CX_df
 #define CX_adf   aircraft_->CX_adf
-  
+  double CXfabetaf_aArray[30][100][100];
+  double CXfabetaf_betaArray[30][100];
+  double CXfabetaf_CXArray[30][100][100];
+  int CXfabetaf_nAlphaArray[30][100];
+  int CXfabetaf_nbeta[30];
+  double CXfabetaf_fArray[30];
+  int CXfabetaf_nf;
+  double CXfabetafI;
+  int CXfabetaf_nice, CXfabetaf_na_nice, CXfabetaf_nb_nice;
+  double CXfabetaf_bArray_nice[100];
+  double CXfabetaf_aArray_nice[100];
+#define CXfabetaf_aArray        aircraft_->CXfabetaf_aArray
+#define CXfabetaf_betaArray     aircraft_->CXfabetaf_betaArray
+#define CXfabetaf_CXArray       aircraft_->CXfabetaf_CXArray
+#define CXfabetaf_nAlphaArray   aircraft_->CXfabetaf_nAlphaArray
+#define CXfabetaf_nbeta         aircraft_->CXfabetaf_nbeta
+#define CXfabetaf_fArray        aircraft_->CXfabetaf_fArray
+#define CXfabetaf_nf            aircraft_->CXfabetaf_nf
+#define CXfabetafI              aircraft_->CXfabetafI
+#define CXfabetaf_nice          aircraft_->CXfabetaf_nice
+#define CXfabetaf_na_nice       aircraft_->CXfabetaf_na_nice
+#define CXfabetaf_nb_nice       aircraft_->CXfabetaf_nb_nice
+#define CXfabetaf_bArray_nice   aircraft_->CXfabetaf_bArray_nice
+#define CXfabetaf_aArray_nice   aircraft_->CXfabetaf_aArray_nice
+  double CXfadef_aArray[30][100][100];
+  double CXfadef_deArray[30][100];
+  double CXfadef_CXArray[30][100][100];
+  int CXfadef_nAlphaArray[30][100];
+  int CXfadef_nde[30];
+  double CXfadef_fArray[30];
+  int CXfadef_nf;
+  double CXfadefI;
+  int CXfadef_nice, CXfadef_na_nice, CXfadef_nde_nice;
+  double CXfadef_deArray_nice[100];
+  double CXfadef_aArray_nice[100];
+#define CXfadef_aArray        aircraft_->CXfadef_aArray
+#define CXfadef_deArray       aircraft_->CXfadef_deArray
+#define CXfadef_CXArray       aircraft_->CXfadef_CXArray
+#define CXfadef_nAlphaArray   aircraft_->CXfadef_nAlphaArray
+#define CXfadef_nde           aircraft_->CXfadef_nde
+#define CXfadef_fArray        aircraft_->CXfadef_fArray
+#define CXfadef_nf            aircraft_->CXfadef_nf
+#define CXfadefI              aircraft_->CXfadefI
+#define CXfadef_nice          aircraft_->CXfadef_nice
+#define CXfadef_na_nice       aircraft_->CXfadef_na_nice
+#define CXfadef_nde_nice      aircraft_->CXfadef_nde_nice
+#define CXfadef_deArray_nice  aircraft_->CXfadef_deArray_nice
+#define CXfadef_aArray_nice   aircraft_->CXfadef_aArray_nice
+  double CXfaqf_aArray[30][100][100];
+  double CXfaqf_qArray[30][100];
+  double CXfaqf_CXArray[30][100][100];
+  int CXfaqf_nAlphaArray[30][100];
+  int CXfaqf_nq[30];
+  double CXfaqf_fArray[30];
+  int CXfaqf_nf;
+  double CXfaqfI;
+  int CXfaqf_nice, CXfaqf_na_nice, CXfaqf_nq_nice;
+  double CXfaqf_qArray_nice[100];
+  double CXfaqf_aArray_nice[100];
+#define CXfaqf_aArray        aircraft_->CXfaqf_aArray
+#define CXfaqf_qArray        aircraft_->CXfaqf_qArray
+#define CXfaqf_CXArray       aircraft_->CXfaqf_CXArray
+#define CXfaqf_nAlphaArray   aircraft_->CXfaqf_nAlphaArray
+#define CXfaqf_nq            aircraft_->CXfaqf_nq
+#define CXfaqf_fArray        aircraft_->CXfaqf_fArray
+#define CXfaqf_nf            aircraft_->CXfaqf_nf
+#define CXfaqfI              aircraft_->CXfaqfI
+#define CXfaqf_nice          aircraft_->CXfaqf_nice
+#define CXfaqf_na_nice       aircraft_->CXfaqf_na_nice
+#define CXfaqf_nq_nice       aircraft_->CXfaqf_nq_nice
+#define CXfaqf_qArray_nice   aircraft_->CXfaqf_qArray_nice
+#define CXfaqf_aArray_nice   aircraft_->CXfaqf_aArray_nice
+  double CDo_save, CDK_save, CD_a_save, CD_adot_save, CD_q_save, CD_ih_save;
+  double CD_de_save, CXo_save, CXK_save, CX_a_save, CX_a2_save, CX_a3_save;
+  double CX_adot_save, CX_q_save, CX_de_save;
+  double CX_dr_save, CX_df_save, CX_adf_save;
+#define CDo_save             aircraft_->CDo_save  
+#define CDK_save             aircraft_->CDK_save  
+#define CD_a_save            aircraft_->CD_a_save  
+#define CD_adot_save         aircraft_->CD_adot_save  
+#define CD_q_save            aircraft_->CD_q_save  
+#define CD_ih_save           aircraft_->CD_ih_save  
+#define CD_de_save           aircraft_->CD_de_save  
+#define CXo_save             aircraft_->CXo_save  
+#define CXK_save             aircraft_->CXK_save  
+#define CX_a_save            aircraft_->CX_a_save  
+#define CX_a2_save           aircraft_->CX_a2_save  
+#define CX_a3_save           aircraft_->CX_a3_save  
+#define CX_adot_save         aircraft_->CX_adot_save  
+#define CX_q_save            aircraft_->CX_q_save  
+#define CX_de_save           aircraft_->CX_de_save
+#define CX_dr_save           aircraft_->CX_dr_save  
+#define CX_df_save           aircraft_->CX_df_save  
+#define CX_adf_save          aircraft_->CX_adf_save  
+
 
   /* Variables (token2) ===========================================*/
   /* CL ============ Aerodynamic z-force quantities (longitudinal) */
@@ -775,6 +926,100 @@ struct AIRCRAFT
 #define CZfa_CZArray       aircraft_->CZfa_CZArray
 #define CZfa_nAlpha        aircraft_->CZfa_nAlpha
 #define CZfaI              aircraft_->CZfaI
+  double CZfabetaf_aArray[30][100][100];
+  double CZfabetaf_betaArray[30][100];
+  double CZfabetaf_CZArray[30][100][100];
+  int CZfabetaf_nAlphaArray[30][100];
+  int CZfabetaf_nbeta[30];
+  double CZfabetaf_fArray[30];
+  int CZfabetaf_nf;
+  double CZfabetafI;
+  int CZfabetaf_nice, CZfabetaf_na_nice, CZfabetaf_nb_nice;
+  double CZfabetaf_bArray_nice[100];
+  double CZfabetaf_aArray_nice[100];
+#define CZfabetaf_aArray        aircraft_->CZfabetaf_aArray
+#define CZfabetaf_betaArray     aircraft_->CZfabetaf_betaArray
+#define CZfabetaf_CZArray       aircraft_->CZfabetaf_CZArray
+#define CZfabetaf_nAlphaArray   aircraft_->CZfabetaf_nAlphaArray
+#define CZfabetaf_nbeta         aircraft_->CZfabetaf_nbeta
+#define CZfabetaf_fArray        aircraft_->CZfabetaf_fArray
+#define CZfabetaf_nf            aircraft_->CZfabetaf_nf
+#define CZfabetafI              aircraft_->CZfabetafI
+#define CZfabetaf_nice          aircraft_->CZfabetaf_nice
+#define CZfabetaf_na_nice       aircraft_->CZfabetaf_na_nice
+#define CZfabetaf_nb_nice       aircraft_->CZfabetaf_nb_nice
+#define CZfabetaf_bArray_nice   aircraft_->CZfabetaf_bArray_nice
+#define CZfabetaf_aArray_nice   aircraft_->CZfabetaf_aArray_nice
+  double CZfadef_aArray[30][100][100];
+  double CZfadef_deArray[30][100];
+  double CZfadef_CZArray[30][100][100];
+  int CZfadef_nAlphaArray[30][100];
+  int CZfadef_nde[30];
+  double CZfadef_fArray[30];
+  int CZfadef_nf;
+  double CZfadefI;
+  int CZfadef_nice, CZfadef_na_nice, CZfadef_nde_nice;
+  double CZfadef_deArray_nice[100];
+  double CZfadef_aArray_nice[100];
+#define CZfadef_aArray         aircraft_->CZfadef_aArray
+#define CZfadef_deArray        aircraft_->CZfadef_deArray
+#define CZfadef_CZArray        aircraft_->CZfadef_CZArray
+#define CZfadef_nAlphaArray    aircraft_->CZfadef_nAlphaArray
+#define CZfadef_nde            aircraft_->CZfadef_nde
+#define CZfadef_fArray         aircraft_->CZfadef_fArray
+#define CZfadef_nf             aircraft_->CZfadef_nf
+#define CZfadefI               aircraft_->CZfadefI
+#define CZfadef_nice           aircraft_->CZfadef_nice
+#define CZfadef_na_nice        aircraft_->CZfadef_na_nice
+#define CZfadef_nde_nice       aircraft_->CZfadef_nde_nice
+#define CZfadef_deArray_nice   aircraft_->CZfadef_deArray_nice
+#define CZfadef_aArray_nice    aircraft_->CZfadef_aArray_nice
+  double CZfaqf_aArray[30][100][100];
+  double CZfaqf_qArray[30][100];
+  double CZfaqf_CZArray[30][100][100];
+  int CZfaqf_nAlphaArray[30][100];
+  int CZfaqf_nq[30];
+  double CZfaqf_fArray[30];
+  int CZfaqf_nf;
+  double CZfaqfI;
+  int CZfaqf_nice, CZfaqf_na_nice, CZfaqf_nq_nice;
+  double CZfaqf_qArray_nice[100];
+  double CZfaqf_aArray_nice[100];
+#define CZfaqf_aArray         aircraft_->CZfaqf_aArray
+#define CZfaqf_qArray         aircraft_->CZfaqf_qArray
+#define CZfaqf_CZArray        aircraft_->CZfaqf_CZArray
+#define CZfaqf_nAlphaArray    aircraft_->CZfaqf_nAlphaArray
+#define CZfaqf_nq             aircraft_->CZfaqf_nq
+#define CZfaqf_fArray         aircraft_->CZfaqf_fArray
+#define CZfaqf_nf             aircraft_->CZfaqf_nf
+#define CZfaqfI               aircraft_->CZfaqfI
+#define CZfaqf_nice           aircraft_->CZfaqf_nice
+#define CZfaqf_na_nice        aircraft_->CZfaqf_na_nice
+#define CZfaqf_nq_nice        aircraft_->CZfaqf_nq_nice
+#define CZfaqf_qArray_nice    aircraft_->CZfaqf_qArray_nice
+#define CZfaqf_aArray_nice    aircraft_->CZfaqf_aArray_nice
+  double CLo_save, CL_a_save, CL_adot_save; 
+  double CL_q_save, CL_ih_save, CL_de_save;
+  double CZo_save, CZ_a_save, CZ_a2_save;
+  double CZ_a3_save, CZ_adot_save, CZ_q_save;
+  double CZ_de_save, CZ_deb2_save, CZ_df_save;
+  double CZ_adf_save;
+#define CLo_save              aircraft_->CLo_save
+#define CL_a_save             aircraft_->CL_a_save
+#define CL_adot_save          aircraft_->CL_adot_save
+#define CL_q_save             aircraft_->CL_q_save
+#define CL_ih_save            aircraft_->CL_ih_save
+#define CL_de_save            aircraft_->CL_de_save
+#define CZo_save              aircraft_->CZo_save
+#define CZ_a_save             aircraft_->CZ_a_save
+#define CZ_a2_save            aircraft_->CZ_a2_save
+#define CZ_a3_save            aircraft_->CZ_a3_save
+#define CZ_adot_save          aircraft_->CZ_adot_save
+#define CZ_q_save             aircraft_->CZ_q_save
+#define CZ_de_save            aircraft_->CZ_de_save
+#define CZ_deb2_save          aircraft_->CZ_deb2_save
+#define CZ_df_save            aircraft_->CZ_df_save
+#define CZ_adf_save           aircraft_->CZ_adf_save
 
 
   /* Variables (token2) ===========================================*/
@@ -843,6 +1088,90 @@ struct AIRCRAFT
 #define Cmfadf_nAlphaArray aircraft_->Cmfadf_nAlphaArray
 #define Cmfadf_ndf         aircraft_->Cmfadf_ndf
 #define CmfadfI            aircraft_->CmfadfI
+  double Cmfabetaf_aArray[30][100][100];
+  double Cmfabetaf_betaArray[30][100];
+  double Cmfabetaf_CmArray[30][100][100];
+  int Cmfabetaf_nAlphaArray[30][100];
+  int Cmfabetaf_nbeta[30];
+  double Cmfabetaf_fArray[30];
+  int Cmfabetaf_nf;
+  double CmfabetafI;
+  int Cmfabetaf_nice, Cmfabetaf_na_nice, Cmfabetaf_nb_nice;
+  double Cmfabetaf_bArray_nice[100];
+  double Cmfabetaf_aArray_nice[100];
+#define Cmfabetaf_aArray        aircraft_->Cmfabetaf_aArray
+#define Cmfabetaf_betaArray     aircraft_->Cmfabetaf_betaArray
+#define Cmfabetaf_CmArray       aircraft_->Cmfabetaf_CmArray
+#define Cmfabetaf_nAlphaArray   aircraft_->Cmfabetaf_nAlphaArray
+#define Cmfabetaf_nbeta         aircraft_->Cmfabetaf_nbeta
+#define Cmfabetaf_fArray        aircraft_->Cmfabetaf_fArray
+#define Cmfabetaf_nf            aircraft_->Cmfabetaf_nf
+#define CmfabetafI              aircraft_->CmfabetafI
+#define Cmfabetaf_nice          aircraft_->Cmfabetaf_nice
+#define Cmfabetaf_na_nice       aircraft_->Cmfabetaf_na_nice
+#define Cmfabetaf_nb_nice       aircraft_->Cmfabetaf_nb_nice
+#define Cmfabetaf_bArray_nice   aircraft_->Cmfabetaf_bArray_nice
+#define Cmfabetaf_aArray_nice   aircraft_->Cmfabetaf_aArray_nice
+  double Cmfadef_aArray[30][100][100];
+  double Cmfadef_deArray[30][100];
+  double Cmfadef_CmArray[30][100][100];
+  int Cmfadef_nAlphaArray[30][100];
+  int Cmfadef_nde[30];
+  double Cmfadef_fArray[30];
+  int Cmfadef_nf;
+  double CmfadefI;
+  int Cmfadef_nice, Cmfadef_na_nice, Cmfadef_nde_nice;
+  double Cmfadef_deArray_nice[100];
+  double Cmfadef_aArray_nice[100];
+#define Cmfadef_aArray        aircraft_->Cmfadef_aArray
+#define Cmfadef_deArray       aircraft_->Cmfadef_deArray
+#define Cmfadef_CmArray       aircraft_->Cmfadef_CmArray
+#define Cmfadef_nAlphaArray   aircraft_->Cmfadef_nAlphaArray
+#define Cmfadef_nde           aircraft_->Cmfadef_nde
+#define Cmfadef_fArray        aircraft_->Cmfadef_fArray
+#define Cmfadef_nf            aircraft_->Cmfadef_nf
+#define CmfadefI              aircraft_->CmfadefI
+#define Cmfadef_nice          aircraft_->Cmfadef_nice
+#define Cmfadef_na_nice       aircraft_->Cmfadef_na_nice
+#define Cmfadef_nde_nice      aircraft_->Cmfadef_nde_nice
+#define Cmfadef_deArray_nice  aircraft_->Cmfadef_deArray_nice
+#define Cmfadef_aArray_nice   aircraft_->Cmfadef_aArray_nice
+  double Cmfaqf_aArray[30][100][100];
+  double Cmfaqf_qArray[30][100];
+  double Cmfaqf_CmArray[30][100][100];
+  int Cmfaqf_nAlphaArray[30][100];
+  int Cmfaqf_nq[30];
+  double Cmfaqf_fArray[30];
+  int Cmfaqf_nf;
+  double CmfaqfI;
+  int Cmfaqf_nice, Cmfaqf_na_nice, Cmfaqf_nq_nice;
+  double Cmfaqf_qArray_nice[100];
+  double Cmfaqf_aArray_nice[100];
+#define Cmfaqf_aArray        aircraft_->Cmfaqf_aArray
+#define Cmfaqf_qArray        aircraft_->Cmfaqf_qArray
+#define Cmfaqf_CmArray       aircraft_->Cmfaqf_CmArray
+#define Cmfaqf_nAlphaArray   aircraft_->Cmfaqf_nAlphaArray
+#define Cmfaqf_nq            aircraft_->Cmfaqf_nq
+#define Cmfaqf_fArray        aircraft_->Cmfaqf_fArray
+#define Cmfaqf_nf            aircraft_->Cmfaqf_nf
+#define CmfaqfI              aircraft_->CmfaqfI
+#define Cmfaqf_nice          aircraft_->Cmfaqf_nice
+#define Cmfaqf_na_nice       aircraft_->Cmfaqf_na_nice
+#define Cmfaqf_nq_nice       aircraft_->Cmfaqf_nq_nice
+#define Cmfaqf_qArray_nice   aircraft_->Cmfaqf_qArray_nice
+#define Cmfaqf_aArray_nice   aircraft_->Cmfaqf_aArray_nice
+  double Cmo_save, Cm_a_save, Cm_a2_save, Cm_adot_save, Cm_q_save, Cm_ih_save;
+  double Cm_de_save, Cm_b2_save, Cm_r_save, Cm_df_save;
+#define Cmo_save             aircraft_->Cmo_save
+#define Cm_a_save            aircraft_->Cm_a_save
+#define Cm_a2_save           aircraft_->Cm_a2_save
+#define Cm_adot_save         aircraft_->Cm_adot_save
+#define Cm_q_save            aircraft_->Cm_q_save
+#define Cm_ih_save           aircraft_->Cm_ih_save 
+#define Cm_de_save           aircraft_->Cm_de_save
+#define Cm_b2_save           aircraft_->Cm_b2_save
+#define Cm_r_save            aircraft_->Cm_r_save
+#define Cm_df_save           aircraft_->Cm_df_save
   
 
   /* Variables (token2) ===========================================*/
@@ -888,6 +1217,136 @@ struct AIRCRAFT
 #define CYfbetadr_nBetaArray  aircraft_->CYfbetadr_nBetaArray
 #define CYfbetadr_ndr         aircraft_->CYfbetadr_ndr
 #define CYfbetadrI            aircraft_->CYfbetadrI
+  double CYfabetaf_aArray[30][100][100];
+  double CYfabetaf_betaArray[30][100];
+  double CYfabetaf_CYArray[30][100][100];
+  int CYfabetaf_nAlphaArray[30][100];
+  int CYfabetaf_nbeta[30];
+  double CYfabetaf_fArray[30];
+  int CYfabetaf_nf;
+  double CYfabetafI;
+  int CYfabetaf_nice, CYfabetaf_na_nice, CYfabetaf_nb_nice;
+  double CYfabetaf_bArray_nice[100];
+  double CYfabetaf_aArray_nice[100];
+#define CYfabetaf_aArray        aircraft_->CYfabetaf_aArray
+#define CYfabetaf_betaArray     aircraft_->CYfabetaf_betaArray
+#define CYfabetaf_CYArray       aircraft_->CYfabetaf_CYArray
+#define CYfabetaf_nAlphaArray   aircraft_->CYfabetaf_nAlphaArray
+#define CYfabetaf_nbeta         aircraft_->CYfabetaf_nbeta
+#define CYfabetaf_fArray        aircraft_->CYfabetaf_fArray
+#define CYfabetaf_nf            aircraft_->CYfabetaf_nf
+#define CYfabetafI              aircraft_->CYfabetafI
+#define CYfabetaf_nice          aircraft_->CYfabetaf_nice
+#define CYfabetaf_na_nice       aircraft_->CYfabetaf_na_nice
+#define CYfabetaf_nb_nice       aircraft_->CYfabetaf_nb_nice
+#define CYfabetaf_bArray_nice   aircraft_->CYfabetaf_bArray_nice
+#define CYfabetaf_aArray_nice   aircraft_->CYfabetaf_aArray_nice
+  double CYfadaf_aArray[30][100][100];
+  double CYfadaf_daArray[30][100];
+  double CYfadaf_CYArray[30][100][100];
+  int CYfadaf_nAlphaArray[30][100];
+  int CYfadaf_nda[30];
+  double CYfadaf_fArray[30];
+  int CYfadaf_nf;
+  double CYfadafI;
+  int CYfadaf_nice, CYfadaf_na_nice, CYfadaf_nda_nice;
+  double CYfadaf_daArray_nice[100];
+  double CYfadaf_aArray_nice[100];
+#define CYfadaf_aArray        aircraft_->CYfadaf_aArray
+#define CYfadaf_daArray       aircraft_->CYfadaf_daArray
+#define CYfadaf_CYArray       aircraft_->CYfadaf_CYArray
+#define CYfadaf_nAlphaArray   aircraft_->CYfadaf_nAlphaArray
+#define CYfadaf_nda           aircraft_->CYfadaf_nda
+#define CYfadaf_fArray        aircraft_->CYfadaf_fArray
+#define CYfadaf_nf            aircraft_->CYfadaf_nf
+#define CYfadafI              aircraft_->CYfadafI
+#define CYfadaf_nice          aircraft_->CYfadaf_nice
+#define CYfadaf_na_nice       aircraft_->CYfadaf_na_nice
+#define CYfadaf_nda_nice      aircraft_->CYfadaf_nda_nice
+#define CYfadaf_daArray_nice  aircraft_->CYfadaf_daArray_nice
+#define CYfadaf_aArray_nice   aircraft_->CYfadaf_aArray_nice
+  double CYfadrf_aArray[30][100][100];
+  double CYfadrf_drArray[30][100];
+  double CYfadrf_CYArray[30][100][100];
+  int CYfadrf_nAlphaArray[30][100];
+  int CYfadrf_ndr[30];
+  double CYfadrf_fArray[30];
+  int CYfadrf_nf;
+  double CYfadrfI;
+  int CYfadrf_nice, CYfadrf_na_nice, CYfadrf_ndr_nice;
+  double CYfadrf_drArray_nice[100];
+  double CYfadrf_aArray_nice[100];
+#define CYfadrf_aArray        aircraft_->CYfadrf_aArray
+#define CYfadrf_drArray       aircraft_->CYfadrf_drArray
+#define CYfadrf_CYArray       aircraft_->CYfadrf_CYArray
+#define CYfadrf_nAlphaArray   aircraft_->CYfadrf_nAlphaArray
+#define CYfadrf_ndr           aircraft_->CYfadrf_ndr
+#define CYfadrf_fArray        aircraft_->CYfadrf_fArray
+#define CYfadrf_nf            aircraft_->CYfadrf_nf
+#define CYfadrfI              aircraft_->CYfadrfI
+#define CYfadrf_nice          aircraft_->CYfadrf_nice
+#define CYfadrf_na_nice       aircraft_->CYfadrf_na_nice
+#define CYfadrf_ndr_nice      aircraft_->CYfadrf_ndr_nice
+#define CYfadrf_drArray_nice  aircraft_->CYfadrf_drArray_nice
+#define CYfadrf_aArray_nice   aircraft_->CYfadrf_aArray_nice
+  double CYfapf_aArray[30][100][100];
+  double CYfapf_pArray[30][100];
+  double CYfapf_CYArray[30][100][100];
+  int CYfapf_nAlphaArray[30][100];
+  int CYfapf_np[30];
+  double CYfapf_fArray[30];
+  int CYfapf_nf;
+  double CYfapfI;
+  int CYfapf_nice, CYfapf_na_nice, CYfapf_np_nice;
+  double CYfapf_pArray_nice[100];
+  double CYfapf_aArray_nice[100];
+#define CYfapf_aArray        aircraft_->CYfapf_aArray
+#define CYfapf_pArray        aircraft_->CYfapf_pArray
+#define CYfapf_CYArray       aircraft_->CYfapf_CYArray
+#define CYfapf_nAlphaArray   aircraft_->CYfapf_nAlphaArray
+#define CYfapf_np            aircraft_->CYfapf_np
+#define CYfapf_fArray        aircraft_->CYfapf_fArray
+#define CYfapf_nf            aircraft_->CYfapf_nf
+#define CYfapfI              aircraft_->CYfapfI
+#define CYfapf_nice          aircraft_->CYfapf_nice
+#define CYfapf_na_nice       aircraft_->CYfapf_na_nice
+#define CYfapf_np_nice       aircraft_->CYfapf_np_nice
+#define CYfapf_pArray_nice   aircraft_->CYfapf_pArray_nice
+#define CYfapf_aArray_nice   aircraft_->CYfapf_aArray_nice
+  double CYfarf_aArray[30][100][100];
+  double CYfarf_rArray[30][100];
+  double CYfarf_CYArray[30][100][100];
+  int CYfarf_nAlphaArray[30][100];
+  int CYfarf_nr[30];
+  double CYfarf_fArray[30];
+  int CYfarf_nf;
+  double CYfarfI;
+  int CYfarf_nice, CYfarf_na_nice, CYfarf_nr_nice;
+  double CYfarf_rArray_nice[100];
+  double CYfarf_aArray_nice[100];
+#define CYfarf_aArray        aircraft_->CYfarf_aArray
+#define CYfarf_rArray        aircraft_->CYfarf_rArray
+#define CYfarf_CYArray       aircraft_->CYfarf_CYArray
+#define CYfarf_nAlphaArray   aircraft_->CYfarf_nAlphaArray
+#define CYfarf_nr            aircraft_->CYfarf_nr
+#define CYfarf_fArray        aircraft_->CYfarf_fArray
+#define CYfarf_nf            aircraft_->CYfarf_nf
+#define CYfarfI              aircraft_->CYfarfI
+#define CYfarf_nice          aircraft_->CYfarf_nice
+#define CYfarf_na_nice       aircraft_->CYfarf_na_nice
+#define CYfarf_nr_nice       aircraft_->CYfarf_nr_nice
+#define CYfarf_rArray_nice   aircraft_->CYfarf_rArray_nice
+#define CYfarf_aArray_nice   aircraft_->CYfarf_aArray_nice
+  double CYo_save, CY_beta_save, CY_p_save, CY_r_save, CY_da_save, CY_dr_save;
+  double CY_dra_save, CY_bdot_save;
+#define CYo_save             aircraft_->CYo_save
+#define CY_beta_save         aircraft_->CY_beta_save
+#define CY_p_save            aircraft_->CY_p_save
+#define CY_r_save            aircraft_->CY_r_save
+#define CY_da_save           aircraft_->CY_da_save
+#define CY_dr_save           aircraft_->CY_dr_save
+#define CY_dra_save          aircraft_->CY_dra_save
+#define CY_bdot_save         aircraft_->CY_bdot_save
 
 
   /* Variables (token2) ===========================================*/
@@ -932,7 +1391,136 @@ struct AIRCRAFT
 #define Clfbetadr_nBetaArray  aircraft_->Clfbetadr_nBetaArray
 #define Clfbetadr_ndr         aircraft_->Clfbetadr_ndr
 #define ClfbetadrI            aircraft_->ClfbetadrI
-  
+  double Clfabetaf_aArray[30][100][100];
+  double Clfabetaf_betaArray[30][100];
+  double Clfabetaf_ClArray[30][100][100];
+  int Clfabetaf_nAlphaArray[30][100];
+  int Clfabetaf_nbeta[30];
+  double Clfabetaf_fArray[30];
+  int Clfabetaf_nf;
+  double ClfabetafI;
+  int Clfabetaf_nice, Clfabetaf_na_nice, Clfabetaf_nb_nice;
+  double Clfabetaf_bArray_nice[100];
+  double Clfabetaf_aArray_nice[100];
+#define Clfabetaf_aArray        aircraft_->Clfabetaf_aArray
+#define Clfabetaf_betaArray     aircraft_->Clfabetaf_betaArray
+#define Clfabetaf_ClArray       aircraft_->Clfabetaf_ClArray
+#define Clfabetaf_nAlphaArray   aircraft_->Clfabetaf_nAlphaArray
+#define Clfabetaf_nbeta         aircraft_->Clfabetaf_nbeta
+#define Clfabetaf_fArray        aircraft_->Clfabetaf_fArray
+#define Clfabetaf_nf            aircraft_->Clfabetaf_nf
+#define ClfabetafI              aircraft_->ClfabetafI
+#define Clfabetaf_nice          aircraft_->Clfabetaf_nice
+#define Clfabetaf_na_nice       aircraft_->Clfabetaf_na_nice
+#define Clfabetaf_nb_nice       aircraft_->Clfabetaf_nb_nice
+#define Clfabetaf_bArray_nice   aircraft_->Clfabetaf_bArray_nice
+#define Clfabetaf_aArray_nice   aircraft_->Clfabetaf_aArray_nice
+  double Clfadaf_aArray[30][100][100];
+  double Clfadaf_daArray[30][100];
+  double Clfadaf_ClArray[30][100][100];
+  int Clfadaf_nAlphaArray[30][100];
+  int Clfadaf_nda[30];
+  double Clfadaf_fArray[30];
+  int Clfadaf_nf;
+  double ClfadafI;
+  int Clfadaf_nice, Clfadaf_na_nice, Clfadaf_nda_nice;
+  double Clfadaf_daArray_nice[100];
+  double Clfadaf_aArray_nice[100];
+#define Clfadaf_aArray        aircraft_->Clfadaf_aArray
+#define Clfadaf_daArray       aircraft_->Clfadaf_daArray
+#define Clfadaf_ClArray       aircraft_->Clfadaf_ClArray
+#define Clfadaf_nAlphaArray   aircraft_->Clfadaf_nAlphaArray
+#define Clfadaf_nda           aircraft_->Clfadaf_nda
+#define Clfadaf_fArray        aircraft_->Clfadaf_fArray
+#define Clfadaf_nf            aircraft_->Clfadaf_nf
+#define ClfadafI              aircraft_->ClfadafI
+#define Clfadaf_nice          aircraft_->Clfadaf_nice
+#define Clfadaf_na_nice       aircraft_->Clfadaf_na_nice
+#define Clfadaf_nda_nice      aircraft_->Clfadaf_nda_nice
+#define Clfadaf_daArray_nice  aircraft_->Clfadaf_daArray_nice
+#define Clfadaf_aArray_nice   aircraft_->Clfadaf_aArray_nice
+  double Clfadrf_aArray[30][100][100];
+  double Clfadrf_drArray[30][100];
+  double Clfadrf_ClArray[30][100][100];
+  int Clfadrf_nAlphaArray[30][100];
+  int Clfadrf_ndr[30];
+  double Clfadrf_fArray[30];
+  int Clfadrf_nf;
+  double ClfadrfI;
+  int Clfadrf_nice, Clfadrf_na_nice, Clfadrf_ndr_nice;
+  double Clfadrf_drArray_nice[100];
+  double Clfadrf_aArray_nice[100];
+#define Clfadrf_aArray        aircraft_->Clfadrf_aArray
+#define Clfadrf_drArray       aircraft_->Clfadrf_drArray
+#define Clfadrf_ClArray       aircraft_->Clfadrf_ClArray
+#define Clfadrf_nAlphaArray   aircraft_->Clfadrf_nAlphaArray
+#define Clfadrf_ndr           aircraft_->Clfadrf_ndr
+#define Clfadrf_fArray        aircraft_->Clfadrf_fArray
+#define Clfadrf_nf            aircraft_->Clfadrf_nf
+#define ClfadrfI              aircraft_->ClfadrfI
+#define Clfadrf_nice          aircraft_->Clfadrf_nice
+#define Clfadrf_na_nice       aircraft_->Clfadrf_na_nice
+#define Clfadrf_ndr_nice      aircraft_->Clfadrf_ndr_nice
+#define Clfadrf_drArray_nice  aircraft_->Clfadrf_drArray_nice
+#define Clfadrf_aArray_nice   aircraft_->Clfadrf_aArray_nice
+  double Clfapf_aArray[30][100][100];
+  double Clfapf_pArray[30][100];
+  double Clfapf_ClArray[30][100][100];
+  int Clfapf_nAlphaArray[30][100];
+  int Clfapf_np[30];
+  double Clfapf_fArray[30];
+  int Clfapf_nf;
+  double ClfapfI;
+  int Clfapf_nice, Clfapf_na_nice, Clfapf_np_nice;
+  double Clfapf_pArray_nice[100];
+  double Clfapf_aArray_nice[100];
+#define Clfapf_aArray        aircraft_->Clfapf_aArray
+#define Clfapf_pArray        aircraft_->Clfapf_pArray
+#define Clfapf_ClArray       aircraft_->Clfapf_ClArray
+#define Clfapf_nAlphaArray   aircraft_->Clfapf_nAlphaArray
+#define Clfapf_np            aircraft_->Clfapf_np
+#define Clfapf_fArray        aircraft_->Clfapf_fArray
+#define Clfapf_nf            aircraft_->Clfapf_nf
+#define ClfapfI              aircraft_->ClfapfI
+#define Clfapf_nice          aircraft_->Clfapf_nice
+#define Clfapf_na_nice       aircraft_->Clfapf_na_nice
+#define Clfapf_np_nice       aircraft_->Clfapf_np_nice
+#define Clfapf_pArray_nice   aircraft_->Clfapf_pArray_nice
+#define Clfapf_aArray_nice   aircraft_->Clfapf_aArray_nice
+  double Clfarf_aArray[30][100][100];
+  double Clfarf_rArray[30][100];
+  double Clfarf_ClArray[30][100][100];
+  int Clfarf_nAlphaArray[30][100];
+  int Clfarf_nr[30];
+  double Clfarf_fArray[30];
+  int Clfarf_nf;
+  double ClfarfI;
+  int Clfarf_nice, Clfarf_na_nice, Clfarf_nr_nice;
+  double Clfarf_rArray_nice[100];
+  double Clfarf_aArray_nice[100];
+#define Clfarf_aArray        aircraft_->Clfarf_aArray
+#define Clfarf_rArray        aircraft_->Clfarf_rArray
+#define Clfarf_ClArray       aircraft_->Clfarf_ClArray
+#define Clfarf_nAlphaArray   aircraft_->Clfarf_nAlphaArray
+#define Clfarf_nr            aircraft_->Clfarf_nr
+#define Clfarf_fArray        aircraft_->Clfarf_fArray
+#define Clfarf_nf            aircraft_->Clfarf_nf
+#define ClfarfI              aircraft_->ClfarfI
+#define Clfarf_nice          aircraft_->Clfarf_nice
+#define Clfarf_na_nice       aircraft_->Clfarf_na_nice
+#define Clfarf_nr_nice       aircraft_->Clfarf_nr_nice
+#define Clfarf_rArray_nice   aircraft_->Clfarf_rArray_nice
+#define Clfarf_aArray_nice   aircraft_->Clfarf_aArray_nice
+  double Clo_save, Cl_beta_save, Cl_p_save, Cl_r_save, Cl_da_save; 
+  double Cl_dr_save, Cl_daa_save;
+#define Clo_save             aircraft_->Clo_save
+#define Cl_beta_save         aircraft_->Cl_beta_save
+#define Cl_p_save            aircraft_->Cl_p_save
+#define Cl_r_save            aircraft_->Cl_r_save
+#define Cl_da_save           aircraft_->Cl_da_save
+#define Cl_dr_save           aircraft_->Cl_dr_save
+#define Cl_daa_save          aircraft_->Cl_daa_save
+
 
   /* Variables (token2) ===========================================*/
   /* Cn ============ Aerodynamic n-moment quantities (lateral) ====*/
@@ -977,7 +1565,137 @@ struct AIRCRAFT
 #define Cnfbetadr_nBetaArray  aircraft_->Cnfbetadr_nBetaArray
 #define Cnfbetadr_ndr         aircraft_->Cnfbetadr_ndr
 #define CnfbetadrI            aircraft_->CnfbetadrI
-  
+  double Cnfabetaf_aArray[30][100][100];
+  double Cnfabetaf_betaArray[30][100];
+  double Cnfabetaf_CnArray[30][100][100];
+  int Cnfabetaf_nAlphaArray[30][100];
+  int Cnfabetaf_nbeta[30];
+  double Cnfabetaf_fArray[30];
+  int Cnfabetaf_nf;
+  double CnfabetafI;
+  int Cnfabetaf_nice, Cnfabetaf_na_nice, Cnfabetaf_nb_nice;
+  double Cnfabetaf_bArray_nice[100];
+  double Cnfabetaf_aArray_nice[100];
+#define Cnfabetaf_aArray        aircraft_->Cnfabetaf_aArray
+#define Cnfabetaf_betaArray     aircraft_->Cnfabetaf_betaArray
+#define Cnfabetaf_CnArray       aircraft_->Cnfabetaf_CnArray
+#define Cnfabetaf_nAlphaArray   aircraft_->Cnfabetaf_nAlphaArray
+#define Cnfabetaf_nbeta         aircraft_->Cnfabetaf_nbeta
+#define Cnfabetaf_fArray        aircraft_->Cnfabetaf_fArray
+#define Cnfabetaf_nf            aircraft_->Cnfabetaf_nf
+#define CnfabetafI              aircraft_->CnfabetafI
+#define Cnfabetaf_nice          aircraft_->Cnfabetaf_nice
+#define Cnfabetaf_na_nice       aircraft_->Cnfabetaf_na_nice
+#define Cnfabetaf_nb_nice       aircraft_->Cnfabetaf_nb_nice
+#define Cnfabetaf_bArray_nice   aircraft_->Cnfabetaf_bArray_nice
+#define Cnfabetaf_aArray_nice   aircraft_->Cnfabetaf_aArray_nice
+  double Cnfadaf_aArray[30][100][100];
+  double Cnfadaf_daArray[30][100];
+  double Cnfadaf_CnArray[30][100][100];
+  int Cnfadaf_nAlphaArray[30][100];
+  int Cnfadaf_nda[30];
+  double Cnfadaf_fArray[30];
+  int Cnfadaf_nf;
+  double CnfadafI;
+  int Cnfadaf_nice, Cnfadaf_na_nice, Cnfadaf_nda_nice;
+  double Cnfadaf_daArray_nice[100];
+  double Cnfadaf_aArray_nice[100];
+#define Cnfadaf_aArray        aircraft_->Cnfadaf_aArray
+#define Cnfadaf_daArray       aircraft_->Cnfadaf_daArray
+#define Cnfadaf_CnArray       aircraft_->Cnfadaf_CnArray
+#define Cnfadaf_nAlphaArray   aircraft_->Cnfadaf_nAlphaArray
+#define Cnfadaf_nda           aircraft_->Cnfadaf_nda
+#define Cnfadaf_fArray        aircraft_->Cnfadaf_fArray
+#define Cnfadaf_nf            aircraft_->Cnfadaf_nf
+#define CnfadafI              aircraft_->CnfadafI
+#define Cnfadaf_nice          aircraft_->Cnfadaf_nice
+#define Cnfadaf_na_nice       aircraft_->Cnfadaf_na_nice
+#define Cnfadaf_nda_nice      aircraft_->Cnfadaf_nda_nice
+#define Cnfadaf_daArray_nice  aircraft_->Cnfadaf_daArray_nice
+#define Cnfadaf_aArray_nice   aircraft_->Cnfadaf_aArray_nice
+  double Cnfadrf_aArray[30][100][100];
+  double Cnfadrf_drArray[30][100];
+  double Cnfadrf_CnArray[30][100][100];
+  int Cnfadrf_nAlphaArray[30][100];
+  int Cnfadrf_ndr[30];
+  double Cnfadrf_fArray[30];
+  int Cnfadrf_nf;
+  double CnfadrfI;
+  int Cnfadrf_nice, Cnfadrf_na_nice, Cnfadrf_ndr_nice;
+  double Cnfadrf_drArray_nice[100];
+  double Cnfadrf_aArray_nice[100];
+#define Cnfadrf_aArray        aircraft_->Cnfadrf_aArray
+#define Cnfadrf_drArray       aircraft_->Cnfadrf_drArray
+#define Cnfadrf_CnArray       aircraft_->Cnfadrf_CnArray
+#define Cnfadrf_nAlphaArray   aircraft_->Cnfadrf_nAlphaArray
+#define Cnfadrf_ndr           aircraft_->Cnfadrf_ndr
+#define Cnfadrf_fArray        aircraft_->Cnfadrf_fArray
+#define Cnfadrf_nf            aircraft_->Cnfadrf_nf
+#define CnfadrfI              aircraft_->CnfadrfI
+#define Cnfadrf_nice          aircraft_->Cnfadrf_nice
+#define Cnfadrf_na_nice       aircraft_->Cnfadrf_na_nice
+#define Cnfadrf_ndr_nice      aircraft_->Cnfadrf_ndr_nice
+#define Cnfadrf_drArray_nice  aircraft_->Cnfadrf_drArray_nice
+#define Cnfadrf_aArray_nice   aircraft_->Cnfadrf_aArray_nice
+  double Cnfapf_aArray[30][100][100];
+  double Cnfapf_pArray[30][100];
+  double Cnfapf_CnArray[30][100][100];
+  int Cnfapf_nAlphaArray[30][100];
+  int Cnfapf_np[30];
+  double Cnfapf_fArray[30];
+  int Cnfapf_nf;
+  double CnfapfI;
+  int Cnfapf_nice, Cnfapf_na_nice, Cnfapf_np_nice;
+  double Cnfapf_pArray_nice[100];
+  double Cnfapf_aArray_nice[100];
+#define Cnfapf_aArray        aircraft_->Cnfapf_aArray
+#define Cnfapf_pArray        aircraft_->Cnfapf_pArray
+#define Cnfapf_CnArray       aircraft_->Cnfapf_CnArray
+#define Cnfapf_nAlphaArray   aircraft_->Cnfapf_nAlphaArray
+#define Cnfapf_np            aircraft_->Cnfapf_np
+#define Cnfapf_fArray        aircraft_->Cnfapf_fArray
+#define Cnfapf_nf            aircraft_->Cnfapf_nf
+#define CnfapfI              aircraft_->CnfapfI
+#define Cnfapf_nice          aircraft_->Cnfapf_nice
+#define Cnfapf_na_nice       aircraft_->Cnfapf_na_nice
+#define Cnfapf_np_nice       aircraft_->Cnfapf_np_nice
+#define Cnfapf_pArray_nice   aircraft_->Cnfapf_pArray_nice
+#define Cnfapf_aArray_nice   aircraft_->Cnfapf_aArray_nice
+  double Cnfarf_aArray[30][100][100];
+  double Cnfarf_rArray[30][100];
+  double Cnfarf_CnArray[30][100][100];
+  int Cnfarf_nAlphaArray[30][100];
+  int Cnfarf_nr[30];
+  double Cnfarf_fArray[30];
+  int Cnfarf_nf;
+  double CnfarfI;
+  int Cnfarf_nice, Cnfarf_na_nice, Cnfarf_nr_nice;
+  double Cnfarf_rArray_nice[100];
+  double Cnfarf_aArray_nice[100];
+#define Cnfarf_aArray        aircraft_->Cnfarf_aArray
+#define Cnfarf_rArray        aircraft_->Cnfarf_rArray
+#define Cnfarf_CnArray       aircraft_->Cnfarf_CnArray
+#define Cnfarf_nAlphaArray   aircraft_->Cnfarf_nAlphaArray
+#define Cnfarf_nr            aircraft_->Cnfarf_nr
+#define Cnfarf_fArray        aircraft_->Cnfarf_fArray
+#define Cnfarf_nf            aircraft_->Cnfarf_nf
+#define CnfarfI              aircraft_->CnfarfI
+#define Cnfarf_nice          aircraft_->Cnfarf_nice
+#define Cnfarf_na_nice       aircraft_->Cnfarf_na_nice
+#define Cnfarf_nr_nice       aircraft_->Cnfarf_nr_nice
+#define Cnfarf_rArray_nice   aircraft_->Cnfarf_rArray_nice
+#define Cnfarf_aArray_nice   aircraft_->Cnfarf_aArray_nice
+  double Cno_save, Cn_beta_save, Cn_p_save, Cn_r_save;
+  double Cn_da_save, Cn_dr_save, Cn_q_save, Cn_b3_save;
+#define Cno_save             aircraft_->Cno_save
+#define Cn_beta_save         aircraft_->Cn_beta_save
+#define Cn_p_save            aircraft_->Cn_p_save
+#define Cn_r_save            aircraft_->Cn_r_save
+#define Cn_da_save           aircraft_->Cn_da_save
+#define Cn_dr_save           aircraft_->Cn_dr_save
+#define Cn_q_save            aircraft_->Cn_q_save
+#define Cn_b3_save           aircraft_->Cn_b3_save
+
 
   /* Variables (token2) ===========================================*/
   /* gear ========== Landing gear model quantities ================*/
@@ -1330,6 +2048,12 @@ struct AIRCRAFT
 #define ndf       aircraft_->ndf
 #define dfArray   aircraft_->dfArray
 #define TimeArray aircraft_->TimeArray
+
+  double flap_percent, flap_goal, flap_moving_rate, flap_pos;
+#define flap_percent     aircraft_->flap_percent
+#define flap_goal        aircraft_->flap_goal
+#define flap_moving_rate aircraft_->flap_moving_rate
+#define flap_pos         aircraft_->flap_pos
 
 
   ofstream fout;

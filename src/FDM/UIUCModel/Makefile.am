@@ -7,6 +7,7 @@ libUIUCModel_a_SOURCES = \
                         uiuc_1Dinterpolation.cpp uiuc_1Dinterpolation.h \
                         uiuc_2DdataFileReader.cpp uiuc_2DdataFileReader.h \
                         uiuc_2Dinterpolation.cpp uiuc_2Dinterpolation.h \
+			uiuc_3Dinterpolation.cpp uiuc_3Dinterpolation.h \
                         uiuc_aerodeflections.cpp uiuc_aerodeflections.h \
 			uiuc_aircraftdir.h uiuc_aircraft.h \
                         uiuc_betaprobe.cpp uiuc_betaprobe.h \

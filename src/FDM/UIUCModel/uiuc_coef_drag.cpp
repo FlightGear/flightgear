@@ -19,11 +19,23 @@
 ----------------------------------------------------------------------
 
  HISTORY:      04/15/2000   initial release
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (CXfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (CXfxxf).  Zero flap vairables removed.
+	       02/13/2002   (RD) Added variables so linear aero model
+	                    values can be recorded
+	       02/18/2002   (RD) Added uiuc_3Dinterp_quick() function
+	                    for a quicker 3D interpolation.  Takes
+			    advantage of "nice" data.
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -49,6 +61,8 @@
  CALLS TO:     uiuc_1Dinterpolation
                uiuc_2Dinterpolation
                uiuc_ice_filter
+	       uiuc_3Dinterpolation
+	       uiuc_3Dinterp_quick
 
 ----------------------------------------------------------------------
 
@@ -71,14 +85,16 @@
 **********************************************************************/
 
 #include "uiuc_coef_drag.h"
-
+#include <math.h>
 
 void uiuc_coef_drag()
 {
   string linetoken1;
   string linetoken2;
   stack command_list;
-  
+
+  double q_nondim;
+
   command_list = aeroDragParts -> getCommands();
   
   for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
@@ -94,6 +110,7 @@ void uiuc_coef_drag()
               {
                 CDo = uiuc_ice_filter(CDo_clean,kCDo);
               }
+	    CDo_save = CDo;
             CD += CDo;
             break;
           }
@@ -103,6 +120,7 @@ void uiuc_coef_drag()
               {
                 CDK = uiuc_ice_filter(CDK_clean,kCDK);
               }
+	    CDK_save = CDK * CL * CL;
             CD += CDK * CL * CL;
             break;
           }
@@ -112,6 +130,7 @@ void uiuc_coef_drag()
               {
                 CD_a = uiuc_ice_filter(CD_a_clean,kCD_a);
               }
+	    CD_a_save = CD_a * Alpha;
             CD += CD_a * Alpha;
             break;
           }
@@ -123,6 +142,7 @@ void uiuc_coef_drag()
               }
             /* CD_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    CD_adot_save = CD_adot * Alpha_dot * cbar_2U;
             CD += CD_adot * Alpha_dot * cbar_2U;
             break;
           }
@@ -136,12 +156,14 @@ void uiuc_coef_drag()
                (see Roskam Control book, Part 1, pg. 147) */
             /* why multiply by Theta_dot instead of Q_body? 
                see note in coef_lift.cpp */
+	    CD_q_save = CD_q * Theta_dot * cbar_2U;
             CD += CD_q * Theta_dot * cbar_2U;
             break;
           }
         case CD_ih_flag:
           {
-            CD += CD_ih * ih;
+	    CD_ih_save = fabs(CD_ih * ih);
+            CD += fabs(CD_ih * ih);
             break;
           }
         case CD_de_flag:
@@ -150,7 +172,8 @@ void uiuc_coef_drag()
               {
                 CD_de = uiuc_ice_filter(CD_de_clean,kCD_de);
               }
-            CD += CD_de * elevator;
+	    CD_de_save = fabs(CD_de * elevator);
+            CD += fabs(CD_de * elevator);
             break;
           }
         case CDfa_flag:
@@ -217,6 +240,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CXo;
                   }
               }
+	    CXo_save = CXo;
             CX += CXo;
             break;
           }
@@ -233,6 +257,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CXK * CLiced_tail * CLiced_tail;
                   }
               }
+	    CXK_save = CXK * CZ * CZ;
             CX += CXK * CZ * CZ;
             break;
           }
@@ -249,6 +274,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CX_a * Alpha;
                   }
               }
+	    CX_a_save = CX_a * Alpha;
             CX += CX_a * Alpha;
             break;
           }
@@ -265,6 +291,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CX_a2 * Alpha * Alpha;
                   }
               }
+	    CX_a2_save = CX_a2 * Alpha * Alpha;
             CX += CX_a2 * Alpha * Alpha;
             break;
           }
@@ -281,6 +308,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CX_a3 * Alpha * Alpha * Alpha;
                   }
               }
+	    CX_a3_save = CX_a3 * Alpha * Alpha * Alpha;
             CX += CX_a3 * Alpha * Alpha * Alpha;
             break;
           }
@@ -299,6 +327,7 @@ void uiuc_coef_drag()
               }
             /* CX_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    CX_adot_save = CX_adot * Alpha_dot * cbar_2U;
             CX += CX_adot * Alpha_dot * cbar_2U;
             break;
           }
@@ -317,6 +346,7 @@ void uiuc_coef_drag()
               }
             /* CX_q must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    CX_q_save = CX_q * Q_body * cbar_2U;
             CX += CX_q * Q_body * cbar_2U;
             break;
           }
@@ -333,6 +363,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CX_de * elevator;
                   }
               }
+	    CX_de_save = CX_de * elevator;
             CX += CX_de * elevator;
             break;
           }
@@ -349,6 +380,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CX_dr * rudder;
                   }
               }
+	    CX_dr_save = CX_dr * rudder;
             CX += CX_dr * rudder;
             break;
           }
@@ -365,6 +397,7 @@ void uiuc_coef_drag()
                     CXiced_tail += CX * flap;
                   }
               }
+	    CX_df_save = CX_df * flap;
             CX += CX_df * flap;
             break;
           }
@@ -381,7 +414,90 @@ void uiuc_coef_drag()
                     CXiced_tail += CX_adf * Alpha * flap;
                   }
               }
+	    CX_adf_save = CX_adf * Alpha * flap;
             CX += CX_adf * Alpha * flap;
+            break;
+          }
+        case CXfabetaf_flag:
+          {
+	    if (CXfabetaf_nice == 1)
+	      CXfabetafI = uiuc_3Dinterp_quick(CXfabetaf_fArray,
+					       CXfabetaf_aArray_nice,
+					       CXfabetaf_bArray_nice,
+					       CXfabetaf_CXArray,
+					       CXfabetaf_na_nice,
+					       CXfabetaf_nb_nice,
+					       CXfabetaf_nf,
+					       flap_pos,
+					       Alpha,
+					       Beta);
+	    else
+	      CXfabetafI = uiuc_3Dinterpolation(CXfabetaf_fArray,
+						CXfabetaf_aArray,
+						CXfabetaf_betaArray,
+						CXfabetaf_CXArray,
+						CXfabetaf_nAlphaArray,
+						CXfabetaf_nbeta,
+						CXfabetaf_nf,
+						flap_pos,
+						Alpha,
+						Beta);
+	    CX += CXfabetafI;
+            break;
+          }
+        case CXfadef_flag:
+          {
+	    if (CXfadef_nice == 1)
+	      CXfadefI = uiuc_3Dinterp_quick(CXfadef_fArray,
+					     CXfadef_aArray_nice,
+					     CXfadef_deArray_nice,
+					     CXfadef_CXArray,
+					     CXfadef_na_nice,
+					     CXfadef_nde_nice,
+					     CXfadef_nf,
+					     flap_pos,
+					     Alpha,
+					     elevator);
+	    else
+	      CXfadefI = uiuc_3Dinterpolation(CXfadef_fArray,
+					      CXfadef_aArray,
+					      CXfadef_deArray,
+					      CXfadef_CXArray,
+					      CXfadef_nAlphaArray,
+					      CXfadef_nde,
+					      CXfadef_nf,
+					      flap_pos,
+					      Alpha,
+					      elevator);
+            CX += CXfadefI;
+            break;
+          }
+        case CXfaqf_flag:
+          {
+	    q_nondim = Q_body * cbar_2U;
+	    if (CXfaqf_nice == 1)
+	      CXfaqfI = uiuc_3Dinterp_quick(CXfaqf_fArray,
+					    CXfaqf_aArray_nice,
+					    CXfaqf_qArray_nice,
+					    CXfaqf_CXArray,
+					    CXfaqf_na_nice,
+					    CXfaqf_nq_nice,
+					    CXfaqf_nf,
+					    flap_pos,
+					    Alpha,
+					    q_nondim);
+	    else
+	      CXfaqfI = uiuc_3Dinterpolation(CXfaqf_fArray,
+					     CXfaqf_aArray,
+					     CXfaqf_qArray,
+					     CXfaqf_CXArray,
+					     CXfaqf_nAlphaArray,
+					     CXfaqf_nq,
+					     CXfaqf_nf,
+					     flap_pos,
+					     Alpha,
+					     q_nondim);
+            CX += CXfaqfI;
             break;
           }
         };

@@ -24,11 +24,15 @@
 	                    the velocities.
 	       08/27/2001   (RD) Added uiuc_initial_init() to help
 	                    in starting an A/C at an initial condition
+	       02/24/2002   (GD) Added uiuc_network_routine()
+	       03/27/2002   (RD) Changed how forces are calculated when
+	                    body-axis is used
  
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Robert Deters      <rdeters@uiuc.edu>
+	       Glen Dimock        <dimock@uiuc.edu>
                David Megginson    <david@megginson.com>
  
 ----------------------------------------------------------------------
@@ -86,8 +90,9 @@
 #include "uiuc_menu.h"
 #include "uiuc_betaprobe.h"
 #include <FDM/LaRCsim/ls_generic.h>
-// #include "Main/simple_udp.h"
+//#include "Main/simple_udp.h"
 #include "uiuc_fog.h" //321654
+//#include "uiuc_network.h"
 
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
@@ -99,6 +104,7 @@ extern "C" void uiuc_force_moment(double dt);
 extern "C" void uiuc_engine_routine();
 extern "C" void uiuc_gear_routine();
 extern "C" void uiuc_record_routine(double dt);
+//extern "C" void uiuc_network_routine();
 extern "C" void uiuc_vel_init ();
 extern "C" void uiuc_initial_init ();
 
@@ -184,21 +190,24 @@ void uiuc_force_moment(double dt)
   uiuc_aerodeflections(dt);
   uiuc_coefficients();
 
-  /* Calculate the wind axis forces */
+  /* Calculate the forces */
   if (CX && CZ)
     {
-      CD = -CX * cos(Alpha) - CZ * sin(Alpha);
-      CL =  CX * sin(Alpha) - CZ * cos(Alpha);
+      F_X_aero = CX * qS;
+      F_Y_aero = CY * qS;
+      F_Z_aero = CZ * qS;
     }
-  F_X_wind = -1 * CD * qS;
-  F_Y_wind = CY * qS;
-  F_Z_wind = -1 * CL * qS;
+  else
+    {
+      F_X_wind = -CD * qS;
+      F_Y_wind = CY * qS;
+      F_Z_wind = -CL * qS;
 
-  /* wind-axis to body-axis transformation */
-  F_X_aero = F_X_wind * Cos_alpha * Cos_beta - F_Y_wind * Cos_alpha * Sin_beta - F_Z_wind * Sin_alpha;
-  F_Y_aero = F_X_wind * Sin_beta + F_Y_wind * Cos_beta;
-  F_Z_aero = F_X_wind * Sin_alpha * Cos_beta - F_Y_wind * Sin_alpha * Sin_beta + F_Z_wind * Cos_alpha;
-
+      /* wind-axis to body-axis transformation */
+      F_X_aero = F_X_wind * Cos_alpha * Cos_beta - F_Y_wind * Cos_alpha * Sin_beta - F_Z_wind * Sin_alpha;
+      F_Y_aero = F_X_wind * Sin_beta + F_Y_wind * Cos_beta;
+      F_Z_aero = F_X_wind * Sin_alpha * Cos_beta - F_Y_wind * Sin_alpha * Sin_beta + F_Z_wind * Cos_alpha;
+    }
   /* Moment calculations */
   M_l_aero = Cl * qSb;
   M_m_aero = Cm * qScbar;
@@ -263,4 +272,9 @@ void uiuc_record_routine(double dt)
   if (Simtime >= recordStartTime)
     uiuc_recorder(dt);
 }
+
+//void uiuc_network_routine ()
+//{
+//  uiuc_network();
+//}
 //end uiuc_wrapper.cpp

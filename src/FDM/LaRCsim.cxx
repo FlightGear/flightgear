@@ -198,6 +198,15 @@ void FGLaRCsim::update( int multiloop ) {
     // printf("Altitude = %.2f\n", Altitude * 0.3048);
     // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
 
+    // for engine functions (sounds and instruments)
+    // drive the rpm gauge
+    fgSetDouble("/engines/engine/rpm", (globals->get_controls()->get_throttle( 0 ) * 100.0 * 25 ));
+    // manifold air pressure, which drives the sound (see *sound.xml file)
+    fgSetDouble("/engines/engine/mp-osi", (globals->get_controls()->get_throttle( 0 ) * 100.0 ));
+    // make the engine cranking and running sounds when fgfs starts up
+    fgSetDouble("/engines/engine/cranking", 1);
+    fgSetDouble("/engines/engine/running", 1);
+
     ls_update(multiloop);
 
     // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);

@@ -20,7 +20,7 @@
 		
   CODED BY:		Bipin Sehgal
 		
-  MAINTAINED BY:	Bipin Sehgal
+  MAINTAINED BY:	Rob Deters and Glen Dimock
 
 ----------------------------------------------------------------------------
 
@@ -30,6 +30,8 @@
   3/17/00   Initial test release  
   3/09/01   Added callout to UIUC gear function.   (DPM)
   6/18/01   Added call out to UIUC record routine (RD)
+  11/12/01  Changed from uiuc_init_aeromodel() to uiuc_initial_init(). (RD)
+  2/24/02   Added uiuc_network_routine() (GD)
 
 ----------------------------------------------------------------------------
 
@@ -58,32 +60,38 @@
 #include <FDM/UIUCModel/uiuc_wrapper.h>
 
 
-void uiuc_aero( SCALAR dt, int Initialize ) 
+void uiuc_aero_2_wrapper( SCALAR dt, int Initialize ) 
 {
     static int init = 0;
 
     if (init==0)
     {
       init = -1; 
-      uiuc_init_aeromodel();
+      uiuc_initial_init();
+      //      uiuc_init_aeromodel();
     }
 
     uiuc_force_moment(dt);
 }
 
 
-void uiuc_engine( SCALAR dt, int Initialize ) 
+void uiuc_engine_2_wrapper( SCALAR dt, int Initialize ) 
 {
     uiuc_engine_routine();
 }
 
 
-void uiuc_gear ()
+void uiuc_gear_2_wrapper ()
 {
     uiuc_gear_routine();
 }
 
-void uiuc_record(SCALAR dt)
+void uiuc_record_2_wrapper(SCALAR dt)
 {
   uiuc_record_routine(dt);
 }
+
+//void uiuc_network_2_wrapper()
+//{
+//  uiuc_network_routine();
+//}

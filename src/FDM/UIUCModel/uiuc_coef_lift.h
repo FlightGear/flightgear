@@ -7,6 +7,7 @@
 #include "uiuc_aircraft.h"
 #include "uiuc_1Dinterpolation.h"
 #include "uiuc_2Dinterpolation.h"
+#include "uiuc_3Dinterpolation.h"
 #include "uiuc_ice.h"
 
 

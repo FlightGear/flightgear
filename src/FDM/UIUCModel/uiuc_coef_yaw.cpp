@@ -19,11 +19,23 @@
 ----------------------------------------------------------------------
 
  HISTORY:      04/15/2000   initial release
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (Cnfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (Cnfxxf).  Zero flap vairables removed.
+	       02/13/2002   (RD) Added variables so linear aero model
+	                    values can be recorded
+	       02/18/2002   (RD) Added uiuc_3Dinterp_quick() function
+	                    for a quicker 3D interpolation.  Takes
+			    advantage of "nice" data.
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
 
@@ -51,6 +63,8 @@
  CALLS TO:     uiuc_1Dinterpolation
                uiuc_2Dinterpolation
                uiuc_ice_filter
+	       uiuc_3Dinterpolation
+	       uiuc_3Dinterp_quick
 
 ----------------------------------------------------------------------
 
@@ -80,7 +94,10 @@ void uiuc_coef_yaw()
   string linetoken1;
   string linetoken2;
   stack command_list;
-  
+
+  double p_nondim;
+  double r_nondim;
+
   command_list = aeroYawParts -> getCommands();
   
   for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
@@ -96,6 +113,7 @@ void uiuc_coef_yaw()
               {
                 Cno = uiuc_ice_filter(Cno_clean,kCno);
               }
+	    Cno_save = Cno;
             Cn += Cno;
             break;
           }
@@ -105,6 +123,7 @@ void uiuc_coef_yaw()
               {
                 Cn_beta = uiuc_ice_filter(Cn_beta_clean,kCn_beta);
               }
+	    Cn_beta_save = Cn_beta * Beta;
             Cn += Cn_beta * Beta;
             break;
           }
@@ -116,6 +135,7 @@ void uiuc_coef_yaw()
               }
             /* Cn_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    Cn_p_save = Cn_p * P_body * b_2U;
             Cn += Cn_p * P_body * b_2U;
             break;
           }
@@ -127,6 +147,7 @@ void uiuc_coef_yaw()
               }
             /* Cn_r must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
+	    Cn_r_save = Cn_r * R_body * b_2U;
             Cn += Cn_r * R_body * b_2U;
             break;
           }
@@ -136,6 +157,7 @@ void uiuc_coef_yaw()
               {
                 Cn_da = uiuc_ice_filter(Cn_da_clean,kCn_da);
               }
+	    Cn_da_save = Cn_da * aileron;
             Cn += Cn_da * aileron;
             break;
           }
@@ -145,6 +167,7 @@ void uiuc_coef_yaw()
               {
                 Cn_dr = uiuc_ice_filter(Cn_dr_clean,kCn_dr);
               }
+	    Cn_dr_save = Cn_dr * rudder;
             Cn += Cn_dr * rudder;
             break;
           }
@@ -154,6 +177,7 @@ void uiuc_coef_yaw()
               {
                 Cn_q = uiuc_ice_filter(Cn_q_clean,kCn_q);
               }
+	    Cn_q_save = Cn_q * Q_body * cbar_2U;
             Cn += Cn_q * Q_body * cbar_2U;
             break;
           }
@@ -163,6 +187,7 @@ void uiuc_coef_yaw()
               {
                 Cn_b3 = uiuc_ice_filter(Cn_b3_clean,kCn_b3);
               }
+	    Cn_b3_save = Cn_b3 * Beta * Beta * Beta;
             Cn += Cn_b3 * Beta * Beta * Beta;
             break;
           }
@@ -188,6 +213,143 @@ void uiuc_coef_yaw()
                                               Beta,
                                               rudder);
             Cn += CnfbetadrI;
+            break;
+          }
+        case Cnfabetaf_flag:
+          {
+	    if (Cnfabetaf_nice == 1)
+	      CnfabetafI = uiuc_3Dinterp_quick(Cnfabetaf_fArray,
+					       Cnfabetaf_aArray_nice,
+					       Cnfabetaf_bArray_nice,
+					       Cnfabetaf_CnArray,
+					       Cnfabetaf_na_nice,
+					       Cnfabetaf_nb_nice,
+					       Cnfabetaf_nf,
+					       flap_pos,
+					       Alpha,
+					       Beta);
+	    else
+	      CnfabetafI = uiuc_3Dinterpolation(Cnfabetaf_fArray,
+						Cnfabetaf_aArray,
+						Cnfabetaf_betaArray,
+						Cnfabetaf_CnArray,
+						Cnfabetaf_nAlphaArray,
+						Cnfabetaf_nbeta,
+						Cnfabetaf_nf,
+						flap_pos,
+						Alpha,
+						Beta);
+            Cn += CnfabetafI;
+            break;
+          }
+        case Cnfadaf_flag:
+          {
+	    if (Cnfadaf_nice == 1)
+	      CnfadafI = uiuc_3Dinterp_quick(Cnfadaf_fArray,
+					     Cnfadaf_aArray_nice,
+					     Cnfadaf_daArray_nice,
+					     Cnfadaf_CnArray,
+					     Cnfadaf_na_nice,
+					     Cnfadaf_nda_nice,
+					     Cnfadaf_nf,
+					     flap_pos,
+					     Alpha,
+					     aileron);
+	    else
+	      CnfadafI = uiuc_3Dinterpolation(Cnfadaf_fArray,
+					      Cnfadaf_aArray,
+					      Cnfadaf_daArray,
+					      Cnfadaf_CnArray,
+					      Cnfadaf_nAlphaArray,
+					      Cnfadaf_nda,
+					      Cnfadaf_nf,
+					      flap_pos,
+					      Alpha,
+					      aileron);
+            Cn += CnfadafI;
+            break;
+          }
+        case Cnfadrf_flag:
+          {
+	    if (Cnfadrf_nice == 1)
+	      CnfadrfI = uiuc_3Dinterp_quick(Cnfadrf_fArray,
+					     Cnfadrf_aArray_nice,
+					     Cnfadrf_drArray_nice,
+					     Cnfadrf_CnArray,
+					     Cnfadrf_na_nice,
+					     Cnfadrf_ndr_nice,
+					     Cnfadrf_nf,
+					     flap_pos,
+					     Alpha,
+					     rudder);
+	    else
+	      CnfadrfI = uiuc_3Dinterpolation(Cnfadrf_fArray,
+					      Cnfadrf_aArray,
+					      Cnfadrf_drArray,
+					      Cnfadrf_CnArray,
+					      Cnfadrf_nAlphaArray,
+					      Cnfadrf_ndr,
+					      Cnfadrf_nf,
+					      flap_pos,
+					      Alpha,
+					      rudder);
+            Cn += CnfadrfI;
+            break;
+          }
+        case Cnfapf_flag:
+          {
+	    p_nondim = P_body * b_2U;
+	    if (Cnfapf_nice == 1)
+	      CnfapfI = uiuc_3Dinterp_quick(Cnfapf_fArray,
+					    Cnfapf_aArray_nice,
+					    Cnfapf_pArray_nice,
+					    Cnfapf_CnArray,
+					    Cnfapf_na_nice,
+					    Cnfapf_np_nice,
+					    Cnfapf_nf,
+					    flap_pos,
+					    Alpha,
+					    p_nondim);
+	    else
+	      CnfapfI = uiuc_3Dinterpolation(Cnfapf_fArray,
+					     Cnfapf_aArray,
+					     Cnfapf_pArray,
+					     Cnfapf_CnArray,
+					     Cnfapf_nAlphaArray,
+					     Cnfapf_np,
+					     Cnfapf_nf,
+					     flap_pos,
+					     Alpha,
+					     p_nondim);
+            Cn += CnfapfI;
+            break;
+          }
+        case Cnfarf_flag:
+          {
+	    r_nondim = R_body * b_2U;
+	    if (Cnfarf_nice == 1)
+	      CnfarfI = uiuc_3Dinterp_quick(Cnfarf_fArray,
+					    Cnfarf_aArray_nice,
+					    Cnfarf_rArray_nice,
+					    Cnfarf_CnArray,
+					    Cnfarf_na_nice,
+					    Cnfarf_nr_nice,
+					    Cnfarf_nf,
+					    flap_pos,
+					    Alpha,
+					    r_nondim);
+	    else
+	      CnfarfI = uiuc_3Dinterpolation(Cnfarf_fArray,
+					     Cnfarf_aArray,
+					     Cnfarf_rArray,
+					     Cnfarf_CnArray,
+					     Cnfarf_nAlphaArray,
+					     Cnfarf_nr,
+					     Cnfarf_nf,
+					     flap_pos,
+					     Alpha,
+					     r_nondim);
+            Cn += CnfarfI;
             break;
           }
         };

@@ -17,11 +17,18 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (CYfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (CYfxxf).  Zero flap vairables removed.
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -78,6 +85,11 @@ void uiuc_map_CY()
   CY_map["CY_bdot"]               =      CY_bdot_flag               ;
   CY_map["CYfada"]                =      CYfada_flag                ;
   CY_map["CYfbetadr"]             =      CYfbetadr_flag             ;
+  CY_map["CYfabetaf"]             =      CYfabetaf_flag             ;
+  CY_map["CYfadaf"]               =      CYfadaf_flag               ;
+  CY_map["CYfadrf"]               =      CYfadrf_flag               ;
+  CY_map["CYfapf"]                =      CYfapf_flag                ;
+  CY_map["CYfarf"]                =      CYfarf_flag                ;
 }
 
 // end uiuc_map_CY.cpp

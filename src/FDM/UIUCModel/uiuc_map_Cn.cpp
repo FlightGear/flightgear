@@ -17,12 +17,19 @@
 ----------------------------------------------------------------------
  
  HISTORY:      04/08/2000   initial release
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (Cnfxxf0)
+	       11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (CXfxxf).  Zero flap vairables removed.
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
- 
+	       Robert Deters      <rdeters@uiuc.edu>
+
 ----------------------------------------------------------------------
  
  VARIABLES:
@@ -78,6 +85,11 @@ void uiuc_map_Cn()
   Cn_map["Cn_b3"]                 =      Cn_b3_flag                 ;
   Cn_map["Cnfada"]                =      Cnfada_flag                ;
   Cn_map["Cnfbetadr"]             =      Cnfbetadr_flag             ;
+  Cn_map["Cnfabetaf"]             =      Cnfabetaf_flag             ;
+  Cn_map["Cnfadaf"]               =      Cnfadaf_flag               ;
+  Cn_map["Cnfadrf"]               =      Cnfadrf_flag               ;
+  Cn_map["Cnfapf"]                =      Cnfapf_flag                ;
+  Cn_map["Cnfarf"]                =      Cnfarf_flag                ;
 }
 
 // end uiuc_map_Cn.cpp

@@ -37,6 +37,22 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.5  2002/04/01 19:37:34  curt
+I have attached revisions to the UIUC code.  The revisions include the
+ability to run a nonlinear model with flaps.  The files ls_model.c and
+uiuc_aero.c were changed since we had some functions with the same
+name.  The name changes doesn't affect the code, it just makes it a
+little easier to read.  There are changes in LaRCsim.cxx so UIUC
+models have engine sound.  Could you send me an email when you receive
+this and/or when the changes make it to the CVS?  Thanks.
+
+Also I noticed you have some outdated files that are no longer used in
+the UIUCModel directory.  They are uiuc_initializemaps1.cpp,
+uiuc_initializemaps2.cpp, uiuc_initializemaps3.cpp, and
+uiuc_initializemaps4.cpp
+
+Rob
+
 Revision 1.4  2001/09/14 18:47:27  curt
 More changes in support of UIUCModel.
 
@@ -142,10 +158,11 @@ void ls_model( SCALAR dt, int Initialize ) {
     case UIUC:
       inertias( dt, Initialize );
       subsystems( dt, Initialize );
-      uiuc_aero( dt, Initialize );
-      uiuc_engine( dt, Initialize );
-      uiuc_gear( dt, Initialize );
-      uiuc_record(dt);
+      uiuc_aero_2_wrapper( dt, Initialize );
+      uiuc_engine_2_wrapper( dt, Initialize );
+      uiuc_gear_2_wrapper( dt, Initialize );
+      //uiuc_network_2_wrapper();
+      uiuc_record_2_wrapper(dt);
       break;
     }
 }

@@ -18,11 +18,13 @@
 ----------------------------------------------------------------------
  
  HISTORY:      06/03/2000   file creation
+               11/12/2001   (RD) Added flap_goal and flap_pos
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+	       Robert Deters      <rdeters@uiuc.edu>
  
 ----------------------------------------------------------------------
  
@@ -138,6 +140,8 @@ void uiuc_map_record3()
   record_map["Flap_handle"]       =      Flap_handle_record         ;
   record_map["flap"]              =      flap_record                ;
   record_map["flap_deg"  ]        =      flap_deg_record            ;
+  record_map["flap_goal"]         =      flap_goal_record           ;
+  record_map["flap_pos"]          =      flap_pos_record            ;
 }
 
 // end uiuc_map_record3.cpp

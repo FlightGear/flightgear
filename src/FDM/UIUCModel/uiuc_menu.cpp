@@ -56,6 +56,22 @@
 	                    P_body, Q_body, R_body, Phi, Theta, Psi,
 			    U_body, V_body, and W_body to help in
 			    starting the A/C at an initial condition.
+               10/25/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model at zero flaps
+			    (Cxfxxf0)
+               11/12/2001   (RD) Added new variables needed for the non-
+	                    linear Twin Otter model with flaps
+			    (Cxfxxf).  Removed zero flap variables.
+			    Added minmaxfind() which is needed for non-
+			    linear variables
+	       02/13/2002   (RD) Added variables so linear aero model
+	                    values can be recorded
+	       02/18/2002   (RD) Added variables necessary to use the
+	                    uiuc_3Dinterp_quick() function.  Takes
+			    advantage of data in a "nice" form (data
+			    that are in a rectangular matrix).
+	       03/13/2002   (RD) Added aircraft_directory so full path
+	                    is no longer needed in the aircraft.dat file
 
 ----------------------------------------------------------------------
 
@@ -136,9 +152,29 @@ bool check_float(string  &token)
   return (stream >> value);
 }
 
+void minmaxfind( bool tarray[30], int &tmin, int &tmax)
+{
+  int n=0;
+  bool first=true;
+
+  while (n<=30)
+    {
+      if (tarray[n])
+	{
+	  if (first)
+	    {
+	      tmin=n;
+	      first=false;
+	    }
+	  tmax=n;
+	}
+      n++;
+    }
+}
 
 void uiuc_menu( string aircraft_name )
 {
+  string aircraft_directory;
   stack command_list;
   double token_value;
   int token_value_recordRate;
@@ -150,7 +186,38 @@ void uiuc_menu( string aircraft_name )
   string linetoken4;
   string linetoken5;
   string linetoken6;
+  string linetoken7;
+  string linetoken8;
+  string linetoken9;
 
+  double datafile_xArray[100][100], datafile_yArray[100];
+  double datafile_zArray[100][100];
+  int datafile_nxArray[100], datafile_ny;
+
+  bool CXfabetaf_first = true;
+  bool CXfadef_first = true;
+  bool CXfaqf_first = true;
+  bool CZfabetaf_first = true;
+  bool CZfadef_first = true;
+  bool CZfaqf_first = true;
+  bool Cmfabetaf_first = true;
+  bool Cmfadef_first = true;
+  bool Cmfaqf_first = true;
+  bool CYfabetaf_first = true;
+  bool CYfadaf_first = true;
+  bool CYfadrf_first = true;
+  bool CYfapf_first = true;
+  bool CYfarf_first = true;
+  bool Clfabetaf_first = true;
+  bool Clfadaf_first = true;
+  bool Clfadrf_first = true;
+  bool Clfapf_first = true;
+  bool Clfarf_first = true;
+  bool Cnfabetaf_first = true;
+  bool Cnfadaf_first = true;
+  bool Cnfadrf_first = true;
+  bool Cnfapf_first = true;
+  bool Cnfarf_first = true;
 
   /* the following default setting should eventually be moved to a default or uiuc_init routine */
 
@@ -186,6 +253,11 @@ void uiuc_menu( string aircraft_name )
     exit(-1);
   }
   
+  cerr << "UIUC File " << aircraft_name <<" is being used" << endl;
+  aircraft_directory = aircraft_name;
+  int index_aircraft_dat = aircraft_directory.find("aircraft.dat");
+  aircraft_directory.erase(index_aircraft_dat,12);
+
   for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
     {
       cout << *command_line << endl;
@@ -196,11 +268,17 @@ void uiuc_menu( string aircraft_name )
       linetoken4 = airplane -> getToken (*command_line, 4); 
       linetoken5 = airplane -> getToken (*command_line, 5); 
       linetoken6 = airplane -> getToken (*command_line, 6); 
+      linetoken7 = airplane -> getToken (*command_line, 7);
+      linetoken8 = airplane -> getToken (*command_line, 8);
+      linetoken9 = airplane -> getToken (*command_line, 9);
       
       istrstream token3(linetoken3.c_str());
       istrstream token4(linetoken4.c_str());
       istrstream token5(linetoken5.c_str());
       istrstream token6(linetoken6.c_str());
+      istrstream token7(linetoken7.c_str());
+      istrstream token8(linetoken8.c_str());
+      istrstream token9(linetoken9.c_str());
 
       switch (Keyword_map[linetoken1])
         {
@@ -756,7 +834,7 @@ void uiuc_menu( string aircraft_name )
               case elevator_input_flag:
                 {
                   elevator_input = true;
-                  elevator_input_file = linetoken3;
+                  elevator_input_file = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -772,7 +850,7 @@ void uiuc_menu( string aircraft_name )
 	      case aileron_input_flag:
                 {
                   aileron_input = true;
-                  aileron_input_file = linetoken3;
+                  aileron_input_file = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -788,7 +866,7 @@ void uiuc_menu( string aircraft_name )
 	      case rudder_input_flag:
                 {
                   rudder_input = true;
-                  rudder_input_file = linetoken3;
+                  rudder_input_file = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -816,6 +894,26 @@ void uiuc_menu( string aircraft_name )
 		  pilot_rud_no_check = true;
 		  break;
 		}
+	      case flap_max_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  flap_max = token_value;
+                  break;
+                }
+	      case flap_rate_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  flap_rate = token_value;
+                  break;
+                }
               default:
                 {
                   uiuc_warnings_errors(2, *command_line);
@@ -935,7 +1033,7 @@ void uiuc_menu( string aircraft_name )
               case Throttle_pct_input_flag:
                 {
                   Throttle_pct_input = true;
-                  Throttle_pct_input_file = linetoken3;
+                  Throttle_pct_input_file = aircraft_directory + linetoken3;
 		  token4 >> token_value_convert1;
 		  token5 >> token_value_convert2;
 		  convert_y = uiuc_convert(token_value_convert1);
@@ -1047,7 +1145,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CDfa_flag:
                 {
-                  CDfa = linetoken3;
+                  CDfa = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1065,7 +1163,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CDfCL_flag:
                 {
-                  CDfCL = linetoken3;
+                  CDfCL = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1083,7 +1181,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CDfade_flag:
                 {
-                  CDfade = linetoken3;
+                  CDfade = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1107,7 +1205,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CDfdf_flag:
                 {
-                  CDfdf = linetoken3;
+                  CDfdf = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1125,7 +1223,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CDfadf_flag:
                 {
-                  CDfadf = linetoken3;
+                  CDfadf = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1279,6 +1377,162 @@ void uiuc_menu( string aircraft_name )
                   aeroDragParts -> storeCommands (*command_line);
                   break;
                 }
+	      case CXfabetaf_flag:
+		{
+		  int CXfabetaf_index, i;
+		  string CXfabetaf_file;
+		  double flap_value;
+		  CXfabetaf_file = aircraft_directory + linetoken3;
+		  token4 >> CXfabetaf_index;
+		  if (CXfabetaf_index < 1 || CXfabetaf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CXfabetaf_index > CXfabetaf_nf)
+		    CXfabetaf_nf = CXfabetaf_index;
+		  token5 >> flap_value;
+		  CXfabetaf_fArray[CXfabetaf_index] = flap_value;
+		  token6 >> token_value_convert1;
+		  token7 >> token_value_convert2;
+		  token8 >> token_value_convert3;
+		  token9 >> CXfabetaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+		  /* call 2D File Reader with file name (CXfabetaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CXfabetaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CXfabetaf_aArray[CXfabetaf_index]      = datafile_xArray;
+		  CXfabetaf_betaArray[CXfabetaf_index]   = datafile_yArray;
+		  CXfabetaf_CXArray[CXfabetaf_index]     = datafile_zArray;
+		  CXfabetaf_nAlphaArray[CXfabetaf_index] = datafile_nxArray;
+		  CXfabetaf_nbeta[CXfabetaf_index]       = datafile_ny;
+		  if (CXfabetaf_first==true)
+		    {
+		      if (CXfabetaf_nice == 1)
+			{
+			  CXfabetaf_na_nice = datafile_nxArray[1];
+			  CXfabetaf_nb_nice = datafile_ny;
+			  CXfabetaf_bArray_nice = datafile_yArray;
+			  for (i=1; i<=CXfabetaf_na_nice; i++)
+			    CXfabetaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroDragParts -> storeCommands (*command_line);
+		      CXfabetaf_first=false;
+		    }
+                  break;
+                }
+              case CXfadef_flag:
+                {
+		  int CXfadef_index, i;
+		  string CXfadef_file;
+		  double flap_value;
+		  CXfadef_file = aircraft_directory + linetoken3;
+		  token4 >> CXfadef_index;
+		  if (CXfadef_index < 0 || CXfadef_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CXfadef_index > CXfadef_nf)
+		    CXfadef_nf = CXfadef_index;
+		  token5 >> flap_value;
+		  CXfadef_fArray[CXfadef_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CXfadef_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CXfadef_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CXfadef_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CXfadef_aArray[CXfadef_index]      = datafile_xArray;
+		  CXfadef_deArray[CXfadef_index]     = datafile_yArray;
+		  CXfadef_CXArray[CXfadef_index]     = datafile_zArray;
+		  CXfadef_nAlphaArray[CXfadef_index] = datafile_nxArray;
+		  CXfadef_nde[CXfadef_index]         = datafile_ny;
+		  if (CXfadef_first==true)
+		    {
+		      if (CXfadef_nice == 1)
+			{
+			  CXfadef_na_nice = datafile_nxArray[1];
+			  CXfadef_nde_nice = datafile_ny;
+			  CXfadef_deArray_nice = datafile_yArray;
+			  for (i=1; i<=CXfadef_na_nice; i++)
+			    CXfadef_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroDragParts -> storeCommands (*command_line);
+		      CXfadef_first=false;
+		    }
+                  break;
+                }
+              case CXfaqf_flag:
+                {
+		  int CXfaqf_index, i;
+		  string CXfaqf_file;
+		  double flap_value;
+                  CXfaqf_file = aircraft_directory + linetoken3;
+		  token4 >> CXfaqf_index;
+		  if (CXfaqf_index < 0 || CXfaqf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CXfaqf_index > CXfaqf_nf)
+		    CXfaqf_nf = CXfaqf_index;
+		  token5 >> flap_value;
+		  CXfaqf_fArray[CXfaqf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CXfaqf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CXfaqf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CXfaqf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CXfaqf_aArray[CXfaqf_index]      = datafile_xArray;
+		  CXfaqf_qArray[CXfaqf_index]      = datafile_yArray;
+		  CXfaqf_CXArray[CXfaqf_index]     = datafile_zArray;
+		  CXfaqf_nAlphaArray[CXfaqf_index] = datafile_nxArray;
+		  CXfaqf_nq[CXfaqf_index]          = datafile_ny;
+		  if (CXfaqf_first==true)
+		    {
+		      if (CXfaqf_nice == 1)
+			{
+			  CXfaqf_na_nice = datafile_nxArray[1];
+			  CXfaqf_nq_nice = datafile_ny;
+			  CXfaqf_qArray_nice = datafile_yArray;
+			  for (i=1; i<=CXfaqf_na_nice; i++)
+			    CXfaqf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroDragParts -> storeCommands (*command_line);
+		      CXfaqf_first=false;
+		    }
+                  break;
+                }
               default:
                 {
                   uiuc_warnings_errors(2, *command_line);
@@ -1366,7 +1620,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CLfa_flag:
                 {
-                  CLfa = linetoken3;
+                  CLfa = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1384,7 +1638,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CLfade_flag:
                 {
-                  CLfade = linetoken3;
+                  CLfade = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1408,7 +1662,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CLfdf_flag:
                 {
-                  CLfdf = linetoken3;
+                  CLfdf = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1436,7 +1690,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CLfadf_flag:
                 {
-                  CLfadf = linetoken3;
+                  CLfadf = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1580,7 +1834,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CZfa_flag:
                 {
-                  CZfa = linetoken3;
+                  CZfa = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1594,6 +1848,162 @@ void uiuc_menu( string aircraft_name )
                                         CZfa_CZArray,
                                         CZfa_nAlpha);
                   aeroLiftParts -> storeCommands (*command_line);
+                  break;
+                }
+              case CZfabetaf_flag:
+                {
+		  int CZfabetaf_index, i;
+		  string CZfabetaf_file;
+		  double flap_value;
+                  CZfabetaf_file = aircraft_directory + linetoken3;
+		  token4 >> CZfabetaf_index;
+		  if (CZfabetaf_index < 0 || CZfabetaf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CZfabetaf_index > CZfabetaf_nf)
+		    CZfabetaf_nf = CZfabetaf_index;
+		  token5 >> flap_value;
+		  CZfabetaf_fArray[CZfabetaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CZfabetaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CZfabetaf_file) and 
+                     conversion factors; function returns array of 
+                     beta (betaArray) and corresponding 
+                     alpha (aArray) and CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and beta array (nbeta) */
+                  uiuc_2DdataFileReader(CZfabetaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CZfabetaf_aArray[CZfabetaf_index]      = datafile_xArray;
+		  CZfabetaf_betaArray[CZfabetaf_index]   = datafile_yArray;
+		  CZfabetaf_CZArray[CZfabetaf_index]     = datafile_zArray;
+		  CZfabetaf_nAlphaArray[CZfabetaf_index] = datafile_nxArray;
+		  CZfabetaf_nbeta[CZfabetaf_index]       = datafile_ny;
+		  if (CZfabetaf_first==true)
+		    {
+		      if (CZfabetaf_nice == 1)
+			{
+			  CZfabetaf_na_nice = datafile_nxArray[1];
+			  CZfabetaf_nb_nice = datafile_ny;
+			  CZfabetaf_bArray_nice = datafile_yArray;
+			  for (i=1; i<=CZfabetaf_na_nice; i++)
+			    CZfabetaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroLiftParts -> storeCommands (*command_line);
+		      CZfabetaf_first=false;
+		    }
+                  break;
+                }
+              case CZfadef_flag:
+                {
+		  int CZfadef_index, i;
+		  string CZfadef_file;
+		  double flap_value;
+                  CZfadef_file = aircraft_directory + linetoken3;
+		  token4 >> CZfadef_index;
+		  if (CZfadef_index < 0 || CZfadef_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CZfadef_index > CZfadef_nf)
+		    CZfadef_nf = CZfadef_index;
+		  token5 >> flap_value;
+		  CZfadef_fArray[CZfadef_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CZfadef_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CZfadef_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CZfadef_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CZfadef_aArray[CZfadef_index]      = datafile_xArray;
+		  CZfadef_deArray[CZfadef_index]     = datafile_yArray;
+		  CZfadef_CZArray[CZfadef_index]     = datafile_zArray;
+		  CZfadef_nAlphaArray[CZfadef_index] = datafile_nxArray;
+		  CZfadef_nde[CZfadef_index]         = datafile_ny;
+		  if (CZfadef_first==true)
+		    {
+		      if (CZfadef_nice == 1)
+			{
+			  CZfadef_na_nice = datafile_nxArray[1];
+			  CZfadef_nde_nice = datafile_ny;
+			  CZfadef_deArray_nice = datafile_yArray;
+			  for (i=1; i<=CZfadef_na_nice; i++)
+			    CZfadef_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroLiftParts -> storeCommands (*command_line);
+		      CZfadef_first=false;
+		    }
+                  break;
+                }
+              case CZfaqf_flag:
+                {
+		  int CZfaqf_index, i;
+		  string CZfaqf_file;
+		  double flap_value;
+                  CZfaqf_file = aircraft_directory + linetoken3;
+		  token4 >> CZfaqf_index;
+		  if (CZfaqf_index < 0 || CZfaqf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CZfaqf_index > CZfaqf_nf)
+		    CZfaqf_nf = CZfaqf_index;
+		  token5 >> flap_value;
+		  CZfaqf_fArray[CZfaqf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CZfaqf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CZfaqf_file) and 
+                     conversion factors; function returns array of 
+                     pitch rate (qArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and pitch rate array (nq) */
+                  uiuc_2DdataFileReader(CZfaqf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CZfaqf_aArray[CZfaqf_index]      = datafile_xArray;
+		  CZfaqf_qArray[CZfaqf_index]      = datafile_yArray;
+		  CZfaqf_CZArray[CZfaqf_index]     = datafile_zArray;
+		  CZfaqf_nAlphaArray[CZfaqf_index] = datafile_nxArray;
+		  CZfaqf_nq[CZfaqf_index]          = datafile_ny;
+		  if (CZfaqf_first==true)
+		    {
+		      if (CZfaqf_nice == 1)
+			{
+			  CZfaqf_na_nice = datafile_nxArray[1];
+			  CZfaqf_nq_nice = datafile_ny;
+			  CZfaqf_qArray_nice = datafile_yArray;
+			  for (i=1; i<=CZfaqf_na_nice; i++)
+			    CZfaqf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroLiftParts -> storeCommands (*command_line);
+		      CZfaqf_first=false;
+		    }
                   break;
                 }
               default:
@@ -1731,7 +2141,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Cmfa_flag:
                 {
-                  Cmfa = linetoken3;
+                  Cmfa = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1749,7 +2159,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Cmfade_flag:
                 {
-                  Cmfade = linetoken3;
+                  Cmfade = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1773,7 +2183,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Cmfdf_flag:
                 {
-                  Cmfdf = linetoken3;
+                  Cmfdf = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   convert_y = uiuc_convert(token_value_convert1);
@@ -1791,7 +2201,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Cmfadf_flag:
                 {
-                  Cmfadf = linetoken3;
+                  Cmfadf = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1811,6 +2221,162 @@ void uiuc_menu( string aircraft_name )
                                         Cmfadf_nAlphaArray,
                                         Cmfadf_ndf);
                   aeroPitchParts -> storeCommands (*command_line);
+                  break;
+                }
+              case Cmfabetaf_flag:
+                {
+		  int Cmfabetaf_index, i;
+		  string Cmfabetaf_file;
+		  double flap_value;
+                  Cmfabetaf_file = aircraft_directory + linetoken3;
+		  token4 >> Cmfabetaf_index;
+		  if (Cmfabetaf_index < 0 || Cmfabetaf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cmfabetaf_index > Cmfabetaf_nf)
+		    Cmfabetaf_nf = Cmfabetaf_index;
+		  token5 >> flap_value;
+		  Cmfabetaf_fArray[Cmfabetaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cmfabetaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cmfabetaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cmfabetaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Cmfabetaf_aArray[Cmfabetaf_index]      = datafile_xArray;
+		  Cmfabetaf_betaArray[Cmfabetaf_index]   = datafile_yArray;
+		  Cmfabetaf_CmArray[Cmfabetaf_index]     = datafile_zArray;
+		  Cmfabetaf_nAlphaArray[Cmfabetaf_index] = datafile_nxArray;
+		  Cmfabetaf_nbeta[Cmfabetaf_index]       = datafile_ny;
+		  if (Cmfabetaf_first==true)
+		    {
+		      if (Cmfabetaf_nice == 1)
+			{
+			  Cmfabetaf_na_nice = datafile_nxArray[1];
+			  Cmfabetaf_nb_nice = datafile_ny;
+			  Cmfabetaf_bArray_nice = datafile_yArray;
+			  for (i=1; i<=Cmfabetaf_na_nice; i++)
+			    Cmfabetaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroPitchParts -> storeCommands (*command_line);
+		      Cmfabetaf_first=false;
+		    }
+                  break;
+                }
+              case Cmfadef_flag:
+                {
+		  int Cmfadef_index, i;
+		  string Cmfadef_file;
+		  double flap_value;
+                  Cmfadef_file = aircraft_directory + linetoken3;
+		  token4 >> Cmfadef_index;
+		  if (Cmfadef_index < 0 || Cmfadef_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cmfadef_index > Cmfadef_nf)
+		    Cmfadef_nf = Cmfadef_index;
+		  token5 >> flap_value;
+		  Cmfadef_fArray[Cmfadef_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cmfadef_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cmfadef_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cmfadef_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Cmfadef_aArray[Cmfadef_index]      = datafile_xArray;
+		  Cmfadef_deArray[Cmfadef_index]     = datafile_yArray;
+		  Cmfadef_CmArray[Cmfadef_index]     = datafile_zArray;
+		  Cmfadef_nAlphaArray[Cmfadef_index] = datafile_nxArray;
+		  Cmfadef_nde[Cmfadef_index]         = datafile_ny;
+		  if (Cmfadef_first==true)
+		    {
+		      if (Cmfadef_nice == 1)
+			{
+			  Cmfadef_na_nice = datafile_nxArray[1];
+			  Cmfadef_nde_nice = datafile_ny;
+			  Cmfadef_deArray_nice = datafile_yArray;
+			  for (i=1; i<=Cmfadef_na_nice; i++)
+			    Cmfadef_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroPitchParts -> storeCommands (*command_line);
+		      Cmfadef_first=false;
+		    }
+                  break;
+                }
+              case Cmfaqf_flag:
+                {
+		  int Cmfaqf_index, i;
+		  string Cmfaqf_file;
+		  double flap_value;
+                  Cmfaqf_file = aircraft_directory + linetoken3;
+		  token4 >> Cmfaqf_index;
+		  if (Cmfaqf_index < 0 || Cmfaqf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cmfaqf_index > Cmfaqf_nf)
+		    Cmfaqf_nf = Cmfaqf_index;
+		  token5 >> flap_value;
+		  Cmfaqf_fArray[Cmfaqf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cmfaqf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cmfaqf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cmfaqf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Cmfaqf_aArray[Cmfaqf_index]      = datafile_xArray;
+		  Cmfaqf_qArray[Cmfaqf_index]      = datafile_yArray;
+		  Cmfaqf_CmArray[Cmfaqf_index]     = datafile_zArray;
+		  Cmfaqf_nAlphaArray[Cmfaqf_index] = datafile_nxArray;
+		  Cmfaqf_nq[Cmfaqf_index]          = datafile_ny;
+		  if (Cmfaqf_first==true)
+		    {
+		      if (Cmfaqf_nice == 1)
+			{
+			  Cmfaqf_na_nice = datafile_nxArray[1];
+			  Cmfaqf_nq_nice = datafile_ny;
+			  Cmfaqf_qArray_nice = datafile_yArray;
+			  for (i=1; i<=Cmfaqf_na_nice; i++)
+			    Cmfaqf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroPitchParts -> storeCommands (*command_line);
+		      Cmfaqf_first=false;
+		    }
                   break;
                 }
               default:
@@ -1925,7 +2491,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CYfada_flag:
                 {
-                  CYfada = linetoken3;
+                  CYfada = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1949,7 +2515,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case CYfbetadr_flag:
                 {
-                  CYfbetadr = linetoken3;
+                  CYfbetadr = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -1969,6 +2535,266 @@ void uiuc_menu( string aircraft_name )
                                         CYfbetadr_nBetaArray,
                                         CYfbetadr_ndr);
                   aeroSideforceParts -> storeCommands (*command_line);
+                  break;
+                }
+              case CYfabetaf_flag:
+                {
+		  int CYfabetaf_index, i;
+		  string CYfabetaf_file;
+		  double flap_value;
+                  CYfabetaf_file = aircraft_directory + linetoken3;
+		  token4 >> CYfabetaf_index;
+		  if (CYfabetaf_index < 0 || CYfabetaf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CYfabetaf_index > CYfabetaf_nf)
+		    CYfabetaf_nf = CYfabetaf_index;
+		  token5 >> flap_value;
+		  CYfabetaf_fArray[CYfabetaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CYfabetaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CYfabetaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CYfabetaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CYfabetaf_aArray[CYfabetaf_index]      = datafile_xArray;
+		  CYfabetaf_betaArray[CYfabetaf_index]   = datafile_yArray;
+		  CYfabetaf_CYArray[CYfabetaf_index]     = datafile_zArray;
+		  CYfabetaf_nAlphaArray[CYfabetaf_index] = datafile_nxArray;
+		  CYfabetaf_nbeta[CYfabetaf_index]       = datafile_ny;
+		  if (CYfabetaf_first==true)
+		    {
+		      if (CYfabetaf_nice == 1)
+			{
+			  CYfabetaf_na_nice = datafile_nxArray[1];
+			  CYfabetaf_nb_nice = datafile_ny;
+			  CYfabetaf_bArray_nice = datafile_yArray;
+			  for (i=1; i<=CYfabetaf_na_nice; i++)
+			    CYfabetaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroSideforceParts -> storeCommands (*command_line);
+		      CYfabetaf_first=false;
+		    }
+                  break;
+                }
+              case CYfadaf_flag:
+                {
+		  int CYfadaf_index, i;
+		  string CYfadaf_file;
+		  double flap_value;
+                  CYfadaf_file = aircraft_directory + linetoken3;
+		  token4 >> CYfadaf_index;
+		  if (CYfadaf_index < 0 || CYfadaf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CYfadaf_index > CYfadaf_nf)
+		    CYfadaf_nf = CYfadaf_index;
+		  token5 >> flap_value;
+		  CYfadaf_fArray[CYfadaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CYfadaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CYfadaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CYfadaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CYfadaf_aArray[CYfadaf_index]      = datafile_xArray;
+		  CYfadaf_daArray[CYfadaf_index]     = datafile_yArray;
+		  CYfadaf_CYArray[CYfadaf_index]     = datafile_zArray;
+		  CYfadaf_nAlphaArray[CYfadaf_index] = datafile_nxArray;
+		  CYfadaf_nda[CYfadaf_index]         = datafile_ny;
+		  if (CYfadaf_first==true)
+		    {
+		      if (CYfadaf_nice == 1)
+			{
+			  CYfadaf_na_nice = datafile_nxArray[1];
+			  CYfadaf_nda_nice = datafile_ny;
+			  CYfadaf_daArray_nice = datafile_yArray;
+			  for (i=1; i<=CYfadaf_na_nice; i++)
+			    CYfadaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroSideforceParts -> storeCommands (*command_line);
+		      CYfadaf_first=false;
+		    }
+                  break;
+                }
+              case CYfadrf_flag:
+                {
+		  int CYfadrf_index, i;
+		  string CYfadrf_file;
+		  double flap_value;
+                  CYfadrf_file = aircraft_directory + linetoken3;
+		  token4 >> CYfadrf_index;
+		  if (CYfadrf_index < 0 || CYfadrf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CYfadrf_index > CYfadrf_nf)
+		    CYfadrf_nf = CYfadrf_index;
+		  token5 >> flap_value;
+		  CYfadrf_fArray[CYfadrf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CYfadrf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CYfadrf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CYfadrf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CYfadrf_aArray[CYfadrf_index]      = datafile_xArray;
+		  CYfadrf_drArray[CYfadrf_index]     = datafile_yArray;
+		  CYfadrf_CYArray[CYfadrf_index]     = datafile_zArray;
+		  CYfadrf_nAlphaArray[CYfadrf_index] = datafile_nxArray;
+		  CYfadrf_ndr[CYfadrf_index]         = datafile_ny;
+		  if (CYfadrf_first==true)
+		    {
+		      if (CYfadrf_nice == 1)
+			{
+			  CYfadrf_na_nice = datafile_nxArray[1];
+			  CYfadrf_ndr_nice = datafile_ny;
+			  CYfadrf_drArray_nice = datafile_yArray;
+			  for (i=1; i<=CYfadrf_na_nice; i++)
+			    CYfadrf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroSideforceParts -> storeCommands (*command_line);
+		      CYfadrf_first=false;
+		    }
+                  break;
+                }
+              case CYfapf_flag:
+                {
+		  int CYfapf_index, i;
+		  string CYfapf_file;
+		  double flap_value;
+                  CYfapf_file = aircraft_directory + linetoken3;
+		  token4 >> CYfapf_index;
+		  if (CYfapf_index < 0 || CYfapf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CYfapf_index > CYfapf_nf)
+		    CYfapf_nf = CYfapf_index;
+		  token5 >> flap_value;
+		  CYfapf_fArray[CYfapf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CYfapf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CYfapf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CYfapf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CYfapf_aArray[CYfapf_index]      = datafile_xArray;
+		  CYfapf_pArray[CYfapf_index]      = datafile_yArray;
+		  CYfapf_CYArray[CYfapf_index]     = datafile_zArray;
+		  CYfapf_nAlphaArray[CYfapf_index] = datafile_nxArray;
+		  CYfapf_np[CYfapf_index]          = datafile_ny;
+		  if (CYfapf_first==true)
+		    {
+		      if (CYfapf_nice == 1)
+			{
+			  CYfapf_na_nice = datafile_nxArray[1];
+			  CYfapf_np_nice = datafile_ny;
+			  CYfapf_pArray_nice = datafile_yArray;
+			  for (i=1; i<=CYfapf_na_nice; i++)
+			    CYfapf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroSideforceParts -> storeCommands (*command_line);
+		      CYfapf_first=false;
+		    }
+                  break;
+                }
+              case CYfarf_flag:
+                {
+		  int CYfarf_index, i;
+		  string CYfarf_file;
+		  double flap_value;
+                  CYfarf_file = aircraft_directory + linetoken3;
+		  token4 >> CYfarf_index;
+		  if (CYfarf_index < 0 || CYfarf_index >= 30)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (CYfarf_index > CYfarf_nf)
+		    CYfarf_nf = CYfarf_index;
+		  token5 >> flap_value;
+		  CYfarf_fArray[CYfarf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> CYfarf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (CYfarf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(CYfarf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  CYfarf_aArray[CYfarf_index]      = datafile_xArray;
+		  CYfarf_rArray[CYfarf_index]      = datafile_yArray;
+		  CYfarf_CYArray[CYfarf_index]     = datafile_zArray;
+		  CYfarf_nAlphaArray[CYfarf_index] = datafile_nxArray;
+		  CYfarf_nr[CYfarf_index]          = datafile_ny;
+		  if (CYfarf_first==true)
+		    {
+		      if (CYfarf_nice == 1)
+			{
+			  CYfarf_na_nice = datafile_nxArray[1];
+			  CYfarf_nr_nice = datafile_ny;
+			  CYfarf_rArray_nice = datafile_yArray;
+			  for (i=1; i<=CYfarf_na_nice; i++)
+			    CYfarf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroSideforceParts -> storeCommands (*command_line);
+		      CYfarf_first=false;
+		    }
                   break;
                 }
               default:
@@ -2071,7 +2897,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Clfada_flag:
                 {
-                  Clfada = linetoken3;
+                  Clfada = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -2095,7 +2921,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Clfbetadr_flag:
                 {
-                  Clfbetadr = linetoken3;
+                  Clfbetadr = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -2117,10 +2943,270 @@ void uiuc_menu( string aircraft_name )
                   aeroRollParts -> storeCommands (*command_line);
                   break;
                 }
+              case Clfabetaf_flag:
+                {
+		  int Clfabetaf_index, i;
+		  string Clfabetaf_file;
+		  double flap_value;
+                  Clfabetaf_file = aircraft_directory + linetoken3;
+		  token4 >> Clfabetaf_index;
+		  if (Clfabetaf_index < 0 || Clfabetaf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Clfabetaf_index > Clfabetaf_nf)
+		    Clfabetaf_nf = Clfabetaf_index;
+		  token5 >> flap_value;
+		  Clfabetaf_fArray[Clfabetaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Clfabetaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Clfabetaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Clfabetaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Clfabetaf_aArray[Clfabetaf_index]      = datafile_xArray;
+		  Clfabetaf_betaArray[Clfabetaf_index]   = datafile_yArray;
+		  Clfabetaf_ClArray[Clfabetaf_index]     = datafile_zArray;
+		  Clfabetaf_nAlphaArray[Clfabetaf_index] = datafile_nxArray;
+		  Clfabetaf_nbeta[Clfabetaf_index]       = datafile_ny;
+		  if (Clfabetaf_first==true)
+		    {
+		      if (Clfabetaf_nice == 1)
+			{
+			  Clfabetaf_na_nice = datafile_nxArray[1];
+			  Clfabetaf_nb_nice = datafile_ny;
+			  Clfabetaf_bArray_nice = datafile_yArray;
+			  for (i=1; i<=Clfabetaf_na_nice; i++)
+			    Clfabetaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroRollParts -> storeCommands (*command_line);
+		      Clfabetaf_first=false;
+		    }
+                  break;
+                }
+              case Clfadaf_flag:
+                {
+		  int Clfadaf_index, i;
+		  string Clfadaf_file;
+		  double flap_value;
+                  Clfadaf_file = aircraft_directory + linetoken3;
+		  token4 >> Clfadaf_index;
+		  if (Clfadaf_index < 0 || Clfadaf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Clfadaf_index > Clfadaf_nf)
+		    Clfadaf_nf = Clfadaf_index;
+		  token5 >> flap_value;
+		  Clfadaf_fArray[Clfadaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Clfadaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Clfadaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Clfadaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Clfadaf_aArray[Clfadaf_index]      = datafile_xArray;
+		  Clfadaf_daArray[Clfadaf_index]     = datafile_yArray;
+		  Clfadaf_ClArray[Clfadaf_index]     = datafile_zArray;
+		  Clfadaf_nAlphaArray[Clfadaf_index] = datafile_nxArray;
+		  Clfadaf_nda[Clfadaf_index]         = datafile_ny;
+		  if (Clfadaf_first==true)
+		    {
+		      if (Clfadaf_nice == 1)
+			{
+			  Clfadaf_na_nice = datafile_nxArray[1];
+			  Clfadaf_nda_nice = datafile_ny;
+			  Clfadaf_daArray_nice = datafile_yArray;
+			  for (i=1; i<=Clfadaf_na_nice; i++)
+			    Clfadaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroRollParts -> storeCommands (*command_line);
+		      Clfadaf_first=false;
+		    }
+                  break;
+                }
+              case Clfadrf_flag:
+                {
+		  int Clfadrf_index, i;
+		  string Clfadrf_file;
+		  double flap_value;
+                  Clfadrf_file = aircraft_directory + linetoken3;
+		  token4 >> Clfadrf_index;
+		  if (Clfadrf_index < 0 || Clfadrf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Clfadrf_index > Clfadrf_nf)
+		    Clfadrf_nf = Clfadrf_index;
+		  token5 >> flap_value;
+		  Clfadrf_fArray[Clfadrf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Clfadrf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Clfadrf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Clfadrf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Clfadrf_aArray[Clfadrf_index]      = datafile_xArray;
+		  Clfadrf_drArray[Clfadrf_index]     = datafile_yArray;
+		  Clfadrf_ClArray[Clfadrf_index]     = datafile_zArray;
+		  Clfadrf_nAlphaArray[Clfadrf_index] = datafile_nxArray;
+		  Clfadrf_ndr[Clfadrf_index]         = datafile_ny;
+		  if (Clfadrf_first==true)
+		    {
+		      if (Clfadrf_nice == 1)
+			{
+			  Clfadrf_na_nice = datafile_nxArray[1];
+			  Clfadrf_ndr_nice = datafile_ny;
+			  Clfadrf_drArray_nice = datafile_yArray;
+			  for (i=1; i<=Clfadrf_na_nice; i++)
+			    Clfadrf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroRollParts -> storeCommands (*command_line);
+		      Clfadrf_first=false;
+		    }
+                  break;
+                }
+              case Clfapf_flag:
+                {
+		  int Clfapf_index, i;
+		  string Clfapf_file;
+		  double flap_value;
+                  Clfapf_file = aircraft_directory + linetoken3;
+		  token4 >> Clfapf_index;
+		  if (Clfapf_index < 0 || Clfapf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Clfapf_index > Clfapf_nf)
+		    Clfapf_nf = Clfapf_index;
+		  token5 >> flap_value;
+		  Clfapf_fArray[Clfapf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Clfapf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Clfapf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Clfapf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Clfapf_aArray[Clfapf_index]      = datafile_xArray;
+		  Clfapf_pArray[Clfapf_index]      = datafile_yArray;
+		  Clfapf_ClArray[Clfapf_index]     = datafile_zArray;
+		  Clfapf_nAlphaArray[Clfapf_index] = datafile_nxArray;
+		  Clfapf_np[Clfapf_index]          = datafile_ny;
+		  if (Clfapf_first==true)
+		    {
+		      if (Clfapf_nice == 1)
+			{
+			  Clfapf_na_nice = datafile_nxArray[1];
+			  Clfapf_np_nice = datafile_ny;
+			  Clfapf_pArray_nice = datafile_yArray;
+			  for (i=1; i<=Clfapf_na_nice; i++)
+			    Clfapf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroRollParts -> storeCommands (*command_line);
+		      Clfapf_first=false;
+		    }
+                  break;
+                }
+              case Clfarf_flag:
+                {
+		  int Clfarf_index, i;
+		  string Clfarf_file;
+		  double flap_value;
+                  Clfarf_file = aircraft_directory + linetoken3;
+		  token4 >> Clfarf_index;
+		  if (Clfarf_index < 0 || Clfarf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Clfarf_index > Clfarf_nf)
+		    Clfarf_nf = Clfarf_index;
+		  token5 >> flap_value;
+		  Clfarf_fArray[Clfarf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Clfarf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Clfarf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Clfarf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Clfarf_aArray[Clfarf_index]      = datafile_xArray;
+		  Clfarf_rArray[Clfarf_index]      = datafile_yArray;
+		  Clfarf_ClArray[Clfarf_index]     = datafile_zArray;
+		  Clfarf_nAlphaArray[Clfarf_index] = datafile_nxArray;
+		  Clfarf_nr[Clfarf_index]          = datafile_ny;
+		  if (Clfarf_first==true)
+		    {
+		      if (Clfarf_nice == 1)
+			{
+			  Clfarf_na_nice = datafile_nxArray[1];
+			  Clfarf_nr_nice = datafile_ny;
+			  Clfarf_rArray_nice = datafile_yArray;
+			  for (i=1; i<=Clfarf_na_nice; i++)
+			    Clfarf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroRollParts -> storeCommands (*command_line);
+		      Clfarf_first=false;
+		    }
+                  break;
+                }
               default:
                 {
                   uiuc_warnings_errors(2, *command_line);
-          break;
+		  break;
                 }
               };
             break;
@@ -2229,7 +3315,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Cnfada_flag:
                 {
-                  Cnfada = linetoken3;
+                  Cnfada = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -2253,7 +3339,7 @@ void uiuc_menu( string aircraft_name )
                 }
               case Cnfbetadr_flag:
                 {
-                  Cnfbetadr = linetoken3;
+                  Cnfbetadr = aircraft_directory + linetoken3;
                   token4 >> token_value_convert1;
                   token5 >> token_value_convert2;
                   token6 >> token_value_convert3;
@@ -2273,6 +3359,266 @@ void uiuc_menu( string aircraft_name )
                                         Cnfbetadr_nBetaArray,
                                         Cnfbetadr_ndr);
                   aeroYawParts -> storeCommands (*command_line);
+                  break;
+                }
+              case Cnfabetaf_flag:
+                {
+		  int Cnfabetaf_index, i;
+		  string Cnfabetaf_file;
+		  double flap_value;
+                  Cnfabetaf_file = aircraft_directory + linetoken3;
+		  token4 >> Cnfabetaf_index;
+		  if (Cnfabetaf_index < 0 || Cnfabetaf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cnfabetaf_index > Cnfabetaf_nf)
+		    Cnfabetaf_nf = Cnfabetaf_index;
+		  token5 >> flap_value;
+		  Cnfabetaf_fArray[Cnfabetaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cnfabetaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cnfabetaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cnfabetaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Cnfabetaf_aArray[Cnfabetaf_index]      = datafile_xArray;
+		  Cnfabetaf_betaArray[Cnfabetaf_index]   = datafile_yArray;
+		  Cnfabetaf_CnArray[Cnfabetaf_index]     = datafile_zArray;
+		  Cnfabetaf_nAlphaArray[Cnfabetaf_index] = datafile_nxArray;
+		  Cnfabetaf_nbeta[Cnfabetaf_index]       = datafile_ny;
+		  if (Cnfabetaf_first==true)
+		    {
+		      if (Cnfabetaf_nice == 1)
+			{
+			  Cnfabetaf_na_nice = datafile_nxArray[1];
+			  Cnfabetaf_nb_nice = datafile_ny;
+			  Cnfabetaf_bArray_nice = datafile_yArray;
+			  for (i=1; i<=Cnfabetaf_na_nice; i++)
+			    Cnfabetaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroYawParts -> storeCommands (*command_line);
+		      Cnfabetaf_first=false;
+		    }
+                  break;
+                }
+              case Cnfadaf_flag:
+                {
+		  int Cnfadaf_index, i;
+		  string Cnfadaf_file;
+		  double flap_value;
+                  Cnfadaf_file = aircraft_directory + linetoken3;
+		  token4 >> Cnfadaf_index;
+		  if (Cnfadaf_index < 0 || Cnfadaf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cnfadaf_index > Cnfadaf_nf)
+		    Cnfadaf_nf = Cnfadaf_index;
+		  token5 >> flap_value;
+		  Cnfadaf_fArray[Cnfadaf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cnfadaf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cnfadaf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cnfadaf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Cnfadaf_aArray[Cnfadaf_index]      = datafile_xArray;
+		  Cnfadaf_daArray[Cnfadaf_index]     = datafile_yArray;
+		  Cnfadaf_CnArray[Cnfadaf_index]     = datafile_zArray;
+		  Cnfadaf_nAlphaArray[Cnfadaf_index] = datafile_nxArray;
+		  Cnfadaf_nda[Cnfadaf_index]         = datafile_ny;
+		  if (Cnfadaf_first==true)
+		    {
+		      if (Cnfadaf_nice == 1)
+			{
+			  Cnfadaf_na_nice = datafile_nxArray[1];
+			  Cnfadaf_nda_nice = datafile_ny;
+			  Cnfadaf_daArray_nice = datafile_yArray;
+			  for (i=1; i<=Cnfadaf_na_nice; i++)
+			    Cnfadaf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroYawParts -> storeCommands (*command_line);
+		      Cnfadaf_first=false;
+		    }
+                  break;
+                }
+              case Cnfadrf_flag:
+                {
+		  int Cnfadrf_index, i;
+		  string Cnfadrf_file;
+		  double flap_value;
+                  Cnfadrf_file = aircraft_directory + linetoken3;
+		  token4 >> Cnfadrf_index;
+		  if (Cnfadrf_index < 0 || Cnfadrf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cnfadrf_index > Cnfadrf_nf)
+		    Cnfadrf_nf = Cnfadrf_index;
+		  token5 >> flap_value;
+		  Cnfadrf_fArray[Cnfadrf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cnfadrf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cnfadrf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cnfadrf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Cnfadrf_aArray[Cnfadrf_index]      = datafile_xArray;
+		  Cnfadrf_drArray[Cnfadrf_index]     = datafile_yArray;
+		  Cnfadrf_CnArray[Cnfadrf_index]     = datafile_zArray;
+		  Cnfadrf_nAlphaArray[Cnfadrf_index] = datafile_nxArray;
+		  Cnfadrf_ndr[Cnfadrf_index]         = datafile_ny;
+		  if (Cnfadrf_first==true)
+		    {
+		      if (Cnfadrf_nice == 1)
+			{
+			  Cnfadrf_na_nice = datafile_nxArray[1];
+			  Cnfadrf_ndr_nice = datafile_ny;
+			  Cnfadrf_drArray_nice = datafile_yArray;
+			  for (i=1; i<=Cnfadrf_na_nice; i++)
+			    Cnfadrf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroYawParts -> storeCommands (*command_line);
+		      Cnfadrf_first=false;
+		    }
+                  break;
+                }
+              case Cnfapf_flag:
+                {
+		  int Cnfapf_index, i;
+		  string Cnfapf_file;
+		  double flap_value;
+                  Cnfapf_file = aircraft_directory + linetoken3;
+		  token4 >> Cnfapf_index;
+		  if (Cnfapf_index < 0 || Cnfapf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cnfapf_index > Cnfapf_nf)
+		    Cnfapf_nf = Cnfapf_index;
+		  token5 >> flap_value;
+		  Cnfapf_fArray[Cnfapf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cnfapf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cnfapf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cnfapf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+                                        datafile_ny);
+		  Cnfapf_aArray[Cnfapf_index]      = datafile_xArray;
+		  Cnfapf_pArray[Cnfapf_index]      = datafile_yArray;
+		  Cnfapf_CnArray[Cnfapf_index]     = datafile_zArray;
+		  Cnfapf_nAlphaArray[Cnfapf_index] = datafile_nxArray;
+		  Cnfapf_np[Cnfapf_index]          = datafile_ny;
+		  if (Cnfapf_first==true)
+		    {
+		      if (Cnfapf_nice == 1)
+			{
+			  Cnfapf_na_nice = datafile_nxArray[1];
+			  Cnfapf_np_nice = datafile_ny;
+			  Cnfapf_pArray_nice = datafile_yArray;
+			  for (i=1; i<=Cnfapf_na_nice; i++)
+			    Cnfapf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroYawParts -> storeCommands (*command_line);
+		      Cnfapf_first=false;
+		    }
+                  break;
+                }
+              case Cnfarf_flag:
+                {
+		  int Cnfarf_index, i;
+		  string Cnfarf_file;
+		  double flap_value;
+                  Cnfarf_file = aircraft_directory + linetoken3;
+		  token4 >> Cnfarf_index;
+		  if (Cnfarf_index < 0 || Cnfarf_index >= 100)
+		    uiuc_warnings_errors(1, *command_line);
+		  if (Cnfarf_index > Cnfarf_nf)
+		    Cnfarf_nf = Cnfarf_index;
+		  token5 >> flap_value;
+		  Cnfarf_fArray[Cnfarf_index] = flap_value;
+                  token6 >> token_value_convert1;
+                  token7 >> token_value_convert2;
+                  token8 >> token_value_convert3;
+		  token9 >> Cnfarf_nice;
+                  convert_z = uiuc_convert(token_value_convert1);
+                  convert_x = uiuc_convert(token_value_convert2);
+                  convert_y = uiuc_convert(token_value_convert3);
+                  /* call 2D File Reader with file name (Cnfarf_file) and 
+                     conversion factors; function returns array of 
+                     elevator deflections (deArray) and corresponding 
+                     alpha (aArray) and delta CZ (CZArray) values and 
+                     max number of terms in alpha arrays (nAlphaArray) 
+                     and delfection array (nde) */
+                  uiuc_2DdataFileReader(Cnfarf_file,
+                                        datafile_xArray,
+                                        datafile_yArray,
+                                        datafile_zArray,
+                                        datafile_nxArray,
+					datafile_ny);
+		  Cnfarf_aArray[Cnfarf_index]      = datafile_xArray;
+		  Cnfarf_rArray[Cnfarf_index]      = datafile_yArray;
+		  Cnfarf_CnArray[Cnfarf_index]     = datafile_zArray;
+		  Cnfarf_nAlphaArray[Cnfarf_index] = datafile_nxArray;
+		  Cnfarf_nr[Cnfarf_index]          = datafile_ny;
+		  if (Cnfarf_first==true)
+		    {
+		      if (Cnfarf_nice == 1)
+			{
+			  Cnfarf_na_nice = datafile_nxArray[1];
+			  Cnfarf_nr_nice = datafile_ny;
+			  Cnfarf_rArray_nice = datafile_yArray;
+			  for (i=1; i<=Cnfarf_na_nice; i++)
+			    Cnfarf_aArray_nice[i] = datafile_xArray[1][i];
+			}
+		      aeroYawParts -> storeCommands (*command_line);
+		      Cnfarf_first=false;
+		    }
                   break;
                 }
               default:
@@ -3894,6 +5240,16 @@ void uiuc_menu( string aircraft_name )
                   recordParts -> storeCommands (*command_line);
                   break;
                 }
+              case flap_goal_record:
+                {
+                  recordParts -> storeCommands (*command_line);
+                  break;
+                }
+              case flap_pos_record:
+                {
+                  recordParts -> storeCommands (*command_line);
+                  break;
+                }
 
                 /****************** Aero Coefficients ******************/
               case CD_record:
@@ -3926,6 +5282,111 @@ void uiuc_menu( string aircraft_name )
                   recordParts -> storeCommands (*command_line);
                   break;
                 }
+	      case CXfabetafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CXfadefI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CXfaqfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CDo_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CDK_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CD_a_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CD_adot_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CD_q_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CD_ih_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CD_de_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CXo_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CXK_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_a_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_a2_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_a3_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_adot_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_q_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_de_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_dr_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_df_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CX_adf_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
               case CL_record:
                 {
                   recordParts -> storeCommands (*command_line);
@@ -3956,6 +5417,106 @@ void uiuc_menu( string aircraft_name )
                   recordParts -> storeCommands (*command_line);
                   break;
                 }
+	      case CZfaI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZfabetafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZfadefI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZfaqfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CLo_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CL_a_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CL_adot_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CL_q_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CL_ih_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CL_de_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZo_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_a_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_a2_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_a3_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_adot_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_q_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_de_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_deb2_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_df_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CZ_adf_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
               case Cm_record:
                 {
                   recordParts -> storeCommands (*command_line);
@@ -3981,6 +5542,71 @@ void uiuc_menu( string aircraft_name )
                   recordParts -> storeCommands (*command_line);
                   break;
                 }
+	      case CmfabetafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CmfadefI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CmfaqfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cmo_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_a_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_a2_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_adot_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_q_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_ih_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_de_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_b2_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_r_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cm_df_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
               case CY_record:
                 {
                   recordParts -> storeCommands (*command_line);
@@ -3996,6 +5622,71 @@ void uiuc_menu( string aircraft_name )
                   recordParts -> storeCommands (*command_line);
                   break;
                 }
+	      case CYfabetafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CYfadafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CYfadrfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CYfapfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CYfarfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CYo_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CY_beta_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CY_p_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CY_r_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CY_da_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CY_dr_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CY_dra_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CY_bdot_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
               case Cl_record:
                 {
                   recordParts -> storeCommands (*command_line);
@@ -4011,6 +5702,66 @@ void uiuc_menu( string aircraft_name )
                   recordParts -> storeCommands (*command_line);
                   break;
                 }
+	      case ClfabetafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case ClfadafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case ClfadrfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case ClfapfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case ClfarfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Clo_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cl_beta_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cl_p_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cl_r_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cl_da_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cl_dr_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cl_daa_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
               case Cn_record:
                 {
                   recordParts -> storeCommands (*command_line);
@@ -4026,6 +5777,71 @@ void uiuc_menu( string aircraft_name )
                   recordParts -> storeCommands (*command_line);
                   break;
                 }
+	      case CnfabetafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CnfadafI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CnfadrfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CnfapfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case CnfarfI_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cno_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cn_beta_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cn_p_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cn_r_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cn_da_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cn_dr_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cn_q_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
+	      case Cn_b3_save_record:
+		{
+		  recordParts -> storeCommands (*command_line);
+		  break;
+		}
 
                 /******************** Ice Detection ********************/
               case CLclean_wing_record:
