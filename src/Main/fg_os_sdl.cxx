@@ -18,6 +18,7 @@ static fgMouseMotionHandler MouseMotionHandler = 0;
 static int CurrentModifiers = 0;
 static int CurrentMouseX = 0;
 static int CurrentMouseY = 0;
+static int CurrentMouseCursor = MOUSE_CURSOR_POINTER;
 static bool NeedRedraw = false;
 
 void fgRegisterIdleHandler(fgIdleHandler func)
@@ -54,6 +55,7 @@ void fgRegisterMouseMotionHandler(fgMouseMotionHandler func)
 //
 // fg_os implementation
 //
+static void initCursors();
 
 void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool fullscreen)
 {
@@ -81,6 +83,9 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool fullscreen)
     // we may want to port the input maps to specify <mod-shift>
     // explicitly, and will turn this off.
     SDL_EnableUNICODE(1);
+
+    initCursors();
+    fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 
     // FIXME: we may not get what we asked for (especially in full
     // screen modes), so these need to be propagated back to the
@@ -205,6 +210,129 @@ void fgOSFullScreen()
     // change modes.
 }
 
-// Figure out what to do with these
-void fgSetMouseCursor(int cursor) {}
-int  fgGetMouseCursor() { return MOUSE_CURSOR_POINTER; }
+static struct cursor_rec {
+    int name;
+    SDL_Cursor* sdlCursor;
+    int w;
+    int h;
+    int hotx;
+    int hoty;
+    char *img[32]; // '.' == white, '#' == black, ' ' == transparent
+} cursors[] = {
+    { MOUSE_CURSOR_POINTER, 0, // must be first!
+      10, 16, 1, 1,
+      { "..        ",
+        ".#.       ",
+        ".##.      ",
+        ".###.     ",
+        ".####.    ",
+        ".#####.   ",
+        ".######.  ",
+        ".#######. ",
+        ".########.",
+        ".#####....",
+        ".##.##.   ",
+        ".#. .##.  ",
+        "..  .##.  ",
+        "     .##. ",
+        "     .##. ",
+        "      ..  " } },
+    { MOUSE_CURSOR_CROSSHAIR, 0,
+      17, 17, 8, 8,
+      { "       ...       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "........#........",
+        ".#######.#######.",
+        "........#........",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       .#.       ",
+        "       ...       " } },
+    { MOUSE_CURSOR_WAIT, 0,
+      16, 16, 7, 7,
+      { "  .########.    ",
+        "  .########.    ",
+        "  .########.    ",
+        " .##########.   ",
+        ".##....#...##.  ",
+        "##.....#....##..",
+        "#......#.....###",
+        "#.....###....###",
+        "#.....###....###",
+        "#....#.......###",
+        "##..#.......##..",
+        ".##........##.  ",
+        " .##########.   ",
+        "  .########.    ",
+        "  .########.    ",
+        "  .########.    " } },
+    { MOUSE_CURSOR_LEFTRIGHT, 0,
+      17, 9, 8, 4,
+      { "    ..     ..    ",
+        "   .#.     .#.   ",
+        "  .##.......##.  ",
+        " .#############. ",
+        ".####.......####.",
+        " .#############. ",
+        "  .##.......##.  ",
+        "   .#.     .#.   ",
+        "    ..     ..    " } },
+    { MOUSE_CURSOR_NONE, 0, // must come last!
+      1, 1, 0, 0, { " " } },
+};
+
+#define NCURSORS (sizeof(cursors)/sizeof(struct cursor_rec))
+
+void fgSetMouseCursor(int cursor)
+{
+    if(cursor == MOUSE_CURSOR_NONE) {
+        SDL_ShowCursor(SDL_DISABLE);
+        return;
+    }
+    SDL_ShowCursor(SDL_ENABLE);
+    for(int i=0; i<NCURSORS; i++) {
+        if(cursor == cursors[i].name) {
+            CurrentMouseCursor = cursor;
+            SDL_SetCursor(cursors[i].sdlCursor);
+            return;
+        }
+    }
+    // Default to pointer
+    CurrentMouseCursor = MOUSE_CURSOR_POINTER;
+    SDL_SetCursor(cursors[0].sdlCursor);
+}
+
+int fgGetMouseCursor()
+{
+    return CurrentMouseCursor;
+}
+
+static void initCursors()
+{
+    unsigned char mask[128], img[128];
+    int i=0;
+    for(int i=0; i<NCURSORS; i++) {
+        if(cursors[i].name == MOUSE_CURSOR_NONE) break;
+        for(int j=0; j<128; j++) mask[j] = img[j] = 0;
+        for(int y=0; y<cursors[i].h; y++) {
+            for(int x=0; x<cursors[i].w; x++) {
+                int byte = (4 * y) + (x >> 3);
+                int bit = 1 << (7 - (x & 7));
+                int pix = cursors[i].img[y][x];
+                if(pix != ' ') { mask[byte] |= bit; }
+                if(pix == '#') { img[byte] |= bit; }
+            }
+        }
+        cursors[i].sdlCursor = SDL_CreateCursor(img, mask, 32, 32, 
+                                                cursors[i].hotx,
+                                                cursors[i].hoty);
+    }
+}
