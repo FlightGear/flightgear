@@ -37,6 +37,8 @@
 
 #include <Input/input.hxx>
 
+#include "keyboard.hxx"
+
 
 /**
  * Construct the modifiers.
@@ -58,7 +60,7 @@ static inline int get_mods ()
 
 
 /**
- * Keyboard event handler for Glut.
+ * Key-down event handler for Glut.
  *
  * <p>Pass the value on to the FGInput module unless PUI wants it.</p>
  *
@@ -70,16 +72,27 @@ void GLUTkey(unsigned char k, int x, int y)
 {
 				// Give PUI a chance to grab it first.
   if (!puKeyboard(k, PU_DOWN))
-				// This is problematic; it allows
-				// (say) P and [SHIFT]P to be
-				// distinguished, but is that a good
-				// idea?
     current_input.doKey(k, get_mods(), x, y);
 }
 
 
 /**
- * Special key handler for Glut.
+ * Key-up event handler for GLUT.
+ *
+ * <p>PUI doesn't use this, so always pass it to the input manager.</p>
+ *
+ * @param k The integer value for the key pressed.
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTkeyup(unsigned char k, int x, int y)
+{
+  current_input.doKey(k, get_mods()|FGInput::FG_MOD_UP, x, y);
+}
+
+
+/**
+ * Special key-down handler for Glut.
  *
  * <p>Pass the value on to the FGInput module unless PUI wants it.
  * The key value will have 256 added to it.</p>
@@ -94,6 +107,20 @@ void GLUTspecialkey(int k, int x, int y)
 				// Give PUI a chance to grab it first.
   if (!puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN))
     current_input.doKey(k + 256, get_mods(), x, y);
+}
+
+
+/**
+ * Special key-up handler for Glut.
+ *
+ * @param k The integer value for the key pressed (will have 256 added
+ * to it).
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTspecialkeyup(int k, int x, int y)
+{
+  current_input.doKey(k + 256, get_mods()|FGInput::FG_MOD_UP, x, y);
 }
 
 
