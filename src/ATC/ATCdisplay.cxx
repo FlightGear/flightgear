@@ -145,14 +145,14 @@ void FGATCDisplay::update(double dt) {
 						guiFnt.drawString( m.msg.c_str(),
 						int(iwidth - 10 - m.dsp_offset),
 						(iheight - 40) );
-						++m.counter;
+						m.counter += dt;
 						m.dsp_offset += (80.0/fps);
 						msgList[i] = m;
 						++msgList_itr;
 						++i;
 					} else {
 						//cout << "Not yet started single message\n";
-						++m.counter;
+						m.counter += dt;
 						msgList[i] = m;
 						++msgList_itr;
 						++i;
@@ -172,12 +172,12 @@ void FGATCDisplay::update(double dt) {
 						(iwidth - (m.msg.size() * 8))/2,
 						//iwidth/2,
 						(iheight - 40) );	// TODO - relate the distance in that the string is rendered to the string length.
-						++m.counter;
+						m.counter += dt;
 						msgList[i] = m;
 						++msgList_itr;
 						++i;
 					} else {
-						++m.counter;
+						m.counter += dt;
 						msgList[i] = m;
 						++msgList_itr;
 						++i;
@@ -194,13 +194,13 @@ void FGATCDisplay::update(double dt) {
 	}
 }
 
-void FGATCDisplay::RegisterSingleMessage(string msg, int delay) {
+void FGATCDisplay::RegisterSingleMessage(string msg, double delay) {
 	atcMessage m;
 	m.msg = msg;
 	m.repeating = false;
-	m.counter = 0;
-	m.start_count = delay * 30;		// Fixme - need to use actual FPS
-	m.stop_count = m.start_count + 400;		// Display for 3 - 5 seconds for now - this might have to change eg. be related to length of message in future
+	m.counter = 0.0;
+	m.start_count = delay;
+	m.stop_count = m.start_count + 5.0;		// Display for 5ish seconds for now - this might have to change eg. be related to length of message in future
 	//cout << "m.stop_count = " << m.stop_count << '\n';
 	m.id = 0;
 	m.dsp_offset = 0.0;

@@ -38,9 +38,9 @@ SG_USING_STD(string);
 struct atcMessage {
     string msg;
     bool repeating;
-    int counter;	// count of how many iterations since posting
-    int start_count;	// value of counter at which display should start
-    int stop_count;	// value of counter at which display should stop
+    double counter;		// count of how many seconds since the message was registered
+    double start_count;	// value of counter at which display should start (seconds)
+    double stop_count;	// value of counter at which display should stop (seconds)
     int id;
 	double dsp_offset;
 };
@@ -76,7 +76,7 @@ public:
 
     // Register a single message for display after a delay of delay seconds
     // Will automatically stop displaying after a suitable interval.
-    void RegisterSingleMessage(string msg, int delay);	// OK - I know passing a string in and out is probably not good but it will have to do for now.
+    void RegisterSingleMessage(string msg, double delay);	// OK - I know passing a string in and out is probably not good but it will have to do for now.
 
     // For now we will assume only one repeating message at once
     // This is not really robust
