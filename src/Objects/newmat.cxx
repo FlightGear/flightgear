@@ -150,8 +150,6 @@ FGNewMat::Object::get_model_count () const
 inline void
 FGNewMat::Object::load_models () const
 {
-  cout << "loading ground cover objects:" << endl;
-
 				// Load model only on demand
   if (!_models_loaded) {
     for (unsigned int i = 0; i < _paths.size(); i++) {
@@ -159,7 +157,6 @@ FGNewMat::Object::load_models () const
       path.append(_paths[i]);
       ssgTexturePath((char *)path.dir().c_str());
       ssgEntity * entity = load_object((char *)path.c_str());
-      cout << "  " << path.str() << endl;
       if (entity != 0) {
 	float ranges[] = {0, _range_m};
 	ssgRangeSelector * lod = new ssgRangeSelector;
