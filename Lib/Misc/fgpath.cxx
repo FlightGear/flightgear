@@ -28,12 +28,19 @@
 
 // If Unix, replace all ":" with "/".  If MacOS, replace all "/" with
 // ":" it should go without saying that neither of these characters
-// should be used in file or directory names.
+// should be used in file or directory names.  In windoze, allow the
+// second character to be a ":" for things like c:\foo\bar
 
 static string fix_path( const string path ) {
     string result = path;
 
     for ( int i = 0; i < (int)path.size(); ++i ) {
+#if defined( WIN32 )
+	// for windoze, don't replace the ":" for the second character
+	if ( i == 1 ) {
+	    continue;
+	}
+#endif
 	if ( result[i] == FG_BAD_PATH_SEP ) {
 	    result[i] = FG_PATH_SEP;
 	}

@@ -27,6 +27,10 @@
 #define _FGPATH_HXX
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <Include/compiler.h>
 
 #include STL_STRING
