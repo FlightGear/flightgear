@@ -60,6 +60,9 @@
 #include "options.hxx"
 #include "viewmgr.hxx"
 
+// Hack: from main.cxx
+extern SGPropertyNode *fgInitLocale(const char *);
+
 SG_USING_STD(string);
 SG_USING_NAMESPACE(std);
 
@@ -601,6 +604,8 @@ parse_option (const string& arg)
     } else if ( (arg == "--verbose") || (arg == "-v") ) {
         // verbose help/usage request
         return(FG_OPTIONS_VERBOSE_HELP);
+    } else if ( arg.find( "--language=") == 0 ) {
+        globals->set_locale( fgInitLocale( arg.substr( 11 ).c_str() ) );
     } else if ( arg == "--disable-game-mode") {
 	fgSetBool("/sim/startup/game-mode", false);
     } else if ( arg == "--enable-game-mode" ) {
@@ -1147,7 +1152,7 @@ fgParseOptions (const string& path) {
         }
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
-            cout << endl << "Config file parse error: " << path << " '" 
+            cerr << endl << "Config file parse error: " << path << " '" 
 		    << line << "'" << endl;
 	    fgUsage();
 	    exit(-1);
@@ -1268,7 +1273,7 @@ void fgShowAircraft(void) {
 
    dirp = ulOpenDir(path.c_str());
    if (dirp == NULL) {
-      cout << "Unable to open aircraft directory." << endl;
+      cerr << "Unable to open aircraft directory." << endl;
       exit(-1);
    }
 

@@ -477,6 +477,15 @@ void fgRenderFrame() {
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
+
+            /*
+            glEnable( GL_TEXTURE_2D );
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            */
+
             if ( _bcloud_orig ) {
                 Point3D c = globals->get_scenery()->get_center();
                 sgClouds3d->Set_Cloud_Orig( &c );
@@ -778,6 +787,19 @@ void fgRenderFrame() {
             glDisable( GL_FOG );
             glDisable( GL_LIGHTING );
             // cout << "drawing new clouds" << endl;
+
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
+
+            /*
+            glEnable( GL_TEXTURE_2D );
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            */
+
             sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
             glEnable( GL_FOG );
             glEnable( GL_LIGHTING );
@@ -1449,23 +1471,19 @@ int fgGlutInitEvents( void ) {
 }
 
 // Initialize the localization
-SGPropertyNode *fgInitLocale() {
+SGPropertyNode *fgInitLocale(const char *language) {
    SGPropertyNode *c_node = NULL, *d_node = NULL;
+   SGPropertyNode *intl = fgGetNode("/sim/intl");
 
-   // 
-   // Detect the current language
-   //
-   char *language = getenv("LANG");
-   if (language == NULL) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to detect the current language" );
-      language = "C";
-   }
+   SG_LOG(SG_GENERAL, SG_INFO, "Selected language: " << language );
 
-   SGPropertyNode *intl = fgGetNode("/sim/intl", "");
-
+   // localization not defined
    if (!intl)
       return NULL;
   
+   //
+   // Select the proper language from the list
+   //
    vector<SGPropertyNode_ptr> locale = intl->getChildren("locale");
    for (unsigned int i = 0; i < locale.size(); i++) {
 
@@ -1479,6 +1497,9 @@ SGPropertyNode *fgInitLocale() {
       }
    }
 
+   // No <locale> tags defined
+   if (!c_node)
+      return NULL;
 
    //
    // Load the default strings
@@ -1608,12 +1629,24 @@ int mainLoop( int argc, char **argv ) {
     }
 
     // Initialize the localization routines
-    SGPropertyNode *locale = fgInitLocale();
-    if (!locale)
-       return false;
+    if (globals->get_locale() == NULL) {
+        char *language = getenv("LANG");
+        if (language == NULL) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "Unable to detect the language" );
+            language = "C";
+        }
 
-    globals->set_locale( locale );
+        SGPropertyNode *locale = fgInitLocale(language);
+        if (!locale) {
+           cerr
+             << "Not internationalization settings specified in preferences.xml"
+             << endl;
 
+           return false;
+        }
+
+        globals->set_locale( locale );
+    }
 
     // Initialize the Window/Graphics environment.
     if( !fgGlutInit(&argc, argv) ) {
