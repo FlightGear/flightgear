@@ -105,6 +105,7 @@ private:
     /**
      * tile cache
      */
+    int max_cache_size;
     FGNewCache tile_cache;
 
     /**
@@ -129,6 +130,7 @@ private:
     static queue<FGTileEntry *> attach_queue;
     static queue<FGDeferredModel *> model_queue;
 #endif // ENABLE_THREADS
+    static queue<FGTileEntry *> delete_queue;
 
 public:
 
@@ -136,13 +138,6 @@ public:
      * Add a loaded tile to the 'attach to the scene graph' queue.
      */
     static void ready_to_attach( FGTileEntry *t ) { attach_queue.push( t ); }
-
-#ifdef WISH_PLIB_WAS_THREADED // but it isn't
-    /**
-     * Tile is detatched from scene graph and is ready to delete
-     */
-    inline void ready_to_delete( FGTileEntry *t ) { loader.remove( t ); }
-#endif
 
     /**
      * Add a pending model to the 'deferred model load' queue

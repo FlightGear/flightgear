@@ -85,6 +85,14 @@ public:
     // Ensure at least one entry is free in the cache
     bool make_space();
 
+    // Return the index of the oldest tile in the cache, return -1 if
+    // nothing available to be removed.
+    long get_oldest_tile();
+
+    // Clear a cache entry, note that the cache only holds pointers
+    // and this does not free the object which is pointed to.
+    void clear_entry( long cache_entry );
+
     // Clear all completely loaded tiles (ignores partially loaded tiles)
     void clear_cache();
 

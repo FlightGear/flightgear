@@ -171,6 +171,54 @@ bool FGNewCache::make_space() {
 }
 
 
+// Return the index of the oldest tile in the cache, return -1 if
+// nothing available to be removed.
+long FGNewCache::get_oldest_tile() {
+    // we need to free the furthest entry
+    long max_index = -1;
+    double timestamp = 0.0;
+    double min_time = 2419200000.0f; // one month should be enough
+    double max_time = 0;
+
+    tile_map_iterator current = tile_cache.begin();
+    tile_map_iterator end = tile_cache.end();
+    
+    for ( ; current != end; ++current ) {
+        long index = current->first;
+        FGTileEntry *e = current->second;
+        if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
+            
+            timestamp = e->get_timestamp();
+            if ( timestamp < min_time ) {
+                max_index = index;
+                min_time = timestamp;
+            }
+            if ( timestamp > max_time ) {
+                max_time = timestamp;
+            }
+
+        } else {
+            SG_LOG( SG_TERRAIN, SG_DEBUG, "loaded = " << e->is_loaded()
+                    << " pending models = " << e->get_pending_models()
+                    << " time stamp = " << e->get_timestamp() );
+        }
+    }
+
+    SG_LOG( SG_TERRAIN, SG_INFO, "    min_time = " << min_time );
+    SG_LOG( SG_TERRAIN, SG_INFO, "    index = " << max_index );
+    SG_LOG( SG_TERRAIN, SG_INFO, "    max_time = " << max_time );
+
+    return max_index;
+}
+
+
+// Clear a cache entry, note that the cache only holds pointers
+// and this does not free the object which is pointed to.
+void FGNewCache::clear_entry( long cache_index ) {
+    tile_cache.erase( cache_index );
+}
+
+
 // Clear all completely loaded tiles (ignores partially loaded tiles)
 void FGNewCache::clear_cache() {
 

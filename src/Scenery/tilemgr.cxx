@@ -62,6 +62,7 @@ SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
 queue<FGTileEntry *> FGTileMgr::attach_queue;
 queue<FGDeferredModel *> FGTileMgr::model_queue;
 #endif // ENABLE_THREADS
+queue<FGTileEntry *> FGTileMgr::delete_queue;
 
 
 // Constructor
@@ -69,7 +70,8 @@ FGTileMgr::FGTileMgr():
     state( Start ),
     current_tile( NULL ),
     vis( 16000 ),
-    counter_hack(0)
+    counter_hack(0),
+    max_cache_size(100)
 {
 }
 
@@ -128,6 +130,19 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
     FGTileEntry *t = tile_cache.get_tile( b );
 
     if ( t == NULL ) {
+        // make space in the cache
+        while ( tile_cache.get_size() > max_cache_size ) {
+            long index = tile_cache.get_oldest_tile();
+            if ( index >= 0 ) {
+                FGTileEntry *old = tile_cache.get_tile( index );
+                delete_queue.push( old );
+                tile_cache.clear_entry( index );
+            } else {
+                // nothing to free ?!? forge ahead
+                break;
+            }
+        }
+
         // create a new entry
         FGTileEntry *e = new FGTileEntry( b );
 
@@ -174,7 +189,7 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
     // cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
 
     // note * 2 at end doubles cache size (for fdm and viewer)
-    tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) * 2 );
+    max_cache_size = (2*xrange + 2) * (2*yrange + 2) * 2;
 
     SGBucket b;
 
@@ -345,6 +360,14 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 	// cout << "Adding ssg nodes for "
     }
 
+    if ( !delete_queue.empty() ) {
+	FGTileEntry* e = delete_queue.front();
+	delete_queue.pop();
+        e->disconnect_ssg_nodes();
+        e->free_tile();
+        delete e;
+    }
+
     // no reason to update this if we haven't moved...
     if ( longitude != last_longitude || latitude != last_latitude ) {
       // update current elevation... 
@@ -363,9 +386,10 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 
 // timer event driven call to scheduler for the purpose of refreshing the tile timestamps
 void FGTileMgr::refresh_view_timestamps() {
-  SG_LOG( SG_TERRAIN, SG_INFO,
-      "Refreshing timestamps for " << current_bucket.get_center_lon() << " " << current_bucket.get_center_lat() );
-  schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
+    SG_LOG( SG_TERRAIN, SG_INFO,
+        "Refreshing timestamps for " << current_bucket.get_center_lon()
+        << " " << current_bucket.get_center_lat() );
+    schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
 }
 
 // check and set current tile and scenery center...
