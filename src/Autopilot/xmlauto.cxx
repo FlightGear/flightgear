@@ -646,6 +646,14 @@ static void update_helper( double dt ) {
     if ( diff < -180.0 ) { diff += 360.0; }
     if ( diff > 180.0 ) { diff -= 360.0; }
     true_nav1->setDoubleValue( diff );
+
+    // Calculate vertical speed in fpm
+    static SGPropertyNode *vs_fps
+        = fgGetNode( "/velocities/vertical-speed-fps", true );
+    static SGPropertyNode *vs_fpm
+        = fgGetNode( "/autopilot/internal/vert-speed-fpm", true );
+
+    vs_fpm->setDoubleValue( vs_fps->getDoubleValue() * 60.0 );  
 }
 
 
