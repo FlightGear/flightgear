@@ -199,8 +199,10 @@ bool fgGenTile( const string& path, SGBucket b,
     // Calculate texture coordinates
     point_list geod_nodes;
     geod_nodes.clear();
+    geod_nodes.reserve(4);
     int_list rectangle;
     rectangle.clear();
+    rectangle.reserve(4);
     for ( i = 0; i < 4; ++i ) {
         geod_nodes.push_back( geod[i] );
         rectangle.push_back( i );
@@ -1227,7 +1229,7 @@ ssgLeaf *gen_leaf( const string& path,
     if ( newmat == NULL ) {
         // see if this is an on the fly texture
         string file = path;
-        int pos = file.rfind( "/" );
+        string::size_type pos = file.rfind( "/" );
         file = file.substr( 0, pos );
         // cout << "current file = " << file << endl;
         file += "/";
@@ -1380,38 +1382,33 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 
     }
 
-    point_list nodes = obj.get_wgs84_nodes();
-    point_list colors = obj.get_colors();
-    point_list normals = obj.get_normals();
-    point_list texcoords = obj.get_texcoords();
+    point_list const& nodes = obj.get_wgs84_nodes();
+    point_list const& colors = obj.get_colors();
+    point_list const& normals = obj.get_normals();
+    point_list const& texcoords = obj.get_texcoords();
 
-    string material, tmp_mat;
-    int_list vertex_index;
-    int_list normal_index;
+    string material;
     int_list tex_index;
 
-    int i;
+    group_list::size_type i;
     bool is_lighting = false;
 
     // generate points
-    string_list pt_materials = obj.get_pt_materials();
-    group_list pts_v = obj.get_pts_v();
-    group_list pts_n = obj.get_pts_n();
-    for ( i = 0; i < (int)pts_v.size(); ++i ) {
+    string_list const& pt_materials = obj.get_pt_materials();
+    group_list const& pts_v = obj.get_pts_v();
+    group_list const& pts_n = obj.get_pts_n();
+    for ( i = 0; i < pts_v.size(); ++i ) {
         // cout << "pts_v.size() = " << pts_v.size() << endl;
-        tmp_mat = pt_materials[i];
-        if ( tmp_mat.substr(0, 3) == "RWY" ) {
+	if ( pt_materials[i].substr(0, 3) == "RWY" ) {
             material = "LIGHTS";
             is_lighting = true;
         } else {
-            material = tmp_mat;
+            material = pt_materials[i];
         }
-        vertex_index = pts_v[i];
-        normal_index = pts_n[i];
         tex_index.clear();
         ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
                                   nodes, normals, texcoords,
-                                  vertex_index, normal_index, tex_index,
+                                  pts_v[i], pts_v[i], tex_index,
                                   false, ground_lights );
 
         if ( is_lighting ) {
@@ -1443,64 +1440,52 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     }
 
     // generate triangles
-    string_list tri_materials = obj.get_tri_materials();
-    group_list tris_v = obj.get_tris_v();
-    group_list tris_n = obj.get_tris_n();
-    group_list tris_tc = obj.get_tris_tc();
-    for ( i = 0; i < (int)tris_v.size(); ++i ) {
-        material = tri_materials[i];
-        vertex_index = tris_v[i];
-        normal_index = tris_n[i];
-        tex_index = tris_tc[i];
-        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, material,
+    string_list const& tri_materials = obj.get_tri_materials();
+    group_list const& tris_v = obj.get_tris_v();
+    group_list const& tris_n = obj.get_tris_n();
+    group_list const& tris_tc = obj.get_tris_tc();
+    for ( i = 0; i < tris_v.size(); ++i ) {
+        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, tri_materials[i],
                                   nodes, normals, texcoords,
-                                  vertex_index, normal_index, tex_index,
+                                  tris_v[i], tris_n[i], tris_tc[i],
                                   is_base, ground_lights );
 
         if (use_random_objects)
           gen_random_surface_objects(leaf, random_object_branch,
-                                     center, material);
+                                     center, tri_materials[i]);
         geometry->addKid( leaf );
     }
 
     // generate strips
-    string_list strip_materials = obj.get_strip_materials();
-    group_list strips_v = obj.get_strips_v();
-    group_list strips_n = obj.get_strips_n();
-    group_list strips_tc = obj.get_strips_tc();
-    for ( i = 0; i < (int)strips_v.size(); ++i ) {
-        material = strip_materials[i];
-        vertex_index = strips_v[i];
-        normal_index = strips_n[i];
-        tex_index = strips_tc[i];
-        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
+    string_list const& strip_materials = obj.get_strip_materials();
+    group_list const& strips_v = obj.get_strips_v();
+    group_list const& strips_n = obj.get_strips_n();
+    group_list const& strips_tc = obj.get_strips_tc();
+    for ( i = 0; i < strips_v.size(); ++i ) {
+        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, strip_materials[i],
                                   nodes, normals, texcoords,
-                                  vertex_index, normal_index, tex_index,
+                                  strips_v[i], strips_n[i], strips_tc[i],
                                   is_base, ground_lights );
 
         if (use_random_objects)
           gen_random_surface_objects(leaf, random_object_branch,
-                                     center, material);
+                                     center,strip_materials[i]);
         geometry->addKid( leaf );
     }
 
     // generate fans
-    string_list fan_materials = obj.get_fan_materials();
-    group_list fans_v = obj.get_fans_v();
-    group_list fans_n = obj.get_fans_n();
-    group_list fans_tc = obj.get_fans_tc();
-    for ( i = 0; i < (int)fans_v.size(); ++i ) {
-        material = fan_materials[i];
-        vertex_index = fans_v[i];
-        normal_index = fans_n[i];
-        tex_index = fans_tc[i];
-        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, material,
+    string_list const& fan_materials = obj.get_fan_materials();
+    group_list const& fans_v = obj.get_fans_v();
+    group_list const& fans_n = obj.get_fans_n();
+    group_list const& fans_tc = obj.get_fans_tc();
+    for ( i = 0; i < fans_v.size(); ++i ) {
+        ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, fan_materials[i],
                                   nodes, normals, texcoords,
-                                  vertex_index, normal_index, tex_index,
+                                  fans_v[i], fans_n[i], fans_tc[i],
                                   is_base, ground_lights );
         if (use_random_objects)
           gen_random_surface_objects(leaf, random_object_branch,
-                                     center, material);
+                                     center, fan_materials[i]);
         geometry->addKid( leaf );
     }
 
