@@ -1,4 +1,8 @@
 New in 0.44: 
+* Fixed a horible bug that cause the time to be *WAY* off when
+  compiling with the CygWin32 compiler.
+* Wrap up zlib so we can conditionally compile back in normal behavior
+  on systems that have trouble building zlib.
 * Minor adjustment to texture coordinate generation to reduce texture
   swimming.
 * Added an option to enable/disable texture maps
