@@ -299,7 +299,8 @@ void trRenderFrame( void ) {
 
     // we need a white diffuse light for the phase of the moon
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
-    thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER, fog_exp2_density );
+    thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+    thesky->drawUpperClouds( fog_exp2_density );
 
     // draw the ssg scene
     // return to the desired diffuse color
@@ -317,7 +318,7 @@ void trRenderFrame( void ) {
     ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
 
     if (fgGetBool("/environment/clouds/status"))
-        thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+        thesky->drawLowerClouds();
 
     globals->get_model_mgr()->draw();
     globals->get_aircraft_model()->draw();
@@ -330,6 +331,12 @@ void fgRenderFrame() {
     bool skyblend = fgGetBool("/sim/rendering/skyblend");
     bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
     bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation");
+#ifdef FG_ENABLE_MULTIPASS_CLOUDS
+    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds");
+#else
+    bool multi_pass_clouds = false;
+#endif
+    bool draw_clouds = fgGetBool("/environment/clouds/status");
 
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
@@ -433,6 +440,10 @@ void fgRenderFrame() {
             glClearColor(l->sky_color()[0], l->sky_color()[1],
                          l->sky_color()[2], l->sky_color()[3]);
             clear_mask |= GL_COLOR_BUFFER_BIT;
+        }
+        if ( multi_pass_clouds && draw_clouds ) {
+            glClearStencil( 0 );
+            clear_mask |= GL_STENCIL_BUFFER_BIT;
         }
         glClear( clear_mask );
 
@@ -597,15 +608,12 @@ void fgRenderFrame() {
         globals->get_multiplayer_rx_mgr()->Update();
 #endif
 
-        if ( draw_otw && skyblend )
-        {
+        if ( draw_otw && skyblend ) {
             // draw the sky backdrop
 
             // we need a white diffuse light for the phase of the moon
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
-
-            thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER, fog_exp2_density );
-
+            thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
             // return to the desired diffuse color
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
         }
@@ -620,7 +628,62 @@ void fgRenderFrame() {
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         }
         if ( draw_otw ) {
-            ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+            if ( draw_clouds ) {
+
+                // Draw the terrain
+                FGTileMgr::set_tile_filter( true );
+                sgSetModelFilter( false );
+                ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+
+                // Disable depth buffer update, draw the clouds
+                glDepthMask( GL_FALSE );
+                thesky->drawUpperClouds( fog_exp2_density );
+                if ( multi_pass_clouds ) {
+                    thesky->drawLowerClouds();
+                }
+                glDepthMask( GL_TRUE );
+
+                if ( multi_pass_clouds ) {
+                    // Draw the objects except the aircraft
+                    //  and update the stencil buffer with 1
+                    glEnable( GL_STENCIL_TEST );
+                    glStencilFunc( GL_ALWAYS, 1, 1 );
+                    glStencilOp( GL_REPLACE, GL_REPLACE, GL_REPLACE );
+                }
+                FGTileMgr::set_tile_filter( false );
+                sgSetModelFilter( true );
+                globals->get_aircraft_model()->select( false );
+                ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+
+                if ( multi_pass_clouds ) {
+                    // Disable depth buffer update, draw the clouds where the
+                    //  objects overwrite the already drawn clouds, by testing
+                    //  the stencil buffer against 1
+                    glDepthMask( GL_FALSE );
+                    glStencilFunc( GL_EQUAL, 1, 1 );
+                    glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+                    thesky->drawUpperClouds( fog_exp2_density );
+                    thesky->drawLowerClouds();
+                    glDepthMask( GL_TRUE );
+                    glDisable( GL_STENCIL_TEST );
+                } else {
+                    glDepthMask( GL_FALSE );
+                    thesky->drawLowerClouds();
+                    glDepthMask( GL_TRUE );
+                }
+
+                // Draw the aircraft
+                sgSetModelFilter( false );
+                globals->get_aircraft_model()->select( true );
+                ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+                FGTileMgr::set_tile_filter( true );
+                sgSetModelFilter( true );
+            } else {
+                FGTileMgr::set_tile_filter( true );
+                sgSetModelFilter( true );
+                globals->get_aircraft_model()->select( true );
+                ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+            }
         }
 
         // This is a bit kludgy.  Every 200 frames, do an extra
@@ -722,15 +785,6 @@ void fgRenderFrame() {
         glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
         if ( draw_otw ) {
             ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
-        }
-
-        if ( skyblend ) {
-            // draw the sky cloud layers
-            if ( draw_otw && fgGetBool("/environment/clouds/status") )
-            {
-                thesky->postDraw( cur_fdm_state->get_Altitude()
-                                  * SG_FEET_TO_METER );
-            }
         }
 
         if ( draw_otw && fgGetBool("/sim/rendering/clouds3d") )
@@ -1409,11 +1463,18 @@ bool fgMainInit( int argc, char **argv ) {
     fgRegisterIdleHandler( fgIdleFunction );
     fgRegisterDrawHandler( fgRenderFrame );
 
+#ifdef FG_ENABLE_MULTIPASS_CLOUDS
+    bool get_stencil_buffer = true;
+#else
+    bool get_stencil_buffer = false;
+#endif
+
     // Clouds3D requires an alpha channel
     fgOSOpenWindow( fgGetInt("/sim/startup/xsize"),
                     fgGetInt("/sim/startup/ysize"),
                     fgGetInt("/sim/rendering/bits-per-pixel"),
-                    fgGetBool("/sim/rendering/clouds3d") );
+                    fgGetBool("/sim/rendering/clouds3d"),
+                    get_stencil_buffer );
 
     // This seems to be the absolute earliest in the init sequence
     // that these calls will return valid info.  Too bad it's after

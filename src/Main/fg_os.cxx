@@ -177,10 +177,11 @@ void fgRequestRedraw()
     glutPostRedisplay();
 }
 
-void fgOSOpenWindow(int w, int h, int bpp, bool alpha)
+void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool stencil)
 {
     int mode = GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE;
     if(alpha) mode |= GLUT_ALPHA;
+    if(stencil) mode |= GLUT_STENCIL;
 
     glutInitDisplayMode(mode);
     glutInitWindowSize(w, h);
