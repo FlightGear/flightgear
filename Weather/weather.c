@@ -49,7 +49,7 @@ void fgWeatherInit(void) {
 
 
 /* Update the weather parameters for the current position */
-void fgWeatherUpdate(double lon, double lat, double alt) {
+void fgWeatherUpdate() {
     struct fgFLIGHT *f;
     struct fgWEATHER *w;
 
@@ -64,9 +64,12 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 
 
 /* $Log$
-/* Revision 1.9  1997/12/30 20:48:03  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.10  1997/12/30 22:22:46  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.9  1997/12/30 20:48:03  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.8  1997/12/11 04:43:58  curt
  * Fixed sun vector and lighting problems.  I thing the moon is now lit
  * correctly.

@@ -234,6 +234,8 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     double gst_precise, gst_course;
     static long int warp = 0;
 
+    printf("Updating time\n");
+
     /* get current Unix calendar time (in seconds) */
     /* warp = 60; */
     warp += 0;
@@ -290,9 +292,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.23  1997/12/30 20:47:58  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.24  1997/12/30 22:22:42  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.23  1997/12/30 20:47:58  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.22  1997/12/30 01:38:47  curt
  * Switched back to per vertex normals and smooth shading for terrain.
  *

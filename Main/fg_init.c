@@ -188,6 +188,10 @@ void fgInitSubsystems( void ) {
     /* Initialize the weather modeling subsystem */
     fgWeatherInit();
 
+    /* update the weather for our current position */
+    fgEventRegister( "fgWeatherUpdate()", fgWeatherUpdate, 
+		     FG_EVENT_READY, 120000 );
+
     /* Initialize the Cockpit subsystem */
     if( fgCockpitInit( current_aircraft ) == NULL ) {
     	printf( "Error in Cockpit initialization!\n" );
@@ -201,10 +205,10 @@ void fgInitSubsystems( void ) {
     fgStarsInit();
 
     /* Initialize the sun's position */
-    fgSunInit();
+    fgEventRegister( "fgSunInit()", fgSunInit, FG_EVENT_READY, 600000 );
 
     /* Intialize the moon's position */
-    fgMoonInit();
+    fgEventRegister( "fgMoonInit()", fgSunInit, FG_EVENT_READY, 600000 );
 
     /* Initialize the "sky" */
     fgSkyInit();
@@ -233,7 +237,6 @@ void fgInitSubsystems( void ) {
 	   FG_Altitude * FEET_TO_METER);
     /* end of thing that I just stuck in that I should probably move */
 
-
     /* Initialize the flight model subsystem data structures base on
      * above values */
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
@@ -247,14 +250,20 @@ void fgInitSubsystems( void ) {
     /* Joystick support */
     fgJoystickInit( 0 );
 
+    /* One more try here to get the sky synced up */
+    fgSkyColorsInit();
+
     printf("\n");
 }
 
 
 /* $Log$
-/* Revision 1.24  1997/12/30 20:47:44  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.25  1997/12/30 22:22:33  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.24  1997/12/30 20:47:44  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.23  1997/12/30 16:36:50  curt
  * Merged in Durk's changes ...
  *

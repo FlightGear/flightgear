@@ -40,17 +40,20 @@ extern struct fgWEATHER current_weather;
 void fgWeatherInit(void);
 
 /* Update the weather parameters for the current position */
-void fgWeatherUpdate(double lon, double lat, double alt);
+void fgWeatherUpdate();
 
 
 #endif /* WEATHER_H */
 
 
 /* $Log$
-/* Revision 1.5  1997/12/10 22:37:56  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.6  1997/12/30 22:22:47  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.5  1997/12/10 22:37:56  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.4  1997/08/27 03:30:39  curt
  * Changed naming scheme of basic shared structures.
  *

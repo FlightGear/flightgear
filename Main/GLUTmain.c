@@ -51,6 +51,7 @@
 #include "../Scenery/sky.h"
 #include "../Scenery/stars.h"
 #include "../Scenery/sun.h"
+#include "../Time/event.h"
 #include "../Time/fg_time.h"
 #include "../Time/fg_timer.h"
 #include "../Time/sunpos.h"
@@ -122,16 +123,6 @@ static void fgUpdateViewParams() {
     struct fgTIME *t;
     struct fgVIEW *v;
 
-    double x_2, x_4, x_8, x_10;
-    double light, ambient, diffuse, sky_brightness;
-    /* if the 4th field is 0.0, this specifies a direction ... */
-    /* base sky color */
-    GLfloat base_sky_color[4] =        {0.60, 0.60, 0.90, 1.0};
-    /* base fog color */
-    GLfloat base_fog_color[4] = {0.70, 0.70, 0.70, 1.0};
-
-    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-
     f = &current_aircraft.flight;
     l = &cur_light_params;
     t = &cur_time_params;
@@ -182,52 +173,6 @@ static void fgUpdateViewParams() {
 
     /* set the sun position */
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
-
-    /* calculate lighting parameters based on sun's relative angle to
-     * local up */
-    /* ya kind'a have to plot this to see how it works */
-
-    /* x = t->sun_angle^8 */
-    x_2 = l->sun_angle * l->sun_angle;
-    x_4 = x_2 * x_2;
-    x_8 = x_4 * x_4;
-    x_10 = x_8 * x_2;
-
-    light = pow(1.1, -x_10 / 30.0);
-    ambient = 0.2 * light;
-    diffuse = 0.9 * light;
-
-    sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
-
-    /* sky_brightness = 0.15; */ /* to force a dark sky (for testing) */
-
-    if ( ambient < 0.02 ) { ambient = 0.02; }
-    if ( diffuse < 0.0 ) { diffuse = 0.0; }
-
-    if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
-
-    l->scene_ambient[0] = white[0] * ambient;
-    l->scene_ambient[1] = white[1] * ambient;
-    l->scene_ambient[2] = white[2] * ambient;
-
-    l->scene_diffuse[0] = white[0] * diffuse;
-    l->scene_diffuse[1] = white[1] * diffuse;
-    l->scene_diffuse[2] = white[2] * diffuse;
-
-    /* set fog color */
-    l->fog_color[0] = base_fog_color[0] * (ambient + diffuse);
-    l->fog_color[1] = base_fog_color[1] * (ambient + diffuse);
-    l->fog_color[2] = base_fog_color[2] * (ambient + diffuse);
-    l->fog_color[3] = base_fog_color[3];
-
-    /* set sky color */
-    l->sky_color[0] = base_sky_color[0] * sky_brightness;
-    l->sky_color[1] = base_sky_color[1] * sky_brightness;
-    l->sky_color[2] = base_sky_color[2] * sky_brightness;
-    l->sky_color[3] = base_sky_color[3];
-
-    /* mental note: this should really be done every 10-30 seconds I suppose */
-    fgSkyColorsInit();
 }
 
 
@@ -281,7 +226,6 @@ static void fgRenderFrame( void ) {
     struct fgTIME *t;
     struct fgVIEW *v;
     double angle;
-    static double lastAstroUpdate = 0;
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     l = &cur_light_params;
@@ -304,13 +248,6 @@ static void fgRenderFrame( void ) {
     xglDisable( GL_FOG );
     xglShadeModel( GL_SMOOTH );
     fgSkyRender();
-
-    /* a hack: Force sun and moon position to be updated on an hourly basis */
-    if (((t->gst - lastAstroUpdate) > 1) || (t->gst < lastAstroUpdate)) {
-	lastAstroUpdate = t->gst;
-	fgSunInit();
-	fgMoonInit();
-    }
 
     /* setup transformation for drawing astronomical objects */
     xglPushMatrix();
@@ -384,9 +321,6 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 
     /* printf("updating flight model x %d\n", multi_loop); */
     fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
-
-    /* refresh shared sun position and sun_vec */
-    fgUpdateSunPos(scenery.center);
 
     /* update the view angle */
     for ( i = 0; i < multi_loop; i++ ) {
@@ -525,6 +459,9 @@ static void fgMainLoop( void ) {
     struct fgFLIGHT *f;
     struct fgTIME *t;
 
+    printf("Running Main Loop\n");
+    printf("======= ==== ====\n");
+
     a = &current_aircraft;
     f = &a->flight;
     t = &cur_time_params;
@@ -538,11 +475,6 @@ static void fgMainLoop( void ) {
 	    joy_x, joy_y, joy_b1, joy_b2 );
     fgElevSet( -joy_y );
     fgAileronSet( joy_x ); */
-
-    /* update the weather for our current position */
-    fgWeatherUpdate(FG_Longitude * RAD_TO_ARCSEC, 
-		    FG_Latitude * RAD_TO_ARCSEC, 
-		    FG_Altitude * FEET_TO_METER);
 
     /* Calculate model iterations needed */
     elapsed = fgGetTimeInterval();
@@ -566,7 +498,7 @@ static void fgMainLoop( void ) {
      * eventually */
     cur_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
 			       FG_Latitude  * RAD_TO_ARCSEC);
-    printf("Ground elevation is %.2f meters here.\n", cur_elev);
+    /* printf("Ground elevation is %.2f meters here.\n", cur_elev); */
     /* FG_Runway_altitude = cur_elev * METER_TO_FEET; */
 
     if ( FG_Altitude * FEET_TO_METER < cur_elev + 3.758099) {
@@ -580,13 +512,15 @@ static void fgMainLoop( void ) {
 	       FG_Altitude * FEET_TO_METER);
     }
 
-    fgAircraftOutputCurrent(a);
+    /* fgAircraftOutputCurrent(a); */
 
     /* Process/manage pending events */
     fgEventProcess();
 
     /* redraw display */
     fgRenderFrame();
+
+    printf("\n");
 }
 
 
@@ -622,7 +556,7 @@ int main( int argc, char *argv[] ) {
 
     f = &current_aircraft.flight;
 
-    printf("Flight Gear: prototype version %s\n\n", VERSION);
+    printf("Flight Gear:  Version %s\n\n", VERSION);
 
     /**********************************************************************
      * Initialize the Window/Graphics environment.
@@ -694,9 +628,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.43  1997/12/30 20:47:43  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.44  1997/12/30 22:22:31  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.43  1997/12/30 20:47:43  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.42  1997/12/30 16:36:47  curt
  * Merged in Durk's changes ...
  *

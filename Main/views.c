@@ -69,8 +69,8 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     v->view_pos.y -= scenery.center.y;
     v->view_pos.z -= scenery.center.z;
 
-    printf("View pos = %.4f, %.4f, %.4f\n", 
-	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
+    /* printf("View pos = %.4f, %.4f, %.4f\n", 
+	   v->view_pos.x, v->view_pos.y, v->view_pos.z); */
 
     /* make a vector to the current view position */
     MAT3_SET_VEC(v0, v->view_pos.x, v->view_pos.y, v->view_pos.z);
@@ -79,8 +79,8 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     v->to_sun[0] = l->fg_sunpos.x - (v->view_pos.x + scenery.center.x);
     v->to_sun[1] = l->fg_sunpos.y - (v->view_pos.y + scenery.center.y);
     v->to_sun[2] = l->fg_sunpos.z - (v->view_pos.z + scenery.center.z);
-    printf("Vector to sun = %.2f %.2f %.2f\n", 
-	   v->to_sun[0], v->to_sun[1], v->to_sun[2]);
+    /* printf("Vector to sun = %.2f %.2f %.2f\n",
+	   v->to_sun[0], v->to_sun[1], v->to_sun[2]); */
 
     /* Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw) */
     MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
@@ -125,8 +125,8 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     MAT3_SET_VEC(v->local_up, 1.0, 0.0, 0.0);
     MAT3mult_vec(v->local_up, v->local_up, UP);
 
-    printf("    Local Up = (%.4f, %.4f, %.4f)\n", 
-	   v->local_up[0], v->local_up[1], v->local_up[2]);
+    /* printf("Local Up = (%.4f, %.4f, %.4f)\n",
+	   v->local_up[0], v->local_up[1], v->local_up[2]); */
     
     /* Alternative method to Derive local up vector based on
      * *geodetic* coordinates */
@@ -145,8 +145,8 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
     MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
     MAT3mult_vec(forward, vec, VIEW);
-    printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
-	   forward[2]);
+    /* printf("Forward vector is (%.2f,%.2f,%.2f)\n", forward[0], forward[1], 
+	   forward[2]); */
 
     MAT3rotate(TMP, v->view_up, v->view_offset);
     MAT3mult_vec(v->view_forward, forward, TMP);
@@ -157,9 +157,8 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     map_vec_onto_cur_surface_plane(v->local_up, v0, v->to_sun, 
 				   v->surface_to_sun);
     MAT3_NORMALIZE_VEC(v->surface_to_sun, ntmp);
-    printf("Surface direction to sun is %.2f %.2f %.2f\n",
-	   v->surface_to_sun[0], v->surface_to_sun[1], v->surface_to_sun[2]);
-
+    /* printf("Surface direction to sun is %.2f %.2f %.2f\n",
+	   v->surface_to_sun[0], v->surface_to_sun[1], v->surface_to_sun[2]); */
     /* printf("Should be close to zero = %.2f\n", 
 	   MAT3_DOT_PRODUCT(v->local_up, v->surface_to_sun)); */
 
@@ -183,9 +182,12 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.7  1997/12/30 20:47:45  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.8  1997/12/30 22:22:33  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.7  1997/12/30 20:47:45  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.6  1997/12/22 04:14:32  curt
  * Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
  *

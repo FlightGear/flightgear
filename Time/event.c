@@ -265,14 +265,17 @@ void fgEventPrintStats() {
     if ( event_ptr > 0 ) {
 	printf("\n");
 	printf("Event Stats\n");
-	printf("----- -----\n");
+	printf("-----------\n");
 
 	for ( i = 0; i < event_ptr; i++ ) {
-	    printf("  %s  cum=%d min=%d max=%d count=%d ave=%.2f\n", 
-		   events[i].description, events[i].cum_time, 
+	    printf("  %-20s  int=%.2fs cum=%d min=%d max=%d count=%d ave=%.2f\n",
+		   events[i].description, 
+		   events[i].interval / 1000.0,
+		   events[i].cum_time, 
 		   events[i].min_time, events[i].max_time, events[i].count, 
 		   events[i].cum_time / (double)events[i].count);
 	}
+	printf("\n");
     }
 }
 
@@ -332,9 +335,12 @@ void fgEventProcess() {
 
 
 /* $Log$
-/* Revision 1.2  1997/12/30 20:47:58  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.3  1997/12/30 22:22:42  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.2  1997/12/30 20:47:58  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.1  1997/12/30 04:19:22  curt
  * Initial revision.
  *

@@ -266,21 +266,22 @@ void fgStarsRender() {
 	    i = 3;
 	}
 
-	printf("RENDERING STARS = %d (night)\n", i);
+	/* printf("RENDERING STARS = %d (night)\n", i); */
 
-	xglDisable( GL_LIGHTING );
 	xglCallList(stars[i]);
-	xglEnable( GL_LIGHTING );
     } else {
-	printf("not RENDERING STARS (day)\n");
+	/* printf("not RENDERING STARS (day)\n"); */
     }
 }
 
 
 /* $Log$
-/* Revision 1.23  1997/12/30 20:47:53  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.24  1997/12/30 22:22:39  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.23  1997/12/30 20:47:53  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.22  1997/12/30 16:36:53  curt
  * Merged in Durk's changes ...
  *

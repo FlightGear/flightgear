@@ -266,7 +266,15 @@ void fgUpdateSunPos() {
     struct fgTIME *t;
     struct fgVIEW *v;
     MAT3vec nup, nsun;
+    /* if the 4th field is 0.0, this specifies a direction ... */
+    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+    /* base sky color */
+    GLfloat base_sky_color[4] =        {0.60, 0.60, 0.90, 1.0};
+    /* base fog color */
+    GLfloat base_fog_color[4] = {0.70, 0.70, 0.70, 1.0};
     double sun_gd_lat, sl_radius, temp;
+    double x_2, x_4, x_8, x_10;
+    double light, ambient, diffuse, sky_brightness;
     static int time_warp = 0;
 
     l = &cur_light_params;
@@ -315,13 +323,59 @@ void fgUpdateSunPos() {
     l->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
     printf("  SUN ANGLE relative to current location = %.3f rads.\n", 
 	   l->sun_angle);
+
+    /* calculate lighting parameters based on sun's relative angle to
+     * local up */
+    /* ya kind'a have to plot this to see how it works */
+
+    /* x = t->sun_angle^8 */
+    x_2 = l->sun_angle * l->sun_angle;
+    x_4 = x_2 * x_2;
+    x_8 = x_4 * x_4;
+    x_10 = x_8 * x_2;
+
+    light = pow(1.1, -x_10 / 30.0);
+    ambient = 0.2 * light;
+    diffuse = 0.9 * light;
+
+    sky_brightness = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
+
+    /* sky_brightness = 0.15; */ /* to force a dark sky (for testing) */
+
+    if ( ambient < 0.02 ) { ambient = 0.02; }
+    if ( diffuse < 0.0 ) { diffuse = 0.0; }
+
+    if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
+
+    l->scene_ambient[0] = white[0] * ambient;
+    l->scene_ambient[1] = white[1] * ambient;
+    l->scene_ambient[2] = white[2] * ambient;
+
+    l->scene_diffuse[0] = white[0] * diffuse;
+    l->scene_diffuse[1] = white[1] * diffuse;
+    l->scene_diffuse[2] = white[2] * diffuse;
+
+    /* set fog color */
+    l->fog_color[0] = base_fog_color[0] * (ambient + diffuse);
+    l->fog_color[1] = base_fog_color[1] * (ambient + diffuse);
+    l->fog_color[2] = base_fog_color[2] * (ambient + diffuse);
+    l->fog_color[3] = base_fog_color[3];
+
+    /* set sky color */
+    l->sky_color[0] = base_sky_color[0] * sky_brightness;
+    l->sky_color[1] = base_sky_color[1] * sky_brightness;
+    l->sky_color[2] = base_sky_color[2] * sky_brightness;
+    l->sky_color[3] = base_sky_color[3];
 }
 
 
 /* $Log$
-/* Revision 1.19  1997/12/30 20:47:59  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.20  1997/12/30 22:22:43  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.19  1997/12/30 20:47:59  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.18  1997/12/23 04:58:40  curt
  * Tweaked the sky coloring a bit to build in structures to allow finer rgb
  * control.

@@ -247,7 +247,7 @@ void fgSkyRender() {
     l = &cur_light_params;
     v = &current_view;
 
-    printf("Rendering the sky.\n");
+    /* printf("Rendering the sky.\n"); */
 
     xglPushMatrix();
 
@@ -255,20 +255,20 @@ void fgSkyRender() {
      * v->surface_east.  We do this so we can sort out the acos()
      * ambiguity.  I wish I could think of a more efficient way ... :-( */
     east_dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_east);
-    printf("  East dot product = %.2f\n", east_dot);
+    /* printf("  East dot product = %.2f\n", east_dot); */
 
     /* calculate the angle between v->surface_to_sun and
      * v->surface_south.  this is how much we have to rotate the sky
      * for it to align with the sun */
     dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_south);
-    printf("  Dot product = %.2f\n", dot);
+    /* printf("  Dot product = %.2f\n", dot); */
     if ( east_dot >= 0 ) {
 	angle = acos(dot);
     } else {
 	angle = -acos(dot);
     }
-    printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
-	   angle, angle * RAD_TO_DEG);
+    /*printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
+	   angle, angle * RAD_TO_DEG); */
 
     /* Translate to view position */
     xglTranslatef( v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z );
@@ -276,8 +276,8 @@ void fgSkyRender() {
 	   v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z ); */
 
     /* Rotate to proper orientation */
-    printf("  lon = %.2f  lat = %.2f\n", FG_Longitude * RAD_TO_DEG,
-	   FG_Latitude * RAD_TO_DEG);
+    /* printf("  lon = %.2f  lat = %.2f\n", FG_Longitude * RAD_TO_DEG,
+	   FG_Latitude * RAD_TO_DEG); */
     xglRotatef( FG_Longitude * RAD_TO_DEG, 0.0, 0.0, 1.0 );
     xglRotatef( 90.0 - FG_Latitude * RAD_TO_DEG, 0.0, 1.0, 0.0 );
     xglRotatef( angle * RAD_TO_DEG, 0.0, 0.0, 1.0 );
@@ -329,9 +329,12 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.10  1997/12/30 20:47:53  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.11  1997/12/30 22:22:38  curt
+/* Further integration of event manager.
 /*
+ * Revision 1.10  1997/12/30 20:47:53  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.9  1997/12/30 13:06:57  curt
  * A couple lighting tweaks ...
  *
