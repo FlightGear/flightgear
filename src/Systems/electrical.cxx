@@ -344,11 +344,13 @@ void FGElectricalSystem::update (double dt) {
 
     // impliment an extremely simplistic voltage model (assumes
     // certain naming conventions in electrical system config)
+    // FIXME: we probably want to be able to feed power from all
+    // engines if they are running and the master-alt is switched on
     double volts = 0.0;
-    if ( fgGetBool("/controls/switches/master-bat") ) {
+    if ( fgGetBool("/controls/engines/engine[0]/master-bat") ) {
         volts = 24.0;
     }
-    if ( fgGetBool("/controls/switches/master-alt") &&
+    if ( fgGetBool("/controls/engines/engine[0]/master-alt") &&
          fgGetDouble("/engines/engine[0]/rpm") > 800 )
     {
         double alt_contrib = 28.0;
