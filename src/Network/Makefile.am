@@ -1,10 +1,17 @@
 noinst_LIBRARIES = libNetwork.a
 
+if ENABLE_JPEG_SERVER
+JPEG_SERVER = jpg-httpd.cxx jpg-httpd.hxx
+else
+JPEG_SERVER =
+endif
+
 libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
 	atlas.cxx atlas.hxx \
 	garmin.cxx garmin.hxx \
         httpd.cxx httpd.hxx \
+        $(JPEG_SERVER) \
 	joyclient.cxx joyclient.hxx \
 	native.cxx native.hxx \
 	native_ctrls.cxx native_ctrls.hxx \

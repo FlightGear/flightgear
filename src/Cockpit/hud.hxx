@@ -172,6 +172,7 @@ extern float get_elev_trimval( void );
 extern float get_rudderval   ( void );
 extern float get_speed       ( void );
 extern float get_aoa         ( void );
+extern float get_nlf         ( void );
 extern float get_roll        ( void );
 extern float get_pitch       ( void );
 extern float get_heading     ( void );

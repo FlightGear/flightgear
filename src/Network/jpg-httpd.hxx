@@ -25,8 +25,8 @@
 // $Id$
 
 
-#ifndef _FG_HTTPD_HXX
-#define _FG_HTTPD_HXX
+#ifndef _FG_JPEG_HTTPD_HXX
+#define _FG_JPEG_HTTPD_HXX
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -34,20 +34,39 @@
 
 #include <plib/netChat.h>
 
+#ifdef FG_JPEG_SERVER
+#  include <simgear/screen/jpgfactory.hxx>
+#endif
+
 #include "protocol.hxx"
+
+class trJpgFactory;
 
 
 /* simple httpd server that makes an hasty stab at following the http
    1.1 rfc.  */
 
-class HttpdChannel : public netChat
+class HttpdImageChannel : public netChat
 {
 
     netBuffer buffer ;
-
+    trJpgFactory *JpgFactory;
+    
 public:
 
-    HttpdChannel() : buffer(512) { setTerminator("\r\n"); }
+    HttpdImageChannel() : buffer(512) {
+        setTerminator("\r\n");
+        JpgFactory = new trJpgFactory();
+
+        // This is a terrible hack but it can't be initialized until
+        // after OpenGL is up an running
+        JpgFactory->init(400,300);
+    }
+
+    ~HttpdImageChannel() {
+        JpgFactory->destroy();
+        delete JpgFactory;
+    }
 
     virtual void collectIncomingData (const char* s, int n) {
         buffer.append(s,n);
@@ -55,10 +74,10 @@ public:
 
     // Handle the actual http request
     virtual void foundTerminator (void);
-} ;
+};
 
 
-class HttpdServer : private netChannel
+class HttpdImageServer : private netChannel
 {
     virtual bool writable (void) { return false ; }
 
@@ -67,32 +86,33 @@ class HttpdServer : private netChannel
         int handle = accept ( &addr ) ;
         printf("Client %s:%d connected\n", addr.getHost(), addr.getPort());
 
-        HttpdChannel *hc = new HttpdChannel;
+        HttpdImageChannel *hc = new HttpdImageChannel;
         hc->setHandle ( handle ) ;
     }
 
 public:
 
-    HttpdServer ( int port ) {
-        open() ;
+    HttpdImageServer ( int port ) {
+        open ();
         bind( "", port );
         listen( 5 );
 
-        printf( "Httpd server started on port %d\n", port ) ;
+        printf( "HttpdImage server started on port %d\n", port ) ;
     }
+        
 };
 
 
-class FGHttpd : public FGProtocol {
+class FGJpegHttpd : public FGProtocol {
 
     int port;
-    HttpdServer *server;
+    HttpdImageServer *imageServer;
     
 public:
 
-    inline FGHttpd( int p ) { port = p; }
+    inline FGJpegHttpd( int p ) { port = p; }
 
-    inline ~FGHttpd() { }
+    inline ~FGJpegHttpd() { }
 
     bool open();
 
@@ -102,4 +122,4 @@ public:
 };
 
 
-#endif // _FG_HTTPD_HXX
+#endif // _FG_JPEG_HTTPD_HXX

@@ -40,6 +40,9 @@
 #include <Network/atlas.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
+#ifdef FG_JPEG_SERVER
+#  include <Network/jpg-httpd.hxx>
+#endif
 #include <Network/joyclient.hxx>
 #include <Network/native.hxx>
 #include <Network/native_ctrls.hxx>
@@ -99,6 +102,14 @@ static FGProtocol *parse_port_config( const string& config )
 	FGHttpd *httpd = new FGHttpd( atoi(port.c_str()) );
 	io = httpd;
         short_circuit = true;
+#ifdef FG_JPEG_SERVER
+    } else if ( protocol == "jpg-httpd" ) {
+        // determine port
+        string port = config.substr(begin);
+	FGJpegHttpd *jpeg_httpd = new FGJpegHttpd( atoi(port.c_str()) );
+	io = jpeg_httpd;
+        short_circuit = true;
+#endif
     } else if ( protocol == "joyclient" ) {
 	FGJoyClient *joyclient = new FGJoyClient;
 	io = joyclient;

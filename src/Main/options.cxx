@@ -787,6 +787,10 @@ parse_option (const string& arg)
 	add_channel( "atlas", arg.substr(8) );
     } else if ( arg.find( "--httpd=" ) == 0 ) {
 	add_channel( "httpd", arg.substr(8) );
+#ifdef FG_JPEG_SERVER
+    } else if ( arg.find( "--jpg-httpd=" ) == 0 ) {
+	add_channel( "jpg-httpd", arg.substr(12) );
+#endif
     } else if ( arg.find( "--native=" ) == 0 ) {
 	add_channel( "native", arg.substr(9) );
     } else if ( arg.find( "--native-ctrls=" ) == 0 ) {
@@ -1228,11 +1232,14 @@ fgUsage ()
 	 << "\t\tdate/time. Uses Greenwich Mean Time" << endl;
     cout << "\t--start-date-lat=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
 	 << "\t\tdate/time. Uses Local Aircraft Time" << endl;
-#ifdef FG_NETWORK_OLK
     cout << endl;
 
     cout << "Network Options:" << endl;
     cout << "\t--httpd=port:  enable http server on the specified port" << endl;
+#ifdef FG_JPEG_SERVER
+    cout << "\t--jpg-httpd=port:  enable screen shot http server on the specified port" << endl;
+#endif
+#ifdef FG_NETWORK_OLK
     cout << "\t--enable-network-olk:  enable Multipilot mode" << endl;
     cout << "\t--disable-network-olk:  disable Multipilot mode (default)" << endl;
     cout << "\t--net-hud:  Hud displays network info" << endl;

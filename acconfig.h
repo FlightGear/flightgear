@@ -53,7 +53,10 @@
    
 /* Define to enable plib joystick support (recommended) */
 #undef ENABLE_PLIB_JOYSTICK
-   
+ 
+/* Define to enable http jpeg server code */
+#undef FG_JPEG_SERVER
+
 /* Define to eliminate all trace of debugging messages such as for a 
    release build */
 #undef FG_NDEBUG

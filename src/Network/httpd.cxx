@@ -5,6 +5,9 @@
 //
 // Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
 //
+// Jpeg Image Support added August 2001
+//  by Norman Vine - nhv@cape.com
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the
@@ -28,15 +31,15 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/debug/logstream.hxx>
-#include <simgear/io/iochannel.hxx>
-#include <simgear/math/sg_types.hxx>
-#include <simgear/misc/props.hxx>
-
 #include <stdlib.h>		// atoi() atof()
 
 #include STL_STRING
 #include STL_STRSTREAM
+
+#include <simgear/debug/logstream.hxx>
+#include <simgear/io/iochannel.hxx>
+#include <simgear/math/sg_types.hxx>
+#include <simgear/misc/props.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -58,7 +61,7 @@ bool FGHttpd::open() {
     }
 
     server = new HttpdServer( port );
-
+    
     set_hz( 5 );                // default to processing requests @ 5Hz
     set_enabled( true );
 
@@ -82,6 +85,9 @@ bool FGHttpd::close() {
 
 // Handle http GET requests
 void HttpdChannel::foundTerminator (void) {
+    
+    closeWhenDone ();
+
     const string s = buffer.getData();
 
     if ( s.find( "GET " ) == 0 ) {
