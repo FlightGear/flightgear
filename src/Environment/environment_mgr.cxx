@@ -206,7 +206,7 @@ FGEnvironmentMgr::_update_fdm () const
 				// convert from Rankine to Celsius
     cur_fdm_state
       ->set_Static_temperature((9.0/5.0)
-			       * _environment->get_temperature_degc() + 492.0);
+			       * (_environment->get_temperature_degc() + 273.15));
 				// convert from inHG to PSF
     cur_fdm_state
       ->set_Static_pressure(_environment->get_pressure_inhg() * 70.726566);
