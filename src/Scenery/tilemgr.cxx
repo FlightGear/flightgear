@@ -448,6 +448,9 @@ int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
         // be valid (and not just luck)
         hit = fgCurrentElev(abs_pos_vector,
                             sc,
+		// uncomment next paramater to fly under
+		// bridges and a slightly faster algorithm
+		// but you won't be able to land on aircraft carriers
                             // current_tile->get_terra_transform(),
                             &hit_list,
                             &hit_elev,
