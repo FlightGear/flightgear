@@ -37,6 +37,7 @@
 #include <GL/gl.h>
 
 #include <simgear/compiler.h>
+#include <simgear/constants.h>
 #include <simgear/misc/exception.hxx>
 
 #include <string.h>
@@ -68,54 +69,145 @@ FGMaterialLib::FGMaterialLib ( void ) {
 }
 
 
+static int gen_test_light_map() {
+    static const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+
+            // cout << x << "," << y << " " << (int)(dist * 255) << ","
+            //      << (int)((1.0 - dist) * 255) << endl;
+            env_map[i][j][0] = (int)(dist * 255);
+            env_map[i][j][1] = (int)((1.0 - dist) * 255);
+            env_map[i][j][2] = 0;
+            env_map[i][j][3] = 255;
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+static int gen_light_map() {
+    static const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = 255;
+            env_map[i][j][1] = 255;
+            env_map[i][j][2] = 255;
+            env_map[i][j][3] = (int)(bright * 255);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
 // Load a library of material properties
 bool FGMaterialLib::load( const string& mpath ) {
 
-  SGPropertyNode materials;
+    SGPropertyNode materials;
 
-  SG_LOG(SG_INPUT, SG_INFO, "Reading materials from " << mpath);
-  try {
-    readProperties(mpath, &materials);
-  } catch (const sg_exception &ex) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Error reading materials: " << ex.getMessage());
-    throw ex;
-  }
-
-  int nMaterials = materials.nChildren();
-  for (int i = 0; i < nMaterials; i++) {
-    const SGPropertyNode * node = materials.getChild(i);
-    if (!strcmp(node->getName(), "material")) {
-      FGNewMat * m = new FGNewMat(node);
-
-      vector<SGPropertyNode_ptr>names = node->getChildren("name");
-      for (unsigned int j = 0; j < names.size(); j++) {
-	string name = names[j]->getStringValue();
-	m->ref();
-	// cerr << "Material " << name << endl;
-	matlib[name] = m;
-	SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material "
-		<< names[j]->getStringValue());
-      }
-    } else {
-      SG_LOG(SG_INPUT, SG_ALERT,
-	     "Skipping bad material entry " << node->getName());
+    SG_LOG( SG_INPUT, SG_INFO, "Reading materials from " << mpath );
+    try {
+        readProperties( mpath, &materials );
+    } catch (const sg_exception &ex) {
+        SG_LOG( SG_INPUT, SG_ALERT, "Error reading materials: "
+                << ex.getMessage() );
+        throw ex;
     }
-  }
 
-    // hard coded light state
-    ssgSimpleState *lights = new ssgSimpleState;
-    lights->ref();
-    lights->disable( GL_TEXTURE_2D );
-    lights->enable( GL_CULL_FACE );
-    lights->enable( GL_COLOR_MATERIAL );
-    lights->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
-    lights->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
-    lights->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
-    lights->enable( GL_BLEND );
-    lights->disable( GL_ALPHA_TEST );
-    lights->disable( GL_LIGHTING );
+    int nMaterials = materials.nChildren();
+    for (int i = 0; i < nMaterials; i++) {
+        const SGPropertyNode * node = materials.getChild(i);
+        if (!strcmp(node->getName(), "material")) {
+            FGNewMat * m = new FGNewMat(node);
 
-    matlib["LIGHTS"] = new FGNewMat(lights);
+            vector<SGPropertyNode_ptr>names = node->getChildren("name");
+            for ( unsigned int j = 0; j < names.size(); j++ ) {
+                string name = names[j]->getStringValue();
+                m->ref();
+                // cerr << "Material " << name << endl;
+                matlib[name] = m;
+                SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material "
+                        << names[j]->getStringValue() );
+            }
+        } else {
+            SG_LOG(SG_INPUT, SG_ALERT,
+                   "Skipping bad material entry " << node->getName());
+        }
+    }
+
+    // hard coded ground light state
+    ssgSimpleState *gnd_lights = new ssgSimpleState;
+    gnd_lights->ref();
+    gnd_lights->disable( GL_TEXTURE_2D );
+    gnd_lights->enable( GL_CULL_FACE );
+    gnd_lights->enable( GL_COLOR_MATERIAL );
+    gnd_lights->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
+    gnd_lights->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
+    gnd_lights->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
+    gnd_lights->enable( GL_BLEND );
+    gnd_lights->disable( GL_ALPHA_TEST );
+    gnd_lights->disable( GL_LIGHTING );
+    matlib["GROUND_LIGHTS"] = new FGNewMat(gnd_lights);
+
+    // hard coded runway light state
+    ssgSimpleState *rwy_lights = new ssgSimpleState();
+    rwy_lights->ref();
+
+    rwy_lights->disable( GL_LIGHTING );
+    rwy_lights->enable ( GL_CULL_FACE ) ;
+    rwy_lights->enable( GL_TEXTURE_2D );
+    rwy_lights->enable( GL_BLEND );
+    rwy_lights->enable( GL_ALPHA_TEST );
+    rwy_lights->enable( GL_COLOR_MATERIAL );
+    rwy_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+
+    rwy_lights->setTexture( gen_light_map() );
+    matlib["RUNWAY_LIGHTS"] = new FGNewMat(rwy_lights);
 
     return true;
 }

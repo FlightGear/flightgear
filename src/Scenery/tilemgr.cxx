@@ -370,8 +370,8 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 	attach_queue.pop();
 #endif
 	e->add_ssg_nodes( globals->get_scenery()->get_terrain_branch(),
-			  globals->get_scenery()->get_gnd_lights_branch(),
-			  globals->get_scenery()->get_rwy_lights_branch() );
+			  globals->get_scenery()->get_gnd_lights_root(),
+			  globals->get_scenery()->get_rwy_lights_root() );
 	// cout << "Adding ssg nodes for "
     }
 

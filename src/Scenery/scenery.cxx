@@ -61,9 +61,6 @@ void FGScenery::init() {
     scene_graph = new ssgRoot;
     scene_graph->setName( "Scene" );
 
-    lighting = new ssgRoot;
-    lighting->setName( "Lighting" );
-
     // Terrain branch
     terrain_branch = new ssgBranch;
     terrain_branch->setName( "Terrain" );
@@ -78,13 +75,11 @@ void FGScenery::init() {
     scene_graph->addKid( aircraft_branch );
 
     // Lighting
-    gnd_lights_branch = new ssgBranch;
-    gnd_lights_branch->setName( "Ground Lighting" );
-    lighting->addKid( gnd_lights_branch );
+    gnd_lights_root = new ssgRoot;
+    gnd_lights_root->setName( "Ground Lighting Root" );
 
-    rwy_lights_branch = new ssgBranch;
-    rwy_lights_branch->setName( "Runway Lighting" );
-    lighting->addKid( rwy_lights_branch );
+    rwy_lights_root = new ssgRoot;
+    rwy_lights_root->setName( "Runway Lighting Root" );
 }
 
 

@@ -131,7 +131,7 @@ FGNewMat::Object::load_models () const
 {
 				// Load model only on demand
   if (!_models_loaded) {
-    for (int i = 0; i < _paths.size(); i++) {
+    for (unsigned int i = 0; i < _paths.size(); i++) {
       ssgEntity * entity = globals->get_model_loader()->load_model(_paths[i]);
       if (entity != 0) {
                                 // FIXME: this stuff can be handled
@@ -256,7 +256,7 @@ FGNewMat::FGNewMat (const string &texpath)
     build_ssg_state(true);
 }
 
-FGNewMat::FGNewMat (ssgSimpleState * s)
+FGNewMat::FGNewMat (ssgSimpleState *s)
 {
     init();
     set_ssg_state(s);
@@ -370,9 +370,9 @@ void
 FGNewMat::build_ssg_state (bool defer_tex_load)
 {
     GLenum shade_model =
-      (fgGetBool("/sim/rendering/shading") ? GL_SMOOTH : GL_FLAT);
+        (fgGetBool("/sim/rendering/shading") ? GL_SMOOTH : GL_FLAT);
     bool texture_default = fgGetBool("/sim/rendering/textures");
-
+    
     state = new ssgStateSelector(2);
     state->ref();
 
@@ -389,15 +389,6 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
     textured->enable( GL_TEXTURE_2D );
     textured->disable( GL_BLEND );
     textured->disable( GL_ALPHA_TEST );
-#if 0
-#  ifdef GL_EXT_texture_filter_anisotropic
-    float max_anisotropy;
-    glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-		     max_anisotropy );
-    cout << "Max anisotropy = " << max_anisotropy << endl;
-#  endif
-#endif
     if ( !defer_tex_load ) {
 	textured->setTexture( (char *)texture_path.c_str(), wrapu, wrapv );
 	texture_loaded = true;
@@ -462,25 +453,31 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
 
 void FGNewMat::set_ssg_state( ssgSimpleState *s )
 {
+    GLenum shade_model =
+        (fgGetBool("/sim/rendering/shading") ? GL_SMOOTH : GL_FLAT);
+    bool texture_default = fgGetBool("/sim/rendering/textures");
+
     state = new ssgStateSelector(2);
     state->ref();
 
     textured = s;
+    texture_loaded = true;
 
     nontextured = new ssgSimpleState();
     nontextured->ref();
 
+    // Set up the textured state
+    textured->setShadeModel( shade_model );
+
     // Set up the coloured state
     nontextured->enable( GL_LIGHTING );
-    nontextured->setShadeModel( GL_FLAT );
+    nontextured->setShadeModel( shade_model );
     nontextured->enable ( GL_CULL_FACE      ) ;
     nontextured->disable( GL_TEXTURE_2D );
     nontextured->disable( GL_BLEND );
     nontextured->disable( GL_ALPHA_TEST );
     nontextured->disable( GL_COLOR_MATERIAL );
 
-    /* cout << "ambient = " << ambient[0] << "," << ambient[1] 
-       << "," << ambient[2] << endl; */
     nontextured->setMaterial ( GL_AMBIENT, 
 			       ambient[0], ambient[1], 
 			       ambient[2], ambient[3] ) ;
@@ -499,7 +496,11 @@ void FGNewMat::set_ssg_state( ssgSimpleState *s )
     state->setStep( 1, nontextured ); // untextured
 
     // Choose the appropriate starting state.
-    state->selectStep(0);
+    if ( texture_default ) {
+	state->selectStep(0);
+    } else {
+	state->selectStep(1);
+    }
 }
 
 // end of newmat.cxx

@@ -1,4 +1,4 @@
-// dir_lights.hxx -- build a 'directional' light on the fly
+// pt_lights.hxx -- build a 'directional' light on the fly
 //
 // Written by Curtis Olson, started March 2002.
 //
@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _DIR_LIGHTS_HXX
-#define _DIR_LIGHTS_HXX
+#ifndef _PT_LIGHTS_HXX
+#define _PT_LIGHTS_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -39,7 +39,10 @@
 #include <vector>		// STL
 #include STL_STRING
 
+#include <plib/sg.h>
 #include <plib/ssg.h>		// plib include
+
+#include <simgear/math/sg_types.hxx>
 
 SG_USING_STD(string);
 SG_USING_STD(vector);
@@ -51,7 +54,7 @@ typedef int_list::const_iterator int_point_list_iterator;
 
 
 // Define the various supported light types
-enum {
+typedef enum {
     FG_RWYLIGHT_TAXI = 0,
     FG_RWYLIGHT_VASI,
     FG_RWYLIGHT_EDGE,
@@ -93,13 +96,14 @@ enum {
 // Yes this get's to be long and convoluted.  If you can suggest a
 // simpler way, please do! :-)
 
-ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir );
+ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up );
 
 
-/* ssgLeaf *gen_directional_lights( const point_list &nodes,
-				 const point_list &normals,
-				 const int_list &pnt_i,
-				 const int_list &nml_i );
-*/
+ssgBranch *gen_directional_lights( const point_list &nodes,
+                                   const point_list &normals,
+                                   const int_list &pnt_i,
+                                   const int_list &nml_i,
+                                   sgVec3 up );
 
-#endif // _DIR_LIGHTS_HXX
+
+#endif // _PT_LIGHTS_HXX

@@ -61,14 +61,12 @@ class FGScenery : public FGSubsystem {
     sgdVec3 cur_normal;
 
     // SSG scene graph
-    ssgRoot * scene_graph;
-    ssgBranch * terrain_branch;
-    ssgBranch * gnd_lights_branch;
-    ssgBranch * rwy_lights_branch;
-    ssgBranch * models_branch;
-    ssgBranch * aircraft_branch;
-
-    ssgRoot *lighting;
+    ssgRoot *scene_graph;
+    ssgBranch *terrain_branch;
+    ssgRoot *gnd_lights_root;
+    ssgRoot *rwy_lights_root;
+    ssgBranch *models_branch;
+    ssgBranch *aircraft_branch;
 
 public:
 
@@ -93,42 +91,39 @@ public:
     inline void set_cur_radius( double r ) { cur_radius = r; }
     inline void set_cur_normal( sgdVec3 n ) { sgdCopyVec3( cur_normal, n ); }
 
-    inline ssgRoot * get_scene_graph () const { return scene_graph; }
+    inline ssgRoot *get_scene_graph () const { return scene_graph; }
     inline void set_scene_graph (ssgRoot * s) { scene_graph = s; }
 
-    inline ssgBranch * get_terrain_branch () const { return terrain_branch; }
+    inline ssgBranch *get_terrain_branch () const { return terrain_branch; }
     inline void set_terrain_branch (ssgBranch * t) { terrain_branch = t; }
 
-    inline ssgBranch * get_gnd_lights_branch () const {
-      return gnd_lights_branch;
+    inline ssgRoot *get_gnd_lights_root () const {
+        return gnd_lights_root;
     }
-    inline void set_gnd_lights_branch (ssgBranch * t) {
-      gnd_lights_branch = t;
-    }
-
-    inline ssgBranch * get_rwy_lights_branch () const {
-      return rwy_lights_branch;
-    }
-    inline void set_rwy_lights_branch (ssgBranch * t) {
-      rwy_lights_branch = t;
+    inline void set_gnd_lights_root (ssgRoot *r) {
+        gnd_lights_root = r;
     }
 
-    inline ssgBranch * get_models_branch () const {
-      return models_branch;
+    inline ssgRoot *get_rwy_lights_root () const {
+        return rwy_lights_root;
     }
-    inline void set_models_branch (ssgBranch * t) {
-      models_branch = t;
-    }
-
-    inline ssgBranch * get_aircraft_branch () const {
-      return aircraft_branch;
-    }
-    inline void set_aircraft_branch (ssgBranch * t) {
-      aircraft_branch = t;
+    inline void set_rwy_lights_root (ssgRoot *r) {
+        rwy_lights_root = r;
     }
 
-    inline ssgRoot * get_lighting () const { return lighting; }
-    inline void set_lighting (ssgRoot *l) { lighting = l; }
+    inline ssgBranch *get_models_branch () const {
+        return models_branch;
+    }
+    inline void set_models_branch (ssgBranch *t) {
+        models_branch = t;
+    }
+
+    inline ssgBranch *get_aircraft_branch () const {
+        return aircraft_branch;
+    }
+    inline void set_aircraft_branch (ssgBranch *t) {
+        aircraft_branch = t;
+    }
 };
 
 

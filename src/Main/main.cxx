@@ -397,7 +397,8 @@ void trRenderFrame( void ) {
     // draw the lights
     glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
     ssgSetNearFar( scene_nearplane, scene_farplane );
-    ssgCullAndDraw( globals->get_scenery()->get_lighting() );
+    ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
+    ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
 
     if (fgGetBool("/environment/clouds/status"))
       thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
@@ -749,7 +750,17 @@ void fgRenderFrame() {
 #endif
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
-	ssgCullAndDraw( globals->get_scenery()->get_lighting() );
+	ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
+
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+        glEnable(GL_TEXTURE_GEN_S);
+        glEnable(GL_TEXTURE_GEN_T);
+        glPolygonMode(GL_FRONT, GL_POINT);
+	ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
+        glPolygonMode(GL_FRONT, GL_FILL);
+        glDisable(GL_TEXTURE_GEN_S);
+        glDisable(GL_TEXTURE_GEN_T);
 
 	//static int _frame_count = 0;
 	//if (_frame_count % 30 == 0) {
@@ -855,9 +866,6 @@ void fgUpdateTimeDepCalcs() {
     //SG_LOG(SG_FLIGHT,SG_INFO, "Updating time dep calcs()");
 
     fgLIGHT *l = &cur_light_params;
-    int i;
-
-    long multi_loop = 1;
 
     // Initialize the FDM here if it hasn't been and if we have a
     // scenery elevation hit.
@@ -2069,7 +2077,7 @@ void fgLoadDCS(void) {
 						    //dummy_tile->lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
 							lightpoints_transform->addKid( dummy_tile->lightmaps_sequence );
 							lightpoints_transform->ref();
-							globals->get_scenery()->get_gnd_lights_branch()->addKid( lightpoints_transform );
+							globals->get_scenery()->get_gnd_lights_root()->addKid( lightpoints_transform );
 						} 
 					} //if in1 
                 } //if objc

@@ -59,6 +59,7 @@
 
 #include "newmat.hxx"
 #include "matlib.hxx"
+#include "pt_lights.hxx"
 #include "obj.hxx"
 
 SG_USING_STD(string);
@@ -1376,12 +1377,9 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 
     geometry->setName( (char *)path.c_str() );
 
-    if ( is_base ) {
-        // reference point (center offset/bounding sphere)
-        *center = obj.get_gbs_center();
-        *bounding_radius = obj.get_gbs_radius();
-
-    }
+    // reference point (center offset/bounding sphere)
+    *center = obj.get_gbs_center();
+    *bounding_radius = obj.get_gbs_radius();
 
     point_list const& nodes = obj.get_wgs84_nodes();
     point_list const& colors = obj.get_colors();
@@ -1401,29 +1399,30 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     for ( i = 0; i < pts_v.size(); ++i ) {
         // cout << "pts_v.size() = " << pts_v.size() << endl;
 	if ( pt_materials[i].substr(0, 3) == "RWY" ) {
-            material = "LIGHTS";
+            material = "GROUND_LIGHTS";
             is_lighting = true;
-        } else {
+            sgVec3 up;
+            sgSetVec3( up, center->x(), center->y(), center->z() );
+            ssgBranch *branch = gen_directional_lights( nodes, normals,
+                                                        pts_v[i], pts_n[i],
+                                                        up );
+            float ranges[] = { 0, 12000 };
+            // branch->setCallback( SSG_CALLBACK_PREDRAW, runway_lights_predraw );
+            ssgRangeSelector * lod = new ssgRangeSelector;
+            lod->setRanges( ranges, 2 );
+            lod->addKid( branch );
+            rwy_lights->addKid( lod );
+       } else {
             material = pt_materials[i];
-        }
-        tex_index.clear();
-        ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
-                                  nodes, normals, texcoords,
-                                  pts_v[i], pts_n[i], tex_index,
-                                  false, ground_lights );
+            tex_index.clear();
+            ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
+                                      nodes, normals, texcoords,
+                                      pts_v[i], pts_n[i], tex_index,
+                                      false, ground_lights );
+            geometry->addKid( leaf );
+       }
 
         if ( is_lighting ) {
-            float ranges[] = {
-                0,
-                12000
-            };
-            leaf->setCallback(SSG_CALLBACK_PREDRAW, runway_lights_predraw);
-            ssgRangeSelector * lod = new ssgRangeSelector;
-            lod->setRanges(ranges, 2);
-            lod->addKid(leaf);
-            rwy_lights->addKid(lod);
-        } else {
-            geometry->addKid( leaf );
         }
     }
 
