@@ -72,6 +72,8 @@ void fgTimeInit(fgTIME *t) {
 
     t->warp = current_options.get_time_offset();
     t->warp_delta = 0;
+
+    t->pause = 0;
 }
 
 
@@ -409,6 +411,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.12  1998/07/27 18:42:22  curt
+// Added a pause option.
+//
 // Revision 1.11  1998/07/22 21:45:37  curt
 // fg_time.cxx: Removed call to ctime() in a printf() which should be harmless
 //   but seems to be triggering a bug.

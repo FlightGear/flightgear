@@ -80,6 +80,9 @@ typedef struct {
     // How much to change the value of warp each iteration.  Allows us
     // to make time progress faster than normal.
     long int warp_delta; 
+
+    // Paused (0 = no, 1 = yes)
+    int pause;
 } fgTIME;
 
 extern fgTIME cur_time_params;
@@ -115,6 +118,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.6  1998/07/27 18:42:22  curt
+// Added a pause option.
+//
 // Revision 1.5  1998/05/22 21:14:54  curt
 // Rewrote event.cxx in C++ as a class using STL for the internal event list
 // and run queue this removes the arbitrary list sizes and makes things much
