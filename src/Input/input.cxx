@@ -727,17 +727,19 @@ FGInput::_update_joystick (double dt)
       }
      
                                 // do we have to emulate axis buttons?
-      if (a.low.bindings[modifiers].size())
-        _update_button(_joystick_bindings[i].axes[j].low,
-                       modifiers,
-                       axis_values[j] < a.low_threshold,
-                       -1, -1);
-      
-      if (a.high.bindings[modifiers].size())
-        _update_button(_joystick_bindings[i].axes[j].high,
-                       modifiers,
-                       axis_values[j] > a.high_threshold,
-                       -1, -1);
+      if (_last_dt > 0.05) {
+        if (a.low.bindings[modifiers].size())
+          _update_button(_joystick_bindings[i].axes[j].low,
+                         modifiers,
+                         axis_values[j] < a.low_threshold,
+                         -1, -1);
+
+        if (a.high.bindings[modifiers].size())
+          _update_button(_joystick_bindings[i].axes[j].high,
+                         modifiers,
+                         axis_values[j] > a.high_threshold,
+                         -1, -1);
+      }
     }
 
                                 // Fire bindings for the buttons.
