@@ -267,6 +267,7 @@ bool FGATCOutput::open( int lock_fd ) {
 
 #endif
 
+#ifdef ATCFLIGHTSIM_HAVE_COMPASS
     /////////////////////////////////////////////////////////////////////
     // Home the compass stepper motor
     /////////////////////////////////////////////////////////////////////
@@ -317,6 +318,7 @@ bool FGATCOutput::open( int lock_fd ) {
     }
 
     compass_position = 0.0;
+#endif
 
     /////////////////////////////////////////////////////////////////////
     // Blank the radio display
@@ -930,7 +932,9 @@ bool FGATCOutput::process() {
 
     do_lamps();
     do_radio_display();
+#ifdef ATCFLIGHTSIM_HAVE_COMPASS
     do_steppers();
+#endif
 	
     return true;
 }
