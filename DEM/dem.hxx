@@ -43,7 +43,7 @@
 #define DEM_SIZE_1 1201
 
 
-class fgDEM {
+class FGDem {
 
 private:
 
@@ -60,7 +60,7 @@ private:
     // Distance between column and row data points (in arc seconds)
     double col_step, row_step;
     
-    // pointers to the actual mesh data allocated here
+    // pointers to the actual grid data allocated here
     float (*dem_data)[DEM_SIZE_1];
     float (*output_data)[DEM_SIZE_1];
 
@@ -96,11 +96,11 @@ private:
 public:
 
     // Constructor
-    fgDEM( void );
-    fgDEM( const string& file );
+    FGDem( void );
+    FGDem( const string& file );
 
     // Destructor
-    ~fgDEM( void );
+    ~FGDem( void );
 
     // open a DEM file (use "-" if input is coming from stdin)
     int open ( const string& file );
@@ -117,13 +117,19 @@ public:
     // read and parse DEM "B" record
     void read_b_record();
 
-    // return the current altitude based on mesh data.  We should
+    // write out the area of data covered by the specified bucket.
+    // Data is written out column by column starting at the lower left
+    // hand corner.
+    int write_area( const string& root, FGBucket& b, bool compress );
+
+#if 0
+    // return the current altitude based on grid data.  We should
     // rewrite this to interpolate exact values, but for now this is
     // good enough
     double interpolate_altitude( double lon, double lat );
 
     // Use least squares to fit a simpler data set to dem data
-    void fit( double error, const FGBucket& p );
+    void fit( double error, FGBucket& p );
 
     // Initialize output mesh structure
     void outputmesh_init( void );
@@ -135,7 +141,8 @@ public:
     void outputmesh_set_pt( int i, int j, double value );
 
     // Write out a node file that can be used by the "triangle" program
-    void outputmesh_output_nodes( const string& fg_root, const FGBucket& p );
+    void outputmesh_output_nodes( const string& fg_root, FGBucket& p );
+#endif
 
     // Informational methods
     inline double get_originx() const { return originx; }
@@ -151,6 +158,10 @@ public:
 
 
 // $Log$
+// Revision 1.12  1999/03/12 22:53:09  curt
+// Added a routine to dump out the portion of the dem data covered by a
+// specified bucket.  Other changes related to needs of scenery tools overhaul.
+//
 // Revision 1.11  1999/03/11 23:31:57  curt
 // Tweaks to use newbucket.hxx
 //

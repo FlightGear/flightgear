@@ -54,10 +54,11 @@
 #include <Misc/fgstream.hxx>
 #include <Misc/strutils.hxx>
 #include <Include/compiler.h>
+
 FG_USING_NAMESPACE(std);
 
 #include "dem.hxx"
-#include "leastsqs.hxx"
+// #include "leastsqs.hxx"
 
 #include <Include/fg_constants.h>
 
@@ -76,24 +77,25 @@ FG_USING_NAMESPACE(std);
 #endif //0
 
 
-fgDEM::fgDEM( void ) {
-    // cout << "class fgDEM CONstructor called." << endl;
+FGDem::FGDem( void ) {
+    // cout << "class FGDem CONstructor called." << endl;
     dem_data = new float[DEM_SIZE_1][DEM_SIZE_1];
     output_data = new float[DEM_SIZE_1][DEM_SIZE_1];
 }
 
 
-fgDEM::fgDEM( const string &file ) {
-    // cout << "class fgDEM CONstructor called." << endl;
+FGDem::FGDem( const string &file ) {
+    // cout << "class FGDem CONstructor called." << endl;
     dem_data = new float[DEM_SIZE_1][DEM_SIZE_1];
     output_data = new float[DEM_SIZE_1][DEM_SIZE_1];
 
-    fgDEM::open(file);
+    FGDem::open(file);
 }
 
 
 // open a DEM file
-int fgDEM::open ( const string& file ) {
+int
+FGDem::open ( const string& file ) {
     // open input file (or read from stdin)
     if ( file ==  "-" ) {
 	printf("Loading DEM data file: stdin\n");
@@ -115,7 +117,8 @@ int fgDEM::open ( const string& file ) {
 
 
 // close a DEM file
-int fgDEM::close () {
+int
+FGDem::close () {
     // the fg_gzifstream doesn't seem to have a close()
 
     delete in;
@@ -125,7 +128,8 @@ int fgDEM::close () {
 
 
 // return next token from input stream
-string fgDEM::next_token() {
+string
+FGDem::next_token() {
     string token;
 
     *in >> token;
@@ -137,7 +141,8 @@ string fgDEM::next_token() {
 
 
 // return next integer from input stream
-int fgDEM::next_int() {
+int
+FGDem::next_int() {
     int result;
     
     *in >> result;
@@ -147,7 +152,8 @@ int fgDEM::next_int() {
 
 
 // return next double from input stream
-double fgDEM::next_double() {
+double
+FGDem::next_double() {
     double result;
 
     *in >> result;
@@ -157,7 +163,8 @@ double fgDEM::next_double() {
 
 
 // return next exponential num from input stream
-double fgDEM::next_exp() {
+double
+FGDem::next_exp() {
     string token;
     double mantissa;
     int exp, acc;
@@ -201,7 +208,8 @@ double fgDEM::next_exp() {
 
 
 // read and parse DEM "A" record
-int fgDEM::read_a_record() {
+int
+FGDem::read_a_record() {
     int i, inum;
     double dnum;
     string name, token;
@@ -306,32 +314,10 @@ int fgDEM::read_a_record() {
     i = token.length();
     cout << "    length = " << i << "\n";
 
-#if 1
     inum = atoi( token.substr( 0, i - 36 ) );
-    row_step = atof( token.substr( i - 36, 12 ) );
-    col_step = atof( token.substr( i - 24, 12 ) );
-    //token.substr( 25, 12 )
-#else
-    ptr = token.c_str() + i - 12;
-    cout << "    last field = " << ptr << " = " << atof(ptr) << "\n";
-    ptr[0] = '\0';
-
-    ptr = ptr - 12;
-    col_step = atof(ptr);
-    cout << "    last field = " << ptr << " = " << col_step << "\n";
-    ptr[0] = '\0';
-
-    ptr = ptr - 12;
-    row_step = atof(ptr);
-    cout << "    last field = " << ptr << " = " << row_step << "\n";
-    ptr[0] = '\0';
-
-    // accuracy code = atod(token)
-    ptr = ptr - 12;
-    inum = atoi(ptr);
-#endif
+    row_step = atof( token.substr( i - 24, 12 ) );
+    col_step = atof( token.substr( i - 36, 12 ) );
     cout << "    Accuracy code = " << inum << "\n";
-
     cout << "    column step = " << col_step << 
 	"  row step = " << row_step << "\n";
 
@@ -347,7 +333,8 @@ int fgDEM::read_a_record() {
 
 
 // read and parse DEM "B" record
-void fgDEM::read_b_record( ) {
+void
+FGDem::read_b_record( ) {
     string token;
     int i;
 
@@ -384,7 +371,8 @@ void fgDEM::read_b_record( ) {
 
 
 // parse dem file
-int fgDEM::parse( ) {
+int
+FGDem::parse( ) {
     int i;
 
     cur_col = 0;
@@ -409,9 +397,87 @@ int fgDEM::parse( ) {
 }
 
 
-// return the current altitude based on mesh data.  We should rewrite
+// write out the area of data covered by the specified bucket.  Data
+// is written out column by column starting at the lower left hand
+// corner.
+int
+FGDem::write_area( const string& root, FGBucket& b, bool compress ) {
+    char tile_name[256];
+
+    // calculate some boundaries
+    double min_x = ( b.get_center_lon() - 0.5 * b.get_width() ) * 3600.0;
+    double max_x = ( b.get_center_lon() + 0.5 * b.get_width() ) * 3600.0;
+
+    double min_y = ( b.get_center_lat() - 0.5 * b.get_height() ) * 3600.0;
+    double max_y = ( b.get_center_lat() + 0.5 * b.get_height() ) * 3600.0;
+
+    cout << b << endl;
+    cout << "width = " << b.get_width() << " height = " << b.get_height() 
+	 << endl;
+
+    int start_x = (int)((min_x - originx) / col_step);
+    int span_x = (int)(b.get_width() * 3600.0 / col_step);
+
+    int start_y = (int)((min_y - originy) / row_step);
+    int span_y = (int)(b.get_height() * 3600.0 / row_step);
+
+    cout << "start_x = " << start_x << "  span_x = " << span_x << endl;
+    cout << "start_y = " << start_y << "  span_y = " << span_y << endl;
+
+    // Do a simple sanity checking.  But, please, please be nice to
+    // this write_area() routine and feed it buckets that coincide
+    // well with the underlying grid structure and spacing.
+
+    if ( ( min_x < originx )
+	 || ( max_x > originx + cols * col_step )
+	 || ( min_y < originy )
+	 || ( max_y > originy + rows * row_step ) ) {
+	cout << "  ERROR: bucket at least partially outside DEM data range!" <<
+	    endl;
+	return -1;
+    }
+
+    // generate output file name
+    string base = b.gen_base_path();
+    string path = root + "/Scenery/" + base;
+    string command = "mkdir -p " + path;
+    system( command.c_str() );
+
+    long int b_index = b.gen_index();
+    sprintf(tile_name, "%ld", b_index);
+    string demfile = path + "/" + tile_name + ".dem";
+    cout << "demfile = " << demfile << endl;
+
+    // write the file
+    FILE *fp;
+    if ( (fp = fopen(demfile.c_str(), "w")) == NULL ) {
+	cout << "cannot open " << demfile << " for writing!" << endl;
+	exit(-1);
+    }
+
+    fprintf( fp, "%d %d\n", (int)min_x, (int)min_y );
+    fprintf( fp, "%d %d %d %d\n", span_x + 1, (int)col_step, 
+	     span_y + 1, (int)row_step );
+    for ( int i = start_x; i <= start_x + span_x; ++i ) {
+	for ( int j = start_y; j <= start_y + span_y; ++j ) {
+	    fprintf( fp, "%d ", (int)dem_data[i][j] );
+	}
+	fprintf( fp, "\n" );
+    }
+    fclose(fp);
+
+    if ( compress ) {
+	string command = "gzip --best -f " + demfile;
+	system( command.c_str() );
+    }
+}
+
+
+#if 0
+
+// return the current altitude based on grid data.  We should rewrite
 // this to interpolate exact values, but for now this is good enough
-double fgDEM::interpolate_altitude( double lon, double lat ) {
+double FGDem::interpolate_altitude( double lon, double lat ) {
     // we expect incoming (lon,lat) to be in arcsec for now
 
     double xlocal, ylocal, dx, dy, zA, zB, elev;
@@ -524,7 +590,7 @@ double fgDEM::interpolate_altitude( double lon, double lat ) {
 
 
 // Use least squares to fit a simpler data set to dem data
-void fgDEM::fit( double error, const FGBucket& p ) {
+void FGDem::fit( double error, FGBucket& p ) {
     double x[DEM_SIZE_1], y[DEM_SIZE_1];
     double m, b, ave_error, max_error;
     double cury, lasty;
@@ -537,9 +603,9 @@ void fgDEM::fit( double error, const FGBucket& p ) {
     outputmesh_init();
 
     // determine dimensions
-    colmin = p->x * ( (cols - 1) / 8);
+    colmin = p.get_x() * ( (cols - 1) / 8);
     colmax = colmin + ( (cols - 1) / 8);
-    rowmin = p->y * ( (rows - 1) / 8);
+    rowmin = p.get_y() * ( (rows - 1) / 8);
     rowmax = rowmin + ( (rows - 1) / 8);
     printf("Fitting region = %d,%d to %d,%d\n", colmin, rowmin, colmax, rowmax);
     
@@ -660,7 +726,7 @@ void fgDEM::fit( double error, const FGBucket& p ) {
 
 
 // Initialize output mesh structure
-void fgDEM::outputmesh_init( void ) {
+void FGDem::outputmesh_init( void ) {
     int i, j;
     
     for ( j = 0; j < DEM_SIZE_1; j++ ) {
@@ -672,13 +738,13 @@ void fgDEM::outputmesh_init( void ) {
 
 
 // Get the value of a mesh node
-double fgDEM::outputmesh_get_pt( int i, int j ) {
+double FGDem::outputmesh_get_pt( int i, int j ) {
     return ( output_data[i][j] );
 }
 
 
 // Set the value of a mesh node
-void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
+void FGDem::outputmesh_set_pt( int i, int j, double value ) {
     // printf("Setting data[%d][%d] = %.2f\n", i, j, value);
    output_data[i][j] = value;
 }
@@ -688,12 +754,12 @@ void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
 // Check for an optional "index.node.ex" file in case there is a .poly
 // file to go along with this node file.  Include these nodes first
 // since they are referenced by position from the .poly file.
-void fgDEM::outputmesh_output_nodes( const string& fg_root, const FGBucket& p )
+void FGDem::outputmesh_output_nodes( const string& fg_root, FGBucket& p )
 {
     double exnodes[MAX_EX_NODES][3];
     struct stat stat_buf;
     string dir;
-    char base_path[256], file[256], exfile[256];
+    char file[256], exfile[256];
 #ifdef WIN32
     char tmp_path[256];
 #endif
@@ -704,15 +770,15 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, const FGBucket& p )
     int i, j, count, excount, result;
 
     // determine dimensions
-    colmin = p->x * ( (cols - 1) / 8);
+    colmin = p.get_x() * ( (cols - 1) / 8);
     colmax = colmin + ( (cols - 1) / 8);
-    rowmin = p->y * ( (rows - 1) / 8);
+    rowmin = p.get_y() * ( (rows - 1) / 8);
     rowmax = rowmin + ( (rows - 1) / 8);
     cout << "  dumping region = " << colmin << "," << rowmin << " to " <<
 	colmax << "," << rowmax << "\n";
 
     // generate the base directory
-    fgBucketGenBasePath(p, base_path);
+    string base_path = p.gen_base_path();
     cout << "fg_root = " << fg_root << "  Base Path = " << base_path << endl;
     dir = fg_root + "/Scenery/" + base_path;
     cout << "Dir = " << dir << endl;
@@ -753,7 +819,7 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, const FGBucket& p )
     }
 
     // get index and generate output file name
-    index = fgBucketGenIndex(p);
+    index = p.gen_index();
     sprintf(file, "%s/%ld.node", dir.c_str(), index);
 
     // get (optional) extra node file name (in case there is matching
@@ -821,16 +887,21 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, const FGBucket& p )
 
     fclose(fd);
 }
+#endif
 
 
-fgDEM::~fgDEM( void ) {
-    // printf("class fgDEM DEstructor called.\n");
+FGDem::~FGDem( void ) {
+    // printf("class FGDem DEstructor called.\n");
     delete [] dem_data;
     delete [] output_data;
 }
 
 
 // $Log$
+// Revision 1.25  1999/03/12 22:53:07  curt
+// Added a routine to dump out the portion of the dem data covered by a
+// specified bucket.  Other changes related to needs of scenery tools overhaul.
+//
 // Revision 1.24  1999/03/11 23:31:56  curt
 // Tweaks to use newbucket.hxx
 //
