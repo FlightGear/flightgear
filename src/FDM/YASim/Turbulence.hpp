@@ -5,8 +5,9 @@ public:
     Turbulence(int gens, int seed);
     ~Turbulence();
     void update(double dt, double rate);
-    void setMagnitude(double mag) { _mag = mag; }
+    void setMagnitude(double mag);
     void getTurbulence(double* loc, float* turbOut);
+    void offset(float* dist);
 
 private:
     unsigned int hashrand(unsigned int i);
@@ -21,7 +22,8 @@ private:
     int _sz;
     int _seed;
 
-    double _currTime;
+    double _off[3];
+    double _timeOff;
     double _mag;
     float _x0, _x1, _y0, _y1, _z0, _z1;
     unsigned char* _data;

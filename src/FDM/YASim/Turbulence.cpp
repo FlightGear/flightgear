@@ -8,10 +8,24 @@ namespace yasim {
 // generated turbulence fields top out at about 70% of this number.
 const float MAX_TURBULENCE = 20;
 
+// Rate, in "meters" per second, of the default time axis motion.
+// This will be multiplied by the rate-hz property to get the actual
+// time axis offset.  A setting of 2.0 causes the maximum frequency
+// component to arrive at 1 Hz.
+const float BASE_RATE = 2.0;
+
+// Power to which the input magnitude (always in the range [0:1]) is
+// raised to get a coefficient for the turbulence velocity.  Setting
+// this to 1.0 makes the scale linear.  Increasing it makes it
+// curvier, with a sharp increase at the high end of the scale.
+const double MAGNITUDE_EXP = 2.0;
+
 // How many generations are "meaningful" (i.e., not part of the normal
 // wind computation).  Decreasing this number will reallocate
-// bandwidth to the higher frequency components.
-const int MEANINGFUL_GENS = 9;
+// bandwidth to the higher frequency components.  A turbulence field
+// will swing between maximal values over a distance of approximately
+// 2^(MEANINGFUL_GENS-1).
+const int MEANINGFUL_GENS = 8;
 
 static const float FT2M = 0.3048;
 
@@ -100,19 +114,27 @@ inline void Turbulence::turblut(int x, int y, float* out)
     out[2] = c2fu(turb[2]) * (_z1 - _z0) + _z0;
 }
 
+void Turbulence::setMagnitude(double mag)
+{
+    _mag = Math::pow(mag, MAGNITUDE_EXP);
+}
+
 void Turbulence::update(double dt, double rate)
 {
-    // Assume a normal rate is 2 unit/sec.  This will cause the
-    // highest frequency turbulence component to arrive at 1 Hz.
-    _currTime += 2 * dt * rate;
-    if(_currTime > _sz) _currTime -= _sz;
+    _timeOff += BASE_RATE * dt * rate;
+}
+
+void Turbulence::offset(float* offset)
+{
+    for(int i=0; i<3; i++)
+        _off[i] += offset[i];
 }
 
 void Turbulence::getTurbulence(double* loc, float* turbOut)
 {
     // Convert to integer 2D coordinates; wrap to [0:_sz].
-    double a = loc[0] + loc[2];
-    double b = loc[1] + _currTime;
+    double a = (loc[0] + _off[0]) + (loc[2] + _off[2]);
+    double b = (loc[1] + _off[1]) + _timeOff;
     a -= _sz * Math::floor(a * (1.0/_sz));
     b -= _sz * Math::floor(b * (1.0/_sz));
     int x = (int)Math::floor(a);
@@ -130,7 +152,7 @@ void Turbulence::getTurbulence(double* loc, float* turbOut)
     turblut(x+1, y+1, turb11);
 
     // Interpolate, add in units
-    float mag = _mag * _mag * MAX_TURBULENCE;
+    float mag = _mag * MAX_TURBULENCE;
     for(int i=0; i<3; i++) {
         float avg0 = (1-a)*turb00[i] + a*turb01[i];
         float avg1 = (1-a)*turb10[i] + a*turb11[i];
@@ -170,7 +192,8 @@ Turbulence::Turbulence(int gens, int seed)
     _seed = seed;
     _mag = 1;
     _x0 = _x1 = _y0 = _y1 = _z0 = _z1 = 0;
-    _currTime = 0;
+    _timeOff = 0;
+    _off[0] = _off[1] = _off[2] = 0;
 
     float* xbuf = new float[_sz*_sz];
     float* ybuf = new float[_sz*_sz];

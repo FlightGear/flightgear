@@ -97,6 +97,13 @@ void Model::initIteration()
 	t->getGyro(v);
 	Math::add3(v, _gyro, _gyro);
     }
+
+    // Displace the turbulence coordinates according to the local wind.
+    if(_turb) {
+        float toff[3];
+        Math::mul3(_integrator.getInterval(), _wind, toff);
+        _turb->offset(toff);
+    }
 }
 
 // FIXME: This method looks to me like it's doing *integration*, not
