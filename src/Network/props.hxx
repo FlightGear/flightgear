@@ -39,8 +39,6 @@ const static int max_cmd_len = 256;
 
 class FGProps : public FGProtocol {
 
-    char buf[max_cmd_len];
-    int length;
     enum Mode {
 	PROMPT,
 	DATA
@@ -50,6 +48,9 @@ class FGProps : public FGProtocol {
     // tree view of property list
     string path;
 
+    bool reset();
+    bool process_command( const char *cmd );
+    
 public:
 
     FGProps();
@@ -60,14 +61,10 @@ public:
 
     // process work for this port
     bool process();
-    bool process_command( const char *cmd );
 
     // close the channel
     bool close();
 
-private:
-
-    bool reset();
 };
 
 
