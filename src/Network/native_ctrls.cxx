@@ -138,6 +138,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         net->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	net->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
 	net->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
+	net->condition[i] = node->getDoubleValue( "condition", 0.0 );
 	net->magnetos[i] = node->getIntValue( "magnetos", 0 );
 	if ( i == 0 ) {
 	  // cout << "Magnetos -> " << node->getIntValue( "magnetos", 0 );
@@ -246,6 +247,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
             htond(net->mixture[i]);
             net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
             htond(net->prop_advance[i]);
+            htond(net->condition[i]);
 	    net->engine_ok[i] = htonl(net->engine_ok[i]);
 	    net->mag_left_ok[i] = htonl(net->mag_left_ok[i]);
 	    net->mag_right_ok[i] = htonl(net->mag_right_ok[i]);
@@ -305,6 +307,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
             htond(net->mixture[i]);
             net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
             htond(net->prop_advance[i]);
+            htond(net->condition[i]);
 	    net->engine_ok[i] = htonl(net->engine_ok[i]);
 	    net->mag_left_ok[i] = htonl(net->mag_left_ok[i]);
 	    net->mag_right_ok[i] = htonl(net->mag_right_ok[i]);
@@ -356,6 +359,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         node->getChild( "mixture" )->setDoubleValue( net->mixture[i] );
         node->getChild( "propeller-pitch" )
             ->setDoubleValue( net->prop_advance[i] );
+        node->getChild( "condition" )
+            ->setDoubleValue( net->condition[i] );
         node->getChild( "magnetos" )->setDoubleValue( net->magnetos[i] );
 
 	// Faults

@@ -16,7 +16,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 21;
+const int FG_NET_CTRLS_VERSION = 22;
 
 
 // Define a structure containing the control parameters
@@ -52,6 +52,7 @@ public:
     bool starter_power[FG_MAX_ENGINES];  // true = starter power
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
+    double condition[FG_MAX_ENGINES];    //  0 ... 1
     bool fuel_pump_power[FG_MAX_ENGINES];// true = on
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
 
