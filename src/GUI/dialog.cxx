@@ -141,13 +141,11 @@ format_callback(puObject *obj, int dx, int dy, void *n)
         }
     }
 
-    char buf[256], *end;
+    char buf[256];
     const char *src = obj->getLabel();
 
     if (number) {
         float value = atof(src);
-        if (end == src)
-            return;    // not a number
         snprintf(buf, 256, format, value);
     } else {
         snprintf(buf, 256, format, src);
