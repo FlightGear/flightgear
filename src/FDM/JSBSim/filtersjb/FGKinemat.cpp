@@ -55,6 +55,8 @@ FGKinemat::FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
 
   Detents.clear();
   TransitionTimes.clear();
+  
+  OutputPct=0;
 
   Type = AC_cfg->GetValue("TYPE");
   Name = AC_cfg->GetValue("NAME");
@@ -157,7 +159,11 @@ bool FGKinemat::Run(void ) {
     lastInputCmd = InputCmd;
     Output = OutputPos;
   }
-
+  
+  if( Detents[NumDetents-1] > 0 ) {
+    OutputPct = Output / Detents[NumDetents-1];
+  }
+  
   if (IsOutput) SetOutput();
 
   return true;

@@ -70,6 +70,9 @@ class FGKinemat  : public FGFCSComponent {
 public:
   FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg);
   ~FGKinemat();
+  
+  double GetOutputPct() { return OutputPct; }
+    
   bool Run (void );
   
 private:
@@ -80,6 +83,7 @@ private:
   double lastInputCmd;
   double InputCmd;
   double OutputPos;
+  double OutputPct;
   bool  InTransit;
 
   void Debug(int from);

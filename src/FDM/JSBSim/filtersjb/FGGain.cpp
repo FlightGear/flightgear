@@ -58,6 +58,8 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
   Gain = 1.000;
   Rows = 0;
   Min = Max = 0.0;
+  OutputPct=0;
+  invert=false;
   ScheduledBy = FG_UNDEF;
 
   Type = AC_cfg->GetValue("TYPE");
@@ -84,6 +86,8 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       *AC_cfg >> Min;
     } else if (token == "MAX") {
       *AC_cfg >> Max;
+    } else if (token == "INVERT") {
+      invert=true;  
     } else if (token == "ROWS") {
       *AC_cfg >> Rows;
       Table = new FGTable(Rows);
@@ -130,8 +134,15 @@ bool FGGain::Run(void )
 	  SchedGain = Table->GetValue(LookupVal);
     Output = Gain * SchedGain * Input;
   } else if (Type == "AEROSURFACE_SCALE") {
-    if (Output >= 0.0) Output = Input * Max;
-    else Output = Input * (-Min);
+    if(!invert) {
+      OutputPct = Input;
+      if (Input >= 0.0) Output = Input * Max;
+      else Output = Input * -Min;
+    } else {
+      OutputPct=-1*Input;
+      if (Input <= 0.0) Output = Input * -Max;
+      else Output = Input * Min;
+    } 
     Output *= Gain;
   }
 
@@ -179,6 +190,7 @@ void FGGain::Debug(int from)
       if (IsOutput) cout << "      OUTPUT: " << sOutputIdx << endl;
       cout << "      MIN: " << Min << endl;
       cout << "      MAX: " << Max << endl;
+      if(invert) cout << "      Invert mapping" << endl;
       if (ScheduledBy != FG_UNDEF) {
         cout << "      Scheduled by parameter: " << ScheduledBy << endl;
         Table->Print();

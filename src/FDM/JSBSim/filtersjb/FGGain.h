@@ -70,7 +70,9 @@ class FGGain  : public FGFCSComponent
 public:
   FGGain(FGFCS* fcs, FGConfigFile* AC_cfg);
   ~FGGain();
-
+  
+  double GetOutputPct() { return OutputPct; }
+  
   bool Run (void);
 
 private:
@@ -79,6 +81,8 @@ private:
   FGState* State;
   double Gain;
   double Min, Max;
+  double OutputPct;
+  bool invert;
   int Rows;
   eParam ScheduledBy;
 

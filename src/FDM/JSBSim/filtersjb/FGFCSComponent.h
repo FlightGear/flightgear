@@ -100,7 +100,10 @@ public:
   virtual bool Run(void);
   virtual void SetOutput(void);
   inline double GetOutput (void) {return Output;}
+  inline int GetOutputIdx(void) { return OutputIdx; }
   inline string GetName(void) {return Name;}
+  inline string GetType(void) { return Type; }
+  virtual double GetOutputPct(void) { return 0; }
 
 protected:
    /// Pilot/Aircraft, FCS, Autopilot inputs
