@@ -422,10 +422,12 @@ bool FGATC610x::open() {
     nav1_freq = fgGetNode( "/radios/nav[0]/frequencies/selected-mhz", true );
     nav1_stby_freq
 	= fgGetNode( "/radios/nav[0]/frequencies/standby-mhz", true );
+    nav1_obs = fgGetNode( "/radios/nav[0]/radials/selected-deg", true );
 
     nav2_freq = fgGetNode( "/radios/nav[1]/frequencies/selected-mhz", true );
     nav2_stby_freq
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
+    nav2_obs = fgGetNode( "/radios/nav[1]/radials/selected-deg", true );
 
     adf_power_btn = fgGetNode( "/radios/kr-87/inputs/power-btn", true );
     adf_vol = fgGetNode( "/radios/kr-87/inputs/volume", true );
@@ -610,7 +612,80 @@ bool FGATC610x::do_analog_in() {
     fgSetFloat( "/radios/kr-87/inputs/volume", tmp );
 
     // nav2 obs tuner
-    tmp = (float)analog_in_data[29] * 360.0f / 1024.0f;
+    static int last_obs2 = analog_in_data[29];
+    static double diff_ave = 0.0;
+    int diff = 0;
+
+    // cout << "val = " << analog_in_data[29] << " last_obs = " << last_obs2;
+
+#define FG_SECOND_TRY
+
+#if defined( FG_FIRST_TRY )
+    if ( analog_in_data[29] < 150 || analog_in_data[29] > 990 ) {
+        if ( last_obs2 > 512 && last_obs2 <= 990 ) {
+            diff = 1;
+        } else if ( last_obs2 >= 150 && last_obs2 <= 990 ) {
+            diff = -1;
+        }
+    } else if ( last_obs2 < 150 || last_obs2 > 990 ) {
+        if ( analog_in_data[29] > 512 && analog_in_data[29] <= 990 ) {
+            diff = -1;
+        } else if ( analog_in_data[29] >= 150 && analog_in_data[29] <= 990 ) {
+            diff = 1;
+        }
+    } else {
+        diff = analog_in_data[29] - last_obs2;
+    }
+#elif defined( FG_SECOND_TRY )
+    if ( analog_in_data[29] < 20 ) {
+        if ( last_obs2 >= 110 && last_obs2 < 512 ) {
+            diff = -1;
+        } else if ( last_obs2 >= 512 ) {
+            diff = 1;
+        }
+        last_obs2 = analog_in_data[29];
+    } else if ( analog_in_data[29] < 110 ) {
+        // do nothing
+    } else if ( last_obs2 < 20 ) {
+        if ( analog_in_data[29] >= 110 && analog_in_data[29] < 512 ) {
+            diff = 1;
+        } else if ( analog_in_data[29] >= 512 ) {
+            diff = -1;
+        }
+        last_obs2 = analog_in_data[29];
+    } else {
+        diff = analog_in_data[29] - last_obs2;
+        if ( abs(diff) > 200 ) {
+            // ignore
+            diff = 0;
+        }
+        last_obs2 = analog_in_data[29];
+    }
+#elif defined( FG_THIRD_TRY )
+    static bool ignore_next = false;
+    diff = analog_in_data[29] - last_obs2;
+    if ( abs(diff) > 200 ) {
+        // ignore
+        diff = 0;
+        ignore_next = true;
+    } else if ( ignore_next ) {
+        diff = 0;
+        ignore_next = false;
+    }
+    last_obs2 = analog_in_data[29];
+#endif
+
+    // cout << " diff = " << diff << endl;
+    if ( diff < -500 ) { diff += 1024; }
+    if ( diff > 500 ) { diff -= 1024; }
+
+    if ( fabs(diff_ave - diff) < 200 || fabs(diff) < fabs(diff_ave) ) {
+        diff_ave = (2.0/3.0) * diff_ave + (1.0/3.0) * diff;
+    }
+
+    tmp = nav2_obs->getDoubleValue() + (diff_ave * (60.0/914.0) );
+    while ( tmp >= 360.0 ) { tmp -= 360.0; }
+    while ( tmp < 0.0 ) { tmp += 360.0; }
     fgSetFloat( "/radios/nav[1]/radials/selected-deg", tmp );
 
     // nav1 obs tuner

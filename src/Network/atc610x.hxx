@@ -79,8 +79,8 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *navcom1_power_btn, *navcom2_power_btn;
     SGPropertyNode *com1_freq, *com1_stby_freq;
     SGPropertyNode *com2_freq, *com2_stby_freq;
-    SGPropertyNode *nav1_freq, *nav1_stby_freq;
-    SGPropertyNode *nav2_freq, *nav2_stby_freq;
+    SGPropertyNode *nav1_freq, *nav1_stby_freq, *nav1_obs;
+    SGPropertyNode *nav2_freq, *nav2_stby_freq, *nav2_obs;
     SGPropertyNode *adf_adf_btn, *adf_bfo_btn;
     SGPropertyNode *adf_power_btn, *adf_vol;
     SGPropertyNode *adf_freq, *adf_stby_freq;
