@@ -501,7 +501,7 @@ int FGTileMgr::update( void ) {
 	// have something to see in our first frame.
 	for ( i = 0; i < 9; ++i ) {
 	    if ( load_queue.size() ) {
-		FG_LOG( FG_TERRAIN, FG_INFO, 
+		FG_LOG( FG_TERRAIN, FG_DEBUG, 
 			"Load queue not empty, loading a tile" );
 	    
 		FGLoadRec pending = load_queue.front();
@@ -517,7 +517,7 @@ int FGTileMgr::update( void ) {
 #if 0 
 	// make sure load queue is flushed before doing shift
 	while ( load_queue.size() ) {
-	    FG_LOG( FG_TERRAIN, FG_INFO, 
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, 
 		    "Load queue not empty, flushing queue before tile shift." );
 	    
 	    FGLoadRec pending = load_queue.front();
@@ -582,7 +582,7 @@ int FGTileMgr::update( void ) {
     }
 
     if ( load_queue.size() ) {
-	FG_LOG( FG_TERRAIN, FG_INFO, "Load queue not empty, loading a tile" );
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "Load queue not empty, loading a tile" );
 
 	FGLoadRec pending = load_queue.front();
 	load_queue.pop_front();
