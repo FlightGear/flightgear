@@ -128,9 +128,9 @@ FGRadioStack::bind ()
     fgTie("/radios/nav1/radials/selected", this,
 	  &FGRadioStack::get_nav1_sel_radial,
 	  &FGRadioStack::set_nav1_sel_radial);
-    fgTie("/radios/nav1/on", this,
-	  &FGRadioStack::get_nav1_on_btn,
-	  &FGRadioStack::set_nav1_on_btn);
+    fgTie("/radios/nav1/volume", this,
+	  &FGRadioStack::get_nav1_vol_btn,
+	  &FGRadioStack::set_nav1_vol_btn);
     fgTie("/radios/nav1/ident", this,
 	  &FGRadioStack::get_nav1_ident_btn,
 	  &FGRadioStack::set_nav1_ident_btn);
@@ -156,9 +156,9 @@ FGRadioStack::bind ()
     fgTie("/radios/nav2/radials/selected", this,
 	  &FGRadioStack::get_nav2_sel_radial,
 	  &FGRadioStack::set_nav2_sel_radial);
-    fgTie("/radios/nav2/on", this,
-	  &FGRadioStack::get_nav2_on_btn,
-	  &FGRadioStack::set_nav2_on_btn);
+    fgTie("/radios/nav2/volume", this,
+	  &FGRadioStack::get_nav2_vol_btn,
+	  &FGRadioStack::set_nav2_vol_btn);
     fgTie("/radios/nav2/ident", this,
 	  &FGRadioStack::get_nav2_ident_btn,
 	  &FGRadioStack::set_nav2_ident_btn);
@@ -183,9 +183,9 @@ FGRadioStack::bind ()
 	  &FGRadioStack::get_adf_alt_freq, &FGRadioStack::set_adf_alt_freq);
     fgTie("/radios/adf/rotation", this,
 	  &FGRadioStack::get_adf_rotation, &FGRadioStack::set_adf_rotation);
-    fgTie("/radios/adf/on", this,
-	  &FGRadioStack::get_adf_on_btn,
-	  &FGRadioStack::set_adf_on_btn);
+    fgTie("/radios/adf/volume", this,
+	  &FGRadioStack::get_adf_vol_btn,
+	  &FGRadioStack::set_adf_vol_btn);
     fgTie("/radios/adf/ident", this,
 	  &FGRadioStack::get_adf_ident_btn,
 	  &FGRadioStack::set_adf_ident_btn);
@@ -363,7 +363,12 @@ FGRadioStack::update()
     if ( nav1_valid && nav1_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if ( nav1_on_btn && nav1_ident_btn ) {
+	if ( nav1_vol_btn > 0.1 && nav1_ident_btn ) {
+	    FGSimpleSound *sound;
+	    sound = globals->get_soundmgr()->find( "nav1-vor-ident" );
+	    sound->set_volume( nav1_vol_btn * 0.3 );
+	    sound = globals->get_soundmgr()->find( "nav1-dme-ident" );
+	    sound->set_volume( nav1_vol_btn * 0.3 );
 	    if ( nav1_last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
 		nav1_last_time = globals->get_time_params()->get_cur_time();
@@ -451,7 +456,12 @@ FGRadioStack::update()
     if ( nav2_valid && nav2_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if ( nav2_on_btn && nav2_ident_btn ) {
+	if ( nav2_vol_btn > 0.1 && nav2_ident_btn ) {
+	    FGSimpleSound *sound;
+	    sound = globals->get_soundmgr()->find( "nav2-vor-ident" );
+	    sound->set_volume( nav2_vol_btn * 0.3 );
+	    sound = globals->get_soundmgr()->find( "nav2-dme-ident" );
+	    sound->set_volume( nav2_vol_btn * 0.3 );
 	    if ( nav2_last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
 		nav2_last_time = globals->get_time_params()->get_cur_time();
@@ -508,7 +518,10 @@ FGRadioStack::update()
     if ( adf_valid && adf_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if ( adf_on_btn && adf_ident_btn ) {
+	if ( adf_vol_btn > 0.1 && adf_ident_btn ) {
+	    FGSimpleSound *sound;
+	    sound = globals->get_soundmgr()->find( "adf-ident" );
+	    sound->set_volume( adf_vol_btn * 0.3 );
 	    if ( adf_last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
 		adf_last_time = globals->get_time_params()->get_cur_time();

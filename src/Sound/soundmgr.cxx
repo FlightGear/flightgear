@@ -135,8 +135,8 @@ bool FGSoundMgr::remove( const string& refname ) {
 	// audio scheduler)
 	FGSimpleSound *sample = it->second;
 
-	cout << "Playing "
-	     << sample->get_sample()->getPlayCount() << " instances!" << endl;
+	// cout << "Playing " << sample->get_sample()->getPlayCount()
+	//      << " instances!" << endl;
 
 	audio_sched->stopSample( sample->get_sample() );
 	audio_sched->addSampleEnvelope( sample->get_sample(), 0, 0, 
@@ -158,15 +158,15 @@ bool FGSoundMgr::remove( const string& refname ) {
 	// are you going to do?  Hopefully the plib team will do a new
 	// stable relase with these problems fixed.
 
-	cout << "plib broken audio, skipping actual remove" << endl;
+	// cout << "plib broken audio, skipping actual remove" << endl;
 
 	return false;
 #else
 	// must call audio_sched->update() after stopping the sound
 	// but before deleting it.
 	audio_sched -> update();
-	cout << "Still playing "
-	     << sample->get_sample()->getPlayCount() << " instances!" << endl;
+	// cout << "Still playing " << sample->get_sample()->getPlayCount()
+	//      << " instances!" << endl;
 
 	delete sample;
         sounds.erase( it );
@@ -186,6 +186,18 @@ bool FGSoundMgr::exists( const string& refname ) {
 	return true;
    } else {
 	return false;
+    }
+}
+
+
+// return a pointer to the FGSimpleSound if the specified sound exists
+// in the sound manager system, otherwise return NULL
+FGSimpleSound *FGSoundMgr::find( const string& refname ) {
+    sound_map_iterator it = sounds.find( refname );
+    if ( it != sounds.end() ) {
+	return it->second;
+   } else {
+	return NULL;
     }
 }
 

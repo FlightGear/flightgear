@@ -86,7 +86,7 @@ class FGRadioStack : public FGSubsystem
     double nav1_heading;
     double nav1_target_gs;
     double nav1_magvar;
-    bool nav1_on_btn;
+    double nav1_vol_btn;
     bool nav1_ident_btn;
 
     string nav2_ident;
@@ -124,7 +124,7 @@ class FGRadioStack : public FGSubsystem
     double nav2_heading;
     double nav2_target_gs;
     double nav2_magvar;
-    bool nav2_on_btn;
+    double nav2_vol_btn;
     bool nav2_ident_btn;
 
     string adf_ident;
@@ -144,7 +144,7 @@ class FGRadioStack : public FGSubsystem
     double adf_x;
     double adf_y;
     double adf_z;
-    bool adf_on_btn;
+    double adf_vol_btn;
     bool adf_ident_btn;
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
@@ -176,7 +176,11 @@ public:
     inline void set_nav1_sel_radial( double radial ) {
 	nav1_sel_radial = radial; need_update = true;
     }
-    inline void set_nav1_on_btn( bool val ) { nav1_on_btn = val; }
+    inline void set_nav1_vol_btn( double val ) {
+	if ( val < 0.0 ) val = 0.0;
+	if ( val > 1.0 ) val = 1.0;
+	nav1_vol_btn = val;
+    }
     inline void set_nav1_ident_btn( bool val ) { nav1_ident_btn = val; }
 
     // NAV2 Setters
@@ -187,7 +191,11 @@ public:
     inline void set_nav2_sel_radial( double radial ) {
 	nav2_sel_radial = radial; need_update = true;
     }
-    inline void set_nav2_on_btn( bool val ) { nav2_on_btn = val; }
+    inline void set_nav2_vol_btn( double val ) {
+	if ( val < 0.0 ) val = 0.0;
+	if ( val > 1.0 ) val = 1.0;
+	nav2_vol_btn = val;
+    }
     inline void set_nav2_ident_btn( bool val ) { nav2_ident_btn = val; }
 
     // ADF Setters
@@ -196,7 +204,11 @@ public:
     }
     inline void set_adf_alt_freq( double freq ) { adf_alt_freq = freq; }
     inline void set_adf_rotation( double rot ) { adf_rotation = rot; }
-    inline void set_adf_on_btn( bool val ) { adf_on_btn = val; }
+    inline void set_adf_vol_btn( double val ) {
+	if ( val < 0.0 ) val = 0.0;
+	if ( val > 1.0 ) val = 1.0;
+	adf_vol_btn = val;
+    }
     inline void set_adf_ident_btn( bool val ) { adf_ident_btn = val; }
 
 
@@ -241,7 +253,7 @@ public:
     inline double get_nav1_magvar() const { return nav1_magvar; }
     double get_nav1_heading_needle_deflection() const;
     double get_nav1_gs_needle_deflection() const;
-    inline bool get_nav1_on_btn() const { return nav1_on_btn; }
+    inline double get_nav1_vol_btn() const { return nav1_vol_btn; }
     inline bool get_nav1_ident_btn() const { return nav1_ident_btn; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
@@ -269,14 +281,14 @@ public:
     inline double get_nav2_magvar() const { return nav2_magvar; }
     double get_nav2_heading_needle_deflection() const;
     double get_nav2_gs_needle_deflection() const;
-    inline bool get_nav2_on_btn() const { return nav2_on_btn; }
+    inline double get_nav2_vol_btn() const { return nav2_vol_btn; }
     inline bool get_nav2_ident_btn() const { return nav2_ident_btn; }
 
     inline bool get_adf_inrange() const { return adf_inrange; }
     inline double get_adf_lon() const { return adf_lon; }
     inline double get_adf_lat() const { return adf_lat; }
     inline double get_adf_heading() const { return adf_heading; }
-    inline bool get_adf_on_btn() const { return adf_on_btn; }
+    inline double get_adf_vol_btn() const { return adf_vol_btn; }
     inline bool get_adf_ident_btn() const { return adf_ident_btn; }
 };
 

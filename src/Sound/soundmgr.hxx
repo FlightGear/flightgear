@@ -109,6 +109,10 @@ public:
     // return true of the specified sound exists in the sound manager system
     bool exists( const string& refname );
 
+    // return a pointer to the FGSimpleSound if the specified sound
+    // exists in the sound manager system, otherwise return NULL
+    FGSimpleSound *find( const string& refname );
+
     // tell the scheduler to play the indexed sample in a continuous
     // loop
     bool play_looped( const string& refname );
