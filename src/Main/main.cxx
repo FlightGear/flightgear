@@ -78,6 +78,7 @@
 
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
+#include <Cockpit/steam.hxx>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
 #ifdef FG_NETWORK_OLK
@@ -662,10 +663,12 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 		     multi_loop * current_options.get_speed_up(),
 		     remainder ); */
 	cur_fdm_state->update( multi_loop * current_options.get_speed_up() );
+	FGSteam::update( multi_loop * current_options.get_speed_up() );
     } else {
 	// fgFDMUpdate( current_options.get_flight_model(), 
 	//              fdm_state, 0, remainder );
 	cur_fdm_state->update( 0 );
+	FGSteam::update( 0 );
     }
 
     fdm_list.push_back( *cur_fdm_state );

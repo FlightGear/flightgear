@@ -1387,7 +1387,7 @@ char *viewSubmenu               [] = {
     /* "Cockpit View > ", "View >","------------", */ "Toggle Panel...", NULL
 };
 puCallback viewSubmenuCb        [] = {
-    /* notCb, notCb, NULL, guiTogglePanel, */ NULL
+    /* notCb, notCb, NULL, */ guiTogglePanel, NULL
 };
 
 char *aircraftSubmenu           [] = {

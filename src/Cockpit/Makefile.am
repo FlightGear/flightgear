@@ -7,6 +7,7 @@ libCockpit_a_SOURCES = \
 	hud_labl.cxx hud_ladr.cxx \
 	hud_lat.cxx hud_lon.cxx \
 	hud_scal.cxx hud_tbi.cxx \
-	panel.cxx panel.hxx
+	panel.cxx panel.hxx \
+	steam.cxx steam.hxx
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/src

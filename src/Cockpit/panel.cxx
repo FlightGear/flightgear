@@ -43,6 +43,7 @@
 #include "cockpit.hxx"
 #include "panel.hxx"
 #include "hud.hxx"
+#include "steam.hxx"
 
 extern fgAPDataPtr APDataGlobal;
 
@@ -101,7 +102,7 @@ createAirspeedIndicator (int x, int y)
 				// Rotates with airspeed.
   inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  FGBFI::getAirspeed,
+			  FGSteam::get_ASI_kias,
 			  30.0, 220.0, 36.0 / 20.0, -54.0);
   return inst;
 }
@@ -162,21 +163,21 @@ createAltimeter (int x, int y)
 				// moves with altitude
   inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  FGBFI::getAltitude,
+			  FGSteam::get_ALT_ft,
 			  0.0, 100000.0, 360.0 / 1000.0, 0.0);
 
 				// Layer 2: thousands needle (short)
 				// moves with altitude
   inst->addLayer(2, createTexture("Textures/Panel/short-needle.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
-			  FGBFI::getAltitude,
+			  FGSteam::get_ALT_ft,
 			  0.0, 100000.0, 360.0 / 10000.0, 0.0);
 
 				// Layer 3: ten thousands bug (outside)
 				// moves with altitude
   inst->addLayer(3, createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(3, FGInstrumentLayer::ROTATION,
-			  FGBFI::getAltitude,
+			  FGSteam::get_ALT_ft,
 			  0.0, 100000.0, 360.0 / 100000.0, 0.0);
 
   return inst;
@@ -198,14 +199,14 @@ createTurnCoordinator (int x, int y)
 				// moves with roll
   inst->addLayer(1, createTexture("Textures/Panel/turn.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  FGBFI::getRoll,
+			  FGSteam::get_TC_radps,
 			  -30.0, 30.0, 1.0, 0.0);
 
 				// Layer 2: little ball
 				// moves with slip/skid
   inst->addLayer(2, createTexture("Textures/Panel/ball.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
-			  FGBFI::getSideSlip,
+			  FGSteam::get_TC_radps,
 			  -0.1, 0.1, 450.0, 0.0);
 
   return inst;
@@ -224,14 +225,14 @@ createGyroCompass (int x, int y)
 				// rotates with heading
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
-			  FGBFI::getHeading,
+			  FGSteam::get_DG_deg,
 			  -360.0, 360.0, -1.0, 0.0);
 
 				// Layer 1: heading bug
 				// rotates with heading and AP heading
   inst->addLayer(1, createTexture("Textures/Panel/bug.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  FGBFI::getHeading,
+			  FGSteam::get_DG_deg,
 			  -360.0, 360.0, -1.0, 0.0);
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
 			  FGBFI::getAPHeading,
@@ -259,7 +260,7 @@ createVerticalVelocity (int x, int y)
 				// moves with vertical velocity
   inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
-			  FGBFI::getVerticalSpeed,
+			  FGSteam::get_VSI_fps,
 			  -2000.0, 2000.0, 42.0/500.0, 270.0);
 
   return inst;
