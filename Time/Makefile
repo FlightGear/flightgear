@@ -31,7 +31,8 @@ HFILES = fg_timer.h
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
-CFLAGS = -g -Wall
+# CFLAGS = -g -Wall -DUSE_ITIMER
+CFLAGS = -g -Wall 
 # CFLAGS = -O2 -Wall
 
 AR = ar
@@ -51,7 +52,7 @@ $(TARGET): $(OFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -64,6 +65,9 @@ fg_timer.o: fg_timer.c fg_timer.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/06/25 17:46:58  curt
+# Make itimer support optional.
+#
 # Revision 1.2  1997/06/21 17:12:55  curt
 # Capitalized subdirectory names.
 #
