@@ -416,7 +416,7 @@ void fgRenderFrame( void ) {
 
         fog_exp_density = m_log01 / actual_visibility;
         fog_exp2_density = sqrt_m_log01 / actual_visibility;
-        fog_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 4.0 );
+        fog_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 2.5 );
     }
 
     // double angle;

@@ -151,7 +151,6 @@ void display()
   glEnable(GL_TEXTURE_GEN_S);
   glEnable(GL_TEXTURE_GEN_T);
 
-  /*
   glBegin(GL_QUADS);
   glNormal3f(0.0, 0.0, 1.0);
   glVertex3f(1.0, 1.0, 0.0);
@@ -159,13 +158,14 @@ void display()
   glVertex3f(-1.0, -1.0, 0.0);
   glVertex3f(1.0, -1.0, 0.0);
   glEnd();
-  */
 
+  /*
   glPointSize(48.0);
   glBegin(GL_POINTS);
   glNormal3f(0.0, 0.0, 1.0);
   glVertex3f(0.0, 0.0, 0.0);
   glEnd();
+  */
 
   glDisable(GL_TEXTURE_GEN_S);
   glDisable(GL_TEXTURE_GEN_T);
