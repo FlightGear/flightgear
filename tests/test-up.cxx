@@ -9,10 +9,8 @@
 #include <simgear/constants.h>
 #include <simgear/math/sg_geodesy.hxx>
 
-#if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(endl);
-#endif
 
 int main() {
     // for each lat/lon given in goedetic coordinates, calculate
