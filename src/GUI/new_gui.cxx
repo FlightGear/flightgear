@@ -11,6 +11,49 @@ SG_USING_STD(vector);
 #include <Main/fg_props.hxx>
 
 
+/**
+ * Callback to update all property values.
+ */
+static void
+update_callback (puObject * object)
+{
+    ((NewGUI *)object->getUserData())->updateProperties();
+}
+
+
+/**
+ * Callback to close the dialog.
+ */
+static void
+close_callback (puObject * object)
+{
+    ((NewGUI *)object->getUserData())->closeActiveObject();
+}
+
+
+/**
+ * Callback to apply the property value for every field.
+ */
+static void
+apply_callback (puObject * object)
+{
+    ((NewGUI *)object->getUserData())->applyProperties();
+    update_callback(object);
+}
+
+
+/**
+ * Callback to apply the property values and close the dialog.
+ */
+static void
+close_apply_callback (puObject * object)
+{
+    apply_callback(object);
+    close_callback(object);
+}
+
+
+
 NewGUI::NewGUI ()
     : _activeObject(0)
 {
@@ -53,19 +96,6 @@ NewGUI::update (double delta_time_sec)
     // NO OP
 }
 
-static void
-close_callback (puObject * object)
-{
-    ((NewGUI *)object->getUserData())->closeActiveObject();
-}
-
-void
-NewGUI::closeActiveObject ()
-{
-    delete _activeObject;
-    _activeObject = 0;
-}
-
 void
 NewGUI::display (const string &name)
 {
@@ -88,6 +118,34 @@ NewGUI::display (const string &name)
         SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name
                << " does not contain a proper GUI definition");
     }
+}
+
+void
+NewGUI::applyProperties ()
+{
+    for (int i = 0; i < _propertyObjects.size(); i++) {
+        puObject * object = _propertyObjects[i].object;
+        SGPropertyNode_ptr node = _propertyObjects[i].node;
+        node->setStringValue(object->getStringValue());
+    }
+}
+
+void
+NewGUI::updateProperties ()
+{
+    for (int i = 0; i < _propertyObjects.size(); i++) {
+        puObject * object = _propertyObjects[i].object;
+        SGPropertyNode_ptr node = _propertyObjects[i].node;
+        object->setValue(node->getStringValue());
+    }
+}
+
+void
+NewGUI::closeActiveObject ()
+{
+    delete _activeObject;
+    _activeObject = 0;
+    _propertyObjects.clear();
 }
 
 puObject *
@@ -129,8 +187,6 @@ NewGUI::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         else
             b = new puButton(x, y, legend);
         setupObject(b, props);
-        b->setCallback(close_callback);
-        b->setUserData(this);
         return b;
     } else {
         return 0;
@@ -140,14 +196,34 @@ NewGUI::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 void
 NewGUI::setupObject (puObject * object, SGPropertyNode * props)
 {
+    object->setUserData(this);
+
     if (props->hasValue("legend"))
         object->setLegend(props->getStringValue("legend"));
 
     if (props->hasValue("label"))
         object->setLabel(props->getStringValue("label"));
 
-    if (props->hasValue("default-value-prop"))
-        object->setValue(fgGetString(props->getStringValue("default-value-prop")));
+    if (props->hasValue("default-value-prop")) {
+        const char * name = props->getStringValue("default-value-prop");
+        SGPropertyNode_ptr node = fgGetNode(name, true);
+        object->setValue(node->getStringValue());
+        _propertyObjects.push_back(PropertyObject(object, node));
+    }
+
+    if (props->hasValue("action")) {
+        string action = props->getStringValue("action");
+        if (action == "update")
+            object->setCallback(update_callback);
+        else if (action == "close")
+            object->setCallback(close_callback);
+        else if (action == "apply")
+            object->setCallback(apply_callback);
+        else if (action == "close-apply")
+            object->setCallback(close_apply_callback);
+        else
+            SG_LOG(SG_GENERAL, SG_ALERT, "Unknown GUI action " + action);
+    }
 
     object->makeReturnDefault(props->getBoolValue("default"));
 }
@@ -165,6 +241,12 @@ NewGUI::setupGroup (puGroup * group, SGPropertyNode * props,
     for (int i = 0; i < nChildren; i++)
         makeObject(props->getChild(i), width, height);
     group->close();
+}
+
+NewGUI::PropertyObject::PropertyObject (puObject * o, SGPropertyNode_ptr n)
+    : object(o),
+      node(n)
+{
 }
 
 // end of new_gui.cxx

@@ -10,6 +10,9 @@
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/misc/props.hxx>
 
+#include <vector>
+SG_USING_STD(vector);
+
 #include <map>
 SG_USING_STD(map);
 
@@ -25,8 +28,11 @@ public:
     virtual void init ();
     virtual void update (double delta_time_sec);
 
-    virtual void closeActiveObject ();
     virtual void display (const string &name);
+
+    virtual void updateProperties ();
+    virtual void applyProperties ();
+    virtual void closeActiveObject ();
 
 private:
 
@@ -40,6 +46,14 @@ private:
 
     map<string,SGPropertyNode_ptr> _objects;
     puObject * _activeObject;
+
+    struct PropertyObject {
+        PropertyObject (puObject * object, SGPropertyNode_ptr node);
+        puObject * object;
+        SGPropertyNode_ptr node;
+    };
+
+    vector<PropertyObject> _propertyObjects;
 
 };
 
