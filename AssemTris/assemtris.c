@@ -365,6 +365,8 @@ void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
     double n[3];
     char line[256];
 
+    offset_lon = offset_lat = 0.0;
+
     while ( fgets(line, 250, fp) != NULL ) {
 	if ( strncmp(line, "gdn ", 4) == 0 ) {
 	    sscanf(line, "gdn %lf %lf %lf\n", &n[0], &n[1], &n[2]);
@@ -529,9 +531,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.10  1998/07/21 04:34:20  curt
-/* Mods to handle extra nodes (i.e. preserve cutouts).
+/* Revision 1.11  1998/08/06 12:47:59  curt
+/* Removed overlap in tiles as a test.
 /*
+ * Revision 1.10  1998/07/21 04:34:20  curt
+ * Mods to handle extra nodes (i.e. preserve cutouts).
+ *
  * Revision 1.9  1998/07/04 00:55:39  curt
  * typedef'd struct fgBUCKET.
  *
