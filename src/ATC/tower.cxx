@@ -649,13 +649,19 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 		s = s.substr(0,p);
 		trns += s;
 		if((tt->opType) == CIRCUIT) {
-			if(tt->planePtr->GetLeg() == FINAL) {
+			PatternLeg leg;
+			if(t->isUser) {
+				leg = tt->leg;
+			} else {
+				leg = tt->planePtr->GetLeg();
+			}
+			if(leg == FINAL) {
 				trns += " on final";
-			} else if(tt->planePtr->GetLeg() == TURN4) {
+			} else if(leg == TURN4) {
 				trns += " turning final";
-			} else if(tt->planePtr->GetLeg() == BASE) {
+			} else if(leg == BASE) {
 				trns += " on base";
-			} else if(tt->planePtr->GetLeg() == TURN3) {
+			} else if(leg == TURN3) {
 				trns += " turning base";
 			}
 		} else {
