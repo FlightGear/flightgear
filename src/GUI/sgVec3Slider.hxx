@@ -20,5 +20,7 @@ void PilotOffsetAdjust( puObject * );
 void Vec3FromHeadingPitchRadius( sgVec3 vec3, float heading, float pitch, float radius );
 //void PilotOffsetGet( float *po );
 sgVec3 *PilotOffsetGet();
+void PilotOffsetSet( int opt, float setting);
+float PilotOffsetGetSetting( int opt );
 
 #endif // _VEC3_SLIDER_H

@@ -21,6 +21,7 @@ typedef enum {
 } MouseMode;
 
 extern MouseMode mouse_mode;
+extern int gui_menu_on;
 
 extern float lastGuiQuat[4];
 extern float curGuiQuat[4];

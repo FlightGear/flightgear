@@ -85,6 +85,7 @@
 #include "apt_dlg.hxx"
 #include "net_dlg.hxx"
 #include "sgVec3Slider.hxx"
+#include "prop_picker.hxx"
 
 SG_USING_STD(string);
 
@@ -882,12 +883,14 @@ puCallback editSubmenuCb        [] = {
 
 extern void fgHUDalphaAdjust( puObject * );
 char *viewSubmenu               [] = {
+    "Properties",
     "HUD Alpha",
     "Pilot Offset",
     /* "Cockpit View > ", "View >","------------", */
     "Toggle Panel...", NULL
 };
 puCallback viewSubmenuCb        [] = {
+    prop_pickerView,
     fgHUDalphaAdjust,
     PilotOffsetAdjust,
     /* notCb, notCb, NULL, */

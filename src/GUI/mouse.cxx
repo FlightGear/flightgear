@@ -199,7 +199,7 @@ void TurnCursorOff( void )
 
 void maybeToggleMouse( void )
 {
-#if defined(WIN32_CURSOR_TWEAKS)
+#if defined(WIN32_CURSOR_TWEAKS_OFF)
     static int first_time = ~0;
     static int mouse_changed = 0;
 
@@ -265,7 +265,20 @@ void guiMotionFunc ( int x, int y )
     float W, H;
     double offset;
 
+    ww = fgGetInt("/sim/startup/xsize");
+    wh = fgGetInt("/sim/startup/ysize");
+
     if (mouse_mode == MOUSE_POINTER) {
+        // TURN MENU ON IF MOUSE AT TOP
+        if( y < 2 ) {
+            if( !gui_menu_on )
+                guiToggleMenu();			
+        }
+        // TURN MENU OFF IF MOUSE AT BOTTOM
+        else if( y > wh-2 ) {
+            if( gui_menu_on )
+                guiToggleMenu();			
+        }
         puMouse ( x, y ) ;
         glutPostRedisplay () ;
     } else {
@@ -274,9 +287,6 @@ void guiMotionFunc ( int x, int y )
         
         // reset left click MOUSE_VIEW toggle feature
         _mVtoggle = 0;
-        
-        ww = fgGetInt("/sim/startup/xsize");
-        wh = fgGetInt("/sim/startup/ysize");
         
         switch (mouse_mode) {
             case MOUSE_YOKE:
@@ -490,7 +500,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     
                 case MOUSE_YOKE:
                     mouse_mode = MOUSE_VIEW;
-		    fgSetString("/sim/control-mode", "joystick");
+                    fgSetString("/sim/control-mode", "joystick");
                     x = fgGetInt("/sim/startup/xsize")/2;
                     y = fgGetInt("/sim/startup/ysize")/2;
                     _mVtoggle = 0;

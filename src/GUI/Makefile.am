@@ -12,6 +12,7 @@ libGUI_a_SOURCES = \
 	gui_local.cxx gui_local.hxx \
 	mouse.cxx \
 	$(NETWORK_SRCS) \
+	prop_picker.cxx prop_picker.hxx \
 	sgVec3Slider.cxx sgVec3Slider.hxx \
 	trackball.c trackball.h
 
