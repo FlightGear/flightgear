@@ -174,7 +174,7 @@ string FGTransmissionList::gen_text(const atc_type &station, const TransCode cod
 			int check = 0;	// If mes gets overflowed the while loop can go infinite
 			while ( strchr(&mes[0], crej) != NULL  ) {	// ie. loop until no more occurances of crej ('@') found
 				pos = strchr( &mes[0], crej );
-				bcopy(pos, &tag[0], 3);
+				memmove(&tag[0], pos, 3);
 				tag[3] = '\0';
 				int i;
 				len = 0;

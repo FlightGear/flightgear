@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <iostream>
-
+#include <Main/fg_os.hxx> // To set toolkit for pu.h
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 

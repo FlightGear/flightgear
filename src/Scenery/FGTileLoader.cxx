@@ -40,7 +40,7 @@ extern ssgBranch *ground;
  */
 FGTileLoader::FGTileLoader()
 {
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     // Create and start the loader threads.
     for (int i = 0; i < MAX_THREADS; ++i)
     {
@@ -55,7 +55,7 @@ FGTileLoader::FGTileLoader()
  */
 FGTileLoader::~FGTileLoader()
 {
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     // Wake up its time to die.
     // queue_cond.broadcast();
 
@@ -125,7 +125,7 @@ void
 FGTileLoader::update()
 {
 
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     // send a signal to the pager thread that it is allowed to load
     // another tile
     mutex.lock();
@@ -159,7 +159,7 @@ FGTileLoader::update()
 }
 
 
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
 /**
  * 
  */

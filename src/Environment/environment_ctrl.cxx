@@ -325,7 +325,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
       proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) )
 {
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     thread = new MetarThread(this);
     thread->start();
 #endif // ENABLE_THREADS
@@ -333,7 +333,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
 
 FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
 {
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
    thread->cancel();
    thread->join();
 #endif // ENABLE_THREADS
@@ -461,7 +461,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         }
     }
 
-#ifndef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     // No loader thread running so manually fetch the data
     string id = "";
     while ( !request_queue.empty() ) {
@@ -643,7 +643,7 @@ FGMetarEnvironmentCtrl::update_metar_properties( SGMetar *m )
 }
 
 
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
 /**
  *
  */

@@ -73,7 +73,7 @@ dnl Thread related checks
 # defaults to yes
 with_threads=yes
 AC_ARG_WITH(threads, [  --with-threads          Include tile loading threads [default=yes]])
-if test "x$with_threads" = "xno"; then
+if test "x$with_threads" != "xyes"; then
     AC_DEFINE([ENABLE_THREADS], 0, [Define to enable threaded tile paging])
 else
     AC_DEFINE([ENABLE_THREADS], 1, [Define to enable threaded tile paging])
@@ -252,8 +252,13 @@ case "${host}" in
     AC_DEFINE([WIN32], 1, [Define for Win32 platforms])
     AC_DEFINE([NOMINMAX], 1, [Define for Win32 platforms])
 
-    LIBS="$LIBS -lglut32 -lglu32 -lopengl32"
-    LIBS="$LIBS -luser32 -lgdi32"
+    if test "x$enable_sdl" = "xyes"; then
+        AC_SEARCH_LIBS(SDL_Init, SDL)
+    else
+        LIBS="$LIBS -lglut32"
+    fi
+
+    LIBS="$LIBS -lglu32 -lopengl32 -luser32 -lgdi32"
 
     dnl add -lwsock32 for mingwin
     case "${host}" in
@@ -319,7 +324,7 @@ case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
     dnl CygWin under Windoze.
 
-    LIBS="$LIBS -lopenal32 -lwinmm -ldsound -ldxguid -lole32"
+    LIBS="$LIBS -lalut -lopenal32 -lwinmm -ldsound -ldxguid -lole32"
     ;;
 
 *-apple-darwin*)

@@ -38,7 +38,7 @@
 #include <plib/ssg.h>
 
 #include <simgear/bucket/newbucket.hxx>
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
 #  include <simgear/threads/SGQueue.hxx>
 #endif // ENABLE_THREADS
 
@@ -119,7 +119,7 @@ private:
      * model_queue is the set of models that need to be loaded by the
      * primary render thread.
      */
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     static SGLockedQueue<FGTileEntry *> attach_queue;
     static SGLockedQueue<FGDeferredModel *> model_queue;
 #else

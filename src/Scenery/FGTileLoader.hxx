@@ -27,7 +27,7 @@
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
 #  include <simgear/threads/SGThread.hxx>
 #  include <simgear/threads/SGQueue.hxx>
 #else
@@ -97,7 +97,7 @@ private:
 
 private:
 
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     /**
      * FIFO queue of tiles to load from data files.
      */
@@ -113,7 +113,7 @@ private:
      */
     string tile_path;
 
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
     /**
      * Maximum number of threads to create for loading tiles.
      */

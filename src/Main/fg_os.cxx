@@ -1,5 +1,7 @@
 // The mac puts this in a weird location (GLUT/glut.h), so the
 // configure script detects the location and defines it as a macro.
+#define _WCHAR_T_DEFINED 1 // Glut needs this, or else it tries to
+                           // redefine it
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #  include FG_GLUT_H

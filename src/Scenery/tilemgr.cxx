@@ -46,7 +46,7 @@
 
 #define TEST_LAST_HIT_CACHE
 
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
 SGLockedQueue<FGTileEntry *> FGTileMgr::attach_queue;
 SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
 #else
@@ -90,7 +90,7 @@ int FGTileMgr::init() {
     }
 
     while ( ! model_queue.empty() ) {
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
         FGDeferredModel* dm = model_queue.pop();
 #else
         FGDeferredModel* dm = model_queue.front();
@@ -275,7 +275,7 @@ void FGTileMgr::update_queues()
     if ( !model_queue.empty() ) {
         // cout << "loading next model ..." << endl;
         // load the next tile in the queue
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
         FGDeferredModel* dm = model_queue.pop();
 #else
         FGDeferredModel* dm = model_queue.front();
@@ -314,7 +314,7 @@ void FGTileMgr::update_queues()
     }
 
     if ( !attach_queue.empty() ) {
-#ifdef ENABLE_THREADS
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
         FGTileEntry* e = attach_queue.pop();
 #else
         FGTileEntry* e = attach_queue.front();
