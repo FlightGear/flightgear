@@ -7,8 +7,6 @@
 // with your calculator, third edition_, peter duffett-smith,
 // cambridge university press, 1988.)
 //
-// RCS $Id$
-//
 // Copyright (C) 1989, 1990, 1993, 1994, 1995 Kirk Lauritz Johnson
 //
 // Parts of the source code (as marked) are:
@@ -166,12 +164,15 @@ static void ecliptic_to_equatorial(double lambda, double beta,
     /* double *delta;             (return) declination     */
 
     double sin_e, cos_e;
+    double sin_l, cos_l;
 
     sin_e = sin(MeanObliquity);
     cos_e = cos(MeanObliquity);
+    sin_l = sin(lambda);
+    cos_l = cos(lambda);
 
-    *alpha = atan2(sin(lambda)*cos_e - tan(beta)*sin_e, cos(lambda));
-    *delta = asin(sin(beta)*cos_e + cos(beta)*sin_e*sin(lambda));
+    *alpha = atan2(sin_l*cos_e - tan(beta)*sin_e, cos_l);
+    *delta = asin(sin(beta)*cos_e + cos(beta)*sin_e*sin_l);
 }
 
 
@@ -270,6 +271,38 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 }
 
 
+/* given a particular time expressed in side real time at prime
+ * meridian (GST), compute position on the earth (lat, lon) such that
+ * sun is directly overhead.  (lat, lon are reported in radians */
+
+static void fgSunPositionGST(double gst, double *lon, double *lat) {
+    /* time_t  ssue;           seconds since unix epoch */
+    /* double *lat;            (return) latitude        */
+    /* double *lon;            (return) longitude       */
+
+    /* double lambda; */
+    double alpha, delta;
+    double tmp;
+
+    /* lambda = sun_ecliptic_longitude(ssue); */
+    /* ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta); */
+    ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
+
+//    tmp = alpha - (FG_2PI/24)*GST(ssue);
+    tmp = alpha - (FG_2PI/24)*gst;	
+    if (tmp < -FG_PI) {
+	do tmp += FG_2PI;
+	while (tmp < -FG_PI);
+    } else if (tmp > FG_PI) {
+	do tmp -= FG_2PI;
+	while (tmp < -FG_PI);
+    }
+
+    *lon = tmp;
+    *lat = delta;
+}
+
+
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
@@ -287,8 +320,9 @@ void fgUpdateSunPos( void ) {
 
     printf("  Updating Sun position\n");
 
-    fgSunPosition(t->cur_time, &l->sun_lon, &sun_gd_lat);
-    fgSunPosition(t->cur_time, &l->sun_lon, &sun_gd_lat);
+    // (not sure why there was two)
+    // fgSunPosition(t->cur_time, &l->sun_lon, &sun_gd_lat);
+    fgSunPositionGST(t->gst, &l->sun_lon, &sun_gd_lat);
 
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
 
@@ -370,6 +404,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/08/12 21:13:22  curt
+// Optimizations by Norman Vine.
+//
 // Revision 1.10  1998/07/22 21:45:39  curt
 // fg_time.cxx: Removed call to ctime() in a printf() which should be harmless
 //   but seems to be triggering a bug.
