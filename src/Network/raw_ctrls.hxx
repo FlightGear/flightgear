@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 7;
+const int FG_RAW_CTRLS_VERSION = 8;
 
 
 // Define a structure containing the control parameters

@@ -72,6 +72,7 @@ SG_USING_STD(endl);
 
 #include <plib/netChat.h>
 #include <plib/pu.h>
+#include <plib/sg.h>
 #include <plib/ssg.h>
 
 #include <simgear/constants.h>  // for VERSION

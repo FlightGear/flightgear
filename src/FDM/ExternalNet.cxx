@@ -73,6 +73,7 @@ static void global2raw( FGRawCtrls *raw ) {
     raw->elevator_trim = node->getDoubleValue( "elevator-trim" );
     raw->rudder = node->getDoubleValue( "rudder" );
     raw->flaps = node->getDoubleValue( "flaps" );
+    raw->num_engines = FGRawCtrls::FG_MAX_ENGINES;
     for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
 	raw->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	raw->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
@@ -87,11 +88,23 @@ static void global2raw( FGRawCtrls *raw ) {
 	  //      << endl;
 	}
     }
+    raw->num_tanks = FGRawCtrls::FG_MAX_TANKS;
     for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
-        raw->fuel_selector[i] = node->getDoubleValue( "fuel-selector", true );
+        if ( node->getChild("fuel-selector", i) != 0 ) {
+            raw->fuel_selector[i]
+                = node->getChild("fuel-selector", i)->getDoubleValue();
+        } else {
+            raw->fuel_selector[i] = false;
+        }
     }
+    raw->num_wheels = FGRawCtrls::FG_MAX_WHEELS;
     for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
-	raw->brake[i] = node->getDoubleValue( "brakes", 0.0 );
+        if ( node->getChild("brakes", i) != 0 ) {
+            raw->brake[i]
+                = node->getChild("brakes", i)->getDoubleValue();
+        } else {
+            raw->brake[i] = 0.0;
+        }
     }
     raw->hground = fgGetDouble( "/environment/ground-elevation-m" );
     raw->magvar = fgGetDouble("/environment/magnetic-variation-deg");
@@ -111,12 +124,15 @@ static void global2raw( FGRawCtrls *raw ) {
 	raw->magnetos[i] = htonl(raw->magnetos[i]);
 	raw->starter[i] = htonl(raw->starter[i]);
     }
+    raw->num_engines = htonl(raw->num_engines);
     for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
         raw->fuel_selector[i] = htonl(raw->fuel_selector[i]);
     }
+    raw->num_tanks = htonl(raw->num_tanks);
     for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	htond(raw->brake[i]);
     }
+    raw->num_wheels = htonl(raw->num_wheels);
     htond(raw->hground);
     htond(raw->magvar);
     raw->speedup = htonl(raw->speedup);
@@ -364,6 +380,8 @@ void FGExternalNet::update( double dt ) {
     global2raw( &ctrls );
     if ( data_client.send( (char *)(& ctrls), length, 0 ) != length ) {
 	SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+    } else {
+	SG_LOG( SG_IO, SG_ALERT, "wrote control data." );
     }
 
     // Read next set of FDM data (blocking enabled to maintain 'sync')
