@@ -46,8 +46,7 @@ find_named_node (ssgEntity * node, const string &name)
 }
 
 FGAircraftModel::FGAircraftModel ()
-  : _props(new SGPropertyNode),
-    _model(0),
+  : _model(0),
     _selector(new ssgSelector),
     _position(new ssgTransform)
 {
@@ -55,7 +54,6 @@ FGAircraftModel::FGAircraftModel ()
 
 FGAircraftModel::~FGAircraftModel ()
 {
-  delete _props;
   // since the nodes are attached to the scene graph, they'll be
   // deleted automatically
 }
@@ -66,6 +64,8 @@ FGAircraftModel::init ()
   // TODO: optionally load an XML file with a pointer to the 3D object
   // and placement and animation info
 
+  SGPropertyNode props;
+
   SG_LOG(SG_INPUT, SG_INFO, "Initializing aircraft 3D model");
 
 				// Load the 3D aircraft object itself
@@ -73,10 +73,10 @@ FGAircraftModel::init ()
   path.append(fgGetString("/sim/model/path", "Models/Geometry/glider.ac"));
 
   if (path.str().substr(path.str().size() - 4, 4) == ".xml") {
-    readProperties(path.str(), _props);
-    if (_props->hasValue("/path")) {
+    readProperties(path.str(), &props);
+    if (props.hasValue("/path")) {
       path = path.dir();;
-      path.append(_props->getStringValue("/path"));
+      path.append(props.getStringValue("/path"));
     } else {
       path = globals->get_fg_root();
       path.append("Models/Geometry/glider.ac");
@@ -93,7 +93,7 @@ FGAircraftModel::init ()
 
 				// Load animations
   vector<SGPropertyNode *> animation_nodes =
-    _props->getChildren("animation");
+    props.getChildren("animation");
   for (int i = 0; i < animation_nodes.size(); i++) {
     _animations.push_back(read_animation(animation_nodes[i]));
   }
@@ -104,12 +104,12 @@ FGAircraftModel::init ()
   sgMat4 rot_matrix;
   sgMat4 off_matrix;
   sgMat4 res_matrix;
-  float h_rot = _props->getFloatValue("/offsets/heading-deg", 0.0);
-  float p_rot = _props->getFloatValue("/offsets/roll-deg", 0.0);
-  float r_rot = _props->getFloatValue("/offsets/pitch-deg", 0.0);
-  float x_off = _props->getFloatValue("/offsets/x-m", 0.0);
-  float y_off = _props->getFloatValue("/offsets/y-m", 0.0);
-  float z_off = _props->getFloatValue("/offsets/z-m", 0.0);
+  float h_rot = props.getFloatValue("/offsets/heading-deg", 0.0);
+  float p_rot = props.getFloatValue("/offsets/roll-deg", 0.0);
+  float r_rot = props.getFloatValue("/offsets/pitch-deg", 0.0);
+  float x_off = props.getFloatValue("/offsets/x-m", 0.0);
+  float y_off = props.getFloatValue("/offsets/y-m", 0.0);
+  float z_off = props.getFloatValue("/offsets/z-m", 0.0);
   sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
   sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
   sgMultMat4(res_matrix, off_matrix, rot_matrix);
@@ -221,15 +221,18 @@ FGAircraftModel::read_animation (const SGPropertyNode * node)
     fgGetNode(node->getStringValue("property", "/null"), true);
 
   animation.position = node->getFloatValue("initial-position", 0);
+  animation.offset = node->getFloatValue("offset", 0);
   animation.factor = node->getFloatValue("factor", 1);
 
 				// Get the center and axis
-  animation.center_x = node->getFloatValue("center/x-m", 0);
-  animation.center_y = node->getFloatValue("center/y-m", 0);
-  animation.center_z = node->getFloatValue("center/z-m", 0);
-  animation.axis_x = node->getFloatValue("axis/x", 0);
-  animation.axis_y = node->getFloatValue("axis/y", 1);
-  animation.axis_z = node->getFloatValue("axis/z", 0);
+  animation.center[0] = node->getFloatValue("center/x-m", 0);
+  animation.center[1] = node->getFloatValue("center/y-m", 0);
+  animation.center[2] = node->getFloatValue("center/z-m", 0);
+  animation.axis[0] = node->getFloatValue("axis/x", 0);
+  animation.axis[1] = node->getFloatValue("axis/y", 1);
+  animation.axis[2] = node->getFloatValue("axis/z", 0);
+
+  sgNormalizeVec3(animation.axis);
 
   return animation;
 }
@@ -240,43 +243,73 @@ FGAircraftModel::do_animation (Animation &animation, long elapsed_ms)
   switch (animation.type) {
   case Animation::None:
     return;
-  case Animation::Spin: {
-    float velocity_rpms = animation.prop->getDoubleValue()
-      * animation.factor / 60000.0;
+  case Animation::Spin:
+  {
+    float velocity_rpms = (animation.prop->getDoubleValue()
+			   * animation.factor / 60000.0);
     animation.position += (elapsed_ms * velocity_rpms * 360);
-    while (animation.position >= 360)
-      animation.position -= 360;
-    sgMakeTransMat4(animation.matrix, -animation.center_x,
-		    -animation.center_y, -animation.center_z);
-    sgVec3 axis;
-    sgSetVec3(axis, animation.axis_x, animation.axis_y, animation.axis_z);
-    sgMat4 tmp;
-    sgMakeRotMat4(tmp, animation.position, axis);
-    sgPostMultMat4(animation.matrix, tmp);
-    sgMakeTransMat4(tmp, animation.center_x,
-		    animation.center_y, animation.center_z);
-    sgPostMultMat4(animation.matrix, tmp);
-    animation.transform->setTransform(animation.matrix);
+    animation.setRotation();
     return;
   }
   case Animation::Rotate: {
-    animation.position = animation.prop->getFloatValue() * animation.factor;
-    sgMakeTransMat4(animation.matrix, -animation.center_x,
-		    -animation.center_y, -animation.center_z);
-    sgVec3 axis;
-    sgSetVec3(axis, animation.axis_x, animation.axis_y, animation.axis_z);
-    sgMat4 tmp;
-    sgMakeRotMat4(tmp, animation.position, axis);
-    sgPostMultMat4(animation.matrix, tmp);
-    sgMakeTransMat4(tmp, animation.center_x,
-		    animation.center_y, animation.center_z);
-    sgPostMultMat4(animation.matrix, tmp);
-    animation.transform->setTransform(animation.matrix);
+    animation.position = ((animation.prop->getFloatValue()
+			   + animation.offset)
+			  * animation.factor);
+    animation.setRotation();
     return;
   }
   default:
     return;
   }
 }
+
+/* 
+ * Transform to rotate an object around its local axis
+ * from a relative frame of reference at center -- NHV
+ */
+void
+FGAircraftModel::Animation::setRotation()
+{
+ float temp_angle = -position * SG_DEGREES_TO_RADIANS ;
+ 
+ float s = (float) sin ( temp_angle ) ;
+ float c = (float) cos ( temp_angle ) ;
+ float t = SG_ONE - c ;
+
+ // axis was normalized at load time 
+ // hint to the compiler to put these into FP registers
+ float x = axis[0];
+ float y = axis[1];
+ float z = axis[2];
+
+ sgMat4 matrix;
+ matrix[0][0] = t * x * x + c ;
+ matrix[0][1] = t * y * x - s * z ;
+ matrix[0][2] = t * z * x + s * y ;
+ matrix[0][3] = SG_ZERO;
+ 
+ matrix[1][0] = t * x * y + s * z ;
+ matrix[1][1] = t * y * y + c ;
+ matrix[1][2] = t * z * y - s * x ;
+ matrix[1][3] = SG_ZERO;
+ 
+ matrix[2][0] = t * x * z - s * y ;
+ matrix[2][1] = t * y * z + s * x ;
+ matrix[2][2] = t * z * z + c ;
+ matrix[2][3] = SG_ZERO;
+
+  // hint to the compiler to put these into FP registers
+ x = center[0];
+ y = center[1];
+ z = center[2];
+ 
+ matrix[3][0] = x - x*matrix[0][0] - y*matrix[1][0] - z*matrix[2][0];
+ matrix[3][1] = y - x*matrix[0][1] - y*matrix[1][1] - z*matrix[2][1];
+ matrix[3][2] = z - x*matrix[0][2] - y*matrix[1][2] - z*matrix[2][2];
+ matrix[3][3] = SG_ONE;
+ 
+ transform->setTransform(matrix);
+}
+
 
 // end of model.cxx

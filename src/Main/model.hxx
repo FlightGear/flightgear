@@ -47,19 +47,16 @@ private:
     sgMat4 matrix;
     SGPropertyNode * prop;
     float factor;
+    float offset;
     float position;
-    float center_x;
-    float center_y;
-    float center_z;
-    float axis_x;
-    float axis_y;
-    float axis_z;
+    sgVec3 center;
+    sgVec3 axis;
+    void setRotation ();
   };
 
   Animation read_animation (const SGPropertyNode * node);
   void do_animation (Animation &animation, long elapsed_ms);
 
-  SGPropertyNode * _props;
   ssgEntity * _model;
   ssgSelector * _selector;
   ssgTransform * _position;
