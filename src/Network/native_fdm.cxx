@@ -382,6 +382,117 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 }
 
 
+// Do some ultra simplistic extrapolation for times when a network
+// packet get's dropped or delayed.
+//
+// If a valid net structure is passed in, just record the last
+// position/orientation.  If NULL is passed in, use the most recent
+// deltas to predict the new position.
+void FGNativeFDMSmooth( FGNetFDM *net ) {
+    double w = 0.25;
+    static double dlon = 0.0;
+    static double dlat = 0.0;
+    static double dalt = 0.0;
+    static double dphi = 0.0;
+    static double dtheta = 0.0;
+    static double dpsi = 0.0;
+
+    static double last_lon = 0.0;
+    static double last_lat = 0.0;
+    static double last_alt = 0.0;
+    static double last_phi = 0.0;
+    static double last_theta = 0.0;
+    static double last_psi = 0.0;
+
+    static bool primed = false;
+
+    if ( net ) {
+        if ( !primed ) {
+            last_lon = net->longitude;
+            last_lat = net->latitude;
+            last_alt = net->altitude;
+            last_phi = net->phi;
+            last_theta = net->theta;
+            last_psi = net->psi;
+
+            primed = true;
+        }
+
+        // update data;
+        dlon = (net->longitude - last_lon)*w + dlon*(1.0-w);
+        dlat = (net->latitude - last_lat)*w + dlat*(1.0-w);
+        dalt = (net->altitude - last_alt)*w + dalt*(1.0-w);
+        dphi = (net->phi - last_phi)*w + dphi*(1.0-w);
+        dtheta = (net->theta - last_theta)*w + dtheta*(1.0-w);
+        dpsi = (net->psi - last_psi)*w + dpsi*(1.0-w);
+
+        last_lon = net->longitude;
+        last_lat = net->latitude;
+        last_alt = net->altitude;
+        last_phi = net->phi;
+        last_theta = net->theta;
+        last_psi = net->psi;
+
+        printf( "Net: %.8f %.8f %.8f\n", last_phi, last_theta, last_psi );
+    } else {
+        if ( primed ) {
+            // do simple prediction
+            last_lon += dlon;
+            last_lat += dlat;
+            last_alt += dalt;
+            last_phi += dphi;
+            last_theta += dtheta;
+            last_psi += dpsi;
+
+            // Force values to stay sane ...
+            if ( last_lon < -SGD_2PI ) {
+                last_lon = 0; dlon = 0; primed = false;
+            }
+            if ( last_lon > SGD_2PI ) {
+                last_lon = 0; dlon = 0; primed = false;
+            }
+            if ( last_lat < -SGD_2PI ) {
+                last_lat = 0; dlat = 0; primed = false;
+            }
+            if ( last_lat > SGD_2PI ) {
+                last_lat = 0; dlat = 0; primed = false;
+            }
+            if ( last_alt < -1000 ) {
+                last_alt = 0; dalt = 0; primed = false;
+            }
+            if ( last_alt > 500000 ) {
+                last_alt = 0; dalt = 0; primed = false;
+            }
+            if ( last_phi < -SGD_2PI ) {
+                last_phi = 0; dphi = 0; primed = false;
+            }
+            if ( last_phi > SGD_2PI ) {
+                last_phi = 0; dphi = 0; primed = false;
+            }
+            if ( last_theta < -SGD_2PI ) {
+                last_theta = 0; dtheta = 0; primed = false;
+            }
+            if ( last_theta > SGD_2PI ) {
+                last_theta = 0; dtheta = 0; primed = false;
+            }
+            if ( last_psi < -SGD_2PI ) {
+                last_psi = 0; dpsi = 0; primed = false;
+            }
+            if ( last_psi > SGD_2PI ) {
+                last_psi = 0; dpsi = 0; primed = false;
+            }
+
+            printf( "Ext: %.8f %.8f %.8f\n", last_phi, last_theta, last_psi );
+            cur_fdm_state->_updateGeodeticPosition( last_lat, last_lon,
+                                                    last_alt
+                                                      * SG_METER_TO_FEET );
+            cur_fdm_state->_set_Euler_Angles( last_phi, last_theta, last_psi );
+        }
+    }
+
+}
+
+
 // process work for this port
 bool FGNativeFDM::process() {
     SGIOChannel *io = get_io_channel();
@@ -401,10 +512,20 @@ bool FGNativeFDM::process() {
 		FGNetFDM2Props( &buf );
 	    }
 	} else {
-	    while ( io->read( (char *)(& buf), length ) == length ) {
+            bool rcvd_data = false;
+            while ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
 		FGNetFDM2Props( &buf );
+                rcvd_data = true;
 	    }
+            if ( rcvd_data ) {
+                // mark this position for smoothing/extrapolation
+                FGNativeFDMSmooth( &buf );
+            } else {
+                // oops, no data, use past data to predict a new
+                // position/orientation.
+                FGNativeFDMSmooth( NULL );
+            }
 	}
     }
 

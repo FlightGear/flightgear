@@ -62,6 +62,14 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order = true );
 // Update the property tree from the FGNetFDM structure.
 void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order = true );
 
+// Do some ultra simplistic extrapolation for times when a network
+// packet get's dropped or delayed.
+//
+// If a valid net structure is passed in, just record the last
+// position/orientation.  If NULL is passed in, use the most recent
+// deltas to predict the new position.
+void FGNativeFDMSmooth( FGNetFDM *net );
+
 
 #endif // _FG_NATIVE_FDM_HXX
 
