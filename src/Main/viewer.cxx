@@ -132,8 +132,6 @@ static void MakeVIEW_OFFSET( sgMat4 dst,
 
 // Constructor
 FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool at_model, int at_model_index, double x_offset_m, double y_offset_m, double z_offset_m, double near_m ):
-    _scaling_type(FG_SCALING_MAX),
-    _fov_deg(55.0),
     _dirty(true),
     _lon_deg(0),
     _lat_deg(0),
@@ -144,11 +142,13 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index, bool
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
-    _heading_offset_deg(0),
-    _pitch_offset_deg(0),
     _roll_offset_deg(0),
+    _pitch_offset_deg(0),
+    _heading_offset_deg(0),
+    _goal_pitch_offset_deg(0.0),
     _goal_heading_offset_deg(0.0),
-    _goal_pitch_offset_deg(0.0)
+    _scaling_type(FG_SCALING_MAX),
+    _fov_deg(55.0)
 {
     sgdZeroVec3(_absolute_view_pos);
     _type = Type;
