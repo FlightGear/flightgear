@@ -29,14 +29,25 @@
 #  include <config.h>
 #endif
 
-#ifdef SG_MATH_EXCEPTION_CLASH
-#  include <math.h>
-#endif
+#include <simgear/compiler.h>
+
+// #ifdef SG_MATH_EXCEPTION_CLASH
+// #  include <math.h>
+// #endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
 #  include <float.h>                    
 #endif
+
+#include STL_STRING
+SG_USING_STD(string);
+
+#include <vector>
+SG_USING_STD(vector);
+
+#include <map>
+SG_USING_STD(map);
 
 #include <simgear/misc/props.hxx>
 
@@ -218,6 +229,87 @@ protected:
   bool _suspended;
 
 };
+
+
+
+/**
+ * A group of FlightGear subsystems.
+ */
+class FGSubsystemGroup : public FGSubsystem
+{
+public:
+
+    FGSubsystemGroup ();
+    virtual ~FGSubsystemGroup ();
+
+    virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (double delta_time_sec);
+
+    virtual void set_subsystem (const string &name,
+                                FGSubsystem * subsystem,
+                                double min_step_sec = 0);
+    virtual FGSubsystem * get_subsystem (const string &name);
+    virtual void remove_subsystem (const string &name);
+    virtual bool has_subsystem (const string &name) const;
+
+private:
+
+    struct Member {
+
+        Member ();
+        Member (const Member &member);
+        virtual ~Member ();
+
+        virtual void update (double delta_time_sec);
+
+        string name;
+        FGSubsystem * subsystem;
+        double min_step_sec;
+        double elapsed_sec;
+    };
+
+    Member * get_member (const string &name, bool create = false);
+
+    vector<Member *> _members;
+};
+
+
+
+/**
+ * Manage subsystems for the application.
+ */
+class FGSubsystemMgr : public FGSubsystem
+{
+public:
+
+    enum GroupType {
+        INIT = 0,
+        GENERAL,
+        MAX_GROUPS
+    };
+
+    FGSubsystemMgr ();
+    virtual ~FGSubsystemMgr ();
+
+    virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (double delta_time_sec);
+
+    virtual void add (GroupType group, const string &name,
+                      FGSubsystem * subsystem,
+                      double min_time_sec = 0);
+
+    virtual FGSubsystemGroup * get_group (GroupType group);
+
+private:
+
+    FGSubsystemGroup _groups[MAX_GROUPS];
+
+};
+
 
 
 #endif // __FGFS_HXX

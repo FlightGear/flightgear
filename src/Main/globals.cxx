@@ -24,8 +24,6 @@
 #include <simgear/misc/commands.hxx>
 
 #include <Environment/environment_mgr.hxx>
-#include <Instrumentation/instrument_mgr.hxx>
-#include <Systems/system_mgr.hxx>
 
 #include "globals.hxx"
 #include "viewmgr.hxx"
@@ -44,15 +42,13 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
+    subsystem_mgr(new FGSubsystemMgr),
     sim_time_sec(0.0),
 #if defined(FX) && defined(XMESA)
     fullscreen( true ),
 #endif
     warp( 0 ),
     warp_delta( 0 ),
-    logger(0),
-    systemmgr(new FGSystemMgr),
-    instrumentmgr(new FGInstrumentMgr),
     props(new SGPropertyNode),
     initial_state(0),
     commands(new SGCommandMgr),
@@ -64,6 +60,7 @@ FGGlobals::FGGlobals() :
 // Destructor
 FGGlobals::~FGGlobals() 
 {
+  delete subsystem_mgr;
   delete initial_state;
   delete props;
   delete commands;

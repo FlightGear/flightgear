@@ -846,9 +846,9 @@ bool fgInitSubsystems( void ) {
     // Initialize the logger.
     ////////////////////////////////////////////////////////////////////
     
-    globals->set_logger(new FGLogger);
-    globals->get_logger()->init();
-    globals->get_logger()->bind();
+    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
+                                      "logger",
+                                      new FGLogger);
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1020,23 +1020,20 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
     // Initialize the sound-effects subsystem.
     ////////////////////////////////////////////////////////////////////
-    globals->set_fx(new FGFX);
-    globals->get_fx()->init();
-    globals->get_fx()->bind();
+
+    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
+                                      "fx",
+                                      new FGFX);
+    
 
 #endif
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the aircraft systems.
-    ////////////////////////////////////////////////////////////////////
-    globals->get_systemmgr()->init();
-    globals->get_systemmgr()->bind();
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the instrumentation.
-    ////////////////////////////////////////////////////////////////////
-    globals->get_instrumentmgr()->init();
-    globals->get_instrumentmgr()->bind();
+    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
+                                      "instrumentation",
+                                      new FGInstrumentMgr);
+    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
+                                      "systems",
+                                      new FGSystemMgr);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the radio stack subsystem.
@@ -1126,6 +1123,14 @@ bool fgInitSubsystems( void ) {
 
     current_input.init();
     current_input.bind();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Bind and initialize subsystems.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->get_subsystem_mgr()->bind();
+    globals->get_subsystem_mgr()->init();
 
 
     ////////////////////////////////////////////////////////////////////////

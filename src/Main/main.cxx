@@ -823,7 +823,7 @@ void fgRenderFrame() {
         glEnable( GL_DEPTH_TEST );
         glEnable( GL_FOG );
 
-	globals->get_logger()->update(delta_time_sec);
+// 	globals->get_logger()->update(delta_time_sec);
     }
 
     glutSwapBuffers();
@@ -1138,13 +1138,14 @@ static void fgMainLoop( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound/audible")
            && globals->get_soundmgr()->is_working() ) {
-        globals->get_fx()->update( delta_time_sec );
+//         globals->get_fx()->update( delta_time_sec );
         globals->get_soundmgr()->update( delta_time_sec );
     }
 #endif
 
-    globals->get_systemmgr()->update( delta_time_sec );
-    globals->get_instrumentmgr()->update( delta_time_sec );
+//     globals->get_systemmgr()->update( delta_time_sec );
+//     globals->get_instrumentmgr()->update( delta_time_sec );
+    globals->get_subsystem_mgr()->update(delta_time_sec);
 
     //
     // Tile Manager updates - see if we need to load any new scenery tiles.

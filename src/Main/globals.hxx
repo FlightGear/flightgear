@@ -53,16 +53,13 @@ class SGTime;
 class SGPropertyNode;
 class SGCommandMgr;
 
-class FGLogger;
+class FGSubsystemMgr;
 class FGEnvironmentMgr;
 class FGEnvironment;
 class FGControls;
 class FGSteam;
 class FGSoundMgr;
-class FGSystemMgr;
-class FGInstrumentMgr;
 class FGAutopilot;
-class FGFX;
 class FGViewMgr;
 class FGViewer;
 class FGATCMgr;
@@ -82,6 +79,8 @@ class FGGlobals
 {
 
 private:
+
+    FGSubsystemMgr * subsystem_mgr;
 
     // Number of milliseconds elapsed since the start of the program.
     double sim_time_sec;
@@ -110,9 +109,6 @@ private:
     // to make time progress faster than normal (or even run in reverse.)
     long int warp_delta;
 
-    // Logger
-    FGLogger *logger;
-
     // Time structure
     SGTime *time_params;
 
@@ -130,15 +126,6 @@ private:
 
     // sound manager
     FGSoundMgr *soundmgr;
-
-    // sound-effects manager
-    FGFX *fx;
-
-    // aircraft system manager
-    FGSystemMgr * systemmgr;
-
-    // aircraft instrument manager
-    FGInstrumentMgr * instrumentmgr;
 
     // environment information
     FGEnvironmentMgr * environment_mgr;
@@ -191,6 +178,10 @@ public:
     FGGlobals();
     ~FGGlobals();
 
+    inline FGSubsystemMgr * get_subsystem_mgr () const {
+        return subsystem_mgr;
+    }
+
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
     inline void set_sim_time_sec (double t) { sim_time_sec = t; }
@@ -220,9 +211,6 @@ public:
     inline long int get_warp_delta() const { return warp_delta; }
     inline void set_warp_delta( long int d ) { warp_delta = d; }
     inline void inc_warp_delta( long int d ) { warp_delta += d; }
-
-    inline FGLogger * get_logger () { return logger; }
-    inline void set_logger (FGLogger * l) { logger = l; }
 
     inline SGTime *get_time_params() const { return time_params; }
     inline void set_time_params( SGTime *t ) { time_params = t; }
@@ -257,13 +245,6 @@ public:
 
     inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }
-
-    inline FGSystemMgr *get_systemmgr() const { return systemmgr; }
-
-    inline FGInstrumentMgr *get_instrumentmgr() const { return instrumentmgr; }
-
-    inline FGFX *get_fx() const { return fx; }
-    inline void set_fx( FGFX *x ) { fx = x; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }
