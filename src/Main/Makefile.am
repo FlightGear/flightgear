@@ -26,7 +26,7 @@ AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
-bin_PROGRAMS = fgfs
+bin_PROGRAMS = fgfs metar
 
 noinst_SCRIPTS = runfgfs.bat runfgfs
 
@@ -94,5 +94,12 @@ fgfs_LDADD = \
 	-lz \
 	$(opengl_LIBS) \
 	$(audio_LIBS)
+
+metar_SOURCES = metar_main.cxx
+
+metar_LDADD = \
+        -lsgenvironment -lsgio -lsgbucket -lsgmisc -lsgstructure -lsgdebug \
+        -lplibnet -lplibul \
+        -lz $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

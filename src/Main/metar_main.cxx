@@ -25,8 +25,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
-
-#include "metar.hxx"
+#include <simgear/environment/metar.hxx>
 
 using std::ostringstream;
 
@@ -54,9 +53,9 @@ using std::ostringstream;
 
 const char *azimuthName(double d);
 double rnd(double number, int digits);
-void printReport(Metar *m);
-void printVisibility(FGMetarVisibility *v);
-void printArgs(Metar *m, double airport_elevation);
+void printReport(SGMetar *m);
+void printVisibility(SGMetarVisibility *v);
+void printArgs(SGMetar *m, double airport_elevation);
 
 
 const char *azimuthName(double d)
@@ -84,14 +83,14 @@ double rnd(double r, int g = 0)
 }
 
 
-ostream& operator<<(ostream& s, FGMetarVisibility& v)
+ostream& operator<<(ostream& s, SGMetarVisibility& v)
 {
 	ostringstream buf;
 	int m = v.getModifier();
 	const char *mod;
-	if (m == FGMetarVisibility::GREATER_THAN)
+	if (m == SGMetarVisibility::GREATER_THAN)
 		mod = ">=";
-	else if (m == FGMetarVisibility::LESS_THAN)
+	else if (m == SGMetarVisibility::LESS_THAN)
 		mod = "<";
 	else
 		mod = "";
@@ -114,19 +113,19 @@ ostream& operator<<(ostream& s, FGMetarVisibility& v)
 }
 
 
-void printReport(Metar *m)
+void printReport(SGMetar *m)
 {
-#define NaN FGMetarNaN
+#define NaN SGMetarNaN
 	const char *s;
 	char buf[256];
 	double d;
 	int i, lineno;
 
-	if ((i = m->getReportType()) == Metar::AUTO)
+	if ((i = m->getReportType()) == SGMetar::AUTO)
 		s = "\t\t(automatically generated)";
-	else if (i == Metar::COR)
+	else if (i == SGMetar::COR)
 		s = "\t\t(manually corrected)";
-	else if (i == Metar::RTD)
+	else if (i == SGMetar::RTD)
 		s = "\t\t(routine delayed)";
 	else
 		s = "";
@@ -147,8 +146,8 @@ void printReport(Metar *m)
 
 
 	// visibility
-	FGMetarVisibility minvis = m->getMinVisibility();
-	FGMetarVisibility maxvis = m->getMaxVisibility();
+	SGMetarVisibility minvis = m->getMinVisibility();
+	SGMetarVisibility maxvis = m->getMaxVisibility();
 	double min = minvis.getVisibility_m();
 	double max = maxvis.getVisibility_m();
 	if (min != NaN) {
@@ -161,17 +160,17 @@ void printReport(Metar *m)
 
 
 	// directed visibility
-	FGMetarVisibility *dirvis = m->getDirVisibility();
+	SGMetarVisibility *dirvis = m->getDirVisibility();
 	for (i = 0; i < 8; i++, dirvis++)
 		if (dirvis->getVisibility_m() != NaN)
 			cout << "\t\t\t" << *dirvis << endl;
 
 
 	// vertical visibility
-	FGMetarVisibility vertvis = m->getVertVisibility();
+	SGMetarVisibility vertvis = m->getVertVisibility();
 	if ((d = vertvis.getVisibility_ft()) != NaN)
 		cout << "Vert. visibility:\t" << vertvis << endl;
-	else if (vertvis.getModifier() == FGMetarVisibility::NOGO)
+	else if (vertvis.getModifier() == SGMetarVisibility::NOGO)
 		cout << "Vert. visibility:\timpossible to determine" << endl;
 
 
@@ -241,8 +240,8 @@ void printReport(Metar *m)
 	const char *coverage_string[5] = {
 		"clear skies", "few clouds", "scattered clouds", "broken clouds", "sky overcast"
 	};
-	vector<FGMetarCloud> cv = m->getClouds();
-	vector<FGMetarCloud>::iterator cloud;
+	vector<SGMetarCloud> cv = m->getClouds();
+	vector<SGMetarCloud>::iterator cloud;
 	for (lineno = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, lineno++) {
 		cout << (lineno ? "\t\t\t" : "Sky condition:\t\t");
 
@@ -259,15 +258,15 @@ void printReport(Metar *m)
 
 
 	// runways
-	map<string, FGMetarRunway> rm = m->getRunways();
-	map<string, FGMetarRunway>::iterator runway;
+	map<string, SGMetarRunway> rm = m->getRunways();
+	map<string, SGMetarRunway>::iterator runway;
 	for (runway = rm.begin(); runway != rm.end(); runway++) {
 		lineno = 0;
 		if (!strcmp(runway->first.c_str(), "ALL"))
 			cout << "All runways:\t\t";
 		else
 			cout << "Runway " << runway->first << ":\t\t";
-		FGMetarRunway rwy = runway->second;
+		SGMetarRunway rwy = runway->second;
 
 		// assemble surface string
 		vector<string> surface;
@@ -297,8 +296,8 @@ void printReport(Metar *m)
 		}
 
 		// assemble visibility string
-		FGMetarVisibility minvis = rwy.getMinVisibility();
-		FGMetarVisibility maxvis = rwy.getMaxVisibility();
+		SGMetarVisibility minvis = rwy.getMinVisibility();
+		SGMetarVisibility maxvis = rwy.getMaxVisibility();
 		if ((d = minvis.getVisibility_m()) != NaN) {
 			if (lineno++)
 				cout << endl << "\t\t\t";
@@ -321,9 +320,9 @@ void printReport(Metar *m)
 }
 
 
-void printArgs(Metar *m, double airport_elevation)
+void printArgs(SGMetar *m, double airport_elevation)
 {
-#define NaN FGMetarNaN
+#define NaN SGMetarNaN
 	vector<string> args;
 	char buf[256];
 	int i;
@@ -342,8 +341,8 @@ void printArgs(Metar *m, double airport_elevation)
 	const char *coverage_string[5] = {
 		"clear", "few", "scattered", "broken", "overcast"
 	};
-	vector<FGMetarCloud> cv = m->getClouds();
-	vector<FGMetarCloud>::iterator cloud;
+	vector<SGMetarCloud> cv = m->getClouds();
+	vector<SGMetarCloud>::iterator cloud;
 	for (i = 0, cloud = cv.begin(); i < 5; i++) {
 		int coverage = 0;
 		double altitude = -99999;
@@ -460,8 +459,8 @@ int main(int argc, char *argv[])
 		const char *icao = src[i];
 
 		try {
-			Metar *m = new Metar(icao);
-			//Metar *m = new Metar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
+			SGMetar *m = new SGMetar(icao);
+			//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
 
 			printf(G"INPUT: %s\n"N, m->getData());
 			const char *unused = m->getUnusedData();
