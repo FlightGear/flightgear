@@ -26,7 +26,12 @@
 #  include <config.h>
 #endif
 
-#include <strings.h>	// bcopy()
+#ifdef HAVE_STRINGS_H
+#  include <strings.h>   // bcopy()
+#else
+#  include <string.h>    // MSVC doesn't have strings.h
+#endif
+
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
