@@ -70,7 +70,7 @@ GPS::init ()
     _wp_name_node =
         fgGetNode("/instrumentation/gps/wp-name", true);
     _wp_course_node = 
-        fgGetNode("/instrumentation/gps/course-deg", true);
+        fgGetNode("/instrumentation/gps/indicated-course-deg", true);
     _get_nearest_airport_node =
       fgGetNode("/instrumentation/gps/get-nearest-airport", true);
     _waypoint_type_node =
@@ -78,25 +78,23 @@ GPS::init ()
 
     _raim_node = fgGetNode("/instrumentation/gps/raim", true);
     _indicated_longitude_node =
-        fgGetNode("/instrumentation/gps/longitude-deg", true);
+        fgGetNode("/instrumentation/gps/indicated-longitude-deg", true);
     _indicated_latitude_node =
-        fgGetNode("/instrumentation/gps/latitude-deg", true);
+        fgGetNode("/instrumentation/gps/indicated-latitude-deg", true);
     _indicated_altitude_node =
-        fgGetNode("/instrumentation/gps/altitude-ft", true);
+        fgGetNode("/instrumentation/gps/indicated-altitude-ft", true);
     _true_track_node =
-        fgGetNode("/instrumentation/gps/track-true-deg", true);
+        fgGetNode("/instrumentation/gps/indicated-track-true-deg", true);
     _magnetic_track_node =
-        fgGetNode("/instrumentation/gps/track-magnetic-deg", true);
+        fgGetNode("/instrumentation/gps/indicated-track-magnetic-deg", true);
     _speed_node =
-        fgGetNode("/instrumentation/gps/ground-speed-kt", true);
+        fgGetNode("/instrumentation/gps/indicated-ground-speed-kt", true);
     _wp_distance_node =
         fgGetNode("/instrumentation/gps/wp-distance-nm", true);
     _wp_ttw_node =
         fgGetNode("/instrumentation/gps/TTW",true);
     _wp_bearing_node =
         fgGetNode("/instrumentation/gps/wp-bearing-deg", true);
-    _wp_actual_radial_node =
-        fgGetNode("/instrumentation/gps/radials/actual-deg", true);
     _wp_course_deviation_node =
         fgGetNode("/instrumentation/gps/course-deviation-deg", true);
     _wp_course_error_nm_node =
@@ -129,7 +127,6 @@ GPS::update (double delta_time_sec)
         _speed_node->setDoubleValue(0);
         _wp_distance_node->setDoubleValue(0);
         _wp_bearing_node->setDoubleValue(0);
-        _wp_actual_radial_node->setDoubleValue(0);
         _wp_longitude_node->setDoubleValue(0);
         _wp_latitude_node->setDoubleValue(0);
         _wp_course_node->setDoubleValue(0);
@@ -270,24 +267,6 @@ GPS::update (double delta_time_sec)
         }
         else
           _wp_ttw_node->setStringValue("--:--:--");
-
-        /*
-        // We are on the radial 180 degrees from the bearing to the waypoint.
-        wp_actual_radial_deg = wp_bearing - 180.0;
-        while (wp_actual_radial_deg < 0.0) {
-            wp_actual_radial_deg += 360.0; }
-        while (wp_actual_radial_deg >= 360.0) {
-            wp_actual_radial_deg -= 360.0; }
-        _wp_actual_radial_node->setDoubleValue(wp_actual_radial_deg);
-
-        // We want to be on the radial 180 degrees from the desired course.
-        wp_course_deg -= 180.0;
-        while (wp_course_deg < 0.0) {
-            wp_course_deg += 360.0; }
-        while (wp_course_deg >= 360.0) {
-            wp_course_deg -= 360.0;
-        }
-        */
 
         // Course deviation is the diffenrence between the bearing
         // and the course.

@@ -37,17 +37,16 @@
  *
  * Output properties:
  *
- * /instrumentation/gps/longitude-deg
- * /instrumentation/gps/latitude-deg
- * /instrumentation/gps/altitude-ft
- * /instrumentation/gps/track-true-deg
- * /instrumentation/gps/track-magnetic-deg
- * /instrumentation/gps/ground-speed-kt
+ * /instrumentation/gps/indicated-longitude-deg
+ * /instrumentation/gps/indicated-latitude-deg
+ * /instrumentation/gps/indicated-altitude-ft
+ * /instrumentation/gps/indicated-track-true-deg
+ * /instrumentation/gps/indicated-track-magnetic-deg
+ * /instrumentation/gps/indicated-ground-speed-kt
  *
  * /instrumentation/gps/wp-distance-m
  * /instrumentation/gps/wp-bearing-deg
  * /instrumentation/gps/TTW
- * /instrumentation/gps/wp-bearing-deg
  * /instrumentation/gps/radials/actual-deg
  * /instrumentation/gps/course-deviation-deg
  * /instrumentation/gps/course-error-nm
@@ -95,7 +94,6 @@ private:
     SGPropertyNode_ptr _wp_distance_node;
     SGPropertyNode_ptr _wp_ttw_node;
     SGPropertyNode_ptr _wp_bearing_node;
-    SGPropertyNode_ptr _wp_actual_radial_node;
     SGPropertyNode_ptr _wp_course_deviation_node;
     SGPropertyNode_ptr _wp_course_error_nm_node;
     SGPropertyNode_ptr _wp_to_flag_node;
