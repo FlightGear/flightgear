@@ -524,7 +524,7 @@ double fgDEM::interpolate_altitude( double lon, double lat ) {
 
 
 // Use least squares to fit a simpler data set to dem data
-void fgDEM::fit( double error, fgBUCKET *p ) {
+void fgDEM::fit( double error, const FGBucket& p ) {
     double x[DEM_SIZE_1], y[DEM_SIZE_1];
     double m, b, ave_error, max_error;
     double cury, lasty;
@@ -688,7 +688,8 @@ void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
 // Check for an optional "index.node.ex" file in case there is a .poly
 // file to go along with this node file.  Include these nodes first
 // since they are referenced by position from the .poly file.
-void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
+void fgDEM::outputmesh_output_nodes( const string& fg_root, const FGBucket& p )
+{
     double exnodes[MAX_EX_NODES][3];
     struct stat stat_buf;
     string dir;
@@ -830,6 +831,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.24  1999/03/11 23:31:56  curt
+// Tweaks to use newbucket.hxx
+//
 // Revision 1.23  1999/03/10 01:09:12  curt
 // Tweaks to go along with scenery tools overhaul.
 // Added a new constructor that accepts the file name.

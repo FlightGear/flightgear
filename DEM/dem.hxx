@@ -35,9 +35,7 @@
 
 #include <stdio.h>
 
-#include <Bucket/bucketutils.h>
-
-//#include <zlib/zlib.h>
+#include <Bucket/newbucket.hxx>
 #include <Misc/fgstream.hxx>
 
 
@@ -46,6 +44,9 @@
 
 
 class fgDEM {
+
+private:
+
     // file pointer for input
     // gzFile fd;
     fg_gzifstream *in;
@@ -98,11 +99,14 @@ public:
     fgDEM( void );
     fgDEM( const string& file );
 
+    // Destructor
+    ~fgDEM( void );
+
     // open a DEM file (use "-" if input is coming from stdin)
     int open ( const string& file );
 
     // close a DEM file
-    int close ();
+    int close();
 
     // parse a DEM file
     int parse();
@@ -113,21 +117,13 @@ public:
     // read and parse DEM "B" record
     void read_b_record();
 
-    // Informational methods
-    double get_originx( void ) { return originx; }
-    double get_originy( void ) { return originy; }
-    int get_cols( void ) { return cols; }
-    int get_rows( void ) { return rows; }
-    double get_col_step( void ) { return col_step; }
-    double get_row_step( void ) { return row_step; }
-
     // return the current altitude based on mesh data.  We should
     // rewrite this to interpolate exact values, but for now this is
     // good enough
     double interpolate_altitude( double lon, double lat );
 
     // Use least squares to fit a simpler data set to dem data
-    void fit( double error, fgBUCKET *p );
+    void fit( double error, const FGBucket& p );
 
     // Initialize output mesh structure
     void outputmesh_init( void );
@@ -139,10 +135,15 @@ public:
     void outputmesh_set_pt( int i, int j, double value );
 
     // Write out a node file that can be used by the "triangle" program
-    void outputmesh_output_nodes( const string& fg_root, fgBUCKET *p );
+    void outputmesh_output_nodes( const string& fg_root, const FGBucket& p );
 
-    // Destructor
-    ~fgDEM( void );
+    // Informational methods
+    inline double get_originx() const { return originx; }
+    inline double get_originy() const { return originy; }
+    inline int get_cols() const { return cols; }
+    inline int get_rows() const { return rows; }
+    inline double get_col_step() const { return col_step; }
+    inline double get_row_step() const { return row_step; }
 };
 
 
@@ -150,6 +151,9 @@ public:
 
 
 // $Log$
+// Revision 1.11  1999/03/11 23:31:57  curt
+// Tweaks to use newbucket.hxx
+//
 // Revision 1.10  1999/03/10 01:09:13  curt
 // Tweaks to go along with scenery tools overhaul.
 // Added a new constructor that accepts the file name.
