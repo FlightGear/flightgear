@@ -59,7 +59,20 @@ struct fgTILE tile_cache[FG_TILE_CACHE_SIZE];
 /* Initialize the Tile Manager subsystem */
 void fgTileMgrInit( void ) {
     printf("Initializing Tile Manager subsystem.\n");
+
     fgTileCacheInit();
+}
+
+
+/* load a tile */
+void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
+    printf("Updating for bucket %d %d %d %d\n", 
+	   p->lon, p->lat, p->x, p->y);
+    
+    *index = fgTileCacheNextAvail();
+    printf("Selected cache index of %d\n", *index);
+    
+    fgTileCacheEntryFillIn(*index, p);
 }
 
 
@@ -70,20 +83,21 @@ void fgTileMgrUpdate( void ) {
     struct fgBUCKET p1, p2;
     static struct fgBUCKET p_last = {-1000, 0, 0, 0};
     int i, j, dw, dh;
-    int index;
 
     f = &current_aircraft.flight;
 
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p1);
+    dw = FG_LOCAL_X / 2;
+    dh = FG_LOCAL_Y / 2;
 
     if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) && 
 	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
 	/* same bucket as last time */
 	printf("Same bucket as last time\n");
-	return;
-    }
+    } else if ( p_last.lon == -1000 ) {
+	/* First time through, initialize the system and load all
+         * relavant tiles */
 
-    if ( p_last.lon == -1000 ) {
 	printf("First time through ... \n");
 	printf("Updating Tile list for %d,%d %d,%d\n", 
 	       p1.lon, p1.lat, p1.x, p1.y);
@@ -92,27 +106,75 @@ void fgTileMgrUpdate( void ) {
 	fgTileCacheInit();
 
 	/* build the local area list and update cache */
-	dw = FG_LOCAL_X / 2;
-	dh = FG_LOCAL_Y / 2;
-
 	for ( j = 0; j < FG_LOCAL_Y; j++ ) {
 	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
 		fgBucketOffset(&p1, &p2, i - dw, j - dh);
-		printf("Updating for bucket %d %d %d %d\n", 
-		       p2.lon, p2.lat, p2.x, p2.y);
-
-		index = fgTileCacheNextAvail();
-		printf("Selected cache index of %d\n", index);
-
-		tiles[(j*FG_LOCAL_Y) + i] = index;
-		fgTileCacheEntryFillIn(index, &p2);
+		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + i]);
 	    }
 	}
+    } else {
+	/* We've moved to a new bucket, we need to scroll our
+         * structures, and load in the new tiles */
+
+	/* CURRENTLY THIS ASSUMES WE CAN ONLY MOVE TO ADJACENT TILES.
+           AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
+           THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION. */
+
+	if ( (p1.lon > p_last.lon) || (p1.x > p_last.x) ) {
+	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
+		/* scrolling East */
+		for ( i = 0; i < FG_LOCAL_X - 1; i++ ) {
+		    tiles[(j*FG_LOCAL_Y) + i] = tiles[(j*FG_LOCAL_Y) + i + 1];
+		}
+		/* load in new column */
+		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
+		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + FG_LOCAL_X - 1]);
+	    }
+	} else if ( (p1.lon < p_last.lon) || (p1.x < p_last.x) ) {
+	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
+		/* scrolling West */
+		for ( i = FG_LOCAL_X - 1; i > 0; i-- ) {
+		    tiles[(j*FG_LOCAL_Y) + i] = tiles[(j*FG_LOCAL_Y) + i - 1];
+		}
+		/* load in new column */
+		fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
+		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + 0]);
+	    }
+	}
+
+	if ( (p1.lat > p_last.lat) || (p1.y > p_last.y) ) {
+	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
+		/* scrolling North */
+		for ( j = 0; j < FG_LOCAL_Y - 1; j++ ) {
+		    tiles[(j * FG_LOCAL_Y) + i] = 
+			tiles[((j+1) * FG_LOCAL_Y) + i];
+		}
+		/* load in new column */
+		fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
+		fgTileMgrLoadTile(&p2, 
+		    &tiles[((FG_LOCAL_Y-1)*FG_LOCAL_Y) + i]);
+	    }
+	} else if ( (p1.lat < p_last.lat) || (p1.y < p_last.y) ) {
+	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
+		/* scrolling South */
+		for ( j = FG_LOCAL_Y - 1; j > 0; j-- ) {
+		    tiles[(j * FG_LOCAL_Y) + i] = 
+			tiles[((j-1) * FG_LOCAL_Y) + i];
+		}
+		/* load in new column */
+		fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
+		fgTileMgrLoadTile(&p2, &tiles[0 + i]);
+	    }
+	} 
     }
+    p_last.lon = p1.lon;
+    p_last.lat = p1.lat;
+    p_last.x = p1.x;
+    p_last.y = p1.y;
 }
 
 
-/* Render the local tiles --- hack, hack, hack */
+/* Render the local tiles */
 void fgTileMgrRender( void ) {
     static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
     static GLfloat terrain_ambient[4];
@@ -146,9 +208,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/01/24 00:03:30  curt
-/* Initial revision.
+/* Revision 1.7  1998/01/26 15:55:25  curt
+/* Progressing on building dynamic scenery system.
 /*
+ * Revision 1.6  1998/01/24 00:03:30  curt
+ * Initial revision.
+ *
  * Revision 1.5  1998/01/19 19:27:18  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

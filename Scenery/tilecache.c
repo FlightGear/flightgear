@@ -105,10 +105,19 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 }
 
 
+/* Free the specified cache entry
+void fgTileCacheEntryFree( in index ) {
+}
+*/
+
+
 /* $Log$
-/* Revision 1.1  1998/01/24 00:03:29  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/26 15:55:24  curt
+/* Progressing on building dynamic scenery system.
 /*
+ * Revision 1.1  1998/01/24 00:03:29  curt
+ * Initial revision.
+ *
  */
 
 
