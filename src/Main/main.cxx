@@ -293,7 +293,7 @@ void fgInitVisuals( void ) {
 
     glEnable( GL_LIGHTING );
     glEnable( GL_LIGHT0 );
-    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+    // glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );  // done later with ssg
 
     sgVec3 sunpos;
     sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
@@ -451,8 +451,8 @@ void fgRenderFrame() {
 	fgReshape( fgGetInt("/sim/startup/xsize"),
 		   fgGetInt("/sim/startup/ysize") );
 
-	// set the sun position
-	glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+	// set the sun position (done later with ssg calls)
+	// glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
 	clear_mask = GL_DEPTH_BUFFER_BIT;
 	if ( fgGetBool("/sim/rendering/wireframe") ) {
