@@ -734,7 +734,7 @@ FGNavCom::get_nav_from_flag () const
 double
 FGNavCom::get_nav_radial () const
 {
-    if (nav_inrange && nav_serviceable->getBoolValue()) {
+    if (nav_inrange && nav_servicable->getBoolValue()) {
         double radial = nav_heading + 180;
         if (radial >= 360)
             radial -= 360;
