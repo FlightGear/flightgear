@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifndef TILEUTILS_H
+#define TILEUTILS_H
+
+
 struct bucket {
     int lon;  /* longitude (-180 to 179) */
     int lat;  /* latitude (-90 to 89) */
@@ -45,15 +49,15 @@ struct bucket {
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-/* static long gen_index(struct bucket *p); */
+long int gen_index(struct bucket *p);
 
 
 /* Parse a unique scenery tile index and find the lon, lat, x, and y */
-/* static void parse_index(long int index, struct bucket *p); */
+void parse_index(long int index, struct bucket *p);
 
 
 /* Build a path name from an tile index */
-void gen_path(long int index, char *path);
+void gen_base_path(struct bucket *p, char *path);
 
 
 /* offset an bucket struct by the specified amounts in the X & Y direction */
@@ -69,10 +73,16 @@ void gen_idx_array(struct bucket *p1, long int *tiles,
 			  int width, int height);
 
 
+#endif /* TILEUTILS_H */
+
+
 /* $Log$
-/* Revision 1.2  1998/01/08 02:22:28  curt
-/* Continue working on basic features.
+/* Revision 1.3  1998/01/10 00:01:48  curt
+/* Misc api changes and tweaks.
 /*
+ * Revision 1.2  1998/01/08 02:22:28  curt
+ * Continue working on basic features.
+ *
  * Revision 1.1  1998/01/07 23:50:52  curt
  * "area" renamed to "tile"
  *

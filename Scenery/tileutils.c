@@ -44,7 +44,7 @@
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-static long gen_index(struct bucket *p) {
+long int gen_index(struct bucket *p) {
     long index = 0;
 
     index = ((p->lon + 180) << 14) + ((p->lat + 90) << 6) + (p->y << 3) + p->x;
@@ -55,7 +55,7 @@ static long gen_index(struct bucket *p) {
 
 
 /* Parse a unique scenery tile index and find the lon, lat, x, and y */
-static void parse_index(long int index, struct bucket *p) {
+void parse_index(long int index, struct bucket *p) {
     p->lon = index >> 14;
     index -= p->lon << 14;
     p->lon -= 180;
@@ -72,20 +72,19 @@ static void parse_index(long int index, struct bucket *p) {
 
 
 /* Build a path name from an tile index */
-void gen_path(long int index, char *path) {
-    struct bucket p;
+void gen_base_path(struct bucket *p, char *path) {
+    long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
 
-    parse_index(index, &p);
+    index = gen_index(p);
 
     path[0] = '\0';
 
-    top_lon = p.lon / 10;
-    main_lon = p.lon;
-    if ( (p.lon < 0) && (top_lon * 10 != p.lon) ) {
+    top_lon = p->lon / 10;
+    main_lon = p->lon;
+    if ( (p->lon < 0) && (top_lon * 10 != p->lon) ) {
 	top_lon -= 1;
-	main_lon -= 1;
     }
     top_lon *= 10;
     if ( top_lon >= 0 ) {
@@ -98,11 +97,10 @@ void gen_path(long int index, char *path) {
 	main_lon *= -1;
     }
 
-    top_lat = p.lat / 10;
-    main_lat = p.lat;
-    if ( (p.lat < 0) && (top_lat * 10 != p.lat) ) {
+    top_lat = p->lat / 10;
+    main_lat = p->lat;
+    if ( (p->lat < 0) && (top_lat * 10 != p->lat) ) {
 	top_lat -= 1;
-	main_lat -= 1;
     }
     top_lat *= 10;
     if ( top_lat >= 0 ) {
@@ -115,10 +113,9 @@ void gen_path(long int index, char *path) {
 	main_lat *= -1;
     }
 
-    sprintf(path, "%c%03d%c%03d/%c%03d%c%03d/%ld.ter", 
+    sprintf(path, "%c%03d%c%03d/%c%03d%c%03d", 
 	    hem, top_lon, pole, top_lat,
-	    hem, main_lon, pole, main_lat,
-	    index);
+	    hem, main_lon, pole, main_lat);
 }
 
 
@@ -268,9 +265,12 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.2  1998/01/08 02:22:28  curt
-/* Continue working on basic features.
+/* Revision 1.3  1998/01/10 00:01:47  curt
+/* Misc api changes and tweaks.
 /*
+ * Revision 1.2  1998/01/08 02:22:28  curt
+ * Continue working on basic features.
+ *
  * Revision 1.1  1998/01/07 23:50:52  curt
  * "area" renamed to "tile"
  *
