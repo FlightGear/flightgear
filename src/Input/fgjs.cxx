@@ -36,10 +36,6 @@ SG_USING_STD(ios);
 #endif
 SG_USING_STD(string);
 
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#define snprintf _snprintf
-#endif
-
 string axes_humannames[8] = { "elevator", "ailerons", "rudder", "throttle", 
                               "mixture","propller pitch", "lateral view", 
                               "longitudinal view" 

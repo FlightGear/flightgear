@@ -1172,11 +1172,7 @@ void FGRadioStack::search()
 
     if ( current_navlist->query( lon, lat, elev, adf_freq, &nav ) ) {
 	char freq[128];
-#if defined( _MSC_VER ) || defined(__MINGW32__)
-	_snprintf( freq, 10, "%.0f", adf_freq );
-#else
 	snprintf( freq, 10, "%.0f", adf_freq );
-#endif
 	adf_ident = freq;
 	adf_ident += nav.get_ident();
 	// cout << "adf ident = " << adf_ident << endl;

@@ -92,10 +92,6 @@ SG_USING_STD(string);
 SG_USING_STD(cout);
 #endif
 
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#define  snprintf    _snprintf
-#endif   /* _MSC_VER */
-
 // main.cxx hack, should come from an include someplace
 extern void fgInitVisuals( void );
 extern void fgReshape( int width, int height );

@@ -1323,7 +1323,7 @@ int mainLoop( int argc, char **argv ) {
 #endif
 
     // set default log levels
-     sglog().setLogLevels( SG_ALL, SG_INFO );
+    sglog().setLogLevels( SG_ALL, SG_INFO );
 
     string version;
 #ifdef FLIGHTGEAR_VERSION
@@ -1333,7 +1333,7 @@ int mainLoop( int argc, char **argv ) {
 #endif
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
 	    << version );
-    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR );
+    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR << endl );
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options

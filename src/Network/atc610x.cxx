@@ -52,10 +52,6 @@
 
 SG_USING_STD(string);
 
-#if defined( _MSC_VER ) || defined(__MINGW32__)
-#  define snprintf _snprintf
-#endif
-
 // Lock the ATC 610 hardware
 static int ATC610xLock( int fd ) {
     // rewind
