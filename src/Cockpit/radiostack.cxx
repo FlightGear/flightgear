@@ -198,11 +198,11 @@ FGRadioStack::bind ()
 	  &FGRadioStack::get_adf_ident_btn,
 	  &FGRadioStack::set_adf_ident_btn);
 
-    fgTie("/radios/marker-beacons/inner", this,
+    fgTie("/radios/marker-beacon/inner", this,
 	  &FGRadioStack::get_inner_blink);
-    fgTie("/radios/marker-beacons/middle", this,
+    fgTie("/radios/marker-beacon/middle", this,
 	  &FGRadioStack::get_middle_blink);
-    fgTie("/radios/marker-beacons/outer", this,
+    fgTie("/radios/marker-beacon/outer", this,
 	  &FGRadioStack::get_outer_blink);
 }
 
@@ -243,9 +243,9 @@ FGRadioStack::unbind ()
     fgUntie("/radios/adf/on");
     fgUntie("/radios/adf/ident");
 
-    fgUntie("/radios/marker-beacons/inner");
-    fgUntie("/radios/marker-beacons/middle");
-    fgUntie("/radios/marker-beacons/outer");
+    fgUntie("/radios/marker-beacon/inner");
+    fgUntie("/radios/marker-beacon/middle");
+    fgUntie("/radios/marker-beacon/outer");
 }
 
 
