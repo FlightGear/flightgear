@@ -362,7 +362,8 @@ static void fgRenderFrame( void ) {
 
 	// xglMatrixMode( GL_PROJECTION );
 	// xglLoadIdentity();
-	ssgSetFOV( current_options.get_fov(), 0.0f );
+ 	float fov = current_options.get_fov();
+ 	ssgSetFOV(fov * current_view.get_win_ratio(), fov);
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
 	    - scenery.cur_elev;
@@ -936,6 +937,11 @@ void fgReshape( int width, int height ) {
     current_view.set_winWidth( width );
     current_view.set_winHeight( height );
     current_view.force_update_fov_math();
+
+    // set these fov to be the same as in fgRenderFrame()
+    float x_fov = current_options.get_fov();
+    float y_fov = x_fov * 1.0 / current_view.get_win_ratio();
+    ssgSetFOV( x_fov, y_fov );
 
     glViewport ( 0, 0, width, height );
 

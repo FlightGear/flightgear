@@ -43,23 +43,8 @@
 #include "views.hxx"
 
 
-// Define following to extract various vectors directly
-// from matrices we have allready computed
-// rather then performing 'textbook algebra' to rederive them
-// Norman Vine -- nhv@yahoo.com
-// #define FG_VIEW_INLINE_OPTIMIZATIONS
-
 // temporary (hopefully) hack
 static int panel_hist = 0;
-
-
-// specify code paths ... these are done as variable rather than
-// #define's because down the road we may want to choose between them
-// on the fly for different flight models ... this way magic carpet
-// and external modes wouldn't need to recreate the LaRCsim matrices
-// themselves.
-
-static const bool use_larcsim_local_to_body = false;
 
 
 // This is a record containing current view parameters for the current
@@ -93,47 +78,29 @@ void FGView::Init( void ) {
 				    ((GLfloat) (winHeight)*0.4232) );
     }
 
+    // This never changes -- NHV
+    sgLARC_TO_SSG[0][0] = 0.0; 
+    sgLARC_TO_SSG[0][1] = 1.0; 
+    sgLARC_TO_SSG[0][2] = -0.0; 
+    sgLARC_TO_SSG[0][3] = 0.0; 
+
+    sgLARC_TO_SSG[1][0] = 0.0; 
+    sgLARC_TO_SSG[1][1] = 0.0; 
+    sgLARC_TO_SSG[1][2] = 1.0; 
+    sgLARC_TO_SSG[1][3] = 0.0;
+	
+    sgLARC_TO_SSG[2][0] = 1.0; 
+    sgLARC_TO_SSG[2][1] = -0.0; 
+    sgLARC_TO_SSG[2][2] = 0.0; 
+    sgLARC_TO_SSG[2][3] = 0.0;
+	
+    sgLARC_TO_SSG[3][0] = 0.0; 
+    sgLARC_TO_SSG[3][1] = 0.0; 
+    sgLARC_TO_SSG[3][2] = 0.0; 
+    sgLARC_TO_SSG[3][3] = 1.0; 
+	
     force_update_fov_math();
 }
-
-
-// Update the field of view coefficients
-void FGView::UpdateFOV( const fgOPTIONS& o ) {
-    ssgSetFOV( o.get_fov(), 0.0 );
-
-    double fov, theta_x, theta_y;
-
-    fov = o.get_fov();
-	
-    // printf("win_ratio = %.2f\n", win_ratio);
-    // calculate sin() and cos() of fov / 2 in X direction;
-    theta_x = (fov * win_ratio * DEG_TO_RAD) / 2.0;
-    // printf("theta_x = %.2f\n", theta_x);
-    sin_fov_x = sin(theta_x);
-    cos_fov_x = cos(theta_x);
-    slope_x =  -cos_fov_x / sin_fov_x;
-    // printf("slope_x = %.2f\n", slope_x);
-
-    // fov_x_clip and fov_y_clip convoluted algebraic simplification
-    // see code executed in tilemgr.cxx when USE_FAST_FOV_CLIP not
-    // defined Norman Vine -- nhv@yahoo.com
-#if defined( USE_FAST_FOV_CLIP )
-    fov_x_clip = slope_x*cos_fov_x - sin_fov_x;
-#endif // defined( USE_FAST_FOV_CLIP )
-
-    // calculate sin() and cos() of fov / 2 in Y direction;
-    theta_y = (fov * DEG_TO_RAD) / 2.0;
-    // printf("theta_y = %.2f\n", theta_y);
-    sin_fov_y = sin(theta_y);
-    cos_fov_y = cos(theta_y);
-    slope_y = cos_fov_y / sin_fov_y;
-    // printf("slope_y = %.2f\n", slope_y);
-
-#if defined( USE_FAST_FOV_CLIP )
-    fov_y_clip = -(slope_y*cos_fov_y + sin_fov_y);	
-#endif // defined( USE_FAST_FOV_CLIP )
-}
-
 
 // Update the view volume, position, and orientation
 void FGView::UpdateViewParams( const FGInterface& f ) {
@@ -155,120 +122,38 @@ void FGView::UpdateViewParams( const FGInterface& f ) {
 }
 
 
-void getRotMatrix(double* out, MAT3vec vec, double radians)
-{
-    /* This function contributed by Erich Boleyn (erich@uruk.org) */
-    /* This function used from the Mesa OpenGL code (matrix.c)  */
-    double s, c; // mag,
-    double vx, vy, vz, xy, yz, zx, xs, ys, zs, one_c; //, xx, yy, zz
-  
-    MAT3identity(out);
-    s = sin(radians);
-    c = cos(radians);
-  
-    //  mag = getMagnitude();
-  
-    vx = vec[0];
-    vy = vec[1];
-    vz = vec[2];
-  
-#define M(row,col)  out[row*4 + col]
-  
-    /*
-     *     Arbitrary axis rotation matrix.
-     *
-     *  This is composed of 5 matrices, Rz, Ry, T, Ry', Rz', multiplied
-     *  like so:  Rz * Ry * T * Ry' * Rz'.  T is the final rotation
-     *  (which is about the X-axis), and the two composite transforms
-     *  Ry' * Rz' and Rz * Ry are (respectively) the rotations necessary
-     *  from the arbitrary axis to the X-axis then back.  They are
-     *  all elementary rotations.
-     *
-     *  Rz' is a rotation about the Z-axis, to bring the axis vector
-     *  into the x-z plane.  Then Ry' is applied, rotating about the
-     *  Y-axis to bring the axis vector parallel with the X-axis.  The
-     *  rotation about the X-axis is then performed.  Ry and Rz are
-     *  simply the respective inverse transforms to bring the arbitrary
-     *  axis back to it's original orientation.  The first transforms
-     *  Rz' and Ry' are considered inverses, since the data from the
-     *  arbitrary axis gives you info on how to get to it, not how
-     *  to get away from it, and an inverse must be applied.
-     *
-     *  The basic calculation used is to recognize that the arbitrary
-     *  axis vector (x, y, z), since it is of unit length, actually
-     *  represents the sines and cosines of the angles to rotate the
-     *  X-axis to the same orientation, with theta being the angle about
-     *  Z and phi the angle about Y (in the order described above)
-     *  as follows:
-     *
-     *  cos ( theta ) = x / sqrt ( 1 - z^2 )
-     *  sin ( theta ) = y / sqrt ( 1 - z^2 )
-     *
-     *  cos ( phi ) = sqrt ( 1 - z^2 )
-     *  sin ( phi ) = z
-     *
-     *  Note that cos ( phi ) can further be inserted to the above
-     *  formulas:
-     *
-     *  cos ( theta ) = x / cos ( phi )
-     *  sin ( theta ) = y / cos ( phi )
-     *
-     *  ...etc.  Because of those relations and the standard trigonometric
-     *  relations, it is pssible to reduce the transforms down to what
-     *  is used below.  It may be that any primary axis chosen will give the
-     *  same results (modulo a sign convention) using thie method.
-     *
-     *  Particularly nice is to notice that all divisions that might
-     *  have caused trouble when parallel to certain planes or
-     *  axis go away with care paid to reducing the expressions.
-     *  After checking, it does perform correctly under all cases, since
-     *  in all the cases of division where the denominator would have
-     *  been zero, the numerator would have been zero as well, giving
-     *  the expected result.
-     */
-    
-    one_c = 1.0F - c;
-    
-    //  xx = vx * vx;
-    //  yy = vy * vy;
-    //  zz = vz * vz;
-  
-    //  xy = vx * vy;
-    //  yz = vy * vz;
-    //  zx = vz * vx;
-  
-  
-    M(0,0) = (one_c * vx * vx) + c;  
-    xs = vx * s;
-    yz = vy * vz * one_c;
-    M(1,2) = yz + xs;
-    M(2,1) = yz - xs;
+// convert sgMat4 to MAT3 and print
+static void print_sgMat4( sgMat4 &in) {
+    MAT3mat print;
+    int i;
+    int j;
+    for ( i = 0; i < 4; i++ ) {
+	for ( j = 0; j < 4; j++ ) {
+	    print[i][j] = in[i][j];
+	}
+    }
+    MAT3print( print, stdout);
+}
 
-    M(1,1) = (one_c * vy * vy) + c;
-    ys = vy * s;
-    zx = vz * vx * one_c;
-    M(0,2) = zx - ys;
-    M(2,0) = zx + ys;
-  
-    M(2,2) = (one_c * vz *vz) + c;
-    zs = vz * s;
-    xy = vx * vy * one_c;
-    M(0,1) = xy + zs;
-    M(1,0) = xy - zs;
-  
-    //  M(0,0) = (one_c * xx) + c;
-    //  M(1,0) = (one_c * xy) - zs;
-    //  M(2,0) = (one_c * zx) + ys;
-  
-    //  M(0,1) = (one_c * xy) + zs;
-    //  M(1,1) = (one_c * yy) + c;
-    //  M(2,1) = (one_c * yz) - xs;
-  
-    //  M(0,2) = (one_c * zx) - ys;
-    //  M(1,2) = (one_c * yz) + xs;
-    //  M(2,2) = (one_c * zz) + c;
-  
-#undef M
+
+// convert convert MAT3 to sgMat4
+static void MAT3mat_To_sgMat4( MAT3mat &in, sgMat4 &out ) {
+    out[0][0] = in[0][0];
+    out[0][1] = in[0][1];
+    out[0][2] = in[0][2];
+    out[0][3] = in[0][3];
+    out[1][0] = in[1][0];
+    out[1][1] = in[1][1];
+    out[1][2] = in[1][2];
+    out[1][3] = in[1][3];
+    out[2][0] = in[2][0];
+    out[2][1] = in[2][1];
+    out[2][2] = in[2][2];
+    out[2][3] = in[2][3];
+    out[3][0] = in[3][0];
+    out[3][1] = in[3][1];
+    out[3][2] = in[3][2];
+    out[3][3] = in[3][3];
 }
 
 
@@ -280,14 +165,13 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     double ntmp;
 
     if ( update_fov ) {
-	// printf("Updating fov\n");
-	UpdateFOV( current_options );
+	ssgSetFOV( current_options.get_fov(), 
+		   current_options.get_fov() * win_ratio );
 	update_fov = false;
     }
 		
     scenery.center = scenery.next_center;
 
-#if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
     // printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x,
     //        scenery.center.y, scenery.center.z);
 
@@ -310,156 +194,59 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 
     abs_view_pos = fgPolarToCart3d(p);
 	
-#else // FG_VIEW_INLINE_OPTIMIZATIONS
-	
-    double tmp_radius = f.get_Sea_level_radius() * FEET_TO_METER;
-    double tmp = f.get_cos_lat_geocentric() * tmp_radius;
-	
-    cur_zero_elev.setx(f.get_cos_longitude()*tmp - scenery.center.x());
-    cur_zero_elev.sety(f.get_sin_longitude()*tmp - scenery.center.y());
-    cur_zero_elev.setz(f.get_sin_lat_geocentric()*tmp_radius - scenery.center.z());
-
-    // calculate view position in current FG view coordinate system
-    // p.lon & p.lat are already defined earlier, p.radius was set to
-    // the sea level radius, so now we add in our altitude.
-    if ( f.get_Altitude() * FEET_TO_METER > 
-	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
-	tmp_radius += f.get_Altitude() * FEET_TO_METER;
-    } else {
-	tmp_radius += scenery.cur_elev + 0.5 * METER_TO_FEET ;
-    }
-    tmp = f.get_cos_lat_geocentric() * tmp_radius;
-    abs_view_pos.setx(f.get_cos_longitude()*tmp);
-    abs_view_pos.sety(f.get_sin_longitude()*tmp);
-    abs_view_pos.setz(f.get_sin_lat_geocentric()*tmp_radius);
-	
-#endif // FG_VIEW_INLINE_OPTIMIZATIONS
-	
     view_pos = abs_view_pos - scenery.center;
 
     FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
     FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = " << abs_view_pos );
     FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = " << view_pos );
 
-    // Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw)
-    // from FG_T_local_to_body[3][3]
+    // code to calculate LOCAL matrix calculated from Phi, Theta, and
+    // Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
+    // flight model
 
-    if ( use_larcsim_local_to_body ) {
+    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
+    MAT3rotate(R, vec, f.get_Phi());
+    // cout << "Roll matrix" << endl;
+    // MAT3print(R, stdout);
 
-	// Question: Why is the LaRCsim matrix arranged so differently
-	// than the one we need???
+    sgVec3 sgrollvec;
+    sgSetVec3( sgrollvec, 0.0, 0.0, 1.0 );
+    sgMat4 sgPHI;		// roll
+    sgMakeRotMat4( sgPHI, f.get_Phi() * RAD_TO_DEG, sgrollvec );
 
-	// Answer (I think): The LaRCsim matrix is generated in a
-	// different reference frame than we've set up for our world
+    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
+    MAT3rotate(TMP, vec, f.get_Theta());
+    // cout << "Pitch matrix" << endl;;
+    // MAT3print(TMP, stdout);
+    MAT3mult(R, R, TMP);
+    // cout << "tmp rotation matrix, R:" << endl;;
+    // MAT3print(R, stdout);
 
-	LOCAL[0][0] = f.get_T_local_to_body_33();
-	LOCAL[0][1] = -f.get_T_local_to_body_32();
-	LOCAL[0][2] = -f.get_T_local_to_body_31();
-	LOCAL[0][3] = 0.0;
-	LOCAL[1][0] = -f.get_T_local_to_body_23();
-	LOCAL[1][1] = f.get_T_local_to_body_22();
-	LOCAL[1][2] = f.get_T_local_to_body_21();
-	LOCAL[1][3] = 0.0;
-	LOCAL[2][0] = -f.get_T_local_to_body_13();
-	LOCAL[2][1] = f.get_T_local_to_body_12();
-	LOCAL[2][2] = f.get_T_local_to_body_11();
-	LOCAL[2][3] = 0.0;
-	LOCAL[3][0] = LOCAL[3][1] = LOCAL[3][2] = LOCAL[3][3] = 0.0;
-	LOCAL[3][3] = 1.0;
+    sgVec3 sgpitchvec;
+    sgSetVec3( sgpitchvec, 0.0, 1.0, 0.0 );
+    sgMat4 sgTHETA;		// pitch
+    sgMakeRotMat4( sgTHETA, f.get_Theta() * RAD_TO_DEG,
+		   sgpitchvec );
 
-	// printf("LaRCsim LOCAL matrix\n");
-	// MAT3print(LOCAL, stdout);
+    sgMat4 sgROT;
+    sgMultMat4( sgROT, sgPHI, sgTHETA );
 
-    } else {
+    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
+    MAT3rotate(TMP, vec, -f.get_Psi());
+    // cout << "Yaw matrix" << endl;
+    // MAT3print(TMP, stdout);
+    MAT3mult(LOCAL, R, TMP);
+    // cout << "LOCAL matrix:" << endl;
+    // MAT3print(LOCAL, stdout);
 
-	// calculate the transformation matrix to go from LaRCsim to ssg
-	sgVec3 vec1;
-	sgSetVec3( vec1, 0.0, 1.0, 0.0 );
-	sgMat4 mat1;
-	sgMakeRotMat4( mat1, 90, vec1 );
+    sgVec3 sgyawvec;
+    sgSetVec3( sgyawvec, 1.0, 0.0, 0.0 );
+    sgMat4 sgPSI;		// pitch
+    sgMakeRotMat4( sgPSI, -f.get_Psi() * RAD_TO_DEG, sgyawvec );
 
-	sgVec3 vec2;
-	sgSetVec3( vec2, 1.0, 0.0, 0.0 );
-	sgMat4 mat2;
-	sgMakeRotMat4( mat2, 90, vec2 );
-
-	sgMultMat4( sgLARC_TO_SSG, mat1, mat2 );
-
-	/*
-	cout << "LaRCsim to SSG:" << endl;
-	MAT3mat print;
-	int i;
-	int j;
-	for ( i = 0; i < 4; i++ ) {
-	    for ( j = 0; j < 4; j++ ) {
-		print[i][j] = sgLARC_TO_SSG[i][j];
-	    }
-	}
-	MAT3print( print, stdout);
-	*/
-
-	// code to calculate LOCAL matrix calculated from Phi, Theta, and
-	// Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
-	// flight model
-
-	MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-	MAT3rotate(R, vec, f.get_Phi());
-	// cout << "Roll matrix" << endl;
-	// MAT3print(R, stdout);
-
-	sgVec3 sgrollvec;
-	sgSetVec3( sgrollvec, 0.0, 0.0, 1.0 );
-	sgMat4 sgPHI;		// roll
-	sgMakeRotMat4( sgPHI, f.get_Phi() * RAD_TO_DEG, sgrollvec );
-
-
-	MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-	MAT3rotate(TMP, vec, f.get_Theta());
-	// cout << "Pitch matrix" << endl;;
-	// MAT3print(TMP, stdout);
-	MAT3mult(R, R, TMP);
-	// cout << "tmp rotation matrix, R:" << endl;;
-	// MAT3print(R, stdout);
-
-	sgVec3 sgpitchvec;
-	sgSetVec3( sgpitchvec, 0.0, 1.0, 0.0 );
-	sgMat4 sgTHETA;		// pitch
-	sgMakeRotMat4( sgTHETA, f.get_Theta() * RAD_TO_DEG,
-		       sgpitchvec );
-
-	sgMat4 sgROT;
-	sgMultMat4( sgROT, sgPHI, sgTHETA );
-
-
-	MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-	MAT3rotate(TMP, vec, -f.get_Psi());
-	// cout << "Yaw matrix" << endl;
-	// MAT3print(TMP, stdout);
-	MAT3mult(LOCAL, R, TMP);
-	// cout << "LOCAL matrix:" << endl;
-	// MAT3print(LOCAL, stdout);
-
-	sgVec3 sgyawvec;
-	sgSetVec3( sgyawvec, 1.0, 0.0, 0.0 );
-	sgMat4 sgPSI;		// pitch
-	sgMakeRotMat4( sgPSI, -f.get_Psi() * RAD_TO_DEG, sgyawvec );
-
-	sgMultMat4( sgLOCAL, sgROT, sgPSI );
-
-	/*
-	MAT3mat print;
-	int i;
-	int j;
-	for ( i = 0; i < 4; i++ ) {
-	    for ( j = 0; j < 4; j++ ) {
-		print[i][j] = sgLOCAL[i][j];
-	    }
-	}
-	MAT3print( print, stdout);
-	*/
-    } // if ( use_larcsim_local_to_body ) 
-
-#if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
+    sgMultMat4( sgLOCAL, sgROT, sgPSI );
+    // cout << "sgLOCAL matrix" << endl;
+    // print_sgMat4( sgLOCAL );
 	
     // Derive the local UP transformation matrix based on *geodetic*
     // coordinates
@@ -483,15 +270,15 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 		   0.0,
 		   -f.get_Latitude() * RAD_TO_DEG );
     /*
-    cout << "FG derived UP matrix using sg routines" << endl;
+      cout << "FG derived UP matrix using sg routines" << endl;
     MAT3mat print;
     int i;
     int j;
     for ( i = 0; i < 4; i++ ) {
 	for ( j = 0; j < 4; j++ ) {
-	    print[i][j] = sgUP[i][j];
+	print[i][j] = sgUP[i][j];
 	}
-    }
+	}
     MAT3print( print, stdout);
     */
 
@@ -522,20 +309,9 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 
     // generate the view offset matrix
     sgMakeRotMat4( sgVIEW_OFFSET, view_offset * RAD_TO_DEG, sgview_up );
-
-    /*
-    cout << "sg VIEW_OFFSET matrix" << endl;
-    MAT3mat print;
-    int i;
-    int j;
-    for ( i = 0; i < 4; i++ ) {
-	for ( j = 0; j < 4; j++ ) {
-	    print[i][j] = sgVIEW_OFFSET[i][j];
-	}
-    }
-    MAT3print( print, stdout);
-    */
-
+    // cout << "sgVIEW_OFFSET matrix" << endl;
+    // print_sgMat4( sgVIEW_OFFSET );
+	
     sgMultMat4( sgTMP2, sgTMP, sgVIEW_OFFSET );
     sgMultMat4( sgVIEW_ROT, sgLARC_TO_SSG, sgTMP2 );
 
@@ -591,62 +367,6 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     //         surface_east[0], surface_east[1], surface_east[2]);
     // printf( "Should be close to zero = %.2f\n", 
     //         MAT3_DOT_PRODUCT(surface_south, surface_east));
-	
-#else // FG_VIEW_INLINE_OPTIMIZATIONS
-	 
-    //	// Build spherical to cartesian transform matrix directly
-    double cos_lat = f.get_cos_latitude(); // cos(-f.get_Latitude());
-    double sin_lat = -f.get_sin_latitude(); // sin(-f.get_Latitude());
-    double cos_lon = f.get_cos_longitude(); //cos(f.get_Longitude());
-    double sin_lon = f.get_sin_longitude(); //sin(f.get_Longitude());
-
-    double *mat = (double *)UP;
-	
-    mat[0] =  cos_lat*cos_lon;
-    mat[1] =  cos_lat*sin_lon;
-    mat[2] = -sin_lat;
-    mat[3] =  0.0;
-    mat[4] =  -sin_lon;
-    mat[5] =  cos_lon;
-    mat[6] =  0.0;
-    mat[7] =  0.0;
-    mat[8]  =  sin_lat*cos_lon;
-    mat[9]  =  sin_lat*sin_lon;
-    mat[10] =  cos_lat;
-    mat[11] =  mat[12] = mat[13] = mat[14] = 0.0;
-    mat[15] =  1.0;
-
-    MAT3mult(VIEW, LOCAL, UP);
-	
-    // THESE COULD JUST BE POINTERS !!!
-    MAT3_SET_VEC(local_up, mat[0],     mat[1],     mat[2]);
-    MAT3_SET_VEC(view_up,  VIEW[0][0], VIEW[0][1], VIEW[0][2]);
-    MAT3_SET_VEC(forward,  VIEW[2][0], VIEW[2][1], VIEW[2][2]);
-
-    getRotMatrix((double *)TMP, view_up, view_offset);
-    MAT3mult_vec(view_forward, forward, TMP);
-
-    // make a vector to the current view position
-    MAT3_SET_VEC(v0, view_pos.x(), view_pos.y(), view_pos.z());
-
-    // Given a vector pointing straight down (-Z), map into onto the
-    // local plane representing "horizontal".  This should give us the
-    // local direction for moving "south".
-    MAT3_SET_VEC(minus_z, 0.0, 0.0, -1.0);
-    map_vec_onto_cur_surface_plane(local_up, v0, minus_z, surface_south);
-
-    MAT3_NORMALIZE_VEC(surface_south, ntmp);
-    // printf( "Surface direction directly south %.6f %.6f %.6f\n",
-    //         surface_south[0], surface_south[1], surface_south[2]);
-
-    // now calculate the surface east vector
-    getRotMatrix((double *)TMP, view_up, FG_PI_2);
-    MAT3mult_vec(surface_east, surface_south, TMP);
-    // printf( "Surface direction directly east %.6f %.6f %.6f\n",
-    //         surface_east[0], surface_east[1], surface_east[2]);
-    // printf( "Should be close to zero = %.6f\n", 
-    //         MAT3_DOT_PRODUCT(surface_south, surface_east));
-#endif // !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
 }
 
 

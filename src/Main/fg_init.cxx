@@ -551,8 +551,11 @@ void fgReInitSubsystems( void )
     cur_fdm_state.set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize view parameters
-    FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
-    v->Init();
+    // FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
+    // v->Init();
+    v->set_view_offset( 0.0 );
+    v->set_goal_view_offset( 0.0 );
+
     FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
     v->UpdateViewMath(cur_fdm_state);
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
