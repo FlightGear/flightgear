@@ -260,7 +260,7 @@ public:
       is not enough/too much thrust.
       @param gamma_fallback true to enable fallback
   */     
-  inline void SetGammaFallback(bool bb) { gamma_fallback=true; }
+  inline void SetGammaFallback(bool bb) { gamma_fallback=bb; }
   
   /** query the fallback state
       @return true if fallback is enabled.
