@@ -133,19 +133,19 @@ FGTileEntry::free_tile()
 // selector to disable it from ever being drawn.
 void 
 FGTileEntry::ssg_disable() {
-    cout << "TILE STATE = " << state << endl;
+    // cout << "TILE STATE = " << state << endl;
     if ( state == Scheduled_for_use ) {
 	state = Scheduled_for_cache;
     } else if ( state == Scheduled_for_cache ) {
 	// do nothing
     } else if ( (state == Loaded) || (state == Cached) ) {
 	state = Cached;
-	cout << "DISABLING SSG NODE" << endl;
+	// cout << "DISABLING SSG NODE" << endl;
 	select_ptr->select(0);
     } else {
 	FG_LOG( FG_TERRAIN, FG_ALERT,
 		"Trying to disable an unused tile!  Dying" );
 	exit(-1);
     }	
-    cout << "TILE STATE = " << state << endl;
+    // cout << "TILE STATE = " << state << endl;
 }

@@ -103,7 +103,7 @@ int FGTileMgr::init( void ) {
 // schedule a tile for loading
 static void disable_tile( int cache_index ) {
     // see if tile already exists in the cache
-    cout << "DISABLING CACHE ENTRY = " << cache_index << endl;
+    // cout << "DISABLING CACHE ENTRY = " << cache_index << endl;
     FGTileEntry *t = global_tile_cache.get_tile( cache_index );
     t->ssg_disable();
 }
@@ -116,7 +116,7 @@ int FGTileMgr::sched_tile( const FGBucket& b ) {
 
     if ( cache_index >= 0 ) {
 	// tile exists in cache, reenable it.
-	cout << "REENABLING DISABLED TILE" << endl;
+	// cout << "REENABLING DISABLED TILE" << endl;
 	FGTileEntry *t = global_tile_cache.get_tile( cache_index );
 	t->select_ptr->select( 1 );
 	t->mark_loaded();
@@ -391,7 +391,7 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 
     for ( int i = 0 ; i < num_hits ; i++ ) {
 	ssgHit *h = &(results [ i ]) ;
-	cout << "got a hit!" << endl;
+	// cout << "got a hit!" << endl;
 	/* Do something with 'h' */
     }
 

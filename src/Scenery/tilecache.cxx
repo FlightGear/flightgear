@@ -103,6 +103,10 @@ FGTileCache::init( void )
 	tile_cache[i].mark_unused();
 	tile_cache[i].tile_bucket.make_bad();
     }
+
+    // and ... just in case we missed something ... 
+    terrain->removeAllKids();
+
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  done with init()"  );
 }
 
