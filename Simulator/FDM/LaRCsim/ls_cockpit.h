@@ -35,8 +35,11 @@
 
 $Header$
 $Log$
-Revision 1.1  1999/04/05 21:32:45  curt
-Initial revision
+Revision 1.2  1999/04/22 18:47:25  curt
+Wrap with extern "C" { } if building with __cplusplus compiler.
+
+Revision 1.1.1.1  1999/04/05 21:32:45  curt
+Start of 0.6.x branch.
 
 Revision 1.5  1998/10/17 01:34:14  curt
 C++ ifying ...
@@ -70,6 +73,9 @@ Initial Flight Gear revision.
 #ifndef _LS_COCKPIT_H
 #define _LS_COCKPIT_H
 
+#ifdef __cplusplus
+extern "C" { 
+#endif
 
 typedef struct {
     float   long_stick, lat_stick, rudder_pedal;
@@ -103,5 +109,9 @@ extern COCKPIT cockpit_;
 #define Gear_sel_up	cockpit_.gear_sel_up
 #define Brake_pct       cockpit_.brake_pct
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _LS_COCKPIT_H */
