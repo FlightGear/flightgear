@@ -734,7 +734,6 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    vNorth = atof( arg.substr(9) ) * FEET_TO_METER;
 	}
-	globals->get_props()->setDoubleValue("/velocities/speed-north", vNorth);
     } else if ( arg.find( "--vEast=" ) != string::npos ) {
 	speedset = FG_VTNED;
 	if ( units == FG_UNITS_FEET ) {
@@ -742,7 +741,6 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    vEast = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	globals->get_props()->setDoubleValue("/velocities/speed-east", vEast);
     } else if ( arg.find( "--vDown=" ) != string::npos ) {
 	speedset = FG_VTNED;
 	if ( units == FG_UNITS_FEET ) {
@@ -750,11 +748,11 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    vDown = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	globals->get_props()->setDoubleValue("/velocities/speed-down", vDown);
     } else if ( arg.find( "--vc=" ) != string::npos) {
 	speedset = FG_VC;
 	vkcas=atof( arg.substr(5) );
 	cout << "Got vc: " << vkcas << endl;
+	globals->get_props()->setDoubleValue("/velocities/airspeed", vkcas);
     } else if ( arg.find( "--mach=" ) != string::npos) {
 	speedset = FG_MACH;
 	mach=atof( arg.substr(7) );
@@ -952,6 +950,27 @@ int FGOptions::parse_option( const string& arg ) {
 	visibility = atof( arg.substr( 19 ) ) * 5280.0 * FEET_TO_METER;
 	globals->get_props()->setDoubleValue("/environment/visibility",
 					     visibility);
+    } else if ( arg.find( "--wind=" ) == 0 ) {
+        string val = arg.substr(7);
+	int pos = val.find('@');
+	if (pos == string::npos) {
+	  FG_LOG(FG_GENERAL, FG_ALERT, "bad wind value " << val);
+	  return FG_OPTIONS_ERROR;
+	}
+	double dir = atof(val.substr(0,pos).c_str());
+	double speed = atof(val.substr(pos+1).c_str());
+	FG_LOG(FG_GENERAL, FG_INFO, "WIND: " << dir << '@' << 
+	       speed << " knots" << endl);
+				// convert to fps
+	speed *= NM_TO_METER * METER_TO_FEET * (1.0/3600);
+	dir += 180;
+	if (dir >= 360)
+	  dir -= 360;
+	dir *= DEG_TO_RAD;
+	globals->get_props()->setDoubleValue("/environment/wind-north",
+					     speed * cos(dir));
+	globals->get_props()->setDoubleValue("/environment/wind-east",
+					     speed * sin(dir));
     } else if ( arg.find( "--wp=" ) != string::npos ) {
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") != string::npos) {
@@ -1133,6 +1152,7 @@ void FGOptions::usage ( void ) {
 	 << endl;
     cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
     cout << "\t--notrim:  Do NOT attempt to trim the model when initializing JSBsim" << endl;
+    cout << "\t--wind=degrees@knots:  specify a wind component." << endl;
     cout << endl;
     //(UIUC)
     cout <<"Aircraft model directory:" << endl;

@@ -315,9 +315,9 @@ FGBFI::init ()
 
 				// Weather
   fgTie("/environment/visibility", getVisibility, setVisibility);
-  fgTie("/environment/wind-north", getWindNorth);
-  fgTie("/environment/wind-east", getWindEast);
-  fgTie("/environment/wind-down", getWindDown);
+  fgTie("/environment/wind-north", getWindNorth, setWindNorth);
+  fgTie("/environment/wind-east", getWindEast, setWindEast);
+  fgTie("/environment/wind-down", getWindDown, setWindDown);
 
 				// View
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
@@ -1721,7 +1721,7 @@ FGBFI::setGPSTargetLongitude (double longitude)
 
 
 /**
- * Get the current visible (units??).
+ * Get the current visibility (meters).
  */
 double
 FGBFI::getVisibility ()
@@ -1735,7 +1735,7 @@ FGBFI::getVisibility ()
 
 
 /**
- * Set the current visibility (units??).
+ * Set the current visibility (meters).
  */
 void
 FGBFI::setVisibility (double visibility)
@@ -1749,7 +1749,7 @@ FGBFI::setVisibility (double visibility)
 
 
 /**
- * Get the current wind north velocity.
+ * Get the current wind north velocity (feet/second).
  */
 double
 FGBFI::getWindNorth ()
@@ -1759,7 +1759,19 @@ FGBFI::getWindNorth ()
 
 
 /**
- * Get the current wind east velocity.
+ * Set the current wind north velocity (feet/second).
+ */
+void
+FGBFI::setWindNorth (double speed)
+{
+  current_aircraft.fdm_state->set_Velocities_Local_Airmass(speed,
+							   getWindEast(),
+							   getWindDown());
+}
+
+
+/**
+ * Get the current wind east velocity (feet/second).
  */
 double
 FGBFI::getWindEast ()
@@ -1769,12 +1781,37 @@ FGBFI::getWindEast ()
 
 
 /**
- * Get the current wind down velocity.
+ * Set the current wind east velocity (feet/second).
+ */
+void
+FGBFI::setWindEast (double speed)
+{
+  cout << "Set wind-east to " << speed << endl;
+  current_aircraft.fdm_state->set_Velocities_Local_Airmass(getWindNorth(),
+							   speed,
+							   getWindDown());
+}
+
+
+/**
+ * Get the current wind down velocity (feet/second).
  */
 double
 FGBFI::getWindDown ()
 {
   return current_aircraft.fdm_state->get_V_down_airmass();
+}
+
+
+/**
+ * Set the current wind down velocity (feet/second).
+ */
+void
+FGBFI::setWindDown (double speed)
+{
+  current_aircraft.fdm_state->set_Velocities_Local_Airmass(getWindNorth(),
+							   getWindEast(),
+							   speed);
 }
 
 

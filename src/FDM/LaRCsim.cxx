@@ -426,8 +426,8 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Velocities_Local( V_north, V_east, V_down );
     // set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
     // 		     V_down_rel_ground );
-    // set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
-    // 			    V_down_airmass );
+    _set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
+				   V_down_airmass );
     // set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
     //                          V_east_rel_airmass, V_down_rel_airmass );
     // set_Velocities_Gust( U_gust, V_gust, W_gust );

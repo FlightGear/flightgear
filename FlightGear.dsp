@@ -2193,6 +2193,36 @@ SOURCE=.\src\Main\fg_io.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\fg_props.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\fgfs.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\globals.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -2224,21 +2254,6 @@ SOURCE=.\src\Main\keyboard.cxx
 # Begin Source File
 
 SOURCE=.\src\Main\options.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\main"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\main"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Main\save.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 

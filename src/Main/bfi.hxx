@@ -64,8 +64,8 @@ public:
 
 //   static time_t getTimeGMT ();
 //   static void setTimeGMT (time_t time);
-  static string getDateString ();
-  static void setDateString (string time_string);
+  static string getDateString ();// ISO 8601 subset
+  static void setDateString (string time_string); // ISO 8601 subset
 
 				// deprecated
   static string getGMTString ();
@@ -76,59 +76,59 @@ public:
   static bool getPanelVisible ();
   static void setPanelVisible (bool panelVisible);
 
-  static int getPanelXOffset ();
-  static void setPanelXOffset (int i);
+  static int getPanelXOffset (); // pixels
+  static void setPanelXOffset (int i); // pixels
 
-  static int getPanelYOffset ();
-  static void setPanelYOffset (int i);
+  static int getPanelYOffset (); // pixels
+  static void setPanelYOffset (int i); // pixels
 
 
 				// Position
-  static double getLatitude ();
-  static void setLatitude (double latitude);
+  static double getLatitude ();	// degrees
+  static void setLatitude (double latitude); // degrees
 
-  static double getLongitude ();
-  static void setLongitude (double longitude);
+  static double getLongitude (); // degrees
+  static void setLongitude (double longitude); // degrees
 
-  static double getAltitude ();
-  static void setAltitude (double altitude);
+  static double getAltitude ();	// feet
+  static void setAltitude (double altitude); // feet
 
-  static double getAGL ();
+  static double getAGL ();	// feet
 
 
 				// Attitude
-  static double getHeading ();	  // true heading
-  static void setHeading (double heading);
+  static double getHeading ();	  // degrees
+  static void setHeading (double heading); // degrees
 
-  static double getHeadingMag (); // exact magnetic heading
+  static double getHeadingMag (); // degrees
 
-  static double getPitch ();
-  static void setPitch (double pitch);
+  static double getPitch ();	// degrees
+  static void setPitch (double pitch); // degrees
 
-  static double getRoll ();
-  static void setRoll (double roll);
+  static double getRoll ();	// degrees
+  static void setRoll (double roll); // degrees
 
 				// Engine
-  static double getRPM ();
-  static void setRPM ( double rpm );
+  static double getRPM ();	// revolutions/minute
+  static void setRPM ( double rpm ); // revolutions/minute
 
-  static double getEGT ();
-  static double getCHT ();
-  static double getMP ();
+  static double getEGT ();	// [unit??]
+  static double getCHT ();	// [unit??]
+  static double getMP ();	// [unit??]
 
 				// Velocities
-  static double getAirspeed ();
-  static void setAirspeed (double speed);
+  static double getAirspeed ();	// knots
+  static void setAirspeed (double speed); // knots
 
-  static double getSideSlip ();
+  static double getSideSlip ();	// [unit??]
 
-  static double getVerticalSpeed ();
+  static double getVerticalSpeed (); // feet/second
 
-  static double getSpeedNorth ();
+  static double getSpeedNorth (); // feet/second
 
-  static double getSpeedEast ();
+  static double getSpeedEast (); // feet/second
 
-  static double getSpeedDown ();
+  static double getSpeedDown (); // feet/second
 
 //   static void setSpeedNorth (double speed);
 //   static void setSpeedEast (double speed);
@@ -136,58 +136,58 @@ public:
 
 
 				// Controls
-  static double getThrottle ();
-  static void setThrottle (double throttle);
+  static double getThrottle ();	// 0.0:1.0
+  static void setThrottle (double throttle); // 0.0:1.0
 
-  static double getMixture ();
-  static void setMixture (double mixture);
+  static double getMixture ();	// 0.0:1.0
+  static void setMixture (double mixture); // 0.0:1.0
 
-  static double getPropAdvance ();
-  static void setPropAdvance (double pitch);
+  static double getPropAdvance (); // 0.0:1.0
+  static void setPropAdvance (double pitch); // 0.0:1.0
 
-  static double getFlaps ();
-  static void setFlaps (double flaps);
+  static double getFlaps ();	// 0.0:1.0
+  static void setFlaps (double flaps); // 0.0:1.0
 
-  static double getAileron ();
-  static void setAileron (double aileron);
+  static double getAileron ();	// -1.0:1.0
+  static void setAileron (double aileron); // -1.0:1.0
 
-  static double getRudder ();
-  static void setRudder (double rudder);
+  static double getRudder ();	// -1.0:1.0
+  static void setRudder (double rudder); // -1.0:1.0
 
-  static double getElevator ();
-  static void setElevator (double elevator);
+  static double getElevator ();	// -1.0:1.0
+  static void setElevator (double elevator); // -1.0:1.0
 
-  static double getElevatorTrim ();
-  static void setElevatorTrim (double trim);
+  static double getElevatorTrim (); // -1.0:1.0
+  static void setElevatorTrim (double trim); // -1.0:1.0
 
-  static double getBrakes ();
-  static void setBrakes (double brake);
+  static double getBrakes ();	// 0.0:1.0
+  static void setBrakes (double brake);	// 0.0:1.0
 
-  static double getLeftBrake ();
-  static void setLeftBrake (double brake);
+  static double getLeftBrake (); // 0.0:1.0
+  static void setLeftBrake (double brake); // 0.0:1.0
 
-  static double getRightBrake ();
-  static void setRightBrake (double brake);
+  static double getRightBrake (); // 0.0:1.0
+  static void setRightBrake (double brake); // 0.0:1.0
 
-  static double getCenterBrake ();
-  static void setCenterBrake (double brake);
+  static double getCenterBrake (); // 0.0:1.0
+  static void setCenterBrake (double brake); // 0.0:1.0
 
 
 				// Autopilot
   static bool getAPAltitudeLock ();
   static void setAPAltitudeLock (bool lock);
 
-  static double getAPAltitude ();
-  static void setAPAltitude (double altitude);
+  static double getAPAltitude (); // feet
+  static void setAPAltitude (double altitude); // feet
 
   static bool getAPHeadingLock ();
   static void setAPHeadingLock (bool lock);
 
-  static double getAPHeading ();
-  static void setAPHeading (double heading);
+  static double getAPHeading (); // degrees
+  static void setAPHeading (double heading); // degrees
 
-  static double getAPHeadingMag ();
-  static void setAPHeadingMag (double heading);
+  static double getAPHeadingMag (); // degrees
+  static void setAPHeadingMag (double heading);	// degrees
 
   static bool getAPNAV1Lock ();
   static void setAPNAV1Lock (bool lock);
@@ -199,12 +199,12 @@ public:
   static double getNAV1AltFreq ();
   static void setNAV1AltFreq (double freq);
 
-  static double getNAV1Radial ();
+  static double getNAV1Radial (); // degrees
 
-  static double getNAV1SelRadial ();
-  static void setNAV1SelRadial (double radial);
+  static double getNAV1SelRadial (); // degrees
+  static void setNAV1SelRadial (double radial);	// degrees
 
-  static double getNAV1DistDME ();
+  static double getNAV1DistDME (); // nautical miles
 
   static bool getNAV1TO ();
 
@@ -220,12 +220,12 @@ public:
   static double getNAV2AltFreq ();
   static void setNAV2AltFreq (double freq);
 
-  static double getNAV2Radial ();
+  static double getNAV2Radial (); // degrees
 
-  static double getNAV2SelRadial ();
-  static void setNAV2SelRadial (double radial);
+  static double getNAV2SelRadial (); // degrees
+  static void setNAV2SelRadial (double radial);	// degrees
 
-  static double getNAV2DistDME ();
+  static double getNAV2DistDME (); // nautical miles
 
   static bool getNAV2TO ();
 
@@ -241,8 +241,8 @@ public:
   static double getADFAltFreq ();
   static void setADFAltFreq (double freq);
 
-  static double getADFRotation ();
-  static void setADFRotation (double rot);
+  static double getADFRotation (); // degrees
+  static void setADFRotation (double rot); // degrees
 
 				// GPS
   static string getTargetAirport ();
@@ -251,26 +251,29 @@ public:
   static bool getGPSLock ();
   static void setGPSLock (bool lock);
 
-  static double getGPSTargetLatitude ();
+  static double getGPSTargetLatitude (); // degrees
 
-  static double getGPSTargetLongitude ();
+  static double getGPSTargetLongitude (); // degrees
 
 
 				// Weather
-  static double getVisibility ();
-  static void setVisibility (double visiblity);
-  static double getWindNorth ();
-  static double getWindEast ();
-  static double getWindDown ();
+  static double getVisibility ();// meters
+  static void setVisibility (double visiblity);	// meters
+  static double getWindNorth (); // feet/second
+  static void setWindNorth (double speed); // feet/second
+  static double getWindEast ();	// feet/second
+  static void setWindEast (double speed); // feet/second
+  static double getWindDown ();	// feet/second
+  static void setWindDown (double speed); // feet/second
 
 				// View
-  static void setViewAxisLong (double axis);
-  static void setViewAxisLat (double axis);
+  static void setViewAxisLong (double axis);// -1.0:1.0
+  static void setViewAxisLat (double axis); // -1.0:1.0
 
 
                                 // Time (this varies with time) huh, huh
-  static double getMagVar (); 
-  static double getMagDip (); 
+  static double getMagVar ();	// degrees
+  static double getMagDip ();	// degrees
 
 
 private:
