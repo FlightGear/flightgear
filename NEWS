@@ -1,4 +1,7 @@
 New in 0.44: 
+* Minor adjustment to texture coordinate generation to reduce texture
+  swimming.
+* Added an option to enable/disable texture maps
 * Minor transformation adjustments to try to keep scenery tiles closer
   to (0, 0, 0) GLfloats run out of precision at the distances we need
   to model the earth, but we can do a bunch of pre-transformations
