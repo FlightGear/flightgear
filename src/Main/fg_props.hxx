@@ -7,9 +7,11 @@
 
 
 ////////////////////////////////////////////////////////////////////////
-// Loading and saving properties.
+// Property management.
 ////////////////////////////////////////////////////////////////////////
 
+extern void fgInitProps ();	// fixme: how are they untied?
+extern void fgUpdateProps ();
 extern bool fgSaveFlight (ostream &output);
 extern bool fgLoadFlight (istream &input);
 
