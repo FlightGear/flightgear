@@ -27,6 +27,8 @@
 
 #include "environment_ctrl.hxx"
 
+SG_USING_STD(sort);
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -168,9 +170,10 @@ FGInterpolateEnvironmentCtrl::FGInterpolateEnvironmentCtrl ()
 
 FGInterpolateEnvironmentCtrl::~FGInterpolateEnvironmentCtrl ()
 {
-    for (int i = 0; i < _boundary_table.size(); i++)
+    int i;
+    for (i = 0; i < _boundary_table.size(); i++)
         delete _boundary_table[i];
-    for (int i = 0; i < _aloft_table.size(); i++)
+    for (i = 0; i < _aloft_table.size(); i++)
         delete _aloft_table[i];
 }
 
@@ -188,9 +191,10 @@ FGInterpolateEnvironmentCtrl::init ()
 void
 FGInterpolateEnvironmentCtrl::reinit ()
 {
-    for (int i = 0; i < _boundary_table.size(); i++)
+    int i;
+    for (i = 0; i < _boundary_table.size(); i++)
         delete _boundary_table[i];
-    for (int i = 0; i < _aloft_table.size(); i++)
+    for (i = 0; i < _aloft_table.size(); i++)
         delete _aloft_table[i];
     _boundary_table.clear();
     _aloft_table.clear();
