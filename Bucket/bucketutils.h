@@ -63,7 +63,7 @@ void fgBucketParseIndex(long int index, fgBUCKET *p);
 void fgBucketGenBasePath( const fgBUCKET *p, char *path);
 
 
-// offset an bucket struct by the specified amounts in the X & Y direction
+// offset a bucket struct by the specified amounts in the X & Y direction
 void fgBucketOffset(fgBUCKET *in, fgBUCKET *out, int x, int y);
 
 
@@ -85,6 +85,11 @@ void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height);
 
 
 // $Log$
+// Revision 1.5  1999/02/08 23:52:15  curt
+// Added a new "newbucket.[ch]xx" FGBucket class to replace the old
+// fgBUCKET struct and C routines.  This FGBucket class adjusts the tile
+// width towards the poles to ensure the tiles are at least 8 miles wide.
+//
 // Revision 1.4  1998/12/09 18:48:09  curt
 // Use C++ style comments.
 //

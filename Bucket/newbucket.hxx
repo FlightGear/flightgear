@@ -1,0 +1,297 @@
+/**************************************************************************
+ * newbucket.hxx -- new bucket routines for better world modeling
+ *
+ * Written by Curtis L. Olson, started February 1999.
+ *
+ * Copyright (C) 1999  Curtis L. Olson - curt@flightgear.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Id$
+ * (Log is kept at end of this file)
+ **************************************************************************/
+
+
+#ifndef _NEWBUCKET_HXX
+#define _NEWBUCKET_HXX
+
+#include <Include/compiler.h>
+
+#include <string>
+
+FG_USING_STD(string);
+FG_USING_NAMESPACE(std);
+
+#include <stdio.h> // sprintf()
+
+#include <Include/fg_constants.h>
+
+
+#define FG_BUCKET_SPAN      0.125   // 1/8 of a degree
+#define FG_HALF_BUCKET_SPAN 0.0625  // 1/2 of 1/8 of a degree = 1/16 = 0.0625
+
+
+class FGBucket {
+
+private:
+    double cx, cy;  // centerpoint (lon, lat) in degrees of bucket
+    int lon;        // longitude index (-180 to 179)
+    int lat;        // latitude index (-90 to 89)
+    int x;          // x subdivision (0 to 7)
+    int y;          // y subdivision (0 to 7)
+
+public:
+    
+    // default constructor
+    FGBucket();
+
+    // create a bucket which would contain the specified lon/lat
+    FGBucket(const double lon, const double lat);
+
+    // create a bucket based on "long int" index
+    FGBucket(const long int bindex);
+
+    ~FGBucket();
+
+    // Set the bucket params for the specified lat and lon
+    void set_bucket( double dlon, double dlat );
+
+    // Generate the unique scenery tile index for this bucket
+    long int gen_index();
+
+    // Build the path name for this bucket
+    string gen_base_path();
+
+    // return the center lon of a tile
+    double get_center_lon();
+
+    // return the center lat of a tile
+    double get_center_lat();
+
+    // friends
+    friend ostream& operator<< ( ostream&, const FGBucket& );
+};
+
+
+// return the horizontal tile span factor based on latitude
+inline double bucket_span( double l ) {
+    if ( l >= 89.0 ) {
+	return 0.0;
+    } else if ( l >= 88.0 ) {
+	return 8.0;
+    } else if ( l >= 86.0 ) {
+	return 4.0;
+    } else if ( l >= 83.0 ) {
+	return 2.0;
+    } else if ( l >= 76.0 ) {
+	return 1.0;
+    } else if ( l >= 62.0 ) {
+	return 0.5;
+    } else if ( l >= 22.0 ) {
+	return 0.25;
+    } else if ( l >= -22.0 ) {
+	return 0.125;
+    } else if ( l >= -62.0 ) {
+	return 0.25;
+    } else if ( l >= -76.0 ) {
+	return 0.5;
+    } else if ( l >= -83.0 ) {
+	return 1.0;
+    } else if ( l >= -86.0 ) {
+	return 2.0;
+    } else if ( l >= -88.0 ) {
+	return 4.0;
+    } else if ( l >= -89.0 ) {
+	return 8.0;
+    } else {
+	return 0.0;
+    }
+}
+
+
+// Set the bucket params for the specified lat and lon
+inline void FGBucket::set_bucket( double dlon, double dlat ) {
+    //
+    // latitude first
+    //
+    double span = bucket_span( dlat );
+    double diff = dlon - (double)(int)dlon;
+
+    // cout << "diff = " << diff << "  span = " << span << endl;
+
+    if ( (dlon >= 0) || (fabs(diff) < FG_EPSILON) ) {
+	lon = (int)dlon;
+    } else {
+	lon = (int)dlon - 1;
+    }
+
+    // find subdivision or super lon if needed
+    if ( span < FG_EPSILON ) {
+	// polar cap
+	lon = 0;
+	x = 0;
+    } else if ( span <= 1.0 ) {
+	x = (int)((dlon - lon) / span);
+    } else {
+	if ( (dlon >= 0) || (fabs(diff) < FG_EPSILON) ) {
+	    lon = (int)( (int)(lon / span) * span);
+	} else {
+	    // cout << " lon = " << lon 
+	    //  << "  tmp = " << (int)((lon-1) / span) << endl;
+	    lon = (int)( (int)((lon + 1) / span) * span - span);
+	    if ( lon < -180 ) {
+		lon = -180;
+	    }
+	}
+	x = 0;
+    }
+
+    //
+    // then latitude
+    //
+    diff = dlat - (double)(int)dlat;
+
+    if ( (dlat >= 0) || (fabs(diff) < FG_EPSILON) ) {
+	lat = (int)dlat;
+    } else {
+	lat = (int)dlat - 1;
+    }
+    y = (int)((dlat - lat) * 8);
+}
+
+
+// default constructor
+inline FGBucket::FGBucket() {}
+
+
+// constructor for specified location
+inline FGBucket::FGBucket(const double dlon, const double dlat) {
+    set_bucket(dlon, dlat);
+}
+
+
+// Parse a unique scenery tile index and find the lon, lat, x, and y
+inline FGBucket::FGBucket(const long int bindex) {
+    long int index = bindex;
+
+    lon = index >> 14;
+    index -= lon << 14;
+    lon -= 180;
+    
+    lat = index >> 6;
+    index -= lat << 6;
+    lat -= 90;
+    
+    y = index >> 3;
+    index -= y << 3;
+
+    x = index;
+}
+
+
+// default destructor
+inline FGBucket::~FGBucket() {}
+
+
+// Generate the unique scenery tile index for this bucket
+// 
+// The index is constructed as follows:
+// 
+// 9 bits - to represent 360 degrees of longitude (-180 to 179)
+// 8 bits - to represent 180 degrees of latitude (-90 to 89)
+//
+// Each 1 degree by 1 degree tile is further broken down into an 8x8
+// grid.  So we also need:
+//
+// 3 bits - to represent x (0 to 7)
+// 3 bits - to represent y (0 to 7)
+
+inline long int FGBucket::gen_index() {
+    return ((lon + 180) << 14) + ((lat + 90) << 6) + (y << 3) + x;
+}
+
+
+// return the center lon of a tile
+inline double FGBucket::get_center_lon() {
+    double span = bucket_span( lat + y / 8.0 + FG_HALF_BUCKET_SPAN );
+
+    if ( span >= 1.0 ) {
+	return lon + span / 2.0;
+    } else {
+	return lon + x * span + span / 2.0;
+    }
+}
+
+
+// return the center lat of a tile
+inline double FGBucket::get_center_lat() {
+    return lat + y / 8.0 + FG_HALF_BUCKET_SPAN;
+}
+
+
+// offset a bucket struct by the specified tile units in the X & Y
+// direction
+FGBucket fgBucketOffset( double dlon, double dlat, int x, int y );
+
+
+/*
+// Given a lat/lon, fill in the local tile index array
+void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height);
+
+
+
+inline bool
+operator== ( const fgBUCKET& b1, const fgBUCKET& b2 )
+{
+    return ( b1.lon == b2.lon &&
+	     b1.lat == b2.lat &&
+	     b1.x == b2.x &&
+	     b1.y == b2.y );
+}
+
+inline string
+fgBucketGenIndex( const fgBUCKET& p )
+{
+    char index_str[256];
+    sprintf( index_str, "%ld", fgBucketGenIndex( &p ) );
+    return string( index_str );
+}
+
+inline string
+fgBucketGenBasePath( const fgBUCKET& p )
+{
+    char base_path[256];
+    fgBucketGenBasePath( &p, base_path );
+    return string( base_path );
+}
+
+*/
+
+inline ostream&
+operator<< ( ostream& out, const FGBucket& b )
+{
+    return out << b.lon << ":" << b.x << ", " << b.lat << ":" << b.y;
+}
+
+
+#endif // _NEWBUCKET_HXX
+
+
+// $Log$
+// Revision 1.1  1999/02/08 23:52:16  curt
+// Added a new "newbucket.[ch]xx" FGBucket class to replace the old
+// fgBUCKET struct and C routines.  This FGBucket class adjusts the tile
+// width towards the poles to ensure the tiles are at least 8 miles wide.
+//
