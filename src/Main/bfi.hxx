@@ -90,6 +90,9 @@ public:
   static void setPitch (double pitch);
   static void setRoll (double roll);
 
+				// Engine
+  static double getRPM ();
+  static void setRPM ( double rpm );
 
 				// Velocities
   static double getAirspeed ();

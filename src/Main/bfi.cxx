@@ -123,6 +123,10 @@ FGBFI::init ()
   current_properties.tieDouble("/orientation/roll",
 			       getRoll, setRoll);
 
+				// Engine
+  current_properties.tieDouble("/engine0/rpm",
+			       getRPM, setRPM);
+
 				// Velocities
   current_properties.tieDouble("/velocities/airspeed",
 			       getAirspeed, 0);
@@ -655,6 +659,26 @@ FGBFI::setRoll (double roll)
 					       getPitch() * DEG_TO_RAD,
 					       getHeading() * DEG_TO_RAD);
   needReinit();
+}
+
+
+/**
+ * Return the current engine0 rpm
+ */
+double
+FGBFI::getRPM ()
+{
+  return current_aircraft.fdm_state->get_engine(0)->get_RPM();
+}
+
+
+/**
+ * Set the current engine0 rpm
+ */
+void
+FGBFI::setRPM (double rpm)
+{
+  current_aircraft.fdm_state->get_engine(0)->set_RPM( rpm );
 }
 
 
