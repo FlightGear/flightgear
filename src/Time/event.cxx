@@ -25,7 +25,7 @@
 #  include <config.h>
 #endif
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -53,7 +53,7 @@
                          // contains milliseconds
 #endif
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
 
 #include "event.hxx"
 

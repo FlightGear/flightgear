@@ -23,9 +23,10 @@
 
 #include <stdio.h>
 
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+
 #include "aircraft.hxx"
-#include <Debug/logstream.hxx>
-#include <Include/fg_constants.h>
 
 // This is a record containing all the info for the aircraft currently
 // being operated

@@ -29,11 +29,11 @@
 # error This library requires C++
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <string>
 
-#include <Include/fg_types.hxx>
+#include <simgear/fg_types.hxx>
 
 #include "iochannel.hxx"
 #include "protocol.hxx"

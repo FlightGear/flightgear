@@ -28,7 +28,7 @@
 #  include <config.h>
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -39,7 +39,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #if defined(FX) && defined(XMESA)
 #  include <GL/xmesa.h>
@@ -50,9 +50,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <simgear/constants.h>
+#include <simgear/logstream.hxx>
+#include <simgear/fgpath.hxx>
+#include <simgear/screen-dump.hxx>
+
 #include <Include/general.hxx>
-#include <Include/fg_constants.h>
-#include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
 #include <Cockpit/panel.hxx>
@@ -61,11 +64,9 @@
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/views.hxx>
-#include <Misc/fgpath.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
-#include <Screen/screen-dump.hxx>
 #include <Time/fg_time.hxx>
 
 #if defined( WIN32 ) && !defined( __CYGWIN__ )

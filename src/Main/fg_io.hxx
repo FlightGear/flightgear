@@ -25,7 +25,7 @@
 #define _FG_IO_HXX
 
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #include <Network/iochannel.hxx>
 

@@ -34,7 +34,7 @@
 #  include <config.h>
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 // #ifdef HAVE_WINDOWS_H
 // #  include <windows.h>
@@ -49,6 +49,10 @@
 #include <Scenery/tileentry.hxx>
 
 FG_USING_STD(string);
+
+
+// duplicated from the TerraGear tools
+#define FG_MAX_NODES 2000
 
 
 // Load a .obj file and build the fragment list

@@ -39,7 +39,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 
 // Handle keyboard events

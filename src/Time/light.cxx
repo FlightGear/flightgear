@@ -31,9 +31,9 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 #  define exception c_exception
@@ -48,16 +48,17 @@
 #include <string>
 FG_USING_STD(string);
 
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/interpolater.hxx>
+#include <simgear/mat3.h>
+#include <simgear/polar3d.hxx>
+#include <simgear/fgpath.hxx>
+
 #include <Aircraft/aircraft.hxx>
-#include <Debug/logstream.hxx>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Math/interpolater.hxx>
-#include <Math/mat3.h>
-#include <Math/polar3d.hxx>
-#include <Misc/fgpath.hxx>
 
 #include "fg_time.hxx"
 #include "light.hxx"

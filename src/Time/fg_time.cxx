@@ -25,7 +25,7 @@
 #  include <config.h>
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -49,13 +49,14 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fgpath.hxx>
+
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>
 #include <FDM/flight.hxx>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
-#include <Misc/fgpath.hxx>
 #include <Time/light.hxx>
 
 #include "fg_time.hxx"

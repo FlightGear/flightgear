@@ -44,7 +44,8 @@
 # error This library requires C++
 #endif                                   
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
+
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <ctime>
 #else

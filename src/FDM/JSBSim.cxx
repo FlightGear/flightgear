@@ -21,7 +21,7 @@
 // $Id$
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -29,13 +29,14 @@
 
 #include STL_STRING
 
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/fgpath.hxx>
+
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Debug/logstream.hxx>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Misc/fgpath.hxx>
 
 #include <FDM/JSBsim/FGFDMExec.h>
 #include <FDM/JSBsim/FGAircraft.h>
@@ -46,7 +47,6 @@
 #include <FDM/JSBsim/FGTranslation.h>
 #include <FDM/JSBsim/FGAuxiliary.h>
 #include <FDM/JSBsim/FGDefs.h>
-
 
 #include "JSBsim.hxx"
 

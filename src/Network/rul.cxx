@@ -22,9 +22,10 @@
 // $Id$
 
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fg_geodesy.hxx>
+
 #include <FDM/flight.hxx>
-#include <Math/fg_geodesy.hxx>
 #include <Time/fg_time.hxx>
 
 #include "iochannel.hxx"

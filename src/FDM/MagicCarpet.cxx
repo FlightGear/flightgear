@@ -21,11 +21,12 @@
 // $Id$
 
 
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/point3d.hxx>
+#include <simgear/polar3d.hxx>
+
 #include <Controls/controls.hxx>
 #include <Main/options.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Math/point3d.hxx>
-#include <Math/polar3d.hxx>
 
 #include "MagicCarpet.hxx"
 

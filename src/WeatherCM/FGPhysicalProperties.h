@@ -57,7 +57,7 @@ HISTORY
 #  include <config.h>
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>

@@ -42,8 +42,9 @@ HISTORY
 // #include <conio.h>
 #include <math.h>
 
+#include <simgear/constants.h>
+
 #include <Aircraft/aircraft.hxx>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <WeatherCM/FGLocalWeatherDatabase.h>
 

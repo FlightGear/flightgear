@@ -15,7 +15,7 @@
 #include <stdlib.h> 
 #include <string.h>
 
-#include <Include/fg_zlib.h>
+#include <simgear/fg_zlib.h>
 
 #include "texload.h"
 #include "colours.h"

@@ -29,7 +29,7 @@
 # error This library requires C++
 #endif
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #include <string>
 

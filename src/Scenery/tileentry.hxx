@@ -38,17 +38,18 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <vector>
 #include STL_STRING
 
 #include <plib/ssg.h>		// plib includes
 
-#include <Bucket/newbucket.hxx>
-#include <Math/point3d.hxx>
+#include <simgear/newbucket.hxx>
+#include <simgear/point3d.hxx>
+
 #include <Objects/fragment.hxx>
 
 #if defined( sgi )

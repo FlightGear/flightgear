@@ -38,7 +38,8 @@
 #  include <windows.h>
 #endif
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
+
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <ctime>
 #else

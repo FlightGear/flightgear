@@ -22,7 +22,7 @@
 // $Id$
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include STL_STRING
 #include <vector>
@@ -36,13 +36,13 @@
 #  include <strings.h>
 #endif
 
-#include <Debug/logstream.hxx>
-// #include <Include/fg_types.h>
-#include <Math/fg_geodesy.hxx>
-#include <Math/mat3.h>
-#include <Math/point3d.hxx>
-#include <Math/polar3d.hxx>
-#include <Misc/fgstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/mat3.h>
+#include <simgear/point3d.hxx>
+#include <simgear/polar3d.hxx>
+#include <simgear/fgstream.hxx>
+
 #include <Objects/materialmgr.hxx>
 
 // #include <gpc/gpc.h>

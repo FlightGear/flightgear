@@ -1,9 +1,7 @@
-//  panel.hxx -- instrument panel defines and prototypes
-// 
-//  Written by Friedemann Reinhard, started June 1998.
+//  panel.cxx - default, 2D single-engine prop instrument panel
 //
-//  Major code reorganization by David Megginson, November 1999.
-// 
+//  Written by David Megginson, started January 2000.
+//
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License as
 //  published by the Free Software Foundation; either version 2 of the
@@ -20,10 +18,8 @@
 //
 //  $Id$
 
-
-#ifndef _PANEL_HXX
-#define _PANEL_HXX
-
+#ifndef __PANEL_HXX
+#define __PANEL_HXX
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
@@ -39,227 +35,218 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
-class FGInstrument;		// FIXME: rearrange to avoid this?
+#include <plib/ssg.h>
+
+class FGPanelInstrument;
 
 
-/**
- * Top-level class to hold an instance of a panel.
- */
-class FGPanel{
+
+////////////////////////////////////////////////////////////////////////
+// Instrument panel class.
+////////////////////////////////////////////////////////////////////////
 
+class FGPanel
+{
 public:
-  static FGPanel *OurPanel;	// current_panel would be better
-
-				// FIXME: a few other classes have a
-				// dependency on this information; it
-				// would be nice to fix that.
-  GLuint panel_tex_id[2];
-
-  FGPanel();
+  FGPanel ();
   virtual ~FGPanel ();
-  virtual float get_height(void) { return height; }
-  virtual void ReInit( int x, int y, int finx, int finy);
-  virtual void Update(void);
+
+				// Legacy interface from old panel.
+  static FGPanel * OurPanel;
+  virtual float get_height () const;
+  virtual void ReInit (int x, int y, int finx, int finy);
+  virtual void Update () const;
 
 private:
+  int _x, _y, _w, _h;
+  int _panel_h;
 
-  int height;
-  int width;
-  GLubyte *background;
-  GLubyte *imag;
-  int imag_width, imag_height;
-  GLubyte *img;
-  int img_width, img_height;
-				// The instruments on the panel.
-  FGInstrument * horizonIndicator;
-  FGInstrument * turnCoordinator;
-  FGInstrument * rpmIndicator;
-  FGInstrument * airspeedIndicator;
-  FGInstrument * verticalSpeedIndicator;
-  FGInstrument * altimeter;
-  FGInstrument * altimeter2;
+  ssgTexture * _bg;
+
+  const FGPanelInstrument * _airspeed;
+  const FGPanelInstrument * _horizon;
+  const FGPanelInstrument * _altimeter;
+  const FGPanelInstrument * _coordinator;
+  const FGPanelInstrument * _gyro;
+  const FGPanelInstrument * _vertical;
+  const FGPanelInstrument * _flaps;
+  const FGPanelInstrument * _rpm;
 };
 
 
-/**
- * Abstract base class for all panel instruments.
- */
-class FGInstrument{
+
+////////////////////////////////////////////////////////////////////////
+// Instrument base class.
+////////////////////////////////////////////////////////////////////////
 
+class FGPanelInstrument
+{
 public:
-  FGInstrument (void) {}
-  virtual ~FGInstrument (void) {}
-  virtual void Init(void) = 0;
-  virtual void Render(void) = 0;
+  FGPanelInstrument ();
+  FGPanelInstrument (int x, int y, int w, int h);
+  virtual ~FGPanelInstrument ();
+
+  virtual void draw () const = 0;
+
+  virtual void setPosition(int x, int y);
+  virtual void setSize(int w, int h);
+
+  virtual int getXPos () const;
+  virtual int getYPos () const;
 
 protected:
-  float XPos;
-  float YPos;
+  int _x, _y, _w, _h;
 };
 
 
-/**
- * Instrument: the artificial horizon.
- */
-class FGHorizon : public FGInstrument 
-{
+
+////////////////////////////////////////////////////////////////////////
+// An instrument composed of layered textures.
+////////////////////////////////////////////////////////////////////////
 
-public:
-  FGHorizon (float inXPos, float inYPos);
-  virtual ~FGHorizon (void);
-  virtual void Init (void);
-  virtual void Render (void);
-        
-private:
-  float texXPos;
-  float texYPos;
-  float radius;
-  float bottom;   // tell the program the offset between midpoint and bottom 
-  float top;      // guess what ;-)
-  float vertices[180][2];
-  float normals[180][3];
-  float texCoord[180][2];
-};
-
-
-/**
- * Instrument: the turn co-ordinator.
- */
-class FGTurnCoordinator : public FGInstrument 
-{
-
-public:
-  FGTurnCoordinator (float inXPos, float inYPos);
-  virtual ~FGTurnCoordinator (void);
-  virtual void Init (void);
-  virtual void Render(void);
-  
-private:
-  float PlaneTexXPos;
-  float PlaneTexYPos;
-  float alpha;
-  float PlaneAlpha;
-  float alphahist[2];
-  float rollhist[2];
-  float BallXPos;
-  float BallYPos;
-  float BallTexXPos;
-  float BallTexYPos;
-  float BallRadius;
-  GLfloat vertices[72];
-  static GLfloat wingArea[];
-  static GLfloat elevatorArea[];
-  static GLfloat rudderArea[];
-};
-
-
-/**
- * Abstract base class for gauges with needles and textured backgrounds.
- *
- * The airspeed indicator, vertical speed indicator, altimeter, and RPM 
- * gauge are all derived from this class.
- */
-class FGTexInstrument : public FGInstrument 
+class FGTexturedInstrument : public FGPanelInstrument
 {
 public:
-  FGTexInstrument (void);
-  virtual ~FGTexInstrument ();
-  virtual void Init(void);
-  virtual void Render(void);
-  
+  static const int MAX_LAYERS = 8;
+  FGTexturedInstrument (int x, int y, int w, int h);
+  virtual ~FGTexturedInstrument ();
+
+  virtual void addLayer (int layer, const char * textureName);
+  virtual void addLayer (int layer, ssgTexture * texture);
+  virtual void setLayerCenter (int layer, int x, int y);
+  virtual void setLayerRot (int layer, double rotation) const;
+  virtual void setLayerOffset (int layer, int xoffset, int yoffset) const;
+  virtual bool hasLayer (int layer) const;
+
+  virtual void draw () const;
 protected:
-  virtual void CreatePointer(void);
-  virtual void UpdatePointer(void);
-  virtual double getValue () const = 0;
-
-  float radius;
-  float length;
-  float width;
-  float angle;
-  float tape[2];
-  float value1;
-  float value2;
-  float alpha1;
-  float alpha2;
-  float textureXPos;
-  float textureYPos;
-  GLfloat vertices[20];
+  bool _layers[MAX_LAYERS];
+  mutable int _xcenter[MAX_LAYERS];
+  mutable int _ycenter[MAX_LAYERS];
+  mutable double _rotation[MAX_LAYERS];
+  mutable int _xoffset[MAX_LAYERS];
+  mutable int _yoffset[MAX_LAYERS];
+  ssgTexture * _textures[MAX_LAYERS];
 };
 
 
-/**
- * Instrument: the airspeed indicator.
- */
-class FGAirspeedIndicator : public FGTexInstrument
+
+////////////////////////////////////////////////////////////////////////
+// Airspeed indicator.
+////////////////////////////////////////////////////////////////////////
+
+class FGAirspeedIndicator : public FGTexturedInstrument
 {
 public:
   FGAirspeedIndicator (int x, int y);
   virtual ~FGAirspeedIndicator ();
-
-protected:
-  double getValue () const;
+  virtual void draw () const;
 };
 
 
-/**
- * Instrument: the vertical speed indicator.
- */
-class FGVerticalSpeedIndicator : public FGTexInstrument
+
+////////////////////////////////////////////////////////////////////////
+// Artificial Horizon.
+////////////////////////////////////////////////////////////////////////
+
+class FGHorizon : public FGTexturedInstrument
 {
 public:
-  FGVerticalSpeedIndicator (int x, int y);
-  virtual ~FGVerticalSpeedIndicator ();
-
-protected:
-  double getValue () const;
+  FGHorizon (int x, int y);
+  virtual ~FGHorizon ();
+  virtual void draw () const;
 };
 
 
-/**
- * Instrument: the altimeter (big hand?)
- */
-class FGAltimeter : public FGTexInstrument
+
+////////////////////////////////////////////////////////////////////////
+// Altimeter.
+////////////////////////////////////////////////////////////////////////
+
+class FGAltimeter : public FGTexturedInstrument
 {
 public:
   FGAltimeter (int x, int y);
   virtual ~FGAltimeter ();
-
-protected:
-  double getValue () const;
+  virtual void draw () const;
 };
 
 
-/**
- * Instrument: the altimeter (little hand?)
- */
-class FGAltimeter2 : public FGTexInstrument
+
+////////////////////////////////////////////////////////////////////////
+// Turn Co-ordinator.
+////////////////////////////////////////////////////////////////////////
+
+class FGTurnCoordinator : public FGTexturedInstrument
 {
 public:
-  FGAltimeter2 (int x, int y);
-  virtual ~FGAltimeter2 ();
-
-protected:
-  double getValue () const;
+  FGTurnCoordinator (int x, int y);
+  virtual ~FGTurnCoordinator ();
+  virtual void draw () const;
 };
 
 
-/**
- * Instrument: the RPM gauge (actually manifold pressure right now).
- */
-class FGRPMIndicator : public FGTexInstrument
+
+////////////////////////////////////////////////////////////////////////
+// Gyro Compass.
+////////////////////////////////////////////////////////////////////////
+
+class FGGyroCompass : public FGTexturedInstrument
 {
 public:
-  FGRPMIndicator (int x, int y);
-  virtual ~FGRPMIndicator ();
-
-protected:
-  double getValue () const;
+  FGGyroCompass (int x, int y);
+  virtual ~FGGyroCompass ();
+  virtual void draw () const;
 };
 
 
-				// FIXME: move to FGPanel, somehow
-void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor);
+
+////////////////////////////////////////////////////////////////////////
+// Vertical velocity indicator.
+////////////////////////////////////////////////////////////////////////
 
-#endif // _PANEL_HXX 
+class FGVerticalVelocity : public FGTexturedInstrument
+{
+public:
+  FGVerticalVelocity (int x, int y);
+  virtual ~FGVerticalVelocity ();
+  virtual void draw () const;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// RPM gauge.
+////////////////////////////////////////////////////////////////////////
+
+class FGRPMGauge : public FGTexturedInstrument
+{
+public:
+  FGRPMGauge (int x, int y);
+  virtual ~FGRPMGauge ();
+  virtual void draw () const;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Flap position indicator.
+////////////////////////////////////////////////////////////////////////
+
+class FGFlapIndicator : public FGTexturedInstrument
+{
+public:
+  FGFlapIndicator (int x, int y);
+  virtual ~FGFlapIndicator ();
+  virtual void draw () const;
+};
+
+
+
+#endif // __PANEL_HXX
+
+// end of panel.hxx
+
+

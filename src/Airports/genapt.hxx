@@ -31,7 +31,7 @@
 #endif                                   
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include STL_STRING
 #include <set>

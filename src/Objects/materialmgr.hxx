@@ -37,10 +37,10 @@
 #  include <windows.h>
 #endif
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include STL_STRING		// Standard C++ string library
 #include <map>			// STL associative "array"

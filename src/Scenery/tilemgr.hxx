@@ -29,11 +29,11 @@
 # error This library requires C++
 #endif                                   
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <list>
 
-#include <Bucket/newbucket.hxx>
+#include <simgear/newbucket.hxx>
 
 
 FG_USING_STD(list);

@@ -81,7 +81,7 @@
  */
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <math.h>
 

@@ -33,15 +33,16 @@
 
 #include <Scenery/scenery.hxx>
 
-#include "autopilot.hxx"
+#include <simgear/constants.h>
+#include <simgear/logstream.hxx>
 
-#include <Include/fg_constants.h>
-#include <Debug/logstream.hxx>
 #include <Airports/simple.hxx>
 #include <GUI/gui.h>
 #include <Main/fg_init.hxx>
 #include <Main/options.hxx>
 #include <Time/fg_time.hxx>
+
+#include "autopilot.hxx"
 
 
 #define mySlider puSlider

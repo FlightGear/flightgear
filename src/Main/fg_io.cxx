@@ -21,12 +21,13 @@
 // $Id$
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
-#include <Include/fg_types.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fg_types.hxx>
+
 #include <Main/options.hxx>
 
 #include <Network/iochannel.hxx>

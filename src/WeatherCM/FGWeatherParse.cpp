@@ -56,7 +56,7 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include <Include/fg_constants.h>
+#include <simgear/constants.h>
 
 #include "FGWeatherParse.h"
 #include "FGWeatherUtils.h"

@@ -33,7 +33,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,11 +44,17 @@
 #  define _G_NO_EXTERN_TEMPLATES
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/point3d.hxx>
+#include <simgear/polar3d.hxx>
+#include <simgear/fgpath.hxx>
+
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
 #include <Astro/sky.hxx>
@@ -61,13 +67,8 @@
 #include <FDM/JSBsim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
-#include <Include/fg_constants.h>
 #include <Include/general.hxx>
 #include <Joystick/joystick.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Math/point3d.hxx>
-#include <Math/polar3d.hxx>
-#include <Misc/fgpath.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>

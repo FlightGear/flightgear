@@ -47,8 +47,8 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include <Include/compiler.h>
-#include <Include/fg_constants.h>
+#include <simgear/compiler.h>
+#include <simgear/constants.h>
 
 #include <Aircraft/aircraft.hxx>
 

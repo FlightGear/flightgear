@@ -29,14 +29,14 @@
 # error This library requires C++
 #endif                                   
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <list>
 
 #include <plib/sg.h>		// plib include
 
 #include <FDM/flight.hxx>
-#include <Math/point3d.hxx>
+#include <simgear/point3d.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
@@ -47,6 +47,8 @@ FG_USING_STD(list);
 
 // used in views.cxx and tilemgr.cxx
 #define USE_FAST_FOV_CLIP 
+#define FG_FOV_MIN 0.1
+#define FG_FOV_MAX 179.9
 
 
 // Define a structure containing view information

@@ -32,7 +32,7 @@
 #ifndef _GEOCOORD_H_
 #define _GEOCOORD_H_
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 
 #include <math.h>

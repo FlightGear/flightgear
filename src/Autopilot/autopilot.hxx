@@ -24,7 +24,7 @@
 #ifndef _AUTOPILOT_HXX
 #define _AUTOPILOT_HXX
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
                        
 #include STL_STRING
 

@@ -30,21 +30,22 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_random.h>
+#include <simgear/mat3.h>
+#include <simgear/polar3d.hxx>
+
 #include <Aircraft/aircraft.hxx>
-#include <Debug/logstream.hxx>
-#include <Include/fg_constants.h>
 #include <Include/general.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Math/fg_random.h>
-#include <Math/mat3.h>
-#include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/fg_time.hxx>

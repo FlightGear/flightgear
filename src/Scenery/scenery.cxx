@@ -30,17 +30,16 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include <stdio.h>
 #include <string.h>
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
+
 #include <Main/options.hxx>
 
-// #include "obj.hxx"
 #include "scenery.hxx"
-// #include "texload.h"
 
 
 // Temporary hack until we get a better texture management system running

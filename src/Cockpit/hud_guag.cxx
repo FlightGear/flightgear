@@ -5,18 +5,22 @@
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
+
 #include <stdlib.h>
 #include <string.h>
+
+#include <simgear/constants.h>
+#include <simgear/fg_random.h>
+#include <simgear/mat3.h>
+#include <simgear/polar3d.hxx>
+
 #include <Aircraft/aircraft.hxx>
 #include <GUI/gui.h>
-#include <Include/fg_constants.h>
-#include <Math/fg_random.h>
-#include <Math/mat3.h>
-#include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 
 #include "hud.hxx"
+
 
 #ifdef USE_HUD_TextList
 #define textString( x , y, text, font )  TextString( text, x , y )

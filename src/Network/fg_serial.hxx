@@ -29,7 +29,7 @@
 # error This library requires C++
 #endif
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #include <string>
 
@@ -39,7 +39,7 @@
 // #  include <time.h>
 // #endif
 
-#include <Serial/serial.hxx>
+#include <simgear/serial.hxx>
 
 #include "iochannel.hxx"
 #include "protocol.hxx"

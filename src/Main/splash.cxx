@@ -35,14 +35,15 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include <string.h>
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fg_random.h>
+#include <simgear/fgpath.hxx>
+
 #include <Main/options.hxx>
-#include <Math/fg_random.h>
-#include <Misc/fgpath.hxx>
 #include <Objects/texload.h>
 
 #include "splash.hxx"

@@ -25,7 +25,7 @@
 #define _IOCHANNEL_HXX
 
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #include "protocol.hxx"
 

@@ -37,24 +37,25 @@
 // extern "C" void *memset(void *, int, size_t);
 // #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include STL_STRING
 #include <map>			// STL
 #include <vector>		// STL
 #include <ctype.h>		// isdigit()
 
-#include <Debug/logstream.hxx>
-#include <Misc/fgstream.hxx>
-#include <Include/fg_constants.h>
+#include <simgear/logstream.hxx>
+#include <simgear/fgstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/mat3.h>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/fg_random.h>
+#include <simgear/point3d.hxx>
+#include <simgear/polar3d.hxx>
+#include <simgear/stopwatch.hxx>
+#include <simgear/texcoord.hxx>
+
 #include <Main/options.hxx>
-#include <Math/mat3.h>
-#include <Math/fg_geodesy.hxx>
-#include <Math/fg_random.h>
-#include <Math/point3d.hxx>
-#include <Math/polar3d.hxx>
-#include <Misc/stopwatch.hxx>
-#include <Misc/texcoord.hxx>
 #include <Scenery/tileentry.hxx>
 
 #include "materialmgr.hxx"

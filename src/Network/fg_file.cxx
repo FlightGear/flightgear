@@ -21,11 +21,11 @@
 // $Id$
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
 
 #include "fg_file.hxx"
 

@@ -39,7 +39,8 @@
 #  include <config.h>
 #endif
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
+
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <cmath>
 #  include <cstdio>
@@ -50,16 +51,16 @@
 #  include <time.h>
 #endif
 
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/mat3.h>
+#include <simgear/point3d.hxx>
+#include <simgear/polar3d.hxx>
+#include <simgear/vector.hxx>
 
-#include <Debug/logstream.hxx>
 #include <Astro/solarsystem.hxx>
-#include <Include/fg_constants.h>
 #include <Main/views.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Math/mat3.h>
-#include <Math/point3d.hxx>
-#include <Math/polar3d.hxx>
-#include <Math/vector.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "fg_time.hxx"

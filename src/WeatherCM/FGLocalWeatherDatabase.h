@@ -57,7 +57,7 @@ HISTORY
 
 #include <plib/sg.h>
 
-#include <Math/sphrintp.h>
+#include "sphrintp.h"
 
 #include "FGPhysicalProperties.h"
 #include "FGPhysicalProperty.h"

@@ -49,7 +49,7 @@ HISTORY
 #include "FGWeatherDefs.h"
 
 //for the case that mutable isn't supported:
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 		
 /****************************************************************************/
 /* DEFINES								    */

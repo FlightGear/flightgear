@@ -23,11 +23,12 @@
 
 #include <stdio.h>
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_geodesy.hxx>
+
 #include <FDM/LaRCsim/ls_interface.h>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
-#include <Math/fg_geodesy.hxx>
 #include <Time/timestamp.hxx>
 
 #include "External.hxx"

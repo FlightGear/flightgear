@@ -29,7 +29,7 @@
 bool global_fullscreen = true;
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <math.h>            // rint()
 #include <stdio.h>
@@ -38,9 +38,10 @@ bool global_fullscreen = true;
 
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
-#include <Misc/fgstream.hxx>
-#include <Include/fg_constants.h>
+#include <simgear/logstream.hxx>
+#include <simgear/fgstream.hxx>
+#include <simgear/constants.h>
+
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <FDM/flight.hxx>
@@ -49,6 +50,7 @@ bool global_fullscreen = true;
 #endif
 #include <Time/fg_time.hxx>
 
+#include "views.hxx"
 #include "options.hxx"
 
 FG_USING_STD(string);

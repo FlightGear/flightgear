@@ -25,6 +25,7 @@
 #ifndef _GUI_H_
 #define _GUI_H_
 
+#include <GL/glut.h>		// needed before pu.h
 #include <plib/pu.h>		// plib include
 
 extern void guiInit();

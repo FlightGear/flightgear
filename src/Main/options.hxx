@@ -33,26 +33,29 @@
 #  include <config.h>
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #if defined(FX) && defined(XMESA)
 extern bool global_fullscreen;
 #endif
 
-#include <Include/fg_types.hxx>
+#include <simgear/fg_types.hxx>
 
 #include STL_STRING
 #include <vector>
 
 FG_USING_STD(vector);
 FG_USING_STD(string);
+
+#define NEW_DEFAULT_MODEL_HZ 120
+
 
 class fgOPTIONS {
 

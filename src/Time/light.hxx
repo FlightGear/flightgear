@@ -39,12 +39,12 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include <plib/sg.h>			// plib include
 
-#include <Math/interpolater.hxx>
-#include <Math/point3d.hxx>
+#include <simgear/interpolater.hxx>
+#include <simgear/point3d.hxx>
 
 
 // Define a structure containing the global lighting parameters
@@ -149,5 +149,3 @@ extern fgLIGHT cur_light_params;
 
 
 #endif // _LIGHT_HXX
-
-

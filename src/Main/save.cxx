@@ -38,8 +38,9 @@ TODO:
 
 #include <iostream>
 
-#include <Include/fg_types.hxx>
-#include <Include/fg_constants.h>
+#include <simgear/fg_types.hxx>
+#include <simgear/constants.h>
+
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <Autopilot/autopilot.hxx>
@@ -49,7 +50,6 @@ TODO:
 #else
 #  include <Weather/weather.hxx>
 #endif
-
 
 #include "options.hxx"
 #include "save.hxx"

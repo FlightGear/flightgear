@@ -47,13 +47,14 @@
 #include <vector>       // STL vector
 #include <deque>        // STL double ended queue
 
+#include <simgear/constants.h>
+#include <simgear/mat3.h>
+
 #include <fg_typedefs.h>
-#include <fg_constants.h>
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
 #include <GUI/gui.h>
-#include <Math/mat3.h>
 
 FG_USING_STD(deque);
 FG_USING_STD(vector);

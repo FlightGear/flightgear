@@ -61,10 +61,10 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 #include <vector>
 
-#include <Misc/fgstream.hxx>
+#include <simgear/fgstream.hxx>
 
 #include "FGPhysicalProperties.h"
 

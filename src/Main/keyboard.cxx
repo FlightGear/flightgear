@@ -30,7 +30,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #if defined(FX) && defined(XMESA)
 #include <GL/xmesa.h>
@@ -41,15 +41,16 @@
 
 #include <plib/pu.h>		// plib include
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fgpath.hxx>
+
 #include <Aircraft/aircraft.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Astro/sky.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
-#include <Include/fg_constants.h>
-#include <Misc/fgpath.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/materialmgr.hxx>
 #include <Time/fg_time.hxx>

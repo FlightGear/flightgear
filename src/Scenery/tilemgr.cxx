@@ -30,20 +30,19 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
+
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/mat3.h>
+#include <simgear/point3d.hxx>
+#include <simgear/polar3d.hxx>
+#include <simgear/vector.hxx>
 
 #include <Aircraft/aircraft.hxx>
-
-#include <Debug/logstream.hxx>
-// #include <Bucket/bucketutils.hxx>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Math/mat3.h>
-#include <Math/point3d.hxx>
-#include <Math/polar3d.hxx>
-#include <Math/vector.hxx>
 #include <Objects/materialmgr.hxx>
 #include <Objects/obj.hxx>
 

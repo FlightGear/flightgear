@@ -24,11 +24,12 @@
 // $Id$
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
-#include <Debug/logstream.hxx>
-#include <Misc/fgpath.hxx>
-#include <Misc/fgstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fgpath.hxx>
+#include <simgear/fgstream.hxx>
+
 #include <Main/options.hxx>
 
 #include STL_STRING

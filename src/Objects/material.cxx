@@ -25,7 +25,7 @@
 #  include <config.h>
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -36,13 +36,13 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
-#include <Misc/fgpath.hxx>
-#include <Misc/fgstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fgpath.hxx>
+#include <simgear/fgstream.hxx>
 
 #include "material.hxx"
 #include "texload.h"

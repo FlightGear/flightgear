@@ -30,7 +30,8 @@
 #endif                                   
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
+
 #include <Include/fg_callback.hxx>
 
 #include <deque>        // STL double ended queue

@@ -37,7 +37,7 @@
 #ifndef _MY_MATH_H_
 #define _MY_MATH_H__
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <math.h>
 #include STL_FSTREAM
@@ -45,7 +45,8 @@
 
 FG_USING_NAMESPACE(std);
 
-#include <fg_constants.h>
+#include <simgear/constants.h>
+
 extern const  double PiOver180;
 extern const double Pix4dif3;
 

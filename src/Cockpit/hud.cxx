@@ -42,14 +42,15 @@
 #  include <values.h>  // for MAXINT
 #endif
 
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_random.h>
+#include <simgear/mat3.h>
+#include <simgear/polar3d.hxx>
+
 #include <Aircraft/aircraft.hxx>
-#include <Debug/logstream.hxx>
 #include <GUI/gui.h>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
-#include <Math/fg_random.h>
-#include <Math/mat3.h>
-#include <Math/polar3d.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif

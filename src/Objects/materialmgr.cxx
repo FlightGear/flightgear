@@ -34,16 +34,17 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <string.h>
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
-#include <Misc/fgpath.hxx>
-#include <Misc/fgstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fgpath.hxx>
+#include <simgear/fgstream.hxx>
+
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Scenery/tileentry.hxx>

@@ -20,8 +20,8 @@
 //
 // $Id$
 
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef NETWORK_OLK_H
+#define NETWORK_OLK_H
 
 #define FGD
 

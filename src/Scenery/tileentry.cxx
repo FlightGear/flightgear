@@ -21,7 +21,7 @@
 // $Id$
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -30,8 +30,8 @@
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
 
-#include <Debug/logstream.hxx>
-#include <Bucket/newbucket.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/newbucket.hxx>
 
 #include "tileentry.hxx"
 

@@ -38,7 +38,8 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -63,10 +64,16 @@
 #  include <plib/sm.h>		// plib include
 #endif
 
-#include <Include/fg_constants.h>  // for VERSION
+#include <simgear/constants.h>  // for VERSION
+#include <simgear/logstream.hxx>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/mat3.h>
+#include <simgear/polar3d.hxx>
+#include <simgear/fg_random.h>
+#include <simgear/fgpath.hxx>
+
 #include <Include/general.hxx>
 
-#include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
@@ -76,11 +83,6 @@
 #include <Cockpit/cockpit.hxx>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Math/mat3.h>
-#include <Math/polar3d.hxx>
-#include <Math/fg_random.h>
-#include <Misc/fgpath.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif

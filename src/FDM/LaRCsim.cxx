@@ -23,11 +23,11 @@
 
 #include "LaRCsim.hxx"
 
-#include <Include/fg_constants.h>
+#include <simgear/constants.h>
+#include <simgear/logstream.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Debug/logstream.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <FDM/LaRCsim/ls_generic.h>

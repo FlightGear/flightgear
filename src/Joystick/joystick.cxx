@@ -29,15 +29,16 @@
 #  include <windows.h>                     
 #endif
 
+#include <simgear/logstream.hxx>
+
 #include <Aircraft/aircraft.hxx>
-#include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 
 #if defined( ENABLE_PLIB_JOYSTICK )
 #  include <plib/js.h>		// plib include
 #elif defined( ENABLE_GLUT_JOYSTICK )
 #  include <GL/glut.h>
-#  include <XGL/xgl.h>
+#  include <simgear/xgl.h>
 #endif
 
 

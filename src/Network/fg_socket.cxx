@@ -21,7 +21,7 @@
 // $Id$
 
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <sys/time.h>		// select()
 #include <sys/types.h>		// socket(), bind(), select(), accept()
@@ -36,7 +36,7 @@
 
 #include STL_STRING
 
-#include <Debug/logstream.hxx>
+#include <simgear/logstream.hxx>
 
 #include "fg_socket.hxx"
 

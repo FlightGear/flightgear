@@ -32,4 +32,4 @@ libLaRCsim_a_SOURCES = \
 	$(AIRCRAFT_MODEL) \
 	ls_interface.c ls_interface.h
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Simulator
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/src

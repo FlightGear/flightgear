@@ -39,7 +39,7 @@ HISTORY
 #  include <config.h>
 #endif
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #include <stdlib.h>
 #include <time.h>

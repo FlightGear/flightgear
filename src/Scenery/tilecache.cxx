@@ -30,18 +30,19 @@
 #endif
 
 #include <GL/glut.h>
-#include <XGL/xgl.h>
+#include <simgear/xgl.h>
 
 #include <plib/ssg.h>		// plib include
 
-#include <Debug/logstream.hxx>
-#include <Misc/fgstream.hxx>
+#include <simgear/logstream.hxx>
+#include <simgear/fgstream.hxx>
+#include <simgear/newbucket.hxx>
+#include <simgear/fgpath.hxx>
+
 #include <Airports/genapt.hxx>
-#include <Bucket/newbucket.hxx>
 #include <Clouds/cloudobj.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Misc/fgpath.hxx>
 #include <Objects/obj.hxx>
 #include <Scenery/scenery.hxx>  // for scenery.center
 

@@ -37,7 +37,7 @@ HISTORY
 /* INCLUDES								    */
 /****************************************************************************/
 
-#include <Include/compiler.h>
+#include <simgear/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -45,13 +45,14 @@ HISTORY
 
 #include STL_STRING
 
+#include <simgear/logstream.hxx>
+#include <simgear/constants.h>
+#include <simgear/fg_geodesy.hxx>
+#include <simgear/fgpath.hxx>
+
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Debug/logstream.hxx>
-#include <Include/fg_constants.h>
 #include <Main/options.hxx>
-#include <Math/fg_geodesy.hxx>
-#include <Misc/fgpath.hxx>
 
 #include "Balloon.h"
 

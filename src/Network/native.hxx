@@ -25,11 +25,12 @@
 #define _FG_NATIVE_HXX
 
 
-#include "Include/compiler.h"
+#include <simgear/compiler.h>
 
 #include STL_STRING
 
 #include <FDM/flight.hxx>
+
 #include "protocol.hxx"
 
 FG_USING_STD(string);

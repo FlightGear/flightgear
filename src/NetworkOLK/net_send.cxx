@@ -35,8 +35,9 @@
 #include "fgd.h"
 
 /* I prefer NHV's decl. */
+#include <simgear/constants.h>
+
 #include <Cockpit/hud.hxx>
-#include <Include/fg_constants.h>
 #include <plib/ssg.h>
 #include <Main/views.hxx>
 
