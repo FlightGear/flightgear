@@ -97,7 +97,14 @@ FGBucket fgBucketOffset( double dlon, double dlat, int dx, int dy ) {
     double span = bucket_span( clat );
 
     // walk dx units in the lon direction
-    result.set_bucket( dlon + dx * span, clat );
+    double tmp = dlon + dx * span;
+    while ( tmp < -180.0 ) {
+	tmp += 360.0;
+    }
+    while ( tmp >= 180.0 ) {
+	tmp -= 360.0;
+    }
+    result.set_bucket( tmp, clat );
 
     return result;
 }
