@@ -30,6 +30,12 @@ Michael Basler <pmb@knUUt.de>
   Coauthor of the Getting Started guide.
 
 
+Jon S. Berndt <jsb@hal-pc.org>
+  Working on a complete C++ rewrite/reimplimentation of the core FDM.
+  Initially he is using X15 data to test his code, but once things are
+  all in place we should be able to simulator arbitrary aircraft.
+
+
 Paul Bleisch <pbleisch@acm.org>
   Paul redid the "debug" system so that it would be much more
   flexible, so it could be easily disabled for production system, and
