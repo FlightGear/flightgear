@@ -275,7 +275,9 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         
         cm->setTransitionTime(handle, time);
     } else {
-	*(int*)0=0; // unexpected tag, boom
+        SG_LOG(SG_FLIGHT,SG_ALERT,"Unexpected tag '"
+               << name << "' found in YASim aircraft description");
+        exit(1);
     }
 }
 
@@ -493,7 +495,10 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "FLAP1"))     return ControlMap::FLAP1;
     if(eq(name, "SLAT"))      return ControlMap::SLAT;
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
-    *(int*)0=0;
+    SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
+           << name << "' in YASim aircraft description.");
+    exit(1);
+
 }
 
 void FGFDM::parseWeight(XMLAttributes* a)
@@ -532,7 +537,11 @@ char* FGFDM::dup(const char* s)
 
 int FGFDM::attri(XMLAttributes* atts, char* attr)
 {
-    if(!atts->hasAttribute(attr)) *(int*)0=0; // boom
+    if(!atts->hasAttribute(attr)) {
+        SG_LOG(SG_FLIGHT,SG_ALERT,"Missing '" << attr <<
+               "' in YASim aircraft description");
+        exit(1);
+    }
     return attri(atts, attr, 0);
 }
 
@@ -545,7 +554,11 @@ int FGFDM::attri(XMLAttributes* atts, char* attr, int def)
 
 float FGFDM::attrf(XMLAttributes* atts, char* attr)
 {
-    if(!atts->hasAttribute(attr)) *(int*)0=0; // boom
+    if(!atts->hasAttribute(attr)) {
+        SG_LOG(SG_FLIGHT,SG_ALERT,"Missing '" << attr <<
+               "' in YASim aircraft description");
+        exit(1);
+    }
     return attrf(atts, attr, 0);
 }
 
