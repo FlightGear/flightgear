@@ -38,6 +38,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/polar3d.hxx>
+#include <simgear/misc/props.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
@@ -152,10 +153,12 @@ float get_rudderval( void )
 
 float get_speed( void )
 {
-    // Make an explicit function call.
+    static const SGPropertyNode * speedup_node = fgGetNode("/sim/speed-up");
+
     float speed = current_aircraft.fdm_state->get_V_calibrated_kts()
-	* fgGetInt("/sim/speed-up"); // FIXME: inefficient
-    return( speed );
+	* speedup_node->getIntValue();
+
+    return speed;
 }
 
 float get_mach(void)
@@ -190,19 +193,18 @@ float get_heading( void )
 
 float get_altitude( void )
 {
-//  FGState *f;
-    // double rough_elev;
+    static const SGPropertyNode *startup_units_node
+        = fgGetNode("/sim/startup/units");
 
-//  current_aircraft.fdm_state
-    // rough_elev = mesh_altitude(f->get_Longitude() * SG_RAD_TO_ARCSEC,
-    //                         f->get_Latitude()  * SG_RAD_TO_ARCSEC);
     float altitude;
 
-    if ( fgGetString("/sim/startup/units") == "feet" ) {
+    if ( startup_units_node->getStringValue() == "feet" ) {
         altitude = current_aircraft.fdm_state->get_Altitude();
     } else {
-        altitude = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER);
+        altitude = (current_aircraft.fdm_state->get_Altitude()
+                    * SG_FEET_TO_METER);
     }
+
     return altitude;
 }
 
@@ -701,18 +703,21 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 void fgCockpitUpdate( void ) {
 
     SG_LOG( SG_COCKPIT, SG_DEBUG,
-        "Cockpit: code " << ac_cockpit->code() << " status " 
-        << ac_cockpit->status() );
+            "Cockpit: code " << ac_cockpit->code() << " status " 
+            << ac_cockpit->status() );
+
+    static const SGPropertyNode * xsize_node = fgGetNode("/sim/startup/xsize");
+    static const SGPropertyNode * ysize_node = fgGetNode("/sim/startup/ysize");
+    static const SGPropertyNode * hud_visibility_node
+        = fgGetNode("/sim/hud/visibility");
+
+    int iwidth   = xsize_node->getIntValue();
+    int iheight  = ysize_node->getIntValue();
+    float width  = iwidth;
+    float height = iheight;
 
 				// FIXME: inefficient
-	int iwidth   = fgGetInt("/sim/startup/xsize");
-				// FIXME: inefficient
-	int iheight  = fgGetInt("/sim/startup/ysize");
-	float width  = iwidth;
-	float height = iheight;
-
-				// FIXME: inefficient
-    if ( fgGetBool("/sim/hud/visibility") ) {
+    if ( hud_visibility_node->getBoolValue() ) {
         // This will check the global hud linked list pointer.
         // If these is anything to draw it will.
         fgUpdateHUD();
@@ -731,8 +736,7 @@ void fgCockpitUpdate( void ) {
         glMatrixMode( GL_PROJECTION );
         glPushMatrix();
         glLoadIdentity();
-        gluOrtho2D( 0, fgGetInt("/sim/startup/xsize"),
-		    0, fgGetInt("/sim/startup/ysize") );
+        gluOrtho2D( 0, iwidth, 0, iheight );
         glMatrixMode( GL_MODELVIEW );
         glPushMatrix();
         glLoadIdentity();
@@ -754,8 +758,5 @@ void fgCockpitUpdate( void ) {
     }
 #endif // #ifdef DISPLAY_COUNTER
     
-    glViewport( 0, 0, 
-		fgGetInt("/sim/startup/xsize"),
-		fgGetInt("/sim/startup/ysize") );
-
+    glViewport( 0, 0, iwidth, iheight );
 }
