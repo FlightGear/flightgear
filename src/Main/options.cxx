@@ -772,6 +772,10 @@ parse_option (const string& arg)
         fgSetBool("/environment/clouds/status", false);
     } else if ( arg == "--enable-clouds" ) {
         fgSetBool("/environment/clouds/status", true);
+    } else if ( arg == "--disable-clouds3d" ) {
+        fgSetBool("/sim/rendering/clouds3d", false);
+    } else if ( arg == "--enable-clouds3d" ) {
+        fgSetBool("/sim/rendering/clouds3d", true);
     } else if ( arg.find( "--fov=" ) == 0 ) {
 	parse_fov( arg.substr(6) );
     } else if ( arg == "--disable-fullscreen" ) {
