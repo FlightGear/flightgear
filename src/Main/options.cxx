@@ -827,6 +827,8 @@ parse_option (const string& arg)
 	add_channel( "nmea", arg.substr(7) );
     } else if ( arg.find( "--props=" ) == 0 ) {
 	add_channel( "props", arg.substr(8) );
+    } else if ( arg.find( "--telnet=" ) == 0 ) {
+	add_channel( "telnet", arg.substr(9) );
     } else if ( arg.find( "--pve=" ) == 0 ) {
 	add_channel( "pve", arg.substr(6) );
     } else if ( arg.find( "--ray=" ) == 0 ) {
@@ -1100,194 +1102,186 @@ fgParseOptions (const string& path) {
 void 
 fgUsage ()
 {
-    cout << "Usage: fgfs [ option ... ]" << endl
-         << endl
+    cout <<
+"Usage: fgfs [ option ... ]\n\
+\n\
+General Options:\n\
+    --help, -h                    Print usage\n\
+    --fg-root=path                Specify the root data path\n\
+    --fg-scenery=path             Specify the base scenery path\n\
+                                  Defaults to $FG_ROOT/Scenery\n\
+    --disable-game-mode           Disable full-screen game mode\n\
+    --enable-game-mode            Enable full-screen game mode\n\
+    --disable-splash-screen       Disable splash screen\n\
+    --enable-splash-screen        Enable splash screen\n\
+    --disable-intro-music         Disable introduction music\n\
+    --enable-intro-music          Enable introduction music\n\
+    --disable-mouse-pointer       Disable extra mouse pointer\n\
+    --enable-mouse-pointer        Enable extra mouse pointer (i.e. for full-\n\
+                                  screen Voodoo based cards)\n\
+    --disable-freeze              Start in a running state\n\
+    --enable-freeze               Start in a frozen state\n\
+    --disable-fuel-freeze         Fuel is consumed normally\n\
+    --enable-fuel-freeze          Fuel tank quantity forced to remain constant\n\
+    --disable-clock-freeze        Clock advances normally\n\
+    --enable-clock-freeze         Do not advance clock\n\
+    --control=mode                Primary control mode (joystick, keyboard,\n\
+                                  mouse)\n\
+    --enable-auto-coordination    Enable auto coordination\n\
+    --disable-auto-coordination   Disable auto coordination\n\
+    --browser-app=path            Specify path to your web browser\n\
+    --prop:name=value             Set property <name> to <value>\n\
+    --config=path                 Load additional properties from path\n\
+    --units-feet                  Use feet for distances\n\
+    --units-meters                Use meters for distances\n\
+\n\
+Features:\n\
+    --disable-hud                 Disable Heads Up Display (HUD)\n\
+    --enable-hud                  Enable Heads Up Display (HUD)\n\
+    --disable-panel               Disable instrument panel\n\
+    --enable-panel                Enable instrument panel\n\
+    --disable-sound               Disable sound effects\n\
+    --enable-sound                Enable sound effects\n\
+    --disable-anti-alias-hud      Disable anti-aliased HUD\n\
+    --enable-anti-alias-hud       Enable anti-aliased HUD\n\
+\n\
+Aircraft:\n\
+    --aircraft=name               Select an aircraft profile as defined by a\n\
+                                  top level <name>-set.xml\n\
+\n\
+Flight Model:\n\
+    --fdm=name                    Select the core flight dynamics model\n\
+                                  Can be one of jsb, larcsim, yasim, magic,\n\
+                                  balloon, ada, external, or null\n\
+    --aero=name                   Select aircraft aerodynamics model to load\n\
+    --model-hz=n                  Run the FDM this rate (iterations per\n\
+                                  second)\n\
+    --speed=n                     Run the FDM 'n' times faster than real time\n\
+    --notrim                      Do NOT attempt to trim the model (only with\n\
+                                  fdm=jsbsim)\n\
+    --on-ground                   Start at ground level (default)\n\
+    --in-air                      Start in air (implied when using --altitude)\n\
+    --wind=DIR@SPEED              Specify wind coming from DIR (degrees) at\n\
+                                  SPEED (knots)\n\
+\n\
+Aircraft model directory (UIUC FDM ONLY):\n\
+    --aircraft-dir=path           Aircraft directory relative to the path of\n\
+                                  the executable\n\
+\n\
+Initial Position and Orientation:\n\
+    --airport-id=ID               Specify starting position by airport ID\n\
+    --offset-distance=nm          Specify distance to threshold\n\
+    --offset-azimuth=degrees      Specify heading to threshold\n\
+    --lon=degrees                 Starting longitude (west = -)\n\
+    --lat=degrees                 Starting latitude (south = -)\n\
+    --altitude=value              Starting altitude (in feet unless\n\
+                                  --units-meters specified)\n\
+    --heading=degrees             Specify heading (yaw) angle (Psi)\n\
+    --roll=degrees                Specify roll angle (Phi)\n\
+    --pitch=degrees               Specify pitch angle (Theta)\n\
+    --uBody=units_per_sec         Specify velocity along the body X axis\n\
+                                  (in feet unless --units-meters specified)\n\
+    --vBody=units_per_sec         Specify velocity along the body Y axis\n\
+                                  (in feet unless --units-meters specified)\n\
+    --wBody=units_per_sec         Specify velocity along the body Z axis\n\
+                                  (in feet unless --units-meters specified)\n\
+    --vc=knots                    Specify initial airspeed\n\
+    --mach=num                    Specify initial mach number\n\
+    --glideslope=degreees         Specify flight path angle (can be positive)\n\
+    --roc=fpm                     Specify initial climb rate (can be negative)\n\
+\n\
+Rendering Options:\n\
+    --bpp=depth                   Specify the bits per pixel\n\
+    --fog-disable                 Disable fog/haze\n\
+    --fog-fastest                 Enable fastest fog/haze\n\
+    --fog-nicest                  Enable nicest fog/haze\n\
+    --enable-clouds               Enable cloud layers\n\
+    --disable-clouds              Disable cloud layers\n\
+    --clouds-asl=altitude         Specify altitude of cloud layer above sea\n\
+                                  level\n\
+    --fov=degrees                 Specify field of view angle\n\
+    --disable-fullscreen          Disable fullscreen mode\n\
+    --enable-fullscreen           Enable fullscreen mode\n\
+    --shading-flat                Enable flat shading\n\
+    --shading-smooth              Enable smooth shading\n\
+    --disable-skyblend            Disable sky blending\n\
+    --enable-skyblend             Enable sky blending\n\
+    --disable-textures            Disable textures\n\
+    --enable-textures             Enable textures\n\
+    --disable-wireframe           Disable wireframe drawing mode\n\
+    --enable-wireframe            Enable wireframe drawing mode\n\
+    --geometry=WxH                Specify window geometry (640x480, etc)\n\
+    --view-offset=value           Specify the default forward view direction\n\
+                                  as an offset from straight ahead.  Allowable\n\
+                                  values are LEFT, RIGHT, CENTER, or a specific\n\
+                                  number in degrees\n\
+    --visibility=meters           Specify initial visibility\n\
+    --visibility-miles=miles      Specify initial visibility in miles\n\
+\n\
+Hud Options:\n\
+    --hud-tris                    Hud displays number of triangles rendered\n\
+    --hud-culled                  Hud displays percentage of triangles culled\n\
+\n\
+Time Options:\n\
+    --time-offset=[+-]hh:mm:ss    Add this time offset\n\
+    --time-match-real             Synchronize time with real-world time\n\
+    --time-match-local            Synchronize time with local real-world time\n\
+    --start-date-sys=yyyy:mm:dd:hh:mm:ss\n\
+                                  Specify a starting date/time with respect to\n\
+                                  system time\n\
+    --start-date-gmt=yyyy:mm:dd:hh:mm:ss\n\
+                                  Specify a starting date/time with respect to\n\
+                                  Greenwich Mean Time\n\
+    --start-date-lat=yyyy:mm:dd:hh:mm:ss\n\
+                                  Specify a starting date/time with respect to\n\
+                                  Local Aircraft Time\n\
+\n\
+Network Options:\n\
+    --httpd=port                  Enable http server on the specified port\n\
+    --telnet=port                 Enable telnet server on the specified port\n\
+\n"
 
-         << "General Options:" << endl
-         << "    --help, -h                    Print usage" << endl
-         << "    --fg-root=path                Specify the root data path" << endl
-         << "    --fg-scenery=path             Specify the base scenery path;" << endl
-	 << "                                  Defaults to $FG_ROOT/Scenery" << endl
-         << "    --disable-game-mode           Disable full-screen game mode" << endl
-         << "    --enable-game-mode            Enable full-screen game mode" << endl
-         << "    --disable-splash-screen       Disable splash screen" << endl
-         << "    --enable-splash-screen        Enable splash screen" << endl
-         << "    --disable-intro-music         Disable introduction music" << endl
-         << "    --enable-intro-music          Enable introduction music" << endl
-         << "    --disable-mouse-pointer       Disable extra mouse pointer" << endl
-         << "    --enable-mouse-pointer        Enable extra mouse pointer (i.e. for full-" << endl
-         << "                                  screen Voodoo based cards)" << endl
-         << "    --disable-freeze              Start in a running state" << endl
-         << "    --enable-freeze               Start in a frozen state" << endl
-         << "    --disable-fuel-freeze         Fuel is consumed normally" << endl
-         << "    --enable-fuel-freeze          Fuel tank quantity forced to remain constant" << endl
-         << "    --disable-clock-freeze        Clock advances normally" << endl
-         << "    --enable-clock-freeze         Do not advance clock" << endl
-         << "    --control=mode                Primary control mode (joystick, keyboard," << endl
-         << "                                  mouse)" << endl
-         << "    --enable-auto-coordination    Enable auto coordination" << endl
-         << "    --disable-auto-coordination   Disable auto coordination" << endl
-         << "    --browser-app=path            Specify path to your web browser" << endl
-         << "    --prop:name=value             Set property <name> to <value>" << endl
-         << "    --config=path                 Load additional properties from path" << endl
-         << "    --units-feet                  Use feet for distances" << endl
-         << "    --units-meters                Use meters for distances" << endl
-         << endl
-
-         << "Features:" << endl
-         << "    --disable-hud                 Disable Heads Up Display (HUD)" << endl
-         << "    --enable-hud                  Enable Heads Up Display (HUD)" << endl
-         << "    --disable-panel               Disable instrument panel" << endl
-         << "    --enable-panel                Enable instrument panel" << endl
-         << "    --disable-sound               Disable sound effects" << endl
-         << "    --enable-sound                Enable sound effects" << endl
-         << "    --disable-anti-alias-hud      Disable anti-aliased HUD" << endl
-         << "    --enable-anti-alias-hud       Enable anti-aliased HUD" << endl
-         << endl
-
-         << "Aircraft:" <<endl
-         << "    --aircraft=name               Select an aircraft profile as defined by a" << endl
-         << "                                  top level <name>-set.xml" << endl
-         << endl
-
-         << "Flight Model:" << endl
-         << "    --fdm=name                    Select the core flight dynamics model" << endl
-         << "                                  Can be one of jsb, larcsim, yasim, magic," << endl
-         << "                                  balloon, ada, external, or null" << endl
-         << "    --aero=name                   Select aircraft aerodynamics model to load" << endl
-         << "    --model-hz=n                  Run the FDM this rate (iterations per" << endl
-         << "                                  second)" << endl
-         << "    --speed=n                     Run the FDM 'n' times faster than real time" << endl
-         << "    --notrim                      Do NOT attempt to trim the model (only with" << endl
-         << "                                  fdm=jsbsim)" << endl
-         << "    --on-ground                   Start at ground level (default)" << endl
-         << "    --in-air                      Start in air (implied when using --altitude)" << endl
-         << "    --wind=DIR@SPEED              Specify wind coming from DIR (degrees) at" << endl
-         << "                                  SPEED (knots)" << endl
-         << endl
-
-         << "Aircraft model directory (UIUC FDM ONLY):" << endl
-         << "    --aircraft-dir=path           Aircraft directory relative to the path of" << endl
-         << "                                  the executable" << endl
-         << endl
-
-         << "Initial Position and Orientation:" << endl
-         << "    --airport-id=ID               Specify starting position by airport ID" << endl
-         << "    --offset-distance=nm          Specify distance to threshold" << endl 
-         << "    --offset-azimuth=degrees      Specify heading to threshold" << endl    
-         << "    --lon=degrees                 Starting longitude (west = -)" << endl
-         << "    --lat=degrees                 Starting latitude (south = -)" << endl
-         << "    --altitude=value              Starting altitude (in feet unless" << endl
-         << "                                  --units-meters specified)" << endl
-         << "    --heading=degrees             Specify heading (yaw) angle (Psi)" << endl
-         << "    --roll=degrees                Specify roll angle (Phi)" << endl
-         << "    --pitch=degrees               Specify pitch angle (Theta)" << endl
-         << "    --uBody=units_per_sec         Specify velocity along the body X axis" << endl
-         << "                                  (in feet unless --units-meters specified)" << endl
-         << "    --vBody=units_per_sec         Specify velocity along the body Y axis" << endl
-         << "                                  (in feet unless --units-meters specified)" << endl
-         << "    --wBody=units_per_sec         Specify velocity along the body Z axis" << endl
-         << "                                  (in feet unless --units-meters specified)" << endl
-         << "    --vc=knots                    Specify initial airspeed" << endl
-         << "    --mach=num                    Specify initial mach number" << endl
-         << "    --glideslope=degreees         Specify flight path angle (can be positive)" << endl
-         << "    --roc=fpm                     Specify initial climb rate (can be negative)" << endl
-         << endl
-
-         << "Rendering Options:" << endl
-         << "    --bpp=depth                   Specify the bits per pixel" << endl
-         << "    --fog-disable                 Disable fog/haze" << endl
-         << "    --fog-fastest                 Enable fastest fog/haze" << endl
-         << "    --fog-nicest                  Enable nicest fog/haze" << endl
-         << "    --enable-clouds               Enable cloud layers" << endl
-         << "    --disable-clouds              Disable cloud layers" << endl
-         << "    --clouds-asl=altitude         Specify altitude of cloud layer above sea" << endl
-         << "                                  level" << endl
-         << "    --fov=degrees                 Specify field of view angle" << endl
-         << "    --disable-fullscreen          Disable fullscreen mode" << endl
-         << "    --enable-fullscreen           Enable fullscreen mode" << endl
-         << "    --shading-flat                Enable flat shading" << endl
-         << "    --shading-smooth              Enable smooth shading" << endl
-         << "    --disable-skyblend            Disable sky blending" << endl
-         << "    --enable-skyblend             Enable sky blending" << endl
-         << "    --disable-textures            Disable textures" << endl
-         << "    --enable-textures             Enable textures" << endl
-         << "    --disable-wireframe           Disable wireframe drawing mode" << endl
-         << "    --enable-wireframe            Enable wireframe drawing mode" << endl
-         << "    --geometry=WxH                Specify window geometry (640x480, etc)" << endl
-         << "    --view-offset=value           Specify the default forward view direction" << endl
-         << "                                  as an offset from straight ahead.  Allowable" << endl
-         << "                                  values are LEFT, RIGHT, CENTER, or a specific" << endl
-         << "                                  number in degrees" << endl
-         << "    --visibility=meters           Specify initial visibility" << endl
-         << "    --visibility-miles=miles      Specify initial visibility in miles" << endl
-         << endl
-
-         << "Hud Options:" << endl
-         << "    --hud-tris                    Hud displays number of triangles rendered" << endl
-         << "    --hud-culled                  Hud displays percentage of triangles culled" << endl
-         << endl
-	
-         << "Time Options:" << endl
-         << "    --time-offset=[+-]hh:mm:ss    Add this time offset" << endl
-         << "    --time-match-real             Synchronize time with real-world time" << endl
-         << "    --time-match-local            Synchronize time with local real-world time" << endl
-         << "    --start-date-sys=yyyy:mm:dd:hh:mm:ss" << endl
-         << "                                  Specify a starting date/time with respect to" << endl
-         << "                                  system time" << endl
-         << "    --start-date-gmt=yyyy:mm:dd:hh:mm:ss" << endl
-         << "                                  Specify a starting date/time with respect to" << endl
-         << "                                  Greenwich Mean Time" << endl
-         << "    --start-date-lat=yyyy:mm:dd:hh:mm:ss" << endl
-         << "                                  Specify a starting date/time with respect to" << endl
-         << "                                  Local Aircraft Time" << endl
-         << endl
-
-         << "Network Options:" << endl
-         << "    --httpd=port                  Enable http server on the specified port" << endl
 #ifdef FG_JPEG_SERVER
-         << "    --jpg-httpd=port              Enable screen shot http server on the" << endl
-         << "                                  specified port" << endl
+"\
+    --jpg-httpd=port              Enable screen shot http server on the\n\
+                                  specified port\n"
 #endif
 #ifdef FG_NETWORK_OLK
-         << "    --disable-network-olk         Disable Multipilot mode (default)" << endl
-         << "    --enable-network-olk          Enable Multipilot mode" << endl
-         << "    --net-hud                     Hud displays network info" << endl
-         << "    --net-id=name                 Specify your own callsign" << endl
+"\
+    --disable-network-olk         Disable Multipilot mode (default)\n\
+    --enable-network-olk          Enable Multipilot mode\n\
+    --net-hud                     Hud displays network info\n\
+    --net-id=name                 Specify your own callsign\n"
 #endif
-         << endl
-
-         << "Route/Way Point Options:" << endl
-         << "    --wp=ID[@alt]                 Specify a waypoint for the GC autopilot;" << endl
-         << "                                  multiple instances can be used to create a" << endl
-         << "                                  route" << endl
-         << "    --flight-plan=file            Read all waypoints from a file" << endl
-         << endl
-
-         << "IO Options:" << endl
-         << "    --gamin=params                Open connection using the Garmin GPS protocol" << endl
-         << "    --joyclient=params            Open connection to an Agwagon joystick" << endl
-         << "    --native-ctrls=params         Open connection using the FG Native Controls" << endl
-         << "                                  protocol" << endl
-         << "    --native-fdm=params           Open connection using the FG Native FDM" << endl
-         << "                                  protocol" << endl
-         << "    --native=params               Open connection using the FG Native protocol" << endl
-         << "    --nmea=params                 Open connection using the NMEA protocol" << endl
-         << "    --opengc=params               Open connection using the OpenGC protocol" << endl
-         << "    --props=params                Open connection using the interactive" << endl
-         << "                                  property manager" << endl
-         << "    --pve=params                  Open connection using the PVE protocol" << endl
-         << "    --ray=params                  Open connection using the RayWoodworth" << endl
-         << "                                  motion chair protocol" << endl
-         << "    --rul=params                  Open connection using the RUL protocol" << endl
-         << endl
-         << "    --atc610x                     Enable atc610x interface." << endl
-         << endl
-
-         << "Debugging Options:" << endl
-         << "    --trace-read=property         Trace the reads for a property; multiple" << endl
-         << "                                  instances allowed." << endl
-         << "    --trace-write=property        Trace the writes for a property; multiple" << endl
-         << "                                  instances allowed." << endl
-         << endl;
+"\
+Route/Way Point Options:\n\
+    --wp=ID[@alt]                 Specify a waypoint for the GC autopilot;\n\
+                                  multiple instances can be used to create a\n\
+                                  route\n\
+    --flight-plan=file            Read all waypoints from a file\n\
+\n\
+IO Options:\n\
+    --gamin=params                Open connection using the Garmin GPS protocol\n\
+    --joyclient=params            Open connection to an Agwagon joystick\n\
+    --native-ctrls=params         Open connection using the FG Native Controls\n\
+                                  protocol\n\
+    --native-fdm=params           Open connection using the FG Native FDM\n\
+                                  protocol\n\
+    --native=params               Open connection using the FG Native protocol\n\
+    --nmea=params                 Open connection using the NMEA protocol\n\
+    --opengc=params               Open connection using the OpenGC protocol\n\
+    --props=params                Open connection using the interactive\n\
+                                  property manager\n\
+    --pve=params                  Open connection using the PVE protocol\n\
+    --ray=params                  Open connection using the RayWoodworth\n\
+                                  motion chair protocol\n\
+    --rul=params                  Open connection using the RUL protocol\n\
+\n\
+    --atc610x                     Enable atc610x interface.\n\
+\n\
+Debugging Options:\n\
+    --trace-read=property         Trace the reads for a property; multiple\n\
+                                  instances allowed.\n\
+    --trace-write=property        Trace the writes for a property; multiple\n\
+                                  instances allowed.\n";
 }

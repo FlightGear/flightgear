@@ -381,25 +381,25 @@ TelnetChannel::foundTerminator()
 // 	}
 	else
 	{
-	    const char* msg = "
-Valid commands are:
-
-cd <dir>         cd to a directory, '..' to move back
-data             switch to raw data mode
-dump             dump current state (in xml)
-get <var>        show the value of a parameter
-help             show this help message
-ls [<dir>]       list directory
-prompt           switch to interactive mode (default)
-pwd              display your current path
-quit             terminate connection
-set <var> <val>  set <var> to a new <val>
-show <var>       synonym for get
-view next        display next view
-view prev        display prev view
-view set <n>     display view 'n'
-view get         return current view index
-view current     return current view index
+	    const char* msg = "\
+Valid commands are:\n\
+\n\
+cd <dir>         cd to a directory, '..' to move back\n\
+data             switch to raw data mode\n\
+dump             dump current state (in xml)\n\
+get <var>        show the value of a parameter\n\
+help             show this help message\n\
+ls [<dir>]       list directory\n\
+prompt           switch to interactive mode (default)\n\
+pwd              display your current path\n\
+quit             terminate connection\n\
+set <var> <val>  set <var> to a new <val>\n\
+show <var>       synonym for get\n\
+view next        display next view\n\
+view prev        display prev view\n\
+view set <n>     display view 'n'\n\
+view get         return current view index\n\
+view current     return current view index\n\
 ";
 	    push( msg );
 	}
