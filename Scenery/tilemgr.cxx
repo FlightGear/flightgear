@@ -53,10 +53,22 @@
 #include "tilecache.hxx"
 
 
+// to test clipping speedup in fgTileMgrRender()
+#if defined ( USE_FAST_FOV_CLIP )
+  // #define TEST_FOV_CLIP
+  // #define TEST_ELEV
+#endif
+
+
 #define FG_LOCAL_X_Y         81  // max(o->tile_diameter) ** 2
 
 #define FG_SQUARE( X ) ( (X) * (X) )
 
+#ifdef WIN32
+#  define FG_MEM_COPY(to,from,n)	memcpy(to, from, n)
+#else
+#  define FG_MEM_COPY(to,from,n)	bcopy(from, to, n)
+#endif
 
 // closest (potentially viewable) tiles, centered on current tile.
 // This is an array of pointers to cache indexes.
@@ -237,10 +249,55 @@ static double point_line_dist_squared( fgPoint3d *tc, fgPoint3d *vp,
 
 // Calculate if point/radius is inside view frustum
 static int viewable( fgPoint3d *cp, double radius ) {
+    int viewable = 1; // start by assuming it's viewable
+    double x1, y1;
+
+/********************************/
+#if defined( USE_FAST_FOV_CLIP ) // views.hxx
+/********************************/
+	
+    MAT3vec eye;	
+    double *mat;
+    double x, y, z;
+
+    x = cp->x;
+    y = cp->y;
+    z = cp->z;
+	
+    mat = (double *)(current_view.WORLD_TO_EYE);
+	
+    eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12]) * current_view.slope_x;
+    eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) * current_view.slope_y; 
+    eye[2] =  x*mat[2] + y*mat[6] + z*mat[10] + mat[14];
+	
+    // Check near and far clip plane
+    if( ( eye[2] > radius ) ||
+	( eye[2] + radius + current_weather.visibility < 0) )
+    {
+	return(0);
+    }
+	
+    // check right and left clip plane (from eye perspective)
+    x1 = radius * current_view.fov_x_clip;
+    if( (eye[2] > -(eye[0]+x1)) || (eye[2] > (eye[0]-x1)) )
+    {
+	return(0);
+    }
+	
+    // check bottom and top clip plane (from eye perspective)
+    y1 = radius * current_view.fov_y_clip;
+    if( (eye[2] > -(eye[1]+y1)) || (eye[2] > (eye[1]-y1)) )
+    {
+	return(0);
+    }
+
+/********************************/	
+#else // DO NOT USE_FAST_FOV_CLIP
+/********************************/	
+
     fgVIEW *v;
     MAT3hvec world, eye;
-    int viewable = 1; // start by assuming it's viewable
-    double x0, x1, y1, slope;
+    double x0, slope;
 
     v = &current_view;
 
@@ -318,7 +375,47 @@ static int viewable( fgPoint3d *cp, double radius ) {
 	return(0);
     }
 
+#endif // defined( USE_FAST_FOV_CLIP )
+	
     return(viewable);
+}
+
+
+// NEW 
+
+// inrange() IS THIS POINT WITHIN POSSIBLE VIEWING RANGE ?
+//	calculate distance from vertical tangent line at
+//	current position to center of object.
+//	this is equivalent to
+//	dist = point_line_dist_squared( &(t->center), &(v->abs_view_pos), 
+//				        v->local_up );
+//	if ( dist < FG_SQUARE(t->bounding_radius) ) {
+//
+// the compiler should inline this for us
+
+static int
+inrange( const double radius, const fgPoint3d *center, const fgPoint3d *vp,
+	 const MAT3vec up)
+{
+    MAT3vec u, u1, v;
+    //	double tmp;
+	
+    // u = p - p0
+    u[0] = center->x - vp->x;
+    u[1] = center->y - vp->y;
+    u[2] = center->z - vp->z;
+	
+    // calculate the projection, u1, of u along d.
+    // u1 = ( dot_prod(u, d) / dot_prod(d, d) ) * d;
+	
+    MAT3_SCALE_VEC(u1, up,
+		   (MAT3_DOT_PRODUCT(u, up) / MAT3_DOT_PRODUCT(up, up)) );
+    
+    // v = u - u1 = vector from closest point on line, p1, to the
+    // original point, p.
+    MAT3_SUB_VEC(v, u, u1);
+	
+    return( FG_SQUARE(radius) >= MAT3_DOT_PRODUCT(v, v));
 }
 
 
@@ -348,8 +445,6 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
     local_up[1] = abs_view_pos->y;
     local_up[2] = abs_view_pos->z;
 
-    tile_diameter = current_options.get_tile_diameter();
-
     // Find current translation offset
     fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
     index = c->Exists(&p);
@@ -368,55 +463,48 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
 	      lon * RAD_TO_DEG, lat * RAD_TO_DEG,
 	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
 
-    // traverse the potentially viewable tile list
-    for ( i = 0; i < (tile_diameter * tile_diameter); i++ ) {
-	index = tiles[i];
-	// fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index);
-	t = c->GetTile(index);
+    // calculate tile offset
+    x = (t->offset.x = t->center.x - scenery.center.x);
+    y = (t->offset.y = t->center.y - scenery.center.y);
+    z = (t->offset.z = t->center.z - scenery.center.z);
 
-	// calculate tile offset
-	x = (t->offset.x = t->center.x - scenery.center.x);
-	y = (t->offset.y = t->center.y - scenery.center.y);
-	z = (t->offset.z = t->center.z - scenery.center.z);
-
-	// calc current terrain elevation calculate distance from
-	// vertical tangent line at current position to center of
-	// tile.
+    // calc current terrain elevation calculate distance from
+    // vertical tangent line at current position to center of
+    // tile.
 	
-	/* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-	       point_line_dist_squared(&(t->offset), &(v->view_pos), 
-	       v->local_up), t->bounding_radius); */
+    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+       point_line_dist_squared(&(t->offset), &(v->view_pos), 
+       v->local_up), t->bounding_radius); */
 
-	dist = point_line_dist_squared( &(t->center), abs_view_pos, 
+    dist = point_line_dist_squared( &(t->center), abs_view_pos, 
 				        local_up );
-	if ( dist < FG_SQUARE(t->bounding_radius) ) {
+    if ( dist < FG_SQUARE(t->bounding_radius) ) {
 
-	    // traverse fragment list for tile
-	    current = t->fragment_list.begin();
-	    last = t->fragment_list.end();
+	// traverse fragment list for tile
+	current = t->fragment_list.begin();
+	last = t->fragment_list.end();
 
-	    while ( current != last ) {
-		frag_ptr = &(*current);
-		current++;
-		/* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-		       point_line_dist_squared( &(frag_ptr->center), 
-					&abs_view_pos), local_up),
-		       frag_ptr->bounding_radius); */
+	while ( current != last ) {
+	    frag_ptr = &(*current);
+	    current++;
+	    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+	       point_line_dist_squared( &(frag_ptr->center), 
+	       &abs_view_pos), local_up),
+	       frag_ptr->bounding_radius); */
 
-		dist = point_line_dist_squared( &(frag_ptr->center), 
-					abs_view_pos, local_up);
-		if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
-		    if ( frag_ptr->intersect( abs_view_pos, 
-					      &earth_center, 0, &result ) ) {
-			// compute geocentric coordinates of tile center
-			pp = fgCartToPolar3d(result);
-			// convert to geodetic coordinates
-			fgGeocToGeod(pp.lat, pp.radius, &lat_geod, 
-				     &alt, &sea_level_r);
-			// printf("alt = %.2f\n", alt);
-			// exit since we found an intersection
-			return(alt);
-		    }
+	    dist = point_line_dist_squared( &(frag_ptr->center), 
+					    abs_view_pos, local_up);
+	    if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
+		if ( frag_ptr->intersect( abs_view_pos, 
+					  &earth_center, 0, &result ) ) {
+		    // compute geocentric coordinates of tile center
+		    pp = fgCartToPolar3d(result);
+		    // convert to geodetic coordinates
+		    fgGeocToGeod(pp.lat, pp.radius, &lat_geod, 
+				 &alt, &sea_level_r);
+		    // printf("alt = %.2f\n", alt);
+		    // exit since we found an intersection
+		    return(alt);
 		}
 	    }
 	}
@@ -424,6 +512,36 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
 
     printf("no terrain intersection found\n");
     return(0);
+}
+
+
+// NEW for legibility
+
+// update this tile's geometry for current view
+// The Compiler should inline this
+static void
+update_tile_geometry( fgTILE *t, GLdouble *MODEL_VIEW)
+{
+    GLdouble *m;
+    double x, y, z;
+	
+    // calculate tile offset
+    x = (t->offset.x = t->center.x - scenery.center.x);
+    y = (t->offset.y = t->center.y - scenery.center.y);
+    z = (t->offset.z = t->center.z - scenery.center.z);
+	
+    m = t->model_view;
+	
+    // Calculate the model_view transformation matrix for this tile
+    FG_MEM_COPY( m, MODEL_VIEW, 16*sizeof(GLdouble) );
+    
+    // This is equivalent to doing a glTranslatef(x, y, z);
+    m[12] += (m[0]*x + m[4]*y + m[8] *z);
+    m[13] += (m[1]*x + m[5]*y + m[9] *z);
+    m[14] += (m[2]*x + m[6]*y + m[10]*z);
+    // m[15] += (m[3]*x + m[7]*y + m[11]*z);
+    // m[3] m7[] m[11] are 0.0 see LookAt() in views.cxx
+    // so m[15] is unchanged
 }
 
 
@@ -479,6 +597,9 @@ void fgTileMgrRender( void ) {
     material_mgr.init_transient_material_lists();
     min_dist = 100000.0;
 
+    scenery.cur_elev = fgTileMgrCurElev( FG_Longitude, FG_Latitude, 
+					 &(v->abs_view_pos) );
+    
     // Pass 1
     // traverse the potentially viewable tile list
     for ( i = 0; i < (tile_diameter * tile_diameter); i++ ) {
@@ -503,48 +624,14 @@ void fgTileMgrRender( void ) {
 	m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
 	m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
 
-	// temp ... calc current terrain elevation
-	// calculate distance from vertical tangent line at
-	// current position to center of tile.
-	
-	/* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-	       point_line_dist_squared(&(t->offset), &(v->view_pos), 
-	       v->local_up), t->bounding_radius); */
-
-	dist = point_line_dist_squared( &(t->center), &(v->abs_view_pos), 
-				        v->local_up );
-	if ( dist < FG_SQUARE(t->bounding_radius) ) {
-
-	    // traverse fragment list for tile
-	    current = t->fragment_list.begin();
-	    last = t->fragment_list.end();
-
-	    while ( current != last ) {
-		frag_ptr = &(*current);
-		current++;
-		/* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-		       point_line_dist_squared( &(frag_ptr->center), 
-					&(v->abs_view_pos), v->local_up),
-		       frag_ptr->bounding_radius); */
-
-		dist = point_line_dist_squared( &(frag_ptr->center), 
-					&(v->abs_view_pos), v->local_up);
-		if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
-		    if ( frag_ptr->intersect( &(v->abs_view_pos), 
-					      &earth_center, 0, &result ) ) {
-			// compute geocentric coordinates of tile center
-			pp = fgCartToPolar3d(result);
-			// convert to geodetic coordinates
-			fgGeocToGeod(pp.lat, pp.radius, &lat_geod, 
-				     &alt, &sea_level_r);
-			// printf("alt = %.2f\n", alt);
-			scenery.cur_elev = alt;
-			// exit this loop since we found an intersection
-			break;
-		    }
-		}
-	    }
+#if defined( TEST_FOV_CLIP )
+	if( viewable(&(t->offset), t->bounding_radius) !=
+	    viewable2(&(t->offset), t->bounding_radius) )
+	{
+	    printf("FOV PROBLEM\n");
+	    exit(10);
 	}
+#endif // defined( TEST_FOV_CLIP )
 
 	// Course (tile based) culling
 	if ( viewable(&(t->offset), t->bounding_radius) ) {
@@ -566,6 +653,15 @@ void fgTileMgrRender( void ) {
 		    frag_offset.x = frag_ptr->center.x - scenery.center.x;
 		    frag_offset.y = frag_ptr->center.y - scenery.center.y;
 		    frag_offset.z = frag_ptr->center.z - scenery.center.z;
+
+#if defined( TEST_FOV_CLIP )
+		    radius = frag_ptr->bounding_radius*2;
+		    if ( viewable(&frag_offset, radius) !=
+			 viewable2(&frag_offset, radius) ) {
+			printf("FOV PROBLEM\n");
+			exit(10);
+		    }
+#endif // defined( TEST_FOV_CLIP )
 
 		    if ( viewable(&frag_offset, frag_ptr->bounding_radius*2) ) {
 			// add to transient per-material property fragment list
@@ -679,6 +775,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.33  1998/09/08 15:05:10  curt
+// Optimization by Norman Vine.
+//
 // Revision 1.32  1998/08/25 16:52:44  curt
 // material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
 //   ../Objects
