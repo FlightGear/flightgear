@@ -2,7 +2,7 @@ SUBDIRS = \
 	tests \
 	src
 
-EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.pl \
+EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.sh \
 	FlightGear.dsp FlightGear.dsw
 
 dist-hook:

@@ -380,6 +380,7 @@ Norman Vine <nhv@yahoo.com>
   Contributed a great circle route autopilot mode based on wgs84 routines.
   Many other GUI, HUD, and autopilot contributions.
   Contributed a patch to allow mouse input to control view direction.
+  Ultra hires tiled screen dumps.
 
 
 Roland Voegtli <voegtli@sanw.unibe.ch>
