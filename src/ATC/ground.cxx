@@ -197,7 +197,7 @@ bool FGGround::LoadNetwork() {
 			}
 			fin.setf(ios::skipws);
 			ap->distance = (int)dclGetHorizontalSeparation(network[ap->n1]->pos, network[ap->n2]->pos);
-			cout << "Distance  = " << ap->distance << '\n';
+			//cout << "Distance  = " << ap->distance << '\n';
 			network[ap->n1]->arcs.push_back(ap);
 			network[ap->n2]->arcs.push_back(ap);
 		} else if(!strcmp(buf, "G")) {
