@@ -38,11 +38,13 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
+    elapsed_time_ms(0L),
 #if defined(FX) && defined(XMESA)
     fullscreen( true ),
 #endif
     warp( 0 ),
     warp_delta( 0 ),
+    logger(0),
     props(new SGPropertyNode),
     initial_state(0),
     commands(new SGCommandMgr)

@@ -152,6 +152,7 @@ sgVec3 rway_ols;
 #include "splash.hxx"
 #include "viewmgr.hxx"
 #include "options.hxx"
+#include "logger.hxx"
 #include "model.hxx"
 
 #ifdef macintosh
@@ -224,6 +225,9 @@ sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
 ssgSimpleState *default_state;
 ssgSimpleState *hud_and_panel;
 ssgSimpleState *menus;
+
+SGTimeStamp start_time_stamp;
+SGTimeStamp current_time_stamp;
 
 void fgBuildRenderStates( void ) {
     default_state = new ssgSimpleState;
@@ -423,22 +427,19 @@ void fgRenderFrame( void ) {
 	if ( fgGetBool("/sim/startup/splash-screen") ) {
 	    fgSplashUpdate(0.0);
 	}
+	start_time_stamp.stamp(); // Keep resetting the start time
     } else {
 	// idle_state is now 1000 meaning we've finished all our
 	// initializations and are running the main loop, so this will
 	// now work without seg faulting the system.
 
-	// printf("Ground = %.2f  Altitude = %.2f\n", scenery.get_cur_elev(), 
-	//        FG_Altitude * SG_FEET_TO_METER);
-    
-	// this is just a temporary hack, to make me understand Pui
-	// timerText -> setLabel (ctime (&t->cur_time));
-	// end of hack
+				// Update the elapsed time.
+        current_time_stamp.stamp();
+	globals->set_elapsed_time_ms((current_time_stamp - start_time_stamp)
+				     / 1000L);
 
 	// calculate our current position in cartesian space
 	scenery.set_center( scenery.get_next_center() );
-	// printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x(),
-	//        scenery.center.y(), scenery.center.z());
 
 	FGViewerRPH *pilot_view =
 	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
@@ -484,29 +485,6 @@ void fgRenderFrame( void ) {
 	chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
 	chase_view->set_view_forward( pilot_view->get_view_pos() ); 
 	chase_view->set_view_up( wup );
-
-#if 0
-	sgMat4 rph;
-	sgCopyMat4( rph, pilot_view->get_VIEW() );
-	cout << "RPH Matrix = " << endl;
-	int i, j;
-	for ( i = 0; i < 4; i++ ) {
-	    for ( j = 0; j < 4; j++ ) {
-		printf("%10.4f ", rph[i][j]);
-	    }
-	    cout << endl;
-	}
-
-	sgMat4 la;
-	sgCopyMat4( la, chase_view->get_VIEW() );
-	cout << "LookAt Matrix = " << endl;
-	for ( i = 0; i < 4; i++ ) {
-	    for ( j = 0; j < 4; j++ ) {
-		printf("%10.4f ", la[i][j]);
-	    }
-	    cout << endl;
-	}
-#endif
 
 	// update view port
 	fgReshape( fgGetInt("/sim/startup/xsize"),
@@ -810,6 +788,8 @@ void fgRenderFrame( void ) {
 	// glDisable ( GL_BLEND ) ;
 
 	// glEnable( GL_FOG );
+
+	globals->get_logger()->update(0); // FIXME: use real dt
     }
 
     glutSwapBuffers();

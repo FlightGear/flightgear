@@ -44,6 +44,7 @@ typedef vector<string> string_list;
 
 
 // Forward declarations
+class FGLogger;
 class FGEnvironmentMgr;
 class FGEnvironment;
 class FGControls;
@@ -57,6 +58,9 @@ class FGATCDisplay;
 class FGGlobals {
 
 private:
+
+    // Number of milliseconds elapsed since the start of the program.
+    long elapsed_time_ms;
 
     // Root of FlightGear data tree
     string fg_root;
@@ -81,6 +85,9 @@ private:
     // How much to change the value of warp each iteration.  Allows us
     // to make time progress faster than normal (or even run in reverse.)
     long int warp_delta;
+
+    // Logger
+    FGLogger * logger;
 
     // Time structure
     SGTime *time_params;
@@ -130,6 +137,9 @@ public:
     FGGlobals();
     ~FGGlobals();
 
+    inline long get_elapsed_time_ms () const { return elapsed_time_ms; }
+    inline void set_elapsed_time_ms (long t) { elapsed_time_ms = t; }
+
     inline const string &get_fg_root () const { return fg_root; }
     inline void set_fg_root (const string &root) { fg_root = root; }
 
@@ -155,6 +165,9 @@ public:
     inline long int get_warp_delta() const { return warp_delta; }
     inline void set_warp_delta( long int d ) { warp_delta = d; }
     inline void inc_warp_delta( long int d ) { warp_delta += d; }
+
+    inline FGLogger * get_logger () { return logger; }
+    inline void set_logger (FGLogger * l) { logger = l; }
 
     inline SGTime *get_time_params() const { return time_params; }
     inline void set_time_params( SGTime *t ) { time_params = t; }
