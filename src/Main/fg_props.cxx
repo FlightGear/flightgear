@@ -1136,10 +1136,8 @@ fgInitProps ()
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
   fgSetArchivable("/autopilot/locks/altitude");
-  std::cout << "[AP] altitude = " << fgGetDouble("/autopilot/settings/altitude-ft") << std::endl;
   fgTie("/autopilot/settings/altitude-ft", getAPAltitude, setAPAltitude);
   fgSetArchivable("/autopilot/settings/altitude-ft");
-  std::cout << "[AP] altitude = " << fgGetDouble("/autopilot/settings/altitude-ft") << std::endl;
   fgTie("/autopilot/locks/glide-slope", getAPGSLock, setAPGSLock);
   fgSetArchivable("/autopilot/locks/glide-slope");
   fgTie("/autopilot/locks/terrain", getAPTerrainLock, setAPTerrainLock);
