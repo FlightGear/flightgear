@@ -216,8 +216,8 @@ string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
     FGRunway r;
     FGRunway tmp_r;	
     string rn;
-    double found_dir = 0.0;  
- 
+    double found_dir = 0.0;
+
     if ( !search( aptid, &tmp_r ) ) {
 	SG_LOG( SG_GENERAL, SG_ALERT,
                 "Failed to find " << aptid << " in database." );
@@ -228,34 +228,32 @@ string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
     double min_diff = 360.0;
     
     while ( tmp_r._id == aptid ) {
-	r = tmp_r;
-	
 	// forward direction
-	diff = tgt_hdg - r._heading;
+	diff = tgt_hdg - tmp_r._heading;
 	while ( diff < -180.0 ) { diff += 360.0; }
 	while ( diff >  180.0 ) { diff -= 360.0; }
 	diff = fabs(diff);
         // SG_LOG( SG_GENERAL, SG_INFO,
-        //	   "Runway " << r.rwy_no << " heading = " << r.heading <<
-        //	   " diff = " << diff );
+        //	   "Runway " << tmp_r._rwy_no << " heading = "
+	//         << tmp_r._heading << " diff = " << diff );
 	if ( diff < min_diff ) {
 	    min_diff = diff;
-	    rn = r._rwy_no;
+	    r = tmp_r;
 	    found_dir = 0;
 	}
 	
 	// reverse direction
-	diff = tgt_hdg - r._heading - 180.0;
+	diff = tgt_hdg - tmp_r._heading - 180.0;
 	while ( diff < -180.0 ) { diff += 360.0; }
 	while ( diff >  180.0 ) { diff -= 360.0; }
 	diff = fabs(diff);
         // SG_LOG( SG_GENERAL, SG_INFO,
-        //	   "Runway -" << r._rwy_no << " heading = " <<
-        //	   r._heading + 180.0 <<
+        //	   "Runway -" << tmp_r._rwy_no << " heading = " <<
+        //	   tmp_r._heading + 180.0 <<
         //	   " diff = " << diff );
 	if ( diff < min_diff ) {
 	    min_diff = diff;
-	    rn = r._rwy_no;
+	    r = tmp_r;
 	    found_dir = 180.0;
 	}
 	
@@ -265,10 +263,8 @@ string FGRunwayList::search( const string& aptid, const int tgt_hdg ) {
     // SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << r._rwy_no
     //	       << " + " << found_dir );
     rn = r._rwy_no;
-    // cout << "In search, rn = " << rn << endl;
     if ( found_dir == 180 ) {
 	rn = GetReverseRunwayNo(rn);
-	//cout << "New rn = " << rn << '\n';
     }	
     
     return rn;
