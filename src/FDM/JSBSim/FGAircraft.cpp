@@ -119,40 +119,6 @@ FGAircraft::~FGAircraft()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGAircraft::Load(FGConfigFile* AC_cfg)
-{
-  string token;
-
-  if (!ReadPrologue(AC_cfg)) return false;
-
-  while ((AC_cfg->GetNextConfigLine() != string("EOF")) &&
-         (token = AC_cfg->GetValue()) != string("/FDM_CONFIG")) {
-    if (token == "METRICS") {
-      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Metrics" << fgdef << endl;
-      if (!ReadMetrics(AC_cfg)) return false;
-    } else if (token == "AERODYNAMICS") {
-      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Aerodynamics" << fgdef << endl;
-      if (!ReadAerodynamics(AC_cfg)) return false;
-    } else if (token == "UNDERCARRIAGE") {
-      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Landing Gear" << fgdef << endl;
-      if (!ReadUndercarriage(AC_cfg)) return false;
-    } else if (token == "PROPULSION") {
-      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Propulsion" << fgdef << endl;
-      if (!ReadPropulsion(AC_cfg)) return false;
-    } else if (token == "FLIGHT_CONTROL") {
-      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Flight Control" << fgdef << endl;
-      if (!ReadFlightControls(AC_cfg)) return false;
-    } else if (token == "OUTPUT") {
-      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Output directives" << fgdef << endl;
-      if (!ReadOutput(AC_cfg)) return false;
-    }
-  }
-  
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 bool FGAircraft::Run(void)
 {
   if (!FGModel::Run()) {                 // if false then execute this Run()
@@ -197,33 +163,7 @@ float FGAircraft::GetNlf(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGAircraft::ReadPrologue(FGConfigFile* AC_cfg)
-{
-  string token = AC_cfg->GetValue();
-  string scratch;
-  AircraftName = AC_cfg->GetValue("NAME");
-  if (debug_lvl > 0) cout << underon << "Reading Aircraft Configuration File"
-            << underoff << ": " << highint << AircraftName << normint << endl;
-  scratch = AC_cfg->GetValue("VERSION").c_str();
-
-  CFGVersion = AC_cfg->GetValue("VERSION");
-
-  if (debug_lvl > 0)
-    cout << "                            Version: " << highint << CFGVersion
-                                                             << normint << endl;
-  if (CFGVersion != needed_cfg_version) {
-    cerr << endl << fgred << "YOU HAVE AN INCOMPATIBLE CFG FILE FOR THIS AIRCRAFT."
-            " RESULTS WILL BE UNPREDICTABLE !!" << endl;
-    cerr << "Current version needed is: " << needed_cfg_version << endl;
-    cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
-    return false;
-  }
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGAircraft::ReadMetrics(FGConfigFile* AC_cfg)
+bool FGAircraft::Load(FGConfigFile* AC_cfg)
 {
   string token = "";
   string parameter;
@@ -319,61 +259,6 @@ bool FGAircraft::ReadMetrics(FGConfigFile* AC_cfg)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGAircraft::ReadPropulsion(FGConfigFile* AC_cfg)
-{
-  if (!Propulsion->Load(AC_cfg)) {
-    cerr << "  Propulsion not successfully loaded" << endl;
-    return false;
-  }
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGAircraft::ReadFlightControls(FGConfigFile* AC_cfg)
-{
-  if (!FCS->Load(AC_cfg)) {
-    cerr << "  Flight Controls not successfully loaded" << endl;
-    return false;
-  }
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGAircraft::ReadAerodynamics(FGConfigFile* AC_cfg)
-{
-  if (!Aerodynamics->Load(AC_cfg)) {
-    cerr << "  Aerodynamics not successfully loaded" << endl;
-    return false;
-  }
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGAircraft::ReadUndercarriage(FGConfigFile* AC_cfg)
-{
-  if (!GroundReactions->Load(AC_cfg)) {
-    cerr << "  Ground Reactions not successfully loaded" << endl;
-    return false;
-  }
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGAircraft::ReadOutput(FGConfigFile* AC_cfg)
-{
-  if (!Output->Load(AC_cfg)) {
-    cerr << "  Output not successfully loaded" << endl;
-    return false;
-  }
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing
@@ -410,7 +295,11 @@ void FGAircraft::Debug(int from)
   }
   if (debug_lvl & 16) { // Sanity checking
   }
-  if (debug_lvl & 32) { // Turbulence
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
   }
 }
 

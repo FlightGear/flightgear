@@ -97,6 +97,9 @@ public:
   inline FGColumnVector3& GetEulerRates(void) { return vEulerRates; }
   inline double GetEulerRates(int axis) { return vEulerRates(axis); }
   inline void SetPQR(FGColumnVector3 tt) {vPQR = tt;}
+  inline void SetPQR(double p, double q, double r) {vPQR(eP)=p;
+                                                    vPQR(eQ)=q;
+                                                    vPQR(eR)=r;}
   inline void SetEuler(FGColumnVector3 tt) {vEuler = tt;}
   
   inline double Getphi(void) {return vEuler(1);}

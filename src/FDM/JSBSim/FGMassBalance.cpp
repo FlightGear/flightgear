@@ -231,5 +231,11 @@ void FGMassBalance::Debug(int from)
         cout << "MassBalance::Mass out of bounds: " << Mass << endl;
     }
   }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
+  }
 }
 

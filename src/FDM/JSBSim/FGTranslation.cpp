@@ -212,4 +212,11 @@ void FGTranslation::Debug(int from)
     if (qbar > 1e6 || qbar < 0.00)
       cout << "FGTranslation::qbar is out of bounds: " << qbar << endl;
   }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
+  }
 }
+

@@ -326,7 +326,7 @@ eParam FGState::GetParameterIndex(string val_string)
 
 void FGState::SetParameter(eParam val_idx, double val)
 {
-  int i;
+  unsigned i;
 
   switch(val_idx) {
   case FG_ELEVATOR_POS:
@@ -888,5 +888,12 @@ void FGState::Debug(int from)
   }
   if (debug_lvl & 16) { // Sanity checking
   }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
+  }
 }
+
 

@@ -171,6 +171,8 @@ bool FGFilter::Run(void)
       case eIntegrator:
         Output = Input * ca + PreviousInput1 * ca + PreviousOutput1;
         break;
+      case eUnknown:
+        break;
     }
 
   }
@@ -230,6 +232,12 @@ void FGFilter::Debug(int from)
   if (debug_lvl & 8 ) { // Runtime state variables
   }
   if (debug_lvl & 16) { // Sanity checking
+  }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
   }
 }
 

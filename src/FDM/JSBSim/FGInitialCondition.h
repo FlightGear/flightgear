@@ -290,6 +290,7 @@ private:
 
   bool findInterval(double x,double guess);
   bool solve(double *y, double x);
+  void Debug(int from);
 };
 
 #endif

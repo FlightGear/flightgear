@@ -130,6 +130,8 @@ public:
 protected:
   int exe_ctr;
   int rate;
+  
+  virtual void Debug(int from);
 
   FGFDMExec*         FDMExec;
   FGState*           State;

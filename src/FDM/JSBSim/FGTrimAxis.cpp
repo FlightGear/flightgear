@@ -72,6 +72,7 @@ FGTrimAxis::FGTrimAxis(FGFDMExec* fdex, FGInitialCondition* ic, State st,
     case tRdot: tolerance = DEFAULT_TOLERANCE / 10; break;
     case tHmgt: tolerance = 0.01; break;
     case  tNlf: state_target=1.0; tolerance = 1E-5; break;
+    case tAll: break;
   }  
   
   solver_eps=tolerance;
@@ -153,14 +154,15 @@ FGTrimAxis::~FGTrimAxis(void)
 
 void FGTrimAxis::getState(void) {
   switch(state) {
-  case tUdot: state_value=fdmex->GetTranslation()->GetUVWdot()(1)-state_target; break;
-  case tVdot: state_value=fdmex->GetTranslation()->GetUVWdot()(2)-state_target; break;
-  case tWdot: state_value=fdmex->GetTranslation()->GetUVWdot()(3)-state_target; break;
+  case tUdot: state_value=fdmex->GetTranslation()->GetUVWdot(1)-state_target; break;
+  case tVdot: state_value=fdmex->GetTranslation()->GetUVWdot(2)-state_target; break;
+  case tWdot: state_value=fdmex->GetTranslation()->GetUVWdot(3)-state_target; break;
   case tQdot: state_value=fdmex->GetRotation()->GetPQRdot(2)-state_target;break;
   case tPdot: state_value=fdmex->GetRotation()->GetPQRdot(1)-state_target; break;
   case tRdot: state_value=fdmex->GetRotation()->GetPQRdot(3)-state_target; break;
   case tHmgt: state_value=computeHmgt()-state_target; break;
   case tNlf:  state_value=fdmex->GetAircraft()->GetNlf()-state_target; break;
+  case tAll: break;
   }
 }
 
@@ -450,9 +452,9 @@ double FGTrimAxis::GetAvgStability( void ) {
 
 void FGTrimAxis::Debug(int from)
 {
-  if (debug_lvl <= 0) return;
 
-  if (debug_lvl & 1) { // Standard console startup message output
+  if (debug_lvl <= 0) return;
+  if (debug_lvl & 1 ) { // Standard console startup message output
     if (from == 0) { // Constructor
 
     }
@@ -467,5 +469,12 @@ void FGTrimAxis::Debug(int from)
   }
   if (debug_lvl & 16) { // Sanity checking
   }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
+  }
 }
+
 

@@ -195,4 +195,11 @@ void FGRotation::Debug(int from)
         cout << "FGRotation::R (Yaw Rate) out of bounds: " << vPQR(eR) << endl;
     }
   }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
+  }
 }
+

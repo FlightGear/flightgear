@@ -4,7 +4,6 @@
  Author:       Jon S. Berndt
  Date started: 11/17/98
  Purpose:      Schedules and runs the model routines.
- Called by:    The GUI.
 
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
 
@@ -80,26 +79,6 @@ static const char *IdHdr = ID_FDMEXEC;
 GLOBAL DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-short debug_lvl;  // This describes to any interested entity the debug level
-                  // requested by setting the JSBSIM_DEBUG environment variable.
-                  // The bitmasked value choices are as follows:
-                  // a) unset: In this case (the default) JSBSim would only print
-                  //    out the normally expected messages, essentially echoing
-                  //    the config files as they are read. If the environment
-                  //    variable is not set, debug_lvl is set to 1 internally
-                  // b) 0: This requests JSBSim not to output any messages
-                  //    whatsoever.
-                  // c) 1: This value explicity requests the normal JSBSim
-                  //    startup messages
-                  // d) 2: This value asks for a message to be printed out when
-                  //    a class is instantiated
-                  // e) 4: When this value is set, a message is displayed when a
-                  //    FGModel object executes its Run() method
-                  // f) 8: When this value is set, various runtime state variables
-                  //    are printed out periodically
-                  // g) 16: When set various parameters are sanity checked and
-                  //    a message is printed out when they go out of bounds.
-
 unsigned int FGFDMExec::FDMctr = 0;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -131,7 +110,6 @@ FGFDMExec::FGFDMExec(void)
   terminate = false;
   frozen = false;
   modelLoaded = false;
-  Scripted = false;
 
   IdFDM = FDMctr;
   FDMctr++;
@@ -328,11 +306,6 @@ bool FGFDMExec::Run(void)
   model_iterator = FirstModel;
   if (model_iterator == 0L) return false;
 
-  if (Scripted) {
-    RunScript();
-    if (State->Getsim_time() >= EndTime) return false;
-  }
-
   Debug(2);
 
   while (!model_iterator->Run()) {
@@ -361,8 +334,8 @@ bool FGFDMExec::RunIC(FGInitialCondition *fgic)
 
 bool FGFDMExec::LoadModel(string APath, string EPath, string model)
 {
-  bool result = false;
-
+  bool result = true;
+  string token;
   string aircraftCfgFileName;
 
   AircraftPath = APath;
@@ -382,7 +355,30 @@ bool FGFDMExec::LoadModel(string APath, string EPath, string model)
     Allocate();
   }
 
-  result = Aircraft->Load(&AC_cfg);
+  if (!ReadPrologue(&AC_cfg)) return false;
+
+  while ((AC_cfg.GetNextConfigLine() != string("EOF")) &&
+         (token = AC_cfg.GetValue()) != string("/FDM_CONFIG")) {
+    if (token == "METRICS") {
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Metrics" << fgdef << endl;
+      if (!ReadMetrics(&AC_cfg)) result = false;
+    } else if (token == "AERODYNAMICS") {
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Aerodynamics" << fgdef << endl;
+      if (!ReadAerodynamics(&AC_cfg)) result = false;
+    } else if (token == "UNDERCARRIAGE") {
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Landing Gear" << fgdef << endl;
+      if (!ReadUndercarriage(&AC_cfg)) result = false;
+    } else if (token == "PROPULSION") {
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Propulsion" << fgdef << endl;
+      if (!ReadPropulsion(&AC_cfg)) result = false;
+    } else if (token == "FLIGHT_CONTROL") {
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Flight Control" << fgdef << endl;
+      if (!ReadFlightControls(&AC_cfg)) result = false;
+    } else if (token == "OUTPUT") {
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Output directives" << fgdef << endl;
+      if (!ReadOutput(&AC_cfg)) result = false;
+    }
+  }
 
   if (result) {
     modelLoaded = true;
@@ -398,208 +394,98 @@ bool FGFDMExec::LoadModel(string APath, string EPath, string model)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadScript(string script)
+bool FGFDMExec::ReadPrologue(FGConfigFile* AC_cfg)
 {
-  FGConfigFile Script(script);
-  string token="";
-  string aircraft="";
-  string initialize="";
-  bool result = false;
-  double dt = 0.0;
-  unsigned i;
-  struct condition *newCondition;
+  string token = AC_cfg->GetValue();
+  string scratch;
+  string AircraftName;
+  
+  AircraftName = AC_cfg->GetValue("NAME");
+  Aircraft->SetAircraftName(AircraftName);
 
-  if (!Script.IsOpen()) return false;
+  if (debug_lvl > 0) cout << underon << "Reading Aircraft Configuration File"
+            << underoff << ": " << highint << AircraftName << normint << endl;
+  scratch = AC_cfg->GetValue("VERSION").c_str();
 
-  Script.GetNextConfigLine();
-  ScriptName = Script.GetValue("name");
-  Scripted = true;
-  if (debug_lvl > 0) cout << "Reading Script File " << ScriptName << endl;
+  CFGVersion = AC_cfg->GetValue("VERSION");
 
-  while (Script.GetNextConfigLine() != string("EOF") && Script.GetValue() != string("/runscript")) {
-    token = Script.GetValue();
-    if (token == "use") {
-      if ((token = Script.GetValue("aircraft")) != string("")) {
-        aircraft = token;
-        if (debug_lvl > 0) cout << "  Use aircraft: " << token << endl;
-      } else if ((token = Script.GetValue("initialize")) != string("")) {
-        initialize = token;
-        if (debug_lvl > 0) cout << "  Use reset file: " << token << endl;
-      } else {
-        cerr << "Unknown 'use' keyword: \"" << token << "\"" << endl;
-      }
-    } else if (token == "run") {
-      StartTime = strtod(Script.GetValue("start").c_str(), NULL);
-      State->Setsim_time(StartTime);
-      EndTime   = strtod(Script.GetValue("end").c_str(), NULL);
-      dt        = strtod(Script.GetValue("dt").c_str(), NULL);
-      State->Setdt(dt);
-      Script.GetNextConfigLine();
-      token = Script.GetValue();
-      while (token != string("/run")) {
-
-        if (token == "when") {
-          Script.GetNextConfigLine();
-          token = Script.GetValue();
-          newCondition = new struct condition();
-          while (token != string("/when")) {
-            if (token == "parameter") {
-              newCondition->TestParam.push_back(State->GetParameterIndex(Script.GetValue("name")));
-              newCondition->TestValue.push_back(strtod(Script.GetValue("value").c_str(), NULL));
-              newCondition->Comparison.push_back(Script.GetValue("comparison"));
-            } else if (token == "set") {
-              newCondition->SetParam.push_back(State->GetParameterIndex(Script.GetValue("name")));
-              newCondition->SetValue.push_back(strtod(Script.GetValue("value").c_str(), NULL));
-              newCondition->Triggered.push_back(false);
-              newCondition->OriginalValue.push_back(0.0);
-              newCondition->newValue.push_back(0.0);
-              newCondition->StartTime.push_back(0.0);
-              newCondition->EndTime.push_back(0.0);
-              string tempCompare = Script.GetValue("type");
-              if      (tempCompare == "FG_DELTA") newCondition->Type.push_back(FG_DELTA);
-              else if (tempCompare == "FG_BOOL")  newCondition->Type.push_back(FG_BOOL);
-              else if (tempCompare == "FG_VALUE") newCondition->Type.push_back(FG_VALUE);
-              else                                newCondition->Type.push_back((eType)0);
-              tempCompare = Script.GetValue("action");
-              if      (tempCompare == "FG_RAMP") newCondition->Action.push_back(FG_RAMP);
-              else if (tempCompare == "FG_STEP") newCondition->Action.push_back(FG_STEP);
-              else if (tempCompare == "FG_EXP")  newCondition->Action.push_back(FG_EXP);
-              else                               newCondition->Action.push_back((eAction)0);
-              
-              if (Script.GetValue("persistent") == "true")
-                newCondition->Persistent.push_back(true);
-              else
-                newCondition->Persistent.push_back(false);
-		
-              newCondition->TC.push_back(strtod(Script.GetValue("tc").c_str(), NULL));
-	      
-            } else {
-              cerr << "Unrecognized keyword in script file: \" [when] " << token << "\"" << endl;
-            }
-            Script.GetNextConfigLine();
-            token = Script.GetValue();
-          }
-          Conditions.push_back(*newCondition);
-          Script.GetNextConfigLine();
-          token = Script.GetValue();
-
-        } else {
-          cerr << "Error reading script file: expected \"when\", got \"" << token << "\"" << endl;
-        }
-
-      }
-    } else if (token.empty()) {
-     // do nothing
-    } else {
-      cerr << "Unrecognized keyword in script file: \"" << token << "\" [runscript] " << endl;
-    }
+  if (debug_lvl > 0)
+    cout << "                            Version: " << highint << CFGVersion
+                                                             << normint << endl;
+  if (CFGVersion != needed_cfg_version) {
+    cerr << endl << fgred << "YOU HAVE AN INCOMPATIBLE CFG FILE FOR THIS AIRCRAFT."
+            " RESULTS WILL BE UNPREDICTABLE !!" << endl;
+    cerr << "Current version needed is: " << needed_cfg_version << endl;
+    cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
+    return false;
   }
-
-  if (aircraft == "") {
-    cerr << "Aircraft file not loaded in script" << endl;
-    exit(-1);
-  }
-
-  Debug(4);
-
-  result = LoadModel("aircraft", "engine", aircraft);
-  if (!result) {
-    cerr << "Aircraft file " << aircraft << " was not found" << endl;
-	  exit(-1);
-  }
-
-  FGInitialCondition IC(this);
-  if ( ! IC.Load("aircraft", aircraft, initialize)) {
-    cerr << "Initialization unsuccessful" << endl;
-    exit(-1);
-  }
-
   return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFDMExec::RunScript(void)
+bool FGFDMExec::ReadPropulsion(FGConfigFile* AC_cfg)
 {
-  vector <struct condition>::iterator iC = Conditions.begin();
-  bool truth = false;
-  bool WholeTruth = false;
-  unsigned i;
-
-  double currentTime = State->Getsim_time();
-  double newSetValue = 0;
-
-  while (iC < Conditions.end()) {
-    // determine whether the set of conditional tests for this condition equate
-    // to true
-    for (i=0; i<iC->TestValue.size(); i++) {
-           if (iC->Comparison[i] == "lt")
-              truth = State->GetParameter(iC->TestParam[i]) <  iC->TestValue[i];
-      else if (iC->Comparison[i] == "le")
-              truth = State->GetParameter(iC->TestParam[i]) <= iC->TestValue[i];
-      else if (iC->Comparison[i] == "eq")
-              truth = State->GetParameter(iC->TestParam[i]) == iC->TestValue[i];
-      else if (iC->Comparison[i] == "ge")
-              truth = State->GetParameter(iC->TestParam[i]) >= iC->TestValue[i];
-      else if (iC->Comparison[i] == "gt")
-              truth = State->GetParameter(iC->TestParam[i]) >  iC->TestValue[i];
-      else if (iC->Comparison[i] == "ne")
-              truth = State->GetParameter(iC->TestParam[i]) != iC->TestValue[i];
-      else
-              cerr << "Bad comparison" << endl;
-
-      if (i == 0) WholeTruth = truth;
-      else        WholeTruth = WholeTruth && truth;
-
-      if (!truth && iC->Persistent[i] && iC->Triggered[i]) iC->Triggered[i] = false;
-    }
-
-    // if the conditions are true, do the setting of the desired parameters
-
-    if (WholeTruth) {
-      for (i=0; i<iC->SetValue.size(); i++) {
-        if ( ! iC->Triggered[i]) {
-          iC->OriginalValue[i] = State->GetParameter(iC->SetParam[i]);
-          switch (iC->Type[i]) {
-          case FG_VALUE:
-            iC->newValue[i] = iC->SetValue[i];
-            break;
-          case FG_DELTA:
-            iC->newValue[i] = iC->OriginalValue[i] + iC->SetValue[i];
-            break;
-          case FG_BOOL:
-            iC->newValue[i] = iC->SetValue[i];
-            break;
-          default:
-            cerr << "Invalid Type specified" << endl;
-            break;
-          }
-          iC->Triggered[i] = true;
-          iC->StartTime[i] = currentTime;
-        }
-
-        switch (iC->Action[i]) {
-        case FG_RAMP:
-        newSetValue = (currentTime - iC->StartTime[i])/(iC->TC[i])
-                      * (iC->newValue[i] - iC->OriginalValue[i]) + iC->OriginalValue[i];
-          if (newSetValue > iC->newValue[i]) newSetValue = iC->newValue[i];
-          break;
-        case FG_STEP:
-          newSetValue = iC->newValue[i];
-          break;
-        case FG_EXP:
-          newSetValue = (1 - exp(-(currentTime - iC->StartTime[i])/(iC->TC[i])))
-              * (iC->newValue[i] - iC->OriginalValue[i]) + iC->OriginalValue[i];
-          break;
-        default:
-          cerr << "Invalid Action specified" << endl;
-          break;
-        }
-        State->SetParameter(iC->SetParam[i], newSetValue);
-      }
-    }
-    iC++;
+  if (!Propulsion->Load(AC_cfg)) {
+    cerr << "  Propulsion not successfully loaded" << endl;
+    return false;
   }
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::ReadFlightControls(FGConfigFile* AC_cfg)
+{
+  if (!FCS->Load(AC_cfg)) {
+    cerr << "  Flight Controls not successfully loaded" << endl;
+    return false;
+  }
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::ReadAerodynamics(FGConfigFile* AC_cfg)
+{
+  if (!Aerodynamics->Load(AC_cfg)) {
+    cerr << "  Aerodynamics not successfully loaded" << endl;
+    return false;
+  }
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::ReadUndercarriage(FGConfigFile* AC_cfg)
+{
+  if (!GroundReactions->Load(AC_cfg)) {
+    cerr << "  Ground Reactions not successfully loaded" << endl;
+    return false;
+  }
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::ReadMetrics(FGConfigFile* AC_cfg)
+{
+  if (!Aircraft->Load(AC_cfg)) {
+    cerr << "  Aircraft metrics not successfully loaded" << endl;
+    return false;
+  }
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFDMExec::ReadOutput(FGConfigFile* AC_cfg)
+{
+  if (!Output->Load(AC_cfg)) {
+    cerr << "  Output not successfully loaded" << endl;
+    return false;
+  }
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -623,8 +509,6 @@ void FGFDMExec::RunScript(void)
 
 void FGFDMExec::Debug(int from)
 {
-  unsigned int i;
-
   if (debug_lvl <= 0) return;
 
   if (debug_lvl & 1) { // Standard console startup message output
@@ -635,73 +519,6 @@ void FGFDMExec::Debug(int from)
       cout << normint << "JSBSim startup beginning ...\n\n";
     } else if (from == 3) {
       cout << "\n\nJSBSim startup complete\n\n";
-    } else if (from == 4)  { // print out script data
-      vector <struct condition>::iterator iterConditions = Conditions.begin();
-      int count=0;
-
-      cout << "\n  Script goes from " << StartTime << " to " << EndTime
-           << " with dt = " << State->Getdt() << endl << endl;
-
-      while (iterConditions < Conditions.end()) {
-        cout << "  Condition: " << count++ << endl;
-        cout << "    if (";
-
-        for (i=0; i<iterConditions->TestValue.size(); i++) {
-          if (i>0) cout << " and" << endl << "        ";
-          cout << "(" << State->paramdef[iterConditions->TestParam[i]]
-                      << iterConditions->Comparison[i] << " "
-                      << iterConditions->TestValue[i] << ")";
-        }
-        cout << ") then {";
-
-        for (i=0; i<iterConditions->SetValue.size(); i++) {
-          cout << endl << "      set" << State->paramdef[iterConditions->SetParam[i]]
-               << "to " << iterConditions->SetValue[i];
-
-          switch (iterConditions->Type[i]) {
-          case FG_VALUE:
-            cout << " (constant";
-            break;
-          case FG_DELTA:
-            cout << " (delta";
-            break;
-          case FG_BOOL:
-            cout << " (boolean";
-            break;
-          default:
-            cout << " (unspecified type";
-          }
-
-          switch (iterConditions->Action[i]) {
-          case FG_RAMP:
-            cout << " via ramp";
-            break;
-          case FG_STEP:
-            cout << " via step";
-            break;
-          case FG_EXP:
-            cout << " via exponential approach";
-            break;
-          default:
-            cout << " via unspecified action";
-          }
-
-          if (!iterConditions->Persistent[i]) cout << endl
-                             << "                              once";
-          else cout << endl
-                             << "                              repeatedly";
-
-          if (iterConditions->Action[i] == FG_RAMP ||
-              iterConditions->Action[i] == FG_EXP) cout << endl
-                             << "                              with time constant "
-                             << iterConditions->TC[i];
-        }
-        cout << ")" << endl << "    }" << endl << endl;
-
-        iterConditions++;
-      }
-
-      cout << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification
@@ -718,4 +535,11 @@ void FGFDMExec::Debug(int from)
   }
   if (debug_lvl & 16) { // Sanity checking
   }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
+  }
 }
+

@@ -107,7 +107,7 @@ private:
   struct sockaddr_in scktName;
   struct hostent *host;
   string buffer;
-  void Debug(int from) {}
+  void Debug(int from);
 };
 
 #endif

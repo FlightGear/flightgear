@@ -88,11 +88,11 @@ public:
   ~FGTranslation();
 
   inline FGColumnVector3& GetUVW   (void)    { return vUVW; }
-  inline double            GetUVW   (int idx) { return vUVW(idx); }
+  inline double           GetUVW   (int idx) { return vUVW(idx); }
   inline FGColumnVector3& GetUVWdot(void)    { return vUVWdot; }
-  inline double            GetUVWdot(int idx) { return vUVWdot(idx); }
+  inline double           GetUVWdot(int idx) { return vUVWdot(idx); }
   inline FGColumnVector3& GetvAeroUVW (void)    { return vAeroUVW; }
-  inline double            GetvAeroUVW (int idx) { return vAeroUVW(idx); }
+  inline double           GetvAeroUVW (int idx) { return vAeroUVW(idx); }
 
   inline double Getalpha(void) { return alpha; }
   inline double Getbeta (void) { return beta; }

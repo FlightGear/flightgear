@@ -93,7 +93,6 @@ bool FGScript::LoadScript(string script)
   string initialize="";
   bool result = false;
   double dt = 0.0;
-  unsigned i;
   struct condition *newCondition;
 
   if (!Script.IsOpen()) return false;
@@ -404,6 +403,12 @@ void FGScript::Debug(int from)
   if (debug_lvl & 8 ) { // Runtime state variables
   }
   if (debug_lvl & 16) { // Sanity checking
+  }
+  if (debug_lvl & 64) {
+    if (from == 0) { // Constructor
+      cout << IdSrc << endl;
+      cout << IdHdr << endl;
+    }
   }
 }
 

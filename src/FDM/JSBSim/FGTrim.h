@@ -168,6 +168,8 @@ private:
   double xlo,xhi,alo,ahi;
   double targetNlf;
   int debug_axis;
+  
+  double psidot,thetadot;
 
   FGFDMExec* fdmex;
   FGInitialCondition* fgic;
@@ -188,6 +190,8 @@ private:
   void setupPullup(void);
   void setupTurn(void);
   
+  void updateRates(void);
+
   void setDebug(void);
 
 public:
