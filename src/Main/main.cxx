@@ -343,7 +343,7 @@ void trRenderFrame( void ) {
 
     // we need a white diffuse light for the phase of the moon
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
-    thesky->preDraw();
+    thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
     // draw the ssg scene
     // return to the desired diffuse color
@@ -678,7 +678,7 @@ void fgRenderFrame() {
             // we need a white diffuse light for the phase of the moon
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
 
-            thesky->preDraw();
+            thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
             // return to the desired diffuse color
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
