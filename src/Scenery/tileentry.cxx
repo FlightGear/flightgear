@@ -981,7 +981,7 @@ FGTileEntry::obj_load( const std::string& path,
 void
 FGTileEntry::load( const SGPath& base, bool is_base )
 {
-    cout << "load() base = " << base.str() << endl;
+    SG_LOG( SG_TERRAIN, SG_INFO, "load() base = " << base.str() );
 
     // Generate names for later use
     string index_str = tile_bucket.gen_index_str();
