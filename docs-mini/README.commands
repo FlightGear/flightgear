@@ -1,0 +1,32 @@
+Binding New Commands in FlightGear
+----------------------------------
+
+
+To add a new command to FlightGear, you first need to create a
+function that takes a single SGPropertyNode const pointer as an
+argument:
+
+  void
+  do_something (SGPropertyNode * arg)
+  {
+    something();
+  }
+
+Next, you need to register it with the command manager:
+
+  globals->get_commands()->addCommand("something", do_something);
+
+Now, the command "something" is available to any mouse, joystick,
+panel, or keyboard bindings.  If the bindings pass any arguments, they
+will be children of the SGPropertyNode passed in:
+
+  void
+  do_something (const SGPropertyNode * arg)
+  {
+    something(arg->getStringValue("foo"), arg->getDoubleValue("bar"));
+  }
+
+That's pretty-much it.  Apologies in advance for not making things any
+more complicated.
+
+
