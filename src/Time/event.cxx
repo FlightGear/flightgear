@@ -124,7 +124,7 @@ fgEVENT::~fgEVENT()
 void
 fgEVENT::run()
 {
-    FG_LOG(FG_EVENT, FG_INFO, "Running " << description );
+    FG_LOG(FG_EVENT, FG_DEBUG, "Running " << description );
 
     // record starting time
     last_run.stamp();

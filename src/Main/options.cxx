@@ -248,7 +248,8 @@ fgOPTIONS::toggle_panel() {
     } else {
 	fov *= (1.0 / 0.4232);
     }
-    fgReshape( xsize, ysize);
+    // fgReshape( xsize, ysize);
+    fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
     
     if( !toggle_pause )
         t->togglePauseMode();

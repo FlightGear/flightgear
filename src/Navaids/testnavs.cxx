@@ -11,11 +11,9 @@ int main() {
     FGPath p_nav( "/home/curt/FlightGear/Navaids/default.nav" );
     current_navlist->init( p_nav );
     FGNav n;
-    if ( current_navlist->query( -93.2, 45.14, 3000, 117.30,
-				 &n, &heading, &dist) ) {
+    if ( current_navlist->query( -93.2, 45.14, 3000, 117.30, &n) ) {
 	cout << "Found a vor station in range" << endl;
 	cout << " id = " << n.get_ident() << endl;
-	cout << " heading = " << heading << " dist = " << dist << endl;
     } else {
 	cout << "not picking up vor. :-(" << endl;
     }
@@ -24,12 +22,10 @@ int main() {
     FGPath p_ils( "/home/curt/FlightGear/Navaids/default.ils" );
     current_ilslist->init( p_ils );
     FGILS i;
-    if ( current_ilslist->query( -93.1, 45.24, 3000, 110.30,
-				 &i, &heading, &dist) ) {
+    if ( current_ilslist->query( -93.1, 45.24, 3000, 110.30, &i) ) {
 	cout << "Found an ils station in range" << endl;
 	cout << " apt = " << i.get_aptcode() << endl;
 	cout << " rwy = " << i.get_rwyno() << endl;
-	cout << " heading = " << heading << " dist = " << dist << endl;
     } else {
 	cout << "not picking up ils. :-(" << endl;
     }

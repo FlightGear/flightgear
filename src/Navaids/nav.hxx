@@ -26,6 +26,7 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/misc/fgstream.hxx>
 
 #ifdef FG_HAVE_STD_INCLUDES
@@ -48,6 +49,7 @@ class FGNav {
     char type;
     double lon, lat;
     double elev;
+    double x, y, z;
     int freq;
     int range;
     bool dme;
@@ -62,6 +64,9 @@ public:
     inline double get_lon() const { return lon; }
     inline double get_lat() const { return lat; }
     inline double get_elev() const { return elev; }
+    inline double get_x() const { return x; }
+    inline double get_y() const { return y; }
+    inline double get_z() const { return z; }
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
     inline bool get_dme() const { return dme; }
@@ -94,6 +99,13 @@ operator >> ( istream& in, FGNav& n )
     } else {
 	n.dme = false;
     }
+
+    // generate cartesian coordinates
+    Point3D geod( n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD, n.elev );
+    Point3D cart = fgGeodToCart( geod );
+    n.x = cart.x();
+    n.y = cart.y();
+    n.z = cart.z();
 
     return in >> skipeol;
 }

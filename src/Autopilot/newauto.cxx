@@ -301,21 +301,30 @@ int FGAutopilot::run() {
 	if ( heading_mode == FG_HEADING_LOCK ) {
 	    // leave target heading alone
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
-	    double tgt_radial = current_radiostack->get_nav1_radial();
-	    double cur_radial = current_radiostack->get_nav1_heading() + 180.0;
-	    // cout << "target rad = " << tgt_radial 
-	    //      << "  current rad = " << cur_radial
-	    //      << endl;
+	    double tgt_radial;
+	    double cur_radial;
+	    if ( current_radiostack->get_nav1_loc() ) {
+		tgt_radial = current_radiostack->get_nav1_radial() + 180.0;
+	    } else {
+		tgt_radial = current_radiostack->get_nav1_radial();
+	    }
+	    cur_radial = current_radiostack->get_nav1_heading();
+	    cout << "target rad = " << tgt_radial 
+	         << "  current rad = " << cur_radial
+	         << endl;
 
-	    double diff = (tgt_radial - cur_radial) 
-		* (current_radiostack->get_nav1_dist() * METER_TO_NM);
+	    double diff = (tgt_radial - cur_radial);
+	    while ( diff < -180.0 ) { diff += 360.0; }
+	    while ( diff > 180.0 ) { diff -= 360.0; }
+		
+	    diff *= (current_radiostack->get_nav1_dist() * METER_TO_NM);
 	    if ( diff < -30.0 ) { diff = -30.0; }
 	    if ( diff >  30.0 ) { diff =  30.0; }
 
 	    TargetHeading = cur_radial - diff;
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
-	    // cout << "target course = " << TargetHeading << endl;
+	    cout << "target course = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	    // update target heading to waypoint
 

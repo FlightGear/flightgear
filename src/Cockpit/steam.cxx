@@ -349,8 +349,8 @@ double FGSteam::get_HackVOR1_deg () {
     double r;
 
     if ( current_radiostack->get_nav1_inrange() ) {
-	r = current_radiostack->get_nav1_radial() - 
-	    current_radiostack->get_nav1_heading();
+	r = current_radiostack->get_nav1_heading() - 
+	    current_radiostack->get_nav1_radial();
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	//      << "  Bearing = " << current_radiostack->get_nav1_heading()
 	//      << endl;
@@ -359,7 +359,7 @@ double FGSteam::get_HackVOR1_deg () {
 	    if (r<-180.0) r+=360.0;
 	if ( fabs(r) > 90.0 )
 	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	if ( current_radiostack->get_nav1_loc() ) r*=5.0;
+	if ( current_radiostack->get_nav1_loc() ) r *= -5.0;
     } else {
 	r = 0.0;
     }

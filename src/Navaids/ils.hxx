@@ -26,6 +26,7 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/misc/fgstream.hxx>
 
 #ifdef FG_HAVE_STD_INCLUDES
@@ -56,6 +57,7 @@ class FGILS {
     double locheading;
     double loclat;
     double loclon;
+    double x, y, z;
     double gselev;
     double gsangle;
     double gslat;
@@ -84,6 +86,9 @@ public:
     inline double get_loclat() const { return loclat; }
     inline double get_loclon() const { return loclon; }
     inline double get_gselev() const { return gselev; }
+    inline double get_x() const { return x; }
+    inline double get_y() const { return y; }
+    inline double get_z() const { return z; }
     inline double get_gsangle() const { return gsangle; }
     inline double get_gslat() const { return gslat; }
     inline double get_gslon() const { return gslon; }
@@ -115,9 +120,16 @@ operator >> ( istream& in, FGILS& i )
 
     i.locfreq = (int)(f*100.0 + 0.5);
 
-    // return in >> skipeol;
+    // generate cartesian coordinates
+    Point3D geod( i.loclon * DEG_TO_RAD, i.loclat * DEG_TO_RAD, i.gselev );
+    Point3D cart = fgGeodToCart( geod );
+    i.x = cart.x();
+    i.y = cart.y();
+    i.z = cart.z();
+
+     // return in >> skipeol;
     return in;
 }
 
 
-#endif // _FG_NAVAID_HXX
+#endif // _FG_ILS_HXX

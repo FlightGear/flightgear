@@ -97,8 +97,8 @@ bool FGILSList::init( FGPath path ) {
 	}
     }
 
-    cout << "min freq = " << min << endl;
-    cout << "max freq = " << max << endl;
+    // cout << "min freq = " << min << endl;
+    // cout << "max freq = " << max << endl;
 
 #endif
 
@@ -109,24 +109,33 @@ bool FGILSList::init( FGPath path ) {
 // query the database for the specified frequency, lon and lat are in
 // degrees, elev is in meters
 bool FGILSList::query( double lon, double lat, double elev, double freq,
-		       FGILS *ils, double *heading, double *dist )
+		       FGILS *ils )
 {
     ils_list_type stations = ilslist[(int)(freq*100.0 + 0.5)];
 
     ils_list_iterator current = stations.begin();
     ils_list_iterator last = stations.end();
 
-    double az1, az2, s;
+    // double az1, az2, s;
+    Point3D aircraft = fgGeodToCart( Point3D(lon, lat, elev) );
+    Point3D station;
+    double d;
     for ( ; current != last ; ++current ) {
-	// cout << "testing " << current->get_ident() << endl;
-	geo_inverse_wgs_84( elev, lat, lon, 
-			    current->get_loclat(), current->get_loclon(),
-			    &az1, &az2, &s );
+	// cout << "  testing " << current->get_locident() << endl;
+	station = Point3D(current->get_x(), current->get_y(), current->get_z());
+	// cout << "    aircraft = " << aircraft << " station = " << station 
+	//      << endl;
+
+	d = aircraft.distance3Dsquared( station );
+	// cout << "  distance = " << d << " (" 
+	//      << FG_ILS_DEFAULT_RANGE * NM_TO_METER 
+	//         * FG_ILS_DEFAULT_RANGE * NM_TO_METER
+	//      << ")" << endl;
+
 	// cout << "  dist = " << s << endl;
-	if ( s < ( FG_ILS_DEFAULT_RANGE * NM_TO_METER ) ) {
+	if ( d < (FG_ILS_DEFAULT_RANGE * NM_TO_METER 
+		  * FG_ILS_DEFAULT_RANGE * NM_TO_METER) ) {
 	    *ils = *current;
-	    *heading = az2;
-	    *dist = s;
 	    return true;
 	}
     }

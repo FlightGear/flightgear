@@ -60,8 +60,7 @@ public:
 
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters
-    bool query( double lon, double lat, double elev, double freq,
-		FGILS *i, double *heading, double *dist);
+    bool query( double lon, double lat, double elev, double freq, FGILS *i );
 };
 
 

@@ -27,11 +27,15 @@
 
 #include <simgear/compiler.h>
 
+#include <Navaids/ilslist.hxx>
+#include <Navaids/navlist.hxx>
+
 
 class FGRadioStack {
 
     bool need_update;
 
+    bool nav1_valid;
     bool nav1_inrange;
     bool nav1_loc;
     double nav1_freq;
@@ -41,10 +45,15 @@ class FGRadioStack {
     double nav1_lon;
     double nav1_lat;
     double nav1_elev;
+    double nav1_effective_range;
     double nav1_dist;
     double nav1_heading;
     double nav1_target_gs;
+    double nav1_x;
+    double nav1_y;
+    double nav1_z;
 
+    bool nav2_valid;
     bool nav2_inrange;
     bool nav2_loc;
     double nav2_freq;
@@ -54,10 +63,15 @@ class FGRadioStack {
     double nav2_lon;
     double nav2_lat;
     double nav2_elev;
+    double nav2_effective_range;
     double nav2_dist;
     double nav2_heading;
     double nav2_target_gs;
+    double nav2_x;
+    double nav2_y;
+    double nav2_z;
 
+    bool adf_valid;
     bool adf_inrange;
     double adf_freq;
     double adf_alt_freq;
@@ -65,12 +79,20 @@ class FGRadioStack {
     double adf_lon;
     double adf_lat;
     double adf_elev;
+    double adf_effective_range;
+    double adf_dist;
     double adf_heading;
+    double adf_x;
+    double adf_y;
+    double adf_z;
 
 public:
 
     FGRadioStack();
     ~FGRadioStack();
+
+    // Update nav/adf radios based on current postition
+    void search( double lon, double lat, double elev );
 
     // Update nav/adf radios based on current postition
     void update( double lon, double lat, double elev );
@@ -145,6 +167,10 @@ public:
 
 
 extern FGRadioStack *current_radiostack;
+
+
+// periodic radio station search wrapper
+void fgRadioSearch( void );
 
 
 #endif // _FG_RADIOSTACK_HXX

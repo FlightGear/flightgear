@@ -99,8 +99,8 @@ bool FGNavList::init( FGPath path ) {
 	}
     }
 
-    cout << "min freq = " << min << endl;
-    cout << "max freq = " << max << endl;
+    // cout << "min freq = " << min << endl;
+    // cout << "max freq = " << max << endl;
 
 #endif
 
@@ -111,24 +111,27 @@ bool FGNavList::init( FGPath path ) {
 // query the database for the specified frequency, lon and lat are in
 // degrees, elev is in meters
 bool FGNavList::query( double lon, double lat, double elev, double freq,
-		       FGNav *n, double *heading, double *dist )
+		       FGNav *n )
 {
     nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
 
     nav_list_iterator current = stations.begin();
     nav_list_iterator last = stations.end();
 
-    double az1, az2, s;
+    // double az1, az2, s;
+    Point3D aircraft = fgGeodToCart( Point3D(lon, lat, elev) );
+    Point3D station;
+    double d;
     for ( ; current != last ; ++current ) {
 	// cout << "testing " << current->get_ident() << endl;
-	geo_inverse_wgs_84( elev, lat, lon, 
-			    current->get_lat(), current->get_lon(),
-			    &az1, &az2, &s );
+	station = Point3D(current->get_x(), current->get_y(), current->get_z());
+
+	d = aircraft.distance3Dsquared( station );
+
 	// cout << "  dist = " << s << endl;
-	if ( s < ( current->get_range() * NM_TO_METER ) ) {
+	if ( d < (current->get_range() * NM_TO_METER 
+		  * current->get_range() * NM_TO_METER) ) {
 	    *n = *current;
-	    *heading = az2;
-	    *dist = s;
 	    return true;
 	}
     }

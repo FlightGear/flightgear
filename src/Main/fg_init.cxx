@@ -460,16 +460,19 @@ bool fgInitSubsystems( void ) {
     // Initialize vor/ndb/ils/fix list management and query systems
     FG_LOG(FG_GENERAL, FG_INFO, "Loading Navaids");
 
+    FG_LOG(FG_GENERAL, FG_INFO, "  VOR/NDB");
     current_navlist = new FGNavList;
     FGPath p_nav( current_options.get_fg_root() );
     p_nav.append( "Navaids/default.nav" );
     current_navlist->init( p_nav );
 
+    FG_LOG(FG_GENERAL, FG_INFO, "  ILS");
     current_ilslist = new FGILSList;
     FGPath p_ils( current_options.get_fg_root() );
     p_ils.append( "Navaids/default.ils" );
     current_ilslist->init( p_ils );
 
+    FG_LOG(FG_GENERAL, FG_INFO, "  Fixes");
     current_fixlist = new FGFixList;
     FGPath p_fix( current_options.get_fg_root() );
     p_fix.append( "Navaids/default.fix" );
@@ -478,7 +481,7 @@ bool fgInitSubsystems( void ) {
     // Initialize the underlying radio stack model
     current_radiostack = new FGRadioStack;
 
-    current_radiostack->set_nav1_freq( 110.30 );
+    current_radiostack->set_nav1_freq( 117.30 );
     current_radiostack->set_nav1_alt_freq( 110.30 );
     current_radiostack->set_nav1_sel_radial( 299.0 );
 
@@ -488,9 +491,18 @@ bool fgInitSubsystems( void ) {
 
     current_radiostack->set_adf_freq( 266.0 );
 
+    current_radiostack->search( cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude(),
+				cur_fdm_state->get_Altitude() * FEET_TO_METER );
+
     current_radiostack->update( cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
 				cur_fdm_state->get_Altitude() * FEET_TO_METER );
+
+    // Search radio database once per second
+    global_events.Register( "fgRadioSearch()", fgRadioSearch,
+			    fgEVENT::FG_EVENT_READY, 1000);
+
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
