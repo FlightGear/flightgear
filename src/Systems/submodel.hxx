@@ -25,9 +25,10 @@ class SubmodelSystem : public SGSubsystem
 
 public:
 
+
  typedef struct {
-  SGPropertyNode_ptr trigger;
-  SGPropertyNode_ptr prop;
+  SGPropertyNode* trigger;
+  SGPropertyNode* prop;
   string             name;
   string             model;
   double             speed;
@@ -52,6 +53,7 @@ public:
   double     lat;
   double     lon;
   double     alt;
+  double     roll;
   double     azimuth;
   double     elevation;
   double     speed;
@@ -70,6 +72,7 @@ public:
     void update (double dt);
     bool release (submodel* sm, double dt);
     void transform (submodel* sm);
+    void updatelat( double lat );
 
 private:
 
@@ -79,21 +82,35 @@ private:
     submodel_vector_type       submodels;
     submodel_vector_iterator   submodel_iterator;
 
+    float trans[3][3];
+    float in[3];
+    float out[3];
+
+    double Rx, Ry, Rz;
+    double Sx, Sy, Sz;
+    double Tx, Ty, Tz;
+
+    float cosRx, sinRx;
+    float cosRy, sinRy;
+    float cosRz, sinRz;
+
+    double ft_per_deg_longitude;
+    double ft_per_deg_latitude;
 
     double x_offset, y_offset, z_offset;
     double pitch_offset, yaw_offset;
 
-    SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _user_lat_node;
-    SGPropertyNode_ptr _user_lon_node;
-    SGPropertyNode_ptr _user_heading_node;
-    SGPropertyNode_ptr _user_alt_node;
-    SGPropertyNode_ptr _user_pitch_node;
-    SGPropertyNode_ptr _user_roll_node;
-    SGPropertyNode_ptr _user_yaw_node;
-    SGPropertyNode_ptr _user_speed_node;
-	SGPropertyNode_ptr _user_wind_from_east_node;
-    SGPropertyNode_ptr _user_wind_from_north_node;
+    SGPropertyNode* _serviceable_node;
+    SGPropertyNode* _user_lat_node;
+    SGPropertyNode* _user_lon_node;
+    SGPropertyNode* _user_heading_node;
+    SGPropertyNode* _user_alt_node;
+    SGPropertyNode* _user_pitch_node;
+    SGPropertyNode* _user_roll_node;
+    SGPropertyNode* _user_yaw_node;
+    SGPropertyNode* _user_speed_node;
+    SGPropertyNode* _user_wind_from_east_node;
+    SGPropertyNode* _user_wind_from_north_node;
     FGAIManager* ai;
     IC_struct  IC;
 };

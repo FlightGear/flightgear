@@ -15,10 +15,14 @@
 
 SubmodelSystem::SubmodelSystem ()
 {
+    
   x_offset = y_offset = 0.0;
   z_offset = -4.0;
   pitch_offset = 2.0;
   yaw_offset = 0.0;
+  
+  out[0] = out[1] = out[2] = 0;
+  in[3] = out[3] = 1;
 }
 
 SubmodelSystem::~SubmodelSystem ()
@@ -46,6 +50,8 @@ SubmodelSystem::init ()
     _user_wind_from_north_node = fgGetNode("/environment/wind-from-north-fps",true);
 
     ai = (FGAIManager*)globals->get_subsystem("ai_model");
+
+
 }
 
 void
@@ -88,8 +94,7 @@ SubmodelSystem::release (submodel* sm, double dt)
   if (sm->timer < sm->delay) return false;
   sm->timer = 0.0;
 
-  // calculate submodel's initial conditions in world-coordinates
-  transform(sm);
+  transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
   //cout << "Creating a submodel." << endl; 
   FGAIModelEntity entity;
@@ -151,7 +156,7 @@ SubmodelSystem::load ()
      sm->count          = entry_node->getIntValue   ("count", 1); 
      sm->slaved         = entry_node->getBoolValue  ("slaved", false); 
      sm->x_offset       = entry_node->getDoubleValue("x-offset", 0.0); 
-     sm->y_offset       = entry_node->getDoubleValue("y_offset", 0.0); 
+     sm->y_offset       = entry_node->getDoubleValue("y-offset", 0.0); 
      sm->z_offset       = entry_node->getDoubleValue("z-offset", 0.0); 
      sm->yaw_offset     = entry_node->getDoubleValue("yaw-offset", 0.0); 
      sm->pitch_offset   = entry_node->getDoubleValue("pitch-offset", 0.0);
@@ -166,6 +171,11 @@ SubmodelSystem::load ()
      sm->prop = fgGetNode("/systems/submodels/submodel", i, true);
      sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
 
+//	 in[0] = sm->x_offset;
+//	 in[1] = sm->y_offset;
+//	 in[2] = sm->z_offset; 
+ 
+
      submodels.push_back( sm );
    }
 
@@ -177,17 +187,87 @@ SubmodelSystem::load ()
 void
 SubmodelSystem::transform( submodel* sm) 
 {
-  IC.lat =             _user_lat_node->getDoubleValue();
-  IC.lon =             _user_lon_node->getDoubleValue();
-  IC.alt =             _user_alt_node->getDoubleValue();
-  IC.azimuth =         _user_heading_node->getDoubleValue() + sm->yaw_offset;
-  IC.elevation =       _user_pitch_node->getDoubleValue() + sm->pitch_offset;
+
+ // get initial conditions 
+    
+  IC.lat =        _user_lat_node->getDoubleValue();    
+  IC.lon =        _user_lon_node->getDoubleValue();	   
+  IC.alt =        _user_alt_node->getDoubleValue();    
+  IC.roll =      - _user_roll_node->getDoubleValue();   // rotation about x axis
+  IC.elevation =  _user_pitch_node->getDoubleValue();  // rotation about y axis
+  IC.azimuth =    _user_heading_node->getDoubleValue(); // rotation about z axis
+  
   IC.speed =           _user_speed_node->getDoubleValue() + sm->speed;
   IC.wind_from_east =  _user_wind_from_east_node->getDoubleValue();
   IC.wind_from_north = _user_wind_from_north_node->getDoubleValue();
-//  IC.wind_from_east =  4;
-//   IC.wind_from_north = 5;
+  
+  in[0] = sm->x_offset;
+  in[1] = sm->y_offset;
+  in[2] = sm->z_offset; 
+  
+ 
 
+// pre-process the trig functions
+
+    cosRx = cos(IC.roll * SG_DEGREES_TO_RADIANS);
+    sinRx = sin(IC.roll * SG_DEGREES_TO_RADIANS);
+    cosRy = cos(IC.elevation * SG_DEGREES_TO_RADIANS);
+    sinRy = sin(IC.elevation * SG_DEGREES_TO_RADIANS);
+    cosRz = cos(IC.azimuth * SG_DEGREES_TO_RADIANS);
+    sinRz = sin(IC.azimuth * SG_DEGREES_TO_RADIANS);
+
+
+// set up the transform matrix
+
+    trans[0][0] =	cosRy * cosRz;
+    trans[0][1] =	-1 * cosRx * sinRz + sinRx * sinRy * cosRz ;
+    trans[0][2] =	sinRx * sinRz + cosRx * sinRy * cosRz;
+
+    trans[1][0] = 	cosRy * sinRz;
+    trans[1][1] =	cosRx * cosRz + sinRx * sinRy * sinRz;
+    trans[1][2] =	-1 * sinRx * cosRx + cosRx * sinRy * sinRz;
+
+    trans[2][0] =	-1 * sinRy;
+    trans[2][1] =	sinRx * cosRy;
+    trans[2][2] =   cosRx * cosRy;
+
+
+// multiply the input and transform matrices
+
+//	for( int i=0; i<4; i++) {
+//		for( int j=0; j<4; j++ ) {
+//			out[i] += in[j] * trans[i][j];
+//		}
+//	}
+
+out[0] = in[0] * trans[0][0] + in[1] * trans[0][1] + in[2] * trans[0][2];
+out[1] = in[0] * trans[1][0] + in[1] * trans[1][1] + in[2] * trans[1][2];
+out[2] = in[0] * trans[2][0] + in[1] * trans[2][1] + in[2] * trans[2][2];
+
+// convert ft to degrees of latitude
+
+    out[0] = out[0] /(366468.96 - 3717.12 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
+
+// convert ft to degrees of longitude
+
+    out[1] = out[1] /(365228.16 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
+
+
+    IC.lat += out[0];
+    IC.lon += out[1];
+    IC.alt += out[2];
+    IC.elevation += sm->pitch_offset;
+    IC.azimuth   += sm->yaw_offset;
+
+
+}
+
+void 
+SubmodelSystem::updatelat(double lat) 
+{
+    double latitude = lat;
+    ft_per_deg_latitude = 366468.96 - 3717.12 * cos(latitude / SG_RADIANS_TO_DEGREES);
+    ft_per_deg_longitude = 365228.16 * cos(latitude / SG_RADIANS_TO_DEGREES);
 }
 
 // end of submodel.cxx
