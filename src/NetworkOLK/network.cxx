@@ -63,6 +63,8 @@ extern "C" {
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
+#include <simgear/compiler.h>
+
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 

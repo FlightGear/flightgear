@@ -24,6 +24,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flight.hxx>
 #include <Main/globals.hxx>
@@ -144,7 +145,7 @@ bool FGNMEA::gen_message() {
     nmea_sentence += gga_sum;
     nmea_sentence += "\n";
 
-    cout << nmea_sentence;
+    std::cout << nmea_sentence;
 
     length = nmea_sentence.length();
     strncpy( buf, nmea_sentence.c_str(), length );

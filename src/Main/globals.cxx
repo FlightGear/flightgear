@@ -21,6 +21,8 @@
 // $Id$
 
 
+#include <simgear/misc/commands.hxx>
+
 #include <Environment/environment_mgr.hxx>
 
 #include "globals.hxx"

@@ -45,6 +45,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/props.hxx>
+#include <simgear/misc/sg_path.hxx>
 //#include <simgear/math/fg_random.h>
 //#include <simgear/math/polar3d.hxx>
 

@@ -90,7 +90,7 @@ static FGProtocol *parse_port_config( const string& config )
 	FGATC610x *atc610x = new FGATC610x;
 	io = atc610x;
         short_circuit = true;
-	cout << "here ..." << endl;
+	std::cout << "here ..." << endl;
     } else if ( protocol == "atlas" ) {
 	FGAtlas *atlas = new FGAtlas;
 	io = atlas;
@@ -299,7 +299,7 @@ void fgIOProcess() {
 	    p->dec_count_down( interval );
 	    while ( p->get_count_down() < 0 ) {
 		p->process();
-		p->dec_count_down( -1000000.0 / p->get_hz() );
+		p->dec_count_down(int( -1000000.0 / p->get_hz()));
 	    }
 	}
     }

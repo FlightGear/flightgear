@@ -407,7 +407,7 @@ FGInterface::unbind ()
 void
 FGInterface::update (int dt)
 {
-    cout << "dummy update() ... SHOULDN'T BE CALLED!" << endl;
+    SG_LOG(SG_FLIGHT, SG_ALERT, "dummy update() ... SHOULDN'T BE CALLED!");
 }
 
 
@@ -525,7 +525,7 @@ void FGInterface::extrapolate( int time_offset ) {
     // -dw- metrowerks complains about ambiguous access, not critical
     // to keep this ;)
 #ifndef __MWERKS__
-    cout << "extrapolating FDM by dt = " << dt << endl;
+    SG_LOG(SG_FLIGHT, SG_INFO, "extrapolating FDM by dt = " << dt);
 #endif
 
     double lat = geodetic_position_v[0] + geocentric_rates_v[0] * dt;

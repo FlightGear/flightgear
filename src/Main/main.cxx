@@ -32,6 +32,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
+#include <simgear/route/route.hxx>
 
 #ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>

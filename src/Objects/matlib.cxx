@@ -71,7 +71,7 @@ bool FGMaterialLib::load( const string& mpath ) {
 
   SGPropertyNode materials;
 
-  cout << "Reading materials from " << mpath << endl;
+  SG_LOG(SG_INPUT, SG_INFO, "Reading materials from " << mpath);
   try {
     readProperties(mpath, &materials);
   } catch (const sg_exception &ex) {

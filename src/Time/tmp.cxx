@@ -27,6 +27,7 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/magvar/magvar.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
@@ -48,11 +49,11 @@ void fgUpdateLocalTime() {
     SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
 
-    cout << "updateLocal("
-         << longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS
-         << ", "
-         << latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS
-         << ", " << zone.str() << ")" << endl;
+    SG_LOG(SG_GENERAL, SG_INFO, "updateLocal("
+	   << longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS
+	   << ", "
+	   << latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS
+	   << ", " << zone.str() << ")");
     globals->get_time_params()->updateLocal( longitude->getDoubleValue()
 					       * SGD_DEGREES_TO_RADIANS, 
 					     latitude->getDoubleValue()

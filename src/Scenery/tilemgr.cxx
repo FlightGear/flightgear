@@ -292,7 +292,6 @@ int FGTileMgr::update( double lon, double lat ) {
     // happen in the render thread because model loading can trigger
     // texture loading which involves use of the opengl api.
     if ( !model_queue.empty() ) {
-        cout << "loading next model ..." << endl;
         // load the next tile in the queue
 #ifdef ENABLE_THREADS
 	FGDeferredModel* dm = model_queue.pop();
@@ -311,8 +310,6 @@ int FGTileMgr::update( double lon, double lat ) {
 
 	delete dm;
     }
-
-    // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
 
     previous_bucket = current_bucket;
     last_longitude = longitude;
@@ -337,7 +334,6 @@ int FGTileMgr::update( double lon, double lat ) {
 	e->add_ssg_nodes( terrain_branch,
 			  gnd_lights_branch,
 			  rwy_lights_branch );
-	// cout << "Adding ssg nodes for "
     }
 
     sgdVec3 sc;
@@ -349,7 +345,6 @@ int FGTileMgr::update( double lon, double lat ) {
 #if 0
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
-	cout << "initializing scenery current elevation ... " << endl;
 	sgdVec3 tmp_abs_view_pos;
 
 	Point3D geod_pos = Point3D( longitude * SGD_DEGREES_TO_RADIANS,
@@ -359,7 +354,6 @@ int FGTileMgr::update( double lon, double lat ) {
 	scenery.center = tmp;
 	sgdSetVec3( tmp_abs_view_pos, tmp.x(), tmp.y(), tmp.z() );
 
-	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
 	prep_ssg_nodes();
 
 	double tmp_elev;
@@ -370,24 +364,8 @@ int FGTileMgr::update( double lon, double lat ) {
 	} else {
 	    scenery.set_cur_elev( 0.0 );
 	}
-	cout << "result = " << scenery.get_cur_elev() << endl;
     } else {
 #endif
-        /*
-	cout << "abs view pos = "
-             << globals->get_current_view()->get_abs_view_pos()[0] << ","
-             << globals->get_current_view()->get_abs_view_pos()[1] << ","
-             << globals->get_current_view()->get_abs_view_pos()[2]
-	     << " view pos = " 
-             << globals->get_current_view()->get_view_pos()[0] << ","
-             << globals->get_current_view()->get_view_pos()[1] << ","
-             << globals->get_current_view()->get_view_pos()[2]
-             << endl;
-        cout << "current_tile = " << current_tile << endl;
-        cout << "Scenery center = " << sc[0] << "," << sc[1] << "," << sc[2]
-             << endl;
-        */
-
         // overridden with actual values if a terrain intersection is
         // found
 	double hit_elev = -9999.0;
@@ -415,8 +393,6 @@ int FGTileMgr::update( double lon, double lat ) {
             scenery.set_cur_radius( 0.0 );
             scenery.set_cur_normal( hit_normal );
         }
-
-	// cout << "Current elevation = " << scenery.get_cur_elev() << endl;
 #if 0
     }
 #endif
@@ -437,11 +413,10 @@ void FGTileMgr::prep_ssg_nodes() {
     tile_cache.reset_traversal();
 
     while ( ! tile_cache.at_end() ) {
-        // cout << "processing a tile" << endl;
         if ( (e = tile_cache.get_current()) ) {
 	    e->prep_ssg_node( scenery.get_center(), vis);
         } else {
-            cout << "warning ... empty tile in cache" << endl;
+	    SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
         }
 	tile_cache.next();
    }

@@ -8,6 +8,8 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/props.hxx>
+#include <simgear/misc/props_io.hxx>
+
 #include "globals.hxx"
 
 

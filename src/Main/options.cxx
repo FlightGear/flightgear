@@ -36,6 +36,9 @@
 #include STL_STRING
 
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/route/route.hxx>
+#include <simgear/route/waypoint.hxx>
 
 // #include <Include/general.hxx>
 // #include <Airports/simple.hxx>

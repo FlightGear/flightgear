@@ -29,14 +29,6 @@
 #include <vector>
 #include STL_STRING
 
-
-#include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/magvar/magvar.hxx>
-#include <simgear/route/route.hxx>
-#include <simgear/timing/sg_time.hxx>
-#include <simgear/misc/commands.hxx>
-#include <simgear/misc/props.hxx>
-
 #include "viewmgr.hxx"
 
 SG_USING_STD( vector );
@@ -46,6 +38,22 @@ typedef vector<string> string_list;
 
 
 // Forward declarations
+
+// This file is included, directly or indirectly, almost everywhere in
+// FlightGear, so if any of its dependencies changes, most of the sim
+// has to be recompiled.  Using these forward declarations helps us to
+// avoid including a lot of header files (and thus, a lot of
+// dependencies).  Since Most of the methods simply set or return
+// pointers, we don't need to know anything about the class details
+// anyway.
+
+class SGEphemeris;
+class SGMagVar;
+class SGRoute;
+class SGTime;
+class SGPropertyNode;
+class SGCommandMgr;
+
 class FGLogger;
 class FGEnvironmentMgr;
 class FGEnvironment;
@@ -57,7 +65,12 @@ class FGViewer;
 class FGATCMgr;
 class FGATCDisplay;
 
-class FGGlobals {
+
+/**
+ * Bucket for subsystem pointers representing the sim's state.
+ */
+class FGGlobals
+{
 
 private:
 

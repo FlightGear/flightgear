@@ -25,6 +25,8 @@
 #endif
 
 #include <simgear/misc/exception.hxx>
+#include <simgear/magvar/magvar.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include STL_IOSTREAM
 

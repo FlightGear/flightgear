@@ -39,6 +39,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/props.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>

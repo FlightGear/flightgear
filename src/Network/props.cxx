@@ -21,13 +21,15 @@
 // $Id$
 
 
-#include <Main/globals.hxx>
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
+#include <simgear/misc/props_io.hxx>
+
+#include <Main/globals.hxx>
 
 #include <stdlib.h>		// atoi() atof()
 
@@ -38,6 +40,7 @@
 #if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(istrstream);
+SG_USING_STD(strstream);
 #endif
 
 FGProps::FGProps() {

@@ -34,6 +34,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/route/route.hxx>
 
 #include <Cockpit/steam.hxx>
 #include <Cockpit/radiostack.hxx>

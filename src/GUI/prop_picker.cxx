@@ -39,6 +39,7 @@
 #include <Main/globals.hxx>
 
 #include <simgear/compiler.h>
+#include <simgear/misc/props.hxx>
 
 #define DOTDOTSLASH "../"
 #define SLASH       "/"

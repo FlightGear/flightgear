@@ -28,6 +28,8 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/route/route.hxx>
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
+
 #include <Main/globals.hxx>
 #include "FGTileLoader.hxx"
 #include "tileentry.hxx"

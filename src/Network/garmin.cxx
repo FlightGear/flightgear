@@ -24,6 +24,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flight.hxx>
 #include <Main/globals.hxx>
@@ -144,7 +145,7 @@ bool FGGarmin::gen_message() {
     garmin_sentence += rmz_sum;
     garmin_sentence += "\n";
 
-    cout << garmin_sentence;
+    std::cout << garmin_sentence;
 
     length = garmin_sentence.length();
     strncpy( buf, garmin_sentence.c_str(), length );
