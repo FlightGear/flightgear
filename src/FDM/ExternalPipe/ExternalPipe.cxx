@@ -1,4 +1,4 @@
-// ExternalPipe.hxx -- a "pipe" interface to an external flight dynamics model
+// ExternalPipe.cxx -- a "pipe" interface to an external flight dynamics model
 //
 // Written by Curtis Olson, started March 2003.
 //
@@ -117,6 +117,7 @@ void FGExternalPipe::init() {
     double ground = fgGetDouble( "/environment/ground-elevation-m" );
     double heading = fgGetDouble("/sim/presets/heading-deg");
     double speed = fgGetDouble( "/sim/presets/airspeed-kt" );
+    double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
 
 #ifdef HAVE_MKFIFO
 
@@ -159,6 +160,14 @@ void FGExternalPipe::init() {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
     }
 
+    if ( weight > 1000.0 ) {
+      sprintf( cmd, "1aircraft-weight-lbs=%.2f", weight );
+      result = write( pd1, cmd, strlen(cmd) );
+      if ( result == -1 ) {
+        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
+      }
+    }
+
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
     if( fgGetBool("/sim/presets/onground") ) {
@@ -183,12 +192,24 @@ void FGExternalPipe::update( double dt ) {
 
     int length;
     int result;
-
+    
     if ( is_suspended() ) {
         return;
     }
 
     int iterations = _calc_multiloop(dt);
+
+    double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
+    static double last_weight = 0.0;
+    if ( fabs( weight - last_weight ) > 0.01 ) {
+      char cmd[256];
+      sprintf( cmd, "1aircraft-weight-lbs=%.2f", weight );
+      result = write( pd1, cmd, strlen(cmd) );
+      if ( result == -1 ) {
+        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
+      }
+    }
+    last_weight = weight;
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
@@ -205,6 +226,7 @@ void FGExternalPipe::update( double dt ) {
                 << fifo_name_1 );
     }
 
+    // Read fdm values
     length = sizeof(fdm);
     result = read( pd2, (char *)(& fdm), length );
     if ( result == -1 ) {
