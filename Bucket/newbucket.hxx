@@ -76,8 +76,20 @@ public:
     // return the center lon of a tile
     double get_center_lon() const;
 
+    // return width of the tile
+    double get_width() const;
+
     // return the center lat of a tile
     double get_center_lat() const;
+
+    // return height of the tile
+    double get_height() const;
+
+    // Informational methods
+    inline int get_lon() const { return lon; }
+    inline int get_lat() const { return lat; }
+    inline int get_x() const { return x; }
+    inline int get_y() const { return y; }
 
     // friends
     friend ostream& operator<< ( ostream&, const FGBucket& );
@@ -235,9 +247,21 @@ inline double FGBucket::get_center_lon() const {
 }
 
 
+// return width of the tile
+inline double FGBucket::get_width() const {
+    return bucket_span( get_center_lat() );
+}
+
+
 // return the center lat of a tile
 inline double FGBucket::get_center_lat() const {
     return lat + y / 8.0 + FG_HALF_BUCKET_SPAN;
+}
+
+
+// return height of the tile
+inline double FGBucket::get_height() const {
+    return FG_BUCKET_SPAN;
 }
 
 
@@ -289,6 +313,9 @@ fgBucketGenIndex( const fgBUCKET& p )
 
 
 // $Log$
+// Revision 1.5  1999/03/12 22:51:18  curt
+// Added some informational methods.
+//
 // Revision 1.4  1999/03/02 01:01:43  curt
 // Tweaks for compiling with native SGI compilers.
 //
