@@ -1333,6 +1333,7 @@ struct OptionDesc {
     {"nav2",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV2 },
     {"adf",                          true,  OPTION_FUNC,   "", false, "", fgOptADF },
     {"dme",                          true,  OPTION_FUNC,   "", false, "", fgOptDME },
+    {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
     {0}
 };
 
@@ -1683,9 +1684,26 @@ fgUsage (bool verbose)
 #endif
 }
 
+// A simple function to return an integer depending on the position
+// of the status string within the array in order to determine the hierarchy.
+unsigned int getNumMaturity(const char * str) 
+{
+  // changes should also be reflected in $FG_ROOT/data/options.xml & 
+  // $FG_ROOT/data/Translations/string-default.xml
+  const char levels[][20]= {"alpha","beta","early-production","production",0}; 
+
+  for (int i=0; i<(sizeof(levels)/sizeof(levels[0])-1);i++) 
+    if (strcmp(str,levels[i])==0)
+      return i;
+
+  return 0;
+};
+
+
 static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
                              bool recursive)
-{
+{   
+   
    ulDirEnt* dire;
    ulDir *dirp = ulOpenDir(path.str().c_str());
    if (dirp == NULL) {
@@ -1720,28 +1738,57 @@ static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
           }
 
           SGPropertyNode *desc = NULL;
+	  SGPropertyNode *status = NULL;
+	  
           SGPropertyNode *node = root.getNode("sim");
           if (node) {
              desc = node->getNode("description");
+	     // if a status tag is found, read it in
+	     if (node->hasValue("status"))
+	     	status = node->getNode("status");
           }
 
           char cstr[96];
+	  //additionally display status information where it is available
+	  char *status_level = (status) ? status->getStringValue() : "";
+          
           if (strlen(dire->d_name) <= 27) {
              snprintf(cstr, 96, "   %-27s  %s", dire->d_name,
-                      (desc) ? desc->getStringValue() : "" );
+                      (desc) ? desc->getStringValue() : "");
 
           } else {
              snprintf(cstr, 96, "   %-27s\n%32c%s", dire->d_name, ' ',
-                      (desc) ? desc->getStringValue() : "" );
+                      (desc) ? desc->getStringValue() : "");
           }
 
-          aircraft.push_back(cstr);
-      }
+	  SGPropertyNode * required_status
+                             = fgGetNode ("/sim/aircraft-min-status", true);
+	  
+	  // If the node holds the value "all", then there wasn't any status 
+	  // level specified, so we simply go ahead and output ALL aircraft
+	  if (strcmp(required_status->getStringValue(),"all")==0) {	   
+		  aircraft.push_back(cstr);
+		  }
+	  else
+	  {
+	  // If the node doesn't hold "all" as its value, then we are supposed
+	  // to show only aircraft meeting specific status (development status)
+          // requirements:
+ 
+     if (node->hasValue("status"))     {
+     	  //Compare (minimally) required status level with actual aircraft status:
+	   if (	getNumMaturity(status->getStringValue() ) >= 
+	  	getNumMaturity(required_status->getStringValue() ) )
+				  aircraft.push_back(cstr); }
+	  			  		  
+	  }
+      
+   
+   }
    }
 
    ulCloseDir(dirp);
 }
-
 
 /*
  * Search in the current directory, and in on directory deeper
