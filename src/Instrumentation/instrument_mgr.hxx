@@ -19,10 +19,6 @@
 
 #include <Main/fgfs.hxx>
 
-#include <vector>
-
-SG_USING_STD(vector);
-
 
 /**
  * Manage aircraft instruments.
