@@ -118,9 +118,15 @@ FGElectricalBus::FGElectricalBus ( SGPropertyNode *node ) {
 
 FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
     kind = FG_OUTPUT;
-    output_amps = 0.1;
+    output_amps = 0.1;          // arbitrary default value
 
     name = node->getStringValue("name");
+    SGPropertyNode *draw = node->getNode("rated-draw");
+    if ( draw != NULL ) {
+        output_amps = draw->getDoubleValue();
+    }
+    // cout << "rated draw = " << output_amps << endl;
+
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
