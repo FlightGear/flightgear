@@ -6,182 +6,138 @@ FlightGear up and running under Linux.
 
 1. Prerequisites:
 
-You need to understand the concepts of 3D acceleration under Linux and
-the needed libraries. An excellent source of information is the "Linux
-Quake-HOWTO" which can be found at
+- You need to understand the concepts of 3D acceleration under Linux
+  and the needed libraries.  You will need to install and configure
+  accelerated drivers for your specific video card.  It is beyond the
+  scope of this document to describe the process for your specific
+  video card.
 
-       http://www.linuxquake.com
+  More and more distributions are coming out with pre-packaged drivers
+  so look around (just in case) before you go out and build software
+  yourself.
 
-If anything seem to be wrong with your 3D setup, check there first!
+  Here are some potentially useful sites, but be careful and find the
+  specific instructions for your specific video card and distribution:
 
-You need Linux of course (any flavour) and a 3DFX-card (Voodoo1 in my
-case).  3D rendering without hardware support can force even the
-fastest PII to its knees.  To make use of the accelerator board you
-need"
+    http://www.thedukeofurl.org/reviews/misc/3dlinux/
+    http://www.linux3d.net/
+    http://dri.sourceforge.net/
+    http://www.nvidia.com
+    http://glide.xxedgexx.com/
 
-- the GLIDE library installed. Grab it at:
+  Without accelerated 3d rendering, FlightGear could never run at
+  decent frame rates, even on the fastest CPU's.
 
-	http://www.3dfx.com/software/download_glidel.html
-
-  and install. There is even an install script contained that will do
-  things for you. The canonical place for GLIDE is /usr/local/glide,
-  if you prefer another location, you'll have to edit the Makefile for
-  FlightGear by hand. Be sure to read and understand the file
-  /usr/local/glide/README.
-
-- the MESA library version 3.0 (or greater) installed.
-
-  Grab it at:
-
-			http://www.mesa3d.org/
-
-  unpack it and run "make linux-glide" in the Mesa directory. Follow
-  the instructions in the README file, take a close look at
-  README.3DFX and play with the demo programs. Relax, rejoice :-)
-
-- the GLUT library version 3.7 (or greater, aka GameGLUT) installed.
+- You will need the GLUT library version 3.7 (or greater, aka
+  GameGLUT) installed.
 
   Grab it at:
 
 	http://reality.sgi.com/opengl/glut3/glut3.html
 
-  Note: glut-3.7 is included with Mesa 3.0 so if you've already
+  Note: glut-3.7 is included with Mesa 3.x so if you've already
   grabbed the latest version of mesa, you should have everything you
   need.
 
   Alternatively, you can use the 3D-stuff that came along with your
   Linux distribution. At least RedHat (5.3 and later) and S.u.S.E. 6.0
-  (or later) contain all the things you need.
+  (or later) may contain all the things you need depending again on
+  your video card.
 
-  - (optional) the 3DFX kernel module.
+- Steve Baker's plib library.  Get it from:
 
-  Without this thingy installed, access to your accelerator board
-  needs to be SUID root, which bad practice (and a _huge_ security
-  hole). Get the 3DFX module from
-	
-	http://www.xs4all.nl/~carlo17/3dfx/index.html
+    http://plib.sf.net
 
-  and install it:
+  ... and follow the instructions there to install it.
 
- 	mkdir 3dfx
-	cd 3dfx
-	tar xvfz ../Dev3Dfx-2.7.tar.gz 
-	make
-	cp 3dfx.o /lib/modules/`uname -r`/misc
-	mknod /dev/3dfx c 107 0
-	insmod 3dfx
+- SimGear.  Get it from:
 
-  alternatively, you can get the RPM from there ind use rpm for
-  installation.
+    http://www.simgear.org
 
-  - Steve Baker's plib library.
+  ... and follow the instructions there to install it.
 
-  get it from    
-
-	http://www.woodsoup.org/projs/plib/ 
-
-  and follow the instructions in README.plib.
-
-  - (optional) the gpc libraries.
-
-  Read the README.gpc files to understand what they are good for
-  and decide whether you need to download them. If you don't want to
-  build your own sceneries, you might not need them.
 
 2. Build FlightGear:
 
-You will need the following files:
+   You will need the following files:
 
-	FlightGear-x.xx.tar.gz (source code)
+     FlightGear-x.xx.tar.gz (source code)
 
-which can be found under 
+   which can be found under:
 
-	      ftp://ftp.flightgear.org/pub/fgfs/Source/
+     ftp://flightgear.sourceforge.net/pub/flightgear/Source
 
-and the support files located at
+   and the base package located at:
 
-	     ftp://ftp.flightgear.org/pub/fgfs/Binaries/
+     ftp://flightgear.sourceforge.net/pub/flightgear/Shared/
 
-the file is called 
+   the file is called 
 
 	fgfs-base-x.xx.tar.gz       (data files)
 
-Ok, now that you got all the stuff, let's proceed towards installation.
+   Ok, now that you got all the stuff, let's proceed towards installation.
 
-Unpack FlightGear-x.xx.tar.gz using :
+   Unpack FlightGear-x.xx.tar.gz using :
 
 	tar xvfz FlightGear-x.xx.tar.gz
 
-and cd info FlightGear-x.xx. Run:
+   and cd info FlightGear-x.xx. Run:
 
 	./configure
 
-and wait a few minutes. configure knows about a lot of options. Have a
-look at the file INSTALL in the FlightGear source directory to learn
-about them. If run without options, configure assumes that you will
-install the data files under /usr/local/lib/FlightGear. Assuming
-configure finished successfully, simply run
+   and wait a few minutes. configure knows about a lot of
+   options. Have a look at the file INSTALL in the FlightGear source
+   directory to learn about them. If run without options, configure
+   assumes that you will install the data files under
+   /usr/local/lib/FlightGear. Assuming configure finished
+   successfully, simply run
 
 	make
 
-and wait for the make process to finish. Now become root (for example
-by using the su command) and type
+   and wait for the make process to finish. Now become root (for
+   example by using the su command) and type
 
 	make install
 
-This will install the binaries in /usr/local/bin. Notice that the name
-of the FlightGear binary is "fgfs".
-
-Another problem with Linux/Glide is permission-related. All programs
-accessing the Accelerator board need root permissions (or the kernel
-module mentioned above installed). I _strongly_ recommend the latter.
+   This will install the binaries in /usr/local/bin. Notice that the
+   name of the FlightGear binary is "fgfs".
 
 
 3. Install the data files
 
-Change to /usr/local/lib
+   Change to /usr/local/lib
 
 	tar xvfz WHERE_YOU_DOWNLOADED_THE_FILES/fgfs-base-x.xx.tar.gz 
 
-That's it...
+   That's it...
+
 
 4. Fly!
 
-If everything went ok, simply type
+   If everything went ok, simply type
 
 	runfgfs
 
-at the prompt. You should see the FlightGear splash-screen and a few
-seconds later you'll find youself somewhere in the desert, ready for
-take-off.
+   at the prompt. You should see the FlightGear splash-screen and a
+   few seconds later you'll find youself somewhere in the desert,
+   ready for take-off.
 
 5. Strange things happen...
 
-A note on the behaviour of Voodoo boards:
+   We have mailing lists set up for specific FlightGear problems,
+   bugs, and questions.  Please see the flightgear web page for
+   details.
 
-Your card comes packaged with a loop-through-cable. If you have only
-one monitor, then the Voodoo will take it over when used. This means
-that all the applications on your desktop will continue running but
-you'll only see the FlightGear screen. If your window manager uses a
-focus-follows-mouse policy, don't move the mouse. If you lose the
-focus, there's no way to shut down FlightGear graciously! Better
-solution: Use two monitors, one for your desktop, connect the other
-one to your accelerator. You'll then get a window on your desktop
-which manages all keyboard events and you're still able to see your
-desktop.
-
-A final note: There are several types of VooDoo cards out there, so be
-sure to get the correct version of Glide!
-
-Enjoy!
 
 6. Conclusion
 
-I hope this document provides some help. If it does, send virtual/real
-beer to me, if not flame me!
+    I hope this document provides some help. If it does, send
+    virtual/real beer to me, if not flame me!
 
-Bernhard H. Buckel
-<buckel@wmad95.mathematik.uni-wuerzburg.de>
+    Bernhard H. Buckel
+    <buckel@wmad95.mathematik.uni-wuerzburg.de>
+
+    Updated by Curtis Olson <curt@flightgear.org> 6/26/2001
 
 
 II.  RedHat Linux Notes
