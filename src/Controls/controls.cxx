@@ -102,7 +102,6 @@ FGControls::FGControls() :
     release_ALL( false ),
     vertical_adjust( 0.0 ),
     fore_aft_adjust( 0.0 ),
-    eject( false ),
     off_start_run( 0 ),
     APU_fire_switch( false ),
     autothrottle_arm( false ),
@@ -166,7 +165,9 @@ void FGControls::reset_all()
     landing_lights = false;
     turn_off_lights = false;
     master_arm = false;
-    eject = false;
+    set_ejection_seat( ALL_EJECTION_SEATS, false );
+    set_eseat_status( ALL_EJECTION_SEATS, SEAT_SAFED );
+    set_cmd_selector_valve( CMD_SEL_NORM );
     APU_fire_switch = false;
     autothrottle_arm = false;
     autothrottle_engage = false;
@@ -681,9 +682,30 @@ FGControls::bind ()
         &FGControls::set_fore_aft_adjust);
   fgSetArchivable("/controls/seat/fore-aft-adjust");
   
-  fgTie("/controls/seat/eject", this,
-	&FGControls::get_eject, &FGControls::set_eject);
-  fgSetArchivable("/controls/seat/eject");
+  for (index = 0; index < MAX_EJECTION_SEATS; index++) {
+      char name[MAX_NAME_LEN];
+      snprintf(name, MAX_NAME_LEN,
+	       "/controls/seat/eject[%d]/initiate", index);
+      fgTie(name, this, index,
+	   &FGControls::get_ejection_seat, 
+	   &FGControls::set_ejection_seat);
+      fgSetArchivable(name);
+
+      snprintf(name, MAX_NAME_LEN,
+	       "/controls/seat/eject[%d]/status", index);
+
+      fgTie(name, this, index,
+           &FGControls::get_eseat_status,
+	   &FGControls::set_eseat_status);
+
+      fgSetArchivable(name);
+  }
+  
+  fgTie("/controls/seat/cmd_selector_valve", this,
+        &FGControls::get_cmd_selector_valve,
+	&FGControls::set_cmd_selector_valve);
+  fgSetArchivable("/controls/seat/eject/cmd_selector_valve");
+
 
   // APU
   fgTie("/controls/APU/off-start-run", this,
@@ -942,7 +964,17 @@ void FGControls::unbind ()
 #endif
   fgUntie("/controls/seat/vertical-adjust");  
   fgUntie("/controls/seat/fore-aft-adjust");  
-  fgUntie("/controls/seat/eject");  
+  for (index = 0; index < MAX_EJECTION_SEATS; index++) {
+    char name[MAX_NAME_LEN];
+    snprintf(name, MAX_NAME_LEN,
+       "/controls/seat/eject[%d]/initiate", index);
+    fgUntie(name);
+    snprintf(name, MAX_NAME_LEN,
+       "/controls/seat/eject[%d]/status", index);
+    fgUntie(name);
+  }
+  fgUntie("/controls/seat/cmd_selector_valve");
+  
   fgUntie("/controls/APU/off-start-run");  
   fgUntie("/controls/APU/fire-switch");  
   for (index = 0; index < MAX_AUTOPILOTS; index++) {
@@ -2033,10 +2065,46 @@ FGControls::move_fore_aft_adjust( double amt )
 }
 
 void
-FGControls::set_eject( bool val )
+FGControls::set_ejection_seat( int which_seat, bool val )
 {
-  eject = val;
+    if ( which_seat == ALL_EJECTION_SEATS ) {
+        for ( int i = 0; i < MAX_EJECTION_SEATS; i++ ) {
+            eject[i] = val;
+        }
+    } else {
+        if ( (which_seat >= 0) && (which_seat <= MAX_EJECTION_SEATS) ) {
+            if ( eseat_status[which_seat] == SEAT_SAFED ||
+                 eseat_status[which_seat] == SEAT_FAIL )
+            {
+                // we can never eject if SEAT_SAFED or SEAT_FAIL
+                val = false;
+            }
+
+            eject[which_seat] = val;
+        }
+    }
 }
+
+void
+FGControls::set_eseat_status( int which_seat, int val )
+{
+    if ( which_seat == ALL_EJECTION_SEATS ) {
+        for ( int i = 0; i < MAX_EJECTION_SEATS; i++ ) {
+            eseat_status[i] = val;
+        }
+    } else {
+        if ( (which_seat >=0) && (which_seat <= MAX_EJECTION_SEATS) ) {
+            eseat_status[which_seat] = val;
+        }
+    }
+}
+
+void
+FGControls::set_cmd_selector_valve( int val )
+{
+  cmd_selector_valve = val;
+}
+
 
 void
 FGControls::set_off_start_run( int pos )

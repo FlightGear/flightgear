@@ -86,6 +86,23 @@ public:
 	MAX_AUTOPILOTS = 3
     };
 
+    enum {
+	ALL_EJECTION_SEATS = -1,
+	MAX_EJECTION_SEATS = 10
+    };
+   
+    enum {
+	SEAT_SAFED = -1,
+	SEAT_ARMED = 0,
+	SEAT_FAIL = 1
+    };
+   
+    enum { 
+	CMD_SEL_NORM = -1,
+	CMD_SEL_AFT = 0,
+	CMD_SEL_SOLO = 1
+    };
+    
 private:
     // controls/flight/
     double aileron;
@@ -211,7 +228,9 @@ private:
     // controls/seat/
     double vertical_adjust;
     double fore_aft_adjust;
-    bool eject;
+    bool eject[MAX_EJECTION_SEATS];
+    int eseat_status[MAX_EJECTION_SEATS];
+    int cmd_selector_valve;
 
     // controls/APU/
     int off_start_run;
@@ -394,7 +413,14 @@ public:
     // controls/seat/
     inline double get_vertical_adjust() const { return vertical_adjust; }
     inline double get_fore_aft_adjust() const { return fore_aft_adjust; }
-    inline bool get_eject() const { return eject; }
+    inline bool get_ejection_seat( int which_seat ) const {
+        return eject[which_seat];
+    }
+    inline int get_eseat_status( int which_seat ) const {
+        return eseat_status[which_seat];
+    }
+    inline int get_cmd_selector_valve() const { return cmd_selector_valve; }
+    
 
     // controls/APU/
     inline int get_off_start_run() const { return off_start_run; }
@@ -571,7 +597,9 @@ public:
     void move_vertical_adjust( double amt );
     void set_fore_aft_adjust( double pos );
     void move_fore_aft_adjust( double amt );
-    void set_eject( bool val );
+    void set_ejection_seat( int which_seat, bool val );
+    void set_eseat_status( int which_seat, int val );
+    void set_cmd_selector_valve( int val );
 
     // controls/APU/
     void set_off_start_run( int pos );
