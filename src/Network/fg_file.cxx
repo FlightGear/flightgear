@@ -108,6 +108,13 @@ int FGFile::write( char *buf, int length ) {
 }
 
 
+// write null terminated string to a file
+int FGFile::writestring( char *str ) {
+    int length = strlen( str );
+    return write( str, length );
+}
+
+
 // close the port
 bool FGFile::close() {
     if ( std::close( fp ) == -1 ) {

@@ -62,6 +62,12 @@ int FGIOChannel::write( char *buf, int length ) {
 }
 
 
+// dummy process routine
+int FGIOChannel::writestring( char *str ) {
+    return false;
+}
+
+
 // dummy close routine
 bool FGIOChannel::close() {
     return false;

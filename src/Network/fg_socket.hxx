@@ -71,14 +71,17 @@ public:
     // open the file based on specified direction
     bool open( FGProtocol::fgProtocolDir dir );
 
-    // read data from file
+    // read data from socket
     int read( char *buf, int length );
 
-    // read data from file
+    // read data from socket
     int readline( char *buf, int length );
 
-    // write data to a file
+    // write data to a socket
     int write( char *buf, int length );
+
+    // write null terminated string to a socket
+    int writestring( char *str );
 
     // close file
     bool close();

@@ -70,8 +70,11 @@ public:
     // read a line of data, length is max size of input buffer
     int readline( char *buf, int length );
 
-    // write data to a file
+    // write data to port
     int write( char *buf, int length );
+
+    // write null terminated string to port
+    int writestring( char *str );
 
     // close port
     bool close();

@@ -27,8 +27,6 @@
 #include <sys/types.h>		// socket(), bind(), select(), accept()
 #include <sys/socket.h>		// socket(), bind(), listen(), accept()
 #include <netinet/in.h>		// struct sockaddr_in
-#include <netinet/tcp.h>	// #define TCP_NODELAY, this attempts to 
-                                // disable the Nagle algorithm.
 #include <netdb.h>		// gethostbyname()
 #include <unistd.h>		// select(), fsync()/fdatasync()
 
@@ -53,7 +51,12 @@ FGSocket::~FGSocket() {
 
 int FGSocket::make_server_socket () {
     struct sockaddr_in name;
+
+#if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
+    int length;
+#else
     socklen_t length;
+#endif
      
     // Create the socket.
     sock = socket (PF_INET, SOCK_STREAM, 0);
@@ -107,7 +110,11 @@ int FGSocket::make_client_socket () {
 
     // Connect this socket to the host and the port specified on the
     // command line
+#if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
+    bcopy(hp->h_addr, (char *)(&(name.sin_addr.s_addr)), hp->h_length);
+#else
     bcopy(hp->h_addr, &(name.sin_addr.s_addr), hp->h_length);
+#endif
     name.sin_port = htons(port);
 
     if ( connect(sock, (struct sockaddr *) &name, 
@@ -309,6 +316,13 @@ int FGSocket::write( char *buf, int length ) {
     }
 
     return length;
+}
+
+
+// write null terminated string to socket (server)
+int FGSocket::writestring( char *str ) {
+    int length = strlen( str );
+    return write( str, length );
 }
 
 

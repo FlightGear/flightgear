@@ -51,6 +51,7 @@ public:
     virtual int read( char *buf, int length );
     virtual int readline( char *buf, int length );
     virtual int write( char *buf, int length );
+    virtual int writestring( char *str );
     virtual bool close();
 };
 

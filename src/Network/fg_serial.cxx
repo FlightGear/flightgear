@@ -136,6 +136,13 @@ int FGSerial::write( char *buf, int length ) {
 }
 
 
+// write null terminated string to port
+int FGSerial::writestring( char *str ) {
+    int length = strlen( str );
+    return write( str, length );
+}
+
+
 // close the port
 bool FGSerial::close() {
     if ( ! port.close_port() ) {

@@ -66,6 +66,9 @@ public:
     // write data to a file
     int write( char *buf, int length );
 
+    // write null terminated string to a file
+    int writestring( char *str );
+
     // close file
     bool close();
 
