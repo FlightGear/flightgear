@@ -911,7 +911,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         if ( general.get_glDepthBits() > 16 ) {
             sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
         } else {
-            sgScaleVec3( lift_vec, 0.0 + agl / 20.0 );
+            sgScaleVec3( lift_vec, 0.0 + agl / 150.0 );
         }
 
         sgVec3 lt_trans;
@@ -954,7 +954,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         if ( general.get_glDepthBits() > 16 ) {
             sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
         } else {
-            sgScaleVec3( lift_vec, 0.0 + agl / 20.0 );
+            sgScaleVec3( lift_vec, 0.0 + agl / 150.0 );
         }
 
         sgVec3 lt_trans;
