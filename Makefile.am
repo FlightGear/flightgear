@@ -7,8 +7,8 @@ EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.pl \
 
 dist-hook:
 	(cd $(top_srcdir); $(HOME)/projects/FlightGear-0.7/admin/am2dsp.pl)
-	tar --exclude docs-mini/CVS --exclude hints/CVS -cf - docs-mini hints \
-		| (cd $(distdir); tar xvf -)
+	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
+		-cf - docs-mini hints) | (cd $(distdir); tar xvf -)
 	# tar cf - Simulator/FDM/JSBsim/aircraft Simulator/FDM/JSBsim/engine | (cd $(distdir); tar xvf -)
 
 
