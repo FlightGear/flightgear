@@ -95,19 +95,19 @@ FGJSBsim::FGJSBsim( double dt )
 
     result = fdmex->LoadModel( aircraft_path.str(),
                                engine_path.str(),
-                               fgGetString("/sim/aircraft") );
+                               fgGetString("/sim/aero") );
     
     if (result) {
-      SG_LOG( SG_FLIGHT, SG_INFO, "  loaded aircraft.");
+      SG_LOG( SG_FLIGHT, SG_INFO, "  loaded aero.");
     } else {
       SG_LOG( SG_FLIGHT, SG_INFO,
-              "  aircraft does not exist (you may have mis-typed the name).");
+              "  aero does not exist (you may have mis-typed the name).");
       throw(-1);
     }
 
     SG_LOG( SG_FLIGHT, SG_INFO, "" );
     SG_LOG( SG_FLIGHT, SG_INFO, "" );
-    SG_LOG( SG_FLIGHT, SG_INFO, "After loading aircraft definition file ..." );
+    SG_LOG( SG_FLIGHT, SG_INFO, "After loading aero definition file ..." );
 
     int Neng = Propulsion->GetNumEngines();
     SG_LOG( SG_FLIGHT, SG_INFO, "num engines = " << Neng );
@@ -143,7 +143,7 @@ FGJSBsim::FGJSBsim( double dt )
     rudder_trim = fgGetNode("/fdm/trim/rudder", true );
     
     
-    stall_warning = fgGetNode("/sim/aircraft/alarms/stall-warning",true);
+    stall_warning = fgGetNode("/sim/aero/alarms/stall-warning",true);
     stall_warning->setDoubleValue(0);
 }
 

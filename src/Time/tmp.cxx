@@ -48,6 +48,11 @@ void fgUpdateLocalTime() {
     SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
 
+    cout << "updateLocal("
+         << longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS
+         << ", "
+         << latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS
+         << ", " << zone.str() << ")" << endl;
     globals->get_time_params()->updateLocal( longitude->getDoubleValue()
 					       * SGD_DEGREES_TO_RADIANS, 
 					     latitude->getDoubleValue()

@@ -566,7 +566,7 @@ bool fgInitSubsystems( void ) {
 	} else {
 	    SG_LOG(SG_GENERAL, SG_ALERT,
 		   "Unrecognized flight model '" << model
-		   << ", can't init aircraft");
+		   << "', cannot init flight dynamics model.");
 	    exit(-1);
 	}
     } catch ( ... ) {
@@ -942,7 +942,7 @@ void fgReInitSubsystems( void )
 	} else {
 	    SG_LOG(SG_GENERAL, SG_ALERT,
 		   "Unrecognized flight model '" << model
-		   << ", can't init aircraft");
+		   << "', cannot init flight dynamics model.");
 	    exit(-1);
 	}
     } catch ( ... ) {

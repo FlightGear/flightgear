@@ -41,7 +41,7 @@ private:
     void snap_shot(void);
     double time_step;
     SGPropertyNode *speed_up;
-    SGPropertyNode *aircraft;
+    SGPropertyNode *aero;
     
 public:
 

@@ -43,12 +43,12 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     set_delta_t( dt );
 
     speed_up = fgGetNode("/sim/speed-up", true);
-    aircraft = fgGetNode("/sim/aircraft", true);
+    aero = fgGetNode("/sim/aero", true);
     
-    ls_toplevel_init( 0.0, (char *)(aircraft->getStringValue().c_str()) );
+    ls_toplevel_init( 0.0, (char *)(aero->getStringValue().c_str()) );
 
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
-    if ( aircraft->getStringValue() == "c172" ) {
+    if ( aero->getStringValue() == "c172" ) {
 	copy_to_LaRCsim(); // initialize all of LaRCsim's vars
 
 	//this should go away someday -- formerly done in fg_init.cxx
@@ -98,7 +98,7 @@ void FGLaRCsim::init() {
 // Run an iteration of the EOM (equations of motion)
 bool FGLaRCsim::update( int multiloop ) {
 
-    if ( aircraft->getStringValue() == "c172" ) {
+    if ( aero->getStringValue() == "c172" ) {
 	// set control inputs
 	// cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
 	eng.set_IAS( V_calibrated_kts );
@@ -172,7 +172,7 @@ bool FGLaRCsim::update( int multiloop ) {
         speed_up->getIntValue();
     Flap_handle = 30.0 * globals->get_controls()->get_flaps();
 
-    if ( aircraft->getStringValue() == "c172" ) {
+    if ( aero->getStringValue() == "c172" ) {
 	Use_External_Engine = 1;
     } else {
 	Use_External_Engine = 0;
@@ -544,7 +544,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Climb_Rate( -1 * V_down );
     // cout << "climb rate = " << -V_down * 60 << endl;
 
-    if ( aircraft->getStringValue() == "uiuc" ) {
+    if ( aero->getStringValue() == "uiuc" ) {
 	if (pilot_elev_no) {
 	    globals->get_controls()->set_elevator(Long_control);
 	    globals->get_controls()->set_elevator_trim(Long_trim);

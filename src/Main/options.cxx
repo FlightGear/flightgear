@@ -160,7 +160,7 @@ fgSetDefaults ()
 
 				// Flight Model options
     fgSetString("/sim/flight-model", "jsb");
-    fgSetString("/sim/aircraft", "c172");
+    fgSetString("/sim/aero", "c172");
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
     fgSetInt("/sim/speed-up", 1);
     fgSetBool("/sim/startup/trim", false);
@@ -662,8 +662,8 @@ parse_option (const string& arg)
         globals->set_fg_scenery(arg.substr( 13 ));
     } else if ( arg.find( "--fdm=" ) == 0 ) {
 	fgSetString("/sim/flight-model", arg.substr(6));
-    } else if ( arg.find( "--aircraft=" ) == 0 ) {
-	fgSetString("/sim/aircraft", arg.substr(11));
+    } else if ( arg.find( "--aero=" ) == 0 ) {
+	fgSetString("/sim/aero", arg.substr(7));
     } else if ( arg.find( "--aircraft-dir=" ) == 0 ) {
         fgSetString("/sim/aircraft-dir", arg.substr(15));
     } else if ( arg.find( "--model-hz=" ) == 0 ) {
@@ -1092,7 +1092,7 @@ fgUsage ()
     cout << "\t--fdm=abcd:  selects the core flight model code." << endl;
     cout << "\t\tcan be one of jsb, larcsim, magic, null, external, balloon, or ada"
 	 << endl;
-    cout << "\t--aircraft=abcd:  aircraft model to load" << endl;
+    cout << "\t--aero=abcd:  aerodynamics model to load" << endl;
     cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
 	 << endl;
     cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;

@@ -188,7 +188,7 @@ FGFX::init ()
     sprintf(buf, "/engines/engine[%d]/cranking", i);
     _engine_cranking_prop[i] = fgGetNode(buf, true);
   }
-  _stall_warning_prop = fgGetNode("/sim/aircraft/alarms/stall-warning", true);
+  _stall_warning_prop = fgGetNode("/sim/aero/alarms/stall-warning", true);
   _vc_prop = fgGetNode("/velocities/airspeed-kt", true);
   _flaps_prop = fgGetNode("/controls/flaps", true);
   _gear_prop = fgGetNode("/controls/gear-down", true);
