@@ -93,9 +93,7 @@ FGColumnVector3& FGForce::GetBodyForces(void) {
   vDXYZ(2) =  (vXYZn(2) - fdmex->GetMassBalance()->GetXYZcg(2))*INCHTOFT;  //cg and rp values are in inches
   vDXYZ(3) = -(vXYZn(3) - fdmex->GetMassBalance()->GetXYZcg(3))*INCHTOFT;
 
-  // include rotational effects. vH will be set in descendent class such as
-  // FGPropeller, and in most other cases will be zero.
-  vM = vMn + vDXYZ*vFb + fdmex->GetRotation()->GetPQR()*vH;
+  vM = vMn + vDXYZ*vFb;
 
   return vFb;
 }

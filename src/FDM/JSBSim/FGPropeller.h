@@ -41,6 +41,7 @@ INCLUDES
 #include "FGThruster.h"
 #include "FGTable.h"
 #include "FGTranslation.h"
+#include "FGRotation.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -114,6 +115,10 @@ public:
       propellers.
       @param pitch the pitch of the blade in degrees. */
   void SetPitch(float pitch) {Pitch = pitch;}
+  
+  void SetPFactor(double pf) {P_Factor = pf;}
+  
+  void SetSense(double s) { Sense = s;}
 
   /// Retrieves the pitch of the propeller in degrees.
   float GetPitch(void)         { return Pitch;         }

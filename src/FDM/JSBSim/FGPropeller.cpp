@@ -67,10 +67,6 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
       *Prop_cfg >> MinPitch;
     } else if (token == "MAXPITCH") {
       *Prop_cfg >> MaxPitch;
-    } else if (token == "P_FACTOR") {
-      *Prop_cfg >> P_Factor;
-    } else if (token == "SENSE") {
-      *Prop_cfg >> Sense;
     } else if (token == "EFFICIENCY") {
       *Prop_cfg >> rows >> cols;
       if (cols == 1) Efficiency = new FGTable(rows);
@@ -101,14 +97,6 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
     cout << "      Number of Blades  = " << numBlades << endl;
     cout << "      Minimum Pitch  = " << MinPitch << endl;
     cout << "      Maximum Pitch  = " << MaxPitch << endl;
-    if (P_Factor > 0.0) cout << "      P-Factor = " << P_Factor << endl;
-    if (Sense > 0.0) {
-      cout << "      Rotation Sense = CW (viewed from pilot looking forward)" << endl;
-    } else if (Sense < 0.0) {
-      cout << "      Rotation Sense = CCW (viewed from pilot looking forward)" << endl;
-    } else {
-      cout << "      Rotation Sense = indeterminate" << endl;
-    }
     cout << "      Efficiency: " <<  endl;
     Efficiency->Print();
     cout << "      Thrust Coefficient: " <<  endl;
@@ -180,8 +168,10 @@ float FGPropeller::Calculate(float PowerAvailable)
   vFn(1) = Thrust;
   omega = RPS*2.0*M_PI;
 
-  // Must consider rotated axis for propeller (V-22, helicopter case)
-  // FIX THIS !!
+  // The Ixx value and rotation speed given below are for rotation about the
+  // natural axis of the engine. The transform takes place in the base class
+  // FGForce::GetBodyForces() function.
+
   vH(eX) = Ixx*omega*fabs(Sense)/Sense;
   vH(eY) = 0.0;
   vH(eZ) = 0.0;
@@ -190,6 +180,9 @@ float FGPropeller::Calculate(float PowerAvailable)
 
   Torque = PowerAvailable / omega;
   RPM = (RPS + ((Torque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
+
+  vMn = fdmex->GetRotation()->GetPQR()*vH + Torque*Sense;
+
   return Thrust; // return thrust in pounds
 }
 
