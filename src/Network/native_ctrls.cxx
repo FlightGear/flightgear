@@ -125,6 +125,16 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         node = fgGetNode("/controls/engines/engine", i );
         starter = fgGetNode("/systems/electrical/outputs/starter", i );
         fuelpump = fgGetNode("/systems/electrical/outputs/fuel-pump", i );
+
+        tempnode = node->getChild("master-bat");
+        if ( tempnode != NULL ) {
+            net->master_bat[i] = tempnode->getBoolValue();
+        }
+        tempnode = node->getChild("master-alt");
+        if ( tempnode != NULL ) {
+            net->master_alt[i] = tempnode->getBoolValue();
+        }
+
         net->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	net->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
 	net->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
@@ -178,15 +188,8 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     net->brake_right = node->getChild("brake-right")->getDoubleValue();
     net->brake_parking = node->getChild("brake-parking")->getDoubleValue();
 
-    node = fgGetNode("/controls/switches", true);
-    tempnode = node->getChild("master-bat");
-    if ( tempnode != NULL ) {
-        net->master_bat = tempnode->getBoolValue();
-    }
-    tempnode = node->getChild("master-alt");
-    if ( tempnode != NULL ) {
-        net->master_alt = tempnode->getBoolValue();
-    }
+    net->gear_handle = fgGetBool( "controls/gear/gear-down" );
+
     tempnode = node->getChild("master-avionics");
     if ( tempnode != NULL ) {
         net->master_avionics = tempnode->getBoolValue();
@@ -232,6 +235,8 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         net->flaps_power = htonl(net->flaps_power);
         net->flap_motor_ok = htonl(net->flap_motor_ok);
         for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+            net->master_bat[i] = htonl(net->master_bat[i]);
+            net->master_alt[i] = htonl(net->master_alt[i]);
             net->magnetos[i] = htonl(net->magnetos[i]);
             net->starter_power[i] = htonl(net->starter_power[i]);
             htond(net->throttle[i]);
@@ -254,8 +259,6 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         htond(net->brake_right);
         htond(net->brake_parking);
         net->gear_handle = htonl(net->gear_handle);
-        net->master_bat = htonl(net->master_bat);
-        net->master_alt = htonl(net->master_alt);
         net->master_avionics = htonl(net->master_avionics);
         htond(net->wind_speed_kt);
         htond(net->wind_dir_deg);
@@ -290,6 +293,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         net->flap_motor_ok = htonl(net->flap_motor_ok);
         net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < net->num_engines; ++i ) {
+            net->master_bat[i] = htonl(net->master_bat[i]);
+            net->master_alt[i] = htonl(net->master_alt[i]);
             net->magnetos[i] = htonl(net->magnetos[i]);
             net->starter_power[i] = htonl(net->starter_power[i]);
             htond(net->throttle[i]);
@@ -311,8 +316,6 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         htond(net->brake_right);
         htond(net->brake_parking);
         net->gear_handle = htonl(net->gear_handle);
-        net->master_bat = htonl(net->master_bat);
-        net->master_alt = htonl(net->master_alt);
         net->master_avionics = htonl(net->master_avionics);
         htond(net->wind_speed_kt);
         htond(net->wind_dir_deg);

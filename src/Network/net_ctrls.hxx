@@ -16,7 +16,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 19;
+const int FG_NET_CTRLS_VERSION = 20;
 
 
 // Define a structure containing the control parameters
@@ -46,6 +46,8 @@ public:
 
     // Engine controls
     int num_engines;		         // number of valid engines
+    bool master_bat[FG_MAX_ENGINES];
+    bool master_alt[FG_MAX_ENGINES];
     int magnetos[FG_MAX_ENGINES];
     bool starter_power[FG_MAX_ENGINES];  // true = starter power
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
@@ -57,7 +59,7 @@ public:
     bool engine_ok[FG_MAX_ENGINES];
     bool mag_left_ok[FG_MAX_ENGINES];
     bool mag_right_ok[FG_MAX_ENGINES];
-    bool spark_plugs_ok[FG_MAX_ENGINES]; // false = fouled plugs
+    bool spark_plugs_ok[FG_MAX_ENGINES];  // false = fouled plugs
     int oil_press_status[FG_MAX_ENGINES]; // 0 = normal, 1 = low, 2 = full fail
     bool fuel_pump_ok[FG_MAX_ENGINES];
 
@@ -74,8 +76,6 @@ public:
     bool gear_handle; // true=gear handle down; false= gear handle up
 
     // Switches
-    bool master_bat;
-    bool master_alt;
     bool master_avionics;
 
     // wind and turbulance
