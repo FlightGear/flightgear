@@ -25,9 +25,8 @@
 #include <plib/ssg.h>
 
 #include <simgear/math/point3d.hxx>
+#include <simgear/scene/model/model.hxx>
 #include <simgear/scene/model/placement.hxx>
-
-#include <Model/model.hxx>
 
 
 /*****************************************************************

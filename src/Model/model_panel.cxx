@@ -22,10 +22,10 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/model/animation.hxx>
+#include <simgear/scene/model/model.hxx>
 
 #include "panelnode.hxx"
 
-#include "model.hxx"
 #include "model_panel.hxx"
 
 SG_USING_STD(vector);

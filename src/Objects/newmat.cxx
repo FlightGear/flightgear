@@ -40,10 +40,10 @@ SG_USING_STD(map);
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/scene/model/loader.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Model/loader.hxx>
 
 #include "newmat.hxx"
 

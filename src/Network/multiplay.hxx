@@ -25,17 +25,22 @@
 
 #define FG_MULTIPLAY_HID "$Id$"
 
-#include STL_STRING
-SG_USING_STD(string);
-
-#include "protocol.hxx"
 #include <simgear/compiler.h>
+
+#include STL_STRING
+
+#include <simgear/scene/model/model.hxx>
+
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
-#include <Model/model.hxx>
 #include <MultiPlayer/multiplaytxmgr.hxx>
 #include <MultiPlayer/multiplayrxmgr.hxx>
+
+#include "protocol.hxx"
+
+SG_USING_STD(string);
+
 
 /****************************************************************
 * @version $Id$

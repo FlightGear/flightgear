@@ -78,7 +78,9 @@ SG_USING_STD(endl);
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/animation.hxx>
+#include <simgear/scene/model/loader.hxx>
 #include <simgear/scene/model/location.hxx>
+#include <simgear/scene/model/model.hxx>
 #ifdef FG_USE_CLOUDS_3D
 #  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
 #  include <simgear/sky/clouds3d/SkyUtil.hpp>
@@ -104,8 +106,6 @@ SG_USING_STD(endl);
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <Model/acmodel.hxx>
-#include <Model/loader.hxx>
-#include <Model/model.hxx>
 #include <Model/modelmgr.hxx>
 #include <Model/panelnode.hxx>
 #ifdef FG_NETWORK_OLK

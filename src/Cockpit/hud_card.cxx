@@ -435,7 +435,7 @@ draw( void ) //  (HUD_scale * pscale )
             i = (int)vmin; // N
 
             if(zoom ==1) { 
-                zoomed_scale(vmin,vmax); //suma
+                zoomed_scale((int)vmin,(int)vmax); //suma
             } else {
                 for( ; i <last ; i++ ) {
                     condition = true;
@@ -742,7 +742,7 @@ draw( void ) //  (HUD_scale * pscale )
             //  i    = FloatToInt(vmin);
 
             if(zoom ==1) {  
-                zoomed_scale(vmin,vmax); //suma
+                zoomed_scale((int)vmin,(int)vmax); //suma
             } else  { 
                 //default to zoom=0
                 last = (int)vmax + 1;
@@ -909,7 +909,7 @@ zoomed_scale(int first, int last)
     RECT   scrn_rect = get_location();
     UINT options     = get_options();
     char TextScale[80];
-    int disp_val = 0;
+    // int disp_val = 0;
     int data[80];
  
     float x,y,w,h,bottom;

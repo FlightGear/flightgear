@@ -10,11 +10,11 @@
 #include <plib/ssg.h>
 
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/scene/model/model.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 
-#include "model.hxx"
 
 #include "modelmgr.hxx"
 

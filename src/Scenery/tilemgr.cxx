@@ -34,11 +34,11 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 #include <simgear/misc/exception.hxx>
+#include <simgear/scene/model/loader.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewer.hxx>
-#include <Model/loader.hxx>
 #include <Objects/obj.hxx>
 
 #include "newcache.hxx"

@@ -291,7 +291,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
             value_nodes.push_back(selection_node->getChild(q));
 
         char ** entries = make_char_array(value_nodes.size());
-        for (int i = 0, j = value_nodes.size() - 1;
+        for (unsigned int i = 0, j = value_nodes.size() - 1;
              i < value_nodes.size();
              i++, j--)
             entries[i] = strdup((char *)value_nodes[i]->getName());

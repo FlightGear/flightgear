@@ -52,8 +52,9 @@
 #include <plib/netSocket.h>
 #include <plib/sg.h>
 
+#include <simgear/scene/model/loader.hxx>
+
 #include <Main/globals.hxx>
-#include <Model/loader.hxx>
 #include <Scenery/scenery.hxx>
 
 
