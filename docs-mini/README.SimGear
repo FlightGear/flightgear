@@ -1,0 +1,22 @@
+21 February 2000 - CLO
+
+As of version 0.7.2, FlightGear now requires the SimGear supporting
+libraries to be installed before configuring and building FlightGear.
+You must also have SimGear installed if you build the TerraGear
+scenery creating tools (TerraGear is not required to run the
+simulator).
+
+You can get a copy of SimGear from the same place you get FlightGear:
+
+    ftp://ftp.flightgear.org/pub/fgfs/Source/
+
+SimGear build notes:
+
+You should be able to just run the standard "./configure; make; make
+install" to configure, build, and install SimGear.  By default,
+SimGear is installed in /usr/local/lib/libsg*.a and
+/usr/local/include/simgear/.
+
+You may specify an alternate prefix, but then you may then also have
+to do addition things to add your non-standard include and lib paths
+to your compilers search path when you build FlightGear.
