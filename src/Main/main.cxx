@@ -767,7 +767,10 @@ void fgRenderFrame() {
 	ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
 
         // change punch through and then draw taxi lighting
-	glFogf (GL_FOG_DENSITY, taxi_exp2_punch_through);
+	glFogf ( GL_FOG_DENSITY, fog_exp2_density );
+        // sgVec3 taxi_fog;
+        // sgSetVec3( taxi_fog, 0.0, 0.0, 0.0 );
+        // glFogfv ( GL_FOG_COLOR, taxi_fog );
 	ssgCullAndDraw( globals->get_scenery()->get_taxi_lights_root() );
 
         // clean up lighting
@@ -1548,7 +1551,7 @@ static bool fgMainInit( int argc, char **argv ) {
 	cerr << endl << "Base package check failed ... " \
 	     << "Found version " << base_version << " at: " \
              << globals->get_fg_root() << endl;
-        cerr << "Please upgrade to version" << required_version << endl;
+        cerr << "Please upgrade to version: " << required_version << endl;
 	exit(-1);
     }
 

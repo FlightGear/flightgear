@@ -935,14 +935,16 @@ static void fgSetDistOrAltFromGlideSlope() {
         alt = fabs(od*tan(gs)) + apt_elev;
         fgSetDouble("/sim/presets/altitude-ft", alt);
         fgSetBool("/sim/presets/onground", false);
-        SG_LOG(SG_GENERAL,SG_INFO, "Calculated altitude as: " << alt  << " ft");
+        SG_LOG( SG_GENERAL, SG_INFO, "Calculated altitude as: "
+                << alt  << " ft" );
     } else if( fabs(gs) > 0.01 && alt > 0 && fabs(od) < 0.1) {
         // set offset-distance from glideslope and altitude
         od  = (alt - apt_elev) / tan(gs);
         od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
         fgSetDouble("/sim/presets/offset-distance", od);
-        SG_LOG(SG_GENERAL, SG_INFO, "Calculated offset distance as: " 
-                                       << od  << " nm");
+        fgSetBool("/sim/presets/onground", false);
+        SG_LOG( SG_GENERAL, SG_INFO, "Calculated offset distance as: " 
+                << od  << " nm" );
     } else if( fabs(gs) > 0.01 ) {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Glideslope given but not altitude or offset-distance." );
