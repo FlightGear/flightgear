@@ -84,9 +84,12 @@ FGRadioStack::FGRadioStack() :
     alt_node(fgGetNode("/position/altitude-ft", true)),
     need_update(true),
     nav1_radial(0.0),
-    nav1_dme_dist(0.0),
     nav2_radial(0.0),
-    nav2_dme_dist(0.0)
+    dme_freq(0.0),
+    dme_dist(0.0),
+    dme_prev_dist(0.0),
+    dme_spd(0.0),
+    dme_ete(0.0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -99,6 +102,7 @@ FGRadioStack::FGRadioStack() :
     term_tbl = new SGInterpTable( term.str() );
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
+    dme_last_time.stamp();
 }
 
 
@@ -157,10 +161,6 @@ FGRadioStack::bind ()
     fgTie("/radios/nav[0]/to-flag", this, &FGRadioStack::get_nav1_to_flag);
     fgTie("/radios/nav[0]/from-flag", this, &FGRadioStack::get_nav1_from_flag);
     fgTie("/radios/nav[0]/in-range", this, &FGRadioStack::get_nav1_inrange);
-    fgTie("/radios/nav[0]/dme/distance-nm", this,
-	  &FGRadioStack::get_nav1_dme_dist);
-    fgTie("/radios/nav[0]/dme/in-range", this,
-	  &FGRadioStack::get_nav1_dme_inrange);
     fgTie("/radios/nav[0]/heading-needle-deflection", this,
 	  &FGRadioStack::get_nav1_heading_needle_deflection);
     fgTie("/radios/nav[0]/gs-needle-deflection", this,
@@ -192,14 +192,20 @@ FGRadioStack::bind ()
     fgTie("/radios/nav[1]/to-flag", this, &FGRadioStack::get_nav2_to_flag);
     fgTie("/radios/nav[1]/from-flag", this, &FGRadioStack::get_nav2_from_flag);
     fgTie("/radios/nav[1]/in-range", this, &FGRadioStack::get_nav2_inrange);
-    fgTie("/radios/nav[1]/dme/distance-nm", this,
-	  &FGRadioStack::get_nav2_dme_dist);
-    fgTie("/radios/nav[1]/dme/in-range", this,
-	  &FGRadioStack::get_nav2_dme_inrange);
     fgTie("/radios/nav[1]/heading-needle-deflection", this,
 	  &FGRadioStack::get_nav2_heading_needle_deflection);
     fgTie("/radios/nav[1]/gs-needle-deflection", this,
 	  &FGRadioStack::get_nav2_gs_needle_deflection);
+
+				// User inputs
+    fgTie("/radios/dme/frequencies/selected-khz", this,
+	  &FGRadioStack::get_dme_freq, &FGRadioStack::set_adf_freq);
+
+				// Radio outputs
+    fgTie("/radios/dme/in-range", this, &FGRadioStack::get_dme_inrange);
+    fgTie("/radios/dme/distance-nm", this, &FGRadioStack::get_dme_dist);
+    fgTie("/radios/dme/speed-kt", this, &FGRadioStack::get_dme_spd);
+    fgTie("/radios/dme/ete-min", this, &FGRadioStack::get_dme_ete);
 
 				// User inputs
     fgTie("/radios/adf/frequencies/selected-khz", this,
@@ -240,8 +246,6 @@ FGRadioStack::unbind ()
     fgUntie("/radios/nav[0]/to-flag");
     fgUntie("/radios/nav[0]/from-flag");
     fgUntie("/radios/nav[0]/in-range");
-    fgUntie("/radios/nav[0]/dme/distance-nm");
-    fgUntie("/radios/nav[0]/dme/in-range");
     fgUntie("/radios/nav[0]/heading-needle-deflection");
     fgUntie("/radios/nav[0]/gs-needle-deflection");
 
@@ -254,10 +258,16 @@ FGRadioStack::unbind ()
     fgUntie("/radios/nav[1]/to-flag");
     fgUntie("/radios/nav[1]/from-flag");
     fgUntie("/radios/nav[1]/in-range");
-    fgUntie("/radios/nav[1]/dme/distance-nm");
-    fgUntie("/radios/nav[1]/dme/in-range");
     fgUntie("/radios/nav[1]/heading-needle-deflection");
     fgUntie("/radios/nav[1]/gs-needle-deflection");
+
+    fgUntie("/radios/dme/frequencies/selected-khz");
+
+				// Radio outputs
+    fgUntie("/radios/dme/in-range");
+    fgUntie("/radios/dme/distance-nm");
+    fgUntie("/radios/dme/speed-kt");
+    fgUntie("/radios/dme/ete-min");
 
     fgUntie("/radios/adf/frequencies/selected-khz");
     fgUntie("/radios/adf/frequencies/standby-khz");
@@ -341,17 +351,13 @@ FGRadioStack::update()
     Point3D station;
     double az1, az2, s;
 
+    ////////////////////////////////////////////////////////////////////////
+    // Nav1.
+    ////////////////////////////////////////////////////////////////////////
+
     if ( nav1_valid ) {
 	station = Point3D( nav1_x, nav1_y, nav1_z );
 	nav1_loc_dist = aircraft.distance3D( station );
-
-	if ( nav1_has_dme ) {
-	    // staightline distance
-	    station = Point3D( nav1_dme_x, nav1_dme_y, nav1_dme_z );
-	    nav1_dme_dist = aircraft.distance3D( station );
-	} else {
-	    nav1_dme_dist = 0.0;
-	}
 
 	if ( nav1_has_gs ) {
 	    station = Point3D( nav1_gs_x, nav1_gs_y, nav1_gs_z );
@@ -397,7 +403,6 @@ FGRadioStack::update()
 	}
     } else {
 	nav1_inrange = false;
-	nav1_dme_dist = 0.0;
 	// cout << "not picking up vor. :-(" << endl;
     }
 
@@ -437,17 +442,14 @@ FGRadioStack::update()
     }
 #endif
 
+
+    ////////////////////////////////////////////////////////////////////////
+    // Nav2.
+    ////////////////////////////////////////////////////////////////////////
+
     if ( nav2_valid ) {
 	station = Point3D( nav2_x, nav2_y, nav2_z );
 	nav2_loc_dist = aircraft.distance3D( station );
-
-	if ( nav2_has_dme ) {
-	    // staightline distance
-	    station = Point3D( nav2_dme_x, nav2_dme_y, nav2_dme_z );
-	    nav2_dme_dist = aircraft.distance3D( station );
-	} else {
-	    nav2_dme_dist = 0.0;
-	}
 
 	if ( nav2_has_gs ) {
 	    station = Point3D( nav2_gs_x, nav2_gs_y, nav2_gs_z );
@@ -492,7 +494,6 @@ FGRadioStack::update()
 	}
     } else {
 	nav2_inrange = false;
-	nav2_dme_dist = 0.0;
 	// cout << "not picking up vor. :-(" << endl;
     }
 
@@ -532,7 +533,58 @@ FGRadioStack::update()
     }
 #endif
 
-    // adf
+
+    ////////////////////////////////////////////////////////////////////////
+    // DME.
+    ////////////////////////////////////////////////////////////////////////
+
+    if (dme_valid) {
+	station = Point3D( dme_x, dme_y, dme_z );
+	dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
+	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
+	if (dme_dist < dme_effective_range * SG_NM_TO_METER) {
+	  dme_inrange = true;
+	} else if (dme_dist < 2 * dme_effective_range * SG_NM_TO_METER) {
+	  dme_inrange = sg_random() <
+	    (2 * dme_effective_range * SG_NM_TO_METER - dme_dist) /
+	    (dme_effective_range * SG_NM_TO_METER);
+	} else {
+	  dme_inrange = false;
+	}
+	if (dme_inrange) {
+	  SGTimeStamp current_time;
+	  station = Point3D( dme_x, dme_y, dme_z );
+	  dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
+	  current_time.stamp();
+	  long dMs = (current_time - dme_last_time) / 1000;
+				// Update every second
+	  if (dMs >= 1000) {
+	    double dDist = dme_dist - dme_prev_dist;
+	    dme_spd = fabs((dDist/dMs) * 3600000);
+				// FIXME: the panel should be able to
+				// handle this!!!
+	    if (dme_spd > 999.0)
+	      dme_spd = 999.0;
+	    dme_ete = fabs((dme_dist/dme_spd) * 60.0);
+				// FIXME: the panel should be able to
+				// handle this!!!
+	    if (dme_ete > 99.0)
+	      dme_ete = 99.0;
+	    dme_prev_dist = dme_dist;
+	    dme_last_time.stamp();
+	  }
+	}
+    } else {
+      dme_inrange = false;
+      dme_dist = 0.0;
+      dme_prev_dist = 0.0;
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // ADF
+    ////////////////////////////////////////////////////////////////////////
+
     if ( adf_valid ) {
 	// staightline distance
 	station = Point3D( adf_x, adf_y, adf_z );
@@ -630,7 +682,25 @@ void FGRadioStack::search()
     double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
-    // nav1
+				// FIXME: the panel should handle this
+				// don't worry about overhead for now,
+				// since this is handled only periodically
+    int dme_switch_pos = fgGetInt("/panel/dme/switch-position");
+    if (dme_switch_pos == 0) {
+      dme_freq = 0;
+      dme_inrange = false;
+    } else if (dme_switch_pos == 1) {
+      if (dme_freq != nav1_freq) {
+	dme_freq = nav1_freq;
+	need_update = true;
+      }
+    } else if (dme_switch_pos == 3) {
+      if (dme_freq != nav2_freq) {
+	dme_freq = nav2_freq;
+	need_update = true;
+      }
+    }
+
     FGILS ils;
     FGNav nav;
 
@@ -639,6 +709,12 @@ void FGRadioStack::search()
     static string last_adf_ident = "";
     static bool last_nav1_vor = false;
     static bool last_nav2_vor = false;
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // Nav1.
+    ////////////////////////////////////////////////////////////////////////
+
     if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
 	nav1_ident = ils.get_locident();
 	nav1_valid = true;
@@ -654,8 +730,6 @@ void FGRadioStack::search()
 	    nav1_loclat = ils.get_loclat();
 	    nav1_gslon = ils.get_gslon();
 	    nav1_gslat = ils.get_gslat();
-	    nav1_dmelon = ils.get_dmelon();
-	    nav1_dmelat = ils.get_dmelat();
 	    nav1_elev = ils.get_gselev();
 	    nav1_magvar = 0;
 	    nav1_range = FG_ILS_DEFAULT_RANGE;
@@ -670,9 +744,6 @@ void FGRadioStack::search()
 	    nav1_gs_x = ils.get_gs_x();
 	    nav1_gs_y = ils.get_gs_y();
 	    nav1_gs_z = ils.get_gs_z();
-	    nav1_dme_x = ils.get_dme_x();
-	    nav1_dme_y = ils.get_dme_y();
-	    nav1_dme_z = ils.get_dme_z();
 
 #ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
@@ -722,9 +793,9 @@ void FGRadioStack::search()
 	    nav1_effective_range = adjustNavRange(nav1_elev, elev, nav1_range);
 	    nav1_target_gs = 0.0;
 	    nav1_radial = nav1_sel_radial;
-	    nav1_x = nav1_dme_x = nav.get_x();
-	    nav1_y = nav1_dme_y = nav.get_y();
-	    nav1_z = nav1_dme_z = nav.get_z();
+	    nav1_x = nav.get_x();
+	    nav1_y = nav.get_y();
+	    nav1_z = nav.get_z();
 
 #ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
@@ -759,7 +830,6 @@ void FGRadioStack::search()
 	nav1_valid = false;
 	nav1_ident = "";
 	nav1_radial = 0;
-	nav1_dme_dist = 0;
 	nav1_trans_ident = "";
 	last_nav1_ident = "";
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -768,6 +838,11 @@ void FGRadioStack::search()
 #endif
 	// cout << "not picking up vor1. :-(" << endl;
     }
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // Nav2.
+    ////////////////////////////////////////////////////////////////////////
 
     if ( current_ilslist->query( lon, lat, elev, nav2_freq, &ils ) ) {
 	nav2_ident = ils.get_locident();
@@ -796,9 +871,6 @@ void FGRadioStack::search()
 	    nav2_gs_x = ils.get_gs_x();
 	    nav2_gs_y = ils.get_gs_y();
 	    nav2_gs_z = ils.get_gs_z();
-	    nav2_dme_x = ils.get_dme_x();
-	    nav2_dme_y = ils.get_dme_y();
-	    nav2_dme_z = ils.get_dme_z();
 
 #ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
@@ -847,9 +919,9 @@ void FGRadioStack::search()
 	    nav2_effective_range = adjustNavRange(nav2_elev, elev, nav2_range);
 	    nav2_target_gs = 0.0;
 	    nav2_radial = nav2_sel_radial;
-	    nav2_x = nav2_dme_x = nav.get_x();
-	    nav2_y = nav2_dme_y = nav.get_y();
-	    nav2_z = nav2_dme_z = nav.get_z();
+	    nav2_x = nav.get_x();
+	    nav2_y = nav.get_y();
+	    nav2_z = nav.get_z();
 
 #ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
@@ -884,7 +956,6 @@ void FGRadioStack::search()
 	nav2_valid = false;
 	nav2_ident = "";
 	nav2_radial = 0;
-	nav2_dme_dist = 0;
 	nav2_trans_ident = "";
 	last_nav2_ident = "";
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -893,6 +964,45 @@ void FGRadioStack::search()
 #endif
 	// cout << "not picking up vor1. :-(" << endl;
     }
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // DME
+    ////////////////////////////////////////////////////////////////////////
+
+    if ( current_ilslist->query( lon, lat, elev, dme_freq, &ils ) ) {
+      if (ils.get_has_dme()) {
+	dme_valid = true;
+	dme_lon = ils.get_loclon();
+	dme_lat = ils.get_loclat();
+	dme_elev = ils.get_gselev();
+	dme_range = FG_ILS_DEFAULT_RANGE;
+	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
+	dme_x = ils.get_dme_x();
+	dme_y = ils.get_dme_y();
+	dme_z = ils.get_dme_z();
+      }
+    } else if ( current_navlist->query( lon, lat, elev, dme_freq, &nav ) ) {
+      if (nav.get_has_dme()) {
+	dme_valid = true;
+	dme_lon = nav.get_lon();
+	dme_lat = nav.get_lat();
+	dme_elev = nav.get_elev();
+	dme_range = nav.get_range();
+	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
+	dme_x = nav.get_x();
+	dme_y = nav.get_y();
+	dme_z = nav.get_z();
+      }
+    } else {
+      dme_valid = false;
+      dme_dist = 0;
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // Beacons.
+    ////////////////////////////////////////////////////////////////////////
 
     FGMkrBeacon::fgMkrBeacType beacon_type
 	= current_beacons->query( lon * SGD_RADIANS_TO_DEGREES,
@@ -955,7 +1065,11 @@ void FGRadioStack::search()
     }
     last_beacon = beacon_type;
 
-    // adf
+
+    ////////////////////////////////////////////////////////////////////////
+    // ADF.
+    ////////////////////////////////////////////////////////////////////////
+
     if ( current_navlist->query( lon, lat, elev, adf_freq, &nav ) ) {
 	char freq[128];
 #if defined( _MSC_VER )
