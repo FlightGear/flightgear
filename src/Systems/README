@@ -1,0 +1,12 @@
+src/Systems/ - support code for aircraft systems
+
+This directory contains support code for major aircraft systems,
+including the static, pitot, electrical, and vacuum systems.  The file
+system_mgr.[ch]xx contains a subsystem group that holds all of the
+individual systems.  Every system should extend FGSubsystem, and then
+should be added to the group in the FGSystemMgr constructor.
+
+Eventually, there will be an XML configuration file to select what
+system modules should be available, so that different aircraft (i.e. a
+twin plane with two vacuum systems) can have appropriate support.
+
