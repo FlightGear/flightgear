@@ -41,6 +41,8 @@ SG_USING_STD(string);
 #include "ATCutils.hxx"
 
 FGAILocalTraffic::FGAILocalTraffic() {
+	ATC = globals->get_ATC_mgr();
+	
 	roll = 0.0;
 	pitch = 0.0;
 	hdg = 270.0;
@@ -159,24 +161,38 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	// Find the tower frequency - this is dependent on the ATC system being initialised before the AI system
 	airportID = ICAO;
 	AirportATC a;
-	if(globals->get_ATC_mgr()->GetAirportATCDetails(airportID, &a)) {
+	if(ATC->GetAirportATCDetails(airportID, &a)) {
 		if(a.tower_freq) {	// Has a tower
-			tower = (FGTower*)globals->get_ATC_mgr()->GetATCPointer((string)airportID, TOWER);	// Maybe need some error checking here
+			tower = (FGTower*)ATC->GetATCPointer((string)airportID, TOWER);	// Maybe need some error checking here
+			if(tower == NULL) {
+				// Something has gone wrong - abort or carry on with un-towered operation?
+				return(false);
+			}
 			freq = (double)tower->get_freq() / 100.0;
-			//cout << "***********************************AILocalTraffic freq = " << freq << '\n';
 		} else {
 			// Check CTAF, unicom etc
+		}
+		if(a.ground_freq) {		// Ground control
+			ground = (FGGround*)ATC->GetATCPointer((string)airportID, GROUND);	// Maybe need some error checking here
+			if(ground == NULL) {
+				// Something has gone wrong :-(
+				cout << "ERROR - ground has frequency but can't get ground pointer :-(\n";
+				return(false);
+			}
+			freq = (double)tower->get_freq() / 100.0;
+		} else {
+			// Initialise ground anyway to do the shortest path stuff!
+			// This is a bit of a hack - might need to be altered sometime, but
+			// in theory AILocalTraffic doesn't get called unless we have a logical
+			// network for ground to use so it should work for now!
+			ground = new FGGround(airportID);	// TODO - ought to set a flag saying that we're responsible
+											// for deleting ground in this instance, since normally we're not.
+			ground->Init();
 		}
 	} else {
 		//cout << "Unable to find airport details in FGAILocalTraffic::Init()\n";
 	}
 
-	// Initialise the relevant FGGround
-	// This needs a complete overhaul soon - what happens if we have 2 AI planes at same airport - they don't both need a structure
-	// This needs to be handled by the ATC manager or similar so only one set of physical data per airport is instantiated
-	// ie. TODO TODO FIXME FIXME
-	airport.Init();
-	
 	// Get the airport elevation
 	aptElev = dclGetAirportElev(airportID.c_str()) * SG_FEET_TO_METER;
 	//cout << "Airport elev in AILocalTraffic = " << aptElev << '\n';
@@ -187,7 +203,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	operatingState = initialState;
 	switch(operatingState) {
 	case PARKED:
-		ourGate = airport.GetGateNode();
+		ourGate = ground->GetGateNode();
 		if(ourGate == NULL) {
 			// Implies no available gates - what shall we do?
 			// For now just vanish the plane - possibly we can make this more elegant in the future
@@ -282,7 +298,7 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 		GetRwyDetails();
 		
 		// Get the takeoff node for the active runway, get a path to it and start taxiing
-		path = airport.GetPath(ourGate, rwy.rwyID);
+		path = ground->GetPath(ourGate, rwy.rwyID);
 		if(path.size() < 2) {
 			// something has gone wrong
 			SG_LOG(SG_GENERAL, SG_ALERT, "Invalid path from gate to theshold in FGAILocalTraffic::FlyCircuits\n");
@@ -694,7 +710,7 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 	//cout << "In ExitRunway" << endl;
 	//cout << "Runway ID is " << rwy.ID << endl;
-	node_array_type exitNodes = airport.GetExits(rwy.ID);	//I suppose we ought to have some fallback for rwy with no defined exits?
+	node_array_type exitNodes = ground->GetExits(rwy.ID);	//I suppose we ought to have some fallback for rwy with no defined exits?
 	/*
 	cout << "Node ID's of exits are ";
 	for(unsigned int i=0; i<exitNodes.size(); ++i) {
@@ -725,7 +741,7 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 			}
 			++nItr;
 		}
-		ourGate = airport.GetGateNode();
+		ourGate = ground->GetGateNode();
 		if(ourGate == NULL) {
 			// Implies no available gates - what shall we do?
 			// For now just vanish the plane - possibly we can make this more elegant in the future
@@ -734,7 +750,7 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 			operatingState = PARKED;
 			return;
 		}
-		path = airport.GetPath(rwyExit, ourGate);
+		path = ground->GetPath(rwyExit, ourGate);
 		/*
 		cout << "path returned was:" << endl;
 		for(unsigned int i=0; i<path.size(); ++i) {

@@ -208,6 +208,7 @@ class FGGround : public FGATC {
 
 public:
 	FGGround();
+	FGGround(string id);
 	~FGGround();
     void Init();
 

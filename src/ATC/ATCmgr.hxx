@@ -62,10 +62,13 @@ struct AirportATC {
     //bool approach_active;
     //float departure_freq;
     //bool departure_active;
+	
+	// NOTE - the *_active flags determine whether the service is active in atc_list,
+	// *NOT* whether the tower etc is closed or not!!!!
 
     // Flags to ensure the stations don't get wrongly deactivated
     bool set_by_AI;	// true when the AI manager has activated this station
-	// Do we need to ref-count the number of AI planes setting this?
+	unsigned int numAI;	// Ref count of the number of AI planes registered
     bool set_by_comm_search;	// true when the comm_search has activated this station
 	// Do we need to distingiush comm1 and comm2?
 };
@@ -159,6 +162,7 @@ public:
     bool GetAirportATCDetails(string icao, AirportATC* a);
 
     // Return a pointer to a given sort of ATC at a given airport and activate if necessary
+	// Returns NULL if service doesn't exist - calling function should check for this.
     FGATC* GetATCPointer(string icao, atc_type type);
 	
 	// Display a dialog box with options relevant to the currently tuned ATC service.
@@ -177,6 +181,16 @@ public:
 	FGATC* GetComm1ATCPointer() { return(comm_atc_ptr[0]); }
 	atc_type GetComm2ATCType() { return(comm_type[1]); }
 	FGATC* GetComm2ATCPointer() { return(comm_atc_ptr[1]); }
+	
+	// Get the frequency of a given service at a given airport
+	// Returns zero if not found
+	unsigned short int GetFrequency(string ident, atc_type tp);
+	
+	// Register the fact that the AI system wants to activate an airport
+	bool AIRegisterAirport(string ident);
+	
+	// Register the fact that the comm radio is tuned to an airport
+	bool CommRegisterAirport(string ident);	// Later we'll differentiate between comm 1 and comm2
 	
 private:
 

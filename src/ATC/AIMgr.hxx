@@ -27,14 +27,18 @@
 
 #include <list>
 
+#include "ATCMgr.hxx"
 #include "AIEntity.hxx"
 
 SG_USING_STD(list);
+
 
 class FGAIMgr : public FGSubsystem
 {
 
 private:
+	FGATCMgr* ATC;	
+	// This is purely for synactic convienience to avoid writing globals->get_ATC_mgr()-> all through the code!
 
     // A list of pointers to all currently active AI stuff
     typedef list <FGAIEntity*> ai_list_type;
@@ -48,6 +52,11 @@ private:
     // Any member function of FGATCMgr is permitted to leave this iterator pointing
     // at any point in or at the end of the list.
     // Hence any new access must explicitly first check for atc_list.end() before dereferencing.
+	
+	// A map of airport-IDs that have taxiway network files against bucket number
+	typedef map < int, string > ai_apt_map_type;
+	typedef ai_apt_map_type::iterator ai_apt_map_iterator;
+	ai_apt_map_type airports;
 
     // Position of the Users Aircraft
     // (This may be needed to calculate the distance from the user when deciding which 3D model to render)

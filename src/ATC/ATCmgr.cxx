@@ -22,6 +22,7 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <Airports/simple.hxx>
 
 #include "ATCmgr.hxx"
 #include "commlist.hxx"
@@ -31,6 +32,7 @@
 //#include "approachlist.hxx"
 #include "ATCdisplay.hxx"
 #include "ATCDialog.hxx"
+#include "ATCutils.hxx"
 
 /*
 // periodic radio station search wrapper
@@ -50,6 +52,7 @@ AirportATC::AirportATC() :
     ground_freq(0.0),
     ground_active(false),
     set_by_AI(false),
+	numAI(0),
     set_by_comm_search(false) {
 }
 
@@ -83,6 +86,7 @@ void FGATCMgr::init() {
 	lat_node = fgGetNode("/position/latitude-deg", true);
 	elev_node = fgGetNode("/position/altitude-ft", true);
 	atc_list_itr = atc_list.begin();
+	
 	// Search for connected ATC stations once per 0.8 seconds or so
 	// global_events.Register( "fgATCSearch()", fgATCSearch,
 	//		    fgEVENT::FG_EVENT_READY, 800);
@@ -92,23 +96,6 @@ void FGATCMgr::init() {
     current_commlist = new FGCommList;
     SGPath p_comm( globals->get_fg_root() );
     current_commlist->init( p_comm );
-	
-	// Initialise the airport_atc_map - we'll cheat for now and just hardcode KEMT and any others that may be needed for development
-	AirportATC *a = new AirportATC;
-	a->lon = -118.034719;
-	a->lat = 34.086114;
-	a->elev = 296.0;
-	a->atis_freq = 118.75;
-	a->atis_active = false;
-	a->tower_freq = 121.2;
-	a->tower_active = false;
-	a->ground_freq = 125.9;
-	a->ground_active = false;
-	
-	//a->set_by_AI = true;
-	//a->set_by_comm_search = false;
-	
-	airport_atc_map[(string)"KEMT"] = a;
 
 #ifdef ENABLE_AUDIO_SUPPORT	
 	// Load all available voices.
@@ -191,6 +178,53 @@ void FGATCMgr::update(double dt) {
 	//cout << "comm1 type = " << comm_type[0] << '\n';
 }
 
+
+// Returns frequency in KHz - should I alter this to return in MHz?
+unsigned short int FGATCMgr::GetFrequency(string ident, atc_type tp) {
+	ATCData test;
+	bool ok = current_commlist->FindByCode(ident, test, tp);
+	return(ok ? test.freq : 0);
+}	
+
+
+// Register the fact that the AI system wants to activate an airport
+// Might need more sophistication in this in the future - eg registration by aircraft call-sign.
+bool FGATCMgr::AIRegisterAirport(string ident) {
+	if(airport_atc_map.find(ident) != airport_atc_map.end()) {
+		airport_atc_map[ident]->set_by_AI = true;
+		return(true);
+	} else {
+		FGAirport ap;
+		if(dclFindAirportID(ident, &ap)) {
+			AirportATC *a = new AirportATC;
+			// I'm not entirely sure that this AirportATC structure business is actually needed - it just duplicates what we can find out anyway!
+			a->lon = ap.longitude;
+			a->lat = ap.latitude;
+			a->elev = ap.elevation;
+			a->atis_freq = GetFrequency(ident, ATIS);
+			a->atis_active = false;
+			a->tower_freq = GetFrequency(ident, TOWER);
+			a->tower_active = false;
+			a->ground_freq = GetFrequency(ident, GROUND);
+			a->ground_active = false;
+			// TODO - some airports will have a tower/ground frequency but be inactive overnight.
+			a->set_by_AI = true;
+			a->numAI++;
+			airport_atc_map[ident] = a;
+			return(true);
+		}
+	}
+	return(false);
+}
+
+
+// Register the fact that the comm radio is tuned to an airport
+bool FGATCMgr::CommRegisterAirport(string ident) {	// Later we'll differentiate between comm 1 and comm2
+	// TODO - implement me!
+	return(false);
+}
+
+
 // Remove from list only if not needed by the AI system or the other comm channel
 // TODO - implement me!!
 void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
@@ -263,10 +297,11 @@ bool FGATCMgr::GetAirportATCDetails(string icao, AirportATC* a) {
 
 
 // Return a pointer to a given sort of ATC at a given airport and activate if necessary
-// ONLY CALL THIS FUNCTION AFTER FIRST CHECKING THE SERVICE EXISTS BY CALLING GetAirportATCDetails
-// FIXME - we really ought to take out the necessity for two function calls by simply returning
-// a NULL pointer if the service doesn't exist and requiring the caller to check for it (NULL).
+// Returns NULL if service doesn't exist - calling function should check for this.
 FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
+	if(airport_atc_map.find(icao) == airport_atc_map.end()) {
+		return NULL;
+	}
 	AirportATC *a = airport_atc_map[icao];
 	//cout << "a->lon = " << a->lon << '\n';
 	//cout << "a->elev = " << a->elev << '\n';
@@ -275,28 +310,45 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 		case TOWER:
 		if(a->tower_active) {
 			// Get the pointer from the list
-			return(FindInList(icao.c_str(), type));	// DCL - this untested so far.
+			return(FindInList(icao.c_str(), type));
 		} else {
-			FGTower* t = new FGTower;
 			ATCData data;
 			if(current_commlist->FindByFreq(a->lon, a->lat, a->elev, a->tower_freq, &data, TOWER)) {
+				FGTower* t = new FGTower;
 				t->SetData(&data);
 				atc_list.push_back(t);
 				a->tower_active = true;
 				airport_atc_map[icao] = a;
+				t->Init();
 				return(t);
 			} else {
 				cout << "ERROR - tower that should exist in FGATCMgr::GetATCPointer for airport " << icao << " not found\n";
 			}
 		}
 		break;
-		// Lets add the rest to get rid of the compiler warnings even though we don't need them yet.
 		case APPROACH:
 		break;
 		case ATIS:
 		SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - ATIS station should not be requested from FGATCMgr::GetATCPointer");
 		break;
 		case GROUND:
+		if(a->ground_active) {
+			// Get the pointer from the list
+			return(FindInList(icao.c_str(), type));
+		} else {
+			ATCData data;
+			if(current_commlist->FindByFreq(a->lon, a->lat, a->elev, a->ground_freq, &data, GROUND)) {
+				FGGround* g = new FGGround;
+				g->SetData(&data);
+				atc_list.push_back(g);
+				a->ground_active = true;
+				airport_atc_map[icao] = a;
+				g->Init();
+				return(g);
+			} else {
+				cout << "ERROR - ground control that should exist in FGATCMgr::GetATCPointer for airport " << icao << " not found\n";
+			}
+		}
 		break;
 		case INVALID:
 		break;

@@ -120,7 +120,14 @@ bool FGCommList::FindByFreq( double lon, double lat, double elev, double freq,
 	lon *= SGD_DEGREES_TO_RADIANS;
 	lat *= SGD_DEGREES_TO_RADIANS;
 	
-	comm_list_type stations = commlist_freq[(int)(freq*100.0 + 0.5)];
+	// HACK - if freq > 1000 assume it's in KHz, otherwise assume MHz.
+	// A bit ugly but it works for now!!!!
+	comm_list_type stations;
+	if(freq > 1000.0) {
+		stations = commlist_freq[(int)freq];
+	} else {
+		stations = commlist_freq[(int)(freq*100.0 + 0.5)];
+	}
 	comm_list_iterator current = stations.begin();
 	comm_list_iterator last = stations.end();
 	

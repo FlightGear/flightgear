@@ -105,6 +105,9 @@ protected:
 	void ReturnToBase(double dt);
 	
 private:
+	FGATCMgr* ATC;	
+	// This is purely for synactic convienience to avoid writing globals->get_ATC_mgr()-> all through the code!
+
 	// High-level stuff
 	OperatingState operatingState;
 	int circuitsToFly;	//Number of circuits still to do in this session NOT INCLUDING THE CURRENT ONE
@@ -117,7 +120,7 @@ private:
 	// Airport/runway/pattern details
 	string airportID;	// The ICAO code of the airport that we're operating around
 	double aptElev;		// Airport elevation
-	FGGround airport;	// FIXME FIXME FIXME This is a complete hardwired cop-out at the moment - we need to connect to the correct ground in the same way we do to the tower.
+	FGGround* ground;	// A pointer to the ground control.
 	FGTower* tower;	// A pointer to the tower control.
 	RunwayDetails rwy;
 	double patternDirection;	// 1 for right, -1 for left (This is double because we multiply/divide turn rates

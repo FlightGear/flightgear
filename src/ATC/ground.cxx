@@ -53,6 +53,12 @@ FGGround::FGGround() {
 	networkLoadOK = false;
 }
 
+FGGround::FGGround(string id) {
+	display = false;
+	networkLoadOK = false;
+	ident = id;
+}
+
 FGGround::~FGGround() {
 }
 
