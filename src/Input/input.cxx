@@ -26,6 +26,8 @@
 
 #include <simgear/compiler.h>
 
+#include <ctype.h>
+
 #include STL_FSTREAM
 #include STL_STRING
 
@@ -69,152 +71,152 @@ SG_USING_STD(string);
 ////////////////////////////////////////////////////////////////////////
 
 FGBinding::FGBinding ()
-  : _action(ACTION_NONE), _node(0), _adjust_step(0), _assign_value(0)
+    : _action(ACTION_NONE), _node(0), _adjust_step(0), _assign_value(0)
 {
 }
 
 FGBinding::FGBinding (const SGPropertyNode * node)
-  : _action(ACTION_NONE), _node(0), _adjust_step(0), _assign_value(0)
+    : _action(ACTION_NONE), _node(0), _adjust_step(0), _assign_value(0)
 {
-  read(node);
+    read(node);
 }
 
 FGBinding::~FGBinding ()
 {
-  // no op
+    // no op
 }
 
 void
 FGBinding::setAction (Action action)
 {
-  _action = action;
+    _action = action;
 }
 
 void
 FGBinding::setProperty (SGPropertyNode * node)
 {
-  _node = node;
+    _node = node;
 }
 
 void
 FGBinding::setAdjustStep (const SGValue * step)
 {
-  _adjust_step = step;
+    _adjust_step = step;
 }
 
 void
 FGBinding::setAssignValue (const SGValue * value)
 {
-  _assign_value = value;
+    _assign_value = value;
 }
 
 void
 FGBinding::read (const SGPropertyNode * node)
 {
-  if (node->hasValue("action")) {
-    string action = node->getStringValue("action");
-    if (action == "none")
-      _action = ACTION_NONE;
-    else if (action == "switch")
-      _action = ACTION_SWITCH;
-    else if (action == "adjust")
-      _action = ACTION_ADJUST;
-    else if (action == "assign")
-      _action = ACTION_ASSIGN;
-    else
-      SG_LOG(SG_INPUT, SG_ALERT, "Ignoring unrecognized action type "
-	     << action);
-  }
+    if (node->hasValue("action")) {
+        string action = node->getStringValue("action");
+        if (action == "none")
+            _action = ACTION_NONE;
+        else if (action == "switch")
+            _action = ACTION_SWITCH;
+        else if (action == "adjust")
+            _action = ACTION_ADJUST;
+        else if (action == "assign")
+            _action = ACTION_ASSIGN;
+        else
+            SG_LOG(SG_INPUT, SG_ALERT, "Ignoring unrecognized action type "
+                   << action);
+    }
 
-  if (node->hasValue("control"))
-    _node = fgGetNode(node->getStringValue("control"), true);
+    if (node->hasValue("control"))
+        _node = fgGetNode(node->getStringValue("control"), true);
 
-  if (node->hasValue("step"))
-    _adjust_step = node->getChild("step")->getValue();
+    if (node->hasValue("step"))
+        _adjust_step = node->getChild("step")->getValue();
 
-  if (node->hasValue("value"))
-    _assign_value = node->getChild("value")->getValue();
+    if (node->hasValue("value"))
+        _assign_value = node->getChild("value")->getValue();
 }
 
 void
 FGBinding::fire () const
 {
-  if (_node == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT, "No control property attached to binding");
-    return;
-  }
-
-  switch (_action) {
-
-  case ACTION_NONE:
-    break;
-
-  case ACTION_SWITCH:
-    _node->setBoolValue(!_node->getBoolValue());
-    break;
-
-  case ACTION_ADJUST:
-    if  (_adjust_step == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No step provided for adjust binding");
-      break;
+    if (_node == 0) {
+        SG_LOG(SG_INPUT, SG_ALERT, "No control property attached to binding");
+        return;
     }
-    switch (_node->getType()) {
-    case SGValue::BOOL:
-      if (_adjust_step->getBoolValue())
-	_node->setBoolValue(!_node->getBoolValue());
-      break;
-    case SGValue::INT:
-      _node->setIntValue(_node->getIntValue() + _adjust_step->getIntValue());
-      break;
-    case SGValue::LONG:
-      _node->setLongValue(_node->getLongValue() + _adjust_step->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      _node->setFloatValue(_node->getFloatValue()
-			   + _adjust_step->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-    case SGValue::UNKNOWN:	// force to double
-      _node->setDoubleValue(_node->getDoubleValue()
-			    + _adjust_step->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      SG_LOG(SG_INPUT, SG_ALERT, "Cannot increment or decrement string value"
-	     << _node->getStringValue());
-      break;
-    }
-    break;
 
-  case ACTION_ASSIGN:
-    if  (_assign_value == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No value provided for assign binding");
-      break;
+    switch (_action) {
+
+    case ACTION_NONE:
+        break;
+
+    case ACTION_SWITCH:
+        _node->setBoolValue(!_node->getBoolValue());
+        break;
+
+    case ACTION_ADJUST:
+        if  (_adjust_step == 0) {
+            SG_LOG(SG_INPUT, SG_ALERT, "No step provided for adjust binding");
+            break;
+        }
+        switch (_node->getType()) {
+        case SGValue::BOOL:
+            if (_adjust_step->getBoolValue())
+                _node->setBoolValue(!_node->getBoolValue());
+            break;
+        case SGValue::INT:
+            _node->setIntValue(_node->getIntValue() + _adjust_step->getIntValue());
+            break;
+        case SGValue::LONG:
+            _node->setLongValue(_node->getLongValue() + _adjust_step->getLongValue());
+            break;
+        case SGValue::FLOAT:
+            _node->setFloatValue(_node->getFloatValue()
+                                 + _adjust_step->getFloatValue());
+            break;
+        case SGValue::DOUBLE:
+        case SGValue::UNKNOWN:	// force to double
+            _node->setDoubleValue(_node->getDoubleValue()
+                                  + _adjust_step->getDoubleValue());
+            break;
+        case SGValue::STRING:
+            SG_LOG(SG_INPUT, SG_ALERT, "Cannot increment or decrement string value"
+                   << _node->getStringValue());
+            break;
+        }
+        break;
+
+    case ACTION_ASSIGN:
+        if  (_assign_value == 0) {
+            SG_LOG(SG_INPUT, SG_ALERT, "No value provided for assign binding");
+            break;
+        }
+        switch (_node->getType()) {
+        case SGValue::BOOL:
+            _node->setBoolValue(_assign_value->getBoolValue());
+            break;
+        case SGValue::INT:
+            _node->setIntValue(_assign_value->getIntValue());
+            break;
+        case SGValue::LONG:
+            _node->setLongValue(_assign_value->getLongValue());
+            break;
+        case SGValue::FLOAT:
+            _node->setFloatValue(_assign_value->getFloatValue());
+            break;
+        case SGValue::DOUBLE:
+            _node->setDoubleValue(_assign_value->getDoubleValue());
+            break;
+        case SGValue::STRING:
+            _node->setStringValue(_assign_value->getStringValue());
+            break;
+        case SGValue::UNKNOWN:
+            _node->setUnknownValue(_assign_value->getStringValue());
+            break;
+        }
+        break;
     }
-    switch (_node->getType()) {
-    case SGValue::BOOL:
-      _node->setBoolValue(_assign_value->getBoolValue());
-      break;
-    case SGValue::INT:
-      _node->setIntValue(_assign_value->getIntValue());
-      break;
-    case SGValue::LONG:
-      _node->setLongValue(_assign_value->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      _node->setFloatValue(_assign_value->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-      _node->setDoubleValue(_assign_value->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      _node->setStringValue(_assign_value->getStringValue());
-      break;
-    case SGValue::UNKNOWN:
-      _node->setUnknownValue(_assign_value->getStringValue());
-      break;
-    }
-    break;
-  }
 }
 
 
@@ -223,7 +225,7 @@ FGBinding::fire () const
 // Implementation of FGInput.
 ////////////////////////////////////////////////////////////////////////
 
-				// From main.cxx
+// From main.cxx
 extern void fgReshape( int width, int height );
 
 FGInput current_input;
@@ -231,96 +233,102 @@ FGInput current_input;
 
 FGInput::FGInput ()
 {
-  // no op
+    // no op
 }
 
 FGInput::~FGInput ()
 {
-  // no op
+    // no op
 }
 
 void
 FGInput::init ()
 {
-				// Read the keyboard bindings.
-				// TODO: zero the old bindings first.
-  const SGPropertyNode * keyboard =
-    globals->get_props()->getNode("/input/keyboard", true);
-  vector<const SGPropertyNode *> keys = keyboard->getChildren("key");
+    // Read the keyboard bindings.
+    // TODO: zero the old bindings first.
+    const SGPropertyNode * keyboard =
+        globals->get_props()->getNode("/input/keyboard", true);
+    vector<const SGPropertyNode *> keys = keyboard->getChildren("key");
 
-  for (unsigned int i = 0; i < keys.size(); i++) {
-    int index = keys[i]->getIndex();
-    int modifiers = FG_MOD_NONE;
-    if (keys[i]->getBoolValue("mod-shift"))
-      modifiers |= FG_MOD_SHIFT;
-    if (keys[i]->getBoolValue("mod-ctrl"))
-      modifiers |= FG_MOD_CTRL;
-    if (keys[i]->getBoolValue("mod-alt"))
-      modifiers |= FG_MOD_ALT;
-    SG_LOG(SG_INPUT, SG_INFO, "Binding key " << index
-	   << " with modifiers " << modifiers);
+    for (unsigned int i = 0; i < keys.size(); i++) {
+        int code = keys[i]->getIndex();
+        int modifiers = FG_MOD_NONE;
+        if (keys[i]->getBoolValue("mod-shift"))
+            modifiers |= FG_MOD_SHIFT;
+        if (keys[i]->getBoolValue("mod-ctrl"))
+            modifiers |= FG_MOD_CTRL;
+        if (keys[i]->getBoolValue("mod-alt"))
+            modifiers |= FG_MOD_ALT;
 
-    vector<const SGPropertyNode *> bindings = keys[i]->getChildren("binding");
-    for (unsigned int j = 0; j < bindings.size(); j++) {
-      SG_LOG(SG_INPUT, SG_INFO, "  Adding binding " << j);
-      _key_bindings[modifiers][index].push_back(FGBinding(bindings[j]));
+        if (code < 0) {
+            SG_LOG(SG_INPUT, SG_ALERT, "Key stroke not bound = "
+                   << keys[i]->getStringValue("name", "[unnamed]"));
+        } else {
+            SG_LOG(SG_INPUT, SG_INFO, "Binding key " << code
+                   << " with modifiers " << modifiers);
+            vector<const SGPropertyNode *> bindings =
+                keys[i]->getChildren("binding");
+            for (unsigned int j = 0; j < bindings.size(); j++) {
+                SG_LOG(SG_INPUT, SG_INFO, "  Adding binding " << j);
+                _key_bindings[modifiers][code].push_back(FGBinding(bindings[j]));
+            }
+        }
     }
-  }
 }
 
 void
 FGInput::bind ()
 {
-  // no op
+    // no op
 }
 
 void
 FGInput::unbind ()
 {
-  // no op
+    // no op
 }
 
 void 
 FGInput::update ()
 {
-  // we'll do something here with the joystick
+    // we'll do something here with the joystick
 }
 
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
-  float fov, tmp;
-  static bool winding_ccw = true;
-  int speed;
+    float fov, tmp;
+    static bool winding_ccw = true;
+    int speed;
 
-  SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
-	 << " with modifiers " << modifiers);
+    SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
+           << " with modifiers " << modifiers);
 
-  if (_key_bindings[modifiers].find(k) != _key_bindings[modifiers].end()) {
-    const vector<FGBinding> &bindings = _key_bindings[modifiers][k];
-    for (unsigned int i = 0; i < bindings.size(); i++) {
-      bindings[i].fire();
+    if (_key_bindings[modifiers].find(k) != _key_bindings[modifiers].end()) {
+        const vector<FGBinding> &bindings = _key_bindings[modifiers][k];
+        for (unsigned int i = 0; i < bindings.size(); i++) {
+            bindings[i].fire();
+        }
+        return;
     }
-    return;
-  }
 
-  SG_LOG(SG_INPUT, SG_INFO, "(No user binding.)");
+    SG_LOG(SG_INPUT, SG_INFO, "(No user binding.)");
 
-				// Use the old, default actions.
-  FGInterface *f = current_aircraft.fdm_state;
-  FGViewer *v = globals->get_current_view();
+    // Use the old, default actions.
+    FGInterface *f = current_aircraft.fdm_state;
+    FGViewer *v = globals->get_current_view();
   
-  // everything after here will be removed sooner or later...
+    // everything after here will be removed sooner or later...
 
-  if (modifiers & FG_MOD_SHIFT) {
+    if (modifiers & FG_MOD_SHIFT) {
 
 	switch (k) {
 	case 7: // Ctrl-G key
 	    current_autopilot->set_AltitudeMode( 
-                  FGAutopilot::FG_ALTITUDE_GS1 );
+                                                FGAutopilot::FG_ALTITUDE_GS1 );
 	    current_autopilot->set_AltitudeEnabled(
-		  ! current_autopilot->get_AltitudeEnabled()
-	        );
+                                                   ! current_autopilot->get_AltitudeEnabled()
+                                                   );
 	    return;
 	case 18: // Ctrl-R key
 	    // temporary
@@ -333,15 +341,15 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    return;
 	case 19: // Ctrl-S key
 	    current_autopilot->set_AutoThrottleEnabled(
-		  ! current_autopilot->get_AutoThrottleEnabled()
-	        );
+                                                       ! current_autopilot->get_AutoThrottleEnabled()
+                                                       );
 	    return;
 	case 20: // Ctrl-T key
 	    current_autopilot->set_AltitudeMode( 
-                  FGAutopilot::FG_ALTITUDE_TERRAIN );
+                                                FGAutopilot::FG_ALTITUDE_TERRAIN );
 	    current_autopilot->set_AltitudeEnabled(
-		  ! current_autopilot->get_AltitudeEnabled()
-	        );
+                                                   ! current_autopilot->get_AltitudeEnabled()
+                                                   );
 	    return;
 	case 49: // numeric keypad 1
 	    v->set_goal_view_offset( SGD_PI * 0.75 );
@@ -412,7 +420,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 #endif
 	    return;
 
-// START SPECIALS
+            // START SPECIALS
 
  	case 256+GLUT_KEY_F1: {
  	    ifstream input("fgfs.sav");
@@ -521,7 +529,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    v->set_goal_view_offset( SGD_PI * 1.75 );
 	    return;
 
-// END SPECIALS
+            // END SPECIALS
 
 	}
 
@@ -624,7 +632,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    ConfirmExitDialog();
 	    return;
 
-// START SPECIALS
+            // START SPECIALS
 
 	case 256+GLUT_KEY_F2: // F2 Reload Tile Cache...
 	    {
@@ -636,8 +644,8 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 		if ( global_tile_mgr.init() ) {
 		    // Load the local scenery data
 		    global_tile_mgr.update( 
-		        cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES,
-			cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
+                                           cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES,
+                                           cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
 		} else {
 		    SG_LOG( SG_GENERAL, SG_ALERT, 
 			    "Error in Tile Manager initialization!" );
@@ -645,7 +653,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 		}
 		BusyCursor(1);
 		if ( !freeze )
-		   globals->set_freeze( false );
+                    globals->set_freeze( false );
 		return;
 	    }
 	case 256+GLUT_KEY_F3: // F3 Take a screen shot
@@ -658,28 +666,28 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    if ( current_autopilot->get_HeadingMode() !=
 		 FGAutopilot::FG_HEADING_WAYPOINT ) {
 		current_autopilot->set_HeadingMode(
-		    FGAutopilot::FG_HEADING_WAYPOINT );
+                                                   FGAutopilot::FG_HEADING_WAYPOINT );
 		current_autopilot->set_HeadingEnabled( true );
 	    } else {
 		current_autopilot->set_HeadingMode(
-		    FGAutopilot::FG_TC_HEADING_LOCK );
+                                                   FGAutopilot::FG_TC_HEADING_LOCK );
 	    }
 	    return;
 	case 256+GLUT_KEY_F8: {// F8 toggles fog ... off fastest nicest...
 	    const string &fog = fgGetString("/sim/rendering/fog");
 	    if (fog == "disabled") {
-	      fgSetString("/sim/rendering/fog", "fastest");
-	      SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=fastest");
+                fgSetString("/sim/rendering/fog", "fastest");
+                SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=fastest");
 	    } else if (fog == "fastest") {
-	      fgSetString("/sim/rendering/fog", "nicest");
-	      SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=nicest");
+                fgSetString("/sim/rendering/fog", "nicest");
+                SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=nicest");
 	    } else if (fog == "nicest") {
-	      fgSetString("/sim/rendering/fog", "disabled");
-	      SG_LOG(SG_INPUT, SG_INFO, "Fog disabled");
+                fgSetString("/sim/rendering/fog", "disabled");
+                SG_LOG(SG_INPUT, SG_INFO, "Fog disabled");
 	    } else {
-	      fgSetString("/sim/rendering/fog", "disabled");
-	      SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized fog type "
-		     << fog << ", changed to 'disabled'");
+                fgSetString("/sim/rendering/fog", "disabled");
+                SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized fog type "
+                       << fog << ", changed to 'disabled'");
 	    }
  	    return;
 	}
@@ -707,7 +715,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    return;
 	}
 
-// END SPECIALS
+        // END SPECIALS
 
     }
 }
@@ -716,110 +724,110 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 void
 FGInput::action (const SGPropertyNode * binding)
 {
-  const string &action = binding->getStringValue("action", "");
-  const string &control = binding->getStringValue("control", "");
-  bool repeatable = binding->getBoolValue("repeatable", false);
-  int step = binding->getIntValue("step", 0.0);
+    const string &action = binding->getStringValue("action", "");
+    const string &control = binding->getStringValue("control", "");
+    bool repeatable = binding->getBoolValue("repeatable", false);
+    int step = binding->getIntValue("step", 0.0);
 
-  if (control == "") {
-    SG_LOG(SG_INPUT, SG_ALERT, "No control specified for key "
-	   << binding->getIndex());
-    return;
-  }
-
-  else if (action == "") {
-    SG_LOG(SG_INPUT, SG_ALERT, "No action specified for key "
-	   << binding->getIndex());
-    return;
-  }
-
-  else if (action == "switch") {
-    fgSetBool(control, !fgGetBool(control));
-  }
-
-  else if (action == "adjust") {
-    const SGValue * step = binding->getValue("step");
-    if (step == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No step supplied for adjust action for key "
-	     << binding->getIndex());
-      return;
+    if (control == "") {
+        SG_LOG(SG_INPUT, SG_ALERT, "No control specified for key "
+               << binding->getIndex());
+        return;
     }
-    SGValue * target = fgGetValue(control, true);
-				// Use the target's type...
-    switch (target->getType()) {
-    case SGValue::BOOL:
-    case SGValue::INT:
-      target->setIntValue(target->getIntValue() + step->getIntValue());
-      break;
-    case SGValue::LONG:
-      target->setLongValue(target->getLongValue() + step->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      target->setFloatValue(target->getFloatValue() + step->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-    case SGValue::UNKNOWN:	// treat unknown as a double
-      target->setDoubleValue(target->getDoubleValue()
-			     + step->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed attempt to adjust string property "
-	     << control);
-      break;
-    }
-  }
 
-  else if (action == "assign") {
-    const SGValue * value = binding->getValue("value");
-    if (value == 0) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No value supplied for assign action for key "
-	     << binding->getIndex());
-      return;
+    else if (action == "") {
+        SG_LOG(SG_INPUT, SG_ALERT, "No action specified for key "
+               << binding->getIndex());
+        return;
     }
-    SGValue * target = fgGetValue(control, true);
-				// Use the target's type...
-    switch (target->getType()) {
-    case SGValue::BOOL:
-      target->setBoolValue(value->getBoolValue());
-      break;
-    case SGValue::INT:
-      target->setIntValue(value->getIntValue());
-      break;
-    case SGValue::LONG:
-      target->setLongValue(value->getLongValue());
-      break;
-    case SGValue::FLOAT:
-      target->setFloatValue(value->getFloatValue());
-      break;
-    case SGValue::DOUBLE:
-      target->setDoubleValue(value->getDoubleValue());
-      break;
-    case SGValue::STRING:
-      target->setStringValue(value->getStringValue());
-      break;
-    case SGValue::UNKNOWN:
-      target->setUnknownValue(value->getStringValue());
-      break;
-    }
-  }
 
-  else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Unknown action " << action
-	   << " for key " << binding->getIndex());
-  }
+    else if (action == "switch") {
+        fgSetBool(control, !fgGetBool(control));
+    }
+
+    else if (action == "adjust") {
+        const SGValue * step = binding->getValue("step");
+        if (step == 0) {
+            SG_LOG(SG_INPUT, SG_ALERT, "No step supplied for adjust action for key "
+                   << binding->getIndex());
+            return;
+        }
+        SGValue * target = fgGetValue(control, true);
+        // Use the target's type...
+        switch (target->getType()) {
+        case SGValue::BOOL:
+        case SGValue::INT:
+            target->setIntValue(target->getIntValue() + step->getIntValue());
+            break;
+        case SGValue::LONG:
+            target->setLongValue(target->getLongValue() + step->getLongValue());
+            break;
+        case SGValue::FLOAT:
+            target->setFloatValue(target->getFloatValue() + step->getFloatValue());
+            break;
+        case SGValue::DOUBLE:
+        case SGValue::UNKNOWN:	// treat unknown as a double
+            target->setDoubleValue(target->getDoubleValue()
+                                   + step->getDoubleValue());
+            break;
+        case SGValue::STRING:
+            SG_LOG(SG_INPUT, SG_ALERT, "Failed attempt to adjust string property "
+                   << control);
+            break;
+        }
+    }
+
+    else if (action == "assign") {
+        const SGValue * value = binding->getValue("value");
+        if (value == 0) {
+            SG_LOG(SG_INPUT, SG_ALERT, "No value supplied for assign action for key "
+                   << binding->getIndex());
+            return;
+        }
+        SGValue * target = fgGetValue(control, true);
+        // Use the target's type...
+        switch (target->getType()) {
+        case SGValue::BOOL:
+            target->setBoolValue(value->getBoolValue());
+            break;
+        case SGValue::INT:
+            target->setIntValue(value->getIntValue());
+            break;
+        case SGValue::LONG:
+            target->setLongValue(value->getLongValue());
+            break;
+        case SGValue::FLOAT:
+            target->setFloatValue(value->getFloatValue());
+            break;
+        case SGValue::DOUBLE:
+            target->setDoubleValue(value->getDoubleValue());
+            break;
+        case SGValue::STRING:
+            target->setStringValue(value->getStringValue());
+            break;
+        case SGValue::UNKNOWN:
+            target->setUnknownValue(value->getStringValue());
+            break;
+        }
+    }
+
+    else {
+        SG_LOG(SG_INPUT, SG_ALERT, "Unknown action " << action
+               << " for key " << binding->getIndex());
+    }
 }
 
 
 #if 0
-    FGViewer *v = globals->get_current_view();
+FGViewer *v = globals->get_current_view();
 
-    SG_LOG( SG_INPUT, SG_DEBUG, "Special key hit = " << k );
+SG_LOG( SG_INPUT, SG_DEBUG, "Special key hit = " << k );
 
-    if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
-	SG_LOG( SG_INPUT, SG_DEBUG, " SHIFTED" );
-	switch (k)
-    } else
-}
+if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
+    SG_LOG( SG_INPUT, SG_DEBUG, " SHIFTED" );
+    switch (k)
+        } else
+        }
 
 #endif
 

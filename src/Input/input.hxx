@@ -174,6 +174,11 @@ public:
 
 private:
 
+  /**
+   * Look up the bindings for a key code.
+   */
+  const vector<FGBinding> * _find_bindings (int k, int modifiers);
+
   typedef map<int,vector<FGBinding> > keyboard_map;
   keyboard_map _key_bindings[FG_MOD_MAX];
 

@@ -219,6 +219,7 @@ void FGAutopilot::init() {
     heading_hold = false ;      // turn the heading hold off
     altitude_hold = false ;     // turn the altitude hold off
     auto_throttle = false ;	// turn the auto throttle off
+    heading_mode = DEFAULT_AP_HEADING_LOCK;
 
     sg_srandom_time();
     DGTargetHeading = sg_random() * 360.0;
@@ -235,8 +236,8 @@ void FGAutopilot::init() {
     alt_error_accum = 0.0;
     climb_error_accum = 0.0;
 
-    MakeTargetAltitudeStr( 3000.0);
-    MakeTargetHeadingStr( 0.0 );
+    MakeTargetAltitudeStr( TargetAltitude );
+    MakeTargetHeadingStr( TargetHeading );
 	
     // These eventually need to be read from current_aircaft somehow.
 
@@ -279,11 +280,12 @@ void FGAutopilot::reset() {
     heading_hold = false ;      // turn the heading hold off
     altitude_hold = false ;     // turn the altitude hold off
     auto_throttle = false ;	// turn the auto throttle off
+    heading_mode = DEFAULT_AP_HEADING_LOCK;
 
-    TargetHeading = 0.0;	// default direction, due north
+    // TargetHeading = 0.0;	// default direction, due north
     MakeTargetHeadingStr( TargetHeading );			
 	
-    TargetAltitude = 3000;   // default altitude in meters
+    // TargetAltitude = 3000;   // default altitude in meters
     MakeTargetAltitudeStr( TargetAltitude );
 	
     alt_error_accum = 0.0;
@@ -395,6 +397,9 @@ int FGAutopilot::run() {
 	    // coordinator zero'd
 	} else if ( heading_mode == FG_TRUE_HEADING_LOCK ) {
 	    // leave "true" target heading as is
+            while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
+            while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+            MakeTargetHeadingStr( TargetHeading );
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
 	    // track the NAV1 heading needle deflection
 
@@ -1010,13 +1015,19 @@ void FGAutopilot::HeadingAdjust( double inc ) {
 
 
 void FGAutopilot::HeadingSet( double new_heading ) {
-    heading_mode = FG_DG_HEADING_LOCK;
-	
-    new_heading = NormalizeDegrees( new_heading );
-    DGTargetHeading = new_heading;
-    // following cast needed ambiguous plib
-    // ApHeadingDialogInput -> setValue ((float)APData->TargetHeading );
-    MakeTargetHeadingStr( DGTargetHeading );			
+    if( heading_mode == FG_TRUE_HEADING_LOCK ) {
+        new_heading = NormalizeDegrees( new_heading );
+        TargetHeading = new_heading;
+        MakeTargetHeadingStr( TargetHeading );
+    } else {
+        heading_mode = FG_DG_HEADING_LOCK;
+
+        new_heading = NormalizeDegrees( new_heading );
+        DGTargetHeading = new_heading;
+        // following cast needed ambiguous plib
+        // ApHeadingDialogInput -> setValue ((float)APData->TargetHeading );
+        MakeTargetHeadingStr( DGTargetHeading );
+    }
     update_old_control_values();
 }
 

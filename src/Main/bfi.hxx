@@ -29,6 +29,11 @@
 
 SG_USING_NAMESPACE(std);
 
+// Uncomment the appropriate line to get the desired heading hold
+// autopilot behavior
+
+// #define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_TRUE_HEADING_LOCK
+#define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_DG_HEADING_LOCK
 
 /**
  * Big Flat Interface
@@ -152,6 +157,16 @@ public:
 
   static bool getAPNAV1Lock ();
   static void setAPNAV1Lock (bool lock);
+
+  static bool getAPAutoThrottleLock ();
+  static void setAPAutoThrottleLock (bool lock);
+
+  static double getAPRudderControl ();
+  static void setAPRudderControl (double value);
+  static double getAPElevatorControl ();
+  static void setAPElevatorControl (double value);
+  static double getAPThrottleControl ();
+  static void setAPThrottleControl (double value);
 
 
 				// GPS

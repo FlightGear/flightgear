@@ -207,6 +207,14 @@ FGBFI::init ()
 	false);
   fgTie("/autopilot/locks/wing-leveler", getAPWingLeveler, setAPWingLeveler);
   fgTie("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);
+  fgTie("/autopilot/locks/auto-throttle",
+	getAPAutoThrottleLock, setAPAutoThrottleLock);
+  fgTie("/autopilot/control-overrides/rudder",
+	getAPRudderControl, setAPRudderControl);
+  fgTie("/autopilot/control-overrides/elevator",
+	getAPElevatorControl, setAPElevatorControl);
+  fgTie("/autopilot/control-overrides/throttle",
+	getAPThrottleControl, setAPThrottleControl);
 
 				// Weather
   fgTie("/environment/visibility", getVisibility, setVisibility);
@@ -739,271 +747,6 @@ FGBFI::getSpeedDown ()
 
 
 ////////////////////////////////////////////////////////////////////////
-// Controls
-////////////////////////////////////////////////////////////////////////
-
-#if 0
-
-/**
- * Get the throttle setting, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getThrottle ()
-{
-				// FIXME: add engine selector
-  return controls.get_throttle(0);
-}
-
-
-/**
- * Set the throttle, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setThrottle (double throttle)
-{
-				// FIXME: allow engine selection
-  controls.set_throttle(0, throttle);
-}
-
-
-/**
- * Get the fuel mixture setting, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getMixture ()
-{
-				// FIXME: add engine selector
-  return controls.get_mixture(0);
-}
-
-
-/**
- * Set the fuel mixture, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setMixture (double mixture)
-{
-				// FIXME: allow engine selection
-  controls.set_mixture(0, mixture);
-}
-
-
-/**
- * Get the propellor pitch setting, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getPropAdvance ()
-{
-				// FIXME: add engine selector
-  return controls.get_prop_advance(0);
-}
-
-
-/**
- * Set the propellor pitch, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setPropAdvance (double pitch)
-{
-				// FIXME: allow engine selection
-  controls.set_prop_advance(0, pitch);
-}
-
-
-/**
- * Get the flaps setting, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getFlaps ()
-{
-  return controls.get_flaps();
-}
-
-
-/**
- * Set the flaps, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setFlaps (double flaps)
-{
-				// FIXME: clamp?
-  controls.set_flaps(flaps);
-}
-
-
-/**
- * Get the aileron, from -1.0 (left) to 1.0 (right).
- */
-double
-FGBFI::getAileron ()
-{
-  return controls.get_aileron();
-}
-
-
-/**
- * Set the aileron, from -1.0 (left) to 1.0 (right).
- */
-void
-FGBFI::setAileron (double aileron)
-{
-				// FIXME: clamp?
-  controls.set_aileron(aileron);
-}
-
-
-/**
- * Get the rudder setting, from -1.0 (left) to 1.0 (right).
- */
-double
-FGBFI::getRudder ()
-{
-  return controls.get_rudder();
-}
-
-
-/**
- * Set the rudder, from -1.0 (left) to 1.0 (right).
- */
-void
-FGBFI::setRudder (double rudder)
-{
-				// FIXME: clamp?
-  controls.set_rudder(rudder);
-}
-
-
-/**
- * Get the elevator setting, from -1.0 (down) to 1.0 (up).
- */
-double
-FGBFI::getElevator ()
-{
-  return controls.get_elevator();
-}
-
-
-/**
- * Set the elevator, from -1.0 (down) to 1.0 (up).
- */
-void
-FGBFI::setElevator (double elevator)
-{
-				// FIXME: clamp?
-  controls.set_elevator(elevator);
-}
-
-
-/**
- * Get the elevator trim, from -1.0 (down) to 1.0 (up).
- */
-double
-FGBFI::getElevatorTrim ()
-{
-  return controls.get_elevator_trim();
-}
-
-
-/**
- * Set the elevator trim, from -1.0 (down) to 1.0 (up).
- */
-void
-FGBFI::setElevatorTrim (double trim)
-{
-				// FIXME: clamp?
-  controls.set_elevator_trim(trim);
-}
-
-
-/**
- * Get the highest brake setting, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getBrakes ()
-{
-  double b1 = getCenterBrake();
-  double b2 = getLeftBrake();
-  double b3 = getRightBrake();
-  return (b1 > b2 ? (b1 > b3 ? b1 : b3) : (b2 > b3 ? b2 : b3));
-}
-
-
-/**
- * Set all brakes, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setBrakes (double brake)
-{
-  setCenterBrake(brake);
-  setLeftBrake(brake);
-  setRightBrake(brake);
-}
-
-
-/**
- * Get the center brake, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getCenterBrake ()
-{
-  return controls.get_brake(2);
-}
-
-
-/**
- * Set the center brake, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setCenterBrake (double brake)
-{
-  controls.set_brake(2, brake);
-}
-
-
-/**
- * Get the left brake, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getLeftBrake ()
-{
-  return controls.get_brake(0);
-}
-
-
-/**
- * Set the left brake, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setLeftBrake (double brake)
-{
-  controls.set_brake(0, brake);
-}
-
-
-/**
- * Get the right brake, from 0.0 (none) to 1.0 (full).
- */
-double
-FGBFI::getRightBrake ()
-{
-  return controls.get_brake(1);
-}
-
-
-/**
- * Set the right brake, from 0.0 (none) to 1.0 (full).
- */
-void
-FGBFI::setRightBrake (double brake)
-{
-  controls.set_brake(1, brake);
-}
-
-
-#endif
-
-
-////////////////////////////////////////////////////////////////////////
 // Autopilot
 ////////////////////////////////////////////////////////////////////////
 
@@ -1077,7 +820,7 @@ FGBFI::getAPHeadingLock ()
 {
     return
       (current_autopilot->get_HeadingEnabled() &&
-       current_autopilot->get_HeadingMode() == FGAutopilot::FG_DG_HEADING_LOCK);
+       current_autopilot->get_HeadingMode() == DEFAULT_AP_HEADING_LOCK);
 }
 
 
@@ -1088,7 +831,7 @@ void
 FGBFI::setAPHeadingLock (bool lock)
 {
     if (lock) {
-	current_autopilot->set_HeadingMode(FGAutopilot::FG_DG_HEADING_LOCK);
+	current_autopilot->set_HeadingMode(DEFAULT_AP_HEADING_LOCK);
 	current_autopilot->set_HeadingEnabled(true);
     } else {
 	current_autopilot->set_HeadingEnabled(false);
@@ -1170,6 +913,92 @@ FGBFI::setAPNAV1Lock (bool lock)
   }
 }
 
+/**
+ * Get the autopilot autothrottle lock.
+ */
+bool
+FGBFI::getAPAutoThrottleLock ()
+{
+  return current_autopilot->get_AutoThrottleEnabled();
+}
+
+
+/**
+ * Set the autothrottle lock.
+ */
+void
+FGBFI::setAPAutoThrottleLock (bool lock)
+{
+  current_autopilot->set_AutoThrottleEnabled(lock);
+}
+
+
+// kludge
+double
+FGBFI::getAPRudderControl ()
+{
+    if (getAPHeadingLock())
+        return current_autopilot->get_TargetHeading();
+    else
+        return controls.get_rudder();
+}
+
+// kludge
+void
+FGBFI::setAPRudderControl (double value)
+{
+    if (getAPHeadingLock()) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "setAPRudderControl " << value );
+        value -= current_autopilot->get_TargetHeading();
+        current_autopilot->HeadingAdjust(value < 0.0 ? -1.0 : 1.0);
+    } else {
+        controls.set_rudder(value);
+    }
+}
+
+// kludge
+double
+FGBFI::getAPElevatorControl ()
+{
+  if (getAPAltitudeLock())
+      return current_autopilot->get_TargetAltitude();
+  else
+    return controls.get_elevator();
+}
+
+// kludge
+void
+FGBFI::setAPElevatorControl (double value)
+{
+    if (getAPAltitudeLock()) {
+        SG_LOG(SG_GENERAL, SG_DEBUG, "setAPElevatorControl " << value );
+        value -= current_autopilot->get_TargetAltitude();
+        current_autopilot->AltitudeAdjust(value < 0.0 ? 100.0 : -100.0);
+    } else {
+        controls.set_elevator(value);
+    }
+}
+
+// kludge
+double
+FGBFI::getAPThrottleControl ()
+{
+  if (getAPAutoThrottleLock())
+    return 0.0;			// always resets
+  else
+    return controls.get_throttle(0);
+}
+
+// kludge
+void
+FGBFI::setAPThrottleControl (double value)
+{
+  if (getAPAutoThrottleLock())
+    current_autopilot->AutoThrottleAdjust(value < 0.0 ? -0.01 : 0.01);
+  else
+    controls.set_throttle(0, value);
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1223,17 +1052,6 @@ FGBFI::getGPSTargetLongitude ()
 {
   return current_autopilot->get_TargetLongitude();
 }
-
-#if 0
-/**
- * Set the GPS target longitude in degrees (negative for west).
- */
-void
-FGBFI::setGPSTargetLongitude (double longitude)
-{
-  current_autopilot->set_TargetLongitude( longitude );
-}
-#endif
 
 
 
