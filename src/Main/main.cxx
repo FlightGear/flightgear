@@ -222,6 +222,8 @@ static void fgMainLoop( void ) {
 
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
 
+    bool scenery_loaded = fgGetBool("sim/sceneryloaded") || fgGetBool("sim/sceneryloaded-override");
+
     // Update the elapsed time.
     static bool first_time = true;
     if ( first_time ) {
@@ -230,13 +232,20 @@ static void fgMainLoop( void ) {
     }
 
     double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
-    if ( throttle_hz > 0.0 ) {
+    if ( throttle_hz > 0.0 && scenery_loaded ) {
+        static double remainder = 0.0;
+
         // simple frame rate throttle
-        double dt = 1000000.0 / throttle_hz;
+        double dt = 1000000.0 / throttle_hz + remainder;
+        int wait = dt / 1000;
+        remainder = dt - ( wait * 1000.0 );
+
         current_time_stamp.stamp();
-        while ( current_time_stamp - last_time_stamp < dt ) {
-            current_time_stamp.stamp();
+        int t_ms = (int) ( ( current_time_stamp - last_time_stamp ) / 1000 ) ; /* Convert to ms */
+        if ( t_ms < wait ) {
+            ulMilliSecondSleep ( wait - t_ms ) ;
         }
+        current_time_stamp.stamp();
     } else {
         // run as fast as the app will go
         current_time_stamp.stamp();
@@ -420,8 +429,6 @@ static void fgMainLoop( void ) {
         global_multi_loop = (int)(2.0 * model_hz );
         remainder = 0;
     }
-
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded") || fgGetBool("sim/sceneryloaded-override");
 
     // flight model
     if ( global_multi_loop > 0) {
