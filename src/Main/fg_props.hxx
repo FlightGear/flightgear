@@ -9,6 +9,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include "globals.hxx"
 
@@ -17,25 +18,17 @@
 // Property management.
 ////////////////////////////////////////////////////////////////////////
 
+class FGProperties : public SGSubsystem
+{
+public:
+    FGProperties ();
+    virtual ~FGProperties ();
 
-/**
- * Initialize the default FlightGear properties.
- *
- * These are mostly properties that haven't been claimed by a
- * specific module yet.  This function should be invoked once,
- * while the program is starting (and after the global property
- * tree has been created).
- */
-extern void fgInitProps ();	// fixme: how are they untied?
-
-
-/**
- * Update the default FlightGear properties.
- *
- * This function should be invoked once in each loop to update all
- * of the default properties.
- */
-extern void fgUpdateProps ();
+    void init ();
+    void bind ();
+    void unbind ();
+    void update (double dt);
+};
 
 
 /**

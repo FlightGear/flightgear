@@ -351,7 +351,6 @@ getGMTString ()
   return buf;
 }
 
-
 /**
  * Return the magnetic variation
  */
@@ -555,10 +554,22 @@ setFDMDataLogging (bool state)
 // Tie the properties.
 ////////////////////////////////////////////////////////////////////////
 
-void
-fgInitProps ()
+FGProperties::FGProperties ()
 {
-  SG_LOG(SG_GENERAL, SG_DEBUG, "start of fgInitProps()" );
+}
+
+FGProperties::~FGProperties ()
+{
+}
+
+void
+FGProperties::init ()
+{
+}
+
+void
+FGProperties::bind ()
+{
 				// Simulation
   fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
@@ -595,14 +606,61 @@ fgInitProps ()
   fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
   fgTie("/sim/temp/full-screen", getFullScreen, setFullScreen);
   fgTie("/sim/temp/fdm-data-logging", getFDMDataLogging, setFDMDataLogging);
-
-  SG_LOG(SG_GENERAL, SG_DEBUG, "end of fgInitProps()" );
 }
 
+void
+FGProperties::unbind ()
+{
+				// Simulation
+  fgUntie("/sim/logging/priority");
+  fgUntie("/sim/logging/classes");
+  fgUntie("/sim/freeze/master");
+  fgUntie("/sim/aircraft-dir");
+
+  fgUntie("/sim/time/elapsed-sec");
+  fgUntie("/sim/time/gmt");
+  fgUntie("/sim/time/gmt-string");
+
+				// Orientation
+  fgUntie("/orientation/heading-magnetic-deg");
+
+				// Environment
+#ifdef FG_WEATHERCM
+  fgUntie("/environment/visibility-m");
+  fgUntie("/environment/wind-from-north-fps");
+  fgUntie("/environment/wind-from-east-fps");
+  fgUntie("/environment/wind-from-down-fps");
+#endif
+
+  fgUntie("/environment/magnetic-variation-deg");
+  fgUntie("/environment/magnetic-dip-deg");
+
+  fgUntie("/sim/time/warp");
+  fgUntie("/sim/time/warp-delta");
+
+				// Misc. Temporary junk.
+  fgUntie("/sim/temp/winding-ccw");
+  fgUntie("/sim/temp/full-screen");
+  fgUntie("/sim/temp/fdm-data-logging");
+}
 
 void
-fgUpdateProps ()
+FGProperties::update (double dt)
 {
+                                // Date and time
+    struct tm * t = globals->get_time_params()->getGmt();
+
+    fgSetInt("/sim/time/utc/year", t->tm_year + 1900);
+    fgSetInt("/sim/time/utc/month", t->tm_mon + 1);
+    fgSetInt("/sim/time/utc/day", t->tm_mday);
+    fgSetInt("/sim/time/utc/hour", t->tm_hour);
+    fgSetInt("/sim/time/utc/minute", t->tm_min);
+    fgSetInt("/sim/time/utc/second", t->tm_sec);
+
+    fgSetDouble("/sim/time/utc/day-seconds",
+                t->tm_hour * 3600 +
+                t->tm_min * 60 +
+                t->tm_sec);
 }
 
 

@@ -371,9 +371,6 @@ void fgRenderFrame() {
     static const SGPropertyNode *groundlevel_nearplane
         = fgGetNode("/sim/current-view/ground-level-nearplane-m");
 
-    // Update the default (kludged) properties.
-    fgUpdateProps();
-
     FGViewer *current__view = globals->get_current_view();
 
     FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
