@@ -125,7 +125,7 @@ class FGPanel : public FGSubsystem
 {
 public:
 
-  FGPanel (int window_x, int window_y, int window_w, int window_h);
+  FGPanel ();
   virtual ~FGPanel ();
 
 				// Update the panel (every frame).
@@ -133,7 +133,6 @@ public:
   virtual void bind ();
   virtual void unbind ();
   virtual void update ();
-  virtual void update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
 
 				// transfer pointer ownership!!!
   virtual void addInstrument (FGPanelInstrument * instrument);
@@ -175,13 +174,15 @@ private:
   mutable int _mouseDelay;
   mutable FGPanelInstrument * _mouseInstrument;
   typedef vector<FGPanelInstrument *> instrument_list_type;
-  int _winx, _winy, _winw, _winh;
   int _width;
   int _height;
   int _x_offset;
   int _y_offset;
   int _view_height;
   bool _bound;
+
+  const SGPropertyNode * _xsize_node;
+  const SGPropertyNode * _ysize_node;
   
   ssgTexture * _bg;
 				// List of instruments in panel.
