@@ -40,13 +40,13 @@ class HTTPClient : public netBufferChannel
 
 public:
 
-    HTTPClient ( cchar* host, int port, cchar* path ) :
+    HTTPClient ( const char* host, int port, const char* path ) :
         done( false )
     {
 	open ();
 	connect (host, port);
 
-	cchar* s = netFormat ( "GET %s HTTP/1.0\r\n\r\n", path );
+	const char* s = netFormat ( "GET %s HTTP/1.0\r\n\r\n", path );
 	bufferSend( s, strlen(s) ) ;
 
         start.stamp();
