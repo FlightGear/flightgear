@@ -49,6 +49,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/point3d.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #if defined( sgi )
 #include <strings.h>

@@ -27,14 +27,6 @@
 
 #include <simgear/compiler.h>
 
-#ifdef SG_MATH_EXCEPTION_CLASH
-#  include <math.h>
-#endif
-
-#include STL_FUNCTIONAL
-#include STL_ALGORITHM
-#include STL_STRING
-
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -52,10 +44,6 @@
 
 #include "tileentry.hxx"
 #include "tilemgr.hxx"
-
-SG_USING_STD(for_each);
-SG_USING_STD(mem_fun_ref);
-SG_USING_STD(string);
 
 
 // Constructor
@@ -84,6 +72,91 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
 FGTileEntry::~FGTileEntry () {
     // cout << "nodes = " << nodes.size() << endl;;
     // delete[] nodes;
+}
+
+
+#if 0
+// This is the current method cut and pasted from 
+//  FGTileEntry::load( const SGPath& base, bool is_base )
+void
+FGTileEntry::WorldCoordinate( sgCoord *obj_pos, Point3D center,
+                              double lat, double lon, double elev, double hdg)
+{
+    // setup transforms
+    Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
+                  lat * SGD_DEGREES_TO_RADIANS,
+                  elev );
+	
+    Point3D world_pos = sgGeodToCart( geod );
+    Point3D offset = world_pos - center;
+	
+    sgMat4 POS;
+    sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
+
+    sgVec3 obj_rt, obj_up;
+    sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
+    sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
+
+    sgMat4 ROT_lon, ROT_lat, ROT_hdg;
+    sgMakeRotMat4( ROT_lon, lon, obj_up );
+    sgMakeRotMat4( ROT_lat, 90 - lat, obj_rt );
+    sgMakeRotMat4( ROT_hdg, hdg, obj_up );
+
+    sgMat4 TUX;
+    sgCopyMat4( TUX, ROT_hdg );
+    sgPostMultMat4( TUX, ROT_lat );
+    sgPostMultMat4( TUX, ROT_lon );
+    sgPostMultMat4( TUX, POS );
+
+    sgSetCoord( obj_pos, TUX );
+}
+#endif
+
+
+// Norman's 'fast hack' for above
+static void WorldCoordinate( sgCoord *obj_pos, Point3D center, double lat,
+                             double lon, double elev, double hdg )
+{
+    double lon_rad = lon * SGD_DEGREES_TO_RADIANS;
+    double lat_rad = lat * SGD_DEGREES_TO_RADIANS;
+    double hdg_rad = hdg * SGD_DEGREES_TO_RADIANS;
+
+    // setup transforms
+    Point3D geod( lon_rad, lat_rad, elev );
+	
+    Point3D world_pos = sgGeodToCart( geod );
+    Point3D offset = world_pos - center;
+
+    sgMat4 mat;
+
+    SGfloat sin_lat = (SGfloat)sin( lat_rad );
+    SGfloat cos_lat = (SGfloat)cos( lat_rad );
+    SGfloat cos_lon = (SGfloat)cos( lon_rad );
+    SGfloat sin_lon = (SGfloat)sin( lon_rad );
+    SGfloat sin_hdg = (SGfloat)sin( hdg_rad ) ;
+    SGfloat cos_hdg = (SGfloat)cos( hdg_rad ) ;
+
+    mat[0][0] =  cos_hdg * (SGfloat)sin_lat * (SGfloat)cos_lon - sin_hdg * (SGfloat)sin_lon;
+    mat[0][1] =  cos_hdg * (SGfloat)sin_lat * (SGfloat)sin_lon + sin_hdg * (SGfloat)cos_lon;
+    mat[0][2] =	-cos_hdg * (SGfloat)cos_lat;
+    mat[0][3] =	 SG_ZERO;
+
+    mat[1][0] = -sin_hdg * (SGfloat)sin_lat * (SGfloat)cos_lon - cos_hdg * (SGfloat)sin_lon;
+    mat[1][1] = -sin_hdg * (SGfloat)sin_lat * (SGfloat)sin_lon + cos_hdg * (SGfloat)cos_lon;
+    mat[1][2] =	 sin_hdg * (SGfloat)cos_lat;
+    mat[1][3] =	 SG_ZERO;
+
+    mat[2][0] = (SGfloat)cos_lat * (SGfloat)cos_lon;
+    mat[2][1] = (SGfloat)cos_lat * (SGfloat)sin_lon;
+    mat[2][2] =	(SGfloat)sin_lat;
+    mat[2][3] =  SG_ZERO;
+
+    mat[3][0] = offset.x();
+    mat[3][1] = offset.y();
+    mat[3][2] = offset.z();
+    mat[3][3] = SG_ONE ;
+
+    sgSetCoord( obj_pos, mat );
 }
 
 
@@ -375,32 +448,9 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		SGPath custom_path = tile_path;
 		custom_path.append( name );
 
-		// setup transforms
-		Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
-			      lat * SGD_DEGREES_TO_RADIANS,
-			      elev );
-		Point3D world_pos = sgGeodToCart( geod );
-		Point3D offset = world_pos - center;
-		sgMat4 POS;
-		sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
-
-		sgVec3 obj_rt, obj_up;
-		sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
-		sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
-
-		sgMat4 ROT_lon, ROT_lat, ROT_hdg;
-		sgMakeRotMat4( ROT_lon, lon, obj_up );
-		sgMakeRotMat4( ROT_lat, 90 - lat, obj_rt );
-		sgMakeRotMat4( ROT_hdg, hdg, obj_up );
-	
-		sgMat4 TUX;
-		sgCopyMat4( TUX, ROT_hdg );
-		sgPostMultMat4( TUX, ROT_lat );
-		sgPostMultMat4( TUX, ROT_lon );
-		sgPostMultMat4( TUX, POS );
-
 		sgCoord obj_pos;
-		sgSetCoord( &obj_pos, TUX );
+		WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+		
 		ssgTransform *obj_trans = new ssgTransform;
 		obj_trans->setTransform( &obj_pos );
 
@@ -429,32 +479,9 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		SGPath custom_path = tile_path;
 		custom_path.append( name );
 
-		// setup transforms
-		Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
-			      lat * SGD_DEGREES_TO_RADIANS,
-			      elev );
-		Point3D world_pos = sgGeodToCart( geod );
-		Point3D offset = world_pos - center;
-		sgMat4 POS;
-		sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
-
-		sgVec3 obj_rt, obj_up;
-		sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
-		sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
-
-		sgMat4 ROT_lon, ROT_lat, ROT_hdg;
-		sgMakeRotMat4( ROT_lon, lon, obj_up );
-		sgMakeRotMat4( ROT_lat, 90 - lat, obj_rt );
-		sgMakeRotMat4( ROT_hdg, hdg, obj_up );
-	
-		sgMat4 TUX;
-		sgCopyMat4( TUX, ROT_hdg );
-		sgPostMultMat4( TUX, ROT_lat );
-		sgPostMultMat4( TUX, ROT_lon );
-		sgPostMultMat4( TUX, POS );
-
 		sgCoord obj_pos;
-		sgSetCoord( &obj_pos, TUX );
+		WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+
 		ssgTransform *obj_trans = new ssgTransform;
 		obj_trans->setTransform( &obj_pos );
 
@@ -480,32 +507,9 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		SGPath custom_path = tile_path;
 		custom_path.append( name );
 
-		// setup transforms
-		Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
-			      lat * SGD_DEGREES_TO_RADIANS,
-			      elev );
-		Point3D world_pos = sgGeodToCart( geod );
-		Point3D offset = world_pos - center;
-		sgMat4 POS;
-		sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
-
-		sgVec3 obj_rt, obj_up;
-		sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
-		sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
-
-		sgMat4 ROT_lon, ROT_lat, ROT_hdg;
-		sgMakeRotMat4( ROT_lon, lon, obj_up );
-		sgMakeRotMat4( ROT_lat, 90 - lat, obj_rt );
-		sgMakeRotMat4( ROT_hdg, hdg, obj_up );
-	
-		sgMat4 TUX;
-		sgCopyMat4( TUX, ROT_hdg );
-		sgPostMultMat4( TUX, ROT_lat );
-		sgPostMultMat4( TUX, ROT_lon );
-		sgPostMultMat4( TUX, POS );
-
 		sgCoord obj_pos;
-		sgSetCoord( &obj_pos, TUX );
+		WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+
 		ssgTransform *obj_trans = new ssgTransform;
 		obj_trans->setTransform( &obj_pos );
 
