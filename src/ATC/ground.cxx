@@ -133,28 +133,29 @@ bool FGGround::LoadNetwork() {
 			} else if(!strcmp(buf, "H")) {
 				np->type = HOLD;
 			} else {
-				cout << "**** ERROR ***** Unknown node type in taxi network...\n";
+				SG_LOG(SG_GENERAL, SG_ALERT, "**** ERROR ***** Unknown node type in taxi network...\n");
 				delete np;
 				return(false);
 			}
 			fin >> buf;		// rwy exit information - gets parsed later - FRAGILE - will break if buf is reused.
 			// Now the name
+			fin >> ch;	// strip the leading " off
 			np->name = "";
 			while(1) {
 				fin.unsetf(ios::skipws);
 				fin >> ch;
-				np->name += ch;
 				if((ch == '"') || (ch == 0x0A)) {
 					break;
 				}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
+				np->name += ch;
 			}
 			fin.setf(ios::skipws);
 			network.push_back(np);
 			// FIXME - fragile - replies on buf not getting modified from exits read to here
 			// see if we also need to push it onto the runway exit list
-			cout << "strlen(buf) = " << strlen(buf) << endl;
+			//cout << "strlen(buf) = " << strlen(buf) << endl;
 			if(strlen(buf) > 2) {
-				cout << "Calling ParseRwyExits for " << buf << endl;
+				//cout << "Calling ParseRwyExits for " << buf << endl;
 				ParseRwyExits(np, buf);
 			}
 		} else if(!strcmp(buf, "A")) {
@@ -170,7 +171,7 @@ bool FGGround::LoadNetwork() {
 			} else if(!strcmp(buf, "T")) {
 				ap->type = TAXIWAY;
 			} else {
-				cout << "**** ERROR ***** Unknown arc type in taxi network...\n";
+				SG_LOG(SG_GENERAL, SG_ALERT, "**** ERROR ***** Unknown arc type in taxi network...\n");
 				delete ap;
 				return(false);
 			}
@@ -181,7 +182,7 @@ bool FGGround::LoadNetwork() {
 			} else if(!strcmp(buf, "N")) {
 				ap->directed = false;
 			} else {
-				cout << "**** ERROR ***** Unknown arc directed value in taxi network - should be Y/N !!!\n";
+				SG_LOG(SG_GENERAL, SG_ALERT, "**** ERROR ***** Unknown arc directed value in taxi network - should be Y/N !!!\n");
 				delete ap;
 				return(false);
 			}			
@@ -233,7 +234,7 @@ bool FGGround::LoadNetwork() {
 			gateCount++;
 		} else {
 			// Something has gone seriously pear-shaped
-			cout << "********* ERROR - unknown ground network element type... aborting read of " << path.c_str() << '\n';
+			SG_LOG(SG_GENERAL, SG_ALERT, "********* ERROR - unknown ground network element type... aborting read of " << path.c_str() << '\n');
 			return(false);
 		}
 		
@@ -315,6 +316,31 @@ Gate* FGGround::GetGateNode() {
 	}
 }
 
+
+// WARNING - This is hardwired to my prototype logical network format
+// and will almost certainly change when Bernie's stuff comes on-line.
+node* FGGround::GetThresholdNode(string rwyID) {
+	// For now go through all the nodes and parse their names
+	// Maybe in the future we'll map threshold nodes by ID
+	//cout << "Size of network is " << network.size() << '\n';
+	for(unsigned int i=0; i<network.size(); ++i) {
+		//cout << "Name = " << network[i]->name << '\n';
+		if(network[i]->name.size()) {
+			string s = network[i]->name;
+			// Warning - the next bit is fragile and dependent on my current naming scheme
+			//cout << "substr = " << s.substr(0,3) << '\n';
+			//cout << "size of s = " << s.size() << '\n'; 
+			if(s.substr(0,3) == "rwy") {
+				//cout << "subsubstr = " << s.substr(4, s.size() - 4) << '\n';
+				if(s.substr(4, s.size() - 4) == rwyID) {
+					return network[i];
+				}
+			}
+		}
+	}
+	return NULL;
+}
+
 // Get a path from a point on a runway to a gate
 // TODO !!
 
@@ -326,6 +352,17 @@ ground_network_path_type FGGround::GetPath(node* A, node* B) {
 	return(GetShortestPath(A, B));
 };
 
+// Get a path from a node to a runway threshold
+ground_network_path_type FGGround::GetPath(node* A, string rwyID) {
+	node* b = GetThresholdNode(rwyID);
+	if(b == NULL) {
+		SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - unable to find path to runway theshold in ground.cxx\n");
+		ground_network_path_type emptyPath;
+		emptyPath.erase(emptyPath.begin(), emptyPath.end());
+		return(emptyPath);
+	}
+	return GetShortestPath(A, b);
+}
 
 // A shortest path algorithm from memory (ie. I can't find the bl&*dy book again!)
 // I'm sure there must be enchancements that we can make to this, such as biasing the

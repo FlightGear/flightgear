@@ -101,7 +101,7 @@ struct node : public ground_network_element {
 	unsigned int nodeID;	//each node in an airport needs a unique ID number - this is ZERO-BASED to match array position
 	Point3D pos;
 	Point3D orthoPos;
-	char* name;
+	string name;
 	node_type type;
 	arc_array_type arcs;
 	double max_turn_radius;
@@ -116,7 +116,7 @@ struct Gate : public node {
 	int max_weight;	//units??
 	//airline_code airline;	//For the future - we don't have any airline codes ATM
 	int id;	// The gate number in the logical scheme of things
-	string sid;	// The real-world gate letter/number
+	string name;	// The real-world gate letter/number
 	//node* pNode;
 	bool used;
 	double heading;	// The direction the parked-up plane should point in degrees
@@ -248,7 +248,10 @@ public:
 	node_array_type GetExits(int rwyID);
 	
 	// Get a path from one node to another
-	ground_network_path_type GetPath(node* A, node* B); 
+	ground_network_path_type GetPath(node* A, node* B);
+	
+	// Get a path from a node to a runway threshold
+	ground_network_path_type GetPath(node* A, string rwyID);
 
 private:
 
@@ -309,6 +312,10 @@ private:
 	// -1 signifies that all gates are currently full.
 	// TODO - modify to return a suitable gate based on aircraft size/weight.
 	int GetRandomGateID();
+	
+	// Return a pointer to the node at a runway threshold
+	// Returns NULL if unsuccessful.
+	node* GetThresholdNode(string rwyID);
 	
 	// A shortest path algorithm sort of from memory (I can't find the bl&*dy book again!)
 	ground_network_path_type GetShortestPath(node* A, node* B); 
