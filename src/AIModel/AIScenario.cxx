@@ -1,4 +1,4 @@
-// FGAIScenario - class for loading an AI scenario
+// FGAIScenario.cxx - class for loading an AI scenario
 // Written by David Culp, started May 2004
 // - davidculp2@comcast.net
 //
@@ -78,6 +78,8 @@ FGAIScenario::FGAIScenario(string filename)
      en->wind_from_east = entry_node->getDoubleValue("wind_from_east", 0);
      en->wind_from_north = entry_node->getDoubleValue("wind_from_north", 0);
      en->wind            = entry_node->getBoolValue("wind", false);
+	 en->cd              = entry_node->getDoubleValue  ("cd", 0.029); 
+	 en->weight          = entry_node->getDoubleValue  ("weight", 0.030); 
      en->fp             = NULL;
    }
 
@@ -108,4 +110,4 @@ int FGAIScenario::nEntries( void )
   return entries.size();
 }
 
-
+// end scenario.cxx

@@ -43,6 +43,11 @@
 #include "AIBase.hxx"
 #include "AIManager.hxx"
 
+
+const double FGAIBase::rho = 0.023780;  // sea level air density slugs/ft3
+const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
+
+
 FGAIBase::FGAIBase()
  :  fp( NULL ),
     model( NULL ),

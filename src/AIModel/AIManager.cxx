@@ -203,6 +203,8 @@ FGAIManager::createBallistic( FGAIModelEntity *entity ) {
         ai_ballistic->setWind_from_north(entity->wind_from_north);
         ai_ballistic->setWind(entity->wind);
         ai_ballistic->setRoll(entity->roll);
+		ai_ballistic->setCd(entity->cd);
+		ai_ballistic->setWeight(entity->weight);
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic;
@@ -316,3 +318,4 @@ void FGAIManager::processScenario( string filename ) {
   delete s;
 }
 
+//end AIManager.cxx

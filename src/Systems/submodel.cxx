@@ -13,6 +13,8 @@
 #include <AIModel/AIManager.hxx>
 
 
+const double SubmodelSystem::lbs_to_slugs = 0.031080950172;
+
 SubmodelSystem::SubmodelSystem ()
 {
     
@@ -52,8 +54,8 @@ SubmodelSystem::init ()
 
     _user_speed_down_fps_node   = fgGetNode("/velocities/speed-down-fps",true);
     _user_speed_east_fps_node   = fgGetNode("/velocities/speed-east-fps",true);
-	_user_speed_north_fps_node  = fgGetNode("/velocities/speed-north-fps",true);
-	
+    _user_speed_north_fps_node  = fgGetNode("/velocities/speed-north-fps",true);
+
     ai = (FGAIManager*)globals->get_subsystem("ai_model");
 
 
@@ -124,6 +126,8 @@ SubmodelSystem::release (submodel* sm, double dt)
   entity.wind_from_east = IC.wind_from_east;
   entity.wind_from_north = IC.wind_from_north;
   entity.wind = sm->wind;
+  entity.cd = sm->cd;
+  entity.weight = sm->weight;
   ai->createBallistic( &entity );
  
   if (sm->count > 0) (sm->count)--; 
@@ -161,7 +165,7 @@ SubmodelSystem::load ()
      sm->trigger        = fgGetNode(entry_node->getStringValue("trigger", "none"), true);
      sm->name           = entry_node->getStringValue("name", "none_defined");
      sm->model          = entry_node->getStringValue("model", "Models/Geometry/rocket.ac");
-     sm->speed          = entry_node->getDoubleValue("speed", 0.0);
+     sm->speed          = entry_node->getDoubleValue("speed", 2329.4 );
      sm->repeat         = entry_node->getBoolValue  ("repeat", false); 
      sm->delay          = entry_node->getDoubleValue("delay", 0.25); 
      sm->count          = entry_node->getIntValue   ("count", 1); 
@@ -171,11 +175,13 @@ SubmodelSystem::load ()
      sm->z_offset       = entry_node->getDoubleValue("z-offset", 0.0); 
      sm->yaw_offset     = entry_node->getDoubleValue("yaw-offset", 0.0); 
      sm->pitch_offset   = entry_node->getDoubleValue("pitch-offset", 0.0);
-     sm->drag_area      = entry_node->getDoubleValue("eda", 0.007);
+     sm->drag_area      = entry_node->getDoubleValue("eda", 0.034);
      sm->life           = entry_node->getDoubleValue("life", 900.0);
      sm->buoyancy       = entry_node->getDoubleValue("buoyancy", 0);
      sm->wind           = entry_node->getBoolValue  ("wind", false); 
      sm->first_time     = false;
+     sm->cd             = entry_node->getDoubleValue("cd", 0.295);
+     sm->weight         = entry_node->getDoubleValue("weight", 0.25);
 
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;
@@ -198,7 +204,7 @@ SubmodelSystem::transform( submodel* sm)
  // get initial conditions 
     
   IC.lat =        _user_lat_node->getDoubleValue();    
-  IC.lon =        _user_lon_node->getDoubleValue();	   
+  IC.lon =        _user_lon_node->getDoubleValue();   
   IC.alt =        _user_alt_node->getDoubleValue();    
   IC.roll =       _user_roll_node->getDoubleValue();    // rotation about x axis 
   IC.elevation =  _user_pitch_node->getDoubleValue();   // rotation about y axis 
@@ -216,7 +222,9 @@ SubmodelSystem::transform( submodel* sm)
   in[0] = sm->x_offset;
   in[1] = sm->y_offset;
   in[2] = sm->z_offset; 
-
+  
+  IC.mass = sm->weight * lbs_to_slugs;
+   
 // pre-process the trig functions
 
     cosRx = cos(-IC.roll * SG_DEGREES_TO_RADIANS);
@@ -289,22 +297,22 @@ SubmodelSystem::transform( submodel* sm)
   // re-calculate speed, elevation and azimuth
 
    IC.speed = sqrt( IC.total_speed_north * IC.total_speed_north + 
-                      IC.total_speed_east * IC.total_speed_east +
-					  IC.total_speed_down * IC.total_speed_down);
-   			  
+                    IC.total_speed_east * IC.total_speed_east +
+                    IC.total_speed_down * IC.total_speed_down);
+
    IC.azimuth = atan(IC.total_speed_east/IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
    
    // rationalise the output
    
    if (IC.total_speed_north <= 0){
     IC.azimuth = 180 + IC.azimuth;
-	}
+   }
    else{
      if(IC.total_speed_east <= 0){
      IC.azimuth = 360 + IC.azimuth;
-	 }
+   }
   }
-	 
+ 
     IC.elevation = -atan(IC.total_speed_down/sqrt(IC.total_speed_north * 
                        IC.total_speed_north + 
                        IC.total_speed_east * IC.total_speed_east)) * SG_RADIANS_TO_DEGREES;

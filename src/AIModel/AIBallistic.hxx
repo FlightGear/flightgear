@@ -25,12 +25,12 @@
 
 
 class FGAIBallistic : public FGAIBase {
-	
+
 public:
-	
+
     FGAIBallistic(FGAIManager* mgr);
     ~FGAIBallistic();
-	
+
     bool init();
     virtual void bind();
     virtual void unbind();
@@ -38,7 +38,7 @@ public:
 
     void setAzimuth( double az );
     void setElevation( double el );
-	void setRoll( double rl );
+    void setRoll( double rl );
     void setStabilization( bool val );
     void setDragArea( double a );
     void setLife( double seconds );
@@ -46,14 +46,16 @@ public:
     void setWind_from_east( double fps );
     void setWind_from_north( double fps );
     void setWind( bool val );
+    void setCd( double c );
+    void setWeight( double w );
 
     double _getTime() const;
-	
+
 private:
 
     double azimuth;         // degrees true
     double elevation;       // degrees
-	double rotation;        // degrees
+    double rotation;        // degrees
     double hs;              // horizontal speed (fps)
     bool aero_stabilized;   // if true, object will point where it's going
     double drag_area;       // equivalent drag area in ft2
@@ -63,7 +65,9 @@ private:
     double wind_from_east;  // fps
     double wind_from_north; // fps
     bool wind;              // if true, local wind will be applied to object
-		
+    double Cd;              // drag coefficient
+    double weight;          // lbs
+
     void Run(double dt);
 };
 

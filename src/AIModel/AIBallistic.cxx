@@ -27,16 +27,17 @@
 #include "AIBallistic.hxx"
 
 
+
 FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     manager = mgr;
     _type_str = "ballistic";
     _otype = otBallistic;
     drag_area = 0.007;
     life_timer = 0.0;
-	gravity = 32;
-//	buoyancy = 64;
+    gravity = 32;
+//  buoyancy = 64;
     no_roll = false;
-	}
+}
 
 FGAIBallistic::~FGAIBallistic() {
 }
@@ -111,8 +112,16 @@ void FGAIBallistic::setWind_from_north(double fps) {
 void FGAIBallistic::setWind(bool val) {
    wind = val;
 }
-void FGAIBallistic::Run(double dt) {
 
+void FGAIBallistic::setCd(double c) {
+   Cd = c;
+}
+
+void FGAIBallistic::setWeight(double w) {
+   weight = w;
+}
+
+void FGAIBallistic::Run(double dt) {
    life_timer += dt;
    if (life_timer > life) setDie(true); 
 
@@ -120,12 +129,22 @@ void FGAIBallistic::Run(double dt) {
    double speed_east_deg_sec;
    double wind_speed_from_north_deg_sec;
    double wind_speed_from_east_deg_sec;
+   double mass;
       
-   // the two drag calculations below assume sea-level density, 
-   // mass of 0.03 slugs,  drag coeff of 0.295
-   // adjust speed due to drag 
-   speed -= 0.0116918 * drag_area * speed * speed * dt;
+   // the drag calculations below assume sea-level density,
+   // rho = 0.023780  slugs/ft3
+   // calculate mass
+   mass = weight * lbs_to_slugs;
+   
+   // drag = Cd * 0.5 * rho * speed * speed * drag_area;
+   // acceleration = drag/mass;
+   // adjust speed by drag
+   speed -= (Cd * 0.5 * rho * speed * speed * drag_area/mass) * dt; 
+
+   // don't let speed become negative
    if ( speed < 0.0 ) speed = 0.0;
+   
+   // calculate vertical and horizontal speed components
    vs = sin( pitch * SG_DEGREES_TO_RADIANS ) * speed;
    hs = cos( pitch * SG_DEGREES_TO_RADIANS ) * speed;
 
@@ -133,28 +152,21 @@ void FGAIBallistic::Run(double dt) {
    speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lat;
    speed_east_deg_sec  = sin(hdg / SG_RADIANS_TO_DEGREES) * hs / ft_per_deg_lon;
    
-   // convert wind speed (fps) to degrees per second
-   
+   // if wind not required, set to zero
    if (!wind){
       wind_from_north = 0;
       wind_from_east = 0;
-	  }
-
+   }
+  
+   // convert wind speed (fps) to degrees per second
    wind_speed_from_north_deg_sec = wind_from_north / ft_per_deg_lat;
    wind_speed_from_east_deg_sec  = wind_from_east / ft_per_deg_lon;
    
- 
    // set new position
-//   pos.setlat( pos.lat() + (speed_north_deg_sec * dt)  );
-//   pos.setlon( pos.lon() + (speed_east_deg_sec * dt)  ); 
- 
- 
-   // set new position
-   
    pos.setlat( pos.lat() + (speed_north_deg_sec - wind_speed_from_north_deg_sec) * dt );
    pos.setlon( pos.lon() + (speed_east_deg_sec - wind_speed_from_east_deg_sec) * dt ); 
 
-   // adjust vertical speed for acceleration of gravity
+   // adjust vertical speed for acceleration of gravity and buoyancy
    vs -= (gravity - buoyancy) * dt;
    
    // adjust altitude (feet)
@@ -170,7 +182,7 @@ void FGAIBallistic::Run(double dt) {
    // set destruction flag if altitude less than sea level -1000
    if (altitude < -1000.0) setDie(true);
 
-}
+}  // end Run
 
 double FGAIBallistic::_getTime() const {
    return life_timer;

@@ -1,4 +1,4 @@
-// FGAIBase - abstract base class for AI objects
+// FGAIBase.hxx - abstract base class for AI objects
 // Written by David Culp, started Nov 2003, based on
 // David Luff's FGAIEntity class.
 // - davidculp2@comcast.net
@@ -62,7 +62,9 @@ typedef struct {
    double buoyancy;           // acceleration in ft per sec2
    double wind_from_east;     // in feet per second
    double wind_from_north;    // in feet per second
-   bool wind;
+   double cd;                 // coefficient of drag
+   bool wind;                 // if true, model reacts to parent wind
+   double weight;             // in lbs
 } FGAIModelEntity;
 
 
@@ -176,6 +178,9 @@ public:
     double _getX_shift() const;
     double _getY_shift() const;
     double _getRotation() const;
+
+    static const double rho;
+    static const double lbs_to_slugs;
 
     int _getID() const;
 

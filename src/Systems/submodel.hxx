@@ -29,6 +29,7 @@ public:
  typedef struct {
   SGPropertyNode* trigger;
   SGPropertyNode* prop;
+  
   string             name;
   string             model;
   double             speed;
@@ -47,6 +48,9 @@ public:
   double             buoyancy;
   bool               wind;
   bool               first_time;
+  double             cd;
+  double             weight;
+//  double             mass;
  } submodel; 
 
  typedef struct {
@@ -65,6 +69,7 @@ public:
   double     total_speed_down;
   double     total_speed_east;
   double     total_speed_north;
+  double     mass;
  } IC_struct;  
 
     SubmodelSystem ();
@@ -105,6 +110,8 @@ private:
     double x_offset, y_offset, z_offset;
     double pitch_offset, yaw_offset;
 
+    static const double lbs_to_slugs; //conversion factor
+
     SGPropertyNode* _serviceable_node;
     SGPropertyNode* _user_lat_node;
     SGPropertyNode* _user_lon_node;
@@ -117,14 +124,15 @@ private:
     SGPropertyNode* _user_speed_node;
     SGPropertyNode* _user_wind_from_east_node;
     SGPropertyNode* _user_wind_from_north_node;
-	SGPropertyNode* _user_speed_down_fps_node;
-	SGPropertyNode* _user_speed_east_fps_node;
-	SGPropertyNode* _user_speed_north_fps_node;
-	
+    SGPropertyNode* _user_speed_down_fps_node;
+    SGPropertyNode* _user_speed_east_fps_node;
+    SGPropertyNode* _user_speed_north_fps_node;
+
     FGAIManager* ai;
     IC_struct  IC;
 
 };
 
 #endif // __SYSTEMS_SUBMODEL_HXX
+
 
