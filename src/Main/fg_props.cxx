@@ -571,6 +571,12 @@ setAPTerrainLock (bool lock)
 {
   current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_TERRAIN);
   current_autopilot->set_AltitudeEnabled(lock);
+  current_autopilot->set_TargetAGL(
+      current_aircraft.fdm_state->get_Altitude_AGL() * SG_FEET_TO_METER
+    );
+  cout << "Target AGL = "
+       << current_aircraft.fdm_state->get_Altitude_AGL() * SG_FEET_TO_METER
+       << endl;
 }
 
 
@@ -1030,6 +1036,8 @@ fgInitProps ()
   fgSetArchivable("/autopilot/locks/glide-slope");
   fgTie("/autopilot/locks/terrain", getAPTerrainLock, setAPTerrainLock);
   fgSetArchivable("/autopilot/locks/terrain");
+  fgTie("/autopilot/settings/agl-ft", getAPAltitude, setAPAltitude);
+  fgSetArchivable("/autopilot/settings/agl-ft");
   fgTie("/autopilot/settings/climb-rate-fpm", getAPClimb, setAPClimb, false);
   fgSetArchivable("/autopilot/settings/climb-rate-fpm");
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
@@ -1195,7 +1203,7 @@ FGAndCondition::FGAndCondition ()
 
 FGAndCondition::~FGAndCondition ()
 {
-  for (int i = 0; i < _conditions.size(); i++)
+  for (unsigned int i = 0; i < _conditions.size(); i++)
     delete _conditions[i];
 }
 
@@ -1228,7 +1236,7 @@ FGOrCondition::FGOrCondition ()
 
 FGOrCondition::~FGOrCondition ()
 {
-  for (int i = 0; i < _conditions.size(); i++)
+  for (unsigned int i = 0; i < _conditions.size(); i++)
     delete _conditions[i];
 }
 

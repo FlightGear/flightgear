@@ -469,7 +469,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Geodetic_Position( Latitude, tmp_lon, Altitude );
     _set_Euler_Angles( Phi, Theta, Psi );
 
-    _set_Altitude_AGL( Altitude-Runway_altitude );
+    _set_Altitude_AGL( Altitude - Runway_altitude );
 
     // Miscellaneous quantities
     _set_T_Local_to_Body(T_local_to_body_m);

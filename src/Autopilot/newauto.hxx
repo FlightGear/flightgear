@@ -176,6 +176,8 @@ public:
     inline void set_TargetDistance( double val ) { TargetDistance = val; }
     inline double get_TargetAltitude() const { return TargetAltitude; }
     inline void set_TargetAltitude( double val ) { TargetAltitude = val; }
+    inline double get_TargetAGL() const { return TargetAGL; }
+    inline void set_TargetAGL( double val ) { TargetAGL = val; }
     inline double get_TargetClimbRate() const { return TargetClimbRate; }
     inline void set_TargetClimbRate( double val ) { TargetClimbRate = val; }
 

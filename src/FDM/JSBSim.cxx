@@ -381,6 +381,8 @@ bool FGJSBsim::copy_from_JSBsim() {
                      Position->GetLongitude(),
                      Position->Geth() );
 
+    _set_Altitude_AGL( Position->GetDistanceAGL() );
+
     _set_Euler_Angles( Rotation->Getphi(),
                        Rotation->Gettht(),
                        Rotation->Getpsi() );
