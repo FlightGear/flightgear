@@ -11,6 +11,7 @@ int main( int argc, char **argv ) {
 	runways.dump_mk4( argv[2] );    
     } else {
 	cout << "usage: " << argv[0] << " <in> <out>" << endl;
+	exit(-1);
     }
 
     cout << endl;

@@ -12,4 +12,4 @@ gensimple_LDADD = libAirports.a -lsgdebug -lsgmisc -lmk4 -lz
 genrunways_SOURCES = genrunways.cxx
 genrunways_LDADD = libAirports.a -lsgdebug -lsgmisc -lmk4 -lz
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
+INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

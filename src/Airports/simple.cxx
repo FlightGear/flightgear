@@ -125,34 +125,47 @@ int FGAirportsUtil::load( const string& file ) {
 	exit(-1);
     }
 
-    /*
-    // We can use the STL copy algorithm because the input
-    // file doesn't contain and comments or blank lines.
-    copy( istream_iterator<FGAirport,ptrdiff_t>(in.stream()),
-	  istream_iterator<FGAirport,ptrdiff_t>(),
- 	  inserter( airports, airports.begin() ) );
-    */
+    // skip first line of file
+    char tmp[256];
+    in.getline( tmp, 256 );
+
 
     // read in each line of the file
 
 #ifdef __MWERKS__
 
-    in >> skipcomment;
+    in >> ::skipws;
     char c = 0;
     while ( in.get(c) && c != '\0' ) {
-	in.putback(c);
-	in >> a;
-	airports.insert(a);
-	in >> skipcomment;
+	if ( c == 'A' ) {
+	    in >> a;
+	    in >> skipeol;
+	    airports.insert(a);
+	} else if ( c == 'R' ) {
+	    in >> skipeol;
+	} else {
+	    in >> skipeol;
+	}
+	in >> ::skipws;
     }
 
 #else
 
-    in >> skipcomment;
+    in >> skipws;
     while ( ! in.eof() ) {
-	in >> a;
-	airports.insert(a);
-	in >> skipcomment;
+	char c = 0;
+ 	in.get(c);
+	if ( c == 'A' ) {
+	    in >> a;
+	    cout << "in <- " << a.id << endl;
+	    in >> skipeol;
+	    airports.insert(a);
+	} else if ( c == 'R' ) {
+	    in >> skipeol;
+	} else {
+	    in >> skipeol;
+	}
+	in >> skipws;
     }
 
 #endif
@@ -185,6 +198,7 @@ bool FGAirportsUtil::dump_mk4( const string& file ) {
     const_iterator end = airports.end();
     while ( current != end ) {
 	// add each airport record
+	cout << "out -> " << current->id << endl;
 	pID (row) = current->id.c_str();
 	pLon (row) = current->longitude;
 	pLat (row) = current->latitude;

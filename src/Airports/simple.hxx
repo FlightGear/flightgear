@@ -94,7 +94,7 @@ public:
 inline istream&
 operator >> ( istream& in, FGAirport& a )
 {
-    return in >> a.id >> a.longitude >> a.latitude >> a.elevation;
+    return in >> a.id >> a.latitude >> a.longitude >> a.elevation;
 }
 
 
