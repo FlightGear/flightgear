@@ -65,7 +65,9 @@ enum atc_type {
 	APPROACH,
 	DEPARTURE,
 	ENROUTE
-}; 
+};
+
+const int ATC_NUM_TYPES = 7;
 
 // DCL - new experimental ATC data store
 struct ATCData {
