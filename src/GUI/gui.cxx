@@ -4,6 +4,8 @@
  * Written 1998 by Durk Talsma, started Juni, 1998.  For the flight gear
  * project.
  *
+ * Additional mouse supported added by David Megginson, 1999.
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
@@ -111,7 +113,9 @@ Mouse stuff
 ---------------------------------------------------------------------*/
 
 static int _mX = 0;
-static int  _mY = 0;
+static int _mY = 0;
+static int _savedX = 0;
+static int _savedY = 0;
 static int last_buttons = 0 ;
 static int mouse_active = 0;
 static int menu_on = 0;
@@ -147,6 +151,9 @@ static float trim_sensitivity = 1000.0;
 void guiMotionFunc ( int x, int y )
 {
     if (mouse_yoke) {
+	int ww = current_view.get_winWidth();
+	int wh = current_view.get_winHeight();
+
 	if (last_buttons & (1 << GLUT_LEFT_BUTTON)) {
 	    float brake_offset = (_mX - x) / brake_sensitivity;
 	    float throttle_offset = (_mY - y) / throttle_sensitivity;
@@ -163,13 +170,17 @@ void guiMotionFunc ( int x, int y )
 	    controls.move_aileron(aileron_offset);
 	    controls.move_elevator(elevator_offset);
 	}
+	if (x < 5 || x > ww-5 || y < 5 || y > wh-5) {
+	    _mX = x = ww / 2;
+	    _mY = y = wh / 2;
+	    glutWarpPointer(x, y);
+	}
     } else {
         puMouse ( x, y ) ;
         glutPostRedisplay () ;
     }
     _mX = x;
     _mY = y;
-
 }
 
 void guiMouseFunc(int button, int updown, int x, int y)
@@ -180,8 +191,13 @@ void guiMouseFunc(int button, int updown, int x, int y)
         mouse_yoke = !mouse_yoke;
 	if (mouse_yoke) {
             FG_LOG( FG_INPUT, FG_INFO, "Mouse in yoke mode" );
+	    _savedX = x;
+	    _savedY = y;
   	    glutSetCursor(GLUT_CURSOR_NONE);
 	} else {
+	    _mX = x = _savedX;
+	    _mY = y = _savedY;
+	    glutWarpPointer(x, y);
 	    glutSetCursor(GLUT_CURSOR_INHERIT);
             FG_LOG( FG_INPUT, FG_INFO, "Mouse in pointer mode" );
 	}
