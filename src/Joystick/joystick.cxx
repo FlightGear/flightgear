@@ -158,11 +158,13 @@ fgJoystickInit()
 	JOYCAPS jsCaps ;
 	joyGetDevCaps( i, &jsCaps, sizeof(jsCaps) );
 	int nbuttons = jsCaps.wNumButtons;
+	if (nbuttons > MAX_BUTTONS) nbuttons = MAX_BUTTONS;
 #else
 	int nbuttons = MAX_BUTTONS;
 #endif
 	
 	int naxes = js->getNumAxes();
+	if (naxes > MAX_AXES) naxes = MAX_AXES;
 	joysticks[i].naxes = naxes;
 	joysticks[i].nbuttons = nbuttons;
 
