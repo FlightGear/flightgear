@@ -127,7 +127,7 @@ AttitudeIndicator::update (double dt)
     _pitch_int_node->setDoubleValue(pitch);
 
     // add in a gyro underspin "error" if gyro is spinning too slowly
-    const double spin_thresh = 0.4;
+    const double spin_thresh = 0.8;
     const double max_roll_error = 40.0;
     const double max_pitch_error = 12.0;
     double roll_error;

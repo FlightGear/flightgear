@@ -6,6 +6,7 @@
 
 #include "instrument_mgr.hxx"
 #include "airspeed_indicator.hxx"
+#include "annunciator.hxx"
 #include "attitude_indicator.hxx"
 #include "altimeter.hxx"
 #include "turn_indicator.hxx"
@@ -21,6 +22,7 @@
 FGInstrumentMgr::FGInstrumentMgr ()
 {
     set_subsystem("asi", new AirspeedIndicator);
+    set_subsystem("annunciator", new Annunciator);
     set_subsystem("ai", new AttitudeIndicator);
     set_subsystem("alt", new Altimeter);
     set_subsystem("ti", new TurnIndicator);
