@@ -1,10 +1,14 @@
 // dump out a gdbm version of the simple airport file
 
+#include <simgear/debug/logstream.hxx>
+
 #include "simple.hxx"
 
 int main( int argc, char **argv ) {
     FGAirportsUtil airports;
     FGAirport a;
+
+    sglog().setLogLevels( SG_ALL, SG_INFO );
 
     if ( argc == 3 ) {
 	airports.load( argv[1] );

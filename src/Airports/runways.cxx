@@ -232,8 +232,8 @@ int FGRunwaysUtil::load( const string& file ) {
     }
 
     // skip first line of file
-    char tmp[256];
-    in.getline( tmp, 256 );
+    char tmp[2048];
+    in.getline( tmp, 2048 );
 
     // read in each line of the file
 

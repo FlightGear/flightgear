@@ -121,12 +121,13 @@ int FGAirportsUtil::load( const string& file ) {
     if ( !in.is_open() ) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
 	exit(-1);
+    } else {
+	SG_LOG( SG_GENERAL, SG_ALERT, "opened: " << file );
     }
 
     // skip first line of file
-    char tmp[256];
-    in.getline( tmp, 256 );
-
+    char tmp[2048];
+    in.getline( tmp, 2048 );
 
     // read in each line of the file
 
@@ -137,6 +138,7 @@ int FGAirportsUtil::load( const string& file ) {
     while ( in.get(c) && c != '\0' ) {
 	if ( c == 'A' ) {
 	    in >> a;
+            SG_LOG( SG_GENERAL, SG_INFO, a.id );
 	    in >> skipeol;
 	    airports.insert(a);
 	} else if ( c == 'R' ) {
@@ -150,15 +152,15 @@ int FGAirportsUtil::load( const string& file ) {
 #else
 
     in >> ::skipws;
+    string token;
     while ( ! in.eof() ) {
-	char c = 0;
- 	in.get(c);
-	if ( c == 'A' ) {
+ 	in >> token;
+	if ( token == "A" ) {
 	    in >> a;
-	    cout << "in <- " << a.id << endl;
+            SG_LOG( SG_GENERAL, SG_INFO, "in <- " << a.id );
 	    in >> skipeol;
 	    airports.insert(a);
-	} else if ( c == 'R' ) {
+	} else if ( token == "R" ) {
 	    in >> skipeol;
 	} else {
 	    in >> skipeol;
