@@ -274,7 +274,7 @@ sgVec3 *PilotOffsetGet()
         if( PO_vec == 0 ) {
                 sgVec3 v;
                 // we seem to need the ~quite zero terms ???
-                sgSetVec3(v,15,0.0001,0.0001);
+                sgSetVec3(v,25,0.0001,0.0001);
                 PilotOffsetInit(v);
         }
         sgVec3Slider *me = (sgVec3Slider *)PO_vec -> getUserData();
