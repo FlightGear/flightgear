@@ -36,9 +36,9 @@
 #include <Include/fg_types.h>
 #include <Bucket/bucketutils.h>
 
-#include "fg_geodesy.h"
-#include "mat3.h"
-#include "polar.h"
+#include <Math/fg_geodesy.h>
+#include <Math/mat3.h>
+#include <Math/polar.h>
 
 
 int nodecount, tricount;
@@ -640,9 +640,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.13  1998/04/14 02:26:11  curt
-/* Code reorganizations.  Added a Lib/ directory for more general libraries.
+/* Revision 1.14  1998/04/18 04:01:32  curt
+/* Now use libMath rather than having local copies of math routines.
 /*
+ * Revision 1.13  1998/04/14 02:26:11  curt
+ * Code reorganizations.  Added a Lib/ directory for more general libraries.
+ *
  * Revision 1.12  1998/04/08 23:22:18  curt
  * Adopted Gnu automake/autoconf system.
  *

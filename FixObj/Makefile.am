@@ -26,15 +26,18 @@
 
 bin_PROGRAMS = fixobj
 
-fixobj_SOURCES = main.c mat3.h obj.c obj.h MAT3vec.c
+fixobj_SOURCES = main.c obj.c obj.h
 
-fixobj_LDADD =
+fixobj_LDADD = $(top_builddir)/Lib/Math/libMath.la
 
-INCLUDES += -I$(top_builddir)
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/04/18 04:01:02  curt
+# Now use libMath rather than having local copies of math routines.
+#
 # Revision 1.2  1998/04/14 02:26:05  curt
 # Code reorganizations.  Added a Lib/ directory for more general libraries.
 #

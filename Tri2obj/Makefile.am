@@ -26,21 +26,20 @@
 
 bin_PROGRAMS = tri2obj
 
-tri2obj_SOURCES = \
-	tri2obj.c tri2obj.h \
-	MAT3vec.c \
-	fg_geodesy.c fg_geodesy.h \
-	mat3.h \
-	polar.c polar.h
+tri2obj_SOURCES = tri2obj.c tri2obj.h
 
 tri2obj_LDADD = \
-	$(top_builddir)/Lib/Bucket/libBucket.la
+	$(top_builddir)/Lib/Bucket/libBucket.la \
+	$(top_builddir)/Lib/Math/libMath.la
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/04/18 04:01:29  curt
+# Now use libMath rather than having local copies of math routines.
+#
 # Revision 1.2  1998/04/14 02:26:09  curt
 # Code reorganizations.  Added a Lib/ directory for more general libraries.
 #
