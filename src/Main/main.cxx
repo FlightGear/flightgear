@@ -1076,11 +1076,6 @@ static void fgMainLoop( void ) {
     fgIOProcess();
 #endif
 
-    // see if we need to load any new scenery tiles
-    double visibility_meters = fgGetDouble("/environment/visibility-m");
-    global_tile_mgr.update( longitude->getDoubleValue(),
-			    latitude->getDoubleValue(), visibility_meters );
-
     // see if we need to load any deferred-load textures
     material_lib.load_next_deferred();
 
@@ -1095,6 +1090,11 @@ static void fgMainLoop( void ) {
 
     // redraw display
     fgRenderFrame();
+
+    // see if we need to load any new scenery tiles
+    double visibility_meters = fgGetDouble("/environment/visibility-m");
+    global_tile_mgr.update( longitude->getDoubleValue(),
+			    latitude->getDoubleValue(), visibility_meters );
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
