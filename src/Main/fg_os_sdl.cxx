@@ -1,5 +1,9 @@
 #include <stdlib.h>
 
+#include <simgear/compiler.h>
+#include <simgear/structure/exception.hxx>
+#include <simgear/debug/logstream.hxx>
+
 #include <SDL/SDL.h>
 #include <plib/pu.h>
 
@@ -63,14 +67,16 @@ void fgOSOpenWindow(int w, int h, int bpp,
     int cbits = (bpp <= 16) ?  5 :  8;
     int zbits = (bpp <= 16) ? 16 : 24;
 
-    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE); // FIXME: handle errors
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) == -1)
+        throw sg_throwable(string("Failed to initialize SDL: ")
+                           + SDL_GetError());
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, cbits);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, cbits);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, cbits);
     if(alpha)
         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-    if(stencil)
+    if(bpp > 16 && stencil)
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, zbits);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -79,7 +85,9 @@ void fgOSOpenWindow(int w, int h, int bpp,
     if(fullscreen) {
         vidmask |= SDL_FULLSCREEN;
     }
-    SDL_SetVideoMode(w, h, 16, vidmask); // FIXME: handle errors
+    if (SDL_SetVideoMode(w, h, 16, vidmask) == 0)
+        throw sg_throwable(string("Failed to set SDL video mode: ")
+                                   + SDL_GetError());
 
     SDL_WM_SetCaption("FlightGear", "FlightGear");
 
