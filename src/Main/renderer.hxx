@@ -22,11 +22,15 @@ public:
     ~FGRenderer() {}
 
     void init();
-    static void update();
+
+    void build_states();
     static void resize(int width, int height );
 
-    void screendump();
-    void build_states();
+    // calling update( refresh_camera_settings = false ) will not
+    // touch window or camera settings.  This is useful for the tiled
+    // renderer which needs to set the view frustum itself.
+    static void update( bool refresh_camera_settings );
+    inline static void update() { update( true ); }
 };
 
 #endif

@@ -138,9 +138,9 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"loadFlight", loadFlight},
         {"reInit", reInit},
 #ifdef TR_HIRES_SNAP
-        {"dumpHiResSnapShot", dumpHiResSnapShot},
+        {"dumpHiResSnapShot", fgHiResDumpWrapper},
 #endif
-        {"dumpSnapShot", dumpSnapShot},
+        {"dumpSnapShot", fgDumpSnapShotWrapper},
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
         {"printScreen", printScreen},
 #endif
@@ -528,9 +528,10 @@ void fgHiResDump()
         fgSetBool("/sim/freeze/master", true);
     }
 
+    TurnCursorOff();
     if ( !puCursorIsHidden() ) {
-        show_pu_cursor = true;
-        puHideCursor();
+	show_pu_cursor = true;
+	puHideCursor();
     }
 
     FGRenderer *renderer = globals->get_renderer();
@@ -541,22 +542,9 @@ void fgHiResDump()
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
-    renderer->update();
-    renderer->update();
+    renderer->update( true );
+    renderer->update( true );
 
-    // Make sure we have SSG projection primed for current view
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    ssgSetCamera( (sgVec4 *)globals->get_current_view()->get_VIEW() );
-    ssgSetFOV( globals->get_current_view()->get_h_fov(),
-	       globals->get_current_view()->get_v_fov() );
-    cout << "FOV = " << globals->get_current_view()->get_h_fov()
-         << ", " << globals->get_current_view()->get_v_fov() << endl;
- 
-    // ssgSetNearFar( 10.0f, 120000.0f );
-    ssgSetNearFar( 0.5f, 1200000.0f );
-
-	
     // This ImageSize stuff is a temporary hack
     // should probably use 128x128 tile size and
     // support any image size
@@ -636,7 +624,7 @@ void fgHiResDump()
         trBeginTile(tr);
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
         int curRow =  trGet(tr, TR_CURRENT_ROW);
-        renderer->screendump();
+        renderer->update( false );
         if ( do_hud )
             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
                          (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
@@ -696,6 +684,8 @@ void fgHiResDump()
         puShowCursor();
     }
 
+    TurnCursorOn();
+
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
@@ -729,7 +719,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 	    globals->get_renderer()->resize( cur_width, cur_height );
 	    // pan to tile
 	    rotateView( 0, (y*fov)-((multiplier-1)*fov/2), (x*fov)-((multiplier-1)*fov/2) );
-	    globals->get_renderer()->update();
+	    globals->get_renderer()->update( false );
 	    // restore view
 	    GlBitmap b2;
 	    b1->copyBitmap( &b2, cur_width*x, cur_height*y );
@@ -755,7 +745,7 @@ void printScreen ( puObject *obj ) {
     int cur_width = fgGetInt("/sim/startup/xsize");
     int cur_height = fgGetInt("/sim/startup/ysize");
     p.Begin( "FlightGear", cur_width*3, cur_height*3 );
-	p.End( hiResScreenCapture(3) );
+    p.End( hiResScreenCapture(3) );
 
     // BusyCursor(1);
     if ( show_pu_cursor ) {
@@ -766,12 +756,12 @@ void printScreen ( puObject *obj ) {
 #endif // #ifdef WIN32
 
 
-void dumpSnapShot ( puObject *obj ) {
+void fgDumpSnapShotWrapper ( puObject *obj ) {
     fgDumpSnapShot();
 }
 
 
-void dumpHiResSnapShot ( puObject *obj ) {
+void fgHiResDumpWrapper ( puObject *obj ) {
     fgHiResDump();
 }
 
@@ -805,8 +795,8 @@ void fgDumpSnapShot () {
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
-    renderer->update();
-    renderer->update();
+    renderer->update( true );
+    renderer->update( true );
 
     while (count < 1000) {
         FILE *fp;

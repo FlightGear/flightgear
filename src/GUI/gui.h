@@ -57,9 +57,9 @@ extern int gui_menu_on;
 extern void saveFlight(puObject *);
 extern void loadFlight(puObject *);
 extern void reInit(puObject *);
-extern void dumpSnapShot(puObject *);
+extern void fgDumpSnapShotWrapper(puObject *);
 #ifdef TR_HIRES_SNAP
-extern void dumpHiResSnapShot(puObject *);
+extern void fgHiResDumpWrapper(puObject *);
 extern void fgHiResDump();
 #endif
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
