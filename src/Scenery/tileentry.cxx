@@ -55,17 +55,57 @@ FGTileEntry::~FGTileEntry ( void ) {
 }
 
 
-// Step through the fragment list, deleting the display list, then
-// the fragment, until the list is empty.
+// Step through the fragment list, deleting the display list, then the
+// fragment, until the list is empty.  Also delete the arrays used by
+// ssg as well as the whole ssg branch
 void
-FGTileEntry::release_fragments()
+FGTileEntry::free_tile()
 {
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "FREEING TILE = (" << tile_bucket << ")" );
+
+    // mark tile unused
+    mark_unused();
+
+    // delete fragment list
     for_each( begin(), end(),
 	      mem_fun_ref( &fgFRAGMENT::deleteDisplayList ));
     fragment_list.erase( begin(), end() );
-    mark_unused();
+
+    // delete the ssg used structures
+    delete vtlist;
+    delete vnlist;
+    delete tclist;
+
+    // delete the ssg branch
+
+    // make sure we have a sane number of parents
+    int pcount = branch_ptr->getNumParents();
+    if ( pcount > 0 ) {
+	// find the first parent (should only be one)
+	ssgBranch *parent = branch_ptr->getParent( 0 ) ;
+	// find the number of kids this parent has
+	int kcount = parent->getNumKids();
+	// find the kid that matches our original branch_ptr
+	bool found_kid = false;
+	for ( int i = 0; i < kcount; ++i ) {
+	    ssgEntity *kid = parent->getKid( i );
+	    if ( kid == branch_ptr ) {
+		FG_LOG( FG_TERRAIN, FG_INFO,
+			"Found a kid to delete " << kid);
+		found_kid = true;
+	    }
+	}
+	if ( ! found_kid ) {
+	    FG_LOG( FG_TERRAIN, FG_ALERT,
+		    "Couldn't find the kid to delete!  Dying" );
+	    exit(-1);
+	}
+    } else {
+	FG_LOG( FG_TERRAIN, FG_ALERT,
+		"Parent count is zero for an ssg tile!  Dying" );
+	exit(-1);
+    }    
 }
 
 

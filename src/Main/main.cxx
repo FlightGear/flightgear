@@ -182,8 +182,6 @@ static void fgInitVisuals( void ) {
 
     // xglFogi (GL_FOG_MODE, GL_LINEAR);
     xglFogi (GL_FOG_MODE, GL_EXP2);
-    // Fog density is now set when the weather system is initialized
-    // xglFogf (GL_FOG_DENSITY, w->fog_density);
     if ( (current_options.get_fog() == 1) || 
 	 (current_options.get_shading() == 0) ) {
 	// if fastest fog requested, or if flat shading force fastest
@@ -354,11 +352,12 @@ static void fgRenderFrame( void ) {
 	xglEnable( GL_DEPTH_TEST );
 	if ( current_options.get_fog() > 0 ) {
 	    xglEnable( GL_FOG );
-	    xglFogfv (GL_FOG_COLOR, l->adj_fog_color);
+	    xglFogi( GL_FOG_MODE, GL_EXP2 );
+	    xglFogfv( GL_FOG_COLOR, l->adj_fog_color );
 	}
 	// set lighting parameters
-	xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
-	xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
+	xglLightfv( GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
+	xglLightfv( GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
 	// xglLightfv(GL_LIGHT0, GL_SPECULAR, white );
 	
 	if ( current_options.get_textures() ) {
@@ -383,12 +382,25 @@ static void fgRenderFrame( void ) {
 
 	// ssg test
 
-	xglMatrixMode(GL_PROJECTION);
+	xglMatrixMode( GL_PROJECTION );
 	xglLoadIdentity();
-	ssgSetFOV(60.0f, 0.0f);
-	ssgSetNearFar(10.0f, 14000.0f);
-	sgMat4 sgTRANS;
+	ssgSetFOV( current_options.get_fov(), 0.0f );
 
+	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+	    - scenery.cur_elev;
+
+	FG_LOG( FG_ALL, FG_INFO, "visibility is " 
+		<< current_weather.get_visibility() );
+	    
+	if ( agl > 10.0 ) {
+	    // ssgSetNearFar( 10.0f, current_weather.get_visibility() );
+	    ssgSetNearFar( 10.0f, 100000.0f );
+	} else {
+	    // ssgSetNearFar( 0.5f, current_weather.get_visibility() );
+	    ssgSetNearFar( 0.5f, 100000.0f );
+	}
+
+	sgMat4 sgTRANS;
 	sgMakeTransMat4( sgTRANS, 
 			 current_view.view_pos.x() 
 			 + current_view.view_forward[0] * 20,

@@ -239,10 +239,10 @@ void FGView::UpdateViewParams( void ) {
     xglMatrixMode(GL_PROJECTION);
     xglLoadIdentity();
     if ( f->get_Altitude() * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
-	ssgSetNearFar( 10.0, 100000.0 );
+	// ssgSetNearFar( 10.0, 100000.0 );
 	gluPerspective(current_options.get_fov(), win_ratio, 10.0, 100000.0);
     } else {
-	ssgSetNearFar( 0.5, 100000.0 );
+	// ssgSetNearFar( 0.5, 100000.0 );
 	gluPerspective(current_options.get_fov(), win_ratio, 0.5, 100000.0);
 	// printf("Near ground, minimizing near clip plane\n");
     }
@@ -378,7 +378,6 @@ void FGView::UpdateViewParams( void ) {
 	xglLoadMatrixf( m );
     }
 #endif // FG_VIEW_INLINE_OPTIMIZATIONS
-	
 
     panel_hist = current_options.get_panel_status();
 }

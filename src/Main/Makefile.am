@@ -4,7 +4,7 @@ else
 SERIAL_LIBS =
 endif
 
-CPPFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
+CPPFLAGS += -DUSE_SSG -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 

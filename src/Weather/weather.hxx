@@ -45,6 +45,7 @@ public:
     inline double get_visibility() const { return visibility; }
 
     inline void set_visibility( double v ) {
+	xglMatrixMode(GL_MODELVIEW);
 	// in meters
 	visibility = v;
 
@@ -56,8 +57,11 @@ public:
 
 	// Set correct opengl fog density
 	xglFogf (GL_FOG_DENSITY, fog_exp2_density);
+	xglFogi( GL_FOG_MODE, GL_EXP2 );
 
-	// FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << w->fog_density );
+	// FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << fog_density );
+	FG_LOG( FG_INPUT, FG_INFO, 
+		"Fog exp2 density = " << fog_exp2_density );
     }
 };
 

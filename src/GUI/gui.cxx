@@ -696,7 +696,7 @@ void guiInit()
     // Install our fast fonts
     fntpath.append( "typewriter.txf" );
     guiFntHandle = new fntTexFont ;
-    guiFntHandle -> load ( fntpath.c_str() ) ;
+    guiFntHandle -> load ( (char *)fntpath.c_str() ) ;
     puFont GuiFont ( guiFntHandle, 15 ) ;
     puSetDefaultFonts( GuiFont, GuiFont ) ;
     guiFnt = puGetDefaultLabelFont();

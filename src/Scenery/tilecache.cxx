@@ -161,7 +161,7 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 void
 FGTileCache::entry_free( int index )
 {
-    tile_cache[index].release_fragments();
+    tile_cache[index].free_tile();
 }
 
 

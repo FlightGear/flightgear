@@ -136,8 +136,9 @@ public:
     }
 
     // Step through the fragment list, deleting the display list, then
-    // the fragment, until the list is empty.
-    void release_fragments();
+    // the fragment, until the list is empty.  Also delete the arrays
+    // used by ssg as well as the whole ssg branch
+    void free_tile();
 
     // Calculate this tile's offset
     void SetOffset( const Point3D& off)
