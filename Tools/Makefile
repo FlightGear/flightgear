@@ -27,7 +27,7 @@
 include make.inc
 
 
-SUBDIRS = Dem2node FixNode Tri2obj Triangle
+SUBDIRS = Dem2node FixNode FixObj Stripe_u Tri2obj Triangle
 
 
 all: 
@@ -58,15 +58,17 @@ clean:
 
 source-tar: clean
 	echo "need to fix this"
-#	(cd ../..; \
-#	tar cvzf source-$(VERSION).tar.gz FlightGear/fgtop FlightGear/COPYING \
-#	FlightGear/Docs FlightGear/Src FlightGear/Thanks)
+	(cd ..; \
+	tar cvzf demtools-$(VERSION).tar.gz Tools/Makefile Tools/README \
+	Tools/TODO Tools/make.inc Tools/Dem2node Tools/FixNode Tools/FixObj \
+	Tools/Stripe_u Tools/Tri2obj Tools/Triangle Tools/mesa-e.dem)
 
 source-zip: clean
 	echo "need to fix this"
-#	(cd ../..; \
-#	zip -r source-$(VERSION).zip FlightGear/fgtop FlightGear/COPYING \
-#	FlightGear/Docs FlightGear/Src FlightGear/Thanks)
+	(cd ..; \
+	zip -r demtools-$(VERSION).zip Tools/Makefile Tools/README \
+	Tools/TODO Tools/make.inc Tools/Dem2node Tools/FixNode Tools/FixObj \
+	Tools/Stripe_u Tools/Tri2obj Tools/Triangle Tools/mesa-e.dem)
 
 bin-tar: all
 	echo "need to fix this"
@@ -86,6 +88,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/12/10 01:18:25  curt
+# Initial revision.
+#
 # Revision 1.3  1997/11/27 00:18:26  curt
 # Added FixNode
 #

@@ -1,0 +1,2 @@
+- Try reversing cw-wound strips rather than calling glFrontFace() in the 
+  display list.
