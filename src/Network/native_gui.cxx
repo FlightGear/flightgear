@@ -35,6 +35,7 @@
 #include <Time/tmp.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
 
 #include "native_gui.hxx"
 
@@ -144,9 +145,10 @@ void FGProps2NetGUI( FGNetGUI *net ) {
         net->fuel_quantity[i] = node->getDoubleValue("level-gal_us");
     }
 
-    // the following really aren't used in this context
+    // Environment
     net->cur_time = globals->get_time_params()->get_cur_time();
     net->warp = globals->get_warp();
+    net->ground_elev = globals->get_scenery()->get_cur_elev();
 
     // Approach
     net->tuned_freq = current_radiostack->get_navcom1()->get_nav_freq();
@@ -209,6 +211,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 
     net->cur_time = htonl( net->cur_time );
     net->warp = htonl( net->warp );
+    net->ground_elev = htonl( net->ground_elev );
 
     htonf(net->tuned_freq);
     htonf(net->nav_radial);
@@ -243,6 +246,7 @@ void FGNetGUI2Props( FGNetGUI *net ) {
 
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
+    net->ground_elev = htonl( net->ground_elev );
 
     htonf(net->tuned_freq);
     net->in_range = htonl(net->in_range);
@@ -277,6 +281,7 @@ void FGNetGUI2Props( FGNetGUI *net ) {
 	}
 
         globals->set_warp( net->warp );
+        globals->get_scenery()->set_cur_elev( net->ground_elev );
 
         // Approach
         fgSetDouble( "/radios/nav[0]/frequencies/selected-mhz",

@@ -31,7 +31,7 @@
 #endif                                   
 
 
-const int FG_NET_GUI_VERSION = 3;
+const int FG_NET_GUI_VERSION = 4;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -73,6 +73,7 @@ public:
     // Environment
     time_t cur_time;            // current unix time
     long int warp;              // offset in seconds to unix time
+    float ground_elev;          // ground elev (meters)
 
     // Approach
     float tuned_freq;           // currently tuned frequency
