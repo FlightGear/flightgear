@@ -732,11 +732,6 @@ void reInit(puObject *cb)
     BusyCursor(1);
 }
 
-static void toggleClouds(puObject *cb)
-{
-    FGBFI::setClouds( !FGBFI::getClouds() );
-}
-	
 // This is the accessor function
 void guiTogglePanel(puObject *cb)
 {
@@ -1445,11 +1440,9 @@ puCallback autopilotSubmenuCb    [] = {
 };
 
 char *environmentSubmenu        [] = {
-    "Toggle Clouds",
     "Goto Airport", /* "Terrain", "Weather", */ NULL
 };
 puCallback environmentSubmenuCb [] = {
-    toggleClouds,
     NewAirport, /* notCb, notCb, */ NULL
 };
 

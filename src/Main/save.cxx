@@ -30,6 +30,16 @@
 
 #include <simgear/misc/props.hxx>
 
+				// FIXME: just for the temporary
+				// tile cache update stuff.
+#include <simgear/debug/logstream.hxx>
+#include <simgear/constants.h>
+#include <Aircraft/aircraft.hxx>
+#include <GUI/gui.h>
+#include <Scenery/tilemgr.hxx>
+#include "globals.hxx"
+				// end FIXME
+
 using std::istream;
 using std::ostream;
 
@@ -50,7 +60,36 @@ fgSaveFlight (ostream &output)
 bool
 fgLoadFlight (istream &input)
 {
-  return readPropertyList(input, &current_properties);
+  bool retval = readPropertyList(input, &current_properties);
+
+				// FIXME: from keyboard.cxx
+				// this makes sure that the tile
+				// cache is updated after a restore;
+				// it would be better if FGFS just
+				// noticed the new lat/lon.
+  if (retval) {
+    bool freeze;
+    FG_LOG(FG_INPUT, FG_INFO, "ReIniting TileCache");
+    if ( !freeze ) 
+      globals->set_freeze( true );
+    BusyCursor(0);
+    if ( global_tile_mgr.init() ) {
+      // Load the local scenery data
+      global_tile_mgr.update( 
+			     cur_fdm_state->get_Longitude() * RAD_TO_DEG,
+			     cur_fdm_state->get_Latitude() * RAD_TO_DEG );
+    } else {
+      FG_LOG( FG_GENERAL, FG_ALERT, 
+	      "Error in Tile Manager initialization!" );
+      exit(-1);
+    }
+    BusyCursor(1);
+    if ( !freeze )
+      globals->set_freeze( false );
+  }
+				// end FIXME
+
+  return retval;
 }
 
 // end of save.cxx

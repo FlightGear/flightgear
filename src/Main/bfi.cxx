@@ -48,6 +48,7 @@
 #include <Time/sunpos.hxx>
 #include <Time/tmp.hxx>
 #include <Cockpit/radiostack.hxx>
+#include <Cockpit/panel.hxx>
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
@@ -70,7 +71,80 @@ FG_USING_NAMESPACE(std);
 // Static variables.
 ////////////////////////////////////////////////////////////////////////
 
-bool FGBFI::_needReinit = false;
+				// Yech -- not thread-safe, etc. etc.
+static bool _needReinit = false;
+static string _temp;
+
+static inline void needReinit ()
+{
+  _needReinit = true;
+}
+
+
+/**
+ * Reinitialize FGFS to use the new BFI settings.
+ */
+static inline void
+reinit ()
+{
+				// Save the state of everything
+				// that's going to get clobbered
+				// when we reinit the subsystems.
+
+  cout << "BFI: start reinit\n";
+
+				// TODO: add more AP stuff
+  double elevator = FGBFI::getElevator();
+  double aileron = FGBFI::getAileron();
+  double rudder = FGBFI::getRudder();
+  double throttle = FGBFI::getThrottle();
+  double elevator_trim = FGBFI::getElevatorTrim();
+  double flaps = FGBFI::getFlaps();
+  double brake = FGBFI::getBrakes();
+  bool apHeadingLock = FGBFI::getAPHeadingLock();
+  double apHeadingMag = FGBFI::getAPHeadingMag();
+  bool apAltitudeLock = FGBFI::getAPAltitudeLock();
+  double apAltitude = FGBFI::getAPAltitude();
+  const string &targetAirport = FGBFI::getTargetAirport();
+  bool gpsLock = FGBFI::getGPSLock();
+  double gpsLatitude = FGBFI::getGPSTargetLatitude();
+  double gpsLongitude = FGBFI::getGPSTargetLongitude();
+
+  FGBFI::setTargetAirport("");
+  cout << "Target airport is " << globals->get_options()->get_airport_id() << endl;
+
+  fgReInitSubsystems();
+
+				// FIXME: this is wrong.
+				// All of these are scheduled events,
+				// and it should be possible to force
+				// them all to run once.
+  fgUpdateSunPos();
+  fgUpdateMoonPos();
+  cur_light_params.Update();
+  fgUpdateLocalTime();
+  fgUpdateWeatherDatabase();
+  fgRadioSearch();
+
+				// Restore all of the old states.
+  FGBFI::setElevator(elevator);
+  FGBFI::setAileron(aileron);
+  FGBFI::setRudder(rudder);
+  FGBFI::setThrottle(throttle);
+  FGBFI::setElevatorTrim(elevator_trim);
+  FGBFI::setFlaps(flaps);
+  FGBFI::setBrakes(brake);
+  FGBFI::setAPHeadingLock(apHeadingLock);
+  FGBFI::setAPHeadingMag(apHeadingMag);
+  FGBFI::setAPAltitudeLock(apAltitudeLock);
+  FGBFI::setAPAltitude(apAltitude);
+  FGBFI::setTargetAirport(targetAirport);
+  FGBFI::setGPSLock(gpsLock);
+
+  _needReinit = false;
+
+  cout << "BFI: end reinit\n";
+}
 
 
 
@@ -92,8 +166,10 @@ FGBFI::init ()
 				// Simulation
   current_properties.tieInt("/sim/flight-model",
 			    getFlightModel, setFlightModel);
-//   current_properties.tieString("/sim/aircraft",
-// 			       getAircraft, setAircraft);
+  current_properties.tieString("/sim/aircraft",
+			       getAircraft, setAircraft);
+  current_properties.tieString("/sim/aircraft-dir",
+			       getAircraftDir, setAircraftDir);
   // TODO: timeGMT
   current_properties.tieString("/sim/time/gmt-string",
 			       getGMTString, 0);
@@ -101,6 +177,10 @@ FGBFI::init ()
 			     getHUDVisible, setHUDVisible);
   current_properties.tieBool("/sim/panel/visibility",
 			     getPanelVisible, setPanelVisible);
+  current_properties.tieInt("/sim/panel/x-offset",
+			    getPanelXOffset, setPanelXOffset);
+  current_properties.tieInt("/sim/panel/y-offset",
+			    getPanelYOffset, setPanelYOffset);
 
 				// Position
   current_properties.tieString("/position/airport-id",
@@ -137,17 +217,17 @@ FGBFI::init ()
 
 				// Velocities
   current_properties.tieDouble("/velocities/airspeed",
-			       getAirspeed, 0);
+			       getAirspeed, setAirspeed);
   current_properties.tieDouble("/velocities/side-slip",
 			       getSideSlip, 0);
   current_properties.tieDouble("/velocities/vertical-speed",
 			       getVerticalSpeed, 0);
   current_properties.tieDouble("/velocities/speed-north",
-			       getSpeedNorth, setSpeedNorth);
+			       getSpeedNorth, 0);
   current_properties.tieDouble("/velocities/speed-east",
-			       getSpeedEast, setSpeedEast);
+			       getSpeedEast, 0);
   current_properties.tieDouble("/velocities/speed-down",
-			       getSpeedDown, setSpeedDown);
+			       getSpeedDown, 0);
 
 				// Controls
   current_properties.tieDouble("/controls/throttle",
@@ -261,72 +341,6 @@ FGBFI::update ()
 }
 
 
-/**
- * Reinitialize FGFS to use the new BFI settings.
- */
-void
-FGBFI::reinit ()
-{
-				// Save the state of everything
-				// that's going to get clobbered
-				// when we reinit the subsystems.
-
-  cout << "BFI: start reinit\n";
-
-				// TODO: add more AP stuff
-  double elevator = getElevator();
-  double aileron = getAileron();
-  double rudder = getRudder();
-  double throttle = getThrottle();
-  double elevator_trim = getElevatorTrim();
-  double flaps = getFlaps();
-  double brake = getBrakes();
-  bool apHeadingLock = getAPHeadingLock();
-  double apHeadingMag = getAPHeadingMag();
-  bool apAltitudeLock = getAPAltitudeLock();
-  double apAltitude = getAPAltitude();
-  const string &targetAirport = getTargetAirport();
-  bool gpsLock = getGPSLock();
-  double gpsLatitude = getGPSTargetLatitude();
-  double gpsLongitude = getGPSTargetLongitude();
-
-  setTargetAirport("");
-  cout << "Target airport is " << globals->get_options()->get_airport_id() << endl;
-
-  fgReInitSubsystems();
-
-				// FIXME: this is wrong.
-				// All of these are scheduled events,
-				// and it should be possible to force
-				// them all to run once.
-  fgUpdateSunPos();
-  fgUpdateMoonPos();
-  cur_light_params.Update();
-  fgUpdateLocalTime();
-  fgUpdateWeatherDatabase();
-  fgRadioSearch();
-
-				// Restore all of the old states.
-  setElevator(elevator);
-  setAileron(aileron);
-  setRudder(rudder);
-  setThrottle(throttle);
-  setElevatorTrim(elevator_trim);
-  setFlaps(flaps);
-  setBrakes(brake);
-  setAPHeadingLock(apHeadingLock);
-  setAPHeadingMag(apHeadingMag);
-  setAPAltitudeLock(apAltitudeLock);
-  setAPAltitude(apAltitude);
-  setTargetAirport(targetAirport);
-  setGPSLock(gpsLock);
-
-  _needReinit = false;
-
-  cout << "BFI: end reinit\n";
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Simulation.
@@ -348,20 +362,22 @@ FGBFI::getFlightModel ()
 /**
  * Return the current aircraft as a string.
  */
-const string
+const string &
 FGBFI::getAircraft ()
 {
-  return globals->get_options()->get_aircraft();
+  _temp = globals->get_options()->get_aircraft();
+  return _temp;
 }
 
 
 /**
  * Return the current aircraft directory (UIUC) as a string.
  */
-const string
+const string &
 FGBFI::getAircraftDir ()
 {
-  return aircraft_dir;
+  _temp = aircraft_dir;
+  return _temp;
 }
 
 
@@ -493,6 +509,56 @@ FGBFI::setPanelVisible (bool visible)
 }
 
 
+/**
+ * Get the panel's current x-shift.
+ */
+int
+FGBFI::getPanelXOffset ()
+{
+  if (current_panel != 0)
+    return current_panel->getXOffset();
+  else
+    return 0;
+}
+
+
+/**
+ * Set the panel's current x-shift.
+ */
+void
+FGBFI::setPanelXOffset (int offset)
+{
+  if (current_panel != 0)
+    current_panel->setXOffset(offset);
+}
+
+
+/**
+ * Get the panel's current y-shift.
+ */
+int
+FGBFI::getPanelYOffset ()
+{
+  if (current_panel != 0)
+    return current_panel->getYOffset();
+  else
+    return 0;
+}
+
+
+/**
+ * Set the panel's current y-shift.
+ */
+void
+FGBFI::setPanelYOffset (int offset)
+{
+  if (current_panel != 0)
+    current_panel->setYOffset(offset);
+}
+
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Position
@@ -515,11 +581,7 @@ FGBFI::getLatitude ()
 void
 FGBFI::setLatitude (double latitude)
 {
-  if (getLatitude() != latitude) {
-    globals->get_options()->set_lat(latitude);
-    current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
-    needReinit();
-  }
+  current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
 }
 
 
@@ -539,11 +601,7 @@ FGBFI::getLongitude ()
 void
 FGBFI::setLongitude (double longitude)
 {
-  if (getLongitude() != longitude) {
-    globals->get_options()->set_lon(longitude);
-    current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
-    needReinit();
-  }
+  current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
 }
 
 
@@ -575,11 +633,7 @@ FGBFI::getAGL ()
 void
 FGBFI::setAltitude (double altitude)
 {
-  if (getAltitude() != altitude) {
-    fgFDMForceAltitude(getFlightModel(), altitude);
-    globals->get_options()->set_altitude(altitude);
-    current_aircraft.fdm_state->set_Altitude(altitude);
-  }
+  current_aircraft.fdm_state->set_Altitude(altitude);
 }
 
 
@@ -615,13 +669,9 @@ FGBFI::getHeadingMag ()
 void
 FGBFI::setHeading (double heading)
 {
-  if (getHeading() != heading) {
-    globals->get_options()->set_heading(heading);
-    current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
-						 getPitch() * DEG_TO_RAD,
-						 heading * DEG_TO_RAD);
-    needReinit();
-  }
+  FGInterface * fdm = current_aircraft.fdm_state;
+  fdm->set_Euler_Angles(fdm->get_Phi(), fdm->get_Theta(),
+			heading * DEG_TO_RAD);
 }
 
 
@@ -641,13 +691,8 @@ FGBFI::getPitch ()
 void
 FGBFI::setPitch (double pitch)
 {
-  if (getPitch() != pitch) {
-    globals->get_options()->set_pitch(pitch);
-    current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
-						 pitch * DEG_TO_RAD,
-						 getHeading() * DEG_TO_RAD);
-    needReinit();
-  }
+  FGInterface * fdm = current_aircraft.fdm_state;
+  fdm->set_Euler_Angles(fdm->get_Phi(), pitch * DEG_TO_RAD, fdm->get_Psi());
 }
 
 
@@ -667,13 +712,8 @@ FGBFI::getRoll ()
 void
 FGBFI::setRoll (double roll)
 {
-  if (getRoll() != roll) {
-    globals->get_options()->set_roll(roll);
-    current_aircraft.fdm_state->set_Euler_Angles(roll * DEG_TO_RAD,
-						 getPitch() * DEG_TO_RAD,
-						 getHeading() * DEG_TO_RAD);
-    needReinit();
-  }
+  FGInterface * fdm = current_aircraft.fdm_state;
+  fdm->set_Euler_Angles(roll * DEG_TO_RAD, fdm->get_Theta(), fdm->get_Psi());
 }
 
 
@@ -759,6 +799,16 @@ FGBFI::getAirspeed ()
 
 
 /**
+ * Set the calibrated airspeed in knots.
+ */
+void
+FGBFI::setAirspeed (double speed)
+{
+  current_aircraft.fdm_state->set_V_calibrated_kts(speed);
+}
+
+
+/**
  * Return the current sideslip (FIXME: units unknown).
  */
 double
@@ -789,19 +839,15 @@ FGBFI::getSpeedNorth ()
 }
 
 
-/**
- * Set the current north velocity (units??).
- */
-void
-FGBFI::setSpeedNorth (double speed)
-{
-  if (getSpeedNorth() != speed) {
-    current_aircraft.fdm_state->set_Velocities_Local(speed,
-						     getSpeedEast(),
-						     getSpeedDown());
-    needReinit();
-  }
-}
+// /**
+//  * Set the current north velocity (units??).
+//  */
+// void
+// FGBFI::setSpeedNorth (double speed)
+// {
+//   FGInterface * fdm = current_aircraft.fdm_state;
+// //   fdm->set_Velocities_Local(speed, fdm->get_V_east(), fdm->get_V_down());
+// }
 
 
 /**
@@ -814,19 +860,15 @@ FGBFI::getSpeedEast ()
 }
 
 
-/**
- * Set the current east velocity (units??).
- */
-void
-FGBFI::setSpeedEast (double speed)
-{
-  if (getSpeedEast() != speed) {
-    current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
-						     speed,
-						     getSpeedDown());
-    needReinit();
-  }
-}
+// /**
+//  * Set the current east velocity (units??).
+//  */
+// void
+// FGBFI::setSpeedEast (double speed)
+// {
+//   FGInterface * fdm = current_aircraft.fdm_state;
+// //   fdm->set_Velocities_Local(fdm->get_V_north(), speed, fdm->get_V_down());
+// }
 
 
 /**
@@ -839,19 +881,15 @@ FGBFI::getSpeedDown ()
 }
 
 
-/**
- * Set the current down velocity (units??).
- */
-void
-FGBFI::setSpeedDown (double speed)
-{
-  if (getSpeedDown() != speed) {
-    current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
-						     getSpeedEast(),
-						     speed);
-    needReinit();
-  }
-}
+// /**
+//  * Set the current down velocity (units??).
+//  */
+// void
+// FGBFI::setSpeedDown (double speed)
+// {
+//   FGInterface * fdm = current_aircraft.fdm_state;
+// //   fdm->set_Velocities_Local(fdm->get_V_north(), fdm->get_V_east(), speed);
+// }
 
 
 
@@ -1623,26 +1661,6 @@ FGBFI::getVisibility ()
 
 
 /**
- * Check whether clouds are enabled.
- */
-bool
-FGBFI::getClouds ()
-{
-  return globals->get_options()->get_clouds();
-}
-
-
-/**
- * Check the height of the clouds ASL (units?).
- */
-double
-FGBFI::getCloudsASL ()
-{
-  return globals->get_options()->get_clouds_asl();
-}
-
-
-/**
  * Set the current visibility (units??).
  */
 void
@@ -1653,33 +1671,6 @@ FGBFI::setVisibility (double visibility)
 #else
   current_weather.set_visibility(visibility);
 #endif
-}
-
-
-/**
- * Switch clouds on or off.
- */
-void
-FGBFI::setClouds (bool clouds)
-{
-  if (getClouds() != clouds) {
-    cout << "Set clouds to " << clouds << endl;
-    globals->get_options()->set_clouds(clouds);
-    needReinit();
-  }
-}
-
-
-/**
- * Set the cloud height.
- */
-void
-FGBFI::setCloudsASL (double cloudsASL)
-{
-  if (getCloudsASL() != cloudsASL) {
-    globals->get_options()->set_clouds_asl(cloudsASL);
-    needReinit();
-  }
 }
 
 

@@ -54,101 +54,136 @@ public:
 
 				// Simulation
   static int getFlightModel ();
-  static const string getAircraft ();
-  static const string getAircraftDir ();
-  static time_t getTimeGMT ();
-  static const string &getGMTString ();
-  static bool getHUDVisible ();
-  static bool getPanelVisible ();
-
   static void setFlightModel (int flightModel);
+
+  static const string &getAircraft ();
   static void setAircraft (const string &aircraft);
+
+  static const string &getAircraftDir ();
   static void setAircraftDir (const string &aircraftDir);
+
+  static time_t getTimeGMT ();
   static void setTimeGMT (time_t time);
+
+  static const string &getGMTString ();
+
+  static bool getHUDVisible ();
   static void setHUDVisible (bool hudVisible);
+
+  static bool getPanelVisible ();
   static void setPanelVisible (bool panelVisible);
+
+  static int getPanelXOffset ();
+  static void setPanelXOffset (int i);
+
+  static int getPanelYOffset ();
+  static void setPanelYOffset (int i);
 
 
 				// Position
   static double getLatitude ();
-  static double getLongitude ();
-  static double getAltitude ();
-  static double getAGL ();
-
   static void setLatitude (double latitude);
+
+  static double getLongitude ();
   static void setLongitude (double longitude);
+
+  static double getAltitude ();
   static void setAltitude (double altitude);
+
+  static double getAGL ();
 
 
 				// Attitude
   static double getHeading ();	  // true heading
-  static double getHeadingMag (); // exact magnetic heading
-  static double getPitch ();
-  static double getRoll ();
-
   static void setHeading (double heading);
+
+  static double getHeadingMag (); // exact magnetic heading
+
+  static double getPitch ();
   static void setPitch (double pitch);
+
+  static double getRoll ();
   static void setRoll (double roll);
 
 				// Engine
   static double getRPM ();
   static void setRPM ( double rpm );
+
   static double getEGT ();
   static double getCHT ();
   static double getMP ();
 
 				// Velocities
   static double getAirspeed ();
+  static void setAirspeed (double speed);
+
   static double getSideSlip ();
+
   static double getVerticalSpeed ();
+
   static double getSpeedNorth ();
+
   static double getSpeedEast ();
+
   static double getSpeedDown ();
 
-  static void setSpeedNorth (double speed);
-  static void setSpeedEast (double speed);
-  static void setSpeedDown (double speed);
+//   static void setSpeedNorth (double speed);
+//   static void setSpeedEast (double speed);
+//   static void setSpeedDown (double speed);
 
 
 				// Controls
   static double getThrottle ();
-  static double getMixture ();
-  static double getPropAdvance ();
-  static double getFlaps ();
-  static double getAileron ();
-  static double getRudder ();
-  static double getElevator ();
-  static double getElevatorTrim ();
-  static double getBrakes ();
-  static double getLeftBrake ();
-  static double getRightBrake ();
-  static double getCenterBrake ();
-
   static void setThrottle (double throttle);
+
+  static double getMixture ();
   static void setMixture (double mixture);
+
+  static double getPropAdvance ();
   static void setPropAdvance (double pitch);
+
+  static double getFlaps ();
   static void setFlaps (double flaps);
+
+  static double getAileron ();
   static void setAileron (double aileron);
+
+  static double getRudder ();
   static void setRudder (double rudder);
+
+  static double getElevator ();
   static void setElevator (double elevator);
+
+  static double getElevatorTrim ();
   static void setElevatorTrim (double trim);
+
+  static double getBrakes ();
   static void setBrakes (double brake);
+
+  static double getLeftBrake ();
   static void setLeftBrake (double brake);
+
+  static double getRightBrake ();
   static void setRightBrake (double brake);
+
+  static double getCenterBrake ();
   static void setCenterBrake (double brake);
 
 
 				// Autopilot
   static bool getAPAltitudeLock ();
-  static double getAPAltitude ();
-  static bool getAPHeadingLock ();
-  static double getAPHeading ();
-  static double getAPHeadingMag ();
-
   static void setAPAltitudeLock (bool lock);
+
+  static double getAPAltitude ();
   static void setAPAltitude (double altitude);
+
+  static bool getAPHeadingLock ();
   static void setAPHeadingLock (bool lock);
+
+  static double getAPHeading ();
   static void setAPHeading (double heading);
+
+  static double getAPHeadingMag ();
   static void setAPHeadingMag (double heading);
 
   static bool getAPNAV1Lock ();
@@ -156,58 +191,71 @@ public:
 
 				// Radio Navigation
   static double getNAV1Freq ();
+  static void setNAV1Freq (double freq);
+
   static double getNAV1AltFreq ();
+  static void setNAV1AltFreq (double freq);
+
   static double getNAV1Radial ();
+
   static double getNAV1SelRadial ();
+  static void setNAV1SelRadial (double radial);
+
   static double getNAV1DistDME ();
+
   static bool getNAV1TO ();
+
   static bool getNAV1FROM ();
+
   static bool getNAV1InRange ();
+
   static bool getNAV1DMEInRange ();
 
   static double getNAV2Freq ();
+  static void setNAV2Freq (double freq);
+
   static double getNAV2AltFreq ();
+  static void setNAV2AltFreq (double freq);
+
   static double getNAV2Radial ();
+
   static double getNAV2SelRadial ();
+  static void setNAV2SelRadial (double radial);
+
   static double getNAV2DistDME ();
+
   static bool getNAV2TO ();
+
   static bool getNAV2FROM ();
+
   static bool getNAV2InRange ();
+
   static bool getNAV2DMEInRange ();
 
   static double getADFFreq ();
-  static double getADFAltFreq ();
-  static double getADFRotation ();
-
-  static void setNAV1Freq (double freq);
-  static void setNAV1AltFreq (double freq);
-  static void setNAV1SelRadial (double radial);
-
-  static void setNAV2Freq (double freq);
-  static void setNAV2AltFreq (double freq);
-  static void setNAV2SelRadial (double radial);
-
   static void setADFFreq (double freq);
+
+  static double getADFAltFreq ();
   static void setADFAltFreq (double freq);
+
+  static double getADFRotation ();
   static void setADFRotation (double rot);
 
 				// GPS
   static const string &getTargetAirport ();
+  static void setTargetAirport (const string &targetAirport);
+
   static bool getGPSLock ();
+  static void setGPSLock (bool lock);
+
   static double getGPSTargetLatitude ();
+
   static double getGPSTargetLongitude ();
 
-  static void setTargetAirport (const string &targetAirport);
-  static void setGPSLock (bool lock);
 
 				// Weather
   static double getVisibility ();
-  static bool getClouds ();
-  static double getCloudsASL ();
-
   static void setVisibility (double visiblity);
-  static void setClouds (bool clouds);
-  static void setCloudsASL (double cloudsASL);
 
 
                                 // Time (this varies with time) huh, huh
@@ -219,9 +267,6 @@ private:
 				// Will cause a linking error if invoked.
   FGBFI ();
 
-  static void reinit ();
-  static void needReinit () { _needReinit = true; }
-  static bool _needReinit;
 };
 
 // end of bfi.hxx

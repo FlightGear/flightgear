@@ -663,14 +663,18 @@ int FGOptions::parse_option( const string& arg ) {
 	auto_coordination = FG_AUTO_COORD_ENABLED;	
     } else if ( arg == "--disable-hud" ) {
 	hud_status = false;	
+	current_properties.setBoolValue("/sim/hud/visibility", false);
     } else if ( arg == "--enable-hud" ) {
 	hud_status = true;	
+	current_properties.setBoolValue("/sim/hud/visibility", true);
     } else if ( arg == "--disable-panel" ) {
 	panel_status = false;
+	current_properties.setBoolValue("/sim/panel/visibility", false);
 	if ( current_panel != NULL )
 	  current_panel->setVisibility(false);
     } else if ( arg == "--enable-panel" ) {
 	panel_status = true;
+	current_properties.setBoolValue("/sim/panel/visibility", true);
 	if ( current_panel != NULL )
 	    current_panel->setVisibility(true);
 	// fov *= 0.4232; /* NO!!! */
