@@ -458,6 +458,8 @@ void FGInterface::extrapolate( int time_offset ) {
 
 // Set the altitude (force)
 void fgFDMForceAltitude(const string &model, double alt_meters) {
+    SG_LOG(SG_FLIGHT,SG_INFO, "fgFDMForceAltitude: " << alt_meters );
+    
     double sea_level_radius_meters;
     double lat_geoc;
 
@@ -468,7 +470,10 @@ void fgFDMForceAltitude(const string &model, double alt_meters) {
     base_fdm_state.set_Altitude( alt_meters * SG_METER_TO_FEET );
     base_fdm_state.set_Sea_level_radius( sea_level_radius_meters *
 					 SG_METER_TO_FEET ); 
-					  
+		
+    cur_fdm_state->set_Altitude( alt_meters * SG_METER_TO_FEET );
+    cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters * 
+           SG_METER_TO_FEET );			  
 
     // additional work needed for some flight models
     if ( model == "larcsim" ) {
