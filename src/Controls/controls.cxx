@@ -36,7 +36,6 @@ FGControls::FGControls() :
 {
     for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
 	throttle[engine] = 0.0;
-	trimmed_throttle[engine]=0.0;
     }
 
     for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {

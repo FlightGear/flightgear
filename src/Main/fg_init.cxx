@@ -544,13 +544,6 @@ bool fgInitSubsystems( void ) {
     // Autopilot init
     current_autopilot = new FGAutopilot;
     current_autopilot->init();
-    
-    if((current_options.get_trim_mode() == true) && (current_options.get_flight_model() == FGInterface::FG_JSBSIM) ) {
-       current_autopilot->set_AutoThrottleEnabled(
-             ! current_autopilot->get_AutoThrottleEnabled()  );
-       current_autopilot->AutoThrottleAdjust( 
-                 controls.get_trimmed_throttle(0) );
-   } 
 
     // initialize the gui parts of the autopilot
     NewTgtAirportInit();

@@ -54,6 +54,12 @@ static jsJoystick *js1;
 // these will hold the values of the axes
 static float *js_ax0, *js_ax1;
 
+static bool sync_throttle=false;
+
+static float throttle_tmp=0;
+
+#define SYNC_TOLERANCE 0.02
+
 #elif defined( ENABLE_GLUT_JOYSTICK )
 
 // Do we want these user settable ??
@@ -176,6 +182,12 @@ int fgJoystickInit( void ) {
     {
 	current_options.set_auto_coordination(fgOPTIONS::FG_AUTO_COORD_ENABLED);
     }
+    
+    if(current_options.get_trim_mode() > 0) {
+        FG_LOG(FG_INPUT, FG_INFO,
+	       "  Waiting for user to synchronize throttle lever...");
+        sync_throttle=true;
+    }
 
 
 #elif defined( ENABLE_GLUT_JOYSTICK )
@@ -205,8 +217,19 @@ int fgJoystickRead( void ) {
 
 	//  Added by William Riley -- riley@technologist.com
 	if ( js0->getNumAxes() >= 3 ) {
-	    controls.set_throttle( FGControls::ALL_ENGINES,
-				   ((-js_ax0[2] + 1) / 2) );
+	    throttle_tmp=(-js_ax0[2] + 1) / 2;
+        
+	    if(sync_throttle == true) {
+		if (fabs(controls.get_throttle(0)-throttle_tmp)
+		    < SYNC_TOLERANCE)
+		{
+		    FG_LOG(FG_INPUT, FG_INFO, "  Throttle lever synchronized.");
+	            controls.set_throttle(FGControls::ALL_ENGINES,throttle_tmp);
+		    sync_throttle=false;
+		}    
+	    } else {
+		controls.set_throttle( FGControls::ALL_ENGINES,throttle_tmp );
+	    }
 	} 
 	if ( js0->getNumAxes() > 3 ) {
 	    if ( current_options.get_auto_coordination() !=

@@ -169,7 +169,7 @@ fgOPTIONS::fgOPTIONS() :
     aircraft( "c172" ),
     model_hz( NEW_DEFAULT_MODEL_HZ ),
     speed_up( 1 ),
-    trim(true),
+    trim(0),
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
@@ -681,6 +681,11 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	fg_root = arg.substr( 10 );
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
 	flight_model = parse_fdm( arg.substr(6) );
+    if((flight_model == FGInterface::FG_JSBSIM) && (get_trim_mode() == 0)) {
+	set_trim_mode(1);
+    } else {
+	set_trim_mode(0);
+    }        
     } else if ( arg.find( "--aircraft=" ) != string::npos ) {
 	aircraft = arg.substr(11);
     } else if ( arg.find( "--aircraft-dir=" ) != string::npos ) {
@@ -690,7 +695,7 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg.find( "--speed=" ) != string::npos ) {
 	speed_up = atoi( arg.substr(8) );
     } else if ( arg.find( "--notrim") != string::npos) {
-	trim=false;
+	trim=-1;
     } else if ( arg == "--fog-disable" ) {
 	fog = FG_FOG_DISABLED;	
     } else if ( arg == "--fog-fastest" ) {

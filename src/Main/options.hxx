@@ -162,7 +162,10 @@ private:
     string aircraft;    // Aircraft to model
     int model_hz;       // number of FDM iterations per second
     int speed_up;       // Sim mechanics run this much faster than normal speed
-    bool trim;          // use the FDM trimming routine during init
+    int trim;           // use the FDM trimming routine during init
+                        // <0 --notrim set, 0 no trim, >0 trim
+                        // default behavior is to enable trimming for jsbsim
+                        // disable for all other fdm's
 
     // Rendering options
     fgFogKind fog;      // Fog nicest/fastest/disabled
@@ -256,7 +259,7 @@ public:
     inline int get_model_hz() const { return model_hz; }
     inline int get_speed_up() const { return speed_up; }
     inline void set_speed_up( int speed ) { speed_up = speed; }
-    inline bool get_trim_mode(void) { return trim; }
+    inline int get_trim_mode(void) { return trim; }
 	
     inline bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
     inline fgFogKind get_fog() const { return fog; }
@@ -313,7 +316,7 @@ public:
     inline void set_flight_model (int value) { flight_model = value; }
     inline void set_aircraft (const string &ac) { aircraft = ac; }
     inline void set_model_hz (int value) { model_hz = value; }
-    inline void set_trim_mode(bool bb) { trim=bb; }
+    inline void set_trim_mode(int value) { trim = value; }
     inline void set_fog (fgFogKind value) { fog = value; }
     inline void set_clouds( bool value ) { clouds = value; }
     inline void set_clouds_asl( double value ) { clouds_asl = value; }
