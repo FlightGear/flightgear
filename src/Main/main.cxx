@@ -1510,10 +1510,14 @@ bool fgMainInit( int argc, char **argv ) {
     if ( !(base_version == required_version) ) {
         // tell the operator how to use this application
 
-        cerr << endl << "Base package check failed ... " \
+        SG_LOG( SG_GENERAL, SG_ALERT, endl << "Base package check failed ... " \
              << "Found version " << base_version << " at: " \
-             << globals->get_fg_root() << endl;
-        cerr << "Please upgrade to version: " << required_version << endl;
+             << globals->get_fg_root() );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version: " << required_version );
+#ifdef _MSC_VER
+        SG_LOG( SG_GENERAL, SG_ALERT, "Hit a key to continue..." );
+        cin.get();
+#endif
         exit(-1);
     }
 

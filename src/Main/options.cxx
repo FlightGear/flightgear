@@ -1762,8 +1762,12 @@ void fgShowAircraft(const SGPath &path, bool recursive) {
     fgSearchAircraft( path, aircraft, recursive );
 
     sort(aircraft.begin(), aircraft.end());
-    cout << "Available aircraft:" << endl;
+    SG_LOG( SG_GENERAL, SG_ALERT, "Available aircraft:" );
     for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
-        cout << aircraft[i] << endl;
+        SG_LOG( SG_GENERAL, SG_ALERT, aircraft[i] );
     }
+#ifdef _MSC_VER
+    SG_LOG( SG_GENERAL, SG_ALERT, "Hit a key to continue..." );
+    cin.get();
+#endif
 }
