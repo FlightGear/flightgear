@@ -1160,13 +1160,11 @@ fgUsage (bool verbose)
     SGPropertyNode *locale = globals->get_locale();
 
     SGPropertyNode options_root;
-    SGPath opath( globals->get_fg_root() );
-    opath.append( "options.xml" );
 
     cout << "" << endl;
 
     try {
-        readProperties(opath.c_str(), &options_root);
+        fgLoadProps("options.xml", &options_root);
     } catch (const sg_exception &ex) {
         cout << "Unable to read the help file." << endl;
         cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;

@@ -22,6 +22,21 @@ FGSubsystem::~FGSubsystem ()
 }
 
 void
+FGSubsystem::init ()
+{
+}
+
+void
+FGSubsystem::bind ()
+{
+}
+
+void
+FGSubsystem::unbind ()
+{
+}
+
+void
 FGSubsystem::suspend ()
 {
   _suspended = true;

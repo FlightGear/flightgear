@@ -78,11 +78,9 @@ unsigned int Menu_size;
 void initMenu()
 {
      SGPropertyNode main;
-     SGPath spath( globals->get_fg_root() );
-     spath.append( "menu.xml" );
 
      try {
-         readProperties(spath.c_str(), &main);
+         fgLoadProps("menu.xml", &main);
      } catch (const sg_exception &ex) {
          SG_LOG(SG_GENERAL, SG_ALERT, "Error processing the menu file.");
          return;

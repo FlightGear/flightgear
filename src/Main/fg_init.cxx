@@ -389,10 +389,8 @@ bool fgInitConfig ( int argc, char **argv ) {
     fgSetDefaults();
 
     // Read global preferences from $FG_ROOT/preferences.xml
-    SGPath props_path(globals->get_fg_root());
-    props_path.append("preferences.xml");
     SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
-    readProperties(props_path.str(), globals->get_props());
+    fgLoadProps("preferences.xml", globals->get_props());
     SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
 
     // Detect the required language as early as possible

@@ -64,6 +64,14 @@ extern bool fgSaveFlight (ostream &output, bool write_all = false);
 extern bool fgLoadFlight (istream &input);
 
 
+/**
+ * Load properties from a file relative to $FG_ROOT.
+ *
+ * @param file The file name relative to $FG_ROOT.
+ */
+extern void fgLoadProps (const char * path, SGPropertyNode * props);
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Convenience functions for getting property values.

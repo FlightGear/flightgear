@@ -145,7 +145,7 @@ public:
    * in the constructor, so that FlightGear can control the
    * initialization order.</p>
    */
-  virtual void init () = 0;
+  virtual void init ();
 
 
   /**
@@ -155,7 +155,7 @@ public:
    * publishes.  It will be invoked after init, but before any
    * invocations of update.</p>
    */
-  virtual void bind () = 0;
+  virtual void bind ();
 
 
   /**
@@ -165,7 +165,7 @@ public:
    * publishes.  It will be invoked by FlightGear (not the destructor)
    * just before the subsystem is removed.</p>
    */
-  virtual void unbind () = 0;
+  virtual void unbind ();
 
 
   /**

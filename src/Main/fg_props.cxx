@@ -27,6 +27,7 @@
 #include <simgear/misc/exception.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include STL_IOSTREAM
 
@@ -676,6 +677,15 @@ fgLoadFlight (istream &input)
   // new initial state.
   globals->saveInitialState();
   return true;
+}
+
+
+void
+fgLoadProps (const char * path, SGPropertyNode * props)
+{
+    SGPath loadpath(globals->get_fg_root());
+    loadpath.append(path);
+    readProperties(loadpath.c_str(), props);
 }
 
 

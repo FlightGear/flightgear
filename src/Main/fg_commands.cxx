@@ -205,13 +205,9 @@ do_panel_mouse_click (const SGPropertyNode * arg)
 static bool
 do_preferences_load (const SGPropertyNode * arg)
 {
-  const string &path = arg->getStringValue("path", "preferences.xml");
-  SGPath props_path(globals->get_fg_root());
-  props_path.append(path);
-  SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences from "
-	 << props_path.str());
   try {
-    readProperties(props_path.str(), globals->get_props());
+    fgLoadProps(arg->getStringValue("path", "preferences.xml"),
+                globals->get_props());
   } catch (const sg_exception &e) {
     guiErrorMessage("Error reading global preferences: ", e);
     return false;
