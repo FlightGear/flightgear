@@ -1,3 +1,7 @@
+if ENABLE_XMESA_FX                                                              
+DEFS += -DXMESA -DFX
+endif                                                                           
+                                                                                
 noinst_LIBRARIES = libGUI.a
 
 libGUI_a_SOURCES = gui.cxx gui.h

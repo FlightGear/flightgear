@@ -26,6 +26,10 @@
 #  include <config.h>
 #endif
 
+#if defined(FX) && defined(XMESA)
+bool global_fullscreen = true;
+#endif
+
 #include <Include/compiler.h>
 
 #include <math.h>            // rint()
@@ -637,6 +641,11 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.42  1999/03/11 23:09:50  curt
+// When "Help" is selected from the menu check to see if netscape is running.
+// If so, command it to go to the flight gear user guide url.  Otherwise
+// start a new version of netscape with this url.
+//
 // Revision 1.41  1999/03/02 01:03:17  curt
 // Tweaks for building with native SGI compilers.
 //

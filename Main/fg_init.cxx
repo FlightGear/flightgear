@@ -28,6 +28,9 @@
 #  include <config.h>
 #endif
 
+#include <GL/glut.h>
+#include <XGL/xgl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -41,8 +44,6 @@
 
 #include STL_STRING
 
-#include <Include/fg_constants.h>
-
 #include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
@@ -51,6 +52,8 @@
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
+#include <Include/fg_constants.h>
+#include <Include/general.hxx>
 #include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
@@ -67,6 +70,10 @@
 #include "options.hxx"
 #include "views.hxx"
 #include "fg_serial.hxx"
+
+#if defined(FX) && defined(XMESA)
+#include <GL/xmesa.h>
+#endif
 
 FG_USING_STD(string);
 
@@ -126,7 +133,7 @@ int fgInitPosition( void ) {
 // General house keeping initializations
 int fgInitGeneral( void ) {
     string root;
-    // int i;
+    char *mesa_win_state;
 
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
@@ -141,10 +148,20 @@ int fgInitGeneral( void ) {
     }
     FG_LOG( FG_GENERAL, FG_INFO, "FG_ROOT = " << root << endl );
 
-    // prime the frame rate counter pump
-    // for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
-    //    general.frames[i] = 0.0;
-    // }
+#if defined(FX) && defined(XMESA)
+    // initialize full screen flag
+    global_fullscreen = false;
+    if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
+	// Test for the MESA_GLX_FX env variable
+	if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
+	    // test if we are fullscreen mesa/glide
+	    if ( (mesa_win_state[0] == 'f') || 
+		 (mesa_win_state[0] == 'F') ) {
+		global_fullscreen = true;
+	    }
+	}
+    }
+#endif
 
     return ( 1 ); 
 }
@@ -391,6 +408,11 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.70  1999/03/11 23:09:49  curt
+// When "Help" is selected from the menu check to see if netscape is running.
+// If so, command it to go to the flight gear user guide url.  Otherwise
+// start a new version of netscape with this url.
+//
 // Revision 1.69  1999/03/08 21:56:39  curt
 // Added panel changes sent in by Friedemann.
 // Added a splash screen randomization since we have several nice splash screens.

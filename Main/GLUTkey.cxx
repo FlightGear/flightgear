@@ -32,6 +32,11 @@
 
 #include <GL/glut.h>
 #include <XGL/xgl.h>
+
+#if defined(FX) && defined(XMESA)
+#include <GL/xmesa.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -51,11 +56,6 @@
 #include "GLUTkey.hxx"
 #include "options.hxx"
 #include "views.hxx"
-
-#if defined(FX) && defined(XMESA)
-#  include <GL/xmesa.h>
-static int fullscreen = 1;
-#endif
 
 
 // Force an update of the sky and lighting parameters
@@ -151,10 +151,11 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 87: // W key
 #if defined(FX) && !defined(WIN32)
-	    fullscreen = ( !fullscreen );
-#if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
-	    XMesaSetFXmode(fullscreen ? XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW);
-#endif
+	    global_fullscreen = ( !global_fullscreen );
+#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
+	    XMesaSetFXmode( global_fullscreen ? 
+			    XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW );
+#  endif
 #endif
 	    return;
 	case 88: // X key
@@ -434,6 +435,11 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.43  1999/03/11 23:09:46  curt
+// When "Help" is selected from the menu check to see if netscape is running.
+// If so, command it to go to the flight gear user guide url.  Otherwise
+// start a new version of netscape with this url.
+//
 // Revision 1.42  1999/02/26 22:09:46  curt
 // Added initial support for native SGI compilers.
 //

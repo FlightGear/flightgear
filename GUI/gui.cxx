@@ -23,6 +23,25 @@
  **************************************************************************/
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>                     
+#endif
+
+#include <Include/compiler.h>
+
+#include <GL/glut.h>
+#include <XGL/xgl.h>
+
+#if defined(FX) && defined(XMESA)
+#  include <GL/xmesa.h>
+#endif
+
+#include STL_STRING
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -30,6 +49,8 @@
 #include <Main/options.hxx>
 
 #include "gui.h"
+
+FG_USING_STD(string);
 
 
 puMenuBar    *mainMenuBar;
@@ -103,6 +124,36 @@ void notCb (puObject *)
   mkDialog ("This function isn't implemented yet");
 }
 
+void helpCb (puObject *)
+{
+#if defined(FX) && !defined(WIN32)
+#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
+    if ( global_fullscreen ) {
+	global_fullscreen = false;
+	XMesaSetFXmode( XMESA_FX_WINDOW );
+    }
+#  endif
+#endif
+
+#if !defined(WIN32)
+    string url = "http://www.flightgear.org/Docs/InstallGuide/getstart.html";
+    string command;
+
+    if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
+	command = "netscape -remote \"openURL(" + url + ")\" &";
+    } else {
+	command = "netscape " + url + " &";
+    }
+
+    system( command.c_str() );
+    string text = "Help started in netscape window.";
+#else
+    string text = "Help not yet implimented for Win32.";
+#endif
+
+    mkDialog (text.c_str());
+}
+
 /* -----------------------------------------------------------------------
    The menu stuff 
    ---------------------------------------------------------------------*/
@@ -120,7 +171,7 @@ puCallback viewSubmenuCb        [] = { notCb, notCb, NULL, notCb, NULL };
 puCallback aircraftSubmenuCb    [] = { notCb, notCb, notCb,notCb, NULL };
 puCallback environmentSubmenuCb [] = { notCb, notCb, notCb, NULL };
 puCallback optionsSubmenuCb     [] = { notCb, notCb, NULL};
-puCallback helpSubmenuCb        [] = { notCb, notCb, NULL };
+puCallback helpSubmenuCb        [] = { notCb, helpCb, NULL };
 
  
 

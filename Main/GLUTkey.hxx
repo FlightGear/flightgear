@@ -44,7 +44,6 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y);
 void GLUTspecialkey(int k, int x, int y);
@@ -54,11 +53,16 @@ void GLUTspecialkey(int k, int x, int y);
 
 
 /* $Log$
-/* Revision 1.2  1998/04/24 00:49:18  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Trying out some different option parsing code.
-/* Some code reorganization.
+/* Revision 1.3  1999/03/11 23:09:47  curt
+/* When "Help" is selected from the menu check to see if netscape is running.
+/* If so, command it to go to the flight gear user guide url.  Otherwise
+/* start a new version of netscape with this url.
 /*
+ * Revision 1.2  1998/04/24 00:49:18  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Trying out some different option parsing code.
+ * Some code reorganization.
+ *
  * Revision 1.1  1998/04/22 13:25:41  curt
  * C++ - ifing the code.
  * Starting a bit of reorganization of lighting code.

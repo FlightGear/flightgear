@@ -43,6 +43,10 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#if defined(FX) && defined(XMESA)
+extern bool global_fullscreen;
+#endif
+
 #include STL_STRING
 #include <vector>
 
@@ -241,6 +245,11 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.30  1999/03/11 23:09:51  curt
+// When "Help" is selected from the menu check to see if netscape is running.
+// If so, command it to go to the flight gear user guide url.  Otherwise
+// start a new version of netscape with this url.
+//
 // Revision 1.29  1999/03/02 01:03:19  curt
 // Tweaks for building with native SGI compilers.
 //
