@@ -1025,8 +1025,6 @@ static void fgMainLoop( void ) {
 
     SGTime *t = globals->get_time_params();
 
-    sglog().setLogLevels( SG_ALL, (sgDebugPriority)fgGetInt("/sim/log-level") );
-
     SGLocation * acmodel_location = 0;
     if(cur_fdm_state->getACModel() != 0) {
       acmodel_location = (SGLocation *)  cur_fdm_state->getACModel()->get3DModel()->getSGLocation();

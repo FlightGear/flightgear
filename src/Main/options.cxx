@@ -181,7 +181,7 @@ fgSetDefaults ()
 #else
     fgSetString("/sim/startup/browser-app", "webrun.bat");
 #endif
-    fgSetInt("/sim/log-level", SG_WARN);
+    fgSetString("/sim/logging/priority", "warn");
 
 				// Features
     fgSetBool("/sim/hud/antialiased", false);
@@ -957,6 +957,15 @@ fgOptTraceRead( const char *arg )
 }
 
 static int
+fgOptLogLevel( const char *arg )
+{
+    fgSetString("/sim/logging/classes", "all");
+    fgSetString("/sim/logging/priority", arg);
+    return FG_OPTIONS_OK;
+}
+
+
+static int
 fgOptTraceWrite( const char *arg )
 {
     string name = arg;
@@ -1352,7 +1361,7 @@ struct OptionDesc {
 #endif
     {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
-    {"log-level",                    true,  OPTION_INT,    "/sim/log-level", false, "", 0 },
+    {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
     {"view-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
