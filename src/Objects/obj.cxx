@@ -329,7 +329,7 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
  */
 static void
 add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
-			sgMat4 ROT, FGNewMat * mat, int object_index,
+			sgMat4 ROT, FGNewMat::Object * object,
 			ssgBranch * branch)
 {
     sgVec3 result;
@@ -342,7 +342,7 @@ add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
     sgPostMultMat4(OBJ, OBJ_pos);
     ssgTransform * pos = new ssgTransform;
     pos->setTransform(OBJ);
-    pos->addKid(mat->get_object(object_index));
+    pos->addKid(object->get_model());
     branch->addKid(pos);
 }
 
@@ -353,8 +353,7 @@ public:
   float * p1;
   float * p2;
   float * p3;
-  FGNewMat * mat;
-  int object_index;
+  FGNewMat::Object * object;
   ssgBranch * branch;
   sgMat4 ROT;
 };
@@ -376,8 +375,8 @@ public:
  *        surface.
  */
 static void
-fill_in_triangle (float * p1, float * p2, float * p3, FGNewMat * mat,
-		  int object_index, ssgBranch * branch, sgMat4 ROT)
+fill_in_triangle (float * p1, float * p2, float * p3,
+		  FGNewMat::Object *object, ssgBranch * branch, sgMat4 ROT)
 {
     sgVec3 center;
     sgSetVec3(center,
@@ -385,12 +384,11 @@ fill_in_triangle (float * p1, float * p2, float * p3, FGNewMat * mat,
 	      (p1[1] + p2[1] + p3[1]) / 3.0,
 	      (p1[2] + p2[2] + p3[2]) / 3.0);
     double area = sgTriArea(p1, p2, p3);
-    double num = area / mat->get_object_coverage(object_index);
+    double num = area / object->get_coverage_m2();
 
     // place an object each unit of area
     while ( num > 1.0 ) {
-      add_object_to_triangle(p1, p2, p3, center,
-			     ROT, mat, object_index, branch);
+      add_object_to_triangle(p1, p2, p3, center, ROT, object, branch);
       num -= 1.0;
     }
     // for partial units of area, use a zombie door method to
@@ -399,8 +397,7 @@ fill_in_triangle (float * p1, float * p2, float * p3, FGNewMat * mat,
     if ( num > 0.0 ) {
       if ( sg_random() <= num ) {
 	// a zombie made it through our door
-	add_object_to_triangle(p1, p2, p3, center,
-			       ROT, mat, object_index, branch);
+	add_object_to_triangle(p1, p2, p3, center, ROT, object, branch);
       }
     }
 }
@@ -423,8 +420,8 @@ in_range_callback (ssgEntity * entity, int mask)
 {
   RandomObjectUserData * data = (RandomObjectUserData *)entity->getUserData();
   if (!data->is_filled_in) {
-    fill_in_triangle(data->p1, data->p2, data->p3, data->mat,
-		     data->object_index, data->branch, data->ROT);
+    fill_in_triangle(data->p1, data->p2, data->p3, data->object,
+		     data->branch, data->ROT);
     data->is_filled_in = true;
   }
   return 1;
@@ -540,7 +537,7 @@ get_bounding_radius (sgVec3 center, float *p1, float *p2, float *p3)
  */
 static void
 setup_triangle (float * p1, float * p2, float * p3,
-		   FGNewMat * mat, ssgBranch * branch, sgMat4 ROT)
+		FGNewMat * mat, ssgBranch * branch, sgMat4 ROT)
 {
 				// Set up a single center point for LOD
     sgVec3 center;
@@ -564,13 +561,15 @@ setup_triangle (float * p1, float * p2, float * p3,
 				// Iterate through all the object types.
     int num_objects = mat->get_object_count();
     for (int i = 0; i < num_objects; i++) {
+				// Look up the random object.
+        FGNewMat::Object * object = mat->get_object(i);
 
 				// Set up the range selector for the entire
 				// triangle; note that we use the object
 				// range plus the bounding radius here, to
 				// allow for objects far from the center.
 	float ranges[] = {0,
-			  mat->get_object_lod(i) + bounding_radius,
+			  object->get_range_m() + bounding_radius,
                           500000};
 	ssgRangeSelector * lod = new ssgRangeSelector;
 	lod->setRanges(ranges, 3);
@@ -589,8 +588,7 @@ setup_triangle (float * p1, float * p2, float * p3,
 	data->p1 = p1;
 	data->p2 = p2;
 	data->p3 = p3;
-	data->mat = mat;
-	data->object_index = i;
+	data->object = object;
 	data->branch = in_range;
 	sgCopyMat4(data->ROT, ROT);
 

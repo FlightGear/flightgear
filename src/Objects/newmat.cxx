@@ -92,6 +92,83 @@ local_file_exists( const string& path ) {
 
 
 ////////////////////////////////////////////////////////////////////////
+// Implementation of FGNewMat::Object.
+////////////////////////////////////////////////////////////////////////
+
+FGNewMat::Object::Object (const SGPropertyNode * node)
+  : _path(node->getStringValue("path")),
+    _model(0),
+    _coverage_m2(node->getDoubleValue("coverage-m2", 100000)),
+    _range_m(node->getDoubleValue("range-m", 2000))
+{
+  string hdg = node->getStringValue("heading-type", "fixed");
+  if (hdg == "fixed") {
+    _heading_type = HEADING_FIXED;
+  } else if (hdg == "billboard") {
+    _heading_type = HEADING_BILLBOARD;
+  } else if (hdg == "random") {
+    _heading_type = HEADING_RANDOM;
+  } else {
+    _heading_type = HEADING_FIXED;
+    SG_LOG(SG_INPUT, SG_ALERT, "Unknown heading type: " << hdg
+	   << "; using 'fixed' instead.");
+  }
+}
+
+FGNewMat::Object::~Object ()
+{
+  _model->deRef();
+}
+
+const string &
+FGNewMat::Object::get_path () const
+{
+  return _path;
+}
+
+ssgEntity *
+FGNewMat::Object::get_model () const
+{
+				// Load model only on demand
+  if (_model == 0) {
+    SGPath path = globals->get_fg_root();
+    path.append(_path);
+    ssgTexturePath((char *)path.dir().c_str());
+    ssgEntity * entity = load_object((char *)path.c_str());
+    if (entity != 0) {
+      float ranges[] = {0, _range_m};
+      _model = new ssgRangeSelector;
+      ((ssgRangeSelector *)_model)->setRanges(ranges, 2);
+      if (_heading_type == HEADING_BILLBOARD) {
+	ssgCutout * cutout = new ssgCutout(false);
+	cutout->addKid(entity);
+	((ssgBranch *)_model)->addKid(cutout);
+      } else {
+	((ssgBranch *)_model)->addKid(entity);
+      }
+      _model->ref();
+    } else {
+      SG_LOG(SG_INPUT, SG_ALERT, "Failed to load object " << path.str());
+    }
+  }
+  return _model;
+}
+
+double
+FGNewMat::Object::get_coverage_m2 () const
+{
+  return _coverage_m2;
+}
+
+double
+FGNewMat::Object::get_range_m () const
+{
+  return _range_m;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Constructors and destructor.
 ////////////////////////////////////////////////////////////////////////
 
@@ -118,8 +195,10 @@ FGNewMat::FGNewMat (ssgSimpleState * s)
 
 FGNewMat::~FGNewMat (void)
 {
-  for (unsigned int i = 0; i < objects.size(); i++)
-    objects[i].model->deRef();
+  for (unsigned int i = 0; i < objects.size(); i++) {
+    delete objects[i];
+    objects[i] = 0;
+  }
 }
 
 
@@ -174,33 +253,10 @@ FGNewMat::read_properties (const SGPropertyNode * props)
     ((SGPropertyNode *)props)->getChildren("object");
   for (unsigned int i = 0; i < object_nodes.size(); i++) {
     const SGPropertyNode * object_node = object_nodes[i];
-    if (object_node->hasChild("path")) {
-      Object object;
-      SGPath path = globals->get_fg_root();
-      path.append(object_node->getStringValue("path"));
-      ssgTexturePath((char *)path.dir().c_str());
-      ssgEntity * model = load_object((char *)path.c_str());
-      if (model != 0) {
-	float ranges[] = {0, object_node->getDoubleValue("range-m", 2000)};
-	object.model = new ssgRangeSelector;
-	((ssgRangeSelector *)object.model)->setRanges(ranges, 2);
-	if (object_node->getBoolValue("billboard", false)) {
-	  ssgCutout * cutout = new ssgCutout(false);
-	  cutout->addKid(model);
-	  ((ssgBranch *)object.model)->addKid(cutout);
-	} else {
-	  ((ssgBranch *)object.model)->addKid(model);
-	}
-	object.model->ref();
-	object.coverage = object_node->getDoubleValue("coverage", 100000);
-	object.lod = object_node->getDoubleValue("range-m", 2000);
-	objects.push_back(object);
-      } else {
-	SG_LOG(SG_INPUT, SG_ALERT, "Failed to load object " << path.str());
-      }
-    } else {
+    if (object_node->hasChild("path"))
+      objects.push_back(new Object(object_node));
+    else
       SG_LOG(SG_INPUT, SG_ALERT, "No path supplied for object");
-    }
   }
 }
 

@@ -65,6 +65,43 @@ class FGNewMat {
 public:
 
 
+  //////////////////////////////////////////////////////////////////////
+  // Inner class.
+  //////////////////////////////////////////////////////////////////////
+
+
+  /**
+   * A randomly-placeable object.
+   */
+  class Object
+  {
+  public:
+
+    enum HeadingType {
+      HEADING_FIXED,
+      HEADING_BILLBOARD,
+      HEADING_RANDOM
+    };
+
+    const string &get_path () const;
+    ssgEntity * get_model () const;
+    double get_coverage_m2 () const;
+    double get_range_m () const;
+    HeadingType get_heading_type () const;
+  protected:
+    friend class FGNewMat;
+    Object (const SGPropertyNode * node);
+    virtual ~Object ();
+  private:
+    string _path;
+    mutable ssgEntity * _model;
+    double _coverage_m2;
+    double _range_m;
+    HeadingType _heading_type;
+  };
+
+
+
   ////////////////////////////////////////////////////////////////////
   // Public Constructors.
   ////////////////////////////////////////////////////////////////////
@@ -148,31 +185,15 @@ public:
 
 
   /**
-   * Get the number of dynamic objects defined for this material.
+   * Get the number of randomly-placed objects defined for this material.
    */
   virtual int get_object_count () const { return objects.size(); }
 
 
   /**
-   * Get a dynamic object for this material.
+   * Get a randomly-placed object for this material.
    */
-  virtual ssgEntity * get_object (int i) const { return objects[i].model; }
-
-
-  /**
-   * Get the average space for a dynamic object for this material.
-   */
-  virtual double get_object_coverage (int i) const {
-    return objects[i].coverage;
-  }
-
-
-  /**
-   * Get the target LOD range for a dynamic object for this material.
-   */
-  virtual double get_object_lod (int i) const {
-    return objects[i].lod;
-  }
+  virtual Object * get_object (int index) const { return objects[index]; }
 
 
   /**
@@ -249,14 +270,7 @@ private:
   // true if texture loading deferred, and not yet loaded
   bool texture_loaded;
 
-  struct Object
-  {
-    ssgEntity * model;
-    double coverage;
-    double lod;
-  };
-
-  vector<Object> objects;
+  vector<Object *> objects;
 
   // ref count so we can properly delete if we have multiple
   // pointers to this record
@@ -273,6 +287,7 @@ private:
   void read_properties (const SGPropertyNode * props);
   void build_ssg_state(bool defer_tex_load = false);
   void set_ssg_state( ssgSimpleState *s );
+
 
 };
 
