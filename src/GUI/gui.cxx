@@ -116,24 +116,87 @@ static int last_buttons = 0 ;
 static int mouse_active = 0;
 static int menu_on = 0;
 
+/* --------------------------------------------------------------------
+Support for mouse as control yoke (david@megginson.com)
+
+- right button toggles between pointer and yoke
+- horizontal drag with no buttons moves ailerons
+- vertical drag with no buttons moves elevators
+- horizontal drag with left button moves brakes (left=on)
+- vertical drag with left button moves throttle (up=more)
+- horizontal drag with middle button moves rudder
+- vertical drag with middle button moves trim
+
+For the *_sensitivity variables, a lower number means more sensitive.
+
+TODO: figure out how to keep pointer from leaving window in yoke mode.
+TODO: add thresholds and null zones
+TODO: sensitivity should be configurable at user option.
+TODO: allow differential braking (this will be useful if FlightGear
+      ever supports tail-draggers like the DC-3)
+---------------------------------------------------------------------*/
+
+static int mouse_yoke = 0;
+static float aileron_sensitivity = 500.0;
+static float elevator_sensitivity = 500.0;
+static float brake_sensitivity = 250.0;
+static float throttle_sensitivity = 250.0;
+static float rudder_sensitivity = 500.0;
+static float trim_sensitivity = 1000.0;
+
 void guiMotionFunc ( int x, int y )
 {
+    if (mouse_yoke) {
+	if (last_buttons & (1 << GLUT_LEFT_BUTTON)) {
+	    float brake_offset = (_mX - x) / brake_sensitivity;
+	    float throttle_offset = (_mY - y) / throttle_sensitivity;
+	    controls.move_brake(FGControls::ALL_WHEELS, brake_offset);
+	    controls.move_throttle(FGControls::ALL_ENGINES, throttle_offset);
+	} else if (last_buttons & (1 << GLUT_MIDDLE_BUTTON)) {
+	    float rudder_offset = (x - _mX) / rudder_sensitivity;
+	    float trim_offset = (_mY - y) / trim_sensitivity;
+	    controls.move_rudder(rudder_offset);
+	    controls.move_elevator_trim(trim_offset);
+	} else {
+	    float aileron_offset = (x - _mX) / aileron_sensitivity;
+	    float elevator_offset = (_mY - y) / elevator_sensitivity;
+	    controls.move_aileron(aileron_offset);
+	    controls.move_elevator(elevator_offset);
+	}
+    } else {
+        puMouse ( x, y ) ;
+        glutPostRedisplay () ;
+    }
     _mX = x;
     _mY = y;
-    puMouse ( x, y ) ;
-    glutPostRedisplay () ;
+
 }
 
 void guiMouseFunc(int button, int updown, int x, int y)
 {
+    // Toggle mouse as pointer or yoke
+    if (updown == GLUT_DOWN && (button & GLUT_RIGHT_BUTTON)) {
+        FG_LOG( FG_INPUT, FG_INFO, "Toggling mouse as yoke" );
+        mouse_yoke = !mouse_yoke;
+	if (mouse_yoke) {
+            FG_LOG( FG_INPUT, FG_INFO, "Mouse in yoke mode" );
+  	    glutSetCursor(GLUT_CURSOR_NONE);
+	} else {
+	    glutSetCursor(GLUT_CURSOR_INHERIT);
+            FG_LOG( FG_INPUT, FG_INFO, "Mouse in pointer mode" );
+	}
+    }
     _mX = x;
     _mY = y;
-    if ( updown == PU_DOWN )
+    if ( updown == PU_DOWN ) {
         last_buttons |=  ( 1 << button ) ;
-    else
+    } else {
         last_buttons &= ~( 1 << button ) ;
-    puMouse (button, updown, x,y);
-    glutPostRedisplay ();
+    }
+    if (!mouse_yoke) {
+	puMouse (button, updown, x,y);
+	glutPostRedisplay ();
+    }
 }
 
 int guiGetMouseButton(void)
