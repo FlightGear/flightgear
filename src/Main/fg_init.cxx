@@ -116,6 +116,7 @@
 #include "fg_props.hxx"
 #include "options.hxx"
 #include "globals.hxx"
+#include "logger.hxx"
 #include "viewmgr.hxx"
 
 #if defined(FX) && defined(XMESA)
@@ -778,6 +779,14 @@ bool fgInitSubsystems( void ) {
 						       &fgLIGHT::Update),
 			    fgEVENT::FG_EVENT_READY, 30000 );
 
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the logger.
+    ////////////////////////////////////////////////////////////////////
+    
+    globals->set_logger(new FGLogger);
+    globals->get_logger()->init();
+    globals->get_logger()->bind();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the local time subsystem.

@@ -47,6 +47,7 @@ fgfs_SOURCES = \
 	fg_props.cxx fg_props.hxx \
         fgfs.cxx fgfs.hxx \
 	globals.cxx globals.hxx \
+        logger.cxx logger.hxx \
         model.cxx model.hxx \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
