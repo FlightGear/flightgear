@@ -103,7 +103,7 @@ GUIInfo::GUIInfo (FGDialog * d)
 
 GUIInfo::~GUIInfo ()
 {
-    for (int i = 0; i < bindings.size(); i++) {
+    for (unsigned int i = 0; i < bindings.size(); i++) {
         delete bindings[i];
         bindings[i] = 0;
     }
@@ -125,7 +125,7 @@ FGDialog::~FGDialog ()
 {
     puDeleteObject(_object);
 
-    int i;
+    unsigned int i;
 
                                 // Delete all the arrays we made
                                 // and were forced to keep around
@@ -155,7 +155,7 @@ FGDialog::~FGDialog ()
 void
 FGDialog::updateValue (const char * objectName)
 {
-    for (int i = 0; i < _propertyObjects.size(); i++) {
+    for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         const string &name = _propertyObjects[i]->name;
         if (name == objectName)
             copy_to_pui(_propertyObjects[i]->node,
@@ -166,7 +166,7 @@ FGDialog::updateValue (const char * objectName)
 void
 FGDialog::applyValue (const char * objectName)
 {
-    for (int i = 0; i < _propertyObjects.size(); i++) {
+    for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
         if (_propertyObjects[i]->name == objectName)
             copy_from_pui(_propertyObjects[i]->object,
                           _propertyObjects[i]->node);
@@ -176,14 +176,14 @@ FGDialog::applyValue (const char * objectName)
 void
 FGDialog::updateValues ()
 {
-    for (int i = 0; i < _propertyObjects.size(); i++)
+    for (unsigned int i = 0; i < _propertyObjects.size(); i++)
         copy_to_pui(_propertyObjects[i]->node, _propertyObjects[i]->object);
 }
 
 void
 FGDialog::applyValues ()
 {
-    for (int i = 0; i < _propertyObjects.size(); i++)
+    for (unsigned int i = 0; i < _propertyObjects.size(); i++)
         copy_from_pui(_propertyObjects[i]->object,
                       _propertyObjects[i]->node);
 }
@@ -257,7 +257,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     } else if (type == "combo") {
         vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
         char ** entries = make_char_array(value_nodes.size());
-        for (int i = 0, j = value_nodes.size() - 1;
+        for (unsigned int i = 0, j = value_nodes.size() - 1;
              i < value_nodes.size();
              i++, j--)
             entries[i] = strdup((char *)value_nodes[i]->getStringValue());
@@ -309,7 +309,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     if (nodes.size() > 0) {
         GUIInfo * info = new GUIInfo(this);
 
-        for (int i = 0; i < nodes.size(); i++)
+        for (unsigned int i = 0; i < nodes.size(); i++)
             info->bindings.push_back(new FGBinding(nodes[i]));
         object->setCallback(action_callback);
         object->setUserData(info);
