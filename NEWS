@@ -1,8 +1,19 @@
 New in 0.7.3
 * April 27, 2000
-* Cygwin32 build fixes
-* MSVC++ build fixes
-* Mac build fixes
+* Simple radio stack added to the instrument panel.  The frequencies are
+  currently hardwired to default values until the UI for changing them
+  is finished.  But, this is enough to fly a compile time selected ILS
+  instrument approach.  You can adjust the radial by clicking the knob on
+  the panel. 
+* Added a chronometer to the instrument panel.
+* Compass, vsi, and altitute instruments and vacuum system are more
+  accurately modeled.
+* Added a magnetic variation model.
+* Added custom joystick client support so sim can be flown from a
+  remote joystick connected to another machine.  This is in support of
+  some custom hardware located in the human factors research lab of the
+  university of minnesota.
+* Added navaid database management and query code.
 * Updates to JSBsim flight dynamics code that includes a generic
   reconfigurable flight control system.
 * Updates to LaRCsim flight dynamcis code contributed by UIUC that
@@ -16,22 +27,13 @@ New in 0.7.3
   have the correct phase.
 * Rebuilt the sky dome using ssg.
 * Removed dependencies on mat3.h and friends (old srgp support lib)
-* Added navaid database management and query code.
 * Airport lookups now done through gdbm (a light weight embedded database.)
 * Converted ssgVTable's to ssgVtxTables which do proper memory
   management and should facilitate use of compiled vertex arrays once
   ssg add support for these.
-* Simple radio stack added to the instrument panel.  The frequencies are
-  currently hardwired to default values until the UI for changing them
-  is finished.  But, this is enough to fly ILS instrument approaches.
-* Added a chronometer to the instrument panel.
-* Compass, vsi, and altitute instruments and vacuum system are more
-  accurately modeled.
-* Added a magnetic variation model to "simgear" for use by flightgear.
-* Added custom joystick client support so sim can be flown from a
-  remote joystick connected to another machine.  This is in support of
-  some custom hardware located in the human factors research lab of the
-  university of minnesota.
+* Cygwin32 build fixes
+* MSVC++ build fixes
+* Mac build fixes
 
 New in 0.7.2
 * February 17, 2000
