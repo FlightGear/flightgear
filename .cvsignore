@@ -6,4 +6,5 @@ config.cache
 config.log
 config.status
 configure
+do-config.sh
 gmon.out
