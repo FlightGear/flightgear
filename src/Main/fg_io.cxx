@@ -320,7 +320,7 @@ void
 FGIO::shutdown_all() {
     FGProtocol *p;
 
-    // cout << "processing I/O channels" << endl;
+    // cout << "shutting down all I/O channels" << endl;
 
     typedef vector< FGProtocol* > container;
     container::iterator i = io_channels.begin();

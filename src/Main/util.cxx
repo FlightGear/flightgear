@@ -106,7 +106,6 @@ fgExit (int status)
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Exiting FlightGear with status " << status);
 
-    globals->get_io()->shutdown_all();
     exit(status);
 }
 
