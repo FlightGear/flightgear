@@ -109,7 +109,7 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 	} else
 	{	/* Moderate time step; non linear response */
 		double keep = exp ( -tc );
-		printf ( "ARP: Keep is %f\n", keep );
+		// printf ( "ARP: Keep is %f\n", keep );
 		(*outthe) = (*outthe) * keep
 			  +    inthe  * ( 1.0 - keep );
 	}
