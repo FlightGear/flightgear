@@ -65,7 +65,7 @@ extern "C" {
 
 #include <Main/options.hxx>
 #include <Cockpit/hud.hxx>
-#include <Network/network.h>
+#include <NetworkOLK/network.h>
 
 extern char *fgd_callsign;
 
