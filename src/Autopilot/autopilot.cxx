@@ -1160,27 +1160,30 @@ int fgAPRun( void ) {
     double lat = fgAPget_latitude();
     double lon = fgAPget_longitude();
 
-	// see if somebody else has changed them
+#ifdef FG_FORCE_AUTO_DISENGAGE
+    // see if somebody else has changed them
     if( fabs(aileron - APData->old_aileron) > APData->disengage_threshold ||
-	fabs(elevator - APData->old_elevator) > APData->disengage_threshold ||		
-	fabs(elevator_trim - APData->old_elevator_trim) > APData->disengage_threshold ||		
+	fabs(elevator - APData->old_elevator) > APData->disengage_threshold ||
+	fabs(elevator_trim - APData->old_elevator_trim) > 
+	APData->disengage_threshold ||		
 	fabs(rudder - APData->old_rudder) > APData->disengage_threshold )
-	{
-	    // if controls changed externally turn autopilot off
-	    APData->waypoint_hold = false ;     // turn the target hold off
-	    APData->heading_hold = false ;      // turn the heading hold off
-	    APData->altitude_hold = false ;     // turn the altitude hold off
-	    APData->terrain_follow = false;     // turn the terrain_follow hold off
-	    //		APData->auto_throttle = false;      // turn the auto_throttle off
+    {
+	// if controls changed externally turn autopilot off
+	APData->waypoint_hold = false ;     // turn the target hold off
+	APData->heading_hold = false ;      // turn the heading hold off
+	APData->altitude_hold = false ;     // turn the altitude hold off
+	APData->terrain_follow = false;     // turn the terrain_follow hold off
+	// APData->auto_throttle = false;      // turn the auto_throttle off
 
-		// stash this runs control settings
-	    APData->old_aileron = aileron;
-	    APData->old_elevator = elevator;
-	    APData->old_elevator_trim = elevator_trim;
-	    APData->old_rudder = rudder;
-		
-	    return(0);
-	}
+	// stash this runs control settings
+	APData->old_aileron = aileron;
+	APData->old_elevator = elevator;
+	APData->old_elevator_trim = elevator_trim;
+	APData->old_rudder = rudder;
+	
+	return 0;
+    }
+#endif
 	
     // waypoint hold enabled?
     if ( APData->waypoint_hold == true )
