@@ -142,11 +142,7 @@ void FGPanelNode::draw_geometry()
     glGetFloatv(GL_PROJECTION_MATRIX, _lastProjection);
     glGetIntegerv(GL_VIEWPORT, _lastViewport);
 
-    glDepthMask( GL_FALSE );
-
     _panel->draw();
-
-    glDepthMask( GL_TRUE );
 
 
     glPopMatrix();
