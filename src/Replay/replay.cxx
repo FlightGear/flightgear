@@ -315,8 +315,8 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
         = weight( ctrls1.elevator_trim, ctrls2.elevator_trim, ratio );
     result.ctrls.rudder = weight( ctrls1.rudder, ctrls2.rudder, ratio );
     result.ctrls.flaps = weight( ctrls1.flaps, ctrls2.flaps, ratio );
-    result.ctrls.flaps_power
-        = weight( ctrls1.flaps_power, ctrls2.flaps_power, ratio );
+    result.ctrls.flaps_power = ctrls1.flaps_power;
+    result.ctrls.flap_motor_ok = ctrls1.flap_motor_ok;
 
     // Engine controls
     for ( i = 0; i < ctrls1.num_engines; ++i ) {

@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 15;
+const int FG_NET_CTRLS_VERSION = 16;
 
 
 // Define a structure containing the control parameters
@@ -56,6 +56,7 @@ public:
 
     // Aero control faults
     bool flaps_power;                    //  true = power available
+    bool flap_motor_ok;
 
     // Engine controls
     int num_engines;		         // number of valid engines

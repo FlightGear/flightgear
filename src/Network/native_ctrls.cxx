@@ -113,10 +113,10 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     net->elevator_trim = node->getDoubleValue( "elevator-trim" );
     net->rudder = node->getDoubleValue( "rudder" );
     net->flaps = node->getDoubleValue( "flaps" );
-    node = fgGetNode("/controls", true); 
     net->flaps_power
-            = node->getDoubleValue( "/systems/electrical/outputs/flaps",
-                                    1.0 ) >= 1.0;
+        = fgGetDouble( "/systems/electrical/outputs/flaps", 1.0 ) >= 1.0;
+    net->flap_motor_ok = node->getBoolValue( "flaps-serviceable" );
+
     net->num_engines = FGNetCtrls::FG_MAX_ENGINES;
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
         // Controls
@@ -229,6 +229,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         htond(net->rudder);
         htond(net->flaps);
         net->flaps_power = htonl(net->flaps_power);
+        net->flap_motor_ok = htonl(net->flap_motor_ok);
         for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
             net->magnetos[i] = htonl(net->magnetos[i]);
             net->starter_power[i] = htonl(net->starter_power[i]);
@@ -284,6 +285,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         htond(net->rudder);
         htond(net->flaps);
         net->flaps_power = htonl(net->flaps_power);
+        net->flap_motor_ok = htonl(net->flap_motor_ok);
         net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < net->num_engines; ++i ) {
             net->magnetos[i] = htonl(net->magnetos[i]);
@@ -333,8 +335,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     node->setDoubleValue( "elevator-trim", net->elevator_trim );
     node->setDoubleValue( "rudder", net->rudder );
     node->setDoubleValue( "flaps", net->flaps );
-
     fgSetBool( "/systems/electrical/outputs/flaps", net->flaps_power );
+    node->setBoolValue( "flaps-serviceable", net->flap_motor_ok );
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
         // Controls
