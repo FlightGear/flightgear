@@ -391,21 +391,29 @@ FGInterface::bind ()
   fgTie("/velocities/glideslope", this,
   &FGInterface::get_Gamma_vert_rad,
   &FGInterface::set_Gamma_vert_rad );
-  fgTie("/velocities/side-slip-rad", this,
+  fgTie("/orientation/side-slip-rad", this,
 	&FGInterface::get_Beta); // read-only
-  fgTie("/velocities/side-slip-deg", this,
+  fgTie("/orientation/side-slip-deg", this,
   &FGInterface::get_Beta_deg); // read-only
-  fgTie("/velocities/alpha-deg", this,
+  fgTie("/orientation/alpha-deg", this,
   &FGInterface::get_Alpha_deg); // read-only
   fgTie("/accelerations/nlf", this,
   &FGInterface::get_Nlf); // read-only
 
+                                // NED accelerations
+  fgTie("/accelerations/ned/north-accel-fps_sec",
+        this, &FGInterface::get_V_dot_north);
+  fgTie("/accelerations/ned/east-accel-fps_sec",
+        this, &FGInterface::get_V_dot_east);
+  fgTie("/accelerations/ned/down-accel-fps_sec",
+        this, &FGInterface::get_V_dot_down);
+
                                 // Pilot accelerations
-  fgTie("/accelerations/pilot/x-accel-ft_sec2",
+  fgTie("/accelerations/pilot/x-accel-fps_sec",
         this, &FGInterface::get_A_X_pilot);
-  fgTie("/accelerations/pilot/y-accel-ft_sec2",
+  fgTie("/accelerations/pilot/y-accel-fps_sec",
         this, &FGInterface::get_A_Y_pilot);
-  fgTie("/accelerations/pilot/z-accel-ft_sec2",
+  fgTie("/accelerations/pilot/z-accel-fps_sec",
         this, &FGInterface::get_A_Z_pilot);
 
 }
