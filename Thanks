@@ -163,6 +163,10 @@ Mike Hill <mikehill@flightsim.com>
   http://www.flightsimnetwork.com/mikehill/home.htm
 
 
+Erik Hofman <erik@ehofman.com>
+  Irix port.
+
+
 Charlie Hotchkiss <clhotch@pacbell.net> 
   Worked on improving and enhancing the HUD code.
   Lots of code style tips and code tweaks ...
@@ -224,6 +228,11 @@ David Megginson <david@megginson.com>
 Eric Mitchell <mitchell@mars.ark.com>
   Contributed some topnotch scenery textures. His textures were 
   all original creations.
+
+
+Cameron Moore <lists@toad.bitstreet.net>
+  Reigning list admin.
+  Provided our pages.
 
 
 Anders Morken <amrken@online.no>
@@ -338,6 +347,10 @@ Michael Smith <msmith99@flash.net>
   Project Bonanza - http://members.xoom.com/ConceptSim/index.html
 
 
+Martin Spott <Martin.Spott@uni-duisburg.de>
+  Contributed to the installation / user guide.
+
+
 U.S. Geological Survey
   Provided geographic data used by this project
   http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
@@ -432,6 +445,8 @@ Jean-Claude Wippler <jcw@equi4.com>
 
 
 WoodSoup Project  http://www.woodsoup.org
+  [ FlightGear no longer uses woodsoup services, but we appreciate
+  the support provided to our project during the time they hosted us. ]
   Provided computing resources and services so that the Flight Gear 
   project could have real home.  This includes, web services, 
   ftp services, shell accounts, email lists, dns services, etc.
