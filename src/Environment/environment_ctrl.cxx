@@ -361,6 +361,7 @@ FGMetarEnvironmentCtrl::init ()
 void
 FGMetarEnvironmentCtrl::reinit ()
 {
+#if 0
     if (_icao != NULL) {
         free(_icao);
         _icao = NULL;
@@ -382,6 +383,7 @@ FGMetarEnvironmentCtrl::reinit ()
         fgGetDouble("/environment/metar/temperature-degc"));
     fgSetDouble("/environment/dewpoint-degc",
         fgGetDouble("/environment/metar/dewpoint-degc"));
+#endif
 
     env->reinit();
 }
