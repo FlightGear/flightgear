@@ -263,6 +263,7 @@ private:
     SGPropertyNode *temperature;
     SGPropertyNode *pressure;
     SGPropertyNode *density;
+    SGPropertyNode *turbulence;
     
     SGPropertyNode *wind_from_north;
     SGPropertyNode *wind_from_east;
