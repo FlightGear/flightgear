@@ -27,83 +27,47 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <Math/polar.h>
 #include <Include/fg_constants.h>
 
-
-/* we can save these values between calls for efficiency */
-static double st, ct, sp, cp;
+#include "polar3d.h"
 
 
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
  * must be specified in radians.  The FG convention is for distances
  * to be specified in meters */
-struct fgCartesianPoint fgPolarToCart(double lon, double lat, double radius) {
-    struct fgCartesianPoint pnew;
+fgCartesianPoint3d fgPolarToCart3d(fgPolarPoint3d p) {
+    fgCartesianPoint3d pnew;
 
-    pnew.x = cos(lon) * cos(lat) * radius;
-    pnew.y = sin(lon) * cos(lat) * radius;
-    pnew.z = sin(lat) * radius;
+    pnew.x = cos(p.lon) * cos(p.lat) * p.radius;
+    pnew.y = sin(p.lon) * cos(p.lat) * p.radius;
+    pnew.z = sin(p.lat) * p.radius;
 
     return(pnew);
 }
 
 
-/* Precalculate as much as possible so we can do a batch of transforms
- * through the same angles, will rotates a cartesian point about the
- * center of the earth by Theta (longitude axis) and Phi (latitude
- * axis) */
+/* Convert a cartesian coordinate to polar coordinates (lon/lat
+ * specified in radians.  Distances are specified in meters. */
+fgPolarPoint3d fgCartToPolar3d(fgCartesianPoint3d cp) {
+    fgPolarPoint3d pp;
 
-/* Here are the unoptimized transformation equations 
+    pp.lon = atan2( cp.y, cp.x );
+    pp.lat = FG_PI_2 - atan2( sqrt(cp.x*cp.x + cp.y*cp.y), cp.z );
+    pp.radius = sqrt(cp.x*cp.x + cp.y*cp.y + cp.z*cp.z);
 
-   x' = cos(Phi) * cos(Theta) * x + cos(Phi) * sin(Theta) * y + 
-	     sin(Phi) * z
-   y' = -sin(Theta) * x + cos(Theta) * y
-   z' = -sin(Phi) * sin(Theta) * y - sin(Phi) * cos(Theta) * x + 
-	     cos(Phi) * z;
-
- */
-void fgRotateBatchInit(double Theta, double Phi) {
-    printf("Theta = %.3f, Phi = %.3f\n", Theta, Phi);
-
-    st = sin(Theta);
-    ct = cos(Theta);
-    sp = sin(-Phi);
-    cp = cos(-Phi);
-}
-
-/* Rotates a cartesian point about the center of the earth by Theta
- * (longitude axis) and Phi (latitude axis) */
-struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p) {
-    struct fgCartesianPoint p1, p2;
-
-    /* printf("start = %.3f %.3f %.3f\n", p.x, p.y, p.z); */
-
-    /* rotate about the z axis */
-    p1.x = ct * p.x - st * p.y;
-    p1.y = st * p.x + ct * p.y;
-    p1.z = p.z;
-
-    /* printf("step 1 = %.3f %.3f %.3f\n", p1.x, p1.y, p1.z); */
-
-    /* rotate new point about y axis */
-    p2.x = cp * p1.x + sp * p1.z;
-    p2.y = p1.y;
-    p2.z = cp * p1.z - sp * p1.x;
-
-    /* printf("cp = %.5f, sp = %.5f\n", cp, sp); */
-    /* printf("(1) = %.5f, (2) = %.5f\n", cp * p1.z, sp * p1.x); */
-
-    /* printf("step 2 = %.3f %.3f %.3f\n", p2.x, p2.y, p2.z); */
-
-    return(p2);
+    printf("lon = %.l2f  lat = %.l2f  radius = %.l2f\n", 
+	   pp.lon, pp.lat, pp.radius);
+    return(pp);
 }
 
 
 /* $Log$
-/* Revision 1.6  1998/04/25 22:06:23  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.1  1998/05/02 01:50:11  curt
+/* polar.[ch] renamed to polar3d.[ch]
 /*
+ * Revision 1.6  1998/04/25 22:06:23  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.5  1998/01/27 00:48:00  curt
  * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.

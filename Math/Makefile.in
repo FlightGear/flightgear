@@ -82,7 +82,7 @@ libMath_la_SOURCES = \
 	fg_random.c fg_random.h \
 	interpolater.cxx interpolater.hxx \
 	mat3.h mat3defs.h mat3err.h \
-	polar.c polar.h \
+	polar3d.c polar3d.h \
 	vector.c vector.h
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Include/config.h
@@ -101,7 +101,7 @@ X_PRE_LIBS = @X_PRE_LIBS@
 libMath_la_LDFLAGS = 
 libMath_la_LIBADD = 
 libMath_la_OBJECTS =  MAT3geom.lo MAT3inv.lo MAT3mat.lo MAT3vec.lo \
-fg_geodesy.lo fg_random.lo interpolater.lo polar.lo vector.lo
+fg_geodesy.lo fg_random.lo interpolater.lo polar3d.lo vector.lo
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
@@ -119,7 +119,7 @@ TAR = tar
 GZIP = --best
 DEP_FILES =  .deps/MAT3geom.P .deps/MAT3inv.P .deps/MAT3mat.P \
 .deps/MAT3vec.P .deps/fg_geodesy.P .deps/fg_random.P \
-.deps/interpolater.P .deps/polar.P .deps/vector.P
+.deps/interpolater.P .deps/polar3d.P .deps/vector.P
 CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(libMath_la_SOURCES)
 OBJECTS = $(libMath_la_OBJECTS)

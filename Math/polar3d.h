@@ -39,29 +39,12 @@ extern "C" {
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
  * must be specified in radians.  The FG convention is for distances
  * to be specified in meters */
-struct fgCartesianPoint fgPolarToCart(double lon, double lat, double radius);
+fgCartesianPoint3d fgPolarToCart3d(fgPolarPoint3d p);
 
 
-/* Precalculate as much as possible so we can do a batch of transforms
- * through the same angles, will rotates a cartesian point about the
- * center of the earth by Theta (longitude axis) and Phi (latitude
- * axis) */
-
-/* Here are the unoptimized transformation equations 
-
-   x' = cos(Phi) * cos(Theta) * x + cos(Phi) * sin(Theta) * y + 
-	     sin(Phi) * z
-   y' = -sin(Theta) * x + cos(Theta) * y
-   z' = -sin(Phi) * sin(Theta) * y - sin(Phi) * cos(Theta) * x + 
-	     cos(Phi) * z;
-
- */
-void fgRotateBatchInit(double Theta, double Phi);
-
-
-/* Rotates a cartesian point about the center of the earth by Theta
- * (longitude axis) and Phi (latitude axis) */
-struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
+/* Convert a cartesian coordinate to polar coordinates (lon/lat
+ * specified in radians.  Distances are specified in meters. */
+fgPolarPoint3d fgCartToPolar3d(fgCartesianPoint3d cp);
 
 
 #ifdef __cplusplus
@@ -73,9 +56,12 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
 /* $Log$
-/* Revision 1.9  1998/04/25 22:06:23  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.1  1998/05/02 01:50:11  curt
+/* polar.[ch] renamed to polar3d.[ch]
 /*
+ * Revision 1.9  1998/04/25 22:06:23  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.8  1998/04/21 17:03:50  curt
  * Prepairing for C++ integration.
  *
