@@ -1,3 +1,105 @@
+New in 0.9.2
+* June 4, 2002
+
+* New aircraft available: P51-D (w/ full 3d cockpit), Sea Hawk
+  (WV908), a research ornithopter (propelled by actual flapping
+  wings), A10, B-52, F-104, F-15, F-16, OV10, PA28-161, T-6A Texan II,
+  T-38, British TSR2, YF-23, 737,
+
+* Updated aircraft: airwave extreme hang glider, asw20 glider, A-4
+  Skyhawk, Beech-99, Cessna 172 w/ 3d cockpit, Cessna 310 w/ 3d
+  cockpit, DC3, Piper J3 Cub, 1903 Wright Flyer, Sopwith Camel, Space
+  Shuttle, Boeing 747-400
+
+* Overhauled menu/gui system and made it xml configurable rather than
+  hardwired.  Include support for things like checkboxes, sliders, and
+  dials.
+
+* Added some early multiplayer features.
+
+* Added support for in-air presets relative to a VOR, NDB, or fix.
+
+* Support for Futaba, Airtronics, Hitec, JR, Multiplex and Tower R/C
+  transmitters using the RCJoy USB interface box (see
+  http://www.rcjoy.com).
+
+* Much improved sky and coloring as well as more realistic coloring of
+  the sunset and sunrise.
+
+* Clouds are drawn on a surface that better matches the underlying
+  curve of the earth.
+
+* A few updated terrain textures, better variety of random ground
+  cover objects.
+
+* Most weather options can now be set via the GUI.  Added an option to
+  randomize the weather.
+
+* Various instruments and systems can now be failed/unfailed via the
+  GUI.
+
+* Developed scripts to build Navaid and ILS databases from DAFIFT,
+  FAA, and other data sources.
+* Update Navaid and ILS databases based on DAFIFT, FAA, and other data
+  sources.
+
+* Continued development of voice ATC, robot aircraft AI, logical
+  taxiway networks (continues to be a work in progess, but much
+  progress has been made.)
+* Separated out much of the low level model/material management code
+  and moved it over to SimGear where it can be potentially used by
+  other projects.
+* Separated out the low level sound effect playing/management code and
+  moved it over to SimGear.
+* Added functions to the "telnet" interface to allow remote management
+  of autopilot waypoints.
+* Support the parking brake in the "external" flight dynamics interface.
+* Added support for an audio panel (set of switches to set various
+  avionics audio sources on/off in the aircraft.)
+* Add support for speed brake and spoiler controls.
+* Many code updates to UIUCmodel including support for ornithopters
+  (flapping wing vehicles.)
+* Many JSBsim code updates include a new turbine engine model.
+* Added a "named pipe" external flight dynamics model interface.
+* YASim updates including support for manual-pitch control props,
+  support for wing washout, and adjusting aircraft masses as fuel is
+  consumed.
+* The property picker interface now shows the property values changing
+  dynamically.
+* Added support for a simple annunciator panel (fuel, oil, vacuum,
+  volts dummy warning lights.)
+* Added a "gyro" model.  This can be driven electrically (turn
+  coordinator) or via vacuum (attitude indicator).  If one of these
+  systems failes, the corresponding gyro will spin down realistically
+  an introduce realistic errors in the gauge reading.
+* Model attitude indicator tumbling at extreme attitudes.
+* Modeled the pitot system and use that drive the air speed indicator. 
+* Added a very simplistic volts/amps model to the electrical
+  system...enough to make the gauges behave plausibly and drive the
+  annunciator panel correctly.
+* Updated the vacuum/suction model to behave more realistically.
+* Added Italian and Polish translation for the GUI.
+
+* Mac OS X fixes.
+* Better FreeBSD support.
+* Mingwin fixes.
+* Improved native sgi compiler support.
+* MSVC fixes.
+
+* Fixed problems in marker beacon audio.
+* Fixed several subtle problems in the modeling/positioning of glide
+  slope transmitters in FlightGear
+* Don't allow the dewpoint to go higher than the temperature.
+* Don't allow gust speed to be less than base wind speed.
+* Fix a couple problems in the external fdm interface that prevented
+  FlightGear from being driven properly by an external source (i.e. to
+  act as a image generator only.)
+* Fixes to camera parameters for external views (especially when rotating
+  the view around the different axes.)
+* Many miscellaneous code clean ups, many bug fixes, and much code
+  refactoring.
+
+
 New in 0.9.1
 * December 5, 2002
 
