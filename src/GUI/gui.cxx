@@ -63,6 +63,7 @@ extern void ConfirmExitDialogInit(void);
 
 puFont guiFnt = 0;
 fntTexFont *guiFntHandle = 0;
+#if defined(FG_OLD_MENUBAR)
 int gui_menu_on = 0;
 puMenuBar    *mainMenuBar = 0;
 //static puButton     *hideMenuButton = 0;
@@ -162,7 +163,7 @@ void destroyMenu(void) {
            free(Menu[i].submenu[j]);
     }
 }
-
+#endif
 
 
 
@@ -238,6 +239,7 @@ void guiInit()
 
     mkDialogInit();
 
+#if defined(FG_OLD_MENUBAR)
     initMenu();
     
     // Set up menu bar toggle
@@ -246,4 +248,5 @@ void guiInit()
     if (!strcmp(fgGetString("/sim/flight-model"), "ada")) {
         guiToggleMenu(); // Menu off by default
     }
+#endif
 }

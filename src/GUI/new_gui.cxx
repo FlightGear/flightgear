@@ -11,6 +11,8 @@ SG_USING_STD(vector);
 #include <simgear/misc/exception.hxx>
 #include <Main/fg_props.hxx>
 
+#include "menubar.hxx"
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -257,20 +259,27 @@ GUIWidget::PropertyObject::PropertyObject (const char * n,
 
 
 NewGUI::NewGUI ()
-    : _current_widget(0)
+    : _menubar(new FGMenuBar),
+      _current_widget(0)
 {
 }
 
 NewGUI::~NewGUI ()
 {
+    delete _menubar;
 }
 
 void
 NewGUI::init ()
 {
-    char path[1024];
-    ulMakePath(path, getenv("FG_ROOT"), "gui");
-    readDir(path);
+    char path1[1024];
+    char path2[1024];
+    ulMakePath(path1, getenv("FG_ROOT"), "gui");
+    ulMakePath(path2, path1, "dialogs");
+    readDir(path2);
+#if !defined(FG_OLD_MENUBAR)
+    _menubar->init();
+#endif
 }
 
 void
@@ -298,6 +307,12 @@ GUIWidget *
 NewGUI::getCurrentWidget ()
 {
     return _current_widget;
+}
+
+FGMenuBar *
+NewGUI::getMenuBar ()
+{
+    return _menubar;
 }
 
 void

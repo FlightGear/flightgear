@@ -323,7 +323,9 @@ void CenterView( void ) {
 	glutSetCursor(GLUT_CURSOR_INHERIT);
 
 	// Is this necessary ??
+#if defined(FG_OLD_MENU)
 	if( !gui_menu_on )   TurnCursorOff();
+#endif
 
 	glutWarpPointer( _savedX, _savedY );
     }
@@ -368,6 +370,7 @@ void guiMotionFunc ( int x, int y )
     wh = MOUSE_YSIZE;
 
     if (mouse_mode == MOUSE_POINTER) {
+#if defined(FG_OLD_MENU)
         // TURN MENU ON IF MOUSE AT TOP
         if( y < 1 ) {
             if( !gui_menu_on )
@@ -378,6 +381,7 @@ void guiMotionFunc ( int x, int y )
             if( gui_menu_on )
                 guiToggleMenu();			
         }
+#endif
         puMouse ( x, y ) ;
         glutPostRedisplay () ;
     } else {
@@ -620,11 +624,13 @@ void guiMouseFunc(int button, int updown, int x, int y)
 #endif // NO_SMOOTH_MOUSE_VIEW
 #endif // RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     glutSetCursor(GLUT_CURSOR_INHERIT);
-                    
+
+#if defined(FG_OLD_MENU)                    
 #if defined(WIN32_CURSOR_TWEAKS_OFF)
                     if(!gui_menu_on)
                         TurnCursorOff();
 #endif // WIN32_CURSOR_TWEAKS_OFF
+#endif // FG_OLD_MENU
                     break;
             } // end switch (mouse_mode)
             glutWarpPointer( x, y );

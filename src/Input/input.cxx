@@ -335,7 +335,9 @@ FGInput::doKey (int k, int modifiers, int x, int y)
         }
         case 256+GLUT_KEY_F10: // F10 toggles menu on and off...
             SG_LOG(SG_INPUT, SG_INFO, "Invoking call back function");
+#if defined(FG_OLD_MENUBAR)
             guiToggleMenu();
+#endif
             return;
         case 256+GLUT_KEY_F11: // F11 Altitude Dialog.
             SG_LOG(SG_INPUT, SG_INFO, "Invoking Altitude call back function");

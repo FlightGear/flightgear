@@ -22,6 +22,7 @@ SG_USING_STD(map);
 #include <Main/fg_props.hxx>
 #include <Input/input.hxx>
 
+class FGMenuBar;
 class GUIWidget;
 
 
@@ -133,11 +134,14 @@ public:
     virtual void setCurrentWidget (GUIWidget * widget);
     virtual GUIWidget * getCurrentWidget ();
 
+    virtual FGMenuBar * getMenuBar ();
+
 
 private:
 
     void readDir (const char * path);
 
+    FGMenuBar * _menubar;
     GUIWidget * _current_widget;
     map<string,SGPropertyNode_ptr> _widgets;
 

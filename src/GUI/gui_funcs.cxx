@@ -119,7 +119,9 @@ extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                          GLfloat x_end, GLfloat y_end );
 #endif
 
+#if defined(FG_OLD_MENUBAR)
 extern puMenuBar    *mainMenuBar;
+#endif
 
 puDialogBox  *dialogBox = 0;
 puFrame      *dialogFrame = 0;
@@ -245,6 +247,7 @@ void guiErrorMessage (const char *txt, const sg_throwable &throwable)
       mkDialog(msg.c_str());
 }
 
+#if defined(FG_OLD_MENUBAR)
 // Toggle the Menu and Mouse display state
 void guiToggleMenu(void)
 {
@@ -264,6 +267,7 @@ void guiToggleMenu(void)
     }
     gui_menu_on = ~gui_menu_on;
 }
+#endif // FG_OLD_MENUBAR
 
 // Intercept the Escape Key
 void ConfirmExitDialog(void)
@@ -423,12 +427,14 @@ void guiTogglePanel(puObject *cb)
   fgReshape(fgGetInt("/sim/startup/xsize"),
 	    fgGetInt("/sim/startup/ysize"));
 }
-    
+
+#if defined(FG_OLD_MENUBAR)    
 //void MenuHideMenuCb(puObject *cb)
 void hideMenuCb (puObject *cb)
 {
     guiToggleMenu();
 }
+#endif
 
 void goodBye(puObject *)
 {
@@ -586,10 +592,12 @@ void fgHiResDump()
         fgSetBool("/sim/freeze/master", true);
     }
 
+#if defined(FG_OLD_MENUBAR)
     if(gui_menu_on) {
         show_menu = true;
         guiToggleMenu();
     }
+#endif
 	
     if ( !puCursorIsHidden() ) {
         show_pu_cursor = true;
@@ -750,8 +758,10 @@ void fgHiResDump()
 
     delete [] filename;
 
+#if defined(FG_OLD_MENUBAR)
     if( show_menu )
         guiToggleMenu();
+#endif
 
     if ( show_pu_cursor ) {
         puShowCursor();
@@ -811,7 +821,9 @@ void printScreen ( puObject *obj ) {
 	puHideCursor();
     }
     // BusyCursor( 0 );
+#if defined(FG_OLD_MENUBAR)
     mainMenuBar->hide();
+#endif
 
     CGlPrinter p( CGlPrinter::PRINT_BITMAP );
     int cur_width = fgGetInt("/sim/startup/xsize");
@@ -819,9 +831,11 @@ void printScreen ( puObject *obj ) {
     p.Begin( "FlightGear", cur_width*3, cur_height*3 );
 	p.End( hiResScreenCapture(3) );
 
+#if defined(FG_OLD_MENUBAR)
     if( gui_menu_on ) {
 	mainMenuBar->reveal();
     }
+#endif
     // BusyCursor(1);
     if ( show_pu_cursor ) {
 	puShowCursor();
@@ -856,7 +870,9 @@ void fgDumpSnapShot () {
         fgSetBool("/sim/freeze/master", true);
     }
 
+#if defined(FG_OLD_MENUBAR)
     mainMenuBar->hide();
+#endif
     TurnCursorOff();
     if ( !puCursorIsHidden() ) {
 	show_pu_cursor = true;
@@ -900,9 +916,11 @@ void fgDumpSnapShot () {
     }
 
     TurnCursorOn();
+#if defined(FG_OLD_MENUBAR)
     if( gui_menu_on ) {
 	mainMenuBar->reveal();
     }
+#endif
 
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);

@@ -71,13 +71,24 @@ AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno")
 
 # Specify if we want to use WeatherCM instead of FGEnvironment.
 # default to with_weathercm=no
-AC_ARG_WITH(new-environment, [  --with-weathercm        Use WeatherCM instead of FGEnvironment])
+AC_ARG_WITH(weathercm, [  --with-weathercm        Use WeatherCM instead of FGEnvironment])
 if test "x$with_weathercm" = "xyes" ; then
     echo "Building with WeatherCM"
     AC_DEFINE([FG_WEATHERCM], 1,
               [Define to build with Christian Mayer's weather code])
 else
     echo "Building with FGEnvironment"
+fi
+AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
+
+dnl Specify if we want the new XML menu; default to the old one
+AC_ARG_WITH(new-menubar, [  --with-new-menubar        Use the new XML menu bar])
+if test "x$with_new_menubar" = "xyes" ; then
+    echo "Building with new menubar"
+else
+    AC_DEFINE([FG_OLD_MENUBAR], 1,
+              [Define to build with old menubar])
+    echo "Building with old menubar"
 fi
 AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
 
@@ -608,6 +619,12 @@ if test "x$with_weathercm" != "x"; then
     echo "WeatherCM instead of FGEnvironment: $with_weathercm"
 else
     echo "Using FGEnvironment"
+fi
+
+if test "x$with_new_menubar" != "x"; then
+    echo "Using new menubar"
+else
+    echo "Defaulting to old menubar"
 fi
 
 if test "x$with_threads" = "xyes"; then
