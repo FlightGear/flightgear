@@ -104,6 +104,7 @@ CLASS IMPLEMENTATION
 FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAircraft";
+  WingSpan = 0.0;
   HTailArea = VTailArea = 0.0;
   HTailArm  = VTailArm  = 0.0;
   lbarh = lbarv = 0.0;

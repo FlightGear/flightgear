@@ -266,4 +266,6 @@ void FGSwitch::Debug(int from)
     }
   }
 }
-}
+
+} //namespace JSBSim
+

@@ -70,7 +70,7 @@ CLASS IMPLEMENTATION
 FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAuxiliary";
-  vcas = veas = mach = qbar = pt = 0;
+  vcas = veas = mach = qbar = pt = tat = 0;
   psl = rhosl = 1;
   earthPosAngle = 0.0;
   

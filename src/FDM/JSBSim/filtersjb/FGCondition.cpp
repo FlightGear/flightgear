@@ -75,13 +75,13 @@ FGCondition::FGCondition(FGConfigFile* AC_cfg, FGPropertyManager* PropertyManage
   if (AC_cfg->GetValue("CONDITION_GROUP").empty()) {  // define a condition
 
     *AC_cfg >> property1 >> conditional >> property2;
-    TestParam1 = PropertyManager->GetNode(property1);
+    TestParam1 = PropertyManager->GetNode(property1, true);
     Comparison = mComparison[conditional];
 
     if (property2.find_first_not_of("-.0123456789eE") == string::npos) {
       TestValue = atof(property2.c_str());
     } else {
-      TestParam2 = PropertyManager->GetNode(property2);
+      TestParam2 = PropertyManager->GetNode(property2, true);
     }
 
     isGroup = false;
@@ -253,4 +253,6 @@ void FGCondition::Debug(int from)
     }
   }
 }
-}
+
+} //namespace JSBSim
+

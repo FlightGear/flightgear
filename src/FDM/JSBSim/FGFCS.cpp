@@ -80,6 +80,7 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
   PTrimCmd = YTrimCmd = RTrimCmd = 0.0;
   GearCmd = GearPos = 1; // default to gear down
   LeftBrake = RightBrake = CenterBrake = 0.0;
+  APAttitudeSetPt = APAltitudeSetPt = APHeadingSetPt = APAirspeedSetPt = 0.0;
   DoNormalize=true;
   
   eMode = mNone;

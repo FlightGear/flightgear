@@ -114,21 +114,22 @@ public:
   FGPropertyManager* resolveSymbol(string token);
   
 protected:
-   /// Pilot/Aircraft, FCS, Autopilot inputs
-  enum eInputType {itPilotAC, itFCS, itAP, itBias} InputType;
   FGFCS* fcs;
   FGPropertyManager* PropertyManager;
   FGPropertyManager* treenode;
   string Type;
   string Name;
   vector <FGPropertyManager*> InputNodes;
+  vector <float> InputSigns;
   double Input;
   FGPropertyManager* OutputNode;
   double Output;
   bool IsOutput;
   virtual void Debug(int from);
 };
-}
+
+} //namespace JSBSim
+
 #include "../FGFCS.h"
 
 #endif

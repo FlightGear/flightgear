@@ -46,9 +46,9 @@ libJSBSim_a_SOURCES = \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h \
 	FGfdmSocket.cpp FGfdmSocket.h \
-  FGTurbine.cpp FGTurbine.h \
-  FGPropertyManager.cpp FGPropertyManager.h  \
-  FGSimTurbine.cpp FGSimTurbine.h \
+	FGTurbine.cpp FGTurbine.h \
+	FGPropertyManager.cpp FGPropertyManager.h  \
+	FGSimTurbine.cpp FGSimTurbine.h \
 	JSBSim.cxx JSBSim.hxx
 
 

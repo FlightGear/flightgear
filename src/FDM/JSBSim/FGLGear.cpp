@@ -488,23 +488,23 @@ void FGLGear::Report(ReportType repType)
   case erLand:
     cout << endl << "Touchdown report for " << name << endl;
     cout << "  Sink rate at contact:  " << SinkRate                << " fps,    "
-                                << SinkRate*0.3408          << " mps"     << endl;
+                                << SinkRate*0.3048          << " mps"     << endl;
     cout << "  Contact ground speed:  " << GroundSpeed*.5925       << " knots,  "
-                                << GroundSpeed*0.3408       << " mps"     << endl;
+                                << GroundSpeed*0.3048       << " mps"     << endl;
     cout << "  Maximum contact force: " << MaximumStrutForce       << " lbs,    "
                                 << MaximumStrutForce*4.448  << " Newtons" << endl;
     cout << "  Maximum strut travel:  " << MaximumStrutTravel*12.0 << " inches, "
                                 << MaximumStrutTravel*30.48 << " cm"      << endl;
     cout << "  Distance traveled:     " << LandingDistanceTraveled        << " ft,     "
-                                << LandingDistanceTraveled*0.3408  << " meters"  << endl;
+                                << LandingDistanceTraveled*0.3048  << " meters"  << endl;
     LandingReported = true;
     break;
   case erTakeoff:
     cout << endl << "Takeoff report for " << name << endl;
     cout << "  Distance traveled:                " << TakeoffDistanceTraveled
-         << " ft,     " << TakeoffDistanceTraveled*0.3408  << " meters"  << endl;
+         << " ft,     " << TakeoffDistanceTraveled*0.3048  << " meters"  << endl;
     cout << "  Distance traveled (over 50'):     " << TakeoffDistanceTraveled50ft
-         << " ft,     " << TakeoffDistanceTraveled50ft*0.3408 << " meters" << endl;
+         << " ft,     " << TakeoffDistanceTraveled50ft*0.3048 << " meters" << endl;
     TakeoffReported = true;
     break;
   }
