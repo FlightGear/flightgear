@@ -191,10 +191,12 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     float power = _power0 * burned/_f0;
     _torque = power/speed;
 
-    // Figure that the starter motor produces 20% of the engine's
-    // cruise torque.
+    // Figure that the starter motor produces 60% of the engine's
+    // cruise torque.  That sounds like a lot to me, but it's
+    // necessary to produce the right acceleration.  Someone should
+    // find a good reference for this...
     if(_cranking && !_running)
-	_torque += 0.20f * _power0/_omega0;
+	_torque += 0.60f * _power0/_omega0;
 
     // Also, add a negative torque of 10% of cruise, to represent
     // internal friction.  Propeller aerodynamic friction is too low
