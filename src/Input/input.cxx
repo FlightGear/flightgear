@@ -194,9 +194,9 @@ FGInput::init ()
 void 
 FGInput::update (double dt)
 {
-  _update_keyboard(dt);
-  _update_joystick(dt);
-  _update_mouse(dt);
+  _update_keyboard();
+  _update_joystick();
+  _update_mouse();
 }
 
 void
@@ -683,28 +683,22 @@ FGInput::_init_button (const SGPropertyNode * node,
 
 
 void
-FGInput::_update_keyboard (double dt)
+FGInput::_update_keyboard ()
 {
   // no-op
 }
 
 
 void
-FGInput::_update_joystick (double dt)
+FGInput::_update_joystick ()
 {
-#ifdef REMOVE_ME_AFTER_FLIGHTGEAR_0_9_2_RELEASE
-  static double _last_dt = 0.0;
-#else
-  static double _last_dt = 1.0;
-#endif
   int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
-  int i, j, buttons;
+  int buttons;
   // float js_val, diff;
   float axis_values[MAX_JOYSTICK_AXES];
 
-#ifdef REMOVE_ME_AFTER_FLIGHTGEAR_0_9_2_RELEASE
-  _last_dt += dt;
-#endif
+  int i;
+  int j;
 
   for ( i = 0; i < MAX_JOYSTICKS; i++) {
 
@@ -733,42 +727,31 @@ FGInput::_update_joystick (double dt)
       }
      
                                 // do we have to emulate axis buttons?
-      if (_last_dt > 0.05) {
-        if (a.low.bindings[modifiers].size())
-          _update_button(_joystick_bindings[i].axes[j].low,
-                         modifiers,
-                         axis_values[j] < a.low_threshold,
-                         -1, -1);
-
-        if (a.high.bindings[modifiers].size())
-          _update_button(_joystick_bindings[i].axes[j].high,
-                         modifiers,
-                         axis_values[j] > a.high_threshold,
-                         -1, -1);
-      }
+      if (a.low.bindings[modifiers].size())
+        _update_button(_joystick_bindings[i].axes[j].low,
+                       modifiers,
+                       axis_values[j] < a.low_threshold,
+                       -1, -1);
+      
+      if (a.high.bindings[modifiers].size())
+        _update_button(_joystick_bindings[i].axes[j].high,
+                       modifiers,
+                       axis_values[j] > a.high_threshold,
+                       -1, -1);
     }
 
                                 // Fire bindings for the buttons.
-    if (_last_dt > 0.05) {
-      for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
-        _update_button(_joystick_bindings[i].buttons[j],
-                       modifiers,
-                       (buttons & (1 << j)) > 0,
-                       -1, -1);
-      }
+    for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
+      _update_button(_joystick_bindings[i].buttons[j],
+                     modifiers,
+                     (buttons & (1 << j)) > 0,
+                     -1, -1);
     }
   }
-
-#if REMOVE_ME_AFTER_FLIGHTGEAR_0_9_2_RELEASE
-  if (_last_dt > 0.05) {
-    while(_last_dt >= 0.05)
-      _last_dt -= 0.05;
-  }
-#endif
 }
 
 void
-FGInput::_update_mouse (double dt)
+FGInput::_update_mouse ()
 {
   mouse &m = _mouse_bindings[0];
   int mode =  m.mode_node->getIntValue();
@@ -818,11 +801,9 @@ FGInput::_read_bindings (const SGPropertyNode * node,
   SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
   vector<SGPropertyNode_ptr> bindings = node->getChildren("binding");
   for (unsigned int i = 0; i < bindings.size(); i++) {
-    if (bindings[i]->nChildren() > 0) {
-      SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
-             << bindings[i]->getStringValue("command"));
-      binding_list[modifiers].push_back(new FGBinding(bindings[i]));
-    }
+    SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
+           << bindings[i]->getStringValue("command"));
+    binding_list[modifiers].push_back(new FGBinding(bindings[i]));
   }
 
                                 // Read nested bindings for modifiers
