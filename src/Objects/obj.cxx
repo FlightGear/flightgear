@@ -115,6 +115,11 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     ssgSimpleState *state = NULL;
 
     ssgBranch *tile = new ssgBranch () ;
+    if ( !tile ) {
+        SG_LOG( SG_TERRAIN, SG_ALERT, "fgGenTile(): NO MEMORY" );
+        return NULL;
+    }
+
     tile -> setName ( (char *)path.c_str() ) ;
 
     double tex_width = 1000.0;
@@ -157,8 +162,9 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     Point3D rad[4];
     int i;
     for ( i = 0; i < 4; ++i ) {
-	rad[i] = Point3D( geod[i].x() * SGD_DEGREES_TO_RADIANS, geod[i].y() * SGD_DEGREES_TO_RADIANS,
-			  geod[i].z() );
+        rad[i] = Point3D( geod[i].x() * SGD_DEGREES_TO_RADIANS,
+                          geod[i].y() * SGD_DEGREES_TO_RADIANS,
+                          geod[i].z() );
     }
 
     Point3D cart[4], rel[4];
@@ -179,21 +185,18 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     // Calculate normals
     Point3D normals[4];
     for ( i = 0; i < 4; ++i ) {
-	normals[i] = cart[i];
-	double length = normals[i].distance3D( Point3D(0.0) );
-	normals[i] /= length;
+	double length = cart[i].distance3D( Point3D(0.0) );
+	normals[i] = cart[i] / length;
 	// cout << "normal = " << normals[i] << endl;
     }
 
     // Calculate texture coordinates
     point_list geod_nodes;
     geod_nodes.clear();
-    for ( i = 0; i < 4; ++i ) {
-	geod_nodes.push_back( geod[i] );
-    }
     int_list rectangle;
     rectangle.clear();
     for ( i = 0; i < 4; ++i ) {
+	geod_nodes.push_back( geod[i] );
 	rectangle.push_back( i );
     }
     point_list texs = calc_tex_coords( b, geod_nodes, rectangle, 
@@ -349,6 +352,8 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "Cannot open file: " << path );
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "default to ocean tile: " << path );
 
+        delete tile;
+
 	return NULL;
     }
 
@@ -364,8 +369,8 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
     }
     center = t->center;
 
-    StopWatch stopwatch;
-    stopwatch.start();
+    // StopWatch stopwatch;
+    // stopwatch.start();
 
     // ignore initial comments and blank lines. (priming the pump)
     // in >> skipcomment;
@@ -740,10 +745,10 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 	t->nodes = nodes;
     }
 
-    stopwatch.stop();
-    SG_LOG( SG_TERRAIN, SG_DEBUG, 
-	    "Loaded " << path << " in " 
-	    << stopwatch.elapsedSeconds() << " seconds" );
+    // stopwatch.stop();
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, 
+    //     "Loaded " << path << " in " 
+    //     << stopwatch.elapsedSeconds() << " seconds" );
 
     return tile;
 }
@@ -801,39 +806,57 @@ ssgLeaf *gen_leaf( const string& path,
 
     // cout << "before list allocs" << endl;
 
-    int size = node_index.size();
-
-    if ( size < 1 ) {
-	SG_LOG( SG_TERRAIN, SG_ALERT, "Woh! list size < 1" );
-	exit(-1);
-    }
-
     // cout << "before vl, size = " << size << endl;
-    ssgVertexArray   *vl = new ssgVertexArray( size );
     // cout << "before nl" << endl;
-    ssgNormalArray   *nl = new ssgNormalArray( size );
     // cout << "before tl" << endl;
-    ssgTexCoordArray *tl = new ssgTexCoordArray( size );
     // cout << "before cl" << endl;
-    ssgColourArray   *cl = new ssgColourArray( 1 );
-
-    sgVec4 color;
-    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
-    cl->add( color );
 
     sgVec2 tmp2;
     sgVec3 tmp3;
+    sgVec4 tmp4;
     int i;
+
+    // vertices
+    int size = node_index.size();
+    if ( size < 1 ) {
+	SG_LOG( SG_TERRAIN, SG_ALERT, "Woh! node list size < 1" );
+	exit(-1);
+    }
+    ssgVertexArray *vl = new ssgVertexArray( size );
+    Point3D node;
     for ( i = 0; i < size; ++i ) {
-	Point3D node = nodes[ node_index[i] ];
+	node = nodes[ node_index[i] ];
 	sgSetVec3( tmp3, node[0], node[1], node[2] );
 	vl -> add( tmp3 );
+    }
 
-	Point3D normal = normals[ node_index[i] ];
-	sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
-	nl -> add( tmp3 );
+    // colors
+    ssgColourArray *cl = new ssgColourArray( 1 );
+    sgSetVec4( tmp4, 1.0, 1.0, 1.0, 1.0 );
+    cl->add( tmp4 );
 
-	Point3D texcoord = texcoords[ tex_index[i] ];
+    // normals
+    Point3D normal;
+    ssgNormalArray *nl = new ssgNormalArray( size );
+    if ( normals.size() == 1 ) {
+        normal = normals[ 0 ];
+        sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
+        nl -> add( tmp3 );
+    } else if ( normals.size() > 1 ) {
+        for ( i = 0; i < size; ++i ) {
+            normal = normals[ node_index[i] ];
+            sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
+            nl -> add( tmp3 );
+        }
+    }
+
+    // texture coordinates
+    size = tex_index.size();
+    Point3D texcoord;
+    ssgTexCoordArray *tl = new ssgTexCoordArray( size );
+    if ( size == 1 ) {
+        texcoord = texcoords[ tex_index[0] ];
+	sgSetVec2( tmp2, texcoord[0], texcoord[1] );
 	sgSetVec2( tmp2, texcoord[0], texcoord[1] );
 	if ( tex_width > 0 ) {
 	    tmp2[0] *= (1000.0 / tex_width);
@@ -842,6 +865,18 @@ ssgLeaf *gen_leaf( const string& path,
 	    tmp2[1] *= (1000.0 / tex_height);
 	}
 	tl -> add( tmp2 );
+    } else if ( size > 1 ) {
+        for ( i = 0; i < size; ++i ) {
+            texcoord = texcoords[ tex_index[i] ];
+            sgSetVec2( tmp2, texcoord[0], texcoord[1] );
+            if ( tex_width > 0 ) {
+                tmp2[0] *= (1000.0 / tex_width);
+            }
+            if ( tex_height > 0 ) {
+                tmp2[1] *= (1000.0 / tex_height);
+            }
+            tl -> add( tmp2 );
+        }
     }
 
     // cout << "before leaf create" << endl;
@@ -896,12 +931,29 @@ ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
     }
 
     point_list nodes = obj.get_wgs84_nodes();
+    point_list colors = obj.get_colors();
     point_list normals = obj.get_normals();
     point_list texcoords = obj.get_texcoords();
 
     string material;
     int_list vertex_index;
     int_list tex_index;
+
+    // generate points
+    string_list pt_materials = obj.get_pt_materials();
+    group_list pts_v = obj.get_pts_v();
+    for ( i = 0; i < (int)pts_v.size(); ++i ) {
+        cout << "pts_v.size() = " << pts_v.size() << endl;
+	material = pt_materials[i];
+	vertex_index = pts_v[i];
+	tex_index.clear();
+	ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
+				  nodes, normals, texcoords,
+				  vertex_index, tex_index,
+				  false, lights );
+
+	object->addKid( leaf );
+    }
 
     // generate triangles
     string_list tri_materials = obj.get_tri_materials();
