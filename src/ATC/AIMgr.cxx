@@ -195,7 +195,7 @@ void FGAIMgr::ActivateAirport(string ident) {
 // Search for valid airports in the vicinity of the user and activate them if necessary
 void FGAIMgr::SearchByPos(double range)
 {
-	//cout << "In SearchByPos(...)\n";
+	//cout << "In SearchByPos(...)" << endl;
 	
 	// get bucket number for plane position
 	lon = lon_node->getDoubleValue();
@@ -204,9 +204,9 @@ void FGAIMgr::SearchByPos(double range)
 
 	// get neigboring buckets
 	int bx = (int)( range*SG_NM_TO_METER / buck.get_width_m() / 2);
-	//cout << "bx = " << bx << '\n';
+	//cout << "bx = " << bx << endl;
 	int by = (int)( range*SG_NM_TO_METER / buck.get_height_m() / 2 );
-	//cout << "by = " << by << '\n';
+	//cout << "by = " << by << endl;
 	
 	// loop over bucket range 
 	for ( int i=-bx; i<=bx; i++) {
@@ -215,28 +215,31 @@ void FGAIMgr::SearchByPos(double range)
 			//cout << "j loop\n";
 			buck = sgBucketOffset(lon, lat, i, j);
 			long int bucket = buck.gen_index();
-			//cout << "bucket is " << bucket << '\n';
-			aptID_list_type* apts = airports[bucket];
-			aptID_list_iterator current = apts->begin();
-			aptID_list_iterator last = apts->end();
-			
-			//cout << "Size of apts is " << apts->size() << '\n';
-			
-			//double rlon = lon * SGD_DEGREES_TO_RADIANS;
-			//double rlat = lat * SGD_DEGREES_TO_RADIANS;
-			//Point3D aircraft = sgGeodToCart( Point3D(rlon, rlat, elev) );
-			//Point3D airport;
-			for(; current != last; ++current) {
-				//cout << "Found " << *current << '\n';
-				if(activated.find(*current) == activated.end()) {
-					//cout << "Activating " << *current << '\n';
-					//FGAirport a;
-					//if(dclFindAirportID(*current, &a)) {
-					//	// We can do something here based on distance from the user if we wish.
-					//}
-					ActivateAirport(*current);
-				} else {
-					//cout << *current << " already activated\n";
+			//cout << "bucket is " << bucket << endl;
+			if(airports.find(bucket) != airports.end()) {
+				aptID_list_type* apts = airports[bucket];
+				aptID_list_iterator current = apts->begin();
+				aptID_list_iterator last = apts->end();
+				
+				//cout << "Size of apts is " << apts->size() << endl;
+				
+				//double rlon = lon * SGD_DEGREES_TO_RADIANS;
+				//double rlat = lat * SGD_DEGREES_TO_RADIANS;
+				//Point3D aircraft = sgGeodToCart( Point3D(rlon, rlat, elev) );
+				//Point3D airport;
+				for(; current != last; ++current) {
+					//cout << "Found " << *current << endl;;
+					if(activated.find(*current) == activated.end()) {
+						//cout << "Activating " << *current << endl;
+						//FGAirport a;
+						//if(dclFindAirportID(*current, &a)) {
+							//	// We can do something here based on distance from the user if we wish.
+						//}
+						ActivateAirport(*current);
+						//cout << "Activation done" << endl;
+					} else {
+						//cout << *current << " already activated" << endl;
+					}
 				}
 			}
 		}
