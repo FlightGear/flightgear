@@ -45,6 +45,7 @@ void check_master_switch() {
 
 // check if the host system is free of interactive users
 int system_free() {
+#ifndef __FreeBSD__
     struct utmp *uptr;
 
     setutent();
@@ -61,6 +62,10 @@ int system_free() {
     }
 
     endutent();
+#else
+#  warning Port me
+#endif
+
     return 1;
 }
 
