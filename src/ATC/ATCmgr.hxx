@@ -43,10 +43,12 @@ SG_USING_STD(list);
 SG_USING_STD(map);
 
 // Structure for holding details of the ATC frequencies at a given airport, and whether they are in the active list or not.
-// These can then be cross referenced with the [atis][tower][etc]lists which are stored by frequency.
+// These can then be cross referenced with the commlists which are stored by frequency or bucket.
 // Non-available services are denoted by a frequency of zero.
-// Eventually the whole ATC data structures may have to be rethought if we turn out to be massive memory hogs!!
+// These structures are only intended to be created for in-use airports, and removed when no longer needed. 
 struct AirportATC {
+	AirportATC();
+	
     float lon;
     float lat;
     float elev;
@@ -63,7 +65,9 @@ struct AirportATC {
 
     // Flags to ensure the stations don't get wrongly deactivated
     bool set_by_AI;	// true when the AI manager has activated this station
+	// Do we need to ref-count the number of AI planes setting this?
     bool set_by_comm_search;	// true when the comm_search has activated this station
+	// Do we need to distingiush comm1 and comm2?
 };
 
 class FGATCMgr : public FGSubsystem

@@ -39,6 +39,20 @@ static void fgATCSearch( void ) {
 }
 */ //This wouldn't compile - including Time/event.hxx breaks it :-(
 
+AirportATC::AirportATC() :
+    lon(0.0),
+    lat(0.0),
+    elev(0.0),
+    atis_freq(0.0),
+    atis_active(false),
+    tower_freq(0.0),
+    tower_active(false),
+    ground_freq(0.0),
+    ground_active(false),
+    set_by_AI(false),
+    set_by_comm_search(false) {
+}
+
 FGATCMgr::FGATCMgr() {
 	comm_ident[0] = "";
 	comm_ident[1] = "";
@@ -129,6 +143,16 @@ void FGATCMgr::init() {
 	// DCL - testing
 	//current_atcdialog->add_entry( "EGNX", "Request vectoring for approach", "Request Vectors" );
 	//current_atcdialog->add_entry( "EGNX", "Mayday, Mayday", "Declare Emergency" );
+	/*
+	ATCData test;
+	bool ok = current_commlist->FindByCode("KEMT", test, TOWER);
+	if(ok) {
+		cout << "KEMT tower frequency from test was " << test.freq << endl;
+	} else {
+		cout << "KEMT tower frequency not found :-(" << endl;
+	}
+	exit(-1);
+	*/
 }
 
 void FGATCMgr::update(double dt) {
