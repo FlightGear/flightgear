@@ -157,7 +157,7 @@ static void print_sgMat4( sgMat4 &in) {
 // Update the view parameters
 void FGViewerRPH::update() {
     Point3D tmp;
-    sgVec3 minus_z, forward;
+    sgVec3 minus_z, right, forward, tilt;
     sgMat4 VIEWo;
 
     // convert to geocentric coordinates
@@ -270,6 +270,7 @@ void FGViewerRPH::update() {
     sgSetVec3( view_up, VIEWo[0][0], VIEWo[0][1], VIEWo[0][2] );
     // cout << "view = " << view[0] << ","
     //      << view[1] << "," << view[2] << endl;
+    sgSetVec3( right, VIEWo[1][0], VIEWo[1][1], VIEWo[1][2] );
     sgSetVec3( forward, VIEWo[2][0], VIEWo[2][1], VIEWo[2][2] );
     // cout << "forward = " << forward[0] << ","
     //      << forward[1] << "," << forward[2] << endl;
@@ -282,6 +283,10 @@ void FGViewerRPH::update() {
 
     // generate the view offset matrix
     sgMakeRotMat4( VIEW_OFFSET, view_offset * SGD_RADIANS_TO_DEGREES, view_up );
+
+    sgMat4 VIEW_TILT;
+    sgMakeRotMat4( VIEW_TILT, view_tilt * SGD_RADIANS_TO_DEGREES, right );
+    sgPreMultMat4(VIEW_OFFSET, VIEW_TILT);
     // cout << "VIEW_OFFSET matrix" << endl;
     // print_sgMat4( VIEW_OFFSET );
     sgXformVec3( view_forward, forward, VIEW_OFFSET );
