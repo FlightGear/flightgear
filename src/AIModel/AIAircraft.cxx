@@ -91,7 +91,9 @@ void FGAIAircraft::unbind() {
     FGAIBase::unbind();
 
     props->untie("controls/gear/gear-down");
+#if 0
     props->getNode("controls/lighting/landing-lights")->unalias();
+#endif
 }
 
 
