@@ -312,6 +312,9 @@ void fgUpdateSunPos() {
     l->sun_vec[3] = 0.0;
     l->sun_vec_inv[3] = 0.0;
 
+    printf("  l->sun_vec = %.2f %.2f %.2f\n", l->sun_vec[0], l->sun_vec[1],
+	   l->sun_vec[2]);
+
     /* calculate the sun's relative angle to local up */
     MAT3_COPY_VEC(nup, v->local_up);
     nsun[0] = l->fg_sunpos.x; 
@@ -370,9 +373,12 @@ void fgUpdateSunPos() {
 
 
 /* $Log$
-/* Revision 1.20  1997/12/30 22:22:43  curt
-/* Further integration of event manager.
+/* Revision 1.21  1997/12/30 23:10:19  curt
+/* Calculate lighting parameters here.
 /*
+ * Revision 1.20  1997/12/30 22:22:43  curt
+ * Further integration of event manager.
+ *
  * Revision 1.19  1997/12/30 20:47:59  curt
  * Integrated new event manager with subsystem initializations.
  *
