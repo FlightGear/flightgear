@@ -327,6 +327,8 @@ void ls_setdefopts()
 #define OPT_OK 0
 #define OPT_ERR 1
 
+#ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
+
 extern char *optarg;
 extern int optind;
 
@@ -476,6 +478,7 @@ int ls_checkopts(argc, argv)	/* check and set options flags */
 	 
     return OPT_OK;
   }
+#endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
 
 
 void ls_loop( dt, initialize )
@@ -909,6 +912,9 @@ int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.11  1998/01/05 22:19:26  curt
+ * #ifdef'd out some unused code that was problematic for MSVC++ to compile.
+ *
  * Revision 1.10  1997/12/10 22:37:43  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

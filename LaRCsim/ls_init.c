@@ -34,6 +34,9 @@
 
 $Header$
 $Log$
+Revision 1.3  1998/01/05 22:19:25  curt
+#ifdef'd out some unused code that was problematic for MSVC++ to compile.
+
 Revision 1.2  1997/05/29 22:39:58  curt
 Working on incorporating the LaRCsim flight model.
 
@@ -210,6 +213,8 @@ void ls_init()
 }
 
 
+#ifdef COMPILE_THIS_CODE_THIS_USELESS_CODE
+
 char *ls_init_get_set(char *buffer, char *eob)
 /* This routine parses the settings file for "init" entries. */
 {
@@ -308,7 +313,7 @@ char *ls_init_get_set(char *buffer, char *eob)
 
     return bufptr;
 }
-
+#endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
 
 
 void ls_init_put_set( FILE *fp )
