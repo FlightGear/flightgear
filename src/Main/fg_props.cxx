@@ -180,8 +180,19 @@ getGoalViewOffset ()
 static void
 setGoalViewOffset (double offset)
 {
-  globals->get_current_view()
-    ->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
+    while ( offset < 0 ) {
+	offset += 360.0;
+    }
+    while ( offset > 360.0 ) {
+	offset -= 360.0;
+    }
+    // Snap to center if we are close
+    if ( fabs( offset ) < 1.0 ) {
+	offset = 0.0;
+    }
+
+    globals->get_current_view()
+	->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
 }
 
 

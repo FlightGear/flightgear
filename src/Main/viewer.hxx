@@ -142,6 +142,12 @@ public:
     inline void set_goal_view_offset( double a) {
 	set_dirty();
 	goal_view_offset = a;
+	while ( goal_view_offset < 0 ) {
+	    goal_view_offset += 360.0;
+	}
+	while ( goal_view_offset > 360.0 ) {
+	    goal_view_offset -= 360.0;
+	}
     }
     inline void set_reverse_view_offset( bool val ) {
 	reverse_view_offset = val;
