@@ -33,7 +33,6 @@
 #include <Scenery/bucketutils.h>
 
 
-#define EPSILON 0.000001
 #define DEM_SIZE 1200
 #define DEM_SIZE_1 1201
 
@@ -131,6 +130,9 @@ public:
 
 
 // $Log$
+// Revision 1.2  1998/03/23 20:35:42  curt
+// Updated to use FG_EPSILON
+//
 // Revision 1.1  1998/03/19 02:54:47  curt
 // Reorganized into a class lib called fgDEM.
 //

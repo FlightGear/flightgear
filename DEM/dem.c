@@ -34,6 +34,8 @@
 #include "dem.h"
 #include "leastsqs.h"
 
+#include <Include/fg_constants.h>
+
 
 fgDEM::fgDEM( void ) {
     // printf("class fgDEM CONstructor called.\n");
@@ -395,7 +397,7 @@ double fgDEM::interpolate_altitude( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
 	
 	// printf("  zA = %.2f  zB = %.2f\n", zA, zB);
 
-	if ( dx > EPSILON ) {
+	if ( dx > FG_EPSILON ) {
 	    elev = dy * (zB - zA) / dx + zA;
 	} else {
 	    elev = zA;
@@ -427,7 +429,7 @@ double fgDEM::interpolate_altitude( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
 	// printf("  zA = %.2f  zB = %.2f\n", zA, zB );
 	// printf("  xB - xA = %.2f\n", col_step * dy / row_step);
 
-	if ( dy > EPSILON ) {
+	if ( dy > FG_EPSILON ) {
 	    elev = dx * (zB - zA) / dy    + zA;
 	} else {
 	    elev = zA;
@@ -685,6 +687,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/03/23 20:35:41  curt
+// Updated to use FG_EPSILON
+//
 // Revision 1.1  1998/03/19 02:54:47  curt
 // Reorganized into a class lib called fgDEM.
 //
