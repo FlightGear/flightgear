@@ -36,7 +36,16 @@ HISTORY
 INCLUDES
 *******************************************************************************/
 
-#include <fstream.h>
+#ifdef FGFS
+#  include <Include/compiler.h>
+#  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
+#  else
+#    include <fstream.h>
+#  endif
+#else
+#  include <fstream>
+#endif
 
 #include "FGEngine.h"
 #include "FGState.h"
@@ -55,8 +64,7 @@ INCLUDES
 *******************************************************************************/
 
 
-FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, 
-		   int num)
+FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int num)
 {
   string fullpath;
   string tag;

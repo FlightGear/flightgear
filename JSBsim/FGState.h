@@ -53,9 +53,6 @@ INCLUDES
 #    include <fstream.h>
 #  endif
    FG_USING_STD(string);
-#  ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-     FG_USING_NAMESPACE(std);
-#  endif
 #else
 #  include <string>
 #  include <fstream>

@@ -49,8 +49,9 @@ INCLUDES
 #else
 #  include <iostream>
 #endif
+
 #ifdef HAVE_CURSES
-#  include <ncurses.h>
+  #include <ncurses.h>
 #endif
 
 #include "FGOutput.h"

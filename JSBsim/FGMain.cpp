@@ -28,8 +28,8 @@ void main(int argc, char** argv)
 
   FDMExec = new FGFDMExec();
 
-  FDMExec->GetAircraft()->LoadAircraft(string(argv[1]));
-  FDMExec->GetState()->Reset(string(argv[2]));
+  FDMExec->GetAircraft()->LoadAircraft("aircraft", "engine", string(argv[1]));
+  FDMExec->GetState()->Reset("aircraft", string(argv[2]));
 
   while (FDMExec->GetState()->Getsim_time() <= 25.0)
   {

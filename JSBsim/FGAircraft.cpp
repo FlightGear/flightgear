@@ -183,8 +183,7 @@ FGAircraft::~FGAircraft(void)
 }
 
 
-bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, 
-			      string fname)
+bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string fname)
 {
   string path;
   string fullpath;
@@ -240,8 +239,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path,
         numTanks++;
       } else if (tag == "ENGINE") {
         aircraftfile >> tag;
-        Engine[numEngines] = new FGEngine(FDMExec, engine_path, tag, 
-					  numEngines);
+        Engine[numEngines] = new FGEngine(FDMExec, engine_path, tag, numEngines);
         numEngines++;
       }
       aircraftfile >> tag;

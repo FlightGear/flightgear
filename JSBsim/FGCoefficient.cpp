@@ -164,21 +164,21 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
       coeffDefFile >> description;
       coeffDefFile >> method;
 
-      if      (method == "EQUATION") type = 4;
-      else if (method == "TABLE")    type = 3;
-      else if (method == "VECTOR")   type = 2;
-      else if (method == "VALUE")    type = 1;
-      else                           type = 0;
+      if      (method == "EQUATION") type = EQUATION;
+      else if (method == "TABLE")    type = TABLE;
+      else if (method == "VECTOR")   type = VECTOR;
+      else if (method == "VALUE")    type = VALUE;
+      else                           type = UNKNOWN;
 
-      if (type == 2 || type == 3) {
+      if (type == VECTOR || type == TABLE) {
         coeffDefFile >> rows;
-        if (type == 3) {
+        if (type == TABLE) {
           coeffDefFile >> columns;
         }
         coeffDefFile >> LookupR;
       }
 
-      if (type == 3) {
+      if (type == TABLE) {
         coeffDefFile >> LookupC;
       }
 
@@ -251,10 +251,10 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
       }
 
       switch(type) {
-      case 1:
+      case VALUE:
         coeffDefFile >> StaticValue;
         break;
-      case 2:
+      case VECTOR:
         Allocate(rows,2);
 
         for (r=1;r<=rows;r++) {
@@ -262,7 +262,7 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
           coeffDefFile >> Table3D[r][1];
         }
         break;
-      case 3:
+      case TABLE:
         Allocate(rows, columns);
 
         for (c=1;c<=columns;c++) {

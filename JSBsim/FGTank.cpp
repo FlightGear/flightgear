@@ -35,17 +35,6 @@ HISTORY
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
-#ifdef FGFS
-#  include <Include/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
-#else
-#  include <fstream>
-#endif
-
 #include "FGTank.h"
 
 /*******************************************************************************

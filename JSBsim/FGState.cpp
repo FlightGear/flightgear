@@ -91,8 +91,7 @@ bool FGState::Reset(string path, string fname)
   float Q0, Q1, Q2, Q3;
   float T[4][4];
 
-  resetDef = path + "/" + FDMExec->GetAircraft()->GetAircraftName() + 
-      "/" + fname;
+  resetDef = path + "/" + FDMExec->GetAircraft()->GetAircraftName() + "/" + fname;
 
   ifstream resetfile(resetDef.c_str());
 

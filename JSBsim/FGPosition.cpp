@@ -63,6 +63,7 @@ INCLUDES
 #else
 #  include <cmath>
 #endif
+
 #include "FGPosition.h"
 #include "FGAtmosphere.h"
 #include "FGState.h"

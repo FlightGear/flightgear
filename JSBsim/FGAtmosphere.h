@@ -41,19 +41,42 @@ INCLUDES
 #include "FGModel.h"
 
 /*******************************************************************************
+COMMENTS, REFERENCES,  and NOTES
+*******************************************************************************/
+/**
+The equation used in this model was determined by a third order curve fit using
+Excel. The data is from the ICAO atmosphere model.
+@memo Models the atmosphere.
+@author Jon S. Berndt
+*/
+/*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/
 
 class FGAtmosphere : public FGModel
 {
 public:
+  // ***************************************************************************
+  /** @memo Constructor
+      @param FGFDMExec* - a pointer to the "owning" FDM Executive
+  */
   FGAtmosphere(FGFDMExec*);
+
+  // ***************************************************************************
+  /** @memo Destructor
+  */
   ~FGAtmosphere(void);
 
+  // ***************************************************************************
+  /** This must be called for each dt to execute the model algorithm */
   bool Run(void);
 
+  // ***************************************************************************
+  /** @memo Returns the air density
+      @return float air density in slugs/cubic foot
+  */
   inline float Getrho(void) {return rho;}
-  
+
 protected:
 
 private:

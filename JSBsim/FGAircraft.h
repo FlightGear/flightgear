@@ -137,6 +137,7 @@ stability derivatives for the aircraft.
 /*******************************************************************************
 INCLUDES
 *******************************************************************************/
+
 #ifdef FGFS
 #  include <Include/compiler.h>
 #  ifdef FG_HAVE_STD_INCLUDES
@@ -180,13 +181,11 @@ public:
 
   // ***************************************************************************
   /** This function must be called with the name of an aircraft which
-      has an associated .dat file in the appropriate subdirectory. The
-      appropriate subdirectory is underneath the main fgfs binary directory
-      called "aircraft/{<i>aircraft</i>}/, where {<i>aircraft</i>} is the name of
-      specific aircraft you want to simulate.
+      has an associated .dat file in the appropriate subdirectory. The paths
+      to the appropriate subdirectories are given as the first two parameters. 
       @memo Loads the given aircraft.
-      @param string Path to the Aircraft files
-      @param string Path to the Engine files
+      @param string Path to the aircraft files
+      @param string Path to the engine files
       @param string The name of the aircraft to be loaded, e.g. "X15".
       @return True - if successful
   */
