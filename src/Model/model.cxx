@@ -162,12 +162,9 @@ FG3DModel::~FG3DModel ()
   // since the nodes are attached to the scene graph, they'll be
   // deleted automatically
 
-  for (int i = 0; i < _animations.size(); i++) {
-    Animation * tmp = _animations[i];
-    _animations[i] = 0;
-    delete tmp;
-  }
-
+  int i;
+  for (i = 0; i < _animations.size(); i++)
+    delete _animations[i];
 }
 
 void 
@@ -194,39 +191,13 @@ FG3DModel::init (const string &path)
                                 // Assume that textures are in
                                 // the same location as the XML file.
   ssgTexturePath((char *)xmlpath.dir().c_str());
-  _model = ssgLoad((char *)modelpath.c_str());
+  _model = (ssgBranch *)ssgLoad((char *)modelpath.c_str());
   if (_model == 0)
     throw sg_exception("Failed to load 3D model");
 
-                                // Load animations
-  vector<SGPropertyNode *> animation_nodes = props.getChildren("animation");
-  for (unsigned int i = 0; i < animation_nodes.size(); i++) {
-    vector<SGPropertyNode *> name_nodes =
-      animation_nodes[i]->getChildren("object-name");
-    if (name_nodes.size() < 1) {
-      SG_LOG(SG_INPUT, SG_ALERT, "No object-name given for transformation");
-    } else {
-      for (unsigned int j = 0; j < name_nodes.size(); j++) {
-        Animation * animation =
-          make_animation(name_nodes[j]->getStringValue(), animation_nodes[i]);
-        if (animation != 0)
-          _animations.push_back(animation);
-      }
-    }
-  }
-
-                                // Set up the range selector node
-  float ranges[2];
-  ssgRangeSelector * lod = new ssgRangeSelector;
-  lod->addKid(_model);
-  ranges[0] = props.getFloatValue("range/min-m", 0);
-  ranges[1] = props.getFloatValue("range/max-m", 5000);
-  lod->setRanges(ranges, 2);
-
-
                                 // Set up the alignment node
   ssgTransform * align = new ssgTransform;
-  align->addKid(lod);
+  align->addKid(_model);
   sgMat4 rot_matrix;
   sgMat4 off_matrix;
   sgMat4 res_matrix;
@@ -251,6 +222,23 @@ FG3DModel::init (const string &path)
                                 // Set up a location class
   _location = (FGLocation *) new FGLocation;
 
+                                // Load animations
+  vector<SGPropertyNode *> animation_nodes = props.getChildren("animation");
+  unsigned int i;
+  for (i = 0; i < animation_nodes.size(); i++) {
+    vector<SGPropertyNode *> name_nodes =
+      animation_nodes[i]->getChildren("object-name");
+    if (name_nodes.size() < 1) {
+      Animation * animation = make_animation(0, animation_nodes[i]);
+    } else {
+      for (unsigned int j = 0; j < name_nodes.size(); j++) {
+        Animation * animation =
+          make_animation(name_nodes[j]->getStringValue(), animation_nodes[i]);
+        if (animation != 0)
+          _animations.push_back(animation);
+      }
+    }
+  }
 }
 
 void
@@ -367,15 +355,19 @@ FG3DModel::make_animation (const char * object_name,
     SG_LOG(SG_INPUT, SG_WARN, "Unknown animation type " << type);
   }
 
-  ssgEntity * object = find_named_node(_model, object_name);
-  if (object == 0) {
-    SG_LOG(SG_INPUT, SG_WARN, "Object " << object_name << " not found");
-    delete animation;
-    animation = 0;
+  ssgEntity * object;
+  if (object_name != 0) {
+    object = find_named_node(_model, object_name);
+    if (object == 0) {
+      SG_LOG(SG_INPUT, SG_WARN, "Object " << object_name << " not found");
+      delete animation;
+      animation = 0;
+    }
   } else {
-    animation->init(object, node);
+    object = _model;
   }
 
+  animation->init(object, node);
   return animation;
 }
 

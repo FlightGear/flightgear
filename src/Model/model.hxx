@@ -18,6 +18,7 @@ SG_USING_STD(vector);
 
 
 // Don't pull in the headers, since we don't need them here.
+class ssgBranch;
 class ssgEntity;
 class ssgRangeSelector;
 class ssgSelector;
@@ -89,12 +90,10 @@ private:
   double _heading_deg;
 
 				// Animations
-
   vector <Animation *> _animations;
 
-
 				// Scene graph
-  ssgEntity * _model;
+  ssgBranch * _model;
   ssgSelector * _selector;
   ssgTransform * _position;
 
