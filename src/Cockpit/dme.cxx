@@ -212,6 +212,8 @@ void FGDME::search()
             freq = navcom2_freq->getDoubleValue();
             need_update = true;
         }
+    } else if ( switch_pos == 2 && has_power() ) {
+        // no-op
     } else {
         freq = 0;
         inrange = false;

@@ -93,7 +93,7 @@ public:
 
     // DME Accessors
     inline bool has_power() const {
-        return (switch_pos == 1 || switch_pos == 3)
+        return (switch_pos > 0)
             && (bus_power->getDoubleValue() > 1.0);
     }
     inline bool navcom1_on() const {
