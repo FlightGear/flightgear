@@ -1535,6 +1535,9 @@ int mainLoop( int argc, char **argv ) {
     glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
 #endif
 
+    // Set position relative to glide slope if requested
+    fgSetPosFromGlideSlope();
+
     // set current_options lon/lat if an airport id is specified
     // cout << "3. airport_id = " << fgGetString("/sim/startup/airport-id") << endl;
     if ( fgGetString("/sim/startup/airport-id").length() ) {

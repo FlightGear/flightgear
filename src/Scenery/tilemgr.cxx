@@ -76,6 +76,7 @@ queue<FGDeferredModel *> FGTileMgr::model_queue;
 // Constructor
 FGTileMgr::FGTileMgr():
     state( Start ),
+    current_tile( NULL ),
     vis( 16000 ),
     counter_hack(0)
 {
@@ -280,6 +281,7 @@ int FGTileMgr::update( double lon, double lat ) {
         scenery.set_next_center( current_tile->center );
     } else {
         SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
+        scenery.set_next_center( Point3D(0.0) );
     }
 
     if ( state == Running ) {
@@ -351,9 +353,9 @@ int FGTileMgr::update( double lon, double lat ) {
 
     sgdVec3 sc;
     sgdSetVec3( sc,
-		scenery.get_center()[0],
-		scenery.get_center()[1],
-		scenery.get_center()[2] );
+                scenery.get_center()[0],
+                scenery.get_center()[1],
+                scenery.get_center()[2] );
 
 #if 0
     if ( scenery.center == Point3D(0.0) ) {
@@ -382,21 +384,49 @@ int FGTileMgr::update( double lon, double lat ) {
 	cout << "result = " << scenery.get_cur_elev() << endl;
     } else {
 #endif
-	// cout << "abs view pos = " << current_view.abs_view_pos
-	//      << " view pos = " << current_view.view_pos << endl;
-	double tmp_elev;
-	double tmp_radius;
-	sgdVec3 tmp_normal;
-	if ( fgCurrentElev(globals->get_current_view()->get_abs_view_pos(),
-			   sc, &hit_list,
-			   &tmp_elev, &tmp_radius, tmp_normal) )
-	{
-	    scenery.set_cur_elev( tmp_elev );
-	    scenery.set_cur_radius( tmp_radius );
-	    scenery.set_cur_normal( tmp_normal );
-	} else {
-	    scenery.set_cur_elev( -9999.0 );
-	}
+        /*
+	cout << "abs view pos = "
+             << globals->get_current_view()->get_abs_view_pos()[0] << ","
+             << globals->get_current_view()->get_abs_view_pos()[1] << ","
+             << globals->get_current_view()->get_abs_view_pos()[2]
+	     << " view pos = " 
+             << globals->get_current_view()->get_view_pos()[0] << ","
+             << globals->get_current_view()->get_view_pos()[1] << ","
+             << globals->get_current_view()->get_view_pos()[2]
+             << endl;
+        cout << "current_tile = " << current_tile << endl;
+        cout << "Scenery center = " << sc[0] << "," << sc[1] << "," << sc[2]
+             << endl;
+        */
+
+        // overridden with actual values if a terrain intersection is
+        // found
+	double hit_elev = -9999.0;
+	double hit_radius = 0.0;
+	sgdVec3 hit_normal = { 0.0, 0.0, 0.0 };
+
+        bool hit = false;
+        if ( fabs(sc[0]) > 1.0 || fabs(sc[1]) > 1.0 || fabs(sc[2]) > 1.0 ) {
+            // scenery center has been properly defined so any hit
+            // should be valid (and not just luck)
+            hit = fgCurrentElev(globals->get_current_view()->get_abs_view_pos(),
+                                sc,
+                                &hit_list,
+                                &hit_elev,
+                                &hit_radius,
+                                hit_normal);
+        }
+
+        if ( hit ) {
+            scenery.set_cur_elev( hit_elev );
+            scenery.set_cur_radius( hit_radius );
+            scenery.set_cur_normal( hit_normal );
+        } else {
+            scenery.set_cur_elev( -9999.0 );
+            scenery.set_cur_radius( 0.0 );
+            scenery.set_cur_normal( hit_normal );
+        }
+
 	// cout << "Current elevation = " << scenery.get_cur_elev() << endl;
 #if 0
     }

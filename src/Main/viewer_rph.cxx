@@ -199,6 +199,8 @@ void FGViewerRPH::update() {
 	    << abs_view_pos[0] << ","
 	    << abs_view_pos[1] << ","
 	    << abs_view_pos[2] );
+    SG_LOG( SG_VIEW, SG_DEBUG, "Scenery center = "
+	    << sc[0] << "," << sc[1] << "," << sc[2] );
     SG_LOG( SG_VIEW, SG_DEBUG, "(RPH) Relative view pos = "
 	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
 
