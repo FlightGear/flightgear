@@ -8,6 +8,7 @@ EXTRA_DIST = \
 	fg_memory.h \
 	fg_traits.hxx \
 	fg_typedefs.h \
+	fg_types.hxx \
 	fg_stl_config.h \
 	fg_zlib.h \
 	general.hxx
