@@ -964,6 +964,12 @@ static void set_hud_color(float r, float g, float b) {
 // all C++.
 //
 void fgUpdateHUD( void ) {
+    fgUpdateHUD( 0.0f, 0.0f, 640.0f, 480.0f );
+}
+
+void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
+                  GLfloat x_end, GLfloat y_end )
+{
   int brightness;
   // int day_night_sw = current_aircraft.controls->day_night_switch;
   int day_night_sw = global_day_night_switch;
@@ -987,7 +993,7 @@ void fgUpdateHUD( void ) {
   glPushMatrix();
 
   glLoadIdentity();
-  gluOrtho2D(0, 640, 0, 480);
+  gluOrtho2D(x_start, x_end, y_start, y_end);
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();

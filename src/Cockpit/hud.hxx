@@ -907,6 +907,8 @@ extern void HUD_brightkey( bool incr_bright );
 extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
 extern int  fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ );
 extern void fgUpdateHUD( void );
+extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
+                         GLfloat x_end, GLfloat y_end );
 
 extern void drawOneLine ( UINT x1, UINT y1, UINT x2, UINT y2);
 extern void drawOneLine ( RECT &rect);

@@ -208,8 +208,14 @@ FGPanel::unbind ()
 /**
  * Update the panel.
  */
+void FGPanel::update ()
+{
+	update(_winx, _winw, _winy, _winh);
+}
+
+
 void
-FGPanel::update ()
+FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
 {
 				// Do nothing if the panel isn't visible.
   if (!fgPanelVisible())
@@ -228,7 +234,7 @@ FGPanel::update ()
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  gluOrtho2D(_winx, _winx + _winw, _winy, _winy + _winh);
+  gluOrtho2D(winx, winx + winw, winy, winy + winh);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
