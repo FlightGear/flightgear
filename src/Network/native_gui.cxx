@@ -306,13 +306,13 @@ void FGNetGUI2Props( FGNetGUI *net ) {
         globals->get_scenery()->set_cur_elev( net->ground_elev );
 
         // Approach
-        fgSetDouble( "/radios/nav[0]/frequencies/selected-mhz",
+        fgSetDouble( "/instrumentation/nav[0]/frequencies/selected-mhz",
                      net->tuned_freq );
-        fgSetBool( "/radios/nav[0]/in-range", net->in_range );
-        fgSetDouble( "/radios/dme/distance-nm", net->dist_nm );
-        fgSetDouble( "/radios/nav[0]/heading-needle-deflection",
+        fgSetBool( "/instrumentation/nav[0]/in-range", net->in_range );
+        fgSetDouble( "/instrumentation/dme/distance-nm", net->dist_nm );
+        fgSetDouble( "/instrumentation/nav[0]/heading-needle-deflection",
                      net->course_deviation_deg );
-        fgSetDouble( "/radios/nav[0]/gs-needle-deflection",
+        fgSetDouble( "/instrumentation/nav[0]/gs-needle-deflection",
                      net->gs_deviation_deg );
     } else {
 	SG_LOG( SG_IO, SG_ALERT,

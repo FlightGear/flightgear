@@ -873,7 +873,7 @@ static void update_helper( double dt ) {
 
     // Calculate nav1 target heading error normalized to +/- 180.0
     static SGPropertyNode *target_nav1
-        = fgGetNode( "/radios/nav[0]/radials/target-auto-hdg-deg", true );
+        = fgGetNode( "/instrumentation/nav[0]/radials/target-auto-hdg-deg", true );
     static SGPropertyNode *true_nav1
         = fgGetNode( "/autopilot/internal/nav1-heading-error-deg", true );
     static SGPropertyNode *true_track_nav1
@@ -894,7 +894,7 @@ static void update_helper( double dt ) {
     static SGPropertyNode *nav1_course_error
         = fgGetNode( "/autopilot/internal/nav1-course-error", true );
     static SGPropertyNode *nav1_selected_course
-        = fgGetNode( "/radios/nav[0]/radials/selected-deg", true );
+        = fgGetNode( "/instrumentation/nav[0]/radials/selected-deg", true );
 
     diff = nav1_selected_course->getDoubleValue() - ind_hdg->getDoubleValue();
 //    if ( diff < -180.0 ) { diff += 360.0; }

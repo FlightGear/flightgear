@@ -366,26 +366,26 @@ bool FGATC610x::open() {
     xpdr_bus_power = fgGetNode( "/systems/electrical/outputs/transponder",
                                  true );
 
-    navcom1_power_btn = fgGetNode( "/radios/comm[0]/inputs/power-btn", true );
-    navcom2_power_btn = fgGetNode( "/radios/comm[1]/inputs/power-btn", true );
+    navcom1_power_btn = fgGetNode( "/instrumentation/comm[0]/inputs/power-btn", true );
+    navcom2_power_btn = fgGetNode( "/instrumentation/comm[1]/inputs/power-btn", true );
 
-    com1_freq = fgGetNode( "/radios/comm[0]/frequencies/selected-mhz", true );
+    com1_freq = fgGetNode( "/instrumentation/comm[0]/frequencies/selected-mhz", true );
     com1_stby_freq
-	= fgGetNode( "/radios/comm[0]/frequencies/standby-mhz", true );
+	= fgGetNode( "/instrumentation/comm[0]/frequencies/standby-mhz", true );
 
-    com2_freq = fgGetNode( "/radios/comm[1]/frequencies/selected-mhz", true );
+    com2_freq = fgGetNode( "/instrumentation/comm[1]/frequencies/selected-mhz", true );
     com2_stby_freq
-	= fgGetNode( "/radios/comm[1]/frequencies/standby-mhz", true );
+	= fgGetNode( "/instrumentation/comm[1]/frequencies/standby-mhz", true );
 
-    nav1_freq = fgGetNode( "/radios/nav[0]/frequencies/selected-mhz", true );
+    nav1_freq = fgGetNode( "/instrumentation/nav[0]/frequencies/selected-mhz", true );
     nav1_stby_freq
-	= fgGetNode( "/radios/nav[0]/frequencies/standby-mhz", true );
-    nav1_obs = fgGetNode( "/radios/nav[0]/radials/selected-deg", true );
+	= fgGetNode( "/instrumentation/nav[0]/frequencies/standby-mhz", true );
+    nav1_obs = fgGetNode( "/instrumentation/nav[0]/radials/selected-deg", true );
 
-    nav2_freq = fgGetNode( "/radios/nav[1]/frequencies/selected-mhz", true );
+    nav2_freq = fgGetNode( "/instrumentation/nav[1]/frequencies/selected-mhz", true );
     nav2_stby_freq
-	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
-    nav2_obs = fgGetNode( "/radios/nav[1]/radials/selected-deg", true );
+	= fgGetNode( "/instrumentation/nav[1]/frequencies/standby-mhz", true );
+    nav2_obs = fgGetNode( "/instrumentation/nav[1]/radials/selected-deg", true );
 
     adf_power_btn
         = fgGetNode( "/instrumentation/kr-87/inputs/power-btn", true );
@@ -410,9 +410,9 @@ bool FGATC610x::open() {
     adf_flt_ann = fgGetNode( "/instrumentation/kr-87/annunciators/flt", true );
     adf_et_ann = fgGetNode( "/instrumentation/kr-87/annunciators/et", true );
 
-    inner = fgGetNode( "/radios/marker-beacon/inner", true );
-    middle = fgGetNode( "/radios/marker-beacon/middle", true );
-    outer = fgGetNode( "/radios/marker-beacon/outer", true );
+    inner = fgGetNode( "/instrumentation/marker-beacon/inner", true );
+    middle = fgGetNode( "/instrumentation/marker-beacon/middle", true );
+    outer = fgGetNode( "/instrumentation/marker-beacon/outer", true );
 
     xpdr_ident_btn
         = fgGetNode( "/instrumentation/kt-70/inputs/ident-btn", true );

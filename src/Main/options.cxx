@@ -1089,8 +1089,8 @@ fgOptNAV1( const char * arg )
 {
     double radial, freq;
     if (parse_colon(arg, &radial, &freq))
-        fgSetDouble("/radios/nav[0]/radials/selected-deg", radial);
-    fgSetDouble("/radios/nav[0]/frequencies/selected-mhz", freq);
+        fgSetDouble("/instrumentation/nav[0]/radials/selected-deg", radial);
+    fgSetDouble("/instrumentation/nav[0]/frequencies/selected-mhz", freq);
     return FG_OPTIONS_OK;
 }
 
@@ -1099,8 +1099,8 @@ fgOptNAV2( const char * arg )
 {
     double radial, freq;
     if (parse_colon(arg, &radial, &freq))
-        fgSetDouble("/radios/nav[1]/radials/selected-deg", radial);
-    fgSetDouble("/radios/nav[1]/frequencies/selected-mhz", freq);
+        fgSetDouble("/instrumentation/nav[1]/radials/selected-deg", radial);
+    fgSetDouble("/instrumentation/nav[1]/frequencies/selected-mhz", freq);
     return FG_OPTIONS_OK;
 }
 
@@ -1121,11 +1121,11 @@ fgOptDME( const char *arg )
     if (opt == "nav1") {
         fgSetInt("/instrumentation/dme/switch-position", 1);
         fgSetString("/instrumentation/dme/frequencies/source",
-                    "/radios/nav[0]/frequencies/selected-mhz");
+                    "/instrumentation/nav[0]/frequencies/selected-mhz");
     } else if (opt == "nav2") {
         fgSetInt("/instrumentation/dme/switch-position", 3);
         fgSetString("/instrumentation/dme/frequencies/source",
-                    "/radios/nav[1]/frequencies/selected-mhz");
+                    "/instrumentation/nav[1]/frequencies/selected-mhz");
     } else {
         fgSetInt("/instrumentation/dme/switch-position", 2);
         fgSetString("/instrumentation/dme/frequencies/source",
@@ -1327,8 +1327,8 @@ struct OptionDesc {
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"failure",                      true,  OPTION_FUNC,   "", false, "", fgOptFailure },
-    {"com1",                         true,  OPTION_DOUBLE, "/radios/comm[0]/frequencies/selected-mhz", false, "", 0 },
-    {"com2",                         true,  OPTION_DOUBLE, "/radios/comm[1]/frequencies/selected-mhz", false, "", 0 },
+    {"com1",                         true,  OPTION_DOUBLE, "/instrumentation/comm[0]/frequencies/selected-mhz", false, "", 0 },
+    {"com2",                         true,  OPTION_DOUBLE, "/instrumentation/comm[1]/frequencies/selected-mhz", false, "", 0 },
     {"nav1",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV1 },
     {"nav2",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV2 },
     {"adf",                          true,  OPTION_FUNC,   "", false, "", fgOptADF },
