@@ -274,7 +274,7 @@ void dump_list(int *list, int list_ptr) {
 	xmin = xmax = nodes[n][0];
 	ymin = ymax = nodes[n][1];
 	zmin = zmax = nodes[n][2];
-	printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
+	// printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
 
 	for ( j = i + 1; j < i + len; j++ ) {
 	    // printf("j = %d\n", j);
@@ -285,12 +285,12 @@ void dump_list(int *list, int list_ptr) {
 	    if ( nodes[n][1] > ymax ) { ymax = nodes[n][1]; }
 	    if ( nodes[n][2] < zmin ) { zmin = nodes[n][2]; }
 	    if ( nodes[n][2] > zmax ) { zmax = nodes[n][2]; }
-	    printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
+	    // printf("%.2f %.2f %.2f\n", nodes[n][0], nodes[n][1], nodes[n][2]);
 	}	    
 	x = (xmin + xmax) / 2.0;
 	y = (ymin + ymax) / 2.0;
 	z = (zmin + zmax) / 2.0;
-	printf("center = %.2f %.2f %.2f\n", x, y, z);
+	// printf("center = %.2f %.2f %.2f\n", x, y, z);
 
 	/* calc bounding radius */
 	n = list[i];
@@ -302,7 +302,7 @@ void dump_list(int *list, int list_ptr) {
 			     nodes[n][2] - z);
 	    if ( dist > radius ) { radius = dist; }
 	}
-	printf("radius = %.2f\n", radius);
+	// printf("radius = %.2f\n", radius);
 
 	/* dump bounding sphere and header */
 	fprintf(out, "bs %.2f %.2f %.2f %.2f\n", x, y, z, radius);
@@ -562,10 +562,13 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.15  1998/05/24 02:47:47  curt
-/* For each strip, specify a default material property and calculate a center
-/* and bounding sphere.
+/* Revision 1.16  1998/05/27 02:27:22  curt
+/* Commented out a couple of debugging messages.
 /*
+ * Revision 1.15  1998/05/24 02:47:47  curt
+ * For each strip, specify a default material property and calculate a center
+ * and bounding sphere.
+ *
  * Revision 1.14  1998/05/23 15:19:49  curt
  * Output more digits after the decimal place.
  *
