@@ -28,6 +28,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __CYGWIN32__                                                  
+#  include <Windows32/Base.h>                     
+#endif
 
 #ifdef GLUT
     #include <GL/glut.h>
@@ -612,10 +615,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.32  1997/07/11 03:23:18  curt
-/* Solved some scenery display/orientation problems.  Still have a positioning
-/* (or transformation?) problem.
+/* Revision 1.33  1997/07/12 03:50:20  curt
+/* Added an #include <Windows32/Base.h> to help compiling for Win32
 /*
+ * Revision 1.32  1997/07/11 03:23:18  curt
+ * Solved some scenery display/orientation problems.  Still have a positioning
+ * (or transformation?) problem.
+ *
  * Revision 1.31  1997/07/11 01:29:58  curt
  * More tweaking of terrian floor.
  *

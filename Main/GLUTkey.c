@@ -27,6 +27,10 @@
 #include <math.h>
 #include <stdio.h>
 
+#ifdef __CYGWIN32__                                                  
+#  include <Windows32/Base.h>                     
+#endif
+
 #include <GL/glut.h>
 
 #include "GLUTkey.h"
@@ -156,9 +160,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.13  1997/06/25 15:39:46  curt
-/* Minor changes to compile with rsxnt/win32.
+/* Revision 1.14  1997/07/12 03:50:20  curt
+/* Added an #include <Windows32/Base.h> to help compiling for Win32
 /*
+ * Revision 1.13  1997/06/25 15:39:46  curt
+ * Minor changes to compile with rsxnt/win32.
+ *
  * Revision 1.12  1997/06/21 17:12:52  curt
  * Capitalized subdirectory names.
  *

@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifdef __CYGWIN32__                                                  
+#  include <Windows32/Base.h>                     
+#endif
+
 #include <GL/glut.h>
 
 #include "../constants.h"
@@ -172,9 +176,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.31  1997/07/12 02:27:07  curt
-/* Looking at potential scenery transformation/coordinate system problems.
+/* Revision 1.32  1997/07/12 03:50:21  curt
+/* Added an #include <Windows32/Base.h> to help compiling for Win32
 /*
+ * Revision 1.31  1997/07/12 02:27:07  curt
+ * Looking at potential scenery transformation/coordinate system problems.
+ *
  * Revision 1.30  1997/07/11 03:23:18  curt
  * Solved some scenery display/orientation problems.  Still have a positioning
  * (or transformation?) problem.
