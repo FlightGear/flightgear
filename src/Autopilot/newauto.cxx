@@ -519,12 +519,12 @@ FGAutopilot::update (double dt)
 
 	    // determine our current radial position relative to the
 	    // navaid in "true" heading.
-	    double cur_radial = current_radiostack->get_navcom1()->get_nav_heading();
+	    double cur_radial = current_radiostack->get_navcom1()->get_nav_reciprocal_radial();
 	    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
 		// ILS localizers radials are already "true" in our
 		// database
 	    } else {
-		cur_radial += current_radiostack->get_navcom1()->get_nav_magvar();
+		cur_radial += current_radiostack->get_navcom1()->get_nav_twist();
 	    }
 	    if ( current_radiostack->get_navcom1()->get_nav_from_flag() ) {
 		cur_radial += 180.0;
@@ -538,18 +538,18 @@ FGAutopilot::update (double dt)
 		// database
 	    } else {
 		// VOR radials need to have that vor's offset added in
-		tgt_radial += current_radiostack->get_navcom1()->get_nav_magvar();
+		tgt_radial += current_radiostack->get_navcom1()->get_nav_twist();
 	    }
 
 	    // determine the heading adjustment needed.
 	    double adjustment = 
-		current_radiostack->get_navcom1()->get_nav_heading_needle_deflection()
+		current_radiostack->get_navcom1()->get_nav_cdi_deflection()
 		* (current_radiostack->get_navcom1()->get_nav_loc_dist() * SG_METER_TO_NM);
 	    SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
 
             // clamp closer when inside cone when beyond 5km...
             if (current_radiostack->get_navcom1()->get_nav_loc_dist() > 5000) {
-              double clamp_angle = fabs(current_radiostack->get_navcom1()->get_nav_heading_needle_deflection()) * 3;
+              double clamp_angle = fabs(current_radiostack->get_navcom1()->get_nav_cdi_deflection()) * 3;
               if (clamp_angle < 30)
                 SG_CLAMP_RANGE( adjustment, -clamp_angle, clamp_angle);
             }

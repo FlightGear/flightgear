@@ -59,7 +59,7 @@ FGNavCom::FGNavCom() :
     comm_vol_btn(0.0),
     nav_freq(0.0),
     nav_alt_freq(0.0),
-    nav_radial(0.0),
+    nav_target_radial(0.0),
     nav_vol_btn(0.0),
     nav_ident_btn(true)
 {
@@ -193,13 +193,13 @@ FGNavCom::bind ()
     fgTie( propname, this, &FGNavCom::get_nav_inrange );
 
     snprintf(propname, 256, "/radios/nav[%d]/heading-needle-deflection", index);
-    fgTie( propname, this, &FGNavCom::get_nav_heading_needle_deflection );
+    fgTie( propname, this, &FGNavCom::get_nav_cdi_deflection );
 
     snprintf(propname, 256, "/radios/nav[%d]/has-gs", index);
     fgTie( propname, this, &FGNavCom::get_nav_has_gs );
 
     snprintf(propname, 256, "/radios/nav[%d]/gs-needle-deflection", index);
-    fgTie( propname, this, &FGNavCom::get_nav_gs_needle_deflection );
+    fgTie( propname, this, &FGNavCom::get_nav_gs_deflection );
 
     snprintf(propname, 256, "/radios/nav[%d]/nav-id", index);
     fgTie( propname, this, &FGNavCom::get_nav_id );
@@ -364,7 +364,7 @@ FGNavCom::update(double dt)
                                 lon * SGD_RADIANS_TO_DEGREES, 
                                 nav_gslat, nav_gslon,
                                 &az1, &az2, &s );
-            double r = az1 - nav_radial;
+            double r = az1 - nav_target_radial;
             while ( r >  180.0 ) { r -= 360.0;}
             while ( r < -180.0 ) { r += 360.0;}
             if ( r >= -90.0 && r <= 90.0 ) {
@@ -372,7 +372,7 @@ FGNavCom::update(double dt)
             } else {
                 nav_gs_dist_signed = -nav_gs_dist;
             }
-            /* cout << "Target Radial = " << nav_radial 
+            /* cout << "Target Radial = " << nav_target_radial 
                  << "  Bearing = " << az1
                  << "  dist (signed) = " << nav_gs_dist_signed
                  << endl; */
@@ -388,12 +388,12 @@ FGNavCom::update(double dt)
 			    nav_loclat, nav_loclon,
 			    &az1, &az2, &s );
 	// cout << "az1 = " << az1 << " magvar = " << nav_magvar << endl;
-	nav_heading = az1 - nav_magvar;
+	nav_radial = az2 - nav_twist;
 	// cout << " heading = " << nav_heading
 	//      << " dist = " << nav_dist << endl;
 
 	if ( nav_loc ) {
-	    double offset = nav_heading - nav_radial;
+	    double offset = nav_radial - nav_target_radial;
 	    while ( offset < -180.0 ) { offset += 360.0; }
 	    while ( offset > 180.0 ) { offset -= 360.0; }
 	    // cout << "ils offset = " << offset << endl;
@@ -416,7 +416,7 @@ FGNavCom::update(double dt)
 	}
 
 	if ( !nav_loc ) {
-	    nav_radial = nav_sel_radial;
+	    nav_target_radial = nav_sel_radial;
 	}
     } else {
 	nav_inrange = false;
@@ -508,13 +508,13 @@ void FGNavCom::search()
 	    nav_gslon = ils->get_gslon();
 	    nav_gslat = ils->get_gslat();
 	    nav_elev = ils->get_gselev();
-	    nav_magvar = 0;
+	    nav_twist = 0;
 	    nav_range = FG_ILS_DEFAULT_RANGE;
 	    nav_effective_range = nav_range;
 	    nav_target_gs = ils->get_gsangle();
-	    nav_radial = ils->get_locheading();
-	    while ( nav_radial <   0.0 ) { nav_radial += 360.0; }
-	    while ( nav_radial > 360.0 ) { nav_radial -= 360.0; }
+	    nav_target_radial = ils->get_locheading();
+	    while ( nav_target_radial <   0.0 ) { nav_target_radial += 360.0; }
+	    while ( nav_target_radial > 360.0 ) { nav_target_radial -= 360.0; }
 	    nav_x = ils->get_x();
 	    nav_y = ils->get_y();
 	    nav_z = ils->get_z();
@@ -524,7 +524,7 @@ void FGNavCom::search()
 
             // derive GS baseline
             double tlon, tlat, taz;
-            geo_direct_wgs_84 ( 0.0, nav_gslat, nav_gslon, nav_radial + 90,  
+            geo_direct_wgs_84 ( 0.0, nav_gslat, nav_gslon, nav_target_radial + 90,  
                                 100.0, &tlat, &tlon, &taz );
             // cout << nav_gslon << "," << nav_gslat << "  "
             //      << tlon << "," << tlat << "  (" << nav_elev << ")" << endl;
@@ -579,11 +579,11 @@ void FGNavCom::search()
 	    nav_loclon = nav->get_lon();
 	    nav_loclat = nav->get_lat();
 	    nav_elev = nav->get_elev();
-	    nav_magvar = nav->get_magvar();
+	    nav_twist = nav->get_magvar();
 	    nav_range = nav->get_range();
 	    nav_effective_range = adjustNavRange(nav_elev, elev, nav_range);
 	    nav_target_gs = 0.0;
-	    nav_radial = nav_sel_radial;
+	    nav_target_radial = nav_sel_radial;
 	    nav_x = nav->get_x();
 	    nav_y = nav->get_y();
 	    nav_z = nav->get_z();
@@ -622,7 +622,7 @@ void FGNavCom::search()
     } else {
 	nav_valid = false;
 	nav_id = "";
-	nav_radial = 0;
+	nav_target_radial = 0;
 	nav_trans_ident = "";
 	last_nav_id = "";
 	if ( ! globals->get_soundmgr()->remove( nav_fx_name ) ) {
@@ -636,15 +636,15 @@ void FGNavCom::search()
 
 // return the amount of heading needle deflection, returns a value
 // clamped to the range of ( -10 , 10 )
-double FGNavCom::get_nav_heading_needle_deflection() const {
+double FGNavCom::get_nav_cdi_deflection() const {
     double r;
 
     if ( nav_inrange
          && nav_servicable->getBoolValue() && cdi_servicable->getBoolValue() )
     {
-        r = nav_heading - nav_radial;
-	// cout << "Radial = " << nav_radial 
-	//      << "  Bearing = " << nav_heading << endl;
+        r = nav_radial - nav_target_radial;
+	// cout << "Target radial = " << nav_target_radial 
+	//      << "  Actual radial = " << nav_radial << endl;
     
 	while ( r >  180.0 ) { r -= 360.0;}
 	while ( r < -180.0 ) { r += 360.0;}
@@ -652,6 +652,7 @@ double FGNavCom::get_nav_heading_needle_deflection() const {
 	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
 
 	// According to Robin Peel, the ILS is 4x more sensitive than a vor
+        r = -r;                 // reverse, since radial is outbound
 	if ( nav_loc ) { r *= 4.0; }
 	if ( r < -10.0 ) { r = -10.0; }
 	if ( r >  10.0 ) { r = 10.0; }
@@ -665,7 +666,7 @@ double FGNavCom::get_nav_heading_needle_deflection() const {
 
 // return the amount of glide slope needle deflection (.i.e. the
 // number of degrees we are off the glide slope * 5.0
-double FGNavCom::get_nav_gs_needle_deflection() const {
+double FGNavCom::get_nav_gs_deflection() const {
     if ( nav_inrange && nav_has_gs
          && nav_servicable->getBoolValue() && gs_servicable->getBoolValue() )
     {
@@ -691,11 +692,11 @@ FGNavCom::get_nav_to_flag () const
          && nav_servicable->getBoolValue()
          && tofrom_servicable->getBoolValue() )
     {
-        double offset = fabs(nav_heading - nav_radial);
+        double offset = fabs(nav_radial - nav_target_radial);
         if (nav_loc) {
             return true;
         } else {
-            return (offset <= 90.0 || offset >= 270.0);
+            return !(offset <= 90.0 || offset >= 270.0);
         }
     } else {
         return false;
@@ -712,11 +713,11 @@ FGNavCom::get_nav_from_flag () const
     if ( nav_inrange
          && nav_servicable->getBoolValue()
          && tofrom_servicable->getBoolValue() ) {
-        double offset = fabs(nav_heading - nav_radial);
+        double offset = fabs(nav_radial - nav_target_radial);
         if (nav_loc) {
             return false;
         } else {
-          return (offset > 90.0 && offset < 270.0);
+          return !(offset > 90.0 && offset < 270.0);
         }
     } else {
         return false;
@@ -726,20 +727,18 @@ FGNavCom::get_nav_from_flag () const
 
 /**
  * Return the current radial.
- *
- * FIXME: the variable 'nav_radial' does not contain the current
- * radial, while the variable 'nav_heading' contains the reciprocal of
- * the current radial.
  */
 double
 FGNavCom::get_nav_radial () const
 {
-    if (nav_inrange && nav_servicable->getBoolValue()) {
-        double radial = nav_heading + 180;
-        if (radial >= 360)
-            radial -= 360;
-        return radial;
-    } else {
-        return 0.0;
-    }
+    return nav_radial;
+}
+
+double
+FGNavCom::get_nav_reciprocal_radial () const
+{
+    double recip = nav_radial + 180;
+    if (recip >= 360)
+        recip = 360;
+    return recip;
 }

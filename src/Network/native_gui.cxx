@@ -152,7 +152,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 
     // Approach
     net->tuned_freq = current_radiostack->get_navcom1()->get_nav_freq();
-    net->nav_radial = current_radiostack->get_navcom1()->get_nav_radial();
+    net->nav_radial = current_radiostack->get_navcom1()->get_nav_target_radial();
     net->in_range = current_radiostack->get_navcom1()->get_nav_inrange();
 
     if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
@@ -167,8 +167,8 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     }
 
     net->course_deviation_deg
-        = current_radiostack->get_navcom1()->get_nav_heading()
-        - current_radiostack->get_navcom1()->get_nav_radial();
+        = current_radiostack->get_navcom1()->get_nav_reciprocal_radial()
+        - current_radiostack->get_navcom1()->get_nav_target_radial();
     while ( net->course_deviation_deg >  180.0 ) {
         net->course_deviation_deg -= 360.0;
     }
@@ -184,7 +184,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
         // is an ILS
         net->gs_deviation_deg
-            = current_radiostack->get_navcom1()->get_nav_gs_needle_deflection()
+            = current_radiostack->get_navcom1()->get_nav_gs_deflection()
             / 5.0;
     } else {
         // is an ILS

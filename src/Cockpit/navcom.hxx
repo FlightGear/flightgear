@@ -91,6 +91,7 @@ class FGNavCom : public FGSubsystem
     double nav_alt_freq;
     double nav_radial;
     double nav_sel_radial;
+    double nav_target_radial;
     double nav_loclon;
     double nav_loclat;
     double nav_x;
@@ -110,9 +111,8 @@ class FGNavCom : public FGSubsystem
     double nav_elev;
     double nav_range;
     double nav_effective_range;
-    double nav_heading;
     double nav_target_gs;
-    double nav_magvar;
+    double nav_twist;
     double nav_vol_btn;
     bool nav_ident_btn;
 
@@ -189,6 +189,7 @@ public:
     inline double get_nav_freq () const { return nav_freq; }
     inline double get_nav_alt_freq () const { return nav_alt_freq; }
     inline double get_nav_sel_radial() const { return nav_sel_radial; }
+    inline double get_nav_target_radial() const { return nav_target_radial; }
 
     // Calculated values.
     inline bool get_comm_inrange() const { return comm_inrange; }
@@ -212,12 +213,12 @@ public:
     inline double get_nav_gs_dist() const { return nav_gs_dist; }
     inline double get_nav_gs_dist_signed() const { return nav_gs_dist_signed; }
     inline double get_nav_elev() const { return nav_elev; }
-    inline double get_nav_heading() const { return nav_heading; }
-    inline double get_nav_radial() const;
+    double get_nav_radial() const;
+    double get_nav_reciprocal_radial() const;
     inline double get_nav_target_gs() const { return nav_target_gs; }
-    inline double get_nav_magvar() const { return nav_magvar; }
-    double get_nav_heading_needle_deflection() const;
-    double get_nav_gs_needle_deflection() const;
+    inline double get_nav_twist() const { return nav_twist; }
+    double get_nav_cdi_deflection() const;
+    double get_nav_gs_deflection() const;
     inline double get_nav_vol_btn() const { return nav_vol_btn; }
     inline bool get_nav_ident_btn() const { return nav_ident_btn; }
     inline const char * get_nav_id() const { return nav_id.c_str(); }
