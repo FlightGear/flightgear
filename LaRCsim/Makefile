@@ -11,7 +11,7 @@
 TARGET = libLaRCsim.a
 
 LaRCsimFILES = atmos_62.c ls_accel.c ls_aux.c ls_geodesy.c ls_gravity.c \
-	ls_step.c ls_model.c default_model_routines.c ls_init.c ls_sync.c
+	ls_step.c ls_model.c default_model_routines.c ls_init.c # ls_sync.c
 
 NavionFILES = navion_aero.c navion_engine.c navion_gear.c navion_init.c
 
@@ -55,6 +55,10 @@ include depend
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1997/07/07 20:59:48  curt
+# Working on scenery transformations to enable us to fly fluidly over the
+# poles with no discontinuity/distortion in scenery.
+#
 # Revision 1.6  1997/06/27 21:38:06  curt
 # Working on Makefile structure.
 #

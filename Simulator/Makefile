@@ -52,12 +52,21 @@ clean:
 
 tar: clean
 	(cd ../..; \
-	tar cvf prototype-0.04.tar FlightGear/COPYING FlightGear/Docs \
-	FlightGear/Scenery/mesa-e.scn FlightGear/Src FlightGear/Thanks)
+	tar cvf prototype-0.05.tar FlightGear/COPYING FlightGear/Docs \
+	FlightGear/Src FlightGear/Thanks)
+
+zip: clean
+	(cd ../..; \
+	zip -r prototype-0.05.zip FlightGear/COPYING FlightGear/Docs \
+	FlightGear/Src FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.16  1997/07/07 20:59:47  curt
+# Working on scenery transformations to enable us to fly fluidly over the
+# poles with no discontinuity/distortion in scenery.
+#
 # Revision 1.15  1997/07/05 20:43:27  curt
 # renamed mat3 directory to Math so we could add other math related routines.
 #

@@ -38,14 +38,14 @@
     #include "GLTKkey.h"
 #endif
 
+#include "../constants.h"
+
 #include "../Aircraft/aircraft.h"
 #include "../Scenery/scenery.h"
 #include "../Math/mat3.h"
+#include "../Math/polar.h"
 #include "../Timer/fg_timer.h"
 
-
-#define DEG_TO_RAD       0.017453292
-#define RAD_TO_DEG       57.29577951
 
 #ifndef M_PI
 #define M_PI        3.14159265358979323846	/* pi */
@@ -80,7 +80,7 @@ static GLfloat sun_vec[4] = {-3.0, 1.0, 2.0, 0.0 };
 /* static GLint scenery, runway; */
 
 /* Another hack */
-double fogDensity = 2000.0;
+double fogDensity = 80.0; /* in meters = about 70 miles */
 double view_offset = 0.0;
 double goal_view_offset = 0.0;
 
@@ -134,7 +134,7 @@ static void fgInitVisuals() {
  **************************************************************************/
 
 static void fgUpdateViewParams() {
-    double pos_x, pos_y, pos_z;
+    struct fgCartesianPoint view_pos;
     struct flight_params *f;
     MAT3mat R, TMP;
     MAT3vec vec, up, forward, fwrd_view;
@@ -144,17 +144,16 @@ static void fgUpdateViewParams() {
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, 1.0/win_ratio, 0.01, 6000.0);
+    gluPerspective(45.0, 1.0/win_ratio, 0.1, 200000.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    /* calculate position in arc seconds */
-    pos_x = (FG_Longitude * RAD_TO_DEG) * 3600.0;
-    pos_y = (FG_Latitude   * RAD_TO_DEG) * 3600.0;
-    pos_z = FG_Altitude * 0.01; /* (Convert feet to aproximate arcsecs) */
+    /* calculate position in current FG view coordinate system */
+    view_pos = fgGeodetic2Cartesian(FG_Longitude, FG_Latitude);
+    view_pos = fgRotateCartesianPoint(view_pos);
 
-    printf("*** pos_z = %.2f\n", pos_z);
+    printf("*** Altitude = %.2f meters\n", FG_Altitude * FEET_TO_METER);
 
     /* build current rotation matrix */
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
@@ -191,8 +190,11 @@ static void fgUpdateViewParams() {
     MAT3rotate(TMP, up, view_offset);
     MAT3mult_vec(fwrd_view, forward, TMP);
 
-    gluLookAt(pos_x, pos_y, pos_z,
-	      pos_x + fwrd_view[0], pos_y + fwrd_view[1], pos_z + fwrd_view[2],
+    printf("View pos = %.4f, %.4f, %.4f\n", view_pos.y, view_pos.z,  
+	   FG_Altitude * FEET_TO_METER);
+    gluLookAt(view_pos.y, view_pos.z,  FG_Altitude * FEET_TO_METER * 0.001,
+	      view_pos.y + fwrd_view[0], view_pos.z + fwrd_view[1], 
+	      FG_Altitude * FEET_TO_METER * 0.001 + fwrd_view[2],
 	      up[0], up[1], up[2]);
 
     glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
@@ -468,10 +470,10 @@ int main( int argc, char *argv[] ) {
     FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
     /* Initial Position */
-    /* FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
-    FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD; */
-    FG_Latitude  = 0.0;
-    FG_Longitude = 0.0;
+    FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
+    FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
+    /* FG_Latitude  = 0.0;
+    FG_Longitude = 0.0; */
     FG_Altitude  = FG_Runway_altitude + 3.758099;
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
@@ -580,9 +582,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.26  1997/07/05 20:43:34  curt
-/* renamed mat3 directory to Math so we could add other math related routines.
+/* Revision 1.27  1997/07/07 20:59:49  curt
+/* Working on scenery transformations to enable us to fly fluidly over the
+/* poles with no discontinuity/distortion in scenery.
 /*
+ * Revision 1.26  1997/07/05 20:43:34  curt
+ * renamed mat3 directory to Math so we could add other math related routines.
+ *
  * Revision 1.25  1997/06/29 21:19:17  curt
  * Working on scenery management system.
  *

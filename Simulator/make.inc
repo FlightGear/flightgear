@@ -57,7 +57,8 @@ AR = ar
 #                much smoother.
 #---------------------------------------------------------------------------
 
-FG_CFLAGS = -g -Wall -DUSE_ITIMER
+# FG_CFLAGS = -g -Wall -DUSE_ITIMER
+FG_CFLAGS = -g -Wall 
 
 
 #---------------------------------------------------------------------------
@@ -99,6 +100,10 @@ GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/07/07 20:59:48  curt
+# Working on scenery transformations to enable us to fly fluidly over the
+# poles with no discontinuity/distortion in scenery.
+#
 # Revision 1.1  1997/06/27 21:38:00  curt
 # Working on Makefile structure.
 #

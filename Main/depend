@@ -11,11 +11,12 @@ GLUTkey.o: GLUTkey.c GLUTkey.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h
-GLmain.o: GLmain.c ../Aircraft/aircraft.h \
+GLmain.o: GLmain.c ../constants.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
  ../Aircraft/../Flight/LaRCsim/ls_interface.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h ../Scenery/scenery.h \
- ../Math/mat3.h ../Timer/fg_timer.h
-mesh2GL.o: mesh2GL.c ../Scenery/mesh.h ../Math/mat3.h
+ ../Math/mat3.h ../Math/polar.h ../Math/../types.h ../Timer/fg_timer.h
+mesh2GL.o: mesh2GL.c ../constants.h ../Scenery/mesh.h ../Math/mat3.h \
+ ../Math/polar.h ../Math/../types.h

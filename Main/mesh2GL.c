@@ -26,16 +26,20 @@
 
 #include <GL/glut.h>
 
+#include "../constants.h"
 #include "../Scenery/mesh.h"
 #include "../Math/mat3.h"
+#include "../Math/polar.h"
 
 
 /* walk through mesh and make ogl calls */
 GLint mesh2GL(struct mesh *m) {
     GLint mesh;
-    static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 };
+    /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
+    static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
+    struct fgCartesianPoint p11, p12, p21, p22;
 
     MAT3vec v1, v2, normal; 
     int i, j, istep, jstep, iend, jend;
@@ -43,7 +47,10 @@ GLint mesh2GL(struct mesh *m) {
 
     printf("In mesh2GL(), generating GL call list.\n");
 
-    istep = jstep = 4;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
+
+    /* setup the batch transformation */
+    fgRotateBatchInit(-m->originx * ARCSEC_TO_RAD, -m->originy * ARCSEC_TO_RAD);
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -63,31 +70,51 @@ GLint mesh2GL(struct mesh *m) {
 	glBegin(GL_TRIANGLE_STRIP);
 
 	for ( j = 0; j < jend; j += jstep ) {
-	    z11 = 0.03 * m->mesh_data[j         * m->rows + i        ];
-	    z12 = 0.03 * m->mesh_data[j         * m->rows + (i+istep)];
-	    z21 = 0.03 * m->mesh_data[(j+jstep) * m->rows + i        ];
-	    z22 = 0.03 * m->mesh_data[(j+jstep) * m->rows + (i+istep)];
+	    p11 = fgGeodetic2Cartesian(x1*ARCSEC_TO_RAD, y1*ARCSEC_TO_RAD);
+	    /* printf("A geodetic is (%.2f, %.2f)\n", x1, y1); */
+	    /* printf("A cart is (%.8f, %.8f, %.8f)\n", p11.x, p11.y, p11.z); */
+	    p11 = fgRotateCartesianPoint(p11);
+	    /* printf("A point is (%.8f, %.8f, %.8f)\n", p11.y, p11.z, z11); */
 
-	    v1[0] = x2 - x1; v1[1] = 0;       v1[2] = z21 - z11;
-	    v2[0] = 0;       v2[1] = y2 - y1; v2[2] = z12 - z11;
+	    p12 = fgGeodetic2Cartesian(x1*ARCSEC_TO_RAD, y2*ARCSEC_TO_RAD);
+	    p12 = fgRotateCartesianPoint(p12);
+
+	    p21 = fgGeodetic2Cartesian(x2*ARCSEC_TO_RAD, y1*ARCSEC_TO_RAD);
+	    p21 = fgRotateCartesianPoint(p21);
+
+	    p22 = fgGeodetic2Cartesian(x2*ARCSEC_TO_RAD, y2*ARCSEC_TO_RAD);
+	    p22 = fgRotateCartesianPoint(p22);
+
+	    z11 = 0.001 * m->mesh_data[j         * m->rows + i        ];
+	    z12 = 0.001 * m->mesh_data[j         * m->rows + (i+istep)];
+	    z21 = 0.001 * m->mesh_data[(j+jstep) * m->rows + i        ];
+	    z22 = 0.001 * m->mesh_data[(j+jstep) * m->rows + (i+istep)];
+
+	    v1[0] = p21.y - p11.y; v1[1] = p21.z - p11.z; v1[2] = z21 - z11;
+	    v2[0] = p12.y - p11.y; v2[1] = p12.z - p11.z; v2[2] = z12 - z11;
 	    MAT3cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
 	    glNormal3d(normal[0], normal[1], normal[2]);
-
+	    /* printf("normal 1 = (%.2f %.2f %.2f\n", normal[0], normal[1], 
+		   normal[2]); */
+	    
 	    if ( j == 0 ) {
 		/* first time through */
-		glVertex3f(x1, y1, z11);
-		glVertex3f(x1, y2, z12);
+		glVertex3d(p11.y, p11.z, z11);
+		glVertex3d(p12.y, p12.z, z12);
 	    }
-
-	    glVertex3f(x2, y1, z21);
 	    
-	    v1[0] = x2 - x1; v1[1] = y1 - y2; v1[2] = z21 - z12;
-	    v2[0] = x2 - x1; v2[1] = 0; v2[2] = z22 - z12;
+	    glVertex3d(p21.y, p21.z, z21);
+	    
+	    v1[0] = p21.y - p12.y; v1[1] = p21.z - p12.z; v1[2] = z21 - z12;
+	    v2[0] = p22.y - p12.y; v2[1] = p22.z - p12.z; v2[2] = z22 - z12;
 	    MAT3cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
 	    glNormal3d(normal[0], normal[1], normal[2]);
-	    glVertex3f(x2, y2, z22);
+	    /* printf("normal 2 = (%.2f %.2f %.2f\n", normal[0], normal[1], 
+		   normal[2]); */
+
+	    glVertex3d(p22.y, p22.z, z22);
 
 	    x1 = x2;
 	    x2 = x1 + (m->row_step * jstep);
@@ -104,10 +131,15 @@ GLint mesh2GL(struct mesh *m) {
 }
 
 
+
 /* $Log$
-/* Revision 1.24  1997/07/05 20:43:35  curt
-/* renamed mat3 directory to Math so we could add other math related routines.
+/* Revision 1.25  1997/07/07 20:59:50  curt
+/* Working on scenery transformations to enable us to fly fluidly over the
+/* poles with no discontinuity/distortion in scenery.
 /*
+ * Revision 1.24  1997/07/05 20:43:35  curt
+ * renamed mat3 directory to Math so we could add other math related routines.
+ *
  * Revision 1.23  1997/07/03 00:51:14  curt
  * Playing with terrain color.
  *

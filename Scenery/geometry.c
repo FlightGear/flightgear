@@ -58,7 +58,11 @@ void vrmlGeomOptionName(char *name) {
 
     switch(vrmlGeometryType) {
     case VRML_ELEV_GRID:
-	if ( strcmp(name, "xDimension") == 0 ) {
+	if ( strcmp(name, "xOrigin") == 0 ) {
+	    mesh_set_option_name(&eg, "origin_lon");
+	} else if ( strcmp(name, "zOrigin") == 0 ) {
+	    mesh_set_option_name(&eg, "origin_lat");
+	} else if ( strcmp(name, "xDimension") == 0 ) {
 	    mesh_set_option_name(&eg, "rows");
 	} else if ( strcmp(name, "zDimension") == 0 ) {
 	    mesh_set_option_name(&eg, "cols");
@@ -112,9 +116,13 @@ int vrmlFreeGeometry() {
 
 
 /* $Log$
-/* Revision 1.1  1997/06/29 21:16:48  curt
-/* More twiddling with the Scenery Management system.
+/* Revision 1.2  1997/07/07 20:59:51  curt
+/* Working on scenery transformations to enable us to fly fluidly over the
+/* poles with no discontinuity/distortion in scenery.
 /*
+ * Revision 1.1  1997/06/29 21:16:48  curt
+ * More twiddling with the Scenery Management system.
+ *
  * Revision 1.1  1997/06/22 21:42:35  curt
  * Initial revision of VRML (subset) parser.
  *
