@@ -92,6 +92,8 @@ sub add_default_fields() {
                      "/surface-positions/right-aileron-pos-norm" ) );
     push( @FIELDS, ( "Elevator Pos (norm)",
                      "/surface-positions/elevator-pos-norm" ) );
+    push( @FIELDS, ( "Elevator Trim Tab Pos (norm)",
+                     "/surface-positions/elevator-trim-tab-pos-norm" ) );
     push( @FIELDS, ( "Rudder Pos (norm)",
                      "/surface-positions/rudder-pos-norm" ) );
     push( @FIELDS, ( "Flap Pos (norm)",
