@@ -215,9 +215,6 @@ bool FGProps::process_command( const char *cmd ) {
 	    string tmp;	
 	    string value = node->getStringValue ( tokens[1].c_str(), "" );
 	    if ( mode == PROMPT ) {
-		//string ttt = "debug = '" + tokens[1] + "'\n";
-		//io->writestring( ttt.c_str() );
-
 		tmp = tokens[1] + " = '" + value + "' (";
 		tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
 		tmp += ")\n";
@@ -230,16 +227,22 @@ bool FGProps::process_command( const char *cmd ) {
         if ( tokens.size() <= 2 ) {
 	    // do nothing
 	} else {
-	    node->getNode( tokens[1].c_str(), true )->setStringValue(tokens[2].c_str());
+	    string tmp = tokens[2];
+	    for ( unsigned int i = 3; i < tokens.size() - 1; i++ ) {
+		tmp += " " + tokens[i];
+	    }
+	    node->getNode( tokens[1].c_str(), true )->setStringValue(tmp.c_str());
 
-	    // now fetch and write out the new value as confirmation
-	    // of the change
-	    string value = node->getStringValue ( tokens[1].c_str(), "" );
-	    string tmp = tokens[1] + " = '" + value + "' (";
-	    tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
-	    tmp += ")\n";
- 
-	    io->writestring( tmp.c_str() );
+	    if ( mode == PROMPT ) {
+		// now fetch and write out the new value as confirmation
+		// of the change
+		string value = node->getStringValue ( tokens[1].c_str(), "" );
+		string tmp = tokens[1] + " = '" + value + "' (";
+		tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+		tmp += ")\n";
+
+		io->writestring( tmp.c_str() );
+	    }
 	}
     } else if ( command == "quit" ) {
 	close();
