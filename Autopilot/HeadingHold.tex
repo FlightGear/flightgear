@@ -1,0 +1,107 @@
+%
+% `HeadingHold.tex' -- describes the FGFS Heading Hold
+%
+%  Written by Jeff Goeke-Smith
+%
+% $Id$
+%------------------------------------------------------------------------
+
+
+\documentclass[12pt]{article}
+
+\usepackage{anysize}
+\papersize{11in}{8.5in}
+\marginsize{1in}{1in}{1in}{1in}
+
+\usepackage{amsmath}
+
+\usepackage{epsfig}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{url}
+
+
+\begin{document}
+
+
+\title{
+  Flight Gear Autopilot: \\
+  Heading Hold Module
+}
+
+
+\author{
+    Jeff Goeke-Smith \\ 
+    (\texttt{jgoeke@voyager.net})
+}
+
+
+\maketitle
+
+\section{Heading Hold}
+
+The first autopilot system implemented was a heading hold system. The
+entire point of the system was to hold a single heading by using the
+ailerons only.  Currently the system does not use the rudder for
+heading or side slip control.  The system of determining how to
+control the ailerons is a fuzzy logic system ( at least according to
+the book I borrowed from the local library) .
+
+The first stage of the autopilot system determines the relative
+heading by comparing the current heading to the target heading.  This
+step allows me to determine what direction I should turn.
+
+
+\begin{figure}[hbt]
+  \centerline{                   
+      \psfig{file=HeadingHold.eps}
+  }
+  \caption{Relative heading vs. target roll}
+  \label{fig:headinghold}
+\end{figure}
+
+
+The next step determines how far I should be rolled and in what
+direction.  By luck, or maybe by design, If I want to move to a
+negative relative heading, I need to have a negative roll. And by even
+more luck, To roll in a negative direction, I need to add negative
+aileron.  Figure \ref{fig:headinghold} shows how I determine how far I
+should be rolled.  The x-axis represents the relative heading.  The
+y-axis represents the Target Roll.  The specific values where the
+graph changes slope is determined by a series of variables in the
+Autopilot Structure.
+
+
+%                            ___________________________
+%                           /
+%                          /
+%0- - - - - - - - - - - - / - - - - - - - - - - - -
+%                        /
+%_______________________/
+%|                        |                            |
+%-180                     0                           180
+
+
+Now that the we know how far the aircraft should be rolled, we now
+determine the Relative roll. This being the current roll compared to
+the target roll.  Now that we know how far we need to roll, we employ
+a near identical copy of the above routine to determine where the
+aileron should be by using the x-axis to represent the relative roll
+and the y-axis being the aileron setting.  The system then sets the
+aileron to that setting and finishes the procedure.
+
+If anyone who reads this is interested in more information on how I
+built this system, feel free to e-mail me at
+\texttt{jgoeke@voyager.net} or read the code yourself.
+
+
+\end{document}
+
+
+%------------------------------------------------------------------------
+% $Log$
+% Revision 1.1  1999/03/09 19:09:41  curt
+% Initial revision.
+%
