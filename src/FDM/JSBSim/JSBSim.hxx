@@ -241,6 +241,12 @@ private:
     SGPropertyNode *rudder_trim;
     SGPropertyNode *stall_warning;
     
+    SGPropertyNode *elevator_pos;
+    SGPropertyNode *left_aileron_pos;
+    SGPropertyNode *right_aileron_pos;
+    SGPropertyNode *rudder_pos;
+    SGPropertyNode *flap_pos;
+    
     void init_gear(void);
     void update_gear(void);
     
