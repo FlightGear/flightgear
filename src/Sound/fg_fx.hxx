@@ -65,6 +65,7 @@ private:
   void set_playing (const char * soundName, bool state = true);
 
   double _old_flap_position;
+  double _old_gear_position;
 
   bool _gear_on_ground[MAX_GEAR];
 
@@ -77,6 +78,8 @@ private:
 
 				// one-off sounds
   FGSimpleSound * _flaps;
+  FGSimpleSound * _gear_up;
+  FGSimpleSound * _gear_dn;
   FGSimpleSound * _squeal;
   FGSimpleSound * _click;
 
@@ -84,7 +87,9 @@ private:
   const SGPropertyNode * _engine_running_prop[MAX_ENGINES];
   const SGPropertyNode * _engine_cranking_prop[MAX_ENGINES];
   const SGPropertyNode * _stall_warning_prop;
+  const SGPropertyNode * _vc_prop;
   const SGPropertyNode * _flaps_prop;
+  const SGPropertyNode * _gear_prop;
 
 };
 

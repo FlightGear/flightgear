@@ -40,14 +40,18 @@ static const char * crank_names[FGFX::MAX_ENGINES] = {
 
 FGFX::FGFX ()
   : _old_flap_position(0),
+    _old_gear_position(0),
     _wind(0),
     _stall(0),
     _rumble(0),
     _flaps(0),
+    _gear_up(0),
+    _gear_dn(0),
     _squeal(0),
     _click(0),
     _stall_warning_prop(0),
-    _flaps_prop(0)
+    _flaps_prop(0),
+    _gear_prop(0)
 {
   for (int i = 0; i < MAX_ENGINES; i++) {
     _engine[i] = 0;
@@ -70,6 +74,8 @@ FGFX::~FGFX ()
   delete _rumble;
 
   delete _flaps;
+  delete _gear_up;
+  delete _gear_dn;
   delete _squeal;
   delete _click;
 }
@@ -86,14 +92,17 @@ FGFX::init ()
   for (int i = 0; i < MAX_ENGINES; i++) {
 				// Engine
     _engine[i] =
-      new FGSimpleSound(fgGetString("/sim/sounds/engine", "Sounds/wasp.wav"));
+      new FGSimpleSound(fgGetString("/sim/sounds/engine/path",
+				    "Sounds/wasp.wav"));
+    _engine[i]->set_volume(fgGetFloat("/sim/sounds/engine/volume", 1.0));
+    _engine[i]->set_pitch(fgGetFloat("/sim/sounds/engine/pitch", 1.0));
     mgr->add(_engine[i], engine_names[i]);
 
 				// Starter
-    _crank[i] = new FGSimpleSound(fgGetString("/sim/sounds/cranking",
+    _crank[i] = new FGSimpleSound(fgGetString("/sim/sounds/cranking/path",
 					      "Sounds/cranking.wav"));
-    _crank[i]->set_pitch(1.25);
-    _crank[i]->set_volume(0.175);
+    _crank[i]->set_volume(fgGetFloat("/sim/sounds/cranking/volume", 0.175));
+    _crank[i]->set_pitch(fgGetFloat("/sim/sounds/cranking/pitch", 1.25));
     mgr->add(_crank[i], crank_names[i]);
   }
 
@@ -101,45 +110,70 @@ FGFX::init ()
   //
   // Create and add the wind noise.
   //
-  _wind = new FGSimpleSound(fgGetString("/sim/sounds/wind",
+  _wind = new FGSimpleSound(fgGetString("/sim/sounds/wind/path",
 					"Sounds/wind.wav"));
+  _wind->set_volume(fgGetFloat("/sim/sounds/wind/volume", 1.0));
+  _wind->set_pitch(fgGetFloat("/sim/sounds/wind/pitch", 1.0));
   mgr->add(_wind, "wind");
 
 
   //
   // Create and add the stall noise.
   //
-  _stall = new FGSimpleSound(fgGetString("/sim/sounds/stall",
+  _stall = new FGSimpleSound(fgGetString("/sim/sounds/stall/path",
 					 "Sounds/stall.wav"));
+  _stall->set_volume(fgGetFloat("/sim/sounds/stall/volume", 1.0));
+  _stall->set_pitch(fgGetFloat("/sim/sounds/stall/pitch", 1.0));
   mgr->add(_stall, "stall");
 
   //
   // Create and add the rumble noise.
   //
-  _rumble = new FGSimpleSound(fgGetString("/sim/sounds/rumble",
+  _rumble = new FGSimpleSound(fgGetString("/sim/sounds/rumble/path",
 					  "Sounds/rumble.wav"));
+  _rumble->set_volume(fgGetFloat("/sim/sounds/rumble/volume", 1.0));
+  _rumble->set_pitch(fgGetFloat("/sim/sounds/rumble/pitch", 1.0));
   mgr->add(_rumble, "rumble");
 
 
   //
   // Create and add the flaps noise
   //
-  _flaps = new FGSimpleSound(fgGetString("/sim/sounds/flaps",
+  _flaps = new FGSimpleSound(fgGetString("/sim/sounds/flaps/path",
 					 "Sounds/flaps.wav"));
-  _flaps->set_volume(0.50);
+  _flaps->set_volume(fgGetFloat("/sim/sounds/flaps/volume", 0.5));
+  _flaps->set_pitch(fgGetFloat("/sim/sounds/flaps/pitch", 1.0));
   mgr->add(_flaps, "flaps");
+
+  //
+  // Create and add the gear noises.
+  //
+  _gear_up = new FGSimpleSound(fgGetString("/sim/sounds/gear-up/path",
+					   "Sounds/gear-up.wav"));
+  _gear_dn = new FGSimpleSound(fgGetString("/sim/sounds/gear-down/path",
+					   "Sounds/gear-dn.wav"));
+  _gear_up->set_volume(fgGetFloat("/sim/sounds/gear-up/volume", 1.0));
+  _gear_dn->set_volume(fgGetFloat("/sim/sounds/gear-down/volume", 1.0));
+  _gear_up->set_pitch(fgGetFloat("/sim/sounds/gear-up/pitch", 1.0));
+  _gear_dn->set_pitch(fgGetFloat("/sim/sounds/gear-down/pitch", 1.0));
+  mgr->add(_gear_up, "gear-up");
+  mgr->add(_gear_dn, "gear-down");
 
   //
   // Create and add the squeal noise.
   //
-  _squeal = new FGSimpleSound(fgGetString("/sim/sounds/squeal",
+  _squeal = new FGSimpleSound(fgGetString("/sim/sounds/squeal/path",
 					  "Sounds/squeal.wav"));
+  _squeal->set_volume(fgGetFloat("/sim/sounds/squeal/volume", 1.0));
+  _squeal->set_pitch(fgGetFloat("/sim/sounds/squeal/pitch", 1.0));
   mgr->add(_squeal, "squeal");
 
   //
   // Create and add the click noise.
-  _click = new FGSimpleSound(fgGetString("/sim/sounds/click",
+  _click = new FGSimpleSound(fgGetString("/sim/sounds/click/path",
 					 "Sounds/click.wav"));
+  _flaps->set_volume(fgGetFloat("/sim/sounds/click/volume", 1.0));
+  _flaps->set_pitch(fgGetFloat("/sim/sounds/click/pitch", 1.0));
   mgr->add(_click, "click");
 
 
@@ -155,7 +189,9 @@ FGFX::init ()
     _engine_cranking_prop[i] = fgGetNode(buf, true);
   }
   _stall_warning_prop = fgGetNode("/sim/aircraft/alarms/stall-warning", true);
+  _vc_prop = fgGetNode("/velocities/airspeed-kt", true);
   _flaps_prop = fgGetNode("/controls/flaps", true);
+  _gear_prop = fgGetNode("/controls/gear-down", true);
 }
 
 void
@@ -249,7 +285,8 @@ FGFX::update ()
   ////////////////////////////////////////////////////////////////////
 
   double stall = _stall_warning_prop->getDoubleValue();
-  if (stall > 0.0) {
+  double vc = _vc_prop->getDoubleValue();
+  if (stall > 0.0 && vc > 30.0) {
     _stall->set_volume(stall);
     set_playing("stall", true);
   } else {
@@ -306,7 +343,7 @@ FGFX::update ()
   }
 
 
-  ////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
   // Check for flap movement.
   ////////////////////////////////////////////////////////////////////
 
@@ -314,6 +351,21 @@ FGFX::update ()
   if (fabs(flap_position - _old_flap_position) > 0.1) {
     mgr->play_once("flaps");
     _old_flap_position = flap_position;
+  }
+
+
+  ////////////////////////////////////////////////////////////////////
+  // Check for gear movement.
+  ////////////////////////////////////////////////////////////////////
+  
+  double gear_position = _gear_prop->getDoubleValue();
+  if (gear_position != _old_gear_position) {
+    if (gear_position < _old_gear_position) {
+      mgr->play_once("gear-up");
+    } else {
+      mgr->play_once("gear-down");
+    }
+    _old_gear_position = gear_position;
   }
 
   // TODO: click
