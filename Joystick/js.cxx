@@ -1,5 +1,5 @@
 
-#include "js.h"
+#include "js.hxx"
 
 jsJoystick js0 ( 0 ) ;
 jsJoystick js1 ( 1 ) ;

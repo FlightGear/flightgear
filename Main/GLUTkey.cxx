@@ -272,10 +272,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 // Handle "special" keyboard events
 void GLUTspecialkey(int k, int x, int y) {
-    fgCONTROLS *c;
     fgVIEW *v;
 
-    c = current_aircraft.controls;
     v = &current_view;
 
     fgPrintf( FG_INPUT, FG_DEBUG, "Special key hit = %d", k);
@@ -389,6 +387,10 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.31  1998/11/02 18:25:37  curt
+// Check for __CYGWIN__ (b20) as well as __CYGWIN32__ (pre b20 compilers)
+// Other misc. tweaks.
+//
 // Revision 1.30  1998/10/25 14:08:46  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //

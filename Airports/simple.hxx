@@ -70,7 +70,7 @@ operator >> ( istream& in, fgAIRPORT& a )
 
 class fgAIRPORTS {
 public:
-#ifdef _FG_NO_DEFAULT_TEMPLATE_ARGS
+#ifdef FG_NO_DEFAULT_TEMPLATE_ARGS
     typedef set< fgAIRPORT, less< fgAIRPORT > > container;
 #else
     typedef set< fgAIRPORT > container;
@@ -105,6 +105,10 @@ public:
 
 
 // $Log$
+// Revision 1.5  1998/11/02 18:25:34  curt
+// Check for __CYGWIN__ (b20) as well as __CYGWIN32__ (pre b20 compilers)
+// Other misc. tweaks.
+//
 // Revision 1.4  1998/09/08 21:38:43  curt
 // Changes by Bernie Bright.
 //

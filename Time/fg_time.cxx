@@ -44,7 +44,7 @@
 
 #ifdef  WIN32
 #  include <windows.h>
-#  ifdef __CYGWIN32__
+#  if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
 #    define NEAR /* */
 #    define FAR  /* */
 #  endif
@@ -448,6 +448,10 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.20  1998/11/02 18:25:38  curt
+// Check for __CYGWIN__ (b20) as well as __CYGWIN32__ (pre b20 compilers)
+// Other misc. tweaks.
+//
 // Revision 1.19  1998/10/17 01:34:29  curt
 // C++ ifying ...
 //
