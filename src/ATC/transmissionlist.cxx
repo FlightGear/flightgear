@@ -142,7 +142,7 @@ bool FGTransmissionList::query_station( const int &station, FGTransmission *t,
 string FGTransmissionList::gen_text(const int &station, const TransCode code, 
                                     const TransPar &tpars, const bool ttext )
 {
-	const int cmax = 100;
+	const int cmax = 300;
 	string message;
 	char tag[4];
 	char crej = '@';
@@ -167,6 +167,7 @@ string FGTransmissionList::gen_text(const int &station, const TransCode code,
 			else message = current->get_menutext();
 			strcpy( &mes[0], message.c_str() ); 
 			
+			int check = 0;	// If mes gets overflowed the while loop can go infinite
 			while ( strchr(&mes[0], crej) != NULL  ) {
 				pos = strchr( &mes[0], crej );
 				bcopy(pos, &tag[0], 3);
@@ -240,6 +241,12 @@ string FGTransmissionList::gen_text(const int &station, const TransCode code,
 				}
 				strcat( &dum[0], &mes[len+3] );
 				strcpy( &mes[0], &dum[0] );
+				
+				++check;
+				if(check > 10) {
+					SG_LOG(SG_ATC, SG_WARN, "WARNING: Possibly endless loop terminated in FGTransmissionlist::gen_text(...)"); 
+					break;
+				}
 			}
 			
 			//cout << mes  << endl;  
