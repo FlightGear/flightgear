@@ -44,6 +44,7 @@
 #include "../Math/fg_random.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
+#include "../Time/fg_time.h"
 #include "../Time/fg_timer.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
@@ -254,12 +255,11 @@ static void fgUpdateVisuals( void ) {
 
 void fgUpdateTimeDepCalcs(int multi_loop) {
     struct flight_params *f;
-    struct fgCartesianPoint sunpos;
-    double sun_lon, sun_gd_lat, sun_gc_lat, sl_radius;
+    struct time_params *t;
     int i;
-    static int time_warp = 0;
 
     f = &current_aircraft.flight;
+    t = &cur_time_params;
 
     /* update the flight model */
     if ( multi_loop < 0 ) {
@@ -269,18 +269,13 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     /* printf("updating flight model x %d\n", multi_loop); */
     fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
 
-    /* refresh sun position */
-    time_warp += 1200;
-    fgSunPosition(time(NULL) + time_warp, &sun_lon, &sun_gd_lat);
-    fgGeodToGeoc(sun_gd_lat, 20000.0, &sl_radius, &sun_gc_lat);
-    sunpos = fgPolarToCart(sun_lon, sun_gc_lat, sl_radius);
-    printf("Time warp = %.2f  Sun position is (%.2f, %.2f, %.2f)\n", 
-	   time_warp / 3600.0, sunpos.x, sunpos.y, sunpos.z);
+    /* refresh shared sun position and sun_vec */
+    fgUpdateSunPos();
 
     /* the sun position has to be translated just like everything else */
-    sun_vec[0] = sunpos.x - scenery.center.x; 
-    sun_vec[1] = sunpos.y - scenery.center.y;
-    sun_vec[2] = sunpos.z - scenery.center.z;
+    sun_vec[0] = t->fg_sunpos.x - scenery.center.x; 
+    sun_vec[1] = t->fg_sunpos.y - scenery.center.y;
+    sun_vec[2] = t->fg_sunpos.z - scenery.center.z;
     /* make this a directional light source only */
     sun_vec[3] = 0.0;
 
@@ -531,14 +526,15 @@ int main( int argc, char *argv[] ) {
     FG_Runway_longitude = -398391.28;
     FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
-    /* Initial Position */
+    /* Initial Position at GLOBE airport */
     FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
     FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    /* FG_Latitude  = 0.0; */
-    /* FG_Longitude = 0.0; */
-    /* FG_Altitude = 15000.0; */
+    /* Initial Position north of the city of Globe */
+    /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Altitude = 0.0 + 3.758099; */
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
 	   FG_Longitude, FG_Altitude);
@@ -551,8 +547,8 @@ int main( int argc, char *argv[] ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    /* FG_Psi   =  270.0 * DEG_TO_RAD; */
-    FG_Psi   =  0.0 * DEG_TO_RAD;
+    FG_Psi   =  270.0 * DEG_TO_RAD;
+    /* FG_Psi   =  0.0 * DEG_TO_RAD; */
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -645,10 +641,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.5  1997/08/06 21:08:32  curt
-/* Sun position now *really* works (I think) ... I still have sun time warping
-/* code in place, probably should remove it soon.
+/* Revision 1.6  1997/08/13 20:24:56  curt
+/* Changes due to changing sunpos interface.
 /*
+ * Revision 1.5  1997/08/06 21:08:32  curt
+ * Sun position now *really* works (I think) ... I still have sun time warping
+ * code in place, probably should remove it soon.
+ *
  * Revision 1.4  1997/08/06 15:41:26  curt
  * Working on correct sun position.
  *
