@@ -65,6 +65,7 @@ public:
   static double getLatitude ();
   static double getLongitude ();
   static double getAltitude ();
+  static double getAGL ();
 
   static void setLatitude (double latitude);
   static void setLongitude (double longitude);

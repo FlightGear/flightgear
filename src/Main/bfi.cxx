@@ -37,6 +37,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <Autopilot/autopilot.hxx>
+#include <Scenery/scenery.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Cockpit/radiostack.hxx>
@@ -304,6 +305,18 @@ double
 FGBFI::getAltitude ()
 {
   return current_aircraft.fdm_state->get_Altitude();
+}
+
+
+
+/**
+ * Return the current altitude in above the terrain.
+ */
+double
+FGBFI::getAGL ()
+{
+  return current_aircraft.fdm_state->get_Altitude()
+	 - scenery.cur_elev * METER_TO_FEET;
 }
 
 
