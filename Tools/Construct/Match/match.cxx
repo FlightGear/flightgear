@@ -25,6 +25,7 @@
 #  include <config.h>
 #endif
 
+#include <Misc/fgstream.hxx>
 
 #include "match.hxx"
 
@@ -35,6 +36,41 @@ FGMatch::FGMatch( void ) {
 
 
 FGMatch::~FGMatch( void ) {
+}
+
+
+static bool check_corner( FGMatch::neighbor_type n, FGBucket b ) {
+    double clon = b.get_center_lon();
+    double clat = b.get_center_lat();
+
+    if ( n == FGMatch::SW_Corner ) {
+	fgBucketOffset(clon, clat, -1, 0)
+    }
+}
+
+
+// load any previously existing shared data from all neighbors
+void FGMatch::load_neighbor_shared( FGConstruct& c ) {
+    sw_flag = se_flag = ne_flag = nw_flag = false;
+    north_flag = south_flag = east_flag = west_flag = false;
+
+    string base = c.get_work_base();
+    FGBucket b = c.get_bucket();
+
+    string dir = base + ".shared/Scenery/" + b.gen_base_path();
+    string command = "mkdir -p " + dir;
+    string file = dir + "/" + b.gen_index_str();
+    cout << "shared data will be written to " << file << endl;
+
+    system(command.c_str());
+    fg_gzifstream in( file );
+    if ( !in ) {
+        cout << "Cannot open file: " << file << endl;
+    }
+
+    while ( in ) { }
+
+    check_corner( SW_Corner, b );
 }
 
 
@@ -212,6 +248,7 @@ void FGMatch::write_shared( FGConstruct& c ) {
 		 west_normals[i].z() );
     }
 
+#if 0 // not needed
     point_list nodes = c.get_geod_nodes();
     Point3D p1, p2;
 
@@ -242,6 +279,10 @@ void FGMatch::write_shared( FGConstruct& c ) {
 	fprintf( fp, "w_seg %.6f %.6f %.6f %.6f\n", 
 		 p1.x(), p1.y(), p2.x(), p2.y() );
     }
+#endif
 
     fclose( fp );
+
+    command = "gzip --force --best " + file;
+    system(command.c_str());
 }

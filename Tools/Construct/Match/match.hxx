@@ -52,11 +52,26 @@ private:
     point_list north_normals, south_normals, east_normals, west_normals;
     point_list body_normals;
 
+    // flags
+    bool sw_flag, se_flag, ne_flag, nw_flag;
+    bool north_flag, south_flag, east_flag, west_flag;
+
     // segment breakdown
     triseg_list north_segs, south_segs, east_segs, west_segs;
     triseg_list body_segs;
 
 public:
+
+    enum neighbor_type {
+	SW_Corner = 1,
+	SE_Corner = 2,
+	NE_Corner = 3,
+	NW_Corner = 4,
+	NORTH = 5,
+	SOUTH = 6,
+	EAST = 7,
+	WEST = 8
+    };
 
     // Constructor
     FGMatch( void );
@@ -65,7 +80,7 @@ public:
     ~FGMatch( void );
 
     // load any previously existing shared data from all neighbors
-    void load_neighbor_data();
+    void load_neighbor_shared( FGConstruct& c );
 
     // extract the shared edge points, normals, and segments.  This
     // must be done after calling load_neighbor_data() and will ignore
