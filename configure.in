@@ -80,8 +80,13 @@ AM_CONDITIONAL(ENABLE_IRIX_AUDIO, test -r /usr/include/audio.h)
 AM_CONDITIONAL(ENABLE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
 
 dnl Check for (currently Linux only style) joystick support
-AM_CONDITIONAL(ENABLE_JOYSTICK_SUPPORT, \
-	test -r /usr/include/linux/joystick.h )
+# AM_CONDITIONAL(ENABLE_JOYSTICK_SUPPORT, \
+#	test -r /usr/include/linux/joystick.h \
+#	-o "x$ac_cv_header_windows_h" = "xyes" )
+
+AM_CONDITIONAL(ENABLE_LINUX_JOYSTICK, test -r /usr/include/linux/joystick.h )
+
+# AM_CONDITIONAL(ENABLE_GLUT_JOYSTICK, "x$ac_cv_header_windows_h" = "xyes" )
 
 dnl extra library and include directories
 EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"
