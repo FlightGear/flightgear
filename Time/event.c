@@ -142,6 +142,8 @@ void fgEventRun(int ptr) {
 
     e = &events[ptr];
     
+    printf("Running %s\n", e->description);
+
     /* record starting time */
 #ifdef USE_FTIME
     ftime(&e->last_run);
@@ -196,6 +198,7 @@ void fgEventRun(int ptr) {
 
 /* Initialize the scheduling subsystem */
 void fgEventInit() {
+    printf("Initializing event manager\n");
     event_ptr = 0;
     initq();
 }
@@ -207,6 +210,8 @@ int fgEventRegister(char *desc, void (*event)(), int status, int interval) {
     struct fgEVENT *e;
 
     e = &events[event_ptr];
+
+    printf("Registering event: %s\n", desc);
 
     if ( strlen(desc) < 256 ) {
 	strcpy(e->description, desc);
@@ -257,13 +262,17 @@ void fgEventResume() {
 void fgEventPrintStats() {
     int i;
 
-    printf("Event Stats\n");
+    if ( event_ptr > 0 ) {
+	printf("\n");
+	printf("Event Stats\n");
+	printf("----- -----\n");
 
-    for ( i = 0; i < event_ptr; i++ ) {
-	printf("  %s  cum=%d min=%d max=%d count=%d ave=%.2f\n", 
-	       events[i].description, events[i].cum_time, events[i].min_time,
-	       events[i].max_time, events[i].count, 
-	       events[i].cum_time / (double)events[i].count);
+	for ( i = 0; i < event_ptr; i++ ) {
+	    printf("  %s  cum=%d min=%d max=%d count=%d ave=%.2f\n", 
+		   events[i].description, events[i].cum_time, 
+		   events[i].min_time, events[i].max_time, events[i].count, 
+		   events[i].cum_time / (double)events[i].count);
+	}
     }
 }
 
@@ -279,7 +288,7 @@ void fgEventProcess() {
 #endif /* USE_FTIME */
     int i;
 
-    /* printf("Processing events\n"); */
+    printf("Processing events\n");
     
     /* get the current time */
 #ifdef USE_FTIME
@@ -323,7 +332,10 @@ void fgEventProcess() {
 
 
 /* $Log$
-/* Revision 1.1  1997/12/30 04:19:22  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/30 20:47:58  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.1  1997/12/30 04:19:22  curt
+ * Initial revision.
+ *
  */

@@ -45,7 +45,7 @@
 #include "../Include/types.h"
 
 /* update the cur_time_params structure with the current sun position */
-void fgUpdateSunPos(struct fgCartesianPoint scenery_center);
+void fgUpdateSunPos();
 
 void fgSunPosition(time_t ssue, double *lon, double *lat);
 

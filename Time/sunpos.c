@@ -51,6 +51,7 @@
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
 
+
 #undef E
 
 
@@ -260,7 +261,7 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
 
 /* update the cur_time_params structure with the current sun position */
-void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
+void fgUpdateSunPos() {
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
@@ -272,6 +273,8 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
     t = &cur_time_params;
     v = &current_view;
 
+    printf("  Updating Sun position\n");
+
     time_warp += 0; /* increase this to make the world spin real fast */
 
     fgSunPosition(t->cur_time + time_warp, &l->sun_lon, &sun_gd_lat);
@@ -280,7 +283,7 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
     l->fg_sunpos = fgPolarToCart(l->sun_lon, l->sun_gc_lat, sl_radius);
 
-    /* printf("Geodetic lat = %.5f Geocentric lat = %.5f\n", sun_gd_lat,
+    /* printf("  Geodetic lat = %.5f Geocentric lat = %.5f\n", sun_gd_lat,
        t->sun_gc_lat); */
 
     /* FALSE! (?> the sun position has to be translated just like
@@ -310,16 +313,19 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
     MAT3_NORMALIZE_VEC(nsun, temp);
 
     l->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
-    printf("SUN ANGLE relative to current location = %.3f rads.\n", 
+    printf("  SUN ANGLE relative to current location = %.3f rads.\n", 
 	   l->sun_angle);
 }
 
 
 /* $Log$
-/* Revision 1.18  1997/12/23 04:58:40  curt
-/* Tweaked the sky coloring a bit to build in structures to allow finer rgb
-/* control.
+/* Revision 1.19  1997/12/30 20:47:59  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.18  1997/12/23 04:58:40  curt
+ * Tweaked the sky coloring a bit to build in structures to allow finer rgb
+ * control.
+ *
  * Revision 1.17  1997/12/15 23:55:08  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

@@ -43,6 +43,7 @@
 #include "../Scenery/sky.h"
 #include "../Scenery/stars.h"
 #include "../Scenery/sun.h"
+#include "../Time/event.h"
 #include "../Time/fg_time.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
@@ -59,6 +60,9 @@ void fgInitGeneral( void ) {
 
     g = &general;
 
+    printf("General Initialization\n");
+    printf("======= ==============\n");
+
     /* seed the random number generater */
     fg_srandom();
 
@@ -69,6 +73,8 @@ void fgInitGeneral( void ) {
 	exit(0);
     } 
     printf("FG_ROOT = %s\n", g->root_dir);
+
+    printf("\n");
 }
 
 
@@ -87,6 +93,8 @@ void fgInitSubsystems( void ) {
     t = &cur_time_params;
     v = &current_view;
 
+    printf("Initialize Subsystems\n");
+    printf("========== ==========\n");
 
     /****************************************************************
      * The following section sets up the flight model EOM parameters and 
@@ -160,12 +168,19 @@ void fgInitSubsystems( void ) {
     /* fgSlewInit(-335340,162540, 15, 4.38); */
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
+    /* Initialize the event manager */
+    fgEventInit();
+
+    /* Dump event stats every 60 seconds */
+    fgEventRegister( "fgEventPrintStats()", fgEventPrintStats, 
+		     FG_EVENT_READY, 60000 );
+
     /* Initialize "time" */
     fgTimeInit(t);
     fgTimeUpdate(f, t);
 
     /* Initialize shared sun position and sun_vec */
-    fgUpdateSunPos(scenery.center);
+    fgEventRegister( "fgUpdateSunPos()", fgUpdateSunPos, FG_EVENT_READY, 1000 );
 
     /* Initialize view parameters */
     fgViewInit(v);
@@ -174,13 +189,10 @@ void fgInitSubsystems( void ) {
     fgWeatherInit();
 
     /* Initialize the Cockpit subsystem */
-    /*
-    if( fgCockpitInit( current_aircraft ) == NULL )
-    {
+    if( fgCockpitInit( current_aircraft ) == NULL ) {
     	printf( "Error in Cockpit initialization!\n" );
     	exit( 1 );
     }
-    */
 
     /* Initialize the orbital elements of sun, moon and mayor planets */
     fgSolarSystemInit(*t);
@@ -208,7 +220,7 @@ void fgInitSubsystems( void ) {
      * eventually */
     cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
 			     FG_Latitude  * RAD_TO_DEG * 3600.0);
-    printf("Ground elevation is %.2f meters here.\n", cur_elev);
+    printf("True ground elevation is %.2f meters here.\n", cur_elev);
     if ( cur_elev > -9990.0 ) {
 	FG_Runway_altitude = cur_elev * METER_TO_FEET;
     }
@@ -216,7 +228,7 @@ void fgInitSubsystems( void ) {
     if ( FG_Altitude < FG_Runway_altitude ) {
 	FG_Altitude = FG_Runway_altitude + 3.758099;
     }
-    printf("Updated position is: (%.4f, %.4f, %.2f)\n", 
+    printf("Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n", 
 	   FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG, 
 	   FG_Altitude * FEET_TO_METER);
     /* end of thing that I just stuck in that I should probably move */
@@ -227,20 +239,25 @@ void fgInitSubsystems( void ) {
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
     /* To HUD or not to HUD */
-    show_hud = 1;
+    show_hud = 0;
 
     /* Let's show the instrument panel */
-    displayInstruments = 1;
+    displayInstruments = 0;
 
     /* Joystick support */
     fgJoystickInit( 0 );
+
+    printf("\n");
 }
 
 
 /* $Log$
-/* Revision 1.23  1997/12/30 16:36:50  curt
-/* Merged in Durk's changes ...
+/* Revision 1.24  1997/12/30 20:47:44  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.23  1997/12/30 16:36:50  curt
+ * Merged in Durk's changes ...
+ *
  * Revision 1.22  1997/12/19 23:34:05  curt
  * Lot's of tweaking with sky rendering and lighting.
  *

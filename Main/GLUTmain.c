@@ -348,9 +348,9 @@ static void fgRenderFrame( void ) {
     fgSceneryRender();
 
     /* display HUD */
-    /* if( show_hud ) {
+    if( show_hud ) {
      	fgCockpitUpdate();
-    } */
+    }
 
     /* display instruments */
     if (displayInstruments) {
@@ -512,6 +512,7 @@ void fgInitTimeDepCalcs() {
 }
 */
 
+
 /* What should we do when we have nothing else to do?  How about get
  * ready for the next move and update the display? */
 static void fgMainLoop( void ) {
@@ -555,6 +556,7 @@ static void fgMainLoop( void ) {
     printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
 	   remainder);
 
+    /* Run flight model */
     if ( ! use_signals ) {
 	/* flight model */
 	fgUpdateTimeDepCalcs(multi_loop);
@@ -579,6 +581,9 @@ static void fgMainLoop( void ) {
     }
 
     fgAircraftOutputCurrent(a);
+
+    /* Process/manage pending events */
+    fgEventProcess();
 
     /* redraw display */
     fgRenderFrame();
@@ -689,9 +694,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.42  1997/12/30 16:36:47  curt
-/* Merged in Durk's changes ...
+/* Revision 1.43  1997/12/30 20:47:43  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.42  1997/12/30 16:36:47  curt
+ * Merged in Durk's changes ...
+ *
  * Revision 1.41  1997/12/30 13:06:56  curt
  * A couple lighting tweaks ...
  *

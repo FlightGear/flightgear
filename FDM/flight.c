@@ -31,6 +31,8 @@
 int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt) {
     int result;
 
+    printf("Initializing flight model\n");
+
     if ( model == FG_LARCSIM ) {
 	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
 	fgLaRCsimInit(dt);
@@ -61,10 +63,13 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/10 22:37:42  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.5  1997/12/30 20:47:37  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.4  1997/12/10 22:37:42  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.3  1997/08/27 03:30:04  curt
  * Changed naming scheme of basic shared structures.
  *

@@ -39,6 +39,8 @@ void fgWeatherInit(void) {
 
     w = &current_weather;
 
+    printf("Initializing weather subsystem\n");
+
     /* Configure some wind */
     /* FG_V_north_airmass = 15; */ /* ft/s =~ 10mph */
 
@@ -62,10 +64,13 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 
 
 /* $Log$
-/* Revision 1.8  1997/12/11 04:43:58  curt
-/* Fixed sun vector and lighting problems.  I thing the moon is now lit
-/* correctly.
+/* Revision 1.9  1997/12/30 20:48:03  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.8  1997/12/11 04:43:58  curt
+ * Fixed sun vector and lighting problems.  I thing the moon is now lit
+ * correctly.
+ *
  * Revision 1.7  1997/12/10 22:37:56  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

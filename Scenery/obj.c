@@ -89,6 +89,8 @@ GLint fgObjLoad(char *path) {
     while ( fgets(line, 250, f) != NULL ) {
 	if ( line[0] == '#' ) {
 	    /* comment -- ignore */
+	} else if ( line[0] == '\n' ) {
+	    /* empty line -- ignore */
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
@@ -121,7 +123,7 @@ GLint fgObjLoad(char *path) {
 	    }
 	} else if ( strncmp(line, "winding ", 8) == 0 ) {
 	    sscanf(line+8, "%s", winding_str);
-	    printf("WINDING = %s\n", winding_str);
+	    printf("    WINDING = %s\n", winding_str);
 
 	    /* can't call xglFrontFace() between xglBegin() & xglEnd() */
 	    xglEnd();
@@ -146,7 +148,7 @@ GLint fgObjLoad(char *path) {
 		first = 0;
 	    }
 
-	    printf("new tri strip = %s", line);
+	    /* printf("    new tri strip = %s", line); */
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
 	    /* printf("(t) = "); */
@@ -315,9 +317,12 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.14  1997/12/30 01:38:46  curt
-/* Switched back to per vertex normals and smooth shading for terrain.
+/* Revision 1.15  1997/12/30 20:47:51  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.14  1997/12/30 01:38:46  curt
+ * Switched back to per vertex normals and smooth shading for terrain.
+ *
  * Revision 1.13  1997/12/18 23:32:36  curt
  * First stab at sky dome actually starting to look reasonable. :-)
  *

@@ -120,20 +120,25 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
       default:
 	printf("index %d out of range !!!!\n", idx);
       }
-    printf("Geocentric dist     %f\n"
-           "Heliocentric dist   %f\n"
-	   "Distance to the sun %f\n"
-	   "Phase angle         %f\n"
-	   "Brightness          %f\n", R, r, s, FV, result.magnitude);
+    printf("    Planet found at %f (ra), %f (dec)\n", 
+	   result.RightAscension, result.Declination);
+    printf("      Geocentric dist     %f\n"
+           "      Heliocentric dist   %f\n"
+	   "      Distance to the sun %f\n"
+	   "      Phase angle         %f\n"
+	   "      Brightness          %f\n", R, r, s, FV, result.magnitude);
     return result;
 }
 
 
 
 /* $Log$
-/* Revision 1.3  1997/12/30 16:36:52  curt
-/* Merged in Durk's changes ...
+/* Revision 1.4  1997/12/30 20:47:52  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.3  1997/12/30 16:36:52  curt
+ * Merged in Durk's changes ...
+ *
  * Revision 1.2  1997/12/12 21:41:29  curt
  * More light/material property tweaking ... still a ways off.
  *

@@ -68,6 +68,8 @@ void fgStarsInit() {
     double ra_save1, decl_save1;
     int count, i, j, max_stars;
 
+    printf("Initializing stars\n");
+
     g = &general;
 
     /* build the full path name to the stars data base file */
@@ -79,7 +81,7 @@ void fgStarsInit() {
     max_stars = FG_MAX_STARS;
 
     for ( i = 0; i < FG_STAR_LEVELS; i++ ) {
-	printf("Loading %d Stars: %s\n", max_stars, path);
+	printf("  Loading %d Stars: %s\n", max_stars, path);
 
 	if ( (fd = fopen(path, "r")) == NULL ) {
 	    printf("Cannot open star file: '%s'\n", path);
@@ -95,14 +97,14 @@ void fgStarsInit() {
 	while ( (fgets(line, 256, fd) != NULL) && (count < max_stars) ) {
 	    front = line;
 
-	    /* printf("Read line = %s", front); */
+	    /* printf("  Read line = %s", front); */
 
 	    /* advance to first non-whitespace character */
 	    while ( (front[0] == ' ') || (front[0] == '\t') ) {
 		front++;
 	    }
 
-	    /* printf("Line length (after trimming) = %d\n", strlen(front)); */
+	    /* printf("  Line length (after trimming) = %d\n", strlen(front));*/
 
 	    if ( front[0] == '#' ) {
 		/* comment */
@@ -148,7 +150,7 @@ void fgStarsInit() {
 		if ( magnitude < 0.0 ) { magnitude = 0.0; }
 		magnitude = 
 		    magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1);
-		/* printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
+		/* printf("  Found star: %d %s, %.3f %.3f %.3f\n", count,
 		       name, right_ascension, declination, magnitude); */
 
 		xglColor3f( magnitude, magnitude, magnitude );
@@ -168,8 +170,6 @@ void fgStarsInit() {
 	for ( j = 2; j < 9; j++ ) {
 	    pltPos = fgCalculatePlanet(pltOrbElements[j], 
 				       pltOrbElements[0], cur_time_params, j);
-	    printf("Planet found at %f (ra), %f (dec)\n", 
-		   pltPos.RightAscension, pltPos.Declination);
 	    /* give the planets a temporary color, for testing purposes */
 	    /* xglColor3f( 1.0, 0.0, 0.0); */
 
@@ -278,9 +278,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.22  1997/12/30 16:36:53  curt
-/* Merged in Durk's changes ...
+/* Revision 1.23  1997/12/30 20:47:53  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.22  1997/12/30 16:36:53  curt
+ * Merged in Durk's changes ...
+ *
  * Revision 1.21  1997/12/19 23:35:00  curt
  * Lot's of tweaking with sky rendering and lighting.
  *

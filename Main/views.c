@@ -42,6 +42,8 @@ struct fgVIEW current_view;
 
 /* Initialize a view structure */
 void fgViewInit(struct fgVIEW *v) {
+    printf("Initializing View parameters\n");
+
     v->view_offset = 0.0;
     v->goal_view_offset = 0.0;
 }
@@ -181,9 +183,12 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.6  1997/12/22 04:14:32  curt
-/* Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+/* Revision 1.7  1997/12/30 20:47:45  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.6  1997/12/22 04:14:32  curt
+ * Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+ *
  * Revision 1.5  1997/12/18 04:07:02  curt
  * Worked on properly translating and positioning the sky dome.
  *

@@ -52,6 +52,8 @@ struct fgSCENERY scenery;
 
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
+    printf("Initializing scenery subsystem\n");
+
     /* set the default terrain detail level */
     scenery.terrain_skip = 6;
 }
@@ -74,7 +76,7 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
     strcat(path, "/Scenery/");
     strcat(path, "mesa-e.obj");
 
-    printf("Loading Scenery: %s\n", path);
+    printf("  Loading Scenery: %s\n", path);
 
     area_terrain = fgObjLoad(path);
 }
@@ -100,10 +102,13 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.28  1997/12/15 23:55:02  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.29  1997/12/30 20:47:52  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.28  1997/12/15 23:55:02  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.27  1997/12/12 21:41:30  curt
  * More light/material property tweaking ... still a ways off.
  *

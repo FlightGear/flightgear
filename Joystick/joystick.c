@@ -41,8 +41,9 @@ static joy_y_dead_min=1000, joy_y_dead_max=-1000;
 
 static int joystick_fd;
 
-int fgJoystickInit( int joy_num )
-{
+int fgJoystickInit( int joy_num ) {
+    printf("Initializing joystick\n");
+
 #ifdef HAVE_JOYSTICK
 	int status;
 	char *fname;
@@ -235,7 +236,10 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 )
 
 
 /* $Log$
-/* Revision 1.1  1997/08/29 18:06:54  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/30 20:47:40  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.1  1997/08/29 18:06:54  curt
+ * Initial revision.
+ *
  */

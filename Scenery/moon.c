@@ -260,6 +260,8 @@ void fgMoonInit() {
     struct fgLIGHT *l;
     static int dl_exists = 0;
 
+    printf("Initializing the Moon\n");
+
     l = &cur_light_params;
 
     /* position the moon */
@@ -317,7 +319,10 @@ void fgMoonRender() {
 
 
 /* $Log$
-/* Revision 1.13  1997/12/30 16:41:00  curt
-/* Added log at end of file.
+/* Revision 1.14  1997/12/30 20:47:50  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.13  1997/12/30 16:41:00  curt
+ * Added log at end of file.
+ *
  */

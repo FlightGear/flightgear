@@ -97,6 +97,8 @@ struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 void fgSunInit() {
     static int dl_exists = 0;
 
+    printf("Initializing the Sun\n");
+
     fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
     sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
 #ifdef DEBUG
@@ -188,9 +190,12 @@ void fgSunRender() {
 
 
 /* $Log$
-/* Revision 1.9  1997/12/30 16:36:54  curt
-/* Merged in Durk's changes ...
+/* Revision 1.10  1997/12/30 20:47:54  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.9  1997/12/30 16:36:54  curt
+ * Merged in Durk's changes ...
+ *
  * Revision 1.8  1997/12/19 23:35:00  curt
  * Lot's of tweaking with sky rendering and lighting.
  *

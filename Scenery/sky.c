@@ -40,6 +40,7 @@
 
 #include "sky.h"
 
+#include "../Time/event.h"
 #include "../Time/fg_time.h"
 
 #include "../Aircraft/aircraft.h"
@@ -75,7 +76,7 @@ void fgSkyVerticesInit() {
     float theta;
     int i;
 
-    printf("Generating the sky dome vertices.\n");
+    printf("  Generating the sky dome vertices.\n");
 
     for ( i = 0; i < 12; i++ ) {
 	theta = (i * 30.0) * DEG_TO_RAD;
@@ -84,8 +85,8 @@ void fgSkyVerticesInit() {
 	inner_vertex[i][1] = sin(theta) * INNER_RADIUS;
 	inner_vertex[i][2] = INNER_ELEV;
 	
-	printf(" %.2f %.2f\n", cos(theta) * INNER_RADIUS, 
-	       sin(theta) * INNER_RADIUS);
+	/* printf("    %.2f %.2f\n", cos(theta) * INNER_RADIUS, 
+	       sin(theta) * INNER_RADIUS); */
 
 	middle_vertex[i][0] = cos((double)theta) * MIDDLE_RADIUS;
 	middle_vertex[i][1] = sin((double)theta) * MIDDLE_RADIUS;
@@ -109,7 +110,7 @@ void fgSkyColorsInit() {
 
     l = &cur_light_params;
 
-    printf("Generating the sky colors for each vertex.\n");
+    printf("  Generating the sky colors for each vertex.\n");
 
     /* setup for the possibility of sunset effects */
     sun_angle = l->sun_angle * RAD_TO_DEG;
@@ -169,6 +170,7 @@ void fgSkyColorsInit() {
 	    middle_amt[j] -= middle_diff[j];
 	}
 
+	/*
 	printf("inner_color[%d] = %.2f %.2f %.2f %.2f\n", i, inner_color[i][0],
 	       inner_color[i][1], inner_color[i][2], inner_color[i][3]);
 	printf("middle_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
@@ -177,6 +179,7 @@ void fgSkyColorsInit() {
 	printf("outer_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
 	       outer_color[i][0], outer_color[i][1], outer_color[i][2], 
 	       outer_color[i][3]);
+	*/
     }
 
     for ( j = 0; j < 3; j++ ) {
@@ -206,6 +209,7 @@ void fgSkyColorsInit() {
 	    middle_amt[j] += middle_diff[j];
 	}
 
+	/*
 	printf("inner_color[%d] = %.2f %.2f %.2f %.2f\n", i, inner_color[i][0],
 	       inner_color[i][1], inner_color[i][2], inner_color[i][3]);
 	printf("middle_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
@@ -214,14 +218,20 @@ void fgSkyColorsInit() {
 	printf("outer_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
 	       outer_color[i][0], outer_color[i][1], outer_color[i][2], 
 	       outer_color[i][3]);
+	*/
     }
 }
 
 
 /* Initialize the sky structure and colors */
 void fgSkyInit() {
+    printf("Initializing the sky\n");
+
     fgSkyVerticesInit();
-    fgSkyColorsInit();
+
+    /* regester fgSkyColorsInit() as an event to be run periodically */
+    fgEventRegister("fgSkyColorsInit()", fgSkyColorsInit, 
+		    FG_EVENT_READY, 30000);
 }
 
 
@@ -319,9 +329,12 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.9  1997/12/30 13:06:57  curt
-/* A couple lighting tweaks ...
+/* Revision 1.10  1997/12/30 20:47:53  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.9  1997/12/30 13:06:57  curt
+ * A couple lighting tweaks ...
+ *
  * Revision 1.8  1997/12/23 04:58:38  curt
  * Tweaked the sky coloring a bit to build in structures to allow finer rgb
  * control.

@@ -51,6 +51,8 @@ struct fgLIGHT cur_light_params;
 /* Initialize the time dependent variables */
 
 void fgTimeInit(struct fgTIME *t) {
+    printf("Initializing Time\n");
+
     t->gst_diff = -9999.0;
 }
 
@@ -118,7 +120,7 @@ double utc_gst (double mjd) {
     x /= 3600.0;
     gst = (1.0/SIDRATE)*hr + x;
 
-    printf("gst => %.4f\n", gst);
+    printf("  gst => %.4f\n", gst);
 
     return(gst);
 }
@@ -166,9 +168,11 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     struct timezone tz;
 #endif
 
-    printf("COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
+    /*
+    printf("  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
            gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
            gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+    */
 
     mt.tm_mon = 2;
     mt.tm_mday = 21;
@@ -193,19 +197,19 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 
     offset = -(timezone / 3600 - daylight);
 
-    printf("Raw time zone offset = %ld\n", timezone);
-    printf("Daylight Savings = %d\n", daylight);
+    /* printf("  Raw time zone offset = %ld\n", timezone); */
+    /* printf("  Daylight Savings = %d\n", daylight); */
 
-    printf("Local hours from GMT = %ld\n", offset);
+    /* printf("  Local hours from GMT = %ld\n", offset); */
 
     start_gmt = start - timezone + (daylight * 3600);
 
-    printf("March 21 noon (CST) = %ld\n", start);
-    printf("March 21 noon (GMT) = %ld\n", start_gmt);
+    /* printf("  March 21 noon (CST) = %ld\n", start); */
+    /* printf("  March 21 noon (GMT) = %ld\n", start_gmt); */
 
     diff = (now - start_gmt) / (3600.0 * 24.0);
 
-    printf("Time since 3/21/%2d GMT = %.2f\n", gmt->tm_year, diff);
+    /* printf("  Time since 3/21/%2d GMT = %.2f\n", gmt->tm_year, diff); */
 
     part = fmod(diff, 1.0);
     days = diff - part;
@@ -217,8 +221,8 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 	lst += 24.0;
     }
 
-    printf("days = %.1f  hours = %.2f  lon = %.2f  lst = %.2f\n", 
-	   days, hours, lng, lst);
+    /* printf("  days = %.1f  hours = %.2f  lon = %.2f  lst = %.2f\n", 
+	   days, hours, lng, lst); */
 
     return(lst);
 }
@@ -235,11 +239,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     warp += 0;
     t->cur_time = time(NULL) + (0) * 60 * 60;
     t->cur_time += warp;
-    printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
+    printf("  Current Unix calendar time = %ld  warp = %ld\n", 
+	   t->cur_time, warp);
 
     /* get GMT break down for current time */
     t->gmt = gmtime(&t->cur_time);
-    printf("Current GMT = %d/%d/%2d %d:%02d:%02d\n", 
+    printf("  Current GMT = %d/%d/%2d %d:%02d:%02d\n", 
            t->gmt->tm_mon+1, t->gmt->tm_mday, t->gmt->tm_year,
            t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec);
 
@@ -253,15 +258,15 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
     /* convert "back" to Julian date + partial day (as a fraction of one) */
     t->jd = t->mjd + MJD0;
-    printf("Current Julian Date = %.5f\n", t->jd);
+    printf("  Current Julian Date = %.5f\n", t->jd);
 
-    printf("Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG);
+    /* printf("  Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG); */
 
     /* Calculate local side real time */
     if ( t->gst_diff < -100.0 ) {
 	/* first time through do the expensive calculation & cheap
            calculation to get the difference. */
-	printf("First time, doing precise gst\n");
+	printf("  First time, doing precise gst\n");
 	t->gst = gst_precise = sidereal_precise(t->mjd, 0.00);
 	gst_course = sidereal_course(t->gmt, t->cur_time, 0.00);
 	t->gst_diff = gst_precise - gst_course;
@@ -277,17 +282,20 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
 	    + t->gst_diff;
     }
-    /* printf("Current lon=0.00 Sidereal Time = %.3f\n", t->gst); */
-    /* printf("Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", 
+    /* printf("  Current lon=0.00 Sidereal Time = %.3f\n", t->gst); */
+    /* printf("  Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", 
            t->lst, sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
 	   t->gst_diff); */
 }
 
 
 /* $Log$
-/* Revision 1.22  1997/12/30 01:38:47  curt
-/* Switched back to per vertex normals and smooth shading for terrain.
+/* Revision 1.23  1997/12/30 20:47:58  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.22  1997/12/30 01:38:47  curt
+ * Switched back to per vertex normals and smooth shading for terrain.
+ *
  * Revision 1.21  1997/12/23 04:58:39  curt
  * Tweaked the sky coloring a bit to build in structures to allow finer rgb
  * control.

@@ -53,10 +53,11 @@ double fgCalcActTime(struct fgTIME t)
     actTime += (UT / 24.0);
     #define DEBUG 1
     #ifdef DEBUG
-    printf("Actual Time:\n");
-    printf("current day = %f\t", actTime);
-    printf("GMT = %d, %d, %d, %d, %d, %d\n",           year, t.gmt->tm_mon, t.gmt->tm_mday,
-                                             t.gmt->tm_hour, t.gmt->tm_min, t.gmt->tm_sec);
+    /* printf("  Actual Time:\n"); */
+    /* printf("  current day = %f\t", actTime); */
+    /* printf("  GMT = %d, %d, %d, %d, %d, %d\n",
+	   year, t.gmt->tm_mon, t.gmt->tm_mday,
+	   t.gmt->tm_hour, t.gmt->tm_min, t.gmt->tm_sec); */
     #endif
     return actTime;
 }
@@ -124,6 +125,8 @@ void fgSolarSystemInit(struct fgTIME t)
    int i;
    FILE *data;
 
+   printf("Initializing solar system\n");
+
    /* build the full path name to the orbital elements database file */
    g = &general;
    path[0] = '\0';
@@ -137,7 +140,7 @@ void fgSolarSystemInit(struct fgTIME t)
 	    return;
    }
    #ifdef DEBUG
-   printf("reading datafile %s", path);
+   printf("  reading datafile %s\n", path);
    #endif
 
    /* for all the objects... */
@@ -170,10 +173,13 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.5  1997/12/15 23:55:02  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.6  1997/12/30 20:47:52  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.5  1997/12/15 23:55:02  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.4  1997/12/10 22:37:51  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

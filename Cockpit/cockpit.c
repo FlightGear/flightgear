@@ -50,6 +50,8 @@ struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
 	struct fgCOCKPIT *cockpit;
 	Hptr hud;
 	
+	printf("Initializing cockpit subsystem\n");
+
 	cockpit = (struct fgCOCKPIT *)calloc(sizeof(struct fgCOCKPIT),1);
 	if( cockpit == NULL )
 		return( NULL );
@@ -66,7 +68,8 @@ struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
 	
 	aircraft_cockpit = cockpit;
 	
-	printf( "Code %d  Status %d\n", cockpit->hud->code, cockpit->hud->status );
+	printf("  Code %d  Status %d\n", cockpit->hud->code, 
+	       cockpit->hud->status );
 		
 	return( cockpit );
 }
@@ -87,10 +90,13 @@ void fgCockpitUpdate()
 
 
 /* $Log$
-/* Revision 1.3  1997/12/15 23:54:33  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.4  1997/12/30 20:47:34  curt
+/* Integrated new event manager with subsystem initializations.
 /*
+ * Revision 1.3  1997/12/15 23:54:33  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.2  1997/12/10 22:37:38  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
