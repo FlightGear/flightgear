@@ -1,5 +1,6 @@
 SUBDIRS = \
 	tests \
+	man \
 	src
 
 EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.sh \
