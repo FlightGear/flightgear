@@ -39,7 +39,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl/xgl.h>
+#include <GL/gl.h>
 
 #if defined(FX) && defined(XMESA)
 #  include <GL/xmesa.h>

@@ -21,6 +21,10 @@
 // $Id$
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/compiler.h>
 
 #ifdef SG_MATH_EXCEPTION_CLASH

@@ -35,7 +35,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl/xgl.h>
+#include <GL/gl.h>
 
 #include <string.h>
 
@@ -60,19 +60,19 @@ void fgSplashInit ( void ) {
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
 #ifdef GL_VERSION_1_1
-    xglGenTextures(1, &splash_texid);
-    xglBindTexture(GL_TEXTURE_2D, splash_texid);
+    glGenTextures(1, &splash_texid);
+    glBindTexture(GL_TEXTURE_2D, splash_texid);
 #elif GL_EXT_texture_object
-    xglGenTexturesEXT(1, &splash_texid);
-    xglBindTextureEXT(GL_TEXTURE_2D, splash_texid);
+    glGenTexturesEXT(1, &splash_texid);
+    glBindTextureEXT(GL_TEXTURE_2D, splash_texid);
 #else
 #  error port me
 #endif
 
-    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);   
-    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);   
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // load in the texture data
     int num = (int)(sg_random() * 4.0 + 1.0);
@@ -99,7 +99,7 @@ void fgSplashInit ( void ) {
 	} 
     } 
 
-    xglTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, 
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, 
 		   GL_UNSIGNED_BYTE, (GLvoid *)(splash_texbuf) );
 }
 
@@ -122,48 +122,48 @@ void fgSplashUpdate ( double progress ) {
     ymax = ymin + ysize;
 
     // first clear the screen;
-    xglClearColor(0.0, 0.0, 0.0, 1.0);
-    xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
     // now draw the logo
-    xglMatrixMode(GL_PROJECTION);
-    xglPushMatrix();
-    xglLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
     gluOrtho2D(0, fgGetInt("/sim/startup/xsize"),
 	       0, fgGetInt("/sim/startup/ysize"));
-    xglMatrixMode(GL_MODELVIEW);
-    xglPushMatrix();
-    xglLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
 
-    xglDisable(GL_DEPTH_TEST);
-    xglDisable(GL_LIGHTING);
-    xglEnable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
 #ifdef GL_VERSION_1_1
-    xglBindTexture(GL_TEXTURE_2D, splash_texid);
+    glBindTexture(GL_TEXTURE_2D, splash_texid);
 #elif GL_EXT_texture_object
-    xglBindTextureEXT(GL_TEXTURE_2D, splash_texid);
+    glBindTextureEXT(GL_TEXTURE_2D, splash_texid);
 #else
 #  error port me
 #endif
-    xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 
-    xglBegin(GL_POLYGON);
-    xglTexCoord2f(0.0, 0.0); glVertex2f(xmin, ymin);
-    xglTexCoord2f(1.0, 0.0); glVertex2f(xmax, ymin);
-    xglTexCoord2f(1.0, 1.0); glVertex2f(xmax, ymax);
-    xglTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax); 
-    xglEnd();
+    glBegin(GL_POLYGON);
+    glTexCoord2f(0.0, 0.0); glVertex2f(xmin, ymin);
+    glTexCoord2f(1.0, 0.0); glVertex2f(xmax, ymin);
+    glTexCoord2f(1.0, 1.0); glVertex2f(xmax, ymax);
+    glTexCoord2f(0.0, 1.0); glVertex2f(xmin, ymax); 
+    glEnd();
 
-    xglutSwapBuffers();
+    glutSwapBuffers();
 
-    xglEnable(GL_DEPTH_TEST);
-    xglEnable(GL_LIGHTING);
-    xglDisable(GL_TEXTURE_2D);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
 
-    xglMatrixMode(GL_PROJECTION);
-    xglPopMatrix();
-    xglMatrixMode(GL_MODELVIEW);
-    xglPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 
 

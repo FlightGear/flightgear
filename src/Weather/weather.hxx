@@ -27,7 +27,7 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/xgl/xgl.h>
+#include <GL/gl.h>
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>

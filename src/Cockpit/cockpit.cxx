@@ -30,7 +30,6 @@
 #endif
 
 #include <GL/glut.h>
-// #include <simgear/xgl/xgl.h>
 
 #include <stdlib.h>
 #include <stdio.h>

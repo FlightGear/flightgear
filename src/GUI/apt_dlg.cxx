@@ -17,7 +17,7 @@
 #include <Include/general.hxx>
 
 #include <GL/glut.h>
-#include <simgear/xgl/xgl.h>
+#include <GL/gl.h>
 
 #include <Airports/simple.hxx>
 #include <FDM/flight.hxx>

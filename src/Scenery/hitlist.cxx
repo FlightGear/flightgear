@@ -10,11 +10,11 @@
 #include <math.h>
 
 #include <GL/glut.h>
+#include <GL/gl.h>
 
 #include <simgear/constants.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/math/vector.hxx>
-#include <simgear/xgl/xgl.h>
 
 #include "hitlist.hxx"
 

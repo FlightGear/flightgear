@@ -36,7 +36,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <Include/general.hxx>
-#include <simgear/xgl/xgl.h>
+#include <GL/gl.h>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
