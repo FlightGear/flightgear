@@ -454,7 +454,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                 60,
                                                 10,
                                                  get_frame_rate,
-                                                "%.1f",
+                                                "%.0f",
                                                 "Frame rate = ",
                                                 NULL,
                                                  1.0,
@@ -558,7 +558,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 
     p = new instr_label( 10, 10, 60, 10,
 			 get_frame_rate,
-			 "%.1f",
+			 "%.0f",
 			 "Frame rate = ",
 			 NULL,
 			 1.0,
@@ -840,6 +840,9 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.29  1998/12/18 23:35:10  curt
+// Converted to a simpler frame rate counting method.
+//
 // Revision 1.28  1998/11/23 21:48:59  curt
 // Borland portability tweaks.
 //

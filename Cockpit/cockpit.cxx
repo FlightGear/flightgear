@@ -217,7 +217,7 @@ double get_sideslip( void )
 
 double get_frame_rate( void )
 {
-    return general.frame_rate;
+    return (double) general.frame_rate;
 }
 
 double get_fov( void )
@@ -303,6 +303,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.27  1998/12/18 23:35:09  curt
+// Converted to a simpler frame rate counting method.
+//
 // Revision 1.26  1998/12/09 18:50:19  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.
