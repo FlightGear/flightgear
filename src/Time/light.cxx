@@ -214,51 +214,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	rotation -= SGD_2PI;
     }
 
-#ifdef USE_OLD_SUNSET_CODE
-
-    double sun_angle_deg, param1[3], param2[3];
-
-    rotation *= SGD_RADIANS_TO_DEGREES;
-    // fgPrintf( SG_EVENT, SG_INFO, 
-    //           "  View to sun difference in degrees = %.2f\n", rotation);
-
-    // next check if we are in a sunset/sunrise situation
-    sun_angle_deg = sun_angle * SGD_RADIANS_TO_DEGREES;
-    if ( (sun_angle_deg > 80.0) && (sun_angle_deg < 100.0) ) {
-	/* 0.0 - 0.6 */
-	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 20.0;
-	param1[1] = (10.0 - fabs(90.0 - sun_angle_deg)) / 40.0;
-	param1[2] = (10.0 - fabs(90.0 - sun_angle_deg)) / 30.0;
-	// param2[2] = -(10.0 - fabs(90.0 - sun_angle)) / 30.0;
-    } else {
-	param1[0] = param1[1] = param1[2] = 0.0;
-    }
-
-    if ( rotation - 180.0 <= 0.0 ) {
-	param2[0] = param1[0] * (180.0 - rotation) / 180.0;
-	param2[1] = param1[1] * (180.0 - rotation) / 180.0;
-	param2[2] = param1[2] * (180.0 - rotation) / 180.0;
-	// printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
-    } else {
-	param2[0] = param1[0] * (rotation - 180.0) / 180.0;
-	param2[1] = param1[1] * (rotation - 180.0) / 180.0;
-	param2[2] = param1[2] * (rotation - 180.0) / 180.0;
-	// printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
-    }
-
-    adj_fog_color[0] = fog_color[0] + param2[0];
-    if ( adj_fog_color[0] > 1.0 ) { adj_fog_color[0] = 1.0; }
-
-    adj_fog_color[1] = fog_color[1] + param2[1];
-    if ( adj_fog_color[1] > 1.0 ) { adj_fog_color[1] = 1.0; }
-
-    adj_fog_color[2] = fog_color[2] + param2[2];
-    if ( adj_fog_color[2] > 1.0 ) { adj_fog_color[2] = 1.0; }
-
-    adj_fog_color[3] = fog_color[3];
-
-#else
-
     // revert to unmodified values before usign them.
     //
     float *sun_color = thesky->get_sun_color();
@@ -291,7 +246,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
     //
     gamma_correct_rgb( fog_color );
     gamma_correct_rgb( cloud_color );
-#endif
 }
 
 
