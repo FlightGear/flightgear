@@ -17,6 +17,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/viewer.hxx>
