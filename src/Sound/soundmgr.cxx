@@ -64,6 +64,8 @@ FGSimpleSound::~FGSimpleSound() {
 // constructor
 FGSoundMgr::FGSoundMgr() {
     audio_sched = new slScheduler( 8000 );
+    audio_sched -> setMaxConcurrent ( 6 ); 
+
     audio_mixer = new smMixer;
 
     SG_LOG( SG_GENERAL, SG_INFO,
