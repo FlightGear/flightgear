@@ -377,10 +377,6 @@ string FGPropulsion::GetPropulsionStrings(void)
     case FGEngine::etRocket:
       PropulsionStrings += (Engines[i]->GetName() + "_ChamberPress[" + buffer + "]");
       break;
-    case FGEngine::etTurboJet:
-    case FGEngine::etTurboProp:
-    case FGEngine::etTurboShaft:
-      break;
     default:
       PropulsionStrings += "INVALID ENGINE TYPE";
       break;
@@ -432,10 +428,6 @@ string FGPropulsion::GetPropulsionValues(void)
       break;
     case FGEngine::etRocket:
       PropulsionValues += (string(gcvt(((FGRocket*)Engines[i])->GetChamberPressure(), 10, buff)));
-      break;
-    case FGEngine::etTurboJet:
-    case FGEngine::etTurboProp:
-    case FGEngine::etTurboShaft:
       break;
     }
 
