@@ -115,9 +115,9 @@ fgSetDefaults ()
 	// Otherwise, default to Scenery being in $FG_ROOT/Scenery
 	globals->set_fg_scenery("");
     }
-				// Position (Globe, AZ)
-    fgSetDouble("/position/longitude-deg", -110.6642444);
-    fgSetDouble("/position/latitude-deg", 33.3528917);
+				// Position (deliberately out of range)
+    fgSetDouble("/position/longitude-deg", 9999.0);
+    fgSetDouble("/position/latitude-deg", 9999.0);
     fgSetDouble("/position/altitude-ft", -9999.0);
 
 				// Orientation

@@ -1451,14 +1451,27 @@ int mainLoop( int argc, char **argv ) {
     // Set position relative to glide slope if requested
     fgSetPosFromGlideSlope();
 
-    // set current_options lon/lat if an airport id is specified
-    // cout << "3. airport_id = " << fgGetString("/sim/startup/airport-id") << endl;
-    if ( fgGetString("/sim/startup/airport-id")[0] != '\0' ) {
-	// fgSetPosFromAirportID( fgGetString("/sim/startup/airport-id") );
+    // If we have an explicit, in-range lon/lat, use it.
+    // If not, check for an airport-id and use that.
+    // If not, default to the middle of the KSFO field.
+    // The default values for lon/lat are deliberately out of range
+    // so that the airport-id can take effect; valid lon/lat will
+    // override airport-id, however.
+    double lon_deg = fgGetDouble("/position/longitude-deg");
+    double lat_deg = fgGetDouble("/position/latitude-deg");
+    if (lon_deg < -180 || lon_deg > 180 || lat_deg < -90 || lat_deg > 90) {
+      if ( fgGetString("/sim/startup/airport-id")[0] != '\0' ) {
 	fgSetPosFromAirportIDandHdg( fgGetString("/sim/startup/airport-id"),
 				     fgGetDouble("/orientation/heading-deg") );
-        // set tower position (a little off the heading for single runway airports)
-        fgSetTowerPosFromAirportID( fgGetString("/sim/startup/airport-id"), fgGetDouble("orientation/heading") );
+        // set tower position (a little off the heading for single 
+	// runway airports)
+        fgSetTowerPosFromAirportID( fgGetString("/sim/startup/airport-id"),
+				    fgGetDouble("orientation/heading") );
+      } else {
+				// Default to middle of KSFO field
+	fgSetDouble("/position/longitude-deg", -122.374843);
+	fgSetDouble("/position/latitude-deg", 37.619002);
+      }
     }
 
     SGTime *t = fgInitTime();
