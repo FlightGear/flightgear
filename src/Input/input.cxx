@@ -310,30 +310,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
                     FGAutopilot::FG_TC_HEADING_LOCK );
             }
             return;
-        case 256+GLUT_KEY_F8: {// F8 toggles fog ... off fastest nicest...
-            const string &fog = fgGetString("/sim/rendering/fog");
-            if (fog == "disabled") {
-              fgSetString("/sim/rendering/fog", "fastest");
-              SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=fastest");
-            } else if (fog == "fastest") {
-              fgSetString("/sim/rendering/fog", "nicest");
-              SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=nicest");
-            } else if (fog == "nicest") {
-              fgSetString("/sim/rendering/fog", "disabled");
-              SG_LOG(SG_INPUT, SG_INFO, "Fog disabled");
-            } else {
-              fgSetString("/sim/rendering/fog", "disabled");
-              SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized fog type "
-                     << fog << ", changed to 'disabled'");
-            }
-            return;
-        }
-        case 256+GLUT_KEY_F10: // F10 toggles menu on and off...
-            SG_LOG(SG_INPUT, SG_INFO, "Invoking call back function");
-#if defined(FG_OLD_MENUBAR)
-            guiToggleMenu();
-#endif
-            return;
         case 256+GLUT_KEY_F11: // F11 Altitude Dialog.
             SG_LOG(SG_INPUT, SG_INFO, "Invoking Altitude call back function");
             NewAltitude( NULL );
