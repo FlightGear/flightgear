@@ -50,7 +50,7 @@ public:
     void setGroundPlane(double* planeNormal, double fromOrigin);
     void setGroundEffect(float* pos, float span, float mul);
     void setWind(float* wind);
-    void setAir(float pressure, float temp);
+    void setAir(float pressure, float temp, float density);
 
     // BodyEnvironment callbacks
     virtual void calcForces(State* s);

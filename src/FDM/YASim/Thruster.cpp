@@ -61,11 +61,11 @@ void Thruster::setWind(float* wind)
     for(i=0; i<3; i++) _wind[i] = wind[i];
 }
 
-void Thruster::setAir(float pressure, float temp)
+void Thruster::setAir(float pressure, float temp, float density)
 {
     _pressure = pressure;
     _temp = temp;
-    _rho = _pressure / (287.1f * _temp);
+    _rho = density;
 }
 
 }; // namespace yasim

@@ -53,10 +53,11 @@ float Atmosphere::getStdDensity(float alt)
     return getRecord(alt, 3);
 }
 
-float Atmosphere::calcVEAS(float spd, float pressure, float temp)
+float Atmosphere::calcVEAS(float spd,
+                           float pressure, float temp, float density)
 {
     static float rho0 = getStdDensity(0);
-    float densityRatio = calcDensity(pressure, temp) / rho0;
+    float densityRatio = density / rho0;
     return spd * Math::sqrt(densityRatio);
 }
 
@@ -91,7 +92,7 @@ float Atmosphere::calcVCAS(float spd, float pressure, float temp)
     return Math::sqrt((7*p0/rho0)*(tmp-1));
 }
 
-float Atmosphere::calcDensity(float pressure, float temp)
+float Atmosphere::calcStdDensity(float pressure, float temp)
 {
     return pressure / (R * temp);
 }

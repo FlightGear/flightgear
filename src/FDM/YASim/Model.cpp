@@ -84,7 +84,7 @@ void Model::initIteration()
         localWind(pos, _s, v);
 
 	t->setWind(v);
-	t->setAir(_pressure, _temp);
+	t->setAir(_pressure, _temp, _rho);
 	t->integrate(_integrator.getInterval());
 
 	t->getTorque(v);
@@ -191,11 +191,11 @@ void Model::setGroundPlane(double* planeNormal, double fromOrigin)
     _ground[3] = fromOrigin;
 }
 
-void Model::setAir(float pressure, float temp)
+void Model::setAir(float pressure, float temp, float density)
 {
     _pressure = pressure;
     _temp = temp;
-    _rho = Atmosphere::calcDensity(pressure, temp);
+    _rho = density;
 }
 
 void Model::setWind(float* wind)

@@ -10,9 +10,9 @@ public:
     static float getStdDensity(float alt);
 
     static float calcVCAS(float spd, float pressure, float temp);
-    static float calcVEAS(float spd, float pressure, float temp);
+    static float calcVEAS(float spd, float pressure, float temp, float density);
     static float calcMach(float spd, float temp);
-    static float calcDensity(float pressure, float temp);
+    static float calcStdDensity(float pressure, float temp);
     
     // Given ambient ("0") pressure/density/temperature values,
     // calculate the properties of static air (air accelerated to the

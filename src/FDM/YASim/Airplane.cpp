@@ -667,7 +667,8 @@ void Airplane::runCruise()
 {
     setupState(_cruiseAoA, _cruiseSpeed, &_cruiseState);
     _model.setState(&_cruiseState);
-    _model.setAir(_cruiseP, _cruiseT);
+    _model.setAir(_cruiseP, _cruiseT,
+                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
 
     // The control configuration
     _controls.reset();
@@ -691,7 +692,8 @@ void Airplane::runCruise()
     for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
-	t->setAir(_cruiseP, _cruiseT);
+	t->setAir(_cruiseP, _cruiseT,
+                  Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
     }
     stabilizeThrust();
 
@@ -708,7 +710,8 @@ void Airplane::runApproach()
 {
     setupState(_approachAoA, _approachSpeed, &_approachState);
     _model.setState(&_approachState);
-    _model.setAir(_approachP, _approachT);
+    _model.setAir(_approachP, _approachT,
+                  Atmosphere::calcStdDensity(_approachP, _approachT));
 
     // The control configuration
     _controls.reset();
@@ -732,7 +735,8 @@ void Airplane::runApproach()
     for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
-	t->setAir(_approachP, _approachT);
+	t->setAir(_approachP, _approachT,
+                  Atmosphere::calcStdDensity(_approachP, _approachT));
     }
     stabilizeThrust();
 

@@ -28,6 +28,7 @@ static const float CM2GALS = 264.172037284; // gallons/cubic meter
 static const float KG2LBS = 2.20462262185;
 static const float W2HP = 1.3416e-3;
 static const float INHG2PA = 3386.389;
+static const float SLUG2KG = 14.59390;
 
 void YASim::printDEBUG()
 {
@@ -236,8 +237,10 @@ void YASim::copyToYASim(bool copyState)
     double ground = getACModel()->get3DModel()->getFGLocation()->get_cur_elev_m();
     // cout << "YASIM: ground = " << ground << endl;
 
-    float pressure = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
-    float temp = fgGetDouble("/environment/temperature-degc") + 273.15;
+    float pressure = fgGetFloat("/environment/pressure-inhg") * INHG2PA;
+    float temp = fgGetFloat("/environment/temperature-degc") + 273.15;
+    float dens = fgGetFloat("/environment/density-slugft3") 
+        * SLUG2KG * M2FT*M2FT*M2FT;
 
     // Convert and set:
     Model* model = _fdm->getAirplane()->getModel();
@@ -274,7 +277,7 @@ void YASim::copyToYASim(bool copyState)
     model->setGroundPlane(gplane, rad);
 
     // air
-    model->setAir(pressure, temp);
+    model->setAir(pressure, temp, dens);
 }
 
 // All the settables:
@@ -366,10 +369,11 @@ void YASim::copyFromYASim()
     _set_Velocities_Wind_Body(v[0]*M2FT, -v[1]*M2FT, -v[2]*M2FT);
     _set_V_rel_wind(Math::mag3(v)*M2FT); // units?
 
-
     float P = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
     float T = fgGetDouble("/environment/temperature-degC") + 273.15;
-    _set_V_equiv_kts(Atmosphere::calcVEAS(v[0], P, T)*MPS2KTS);
+    float D = fgGetFloat("/environment/density-slugft3")
+        *SLUG2KG * M2FT*M2FT*M2FT;
+    _set_V_equiv_kts(Atmosphere::calcVEAS(v[0], P, T, D)*MPS2KTS);
     _set_V_calibrated_kts(Atmosphere::calcVCAS(v[0], P, T)*MPS2KTS);
     _set_Mach_number(Atmosphere::calcMach(v[0], T));
 
