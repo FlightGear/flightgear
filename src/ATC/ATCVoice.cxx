@@ -60,10 +60,10 @@ bool FGATCVoice::LoadVoice(string voice) {
 	// Now load the word data
 	fin.open(path.c_str(), ios::in);
 	if(!fin) {
-		SG_LOG(SG_GENERAL, SG_ALERT, "Unable to open input file " << path.c_str() << '\n');
+		SG_LOG(SG_ATC, SG_ALERT, "Unable to open input file " << path.c_str());
 		return(false);
 	}
-	cout << "Opened word data file " << wordPath << " OK...\n";
+	SG_LOG(SG_ATC, SG_INFO, "Opened word data file " << wordPath << " OK...");
 	char numwds[10];
 	char wrd[100];
 	string wrdstr;
@@ -158,8 +158,8 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 		*  to be OK since it checks for mis-indexing of voice files by 3rd party developers.
 		*/
 		if((wdptr[i].offset + wdptr[i].length) > rawDataSize) {
-			SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - mismatch between ATC .wav and .vce file in ATCVoice.cxx\n");
-			SG_LOG(SG_GENERAL, SG_ALERT, "Offset + length: " << wdptr[i].offset + wdptr[i].length
+			SG_LOG(SG_ATC, SG_ALERT, "ERROR - mismatch between ATC .wav and .vce file in ATCVoice.cxx\n");
+			SG_LOG(SG_ATC, SG_ALERT, "Offset + length: " << wdptr[i].offset + wdptr[i].length
 			     << " exceeds rawdata size: " << rawDataSize << endl);
 			delete[] wdptr;
 			dataOK = false;
