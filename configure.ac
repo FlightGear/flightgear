@@ -147,27 +147,14 @@ if test "$have_timezone" = yes; then
     AC_DEFINE([HAVE_TIMEZONE], 1, [Define if system has timezone variable])
 fi
 
-dnl add correct audio libs and configure for audio support
-LIBS="-lplibsl -lplibsm"
 
+dnl add joystick support libraries
 dnl search for FreeBSD library
 AC_SEARCH_LIBS(hid_init, usbhid)
-
-case "${host}" in
-*-*-cygwin* | *-*-mingw32*)
-    LIBS="$LIBS -lwinmm"
-    ;;
-*-apple-darwin*)
-    LIBS="$LIBS -framework IOKit -framework CoreFoundation"
-    ;;
-*-*-irix* )
-    LIBS="$LIBS -laudio"
-    ;;
-
-esac
-audio_LIBS="$LIBS"
+joystick_LIBS="$LIBS"
 LIBS=""
-AC_SUBST(audio_LIBS)
+AC_SUBST(joystick_LIBS)
+
 
 dnl ENABLE_AUDIO_SUPPORT could be depricated at any time in favor of
 dnl just assuming we have audio support on all platform.  We can
@@ -298,10 +285,7 @@ case "${host}" in
 esac
 
 opengl_LIBS="$LIBS"
-LIBS="$base_LIBS"
-
-dnl search for FreeBSD library
-AC_SEARCH_LIBS(hid_init, usbhid)
+LIBS="$base_LIBS $joystick_LIBS"
 
 dnl check for OpenAL libraries
 case "${host}" in
