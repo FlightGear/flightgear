@@ -185,7 +185,7 @@ static void fgUpdateViewParams() {
 
     /* sky_brightness = 0.15; */ /* to force a dark sky (for testing) */
 
-    if ( ambient < 0.1 ) { ambient = 0.1; }
+    if ( ambient < 0.02 ) { ambient = 0.02; }
     if ( diffuse < 0.0 ) { diffuse = 0.0; }
 
     if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
@@ -623,9 +623,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.40  1997/12/30 01:38:37  curt
-/* Switched back to per vertex normals and smooth shading for terrain.
+/* Revision 1.41  1997/12/30 13:06:56  curt
+/* A couple lighting tweaks ...
 /*
+ * Revision 1.40  1997/12/30 01:38:37  curt
+ * Switched back to per vertex normals and smooth shading for terrain.
+ *
  * Revision 1.39  1997/12/22 23:45:45  curt
  * First stab at sunset/sunrise sky glow effects.
  *

@@ -156,8 +156,10 @@ void fgSkyColorsInit() {
 	    middle_color[i][j] = l->sky_color[j] - diff * 0.9 + middle_amt[j];
 	    outer_color[i][j] = l->fog_color[j] + outer_amt[j];
 
-	    if ( middle_color[i][j] > 1.0 ) { middle_color[i][j] = 1.0; }
-	    if ( outer_color[i][j] > 1.0 ) { outer_color[i][j] = 1.0; }
+	    if ( middle_color[i][j] > 1.00 ) { middle_color[i][j] = 1.00; }
+	    if ( middle_color[i][j] < 0.10 ) { middle_color[i][j] = 0.10; }
+	    if ( outer_color[i][j] > 1.00 ) { outer_color[i][j] = 1.00; }
+	    if ( outer_color[i][j] < 0.10 ) { outer_color[i][j] = 0.10; }
 	}
 	inner_color[i][3] = middle_color[i][3] = outer_color[i][3] = 
 	    l->sky_color[3];
@@ -191,8 +193,10 @@ void fgSkyColorsInit() {
 	    middle_color[i][j] = l->sky_color[j] - diff * 0.9 + middle_amt[j];
 	    outer_color[i][j] = l->fog_color[j] + outer_amt[j];
 
-	    if ( middle_color[i][j] > 1.0 ) { middle_color[i][j] = 1.0; }
-	    if ( outer_color[i][j] > 1.0 ) { outer_color[i][j] = 1.0; }
+	    if ( middle_color[i][j] > 1.00 ) { middle_color[i][j] = 1.00; }
+	    if ( middle_color[i][j] < 0.10 ) { middle_color[i][j] = 0.10; }
+	    if ( outer_color[i][j] > 1.00 ) { outer_color[i][j] = 1.00; }
+	    if ( outer_color[i][j] < 0.15 ) { outer_color[i][j] = 0.15; }
 	}
 	inner_color[i][3] = middle_color[i][3] = outer_color[i][3] = 
 	    l->sky_color[3];
@@ -315,10 +319,13 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.8  1997/12/23 04:58:38  curt
-/* Tweaked the sky coloring a bit to build in structures to allow finer rgb
-/* control.
+/* Revision 1.9  1997/12/30 13:06:57  curt
+/* A couple lighting tweaks ...
 /*
+ * Revision 1.8  1997/12/23 04:58:38  curt
+ * Tweaked the sky coloring a bit to build in structures to allow finer rgb
+ * control.
+ *
  * Revision 1.7  1997/12/22 23:45:48  curt
  * First stab at sunset/sunrise sky glow effects.
  *

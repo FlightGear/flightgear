@@ -31,7 +31,7 @@
 #  include <sys/timeb.h> /* for ftime() and struct timeb */
 #else
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
-#endif USE_FTIME
+#endif /* USE_FTIME */
 
 #include "fg_timer.h"
 
@@ -82,7 +82,7 @@ void fgTimerInit(float dt, void (*f)()) {
 	exit(0);
     }
 }
-#endif HAVE_ITIMER
+#endif /* HAVE_ITIMER */
 
 
 /* This function returns the number of milleseconds since the last
@@ -98,7 +98,7 @@ int fgGetTimeInterval() {
     static struct timeval last;
     static struct timeval current;
     static struct timezone tz;
-#endif USE_FTIME
+#endif /* USE_FTIME */
 
     if ( ! inited ) {
 	inited = 1;
@@ -107,7 +107,7 @@ int fgGetTimeInterval() {
 	ftime(&last);
 #else
 	gettimeofday(&last, &tz);
-#endif
+#endif /* USE_FTIME */
 
 	interval = 0;
     } else {
@@ -121,7 +121,7 @@ int fgGetTimeInterval() {
 	interval = 1000000 * (current.tv_sec - last.tv_sec) + 
 	    (current.tv_usec - last.tv_usec);
 	interval /= 1000;  /* convert back to milleseconds */
-#endif
+#endif /* USE_FTIME */
 
 	last = current;
     }
@@ -131,9 +131,12 @@ int fgGetTimeInterval() {
 
 
 /* $Log$
-/* Revision 1.6  1997/07/12 02:13:04  curt
-/* Add ftime() support for those that don't have gettimeofday()
+/* Revision 1.7  1997/12/30 13:06:58  curt
+/* A couple lighting tweaks ...
 /*
+ * Revision 1.6  1997/07/12 02:13:04  curt
+ * Add ftime() support for those that don't have gettimeofday()
+ *
  * Revision 1.5  1997/06/26 19:08:38  curt
  * Restructuring make, adding automatic "make dep" support.
  *
