@@ -125,9 +125,12 @@ gen_area(point2d origin, double angle, list < point2d > cart_list)
     current = rad_list.begin();
     last = rad_list.end();
     for ( ; current != last ; ++current ) {
-	current->theta -= angle;
-	while ( current->theta > FG_2PI ) {
-	    current->theta -= FG_2PI;
+        current->theta -= angle;
+        while ( current->theta > FG_2PI ) {
+            current->theta -= FG_2PI;
+	// (*current).theta -= angle;
+	// while ( (*current).theta > FG_2PI ) {
+	//     (*current).theta -= FG_2PI;
 	}
 	// printf("(%.2f, %.2f)\n", current->theta, current->dist);
     }
@@ -215,6 +218,9 @@ gen_runway_area( double lon, double lat, double heading,
 
 
 // $Log$
+// Revision 1.5  1998/10/20 15:49:54  curt
+// tweak ...
+//
 // Revision 1.4  1998/09/09 20:59:53  curt
 // Loop construct tweaks for STL usage.
 // Output airport file to be used to generate airport scenery on the fly
