@@ -167,7 +167,6 @@ float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
 
 static double delta_time_sec = 0.0;
-static double replay_dt_sec = 0.0;
 
 
 #ifdef FG_WEATHERCM
@@ -934,8 +933,8 @@ void fgRenderFrame() {
 void fgUpdateTimeDepCalcs() {
     static bool inited = false;
 
-    static const SGPropertyNode *replay
-        = fgGetNode( "/sim/replay/master", true );
+    static const SGPropertyNode *replay_master
+        = fgGetNode( "/sim/freeze/replay", true );
     static SGPropertyNode *replay_time
         = fgGetNode( "/sim/replay/time", true );
     static const SGPropertyNode *replay_end_time
@@ -971,14 +970,14 @@ void fgUpdateTimeDepCalcs() {
             inited = true;
         }
 
-        if ( ! replay->getBoolValue() ) {
+        if ( ! replay_master->getBoolValue() ) {
             globals->get_autopilot()->update(delta_time_sec);
             cur_fdm_state->update(delta_time_sec);
         } else {
             FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
             r->replay( replay_time->getDoubleValue() );
             replay_time->setDoubleValue( replay_time->getDoubleValue()
-                                         + replay_dt_sec );
+                                         + delta_time_sec );
         }
     } else {
         // do nothing, fdm isn't inited yet
@@ -1026,8 +1025,8 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
         = fgGetNode("/sim/time/cur-time-override", true);
-    static const SGPropertyNode *replay
-        = fgGetNode("/sim/replay/master", true);
+    static const SGPropertyNode *replay_master
+        = fgGetNode("/sim/freeze/replay", true);
 
     // Update the elapsed time.
     static bool first_time = true;
@@ -1050,9 +1049,6 @@ static void fgMainLoop( void ) {
     }
 
     delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
-    if ( replay->getBoolValue() ) {
-        replay_dt_sec = delta_time_sec;
-    }
     if ( clock_freeze->getBoolValue() ) {
         delta_time_sec = 0;
     } 

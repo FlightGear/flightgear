@@ -829,9 +829,7 @@ static bool
 do_replay (const SGPropertyNode * arg)
 {
     // freeze the master fdm
-    fgSetBool( "/sim/freeze/master", true );
-    fgSetBool( "/sim/freeze/clock", true );
-    fgSetBool( "/sim/replay/master", true );
+    fgSetBool( "/sim/freeze/replay", true );
 
     FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
 

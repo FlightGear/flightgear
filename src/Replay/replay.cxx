@@ -24,6 +24,7 @@
 #include <simgear/constants.h>
 
 #include <FDM/flight.hxx>
+#include <Main/fg_props.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 #include <Network/net_ctrls.hxx>
@@ -101,10 +102,10 @@ void FGReplay::unbind() {
  */
 
 void FGReplay::update( double dt ) {
+    static SGPropertyNode *replay_master = fgGetNode( "/sim/freeze/replay" );
 
-    if ( dt <= 0 ) {
-        // don't save data if nothing is going on ...
-
+    if ( replay_master->getBoolValue() ) {
+        // don't record the replay session
         return;
     }
 
