@@ -248,6 +248,7 @@ AC_OUTPUT( \
 	Lib/zlib/Makefile \
 	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
+	Simulator/Airports/Makefile \
 	Simulator/Astro/Makefile \
 	Simulator/Autopilot/Makefile \
 	Simulator/Cockpit/Makefile \
@@ -261,6 +262,7 @@ AC_OUTPUT( \
 	Simulator/Main/runfgfs \
 	Simulator/Main/runfgfs.bat \
 	Simulator/Makefile \
+	Simulator/Objects/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
