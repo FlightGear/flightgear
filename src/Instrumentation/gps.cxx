@@ -9,24 +9,10 @@
 
 #include <simgear/compiler.h>
 
-#include <string.h>
-
-#include STL_STRING
-
 #include <Aircraft/aircraft.hxx>
-#include <FDM/flight.hxx>
-#include <Controls/controls.hxx>
-#include <Scenery/scenery.hxx>
-
-#include <simgear/constants.h>
-#include <simgear/sg_inlines.h>
-#include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/sg_path.hxx>
 #include <simgear/route/route.hxx>
 
 #include <Airports/simple.hxx>
-#include <GUI/gui.h>
 #include <Main/fg_init.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -70,11 +56,13 @@ GPS::init ()
     _wp_name_node =
         fgGetNode("/instrumentation/gps/wp-name", true);
     _wp_course_node = 
-        fgGetNode("/instrumentation/gps/indicated-course-deg", true);
+        fgGetNode("/instrumentation/gps/desired-course-deg", true);
     _get_nearest_airport_node =
-      fgGetNode("/instrumentation/gps/get-nearest-airport", true);
+	fgGetNode("/instrumentation/gps/get-nearest-airport", true);
     _waypoint_type_node =
-      fgGetNode("/instrumentation/gps/waypoint-type", true);
+	fgGetNode("/instrumentation/gps/waypoint-type", true);
+    _tracking_bug_node =
+	fgGetNode("/instrumentation/gps/tracking-bug", true);
 
     _raim_node = fgGetNode("/instrumentation/gps/raim", true);
     _indicated_longitude_node =
@@ -95,6 +83,8 @@ GPS::init ()
         fgGetNode("/instrumentation/gps/TTW",true);
     _wp_bearing_node =
         fgGetNode("/instrumentation/gps/wp-bearing-deg", true);
+    _wp_mag_bearing_node =
+        fgGetNode("/instrumentation/gps/wp-bearing-mag-deg", true);
     _wp_course_deviation_node =
         fgGetNode("/instrumentation/gps/course-deviation-deg", true);
     _wp_course_error_nm_node =
@@ -104,7 +94,12 @@ GPS::init ()
     _odometer_node =
         fgGetNode("/instrumentation/gps/odometer", true);
     _trip_odometer_node =
-      fgGetNode("/instrumentation/gps/trip-odometer", true);
+        fgGetNode("/instrumentation/gps/trip-odometer", true);
+    _true_bug_error_node =
+	fgGetNode("/instrumentation/gps/true-bug-error-deg", true);
+    _magnetic_bug_error_node =
+        fgGetNode("/instrumentation/gps/magnetic-bug-error-deg", true);
+	
 }
 
 void
@@ -132,10 +127,14 @@ GPS::update (double delta_time_sec)
         _wp_course_node->setDoubleValue(0);
         _odometer_node->setDoubleValue(0);
         _trip_odometer_node->setDoubleValue(0);
+        _tracking_bug_node->setDoubleValue(0);
+        _true_bug_error_node->setDoubleValue(0);
+        _magnetic_bug_error_node->setDoubleValue(0);
         return;
     }
 
-                                // Get the aircraft position
+    // Get the aircraft position
+    // TODO: Add noise and other errors.
     double longitude_deg = _longitude_node->getDoubleValue();
     double latitude_deg = _latitude_node->getDoubleValue();
     double altitude_m = _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
@@ -149,7 +148,7 @@ GPS::update (double delta_time_sec)
     _indicated_altitude_node->setDoubleValue(altitude_m * SG_METER_TO_FEET);
 
     if (_last_valid) {
-        double track1_deg, track2_deg, distance_m, odometer;
+        double track1_deg, track2_deg, distance_m, odometer, mag_track_bearing;
         geo_inverse_wgs_84(altitude_m,
                            _last_latitude_deg, _last_longitude_deg,
                            latitude_deg, longitude_deg,
@@ -157,7 +156,8 @@ GPS::update (double delta_time_sec)
         speed_kt = ((distance_m * SG_METER_TO_NM) *
                     ((1 / delta_time_sec) * 3600.0));
         _true_track_node->setDoubleValue(track1_deg);
-        _magnetic_track_node->setDoubleValue(track1_deg - magvar_deg);
+	mag_track_bearing = deg360(track1_deg - magvar_deg);
+        _magnetic_track_node->setDoubleValue(mag_track_bearing);
         speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, delta_time_sec/20.0);
         _last_speed_kts = speed_kt;
         _speed_node->setDoubleValue(speed_kt);
@@ -174,7 +174,6 @@ GPS::update (double delta_time_sec)
           _wp_course_node->getDoubleValue();
         double wp_distance, wp_bearing_deg, wp_course_deviation_deg,
             wp_course_error_m, wp_TTW;
-        // double wp_actual_radial_deg;
         string wp_ID = _wp_ID_node->getStringValue();
 
         // If the get-nearest-airport-node is true.
@@ -237,6 +236,7 @@ GPS::update (double delta_time_sec)
         _wp_latitude_node->setDoubleValue(wp_latitude_deg);
         _wp_distance_node->setDoubleValue(wp_distance * SG_METER_TO_NM);
         _wp_bearing_node->setDoubleValue(wp_bearing_deg);
+	_wp_mag_bearing_node->setDoubleValue(deg360(wp_bearing_deg - magvar_deg));
         
         // Estimate time to waypoint.
         // The estimation does not take track into consideration,
@@ -302,6 +302,25 @@ GPS::update (double delta_time_sec)
         _wp_course_error_nm_node->setDoubleValue(wp_course_error_m 
                                                  * SG_METER_TO_NM);
 
+        // Tracking bug.
+	double tracking_bug = _tracking_bug_node->getDoubleValue();
+	double true_bug_error = tracking_bug - track1_deg;
+	double magnetic_bug_error = tracking_bug - mag_track_bearing;
+
+	// Get the errors into the (-180,180) range.
+	while (true_bug_error < -180.0)
+            true_bug_error += 360.0;
+        while (true_bug_error >  180.0)
+            true_bug_error -= 360.0;
+
+        while (magnetic_bug_error < -180.0)
+            magnetic_bug_error += 360.0;
+        while (magnetic_bug_error >  180.0)
+            magnetic_bug_error -= 360.0;
+
+	_true_bug_error_node->setDoubleValue(true_bug_error);
+	_magnetic_bug_error_node->setDoubleValue(magnetic_bug_error);
+
     } else {
         _true_track_node->setDoubleValue(0.0);
         _magnetic_track_node->setDoubleValue(0.0);
@@ -313,5 +332,18 @@ GPS::update (double delta_time_sec)
     _last_latitude_deg = latitude_deg;
     _last_altitude_m = altitude_m;
 }
+
+double GPS::deg360 (double deg)
+{
+    while (deg <= 0.0) {
+	deg += 360.0; }
+    while (deg > 360.0) {
+	deg -= 360.0; }
+
+    return deg;
+}
+
+    
+
 
 // end of gps.cxx

@@ -31,9 +31,10 @@
  * /instrumentation/gps/wp-latitude-deg
  * /instrumentation/gps/wp-ID
  * /instrumentation/gps/wp-name
- * /instrumentation/gps/course-deg
+ * /instrumentation/gps/desired-course-deg
  * /instrumentation/gps/get-nearest-airport
  * /instrumentation/gps/waypoint-type
+ * /instrumentation/gps/tracking-bug
  *
  * Output properties:
  *
@@ -44,15 +45,17 @@
  * /instrumentation/gps/indicated-track-magnetic-deg
  * /instrumentation/gps/indicated-ground-speed-kt
  *
- * /instrumentation/gps/wp-distance-m
+ * /instrumentation/gps/wp-distance-nm
  * /instrumentation/gps/wp-bearing-deg
+ * /instrumentation/gps/wp-bearing-mag-deg
  * /instrumentation/gps/TTW
- * /instrumentation/gps/radials/actual-deg
  * /instrumentation/gps/course-deviation-deg
  * /instrumentation/gps/course-error-nm
  * /instrumentation/gps/to-flag
  * /instrumentation/gps/odometer
  * /instrumentation/gps/trip-odometer
+ * /instrumentation/gps/true-bug-error-deg
+ * /instrumentation/gps/magnetic-bug-error-deg
  */
 class GPS : public SGSubsystem
 {
@@ -70,6 +73,10 @@ private:
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
 
+    double deg360 (double deg);
+    double deg180 (double deg);
+    double deg90 (double deg);
+
     SGPropertyNode_ptr _longitude_node;
     SGPropertyNode_ptr _latitude_node;
     SGPropertyNode_ptr _altitude_node;
@@ -83,6 +90,7 @@ private:
     SGPropertyNode_ptr _wp_course_node;
     SGPropertyNode_ptr _get_nearest_airport_node;
     SGPropertyNode_ptr _waypoint_type_node;
+    SGPropertyNode_ptr _tracking_bug_node;
 
     SGPropertyNode_ptr _raim_node;
     SGPropertyNode_ptr _indicated_longitude_node;
@@ -94,11 +102,14 @@ private:
     SGPropertyNode_ptr _wp_distance_node;
     SGPropertyNode_ptr _wp_ttw_node;
     SGPropertyNode_ptr _wp_bearing_node;
+    SGPropertyNode_ptr _wp_mag_bearing_node;
     SGPropertyNode_ptr _wp_course_deviation_node;
     SGPropertyNode_ptr _wp_course_error_nm_node;
     SGPropertyNode_ptr _wp_to_flag_node;
     SGPropertyNode_ptr _odometer_node;
     SGPropertyNode_ptr _trip_odometer_node;
+    SGPropertyNode_ptr _true_bug_error_node;
+    SGPropertyNode_ptr _magnetic_bug_error_node;
 
     bool _last_valid;
     double _last_longitude_deg;
