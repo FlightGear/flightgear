@@ -3,6 +3,7 @@
 noinst_LIBRARIES = libMisc.a
 
 libMisc_a_SOURCES = \
+	fgpath.cxx fgpath.hxx \
 	fgstream.cxx fgstream.hxx \
 	stopwatch.hxx \
 	strutils.cxx strutils.hxx \
