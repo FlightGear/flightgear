@@ -316,6 +316,12 @@ LIBS="$base_LIBS"
 
 dnl check for OpenAL libraries
 case "${host}" in
+*-apple-darwin*)
+    dnl Mac OS X
+
+    LIBS="$LIBS -framework IOKit -framework OpenAL"
+    ;;
+
 *)
     dnl default unix style machines
 
