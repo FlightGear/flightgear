@@ -77,22 +77,9 @@ Airplane* FGFDM::getAirplane()
 
 void FGFDM::init()
 {
-    // We don't want to use these ties (we set the values ourselves,
-    // and this works only for the first piston engine anyway).
-    fgUntie("/engines/engine[0]/rpm");
-    fgUntie("/engines/engine[0]/egt-degf");
-    fgUntie("/engines/engine[0]/cht-degf");
-    fgUntie("/engines/engine[0]/oil-temperature-degf");
-    fgUntie("/engines/engine[0]/mp-osi");
-    fgUntie("/engines/engine[0]/fuel-flow-gph");
-    fgUntie("/engines/engine[0]/running");
-    fgUntie("/engines/engine[0]/cranking");
+    // We don't want to use these ties (we set the values ourselves)
     fgUntie("/consumables/fuel/tank[0]/level-gal_us");
     fgUntie("/consumables/fuel/tank[1]/level-gal_us");
-
-    // Set these to sane values.  We don't support engine start yet.
-    fgSetBool("/engines/engine[0]/running", true);
-    fgSetBool("/engines/engine[0]/cranking", false);
 
     // Allows the user to start with something other than full fuel
     _airplane.setFuelFraction(fgGetFloat("/yasim/fuel-fraction", 1));

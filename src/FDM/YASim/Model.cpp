@@ -47,6 +47,9 @@ Model::Model()
 
     // Default value of 30 Hz
     _integrator.setInterval(1.0/30.0);
+
+    _agl = 0;
+    _crashed = false;
 }
 
 Model::~Model()
@@ -97,6 +100,21 @@ void Model::iterate()
     initIteration();
     _body.recalc(); // FIXME: amortize this, somehow
     _integrator.calcNewInterval();
+}
+
+bool Model::isCrashed()
+{
+    return _crashed;
+}
+
+void Model::setCrashed(bool crashed)
+{
+    _crashed = crashed;
+}
+
+float Model::getAGL()
+{
+    return _agl;
 }
 
 State* Model::getState()
@@ -269,20 +287,27 @@ void Model::newState(State* s)
     //printState(s);
 
     // Some simple collision detection
+    float min = 1e8;
     float ground[4], pos[3], cmpr[3];
     ground[3] = localGround(s, ground);
     int i;
     for(i=0; i<_gears.size(); i++) {
 	Gear* g = (Gear*)_gears.get(i);
+
+	// Get the point of ground contact
 	g->getPosition(pos);
 	g->getCompression(cmpr);
+	Math::mul3(g->getCompressFraction(), cmpr, cmpr);
 	Math::add3(cmpr, pos, pos);
 	float dist = ground[3] - Math::dot3(pos, ground);
-	if(dist < 0) {
-	    printf("CRASH: gear %d\n", i);
-	    *(int*)0=0;
-	}
+
+	// Find the lowest one
+	if(dist < min)
+	    min = dist;
     }
+    _agl = min;
+    if(_agl < -1) // Allow for some integration slop
+	_crashed = true;
 }
 
 // Returns a unit "down" vector for the ground in out, and the

@@ -20,11 +20,6 @@ float Math::sqrt(float f)
     return ::sqrt(f);
 }
 
-float Math::pow(float base, float exp)
-{
-    return ::pow(base, exp);
-}
-
 float Math::ceil(float f)
 {
     return ::ceil(f);
@@ -60,7 +55,7 @@ double Math::sqrt(double f)
     return ::sqrt(f);
 }
 
-double Math::pow(double base, double exp)
+float Math::pow(double base, double exp)
 {
     return ::pow(base, exp);
 }

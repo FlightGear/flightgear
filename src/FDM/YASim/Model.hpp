@@ -24,6 +24,9 @@ public:
 
     State* getState();
     void setState(State* s);
+    bool isCrashed();
+    void setCrashed(bool crashed);
+    float getAGL();
 
     void iterate();
 
@@ -81,6 +84,8 @@ private:
     float _torque[3];
 
     State* _s;
+    bool _crashed;
+    float _agl;
 };
 
 }; // namespace yasim

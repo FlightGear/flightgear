@@ -143,8 +143,11 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     // First off, make sure that the gear "tip" is below the ground.
     // If it's not, there's no force.
     float a = ground[3] - Math::dot3(_pos, ground);
-    if(a > 0)
+    if(a > 0) {
+	_wow = 0;
+	_frac = 0;
 	return;
+    }
 
     // Now a is the distance from the tip to ground, so make b the
     // distance from the base to ground.  We can get the fraction
@@ -169,11 +172,10 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     body->pointVelocity(_contact, rot, cv);
     Math::add3(cv, v, cv);
 
-    // Finally, we can start adding up the forces.  First the
-    // spring compression (note the clamping of _frac to 1):
+    // Finally, we can start adding up the forces.  First the spring
+    // compression.   (note the clamping of _frac to 1):
     _frac = (_frac > 1) ? 1 : _frac;
     float fmag = _frac*clen*_spring;
-    Math::mul3(fmag, cmpr, _force);
 
     // Then the damping.  Use the only the velocity into the ground
     // (projection along "ground") projected along the compression
@@ -183,10 +185,11 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     float damp = _damp * dv;
     if(damp > fmag) damp = fmag; // can't pull the plane down!
     if(damp < -fmag) damp = -fmag; // sanity
-    Math::mul3(-damp, cmpr, tmp);
-    Math::add3(_force, tmp, _force);
 
-    _wow = fmag - damp;    
+    // The actual force applied is only the component perpendicular to
+    // the ground.  Side forces come from velocity only.
+    _wow = (fmag - damp) * -Math::dot3(cmpr, ground);
+    Math::mul3(-_wow, ground, _force);
 
     // Wheels are funky.  Split the velocity along the ground plane
     // into rolling and skidding components.  Assuming small angles,

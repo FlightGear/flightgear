@@ -31,6 +31,10 @@ float Atmosphere::data[][4] = {{ 0,     288.20, 101325, 1.22500 },
 			       { 18000, 216.66,   7565, 0.12165 },
 			       { 18900, 216.66,   6570, 0.10564 }};
 
+// Universal gas constant for air, in SI units.  P = R * rho * T.
+// P in pascals (N/m^2), rho is kg/m^3, T in kelvin.
+const float R = 287.1;
+
 float Atmosphere::getStdTemperature(float alt)
 {
     return getRecord(alt, 1);
@@ -48,7 +52,9 @@ float Atmosphere::getStdDensity(float alt)
 
 float Atmosphere::calcVEAS(float spd, float pressure, float temp)
 {
-    return 0; //FIXME
+    static float rho0 = getStdDensity(0);
+    float densityRatio = calcDensity(pressure, temp) / rho0;
+    return spd * Math::sqrt(densityRatio);
 }
 
 float Atmosphere::calcVCAS(float spd, float pressure, float temp)
@@ -84,13 +90,12 @@ float Atmosphere::calcVCAS(float spd, float pressure, float temp)
 
 float Atmosphere::calcDensity(float pressure, float temp)
 {
-    // P = rho*R*T, R == 287 kPa*m^3 per kg*kelvin for air
-    return pressure / (287 * temp);
+    return pressure / (R * temp);
 }
 
 float Atmosphere::calcMach(float spd, float temp)
 {
-    return spd / Math::sqrt(1.4 * 287 * temp);
+    return spd / Math::sqrt(1.4 * R * temp);
 }
 
 float Atmosphere::getRecord(float alt, int recNum)

@@ -105,6 +105,8 @@ void YASim::init()
     // Superclass hook
     common_init();
 
+    m->setCrashed(false);
+
     // Build a filename and parse it
     SGPath f(globals->get_fg_root());
     f.append("Aircraft-yasim");
@@ -141,16 +143,19 @@ void YASim::init()
     }
     
 
-    // Lift the plane up so the gear clear the ground
-    float minGearZ = 1e18;
-    for(i=0; i<a->numGear(); i++) {
-	Gear* g = a->getGear(i);
-	float pos[3];
-	g->getPosition(pos);
-	if(pos[2] < minGearZ)
-	    minGearZ = pos[2];
+    // Are we at ground level?  If so, lift the plane up so the gear
+    // clear the ground
+    if(get_Altitude() - get_Runway_altitude() < 50) {
+	float minGearZ = 1e18;
+	for(i=0; i<a->numGear(); i++) {
+	    Gear* g = a->getGear(i);
+	    float pos[3];
+	    g->getPosition(pos);
+	    if(pos[2] < minGearZ)
+		minGearZ = pos[2];
+	}
+	_set_Altitude(get_Runway_altitude() - minGearZ*M2FT);
     }
-    _set_Altitude(get_Altitude() - minGearZ*M2FT);
 
     // The pilot's eyepoint
     float pilot[3];
@@ -169,6 +174,10 @@ void YASim::init()
 
 bool YASim::update(int iterations)
 {
+    // If we're crashed, then we don't care
+    if(_fdm->getAirplane()->getModel()->isCrashed())
+	return true;
+
     int i;
     for(i=0; i<iterations; i++) {
         // Remember, update only every 4th call
@@ -310,10 +319,7 @@ void YASim::copyFromYASim()
     // UNUSED
     //_set_Geocentric_Position(Glue::geod2geocLat(lat), lon, alt*M2FT);
 
-    // FIXME: there's a normal vector available too, use it.
-    float groundMSL = scenery.get_cur_elev();
-    _set_Runway_altitude(groundMSL*M2FT);
-    _set_Altitude_AGL((alt - groundMSL)*M2FT);
+    _set_Altitude_AGL(model->getAGL() * M2FT);
 
     // useful conversion matrix
     float xyz2ned[9];
@@ -390,6 +396,8 @@ void YASim::copyFromYASim()
             fgg->SetBrake(true);
         if(g->getCompressFraction() != 0)
             fgg->SetWoW(true);
+	else
+	    fgg->SetWoW(false);
         fgg->SetPosition(g->getExtension());
     }
 
@@ -398,6 +406,7 @@ void YASim::copyFromYASim()
         Thruster* t = model->getThruster(i);
 
         fge->set_Running_Flag(true);
+        fge->set_Cranking_Flag(false);
 
         // Note: assumes all tanks have the same fuel density!
         fge->set_Fuel_Flow(CM2GALS * t->getFuelFlow()

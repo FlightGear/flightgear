@@ -126,9 +126,6 @@ void PropEngine::integrate(float dt)
     // needs to go away when the startup code gets written.
     if(_omega < 52.3) _omega = 52.3;
 
-    // FIXME: Integrate the propeller governor here, when that gets
-    // implemented...
-
     // Store the total angular momentum into _gyro
     Math::mul3(_omega*_moment, _dir, _gyro);
 
@@ -140,15 +137,25 @@ void PropEngine::integrate(float dt)
     float tau = _moment < 0 ? engTorque : -engTorque;
     Math::mul3(tau, _dir, _torque);
 
-    // Play with the variable propeller, but only if the propeller is
-    // vaguely stable alread (accelerating less than 100 rpm/s)
-    if(_variable && Math::abs(rotacc) < 20) {
-	float target = _minOmega + _advance*(_maxOmega-_minOmega);
-	float mod = 1.04;
-	if(target > _omega) mod = 1/mod;
-	float diff = Math::abs(target - _omega);
-	if(diff < 1) mod = 1 + (mod-1)*diff;
-	if(thrust < 0) mod = 1;
+    // Iterate the propeller governor, if we have one.  Since engine
+    // torque is basically constant with RPM, we want to make the
+    // propeller torque at the target RPM equal to the engine by
+    // varying the pitch.  Assume the the torque goes as the square of
+    // the RPM (roughly correct) and compute a "target" torque for the
+    // _current_ RPM.  Seek to that.  This is sort of a continuous
+    // Newton-Raphson, basically.
+    if(_variable) {
+	float targetOmega = _minOmega + _advance*(_maxOmega-_minOmega);
+	float ratio2 = (_omega*_omega)/(targetOmega*targetOmega);
+	float targetTorque = engTorque * ratio2;
+
+	float mod = propTorque < targetTorque ? 1.04 : (1/1.04);
+
+	// Convert to an acceleration here, so that big propellers
+	// don't seek faster than small ones.
+	float diff = Math::abs(propTorque - targetTorque) / _moment;
+	if(diff < 10) mod = 1 + (mod-1)*(0.1*diff);
+
 	_prop->modPitch(mod);
     }
 }
