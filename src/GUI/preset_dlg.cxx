@@ -60,7 +60,8 @@ static void PresetDialog_OK(puObject *)
 {
     char *value;
     PresetDialogInput->getValue(&value);
-    cout << "setting " << PresetProperty << " = " << value << endl;
+    SG_LOG( SG_GENERAL, SG_DEBUG, "setting " << PresetProperty
+            << " = " << value );
     fgSetString( PresetProperty.c_str(), value );
     FG_POP_PUI_DIALOG( PresetDialog );
 
@@ -75,19 +76,19 @@ static void PresetDialog_OK(puObject *)
         if ( fabs(fgGetDouble("/sim/presets/altitude-ft")) > 0.000001
              && fabs(fgGetDouble("/sim/presets/glideslope-deg")) > 0.000001 ) {
             fgSetDouble("/sim/presets/altitude-ft", -9999.0);
-            cout << "nuking altitude" << endl;
+            SG_LOG( SG_GENERAL, SG_DEBUG, "nuking altitude" );
         }
     } else if ( PresetProperty == "/sim/presets/altitude-ft" ) {
         if ( fabs(fgGetDouble("/sim/presets/offset-distance")) > 0.000001
              && fabs(fgGetDouble("/sim/presets/glideslope-deg")) > 0.000001 ) {
             fgSetDouble("/sim/presets/offset-distance", 0.0);
-            cout << "nuking offset distance" << endl;
+            SG_LOG( SG_GENERAL, SG_DEBUG, "nuking offset distance" );
         }
     } else if ( PresetProperty == "/sim/presets/glideslope-deg" ) {
         if ( fabs(fgGetDouble("/sim/presets/offset-distance")) > 0.000001
              && fabs(fgGetDouble("/sim/presets/altitude-ft")) > 0.000001 ) {
             fgSetDouble("/sim/presets/altitude-ft", -9999.0);
-            cout << "nuking altitude" << endl;
+            SG_LOG( SG_GENERAL, SG_DEBUG, "nuking altitude" );
         }
     }
 }
@@ -136,7 +137,7 @@ void fgPresetInit()
         PresetDialogResetButton -> setLegend (gui_msg_RESET);
         PresetDialogResetButton -> setCallback (PresetDialog_Reset);
     }
-    cout << "PresetInit " << PresetValue << endl;
+    SG_LOG( SG_GENERAL, SG_DEBUG, "PresetInit " << PresetValue );
     FG_FINALIZE_PUI_DIALOG( PresetDialog );
 }
 
