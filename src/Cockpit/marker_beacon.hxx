@@ -49,6 +49,10 @@ class FGMarkerBeacon : public FGSubsystem
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
+    SGPropertyNode *bus_power;
+    SGPropertyNode *power_btn;
+    SGPropertyNode *audio_btn;
+    SGPropertyNode *servicable;
 
     bool need_update;
 
@@ -78,6 +82,9 @@ public:
     inline bool get_inner_blink () const { return inner_blink; }
     inline bool get_middle_blink () const { return middle_blink; }
     inline bool get_outer_blink () const { return outer_blink; }
+    inline bool has_power() const {
+        return power_btn->getBoolValue() && (bus_power->getDoubleValue() > 1.0);
+    }
 };
 
 

@@ -52,6 +52,7 @@ FGNavCom::FGNavCom() :
     nav_last_time(0),
     need_update(true),
     power_btn(true),
+    audio_btn(true),
     comm_freq(0.0),
     comm_alt_freq(0.0),
     comm_vol_btn(0.0),
@@ -171,6 +172,11 @@ FGNavCom::bind ()
     fgSetArchivable( propname );
 
 				// Radio outputs
+    sprintf( propname, "/radios/nav[%d]/audio-btn", index );
+    fgTie( propname, this,
+           &FGNavCom::get_audio_btn, &FGNavCom::set_audio_btn );
+    fgSetArchivable( propname );
+
     sprintf( propname, "/radios/nav[%d]/radials/actual-deg", index );
     fgTie( propname,  this, &FGNavCom::get_nav_radial );
 
@@ -361,12 +367,11 @@ FGNavCom::update(double dt)
 	// cout << "not picking up vor. :-(" << endl;
     }
 
-#ifdef ENABLE_AUDIO_SUPPORT
     if ( nav_valid && nav_inrange && nav_servicable->getBoolValue() ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
 	if ( power_btn && (bus_power->getDoubleValue() > 1.0)
-             && nav_ident_btn )
+             && nav_ident_btn && audio_btn )
         {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( nav_fx_name );
@@ -414,8 +419,6 @@ FGNavCom::update(double dt)
 	    globals->get_soundmgr()->stop( dme_fx_name );
 	}
     }
-#endif
-
 }
 
 
@@ -463,7 +466,6 @@ void FGNavCom::search()
 	    nav_gs_y = ils.get_gs_y();
 	    nav_gs_z = ils.get_gs_z();
 
-#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
@@ -488,7 +490,6 @@ void FGNavCom::search()
 	    //      << " nav_last_time = " << nav_last_time
 	    //      << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
 
 	    // cout << "Found an ils station in range" << endl;
 	    // cout << " id = " << ils.get_locident() << endl;
@@ -515,7 +516,6 @@ void FGNavCom::search()
 	    nav_y = nav.get_y();
 	    nav_z = nav.get_z();
 
-#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
@@ -543,7 +543,6 @@ void FGNavCom::search()
 	    //      << nav_play_count << " nav_last_time = "
 	    //      << nav_last_time << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
 
 	    // cout << "Found a vor station in range" << endl;
 	    // cout << " id = " << nav.get_ident() << endl;
@@ -554,12 +553,10 @@ void FGNavCom::search()
 	nav_radial = 0;
 	nav_trans_ident = "";
 	last_nav_id = "";
-#ifdef ENABLE_AUDIO_SUPPORT
 	if ( ! globals->get_soundmgr()->remove( nav_fx_name ) ) {
             cout << "Failed to remove nav-vor-ident sound" << endl;
         }
 	globals->get_soundmgr()->remove( dme_fx_name );
-#endif
 	// cout << "not picking up vor1. :-(" << endl;
     }
 }

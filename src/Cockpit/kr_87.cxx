@@ -88,6 +88,7 @@ FGKR_87::FGKR_87() :
     count_mode(0),
     rotation(0),
     power_btn(true),
+    audio_btn(true),
     vol_btn(0.5),
     adf_btn(true),
     bfo_btn(false),
@@ -97,7 +98,6 @@ FGKR_87::FGKR_87() :
     last_flt_et_btn(false),
     set_rst_btn(false),
     last_set_rst_btn(false),
-    ident_btn(false),
     freq(0.0),
     stby_freq(0.0),
     needle_deg(0.0),
@@ -144,6 +144,10 @@ void FGKR_87::bind () {
 	  &FGKR_87::get_power_btn,
 	  &FGKR_87::set_power_btn);
     fgSetArchivable("/radios/kr-87/inputs/power-btn");
+    fgTie("/radios/kr-87/inputs/audio-btn", this,
+	  &FGKR_87::get_audio_btn,
+	  &FGKR_87::set_audio_btn);
+    fgSetArchivable("/radios/kr-87/inputs/audio-btn");
     fgTie("/radios/kr-87/inputs/volume", this,
 	  &FGKR_87::get_vol_btn,
 	  &FGKR_87::set_vol_btn);
@@ -163,8 +167,6 @@ void FGKR_87::bind () {
     fgTie("/radios/kr-87/inputs/set-rst-btn", this,
 	  &FGKR_87::get_set_rst_btn,
 	  &FGKR_87::set_set_rst_btn);
-    fgTie("/radios/kr-87/inputs/ident-btn", this,
-	  &FGKR_87::get_ident_btn, &FGKR_87::set_ident_btn);
 
     // outputs
     fgTie("/radios/kr-87/outputs/selected-khz", this,
@@ -439,15 +441,18 @@ void FGKR_87::update( double dt ) {
     // cout << "flt = " << flight_timer << " et = " << elapsed_timer 
     //      << " needle = " << needle_deg << endl;
 
-#ifdef ENABLE_AUDIO_SUPPORT
     if ( valid && inrange && servicable->getBoolValue() ) {
-	// play station ident via audio system if on + ident_btn,
+	// play station ident via audio system if on + ant mode,
 	// otherwise turn it off
-	if ( vol_btn >= 0.01 && ident_btn ) {
+	if ( vol_btn >= 0.01 && audio_btn ) {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( "adf-ident" );
             if ( sound != NULL ) {
-                sound->set_volume( vol_btn );
+                if ( !adf_btn ) {
+                    sound->set_volume( vol_btn );
+                } else {
+                    sound->set_volume( vol_btn / 4.0 );
+                }
             } else {
                 SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find adf-ident sound" );
             }
@@ -467,7 +472,6 @@ void FGKR_87::update( double dt ) {
 	    globals->get_soundmgr()->stop( "adf-ident" );
 	}
     }
-#endif
 }
 
 
@@ -506,7 +510,6 @@ void FGKR_87::search() {
 	    y = nav.get_y();
 	    z = nav.get_z();
 
-#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );
 	    }
@@ -523,7 +526,6 @@ void FGKR_87::search() {
 	    //      << play_count << " last_time = "
 	    //      << last_time << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
 
 	    // cout << "Found an adf station in range" << endl;
 	    // cout << " id = " << nav.get_ident() << endl;
@@ -532,9 +534,7 @@ void FGKR_87::search() {
 	valid = false;
 	ident = "";
 	trans_ident = "";
-#ifdef ENABLE_AUDIO_SUPPORT
 	globals->get_soundmgr()->remove( "adf-ident" );
-#endif
 	last_ident = "";
 	// cout << "not picking up adf. :-(" << endl;
     }

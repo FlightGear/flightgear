@@ -70,6 +70,11 @@ FGMarkerBeacon::FGMarkerBeacon() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
+    bus_power(fgGetNode("/systems/electrical/outputs/navcom[0]", true)),
+    power_btn(fgGetNode("/radios/marker-beacon/power-btn", true)),
+    audio_btn(fgGetNode("/radios/marker-beacon/audio-btn", true)),
+    servicable(fgGetNode("/instrumentation/marker-beacons/servicable", true)),
+                 
     need_update(true),
     outer_blink(false),
     middle_blink(false),
@@ -86,6 +91,10 @@ FGMarkerBeacon::FGMarkerBeacon() :
     term_tbl = new SGInterpTable( term.str() );
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
+
+    power_btn->setBoolValue( true );
+    audio_btn->setBoolValue( true );
+    servicable->setBoolValue( true );
 }
 
 
@@ -137,38 +146,43 @@ FGMarkerBeacon::update(double dt)
 {
     need_update = false;
 
-    // marker beacon blinking
-    bool light_on = ( outer_blink || middle_blink || inner_blink );
-    SGTimeStamp current;
-    current.stamp();
+    if ( has_power() && servicable->getBoolValue() ) {
+        // marker beacon blinking
+        bool light_on = ( outer_blink || middle_blink || inner_blink );
+        SGTimeStamp current;
+        current.stamp();
 
-    if ( light_on && (current - blink > 400000) ) {
-	light_on = false;
-	blink.stamp();
-    } else if ( !light_on && (current - blink > 100000) ) {
-	light_on = true;
-	blink.stamp();
-    }
+        if ( light_on && (current - blink > 400000) ) {
+            light_on = false;
+            blink.stamp();
+        } else if ( !light_on && (current - blink > 100000) ) {
+            light_on = true;
+            blink.stamp();
+        }
 
-    if ( outer_marker ) {
-	outer_blink = light_on;
+        if ( outer_marker ) {
+            outer_blink = light_on;
+        } else {
+            outer_blink = false;
+        }
+
+        if ( middle_marker ) {
+            middle_blink = light_on;
+        } else {
+            middle_blink = false;
+        }
+
+        if ( inner_marker ) {
+            inner_blink = light_on;
+        } else {
+            inner_blink = false;
+        }
+
+        // cout << outer_blink << " " << middle_blink << " "
+        //      << inner_blink << endl;
     } else {
-	outer_blink = false;
+        inner_blink = middle_blink = outer_blink = false;
     }
-
-    if ( middle_marker ) {
-	middle_blink = light_on;
-    } else {
-	middle_blink = false;
-    }
-
-    if ( inner_marker ) {
-	inner_blink = light_on;
-    } else {
-	inner_blink = false;
-    }
-
-    // cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
 }
 
 
@@ -191,58 +205,65 @@ void FGMarkerBeacon::search()
 
     outer_marker = middle_marker = inner_marker = false;
 
-    if ( beacon_type == FGMkrBeacon::OUTER ) {
+    if ( beacon_type == FGMkrBeacon::NOBEACON
+         || !has_power() || !servicable->getBoolValue() )
+    {
+	// cout << "no marker" << endl;
+        beacon_type = FGMkrBeacon::NOBEACON;
+	globals->get_soundmgr()->stop( "outer-marker" );
+	globals->get_soundmgr()->stop( "middle-marker" );
+	globals->get_soundmgr()->stop( "inner-marker" );
+    } else if ( beacon_type == FGMkrBeacon::OUTER ) {
 	outer_marker = true;
 	// cout << "OUTER MARKER" << endl;
-#ifdef ENABLE_AUDIO_SUPPORT
-	if ( last_beacon != FGMkrBeacon::OUTER ) {
-	    if ( ! globals->get_soundmgr()->exists( "outer-marker" ) ) {
-		FGSimpleSound *sound = beacon.get_outer();
-		sound->set_volume( 0.3 );
-		globals->get_soundmgr()->add( sound, "outer-marker" );
-	    }
-	    if ( !globals->get_soundmgr()->is_playing("outer-marker") ) {
-		globals->get_soundmgr()->play_looped( "outer-marker" );
-	    }
-	}
-#endif
+        if ( last_beacon != FGMkrBeacon::OUTER ) {
+            if ( ! globals->get_soundmgr()->exists( "outer-marker" ) ) {
+                FGSimpleSound *sound = beacon.get_outer();
+                sound->set_volume( 0.3 );
+                globals->get_soundmgr()->add( sound, "outer-marker" );
+            }
+        }
+        if ( audio_btn->getBoolValue() 
+             && !globals->get_soundmgr()->is_playing("outer-marker") )
+        {
+            globals->get_soundmgr()->play_looped( "outer-marker" );
+        } else {
+            globals->get_soundmgr()->stop( "outer-marker" );
+        }
     } else if ( beacon_type == FGMkrBeacon::MIDDLE ) {
 	middle_marker = true;
 	// cout << "MIDDLE MARKER" << endl;
-#ifdef ENABLE_AUDIO_SUPPORT
 	if ( last_beacon != FGMkrBeacon::MIDDLE ) {
 	    if ( ! globals->get_soundmgr()->exists( "middle-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_middle();
 		sound->set_volume( 0.3 );
 		globals->get_soundmgr()->add( sound, "middle-marker" );
 	    }
-	    if ( !globals->get_soundmgr()->is_playing("middle-marker") ) {
-		globals->get_soundmgr()->play_looped( "middle-marker" );
-	    }
-	}
-#endif
+        }
+        if ( audio_btn->getBoolValue() 
+             && !globals->get_soundmgr()->is_playing("middle-marker") )
+        {
+            globals->get_soundmgr()->play_looped( "middle-marker" );
+        } else {
+            globals->get_soundmgr()->stop( "middle-marker" );
+        }
     } else if ( beacon_type == FGMkrBeacon::INNER ) {
 	inner_marker = true;
 	// cout << "INNER MARKER" << endl;
-#ifdef ENABLE_AUDIO_SUPPORT
 	if ( last_beacon != FGMkrBeacon::INNER ) {
 	    if ( ! globals->get_soundmgr()->exists( "inner-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_inner();
 		sound->set_volume( 0.3 );
 		globals->get_soundmgr()->add( sound, "inner-marker" );
 	    }
-	    if ( !globals->get_soundmgr()->is_playing("inner-marker") ) {
-		globals->get_soundmgr()->play_looped( "inner-marker" );
-	    }
-	}
-#endif
-    } else {
-	// cout << "no marker" << endl;
-#ifdef ENABLE_AUDIO_SUPPORT
-	globals->get_soundmgr()->stop( "outer-marker" );
-	globals->get_soundmgr()->stop( "middle-marker" );
-	globals->get_soundmgr()->stop( "inner-marker" );
-#endif
+        }
+        if ( audio_btn->getBoolValue() 
+             && !globals->get_soundmgr()->is_playing("inner-marker") )
+        {
+            globals->get_soundmgr()->play_looped( "inner-marker" );
+        } else {
+            globals->get_soundmgr()->stop( "inner-marker" );
+        }
     }
     last_beacon = beacon_type;
 }

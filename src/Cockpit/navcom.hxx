@@ -64,6 +64,7 @@ class FGNavCom : public FGSubsystem
     bool need_update;
 
     bool power_btn;
+    bool audio_btn;
 
     bool comm_valid;
     bool comm_inrange;
@@ -141,10 +142,8 @@ public:
     }
 
     // NavCom Setters
-    inline void set_power_btn( bool val ) {
-        power_btn = val;
-
-    }
+    inline void set_power_btn( bool val ) { power_btn = val; }
+    inline void set_audio_btn( bool val ) { audio_btn = val; }
  
     // COMM Setters
     inline void set_comm_freq( double freq ) {
@@ -178,6 +177,7 @@ public:
         return power_btn && (bus_power->getDoubleValue() > 1.0);
     }
     inline bool get_power_btn() const { return power_btn; }
+    inline bool get_audio_btn() const { return audio_btn; }
 
     // COMM Accessors
     inline double get_comm_freq () const { return comm_freq; }

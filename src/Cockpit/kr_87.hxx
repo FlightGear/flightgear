@@ -77,6 +77,7 @@ class FGKR_87 : public FGSubsystem
     // input and buttons
     double rotation;            // compass faceplace rotation
     bool power_btn;             // 0 = off, 1 = powered
+    bool audio_btn;             // 0 = off, 1 = on
     double vol_btn;
     bool adf_btn;               // 0 = normal, 1 = depressed
     bool bfo_btn;               // 0 = normal, 1 = depressed
@@ -86,7 +87,6 @@ class FGKR_87 : public FGSubsystem
     bool last_flt_et_btn;
     bool set_rst_btn;           // 0 = normal, 1 = depressed
     bool last_set_rst_btn;      // 0 = normal, 1 = depressed
-    bool ident_btn;             // turn audio morse code on/off
 
     // outputs
     double freq;
@@ -142,6 +142,10 @@ public:
     inline void set_power_btn( bool val ) {
 	power_btn = val;
     }
+    inline bool get_audio_btn() const { return audio_btn; }
+    inline void set_audio_btn( bool val ) {
+	audio_btn = val;
+    }
     inline double get_vol_btn() const { return vol_btn; }
     inline void set_vol_btn( double val ) {
 	if ( val < 0.0 ) val = 0.0;
@@ -158,8 +162,6 @@ public:
     inline void set_flt_et_btn( bool val ) { flt_et_btn = val; }
     inline bool get_set_rst_btn() const { return set_rst_btn; }
     inline void set_set_rst_btn( bool val ) { set_rst_btn = val; }
-    inline bool get_ident_btn() const { return ident_btn; }
-    inline void set_ident_btn( bool val ) { ident_btn = val; }
 
     // outputs
     inline double get_freq () const { return freq; }
