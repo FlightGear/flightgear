@@ -47,6 +47,9 @@
 
 $Header$
 $Log$
+Revision 1.4  1998/08/24 20:09:26  curt
+Code optimization tweaks from Norman Vine.
+
 Revision 1.3  1998/08/06 12:46:38  curt
 Header change.
 
@@ -140,6 +143,7 @@ void ls_aux( void ) {
 	/* SCALAR inv_radius_ratio; */
 	SCALAR	cos_rwy_hdg, sin_rwy_hdg;
 	SCALAR	mach2, temp_ratio, pres_ratio;
+	SCALAR  tmp;
 	
     /* update geodetic position */
 
@@ -261,7 +265,8 @@ void ls_aux( void ) {
 
 	mach2 = Mach_number*Mach_number;
 	temp_ratio = 1.0 + 0.2*mach2; 
-	pres_ratio = pow( temp_ratio, 3.5 );
+	tmp = 3.5;
+	pres_ratio = pow( temp_ratio, tmp );
 
 	Total_temperature = temp_ratio*Static_temperature;
 	Total_pressure    = pres_ratio*Static_pressure;

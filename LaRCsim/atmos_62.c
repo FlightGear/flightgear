@@ -89,7 +89,7 @@ void ls_atmos( SCALAR altitude, SCALAR * sigma, SCALAR * v_sound,
     int		index;
     SCALAR	daltp, daltn, daltp3, daltn3, density;
     SCALAR	t_amb_r, p_amb_r;
-    int         nonconstant_const_param = 5.256;
+    SCALAR      tmp;
 
     static SCALAR	d_a_table[MAX_ALT_INDEX][5] =
     {
@@ -254,7 +254,8 @@ void ls_atmos( SCALAR altitude, SCALAR * sigma, SCALAR * v_sound,
 	t_amb_r = 1. - 6.875e-6*altitude;
 	// printf("index = %d  t_amb_r = %.2f\n", index, t_amb_r);
 	// p_amb_r = pow( t_amb_r, 5.256 );
-	p_amb_r = pow( t_amb_r, nonconstant_const_param );
+	tmp = 5.256; // avoid a segfault (?)
+	p_amb_r = pow( t_amb_r, tmp );
 	// printf("p_amb_r = %.2f\n", p_amb_r);
       }
     else

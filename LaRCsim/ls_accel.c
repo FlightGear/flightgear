@@ -38,6 +38,9 @@
 	    
 $Header$
 $Log$
+Revision 1.4  1998/08/24 20:09:26  curt
+Code optimization tweaks from Norman Vine.
+
 Revision 1.3  1998/08/06 12:46:38  curt
 Header change.
 
@@ -102,6 +105,7 @@ void ls_accel( void ) {
   SCALAR	inv_Mass, inv_Radius;
   SCALAR	ixz2, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10;
   SCALAR	dx_pilot_from_cg, dy_pilot_from_cg, dz_pilot_from_cg;
+  SCALAR	tan_Lat_geocentric;
   
   
   /* Sum forces and moments at reference point */
@@ -132,12 +136,13 @@ void ls_accel( void ) {
   
   /* Calculate linear accelerations */
   
+  tan_Lat_geocentric = tan(Lat_geocentric);
   inv_Mass = 1/Mass;
   inv_Radius = 1/Radius_to_vehicle;
   V_dot_north = inv_Mass*F_north + 
-    inv_Radius*(V_north*V_down - V_east*V_east*tan(Lat_geocentric));
+    inv_Radius*(V_north*V_down - V_east*V_east*tan_Lat_geocentric);
   V_dot_east  = inv_Mass*F_east  + 
-    inv_Radius*(V_east*V_down + V_north*V_east*tan(Lat_geocentric));
+    inv_Radius*(V_east*V_down + V_north*V_east*tan_Lat_geocentric);
   V_dot_down  = inv_Mass*(F_down) + Gravity -
     inv_Radius*(V_north*V_north + V_east*V_east);
   
@@ -146,14 +151,16 @@ void ls_accel( void ) {
   ixz2 = I_xz*I_xz;
   c0  = 1/(I_xx*I_zz - ixz2);
   c1  = c0*((I_yy-I_zz)*I_zz - ixz2);
-  c2  = c0*I_xz*(I_xx - I_yy + I_zz);
-  c3  = c0*I_zz;
   c4  = c0*I_xz;
+  /* c2  = c0*I_xz*(I_xx - I_yy + I_zz); */
+  c2  = c4*(I_xx - I_yy + I_zz);
+  c3  = c0*I_zz;
   c7  = 1/I_yy;
   c5  = c7*(I_zz - I_xx);
   c6  = c7*I_xz;
   c8  = c0*((I_xx - I_yy)*I_xx + ixz2);
-  c9  = c0*I_xz*(I_yy - I_zz - I_xx);
+  /* c9  = c0*I_xz*(I_yy - I_zz - I_xx); */
+  c9  = c4*(I_yy - I_zz - I_xx);
   c10 = c0*I_xx;
   
   /* Calculate the rotational body axis accelerations */

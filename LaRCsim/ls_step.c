@@ -50,6 +50,9 @@
 
 $Header$
 $Log$
+Revision 1.4  1998/08/24 20:09:27  curt
+Code optimization tweaks from Norman Vine.
+
 Revision 1.3  1998/07/12 03:11:04  curt
 Removed some printf()'s.
 Fixed the autopilot integration so it should be able to update it's control
@@ -140,6 +143,7 @@ void ls_step( SCALAR dt, int Initialize ) {
 		SCALAR	e_dot_0, e_dot_1, e_dot_2, e_dot_3;
 	static	SCALAR	e_0, e_1, e_2, e_3;
 	static	SCALAR	e_dot_0_past, e_dot_1_past, e_dot_2_past, e_dot_3_past;
+	        SCALAR  cos_Lat_geocentric, inv_Radius_to_vehicle;
 
 /*  I N I T I A L I Z A T I O N   */
 
@@ -233,10 +237,14 @@ void ls_step( SCALAR dt, int Initialize ) {
     
 /* Calculate trajectory rate (geocentric coordinates) */
 
-    if (cos(Lat_geocentric) != 0)
-    	Longitude_dot = V_east/(Radius_to_vehicle*cos(Lat_geocentric));
+    inv_Radius_to_vehicle = 1.0/Radius_to_vehicle;
+    cos_Lat_geocentric = cos(Lat_geocentric);
+
+    if ( cos_Lat_geocentric != 0) {
+    	Longitude_dot = V_east/(Radius_to_vehicle*cos_Lat_geocentric);
+    }
     	
-    Latitude_dot = V_north/Radius_to_vehicle;
+    Latitude_dot = V_north*inv_Radius_to_vehicle;
     Radius_dot = -V_down;
     	
 /*  A N G U L A R   V E L O C I T I E S   A N D   P O S I T I O N S  */
@@ -255,9 +263,9 @@ void ls_step( SCALAR dt, int Initialize ) {
     
 /* Calculate local axis frame rates due to travel over curved earth */
 
-    P_local =  V_east/Radius_to_vehicle;
-    Q_local = -V_north/Radius_to_vehicle;
-    R_local = -V_east*tan(Lat_geocentric)/Radius_to_vehicle;
+    P_local =  V_east*inv_Radius_to_vehicle;
+    Q_local = -V_north*inv_Radius_to_vehicle;
+    R_local = -V_east*tan(Lat_geocentric)*inv_Radius_to_vehicle;
     
 /* Transform local axis frame rates to body axis rates */
 
