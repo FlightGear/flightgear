@@ -194,7 +194,7 @@ In my case I had to make entries to put the throttle on axis2.
 --prop:/input/js0/axis0/dead-band=0.1
  
     // Default axis 1 to elevator
---prop:/input/js0/axis1/control=/controls/elevator"
+--prop:/input/js0/axis1/control=/controls/elevator
 --prop:/input/js0/axis1/dead-band=0.1
 --prop:/input/js0/axis1/factor=-1.0
  
