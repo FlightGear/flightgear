@@ -193,9 +193,18 @@ FG3DModel::init (const string &path)
     }
   }
 
+				// Set up the range selector node
+  float ranges[2];
+  ssgRangeSelector * lod = new ssgRangeSelector;
+  lod->addKid(_model);
+  ranges[0] = props.getFloatValue("range/min-m", 0);
+  ranges[1] = props.getFloatValue("range/max-m", 5000);
+  lod->setRanges(ranges, 2);
+
+
 				// Set up the alignment node
   ssgTransform * align = new ssgTransform;
-  align->addKid(_model);
+  align->addKid(lod);
   sgMat4 rot_matrix;
   sgMat4 off_matrix;
   sgMat4 res_matrix;
@@ -216,7 +225,6 @@ FG3DModel::init (const string &path)
 				// Set up the selector node
   _selector->addKid(_position);
   _selector->clrTraversalMaskBits(SSGTRAV_HOT);
-
 
 				// Set up a location class
   _location = (FGLocation *) new FGLocation;
@@ -318,6 +326,8 @@ FG3DModel::make_animation (const char * object_name,
   const char * type = node->getStringValue("type");
   if (!strcmp("none", type)) {
     animation = new NullAnimation();
+  } else if (!strcmp("range", type)) {
+    animation = new RangeAnimation();
   } else if (!strcmp("select", type)) {
     animation = new SelectAnimation();
   } else if (!strcmp("spin", type)) {
@@ -383,6 +393,39 @@ FG3DModel::NullAnimation::init (ssgEntity * object,
 
 void
 FG3DModel::NullAnimation::update (int dt)
+{
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FG3DModel::RangeAnimation
+////////////////////////////////////////////////////////////////////////
+
+FG3DModel::RangeAnimation::RangeAnimation ()
+  : _branch(new ssgRangeSelector)
+{
+}
+
+FG3DModel::RangeAnimation::~RangeAnimation ()
+{
+  _branch = 0;
+}
+
+void
+FG3DModel::RangeAnimation::init (ssgEntity * object,
+				      SGPropertyNode * props)
+{
+  float ranges[2];
+  splice_branch(_branch, object);
+  _branch->setName(props->getStringValue("name", 0));
+  ranges[0] = props->getFloatValue("min-m", 0);
+  ranges[1] = props->getFloatValue("max-m", 5000);
+  _branch->setRanges(ranges, 2);
+}
+
+void
+FG3DModel::RangeAnimation::update (int dt)
 {
 }
 

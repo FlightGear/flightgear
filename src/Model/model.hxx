@@ -139,6 +139,21 @@ private:
     ssgBranch * _branch;
   };
 
+  
+  /**
+   * A range, or level-of-detail (LOD) animation.
+   */
+  class RangeAnimation : public Animation
+  {
+  public:
+    RangeAnimation ();
+    virtual ~RangeAnimation ();
+    virtual void init (ssgEntity * object, SGPropertyNode * props);
+    virtual void update (int dt);
+  private:
+    ssgRangeSelector * _branch;
+  };
+
 
   /**
    * Animation to select alternative versions of the same object.
