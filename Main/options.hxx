@@ -221,6 +221,8 @@ public:
 	    xglHint ( GL_FOG_HINT, GL_FASTEST );
 	}
     }
+    inline void set_xsize( int x ) { xsize= x; }
+    inline void set_ysize( int y ) { xsize= y; }
 
 private:
 
@@ -241,6 +243,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.22  1998/11/20 01:02:38  curt
+// Try to detect Mesa/Glide/Voodoo and chose the appropriate resolution.
+//
 // Revision 1.21  1998/11/16 14:00:04  curt
 // Added pow() macro bug work around.
 // Added support for starting FGFS at various resolutions.

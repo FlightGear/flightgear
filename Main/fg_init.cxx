@@ -123,18 +123,11 @@ int fgInitPosition( void ) {
 
 // General house keeping initializations
 int fgInitGeneral( void ) {
-    fgGENERAL *g;
     string root;
     int i;
 
-    g = &general;
-
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
-
-    g->glVendor = (char *)glGetString ( GL_VENDOR );
-    g->glRenderer = (char *)glGetString ( GL_RENDERER );
-    g->glVersion = (char *)glGetString ( GL_VERSION );
 
     root = current_options.get_fg_root();
     if ( ! root.length() ) {
@@ -148,7 +141,7 @@ int fgInitGeneral( void ) {
 
     // prime the frame rate counter pump
     for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
-	g->frames[i] = 0.0;
+	general.frames[i] = 0.0;
     }
 
     return ( 1 ); 
@@ -381,6 +374,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.51  1998/11/20 01:02:37  curt
+// Try to detect Mesa/Glide/Voodoo and chose the appropriate resolution.
+//
 // Revision 1.50  1998/11/16 14:00:01  curt
 // Added pow() macro bug work around.
 // Added support for starting FGFS at various resolutions.

@@ -807,6 +807,7 @@ static void fgReshape( int width, int height ) {
 
     v->winWidth = width;
     v->winHeight = height;
+    v->update_fov = true;
 
     // Inform gl of our view window size (now handled elsewhere)
     // xglViewport(0, 0, (GLint)width, (GLint)height);
@@ -899,7 +900,43 @@ int main( int argc, char **argv ) {
     // set default log levels
     fglog().setLogLevels( FG_ALL, FG_INFO );
 
-    FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version" << VERSION << endl );
+    FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version " << VERSION << endl );
+
+    string root;
+    int i;
+
+    FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
+    FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
+
+    // pull some basic driver info
+    general.glVendor = (char *)glGetString ( GL_VENDOR );
+    general.glRenderer = (char *)glGetString ( GL_RENDERER );
+    general.glVersion = (char *)glGetString ( GL_VERSION );
+
+    // try to determine if we should adjust the default display
+    // resolution.  The options class defaults (is initialized) to
+    // 640x480.
+    string renderer = general.glRenderer;
+
+    // currently we only know how to deal with Mesa/Glide/Voodoo cards
+    if ( renderer.find( "Glide" ) != string::npos ) {
+	if ( renderer.find( "FB/8" ) != string::npos ) {
+	    // probably a voodoo-2
+	    if ( renderer.find( "TMU/SLI" ) != string::npos ) {
+		// probably two SLI'd Voodoo-2's
+		current_options.set_xsize( 1024 );
+		current_options.set_ysize( 768 );
+	    } else {
+		// probably a single non-SLI'd Voodoo-2
+		current_options.set_xsize( 800 );
+		current_options.set_ysize( 600 );
+	    }
+	} else if ( renderer.find( "FB/2" ) != string::npos ) {
+	    // probably a voodoo-1, stick with the default
+	}
+    } else {
+	// we have no special knowledge of this card, stick with the default
+    }
 
     // Attempt to locate and parse a config file
     // First check fg_root
@@ -960,6 +997,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.68  1998/11/20 01:02:35  curt
+// Try to detect Mesa/Glide/Voodoo and chose the appropriate resolution.
+//
 // Revision 1.67  1998/11/16 13:59:58  curt
 // Added pow() macro bug work around.
 // Added support for starting FGFS at various resolutions.
