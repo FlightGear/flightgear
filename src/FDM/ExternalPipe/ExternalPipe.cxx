@@ -24,7 +24,7 @@
 #  include <config.h>
 #endif
 
-#if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
+#ifdef HAVE_MKFIFO
 #  include <sys/types.h>        // mkfifo() open() umask()
 #  include <sys/stat.h>         // mkfifo() open() umask()
 #  include <fcntl.h>            // open()
@@ -46,7 +46,7 @@ FGExternalPipe::FGExternalPipe( double dt, string name ) {
 
     buf = new char[sizeof(ctrls) + 1];
 
-#if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
+#ifdef HAVE_MKFIFO
     fifo_name_1 = name + "1";
     fifo_name_2 = name + "2";
 
@@ -87,7 +87,7 @@ FGExternalPipe::~FGExternalPipe() {
 
     SG_LOG( SG_IO, SG_INFO, "Closing up the ExternalPipe." );
     
-#if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
+#ifdef HAVE_MKFIFO
     // close
     int result;
     result = close( pd1 );
@@ -118,7 +118,7 @@ void FGExternalPipe::init() {
     double heading = fgGetDouble("/sim/presets/heading-deg");
     double speed = fgGetDouble( "/sim/presets/airspeed-kt" );
 
-#if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
+#ifdef HAVE_MKFIFO
 
     char cmd[256];
     int result;
@@ -178,7 +178,7 @@ void FGExternalPipe::init() {
 
 // Run an iteration of the EOM.
 void FGExternalPipe::update( double dt ) {
-#if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
+#ifdef HAVE_MKFIFO
     // SG_LOG( SG_IO, SG_INFO, "Start FGExternalPipe::udpate()" );
 
     int length;

@@ -538,7 +538,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( \
 	fcntl.h getopt.h malloc.h memory.h stdlib.h sys/param.h sys/stat.h \
-        sys/time.h sys/timeb.h unistd.h windows.h winbase.h values.h )
+        sys/time.h sys/timeb.h unistd.h windows.h values.h )
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -550,7 +550,7 @@ dnl Checks for library functions.
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS( \
-        ftime gettimeofday timegm memcpy bcopy mktime strstr rand \
+        ftime gettimeofday timegm memcpy bcopy mktime strstr rand mkfifo \
 	random drand48 setitimer getitimer signal GetLocalTime rint getrusage )
 
 AM_CONFIG_HEADER(src/Include/config.h)
