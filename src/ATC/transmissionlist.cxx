@@ -89,21 +89,24 @@ bool FGTransmissionList::init( SGPath path ) {
 
     while ( ! in.eof() ) {
         in >> a;
-	transmissionlist_station[a.get_station()].push_back(a);
-	
+        transmissionlist_station[a.get_station()].push_back(a);
+
         in >> skipcomment;
 
-	if ( a.get_station() < min ) {
-	  min = a.get_station();
-	}
-	if ( a.get_station() > max ) {
-	  max = a.get_station();
-	}
-	cout << a.get_station() << " " << a.get_code().c1 << " " << a.get_code().c2 << " "
-	     << a.get_code().c3 << " " << a.get_transtext() 
-	     << " " << a.get_menutext() << endl;
+        if ( a.get_station() < min ) {
+            min = a.get_station();
+        }
+        if ( a.get_station() > max ) {
+            max = a.get_station();
+        }
+
+        /*
+        cout << a.get_station() << " " << a.get_code().c1 << " " << a.get_code().c2 << " "
+             << a.get_code().c3 << " " << a.get_transtext() 
+             << " " << a.get_menutext() << endl;
+        */
     }
-    
+ 
 #endif
 
     // init ATC menu
@@ -161,14 +164,15 @@ string FGTransmissionList::gen_text(const int &station, const TransCode code,
 	for ( ; current != last ; ++current ) {
 		if ( current->get_code().c1 == code.c1 &&  
 			current->get_code().c2 == code.c2 &&
-		current->get_code().c3 == code.c3 ) {
+		    current->get_code().c3 == code.c3 ) {
 			
 			if ( ttext ) message = current->get_transtext();
 			else message = current->get_menutext();
 			strcpy( &mes[0], message.c_str() ); 
 			
+			// Replace all the '@' parameters with the actual text.
 			int check = 0;	// If mes gets overflowed the while loop can go infinite
-			while ( strchr(&mes[0], crej) != NULL  ) {
+			while ( strchr(&mes[0], crej) != NULL  ) {	// ie. loop until no more occurances of crej ('@') found
 				pos = strchr( &mes[0], crej );
 				bcopy(pos, &tag[0], 3);
 				tag[3] = '\0';

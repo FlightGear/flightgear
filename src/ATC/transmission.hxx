@@ -79,10 +79,10 @@ struct TransPar {
 // FGTransmission - a class to encapsulate a speech transmission
 class FGTransmission {
 
-  int       StationType;             // Type of ATC station: 1 Approach
-  TransCode Code;
-  string    TransText;
-  string    MenuText;
+  int       StationType;    // Type of ATC station: 1 Approach
+  TransCode Code;           // DCL - no idea what this is.
+  string    TransText;      // The text of the spoken transmission
+  string    MenuText;       // An abbreviated version of the text for the menu entry
 
 public:
 
