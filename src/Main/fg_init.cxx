@@ -604,6 +604,7 @@ bool fgInitConfig ( int argc, char **argv ) {
         } else {
             SG_LOG( SG_INPUT, SG_ALERT, "Cannot find specified aircraft: "
                     << aircraft );
+            return false;
         }
 
     } else {
