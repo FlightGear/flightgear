@@ -56,6 +56,7 @@ FGAIBase::FGAIBase() {
 }
 
 FGAIBase::~FGAIBase() {
+    globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
     unbind();
     _self = NULL;
 }

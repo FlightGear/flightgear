@@ -27,6 +27,8 @@
 #include <Main/fg_props.hxx>
 #include <list>
 #include "AIBase.hxx"
+#include "AIScenario.hxx"
+#include "AIFlightPlan.hxx"
 
 SG_USING_STD(list);
 class FGAIThermal;
@@ -75,6 +77,10 @@ public:
                         double pitch = 0,   // in degrees
                         double roll = 0 );  // in degrees
 
+    int createAircraft( string model_class, // see FGAIAircraft.hxx for possible classes
+                        string path,        // path to exterior model
+                        FGAIFlightPlan *flightplan );
+
     int createShip(     string path,        // path to exterior model
                         double latitude,    // in degrees -90 to 90
                         double longitude,   // in degrees -180 to 180
@@ -113,6 +119,8 @@ public:
     inline double get_user_pitch() { return user_pitch; }
     inline double get_user_yaw() { return user_yaw; }
     inline double get_user_speed() {return user_speed; }
+
+    void processScenario( string filename );
 
 private:
 

@@ -56,6 +56,9 @@ FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
    _self = this;
    _type_str = "aircraft";
    _otype = otAircraft;
+   fp = 0;
+   fp_count = 0;
+   use_perf_vs = true;
 
    // set heading and altitude locks
    hdg_lock = false;
@@ -64,6 +67,7 @@ FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
 
 
 FGAIAircraft::~FGAIAircraft() {
+    if (fp) delete fp;
     _self = NULL;
 }
 
@@ -108,6 +112,8 @@ void FGAIAircraft::SetPerformance(const PERF_STRUCT *ps) {
 void FGAIAircraft::Run(double dt) {
 
    FGAIAircraft::dt = dt;
+
+   if (fp) ProcessFlightPlan();
 	
    double turn_radius_ft;
    double turn_circum_ft;
@@ -159,26 +165,31 @@ void FGAIAircraft::Run(double dt) {
      double sum = hdg + diff;
      if (sum > 360.0) sum -= 360.0;
      if (fabs(sum - tgt_heading) < 1.0) { 
-       bank_sense = 1.0;
+       bank_sense = 1.0;   // right turn
      } else {
-       bank_sense = -1.0;
+       bank_sense = -1.0;  // left turn
      } 
-     if (diff < 30) tgt_roll = diff * bank_sense; 
+     if (diff < 30) {
+         tgt_roll = diff * bank_sense; 
+     } else {
+         tgt_roll = 30.0 * bank_sense;
+     }
    }
 
-   // adjust bank angle
+   // adjust bank angle, use 9 degrees per second
    double bank_diff = tgt_roll - roll;
    if (fabs(bank_diff) > 0.2) {
-     if (bank_diff > 0.0) roll += 5.0 * dt;
-     if (bank_diff < 0.0) roll -= 5.0 * dt;
+     if (bank_diff > 0.0) roll += 9.0 * dt;
+     if (bank_diff < 0.0) roll -= 9.0 * dt;
    }
 
    // adjust altitude (meters) based on current vertical speed (fpm)
-   altitude += vs * 0.0166667 * dt * SG_FEET_TO_METER;  
-   double altitude_ft = altitude * SG_METER_TO_FEET;
+   altitude += vs / 60.0 * dt;
+   pos.setelev(altitude * SG_FEET_TO_METER);  
+   double altitude_ft = altitude;
 
    // find target vertical speed if altitude lock engaged
-   if (alt_lock) {
+   if (alt_lock && use_perf_vs) {
      if (altitude_ft < tgt_altitude) {
        tgt_vs = tgt_altitude - altitude_ft;
        if (tgt_vs > performance->climb_rate)
@@ -190,9 +201,15 @@ void FGAIAircraft::Run(double dt) {
      }
    }
 
+   if (alt_lock && !use_perf_vs) {
+     double max_vs = 2*(tgt_altitude - altitude);
+     if ((fabs(tgt_altitude - altitude) < 1500.0) && 
+         (fabs(max_vs) < fabs(tgt_vs))) tgt_vs = max_vs;
+   }   
+
    // adjust vertical speed
    double vs_diff = tgt_vs - vs;
-   if (fabs(vs_diff) > 1.0) {
+   if (fabs(vs_diff) > 10.0) {
      if (vs_diff > 0.0) {
        vs += 400.0 * dt;
        if (vs > tgt_vs) vs = tgt_vs;
@@ -216,7 +233,7 @@ void FGAIAircraft::Run(double dt) {
    double user_heading   = manager->get_user_heading();
    double user_pitch     = manager->get_user_pitch();
    double user_yaw       = manager->get_user_yaw();
-   // double user_speed     = manager->get_user_speed();
+   double user_speed     = manager->get_user_speed();
 
    // calculate range to target in feet and nautical miles
    double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;
@@ -253,7 +270,7 @@ void FGAIAircraft::Run(double dt) {
    // calculate look up/down to target
    vert_offset = elevation + user_pitch;
 
-/* this calculation needs to be fixed
+/* this calculation needs to be fixed, but it isn't important anyway
    // calculate range rate
    double recip_bearing = bearing + 180.0;
    if (recip_bearing > 360.0) recip_bearing -= 360.0;
@@ -311,7 +328,102 @@ void FGAIAircraft::TurnTo(double heading) {
 
 
 double FGAIAircraft::sign(double x) {
-
   if ( x < 0.0 ) { return -1.0; }
   else { return 1.0; }
 }
+
+void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
+  fp = f;
+}
+
+void FGAIAircraft::ProcessFlightPlan( void ) {
+  FGAIFlightPlan::waypoint* prev = 0; // the one behind you
+  FGAIFlightPlan::waypoint* curr = 0; // the one ahead
+  FGAIFlightPlan::waypoint* next = 0; // the next plus 1
+  prev = fp->getPreviousWaypoint();
+  curr = fp->getCurrentWaypoint();
+  next = fp->getNextWaypoint();
+  ++fp_count;
+
+  if (!prev) {  //beginning of flightplan, do this initialization once
+    fp->IncrementWaypoint();
+    prev = fp->getPreviousWaypoint(); //first waypoint
+    curr = fp->getCurrentWaypoint();  //second waypoint
+    next = fp->getNextWaypoint();     //third waypoint (might not exist!) 
+    setLatitude(prev->latitude);
+    setLongitude(prev->longitude);
+    setSpeed(prev->speed);
+    setAltitude(prev->altitude);
+    setHeading(fp->getBearing(prev->latitude, prev->longitude, curr));
+    if (next) fp->setLeadDistance(speed, hdg, curr, next);
+    
+    if (curr->crossat > -1000.0) { //start descent/climb now
+        use_perf_vs = false;
+        tgt_vs = (curr->crossat - prev->altitude)/
+                 (fp->getDistanceToGo(pos.lat(), pos.lon(), curr)/
+                                      6076.0/prev->speed*60.0);
+        tgt_altitude = curr->crossat;
+    } else {
+        use_perf_vs = true;
+        tgt_altitude = prev->altitude;
+    }
+    alt_lock = hdg_lock = true;
+    //cout << "First waypoint:  " << prev->name << endl;
+    //cout << "  Target speed:    " << tgt_speed << endl;
+    //cout << "  Target altitude: " << tgt_altitude << endl;
+    //cout << "  Target heading:  " << tgt_heading << endl << endl;       
+    return;  
+  } // end of initialization
+
+  // let's only process the flight plan every 11 time steps
+  if (fp_count < 11) { 
+    return;
+  } else {
+    fp_count = 0;
+
+    // check to see if we've reached the lead point for our next turn
+    double dist_to_go = fp->getDistanceToGo(pos.lat(), pos.lon(), curr); 
+    double lead_dist = fp->getLeadDistance();
+    if (lead_dist < (2*speed)) lead_dist = 2*speed;  //don't skip over the waypoint
+    //cout << "dist_to_go: " << dist_to_go << ",  lead_dist: " << lead_dist << endl;
+
+    if ( dist_to_go < lead_dist ) {
+      if (curr->name == "END") {  //end of the flight plan, so terminate
+        setDie(true);
+        return;
+      }
+      // we've reached the lead-point for the waypoint ahead 
+      if (next) tgt_heading = fp->getBearing(curr, next);  
+      fp->IncrementWaypoint();
+      prev = fp->getPreviousWaypoint();
+      curr = fp->getCurrentWaypoint();
+      next = fp->getNextWaypoint();
+      if (next) fp->setLeadDistance(speed, tgt_heading, curr, next);
+      if (curr->crossat > -1000.0) {
+        use_perf_vs = false;
+        tgt_vs = (curr->crossat - altitude)/
+                 (fp->getDistanceToGo(pos.lat(), pos.lon(), curr)/6076.0/speed*60.0);
+        tgt_altitude = curr->crossat;
+      } else {
+        use_perf_vs = true;
+        tgt_altitude = prev->altitude;
+      }
+      tgt_speed = prev->speed;
+      hdg_lock = alt_lock = true;
+      //cout << "Crossing waypoint: " << prev->name << endl;
+      //cout << "  Target speed:    " << tgt_speed << endl;
+      //cout << "  Target altitude: " << tgt_altitude << endl;
+      //cout << "  Target heading:  " << tgt_heading << endl << endl;       
+    } else {
+        double calc_bearing = fp->getBearing(pos.lat(), pos.lon(), curr);
+        double hdg_error = calc_bearing - tgt_heading;
+        if (fabs(hdg_error) > 1.0) {
+          TurnTo( calc_bearing ); 
+        }
+    }
+     
+  }
+
+}
+
+

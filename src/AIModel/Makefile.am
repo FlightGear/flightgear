@@ -4,9 +4,11 @@ libAIModel_a_SOURCES = \
 	AIManager.hxx AIManager.cxx \
 	AIBase.hxx AIBase.cxx \
 	AIAircraft.hxx AIAircraft.cxx \
-        AIShip.hxx AIShip.cxx \
-        AIBallistic.hxx AIBallistic.cxx \
+	AIShip.hxx AIShip.cxx \
+	AIBallistic.hxx AIBallistic.cxx \
 	AIStorm.hxx AIStorm.cxx \
-	AIThermal.hxx AIThermal.cxx
+	AIThermal.hxx AIThermal.cxx \
+	AIFlightPlan.hxx AIFlightPlan.cxx \
+	AIScenario.hxx AIScenario.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

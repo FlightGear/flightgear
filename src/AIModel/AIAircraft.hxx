@@ -23,6 +23,7 @@
 
 #include "AIManager.hxx"
 #include "AIBase.hxx"
+#include "AIFlightPlan.hxx"
 
 #include <string>
 SG_USING_STD(string);
@@ -58,12 +59,15 @@ public:
 	void update(double dt);
 
         void SetPerformance(const PERF_STRUCT *ps);
+        void SetFlightPlan(FGAIFlightPlan *f);
         void AccelTo(double speed);
         void PitchTo(double angle);
         void RollTo(double angle);
         void YawTo(double angle);
         void ClimbTo(double altitude);
         void TurnTo(double heading);
+        void ProcessFlightPlan( void );
+        //double getHeading(double lat1, double lon1, double lat2, double lon2);
 
 protected:
         static FGAIAircraft *_self;
@@ -72,10 +76,12 @@ private:
 
         bool hdg_lock;
         bool alt_lock;
-
+        FGAIFlightPlan *fp;
+        int fp_count;  
         double dt; 
 
         const PERF_STRUCT *performance;
+        bool use_perf_vs;
 
 	void Run(double dt);
         double sign(double x);	

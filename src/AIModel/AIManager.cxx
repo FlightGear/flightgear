@@ -113,6 +113,10 @@ void FGAIManager::init() {
     }
   }
 
+  //**********  Flight Plan test code !!!! ****************
+  processScenario( "default_scenario" );
+  //******************************************************* 
+
   initDone = true;
 }
 
@@ -208,6 +212,8 @@ int FGAIManager::createAircraft( string model_class, string path,
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         } else if (model_class == "jet_fighter") {
           ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
+        } else {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
         }
         ai_plane->setHeading(heading);
         ai_plane->setSpeed(speed);
@@ -216,6 +222,32 @@ int FGAIManager::createAircraft( string model_class, string path,
         ai_plane->setLongitude(longitude);
         ai_plane->setLatitude(latitude);
         ai_plane->setBank(roll);
+        ai_plane->init();
+        ai_plane->bind();
+        return ai_plane->getID();
+}
+
+
+int FGAIManager::createAircraft( string model_class, string path,
+              FGAIFlightPlan* flightplan ) {
+     
+        FGAIAircraft* ai_plane = new FGAIAircraft(this);
+        ai_list.push_back(ai_plane);
+        ai_plane->setID( assignID() );
+        ++numObjects;
+        if (model_class == "light") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
+        } else if (model_class == "ww2_fighter") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::WW2_FIGHTER]);
+        } else if (model_class ==  "jet_transport") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+        } else if (model_class == "jet_fighter") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
+        } else {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+        }
+        ai_plane->setPath(path.c_str());
+        ai_plane->SetFlightPlan(flightplan);
         ai_plane->init();
         ai_plane->bind();
         return ai_plane->getID();
@@ -336,3 +368,16 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
      strength = thermal->getStrength();
   }
 }
+
+
+void FGAIManager::processScenario( string filename ) {
+  //cout << "AIManager: creating a scenario." << endl;
+  FGAIScenario* s = new FGAIScenario( filename );
+  FGAIScenario::entry* en = s->getNextEntry();
+  if (en) {
+    FGAIFlightPlan* f = new FGAIFlightPlan( en->flightplan );
+    createAircraft("jet_transport", "Aircraft/737/Models/boeing733.xml", f);
+  }
+  delete s;
+}
+
