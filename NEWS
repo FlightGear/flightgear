@@ -1,4 +1,8 @@
 New in 0.48
+* Impose a maximum triangle area during scenery generation so even
+  very flat areas will get split into a few smaller sub triangles.
+* Fine grained (fragment level) view frustum culling.
+* view transformation optimizations -- Norman Vine.
 * Fixed polygon winding problem in scenery generation, so all
   tri-strips are wound counter clockwise (opengl default).
 
