@@ -133,7 +133,9 @@ bool FGClipper::load_polys(const string& path) {
     }
 
     int area = (int)poly_type;
-    if ( area < FG_MAX_AREA_TYPES ) {
+    if ( area == OceanArea ) {
+	// TEST - Ignore
+    } else if ( area < FG_MAX_AREA_TYPES ) {
 	polys_in.polys[area].push_back(poly);
     } else {
 	FG_LOG( FG_CLIPPER, FG_ALERT, "Polygon type out of range = " 
@@ -251,7 +253,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 	}
     }
 
-    // finally, what ever is left over goes to base terrain
+    // finally, what ever is left over goes to ocean
 
     // clip to accum against original base tile
     remains = new gpc_polygon;
@@ -260,7 +262,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     gpc_polygon_clip(GPC_DIFF, &polys_in.safety_base, &accum, 
 		     remains);
     if ( remains->num_contours > 0 ) {
-	polys_clipped.polys[0].push_back(remains);
+	polys_clipped.polys[(int)OceanArea].push_back(remains);
     }
 
     FILE *ofp;
