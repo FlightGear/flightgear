@@ -160,6 +160,11 @@ public:
   inline double GetXYZep(int idx) const { return vXYZep(idx); }
   inline double GetAlphaCLMax(void) const { return alphaclmax; }
   inline double GetAlphaCLMin(void) const { return alphaclmin; }
+  
+  inline double GetAlphaHystMax(void) const { return alphahystmax; }
+  inline double GetAlphaHystMin(void) const { return alphahystmin; }
+  inline double GetHysteresisParm(void) const { return stall_hyst; }
+  
 
   inline void SetAlphaCLMax(double tt) { alphaclmax=tt; }
   inline void SetAlphaCLMin(double tt) { alphaclmin=tt; }
@@ -193,7 +198,8 @@ private:
   double HTailArea, VTailArea, HTailArm, VTailArm;
   double lbarh,lbarv,vbarh,vbarv;
   double alphaclmax,alphaclmin;
-  double impending_stall;
+  double alphahystmax, alphahystmin;
+  double impending_stall, stall_hyst;
   double bi2vel, ci2vel,alphaw;
   string AircraftName;
 

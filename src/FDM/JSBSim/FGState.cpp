@@ -575,6 +575,7 @@ void FGState::InitPropertyMaps(void)
   ParamNameToProp[  "FG_VBARV" ]="metrics/vbarv-norm";     
   ParamNameToProp[  "FG_GEAR_CMD" ]="gear/gear-cmd-norm";
   ParamNameToProp[  "FG_GEAR_POS" ]="gear/gear-pos-norm";
+  ParamNameToProp[  "FG_HYSTPARM" ]="aero/stall-hyst-norm";
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
