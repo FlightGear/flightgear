@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+  #include <config.h>
+#endif
+
 #include <FDM/flight.hxx>
 
 #include "Glue.hpp"

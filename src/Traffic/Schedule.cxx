@@ -444,6 +444,9 @@ void FGAISchedule::setClosestDistanceToUser()
 
   FGAirport *dep;
   
+#ifdef __CYGWIN__
+  #define HUGE HUGE_VAL
+#endif
   distanceToUser = HUGE;
   FGScheduledFlightVecIterator i = flights.begin();
   while (i != flights.end())
