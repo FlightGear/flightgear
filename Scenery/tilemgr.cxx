@@ -329,6 +329,7 @@ void fgTileMgrRender( void ) {
 	offset.y = t->center.y - scenery.center.y;
 	offset.z = t->center.z - scenery.center.z;
 
+	// Course (tile based) culling
 	if ( viewable(&offset, t->bounding_radius) ) {
 	    // at least a portion of this tile is viewable
 	    
@@ -343,22 +344,39 @@ void fgTileMgrRender( void ) {
 		fragment = *current++;
 
 		if ( fragment.display_list >= 0 ) {
-		    xglCallList(fragment.display_list);
+		    // Fine (fragment based) culling
+		    offset.x = fragment.center.x - scenery.center.x;
+		    offset.y = fragment.center.y - scenery.center.y;
+		    offset.z = fragment.center.z - scenery.center.z;
+
+		    if ( viewable(&offset, fragment.bounding_radius * 2) ) {
+			xglCallList(fragment.display_list);
+			drawn++;
+		    } else {
+			// printf("Culled a fragment %.2f %.2f %.2f %.2f\n",
+			//        fragment.center.x, fragment.center.y,
+			//        fragment.center.z, fragment.bounding_radius);
+			culled++;
+		    }
 		}
 	    }
 
 	    xglPopMatrix();
+	} else {
+	    culled += t->fragment_list.size();
 	}
     }
 
-    // v->vfc_ratio = (double)culled / (double)(drawn + culled);
-    v->vfc_ratio = 0.0;
+    v->vfc_ratio = (double)culled / (double)(drawn + culled);
     // printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
     //        v->vfc_ratio);
 }
 
 
 // $Log$
+// Revision 1.13  1998/05/24 02:49:10  curt
+// Implimented fragment level view frustum culling.
+//
 // Revision 1.12  1998/05/23 14:09:23  curt
 // Added tile.cxx and tile.hxx.
 // Working on rewriting the tile management system so a tile is just a list
