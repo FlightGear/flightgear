@@ -1,136 +1,615 @@
 Users Guide to FlightGear panel configuration
-Version 0.6, March 1 2001
-Author: John Check <j4strngs@rockfish.net>  
+Version 0.7.7, May 16 2001
+Author: John Check <j4strngs@rockfish.net>
 
-This document is an attempt to describe the configuration of 
-FlightGear flight simulator's aircraft panel display via XML. 
-The information was culled from the fgfs-devel@flightgear.org 
-mailing list and my experiences making alternate panels. I'd 
-like  to say thanks to all the developers who  make FGFS happen.
-Corrections and additions are encouraged.
+This document is an attempt to describe the configuration of
+FlightGear flight simulator's aircraft panel display via XML.  The
+information was culled from the fgfs-devel@flightgear.org mailing list
+and my experiences making alternate panels.  Corrections and additions
+are encouraged.
 
 Some History:
+------------
+Older versions of FGFS had a hard coded display of instruments.  This
+was a less than ideal state of affairs due to FGFS ability to use
+different aircraft models. Being primarily developed on UNIX type
+systems, a modular approach is taken towards the simulation. To date,
+most alternatives to the default Cessna 172 aircraft are the product
+of research institutions interested in the flight characteristics and
+not cosmetics.  The result of this was that one could fly the X-15 or
+a Boeing 747 but be limited to C172 instrumentation.
 
-Older versions of FGFS had a hard coded display of instruments.
-This was a less than ideal state of affairs due to FGFS ability
-to use different aircraft models. Being primarily developed on
-UNIX type systems, a modular approach is taken towards the
-aircraft modeling. To date, most alternatives to the default 
-Cessna 172 aircraft are the product of research institutions
-interested in the flight characteristics and not cosmetics.
-The result of this was that one could fly the X-15 or a Boeing 747
-but be limited to C172 instrumentation.
-
-A rewrite of the panel display code was done around v0.7.5 by 
-developer David Megginson allowing for configuration of the panel
-via XML to address this limitation.
+A rewrite of the panel display code was done around v0.7.5 by
+developer David Megginson allowing for configuration of the panel via
+XML to address this limitation. Some major changes and additions were
+made during the course of version 0.7.7 necessitating a rewrite and
+expansion of this document.
 
 
-Using Custom Panels:
+About The Property Manager:
+--------------------------
+While not absolutely necessary in order to create aircraft panels,
+some familiarity with the property manager is beneficial....
+FlightGear provides a hierarchical representation of all aspects of
+the state of the running simulation that is known as the property
+tree.  Some properties, such as velocities are read only. Others such
+as the frequencies to which the navcom radios are tuned or the
+position of control surfaces can be set by various means.  FlightGear
+can optionally provide an interface to these properties for external
+applications such as Atlas, the moving map program, or even lowly
+telnet, via a network socket. Data can even be placed on a serial port
+and connected to, say a GPS receiver.  Aside from its usefulness in a
+flight training context, being able to manipulate the property tree on
+a running copy of FG allows for switching components on the fly, a
+positive boon for panel authors.  To see the property tree start FG
+with the following command line:
 
-The default panel location is $FG_ROOT/Aircraft/c172/Panels/Default.
-$FG_ROOT is the place on your filesystem where you installed FG
-data files. Alternate panels can be specified on the command line 
-or set as the default in the $HOME/.fgfsrc or $FG_ROOT/preferences.xml 
-using a property specification. The command line format is as follows:
+fgfs --props=socket,bi,5,localhost,5500,tcp
 
---prop:/sim/panel/path=Aircraft/c172/Panels/Default
+Then use telnet to connect to localhost on port 5500. You can browse
+the tree as you would a filesystem.
 
-The path description shown is relative to $FG_ROOT. An absolute
-path may also be used for locations outside $FG_ROOT. I would 
-recommend copying Panels/Default to Panels/Custom as a starting point
-for experimentation. When editing a panel configuration, pressing
-Shift +F3 will reload the panel. If your changes don't seem to be taking 
-effect, check the console output. It will report the success or failure
-of the panel reload*. Editing textures requires restarting FGFS so the
-new textures can be loaded.
+XML and the Property Manager:
+----------------------------
+Panel instruments interface with the property tree to get/set values
+as appropriate. Properties for which FG doesn't yet provide a value
+can be created by simply making them up. Values can be adjusted using
+the telnet interface allowing for creation and testing of instruments
+while code to drive them is being developed.
 
+If fact, the XML configuration system allows a user to combine
+components such as flight data model, aircraft exterior model, heads
+up display, and of course control panel. Furthermore, such a
+preconfigured aircraft.xml can be included into a scenario with
+specific flight conditions. These can be manually specified or a FG
+session can be saved and/or edited and reloaded later. Options
+specified in these files can be overridden on the command line. For
+example:
+
+--prop:/sim/panel/path=Aircraft/c172/Panels/c172-panel.xml
+
+passed as an option, would override a panel specified elsewhere.
+Property tree options all have the same format, specify the node and
+supply it a value.
+
+The order of precedence for options is thus:
+
+Source          Location                Format
+------          --------                ------
+command line
+.fgfsrc         Users home directory.   command line options
+system.fgfsrc   $FG_ROOT                ""      ""
+preferences.xml $FG_ROOT                XML property list
+
+
+Loading Panels on the fly:
+-------------------------
+When editing a panel configuration, pressing Shift +F3 will reload the
+panel. If your changes don't seem to be taking effect, check the
+console output.  It will report the success or failure of the panel
+reload*. Editing textures requires restarting FGFS so the new textures
+can be loaded. Panels can be switched on the fly by setting the
+/sim/panel/path property value and reloading.
+
+Regarding Window Geometry:
+-------------------------
+For the sake of simplicity the FGFS window is always considered to be
+1024x768 so all x/y values for instrument placement should relative to
+these dimensions.  Since FG uses OpenGL 0,0 represents the lower left
+hand corner of the screen. Panels may have a virtual size larger than
+1024x768. Vertical scrolling is accomplished with
+Shift+F5/F6. Horizontal scrolling is via Shift+F7/F8. An offset should
+be supplied to set the default visible area. It is possible to place
+items to overlap the 3D viewport.
 
 Panel Architecture:
-
-All of the panel configuration files are XML-encoded* property lists. 
+-------------------
+All of the panel configuration files are XML-encoded* property lists.
 The root element of each file is always named <PropertyList>. Tags are
-always found in pairs, with the closing tag having a slash prefixing
-the tag name, i.e </PropertyList>. The top level panel configuration 
-file is composed of a <name>, a <background> texture and zero or more 
-<instruments>. Instruments are used by including a <"unique_name">, a
-<path> to the instruments configuration file, <x> and <y> placement
-coordinates, and optional <w> and <h> size specifications.
-Comments are bracketed with <!-- -->.
+almost always found in pairs, with the closing tag having a slash
+prefixing the tag name, i.e </PropertyList>. The exception is the tag
+representing an aliased property. In this case a slash is prepended to
+the closing angle bracket.  (see section Aliasing)
 
-    Example Top Level Panel Config
+The top level panel configuration file is composed of a <name>, a
+<background> texture and zero or more <instruments>.Earlier versions
+required instruments to have a unique name and a path specification
+pointing to the instruments configuration file.
 
-<PropertyList>
- <name>Example Panel</name>
- <background>Aircraft/c172/Panels/Textures/panel-bg.rgb</background>
- <instruments>
-  <clock>         <!-- the "unique_name" -->
+[ Paths are relative to $FG_ROOT (the installed location of FGFS data files.) ]
+[ Absolute paths may be used.Comments are bracketed with <!-- -->.            ]
+
+Old style instrument call in top level panel.xml:
+------------------------------------------------
+  <clock>         <!-- required "unique_name" -->
    <path>Aircraft/c172/Instruments/clock.xml</path>
-   <x>110</x>
-   <y>320</y>
+   <x>110</x>     <!-- required horizontal placement -->
+   <y>320</y>     <!-- required vertical placement -->
    <w>72</w>      <!-- optional width specification -->
    <h>72</h>      <!-- optional height specification -->
   </clock>
+
+The difference between the old and new styles, while subtle, is rather
+drastic.  The old and new methods are indeed incompatible. I cover the
+old style only to acknowledge the incompatibility. This section will
+be removed after the next official FGFS release.
+
+New Style Example Top Level Panel Config:
+----------------------------------------
+<PropertyList>
+ <name>Example Panel</name>
+ <background>Aircraft/c172/Panels/Textures/panel-bg.rgb</background>
+ <w>1024</w>                      <!-- virtual width -->
+ <h>768</h>                       <!-- virtual height -->
+ <y-offset>-305</y-offset>        <!-- hides the bottom part -->
+ <view-height>172</view-height>   <!-- amount of overlap between 2D panel and 3D viewport -->
+
+ <instruments>                    <!-- from here down is where old and new styles break compatibility -->
+
+  <instrument include="../Instruments/clock.xml">
+   <name>Chronometer</name>   <!-- currently optional but strongly recommended -->
+   <x>150</x>                 <!-- required horizontal placement -->
+   <y>645</y>                 <!-- required vertical placement -->
+   <w>72</w>                  <!-- optional width specification -->
+   <h>72</h>                  <!-- optional height specification -->
+  </instrument>
+
  </instruments>
+
 </PropertyList>
-  
-The default location for instrument files is $FG_ROOT/Aircraft/c172/Instruments/.
-Alternate locations may be specified in the panel configuration, paths
-must be absolute to use files outside $FG_ROOT.
 
-About Instrument Placement:
 
-For the sake of simplicity the FGFS window is always considered to be 1024x768
-so all x/y values for instrument placement should fall within these bounds.
-Being an OpenGL program, 0,0 represents the lower left hand corner of the
-screen. It is possible to place items to overlap the 3D viewport.
+Indexed Properties
+------------------
+This is a lot to do with the compatibility break so lets get it out of
+the way.  The property manager now assigns incremental indices to
+repeated properties with the same parent node, so that
+
+ <PropertyList>
+ <x>1</x>
+ <x>2</x>
+ <x>3</x>
+ </PropertyList>
+
+shows up as
+
+ /x[0] = 1
+ /x[1] = 2
+ /x[2] = 3
+
+This means that property files no longer need to make up a separate
+name for each item in a list of instruments, layers, actions,
+transformations, or text chunks. In fact, the new panel I/O code now
+insists that every instrument have the XML element name "instrument",
+every layer have the name "layer", every text chunk have the name
+"chunk", every action have the name "action", and every transformation
+have the name "transformation" -- this makes the XML more regular (so
+that it can be created in a DTD-driven tool) and also allows us to
+include other kinds of information (such as doc strings) in the lists
+without causing confusion.
+
+Inclusion:
+----------
+The property manager now supports file inclusion and aliasing.
+Inclusion means that a node can include another property file as if it
+were a part of the current file.  To clarify how inclusion works,
+consider the following examples:
+
+If bar.xml contains
+
+ <PropertyList>
+ <a>1</a>
+ <b>
+ <c>2</c>
+ </b>
+ </PropertyList>
+
+then the declaration
+
+ <foo include="../bar.xml">
+ </foo>
+
+is exactly equivalent to
+
+ <foo>
+ <a>1</a>
+ <b>
+ <c>2</c>
+ </b>
+ </foo>
+
+However, it is also possible to selectively override properties in the
+included file. For example, if the declaration were
+
+ <foo include="../bar.xml">
+ <a>3</a>
+ </foo>
+
+then the property manager would see
+
+ <foo>
+ <a>3</a>
+ <b>
+ <c>2</c>
+ </b>
+ </foo>
+
+with the original 'a' property's value replaced with 3.
+
+This new inclusion feature allows property files to be broken up and
+reused arbitrarily -- for example, there might be separate cropping
+property lists for commonly-used textures or layers, to avoid
+repeating the information in each instrument file.
+
+
+Aliasing
+--------
+Properties can now alias other properties, similar to a symbolic link
+in Unix. When the target property changes value, the new value will
+show up in the aliased property as well. For example,
+
+ <PropertyList>
+ <foo>3</foo>
+ <bar alias="/foo"/>
+ </PropertyList>
+
+will look the same to the application as
+
+ <PropertyList>
+ <foo>3</foo>
+ <bar>3</bar>
+ </PropertyList>
+
+except that when foo changes value, bar will change too.
+
+
+The combination of inclusions and aliases is very powerful, because it
+allows for parameterized property files. For example, the XML file for
+the NAVCOM radio can include a parameter subtree at the start, like
+this:
+
+ <PropertyList>
+ <params>
+ <comm-freq-prop>/radios/comm1/frequencies/selected</comm-freq-prop>
+ <nav-freq-prop>/radios/nav1/frequencies/selected</comm-freq-prop>
+ </params>
+
+ ...
+
+ <chunk>
+ <type>number-value</type>
+ <property alias="/params/nav-freq-prop"/>
+ </chunk>
+
+ ...
+ </PropertyList>
+
+Now, the same instrument file can be used for navcomm1 and navcomm2,
+for example, simply by overriding the parameters at inclusion:
+
+ <instrument include="../Instruments/navcomm.xml">
+ <params>
+ <comm-freq-prop>/radios/comm1/frequencies/selected</comm-freq-prop>
+ <nav-freq-prop>/radios/nav1/frequencies/selected</comm-freq-prop>
+ </params>
+ </instrument>
+
+ <instrument include="../Instruments/navcomm.xml">
+ <params>
+ <comm-freq-prop>/radios/comm2/frequencies/selected</comm-freq-prop>
+ <nav-freq-prop>/radios/nav2/frequencies/selected</comm-freq-prop>
+ </params>
+ </instrument>
 
 Instrument Architecture:
-
+-----------------------
 Instruments are defined in separate configuration files. An instrument
-consists of a preferred width and height, one or more stacked layers, 
-and zero or more actions.
+consists of a base width and height, one or more stacked layers, and
+zero or more actions. Base dimensions are specified as follows:
 
-A layer** can be a <texture>, or be of <type> text or switch. A text layer
-may be static, as in a label, or generated (if it needs to be dynamic, as 
-in an LED display), or a combination of both. 
-A switch layer is composed of two or more nested layers and will display
-one of the nested layers based on a boolean property. For a simple example 
-of a switch see $FG_ROOT/Aircraft/Custom/Instruments/brake.xml. 
-Textures used in a switch context *must* have width and height specified to be 
-visible. Each layer may contain zero or more transformations.  
+<PropertyList>                   <!-- remember, all xml files start like this -->
+ <name>Airspeed Indicator</name> <!-- names are good -->
+ <w-base>128</w-base>            <!-- required width spec-->
+ <h-base>128</h-base>            <!-- required height spec-->
+  <layers>                       <!-- begins layers section -->
 
-A transformation is a rotation, an x-shift, or a y-shift. Transformations 
-can be static  or they can be based on properties. Static rotations are 
-useful for flipping textures horizontally or vertically. Transformations
-based on properties are useful for driving instrument needles. I.E. rotate the
-number of degrees equal to the airspeed. X and y shifts are relative to the
-center of the instrument. Each specified transformation type takes an <offset>
+Height and width can be overriden in the top level panel.xml by
+specifying <w> and <h>. Transformations are caculated against the base
+size regardless of the display size. This ensures that instruments
+remain calibrated
 
+Textures:
+--------
+FG uses red/green/blue/alpha .rgba files for textures. Dimensions for
+texture files should be power of 2 with a maximum 8:1 aspect ratio.
+The lowest common denominator for maximum texture size is 256 pixels.
+This is due to the limitations of certain video accelerators, most
+notably those with 3Dfx chipset such as the Voodoo2.
+
+Instrument Layers**:
+-------------------
+The simplest layer is a <texture>. These can be combined in <switch> layers
+
+<texture>
+A texture layer looks like this:
+
+  <layer>                      <!-- creates a layer -->
+   <name>face</name>
+   <texture>                   <!-- defines it as a texture layer -->
+    <path>Aircraft/c172/Instruments/Textures/faces-2.rgb</path>
+    <x1>0</x1>                 <!-- lower boundary for texture cropping-->
+    <y1>0.51</y1>              <!-- left boundary  for texture cropping-->
+    <x2>0.49</x2>              <!-- upper boundary  for texture cropping-->
+    <y2>1.0</y2>               <!-- right boundary  for texture cropping-->
+   </texture>                  <!-- closing texure tag -->
+  </layer>                     <!-- closing layer tag -->
+
+The texture cropping specification is represented as a decimal. There
+is a table at the end of this document for converting from pixel
+coordinates to percentages.
+
+This particular layer, being a gauge face has no transformations
+applied to it.  Layers with that aren't static *must* include <w> and
+<h> parameters to be visible.
+
+<type> May be either text or switch..
+
+<type>switch</type>
+A switch layer is composed of two or more nested layers and will
+display one of the nested layers based on a boolean property. For a
+simple example of a switch see
+$FG_ROOT/Aircraft/c172/Instruments/brake.xml.
+
+  <layer>
+   <name>Brake light</name>
+   <type>switch</type>                      <!-- define layer as a switch -->
+   <property>/controls/brakes</property>    <!-- tie it to a property -->
+    <layer1>                                <!-- layer for true state -->
+     <name>on</name>                        <!-- label to make life easy -->
+     <texture>                              <!-- layer1 of switch is a texture layer -->
+     <path>Aircraft/c172/Instruments/Textures/brake.rgb</path>
+     <x1>0.25</x1>
+     <y1>0.0</y1>
+     <x2>0.5</x2>
+     <y2>0.095</y2>
+     </texture>
+     <w>64</w>                              <!-- required width - layer isn't static -->
+     <h>24</h>                              <!-- required height - layer isn't static -->
+    </layer1>                               <!-- close layer1 of switch -->
+    <layer2>                                <!-- layer for false state -->
+     <name>off</name>
+     <texture>
+     <path>Aircraft/c172/Instruments/Textures/brake.rgb</path>
+     <x1>0.0</x1>
+     <y1>0.0</y1>
+     <x2>0.25</x2>
+     <y2>0.095</y2>
+     </texture>
+     <w>64</w>
+     <h>24</h>
+   </layer2>
+  </layer>
+
+Switches can have more than 2 states. This requires nesting one switch
+inside another.  One could make, for example, a 3 color LED by nesting
+switch layers.
+
+<type>text</type>
+A text layer may be static, as in a label, generated from a property
+or a combination of both.  This example is a switch that contains both
+static and dynamic text:
+
+   <layer1>                               <!-- switch layer -->
+    <name>display</name>
+    <type>text</type>                     <!-- type == text -->
+    <point-size>12</point-size>           <!-- font size -->
+    <color>                               <!-- specify rgb values to color text -->
+     <red>1.0</red>
+     <green>0.5</green>
+     <blue>0.0</blue>
+    </color>                              <!-- close color section -->
+    <chunks>                              <!-- sections of text are referred to as chunks -->
+     <chunk>                              <!-- first chunk of text -->
+      <type>number-value</type>           <!-- value defines it as dynamic -->
+      <property>/radios/nav1/dme/distance</property>      <!-- ties it to a property -->
+      <scale>0.00053995680</scale>        <!-- convert between  statute and nautical miles? -->
+      <format>%5.1f</format>              <!-- define format -->
+     </chunk>
+    </chunks>
+   </layer1>
+   <layer2>                                <!-- switch layer -->
+    <name>display</name>
+    <type>text</type>                      <!-- type == text -->
+    <point-size>10</point-size>            <!-- font size -->
+    <color>                                <!-- specify rgb values to color text -->
+     <red>1.0</red>
+     <green>0.5</green>
+     <blue>0.0</blue>
+    </color>                               <!-- close color section -->
+    <chunks>                               <!-- sections of text are referred to as chunks -->
+     <chunk>                               <!-- first chunk of text -->
+      <type>literal</type>                 <!-- static text -->
+      <text>---.--</text>                  <!-- fixed value -->
+     </chunk>
+    </chunks>
+   </layer2>
+
+
+Transformations:
+---------------
+A transformation is a rotation, an x-shift, or a
+y-shift. Transformations can be static or they can be based on
+properties. Static rotations are useful for flipping textures
+horizontally or vertically. Transformations based on properties are
+useful for driving instrument needles. I.E. rotate the number of
+degrees equal to the airspeed. X and y shifts are relative to the
+center of the instrument. Each specified transformation type takes an
+<offset>.  Offsets are relative to the center of the instrument. A
+shift without an offset has no effect. For example, let's say we have
+a texure that is a circle. If we use this texture in two layers, one
+defined as having a size of 128x128 and the second layer is defined as
+64x64 and neither is supplied a shift and offset the net result
+appears as 2 concentric circles.
+
+
+About Transformations and Needle Placement:
+------------------------------------------
+
+When describing placement of instrument needles, a transformation
+offset must be applied to shift the needles fulcrum or else the needle
+will rotate around it's middle. The offset will be of <type> x-shift
+or y-shift depending on the orientation of the needle section in the
+cropped texture.
+
+This example comes from the altimeter.xml
+
+  <layer>
+   <name>long needle (hundreds)</name>        <!-- the altimeter has more than one needle -->
+   <texture>
+    <path>Aircraft/c172/Instruments/Textures/misc-1.rgb</path>
+    <x1>0.8</x1>
+    <y1>0.78125</y1>
+    <x2>0.8375</x2>
+    <y2>1.0</y2>
+   </texture>
+   <w>8</w>
+   <h>56</h>
+   <transformations>                          <!-- begin defining transformations -->
+    <transformation>                          <!-- start definition of transformation that drives the needle -->
+     <type>rotation</type>
+     <property>/steam/altitude</property>     <!-- bind it to a property -->
+     <max>100000.0</max>                      <!-- upper limit of instrument -->
+     <scale>0.36</scale>                      <!-- once around == 1000 ft -->
+    </transformation>                         <!-- close this transformation -->
+    <transformation>                          <!-- this one shifts the fulcrum of the needle -->
+     <type>y-shift</type>                     <!-- y-shift relative to needle -->
+     <offset>24.0</offset>                    <!-- amount of shift -->
+    </transformation>
+   </transformations>
+  </layer>
+
+This needles has its origin in the center of the instrument. If the
+needles fulcrum was towards the edge of the instrument, the
+transformations to place the pivot point must precede those which
+drive the needle,
+
+Interpolation
+-------------
+Non linear transformations are now possible via the use of
+interpolation tables.
+
+ <transformation>
+ ...
+ <interpolation>
+ <entry>
+ <ind>0.0</ind>            <!-- raw value -->
+ <dep>0.0</dep>            <!-- displayed value -->
+ </entry>
+ <entry>
+ <ind>10.0</ind>
+ <dep>100.0</dep>
+ </entry>
+ <entry>
+ <ind>20.0</ind>
+ <dep>-5.0</dep>
+ </entry>
+ <entry>
+ <ind>30.0</ind>
+ <dep>1000.0</dep>
+ </entry>
+ </interpolation>
+ </transformation>
+
+Of course, interpolation tables are useful for non-linear stuff, as in
+the above example, but I kind-of like the idea of using them for
+pretty much everything, including non-trivial linear movement -- many
+instrument markings aren't evenly spaced, and the interpolation tables
+are much nicer than the older min/max/scale/offset stuff and should
+allow for a more realistic panel without adding a full equation parser
+to the property manager.
+
+If you want to try this out, look at the airspeed.xml file in the base
+package, and uncomment the interpolation table in it for a very funky,
+non-linear and totally unreliable airspeed indicator.
+
+
+Actions:
+-------
 An action is a hotspot on an instrument where something will happen
 when the user clicks the left or center mouse button.  Actions are
 always tied to properties: they can toggle a boolean property, adjust
 the value of a numeric property, or swap the values of two properties.
+The x/y placement for actions specifies the origin of the lower left
+corner.  In the following example the first action sets up a hotspot
+32 pixels wide and 16 pixels high. It lower left corner is placed 96
+pixels (relative to the defined base size of the instrument) to the
+right of the center of the instrument. It is also 32 pixels below the
+centerline of the instrument.  The actual knob texture over which the
+action is superimposed is 32x32.  Omitted here is a second action,
+bound to the same property, with a positive increment value. This
+second action is placed to cover the other half of the knob. The
+result is that clicking on the left half of the knob texture decreases
+the value and clicking the right half increases the value. Also
+omitted here is a second pair of actions with the same coordinates but
+a larger increment value. This second pair is bound to a different
+mouse button. The net result is that we have both fine and coarse
+adjustments in the same hotspot, each bound to a different mouse
+button.
 
-About Transformations and Needle Placement:
+These examples come from the radio stack:
+<actions>                              <!-- open the actions section -->
+  <action>                             <!- first action -->
+   <name>small nav frequency decrease</name>
+   <type>adjust</type>
+   <button>0</button>                  <!-- bind it to a mouse button -->
+   <x>96</x>                           <!-- placement relative to instrument center -->
+   <y>-32</y>
+   <w>16</w>                           <!-- size of hotspot -->
+   <h>32</h>
+   <property>/radios/nav1/frequencies/standby</property>    <!-- bind to a property -->
+   <increment>-0.05</increment>        <!-- amount of adjustment per mouse click -->
+   <min>108.0</min>                    <!-- lower range -->
+   <max>117.95</max>                   <!-- upper range -->
+   <wrap>1</wrap>                      <!-- boolean value -- value wraps around when it hits bounds -->
+  </action>
+  <action>
+   <name>swap nav frequencies</name>
+   <type>swap</type>                   <!-- define type of action -->
+   <button>0</button>
+   <x>48</x>
+   <y>-32</y>
+   <w>32</w>
+   <h>32</h>
+   <property1>/radios/nav1/frequencies/selected</property1>   <!-- properties to toggle between -->
+   <property2>/radios/nav1/frequencies/standby</property2>
+  </action>
+  <action>
+   <name>ident volume on/off</name>
+   <type>adjust</type>
+   <button>1</button>
+   <x>40</x>
+   <y>-24</y>
+   <w>16</w>
+   <h>16</h>
+   <property>/radios/nav1/ident</property>  <!-- this property is for Morse code identification of nav beacons -->
+   <increment>1.0</increment>          <!-- the increment equals the max value so this toggles on/off -->
+   <min>0</min>
+   <max>1</max>
+   <wrap>1</wrap>                      <!-- a shortcut to avoid having separate actions for on/off -->
+  </action>
+</actions>
 
-When describing placement of instrument needles, an transformation offset must 
-be applied to shift the needle's fulcrum or else the needle will rotate around it's 
-middle. The offset will be of <type> x-shift or y-shift depending on the orientation of 
-the needle section in the cropped texture.
-Offsets applied to shift the needle from the center of the instrument face must be 
-applied *before* the transformation that describes the needle movement.
+More About Textures:
+-------------------
+As previously stated, the usual size instrument texture files in FGFS
+are 256x256 pixels, red/green/blue/alpha format. However the mechanism
+for specifying texture cropping coordinates is decimal in nature. When
+calling a section of a texture file the 0,0 lower left convention is
+used.  There is a pair of x/y coordinates defining which section of
+the texture to use.
 
-About Textures:
-
-The texture files used to create the panel instruments are maximum 256x256
-pixels, red/green/blue/alpha format. However the mechanism for specifying
-texture cropping coordinates is decimal in nature. When calling a section 
-of a texture file the 0,0 lower left convention is used.
-There is a pair of x/y coordinates defining which section of the texture 
-to use. 
-
-The following table can be used to calculate texture cropping specifications.
+The following table can be used to calculate texture cropping
+specifications.
 
 # of divisions | width in pixels | decimal specification
 per axis
@@ -143,23 +622,33 @@ per axis
         64  =   4 pixels,               0.015625
         128 =   2 pixels,               0.0078125
 
-The recommended procedure for generating gauge faces is to use a
-vector graphics package such as xfig, exporting the result as a
-poscript file. 3D modeling tools may also be used and are prefered
-for pretty items that don't require text such as levers, switches,
-bezels and so forth. Ideally, the size of the item in the final render
-should be of proportions that fit into the recommended pixel widths.
-The resulting files should be imported into a graphics manipulation
-package such as GIMP, et al for final processing.
+A common procedure for generating gauge faces is to use a vector
+graphics package such as xfig, exporting the result as a postscript
+file. 3D modeling tools may also be used and I prefer them for pretty
+items such as levers, switches, bezels and so forth.  Ideally, the
+size of the item in the final render should be of proportions that fit
+into the recommended pixel widths.  The resulting files can be
+imported into a graphics manipulation package such as GIMP, et al for
+final processing.
 
+How do I get my panels/instruments into the base package?
+-------------------------------------------------------
+Cash bribes always help ;) Seriously though, there are two main
+considerations.  Firstly, original artwork is a major plus since you
+as the creator can dictate the terms of distribution.All Artwork must
+have a license compatible with the GPL.  Artwork of unverifiable
+origin is not acceptable.  Secondly, texture sizes must meet the
+lowest common denominator of 256e2 pixels.  Artwork from third parties
+may be acceptable if it meets these criteria.
 
-*  If there are *any* XML parsing errors, the panel will fail to load, 
+*  If there are *any* XML parsing errors, the panel will fail to load,
    so it's worth downloading a parser like Expat (http://www.jclark.com/xml/)
    for checking your XML. FlightGear will print the location of errors, but
-   the messages are a little cryptic right now. 
+   the messages are a little cryptic right now.
 
 ** NOTE: There is one built-in layer -- for the mag compass ribbon --
    and all other layers are defined in the XML files.  In the future,
    there may also be built-in layers for special things like a
    weather-radar display or a GPS (though the GPS could be handled with
    text properties).
+
