@@ -94,6 +94,18 @@ sub write_navaid {
          $magvar, $name, $TYPE_NAMES[$type]);
 }
 
+sub make_dmagvar {
+    my($coord) = shift;
+    my( $value );
+    my( $dir, $deg, $date ) = $coord =~ m/^([EW])(\d\d\d\d)(\d\d\d\d)/;
+    $value = $deg / 10.0;
+    if ( $dir eq "W" ) {
+        $value = -$value;
+    }
+
+    return $value;
+}
+
 
 <>;                             # skip header line
 
@@ -125,8 +137,13 @@ while (<>)
   if ($magvar eq '') {
     $magvar = 'XXX';
   } else {
-    $magvar =~ /^([EW])([0-9.]+)( .*)?/;
-    $magvar = sprintf("%02d%s", $2/100000, $1);
+    my $tmp = make_dmagvar( $magvar );
+    # print "$magvar $tmp\n";
+    if ( $tmp <= 0 ) {
+        $magvar = sprintf("%02.0fW", -$tmp );
+    } else {
+        $magvar = sprintf("%02.0fE", $tmp );
+    }
   }
   my $name = $F[5];
 
