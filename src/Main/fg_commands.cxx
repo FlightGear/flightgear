@@ -699,7 +699,7 @@ do_property_randomize (const SGPropertyNode * arg)
     double min = arg->getDoubleValue("min", DBL_MIN);
     double max = arg->getDoubleValue("max", DBL_MAX);
     prop->setDoubleValue(sg_random() * (max - min) + min);
-    std::cerr << "Random value is " << prop->getDoubleValue() << std::endl;
+    return true;
 }
 
 
