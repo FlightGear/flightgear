@@ -62,31 +62,45 @@ static inline void
 _set_view_from_axes ()
 {
 				// Take no action when hat is centered
-  if (axisLong == 0 && axisLat == 0)
+  if ( ( axisLong <  0.01 ) &&
+       ( axisLong > -0.01 ) &&
+       ( axisLat  <  0.01 ) &&
+       ( axisLat  > -0.01 )
+     )
     return;
 
-  double viewDir = 0;
+  double viewDir = 999;
 
+  /* Do all the quick and easy cases */
   if (axisLong < 0) {		// Longitudinal axis forward
-    if (axisLat < 0)
+    if (axisLat == axisLong)
       viewDir = 45;
-    else if (axisLat > 0)
+    else if (axisLat == - axisLong)
       viewDir = 315;
-    else
+    else if (axisLat == 0)
       viewDir = 0;
   } else if (axisLong > 0) {	// Longitudinal axis backward
-    if (axisLat < 0)
+    if (axisLat == - axisLong)
       viewDir = 135;
-    else if (axisLat > 0)
+    else if (axisLat == axisLong)
       viewDir = 225;
-    else
+    else if (axisLat == 0)
       viewDir = 180;
-  } else {			// Longitudinal axis neutral
+  } else if (axisLong = 0) {	// Longitudinal axis neutral
     if (axisLat < 0)
       viewDir = 90;
-    else
+    else if (axisLat > 0)
       viewDir = 270;
+    else return; /* And assertion failure maybe? */
   }
+
+  /* Do all the difficult cases */
+  if ( viewDir > 900 )
+    viewDir = SGD_RADIANS_TO_DEGREES * atan2 ( -axisLat, -axisLong );
+  if ( viewDir < -1 ) viewDir += 360;
+
+//  SG_LOG(SG_INPUT, SG_ALERT, "Joystick Lat=" << axisLat << "   and Long="
+//	<< axisLong << "  gave angle=" << viewDir );
 
   globals->get_current_view()->set_goal_view_offset(viewDir*SGD_DEGREES_TO_RADIANS);
 //   globals->get_current_view()->set_view_offset(viewDir*SGD_DEGREES_TO_RADIANS);
