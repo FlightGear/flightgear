@@ -45,6 +45,8 @@ void FGControls::reset_all()
     set_elevator_trim(0.0);
     set_rudder(0.0);
     set_throttle(FGControls::ALL_ENGINES, 0.0);
+    set_starter(FGControls::ALL_ENGINES, false);
+    set_magnetos(FGControls::ALL_ENGINES, 0);
     throttle_idle = true;
     gear_down = true;
 }
@@ -62,6 +64,8 @@ FGControls::init ()
 	throttle[engine] = 0.0;
 	mixture[engine] = 1.0;
 	prop_advance[engine] = 1.0;
+	magnetos[engine] = 0;
+	starter[engine] = false;
     }
 
     for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
@@ -105,6 +109,14 @@ FGControls::bind ()
     fgTie(name, this, index,
 	 &FGControls::get_prop_advance, &FGControls::set_prop_advance);
     fgSetArchivable(name);
+    sprintf(name, "/controls/magnetos[%d]", index);
+    fgTie(name, this, index,
+	 &FGControls::get_magnetos, &FGControls::set_magnetos);
+    fgSetArchivable(name);
+    sprintf(name, "/controls/starter[%d]", index);
+    fgTie(name, this, index,
+	 &FGControls::get_starter, &FGControls::set_starter);
+    fgSetArchivable(name);
   }
   for (index = 0; index < MAX_WHEELS; index++) {
     char name[32];
@@ -136,6 +148,10 @@ FGControls::unbind ()
     sprintf(name, "/controls/mixture[%d]", index);
     fgUntie(name);
     sprintf(name, "/controls/propellor-pitch[%d]", index);
+    fgUntie(name);
+    sprintf(name, "/controls/magnetos[%d]", index);
+    fgUntie(name);
+    sprintf(name, "/controls/starter[%d]", index);
     fgUntie(name);
   }
   for (index = 0; index < MAX_WHEELS; index++) {

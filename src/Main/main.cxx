@@ -110,7 +110,8 @@
 #include <FDM/flight.hxx>
 #include <FDM/ADA.hxx>
 #include <Scenery/tileentry.hxx>
-// Should be inlcluded by gl.h if needed by your platform
+// Should already be inlcluded by gl.h if needed by your platform so
+// we shouldn't include this here.
 // #include <GL/glext.h>
 PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
 PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
@@ -1195,6 +1196,7 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
+    static bool bCranking;
     if ( fgGetBool("/sim/sound") && globals->get_soundmgr()->is_working() ) {
 	if ( fgGetString("/sim/aircraft") == "c172" ) {
 	    if(fgGetBool("/engines/engine[0]/running")) {
@@ -1242,7 +1244,18 @@ static void fgMainLoop( void ) {
 		s1->set_pitch(0.0);
 		s1->set_volume(0.0);
 	    }
-	} else {
+	    if(fgGetBool("/engines/engine[0]/cranking")) {
+		if(!bCranking) {
+		    globals->get_soundmgr()->play_looped("cranking");
+		    bCranking = true;
+		}
+	    } else {
+		if(bCranking) {
+		    globals->get_soundmgr()->stop("cranking");
+		    bCranking = false;
+		}
+	    }
+	} else {    // Not C172
 	    double param
 		= globals->get_controls()->get_throttle( 0 ) * 2.0 + 1.0;
 	    s1->set_pitch( param );
@@ -1314,6 +1327,11 @@ static void fgIdleFunction ( void ) {
 	    // s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
 	    // s2->set_volume( 0.3 );
 	    // globals->get_soundmgr()->add( s2, "flaps" );
+	    s2 = new FGSimpleSound( fgGetString("/sim/sounds/engine",
+						"Sounds/cranking.wav") );
+	    globals->get_soundmgr()->add( s2, "cranking" );
+	    s2->set_pitch(1.5);
+	    s2->set_volume(0.25);
 	}
 #endif
 

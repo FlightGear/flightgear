@@ -82,10 +82,10 @@ void FGNewEngine::init(double dt) {
     n_R = 2;         // Number of crank revolutions per power cycle - 2 for a 4 stroke engine.
 
     // Various bits of housekeeping describing the engines initial state.
-    running = fgGetBool("/engines/engine[0]/running");
+    running = false;
     cranking = false;
     crank_counter = false;
-    fgSetBool("/engines/engine[0]/cranking", false);
+    starter = false;
 
     // Initialise Engine Variables used by this instance
     if(running)
@@ -148,7 +148,6 @@ void FGNewEngine::update() {
     // Check for spark
     bool Magneto_Left = false;
     bool Magneto_Right = false;
-    int mag_pos = fgGetInt("/engines/engine[0]/magneto");
     // Magneto positions:
     // 0 -> off
     // 1 -> left only
@@ -172,15 +171,10 @@ void FGNewEngine::update() {
     }  // Need to make this better, eg position of fuel selector switch.
 
     // Check if we are turning the starter motor
-    bool temp = fgGetBool("/engines/engine[0]/starter");
-    if(cranking != temp) {
+    if(cranking != starter) {
 	// This check saves .../cranking from getting updated every loop - they only update when changed.
-	cranking = temp;
-	if(cranking)
-	    fgSetBool("/engines/engine[0]/cranking", true);
-	else
-	    fgSetBool("/engines/engine[0]/cranking", false);
-	    crank_counter = 0;
+	cranking = starter;
+	crank_counter = 0;
     }
     // Note that although /engines/engine[0]/starter and /engines/engine[0]/cranking might appear to be duplication it is
     // not since the starter may be engaged with the battery voltage too low for cranking to occur (or perhaps the master 
@@ -206,7 +200,6 @@ void FGNewEngine::update() {
 	if(RPM > 450) {
 	    // For now just instantaneously start but later we should maybe crank for a bit
 	    running = true;
-	    fgSetBool("/engines/engine[0]/running", true);
 //	    RPM = 600;
 	}
     }
@@ -214,7 +207,6 @@ void FGNewEngine::update() {
 	// Cut the engine
 	// note that we only cut the power - the engine may continue to spin if the prop is in a moving airstream
 	running = false;
-	fgSetBool("/engines/engine[0]/running", false);
     }
 
     // Now we've ascertained whether the engine is running or not we can start to do the engine calculations 'proper'
@@ -293,11 +285,9 @@ void FGNewEngine::update() {
 	//Check if we have stalled the engine
 	if (RPM == 0) {
 	    running = false;
-	    fgSetBool("/engines/engine[0]/running", false);
 	} else if((RPM <= 480) && (cranking)) {
 	    //Make sure the engine noise dosn't play if the engine won't start due to eg mixture lever pulled out.
 	    running = false;
-	    fgSetBool("/engines/engine[0]/running", false);
 	}
     }
 }

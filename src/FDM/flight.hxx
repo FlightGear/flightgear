@@ -110,8 +110,8 @@ private:
     double Throttle;
     double Mixture;
     double Prop_Advance;
-    int Magnetos;			// 0=off, 1=left, 2=right, 3=both
-    bool Starter;			// flag to indicate the starter switch is on	
+//    int Magnetos;			// 0=off, 1=left, 2=right, 3=both
+//    bool Starter;			// flag to indicate the starter switch is on	
 
     // outputs
     double RPM;
@@ -161,8 +161,6 @@ public:
     inline void set_Throttle( double t ) { Throttle = t; }
     inline void set_Mixture( double m ) { Mixture = m; }
     inline void set_Prop_Advance( double p ) { Prop_Advance = p; }
-    inline void set_Magnetos( int m ) { Magnetos = m; }
-    inline void set_Starter( bool s ) { Starter = s; }
     inline void set_RPM( double r ) { RPM = r; }
     inline void set_Manifold_Pressure( double mp ) { Manifold_Pressure = mp; }
     inline void set_MaxHP( double hp ) { MaxHP = hp; }
@@ -172,6 +170,8 @@ public:
     inline void set_prop_thrust( double t ) { prop_thrust = t; }
     inline void set_Fuel_Flow( double f ) { Fuel_Flow = f; }
     inline void set_Oil_Temp (double o) { Oil_Temp = o; }
+    inline void set_Running_Flag (bool r) { running = r; }
+    inline void set_Cranking_Flag (bool c) { cranking = c; }
 
 };
 

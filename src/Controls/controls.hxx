@@ -65,7 +65,9 @@ private:
     double mixture[MAX_ENGINES];
     double prop_advance[MAX_ENGINES];
     double brake[MAX_WHEELS];
+    int magnetos[MAX_ENGINES];
     bool throttle_idle;
+    bool starter[MAX_ENGINES];
     bool gear_down;
 
     SGPropertyNode * auto_coordination;
@@ -74,7 +76,12 @@ private:
 	if ( *x < min ) { *x = min; }
 	if ( *x > max ) { *x = max; }
     }
-		
+
+    inline void CLAMP(int *i, int min, int max ) {
+	if ( *i < min ) { *i = min; }
+	if ( *i > max ) { *i = max; }
+    }
+    
 public:
 
     FGControls();
@@ -101,6 +108,8 @@ public:
 	return prop_advance[engine];
     }
     inline double get_brake(int wheel) const { return brake[wheel]; }
+    inline int get_magnetos(int engine) const { return magnetos[engine]; }
+    inline bool get_starter(int engine) const { return starter[engine]; }
     inline bool get_gear_down() const { return gear_down; }
 
     // Update functions
@@ -237,6 +246,43 @@ public:
 	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 		prop_advance[engine] += amt;
 		CLAMP( &prop_advance[engine], 0.0, 1.0 );
+	    }
+	}
+    }
+    inline void set_magnetos( int engine, int pos ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		magnetos[i] = pos;
+		CLAMP( &magnetos[i], 0, 3 );
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		magnetos[engine] = pos;
+		CLAMP( &magnetos[engine], 0, 3 );
+	    }
+	}
+    }
+    inline void move_magnetos( int engine, int amt ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		magnetos[i] += amt;
+		CLAMP( &magnetos[i], 0, 3 );
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		magnetos[engine] += amt;
+		CLAMP( &magnetos[engine], 0, 3 );
+	    }
+	}
+    }
+    inline void set_starter( int engine, bool flag ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		starter[i] = flag;
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		starter[engine] = flag;
 	    }
 	}
     }

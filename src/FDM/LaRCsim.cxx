@@ -74,10 +74,8 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     // Hardwired to C172 full tanks for now - need to fix this sometime
     // Also note that this is the max quantity - the usable quantity
     // is slightly less
-    set_Tank1Fuel(14.0);
-    set_Tank2Fuel(14.0);  
-
-
+    set_Tank1Fuel(28.0);
+    set_Tank2Fuel(28.0);  
 }
 
 FGLaRCsim::~FGLaRCsim(void) {
@@ -109,6 +107,8 @@ bool FGLaRCsim::update( int multiloop ) {
 	eng.set_Propeller_Lever_Pos( 100 );
         eng.set_Mixture_Lever_Pos( globals->get_controls()->get_mixture( 0 )
 				   * 100.0 );
+	eng.set_Magneto_Switch_Pos( globals->get_controls()->get_magnetos(0) );
+    	eng.setStarterFlag( globals->get_controls()->get_starter(0) );
 	eng.set_p_amb( Static_pressure );
 	eng.set_T_amb( Static_temperature );
 
@@ -117,8 +117,8 @@ bool FGLaRCsim::update( int multiloop ) {
 
 	// copy engine state values onto "bus"
 	FGEngInterface *e = get_engine( 0 );
-	e->set_Throttle( globals->get_controls()->get_throttle( 0 ) * 100.0 );
-	e->set_Mixture( 80 );
+	e->set_Throttle( globals->get_controls()->get_throttle(0) * 100.0 );
+	e->set_Mixture( 80 );	// ???????
 	e->set_Prop_Advance( 100 );
 	e->set_RPM( eng.get_RPM() );
 	e->set_Manifold_Pressure( eng.get_Manifold_Pressure() );
@@ -129,6 +129,8 @@ bool FGLaRCsim::update( int multiloop ) {
 	e->set_prop_thrust( eng.get_prop_thrust_SI() );
 	e->set_Fuel_Flow( eng.get_fuel_flow_gals_hr() );
 	e->set_Oil_Temp( eng.get_oil_temp() );
+	e->set_Running_Flag( eng.getRunningFlag() );
+	e->set_Cranking_Flag( eng.getCrankingFlag() );
 
         //Assume we are using both tanks equally for now
 	reduce_Tank1Fuel( (eng.get_fuel_flow_gals_hr() / (2 * 3600))

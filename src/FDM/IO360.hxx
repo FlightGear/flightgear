@@ -58,6 +58,8 @@ private:
     float Throttle_Lever_Pos;	// 0 = Closed, 100 = Fully Open
     float Propeller_Lever_Pos;	// 0 = Full Course 100 = Full Fine
     float Mixture_Lever_Pos;	// 0 = Idle Cut Off 100 = Full Rich
+    int mag_pos;		// 0=off, 1=left, 2=right, 3=both.
+    bool starter;
 
     //misc
     float IAS;
@@ -205,6 +207,13 @@ public:
     inline void set_Mixture_Lever_Pos( float value ) {
 	Mixture_Lever_Pos = value;
     }
+    // set the magneto switch position
+    inline void set_Magneto_Switch_Pos( int value ) {
+	mag_pos = value;
+    }
+    inline void setStarterFlag( bool flag ) {
+	starter = flag;
+    }
     // set ambient pressure - takes pounds per square foot
     inline void set_p_amb( float value ) { 
 	p_amb = value * 47.88026;
@@ -228,6 +237,9 @@ public:
     inline float get_prop_thrust_lbs() const { return (prop_thrust * 0.2248); }
     inline float get_fuel_flow_gals_hr() const { return (Fuel_Flow_gals_hr); }
     inline float get_oil_temp() const { return ((current_oil_temp * 1.8) - 459.67); }
+    inline bool getRunningFlag() const { return running; }
+    inline bool getCrankingFlag() const { return cranking; }
+    inline bool getStarterFlag() const { return starter; }
 };
 
 

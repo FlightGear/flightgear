@@ -469,6 +469,32 @@ getFuelFlow ()
 }
 
 /**
+ * Return the current engine0 running flag
+ */
+static bool
+getRunningFlag ()
+{
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      return current_aircraft.fdm_state->get_engine(0)->get_Running_Flag();
+  } else {
+      return false;
+  }
+}
+
+/**
+ * Return the current engine0 cranking flag
+ */
+static bool
+getCrankingFlag ()
+{
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      return current_aircraft.fdm_state->get_engine(0)->get_Cranking_Flag();
+  } else {
+      return false;
+  }
+}
+
+/**
  * Return the fuel level in tank 1
  */
 static double
@@ -892,6 +918,31 @@ setWindDown (double speed)
 							   speed);
 }
 
+/*
+ * Set the current engine0 running flag.
+ */
+static void
+setRunningFlag (bool flag)
+{
+  if(current_aircraft.fdm_state->get_engine(0) != NULL) {
+    current_aircraft.fdm_state->get_engine(0)->set_Running_Flag( flag );
+  }
+}
+
+/*
+ * Set the current engine0 cranking flag.
+ */
+//Although there is no real reason to want to tell the engine that it is cranking,
+//this is currently necessary to avoid the cranking sound being played 
+//before the engine inits.
+static void
+setCrankingFlag (bool flag)
+{
+  if(current_aircraft.fdm_state->get_engine(0) != NULL) {
+    current_aircraft.fdm_state->get_engine(0)->set_Cranking_Flag( flag );
+  }
+}
+
 static double
 getFOV ()
 {
@@ -1032,6 +1083,8 @@ fgInitProps ()
   fgTie("/engines/engine[0]/oil-temperature-degf", getOilTemp);
   fgTie("/engines/engine[0]/mp-osi", getMP);
   fgTie("/engines/engine[0]/fuel-flow-gph", getFuelFlow);
+  fgTie("/engines/engine[0]/running", getRunningFlag, setRunningFlag);
+  fgTie("/engines/engine[0]/cranking", getCrankingFlag, setCrankingFlag);
 
   //consumables
   fgTie("/consumables/fuel/tank[0]/level-gal_us",
