@@ -81,7 +81,7 @@ sub load_dafift() {
         $CodesByICAO{$icao} = 1;
         # print "$F[0] - $icao\n";
         $Elevations{$icao} = $F[11];
-        print "$icao $F[11]\n";
+        # print "$icao $F[11]\n";
     }
 
     # Load the DAFIFT ils file
@@ -425,7 +425,8 @@ sub fix_localizer() {
 
 
 ########################################################################
-# Run through the final ils list and adjust the heading to match the runway
+# Run through the final ils list and fixup any missing glide slope elevations
+# to match that of the field elevation.
 ########################################################################
 
 sub fudge_missing_gs_elev() {
