@@ -149,6 +149,15 @@ public:
 
 
   /**
+   * Reinitialize the subsystem.
+   *
+   * <p>This method should cause the subsystem to reinitialize itself,
+   * and (normally) to reload any configuration files.</p>
+   */
+  virtual void reinit ();
+
+
+  /**
    * Acquire the subsystem's property bindings.
    *
    * <p>This method should bind all properties that the subsystem

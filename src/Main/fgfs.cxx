@@ -27,6 +27,11 @@ FGSubsystem::init ()
 }
 
 void
+FGSubsystem::reinit ()
+{
+}
+
+void
 FGSubsystem::bind ()
 {
 }
