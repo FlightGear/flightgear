@@ -765,8 +765,9 @@ FGInput::_update_mouse ()
     m.current_mode = mode;
     if (mode >= 0 && mode < m.nModes) {
       glutSetCursor(m.modes[mode].cursor);
-      glutWarpPointer(fgGetInt("/sim/startup/xsize", 800) / 2,
-		      fgGetInt("/sim/startup/ysize", 600) / 2);
+      m.x = fgGetInt("/sim/startup/xsize", 800) / 2;
+      m.y = fgGetInt("/sim/startup/ysize", 600) / 2;
+      glutWarpPointer(m.x, m.y);
     } else {
       SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
       glutSetCursor(GLUT_CURSOR_INHERIT);
