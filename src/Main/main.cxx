@@ -647,7 +647,7 @@ void fgRenderFrame() {
             sstate.moon_dec  = globals->get_ephem()->getMoonDeclination();
             sstate.moon_dist = 40000.0 * moon_horiz_eff;
 
-            thesky->reposition( sstate );
+            thesky->reposition( sstate, delta_time_sec );
         }
 
         glEnable( GL_DEPTH_TEST );
