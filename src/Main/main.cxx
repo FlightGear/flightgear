@@ -151,6 +151,7 @@ sgVec3 rway_ols;
 #include "splash.hxx"
 #include "viewmgr.hxx"
 #include "options.hxx"
+#include "model.hxx"
 
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
@@ -172,14 +173,6 @@ void fgReshape( int width, int height );
 // ssg variables
 ssgRoot *scene = NULL;
 ssgBranch *terrain = NULL;
-
-// aircraft model stuff
-ssgSelector *acmodel_selector = NULL;
-ssgTransform *acmodel_pos = NULL;
-ssgSelector *prop_selector = NULL;
-ssgSelector *flaps_selector = NULL;
-int acmodel_npropsettings;
-int acmodel_proprpms[4][2];  // different propeller settings
 
 ssgRoot *lighting = NULL;
 ssgBranch *ground = NULL;
@@ -675,57 +668,7 @@ void fgRenderFrame( void ) {
 	    ssgSetNearFar( 0.5f, 120000.0f );
 	}
 
-	if ( globals->get_viewmgr()->get_current() == 0 ) {
-	    // disable aircraft model
-	    acmodel_selector->select(0);
-	} else { 
-	    // enable aircraft model and set up its position and orientation
-	    acmodel_selector->select(1);
-
-	    FGViewerRPH *pilot_view =
-		(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
-
-	    sgMat4 sgTRANS;
-	    sgMakeTransMat4( sgTRANS, pilot_view->get_view_pos() );
-
-	    sgVec3 ownship_up;
-	    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
-
-	    sgMat4 sgROT;
-	    sgMakeRotMat4( sgROT, -90.0, ownship_up );
-
-	    // sgMat4 sgTMP;
-	    // sgMat4 sgTUX;
-	    // sgMultMat4( sgTMP, sgROT, pilot_view.VIEW_ROT );
-	    // sgMultMat4( sgTUX, sgTMP, sgTRANS );
-
-	    // sgTUX = ( sgROT * pilot_view.VIEW_ROT ) * sgTRANS
-	    sgMat4 sgTUX;
-	    sgCopyMat4( sgTUX, sgROT );
-	    sgPostMultMat4( sgTUX, pilot_view->get_VIEW_ROT() );
-	    sgPostMultMat4( sgTUX, sgTRANS );
-	
-	    sgCoord tuxpos;
-	    sgSetCoord( &tuxpos, sgTUX );
-	    acmodel_pos->setTransform( &tuxpos );
-
-	    // set up moving parts
-	    if (flaps_selector != NULL) {
-		flaps_selector->select( (globals->get_controls()->get_flaps() > 0.5f) ? 1 : 2 );
-	    }
-
-	    if (prop_selector != NULL) {
-	      int propsel_mask = 0;
-	      double rpm = fgGetDouble("/engines/engine[0]/rpm");
-	      for (int i = 0; i < acmodel_npropsettings; i++) {
-		if (rpm >= acmodel_proprpms[i][0] &&
-		    rpm <= acmodel_proprpms[i][1]) {
-		  propsel_mask |= 1 << i;
-		}
-	      }
-	      prop_selector->select(propsel_mask);
-	    }
-	}
+	current_model.update(0); // FIXME: use real delta time
 
 	// $$$ begin - added VS Renganthan 17 Oct 2K
 	fgUpdateDCS();
@@ -1621,92 +1564,7 @@ int mainLoop( int argc, char **argv ) {
     // ADA
 
     // temporary visible aircraft "own ship"
-    acmodel_selector = new ssgSelector;
-    acmodel_pos = new ssgTransform;
-
-    ssgEntity *acmodel_obj = NULL;
-    if (fgGetString("/sim/flight-model") == "ada") {
-        // ada exteranl aircraft model loading
-        if( !ship_pos[0]->getKid(0) ) {
-            // fall back to default
-            ssgEntity *acmodel_obj = ssgLoad( (char *)"glider.ac" );
-            if( !acmodel_obj ) {
-                SG_LOG( SG_GENERAL, SG_ALERT, "FAILED to LOAD an AC model! ..." );
-                exit(-1);
-            }
-            acmodel_pos->addKid( acmodel_obj );
-        } else {
-            acmodel_obj = ship_pos[0]->getKid(0);
-        }
-    } else {
-        // default aircraft model loading
-
-        // Get the model location, and load textures from the same
-        // directory.  Use an absolute path for the model to avoid
-        // incompatibilities in different versions of PLIB.
-        string acmodel_path =
-            fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
-        SGPath full_model = globals->get_fg_root();
-        full_model.append(acmodel_path);
-
-        ssgTexturePath( (char *)full_model.dir().c_str() );
-        acmodel_obj = ssgLoad( (char *)full_model.c_str() );
-        if( !acmodel_obj ) {
-            // fall back to default
-            acmodel_obj = ssgLoad( (char *)"Models/Geometry/glider.ac" );
-            if( !acmodel_obj ) {
-                SG_LOG( SG_GENERAL, SG_ALERT, "FAILED to LOAD an AC model! ..." );
-                exit(-1);
-            }
-        }
-    }
-
-    // find moving parts (if this is an MDL model)
-    flaps_selector = (ssgSelector*)fgFindNode( acmodel_obj, "FLAPS" );
-    prop_selector  = (ssgSelector*)fgFindNode( acmodel_obj, "PROP"  );
-
-    acmodel_npropsettings = 0;
-    if (prop_selector != NULL) {
-      for (ssgEntity* kid = prop_selector->getKid(0); kid != NULL;
-	   kid = prop_selector->getNextKid()) {
-	int prop_low, prop_high;
-	if ( sscanf(kid->getName(), "PROP_%d_%d", 
-		    &prop_low, &prop_high) == 2 ) {
-	  prop_low  = (int)((float)prop_low  * (5000.0f / 32767.0f));
-	  prop_high = (int)((float)prop_high * (5000.0f / 32767.0f));
-	  acmodel_proprpms[acmodel_npropsettings][0] = prop_low ;
-	  acmodel_proprpms[acmodel_npropsettings][1] = prop_high;
-	  acmodel_npropsettings++;
-
-	  SG_LOG( SG_GENERAL, SG_INFO, "PROPELLER SETTING " << prop_low <<
-		  " " << prop_high );
-	}
-      }
-    }
-
-    // align the model properly for FGFS
-    ssgTransform *acmodel_align = new ssgTransform;
-    acmodel_align->addKid(acmodel_obj);
-    sgMat4 rot_matrix;
-    sgMat4 off_matrix;
-    sgMat4 res_matrix;
-    float h_rot = fgGetFloat("/sim/model/heading-offset-deg", 0.0);
-    float p_rot = fgGetFloat("/sim/model/roll-offset-deg", 0.0);
-    float r_rot = fgGetFloat("/sim/model/pitch-offset-deg", 0.0);
-    float x_off = fgGetFloat("/sim/model/x-offset-m", 0.0);
-    float y_off = fgGetFloat("/sim/model/y-offset-m", 0.0);
-    float z_off = fgGetFloat("/sim/model/z-offset-m", 0.0);
-    sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
-    sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
-    sgMultMat4(res_matrix, off_matrix, rot_matrix);
-    acmodel_align->setTransform(res_matrix);
-
-    acmodel_pos->addKid( acmodel_align );
-    acmodel_selector->addKid( acmodel_pos );
-    //ssgFlatten( acmodel_obj );
-    //ssgStripify( acmodel_selector );
-    acmodel_selector->clrTraversalMaskBits( SSGTRAV_HOT );
-    scene->addKid( acmodel_selector );
+    current_model.init();
 
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
