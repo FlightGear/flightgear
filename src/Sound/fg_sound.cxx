@@ -375,7 +375,7 @@ FGSound::update (int dt)
    //
    // Do we need to start playing the sample?
    //
-   if (_active && (_type == FGSound::LEVEL) || (_type == FGSound::INVERTED))
+   if (_active && ((_type == FGSound::LEVEL) || (_type == FGSound::INVERTED)))
          return;
 
    //
