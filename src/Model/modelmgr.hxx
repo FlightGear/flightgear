@@ -30,18 +30,20 @@ class FGModelPlacement;
 class FGModelMgr : public FGSubsystem
 {
 public:
-  FGModelMgr ();
-  virtual ~FGModelMgr ();
 
-  virtual void init ();
-  virtual void bind ();
-  virtual void unbind ();
-  virtual void update (double dt);
-
-  virtual void draw ();
-
-private:
-
+  /**
+   * A dynamically-placed model using properties.
+   *
+   * The model manager uses the property nodes to update the model's
+   * position and orientation; any of the property node pointers may
+   * be set to zero to avoid update.  Normally, a caller should
+   * load the model by instantiating FGModelPlacement with the path
+   * to the model or its XML wrapper, then assign any relevant
+   * property node pointers.
+   *
+   * @see FGModelPlacement
+   * @see FGModelMgr#add_instance
+   */
   struct Instance
   {
     Instance ();
@@ -54,6 +56,38 @@ private:
     SGPropertyNode * pitch_deg_node;
     SGPropertyNode * heading_deg_node;
   };
+
+  FGModelMgr ();
+  virtual ~FGModelMgr ();
+
+  virtual void init ();
+  virtual void bind ();
+  virtual void unbind ();
+  virtual void update (double dt);
+
+  /**
+   * Add an instance of a dynamic model to the manager.
+   *
+   * NOTE: pointer ownership is transferred to the model manager!
+   *
+   * The caller is responsible for setting up the Instance structure
+   * as required.  The model manager will continuously update the
+   * location and orientation of the model based on the current
+   * values of the properties.
+   */
+  virtual void add_instance (Instance * instance);
+
+
+  /**
+   * Remove an instance of a dynamic model from the manager.
+   *
+   * NOTE: the manager will delete the instance as well.
+   */
+  virtual void remove_instance (Instance * instance);
+
+  virtual void draw ();
+
+private:
 
   vector<Instance *> _instances;
 

@@ -83,7 +83,7 @@ FGModelMgr::init ()
     globals->get_scenery()->get_scene_graph()->addKid(model->getSceneGraph());
 
 				// Save this instance for updating
-    _instances.push_back(instance);
+    add_instance(instance);
   }
 }
 
@@ -122,6 +122,19 @@ FGModelMgr::update (double dt)
 
     instance->model->update();
   }
+}
+
+void
+FGModelMgr::add_instance (Instance * instance)
+{
+    _instances.push_back(instance);
+}
+
+void
+FGModelMgr::remove_instance (Instance * instance)
+{
+    _instances.erase(find(_instances.begin(), _instances.end(), instance));
+    delete instance;
 }
 
 void
