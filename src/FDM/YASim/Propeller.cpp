@@ -58,55 +58,47 @@ void Propeller::setPropPitch(float proppitch)
 void Propeller::calc(float density, float v, float omega,
 		     float* thrustOut, float* torqueOut)
 {
-    if (_manual) {
-        float pps = _proppitch * 0.9999f; // avoid singularity
-        pps = 1 + ( Math::pow(pps,-1/(pps-1)) - Math::pow(pps,-pps/(pps-1)) );
-        _j0 = (4*_baseJ0) -  (  ((4*_baseJ0) - (0.26f*_baseJ0)) * pps );
-    }
-
+    // For manual pitch, exponentially modulate the J0 value between
+    // 0.25 and 4.  A prop pitch of 0.5 results in no change from the
+    // base value.
+    if (_manual) 
+        _j0 = _baseJ0 * Math::pow(2, 4*_proppitch - 2);
+    
     float tipspd = _r*omega;
     float V2 = v*v + tipspd*tipspd;
 
-    // Clamp v (forward velocity) to zero, now that we've used it to
-    // calculate V (propeller "speed")
+    // Sanify
     if(v < 0) v = 0;
-
-    // The model doesn't work for propellers turning backwards.
     if(omega < 0.001) omega = 0.001;
 
-    float J = v/omega;
-    float lambda = J/_j0;
+    float J = v/omega;    // Advance ratio
+    float lambda = J/_j0; // Unitless scalar advance ratio
 
-    float torque = 0;
-    if(lambda > 1) {
-	lambda = 1.0f/lambda;
-	torque = (density*V2*_f0*_j0)/(4*_etaC*_beta*(1-_lambdaPeak));
-    }
+    // There's an undefined point at lambda == 1.
+    if(lambda == 1.0f) lambda = 0.9999f;
 
-    // There's an undefined point at 1.  Just offset by a tiny bit to
-    // fix (note: the discontinuity is at EXACTLY one, this is about
-    // the only time in history you'll see me use == on a floating
-    // point number!)
-    if(lambda == 1.0) lambda = 0.9999f;
+    float l4 = lambda*lambda; l4 = l4*l4;   // lambda^4
+    float gamma = (_etaC*_beta/_j0)*(1-l4); // thrust/torque ratio
 
-    // Calculate lambda^4
-    float l4 = lambda*lambda; l4 = l4*l4;
-
-    // thrust/torque ratio
-    float gamma = (_etaC*_beta/_j0)*(1-l4);
-
-    // Compute a thrust, clamp to takeoff thrust to prevend huge
-    // numbers at slow speeds.
+    // Compute a thrust coefficient, with clamping at very low
+    // lambdas (fast propeller / slow aircraft).
     float tc = (1 - lambda) / (1 - _lambdaPeak);
     if(_matchTakeoff && tc > _tc0) tc = _tc0;
 
     float thrust = 0.5f * density * V2 * _f0 * tc;
-
-    if(torque > 0) {
-	torque -= thrust/gamma;
-	thrust = -thrust;
-    } else {
-	torque = thrust/gamma;
+    float torque = thrust/gamma;
+    if(lambda > 1) {
+        // This is the negative thrust / windmilling regime.  Throw
+        // out the efficiency graph approach and instead simply
+        // extrapolate the existing linear thrust coefficient and a
+        // torque coefficient that crosses the axis at a preset
+        // windmilling speed.  The tau0 value is an analytically
+        // calculated (i.e. don't mess with it) value for a torque
+        // coefficient at lamda==1.
+        float tau0 = (0.25f * _j0) / (_etaC * _beta * (1 - _lambdaPeak));
+        float lambdaWM = 1.2f; // lambda of zero torque (windmilling)
+        torque = tau0 - tau0 * (lambda - 1) / (lambdaWM - 1);
+        torque *= 0.5f * density * V2 * _f0;
     }
 
     *thrustOut = thrust;
