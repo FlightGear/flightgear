@@ -446,14 +446,13 @@ fgJoystickRead()
 		    continue;
 
 		switch (b.action) {
+		case button::ADJUST:
 		case button::TOGGLE:
 		    // no op
+		    flag = true;
 		    break;
 		case button::SWITCH:
 		    flag = b.value->setDoubleValue(0.0);
-		    break;
-		case button::ADJUST:
-		    // no op
 		    break;
 		default:
 		    flag = false;

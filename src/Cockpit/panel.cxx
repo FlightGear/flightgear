@@ -112,6 +112,8 @@ FGCroppedTexture::getTexture ()
 ////////////////////////////////////////////////////////////////////////
 
 FGPanel * current_panel = NULL;
+static fntRenderer text_renderer;
+
 
 FGPanel::FGPanel (int x, int y, int w, int h)
   : _mouseDown(false),
@@ -362,15 +364,6 @@ FGToggleAction::doAction ()
 ////////////////////////////////////////////////////////////////////////
 
 FGPanelTransformation::FGPanelTransformation ()
-{
-}
-
-FGPanelTransformation::FGPanelTransformation (Type _type,
-					      const SGValue * _value,
-					      float _min, float _max,
-					      float _factor, float _offset)
-  : type(_type), value(_value), min(_min), max(_max),
-    factor(_factor), offset(_offset)
 {
 }
 
@@ -630,48 +623,15 @@ FGTexturedLayer::draw ()
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGWindowLayer.
-////////////////////////////////////////////////////////////////////////
-
-FGWindowLayer::FGWindowLayer (int w, int h)
-  : FGTexturedLayer (w, h)
-{
-}
-
-FGWindowLayer::FGWindowLayer (const FGCroppedTexture &texture, int w, int h)
-  : FGTexturedLayer(texture, w, h)
-{
-}
-
-FGWindowLayer::~FGWindowLayer ()
-{
-}
-
-void
-FGWindowLayer::draw ()
-{
-  // doesn't do anything yet
-  FGTexturedLayer::draw();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
 // Implementation of FGTextLayer.
 ////////////////////////////////////////////////////////////////////////
 
-FGTextLayer::FGTextLayer (int w, int h, Chunk * chunk1, Chunk * chunk2,
-			  Chunk * chunk3)
+FGTextLayer::FGTextLayer (int w, int h)
   : FGInstrumentLayer(w, h), _pointSize(14.0)
 {
+  _then.stamp();
   _color[0] = _color[1] = _color[2] = 0.0;
   _color[3] = 1.0;
-  if (chunk1)
-    addChunk(chunk1);
-  if (chunk2)
-    addChunk(chunk2);
-  if (chunk3)
-    addChunk(chunk3);
 }
 
 FGTextLayer::~FGTextLayer ()
@@ -689,19 +649,19 @@ FGTextLayer::draw ()
   glPushMatrix();
   glColor4fv(_color);
   transform();
-  _renderer.setFont(guiFntHandle);
-  _renderer.setPointSize(_pointSize);
-  _renderer.begin();
-  _renderer.start3f(0, 0, 0);
+  text_renderer.setFont(guiFntHandle);
+  text_renderer.setPointSize(_pointSize);
+  text_renderer.begin();
+  text_renderer.start3f(0, 0, 0);
 
-				// Render each of the chunks.
-  chunk_list::const_iterator it = _chunks.begin();
-  chunk_list::const_iterator last = _chunks.end();
-  for ( ; it != last; it++) {
-    _renderer.puts((char *)((*it)->getValue()));
+  _now.stamp();
+  if (_now - _then > 100000) {
+    recalc_value();
+    _then = _now;
   }
+  text_renderer.puts((char *)(_value.c_str()));
 
-  _renderer.end();
+  text_renderer.end();
   glColor4f(1.0, 1.0, 1.0, 1.0);	// FIXME
   glPopMatrix();
 }
@@ -730,7 +690,19 @@ FGTextLayer::setPointSize (float size)
 void
 FGTextLayer::setFont(fntFont * font)
 {
-  _renderer.setFont(font);
+  text_renderer.setFont(font);
+}
+
+
+void
+FGTextLayer::recalc_value () const
+{
+  _value = "";
+  chunk_list::const_iterator it = _chunks.begin();
+  chunk_list::const_iterator last = _chunks.end();
+  for ( ; it != last; it++) {
+    _value += (*it)->getValue();
+  }
 }
 
 

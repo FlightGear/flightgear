@@ -163,14 +163,6 @@ FGBFI::init ()
   current_properties.tieDouble("/controls/brakes/center",
 			       getRightBrake, setCenterBrake);
 
-				// Deprecated...
-  current_properties.tieDouble("/controls/brake",
-			       getBrakes, setBrakes);
-  current_properties.tieDouble("/controls/left-brake",
-			       getLeftBrake, setLeftBrake);
-  current_properties.tieDouble("/controls/right-brake",
-			       getRightBrake, setRightBrake);
-
 				// Autopilot
   current_properties.tieBool("/autopilot/locks/altitude",
 			     getAPAltitudeLock, setAPAltitudeLock);
@@ -230,6 +222,9 @@ FGBFI::init ()
 			       getADFAltFreq, setADFAltFreq);
   current_properties.tieDouble("/radios/adf/rotation",
 			       getADFRotation, setADFRotation);
+
+  current_properties.tieDouble("/environment/visibility",
+			       getVisibility, setVisibility);
 
   FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI init");
 }

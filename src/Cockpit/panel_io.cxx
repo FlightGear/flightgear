@@ -48,6 +48,53 @@ FG_USING_STD(string);
 
 
 ////////////////////////////////////////////////////////////////////////
+// Default panel, instrument, and layer for when things go wrong...
+////////////////////////////////////////////////////////////////////////
+
+static FGCroppedTexture defaultTexture("Textures/default.rgb");
+
+
+/**
+ * Default layer: the default texture.
+ */
+class DefaultLayer : public FGTexturedLayer
+{
+public:
+  DefaultLayer () : FGTexturedLayer(defaultTexture)
+  {
+  }
+  
+};
+
+/**
+ * Default instrument: a single default layer.
+ */
+class DefaultInstrument : public FGLayeredInstrument
+{
+public:
+  DefaultInstrument (int x, int y, int w, int h)
+    : FGLayeredInstrument(x, y, w, h)
+  {
+    addLayer(new DefaultLayer());
+  }
+};
+
+
+/**
+ * Default panel: the default texture.
+ */
+class DefaultPanel : public FGPanel
+{
+public:
+  DefaultPanel (int x, int y, int w, int h) : FGPanel(x, y, w, h)
+  {
+    setBackground(defaultTexture.getTexture());
+  }
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Built-in layer for the magnetic compass ribbon layer.
 //
 // TODO: move this out into a special directory for built-in
@@ -168,10 +215,10 @@ static FGCroppedTexture
 readTexture (SGPropertyNode node)
 {
   FGCroppedTexture texture(node.getStringValue("path"),
-			 node.getFloatValue("x1"),
-			 node.getFloatValue("y1"),
-			 node.getFloatValue("x2", 1.0),
-			 node.getFloatValue("y2", 1.0));
+			   node.getFloatValue("x1"),
+			   node.getFloatValue("y1"),
+			   node.getFloatValue("x2", 1.0),
+			   node.getFloatValue("y2", 1.0));
   FG_LOG(FG_INPUT, FG_INFO, "Read texture " << node.getName());
   return texture;
 }
@@ -575,12 +622,10 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
   if (real_w != -1) {
     hscale = float(real_w) / float(w);
     w = real_w;
-    cerr << "hscale is " << hscale << endl;
   }
   if (real_h != -1) {
     vscale = float(real_h) / float(h);
     h = real_h;
-    cerr << "vscale is " << hscale << endl;
   }
 
   FG_LOG(FG_INPUT, FG_INFO, "Reading instrument " << name);
@@ -598,7 +643,7 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
 					hscale, vscale);
     if (action == 0) {
       delete instrument;
-      return 0;
+      return new DefaultInstrument(x, y, w, h);
     }
     instrument->addAction(action);
   }
@@ -613,7 +658,7 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
 					  hscale, vscale);
     if (layer == 0) {
       delete instrument;
-      return 0;
+      return new DefaultInstrument(x, y, w, h);
     }
     instrument->addLayer(layer);
   }
@@ -693,17 +738,14 @@ fgReadPanel (istream &input)
       return 0;
     }
 
-    if (!readPropertyList(path.str(), &props2)) {
-      delete panel;
-      return 0;
-    }
 
-    FGPanelInstrument * instrument =
-      readInstrument(SGPropertyNode("/", &props2), x, y, w, h);
+    FGPanelInstrument * instrument = 0;
+
+    if (readPropertyList(path.str(), &props2)) {
+      instrument = readInstrument(SGPropertyNode("/", &props2), x, y, w, h);
+    }
     if (instrument == 0) {
-      delete instrument;
-      delete panel;
-      return 0;
+      instrument = new DefaultInstrument(x, y, w, h);
     }
     panel->addInstrument(instrument);
   }
@@ -726,16 +768,19 @@ fgReadPanel (istream &input)
 FGPanel *
 fgReadPanel (const string &relative_path)
 {
+  FGPanel * panel = 0;
   FGPath path(current_options.get_fg_root());
   path.append(relative_path);
   ifstream input(path.c_str());
   if (!input.good()) {
     FG_LOG(FG_INPUT, FG_ALERT,
 	   "Cannot read panel configuration from " << path.str());
-    return 0;
+  } else {
+    panel = fgReadPanel(input);
+    input.close();
   }
-  FGPanel * panel = fgReadPanel(input);
-  input.close();
+  if (panel == 0)
+    panel = new DefaultPanel(0, 0, 1024, 768);
   return panel;
 }
 

@@ -45,6 +45,8 @@
 #include <map>
 #include <plib/fnt.h>
 
+#include <Time/timestamp.hxx>
+
 FG_USING_STD(vector);
 FG_USING_STD(map);
 
@@ -343,9 +345,6 @@ public:
   };
 
   FGPanelTransformation ();
-  FGPanelTransformation (Type type, const SGValue * value,
-			 float min, float max,
-			 float factor, float offset);
   virtual ~FGPanelTransformation ();
 
   Type type;
@@ -413,7 +412,6 @@ protected:
 class FGLayeredInstrument : public FGPanelInstrument
 {
 public:
-  typedef vector<FGInstrumentLayer *> layer_list;
   FGLayeredInstrument (int x, int y, int w, int h);
   virtual ~FGLayeredInstrument ();
 
@@ -427,6 +425,7 @@ public:
   virtual void addTransformation (FGPanelTransformation * transformation);
 
 protected:
+  typedef vector<FGInstrumentLayer *> layer_list;
   layer_list _layers;
 };
 
@@ -457,34 +456,6 @@ public:
 
 private:
   mutable FGCroppedTexture _texture;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// A moving window on a texture.
-//
-// This layer automatically recrops a cropped texture based on
-// property values, creating a moving window over the texture.
-////////////////////////////////////////////////////////////////////////
-
-class FGWindowLayer : public FGTexturedLayer
-{
-public:
-  FGWindowLayer (int w = -1, int h = -1);
-  FGWindowLayer (const FGCroppedTexture &texture, int w = -1, int h = -1);
-  virtual ~FGWindowLayer ();
-
-  virtual void draw ();
-
-  virtual const SGValue * getXValue () const { return _xValue; }
-  virtual void setXValue (const SGValue * value) { _xValue = value; }
-  virtual const SGValue * getYValue () const { return _yValue; }
-  virtual void setYValue (const SGValue * value) { _yValue = value; }
-
-private:
-  const SGValue * _xValue;
-  const SGValue * _yValue;
 };
 
 
@@ -522,8 +493,7 @@ public:
     mutable char _buf[1024];
   };
 
-  FGTextLayer (int w = -1, int h = -1, Chunk * chunk1 = 0, Chunk * chunk2 = 0,
-	       Chunk * chunk3 = 0);
+  FGTextLayer (int w = -1, int h = -1);
   virtual ~FGTextLayer ();
 
   virtual void draw ();
@@ -535,13 +505,18 @@ public:
   virtual void setFont (fntFont * font);
 
 private:
+
+  void recalc_value () const;
+
   typedef vector<Chunk *> chunk_list;
   chunk_list _chunks;
   float _color[4];
 
   float _pointSize;
-				// FIXME: need only one globally
-  mutable fntRenderer _renderer;
+
+  mutable string _value;
+  mutable FGTimeStamp _then;
+  mutable FGTimeStamp _now;
 };
 
 

@@ -524,5 +524,6 @@ void fgCockpitUpdate( void ) {
     
     xglViewport( 0, 0, iwidth, iheight );
 
-    current_panel->update();
+    if (current_panel != 0)
+      current_panel->update();
 }
