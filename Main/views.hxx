@@ -38,6 +38,16 @@
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
+#include "options.hxx"
+
+#ifndef BOOL
+#define BOOL int
+#endif
+
+#ifndef TRUE
+#define FALSE 0
+#define TRUE 1
+#endif
 
 // Define a structure containing view information
 class fgVIEW {
@@ -50,6 +60,9 @@ public:
     // the goal view offset for viewing (used for smooth view changes)
     double goal_view_offset;
 
+    // flag forcing update of fov related stuff
+    BOOL update_fov;
+	
     // fov of view is specified in the y direction, win_ratio is used to
     // calculate the fov in the X direction = width/height
     double win_ratio;
@@ -134,6 +147,9 @@ public:
     // Update the "World to Eye" transformation matrix
     void UpdateWorldToEye(  fgFLIGHT *f );
 
+    // Update the field of view parameters
+    void UpdateFOV( fgOPTIONS *o );
+	
     // Destructor
     ~fgVIEW( void );
 };
@@ -146,6 +162,9 @@ extern fgVIEW current_view;
 
 
 // $Log$
+// Revision 1.8  1998/05/27 02:24:06  curt
+// View optimizations by Norman Vine.
+//
 // Revision 1.7  1998/05/17 16:59:04  curt
 // First pass at view frustum culling now operational.
 //

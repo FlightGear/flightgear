@@ -55,6 +55,34 @@ void fgVIEW::Init( void ) {
 
     view_offset = 0.0;
     goal_view_offset = 0.0;
+
+    winWidth = 640;  // FG_DEFAULT_WIN_WIDTH
+    winHeight = 480; // FG_DEFAULT_WIN_HEIGHT
+    win_ratio = (double) winWidth / (double) winHeight;
+    update_fov = TRUE;
+}
+
+
+// Update the field of view parameters
+void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
+    double theta_x, theta_y;
+	
+	// printf("win_ratio = %.2f\n", win_ratio);
+	// calculate sin() and cos() of fov / 2 in X direction;
+	theta_x = (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
+	// printf("theta_x = %.2f\n", theta_x);
+	sin_fov_x = sin(theta_x);
+	cos_fov_x = cos(theta_x);
+	slope_x = sin_fov_x / cos_fov_x;
+	// printf("slope_x = %.2f\n", slope_x);
+
+	// calculate sin() and cos() of fov / 2 in Y direction;
+	theta_y = (o->fov * DEG_TO_RAD) / 2.0;
+	// printf("theta_y = %.2f\n", theta_y);
+	sin_fov_y = sin(theta_y);
+	cos_fov_y = cos(theta_y);
+	slope_y = sin_fov_y / cos_fov_y;
+	// printf("slope_y = %.2f\n", slope_y);
 }
 
 
@@ -64,31 +92,19 @@ void fgVIEW::Update( fgFLIGHT *f ) {
     fgPolarPoint3d p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
-    double theta_x, theta_y, ntmp;
+    double ntmp;
 
     o = &current_options;
 
+    if(update_fov == TRUE) {
+	// printf("Updating fov\n");
+	UpdateFOV(o);
+	update_fov = FALSE;
+    }
+		
     scenery.center.x = scenery.next_center.x;
     scenery.center.y = scenery.next_center.y;
     scenery.center.z = scenery.next_center.z;
-
-    // printf("win_ratio = %.2f\n", win_ratio);
-
-    // calculate sin() and cos() of fov / 2 in X direction;
-    theta_x = (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
-    // printf("theta_x = %.2f\n", theta_x);
-    sin_fov_x = sin(theta_x);
-    cos_fov_x = cos(theta_x);
-    slope_x = sin_fov_x / cos_fov_x;
-    // printf("slope_x = %.2f\n", slope_x);
-
-    // calculate sin() and cos() of fov / 2 in Y direction;
-    theta_y = (o->fov * DEG_TO_RAD) / 2.0;
-    // printf("theta_y = %.2f\n", theta_y);
-    sin_fov_y = sin(theta_y);
-    cos_fov_y = cos(theta_y);
-    slope_y = sin_fov_y / cos_fov_y;
-    // printf("slope_y = %.2f\n", slope_y);
 
     // calculate the cartesion coords of the current lat/lon/0 elev
     p.lon = FG_Longitude;
@@ -240,23 +256,63 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
     MAT3mat TMP;
     MAT3hvec vec;
 
-    // Roll Matrix
-    MAT3_SET_HVEC(vec, 0.0, 0.0, -1.0, 1.0);
-    MAT3rotate(R_Phi, vec, FG_Phi);
-    // printf("Roll matrix (Phi)\n");
-    // MAT3print(R_Phi, stdout);
+    // if we have a view offset use slow way for now
+    if(fabs(view_offset)>FG_EPSILON){ 
+	// Roll Matrix
+	MAT3_SET_HVEC(vec, 0.0, 0.0, -1.0, 1.0);
+	MAT3rotate(R_Phi, vec, FG_Phi);
+	// printf("Roll matrix (Phi)\n");
+	// MAT3print(R_Phi, stdout);
 
-    // Pitch Matrix
-    MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
-    MAT3rotate(R_Theta, vec, FG_Theta);
-    // printf("\nPitch matrix (Theta)\n");
-    // MAT3print(R_Theta, stdout);
+	// Pitch Matrix
+	MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
+	MAT3rotate(R_Theta, vec, FG_Theta);
+	// printf("\nPitch matrix (Theta)\n");
+	// MAT3print(R_Theta, stdout);
 
-    // Yaw Matrix
-    MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
-    MAT3rotate(R_Psi, vec, FG_Psi + FG_PI - view_offset );
-    // printf("\nYaw matrix (Psi)\n");
-    // MAT3print(R_Psi, stdout);
+	// Yaw Matrix
+	MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
+	MAT3rotate(R_Psi, vec, FG_Psi + FG_PI - view_offset );
+	// printf("\nYaw matrix (Psi)\n");
+	// MAT3print(R_Psi, stdout);
+
+	// aircraft roll/pitch/yaw
+	MAT3mult(TMP, R_Phi, R_Theta);
+	MAT3mult(AIRCRAFT, TMP, R_Psi);
+
+    } else { // JUST USE LOCAL_TO_BODY  NHV 5/25/98
+	// hey this is even different then LOCAL[][] above ??
+	 
+	AIRCRAFT[0][0] = -FG_T_local_to_body_22;
+	AIRCRAFT[0][1] = -FG_T_local_to_body_23;
+	AIRCRAFT[0][2] = FG_T_local_to_body_21;
+	AIRCRAFT[0][3] = 0.0;
+	AIRCRAFT[1][0] = FG_T_local_to_body_32;
+	AIRCRAFT[1][1] = FG_T_local_to_body_33;
+	AIRCRAFT[1][2] = -FG_T_local_to_body_31;
+	AIRCRAFT[1][3] = 0.0;
+	AIRCRAFT[2][0] = FG_T_local_to_body_12;
+	AIRCRAFT[2][1] = FG_T_local_to_body_13;
+	AIRCRAFT[2][2] = -FG_T_local_to_body_11;
+	AIRCRAFT[2][3] = 0.0;
+	AIRCRAFT[3][0] = AIRCRAFT[3][1] = AIRCRAFT[3][2] = AIRCRAFT[3][3] = 0.0;
+	AIRCRAFT[3][3] = 1.0;
+
+	// ??? SOMETHING LIKE THIS SHOULD WORK    NHV
+	// Rotate about LOCAL_UP  (AIRCRAFT[2][])
+	// MAT3_SET_HVEC(vec, AIRCRAFT[2][0], AIRCRAFT[2][1],
+	//			  AIRCRAFT[2][2], AIRCRAFT[2][3]);
+	// MAT3rotate(TMP, vec, FG_PI - view_offset );
+	// MAT3mult(AIRCRAFT, AIRCRAFT, TMP);
+    }
+    // printf("\naircraft roll pitch yaw\n");
+    // MAT3print(AIRCRAFT, stdout);
+
+    // View position in scenery centered coordinates
+    MAT3_SET_HVEC(vec, view_pos.x, view_pos.y, view_pos.z, 1.0);
+    MAT3translate(T_view, vec);
+    // printf("\nTranslation matrix\n");
+    // MAT3print(T_view, stdout);
 
     // Latitude
     MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
@@ -272,6 +328,7 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
     // printf("\nLongitude matrix\n");
     // MAT3print(R_Lon, stdout);
 
+#ifdef THIS_IS_OLD_CODE
     // View position in scenery centered coordinates
     MAT3_SET_HVEC(vec, view_pos.x, view_pos.y, view_pos.z, 1.0);
     MAT3translate(T_view, vec);
@@ -283,6 +340,7 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
     MAT3mult(AIRCRAFT, TMP, R_Psi);
     // printf("\naircraft roll pitch yaw\n");
     // MAT3print(AIRCRAFT, stdout);
+#endif THIS_IS_OLD_CODE
 
     // lon/lat
     MAT3mult(WORLD, R_Lat, R_Lon);
@@ -318,6 +376,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/05/27 02:24:05  curt
+// View optimizations by Norman Vine.
+//
 // Revision 1.10  1998/05/17 16:59:03  curt
 // First pass at view frustum culling now operational.
 //

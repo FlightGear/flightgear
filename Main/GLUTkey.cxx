@@ -111,6 +111,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( o->fov > FG_FOV_MAX ) {
 		o->fov = FG_FOV_MAX;
 	    }
+	    v->update_fov = TRUE;
 	    return;
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
@@ -179,6 +180,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( o->fov < FG_FOV_MIN ) {
 		o->fov = FG_FOV_MIN;
 	    }
+	    v->update_fov = TRUE;
 	    return;
 	case 122: /* z key */
 	    w->visibility *= 1.10;
@@ -280,9 +282,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.9  1998/05/16 13:05:21  curt
-/* Added limits to fov.
+/* Revision 1.10  1998/05/27 02:24:05  curt
+/* View optimizations by Norman Vine.
 /*
+ * Revision 1.9  1998/05/16 13:05:21  curt
+ * Added limits to fov.
+ *
  * Revision 1.8  1998/05/13 18:29:56  curt
  * Added a keyboard binding to dynamically adjust field of view.
  * Added a command line option to specify fov.
