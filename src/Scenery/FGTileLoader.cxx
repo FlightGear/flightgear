@@ -89,6 +89,7 @@ FGTileLoader::add( FGTileEntry* tile )
     tile_load_queue.push( tile );
 }
 
+#ifdef WISH_PLIB_WAS_THREADED // but it isn't
 /**
  * 
  */
@@ -97,6 +98,7 @@ FGTileLoader::remove( FGTileEntry* tile )
 {
     tile_free_queue.push( tile );
 }
+#endif
 
 /**
  * 
@@ -156,6 +158,7 @@ FGTileLoader::LoaderThread::run()
 
   	FGTileMgr::ready_to_attach( tile );
 
+#ifdef WISH_PLIB_WAS_THREADED // but it isn't
 	// Handle and pending removals
 	while ( !loader->tile_free_queue.empty() ) {
 	    cout << "freeing next tile ..." << endl;
@@ -164,6 +167,8 @@ FGTileLoader::LoaderThread::run()
 	    tile->free_tile();
 	    delete tile;
 	}
+#endif
+
     }
     pthread_cleanup_pop(1);
 }

@@ -64,9 +64,10 @@ void FGNewCache::entry_free( long cache_index ) {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING CACHE ENTRY = " << cache_index );
     FGTileEntry *tile = tile_cache[cache_index];
     tile->disconnect_ssg_nodes();
-    tile->sched_removal();
 
-#if 0
+#ifdef WISH_PLIB_WAS_THREADED
+    tile->sched_removal();
+#else // plib isn't threaded so we always go here
     tile->free_tile();
     delete tile;
 #endif

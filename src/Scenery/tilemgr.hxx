@@ -143,10 +143,12 @@ public:
      */
     static void ready_to_attach( FGTileEntry *t ) { attach_queue.push( t ); }
 
+#ifdef WISH_PLIB_WAS_THREADED // but it isn't
     /**
      * Tile is detatched from scene graph and is ready to delete
      */
     inline void ready_to_delete( FGTileEntry *t ) { loader.remove( t ); }
+#endif
 
     /**
      * Add a pending model to the 'deferred model load' queue

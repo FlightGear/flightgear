@@ -105,10 +105,14 @@ static void my_remove_branch( ssgBranch * branch ) {
 }
 
 
+#ifdef WISH_PLIB_WAS_THREADED // but it isn't
+
 // Schedule tile to be freed/removed
 void FGTileEntry::sched_removal() {
     global_tile_mgr.ready_to_delete( this );
 }
+
+#endif
 
 
 // Clean up the memory used by this tile and delete the arrays used by
