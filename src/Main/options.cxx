@@ -171,7 +171,7 @@ fgSetDefaults ()
     fgSetInt("/sim/startup/ysize", 600);
     fgSetInt("/sim/rendering/bits-per-pixel", 16);
     fgSetString("/sim/view-mode", "pilot");
-    fgSetDouble("/sim/startup/view-offset", 0);
+    fgSetDouble("/sim/view/offset", 0);
     fgSetDouble("/environment/visibility", 20000);
 
 				// HUD options
@@ -837,7 +837,7 @@ parse_option (const string& arg)
 	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
 	pilot_view->set_view_offset( default_view_offset );
 	pilot_view->set_goal_view_offset( default_view_offset );
-	fgSetDouble("/sim/startup/view-offset", default_view_offset);
+	fgSetDouble("/sim/view/offset", default_view_offset);
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--visibility=" ) == 0 ) {
 	fgSetDouble("/environment/visibility", atof(arg.substr(13)));
