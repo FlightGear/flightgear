@@ -84,9 +84,9 @@ FGRadioStack::FGRadioStack() {
     nav2_radial = 0.0;
     nav2_dme_dist = 0.0;
     need_update = true;
-    longitudeVal = fgGetValue("/position/longitude");
-    latitudeVal = fgGetValue("/position/latitude");
-    altitudeVal = fgGetValue("/position/altitude");
+    lon_node = fgGetNode("/position/longitude");
+    lat_node = fgGetNode("/position/latitude");
+    alt_node = fgGetNode("/position/altitude");
 }
 
 
@@ -308,9 +308,9 @@ double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
 void 
 FGRadioStack::update() 
 {
-    double lon = longitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = latitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = altitudeVal->getDoubleValue() * SG_FEET_TO_METER;
+    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
     need_update = false;
 
@@ -603,9 +603,9 @@ void FGRadioStack::search()
 {
     static FGMkrBeacon::fgMkrBeacType last_beacon = FGMkrBeacon::NOBEACON;
 
-    double lon = longitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = latitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = altitudeVal->getDoubleValue() * SG_FEET_TO_METER;
+    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
     // nav1
     FGILS ils;

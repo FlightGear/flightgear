@@ -48,9 +48,9 @@ class FGRadioStack : public FGSubsystem
     SGInterpTable *low_tbl;
     SGInterpTable *high_tbl;
 
-    SGValue * latitudeVal;
-    SGValue * longitudeVal;
-    SGValue * altitudeVal;
+    SGPropertyNode *lat_node;
+    SGPropertyNode *lon_node;
+    SGPropertyNode *alt_node;
 
     bool need_update;
 

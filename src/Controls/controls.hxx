@@ -66,7 +66,7 @@ private:
     double brake[MAX_WHEELS];
     bool throttle_idle;
 
-    SGValue * auto_coordination;
+    SGPropertyNode * auto_coordination;
 
     inline void CLAMP(double *x, double min, double max ) {
 	if ( *x < min ) { *x = min; }

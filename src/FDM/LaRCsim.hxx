@@ -33,14 +33,18 @@
 
 class FGLaRCsim: public FGInterface {
 
+private:
+
     FGNewEngine eng;
     LaRCsimIC* lsic;
     void set_ls(void);
     void snap_shot(void);
     double time_step;
-    SGValue * speed_up;
+    SGPropertyNode *speed_up;
+    SGPropertyNode *aircraft;
     
 public:
+
     FGLaRCsim( double dt );
     ~FGLaRCsim(void);
     

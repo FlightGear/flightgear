@@ -41,8 +41,11 @@
 FGLaRCsim::FGLaRCsim( double dt ) {
     set_delta_t( dt );
 
-    ls_toplevel_init( 0.0, 
-		      (char *)fgGetString("/sim/aircraft").c_str() );
+    speed_up = fgGetNode("/sim/speed-up", true);
+    aircraft = fgGetNode("/sim/aircraft", true);
+    
+    ls_toplevel_init( 0.0, (char *)(aircraft->getStringValue().c_str()) );
+
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
     copy_to_LaRCsim(); // initialize all of LaRCsim's vars
     //this should go away someday -- formerly done in fg_init.cxx
@@ -71,8 +74,6 @@ void FGLaRCsim::init() {
 				// init method first.
     FGInterface::init();
 
-    speed_up = fgGetValue("/sim/speed-up", true);
-    
     ls_set_model_dt( get_delta_t() );
     // Initialize our little engine that hopefully might
     eng.init( get_delta_t() );
@@ -121,7 +122,7 @@ void FGLaRCsim::init() {
 // Run an iteration of the EOM (equations of motion)
 bool FGLaRCsim::update( int multiloop ) {
 
-    if ( fgGetString("/sim/aircraft") == "c172" ) {
+    if ( aircraft->getStringValue() == "c172" ) {
 	// set control inputs
 	// cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
 	eng.set_IAS( V_calibrated_kts );
@@ -188,7 +189,7 @@ bool FGLaRCsim::update( int multiloop ) {
         speed_up->getIntValue();
     Flap_handle = 30.0 * controls.get_flaps();
 
-    if ( fgGetString("/sim/aircraft") == "c172" ) {
+    if ( aircraft->getStringValue() == "c172" ) {
 	Use_External_Engine = 1;
     } else {
 	Use_External_Engine = 0;

@@ -50,6 +50,8 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <simgear/misc/props.hxx>
+
 #include <FDM/JSBSim/FGFDMExec.h>
 
 class FGState;
@@ -233,7 +235,12 @@ private:
     float trim_elev;
     float trim_throttle;
     
-    SGValue *trimmed;
+    SGPropertyNode *startup_trim;
+    SGPropertyNode *trimmed;
+    SGPropertyNode *pitch_trim;
+    SGPropertyNode *throttle_trim;
+    SGPropertyNode *aileron_trim;
+    SGPropertyNode *rudder_trim;
     
     void snap_shot(void);
 };

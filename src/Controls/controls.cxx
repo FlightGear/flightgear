@@ -70,7 +70,7 @@ FGControls::init ()
         brake[wheel] = 0.0;
     }
 
-    auto_coordination = fgGetValue("/sim/auto-coordination", true);
+    auto_coordination = fgGetNode("/sim/auto-coordination", true);
 }
 
 
