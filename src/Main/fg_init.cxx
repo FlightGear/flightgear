@@ -65,7 +65,7 @@
 #include <Cockpit/sp_panel.hxx>
 #include <FDM/Balloon.h>
 #include <FDM/External.hxx>
-#include <FDM/JSBsim.hxx>
+#include <FDM/JSBSim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
 #include <Include/general.hxx>

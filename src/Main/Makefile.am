@@ -50,8 +50,8 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Controls/libControls.a \
 	$(top_builddir)/src/FDM/libFlight.a \
 	$(top_builddir)/src/FDM/Balloon/libBalloon.a \
-	$(top_builddir)/src/FDM/JSBsim/libJSBsim.a \
-	$(top_builddir)/src/FDM/JSBsim/filtersjb/libfiltersjb.a \
+	$(top_builddir)/src/FDM/JSBSim/libJSBSim.a \
+	$(top_builddir)/src/FDM/JSBSim/filtersjb/libfiltersjb.a \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
 	$(top_builddir)/src/GUI/libGUI.a \
