@@ -27,6 +27,30 @@
 #include <Main/fg_props.hxx>
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Inline utility methods.
+////////////////////////////////////////////////////////////////////////
+
+static inline void
+CLAMP(double *x, double min, double max )
+{
+  if ( *x < min ) { *x = min; }
+  if ( *x > max ) { *x = max; }
+}
+
+static inline void
+CLAMP(int *i, int min, int max )
+{
+  if ( *i < min ) { *i = min; }
+  if ( *i > max ) { *i = max; }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGControls.
+////////////////////////////////////////////////////////////////////////
+
 // Constructor
 FGControls::FGControls() :
     aileron( 0.0 ),
@@ -128,6 +152,9 @@ FGControls::bind ()
 	 &FGControls::get_starter, &FGControls::set_starter);
     fgSetArchivable(name);
   }
+  fgTie("/controls/parking-brake", this,
+	&FGControls::get_parking_brake, &FGControls::set_parking_brake);
+  fgSetArchivable("/controls/parking-brake");
   for (index = 0; index < MAX_WHEELS; index++) {
     char name[32];
     sprintf(name, "/controls/brakes[%d]", index);
@@ -179,4 +206,306 @@ void
 FGControls::update (int dt)
 {
 }
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Setters and adjusters.
+////////////////////////////////////////////////////////////////////////
+
+void
+FGControls::set_aileron (double pos)
+{
+  aileron = pos;
+  CLAMP( &aileron, -1.0, 1.0 );
+			
+  // check for autocoordination
+  if ( auto_coordination->getBoolValue() ) {
+    set_rudder( aileron / 2.0 );
+  }
+}
+
+void
+FGControls::move_aileron (double amt)
+{
+  aileron += amt;
+  CLAMP( &aileron, -1.0, 1.0 );
+			
+  // check for autocoordination
+  if ( auto_coordination->getBoolValue() ) {
+    set_rudder( aileron / 2.0 );
+  }
+}
+
+void
+FGControls::set_aileron_trim( double pos )
+{
+    aileron_trim = pos;
+    CLAMP( &aileron_trim, -1.0, 1.0 );
+}
+
+void
+FGControls::move_aileron_trim( double amt )
+{
+    aileron_trim += amt;
+    CLAMP( &aileron_trim, -1.0, 1.0 );
+}
+
+void
+FGControls::set_elevator( double pos )
+{
+    elevator = pos;
+    CLAMP( &elevator, -1.0, 1.0 );
+}
+
+void
+FGControls::move_elevator( double amt )
+{
+    elevator += amt;
+    CLAMP( &elevator, -1.0, 1.0 );
+}
+
+void
+FGControls::set_elevator_trim( double pos )
+{
+    elevator_trim = pos;
+    CLAMP( &elevator_trim, -1.0, 1.0 );
+}
+
+void
+FGControls::move_elevator_trim( double amt )
+{
+    elevator_trim += amt;
+    CLAMP( &elevator_trim, -1.0, 1.0 );
+}
+
+void
+FGControls::set_rudder( double pos )
+{
+    rudder = pos;
+    CLAMP( &rudder, -1.0, 1.0 );
+}
+
+void
+FGControls::move_rudder( double amt )
+{
+    rudder += amt;
+    CLAMP( &rudder, -1.0, 1.0 );
+}
+
+void
+FGControls::set_rudder_trim( double pos )
+{
+    rudder_trim = pos;
+    CLAMP( &rudder_trim, -1.0, 1.0 );
+}
+
+void
+FGControls::move_rudder_trim( double amt )
+{
+    rudder_trim += amt;
+    CLAMP( &rudder_trim, -1.0, 1.0 );
+}
+
+void
+FGControls::set_flaps( double pos )
+{
+    flaps = pos;
+    CLAMP( &flaps, 0.0, 1.0 );
+}
+
+void
+FGControls::move_flaps( double amt )
+{
+    flaps += amt;
+    CLAMP( &flaps, 0.0, 1.0 );
+}
+
+void
+FGControls::set_throttle( int engine, double pos )
+{
+  if ( engine == ALL_ENGINES ) {
+    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+      throttle[i] = pos;
+      CLAMP( &throttle[i], 0.0, 1.0 );
+    }
+  } else {
+    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+      throttle[engine] = pos;
+      CLAMP( &throttle[engine], 0.0, 1.0 );
+    }
+  }
+}
+
+void
+FGControls::move_throttle( int engine, double amt )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    throttle[i] += amt;
+	    CLAMP( &throttle[i], 0.0, 1.0 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    throttle[engine] += amt;
+	    CLAMP( &throttle[engine], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::set_mixture( int engine, double pos )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    mixture[i] = pos;
+	    CLAMP( &mixture[i], 0.0, 1.0 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    mixture[engine] = pos;
+	    CLAMP( &mixture[engine], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::move_mixture( int engine, double amt )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    mixture[i] += amt;
+	    CLAMP( &mixture[i], 0.0, 1.0 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    mixture[engine] += amt;
+	    CLAMP( &mixture[engine], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::set_prop_advance( int engine, double pos )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    prop_advance[i] = pos;
+	    CLAMP( &prop_advance[i], 0.0, 1.0 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    prop_advance[engine] = pos;
+	    CLAMP( &prop_advance[engine], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::move_prop_advance( int engine, double amt )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    prop_advance[i] += amt;
+	    CLAMP( &prop_advance[i], 0.0, 1.0 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    prop_advance[engine] += amt;
+	    CLAMP( &prop_advance[engine], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::set_magnetos( int engine, int pos )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    magnetos[i] = pos;
+	    CLAMP( &magnetos[i], 0, 3 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    magnetos[engine] = pos;
+	    CLAMP( &magnetos[engine], 0, 3 );
+	}
+    }
+}
+
+void
+FGControls::move_magnetos( int engine, int amt )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    magnetos[i] += amt;
+	    CLAMP( &magnetos[i], 0, 3 );
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    magnetos[engine] += amt;
+	    CLAMP( &magnetos[engine], 0, 3 );
+	}
+    }
+}
+
+void
+FGControls::set_starter( int engine, bool flag )
+{
+    if ( engine == ALL_ENGINES ) {
+	for ( int i = 0; i < MAX_ENGINES; i++ ) {
+	    starter[i] = flag;
+	}
+    } else {
+	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+	    starter[engine] = flag;
+	}
+    }
+}
+
+void
+FGControls::set_parking_brake( double pos )
+{
+    parking_brake = pos;
+    CLAMP(&parking_brake, 0.0, 1.0);
+}
+
+void
+FGControls::set_brake( int wheel, double pos )
+{
+    if ( wheel == ALL_WHEELS ) {
+	for ( int i = 0; i < MAX_WHEELS; i++ ) {
+	    brake[i] = pos;
+	    CLAMP( &brake[i], 0.0, 1.0 );
+	}
+    } else {
+	if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
+	    brake[wheel] = pos;
+	    CLAMP( &brake[wheel], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::move_brake( int wheel, double amt )
+{
+    if ( wheel == ALL_WHEELS ) {
+	for ( int i = 0; i < MAX_WHEELS; i++ ) {
+	    brake[i] += amt;
+	    CLAMP( &brake[i], 0.0, 1.0 );
+	}
+    } else {
+	if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
+	    brake[wheel] += amt;
+	    CLAMP( &brake[wheel], 0.0, 1.0 );
+	}
+    }
+}
+
+void
+FGControls::set_gear_down( bool gear )
+{
+  gear_down = gear;
+}
+
 
