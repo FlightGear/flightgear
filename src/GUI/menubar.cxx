@@ -146,7 +146,7 @@ static struct {
 } deprecated_dialogs [] = {
     { "old-save-dialog", do_save_dialog },
     { "old-load-dialog", do_load_dialog },
-    { "old-reinit_dialog", do_reinit_dialog },
+    { "old-reinit-dialog", do_reinit_dialog },
 #if defined(TR_HIRES_SNAP)
     { "old-hires-snapshot-dialog", do_hires_snapshot_dialog },
 #endif
