@@ -580,15 +580,20 @@ void fgRenderFrame() {
                     "    sun_angle = " << cur_light_params.sun_angle
              << "    moon_angle = " << cur_light_params.moon_angle );
             */
-            thesky->repaint( cur_light_params.sky_color,
-                             cur_light_params.adj_fog_color,
-                             cur_light_params.cloud_color,
-                             cur_light_params.sun_angle,
-                             cur_light_params.moon_angle,
-                             globals->get_ephem()->getNumPlanets(),
-                             globals->get_ephem()->getPlanets(),
-                             globals->get_ephem()->getNumStars(),
-                             globals->get_ephem()->getStars() );
+
+            static SGSkyColor scolor;
+
+            scolor.sky_color   = cur_light_params.sky_color;
+            scolor.fog_color   = cur_light_params.adj_fog_color;
+            scolor.cloud_color = cur_light_params.cloud_color;
+            scolor.sun_angle   = cur_light_params.sun_angle;
+            scolor.moon_angle  = cur_light_params.moon_angle;
+            scolor.nplanets    = globals->get_ephem()->getNumPlanets();
+            scolor.nstars      = globals->get_ephem()->getNumStars();
+            scolor.planet_data = globals->get_ephem()->getPlanets();
+            scolor.star_data   = globals->get_ephem()->getStars();
+
+            thesky->repaint( scolor );
 
             /*
             SG_LOG( SG_GENERAL, SG_BULK,
@@ -621,23 +626,28 @@ void fgRenderFrame() {
             } else {
                sun_horiz_eff = moon_horiz_eff = 1.0;
             }
-            thesky->reposition( current__view->get_view_pos(),
-                                current__view->get_zero_elev(),
-                                current__view->get_world_up(),
-                                current__view->getLongitude_deg()
-                                  * SGD_DEGREES_TO_RADIANS,
-                                current__view->getLatitude_deg()
-                                  * SGD_DEGREES_TO_RADIANS,
-                                current__view->getAltitudeASL_ft()
-                                  * SG_FEET_TO_METER,
-                                cur_light_params.sun_rotation,
-                                globals->get_time_params()->getGst(),
-                                globals->get_ephem()->getSunRightAscension(),
-                                globals->get_ephem()->getSunDeclination(),
-                                50000.0 * sun_horiz_eff,
-                                globals->get_ephem()->getMoonRightAscension(),
-                                globals->get_ephem()->getMoonDeclination(),
-                                40000.0 * moon_horiz_eff );
+
+            static SGSkyState sstate;
+
+            sstate.view_pos  = current__view->get_view_pos();
+            sstate.zero_elev = current__view->get_zero_elev();
+            sstate.view_up   = current__view->get_world_up();
+            sstate.lon       = current__view->getLongitude_deg()
+                                * SGD_DEGREES_TO_RADIANS;
+            sstate.lat       = current__view->getLatitude_deg()
+                                * SGD_DEGREES_TO_RADIANS;
+            sstate.alt       = current__view->getAltitudeASL_ft()
+                                * SG_FEET_TO_METER;
+            sstate.spin      = cur_light_params.sun_rotation;
+            sstate.gst       = globals->get_time_params()->getGst();
+            sstate.sun_ra    = globals->get_ephem()->getSunRightAscension();
+            sstate.sun_dec   = globals->get_ephem()->getSunDeclination();
+            sstate.sun_dist  = 50000.0 * sun_horiz_eff;
+            sstate.moon_ra   = globals->get_ephem()->getMoonRightAscension();
+            sstate.moon_dec  = globals->get_ephem()->getMoonDeclination();
+            sstate.moon_dist = 40000.0 * moon_horiz_eff;
+
+            thesky->reposition( sstate );
         }
 
         glEnable( GL_DEPTH_TEST );
