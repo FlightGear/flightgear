@@ -304,6 +304,7 @@ static void fgRenderFrame( void ) {
 
 	// draw stars and planets
 	fgStarsRender();
+	//xglEnable(GL_DEPTH_TEST);
 	SolarSystem::theSolarSystem->draw();
 
 	xglPopMatrix();

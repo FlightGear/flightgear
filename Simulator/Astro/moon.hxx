@@ -50,6 +50,7 @@ public:
   ~Moon();
   void updatePosition(FGTime *t, Star *ourSun);
   void newImage();
+  void castShadow();
 };
 
 

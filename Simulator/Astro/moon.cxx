@@ -308,8 +308,8 @@ void Moon::newImage()
   int moonSize = 750;
 
   GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
-  GLfloat black[4] = {0.0, 0.0,0.0,1.0};
-  GLfloat white[4] = {1.0, 1.0,1.0,1.0};
+  GLfloat black[4] = {0.0, 0.0, 0.0, 1.0};
+  GLfloat white[4] = {1.0, 1.0, 1.0, 0.0};
   
   if( moon_angle*RAD_TO_DEG < 100 ) 
     {
@@ -341,7 +341,7 @@ void Moon::newImage()
 	FG_LOG( FG_GENERAL, FG_INFO, 
 		"Ra = (" << (RAD_TO_DEG *rightAscension) 
 		<< "), Dec= (" << (RAD_TO_DEG *declination) << ")" );
-	xglTranslatef(0.0, 58600.0, 0.0);
+	xglTranslatef(0.0, 60000.0, 0.0);
 	glEnable(GL_BLEND);  // BLEND ENABLED
 
 	if (current_options.get_textures())
@@ -375,16 +375,24 @@ void Moon::newImage()
 	if (current_options.get_textures())
 	  {
 	    glBindTexture(GL_TEXTURE_2D, moon_texid);                         
-	    //glDisable(GL_LIGHTING);                                               // LIGHTING DISABLED
-	    gluQuadricTexture(moonObject, GL_TRUE );   
+	    // glDisable(GL_LIGHTING);    // LIGHTING DISABLED
+	    gluQuadricTexture(moonObject, GL_TRUE );
+	    // glDisable(GL_LIGHTING);
+	    // glDisable(GL_TEXTURE_2D);  // TEXTURE DISABLED
 	  }
+	//glDisable(GL_LIGHTING); // for testing
+	//glDisable(GL_BLEND); // also for testing
+	//glColor3f(1.0, 0.0, 0.0); // also also for testing
 	gluSphere(moonObject,  moonSize, 12, 12 );
-	glDisable(GL_TEXTURE_2D);                                             // TEXTURE DISABLED
-	glDisable(GL_BLEND);                                                  // BLEND DISABLED
+	//glDisable(GL_LIGHTING);         // LIGHTING DISABLED
+	//glColor4fv(white);
+	//glBlendFunc(GL_ZERO, GL_SRC_COLOR);     // Set alpha to zero
+	//gluSphere(moonObject,  moonSize, 12, 12 );
+	glDisable(GL_TEXTURE_2D);         // TEXTURE DISABLED
+	glDisable(GL_BLEND);              // BLEND DISABLED
       }
       xglPopMatrix();
-      glDisable(GL_LIGHTING);                                               // LIGHTING DISABLED
-
+      glDisable(GL_LIGHTING);
     }
   else
     {
@@ -392,8 +400,47 @@ void Moon::newImage()
 }
 
 
+void Moon::castShadow()
+{
+  fgLIGHT *l = &cur_light_params;
+  float moon_angle = l->moon_angle;
+  
+  /*double x_2, x_4, x_8, x_10;
+  GLfloat ambient;
+  GLfloat amb[4];*/
+  int moonSize = 750;
 
+  GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
+  GLfloat black[4] = {0.0, 0.0, 0.0, 1.0};
+  GLfloat white[4] = {1.0, 1.0, 1.0, 0.0};
+  
+  if( moon_angle*RAD_TO_DEG < 100 ) 
+    {
+      xglPushMatrix();
+      {
+	//xglRotatef(-90, 0.0, 0.0, 1.0);
+	xglRotatef(((RAD_TO_DEG * rightAscension)- 90.0), 0.0, 0.0, 1.0);
+	xglRotatef((RAD_TO_DEG * declination), 1.0, 0.0, 0.0);
+	
+	FG_LOG( FG_GENERAL, FG_INFO, 
+		"Ra = (" << (RAD_TO_DEG *rightAscension) 
+		<< "), Dec= (" << (RAD_TO_DEG *declination) << ")" );
+	xglTranslatef(0.0, 60000.0, 0.0);
+	glEnable(GL_BLEND);                 // BLEND ENABLED
 
+	glDisable(GL_LIGHTING);             // LIGHTING DISABLED
+	//glColor4fv(white);
+	glColor4f(1.0, 1.0, 1.0, 0.0);
+	glBlendFunc(GL_ZERO, GL_SRC_COLOR); // Set alpha to zero
+	//glBlendFunc(GL_ZERO,GL_ZERO);
+	gluSphere(moonObject,  moonSize, 12, 12 );
+	glDisable(GL_TEXTURE_2D);           // TEXTURE DISABLED
+	glDisable(GL_BLEND);                // BLEND DISABLED
+      }
+      xglPopMatrix();
 
-
-
+    }
+  else
+    {
+    }
+}

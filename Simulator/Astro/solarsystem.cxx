@@ -140,7 +140,9 @@ void SolarSystem::rebuild()
     // Step 2b:  Add the sun
     //xglPushMatrix();
     //{
-      ourSun->newImage();
+    //ourSun->drawHalo();
+    //earthsMoon->castShadow();
+    ourSun->newImage();
       //}
     //xglPopMatrix();
     // Step 2c: Add the planets

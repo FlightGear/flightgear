@@ -140,6 +140,8 @@ private:
 
     // Time options
     int time_offset;   // Offset true time by this many seconds
+    long int start_gst;     // Specify a greenwich sidereal time (gst)
+    long int start_lst;     // Specify a local sidereal time (lst)
 
     // Serial Ports, we currently support up to four channels
     // fgSerialPortKind port_a_kind;  // Port a kind
@@ -202,6 +204,8 @@ public:
     inline int get_tris_or_culled() const { return tris_or_culled; }
 
     inline int get_time_offset() const { return time_offset; }
+    inline long int get_start_gst() const { return start_gst; };
+    inline long int get_start_lst() const { return start_lst; }
 
     inline str_container get_port_options_list() const { 
 	return port_options_list;
@@ -228,6 +232,7 @@ public:
 private:
 
     double parse_time( const string& time_str );
+    long int parse_date( const string& date_str );
     double parse_degree( const string& degree_str );
     int parse_time_offset( const string& time_str );
     int parse_tile_radius( const string& arg );

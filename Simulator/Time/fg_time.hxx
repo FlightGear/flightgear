@@ -124,7 +124,9 @@ public:
 
     // Some other stuff which were changed to FGTime members on
     // questionable grounds -:)
-    time_t get_start_gmt(int year);
+    // time_t get_start_gmt(int year);
+    time_t get_gmt(int year, int month, int day, 
+		   int hour, int minute, int second);
     char* format_time( const struct tm* p, char* buf );
     long int fix_up_timezone( long int timezone_orig );
 };

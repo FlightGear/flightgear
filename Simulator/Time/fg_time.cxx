@@ -85,14 +85,54 @@ FGTime::~FGTime()
 }
 
 
-// Initialize the time dependent variables
+// Initialize the time dependent variables (maybe I'll put this in the
+// constructor later)
 void FGTime::init() 
 {
     FG_LOG( FG_EVENT, FG_INFO, "Initializing Time" );
     gst_diff = -9999.0;
     FG_LOG( FG_EVENT, FG_DEBUG, 
 	    "time offset = " << current_options.get_time_offset() );
-    warp = current_options.get_time_offset();
+    time_t timeOffset = current_options.get_time_offset();
+    time_t gstStart = current_options.get_start_gst();
+    time_t lstStart = current_options.get_start_lst();
+
+    // would it be better to put these sanity checks in the options
+    // parsing code? (CLO)
+    if (timeOffset && gstStart)
+	{
+	    FG_LOG( FG_EVENT, FG_ALERT, "Error: you specified both a time offset and a gst. Confused now!" );
+	    current_options.usage();
+	    exit(1);
+	}
+    if (timeOffset && lstStart)
+	{
+	    FG_LOG( FG_EVENT, FG_ALERT, "Error: you specified both a time offset and a lst. Confused now!" );
+	    current_options.usage();
+	    exit(1);
+	}
+    if (gstStart && lstStart)
+	{
+	    FG_LOG( FG_EVENT, FG_ALERT, "Error: you specified both a time offset and a lst. Confused now!" );
+	    current_options.usage();
+	    exit(1);
+	}
+    cur_time = time(NULL); 
+    if (gstStart)
+	warp = gstStart - cur_time;
+    else if (lstStart) // I need to use the time zone info for this one, but I'll do that later.
+	// Until then, Gst and LST are the same 
+	{
+	    warp = lstStart - cur_time;
+	}
+    else if (timeOffset)
+	{
+	    warp = timeOffset;
+	}
+    else
+	{
+	    warp = 0;
+	}
     warp_delta = 0;
     pause = current_options.get_pause();
 }
@@ -172,7 +212,6 @@ void FGTime::utc_gst ()
 
 double FGTime::sidereal_precise (double lng) 
 {
-    double gst;
     double lstTmp;
 
     /* printf ("Current Lst on JD %13.5f at %8.4f degrees West: ", 
@@ -182,7 +221,6 @@ double FGTime::sidereal_precise (double lng)
     lng *= DEG_TO_RAD;
 
     // compute LST and print
-    //gst = utc_gst ();
     utc_gst();
     lstTmp = gst - RADHR (lng);
     lstTmp -= 24.0*floor(lst/24.0);
@@ -205,7 +243,7 @@ double FGTime::sidereal_course(double lng)
     //gmt = t->gmt;
     //now = t->cur_time;
     now = cur_time;
-    start_gmt = get_start_gmt(gmt->tm_year);
+    start_gmt = get_gmt(gmt->tm_year, 2, 21, 12, 0, 0);
   
     FG_LOG( FG_EVENT, FG_DEBUG, "  COURSE: GMT = " << format_time(gmt, tbuf) );
     FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = " << start_gmt );
@@ -303,7 +341,7 @@ void FGTime::update(FGInterface *f)
 
 /******************************************************************
  * The following are some functions that were included as FGTime
- * members, although they currenty don't make used of any of the
+ * members, although they currently don't make used of any of the
  * class's variables. Maybe this'll change in the future
  *****************************************************************/
 
@@ -321,7 +359,8 @@ void FGTime::update(FGInterface *f)
 // If you are having problems with incorrectly positioned astronomical
 // bodies, this is a really good place to start looking.
 
-time_t FGTime::get_start_gmt(int year) {
+time_t FGTime::get_gmt(int year, int month, int day, int hour, int min, int sec)
+{
     struct tm mt;
 
     // For now we assume that if daylight is not defined in
@@ -336,12 +375,12 @@ time_t FGTime::get_start_gmt(int year) {
 #       define TIMEZONE_OFFSET_WORKS 1
 #   endif
 
-    mt.tm_mon = 2;
-    mt.tm_mday = 21;
+    mt.tm_mon = month;
+    mt.tm_mday = day;
     mt.tm_year = year;
-    mt.tm_hour = 12;
-    mt.tm_min = 0;
-    mt.tm_sec = 0;
+    mt.tm_hour = hour;
+    mt.tm_min = min;
+    mt.tm_sec = sec;
     mt.tm_isdst = -1; // let the system determine the proper time zone
 
 #   if defined( MK_TIME_IS_GMT )

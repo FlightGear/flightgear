@@ -42,6 +42,7 @@ bool global_fullscreen = true;
 #include <Misc/fgstream.hxx>
 #include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
+#include <Time/fg_time.hxx>
 #include <Main/options.hxx>
 
 #include "fg_serial.hxx"
@@ -158,7 +159,9 @@ fgOPTIONS::fgOPTIONS() :
     tris_or_culled(0),
 	
     // Time options
-    time_offset(0)
+    time_offset(0),
+    start_gst(0),
+    start_lst(0)
 
 {
     // set initial values/defaults
@@ -264,6 +267,117 @@ fgOPTIONS::parse_time(const string& time_in) {
     }
 
     return(sign * result);
+}
+
+
+long int fgOPTIONS::parse_date( const string& date)
+{
+  struct tm gmt;
+  char * date_str, num[256];
+  int i;
+  // initialize to zero
+  gmt.tm_sec = 0;
+  gmt.tm_min = 0;
+  gmt.tm_hour = 0;
+  gmt.tm_mday = 0;
+  gmt.tm_mon = 0;
+  gmt.tm_year = 0;
+  gmt.tm_isdst = 0; // ignore daylight savingtime for the moment
+  date_str = (char *)date.c_str();
+  // get year
+    if ( strlen(date_str) ) {
+	i = 0;
+	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
+	    num[i] = date_str[0];
+	    date_str++;
+	    i++;
+	}
+	if ( date_str[0] == ':' ) {
+	    date_str++;
+	}
+	num[i] = '\0';
+	gmt.tm_year = atoi(num) - 1900;
+    }
+   // get month
+    if ( strlen(date_str) ) {
+	i = 0;
+	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
+	    num[i] = date_str[0];
+	    date_str++;
+	    i++;
+	}
+	if ( date_str[0] == ':' ) {
+	    date_str++;
+	}
+	num[i] = '\0';
+	gmt.tm_mon = atoi(num) -1;
+    }
+    // get day
+    if ( strlen(date_str) ) {
+	i = 0;
+	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
+	    num[i] = date_str[0];
+	    date_str++;
+	    i++;
+	}
+	if ( date_str[0] == ':' ) {
+	    date_str++;
+	}
+	num[i] = '\0';
+	gmt.tm_mday = atoi(num);
+    }
+    // get hour
+    if ( strlen(date_str) ) {
+	i = 0;
+	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
+	    num[i] = date_str[0];
+	    date_str++;
+	    i++;
+	}
+	if ( date_str[0] == ':' ) {
+	    date_str++;
+	}
+	num[i] = '\0';
+	gmt.tm_hour = atoi(num);
+    }
+    // get minute
+    if ( strlen(date_str) ) {
+	i = 0;
+	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
+	    num[i] = date_str[0];
+	    date_str++;
+	    i++;
+	}
+	if ( date_str[0] == ':' ) {
+	    date_str++;
+	}
+	num[i] = '\0';
+	gmt.tm_min = atoi(num);
+    }
+    // get second
+    if ( strlen(date_str) ) {
+	i = 0;
+	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
+	    num[i] = date_str[0];
+	    date_str++;
+	    i++;
+	}
+	if ( date_str[0] == ':' ) {
+	    date_str++;
+	}
+	num[i] = '\0';
+	gmt.tm_sec = atoi(num);
+    }
+    time_t theTime = FGTime::cur_time_params->get_gmt(gmt.tm_year,
+                                                      gmt.tm_mon,
+						      gmt.tm_mday,
+						      gmt.tm_hour,
+						      gmt.tm_min,
+						      gmt.tm_sec);
+    //printf ("Date is %s\n", ctime(&theTime));
+    //printf ("in seconds that is %d\n", theTime);
+    //exit(1);
+    return (theTime);
 }
 
 
@@ -492,6 +606,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	tile_diameter = tile_radius * 2 + 1;
     } else if ( arg.find( "--time-offset=" ) != string::npos ) {
 	time_offset = parse_time_offset( (arg.substr(14)) );
+    } else if (arg.find( "--start-date-gmt=") != string::npos ) {
+        start_gst = parse_date( (arg.substr(17)) );
+    } else if (arg.find( "--start-data-lst=") != string::npos ) {
+        start_lst = parse_date( (arg.substr(17)) );
     } else if ( arg == "--hud-tris" ) {
 	tris_or_culled = 0;	
     } else if ( arg == "--hud-culled" ) {
@@ -632,6 +750,8 @@ void fgOPTIONS::usage ( void ) {
 	
     printf("Time Options:\n");
     printf("\t--time-offset=[+-]hh:mm:ss:  offset local time by this amount\n");
+    printf("\t--start-date-gmt=yyyy:mm:dd:hh:mm:ss: specify a starting date/time. Time is Greenwich Mean Time\n");
+    printf("\t--start-date-lst=yyyy:mm:dd:hh:mm:ss: specify a starting date/time. Uses local sidereal time\n");
 }
 
 

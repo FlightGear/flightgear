@@ -1006,5 +1006,3 @@ FGView::SphereClip( const Point3D& cp, const double radius )
 // Destructor
 FGView::~FGView( void ) {
 }
-
-
