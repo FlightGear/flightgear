@@ -425,10 +425,10 @@ bool fgInitPosition( void ) {
     }
 
     // if requested altitude is below ground level
-    if ( scenery.cur_elev >
-	 fgGetDouble("/position/altitude") * METERS_TO_FEET - 1) {
-	fgSetDouble("/position/altitude",
-		    (scenery.cur_elev + 1) * METERS_TO_FEET );
+    if ( fgGetDouble( "/position/altitude" ) < (scenery.cur_elev + 1)
+	 * METERS_TO_FEET ) {
+	fgSetDouble( "/position/altitude",
+		     (scenery.cur_elev + 1) * METERS_TO_FEET );
     }
 
     SG_LOG( SG_GENERAL, SG_INFO,
