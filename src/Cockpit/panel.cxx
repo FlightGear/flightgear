@@ -423,6 +423,7 @@ FGPanel::draw()
 
   // restore some original state
   glPopAttrib();
+  glPolygonOffset(0, 0);
   glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
