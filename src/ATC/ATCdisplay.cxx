@@ -33,10 +33,10 @@
 
 // Constructor
 FGATCDisplay::FGATCDisplay() {
-    rep_msg = false;
-    change_msg_flag = false;
-    dsp_offset1 = 0;
-    dsp_offset2 = 0;
+	rep_msg = false;
+	change_msg_flag = false;
+	dsp_offset1 = 0;
+	dsp_offset2 = 0;
 }
 
 
@@ -55,103 +55,20 @@ void FGATCDisplay::unbind() {
 
 // update - this actually draws the visuals and should be called from the main Flightgear rendering loop.
 void FGATCDisplay::update(double dt) {
-
-    // These strings are used for temporary storage of the transmission string in order
-    // that the string we view only changes when the next repetition starts scrolling
-    // even though the master string (rep_msg_str) may change at any time.
-    static string msg1 = "";
-    static string msg2 = "";
-
-    if(rep_msg) {
-	//cout << "dsp_offset1 = " << dsp_offset1 << " dsp_offset2 = " << dsp_offset2 << endl;
-	if(dsp_offset1 == 0) {
-	    msg1 = rep_msg_str;
-	}
-	if(dsp_offset2 == 0) {
-	    msg2 = rep_msg_str;
-	}
-	// Check for the situation where one offset is negative and the message is changed
-	if(change_msg_flag) {
-	    if(dsp_offset1 < 0) {
-	    	msg1 = rep_msg_str;
-	    } else if(dsp_offset2 < 0) {
-	    	msg2 = rep_msg_str;
-	    }
-	    change_msg_flag = false;
-	}
-
-	float fps = general.get_frame_rate();
 	
-	//cout << "In FGATC::update()" << endl;
-	SGPropertyNode *xsize_node = fgGetNode("/sim/startup/xsize");
-	SGPropertyNode *ysize_node = fgGetNode("/sim/startup/ysize");
-	int iwidth   = xsize_node->getIntValue();
-	int iheight  = ysize_node->getIntValue();
+	// These strings are used for temporary storage of the transmission string in order
+	// that the string we view only changes when the next repetition starts scrolling
+	// even though the master string (rep_msg_str) may change at any time.
+	static string msg1 = "";
+	static string msg2 = "";
 	
-	glMatrixMode( GL_PROJECTION );
-	glPushMatrix();
-	glLoadIdentity();
-	gluOrtho2D( 0, iwidth, 0, iheight );
-	glMatrixMode( GL_MODELVIEW );
-	glPushMatrix();
-	glLoadIdentity();
-	
-	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_LIGHTING );
-	
-	glColor3f( 0.9, 0.4, 0.2 );
-	
-//	guiFnt.drawString( rep_msg_str.c_str(),
-//	    int(iwidth - guiFnt.getStringWidth(buf) - 10 - (int)dsp_offset),
-//	    (iheight - 20) );
-	guiFnt.drawString( msg1.c_str(),
-	    int(iwidth - 10 - dsp_offset1),
-	    (iheight - 20) );
-    	guiFnt.drawString( msg2.c_str(),
-	    int(iwidth - 10 - dsp_offset2),
-	    (iheight - 20) );
-	glEnable( GL_DEPTH_TEST );
-	glEnable( GL_LIGHTING );
-	glMatrixMode( GL_PROJECTION );
-	glPopMatrix();
-	glMatrixMode( GL_MODELVIEW );
-	glPopMatrix();
-	
-	// Try to scroll at a frame rate independent speed
-	// 40 pixels/second looks about right for now
-	if(dsp_offset1 >= dsp_offset2) {
-	    dsp_offset1+=(40.0/fps);
-	    dsp_offset2 = dsp_offset1 - (rep_msg_str.size() * 10) - 100;
-	    if(dsp_offset1 > (iwidth + (rep_msg_str.size() * 10)))
-		dsp_offset1 = 0;
-	} else {
-	    dsp_offset2+=(40.0/fps);
-	    dsp_offset1 = dsp_offset2 - (rep_msg_str.size() * 10) - 100;
-	    if(dsp_offset2 > (iwidth + (rep_msg_str.size() * 10)))
-		dsp_offset2 = 0;
-	}
-	
-    }
-
-    if(msgList.size()) {
-	//cout << "Attempting to render single message\n";
-	// We have at least one non-repeating message to process
-	msgList_itr = msgList.begin();
-	int i = 0;
-	while(msgList_itr != msgList.end()) {
-	    atcMessage m = *msgList_itr;
-	    //cout << "m.counter = " << m.counter << '\n';
-	    if(m.counter > m.stop_count) {
-		//cout << "Stopping single message\n";
-		msgList_itr = msgList.erase(msgList_itr);
-	    } else if(m.counter > m.start_count) {
-		//cout << "Displaying single message\n";
-		// Display the message
-		// FIXME - I'm sure all this opengl code should only be called once until all drawing is finished
+	if( rep_msg || msgList.size() ) {
+		//cout << "In FGATC::update()" << endl;
 		SGPropertyNode *xsize_node = fgGetNode("/sim/startup/xsize");
 		SGPropertyNode *ysize_node = fgGetNode("/sim/startup/ysize");
 		int iwidth   = xsize_node->getIntValue();
 		int iheight  = ysize_node->getIntValue();
+		
 		glMatrixMode( GL_PROJECTION );
 		glPushMatrix();
 		glLoadIdentity();
@@ -162,62 +79,122 @@ void FGATCDisplay::update(double dt) {
 		
 		glDisable( GL_DEPTH_TEST );
 		glDisable( GL_LIGHTING );
-	
+		
 		glColor3f( 0.9, 0.4, 0.2 );
-	
-		guiFnt.drawString( m.msg.c_str(),
-		    100,
-	    	    (iheight - 40) );	// TODO - relate the distance in that the string is rendered to the string length.
+		
+		if(rep_msg) {
+			//cout << "dsp_offset1 = " << dsp_offset1 << " dsp_offset2 = " << dsp_offset2 << endl;
+			if(dsp_offset1 == 0) {
+				msg1 = rep_msg_str;
+			}
+			if(dsp_offset2 == 0) {
+				msg2 = rep_msg_str;
+			}
+			// Check for the situation where one offset is negative and the message is changed
+			if(change_msg_flag) {
+				if(dsp_offset1 < 0) {
+					msg1 = rep_msg_str;
+				} else if(dsp_offset2 < 0) {
+					msg2 = rep_msg_str;
+				}
+				change_msg_flag = false;
+			}
+			
+			float fps = general.get_frame_rate();
+			
+			//	guiFnt.drawString( rep_msg_str.c_str(),
+			//	    int(iwidth - guiFnt.getStringWidth(buf) - 10 - (int)dsp_offset),
+			//	    (iheight - 20) );
+			guiFnt.drawString( msg1.c_str(),
+			int(iwidth - 10 - dsp_offset1),
+			(iheight - 20) );
+			guiFnt.drawString( msg2.c_str(),
+			int(iwidth - 10 - dsp_offset2),
+			(iheight - 20) );
+			
+			// Try to scroll at a frame rate independent speed
+			// 40 pixels/second looks about right for now
+			if(dsp_offset1 >= dsp_offset2) {
+				dsp_offset1+=(40.0/fps);
+				dsp_offset2 = dsp_offset1 - (rep_msg_str.size() * 10) - 100;
+				if(dsp_offset1 > (iwidth + (rep_msg_str.size() * 10)))
+					dsp_offset1 = 0;
+			} else {
+				dsp_offset2+=(40.0/fps);
+				dsp_offset1 = dsp_offset2 - (rep_msg_str.size() * 10) - 100;
+				if(dsp_offset2 > (iwidth + (rep_msg_str.size() * 10)))
+					dsp_offset2 = 0;
+			}
+			
+		}
+		
+		if(msgList.size()) {
+			//cout << "Attempting to render single message\n";
+			// We have at least one non-repeating message to process
+			msgList_itr = msgList.begin();
+			int i = 0;
+			while(msgList_itr != msgList.end()) {
+				atcMessage m = *msgList_itr;
+				//cout << "m.counter = " << m.counter << '\n';
+				if(m.counter > m.stop_count) {
+					//cout << "Stopping single message\n";
+					msgList_itr = msgList.erase(msgList_itr);
+				} else if(m.counter > m.start_count) {
+					guiFnt.drawString( m.msg.c_str(),
+					100,
+					(iheight - 40) );	// TODO - relate the distance in that the string is rendered to the string length.
+					++m.counter;
+					msgList[i] = m;
+					++msgList_itr;
+					++i;
+				} else {
+					++m.counter;
+					msgList[i] = m;
+					++msgList_itr;
+					++i;
+				}
+			}
+		}
 		glEnable( GL_DEPTH_TEST );
 		glEnable( GL_LIGHTING );
 		glMatrixMode( GL_PROJECTION );
 		glPopMatrix();
 		glMatrixMode( GL_MODELVIEW );
 		glPopMatrix();
-		++m.counter;
-		msgList[i] = m;
-		++msgList_itr;
-		++i;
-	    } else {
-		++m.counter;
-		msgList[i] = m;
-		++msgList_itr;
-		++i;
-	    }
 	}
-    }
 }
 
 void FGATCDisplay::RegisterSingleMessage(string msg, int delay) {
-    atcMessage m;
-    m.msg = msg;
-    m.repeating = false;
-    m.counter = 0;
-    m.start_count = delay * 30;		// Fixme - need to use actual FPS
-    m.stop_count = m.start_count + 100;		// Display for 3 - 5 seconds for now - this might have to change eg. be related to length of message in future
-    //cout << "m.stop_count = " << m.stop_count << '\n';
-    m.id = 0;
-    
-    msgList.push_back(m);
-    //cout << "Single message registered\n";
+	atcMessage m;
+	m.msg = msg;
+	m.repeating = false;
+	m.counter = 0;
+	m.start_count = delay * 30;		// Fixme - need to use actual FPS
+	m.stop_count = m.start_count + 100;		// Display for 3 - 5 seconds for now - this might have to change eg. be related to length of message in future
+	//cout << "m.stop_count = " << m.stop_count << '\n';
+	m.id = 0;
+	
+	msgList.push_back(m);
+	//cout << "Single message registered\n";
 }
 
 void FGATCDisplay::RegisterRepeatingMessage(string msg) {
-    rep_msg = true;
-    rep_msg_str = msg;
-    return;
+	rep_msg = true;
+	rep_msg_str = msg;
+	return;
 }
 
 void FGATCDisplay::ChangeRepeatingMessage(string newmsg) {
-    rep_msg_str = newmsg;
-    change_msg_flag = true;
-    return;
+	rep_msg_str = newmsg;
+	change_msg_flag = true;
+	return;
 }
 
 void FGATCDisplay::CancelRepeatingMessage() {
-    rep_msg = false;
-    rep_msg_str = "";
-    dsp_offset1 = 0;
-    dsp_offset2 = 0;
-    return;
+	rep_msg = false;
+	rep_msg_str = "";
+	dsp_offset1 = 0;
+	dsp_offset2 = 0;
+	return;
 }
+
