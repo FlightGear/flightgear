@@ -756,7 +756,7 @@ static void fgIdleFunction ( void ) {
 
 	audio_sched = new slScheduler ( 8000 );
 	audio_mixer = new smMixer;
-	audio_mixer -> setMasterVolume ( 30 ) ;  /* 50% of max volume. */
+	audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
 	audio_sched -> setSafetyMargin ( 1.0 ) ;
 	current_options.get_fg_root(path);
 	strcat(path, "/Sounds/");
@@ -934,6 +934,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.43  1998/08/12 21:01:47  curt
+// Master volume from 30% -> 80%
+//
 // Revision 1.42  1998/07/30 23:48:25  curt
 // Output position & orientation when pausing.
 // Eliminated libtool use.
