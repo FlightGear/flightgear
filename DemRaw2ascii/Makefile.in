@@ -343,8 +343,8 @@ INCLUDES +=
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.4  1998/04/26 05:01:34  curt
-# Tweaks.
+# Revision 1.5  1998/04/26 13:37:12  curt
+# Removed DemInfo for now.
 #
 # Revision 1.2  1998/04/24 00:44:04  curt
 # Added zlib support.

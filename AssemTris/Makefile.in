@@ -344,8 +344,8 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.6  1998/04/26 05:01:31  curt
-# Tweaks.
+# Revision 1.7  1998/04/26 13:37:11  curt
+# Removed DemInfo for now.
 #
 # Revision 1.2  1998/04/14 02:25:59  curt
 # Code reorganizations.  Added a Lib/ directory for more general libraries.
