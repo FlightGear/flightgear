@@ -400,6 +400,9 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt);
 /* Run multiloop iterations of the flight model */
 int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop);
 
+/* Set the altitude (force) */
+int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
+
 
 #ifdef __cplusplus
 }
@@ -410,9 +413,14 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop);
 
 
 /* $Log$
-/* Revision 1.16  1998/04/22 13:26:20  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.17  1998/07/12 03:08:28  curt
+/* Added fgFlightModelSetAltitude() to force the altitude to something
+/* other than the current altitude.  LaRCsim doesn't let you do this by just
+/* changing FG_Altitude.
 /*
+ * Revision 1.16  1998/04/22 13:26:20  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.15  1998/04/21 16:59:33  curt
  * Integrated autopilot.
  * Prepairing for C++ integration.

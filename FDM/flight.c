@@ -28,6 +28,8 @@
 #include <Debug/fg_debug.h>
 #include <Flight/flight.h>
 #include <Flight/LaRCsim/ls_interface.h>
+#include <Include/fg_constants.h>
+#include <Math/fg_geodesy.h>
 
 
 fgFLIGHT cur_flight_params;
@@ -58,6 +60,8 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
 int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
     int result;
 
+    // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
+
     if ( model == FG_LARCSIM ) {
 	fgLaRCsimUpdate(f, multiloop);
     } else {
@@ -70,10 +74,37 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 }
 
 
+/* Set the altitude (force) */
+int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
+    double sea_level_radius_meters;
+    double lat_geoc;
+    // Set the FG variables first
+    fgGeodToGeoc( FG_Latitude, alt_meters, 
+		  &sea_level_radius_meters, &lat_geoc);
+
+    FG_Altitude = alt_meters * METER_TO_FEET;
+    FG_Radius_to_vehicle = FG_Altitude + 
+	(sea_level_radius_meters * METER_TO_FEET);
+
+    if ( model == FG_LARCSIM ) {
+	ls_ForceAltitude(FG_Altitude);
+    } else {
+	fgPrintf( FG_FLIGHT, FG_WARN, 
+		  "Unimplemented flight model == %d\n", model );
+    }
+
+}
+
+
 /* $Log$
-/* Revision 1.13  1998/04/25 22:06:28  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.14  1998/07/12 03:08:27  curt
+/* Added fgFlightModelSetAltitude() to force the altitude to something
+/* other than the current altitude.  LaRCsim doesn't let you do this by just
+/* changing FG_Altitude.
 /*
+ * Revision 1.13  1998/04/25 22:06:28  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.12  1998/04/21 16:59:33  curt
  * Integrated autopilot.
  * Prepairing for C++ integration.
