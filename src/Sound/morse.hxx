@@ -90,8 +90,8 @@ static const char DAH = '2';
 static const char end = '0';
 
 static const int BYTES_PER_SECOND = 8000;
-static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
-// static const int BEAT_LENGTH = 92;  // milleseconds (13 wpm)
+// static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
+static const int BEAT_LENGTH = 92;  // milleseconds (13 wpm)
 static const int TRANSITION_BYTES = (int)(0.005 * BYTES_PER_SECOND);
 static const int COUNT_SIZE = BYTES_PER_SECOND * BEAT_LENGTH / 1000;
 static const int DIT_SIZE = 2 * COUNT_SIZE;   // 2 counts

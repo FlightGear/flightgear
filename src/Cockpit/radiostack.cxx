@@ -21,6 +21,8 @@
 // $Id$
 
 
+#include <simgear/math/sg_random.h>
+
 #include <Aircraft/aircraft.hxx>
 #include <Main/bfi.hxx>
 #include <Navaids/ilslist.hxx>
@@ -28,6 +30,10 @@
 #include <Time/event.hxx>
 
 #include "radiostack.hxx"
+
+static int nav1_play_count = 0;
+static time_t nav1_last_time = 0;
+
 
 /**
  * Boy, this is ugly!  Make the VOR range vary by altitude difference.
@@ -257,16 +263,34 @@ FGRadioStack::update()
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
 	if ( nav1_on_btn && nav1_ident_btn ) {
-	    if ( ! globals->get_soundmgr()->is_playing( "nav1-ident" ) ) {
-		globals->get_soundmgr()->play_once( "nav1-ident" );
+	    if ( nav1_last_time <
+		 globals->get_time_params()->get_cur_time() - 30 ) {
+		nav1_last_time = globals->get_time_params()->get_cur_time();
+		nav1_play_count = 0;
+	    }
+	    if ( nav1_play_count < 4 ) {
+		// play VOR ident
+		if ( !globals->get_soundmgr()->is_playing("nav1-vor-ident") ) {
+		    globals->get_soundmgr()->play_once( "nav1-vor-ident" );
+		    ++nav1_play_count;
+		}
+	    } else if ( nav1_play_count < 5 ) {
+		// play DME ident
+		if ( !globals->get_soundmgr()->is_playing("nav1-vor-ident") &&
+		     !globals->get_soundmgr()->is_playing("nav1-dme-ident") ) {
+		    globals->get_soundmgr()->play_once( "nav1-dme-ident" );
+		    ++nav1_play_count;
+		}
 	    }
 	} else {
-	    globals->get_soundmgr()->stop( "nav1-ident" );
+	    globals->get_soundmgr()->stop( "nav1-vor-ident" );
+	    globals->get_soundmgr()->stop( "nav1-dme-ident" );
 	}
     } else {
 	nav1_inrange = false;
 	nav1_dme_dist = 0.0;
-	globals->get_soundmgr()->stop( "nav1-ident" );
+	globals->get_soundmgr()->stop( "nav1-vor-ident" );
+	globals->get_soundmgr()->stop( "nav1-dme-ident" );
 	// cout << "not picking up vor. :-(" << endl;
     }
 
@@ -385,12 +409,28 @@ void FGRadioStack::search()
 	    nav1_dme_y = ils.get_dme_y();
 	    nav1_dme_z = ils.get_dme_z();
 
-	    if ( globals->get_soundmgr()->exists( "nav1-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav1-ident" );
+	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	    }
-	    FGSimpleSound *sound = morse.make_ident( nav1_ident );
+	    FGSimpleSound *sound;
+	    sound = morse.make_ident( nav1_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav1-ident" );
+	    globals->get_soundmgr()->add( sound, "nav1-vor-ident" );
+
+	    if ( globals->get_soundmgr()->exists( "nav1-dme-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav1-dme-ident" );
+	    }
+	    sound = morse.make_ident( nav1_ident, HI_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav1-dme-ident" );
+
+	    int offset = (int)(sg_random() * 30.0);
+	    nav1_play_count = offset / 4;
+	    nav1_last_time = globals->get_time_params()->get_cur_time() -
+		offset;
+	    cout << "offset = " << offset << " play_count = " << nav1_play_count
+		 << " nav1_last_time = " << nav1_last_time << " current time = "
+		 << globals->get_time_params()->get_cur_time() << endl;
 
 	    // cout << "Found an ils station in range" << endl;
 	    // cout << " id = " << ils.get_locident() << endl;
@@ -415,12 +455,28 @@ void FGRadioStack::search()
 	    nav1_y = nav1_dme_y = nav.get_y();
 	    nav1_z = nav1_dme_z = nav.get_z();
 
-	    if ( globals->get_soundmgr()->exists( "nav1-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav1-ident" );
+	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	    }
-	    FGSimpleSound *sound = morse.make_ident( nav1_ident );
+	    FGSimpleSound *sound;
+	    sound = morse.make_ident( nav1_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav1-ident" );
+	    globals->get_soundmgr()->add( sound, "nav1-vor-ident" );
+
+	    if ( globals->get_soundmgr()->exists( "nav1-dme-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav1-dme-ident" );
+	    }
+	    sound = morse.make_ident( nav1_ident, HI_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav1-dme-ident" );
+
+	    int offset = (int)(sg_random() * 30.0);
+	    nav1_play_count = offset / 4;
+	    nav1_last_time = globals->get_time_params()->get_cur_time() -
+		offset;
+	    cout << "offset = " << offset << " play_count = " << nav1_play_count
+		 << " nav1_last_time = " << nav1_last_time << " current time = "
+		 << globals->get_time_params()->get_cur_time() << endl;
 
 	    // cout << "Found a vor station in range" << endl;
 	    // cout << " id = " << nav.get_ident() << endl;
@@ -430,7 +486,8 @@ void FGRadioStack::search()
 	nav1_ident = "";
 	nav1_radial = 0;
 	nav1_dme_dist = 0;
-	globals->get_soundmgr()->remove( "nav1-ident" );
+	globals->get_soundmgr()->remove( "nav1-vor-ident" );
+	globals->get_soundmgr()->remove( "nav1-dme-ident" );
 	// cout << "not picking up vor1. :-(" << endl;
     }
 
