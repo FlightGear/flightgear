@@ -42,6 +42,7 @@
 #include <Astro/sky.h>
 #include <Astro/stars.h>
 #include <Astro/sun.h>
+#include <Autopilot/autopilot.h>
 #include <Cockpit/cockpit.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_random.h>
@@ -227,10 +228,10 @@ int fgInitSubsystems( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Test Position
-    // FG_Longitude = ( -139.5 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  -9.5 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 13000.0 * METER_TO_FEET;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
+    FG_Longitude = ( -113.5 ) * DEG_TO_RAD;
+    FG_Latitude  = (   33.5 ) * DEG_TO_RAD;
+    FG_Runway_altitude = 8000.0;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // A random test position
     // FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD;
@@ -390,6 +391,10 @@ int fgInitSubsystems( void ) {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Joystick initialization!\n" );
     }
 
+    	/// Autopilot init added here, by Jeff Goeke-Smith
+    	fgAPInit(&current_aircraft);
+    	// end added section;
+    
     // One more try here to get the sky synced up
     fgSkyColorsInit();
     ret_val = 0;
@@ -400,9 +405,13 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.54  1998/04/08 23:35:36  curt
-/* Tweaks to Gnu automake/autoconf system.
+/* Revision 1.55  1998/04/14 02:21:03  curt
+/* Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
+/* <jgoeke@voyager.net>
 /*
+ * Revision 1.54  1998/04/08 23:35:36  curt
+ * Tweaks to Gnu automake/autoconf system.
+ *
  * Revision 1.53  1998/04/03 22:09:06  curt
  * Converting to Gnu autoconf system.
  *

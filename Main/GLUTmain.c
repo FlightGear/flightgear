@@ -57,6 +57,7 @@
 #include <Astro/sky.h>
 #include <Astro/stars.h>
 #include <Astro/sun.h>
+#include <Autopilot/autopilot.h>
 #include <Cockpit/cockpit.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
@@ -248,7 +249,7 @@ static void fgUpdateViewParams( void ) {
 	/* Tell GL we are about to modify the projection parameters */
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(45.0, 2.0/win_ratio, 1.0, 100000.0);
+	gluPerspective(65.0, 2.0/win_ratio, 1.0, 100000.0);
       }
     else
       {
@@ -256,7 +257,7 @@ static void fgUpdateViewParams( void ) {
 	/* Tell GL we are about to modify the projection parameters */    
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(45.0, 1.0/win_ratio, 10.0, 100000.0);
+	gluPerspective(65.0, 1.0/win_ratio, 10.0, 100000.0);
       }
 
     xglMatrixMode(GL_MODELVIEW);
@@ -625,6 +626,18 @@ static void fgMainLoop( void ) {
     fgPrintf( FG_ALL, FG_BULK, 
 	      "Model iterations needed = %d, new remainder = %d\n", 
 	      multi_loop, remainder);
+	
+	//Insertion by Jeff Goeke-Smith for Autopilot.
+	// Where should this really go?  
+	// Maybe this should run in tandem with the Flight model.
+	
+	/* run Autopilot system */
+	fgPrintf( FG_ALL, FG_BULK,"Attempting autopilot run\n");
+	              
+	fgAPRun();
+	
+	// end of insertion 
+	
 
     /* Run flight model */
     if ( ! use_signals ) {
@@ -811,9 +824,13 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.69  1998/04/08 23:35:34  curt
-/* Tweaks to Gnu automake/autoconf system.
+/* Revision 1.70  1998/04/14 02:21:02  curt
+/* Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
+/* <jgoeke@voyager.net>
 /*
+ * Revision 1.69  1998/04/08 23:35:34  curt
+ * Tweaks to Gnu automake/autoconf system.
+ *
  * Revision 1.68  1998/04/03 22:09:03  curt
  * Converting to Gnu autoconf system.
  *

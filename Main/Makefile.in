@@ -89,24 +89,25 @@ fg_SOURCES = \
 fg_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.la \
 	$(top_builddir)/Simulator/Astro/libAstro.la \
+	$(top_builddir)/Simulator/Autopilot/libAutopilot.la \
 	$(top_builddir)/Simulator/Cockpit/libCockpit.la \
 	$(top_builddir)/Simulator/Controls/libControls.la \
 	$(top_builddir)/Simulator/Flight/libFlight.la \
 	$(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.la \
 	$(top_builddir)/Simulator/Flight/Slew/libSlew.la \
 	$(top_builddir)/Simulator/Scenery/libScenery.la \
-	$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la \
 	$(top_builddir)/Simulator/Time/libTime.la \
 	$(top_builddir)/Simulator/Weather/libWeather.la \
         $(top_builddir)/Simulator/Joystick/libJoystick.la \
-	$(top_builddir)/Simulator/Math/libMath.la
+	$(top_builddir)/Simulator/Math/libMath.la \
+	$(top_builddir)/Lib/Bucket/libBucket.la
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
-CONFIG_HEADER = ../../Simulator/Include/config.h
+CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES =  runfg runfg.bat
 PROGRAMS =  $(bin_PROGRAMS)
 
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I../../Simulator/Include
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../Include
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -118,17 +119,18 @@ fg_OBJECTS =  GLUTkey.o GLUTmain.o fg_debug.o fg_getopt.o fg_init.o \
 views.o
 fg_DEPENDENCIES =  $(top_builddir)/Simulator/Aircraft/libAircraft.la \
 $(top_builddir)/Simulator/Astro/libAstro.la \
+$(top_builddir)/Simulator/Autopilot/libAutopilot.la \
 $(top_builddir)/Simulator/Cockpit/libCockpit.la \
 $(top_builddir)/Simulator/Controls/libControls.la \
 $(top_builddir)/Simulator/Flight/libFlight.la \
 $(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.la \
 $(top_builddir)/Simulator/Flight/Slew/libSlew.la \
 $(top_builddir)/Simulator/Scenery/libScenery.la \
-$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la \
 $(top_builddir)/Simulator/Time/libTime.la \
 $(top_builddir)/Simulator/Weather/libWeather.la \
 $(top_builddir)/Simulator/Joystick/libJoystick.la \
-$(top_builddir)/Simulator/Math/libMath.la
+$(top_builddir)/Simulator/Math/libMath.la \
+$(top_builddir)/Lib/Bucket/libBucket.la
 fg_LDFLAGS = 
 SCRIPTS =  $(bin_SCRIPTS)
 
@@ -377,7 +379,11 @@ distclean-generic clean-generic maintainer-clean-generic clean \
 mostlyclean distclean maintainer-clean
 
 
-INCLUDES += -I.. -DGLUT
+INCLUDES += \
+	-DGLUT \
+	-I$(top_builddir) \
+	-I$(top_builddir)/Lib \
+	-I$(top_builddir)/Simulator
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

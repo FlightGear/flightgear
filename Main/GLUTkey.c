@@ -42,6 +42,7 @@
 #include <Include/fg_constants.h>
 
 #include <Aircraft/aircraft.h>
+#include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
 #include <Weather/weather.h>
 
 
@@ -105,8 +106,17 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
 	    xglFogf(GL_FOG_END, w->visibility);
-	    fgPrintf( FG_INPUT, FG_DEBUG, "Fog density = %.4f\n", w->visibility);
+	    fgPrintf( FG_INPUT, FG_DEBUG, 
+		      "Fog density = %.4f\n", w->visibility );
 	    return;
+	// autopilot additions
+	case 65: /* A key */
+		fgAPSetMode(1);
+		return;
+	case 83: /* S key */
+		fgAPSetMode(0);
+		return;
+		
 	}
     } else {
 	fgPrintf( FG_INPUT, FG_DEBUG, "\n");
@@ -247,9 +257,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.31  1998/04/08 23:34:05  curt
-/* Patch from Durk to fix trim reversal with numlock key active.
+/* Revision 1.32  1998/04/14 02:21:01  curt
+/* Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
+/* <jgoeke@voyager.net>
 /*
+ * Revision 1.31  1998/04/08 23:34:05  curt
+ * Patch from Durk to fix trim reversal with numlock key active.
+ *
  * Revision 1.30  1998/04/03 22:09:02  curt
  * Converting to Gnu autoconf system.
  *
