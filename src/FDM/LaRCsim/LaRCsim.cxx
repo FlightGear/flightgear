@@ -223,10 +223,10 @@ void FGLaRCsim::update( double dt ) {
     if ( !strcmp(aero->getStringValue(), "uiuc")) {
 
       // surface positions
-      fgSetDouble("/surface-positions/rudder-pos-norm",             fgGetDouble("/controls/flight/rudder"));
-      fgSetDouble("/surface-positions/elevator-pos-norm",           fgGetDouble("/controls/flight/elevator")); // FIXME: ignoring trim
-      fgSetDouble("/surface-positions/right-aileron-pos-norm", -1 * fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
-      fgSetDouble("/surface-positions/left-aileron-pos-norm",       fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
+      fgSetDouble("/surface-positions/flight/rudder-pos-norm",             fgGetDouble("/controls/flight/rudder"));
+      fgSetDouble("/surface-positions/flight/elevator-pos-norm",           fgGetDouble("/controls/flight/elevator")); // FIXME: ignoring trim
+      fgSetDouble("/surface-positions/flight/right-aileron-pos-norm", -1 * fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
+      fgSetDouble("/surface-positions/flight/left-aileron-pos-norm",       fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
 
       Flap_handle = flap_max * globals->get_controls()->get_flaps();
 
@@ -237,11 +237,11 @@ void FGLaRCsim::update( double dt ) {
 
       // spoilers with transition occurring in uiuc_aerodeflections.cpp
       if(use_spoilers) {
-	Spoiler_handle = spoiler_max * fgGetDouble("/controls/spoilers");
+	Spoiler_handle = spoiler_max * fgGetDouble("/controls/flight/spoilers");
       }
       // gear with transition occurring here in LaRCsim.cxx
       if (use_gear) {
-	if(fgGetBool("/controls/gear-down")) {
+	if(fgGetBool("/controls/gear/gear-down")) {
 	  Gear_handle = 1.0;
 	}
 	else {
@@ -287,24 +287,19 @@ void FGLaRCsim::update( double dt ) {
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-sailplane")) {
 	// uiuc sailplane, e.g. asw20
 	fgSetDouble("/engines/engine/cranking", 0);
-	// set the wind speed for use in setting wind sound level
-	fgSetDouble("/velocities/V_rel_wind_kts", (V_rel_wind * 1.274));
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-hangglider")) {
-	// uiuc sailplane, e.g. asw20
+	// uiuc hang glider, e.g. airwave
 	fgSetDouble("/engines/engine/cranking", 0);
       }
       else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-ornithopter")) {
-	// mechanical flapping wings
-	// flapping wings (using seahawk for now)
+	// flapping wings
 	fgSetDouble("/canopy/position-norm", 0);
 	fgSetDouble("/wing-phase/position-norm", sin(flapper_phi - 3 * LS_PI / 2));
-	//	fgSetDouble("/wing-phase/position-norm", fgGetDouble("/controls/rudder"));
 	fgSetDouble("/wing-phase/position-deg", flapper_phi*RAD_TO_DEG);
 	fgSetDouble("/wing-phase/position-one", 1);
 	fgSetDouble("/thorax/volume", 0);
 	fgSetDouble("/thorax/rpm",    0);
-	//	fgSetDouble("/wing-phase/position-norm", ((1+cos(flapper_phi - LS_PI/2))/2 -.36 ));
 	//	fgSetDouble("/thorax/volume", ((1+sin(2*(flapper_phi+LS_PI)))/2));
 	//	fgSetDouble("/thorax/rpm",    ((1+sin(2*(flapper_phi+LS_PI)))/2));
       }
@@ -314,14 +309,14 @@ void FGLaRCsim::update( double dt ) {
     // add Gamma_horiz_deg to properties, mss 021213
     if (use_gamma_horiz_on_speed) {
       if (V_rel_wind > gamma_horiz_on_speed) {
-	fgSetDouble("/orientation/Gamma_horiz_deg", (Gamma_horiz_rad * RAD_TO_DEG));
+	fgSetDouble("/orientation/gamma-horiz-deg", (Gamma_horiz_rad * RAD_TO_DEG));
       }
       else {
-	fgSetDouble("/orientation/Gamma_horiz_deg",  fgGetDouble("/orientation/heading-deg"));
+	fgSetDouble("/orientation/gamma-horiz-deg",  fgGetDouble("/orientation/heading-deg"));
       }
     }
     else {
-      fgSetDouble("/orientation/Gamma_horiz_deg",  fgGetDouble("/orientation/heading-deg"));
+      fgSetDouble("/orientation/gamma-horiz-deg",  fgGetDouble("/orientation/heading-deg"));
     }
     ls_update(multiloop);
 
