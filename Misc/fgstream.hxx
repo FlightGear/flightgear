@@ -47,10 +47,9 @@
 #include "zfstream.hxx"
 
 FG_USING_STD(string);
-FG_USING_STD(istream);
 
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
+#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
+FG_USING_STD(istream);
 #endif
 
 
@@ -99,6 +98,9 @@ istream& skipcomment( istream& in );
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.8  1999/03/02 01:01:55  curt
+// Tweaks for compiling with native SGI compilers.
+//
 // Revision 1.7  1999/02/26 22:08:08  curt
 // Added initial support for native SGI compilers.
 //

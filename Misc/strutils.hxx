@@ -35,10 +35,6 @@
 
 FG_USING_STD(string);
 
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_NAMESPACE(std);
-#endif
-
 // Default characters to remove.
 extern const string whitespace;
 
@@ -68,6 +64,9 @@ atoi( const string& str )
 #endif // STRUTILS_H
 
 // $Log$
+// Revision 1.6  1999/03/02 01:01:56  curt
+// Tweaks for compiling with native SGI compilers.
+//
 // Revision 1.5  1999/02/26 22:08:09  curt
 // Added initial support for native SGI compilers.
 //

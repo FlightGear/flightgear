@@ -21,7 +21,9 @@
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
 
+#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
 FG_USING_STD(cout);
+#endif
 
 // ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator
 #define ONE_SECOND 4.848136811E-6
@@ -162,6 +164,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.6  1999/03/02 01:01:49  curt
+Tweaks for compiling with native SGI compilers.
+
 Revision 1.5  1999/01/27 04:46:14  curt
 Portability tweaks by Bernie Bright.
 
@@ -251,6 +256,9 @@ Initial Flight Gear revision.
 
 
 // $Log$
+// Revision 1.6  1999/03/02 01:01:49  curt
+// Tweaks for compiling with native SGI compilers.
+//
 // Revision 1.5  1999/01/27 04:46:14  curt
 // Portability tweaks by Bernie Bright.
 //

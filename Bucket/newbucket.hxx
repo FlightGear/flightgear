@@ -32,7 +32,6 @@
 #include STL_STRING
 
 FG_USING_STD(string);
-FG_USING_NAMESPACE(std);
 
 #include <stdio.h> // sprintf()
 
@@ -290,6 +289,9 @@ fgBucketGenIndex( const fgBUCKET& p )
 
 
 // $Log$
+// Revision 1.4  1999/03/02 01:01:43  curt
+// Tweaks for compiling with native SGI compilers.
+//
 // Revision 1.3  1999/02/26 22:07:55  curt
 // Added initial support for native SGI compilers.
 //

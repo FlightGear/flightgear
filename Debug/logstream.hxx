@@ -29,12 +29,11 @@
 #endif
 
 
-#include "Include/compiler.h"
+#include <Include/compiler.h>
 
 #ifdef FG_HAVE_STD_INCLUDES
 # include <streambuf>
 # include <iostream>
-//# include <ostream>
 #else
 # include <iostream.h>
 # include "Include/fg_traits.hxx"
@@ -42,10 +41,12 @@
 
 #include "debug_types.h"
 
+#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
 FG_USING_STD(streambuf);
 FG_USING_STD(ostream);
 FG_USING_STD(cerr);
 FG_USING_STD(endl);
+#endif
 
 //
 // TODO:
@@ -211,6 +212,9 @@ fglog()
 #endif // _LOGSTREAM_H
 
 // $Log$
+// Revision 1.4  1999/03/02 01:01:47  curt
+// Tweaks for compiling with native SGI compilers.
+//
 // Revision 1.3  1999/01/19 20:53:35  curt
 // Portability updates by Bernie Bright.
 //

@@ -27,13 +27,12 @@
 #ifndef _BUCKETUTILS_HXX
 #define _BUCKETUTILS_HXX
 
-#include <string>
+#include <Include/compiler.h>
 
-FG_USING_NAMESPACE(std);
+#include STL_STRING
 
 #include "bucketutils.h"
 
-#include <Include/compiler.h>
 FG_USING_STD(string);
 
 inline bool
@@ -71,6 +70,9 @@ operator<< ( ostream& out, const fgBUCKET& b )
 
 
 // $Log$
+// Revision 1.3  1999/03/02 01:01:42  curt
+// Tweaks for compiling with native SGI compilers.
+//
 // Revision 1.2  1999/01/19 20:56:53  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

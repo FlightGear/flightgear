@@ -46,8 +46,10 @@
 # include <math.h>
 #endif
 
+#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
 FG_USING_STD(ostream);
 FG_USING_STD(istream);
+#endif
 
 // -rp- assert.h is buggy under MWCWP3, as multiple #include undef assert !
 #ifdef __MWERKS__
@@ -335,6 +337,9 @@ Point3D::distance3Dsquared(const Point3D& a ) const
 
 
 // $Log$
+// Revision 1.10  1999/03/02 01:01:52  curt
+// Tweaks for compiling with native SGI compilers.
+//
 // Revision 1.9  1999/02/01 21:08:28  curt
 // Optimizations from Norman Vine.
 //
