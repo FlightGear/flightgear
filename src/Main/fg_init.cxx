@@ -103,9 +103,6 @@ FG_USING_STD(string);
 
 extern const char *default_root;
 
-// from main.cxx
-extern void fgReshape( int width, int height );
-
 
 // Read in configuration (file and command line) and just set fg_root
 bool fgInitFGRoot ( int argc, char **argv ) {

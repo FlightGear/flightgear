@@ -1956,6 +1956,21 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_wrapper.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\src\FDM\ADA.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\Balloon.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
