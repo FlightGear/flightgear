@@ -184,10 +184,14 @@ void fgFDMForceAltitude(int model, double alt_meters) {
 // Set the local ground elevation
 void fgFDMSetGroundElevation(int model, double ground_meters) {
     base_fdm_state.set_Runway_altitude( ground_meters * METER_TO_FEET );
+    cur_fdm_state.set_Runway_altitude( ground_meters * METER_TO_FEET );
 }
 
 
 // $Log$
+// Revision 1.13  1999/01/27 04:48:39  curt
+// Set the runway height in cur_fdm_state as well as base_fdm_state.
+//
 // Revision 1.12  1999/01/20 13:42:22  curt
 // Tweaked FDM interface.
 // Testing check sum support for NMEA serial output.
