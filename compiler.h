@@ -106,6 +106,7 @@
 #  define FG_NO_DEFAULT_TEMPLATE_ARGS
 #  define FG_NAMESPACES
 #  define FG_INCOMPLETE_FUNCTIONAL
+#  define FG_HAVE_STD
 
 #endif
 
@@ -127,14 +128,6 @@
 #  define false 0
 #endif
 
-#ifdef FG_MATH_FN_IN_NAMESPACE_STD
-#  define FG_MATHFN_SCOPE(x) std::x
-#elif defined(FG_NAMESPACES)
-#  define FG_MATHFN_SCOPE(x) ::x
-#else
-#  define FG_MATHFN_SCOPE(x) x
-#endif
-
 #ifdef FG_EXPLICIT_FUNCTION_TMPL_ARGS
 #  define FG_NULL_TMPL_ARGS <>
 #else
@@ -152,6 +145,12 @@
 #   define FG_NAMESPACE_END
 #   define FG_USING_NAMESPACE(X)
 #endif
+
+# ifdef FG_HAVE_STD
+#  define FG_USING_STD(X) using std::X
+# else
+#  define FG_USING_STD(X) 
+# endif
 
 // Additional <functional> implementation from SGI STL 3.11
 // Adapter function objects: pointers to member functions
@@ -179,6 +178,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.2  1998/11/02 18:28:08  curt
+// Portability updates from Bernie Bright
+//
 // Revision 1.1  1998/10/16 00:49:04  curt
 // fg_stl_config.h -> compiler.h, fg_stl_config.h maintained for backwards
 // compatibility.
