@@ -4,4 +4,4 @@ lib_LTLIBRARIES = libXGL.la
 
 libXGL_la_SOURCES = xgl.c xgl.h xglUtils.c
 
-INCLUDES += -I..
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator
