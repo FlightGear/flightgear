@@ -55,6 +55,8 @@ public:
     void addApproachControl(int control, float val);
     void addCruiseControl(int control, float val);
 
+    void addSolutionWeight(bool approach, int idx, float wgt);
+
     int numGear();
     Gear* getGear(int g);
 
@@ -86,6 +88,7 @@ private:
 	               int handle; float cg[3]; float mass; };
     struct Control { int control; float val; };
     struct WeightRec { int handle; Surface* surf; };
+    struct SolveWeight { bool approach; int idx; float wgt; };
 
     void runCruise();
     void runApproach();
@@ -104,6 +107,7 @@ private:
     void compileContactPoints();
     float normFactor(float f);
     void updateGearState();
+    void setupWeights(bool isApproach);
 
     Model _model;
     ControlMap _controls;
@@ -126,6 +130,8 @@ private:
     Vector _surfs; // NON-wing Surfaces
 
     Vector _rotors;
+
+    Vector _solveWeights;
 
     Vector _cruiseControls;
     State _cruiseState;

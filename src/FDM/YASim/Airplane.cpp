@@ -66,6 +66,8 @@ Airplane::~Airplane()
 	delete (Surface*)_surfs.get(i);    
     for(i=0; i<_contacts.size(); i++)
         delete[] (float*)_contacts.get(i);
+    for(i=0; i<_solveWeights.size(); i++)
+        delete[] (SolveWeight*)_solveWeights.get(i);
 }
 
 void Airplane::iterate(float dt)
@@ -210,6 +212,15 @@ void Airplane::addCruiseControl(int control, float val)
     c->control = control;
     c->val = val;
     _cruiseControls.add(c);
+}
+
+void Airplane::addSolutionWeight(bool approach, int idx, float wgt)
+{
+    SolveWeight* w = new SolveWeight();
+    w->approach = approach;
+    w->idx = idx;
+    w->wgt = wgt;
+    _solveWeights.add(w);
 }
 
 int Airplane::numTanks()
@@ -755,6 +766,18 @@ void Airplane::stabilizeThrust()
 	_model.getThruster(i)->stabilize();
 }
 
+void Airplane::setupWeights(bool isApproach)
+{
+    int i;
+    for(i=0; i<_weights.size(); i++)
+        setWeight(i, 0);
+    for(i=0; i<_solveWeights.size(); i++) {
+        SolveWeight* w = (SolveWeight*)_solveWeights.get(i);
+        if(w->approach == isApproach)
+            setWeight(w->idx, w->wgt);
+    }
+}
+
 void Airplane::runCruise()
 {
     setupState(_cruiseAoA, _cruiseSpeed, &_cruiseState);
@@ -777,6 +800,7 @@ void Airplane::runCruise()
     Math::vmul33(_cruiseState.orient, wind, wind);
  
     setFuelFraction(_cruiseFuel);
+    setupWeights(false);
    
     // Set up the thruster parameters and iterate until the thrust
     // stabilizes.
@@ -818,8 +842,9 @@ void Airplane::runApproach()
     Math::mul3(-1, _approachState.v, wind);
     Math::vmul33(_approachState.orient, wind, wind);
     
-    // Approach is by convention at 20% tank capacity
     setFuelFraction(_approachFuel);
+
+    setupWeights(true);
 
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.

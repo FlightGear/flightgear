@@ -125,6 +125,10 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	float alt = attrf(a, "alt") * FT2M;
 	_airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5));
 	_cruiseCurr = true;
+    } else if(eq(name, "solve-weight")) {
+        int idx = attri(a, "idx");
+        float wgt = attrf(a, "weight") * LBS2KG;
+        _airplane.addSolutionWeight(!_cruiseCurr, idx, wgt);
     } else if(eq(name, "cockpit")) {
 	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
