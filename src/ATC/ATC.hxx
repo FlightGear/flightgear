@@ -126,9 +126,13 @@ public:
 	// Returns true if OK to transmit on this frequency
 	inline bool GetFreqClear() { return freqClear; }
 	// Indicate that the frequency is in use
-	inline void SetFreqInUse() { freqClear = false; }
+	inline void SetFreqInUse() { freqClear = false; receiving = true; }
 	// Transmission to the ATC is finished and a response is required
 	void SetResponseReqd(string rid);
+	// Transmission finished - let ATC decide if a response is reqd and clear freq if necessary
+	void NotifyTransmissionFinished(string rid);
+	// Transmission finished and no response required
+	inline void ReleaseFreq() { freqClear = true; receiving = false; }	// TODO - check that the plane releasing the freq is the right one etc.
 	// The above 3 funcs under development!!
 	// The idea is that AI traffic or the user ATC dialog box calls FreqInUse() when they begin transmitting,
 	// and that the tower control sets freqClear back to true following a reply.
@@ -188,7 +192,9 @@ protected:
 	FGATCVoice* vPtr;
 	
 	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
+	bool receiving;		// Flag to indicate we are receiving a transmission
 	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
+	bool runResponseCounter;	// Flag to indicate the response counter should be run
 	double responseTime;	// Time to take from end of request transmission to beginning of response
 							// The idea is that this will be slightly random.
 	double responseCounter;		// counter to implement the above

@@ -31,6 +31,8 @@
 
 FGATC::FGATC() {
 	freqClear = true;
+	runResponseCounter = false;
+	responseReqd = false;
 }
 
 FGATC::~FGATC() {
@@ -38,10 +40,12 @@ FGATC::~FGATC() {
 
 // Derived classes wishing to use the response counter should call this from their own Update(...).
 void FGATC::Update(double dt) {
-	if(responseReqd) {
+	if(runResponseCounter) {
+		//cout << responseCounter << '\t' << responseTime << '\n';
 		if(responseCounter >= responseTime) {
-			responseReqd = false;
+			runResponseCounter = false;
 			respond = true;
+			//cout << "RESPOND\n";
 		} else {
 			responseCounter += dt;
 		}
@@ -49,12 +53,25 @@ void FGATC::Update(double dt) {
 }
 
 void FGATC::SetResponseReqd(string rid) {
+	receiving = false;
 	responseReqd = true;
 	respond = false;	// TODO - this ignores the fact that more than one plane could call this before response
 						// Shouldn't happen with AI only, but user could confuse things??
 	responseID = rid;
 	responseCounter = 0.0;
 	responseTime = 2.5;		// TODO - randomize this slightly.
+}
+
+void FGATC::NotifyTransmissionFinished(string rid) {
+	receiving = false;
+	responseID = rid;
+	if(responseReqd) {
+		runResponseCounter = true;
+		responseCounter = 0.0;
+		responseTime = 2.5;		// TODO - randomize this slightly.
+	} else {
+		freqClear = true;
+	}
 }
 
 void FGATC::AddPlane(string pid) {

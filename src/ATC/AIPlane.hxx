@@ -85,9 +85,6 @@ public:
 	LandingType GetLandingOption();
 
 protected:
-	// callback type for derived classes to use
-	typedef void (*ai_plane_callback_t) (void);
-
 	PlaneRec plane;
 
     double mag_hdg;	// degrees - the heading that the physical aircraft is *pointing*
@@ -113,23 +110,26 @@ protected:
 	FGATC* tuned_station;			// and this if they are tuned to ATC
 	
 	// Transmit a message when channel becomes free of other dialog
-    void Transmit(ai_plane_callback_t callback = NULL);
+    void Transmit(int callback_code = 0);
 	
 	// Transmit a message if channel becomes free within timeout (seconds). timeout of zero implies no limit
-	void Transmit(double timeout, ai_plane_callback_t callback = NULL);
+	void ConditionalTransmit(double timeout, int callback_code = 0);
 	
 	// Transmit regardless of other dialog on the channel eg emergency
-	void ImmediateTransmit(ai_plane_callback_t callback = NULL);
+	void ImmediateTransmit(int callback_code = 0);
 
     void Bank(double angle);
     void LevelWings(void);
+	
+	virtual void ProcessCallback(int code);
 	
 	PatternLeg leg;
 	
 private:
 	bool _pending;
 	double _timeout;
-	ai_plane_callback_t _callback;
+	int _callback_code;	// A callback code to be notified and processed by the derived classes
+						// A value of zero indicates no callback required
 	bool _transmit;		// we are to transmit
 	bool _transmitting;	// we are transmitting
 	double _counter;

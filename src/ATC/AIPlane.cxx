@@ -37,7 +37,7 @@ FGAIPlane::FGAIPlane() {
 	pending_transmission = "";
 	_timeout = 0;
 	_pending = false;
-	_callback = NULL;
+	_callback_code = 0;
 	_transmit = false;
 	_transmitting = false;
 	voice = false;
@@ -53,6 +53,7 @@ void FGAIPlane::Update(double dt) {
 	if(_pending) {
 		if(tuned_station) {
 			if(tuned_station->GetFreqClear()) {
+				tuned_station->SetFreqInUse();
 				_pending = false;
 				_transmit = true;
 				_transmitting = false;
@@ -82,6 +83,7 @@ void FGAIPlane::Update(double dt) {
 		_counter = 0.0;
 		_max_count = 5.0;		// FIXME - hardwired length of message - need to calculate it!
 		
+		//cout << "Transmission = " << pending_transmission << '\n';
 		if(freq == user_freq0 || freq == user_freq1) {
 			//cout << "Transmitting..." << endl;
 			// we are on the same frequency, so check distance to the user plane
@@ -93,10 +95,18 @@ void FGAIPlane::Update(double dt) {
 				_transmitting = true;
 			}
 		}
+		// Run the callback regardless of whether on same freq as user or not.
+		//cout << "_callback_code = " << _callback_code << '\n';
+		if(_callback_code) {
+			ProcessCallback(_callback_code);
+		}
 	} else if(_transmitting) {
 		if(_counter >= _max_count) {
 			NoRender(plane.callsign);
 			_transmitting = false;
+			// For now we'll let ATC decide whether to respond
+			//if(tuned_station) tuned_station->SetResponseReqd(plane.callsign);
+			if(tuned_station) tuned_station->NotifyTransmissionFinished(plane.callsign);
 		}
 		_counter += dt;
 	}
@@ -117,25 +127,29 @@ void FGAIPlane::LevelWings(void) {
 	}
 }
 
-void FGAIPlane::Transmit(ai_plane_callback_t callback) {
+void FGAIPlane::Transmit(int callback_code) {
 	SG_LOG(SG_ATC, SG_INFO, "Transmit called for plane " << plane.callsign << ", msg = " << pending_transmission);
 	_pending = true;
-	_callback = callback;
+	_callback_code = callback_code;
 	_timeout = 0.0;
 }
 
-void FGAIPlane::Transmit(double timeout, ai_plane_callback_t callback) {
+void FGAIPlane::ConditionalTransmit(double timeout, int callback_code) {
 	SG_LOG(SG_ATC, SG_INFO, "Timed transmit called for plane " << plane.callsign << ", msg = " << pending_transmission);
 	_pending = true;
-	_callback = callback;
+	_callback_code = callback_code;
 	_timeout = timeout;
 }
 
-void FGAIPlane::ImmediateTransmit(ai_plane_callback_t callback) {
+void FGAIPlane::ImmediateTransmit(int callback_code) {
 	Render(plane.callsign, false);
-	if(_callback) {
-		(*_callback)();
+	if(callback_code) {
+		ProcessCallback(callback_code);
 	}
+}
+
+// Derived classes should override this.
+void FGAIPlane::ProcessCallback(int code) {
 }
 
 // Render a transmission
