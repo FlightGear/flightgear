@@ -71,9 +71,11 @@ class FGATC610x : public FGProtocol {
 
     float compass_position;
 
+    // Electrical system state
     SGPropertyNode *adf_bus_power, *dme_bus_power, *xpdr_bus_power;
     SGPropertyNode *navcom1_bus_power, *navcom2_bus_power;
 
+    // Property tree variables
     SGPropertyNode *mag_compass;
     SGPropertyNode *dme_min, *dme_kt, *dme_nm;
     SGPropertyNode *navcom1_power_btn, *navcom2_power_btn;
@@ -95,7 +97,12 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *xpdr_fl_ann, *xpdr_alt_ann, *xpdr_gnd_ann, *xpdr_on_ann;
     SGPropertyNode *xpdr_sby_ann, *xpdr_reply_ann;
 
-    // configuration values
+    // Faults
+    SGPropertyNode *comm1_servicable, *comm2_servicable;
+    SGPropertyNode *nav1_servicable, *nav2_servicable;
+    SGPropertyNode *adf_servicable, *xpdr_servicable, *dme_servicable;
+
+    // Configuration values
     SGPropertyNode *elevator_center, *elevator_min, *elevator_max;
     SGPropertyNode *ailerons_center, *ailerons_min, *ailerons_max;
     SGPropertyNode *rudder_center, *rudder_min, *rudder_max;
@@ -139,7 +146,6 @@ class FGATC610x : public FGProtocol {
 public:
 
     FGATC610x() { }
-
     ~FGATC610x() { }
 
     bool open();

@@ -53,6 +53,7 @@
 
 SG_USING_STD(string);
 
+
 // Lock the ATC 610 hardware
 static int ATC610xLock( int fd ) {
     // rewind
@@ -467,33 +468,51 @@ bool FGATC610x::open() {
     xpdr_sby_ann = fgGetNode( "/radios/kt-70/annunciators/sby", true );
     xpdr_reply_ann = fgGetNode( "/radios/kt-70/annunciators/reply", true );
 
-    elevator_center = fgGetNode( "/input/atc610x/elevator/center", 0 );
-    elevator_min = fgGetNode( "/input/atc610x/elevator/min", 0 );
-    elevator_max = fgGetNode( "/input/atc610x/elevator/max", 0 );
+    elevator_center = fgGetNode( "/input/atc610x/elevator/center", true );
+    elevator_min = fgGetNode( "/input/atc610x/elevator/min", true );
+    elevator_max = fgGetNode( "/input/atc610x/elevator/max", true );
 
-    ailerons_center = fgGetNode( "/input/atc610x/ailerons/center", 0 );
-    ailerons_min = fgGetNode( "/input/atc610x/ailerons/min", 0 );
-    ailerons_max = fgGetNode( "/input/atc610x/ailerons/max", 0 );
+    ailerons_center = fgGetNode( "/input/atc610x/ailerons/center", true );
+    ailerons_min = fgGetNode( "/input/atc610x/ailerons/min", true );
+    ailerons_max = fgGetNode( "/input/atc610x/ailerons/max", true );
 
-    rudder_center = fgGetNode( "/input/atc610x/rudder/center", 0 );
-    rudder_min = fgGetNode( "/input/atc610x/rudder/min", 0 );
-    rudder_max = fgGetNode( "/input/atc610x/rudder/max", 0 );
+    rudder_center = fgGetNode( "/input/atc610x/rudder/center", true );
+    rudder_min = fgGetNode( "/input/atc610x/rudder/min", true );
+    rudder_max = fgGetNode( "/input/atc610x/rudder/max", true );
 
-    throttle_min = fgGetNode( "/input/atc610x/throttle/min", 0 );
-    throttle_max = fgGetNode( "/input/atc610x/throttle/max", 0 );
+    throttle_min = fgGetNode( "/input/atc610x/throttle/min", true );
+    throttle_max = fgGetNode( "/input/atc610x/throttle/max", true );
 
-    mixture_min = fgGetNode( "/input/atc610x/mixture/min", 0 );
-    mixture_max = fgGetNode( "/input/atc610x/mixture/max", 0 );
+    mixture_min = fgGetNode( "/input/atc610x/mixture/min", true );
+    mixture_max = fgGetNode( "/input/atc610x/mixture/max", true );
 
-    trim_center = fgGetNode( "/input/atc610x/trim/center", 0 );
-    trim_min = fgGetNode( "/input/atc610x/trim/min", 0 );
-    trim_max = fgGetNode( "/input/atc610x/trim/max", 0 );
+    trim_center = fgGetNode( "/input/atc610x/trim/center", true );
+    trim_min = fgGetNode( "/input/atc610x/trim/min", true );
+    trim_max = fgGetNode( "/input/atc610x/trim/max", true );
 
-    nav1vol_min = fgGetNode( "/input/atc610x/nav1vol/min", 0 );
-    nav1vol_max = fgGetNode( "/input/atc610x/nav1vol/max", 0 );
+    nav1vol_min = fgGetNode( "/input/atc610x/nav1vol/min", true );
+    nav1vol_max = fgGetNode( "/input/atc610x/nav1vol/max", true );
 
-    nav2vol_min = fgGetNode( "/input/atc610x/nav2vol/min", 0 );
-    nav2vol_max = fgGetNode( "/input/atc610x/nav2vol/max", 0 );
+    nav2vol_min = fgGetNode( "/input/atc610x/nav2vol/min", true );
+    nav2vol_max = fgGetNode( "/input/atc610x/nav2vol/max", true );
+
+    comm1_servicable = fgGetNode( "/instrumentation/comm[0]/servicable", true );
+    comm2_servicable = fgGetNode( "/instrumentation/comm[1]/servicable", true );
+    nav1_servicable = fgGetNode( "/instrumentation/nav[0]/servicable", true );
+    nav2_servicable = fgGetNode( "/instrumentation/nav[1]/servicable", true );
+    adf_servicable = fgGetNode( "/instrumentation/adf/servicable", true );
+    xpdr_servicable = fgGetNode( "/instrumentation/transponder/servicable",
+                                 true );
+    dme_servicable = fgGetNode( "/instrumentation/dme/servicable", true );
+
+    // default to having everything servicable
+    comm1_servicable->setBoolValue( true );
+    comm2_servicable->setBoolValue( true );
+    nav1_servicable->setBoolValue( true );
+    nav2_servicable->setBoolValue( true );
+    adf_servicable->setBoolValue( true );
+    xpdr_servicable->setBoolValue( true );
+    dme_servicable->setBoolValue( true );
 
     return true;
 }
@@ -559,7 +578,7 @@ bool FGATC610x::do_analog_in() {
 	// printf("%04d ", value );
     }
 
-    float tmp, tmp1, tmp2;
+    float tmp;
 
     // aileron
     tmp = scale( ailerons_center->getIntValue(), ailerons_min->getIntValue(),
@@ -611,87 +630,173 @@ bool FGATC610x::do_analog_in() {
     tmp = (float)analog_in_data[26] / 1024.0f;
     fgSetFloat( "/radios/kr-87/inputs/volume", tmp );
 
-    // nav2 obs tuner
-    static int last_obs2 = analog_in_data[29];
-    static double diff_ave = 0.0;
-    int diff = 0;
-
-    // cout << "val = " << analog_in_data[29] << " last_obs = " << last_obs2;
-
 #define FG_SECOND_TRY
+
+    // nav1 obs tuner
+    static int last_obs1 = analog_in_data[29];
+    static double diff1_ave = 0.0;
+    int diff1 = 0;
 
 #if defined( FG_FIRST_TRY )
     if ( analog_in_data[29] < 150 || analog_in_data[29] > 990 ) {
-        if ( last_obs2 > 512 && last_obs2 <= 990 ) {
-            diff = 1;
-        } else if ( last_obs2 >= 150 && last_obs2 <= 990 ) {
-            diff = -1;
+        if ( last_obs1 > 512 && last_obs1 <= 990 ) {
+            diff1 = 1;
+        } else if ( last_obs1 >= 150 && last_obs1 <= 990 ) {
+            diff1 = -1;
         }
-    } else if ( last_obs2 < 150 || last_obs2 > 990 ) {
+    } else if ( last_obs1 < 150 || last_obs1 > 990 ) {
         if ( analog_in_data[29] > 512 && analog_in_data[29] <= 990 ) {
-            diff = -1;
+            diff1 = -1;
         } else if ( analog_in_data[29] >= 150 && analog_in_data[29] <= 990 ) {
-            diff = 1;
+            diff1 = 1;
         }
     } else {
-        diff = analog_in_data[29] - last_obs2;
+        diff1 = analog_in_data[29] - last_obs1;
     }
 #elif defined( FG_SECOND_TRY )
     if ( analog_in_data[29] < 20 ) {
-        if ( last_obs2 >= 110 && last_obs2 < 512 ) {
-            diff = -1;
-        } else if ( last_obs2 >= 512 ) {
-            diff = 1;
+        if ( last_obs1 >= 110 && last_obs1 < 512 ) {
+            diff1 = -6;
+        } else if ( last_obs1 >= 512 ) {
+            diff1 = 6;
         }
-        last_obs2 = analog_in_data[29];
+        last_obs1 = analog_in_data[29];
     } else if ( analog_in_data[29] < 110 ) {
         // do nothing
-    } else if ( last_obs2 < 20 ) {
+    } else if ( last_obs1 < 20 ) {
         if ( analog_in_data[29] >= 110 && analog_in_data[29] < 512 ) {
-            diff = 1;
+            diff1 = 6;
         } else if ( analog_in_data[29] >= 512 ) {
-            diff = -1;
+            diff1 = -6;
         }
-        last_obs2 = analog_in_data[29];
+        last_obs1 = analog_in_data[29];
     } else {
-        diff = analog_in_data[29] - last_obs2;
-        if ( abs(diff) > 200 ) {
+        diff1 = analog_in_data[29] - last_obs1;
+        if ( abs(diff1) > 200 ) {
             // ignore
-            diff = 0;
+            diff1 = 0;
         }
-        last_obs2 = analog_in_data[29];
+        last_obs1 = analog_in_data[29];
     }
-#elif defined( FG_THIRD_TRY )
+#elif defined( FG_FOURTH_TRY )
     static bool ignore_next = false;
-    diff = analog_in_data[29] - last_obs2;
-    if ( abs(diff) > 200 ) {
+    diff1 = analog_in_data[29] - last_obs1;
+    if ( abs(diff1) > 200 ) {
         // ignore
-        diff = 0;
+        diff1 = 0;
         ignore_next = true;
     } else if ( ignore_next ) {
-        diff = 0;
+        diff1 = 0;
         ignore_next = false;
     }
-    last_obs2 = analog_in_data[29];
+    last_obs1 = analog_in_data[29];
 #endif
 
-    // cout << " diff = " << diff << endl;
-    if ( diff < -500 ) { diff += 1024; }
-    if ( diff > 500 ) { diff -= 1024; }
+    // cout << " diff1 = " << diff1 << endl;
+    if ( diff1 < -500 ) { diff1 += 1024; }
+    if ( diff1 > 500 ) { diff1 -= 1024; }
 
-    if ( fabs(diff_ave - diff) < 200 || fabs(diff) < fabs(diff_ave) ) {
-        diff_ave = (2.0/3.0) * diff_ave + (1.0/3.0) * diff;
+    if ( fabs(diff1_ave - diff1) < 200 || fabs(diff1) < fabs(diff1_ave) ) {
+        diff1_ave = (2.0/3.0) * diff1_ave + (1.0/3.0) * diff1;
     }
 
-    tmp = nav2_obs->getDoubleValue() + (diff_ave * (60.0/914.0) );
+    tmp = nav1_obs->getDoubleValue() + (diff1_ave * (72.0/914.0) );
     while ( tmp >= 360.0 ) { tmp -= 360.0; }
     while ( tmp < 0.0 ) { tmp += 360.0; }
-    fgSetFloat( "/radios/nav[1]/radials/selected-deg", tmp );
 
-    // nav1 obs tuner
-    tmp1 = (float)analog_in_data[30] * 360.0f / 1024.0f;
-    tmp2 = (float)analog_in_data[31] * 360.0f / 1024.0f;
-    fgSetFloat( "/radios/nav[0]/radials/selected-deg", tmp1 );
+    fgSetFloat( "/radios/nav[0]/radials/selected-deg", tmp );
+
+    // nav2 obs tuner
+    static int last_obs2 = analog_in_data[30];
+    static double diff2_ave = 0.0;
+    int diff2 = 0;
+
+    // cout << "obs2 = " << analog_in_data[30] << " last obs2 = " << last_obs2;
+
+#if defined( FG_FIRST_TRY )
+    if ( analog_in_data[30] < 150 || analog_in_data[30] > 990 ) {
+        if ( last_obs2 > 512 && last_obs2 <= 990 ) {
+            diff2 = 1;
+        } else if ( last_obs2 >= 150 && last_obs2 <= 990 ) {
+            diff2 = -1;
+        }
+    } else if ( last_obs2 < 150 || last_obs2 > 990 ) {
+        if ( analog_in_data[30] > 512 && analog_in_data[30] <= 990 ) {
+            diff2 = -1;
+        } else if ( analog_in_data[30] >= 150 && analog_in_data[30] <= 990 ) {
+            diff2 = 1;
+        }
+    } else {
+        diff2 = analog_in_data[30] - last_obs2;
+    }
+#elif defined( FG_SECOND_TRY )
+    if ( analog_in_data[30] < 30 ) {
+        if ( last_obs2 >= 43 && last_obs2 < 480 ) {
+            diff2 = -6;
+        } else if ( last_obs2 >= 480 ) {
+            diff2 = 6;
+        }
+        last_obs2 = analog_in_data[30];
+    } else if ( analog_in_data[30] < 43 ) {
+        // do nothing
+    } else if ( last_obs2 < 30 ) {
+        if ( analog_in_data[30] >= 23 && analog_in_data[30] < 480 ) {
+            diff2 = 6;
+        } else if ( analog_in_data[30] >= 480 ) {
+            diff2 = -6;
+        }
+        last_obs2 = analog_in_data[30];
+    } else if ( analog_in_data[30] > 930 ) {
+        if ( last_obs2 <= 924 && last_obs2 > 480 ) {
+            diff2 = 6;
+        } else if ( last_obs2 <= 480 ) {
+            diff2 = -6;
+        }
+        last_obs2 = analog_in_data[30];
+    } else if ( analog_in_data[30] > 924 ) {
+        // do nothing
+    } else if ( last_obs2 > 930 ) {
+        if ( analog_in_data[30] <= 924 && analog_in_data[30] > 480 ) {
+            diff2 = -6;
+        } else if ( analog_in_data[30] <= 480 ) {
+            diff2 = 6;
+        }
+        last_obs2 = analog_in_data[30];
+    } else {
+        diff2 = analog_in_data[30] - last_obs2;
+        if ( abs(diff2) > 200 ) {
+            // ignore
+            diff2 = 0;
+        }
+        last_obs2 = analog_in_data[30];
+    }
+#elif defined( FG_FOURTH_TRY )
+    static bool ignore_next = false;
+    diff2 = analog_in_data[30] - last_obs2;
+    if ( abs(diff2) > 200 ) {
+        // ignore
+        diff2 = 0;
+        ignore_next = true;
+    } else if ( ignore_next ) {
+        diff2 = 0;
+        ignore_next = false;
+    }
+    last_obs2 = analog_in_data[30];
+#endif
+
+    // cout << " diff2 = " << diff2 << endl;
+    if ( diff2 < -500 ) { diff2 += 1024; }
+    if ( diff2 > 500 ) { diff2 -= 1024; }
+
+    if ( fabs(diff2_ave - diff2) < 200 || fabs(diff2) < fabs(diff2_ave) ) {
+        diff2_ave = (2.0/3.0) * diff2_ave + (1.0/3.0) * diff2;
+    }
+
+    tmp = nav2_obs->getDoubleValue() + (diff2_ave * (72.0/880.0) );
+    while ( tmp >= 360.0 ) { tmp -= 360.0; }
+    while ( tmp < 0.0 ) { tmp += 360.0; }
+    // cout << " obs = " << tmp << endl;
+    fgSetFloat( "/radios/nav[1]/radials/selected-deg", tmp );
 
     return true;
 }
@@ -755,7 +860,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetBool( "/radios/comm[0]/inputs/power-btn",
                radio_switch_data[7] & 0x01 );
 
-    if ( navcom1_has_power() ) {
+    if ( navcom1_has_power() && comm1_servicable->getBoolValue() ) {
         // Com1 Swap
         int com1_swap = !((radio_switch_data[7] >> 1) & 0x01);
         static int last_com1_swap;
@@ -772,7 +877,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetBool( "/radios/comm[1]/inputs/power-btn",
                radio_switch_data[15] & 0x01 );
 
-    if ( navcom2_has_power() ) {
+    if ( navcom2_has_power() && comm2_servicable->getBoolValue() ) {
         // Com2 Swap
         int com2_swap = !((radio_switch_data[15] >> 1) & 0x01);
         static int last_com2_swap;
@@ -785,7 +890,7 @@ bool FGATC610x::do_radio_switches() {
         last_com2_swap = com2_swap;
     }
 
-    if ( navcom1_has_power() ) {
+    if ( navcom1_has_power() && nav1_servicable->getBoolValue() ) {
         // Nav1 Swap
         int nav1_swap = radio_switch_data[11] & 0x01;
         static int last_nav1_swap;
@@ -798,7 +903,7 @@ bool FGATC610x::do_radio_switches() {
         last_nav1_swap = nav1_swap;
     }
 
-    if ( navcom2_has_power() ) {
+    if ( navcom2_has_power() && nav2_servicable->getBoolValue() ) {
         // Nav2 Swap
         int nav2_swap = !(radio_switch_data[19] & 0x01);
         static int last_nav2_swap;
@@ -811,7 +916,7 @@ bool FGATC610x::do_radio_switches() {
         last_nav2_swap = nav2_swap;
     }
 
-    if ( navcom1_has_power() ) {
+    if ( navcom1_has_power() && comm1_servicable->getBoolValue() ) {
         // Com1 Tuner
         int com1_tuner_fine = ((radio_switch_data[5] >> 4) & 0x0f) - 1;
         int com1_tuner_coarse = (radio_switch_data[5] & 0x0f) - 1;
@@ -863,7 +968,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 40.0 );
     }
 
-    if ( navcom2_has_power() ) {
+    if ( navcom2_has_power() && comm2_servicable->getBoolValue() ) {
         // Com2 Tuner
         int com2_tuner_fine = ((radio_switch_data[13] >> 4) & 0x0f) - 1;
         int com2_tuner_coarse = (radio_switch_data[13] & 0x0f) - 1;
@@ -915,7 +1020,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 40.0 );
     }
 
-    if ( navcom1_has_power() ) {
+    if ( navcom1_has_power() && nav1_servicable->getBoolValue() ) {
         // Nav1 Tuner
         int nav1_tuner_fine = ((radio_switch_data[9] >> 4) & 0x0f) - 1;
         int nav1_tuner_coarse = (radio_switch_data[9] & 0x0f) - 1;
@@ -967,7 +1072,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 20.0 );
     }
 
-    if ( navcom2_has_power() ) {
+    if ( navcom2_has_power() && nav2_servicable->getBoolValue() ) {
         // Nav2 Tuner
         int nav2_tuner_fine = ((radio_switch_data[17] >> 4) & 0x0f) - 1;
         int nav2_tuner_coarse = (radio_switch_data[17] & 0x0f) - 1;
@@ -1026,7 +1131,7 @@ bool FGATC610x::do_radio_switches() {
     static int last_adf_tuner_fine = adf_tuner_fine;
     static int last_adf_tuner_coarse = adf_tuner_coarse;
 
-    if ( adf_has_power() ) {
+    if ( adf_has_power() && adf_servicable->getBoolValue() ) {
         // cout << "adf_stby_mode = " << adf_stby_mode->getIntValue() << endl;
         if ( adf_count_mode->getIntValue() == 2 ) {
             // tune count down timer
@@ -1101,17 +1206,17 @@ bool FGATC610x::do_radio_switches() {
     fgSetInt( "/radios/kr-87/inputs/bfo-btn",
               !(radio_switch_data[23] >> 1 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/frq-btn",
-              (radio_switch_data[23] >> 2 & 0x01) );
+              !(radio_switch_data[23] >> 2 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
-                  !(radio_switch_data[23] >> 3 & 0x01) );
+              !(radio_switch_data[23] >> 3 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
               !(radio_switch_data[23] >> 4 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/power-btn",
               radio_switch_data[23] >> 5 & 0x01 );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
          << " bfo = " << !(radio_switch_data[23] >> 1 & 0x01)
-         << " stby = " << !(radio_switch_data[23] >> 2 & 0x01)
-         << " timer = " << !(radio_switch_data[23] >> 3 & 0x01)
+         << " frq = " << !(radio_switch_data[23] >> 2 & 0x01)
+         << " flt/et = " << !(radio_switch_data[23] >> 3 & 0x01)
          << " set/rst = " << !(radio_switch_data[23] >> 4 & 0x01)
          << endl; */
 
@@ -1132,7 +1237,7 @@ bool FGATC610x::do_radio_switches() {
         }
     }
 
-    if ( xpdr_has_power() ) {
+    if ( xpdr_has_power() && xpdr_servicable->getBoolValue() ) {
         int id_code = xpdr_id_code->getIntValue();
         int digit[4];
         int place = 1000;
@@ -1193,7 +1298,7 @@ bool FGATC610x::do_radio_display() {
     char digits[10];
     int i;
 
-    if ( dme_has_power() ) {
+    if ( dme_has_power() && dme_servicable->getBoolValue() ) {
 	// DME minutes
 	float minutes = dme_min->getFloatValue();
 	if ( minutes > 999 ) {
@@ -1238,7 +1343,7 @@ bool FGATC610x::do_radio_display() {
 	}
     }
 
-    if ( navcom1_has_power() ) {
+    if ( navcom1_has_power() && comm1_servicable->getBoolValue() ) {
         // Com1 standby frequency
         float com1_stby = com1_stby_freq->getFloatValue();
         if ( fabs(com1_stby) > 999.99 ) {
@@ -1275,7 +1380,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[11] = 0xff;
     }
 
-    if ( navcom2_has_power() ) {
+    if ( navcom2_has_power() && comm2_servicable->getBoolValue() ) {
         // Com2 standby frequency
         float com2_stby = com2_stby_freq->getFloatValue();
         if ( fabs(com2_stby) > 999.99 ) {
@@ -1312,7 +1417,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[23] = 0xff;
     }
 
-    if ( navcom1_has_power() ) {
+    if ( navcom1_has_power() && nav1_servicable->getBoolValue() ) {
         // Nav1 standby frequency
         float nav1_stby = nav1_stby_freq->getFloatValue();
         if ( fabs(nav1_stby) > 999.99 ) {
@@ -1349,7 +1454,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[17] = 0xff;
     }
 
-    if ( navcom2_has_power() ) {
+    if ( navcom2_has_power() && nav2_servicable->getBoolValue() ) {
         // Nav2 standby frequency
         float nav2_stby = nav2_stby_freq->getFloatValue();
         if ( fabs(nav2_stby) > 999.99 ) {
@@ -1387,7 +1492,7 @@ bool FGATC610x::do_radio_display() {
     }
 
     // ADF standby frequency / timer
-    if ( adf_has_power() ) {
+    if ( adf_has_power() && adf_servicable->getBoolValue() ) {
         if ( adf_stby_mode->getIntValue() == 0 ) {
             // frequency
             float adf_stby = adf_stby_freq->getFloatValue();
@@ -1439,9 +1544,9 @@ bool FGATC610x::do_radio_display() {
             for ( i = 0; i < 6; ++i ) {
                 digits[i] -= '0';
             }
-            radio_display_data[30] = digits[3] << 4 | 0x0f;
-            radio_display_data[31] = digits[1] << 4 | digits[2];
-            radio_display_data[32] = 0xf0 | digits[0];
+            radio_display_data[30] = digits[2] << 4 | digits[3];
+            radio_display_data[31] = digits[0] << 4 | digits[1];
+            radio_display_data[32] = 0xff;
         }
 
         // ADF in use frequency
@@ -1474,7 +1579,7 @@ bool FGATC610x::do_radio_display() {
     }
     
     // Transponder code and flight level
-    if ( xpdr_has_power() ) {
+    if ( xpdr_has_power() && xpdr_servicable->getBoolValue() ) {
         if ( xpdr_func_knob->getIntValue() == 2 ) {
             // test mode
             radio_display_data[36] = 8 << 4 | 8;
@@ -1704,6 +1809,8 @@ bool FGATC610x::do_switches() {
                switch_matrix[board][6][0] );
     fgSetBool( "/controls/circuit-breakers/annunciators",
                switch_matrix[board][7][0] );
+
+    fgSetDouble( "/controls/parking-brake", switch_matrix[board][7][3] );
 
     return true;
 }
