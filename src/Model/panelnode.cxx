@@ -1,7 +1,11 @@
-#include <GL/gl.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <Main/fg_props.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
+#include <GL/gl.h>
 #include "panelnode.hxx"
 
 FGPanelNode::FGPanelNode(SGPropertyNode* props)
