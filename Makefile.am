@@ -42,16 +42,19 @@ fgfs-base-zip:
 
 # make the documentation distribution
 
-fgfs-docs: fgfs-docs-tar fgfs-docs-zip
+fgfs-docs: fgfs-docs-tar fgfs-manual-zip
 
 fgfs-docs-tar:
 	( cd .. ; \
 	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear/Docs )
 
-fgfs-docs-zip:
-	( cd .. ; \
-	zip -r fgfs-docs-$(VERSION).zip FlightGear/Docs )
+# fgfs-docs-zip:
+# 	( cd .. ; \
+# 	zip -r fgfs-docs-$(VERSION).zip FlightGear/Docs )
 
+fgfs-manual-zip:
+	( cd .. ; \
+	zip -r fgfs-manual-$(VERSION).zip FlightGear/Docs/InstallGuide )
 
 # make the win32-bin distribution
 
