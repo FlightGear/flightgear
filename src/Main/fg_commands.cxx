@@ -847,21 +847,25 @@ do_replay (const SGPropertyNode * arg)
 
 
 static bool
-do_decrease_visability (const SGPropertyNode * arg)
+do_decrease_visibility (const SGPropertyNode * arg)
 {
     double new_value = fgGetDouble("/environment/visibility-m") * 0.9;
     fgSetDouble("/environment/visibility-m", new_value);
     fgDefaultWeatherValue("visibility-m", new_value);
     globals->get_subsystem("environment")->reinit();
+
+    return true;
 }
  
 static bool
-do_increase_visability (const SGPropertyNode * arg)
+do_increase_visibility (const SGPropertyNode * arg)
 {
     double new_value = fgGetDouble("/environment/visibility-m") * 1.1;
     fgSetDouble("/environment/visibility-m", new_value);
     fgDefaultWeatherValue("visibility-m", new_value);
     globals->get_subsystem("environment")->reinit();
+
+    return true;
 }
 
 
@@ -913,8 +917,8 @@ static struct {
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
-    { "decrease-visibility", do_decrease_visability },
-    { "increase-visibility", do_increase_visability },
+    { "decrease-visibility", do_decrease_visibility },
+    { "increase-visibility", do_increase_visibility },
     { 0, 0 }			// zero-terminated
 };
 
