@@ -2,6 +2,8 @@
 | Todo 
 --------------------------------------------------------------------------
 
+1/12/98  - Fix time problem on win32
+
 12/29/97 - View frustum culling
 
 1/5/98 -   Create a development "roadmap"

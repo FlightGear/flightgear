@@ -28,12 +28,12 @@
 #define _GLUTKEY_H
 
 
-#ifdef GLUT
-    #include <GL/glut.h>
-#elif TIGER
-    /* assumes -I/usr/include/mesa in compile command */
-    #include "gltk.h"
+#ifdef WIN32
+#  include <windows.h>                     
 #endif
+
+#include <GL/glut.h>
+#include <XGL/xgl.h>
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y);
@@ -44,9 +44,13 @@ void GLUTspecialkey(int k, int x, int y);
 
 
 /* $Log$
-/* Revision 1.6  1998/01/22 02:59:36  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.7  1998/02/12 21:59:44  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.6  1998/01/22 02:59:36  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.5  1997/07/23 21:52:23  curt
  * Put comments around the text after an #endif for increased portability.
  *

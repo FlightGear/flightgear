@@ -65,10 +65,11 @@ ConvertUint(unsigned *array, unsigned int length) {
 
 static ImageRec *ImageOpen(char *fileName)
 {
-    union {
-        int testWord;
-        char testByte[4];
-    } endianTest;
+     union {
+       int testWord;
+       char testByte[4];
+     } endianTest;
+
     ImageRec *image;
     int swapFlag;
     int x;
@@ -86,7 +87,7 @@ static ImageRec *ImageOpen(char *fileName)
         exit(1);
     }
     if ((image->file = fopen(fileName, "rb")) == NULL) {
-	return NULL;
+      return NULL;
     }
 
     fread(image, 1, 12, image->file);

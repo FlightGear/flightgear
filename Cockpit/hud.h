@@ -32,14 +32,17 @@
 #include <Flight/flight.h>
 #include <Controls/controls.h>
 
+// View mode definitions
 
-/* Instrument types */
+enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
+
+// Instrument types
 #define ARTIFICIAL_HORIZON	1
 #define SCALE              2
 #define LADDER             3
 #define LABEL              4
 
-/* Scale constants */
+// Scale constants
 #define HORIZONTAL         1
 #define TOP                2
 #define BOTTOM             3
@@ -50,7 +53,7 @@
 #define NOLIMIT            8
 #define ROUNDROB           9
 
-/* Label constants */
+// Label constants
 #define SMALL              1
 #define LARGE              2
 #define BLINK              3
@@ -59,7 +62,7 @@
 #define CENTER_JUST        6
 #define RIGHT_JUST         7
 
-/* Ladder constants */
+// Ladder constants
 #define NONE               1
 #define UPPER_LEFT         2
 #define UPPER_CENTER       3
@@ -73,12 +76,12 @@
 #define DASHED_LINES      11
 #define DASHED_NEG_LINES  12
 
-/* Ladder orientaion */
+// Ladder orientaion
 // #define HUD_VERTICAL        1
 // #define HUD_HORIZONTAL		2
 // #define HUD_FREEFLOAT		3
 
-/* Ladder orientation modes */
+// Ladder orientation modes
 // #define HUD_LEFT    		1
 // #define HUD_RIGHT         	2
 // #define HUD_TOP           	1
@@ -89,7 +92,7 @@
 // #define HUD_H_BOTTOM        	2
 
 
-/* Ladder sub-types */
+// Ladder sub-types
 // #define HUD_LIM				1
 // #define HUD_NOLIM			2
 // #define HUD_CIRC			3
@@ -203,7 +206,7 @@ typedef struct {
 
 // Removed union HUD_instr_data to evolve this to oop code.
 
-enum hudinstypes { HUDno_instr,
+typedef enum{ HUDno_instr,
                    HUDscale,
                    HUDcirc_scale,
                    HUDladder,
@@ -211,10 +214,10 @@ enum hudinstypes { HUDno_instr,
                    HUDhorizon,
                    HUDlabel,
                    HUDcontrols
-                   };
+                   } hudinstype;
 
 typedef struct HUD_INSTR_STRUCT{
-  int type;
+  hudinstype  type;
   int sub_type;
   int orientation;
   void *instr;   // For now we will cast this pointer accoring to the value
@@ -312,12 +315,12 @@ void fgUpdateHUD ( Hptr hud );
 void fgUpdateHUD2( Hptr hud ); // Future use?
 
 
-#endif /* _HUD_H */
-
+#endif // _HUD_H  
 
 /* $Log$
-/* Revision 1.9  1998/02/11 02:50:22  curt
-/* Added changes submitted by Michele America.
+/* Revision 1.10  1998/02/12 21:59:42  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
  * Revision 1.8  1998/02/07 15:29:35  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss

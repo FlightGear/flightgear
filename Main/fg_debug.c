@@ -23,29 +23,29 @@
  **************************************************************************/
 
 #include <string.h>
-#include <Main/fg_debug.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 
-static int fg_DebugSem = 1;
-static fgDebugClass fg_DebugClass = FG_ALL;
-static fgDebugPriority fg_DebugPriority = FG_INFO;
+#include <Include/cmdargs.h> // Line to command line arguments
+#include <Main/fg_debug.h>
+
+static int             fg_DebugSem      = 1;
+fgDebugClass           fg_DebugClass    = FG_ALL;  // Need visibility for
+fgDebugPriority        fg_DebugPriority = FG_INFO; // command line processing.
 static fgDebugCallback fg_DebugCallback = NULL;
 
-#ifndef __CYGWIN32__
-    static FILE *fg_DebugOutput = stderr;
-#else /* __CYGWIN32__ */
-    static FILE *fg_DebugOutput = NULL;
-#endif /* __CYGWIN32 */
+FILE *fg_DebugOutput = NULL;  // Visibility needed for command line processor.
+                              // This can be set to a FILE from the command
+                              // line. If not, it will be set to stderr.
 
 /* TODO: Actually make this thing thread safe */
 #ifdef USETHREADS
-#define FG_GRABDEBUGSEM  while( --fg_DebugSem < 0 ) { fg_DebugSem++; } 
+#define FG_GRABDEBUGSEM  while( --fg_DebugSem < 0 ) { fg_DebugSem++; }
 #define FG_RELEASEDEBUGSEM fg_DebugSem++;
 #else
 #define FG_GRABDEBUGSEM
-#define FG_RELEASEDEBUGSEM 
+#define FG_RELEASEDEBUGSEM
 #endif
 
 /* Used for convienence initialization from env variables.
@@ -77,28 +77,59 @@ static fgDebugClass fgDebugStrToClass( char *str );
 /* fgInitDebug =============================================================*/
 void fgInitDebug( void )
 {
-  char *pszClass, *pszPrio;
+  char *pszClass, *pszPrio, *pszFile;
 
-#ifdef __CYGWIN32__
-    fg_DebugOutput = stderr;
-#endif /* __CYGWIN32 */
+  // Support for log file/alt debug output via command line, environment or
+  // reasonable default.
+
+  if( strlen( logArgbuf ) > 3) {   // First check for command line option
+    fg_DebugOutput = fopen(logArgbuf, "a+" );  // Assumed that we will append.
+    }
+
+  if( !fg_DebugOutput ) {          // If not set on command line, environment?
+    pszFile = getenv( "FG_DEBUGFILE" );
+    if( pszFile ) {          // There is such an environmental variable.
+      fg_DebugOutput = fopen( pszFile, "a+" );
+      }
+    }
+
+  if( !fg_DebugOutput ) {         // If neither command line nor environment
+    fg_DebugOutput = stderr;      // then we use the fallback position
+    }                       
 
   FG_GRABDEBUGSEM;
-  fg_DebugSem=fg_DebugSem;  /* shut up GCC */
+  fg_DebugSem = fg_DebugSem;  /* shut up GCC */
 
-  pszPrio = getenv( "FG_DEBUGPRIORITY" );
-  if( pszPrio ) {
-    fg_DebugPriority = atoi( pszPrio );
-    fprintf( stderr, "fg_debug.c: Environment overrides default debug priority (%d)\n",
-	     fg_DebugPriority );
-  }
+  // Test command line option overridge of debug priority. If the value
+  // is in range (properly optioned) the we will override both defaults
+  // and the environmental value.
 
-  pszClass = getenv( "FG_DEBUGCLASS" );
-  if( pszClass ) {
-    fg_DebugClass = fgDebugStrToClass( pszClass );
-    fprintf( stderr, "fg_debug.c: Environment overrides default debug class (0x%08X)\n",
-	     fg_DebugClass );
-  }
+  if ((priorityArgValue >= FG_BULK) && (priorityArgValue <= FG_ABORT)) {
+    fg_DebugPriority = priorityArgValue;
+    }
+  else {  // Either not set or out of range. We will not warn the user.
+    pszPrio = getenv( "FG_DEBUGPRIORITY" );
+    if( pszPrio ) {
+      fg_DebugPriority = atoi( pszPrio );
+      fprintf( stderr,
+           "fg_debug.c: Environment overrides default debug priority (%d)\n",
+           fg_DebugPriority );
+      }
+    }
+
+
+  if ((debugArgValue >= FG_ALL) && (debugArgValue < FG_UNDEFD)) {
+    fg_DebugPriority = priorityArgValue;
+    }
+  else {  // Either not set or out of range. We will not warn the user.
+    pszClass = getenv( "FG_DEBUGCLASS" );
+    if( pszClass ) {
+      fg_DebugClass = fgDebugStrToClass( pszClass );
+      fprintf( stderr,
+            "fg_debug.c: Environment overrides default debug class (0x%08X)\n",
+	          fg_DebugClass );
+      }
+    }
 
   FG_RELEASEDEBUGSEM;
 }
@@ -108,7 +139,7 @@ fgDebugClass fgDebugStrToClass( char *str )
 {
   char *hex = "0123456789ABCDEF";
   char *hexl = "0123456789abcdef";
-  char *pt, *p, *ph, ps=1;
+  char *pt, *p, *ph, ps = 1;
   unsigned int val = 0, i;
   
   if( str == NULL ) {
@@ -195,12 +226,15 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... )
   va_list ap;
   int ret = 0;
 
-  FG_GRABDEBUGSEM;
+  // If no action to take, then don't bother with the semaphore activity
+  // Slight speed benefit.
 
   if( !(dbg_class & fg_DebugClass) || (prio < fg_DebugPriority) ) {
-    FG_RELEASEDEBUGSEM;
-    return 0;
-  } 
+    return ret;        // Its zero anyway. But we might think about changing
+                       // it upon some error condition?
+  }
+
+  FG_GRABDEBUGSEM;
 
   /* ret = vsprintf( szOut, fmt, (&fmt+1)); (but it didn't work, thus ... */
   va_start (ap, fmt);
@@ -210,17 +244,20 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... )
   if( fg_DebugCallback!=NULL && fg_DebugCallback(dbg_class, prio, szOut) ) {
     FG_RELEASEDEBUGSEM;
     return ret;
-  } 
+  }
   else {
     fprintf( fg_DebugOutput, szOut );
     FG_RELEASEDEBUGSEM;
     if( prio == FG_EXIT ) {
       exit(0);
-    } 
+    }
     else if( prio == FG_ABORT ) {
       abort();
     }
   }
   return ret;  
 } 
+
+// Revision history?
+//
 

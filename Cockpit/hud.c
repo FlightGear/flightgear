@@ -33,8 +33,8 @@
 #include <string.h>
 
 #ifndef WIN32
-#  include <values.h>  /* for MAXINT */
-#endif /* not WIN32 */
+#  include <values.h>  // for MAXINT
+#endif //
 
 #include "hud.h"
 
@@ -45,7 +45,6 @@
 #include <Math/mat3.h>
 #include <Math/polar.h>
 #include <Scenery/scenery.h>
-// #include <Scenery/mesh.h>   /* not used any more :-) */
 #include <Time/fg_timer.h>
 #include <Weather/weather.h>
 
@@ -216,53 +215,61 @@ static void drawscale( HUD_scale * pscale )
 
     factor = (pscale->scr_max - pscale->scr_min)/pscale->width_units;
 
-    for( i=vmin; i<=vmax; i+=1 )
+    for( i = vmin; i <= vmax; i++ )
       {
-      if( pscale->sub_type == LIMIT )
-        condition = i>= pscale->minimum_value;
-      else
-        if( pscale->sub_type == NOLIMIT )
+      if( pscale->sub_type == LIMIT ) {
+        condition = (i >= pscale->minimum_value);
+        }
+      else {
+        if( pscale->sub_type == NOLIMIT ) {
           condition = 1;
-
+          }
+        }
       if( condition )
         {
-        marker_y = pscale->scr_min+(i-vmin)*factor;
-        if( i%pscale->div_min==0 )
+        marker_y = pscale->scr_min + (i - vmin) * factor;
+        if( !(i%pscale->div_min)) {
           if( pscale->orientation == LEFT )
             {
-            drawOneLine( marker_x+3, marker_y, marker_x+6, marker_y );
+            drawOneLine( marker_x + 3, marker_y, marker_x + 6, marker_y );
             }
-          else
+          else {
             if( pscale->orientation == RIGHT )
               {
-              drawOneLine( marker_x, marker_y, marker_x+3, marker_y );
+              drawOneLine( marker_x, marker_y, marker_x + 3, marker_y );
               }
             if( i%pscale->div_max==0 )
               {
-              drawOneLine( marker_x, marker_y, marker_x+6, marker_y );
+              drawOneLine( marker_x, marker_y, marker_x + 6, marker_y );
               sprintf( TextScale, "%d", i );
               if( pscale->orientation == LEFT )
                 {
-                textString( marker_x-8*strlen(TextScale)-2, marker_y-4,
+                textString( marker_x - 8 * strlen(TextScale) - 2, marker_y - 4,
                             TextScale, GLUT_BITMAP_8_BY_13 );
                 }
-              else
+              else  {
                 if( pscale->orientation == RIGHT )
                   {
                   textString( marker_x+10, marker_y-4,
                               TextScale, GLUT_BITMAP_8_BY_13 );
                   }
+                }
               }
-         }
+            }
+          }
+        }
       } // End for range of i from vmin to vmax
     }
   if( pscale->type == HORIZONTAL )     // Horizontal scale
     {
-    if( pscale->orientation == TOP )
+    if( pscale->orientation == TOP ) {
       marker_y = pscale->scr_pos;
-    else
-      if( pscale->orientation == BOTTOM )
-        marker_y = pscale->scr_pos-6;
+      }
+    else {
+      if( pscale->orientation == BOTTOM ) {
+        marker_y = pscale->scr_pos - 6;
+        }
+      }
     drawOneLine( pscale->scr_min,
                  pscale->scr_pos,
                  pscale->scr_max,
@@ -285,7 +292,7 @@ static void drawscale( HUD_scale * pscale )
                    pscale->scr_pos-6 );
 
       }
-    else
+    else {
       if( pscale->orientation == BOTTOM )
         {
         drawOneLine( pscale->scr_min,
@@ -303,58 +310,61 @@ static void drawscale( HUD_scale * pscale )
                      mid_scr,
                      pscale->scr_pos+6 );
         }
-
+      }
     factor = (pscale->scr_max - pscale->scr_min)/pscale->width_units;
 
-    for( i=vmin; i<=vmax; i+=1 )
+    for( i = vmin; i <= vmax; i++ )  // increment is faster than addition
       {
-      if( pscale->sub_type == LIMIT )
-        condition = i>= pscale->minimum_value;
-      else
-        if( pscale->sub_type == NOLIMIT )
+      if( pscale->sub_type == LIMIT ) {
+        condition = (i >= pscale->minimum_value);
+        }
+      else {
+        if( pscale->sub_type == NOLIMIT ) {
           condition = 1;
-
+          }
+        }
       if( condition )
         {
         marker_x = pscale->scr_min+(i-vmin)*factor;
-        if( i%pscale->div_min==0 )
+        if( i%pscale->div_min==0 ) {
           if( pscale->orientation == TOP )
             {
             drawOneLine( marker_x, marker_y, marker_x, marker_y+3 );
             }
-          else
+          else {
             if( pscale->orientation == BOTTOM )
               {
               drawOneLine( marker_x, marker_y+3, marker_x, marker_y+6 );
               }
-          if( i%pscale->div_max==0 )
+            }
+          }
+        if( i%pscale->div_max==0 )
+          {
+          sprintf( TextScale, "%d", i );
+          if( pscale->orientation == TOP )
             {
-            sprintf( TextScale, "%d", i );
-            if( pscale->orientation == TOP )
+            drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
+            textString ( marker_x-4*strlen(TextScale), marker_y+14,
+                         TextScale, GLUT_BITMAP_8_BY_13 );
+            }
+          else {
+            if( pscale->orientation == BOTTOM )
               {
               drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
-              textString ( marker_x-4*strlen(TextScale), marker_y+14,
+              textString ( marker_x+10, marker_y-4,
                            TextScale, GLUT_BITMAP_8_BY_13 );
               }
-            else
-              if( pscale->orientation == BOTTOM )
-                {
-                drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
-                textString ( marker_x+10, marker_y-4,
-                             TextScale, GLUT_BITMAP_8_BY_13 );
-                }
             }
+          }
         }
       }
     }
 
 }
 
-/*
-
-	Draws a climb ladder in the center of the HUD
-
-*/
+//
+//	Draws a climb ladder in the center of the HUD
+//
 
 static void drawladder( HUD_ladder *ladder )
 {
@@ -379,7 +389,7 @@ static void drawladder( HUD_ladder *ladder )
 
   vmin = pitch_value - ladder->width_units/2;
   vmax = pitch_value + ladder->width_units/2;
-    
+
   scr_min = ladder->y_pos - (ladder->scr_height/2);
   scr_max = scr_min       + ladder->scr_height;
 
@@ -402,10 +412,12 @@ static void drawladder( HUD_ladder *ladder )
         sprintf( TextLadder, "%d", i );
         if( ladder->scr_hole == 0 )
           {
-          if( i )
+          if( i ) {
             x_ini = ladder->x_pos - ladder->scr_width/2;
-          else
+            }
+          else {
             x_ini = ladder->x_pos - ladder->scr_width/2 - 10;
+            }
           y_ini = marker_y;
           x_end = ladder->x_pos + ladder->scr_width/2;
           y_end = marker_y;
@@ -442,10 +454,12 @@ static void drawladder( HUD_ladder *ladder )
           }
         else
           {
-          if( i != 0 )
+          if( i != 0 )  {
             x_ini = ladder->x_pos - ladder->scr_width/2;
-          else
+            }
+          else          {
             x_ini = ladder->x_pos - ladder->scr_width/2 - 10;
+            }
           y_ini = marker_y;
           x_end = ladder->x_pos - ladder->scr_width/2 + ladder->scr_hole/2;
           y_end = marker_y;
@@ -479,10 +493,12 @@ static void drawladder( HUD_ladder *ladder )
 
           x_ini = ladder->x_pos + ladder->scr_width/2 - ladder->scr_hole/2;
           y_ini = marker_y;
-          if( i != 0 )
+          if( i != 0 )  {
             x_end = ladder->x_pos + ladder->scr_width/2;
-          else
+            }
+          else          {
             x_end = ladder->x_pos + ladder->scr_width/2 + 10;
+            }
           y_end = marker_y;
           new_x_ini = ladder->x_pos +                        \
                       (x_ini-ladder->x_pos)*cos(roll_value) -\
@@ -571,14 +587,12 @@ static void drawhorizon( HUD_horizon *horizon )
                  horizon->x_pos + x_inc1, horizon->y_pos + y_inc1 );
     }
 }
-/*
 
-	Draws a representation of the control surfaces in their current state
-		anywhere in the HUD
-	
-	Needs: struct HUD_control_surfaces
+//  drawControlSurfaces()
+//	Draws a representation of the control surfaces in their current state
+//	anywhere in the HUD
+//
 
-*/
 static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 {
 	int x_ini, y_ini;
@@ -647,19 +661,19 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 		drawOneLine( x_ini + 35 + (int)(((FG_Rudder + 1.0)/2)*50.0), y_ini + 25, \
 				x_ini + 35 + (int)(((FG_Rudder + 1.0)/2)*50.0), y_ini + 5 );
 	}
-	
-	
+
+
 	/* Draw throttle diagram */
-	textString( x_ini + 90 + 1, y_end-11, "T", GLUT_BITMAP_8_BY_13 );	
-	textString( x_ini + 90 + 1, y_end-21, "r", GLUT_BITMAP_8_BY_13 );	
+	textString( x_ini + 90 + 1, y_end-11, "T", GLUT_BITMAP_8_BY_13 );
+	textString( x_ini + 90 + 1, y_end-21, "r", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 105, y_ini + 5, x_ini + 105, y_ini + 55 );
 	drawOneLine( x_ini + 100, y_ini + 5 + (int)(FG_Throttle[0]*50.0), \
 			x_ini + 110, y_ini + 5 + (int)(FG_Throttle[0]*50.0) );
-	
-	
+
+
 	/* Draw elevator trim diagram */
-	textString( x_ini + 121, y_end-11, "T", GLUT_BITMAP_8_BY_13 );	
-	textString( x_ini + 121, y_end-22, "m", GLUT_BITMAP_8_BY_13 );	
+	textString( x_ini + 121, y_end-11, "T", GLUT_BITMAP_8_BY_13 );
+	textString( x_ini + 121, y_end-22, "m", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 135, y_ini + 5, x_ini + 135, y_ini + 55 );
 	drawOneLine( x_ini + 134, y_ini + 30, x_ini + 136, y_ini + 30 );
 	if( FG_Elev_Trim <= -0.01 || FG_Elev_Trim >= 0.01 )
@@ -672,7 +686,7 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 		drawOneLine( x_ini + 127, y_ini + 5 + (int)(((FG_Elev_Trim + 1.0)/2)*50.0), \
 				x_ini + 143, y_ini + 5 + (int)(((FG_Elev_Trim + 1.0)/2)*50.0) );
 	}
-	
+
 }
 
 //
@@ -711,12 +725,12 @@ static void drawlabel( HUD_label *label )
 
 
   sprintf( string, buffer, (*label->load_value)() );
-
+#ifdef DEBUGHUD
 	fgPrintf( FG_COCKPIT, FG_DEBUG,  buffer );
 	fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
 	fgPrintf( FG_COCKPIT, FG_DEBUG, string );
 	fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
-
+#endif
   lenstr = strlen( string );
   if( label->justify == LEFT_JUST ) {
    posincr = -lenstr*8;
@@ -767,7 +781,7 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   hud->code = 1;
   hud->status = 0;
 
-  // For now lets just hardcode the hud here .
+  // For now lets just hardcode the hud here.
   // In the future, hud information has to come from the same place
   // aircraft information came from.
 
@@ -784,7 +798,7 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
                    RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
   fgHUDAddLadder ( hud, 330, 190, 90, 180, 70, 10,
                    NONE, 45, get_roll, get_pitch );
-  // fgHUDAddControlSurfaces( hud, 10, 10, get_heading );
+  fgHUDAddControlSurfaces( hud, 10, 10, get_heading );
 
   return( hud );
 }
@@ -1011,6 +1025,50 @@ Hptr fgHUDAddLadder( Hptr hud,        \
 	return hud;
 }
 
+//   fgHUDAddControlSurfaces()
+//
+//   Adds the control surface indicators which make up for the lack of seat
+//   of the pants feel. Should be unnecessary with joystick and pedals
+//   enabled. But that is another improvement. Also, what of flaps? Spoilers?
+//   This may need to be expanded or flattened into multiple indicators,
+//   vertical and horizontal.
+
+Hptr fgHUDAddControlSurfaces( Hptr hud,
+                              int x_pos,
+                              int y_pos,
+                              double (*load_value)() )
+{
+    HUD_control_surfaces *pctrl_surf;
+    HUD_instr *pinstrument;
+
+    if( !hud ) {
+	return NULL;
+    }
+
+    // Construct shell
+    pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
+    if( !pinstrument )
+	return NULL;
+
+    pinstrument->type = HUDcontrols;
+
+    // Construct core
+    pctrl_surf = (HUD_control_surfaces *)calloc(sizeof(HUD_control_surfaces),1);
+    if( !(pctrl_surf == NULL) )
+	return( NULL );
+
+    pctrl_surf->x_pos      = x_pos;
+    pctrl_surf->y_pos      = y_pos;
+    pctrl_surf->load_value = load_value;
+                                                   // Integrate
+    pinstrument->instr     = pctrl_surf;
+                                                   // Install
+    add_instrument( hud, pinstrument);
+
+    return hud;
+}
+
+
 /*
 Hptr fgHUDAddMovingHorizon(  Hptr hud,     \
                              int x_pos,    \
@@ -1073,9 +1131,8 @@ void fgUpdateHUD( Hptr hud ) {
     glLineWidth(1);
     glColor3f (0.1, 0.9, 0.1);
 
-    fgPrintf( FG_COCKPIT, FG_DEBUG,
-	      "HUD Code %d  Status %d\n",
-	      hud->code, hud->status );
+    fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
+              hud->code, hud->status );
 
     phud_instr = hud->instruments;
     while( phud_instr ) {
@@ -1100,6 +1157,7 @@ void fgUpdateHUD( Hptr hud ) {
 
 	case HUDcontrols:
 	    drawControlSurfaces( (pHUDControlSurface) phud_instr->instr );
+	    break;
 	    
 	default:; // Ignore anything you don't know about.
 	}
@@ -1117,8 +1175,9 @@ void fgUpdateHUD( Hptr hud ) {
 
 
 /* $Log$
-/* Revision 1.13  1998/02/11 02:50:19  curt
-/* Added changes submitted by Michele America.
+/* Revision 1.14  1998/02/12 21:59:41  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
  * Revision 1.12  1998/02/09 15:07:48  curt
  * Minor tweaks.

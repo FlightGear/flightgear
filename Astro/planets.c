@@ -131,7 +131,7 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 	fgPrintf( FG_ASTRO, FG_ALERT, "index %d out of range !!!!\n", idx);
       }
     fgPrintf( FG_ASTRO, FG_DEBUG,
-	      "    Planet found at %f (ra), %f (dec)\n", 
+	      "    Planet found at %f (ra), %f (dec)\n",
 	      result.RightAscension, result.Declination);
     fgPrintf( FG_ASTRO, FG_DEBUG,
 	      "      Geocentric dist     %f\n"
@@ -188,7 +188,7 @@ void fgPlanetsInit( void )
     
     xglVertex3f( 50000.0 * cos(pltPos.RightAscension) * 
 		           cos(pltPos.Declination),
-		 50000.0 * sin(pltPos.RightAscension) * 
+		 50000.0 * sin(pltPos.RightAscension) *
 		           cos(pltPos.Declination),
 		 50000.0 * sin(pltPos.Declination) );
   }
@@ -204,12 +204,16 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/02/03 23:20:12  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.6  1998/02/12 21:59:36  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.5  1998/02/03 23:20:12  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.4  1998/02/02 20:53:23  curt
  * To version 0.29
  *

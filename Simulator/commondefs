@@ -43,7 +43,7 @@ TAR = tar
 #
 #---------------------------------------------------------------------------
 
-GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
+GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
 
 
 #---------------------------------------------------------------------------
@@ -85,9 +85,7 @@ GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
 #---------------------------------------------------------------------------
 # Linux/Mesa with the GLUT toolkit
 #
-INTERFACE_FLAGS = -DGLUT
 INTERFACE_LIBS = -lglut
-INTERFACE_FILES = GLUTmain.c GLUTkey.c
 MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
 X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
 GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
@@ -100,9 +98,7 @@ EXT =
 #     (Surprisingly, this also works on our SunOS 4.x machine with the 
 #     way we have Mesa & Glut installed.)
 #
-# INTERFACE_FLAGS = -DGLUT
 # INTERFACE_LIBS = -lglut
-# INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 # EXT =
@@ -113,9 +109,7 @@ EXT =
 # Sun/Solaris with the GLUT toolkit
 #
 # VERSION=\"$(VERSION)\"
-# INTERFACE_FLAGS = -DGLUT
 # INTERFACE_LIBS = -lglut
-# INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS =  -L/opt/X11R6/lib -lGLU -lGL -lXext -lXmu -lXi -lX11 -lsocket
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 # EXT =
@@ -125,9 +119,7 @@ EXT =
 #---------------------------------------------------------------------------
 # Cygnus Win32 (gcc based) with a static version of the GLUT toolkit
 #
-# INTERFACE_FLAGS = -DGLUT 
 # INTERFACE_LIBS = ../Win32/libglut.a
-# INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -DWIN32 -DUSE_RAND
 # EXT = .exe

@@ -28,22 +28,26 @@
 #define _FG_INIT_H
 
 
-/* General house keeping initializations */
-void fgInitGeneral( void );
+// General house keeping initializations
+int fgInitGeneral ( void );
 
-/* This is the top level init routine which calls all the other
- * initialization routines.  If you are adding a subsystem to flight
- * gear, its initialization call should located in this routine.*/
-void fgInitSubsystems( void );
+// This is the top level init routine which calls all the other
+// initialization routines.  If you are adding a subsystem to flight
+// gear, its initialization call should located in this routine.
+int fgInitSubsystems( void );
 
 
 #endif /* _FG_INIT_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/22 02:59:38  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.3  1998/02/12 21:59:50  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.2  1998/01/22 02:59:38  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.1  1997/08/23 01:46:20  curt
  * Initial revision.
  *

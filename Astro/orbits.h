@@ -73,7 +73,7 @@ double fgCalcEccAnom(double M, double e);
 double fgCalcActTime(struct fgTIME t);
 
 void fgReadOrbElements(struct OrbElements *dest, FILE *src);
-void fgSolarSystemInit(struct fgTIME t);
+int  fgSolarSystemInit(struct fgTIME t);
 void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
@@ -81,9 +81,13 @@ void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
 /* $Log$
-/* Revision 1.4  1998/02/02 20:53:22  curt
-/* To version 0.29
+/* Revision 1.5  1998/02/12 21:59:35  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.4  1998/02/02 20:53:22  curt
+ * To version 0.29
+ *
  * Revision 1.3  1998/01/22 02:59:27  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

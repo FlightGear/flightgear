@@ -29,12 +29,12 @@
 
 
 /* Initialize the Tile Manager subsystem */
-void fgTileMgrInit( void );
+int fgTileMgrInit( void );
 
 
 /* given the current lon/lat, fill in the array of local chunks.  If
  * the chunk isn't already in the cache, then read it from disk. */
-void fgTileMgrUpdate( void );
+int fgTileMgrUpdate( void );
 
 
 /* Render the local tiles --- hack, hack, hack */
@@ -45,9 +45,13 @@ void fgTileMgrRender( void );
 
 
 /* $Log$
-/* Revision 1.4  1998/01/22 02:59:42  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.5  1998/02/12 21:59:53  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.4  1998/01/22 02:59:42  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.3  1998/01/19 18:40:38  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

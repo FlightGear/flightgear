@@ -30,6 +30,7 @@
 #include <Main/fg_init.h>
 #include <Main/views.h>
 
+#include <Include/cmdargs.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 
@@ -52,11 +53,11 @@
 
 extern int show_hud;             /* HUD state */
 extern int displayInstruments;
-
+extern const char *default_root;
 
 /* General house keeping initializations */
 
-void fgInitGeneral( void ) {
+int fgInitGeneral( void ) {
     struct fgGENERAL *g;
 
     g = &general;
@@ -69,22 +70,36 @@ void fgInitGeneral( void ) {
     /* seed the random number generater */
     fg_srandom();
 
-    /* determine the fg root path */
-    if ( (g->root_dir = getenv("FG_ROOT")) == NULL ) {
-	/* environment variable not defined */
-	fgPrintf(FG_GENERAL, FG_EXIT, "FG_ROOT needs to be defined!  "
-		                  "See the documentation.\n");
-    } 
+    // determine the fg root path. The command line parser getargs() will
+    // fill in a root directory if the option was used.
+
+    if( !(g->root_dir) ) { 
+	// If not set by command line test for environmental var..
+	g->root_dir = getenv("FG_ROOT");
+	if ( !g->root_dir ) { 
+	    // No root path set? Then assume, we will exit if this is
+	    // wrong when looking for support files.
+	    g->root_dir = (char *)DefaultRootDir;
+	}
+    }
     fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
+
+    // Dummy value can be changed if future initializations
+    // fail a critical task.
+    return ( 0 /* FALSE */ ); 
 }
 
 
-/* This is the top level init routine which calls all the other
- * initialization routines.  If you are adding a subsystem to flight
- * gear, its initialization call should located in this routine.*/
+// This is the top level init routine which calls all the other
+// initialization routines.  If you are adding a subsystem to flight
+// gear, its initialization call should located in this routine.
+// Returns non-zero if a problem encountered.
 
-void fgInitSubsystems( void ) {
+int fgInitSubsystems( void ) {
     double cur_elev;
+
+    // Ok will be flagged only if we get EVERYTHING done.
+    int ret_val = 1 /* TRUE */;
 
     fgFLIGHT *f;
     struct fgLIGHT *l;
@@ -99,13 +114,14 @@ void fgInitSubsystems( void ) {
     fgPrintf( FG_GENERAL, FG_INFO, "========== ==========\n");
 
     /****************************************************************
-     * The following section sets up the flight model EOM parameters and 
+     * The following section sets up the flight model EOM parameters and
      * should really be read in from one or more files.
      ****************************************************************/
 
     /* Must happen before any of the flight model or control
      * parameters are set */
-    fgAircraftInit();
+
+    fgAircraftInit();   // In the future this might not be the case.
     f = current_aircraft.flight;
 
     /* Globe Aiport, AZ */
@@ -155,7 +171,7 @@ void fgInitSubsystems( void ) {
     /* FG_Latitude  = 45.145 * DEG_TO_RAD; */
     /* FG_Runway_altitude = 912; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
-    
+
     /* Initial Position north of the city of Globe */
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
@@ -180,11 +196,17 @@ void fgInitSubsystems( void ) {
     /* FG_Runway_altitude = 5000.0; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
-    /* Initial Position: (GCN) Grand Canyon Airport, AZ */
-    FG_Longitude = ( -112.1469647 ) * DEG_TO_RAD;
-    FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
-    FG_Runway_altitude = 6606.0;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    // Initial Position: (GCN) Grand Canyon Airport, AZ
+    // FG_Longitude = ( -112.1469647 ) * DEG_TO_RAD;
+    // FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 6606.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
+
+    // Initial Position: Jim Brennon's Kingmont Observatory
+    // FG_Longitude = ( -121.1131666 ) * DEG_TO_RAD;
+    // FG_Latitude  = (   38.8293916 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 920.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     /* A random test position */
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
@@ -233,7 +255,7 @@ void fgInitSubsystems( void ) {
     fgEventInit();
 
     /* Dump event stats every 60 seconds */
-    fgEventRegister( "fgEventPrintStats()", fgEventPrintStats, 
+    fgEventRegister( "fgEventPrintStats()", fgEventPrintStats,
 		     FG_EVENT_READY, 60000 );
 
     /* Initialize "time" */
@@ -257,48 +279,55 @@ void fgInitSubsystems( void ) {
     fgWeatherInit();
 
     /* update the weather for our current position */
-    fgEventRegister( "fgWeatherUpdate()", fgWeatherUpdate, 
+    fgEventRegister( "fgWeatherUpdate()", fgWeatherUpdate,
 		     FG_EVENT_READY, 120000 );
 
     /* Initialize the Cockpit subsystem */
-    if( fgCockpitInit( &current_aircraft ) == NULL ) {
+    if( fgCockpitInit( &current_aircraft )) {
+	// Cockpit initialized ok.
+    } else {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Cockpit initialization!\n" );
     }
 
-    /* Initialize the orbital elements of sun, moon and mayor planets */
+    // Initialize the orbital elements of sun, moon and mayor planets
     fgSolarSystemInit(*t);
 
-    /* Initialize the Stars subsystem */
-    fgStarsInit();
+    // Initialize the Stars subsystem
+    if( fgStarsInit() ) {
+	// Stars initialized ok.
+    } else {
+    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Stars initialization!\n" );
+    }
 
-    /* Initialize the planetary subsystem */
+    // Initialize the planetary subsystem
     fgEventRegister("fgPlanetsInit()", fgPlanetsInit, FG_EVENT_READY, 600000);
 
-    /* Initialize the sun's position */
-    fgEventRegister( "fgSunInit()", fgSunInit, FG_EVENT_READY, 60000 );
+    // Initialize the sun's position 
+    fgEventRegister("fgSunInit()", fgSunInit, FG_EVENT_READY, 60000 );
 
-    /* Intialize the moon's position */
+    // Intialize the moon's position
     fgEventRegister( "fgMoonInit()", fgMoonInit, FG_EVENT_READY, 600000 );
 
-    /* Initialize the "sky" */
+    // Initialize the "sky"
     fgSkyInit();
 
-    /* Initialize the Scenery Management subsystem */
-    fgTileMgrInit();
-    /* fgSceneryInit(); */
+    // Initialize the Scenery Management subsystem
+    if( fgTileMgrInit() ) {
+	// Load the local scenery data
+	fgTileMgrUpdate();
+    } else {
+    	fgPrintf( FG_GENERAL, FG_EXIT, 
+		  "Error in Tile Manager initialization!\n" );
+    }
 
-    /* Tell the Scenery Management system where we are so it can load
-     * the correct scenery data */
-    fgTileMgrUpdate();
-    /* fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude); */
+    // I'm just sticking this here for now, it should probably move
+    // eventually
+    // cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0,
+    //           FG_Latitude  * RAD_TO_DEG * 3600.0); */
+    // fgPrintf( FG_GENERAL, FG_INFO,
+    //   "True ground elevation is %.2f meters here.\n",
+    //   cur_elev); */
 
-    /* I'm just sticking this here for now, it should probably move 
-     * eventually */
-    /* cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
-			     FG_Latitude  * RAD_TO_DEG * 3600.0); */
-    /* fgPrintf( FG_GENERAL, FG_INFO, 
-       "True ground elevation is %.2f meters here.\n",
-       cur_elev); */
     cur_elev = FG_Runway_altitude * FEET_TO_METER;
     if ( cur_elev > -9990.0 ) {
 	FG_Runway_altitude = cur_elev * METER_TO_FEET;
@@ -307,36 +336,49 @@ void fgInitSubsystems( void ) {
     if ( FG_Altitude < FG_Runway_altitude ) {
 	FG_Altitude = FG_Runway_altitude + 3.758099;
     }
-    fgPrintf(FG_GENERAL, FG_INFO,
-	   "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n", 
-	   FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG, 
-	   FG_Altitude * FEET_TO_METER);
-    /* end of thing that I just stuck in that I should probably move */
 
+    fgPrintf(FG_GENERAL, FG_INFO,
+	     "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
+	     FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
+	     FG_Altitude * FEET_TO_METER);
+
+    /* end of thing that I just stuck in that I should probably move */
+		
     /* Initialize the flight model subsystem data structures base on
      * above values */
+
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
-    /* To HUD or not to HUD */
-    show_hud = 0;
+    // To HUD or not to HUD  - Now a command line issue
+    //              show_hud = 0;
 
-    /* Let's show the instrument panel */
+    // Let's not show the instrument panel
     displayInstruments = 0;
 
-    /* Joystick support */
-    fgJoystickInit( 0 );
+    // Joystick support
+    if (fgJoystickInit(0) ) {
+	// Joystick initialized ok.
+    } else {
+    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Joystick initialization!\n" );
+    }
 
-    /* One more try here to get the sky synced up */
+    // One more try here to get the sky synced up
     fgSkyColorsInit();
+    ret_val = 0;
 
     fgPrintf(FG_GENERAL, FG_INFO,"\n");
+    return ret_val;
 }
 
 
 /* $Log$
-/* Revision 1.43  1998/02/11 02:50:40  curt
-/* Minor changes.
+/* Revision 1.44  1998/02/12 21:59:50  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.43  1998/02/11 02:50:40  curt
+ * Minor changes.
+ *
  * Revision 1.42  1998/02/09 22:56:58  curt
  * Removed "depend" files from cvs control.  Other minor make tweaks.
  *

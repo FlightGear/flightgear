@@ -33,7 +33,7 @@
 #define FG_MIN_STAR_MAG 0.738750 /* magnitude of weakest star we'll display */
 
 /* Initialize the Star Management Subsystem */
-void fgStarsInit( void );
+int fgStarsInit( void );
 
 /* Draw the Stars */
 void fgStarsRender( void );
@@ -44,9 +44,13 @@ extern struct fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:28  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.4  1998/02/12 21:59:39  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.3  1998/01/22 02:59:28  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/19 18:40:18  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

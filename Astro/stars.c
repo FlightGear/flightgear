@@ -56,7 +56,7 @@
 
 
 /* Initialize the Star Management Subsystem */
-void fgStarsInit( void ) {
+int fgStarsInit( void ) {
     FILE *fd;
     struct fgGENERAL *g;
     /* struct CelestialCoord pltPos; */
@@ -81,15 +81,15 @@ void fgStarsInit( void ) {
     max_stars = FG_MAX_STARS;
 
     for ( i = 0; i < FG_STAR_LEVELS; i++ ) {
-	fgPrintf( FG_ASTRO, FG_INFO, 
+	fgPrintf( FG_ASTRO, FG_INFO,
 		  "  Loading %d Stars: %s\n", max_stars, path);
 
 	if ( (fd = fopen(path, "r")) == NULL ) {
-	    fgPrintf( FG_ASTRO, FG_ALERT, 
+	    fgPrintf( FG_ASTRO, FG_ALERT,
 		      "Cannot open star file: '%s'\n", path);
-	    return;
+	    return 0; // Oops, lets not even try to continue. This is critical.
 	}
-	
+
 	stars[i] = xglGenLists(1);
 	xglNewList( stars[i], GL_COMPILE );
 	xglBegin( GL_POINTS );
@@ -114,7 +114,7 @@ void fgStarsInit( void ) {
 		/* blank line */
 	    } else {
 		/* star data line */
-		
+
 		/* get name */
 		end = front;
 		while ( end[0] != ',' ) {
@@ -125,24 +125,24 @@ void fgStarsInit( void ) {
 		front = end;
 		front++;
 
-		sscanf(front, "%lf,%lf,%lf\n", 
+		sscanf(front, "%lf,%lf,%lf\n",
 		       &right_ascension, &declination, &magnitude);
 
 		/*
-		if ( strcmp(name, "Betelgeuse") == 0 ) {
-		    printf("  *** Marking %s\n", name);
-		    ra_save = right_ascension;
-		    decl_save = declination;
-		}
-		*/
+		  if ( strcmp(name, "Betelgeuse") == 0 ) {
+		  printf("  *** Marking %s\n", name);
+		  ra_save = right_ascension;
+		  decl_save = declination;
+		  }
+		  */
 
 		/*
-		if ( strcmp(name, "Alnilam") == 0 ) {
-		    printf("  *** Marking %s\n", name);
-		    ra_save1 = right_ascension;
-		    decl_save1 = declination;
-		}
-		*/
+		  if ( strcmp(name, "Alnilam") == 0 ) {
+		  printf("  *** Marking %s\n", name);
+		  ra_save1 = right_ascension;
+		  decl_save1 = declination;
+		  }
+		  */
 
 		/* scale magnitudes to (0.0 - 1.0) */
 		magnitude = (0.0 - magnitude) / 5.0 + 1.0;
@@ -150,19 +150,19 @@ void fgStarsInit( void ) {
 		/* scale magnitudes again so they look ok */
 		if ( magnitude > 1.0 ) { magnitude = 1.0; }
 		if ( magnitude < 0.0 ) { magnitude = 0.0; }
-		magnitude = 
+		magnitude =
 		    magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1);
 		/* printf("  Found star: %d %s, %.3f %.3f %.3f\n", count,
-		       name, right_ascension, declination, magnitude); */
+		   name, right_ascension, declination, magnitude); */
 
 		xglColor3f( magnitude, magnitude, magnitude );
 		/*xglColor3f(0,0,0);*/
 		xglVertex3f( 50000.0 * cos(right_ascension) * cos(declination),
 			     50000.0 * sin(right_ascension) * cos(declination),
 			     50000.0 * sin(declination) );
-		
+
 		count++;
-	    } /* if valid line */
+	    } //  valid line
 
 	} /* while */
 
@@ -205,11 +205,13 @@ void fgStarsInit( void ) {
 		    50000.0 * sin(decl_save1+0.2) );
 	xglEnd();
 	*/
-       
+
 	xglEndList();
 
 	max_stars /= 2;
     }
+
+    return 1;  // OK, we got here because initialization worked.
 }
 
 
@@ -253,9 +255,13 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/02/09 15:07:48  curt
-/* Minor tweaks.
+/* Revision 1.8  1998/02/12 21:59:38  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.7  1998/02/09 15:07:48  curt
+ * Minor tweaks.
+ *
  * Revision 1.6  1998/02/02 20:53:23  curt
  * To version 0.29
  *

@@ -53,8 +53,9 @@ int tiles[FG_LOCAL_X_Y];
 
 
 /* Initialize the Tile Manager subsystem */
-void fgTileMgrInit( void ) {
+int fgTileMgrInit( void ) {
     fgPrintf( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem.\n");
+    return 1;
 }
 
 
@@ -75,7 +76,7 @@ void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
 
 /* given the current lon/lat, fill in the array of local chunks.  If
  * the chunk isn't already in the cache, then read it from disk. */
-void fgTileMgrUpdate( void ) {
+int fgTileMgrUpdate( void ) {
     fgFLIGHT *f;
     struct fgBUCKET p1, p2;
     static struct fgBUCKET p_last = {-1000, 0, 0, 0};
@@ -87,7 +88,7 @@ void fgTileMgrUpdate( void ) {
     dw = FG_LOCAL_X / 2;
     dh = FG_LOCAL_Y / 2;
 
-    if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) && 
+    if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) &&
 	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
 	/* same bucket as last time */
 	fgPrintf( FG_TERRAIN, FG_DEBUG, "Same bucket as last time\n");
@@ -96,8 +97,8 @@ void fgTileMgrUpdate( void ) {
          * relavant tiles */
 
 	fgPrintf( FG_TERRAIN, FG_DEBUG, "First time through ... \n");
-	fgPrintf( FG_TERRAIN, FG_DEBUG, "Updating Tile list for %d,%d %d,%d\n", 
-	       p1.lon, p1.lat, p1.x, p1.y);
+	fgPrintf( FG_TERRAIN, FG_DEBUG, "Updating Tile list for %d,%d %d,%d\n",
+		  p1.lon, p1.lat, p1.x, p1.y);
 
 	/* wipe tile cache */
 	fgTileCacheInit();
@@ -117,7 +118,7 @@ void fgTileMgrUpdate( void ) {
            AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
            THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION. */
 
-	if ( (p1.lon > p_last.lon) || 
+	if ( (p1.lon > p_last.lon) ||
 	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
 	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
 		/* scrolling East */
@@ -128,7 +129,7 @@ void fgTileMgrUpdate( void ) {
 		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
 		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + FG_LOCAL_X - 1]);
 	    }
-	} else if ( (p1.lon < p_last.lon) || 
+	} else if ( (p1.lon < p_last.lon) ||
 		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
 	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
 		/* scrolling West */
@@ -141,20 +142,19 @@ void fgTileMgrUpdate( void ) {
 	    }
 	}
 
-	if ( (p1.lat > p_last.lat) || 
+	if ( (p1.lat > p_last.lat) ||
 	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
 	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
 		/* scrolling North */
 		for ( j = 0; j < FG_LOCAL_Y - 1; j++ ) {
-		    tiles[(j * FG_LOCAL_Y) + i] = 
+		    tiles[(j * FG_LOCAL_Y) + i] =
 			tiles[((j+1) * FG_LOCAL_Y) + i];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
-		fgTileMgrLoadTile(&p2, 
-		    &tiles[((FG_LOCAL_Y-1)*FG_LOCAL_Y) + i]);
+		fgTileMgrLoadTile(&p2, &tiles[((FG_LOCAL_Y-1)*FG_LOCAL_Y) + i]);
 	    }
-	} else if ( (p1.lat < p_last.lat) || 
+	} else if ( (p1.lat < p_last.lat) ||
 		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
 	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
 		/* scrolling South */
@@ -166,12 +166,13 @@ void fgTileMgrUpdate( void ) {
 		fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
 		fgTileMgrLoadTile(&p2, &tiles[0 + i]);
 	    }
-	} 
+	}
     }
     p_last.lon = p1.lon;
     p_last.lat = p1.lat;
     p_last.x = p1.x;
     p_last.y = p1.y;
+    return 1;
 }
 
 
@@ -224,8 +225,9 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.15  1998/02/11 02:50:44  curt
-/* Minor changes.
+/* Revision 1.16  1998/02/12 21:59:53  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
  * Revision 1.14  1998/02/09 21:30:19  curt
  * Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.

@@ -32,11 +32,14 @@
 #include <XGL/xgl.h>
 #include <stdio.h>
 
+#include <getopt.h>
 #include <Main/GLUTkey.h>
 #include <Main/fg_init.h>
 #include <Main/fg_debug.h>
+#include <Main/fg_getopt.h>
 #include <Main/views.h>
 
+#include <Include/cmdargs.h>       // Line to command line arguments
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 
@@ -82,21 +85,114 @@ int show_hud;
 /* Yet another other hack. Used for my prototype instrument code. (Durk) */
 int displayInstruments; 
 
+// The following defines flight gear options. Because glutlib will also
+// want to parse its own options, those options must not be included here
+// or they will get parsed by the main program option parser. Hence case
+// is significant for any option added that might be in conflict with
+// glutlib's parser.
+//
+// glutlib parses for:
+//    -display
+//    -direct   (invalid in Win32)
+//    -geometry
+//    -gldebug
+//    -iconized
+//    -indirect (invalid in Win32)
+//    -synce
+//
+// Note that glutlib depends upon strings while this program's
+// option parser wants only initial characters followed by numbers
+// or pathnames.
+//
+const char *fg_cmdargopts = "a:c:Hhp:r:v:x:?";
+//
+// Where
+//   -a aircraftfilename    aircraft start over ride
+//   -c0x0000 - 0xffffffff  debug class setting
+//    H,h.? help on command line use (does not need Option struct)
+//   -p  priority
+//   -r flightgear          root path to program support files
+//   -v0 -v1                initial view mode (hud/no_hud currently)
+//   -xlogpathname          debug logfile name
+//
+// Defaults in arguments to indicate not set on command line.
+// Program defaults set variables from constants if neither command
+// options or environmental variables effect values.
+//
 
+char  acArgbuf          [ MAXPATH + 1] = "\0";
+int   debugArgValue                    = -2;
+int   priorityArgValue                 = -1;
+char  rootArgbuf        [ MAXPATH + 1] = "\0";
+int   viewArg                          = -1;
+char  logArgbuf         [ MAXPATH + 1] = "\0";
+
+// There is a reason for defining the option structs by name and then
+// creating an array of pointers to options. C++ is unfriendly to
+// initializing arrays of objects that are not built in types. Always
+// look forward. (Besides, you can follow what is going on better and
+// add or modify with greater security. -ch
+//
+Option aircraftOption = { 'a',
+                          OPT_STRING,
+                          acArgbuf,
+                          "Startup aircraft pathname override"
+                        };
+Option debugOption    = { 'c',
+                          OPT_LHEX,       // Long int (32 bits)
+                          &debugArgValue,
+                          "Debug trace level"
+                        };
+Option priorityOption = { 'p',
+                          OPT_INTEGER,
+                          &priorityArgValue,
+                          "Debug priority Threshold"
+                        };
+Option rootOption     = { 'r',
+                          OPT_STRING,
+                          rootArgbuf,
+                          "Root directory for execution"
+                        };
+Option hudOption      = { 'v',
+                          OPT_SWITCH,
+                          &viewArg,
+                          "View mode start" // HUD,Panel,Chase,Tower
+                        };
+Option logfileOption  = { 'x',
+                          OPT_STRING,
+                          logArgbuf,
+                          "Debug log file name"
+                        };
+
+//
+#define OptsDefined 6
+Option *CmdLineOptions[ OptsDefined ] = {
+  &aircraftOption,
+  &debugOption,
+  &hudOption,
+  &priorityOption,
+  &rootOption,
+  &logfileOption
+  };
+
+const char *DefaultRootDir  = "\\Flightgear";
+const char *DefaultAircraft = "Navion.acf";
+const char *DefaultDebuglog = "fgdebug.log";
+const int   DefaultViewMode = HUD_VIEW;
+//
+// Debug defaults handled in fg_debug.c
+//
 /**************************************************************************
  * fgInitVisuals() -- Initialize various GL/view parameters
  **************************************************************************/
 
 static void fgInitVisuals( void ) {
     struct fgLIGHT *l;
-    struct fgTIME *t;
     struct fgWEATHER *w;
 
     l = &cur_light_params;
-    t = &cur_time_params;
     w = &current_weather;
 
-    
     /* xglDisable( GL_DITHER ); */
 
     /* If enabled, normal vectors specified with glNormal are scaled
@@ -125,12 +221,12 @@ static void fgInitVisuals( void ) {
 static void fgUpdateViewParams( void ) {
     fgFLIGHT *f;
     struct fgLIGHT *l;
-    struct fgTIME *t;
+//  struct fgTIME *t;
     struct fgVIEW *v;
 
     f = current_aircraft.flight;
     l = &cur_light_params;
-    t = &cur_time_params;
+//  t = &cur_time_params;
     v = &current_view;
 
     fgViewUpdate(f, v, l);
@@ -138,7 +234,7 @@ static void fgUpdateViewParams( void ) {
     if (displayInstruments)
       {
 	xglViewport(0, (GLint)(winHeight / 2 ) , (GLint)winWidth, (GLint)winHeight / 2);
-	/* Tell GL we are about to modify the projection parameters */    
+	/* Tell GL we are about to modify the projection parameters */
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
 	gluPerspective(55.0, 2.0/win_ratio, 1.0, 100000.0);
@@ -195,7 +291,7 @@ static void fgUpdateInstrViewParams( void ) {
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
-    
+
     xglColor3f(1.0, 1.0, 1.0);
     xglIndexi(7);
   
@@ -306,9 +402,7 @@ static void fgRenderFrame( void ) {
 	fgUpdateInstrViewParams();
     }
 
-    #ifdef GLUT
-      xglutSwapBuffers();
-    #endif
+    xglutSwapBuffers();
 }
 
 
@@ -575,84 +669,129 @@ static void fgReshape( int width, int height ) {
 
 int main( int argc, char *argv[] ) {
     fgFLIGHT *f;
+    int parse_result;  // Used in command line argument.
 
     f = current_aircraft.flight;
+    //  First things first... We must have startup options dealt with.
 
+    #ifndef VERSION
+    #define VERSION "src-32A"
+    #endif
     printf("Flight Gear:  Version %s\n\n", VERSION);
 
-    /**********************************************************************
+     /*********************************************************************
      * Initialize the Window/Graphics environment.
      **********************************************************************/
 
-    #ifdef GLUT
-      /* initialize GLUT */
-      xglutInit(&argc, argv);
+    /* initialize GLUT */
+    xglutInit(&argc, argv);
 
-      /* Define Display Parameters */
-      xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
+    /* Define Display Parameters */
+    xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
-      /* Define initial window size */
-      xglutInitWindowSize(640, 480);
+    /* Define initial window size */
+    xglutInitWindowSize(640, 480);
 
-      /* Initialize windows */
-      xglutCreateWindow("Flight Gear");
-    #endif
+    /* Initialize windows */
+    xglutCreateWindow("Flight Gear");
 
-    /* This is the general house keeping init routine */
-    fgInitGeneral();
+    // xglutInit above will extract all non-general program command line.
+    // We only need wory about our own.
 
-    /* This is the top level init routine which calls all the other
-     * subsystem initialization routines.  If you are adding a
-     * subsystem to flight gear, its initialization call should
-     * located in this routine.*/
-    fgInitSubsystems();
+    parse_result = getargs( argc, argv, OptsDefined, CmdLineOptions, NULL);
 
-    /* setup view parameters, only makes GL calls */
-    fgInitVisuals();
+    switch( parse_result ) {
+    case ALLDONE:
+	break;
 
-    if ( use_signals ) {
-	/* init timer routines, signals, etc.  Arrange for an alarm
-	   signal to be generated, etc. */
-	fgInitTimeDepCalcs();
+    case HELP:
+        print_desc( OptsDefined, CmdLineOptions );
+        exit(0);
+
+    case INVALID:
+    default:
+        printf( "Flight Gear: Command line invalid.");
+        exit(0);
     }
 
-   /**********************************************************************
-     * Initialize the Event Handlers.
-     **********************************************************************/
+    // Deal with the effects of options no set by manipulating the command
+    // line, or possibly set to invalid states.
 
-    #ifdef GLUT
-      /* call fgReshape() on window resizes */
-      xglutReshapeFunc( fgReshape );
+    if(( viewArg >= 0) && (viewArg < 1)) {
+	show_hud = viewArg; // For now view_mode TRUE - no HUD, else show_hud.
+    } else {
+	show_hud = DefaultViewMode;
+    }
 
-      /* call key() on keyboard event */
-      xglutKeyboardFunc( GLUTkey );
-      glutSpecialFunc( GLUTspecialkey );
+    // All other command line option responses are handled in the various
+    // initialization routines (or ignored if not implemented.
 
-      /* call fgMainLoop() whenever there is nothing else to do */
-      xglutIdleFunc( fgMainLoop );
+    // This is the general house keeping init routine. It initializes the
+    // debug trail scheme and then any other stuff.
 
-      /* draw the scene */
-      xglutDisplayFunc( fgRenderFrame );
+    if( !fgInitGeneral()) {
 
-      /* pass control off to the GLUT event handler */
-      glutMainLoop();
-    #endif
+	// This is the top level init routine which calls all the other
+	// subsystem initialization routines.  If you are adding a
+	// subsystem to flight gear, its initialization call should
+	// located in this routine.
+	if( !fgInitSubsystems()) {
 
+	    // setup view parameters, only makes GL calls
+	    fgInitVisuals();
+
+	    if ( use_signals ) {
+		/* init timer routines, signals, etc.  Arrange for an alarm
+		   signal to be generated, etc. */
+		fgInitTimeDepCalcs();
+	    }
+
+	    /**********************************************************
+	     * Initialize the GLUT Event Handlers.
+	     **********************************************************/
+
+	    // call fgReshape() on window resizes
+	    xglutReshapeFunc( fgReshape );
+
+	    // call key() on keyboard event
+	    xglutKeyboardFunc( GLUTkey );
+	    glutSpecialFunc( GLUTspecialkey );
+
+	    // call fgMainLoop() whenever there is
+	    // nothing else to do
+	    xglutIdleFunc( fgMainLoop );
+
+	    // draw the scene
+	    xglutDisplayFunc( fgRenderFrame );
+
+	    // pass control off to the GLUT event handler
+	    glutMainLoop();
+
+        }  // End if subsystems initialize ok
+    } // End if general initializations went ok
+
+    if( fg_DebugOutput ) {
+	fclose( fg_DebugOutput );
+    }
     return(0);
 }
 
 
 #ifdef __SUNPRO_CC
-    extern "C" {
-	void __eprintf( void ) {
-	}
+extern "C" {
+    void __eprintf( void ) {
     }
+}
 #endif
 
 /* $Log$
-/* Revision 1.60  1998/02/11 02:50:40  curt
-/* Minor changes.
+/* Revision 1.61  1998/02/12 21:59:46  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.60  1998/02/11 02:50:40  curt
+ * Minor changes.
+ *
  * Revision 1.59  1998/02/09 22:56:54  curt
  * Removed "depend" files from cvs control.  Other minor make tweaks.
  *

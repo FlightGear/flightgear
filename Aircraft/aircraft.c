@@ -39,7 +39,7 @@ fgAIRCRAFT current_aircraft;
 void fgAircraftInit( void ) {
     fgPrintf( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure\n" );
 
-    current_aircraft.flight = &cur_flight_params;
+    current_aircraft.flight   = &cur_flight_params;
     current_aircraft.controls = &cur_control_params;
 }
 
@@ -64,10 +64,14 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 /* $Log$
-/* Revision 1.16  1998/02/07 15:29:31  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+/* Revision 1.17  1998/02/12 21:59:31  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
 /* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.16  1998/02/07 15:29:31  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.15  1998/01/27 00:47:46  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

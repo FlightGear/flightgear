@@ -25,7 +25,7 @@
 
 TARGET = fg-$(FG_VERSION)
 
-CFILES = fg_init.c fg_debug.c views.c $(INTERFACE_FILES)
+CFILES = fg_debug.c fg_getopt.c fg_init.c views.c GLUTmain.c GLUTkey.c
 
 FGLIBS = -lAircraft -lAstro -lCockpit -lControls -lFlight \
 	-lJoystick -lLaRCsim -lSlew -lScenery -lTime -lWeather -lMath \
@@ -34,8 +34,7 @@ FGLIBS = -lAircraft -lAstro -lCockpit -lControls -lFlight \
 
 LCDEFS = -DGLUT
 LLDFLAGS =
-LDLIBS = $(FGLIBS) $(FG_DEBUG_LIBS) \
-	$(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm
+LDLIBS = $(FGLIBS) $(FG_DEBUG_LIBS) $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm
 
 include $(FG_ROOT_SRC)/commondefs
 
@@ -52,6 +51,10 @@ include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.48  1998/02/12 21:59:47  curt
+# Incorporated code changes contributed by Charlie Hotchkiss
+# <chotchkiss@namg.us.anritsu.com>
+#
 # Revision 1.47  1998/02/09 22:56:56  curt
 # Removed "depend" files from cvs control.  Other minor make tweaks.
 #

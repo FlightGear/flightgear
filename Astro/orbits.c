@@ -101,6 +101,8 @@ double fgCalcEccAnom(double M, double e)
 }
 
 
+// This function assumes that if the FILE ptr is valid that the contents
+// will be valid. Should we check the file for validity?
 
 void fgReadOrbElements(struct OrbElements *dest, FILE *src)
 {
@@ -119,49 +121,51 @@ void fgReadOrbElements(struct OrbElements *dest, FILE *src)
     }
     while (!(strlen(line)));
     sscanf(line, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
-    		&dest->NFirst, &dest->NSec,
-            &dest->iFirst, &dest->iSec,
-            &dest->wFirst, &dest->wSec,
-            &dest->aFirst, &dest->aSec,
-            &dest->eFirst, &dest->eSec,
-            &dest->MFirst, &dest->MSec);
+           &dest->NFirst, &dest->NSec,
+           &dest->iFirst, &dest->iSec,
+           &dest->wFirst, &dest->wSec,
+           &dest->aFirst, &dest->aSec,
+           &dest->eFirst, &dest->eSec,
+           &dest->MFirst, &dest->MSec);
 }
 
 
-void fgSolarSystemInit(struct fgTIME t)
+int fgSolarSystemInit(struct fgTIME t)
 {
-   struct fgGENERAL *g;
-   char path[80];
-   int i;
-   FILE *data;
+    struct fgGENERAL *g;
+    char path[80];
+    int i;
+    FILE *data;
+    int ret_val = 0;
 
-   fgPrintf( FG_ASTRO, FG_INFO, "Initializing solar system\n");
+    fgPrintf( FG_ASTRO, FG_INFO, "Initializing solar system\n");
 
    /* build the full path name to the orbital elements database file */
-   g = &general;
-   path[0] = '\0';
-   strcat(path, g->root_dir);
-   strcat(path, "/Scenery/");
-   strcat(path, "Planets.dat");
+    g = &general;
+    path[0] = '\0';
+    strcat(path, g->root_dir);
+    strcat(path, "/Scenery/");
+    strcat(path, "Planets.dat");
 
-   if ( (data = fopen(path, "r")) == NULL )
-   {
-	    fgPrintf( FG_ASTRO, FG_ALERT, 
+    if ( (data = fopen(path, "r")) == NULL )
+    {
+	    fgPrintf( FG_ASTRO, FG_ALERT,
 		      "Cannot open data file: '%s'\n", path);
-	    return;
-   }
-   /* printf("  reading datafile %s\n", path); */
-   fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
+    } else {
+	/* printf("  reading datafile %s\n", path); */
+	fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
 
-   /* for all the objects... */
-   for (i = 0; i < 9; i ++)
-   {
-      /* ...read from the data file ... */
-      fgReadOrbElements(&pltOrbElements[i], data);
-      /* ...and calculate the actual values */
-      fgSolarSystemUpdate(&pltOrbElements[i], t);
-   }
-
+	/* for all the objects... */
+	for (i = 0; i < 9; i ++)
+	    {
+		/* ...read from the data file ... */
+		fgReadOrbElements(&pltOrbElements[i], data);
+		/* ...and calculate the actual values */
+		fgSolarSystemUpdate(&pltOrbElements[i], t);
+	    }
+	ret_val = 1;
+    }
+    return ret_val;
 }
 
 
@@ -183,12 +187,16 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.6  1998/02/03 23:20:11  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.7  1998/02/12 21:59:33  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.6  1998/02/03 23:20:11  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.5  1998/02/02 20:53:22  curt
  * To version 0.29
  *

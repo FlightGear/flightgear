@@ -114,8 +114,9 @@ void fgSunInit( void ) {
 
     fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
     sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
-    fgPrintf( FG_ASTRO, FG_INFO, 
-	      "Sun found at %f (ra), %f (dec)\n", 
+
+    fgPrintf( FG_ASTRO, FG_INFO,
+	      "Sun found at %f (ra), %f (dec)\n",
 	      sunPos.RightAscension, sunPos.Declination);
 
     xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
@@ -155,12 +156,12 @@ void fgSunInit( void ) {
     if (amb[1] > 1.0) amb[1] = 1.0;
     if (amb[2] > 1.0) amb[2] = 1.0;
 
-    fgPrintf( FG_ASTRO, FG_DEBUG, 
-	    "Color of the sun: %f, %f, %f\n"
-	    "Ambient value   : %f\n"
-	    "Sun Angle       : %f\n" , 
-	    amb[0], amb[1], amb[2], ambient, l->sun_angle);
-    
+    fgPrintf( FG_ASTRO, FG_DEBUG,
+              "Color of the sun: %f, %f, %f\n"
+              "Ambient value   : %f\n"
+              "Sun Angle       : %f\n" ,
+              amb[0], amb[1], amb[2], ambient, l->sun_angle);
+
     /* set lighting parameters */
     /*xglLightfv(GL_LIGHT0, GL_AMBIENT, color );
       xglLightfv(GL_LIGHT0, GL_DIFFUSE, color );
@@ -195,9 +196,13 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/02/02 20:53:24  curt
-/* To version 0.29
+/* Revision 1.6  1998/02/12 21:59:39  curt
+/* Incorporated code changes contributed by Charlie Hotchkiss
+/* <chotchkiss@namg.us.anritsu.com>
 /*
+ * Revision 1.5  1998/02/02 20:53:24  curt
+ * To version 0.29
+ *
  * Revision 1.4  1998/01/27 00:47:50  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.
