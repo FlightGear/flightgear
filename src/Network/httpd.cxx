@@ -100,6 +100,7 @@ void HttpdChannel::foundTerminator (void) {
         unsigned int pos = rest.find( " " );
         if ( pos != string::npos ) {
             request = rest.substr( 0, pos );
+            request = urlDecode(request);
         } else {
             request = "/";
         }
@@ -176,6 +177,11 @@ void HttpdChannel::foundTerminator (void) {
             for (int i = 0; i < node->nChildren(); i++) {
                 SGPropertyNode *child = node->getChild(i);
                 string name = child->getName();
+                if ( node->getChild(name, 1) ) {
+                    char buf[16];
+                    sprintf(buf, "[%d]", child->getIndex());
+                    name += buf;
+                }
                 string line = "";
                 if ( child->nChildren() > 0 ) {
                     line += "<B><A HREF=\"";
@@ -183,7 +189,7 @@ void HttpdChannel::foundTerminator (void) {
                     if ( request.substr(request.length() - 1, 1) != (string)"/" ) {
                         line += "/";
                     }
-                    line += name;
+                    line += urlEncode(name);
                     line += "\">";
                     line += name;
                     line += "</A></B>";
@@ -197,7 +203,7 @@ void HttpdChannel::foundTerminator (void) {
                     if ( request.substr(request.length() - 1, 1) != (string)"/" ) {
                         line += "/";
                     }
-                    line += name;
+                    line += urlEncode(name);
                     line += "\">(";
                     line += value;
                     line += ")</A><BR>";
@@ -210,12 +216,12 @@ void HttpdChannel::foundTerminator (void) {
             string value = node->getStringValue();
             
             response += "<form method=\"GET\" action=\"";
-            response += request;
+            response += urlEncode(request);
             response += "\">";
             response += "<B>";
             response += request;
             response += "</B> = ";
-            response += "<input type=text name=value size=\"5\" value=\"";
+            response += "<input type=text name=value size=\"15\" value=\"";
             response += value;
             response += "\" maxlength=2047>";
             response += "<input type=submit value=\"update\" name=\"submit\">";
@@ -248,4 +254,46 @@ void HttpdChannel::foundTerminator (void) {
     }
 
     buffer.remove();
+}
+
+
+// encode everything but "a-zA-Z0-9_.-/"
+string HttpdChannel::urlEncode(string s) {
+    string r = "";
+    
+    for ( int i = 0; i < (int)s.length(); i++ ) {
+        if ( isalnum(s[i]) || s[i] == '_' || s[i] == '.'
+                || s[i] == '-' || s[i] == '/' ) {
+            r += s[i];
+        } else {
+            char buf[16];
+            sprintf(buf, "%%%02X", (unsigned char)s[i]);
+            r += buf;
+        }
+    }
+    return r;
+}
+
+
+string HttpdChannel::urlDecode(string s) {
+    string r = "";
+    int max = s.length();
+    int a, b;
+
+    for ( int i = 0; i < max; i++ ) {
+        if ( s[i] == '+' ) {
+            r += ' ';
+        } else if ( s[i] == '%' && i + 2 < max
+                && isxdigit(s[i + 1])
+                && isxdigit(s[i + 2]) ) {
+            i++;
+            a = isdigit(s[i]) ? s[i] - '0' : toupper(s[i]) - 'A' + 10;
+            i++;
+            b = isdigit(s[i]) ? s[i] - '0' : toupper(s[i]) - 'A' + 10;
+            r += (char)(a * 16 + b);
+        } else {
+            r += s[i];
+        }
+    }
+    return r;
 }

@@ -45,6 +45,9 @@ class HttpdChannel : public netChat
 
     netBuffer buffer ;
 
+    string urlEncode(string);
+    string urlDecode(string);
+
 public:
 
     HttpdChannel() : buffer(512) { setTerminator("\r\n"); }
