@@ -304,12 +304,16 @@ void fgCockpitUpdate( void ) {
 
     if ( current_options.get_panel_status() && 
 	 (fabs(pview->view_offset) < 0.2) ) {
+	xglViewport(0, 0, pview->winWidth, pview->winHeight);
 	fgPanelUpdate();
     }
 }
 
 
 // $Log$
+// Revision 1.23  1998/11/09 23:38:50  curt
+// Panel updates from Friedemann.
+//
 // Revision 1.22  1998/11/06 21:17:45  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

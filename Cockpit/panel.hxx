@@ -31,6 +31,17 @@
 #endif                                   
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+
+
 typedef struct {
     unsigned short imagic;
     unsigned short type;
@@ -58,23 +69,30 @@ typedef struct {
     GLfloat vertices[20];
 } Pointer;
 
+
 void fgPanelInit( void);
-void fgPanelReInit( void);
+void fgPanelReInit( int x, int y, int finx, int finy );
 void fgPanelUpdate( void);
 void horizont( void);
 void CreatePointer(Pointer *pointer);
 float UpdatePointer(Pointer pointer);
 void ErasePointer(Pointer pointer);
-void DrawBox(float x1, float y1, float x2, float y2);
+
+void PrintMatrix( void);
+
+extern int panel_hist;
 
 #endif /* _PANEL_HXX */
 
 
 /* $Log$
-/* Revision 1.2  1998/08/28 18:14:41  curt
-/* Added new cockpit code from Friedemann Reinhard
-/* <mpt218@faupt212.physik.uni-erlangen.de>
+/* Revision 1.3  1998/11/09 23:38:54  curt
+/* Panel updates from Friedemann.
 /*
+ * Revision 1.2  1998/08/28 18:14:41  curt
+ * Added new cockpit code from Friedemann Reinhard
+ * <mpt218@faupt212.physik.uni-erlangen.de>
+ *
  * Revision 1.1  1998/06/27 16:47:55  curt
  * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
  * first pass at an isntrument panel.
