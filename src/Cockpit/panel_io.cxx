@@ -365,9 +365,10 @@ readTextChunk (const SGPropertyNode * node)
   else if (type == "number-value") {
     string propName = node->getStringValue("property");
     float scale = node->getFloatValue("scale", 1.0);
+    float offset = node->getFloatValue("offset", 0.0);
     SGPropertyNode * target = fgGetNode(propName.c_str(), true);
     chunk = new FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE, target,
-				   format, scale);
+				   format, scale, offset);
   }
 
 				// Unknown type.

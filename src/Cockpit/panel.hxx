@@ -492,7 +492,7 @@ public:
   public:
     Chunk (const string &text, const string &fmt = "%s");
     Chunk (ChunkType type, const SGPropertyNode * node,
-	   const string &fmt = "", float mult = 1.0);
+	   const string &fmt = "", float mult = 1.0, float offs = 0.0);
 
     const char * getValue () const;
   private:
@@ -501,6 +501,7 @@ public:
     const SGPropertyNode * _node;
     string _fmt;
     float _mult;
+    float _offs;
     mutable char _buf[1024];
   };
 
