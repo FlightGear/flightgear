@@ -151,7 +151,7 @@ read_interpolation_table (const SGPropertyNode * props)
   if (table_node != 0) {
     SGInterpTable * table = new SGInterpTable();
     vector<SGPropertyNode_ptr> entries = table_node->getChildren("entry");
-    for (int i = 0; i < entries.size(); i++)
+    for (unsigned int i = 0; i < entries.size(); i++)
       table->addEntry(entries[i]->getDoubleValue("ind", 0.0),
 		      entries[i]->getDoubleValue("dep", 0.0));
     return table;
@@ -176,7 +176,7 @@ FG3DModel::~FG3DModel ()
   // since the nodes are attached to the scene graph, they'll be
   // deleted automatically
 
-  int i;
+  unsigned int i;
   for (i = 0; i < _animations.size(); i++)
     delete _animations[i];
 }
