@@ -500,6 +500,11 @@ void fgPropPicker::find_props ()
             ++pi;
   }
 
+  // truncate entries to 80 characters (plib pui limit)
+  for (i = 0; i < num_files; i++) {
+    if (strlen(files[i]) > 80) files[i][79] = '\0';
+  }
+
   files [ num_files ] = NULL ;
 
   // leave the . and .. alone...
@@ -607,3 +612,4 @@ fgPropEdit::fgPropEdit ( char *name, char *value, char *proppath ) : puDialogBox
         
     FG_FINALIZE_PUI_DIALOG( this );
 }
+
