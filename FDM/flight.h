@@ -387,6 +387,9 @@ typedef struct {
 #define FG_Y_pilot_rwy             f->d_pilot_rwy_rwy_v[1]
 #define FG_H_pilot_rwy             f->d_pilot_rwy_rwy_v[2]
 
+    double        climb_rate;           /* in feet per second */
+#define FG_Climb_Rate              f->climb_rate
+
 } fgFLIGHT, *pfgFlight;
 
 
@@ -414,9 +417,12 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
 
 
 /* $Log$
-/* Revision 1.18  1998/07/30 23:44:36  curt
-/* Beginning to add support for multiple flight models.
+/* Revision 1.19  1998/09/29 02:02:41  curt
+/* Added a rate of climb calculation.
 /*
+ * Revision 1.18  1998/07/30 23:44:36  curt
+ * Beginning to add support for multiple flight models.
+ *
  * Revision 1.17  1998/07/12 03:08:28  curt
  * Added fgFlightModelSetAltitude() to force the altitude to something
  * other than the current altitude.  LaRCsim doesn't let you do this by just

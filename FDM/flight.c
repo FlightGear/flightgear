@@ -73,9 +73,12 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
 
 /* Run multiloop iterations of the flight model */
 int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
+    double time_step, start_elev, end_elev;
     int result;
-
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
+
+    time_step = (1.0 / DEFAULT_MODEL_HZ) * multiloop;
+    start_elev = FG_Altitude;
 
     if ( model == FG_SLEW ) {
 	// fgSlewUpdate(f, multiloop);
@@ -85,6 +88,10 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 	fgPrintf( FG_FLIGHT, FG_WARN,
 		  "Unimplemented flight model == %d\n", model );
     }
+
+    end_elev = FG_Altitude;
+
+    FG_Climb_Rate = (end_elev - start_elev) / time_step;  /* feet per second */
 
     result = 1;
 
@@ -113,9 +120,12 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
 
 
 /* $Log$
-/* Revision 1.17  1998/08/24 20:09:07  curt
-/* .
+/* Revision 1.18  1998/09/29 02:02:40  curt
+/* Added a rate of climb calculation.
 /*
+ * Revision 1.17  1998/08/24 20:09:07  curt
+ * .
+ *
  * Revision 1.16  1998/08/22  14:49:55  curt
  * Attempting to iron out seg faults and crashes.
  * Did some shuffling to fix a initialization order problem between view
