@@ -224,7 +224,6 @@ bool fgInitSubsystems( void ) {
 
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
-    FGView *v = &current_view;
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
@@ -314,7 +313,7 @@ bool fgInitSubsystems( void ) {
 	    << (cur_fdm_state->get_Altitude() * FEET_TO_METER) << ")" );
 
     // We need to calculate a few more values here that would normally
-    // be calculated by the FDM so that the v->UpdateViewMath()
+    // be calculated by the FDM so that the current_view.UpdateViewMath()
     // routine doesn't get hosed.
 
     double sea_level_radius_meters;
@@ -372,12 +371,14 @@ bool fgInitSubsystems( void ) {
     t->update(*cur_fdm_state);
 
     // Initialize view parameters
-    FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
-    v->Init();
-    FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
-    v->UpdateViewMath(*cur_fdm_state);
-    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
-    // v->UpdateWorldToEye(f);
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Before current_view.init()");
+    current_view.Init();
+    pilot_view.Init();
+    FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
+    current_view.UpdateViewMath(*cur_fdm_state);
+    pilot_view.UpdateViewMath(*cur_fdm_state);
+    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << current_view.get_abs_view_pos());
+    // current_view.UpdateWorldToEye(f);
 
     // Build the solar system
     //fgSolarSystemInit(*t);
@@ -503,7 +504,6 @@ bool fgInitSubsystems( void ) {
 
 void fgReInitSubsystems( void )
 {
-    FGView *v = &current_view;
     FGTime *t = FGTime::cur_time_params;
     
     int toggle_pause = t->getPause();
@@ -572,15 +572,15 @@ void fgReInitSubsystems( void )
     cur_fdm_state->set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize view parameters
-    // FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
-    // v->Init();
-    v->set_view_offset( 0.0 );
-    v->set_goal_view_offset( 0.0 );
+    current_view.set_view_offset( 0.0 );
+    current_view.set_goal_view_offset( 0.0 );
+    pilot_view.set_view_offset( 0.0 );
+    pilot_view.set_goal_view_offset( 0.0 );
 
-    FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
-    v->UpdateViewMath(*cur_fdm_state);
-    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
-    // v->UpdateWorldToEye(f);
+    FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
+    current_view.UpdateViewMath(*cur_fdm_state);
+    pilot_view.UpdateViewMath(*cur_fdm_state);
+    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << current_view.get_abs_view_pos());
 
     // fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
     //            1.0 / current_options.get_model_hz() );

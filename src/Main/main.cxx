@@ -141,6 +141,9 @@ ssgBranch *terrain = NULL;
 ssgSelector *penguin_sel = NULL;
 ssgTransform *penguin_pos = NULL;
 
+// current fdm/position used for view
+FGInterface cur_view_fdm;
+
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
 {
@@ -251,7 +254,10 @@ static void fgRenderFrame( void ) {
 	// end of hack
 
 	// update view volume parameters
-	current_view.UpdateViewParams(*cur_fdm_state);
+	// cout << "before pilot_view update" << endl;
+	pilot_view.UpdateViewParams(*cur_fdm_state);
+	// cout << "after pilot_view update" << endl;
+	current_view.UpdateViewParams(cur_view_fdm);
 
 	// set the sun position
 	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
@@ -377,17 +383,9 @@ static void fgRenderFrame( void ) {
 	    ssgSetNearFar( 0.5f, 100000.0f );
 	}
 
-	// sgMat4 sgVIEW;
-	// while ( current_view.follow.size() > 25 ) {
-	//    current_view.follow.pop_front();
-	// }
-
 	if ( current_options.get_view_mode() == 
 	     fgOPTIONS::FG_VIEW_FIRST_PERSON )
         {
-	    // select current view matrix
-	    // sgCopyMat4( sgVIEW, current_view.sgVIEW );
-
 	    // disable TuX
 	    penguin_sel->select(0);
 	} else if ( current_options.get_view_mode() == 
@@ -402,9 +400,9 @@ static void fgRenderFrame( void ) {
 
 	    sgMat4 sgTRANS;
 	    sgMakeTransMat4( sgTRANS, 
-			     current_view.view_pos.x(),
-			     current_view.view_pos.y(),
-			     current_view.view_pos.z() );
+			     pilot_view.view_pos.x(),
+			     pilot_view.view_pos.y(),
+			     pilot_view.view_pos.z() );
 
 	    sgVec3 ownship_up;
 	    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
@@ -414,7 +412,7 @@ static void fgRenderFrame( void ) {
 
 	    sgMat4 sgTMP;
 	    sgMat4 sgTUX;
-	    sgMultMat4( sgTMP, sgROT, current_view.VIEW_ROT );
+	    sgMultMat4( sgTMP, sgROT, pilot_view.VIEW_ROT );
 	    sgMultMat4( sgTUX, sgTMP, sgTRANS );
 	
 	    sgCoord tuxpos;
@@ -472,8 +470,6 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	multi_loop = 1;
     }
 
-    // fdm_state = *cur_fdm_state;
-
     if ( !t->getPause() ) {
 	// run Autopilot system
 	fgAPRun();
@@ -490,18 +486,17 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	cur_fdm_state->update( 0 );
     }
 
-    /*
-    fdm_list.push_back( fdm_state );
-    while ( fdm_list.size() > 25 ) {
+    fdm_list.push_back( *cur_fdm_state );
+    while ( fdm_list.size() > 15 ) {
 	fdm_list.pop_front();
     }
 
     if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FIRST_PERSON ) {
-	*cur_fdm_state = fdm_state;
+	cur_view_fdm = *cur_fdm_state;
+	// do nothing
     } else if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW ) {
-	*cur_fdm_state = fdm_list.front();
+	cur_view_fdm = fdm_list.front();
     }
-    */
 
     // update the view angle
     for ( i = 0; i < multi_loop; i++ ) {
@@ -957,7 +952,7 @@ void fgReshape( int width, int height ) {
 	// the main loop, so this will now work without seg faulting
 	// the system.
 	solarSystemRebuild();
-	current_view.UpdateViewParams(*cur_fdm_state);
+	current_view.UpdateViewParams(cur_view_fdm);
 	if ( current_options.get_panel_status() ) {
 	    FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
 	}
