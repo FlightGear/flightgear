@@ -97,7 +97,7 @@ FGTileLoader::add( FGTileEntry* tile )
 	    tmp.set( globals->get_fg_scenery() );
 	} else {
 	    tmp.set( globals->get_fg_root() );
-	    tile_path.append( "Scenery" );
+            tmp.append( "Scenery" );
 	}
         tile_path = tmp.str();
 	beenhere = true;
