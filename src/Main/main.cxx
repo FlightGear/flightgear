@@ -113,6 +113,7 @@ sgVec3 rway_ols;
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
 
+static double real_delta_time_sec = 0.0;
 static double delta_time_sec = 0.0;
 
 glPointParameterfProc glPointParameterfPtr = 0;
@@ -963,10 +964,13 @@ static void fgMainLoop( void ) {
         current_time_stamp.stamp();
     }
 
-    delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
+    real_delta_time_sec
+        = double(current_time_stamp - last_time_stamp) / 1000000.0;
     if ( clock_freeze->getBoolValue() ) {
         delta_time_sec = 0;
-    } 
+    } else {
+        delta_time_sec = real_delta_time_sec;
+    }
     last_time_stamp = current_time_stamp;
     globals->inc_sim_time_sec( delta_time_sec );
     SGAnimation::set_sim_time_sec( globals->get_sim_time_sec() );
@@ -1136,7 +1140,7 @@ static void fgMainLoop( void ) {
     }
 
     // Do any I/O channel work that might need to be done
-    globals->get_io()->update( delta_time_sec );
+    globals->get_io()->update( real_delta_time_sec );
 
     // see if we need to load any deferred-load textures
     globals->get_matlib()->load_next_deferred();
