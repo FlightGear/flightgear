@@ -24,6 +24,7 @@
 #include <simgear/misc/commands.hxx>
 
 #include <Environment/environment_mgr.hxx>
+#include <Systems/system_mgr.hxx>
 
 #include "globals.hxx"
 #include "viewmgr.hxx"
@@ -49,6 +50,7 @@ FGGlobals::FGGlobals() :
     warp( 0 ),
     warp_delta( 0 ),
     logger(0),
+    systemmgr(new FGSystemMgr),
     props(new SGPropertyNode),
     initial_state(0),
     commands(new SGCommandMgr),

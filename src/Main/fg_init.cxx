@@ -108,6 +108,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Sound/fg_fx.hxx>
 #include <Sound/soundmgr.hxx>
+#include <Systems/system_mgr.hxx>
 #include <Time/FGEventMgr.hxx>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
@@ -1017,6 +1018,12 @@ bool fgInitSubsystems( void ) {
     globals->get_fx()->bind();
 
 #endif
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the aircraft systems.
+    ////////////////////////////////////////////////////////////////////
+    globals->get_systemmgr()->init();
+    globals->get_systemmgr()->bind();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the radio stack subsystem.

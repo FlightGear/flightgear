@@ -11,7 +11,7 @@ NETWORK_DIRS = Network
 endif
 
 SUBDIRS = \
-	Include \
+        Include \
         Aircraft \
         Airports \
         ATC \
@@ -20,13 +20,14 @@ SUBDIRS = \
         Controls \
         FDM \
         GUI \
-	Input \
+        Input \
         Model \
-	Navaids \
+        Navaids \
         $(NETWORK_DIRS) \
         Objects \
         Scenery \
-	Sound \
+        Sound \
+        Systems \
         Time \
         $(WEATHER_DIR) \
         Main

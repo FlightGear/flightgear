@@ -66,6 +66,8 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Airports/libAirports.a \
         $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \
+	$(top_builddir)/src/Systems/libSystems.a \
+	$(top_builddir)/src/Systems/Vacuum/libVacuum.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
 	$(top_builddir)/src/Input/libInput.a \

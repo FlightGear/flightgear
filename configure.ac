@@ -591,6 +591,8 @@ AC_CONFIG_FILES([ \
 	src/Objects/Makefile \
 	src/Scenery/Makefile \
 	src/Sound/Makefile \
+	src/Systems/Makefile \
+	src/Systems/Vacuum/Makefile \
 	src/Time/Makefile \
 	src/WeatherCM/Makefile \
 	tests/Makefile \
