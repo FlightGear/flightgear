@@ -190,7 +190,7 @@ bool fgInitGeneral( void ) {
 		<< "being defined." );
 	exit(-1);
     }
-    FG_LOG( FG_GENERAL, FG_INFO, "FG_ROOT = " << root << endl );
+    FG_LOG( FG_GENERAL, FG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
 
 #if defined(FX) && defined(XMESA)
     // initialize full screen flag

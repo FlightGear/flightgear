@@ -862,8 +862,8 @@ static void fgIdleFunction ( void ) {
 	    pitch_envelope.setStep  ( 0, 0.01, 0.6 );
 	    volume_envelope.setStep ( 0, 0.01, 0.6 );
 
-	    audio_sched -> addSampleEnvelope( s1, 0, 0, &
-					      pitch_envelope,
+	    audio_sched -> addSampleEnvelope( s1, 0, 0, 
+					      &pitch_envelope,
 					      SL_PITCH_ENVELOPE );
 	    audio_sched -> addSampleEnvelope( s1, 0, 1, 
 					      &volume_envelope,
