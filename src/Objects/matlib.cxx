@@ -129,10 +129,8 @@ bool FGMaterialLib::load( const string& mpath ) {
 		in >> m;
 
 		// build the ssgSimpleState
-		SGPath tmp_path( globals->get_fg_root() );
-		tmp_path.append( "Textures.high" );
-
-		SGPath tex_path = tmp_path;
+		SGPath tex_path( globals->get_fg_root() );
+		tex_path.append( "Textures.high" );
 		tex_path.append( m.get_texture_name() );
 		if ( ! local_file_exists(tex_path.str())
 		     || general.get_glMaxTexSize() < 512 ) {
