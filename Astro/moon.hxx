@@ -27,7 +27,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/fg_constants.h>
-#include <Include/general.h>
 #include <Main/views.hxx>
 #include <Time/fg_time.hxx>
 
