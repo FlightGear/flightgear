@@ -127,6 +127,8 @@ class FGRadioStack : public FGSubsystem
     bool nav2_on_btn;
     bool nav2_ident_btn;
 
+    string adf_ident;
+    string adf_trans_ident;
     bool adf_valid;
     bool adf_inrange;
     double adf_freq;
@@ -142,6 +144,8 @@ class FGRadioStack : public FGSubsystem
     double adf_x;
     double adf_y;
     double adf_z;
+    bool adf_on_btn;
+    bool adf_ident_btn;
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
     double adjustNavRange( double stationElev, double aircraftElev,
@@ -192,6 +196,8 @@ public:
     }
     inline void set_adf_alt_freq( double freq ) { adf_alt_freq = freq; }
     inline void set_adf_rotation( double rot ) { adf_rotation = rot; }
+    inline void set_adf_on_btn( bool val ) { adf_on_btn = val; }
+    inline void set_adf_ident_btn( bool val ) { adf_ident_btn = val; }
 
 
     // NAV1 Accessors
@@ -270,6 +276,8 @@ public:
     inline double get_adf_lon() const { return adf_lon; }
     inline double get_adf_lat() const { return adf_lat; }
     inline double get_adf_heading() const { return adf_heading; }
+    inline bool get_adf_on_btn() const { return adf_on_btn; }
+    inline bool get_adf_ident_btn() const { return adf_ident_btn; }
 };
 
 

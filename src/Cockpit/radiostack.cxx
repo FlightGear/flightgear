@@ -32,7 +32,11 @@
 #include "radiostack.hxx"
 
 static int nav1_play_count = 0;
+static int nav2_play_count = 0;
+static int adf_play_count = 0;
 static time_t nav1_last_time = 0;
+static time_t nav2_last_time = 0;
+static time_t adf_last_time = 0;
 
 
 FGRadioStack *current_radiostack;
@@ -179,6 +183,12 @@ FGRadioStack::bind ()
 	  &FGRadioStack::get_adf_alt_freq, &FGRadioStack::set_adf_alt_freq);
     fgTie("/radios/adf/rotation", this,
 	  &FGRadioStack::get_adf_rotation, &FGRadioStack::set_adf_rotation);
+    fgTie("/radios/adf/on", this,
+	  &FGRadioStack::get_adf_on_btn,
+	  &FGRadioStack::set_adf_on_btn);
+    fgTie("/radios/adf/ident", this,
+	  &FGRadioStack::get_adf_ident_btn,
+	  &FGRadioStack::set_adf_ident_btn);
 }
 
 void
@@ -215,6 +225,8 @@ FGRadioStack::unbind ()
     fgUntie("/radios/adf/frequencies/selected");
     fgUntie("/radios/adf/frequencies/standby");
     fgUntie("/radios/adf/rotation");
+    fgUntie("/radios/adf/on");
+    fgUntie("/radios/adf/ident");
 }
 
 
@@ -222,6 +234,9 @@ FGRadioStack::unbind ()
 double FGRadioStack::adjustNavRange( double stationElev, double aircraftElev,
 			      double nominalRange )
 {
+    // extend out actual usable range to be 1.3x the published safe range
+    const double usability_factor = 1.3;
+
     // assumptions we model the standard service volume, plus
     // ... rather than specifying a cylinder, we model a cone that
     // contains the cylinder.  Then we put an upside down cone on top
@@ -234,15 +249,17 @@ double FGRadioStack::adjustNavRange( double stationElev, double aircraftElev,
 
     if ( nominalRange < 25.0 + FG_EPSILON ) {
 	// Standard Terminal Service Volume
-	return term_tbl->interpolate( alt );
+	return term_tbl->interpolate( alt ) * usability_factor;
     } else if ( nominalRange < 50.0 + FG_EPSILON ) {
 	// Standard Low Altitude Service Volume
 	// table is based on range of 40, scale to actual range
-	return low_tbl->interpolate( alt ) * nominalRange / 40.0;
+	return low_tbl->interpolate( alt ) * nominalRange / 40.0
+	    * usability_factor;
     } else {
 	// Standard High Altitude Service Volume
 	// table is based on range of 130, scale to actual range
-	return high_tbl->interpolate( alt ) * nominalRange / 130.0;
+	return high_tbl->interpolate( alt ) * nominalRange / 130.0
+	    * usability_factor;
     }
 }
 
@@ -315,14 +332,14 @@ FGRadioStack::update()
 	    double offset = nav1_heading - nav1_radial;
 	    while ( offset < -180.0 ) { offset += 360.0; }
 	    while ( offset > 180.0 ) { offset -= 360.0; }
-	    cout << "ils offset = " << offset << endl;
+	    // cout << "ils offset = " << offset << endl;
 	    nav1_effective_range = adjustILSRange(nav1_elev, elev, offset,
 						  nav1_loc_dist * METER_TO_NM );
 	} else {
 	    nav1_effective_range = adjustNavRange(nav1_elev, elev, nav1_range);
 	}
-	cout << "nav1 range = " << nav1_effective_range
-	     << " (" << nav1_range << ")" << endl;
+	// cout << "nav1 range = " << nav1_effective_range
+	//      << " (" << nav1_range << ")" << endl;
 
 	if ( nav1_loc_dist < nav1_effective_range * NM_TO_METER ) {
 	    nav1_inrange = true;
@@ -403,14 +420,14 @@ FGRadioStack::update()
 	    double offset = nav2_heading - nav2_radial;
 	    while ( offset < -180.0 ) { offset += 360.0; }
 	    while ( offset > 180.0 ) { offset -= 360.0; }
-	    cout << "ils offset = " << offset << endl;
+	    // cout << "ils offset = " << offset << endl;
 	    nav2_effective_range = adjustILSRange(nav2_elev, elev, offset,
 						  nav2_loc_dist * METER_TO_NM );
 	} else {
 	    nav2_effective_range = adjustNavRange(nav2_elev, elev, nav2_range);
 	}
-	cout << "nav2 range = " << nav2_effective_range
-	     << " (" << nav2_range << ")" << endl;
+	// cout << "nav2 range = " << nav2_effective_range
+	//      << " (" << nav2_range << ")" << endl;
 
 	if ( nav2_loc_dist < nav2_effective_range * NM_TO_METER ) {
 	    nav2_inrange = true;
@@ -429,6 +446,35 @@ FGRadioStack::update()
 	nav2_inrange = false;
 	nav2_dme_dist = 0.0;
 	// cout << "not picking up vor. :-(" << endl;
+    }
+
+    if ( nav2_valid && nav2_inrange ) {
+	// play station ident via audio system if on + ident,
+	// otherwise turn it off
+	if ( nav2_on_btn && nav2_ident_btn ) {
+	    if ( nav2_last_time <
+		 globals->get_time_params()->get_cur_time() - 30 ) {
+		nav2_last_time = globals->get_time_params()->get_cur_time();
+		nav2_play_count = 0;
+	    }
+	    if ( nav2_play_count < 4 ) {
+		// play VOR ident
+		if ( !globals->get_soundmgr()->is_playing("nav2-vor-ident") ) {
+		    globals->get_soundmgr()->play_once( "nav2-vor-ident" );
+		    ++nav2_play_count;
+		}
+	    } else if ( nav2_play_count < 5 && nav2_has_dme ) {
+		// play DME ident
+		if ( !globals->get_soundmgr()->is_playing("nav2-vor-ident") &&
+		     !globals->get_soundmgr()->is_playing("nav2-dme-ident") ) {
+		    globals->get_soundmgr()->play_once( "nav2-dme-ident" );
+		    ++nav2_play_count;
+		}
+	    }
+	} else {
+	    globals->get_soundmgr()->stop( "nav2-vor-ident" );
+	    globals->get_soundmgr()->stop( "nav2-dme-ident" );
+	}
     }
 
     // adf
@@ -458,6 +504,27 @@ FGRadioStack::update()
     } else {
 	adf_inrange = false;
     }
+
+    if ( adf_valid && adf_inrange ) {
+	// play station ident via audio system if on + ident,
+	// otherwise turn it off
+	if ( adf_on_btn && adf_ident_btn ) {
+	    if ( adf_last_time <
+		 globals->get_time_params()->get_cur_time() - 30 ) {
+		adf_last_time = globals->get_time_params()->get_cur_time();
+		adf_play_count = 0;
+	    }
+	    if ( adf_play_count < 4 ) {
+		// play ADF ident
+		if ( !globals->get_soundmgr()->is_playing("adf-ident") ) {
+		    globals->get_soundmgr()->play_once( "adf-ident" );
+		    ++adf_play_count;
+		}
+	    }
+	} else {
+	    globals->get_soundmgr()->stop( "adf-ident" );
+	}
+    }
 }
 
 
@@ -474,15 +541,16 @@ void FGRadioStack::search()
 
     static string last_nav1_ident = "";
     static string last_nav2_ident = "";
+    static string last_adf_ident = "";
     static bool last_nav1_vor = false;
     static bool last_nav2_vor = false;
     if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
 	nav1_ident = ils.get_locident();
+	nav1_valid = true;
 	if ( last_nav1_ident != nav1_ident || last_nav1_vor ) {
 	    nav1_trans_ident = ils.get_trans_ident();
 	    last_nav1_ident = nav1_ident;
 	    last_nav1_vor = false;
-	    nav1_valid = true;
 	    nav1_loc = true;
 	    nav1_has_dme = ils.get_has_dme();
 	    nav1_has_gs = ils.get_has_gs();
@@ -530,20 +598,22 @@ void FGRadioStack::search()
 	    nav1_play_count = offset / 4;
 	    nav1_last_time = globals->get_time_params()->get_cur_time() -
 		offset;
-	    cout << "offset = " << offset << " play_count = " << nav1_play_count
-		 << " nav1_last_time = " << nav1_last_time << " current time = "
-		 << globals->get_time_params()->get_cur_time() << endl;
+	    // cout << "offset = " << offset << " play_count = "
+	    //      << nav1_play_count
+	    //      << " nav1_last_time = " << nav1_last_time
+	    //      << " current time = "
+	    //      << globals->get_time_params()->get_cur_time() << endl;
 
-	    cout << "Found an ils station in range" << endl;
-	    cout << " id = " << ils.get_locident() << endl;
+	    // cout << "Found an ils station in range" << endl;
+	    // cout << " id = " << ils.get_locident() << endl;
 	}
     } else if ( current_navlist->query( lon, lat, elev, nav1_freq, &nav ) ) {
 	nav1_ident = nav.get_ident();
+	nav1_valid = true;
 	if ( last_nav1_ident != nav1_ident || !last_nav1_vor ) {
 	    last_nav1_ident = nav1_ident;
 	    last_nav1_vor = true;
 	    nav1_trans_ident = nav.get_trans_ident();
-	    nav1_valid = true;
 	    nav1_loc = false;
 	    nav1_has_dme = nav.get_has_dme();
 	    nav1_has_gs = false;
@@ -578,30 +648,33 @@ void FGRadioStack::search()
 	    nav1_play_count = offset / 4;
 	    nav1_last_time = globals->get_time_params()->get_cur_time() -
 		offset;
-	    cout << "offset = " << offset << " play_count = " << nav1_play_count
-		 << " nav1_last_time = " << nav1_last_time << " current time = "
-		 << globals->get_time_params()->get_cur_time() << endl;
+	    // cout << "offset = " << offset << " play_count = "
+	    //      << nav1_play_count << " nav1_last_time = "
+	    //      << nav1_last_time << " current time = "
+	    //      << globals->get_time_params()->get_cur_time() << endl;
 
-	    cout << "Found a vor station in range" << endl;
-	    cout << " id = " << nav.get_ident() << endl;
+	    // cout << "Found a vor station in range" << endl;
+	    // cout << " id = " << nav.get_ident() << endl;
 	}
     } else {
 	nav1_valid = false;
 	nav1_ident = "";
 	nav1_radial = 0;
 	nav1_dme_dist = 0;
+	nav1_trans_ident = "";
+	last_nav1_ident = "";
 	globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	globals->get_soundmgr()->remove( "nav1-dme-ident" );
-	cout << "not picking up vor1. :-(" << endl;
+	// cout << "not picking up vor1. :-(" << endl;
     }
 
     if ( current_ilslist->query( lon, lat, elev, nav2_freq, &ils ) ) {
 	nav2_ident = ils.get_locident();
+	nav2_valid = true;
 	if ( last_nav2_ident != nav2_ident || last_nav2_vor ) {
 	    last_nav2_ident = nav2_ident;
 	    last_nav2_vor = false;
 	    nav2_trans_ident = ils.get_trans_ident();
-	    nav2_valid = true;
 	    nav2_loc = true;
 	    nav2_has_dme = ils.get_has_dme();
 	    nav2_has_gs = ils.get_has_gs();
@@ -625,16 +698,41 @@ void FGRadioStack::search()
 	    nav2_dme_x = ils.get_dme_x();
 	    nav2_dme_y = ils.get_dme_y();
 	    nav2_dme_z = ils.get_dme_z();
+
+	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav2-vor-ident" );
+	    }
+	    FGSimpleSound *sound;
+	    sound = morse.make_ident( nav2_trans_ident, LO_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav2-vor-ident" );
+
+	    if ( globals->get_soundmgr()->exists( "nav2-dme-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav2-dme-ident" );
+	    }
+	    sound = morse.make_ident( nav2_trans_ident, HI_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav2-dme-ident" );
+
+	    int offset = (int)(sg_random() * 30.0);
+	    nav2_play_count = offset / 4;
+	    nav2_last_time = globals->get_time_params()->get_cur_time() -
+		offset;
+	    // cout << "offset = " << offset << " play_count = "
+	    //      << nav2_play_count << " nav2_last_time = "
+	    //      << nav2_last_time << " current time = "
+	    //      << globals->get_time_params()->get_cur_time() << endl;
+
 	    // cout << "Found an ils station in range" << endl;
 	    // cout << " id = " << ils.get_locident() << endl;
 	}
     } else if ( current_navlist->query( lon, lat, elev, nav2_freq, &nav ) ) {
 	nav2_ident = nav.get_ident();
+	nav2_valid = true;
 	if ( last_nav2_ident != nav2_ident || !last_nav2_vor ) {
 	    last_nav2_ident = nav2_ident;
 	    last_nav2_vor = true;
 	    nav2_trans_ident = nav.get_trans_ident();
-	    nav2_valid = true;
 	    nav2_loc = false;
 	    nav2_has_dme = nav.get_has_dme();
 	    nav2_has_dme = false;
@@ -649,6 +747,31 @@ void FGRadioStack::search()
 	    nav2_x = nav2_dme_x = nav.get_x();
 	    nav2_y = nav2_dme_y = nav.get_y();
 	    nav2_z = nav2_dme_z = nav.get_z();
+
+	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav2-vor-ident" );
+	    }
+	    FGSimpleSound *sound;
+	    sound = morse.make_ident( nav2_trans_ident, LO_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav2-vor-ident" );
+
+	    if ( globals->get_soundmgr()->exists( "nav2-dme-ident" ) ) {
+		globals->get_soundmgr()->remove( "nav2-dme-ident" );
+	    }
+	    sound = morse.make_ident( nav2_trans_ident, HI_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "nav2-dme-ident" );
+
+	    int offset = (int)(sg_random() * 30.0);
+	    nav2_play_count = offset / 4;
+	    nav2_last_time = globals->get_time_params()->get_cur_time() -
+		offset;
+	    // cout << "offset = " << offset << " play_count = "
+	    //      << nav2_play_count << " nav2_last_time = "
+	    //      << nav2_last_time << " current time = "
+	    //      << globals->get_time_params()->get_cur_time() << endl;
+
 	    // cout << "Found a vor station in range" << endl;
 	    // cout << " id = " << nav.get_ident() << endl;
 	}
@@ -657,25 +780,60 @@ void FGRadioStack::search()
 	nav2_ident = "";
 	nav2_radial = 0;
 	nav2_dme_dist = 0;
-	// cout << "not picking up vor2. :-(" << endl;
+	nav2_trans_ident = "";
+	last_nav2_ident = "";
+	globals->get_soundmgr()->remove( "nav2-vor-ident" );
+	globals->get_soundmgr()->remove( "nav2-dme-ident" );
+	// cout << "not picking up vor1. :-(" << endl;
     }
 
     // adf
     if ( current_navlist->query( lon, lat, elev, adf_freq, &nav ) ) {
+	char freq[128];
+	snprintf( freq, 10, "%.0f", adf_freq );
+	adf_ident = freq;
+	adf_ident += nav.get_ident();
+	// cout << "adf ident = " << adf_ident << endl;
 	adf_valid = true;
+	if ( last_adf_ident != adf_ident ) {
+	    last_adf_ident = adf_ident;
 
-	adf_lon = nav.get_lon();
-	adf_lat = nav.get_lat();
-	adf_elev = nav.get_elev();
-	adf_range = nav.get_range();
-	adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
-	adf_x = nav.get_x();
-	adf_y = nav.get_y();
-	adf_z = nav.get_z();
-	// cout << "Found an adf station in range" << endl;
-	// cout << " id = " << nav.get_ident() << endl;
+	    adf_trans_ident = nav.get_trans_ident();
+	    adf_lon = nav.get_lon();
+	    adf_lat = nav.get_lat();
+	    adf_elev = nav.get_elev();
+	    adf_range = nav.get_range();
+	    adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
+	    adf_x = nav.get_x();
+	    adf_y = nav.get_y();
+	    adf_z = nav.get_z();
+
+	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
+		globals->get_soundmgr()->remove( "adf-ident" );
+	    }
+	    FGSimpleSound *sound;
+	    sound = morse.make_ident( adf_trans_ident, LO_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, "adf-ident" );
+
+	    int offset = (int)(sg_random() * 30.0);
+	    adf_play_count = offset / 4;
+	    adf_last_time = globals->get_time_params()->get_cur_time() -
+		offset;
+	    // cout << "offset = " << offset << " play_count = "
+	    //      << adf_play_count << " adf_last_time = "
+	    //      << adf_last_time << " current time = "
+	    //      << globals->get_time_params()->get_cur_time() << endl;
+
+	    // cout << "Found an adf station in range" << endl;
+	    // cout << " id = " << nav.get_ident() << endl;
+	}
     } else {
 	adf_valid = false;
+	adf_ident = "";
+	adf_trans_ident = "";
+	globals->get_soundmgr()->remove( "adf-ident" );
+	last_adf_ident = "";
 	// cout << "not picking up adf. :-(" << endl;
     }
 }
