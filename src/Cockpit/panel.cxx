@@ -215,8 +215,11 @@ void
 FGPanel::bind ()
 {
   fgTie("/sim/panel/visibility", &_visibility);
+  fgSetArchivable("/sim/panel/visibility");
   fgTie("/sim/panel/x-offset", &_x_offset);
+  fgSetArchivable("/sim/panel/x-offset");
   fgTie("/sim/panel/y-offset", &_y_offset);
+  fgSetArchivable("/sim/panel/y-offset");
   _bound = true;
 }
 
