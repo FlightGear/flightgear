@@ -162,7 +162,9 @@ void YASim::init()
 
     // Are we at ground level?  If so, lift the plane up so the gear
     // clear the ground
-    if(get_Altitude() - get_Runway_altitude() < 50) {
+    double runway_altitude =
+      fgGetDouble("/environment/ground-elevation-m") * SG_METER_TO_FEET;
+    if(get_Altitude() - runway_altitude < 50) {
 	float minGearZ = 1e18;
 	for(i=0; i<a->numGear(); i++) {
 	    Gear* g = a->getGear(i);
@@ -171,7 +173,7 @@ void YASim::init()
 	    if(pos[2] < minGearZ)
 		minGearZ = pos[2];
 	}
-	_set_Altitude(get_Runway_altitude() - minGearZ*M2FT);
+	_set_Altitude(runway_altitude - minGearZ*M2FT);
     }
 
     // The pilot's eyepoint
