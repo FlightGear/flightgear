@@ -2,10 +2,7 @@
 | Todo 
 --------------------------------------------------------------------------
 
-4/29/98 -  Option to toggle between smooth / flat shading.
-
-4/28/98 -  Write a perl script to rename -> *.[ch]xx to *.[ch]pp and update
-           #include entries as well.
+5/2/98  -  Option to go full screen.  call glutFullScreen()
 
 4/25/98 -  Roll all of Time/sunpos.cxx into Astro/sun.cxx
 
