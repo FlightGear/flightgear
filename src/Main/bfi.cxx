@@ -87,7 +87,6 @@ reinit ()
 
 				// TODO: add more AP stuff
   bool apHeadingLock = FGBFI::getAPHeadingLock();
-  double apHeadingMag = FGBFI::getAPHeadingMag();
   bool apAltitudeLock = FGBFI::getAPAltitudeLock();
   double apAltitude = FGBFI::getAPAltitude();
   bool gpsLock = FGBFI::getGPSLock();
@@ -109,7 +108,6 @@ reinit ()
 
 				// Restore all of the old states.
   FGBFI::setAPHeadingLock(apHeadingLock);
-  FGBFI::setAPHeadingMag(apHeadingMag);
   FGBFI::setAPAltitudeLock(apAltitudeLock);
   FGBFI::setAPAltitude(apAltitude);
   FGBFI::setGPSLock(gpsLock);
@@ -196,11 +194,11 @@ FGBFI::init ()
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
   fgTie("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
+  fgTie("/autopilot/settings/climb-rate", getAPClimb, setAPClimb, false);
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
-  fgTie("/autopilot/settings/heading", getAPHeading, setAPHeading);
-  fgTie("/autopilot/settings/heading-dg", getAPHeadingDG, setAPHeadingDG, false);
-  fgTie("/autopilot/settings/heading-magnetic",
-             getAPHeadingMag, setAPHeadingMag);
+  fgTie("/autopilot/settings/heading-bug", getAPHeadingBug, setAPHeadingBug,
+	false);
+  fgTie("/autopilot/locks/wing-leveler", getAPWingLeveler, setAPWingLeveler);
   fgTie("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);
 
 				// Weather
@@ -994,7 +992,27 @@ FGBFI::getAPAltitude ()
 void
 FGBFI::setAPAltitude (double altitude)
 {
-    current_autopilot->set_TargetAltitude( altitude );
+    current_autopilot->set_TargetAltitude( altitude * FEET_TO_METER );
+}
+
+
+/**
+ * Get the autopilot target altitude in feet.
+ */
+double
+FGBFI::getAPClimb ()
+{
+  return current_autopilot->get_TargetClimbRate() * METER_TO_FEET;
+}
+
+
+/**
+ * Set the autopilot target altitude in feet.
+ */
+void
+FGBFI::setAPClimb (double rate)
+{
+    current_autopilot->set_TargetClimbRate( rate * FEET_TO_METER );
 }
 
 
@@ -1016,79 +1034,59 @@ FGBFI::getAPHeadingLock ()
 void
 FGBFI::setAPHeadingLock (bool lock)
 {
-  if (lock) {
-				// We need to do this so that
-				// it's possible to lock onto a
-				// heading other than the current
-				// heading.
-    double heading = getAPHeadingMag();
-    current_autopilot->set_HeadingMode(FGAutopilot::FG_DG_HEADING_LOCK);
-    current_autopilot->set_HeadingEnabled(true);
-    setAPHeadingMag(heading);
-  } else if (current_autopilot->get_HeadingMode() ==
-	     FGAutopilot::FG_DG_HEADING_LOCK) {
-    current_autopilot->set_HeadingEnabled(false);
-  }
+    if (lock) {
+	current_autopilot->set_HeadingMode(FGAutopilot::FG_DG_HEADING_LOCK);
+	current_autopilot->set_HeadingEnabled(true);
+    } else {
+	current_autopilot->set_HeadingEnabled(false);
+    }
 }
 
 
 /**
- * Get the autopilot target heading in degrees.
+ * Get the autopilot heading bug in degrees.
  */
 double
-FGBFI::getAPHeading ()
-{
-  return current_autopilot->get_TargetHeading();
-}
-
-
-/**
- * Set the autopilot target heading in degrees.
- */
-void
-FGBFI::setAPHeading (double heading)
-{
-  current_autopilot->set_TargetHeading( heading );
-}
-
-
-/**
- * Get the autopilot DG target heading in degrees.
- */
-double
-FGBFI::getAPHeadingDG ()
+FGBFI::getAPHeadingBug ()
 {
   return current_autopilot->get_DGTargetHeading();
 }
 
 
 /**
- * Set the autopilot DG target heading in degrees.
+ * Set the autopilot heading bug in degrees.
  */
 void
-FGBFI::setAPHeadingDG (double heading)
+FGBFI::setAPHeadingBug (double heading)
 {
   current_autopilot->set_DGTargetHeading( heading );
 }
 
 
 /**
- * Get the autopilot target heading in degrees.
+ * Get the autopilot wing leveler lock (true=on).
  */
-double
-FGBFI::getAPHeadingMag ()
+bool
+FGBFI::getAPWingLeveler ()
 {
-  return current_autopilot->get_TargetHeading() - getMagVar();
+    return
+      (current_autopilot->get_HeadingEnabled() &&
+       current_autopilot->get_HeadingMode() == FGAutopilot::FG_TC_HEADING_LOCK);
 }
 
 
 /**
- * Set the autopilot target heading in degrees.
+ * Set the autopilot wing leveler lock (true=on).
  */
 void
-FGBFI::setAPHeadingMag (double heading)
+FGBFI::setAPWingLeveler (bool lock)
 {
-  current_autopilot->set_TargetHeading( heading + getMagVar() );
+    if (lock) {
+	current_autopilot->set_HeadingMode(FGAutopilot::FG_TC_HEADING_LOCK);
+	current_autopilot->set_HeadingEnabled(true);
+    } else {
+	current_autopilot->set_HeadingEnabled(false);
+    }
 }
 
 

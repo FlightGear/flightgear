@@ -36,18 +36,19 @@ class FGAutopilot {
 public:
 
     enum fgAutoHeadingMode {
-	FG_DG_HEADING_LOCK = 0,
-	FG_HEADING_LOCK = 1,
-	FG_HEADING_NAV1 = 2,
-	FG_HEADING_NAV2 = 3,
-        FG_HEADING_WAYPOINT = 4
+	FG_DG_HEADING_LOCK = 0,	  // follow bug on directional gryo
+	FG_TC_HEADING_LOCK = 1,   // keep turn coordinator zero'd
+	FG_TRUE_HEADING_LOCK = 2, // lock to true heading (i.e. a perfect world)
+	FG_HEADING_NAV1 = 3,      // follow nav1 radial
+	FG_HEADING_NAV2 = 4,      // follow nav2 radial
+        FG_HEADING_WAYPOINT = 5   // track next waypoint
     };
 
     enum fgAutoAltitudeMode {
-	FG_ALTITUDE_LOCK = 0,
-	FG_ALTITUDE_TERRAIN = 1,
-	FG_ALTITUDE_GS1 = 2,
-	FG_ALTITUDE_GS2 = 3
+	FG_ALTITUDE_LOCK = 0,     // lock to a specific altitude
+	FG_ALTITUDE_TERRAIN = 1,  // try to maintain a specific AGL
+	FG_ALTITUDE_GS1 = 2,      // follow glide slope 1
+	FG_ALTITUDE_GS2 = 3       // follow glide slope 2
     };
 
 private:
@@ -68,7 +69,7 @@ private:
     double TargetHeading;	// the true heading the AP should steer to.
     double TargetAltitude;	// altitude to hold
     double TargetAGL;		// the terrain separation
-    double TargetClimbRate;	// climb rate to shoot for
+    double TargetClimbRate;	// target climb rate
     double TargetSpeed;		// speed to shoot for
     double alt_error_accum;	// altitude error accumulator
     double climb_error_accum;	// climb error accumulator (for GS)
@@ -109,6 +110,12 @@ private:
     char TargetAltitudeStr[64];
 
 public:
+
+    // constructor
+    FGAutopilot();
+
+    // destructor
+    ~FGAutopilot();
 
     // Initialize autopilot system
     void init();
@@ -159,6 +166,8 @@ public:
     inline void set_TargetDistance( double val ) { TargetDistance = val; }
     inline double get_TargetAltitude() const { return TargetAltitude; }
     inline void set_TargetAltitude( double val ) { TargetAltitude = val; }
+    inline double get_TargetClimbRate() const { return TargetClimbRate; }
+    inline void set_TargetClimbRate( double val ) { TargetClimbRate = val; }
 
     inline char *get_TargetLatitudeStr() { return TargetLatitudeStr; }
     inline char *get_TargetLongitudeStr() { return TargetLongitudeStr; }

@@ -109,7 +109,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 8: // Ctrl-H key
 	    current_autopilot->set_HeadingMode(
-		  FGAutopilot::FG_DG_HEADING_LOCK );
+		  FGAutopilot::FG_TC_HEADING_LOCK );
 	    current_autopilot->set_HeadingEnabled(
 		  ! current_autopilot->get_HeadingEnabled()
 	        );
@@ -559,7 +559,7 @@ void GLUTspecialkey(int k, int x, int y) {
 		current_autopilot->set_HeadingEnabled( true );
 	    } else {
 		current_autopilot->set_HeadingMode(
-		    FGAutopilot::FG_DG_HEADING_LOCK );
+		    FGAutopilot::FG_TC_HEADING_LOCK );
 	    }
 	    return;
 	case GLUT_KEY_F8: {// F8 toggles fog ... off fastest nicest...

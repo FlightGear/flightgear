@@ -131,17 +131,17 @@ public:
   static double getAPAltitude (); // feet
   static void setAPAltitude (double altitude); // feet
 
+  static double getAPClimb (); // fpm
+  static void setAPClimb (double rate); // fpm
+
   static bool getAPHeadingLock ();
   static void setAPHeadingLock (bool lock);
 
-  static double getAPHeading (); // degrees
-  static void setAPHeading (double heading); // degrees
+  static double getAPHeadingBug (); // degrees
+  static void setAPHeadingBug (double heading); // degrees
 
-  static double getAPHeadingDG (); // degrees
-  static void setAPHeadingDG (double heading); // degrees
-
-  static double getAPHeadingMag (); // degrees
-  static void setAPHeadingMag (double heading);	// degrees
+  static bool getAPWingLeveler ();
+  static void setAPWingLeveler (bool lock);
 
   static bool getAPNAV1Lock ();
   static void setAPNAV1Lock (bool lock);

@@ -51,8 +51,8 @@ FGAutopilot *current_autopilot;
 // Climb speed constants
 const double min_climb = 70.0;	// kts
 const double best_climb = 75.0;	// kts
-const double ideal_climb_rate = 500.0 * FEET_TO_METER; // fpm -> mpm
-const double ideal_decent_rate = 1000.0 * FEET_TO_METER; // fpm -> mpm
+// const double ideal_climb_rate = 500.0 * FEET_TO_METER; // fpm -> mpm
+// const double ideal_decent_rate = 1000.0 * FEET_TO_METER; // fpm -> mpm
 
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
@@ -68,6 +68,16 @@ static char NewTgtAirportId[16];
 extern char *coord_format_lat(float);
 extern char *coord_format_lon(float);
 			
+
+// constructor
+FGAutopilot::FGAutopilot():
+TargetClimbRate(1000 * FEET_TO_METER)
+{
+}
+
+// destructor
+FGAutopilot::~FGAutopilot() {}
+
 
 void FGAutopilot::MakeTargetLatLonStr( double lat, double lon ) {
     sprintf( TargetLatitudeStr , "%s", coord_format_lat(get_TargetLatitude()));
@@ -379,8 +389,12 @@ int FGAutopilot::run() {
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
 	    MakeTargetHeadingStr( TargetHeading );
-	} else if ( heading_mode == FG_HEADING_LOCK ) {
-	    // leave target heading alone
+	} else if ( heading_mode == FG_TC_HEADING_LOCK ) {
+	    // we don't set a specific target heading in
+	    // TC_HEADING_LOCK mode, we instead try to keep the turn
+	    // coordinator zero'd
+	} else if ( heading_mode == FG_TRUE_HEADING_LOCK ) {
+	    // leave "true" target heading as is
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
 	    // track the NAV1 heading needle deflection
 
@@ -416,50 +430,6 @@ int FGAutopilot::run() {
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
 
-#if 0
-	    if ( current_radiostack->get_nav1_to_flag() ||
-		 current_radiostack->get_nav1_from_flag() ) {
-		// We have an appropriate radial selected that the
-		// autopilot can follow
-		double tgt_radial;
-		double cur_radial;
-		if ( current_radiostack->get_nav1_loc() ) {
-		    // localizers radials are "true"
-		    tgt_radial = current_radiostack->get_nav1_radial();
-		} else {
-		    tgt_radial = current_radiostack->get_nav1_radial() +
-			current_radiostack->get_nav1_magvar();
-		}
-		cur_radial = current_radiostack->get_nav1_heading() +
-		    current_radiostack->get_nav1_magvar();
-		if ( current_radiostack->get_nav1_from_flag() ) {
-		    cur_radial += 180.0;
-		    while ( cur_radial >= 360.0 ) { cur_radial -= 360.0; }
-		}
-		// cout << "target rad (true) = " << tgt_radial 
-		//      << "  current rad (true) = " << cur_radial
-		//      << endl;
-
-		double diff = (tgt_radial - cur_radial);
-		while ( diff < -180.0 ) { diff += 360.0; }
-		while ( diff > 180.0 ) { diff -= 360.0; }
-		
-		diff *= (current_radiostack->get_nav1_loc_dist() * METER_TO_NM);
-		if ( diff < -30.0 ) { diff = -30.0; }
-		if ( diff >  30.0 ) { diff =  30.0; }
-
-		if ( current_radiostack->get_nav1_to_flag() ) {
-		    TargetHeading = cur_radial - diff;
-		} else if ( current_radiostack->get_nav1_from_flag() ) {
-		    TargetHeading = cur_radial + diff;
-		}
-		while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
-		while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
-	    } else {
-		// neither TO, or FROM, maintain current heading.
-		TargetHeading = FGBFI::getHeading();
-	    }
-#endif
 	    MakeTargetHeadingStr( TargetHeading );
 	    // cout << "target course (true) = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
@@ -514,7 +484,7 @@ int FGAutopilot::run() {
 		    set_HeadingMode( FG_HEADING_WAYPOINT );
 		} else {
 		    // end of the line
-		    heading_mode = FG_HEADING_LOCK;
+		    heading_mode = FG_TRUE_HEADING_LOCK;
 		    // use current heading
 		    TargetHeading = FGBFI::getHeading();
 		}
@@ -525,70 +495,86 @@ int FGAutopilot::run() {
 	    MakeTargetWPStr( wp_distance );
 	}
 
-	double RelHeading;
-	double TargetRoll;
-	double RelRoll;
-	double AileronSet;
-
-	RelHeading = NormalizeDegrees( TargetHeading - FGBFI::getHeading() );
-	// figure out how far off we are from desired heading
-
-	// Now it is time to deterime how far we should be rolled.
-	FG_LOG( FG_AUTOPILOT, FG_DEBUG, "RelHeading: " << RelHeading );
-
-
-	// Check if we are further from heading than the roll out point
-	if ( fabs( RelHeading ) > RollOut ) {
-	    // set Target Roll to Max in desired direction
-	    if ( RelHeading < 0 ) {
-		TargetRoll = 0 - MaxRoll;
-	    } else {
-		TargetRoll = MaxRoll;
-	    }
+	if ( heading_mode == FG_TC_HEADING_LOCK ) {
+	    // drive the turn coordinator to zero
+	    double turn = FGSteam::get_TC_std();
+	    // cout << "turn rate = " << turn << endl;
+	    double AileronSet = -turn / 2.0;
+	    if ( AileronSet < -1.0 ) { AileronSet = -1.0; }
+	    if ( AileronSet >  1.0 ) { AileronSet =  1.0; }
+	    controls.set_aileron( AileronSet );
+	    controls.set_rudder( AileronSet / 4.0 );
 	} else {
-	    // We have to calculate the Target roll
+	    // steer towards the target heading
 
-	    // This calculation engine thinks that the Target roll
-	    // should be a line from (RollOut,MaxRoll) to (-RollOut,
-	    // -MaxRoll) I hope this works well.  If I get ambitious
-	    // some day this might become a fancier curve or
-	    // something.
+	    double RelHeading;
+	    double TargetRoll;
+	    double RelRoll;
+	    double AileronSet;
 
-	    TargetRoll = LinearExtrapolate( RelHeading, -RollOut,
-					    -MaxRoll, RollOut,
-					    MaxRoll );
-	}
+	    RelHeading
+		= NormalizeDegrees( TargetHeading - FGBFI::getHeading() );
+	    // figure out how far off we are from desired heading
 
-	// Target Roll has now been Found.
+	    // Now it is time to deterime how far we should be rolled.
+	    FG_LOG( FG_AUTOPILOT, FG_DEBUG, "RelHeading: " << RelHeading );
 
-	// Compare Target roll to Current Roll, Generate Rel Roll
 
-	FG_LOG( FG_COCKPIT, FG_BULK, "TargetRoll: " << TargetRoll );
+	    // Check if we are further from heading than the roll out point
+	    if ( fabs( RelHeading ) > RollOut ) {
+		// set Target Roll to Max in desired direction
+		if ( RelHeading < 0 ) {
+		    TargetRoll = 0 - MaxRoll;
+		} else {
+		    TargetRoll = MaxRoll;
+		}
+	    } else {
+		// We have to calculate the Target roll
 
-	RelRoll = NormalizeDegrees( TargetRoll - FGBFI::getRoll() );
+		// This calculation engine thinks that the Target roll
+		// should be a line from (RollOut,MaxRoll) to (-RollOut,
+		// -MaxRoll) I hope this works well.  If I get ambitious
+		// some day this might become a fancier curve or
+		// something.
 
-	// Check if we are further from heading than the roll out smooth point
-	if ( fabs( RelRoll ) > RollOutSmooth ) {
-	    // set Target Roll to Max in desired direction
-	    if ( RelRoll < 0 ) {
+		TargetRoll = LinearExtrapolate( RelHeading, -RollOut,
+						-MaxRoll, RollOut,
+						MaxRoll );
+	    }
+
+	    // Target Roll has now been Found.
+
+	    // Compare Target roll to Current Roll, Generate Rel Roll
+
+	    FG_LOG( FG_COCKPIT, FG_BULK, "TargetRoll: " << TargetRoll );
+
+	    RelRoll = NormalizeDegrees( TargetRoll - FGBFI::getRoll() );
+
+	    // Check if we are further from heading than the roll out
+	    // smooth point
+	    if ( fabs( RelRoll ) > RollOutSmooth ) {
+		// set Target Roll to Max in desired direction
+		if ( RelRoll < 0 ) {
 		AileronSet = 0 - MaxAileron;
+		} else {
+		    AileronSet = MaxAileron;
+		}
 	    } else {
-		AileronSet = MaxAileron;
+		AileronSet = LinearExtrapolate( RelRoll, -RollOutSmooth,
+						-MaxAileron,
+						RollOutSmooth,
+						MaxAileron );
 	    }
-	} else {
-	    AileronSet = LinearExtrapolate( RelRoll, -RollOutSmooth,
-					    -MaxAileron,
-					    RollOutSmooth,
-					    MaxAileron );
-	}
 
-	controls.set_aileron( AileronSet );
-	controls.set_rudder( AileronSet / 4.0 );
-	// controls.set_rudder( 0.0 );
+	    controls.set_aileron( AileronSet );
+	    controls.set_rudder( AileronSet / 4.0 );
+	    // controls.set_rudder( 0.0 );
+	}
     }
 
     // altitude hold
     if ( altitude_hold ) {
+	double climb_rate;
 	double speed, max_climb, error;
 	double prop_error, int_error;
 	double prop_adj, int_adj, total_adj;
@@ -598,8 +584,8 @@ int FGAutopilot::run() {
 	    // cout << "TargetAltitude = " << TargetAltitude
 	    //      << "Altitude = " << FGBFI::getAltitude() * FEET_TO_METER
 	    //      << endl;
-	    TargetClimbRate =
-		( TargetAltitude - FGBFI::getAltitude() * FEET_TO_METER ) * 8.0;
+	    climb_rate =
+		( TargetAltitude - FGSteam::get_ALT_ft() * FEET_TO_METER ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	    double x = current_radiostack->get_nav1_gs_dist();
 	    double y = (FGBFI::getAltitude() 
@@ -622,21 +608,21 @@ int FGAutopilot::run() {
 	    double horiz_vel = cur_fdm_state->get_V_ground_speed()
 		* FEET_TO_METER * 60.0;
 	    // cout << "Horizontal vel = " << horiz_vel << endl;
-	    TargetClimbRate = -sin( des_angle * DEG_TO_RAD ) * horiz_vel;
-	    // cout << "TargetClimbRate = " << TargetClimbRate << endl;
+	    climb_rate = -sin( des_angle * DEG_TO_RAD ) * horiz_vel;
+	    // cout << "climb_rate = " << climb_rate << endl;
 	    /* climb_error_accum += gs_diff * 2.0; */
-	    /* TargetClimbRate = gs_diff * 200.0 + climb_error_accum; */
+	    /* climb_rate = gs_diff * 200.0 + climb_error_accum; */
 	} else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	    // brain dead ground hugging with no look ahead
-	    TargetClimbRate =
+	    climb_rate =
 		( TargetAGL - FGBFI::getAGL()*FEET_TO_METER ) * 16.0;
 	    // cout << "target agl = " << TargetAGL 
 	    //      << "  current agl = " << fgAPget_agl() 
-	    //      << "  target climb rate = " << TargetClimbRate 
+	    //      << "  target climb rate = " << climb_rate 
 	    //      << endl;
 	} else {
 	    // just try to zero out rate of climb ...
-	    TargetClimbRate = 0.0;
+	    climb_rate = 0.0;
 	}
 
 	speed = get_speed();
@@ -645,30 +631,32 @@ int FGAutopilot::run() {
 	    max_climb = 0.0;
 	} else if ( speed < best_climb ) {
 	    max_climb = ((best_climb - min_climb) - (best_climb - speed)) 
-		* ideal_climb_rate 
+		* fabs(TargetClimbRate) 
 		/ (best_climb - min_climb);
 	} else {			
-	    max_climb = ( speed - best_climb ) * 10.0 + ideal_climb_rate;
+	    max_climb = ( speed - best_climb ) * 10.0 + fabs(TargetClimbRate);
 	}
 
 	// this first one could be optional if we wanted to allow
 	// better climb performance assuming we have the airspeed to
 	// support it.
-	if ( TargetClimbRate > ideal_climb_rate ) {
-	    TargetClimbRate = ideal_climb_rate;
+	if ( climb_rate > fabs(TargetClimbRate) ) {
+	    climb_rate = fabs(TargetClimbRate);
 	}
 
-	if ( TargetClimbRate > max_climb ) {
-	    TargetClimbRate = max_climb;
+	if ( climb_rate > max_climb ) {
+	    climb_rate = max_climb;
 	}
 
-	if ( TargetClimbRate < -ideal_decent_rate ) {
-	    TargetClimbRate = -ideal_decent_rate;
+	if ( climb_rate < -fabs(TargetClimbRate) ) {
+	    climb_rate = -fabs(TargetClimbRate);
 	}
-	// cout << "Target climb = " << TargetClimbRate * METER_TO_FEET 
+	// cout << "Target climb rate = " << TargetClimbRate << endl;
+	// cout << "given our speed, modified desired climb rate = "
+	//      << climb_rate * METER_TO_FEET 
 	//      << " fpm" << endl;
 
-	error = FGBFI::getVerticalSpeed() * FEET_TO_METER - TargetClimbRate;
+	error = FGBFI::getVerticalSpeed() * FEET_TO_METER - climb_rate;
 	// cout << "climb rate = " << FGBFI::getVerticalSpeed()
 	//      << "  vsi rate = " << FGSteam::get_VSI_fps() << endl;
 
@@ -790,7 +778,9 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 	// ... no, leave target heading along ... just use the current
 	// heading bug value
         //  DGTargetHeading = FGSteam::get_DG_deg();
-    } else if ( heading_mode == FG_HEADING_LOCK ) {
+    } else if ( heading_mode == FG_TC_HEADING_LOCK ) {
+	// set autopilot to hold a zero turn (as reported by the TC)
+    } else if ( heading_mode == FG_TRUE_HEADING_LOCK ) {
 	// set heading hold to current heading
 	TargetHeading = FGBFI::getHeading();
     } else if ( heading_mode == FG_HEADING_WAYPOINT ) {
@@ -824,8 +814,8 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 		    );
 	} else {
 	    // no more way points, default to heading lock.
-	    heading_mode = FG_HEADING_LOCK;
-	    TargetHeading = FGBFI::getHeading();
+	    heading_mode = FG_TC_HEADING_LOCK;
+	    // TargetHeading = FGBFI::getHeading();
 	}
     }
 
@@ -840,8 +830,9 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     alt_error_accum = 0.0;
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {
-	// lock at current altitude
-	TargetAltitude = FGBFI::getAltitude() * FEET_TO_METER;
+	if ( TargetAltitude < FGBFI::getAGL() * FEET_TO_METER ) {
+	    // TargetAltitude = FGBFI::getAltitude() * FEET_TO_METER;
+	}
 
 	if ( fgGetString("/sim/startup/units") == "feet" ) {
 	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
@@ -995,7 +986,8 @@ void FGAutopilot::AltitudeAdjust( double inc )
 
 
 void FGAutopilot::HeadingAdjust( double inc ) {
-    if ( heading_mode != FG_DG_HEADING_LOCK && heading_mode != FG_HEADING_LOCK )
+    if ( heading_mode != FG_DG_HEADING_LOCK
+	 && heading_mode != FG_TRUE_HEADING_LOCK )
     {
 	heading_mode = FG_DG_HEADING_LOCK;
     }
@@ -1013,13 +1005,13 @@ void FGAutopilot::HeadingAdjust( double inc ) {
 
 
 void FGAutopilot::HeadingSet( double new_heading ) {
-    heading_mode = FG_HEADING_LOCK;
+    heading_mode = FG_DG_HEADING_LOCK;
 	
     new_heading = NormalizeDegrees( new_heading );
-    TargetHeading = new_heading;
+    DGTargetHeading = new_heading;
     // following cast needed ambiguous plib
     // ApHeadingDialogInput -> setValue ((float)APData->TargetHeading );
-    MakeTargetHeadingStr( TargetHeading );			
+    MakeTargetHeadingStr( DGTargetHeading );			
     update_old_control_values();
 }
 

@@ -661,7 +661,7 @@ void PopWayPoint(puObject *cb)
 	current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
     } else {
 	// end of the line
-	current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_LOCK );
+	current_autopilot->set_HeadingMode( FGAutopilot::FG_TC_HEADING_LOCK );
 
 	// use current heading
 	current_autopilot->set_TargetHeading( FGBFI::getHeading() );

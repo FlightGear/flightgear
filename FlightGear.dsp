@@ -2185,6 +2185,21 @@ SOURCE=.\src\GUI\net_dlg.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\GUI\sgVec3Slider.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_GUI"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\GUI\trackball.c
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
