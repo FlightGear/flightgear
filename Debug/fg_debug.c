@@ -59,21 +59,22 @@ static struct {
     char *str;
     fgDebugClass dbg_class;
 } fg_DebugClasses[] = {
-    { "FG_NONE",    0x00000000 },
-    { "FG_TERRAIN", 0x00000001 },
-    { "FG_ASTRO",   0x00000002 },
-    { "FG_FLIGHT",  0x00000004 },
-    { "FG_INPUT",   0x00000008 },
-    { "FG_GL",      0x00000010 },
-    { "FG_VIEW",    0x00000020 },
-    { "FG_COCKPIT", 0x00000040 },
-    { "FG_GENERAL", 0x00000080 },
-    { "FG_MATH",    0x00000100 },
-    { "FG_EVENT",   0x00000200 },
-    { "FG_AIRCRAFT",0x00000400 },
+    { "FG_NONE",      0x00000000 },
+    { "FG_TERRAIN",   0x00000001 },
+    { "FG_ASTRO",     0x00000002 },
+    { "FG_FLIGHT",    0x00000004 },
+    { "FG_INPUT",     0x00000008 },
+    { "FG_GL",        0x00000010 },
+    { "FG_VIEW",      0x00000020 },
+    { "FG_COCKPIT",   0x00000040 },
+    { "FG_GENERAL",   0x00000080 },
+    { "FG_MATH",      0x00000100 },
+    { "FG_EVENT",     0x00000200 },
+    { "FG_AIRCRAFT",  0x00000400 },
+    { "FG_AUTOPILOT", 0x00000800 },
 
     /* Do not edit below here, last entry should be null */
-    { "FG_ALL",     0xFFFFFFFF },
+    { "FG_ALL",       0xFFFFFFFF },
     { NULL, 0 } 
 };
 
@@ -272,9 +273,12 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
 
 
 /* $Log$
-/* Revision 1.2  1998/04/21 17:03:45  curt
-/* Prepairing for C++ integration.
+/* Revision 1.3  1998/05/07 23:03:54  curt
+/* Added an entry for AUTOPILOT.
 /*
+ * Revision 1.2  1998/04/21 17:03:45  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.1  1998/04/18 03:52:04  curt
  * Moved to Lib directory and created a libDebug.
  *
