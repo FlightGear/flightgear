@@ -42,11 +42,14 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools/Lib
 # We can't build this with "-O2" (optimization) since this causes a seg fault
 # I haven't found a way to strip this out of the CXXFLAGS, so I'm just
 # setting it to "-g"
-CXXFLAGS = -g 
+# CXXFLAGS = -g 
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1999/03/17 23:51:07  curt
+# Removed forced -g compiler flag.
+#
 # Revision 1.2  1999/03/12 22:53:45  curt
 # First working version!
 #
