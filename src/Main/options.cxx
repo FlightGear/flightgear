@@ -885,7 +885,7 @@ parse_option (const string& arg)
 	FGViewer *pilot_view =
 	    (FGViewer *)globals->get_viewmgr()->get_view( 0 );
 	pilot_view->setHeadingOffset_deg( default_view_offset * SGD_RADIANS_TO_DEGREES );
-	pilot_view->set_goal_view_offset( default_view_offset * SGD_RADIANS_TO_DEGREES );
+	pilot_view->setGoalHeadingOffset_deg( default_view_offset * SGD_RADIANS_TO_DEGREES );
 	fgSetDouble("/sim/view/offset-deg", default_view_offset  * SGD_RADIANS_TO_DEGREES );
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--visibility=" ) == 0 ) {
@@ -1297,5 +1297,6 @@ fgUsage ()
          << "                                  instances allowed." << endl
          << endl;
 }
+
 
 

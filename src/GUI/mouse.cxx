@@ -175,7 +175,7 @@ static inline int right_button( void ) {
 
 static inline void set_goal_view_offset( float offset )
 {
-	globals->get_current_view()->set_goal_view_offset(offset * SGD_RADIANS_TO_DEGREES);
+	globals->get_current_view()->setGoalHeadingOffset_deg(offset * SGD_RADIANS_TO_DEGREES);
 }
 
 static inline void set_view_offset( float offset )
@@ -185,7 +185,7 @@ static inline void set_view_offset( float offset )
 
 static inline void set_goal_view_tilt( float tilt )
 {
-	globals->get_current_view()->set_goal_view_tilt(tilt);
+	globals->get_current_view()->setGoalPitchOffset_deg(tilt);
 }
 
 static inline void set_view_tilt( float tilt )
@@ -198,7 +198,7 @@ static inline float get_view_offset() {
 }
 
 static inline float get_goal_view_offset() {
-	return globals->get_current_view()->get_goal_view_offset() * SGD_DEGREES_TO_RADIANS;
+	return globals->get_current_view()->getGoalHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
 }
 
 static inline void move_brake(float offset) {
@@ -662,6 +662,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
     
     glutPostRedisplay ();
 }
+
 
 
 

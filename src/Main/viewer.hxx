@@ -128,12 +128,20 @@ public:
 				     double z_offset_m);
 
 		    // Orientation offsets from reference
+                    //  Goal settings are for smooth transition from prior 
+                    //  offset when changing view direction.
     virtual double getRollOffset_deg () const { return _roll_offset_deg; }
     virtual double getPitchOffset_deg () const { return _pitch_offset_deg; }
     virtual double getHeadingOffset_deg () const { return _heading_offset_deg; }
+    virtual double getGoalRollOffset_deg () const { return _goal_roll_offset_deg; }
+    virtual double getGoalPitchOffset_deg () const { return _goal_pitch_offset_deg; }
+    virtual double getGoalHeadingOffset_deg () const {return _goal_heading_offset_deg; }
     virtual void setRollOffset_deg (double roll_offset_deg);
     virtual void setPitchOffset_deg (double pitch_offset_deg);
     virtual void setHeadingOffset_deg (double heading_offset_deg);
+    virtual void setGoalRollOffset_deg (double goal_roll_offset_deg);
+    virtual void setGoalPitchOffset_deg (double goal_pitch_offset_deg);
+    virtual void setGoalHeadingOffset_deg (double goal_heading_offset_deg);
     virtual void setOrientationOffsets (double roll_offset_deg,
 				     double heading_offset_deg,
 				     double pitch_offset_deg);
@@ -201,10 +209,13 @@ private:
     double _y_offset_m;
     double _z_offset_m;
 
-    // orientation offsets from reference
+    // orientation offsets from reference (_goal* are for smoothed transitions)
     double _roll_offset_deg;
     double _pitch_offset_deg;
     double _heading_offset_deg;
+    double _goal_roll_offset_deg;
+    double _goal_pitch_offset_deg;
+    double _goal_heading_offset_deg;
 
 protected:
 
@@ -218,11 +229,6 @@ protected:
     double aspect_ratio;
 
     bool reverse_view_offset;
-
-    // the goal view offset angle  (used for smooth view changes)
-    double goal_view_offset;
-
-    double goal_view_tilt;
 
     // view position in opengl world coordinates (this is the
     // abs_view_pos translated to scenery.center)
@@ -297,32 +303,12 @@ public:
 	set_dirty();
 	_heading_offset_deg += amt;
     }
-    inline void set_goal_view_offset( double a) {
-	set_dirty();
-	goal_view_offset = a;
-	while ( goal_view_offset < 0.0 ) {
-	    goal_view_offset += 360;
-	}
-	while ( goal_view_offset > 360 ) {
-	    goal_view_offset -= 360;
-	}
-    }
     inline void set_reverse_view_offset( bool val ) {
 	reverse_view_offset = val;
     }
     inline void inc_view_tilt( double amt ) {
 	set_dirty();
 	_pitch_offset_deg += amt;
-    }
-    inline void set_goal_view_tilt( double a) {
-	set_dirty();
-	goal_view_tilt = a;
-	while ( goal_view_tilt < -90 ) {
-	    goal_view_tilt = -90.0;
-	}
-	while ( goal_view_tilt > 90.0 ) {
-	    goal_view_tilt = 90.0;
-	}
     }
     inline void set_sea_level_radius( double r ) {
 	// data should be in meters from the center of the earth
@@ -351,8 +337,6 @@ public:
     inline double get_fov() const { return fov; }
     inline double get_aspect_ratio() const { return aspect_ratio; }
     inline bool get_reverse_view_offset() const { return reverse_view_offset; }
-    inline double get_goal_view_offset() const { return goal_view_offset; }
-    inline double get_goal_view_tilt() const { return goal_view_tilt; }
     inline double get_sea_level_radius() const { return sea_level_radius; }
     // Get horizontal field of view angle, in degrees.
     double get_h_fov();
@@ -372,5 +356,6 @@ public:
 
 
 #endif // _VIEWER_HXX
+
 
 

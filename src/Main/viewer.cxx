@@ -54,8 +54,6 @@
 FGViewer::FGViewer( void ):
     scalingType(FG_SCALING_MAX),
     fov(55.0),
-    goal_view_offset(0.0),
-    goal_view_tilt(0.0),
     _dirty(true),
     _lon_deg(0),
     _lat_deg(0),
@@ -71,7 +69,9 @@ FGViewer::FGViewer( void ):
     _z_offset_m(0),
     _heading_offset_deg(0),
     _pitch_offset_deg(0),
-    _roll_offset_deg(0)
+    _roll_offset_deg(0),
+    _goal_heading_offset_deg(0.0),
+    _goal_pitch_offset_deg(0.0)
 {
     sgdZeroVec3(_absolute_view_pos);
     sea_level_radius = SG_EQUATORIAL_RADIUS_M; 
@@ -256,6 +256,40 @@ FGViewer::setHeadingOffset_deg (double heading_offset_deg)
 }
 
 void
+FGViewer::setGoalRollOffset_deg (double goal_roll_offset_deg)
+{
+  _dirty = true;
+  _goal_roll_offset_deg = goal_roll_offset_deg;
+}
+
+void
+FGViewer::setGoalPitchOffset_deg (double goal_pitch_offset_deg)
+{
+  _dirty = true;
+  _goal_pitch_offset_deg = goal_pitch_offset_deg;
+  while ( _goal_pitch_offset_deg < -90 ) {
+    _goal_pitch_offset_deg = -90.0;
+  }
+  while ( _goal_pitch_offset_deg > 90.0 ) {
+    _goal_pitch_offset_deg = 90.0;
+  }
+
+}
+
+void
+FGViewer::setGoalHeadingOffset_deg (double goal_heading_offset_deg)
+{
+  _dirty = true;
+  _goal_heading_offset_deg = goal_heading_offset_deg;
+  while ( _goal_heading_offset_deg < 0.0 ) {
+    _goal_heading_offset_deg += 360;
+  }
+  while ( _goal_heading_offset_deg > 360 ) {
+    _goal_heading_offset_deg -= 360;
+  }
+}
+
+void
 FGViewer::setOrientationOffsets (double roll_offset_deg, double pitch_offset_deg, double heading_offset_deg)
 {
   _dirty = true;
@@ -290,7 +324,8 @@ FGViewer::getZeroElevViewPos ()
 
 
 // recalc() is done every time one of the setters is called (making the 
-// cached data "dirty").  It calculates all the outputs for viewer.
+// cached data "dirty") on the next "get".  It calculates all the outputs 
+// for viewer.
 void
 FGViewer::recalc ()
 {
@@ -514,58 +549,58 @@ FGViewer::update (int dt)
 {
   int i;
   for ( i = 0; i < dt; i++ ) {
-    if ( fabs(get_goal_view_offset() - getHeadingOffset_deg()) < 1 ) {
-      setHeadingOffset_deg( get_goal_view_offset() );
+    if ( fabs( _goal_heading_offset_deg - _heading_offset_deg) < 1 ) {
+      setHeadingOffset_deg( _goal_heading_offset_deg );
       break;
     } else {
       // move current_view.headingoffset towards
       // current_view.goal_view_offset
-      if ( get_goal_view_offset() > getHeadingOffset_deg() )
+      if ( _goal_heading_offset_deg > _heading_offset_deg )
 	{
-	  if ( get_goal_view_offset() - getHeadingOffset_deg() < 180 ){
+	  if ( _goal_heading_offset_deg - _heading_offset_deg < 180 ){
 	    inc_view_offset( 0.5 );
 	  } else {
 	    inc_view_offset( -0.5 );
 	  }
 	} else {
-	  if ( getHeadingOffset_deg() - get_goal_view_offset() < 180 ){
+	  if ( _heading_offset_deg - _goal_heading_offset_deg < 180 ){
 	    inc_view_offset( -0.5 );
 	  } else {
 	    inc_view_offset( 0.5 );
 	  }
 	}
-      if ( getHeadingOffset_deg() > 360 ) {
+      if ( _heading_offset_deg > 360 ) {
 	inc_view_offset( -360 );
-      } else if ( getHeadingOffset_deg() < 0 ) {
+      } else if ( _heading_offset_deg < 0 ) {
 	inc_view_offset( 360 );
       }
     }
   }
 
   for ( i = 0; i < dt; i++ ) {
-    if ( fabs(get_goal_view_tilt() - getPitchOffset_deg()) < 1 ) {
-      setPitchOffset_deg( get_goal_view_tilt() );
+    if ( fabs( _goal_pitch_offset_deg - _pitch_offset_deg ) < 1 ) {
+      setPitchOffset_deg( _goal_pitch_offset_deg );
       break;
     } else {
       // move current_view.pitch_offset_deg towards
       // current_view.goal_view_tilt
-      if ( get_goal_view_tilt() > getPitchOffset_deg() )
+      if ( _goal_pitch_offset_deg > _pitch_offset_deg )
 	{
-	  if ( get_goal_view_tilt() - getPitchOffset_deg() < 0 ){
+	  if ( _goal_pitch_offset_deg - _pitch_offset_deg < 0 ){
 	    inc_view_tilt( 1.0 );
 	  } else {
 	    inc_view_tilt( -1.0 );
 	  }
 	} else {
-	  if ( getPitchOffset_deg() - get_goal_view_tilt() < 0 ){
+	  if ( _pitch_offset_deg - _goal_pitch_offset_deg < 0 ){
 	    inc_view_tilt( -1.0 );
 	  } else {
 	    inc_view_tilt( 1.0 );
 	  }
 	}
-      if ( getPitchOffset_deg() > 90 ) {
+      if ( _pitch_offset_deg > 90 ) {
 	setPitchOffset_deg(90);
-      } else if ( getPitchOffset_deg() < -90 ) {
+      } else if ( _pitch_offset_deg < -90 ) {
 	setPitchOffset_deg( -90 );
       }
     }
@@ -674,4 +709,5 @@ void FGViewer::fgMakeLOCAL( sgMat4 dst, const double Theta,
 }
 
 /* end from rph */
+
 

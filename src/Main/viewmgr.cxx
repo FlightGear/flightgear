@@ -186,7 +186,7 @@ double
 FGViewMgr::getGoalViewOffset_deg () const
 {
   const FGViewer * view = get_current_view();
-  return (view == 0 ? 0 : view->get_goal_view_offset());
+  return (view == 0 ? 0 : view->getGoalHeadingOffset_deg());
 }
 
 void
@@ -194,7 +194,7 @@ FGViewMgr::setGoalViewOffset_deg (double offset)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
-    view->set_goal_view_offset(offset);
+    view->setGoalHeadingOffset_deg(offset);
 }
 
 double
@@ -216,7 +216,7 @@ double
 FGViewMgr::getGoalViewTilt_deg () const
 {
   const FGViewer * view = get_current_view();
-  return (view == 0 ? 0 : view->get_goal_view_tilt());
+  return (view == 0 ? 0 : view->getGoalPitchOffset_deg());
 }
 
 void
@@ -224,7 +224,7 @@ FGViewMgr::setGoalViewTilt_deg (double tilt)
 {
   FGViewer * view = get_current_view();
   if (view != 0)
-    view->set_goal_view_tilt(tilt);
+    view->setGoalPitchOffset_deg(tilt);
 }
 
 double
@@ -361,6 +361,7 @@ FGViewMgr::do_axes ()
     viewDir = SGD_RADIANS_TO_DEGREES * atan2 ( -axis_lat, -axis_long );
   if ( viewDir < -1 ) viewDir += 360;
 
-  get_current_view()->set_goal_view_offset(viewDir);
+  get_current_view()->setGoalHeadingOffset_deg(viewDir);
 }
+
 
