@@ -180,6 +180,7 @@ static void net2global( FGNetFDM *net ) {
     htond(net->v_north);
     htond(net->v_east);
     htond(net->v_down);
+    htond(net->stall_warning);
 
     htond(net->A_X_pilot);
     htond(net->A_Y_pilot);
@@ -227,6 +228,7 @@ static void net2global( FGNetFDM *net ) {
         cur_fdm_state->_set_Velocities_Local( net->v_north,
                                               net->v_east,
                                               net->v_down );
+        fgSetDouble( "/sim/aero/alarms/stall-warning", net->stall_warning );
         cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
 					       net->A_Y_pilot,
 					       net->A_Z_pilot );
