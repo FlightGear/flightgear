@@ -1,0 +1,20 @@
+# extra targets to do various things ...
+#
+# Use "make -f Makefile.extra <target>
+
+
+VERSION=0.41
+ROOT=fg-$(VERSION)
+
+# clean up dependencies
+clean-deps:
+	rm -rf .deps Src/.deps Src/*/.deps Src/*/*/.deps
+
+clean-libs:
+	rm -rf .libs Src/.libs Src/*/.libs Src/*/*/.libs
+	rm -f Src/*/so_locations Src/*/*/so_locations
+
+# clean up after winbloze spews random case for file names :-(
+clean-winbloze: clean-deps clean-libs
+	rm -f makefile Src/makefile Src/*/makefile Src/*/*/makefile
+	rm -f Src/Main/fg.exe
