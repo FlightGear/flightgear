@@ -323,8 +323,8 @@ void FGKR_87::update( double dt ) {
         }
 
         // annunciators
-        ant_ann = adf_btn;
-        adf_ann = !adf_btn;
+        ant_ann = !adf_btn;
+        adf_ann = adf_btn;
         bfo_ann = bfo_btn;
         frq_ann = !stby_mode;
         flt_ann = stby_mode && !timer_mode;
