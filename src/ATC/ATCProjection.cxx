@@ -22,6 +22,9 @@
 #include <math.h>
 #include <simgear/constants.h>
 
+#include <iostream>
+SG_USING_STD(cout);
+
 #define DCL_PI  3.1415926535f
 //#define SG_PI  ((SGfloat) M_PI)
 #define DCL_DEGREES_TO_RADIANS  (DCL_PI/180.0)
@@ -89,10 +92,12 @@ Point3D FGATCAlignedProjection::ConvertToLocal(Point3D pt) {
     x = x*cos(theta) - y*sin(theta);
     y = (xbar*sin(theta)) + (y*cos(theta));
 
-    return(Point3D(x,y,0.0));
+    return(Point3D(x,y,pt.elev()));
 }
 
 Point3D FGATCAlignedProjection::ConvertFromLocal(Point3D pt) {
+	//cout << "theta = " << theta << '\n';
+	//cout << "origin = " << origin << '\n';
     // de-align
     double thi = theta * -1.0;
     double x = pt.x()*cos(thi) - pt.y()*sin(thi);
@@ -102,5 +107,5 @@ Point3D FGATCAlignedProjection::ConvertFromLocal(Point3D pt) {
     double delta_lat = asin(y / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES;
     double delta_lon = (asin(x / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES) / correction_factor;
 
-    return(Point3D(origin.lon()+delta_lon, origin.lat()+delta_lat, 0.0));
+    return(Point3D(origin.lon()+delta_lon, origin.lat()+delta_lat, pt.elev()));
 }
