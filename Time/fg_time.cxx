@@ -355,7 +355,7 @@ double sidereal_course(fgTIME *t, double lng) {
     start_gmt = get_start_gmt(gmt->tm_year);
 
     FG_LOG( FG_EVENT, FG_DEBUG, 
-	    "  COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n"
+	    "  COURSE: GMT = "
 	    << gmt->tm_mon << "/" << gmt->tm_mday << "/" << gmt->tm_year
 	    << " "
 	    << gmt->tm_hour << ":" << gmt->tm_min << ":" <<  gmt->tm_sec );
@@ -389,12 +389,12 @@ double sidereal_course(fgTIME *t, double lng) {
 void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
     double gst_precise, gst_course;
 
-    FG_LOG( FG_EVENT, FG_BULK, "Updating time" );
+    FG_LOG( FG_EVENT, FG_DEBUG, "Updating time" );
 
     // get current Unix calendar time (in seconds)
     t->warp += t->warp_delta;
     t->cur_time = time(NULL) + t->warp;
-    FG_LOG( FG_EVENT, FG_BULK, 
+    FG_LOG( FG_EVENT, FG_DEBUG, 
 	    "  Current Unix calendar time = " << t->cur_time 
 	    << "  warp = " << t->warp << "  delta = " << t->warp_delta );
 
@@ -405,7 +405,7 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
     // get GMT break down for current time
     t->gmt = gmtime(&t->cur_time);
-    FG_LOG( FG_EVENT, FG_BULK, 
+    FG_LOG( FG_EVENT, FG_DEBUG, 
 	    "  Current GMT = " << t->gmt->tm_mon+1 << "/" 
 	    << t->gmt->tm_mday << "/" << t->gmt->tm_year << " "
 	    << t->gmt->tm_hour << ":" << t->gmt->tm_min << ":" 
@@ -421,7 +421,7 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
     // convert "back" to Julian date + partial day (as a fraction of one)
     t->jd = t->mjd + MJD0;
-    FG_LOG( FG_EVENT, FG_BULK, "  Current Julian Date = " << t->jd );
+    FG_LOG( FG_EVENT, FG_DEBUG, "  Current Julian Date = " << t->jd );
 
     // printf("  Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG);
 
@@ -450,6 +450,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.22  1998/11/16 14:00:28  curt
+// FG_LOG() message tweaks.
+//
 // Revision 1.21  1998/11/06 21:18:26  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using
