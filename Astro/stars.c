@@ -215,13 +215,13 @@ void fgStarsInit( void ) {
 
 /* Draw the Stars */
 void fgStarsRender( void ) {
-    struct fgFLIGHT *f;
+    fgFLIGHT *f;
     struct fgVIEW *v;
     struct fgLIGHT *l;
     struct fgTIME *t;
     int i;
 
-    f = &current_aircraft.flight;
+    f = current_aircraft.flight;
     l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
@@ -253,9 +253,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/02/02 20:53:23  curt
-/* To version 0.29
+/* Revision 1.7  1998/02/09 15:07:48  curt
+/* Minor tweaks.
 /*
+ * Revision 1.6  1998/02/02 20:53:23  curt
+ * To version 0.29
+ *
  * Revision 1.5  1998/01/27 18:35:53  curt
  * Minor tweaks.
  *

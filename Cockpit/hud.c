@@ -758,6 +758,8 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
 {
   Hptr hud;
 
+  fgPrintf( FG_COCKPIT, FG_INFO, "Initializing HUD\n" );
+
   hud = (Hptr)calloc(sizeof( HUD),1);
   if( hud == NULL )
     return( NULL );
@@ -787,19 +789,21 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   return( hud );
 }
 
+
 // add_instrument
 //
 // This is a stand in for linked list code that will get replaced later
 // by some more elegant list handling code.
 
-void add_instrument( Hptr hud, HIptr pinstrument )
-{
-  if( !hud || !pinstrument ) {
-    return;
+void add_instrument( Hptr hud, HIptr pinstrument ) {
+    if( !hud || !pinstrument ) {
+	return;
     }
-  pinstrument->next = hud->instruments;
-  hud->instruments = pinstrument;
+
+    pinstrument->next = hud->instruments;
+    hud->instruments = pinstrument;
 }
+
 
 // fgHUDAddHorizon
 //
@@ -813,36 +817,36 @@ Hptr fgHUDAddHorizon( Hptr hud,     \
                       int hole_len, \
                       double (*load_value)() )
 {
-  HUD_horizon *phorizon;
-  HUD_instr   *pinstrument;
+    HUD_horizon *phorizon;
+    HUD_instr   *pinstrument;
 
-  if( !hud ) {
-    return NULL;
+    if( !hud ) {
+	return NULL;
     }
                                        // construct the parent object
-	pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-	if( pinstrument == NULL ) {
-		return( NULL );
+    pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
+    if( pinstrument == NULL ) {
+	return( NULL );
     }
-	pinstrument->type    = HUDhorizon;  //  ARTIFICIAL_HORIZON;
+    pinstrument->type    = HUDhorizon;  //  ARTIFICIAL_HORIZON;
 
                                       // Construct the horizon
-	phorizon = (HUD_horizon *) calloc( sizeof(HUD_horizon),1);
-	if( phorizon == NULL )   {
-		return( NULL );
+    phorizon = (HUD_horizon *) calloc( sizeof(HUD_horizon),1);
+    if( phorizon == NULL )   {
+	return( NULL );
     }
 
-  phorizon->x_pos      = x_pos;
-  phorizon->y_pos      = y_pos;
-  phorizon->scr_width  = length;
-  phorizon->scr_hole   = hole_len;
-  phorizon->load_value = load_value;
-                                      //  Install the horizon in the parent.
-  pinstrument->instr   = phorizon;
+    phorizon->x_pos      = x_pos;
+    phorizon->y_pos      = y_pos;
+    phorizon->scr_width  = length;
+    phorizon->scr_hole   = hole_len;
+    phorizon->load_value = load_value;
+    //  Install the horizon in the parent.
+    pinstrument->instr   = phorizon;
                                       //  Install the instrument into hud.
-  add_instrument( hud, pinstrument);
+    add_instrument( hud, pinstrument);
 
-  return( hud );
+    return( hud );
 }
 
 // fgHUDAddScale
@@ -1045,73 +1049,78 @@ Hptr fgHUDAddNumDisp( Hptr hud,           \
 // all C++.
 //
 
-void fgUpdateHUD( Hptr hud )
-{
-	HIptr phud_instr;
+void fgUpdateHUD( Hptr hud ) {
+    HIptr phud_instr;
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
 
-	glLoadIdentity();
-	gluOrtho2D(0, 640, 0, 480);
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
+    glLoadIdentity();
+    gluOrtho2D(0, 640, 0, 480);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
 
-	glColor3f(1.0, 1.0, 1.0);
-	glIndexi(7);
+    glColor3f(1.0, 1.0, 1.0);
+    glIndexi(7);
 
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
 
-	glLineWidth(1);
-	glColor3f (0.1, 0.9, 0.1);
+    glLineWidth(1);
+    glColor3f (0.1, 0.9, 0.1);
 
-  fgPrintf( FG_COCKPIT, FG_DEBUG,
-            "HUD Code %d  Status %d\n",
-            hud->code, hud->status );
+    fgPrintf( FG_COCKPIT, FG_DEBUG,
+	      "HUD Code %d  Status %d\n",
+	      hud->code, hud->status );
 
-  phud_instr = hud->instruments;
-  while( phud_instr ) 	{
-    switch (phud_instr->type){
-		  case HUDhorizon:                  // ARTIFICIAL HORIZON
-        drawhorizon( (pHUDhorizon)phud_instr );
-    	  break;
+    phud_instr = hud->instruments;
+    while( phud_instr ) {
+	/* printf("Drawing Instrument %d\n", phud_instr->type); */
 
-    	case HUDscale:                  // Need to simplify this call.
-        drawscale (  (pHUDscale)  phud_instr  );
-        break;
+	switch (phud_instr->type){
+	case HUDhorizon:   // ARTIFICIAL HORIZON
+	    drawhorizon( (pHUDhorizon)phud_instr->instr );
+	    break;
+	    
+	case HUDscale:     // Need to simplify this call.
+	    drawscale (  (pHUDscale)  phud_instr->instr  );
+	    break;
 
-      case HUDlabel:
-        drawlabel (  (pHUDlabel)  phud_instr  );
-        break;
+	case HUDlabel:
+	    drawlabel (  (pHUDlabel)  phud_instr->instr  );
+	    break;
 
-    	case HUDladder:
-    		drawladder(  (pHUDladder) phud_instr  );
-        break;
+	case HUDladder:
+	    drawladder(  (pHUDladder) phud_instr->instr  );
+	    break;
 
-      case HUDcontrols:
-        drawControlSurfaces( (pHUDControlSurface) phud_instr );
-      default:; // Ignore anything you don't know about.
-      }
-   	phud_instr = phud_instr->next;
+	case HUDcontrols:
+	    drawControlSurfaces( (pHUDControlSurface) phud_instr->instr );
+	    
+	default:; // Ignore anything you don't know about.
+	}
+
+	phud_instr = phud_instr->next;
     }
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 
 
 /* $Log$
-/* Revision 1.11  1998/02/07 15:29:34  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.12  1998/02/09 15:07:48  curt
+/* Minor tweaks.
 /*
+ * Revision 1.11  1998/02/07 15:29:34  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.10  1998/02/03 23:20:14  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

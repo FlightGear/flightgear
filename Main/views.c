@@ -136,7 +136,7 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     /* printf("    Alt Up = (%.4f, %.4f, %.4f)\n", 
        alt_up.x, alt_up.y, alt_up.z); */
 
-    /* Derive the VIEW matrix */
+    /* Calculate the VIEW matrix */
     MAT3mult(VIEW, LOCAL, UP);
     /* printf("VIEW matrix\n"); */
     /* MAT3print(VIEW, stdout); */
@@ -184,10 +184,13 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.13  1998/02/07 15:29:45  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.14  1998/02/09 15:07:50  curt
+/* Minor tweaks.
 /*
+ * Revision 1.13  1998/02/07 15:29:45  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.12  1998/01/29 00:50:28  curt
  * Added a view record field for absolute x, y, z position.
  *

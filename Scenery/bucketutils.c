@@ -197,8 +197,8 @@ void fgBucketFind(double lon, double lat, struct fgBUCKET *p) {
     }
     /* printf("  p->lat = %d\n", p->lat); */
 
-    p->x = (lon - p->lon) * 8;
-    p->y = (lat - p->lat) * 8;
+    p->x = (int)((lon - p->lon) * 8);
+    p->y = (int)((lat - p->lat) * 8);
     /* printf( "Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
 	    p->lon, p->lat, p->x, p->y); */
 }
@@ -266,9 +266,12 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.5  1998/01/29 00:51:38  curt
-/* First pass at tile cache, dynamic tile loading and tile unloading now works.
+/* Revision 1.6  1998/02/09 15:07:51  curt
+/* Minor tweaks.
 /*
+ * Revision 1.5  1998/01/29 00:51:38  curt
+ * First pass at tile cache, dynamic tile loading and tile unloading now works.
+ *
  * Revision 1.4  1998/01/27 03:26:41  curt
  * Playing with new fgPrintf command.
  *

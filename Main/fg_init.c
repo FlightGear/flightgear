@@ -175,10 +175,10 @@ void fgInitSubsystems( void ) {
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
     /* Initial Position: Somewhere near the Grand Canyon */
-    FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
-    FG_Latitude  = (  36.5 ) * DEG_TO_RAD;
-    FG_Runway_altitude = 5000.0;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    /* FG_Longitude = ( -112.5 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  36.5 ) * DEG_TO_RAD; */
+    /* FG_Runway_altitude = 5000.0; */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
     /* A random test position */
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
@@ -328,10 +328,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.40  1998/02/07 15:29:44  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.41  1998/02/09 15:07:50  curt
+/* Minor tweaks.
 /*
+ * Revision 1.40  1998/02/07 15:29:44  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.39  1998/02/03 23:20:25  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

@@ -98,7 +98,7 @@ double cal_mjd (int mn, double dy, int yr) {
 	c = (long)(365.25*y) - 694025L;
     }
     
-    d = 30.6001*(m+1);
+    d = (int)(30.6001*(m+1));
 
     mjd = b + c + d + dy - 0.5;
 
@@ -311,10 +311,13 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.34  1998/02/07 15:29:47  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.35  1998/02/09 15:07:52  curt
+/* Minor tweaks.
 /*
+ * Revision 1.34  1998/02/07 15:29:47  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.33  1998/02/02 20:54:04  curt
  * Incorporated Durk's changes.
  *

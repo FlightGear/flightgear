@@ -190,8 +190,8 @@ static double julian_date(int y, int m, int d) {
 
     A = y / 100;
     B = 2 - A + (A / 4);
-    C = 365.25 * y;
-    D = 30.6001 * (m + 1);
+    C = (int)(365.25 * y);
+    D = (int)(30.6001 * (m + 1));
 
     JD = B + C + D + d + 1720994.5;
 
@@ -373,10 +373,13 @@ void fgUpdateSunPos( void ) {
 
 
 /* $Log$
-/* Revision 1.24  1998/01/27 00:48:07  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.25  1998/02/09 15:07:53  curt
+/* Minor tweaks.
 /*
+ * Revision 1.24  1998/01/27 00:48:07  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.23  1998/01/19 19:27:21  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

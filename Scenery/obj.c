@@ -42,8 +42,8 @@
 
 #define MAXNODES 100000
 
-double nodes[MAXNODES][3];
-double normals[MAXNODES][3];
+static double nodes[MAXNODES][3];
+static double normals[MAXNODES][3];
 
 
 /* given three points defining a triangle, calculate the normal */
@@ -71,7 +71,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     GLint tile;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
-    static int use_vertex_norms = 1;
+    static int use_vertex_norms = 0;
     int winding;
     int last1, last2, odd;
 
@@ -354,9 +354,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.22  1998/02/01 03:39:54  curt
+/* Revision 1.23  1998/02/09 15:07:52  curt
 /* Minor tweaks.
 /*
+ * Revision 1.22  1998/02/01 03:39:54  curt
+ * Minor tweaks.
+ *
  * Revision 1.21  1998/01/31 00:43:25  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

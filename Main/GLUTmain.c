@@ -286,7 +286,7 @@ static void fgRenderFrame( void ) {
     xglPopMatrix();
 
     /* draw scenery */
-    xglShadeModel( GL_SMOOTH ); 
+    xglShadeModel( GL_FLAT /* GL_SMOOTH */ ); 
     xglEnable( GL_DEPTH_TEST );
     xglEnable( GL_FOG );
     xglFogfv (GL_FOG_COLOR, l->fog_color);
@@ -647,10 +647,13 @@ int main( int argc, char *argv[] ) {
 #endif
 
 /* $Log$
-/* Revision 1.57  1998/02/07 15:29:40  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.58  1998/02/09 15:07:49  curt
+/* Minor tweaks.
 /*
+ * Revision 1.57  1998/02/07 15:29:40  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.56  1998/02/03 23:20:23  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
