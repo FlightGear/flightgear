@@ -1408,7 +1408,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
         tex_index.clear();
         ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
                                   nodes, normals, texcoords,
-                                  pts_v[i], pts_v[i], tex_index,
+                                  pts_v[i], pts_n[i], tex_index,
                                   false, ground_lights );
 
         if ( is_lighting ) {
