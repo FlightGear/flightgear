@@ -174,6 +174,7 @@ read_interpolation_table (SGPropertyNode_ptr props)
 
 static void
 make_animation (ssgBranch * model,
+                const char * name,
                 vector<SGPropertyNode_ptr> &name_nodes,
                 SGPropertyNode_ptr node)
 {
@@ -197,6 +198,9 @@ make_animation (ssgBranch * model,
     animation = new NullAnimation(node);
     SG_LOG(SG_INPUT, SG_WARN, "Unknown animation type " << type);
   }
+
+  if (name != 0)
+      animation->setName((char *)name);
 
   ssgEntity * object;
   if (name_nodes.size() > 0) {
@@ -223,11 +227,8 @@ make_animation (ssgBranch * model,
           animation = 0;
       }
       ssgBranch * oldParent = object->getParent(0);
-      std::cerr << "Moving " << name << " to new parent\n";
       branch->addKid(object);
       oldParent->removeKid(object);
-      std::cerr << "  leaf has " << object->getNumParents() << " parents\n";
-      std::cerr << "  branch has " << branch->getNumKids() << " kids\n";
   }
 
   branch->setUserData(animation);
@@ -295,9 +296,10 @@ fgLoad3DModel (const string &path)
   vector<SGPropertyNode_ptr> animation_nodes = props.getChildren("animation");
   unsigned int i;
   for (i = 0; i < animation_nodes.size(); i++) {
+    const char * name = animation_nodes[i]->getStringValue("name", 0);
     vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
-    make_animation(model, name_nodes, animation_nodes[i]);
+    make_animation(model, name, name_nodes, animation_nodes[i]);
   }
 
                                 // Load panels
