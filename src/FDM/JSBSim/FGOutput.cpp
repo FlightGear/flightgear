@@ -381,9 +381,9 @@ void FGOutput::SocketOutput(void)
   socket->Clear();
   socket->Append(State->Getsim_time());
   socket->Append(Propagate->Geth());
-  socket->Append(Propagate->Getphi());
-  socket->Append(Propagate->Gettht());
-  socket->Append(Propagate->Getpsi());
+  socket->Append(Propagate->GetEuler(ePhi));
+  socket->Append(Propagate->GetEuler(eTht));
+  socket->Append(Propagate->GetEuler(ePsi));
   socket->Append(Atmosphere->GetDensity());
   socket->Append(Auxiliary->GetVt());
   socket->Append(Propagate->GetUVW(eU));

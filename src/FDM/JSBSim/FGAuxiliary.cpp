@@ -116,9 +116,9 @@ bool FGAuxiliary::Run()
 
 // Rotation
 
-    double cTht = Propagate->GetCostht();
-    double cPhi = Propagate->GetCosphi();
-    double sPhi = Propagate->GetSinphi();
+    double cTht = Propagate->GetCosEuler(eTht);
+    double cPhi = Propagate->GetCosEuler(ePhi);
+    double sPhi = Propagate->GetSinEuler(ePhi);
 
     vEulerRates(eTht) = vPQR(eQ)*cPhi - vPQR(eR)*sPhi;
     if (cTht != 0.0) {
@@ -246,7 +246,7 @@ double FGAuxiliary::GetHeadWind(void)
   psiw = Atmosphere->GetWindPsi();
   vw = Atmosphere->GetWindNED().Magnitude();
 
-  return vw*cos(psiw - Propagate->Getpsi());
+  return vw*cos(psiw - Propagate->GetEuler(ePsi));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -258,7 +258,7 @@ double FGAuxiliary::GetCrossWind(void)
   psiw = Atmosphere->GetWindPsi();
   vw = Atmosphere->GetWindNED().Magnitude();
 
-  return  vw*sin(psiw - Propagate->Getpsi());
+  return  vw*sin(psiw - Propagate->GetEuler(ePsi));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

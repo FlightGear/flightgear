@@ -396,6 +396,7 @@ bool FGTurbine::Load(FGConfigFile *Eng_cfg)
       ThrustTables.back()->Load(Eng_cfg);
     }
     else cerr << "Unhandled token in Engine config file: " << token << endl;
+    if (token == "EOF") return false;
   }
 
   // Pre-calculations and initializations

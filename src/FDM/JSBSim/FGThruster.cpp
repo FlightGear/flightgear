@@ -54,18 +54,30 @@ FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec)
   Type = ttDirect;
   SetTransformType(FGForce::tCustom);
 
+  EngineNum = 0;
+  PropertyManager = FDMExec->GetPropertyManager();
+
   Debug(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGThruster::FGThruster(FGFDMExec *FDMExec,
-                       FGConfigFile *Eng_cfg ): FGForce(FDMExec)
+                       FGConfigFile *Eng_cfg, int num ): FGForce(FDMExec)
 {
   Type = ttDirect;
   SetTransformType(FGForce::tCustom);
   Name = Eng_cfg->GetValue();
   GearRatio = 1.0;
+
+  EngineNum = num;
+  ThrustCoeff = 0.0;
+  PropertyManager = FDMExec->GetPropertyManager();
+
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
+  PropertyManager->Tie( property_name, &ThrustCoeff );
+
   Debug(0);
 }
 
@@ -73,6 +85,10 @@ FGThruster::FGThruster(FGFDMExec *FDMExec,
 
 FGThruster::~FGThruster()
 {
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
+  PropertyManager->Untie( property_name );
+
   Debug(1);
 }
 

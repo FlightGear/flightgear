@@ -110,7 +110,9 @@ bool FGGroundReactions::Load(FGConfigFile* AC_cfg)
   AC_cfg->GetNextConfigLine();
 
   while ((token = AC_cfg->GetValue()) != string("/UNDERCARRIAGE")) {
-    lGear.push_back(FGLGear(AC_cfg, FDMExec));
+    int num = lGear.size();
+    lGear.push_back(FGLGear(AC_cfg, FDMExec, num));
+    FCS->AddGear();
   }
 
   return true;

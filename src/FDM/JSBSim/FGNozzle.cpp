@@ -50,7 +50,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMExec)
+FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg, int num) : FGThruster(FDMExec)
 {
   string token;
 
@@ -71,6 +71,10 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMEx
   Area2 = (Diameter*Diameter/4.0)*M_PI;
   AreaT = Area2/ExpR;
 
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
+  PropertyManager->Tie( property_name, &ThrustCoeff );
+
   Debug(0);
 }
 
@@ -78,6 +82,10 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMEx
 
 FGNozzle::~FGNozzle()
 {
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
+  PropertyManager->Untie( property_name );
+
   Debug(1);
 }
 
@@ -88,6 +96,8 @@ double FGNozzle::Calculate(double CfPc)
   double pAtm = fdmex->GetAtmosphere()->GetPressure();
   Thrust = max((double)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
   vFn(1) = Thrust * cos(ReverserAngle);
+
+  ThrustCoeff = CfPc / ((pAtm - PE) * Area2);
 
   return Thrust;
 }

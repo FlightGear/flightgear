@@ -69,7 +69,7 @@ class FGNozzle : public FGThruster {
 
 public:
   /// Constructor
-  FGNozzle(FGFDMExec* exec, FGConfigFile* AC_cfg);
+  FGNozzle(FGFDMExec* exec, FGConfigFile* AC_cfg, int num = 0);
   /// Destructor
   ~FGNozzle();
 

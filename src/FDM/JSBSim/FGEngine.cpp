@@ -236,11 +236,11 @@ bool FGEngine::LoadThruster(FGConfigFile* AC_cfg)
     thrType = Cfg_ptr->GetValue();
 
     if (thrType == "FG_PROPELLER") {
-      Thruster = new FGPropeller(FDMExec, Cfg_ptr);
+      Thruster = new FGPropeller(FDMExec, Cfg_ptr, EngineNumber);
     } else if (thrType == "FG_NOZZLE") {
-      Thruster = new FGNozzle(FDMExec, Cfg_ptr);
+      Thruster = new FGNozzle(FDMExec, Cfg_ptr, EngineNumber);
     } else if (thrType == "FG_DIRECT") {
-      Thruster = new FGThruster( FDMExec, Cfg_ptr);
+      Thruster = new FGThruster( FDMExec, Cfg_ptr, EngineNumber);
     }
 
     AC_cfg->GetNextConfigLine();

@@ -299,6 +299,15 @@ public:
    */
   double Magnitude(void) const;
 
+  /** Length of the vector in a coordinate axis plane.
+
+      Compute and return the euclidean norm of this vector projected into
+      the coordinate axis plane idx1-idx2.
+   */
+  double Magnitude(int idx1, int idx2) const {
+    return sqrt( Entry(idx1)*Entry(idx1) +  Entry(idx2)*Entry(idx2) );
+  }
+
   /** Normalize.
 
       Normalize the vector to have the Magnitude() == 1.0. If the vector

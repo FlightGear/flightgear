@@ -89,7 +89,7 @@ public:
   /** Constructor for FGPropeller.
       @param exec a pointer to the main executive object
       @param AC_cfg a pointer to the main aircraft config file object */
-  FGPropeller(FGFDMExec* exec, FGConfigFile* AC_cfg);
+  FGPropeller(FGFDMExec* exec, FGConfigFile* AC_cfg, int num = 0);
 
   /// Destructor for FGPropeller - deletes the FGTable objects
   ~FGPropeller();

@@ -152,6 +152,9 @@ void FGPropagate::SetInitialState(const FGInitialCondition *FGIC)
 
   // Compute some derived values.
   vVel = VState.vQtrn.GetTInv()*VState.vUVW;
+
+  // Finaly make shure that the quaternion stays normalized.
+  VState.vQtrn.Normalize();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -289,13 +292,13 @@ void FGPropagate::bind(void)
 
   PropertyManager->Tie("metrics/runway-radius", this, &FGPropagate::GetRunwayRadius, &FGPropagate::SetRunwayRadius);
 
-  PropertyManager->Tie("attitude/phi-rad", this, &FGPropagate::Getphi);
-  PropertyManager->Tie("attitude/theta-rad", this, &FGPropagate::Gettht);
-  PropertyManager->Tie("attitude/psi-rad", this, &FGPropagate::Getpsi);
+  PropertyManager->Tie("attitude/phi-rad", this, (int)ePhi, (PMF)&FGPropagate::GetEuler);
+  PropertyManager->Tie("attitude/theta-rad", this, (int)eTht, (PMF)&FGPropagate::GetEuler);
+  PropertyManager->Tie("attitude/psi-rad", this, (int)ePsi, (PMF)&FGPropagate::GetEuler);
 
-  PropertyManager->Tie("attitude/roll-rad", this, &FGPropagate::Getphi);
-  PropertyManager->Tie("attitude/pitch-rad", this, &FGPropagate::Gettht);
-  PropertyManager->Tie("attitude/heading-true-rad", this, &FGPropagate::Getpsi);
+  PropertyManager->Tie("attitude/roll-rad", this, (int)ePhi, (PMF)&FGPropagate::GetEuler);
+  PropertyManager->Tie("attitude/pitch-rad", this, (int)eTht, (PMF)&FGPropagate::GetEuler);
+  PropertyManager->Tie("attitude/heading-true-rad", this, (int)ePsi, (PMF)&FGPropagate::GetEuler);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

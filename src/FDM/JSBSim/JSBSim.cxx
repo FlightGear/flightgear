@@ -314,11 +314,11 @@ void FGJSBsim::init()
     stall_warning->setDoubleValue(0);
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  Bank Angle: "
-            << Propagate->Getphi()*RADTODEG << " deg" );
+            << Propagate->GetEuler(ePhi)*RADTODEG << " deg" );
     SG_LOG( SG_FLIGHT, SG_INFO, "  Pitch Angle: "
-            << Propagate->Gettht()*RADTODEG << " deg" );
+            << Propagate->GetEuler(eTht)*RADTODEG << " deg" );
     SG_LOG( SG_FLIGHT, SG_INFO, "  True Heading: "
-            << Propagate->Getpsi()*RADTODEG << " deg" );
+            << Propagate->GetEuler(ePsi)*RADTODEG << " deg" );
     SG_LOG( SG_FLIGHT, SG_INFO, "  Latitude: "
             << Propagate->GetLocation().GetLatitudeDeg() << " deg" );
     SG_LOG( SG_FLIGHT, SG_INFO, "  Longitude: "
@@ -415,7 +415,10 @@ bool FGJSBsim::copy_to_JSBsim()
     FCS->SetPitchTrimCmd( globals->get_controls()->get_elevator_trim() );
     FCS->SetDrCmd( -globals->get_controls()->get_rudder() );
     FCS->SetYawTrimCmd( -globals->get_controls()->get_rudder_trim() );
-    FCS->SetDfCmd(  globals->get_controls()->get_flaps() );
+    // FIXME: make that get_steering work
+//     FCS->SetDsCmd( globals->get_controls()->get_steering()/80.0 );
+    FCS->SetDsCmd( globals->get_controls()->get_rudder() );
+    FCS->SetDfCmd( globals->get_controls()->get_flaps() );
     FCS->SetDsbCmd( globals->get_controls()->get_speedbrake() );
     FCS->SetDspCmd( globals->get_controls()->get_spoilers() );
 
@@ -576,9 +579,9 @@ bool FGJSBsim::copy_from_JSBsim()
 
     _set_Altitude_AGL( Propagate->GetDistanceAGL() );
 
-    _set_Euler_Angles( Propagate->Getphi(),
-                       Propagate->Gettht(),
-                       Propagate->Getpsi() );
+    _set_Euler_Angles( Propagate->GetEuler(ePhi),
+                       Propagate->GetEuler(eTht),
+                       Propagate->GetEuler(ePsi) );
 
     _set_Alpha( Auxiliary->Getalpha() );
     _set_Beta( Auxiliary->Getbeta() );
@@ -914,17 +917,17 @@ void FGJSBsim::init_gear(void )
     FGGroundReactions* gr=fdmex->GetGroundReactions();
     int Ngear=GroundReactions->GetNumGearUnits();
     for (int i=0;i<Ngear;i++) {
+      FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
-      node->setDoubleValue("xoffset-in",
-         gr->GetGearUnit(i)->GetBodyLocation()(1));
-      node->setDoubleValue("yoffset-in",
-         gr->GetGearUnit(i)->GetBodyLocation()(2));
-      node->setDoubleValue("zoffset-in",
-         gr->GetGearUnit(i)->GetBodyLocation()(3));
-      node->setBoolValue("wow", gr->GetGearUnit(i)->GetWOW());
-      node->setBoolValue("has-brake", gr->GetGearUnit(i)->GetBrakeGroup() > 0);
+      node->setDoubleValue("xoffset-in", gear->GetBodyLocation()(1));
+      node->setDoubleValue("yoffset-in", gear->GetBodyLocation()(2));
+      node->setDoubleValue("zoffset-in", gear->GetBodyLocation()(3));
+      node->setBoolValue("wow", gear->GetWOW());
+      node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
       node->setDoubleValue("position-norm", FCS->GetGearPos());
-      node->setDoubleValue("tire-pressure-norm", gr->GetGearUnit(i)->GetTirePressure());
+      node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
+      if ( gear->GetSteerable() )
+        node->setDoubleValue("steering-norm", gear->GetSteerNorm());
     }
 }
 
@@ -933,10 +936,13 @@ void FGJSBsim::update_gear(void)
     FGGroundReactions* gr=fdmex->GetGroundReactions();
     int Ngear=GroundReactions->GetNumGearUnits();
     for (int i=0;i<Ngear;i++) {
+      FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
-      node->getChild("wow", 0, true)->setBoolValue(gr->GetGearUnit(i)->GetWOW());
+      node->getChild("wow", 0, true)->setBoolValue( gear->GetWOW());
       node->getChild("position-norm", 0, true)->setDoubleValue(FCS->GetGearPos());
-      gr->GetGearUnit(i)->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
+      gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
+      if ( gear->GetSteerable() )
+        node->setDoubleValue("steering-norm", gear->GetSteerNorm());
     }
 }
 

@@ -87,6 +87,8 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
   TurbGain = 0.0;
   TurbRate = 1.0;
 
+  T_dev_sl = T_dev = delta_T = 0.0;
+
   bind();
   Debug(0);
 }
@@ -234,6 +236,17 @@ void FGAtmosphere::Calculate(double altitude)
 
   }
 
+  T_dev = 0.0;
+  if (delta_T != 0.0) {
+    T_dev = delta_T;
+  } else {
+    if ((h < 36089.239) && (T_dev_sl != 0.0)) {
+      T_dev = T_dev_sl * ( 1.0 - (h/36089.239));
+    }
+  } 
+  density_altitude = h + T_dev * 66.7;
+
+  reftemp+=T_dev;
   if (slope == 0) {
     intTemperature = reftemp;
     intPressure = refpress*exp(-Inertial->SLgravity()/(reftemp*Reng)*(altitude-htab[i]));
@@ -430,6 +443,12 @@ void FGAtmosphere::bind(void)
                        &FGAtmosphere::GetSoundSpeedRatio);
   PropertyManager->Tie("atmosphere/psiw-rad", this,
                        &FGAtmosphere::GetWindPsi);
+  PropertyManager->Tie("atmosphere/delta-T", this,
+                       &FGAtmosphere::GetDeltaT, &FGAtmosphere::SetDeltaT);
+  PropertyManager->Tie("atmosphere/T-sl-dev-F", this,
+                       &FGAtmosphere::GetSLTempDev, &FGAtmosphere::SetSLTempDev);
+  PropertyManager->Tie("atmosphere/density-altitude", this,
+                       &FGAtmosphere::GetDensityAltitude);
   PropertyManager->Tie("atmosphere/p-turb-rad_sec", this,1,
                        (PMF)&FGAtmosphere::GetTurbPQR);
   PropertyManager->Tie("atmosphere/q-turb-rad_sec", this,2,
@@ -450,6 +469,9 @@ void FGAtmosphere::unbind(void)
   PropertyManager->Untie("atmosphere/rho-sl-slugs_ft3");
   PropertyManager->Untie("atmosphere/P-sl-psf");
   PropertyManager->Untie("atmosphere/a-sl-fps");
+  PropertyManager->Untie("atmosphere/delta-T");
+  PropertyManager->Untie("atmosphere/T-sl-dev-F");
+  PropertyManager->Untie("atmosphere/density-altitude");
   PropertyManager->Untie("atmosphere/theta-norm");
   PropertyManager->Untie("atmosphere/sigma-norm");
   PropertyManager->Untie("atmosphere/delta-norm");
