@@ -32,7 +32,7 @@
 #include "LaRCsim/ls_interface.h"
 
 
-/* Define the various supported flight models (not all implemented) */
+/* Define the various supported flight models (most not yet implemented) */
 #define FG_LARCSIM     0
 #define FG_ACM         1
 #define FG_HELICOPTER  2
@@ -41,6 +41,7 @@
 #define FG_PARACHUTE   5
 #define FG_SLEW        6
 #define FG_EXTERN_GPS  7
+#define FG_EXTERN_NET  8
 
 
 /* Define a structure containing the shared flight model parameters */
@@ -405,14 +406,17 @@ int fgFlightModelInit(int model, struct flight_params *f, double dt);
 int fgFlightModelUpdate(int model, struct flight_params *f, int multiloop);
 
 
-#endif FLIGHT_H
+#endif /* FLIGHT_H */
 
 
 /* $Log$
-/* Revision 1.6  1997/06/21 17:52:22  curt
-/* Continue directory shuffling ... everything should be compilable/runnable
-/* again.
+/* Revision 1.7  1997/07/23 21:52:19  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.6  1997/06/21 17:52:22  curt
+ * Continue directory shuffling ... everything should be compilable/runnable
+ * again.
+ *
  * Revision 1.5  1997/06/21 17:12:49  curt
  * Capitalized subdirectory names.
  *

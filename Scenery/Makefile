@@ -26,7 +26,7 @@
 
 TARGET = libScenery.a
 
-CFILES = common.c mesh.c scenery.c scanner.c parser.c geometry.c
+CFILES = chunkmgr.c common.c mesh.c scenery.c scanner.c parser.c geometry.c
 HFILES = 
 OFILES = $(CFILES:.c=.o)
 
@@ -75,6 +75,9 @@ scanner.o: scanner.c
 parser.o: parser.c
 	$(CC) $(CFLAGS) -c parser.c -o $@
 
+chunkmgr.o:
+	$(CC) $(CFLAGS) -c chunkmgr.c -o $@
+
 common.o:
 	$(CC) $(CFLAGS) -c common.c -o $@
 
@@ -89,6 +92,9 @@ geometry.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.17  1997/07/23 21:52:23  curt
+# Put comments around the text after an #endif for increased portability.
+#
 # Revision 1.16  1997/07/20 02:19:11  curt
 # First stab at a system to generate os2 makefiles automatically.
 #

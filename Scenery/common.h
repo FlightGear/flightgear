@@ -36,13 +36,16 @@
 char *strip_quotes(char *s);
 
 
-#endif COMMON_H
+#endif /* COMMON_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 15:40:41  curt
-/* Added GNU copyright headers.
+/* Revision 1.3  1997/07/23 21:52:24  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.2  1997/05/23 15:40:41  curt
+ * Added GNU copyright headers.
+ *
  * Revision 1.1  1997/05/16 16:07:04  curt
  * Initial revision.
  *

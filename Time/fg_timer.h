@@ -40,11 +40,14 @@ void fgTimerInit(float dt, void (*f)());
 int fgGetTimeInterval();
 
 
-#endif FG_TIMER_H
+#endif /* FG_TIMER_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/06/16 19:24:20  curt
-/* Initial revision.
+/* Revision 1.2  1997/07/23 21:52:27  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.1  1997/06/16 19:24:20  curt
+ * Initial revision.
+ *
  */

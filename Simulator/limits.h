@@ -32,13 +32,16 @@
 #define FG_MAX_ENGINES 10
 
 
-#endif LIMITS_H
+#endif /* LIMITS_H */
 
 
 /* $Log$
-/* Revision 1.3  1997/05/31 19:16:24  curt
-/* Elevator trim added.
+/* Revision 1.4  1997/07/23 21:52:11  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.3  1997/05/31 19:16:24  curt
+ * Elevator trim added.
+ *
  * Revision 1.2  1997/05/27 17:48:10  curt
  * Added GNU copyright.
  *

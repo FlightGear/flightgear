@@ -38,13 +38,16 @@ int fgLaRCsimInit(double dt);
 int fgLaRCsimUpdate(int multiloop);
 
 
-#endif LS_INTERFACE_H
+#endif /* LS_INTERFACE_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/05/29 22:39:59  curt
-/* Working on incorporating the LaRCsim flight model.
+/* Revision 1.3  1997/07/23 21:52:20  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.2  1997/05/29 22:39:59  curt
+ * Working on incorporating the LaRCsim flight model.
+ *
  * Revision 1.1  1997/05/29 00:09:58  curt
  * Initial Flight Gear revision.
  *

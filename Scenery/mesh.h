@@ -72,13 +72,16 @@ void mesh_do_it(struct mesh *m);
 double mesh_altitude(double lon, double lat);
 
 
-#endif MESH_H
+#endif /* MESH_H */
 
 
 /* $Log$
-/* Revision 1.4  1997/07/08 18:20:14  curt
-/* Working on establishing a hard ground.
+/* Revision 1.5  1997/07/23 21:52:25  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.4  1997/07/08 18:20:14  curt
+ * Working on establishing a hard ground.
+ *
  * Revision 1.3  1997/06/22 21:44:41  curt
  * Working on intergrating the VRML (subset) parser.
  *

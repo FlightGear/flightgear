@@ -47,13 +47,16 @@ extern struct aircraft_params current_aircraft;
 void aircraft_debug(int type);
 
 
-#endif AIRCRAFT_H
+#endif /* AIRCRAFT_H */
 
 
 /* $Log$
-/* Revision 1.3  1997/06/21 17:12:42  curt
-/* Capitalized subdirectory names.
+/* Revision 1.4  1997/07/23 21:52:17  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.3  1997/06/21 17:12:42  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.2  1997/05/23 15:40:30  curt
  * Added GNU copyright headers.
  *

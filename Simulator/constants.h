@@ -75,13 +75,16 @@
 #define EPSILON 0.000001
 
 
-#endif CONSTANTS_H
+#endif /* CONSTANTS_H */
 
 
 /* $Log$
-/* Revision 1.6  1997/07/21 14:45:01  curt
-/* Minor tweaks.
+/* Revision 1.7  1997/07/23 21:52:10  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.6  1997/07/21 14:45:01  curt
+ * Minor tweaks.
+ *
  * Revision 1.5  1997/07/19 23:04:46  curt
  * Added an initial weather section.
  *

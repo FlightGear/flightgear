@@ -35,14 +35,17 @@
 GLenum GLTKkey(int k, GLenum mask);
 
 
-#endif GLTKKEY_H
+#endif /* GLTKKEY_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 15:40:24  curt
-/* Added GNU copyright headers.
-/* Fog now works!
+/* Revision 1.3  1997/07/23 21:52:22  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.2  1997/05/23 15:40:24  curt
+ * Added GNU copyright headers.
+ * Fog now works!
+ *
  * Revision 1.1  1997/05/21 15:57:49  curt
  * Renamed due to added GLUT support.
  *

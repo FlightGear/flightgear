@@ -40,11 +40,14 @@ struct fgGeodeticPoint {
 };
 
 
-#endif TYPES_H
+#endif /* TYPES_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/07/07 21:03:30  curt
-/* Initial revision.
+/* Revision 1.2  1997/07/23 21:52:12  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.1  1997/07/07 21:03:30  curt
+ * Initial revision.
+ *
  */

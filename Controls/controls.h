@@ -77,13 +77,16 @@ void fgThrottleSet(int engine, double pos);
 
 
 
-#endif CONTROLS_H
+#endif /* CONTROLS_H */
 
 
 /* $Log$
-/* Revision 1.3  1997/05/31 19:16:27  curt
-/* Elevator trim added.
+/* Revision 1.4  1997/07/23 21:52:18  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.3  1997/05/31 19:16:27  curt
+ * Elevator trim added.
+ *
  * Revision 1.2  1997/05/23 15:40:33  curt
  * Added GNU copyright headers.
  *

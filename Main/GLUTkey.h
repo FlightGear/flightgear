@@ -40,13 +40,16 @@ void GLUTkey(unsigned char k, int x, int y);
 void GLUTspecialkey(int k, int x, int y);
 
 
-#endif GLUTKEY_H
+#endif /* GLUTKEY_H */
 
 
 /* $Log$
-/* Revision 1.4  1997/06/02 03:40:06  curt
-/* A tiny bit more view tweaking.
+/* Revision 1.5  1997/07/23 21:52:23  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.4  1997/06/02 03:40:06  curt
+ * A tiny bit more view tweaking.
+ *
  * Revision 1.3  1997/05/31 04:13:52  curt
  * WE CAN NOW FLY!!!
  *

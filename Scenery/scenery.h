@@ -39,21 +39,26 @@ extern struct scenery_params cur_scenery_params;
 /* Initialize the Scenery Management system */
 void fgSceneryInit();
 
+
 /* Tell the scenery manager where we are so it can load the proper data, and
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev);
+
 
 /* Render out the current scene */
 void fgSceneryRender();
 
 
-#endif SCENERY_H
+#endif /* SCENERY_H */
 
 
 /* $Log$
-/* Revision 1.6  1997/07/11 01:30:03  curt
-/* More tweaking of terrian floor.
+/* Revision 1.7  1997/07/23 21:52:27  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.6  1997/07/11 01:30:03  curt
+ * More tweaking of terrian floor.
+ *
  * Revision 1.5  1997/06/26 22:14:57  curt
  * Beginning work on a scenery management system.
  *

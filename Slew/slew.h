@@ -35,13 +35,16 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading);
 void fgSlewUpdate();
 
 
-#endif SLEW_H
+#endif /* SLEW_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/05/29 02:29:43  curt
-/* Moved to their own directory.
+/* Revision 1.2  1997/07/23 21:52:20  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.1  1997/05/29 02:29:43  curt
+ * Moved to their own directory.
+ *
  * Revision 1.2  1997/05/23 15:40:38  curt
  * Added GNU copyright headers.
  *

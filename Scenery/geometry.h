@@ -52,13 +52,16 @@ void vrmlHandleGeometry();
 int vrmlFreeGeometry();
 
 
-#endif GEOMETRY_H
+#endif /* GEOMETRY_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/06/29 21:16:48  curt
-/* More twiddling with the Scenery Management system.
+/* Revision 1.2  1997/07/23 21:52:25  curt
+/* Put comments around the text after an #endif for increased portability.
 /*
+ * Revision 1.1  1997/06/29 21:16:48  curt
+ * More twiddling with the Scenery Management system.
+ *
  * Revision 1.1  1997/06/22 21:42:35  curt
  * Initial revision of VRML (subset) parser.
  *
