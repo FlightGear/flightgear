@@ -43,6 +43,10 @@ SG_USING_STD(cout);
 SG_USING_STD(endl);
 
 
+// Make Cygwin and MSVC builds happy
+#define NOGDI
+
+
 LaRCsimIC::LaRCsimIC(void) {
   vt=vtg=vw=vc=ve=0;
   mach=0;
