@@ -314,8 +314,7 @@ Synchronize time with local real-world time.
 Synchronize time with the real-world time.
 .TP
 .BI "--time-offset=" "[+-]hh:mm:ss"
-Specify a time offset with respect to the current time.  May be used in
-conjunction with other --time-* options.
+Specify a time offset with respect to the current time.
 .TP
 .BI "--trace-read=" "property"
 Trace the reads for a property.  Multiple instances allowed.

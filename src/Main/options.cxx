@@ -1218,8 +1218,7 @@ fgUsage ()
          << endl
 	
          << "Time Options:" << endl
-         << "    --time-offset=[+-]hh:mm:ss    Add this time offset; can be use in" << endl
-         << "                                  combination with other time options" << endl
+         << "    --time-offset=[+-]hh:mm:ss    Add this time offset" << endl
          << "    --time-match-real             Synchronize time with real-world time" << endl
          << "    --time-match-local            Synchronize time with local real-world time" << endl
          << "    --start-date-sys=yyyy:mm:dd:hh:mm:ss" << endl
