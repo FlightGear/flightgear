@@ -54,6 +54,9 @@
 /* Define to enable plib joystick support (recommended) */
 #undef ENABLE_PLIB_JOYSTICK
    
+/* Define to enable plib joystick support (recommended) */
+#undef PLIB_AUDIO_IS_BROKEN
+   
 /* Define to eliminate all trace of debugging messages such as for a 
    release build */
 #undef FG_NDEBUG
