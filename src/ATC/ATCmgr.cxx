@@ -65,8 +65,10 @@ FGATCMgr::FGATCMgr() {
 	comm_type[1] = INVALID;
 	comm_atc_ptr[0] = NULL;
 	comm_atc_ptr[1] = NULL;
-        comm_valid[0] = false;
-        comm_valid[1] = false;
+	comm_valid[0] = false;
+	comm_valid[1] = false;
+	
+	initDone = false;
 }
 
 FGATCMgr::~FGATCMgr() {
@@ -130,9 +132,16 @@ void FGATCMgr::init() {
 	// DCL - testing
 	//current_atcdialog->add_entry( "EGNX", "Request vectoring for approach", "Request Vectors" );
 	//current_atcdialog->add_entry( "EGNX", "Mayday, Mayday", "Declare Emergency" );
+	
+	initDone = true;
 }
 
 void FGATCMgr::update(double dt) {
+	if(!initDone) {
+		init();
+		SG_LOG(SG_ATC, SG_WARN, "Warning - ATCMgr::update(...) called before ATCMgr::init()");
+	}
+	
 	//cout << "Entering update..." << endl;
 	//Traverse the list of active stations.
 	//Only update one class per update step to avoid the whole ATC system having to calculate between frames.

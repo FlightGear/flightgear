@@ -77,6 +77,8 @@ class FGATCMgr : public FGSubsystem
 
 private:
 
+	bool initDone;	// Hack - guard against update getting called before init
+
     // A map of airport ID vs frequencies and ATC provision
     typedef map < string, AirportATC* > airport_atc_map_type;
     typedef airport_atc_map_type::iterator airport_atc_map_iterator;

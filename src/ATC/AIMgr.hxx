@@ -91,6 +91,8 @@ public:
 
 private:
 
+	bool initDone;	// Hack - guard against update getting called before init
+
     // Remove a class from the ai_list and delete it from memory
     //void RemoveFromList(const char* id, atc_type tp);
 	

@@ -42,6 +42,7 @@ SG_USING_STD(cout);
 
 FGAIMgr::FGAIMgr() {
 	ATC = globals->get_ATC_mgr();
+	initDone = false;
 }
 
 FGAIMgr::~FGAIMgr() {
@@ -141,6 +142,8 @@ void FGAIMgr::init() {
 	
 	// See if are in range at startup and activate if necessary
 	SearchByPos(10.0);
+	
+	initDone = true;
 }
 
 void FGAIMgr::bind() {
@@ -150,6 +153,11 @@ void FGAIMgr::unbind() {
 }
 
 void FGAIMgr::update(double dt) {
+	if(!initDone) {
+		init();
+		SG_LOG(SG_ATC, SG_WARN, "Warning - AIMgr::update(...) called before AIMgr::init()");
+	}
+	
 	static int i = 0;
 	static int j = 0;
 
