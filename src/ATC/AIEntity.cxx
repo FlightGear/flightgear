@@ -26,6 +26,10 @@
 *
 ******************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 //#include <simgear/constants.h>

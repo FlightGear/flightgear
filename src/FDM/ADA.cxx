@@ -18,6 +18,10 @@
 
 // Modified by Cdr. VS Renganthan <vsranga@ada.ernet.in>, 12 Oct 2K
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/io/iochannel.hxx>
 #include <simgear/constants.h>
 

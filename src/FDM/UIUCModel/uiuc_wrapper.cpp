@@ -75,6 +75,10 @@
  
 **********************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
 #include <Aircraft/aircraft.hxx>
