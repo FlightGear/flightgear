@@ -47,6 +47,17 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <Include/compiler.h>
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
 #include "sg.h"
 
 #include "FGWeatherDefs.h"

@@ -14,6 +14,7 @@ libWeatherCM_a_SOURCES = \
 	FGVaporPressureItem.cpp FGVaporPressureItem.h \
 	FGVoronoi.cpp FGVoronoi.h \
 	FGWeatherDefs.h FGWeatherFeature.h FGWeatherUtils.h \
+	FGWeatherVectorWrap.h \
 	FGWindItem.cpp FGWindItem.h
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Simulator
