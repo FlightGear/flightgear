@@ -130,7 +130,7 @@ void FGTileMgr::load_tile( const FGBucket& b ) {
     if ( t == NULL ) {
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
 	global_tile_cache.fill_in( b );
-	FGTileEntry *t = global_tile_cache.get_tile( b );
+	t = global_tile_cache.get_tile( b );
 	t->prep_ssg_node( scenery.center, vis);
     } else {
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Tile already in cache " << b );

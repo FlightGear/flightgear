@@ -133,7 +133,7 @@ static void print_refs( ssgSelector *sel, ssgTransform *trans,
 #endif
 
 
-static ssgLeaf *gen_lights( ssgVertexArray *lights ) {
+static ssgLeaf *gen_lights( ssgVertexArray *lights, float bright ) {
     // Allocate ssg structure
     ssgNormalArray   *nl = NULL;
     ssgTexCoordArray *tl = NULL;
@@ -141,7 +141,7 @@ static ssgLeaf *gen_lights( ssgVertexArray *lights ) {
 
     // default to slightly yellow lights for now
     sgVec4 color;
-    sgSetVec4( color, 1.0, 1.0, 0.7, 1.0 );
+    sgSetVec4( color, 1.0 * bright, 1.0 * bright, 0.7 * bright, 1.0 );
     cl->add( color );
 
     // create ssg leaf
@@ -250,12 +250,25 @@ void FGNewCache::fill_in( const FGBucket& b ) {
     terrain->addKid( e->terra_transform );
 
     e->lights_transform = NULL;
+    e->lights_range = NULL;
     /* uncomment this section for testing ground lights */
-    ssgLeaf *lights = gen_lights( light_pts );
-    if ( lights ) {
+    if ( light_pts->getNum() ) {
+	cout << "generating lights" << endl;
 	e->lights_transform = new ssgTransform;
 	e->lights_range = new ssgRangeSelector;
-	e->lights_range->addKid( lights );
+	e->lights_brightness = new ssgSelector;
+	ssgLeaf *lights;
+
+	lights = gen_lights( light_pts, 0.6 );
+	e->lights_brightness->addKid( lights );
+
+	lights = gen_lights( light_pts, 0.8 );
+	e->lights_brightness->addKid( lights );
+
+	lights = gen_lights( light_pts, 1.0 );
+	e->lights_brightness->addKid( lights );
+
+	e->lights_range->addKid( e->lights_brightness );
 	e->lights_transform->addKid( e->lights_range );
 	e->lights_transform->setTransform( &sgcoord );
 	ground->addKid( e->lights_transform );

@@ -36,6 +36,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Time/light.hxx>
 
 #include "tileentry.hxx"
 
@@ -174,8 +175,10 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
     ranges[0] = SG_ZERO;
     ranges[1] = vis + bounding_radius;
     terra_range->setRanges( ranges, 2 );
-    ranges[1] = vis * 1.5 + bounding_radius;
-    lights_range->setRanges( ranges, 2 );
+    if ( lights_range ) {
+	ranges[1] = vis * 1.5 + bounding_radius;
+	lights_range->setRanges( ranges, 2 );
+    }
 #endif
     sgVec3 sgTrans;
     sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
@@ -207,5 +210,17 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	sgScaleVec3( up, 10.0 + agl / 100.0 + dist / 10000 );
 	sgAddVec3( sgTrans, up );
 	lights_transform->setTransform( sgTrans );
+
+	// select which set of lights based on sun angle
+	float sun_angle = cur_light_params.sun_angle * RAD_TO_DEG;
+	if ( sun_angle > 100 ) {
+	    lights_brightness->select(0x04);
+	} else if ( sun_angle > 95.5 ) {
+	    lights_brightness->select(0x02);
+	} else if ( sun_angle > 91 ) {
+	    lights_brightness->select(0x01);
+	} else {
+	    lights_brightness->select(0x00);
+	}
     }
 }

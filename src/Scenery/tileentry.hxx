@@ -109,6 +109,10 @@ public:
     ssgRangeSelector *terra_range;
     ssgRangeSelector *lights_range;
 
+    // we create several preset brightness and can choose which one we
+    // want based on lighting conditions.
+    ssgSelector *lights_brightness;
+
 public:
 
     // Constructor
