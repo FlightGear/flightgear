@@ -82,6 +82,7 @@
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
 #include <FDM/NullFDM.hxx>
+#include <FDM/YASim/YASim.hxx>
 #include <Include/general.hxx>
 #include <Input/input.hxx>
 // #include <Joystick/joystick.hxx>
@@ -560,6 +561,8 @@ bool fgInitSubsystems( void ) {
 	    cur_fdm_state = new FGExternal( dt );
 	} else if (model == "null") {
 	    cur_fdm_state = new FGNullFDM( dt );
+	} else if (model == "yasim") {
+	    cur_fdm_state = new YASim( dt );
 	} else {
 	    SG_LOG(SG_GENERAL, SG_ALERT,
 		   "Unrecognized flight model '" << model
@@ -934,6 +937,8 @@ void fgReInitSubsystems( void )
 	    cur_fdm_state = new FGExternal( dt );
 	} else if (model == "null") {
 	    cur_fdm_state = new FGNullFDM( dt );
+	} else if (model == "yasim") {
+	    cur_fdm_state = new YASim( dt );
 	} else {
 	    SG_LOG(SG_GENERAL, SG_ALERT,
 		   "Unrecognized flight model '" << model
