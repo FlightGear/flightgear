@@ -58,7 +58,7 @@ using namespace std;
 
 
 // Maximum nodes per tile
-#define MAX_NODES 1000
+#define MAX_NODES 2000
 
 
 // Forward declarations
@@ -171,6 +171,9 @@ public:
 
 
 // $Log$
+// Revision 1.16  1998/08/22 02:01:34  curt
+// increased fragment list size.
+//
 // Revision 1.15  1998/08/20 15:12:06  curt
 // Used a forward declaration of classes fgTILE and fgMATERIAL to eliminate
 // the need for "void" pointers and casts.
