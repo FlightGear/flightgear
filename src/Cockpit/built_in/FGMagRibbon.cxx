@@ -67,7 +67,11 @@ FGMagRibbon::draw ()
 
   FGCroppedTexture &t = getTexture();
   t.setCrop(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
+
+  glPushAttrib(GL_DEPTH_BUFFER_BIT);
+  glDepthMask(GL_TRUE);
   FGTexturedLayer::draw();
+  glPopAttrib();
 }
 
 // end of FGMagRibbon.cxx

@@ -346,9 +346,7 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   
   glTranslated(x_offset, y_offset, 0);
   
-  glDepthMask(GL_FALSE);
   draw();
-  glDepthMask(GL_TRUE);
 
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
@@ -370,7 +368,8 @@ FGPanel::draw()
 
   // save some state
   glPushAttrib( GL_COLOR_BUFFER_BIT | GL_ENABLE_BIT | GL_LIGHTING_BIT
-                | GL_TEXTURE_BIT | GL_PIXEL_MODE_BIT );
+                | GL_TEXTURE_BIT | GL_PIXEL_MODE_BIT | GL_CULL_FACE 
+                | GL_DEPTH_BUFFER_BIT );
 
   // Draw the background
   glEnable(GL_TEXTURE_2D);
@@ -378,6 +377,8 @@ FGPanel::draw()
   glEnable(GL_BLEND);
   glEnable(GL_ALPHA_TEST);
   glEnable(GL_COLOR_MATERIAL);
+  glEnable(GL_CULL_FACE);
+  glCullFace(GL_BACK);
   sgVec4 panel_color;
   sgCopyVec4( panel_color, cur_light_params.scene_diffuse );
   if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
@@ -424,6 +425,10 @@ FGPanel::draw()
   instrument_list_type::const_iterator current = _instruments.begin();
   instrument_list_type::const_iterator end = _instruments.end();
 
+  // Don't let the instruments be visible trhought the roof of the c310-3d
+  // This does hurt the magnetic compass in the default c172-3d,
+  //  but we need a real 3d compass anyway.
+  glDepthMask(GL_FALSE);
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
     glPushMatrix();
