@@ -1,0 +1,85 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0104 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <string>} {public
+} 
+
+decl {\#include <FL/Fl_Preferences.H>} {public
+} 
+
+decl {using std::string;} {public
+} 
+
+class FGAdminUI {open selected
+} {
+  decl {\#include <iostream>} {}
+  decl {using std::cout;} {}
+  decl {using std::endl;} {}
+  Function {FGAdminUI()} {open
+  } {
+    Fl_Window main_window {
+      label {FlightGear Admin Wizard} open
+      xywh {186 521 465 435} type Double visible
+    } {
+      Fl_Button quit_b {
+        label Quit
+        callback {quit();}
+        xywh {190 405 85 25}
+      }
+      Fl_Button source_b {
+        label {Select Scenery Source ...}
+        callback {select_install_source();
+refresh_lists();}
+        xywh {5 5 225 25}
+      }
+      Fl_Input source_text {
+        xywh {5 35 225 25}
+      }
+      Fl_Button dest_b {
+        label {Select Install Destination ...}
+        callback {select_install_dest();
+refresh_lists();}
+        xywh {235 5 225 25}
+      }
+      Fl_Input dest_text {
+        xywh {235 35 225 25}
+      }
+      Fl_Check_Browser install_box {
+        label {Select Files to Install}
+        xywh {5 65 225 270}
+      }
+      Fl_Check_Browser remove_box {
+        label {Select Files to Remove}
+        xywh {235 65 225 270}
+      }
+      Fl_Button install_b {
+        label {Install Selected Files}
+        callback {install_selected();}
+        xywh {20 360 195 35} labelfont 1
+      }
+      Fl_Button remove_b {
+        label {Remove Selected Files}
+        callback {remove_selected();}
+        xywh {250 360 195 35} labelfont 1
+      }
+    }
+  }
+  decl {~FGAdminUI();} {public
+  }
+  decl {void init();} {public
+  }
+  decl {void show();} {public
+  }
+  decl {void refresh_lists();} {}
+  decl {void quit();} {}
+  decl {void select_install_source();} {}
+  decl {void select_install_dest();} {}
+  decl {void update_install_box();} {}
+  decl {void update_remove_box();} {}
+  decl {void install_selected();} {}
+  decl {void remove_selected();} {}
+  decl {Fl_Preferences *prefs;} {}
+  decl {string source;} {}
+  decl {string dest;} {}
+} 
