@@ -150,6 +150,22 @@ bool FGClipper::load_polys(const string& path) {
 }
 
 
+// merge any slivers in the specified polygon with larger
+// neighboring polygons of higher priorigy
+void FGClipper::merge_slivers(gpc_polygon *poly) {
+    cout << "Begin merge slivers" << endl;
+    // traverse each contour of the polygon and attempt to identify
+    // likely slivers
+    for ( int i = 0; i < poly->num_contours; i++ ) {
+	cout << "contour " << i << endl;
+	for (int j = 0; j < poly->contour[i].num_vertices; j++ ) {
+	    cout << poly->contour[i].vertex[j].x << ","
+		 << poly->contour[i].vertex[j].y << endl;
+	}
+    }
+}
+
+
 // Do actually clipping work
 bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     gpc_polygon accum, result_union, tmp;
@@ -182,7 +198,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     polys_in.safety_base.contour = NULL;
     gpc_add_contour( &polys_in.safety_base, &v_list, 0 );
 
-    int count = 0;
+    // int count = 0;
     // process polygons in priority order
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	cout << "num polys of type (" << i << ") = " 
@@ -249,6 +265,9 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
 	    // only add to output list if the clip left us with a polygon
 	    if ( result_diff->num_contours > 0 ) {
+		// merge any slivers with larger neighboring polygons
+		merge_slivers(result_diff);
+
 		polys_clipped.polys[i].push_back(result_diff);
 
 		// char filename[256];

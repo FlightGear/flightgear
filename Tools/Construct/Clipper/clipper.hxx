@@ -96,6 +96,10 @@ public:
     // Load a polygon definition file
     bool load_polys(const string& path);
 
+    // merge any slivers in the specified polygon with larger
+    // neighboring polygons of higher priorigy
+    void merge_slivers(gpc_polygon *poly);
+    
     // Do actually clipping work
     bool clip_all(const point2d& min, const point2d& max);
 
