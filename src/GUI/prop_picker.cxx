@@ -447,12 +447,12 @@ void fgPropPicker::find_props ()
     pi = 0;
   } else {
     // add two for the .. and .
-    num_files = num_files +2;
+    num_files = num_files + 2;
     // make room for .. and .
-    files = new char* [ num_files+3 ] ;
-    names = new char* [ num_files+3 ] ;
-    values = new char* [ num_files+3 ] ;
-    dflag = new char  [ num_files+3 ] ;
+    files = new char* [ num_files+1 ] ;
+    names = new char* [ num_files+1 ] ;
+    values = new char* [ num_files+1 ] ;
+    dflag = new char  [ num_files+1 ] ;
     line = ".";
     files [ 0 ] = new char[ strlen(line.c_str())+2 ];
     strcpy ( files [ 0 ], line.c_str() );
@@ -462,7 +462,7 @@ void fgPropPicker::find_props ()
     dflag[ 0 ] = 1;
     files [ 1 ] = new char[ strlen(line.c_str())+2 ];
     strcpy ( files [ 1 ], line.c_str() );
-    names [ 1 ] = new char[ 2 ];
+    names [ 1 ] = new char[ strlen(line.c_str())+2 ];
     values[ 1 ] = new char[ 2 ] ;
     strcpy ( names [ 1 ], line.c_str() );
 
@@ -471,7 +471,7 @@ void fgPropPicker::find_props ()
   };
 
 
-  for (int i = 0; i < (int)node->nChildren()-1; i++) {
+  for (i = 0; i < (int)node->nChildren()-1; i++) {
 	    SGPropertyNode * child = node->getChild(i);
 	    name = child->getName();
 	    line = name;
