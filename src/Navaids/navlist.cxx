@@ -25,7 +25,7 @@
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
 
-#include "navaids.hxx"
+#include "navlist.hxx"
 
 
 // Constructor

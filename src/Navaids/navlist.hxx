@@ -31,7 +31,7 @@
 #include <map>
 #include <vector>
 
-#include "navaid.hxx"
+#include "nav.hxx"
 
 FG_USING_STD(map);
 FG_USING_STD(vector);

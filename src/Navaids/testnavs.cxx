@@ -1,6 +1,6 @@
 #include <simgear/misc/fgpath.hxx>
 
-#include "navaids.hxx"
+#include "navlist.hxx"
 
 int main() {
     FGNavaids navs;
