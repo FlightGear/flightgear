@@ -53,6 +53,9 @@ private:
 
   vector<SGXmlSound *> _sound;
 
+  bool last_pause;
+  double last_volume;
+
 };
 
 

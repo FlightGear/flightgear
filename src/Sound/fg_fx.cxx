@@ -39,7 +39,9 @@
 #include "fg_fx.hxx"
 
 
-FGFX::FGFX ()
+FGFX::FGFX () :
+    last_pause( true ),
+    last_volume( 0.0 )
 {
 }
 
@@ -51,7 +53,7 @@ FGFX::~FGFX ()
 void
 FGFX::init()
 {
-   SGPropertyNode * node = fgGetNode("/sim/sound", true);
+   SGPropertyNode *node = fgGetNode("/sim/sound", true);
    int i;
 
    string path_str = node->getStringValue("path");
@@ -105,9 +107,28 @@ FGFX::unbind ()
 void
 FGFX::update (double dt)
 {
-    if (fgGetBool("/sim/sound/audible")) {
-        for (unsigned int i = 0; i < _sound.size(); i++ )
+    // command sound manger
+    bool pause = fgGetBool("/sim/sound/pause");
+    if ( pause != last_pause ) {
+        if ( pause ) {
+            globals->get_soundmgr()->pause();
+        } else {
+            globals->get_soundmgr()->resume();
+        }
+        last_pause = pause;
+    }
+
+    double volume = fgGetDouble("/sim/sound/volume");
+    if ( volume != last_volume ) {
+        globals->get_soundmgr()->set_volume( volume );        
+        last_volume = volume;
+    }
+
+    if ( !pause ) {
+        // update sound effects if not paused
+        for ( unsigned int i = 0; i < _sound.size(); i++ ) {
             _sound[i]->update(dt);
+        }
     }
 }
 
