@@ -618,9 +618,9 @@ void Airplane::solveGear()
         ((GearRec*)_gears.get(i))->wgt /= total;
     
     // The force at max compression should be sufficient to stop a
-    // plane moving downwards at 3x the approach descent rate.  Assume
+    // plane moving downwards at 2x the approach descent rate.  Assume
     // a 3 degree approach.
-    float descentRate = 3.0f*_approachSpeed/19.1f;
+    float descentRate = 2.0f*_approachSpeed/19.1f;
 
     // Spread the kinetic energy according to the gear weights.  This
     // will results in an equal compression fraction (not distance) of

@@ -59,6 +59,9 @@ public:
     void setStall(int i, float alpha);
     void setStallWidth(int i, float width);
 
+    // Induced drag multiplier
+    void setInducedDrag(float mul) { _inducedDrag = mul; }
+
     void calcForce(float* v, float rho, float* forceOut, float* torqueOut);
 
 private:
@@ -89,6 +92,7 @@ private:
     float _flapPos;
     float _spoilerPos;
     float _incidence;
+    float _inducedDrag;
 };
 
 }; // namespace yasim

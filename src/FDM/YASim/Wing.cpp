@@ -17,6 +17,7 @@ Wing::Wing()
     _stallPeak = 0;
     _camber = 0;
     _incidence = 0;
+    _inducedDrag = 1;
     _dragScale = 1;
     _liftRatio = 1;
     _flap0Start = 0;
@@ -434,6 +435,8 @@ Surface* Wing::newSurface(float* pos, float* orient, float chord,
     if(flap1)   _flap1Surfs.add(s);
     if(slat)    _slatSurfs.add(s);
     if(spoiler) _spoilerSurfs.add(s);
+
+    s->setInducedDrag(_inducedDrag);
 
     return s;
 }

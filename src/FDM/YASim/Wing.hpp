@@ -29,6 +29,7 @@ public:
     void setStallPeak(float fraction);
     void setCamber(float camber);
     void setIncidence(float incidence);
+    void setInducedDrag(float drag) { _inducedDrag = drag; }
     
     void setFlap0(float start, float end, float lift, float drag);
     void setFlap1(float start, float end, float lift, float drag);
@@ -93,6 +94,7 @@ private:
     float _stallPeak;
     float _camber;
     float _incidence;
+    float _inducedDrag;
 
     float _dragScale;
     float _liftRatio;

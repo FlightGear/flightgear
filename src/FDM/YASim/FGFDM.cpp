@@ -401,6 +401,10 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type)
     w->setCamber(attrf(a, "camber", 0));
     w->setIncidence(attrf(a, "incidence", 0) * DEG2RAD);
 
+    // The 70% is a magic number that sorta kinda seems to match known
+    // throttle settings to approach speed.
+    w->setInducedDrag(0.7*attrf(a, "idrag", 1));
+
     float effect = attrf(a, "effectiveness", 1);
     w->setDragScale(w->getDragScale()*effect);
 

@@ -26,6 +26,7 @@ Surface::Surface()
     _flapLift = 0;
     _slatAlpha = 0;
     _spoilerLift = 1;
+    _inducedDrag = 1;
 }
 
 void Surface::setPosition(float* p)
@@ -146,7 +147,7 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // Handle the blowup condition.  Zero velocity means zero force by
     // definition.
     if(vel == 0) {
-	int i;
+        int i;
 	for(i=0; i<3; i++) out[i] = torque[i] = 0;
 	return;
     }
@@ -161,6 +162,11 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // by small rotations.
     out[2] += _incidence * out[0]; // z' = z + incidence * x
 
+    // Hold onto the local wind vector so we can multiply the induced
+    // drag at the end.
+    float lwind[3];
+    Math::set3(out, lwind);
+    
     // Diddle the Z force according to our configuration
     float stallMul = stallFunc(out);
     stallMul *= 1 + _spoilerPos * (_spoilerLift - 1);
@@ -187,6 +193,11 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
 
     // Add in any specific Y (side force) coefficient.
     out[1] *= _cy;
+
+    // Diddle the induced drag
+    float IDMUL = 0.5;
+    Math::mul3(-1*_inducedDrag*out[2]*lwind[2], lwind, lwind);
+    Math::add3(lwind, out, out);
 
     // Reverse the incidence rotation to get back to surface
     // coordinates.
