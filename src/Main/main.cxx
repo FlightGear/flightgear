@@ -90,6 +90,7 @@
 #include <Scenery/tilemgr.hxx>
 #ifdef ENABLE_AUDIO_SUPPORT
 #  include <Sound/soundmgr.hxx>
+#  include <Sound/fg_fx.hxx>
 #  include <Sound/morse.hxx>
 #endif
 #include <Time/event.hxx>
@@ -159,13 +160,6 @@ static long global_multi_loop;
 
 // forward declaration
 void fgReshape( int width, int height );
-
-// Global structures for the Audio library
-#ifdef ENABLE_AUDIO_SUPPORT
-   static FGSimpleSound *s1;
-   static FGSimpleSound *s2;
-#endif
-
 
 // ssg variables
 ssgRoot *scene = NULL;
@@ -1207,7 +1201,7 @@ static void fgMainLoop( void ) {
     if ( global_multi_loop > 0 ) {
 	fgUpdateTimeDepCalcs();
     } else {
-	SG_LOG( SG_ALL, SG_INFO, 
+	SG_LOG( SG_ALL, SG_DEBUG, 
 		"Elapsed time is zero ... we're zinging" );
     }
 
@@ -1228,72 +1222,8 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    static bool bCranking;
     if ( fgGetBool("/sim/sound") && globals->get_soundmgr()->is_working() ) {
-	if ( fgGetString("/sim/aircraft") == "c172" ) {
-	    if(fgGetBool("/engines/engine[0]/running")) {
-		// pitch corresponds to rpm
-		// volume corresponds to manifold pressure
-
-		// cout << "AUDIO working = "
-		//      << globals->get_soundmgr()->is_working() << endl;
-
-	   	double rpm_factor;
-	    	if ( cur_fdm_state->get_engine(0) != NULL ) {
-		    rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
-	    	} else {
-		    rpm_factor = 1.0;
-	    	}
-	    	// cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM()
-	    	//      << endl;
-
-	    	double pitch = 0.3 + rpm_factor * 3.0;
-	
-	    	// don't run at absurdly slow rates -- not realistic
-	    	// and sounds bad to boot.  :-)
-	    	if (pitch < 0.7) { pitch = 0.7; }
-	    	if (pitch > 5.0) { pitch = 5.0; }
-
-	   	double mp_factor;
-	    	if ( cur_fdm_state->get_engine(0) != NULL ) {
-		    mp_factor = cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 100;
-	    	} else {
-		    mp_factor = 0.3;
-	    	}
-	    	/* cout << "mp = " 
-	            << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
-	            << endl; */
-
-	    	double volume = 0.15 + mp_factor / 2.0;
-
-	    	if ( volume < 0.15 ) { volume = 0.15; }
-	    	if ( volume > 0.5 ) { volume = 0.5; }
-	    	// cout << "volume = " << volume << endl;
-
-	    	s1->set_pitch( pitch );
-	    	s1->set_volume( volume );
-	    } else {
-		s1->set_pitch(0.0);
-		s1->set_volume(0.0);
-	    }
-	    if(fgGetBool("/engines/engine[0]/cranking")) {
-		if(!bCranking) {
-		    globals->get_soundmgr()->play_looped("cranking");
-		    bCranking = true;
-		}
-	    } else {
-		if(bCranking) {
-		    globals->get_soundmgr()->stop("cranking");
-		    bCranking = false;
-		}
-	    }
-	} else {    // Not C172
-	    double param
-		= globals->get_controls()->get_throttle( 0 ) * 2.0 + 1.0;
-	    s1->set_pitch( param );
-	    s1->set_volume( param );
-	}
-
+	globals->get_fx()->update();
 	globals->get_soundmgr()->update();
     }
 #endif
@@ -1341,30 +1271,6 @@ static void fgIdleFunction ( void ) {
 	}
 #endif // !WIN32
 
-	FGSoundMgr *soundmgr = new FGSoundMgr;
-	globals->set_soundmgr( soundmgr );
-
-	if ( fgGetBool("/sim/sound") ) {
-	    globals->get_soundmgr()->init();
-
-	    s1 = new FGSimpleSound( fgGetString("/sim/sounds/engine",
-						"Sounds/wasp.wav") );
-	    globals->get_soundmgr()->add( s1, "engine loop" );
-	    globals->get_soundmgr()->play_looped( "engine loop" );
-	    SG_LOG( SG_GENERAL, SG_INFO,
-		    "Rate = " << s1->get_sample()->getRate()
-		    << "  Bps = " << s1->get_sample()->getBps()
-		    << "  Stereo = " << s1->get_sample()->getStereo() );
-
-	    // s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
-	    // s2->set_volume( 0.3 );
-	    // globals->get_soundmgr()->add( s2, "flaps" );
-	    s2 = new FGSimpleSound( fgGetString("/sim/sounds/engine",
-						"Sounds/cranking.wav") );
-	    globals->get_soundmgr()->add( s2, "cranking" );
-	    s2->set_pitch(1.5);
-	    s2->set_volume(0.25);
-	}
 #endif
 
 	idle_state++;
@@ -1540,6 +1446,7 @@ int fgGlutInitEvents( void ) {
 
 // Main loop
 int mainLoop( int argc, char **argv ) {
+
 #if defined( macintosh )
     freopen ("stdout.txt", "w", stdout );
     freopen ("stderr.txt", "w", stderr );
