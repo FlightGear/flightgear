@@ -1,8 +1,8 @@
 // main.cxx -- top level sim routines
 //
-// Written by Curtis Olson for OpenGL, started May 1997.
+// Written by Curtis Olson, started May 1997.
 //
-// Copyright (C) 1997 - 1999  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1997 - 2002  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -32,7 +32,7 @@
 
 #include <simgear/compiler.h>
 
-#include <iostream>
+#include STL_IOSTREAM
 SG_USING_STD(cerr);
 SG_USING_STD(endl);
 
@@ -96,7 +96,6 @@ SG_USING_STD(endl);
 
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
-// #include <Joystick/joystick.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -123,9 +122,6 @@ SG_USING_STD(endl);
 #include <FDM/ADA.hxx>
 #include <Scenery/tileentry.hxx>
 
-// Should already be inlcluded by gl.h if needed by your platform so
-// we shouldn't include this here.
-// #include <GL/glext.h>
 #if !defined(sgi)
 // PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
 // PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
@@ -279,6 +275,7 @@ void fgBuildRenderStates( void ) {
     menus->enable( GL_BLEND );
 }
 
+
 // fgInitVisuals() -- Initialize various GL/view parameters
 void fgInitVisuals( void ) {
     fgLIGHT *l;
@@ -293,7 +290,8 @@ void fgInitVisuals( void ) {
 #endif
 
     // If enabled, normal vectors specified with glNormal are scaled
-    // to unit length after transformation.  See glNormal.
+    // to unit length after transformation.  Enabling this has
+    // performance implications.  See the docs for glNormal.
     // glEnable( GL_NORMALIZE );
 
     glEnable( GL_LIGHTING );
@@ -304,7 +302,6 @@ void fgInitVisuals( void ) {
     sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
     ssgGetLight( 0 ) -> setPosition( sunpos );
 
-    // glFogi (GL_FOG_MODE, GL_LINEAR);
     glFogi (GL_FOG_MODE, GL_EXP2);
     if ( (!strcmp(fgGetString("/sim/rendering/fog"), "disabled")) || 
 	 (!fgGetBool("/sim/rendering/shading"))) {
@@ -448,10 +445,10 @@ void fgRenderFrame( void ) {
 	// initializations and are running the main loop, so this will
 	// now work without seg faulting the system.
 
-				// Update the elapsed time.
+        // Update the elapsed time.
         current_time_stamp.stamp();
-	globals->set_elapsed_time_ms((current_time_stamp - start_time_stamp)
-				     / 1000L);
+	globals->set_elapsed_time_ms( (current_time_stamp - start_time_stamp)
+                                      / 1000L );
 
 	// calculate our current position in cartesian space
 	scenery.set_center( scenery.get_next_center() );
@@ -871,12 +868,7 @@ void fgUpdateTimeDepCalcs() {
 
 
 void fgInitTimeDepCalcs( void ) {
-    // initialize timer
-
-    // #ifdef HAVE_SETITIMER
-    //   fgTimerInit( 1.0 / fgGetInt("/sim/model-hz"), 
-    //                fgUpdateTimeDepCalcs );
-    // #endif HAVE_SETITIMER
+    // noop for now
 }
 
 
@@ -1118,7 +1110,6 @@ static void fgMainLoop( void ) {
 
 // This is the top level master main function that is registered as
 // our idle funciton
-//
 
 // The first few passes take care of initialization things (a couple
 // per pass) and once everything has been initialized fgMainLoop from
@@ -1156,6 +1147,25 @@ static void fgIdleFunction ( void ) {
 
 	    system ( command.c_str() );
 	}
+
+        // This is an 'easter egg' which is kind of a hard thing to
+        // hide in an open source project -- so I won't try very hard
+        // to hide it.  If you are looking at this now, please, you
+        // don't want to ruin the surprise. :-) Just forget about it
+        // and don't look any further; unless it is causing an actual
+        // problem for you, which it shouldn't, and I hope it doesn't!
+        // :-)
+        if ( globals->get_time_params()->getGmt()->tm_mon == 4 
+             && globals->get_time_params()->getGmt()->tm_mday == 19 )
+        {
+            string url = "http://www.flightgear.org/Music/invasion.mp3";
+#if defined( __CYGWIN__ ) || defined( WIN32 )
+            string command = "start /m " + url;
+#else
+            string command = "mpg123 " + url + "> /dev/null 2>&1";
+#endif
+            system( command.c_str() );
+        }
 
 #endif
 
