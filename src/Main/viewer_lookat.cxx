@@ -108,57 +108,6 @@ static void fgLookAt( sgVec3 eye, sgVec3 center, sgVec3 up, sgMat4 &m ) {
 }
 
 
-// Initialize a view structure
-void FGViewerLookAt::init( void ) {
-    set_dirty();
-
-    FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
-
-    view_offset = goal_view_offset =
-	globals->get_options()->get_default_view_offset();
-    sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
-
-    globals->get_options()->set_win_ratio( globals->get_options()->get_xsize() /
-					   globals->get_options()->get_ysize()
-					   );
-}
-
-
-#define USE_FAST_LOCAL
-#ifdef USE_FAST_LOCAL
-inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
-				const double Phi, const double Psi)
-{
-    SGfloat cosTheta = (SGfloat) cos(Theta);
-    SGfloat sinTheta = (SGfloat) sin(Theta);
-    SGfloat cosPhi   = (SGfloat) cos(Phi);
-    SGfloat sinPhi   = (SGfloat) sin(Phi);
-    SGfloat sinPsi   = (SGfloat) sin(Psi) ;
-    SGfloat cosPsi   = (SGfloat) cos(Psi) ;
-	
-    dst[0][0] = cosPhi * cosTheta;
-    dst[0][1] =	sinPhi * cosPsi + cosPhi * -sinTheta * -sinPsi;
-    dst[0][2] =	sinPhi * sinPsi + cosPhi * -sinTheta * cosPsi;
-    dst[0][3] =	SG_ZERO;
-
-    dst[1][0] = -sinPhi * cosTheta;
-    dst[1][1] =	cosPhi * cosPsi + -sinPhi * -sinTheta * -sinPsi;
-    dst[1][2] =	cosPhi * sinPsi + -sinPhi * -sinTheta * cosPsi;
-    dst[1][3] = SG_ZERO ;
-	
-    dst[2][0] = sinTheta;
-    dst[2][1] =	cosTheta * -sinPsi;
-    dst[2][2] =	cosTheta * cosPsi;
-    dst[2][3] = SG_ZERO;
-	
-    dst[3][0] = SG_ZERO;
-    dst[3][1] = SG_ZERO;
-    dst[3][2] = SG_ZERO;
-    dst[3][3] = SG_ONE ;
-}
-#endif
-
-
 // convert sgMat4 to MAT3 and print
 static void print_sgMat4( sgMat4 &in) {
     int i, j;

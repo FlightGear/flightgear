@@ -1,9 +1,8 @@
-// viewer.cxx -- class for managing a viewer in the flightgear world.
+// viewmgr.cxx -- class for managing all the views in the flightgear world.
 //
-// Written by Curtis Olson, started August 1997.
-//                          overhaul started October 2000.
+// Written by Curtis Olson, started October 2000.
 //
-// Copyright (C) 1997 - 2000  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 2000  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -22,30 +21,14 @@
 // $Id$
 
 
-#include <simgear/compiler.h>
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#include <simgear/debug/logstream.hxx>
-
-#include "viewer.hxx"
+#include "viewmgr.hxx"
 
 
 // Constructor
-FGViewer::FGViewer( void )
-{
-}
-
-
-// Update the view parameters
-void FGViewer::update() {
-    FG_LOG( FG_VIEW, FG_ALERT, "Shouldn't ever see this" );
-    exit(-1);
+FGViewMgr::FGViewMgr( void ) {
 }
 
 
 // Destructor
-FGViewer::~FGViewer( void ) {
+FGViewMgr::~FGViewMgr( void ) {
 }

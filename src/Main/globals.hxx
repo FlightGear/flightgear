@@ -31,7 +31,7 @@
 #include <simgear/timing/sg_time.hxx>
 
 #include "options.hxx"
-#include "viewer_rph.hxx"
+#include "viewmgr.hxx"
 
 
 class FGGlobals {
@@ -64,8 +64,9 @@ private:
     // options
     FGOptions *options;
 
-    // viewers
-    FGViewerRPH *current_view;
+    // viewer maneger
+    FGViewMgr *viewmgr;
+    FGViewer *current_view;
 
 public:
 
@@ -98,11 +99,10 @@ public:
     inline FGOptions *get_options() const { return options; }
     inline void set_options( FGOptions *o ) { options = o; }
 
-    // inline FGViewer *get_pilot_view() const { return pilot_view; }
-    // inline void set_pilot_view( FGViewer *v ) { pilot_view = v; }
-    
-    inline FGViewerRPH *get_current_view() const { return current_view; }
-    inline void set_current_view( FGViewerRPH *v ) { current_view = v; }
+    inline FGViewMgr *get_viewmgr() const { return viewmgr; }
+    inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }
+    inline FGViewer *get_current_view() const { return current_view; }
+    inline void set_current_view( FGViewer *v ) { current_view = v; }
     
 };
 

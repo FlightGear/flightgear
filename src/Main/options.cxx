@@ -936,6 +936,10 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    default_view_offset = atof( woffset.c_str() ) * DEG_TO_RAD;
 	}
+	FGViewerRPH *pilot_view =
+	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
+	pilot_view->set_view_offset( default_view_offset );
+	pilot_view->set_goal_view_offset( default_view_offset );
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--wp=" ) != string::npos ) {
 	parse_wp( arg.substr( 5 ) );

@@ -904,7 +904,6 @@ GLubyte *hiResScreenCapture( int multiplier )
 	    b1->copyBitmap( &b2, cur_width*x, cur_height*y );
 	}
     }
-    globals->get_current_view()->UpdateViewParams(cur_view_fdm);
     globals->get_options()->set_fov(oldfov);
     return b1->getBitmap();
 }

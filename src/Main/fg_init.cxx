@@ -564,24 +564,24 @@ bool fgInitSubsystems( void ) {
 						   &fgEVENT_MGR::PrintStats),
 			    fgEVENT::FG_EVENT_READY, 60000 );
 
-    // Initialize view parameters
-    FG_LOG( FG_GENERAL, FG_DEBUG, "Before current_view.init()");
-    globals->get_current_view()->init();
-    // globals->get_pilot_view()->Init();
-    FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
+    // Initialize win ratio parameters
+    globals->get_options()->set_win_ratio( globals->get_options()->get_xsize() /
+					   globals->get_options()->get_ysize()
+					   );
 
-    globals->get_current_view()->
-	set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-			   cur_fdm_state->get_Lat_geocentric(), 
-			   cur_fdm_state->get_Altitude() *
-			   FEET_TO_METER );
-    globals->get_current_view()->
-	set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-			      FEET_TO_METER ); 
-    globals->get_current_view()->
-	set_rph( cur_fdm_state->get_Phi(),
-		 cur_fdm_state->get_Theta(),
-		 cur_fdm_state->get_Psi() );
+    // Initialize pilot view
+    FGViewerRPH *pilot_view =
+	(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
+
+    pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+				   cur_fdm_state->get_Lat_geocentric(), 
+				   cur_fdm_state->get_Altitude() *
+				   FEET_TO_METER );
+    pilot_view->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
+				      FEET_TO_METER ); 
+    pilot_view->set_rph( cur_fdm_state->get_Phi(),
+			 cur_fdm_state->get_Theta(),
+			 cur_fdm_state->get_Psi() );
 
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
@@ -799,23 +799,21 @@ void fgReInitSubsystems( void )
 			  globals->get_options()->get_heading() * DEG_TO_RAD );
 
     // Initialize view parameters
-    globals->get_current_view()->set_view_offset( 0.0 );
-    globals->get_current_view()->set_goal_view_offset( 0.0 );
+    FGViewerRPH *pilot_view =
+	(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
 
-    FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
+    pilot_view->set_view_offset( 0.0 );
+    pilot_view->set_goal_view_offset( 0.0 );
 
-    globals->get_current_view()->
-	set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-			   cur_fdm_state->get_Lat_geocentric(), 
-			   cur_fdm_state->get_Altitude() *
-			   FEET_TO_METER );
-    globals->get_current_view()->
-	set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-			      FEET_TO_METER ); 
-    globals->get_current_view()->
-	set_rph( cur_fdm_state->get_Phi(),
-		 cur_fdm_state->get_Theta(),
-		 cur_fdm_state->get_Psi() );
+    pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+				   cur_fdm_state->get_Lat_geocentric(), 
+				   cur_fdm_state->get_Altitude() *
+				   FEET_TO_METER );
+    pilot_view->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
+				      FEET_TO_METER ); 
+    pilot_view->set_rph( cur_fdm_state->get_Phi(),
+			 cur_fdm_state->get_Theta(),
+			 cur_fdm_state->get_Psi() );
 
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());

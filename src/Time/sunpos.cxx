@@ -251,7 +251,7 @@ void fgUpdateSunPos( void ) {
 
     l = &cur_light_params;
     SGTime *t = globals->get_time_params();
-    v = globals->get_current_view();
+    v = (FGViewerRPH *)globals->get_current_view();
 
     FG_LOG( FG_EVENT, FG_INFO, "  Updating Sun position" );
     FG_LOG( FG_EVENT, FG_INFO, "  Gst = " << t->getGst() );

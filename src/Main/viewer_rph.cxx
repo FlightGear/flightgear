@@ -46,6 +46,28 @@
 // Constructor
 FGViewerRPH::FGViewerRPH( void )
 {
+#ifndef USE_FAST_VIEWROT
+    // This never changes -- NHV
+    LARC_TO_SSG[0][0] = 0.0; 
+    LARC_TO_SSG[0][1] = 1.0; 
+    LARC_TO_SSG[0][2] = -0.0; 
+    LARC_TO_SSG[0][3] = 0.0; 
+
+    LARC_TO_SSG[1][0] = 0.0; 
+    LARC_TO_SSG[1][1] = 0.0; 
+    LARC_TO_SSG[1][2] = 1.0; 
+    LARC_TO_SSG[1][3] = 0.0;
+	
+    LARC_TO_SSG[2][0] = 1.0; 
+    LARC_TO_SSG[2][1] = -0.0; 
+    LARC_TO_SSG[2][2] = 0.0; 
+    LARC_TO_SSG[2][3] = 0.0;
+	
+    LARC_TO_SSG[3][0] = 0.0; 
+    LARC_TO_SSG[3][1] = 0.0; 
+    LARC_TO_SSG[3][2] = 0.0; 
+    LARC_TO_SSG[3][3] = 1.0; 
+#endif // USE_FAST_VIEWROT
 }
 
 
@@ -79,45 +101,6 @@ inline static void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 )
     dst[3][3] = SG_ONE;
 }
 #endif
-
-
-// Initialize a view structure
-void FGViewerRPH::init( void ) {
-    set_dirty();
-
-    FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
-
-    view_offset = goal_view_offset =
-	globals->get_options()->get_default_view_offset();
-    sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
-
-    globals->get_options()->set_win_ratio( globals->get_options()->get_xsize() /
-					   globals->get_options()->get_ysize()
-					   );
-
-#ifndef USE_FAST_VIEWROT
-    // This never changes -- NHV
-    LARC_TO_SSG[0][0] = 0.0; 
-    LARC_TO_SSG[0][1] = 1.0; 
-    LARC_TO_SSG[0][2] = -0.0; 
-    LARC_TO_SSG[0][3] = 0.0; 
-
-    LARC_TO_SSG[1][0] = 0.0; 
-    LARC_TO_SSG[1][1] = 0.0; 
-    LARC_TO_SSG[1][2] = 1.0; 
-    LARC_TO_SSG[1][3] = 0.0;
-	
-    LARC_TO_SSG[2][0] = 1.0; 
-    LARC_TO_SSG[2][1] = -0.0; 
-    LARC_TO_SSG[2][2] = 0.0; 
-    LARC_TO_SSG[2][3] = 0.0;
-	
-    LARC_TO_SSG[3][0] = 0.0; 
-    LARC_TO_SSG[3][1] = 0.0; 
-    LARC_TO_SSG[3][2] = 0.0; 
-    LARC_TO_SSG[3][3] = 1.0; 
-#endif // USE_FAST_VIEWROT
-}
 
 
 #define USE_FAST_LOCAL

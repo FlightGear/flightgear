@@ -78,14 +78,12 @@ extern void fgReshape( int width, int height );
 
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
-    FGInterface *f;
-    FGViewerRPH *v;
     float fov, tmp;
     static bool winding_ccw = true;
     int speed;
 
-    f = current_aircraft.fdm_state;
-    v = globals->get_current_view();
+    FGInterface *f = current_aircraft.fdm_state;
+    FGViewerRPH *v = (FGViewerRPH *)globals->get_current_view();
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );
     if ( puKeyboard(k, PU_DOWN) ) {
@@ -473,9 +471,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 // Handle "special" keyboard events
 void GLUTspecialkey(int k, int x, int y) {
-    FGViewerRPH *v;
-
-    v = globals->get_current_view();
+    FGViewerRPH *v = (FGViewerRPH *)globals->get_current_view();
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Special key hit = " << k );
 

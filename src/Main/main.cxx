@@ -118,10 +118,6 @@ ssgTransform *ship_pos = NULL;
 #include "keyboard.hxx"
 #include "splash.hxx"
 
-// temporary?
-#include "viewer_lookat.hxx"
-FGViewerLookAt *tv;
-
 // -dw- use custom sioux settings so I can see output window
 #ifdef macintosh
 #  ifndef FG_NDEBUG
@@ -326,18 +322,19 @@ void fgRenderFrame( void ) {
 	// printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x(),
 	//        scenery.center.y(), scenery.center.z());
 
-	globals->get_current_view()->
-	    set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-			       cur_fdm_state->get_Lat_geocentric(), 
-			       cur_fdm_state->get_Altitude() *
-			       FEET_TO_METER );
-	globals->get_current_view()->
-	    set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-				  FEET_TO_METER ); 
-	globals->get_current_view()->
-	    set_rph( cur_fdm_state->get_Phi(),
-		     cur_fdm_state->get_Theta(),
-		     cur_fdm_state->get_Psi() );
+	FGViewerRPH *pilot_view =
+	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
+
+	pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+				       cur_fdm_state->get_Lat_geocentric(), 
+				       cur_fdm_state->get_Altitude() *
+				       FEET_TO_METER );
+	pilot_view->set_sea_level_radius( cur_fdm_state->
+					  get_Sea_level_radius() *
+					  FEET_TO_METER ); 
+	pilot_view->set_rph( cur_fdm_state->get_Phi(),
+			     cur_fdm_state->get_Theta(),
+			     cur_fdm_state->get_Psi() );
 
 #if 0
 	// this is a test, we are trying to match RPH and LookAt
@@ -431,14 +428,6 @@ void fgRenderFrame( void ) {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	ssgSetCamera( (sgMat4)globals->get_current_view()->get_VIEW() );
-
-	/*
-	sgMat4 vm_tmp, view_mat;
-	sgTransposeNegateMat4 ( vm_tmp, current_view.VIEW ) ;
-	sgCopyMat4( view_mat, copy_of_ssgOpenGLAxisSwapMatrix ) ;
-	sgPreMultMat4( view_mat, vm_tmp ) ;
-	glLoadMatrixf( (float *)view_mat );
-	*/
 
 	// set the opengl state to known default values
 	default_state->force();
@@ -583,10 +572,6 @@ void fgRenderFrame( void ) {
 	} else if ( globals->get_options()->get_view_mode() == 
 		    FGOptions::FG_VIEW_FOLLOW )
         {
-	    // select view matrix from front of view matrix queue
-	    // FGMat4Wrapper tmp = current_view.follow.front();
-	    // sgCopyMat4( sgVIEW, tmp.m );
-
 	    // enable TuX and set up his position and orientation
 	    penguin_sel->select(1);
 
@@ -641,20 +626,8 @@ void fgRenderFrame( void ) {
 	}
 # endif
 
-	// ssgSetCamera( current_view.VIEW );
-
 	// position tile nodes and update range selectors
 	global_tile_mgr.prep_ssg_nodes();
-
-	// force the default state so ssg can get back on track if
-	// we've changed things elsewhere (this is now handled
-	// differently)
-	// 
-	// FGMaterialSlot m_slot;
-	// FGMaterialSlot *m_ptr = &m_slot;
-	// if ( material_mgr.find( "Default", m_ptr ) ) {
-	//    m_ptr->get_state()->force();
-	// }
 
 	// draw the sky backdrop
 	thesky->preDraw();
@@ -1369,11 +1342,13 @@ int main( int argc, char **argv ) {
     FGOptions *options = new FGOptions;
     globals->set_options( options );
 
+    FGViewMgr *viewmgr = new FGViewMgr;
+    globals->set_viewmgr( viewmgr );
+
     FGViewerRPH *pv = new FGViewerRPH;
+    globals->get_viewmgr()->add_view( pv );
     globals->set_current_view( pv );
-    tv = new FGViewerLookAt;
-    tv->init();
-    
+
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)
     fgInitFGRoot(argc, argv);
