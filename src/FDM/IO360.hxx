@@ -56,7 +56,7 @@
 #include <fstream>
 #include <math.h>
 
-FG_USING_STD(ofstream);
+SG_USING_STD(ofstream);
 
 class FGNewEngine {
 

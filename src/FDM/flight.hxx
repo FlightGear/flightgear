@@ -94,9 +94,9 @@
 
 #include <Main/fgfs.hxx>
 
-FG_USING_STD(list);
-FG_USING_STD(vector);
-FG_USING_STD(string);
+SG_USING_STD(list);
+SG_USING_STD(vector);
+SG_USING_STD(string);
 
 
 typedef double FG_VECTOR_3[3];

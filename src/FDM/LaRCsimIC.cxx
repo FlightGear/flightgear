@@ -38,8 +38,8 @@
 #include <FDM/LaRCsim/ls_constants.h>
 #include <FDM/LaRCsim/ls_geodesy.h>
 
-FG_USING_STD(cout);
-FG_USING_STD(endl);
+SG_USING_STD(cout);
+SG_USING_STD(endl);
 
 
 LaRCsimIC::LaRCsimIC(void) {

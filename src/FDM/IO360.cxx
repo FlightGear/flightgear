@@ -95,7 +95,7 @@
 
 #include "IO360.hxx"
 
-FG_USING_STD(cout);
+SG_USING_STD(cout);
 
 // Static utility functions
 

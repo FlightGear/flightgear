@@ -102,12 +102,12 @@
 
 #include "uiuc_menu.h"
 
-FG_USING_STD(cerr);
-FG_USING_STD(cout);
-FG_USING_STD(endl);
+SG_USING_STD(cerr);
+SG_USING_STD(cout);
+SG_USING_STD(endl);
 
 #ifndef _MSC_VER
-FG_USING_STD(exit);
+SG_USING_STD(exit);
 #endif
 
 bool check_float(string  &token)

@@ -78,11 +78,11 @@ for information.
 
 #include "uiuc_warnings_errors.h"
 
-FG_USING_STD (cerr);
-FG_USING_STD (endl);
+SG_USING_STD (cerr);
+SG_USING_STD (endl);
 
 #ifndef _MSC_VER
-FG_USING_STD (exit);
+SG_USING_STD (exit);
 #endif
 
 void uiuc_warnings_errors(int errorCode, string line)

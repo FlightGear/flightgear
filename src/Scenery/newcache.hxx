@@ -47,7 +47,7 @@
 
 #include "tileentry.hxx"
 
-FG_USING_STD(map);
+SG_USING_STD(map);
 
 
 typedef map < long, FGTileEntry * > tile_map;

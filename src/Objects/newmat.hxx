@@ -46,7 +46,7 @@
 
 #include STL_STRING      // Standard C++ string library
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 
 // MSVC++ 6.0 kuldge - Need forward declaration of friends.

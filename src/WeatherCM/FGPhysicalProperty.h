@@ -67,8 +67,8 @@ HISTORY
 #include "FGWeatherDefs.h"
 #include "FGPhysicalProperties.h"
 
-FG_USING_STD(vector);
-FG_USING_NAMESPACE(std);
+SG_USING_STD(vector);
+SG_USING_NAMESPACE(std);
 
 /****************************************************************************/
 /* used for output:							    */

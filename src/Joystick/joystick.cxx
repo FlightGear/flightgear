@@ -42,8 +42,8 @@
 
 #include "joystick.hxx"
 
-FG_USING_STD(string);
-FG_USING_STD(cout);
+SG_USING_STD(string);
+SG_USING_STD(cout);
 
 #ifdef WIN32
 static const int MAX_JOYSTICKS = 2;

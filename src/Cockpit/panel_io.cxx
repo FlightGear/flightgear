@@ -43,11 +43,11 @@
 #include "steam.hxx"
 #include "panel_io.hxx"
 
-#if !defined (FG_HAVE_NATIVE_SGI_COMPILERS)
-FG_USING_STD(istream);
-FG_USING_STD(ifstream);
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
+SG_USING_STD(istream);
+SG_USING_STD(ifstream);
 #endif
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 
 

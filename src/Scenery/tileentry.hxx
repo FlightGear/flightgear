@@ -54,8 +54,8 @@
 #include <strings.h>
 #endif
 
-FG_USING_STD(string);
-FG_USING_STD(vector);
+SG_USING_STD(string);
+SG_USING_STD(vector);
 
 
 typedef vector < Point3D > point_list;

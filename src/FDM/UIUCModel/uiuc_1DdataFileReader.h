@@ -8,7 +8,7 @@
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
 
-FG_USING_STD(istrstream);
+SG_USING_STD(istrstream);
 
 int uiuc_1DdataFileReader( string file_name, 
                             double x[100], 

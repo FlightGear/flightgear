@@ -39,8 +39,8 @@
 #include <plib/sl.h>
 #include <plib/sm.h>
 
-FG_USING_STD(map);
-FG_USING_STD(string);
+SG_USING_STD(map);
+SG_USING_STD(string);
 
 
 // manages everything we need to know for an individual sound sample

@@ -35,7 +35,7 @@
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
                        
-FG_USING_STD(string);
+SG_USING_STD(string);
 
                   
 // Defines

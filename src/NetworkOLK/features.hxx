@@ -34,7 +34,7 @@
 #include <time.h>
 #include STL_STRING
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 
 /*

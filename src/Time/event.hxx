@@ -40,9 +40,9 @@
 #include STL_STRING
 
 
-FG_USING_STD(deque);
-FG_USING_STD(list);
-FG_USING_STD(string);
+SG_USING_STD(deque);
+SG_USING_STD(list);
+SG_USING_STD(string);
 
 
 class fgEVENT

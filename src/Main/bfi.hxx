@@ -27,7 +27,7 @@
 
 #include <simgear/compiler.h>
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 
 /**

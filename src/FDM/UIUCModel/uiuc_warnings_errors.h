@@ -6,7 +6,7 @@
 #include <string>
 #include <iostream>
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 void uiuc_warnings_errors(int errorCode, string line);
 

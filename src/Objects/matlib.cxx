@@ -52,7 +52,7 @@
 
 #include "matlib.hxx"
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 
 // global material management class

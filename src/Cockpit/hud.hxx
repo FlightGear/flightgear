@@ -59,9 +59,9 @@
 
 #include "hud_opts.hxx"
 
-FG_USING_STD(deque);
-FG_USING_STD(vector);
-FG_USING_NAMESPACE(std);
+SG_USING_STD(deque);
+SG_USING_STD(vector);
+SG_USING_NAMESPACE(std);
 
 
 // some of Norman's crazy optimizations. :-)

@@ -57,8 +57,8 @@
 #include "matlib.hxx"
 #include "obj.hxx"
 
-FG_USING_STD(string);
-FG_USING_STD(vector);
+SG_USING_STD(string);
+SG_USING_STD(vector);
 
 
 typedef vector < int > int_list;

@@ -107,7 +107,7 @@
 #include <GL/xmesa.h>
 #endif
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 extern const char *default_root;
 

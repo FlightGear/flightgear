@@ -55,8 +55,8 @@ bool global_fullscreen = true;
 #include "fg_props.hxx"
 #include "options.hxx"
 
-FG_USING_STD(string);
-FG_USING_NAMESPACE(std);
+SG_USING_STD(string);
+SG_USING_NAMESPACE(std);
 
 
 #define NEW_DEFAULT_MODEL_HZ 120

@@ -7,10 +7,10 @@
 #include <list>
 #include <fstream>
 
-FG_USING_STD(list);
-FG_USING_STD(string);
-FG_USING_STD(getline);
-FG_USING_STD(ifstream);
+SG_USING_STD(list);
+SG_USING_STD(string);
+SG_USING_STD(getline);
+SG_USING_STD(ifstream);
 
 #define DELIMITERS " \t"
 #define COMMENT "#"

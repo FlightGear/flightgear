@@ -41,8 +41,8 @@
 
 #include "tileentry.hxx"
 
-FG_USING_STD(for_each);
-FG_USING_STD(mem_fun_ref);
+SG_USING_STD(for_each);
+SG_USING_STD(mem_fun_ref);
 
 
 // Constructor

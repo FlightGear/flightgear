@@ -57,9 +57,9 @@
 
 #include "event.hxx"
 
-FG_USING_STD(for_each);
-FG_USING_STD(mem_fun);
-FG_USING_STD(string);
+SG_USING_STD(for_each);
+SG_USING_STD(mem_fun);
+SG_USING_STD(string);
 
 fgEVENT_MGR global_events;
 

@@ -39,7 +39,7 @@
 
 #include "runways.hxx"
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 
 FGRunway::FGRunway() {

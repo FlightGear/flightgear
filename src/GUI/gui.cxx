@@ -86,10 +86,10 @@
 #include "net_dlg.hxx"
 #include "sgVec3Slider.hxx"
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
-#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_STD(cout);
+#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
+SG_USING_STD(cout);
 #endif
 
 // main.cxx hack, should come from an include someplace

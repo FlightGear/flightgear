@@ -34,9 +34,9 @@
 
 #include "fix.hxx"
 
-FG_USING_STD(map);
-FG_USING_STD(vector);
-FG_USING_STD(string);
+SG_USING_STD(map);
+SG_USING_STD(vector);
+SG_USING_STD(string);
 
 
 class FGFixList {

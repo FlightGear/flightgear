@@ -41,7 +41,7 @@
 #include "viewer_lookat.hxx"
 #include "viewer_rph.hxx"
 
-FG_USING_STD(vector);
+SG_USING_STD(vector);
 
 
 // Define a structure containing view information

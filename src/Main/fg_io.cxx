@@ -46,7 +46,7 @@
 
 #include "globals.hxx"
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 
 // define the global I/O channel list

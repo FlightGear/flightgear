@@ -35,8 +35,8 @@
 
 #include "props.hxx"
 
-FG_USING_STD(cout);
-FG_USING_STD(istrstream);
+SG_USING_STD(cout);
+SG_USING_STD(istrstream);
 
 FGProps::FGProps() {
 }

@@ -72,7 +72,7 @@
 
 #include "uiuc_recorder.h"
 
-FG_USING_STD(endl);		// -dw
+SG_USING_STD(endl);		// -dw
 
 void uiuc_recorder( double dt )
 {

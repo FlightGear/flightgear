@@ -52,7 +52,7 @@
 #include "fg_init.hxx"
 #include "fg_props.hxx"
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 
 #include "bfi.hxx"

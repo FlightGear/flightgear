@@ -49,7 +49,7 @@
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <ctime>
 #  ifdef macintosh
-     FG_USING_STD(time_t);
+     SG_USING_STD(time_t);
 #  endif
 #else
 #  include <time.h>

@@ -23,7 +23,7 @@
 #  include <config.h>
 #endif
 
-#if defined( FG_HAVE_NATIVE_SGI_COMPILERS )
+#if defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <iostream.h>
 #else
 #  include <iostream>
@@ -36,7 +36,7 @@
 #include <Main/bfi.hxx>
 #include <NetworkOLK/features.hxx>
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 #include "radiostack.hxx"
 #include "steam.hxx"

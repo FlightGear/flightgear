@@ -32,7 +32,7 @@
 
 #include "protocol.hxx"
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 
 const static int max_cmd_len = 256;

@@ -39,7 +39,7 @@
 
 #include "hitlist.hxx"
 
-FG_USING_STD(list);
+SG_USING_STD(list);
 
 
 #if defined(USE_MEM) || defined(WIN32)

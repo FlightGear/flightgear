@@ -39,8 +39,8 @@
 #include <Sound/soundmgr.hxx>
 #include "viewmgr.hxx"
 
-FG_USING_STD( vector );
-FG_USING_STD( string );
+SG_USING_STD( vector );
+SG_USING_STD( string );
 
 typedef vector<string> string_list;
 

@@ -71,7 +71,7 @@
 
 #include "uiuc_engine.h"
 
-FG_USING_STD(cerr);
+SG_USING_STD(cerr);
 
 void uiuc_engine() 
 {

@@ -48,7 +48,7 @@
 
 #include <Scenery/tileentry.hxx>
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 
 // duplicated from the TerraGear tools

@@ -46,7 +46,7 @@
 #endif
 
 #include <string>
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>

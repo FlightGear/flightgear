@@ -11,7 +11,7 @@
 
 #include <plib/ssg.h>
 
-FG_USING_STD(vector);
+SG_USING_STD(vector);
 
 
 class FGHitRec {

@@ -48,7 +48,7 @@
 
 #include "simple.hxx"
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 FGAirports::FGAirports( const string& file ) {
     // open the specified database readonly

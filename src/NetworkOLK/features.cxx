@@ -23,7 +23,7 @@
 #  include <config.h>
 #endif
 
-#if defined( FG_HAVE_NATIVE_SGI_COMPILERS )
+#if defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <iostream.h>
 #else
 #  include <iostream>
@@ -31,7 +31,7 @@
 
 #include <simgear/math/sg_types.hxx>
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 #include "features.hxx"
 

@@ -40,7 +40,7 @@
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
-#elif defined( FG_HAVE_NATIVE_SGI_COMPILERS )
+#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <iostream.h>
 #elif defined( __BORLANDC__ )
 #  include <iostream>
@@ -60,11 +60,11 @@
 #  undef NDEBUG
 #endif
 
-FG_USING_STD(string);
-FG_USING_STD(set);
+SG_USING_STD(string);
+SG_USING_STD(set);
 
-#if ! defined( FG_HAVE_NATIVE_SGI_COMPILERS )
-FG_USING_STD(istream);
+#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
+SG_USING_STD(istream);
 #endif
 
 

@@ -51,7 +51,7 @@
 #include "tileentry.hxx"
 #include "tilemgr.hxx"		// temp, need to delete later
 
-FG_USING_NAMESPACE(std);
+SG_USING_NAMESPACE(std);
 
 // a cheesy hack (to be fixed later)
 extern ssgBranch *terrain;

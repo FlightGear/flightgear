@@ -30,7 +30,7 @@
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
-#elif defined( FG_HAVE_NATIVE_SGI_COMPILERS )
+#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <iostream.h>
 #elif defined( __BORLANDC__ )
 #  include <iostream>
@@ -38,12 +38,12 @@
 #  include <istream.h>
 #endif
 
-#if ! defined( FG_HAVE_NATIVE_SGI_COMPILERS )
-FG_USING_STD(istream);
+#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
+SG_USING_STD(istream);
 #endif
 
 #include STL_STRING
-FG_USING_STD(string);
+SG_USING_STD(string);
 
 
 class FGFix {

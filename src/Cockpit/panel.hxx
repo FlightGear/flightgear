@@ -49,8 +49,8 @@
 #include <Main/fgfs.hxx>
 
 
-FG_USING_STD(vector);
-FG_USING_STD(map);
+SG_USING_STD(vector);
+SG_USING_STD(map);
 
 class FGPanelInstrument;
 

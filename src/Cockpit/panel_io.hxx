@@ -35,8 +35,8 @@
 
 #include "panel.hxx"
 
-#if !defined (FG_HAVE_NATIVE_SGI_COMPILERS)
-FG_USING_STD(istream);
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
+SG_USING_STD(istream);
 #endif
 
 extern FGPanel * fgReadPanel (istream &input);

@@ -45,7 +45,7 @@ public:
 	a.owns = 0;
     }
 
-#ifdef _FG_MEMBER_TEMPLATES
+#ifdef _SG_MEMBER_TEMPLATES
     template <class T> auto_ptr(const auto_ptr<T>& a)
 	: ptr(a.ptr), owns(a.owns) {
 	a.owns = 0;
@@ -62,7 +62,7 @@ public:
 	}
     }
 
-#ifdef _FG_MEMBER_TEMPLATES
+#ifdef _SG_MEMBER_TEMPLATES
     template <class T> auto_ptr& operator = (const auto_ptr<T>& a) {
 	if (&a != this) {
 	    if (owns)

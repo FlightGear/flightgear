@@ -78,10 +78,10 @@
 #include "gui.h"
 #include "gui_local.hxx"
 
-FG_USING_STD(string);
+SG_USING_STD(string);
 
-#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
-FG_USING_STD(cout);
+#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
+SG_USING_STD(cout);
 #endif
 
 /* --------------------------------------------------------------------
