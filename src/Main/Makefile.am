@@ -94,7 +94,7 @@ fgfs_LDADD = \
 	$(network_LIBS) \
 	-lz \
 	$(opengl_LIBS) \
-	$(audio_LIBS)
+	$(openal_LIBS)
 
 metar_SOURCES = metar_main.cxx
 

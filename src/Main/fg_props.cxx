@@ -29,7 +29,7 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#include <simgear/sound/soundmgr.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include STL_IOSTREAM
 

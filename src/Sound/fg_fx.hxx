@@ -26,7 +26,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 
-class SGSound;
+class SGXmlSound;
 
 /**
  * Generator for FlightGear sound effects.
@@ -51,7 +51,7 @@ public:
 
 private:
 
-  vector<SGSound *> _sound;
+  vector<SGXmlSound *> _sound;
 
 };
 

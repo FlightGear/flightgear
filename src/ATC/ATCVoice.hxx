@@ -21,8 +21,6 @@
 #ifndef _FG_ATC_VOICE
 #define _FG_ATC_VOICE
 
-#include <plib/sl.h>
-
 #include <simgear/compiler.h>
 
 #if defined( SG_HAVE_STD_INCLUDES ) || defined( __BORLANDC__ ) || (__APPLE__)
@@ -36,6 +34,8 @@
 #include <map>
 #include <list>
 #include <string>
+
+#include <simgear/sound/sample_openal.hxx>
 
 SG_USING_STD(map);
 SG_USING_STD(list);
@@ -77,7 +77,7 @@ private:
 	// the sound and word position data
 	char* rawSoundData;
 	unsigned int rawDataSize;
-	slSample* SoundData;
+        SGSoundSample *SoundData;
 
 	// A map of words vs. byte position and length in rawSoundData
 	atc_word_map_type wordMap;

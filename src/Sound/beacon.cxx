@@ -51,7 +51,7 @@ bool FGBeacon::init() {
 	ptr += INNER_DIT_LEN;
     }
 
-    inner = new SGSimpleSound( inner_buf, INNER_SIZE );
+    inner = new SGSoundSample( inner_buf, INNER_SIZE, BYTES_PER_SECOND );
 
     // Make middle marker beacon sound
     len= (int)(MIDDLE_DIT_LEN / 2.0 );
@@ -69,7 +69,7 @@ bool FGBeacon::init() {
     ptr += MIDDLE_DIT_LEN;
     memcpy( ptr, middle_dah, MIDDLE_DAH_LEN );
 
-    middle = new SGSimpleSound( middle_buf, MIDDLE_SIZE );
+    middle = new SGSoundSample( middle_buf, MIDDLE_SIZE, BYTES_PER_SECOND );
 
     // Make outer marker beacon sound
     len= (int)(OUTER_DAH_LEN * 3.0 / 4.0 );
@@ -82,7 +82,7 @@ bool FGBeacon::init() {
     ptr += OUTER_DAH_LEN;
     memcpy( ptr, outer_dah, OUTER_DAH_LEN );
 
-    outer = new SGSimpleSound( outer_buf, OUTER_SIZE );
+    outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND );
 
     return true;
 }

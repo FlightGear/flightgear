@@ -87,7 +87,7 @@ void make_tone( unsigned char *buf, int freq,
     int i, j;
 
     for ( i = 0; i < trans_len; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SGD_PI / (BYTES_PER_SECOND / freq) ) )
 	    * ((double)i / trans_len) / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -95,7 +95,7 @@ void make_tone( unsigned char *buf, int freq,
     }
 
     for ( i = trans_len; i < len - trans_len; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SGD_PI / (BYTES_PER_SECOND / freq) ) )
 	    / 2.0 + 0.5;
 
 	/* Convert to unsigned byte */
@@ -103,7 +103,7 @@ void make_tone( unsigned char *buf, int freq,
     }
     j = trans_len;
     for ( i = len - trans_len; i < len; ++i ) {
-	float level = ( sin( (double) i * 2.0 * SGD_PI / (8000.0 / freq) ) )
+	float level = ( sin( (double) i * 2.0 * SGD_PI / (BYTES_PER_SECOND / freq) ) )
 	    * ((double)j / trans_len) / 2.0 + 0.5;
 	--j;
 
@@ -165,8 +165,8 @@ bool FGMorse::cust_init(const int freq ) {
 }
 
 
-// make a SGSimpleSound morse code transmission for the specified string
-SGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
+// make a SGSoundSample morse code transmission for the specified string
+SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     char *idptr = (char *)id.c_str();
 
     int length = 0;
@@ -260,7 +260,8 @@ SGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
     buf_ptr += SPACE_SIZE;
 
     // 4. create the simple sound and return
-    SGSimpleSound *sample = new SGSimpleSound( buffer, length );
+    SGSoundSample *sample = new SGSoundSample( buffer, length,
+                                               BYTES_PER_SECOND );
 
     return sample;
 }

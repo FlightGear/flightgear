@@ -31,7 +31,7 @@
 #endif
 
 #include <simgear/compiler.h>
-#include <simgear/sound/soundmgr.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <plib/sl.h>
 #include <plib/sm.h>
@@ -100,9 +100,9 @@ private:
     unsigned char middle_buf[ MIDDLE_SIZE ] ;
     unsigned char outer_buf[ OUTER_SIZE ] ;
 
-    SGSimpleSound *inner;
-    SGSimpleSound *middle;
-    SGSimpleSound *outer;
+    SGSoundSample *inner;
+    SGSoundSample *middle;
+    SGSoundSample *outer;
 
 public:
 
@@ -112,9 +112,9 @@ public:
     // allocate and initialize sound samples
     bool init();
 
-    SGSimpleSound *get_inner() { return inner; }
-    SGSimpleSound *get_middle() { return middle; }
-    SGSimpleSound *get_outer() { return outer; }
+    SGSoundSample *get_inner() { return inner; }
+    SGSoundSample *get_middle() { return middle; }
+    SGSoundSample *get_outer() { return outer; }
    
 };
 

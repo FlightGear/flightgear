@@ -541,7 +541,7 @@ FGNavCom::update(double dt)
 	if ( power_btn && (bus_power->getDoubleValue() > 1.0)
              && nav_ident_btn && audio_btn )
         {
-	    SGSimpleSound *sound;
+	    SGSoundSample *sound;
 	    sound = globals->get_soundmgr()->find( nav_fx_name );
             if ( sound != NULL ) {
                 sound->set_volume( nav_vol_btn );
@@ -653,7 +653,7 @@ void FGNavCom::search()
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
-	    SGSimpleSound *sound;
+	    SGSoundSample *sound;
 	    sound = morse.make_ident( nav_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, nav_fx_name );
@@ -703,7 +703,7 @@ void FGNavCom::search()
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
-	    SGSimpleSound *sound;
+	    SGSoundSample *sound;
 	    sound = morse.make_ident( nav_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {

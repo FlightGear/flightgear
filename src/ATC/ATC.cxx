@@ -22,7 +22,7 @@
 #  include <config.h>
 #endif
 
-#include <simgear/sound/soundmgr.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -223,7 +223,7 @@ void FGATC::Render(string msg, string refname, bool repeating) {
 		int len;
 		unsigned char* buf = vPtr->WriteMessage((char*)msg.c_str(), len, voice);
 		if(voice) {
-			SGSimpleSound* simple = new SGSimpleSound(buf, len);
+			SGSoundSample* simple = new SGSoundSample(buf, len, 8000);
 			// TODO - at the moment the volume is always set off comm1 
 			// and can't be changed after the transmission has started.
 			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));

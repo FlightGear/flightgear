@@ -29,10 +29,7 @@
 #endif
 
 #include <simgear/compiler.h>
-#include <simgear/sound/soundmgr.hxx>
-
-#include <plib/sl.h>
-#include <plib/sm.h>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 
 // Quoting from http://www.kluft.com/~ikluft/ham/morse-intro.html by
@@ -88,7 +85,7 @@ static const char DA = '2';
 static const char DAH = '2';
 static const char end = '0';
 
-static const int BYTES_PER_SECOND = 8000;
+static const int BYTES_PER_SECOND = 22050;
 // static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
 static const int BEAT_LENGTH = 92;  // milleseconds (13 wpm)
 static const int TRANSITION_BYTES = (int)(0.005 * BYTES_PER_SECOND);
@@ -124,8 +121,8 @@ public:
     bool init();
 
     // make a SimpleSound morse code transmission for the specified string
-    SGSimpleSound *make_ident( const string& id,
-			       const int freq = LO_FREQUENCY );
+    SGSoundSample *make_ident( const string& id,
+                               const int freq = LO_FREQUENCY );
 };
 
 

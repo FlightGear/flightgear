@@ -37,21 +37,25 @@ FGATCVoice::FGATCVoice() {
 }
 
 FGATCVoice::~FGATCVoice() {
-	delete SoundData;
+    // delete SoundData;
 }
 
 // Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 // Return true if successful.
 bool FGATCVoice::LoadVoice(string voice) {
+    // FIXME CLO: disabled to try to see if this is causign problemcs
+    // return false;
+
 	ifstream fin;
 
 	SGPath path = globals->get_fg_root();
-	string soundPath = "ATC/" + voice + ".wav";
-	path.append(soundPath);
+	path.append( "ATC" );
+
+        string file = voice + ".wav";
 	
-	SoundData = new slSample( (char*)path.c_str() );
-	rawDataSize = SoundData->getLength();
-	rawSoundData = (char*)SoundData->getBuffer();
+	SoundData = new SGSoundSample( path.c_str(), file.c_str() );
+	rawDataSize = SoundData->get_size();
+	rawSoundData = SoundData->get_data();
 	
 	path = globals->get_fg_root();
 	string wordPath = "ATC/" + voice + ".vce";

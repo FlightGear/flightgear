@@ -314,7 +314,21 @@ esac
 opengl_LIBS="$LIBS"
 LIBS="$base_LIBS"
 
+dnl check for OpenAL libraries
+case "${host}" in
+*)
+    dnl default unix style machines
+
+    AC_SEARCH_LIBS(alGenBuffers, openal)
+    ;;
+
+esac
+
+openal_LIBS="$LIBS"
+LIBS="$base_LIBS"
+
 AC_SUBST(base_LIBS)
+AC_SUBST(openal_LIBS)
 AC_SUBST(opengl_LIBS)
 AC_SUBST(thread_LIBS)
 AC_SUBST(network_LIBS)

@@ -22,7 +22,7 @@
 #include <Main/fg_props.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/sound/soundmgr.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <math.h>
 #include <string>
 SG_USING_STD(string);
@@ -189,7 +189,7 @@ void FGAIPlane::Render(string refname, bool repeating) {
 		int len;
 		unsigned char* buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), len, voice);
 		if(voice) {
-			SGSimpleSound* simple = new SGSimpleSound(buf, len);
+			SGSoundSample* simple = new SGSoundSample(buf, len, 8000);
 			// TODO - at the moment the volume is always set off comm1 
 			// and can't be changed after the transmission has started.
 			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));

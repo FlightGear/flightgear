@@ -32,7 +32,7 @@
 #endif
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
-#include <simgear/sound/sound.hxx>
+#include <simgear/sound/xmlsound.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -76,7 +76,7 @@ FGFX::init()
 
    node = root.getNode("fx");
    for (i = 0; i < node->nChildren(); i++) {
-      SGSound *sound = new SGSound();
+      SGXmlSound *sound = new SGXmlSound();
 
       sound->init(globals->get_props(), node->getChild(i),
                   globals->get_soundmgr(), globals->get_fg_root());
