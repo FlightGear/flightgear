@@ -33,9 +33,14 @@
 
 
 FGEnvironmentMgr::FGEnvironmentMgr ()
-  : _environment(new FGEnvironment),
-    _controller(new FGInterpolateEnvironmentCtrl)
+  : _environment(new FGEnvironment)
 {
+
+   if (fgGetBool("/environment/params/use-real-wether-fetch") == true)
+       _controller = new FGMetarEnvironmentCtrl;
+   else
+       _controller = new FGInterpolateEnvironmentCtrl;
+
   _controller->setEnvironment(_environment);
   set_subsystem("controller", _controller, 0.5);
 }

@@ -27,6 +27,7 @@
 
 #include <Main/fg_props.hxx>
 
+#include "environment_mgr.hxx"
 #include "environment_ctrl.hxx"
 
 SG_USING_STD(sort);
@@ -302,5 +303,232 @@ FGInterpolateEnvironmentCtrl::bucket::operator< (const bucket &b) const
     return (altitude_ft < b.altitude_ft);
 }
 
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGMetarEnvironmentCtrl.
+////////////////////////////////////////////////////////////////////////
+
+FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
+    : _icao( strdup( fgGetString("/sim/presets/airport-id") ) )
+{
+}
+
+FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
+{
+    if (_icao) {
+      free(_icao);
+      _icao = NULL;
+    }
+}
+
+
+void
+FGMetarEnvironmentCtrl::init ()
+{
+    if (_icao != NULL) {
+        free(_icao);
+        _icao = NULL;
+    }
+
+    read_table(_icao);
+    _base_wind_speed_node =
+        fgGetNode("/environment/metar/base-wind-range-from", true);
+    _gust_wind_speed_node =
+        fgGetNode("/environment/metar/gust-wind-speed-kt", true);
+
+    fgSetDouble("/environment/visibility-m",
+        fgGetDouble("/environment/metar/min-visibility-m"));
+    fgSetDouble("/environment/temperature-degc",
+        fgGetDouble("/environment/metar/temperature_degc"));
+    fgSetDouble("/environment/dewpoint-degc",
+        fgGetDouble("/environment/metar/dewpoint-degc"));
+    fgSetDouble("/environment/pressure-inhg",
+        fgGetDouble("/environment/metar/pressure-inhg"));
+}
+
+void
+FGMetarEnvironmentCtrl::reinit ()
+{
+    init();
+}
+
+void
+FGMetarEnvironmentCtrl::read_table (const char *icao)
+{
+    char s[128];
+    double d, dt;
+    int i;
+
+    if ((icao == NULL) && (_icao == NULL)) {
+        _icao = strdup( fgGetString("/sim/presets/airport-id") );
+
+    } else if (icao != NULL) {
+        if (_icao != NULL)
+            free(_icao);
+
+        _icao = strdup(icao);
+    }
+    SGMetar *m = new SGMetar(_icao);
+
+    d = m->getMinVisibility().getVisibility_m();
+    d = (d != SGMetarNaN) ? d : 10000;
+    fgSetDouble("/environment/metar/min-visibility-m", d);
+
+    dt =  m->getMaxVisibility().getVisibility_m();
+    d = (dt != SGMetarNaN) ? dt : d;
+    fgSetDouble("/environment/metar/max-visibility-m", d);
+
+    SGMetarVisibility *dirvis = m->getDirVisibility();
+    for (i = 0; i < 8; i++, dirvis++) {
+        const char *min = "/environment/metar/visibility[%]/min-m";
+        const char *max = "/environment/metar/visibility[%]/max-m";
+        char s[128];
+
+        d = dirvis->getVisibility_m();
+        d = (d != SGMetarNaN) ? d : 10000;
+
+        snprintf(s, 128, min, i);
+        fgSetDouble(s, d);
+        snprintf(s, 128, max, i);
+        fgSetDouble(s, d);
+    }
+
+    i = m->getWindDir();
+    if ( i == -1 ) {
+        fgSetInt("/environment/metar/base-wind-range-from",
+                    m->getWindRangeFrom() );
+        fgSetInt("/environment/metar/base-wind-range-to",
+                    m->getWindRangeTo() );
+    } else {
+        fgSetInt("/environment/metar/base-wind-range-from", i);
+        fgSetInt("/environment/metar/base-wind-range-to", i);
+    }
+    fgSetDouble("/environment/metar/base-wind-speed-kt",
+                m->getWindSpeed_kt() );
+
+    d = m->getGustSpeed_kt();
+    d = (d != SGMetarNaN) ? d : 0.0;
+    fgSetDouble("/environment/metar/gust-wind-speed-kt", d);
+
+    d = m->getTemperature_C();
+    if (d != SGMetarNaN) {
+        dt = m->getDewpoint_C();
+        dt = (dt != SGMetarNaN) ? dt : 0.0;
+        fgSetDouble("/environment/metar/dewpoint-degc", dt);
+        fgSetDouble("/environment/metar/rel-humidity-norm",
+                    m->getRelHumidity() );
+    }   
+    d = (d != SGMetarNaN) ? d : 15.0;
+    fgSetDouble("/environment/metar/temperature_degc", d);
+
+    d = m->getPressure_inHg();
+    d = (d != SGMetarNaN) ? d : 30.0;
+    fgSetDouble("/environment/metar/pressure-inhg", d);
+
+    vector<SGMetarCloud> cv = m->getClouds();
+    vector<SGMetarCloud>::iterator cloud;
+
+    const char *cl = "/environment/clouds/layer[%i]";
+    for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {
+        const char *coverage_string[5] = 
+            { "clear", "few", "scattered", "broken", "overcast" };
+        const double thickness[5] = { 0, 65, 600,750, 1000};
+        int q;
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/coverage", 128);
+        q = cloud->getCoverage();
+        q = (q != -1 ) ? q : 0;
+        fgSetString(s, coverage_string[q] );
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/elevation-ft", 128);
+        d = cloud->getAltitude_ft();
+        d = (d != SGMetarNaN) ? d : -9999;
+        fgSetDouble(s, d);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/thickness-ft", 128);
+        fgSetDouble(s, thickness[q]);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/span-m", 128);
+        fgSetDouble(s, 40000.0);
+    }
+    for (; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
+        snprintf(s, 128, cl, i);
+        strncat(s, "/coverage", 128);
+        fgSetString(s, "clear");
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/elevation-ft", 128);
+        fgSetDouble(s, -9999);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/thickness-ft", 128);
+        fgSetDouble(s, 0);
+
+        snprintf(s, 128, cl, i);
+        strncat(s, "/span-m", 128);
+        fgSetDouble(s, 40000.0);
+    }
+
+    delete m;
+}
+
+void
+FGMetarEnvironmentCtrl::update (double delta_time_sec)
+{
+  double base_wind_speed = _base_wind_speed_node->getDoubleValue();
+  double gust_wind_speed = _gust_wind_speed_node->getDoubleValue();
+
+  if (gust_wind_speed < base_wind_speed) {
+      gust_wind_speed = base_wind_speed;
+      _gust_wind_speed_node->setDoubleValue(gust_wind_speed);
+  }
+
+  if (base_wind_speed == gust_wind_speed) {
+    _current_wind_speed_kt = base_wind_speed;
+  } else {
+    int rn = rand() % 128;
+    int sign = (_delta_wind_speed_kt < 0 ? -1 : 1);
+    double gust = _current_wind_speed_kt - base_wind_speed;
+    double incr = gust / 50;
+
+    if (rn == 0)
+      _delta_wind_speed_kt = - _delta_wind_speed_kt;
+    else if (rn < 4)
+      _delta_wind_speed_kt -= incr * sign;
+    else if (rn < 16)
+      _delta_wind_speed_kt += incr * sign;
+
+    _current_wind_speed_kt += _delta_wind_speed_kt;
+
+    if (_current_wind_speed_kt < base_wind_speed) {
+      _current_wind_speed_kt = base_wind_speed;
+      _delta_wind_speed_kt = 0.01;
+    } else if (_current_wind_speed_kt > gust_wind_speed) {
+      _current_wind_speed_kt = gust_wind_speed;
+      _delta_wind_speed_kt = -0.01;
+    }
+  }
+
+  if (_environment != 0)
+    _environment->set_wind_speed_kt(_current_wind_speed_kt);
+}
+
+void
+FGMetarEnvironmentCtrl::do_interpolate (vector<bucket *> &table,
+                                              double altitude_ft,
+                                              FGEnvironment * environment)
+{
+}
+
+bool
+FGMetarEnvironmentCtrl::bucket::operator< (const bucket &b) const
+{
+    return (altitude_ft < b.altitude_ft);
+}
 
 // end of environment_ctrl.cxx

@@ -25,6 +25,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/environment/metar.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -132,5 +133,39 @@ private:
     vector<bucket *> _aloft_table;
 };
 
+
+
+/**
+ * Interplation controller using the SGMetar class
+ */
+class FGMetarEnvironmentCtrl : public FGEnvironmentCtrl
+{
+public:
+    FGMetarEnvironmentCtrl ();
+    virtual ~FGMetarEnvironmentCtrl ();
+
+    virtual void init ();
+    virtual void reinit ();
+    virtual void update (double delta_time_sec);
+
+private:
+
+    struct bucket {
+        double altitude_ft;
+        FGEnvironment environment;
+        bool operator< (const bucket &b) const;
+    };
+
+    char *_icao;
+    SGPropertyNode * _base_wind_speed_node;
+    SGPropertyNode * _gust_wind_speed_node;
+
+    double _current_wind_speed_kt;
+    double _delta_wind_speed_kt;
+
+    void read_table (const char *icao);
+    void do_interpolate (vector<bucket *> &table, double altitude_ft,
+                         FGEnvironment * environment);
+};
 
 #endif // _ENVIRONMENT_CTRL_HXX
