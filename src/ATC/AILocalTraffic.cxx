@@ -319,7 +319,8 @@ void FGAILocalTraffic::Update(double dt) {
 		trns += buf;
 		trns += " ";
 		trns += plane.callsign;
-		Transmit(trns);
+		pending_transmission = trns;
+		Transmit(30.0);
 		responseCounter = 0.0;
 		contactTower = false;
 		changeFreq = true;
@@ -414,7 +415,8 @@ void FGAILocalTraffic::Update(double dt) {
 			holdingShort = false;
 			string trns = "Cleared for take-off ";
 			trns += plane.callsign;
-			Transmit(trns);
+			pending_transmission = trns;
+			Transmit();
 			StartTaxi();
 		}
 		//cout << "^" << flush;
@@ -476,7 +478,8 @@ void FGAILocalTraffic::Update(double dt) {
 				trns += plane.callsign;
 				trns += " on apron parking request taxi for traffic pattern";
 				//cout << "trns = " << trns << endl;
-				Transmit(trns);
+				pending_transmission = trns;
+				Transmit();
 				taxiRequestCleared = false;
 				taxiRequestPending = true;
 			}
@@ -504,6 +507,9 @@ void FGAILocalTraffic::Update(double dt) {
 	fgSetDouble("/AI/Local1/ortho-x", (ortho.ConvertToLocal(pos)).x());
 	fgSetDouble("/AI/Local1/ortho-y", (ortho.ConvertToLocal(pos)).y());
 	fgSetDouble("/AI/Local1/elev", pos.elev() * SG_METER_TO_FEET);
+	
+	// And finally, call parent for transmission rendering
+	FGAIPlane::Update(dt);
 }
 
 void FGAILocalTraffic::RegisterTransmission(int code) {
@@ -947,7 +953,8 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 	// And add the airport name again
 	trns += tower->get_name();
 	
-	Transmit(trns);
+	pending_transmission = trns;	// FIXME - make up pending_transmission natively	
+	Transmit(90.0);		// Assume a report of this leg will be invalid if we can't transmit within a minute and a half.
 }
 
 void FGAILocalTraffic::ExitRunway(Point3D orthopos) {

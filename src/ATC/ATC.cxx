@@ -29,6 +29,10 @@
 #include "ATC.hxx"
 #include "ATCdisplay.hxx"
 
+FGATC::FGATC() {
+	freqClear = true;
+}
+
 FGATC::~FGATC() {
 }
 
@@ -39,7 +43,7 @@ void FGATC::AddPlane(string pid) {
 }
 
 int FGATC::RemovePlane() {
-    return 0;
+	return 0;
 }
 
 void FGATC::SetDisplay() {
@@ -49,7 +53,7 @@ void FGATC::SetNoDisplay() {
 }
 
 atc_type FGATC::GetType() {
-    return INVALID;
+	return INVALID;
 }
 
 void FGATC::SetData(ATCData* d) {
@@ -70,9 +74,9 @@ void FGATC::SetData(ATCData* d) {
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGATC::Render(string msg, string refname, bool repeating) {
-#ifdef ENABLE_AUDIO_SUPPORT
+	#ifdef ENABLE_AUDIO_SUPPORT
 	voice = (voiceOK && fgGetBool("/sim/sound/audible")
-                 && fgGetBool("/sim/sound/voice"));
+	&& fgGetBool("/sim/sound/voice"));
 	if(voice) {
 		int len;
 		unsigned char* buf = vPtr->WriteMessage((char*)msg.c_str(), len, voice);
@@ -90,7 +94,7 @@ void FGATC::Render(string msg, string refname, bool repeating) {
 		}
 		delete[] buf;
 	}
-#endif	// ENABLE_AUDIO_SUPPORT
+	#endif	// ENABLE_AUDIO_SUPPORT
 	if(!voice) {
 		// first rip the underscores and the pause hints out of the string - these are for the convienience of the voice parser
 		for(unsigned int i = 0; i < msg.length(); ++i) {
@@ -108,10 +112,10 @@ void FGATC::Render(string msg, string refname, bool repeating) {
 void FGATC::NoRender(string refname) {
 	if(playing) {
 		if(voice) {
-#ifdef ENABLE_AUDIO_SUPPORT		
+			#ifdef ENABLE_AUDIO_SUPPORT		
 			globals->get_soundmgr()->stop(refname);
 			globals->get_soundmgr()->remove(refname);
-#endif
+			#endif
 		} else {
 			globals->get_ATC_display()->CancelRepeatingMessage();
 		}
@@ -120,21 +124,14 @@ void FGATC::NoRender(string refname) {
 }
 
 ostream& operator << (ostream& os, atc_type atc) {
-    switch(atc) {
-    case(INVALID):
-	return(os << "INVALID");
-    case(ATIS):
- 	return(os << "ATIS");
-    case(GROUND):
-	return(os << "GROUND");
-    case(TOWER):
-	return(os << "TOWER");
-    case(APPROACH):
-	return(os << "APPROACH");
-    case(DEPARTURE):
-	return(os << "DEPARTURE");
-    case(ENROUTE):
-	return(os << "ENROUTE");
-    }
-    return(os << "ERROR - Unknown switch in atc_type operator << ");
+	switch(atc) {
+		case(INVALID):    return(os << "INVALID");
+		case(ATIS):       return(os << "ATIS");
+		case(GROUND):     return(os << "GROUND");
+		case(TOWER):      return(os << "TOWER");
+		case(APPROACH):   return(os << "APPROACH");
+		case(DEPARTURE):  return(os << "DEPARTURE");
+		case(ENROUTE):    return(os << "ENROUTE");
+	}
+	return(os << "ERROR - Unknown switch in atc_type operator << ");
 }

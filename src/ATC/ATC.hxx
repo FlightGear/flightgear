@@ -58,13 +58,13 @@ struct PlaneRec {
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
 enum atc_type {
-    INVALID,
-    ATIS,
-    GROUND,
-    TOWER,
-    APPROACH,
-    DEPARTURE,
-    ENROUTE
+	INVALID,
+	ATIS,
+	GROUND,
+	TOWER,
+	APPROACH,
+	DEPARTURE,
+	ENROUTE
 }; 
 
 // DCL - new experimental ATC data store
@@ -98,28 +98,39 @@ struct RunwayDetails {
 ostream& operator << (ostream& os, atc_type atc);
 
 class FGATC {
-
-public:
-
-    virtual ~FGATC();
-
-    // Run the internal calculations
-    virtual void Update(double dt);
-
-    // Add plane to a stack
-    virtual void AddPlane(string pid);
-
-    // Remove plane from stack
-    virtual int RemovePlane();
-
-    // Indicate that this instance should output to the display if appropriate 
-    virtual void SetDisplay();
-
-    // Indicate that this instance should not output to the display
-    virtual void SetNoDisplay();
-
-    // Return the type of ATC station that the class represents
-    virtual atc_type GetType();
+	
+	public:
+	
+	FGATC();
+	virtual ~FGATC();
+	
+	// Run the internal calculations
+	virtual void Update(double dt);
+	
+	// Add plane to a stack
+	virtual void AddPlane(string pid);
+	
+	// Remove plane from stack
+	virtual int RemovePlane();
+	
+	// Indicate that this instance should output to the display if appropriate 
+	virtual void SetDisplay();
+	
+	// Indicate that this instance should not output to the display
+	virtual void SetNoDisplay();
+	
+	// Returns true if OK to transmit on this frequency
+	inline bool FreqClear() { return freqClear; }
+	// Indicate that the frequency is in use
+	inline void FreqInUse() { freqClear = false; }
+	// Under development!!
+	// The idea is that AI traffic or the user ATC dialog box calls FreqInUse() when they begin transmitting,
+	// and that the tower control sets freqClear back to true following a reply.
+	// AI traffic should check FreqClear() is true prior to transmitting.
+	// The user will just have to wait for a gap in dialog as in real life.
+	
+	// Return the type of ATC station that the class represents
+	virtual atc_type GetType();
 	
 	// Set the core ATC data
 	void SetData(ATCData* d);
@@ -145,18 +156,18 @@ public:
 	inline const char* get_name() {return name.c_str();}
 	inline void set_name(const string nm) {name = nm;}
 	
-protected:
-
+	protected:
+	
 	// Render a transmission
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
 	void Render(string msg, string refname, bool repeating);
-
+	
 	// Cease rendering a transmission.
 	// Requires the sound manager refname if audio, else "".
 	void NoRender(string refname);
-
+	
 	double lon, lat, elev;
 	double x, y, z;
 	int freq;
@@ -169,6 +180,8 @@ protected:
 	bool playing;		// Indicates a message in progress	
 	bool voiceOK;		// Flag - true if at least one voice has loaded OK
 	FGATCVoice* vPtr;
+	
+	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
 };
 
 inline istream&
@@ -177,7 +190,7 @@ operator >> ( istream& fin, ATCData& a )
 	double f;
 	char ch;
 	char tp;
-
+	
 	fin >> tp;
 	
 	switch(tp) {
@@ -201,7 +214,7 @@ operator >> ( istream& fin, ATCData& a )
 		a.type = INVALID;
 		return fin >> skipeol;
 	}
-
+	
 	fin >> a.lat >> a.lon >> a.elev >> f >> a.range 
 	>> a.ident;
 	

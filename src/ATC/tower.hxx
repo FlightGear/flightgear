@@ -124,6 +124,7 @@ public:
 	void ReportGoingAround(string ID);
 	void ReportRunwayVacated(string ID);
 	void ReportReadyForDeparture(string ID);
+	void ReportDownwind(string ID);
 	
 	// Contact tower when at a hold short for departure - for now we'll assume plane - maybe vehicles might want to cross runway eventually?
 	void ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_traffic_type operation);
@@ -146,15 +147,6 @@ public:
 	bool GetCrosswindConstraint(double& cpos);
 	bool GetDownwindConstraint(double& dpos);
 	bool GetBaseConstraint(double& bpos);
-	
-	// Returns true if OK to transmit on this frequency
-	inline bool FreqClear() { return freqClear; }
-	// Indicate that the frequency is in use
-	inline void FreqInUse() { freqClear = false; }
-	// The idea is that AI traffic or the user ATC dialog box calls FreqInUse() when they begin transmitting,
-	// and that the tower control sets freqClear back to true following a reply.
-	// AI traffic should check FreqClear() is true prior to transmitting.
-	// The user will just have to wait for a gap in dialog as in real life.
 
 private:
 	FGATCMgr* ATCmgr;	
@@ -197,8 +189,6 @@ private:
 	
 	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
 	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
-	
-	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
 	
 	double timeSinceLastDeparture;	// Time in seconds since last departure from active rwy.
 	bool departed;	// set true when the above needs incrementing with time, false when it doesn't.

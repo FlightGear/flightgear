@@ -22,6 +22,7 @@
 #include <Main/fg_props.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/sound/soundmgr.hxx>
 #include <math.h>
 #include <string>
 SG_USING_STD(string);
@@ -32,12 +33,73 @@ SG_USING_STD(string);
 
 FGAIPlane::FGAIPlane() {
 	leg = LEG_UNKNOWN;
+	tuned_station = NULL;
+	pending_transmission = "";
+	_timeout = 0;
+	_pending = false;
+	_callback = NULL;
+	_transmit = false;
+	_transmitting = false;
+	voice = false;
+	playing = false;
+	voiceOK = false;
+	vPtr = NULL;
 }
 
 FGAIPlane::~FGAIPlane() {
 }
 
 void FGAIPlane::Update(double dt) {
+	if(_pending) {
+		if(tuned_station) {
+			if(tuned_station->FreqClear()) {
+				_pending = false;
+				_transmit = true;
+				_transmitting = false;
+			} else {
+				if(_timeout > 0.0) {	// allows count down to be avoided by initially setting it to zero
+					_timeout -= dt;
+					if(_timeout <= 0.0) {
+						_timeout = 0.0;
+						_pending = false;
+						// timed out - don't render.
+					}
+				}
+			}
+		} else {
+			// Not tuned to ATC - Just go ahead and transmit
+			_pending = false;
+			_transmit = true;
+			_transmitting = false;
+		}
+	}
+	
+	// This turns on rendering if on the same freq as the user
+	// TODO - turn it off if user switches to another freq - keep track of where in message we are etc.
+	if(_transmit) {
+		double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
+		//comm1 is not used yet.
+		_counter = 0.0;
+		_max_count = 5.0;		// FIXME - hardwired length of message - need to calculate it!
+		
+		if(freq == user_freq0) {
+			//cout << "Transmitting..." << endl;
+			// we are on the same frequency, so check distance to the user plane
+			if(1) {
+				// For now assume in range !!!
+				// TODO - implement range checking
+				Render(plane.callsign, false);
+				_transmit = false;
+				_transmitting = true;
+			}
+		}
+	} else if(_transmitting) {
+		if(_counter >= _max_count) {
+			NoRender(plane.callsign);
+			_transmitting = false;
+		}
+		_counter += dt;
+	}
 }
 
 void FGAIPlane::Bank(double angle) {
@@ -55,22 +117,84 @@ void FGAIPlane::LevelWings(void) {
 	}
 }
 
-void FGAIPlane::Transmit(string msg) {
-	SG_LOG(SG_ATC, SG_INFO, "Transmit called, msg = " << msg);
-	double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
-	//double user_freq0 = ("/radios/comm[0]/frequencies/selected-mhz");
-	//comm1 is not used yet.
-	
-	if(freq == user_freq0) {
-		//cout << "Transmitting..." << endl;
-		// we are on the same frequency, so check distance to the user plane
-		if(1) {
-			// For now (testing) assume in range !!!
-			// TODO - implement range checking
-			globals->get_ATC_display()->RegisterSingleMessage(msg, 0);
-		}
+void FGAIPlane::Transmit(ai_plane_callback_t callback) {
+	SG_LOG(SG_ATC, SG_INFO, "Transmit called for plane " << plane.callsign << ", msg = " << pending_transmission);
+	_pending = true;
+	_callback = callback;
+	_timeout = 0.0;
+}
+
+void FGAIPlane::Transmit(double timeout, ai_plane_callback_t callback) {
+	SG_LOG(SG_ATC, SG_INFO, "Timed transmit called for plane " << plane.callsign << ", msg = " << pending_transmission);
+	_pending = true;
+	_callback = callback;
+	_timeout = timeout;
+}
+
+void FGAIPlane::ImmediateTransmit(ai_plane_callback_t callback) {
+	Render(plane.callsign, false);
+	if(_callback) {
+		(*_callback)();
 	}
 }
+
+// Render a transmission
+// Outputs the transmission either on screen or as audio depending on user preference
+// The refname is a string to identify this sample to the sound manager
+// The repeating flag indicates whether the message should be repeated continuously or played once.
+void FGAIPlane::Render(string refname, bool repeating) {
+#ifdef ENABLE_AUDIO_SUPPORT
+	voice = (voiceOK && fgGetBool("/sim/sound/audible")
+                 && fgGetBool("/sim/sound/voice"));
+	if(voice) {
+		int len;
+		unsigned char* buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), len, voice);
+		if(voice) {
+			SGSimpleSound* simple = new SGSimpleSound(buf, len);
+			// TODO - at the moment the volume is always set off comm1 
+			// and can't be changed after the transmission has started.
+			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));
+			globals->get_soundmgr()->add(simple, refname);
+			if(repeating) {
+				globals->get_soundmgr()->play_looped(refname);
+			} else {
+				globals->get_soundmgr()->play_once(refname);
+			}
+		}
+		delete[] buf;
+	}
+#endif	// ENABLE_AUDIO_SUPPORT
+	if(!voice) {
+		// first rip the underscores and the pause hints out of the string - these are for the convienience of the voice parser
+		for(unsigned int i = 0; i < pending_transmission.length(); ++i) {
+			if((pending_transmission.substr(i,1) == "_") || (pending_transmission.substr(i,1) == "/")) {
+				pending_transmission[i] = ' ';
+			}
+		}
+		globals->get_ATC_display()->RegisterSingleMessage(pending_transmission, 0.0);
+	}
+	playing = true;	
+}
+
+
+// Cease rendering a transmission.
+void FGAIPlane::NoRender(string refname) {
+	if(playing) {
+		if(voice) {
+#ifdef ENABLE_AUDIO_SUPPORT		
+			globals->get_soundmgr()->stop(refname);
+			globals->get_soundmgr()->remove(refname);
+#endif
+		} else {
+			globals->get_ATC_display()->CancelRepeatingMessage();
+		}
+		playing = false;
+	}
+}
+
+/*
+
+*/
 
 void FGAIPlane::RegisterTransmission(int code) {
 }

@@ -1248,6 +1248,10 @@ void FGTower::ReportRunwayVacated(string ID) {
 	//cout << "Report Runway Vacated Called...\n";
 }
 
+void FGTower::ReportDownwind(string ID) {
+	// Tell the plane reporting what number she is in the circuit
+}
+
 ostream& operator << (ostream& os, tower_traffic_type ttt) {
 	switch(ttt) {
 	case(CIRCUIT):      return(os << "CIRCUIT");

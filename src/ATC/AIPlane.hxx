@@ -72,7 +72,7 @@ public:
     virtual ~FGAIPlane();
 
     // Run the internal calculations
-    virtual void Update(double dt);
+	void Update(double dt);
 	
 	// Send a transmission *TO* the AIPlane.
 	// FIXME int code is a hack - eventually this will receive Alexander's coded messages.
@@ -85,6 +85,9 @@ public:
 	LandingType GetLandingOption();
 
 protected:
+	// callback type for derived classes to use
+	typedef void (*ai_plane_callback_t) (void);
+
 	PlaneRec plane;
 
     double mag_hdg;	// degrees - the heading that the physical aircraft is *pointing*
@@ -106,12 +109,47 @@ protected:
     // Make radio transmission - this simply sends the transmission for physical rendering if the users
     // aircraft is on the same frequency and in range.  It is up to the derived classes to let ATC know
     // what is going on.
-    void Transmit(string msg);
+	string pending_transmission;	// derived classes set this string before calling Transmit(...)
+	FGATC* tuned_station;			// and this if they are tuned to ATC
+	
+	// Transmit a message when channel becomes free of other dialog
+    void Transmit(ai_plane_callback_t callback = NULL);
+	
+	// Transmit a message if channel becomes free within timeout (seconds). timeout of zero implies no limit
+	void Transmit(double timeout, ai_plane_callback_t callback = NULL);
+	
+	// Transmit regardless of other dialog on the channel eg emergency
+	void ImmediateTransmit(ai_plane_callback_t callback = NULL);
 
     void Bank(double angle);
     void LevelWings(void);
 	
 	PatternLeg leg;
+	
+private:
+	bool _pending;
+	double _timeout;
+	ai_plane_callback_t _callback;
+	bool _transmit;		// we are to transmit
+	bool _transmitting;	// we are transmitting
+	double _counter;
+	double _max_count;
+	
+	// Render a transmission (in string pending_transmission)
+	// Outputs the transmission either on screen or as audio depending on user preference
+	// The refname is a string to identify this sample to the sound manager
+	// The repeating flag indicates whether the message should be repeated continuously or played once.
+	void Render(string refname, bool repeating);
+
+	// Cease rendering a transmission.
+	// Requires the sound manager refname if audio, else "".
+	void NoRender(string refname);
+	
+	// Rendering related stuff
+	bool voice;			// Flag - true if we are using voice
+	bool playing;		// Indicates a message in progress	
+	bool voiceOK;		// Flag - true if at least one voice has loaded OK
+	FGATCVoice* vPtr;
 };
 
 #endif  // _FG_AI_PLANE_HXX
