@@ -38,6 +38,8 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
     r_n( 0.0 ),
     y_scale( 1.0 ),
     r_scale( 1.0 ),
+    y_offset( 0.0 ),
+    r_offset( 0.0 ),
     Kp( 0.0 ),
     alpha( 0.1 ),
     beta( 1.0 ),
@@ -49,7 +51,8 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
     ep_n_1( 0.0 ),
     edf_n_1( 0.0 ),
     edf_n_2( 0.0 ),
-    u_n_1( 0.0 )
+    u_n_1( 0.0 ),
+    desiredTs( 0.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -82,6 +85,10 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
             if ( prop != NULL ) {
                 y_scale = prop->getDoubleValue();
             }
+            prop = child->getChild( "offset" );
+            if ( prop != NULL ) {
+                y_offset = prop->getDoubleValue();
+            }
         } else if ( cname == "reference" ) {
             SGPropertyNode *prop = child->getChild( "prop" );
             if ( prop != NULL ) {
@@ -96,6 +103,10 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
             if ( prop != NULL ) {
                 r_scale = prop->getDoubleValue();
             }
+            prop = child->getChild( "offset" );
+            if ( prop != NULL ) {
+                r_offset = prop->getDoubleValue();
+            }
         } else if ( cname == "output" ) {
             int i = 0;
             SGPropertyNode *prop;
@@ -107,6 +118,11 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
         } else if ( cname == "config" ) {
             SGPropertyNode *prop;
 
+            prop = child->getChild( "Ts" );
+            if ( prop != NULL ) {
+                desiredTs = prop->getDoubleValue();
+            }
+            
             prop = child->getChild( "Kp" );
             if ( prop != NULL ) {
                 Kp = prop->getDoubleValue();
@@ -215,13 +231,16 @@ void FGPIDController::update( double dt ) {
     double Tf;              // filter time
     double delta_u_n = 0.0; // incremental output
     double u_n = 0.0;       // absolute output
-    double Ts = dt;         // Sampling interval (sec)
-
-    if ( Ts <= 0.0 ) {
+    double Ts;              // sampling interval (sec)
+    
+    elapsedTime += dt;
+    if ( elapsedTime <= desiredTs ) {
         // do nothing if time step is not positive (i.e. no time has
         // elapsed)
         return;
     }
+    Ts = elapsedTime;
+    elapsedTime = 0.0;
 
     if (enable_prop != NULL && enable_prop->getStringValue() == enable_value) {
         if ( !enabled ) {
@@ -239,16 +258,17 @@ void FGPIDController::update( double dt ) {
     }
 
     if ( enabled && Ts > 0.0) {
-        if ( debug ) cout << "Updating " << name << endl;
+        if ( debug ) cout << "Updating " << name
+                          << " Ts " << Ts << endl;
 
         double y_n = 0.0;
         if ( input_prop != NULL ) {
-            y_n = input_prop->getDoubleValue() * y_scale;
+            y_n = input_prop->getDoubleValue() * y_scale + y_offset;
         }
 
         double r_n = 0.0;
         if ( r_n_prop != NULL ) {
-            r_n = r_n_prop->getDoubleValue() * r_scale;
+            r_n = r_n_prop->getDoubleValue() * r_scale + r_offset;
         } else {
             r_n = r_n_value;
         }

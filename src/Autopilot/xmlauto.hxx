@@ -100,6 +100,8 @@ private:
     double r_n;                 // reference (set point) value
     double y_scale;             // scale process input from property system
     double r_scale;             // scale reference input from property system
+    double y_offset;
+    double r_offset;
 
     // Configuration values
     double Kp;                  // proportional gain
@@ -123,6 +125,8 @@ private:
     double edf_n_1;             // edf[n-1] (derivative error)
     double edf_n_2;             // edf[n-2] (derivative error)
     double u_n_1;               // u[n-1]   (output)
+    double desiredTs;            // desired sampling interval (sec)
+    double elapsedTime;          // elapsed time (sec)
     
     
     
