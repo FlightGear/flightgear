@@ -41,6 +41,11 @@ class FGProps : public FGProtocol {
 
     char buf[max_cmd_len];
     int length;
+    enum Mode {
+	PROMPT,
+	DATA
+    };
+    Mode mode;
 
     // tree view of property list
     string path;
@@ -59,6 +64,10 @@ public:
 
     // close the channel
     bool close();
+
+private:
+
+    bool reset();
 };
 
 

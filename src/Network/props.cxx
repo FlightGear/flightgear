@@ -49,7 +49,7 @@ FGProps::~FGProps() {
 
 // open hailing frequencies
 bool FGProps::open() {
-    path = "/";
+    reset();
 
     if ( is_enabled() ) {
 	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
@@ -67,6 +67,14 @@ bool FGProps::open() {
     set_enabled( true );
     SG_LOG( SG_IO, SG_INFO, "Opening properties channel communication layer." );
 
+    return true;
+}
+
+
+// prepare for new connection
+bool FGProps::reset() {
+    path = "/";
+    mode = PROMPT;
     return true;
 }
 
@@ -122,18 +130,39 @@ bool FGProps::process_command( const char *cmd ) {
     SGPropertyNode * node = globals->get_props()->getNode(path);
 
     if ( command == "ls" ) {
-	for (int i = 0; i < (int)node->nChildren(); i++) {
-	    SGPropertyNode * child = node->getChild(i);
+	SGPropertyNode * dir = node;
+	if ( tokens.size() > 2 ) {
+	    if ( tokens[1][0] == '/' ) {
+		dir = globals->get_props()->getNode(tokens[1]);
+	    } else {
+		dir = globals->get_props()->getNode(path + "/" + tokens[1]);
+	    }
+	    if ( dir == 0 ) {
+		tokens[1] += " Not Found\n";
+		io->writestring( tokens[1].c_str() );
+		return true;
+	    }
+	}
+	
+	for (int i = 0; i < (int)dir->nChildren(); i++) {
+	    SGPropertyNode * child = dir->getChild(i);
 	    string name = child->getName();
 	    string line = name;
-	    if ( child->nChildren() > 0 ) {
-		line += "/\n";
-	    } else {
-		string value = node->getStringValue ( name, "" );
-		line += " =\t'" + value + "'\t(";
-		line += getValueTypeString( node->getNode( name ) );
-		line += ")\n";
+	    if ( dir->getChild(name, 1) ) {
+		sprintf(buf, "[%d]", child->getIndex());
+		line += buf;
 	    }
+	    if ( child->nChildren() > 0 ) {
+		line += "/";
+	    } else {
+		if (mode == PROMPT) {
+		    string value = dir->getStringValue ( name, "" );
+		    line += " =\t'" + value + "'\t(";
+		    line += getValueTypeString( dir->getNode( name ) );
+		    line += ")";
+		}
+	    }
+	    line += "\n";
 	    io->writestring( line.c_str() );
 	}
     } else if ( command == "dump" ) {
@@ -179,14 +208,18 @@ bool FGProps::process_command( const char *cmd ) {
 	if ( tokens.size() <= 1 ) {
 	    // do nothing
 	} else {
-	    string ttt = "debug = '" + tokens[1] + "'\n";
-	    io->writestring( ttt.c_str() );
-
+	    string tmp;	
 	    string value = node->getStringValue ( tokens[1], "" );
-	    string tmp = tokens[1] + " = '" + value + "' (";
-	    tmp += getValueTypeString( node->getNode( tokens[1] ) );
-	    tmp += ")\n";
- 
+	    if ( mode == PROMPT ) {
+		string ttt = "debug = '" + tokens[1] + "'\n";
+		io->writestring( ttt.c_str() );
+
+		tmp = tokens[1] + " = '" + value + "' (";
+		tmp += getValueTypeString( node->getNode( tokens[1] ) );
+		tmp += ")\n";
+ 	    } else {
+		tmp = value + "\n";
+	    }
 	    io->writestring( tmp.c_str() );
 	}
     } else if ( command == "set" ) {
@@ -206,31 +239,38 @@ bool FGProps::process_command( const char *cmd ) {
 	}
     } else if ( command == "quit" ) {
 	close();
-	path = "/";
+	reset();
 	return true;
+    } else if ( command == "data" ) {
+    	mode = DATA;
+    } else if ( command == "prompt" ) {
+	mode = PROMPT;
     } else {
 	io->writestring( "\n" );
 	io->writestring( "Valid commands are:\n" );
 	io->writestring( "\n" );
 	io->writestring( "help             show help message\n" );
-	io->writestring( "ls               list current directory\n" );
+	io->writestring( "ls [<dir>]       list directory\n" );
 	io->writestring( "dump             dump current state (in xml)\n" );
 	io->writestring( "cd <dir>         cd to a directory, '..' to move back\n" );
 	io->writestring( "pwd              display your current path\n" );
 	io->writestring( "get <var>        show the value of a parameter\n" );
 	io->writestring( "show <var>       synonym for get\n" );
 	io->writestring( "set <var> <val>  set <var> to a new <val>\n" );
+	io->writestring( "data             switch to raw data mode\n" );
+	io->writestring( "prompt           switch to interactive mode (default)\n" );
 	io->writestring( "quit             terminate connection\n" );
 	io->writestring( "\n" );
     }
 
-    string prompt = node->getPath();
-    if ( prompt == "" ) {
-	prompt = "/";
+    if ( mode == PROMPT ) {
+	string prompt = node->getPath();
+	if ( prompt == "" ) {
+	    prompt = "/";
+	}
+	prompt += "> ";
+	io->writestring( prompt.c_str() );
     }
-    prompt += "> ";
-    io->writestring( prompt.c_str() );
-
     return true;
 }
 
