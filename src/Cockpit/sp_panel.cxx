@@ -207,20 +207,20 @@ createGyroCompass (int x, int y)
 
 				// Action: move heading bug
   inst->addAction(0, SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeading,
-				     FGBFI::setAPHeading,
+		  new FGAdjustAction(FGBFI::getAPHeadingMag,
+				     FGBFI::setAPHeadingMag,
 				     -1.0, -360.0, 360.0, true));
   inst->addAction(0, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeading,
-				     FGBFI::setAPHeading,
+		  new FGAdjustAction(FGBFI::getAPHeadingMag,
+				     FGBFI::setAPHeadingMag,
 				     1.0, -360.0, 360.0, true));
   inst->addAction(1, SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeading,
-				     FGBFI::setAPHeading,
+		  new FGAdjustAction(FGBFI::getAPHeadingMag,
+				     FGBFI::setAPHeadingMag,
 				     -5.0, -360.0, 360.0, true));
   inst->addAction(1, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeading,
-				     FGBFI::setAPHeading,
+		  new FGAdjustAction(FGBFI::getAPHeadingMag,
+				     FGBFI::setAPHeadingMag,
 				     5.0, -360.0, 360.0, true));
 
 				// Layer 0: compass background
@@ -237,7 +237,7 @@ createGyroCompass (int x, int y)
 			  FGSteam::get_MH_deg,
 			  -720.0, 720.0, -1.0, 0.0);
   inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getAPHeading,
+			  FGBFI::getAPHeadingMag,
 			  -720.0, 720.0, 1.0, 0.0);
 
 				// Layer 2: fixed center
@@ -250,7 +250,7 @@ createGyroCompass (int x, int y)
   inst->addTransformation(FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
   inst->addTransformation(FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
   inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getAPHeading,
+			  FGBFI::getAPHeadingMag,
 			  -360.0, 360.0, 1.0, 0.0);
 
   return inst;

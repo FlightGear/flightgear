@@ -128,7 +128,7 @@ fgSaveFlight (ostream &output)
   SAVE("autopilot-altitude-lock", FGBFI::getAPAltitudeLock());
   SAVE("autopilot-altitude", FGBFI::getAPAltitude());
   SAVE("autopilot-heading-lock", FGBFI::getAPHeadingLock());
-  SAVE("autopilot-heading", FGBFI::getAPHeading());
+  SAVE("autopilot-heading", FGBFI::getAPHeadingMag());
   SAVE("autopilot-gps-lock", FGBFI::getGPSLock());
   SAVE("autopilot-gps-lat", FGBFI::getGPSTargetLatitude());
   SAVE("autopilot-gps-lon", FGBFI::getGPSTargetLongitude());
@@ -408,7 +408,7 @@ fgLoadFlight (istream &input)
     else if (text == "autopilot-heading:") {
       input >> n;
       cout << "autopilot heading is " << n << endl;
-      FGBFI::setAPHeading(n);
+      FGBFI::setAPHeadingMag(n);
     }
 
     else if (text == "autopilot-gps-lock:") {

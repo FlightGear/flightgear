@@ -117,7 +117,7 @@ FGBFI::reinit ()
   double flaps = getFlaps();
   double brake = getBrake();
   bool apHeadingLock = getAPHeadingLock();
-  double apHeading = getAPHeading();
+  double apHeadingMag = getAPHeadingMag();
   bool apAltitudeLock = getAPAltitudeLock();
   double apAltitude = getAPAltitude();
   const string &targetAirport = getTargetAirport();
@@ -138,7 +138,7 @@ FGBFI::reinit ()
   setFlaps(flaps);
   setBrake(brake);
   setAPHeadingLock(apHeadingLock);
-  setAPHeading(apHeading);
+  setAPHeadingMag(apHeadingMag);
   setAPAltitudeLock(apAltitudeLock);
   setAPAltitude(apAltitude);
   setTargetAirport(targetAirport);
@@ -786,9 +786,9 @@ FGBFI::setAPHeadingLock (bool lock)
  * Get the autopilot target heading in degrees.
  */
 double
-FGBFI::getAPHeading ()
+FGBFI::getAPHeadingMag ()
 {
-  return current_autopilot->get_TargetHeading();
+  return current_autopilot->get_TargetHeading() - getMagVar();
 }
 
 
@@ -796,9 +796,9 @@ FGBFI::getAPHeading ()
  * Set the autopilot target heading in degrees.
  */
 void
-FGBFI::setAPHeading (double heading)
+FGBFI::setAPHeadingMag (double heading)
 {
-  current_autopilot->set_TargetHeading( heading );
+  current_autopilot->set_TargetHeading( heading + getMagVar() );
 }
 
 

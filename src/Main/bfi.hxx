@@ -121,12 +121,12 @@ public:
   static bool getAPAltitudeLock ();
   static double getAPAltitude ();
   static bool getAPHeadingLock ();
-  static double getAPHeading ();
+  static double getAPHeadingMag ();
 
   static void setAPAltitudeLock (bool lock);
   static void setAPAltitude (double altitude);
   static void setAPHeadingLock (bool lock);
-  static void setAPHeading (double heading);
+  static void setAPHeadingMag (double heading);
 
   static bool getAPNAV1Lock ();
   static void setAPNAV1Lock (bool lock);
