@@ -229,6 +229,8 @@ FG3DModel::init (const string &path)
       animation_nodes[i]->getChildren("object-name");
     if (name_nodes.size() < 1) {
       Animation * animation = make_animation(0, animation_nodes[i]);
+      if (animation != 0)
+	_animations.push_back(animation);
     } else {
       for (unsigned int j = 0; j < name_nodes.size(); j++) {
         Animation * animation =
@@ -309,7 +311,8 @@ FG3DModel::make_animation (const char * object_name,
     object = _model;
   }
 
-  animation->init(object, node);
+  if (animation != 0)
+    animation->init(object, node);
   return animation;
 }
 
