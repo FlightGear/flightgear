@@ -1384,11 +1384,16 @@ puCallback editSubmenuCb        [] = {
 };
 */
 
+extern void fgHUDalphaAdjust( puObject * );
 char *viewSubmenu               [] = {
-    /* "Cockpit View > ", "View >","------------", */ "Toggle Panel...", NULL
+    "HUD Alpha",
+    /* "Cockpit View > ", "View >","------------", */
+    "Toggle Panel...", NULL
 };
 puCallback viewSubmenuCb        [] = {
-    /* notCb, notCb, NULL, */ guiTogglePanel, NULL
+    fgHUDalphaAdjust,
+    /* notCb, notCb, NULL, */
+    guiTogglePanel, NULL
 };
 
 char *aircraftSubmenu           [] = {

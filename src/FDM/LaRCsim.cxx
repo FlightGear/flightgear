@@ -96,6 +96,11 @@ int FGLaRCsim::update( int multiloop ) {
     // Inform LaRCsim of the local terrain altitude
     Runway_altitude = get_Runway_altitude();
 
+    // Weather
+    V_north_airmass = get_V_north_airmass();
+    V_east_airmass =  get_V_east_airmass();
+    V_down_airmass =  get_V_down_airmass();
+
     // old -- FGInterface_2_LaRCsim() not needed except for Init()
     // translate FG to LaRCsim structure
     // FGInterface_2_LaRCsim(f);
@@ -410,16 +415,16 @@ int FGLaRCsim::copy_from_LaRCsim() {
     // set_Gamma_horiz_rad( Gamma_horiz_rad );
 
     // set_Sigma( Sigma );
-    // set_Density( Density );
+    set_Density( Density );
     // set_V_sound( V_sound );
     // set_Mach_number( Mach_number );
 
-    // set_Static_pressure( Static_pressure );
+    set_Static_pressure( Static_pressure );
     // set_Total_pressure( Total_pressure );
     // set_Impact_pressure( Impact_pressure );
     // set_Dynamic_pressure( Dynamic_pressure );
 
-    // set_Static_temperature( Static_temperature );
+    set_Static_temperature( Static_temperature );
     // set_Total_temperature( Total_temperature );
 
     set_Sea_level_radius( Sea_level_radius );

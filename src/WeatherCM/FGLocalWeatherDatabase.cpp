@@ -245,11 +245,33 @@ void FGLocalWeatherDatabase::setProperties(const FGPhysicalProperties2D& x)
 void fgUpdateWeatherDatabase(void)
 {
     sgVec3 position;
-    sgSetVec3(position, 
+	sgVec3 wind;
+    
+	
+	sgSetVec3(position, 
 	current_aircraft.fdm_state->get_Latitude(),
 	current_aircraft.fdm_state->get_Longitude(),
 	current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER);
 
     WeatherDatabase->update( position );
+	
+	#define rho0 1.293 /*for air in normal altitudes*/
+    #define PATOPSF  0.02089    // Pascals to psf
+	#define KTOR     1.8        // Kelvin to degree Rankine
+	#define KGMTOSGF 0.0019403  // kg/m^3 to slug/ft^3
+
+
+    FGPhysicalProperty my_value = WeatherDatabase->get(position);
+    current_aircraft.fdm_state->set_Static_temperature(my_value.Temperature*KTOR);
+	current_aircraft.fdm_state->set_Static_pressure(my_value.AirPressure*PATOPSF);
+	float density=rho0 * 273.15 * my_value.AirPressure / (101300 *my_value.Temperature )*KGMTOSGF;
+	current_aircraft.fdm_state->set_Density(density*KGMTOSGF);
+	
+	#define KPHTOFPS 0.9113 //km/hr to ft/s
+	#define MSTOFPS  3.2808 //m/s to ft/s
+	current_aircraft.fdm_state->set_Velocities_Local_Airmass(my_value.Wind[1]*KPHTOFPS,
+    													    my_value.Wind[0]*KPHTOFPS,
+														    my_value.Wind[2]*KPHTOFPS);
+	
 }
 

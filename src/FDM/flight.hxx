@@ -406,16 +406,16 @@ public:
 
     FG_VECTOR_3    v_local_airmass_v;   // velocity of airmass (steady winds)
     // inline double * get_V_local_airmass_v() { return v_local_airmass_v; }
-    // inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }
-    // inline double get_V_east_airmass() const { return v_local_airmass_v[1]; }
-    // inline double get_V_down_airmass() const { return v_local_airmass_v[2]; }
-    /* inline void set_Velocities_Local_Airmass( double north, double east, 
+    inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }
+    inline double get_V_east_airmass() const { return v_local_airmass_v[1]; }
+    inline double get_V_down_airmass() const { return v_local_airmass_v[2]; }
+    inline void set_Velocities_Local_Airmass( double north, double east, 
 					      double down)
     {
 	v_local_airmass_v[0] = north;
 	v_local_airmass_v[1] = east;
 	v_local_airmass_v[2] = down;
-    } */
+    } 
 
     FG_VECTOR_3    v_local_rel_airmass_v;  // velocity of veh. relative to
     // airmass
@@ -693,8 +693,8 @@ public:
     double    sigma, density, v_sound, mach_number;
     // inline double get_Sigma() const { return sigma; }
     // inline void set_Sigma( double s ) { sigma = s; }
-    // inline double get_Density() const { return density; }
-    // inline void set_Density( double d ) { density = d; }
+    inline double get_Density() const { return density; }
+    inline void set_Density( double d ) { density = d; }
     // inline double get_V_sound() const { return v_sound; }
     // inline void set_V_sound( double v ) { v_sound = v; }
     inline double get_Mach_number() const { return mach_number; }
@@ -702,8 +702,8 @@ public:
 
     double    static_pressure, total_pressure, impact_pressure;
     double    dynamic_pressure;
-    // inline double get_Static_pressure() const { return static_pressure; }
-    // inline void set_Static_pressure( double sp ) { static_pressure = sp; }
+    inline double get_Static_pressure() const { return static_pressure; }
+    inline void set_Static_pressure( double sp ) { static_pressure = sp; }
     // inline double get_Total_pressure() const { return total_pressure; }
     // inline void set_Total_pressure( double tp ) { total_pressure = tp; }
     // inline double get_Impact_pressure() const { return impact_pressure; }
@@ -712,8 +712,8 @@ public:
     // inline void set_Dynamic_pressure( double dp ) { dynamic_pressure = dp; }
 
     double    static_temperature, total_temperature;
-    // inline double get_Static_temperature() const { return static_temperature; }
-    // inline void set_Static_temperature( double t ) { static_temperature = t; }
+    inline double get_Static_temperature() const { return static_temperature; }
+    inline void set_Static_temperature( double t ) { static_temperature = t; }
     // inline double get_Total_temperature() const { return total_temperature; }
     // inline void set_Total_temperature( double t ) { total_temperature = t; }
 
