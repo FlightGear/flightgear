@@ -40,9 +40,30 @@ FG_USING_STD(vector);
 
 // a segment is two integer pointers into the node list
 class FGTriSeg {
-public:
     int n1, n2;
+
+public:
+
+    // Constructor and destructor
+    inline FGTriSeg( void ) { };
+    inline FGTriSeg( int i1, int i2 ) { n1 = i1; n2 = i2; }
+
+    inline ~FGTriSeg( void ) { };
+
+    inline int get_n1() const { return n1; }
+    inline void set_n1( int i ) { n1 = i; }
+    inline int get_n2() const { return n2; }
+    inline void set_n2( int i ) { n2 = i; }
+
+    friend bool operator == (const FGTriSeg& a, const FGTriSeg& b);
+
 };
+
+inline bool operator == (const FGTriSeg& a, const FGTriSeg& b)
+{
+    return ((a.n1 == b.n1) && (a.n2 == b.n2)) 
+	|| ((a.n1 == b.n2) && (a.n2 == b.n1));
+}
 
 
 typedef vector < FGTriSeg > triseg_list;
@@ -78,6 +99,10 @@ public:
 
 
 // $Log$
+// Revision 1.2  1999/03/20 20:33:00  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.1  1999/03/20 13:21:36  curt
 // Initial revision.
 //

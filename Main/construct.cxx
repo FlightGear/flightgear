@@ -32,8 +32,10 @@
 #include <Triangulate/triangle.hxx>
 
 
-// load regular grid of elevation data (dem based)
+// load regular grid of elevation data (dem based), return list of
+// fitted nodes
 int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
+    fitnode_list result;
     char tile_name[256];
     string base = b.gen_base_path();
     long int b_index = b.gen_index();
@@ -44,8 +46,10 @@ int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
     cout << "dem_path = " << dem_path << endl;
 
     if ( ! array.open(dem_path) ) {
+	cout << "ERROR: cannot open " << dem_path << endl;
 	return 0;
     }
+
     array.parse();
     array.fit( 100 );
 
@@ -133,21 +137,26 @@ int load_polys( const string& work_base, FGBucket& b, FGClipper& clipper) {
 
 
 // triangulate the data for each polygon
-void triangulate( const FGArray& array, const FGClipper& clipper,
+void do_triangulate( const FGArray& array, const FGClipper& clipper,
 		  FGTriangle& t ) {
-    // first we need to consolidate the points of all the polygons
-    // into a more "Triangle" friendly format
-    FGgpcPolyList gpc_polys;
+    // first we need to consolidate the points of the DEM fit list and
+    // all the polygons into a more "Triangle" friendly format
 
-    gpc_polys = clipper.get_polys_clipped();
+    fitnode_list fit_list = array.get_fit_node_list();
+    FGgpcPolyList gpc_polys = clipper.get_polys_clipped();
 
     cout << "ready to build node list and polygons" << endl;
-    t.build( gpc_polys );
+    t.build( fit_list, gpc_polys );
     cout << "done building node list and polygons" << endl;
+
+    cout << "ready to do triangulation" << endl;
+    t.run_triangulate();
+    cout << "finished triangulation" << endl;
 }
 
 
 main(int argc, char **argv) {
+    fitnode_list fit_list;
     double lon, lat;
 
     if ( argc != 2 ) {
@@ -173,11 +182,15 @@ main(int argc, char **argv) {
 
     // triangulate the data for each polygon
     FGTriangle t;
-    triangulate( array, clipper, t );
+    do_triangulate( array, clipper, t );
 }
 
 
 // $Log$
+// Revision 1.4  1999/03/20 20:32:54  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.3  1999/03/19 00:26:52  curt
 // Minor tweaks ...
 //

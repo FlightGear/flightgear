@@ -25,7 +25,48 @@
 #include "trisegs.hxx"
 
 
+// Constructor 
+FGTriSegments::FGTriSegments( void ) {
+}
+
+
+// Destructor
+FGTriSegments::~FGTriSegments( void ) {
+}
+
+
+// Add a point to the point list if it doesn't already exist.
+// Returns the index (starting at zero) of the point in the list.
+int FGTriSegments::unique_add( const FGTriSeg& s ) {
+    triseg_list_iterator current, last;
+    int counter = 0;
+
+    cout << s.get_n1() << "," << s.get_n2() << endl;
+
+    // see if point already exists
+    current = seg_list.begin();
+    last = seg_list.end();
+    for ( ; current != last; ++current ) {
+	if ( s == *current ) {
+	    cout << "found an existing segment match" << endl;
+	    return counter;
+	}
+	
+	++counter;
+    }
+
+    // add to list
+    seg_list.push_back( s );
+
+    return counter;
+}
+
+
 // $Log$
+// Revision 1.2  1999/03/20 20:32:59  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.1  1999/03/20 13:21:36  curt
 // Initial revision.
 //

@@ -35,6 +35,7 @@
 
 #include <vector>
 
+#include <Array/array.hxx>
 #include <Clipper/clipper.hxx>
 #include <Math/point3d.hxx>
 #include <Polygon/names.hxx>
@@ -46,6 +47,7 @@ extern "C" {
 
 #include "trinodes.hxx"
 #include "tripoly.hxx"
+#include "trisegs.hxx"
 
 FG_USING_STD(vector);
 
@@ -59,9 +61,15 @@ class FGTriangle {
 
 private:
 
+    // list of nodes
     FGTriNodes trinodes;
-    tripoly_list polylist[FG_MAX_AREA_TYPES];
 
+    // list of segments
+    FGTriSegments trisegs;
+
+    // polygon list
+    tripoly_list polylist[FG_MAX_AREA_TYPES];
+    
 public:
 
     // Constructor and destructor
@@ -72,13 +80,10 @@ public:
     int add_nodes();
 
     // populate this class based on the specified gpc_polys list
-    int build( const FGgpcPolyList& gpc_polys );
-
-    // do actual triangulation
-    int do_triangulate( const FGTriPoly& poly );
+    int build( const fitnode_list& fit_list, const FGgpcPolyList& gpc_polys );
 
     // front end triangulator for polygon list
-    int triangulate();
+    int run_triangulate();
 };
 
 
@@ -86,6 +91,10 @@ public:
 
 
 // $Log$
+// Revision 1.6  1999/03/20 20:32:56  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.5  1999/03/20 02:21:53  curt
 // Continue shaping the code towards triangulation bliss.  Added code to
 // calculate some point guaranteed to be inside a polygon.

@@ -60,14 +60,14 @@ FG_USING_STD(string);
 FGArray::FGArray( void ) {
     // cout << "class FGArray CONstructor called." << endl;
     in_data = new float[ARRAY_SIZE_1][ARRAY_SIZE_1];
-    out_data = new float[ARRAY_SIZE_1][ARRAY_SIZE_1];
+    // out_data = new float[ARRAY_SIZE_1][ARRAY_SIZE_1];
 }
 
 
 FGArray::FGArray( const string &file ) {
     // cout << "class FGArray CONstructor called." << endl;
     in_data = new float[ARRAY_SIZE_1][ARRAY_SIZE_1];
-    out_data = new float[ARRAY_SIZE_1][ARRAY_SIZE_1];
+    // out_data = new float[ARRAY_SIZE_1][ARRAY_SIZE_1];
 
     FGArray::open(file);
 }
@@ -130,6 +130,16 @@ FGArray::parse() {
 }
 
 
+// add a node to the output (fitted) node list
+void FGArray::add_fit_node( int i, int j, double val ) {
+    double x = (originx + i * col_step) / 3600.0;
+    double y = (originy + j * row_step) / 3600.0;
+    cout << Point3D(x, y, val) << endl;
+    node_list.push_back( Point3D(x, y, val) );
+}
+
+
+#if 0
 // Initialize output mesh structure
 void FGArray::outputmesh_init( void ) {
     int i, j;
@@ -153,6 +163,7 @@ void FGArray::outputmesh_set_pt( int i, int j, double value ) {
     // cout << "Setting data[" << i << "][" << j << "] = " << value << endl;
    out_data[i][j] = value;
 }
+#endif
 
 
 // Use least squares to fit a simpler data set to dem data
@@ -170,7 +181,7 @@ void FGArray::fit( double error ) {
     error_sq = error * error;
 
     cout << "  Initializing output mesh structure" << endl;
-    outputmesh_init();
+    // outputmesh_init();
 
     // determine dimensions
     colmin = 0;
@@ -181,10 +192,10 @@ void FGArray::fit( double error ) {
 	 << colmax << "," << rowmax << endl;;
     
     // include the corners explicitly
-    outputmesh_set_pt(colmin, rowmin, in_data[colmin][rowmin]);
-    outputmesh_set_pt(colmin, rowmax, in_data[colmin][rowmax]);
-    outputmesh_set_pt(colmax, rowmax, in_data[colmax][rowmax]);
-    outputmesh_set_pt(colmax, rowmin, in_data[colmax][rowmin]);
+    add_fit_node( colmin, rowmin, in_data[colmin][rowmin] );
+    add_fit_node( colmin, rowmax-1, in_data[colmin][rowmax] );
+    add_fit_node( colmax-1, rowmin, in_data[colmax][rowmin] );
+    add_fit_node( colmax-1, rowmax-1, in_data[colmax][rowmax] );
 
     cout << "  Beginning best fit procedure" << endl;
     lasty = 0;
@@ -276,7 +287,7 @@ void FGArray::fit( double error ) {
 	    if ( start > colmin ) {
 		// skip this for the first line segment
 		cury = m * x[0] + b;
-		outputmesh_set_pt(start, row, (lasty + cury) / 2);
+		add_fit_node( start, row, (lasty + cury) / 2 );
 		// fprintf(fit, "%.2f %.2f\n", x[0], (lasty + cury) / 2);
 	    }
 
@@ -544,11 +555,15 @@ void FGArray::outputmesh_output_nodes( const string& fg_root, FGBucket& p )
 FGArray::~FGArray( void ) {
     // printf("class FGArray DEstructor called.\n");
     delete [] in_data;
-    delete [] out_data;
+    // delete [] out_data;
 }
 
 
 // $Log$
+// Revision 1.4  1999/03/20 20:32:51  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.3  1999/03/17 23:48:17  curt
 // Removed forced -g compile flag.
 // Fixed a couple compiler warnings.

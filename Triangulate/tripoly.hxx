@@ -64,9 +64,13 @@ public:
     // return size
     inline int size() const { return poly.size(); }
 
+    // return the ith polygon point index
+    inline int get_pt_index( int i ) const { return poly[i]; }
+
     // calculate an "arbitrary" point inside this polygon for
     // assigning attribute areas
     void calc_point_inside( const FGTriNodes& trinodes );
+    inline Point3D get_point_inside() const { return inside; }
 };
 
 
@@ -74,6 +78,10 @@ public:
 
 
 // $Log$
+// Revision 1.2  1999/03/20 20:32:58  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.1  1999/03/20 13:21:36  curt
 // Initial revision.
 //

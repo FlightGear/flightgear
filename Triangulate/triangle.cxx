@@ -25,7 +25,6 @@
 #include "triangle.hxx"
 #include "tripoly.hxx"
 
-
 // Constructor
 FGTriangle::FGTriangle( void ) {
 }
@@ -37,11 +36,23 @@ FGTriangle::~FGTriangle( void ) {
 
 
 // populate this class based on the specified gpc_polys list
-int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
+int 
+FGTriangle::build( const fitnode_list& fit_list, 
+		   const FGgpcPolyList& gpc_polys )
+{
     int index;
-    // traverse the gpc_polys and build a unified node list and a set
-    // of Triangle PSLG that reference the node list by index
-    // (starting at zero)
+
+    // traverse the dem fit list and gpc_polys building a unified node
+    // list and converting the polygons so that they reference the
+    // node list by index (starting at zero) rather than listing the
+    // points explicitely
+
+    const_fitnode_list_iterator f_current, f_last;
+    f_current = fit_list.begin();
+    f_last = fit_list.end();
+    for ( ; f_current != f_last; ++f_current ) {
+	index = trinodes.unique_add( *f_current );
+    }
 
     gpc_polygon *gpc_poly;
     const_gpcpoly_iterator current, last;
@@ -67,7 +78,7 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 
 	    if (gpc_poly->num_contours > 1 ) {
 		cout << "FATAL ERROR! no multi-contour support" << endl;
-		sleep(5);
+		sleep(2);
 		// exit(-1);
 	    }
 
@@ -93,30 +104,31 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 		 << polylist[i].size() << endl;
 	}
     }
-    return 0;
-}
 
+    // traverse the polygon lists and build the segment (edge) list
+    // that is used by the "Triangle" lib.
 
-// do actual triangulation
-int FGTriangle::do_triangulate( const FGTriPoly& poly ) {
-    trinode_list node_list;
-    struct triangulateio in, out;
-    int counter;
+    FGTriPoly poly;
+    int i1, i2;
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	cout << "area type = " << i << endl;
+	tripoly_list_iterator tp_current, tp_last;
+	tp_current = polylist[i].begin();
+	tp_last = polylist[i].end();
 
-    // define input points
-    node_list = trinodes.get_node_list();
+	// process each polygon in list
+	for ( ; tp_current != tp_last; ++tp_current ) {
+	    poly = *tp_current;
 
-    in.numberofpoints = node_list.size();
-    in.numberofpointattributes = 0;
-    in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
-
-    trinode_list_iterator current, last;
-    current = node_list.begin();
-    last = node_list.end();
-    counter = 0;
-    for ( ; current != last; ++current ) {
-	in.pointlist[counter++] = current->x();
-	in.pointlist[counter++] = current->y();
+	    for ( int j = 0; j < (int)(poly.size()) - 1; ++j ) {
+		i1 = poly.get_pt_index( j );
+		i2 = poly.get_pt_index( j + 1 );
+		trisegs.unique_add( FGTriSeg(i1, i2) );
+	    }
+	    i1 = poly.get_pt_index( 0 );
+	    i2 = poly.get_pt_index( poly.size() - 1 );
+	    trisegs.unique_add( FGTriSeg(i1, i2) );
+	}
     }
 
     return 0;
@@ -124,72 +136,175 @@ int FGTriangle::do_triangulate( const FGTriPoly& poly ) {
 
 
 // triangulate each of the polygon areas
-int FGTriangle::triangulate() {
+int FGTriangle::run_triangulate() {
     FGTriPoly poly;
-    struct triangulateio in, out;
-
-    trinode_list node_list = trinodes.get_node_list();
+    Point3D p;
+    struct triangulateio in, out, vorout;
+    int counter;
 
     // point list
+    trinode_list node_list = trinodes.get_node_list();
     in.numberofpoints = node_list.size();
-    in.numberofpointattributes = 1;
     in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
 
     trinode_list_iterator tn_current, tn_last;
     tn_current = node_list.begin();
     tn_last = node_list.end();
-    int counter = 0;
+    counter = 0;
     for ( ; tn_current != tn_last; ++tn_current ) {
 	in.pointlist[counter++] = tn_current->x();
 	in.pointlist[counter++] = tn_current->y();
     }
 
-    in.pointattributelist = (REAL *) NULL;
-    in.pointmarkerlist = (int *) NULL;
+    in.numberofpointattributes = 1;
+    in.pointattributelist = (REAL *) malloc(in.numberofpoints *
+					    in.numberofpointattributes *
+					    sizeof(REAL));
+    for ( int i = 0; i < in.numberofpoints * in.numberofpointattributes; i++) {
+	in.pointattributelist[i] = 0.0;
+    }
+
+    in.pointmarkerlist = (int *) malloc(in.numberofpoints * sizeof(int));
+    for ( int i = 0; i < in.numberofpoints; i++) {
+	in.pointmarkerlist[i] = 0;
+    }
 
     // segment list
-    in.numberofsegments = 0;
+    triseg_list seg_list = trisegs.get_seg_list();
+    in.numberofsegments = seg_list.size();
+    in.segmentlist = (int *) malloc(in.numberofsegments * 2 * sizeof(int));
 
-    tripoly_list_iterator tp_current, tp_last;
+    triseg_list_iterator s_current, s_last;
+    s_current = seg_list.begin();
+    s_last = seg_list.end();
+    counter = 0;
+    for ( ; s_current != s_last; ++s_current ) {
+	in.segmentlist[counter++] = s_current->get_n1();
+	in.segmentlist[counter++] = s_current->get_n2();
+    }
+
+    // hole list (make holes for airport ignore areas)
+    in.numberofholes = polylist[(int)AirportIgnoreArea].size();
+    in.holelist = (REAL *) malloc(in.numberofholes * 2 * sizeof(REAL));
+
+    tripoly_list_iterator h_current, h_last;
+    h_current = polylist[(int)AirportIgnoreArea].begin();
+    h_last = polylist[(int)AirportIgnoreArea].end();
+    counter = 0;
+    for ( ; h_current != h_last; ++h_current ) {
+	poly = *h_current;
+	p = poly.get_point_inside();
+	in.holelist[counter++] = p.x();
+	in.holelist[counter++] = p.y();
+    }
+
+    // region list
+    in.numberofregions = 0;
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	cout << "area type = " << i << endl;
-	tp_current = polylist[i].begin();
-	tp_last = polylist[i].end();
-	for ( ; tp_current != tp_last; ++tp_current ) {
-	    poly = *tp_current;
-	    in.numberofsegments += poly.size() + 1;
+	in.numberofregions += polylist[i].size();
+    }
+
+    in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	tripoly_list_iterator h_current, h_last;
+	h_current = polylist[(int)AirportIgnoreArea].begin();
+	h_last = polylist[(int)AirportIgnoreArea].end();
+	counter = 0;
+	for ( ; h_current != h_last; ++h_current ) {
+	    poly = *h_current;
+	    p = poly.get_point_inside();
+	    in.regionlist[counter++] = p.x();  // x coord
+	    in.regionlist[counter++] = p.y();  // y coord
+	    in.regionlist[counter++] = i;      // region attribute
+	    in.regionlist[counter++] = -1.0;   // area constraint (unused)
 	}
     }
 
-    in.numberofsegments = 0;
+    // prep the output structures
+    out.pointlist = (REAL *) NULL;        // Not needed if -N switch used.
+    // Not needed if -N switch used or number of point attributes is zero:
+    out.pointattributelist = (REAL *) NULL;
+    out.pointmarkerlist = (int *) NULL;   // Not needed if -N or -B switch used.
+    out.trianglelist = (int *) NULL;      // Not needed if -E switch used.
+    // Not needed if -E switch used or number of triangle attributes is zero:
+    out.triangleattributelist = (REAL *) NULL;
+    out.neighborlist = (int *) NULL;      // Needed only if -n switch used.
+    // Needed only if segments are output (-p or -c) and -P not used:
+    out.segmentlist = (int *) NULL;
+    // Needed only if segments are output (-p or -c) and -P and -B not used:
+    out.segmentmarkerlist = (int *) NULL;
+    out.edgelist = (int *) NULL;          // Needed only if -e switch used.
+    out.edgemarkerlist = (int *) NULL;    // Needed if -e used and -B not used.
+  
+    vorout.pointlist = (REAL *) NULL;     // Needed only if -v switch used.
+    // Needed only if -v switch used and number of attributes is not zero:
+    vorout.pointattributelist = (REAL *) NULL;
+    vorout.edgelist = (int *) NULL;       // Needed only if -v switch used.
+    vorout.normlist = (REAL *) NULL;      // Needed only if -v switch used.
+    
+    // Triangulate the points.  Switches are chosen to read and write
+    // a PSLG (p), preserve the convex hull (c), number everything
+    // from zero (z), assign a regional attribute to each element (A),
+    // and produce an edge list (e), and a triangle neighbor list (n).
 
-  in.numberofholes = 0;
-  in.numberofregions = 1;
-  in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
-  in.regionlist[0] = 0.5;
-  in.regionlist[1] = 5.0;
-  in.regionlist[2] = 7.0;            /* Regional attribute (for whole mesh). */
-  in.regionlist[3] = 0.1;          /* Area constraint that will not be used. */
+    triangulate("pczAen", &in, &out, &vorout);
 
-  /*
-    tripoly_list_iterator current, last;
-    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	cout << "area type = " << i << endl;
-	current = polylist[i].begin();
-	last = polylist[i].end();
-	for ( ; current != last; ++current ) {
-	    poly = *current;
-	    cout << "triangulating a polygon, size = " << poly.size() << endl;
+    // TEMPORARY
+    //
 
-	    do_triangulate( poly );
-	}
+    // Write out the triangulated data to files so we can check
+    // visually that things seem reasonable
+
+    FILE *node = fopen("tile.node", "w");
+    fprintf(node, "%d 2 %d 0\n", 
+	    out.numberofpoints, out.numberofpointattributes);
+    for (int i = 0; i < out.numberofpoints; i++) {
+	fprintf(node, "%d %.6f %.6f %.2f\n", 
+		i, out.pointlist[2*i], out.pointlist[2*i + 1], 0.0);
     }
-    */
+    fclose(node);
+
+    FILE *ele = fopen("tile.ele", "w");
+    fprintf(ele, "%d 3 0\n", out.numberoftriangles);
+    for (int i = 0; i < out.numberoftriangles; i++) {
+        fprintf(ele, "%d ", i);
+        for (int j = 0; j < out.numberofcorners; j++) {
+	    fprintf(ele, "%d ", out.trianglelist[i * out.numberofcorners + j]);
+        }
+        fprintf(ele, "\n");
+    }
+    fclose(ele);
+
+    // free mem allocated to the "Triangle" structures
+    free(in.pointlist);
+    free(in.pointattributelist);
+    free(in.pointmarkerlist);
+    free(in.regionlist);
+    free(out.pointlist);
+    free(out.pointattributelist);
+    free(out.pointmarkerlist);
+    free(out.trianglelist);
+    free(out.triangleattributelist);
+    // free(out.trianglearealist);
+    free(out.neighborlist);
+    free(out.segmentlist);
+    free(out.segmentmarkerlist);
+    free(out.edgelist);
+    free(out.edgemarkerlist);
+    free(vorout.pointlist);
+    free(vorout.pointattributelist);
+    free(vorout.edgelist);
+    free(vorout.normlist);
+
     return 0;
 }
 
 
 // $Log$
+// Revision 1.7  1999/03/20 20:32:55  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.6  1999/03/20 13:22:11  curt
 // Added trisegs.[ch]xx tripoly.[ch]xx.
 //

@@ -31,12 +31,24 @@
 #endif                                   
 
 
+#include <Include/compiler.h>
+
+#include <vector>
+
 #include <Bucket/newbucket.hxx>
+#include <Math/point3d.hxx>
 #include <Misc/fgstream.hxx>
+
+FG_USING_STD(vector);
 
 
 #define ARRAY_SIZE 1200
 #define ARRAY_SIZE_1 1201
+
+
+typedef vector < Point3D > fitnode_list;
+typedef fitnode_list::iterator fitnode_list_iterator;
+typedef fitnode_list::const_iterator const_fitnode_list_iterator;
 
 
 class FGArray {
@@ -58,37 +70,23 @@ private:
     
     // pointers to the actual grid data allocated here
     float (*in_data)[ARRAY_SIZE_1];
-    float (*out_data)[ARRAY_SIZE_1];
+    // float (*out_data)[ARRAY_SIZE_1];
 
-    // Current "A" Record Information
-    // char dem_description[80], dem_quadrangle[80];
-    // double dem_x1, dem_y1, dem_x2, dem_y2, dem_x3, dem_y3, dem_x4, dem_y4;
-    // double dem_z1, dem_z2;
-    // int dem_resolution, dem_num_profiles;
-  
-    // Current "B" Record Information
-    // int prof_col, prof_row;
-    // int prof_num_cols, prof_num_rows;
-    // double prof_x1, prof_y1;
-    // int prof_data;
-
-    // temporary values for the class to use
-    // char option_name[32];
-    // int do_data;
-    // int cur_col, cur_row;
+    // output nodes
+    fitnode_list node_list;
 
     // Initialize output mesh structure
-    void outputmesh_init( void );
+    // void outputmesh_init( void );
 
     // Get the value of a mesh node
-    double outputmesh_get_pt( int i, int j );
+    // double outputmesh_get_pt( int i, int j );
 
     // Set the value of a mesh node
-    void outputmesh_set_pt( int i, int j, double value );
+    // void outputmesh_set_pt( int i, int j, double value );
 
 #if 0
     // Write out a node file that can be used by the "triangle" program
-    void outputmesh_output_nodes( const string& fg_root, FGBucket& p );
+    // void outputmesh_output_nodes( const string& fg_root, FGBucket& p );
 #endif
 
 public:
@@ -112,6 +110,9 @@ public:
     // Use least squares to fit a simpler data set to dem data
     void fit( double error );
 
+    // add a node to the output (fitted) node list
+    void add_fit_node( int i, int j, double val );
+
     // return the current altitude based on grid data.  We should
     // rewrite this to interpolate exact values, but for now this is
     // good enough
@@ -124,6 +125,8 @@ public:
     inline int get_rows() const { return rows; }
     inline double get_col_step() const { return col_step; }
     inline double get_row_step() const { return row_step; }
+
+    inline fitnode_list get_fit_node_list() const { return node_list; }
 };
 
 
@@ -131,6 +134,10 @@ public:
 
 
 // $Log$
+// Revision 1.3  1999/03/20 20:32:52  curt
+// First mostly successful tile triangulation works.  There's plenty of tweaking
+// to do, but we are marching in the right direction.
+//
 // Revision 1.2  1999/03/13 23:50:27  curt
 // Tweaked output formatting a bit.
 //
