@@ -409,6 +409,7 @@ readCard(const SGPropertyNode * node)
 					load_fn = get_throttleval;
 
 
+				if ( (type == "dial") | (type == "tape") ) {
 				p = (instr_item *) new hud_card(	x,
 														y,  
 														width,
@@ -440,7 +441,22 @@ readCard(const SGPropertyNode * node)
 														divisions, //suma
 														zoom  //suma
 														);
-					return p;
+				} else {
+				p = (instr_item *) new  gauge_instr( x,            // x
+                                           y,  // y
+                                           width,            // width
+                                           height,            // height
+                                           load_fn, // data source
+                                           options,
+                                           scaling,
+                                           maxValue,minValue,
+                                           major_divs, minor_divs,
+										   dp_showing,
+										   modulator,
+										   working);
+				}
+
+  return p;
 }// end readCard
 
 static instr_item *
