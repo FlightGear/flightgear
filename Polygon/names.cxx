@@ -52,7 +52,8 @@ AreaType get_area_type( string area ) {
 	return IntLakeArea;
     } else if ( area == "Reservoir" ) {
 	return ReservoirArea;
-    } else if ( area == "Reservoir   Intermittent" ) {
+    } else if ( (area == "Reservoir   Intermittent")
+		|| (area == "IntermittentReservoir") ) {
 	return IntReservoirArea;
     } else if ( area == "Stream" ) {
 	return StreamArea;
@@ -115,6 +116,11 @@ string get_area_name( AreaType area ) {
 
 
 // $Log$
+// Revision 1.7  1999/04/01 13:52:13  curt
+// Version 0.6.0
+// Shape name tweak.
+// Removing tool: FixNode
+//
 // Revision 1.6  1999/03/27 05:31:24  curt
 // Make 0 the default area type since this corresponds well with the conventions
 //   used by the triangulator.

@@ -7,7 +7,6 @@ SUBDIRS = \
 	Utils \
 	Areas \
 	AssemTris \
-	FixNode \
 	FixObj \
 	SplitTris \
 	Stripe_w \

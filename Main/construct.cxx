@@ -197,7 +197,7 @@ main(int argc, char **argv) {
     string output_base = argv[2];
    
     // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
-    lon = -110.664244; lat = 33.352890;     // P13
+    // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
     // lon = -92.486188; lat = 44.590190;      // KRGK
     // lon = -89.744682312011719; lat= 29.314495086669922;
@@ -205,7 +205,8 @@ main(int argc, char **argv) {
     // lon = -114.861097; lat = 35.947480;     // 61B
     // lon = -112.012175; lat = 41.195944;     // KOGD
     // lon = -90.757128; lat = 46.790212;      // WI32
-    // lon = -122.220717; lat = 37.721291;      // KOAK
+    // lon = -122.220717; lat = 37.721291;     // KOAK
+    lon = -111.721477; lat = 40.215641;     // KPVU
 
     double min_x = lon - 1;
     double min_y = lat - 1;
@@ -242,6 +243,11 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.16  1999/04/01 13:52:12  curt
+// Version 0.6.0
+// Shape name tweak.
+// Removing tool: FixNode
+//
 // Revision 1.15  1999/03/31 23:47:02  curt
 // Debugging output tweaks.
 //
