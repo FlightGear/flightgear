@@ -45,7 +45,7 @@ struct scenery_params cur_scenery_params;
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    cur_scenery_params.terrain_skip = 10;
+    cur_scenery_params.terrain_skip = 5;
 }
 
 
@@ -69,9 +69,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.8  1997/07/18 23:41:27  curt
-/* Tweaks for building with Cygnus Win32 compiler.
+/* Revision 1.9  1997/08/04 17:08:11  curt
+/* Testing cvs on IRIX 6.x
 /*
+ * Revision 1.8  1997/07/18 23:41:27  curt
+ * Tweaks for building with Cygnus Win32 compiler.
+ *
  * Revision 1.7  1997/07/16 20:04:52  curt
  * Minor tweaks to aid Win32 port.
  *
