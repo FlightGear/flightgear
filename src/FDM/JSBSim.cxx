@@ -97,12 +97,11 @@ FGJSBsim::FGJSBsim( double dt )
     
 
     if (result) {
-	SG_LOG( SG_FLIGHT, SG_INFO,
-		"  loaded aircraft.");
+      SG_LOG( SG_FLIGHT, SG_INFO, "  loaded aircraft.");
     } else {
-	SG_LOG( SG_FLIGHT, SG_INFO,
-		"  aircraft does not exist (you may have mis-typed the name).");
-	throw(-1);
+      SG_LOG( SG_FLIGHT, SG_INFO,
+              "  aircraft does not exist (you may have mis-typed the name).");
+      throw(-1);
     }
 
     int Neng = Propulsion->GetNumEngines();
@@ -238,7 +237,7 @@ bool FGJSBsim::update( int multiloop ) {
         globals->get_controls()->set_elevator_trim(FCS->GetPitchTrimCmd());
         globals->get_controls()->set_elevator(FCS->GetDeCmd());
         globals->get_controls()->set_throttle(FGControls::ALL_ENGINES,
-					      FCS->GetThrottleCmd(0));
+                                              FCS->GetThrottleCmd(0));
 
         globals->get_controls()->set_aileron(FCS->GetDaCmd());
         globals->get_controls()->set_rudder( FCS->GetDrCmd());
@@ -279,11 +278,12 @@ bool FGJSBsim::copy_to_JSBsim() {
     FCS->SetDfCmd(  globals->get_controls()->get_flaps() );
     FCS->SetDsbCmd( 0.0 ); //speedbrakes
     FCS->SetDspCmd( 0.0 ); //spoilers
-    FCS->SetThrottleCmd( FGControls::ALL_ENGINES,
-                         globals->get_controls()->get_throttle( 0 ));
     FCS->SetLBrake( globals->get_controls()->get_brake( 0 ) );
     FCS->SetRBrake( globals->get_controls()->get_brake( 1 ) );
     FCS->SetCBrake( globals->get_controls()->get_brake( 2 ) );
+    for (int i = 0; i < get_num_engines(); i++) {
+      FCS->SetThrottleCmd(i, globals->get_controls()->get_throttle(i));
+    }
 
     Position->SetSeaLevelRadius( get_Sea_level_radius() );
     Position->SetRunwayRadius( scenery.cur_elev*SG_METER_TO_FEET
