@@ -94,6 +94,8 @@ struct PlaneApp {
   double ahdg;           // assigned heading
   bool   on_crs;         // is the plane on course?
   double tlm;            // time when last message was sent
+
+  PlaneApp(void);
 };
 
 

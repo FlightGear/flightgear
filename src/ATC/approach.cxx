@@ -31,23 +31,55 @@
 # include <Environment/environment.hxx>
 #endif
 
+
+PlaneApp::PlaneApp()
+:
+  ident(""),
+  lon(0.0),
+  lat(0.0),
+  alt(0.0),
+  hdg(0.0),
+  dist(0.0),
+  brg(0.0),
+  spd(0.0),
+  contact(0),
+  wpn(0),
+  dnwp(-999.),
+  dcc(0.0),
+  dnc(0.0),
+  aalt(0.0),
+  ahdg(0.0),
+  on_crs(true),
+  tlm(0.0)
+{
+}
+
 //Constructor
-FGApproach::FGApproach(){
+FGApproach::FGApproach()
+: type(0),
+  lon(0.0), lat(0.0), elev(0.0),
+  x(0.0), y(0.0), z(0.0),
+  freq(0),
+  bucket(0),
+  range(0.0),
+  active_runway(""),
+  active_rw_hdg(0.0),
+  display(false),
+  displaying(false),
+  ident(""),
+  name(""),
+  num_planes(0),
+  transmission(""),
+  first(true),
+  trans_ident(""),
+  approach_failed(false)
+{
   comm1_node = fgGetNode("/radios/comm[0]/frequencies/selected-mhz", true);
   comm2_node = fgGetNode("/radios/comm[1]/frequencies/selected-mhz", true);
 
-  num_planes = 0;
   lon_node = fgGetNode("/position/longitude-deg", true);
   lat_node = fgGetNode("/position/latitude-deg", true);
   elev_node = fgGetNode("/position/altitude-ft", true);
-  first = true;
-  active_runway = "";
-  for ( int i=0; i<max_planes; i++) {
-    planes[i].contact = 0;
-    planes[i].wpn     = 0;
-    planes[i].dnwp    = -999.;
-    planes[i].on_crs  = true;
-  }
 }
 
 //Destructor
