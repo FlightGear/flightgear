@@ -209,6 +209,31 @@ Configuration description:
  	This is usefull if sounds gets to loud. Anything higher will be
  	truncated to this value.
 
+   <position>
+        Specify the position of the sounds source relative to the
+        pilot's ears.  The coordinate system used is a right hand
+        coordinate system where -X = left, +X = right, -Y = down, +Y =
+        up, -Z = forward, +Z = aft.  Distances are in meters.
+
+     <x>
+        X dimension offset
+
+     <y>
+        Y dimension offset
+
+     <z>
+        Z dimension offset
+
+   <reference-dist>
+        Set a reference distance of sound in meters.  This is the
+        distance where the gain/volume will be halved.  This can be
+        useful for limiting cockpit sounds to the cockpit.
+
+   <max-dist>
+        Set the maximum audible distance for the sound in meters.
+        This can be useful for limiting cockpit sounds to the cockpit.
+
+
 Creating a configrationfile:
 ---------------------------
 
