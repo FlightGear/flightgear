@@ -1,0 +1,206 @@
+Users Guide to Joystick Usage Under FlightGear Flight Simulator
+First Draft
+Author John Check <j4strngs@rockfish.net>
+
+This document is written with versions of FlightGear 0.7.5 and greater
+in mind. It assumes a working joystick present on your system. While it
+is written from the point of view of a Linux user, the cross platform
+nature of FGFS should ensure the information presented is useful on other
+platforms. I'd like to say thanks to all the developers who make FGFS happen
+and forgive me for not giving credit with regard to the property
+manager and js_demo. Corrections and additions are encouraged.
+
+Some History:
+Earlier versions of FGFS had assignments of joystick axis/buttons
+hard coded. If you had a joystick that did not use the default channel
+assignments, you had to edit the source code and recompile. 
+Fortunately, around about v0.7.4/0.7.5 a "property manager" was
+implemented, allowing, among other things, runtime access to some of the FGFS
+internals, which facilitated being able to set the parameters for the
+joystick at runtime.
+
+About runtime options:
+FGFS has always had a plethora of available runtime options. Starting
+point, altitude, direction, time of day and other aspects of the
+simulated environment were always well represented. However there
+were also a number of options and features that were not well documented.
+Among these was the ability to use a runtime configuration file (.fgfsrc)
+to control the default operation. The .fgfsrc file is not created at runtime
+and must be created manually. Fortunately, the format of the file is
+straightforward. All one need do is place the commandline options one would
+like in a plain ASCII text file in the users home directory.
+
+With the advent of the property manager it became possible to add a number
+of additional runtime options to the .fgfsrc file including joystick channel
+assignments. Basically, anything* that is reported by the property manager
+can now be tweaked without having to recompile the binary.
+
+*see mini-doc/properties.txt for exceptions
+
+Determining your joystick output:
+
+Included with FlightGear is a utility called js_demo. It will report
+the number of joysticks attached to a system and their capabilites.
+By observing the output of js_demo while working our joystick we can
+determine what controls are where.
+It should be noted that, at least on UNIX, numbering generally starts with
+zero. In the following example the system has 1 joystick (js0) connected.
+The output shown is from an analog Gravis BlackHawk with four buttons and
+a throttle. 
+
+Typical output of js_demo:
+
+Joystick test program.
+~~~~~~~~~~~~~~~~~~~~~~
+Joystick 1 not detected
+Joystick 2 not detected
++---------------JS.0-----------------+
+| Btns Ax:0 Ax:1 Ax:2                |
++------------------------------------+
+| 0000 +0.0 +0.0 -1.0   .    .    .  |              
+
+It appears that the number of detected buttons is represented by the number of
+"0"s. Clicking the actual buttons will result in the rightmost 0 changing to
+the button number output. i.e. pressing button one will change the display to
+look like this: 0001. It should be noted that this is a hexadecimal (base16)
+number +1. Hex numbers start at 0, so this number is incremented by one for
+hopefully obvious reasons. 
+
+Default Joystick properties:
+
+Axis 0   = Aileron
+Axis 1   = Elevator
+Axis 2   = Rudder
+Axis 3   = Throttle
+Button 0 = All brakes
+Button 1 = Left brake
+Button 2 = Right brake
+Button 3 = Elevator trim (up)
+Button 4 = Elevator trim (down)
+Button 5 = Flaps (down)
+Button 6 = Flaps (up)
+
+
+In addition to the channel assignments there are other parameters
+that can be passed to FGFS.
+
+Axis properties
+
+	dead-band
+
+This is an area where signals are ignored. It is used to compensate
+for noise or potentiometers of dubious quality by creating a threshold
+below which any signal is ignored. It it written as a decimal number or "float"
+with a typical value of 0.1 for elevators and ailerons, 0.0 for throttle
+
+	factor
+
+This number, also written as a float, will control sensitivity of an axis.
+Negating the number will result in the control moving counter to the default.
+A typical value is 1.0. In my case, throttle behaviour was inverted from what
+I preferred. I set this value to -1.0 and everything was groovy.
+
+	offset
+
+Also a float. Used to maximize a controls use of it's axis, as in the case of a
+throttle where zero would be a minimum and not a center point like in the case
+of a rudder. Typical value -1.0 (Am I close? Anybody?)  
+
+
+Button properties
+
+	switch
+A button designated a switch is either on or off. While the button is
+held in the switch is engaged. Brakes are described as a switch and take
+additional parameters [ step, repeatable ]
+
+	adjust
+A button designated adjust is for controls that have a range
+of settings, for example elevator trim and flaps. These are found
+in pairs having opposing values for the parameter 'step'.
+The 'repeatable' parameter should be appropriate to the type of control.
+
+	step
+This defines how much adjustment is applied when the button is activated
+Default values are 1.0 for brakes (full on), 0.001 / -0.001 for
+elevator trim and -0.34 / 0.34 for flaps
+
+	repeatable
+In this case repeatable means when the button is held down the value continues
+to increment. repeatable is a true / false value. The default for brakes is
+false. This is appropriate since by default brakes are a switch that are full
+on (right?) Elevator trim on the other hand defaults to true. Holding down the
+button for elevator trim will cause a continuous adjustment until the button
+is released. Being a fine adjustment this is appropriate behaviour. Flaps
+on the otherhand default to false. Clicking the flaps button will cause the
+flaps to be extended to the first detent, subsequent clicks will extend or
+retract by one increment. Being a large adjustment with a major impact on a 
+planes handling this is a good thing.
+
+Syntax for properties in .fgfsrc
+
+Here is a listing of the defaults as they would appear in .fgfsrc
+You only need entries where the defaults aren't what you want.
+In my case I had to make entries to put the throttle on axis2.
+
+    // Default axis 0 to aileron
+--prop:/input/js0/axis0/control=/controls/aileron
+--prop:/input/js0/axis0/dead-band=0.1
+ 
+    // Default axis 1 to elevator
+--prop:/input/js0/axis1/control=/controls/elevator"
+--prop:/input/js0/axis1/dead-band=0.1
+--prop:/input/js0/axis1/factor=-1.0
+ 
+    // Default axis 2 to rudder
+--prop:/input/js0/axis2/control=/controls/rudder
+--prop:/input/js0/axis2/dead-band=0.1
+ 
+    // Default axis 3 to throttle
+--prop:/input/js0/axis3/control=/controls/throttle
+--prop:/input/js0/axis3/dead-band=0.0
+--prop:/input/js0/axis3/offset=-1.0
+--prop:/input/js0/axis3/factor=-0.5
+ 
+    // Default button 0 to all brakes
+--prop:/input/js0/button0/action=switch
+--prop:/input/js0/button0/control=/controls/brakes/all        
+--prop:/input/js0/button0/step=1.0
+--prop:/input/js0/button0/repeatable=false 
+
+    // Default button 1 to left brake.
+--prop:/input/js0/button1/action=switch
+--prop:/input/js0/button1/control=/controls/brakes/left
+--prop:/input/js0/button1/step=1.0
+--prop:/input/js0/button1/repeatable=false
+ 
+    // Default button 2 to right brake.
+--prop:/input/js0/button2/action=switch
+--prop:/input/js0/button2/control=/controls/brakes/right
+--prop:/input/js0/button2/step=1.0
+--prop:/input/js0/button2/repeatable=false
+ 
+    // Default buttons 3 and 4 to elevator trim
+--prop:/input/js0/button3/action=adjust
+--prop:/input/js0/button3/control=/controls/elevator-trim
+--prop:/input/js0/button3/step=0.001
+--prop:/input/js0/button3/repeatable=true
+
+--prop:/input/js0/button4/action=adjust
+--prop:/input/js0/button4/control=/controls/elevator-trim
+--prop:/iput/js0/button4/step=0.001
+--prop:/input/js0/button4/repeatable=true
+ 
+    // Default buttons 5 and 6 to flaps
+--prop:/input/js0/button5/action=adjust
+--prop:/input/js0/button5/control=/controls/flaps
+--prop:/input/js0/button5/step=-0.34
+--prop:/input/js0/button5/repeatable=false
+
+--prop:/input/js0/button6/action=adjust
+--prop:/input/js0/button6/control=/controls/flaps"        
+--prop:/input/js0/button6/step=0.34       
+--prop:/input/js0/button6/repeatable=false
+
+
+
