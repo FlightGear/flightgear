@@ -46,7 +46,7 @@ extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
 
-#include <list>         // STL list
+#include <vector>
 
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
@@ -116,7 +116,7 @@ public:
     GLint display_list;
 
     // face list (this indexes into the master tile vertex list)
-    typedef list < fgFACE > container;
+    typedef vector < fgFACE > container;
     typedef container::iterator iterator;
     typedef container::const_iterator const_iterator;
 
@@ -142,7 +142,7 @@ public:
 		   fgPoint3d *result) const;
 
     // Constructors
-    fgFRAGMENT () {}
+    fgFRAGMENT () : num_faces(0) { /*faces.reserve(512);*/}
     fgFRAGMENT ( const fgFRAGMENT &image );
 
     // Destructor
@@ -161,8 +161,8 @@ public:
 	num_faces = 0;
     }
 
-    void deleteDisplayList() {
-	xglDeleteLists( display_list, 1 );
+    int deleteDisplayList() {
+	xglDeleteLists( display_list, 1 ); return 0;
     }
 };
 
@@ -178,6 +178,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.3  1998/09/08 21:40:44  curt
+// Updates from Bernie Bright.
+//
 // Revision 1.2  1998/09/01 19:03:08  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.

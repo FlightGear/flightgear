@@ -99,7 +99,6 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 			   fgPoint3d *result) const
 {
     fgTILE *t;
-    fgFACE face;
     MAT3vec v1, v2, n, center;
     double p1[3], p2[3], p3[3];
     double x, y, z;  // temporary holding spot for result
@@ -116,12 +115,9 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
     // printf("Intersecting\n");
 
     // traverse the face list for this fragment
-    const_iterator current = faces.begin();
     const_iterator last = faces.end();
-    while ( current != last ) {
-	face = *current;
-	current++;
-
+    for ( const_iterator current = faces.begin(); current != last; ++current )
+    {
 	// printf(".");
 
 	// get face vertex coordinates
@@ -129,9 +125,9 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 	center[1] = t->center.y;
 	center[2] = t->center.z;
 
-	MAT3_ADD_VEC(p1, t->nodes[face.n1], center);
-	MAT3_ADD_VEC(p2, t->nodes[face.n2], center);
-	MAT3_ADD_VEC(p3, t->nodes[face.n3], center);
+	MAT3_ADD_VEC(p1, t->nodes[(*current).n1], center);
+	MAT3_ADD_VEC(p2, t->nodes[(*current).n2], center);
+	MAT3_ADD_VEC(p3, t->nodes[(*current).n3], center);
 
 	// printf("point 1 = %.2f %.2f %.2f\n", p1[0], p1[1], p1[2]);
 	// printf("point 2 = %.2f %.2f %.2f\n", p2[0], p2[1], p2[2]);
@@ -334,6 +330,9 @@ int fgFRAGMENT::intersect( const fgPoint3d *end0,
 }
 
 // $Log$
+// Revision 1.3  1998/09/08 21:40:42  curt
+// Updates from Bernie Bright.
+//
 // Revision 1.2  1998/09/01 19:03:07  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.
