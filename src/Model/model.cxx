@@ -342,6 +342,8 @@ FG3DModel::make_animation (const char * object_name,
     animation = new NullAnimation();
   } else if (!strcmp("range", type)) {
     animation = new RangeAnimation();
+  } else if (!strcmp("billboard", type)) {
+    animation = new BillboardAnimation();
   } else if (!strcmp("select", type)) {
     animation = new SelectAnimation();
   } else if (!strcmp("spin", type)) {
@@ -444,6 +446,38 @@ FG3DModel::RangeAnimation::init (ssgEntity * object,
 
 void
 FG3DModel::RangeAnimation::update (int dt)
+{
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FG3DModel::BillboardAnimation
+////////////////////////////////////////////////////////////////////////
+
+FG3DModel::BillboardAnimation::BillboardAnimation ()
+  : _branch(0)
+{
+  // Note: we cannot allocate the branch until we know whether
+  // it can rotate around the x axis as well as the z axis.
+}
+
+FG3DModel::BillboardAnimation::~BillboardAnimation ()
+{
+  _branch = 0;
+}
+
+void
+FG3DModel::BillboardAnimation::init (ssgEntity * object,
+				     SGPropertyNode * props)
+{
+  _branch = new ssgCutout(props->getBoolValue("spherical", true));
+  splice_branch(_branch, object);
+  _branch->setName(props->getStringValue("name", 0));
+}
+
+void
+FG3DModel::BillboardAnimation::update (int dt)
 {
 }
 

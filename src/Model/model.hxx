@@ -19,6 +19,7 @@ SG_USING_STD(vector);
 
 // Don't pull in the headers, since we don't need them here.
 class ssgBranch;
+class ssgCutout;
 class ssgEntity;
 class ssgRangeSelector;
 class ssgSelector;
@@ -167,6 +168,21 @@ private:
 
 
   /**
+   * Animation to turn and face the screen.
+   */
+  class BillboardAnimation : public Animation
+  {
+  public:
+    BillboardAnimation ();
+    virtual ~BillboardAnimation ();
+    virtual void init (ssgEntity * object, SGPropertyNode * props);
+    virtual void update (int dt);
+  private:
+    ssgCutout * _branch;
+  };
+
+
+  /**
    * Animation to select alternative versions of the same object.
    */
   class SelectAnimation : public Animation
@@ -258,6 +274,7 @@ private:
     sgVec3 _axis;
     ssgTransform * _transform;
   };
+
 
 };
 
