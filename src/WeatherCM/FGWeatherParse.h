@@ -1,6 +1,6 @@
 /*****************************************************************************
 
- Header:       FGWindItem.h	
+ Header:       FGWeatherParse.h	
  Author:       Christian Mayer
  Date started: 28.05.99
 
@@ -25,106 +25,104 @@
 
 FUNCTIONAL DESCRIPTION
 ------------------------------------------------------------------------------
-wind item that gets stored in the micro weather class
+Parse the weather that can be downloaded from 
+
+    http://129.13.102.67/out/flight/yymmddhhdata.txt.gz
+
+where yy stands for the year, mm for the month, dd for the day and hh for the
+hour.
+The columns are explained at
+
+    http://129.13.102.67/out/flight/kopf.txt
+
+and a list of the stations can be found at
+
+    http://129.13.102.67/out/flight/wmoconv.txt.gz
+
+Many thanks to Georg Mueller (Georg.Mueller@imk.fzk.de) of the 
+
+    Institut fuer Meteorologie und Klimaforschung, Universitaet Karlsruhe
+
+for makeking such a service aviable. 
+You can also visit his homepage at http://www.wetterzentrale.de
 
 HISTORY
 ------------------------------------------------------------------------------
-28.05.1999 Christian Mayer	Created
-16.06.1999 Durk Talsma		Portability for Linux
-20.06.1999 Christian Mayer	added lots of consts
-11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
-				suggestion
-19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
-				and lots of wee code cleaning
+18.10.1999 Christian Mayer	Created
 *****************************************************************************/
 
 /****************************************************************************/
 /* SENTRY                                                                   */
 /****************************************************************************/
-#ifndef FGWindItem_H
-#define FGWindItem_H
+#ifndef FGWeatherParse_H
+#define FGWeatherParse_H
 
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <Include/compiler.h>
+#include <vector>
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
+#include <Misc/fgstream.hxx>
 
-#include "sg.h"
-
-#include "FGWeatherDefs.h"
+#include "FGPhysicalProperties.h"
 
 /****************************************************************************/
 /* DEFINES								    */
 /****************************************************************************/
-class FGWindItem;
-FGWindItem operator-(const FGWindItem& arg);
+FG_USING_STD(vector);
 
 /****************************************************************************/
 /* CLASS DECLARATION							    */
 /****************************************************************************/
-class FGWindItem
+class FGWeatherParse
 {
+public:
+    struct entry;
+
 private:
-    sgVec3 value;
+    vector<entry> weather_station;
 
 protected:
 public:
+    /************************************************************************/
+    /* A line (i.e. entry) in the data file looks like:			    */
+    /*  yyyy mm dd hh XXXXX BBBBB LLLLLL UUUUU VVVVV TTTTT DDDDD PPPPP pppp */
+    /************************************************************************/
+    struct entry
+    {
+	int year;			// The yyyy
+	int month;			// The mm
+	int day;			// The dd
+	int hour;			// The hh
+	unsigned int station_number;	// The XXXXX
+	float lat;			// The BBBBBB	negative = south
+	float lon;			// The LLLLLLL	negative = west	
+	float x_wind;			// The UUUUU	negative = to the weat
+	float y_wind;			// The VVVVV	negative = to the south
+	float temperature;		// The TTTTT	in degC
+	float dewpoint;			// The DDDDD	in degC
+	float airpressure;		// The PPPPP	in hPa
+	float airpressure_history[4];	// The pppp	in hPa
+    };
 
-    FGWindItem(const sgVec3& v)	{ sgCopyVec3(value, v); }
-    FGWindItem(const WeatherPrecision x, const WeatherPrecision y, const WeatherPrecision z)	
-				{ sgSetVec3 (value, x, y, z); }
-    FGWindItem()		{ sgZeroVec3(value);    }
+    FGWeatherParse();
+    ~FGWeatherParse();
 
-    void          getValue(sgVec3 ret) const { sgCopyVec3(ret, value); };
-    const sgVec3* getValue(void)       const { return &value;          };
+    void input(const char *file);
 
-    WeatherPrecision x(void) const { return value[0]; };
-    WeatherPrecision y(void) const { return value[1]; };
-    WeatherPrecision z(void) const { return value[2]; };
+    unsigned int stored_stations(void) const
+    {
+	return weather_station.size();
+    }
 
-    FGWindItem& operator*= (const WeatherPrecision arg);
-    FGWindItem& operator+= (const FGWindItem&      arg);
-    FGWindItem& operator-= (const FGWindItem&      arg);
+    entry getEntry(const unsigned int nr) const
+    {
+	return weather_station[nr];
+    }
 
-    friend FGWindItem operator-(const FGWindItem& arg);
+    FGPhysicalProperties2D getFGPhysicalProperties2D(const unsigned int nr) const;
 };
 
-inline FGWindItem& FGWindItem::operator*= (const WeatherPrecision arg)
-{
-  sgScaleVec3(value, arg);
-  return *this;
-}
-
-inline FGWindItem& FGWindItem::operator+= (const FGWindItem& arg)
-{
-  sgAddVec3(value, *arg.getValue());
-  return *this;
-}
-
-inline FGWindItem& FGWindItem::operator-= (const FGWindItem& arg)
-{
-  sgSubVec3(value, *arg.getValue());
-  return *this;
-}
-
-
-inline FGWindItem operator-(const FGWindItem& arg)
-{
-    sgVec3 temp;
-
-    sgNegateVec3(temp, *arg.getValue());
-
-    return FGWindItem(temp);
-}
-
 /****************************************************************************/
-#endif /*FGWindItem_H*/
+#endif /*FGWeatherParse_H*/

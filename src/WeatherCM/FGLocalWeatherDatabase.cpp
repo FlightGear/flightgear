@@ -51,6 +51,7 @@ HISTORY
 #include "FGLocalWeatherDatabase.h"
 #include "FGVoronoi.h"
 
+#include "FGWeatherParse.h"
 
 /****************************************************************************/
 /********************************** CODE ************************************/
@@ -87,13 +88,10 @@ void FGLocalWeatherDatabase::tileLocalWeather(const FGPhysicalProperties2DVector
 	WeatherAreas.push_back(FGMicroWeather(it2->value, it2->boundary));
 }
 
-/****************************************************************************/
-/* Constructor and Destructor						    */
-/****************************************************************************/
 FGLocalWeatherDatabase* FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 0;
 FGLocalWeatherDatabase *WeatherDatabase;
 
-FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& position, const WeatherPrecision visibility, const DatabaseWorkingType type)
+void FGLocalWeatherDatabase::init(const WeatherPrecision visibility, const DatabaseWorkingType type)
 {
     cerr << "Initializing FGLocalWeatherDatabase\n";
     cerr << "-----------------------------------\n";
@@ -109,10 +107,9 @@ FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& position, const Wea
 
     DatabaseStatus = type;
     global = 0;	    //just get sure...
-    sgCopyVec3(last_known_position, position);
 
-
-    theFGLocalWeatherDatabase = this;
+    Thunderstorm = false;
+    //I don't need to set theThunderstorm as Thunderstorm == false
 
     switch(DatabaseStatus)
     {
@@ -120,7 +117,33 @@ FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& position, const Wea
 	{
 	    global = new FGGlobalWeatherDatabase;	//initialize GlobalDatabase
 	    global->setDatabaseStatus(FGGlobalWeatherDatabase_working);
-	    tileLocalWeather(global->getAll(position, WeatherVisibility, 3));
+	    tileLocalWeather(global->getAll(last_known_position, WeatherVisibility, 3));
+	}
+	break;
+
+    case use_internet:
+	{
+	    FGWeatherParse parsed_data;
+
+	    parsed_data.input( "weather/current.gz" );
+	    global = new FGGlobalWeatherDatabase;	//initialize GlobalDatabase
+	    global->setDatabaseStatus(FGGlobalWeatherDatabase_working);
+
+	    // fill the database
+	    for (unsigned int i = 0; i != parsed_data.stored_stations(); i++) 
+	    {
+		global->add( parsed_data.getFGPhysicalProperties2D(i) );
+		//cerr << parsed_data.getFGPhysicalProperties2D(i);
+
+		if ( (i%100) == 0)
+		    cerr << ".";
+	    }
+	    cerr << "\n";
+
+	    //and finally tile it
+	    tileLocalWeather(global->getAll(last_known_position, WeatherVisibility, 3));
+	    cerr << "Finished weather init.\n";
+
 	}
 	break;
 
@@ -131,6 +154,7 @@ FGLocalWeatherDatabase::FGLocalWeatherDatabase(const sgVec3& position, const Wea
     case manual:
     case default_mode:
 	{
+
 	    vector<sgVec2Wrap> emptyList;
 	    WeatherAreas.push_back(FGMicroWeather(FGPhysicalProperties2D(), emptyList));   //in these cases I've only got one tile
 	}
@@ -182,14 +206,35 @@ void FGLocalWeatherDatabase::update(const WeatherPrecision dt)
 void FGLocalWeatherDatabase::update(const sgVec3& p) //position has changed
 {
     sgCopyVec3(last_known_position, p);
-    //cerr << "****\nupdate inside\n";
-    //cerr << "Parameter: " << p << "\n";
-    //cerr << "****\n";
+
+    if ( AreaWith(p) == 0 )
+    {	//I have moved out of my local area...
+
+	//now I should erase all my areas and get the new ones
+	//but that takes too long :-( I have to take care about that soon
+    }
+
+    //uncomment this when you are using the GlobalDatabase
+    /*
+    cerr << "****\nupdate(p) inside\n";
+    cerr << "Parameter: " << p[0] << "/" << p[1] << "/" << p[2] << "\n";
+    sgVec2 p2d;
+    sgSetVec2( p2d, p[0], p[1] );
+    cerr << FGPhysicalProperties2D(global->get(p2d), p2d);
+    cerr << "****\n";
+    */
 }
 
 void FGLocalWeatherDatabase::update(const sgVec3& p, const WeatherPrecision dt)   //time and/or position has changed
 {
     sgCopyVec3(last_known_position, p);
+
+    if ( AreaWith(p) == 0 )
+    {	//I have moved out of my local area...
+
+	//now I should erase all my areas and get the new ones
+	//but that takes too long :-( I have to take care about that soon
+    }
 
     if (DatabaseStatus==use_global)
 	global->update(dt);
@@ -308,7 +353,7 @@ void FGLocalWeatherDatabase::addProperties(const FGPhysicalProperties2D& x)
 	//BAD, BAD, BAD thing I'm doing here: I'm adding to the global database a point that
 	//changes my voronoi diagram but I don't update it! instead I'm changing one local value
 	//that could be anywhere!!
-	//This only *might* work when the plane moves so far so fast that the diagram gets new
+	//This only *might* work when the plane moves so far so fast that the diagram gets newly
 	//calculated soon...
 	unsigned int a = AreaWith(x.p);
 	if (a != 0)

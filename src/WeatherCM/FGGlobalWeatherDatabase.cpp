@@ -50,34 +50,45 @@ HISTORY
 /********************************** CODE ************************************/
 /****************************************************************************/
 
-/****************************************************************************/
-/* Interpolate p which lies inside the triangle x1, x2, x3		    */
-/*									    */
-/*  x3\			Do this by calulating q and linear interpolate its  */
-/*   |\ \		value as it's laying between x1 and x2.		    */
-/*   | \  \		Then interpolate p as it lays between p and x3	    */
-/*   |  \   \								    */
-/*   |   p    \		Advantages: p has exactly the value of a corner	    */
-/*   |    \     \		    when it's laying on it.		    */
-/*   |     \      \		    If p isn't in the triangle the algoritm */
-/*  x1------q------x2		    extrapolates it's value		    */
-/****************************************************************************/
 template<class V>
 V triangle_interpolate(const sgVec2& x1, const V& v1, const sgVec2& x2, const V& v2, const sgVec2& x3, const V& v3, const sgVec2& p)
 {
-    sgVec2 q;
-    V q_value;
-    
-    //q = x1 + (x2 - x1)*( ((x3-x1).x()*(x1-x2).y() - (x1-x2).x()*(x3-x1).y())/((p-x3).x()*(x2-x1).y() - (x2-x1).x()*(p-x3).y()) );
-    
-    sgSubVec2  (q, x2, x1);
-    sgScaleVec2(q,         (x3[0]-x1[0])*(x1[1]-x2[1]) - (x1[0]-x2[0])*(x3[1]-x1[1])   );
-    sgScaleVec2(q, 1.0 / ( (p [0]-x3[0])*(x2[1]-x1[1]) - (x2[0]-x1[0])*(p [1]-x3[1]) ) );
-    sgAddVec2  (q, x1);
+    /************************************************************************/
+    /* First I have to solve the two equations. Rewritten they look like:   */
+    /*									    */
+    /*	a11 * x1 + a12 * x2 = b1					    */
+    /*	a21 * x1 + a22 * x2 = b2					    */
+    /*									    */
+    /* with 								    */
+    /*									    */
+    /*	a11 = x2[0] - x1[0]	a12 = x3[0] - x1[0]	b1 = p[0] - x1[0]   */
+    /*	a21 = x2[1] - x1[1]	a22 = x3[1] - x1[1]	b2 = p[1] - x1[1]   */
+    /*									    */
+    /* So I can easily get the solution by saying:			    */
+    /*									    */
+    /*	     | a11 a12 |						    */
+    /*	D  = |	       |						    */
+    /*	     | a21 a22 |						    */
+    /*									    */
+    /*	     | b1  a12 |	     | a11  b1 |			    */
+    /*	     |         |	     |         |			    */
+    /*	     | b2  a22 |	     | a21  b2 |			    */
+    /*	x1 = -----------        x2 = -----------			    */
+    /*		  D	                  D				    */
+    /*									    */
+    /*	I just need to take care then that D != 0 or I would get no	    */
+    /*	solution or an infinite amount. Both wouildn't be good...	    */
+    /************************************************************************/
 
-    q_value = v1 + (v2 - v1) * ( sgDistanceVec2(x1, q) / sgDistanceVec2(x1, x2) );
-    
-    return q_value + (v3 - q_value) * ( sgDistanceVec2(q, p) / sgDistanceVec2(q, x3));
+    float D = (x2[0] - x1[0]) * (x3[1] - x1[1]) - (x2[1] - x1[1]) * (x3[0] - x1[0]);
+
+    if (D == 0.0)
+	return v1;  //BAD THING HAPPENED!!! I should throw an exeption
+
+    float x = ( (p [0] - x1[0]) * (x3[1] - x1[1]) - (p [1] - x1[1]) * (x3[0] - x1[0]) ) / D;
+    float y = ( (x2[0] - x1[0]) * (p [1] - x1[1]) - (x2[1] - x1[1]) * (p [0] - x1[0]) ) / D;
+
+    return v1 + x * (v2 - v1) + y * (v3 - v1);
 }
 
 /****************************************************************************/
@@ -108,13 +119,13 @@ FGPhysicalProperties FGGlobalWeatherDatabase::get(const sgVec2& p) const
     
     for (FGPhysicalProperties2DVectorConstIt it=database.begin(); it!=database.end(); it++)
     {	//go through the whole database
-	d = sgScalarProductVec2(it->p, p);
+	d = sgDistanceVec2(it->p, p);
 	
 	if (d<distance[0])
 	{
 	    distance[2] = distance[1]; distance[1] = distance[0]; distance[0] = d;
 	    iterator[2] = iterator[1]; iterator[1] = iterator[0]; iterator[0] = it;
-	    //NOTE: The last line causes a warning that an unitialiced variable
+	    //NOTE: The last line causes a warning that an unitialized variable
 	    //is used. You can ignore this warning here.
 	}
 	else if (d<distance[1])
@@ -131,7 +142,7 @@ FGPhysicalProperties FGGlobalWeatherDatabase::get(const sgVec2& p) const
     
     //now I've got the closest entry in xx[0], the 2nd closest in xx[1] and the
     //3rd in xx[2];
-    
+  
     //interpolate now:
     return triangle_interpolate(
 	iterator[0]->p, (FGPhysicalProperties)*iterator[0],

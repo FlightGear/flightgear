@@ -66,6 +66,7 @@ HISTORY
 #include "FGMicroWeather.h"
 #include "FGWeatherFeature.h"
 #include "FGWeatherDefs.h"
+#include "FGThunderstorm.h"
 
 /****************************************************************************/
 /* DEFINES								    */
@@ -99,6 +100,8 @@ protected:
 					//local weather? Unit: metres
     sgVec3 last_known_position;
 
+    bool Thunderstorm;			//is there a thunderstorm near by?
+    FGThunderstorm *theThunderstorm;	//pointer to the thunderstorm.
 
     /************************************************************************/
     /* return the index of the area with point p			    */
@@ -117,6 +120,7 @@ public:
     
     enum DatabaseWorkingType {
 	use_global,	//use global database for data
+	use_internet,   //use the weather data that came from the internet
 	manual,		//use only user inputs
 	distant,	//use distant information, e.g. like LAN when used in
 			//a multiplayer environment
@@ -126,13 +130,22 @@ public:
 
     DatabaseWorkingType DatabaseStatus;
 
+    void init( const WeatherPrecision visibility, const DatabaseWorkingType type );
+
     /************************************************************************/
     /* Constructor and Destructor					    */
     /************************************************************************/
     FGLocalWeatherDatabase(
 	const sgVec3&             position,
 	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
-	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE);
+	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
+    {
+	sgCopyVec3( last_known_position, position );
+
+	init( visibility, type );
+
+	theFGLocalWeatherDatabase = this;
+    }
 
     FGLocalWeatherDatabase(
 	const WeatherPrecision    position_lat,
@@ -141,17 +154,11 @@ public:
 	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
 	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
     {
-	cout << "This constructor is broken and should *NOT* be used!" << endl;
-	exit(-1);
+	sgSetVec3( last_known_position, position_lat, position_lon, position_alt );
 
-	sgVec3 position;
-	sgSetVec3( position, position_lat, position_lon, position_alt );
+	init( visibility, type );
 
-	// Christian: the following line does not do what you intend.
-	// It just creates a new FGLocalWeatherDatabase which isn't
-	// assigned to anything so it is immediately discared.
-
-	/* BAD --> */ FGLocalWeatherDatabase( position, visibility, type );
+	theFGLocalWeatherDatabase = this;
     }
 
     ~FGLocalWeatherDatabase();
@@ -199,6 +206,17 @@ public:
     /************************************************************************/
     void             setWeatherVisibility(const WeatherPrecision visibility);
     WeatherPrecision getWeatherVisibility(void) const;
+
+    /************************************************************************/
+    /* figure out if there's a thunderstorm that has to be taken care of    */
+    /************************************************************************/
+    void updateThunderstorm(const float dt)
+    {
+	if (Thunderstorm == false)
+	    return;
+
+	theThunderstorm->update( dt );
+    }
 };
 
 extern FGLocalWeatherDatabase *WeatherDatabase;

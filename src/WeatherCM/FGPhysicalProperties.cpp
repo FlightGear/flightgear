@@ -45,6 +45,8 @@ HISTORY
 #include "FGPhysicalProperties.h"
 #include "FGWeatherDefs.h"
 
+#include "FGWeatherUtils.h"
+
 /****************************************************************************/
 /********************************** CODE ************************************/
 /****************************************************************************/
@@ -94,7 +96,48 @@ FGCloudItem FGPhysicalProperties::getCloudLayer(unsigned int nr) const
     return CloudsIt->second;
 }
 
+ostream& operator<< ( ostream& out, const FGPhysicalProperties2D& p )
+{
+    typedef map<FGPhysicalProperties::Altitude, FGWindItem      >::const_iterator wind_iterator;
+    typedef map<FGPhysicalProperties::Altitude, FGTurbulenceItem>::const_iterator turbulence_iterator;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecision>::const_iterator scalar_iterator;
 
+    out << "Position: (" << p.p[0] << ", " << p.p[1] << ", " << p.p[2] << ")\n";
+    
+    out << "Stored Wind: ";
+    for (wind_iterator       WindIt = p.Wind.begin(); 
+			     WindIt != p.Wind.end(); 
+			     WindIt++)
+	out << "(" << WindIt->second.x() << ", " << WindIt->second.y() << ", " << WindIt->second.z() << ") m/s at (" << WindIt->first << ") m; ";
+    out << "\n";
+
+    out << "Stored Turbulence: ";
+    for (turbulence_iterator TurbulenceIt = p.Turbulence.begin(); 
+			     TurbulenceIt != p.Turbulence.end(); 
+			     TurbulenceIt++)
+	out << "(" << TurbulenceIt->second.x() << ", " << TurbulenceIt->second.y() << ", " << TurbulenceIt->second.z() << ") m/s at (" << TurbulenceIt->first << ") m; ";
+    out << "\n";
+
+    out << "Stored Temperature: ";
+    for (scalar_iterator     TemperatureIt = p.Temperature.begin(); 
+			     TemperatureIt != p.Temperature.end(); 
+			     TemperatureIt++)
+	out << Kelvin2Celsius(TemperatureIt->second) << " degC at " << TemperatureIt->first << "m; ";
+    out << "\n";
+
+    out << "Stored AirPressure: ";
+    out << p.AirPressure.getValue(0)/100.0 << " hPa at " << 0.0 << "m; ";
+    out << "\n";
+
+    out << "Stored VaporPressure: ";
+    for (scalar_iterator     VaporPressureIt = p.VaporPressure.begin(); 
+			     VaporPressureIt != p.VaporPressure.end(); 
+			     VaporPressureIt++)
+	out << VaporPressureIt->second/100.0 << " hPa at " << VaporPressureIt->first << "m; ";
+    out << "\n";
+
+    return out << "\n";
+}
 
 
 

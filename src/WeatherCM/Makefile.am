@@ -10,10 +10,12 @@ libWeatherCM_a_SOURCES = \
 	FGPhysicalProperty.cpp FGPhysicalProperty.h \
 	FGSnowRain.h \
 	FGTemperatureItem.cpp FGTemperatureItem.h \
+	FGThunderstorm.cpp FGThunderstorm.h \
 	FGTurbulenceItem.cpp FGTurbulenceItem.h \
 	FGVaporPressureItem.cpp FGVaporPressureItem.h \
 	FGVoronoi.cpp FGVoronoi.h \
 	FGWeatherDefs.h FGWeatherFeature.h FGWeatherUtils.h \
+	FGWeatherParse.cpp FGWeatherParse.h \
 	FGWeatherVectorWrap.h \
 	FGWindItem.cpp FGWindItem.h
 

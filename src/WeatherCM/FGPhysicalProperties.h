@@ -97,9 +97,9 @@ public:
 
     map<Altitude,FGCloudItem>      Clouds;	    //amount of covering and type
 
-    WeatherPrecision		   SnowRainIntensity;     //this also stands for hail, snow,...
+    WeatherPrecision		   SnowRainIntensity;	    //this also stands for hail, snow,...
     SnowRainType     		   snowRainType;	    
-    WeatherPrecision 		   LightningProbability;
+    WeatherPrecision 		   LightningProbability;    //in lightnings per second   
 
     FGPhysicalProperties();   //consructor to fill it with FG standart weather
 
@@ -147,48 +147,6 @@ typedef vector<FGPhysicalProperties2D>               FGPhysicalProperties2DVecto
 typedef FGPhysicalProperties2DVector::iterator       FGPhysicalProperties2DVectorIt;
 typedef FGPhysicalProperties2DVector::const_iterator FGPhysicalProperties2DVectorConstIt;
 
-inline ostream& operator<< ( ostream& out, const FGPhysicalProperties2D& p )
-{
-    typedef map<FGPhysicalProperties::Altitude, FGWindItem      >::const_iterator wind_iterator;
-    typedef map<FGPhysicalProperties::Altitude, FGTurbulenceItem>::const_iterator turbulence_iterator;
-    typedef map<FGPhysicalProperties::Altitude, WeatherPrecision>::const_iterator scalar_iterator;
-
-    out << "Position: (" << p.p[0] << ", " << p.p[1] << ", " << p.p[2] << ")\n";
-    
-    out << "Stored Wind: ";
-    for (wind_iterator       WindIt = p.Wind.begin(); 
-			     WindIt != p.Wind.end(); 
-			     WindIt++)
-	out << "(" << WindIt->first << ") at (" << WindIt->second.x() << ", " << WindIt->second.y() << ", " << WindIt->second.z() << ") m; ";
-    out << "\n";
-
-    out << "Stored Turbulence: ";
-    for (turbulence_iterator TurbulenceIt = p.Turbulence.begin(); 
-			     TurbulenceIt != p.Turbulence.end(); 
-			     TurbulenceIt++)
-	out << "(" << TurbulenceIt->first << ") at (" << TurbulenceIt->second.x() << ", " << TurbulenceIt->second.y() << ", " << TurbulenceIt->second.z() << ") m; ";
-    out << "\n";
-
-    out << "Stored Temperature: ";
-    for (scalar_iterator     TemperatureIt = p.Temperature.begin(); 
-			     TemperatureIt != p.Temperature.end(); 
-			     TemperatureIt++)
-	out << TemperatureIt->first << " at " << TemperatureIt->second << "m; ";
-    out << "\n";
-
-    out << "Stored AirPressure: ";
-    out << p.AirPressure.getValue(0) << " at " << 0.0 << "m; ";
-    out << "\n";
-
-    out << "Stored VaporPressure: ";
-    for (scalar_iterator     VaporPressureIt = p.VaporPressure.begin(); 
-			     VaporPressureIt != p.VaporPressure.end(); 
-			     VaporPressureIt++)
-	out << VaporPressureIt->first << " at " << VaporPressureIt->second << "m; ";
-    out << "\n";
-
-    return out << "\n";
-}
 
 
 inline FGPhysicalProperties& FGPhysicalProperties::operator = ( const FGPhysicalProperties& p )
