@@ -179,7 +179,11 @@ fgMATERIAL_MGR::load_lib ( void )
 
 	    ssgSimpleState *state = new ssgSimpleState;
 	    state->enable( GL_LIGHTING );
-	    state->setShadeModel( GL_SMOOTH );
+	    if ( current_options.get_shading() == 1 ) {
+		state->setShadeModel( GL_SMOOTH );
+	    } else {
+		state->setShadeModel( GL_FLAT );
+	    }
 	    state->enable ( GL_CULL_FACE      ) ;
 	    if ( current_options.get_textures() ) {
 		state->enable( GL_TEXTURE_2D );

@@ -48,7 +48,6 @@
 #include <ssg.h>		// plib includes
 
 #include <Bucket/newbucket.hxx>
-#include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Objects/fragment.hxx>
 
