@@ -137,14 +137,26 @@ bool fgInitPosition( void ) {
     if ( id.length() ) {
 	// set initial position from airport id
 
-	fgAIRPORTS airports;
-	fgAIRPORT a;
+	FGPath path( current_options.get_fg_root() );
+	path.append( "Airports" );
+	path.append( "simple.gdbm" );
+	FGAirports airports( path.c_str() );
+	FGAirport a;
 
 	FG_LOG( FG_GENERAL, FG_INFO,
 		"Attempting to set starting position from airport code "
 		<< id );
 
-	airports.load("apt_simple");
+	// FGPath inpath( current_options.get_fg_root() );
+	// inpath.append( "Airports" );
+	// inpath.append( "apt_simple" );
+	// airports.load( inpath.c_str() );
+
+	// FGPath outpath( current_options.get_fg_root() );
+	// outpath.append( "Airports" );
+	// outpath.append( "simple.gdbm" );
+	// airports.dump_gdbm( outpath.c_str() );
+
 	if ( ! airports.search( id, &a ) ) {
 	    FG_LOG( FG_GENERAL, FG_ALERT,
 		    "Failed to find " << id << " in database." );

@@ -1,7 +1,13 @@
 noinst_LIBRARIES = libAirports.a
 
+noinst_PROGRAMS = buildsimple
+
 libAirports_a_SOURCES = \
 	genapt.cxx genapt.hxx \
 	simple.cxx simple.hxx
+
+buildsimple_SOURCES = buildsimple.cxx
+
+buildsimple_LDADD = libAirports.a -lsgdebug -lsgmisc -lgdbm -lz
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/src

@@ -1,4 +1,3 @@
-//
 // simple.hxx -- a really simplistic class to manage airport ID,
 //                 lat, lon of the center of one of it's runways, and 
 //                 elevation in feet.
@@ -33,6 +32,8 @@
 #endif                                   
 
 
+#include <gdbm.h>
+
 #include <simgear/compiler.h>
 
 #ifdef FG_HAVE_STD_INCLUDES
@@ -56,37 +57,65 @@ FG_USING_STD(istream);
 #endif
 
 
-class fgAIRPORT {
+class FGAirport {
+
 public:
-    fgAIRPORT( const string& name = "",
+
+    FGAirport( const string& name = "",
 	       double lon = 0.0,
 	       double lat = 0.0,
 	       double ele = 0.0 )
 	: id(name), longitude(lon), latitude(lat), elevation(ele) {}
 
-    bool operator < ( const fgAIRPORT& a ) const {
+    bool operator < ( const FGAirport& a ) const {
 	return id < a.id;
     }
 
 public:
+
     string id;
     double longitude;
     double latitude;
     double elevation;
+
 };
 
 inline istream&
-operator >> ( istream& in, fgAIRPORT& a )
+operator >> ( istream& in, FGAirport& a )
 {
     return in >> a.id >> a.longitude >> a.latitude >> a.elevation;
 }
 
-class fgAIRPORTS {
+
+class FGAirports {
+
+private:
+
+    GDBM_FILE dbf;
+
+public:
+
+    // Constructor
+    FGAirports( const string& file );
+
+    // Destructor
+    ~FGAirports();
+
+    // search for the specified id.
+    // Returns true if successful, otherwise returns false.
+    // On success, airport data is returned thru "airport" pointer.
+    // "airport" is not changed if "id" is not found.
+    bool search( const string& id, FGAirport* airport ) const;
+    FGAirport search( const string& id ) const;
+};
+
+
+class FGAirportsUtil {
 public:
 #ifdef FG_NO_DEFAULT_TEMPLATE_ARGS
-    typedef set< fgAIRPORT, less< fgAIRPORT > > container;
+    typedef set< FGAirport, less< FGAirport > > container;
 #else
-    typedef set< fgAIRPORT > container;
+    typedef set< FGAirport > container;
 #endif
     typedef container::iterator iterator;
     typedef container::const_iterator const_iterator;
@@ -97,20 +126,23 @@ private:
 public:
 
     // Constructor
-    fgAIRPORTS();
+    FGAirportsUtil();
 
     // Destructor
-    ~fgAIRPORTS();
+    ~FGAirportsUtil();
 
     // load the data
     int load( const string& file );
+
+    // save the data in gdbm format
+    bool dump_gdbm( const string& file );
 
     // search for the specified id.
     // Returns true if successful, otherwise returns false.
     // On success, airport data is returned thru "airport" pointer.
     // "airport" is not changed if "id" is not found.
-    bool search( const string& id, fgAIRPORT* airport ) const;
-    fgAIRPORT search( const string& id ) const;
+    bool search( const string& id, FGAirport* airport ) const;
+    FGAirport search( const string& id ) const;
 };
 
 

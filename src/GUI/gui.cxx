@@ -996,8 +996,11 @@ void AptDialog_Cancel(puObject *)
 
 void AptDialog_OK (puObject *)
 {
-	fgAIRPORTS airports;
-	fgAIRPORT a;
+    FGPath path( current_options.get_fg_root() );
+    path.append( "Airports" );
+    path.append( "simple.gdbm" );
+    FGAirports airports( path.c_str() );
+    FGAirport a;
     
     FGTime *t = FGTime::cur_time_params;
     int PauseMode = t->getPause();
@@ -1018,7 +1021,6 @@ void AptDialog_OK (puObject *)
                 "Attempting to set starting position from airport code "
                 << AptId );
 
-        airports.load("apt_simple");
         if ( airports.search( AptId, &a ) )
         {
             current_options.set_airport_id( AptId.c_str() );

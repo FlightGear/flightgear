@@ -35,6 +35,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Airports/simple.hxx>
 #include <GUI/gui.h>
@@ -919,14 +920,16 @@ void TgtAptDialog_OK (puObject *)
     if ( TgtAptId.length() ) {
         // set initial position from TgtAirport id
         
-        fgAIRPORTS airports;
-        fgAIRPORT a;
+	FGPath path( current_options.get_fg_root() );
+	path.append( "Airports" );
+	path.append( "simple.gdbm" );
+        FGAirports airports( path.c_str() );
+        FGAirport a;
         
         FG_LOG( FG_GENERAL, FG_INFO,
                 "Attempting to set starting position from airport code "
                 << s );
         
-        airports.load("apt_simple");
         if ( airports.search( TgtAptId, &a ) )
 	    {
 		double course, reverse, distance;
