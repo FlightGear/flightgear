@@ -163,6 +163,8 @@ private:
     bool gear_down;
     bool antiskid;
     bool tailhook;
+    bool launchbar;
+    bool catapult_launch_cmd;
     bool tailwheel_lock;
 
     // controls/gear/wheel[n]/
@@ -345,6 +347,8 @@ public:
     inline bool get_gear_down() const { return gear_down; }
     inline bool get_antiskid() const { return antiskid; }
     inline bool get_tailhook() const { return tailhook; }
+    inline bool get_launchbar() const { return launchbar; }
+    inline bool get_catapult_launch_cmd() const { return catapult_launch_cmd; }
     inline bool get_tailwheel_lock() const { return tailwheel_lock; }
 
     // controls/gear/wheel[n]/
@@ -531,6 +535,8 @@ public:
     void set_gear_down( bool gear );
     void set_antiskid( bool val );
     void set_tailhook( bool val );
+    void set_launchbar( bool val );
+    void set_catapult_launch_cmd( bool val );
     void set_tailwheel_lock( bool val );
 
     // controls/gear/wheel[n]/

@@ -81,6 +81,8 @@ FGControls::FGControls() :
     gear_down( true ),
     antiskid( true ),
     tailhook( false ),
+    launchbar( false ),
+    catapult_launch_cmd( false ),
     tailwheel_lock( false ),
     wing_heat( false ),
     pitot_heat( true ),
@@ -157,6 +159,8 @@ void FGControls::reset_all()
     steering =  0.0;
     gear_down = true;
     tailhook = false;
+    launchbar = false;
+    catapult_launch_cmd = false;
     tailwheel_lock = false;
     set_carb_heat( ALL_ENGINES, false );
     set_inlet_heat( ALL_ENGINES, false );
@@ -467,6 +471,14 @@ FGControls::bind ()
   fgTie("/controls/gear/tailhook", this,
 	&FGControls::get_tailhook, &FGControls::set_tailhook);
   fgSetArchivable("/controls/gear/tailhook");
+
+  fgTie("/controls/gear/launchbar", this,
+	&FGControls::get_launchbar, &FGControls::set_launchbar);
+  fgSetArchivable("/controls/gear/launchbar");
+
+  fgTie("/controls/gear/catapult-launch-cmd", this,
+	&FGControls::get_catapult_launch_cmd, &FGControls::set_catapult_launch_cmd);
+  fgSetArchivable("/controls/gear/catapult-launch-cmd");
 
   fgTie("/controls/gear/tailwheel-lock", this,
 	&FGControls::get_tailwheel_lock, 
@@ -898,6 +910,8 @@ void FGControls::unbind ()
   fgUntie("/controls/gear/gear_down");
   fgUntie("/controls/gear/antiskid");
   fgUntie("/controls/gear/tailhook");
+  fgUntie("/controls/gear/launchbar");
+  fgUntie("/controls/gear/catapult-launch-cmd");
   fgUntie("/controls/gear/tailwheel-lock");
   for (index = 0; index < MAX_WHEELS; index++) {
     char name[MAX_NAME_LEN];
@@ -1693,6 +1707,18 @@ void
 FGControls::set_tailhook( bool state )
 {
   tailhook = state;
+}
+
+void
+FGControls::set_launchbar( bool state )
+{
+  launchbar = state;
+}
+
+void
+FGControls::set_catapult_launch_cmd( bool state )
+{
+  catapult_launch_cmd = state;
 }
 
 void
