@@ -128,6 +128,7 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     net->longitude = cur_fdm_state->get_Longitude();
     net->latitude = cur_fdm_state->get_Latitude();
     net->altitude = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER;
+    net->agl = cur_fdm_state->get_Altitude_AGL() * SG_FEET_TO_METER;
     net->phi = cur_fdm_state->get_Phi();
     net->theta = cur_fdm_state->get_Theta();
     net->psi = cur_fdm_state->get_Psi();
@@ -335,6 +336,7 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
                                                 net->longitude,
                                                 net->altitude
                                                   * SG_METER_TO_FEET );
+        cur_fdm_state->_set_Altitude_AGL( net->agl * SG_METER_TO_FEET );
         cur_fdm_state->_set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
