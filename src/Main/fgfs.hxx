@@ -42,16 +42,116 @@
 
 /**
  * Basic interface for all FlightGear subsystems.
+ *
+ * <p>This is an abstract interface that all FlightGear subsystems
+ * will eventually implement.  It defines the basic operations for
+ * each subsystem: initialization, property binding and unbinding, and
+ * updating.  Interfaces may define additional methods, but the
+ * preferred way of exchanging information with other subsystems is
+ * through the property tree.</p>
+ *
+ * <p>To publish information through a property, a subsystem should
+ * bind it to a variable or (if necessary) a getter/setter pair in the
+ * bind() method, and release the property in the unbind() method:</p>
+ *
+ * <pre>
+ * void MySubsystem::bind ()
+ * {
+ *   fgTie("/controls/elevator", &_elevator);
+ *   fgSetArchivable("/controls/elevator");
+ * }
+ *
+ * void MySubsystem::unbind ()
+ * {
+ *   fgUntie("/controls/elevator");
+ * }
+ * </pre>
+ *
+ * <p>To reference a property (possibly) from another subsystem, there
+ * are two alternatives.  If the property will be referenced only
+ * infrequently (say, in the init() method), then the fgGet* methods
+ * declared in fg_props.hxx are the simplest:</p>
+ *
+ * <pre>
+ * void MySubsystem::init ()
+ * {
+ *   _errorMargin = fgGetFloat("/display/error-margin-pct");
+ * }
+ * </pre>
+ *
+ * <p>On the other hand, if the property will be referenced frequently
+ * (say, in the update() method), then the hash-table lookup required
+ * by the fgGet* methods might be too expensive; instead, the
+ * subsystem should obtain a reference to the actual property node in
+ * its init() function and use that reference in the main loop:</p>
+ *
+ * <pre>
+ * void MySubsystem::init ()
+ * {
+ *   _errorNode = fgGetNode("/display/error-margin-pct", true);
+ * }
+ *
+ * void MySubsystem::update ()
+ * {
+ *   do_something(_errorNode.getFloatValue());
+ * }
+ * </pre>
+ *
+ * <p>The node returned will always be a pointer to SGPropertyNode,
+ * and the subsystem should <em>not</em> delete it in its destructor
+ * (the pointer belongs to the property tree, not the subsystem).</p>
  */
 class FGSubsystem
 {
 public:
+
+  /**
+   * Virtual destructor to ensure that subclass destructors are called.
+   */
   virtual ~FGSubsystem ();
 
+
+  /**
+   * Initialize the subsystem.
+   *
+   * <p>This method should set up the state of the subsystem, but
+   * should not bind any properties.  Note that any dependencies on
+   * the state of other subsystems should be placed here rather than
+   * in the constructor, so that FlightGear can control the
+   * initialization order.</p>
+   */
   virtual void init () = 0;
+
+
+  /**
+   * Acquire the subsystem's property bindings.
+   *
+   * <p>This method should bind all properties that the subsystem
+   * publishes.  It will be invoked after init, but before any
+   * invocations of update.</p>
+   */
   virtual void bind () = 0;
+
+
+  /**
+   * Release the subsystem's property bindings.
+   *
+   * <p>This method should release all properties that the subsystem
+   * publishes.  It will be invoked by FlightGear (not the destructor)
+   * just before the subsystem is removed.</p>
+   */
   virtual void unbind () = 0;
+
+
+  /**
+   * Update the subsystem.
+   *
+   * <p>FlightGear invokes this method every time the subsystem should
+   * update its state.  If the subsystem requires delta time information,
+   * it should track it itself.</p>
+   */
   virtual void update () = 0;
+
 };
 
 
