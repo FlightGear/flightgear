@@ -368,8 +368,7 @@ void fgRenderFrame( void ) {
 	thesky->set_visibility( current_weather.get_visibility() );
 #endif
 
-	thesky->modify_vis( cur_fdm_state->get_Altitude()
-			    * FEET_TO_METER,
+	thesky->modify_vis( cur_fdm_state->get_Altitude() * FEET_TO_METER,
 				
 			    ( global_multi_loop * 
 			      current_options.get_speed_up() ) /
@@ -873,7 +872,8 @@ static void fgMainLoop( void ) {
 #endif
 
     // see if we need to load any new scenery tiles
-    global_tile_mgr.update();
+    global_tile_mgr.update( cur_fdm_state->get_Longitude(),
+			    cur_fdm_state->get_Latitude() );
 
     // Process/manage pending events
     global_events.Process();
@@ -1355,9 +1355,8 @@ int main( int argc, char **argv ) {
 		   ephem->getPlanets(), 60000.0,
 		   ephem->getNumStars(),
 		   ephem->getStars(), 60000.0 );
-    thesky->add_cloud_layer( 1000.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
-    thesky->add_cloud_layer( 1800.0, 400.0, 100.0, SG_CLOUD_OVERCAST );
-    thesky->add_cloud_layer( 5000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
+    thesky->add_cloud_layer( 2600.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
+    thesky->add_cloud_layer( 6000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
 
     // Terrain branch
     terrain = new ssgBranch;

@@ -366,7 +366,7 @@ void FGTileMgr::initialize_queue( void )
 
 // given the current lon/lat, fill in the array of local chunks.  If
 // the chunk isn't already in the cache, then read it from disk.
-int FGTileMgr::update( void ) {
+int FGTileMgr::update( double junk1, double junk2 ) {
     // FG_LOG( FG_TERRAIN, FG_DEBUG, "FGTileMgr::update()" );
 
     FGInterface *f = current_aircraft.fdm_state;

@@ -146,7 +146,7 @@ public:
     // given the current lon/lat, fill in the array of local chunks.
     // If the chunk isn't already in the cache, then read it from
     // disk.
-    int update( void );
+    int update( double junk1, double junk2 );
 
     // Determine scenery altitude.  Normally this just happens when we
     // render the scene, but we'd also like to be able to do this

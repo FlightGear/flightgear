@@ -293,7 +293,8 @@ bool fgInitSubsystems( void ) {
 
     if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update();
+	global_tile_mgr.update( cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude() );
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 	exit(-1);
@@ -599,7 +600,8 @@ void fgReInitSubsystems( void )
     fgInitPosition();
     if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update();
+	global_tile_mgr.update( cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude() );
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 		exit(-1);
