@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef MESH_H
-#define MESH_H
+#ifndef _MESH_H
+#define _MESH_H
 
 
 #include <GL/glut.h>
@@ -78,14 +78,17 @@ double mesh_altitude(double lon, double lat);
 GLint mesh_to_OpenGL(struct MESH *m);
 
 
-#endif /* MESH_H */
+#endif /* _MESH_H */
 
 
 /* $Log$
-/* Revision 1.8  1998/01/19 18:40:37  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.9  1998/01/22 02:59:41  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.8  1998/01/19 18:40:37  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.7  1997/08/27 03:30:29  curt
  * Changed naming scheme of basic shared structures.
  *

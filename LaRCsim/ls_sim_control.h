@@ -40,6 +40,9 @@
 
 $Header$
 $Log$
+Revision 1.3  1998/01/22 02:59:33  curt
+Changed #ifdef FILE_H to #ifdef _FILE_H
+
 Revision 1.2  1998/01/06 01:20:17  curt
 Tweaks to help building with MSVC++
 
@@ -67,6 +70,12 @@ Initial Flight Gear revision.
 		
 
 --------------------------------------------------------------------------*/
+
+
+#ifndef _LS_SIM_CONTROL_H
+#define _LS_SIM_CONTROL_H
+
+
 #include <stdio.h>
 
 #ifndef SIM_CONTROL
@@ -112,5 +121,9 @@ typedef struct {
 extern SIM_CONTROL sim_control_;
 
 #endif
+
+
+#endif /* _LS_SIM_CONTROL_H */
+
 
 /*------------------------  end of ls_sim_control.h ----------------------*/

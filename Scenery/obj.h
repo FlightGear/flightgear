@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef OBJ_H
-#define OBJ_H
+#ifndef _OBJ_H
+#define _OBJ_H
 
 
 #ifdef WIN32
@@ -41,14 +41,17 @@
 GLint fgObjLoad(char *file, struct fgCartesianPoint *ref);
 
 
-#endif /* OBJ_H */
+#endif /* _OBJ_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:27:17  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.4  1998/01/22 02:59:41  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.3  1998/01/19 19:27:17  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.2  1998/01/13 00:23:10  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

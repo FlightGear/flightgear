@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef SCENERY_H
-#define SCENERY_H
+#ifndef _SCENERY_H
+#define _SCENERY_H
 
 
 #include <Include/types.h>
@@ -59,14 +59,17 @@ void fgSceneryUpdate(double lon, double lat, double elev);
 void fgSceneryRender( void );
 
 
-#endif /* SCENERY_H */
+#endif /* _SCENERY_H */
 
 
 /* $Log$
-/* Revision 1.14  1998/01/19 19:27:17  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.15  1998/01/22 02:59:41  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.14  1998/01/19 19:27:17  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.13  1998/01/19 18:40:38  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

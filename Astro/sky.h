@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifndef _SKY_H
+#define _SKY_H
+
+
 /* (Re)generate the display list */
 void fgSkyInit( void );
 
@@ -34,11 +38,17 @@ void fgSkyColorsInit( void );
 void fgSkyRender( void );
 
 
+#endif /* _SKY_H */
+
+
 /* $Log$
-/* Revision 1.2  1998/01/19 18:40:17  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.3  1998/01/22 02:59:28  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.2  1998/01/19 18:40:17  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.1  1998/01/07 03:16:19  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *

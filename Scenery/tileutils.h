@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef TILEUTILS_H
-#define TILEUTILS_H
+#ifndef _TILEUTILS_H
+#define _TILEUTILS_H
 
 
 struct bucket {
@@ -73,13 +73,16 @@ void gen_idx_array(struct bucket *p1, struct bucket *tiles,
 			  int width, int height);
 
 
-#endif /* TILEUTILS_H */
+#endif /* _TILEUTILS_H */
 
 
 /* $Log$
-/* Revision 1.5  1998/01/14 02:19:05  curt
-/* Makde offset_bucket visible to outside.
+/* Revision 1.6  1998/01/22 02:59:42  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.5  1998/01/14 02:19:05  curt
+ * Makde offset_bucket visible to outside.
+ *
  * Revision 1.4  1998/01/13 00:23:12  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

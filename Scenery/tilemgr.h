@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifndef _TILEMGR_H
+#define _TILEMGR_H
+
+
 /* Initialize the Tile Manager subsystem */
 void fgTileMgrInit( void );
 
@@ -37,11 +41,17 @@ void fgTileMgrUpdate( void );
 void fgTileMgrRender( void );
 
 
+#endif /* _TILEMGR_H */
+
+
 /* $Log$
-/* Revision 1.3  1998/01/19 18:40:38  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.4  1998/01/22 02:59:42  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.3  1998/01/19 18:40:38  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.2  1998/01/13 00:23:11  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

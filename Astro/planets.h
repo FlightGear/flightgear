@@ -23,8 +23,8 @@
  **************************************************************************/
 
 
-#ifndef PLANETS_H
-#define PLANETS_H
+#ifndef _PLANETS_H
+#define _PLANETS_H
 
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
@@ -35,9 +35,12 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:18  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/22 02:59:28  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.1  1998/01/07 03:16:18  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.3  1997/12/30 16:36:53  curt
  * Merged in Durk's changes ...
  *

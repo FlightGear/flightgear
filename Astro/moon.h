@@ -22,8 +22,8 @@
  **************************************************************************/
 
 
-#ifndef _MOON_H_
-#define _MOON_H_
+#ifndef _MOON_H
+#define _MOON_H
 
 
 #include <Astro/orbits.h>
@@ -47,14 +47,17 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
 
 extern struct OrbElements pltOrbElements[9];
 
-#endif /* _MOON_H_ */
+#endif /* _MOON_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:26:58  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.4  1998/01/22 02:59:27  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.3  1998/01/19 19:26:58  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.2  1998/01/19 18:40:17  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef AIRCRAFT_H
-#define AIRCRAFT_H
+#ifndef _AIRCRAFT_H
+#define _AIRCRAFT_H
 
 #include <Flight/flight.h>
 #include <Controls/controls.h>
@@ -47,14 +47,29 @@ extern struct fgAIRCRAFT current_aircraft;
 void fgAircraftOutputCurrent(struct fgAIRCRAFT *a);
 
 
-#endif /* AIRCRAFT_H */
+#endif /* _AIRCRAFT_H */
 
 
 /* $Log$
-/* Revision 1.8  1998/01/19 19:26:57  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.9  1998/01/22 02:59:23  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.8  1998/01/19 19:26:57  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
+ * Revision 1.7  1997/12/10 22:37:38  curt
+ * Prepended "fg"AIRCRAFT_H */
+
+
+/* $Log$
+/* Revision 1.9  1998/01/22 02:59:23  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/*
+ * Revision 1.8  1998/01/19 19:26:57  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.7  1997/12/10 22:37:38  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

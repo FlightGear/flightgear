@@ -29,14 +29,13 @@ CFILES = fg_init.c views.c $(INTERFACE_FILES)
 
 FGLIBS = -lAircraft -lAstro -lCockpit -lControls -lFlight \
 	-lJoystick -lLaRCsim -lSlew -lScenery -lTime -lWeather -lMath \
-	-lc \
 	$(NULL)
 
 
 LCDEFS = -DGLUT
 LLDFLAGS =
 LDLIBS = $(FGLIBS) $(FG_DEBUG_LIBS) \
-	$(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
+	$(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm
 
 include $(FG_ROOT_SRC)/commondefs
 
@@ -52,6 +51,9 @@ include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.43  1998/01/22 02:59:37  curt
+# Changed #ifdef FILE_H to #ifdef _FILE_H
+#
 # Revision 1.42  1998/01/21 21:11:34  curt
 # Misc. tweaks.
 #

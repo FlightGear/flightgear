@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef FG_INIT_H
-#define FG_INIT_H
+#ifndef _FG_INIT_H
+#define _FG_INIT_H
 
 
 /* General house keeping initializations */
@@ -37,11 +37,14 @@ void fgInitGeneral( void );
 void fgInitSubsystems( void );
 
 
-#endif /* FG_INIT_H */
+#endif /* _FG_INIT_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/08/23 01:46:20  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/22 02:59:38  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.1  1997/08/23 01:46:20  curt
+ * Initial revision.
+ *
  */

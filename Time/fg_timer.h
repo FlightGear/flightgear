@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef FG_TIMER_H
-#define FG_TIMER_H
+#ifndef _FG_TIMER_H
+#define _FG_TIMER_H
 
 
 extern unsigned long int fgSimTime;
@@ -40,14 +40,17 @@ void fgTimerInit( float dt, void (*f)( void ) );
 int fgGetTimeInterval( void );
 
 
-#endif /* FG_TIMER_H */
+#endif /* _FG_TIMER_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 18:40:40  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.4  1998/01/22 02:59:43  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.3  1998/01/19 18:40:40  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.2  1997/07/23 21:52:27  curt
  * Put comments around the text after an #endif for increased portability.
  *

@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef FG_TIME_H
-#define FG_TIME_H
+#ifndef _FG_TIME_H
+#define _FG_TIME_H
 
 
 #ifdef WIN32
@@ -95,14 +95,17 @@ void fgTimeInit(struct fgTIME *t);
 void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
 
 
-#endif /* FG_TIME_H */
+#endif /* _FG_TIME_H */
 
 
 /* $Log$
-/* Revision 1.13  1998/01/19 19:27:20  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.14  1998/01/22 02:59:43  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.13  1998/01/19 19:27:20  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.12  1998/01/05 18:44:37  curt
  * Add an option to advance/decrease time from keyboard.
  *

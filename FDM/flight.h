@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef FLIGHT_H
-#define FLIGHT_H
+#ifndef _FLIGHT_H
+#define _FLIGHT_H
 
 
 #include <Flight/Slew/slew.h>
@@ -392,14 +392,17 @@ int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt);
 int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop);
 
 
-#endif /* FLIGHT_H */
+#endif /* _FLIGHT_H */
 
 
 /* $Log$
-/* Revision 1.11  1998/01/19 19:27:03  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.12  1998/01/22 02:59:32  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.11  1998/01/19 19:27:03  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.10  1997/12/10 22:37:43  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

@@ -24,6 +24,10 @@
  **************************************************************************/
  
 
+#ifndef _COCKPIT_H
+#define _COCKPIT_H
+
+
 #include <Cockpit/hud.h>
 
 
@@ -42,11 +46,17 @@ struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft );
 void fgCockpitUpdate( void );
 
 
+#endif /* _COCKPIT_H */
+
+
 /* $Log$
-/* Revision 1.4  1998/01/19 19:27:01  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.5  1998/01/22 02:59:29  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.4  1998/01/19 19:27:01  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.3  1998/01/19 18:40:19  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef HUD_H
-#define HUD_H
+#ifndef _HUD_H
+#define _HUD_H
 
 
 #include <Aircraft/aircraft.h>
@@ -229,14 +229,17 @@ void fgUpdateHUD( Hptr hud );
 void fgUpdateHUD2( struct HUD *hud );
 
 
-#endif /* HUD_H */
+#endif /* _HUD_H */
 
 
 /* $Log$
-/* Revision 1.5  1998/01/19 19:27:01  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.6  1998/01/22 02:59:30  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.5  1998/01/19 19:27:01  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.4  1998/01/19 18:40:21  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef CONTROLS_H
-#define CONTROLS_H
+#ifndef _CONTROLS_H
+#define _CONTROLS_H
 
 
 #include "../Include/limits.h"
@@ -76,15 +76,17 @@ void fgThrottleMove(int engine, double amt);
 void fgThrottleSet(int engine, double pos);
 
 
-
-#endif /* CONTROLS_H */
+#endif /* _CONTROLS_H */
 
 
 /* $Log$
-/* Revision 1.8  1998/01/19 18:40:22  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.9  1998/01/22 02:59:31  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.8  1998/01/19 18:40:22  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.7  1997/12/15 23:54:36  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef SLEW_H
-#define SLEW_H
+#ifndef _SLEW_H
+#define _SLEW_H
 
 
 /* reset flight params to a specific position */ 
@@ -35,14 +35,17 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading);
 void fgSlewUpdate( void );
 
 
-#endif /* SLEW_H */
+#endif /* _SLEW_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 18:40:30  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.4  1998/01/22 02:59:34  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.3  1998/01/19 18:40:30  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.2  1997/07/23 21:52:20  curt
  * Put comments around the text after an #endif for increased portability.
  *

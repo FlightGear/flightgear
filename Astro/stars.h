@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef STARS_H
-#define STARS_H
+#ifndef _STARS_H
+#define _STARS_H
 
 
 #define FG_MAX_STARS 500
@@ -40,14 +40,17 @@ void fgStarsRender( void );
 extern struct OrbElements pltOrbElements[9];
 extern struct fgTIME cur_time_params;
 
-#endif /* STARS_H */
+#endif /* _STARS_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/19 18:40:18  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.3  1998/01/22 02:59:28  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.2  1998/01/19 18:40:18  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.1  1998/01/07 03:16:20  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *

@@ -24,6 +24,10 @@
  **************************************************************************/
 
 
+#ifndef _EVENT_H
+#define _EVENT_H
+
+
 #define FG_EVENT_SUSP 0
 #define FG_EVENT_READY 1
 #define FG_EVENT_QUEUED 2
@@ -57,11 +61,17 @@ void fgEventPrintStats( void );
 void fgEventProcess( void );
 
 
+#endif /* _EVENT_H */
+
+
 /* $Log$
-/* Revision 1.2  1998/01/19 18:40:39  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.3  1998/01/22 02:59:43  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.2  1998/01/19 18:40:39  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.1  1997/12/30 04:19:22  curt
  * Initial revision.
  *

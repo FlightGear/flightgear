@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef VIEWS_H
-#define VIEWS_H
+#ifndef _VIEWS_H
+#define _VIEWS_H
 
 
 #include <Include/types.h>
@@ -85,14 +85,17 @@ void fgViewInit(struct fgVIEW *v);
 void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
 
 
-#endif /* VIEWS_H */
+#endif /* _VIEWS_H */
 
 
 /* $Log$
-/* Revision 1.6  1998/01/19 19:27:10  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.7  1998/01/22 02:59:38  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.6  1998/01/19 19:27:10  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.5  1997/12/22 04:14:32  curt
  * Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
  *

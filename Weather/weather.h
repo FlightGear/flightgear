@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef WEATHER_H
-#define WEATHER_H
+#ifndef _WEATHER_H
+#define _WEATHER_H
 
 
 /* holds the current weather values */
@@ -43,14 +43,17 @@ void fgWeatherInit( void );
 void fgWeatherUpdate( void );
 
 
-#endif /* WEATHER_H */
+#endif /* _WEATHER_H */
 
 
 /* $Log$
-/* Revision 1.7  1998/01/19 18:40:41  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.8  1998/01/22 02:59:44  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.7  1998/01/19 18:40:41  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.6  1997/12/30 22:22:47  curt
  * Further integration of event manager.
  *

@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef GEOMETRY_H
-#define GEOMETRY_H
+#ifndef _GEOMETRY_H
+#define _GEOMETRY_H
 
 
 #define VRML_BOX       0
@@ -52,14 +52,17 @@ void vrmlHandleGeometry( void );
 int vrmlFreeGeometry( void );
 
 
-#endif /* GEOMETRY_H */
+#endif /* _GEOMETRY_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 18:40:36  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.4  1998/01/22 02:59:40  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.3  1998/01/19 18:40:36  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.2  1997/07/23 21:52:25  curt
  * Put comments around the text after an #endif for increased portability.
  *

@@ -65,6 +65,10 @@
 
 --------------------------------------------------------------------------*/
 
+#ifndef _LS_CONSTANTS
+#define _LS_CONSTANTS
+
+
 #ifndef CONSTANTS
 
 #define CONSTANTS -1
@@ -121,5 +125,9 @@
 #define SEA_LEVEL_DENSITY	0.002376888
 
 #endif
+
+
+#endif /* _LS_CONSTANTS_H */
+
 
 /*------------------------- end of ls_constants.h -------------------------*/

@@ -35,6 +35,9 @@
 
 $Header$
 $Log$
+Revision 1.3  1998/01/22 02:59:32  curt
+Changed #ifdef FILE_H to #ifdef _FILE_H
+
 Revision 1.2  1997/05/31 19:16:27  curt
 Elevator trim added.
 
@@ -53,6 +56,11 @@ Initial Flight Gear revision.
  *
 
 --------------------------------------------------------------------------*/
+
+
+#ifndef _LS_COCKPIT_H
+#define _LS_COCKPIT_H
+
 
 typedef struct {
     float   long_stick, lat_stick, rudder_pedal;
@@ -83,3 +91,6 @@ extern COCKPIT cockpit_;
 #define SB_extend	cockpit_.sb_extend
 #define SB_retract	cockpit_.sb_retract
 #define Gear_sel_up	cockpit_.gear_sel_up
+
+
+#endif /* _LS_COCKPIT_H */

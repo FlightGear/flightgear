@@ -40,6 +40,9 @@
 
 $Header$
 $Log$
+Revision 1.2  1998/01/22 02:59:34  curt
+Changed #ifdef FILE_H to #ifdef _FILE_H
+
 Revision 1.1  1997/05/29 00:10:00  curt
 Initial Flight Gear revision.
 
@@ -80,6 +83,10 @@ Initial Flight Gear revision.
 	OUTPUTS:
 
 --------------------------------------------------------------------------*/
+
+#ifndef _LS_SYM_H
+#define _LS_SYM_H
+
 
 /* Return codes */
 
@@ -151,5 +158,6 @@ extern void 	ls_set_sym_val( symbol_rec *symrec, double value );
 	   and error message is printed on stderr.			*/
 
 
+#endif /* _LS_SYM_H */
 
 

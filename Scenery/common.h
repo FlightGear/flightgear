@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef _COMMON_H
+#define _COMMON_H
 
 
 /* Maximum length for an identifier */
@@ -36,13 +36,16 @@
 char *strip_quotes(char *s);
 
 
-#endif /* COMMON_H */
+#endif /* _COMMON_H */
 
 
 /* $Log$
-/* Revision 1.3  1997/07/23 21:52:24  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.4  1998/01/22 02:59:40  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.3  1997/07/23 21:52:24  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.2  1997/05/23 15:40:41  curt
  * Added GNU copyright headers.
  *

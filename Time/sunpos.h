@@ -36,8 +36,8 @@
  */
 
 
-#ifndef SUNPOS_H
-#define SUNPOS_H
+#ifndef _SUNPOS_H
+#define _SUNPOS_H
 
 
 #include <time.h>
@@ -50,4 +50,4 @@ void fgUpdateSunPos( void );
 void fgSunPosition(time_t ssue, double *lon, double *lat);
 
 
-#endif /* SUNPOS_H */
+#endif /* _SUNPOS_H */

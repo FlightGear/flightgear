@@ -23,8 +23,8 @@
  **************************************************************************/
 
 
-#ifndef ORBITS_H
-#define ORBITS_H
+#ifndef _ORBITS_H
+#define _ORBITS_H
 
 
 #include <stdio.h>
@@ -77,14 +77,17 @@ void fgSolarSystemInit(struct fgTIME t);
 void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
-#endif /* ORBITS_H */
+#endif /* _ORBITS_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/19 19:26:58  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.3  1998/01/22 02:59:27  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.2  1998/01/19 19:26:58  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.1  1998/01/07 03:16:17  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *
