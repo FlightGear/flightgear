@@ -182,7 +182,9 @@ private:
      */
     volatile int pending_models;
 
-    ssgBranch* obj_load( const std::string& path,
+    bool obj_load( const std::string& path,
+			 ssgBranch* geometry,
+			 ssgBranch* rwy_lights,
 			 ssgVertexArray* gound_lights,
 			 bool is_base );
 
