@@ -14,6 +14,10 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <AIModel/AIManager.hxx>
+#include <vector>
+#include <string>
+SG_USING_STD(vector);
+SG_USING_STD(string);
 
 
 class SubmodelSystem : public SGSubsystem
@@ -21,24 +25,56 @@ class SubmodelSystem : public SGSubsystem
 
 public:
 
+ typedef struct {
+  SGPropertyNode_ptr trigger;
+  string             name;
+  string             model;
+  double             speed;
+  bool               slaved;
+  bool               repeat;
+  double             delay;
+  double             timer;
+  int                count;
+  double             x_offset;
+  double             y_offset;
+  double             z_offset;
+  double             yaw_offset;
+  double             pitch_offset;
+ } submodel; 
+
+ typedef struct {
+  double     lat;
+  double     lon;
+  double     alt;
+  double     azimuth;
+  double     elevation;
+  double     speed;
+ } IC_struct;  
+
     SubmodelSystem ();
     ~SubmodelSystem ();
 
+    void load ();
     void init ();
     void bind ();
     void unbind ();
     void update (double dt);
-    bool release (double dt);
+    bool release (submodel* sm, double dt);
+    void transform (submodel* sm);
 
 private:
+
+    typedef vector <submodel*> submodel_vector_type;
+    typedef submodel_vector_type::iterator submodel_vector_iterator;
+
+    submodel_vector_type       submodels;
+    submodel_vector_iterator   submodel_iterator;
+
 
     double x_offset, y_offset, z_offset;
     double pitch_offset, yaw_offset;
 
     SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _trigger_node;
-    SGPropertyNode_ptr _amount_node;
-
     SGPropertyNode_ptr _user_lat_node;
     SGPropertyNode_ptr _user_lon_node;
     SGPropertyNode_ptr _user_heading_node;
@@ -48,10 +84,8 @@ private:
     SGPropertyNode_ptr _user_yaw_node;
     SGPropertyNode_ptr _user_speed_node;
 
-    double elapsed_time;
     FGAIManager* ai;
-    double initial_velocity;
-    bool firing;
+    IC_struct  IC;
 };
 
 #endif // __SYSTEMS_SUBMODEL_HXX
