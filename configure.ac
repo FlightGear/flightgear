@@ -106,7 +106,7 @@ case "${host}" in
 
 *-*-cygwin*)
     if test -d /usr/local ; then
-        EXTRA_DIRS="/usr/local"
+        EXTRA_DIRS="${EXTRA_DIRS} /usr/local"
     fi
     ;;
 
