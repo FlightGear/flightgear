@@ -9,7 +9,6 @@ libFlight_a_SOURCES = \
 	ExternalNet.cxx ExternalNet.hxx \
 	flight.cxx flight.hxx \
 	IO360.cxx IO360.hxx \
-	JSBSim.cxx JSBSim.hxx \
 	LaRCsim.cxx LaRCsim.hxx \
 	LaRCsimIC.cxx LaRCsimIC.hxx \
 	MagicCarpet.cxx MagicCarpet.hxx \

@@ -35,11 +35,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
-#include "External.hxx"
 #include "flight.hxx"
-#include "JSBSim.hxx"
-#include "LaRCsim.hxx"
-#include "Balloon.h"
 
 
 // base_fdm_state is the internal state that is updated in integer

@@ -1,15 +1,8 @@
-SUBDIRS = filtersjb
+SUBDIRS = filtersjb tests
 
-EXTRA_DIST = JSBSim.cpp Makefile.solo
+EXTRA_DIST = Makefile.solo
 
 noinst_LIBRARIES = libJSBSim.a
-
-# FGGroundReactions.cpp FGGroundReactions.h \
-# FGPiston.cpp FGPiston.h \
-# FGPropulsion.cpp FGPropulsion.h \
-# FGRocket.cpp FGRocket.h \
-# FGTurboJet.cpp FGTurboJet.h \
-# FGTurboShaft.cpp FGTurboShaft.h \
 
 libJSBSim_a_SOURCES = \
         FGAerodynamics.cpp FGAerodynamics.h \
@@ -54,13 +47,15 @@ libJSBSim_a_SOURCES = \
 	FGUtility.cpp FGUtility.h \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h \
-	FGfdmSocket.cpp FGfdmSocket.h
+	FGfdmSocket.cpp FGfdmSocket.h \
+	JSBSim.cxx JSBSim.hxx
 
-noinst_PROGRAMS = testJSBsim # demo
 
-testJSBsim_SOURCES = JSBSim.cpp
+# noinst_PROGRAMS = testJSBsim
 
-testJSBsim_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
+# testJSBsim_SOURCES = JSBSim.dcpp
+
+# testJSBsim_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
 
 # demo_SOURCES = demo.cxx
 
