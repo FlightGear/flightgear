@@ -42,11 +42,11 @@
 
 #include <string>
 
-#include <Scenery/tile.hxx>
+#include <Scenery/tileentry.hxx>
 
 
 // Load a .obj file and build the GL fragment list
-int fgObjLoad(const string& path, fgTILE *tile);
+int fgObjLoad(const string& path, FGTileEntry *tile);
 
 
 #endif // _OBJ_HXX

@@ -24,7 +24,7 @@
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
-#include <Scenery/tile.hxx>
+#include <Scenery/tileentry.hxx>
 
 #include "fragment.hxx"
 
@@ -96,7 +96,7 @@ int fgFRAGMENT::intersect( const Point3D& end0,
 			   int side_flag,
 			   Point3D& result) const
 {
-    fgTILE *t;
+    FGTileEntry *t;
     MAT3vec v1, v2, n, center;
     double p1[3], p2[3], p3[3];
     double x, y, z;  // temporary holding spot for result

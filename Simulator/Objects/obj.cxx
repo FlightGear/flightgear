@@ -58,7 +58,7 @@
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Misc/stopwatch.hxx>
-#include <Scenery/tile.hxx>
+#include <Scenery/tileentry.hxx>
 
 #include "materialmgr.hxx"
 #include "obj.hxx"
@@ -71,8 +71,8 @@ static double tex_coords[FG_MAX_NODES*3][3];
 
 
 // given three points defining a triangle, calculate the normal
-static void calc_normal(double p1[3], double p2[3], 
-			double p3[3], double normal[3])
+static void calc_normal(Point3D p1, Point3D p2, 
+			Point3D p3, double normal[3])
 {
     double v1[3], v2[3];
     double temp;
@@ -92,7 +92,7 @@ static void calc_normal(double p1[3], double p2[3],
 
 
 // Calculate texture coordinates for a given point.
-static Point3D calc_tex_coords(double *node, const Point3D& ref) {
+static Point3D calc_tex_coords(const Point3D& node, const Point3D& ref) {
     Point3D cp;
     Point3D pp;
     // double tmplon, tmplat;
@@ -128,7 +128,7 @@ static Point3D calc_tex_coords(double *node, const Point3D& ref) {
 
 
 // Load a .obj file and build the GL fragment list
-int fgObjLoad( const string& path, fgTILE *t) {
+int fgObjLoad( const string& path, FGTileEntry *t) {
     fgFRAGMENT fragment;
     Point3D pp;
     double approx_normal[3], normal[3] /*, scale = 0.0 */;
@@ -140,7 +140,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
     int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
     int tex;
     int last1 = 0, last2 = 0, odd = 0;
-    double (*nodes)[3];
+    point_list nodes;
+    Point3D node;
     Point3D center;
     double tex_width = 1000.0, tex_height = 1000.0;
 
@@ -160,7 +161,6 @@ int fgObjLoad( const string& path, fgTILE *t) {
     vncount = 0;
     vtcount = 0;
     t->bounding_radius = 0.0;
-    nodes = t->nodes;
     center = t->center;
 
     StopWatch stopwatch;
@@ -306,9 +306,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    } else if ( token == "v" ) {
 		// node (vertex)
 		if ( t->ncount < FG_MAX_NODES ) {
-		    in >> t->nodes[t->ncount][0]
-		       >> t->nodes[t->ncount][1]
-		       >> t->nodes[t->ncount][2];
+		    /* in >> nodes[t->ncount][0]
+		       >> nodes[t->ncount][1]
+		       >> nodes[t->ncount][2]; */
+		    in >> node;
+		    nodes.push_back(node);
 		    t->ncount++;
 		} else {
 		    FG_LOG( FG_TERRAIN, FG_ALERT, 
@@ -341,19 +343,19 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n1], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n1]);		
+		    xglVertex3dv(nodes[n1].get_n());		
 
 		    // MAT3_SCALE_VEC(normal, normals[n2], scale);
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n2], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n2]);				
+		    xglVertex3dv(nodes[n2].get_n());				
 
 		    // MAT3_SCALE_VEC(normal, normals[n3], scale);
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n3], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n3]);
+		    xglVertex3dv(nodes[n3].get_n());
 		} else {
 		    // Shading model is "GL_FLAT" so calculate per face
 		    // normals on the fly.
@@ -369,15 +371,15 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 		    pp = calc_tex_coords(nodes[n1], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n1]);		
+		    xglVertex3dv(nodes[n1].get_n());		
 
 		    pp = calc_tex_coords(nodes[n2], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n2]);		
+		    xglVertex3dv(nodes[n2].get_n());		
 		    
 		    pp = calc_tex_coords(nodes[n3], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n3]);		
+		    xglVertex3dv(nodes[n3].get_n());		
 		}
 		// printf("some normals, texcoords, and vertices\n");
 
@@ -413,7 +415,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    xglNormal3dv(normal);
 		    pp = calc_tex_coords(nodes[n4], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n4]);		
+		    xglVertex3dv(nodes[n4].get_n());		
 		    
 		    odd = 1 - odd;
 		    last1 = n3;
@@ -437,7 +439,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    pp = calc_tex_coords(nodes[n1], center);
 		}
 		xglTexCoord2f(pp.x(), pp.y());
-		xglVertex3dv(nodes[n1]);
+		xglVertex3dv(nodes[n1].get_n());
 
 		in >> n2;
 		xglNormal3dv(normals[n2]);
@@ -450,7 +452,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    pp = calc_tex_coords(nodes[n2], center);
 		}
 		xglTexCoord2f(pp.x(), pp.y());
-		xglVertex3dv(nodes[n2]);
+		xglVertex3dv(nodes[n2].get_n());
 		
 		// read all subsequent numbers until next thing isn't a number
 		while ( true ) {
@@ -481,7 +483,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 			pp = calc_tex_coords(nodes[n3], center);
 		    }
 		    xglTexCoord2f(pp.x(), pp.y());
-		    xglVertex3dv(nodes[n3]);
+		    xglVertex3dv(nodes[n3].get_n());
 
 		    fragment.add_face(n1, n2, n3);
 		    n2 = n3;
@@ -505,17 +507,17 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		xglNormal3dv(normals[n1]);
 		pp = calc_tex_coords(nodes[n1], center);
 		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n1]);
+		xglVertex3dv(nodes[n1].get_n());
 
 		xglNormal3dv(normals[n2]);
 		pp = calc_tex_coords(nodes[n2], center);
 		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n2]);
+		xglVertex3dv(nodes[n2].get_n());
 		
 		xglNormal3dv(normals[n3]);
 		pp = calc_tex_coords(nodes[n3], center);
 		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n3]);
+		xglVertex3dv(nodes[n3].get_n());
 		// printf("some normals, texcoords, and vertices (tris)\n");
 	    } else if ( token == "q" ) {
 		// continue a triangle strip
@@ -552,11 +554,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		} else {
 		    // Shading model is "GL_FLAT"
 		    if ( odd ) {
-			calc_normal(nodes[last1], nodes[last2], nodes[n1], 
-				    approx_normal);
+			calc_normal(nodes[last1], nodes[last2], 
+				    nodes[n1], approx_normal);
 		    } else {
-			calc_normal(nodes[last2], nodes[last1], nodes[n1], 
-				    approx_normal);
+			calc_normal(nodes[last2], nodes[last1], 
+				    nodes[n1], approx_normal);
 		    }
 		    // MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
@@ -564,7 +566,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 		pp = calc_tex_coords(nodes[n1], center);
 		xglTexCoord2f(pp.lon(), pp.lat());
-		xglVertex3dv(nodes[n1]);
+		xglVertex3dv(nodes[n1].get_n());
 		// printf("a normal, texcoord, and vertex (4th)\n");
    
 		odd = 1 - odd;
@@ -598,7 +600,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		
 		    pp = calc_tex_coords(nodes[n2], center);
 		    xglTexCoord2f(pp.lon(), pp.lat());
-		    xglVertex3dv(nodes[n2]);		
+		    xglVertex3dv(nodes[n2].get_n());		
 		    // printf("a normal, texcoord, and vertex (4th)\n");
 
 		    odd = 1 -odd;
@@ -638,15 +640,17 @@ int fgObjLoad( const string& path, fgTILE *t) {
     xglBegin(GL_LINES);
     xglColor3f(0.0, 0.0, 0.0);
     for ( i = 0; i < t->ncount; i++ ) {
-	xglVertex3d(t->nodes[i][0],
-		    t->nodes[i][1] ,
- 		    t->nodes[i][2]);
-	xglVertex3d(t->nodes[i][0] + 500*normals[i][0],
- 		    t->nodes[i][1] + 500*normals[i][1],
- 		    t->nodes[i][2] + 500*normals[i][2]);
+	xglVertex3d(nodes[i][0],
+		    nodes[i][1] ,
+ 		    nodes[i][2]);
+	xglVertex3d(nodes[i][0] + 500*normals[i][0],
+ 		    nodes[i][1] + 500*normals[i][1],
+ 		    nodes[i][2] + 500*normals[i][2]);
     } 
     xglEnd();
 #endif
+
+    t->nodes = nodes;
 
     stopwatch.stop();
     FG_LOG( FG_TERRAIN, FG_INFO, 

@@ -74,7 +74,7 @@ operator== ( const fgFACE& lhs, const fgFACE& rhs )
 }
 
 // Forward declarations
-class fgTILE;
+class FGTileEntry;
 class FGMaterialSlot;
 
 // Object fragment data class
@@ -101,7 +101,7 @@ public:
     FGMaterialSlot *material_ptr;
 
     // tile pointer
-    fgTILE *tile_ptr;
+    FGTileEntry *tile_ptr;
 
     // OpenGL display list for fragment data
     GLint display_list;

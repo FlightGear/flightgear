@@ -46,7 +46,7 @@
 #include <Misc/fgstream.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Scenery/tile.hxx>
+#include <Scenery/tileentry.hxx>
 
 #include "materialmgr.hxx"
 #include "fragment.hxx"
@@ -101,7 +101,7 @@ FGMaterialSlot::render_fragments()
 	xglMaterialfv (GL_FRONT, GL_DIFFUSE, m.get_diffuse() );
     }
 
-    fgTILE* last_tile_ptr = NULL;
+    FGTileEntry* last_tile_ptr = NULL;
     frag_list_iterator current = list.begin();
     frag_list_iterator last = list.end();
 
