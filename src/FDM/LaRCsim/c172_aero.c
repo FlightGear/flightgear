@@ -168,7 +168,7 @@ void aero( SCALAR dt, int Initialize ) {
 	   Cma=-0.89;
 	   Cmadot=-5.2;
 	   Cmq=-12.4;
-	   Cmo=-0.062; 
+	   Cmo=-0.015; 
 	   Cmde=-1.28;
 
 	   Clbeta=-0.089;
