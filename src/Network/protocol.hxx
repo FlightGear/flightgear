@@ -42,7 +42,8 @@ class FGProtocol {
 private:
 
     double hz;
-    int count_down;
+    double count_down;
+    long count;
 
     SGProtocolDir dir;
 
@@ -69,9 +70,12 @@ public:
 
     inline double get_hz() const { return hz; }
     inline void set_hz( double t ) { hz = t; }
-    inline int get_count_down() const { return count_down; }
-    inline void set_count_down( int c ) { count_down = c; }
-    inline void dec_count_down( int c ) { count_down -= c; }
+    inline double get_count_down() const { return count_down; }
+    inline void set_count_down( double c ) { count_down = c; }
+    inline void inc_count_down( double amt ) { count_down += amt; }
+    inline void dec_count_down( double amt ) { count_down -= amt; }
+    inline void inc_count() { count++; }
+    inline long get_count() { return count; }
 
     virtual bool gen_message();
     virtual bool parse_message();

@@ -29,7 +29,8 @@
 
 FGProtocol::FGProtocol() :
     hz(0.0),
-    count_down(0),
+    count_down(0.0),
+    count(0),
     enabled(false)
 {
 }
