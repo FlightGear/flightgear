@@ -90,8 +90,12 @@ void uiuc_map_init()
   init_map["Long_trim"]           =      Long_trim_flag             ;
   init_map["recordRate"]          =      recordRate_flag            ;
   init_map["recordStartTime"]     =      recordStartTime_flag       ;
+  init_map["use_V_rel_wind_2U"]   =      use_V_rel_wind_2U_flag     ;
   init_map["nondim_rate_V_rel_wind"]=    nondim_rate_V_rel_wind_flag;
+  init_map["use_abs_U_body_2U"]   =      use_abs_U_body_2U_flag     ;
   init_map["dyn_on_speed"]        =      dyn_on_speed_flag          ;
+  init_map["dyn_on_speed_zero"]   =      dyn_on_speed_zero_flag     ;
+  init_map["use_dyn_on_speed_curve1"] =  use_dyn_on_speed_curve1_flag;
   init_map["Alpha"]               =      Alpha_flag                 ;
   init_map["Beta"]                =      Beta_flag                  ;
   init_map["U_body"]              =      U_body_flag                ;

@@ -199,9 +199,9 @@ void uiuc_force_moment(double dt)
     }
   else
     {
-      F_X_wind = -CD * qS;
-      F_Y_wind = CY * qS;
-      F_Z_wind = -CL * qS;
+      F_X_wind = -CD * qS  * Cos_beta * Cos_beta;
+      F_Y_wind =  CY * qS  * Cos_beta * Cos_beta;
+      F_Z_wind = -CL * qS  * Cos_beta * Cos_beta;
 
       /* wind-axis to body-axis transformation */
       F_X_aero = F_X_wind * Cos_alpha * Cos_beta - F_Y_wind * Cos_alpha * Sin_beta - F_Z_wind * Sin_alpha;
@@ -209,14 +209,29 @@ void uiuc_force_moment(double dt)
       F_Z_aero = F_X_wind * Sin_alpha * Cos_beta - F_Y_wind * Sin_alpha * Sin_beta + F_Z_wind * Cos_alpha;
     }
   /* Moment calculations */
-  M_l_aero = Cl * qSb;
-  M_m_aero = Cm * qScbar;
-  M_n_aero = Cn * qSb;
+  M_l_aero = Cl * qSb    * Cos_beta * Cos_beta;
+  M_m_aero = Cm * qScbar * Cos_beta * Cos_beta;
+  M_n_aero = Cn * qSb    * Cos_beta * Cos_beta;
 
-  /* Call flight data recorder */
-  //  if (Simtime >= recordStartTime)
-  //      uiuc_recorder(dt);
-  
+  /* Adding in apparent mass effects */
+
+  if (Mass_appMass_ratio)
+    F_Z_aero += -(Mass_appMass_ratio * Mass) * W_dot_body;
+  if (I_xx_appMass_ratio)
+    M_l_aero += -(I_xx_appMass_ratio * I_xx) * P_dot_body;
+  if (I_yy_appMass_ratio)
+    M_m_aero += -(I_yy_appMass_ratio * I_yy) * Q_dot_body;
+  if (I_zz_appMass_ratio)
+    M_m_aero += -(I_zz_appMass_ratio * I_yy) * R_dot_body;
+
+  if (Mass_appMass)
+    F_Z_aero += -Mass_appMass * W_dot_body;
+  if (I_xx_appMass)
+    M_l_aero += -I_xx_appMass * P_dot_body;
+  if (I_yy_appMass)
+    M_m_aero += -I_yy_appMass * Q_dot_body;
+  if (I_zz_appMass)
+    M_m_aero += -I_zz_appMass * R_dot_body;
 
   // fog field update
    Fog = 0;

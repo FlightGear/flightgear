@@ -65,6 +65,9 @@
 	                    uiuc_3Dinterp_quick() function.  Takes
 			    advantage of data in a "nice" form (data
 			    that are in a rectangular matrix).
+	       04/21/2002   (MSS) Added new variables for apparent mass effects
+                            and options for computing *_2U coefficient
+                            scale factors.
 
 ----------------------------------------------------------------------
 
@@ -155,7 +158,10 @@ enum {Dx_pilot_flag = 2000, Dy_pilot_flag, Dz_pilot_flag,
       P_body_flag, Q_body_flag, R_body_flag, 
       Phi_flag, Theta_flag, Psi_flag,
       Long_trim_flag, recordRate_flag, recordStartTime_flag, 
-      nondim_rate_V_rel_wind_flag, dyn_on_speed_flag, Alpha_flag, 
+      use_V_rel_wind_2U_flag, nondim_rate_V_rel_wind_flag, 
+      use_abs_U_body_2U_flag,
+      dyn_on_speed_flag, dyn_on_speed_zero_flag, 
+      use_dyn_on_speed_curve1_flag, Alpha_flag, 
       Beta_flag, U_body_flag, V_body_flag, W_body_flag};
 
 // geometry === Aircraft-specific geometric quantities
@@ -173,7 +179,12 @@ enum {de_flag = 4000, da_flag, dr_flag,
 enum {nomix_flag = 5000};
 
 //mass ======== Aircraft-specific mass properties
-enum {Weight_flag = 6000, Mass_flag, I_xx_flag, I_yy_flag, I_zz_flag, I_xz_flag};
+enum {Weight_flag = 6000, 
+      Mass_flag, I_xx_flag, I_yy_flag, I_zz_flag, I_xz_flag,
+      Mass_appMass_ratio_flag, I_xx_appMass_ratio_flag, 
+      I_yy_appMass_ratio_flag, I_zz_appMass_ratio_flag, 
+      Mass_appMass_flag,       I_xx_appMass_flag,      
+      I_yy_appMass_flag,       I_zz_appMass_flag};
 
 // engine ===== Propulsion data
 enum {simpleSingle_flag = 7000, c172_flag, cherokee_flag, 
@@ -239,7 +250,13 @@ enum {iceTime_flag = 15000, transientTime_flag, eta_ice_final_flag,
 // record ===== Record desired quantites to file
 enum {Simtime_record = 16000, dt_record, 
 
+      cbar_2U_record, b_2U_record, ch_2U_record,
+
       Weight_record, Mass_record, I_xx_record, I_yy_record, I_zz_record, I_xz_record, 
+      Mass_appMass_ratio_record, I_xx_appMass_ratio_record, 
+      I_yy_appMass_ratio_record, I_zz_appMass_ratio_record, 
+      Mass_appMass_record,       I_xx_appMass_record,      
+      I_yy_appMass_record,       I_zz_appMass_record,
 
       Dx_pilot_record, Dy_pilot_record, Dz_pilot_record, 
       Dx_cg_record, Dy_cg_record, Dz_cg_record,
@@ -438,16 +455,24 @@ struct AIRCRAFT
   /* init ========== Initial values for equations of motion =======*/
 
   map <string,int> init_map;
-#define      init_map            aircraft_->init_map          
+#define      init_map          aircraft_->init_map          
 
   int recordRate;
 #define recordRate             aircraft_->recordRate
   double recordStartTime;
 #define recordStartTime        aircraft_->recordStartTime
+  bool use_V_rel_wind_2U;
+#define use_V_rel_wind_2U      aircraft_->use_V_rel_wind_2U
   bool nondim_rate_V_rel_wind;
 #define nondim_rate_V_rel_wind aircraft_->nondim_rate_V_rel_wind
+  bool use_abs_U_body_2U;
+#define use_abs_U_body_2U      aircraft_->use_abs_U_body_2U
   double dyn_on_speed;
 #define dyn_on_speed           aircraft_->dyn_on_speed
+  double dyn_on_speed_zero;
+#define dyn_on_speed_zero      aircraft_->dyn_on_speed_zero
+  bool use_dyn_on_speed_curve1;
+#define use_dyn_on_speed_curve1 aircraft_->use_dyn_on_speed_curve1
   bool P_body_init_true;
   double P_body_init;
 #define P_body_init_true       aircraft_->P_body_init_true
@@ -638,6 +663,22 @@ struct AIRCRAFT
   double Weight;
 #define Weight  aircraft_->Weight
 
+  double Mass_appMass_ratio;
+#define Mass_appMass_ratio aircraft_->Mass_appMass_ratio
+  double I_xx_appMass_ratio;
+#define I_xx_appMass_ratio aircraft_->I_xx_appMass_ratio
+  double I_yy_appMass_ratio;
+#define I_yy_appMass_ratio aircraft_->I_yy_appMass_ratio
+  double I_zz_appMass_ratio;
+#define I_zz_appMass_ratio aircraft_->I_zz_appMass_ratio
+  double Mass_appMass;
+#define Mass_appMass aircraft_->Mass_appMass
+  double I_xx_appMass;
+#define I_xx_appMass aircraft_->I_xx_appMass
+  double I_yy_appMass;
+#define I_yy_appMass aircraft_->I_yy_appMass
+  double I_zz_appMass;
+#define I_zz_appMass aircraft_->I_zz_appMass
 
   /* Variables (token2) ===========================================*/
   /* engine ======== Propulsion data ==============================*/

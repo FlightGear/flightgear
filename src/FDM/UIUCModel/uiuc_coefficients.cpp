@@ -100,6 +100,7 @@
 void uiuc_coefficients()
 {
   double l_trim, l_defl;
+  double V_rel_wind_dum, U_body_dum;
 
   if (Alpha_init_true && Simtime==0)
     Alpha = Alpha_init;
@@ -109,34 +110,71 @@ void uiuc_coefficients()
 
   // calculate rate derivative nondimensionalization factors
   // check if speed is sufficient to compute dynamic pressure terms
-  if (nondim_rate_V_rel_wind)         // c172_aero uses V_rel_wind
+  if (nondim_rate_V_rel_wind || use_V_rel_wind_2U)         // c172_aero uses V_rel_wind
     {
       if (V_rel_wind > dyn_on_speed)
 	{
 	  cbar_2U = cbar / (2.0 * V_rel_wind);
-	  b_2U = bw / (2.0 * V_rel_wind);
-	  ch_2U = ch / (2.0 * V_rel_wind);
+	  b_2U    = bw /   (2.0 * V_rel_wind);
+	  ch_2U   = ch /   (2.0 * V_rel_wind);
+	}
+      else if (use_dyn_on_speed_curve1)
+  	{
+  	  V_rel_wind_dum = dyn_on_speed_zero + V_rel_wind * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
+  	  cbar_2U        = cbar / (2.0 * V_rel_wind_dum);
+  	  b_2U           = bw /   (2.0 * V_rel_wind_dum);
+  	  ch_2U          = ch /   (2.0 * V_rel_wind_dum);
+  	}
+      else
+	{
+	  cbar_2U = 0.0;
+	  b_2U    = 0.0;
+	  ch_2U   = 0.0;
+	}
+    }
+  else if(use_abs_U_body_2U)      // use absolute(U_body)
+    {
+      if (fabs(U_body) > dyn_on_speed)
+	{
+	  cbar_2U = cbar / (2.0 * fabs(U_body));
+	  b_2U    = bw /   (2.0 * fabs(U_body));
+	  ch_2U   = ch /   (2.0 * fabs(U_body));
+	}
+      else if (use_dyn_on_speed_curve1)
+	{
+	  U_body_dum = dyn_on_speed_zero + fabs(U_body) * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
+	  cbar_2U    = cbar / (2.0 * U_body_dum);
+	  b_2U       = bw /   (2.0 * U_body_dum);
+	  ch_2U      = ch /   (2.0 * U_body_dum);
 	}
       else
 	{
 	  cbar_2U = 0.0;
-	  b_2U = 0.0;
-	  ch_2U = 0.0;
+	  b_2U    = 0.0;
+	  ch_2U   = 0.0;
 	}
     }
-  else      // use U_body which is probably more correct
+  else      // use U_body
     {
       if (U_body > dyn_on_speed)
 	{
 	  cbar_2U = cbar / (2.0 * U_body);
-	  b_2U = bw / (2.0 * U_body);
-	  ch_2U = ch / (2.0 * U_body);
+	  b_2U    = bw /   (2.0 * U_body);
+	  ch_2U   = ch /   (2.0 * U_body);
+	}
+      else if (use_dyn_on_speed_curve1)
+	{
+	  U_body_dum = dyn_on_speed_zero + U_body * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
+	  cbar_2U    = cbar / (2.0 * U_body_dum);
+	  b_2U       = bw /   (2.0 * U_body_dum);
+	  ch_2U      = ch /   (2.0 * U_body_dum);
+	  beta_flow_clean_tail = cbar_2U;
 	}
       else
 	{
 	  cbar_2U = 0.0;
-	  b_2U = 0.0;
-	  ch_2U = 0.0;
+	  b_2U    = 0.0;
+	  ch_2U   = 0.0;
 	}
     }
 

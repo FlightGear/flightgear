@@ -263,7 +263,8 @@ void uiuc_menu( string aircraft_name )
 
 /* set speed at which dynamic pressure terms will be accounted for,
    since if velocity is too small, coefficients will go to infinity */
-  dyn_on_speed = 33;    /* 20 kts, default */
+  dyn_on_speed      = 33;    /* 20 kts, default */
+  dyn_on_speed_zero = 0.5 * dyn_on_speed;    /* only used of use_dyn_on_speed_curve1 is used */
 
 
 
@@ -533,9 +534,19 @@ void uiuc_menu( string aircraft_name )
                   recordStartTime = token_value;
                   break;
                 }
+              case use_V_rel_wind_2U_flag:
+                {
+                  use_V_rel_wind_2U = true;
+                  break;
+                }
               case nondim_rate_V_rel_wind_flag:
                 {
                   nondim_rate_V_rel_wind = true;
+                  break;
+                }
+              case use_abs_U_body_2U_flag:
+                {
+                  use_abs_U_body_2U = true;
                   break;
                 }
               case dyn_on_speed_flag:
@@ -546,6 +557,21 @@ void uiuc_menu( string aircraft_name )
                     uiuc_warnings_errors(1, *command_line);
                   
                   dyn_on_speed = token_value;
+                  break;
+                }
+              case dyn_on_speed_zero_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  dyn_on_speed_zero = token_value;
+                  break;
+                }
+              case use_dyn_on_speed_curve1_flag:
+                {
+                  use_dyn_on_speed_curve1 = true;
                   break;
                 }
 	      case Alpha_flag:
@@ -1029,6 +1055,94 @@ void uiuc_menu( string aircraft_name )
                     uiuc_warnings_errors(1, *command_line);
                   
                   I_xz = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case Mass_appMass_ratio_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  Mass_appMass_ratio = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case I_xx_appMass_ratio_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  I_xx_appMass_ratio = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case I_yy_appMass_ratio_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  I_yy_appMass_ratio = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case I_zz_appMass_ratio_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  I_zz_appMass_ratio = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case Mass_appMass_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  Mass_appMass = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case I_xx_appMass_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  I_xx_appMass = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case I_yy_appMass_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  I_yy_appMass = token_value;
+                  massParts -> storeCommands (*command_line);
+                  break;
+                }
+              case I_zz_appMass_flag:
+                {
+                  if (check_float(linetoken3))
+                    token3 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+                  
+                  I_zz_appMass = token_value;
                   massParts -> storeCommands (*command_line);
                   break;
                 }

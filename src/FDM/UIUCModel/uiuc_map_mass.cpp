@@ -74,6 +74,14 @@ void uiuc_map_mass()
   mass_map["I_yy"]                =      I_yy_flag                  ;
   mass_map["I_zz"]                =      I_zz_flag                  ;
   mass_map["I_xz"]                =      I_xz_flag                  ;
+  mass_map["Mass_appMass_ratio"]  =      Mass_appMass_ratio_flag    ;
+  mass_map["I_xx_appMass_ratio"]  =      I_xx_appMass_ratio_flag    ;
+  mass_map["I_yy_appMass_ratio"]  =      I_yy_appMass_ratio_flag    ;
+  mass_map["I_zz_appMass_ratio"]  =      I_zz_appMass_ratio_flag    ;
+  mass_map["Mass_appMass"]        =      Mass_appMass_flag          ;
+  mass_map["I_xx_appMass"]        =      I_xx_appMass_flag          ;
+  mass_map["I_yy_appMass"]        =      I_yy_appMass_flag          ;
+  mass_map["I_zz_appMass"]        =      I_zz_appMass_flag          ;
 }
 
 // end uiuc_map_mass.cpp
