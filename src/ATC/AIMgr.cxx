@@ -19,12 +19,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-#include <Airports/simple.hxx>
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/bucket/newbucket.hxx>
 
 #include <list>
 
@@ -54,6 +52,10 @@ void FGAIMgr::init() {
 	lon_node = fgGetNode("/position/longitude-deg", true);
 	lat_node = fgGetNode("/position/latitude-deg", true);
 	elev_node = fgGetNode("/position/altitude-ft", true);
+
+	lon = lon_node->getDoubleValue();
+	lat = lat_node->getDoubleValue();
+	elev = elev_node->getDoubleValue();
 	
 	// go through the $FG_ROOT/ATC directory and find all *.taxi files
 	SGPath path(globals->get_fg_root());
