@@ -34,7 +34,8 @@ static char* readfile(const char* file, int* lenOut)
         // etc...)
         SG_LOG(SG_NASAL, SG_ALERT,
                "ERROR in Nasal initialization: " <<
-               "short count returned from fread().  Check your C library!");
+               "short count returned from fread() of " << file <<
+               ".  Check your C library!");
         delete[] buf;
         return 0;
     }
@@ -58,6 +59,20 @@ FGNasalSys::~FGNasalSys()
     // won't be freed).
     _context = 0;
     _globals = naNil();
+}
+
+bool FGNasalSys::parseAndRun(const char* sourceCode)
+{
+    naRef code = parse("FGNasalSys::parseAndRun()", sourceCode,
+                       strlen(sourceCode));
+    if(naIsNil(code))
+        return false;
+
+    naCall(_context, code, naNil(), naNil(), naNil());
+
+    if(!naGetError(_context)) return true;
+    logError();
+    return false;
 }
 
 // Utility.  Sets a named key in a hash by C string, rather than nasal
@@ -176,13 +191,11 @@ static naRef f_fgcommand(naContext c, naRef args)
 {
     naRef cmd = naVec_get(args, 0);
     naRef props = naVec_get(args, 1);
-    if(!naIsString(cmd) || !naIsString(props)) return naNil();
-
-    SGPropertyNode* pnode =
-        globals->get_props()->getNode(naStr_data(props));
-    if(pnode)
-        globals->get_commands()->execute(naStr_data(cmd), pnode);
+    if(!naIsString(cmd) || !naIsGhost(props)) return naNil();
+    SGPropertyNode_ptr* node = (SGPropertyNode_ptr*)naGhost_ptr(props);
+    globals->get_commands()->execute(naStr_data(cmd), *node);
     return naNil();
+
 }
 
 // settimer(func, dt, simtime) extension function.  Falls through to
@@ -194,18 +207,34 @@ static naRef f_settimer(naContext c, naRef args)
     return naNil();
 }
 
+// Returns a ghost handle to the argument to the currently executing
+// command
+static naRef f_cmdarg(naContext c, naRef args)
+{
+    FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
+    return nasal->cmdArgGhost();
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
     { "setprop",   f_setprop },
     { "print",     f_print },
-    { "fgcommand", f_fgcommand },
+    { "_fgcommand", f_fgcommand },
     { "settimer",  f_settimer },
+    { "_cmdarg",  f_cmdarg },
     { 0, 0 }
 };
 
+naRef FGNasalSys::cmdArgGhost()
+{
+    return propNodeGhost(_cmdArg);
+}
+
 void FGNasalSys::init()
 {
+    int i;
+
     _context = naNewContext();
 
     // Start with globals.  Add it to itself as a recursive
@@ -220,9 +249,12 @@ void FGNasalSys::init()
     hashset(_globals, "math", naMathLib(_context));
 
     // Add our custom extension functions:
-    for(int i=0; funcs[i].name; i++)
+    for(i=0; funcs[i].name; i++)
         hashset(_globals, funcs[i].name,
                 naNewFunc(_context, naNewCCode(_context, funcs[i].func)));
+
+    // And our SGPropertyNode wrapper
+    hashset(_globals, "props", genPropsModule());
 
     // Make a "__timers" hash to hold the settimer() handlers (to
     // protect them from begin garbage-collected).
@@ -240,6 +272,42 @@ void FGNasalSys::init()
         SGPath file(dent->d_name);
         if(file.extension() != "nas") continue;
         readScriptFile(fullpath, file.base().c_str());
+    }
+
+    // Pull scripts out of the property tree, too
+    loadPropertyScripts();
+}
+
+// Loads the scripts found under /nasal in the global tree
+void FGNasalSys::loadPropertyScripts()
+{
+    SGPropertyNode* nasal = globals->get_props()->getNode("nasal");
+    if(!nasal) return;
+
+    for(int i=0; i<nasal->nChildren(); i++) {
+        SGPropertyNode* n = nasal->getChild(i);
+
+        const char* module = n->getName();
+        if(n->hasChild("module"))
+            module = n->getStringValue("module");
+
+        const char* file = n->getStringValue("file");
+        if(!n->hasChild("file")) file = 0; // Hrm...
+        if(file) {
+            SGPath p(globals->get_fg_root());
+            p.append(file);
+            readScriptFile(p, module);
+        }
+        
+        const char* src = n->getStringValue("script");
+        if(!n->hasChild("script")) src = 0; // Hrm...
+        if(src)
+            initModule(module, n->getPath(), src, strlen(src));
+
+        if(!file && !src)
+            SG_LOG(SG_NASAL, SG_ALERT, "Nasal error: " <<
+                   "no <file> or <script> defined in " <<
+                   "/nasal/" << module);
     }
 }
 
@@ -260,27 +328,47 @@ void FGNasalSys::logError()
 // Reads a script file, executes it, and places the resulting
 // namespace into the global namespace under the specified module
 // name.
-void FGNasalSys::readScriptFile(SGPath file, const char* lib)
+void FGNasalSys::readScriptFile(SGPath file, const char* module)
 {
     int len = 0;
     char* buf = readfile(file.c_str(), &len);
-    if(!buf) return;
+    if(!buf) {
+        SG_LOG(SG_NASAL, SG_ALERT,
+               "Nasal error: could not read script file " << file.c_str()
+               << " into module " << module);
+        return;
+    }
 
-    // Parse and run.  Save the local variables namespace, as it will
-    // become a sub-object of globals.
-    naRef code = parse(file.c_str(), buf, len);
+    initModule(module, file.c_str(), buf, len);
     delete[] buf;
+}
+
+// Parse and run.  Save the local variables namespace, as it will
+// become a sub-object of globals.
+void FGNasalSys::initModule(const char* moduleName, const char* fileName,
+                            const char* src, int len)
+{
+    if(len == 0) len = strlen(src);
+
+    naRef code = parse(fileName, src, len);
     if(naIsNil(code))
         return;
 
-    naRef locals = naNewHash(_context);
+    // See if we already have a module hash to use.  This allows the
+    // user to, for example, add functions to the built-in math
+    // module.  Make a new one if necessary.
+    naRef locals;
+    naRef modname = naNewString(_context);
+    naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
+    if(!naHash_get(_globals, modname, &locals))
+        locals = naNewHash(_context);
+
     naCall(_context, code, naNil(), naNil(), locals);
     if(naGetError(_context)) {
         logError();
         return;
     }
-
-    hashset(_globals, lib, locals);
+    hashset(_globals, moduleName, locals);
 }
 
 naRef FGNasalSys::parse(const char* filename, const char* buf, int len)
@@ -310,23 +398,13 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
     naRef code = parse("<command>", nasal, strlen(nasal));
     if(naIsNil(code)) return false;
     
-    // FIXME: Cache the just-created code object somewhere, but watch
-    // for changes to the source in the property tree.  Maybe store an
-    // integer index into a Nasal vector in the original property
-    // location?
-
-    // Extract the "value" or "offset" arguments if present
-    naRef locals = naNil();
-    if(arg->hasValue("value")) {
-        locals = naNewHash(_context);
-        hashset(locals, "value", naNum(arg->getDoubleValue("value")));
-    } else if(arg->hasValue("offset")) {
-        locals = naNewHash(_context);
-        hashset(locals, "offset", naNum(arg->getDoubleValue("offset")));
-    }
+    // Cache the command argument for inspection via cmdarg().  For
+    // performance reasons, we won't bother with it if the invoked
+    // code doesn't need it.
+    _cmdArg = (SGPropertyNode*)arg;
 
     // Call it!
-    naRef result = naCall(_context, code, naNil(), naNil(), locals);
+    naRef result = naCall(_context, code, naNil(), naNil(), naNil());
     if(!naGetError(_context)) return true;
     logError();
     return false;

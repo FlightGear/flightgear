@@ -15,9 +15,18 @@ public:
 
     virtual bool handleCommand(const SGPropertyNode* arg);
 
+    // Simple hook to run arbitrary source code.  Returns a bool to
+    // indicate successful execution.  Does *not* return any Nasal
+    // values, because handling garbage-collected objects from C space
+    // is deep voodoo and violates the "simple hook" idea.
+    bool parseAndRun(const char* sourceCode);
+
     // Implementation of the settimer extension function
     void setTimer(naRef args);
 
+    // Returns a ghost wrapper for the current _cmdArg
+    naRef cmdArgGhost();
+    
 private:
     //
     // FGTimer subclass for handling Nasal timer callbacks.
@@ -31,14 +40,21 @@ private:
         FGNasalSys* nasal;
     };
 
+    void loadPropertyScripts();
+    void initModule(const char* moduleName, const char* fileName,
+                    const char* src, int len);
     void readScriptFile(SGPath file, const char* lib);
     void hashset(naRef hash, const char* key, naRef val);
     void logError();
     naRef parse(const char* filename, const char* buf, int len);
+    naRef genPropsModule();
+    naRef propNodeGhost(SGPropertyNode* handle);
 
     naContext _context;
     naRef _globals;
     naRef _timerHash;
+
+    SGPropertyNode* _cmdArg;
 
     int _nextTimerHashKey;
 
