@@ -38,6 +38,7 @@
 // #endif
 
 #include <simgear/compiler.h>
+#include <simgear/io/sg_binobj.hxx>
 
 #include STL_STRING
 #include <map>			// STL
@@ -71,25 +72,6 @@ typedef int_list::const_iterator int_point_list_iterator;
 
 static double normals[FG_MAX_NODES][3];
 static double tex_coords[FG_MAX_NODES*3][3];
-
-
-#if 0
-// given three points defining a triangle, calculate the normal
-static void calc_normal(Point3D p1, Point3D p2, 
-			Point3D p3, sgVec3 normal)
-{
-    sgVec3 v1, v2;
-
-    v1[0] = p2[0] - p1[0]; v1[1] = p2[1] - p1[1]; v1[2] = p2[2] - p1[2];
-    v2[0] = p3[0] - p1[0]; v2[1] = p3[1] - p1[1]; v2[2] = p3[2] - p1[2];
-
-    sgVectorProductVec3( normal, v1, v2 );
-    sgNormalizeVec3( normal );
-
-    // fgPrintf( FG_TERRAIN, FG_DEBUG, "  Normal = %.2f %.2f %.2f\n", 
-    //           normal[0], normal[1], normal[2]);
-}
-#endif
 
 
 #define FG_TEX_CONSTANT 69.0
@@ -294,24 +276,6 @@ static float fgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
 }
 
 
-#if 0
-// this works too, but Norman claims fgTriArea() is more efficient :-)
-static double triangle_area_3d( float *p1, float *p2, float *p3 ) {
-    // Heron's formula: A^2 = s(s-a)(s-b)(s-c) where A is the area,
-    // a,b,c are the side lengths, s=(a+b+c)/2. In R^3 you can compute
-    // the lengths of the sides with the distance formula, of course.
-
-    double a = sgDistanceVec3( p1, p2 );
-    double b = sgDistanceVec3( p2, p3 );
-    double c = sgDistanceVec3( p3, p1 );
-
-    double s = (a + b + c) / 2.0;
-
-    return sqrt( s * ( s - a ) * ( s - b ) * ( s - c ) );
-}
-#endif
-
-
 static void random_pt_inside_tri( float *res,
 				  float *n1, float *n2, float *n3 )
 {
@@ -376,9 +340,9 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 }
 
 
-// Load a .obj file
-ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
-		      ssgVertexArray *lights, const bool is_base)
+// Load an Ascii obj file
+static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
+				  ssgVertexArray *lights, const bool is_base)
 {
     FGNewMat *newmat = NULL;
     string material;
@@ -419,7 +383,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
 	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
 	FG_LOG( FG_TERRAIN, FG_ALERT, "default to ocean tile: " << path );
 
-	return fgGenTile( path, t );
+	return NULL;
     }
 
     shading = globals->get_options()->get_shading();
@@ -802,41 +766,6 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
 			}
 			gen_random_surface_points(leaf, lights, coverage);
 		    }
-// 		    // generate lighting
-// 		    if ( material == "Urban" || material == "BuiltUpCover" ) {
-// 			gen_random_surface_points( leaf, lights, 100000.0 );
-// 		    } else if ( material == "EvergreenBroadCover" ||
-// 				material == "Default" || material == "Island" ||
-// 				material == "SomeSort" ||
-// 				material == "DeciduousBroadCover" ||
-// 				material == "EvergreenNeedleCover" ||
-// 				material == "DeciduousNeedleCover" ) {
-// 			gen_random_surface_points( leaf, lights, 10000000.0 );
-// 		    } else if ( material == "Road") {
-// 		        gen_random_surface_points( leaf, lights,  10000.0);
-// 		    } else if ( material == "MixedForestCover" ) {
-// 			gen_random_surface_points( leaf, lights, 5000000.0 );
-// 		    } else if ( material == "WoodedTundraCover" ||
-// 				material == "BareTundraCover" ||
-// 				material == "HerbTundraCover" ||
-// 				material == "MixedTundraCover" ||
-// 				material == "Marsh" ||
-// 				material == "HerbWetlandCover" ||
-// 				material == "WoodedWetlandCover" ) {
-// 			gen_random_surface_points( leaf, lights, 20000000.0 );
-// 		    } else if ( material == "ShrubCover" ||
-// 				material == "ShrubGrassCover" ) {
-// 			gen_random_surface_points( leaf, lights, 4000000.0 );
-// 		    } else if ( material == "GrassCover" ||
-// 				material == "SavannaCover" ) {
-// 			gen_random_surface_points( leaf, lights, 4000000.0 );
-// 		    } else if ( material == "MixedCropPastureCover" ||
-// 				material == "IrrCropPastureCover" ||
-// 				material == "DryCropPastureCover" ||
-// 				material == "CropGrassCover" ||
-// 				material == "CropWoodCover" ) {
-// 			gen_random_surface_points( leaf, lights, 2000000.0 );
-// 		    }
 		}
 	    } else {
 		FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
@@ -866,7 +795,209 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
     // if ( globals->get_options()->get_clouds() ) {
     //  	fgGenCloudTile(path, t, tile);
     // }
+
     return tile;
 }
 
 
+static ssgLeaf *gen_leaf( const string& path,
+			  const GLenum ty, const string& material,
+			  const point_list& nodes, const point_list& normals,
+			  const point_list& texcoords,
+			  const int_list& node_index,
+			  const int_list& tex_index,
+			  const bool calc_lights, ssgVertexArray *lights )
+{
+    double tex_width = 1000.0, tex_height = 1000.0;
+    ssgSimpleState *state = NULL;
+    float coverage = -1;
+
+    int size = node_index.size();
+    ssgVertexArray   *vl = new ssgVertexArray( size );
+    ssgNormalArray   *nl = new ssgNormalArray( size );
+    ssgTexCoordArray *tl = new ssgTexCoordArray( size );
+    ssgColourArray   *cl = new ssgColourArray( 1 );
+
+    sgVec4 color;
+    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+    cl->add( color );
+
+    sgVec2 tmp2;
+    sgVec3 tmp3;
+    int i;
+    for ( i = 0; i < size; ++i ) {
+	Point3D node = nodes[ node_index[i] ];
+	sgSetVec3( tmp3, node[0], node[1], node[2] );
+	vl -> add( tmp3 );
+
+	Point3D normal = normals[ node_index[i] ];
+	sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
+	nl -> add( tmp3 );
+
+	Point3D texcoord = texcoords[ tex_index[i] ];
+	sgSetVec2( tmp2, texcoord[0], texcoord[1] );
+	tl -> add( tmp2 );
+    }
+
+    cout << "before leaf create" << endl;
+    ssgLeaf *leaf = new ssgVtxTable ( ty, vl, nl, tl, cl );
+    cout << "after leaf create" << endl;
+
+    // lookup the state record
+    cout << "looking up material = " << endl;
+    cout << material << endl;
+    cout << "'" << endl;
+
+    FGNewMat *newmat = material_lib.find( material );
+    if ( newmat == NULL ) {
+	// see if this is an on the fly texture
+	string file = path;
+	int pos = file.rfind( "/" );
+	file = file.substr( 0, pos );
+	cout << "current file = " << file << endl;
+	file += "/";
+	file += material;
+	cout << "current file = " << file << endl;
+	if ( ! material_lib.add_item( file ) ) {
+	    FG_LOG( FG_TERRAIN, FG_ALERT, 
+		    "Ack! unknown usemtl name = " << material 
+		    << " in " << path );
+	} else {
+	    // locate our newly created material
+	    newmat = material_lib.find( material );
+	    if ( newmat == NULL ) {
+		FG_LOG( FG_TERRAIN, FG_ALERT, 
+			"Ack! bad on the fly materia create = "
+			<< material << " in " << path );
+	    }
+	}
+    }
+
+    if ( newmat != NULL ) {
+	// set the texture width and height values for this
+	// material
+	tex_width = newmat->get_xsize();
+	tex_height = newmat->get_ysize();
+	state = newmat->get_state();
+	coverage = newmat->get_light_coverage();
+	// cout << "(w) = " << tex_width << " (h) = " 
+	//      << tex_width << endl;
+    } else {
+	coverage = -1;
+    }
+
+    leaf->setState( state );
+
+    if ( calc_lights ) {
+	if ( coverage > 0.0 ) {
+	    if ( coverage < 10000.0 ) {
+		FG_LOG(FG_INPUT, FG_ALERT, "Light coverage is "
+		       << coverage << ", pushing up to 10000");
+		coverage = 10000;
+	    }
+	    gen_random_surface_points(leaf, lights, coverage);
+	}
+    }
+
+    return leaf;
+}
+
+
+// Load an Binary obj file
+static ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
+				ssgVertexArray *lights, const bool is_base)
+{
+    int i;
+
+    Point3D gbs_center;
+    float gbs_radius;
+    
+    point_list offset_nodes; offset_nodes.clear();
+    point_list normals;      normals.clear();
+    point_list texcoords;    texcoords.clear();
+
+    // allocate and initialize triangle group structures
+    group_list tris_v;   group_list tris_tc;   string_list tri_materials;
+    tris_v.clear();      tris_tc.clear();      tri_materials.clear();
+
+    group_list strips_v; group_list strips_tc; string_list strip_materials;
+    strips_v.clear();    strips_tc.clear();    strip_materials.clear();
+
+    group_list fans_v;   group_list fans_tc;   string_list fan_materials;
+    fans_v.clear();      fans_tc.clear();      fan_materials.clear();
+
+    bool result = sgReadBinObj( path, gbs_center, &gbs_radius, 
+				offset_nodes, normals, texcoords, 
+				tris_v, tris_tc, tri_materials,
+				strips_v, strips_tc, strip_materials, 
+				fans_v, fans_tc, fan_materials );
+
+    if ( !result ) {
+	return NULL;
+    }
+
+    cout << "fans size = " << fans_v.size() << " fan_mats size = " <<
+	fan_materials.size() << endl;
+
+    ssgBranch *object = new ssgBranch();
+    object->setName( (char *)path.c_str() );
+   
+    if ( is_base && t != NULL ) {
+	// reference point (center offset/bounding sphere)
+	t->center = gbs_center;
+	t->bounding_radius = gbs_radius;
+    }
+
+    // generate triangles
+    for ( i = 0; i < (int)tris_v.size(); ++i ) {
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, tri_materials[i],
+				  offset_nodes, normals, texcoords,
+				  tris_v[i], tris_tc[i],
+				  is_base, lights );
+
+	object->addKid( leaf );
+    }
+
+    // generate strips
+    for ( i = 0; i < (int)strips_v.size(); ++i ) {
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, strip_materials[i],
+				  offset_nodes, normals, texcoords,
+				  strips_v[i], strips_tc[i],
+				  is_base, lights );
+
+	object->addKid( leaf );
+    }
+
+    // generate fans
+    for ( i = 0; i < (int)fans_v.size(); ++i ) {
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, fan_materials[i],
+				  offset_nodes, normals, texcoords,
+				  fans_v[i], fans_tc[i],
+				  is_base, lights );
+
+	object->addKid( leaf );
+    }
+
+    return object;
+}
+
+
+// Load an obj file
+ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
+		      ssgVertexArray *lights, const bool is_base)
+{
+    ssgBranch *result;
+
+    // try loading binary format
+    result = fgBinObjLoad( path, t, lights, is_base );
+    if ( result == NULL ) {
+	// next try the older ascii format
+	result = fgAsciiObjLoad( path, t, lights, is_base );
+	if ( result == NULL ) {
+	    // default to an ocean tile
+	    result = fgGenTile( path, t );
+	}
+    }
+
+    return result;
+}
