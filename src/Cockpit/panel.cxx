@@ -54,14 +54,6 @@
 // my hardware/driver requires many more.
 #define POFF_UNITS 40
 
-#if defined( NONE ) && defined( _MSC_VER )
-#  pragma message( "A sloppy coder has defined NONE as a macro!!!" )
-#  undef NONE
-#elif defined( NONE )
-#  pragma warn A sloppy coder has defined NONE as a macro!!!
-#  undef NONE
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////
 // Local functions.
