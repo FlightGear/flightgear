@@ -42,6 +42,7 @@ struct atcMessage {
     int start_count;	// value of counter at which display should start
     int stop_count;	// value of counter at which display should stop
     int id;
+	double dsp_offset;
 };
 
 // ASSUMPTION - with two radios the list won't be long so we don't need to map the id's
@@ -54,8 +55,8 @@ class FGATCDisplay : public FGSubsystem
 private:
     bool rep_msg;		// Flag to indicate there is a repeating transmission to display
     bool change_msg_flag;	// Flag to indicate that the repeating message has changed
-    float dsp_offset1;		// Used to set the correct position of scrolling display
-    float dsp_offset2;	
+    double dsp_offset1;		// Used to set the correct position of scrolling display
+    double dsp_offset2;	
     string rep_msg_str;		// The repeating transmission to play
     atcMessageList msgList;
     atcMessageListIterator msgList_itr;
