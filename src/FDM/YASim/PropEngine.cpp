@@ -125,8 +125,11 @@ void PropEngine::stabilize()
 	_eng->calc(_pressure, _temp, _omega);
         _eng->stabilize();
 
-        // Compute torque as seen by the engine's end of the
-        // gearbox.
+        // Compute torque as seen by the engine's end of the gearbox.
+        // The propeller will be moving more slowly (for gear ratios
+        // less than one), so it's torque will be higher than the
+        // engine's, so multiply by _gearRatio to get the engine-side
+        // value.
         ptau *= _gearRatio;
         float etau = _eng->getTorque();
 	float tdiff = etau - ptau;
@@ -173,6 +176,7 @@ void PropEngine::integrate(float dt)
     _eng->setFuelState(_fuel);
     
     _prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &propTorque);
+    propTorque *= _gearRatio;
     _eng->calc(_pressure, _temp, _omega);
     _eng->integrate(dt);
     engTorque = _eng->getTorque();
