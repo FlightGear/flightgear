@@ -20,7 +20,6 @@
 
 
 #include "FGMagRibbon.hxx"
-#include "../steam.hxx"
 
 
 FGMagRibbon::FGMagRibbon (int w, int h)
@@ -28,12 +27,15 @@ FGMagRibbon::FGMagRibbon (int w, int h)
 {
   FGCroppedTexture texture("Aircraft/Instruments/Textures/compass-ribbon.rgb");
   setTexture(texture);
+  _magcompass_node =
+      fgGetNode("/instrumentation/magnetic-compass/indicated-heading-deg",
+                true);
 }
 
 void
 FGMagRibbon::draw ()
 {
-  double heading = globals->get_steam()->get_MH_deg();
+  double heading = _magcompass_node->getDoubleValue();
   double xoffset, yoffset;
 
   while (heading >= 360.0) {

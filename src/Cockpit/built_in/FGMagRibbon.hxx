@@ -21,6 +21,7 @@
 #ifndef __FG_MAG_RIBBON_HXX
 #define __FG_MAG_RIBBON_HXX
 
+#include <Main/fg_props.hxx>
 #include "../panel.hxx"
 
 ////////////////////////////////////////////////////////////////////////
@@ -30,10 +31,13 @@
 class FGMagRibbon : public FGTexturedLayer
 {
 public:
-  FGMagRibbon (int w, int h);
-  virtual ~FGMagRibbon () {}
+    FGMagRibbon (int w, int h);
+    virtual ~FGMagRibbon () {}
 
-  virtual void draw ();
+    virtual void draw ();
+
+private:
+    SGPropertyNode_ptr _magcompass_node;
 };
 
 #endif // __FG_MAG_RIBBON_HXX
