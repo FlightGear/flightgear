@@ -195,6 +195,7 @@ static naRef f_print(naContext c, naRef args)
 #define BUFLEN 1024
     char buf[BUFLEN + 1];
     buf[BUFLEN] = 0; // extra nul to handle strncpy brain damage
+    buf[0] = 0; // Zero-length in case there are no arguments
     char* p = buf;
     int buflen = BUFLEN;
     int n = naVec_size(args);
