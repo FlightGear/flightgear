@@ -979,6 +979,10 @@ fgInitNav ()
 bool fgInitPosition() {
     bool set_pos = false;
 
+    // Default to starting on the ground unless one of the other
+    // conditions implies an in-air start.
+    fgSetBool("/sim/presets/onground", true);
+
     // If glideslope is specified, then calculate offset-distance or
     // altitude relative to glide slope if either of those was not
     // specified.
