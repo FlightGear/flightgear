@@ -47,16 +47,13 @@ my @HAS_DME = (
 # Make a frequency from a DME channel
 sub make_freq {
   my ($type, $channel) = (@_);
-  my $freq;
+  my $offset = 0;
+  $offset = 0.05 if ($channel =~ /Y$/);
   if ($channel < 67) {
-    $freq = 108 + (($channel - 17)/10.0);
+    return 108 + (($channel - 17)/10.0) + $offset;
   } else {
-    $freq = 112 + (($channel - 67)/10.0);
+    return 112 + (($channel - 67)/10.0) + $offset;
   }
-  if ($type == 9) {
-    $freq += 0.05;
-  }
-  return $freq;
 }
 
 # Make a range based on navaid type and purpose
@@ -126,7 +123,7 @@ while (<>)
   my $elev = $F[23];
   my $freq = $F[8]/1000;
   if ($type == 3 || $type == 9) {
-    $freq = make_freq($type, 0 + $F[10]);
+    $freq = make_freq($type, $F[10]);
   }
   my $range = 0 + $F[14];
   if ($range == 0) {
