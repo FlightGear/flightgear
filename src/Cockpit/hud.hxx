@@ -65,7 +65,6 @@
 
 SG_USING_STD(deque);
 SG_USING_STD(vector);
-SG_USING_STD(for_each);
 SG_USING_NAMESPACE(std);
 
 
