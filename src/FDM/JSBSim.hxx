@@ -77,17 +77,6 @@ CLASS DECLARATION
 
 class FGJSBsim: public FGInterface {
 
-#if 0
-    // The aircraft for this instance
-    FGFDMExec *fdmex;
-    FGInitialCondition *fgic;
-    bool needTrim;
-    
-    bool trimmed;
-    float trim_elev;
-    float trim_throttle;
-#endif
-
 public:
     /// Constructor
     FGJSBsim::FGJSBsim(void);

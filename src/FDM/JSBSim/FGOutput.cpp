@@ -338,6 +338,10 @@ void FGOutput::DelimitedOutput(string fname)
       datafile << ", ";
       datafile << Aircraft->GetGroundReactionStrings();
     }
+    if (SubSystems & FGAircraft::ssFCS) {
+      datafile << ", ";
+      datafile << FCS->GetComponentStrings();
+    }
     datafile << endl;
     sFirstPass = false;
   }
@@ -405,6 +409,10 @@ void FGOutput::DelimitedOutput(string fname)
   if (SubSystems & FGAircraft::ssGroundReactions) {
     datafile << ", ";
     datafile << Aircraft->GetGroundReactionValues();
+  }
+  if (SubSystems & FGAircraft::ssFCS) {
+    datafile << ", ";
+    datafile << FCS->GetComponentValues();
   }
   datafile << endl;
   datafile.flush();

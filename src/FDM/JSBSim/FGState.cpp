@@ -260,7 +260,7 @@ bool FGState::Reset(string path, string acname, string fname) {
   float phi, tht, psi;
   float latitude, longitude, h;
 
-  resetDef = path + "/" + acname + "/" + fname;
+  resetDef = path + "/" + acname + "/" + fname + ".xml";
 
   ifstream resetfile(resetDef.c_str());
 

@@ -178,8 +178,8 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.19  2000/11/03 22:02:48  curt
-// Sync with current JSBSim devel code.
+// Revision 1.20  2000/11/14 19:32:03  curt
+// Nov. 14, 2000 JSBSim updates
 //
 // Revision 1.7  2000/10/13 19:21:02  jsb
 // ** JSB ** Added version identifiers for all files

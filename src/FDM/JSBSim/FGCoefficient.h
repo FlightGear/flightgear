@@ -111,6 +111,7 @@ class FGCoefficient
   int rows, columns;
   Type type;
   float SD; // Actual stability derivative (or other coefficient) value
+  float gain,bias;
 
   FGFDMExec*      FDMExec;
   FGState*        State;
@@ -138,6 +139,12 @@ public:
   inline float GetSD(void) {return SD;}
   inline MultVec Getmultipliers(void) {return multipliers;}
   void DumpSD(void);
+  
+  inline float GetGain(void) { return gain; }
+  inline float GetBias(void) { return bias; }
+  inline void SetGain(float tt) { gain = tt; }
+  inline void SetBias(float tt) { bias = tt; }
+  inline void ResetGB(void) { gain = 1.0; bias = 0.0; }
 
 };
 

@@ -112,6 +112,7 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       AC_cfg->ResetLineIndexToZero();
       lookup = new float[2];
       *AC_cfg >> lookup[0] >> lookup[1];
+      cout << "        " << lookup[0] << "  " << lookup[1] << endl;
       Schedule.push_back(lookup);
     }
   }
@@ -140,8 +141,8 @@ bool FGGain::Run(void )
     float lowVal = Schedule[0][0], hiVal = Schedule[last][0];
     float factor = 1.0;
 
-    if (LookupVal <= lowVal) Output = Gain * Schedule[0][1];
-    else if (LookupVal >= hiVal) Output = Gain * Schedule[last][1];
+    if (LookupVal <= lowVal) Output = Gain * Schedule[0][1] * Input;
+    else if (LookupVal >= hiVal) Output = Gain * Schedule[last][1] * Input;
     else {
       for (unsigned int ctr = 1; ctr < last; ctr++) {
         if (LookupVal < Schedule[ctr][0]) {

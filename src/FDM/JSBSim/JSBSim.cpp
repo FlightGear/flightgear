@@ -180,15 +180,15 @@ int main(int argc, char** argv)
     if (FDMExec->GetState()->Getsim_time() >= 1.00 &&
         FDMExec->GetState()->Getsim_time() < 2.0)
     {
-      cmd = -(FDMExec->GetState()->Getsim_time() - 1.00)/2.0;
+      cmd = -(FDMExec->GetState()->Getsim_time() - 1.00)/4.0;
     } else if (FDMExec->GetState()->Getsim_time() >= 2.00 &&
         FDMExec->GetState()->Getsim_time() < 6.0)
     {
-      cmd = -1.00/2.0;
+      cmd = -1.00/4.0;
     } else if (FDMExec->GetState()->Getsim_time() >= 6.00 &&
         FDMExec->GetState()->Getsim_time() < 7.0)
     {
-      cmd = -(7.0 - FDMExec->GetState()->Getsim_time())/2.0;
+      cmd = -(7.0 - FDMExec->GetState()->Getsim_time())/4.0;
     } else {
       cmd = 0.00;
     }
