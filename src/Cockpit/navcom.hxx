@@ -88,7 +88,12 @@ class FGNavCom : public SGSubsystem
     bool nav_loc;
     double nav_freq;
     double nav_alt_freq;
-    double nav_radial;
+    double nav_heading;         // true heading to nav station
+    double nav_radial;          // current radial we are on (taking
+                                // into consideration the vor station
+                                // alignment which likely doesn't
+                                // match the magnetic alignment
+                                // exactly.)
     double nav_sel_radial;
     double nav_target_radial;
     double nav_loclon;
@@ -212,6 +217,7 @@ public:
     inline double get_nav_gs_dist() const { return nav_gs_dist; }
     inline double get_nav_gs_dist_signed() const { return nav_gs_dist_signed; }
     inline double get_nav_elev() const { return nav_elev; }
+    double get_nav_heading() const;
     double get_nav_radial() const;
     double get_nav_reciprocal_radial() const;
     inline double get_nav_target_gs() const { return nav_target_gs; }

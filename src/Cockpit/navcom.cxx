@@ -58,6 +58,8 @@ FGNavCom::FGNavCom() :
     comm_vol_btn(0.0),
     nav_freq(0.0),
     nav_alt_freq(0.0),
+    nav_heading(0.0),
+    nav_radial(0.0),
     nav_target_radial(0.0),
     nav_vol_btn(0.0),
     nav_ident_btn(true)
@@ -178,6 +180,9 @@ FGNavCom::bind ()
     fgTie( propname, this,
            &FGNavCom::get_audio_btn, &FGNavCom::set_audio_btn );
     fgSetArchivable( propname );
+
+    snprintf(propname, 256, "/radios/nav[%d]/heading-deg", index);
+    fgTie( propname,  this, &FGNavCom::get_nav_heading );
 
     snprintf(propname, 256, "/radios/nav[%d]/radials/actual-deg", index);
     fgTie( propname,  this, &FGNavCom::get_nav_radial );
@@ -388,7 +393,7 @@ FGNavCom::update(double dt)
                             lat * SGD_RADIANS_TO_DEGREES,
                             lon * SGD_RADIANS_TO_DEGREES, 
 			    nav_loclat, nav_loclon,
-			    &az1, &az2, &s );
+			    &nav_heading, &az2, &s );
 	// cout << "az1 = " << az1 << " magvar = " << nav_magvar << endl;
 	nav_radial = az2 - nav_twist;
 	// cout << " heading = " << nav_heading
@@ -724,6 +729,16 @@ FGNavCom::get_nav_from_flag () const
     } else {
         return false;
     }
+}
+
+
+/**
+ * Return the true heading to station
+ */
+double
+FGNavCom::get_nav_heading () const
+{
+    return nav_heading;
 }
 
 
