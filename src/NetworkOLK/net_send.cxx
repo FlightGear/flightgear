@@ -52,13 +52,21 @@ struct sockaddr_in address;
 struct sockaddr_in my_address;
 int result;
 
-#if defined( __CYGWIN__ )
+//#if defined( __CYGWIN__ )
 #include <errno.h>
-#else
-extern int errno;
-#endif
+//const char *const *sys_errlist = _sys_errlist;
+//#else
+//extern int errno;
+//extern const char *const sys_errlist[];
+//#endif
 
-extern const char *const sys_errlist[];
+//#if defined( __CYGWIN__ )
+//#include <errno.h>
+//#else
+//extern int errno;
+//#endif
+
+//extern const char *const sys_errlist[];
 
 int current_port  = 10000; 
 u_short base_port = 10000;
@@ -323,7 +331,9 @@ void fgd_send_com( char *FGD_com, char *FGFS_host) {
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock == -1)
      {
-	fprintf(stderr, "Error assigning master socket: %s\n",sys_errlist[errno]);
+//	fprintf(stderr, "Error assigning master socket: %s\n",sys_errlist[errno]);
+		 fprintf(stderr, "Error assigning master socket: %s\n",
+				 strerror(errno));
         /* must check how severe this really is */
 	// exit(-1);
      } 
