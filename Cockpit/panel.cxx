@@ -210,7 +210,7 @@ static void ImageGetRow( Image *image, unsigned char *buf, int y, int z)
     }
 }
 
-static void ImageGetRawData( Image *image, char *data)
+static void ImageGetRawData( Image *image, unsigned char *data)
 {
   int i, j, k;
   int remain;
@@ -416,10 +416,14 @@ void fgPanelUpdate ( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/07/13 21:00:52  curt
-/* Integrated Charlies latest HUD updates.
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.4  1998/07/24 21:37:00  curt
+/* Ran dos2unix to get rid of extraneous ^M's.  Tweaked parameter in
+/* ImageGetRawData() to match usage.
 /*
+ * Revision 1.3  1998/07/13 21:00:52  curt
+ * Integrated Charlies latest HUD updates.
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.2  1998/07/03 11:55:37  curt
  * A few small rearrangements and tweaks.
  *

@@ -53,8 +53,8 @@
 #include <Flight/flight.h>
 #include <Controls/controls.h>
 
+#include <deque>        // STL double ended queue
 
-#include <deque>       // STL
 #ifdef NEEDNAMESPACESTD
 using namespace std;
 #endif
@@ -523,9 +523,13 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.10  1998/07/13 21:28:02  curt
-/* Converted the aoa scale to a radio altimeter.
+/* Revision 1.11  1998/07/24 21:36:55  curt
+/* Ran dos2unix to get rid of extraneous ^M's.  Tweaked parameter in
+/* ImageGetRawData() to match usage.
 /*
+ * Revision 1.10  1998/07/13 21:28:02  curt
+ * Converted the aoa scale to a radio altimeter.
+ *
  * Revision 1.9  1998/07/13 21:00:48  curt
  * Integrated Charlies latest HUD updates.
  * Wrote access functions for current fgOPTIONS.
