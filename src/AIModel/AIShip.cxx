@@ -47,12 +47,13 @@ bool FGAIShip::init() {
 void FGAIShip::bind() {
     FGAIBase::bind();
 
-    props->tie("surface-positions/rudder-pos-norm",
+    props->tie("surface-positions/rudder-pos-deg",
                 SGRawValuePointer<double>(&rudder));
 }
 
 void FGAIShip::unbind() {
     FGAIBase::unbind();
+    props->untie("surface-positions/rudder-pos-deg");
 }
 
 void FGAIShip::update(double dt) {
@@ -68,8 +69,8 @@ void FGAIShip::Run(double dt) {
 
    if (fp) ProcessFlightPlan(dt);
 
-   double turn_radius_ft;
-   double turn_circum_ft;
+   double sp_turn_radius_ft;
+   double rd_turn_radius_ft;
    double speed_north_deg_sec;
    double speed_east_deg_sec;
    double dist_covered_ft;
@@ -92,16 +93,41 @@ void FGAIShip::Run(double dt) {
    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
    pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
 
+   
    // adjust heading based on current rudder angle
-   if (rudder != 0.0) {
-     turn_radius_ft = 0.088362 * speed * speed
+   if (rudder != 0.0)  {
+   /*  rd_turn_radius_ft = 0.088362 * speed * speed
                        / tan( fabs(rudder) / SG_RADIANS_TO_DEGREES );
-     turn_circum_ft = SGD_2PI * turn_radius_ft;
+     turn_circum_ft = SGD_2PI * rd_turn_radius_ft;
      dist_covered_ft = speed * 1.686 * dt; 
-     alpha = dist_covered_ft / turn_circum_ft * 360.0;
+     alpha = dist_covered_ft / turn_circum_ft * 360.0;*/
+     
+     if (rd_turn_radius_ft <= 0) rd_turn_radius_ft = 0; // don't allow nonsense values
+     
+//     cout << "speed " << speed << " turn radius " << rd_turn_radius_ft << endl;
+
+// adjust turn radius for speed. The equation is very approximate.
+     sp_turn_radius_ft = 10 * pow ((speed - 15),2) + rd_turn_radius_ft;
+//     cout << "speed " << speed << " speed turn radius " << sp_turn_radius_ft << endl; 
+
+// adjust turn radius for rudder angle. The equation is even more approximate.     
+     rd_turn_radius_ft = -130 * (rudder - 15) + sp_turn_radius_ft;
+//     cout << "rudder " << rudder << " rudder turn radius " << rd_turn_radius_ft << endl;
+          
+// calculate the angle, alpha, subtended by the arc traversed in time dt        
+     alpha = ((speed * 1.686 * dt)/rd_turn_radius_ft) * SG_RADIANS_TO_DEGREES;
+
+// make sure that alpha is applied in the right direction   
+   
      hdg += alpha * sign( rudder );
+
      if ( hdg > 360.0 ) hdg -= 360.0;
      if ( hdg < 0.0) hdg += 360.0;
+
+//adjust roll for rudder angle and speed     
+     roll = - (  speed / 2 - rudder / 6 );
+     
+//    cout << " hdg " << hdg  << "roll "<< roll << endl;
    }
 
    // adjust target rudder angle if heading lock engaged
