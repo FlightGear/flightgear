@@ -213,7 +213,7 @@ FGMenuBar::~FGMenuBar ()
                                 // Delete all the character arrays
                                 // we were forced to keep around for
                                 // plib.
-    std::cerr << "Deleting char arrays\n";
+    SG_LOG(SG_GENERAL, SG_INFO, "Deleting char arrays");
     for (i = 0; i < _char_arrays.size(); i++) {
         for (int j = 0; _char_arrays[i][j] != 0; j++)
             free(_char_arrays[i][j]); // added with strdup
@@ -223,21 +223,21 @@ FGMenuBar::~FGMenuBar ()
                                 // Delete all the callback arrays
                                 // we were forced to keep around for
                                 // plib.
-    std::cerr << "Deleting callback arrays\n";
+    SG_LOG(SG_GENERAL, SG_INFO, "Deleting callback arrays");
     for (i = 0; i < _callback_arrays.size(); i++)
         delete _callback_arrays[i];
 
                                 // Delete all those bindings
-    std::cerr << "Deleting bindings\n";
+    SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings");
     map<string,vector<FGBinding *> >::iterator it;
     it = _bindings.begin();
     for (it = _bindings.begin(); it != _bindings.end(); it++) {
-        std::cerr << "Deleting bindings for " << it->first << std::endl;
+        SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings for " << it->first);
         for (int i = 0; i < it->second.size(); i++)
             delete it->second[i];
     }
 
-    std::cerr << "Done.\n";
+    SG_LOG(SG_GENERAL, SG_INFO, "Done.");
 }
 
 void
