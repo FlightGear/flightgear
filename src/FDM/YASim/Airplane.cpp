@@ -929,9 +929,16 @@ void Airplane::solve()
 	applyDragFactor(dragFactor);
 	applyLiftRatio(liftFactor);
 
+	// Solver threshold.  How close to the solution are we trying
+	// to get?  Trying too hard can result in oscillations about
+	// the correct solution, which is bad.  Stick this in as a
+	// compile time constant for now, and consider making it
+	// settable per-model.
+	float STHRESH = 1.6;
+
 	// DON'T do the following until the above are sane
-	if(normFactor(dragFactor) > 1.0001
-	   || normFactor(liftFactor) > 1.0001)
+	if(normFactor(dragFactor) > STHRESH*1.0001
+	   || normFactor(liftFactor) > STHRESH*1.0001)
 	{
 	    continue;
 	}
@@ -943,13 +950,13 @@ void Airplane::solve()
 	_cruiseAoA = clamp(_cruiseAoA, -0.175f, 0.175f);
 	_tailIncidence = clamp(_tailIncidence, -0.175f, 0.175f);
 
-        if(abs(xforce/_cruiseWeight) < 0.0001 &&
-           abs(alift/_approachWeight) < 0.0001 &&
-           abs(aoaDelta) < .000017 &&
-           abs(tailDelta) < .000017)
+        if(abs(xforce/_cruiseWeight) < STHRESH*0.0001 &&
+           abs(alift/_approachWeight) < STHRESH*0.0001 &&
+           abs(aoaDelta) < STHRESH*.000017 &&
+           abs(tailDelta) < STHRESH*.000017)
         {
             // If this finaly value is OK, then we're all done
-            if(abs(elevDelta) < 0.0001)
+            if(abs(elevDelta) < STHRESH*0.0001)
                 break;
 
             // Otherwise, adjust and do the next iteration
