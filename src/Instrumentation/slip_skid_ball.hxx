@@ -22,6 +22,7 @@
  *
  * Input properties:
  *
+ * /instrumentation/slip-skid-ball/serviceable
  * /accelerations/pilot/y-accel-fps_sec
  * /accelerations/pilot/z-accel-fps_sec
  *
