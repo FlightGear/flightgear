@@ -28,17 +28,27 @@
 #  include <config.h>
 #endif
 
+#include <Include/compiler.h>
+
 #include <ctype.h>    // isspace()
 #include <stdlib.h>   // atoi()
 #include <math.h>     // rint()
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h> // stat()
-#include <errno.h>
+#ifdef HAVE_SYS_STAT_H
+#  include <sys/stat.h> // stat()
+#endif
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cerrno>
+#else
+#  include <errno.h>
+#endif
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>   // stat()
 #endif
 #include <string>
+
+#include STL_IOSTREAM
 
 // #include <zlib/zlib.h>
 #include <Misc/fgstream.hxx>
@@ -858,6 +868,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.22  1999/01/19 20:56:56  curt
+// MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
+//
 // Revision 1.21  1998/11/06 14:04:32  curt
 // Changes due to updates in fgstream.
 //
