@@ -301,7 +301,8 @@ FGInterface::bind ()
 				// Calibrated airspeed
   fgTie("/velocities/airspeed-kt", this,
 	&FGInterface::get_V_calibrated_kts,
-	&FGInterface::set_V_calibrated_kts);
+	&FGInterface::set_V_calibrated_kts,
+	false);
 
 				// Local velocities
 //   fgTie("/velocities/speed-north-fps", this,
@@ -332,15 +333,18 @@ FGInterface::bind ()
 				// the NED problem is fixed.
   fgTie("/velocities/uBody-fps", this,
 	&FGInterface::get_uBody,
-	&FGInterface::set_uBody);
+	&FGInterface::set_uBody,
+	false);
   fgSetArchivable("/velocities/uBody-fps");
   fgTie("/velocities/vBody-fps", this,
 	&FGInterface::get_vBody,
-	&FGInterface::set_vBody);
+	&FGInterface::set_vBody,
+	false);
   fgSetArchivable("/velocities/vBody-fps");
   fgTie("/velocities/wBody-fps", this,
 	&FGInterface::get_wBody,
-	&FGInterface::set_wBody);
+	&FGInterface::set_wBody,
+	false);
   fgSetArchivable("/velocities/wBody-fps");
 
 				// Climb and slip (read-only)

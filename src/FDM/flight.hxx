@@ -274,7 +274,11 @@ private:
     double altitude_agl;
     double Tank1Fuel;             // Gals
     double Tank2Fuel;             // Gals
-    
+
+    double daux[16];		// auxilliary doubles
+    float  faux[16];		// auxilliary floats
+    int    iaux[16];		// auxilliary ints
+
     // Engine list
     engine_list engines;
 
@@ -441,6 +445,10 @@ protected:
 	sin_latitude = sin(parm);
 	cos_latitude = cos(parm);
     }
+
+    inline void _set_daux( int n, double value ) { daux[n] = value; }
+    inline void _set_faux( int n, float value ) { faux[n] = value; }
+    inline void _set_iaux( int n, int value ) { iaux[n] = value; }
 
 public:
   
@@ -1118,6 +1126,11 @@ public:
     inline double get_cos_latitude(void) const {
 	return cos_latitude;
     }
+
+    // Auxilliary variables
+    inline double get_daux( int n ) const { return daux[n]; }
+    inline float  get_faux( int n ) const { return faux[n]; }
+    inline int    get_iaux( int n ) const { return iaux[n]; }
 
     // Consumables
     inline double get_Tank1Fuel() const { return Tank1Fuel; }
