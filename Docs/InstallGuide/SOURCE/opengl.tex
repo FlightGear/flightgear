@@ -50,11 +50,11 @@ support} as detailed under \ref{softrend}.
 
 \section{\Index{3DFX} under \Index{Linux}\label{3dfxlinux}}
 
-%%Bernhard, 21.02.1999
-An excellent place to search for documentation about Linux and 3D
-accelerators is the {\it Linux 3Dfx HOWTO} at
+%%Bernhard, 21.02.1999,25.06.1999
+An excellent place to search for documentation about Linux and 3D accelerators is the
+{\it Linux \Index{Quake} HOWTO} at
 
-\web{http://www.gamers.org/dEngine/xf3D/howto/3Dfx-HOWTO.html}.
+\web{http://www.linuxquake.com}.
 
 It describes all the following steps in an in-depth fashion and
 should be your first aid in case something goes wrong with your 3D
@@ -70,7 +70,7 @@ library installed. Grab it at:
  \noindent
 and install it.
 %%Bernhard 21.02.1999%%
-Be careful, you need different Glide libraries for the different types of VooDoos (I, II, Banshee).
+Be careful, you need different Glide libraries for the different types of VooDoos (I, II, III Banshee).
 %%
 There is even an install script included that will do things for you. The canonical place
 for \Index{GLIDE} is \texttt{/usr/local/glide}, if you prefer another location, you'll
@@ -86,9 +86,8 @@ unpack it and run
   \texttt{make linux-glide}
 
  \noindent
-in the Mesa directory. Follow the instructions in the \texttt{README}
-file, take a close look at \texttt{README.3DFX} and play with the demo
-programs.
+in the \Index{Mesa} directory. Follow the instructions in the \texttt{README} file, take
+a close look at \texttt{README.3DFX} and play with the demo programs.
 
 Besides these, you need the \Index{GLUT} library version 3.7 (or
 greater, aka GameGLUT) installed. Grab it at:
@@ -96,8 +95,14 @@ greater, aka GameGLUT) installed. Grab it at:
    \web{http://reality.sgi.com/opengl/glut3/glut3.html}.
 
  \noindent
-Note: Glut-3.7 is included with Mesa 3.0 so if you've already grabbed
-the latest version of mesa, you should have everything you need.
+Note: Glut-3.7 is included with \Index{Mesa} 3.0 so if you've already grabbed the latest
+version of mesa, you should have everything you need.
+
+%%Bernhard 25.06.1999
+
+For the lazy of you, there is of course the possibility to install the 3D stuff included
+in your distribution. At least \Index{RedHat} 6.0 and \Index{SuSE} 6.1 are known to
+contain all the necessary stuff.
 
 Finally, some more notes on the behavior of \Index{Voodoo} boards:
 
@@ -241,3 +246,5 @@ them from the Start menu.
 %% Added 3DFX Win95
 %% revision 0.20  1999/06/04  michael
 %% corrections of links
+%% revision 0.21 1999/06/30 bernhard
+%% updated and expanded 3DFX/Linux

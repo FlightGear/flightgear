@@ -73,24 +73,33 @@ thoughts on possible causes of problems. (This Section includes contributions by
 Troester \mail{Kai.Troester@rz.tu-ilmenau.de}.)
 
 \begin{itemize}
+  
 
 \item{Wrong library versions}\\
   This is a rather common cause of grief especially when you prefer to
   install the libraries needed by \FlightGear by hand. Be sure that
-  especially the Mesa library contains support for the \Index{3DFX board} and
-  that \Index{Glide} libraries are installed and can be found. If a
-  \texttt{ldd `which fgfs`} complains about missing libraries you are  in trouble.
+  especially the Mesa library contains support for the \Index{3DFX
+    board} and that \Index{Glide} libraries are installed and can be
+  found. If a \texttt{ldd `which fgfs`} complains about missing
+  libraries you are in trouble.
+  
+  You should also be sure to keep \em{always} the \em{latest} version
+  of Steve's plib on your system. Lots of people (including me) have
+  failed miserably to compile \FlightGear just because of an outdated
+  plib.
+  
 
 \item{Missing \Index{permissions}}\\
   \FlightGear needs to be setuid root in order to be capable of
-  accessing the accelerator board. Be sure to issue a
+  accessing the accelerator board (or a special kernel module as
+  described earlier in this document). So you can either issue a
 
   \texttt{chown root.root /usr/local/bin/fgfs ;}\\
   \texttt{chmod 4755 /usr/local/bin/fgfs}
+  
+  to give the \FlightGear binary the proper rights or install the 3DFX module. The latter is the ``clean''
+  solution and strongly recommended!
 
-  to give the \FlightGear binary the proper rights. There is development
-  of a device named \texttt{/dev/3dfx} underway, so this probably
-  being remedied in the near future.
 
 \item{Non-default install options}\\
   \FlightGear will display a lot of diagnostics when being started up.

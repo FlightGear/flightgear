@@ -13,7 +13,7 @@
   
 <p>
 <img src="start.gif"><br> </H3>
-<H3 align=center>June 4, 1999</H3>
+<H3 align=center>June 30, 1999</H3>
 
 <p>
 
@@ -512,6 +512,17 @@ Scenery was further improved by Curt via adding features like lakes, rivers, coa
 and the like in spring 1999.
 
 <p>
+
+<li> In June 1999 there was a split of the source tree into a stable and a developmental
+branch. Even version numbers as 0.6, 0.8, and (hopefully) 1.0 refer to stable versions
+being intended for general use while odd versions as 0.7 and so on refer to developmental
+versions. Policy is to do only bug fixes in the even versions, while new features are
+generally added to odd-numbered versions, which finally after things stabilized will turn
+into the next stable version by adding 0.1. At present (and probably in the future), this
+guide refers to the stable branch. <A NAME="branches">
+</A>
+
+<p>
 </UL>This is by no way a complete history and a lot of people making even important
 contributions were left out here. Besides the named achievements being more on the
 surface there was a lot of work done concerning the internal structure, by Steve
@@ -746,11 +757,12 @@ support20">
 </A></H2>
 
 <p>
-An excellent place to search for documentation about Linux and 3D
-accelerators is the <i>Linux 3Dfx HOWTO</i> at
+An excellent place to search for documentation about Linux and 3D accelerators is the
+<i>Linux Quake<a NAME="Quake21">
+</a> HOWTO</i> at
 
 <p>
-<a href="http://www.gamers.org/dEngine/xf3D/howto/3Dfx-HOWTO.html">http://www.gamers.org/dEngine/xf3D/howto/3Dfx-HOWTO.html</a>.
+<a href="http://www.linuxquake.com">http://www.linuxquake.com</a>.
 
 <p>
 It describes all the following steps in an in-depth fashion and
@@ -770,7 +782,7 @@ library installed. Grab it at:
 
 <p>
  and install it.
-Be careful, you need different Glide libraries for the different types of VooDoos (I, II, Banshee).
+Be careful, you need different Glide libraries for the different types of VooDoos (I, II, III Banshee).
 There is even an install script included that will do things for you. The canonical place
 for GLIDE<a NAME="GLIDE21">
 </a> is <tt>/usr/local/glide</tt>, if you prefer another location, you'll
@@ -789,9 +801,9 @@ version 3.0 (or later). Grab it at
   <tt>make linux-glide</tt>
 
 <p>
- in the Mesa directory. Follow the instructions in the <tt>README</tt>
-file, take a close look at <tt>README.3DFX</tt> and play with the demo
-programs.
+ in the Mesa<a NAME="Mesa21">
+</a> directory. Follow the instructions in the <tt>README</tt> file, take
+a close look at <tt>README.3DFX</tt> and play with the demo programs.
 
 <p>
 Besides these, you need the GLUT<a NAME="GLUT21">
@@ -802,8 +814,16 @@ greater, aka GameGLUT) installed. Grab it at:
    <a href="http://reality.sgi.com/opengl/glut3/glut3.html">http://reality.sgi.com/opengl/glut3/glut3.html</a>.
 
 <p>
- Note: Glut-3.7 is included with Mesa 3.0 so if you've already grabbed
-the latest version of mesa, you should have everything you need.
+ Note: Glut-3.7 is included with Mesa<a NAME="Mesa21">
+</a> 3.0 so if you've already grabbed the latest
+version of mesa, you should have everything you need.
+
+<p>
+For the lazy of you, there is of course the possibility to install the 3D stuff included
+in your distribution. At least RedHat<a NAME="RedHat21">
+</a> 6.0 and SuSE<a NAME="SuSE21">
+</a> 6.1 are known to
+contain all the necessary stuff.
 
 <p>
 Finally, some more notes on the behavior of Voodoo<a NAME="Voodoo21">
@@ -1034,6 +1054,12 @@ a beginner (we all were once) we recommend postponing this and just starting wit
 binary distribution to get you flying.
 
 <p>
+Besides, there have been two branches of code starting from version 0.6. For more
+details, see Section <A href="#branches">1.2</A>. This description generally refers to the stable,
+even-numbered branch. It is almost certain, that odd-numbered versions require
+modifications to that.
+
+<p>
 As you will note, this Chapter is far from being complete. Basically, we describe
 compiling for two operating systems only, Windows 98/NT<a NAME="Windows 98/NT30">
 </a> and Linux<a NAME="Linux30">
@@ -1056,8 +1082,39 @@ binaries<a NAME="binaries31">
 <p>
 
 <OL type="1">
+<li> <i>FlightGear </i>needs some supplementary libraries which are usually
+  not contained in any distribution we know of. These are:
+
+<p>
+  
+<UL>  
+<li><em>plib</em> which is absolutely essential for the building
+    process. Get the latest version of <em>plib</em> at
+    <a href="http://www.woodsoup.org/projs/plib/">http://www.woodsoup.org/projs/plib/</a> and follow the
+    instructions contained in README.plib.
+
+<p>
+  
+<li><em>gfc</em> is only needed if you want to build the scenery
+    generation tools but it doesn't hurt to have it installed. It can
+    be found along with the building instructions at
+    <a href="http://www.geog.psu.edu/~qian/gfc/index.html">http://www.geog.psu.edu/&nbsp;qian/gfc/index.html</a>.
+
+<p>
+  
+<li><em>gpc</em> which is also needed for the scenery generation
+    tools. Get it from
+    <a href="http://www.cs.man.ac.uk/aig/staff/alan/software/">http://www.cs.man.ac.uk/aig/staff/alan/software/</a>, building
+    instructions can be found in README.gpc in your <i>FlightGear </i>source
+    directory.
+
+<p>
+  </UL>  Now you are ready to proceed to the task of getting, compiling and installing <i>FlightGear </i>itself:
+
+<p>
+
 <li> Get the file <tt>FlightGear-x.xx.tar.gz</tt> from the
-<tt>source</tt> subdirectory under
+  <tt>source</tt> subdirectory under
 
 <p>
  <a href="ftp://ftp.flightgear.org/pub/fgfs/Source/">ftp://ftp.flightgear.org/pub/fgfs/Source/</a>
@@ -1107,19 +1164,50 @@ type
 </a> in <tt>/usr/local/bin</tt>.
 
 <p>
-There is a problem concerning permissions under Linux/Glide. All
-programs accessing the accelerator board need root permissions.
-The solution is either to play as root or make the
-<tt>/usr/local/bin/fgfs</tt> binary <tt>setuid root</tt>, i.e.
-when this binary is run root privileges are given. Do this by
-issuing (as root)
+There is a problem concerning permissions under Linux/Glide. All programs accessing the
+accelerator board need root permissions. The solution is either to play as root (this is
+<em>bad</em> practice and not always possible) or make the <tt>/usr/local/bin/fgfs</tt>
+binary <tt>setuid root</tt>, i.e. when this binary is run root privileges are given. Do
+this by issuing (as root)
 
 <p>
    <tt>chmod +s /usr/local/bin/fgfs</tt>.
 
 <p>
- A solution for this problem is upcoming, keep an eye on the 3Dfx
-website if you run a 3Dfx board.
+  Again, this is a quick and dirty hack.  The perfect solution for this
+ problem is using a kernel module called <em>3dfx.o</em>. It is available
+ along with documentation at <a href="http://www.xs4all.nl/~carlo17/3dfx/index.html">http://www.xs4all.nl/&nbsp;carlo17/3dfx/index.html</a>
+ and it might be a good idea to read some of the Quake-related links there!
+
+<p>
+ To install this kernel module, just download it, become root and
+ issue the following commands:
+
+<p>
+<tt>mkdir dev3dfx</tt>
+
+<p>
+<tt>cd dev3dfx</tt>
+
+<p>
+<tt>tar xvfz ../Dev3Dfx-2.7.tar.gz</tt>
+
+<p>
+<tt>make</tt>
+
+<p>
+<tt>cp 3dfx.o /lib/modules/`uname -r`/misc</tt>
+
+<p>
+<tt>mknod /dev/3dfx c 107 0</tt>
+
+<p>
+<tt>insmod 3dfx</tt>
+
+<p>
+It is a good idea to put the last line into one of your bootup scripts! After having
+installed this module, you can even go ahead and remove the S-bit from <em>all</em> programs
+that need access to your 3D hardware.
 
 <p>
 </OL>      <H2><A NAME="tth_sEc3.2">
@@ -1409,10 +1497,10 @@ instructions) you can now create and populate the <tt>install tree</tt>.  Run:
     directory in the <tt>install tree</tt> where your binary lives and run:
 
 <p>
-        <tt>strip fgfs.exe</tt> resp. <tt>strip fgfs-sgi.exe</tt>.
-
+    <tt>strip fgfs.exe</tt> resp. <tt>strip fgfs-sgi.exe</tt>.
+  </OL>
 <p>
-</OL>      <H1><A NAME="tth_chAp4">
+      <H1><A NAME="tth_chAp4">
 Chapter 4     </A><br>Preflight: Installing <i>FlightGear </i><A NAME="prefligh">
 </A></H1>
 
@@ -2814,31 +2902,39 @@ Troester <a href="mailto:Kai.Troester@rz.tu-ilmenau.de">Kai.Troester@rz.tu-ilmen
 
 <p>
 
-<UL>
+<UL>  
 <li>Wrong library versions<br>
   This is a rather common cause of grief especially when you prefer to
   install the libraries needed by <i>FlightGear </i>by hand. Be sure that
-  especially the Mesa library contains support for the 3DFX board<a NAME="3DFX board82">
-</a> and
-  that Glide<a NAME="Glide82">
-</a> libraries are installed and can be found. If a
-  <tt>ldd `which fgfs`</tt> complains about missing libraries you are  in trouble.
-
+  especially the Mesa library contains support for the 3DFX
+    board<a NAME="3DFX
+    board82">
+</a> and that Glide<a NAME="Glide82">
+</a> libraries are installed and can be
+  found. If a <tt>ldd `which fgfs`</tt> complains about missing
+  libraries you are in trouble.
+  
+<p>
+  You should also be sure to keep <em>always the <em>latest version
+  of Steve's plib on your system. Lots of people (including me) have
+  failed miserably to compile <i>FlightGear </i>just because of an outdated
+  plib.
+  
 <p>
 
 <li>Missing permissions<a NAME="permissions82">
 </a><br>
   <i>FlightGear </i>needs to be setuid root in order to be capable of
-  accessing the accelerator board. Be sure to issue a
+  accessing the accelerator board (or a special kernel module as
+  described earlier in this document). So you can either issue a
 
 <p>
   <tt>chown root.root /usr/local/bin/fgfs ;</tt><br>
   <tt>chmod 4755 /usr/local/bin/fgfs</tt>
-
+  
 <p>
-  to give the <i>FlightGear </i>binary the proper rights. There is development
-  of a device named <tt>/dev/3dfx</tt> underway, so this probably
-  being remedied in the near future.
+  to give the <i>FlightGear </i>binary the proper rights or install the 3DFX module. The latter is the ``clean''
+  solution and strongly recommended!
 
 <p>
 
@@ -3014,7 +3110,6 @@ as long as you don't intend to build the scenery creation tools<a NAME="scenery 
 		<a href="#\FlightGear documentation14">1-4</a>
   <dt></dt><dd> <i>FlightGear </i>home page, <a href="#\FlightGear home page14">1-4</a>
   <dt></dt><dd> 3DFX, <a href="#3DFX21">2-1</a>, <a href="#3DFX24">2-4</a>
-  <dt></dt><dd> 3DFX board, <a href="#3DFX board82">8-2</a>
   <dt></dt><dd> 3DFX chip, <a href="#3DFX chip24">2-4</a>
   <dt></dt><dd> 3DXF, <a href="#3DXF24">2-4</a>
 
@@ -3182,6 +3277,7 @@ as long as you don't intend to build the scenery creation tools<a NAME="scenery 
   <dt></dt><dd> Menu entries, <a href="#Menu entries62">6-2</a>
   <dt></dt><dd> menu system, <a href="#menu system72">7-2</a>
   <dt></dt><dd> MESA, <a href="#MESA21">2-1</a>
+  <dt></dt><dd> Mesa, <a href="#Mesa21">2-1</a>
   <dt></dt><dd> Metro Works, <a href="#Metro Works71">7-1</a>
   <dt></dt><dd> Microsoft, <a href="#Microsoft11">1-1</a>
   <dt></dt><dd> military components, <a href="#military components11">1-1</a>
@@ -3235,7 +3331,11 @@ as long as you don't intend to build the scenery creation tools<a NAME="scenery 
   <dt></dt><dd> proposal, <a href="#proposal12">1-2</a>
 
 <p>
-  <dt></dt><dd>   <dt></dt><dd> Reinhard, Friedemann, <a href="#Reinhard, Friedemann12">1-2</a>, 
+  <dt></dt><dd>   <dt></dt><dd> Quake, <a href="#Quake21">2-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> RedHat, <a href="#RedHat21">2-1</a>
+  <dt></dt><dd> Reinhard, Friedemann, <a href="#Reinhard, Friedemann12">1-2</a>, 
 		<a href="#Reinhard, Friedemann71">7-1</a>
   <dt></dt><dd> Reinholdtsen, Petter, <a href="#Reinholdtsen, Petter71">7-1</a>
   <dt></dt><dd> rendering options, <a href="#rendering options53">5-3</a>
@@ -3266,6 +3366,7 @@ as long as you don't intend to build the scenery creation tools<a NAME="scenery 
   <dt></dt><dd> Sun-OS, <a href="#Sun-OS12">1-2</a>
   <dt></dt><dd> SunOS, <a href="#SunOS11">1-1</a>
   <dt></dt><dd> Support files, <a href="#Support files42">4-2</a>
+  <dt></dt><dd> SuSE, <a href="#SuSE21">2-1</a>
   <dt></dt><dd> system requirements, <a href="#system requirements13">1-3</a>
 
 <p>
@@ -3339,6 +3440,6 @@ as long as you don't intend to build the scenery creation tools<a NAME="scenery 
   <dt></dt><dd> zlib library, <a href="#zlib library71">7-1</a>
 
 <p>
-</DL> </font>
+</DL> </font></em></em>
 <p><hr><small>File translated from T<sub><font size="-1">E</font></sub>X by <a href="http://hutchinson.belmont.ma.us/tth/">T<sub><font size="-1">T</font></sub>H</a>, version 1.57.</small>
 </HTML>
