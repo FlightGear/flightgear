@@ -1164,6 +1164,8 @@ fgParseOptions (const string& path) {
 void 
 fgUsage (bool verbose)
 {
+    SGPropertyNode *locale = globals->get_locale();
+
     SGPropertyNode options_root;
     SGPath opath( globals->get_fg_root() );
     opath.append( "options.xml" );
@@ -1188,7 +1190,7 @@ fgUsage (bool verbose)
         exit(-1);
     }
 
-    SGPropertyNode *usage = options->getNode("usage");
+    SGPropertyNode *usage = locale->getNode(options->getStringValue("usage"));
     if (usage) {
         cout << "Usage: " << usage->getStringValue() << endl;
     }
@@ -1229,25 +1231,54 @@ fgUsage (bool verbose)
                     snprintf(cstr, 96, "\n   --%s\n%32c", tmp.c_str(), ' ');
                 }
 
-                msg += cstr;
-                SGPropertyNode *desc = option[k]->getNode("description");
-                if (desc) {
-                    msg += desc->getStringValue();
+                // There may be more than one <description> tag assosiated
+                // with one option
 
-                    for ( unsigned int l = 1;
-                          (desc = option[k]->getNode("description", l, false));
-                          l++ )
-                    {
-                        snprintf(cstr, 96, "\n%32c%s", ' ',
-                                 desc->getStringValue());
-                        msg += cstr;
-                    }
-                    msg += '\n';
-                }
+                msg += cstr;
+                vector<SGPropertyNode_ptr>desc =
+                                          option[k]->getChildren("description");
+
+                if (desc.size() > 0) {
+                   for ( unsigned int l = 0; l < desc.size(); l++) {
+
+                      // There may be more than one translation line.
+
+                      string t = desc[l]->getStringValue();
+                      SGPropertyNode *n = locale->getNode("strings");
+                      vector<SGPropertyNode_ptr>trans_desc =
+                               n->getChildren(t.substr(8).c_str());
+
+                      for ( unsigned int m = 0; m < trans_desc.size(); m++ ) {
+                         string t_str = trans_desc[m]->getStringValue();
+
+                         if ((m > 0) || ((l > 0) && m == 0)) {
+                            snprintf(cstr, 96, "%32c", ' ');
+                            msg += cstr;
+
+                         }
+
+                         // If the string is too large to fit on the screen,
+                         // then split it up in several pieces.
+
+                         while ( t_str.size() > 47 ) {
+
+                            unsigned int m = t_str.rfind(' ', 47);
+                            msg += t_str.substr(0, m);
+                            snprintf(cstr, 96, "\n%32c", ' ');
+                            msg += cstr;
+
+                            t_str.erase(t_str.begin(), t_str.begin() + m + 1);
+                        }
+                        msg += t_str + '\n';
+                     }
+                  }
+               }
             }
         }
 
-        SGPropertyNode *name = section[j]->getNode("name");
+        SGPropertyNode *name =
+                            locale->getNode(section[j]->getStringValue("name"));
+
         if (!msg.empty() && name) {
            cout << endl << name->getStringValue() << ":" << endl;
            cout << msg;

@@ -1323,7 +1323,7 @@ static void fgIdleFunction ( void ) {
 	// sleep(1);
 	idle_state = 1000;
 
-	cout << "Panel visible = " << fgPanelVisible() << endl;
+	SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
 	fgReshape( fgGetInt("/sim/startup/xsize"),
 		   fgGetInt("/sim/startup/ysize") );
     } 
@@ -1533,12 +1533,11 @@ int mainLoop( int argc, char **argv ) {
     string base_version = fgBasePackageVersion();
     if ( !(base_version == required_version) ) {
         // tell the operator how to use this application
-        fgUsage();
 
-	cout << endl << "Base package check failed ... " \
+	cerr << endl << "Base package check failed ... " \
 	     << "Found version " << base_version << " at: " \
              << globals->get_fg_root() << endl;
-        cout << "Please upgrade to version" << required_version << endl;
+        cerr << "Please upgrade to version" << required_version << endl;
 	exit(-1);
     }
 
@@ -1549,26 +1548,6 @@ int mainLoop( int argc, char **argv ) {
     if ( !fgInitConfig(argc, argv) ) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
 	exit(-1);
-    }
-
-    // Initialize the localization routines
-    if (globals->get_locale() == NULL) {
-        char *language = getenv("LANG");
-        if (language == NULL) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "Unable to detect the language" );
-            language = "C";
-        }
-
-        SGPropertyNode *locale = fgInitLocale(language);
-        if (!locale) {
-           cerr
-             << "Not internationalization settings specified in preferences.xml"
-             << endl;
-
-           return false;
-        }
-
-        globals->set_locale( locale );
     }
 
     // Initialize the Window/Graphics environment.

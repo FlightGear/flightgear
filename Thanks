@@ -172,6 +172,7 @@ Erik Hofman <erik@ehofman.com>
   Major overhaul and parameterization of the sound module, to allow
   aircraft-specific sound configuration at runtime.
   Irix port.
+  Localization support.
 
 
 Charlie Hotchkiss <clhotch@pacbell.net> 
@@ -233,6 +234,7 @@ David Megginson <david@megginson.com>
   3D model animation module
   initial take of sound-effects module
   Random ground cover objects
+  Vacuum and pitot systems.
 
 
 Eric Mitchell <mitchell@mars.ark.com>
@@ -278,6 +280,8 @@ Curt Olson <curt@flightgear.org>
   He has his hands in many of the areas, but is primarily responsible
   for the scenery subsystem, as well as much of the infrastructure in
   the sim.
+  Electrical system.
+  Runway lighting.
 
 
 Brian Paul
@@ -464,6 +468,11 @@ Jean-Claude Wippler <jcw@equi4.com>
   allowing us to bundle MetaKit with our code.  MetaKit has a liberal
   X/MIT-style license.  Please see the following URL for more info:
   http://www.equi4.com/metakit
+
+
+John Wojnaroski <castle@mminternet.com>
+  Open Glass Cockpit project
+  3d clouds
 
 
 WoodSoup Project  http://www.woodsoup.org
