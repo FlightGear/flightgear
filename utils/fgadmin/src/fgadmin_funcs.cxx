@@ -151,7 +151,7 @@ void FGAdminUI::update_install_box() {
             char base[FL_PATH_MAX];
             strncpy( base, ent->d_name, FL_PATH_MAX );
             const char *p = fl_filename_ext( base );
-            int offset;
+            int offset, expected_length = 0;
             if ( strcmp( p, ".gz" ) == 0 ) {
                 offset = p - base;
                 base[offset] = '\0';
@@ -159,13 +159,19 @@ void FGAdminUI::update_install_box() {
                 if ( strcmp( p, ".tar" ) == 0 ) {
                     offset = p - base;
                     base[offset] = '\0';
+                    expected_length = 14;
                 }
+            } else if ( strcmp( p, ".tgz" ) == 0 ) {
+                offset = p - base;
+                base[offset] = '\0';
+                expected_length = 11;
             } else if ( strcmp( p, ".zip" ) == 0 ) {
                 offset = p - base;
                 base[offset] = '\0';
+                expected_length = 11;
             }
 
-            if ( strlen(ent->d_name) != 14 ) {
+            if ( strlen(ent->d_name) != expected_length ) {
                 // simple heuristic to ignore non-scenery files
             } else if ( ent->d_name[0] != 'e' && ent->d_name[0] != 'w' ) {
                 // further sanity checks on name
