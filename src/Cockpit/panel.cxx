@@ -164,7 +164,8 @@ FGCroppedTexture::getTexture ()
 
 FGPanel * current_panel = NULL;
 static fntRenderer text_renderer;
-
+static fntTexFont *default_font;
+static fntTexFont *led_font;
 
 /**
  * Constructor.
@@ -215,7 +216,28 @@ FGPanel::addInstrument (FGPanelInstrument * instrument)
 void
 FGPanel::init ()
 {
-  // NO-OP
+    SGPath base_path;
+    char* envp = ::getenv( "FG_FONTS" );
+    if ( envp != NULL ) {
+        base_path.set( envp );
+    } else {
+        base_path.set( globals->get_fg_root() );
+	base_path.append( "Fonts" );
+    }
+
+    SGPath fntpath;
+
+    // Install the default font
+    fntpath = base_path;
+    fntpath.append( "typewriter.txf" );
+    default_font = new fntTexFont ;
+    default_font -> load ( (char *)fntpath.c_str() ) ;
+
+    // Install the LED font
+    fntpath = base_path;
+    fntpath.append( "led.txf" );
+    led_font = new fntTexFont ;
+    led_font -> load ( (char *)fntpath.c_str() ) ;
 }
 
 
@@ -857,7 +879,7 @@ FGTexturedLayer::draw ()
 ////////////////////////////////////////////////////////////////////////
 
 FGTextLayer::FGTextLayer (int w, int h)
-  : FGInstrumentLayer(w, h), _pointSize(14.0)
+  : FGInstrumentLayer(w, h), _pointSize(14.0), _font_name("default")
 {
   _then.stamp();
   _color[0] = _color[1] = _color[2] = 0.0;
@@ -880,7 +902,11 @@ FGTextLayer::draw ()
     glPushMatrix();
     glColor4fv(_color);
     transform();
-    text_renderer.setFont(guiFntHandle);
+    if ( _font_name == "led" ) {
+	text_renderer.setFont(led_font);
+    } else {
+	text_renderer.setFont(guiFntHandle);
+    }
     text_renderer.setPointSize(_pointSize);
     text_renderer.begin();
     text_renderer.start3f(0, 0, 0);
@@ -918,6 +944,13 @@ FGTextLayer::setPointSize (float size)
 {
   _pointSize = size;
 }
+
+void
+FGTextLayer::setFontName(const string &name)
+{
+  _font_name = name;
+}
+
 
 void
 FGTextLayer::setFont(fntFont * font)
