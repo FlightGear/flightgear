@@ -4,7 +4,6 @@
  * Written by Curtis Olson, started May 1997.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 

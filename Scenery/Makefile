@@ -39,7 +39,7 @@ $(TARGET): $(OFILES) $(HFILES)
 	$(AR) rv $(TARGET) $(OFILES)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) parser.output *~ core
 
 
 #---------------------------------------------------------------------------
@@ -70,6 +70,9 @@ mesh.o: mesh.c mesh.h common.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/05/17 00:17:01  curt
+# Cosmetic changes.
+#
 # Revision 1.1  1997/05/16 16:07:02  curt
 # Initial revision.
 #

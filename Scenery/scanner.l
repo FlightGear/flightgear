@@ -6,7 +6,6 @@
  * NOTE: Compiles with flex and gcc.
  *
  * $Id$
- * (Log is kept at end of this file)
  **************************************************************************/
 
 
