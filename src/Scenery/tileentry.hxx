@@ -266,6 +266,12 @@ public:
      * graph for this tile.
      */
     void disconnect_ssg_nodes();
+
+	
+    /**
+     * return the SSG Transform node for the terrain
+     */
+    inline ssgTransform *get_terra_transform() { return terra_transform; }
 };
 
 

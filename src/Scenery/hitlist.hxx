@@ -1,3 +1,7 @@
+// hitlist.hxx 
+// Height Over Terrain and Assosciated Routines for FlightGear based Scenery
+// Written by Norman Vine, started 2000.
+
 #ifndef _HITLIST_HXX
 #define _HITLIST_HXX
 
@@ -11,8 +15,9 @@
 
 #include <plib/ssg.h>
 
-SG_USING_STD(vector);
+#define FAST_HITLIST__TEST 1
 
+SG_USING_STD(vector);
 
 class FGHitRec {
 
@@ -44,11 +49,12 @@ private:
 
     ssgEntity *last;
     vector < FGHitRec > list;
+    double test_dist;
 
 public:
 
-    FGHitList() { last = NULL; }
-    void init(void) { list.clear(); }
+    FGHitList() { last = NULL; test_dist=DBL_MAX; }
+    void init(void) { list.clear(); test_dist=DBL_MAX; }
     void clear(void) { init(); last = NULL; }
     void add( ssgEntity *ent, int idx, sgdVec3 point, sgdVec3 normal ) {
 	list.push_back( FGHitRec( ent,idx,point,normal) );
@@ -63,24 +69,47 @@ public:
 		
     void Intersect( ssgBranch *branch,
 		    sgdVec3 orig, sgdVec3 dir );
+    void Intersect( ssgBranch *scene, sgdMat4 m,
+		    sgdVec3 orig, sgdVec3 dir );
 		
     void IntersectBranch( ssgBranch *branch, sgdMat4 m,
 			  sgdVec3 orig, sgdVec3 dir);
 		
-    void IntersectCachedLeaf( sgdMat4 m,
-			      sgdVec3 orig, sgdVec3 dir);
+    void IntersectCachedLeaf( sgdVec3 orig, sgdVec3 dir);
 		
     int IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
 		       sgdVec3 orig, sgdVec3 dir );
+
+    int IntersectPolyOrFanLeaf( ssgLeaf *leaf, sgdMat4 m,
+				sgdVec3 orig, sgdVec3 dir );
+
+    int IntersectTriLeaf( ssgLeaf *leaf, sgdMat4 m,
+			  sgdVec3 orig, sgdVec3 dir );
+	
+    int IntersectStripLeaf( ssgLeaf *leaf, sgdMat4 m,
+			    sgdVec3 orig, sgdVec3 dir );
+
+    int IntersectQuadsLeaf( ssgLeaf *leaf, sgdMat4 m,
+			    sgdVec3 orig, sgdVec3 dir );
 };
 
 
 // Associated function, assuming a wgs84 world with 0,0,0 at the
 // center, find the current terrain intersection elevation for the
 // point specified.
-bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
+bool fgCurrentElev( sgdVec3 abs_view_pos,
+		    sgdVec3 scenery_center,
+		    ssgTransform *terra_transform,
 		    FGHitList *hit_list,
-		    double *terrain_elev, double *radius, double *normal );
+		    double *terrain_elev,
+		    double *radius,
+		    double *normal );
 
+bool fgCurrentElev( sgdVec3 abs_view_pos,
+		    sgdVec3 scenery_center,
+		    FGHitList *hit_list,
+		    double *terrain_elev,
+		    double *radius,
+		    double *normal );
 
 #endif // _HITLIST_HXX

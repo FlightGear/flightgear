@@ -292,7 +292,8 @@ int FGTileMgr::update( double lon, double lat ) {
     // happen in the render thread because model loading can trigger
     // texture loading which involves use of the opengl api.
     if ( !model_queue.empty() ) {
-        // load the next tile in the queue
+        // cout << "loading next model ..." << endl;
+	// load the next tile in the queue
 #ifdef ENABLE_THREADS
 	FGDeferredModel* dm = model_queue.pop();
 #else
@@ -310,6 +311,8 @@ int FGTileMgr::update( double lon, double lat ) {
 
 	delete dm;
     }
+
+    // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
 
     previous_bucket = current_bucket;
     last_longitude = longitude;
@@ -334,6 +337,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	e->add_ssg_nodes( terrain_branch,
 			  gnd_lights_branch,
 			  rwy_lights_branch );
+	// cout << "Adding ssg nodes for "
     }
 
     sgdVec3 sc;
@@ -345,6 +349,7 @@ int FGTileMgr::update( double lon, double lat ) {
 #if 0
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
+	cout << "initializing scenery current elevation ... " << endl;
 	sgdVec3 tmp_abs_view_pos;
 
 	Point3D geod_pos = Point3D( longitude * SGD_DEGREES_TO_RADIANS,
@@ -354,6 +359,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	scenery.center = tmp;
 	sgdSetVec3( tmp_abs_view_pos, tmp.x(), tmp.y(), tmp.z() );
 
+	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
 	prep_ssg_nodes();
 
 	double tmp_elev;
@@ -364,8 +370,25 @@ int FGTileMgr::update( double lon, double lat ) {
 	} else {
 	    scenery.set_cur_elev( 0.0 );
 	}
+	// cout << "result = " << scenery.get_cur_elev() << endl;
     } else {
 #endif
+
+         /*
+       cout << "abs view pos = "
+              << globals->get_current_view()->get_abs_view_pos()[0] << ","
+              << globals->get_current_view()->get_abs_view_pos()[1] << ","
+              << globals->get_current_view()->get_abs_view_pos()[2]
+            << " view pos = "
+              << globals->get_current_view()->get_view_pos()[0] << ","
+              << globals->get_current_view()->get_view_pos()[1] << ","
+              << globals->get_current_view()->get_view_pos()[2]
+              << endl;
+         cout << "current_tile = " << current_tile << endl;
+         cout << "Scenery center = " << sc[0] << "," << sc[1] << "," << sc[2]
+              << endl;
+         */
+
         // overridden with actual values if a terrain intersection is
         // found
 	double hit_elev = -9999.0;
@@ -376,12 +399,17 @@ int FGTileMgr::update( double lon, double lat ) {
         if ( fabs(sc[0]) > 1.0 || fabs(sc[1]) > 1.0 || fabs(sc[2]) > 1.0 ) {
             // scenery center has been properly defined so any hit
             // should be valid (and not just luck)
-            hit = fgCurrentElev(globals->get_current_view()->get_abs_view_pos(),
-                                sc,
-                                &hit_list,
-                                &hit_elev,
-                                &hit_radius,
-                                hit_normal);
+	    sgdSetVec3( sc,
+			scenery.get_center()[0],
+			scenery.get_center()[1],
+			scenery.get_center()[2] );
+	    hit = fgCurrentElev(globals->get_current_view()->get_abs_view_pos(),
+				sc,
+				current_tile->get_terra_transform(),
+				&hit_list,
+				&hit_elev,
+				&hit_radius,
+				hit_normal);
         }
 
         if ( hit ) {
@@ -393,6 +421,8 @@ int FGTileMgr::update( double lon, double lat ) {
             scenery.set_cur_radius( 0.0 );
             scenery.set_cur_normal( hit_normal );
         }
+	// cout << "Current elevation = " << scenery.get_cur_elev() << endl;
+
 #if 0
     }
 #endif
@@ -413,7 +443,8 @@ void FGTileMgr::prep_ssg_nodes() {
     tile_cache.reset_traversal();
 
     while ( ! tile_cache.at_end() ) {
-        if ( (e = tile_cache.get_current()) ) {
+        // cout << "processing a tile" << endl;
+	if ( (e = tile_cache.get_current()) ) {
 	    e->prep_ssg_node( scenery.get_center(), vis);
         } else {
 	    SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
