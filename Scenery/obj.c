@@ -47,13 +47,14 @@ float normals[MAXNODES][3];
 
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path) {
-    char line[256];
+    char line[256], winding[256];
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
     double v1[3], v2[3], approx_normal[3], dot_prod, temp;
     struct fgCartesianPoint ref;
     GLint area;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
+    int i;
 
     if ( (f = fopen(path, "r")) == NULL ) {
 	printf("Cannot open file: %s\n", path);
@@ -103,6 +104,19 @@ GLint fgObjLoad(char *path) {
 		printf("Read too many vertex normals ... dying :-(\n");
 		exit(-1);
 	    }
+	} else if ( strncmp(line, "winding ", 8) == 0 ) {
+	    sscanf(line+8, "%s", winding);
+	    printf("WINDING = %s\n", winding);
+
+	    /* can't call glFrontFace() between glBegin() & glEnd() */
+	    glEnd();
+	    first = 1;
+
+	    if ( strcmp(winding, "cw") == 0 ) {
+		glFrontFace( GL_CW );
+	    } else {
+		glFrontFace ( GL_CCW );
+	    }
 	} else if ( line[0] == 't' ) {
 	    /* start a new triangle strip */
 
@@ -115,8 +129,6 @@ GLint fgObjLoad(char *path) {
 		first = 0;
 	    }
 
-	    glBegin(GL_TRIANGLE_STRIP);
-
 	    /* printf("new tri strip = %s", line); */
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
@@ -125,7 +137,7 @@ GLint fgObjLoad(char *path) {
 	    /* try to get the proper rotation by calculating an
              * approximate normal and seeing if it is close to the
 	     * precalculated normal */
-	    v1[0] = nodes[n2][0] - nodes[n1][0];
+	    /*v1[0] = nodes[n2][0] - nodes[n1][0];
 	    v1[1] = nodes[n2][1] - nodes[n1][1];
 	    v1[2] = nodes[n2][2] - nodes[n1][2];
 	    v2[0] = nodes[n3][0] - nodes[n1][0];
@@ -136,10 +148,18 @@ GLint fgObjLoad(char *path) {
 	    printf("Approx normal = %.2f %.2f %.2f\n", approx_normal[0], 
 		   approx_normal[1], approx_normal[2]);
 	    dot_prod = MAT3_DOT_PRODUCT(normals[n1], approx_normal);
-	    printf("Dot product = %.4f\n", dot_prod);
+	    printf("Dot product = %.4f\n", dot_prod); */
 	    /* angle = acos(dot_prod); */
 	    /* printf("Normal ANGLE = %.3f rads.\n", angle); */
-	    
+
+	    /* if ( dot_prod < -0.5 ) {
+		glFrontFace( GL_CW );
+	    } else {
+		glFrontFace( GL_CCW );
+	    } */
+
+	    glBegin(GL_TRIANGLE_STRIP);
+
             glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
 	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
 		       nodes[n1][2] - ref.z);
@@ -207,6 +227,20 @@ GLint fgObjLoad(char *path) {
     }
 
     glEnd();
+
+    /* Draw normal vectors (for visually verifying normals)*/
+/*     glBegin(GL_LINES); */
+/*     glColor3f(0.0, 0.0, 0.0); */
+/*     for ( i = 0; i < ncount; i++ ) { */
+/* 	glVertex3d(nodes[i][0] - ref.x,  */
+/* 		   nodes[i][1] - ref.y,  */
+/* 		   nodes[i][2] - ref.z); */
+/* 	glVertex3d(nodes[i][0] - ref.x + 1000*normals[i][0],  */
+/* 		   nodes[i][1] - ref.y + 1000*normals[i][1],  */
+/* 		   nodes[i][2] - ref.z + 1000*normals[i][2]); */
+/*     } */
+/*     glEnd(); */
+
     glEndList();
 
     fclose(f);
@@ -216,9 +250,14 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.6  1997/11/25 19:25:35  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.7  1997/12/08 22:51:17  curt
+/* Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
+/* admission of defeat.  I will eventually go back and get all the stripes
+/* wound the same way (ccw).
 /*
+ * Revision 1.6  1997/11/25 19:25:35  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.5  1997/11/15 18:16:39  curt
  * minor tweaks.
  *

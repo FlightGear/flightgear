@@ -80,16 +80,21 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 
 /* Render out the current scene */
 void fgSceneryRender() {
-    /* glCallList(area_terrain); */
+    glCallList(area_terrain);
 
     fgAstroRender();
 }
 
 
 /* $Log$
-/* Revision 1.23  1997/11/25 19:25:37  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.24  1997/12/08 22:51:18  curt
+/* Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
+/* admission of defeat.  I will eventually go back and get all the stripes
+/* wound the same way (ccw).
 /*
+ * Revision 1.23  1997/11/25 19:25:37  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.22  1997/10/28 21:00:22  curt
  * Changing to new terrain format.
  *
