@@ -488,9 +488,11 @@ bool FGATC610x::do_analog_in() {
     fgSetFloat( "/controls/throttle[0]", tmp );
     fgSetFloat( "/controls/throttle[1]", tmp );
 
+#if 0
     // rudder
     tmp = (float)(ATC_RUDDER_CENTER - analog_in_data[10]) / 145.0f;
     fgSetFloat( "/controls/rudder", tmp );
+#endif
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;
@@ -571,6 +573,10 @@ bool FGATC610x::do_radio_switches() {
 	fgSetInt( "/radios/dme/switch-position", 3 );
     }
 
+    // Com1 Power
+    fgSetBool( "/radios/comm[0]/inputs/power-btn",
+               radio_switch_data[7] & 0x01 );
+
     // Com1 Swap
     int com1_swap = !((radio_switch_data[7] >> 1) & 0x01);
     static int last_com1_swap;
@@ -581,6 +587,10 @@ bool FGATC610x::do_radio_switches() {
 	fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", tmp );
     }
     last_com1_swap = com1_swap;
+
+    // Com2 Power
+    fgSetBool( "/radios/comm[1]/inputs/power-btn",
+               radio_switch_data[15] & 0x01 );
 
     // Com2 Swap
     int com2_swap = !((radio_switch_data[15] >> 1) & 0x01);
