@@ -1,0 +1,396 @@
+.\" Copyright (C) 2001 Cameron Moore
+.\"
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version 2
+.\" of the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\"
+.Id $Id$
+.TH FGFS 1 "August 2001" "@VERSION@" "@PACKAGE@"
+.SH NAME
+fgfs \- FlightGear Flight Simulator
+.SH SYNOPSIS
+.B "fgfs "
+[ option ] ...
+.SH DESCRIPTION
+.B FlightGear
+is a free, open-source, multi-platform, and sophisticated flight
+simulator framework for the development and pursuit of interesting
+flight simulator ideas.
+.SH OPTIONS
+.TP
+.BI "--aero=" "name"
+Specify aerodynamics model to load.
+.TP
+.BI "--aircraft=" "name"
+Specify aircraft to load.
+.TP
+.BI "--aircraft-dir=" "path"
+Specify the aircraft model directory relative to the path of the
+executable.  This is used for UIUC aircraft only.
+.TP
+.BI "--airport-id=" "id"
+Specify starting postion by airport ID.
+.TP
+.BI "--altitude=" "value"
+Specify starting altitude (in feet unless --units-meters specified).
+.TP
+.BI "--atlas=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the Atlas protocol.
+.TP
+.BI "--bpp=" "depth"
+Specify the bits per pixel for the renderer.
+.TP
+.BI "--browser-app=" "path"
+Specify location of your web browser.
+.TP
+.BI "--clouds-asl=" "altitude"
+Specify altitude of cloud layer above sea level.
+.TP
+.BI "--config=" "path"
+Load additional properties from path.  Multiple instances of this
+option are recognized.
+.TP
+.BI "--control=" "mode"
+Primary control mode (joystick, keyboard, mouse).
+.TP
+.B "--disable-anti-alias-hud"
+Disable anti-aliased HUD.
+.TP
+.B "--disable-auto-coordination"
+Disable auto coordination between aileron and rudder.
+.TP
+.B "--disable-clouds"
+Disable cloud rendering.
+.TP
+.B "--disable-freeze"
+Start out in a running state.
+.TP
+.B "--disable-fullscreen"
+Disable fullscreen mode.
+.TP
+.B "--disable-game-mode"
+Disable fullscreen game mode.
+.TP
+.B "--disable-hud"
+Disable HUD.
+.TP
+.B "--disable-intro-music"
+Disable introduction music.
+.TP
+.B "--disable-mouse-pointer"
+Disable extra mouse pointer.
+.TP
+.B "--disable-network-olk"
+Disable Multi-pilot mode.
+.TP
+.B "--disable-panel"
+Disable instrument panel.
+.TP
+.B "--disable-skyblend"
+Disable sky blending.
+.TP
+.B "--disable-sound"
+Disable sound effects.
+.TP
+.B "--disable-splash-screen"
+Disable splash screen.
+.TP
+.B "--disable-textures"
+Disable textures.
+.TP
+.B "--disable-wireframe"
+Disable wireframe drawing mode.
+.TP
+.B "--enable-anti-alias-hud"
+Enable anti-aliased HUD.
+.TP
+.B "--enable-auto-coordination"
+Enable auto coordination between aileron and rudder.
+.TP
+.B "--enable-clouds"
+Enable cloud rendering.
+.TP
+.B "--enable-freeze"
+Start out in a frozen state.
+.TP
+.B "--enable-fullscreen"
+Enable fullscreen mode.
+.TP
+.B "--enable-game-mode"
+Enable fullscreen game mode.
+.TP
+.B "--enable-hud"
+Enable HUD.
+.TP
+.B "--enable-intro-music"
+Enable introduction music.
+.TP
+.B "--enable-mouse-pointer"
+Enable extra mouse pointer (i.e. for full screen voodoo/voodoo-II
+based cards.)
+.TP
+.B "--enable-network-olk"
+Enable Multi-pilot mode.
+.TP
+.B "--enable-panel"
+Enable instrument panel.
+.TP
+.B "--enable-skyblend"
+Enable sky blending.
+.TP
+.B "--enable-sound"
+Enable sound effects.
+.TP
+.B "--enable-splash-screen"
+Enable splash screen.
+.TP
+.B "--enable-textures"
+Enable textures.
+.TP
+.B "--enable-wireframe"
+Enable wireframe drawing mode.
+.TP
+.BI "--fdm=" "name"
+Specify the flight dynamics model to use.  Can be one of jsb, larcsim, yasim,
+magic, balloon, ada, external, or null.
+.TP
+.BI "--fg-root=" "path"
+Specify the root path for data files.
+.TP
+.BI "--fg-scenery=" "path"
+Specify the base path for scenery data.
+.TP
+.BI "--flight-plan=" "file"
+Read all waypoints from the specified file.
+.TP
+.B "--fog-disable"
+Disable fog rendering.
+.TP
+.B "--fog-fastest"
+Enable fastest fog rendering.
+.TP
+.B "--fog-nicest"
+Enable nicest fog rendering.
+.TP
+.BI "--fov=" "degrees"
+Specify initial field of view angle (degrees).
+.TP
+.BI "--garmin=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the Garmin GPS protocol.
+.TP
+.BI "--geometry=" "WxH"
+Specify window geometry (ie. 640x480, 800x600, etc).
+.TP
+.BI "--heading=" "degrees"
+Specify heading or yaw angle (degrees).
+.TP
+.BR "--help" ", " "-h"
+Show help message.
+.TP
+.BI "--httpd=" "port"
+Start an HTTP server on the specified port.
+.TP
+.B "--hud-culled"
+HUD displays percentage of triangles culled.
+.TP
+.B "--hud-tris"
+HUD displays number of triangles rendered.
+.TP
+.B "--in-air"
+Start up in the air.  This is implied when specifying an initial
+altitude above ground level.
+.TP
+.BI "--joyclient=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection to an Agwagon joystick
+.TP
+.BI "--lat=" "degrees"
+Specify starting latitude (degrees).
+.TP
+.BI "--lon=" "degrees"
+Specify starting longitude (degrees).
+.TP
+.BI "--mach=" "value"
+Specify initial mach number.
+.TP
+.BI "--model-hz=" "n"
+Run the FDM at this rate (iterations per second).
+.TP
+.BI "--native-ctrls=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the FlightGear Native Controls protocol.
+.TP
+.BI "--native-fdm=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the FlightGear Native FDM protocol.
+.TP
+.BI "--native=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the FlightGear Native protocol.
+.TP
+.B "--net-hud"
+Enable network information in the HUD.
+.TP
+.BI "--net-id=" "name"
+Specify your callsign.
+.TP
+.BI "--nmea=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the NMEA protocol.
+.TP
+.B "--notrim"
+Do not attempt to trim the model when initializing the JSBSim FDM.
+.TP
+.BI "--offset-azimuth=" "degrees"
+specify heading to threshhold (degrees).
+.TP
+.BI "--offset-distance=" "nm"
+Specify distance to threshhold (nautical miles).
+.TP
+.B "--on-ground"
+Start up at ground level.
+.TP
+.BI "--opengc=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connect to an OpenGC host.
+.TP
+.BI "--pitch=" "degrees"
+Specify pitch angle (degrees).
+.TP
+.BI "--props=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Specify an IO device in which to provide an interactive property manager.
+.TP
+.BI "--prop:name=" "value"
+set property <name> to <value>.
+.TP
+.BI "--pve=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the PVE (Provision Entertainment) protocol.
+.TP
+.BI "--ray=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection to a "RayWoodworth" motion chair
+.TP
+.BI "--roll=" "degrees"
+Specify roll angle (degrees).
+.TP
+.BI "--rul=" "medium" "," "direction" "," "hz" "," "options" "," "..."
+Open an IO connection using the RUL protocol.
+.TP
+.B "--shading-flat"
+Enable flat shading.
+.TP
+.B "--shading-smooth"
+Enable smooth shading.
+.TP
+.BI "--speed=" "n"
+Run the FDM "n" times faster than real-time.
+.TP
+.BI "--start-date-gmt=" "yyyy:mm:dd:hh:mm:ss"
+Specify a starting date/time with respect to GMT (Greenwich Mean Time).
+.TP
+.BI "--start-date-lat=" "yyyy:mm:dd:hh:mm:ss"
+Specify a starting date/time with respect to Local Aircraft Time.
+.TP
+.BI "--start-date-sys=" "yyyy:mm:dd:hh:mm:ss"
+Specify a starting date/time with respect to your local system time.
+.TP
+.BI "--tile-radius=" "n"
+Specify tile radius.  Valid values are 1 - 4.
+.TP
+.B "--time-match-local"
+Synchronize time with local real-world time.
+.TP
+.B "--time-match-real"
+Synchronize time with the real-world time.
+.TP
+.BI "--time-offset=" "[+-]hh:mm:ss"
+Specify a time offset with respect to the current time.  May be used in
+conjunction with other --time-* options.
+.TP
+.BI "--trace-read=" "property"
+Trace the reads for a property.  Multiple instances allowed.
+.TP
+.BI "--trace-write=" "property"
+Trace the writes for a property.  Multiple instances allowed.
+.TP
+.BI "--uBody=" "value"
+Specify velocity along the body X axis (feet per second unless
+--units-meters specified).
+.TP
+.B "--units-feet"
+Use feet instead of meters.  Affects other options as well as the
+values displayed by the HUD.
+.TP
+.B "--units-meters"
+Use meters instead of feet.  Affects other options as well as the
+values displayed by the HUD.
+.TP
+.BI "--vBody=" "value"
+Specify velocity along the body Y axis (feet per second unless
+--units-meters specified).
+.TP
+.BI "--vc=" "knots"
+Specify initial airspeed (knots).
+.TP
+.BI "--view-offset=" "value"
+Specify the default forward view direction as an offset from straight
+ahead.  Allowable values are LEFT, RIGHT, CENTER, or a specific number
+of degrees.
+.TP
+.BI "--visibility-miles=" "value"
+Specify initial visibility (miles).
+.TP
+.BI "--visibility=" "value"
+Specify initial visibility (meters).
+.TP
+.BI "--wBody=" "value"
+Specify velocity along the body Z axis (feet per second unless
+--units-meters specified).
+.TP
+.BI "--wind=" "DIR@SPEED"
+Specify wind coming from DIR (degrees) at SPEED (knots).
+.TP
+.BI "--wp=" "ID[@alt]"
+Specify a waypoint for the GC autopilot.  Multiple instances of this
+option are recognized in build a route.
+.SH ENVIRONMENT
+.TP
+.B $FGROOT
+Path used to locate data files.
+.SH FILES
+~/.fgfsrc
+.RS
+Per user configuration file.
+.RE
+.TP
+$FGROOT/system.fgfsrc
+.RS
+System-wide configuration file in command line format
+.RE
+.TP
+$FGROOT/preferences.xml
+.RS
+System-wide configuration file in XML format
+.RE
+.TP
+$FGROOT/keyboard.xml
+.RS
+Keyboard bindings
+.RE
+.TP
+$FGROOT/joystick.xml
+.RS
+Joystick bindings
+.RE
+.SH BUGS
+Send bug reports to <flightgear-devel@flightgear.org>.
+.SH SEE ALSO
+fgjs(1)
+.SH AUTHORS
+Curt L. Olson, et al.  See
+.I Thanks
+file for a list of contributors.
