@@ -267,6 +267,8 @@ static naRef f_interpolate(naContext c, naRef args)
 
     ((SGInterpolator*)globals->get_subsystem("interpolator"))
         ->interpolate(node, nPoints, values, deltas);
+
+    return naNil();
 }
 
 static naRef f_rand(naContext c, naRef args)
