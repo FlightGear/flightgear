@@ -50,6 +50,10 @@
 
 $Header$
 $Log$
+Revision 1.4  2003/06/20 19:53:56  ehofman
+Get rid of a multiple defined symbol warning" src/FDM/LaRCsim/ls_step.c
+"
+
 Revision 1.3  2003/06/09 02:50:23  mselig
 mods made to setup for some initializations in uiuc code
 
@@ -304,7 +308,7 @@ Initial Flight Gear revision.
 /* #include "ls_sim_control.h" */
 #include <math.h>
 
-Model current_model;
+extern Model current_model;	/* defined in ls_model.c */
 extern SCALAR Simtime;		/* defined in ls_main.c */
 
 void uiuc_init_vars() {
