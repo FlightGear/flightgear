@@ -1,25 +1,28 @@
 /*
 //  Alterations: Copyright C. Hotchkiss 1996
 //
-**$Log$
-**Revision 1.1  1998/05/11 18:26:12  curt
-**Initial revision.
-**
+// $Log$
+// Revision 1.2  1998/05/13 18:23:46  curt
+// fg_typedefs.h: updated version by Charlie Hotchkiss
+// general.h: moved fg_root info to fgOPTIONS structure.
+//
+// Revision 1.1  1998/05/11 18:26:12  curt
+// Initial revision.
 //
 //   Rev 1.4   11 Nov 1997 15:34:28   CHOTCHKISS
-//Expanded definitions.
+// Expanded definitions.
 //
 //   Rev 1.3   20 Jan 1997  9:21:26   CHOTCHKISS
-//Minor additions.
+// Minor additions.
 //
 //   Rev 1.2   12 Nov 1996 15:06:52   CHOTCHKISS
-//Dropped PC Write print format control lines.
-*
-*   Rev 1.1   20 Nov 1995 15:59:02   CHOTCHKISS
-*Additions and improvements. Memcheck compatibilities.
-*
-*   Rev 1.0   06 Apr 1995 14:00:32   CHOTCHKISS
-*Initial revision.
+// Dropped PC Write print format control lines.
+//
+//  Rev 1.1   20 Nov 1995 15:59:02   CHOTCHKISS
+// Additions and improvements. Memcheck compatibilities.
+//
+//  Rev 1.0   06 Apr 1995 14:00:32   CHOTCHKISS
+// Initial revision.
 
 */
 /*
@@ -57,7 +60,7 @@ typedef long           LONG ;    // 32-bit signed data
 typedef unsigned long  ULONG ;   // 32-bit unsigned data
 
 typedef unsigned short UWORD;   // Unsigned 16 bit quantity (WIN=SHORT)
-#ifndef _WINDOWS_
+#if !defined(WIN32)
 typedef signed   short WORD;    // Signed   16 bit quantity
 #endif
 typedef BYTE           UBYTE;    // Used in some 3rd party code

@@ -35,9 +35,6 @@
 
 /* the general house keeping structure definition */
 typedef struct {
-    /* The flight gear "root" directory */
-    char *root_dir;
-
     /* Last frame rate measurement */
     double frame_rate;
     double frames[FG_FRAME_RATE_HISTORY];
@@ -50,9 +47,13 @@ extern fgGENERAL general;
 
 
 /* $Log$
-/* Revision 1.5  1998/05/07 23:03:17  curt
-/* Lowered size of frame rate history buffer.
+/* Revision 1.6  1998/05/13 18:23:46  curt
+/* fg_typedefs.h: updated version by Charlie Hotchkiss
+/* general.h: moved fg_root info to fgOPTIONS structure.
 /*
+ * Revision 1.5  1998/05/07 23:03:17  curt
+ * Lowered size of frame rate history buffer.
+ *
  * Revision 1.4  1998/05/06 03:14:30  curt
  * Added a shared frame rate counter.
  *
