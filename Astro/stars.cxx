@@ -80,8 +80,8 @@ int fgStarsInit( void ) {
 
     /* build the full path name to the stars data base file */
     current_options.get_fg_root(path);
-    strcat(path, "/Scenery/");
-    strcat(path, "Stars");
+    strcat(path, "/Astro/");
+    strcat(path, "stars");
 
     if ( FG_STAR_LEVELS < 4 ) {
 	fgPrintf( FG_ASTRO, FG_EXIT, "Big whups in stars.cxx\n");
@@ -288,11 +288,14 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.10  1998/08/10 20:33:09  curt
-/* Rewrote star loading and rendering to:
-/*   1. significantly improve load speed
-/*   2. transition from no stars to stars through eight stages.
+/* Revision 1.11  1998/08/25 20:53:29  curt
+/* Shuffled $FG_ROOT file layout.
 /*
+ * Revision 1.10  1998/08/10 20:33:09  curt
+ * Rewrote star loading and rendering to:
+ *   1. significantly improve load speed
+ *   2. transition from no stars to stars through eight stages.
+ *
  * Revision 1.9  1998/08/06 12:45:20  curt
  * Modified to bring in stars in 8 increments based on magnitude, not number
  * of stars.

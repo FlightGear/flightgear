@@ -84,8 +84,8 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 
     // build the path name to the material db
     current_options.get_fg_root(mpath);
-    strcat(mpath, "/Scenery/");
-    strcat(mpath, "Materials");
+    strcat(mpath, "/");
+    strcat(mpath, "materials");
     strcpy(fg_mpath, mpath);
     strcat(fg_mpath, ".gz");
 
@@ -303,6 +303,9 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/08/25 20:53:33  curt
+// Shuffled $FG_ROOT file layout.
+//
 // Revision 1.1  1998/08/25 16:51:24  curt
 // Moved from ../Scenery
 //

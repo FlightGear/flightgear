@@ -90,7 +90,7 @@ int fgInitPosition( void ) {
 		  "Attempting to set starting position from airport code %s.\n",
 		  id);
 
-	airports.load("Airports");
+	airports.load("apt_simple");
 	a = airports.search(id);
 	if ( (fabs(a.longitude) < FG_EPSILON) &&
 	     (fabs(a.latitude) < FG_EPSILON) &&
@@ -388,6 +388,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.33  1998/08/25 20:53:32  curt
+// Shuffled $FG_ROOT file layout.
+//
 // Revision 1.32  1998/08/25 16:59:09  curt
 // Directory reshuffling.
 //

@@ -121,8 +121,8 @@ int fgSolarSystemInit(fgTIME t)
 
     /* build the full path name to the orbital elements database file */
     current_options.get_fg_root(path);
-    strcat(path, "/Scenery/");
-    strcat(path, "Planets");
+    strcat(path, "/Astro/");
+    strcat(path, "planets");
 
     if ( (data = fgopen(path, "rb")) == NULL ) {
 	strcpy(gzpath, path);
@@ -170,9 +170,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, fgTIME t)
 
 
 /* $Log$
-/* Revision 1.8  1998/08/22 01:18:59  curt
-/* Minor tweaks to avoid using unitialized memory.
+/* Revision 1.9  1998/08/25 20:53:28  curt
+/* Shuffled $FG_ROOT file layout.
 /*
+ * Revision 1.8  1998/08/22 01:18:59  curt
+ * Minor tweaks to avoid using unitialized memory.
+ *
  * Revision 1.7  1998/07/13 21:00:09  curt
  * Wrote access functions for current fgOPTIONS.
  *

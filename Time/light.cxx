@@ -67,22 +67,22 @@ void fgLIGHT::Init( void ) {
 
     // build the path name to the ambient lookup table
     current_options.get_fg_root(path);
-    strcat(path, "/Scenery/");
-    strcat(path, "Ambient");
+    strcat(path, "/Lighting/");
+    strcat(path, "ambient");
     // initialize ambient table
     ambient_tbl = new fgINTERPTABLE(path);
 
     // build the path name to the diffuse lookup table
     current_options.get_fg_root(path);
-    strcat(path, "/Scenery/");
-    strcat(path, "Diffuse");
+    strcat(path, "/Lighting/");
+    strcat(path, "diffuse");
     // initialize diffuse table
     diffuse_tbl = new fgINTERPTABLE(path);
     
     // build the path name to the sky lookup table
     current_options.get_fg_root(path);
-    strcat(path, "/Scenery/");
-    strcat(path, "Sky");
+    strcat(path, "/Lighting/");
+    strcat(path, "sky");
     // initialize sky table
     sky_tbl = new fgINTERPTABLE(path);
 }
@@ -227,6 +227,9 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/08/25 20:53:33  curt
+// Shuffled $FG_ROOT file layout.
+//
 // Revision 1.14  1998/08/06 12:47:22  curt
 // Adjusted dusk/dawn lighting ...
 //

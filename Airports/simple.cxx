@@ -49,8 +49,8 @@ int fgAIRPORTS::load( char *file ) {
 
     // build the path name to the airport file
     current_options.get_fg_root(path);
-    strcat(path, "/Scenery/");
-    strcat(path, "Airports");
+    strcat(path, "/Airports/");
+    strcat(path, file);
     strcpy(fgpath, path);
     strcat(fgpath, ".gz");
 
@@ -100,6 +100,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/08/25 20:53:24  curt
+// Shuffled $FG_ROOT file layout.
+//
 // Revision 1.1  1998/08/25 17:19:13  curt
 // Moved from ../Main/
 //
