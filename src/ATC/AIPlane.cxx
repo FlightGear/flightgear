@@ -30,6 +30,10 @@ SG_USING_STD(string);
 #include "AIPlane.hxx"
 #include "ATCdisplay.hxx"
 
+FGAIPlane::FGAIPlane() {
+	leg = LEG_UNKNOWN;
+}
+
 FGAIPlane::~FGAIPlane() {
 }
 

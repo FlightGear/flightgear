@@ -35,20 +35,6 @@
 #include <string>
 SG_USING_STD(string);
 
-enum PatternLeg {
-	TAKEOFF_ROLL,
-	CLIMBOUT,
-	TURN1,
-	CROSSWIND,
-	TURN2,
-	DOWNWIND,
-	TURN3,
-	BASE,
-	TURN4,
-	FINAL,
-	LANDING_ROLL
-};
-
 enum TaxiState {
 	TD_INBOUND,
 	TD_OUTBOUND,
@@ -94,7 +80,7 @@ public:
 	void RegisterTransmission(int code); 
 	
 	// This is a hack and will probably go eventually
-	inline bool AtHoldShort() {return(holdingShort);}
+	inline bool AtHoldShort() {return holdingShort;}
 	
 protected:
 	
@@ -156,7 +142,7 @@ private:
 	int numInPattern;		// Number of planes in the pattern (this might get more complicated if high performance GA aircraft fly a higher pattern eventually)
 	int numAhead;		// More importantly - how many of them are ahead of us?
 	double distToNext;		// And even more importantly, how near are we getting to the one immediately ahead?
-	PatternLeg leg;		// Out current position in the pattern
+	//PatternLeg leg;		// Our current position in the pattern - now moved to FGAIPlane
 	StartofDescent SoD;		// Start of descent calculated wrt wind, pattern size & altitude, glideslope etc
 
 	// Taxiing details

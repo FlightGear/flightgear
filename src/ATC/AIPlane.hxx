@@ -18,14 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-/*****************************************************************
-*
-* WARNING - Curt has some ideas about AI traffic so anything in here
-* may get rewritten or scrapped.  Contact Curt curt@flightgear.org 
-* before spending any time or effort on this code!!!
-*
-******************************************************************/
-
 #ifndef _FG_AI_PLANE_HXX
 #define _FG_AI_PLANE_HXX
 
@@ -37,6 +29,20 @@
 #include "AIEntity.hxx"
 #include "ATC.hxx"
 
+enum PatternLeg {
+	TAKEOFF_ROLL,
+	CLIMBOUT,
+	TURN1,
+	CROSSWIND,
+	TURN2,
+	DOWNWIND,
+	TURN3,
+	BASE,
+	TURN4,
+	FINAL,
+	LANDING_ROLL,
+	LEG_UNKNOWN
+};
 
 /*****************************************************************
 *
@@ -51,6 +57,7 @@ class FGAIPlane : public FGAIEntity {
 
 public:
 
+	FGAIPlane();
     virtual ~FGAIPlane();
 
     // Run the internal calculations
@@ -59,6 +66,9 @@ public:
 	// Send a transmission *TO* the AIPlane.
 	// FIXME int code is a hack - eventually this will receive Alexander's coded messages.
 	virtual void RegisterTransmission(int code);
+	
+	// Return the current pattern leg the plane is flying.
+	inline PatternLeg GetLeg() {return leg;}
 
 protected:
 	PlaneRec plane;
@@ -86,6 +96,8 @@ protected:
 
     void Bank(double angle);
     void LevelWings(void);
+	
+	PatternLeg leg;
 };
 
 #endif  // _FG_AI_PLANE_HXX
