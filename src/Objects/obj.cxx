@@ -700,15 +700,21 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    // xglTexCoord2f(pp.x(), pp.y());
 		    // xglVertex3dv(nodes[n3].get_n());
 
-		    if ( odd ) {
+		    if ( token == "tf" ) {
+			// triangle fan
 			fragment.add_face(n1, n2, n3);
+			n2 = n3;
 		    } else {
-			fragment.add_face(n2, n1, n3);
+			// triangle strip
+			if ( odd ) {
+			    fragment.add_face(n1, n2, n3);
+			} else {
+			    fragment.add_face(n2, n1, n3);
+			}
+			odd = !odd;
+			n1 = n2;
+			n2 = n3;
 		    }
-
-		    odd = !odd;
-		    n1 = n2;
-		    n2 = n3;
 		}
 
 		// xglEnd();
