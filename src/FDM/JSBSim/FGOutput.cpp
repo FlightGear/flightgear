@@ -279,7 +279,11 @@ void FGOutput::SocketOutput(void)
 {
   string asciiData;
 
+#ifdef MACOS
+  if (socket == 0) return;
+#else
   if (socket <= 0) return;
+#endif
 
   socket->Clear();
   if (sFirstPass) {

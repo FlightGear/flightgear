@@ -200,7 +200,11 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 	while ( ! in.eof() ) {
 	    in >> token;
 	    in >> name;
+#ifdef MACOS
+	    in >> ::skipws;
+#else
 	    in >> skipws;
+#endif
 	    cout << "token = " << token << " name = " << name << endl;
 
 	    FGPath custom_path = tile_path;

@@ -85,7 +85,11 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
   Output      = FDMExec->GetOutput();
 
   Name = engineName;
+#ifdef MACOS
+  fullpath = enginePath + ":" + engineName + ".dat";
+#else
   fullpath = enginePath + "/" + engineName + ".dat";
+#endif 
   ifstream enginefile(fullpath.c_str());
 
   if (enginefile) {

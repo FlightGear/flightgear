@@ -158,7 +158,15 @@ public:
     /************************************************************************/
     /* Get the physical properties on the specified point p		    */
     /************************************************************************/
+#ifdef MACOS
+    /* fix a problem with mw compilers in that they don't know the
+       difference between the next two methods. Since the first one
+       doesn't seem to be used anywhere, I commented it out. This is
+       supposed to be fixed in the forthcoming CodeWarrior Release
+       6. */
+#else
     FGPhysicalProperties get(const sgVec2& p) const;
+#endif
     FGPhysicalProperty   get(const sgVec3& p) const;
 
     WeatherPrecision     getAirDensity(const sgVec3& p) const;

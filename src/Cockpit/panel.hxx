@@ -132,7 +132,7 @@ class FGTurnCoordinator : public FGInstrument
 
 public:
   FGTurnCoordinator (float inXPos, float inYPos);
-  virtual FGTurnCoordinator::~FGTurnCoordinator (void);
+  virtual ~FGTurnCoordinator (void);
   virtual void Init (void);
   virtual void Render(void);
   

@@ -679,7 +679,9 @@ void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgdMat4 m,
 		    {
 			// cout << "sgLOS hit: " << result[0] << "," 
 			//      << result[1] << "," << result[2] << endl;
-			hit_pts[hitcount] = result;
+			for (int i=0; i < 3; i++) {
+			    hit_pts[hitcount][i] = result[i];
+			}
 			hitcount++;
 		    }
 		}

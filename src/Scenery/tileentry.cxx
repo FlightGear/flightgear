@@ -98,12 +98,20 @@ void FGTileEntry::free_tile() {
 	    << " texture coordinate arrays" );
 
     for ( i = 0; i < (int)vec3_ptrs.size(); ++i ) {
+#ifdef MACOS
+	delete [] vec3_ptrs[i];
+#else
 	delete vec3_ptrs[i];
+#endif
     }
     vec3_ptrs.clear();
 
     for ( i = 0; i < (int)vec2_ptrs.size(); ++i ) {
+#ifdef MACOS
+	delete [] vec2_ptrs[i];
+#else
 	delete vec2_ptrs[i];
+#endif
     }
     vec2_ptrs.clear();
 

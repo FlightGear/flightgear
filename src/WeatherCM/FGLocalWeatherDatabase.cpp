@@ -199,10 +199,18 @@ FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
     return FGPhysicalProperty(database->Evaluate(p), p[3]);
 }
 
+#ifdef MACOS
+    /* fix a problem with mw compilers in that they don't know the
+       difference between the next two methods. Since the first one
+       doesn't seem to be used anywhere, I commented it out. This is
+       supposed to be fixed in the forthcoming CodeWarrior Release
+       6. */
+#else
 FGPhysicalProperties FGLocalWeatherDatabase::get(const sgVec2& p) const
 {
     return database->Evaluate(p);
 }
+#endif
 
 WeatherPrecision FGLocalWeatherDatabase::getAirDensity(const sgVec3& p) const
 {

@@ -815,9 +815,11 @@ int fgOPTIONS::parse_config_file( const string& path ) {
 	string line;
 
 #ifdef GETLINE_NEEDS_TERMINATOR
-	getline( in, line, '\n' );
+        getline( in, line, '\n' );
+#elif defined (MACOS)
+	getline( in, line, '\r' );
 #else
-	getline( in, line );
+        getline( in, line );
 #endif
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {

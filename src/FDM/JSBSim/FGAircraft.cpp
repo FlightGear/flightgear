@@ -101,8 +101,8 @@ Control
 INCLUDES
 *******************************************************************************/
 
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #ifdef FGFS
 # ifndef __BORLANDC__
@@ -156,13 +156,17 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   string holding_string;
   char scratch[128];
   ifstream coeffInFile;
-  streampos gpos;
+  streampos gpos(0);
   int axis;
   string axis_descript;
   bool readAeroRp=false;
 
   axis = -1;
+#ifdef MACOS  
+  aircraftDef = aircraft_path + ":" + fname + ":" + fname + ".cfg";
+#else
   aircraftDef = aircraft_path + "/" + fname + "/" + fname + ".cfg";
+#endif
   ifstream aircraftfile(aircraftDef.c_str());
   cout << "Reading Aircraft Configuration File: " << aircraftDef << endl;
   // Output->SocketStatusOutput("Reading Aircraft Configuration File: " + aircraftDef);
@@ -175,7 +179,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   while (!aircraftfile.fail()) {
     holding_string.erase();
     aircraftfile >> holding_string;
-#if defined(__BORLANDC__) || defined(FG_HAVE_NATIVE_SGI_COMPILERS) || defined(_MSC_VER)
+#if defined(__BORLANDC__) || defined(FG_HAVE_NATIVE_SGI_COMPILERS) || defined(_MSC_VER) || defined(__MWERKS__)
     if (holding_string.compare(0, 2, "//") != 0) {
 #else
     if (holding_string.compare("//",0,2) != 0) {

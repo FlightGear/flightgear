@@ -303,11 +303,16 @@ static void fgtzset_internal (int always, const char *tz)
     /* User specified the empty string; use UTC explicitly.  */
     tz = "Universal";
 
+#ifdef MACOS
+  /* as you well know, mac paths contain leading colon, this code
+     messes things up.... */
+#else
   /* A leading colon means "implementation defined syntax".
      We ignore the colon and always use the same algorithm:
      try a data file, and if none exists parse the 1003.1 syntax.  */
   if (tz && *tz == ':')
     ++tz;
+#endif
 
   /* Check whether the value changes since the last run.  */
   if (old_fgtz != NULL && tz != NULL && strcmp (tz, old_fgtz) == 0)

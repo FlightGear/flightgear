@@ -229,6 +229,49 @@ inline FGPhysicalProperties& FGPhysicalProperties::operator += (const FGPhysical
     return *this;
 }
 
+// slightly modified version that also makes the Mac happy
+inline FGPhysicalProperties& FGPhysicalProperties::operator -= (const FGPhysicalProperties& p)
+{
+    typedef map<FGPhysicalProperties::Altitude, FGWindItem>::const_iterator wind_iterator;
+    typedef map<FGPhysicalProperties::Altitude, FGTurbulenceItem>::const_iterator turbulence_iterator;
+    typedef map<FGPhysicalProperties::Altitude, WeatherPrecision>::const_iterator scalar_iterator;
+    
+    // types to replace make_pair
+    typedef map<FGPhysicalProperties::Altitude, FGWindItem>::value_type wind_type;
+    typedef map<FGPhysicalProperties::Altitude,	FGTurbulenceItem>::value_type turb_type;
+    typedef map<FGPhysicalProperties::Altitude,	WeatherPrecision>::value_type weather_type;
+    
+    for (wind_iterator WindIt = p.Wind.begin();
+	 WindIt != p.Wind.end();
+	 WindIt++)
+	if (!Wind.insert( wind_type(WindIt->first, -WindIt->second) ).second)
+	    // when it's not inserted => it's already existing
+	    Wind[WindIt->first] -= WindIt->second; //=> substract the value
+
+    for (turbulence_iterator TurbulenceIt = p.Turbulence.begin();
+	 TurbulenceIt != p.Turbulence.end();
+	 TurbulenceIt++)
+	if (!Turbulence.insert( turb_type(TurbulenceIt->first, -TurbulenceIt->second) ).second)
+	    Turbulence[TurbulenceIt->first] -= TurbulenceIt->second;
+    
+    for (scalar_iterator TemperatureIt = p.Temperature.begin();
+	 TemperatureIt != p.Temperature.end();
+	 TemperatureIt++)
+	if (!Temperature.insert( weather_type(TemperatureIt->first, -TemperatureIt->second) ).second)
+	    Temperature[TemperatureIt->first] -= TemperatureIt->second;
+    
+    AirPressure -= p.AirPressure.getValue();
+    
+    for (scalar_iterator VaporPressureIt = p.VaporPressure.begin();
+	 VaporPressureIt != p.VaporPressure.end();
+	 VaporPressureIt++)
+	if (!VaporPressure.insert( weather_type(VaporPressureIt->first, -VaporPressureIt->second) ).second)
+	    VaporPressure[VaporPressureIt->first] -= VaporPressureIt->second;
+
+    return *this;
+}
+
+#if 0 // old version
 inline FGPhysicalProperties& FGPhysicalProperties::operator -= (const FGPhysicalProperties& p)
 {
     typedef map<FGPhysicalProperties::Altitude, FGWindItem      >::const_iterator wind_iterator;
@@ -264,6 +307,7 @@ inline FGPhysicalProperties& FGPhysicalProperties::operator -= (const FGPhysical
 
     return *this;
 }
+#endif
 
 inline void FGPhysicalProperties::WindAt(sgVec3 ret, const WeatherPrecision a) const
 {
