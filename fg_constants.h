@@ -69,10 +69,10 @@
 
 /* Value of earth radius from [8] */
 #define EQUATORIAL_RADIUS_FT 20925650.    /* ft */
-#define EQUATORIAL_RADIUS_KM 6378138.12   /* meter */
+#define EQUATORIAL_RADIUS_M   6378138.12  /* meter */
 /* Radius squared */
 #define RESQ_FT 437882827922500.          /* ft */
-#define RESQ_KM 40680645877797.1344       /* meter */
+#define RESQ_M   40680645877797.1344      /* meter */
 
 /* Value of earth flattening parameter from ref [8] 
  *
@@ -145,12 +145,19 @@
 
 
 /* $Log$
-/* Revision 1.6  1998/07/03 14:36:11  curt
-/* Added conversion constants to fg_constants.h to assist with converting
-/*   between various world units and coordinate systems.
-/* Added gl vendor/renderer/version info to general structure.  Initialized
-/*   in fg_init.cxx
+/* Revision 1.7  1998/07/08 14:36:29  curt
+/* Changed name of EQUATORIAL_RADIUS_KM and RESQ_KM to "M" since they were
+/* in meters anyways.
 /*
+/* Unified fgCartesianPoint3d and fgPolarPoint3d in a single struct called
+/* fgPoint3d.
+/*
+ * Revision 1.6  1998/07/03 14:36:11  curt
+ * Added conversion constants to fg_constants.h to assist with converting
+ *   between various world units and coordinate systems.
+ * Added gl vendor/renderer/version info to general structure.  Initialized
+ *   in fg_init.cxx
+ *
  * Revision 1.5  1998/05/17 16:56:47  curt
  * Re-organized PI related constants.
  *

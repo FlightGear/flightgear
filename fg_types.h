@@ -30,14 +30,25 @@
 
 /* A simple 3d cartesian point */
 typedef struct {
-    double x, y, z;
-} fgCartesianPoint3d;
+    union {
+	double x;
+	double lon;
+    };
+    union {
+	double y;
+	double lat;
+    };
+    union {
+	double z;
+	double radius;
+    };
+} fgPoint3d;
 
 
 /* A simple 3d polar point */
 typedef struct {
     double lon, lat, radius;
-} fgPolarPoint3d;
+} fgPolarPoint3dOld;
 
 
 /* A simple geodetic point */
@@ -50,9 +61,16 @@ typedef struct {
 
 
 /* $Log$
-/* Revision 1.3  1998/05/02 01:48:39  curt
-/* typedef-ified fgCartesianPoint3d
+/* Revision 1.4  1998/07/08 14:36:29  curt
+/* Changed name of EQUATORIAL_RADIUS_KM and RESQ_KM to "M" since they were
+/* in meters anyways.
 /*
+/* Unified fgCartesianPoint3d and fgPolarPoint3d in a single struct called
+/* fgPoint3d.
+/*
+ * Revision 1.3  1998/05/02 01:48:39  curt
+ * typedef-ified fgCartesianPoint3d
+ *
  * Revision 1.2  1998/04/08 23:35:33  curt
  * Tweaks to Gnu automake/autoconf system.
  *
