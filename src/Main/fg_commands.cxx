@@ -62,7 +62,7 @@ public:
   virtual const SGPropertyNode * getFactor () const 
     { return _factor ? _factor : &_dummy_1; }
   virtual const SGPropertyNode * getSquared () const 
-    { return _squared ? _squared : &_dummy_1; }
+    { return _squared ? _squared : &_dummy_0; }
   virtual const SGPropertyNode * getSetting () const 
     { return _setting ? _setting : &_dummy_0; }
   virtual const SGPropertyNode * getOffset () const
