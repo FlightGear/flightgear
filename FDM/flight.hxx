@@ -52,6 +52,7 @@
 
    `FGState::get_Gamma_vert_rad ()'
    `FGState::get_Climb_Rate ()'
+   `FGState::get_Alpha ()'
    `FGState::get_Beta ()'
 
    `FGState::get_Runway_altitude ()'
@@ -60,6 +61,10 @@
    `FGState::get_Lat_geocentric ()'
    `FGState::get_Sea_level_radius ()'
    `FGState::get_Earth_position_angle ()'
+
+   `FGState::get_Latitude_dot()'
+   `FGState::get_Longitude_dot()'
+   `FGState::get_Radius_dot()'
 
    `FGState::get_Dx_cg ()'
    `FGState::get_Dy_cg ()'
@@ -511,14 +516,14 @@ public:
 
     FG_VECTOR_3    geocentric_rates_v;     // Geocentric linear velocities
     // inline double * get_Geocentric_rates_v() { return geocentric_rates_v; }
-    // inline double get_Latitude_dot() const { return geocentric_rates_v[0]; }
-    // inline double get_Longitude_dot() const { return geocentric_rates_v[1]; }
-    // inline double get_Radius_dot() const { return geocentric_rates_v[2]; }
-    /* inline void set_Geocentric_Rates( double lat, double lon, double rad ) {
+    inline double get_Latitude_dot() const { return geocentric_rates_v[0]; }
+    inline double get_Longitude_dot() const { return geocentric_rates_v[1]; }
+    inline double get_Radius_dot() const { return geocentric_rates_v[2]; }
+    inline void set_Geocentric_Rates( double lat, double lon, double rad ) {
 	geocentric_rates_v[0] = lat;
 	geocentric_rates_v[1] = lon;
 	geocentric_rates_v[2] = rad;
-    } */
+    }
     
     /*=============================== Positions ===============================*/
 
@@ -538,7 +543,8 @@ public:
     inline void set_Radius_to_vehicle(double radius) {
 	geocentric_position_v[2] = radius;
     }
-    inline void set_Geocentric_Position( double lat, double lon, double rad ) {
+
+//     inline void set_Geocentric_Position( double lat, double lon, double rad ) {
 	geocentric_position_v[0] = lat;
 	geocentric_position_v[1] = lon;
 	geocentric_position_v[2] = rad;
@@ -621,8 +627,8 @@ public:
     // inline void set_Centrifugal_relief(double cr) { centrifugal_relief = cr; }
 
     double    alpha, beta, alpha_dot, beta_dot;   // in radians  
-    // inline double get_Alpha() const { return alpha; }
-    // inline void set_Alpha( double a ) { alpha = a; }
+    inline double get_Alpha() const { return alpha; }
+    inline void set_Alpha( double a ) { alpha = a; }
     inline double get_Beta() const { return beta; }
     inline void set_Beta( double b ) { beta = b; }
     // inline double get_Alpha_dot() const { return alpha_dot; }
@@ -791,6 +797,10 @@ void fgFlightModelSetAltitude(int model, double alt_meters);
 
 
 // $Log$
+// Revision 1.9  1999/01/08 19:27:38  curt
+// Fixed AOA reading on HUD.
+// Continued work on time jitter compensation.
+//
 // Revision 1.8  1999/01/08 03:23:52  curt
 // Beginning work on compensating for sim time vs. real world time "jitter".
 //

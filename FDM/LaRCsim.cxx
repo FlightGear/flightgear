@@ -322,7 +322,7 @@ int fgLaRCsim_2_FGState (FGState& f) {
     // f.set_Omega_Total( P_total, Q_total, R_total );
     
     // f.set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
-    // f.set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+    f.set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
     // Positions
     f.set_Geocentric_Position( Lat_geocentric, Lon_geocentric, 
@@ -335,7 +335,7 @@ int fgLaRCsim_2_FGState (FGState& f) {
     // f.set_Gravity( Gravity );
     // f.set_Centrifugal_relief( Centrifugal_relief );
 
-    // f.set_Alpha( Alpha );
+    f.set_Alpha( Alpha );
     f.set_Beta( Beta );
     // f.set_Alpha_dot( Alpha_dot );
     // f.set_Beta_dot( Beta_dot );
@@ -389,6 +389,10 @@ int fgLaRCsim_2_FGState (FGState& f) {
 
 
 // $Log$
+// Revision 1.9  1999/01/08 19:27:36  curt
+// Fixed AOA reading on HUD.
+// Continued work on time jitter compensation.
+//
 // Revision 1.8  1998/12/18 23:37:06  curt
 // Collapsed out the FGState variables not currently needed.  They are just
 // commented out and can be readded easily at any time.  The point of this

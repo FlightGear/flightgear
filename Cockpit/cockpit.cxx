@@ -150,7 +150,7 @@ double get_aoa( void )
 	FGState *f;
               
 	f = current_aircraft.fdm_state;
-	return( f->get_Gamma_vert_rad() * RAD_TO_DEG );
+	return( f->get_Alpha() * RAD_TO_DEG );
 }
 
 double get_roll( void )
@@ -303,6 +303,10 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.29  1999/01/08 19:27:34  curt
+// Fixed AOA reading on HUD.
+// Continued work on time jitter compensation.
+//
 // Revision 1.28  1999/01/07 20:24:17  curt
 // Update fgGENERAL to FGGeneral.
 //

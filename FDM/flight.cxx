@@ -90,6 +90,43 @@ int fgFlightModelInit(int model, FGState& f, double dt) {
 }
 
 
+// Extrapolate fdm based on jitter time (in milliseconds)
+static FGState extrapolate_fdm( FGState &base, int jitter ) {
+    FGState result;
+
+    double dt = jitter / 1000.0;
+    // cout << "dt = " << dt << endl;
+
+    // start by making a straight up copy
+    result = base;
+
+    double lon = base.get_Longitude() + base.get_Longitude_dot() * dt;
+    double lon_geoc = base.get_Lon_geocentric() + base.get_Longitude_dot() * dt;
+
+    double lat = base.get_Latitude() + base.get_Latitude_dot() * dt;
+    double lat_geoc = base.get_Lat_geocentric() + base.get_Latitude_dot() * dt;
+
+    /*
+    cout << "( " << base.get_Longitude() << ", " << 
+	base.get_Latitude() << " )" << endl;
+    cout << "( " << lon << ", " << lat << " )" << endl;
+    cout << "( " << base.get_Longitude_dot() * dt << ", " << 
+	base.get_Latitude_dot() * dt << ", " << 
+	base.get_Radius_dot() * dt << " )" << endl;
+	*/
+
+    double alt = base.get_Altitude() + base.get_Radius_dot() * dt;
+    double radius = base.get_Radius_to_vehicle() + base.get_Radius_dot() * dt;
+
+    result.set_Longitude( lon );
+    result.set_Latitude( lat );
+    result.set_Altitude( alt );
+    // result.set_Geocentric_Position( lon_geoc, lat_geoc, radius );
+
+    return result;
+}
+
+
 // Run multiloop iterations of the flight model
 int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter) {
     double time_step, start_elev, end_elev;
@@ -119,7 +156,7 @@ int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter) {
 	base_fdm_state.set_Climb_Rate( (end_elev - start_elev) / time_step );
     }
 
-    f = base_fdm_state;
+    f = extrapolate_fdm( base_fdm_state, jitter );
 
     return 1;
 }
@@ -147,6 +184,10 @@ void fgFlightModelSetAltitude(int model, double alt_meters) {
 
 
 // $Log$
+// Revision 1.9  1999/01/08 19:27:37  curt
+// Fixed AOA reading on HUD.
+// Continued work on time jitter compensation.
+//
 // Revision 1.8  1999/01/08 03:23:51  curt
 // Beginning work on compensating for sim time vs. real world time "jitter".
 //
