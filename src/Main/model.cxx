@@ -103,8 +103,10 @@ FGAircraftModel::init ()
       SG_LOG(SG_INPUT, SG_ALERT, "No object-name given for transformation");
     } else {
       for (unsigned int j = 0; j < name_nodes.size(); j++) {
-	_animations.push_back(read_animation(name_nodes[j]->getStringValue(),
-					     animation_nodes[i]));
+	Animation animation;
+	read_animation(animation, name_nodes[j]->getStringValue(),
+		       animation_nodes[i]);
+	_animations.push_back(animation);
       }
     }
   }
@@ -226,21 +228,19 @@ FGAircraftModel::update (int dt)
   }
 }
 
-FGAircraftModel::Animation
-FGAircraftModel::read_animation (const string &object_name,
+void
+FGAircraftModel::read_animation (Animation &animation,
+				 const string &object_name,
 				 const SGPropertyNode * node)
 {
-  Animation animation;
-
 				// Find the object to be animated
   ssgEntity * target = find_named_node(_model, object_name);
   if (target != 0) {
     SG_LOG(SG_INPUT, SG_INFO, "  Target object is " << object_name);
   } else {
-    animation.type = Animation::None;
     SG_LOG(SG_INPUT, SG_ALERT, "Object " << object_name
 	   << " not found in model");
-    return animation;
+    return;
   }
 
 				// Figure out the animation type
@@ -254,11 +254,11 @@ FGAircraftModel::read_animation (const string &object_name,
   } else if (type_name == "none") {
     SG_LOG(SG_INPUT, SG_INFO, "Reading disabled animation");
     animation.type = Animation::None;
-    return animation;
+    return;
   } else {
     animation.type = Animation::None;
     SG_LOG(SG_INPUT, SG_ALERT, "Unknown animation type " << type_name);
-    return animation;
+    return;
   }
 
 				// Splice a transform node into the tree
@@ -299,8 +299,6 @@ FGAircraftModel::read_animation (const string &object_name,
   animation.axis[2] = node->getFloatValue("axis/z", 0);
 
   sgNormalizeVec3(animation.axis);
-
-  return animation;
 }
 
 void
@@ -331,6 +329,32 @@ FGAircraftModel::do_animation (Animation &animation, long elapsed_ms)
   default:
     return;
   }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAircraftModel::Animation
+////////////////////////////////////////////////////////////////////////
+
+FGAircraftModel::Animation::Animation ()
+  : name(""),
+    type(None),
+    transform(0),
+    prop(0),
+    factor(0),
+    offset(0),
+    position(0),
+    has_min(false),
+    min(0),
+    has_max(false),
+    max(0)
+{
+}
+
+FGAircraftModel::Animation::~Animation ()
+{
+  // pointers are managed elsewhere; these are just references
 }
 
 /* 
@@ -380,7 +404,6 @@ FGAircraftModel::Animation::setRotation()
  
  transform->setTransform(matrix);
 }
-
 
 // end of model.cxx
 
