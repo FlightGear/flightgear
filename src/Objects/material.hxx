@@ -48,8 +48,8 @@ FG_USING_STD(string);
 
 
 // MSVC++ 6.0 kuldge - Need forward declaration of friends.
-class fgMATERIAL;
-istream& operator >> ( istream& in, fgMATERIAL& m );
+class FGMaterial;
+istream& operator >> ( istream& in, FGMaterial& m );
 
 // Material property class
 class FGMaterial {
