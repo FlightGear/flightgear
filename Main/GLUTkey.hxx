@@ -28,8 +28,8 @@
 #define _GLUTKEY_H
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -42,23 +42,23 @@ extern "C" {
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y);
 void GLUTspecialkey(int k, int x, int y);
-
-
-#ifdef __cplusplus
-}
-#endif
 
 
 #endif /* _GLUTKEY_H */
 
 
 /* $Log$
-/* Revision 1.9  1998/04/21 17:02:36  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:25:41  curt
+/* C++ - ifing the code.
+/* Starting a bit of reorganization of lighting code.
 /*
+ * Revision 1.9  1998/04/21 17:02:36  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.8  1998/04/03 22:09:02  curt
  * Converting to Gnu autoconf system.
  *

@@ -122,17 +122,23 @@ extern int getargs(int argc, char *argv[],int num_opt, Option ** optarr,
 
 extern void print_desc(int num_opt, Option **optarr);  // Not original code
 
+
 #ifdef __cplusplus
 }
 #endif
+
 
 #endif
 
 
 /* $Log$
-/* Revision 1.2  1998/04/21 17:02:41  curt
-/* Prepairing for C++ integration.
+/* Revision 1.3  1998/04/22 13:25:43  curt
+/* C++ - ifing the code.
+/* Starting a bit of reorganization of lighting code.
 /*
+ * Revision 1.2  1998/04/21 17:02:41  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.1  1998/02/13 00:23:39  curt
  * Initial revision.
  *

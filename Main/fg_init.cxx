@@ -26,33 +26,36 @@
  **************************************************************************/
 
 
+#include <config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <Main/fg_init.h>
-#include <Main/views.h>
 
 #include <Include/cmdargs.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
-#include <Astro/moon.h>
-#include <Astro/planets.h>
-#include <Astro/sky.h>
-#include <Astro/stars.h>
-#include <Astro/sun.h>
+#include <Astro/moon.hxx>
+#include <Astro/planets.hxx>
+#include <Astro/sky.hxx>
+#include <Astro/stars.hxx>
+#include <Astro/sun.hxx>
 #include <Autopilot/autopilot.h>
 #include <Cockpit/cockpit.h>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_random.h>
 #include <Scenery/scenery.h>
-#include <Scenery/tilemgr.h>
+#include <Scenery/tilemgr.hxx>
 #include <Time/event.h>
 #include <Time/fg_time.h>
-#include <Time/sunpos.h>
+#include <Time/light.hxx>
+#include <Time/sunpos.hxx>
 #include <Weather/weather.h>
+
+#include "fg_init.hxx"
+#include "views.hxx"
 
 extern int show_hud;             /* HUD state */
 extern int displayInstruments;
@@ -102,7 +105,7 @@ int fgInitSubsystems( void ) {
     double cur_elev;
 
     // Ok will be flagged only if we get EVERYTHING done.
-    int ret_val = 1 /* TRUE */;
+    int ret_val = 1  /* TRUE */;
 
     fgFLIGHT *f;
     struct fgLIGHT *l;
@@ -121,8 +124,8 @@ int fgInitSubsystems( void ) {
      * should really be read in from one or more files.
      ****************************************************************/
 
-    /* Must happen before any of the flight model or control
-     * parameters are set */
+    // Must happen before any of the flight model or control
+    // parameters are set
 
     fgAircraftInit();   // In the future this might not be the case.
     f = current_aircraft.flight;
@@ -238,69 +241,76 @@ int fgInitSubsystems( void ) {
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
 	      FG_Altitude * FEET_TO_METER);
 
-    /* Initial Velocity */
+    // Initial Velocity
     FG_V_north = 0.0 /*  7.287719E+00 */;
     FG_V_east  = 0.0 /*  1.521770E+03 */;
     FG_V_down  = 0.0 /* -1.265722E-05 */;
 
-    /* Initial Orientation */
+    // Initial Orientation
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  260.0 * DEG_TO_RAD;
+    FG_Psi   =  270.0 * DEG_TO_RAD;
 
-    /* Initial Angular B rates */
+    // Initial Angular B rates
     FG_P_body = 7.206685E-05;
     FG_Q_body = 0.000000E+00;
     FG_R_body = 9.492658E-05;
 
     FG_Earth_position_angle = 0.000000E+00;
 
-    /* Mass properties and geometry values */
+    // Mass properties and geometry values
     FG_Mass = 8.547270E+01;
     FG_I_xx = 1.048000E+03;
     FG_I_yy = 3.000000E+03;
     FG_I_zz = 3.530000E+03;
     FG_I_xz = 0.000000E+00;
 
-    /* CG position w.r.t. ref. point */
+    // CG position w.r.t. ref. point
     FG_Dx_cg = 0.000000E+00;
     FG_Dy_cg = 0.000000E+00;
     FG_Dz_cg = 0.000000E+00;
 
-    /* Set initial position and slew parameters */
-    /* fgSlewInit(-398391.3, 120070.41, 244, 3.1415); */ /* GLOBE Airport */
-    /* fgSlewInit(-335340,162540, 15, 4.38); */
-    /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
+    // Set initial position and slew parameters
+    // fgSlewInit(-398391.3, 120070.41, 244, 3.1415);  // GLOBE Airport
+    // fgSlewInit(-335340,162540, 15, 4.38);
+    // fgSlewInit(-398673.28,120625.64, 53, 4.38);
 
-    /* Initialize the event manager */
+    // Initialize the event manager
     fgEventInit();
 
-    /* Dump event stats every 60 seconds */
+    // Dump event stats every 60 seconds
     fgEventRegister( "fgEventPrintStats()", fgEventPrintStats,
 		     FG_EVENT_READY, 60000 );
 
-    /* Initialize "time" */
+    // Initialize "time"
     fgTimeInit(t);
     fgTimeUpdate(f, t);
 
-    /* fgViewUpdate() needs the sun in the right place, while
-     * fgUpdateSunPos() needs to know the view position.  I'll get
-     * around this interdependency for now by calling fgUpdateSunPos()
-     * once, then moving on with normal initialization. */
+    // fgViewUpdate() needs the sun in the right place, while
+    // fgUpdateSunPos() needs to know the view position.  I'll get
+    // around this interdependency for now by calling fgUpdateSunPos()
+    // once, then moving on with normal initialization.
     fgUpdateSunPos();
 
-    /* Initialize view parameters */
+    // Initialize view parameters
     fgViewInit(v);
     fgViewUpdate(f, v, l);
 
-    /* Initialize the weather modeling subsystem */
+    // Initialize Lighting interpolation tables
+    fgLightInit();
+
+    // update the lighting parameters (based on sun angle)
+    fgEventRegister( "fgLightUpdate()", fgLightUpdate,
+		     FG_EVENT_READY, 30000 );
+
+    // Initialize the weather modeling subsystem
     fgWeatherInit();
 
-    /* update the weather for our current position */
+    // update the weather for our current position
     fgEventRegister( "fgWeatherUpdate()", fgWeatherUpdate,
 		     FG_EVENT_READY, 120000 );
 
-    /* Initialize the Cockpit subsystem */
+    // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
 	// Cockpit initialized ok.
     } else {
@@ -348,10 +358,10 @@ int fgInitSubsystems( void ) {
     // I'm just sticking this here for now, it should probably move
     // eventually
     // cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0,
-    //           FG_Latitude  * RAD_TO_DEG * 3600.0); */
+    //           FG_Latitude  * RAD_TO_DEG * 3600.0);
     // fgPrintf( FG_GENERAL, FG_INFO,
     //   "True ground elevation is %.2f meters here.\n",
-    //   cur_elev); */
+    //   cur_elev);
 
     cur_elev = FG_Runway_altitude * FEET_TO_METER;
     if ( cur_elev > -9990.0 ) {
@@ -367,10 +377,10 @@ int fgInitSubsystems( void ) {
 	     FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
 	     FG_Altitude * FEET_TO_METER);
 
-    /* end of thing that I just stuck in that I should probably move */
+    // end of thing that I just stuck in that I should probably move
 		
-    /* Initialize the flight model subsystem data structures base on
-     * above values */
+    // Initialize the flight model subsystem data structures base on
+    // above values
 
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
@@ -387,7 +397,7 @@ int fgInitSubsystems( void ) {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Joystick initialization!\n" );
     }
 
-    	/// Autopilot init added here, by Jeff Goeke-Smith
+    	// Autopilot init added here, by Jeff Goeke-Smith
     	fgAPInit(&current_aircraft);
     	// end added section;
     
@@ -401,9 +411,13 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.56  1998/04/18 04:11:28  curt
-/* Moved fg_debug to it's own library, added zlib support.
+/* Revision 1.1  1998/04/22 13:25:44  curt
+/* C++ - ifing the code.
+/* Starting a bit of reorganization of lighting code.
 /*
+ * Revision 1.56  1998/04/18 04:11:28  curt
+ * Moved fg_debug to it's own library, added zlib support.
+ *
  * Revision 1.55  1998/04/14 02:21:03  curt
  * Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
  * <jgoeke@voyager.net>

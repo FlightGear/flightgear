@@ -28,8 +28,8 @@
 #define _FG_INIT_H
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -42,18 +42,17 @@ int fgInitGeneral ( void );
 int fgInitSubsystems( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
 #endif /* _FG_INIT_H */
 
 
 /* $Log$
-/* Revision 1.4  1998/04/21 17:02:41  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:25:44  curt
+/* C++ - ifing the code.
+/* Starting a bit of reorganization of lighting code.
 /*
+ * Revision 1.4  1998/04/21 17:02:41  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.3  1998/02/12 21:59:50  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

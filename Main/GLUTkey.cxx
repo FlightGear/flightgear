@@ -35,15 +35,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <Debug/fg_debug.h>
-#include <Main/GLUTkey.h>
-#include <Main/views.h>
-
-#include <Include/fg_constants.h>
-
 #include <Aircraft/aircraft.h>
 #include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
+#include <Debug/fg_debug.h>
+#include <Include/fg_constants.h>
 #include <Weather/weather.h>
+
+#include "GLUTkey.hxx"
+#include "views.hxx"
 
 
 extern int show_hud;             /* HUD state */
@@ -257,9 +256,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.33  1998/04/18 04:11:25  curt
-/* Moved fg_debug to it's own library, added zlib support.
+/* Revision 1.1  1998/04/22 13:25:40  curt
+/* C++ - ifing the code.
+/* Starting a bit of reorganization of lighting code.
 /*
+ * Revision 1.33  1998/04/18 04:11:25  curt
+ * Moved fg_debug to it's own library, added zlib support.
+ *
  * Revision 1.32  1998/04/14 02:21:01  curt
  * Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
  * <jgoeke@voyager.net>

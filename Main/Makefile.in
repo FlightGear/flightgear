@@ -78,12 +78,12 @@ bin_PROGRAMS = fg
 bin_SCRIPTS = runfg runfg.bat
 
 fg_SOURCES = \
-	GLUTkey.c GLUTkey.h \
+	GLUTkey.cxx GLUTkey.hxx \
 	GLUTmain.cxx \
 	fg_config.h \
 	fg_getopt.c fg_getopt.h \
-	fg_init.c fg_init.h \
-	views.c views.h
+	fg_init.cxx fg_init.hxx \
+	views.cxx views.hxx
 
 fg_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.la \

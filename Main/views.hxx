@@ -1,5 +1,5 @@
 /**************************************************************************
- * views.h -- data structures and routines for managing and view parameters.
+ * views.hxx -- data structures and routines for managing and view parameters.
  *
  * Written by Curtis Olson, started August 1997.
  *
@@ -28,8 +28,8 @@
 #define _VIEWS_H
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -37,6 +37,7 @@ extern "C" {
 #include <Flight/flight.h>
 #include <Math/mat3.h>
 #include <Time/fg_time.h>
+#include <Time/light.hxx>
 
 
 /* Define a structure containing view information */
@@ -90,21 +91,20 @@ extern struct fgVIEW current_view;
 void fgViewInit(struct fgVIEW *v);
 
 /* Update the view parameters */
-void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
+void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l);
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _VIEWS_H */
+#endif /* _VIEWS_HXX */
 
 
 /* $Log$
-/* Revision 1.11  1998/04/21 17:02:42  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/04/22 13:25:46  curt
+/* C++ - ifing the code.
+/* Starting a bit of reorganization of lighting code.
 /*
+ * Revision 1.11  1998/04/21 17:02:42  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.10  1998/02/07 15:29:45  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -40,34 +40,34 @@
 #   include <getopt.h>
 #endif
 
-#include <Debug/fg_debug.h>
-#include <Main/GLUTkey.h>
-#include <Main/fg_init.h>
-#include <Main/fg_getopt.h>
-#include <Main/views.h>
-
 #include <Include/cmdargs.h>       // Line to command line arguments
 #include <Include/fg_constants.h>  // for VERSION
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
-#include <Astro/moon.h>
-#include <Astro/planets.h>
-#include <Astro/sky.h>
-#include <Astro/stars.h>
-#include <Astro/sun.h>
+#include <Astro/moon.hxx>
+#include <Astro/planets.hxx>
+#include <Astro/sky.hxx>
+#include <Astro/stars.hxx>
+#include <Astro/sun.hxx>
 #include <Cockpit/cockpit.h>
+#include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
 #include <Scenery/scenery.h>
-#include <Scenery/tilemgr.h>
+#include <Scenery/tilemgr.hxx>
 #include <Time/event.h>
 #include <Time/fg_time.h>
 #include <Time/fg_timer.h>
-#include <Time/sunpos.h>
+#include <Time/sunpos.hxx>
 #include <Weather/weather.h>
+
+#include "GLUTkey.hxx"
+#include "fg_init.hxx"
+#include "fg_getopt.h"
+#include "views.hxx"
 
 
 // This is a record containing global housekeeping information
@@ -777,6 +777,10 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.2  1998/04/22 13:25:41  curt
+// C++ - ifing the code.
+// Starting a bit of reorganization of lighting code.
+//
 // Revision 1.1  1998/04/21 17:02:39  curt
 // Prepairing for C++ integration.
 //

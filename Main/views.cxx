@@ -24,17 +24,19 @@
  **************************************************************************/
 
 
-#include <Main/views.h>
-
-#include <Include/fg_constants.h>
+#include <config.h>
 
 #include <Debug/fg_debug.h>
 #include <Flight/flight.h>
+#include <Include/fg_constants.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
 #include <Math/vector.h>
 #include <Scenery/scenery.h>
 #include <Time/fg_time.h>
+
+#include "views.hxx"
+
 
 /* This is a record containing current view parameters */
 struct fgVIEW current_view;
@@ -50,7 +52,7 @@ void fgViewInit(struct fgVIEW *v) {
 
 
 /* Update the view parameters */
-void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
+void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
@@ -188,9 +190,13 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.16  1998/04/18 04:11:29  curt
-/* Moved fg_debug to it's own library, added zlib support.
+/* Revision 1.1  1998/04/22 13:25:45  curt
+/* C++ - ifing the code.
+/* Starting a bit of reorganization of lighting code.
 /*
+ * Revision 1.16  1998/04/18 04:11:29  curt
+ * Moved fg_debug to it's own library, added zlib support.
+ *
  * Revision 1.15  1998/02/20 00:16:24  curt
  * Thursday's tweaks.
  *
