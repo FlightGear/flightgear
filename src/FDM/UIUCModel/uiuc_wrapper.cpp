@@ -72,6 +72,7 @@
 **********************************************************************/
 
 #include <simgear/compiler.h>
+#include <simgear/misc/sg_path.hxx>
 #include <Aircraft/aircraft.hxx>
 
 #ifndef FG_OLD_WEATHER
@@ -171,15 +172,12 @@ void uiuc_vel_init ()
 
 void uiuc_init_aeromodel ()
 {
-  string aircraft;
-
-  if (aircraft_dir != (string)"")
-    aircraft = aircraft_dir + "/";
-
-  aircraft += "aircraft.dat";
-  cout << "We are using "<< aircraft << endl;
+  SGPath path(globals->get_fg_root());
+  path.append(aircraft_dir);
+  path.append("aircraft.dat");
+  cout << "We are using "<< path.str() << endl;
   uiuc_initializemaps(); // Initialize the <string,int> maps
-  uiuc_menu(aircraft);   // Read the specified aircraft file 
+  uiuc_menu(path.str());   // Read the specified aircraft file 
 }
 
 void uiuc_force_moment(double dt)
