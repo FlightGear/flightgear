@@ -34,8 +34,6 @@ SG_USING_STD(string);
 #include STL_IOSTREAM
 SG_USING_STD(cout);
 
-//#include <simgear/debug/logstream.hxx>
-//#include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #ifdef FG_WEATHERCM
@@ -51,26 +49,23 @@ SG_USING_STD(cout);
 
 #include "atis.hxx"
 #include "commlist.hxx"
-//#include "atislist.hxx"
 #include "ATCdisplay.hxx"
 #include "ATCutils.hxx"
 #include "ATCmgr.hxx"
 
-// Constructor
 FGATIS::FGATIS() :
-display(false),
-displaying(false),
-transmission(""),
-trans_ident(""),
-atis_failed(false),
-refname("atis")
-//type(ATIS)
+	display(false),
+	displaying(false),
+	transmission(""),
+	trans_ident(""),
+	atis_failed(false),
+	refname("atis")
+	//type(ATIS)
 {
 	vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
 	voiceOK = (vPtr == NULL ? false : true);
 }
 
-// Destructor
 FGATIS::~FGATIS() {
 }
 
