@@ -123,8 +123,8 @@ void FGSteam::update ( int timesteps )
 	  fgTie("/steam/glidescope1", FGSteam::get_HackGS_deg);
 	  fgTie("/steam/adf", FGSteam::get_HackADF_deg);
 	  fgTie("/steam/gyro-compass-error",
-		FGSteam::get_DG_err,
-		FGSteam::set_DG_err);
+		FGSteam::get_DG_err, FGSteam::set_DG_err,
+		false);  /* don't modify the value */
 	  fgTie("/steam/mag-compass", FGSteam::get_MH_deg);
 	}
 	_UpdatesPending += timesteps;

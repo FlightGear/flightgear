@@ -197,6 +197,7 @@ FGBFI::init ()
   fgTie("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
   fgTie("/autopilot/settings/heading", getAPHeading, setAPHeading);
+  fgTie("/autopilot/settings/heading-dg", getAPHeadingDG, setAPHeadingDG);
   fgTie("/autopilot/settings/heading-magnetic",
              getAPHeadingMag, setAPHeadingMag);
   fgTie("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);
@@ -1046,6 +1047,26 @@ void
 FGBFI::setAPHeading (double heading)
 {
   current_autopilot->set_TargetHeading( heading );
+}
+
+
+/**
+ * Get the autopilot DG target heading in degrees.
+ */
+double
+FGBFI::getAPHeadingDG ()
+{
+  return current_autopilot->get_DGTargetHeading();
+}
+
+
+/**
+ * Set the autopilot DG target heading in degrees.
+ */
+void
+FGBFI::setAPHeadingDG (double heading)
+{
+  current_autopilot->set_DGTargetHeading( heading );
 }
 
 

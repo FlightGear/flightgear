@@ -137,6 +137,9 @@ public:
   static double getAPHeading (); // degrees
   static void setAPHeading (double heading); // degrees
 
+  static double getAPHeadingDG (); // degrees
+  static void setAPHeadingDG (double heading); // degrees
+
   static double getAPHeadingMag (); // degrees
   static void setAPHeadingMag (double heading);	// degrees
 

@@ -108,8 +108,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	        );
 	    return;
 	case 8: // Ctrl-H key
-	    current_autopilot->set_HeadingMode( 
-                  FGAutopilot::FG_HEADING_LOCK );
+	    current_autopilot->set_HeadingMode(
+		  FGAutopilot::FG_DG_HEADING_LOCK );
 	    current_autopilot->set_HeadingEnabled(
 		  ! current_autopilot->get_HeadingEnabled()
 	        );

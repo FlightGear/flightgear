@@ -33,6 +33,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+#include <Cockpit/steam.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
@@ -365,8 +366,15 @@ int FGAutopilot::run() {
 	
     // heading hold
     if ( heading_hold == true ) {
+	if ( heading_mode == FG_DG_HEADING_LOCK ) {
+	    // cout << "DG heading = " << FGSteam::get_DG_deg()
+	    //      << " DG error = " << FGSteam::get_DG_err() << endl;
 
-	if ( heading_mode == FG_HEADING_LOCK ) {
+	    TargetHeading = DGTargetHeading + FGSteam::get_DG_err();
+	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
+	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+	    MakeTargetHeadingStr( TargetHeading );
+	} else if ( heading_mode == FG_HEADING_LOCK ) {
 	    // leave target heading alone
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
 	    double tgt_radial;
@@ -376,7 +384,7 @@ int FGAutopilot::run() {
 		tgt_radial = current_radiostack->get_nav1_radial();
 	    } else {
 		tgt_radial = current_radiostack->get_nav1_radial() +
-		    current_radiostack->get_nav1_magvar(); 
+		    current_radiostack->get_nav1_magvar();
 	    }
 	    cur_radial = current_radiostack->get_nav1_heading() +
 		    current_radiostack->get_nav1_magvar();
@@ -718,7 +726,10 @@ int FGAutopilot::run() {
 void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
     heading_mode = mode;
 
-    if ( heading_mode == FG_HEADING_LOCK ) {
+    if ( heading_mode == FG_DG_HEADING_LOCK ) {
+	// set heading hold to current heading (as read from DG)
+	DGTargetHeading = FGSteam::get_DG_deg();
+    } else if ( heading_mode == FG_HEADING_LOCK ) {
 	// set heading hold to current heading
 	TargetHeading = FGBFI::getHeading();
     } else if ( heading_mode == FG_HEADING_WAYPOINT ) {
@@ -923,14 +934,19 @@ void FGAutopilot::AltitudeAdjust( double inc )
 
 
 void FGAutopilot::HeadingAdjust( double inc ) {
-    heading_mode = FG_HEADING_LOCK;
-	
-    double target = ( int ) ( TargetHeading / inc ) * inc + inc;
+    if ( heading_mode != FG_DG_HEADING_LOCK && heading_mode != FG_HEADING_LOCK )
+    {
+	heading_mode = FG_DG_HEADING_LOCK;
+    }
 
-    TargetHeading = NormalizeDegrees( target );
-    // following cast needed ambiguous plib
-    // ApHeadingDialogInput -> setValue ((float)TargetHeading );
-    MakeTargetHeadingStr( TargetHeading );			
+    if ( heading_mode == FG_DG_HEADING_LOCK ) {
+	double target = ( int ) ( DGTargetHeading / inc ) * inc + inc;
+	DGTargetHeading = NormalizeDegrees( target );
+    } else {
+	double target = ( int ) ( TargetHeading / inc ) * inc + inc;
+	TargetHeading = NormalizeDegrees( target );
+    }
+
     update_old_control_values();
 }
 

@@ -36,10 +36,11 @@ class FGAutopilot {
 public:
 
     enum fgAutoHeadingMode {
-	FG_HEADING_LOCK = 0,
-	FG_HEADING_NAV1 = 1,
-	FG_HEADING_NAV2 = 2,
-        FG_HEADING_WAYPOINT = 3
+	FG_DG_HEADING_LOCK = 0,
+	FG_HEADING_LOCK = 1,
+	FG_HEADING_NAV1 = 2,
+	FG_HEADING_NAV2 = 3,
+        FG_HEADING_WAYPOINT = 4
     };
 
     enum fgAutoAltitudeMode {
@@ -63,7 +64,8 @@ private:
     // double TargetLatitude;	// the latitude the AP should steer to.
     // double TargetLongitude;	// the longitude the AP should steer to.
     double TargetDistance;	// the distance to Target.
-    double TargetHeading;	// the heading the AP should steer to.
+    double DGTargetHeading;     // the apparent DG heading to steer towards.
+    double TargetHeading;	// the true heading the AP should steer to.
     double TargetAltitude;	// altitude to hold
     double TargetAGL;		// the terrain separation
     double TargetClimbRate;	// climb rate to shoot for
@@ -151,6 +153,8 @@ public:
     inline void set_old_lon( double val ) { old_lon = val; }
     inline double get_TargetHeading() const { return TargetHeading; }
     inline void set_TargetHeading( double val ) { TargetHeading = val; }
+    inline double get_DGTargetHeading() const { return DGTargetHeading; }
+    inline void set_DGTargetHeading( double val ) { DGTargetHeading = val; }
     inline double get_TargetDistance() const { return TargetDistance; }
     inline void set_TargetDistance( double val ) { TargetDistance = val; }
     inline double get_TargetAltitude() const { return TargetAltitude; }
