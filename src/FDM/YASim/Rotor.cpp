@@ -609,7 +609,7 @@ void Rotor::compile()
     for (i=0;i<4;i++)
     {
       
-      rps[i]->setlastnextrp(rps[(i-1)%4],rps[(i+1)%4],rps[(i+2)%4]);
+      rps[i]->setlastnextrp(rps[(i+3)%4],rps[(i+1)%4],rps[(i+2)%4]);
     }
   }
   else
