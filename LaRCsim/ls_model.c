@@ -1,0 +1,86 @@
+/***************************************************************************
+
+	TITLE:		ls_model()	
+	
+----------------------------------------------------------------------------
+
+	FUNCTION:	Model loop executive
+
+----------------------------------------------------------------------------
+
+	MODULE STATUS:	developmental
+
+----------------------------------------------------------------------------
+
+	GENEALOGY:	Created 15 October 1992 as part of LaRCSIM project
+			by Bruce Jackson.
+
+----------------------------------------------------------------------------
+
+	DESIGNED BY:	Bruce Jackson
+	
+	CODED BY:	Bruce Jackson
+	
+	MAINTAINED BY:	maintainer
+
+----------------------------------------------------------------------------
+
+	MODIFICATION HISTORY:
+	
+	DATE	PURPOSE						BY
+
+	950306	Added parameters to call: dt, which is the step size
+		to be taken this loop (caution: may vary from call to call)
+		and Initialize, which if non-zero, implies an initialization
+		is requested.					EBJ
+
+	CURRENT RCS HEADER INFO:
+$Header$
+$Log$
+Revision 1.1  1997/05/29 00:09:58  curt
+Initial Flight Gear revision.
+
+ * Revision 1.3  1995/03/06  18:49:46  bjax
+ * Added dt and initialize flag parameters to subroutine calls. This will
+ * support trim routine (to allow single throttle setting to drive
+ * all four throttle positions, for example, if initialize is TRUE).
+ *
+ * Revision 1.2  1993/03/10  06:38:09  bjax
+ * Added additional calls: inertias() and subsystems()... EBJ
+ *
+ * Revision 1.1  92/12/30  13:19:08  bjax
+ * Initial revision
+ * 
+
+----------------------------------------------------------------------------
+
+	REFERENCES:
+
+----------------------------------------------------------------------------
+
+	CALLED BY:	ls_step (in initialization), ls_loop (planned)
+
+----------------------------------------------------------------------------
+
+	CALLS TO:	aero(), engine(), gear()
+
+----------------------------------------------------------------------------
+
+	INPUTS:
+
+----------------------------------------------------------------------------
+
+	OUTPUTS:
+
+--------------------------------------------------------------------------*/
+#include "ls_types.h"
+
+void ls_model( SCALAR dt, int Initialize )
+
+{
+  inertias( dt, Initialize );
+  subsystems( dt, Initialize );
+  aero( dt, Initialize );
+  engine( dt, Initialize );
+  gear( dt, Initialize );
+}
