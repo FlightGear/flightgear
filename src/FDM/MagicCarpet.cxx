@@ -21,7 +21,7 @@
 // $Id$
 
 
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 
@@ -79,7 +79,7 @@ int FGMagicCarpet::update( int multiloop ) {
     //      << endl;
 
     double sl_radius, lat_geoc;
-    fgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
+    sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );
 
     // update altitude
     double real_climb_rate = -controls.get_elevator() * 5000; // feet/sec

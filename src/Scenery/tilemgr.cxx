@@ -34,9 +34,9 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 
 // #include <Aircraft/aircraft.hxx>
@@ -177,9 +177,9 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 
     int hitcount = hit_list.num_hits();
     for ( int i = 0; i < hitcount; ++i ) {
-	geoc = fgCartToPolar3d( scenery.center + hit_list.get_point(i) );      
+	geoc = sgCartToPolar3d( scenery.center + hit_list.get_point(i) );      
 	double lat_geod, alt, sea_level_r;
-	fgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
+	sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
 		     &alt, &sea_level_r);
 	if ( alt > result && alt < 10000 ) {
 	    result = alt;
@@ -464,7 +464,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	Point3D geod_pos = Point3D( longitude * DEG_TO_RAD,
 				    latitude * DEG_TO_RAD,
 				    0.0);
-	Point3D tmp_abs_view_pos = fgGeodToCart( geod_pos );
+	Point3D tmp_abs_view_pos = sgGeodToCart( geod_pos );
 	scenery.center = tmp_abs_view_pos;
 	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
 	prep_ssg_nodes();

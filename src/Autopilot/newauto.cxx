@@ -31,7 +31,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include <Cockpit/radiostack.hxx>
 #include <Controls/controls.hxx>

@@ -829,6 +829,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	parse_channel( "garmin", arg.substr(9) );
     } else if ( arg.find( "--nmea=" ) != string::npos ) {
 	parse_channel( "nmea", arg.substr(7) );
+    } else if ( arg.find( "--props=" ) != string::npos ) {
+	parse_channel( "props", arg.substr(8) );
     } else if ( arg.find( "--pve=" ) != string::npos ) {
 	parse_channel( "pve", arg.substr(6) );
     } else if ( arg.find( "--ray=" ) != string::npos ) {

@@ -31,7 +31,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/fgpath.hxx>
 
 #include <Scenery/scenery.hxx>
@@ -326,9 +326,9 @@ int FGJSBsim::copy_from_JSBsim() {
   double alt = FDMExec.GetPosition()->Geth();
   double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
 
-  fgGeocToGeod( lat_geoc, EQUATORIAL_RADIUS_M + alt * FEET_TO_METER,
+  sgGeocToGeod( lat_geoc, EQUATORIAL_RADIUS_M + alt * FEET_TO_METER,
                 &lat_geod, &tmp_alt, &sl_radius1 );
-  fgGeodToGeoc( lat_geod, alt * FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
+  sgGeodToGeoc( lat_geod, alt * FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
 
   FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << lon << " lat_geod = " << lat_geod
           << " lat_geoc = " << lat_geoc

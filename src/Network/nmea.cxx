@@ -22,7 +22,7 @@
 
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>
 
 #include <FDM/flight.hxx>
@@ -274,7 +274,7 @@ bool FGNMEA::parse_message() {
 	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
 
 	    double sl_radius, lat_geoc;
-	    fgGeodToGeoc( cur_fdm_state->get_Latitude(), 
+	    sgGeodToGeoc( cur_fdm_state->get_Latitude(), 
 			  cur_fdm_state->get_Altitude(), 
 			  &sl_radius, &lat_geoc );
 	    cur_fdm_state->set_Geocentric_Position( lat_geoc, 

@@ -50,7 +50,6 @@ FG_USING_STD(string);
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/fgpath.hxx>

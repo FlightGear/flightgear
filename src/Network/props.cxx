@@ -60,6 +60,7 @@ bool FGProps::open() {
 
 
 bool FGProps::process_command( const char *cmd ) {
+    cout << "processing command = " << cmd << endl;
     string_list tokens;
     tokens.clear();
 
@@ -76,6 +77,8 @@ bool FGProps::process_command( const char *cmd ) {
     if ( command == "ls" ) {
 	
     }
+
+    return true;
 }
 
 
@@ -83,11 +86,17 @@ bool FGProps::process_command( const char *cmd ) {
 bool FGProps::process() {
     SGIOChannel *io = get_io_channel();
 
+    cout << "processing incoming props command" << endl;
+
     if ( get_direction() == SG_IO_BI ) {
+	cout << "  (bi directional)" << endl;
 	while ( io->read( buf, max_cmd_len ) > 0 ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
 	    process_command( buf );
 	}
+    } else {
+	FG_LOG( FG_IO, FG_ALERT, 
+		"in or out direction not supported for FGProps." );
     }
 
     return true;

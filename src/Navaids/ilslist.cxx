@@ -23,7 +23,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include "ilslist.hxx"
 
@@ -117,7 +117,7 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
     ils_list_iterator last = stations.end();
 
     // double az1, az2, s;
-    Point3D aircraft = fgGeodToCart( Point3D(lon, lat, elev) );
+    Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
     Point3D station;
     double d;
     for ( ; current != last ; ++current ) {

@@ -24,9 +24,9 @@
 
 #include <stdio.h>		// sprintf()
 
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 
 #include <FDM/flight.hxx>
 

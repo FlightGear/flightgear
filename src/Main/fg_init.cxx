@@ -49,9 +49,9 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/timing/sg_time.hxx>
 
@@ -445,7 +445,7 @@ bool fgInitSubsystems( void ) {
 
     /*
     geod_pos = Point3D( cur_fdm_state->get_Longitude(), cur_fdm_state->get_Latitude(), 0.0);
-    tmp_abs_view_pos = fgGeodToCart(geod_pos);
+    tmp_abs_view_pos = sgGeodToCart(geod_pos);
 
     FG_LOG( FG_GENERAL, FG_DEBUG,
     	    "Initial abs_view_pos = " << tmp_abs_view_pos );
@@ -481,7 +481,7 @@ bool fgInitSubsystems( void ) {
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
-    fgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(),
+    sgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(),
 		  &sea_level_radius_meters, &lat_geoc);
     cur_fdm_state->set_Geocentric_Position( lat_geoc, cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Altitude() +
@@ -758,7 +758,7 @@ void fgReInitSubsystems( void )
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
-    fgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(), 
+    sgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(), 
 		  &sea_level_radius_meters, &lat_geoc);
     cur_fdm_state->set_Geocentric_Position( lat_geoc, cur_fdm_state->get_Longitude(), 
 				cur_fdm_state->get_Altitude() + 

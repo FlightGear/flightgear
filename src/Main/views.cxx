@@ -213,7 +213,7 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 		 f.get_Lat_geocentric(), 
 		 f.get_Sea_level_radius() * FEET_TO_METER );
 
-    cur_zero_elev = fgPolarToCart3d(p) - scenery.center;
+    cur_zero_elev = sgPolarToCart3d(p) - scenery.center;
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
@@ -225,7 +225,7 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
 
-    abs_view_pos = fgPolarToCart3d(p);
+    abs_view_pos = sgPolarToCart3d(p);
 	
     view_pos = abs_view_pos - scenery.center;
 
@@ -286,7 +286,7 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     
     // Alternative method to Derive local up vector based on
     // *geodetic* coordinates
-    // alt_up = fgPolarToCart(FG_Longitude, FG_Latitude, 1.0);
+    // alt_up = sgPolarToCart(FG_Longitude, FG_Latitude, 1.0);
     // printf( "    Alt Up = (%.4f, %.4f, %.4f)\n", 
     //         alt_up.x, alt_up.y, alt_up.z);
 

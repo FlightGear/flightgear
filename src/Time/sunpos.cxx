@@ -56,9 +56,9 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
@@ -67,7 +67,7 @@
 
 #include "sunpos.hxx"
 
-#undef E
+// #undef E // should no longer be needed
 #define MeanObliquity (23.440592*(FG_2PI/360))
 
 static void   ecliptic_to_equatorial(double, double, double *, double *);
@@ -258,10 +258,10 @@ void fgUpdateSunPos( void ) {
 
     fgSunPositionGST(t->getGst(), &l->sun_lon, &sun_gd_lat);
 
-    fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
+    sgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
 
     p = Point3D( l->sun_lon, l->sun_gc_lat, sl_radius );
-    l->fg_sunpos = fgPolarToCart3d(p);
+    l->fg_sunpos = sgPolarToCart3d(p);
 
     FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->get_cur_time() );
     FG_LOG( FG_EVENT, FG_INFO, 

@@ -46,10 +46,10 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/fg_random.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/misc/stopwatch.hxx>
 #include <simgear/misc/texcoord.hxx>
@@ -107,7 +107,7 @@ static Point3D local_calc_tex_coords(const Point3D& node, const Point3D& ref) {
 		  node[1] + ref.y(),
 		  node[2] + ref.z() );
 
-    pp = fgCartToPolar3d(cp);
+    pp = sgCartToPolar3d(cp);
 
     // tmplon = pp.lon() * RAD_TO_DEG;
     // tmplat = pp.lat() * RAD_TO_DEG;
@@ -165,7 +165,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     double height = b.get_height();
     double width = b.get_width();
 
-    Point3D center = fgGeodToCart(Point3D(clon*DEG_TO_RAD,clat*DEG_TO_RAD,0.0));
+    Point3D center = sgGeodToCart(Point3D(clon*DEG_TO_RAD,clat*DEG_TO_RAD,0.0));
     t->center = center;
     // cout << "center = " << center << endl;;
     
@@ -186,7 +186,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     Point3D cart[4], rel[4];
     t->nodes.clear();
     for ( i = 0; i < 4; ++i ) {
-	cart[i] = fgGeodToCart(rad[i]);
+	cart[i] = sgGeodToCart(rad[i]);
 	rel[i] = cart[i] - center;
 	t->nodes.push_back( rel[i] );
 	// cout << "corner " << i << " = " << cart[i] << endl;

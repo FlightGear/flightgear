@@ -22,7 +22,6 @@
 
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>
 
 #include "native.hxx"

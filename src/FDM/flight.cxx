@@ -25,7 +25,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Main/options.hxx>
@@ -127,7 +127,7 @@ void fgFDMForceAltitude(int model, double alt_meters) {
     double lat_geoc;
 
     // Set the FG variables first
-    fgGeodToGeoc( base_fdm_state.get_Latitude(), alt_meters, 
+    sgGeodToGeoc( base_fdm_state.get_Latitude(), alt_meters, 
 		  &sea_level_radius_meters, &lat_geoc);
 
     base_fdm_state.set_Altitude( alt_meters * METER_TO_FEET );

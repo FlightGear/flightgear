@@ -38,6 +38,7 @@
 #include <Network/native.hxx>
 #include <Network/garmin.hxx>
 #include <Network/nmea.hxx>
+#include <Network/props.hxx>
 #include <Network/pve.hxx>
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
@@ -81,6 +82,9 @@ static FGProtocol *parse_port_config( const string& config )
     } else if ( protocol == "nmea" ) {
 	FGNMEA *nmea = new FGNMEA;
 	io = nmea;
+    } else if ( protocol == "props" ) {
+	FGProps *props = new FGProps;
+	io = props;
     } else if ( protocol == "pve" ) {
 	FGPVE *pve = new FGPVE;
 	io = pve;

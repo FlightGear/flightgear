@@ -66,7 +66,6 @@
 
 #include <simgear/constants.h>  // for VERSION
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/fg_random.h>
 #include <simgear/misc/fgpath.hxx>

@@ -23,7 +23,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgstream.hxx>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include "fixlist.hxx"
 

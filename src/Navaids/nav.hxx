@@ -26,7 +26,7 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/fgstream.hxx>
 
 #ifdef FG_HAVE_STD_INCLUDES
@@ -102,7 +102,7 @@ operator >> ( istream& in, FGNav& n )
 
     // generate cartesian coordinates
     Point3D geod( n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD, n.elev );
-    Point3D cart = fgGeodToCart( geod );
+    Point3D cart = sgGeodToCart( geod );
     n.x = cart.x();
     n.y = cart.y();
     n.z = cart.z();

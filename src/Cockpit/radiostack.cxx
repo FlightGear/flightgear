@@ -72,7 +72,7 @@ FGRadioStack::~FGRadioStack() {
 void FGRadioStack::update( double lon, double lat, double elev ) {
     need_update = false;
 
-    Point3D aircraft = fgGeodToCart( Point3D( lon, lat, elev ) );
+    Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
     Point3D station;
     double az1, az2, s;
 

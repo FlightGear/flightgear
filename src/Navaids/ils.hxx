@@ -26,7 +26,7 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/math/fg_geodesy.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/fgstream.hxx>
 
 #ifdef FG_HAVE_STD_INCLUDES
@@ -136,7 +136,7 @@ operator >> ( istream& in, FGILS& i )
     Point3D geod, cart;
 
     geod = Point3D( i.loclon * DEG_TO_RAD, i.loclat * DEG_TO_RAD, i.gselev );
-    cart = fgGeodToCart( geod );
+    cart = sgGeodToCart( geod );
     i.x = cart.x();
     i.y = cart.y();
     i.z = cart.z();
@@ -147,7 +147,7 @@ operator >> ( istream& in, FGILS& i )
 	i.has_gs = true;
 
 	geod = Point3D( i.gslon * DEG_TO_RAD, i.gslat * DEG_TO_RAD, i.gselev );
-	cart = fgGeodToCart( geod );
+	cart = sgGeodToCart( geod );
 	i.gs_x = cart.x();
 	i.gs_y = cart.y();
 	i.gs_z = cart.z();
@@ -160,7 +160,7 @@ operator >> ( istream& in, FGILS& i )
 	i.has_dme = true;
 
 	geod = Point3D( i.dmelon * DEG_TO_RAD, i.dmelat * DEG_TO_RAD, i.gselev);
-	cart = fgGeodToCart( geod );
+	cart = sgGeodToCart( geod );
 	i.dme_x = cart.x();
 	i.dme_y = cart.y();
 	i.dme_z = cart.z();

@@ -54,9 +54,9 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
-#include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
@@ -350,10 +350,10 @@ void fgUpdateMoonPos( void ) {
     // fgMoonPosition(t->cur_time, &l->moon_lon, &moon_gd_lat);
     fgMoonPositionGST(t->getGst(), &l->moon_lon, &moon_gd_lat);
 
-    fgGeodToGeoc(moon_gd_lat, 0.0, &sl_radius, &l->moon_gc_lat);
+    sgGeodToGeoc(moon_gd_lat, 0.0, &sl_radius, &l->moon_gc_lat);
 
     p = Point3D( l->moon_lon, l->moon_gc_lat, sl_radius );
-    l->fg_moonpos = fgPolarToCart3d(p);
+    l->fg_moonpos = sgPolarToCart3d(p);
 
     FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->get_cur_time() );
     FG_LOG( FG_EVENT, FG_INFO, 
