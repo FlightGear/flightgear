@@ -14,10 +14,6 @@ libFlight_a_SOURCES = \
 	MagicCarpet.cxx MagicCarpet.hxx \
 	NullFDM.cxx NullFDM.hxx
 
-bin_PROGRAMS = pstest
-
-pstest_SOURCES = ps-10520c.cxx
-
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
 else

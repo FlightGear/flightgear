@@ -53,14 +53,6 @@ libJSBSim_a_SOURCES = \
 
 # noinst_PROGRAMS = testJSBsim
 
-# testJSBsim_SOURCES = JSBSim.dcpp
-
-# testJSBsim_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
-
-# demo_SOURCES = demo.cxx
-
-# demo_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
-
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
 DEFS += -DFGFS
