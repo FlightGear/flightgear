@@ -54,9 +54,12 @@ operator >> ( istream& in, FGRunway& a )
         in >> a.id >> a.rwy_no >> a.lat >> a.lon >> a.heading
            >> a.length >> a.width >> a.surface_flags >> a.end1_flags
            >> tmp >> tmp >> a.end2_flags >> tmp >> tmp;
+    } else if ( a.type == "T" ) {
+        // in >> a.id >> a.rwy_no >> a.lat >> a.lon >> a.heading
+        //    >> a.length >> a.width >> a.surface_flags;
+        in >> skipeol;
     } else {
-        in >> a.id >> a.rwy_no >> a.lat >> a.lon >> a.heading
-           >> a.length >> a.width >> a.surface_flags;
+        in >> skipeol;
     }
 
     return in;
