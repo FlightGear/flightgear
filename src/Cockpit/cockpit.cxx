@@ -243,20 +243,23 @@ float get_fov( void )
 
 float get_vfc_ratio( void )
 {
-    float vfc = current_view.get_vfc_ratio();
-    return (vfc);
+    // float vfc = current_view.get_vfc_ratio();
+    // return (vfc);
+    return 0.0;
 }
 
 float get_vfc_tris_drawn   ( void )
 {
-    float rendered = current_view.get_tris_rendered();
-    return (rendered);
+    // float rendered = current_view.get_tris_rendered();
+    // return (rendered);
+    return 0.0;
 }
 
 float get_vfc_tris_culled   ( void )
 {
-    float culled = current_view.get_tris_culled();
-    return (culled);
+    // float culled = current_view.get_tris_culled();
+    // return (culled);
+    return 0.0;
 }
 
 float get_climb_rate( void )

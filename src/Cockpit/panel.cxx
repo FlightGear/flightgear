@@ -190,6 +190,7 @@ bool
 FGPanel::doMouseAction (int button, int updown, int x, int y)
 {
 				// Note a released button and return
+  // cerr << "Doing mouse action\n";
   if (updown == 1) {
     _mouseDown = false;
     _mouseInstrument = 0;
@@ -431,23 +432,21 @@ int
 FGLayeredInstrument::addLayer (FGInstrumentLayer *layer)
 {
   int n = _layers.size();
+  if (layer->getWidth() == -1) {
+    layer->setWidth(getWidth());
+  }
+  if (layer->getHeight() == -1) {
+    layer->setHeight(getHeight());
+  }
   _layers.push_back(layer);
   return n;
 }
 
 int
-FGLayeredInstrument::addLayer (ssgTexture * texture,
-			       int w = -1, int h = -1,
-			       float texX1 = 0.0, float texY1 = 0.0,
-			       float texX2 = 1.0, float texY2 = 1.0)
+FGLayeredInstrument::addLayer (CroppedTexture &texture,
+			       int w = -1, int h = -1)
 {
-  if (w == -1)
-    w = _w;
-  if (h == -1)
-    h = _h;
-  FGTexturedLayer * layer = new FGTexturedLayer(texture, w, h);
-  layer->setTextureCoords(texX1, texY1, texX2, texY2);
-  return addLayer(layer);
+  return addLayer(new FGTexturedLayer(texture, w, h));
 }
 
 void
@@ -541,13 +540,21 @@ FGInstrumentLayer::addTransformation (transform_type type,
 // Implementation of FGTexturedLayer.
 ////////////////////////////////////////////////////////////////////////
 
-FGTexturedLayer::FGTexturedLayer (ssgTexture * texture, int w, int h,
-				  float texX1 = 0.0, float texY1 = 0.0,
-				  float texX2 = 1.0, float texY2 = 1.0)
+// FGTexturedLayer::FGTexturedLayer (ssgTexture * texture, int w, int h,
+// 				  float texX1 = 0.0, float texY1 = 0.0,
+// 				  float texX2 = 1.0, float texY2 = 1.0)
+//   : FGInstrumentLayer(w, h),
+//     _texX1(texX1), _texY1(texY1), _texX2(texX2), _texY2(texY2)
+// {
+//   setTexture(texture);
+// }
+
+FGTexturedLayer::FGTexturedLayer (CroppedTexture &texture, int w, int h)
   : FGInstrumentLayer(w, h),
-    _texX1(texX1), _texY1(texY1), _texX2(texX2), _texY2(texY2)
+    _texX1(texture.minX), _texY1(texture.minY),
+    _texX2(texture.maxX), _texY2(texture.maxY)
 {
-  setTexture(texture);
+  setTexture(texture.texture);
 }
 
 FGTexturedLayer::~FGTexturedLayer ()
@@ -581,11 +588,18 @@ FGTexturedLayer::draw () const
 // Implementation of FGTextLayer.
 ////////////////////////////////////////////////////////////////////////
 
-FGTextLayer::FGTextLayer (int w, int h)
+FGTextLayer::FGTextLayer (int w, int h, Chunk * chunk1, Chunk * chunk2,
+			  Chunk * chunk3)
   : FGInstrumentLayer(w, h)
 {
   _color[0] = _color[1] = _color[2] = 0.0;
   _color[3] = 1.0;
+  if (chunk1)
+    addChunk(chunk1);
+  if (chunk2)
+    addChunk(chunk2);
+  if (chunk3)
+    addChunk(chunk3);
 }
 
 FGTextLayer::~FGTextLayer ()

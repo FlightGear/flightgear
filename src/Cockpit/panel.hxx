@@ -62,6 +62,28 @@ private:
   static map<const char *,ssgTexture *>_textureMap;
 };
 
+
+
+////////////////////////////////////////////////////////////////////////
+// Cropped texture (should migrate out into FGFS).
+//
+// This class defines a rectangular cropped area of a texture.
+////////////////////////////////////////////////////////////////////////
+
+struct CroppedTexture
+{
+  CroppedTexture () {}
+  CroppedTexture (const char * path,
+		  float _minX = 0.0, float _minY = 0.0,
+		  float _maxX = 1.0, float _maxY = 1.0)
+    : texture(FGTextureManager::createTexture(path)),
+      minX(_minX), minY(_minY), maxX(_maxX), maxY(_maxY) {}
+
+  ssgTexture * texture;
+  float minX, minY, maxX, maxY;
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Instrument panel class.
@@ -284,13 +306,16 @@ public:
 
   typedef double (*transform_func)();
 
-
-  FGInstrumentLayer ();
-  FGInstrumentLayer (int w, int h);
+  FGInstrumentLayer (int w = -1, int h = -1);
   virtual ~FGInstrumentLayer ();
 
   virtual void draw () const = 0;
   virtual void transform () const;
+
+  virtual int getWidth () const { return _w; }
+  virtual int getHeight () const { return _h; }
+  virtual void setWidth (int w) { _w = w; }
+  virtual void setHeight (int h) { _h = h; }
 
   virtual void addTransformation (transform_type type, transform_func func,
 				  float min, float max,
@@ -341,10 +366,8 @@ public:
 
 				// Transfer pointer ownership!!
   virtual int addLayer (FGInstrumentLayer *layer);
-  virtual int addLayer (ssgTexture * texture,
-			int w = -1, int h = -1,
-			float texX1 = 0.0, float texY1 = 0.0,
-			float texX2 = 1.0, float texY2 = 1.0);
+  virtual int addLayer (CroppedTexture &texture,
+			int w = -1, int h = -1);
   virtual void addTransformation (FGInstrumentLayer::transform_type type,
 				  FGInstrumentLayer::transform_func func,
 				  float min, float max,
@@ -369,14 +392,17 @@ protected:
 class FGTexturedLayer : public FGInstrumentLayer
 {
 public:
-  FGTexturedLayer (ssgTexture * texture, int w, int h,
-		   float texX1 = 0.0, float texY1 = 0.0,
-		   float texX2 = 1.0, float texY2 = 1.0);
+//   FGTexturedLayer (ssgTexture * texture, int w, int h,
+// 		   float texX1 = 0.0, float texY1 = 0.0,
+// 		   float texX2 = 1.0, float texY2 = 1.0);
+  FGTexturedLayer (int w = -1, int h = -1) : FGInstrumentLayer(w, h) {}
+  FGTexturedLayer (CroppedTexture &texture, int w = -1, int h = -1);
   virtual ~FGTexturedLayer ();
 
   virtual void draw () const;
 
   virtual void setTexture (ssgTexture * texture) { _texture = texture; }
+  virtual ssgTexture * getTexture () { return _texture; }
   virtual void setTextureCoords (float x1, float y1, float x2, float y2) {
     _texX1 = x1; _texY1 = y1; _texX2 = x2; _texY2 = y2;
   }
@@ -434,7 +460,8 @@ public:
     mutable char _buf[1024];
   };
 
-  FGTextLayer (int w, int h);
+  FGTextLayer (int w = -1, int h = -1, Chunk * chunk1 = 0, Chunk * chunk2 = 0,
+	       Chunk * chunk3 = 0);
   virtual ~FGTextLayer ();
 
   virtual void draw () const;

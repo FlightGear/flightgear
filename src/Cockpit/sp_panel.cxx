@@ -26,6 +26,8 @@
 #  include <windows.h>
 #endif
 
+#include <map>
+
 #include <simgear/debug/logstream.hxx>
 #include <Main/bfi.hxx>
 #include <Time/fg_time.hxx>
@@ -33,6 +35,8 @@
 #include "panel.hxx"
 #include "steam.hxx"
 #include "radiostack.hxx"
+
+FG_USING_STD(map);
 
 				// Macros for instrument sizes
 				// (these aren't used consistently
@@ -143,10 +147,169 @@ static bool panelGetNAV2FROM ()
 
 
 ////////////////////////////////////////////////////////////////////////
+// Cropped textures, with string keys.
+////////////////////////////////////////////////////////////////////////
+
+				// External representation of data.
+struct TextureData
+{
+  const char * name;		// the cropped texture's name
+  const char * path;		// the source texture file
+
+				// the rectangular area containing
+				// the texture (0.0-1.0)
+  float xMin, yMin, xMax, yMax;
+};
+
+
+				// This table is temporarily hard-coded,
+				// but soon it will be initialized from
+				// an XML file at runtime.
+TextureData textureData[] = {
+{"compassFront", "Textures/Panel/misc-1.rgb",
+  48.0/128.0, 0.0, 1.0, 24.0/128.0},
+{"airspeedBG", "Textures/Panel/faces-2.rgb",
+   0, 0.5, 0.5, 1.0},
+{"longNeedle", "Textures/Panel/misc-1.rgb",
+   102.0/128.0, 100.0/128.0, 107.0/128.0, 1.0},
+{"horizonBG", "Textures/Panel/faces-2.rgb",
+   0.5, 0.5, 1.0, 1.0},
+{"horizonFloat", "Textures/Panel/misc-1.rgb",
+   15.0/32.0, 54.0/128.0, 28.0/32.0, 87.0/128.0},
+{"horizonRim", "Textures/Panel/faces-2.rgb",
+   0, 0, 0.5, 0.5},
+{"horizonFront", "Textures/Panel/faces-2.rgb",
+   0.5, 0.0, 1.0, 0.5},
+{"altimeterBG", "Textures/Panel/faces-1.rgb",
+   0.5, 0.5, 1.0, 1.0},
+{"shortNeedle", "Textures/Panel/misc-1.rgb",
+   107.0/128.0, 110.0/128.0, 113.0/128.0, 1.0},
+{"bug", "Textures/Panel/misc-1.rgb",
+   108.0/128.0, 104.0/128.0, 112.0/128.0, 108.0/128.0},
+{"turnBG", "Textures/Panel/faces-1.rgb",
+   0.5, 0.0, 1.0, 0.5},
+{"turnPlane", "Textures/Panel/misc-1.rgb",
+   0.0, 3.0/8.0, 3.0/8.0, 0.5},
+{"turnBall", "Textures/Panel/misc-1.rgb",
+   108.0/128.0, 100.0/128.0, 112.0/128.0, 104.0/128.0},
+{"compassBG", "Textures/Panel/faces-1.rgb",
+   0.0, 0.5, 0.5, 1.0},
+{"compassCenter", "Textures/Panel/misc-1.rgb",
+   15.0/32.0, 11.0/16.0, 25.0/32.0, 1.0},
+{"headingKnob", "Textures/Panel/misc-1.rgb",
+   0, 64.0/128.0, 21.0/128.0, 85.0/128.0},
+{"knob", "Textures/Panel/misc-1.rgb",
+   79.0/128.0, 31.0/128.0, 101.0/128.0, 53.0/128.0},
+{"verticalBG", "Textures/Panel/faces-1.rgb",
+   0.0, 0.0, 0.5, 0.5},
+{"rpmBG", "Textures/Panel/faces-3.rgb",
+   0.0, 0.5, 0.5, 1.0},
+{"flapsBG", "Textures/Panel/faces-3.rgb",
+   0.5, 0.5, 1.0, 1.0},
+{"clockBG", "Textures/Panel/faces-3.rgb",
+   0.5, 0.0, 1.0, 0.5},
+{"controlsBG", "Textures/Panel/faces-3.rgb",
+   0.0, 0.0, 0.5, 0.5},
+{"navFG", "Textures/Panel/misc-1.rgb",
+   0, 0, 0.25, 5.0/16.0},
+{"obsKnob", "Textures/Panel/misc-1.rgb",
+   0.0, 86.0/128.0, 21.0/128.0, 107.0/128.0},
+{"toFlag", "Textures/Panel/misc-1.rgb",
+   120.0/128.0, 74.0/128.0, 1.0, 80.0/128.0},
+{"fromFlag", "Textures/Panel/misc-1.rgb",
+   120.0/128.0, 80.0/128.0, 1.0, 86.0/128.0},
+{"offFlag", "Textures/Panel/misc-1.rgb",
+   120.0/128.0, 0.5, 1.0, 70.0/128.0},
+{"navNeedle", "Textures/Panel/misc-1.rgb",
+   56.0/128.0, 0.5, 58.0/128.0, 1.0},
+{"adfNeedle", "Textures/Panel/misc-1.rgb",
+   120.0/128.0, 88.0/128.0, 1.0, 1.0},
+{"adfKnob", "Textures/Panel/misc-1.rgb",
+   0.0, 107.0/128.0, 21.0/128.0, 1.0},
+{"adfPlane", "Textures/Panel/misc-1.rgb",
+   102.0/128.0, 32.0/128.0, 1.0, 48.0/128.0},
+{"adfFace", "Textures/Panel/faces-4.rgb",
+   0.0, 0.5, 0.5, 1.0},
+{"navRadioBG", "Textures/Panel/radios-1.rgb",
+   0.0, 0.75, 1.0, 1.0},
+{"adfRadioBG", "Textures/Panel/radios-1.rgb",
+   0.0, 0.5, 1.0, 0.75},
+{"autopilotBG", "Textures/Panel/radios-1.rgb",
+   0.0, 0.375, 1.0, 0.5},
+{"hdgButtonOn", "Textures/Panel/misc-1.rgb",
+   39.0/128.0, 118.0/128.0, 54.0/128.0, 128.0/128.0},
+{"hdgButtonOff", "Textures/Panel/misc-1.rgb",
+   22.0/128.0, 118.0/128.0, 37.0/128.0, 128.0/128.0},
+{"navButtonOn", "Textures/Panel/misc-1.rgb",
+   39.0/128.0, 106.0/128.0, 54.0/128.0, 116.0/128.0},
+{"navButtonOff", "Textures/Panel/misc-1.rgb",
+   22.0/128.0, 106.0/128.0, 37.0/128.0, 116.0/128.0},
+{"altButtonOn", "Textures/Panel/misc-1.rgb",
+   39.0/128.0, 82.0/128.0, 54.0/128.0, 92.0/128.0},
+{"altButtonOff", "Textures/Panel/misc-1.rgb",
+   22.0/128.0, 82.0/128.0, 37.0/128.0, 92.0/128.0},
+{"dmeBG", "Textures/Panel/radios-1.rgb",
+   0.0, 0.25, 0.375, 0.375},
+{"compassRibbon", "Textures/Panel/compass-ribbon.rgb",
+   0.0, 0.0, 1.0, 1.0},
+{0, 0}
+};
+
+				// Internal representation of
+				// data.
+map<const char *,CroppedTexture> tex;
+
+
+
+/**
+ * Ugly kludge to delay texture loading.
+ */
+class MyTexturedLayer : public FGTexturedLayer
+{
+public:
+  MyTexturedLayer (const char * name, int w = -1, int h = -1)
+    : FGTexturedLayer(w, h), _name(name) {}
+
+  virtual void draw () const;
+
+private:
+  const char * _name;
+};
+
+void
+MyTexturedLayer::draw () const {
+  MyTexturedLayer * me = (MyTexturedLayer *)this;
+  if (me->getTexture() == 0) {
+    CroppedTexture &t = tex[_name];
+    me->setTexture(t.texture);
+    me->setTextureCoords(t.minX, t.minY, t.maxX, t.maxY);
+  }
+  FGTexturedLayer::draw();
+}
+
+
+
+/**
+ * Populate the textureMap from the data table.
+ */
+static void
+setupTextures ()
+{
+  for (int i = 0; textureData[i].name; i++) {
+    tex[textureData[i].name] =
+      CroppedTexture(textureData[i].path, textureData[i].xMin,
+		     textureData[i].yMin, textureData[i].xMax,
+		     textureData[i].yMax);
+  }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Special class for magnetic compass ribbon layer.
 ////////////////////////////////////////////////////////////////////////
 
-class MagRibbon : public FGTexturedLayer
+class MagRibbon : public MyTexturedLayer
 {
 public:
   MagRibbon (int w, int h);
@@ -156,7 +319,7 @@ public:
 };
 
 MagRibbon::MagRibbon (int w, int h)
-  : FGTexturedLayer(createTexture("Textures/Panel/compass-ribbon.rgb"), w, h)
+  : MyTexturedLayer("compassRibbon", w, h)
 {
 }
 
@@ -194,8 +357,354 @@ MagRibbon::draw () const
   xoffset -= 0.25;
 
   setTextureCoords(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
-  FGTexturedLayer::draw();
+  MyTexturedLayer::draw();
 }
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Instruments.
+////////////////////////////////////////////////////////////////////////
+
+struct ActionData
+{
+  FGPanelAction * action;
+  int button, x, y, w, h;
+};
+
+struct TransData
+{
+  enum Type {
+    End = 0,
+    Rotation,
+    XShift,
+    YShift
+  };
+  Type type;
+  FGInstrumentLayer::transform_func func;
+  float min, max, factor, offset;
+};
+
+struct LayerData
+{
+  FGInstrumentLayer * layer;
+  TransData transformations[16];
+};
+
+struct InstrumentData
+{
+  const char * name;
+  int x, y, w, h;
+  ActionData actions[16];
+  LayerData layers[16];
+};
+
+InstrumentData instruments[] =
+{
+
+  {"magcompass", 512, 459, SIX_W, SIX_W/2, {}, {
+    {new MagRibbon(int(SIX_W*0.8), int(SIX_W*0.2))},
+    {new MyTexturedLayer("compassFront", SIX_W, SIX_W*(24.0/80.0))}
+  }},
+
+  {"airspeed", SIX_X, SIX_Y, SIX_W, SIX_W, {}, {
+    {new MyTexturedLayer("airspeedBG", -1, -1)},
+    {new MyTexturedLayer("longNeedle", int(SIX_W*(5.0/64.0)),
+       int(SIX_W*(7.0/16.0))), {
+      {TransData::Rotation, FGSteam::get_ASI_kias,
+	 30.0, 220.0, 36.0/20.0, -54.0},
+      {TransData::YShift, 0,
+	 0.0, 0.0, 0.0, SIX_W*(12.0/64.0)}
+    }}
+  }},
+
+  {"horizon", SIX_X + SIX_SPACING, SIX_Y, SIX_W, SIX_W, {}, {
+    {new MyTexturedLayer("horizonBG", -1, -1), {
+      {TransData::Rotation, FGBFI::getRoll, -360.0, 360.0, -1.0, 0.0}
+    }},
+    {new MyTexturedLayer("horizonFloat",
+       int(SIX_W * (13.0/16.0)), int(SIX_W * (33.0/64.0))), {
+      {TransData::Rotation, FGBFI::getRoll, -360.0, 360.0, -1.0, 0.0},
+      {TransData::YShift, FGBFI::getPitch,
+	 -20.0, 20.0, -(1.5/160.0)*SIX_W, 0.0}
+    }},
+    {new MyTexturedLayer("horizonRim", -1, -1), {
+      {TransData::Rotation, FGBFI::getRoll, -360.0, 360.0, -1.0, 0.0}
+    }},
+    {new MyTexturedLayer("horizonFront", -1, -1)}
+  }},
+
+  {"altimeter", SIX_X + SIX_SPACING + SIX_SPACING, SIX_Y, SIX_W, SIX_W, {}, {
+    {new MyTexturedLayer("altimeterBG", -1, -1)},
+    {new MyTexturedLayer("longNeedle",
+       int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
+      {TransData::Rotation, FGSteam::get_ALT_ft,
+	 0.0, 100000.0, 360.0/1000.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*(12.0/64.0)}
+    }},
+    {new MyTexturedLayer("shortNeedle",
+       int(SIX_W*(6.0/64.0)), int(SIX_W*(18.0/64.0))), {
+      {TransData::Rotation, FGSteam::get_ALT_ft,
+	 0.0, 100000.0, 360.0/10000.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W/8.0}
+    }},
+    {new MyTexturedLayer("bug", int(SIX_W*(4.0/64.0)), int(SIX_W*(4.0/64.0))), {
+      {TransData::Rotation, FGSteam::get_ALT_ft,
+	 0.0, 100000.0, 360.0/100000.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W/2.0-4}
+    }},
+  }},
+
+  {"turn", SIX_X, SIX_Y-SIX_SPACING, SIX_W, SIX_W, {}, {
+    {new MyTexturedLayer("turnBG", -1, -1)},
+    {new MyTexturedLayer("turnPlane", int(SIX_W * 0.75), int(SIX_W * 0.25)), {
+      {TransData::Rotation, FGSteam::get_TC_std, -2.5, 2.5, 20.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, int(SIX_W * 0.0625)}
+    }},
+    {new MyTexturedLayer("turnBall",
+       int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0))), {
+      {TransData::Rotation, FGSteam::get_TC_rad,
+	 -0.1, 0.1, -450.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -(SIX_W/4)+4}
+    }}
+  }},
+
+  {"verticalVelocity", SIX_X+SIX_SPACING+SIX_SPACING, SIX_Y-SIX_SPACING,
+    SIX_W, SIX_W, {}, {
+    {new MyTexturedLayer("verticalBG", -1, -1)},
+    {new MyTexturedLayer("longNeedle",
+       int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
+      {TransData::Rotation, FGSteam::get_VSI_fps,
+	 -2000.0, 2000.0, 42.0/500.0, 270.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*12.0/64.0}
+    }}
+  }},
+
+  {"controls", SIX_X, SIX_Y-(SIX_SPACING*2), SMALL_W, SMALL_W, {}, {
+    {new MyTexturedLayer("controlsBG", -1, -1)},
+    {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
+      {TransData::XShift, FGBFI::getAileron, -1.0, 1.0, SMALL_W*0.75/2.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-12.0}
+    }},
+    {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
+      {TransData::Rotation, 0, 0.0, 0.0, 0.0, 180.0},
+      {TransData::XShift, FGBFI::getRudder, -1.0, 1.0, -SMALL_W*0.75/2.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W/2.0-12.0}
+    }},
+    {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
+      {TransData::Rotation, 0, 0.0, 0.0, 0.0, 270.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -SMALL_W*3.0/8.0},
+      {TransData::XShift, FGBFI::getElevatorTrim,
+	 -1.0, 1.0, SMALL_W*0.75/2.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-12.0}
+    }},
+    {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
+      {TransData::Rotation, 0, 0.0, 0.0, 0.0, 90.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -SMALL_W*(3.0/8.0)},
+      {TransData::XShift, FGBFI::getElevator,
+	 -1.0, 1.0, -SMALL_W*0.75/2.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-12.0}
+    }}
+  }},
+
+  {"flaps", SIX_X+SIX_SPACING, SIX_Y-(SIX_SPACING*2), SMALL_W, SMALL_W, {}, {
+    {new MyTexturedLayer("flapsBG", -1, -1)},
+    {new MyTexturedLayer("longNeedle",
+       int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
+      {TransData::XShift, 0, 0.0, 0.0, 0.0, -(SMALL_W/4) + (SMALL_W/16)},
+      {TransData::Rotation, FGBFI::getFlaps, 0.0, 1.0, 120.0, 30.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*12.0/64.0}
+    }}
+  }},
+
+  {"rpm", SIX_X+(SIX_SPACING*2), SIX_Y-(SIX_SPACING*2), SMALL_W, SMALL_W, {}, {
+    {new MyTexturedLayer("rpmBG", -1, -1)},
+    {new MyTexturedLayer("longNeedle",
+       int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
+      {TransData::Rotation, FGBFI::getThrottle, 0.0, 100.0, 300.0, -150.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*12.0/64.0}
+    }}
+  }},
+
+  {"gyro", SIX_X+SIX_SPACING, SIX_Y-SIX_SPACING, SIX_W, SIX_W, {
+    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+			-1.0, -360.0, 360.0, true),
+       0, SIX_W/2-SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+			1.0, -360.0, 360.0, true),
+       0, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+			-5.0, -360.0, 360.0, true),
+       1, SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+			5.0, -360.0, 360.0, true),
+       1, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
+//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+// 			-1.0, -360.0, 360.0, true),
+//        0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5}
+//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+// 			1.0, -360.0, 360.0, true),
+//        0, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
+//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+// 			-5.0, -360.0, 360.0, true),
+//        1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5}
+//     {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+// 			5.0, -360.0, 360.0, true),
+//        1, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
+  }, {
+    {new MyTexturedLayer("compassBG", -1, -1), {
+      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, -1.0, 0.0}
+    }},
+    {new MyTexturedLayer("bug",
+			 int(SIX_W*(4.0/64.0)), int(SIX_W*(4.0/64.0))), {
+      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, -1.0, 0.0},
+      {TransData::Rotation, FGBFI::getAPHeadingMag, -720.0, 720.0, -1.0, 0.0},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-4}
+    }},
+    {new MyTexturedLayer("compassCenter", int(SIX_W*0.625), int(SIX_W*0.625))},
+    {new MyTexturedLayer("headingKnob",
+       int(SIX_W*(21.0/112.0)), int(SIX_W*(21.0/112.0))), {
+      {TransData::XShift, 0, 0.0, 0.0, 0.0, SIX_W/2-10},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::Rotation, FGBFI::getAPHeadingMag, -360.0, 360.0, 1.0, 0.0}
+    }},
+    {new MyTexturedLayer("knob",
+			 int(SIX_W*(22.0/112.0)), int(SIX_W*(22.0/112.0))), {
+      {TransData::XShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10}
+    }}
+
+  }},
+
+  {"chronometer", SIX_X-SIX_SPACING-8, SIX_Y, SMALL_W, SMALL_W, {}, {
+    {new MyTexturedLayer("clockBG")},
+    {new FGTextLayer(SMALL_W, SMALL_W,
+		     new FGTextLayer::Chunk(panelGetTime)), {
+      {TransData::XShift, 0, 0.0, 0.0, 0.0, SMALL_W*-0.38},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, SMALL_W*-0.06}
+    }}
+  }},
+
+  {"nav1", SIX_X+(SIX_SPACING*3)+20, SIX_Y, SIX_W, SIX_W, {
+    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+			1.0, 0.0, 360.0, true),
+       0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+			-1.0, 0.0, 360.0, true),
+       0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+			5.0, 0.0, 360.0, true),
+       1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+			-5.0, 0.0, 360.0, true),
+       1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}       
+  }, {
+    {new MyTexturedLayer("compassBG"), {
+      {TransData::Rotation, FGBFI::getNAV1SelRadial,
+	 -360.0, 360.0, -1.0, 0.0}
+    }},
+    {new MyTexturedLayer("navFG", SIX_W/2, int(SIX_W*(5.0/8.0)))},
+    {new MyTexturedLayer("obsKnob", int(SIX_W*(21.0/112.0)),
+			 int(SIX_W*(21.0/112.0))), {
+      {TransData::XShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::Rotation, FGBFI::getNAV1SelRadial, -360.0, 360.0, 1.0, 0.0}
+    }},
+    {new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV1TO,
+		       new MyTexturedLayer("toFlag", SIX_W/8, SIX_W/8),
+		       new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV1FROM,
+					 new MyTexturedLayer("fromFlag",
+							     SIX_W/8,
+							     SIX_W/8),
+					 new MyTexturedLayer("offFlag",
+							     SIX_W/8,
+							     SIX_W/8))), {
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -int(SIX_W*0.1875)}
+    }},
+    {new MyTexturedLayer("navNeedle", SIX_W/32, SIX_W/2), {
+      {TransData::XShift, FGSteam::get_HackVOR1_deg,
+	 -10.0, 10.0, SIX_W/40.0, 0.0}
+    }},
+    {new MyTexturedLayer("navNeedle", SIX_W/32, SIX_W/2), {
+      {TransData::YShift, FGSteam::get_HackGS_deg, -1.0, 1.0, SIX_W/5.0, 0.0},
+      {TransData::Rotation, 0, 0.0, 0.0, 0.0, 90}
+    }}
+  }},
+
+  {"nav2", SIX_X+(SIX_SPACING*3)+20, SIX_Y-SIX_SPACING, SIX_W, SIX_W, {
+    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+			1.0, 0.0, 360.0, true),
+       0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+			-1.0, 0.0, 360.0, true),
+       0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+			5.0, 0.0, 360.0, true),
+       1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+			-5.0, 0.0, 360.0, true),
+       1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}       
+  }, {
+    {new MyTexturedLayer("compassBG"), {
+      {TransData::Rotation, FGBFI::getNAV2SelRadial,
+	 -360.0, 360.0, -1.0, 0.0}
+    }},
+    {new MyTexturedLayer("navFG", SIX_W/2, int(SIX_W*(5.0/8.0)))},
+    {new MyTexturedLayer("obsKnob", int(SIX_W*(21.0/112.0)),
+			 int(SIX_W*(21.0/112.0))), {
+      {TransData::XShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::Rotation, FGBFI::getNAV2SelRadial, -360.0, 360.0, 1.0, 0.0}
+    }},
+    {new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV2TO,
+		       new MyTexturedLayer("toFlag", SIX_W/8, SIX_W/8),
+		       new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV2FROM,
+					 new MyTexturedLayer("fromFlag",
+							     SIX_W/8,
+							     SIX_W/8),
+					 new MyTexturedLayer("offFlag",
+							     SIX_W/8,
+							     SIX_W/8))), {
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -int(SIX_W*0.1875)}
+    }},
+    {new MyTexturedLayer("navNeedle", SIX_W/32, SIX_W/2), {
+      {TransData::XShift, FGSteam::get_HackVOR2_deg,
+	 -10.0, 10.0, SIX_W/40.0, 0.0}
+    }}
+  }},
+
+  {"adf", SIX_X+(SIX_SPACING*3)+20, SIX_Y-(SIX_SPACING*2), SIX_W, SIX_W, {
+    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+			-1.0, 0.0, 360.0, true),
+       0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+			1.0, 0.0, 360.0, true),
+       0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+			-5.0, 0.0, 360.0, true),
+       1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
+    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+			5.0, 0.0, 360.0, true),
+       1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
+  },{
+    {new MyTexturedLayer("compassBG"), {
+      {TransData::Rotation, FGBFI::getADFRotation, 0.0, 360.0, 1.0, 0.0}
+    }},
+    {new MyTexturedLayer("adfFace", -1, -1), {}},
+    {new MyTexturedLayer("adfNeedle", SIX_W/8, int(SIX_W*0.625)), {
+      {TransData::Rotation, FGSteam::get_HackADF_deg, -720.0, 720.0, 1.0, 0.0}
+    }},
+    {new MyTexturedLayer("adfKnob", int(SIX_W*(21.0/112.0)),
+			 int(SIX_W*(21.0/112.0))), {
+      {TransData::XShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
+      {TransData::Rotation, FGBFI::getADFRotation, 0.0, 360.0, 1.0, 0.0}
+    }}
+  }},
+
+  {0}
+
+};
 
 
 
@@ -206,646 +715,6 @@ MagRibbon::draw () const
 // configuration files read from an external source, but for now
 // they're hard-coded.
 ////////////////////////////////////////////////////////////////////////
-
-
-/**
- * Construct a magnetic (wet) compass.
- */
-static FGPanelInstrument *
-createMagneticCompass (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W/2);
-
-  inst->addLayer(new MagRibbon(int(SIX_W*0.8), int(SIX_W*0.2)));
-
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (80.0/80.0)), int(SIX_W * (24.0/80.0)),
-		 48.0/128.0, 0.0, 1.0, 24.0/128.0);
-
-  return inst;
-}
-
-/**
- * Construct an airspeed indicator for a single-engine prop.
- */
-static FGPanelInstrument *
-createAirspeedIndicator (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Layer 0: gauge background.
-  inst->addLayer(createTexture("Textures/Panel/faces-2.rgb"), -1, -1,
-			       0, 0.5, 0.5, 1.0);
-
-				// Layer 1: needle.
-				// Rotates with airspeed.
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0)),
-		 102.0/128.0, 100.0/128.0, 107.0/128.0, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_ASI_kias,
-			  30.0, 220.0, 36.0 / 20.0, -54.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, SIX_W * 12.0/64.0);
-  return inst;
-}
-
-
-/**
- * Construct an artificial horizon.
- */
-static FGPanelInstrument *
-createHorizon (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Layer 0: coloured background
-				// moves with roll only
-  inst->addLayer(createTexture("Textures/Panel/faces-2.rgb"), -1, -1,
-		 0.5, 0.5, 1.0, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getRoll,
-			  -360.0, 360.0, -1.0, 0.0);
-
-				// Layer 1: floating horizon
-				// moves with roll and pitch
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (13.0/16.0)), int(SIX_W * (33.0/64.0)),
-		 15.0/32.0, 54.0/128.0, 28.0/32.0, 87.0/128.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getRoll,
-			  -360.0, 360.0, -1.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT,
-			  FGBFI::getPitch,
-			  -20.0, 20.0, -(1.5 / 160.0) * SIX_W, 0.0);
-
-				// Layer 2: rim
-				// moves with roll only
-  inst->addLayer(createTexture("Textures/Panel/faces-2.rgb"), -1, -1,
-		 0, 0, 0.5, 0.5);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getRoll,
-			  -360.0, 360.0, -1.0, 0.0);
-
-				// Layer 3: glass front of gauge
-				// fixed, with markings
-  inst->addLayer(createTexture("Textures/Panel/faces-2.rgb"), -1, -1,
-		 0.5, 0, 1.0, 0.5);
-
-  return inst;
-}
-
-
-/**
- * Construct an altimeter.
- */
-static FGPanelInstrument *
-createAltimeter (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Layer 0: gauge background
-  inst->addLayer(createTexture("Textures/Panel/faces-1.rgb"), -1, -1,
-		 0.5, 0.5, 1.0, 1.0);
-
-				// Layer 1: hundreds needle (long)
-				// moves with altitude
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0)),
-		 102.0/128.0, 100.0/128.0, 107.0/128.0, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_ALT_ft,
-			  0.0, 100000.0, 360.0 / 1000.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, SIX_W * 12.0/64.0);
-
-				// Layer 2: thousands needle (short)
-				// moves with altitude
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (6.0/64.0)), int(SIX_W * (18.0/64.0)),
-		 (107.0/128.0), (110.0/128.0), (113.0/128.0), 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_ALT_ft,
-			  0.0, 100000.0, 360.0 / 10000.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, SIX_W/8.0);
-
-				// Layer 3: ten thousands bug (outside)
-				// moves with altitude
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0)),
-		 (108.0/128.0), (104.0/128.0), (112.0/128.0), (108.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_ALT_ft,
-			  0.0, 100000.0, 360.0 / 100000.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, (SIX_W/2.0) - 4);
-
-  return inst;
-}
-
-
-/**
- * Construct a turn coordinator.
- */
-static FGPanelInstrument *
-createTurnCoordinator (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Layer 0: background
-  inst->addLayer(createTexture("Textures/Panel/faces-1.rgb"), -1, -1,
-		 0.5, 0, 1.0, 0.5);
-
-				// Layer 1: little plane
-				// moves with roll
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * 0.75), int(SIX_W * 0.25),
-		 0.0, 3.0/8.0, 3.0/8.0, 0.5);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_TC_std,
-			  -2.5, 2.5, 20.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, int(SIX_W * 0.0625));
-
-				// Layer 2: little ball
-				// moves with slip/skid
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0)),
-		 (108.0/128.0), (100.0/128.0), (112.0/128.0), (104.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_TC_rad,
-			  -0.1, 0.1, -450.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, -(SIX_W/4) + 4);
-
-  return inst;
-}
-
-
-/**
- * Construct a gyro compass.
- */
-static FGPanelInstrument *
-createGyroCompass (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Action: move heading bug
-  inst->addAction(0, SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeadingMag,
-				     FGBFI::setAPHeadingMag,
-				     -1.0, -360.0, 360.0, true));
-  inst->addAction(0, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeadingMag,
-				     FGBFI::setAPHeadingMag,
-				     1.0, -360.0, 360.0, true));
-  inst->addAction(1, SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeadingMag,
-				     FGBFI::setAPHeadingMag,
-				     -5.0, -360.0, 360.0, true));
-  inst->addAction(1, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getAPHeadingMag,
-				     FGBFI::setAPHeadingMag,
-				     5.0, -360.0, 360.0, true));
-
-				// Layer 0: compass background
-				// rotates with heading
-  inst->addLayer(createTexture("Textures/Panel/faces-1.rgb"), -1, -1,
-		 0, 0.5, 0.5, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getHeadingMag,
-			  -720.0, 720.0, -1.0, 0.0);
-
-				// Layer 1: heading bug
-				// rotates with heading and AP heading
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0)),
-		 (108.0/128.0), (104.0/128.0), (112.0/128.0), (108.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getHeadingMag,
-			  -720.0, 720.0, -1.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getAPHeadingMag,
-			  -720.0, 720.0, 1.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, (SIX_W/2.0) - 4);
-
-				// Layer 2: fixed center
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * 0.625), int(SIX_W * 0.625),
-		 15.0/32.0, 11.0/16.0, 25.0/32.0, 1.0);
-
-				// Layer 3: heading knob
-				// rotates with AP heading
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (21.0/112.0)), int(SIX_W * (21.0/112.0)),
-		 0, (64.0/128.0), (21.0/128.0), (85.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getAPHeadingMag,
-			  -360.0, 360.0, 1.0, 0.0);
-
-  return inst;
-}
-
-
-/**
- * Construct a vertical velocity indicator.
- */
-static FGPanelInstrument *
-createVerticalVelocity (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Layer 0: gauge background
-  inst->addLayer(createTexture("Textures/Panel/faces-1.rgb"), -1, -1,
-		 0, 0, 0.5, 0.5);
-
-				// Layer 1: needle
-				// moves with vertical velocity
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0)),
-		 102.0/128.0, 100.0/128.0, 107.0/128.0, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_VSI_fps,
-			  -2000.0, 2000.0, 42.0/500.0, 270.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, SIX_W * 12.0/64.0);
-
-  return inst;
-}
-
-
-/**
- * Construct an RPM gauge.
- */
-static FGPanelInstrument *
-createRPMGauge (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
-
-				// Layer 0: gauge background
-  inst->addLayer(createTexture("Textures/Panel/faces-3.rgb"), -1, -1,
-		 0, 0.5, 0.5, 1.0);
-
-				// Layer 1: long needle
-				// FIXME: moves with throttle (for now)
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0)),
-		 102.0/128.0, 100.0/128.0, 107.0/128.0, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getThrottle,
-			  0.0, 100.0, 300.0, -150.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, SIX_W * 12.0/64.0);
-
-  return inst;
-}
-
-
-/**
- * Construct a flap position indicator.
- */
-static FGPanelInstrument *
-createFlapIndicator (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
-
-				// Layer 0: gauge background
-  inst->addLayer(createTexture("Textures/Panel/faces-3.rgb"), -1, -1,
-		 0.5, 0.5, 1.0, 1.0);
-
-				// Layer 1: long needle
-				// shifted over, rotates with flap position
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0)),
-		 102.0/128.0, 100.0/128.0, 107.0/128.0, 1.0);
-  inst->addTransformation(FGInstrumentLayer::XSHIFT,
-			  -(SMALL_W / 4) + (SMALL_W / 16));
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getFlaps,
-			  0.0, 1.0, 120.0, 30.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, SIX_W * 12.0/64.0);
-
-  return inst;
-}
-
-
-/**
- * Construct a digital chronometer.
- */
-static FGPanelInstrument *
-createChronometer (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
-
-				// Layer 0: gauge background
-  inst->addLayer(createTexture("Textures/Panel/faces-3.rgb"), -1, -1,
-		 0.5, 0, 1.0, 0.5);
-
-				// Layer 1: text
-				// displays current GMT
-  FGTextLayer * text = new FGTextLayer(SMALL_W, SMALL_W);
-  text->addChunk(new FGTextLayer::Chunk(panelGetTime));
-  text->setPointSize(14);
-  text->setColor(0.2, 0.2, 0.2);
-  inst->addLayer(text);
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, SMALL_W * -0.38);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, SMALL_W * -0.06);
-
-  return inst;
-}
-
-
-/**
- * Construct control-position indicators.
- */
-static FGPanelInstrument *
-createControls (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SMALL_W, SMALL_W);
-
-				// Layer 0: gauge background
-  inst->addLayer(createTexture("Textures/Panel/faces-3.rgb"), -1, -1,
-		 0, 0, 0.5, 0.5);
-
-				// Layer 1: bug
-				// moves left-right with aileron
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0)),
-		 (108.0/128.0), (104.0/128.0), (112.0/128.0), (108.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, FGBFI::getAileron,
-			  -1.0, 1.0, SMALL_W * .75 / 2.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, (SIX_W/2.0) - 12);
-
-				// Layer 2: bug
-				// moves left-right with rudder
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0)),
-		 (108.0/128.0), (104.0/128.0), (112.0/128.0), (108.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::ROTATION, 180.0);
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, FGBFI::getRudder,
-			  -1.0, 1.0, -SMALL_W * .75 / 2.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, (SIX_W/2.0) - 12);
-
-				// Layer 3: bug
-				// moves up-down with elevator trim
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0)),
-		 (108.0/128.0), (104.0/128.0), (112.0/128.0), (108.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::ROTATION, 270.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT,
-			  -SMALL_W * (3.0 / 8.0));
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, FGBFI::getElevatorTrim,
-			  -1.0, 1.0, SMALL_W * .75 / 2.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, (SIX_W/2.0) - 12);
-
-				// Layer 4: bug
-				// moves up-down with elevator
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0)),
-		 (108.0/128.0), (104.0/128.0), (112.0/128.0), (108.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::ROTATION, 90.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT,
-			  -SMALL_W * (3.0 / 8.0));
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, FGBFI::getElevator,
-			  -1.0, 1.0, -SMALL_W * .75 / 2.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, (SIX_W/2.0) - 12);
-
-  return inst;
-}
-
-
-/**
- * Construct a NAV1 gauge (hardwired).
- */
-static FGPanelInstrument *
-createNAV1 (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Action: change selected radial.
-  inst->addAction(0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
-				     FGBFI::setNAV1SelRadial,
-				     1.0, 0.0, 360.0, true));
-  inst->addAction(0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
-				     FGBFI::setNAV1SelRadial,
-				     -1.0, 0.0, 360.0, true));
-  inst->addAction(1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
-				     FGBFI::setNAV1SelRadial,
-				     5.0, 0.0, 360.0, true));
-  inst->addAction(1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
-				     FGBFI::setNAV1SelRadial,
-				     -5.0, 0.0, 360.0, true));
-
-				// Layer: background
-  inst->addLayer(createTexture("Textures/Panel/faces-1.rgb"), -1, -1,
-		 0, 0.5, 0.5, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV1SelRadial,
-			  -360.0, 360.0, -1.0, 0.0);
-
-				// Layer 3: face with markings
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 SIX_W/2, int(SIX_W * (5.0 / 8.0)),
-		 0, 0, 0.25, (5.0 / 16.0));
-
-				// Layer: OBS knob
-				// rotates with selected radial
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (21.0/112.0)), int(SIX_W * (21.0/112.0)),
-		 0.0, (86.0/128.0), (21.0/128.0), (107.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W/2 + 10); 
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV1SelRadial,
-			  -360.0, 360.0, 1.0, 0.0);
-
-				// Layer: TO/FROM flag
-  int flag_w = int(SIX_W * (8.0/64.0));
-  int flag_h = int(SIX_W * (6.0/64.0));
-
-  FGTexturedLayer * off =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			flag_w, flag_h,
-			120.0/128.0, 0.5, 1.0, 70.0/128.0);
-  FGTexturedLayer * from =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			flag_w, flag_h,
-			120.0/128.0, 80.0/128.0, 1.0, 86.0/128.0);
-  FGTexturedLayer * to =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			flag_w, flag_h,
-			120.0/128.0, 74.0/128.0, 1.0, 80.0/128.0);
-  FGSwitchLayer * sw1 =
-    new FGSwitchLayer(flag_w, flag_h, panelGetNAV1FROM, from, off);
-  FGSwitchLayer * sw2 =
-    new FGSwitchLayer(flag_w, flag_h, panelGetNAV1TO, to, sw1);
-  inst->addLayer(sw2);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, -int(SIX_W*0.1875));
-
-				// Layer: left-right needle.
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 SIX_W * (2.0/64.0), SIX_W/2,
-		 (56.0/128.0), 0.5, (58.0/128.0), 1.0);
-  inst->addTransformation(FGInstrumentLayer::XSHIFT,
-			  FGSteam::get_HackVOR1_deg,
-			  -10.0, 10.0, SIX_W / 40.0, 0.0);
-
-				// Layer: glidescope needle
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 SIX_W * (2.0/64.0), SIX_W/2,
-		 (56.0/128.0), 0.5, (58.0/128.0), 1.0);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT,
-			  FGSteam::get_HackGS_deg,
-			  -1.0, 1.0, SIX_W / 5.0, 0.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  90 );
-
-  return inst;
-}
-
-
-/**
- * Construct a NAV2 gauge.
- */
-static FGPanelInstrument *
-createNAV2 (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Action: change selected radial.
-  inst->addAction(0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
-				     FGBFI::setNAV2SelRadial,
-				     1.0, 0.0, 360.0, true));
-  inst->addAction(0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
-				     FGBFI::setNAV2SelRadial,
-				     -1.0, 0.0, 360.0, true));
-  inst->addAction(1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
-				     FGBFI::setNAV2SelRadial,
-				     5.0, 0.0, 360.0, true));
-  inst->addAction(1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
-				     FGBFI::setNAV2SelRadial,
-				     -5.0, 0.0, 360.0, true));
-
-				// Layer: background
-  inst->addLayer(createTexture("Textures/Panel/faces-1.rgb"), -1, -1,
-		 0, 0.5, 0.5, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV2SelRadial,
-			  -360.0, 360.0, -1.0, 0.0);
-
-				// Layer: face with markings.
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 SIX_W/2, int(SIX_W * (5.0 / 8.0)),
-		 0, 0, 0.25, (5.0 / 16.0));
-
-				// Layer: OBS knob
-				// rotates with selected radial
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (21.0/112.0)), int(SIX_W * (21.0/112.0)),
-		 0.0, (86.0/128.0), (21.0/128.0), (107.0/128.0));
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W/2 + 10); 
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV2SelRadial,
-			  -360.0, 360.0, 1.0, 0.0);
-
-				// Layer: TO/FROM flag
-  int flag_w = int(SIX_W * (8.0/64.0));
-  int flag_h = int(SIX_W * (6.0/64.0));
-
-  FGTexturedLayer * off =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			flag_w, flag_h,
-			120.0/128.0, 0.5, 1.0, 70.0/128.0);
-  FGTexturedLayer * from =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			flag_w, flag_h,
-			120.0/128.0, 80.0/128.0, 1.0, 86.0/128.0);
-  FGTexturedLayer * to =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			flag_w, flag_h,
-			120.0/128.0, 74.0/128.0, 1.0, 80.0/128.0);
-  FGSwitchLayer * sw1 =
-    new FGSwitchLayer(flag_w, flag_h, panelGetNAV2FROM, from, off);
-  FGSwitchLayer * sw2 =
-    new FGSwitchLayer(flag_w, flag_h, panelGetNAV2TO, to, sw1);
-  inst->addLayer(sw2);
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, -int(SIX_W*0.1875));
-
-				// Layer: left-right needle.
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 SIX_W * (2.0/64.0), SIX_W/2,
-		 (56.0/128.0), 0.5, (58.0/128.0), 1.0);
-  inst->addTransformation(FGInstrumentLayer::XSHIFT,
-			  FGSteam::get_HackVOR2_deg,
-			  -10.0, 10.0, SIX_W / 40.0, 0.0);
-
-  return inst;
-}
-
-
-/**
- * Construct an ADF gauge.
- */
-static FGPanelInstrument *
-createADF (int x, int y)
-{
-  FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
-
-				// Action: change selected rotation.
-  inst->addAction(0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getADFRotation,
-				     FGBFI::setADFRotation,
-				     -1.0, 0.0, 360.0, true));
-  inst->addAction(0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getADFRotation,
-				     FGBFI::setADFRotation,
-				     1.0, 0.0, 360.0, true));
-  inst->addAction(1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getADFRotation,
-				     FGBFI::setADFRotation,
-				     -5.0, 0.0, 360.0, true));
-  inst->addAction(1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getADFRotation,
-				     FGBFI::setADFRotation,
-				     5.0, 0.0, 360.0, true));
-
-				// Layer 0: background
-  inst->addLayer(createTexture("Textures/Panel/faces-1.rgb"), -1, -1,
-		 0, 0.5, 0.5, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getADFRotation,
-			  0.0, 360.0, 1.0, 0.0);
-
-				// Layer 1: Direction needle.
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 SIX_W * (6.0/64.0), SIX_W * (40.0/64.0),
-		 (120.0/128.0), (88.0/128.0), 1.0, 1.0);
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGSteam::get_HackADF_deg,
-			  -720.0, 720.0, 1.0, 0.0);
-
-				// Layer 2: heading knob
-				// rotates with selected radial
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (21.0/112.0)), int(SIX_W * (21.0/112.0)),
-		 0.0, (107.0/128.0), (21.0/128.0), 1.0);
-  inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W/2 + 10); 
-  inst->addTransformation(FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
-  inst->addTransformation(FGInstrumentLayer::ROTATION,
-			  FGBFI::getADFRotation,
-			  -360.0, 360.0, -1.0, 0.0);
-
-				// Layer 3: airplace at centre
-  inst->addLayer(createTexture("Textures/Panel/misc-1.rgb"),
-		 int(SIX_W * (20.0/64.0)), int(SIX_W * (16.0/64.0)),
-		 102.0/128.0, 32.0/128.0, 1.0, 48.0/128.0);
-
-  return inst;
-}
 
 
 /**
@@ -883,10 +752,7 @@ createNavCom1 (int x, int y)
 				     0.5, 108.0, 117.95, true));
 
 				// Layer 0: background
-  FGTexturedLayer * layer =
-    new FGTexturedLayer(createTexture("Textures/Panel/radios-1.rgb"),
-			SIX_W*2, SIX_W/2, 0.0, 0.75, 1.0, 1.0);
-  inst->addLayer(layer);
+  inst->addLayer(tex["navRadioBG"], SIX_W*2, SIX_W/2);
 
 				// Layer 1: NAV frequencies
   FGTextLayer * text = new FGTextLayer(SIX_W*2, SMALL_W/2);
@@ -937,10 +803,7 @@ createNavCom2 (int x, int y)
 				     0.5, 108.0, 117.95, true));
 
 				// Layer 0: background
-  FGTexturedLayer * layer =
-    new FGTexturedLayer(createTexture("Textures/Panel/radios-1.rgb"),
-			SIX_W*2, SIX_W/2, 0.0, 0.75, 1.0, 1.0);
-  inst->addLayer(layer);
+  inst->addLayer(tex["navRadioBG"], SIX_W*2, SIX_W/2);
 
 				// Layer 1: NAV frequencies
   FGTextLayer * text = new FGTextLayer(SIX_W*2, SIX_W/2);
@@ -987,10 +850,7 @@ createADFRadio (int x, int y)
 				     25.0, 100.0, 1299, true));
 
 				// Layer 0: background
-  FGTexturedLayer * layer =
-    new FGTexturedLayer(createTexture("Textures/Panel/radios-1.rgb"),
-			SIX_W*2, SIX_W/2, 0.0, 0.5, 1.0, 0.75);
-  inst->addLayer(layer);
+  inst->addLayer(tex["adfRadioBG"], SIX_W*2, SIX_W/2);
 
 				// Layer: ADF frequency
   FGTextLayer * text = new FGTextLayer(SIX_W*2, SIX_W/2);
@@ -1029,51 +889,27 @@ createAP (int x, int y)
 				     FGBFI::setAPAltitudeLock));
 
 				// Layer: AP background
-  FGTexturedLayer * layer;
-  layer = new FGTexturedLayer(createTexture("Textures/Panel/radios-1.rgb"),
-			      SIX_W*2, SIX_W/4,
-			      0.0, 0.375, 1.0, 0.5);
-  inst->addLayer(layer);
+  inst->addLayer(tex["autopilotBG"], SIX_W*2, SIX_W/4);
 
 				// Display HDG button
-  FGTexturedLayer *l1 =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			SIX_W/4, SIX_W/8,
-			39.0/128.0, 118.0/128.0, 54.0/128.0, 1.0);
-  FGTexturedLayer *l2 =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			SIX_W/4, SIX_W/8,
-			22.0/128.0, 118.0/128.0, 37.0/128.0, 1.0);
   FGSwitchLayer * sw =
-    new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPHeadingLock, l1, l2);
+    new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPHeadingLock,
+		      new FGTexturedLayer(tex["hdgButtonOn"], SIX_W/4, SIX_W/8),
+		      new FGTexturedLayer(tex["hdgButtonOff"], SIX_W/4, SIX_W/8));
   inst->addLayer(sw);
   inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W * 0.5);
 
 				// Display NAV button
-  l1 =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			SIX_W/4, SIX_W/8,
-			39.0/128.0, 106.0/128.0, 54.0/128.0, 116.0/128.0);
-  l2 =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			SIX_W/4, SIX_W/8,
-			22.0/128.0, 106.0/128.0, 37.0/128.0, 116.0/128.0);
-  sw =
-    new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPNAV1Lock, l1, l2);
+  sw = new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPNAV1Lock,
+			 new FGTexturedLayer(tex["navButtonOn"], SIX_W/4, SIX_W/8),
+			 new FGTexturedLayer(tex["navButtonOff"], SIX_W/4, SIX_W/8));
   inst->addLayer(sw);
   inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W * 0.25);
 
 				// Display ALT button
-  l1 =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			SIX_W/4, SIX_W/8,
-			39.0/128.0, 82.0/128.0, 54.0/128.0, 92.0/128.0);
-  l2 =
-    new FGTexturedLayer(createTexture("Textures/Panel/misc-1.rgb"),
-			SIX_W/4, SIX_W/8,
-			22.0/128.0, 82.0/128.0, 37.0/128.0, 92.0/128.0);
-  sw =
-    new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPAltitudeLock, l1, l2);
+  sw = new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPAltitudeLock,
+			 new FGTexturedLayer(tex["altButtonOn"], SIX_W/4, SIX_W/8),
+			 new FGTexturedLayer(tex["altButtonOff"], SIX_W/4, SIX_W/8));
   inst->addLayer(sw);
 
   return inst;
@@ -1086,11 +922,7 @@ createDME (int x, int y)
     new FGLayeredInstrument(x, y, int(SIX_W * 0.75), int(SIX_W * 0.25));
 
 				// Layer: background
-  FGTexturedLayer * layer =
-    new FGTexturedLayer(createTexture("Textures/Panel/radios-1.rgb"),
-			int(SIX_W * 0.75), int(SIX_W * 0.25),
-			0.0, 0.25, 0.375, 0.375);
-  inst->addLayer(layer);
+  inst->addLayer(tex["dmeBG"]);
 
 				// Layer: current distance
 
@@ -1130,52 +962,59 @@ fgCreateSmallSinglePropPanel (int xpos, int ypos, int finx, int finy)
   FGPanel * panel = new FGPanel(xpos, ypos, w, h);
   int x, y;
 
+  setupTextures();
+
+				// Read gauges from data table.
+  for (int i = 0; instruments[i].name; i++) {
+    InstrumentData &gauge = instruments[i];
+    FGLayeredInstrument * inst =
+      new FGLayeredInstrument(gauge.x, gauge.y, gauge.w, gauge.h);
+
+    for (int j = 0; gauge.actions[j].action; j++) {
+      ActionData &action = gauge.actions[j];
+      inst->addAction(action.button, action.x, action.y, action.w, action.h,
+		      action.action);
+    }
+
+    for (int j = 0; gauge.layers[j].layer; j++) {
+      LayerData &layer = gauge.layers[j];
+//       inst->addLayer(tex[layer.textureName], layer.w, layer.h);
+      inst->addLayer(layer.layer);
+
+      for (int k = 0; layer.transformations[k].type; k++) {
+	TransData &trans = layer.transformations[k];
+	FGInstrumentLayer::transform_type type;
+	switch (trans.type) {
+	case TransData::Rotation:
+	  type = FGInstrumentLayer::ROTATION;
+	  break;
+	case TransData::XShift:
+	  type = FGInstrumentLayer::XSHIFT;
+	  break;
+	case TransData::YShift:
+	  type = FGInstrumentLayer::YSHIFT;
+	  break;
+	default:
+	  break;
+	}
+	if (trans.func) {
+	  inst->addTransformation(type, trans.func,
+				  trans.min, trans.max,
+				  trans.factor, trans.offset);
+	} else {
+	  inst->addTransformation(type, trans.offset);
+	}
+      }
+
+    }
+    panel->addInstrument(inst);
+  }
+
   x = SIX_X;
   y = SIX_Y;
 
 				// Set the background texture
   panel->setBackground(createTexture("Textures/Panel/panel-bg.rgb"));
-
-				// Mag compass at top.
-  panel->addInstrument(createMagneticCompass((w / 2),
-					     int(h * 0.5768) + (SIX_W / 8)));
-
-				// Chronometer alone at side
-  x = SIX_X - SIX_SPACING - 8;
-  panel->addInstrument(createChronometer(x, y));
-
-				// Top row
-  x = SIX_X;
-  panel->addInstrument(createAirspeedIndicator(x, y));
-  x += SIX_SPACING;
-  panel->addInstrument(createHorizon(x, y));
-  x += SIX_SPACING;
-  panel->addInstrument(createAltimeter(x, y));
-  x += SIX_SPACING + 20;
-  panel->addInstrument(createNAV1(x, y));
-
-				// Middle row
-  x = SIX_X;
-  y -= SIX_SPACING;
-  panel->addInstrument(createTurnCoordinator(x, y));
-  x += SIX_SPACING;
-  panel->addInstrument(createGyroCompass(x, y));
-  x += SIX_SPACING;
-  panel->addInstrument(createVerticalVelocity(x, y));
-  x += SIX_SPACING + 20;
-  panel->addInstrument(createNAV2(x, y));
-
-				// Bottom row
-  x = SIX_X;
-  y -= SIX_SPACING + 10;
-  panel->addInstrument(createControls(x, y));
-  x += SIX_SPACING;
-  panel->addInstrument(createFlapIndicator(x, y));
-  x += SIX_SPACING;
-  panel->addInstrument(createRPMGauge(x, y));
-  x += SIX_SPACING + 20;
-  y += 10;
-  panel->addInstrument(createADF(x, y));
 
 				// Radio stack
   x = SIX_X + (SIX_SPACING * 5);
