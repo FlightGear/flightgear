@@ -445,11 +445,11 @@ void fgPropPicker::find_props ()
     files = new char* [ num_files+1 ] ;
 
     stdString line = ".";
-    files [ 0 ] = new char[line.size()];
+    files [ 0 ] = new char[line.size() + 1];
     strcpy ( files [ 0 ], line.c_str() );
 
     line = "..";
-    files [ 1 ] = new char[line.size()];
+    files [ 1 ] = new char[line.size() + 1];
     strcpy ( files [ 1 ], line.c_str() );
 
     pi = 2;
