@@ -203,8 +203,8 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 				// Key pressed.
   if (modifiers&FG_MOD_UP == 0) {
-    SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
-	   << " with modifiers " << modifiers);
+    // SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
+    //        << " with modifiers " << modifiers);
     if (!b.last_state || b.is_repeatable) {
       const binding_list_t &bindings =
 	_find_key_bindings(k, modifiers);
@@ -219,8 +219,8 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 				// Key released.
   else {
-    SG_LOG(SG_INPUT, SG_INFO, "User released key " << k
-	   << " with modifiers " << modifiers);
+    // SG_LOG(SG_INPUT, SG_INFO, "User released key " << k
+    //        << " with modifiers " << modifiers);
     if (b.last_state) {
       const binding_list_t &bindings =
 	_find_key_bindings(k, modifiers);
@@ -732,11 +732,10 @@ FGInput::_update_joystick ()
 	}
       } else {
 				// The release event is never repeated.
-	modifiers |= FG_MOD_UP;
 	if (b.last_state)
 // 	  SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been released");
-	  for (int k = 0; k < b.bindings[modifiers].size(); k++)
-	    b.bindings[modifiers][k].fire();
+	  for (int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
+	    b.bindings[modifiers|FG_MOD_UP][k].fire();
       }
 	  
       b.last_state = pressed;
