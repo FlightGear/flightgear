@@ -89,6 +89,7 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Sky/skydome.hxx>
+#include <Sky/skymoon.hxx>
 #include <Sky/skysun.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
@@ -160,6 +161,7 @@ FGInterface cur_view_fdm;
 FGEphemeris ephem;
 FGSkyDome current_sky;
 FGSkySun current_sun;
+FGSkyMoon current_moon;
 
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
@@ -377,7 +379,6 @@ void fgRenderFrame( void ) {
 
 	// draw the sun
 	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
 	current_sun.repaint( cur_light_params.sun_angle );
         sgVec3 view_pos;
 	sgSetVec3( view_pos,
@@ -389,6 +390,19 @@ void fgRenderFrame( void ) {
 				ephem.getSunRightAscension(),
 				ephem.getSunDeclination() );
 	current_sun.draw();
+
+	// draw the moon
+	glBlendFunc ( GL_SRC_ALPHA, GL_ONE ) ;
+	current_moon.repaint( cur_light_params.moon_angle );
+	sgSetVec3( view_pos,
+		   current_view.get_view_pos().x(),
+		   current_view.get_view_pos().y(),
+		   current_view.get_view_pos().z() );
+	current_moon.reposition( view_pos,
+				 t->getGst() * 15.041085,
+				 ephem.getMoonRightAscension(),
+				 ephem.getMoonDeclination() );
+	current_moon.draw();
 
 	// xglDisable( GL_FOG );
 
@@ -1298,6 +1312,10 @@ int main( int argc, char **argv ) {
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
 
+    // Initialize ssg (from plib).  Needs to come before we do any
+    // other ssg related stuff
+    ssgInit();
+
     // set default log levels
     fglog().setLogLevels( FG_ALL, FG_INFO );
 
@@ -1324,9 +1342,6 @@ int main( int argc, char **argv ) {
 		"GLUT event handler initialization failed ..." );
 	exit(-1);
     }
-
-    // Initialize ssg (from plib)
-    ssgInit();
 
     // Initialize the user interface (we need to do this before
     // passing off control to glut and before fgInitGeneral to get our
@@ -1366,8 +1381,12 @@ int main( int argc, char **argv ) {
     scene->addKid( terrain );
 
     // Initialize the sky
+    FGPath sky_tex_path( current_options.get_fg_root() );
+    sky_tex_path.append( "Textures" );
+    sky_tex_path.append( "Sky" );
     current_sky.initialize();
-    current_sun.initialize();
+    current_sun.initialize( sky_tex_path );
+    current_moon.initialize( sky_tex_path );
 
     // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;
