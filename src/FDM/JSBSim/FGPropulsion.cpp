@@ -317,7 +317,7 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
         if (thrType == "FG_PROPELLER" && P_Factor > 0.001) {
           ((FGPropeller*)Thrusters[numThrusters])->SetPFactor(P_Factor);
           if (debug_lvl > 0) cout << "      P-Factor: " << P_Factor << endl;
-          ((FGPropeller*)Thrusters[numThrusters])->SetSense(Sense);
+          ((FGPropeller*)Thrusters[numThrusters])->SetSense(fabs(Sense)/Sense);
           if (debug_lvl > 0) cout << "      Sense: " << Sense <<  endl;
         }
         Thrusters[numThrusters]->SetdeltaT(dt*rate);

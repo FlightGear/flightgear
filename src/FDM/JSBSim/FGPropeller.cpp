@@ -147,8 +147,8 @@ double FGPropeller::Calculate(double PowerAvailable)
   if (P_Factor > 0.0001) {
     alpha = fdmex->GetTranslation()->Getalpha();
     beta  = fdmex->GetTranslation()->Getbeta();
-    SetActingLocationY( GetLocationY() + P_Factor*alpha*fabs(Sense)/Sense);
-    SetActingLocationZ( GetLocationZ() + P_Factor*beta*fabs(Sense)/Sense);
+    SetActingLocationY( GetLocationY() + P_Factor*alpha*Sense);
+    SetActingLocationZ( GetLocationZ() + P_Factor*beta*Sense);
   } else if (P_Factor < 0.000) {
     cerr << "P-Factor value in config file must be greater than zero" << endl;
   }
@@ -161,7 +161,7 @@ double FGPropeller::Calculate(double PowerAvailable)
   // natural axis of the engine. The transform takes place in the base class
   // FGForce::GetBodyForces() function.
 
-  vH(eX) = Ixx*omega*fabs(Sense)/Sense;
+  vH(eX) = Ixx*omega*Sense;
   vH(eY) = 0.0;
   vH(eZ) = 0.0;
 
@@ -208,7 +208,7 @@ double FGPropeller::GetPowerRequired(void)
 
   PowerRequired = cPReq*RPS*RPS*RPS*Diameter*Diameter*Diameter*Diameter
                                                        *Diameter*rho;
-  vTorque(eX) = PowerRequired / ((RPM/60)*2.0*M_PI);
+  vTorque(eX) = -Sense*PowerRequired / (RPS*2.0*M_PI);
 
   return PowerRequired;
 }

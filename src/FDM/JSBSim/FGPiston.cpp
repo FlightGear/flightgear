@@ -1,7 +1,8 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Module:       FGPiston.cpp
- Author:       Jon S. Berndt
+ Author:       Jon S. Berndt, JSBSim framework
+               Dave Luff, Piston engine model
  Date started: 09/12/2000
  Purpose:      This module models a Piston engine
 
@@ -85,6 +86,7 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec),
   crank_counter = 0;
   EngineNumber = 0;
   OilTemp_degK = 298;
+  ManifoldPressure_inHg = Atmosphere->GetPressure() * 0.014138; // psf to in Hg
 
   dt = State->Getdt();
 
@@ -285,8 +287,12 @@ void FGPiston::doEngineStartup(void)
 
 void FGPiston::doManifoldPressure(void)
 {
-  ManifoldPressure_inHg = MinManifoldPressure_inHg +
-    (Throttle * (MaxManifoldPressure_inHg - MinManifoldPressure_inHg));
+  if (Running || Cranking) {
+    ManifoldPressure_inHg = MinManifoldPressure_inHg +
+            (Throttle * (MaxManifoldPressure_inHg - MinManifoldPressure_inHg));
+  } else {
+    ManifoldPressure_inHg = Atmosphere->GetPressure() * 0.014138; // psf to in Hg
+  }  
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -390,11 +396,19 @@ void FGPiston::doEnginePower(void)
 
 void FGPiston::doEGT(void)
 {
+  double delta_T_exhaust = 0.0;
+  double heat_capacity_exhaust;
+  double enthalpy_exhaust;
+
   combustion_efficiency = Lookup_Combustion_Efficiency->GetValue(equivalence_ratio);
-  double enthalpy_exhaust = m_dot_fuel * calorific_value_fuel * 
-    combustion_efficiency * 0.33;
-  double heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
-  double delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;
+  enthalpy_exhaust = m_dot_fuel * calorific_value_fuel * combustion_efficiency * 0.33;
+  heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
+
+  if (heat_capacity_exhaust >= 0.0000001)
+    delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;
+  else
+    delta_T_exhaust = 0.0;
+
   ExhaustGasTemp_degK = T_amb + delta_T_exhaust;
   ExhaustGasTemp_degK *= 0.444 + ((0.544 - 0.444) * Percentage_Power / 100.0);
 }
