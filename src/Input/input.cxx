@@ -92,16 +92,6 @@ FGBinding::FGBinding ()
 {
 }
 
-FGBinding::FGBinding (const FGBinding &binding)
-  : _command_name(binding._command_name),
-    _command(binding._command),
-    _arg(new SGPropertyNode),
-    _setting(0),
-    _command_state(0)
-{
-  copyProperties(binding._arg, _arg);
-}
-
 FGBinding::FGBinding (const SGPropertyNode * node)
   : _command(0),
     _arg(new SGPropertyNode),
@@ -120,6 +110,12 @@ FGBinding::~FGBinding ()
 void
 FGBinding::read (const SGPropertyNode * node)
 {
+  const SGPropertyNode * conditionNode = node->getChild("condition");
+  if (conditionNode != 0) {
+    cerr << "Adding condition to binding" << endl;
+    setCondition(fgReadCondition(conditionNode));
+  }
+
   _command_name = node->getStringValue("command", "");
   if (_command_name == "") {
     SG_LOG(SG_INPUT, SG_ALERT, "No command supplied for binding.");
@@ -143,22 +139,27 @@ FGBinding::read (const SGPropertyNode * node)
 void
 FGBinding::fire () const
 {
-  if (_command == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT, "No command attached to binding");
-  } else if (!(*_command)(_arg, &_command_state)) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command " << _command_name);
+  if (test()) {
+    if (_command == 0) {
+      SG_LOG(SG_INPUT, SG_ALERT, "No command attached to binding");
+    } else if (!(*_command)(_arg, &_command_state)) {
+      SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command "
+	     << _command_name);
+    }
   }
 }
 
 void
 FGBinding::fire (double setting) const
 {
+  if (test()) {
 				// A value is automatically added to
 				// the args
-  if (_setting == 0)		// save the setting node for efficiency
-    _setting = _arg->getChild("setting", 0, true);
-  _setting->setDoubleValue(setting);
-  fire();
+    if (_setting == 0)		// save the setting node for efficiency
+      _setting = _arg->getChild("setting", 0, true);
+    _setting->setDoubleValue(setting);
+    fire();
+  }
 }
 
 
@@ -180,7 +181,7 @@ FGInput::FGInput ()
 
 FGInput::~FGInput ()
 {
-  // no op
+  // TODO: delete all FGBinding objects explicitly
 }
 
 void
@@ -233,7 +234,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
       int max = bindings.size();
       if (max > 0) {
 	for (int i = 0; i < max; i++)
-	  bindings[i].fire();
+	  bindings[i]->fire();
 	return;
       }
     }
@@ -249,7 +250,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
       int max = bindings.size();
       if (max > 0) {
 	for (int i = 0; i < max; i++)
-	  bindings[i].fire();
+	  bindings[i]->fire();
 	return;
       }
     }
@@ -519,7 +520,7 @@ FGInput::_update_joystick ()
 // 	SG_LOG(SG_INPUT, SG_INFO, "There are "
 // 	       << a.bindings[modifiers].size() << " bindings");
 	for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
-	  a.bindings[modifiers][k].fire(axis_values[j]);
+	  a.bindings[modifiers][k]->fire(axis_values[j]);
       }
      
 				// do we have to emulate axis buttons?
@@ -552,14 +553,14 @@ FGInput::_update_button (button &b, int modifiers, bool pressed)
     if (!b.last_state || b.is_repeatable) {
       // SG_LOG( SG_INPUT, SG_INFO, "Button has been pressed" );
       for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
-	b.bindings[modifiers][k].fire();
+	b.bindings[modifiers][k]->fire();
     }
   } else {
 				// The release event is never repeated.
     if (b.last_state) {
       // SG_LOG( SG_INPUT, SG_INFO, "Button has been released" );
       for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
-	b.bindings[modifiers|FG_MOD_UP][k].fire();
+	b.bindings[modifiers|FG_MOD_UP][k]->fire();
     }
   }
 	  
@@ -577,7 +578,7 @@ FGInput::_read_bindings (const SGPropertyNode * node,
   for (unsigned int i = 0; i < bindings.size(); i++) {
     SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
 	   << bindings[i]->getStringValue("command"));
-    binding_list[modifiers].push_back(FGBinding(bindings[i]));
+    binding_list[modifiers].push_back(new FGBinding(bindings[i]));
   }
 
 				// Read nested bindings for modifiers
@@ -599,7 +600,7 @@ FGInput::_read_bindings (const SGPropertyNode * node,
 }
 
 
-const vector<FGBinding> &
+const vector<FGBinding *> &
 FGInput::_find_key_bindings (unsigned int k, int modifiers)
 {
   button &b = _key_bindings[k];
