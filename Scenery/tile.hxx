@@ -41,7 +41,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <list.h>       // STL list
+#include <list>         // STL list
 
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
@@ -99,6 +99,10 @@ public:
 
 
 // $Log$
+// Revision 1.2  1998/06/03 00:47:50  curt
+// No .h for STL includes.
+// Minor view culling optimizations.
+//
 // Revision 1.1  1998/05/23 14:09:21  curt
 // Added tile.cxx and tile.hxx.
 // Working on rewriting the tile management system so a tile is just a list

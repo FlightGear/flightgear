@@ -41,15 +41,8 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <map.h>           // STL associative "array"
-
-#if defined(__CYGWIN32__)
-#  include <string>        // Standard C++ string library
-#elif defined(WIN32)
-#  include <string.h>      // Standard C++ string library
-#else
-#  include <std/string.h>  // Standard C++ string library
-#endif
+#include <map>             // STL associative "array"
+#include <string>          // Standard C++ string library
 
 #include "tile.hxx"
 
@@ -106,6 +99,10 @@ public:
 
 
 // $Log$
+// Revision 1.3  1998/06/03 00:47:50  curt
+// No .h for STL includes.
+// Minor view culling optimizations.
+//
 // Revision 1.2  1998/06/01 17:56:20  curt
 // Incremental additions to material.cxx (not fully functional)
 // Tweaked vfc_ratio math to avoid divide by zero.

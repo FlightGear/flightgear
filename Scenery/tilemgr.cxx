@@ -228,7 +228,7 @@ static int viewable( fgCartesianPoint3d *cp, double radius ) {
     // y = m * (x - x0) = equation of a line intercepting X axis at x0
     x1 = v->cos_fov_x * radius;
     y1 = v->sin_fov_x * radius;
-    slope = -1.0 / v->slope_x;
+    slope = v->slope_x;
     x0 = x1 - y1 / slope;
 
     // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
@@ -257,7 +257,7 @@ static int viewable( fgCartesianPoint3d *cp, double radius ) {
     // check bottom clip plane (from eye perspective)
     x1 = -(v->cos_fov_y) * radius;
     y1 = v->sin_fov_y * radius;
-    slope = 1.0 / v->slope_y;
+    slope = v->slope_y;
     x0 = x1 - y1 / slope;
 
     // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
@@ -378,6 +378,10 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/06/03 00:47:51  curt
+// No .h for STL includes.
+// Minor view culling optimizations.
+//
 // Revision 1.14  1998/06/01 17:56:20  curt
 // Incremental additions to material.cxx (not fully functional)
 // Tweaked vfc_ratio math to avoid divide by zero.
