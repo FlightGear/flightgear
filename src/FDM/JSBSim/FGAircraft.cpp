@@ -158,7 +158,7 @@ bool FGAircraft::Run(void)
 
 float FGAircraft::GetNlf(void)
 {
-  return vNwcg(3);
+  return -1*Aerodynamics->GetvFs(3)/MassBalance->GetWeight();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
