@@ -31,8 +31,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "triload.h"
-#include "../DEM/dem.h"
+#include <DEM/dem.hxx>
+
+#include "triload.hxx"
 
 
 // load the node information
@@ -45,6 +46,9 @@ void fixnodes( char *basename, fgDEM dem,
 
 
 // $Log$
+// Revision 1.1  1998/04/08 23:05:56  curt
+// Adopted Gnu automake/autoconf system.
+//
 // Revision 1.4  1998/03/19 02:50:19  curt
 // Updated to support -lDEM class.
 //

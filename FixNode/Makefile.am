@@ -3,7 +3,7 @@
 #
 # Written by Curtis Olson, started October 1997.
 #
-# Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+# Copyright (C) 1997 - 1998  Curtis L. Olson  - curt@me.umn.edu
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,28 +24,25 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = fixnode
+bin_PROGRAMS = fixnode
 
-CFILES = fixnode.c main.c triload.c
-LDLIBS = -lDEM -lScenery -lm
+fixnode_SOURCES = \
+	fixnode.cxx fixnode.hxx \
+	main.cxx \
+	triload.cxx triload.hxx
 
+fixnode_LDADD = \
+	$(top_builddir)/Tools/DEM/libDEM.la \
+        $(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
 
-include $(FG_ROOT_SRC)/commondefs
-
-
-#---------------------------------------------------------------------------
-# Rule for TARGET
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OBJECTS) $(FG_ROOT_LIB)/stamp_libs
-	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
-
-
-include $(COMMONRULES)
+INCLUDES += -I.. -I../../Simulator
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.1  1998/04/08 23:05:54  curt
+# Adopted Gnu automake/autoconf system.
+#
 # Revision 1.4  1998/04/06 21:09:44  curt
 # Additional win32 support.
 # Fixed a bad bug in dem file parsing that was causing the output to be

@@ -28,8 +28,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "fixnode.h"
-#include "triload.h"
+#include "fixnode.hxx"
+#include "triload.hxx"
 
 
 /* load the node information */
@@ -80,9 +80,12 @@ void fixnodes( char *filename, fgDEM dem,
 
 
 /* $Log$
-/* Revision 1.5  1998/03/19 02:50:19  curt
-/* Updated to support -lDEM class.
+/* Revision 1.1  1998/04/08 23:05:56  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.5  1998/03/19 02:50:19  curt
+ * Updated to support -lDEM class.
+ *
  * Revision 1.4  1998/03/03 16:00:57  curt
  * More c++ compile tweaks.
  *

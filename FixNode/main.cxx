@@ -29,9 +29,10 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "../DEM/dem.h"
-#include "fixnode.h"
-#include "triload.h"
+#include <DEM/dem.hxx>
+
+#include "fixnode.hxx"
+#include "triload.hxx"
 
 
 // Storage for the original DEM data which is used to interpolate z values
@@ -103,6 +104,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.1  1998/04/08 23:05:57  curt
+// Adopted Gnu automake/autoconf system.
+//
 // Revision 1.6  1998/04/06 21:09:44  curt
 // Additional win32 support.
 // Fixed a bad bug in dem file parsing that was causing the output to be
