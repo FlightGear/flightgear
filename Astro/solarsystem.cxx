@@ -183,11 +183,6 @@ void SolarSystem::rebuild()
 	xglPushMatrix();
 	{
 	    double sun_size = 1400.0;
-	    // daily variation sun gets larger near horizon
-	    if ( sun_angle > 84.0 ) {
-		double sun_grow = 9.0 * fabs(94.0 - sun_angle);
-		sun_size += 0.5 * sun_size * cos( sun_grow * DEG_TO_RAD);
-	    }
 	    xglTranslatef(x,y,z);
 	    xglColor3fv(amb);
 	    glutSolidSphere(sun_size, 10, 10);
