@@ -281,6 +281,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 
 // Return what type of landing we're doing on this circuit
 LandingType FGAILocalTraffic::GetLandingOption() {
+	//cout << "circuitsToFly = " << circuitsToFly << '\n';
 	if(circuitsToFly) {
 		return(touchAndGo ? TOUCH_AND_GO : STOP_AND_GO);
 	} else {
@@ -535,6 +536,11 @@ void FGAILocalTraffic::RegisterTransmission(int code) {
 		clearedToTakeOff = true;
 		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " cleared to take-off...");
 		break;
+//	case 13: // Go around!
+//		responseCounter = 0;
+//		goAround = true;
+//		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " told to go-around!!");
+//		break;
 	default:
 		break;
 	}
@@ -607,7 +613,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 					cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
 					leg = TURN1;
 				}
-			} else {
+			} else if(orthopos.y() > 1500.0) {   // Added this constraint as a hack to prevent turning too early when going around.
 				cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
 				leg = TURN1;
 			}
@@ -946,6 +952,7 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 		// Fall through to FINAL
 	case FINAL:		// maybe this should include long/short final if appropriate?
 		trns += "final ";
+		code = 13;
 		break;
 	default:		// Hopefully this won't be used
 		trns += "pattern ";
@@ -962,6 +969,7 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 }
 
 // Callback handler
+// TODO - Really should enumerate these coded values.
 void FGAILocalTraffic::ProcessCallback(int code) {
 	// 1 - Request Departure from ground
 	// 10 - report crosswind
@@ -972,6 +980,8 @@ void FGAILocalTraffic::ProcessCallback(int code) {
 		ground->RequestDeparture(plane, this);
 	} else if(code == 11) {
 		tower->ReportDownwind(plane.callsign);
+	} else if(code == 13) {
+		tower->ReportFinal(plane.callsign);
 	}
 }
 
