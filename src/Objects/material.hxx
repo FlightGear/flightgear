@@ -95,6 +95,8 @@ public:
     inline GLfloat *get_diffuse() { return diffuse; }
     inline GLfloat *get_specular() { return specular; }
     inline GLfloat *get_emission() { return emission; }
+
+    void dump_info();
 };
 
 

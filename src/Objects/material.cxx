@@ -106,6 +106,7 @@ operator >> ( istream& in, FGMaterial& m )
     return in;
 }
 
+
 void
 FGMaterial::load_texture( const string& root )
 {
@@ -242,6 +243,25 @@ FGMaterial::load_texture( const string& root )
     }
 
     loaded = true;
+}
+
+
+// Destructor
+void FGMaterial::dump_info () {
+    FG_LOG( FG_TERRAIN, FG_INFO, "{" << endl << "  texture = " 
+	    << texture_name );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  xsize = " << xsize );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  ysize = " << ysize );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  ambient = " << ambient[0] << " "
+	    << ambient[1] <<" "<< ambient[2] <<" "<< ambient[3] );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  diffuse = " << diffuse[0] << " " 
+	    << diffuse[1] << " " << diffuse[2] << " " << diffuse[3] );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  specular = " << specular[0] << " " 
+	    << specular[1] << " " << specular[2] << " " << specular[3]);
+    FG_LOG( FG_TERRAIN, FG_INFO, "  emission = " << emission[0] << " " 
+	    << emission[1] << " " << emission[2] << " " << emission[3]);
+    FG_LOG( FG_TERRAIN, FG_INFO, "  alpha = " << alpha << endl <<"}" );
+	    
 }
 
 

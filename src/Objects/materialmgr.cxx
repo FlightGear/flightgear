@@ -177,6 +177,13 @@ fgMATERIAL_MGR::load_lib ( void )
 	    tex_file.append( m.get_texture_name() );
 	    tex_file.concat( ".rgb" );
 
+	    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
+		    << material_name << " (" << tex_file.c_str() << ")");
+
+#if EXTRA_DEBUG
+	    m.dump_info();
+#endif
+	    
 	    ssgStateSelector *state = new ssgStateSelector(2);
 	    state->setStep(0, new ssgSimpleState); // textured
 	    state->setStep(1, new ssgSimpleState); // untextured
