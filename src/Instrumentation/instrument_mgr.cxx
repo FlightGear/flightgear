@@ -16,20 +16,20 @@
 #include <Main/util.hxx>
 
 #include "instrument_mgr.hxx"
+#include "adf.hxx"
 #include "airspeed_indicator.hxx"
+#include "altimeter.hxx"
 #include "annunciator.hxx"
 #include "attitude_indicator.hxx"
-#include "altimeter.hxx"
-#include "turn_indicator.hxx"
-#include "slip_skid_ball.hxx"
-#include "heading_indicator.hxx"
-#include "vertical_speed_indicator.hxx"
-#include "mag_compass.hxx"
-
-#include "dme.hxx"
-#include "adf.hxx"
-#include "gps.hxx"
 #include "clock.hxx"
+#include "dme.hxx"
+#include "gps.hxx"
+#include "heading_indicator.hxx"
+#include "kr_87.cxx"
+#include "mag_compass.hxx"
+#include "slip_skid_ball.hxx"
+#include "turn_indicator.hxx"
+#include "vertical_speed_indicator.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -123,6 +123,9 @@ bool FGInstrumentMgr::build ()
         } else if ( name == "heading-indicator" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new HeadingIndicator( node ) );
+        } else if ( name == "KR-87" ) {
+            set_subsystem( "instrument" + temp.str(), 
+                           new FGKR_87( node ) );
         } else if ( name == "magnetic-compass" ) {
             set_subsystem( "instrument" + temp.str(), 
                            new MagCompass( node ) );
