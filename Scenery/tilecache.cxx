@@ -197,7 +197,9 @@ fgTILECACHE::next_avail( void )
 		      tile_cache[i].center.x(), tile_cache[i].center.y(),
 		      tile_cache[i].center.z());
 
-	    delta = tile_cache[i].center - v->abs_view_pos;
+	    delta.setx( fabs(tile_cache[i].center.x() - v->abs_view_pos.x() ) );
+	    delta.sety( fabs(tile_cache[i].center.y() - v->abs_view_pos.y() ) );
+	    delta.setz( fabs(tile_cache[i].center.z() - v->abs_view_pos.z() ) );
 
 	    max = delta.x(); med = delta.y(); min = delta.z();
 	    if ( max < med ) {
@@ -232,6 +234,9 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/10/16 18:12:28  curt
+// Fixed a bug in the conversion to Point3D.
+//
 // Revision 1.17  1998/10/16 00:55:48  curt
 // Converted to Point3D class.
 //
