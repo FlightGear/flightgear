@@ -84,6 +84,9 @@
 /* Define if you have the random function.  */
 #undef HAVE_RANDOM
 
+/* Define if you have the rint function.  */
+#undef HAVE_RINT
+
 /* Define if you have the setitimer function.  */
 #undef HAVE_SETITIMER
 
