@@ -4,5 +4,4 @@ MAT3mat.o: MAT3mat.c mat3defs.h mat3.h
 MAT3vec.o: MAT3vec.c mat3.h
 fg_geodesy.o: fg_geodesy.c fg_geodesy.h ../constants.h
 fg_random.o: fg_random.c fg_random.h
-geotest.o: geotest.c ../constants.h fg_geodesy.h
 polar.o: polar.c polar.h ../types.h ../constants.h
