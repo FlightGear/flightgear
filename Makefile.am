@@ -1,2 +1,2 @@
 
-SUBDIRS = Src Docs Scenery
+SUBDIRS = Src
