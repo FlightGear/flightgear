@@ -1,6 +1,6 @@
 bin_PROGRAMS = construct
 
-construct_SOURCES = construct.cxx construct_types.hxx
+construct_SOURCES = main.cxx construct_types.hxx
 
 construct_LDADD = \
 	$(top_builddir)/Tools/Construct/Array/libArray.a \
