@@ -174,9 +174,9 @@ void fgLIGHT::UpdateAdjFog( void ) {
     sun_angle_deg = sun_angle * RAD_TO_DEG;
     if ( (sun_angle_deg > 80.0) && (sun_angle_deg < 100.0) ) {
 	/* 0.0 - 0.6 */
-	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 10.0;
-	param1[1] = (10.0 - fabs(90.0 - sun_angle_deg)) / 50.0;
-	param1[2] = 0.0;
+	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 20.0;
+	param1[1] = (10.0 - fabs(90.0 - sun_angle_deg)) / 40.0;
+	param2[2] = -(10.0 - fabs(90.0 - sun_angle)) / 30.0;
     } else {
 	param1[0] = param1[1] = param1[2] = 0.0;
     }
@@ -212,6 +212,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/10/20 18:41:53  curt
+// Tweaked sunrise/sunset colors.
+//
 // Revision 1.18  1998/10/17 01:34:30  curt
 // C++ ifying ...
 //
