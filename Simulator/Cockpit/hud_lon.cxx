@@ -20,7 +20,9 @@
 #include "hud.hxx"
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font )  TextString( font, text, x , y )
+#define textString( x , y, text, font )  TextString( text, x , y )
+#else
+#define textString( x , y, text, font )  puDrawString ( guiFnt, text, x, y );
 #endif
 
 //======================= Top of instr_label class =========================
@@ -30,12 +32,12 @@ lon_label ::
                       UINT          width,
                       UINT          height,
                       FLTFNPTR      data_source,
-//                      DBLFNPTR      data_source,                  
+//                      DBLFNPTR      data_source,					
                       const char   *label_format,
                       const char   *pre_label_string,
                       const char   *post_label_string,
                       float        scale_data,
-//                      double        scale_data,                   
+//                      double        scale_data,					
                       UINT          options,
                       fgLabelJust   justification,
                       int           font_size,
@@ -108,9 +110,9 @@ lon_label & lon_label ::operator = (const lon_label & rhs )
     justify    = rhs.justify;
     pre_str    = rhs.pre_str;
     post_str   = rhs.post_str;
-    strcpy(format_buffer,rhs.format_buffer);    
+    strcpy(format_buffer,rhs.format_buffer);	
     }
-    return *this;
+  return *this;
 }
 
 //
@@ -128,7 +130,7 @@ draw( void )       // Required method in base class
   float lon = get_value();
 //  double lon = get_value();  
   if( data_available() ) {
-//  char *lonstring = coord_format_lon(lon);
+//	char *lonstring = coord_format_lon(lon);
     lenstr = sprintf( label_buffer, format_buffer, coord_format_lon(lon) );
     }
   else {
@@ -136,23 +138,23 @@ draw( void )       // Required method in base class
     }
     
 #ifdef DEBUGHUD
-    fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
-    fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
-    fgPrintf( FG_COCKPIT, FG_DEBUG, label_buffer );
-    fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
+  fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
+  fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
+  fgPrintf( FG_COCKPIT, FG_DEBUG, label_buffer );
+  fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
 #endif
-//  lenstr = strlen( label_buffer );
-
-  posincr = 0;   //  default to RIGHT_JUST ... center located calc: -lenstr*8;
-
-  if( justify == CENTER_JUST ) {
-    posincr =  - (lenstr << 2); //  -lenstr*4;
-    }
-  else {
-    if( justify == LEFT_JUST ) {
-      posincr = - (lenstr << 8);  // 0;
-      }
-    }
+	
+	lenstr = getStringWidth(label_buffer);
+						
+  if( justify == RIGHT_JUST ) {
+	  posincr = scrn_rect.right - lenstr;
+  }else if( justify == CENTER_JUST ) {
+	  posincr = get_span() - (lenstr/2); //  -lenstr*4;
+  }  else {
+      //  justify == LEFT_JUST
+      posincr = 0;  // 0;
+  }
+  
   if( fontSize == SMALL ) {
     textString( scrn_rect.left + posincr, scrn_rect.top,
                 label_buffer, GLUT_BITMAP_8_BY_13);

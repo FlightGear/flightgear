@@ -52,10 +52,8 @@
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
-
-//#include "glfont.h"
-
-//extern GLFONT *myFont;
+#include <GUI/gui.h>
+#include <Math/mat3.h>
 
 FG_USING_STD(deque);
 FG_USING_STD(vector);
@@ -203,26 +201,10 @@ typedef struct gltagRGBTRIPLE { // rgbt
     GLfloat Green;
     GLfloat Red;
 } glRGBTRIPLE;
-/*
-struct fgVertex2D {
-    UINT x, y;
 
-    fgVertex2D( UINT a = 0, UINT b =0 )
-        : x(a), y(b) {}
-
-    fgVertex2D( const fgVertex2D & image )
-        : x(image.x), y(image.y) {}
-
-    fgVertex2D& operator= ( const fgVertex2D & image ) {
-        x = image.x; y = image.y; return *this;
-    }
-
-    ~fgVertex2D() {}
-};
-*/
 class fgLineSeg2D {
 private:
-    GLfloat x0, y0, x1, y1;  //UINT
+    GLfloat x0, y0, x1, y1;
 
 public:
     fgLineSeg2D( GLfloat a = 0, GLfloat b =0, GLfloat c = 0, GLfloat d =0 )
@@ -245,89 +227,141 @@ public:
 };
 
 #define USE_HUD_TextList
-#ifdef USE_HUD_TextList
+extern float              HUD_TextSize;
+extern fntRenderer       *HUDtext;
+extern float HUD_matrix[16];
 
-//#define FAST_TEXT_TEST
-#ifdef FAST_TEXT_TEST
-extern void Font_Setup(void);
-extern unsigned int font_base;
-#endif
-
-class fgTextString {
+class fgText {
 private:
-    void *font;
-    char msg[80];
+    char msg[32];
     float x, y;
-//  static GLfloat mat[16];
-
 public:
-    fgTextString( void *d = NULL, char *c = NULL, UINT x = 0, UINT y =0 )
-        :  font(d), x(x), y(y) {strcpy(msg,c);}
+    fgText( char *c = NULL, float x = 0, float y =0 )
+        : x(x), y(y) {strncpy(msg,c,32-1);}
 
-    fgTextString( const fgTextString & image )
-        : font(image.font), x(image.x), y(image.y) {strcpy(msg,image.msg);}
+    fgText( float x = 0, float y = 0, char *c = NULL )
+        : x(x), y(y) {strncpy(msg,c,32-1);}
 
-    fgTextString& operator = ( const fgTextString & image ) {
-        font = image.font; strcpy(msg,image.msg); x = image.x; y = image.y;
+    fgText( const fgText & image )
+        : x(image.x), y(image.y) {strcpy(msg,image.msg);}
+
+    fgText& operator = ( const fgText & image ) {
+        strcpy(msg,image.msg); x = image.x; y = image.y;
         return *this;
     }
 
-    ~fgTextString() {msg[0]='\0';}
+    ~fgText() {msg[0]='\0';}
 
-//  void set_mat(void) {
-//          glScalef(.075, .075, 0.0);
-//          glGetFloatv(GL_MODELVIEW_MATRIX, mat);
-//  }
-    
-
-    void draw()
+    int getStringWidth ( char *str )
     {
-#ifdef FAST_TEXT_TEST
-        glRasterPos2f( x, y);
-        int len = (int) strlen(msg);
-        for (int i=0; i < len; i++) {
-            glCallList(font_base+msg[i]);
-        }
-//      glFontTextOut ( msg, x, y, 0.0f);
-        
-#else
-#define USE_STROKED_CHAR
-#ifdef USE_STROKED_CHAR
-        int c;
-        char *buf;
-        buf = msg;
-        if(*buf)
+        if ( HUDtext && str )
         {
-//          glRasterPos2f( x, y);
-            glTranslatef( x, y, 0);
-            glScalef(.075, .075, 0.0);
-            while ((c=*buf++)) {
-                glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN, c);
-            }
+            float r, l ;
+            guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+            return FloatToInt( r - l );
         }
-#else
-        char *c = msg;
-        if(*c)
+        return 0 ;
+    }
+    
+    int StringWidth (void )
+    {
+        if ( HUDtext && strlen( msg ))
         {
-            glRasterPos2f(x, y);
-            while (*c) {
-                glutBitmapCharacter(font, *c);
-                c++;
-            }
+            float r, l ;
+            guiFntHandle->getBBox ( msg, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+            return FloatToInt( r - l );
         }
-#endif // #ifdef USE_STROKED_CHAR
-#endif // FAST_TEXT_TEST
+        return 0 ;
+    }
+    
+    void Draw(fntRenderer *fnt)
+    {
+        fnt->start2f( x, y );
+        fnt->puts   ( msg ) ;
+    }
+
+    void Draw()
+    {
+        puDrawString ( guiFnt, msg, FloatToInt(x), FloatToInt(y) );
     }
 };
 
-typedef vector< fgTextString > TYPE_HUD_TextList;
-extern TYPE_HUD_TextList HUD_TextList;
-#endif //#ifdef USE_HUD_TextList
+class fgLineList {
+    vector < fgLineSeg2D > List;
+public:
+    fgLineList( void ) {}
+    ~fgLineList( void ) {}
+    void add( fgLineSeg2D seg ) { List.push_back(seg); }
+    void erase( void ) { List.erase( List.begin(), List.end() ); }
+    void draw( void ) {
+        vector < fgLineSeg2D > :: iterator curSeg;
+        vector < fgLineSeg2D > :: iterator lastSeg;
+        curSeg  = List.begin();
+        lastSeg = List.end();
+        glBegin(GL_LINES);
+        for ( ; curSeg != lastSeg; curSeg++ ) {
+            curSeg->draw();
+        }
+        glEnd();
+    }
+};
+
+class fgTextList {
+    fntRenderer *Font;
+    vector< fgText > List;
+public:
+    fgTextList ( void ) { Font = 0; }
+    ~fgTextList( void ) {}
+    
+    void setFont( fntRenderer *Renderer ) { Font = Renderer; }
+    void add( fgText String ) { List.push_back(String); }
+    void erase( void ) { List.erase( List.begin(), List.end() ); }
+    
+    void draw( void ) {
+        vector < fgText > :: iterator curString;
+        vector < fgText > :: iterator lastString;
+        if( Font == 0 ) return;
+        curString  = List.begin();
+        lastString = List.end();
+        glPushAttrib( GL_COLOR_BUFFER_BIT );
+        glEnable    ( GL_ALPHA_TEST   ) ;
+        glEnable    ( GL_BLEND        ) ;
+        glAlphaFunc ( GL_GREATER, 0.1 ) ;
+        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+
+        Font->begin();
+        for( ; curString != lastString; curString++ ) {
+            curString->Draw(Font);
+        }
+        Font->end();
+
+        glDisable ( GL_TEXTURE_2D ) ;
+        glPopAttrib();
+    }
+};
 
 
-typedef vector< fgLineSeg2D > TYPE_HUD_LineList;
-extern TYPE_HUD_LineList HUD_LineList;
-extern TYPE_HUD_LineList HUD_StippleLineList;
+inline void Text( fgTextList &List, float x, float y, char *s)
+{
+    List.add( fgText( x, y, s) );
+}
+
+inline void Text( fgTextList &List, fgText &me)
+{
+    List.add(me);
+}
+
+inline void Line( fgLineList &List, float x1, float y1, float x2, float y2)
+{
+    List.add(fgLineSeg2D(x1,y1,x2,y2));
+}
+
+
+// Declare our externals
+extern fgTextList         HUD_TextList;
+extern fgLineList         HUD_LineList;
+extern fgLineList         HUD_StippleLineList;
+
 
 class instr_item {  // An Abstract Base Class (ABC)
   private:
@@ -361,16 +395,16 @@ class instr_item {  // An Abstract Base Class (ABC)
     instr_item & operator = ( const instr_item & rhs );
     virtual ~instr_item ();
 
-    int          get_brightness  ( void ) { return brightness;}
-    RECT         get_location    ( void ) { return scrn_pos;  }
-    bool         is_broken       ( void ) { return broken;    }
-    bool         enabled         ( void ) { return is_enabled;}
-    bool         data_available  ( void ) { return !!load_value_fn; }
-    float       get_value       ( void ) { return load_value_fn(); }
-    float       data_scaling    ( void ) { return disp_factor; }
-    UINT         get_span        ( void ) { return scr_span;  }
-    POINT        get_centroid    ( void ) { return mid_span;  }
-    UINT         get_options     ( void ) { return opts;      }
+    int     get_brightness  ( void ) { return brightness;}
+    RECT    get_location    ( void ) { return scrn_pos;  }
+    bool    is_broken       ( void ) { return broken;    }
+    bool    enabled         ( void ) { return is_enabled;}
+    bool    data_available  ( void ) { return !!load_value_fn; }
+    float   get_value       ( void ) { return load_value_fn(); }
+    float   data_scaling    ( void ) { return disp_factor; }
+    UINT    get_span        ( void ) { return scr_span;  }
+    POINT   get_centroid    ( void ) { return mid_span;  }
+    UINT    get_options     ( void ) { return opts;      }
 
     UINT    huds_vert     (UINT options) { return( options  & HUDS_VERT ); }
     UINT    huds_left     (UINT options) { return( options  & HUDS_LEFT ); }
@@ -387,34 +421,32 @@ class instr_item {  // An Abstract Base Class (ABC)
     virtual void break_display ( bool bad );
     virtual void SetBrightness( int illumination_level ); // fgHUDSetBright...
     void         SetPosition  ( int x, int y, UINT width, UINT height );
-    UINT    get_Handle( void );
+    UINT         get_Handle( void );
     virtual void draw( void ) = 0;   // Required method in derived classes
     
-    void drawOneLine( UINT x1, UINT y1, UINT x2, UINT y2)
+    void drawOneLine( float x1, float y1, float x2, float y2)
     {
-        HUD_LineList.push_back(fgLineSeg2D(x1,y1,x2,y2));
-//    glBegin(GL_LINES);
-//    glVertex2i(x1, y1);
-//    glVertex2i(x2, y2);
-//    glEnd();
+        HUD_LineList.add(fgLineSeg2D(x1,y1,x2,y2));
     }
-    void drawOneStippleLine( UINT x1, UINT y1, UINT x2, UINT y2)
+    void drawOneStippleLine( float x1, float y1, float x2, float y2)
     {
-        HUD_StippleLineList.push_back(fgLineSeg2D(x1,y1,x2,y2));
-//      glEnable(GL_LINE_STIPPLE);
-//      glLineStipple( 1, 0x00FF );
-//      glBegin(GL_LINES);
-//      glVertex2i(x1, y1);
-//      glVertex2i(x2, y2);
-//      glEnd();
-//      glDisable(GL_LINE_STIPPLE);
+        HUD_StippleLineList.add(fgLineSeg2D(x1,y1,x2,y2));
     }
-#ifdef USE_HUD_TextList
-    void TextString( void *font, char *msg, UINT x, UINT y )
+    void TextString( char *msg, float x, float y )
     {
-        HUD_TextList.push_back(fgTextString(font, msg, x, y));      
+        HUD_TextList.add(fgText(msg, x, y));        
     }
-#endif
+    int getStringWidth ( char *str )
+    {
+        if ( HUDtext && str )
+        {
+            float r, l ;
+            guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+            return FloatToInt( r - l );
+        }
+        return 0 ;
+    }
+    
 };
 
 typedef instr_item *HIptr;
@@ -423,6 +455,7 @@ typedef instr_item *HIptr;
 //typedef hud_deque_type::const_iterator hud_deque_const_iterator;
 
 extern deque< instr_item *> HUD_deque;
+extern int HUD_style;
 //extern hud_deque_type HUD_deque;
 
 // instr_item           This class has no other purpose than to maintain
@@ -713,6 +746,10 @@ class HudLadder : public dual_instr_item {
     float vmin;
     float factor;
 
+    fgTextList         TextList;
+    fgLineList         LineList;
+    fgLineList         StippleLineList;
+
   public:
     HudLadder( int       x,
                int       y,
@@ -720,9 +757,9 @@ class HudLadder : public dual_instr_item {
                UINT      height,
                FLTFNPTR  ptch_source    = get_roll,
                FLTFNPTR  roll_source    = get_pitch,
-               float    span_units     = 45.0,
-               float    division_units = 10.0,
-               float    minor_division =  0.0,
+               float     span_units     = 45.0,
+               float     division_units = 10.0,
+               float     minor_division =  0.0,
                UINT      screen_hole    =   70,
                UINT      lbl_pos        =    0,
                bool      working        = true );
@@ -732,6 +769,21 @@ class HudLadder : public dual_instr_item {
     HudLadder( const HudLadder & image );
     HudLadder & operator = ( const HudLadder & rhs );
     virtual void draw( void );
+    
+    void Text( float x, float y, char *s)
+    {
+        TextList.add( fgText( x, y, s) );
+    }
+
+    void Line( float x1, float y1, float x2, float y2)
+    {
+        LineList.add(fgLineSeg2D(x1,y1,x2,y2));
+    }
+
+    void StippleLine( float x1, float y1, float x2, float y2)
+    {
+        StippleLineList.add(fgLineSeg2D(x1,y1,x2,y2));
+    }
 };
 
 

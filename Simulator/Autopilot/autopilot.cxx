@@ -32,12 +32,10 @@
 
 #include "autopilot.hxx"
 
-#include <GUI/gui.h>
 #include <Include/fg_constants.h>
-#include <Cockpit/panel.hxx>
 #include <Debug/logstream.hxx>
 #include <Main/options.hxx>
-#include <Main/views.hxx>
+#include <GUI/gui.h>
 
 
 // The below routines were copied right from hud.c ( I hate reinventing
@@ -103,7 +101,7 @@ static double fgAPget_agl( void )
 
 // Local Prototype section
 
-double LinearExtrapolate( double x,double x1, double y1, double x2, double y2);
+double LinearExtrapolate( double x, double x1, double y1, double x2, double y2);
 double NormalizeDegrees( double Input);
 
 // End Local ProtoTypes
@@ -155,8 +153,7 @@ bool fgAPAutoThrottleEnabled( void )
 void fgAPAltitudeAdjust( double inc )
 {
     // Remove at a later date
-    fgAPDataPtr APData;
-    APData = APDataGlobal;
+    fgAPDataPtr APData = APDataGlobal;
     // end section
 
     double target_alt, target_agl;
@@ -181,6 +178,21 @@ void fgAPAltitudeAdjust( double inc )
     APData->TargetAGL = target_agl;
 }
 
+void fgAPAltitudeSet( double new_altitude ) {
+    // Remove at a later date
+    fgAPDataPtr APData = APDataGlobal;
+    // end section
+    double target_alt = new_altitude;
+    
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET )
+        target_alt = new_altitude * FEET_TO_METER;
+
+    if( target_alt < scenery.cur_elev )
+        target_alt = scenery.cur_elev;
+        
+    APData->TargetAltitude = target_alt;
+}
+
 void fgAPHeadingAdjust( double inc )
 {
     fgAPDataPtr APData;
@@ -189,6 +201,13 @@ void fgAPHeadingAdjust( double inc )
     double target = (int)(APData->TargetHeading / inc) * inc + inc;
 
     APData->TargetHeading = NormalizeDegrees(target);
+}
+
+void fgAPHeadingSet( double new_heading ) {
+    fgAPDataPtr APData = APDataGlobal;
+
+    new_heading = NormalizeDegrees( new_heading );
+    APData->TargetHeading = new_heading;
 }
 
 void fgAPAutoThrottleAdjust( double inc )
@@ -203,6 +222,8 @@ void fgAPAutoThrottleAdjust( double inc )
 
 void fgAPReset(void)
 {
+    fgAPDataPtr APData = APDataGlobal;
+    
     if( fgAPTerrainFollowEnabled() )
 	fgAPToggleTerrainFollow( );
 
@@ -214,6 +235,10 @@ void fgAPReset(void)
 		
     if( fgAPAutoThrottleEnabled() )
 	fgAPToggleAutoThrottle();
+    
+    APData->TargetHeading = 0.0;     // default direction, due north
+    APData->TargetAltitude = 3000;   // default altitude in meters
+    APData->alt_error_accum = 0.0;
 }
 
 #define mySlider puSlider
@@ -242,9 +267,6 @@ static puText          *APAdjustDialogMessage;
 static puFont          APAdjustLegendFont;
 static puFont          APAdjustLabelFont;
 
-static int DialogX = 40;
-static int DialogY = 100;
-
 static puOneShot       *APAdjustOkButton;
 static puOneShot       *APAdjustResetButton;
 static puOneShot       *APAdjustCancelButton;
@@ -268,7 +290,210 @@ static mySlider        *APAdjustHS3;
 
 static char SliderText[4][8];
 
+// THIS NEEDS IMPROVEMENT !!!!!!!!!!!!!
+static int scan_number(char *s, double *new_value)
+{
+    int ret = 0;
+    char WordBuf[64];
+    char *cptr = s;
+    char *WordBufPtr = WordBuf;
 
+    if (*cptr == '+')
+        cptr++;
+    if (*cptr == '-') {
+        *WordBufPtr++ = *cptr++;
+    }
+    while (isdigit(*cptr) ) {
+        *WordBufPtr++ = *cptr++;
+        ret = 1;
+    }
+    if (*cptr == '.') 
+        *WordBufPtr++ = *cptr++;  // put the '.' into the string
+    while (isdigit(*cptr)) {
+        *WordBufPtr++ = *cptr++;
+        ret = 1;
+    }
+    if( ret == 1 ) {
+        *WordBufPtr = '\0';
+        sscanf(WordBuf, "%lf", new_value);
+    }
+    
+    return(ret);
+} // scan_number
+
+
+///////// AutoPilot New Heading Dialog
+
+static puDialogBox     *ApHeadingDialog;
+static puFrame         *ApHeadingDialogFrame;
+static puText          *ApHeadingDialogMessage;
+static puInput         *ApHeadingDialogInput;
+static puOneShot       *ApHeadingDialogOkButton;
+static puOneShot       *ApHeadingDialogCancelButton;
+
+void ApHeadingDialog_Cancel(puObject *)
+{
+    ApHeadingDialogInput->rejectInput();
+    FG_POP_PUI_DIALOG( ApHeadingDialog );
+}
+
+void ApHeadingDialog_OK (puObject *me)
+{
+    int error = 0;
+    char *c;
+    string s;
+    ApHeadingDialogInput -> getValue( &c );
+    
+    if( strlen(c) ) {
+        double NewHeading;
+        if( scan_number( c, &NewHeading ) )
+	    {
+		if(!fgAPHeadingEnabled())
+		    fgAPToggleHeading();
+		fgAPHeadingSet( NewHeading );
+	    } else {
+		error = 1;
+		s = c;
+		s += " is not a valid number.";
+	    }
+    }
+    ApHeadingDialog_Cancel(me);
+    if( error )  mkDialog(s.c_str());
+}
+
+void NewHeading(puObject *cb)
+{
+    //  string ApHeadingLabel( "Enter New Heading" );
+    //  ApHeadingDialogMessage  -> setLabel(ApHeadingLabel.c_str());
+    ApHeadingDialogInput    -> acceptInput();
+    FG_PUSH_PUI_DIALOG( ApHeadingDialog );
+}
+
+void NewHeadingInit(void)
+{
+    //  printf("NewHeadingInit\n");
+    char NewHeadingLabel[] = "Enter New Heading";
+    char *s;
+
+    float heading = fgAPget_heading();
+    int len = 260/2 -
+	(puGetStringWidth( puGetDefaultLabelFont(), NewHeadingLabel ) /2 );
+    
+    ApHeadingDialog = new puDialogBox (150, 50);
+    {
+        ApHeadingDialogFrame   = new puFrame (0, 0, 260, 150);
+        
+        ApHeadingDialogMessage = new puText   (len, 110);
+        ApHeadingDialogMessage    -> setDefaultValue (NewHeadingLabel);
+        ApHeadingDialogMessage    -> getDefaultValue (&s);
+        ApHeadingDialogMessage    -> setLabel        (s);
+    
+        ApHeadingDialogInput   = new puInput  ( 50, 70, 210, 100 );
+        ApHeadingDialogInput   ->    setValue ( heading );
+
+        ApHeadingDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+        ApHeadingDialogOkButton     ->     setLegend         (gui_msg_OK);
+        ApHeadingDialogOkButton     ->     makeReturnDefault (TRUE);
+        ApHeadingDialogOkButton     ->     setCallback       (ApHeadingDialog_OK);
+        
+        ApHeadingDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+        ApHeadingDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
+        ApHeadingDialogCancelButton ->     setCallback       (ApHeadingDialog_Cancel);
+        
+    }
+    FG_FINALIZE_PUI_DIALOG( ApHeadingDialog );
+}
+
+///////// AutoPilot New Altitude Dialog
+
+static puDialogBox     *ApAltitudeDialog = 0;
+static puFrame         *ApAltitudeDialogFrame = 0;
+static puText          *ApAltitudeDialogMessage = 0;
+static puInput         *ApAltitudeDialogInput = 0;
+
+static puOneShot       *ApAltitudeDialogOkButton = 0;
+static puOneShot       *ApAltitudeDialogCancelButton = 0;
+
+void ApAltitudeDialog_Cancel(puObject *)
+{
+    ApAltitudeDialogInput -> rejectInput();
+    FG_POP_PUI_DIALOG( ApAltitudeDialog );
+}
+
+void ApAltitudeDialog_OK (puObject *me)
+{
+    int error = 0;
+    string s;
+    char *c;
+    ApAltitudeDialogInput->getValue( &c );
+
+    if( strlen( c ) ) {
+        double NewAltitude;
+        if( scan_number( c, &NewAltitude) )
+	    {
+		if(!(fgAPAltitudeEnabled()))
+		    fgAPToggleAltitude();
+		fgAPAltitudeSet( NewAltitude );
+	    } else {
+		error = 1;
+		s = c;
+		s += " is not a valid number.";
+	    }
+    }
+    ApAltitudeDialog_Cancel(me);
+    if( error )  mkDialog(s.c_str());
+}
+
+void NewAltitude(puObject *cb)
+{
+    ApAltitudeDialogInput -> acceptInput();
+    FG_PUSH_PUI_DIALOG( ApAltitudeDialog );
+}
+
+void NewAltitudeInit(void)
+{
+    //  printf("NewAltitudeInit\n");
+    char NewAltitudeLabel[] = "Enter New Altitude";
+    char *s;
+
+    float alt = current_aircraft.fdm_state->get_Altitude();
+    int len = 260/2 -
+	(puGetStringWidth( puGetDefaultLabelFont(), NewAltitudeLabel )/2);
+    
+    ApAltitudeDialog = new puDialogBox (150, 50);
+    {
+        ApAltitudeDialogFrame   = new puFrame  (0, 0, 260, 150);
+        ApAltitudeDialogMessage = new puText   (len, 110);
+        ApAltitudeDialogMessage    -> setDefaultValue (NewAltitudeLabel);
+        ApAltitudeDialogMessage    -> getDefaultValue (&s);
+        ApAltitudeDialogMessage    -> setLabel (s);
+        
+        ApAltitudeDialogInput   = new puInput  ( 50, 70, 210, 100 );
+        ApAltitudeDialogInput      -> setValue ( alt );
+        // Uncomment the next line to have input active on startup
+        // ApAltitudeDialogInput   ->    acceptInput       ( );
+        // cursor at begining or end of line ?
+        //len = strlen(s);
+	//      len = 0;
+	//      ApAltitudeDialogInput   ->    setCursor         ( len );
+	//      ApAltitudeDialogInput   ->    setSelectRegion   ( 5, 9 );
+
+        ApAltitudeDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+        ApAltitudeDialogOkButton     ->     setLegend         (gui_msg_OK);
+        ApAltitudeDialogOkButton     ->     makeReturnDefault (TRUE);
+        ApAltitudeDialogOkButton     ->     setCallback       (ApAltitudeDialog_OK);
+        
+        ApAltitudeDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+        ApAltitudeDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
+        ApAltitudeDialogCancelButton ->     setCallback       (ApAltitudeDialog_Cancel);
+        
+    }
+    FG_FINALIZE_PUI_DIALOG( ApAltitudeDialog );
+}
+
+/////// simple AutoPilot GAIN / LIMITS ADJUSTER
+
+   
 #define fgAP_CLAMP(val,min,max) \
 ( (val) = (val) > (max) ? (max) : (val) < (min) ? (min) : (val) )
 
@@ -331,21 +556,10 @@ static void rolloutsmooth_adj( puObject *hs )
 
 static void goAwayAPAdjust (puObject *)
 {
-    FGView *v = &current_view;
-    puPopLiveInterface ( ) ;
-    puPopGroup ( ) ;	
-    APAdjustDialog -> hide();
-    if ( current_options.get_panel_status() ) {
-	// this seems to be the only way to do this :-(
-	// problem is the viewport has been mucked with
-	// current_options.toggle_panel();
-	// current_options.toggle_panel();
-	xglViewport(0, 0, (GLint)(v->winWidth), (GLint)(v->winHeight) );
-	FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
-    }
+    FG_POP_PUI_DIALOG( APAdjustDialog );
 }
 
-void cancelAPAdjust(puObject *)
+void cancelAPAdjust(puObject *self)
 {
     fgAPDataPtr APData  = APDataGlobal;
 	
@@ -353,13 +567,8 @@ void cancelAPAdjust(puObject *)
     APData->RollOut       = TmpRollOutValue;
     APData->MaxAileron    = TmpMaxAileronValue;
     APData->RollOutSmooth = TmpRollOutSmoothValue;
-	
-    puPopLiveInterface ( ) ;
-    //	puPopInterface ( ) ;
-    puPopGroup ( ) ;	
-
-	
-    APAdjustDialog -> hide();
+    
+    goAwayAPAdjust(self);
 }
 
 void resetAPAdjust(puObject *self)
@@ -370,13 +579,10 @@ void resetAPAdjust(puObject *self)
     APData->RollOut       = RollOutAdjust / 2;
     APData->MaxAileron    = MaxAileronAdjust / 2;
     APData->RollOutSmooth = RollOutSmoothAdjust / 2;
-	
-    puPopLiveInterface ( ) ;
-    //	puPopInterface ( ) ;
-    puPopGroup ( ) ;	
-
-    APAdjustDialog -> hide();
-    fgAPAdjust(self);
+    
+    FG_POP_PUI_DIALOG( APAdjustDialog );
+    
+    fgAPAdjust( self );
 }
 
 void fgAPAdjust( puObject * )
@@ -397,180 +603,140 @@ void fgAPAdjust( puObject * )
     APAdjustHS1 -> setValue ( RollOutValue ) ;
     APAdjustHS2 -> setValue ( RollOutSmoothValue ) ;
     APAdjustHS3 -> setValue ( MaxAileronValue ) ;
-	
-    //	puPushInterface     ( APAdjustDialog ) ;
-    puPushGroup     ( APAdjustDialog ) ;	
-    puPushLiveInterface ( APAdjustDialog ) ;
-	
-    APAdjustDialog -> reveal();
+    
+    FG_PUSH_PUI_DIALOG( APAdjustDialog );
 }
 
-#ifdef NOT_USED
-void dragAPAdjust(puObject *self)
-{
-
-    return;
-			
-    int LastX, LastY;
-    int DeltaX, DeltaY, X, Y;
-    int button,  count;
-
-    //	button = guiGetMouseButton();
-    guiGetMouse(&LastX, &LastY);
-
-    button = 0;
-    printf("button %d  LastX %d  LastY %d\n", button, LastX, LastY);
-
-    //	count = 0;
-    //	while( guiGetMouseButton() == button )
-    for(count=0;count<1000;count++)
-	{
-	    guiGetMouse(&X, &Y);
-	    printf("    X %d  Y %d\n", X, Y);
-	}
-	
-    DeltaX = X - LastX;
-    DeltaY = Y - LastY;
-
-    // LiveInterface is Dialog Box
-    puInterface *Interface = puGetBaseLiveInterface();
-    puObject *dlist = Interface->getFirstChild() ;
-    //	printf("%s %p  %s %p\n",
-    //		   Interface->getTypeString(), Interface, dlist->getTypeString(), dlist);
-	
-    Interface -> getPosition ( &X, &Y ) ;
-    Interface -> setPosition ( X + DeltaX, Y + DeltaY ) ;
-    //	Interface -> recalc_bbox();
-	
-    for ( puObject *bo = dlist ; bo != NULL ; bo = bo->next )
-	{
-	    bo -> getPosition ( &X, &Y ) ;
-	    bo -> setPosition ( X + DeltaX, Y + DeltaY ) ;
-	    bo -> recalc_bbox();
-	    //		printf("%s %p  X %d  Y %d\n", bo->getTypeString(), bo, X, Y);
-	}
-
-    Interface->recalc_bbox();
-	
-    puPopLiveInterface ( ) ;
-    //	puPopInterface ( ) ;
-    puPopGroup ( ) ;	
-
-    APAdjustDialog -> hide();
-    fgAPAdjust(dlist);
-}
-#endif // NOT_USED
 
 // Done once at system initialization
-void fgAPAdjustInit( void )
-{
+// Done once at system initialization
+void fgAPAdjustInit( void ) {
+
+    //  printf("fgAPAdjustInit\n");
 #define HORIZONTAL  FALSE
 
-    fgAPDataPtr APData  = APDataGlobal;
-	
-    TmpMaxRollValue        = APData->MaxRoll;
-    TmpRollOutValue        = APData->RollOut;
-    TmpMaxAileronValue     = APData->MaxAileron;
-    TmpRollOutSmoothValue  = APData->RollOutSmooth;
+    int DialogX = 40;
+    int DialogY = 100;
+    int DialogWidth = 230;
 
-    MaxRollValue        = APData->MaxRoll       / MaxRollAdjust;
-    RollOutValue        = APData->RollOut       / RollOutAdjust;
-    MaxAileronValue     = APData->MaxAileron    / MaxAileronAdjust;
-    RollOutSmoothValue  = APData->RollOutSmooth / RollOutSmoothAdjust;
+    char Label[] =  "AutoPilot Adjust";
+    char *s;
+
+    fgAPDataPtr APData = APDataGlobal;
+
+    int labelX = (DialogWidth / 2) -
+	(puGetStringWidth( puGetDefaultLabelFont(), Label ) / 2);
+    labelX -= 30;  // KLUDGEY
+
+    int nSliders = 4;
+    int slider_x = 10;
+    int slider_y = 55;
+    int slider_width = 210;
+    int slider_title_x = 15;
+    int slider_value_x = 160;
+    float slider_delta = 0.1f;
+    
+    TmpMaxRollValue       = APData-> MaxRoll;
+    TmpRollOutValue       = APData-> RollOut;
+    TmpMaxAileronValue    = APData-> MaxAileron;
+    TmpRollOutSmoothValue = APData-> RollOutSmooth;
+
+    MaxRollValue       = APData-> MaxRoll / MaxRollAdjust;
+    RollOutValue       = APData-> RollOut / RollOutAdjust;
+    MaxAileronValue    = APData-> MaxAileron / MaxAileronAdjust;
+    RollOutSmoothValue = APData-> RollOutSmooth / RollOutSmoothAdjust;
 
     puGetDefaultFonts (  &APAdjustLegendFont,  &APAdjustLabelFont );
-    APAdjustDialog = new puDialogBox (DialogX, DialogY);
-    {
-        int horiz_slider_height =  puGetStringHeight (APAdjustLabelFont) +
+    APAdjustDialog = new puDialogBox ( DialogX, DialogY ); {
+        int horiz_slider_height = puGetStringHeight (APAdjustLabelFont) +
 	    puGetStringDescender (APAdjustLabelFont) +
-	    PUSTR_TGAP + PUSTR_BGAP+5;
+	    PUSTR_TGAP + PUSTR_BGAP + 5;
 
-        APAdjustFrame  =  new puFrame (0,0,230, 85+4*horiz_slider_height);
-		
-        APAdjustDialogMessage =  new puText   (40, 52 + 4*horiz_slider_height);
-        APAdjustDialogMessage ->     setLabel ("AutoPilot Adjust");
-        
-	//        APAdjustDragButton =  new puButton    (0, 75+4*horiz_slider_height,
-	//											   230, 85+4*horiz_slider_height);
-	//        APAdjustDragButton -> setLegend   ("*");
-	//        APAdjustDragButton -> setCallback (dragAPAdjust);
-		
-        int slider_y = 55;
-        APAdjustHS0  =   new mySlider    ( 10, slider_y, 210, HORIZONTAL ) ;
-        APAdjustHS0  ->      setDelta    ( 0.1 ) ;
-        APAdjustHS0  ->      setValue    ( MaxRollValue ) ;
-        APAdjustHS0  ->      setCBMode   ( PUSLIDER_DELTA ) ;
-        APAdjustHS0  ->      setCallback ( maxroll_adj ) ;
-		
-	sprintf(SliderText[0],"%05.2f", APData->MaxRoll );
-        APAdjustMaxRollTitle =  new puText   ( 15, slider_y ) ;
-        APAdjustMaxRollTitle ->     setLabel ( "MaxRoll" ) ;
-	APAdjustMaxRollText  =  new puText   ( 160, slider_y ) ;
-	APAdjustMaxRollText  ->     setLabel ( SliderText[0] ) ;
+        APAdjustFrame = new puFrame ( 0, 0,
+                                      DialogWidth, 85 + nSliders * horiz_slider_height );
 
-        slider_y += horiz_slider_height;
-        
-        APAdjustHS1  = new mySlider    ( 10, slider_y, 210, HORIZONTAL ) ;
-        APAdjustHS1  ->    setDelta    ( 0.1 ) ;
-        APAdjustHS1  ->    setValue    ( RollOutValue ) ;
-        APAdjustHS1  ->    setCBMode   ( PUSLIDER_DELTA ) ;
-        APAdjustHS1  ->    setCallback ( rollout_adj ) ;
+        APAdjustDialogMessage = new puText ( labelX, 52 + nSliders * horiz_slider_height );
+        APAdjustDialogMessage -> setDefaultValue ( Label );
+        APAdjustDialogMessage -> getDefaultValue ( &s );
+        APAdjustDialogMessage -> setLabel        ( s );
 
-	sprintf(SliderText[1],"%05.2f", APData->RollOut );
-        APAdjustRollOutTitle = new puText   ( 15, slider_y ) ;
-        APAdjustRollOutTitle ->    setLabel ( "AdjustRollOut" ) ;
-	APAdjustRollOutText  = new puText   ( 160, slider_y ) ;
-	APAdjustRollOutText  ->    setLabel ( SliderText[1] );
-	
-        slider_y += horiz_slider_height;
-        
-        APAdjustHS2  = new mySlider    ( 10, slider_y, 210, HORIZONTAL ) ;
-        APAdjustHS2  ->    setDelta    ( 0.1 ) ;
-        APAdjustHS2  ->    setValue    ( RollOutSmoothValue ) ;
-        APAdjustHS2  ->    setCBMode   ( PUSLIDER_DELTA ) ;
-        APAdjustHS2  ->    setCallback ( rolloutsmooth_adj ) ;
-		
-	sprintf(SliderText[2],"%5.2f", APData->RollOutSmooth );
-        APAdjustRollOutSmoothTitle = new puText   ( 15, slider_y ) ;
-        APAdjustRollOutSmoothTitle ->    setLabel ( "RollOutSmooth" ) ;
-	APAdjustRollOutSmoothText  = new puText   ( 160, slider_y ) ;
-	APAdjustRollOutSmoothText  ->    setLabel ( SliderText[2] );
+        APAdjustHS0 = new mySlider ( slider_x, slider_y, slider_width, HORIZONTAL ) ;
+        APAdjustHS0-> setDelta ( slider_delta ) ;
+        APAdjustHS0-> setValue ( MaxRollValue ) ;
+        APAdjustHS0-> setCBMode ( PUSLIDER_DELTA ) ;
+        APAdjustHS0-> setCallback ( maxroll_adj ) ;
+
+        sprintf( SliderText[ 0 ], "%05.2f", APData->MaxRoll );
+        APAdjustMaxRollTitle = new puText ( slider_title_x, slider_y ) ;
+        APAdjustMaxRollTitle-> setDefaultValue ( "MaxRoll" ) ;
+        APAdjustMaxRollTitle-> getDefaultValue ( &s ) ;
+        APAdjustMaxRollTitle-> setLabel ( s ) ;
+        APAdjustMaxRollText = new puText ( slider_value_x, slider_y ) ;
+        APAdjustMaxRollText-> setLabel ( SliderText[ 0 ] ) ;
 
         slider_y += horiz_slider_height;
-        
-        APAdjustHS3  = new mySlider    ( 10, slider_y, 210, HORIZONTAL ) ;
-        APAdjustHS3  ->    setDelta    ( 0.1 ) ;
-        APAdjustHS3  ->    setValue    ( MaxAileronValue ) ;
-        APAdjustHS3  ->    setCBMode   ( PUSLIDER_DELTA ) ;
-        APAdjustHS3  ->    setCallback ( maxaileron_adj ) ;
-        
-	sprintf(SliderText[3],"%05.2f", APData->MaxAileron );
-        APAdjustMaxAileronTitle = new puText   ( 15, slider_y ) ;
-        APAdjustMaxAileronTitle ->    setLabel ( "MaxAileron" ) ;
-	APAdjustMaxAileronText =  new puText   ( 160, slider_y ) ;
-	APAdjustMaxAileronText ->     setLabel ( SliderText[3] );
-	
-        APAdjustOkButton =  new puOneShot         (10, 10, 60, 50);
-        APAdjustOkButton ->     setLegend         ("OK");
-        APAdjustOkButton ->     makeReturnDefault (TRUE );
-        APAdjustOkButton ->     setCallback       (goAwayAPAdjust);
-		
-        APAdjustCancelButton =  new puOneShot         (70, 10, 150, 50);
-        APAdjustCancelButton ->     setLegend         ("Cancel");
-        APAdjustCancelButton ->     makeReturnDefault (TRUE );
-        APAdjustCancelButton ->     setCallback       (cancelAPAdjust);
-		
-        APAdjustResetButton =  new puOneShot         (160, 10, 220, 50);
-        APAdjustResetButton ->     setLegend         ("Reset");
-        APAdjustResetButton ->     makeReturnDefault (TRUE );
-        APAdjustResetButton ->     setCallback       (resetAPAdjust);
+
+        APAdjustHS1 = new mySlider ( slider_x, slider_y, slider_width, HORIZONTAL ) ;
+        APAdjustHS1-> setDelta ( slider_delta ) ;
+        APAdjustHS1-> setValue ( RollOutValue ) ;
+        APAdjustHS1-> setCBMode ( PUSLIDER_DELTA ) ;
+        APAdjustHS1-> setCallback ( rollout_adj ) ;
+
+        sprintf( SliderText[ 1 ], "%05.2f", APData->RollOut );
+        APAdjustRollOutTitle = new puText ( slider_title_x, slider_y ) ;
+        APAdjustRollOutTitle-> setDefaultValue ( "AdjustRollOut" ) ;
+        APAdjustRollOutTitle-> getDefaultValue ( &s ) ;
+        APAdjustRollOutTitle-> setLabel ( s ) ;
+        APAdjustRollOutText = new puText ( slider_value_x, slider_y ) ;
+        APAdjustRollOutText-> setLabel ( SliderText[ 1 ] );
+
+        slider_y += horiz_slider_height;
+
+        APAdjustHS2 = new mySlider ( slider_x, slider_y, slider_width, HORIZONTAL ) ;
+        APAdjustHS2-> setDelta ( slider_delta ) ;
+        APAdjustHS2-> setValue ( RollOutSmoothValue ) ;
+        APAdjustHS2-> setCBMode ( PUSLIDER_DELTA ) ;
+        APAdjustHS2-> setCallback ( rolloutsmooth_adj ) ;
+
+        sprintf( SliderText[ 2 ], "%5.2f", APData->RollOutSmooth );
+        APAdjustRollOutSmoothTitle = new puText ( slider_title_x, slider_y ) ;
+        APAdjustRollOutSmoothTitle-> setDefaultValue ( "RollOutSmooth" ) ;
+        APAdjustRollOutSmoothTitle-> getDefaultValue ( &s ) ;
+        APAdjustRollOutSmoothTitle-> setLabel ( s ) ;
+        APAdjustRollOutSmoothText = new puText ( slider_value_x, slider_y ) ;
+        APAdjustRollOutSmoothText-> setLabel ( SliderText[ 2 ] );
+
+        slider_y += horiz_slider_height;
+
+        APAdjustHS3 = new mySlider ( slider_x, slider_y, slider_width, HORIZONTAL ) ;
+        APAdjustHS3-> setDelta ( slider_delta ) ;
+        APAdjustHS3-> setValue ( MaxAileronValue ) ;
+        APAdjustHS3-> setCBMode ( PUSLIDER_DELTA ) ;
+        APAdjustHS3-> setCallback ( maxaileron_adj ) ;
+
+        sprintf( SliderText[ 3 ], "%05.2f", APData->MaxAileron );
+        APAdjustMaxAileronTitle = new puText ( slider_title_x, slider_y ) ;
+        APAdjustMaxAileronTitle-> setDefaultValue ( "MaxAileron" ) ;
+        APAdjustMaxAileronTitle-> getDefaultValue ( &s ) ;
+        APAdjustMaxAileronTitle-> setLabel ( s ) ;
+        APAdjustMaxAileronText = new puText ( slider_value_x, slider_y ) ;
+        APAdjustMaxAileronText-> setLabel ( SliderText[ 3 ] );
+
+        APAdjustOkButton = new puOneShot ( 10, 10, 60, 50 );
+        APAdjustOkButton-> setLegend ( gui_msg_OK );
+        APAdjustOkButton-> makeReturnDefault ( TRUE );
+        APAdjustOkButton-> setCallback ( goAwayAPAdjust );
+
+        APAdjustCancelButton = new puOneShot ( 70, 10, 150, 50 );
+        APAdjustCancelButton-> setLegend ( gui_msg_CANCEL );
+        APAdjustCancelButton-> setCallback ( cancelAPAdjust );
+
+        APAdjustResetButton = new puOneShot ( 160, 10, 220, 50 );
+        APAdjustResetButton-> setLegend ( gui_msg_RESET );
+        APAdjustResetButton-> setCallback ( resetAPAdjust );
     }
-    APAdjustDialog -> close();
-    //  APAdjustDialog -> reveal();
-    // Take it off the Stack 
-    puPopLiveInterface ( ) ;
-    //	puPopInterface ( ) ;
-    puPopGroup ( ) ;	
+    FG_FINALIZE_PUI_DIALOG( APAdjustDialog );
+    
 #undef HORIZONTAL
 }
 
@@ -632,6 +798,8 @@ void fgAPInit( fgAIRCRAFT *current_aircraft )
 #endif // !defined( USING_SLIDER_CLASS )
 
     fgAPAdjustInit( ) ;
+    NewHeadingInit();
+    NewAltitudeInit();
 };
 
 int fgAPRun( void )
@@ -805,27 +973,27 @@ int fgAPRun( void )
     /*
     if (APData->Mode == 2) // Glide slope hold
     {
-	double RelSlope;
-	double RelElevator;
-		
-	// First, calculate Relative slope and normalize it
-	RelSlope = NormalizeDegrees( APData->TargetSlope - get_pitch());
-	
-	// Now calculate the elevator offset from current angle
-	if ( abs(RelSlope) > APData->SlopeSmooth )
-	{
-	    if ( RelSlope < 0 )		//  set RelElevator to max in the correct direction
-		RelElevator = -APData->MaxElevator;
-	    else
-		RelElevator = APData->MaxElevator;
-	}
-		
-	else
-	    RelElevator = LinearExtrapolate(RelSlope,-APData->SlopeSmooth,-APData->MaxElevator,APData->SlopeSmooth,APData->MaxElevator);
-		
-	// set the elevator
-	fgElevMove(RelElevator);
-		
+    double RelSlope;
+    double RelElevator;
+        
+    // First, calculate Relative slope and normalize it
+    RelSlope = NormalizeDegrees( APData->TargetSlope - get_pitch());
+    
+    // Now calculate the elevator offset from current angle
+    if ( abs(RelSlope) > APData->SlopeSmooth )
+    {
+        if ( RelSlope < 0 )     //  set RelElevator to max in the correct direction
+        RelElevator = -APData->MaxElevator;
+        else
+        RelElevator = APData->MaxElevator;
+    }
+        
+    else
+        RelElevator = LinearExtrapolate(RelSlope,-APData->SlopeSmooth,-APData->MaxElevator,APData->SlopeSmooth,APData->MaxElevator);
+        
+    // set the elevator
+    fgElevMove(RelElevator);
+        
     }
     */
     
@@ -947,11 +1115,11 @@ double LinearExtrapolate( double x,double x1,double y1,double x2,double y2)
     // This procedure extrapolates the y value for the x posistion on a line defined by x1,y1; x2,y2
     //assert(x1 != x2); // Divide by zero error.  Cold abort for now
     
-    double m, b, y; 	// the constants to find in y=mx+b
-    m=(y2-y1)/(x2-x1);	// calculate the m
-    b= y1- m * x1;	// calculate the b
-    y = m * x + b;	// the final calculation
-	
+    double m, b, y;     // the constants to find in y=mx+b
+    m=(y2-y1)/(x2-x1);  // calculate the m
+    b= y1- m * x1;  // calculate the b
+    y = m * x + b;  // the final calculation
+    
     return y;
 };
 

@@ -47,8 +47,10 @@
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
+#include <Scenery/tilemgr.hxx>
 #include <Objects/materialmgr.hxx>
 #include <plib/pu.h>
+#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Weather/weather.hxx>
 
@@ -56,8 +58,8 @@
 #include "options.hxx"
 #include "views.hxx"
 
-// extern void NewAltitude( puObject *cb );
-// extern void NewHeading( puObject *cb );
+extern void NewAltitude( puObject *cb );
+extern void NewHeading( puObject *cb );
 
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
@@ -344,7 +346,22 @@ void GLUTspecialkey(int k, int x, int y) {
     } else {
         FG_LOG( FG_INPUT, FG_DEBUG, "" );
 	switch (k) {
- 	case GLUT_KEY_F8: // F8 toggles fog ... off fastest nicest...
+	case GLUT_KEY_F2: // F2 Reload Tile Cache...
+	    {
+		int toggle_pause;
+		FG_LOG(FG_INPUT, FG_INFO, "ReIniting TileCache");
+		FGTime *t = FGTime::cur_time_params;
+		if( (toggle_pause = !t->getPause()) )
+		    t->togglePauseMode();
+		BusyCursor(0);
+		fgTileMgrInit();
+		fgTileMgrUpdate();
+		BusyCursor(1);
+		if(toggle_pause)
+		    t->togglePauseMode();
+		return;
+	    }
+	case GLUT_KEY_F8: // F8 toggles fog ... off fastest nicest...
 	    current_options.cycle_fog();
 	
 	    if ( current_options.get_fog() == fgOPTIONS::FG_FOG_DISABLED ) {
@@ -379,12 +396,11 @@ void GLUTspecialkey(int k, int x, int y) {
 	    return;
 	case GLUT_KEY_F11: // F11 Altitude Dialog.
 	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Altitude call back function");
-	    // NewAltitude( NULL );
-	    //exit(1);
+	    NewAltitude( NULL );
 	    return;
 	case GLUT_KEY_F12: // F12 Heading Dialog...
 	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Heading call back function");
-	    // NewHeading( NULL );
+	    NewHeading( NULL );
 	    return;
 	case GLUT_KEY_UP:
 	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {

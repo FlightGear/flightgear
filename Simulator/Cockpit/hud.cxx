@@ -69,14 +69,10 @@ static char units[5];
 //
 
 deque< instr_item * > HUD_deque;
-vector< fgLineSeg2D > HUD_LineList;
-vector< fgLineSeg2D > HUD_StippleLineList;
 
-#ifdef USE_HUD_TextList
-vector< fgTextString > HUD_TextList;
-#endif
-
-//GLFONT *myFont;
+fgTextList         HUD_TextList;
+fgLineList         HUD_LineList;
+fgLineList         HUD_StippleLineList;
 
 class locRECT {
   public:
@@ -158,6 +154,17 @@ void strokeString(int x, int y, char *msg, void *font, float theta)
     }
 }
 
+int getStringWidth ( char *str )
+{
+    if ( HUDtext && str )
+    {
+        float r, l ;
+        guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
+        return FloatToInt( r - l );
+    }
+    return 0 ;
+}
+
 //========================= End of Class Implementations===================
 // fgHUDInit
 //
@@ -187,10 +194,12 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
   unsigned int ladr_w2 = 60;
   int ladr_h2 = 90;
   int ladr_t = 35;
-//  int compass_w2 = 100;
+  int compass_w = 200;
   int gap = 10;
 
   font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
+  
+  HUD_style = 1;
 
   FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
 
@@ -223,9 +232,9 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
   HUD_deque.insert( HUD_deque.begin(), HIptr);
 
 //      case 4:    // GYRO COMPASS
-  HIptr = (instr_item *) new hud_card( cen_x-100,
+  HIptr = (instr_item *) new hud_card( cen_x-(compass_w/2),
                                        max_y,
-                                       200,
+                                       compass_w,
                                        28,
                                        get_heading,
                                        HUDS_TOP,
@@ -240,9 +249,9 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 
 //      case 5:    // AMSL
   HIptr = (instr_item *) new hud_card( max_x - 35 -15, // 15 to balance speed card
-                                       cen_y-100,
+                                       cen_y-(compass_w/2),
                                        35,
-                                       200,
+                                       compass_w,
                                        get_altitude,
 //                                     HUDS_RIGHT | HUDS_VERT,
                                        HUDS_LEFT | HUDS_VERT,
@@ -276,7 +285,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                        HUDS_LEFT | HUDS_VERT,
                                        1000, 0,
                                        1.0,
-                                       25,    5,
+                                       25, 5,
                                        0,
                                        0,
                                        200.0,
@@ -309,9 +318,9 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 
 //      case 2:    // KIAS
   HIptr = (instr_item *) new hud_card( min_x +10 +5, //min_x +18,
-                                       cen_y-100,
+                                       cen_y-(compass_w/2),
                                        28,
-                                       200,
+                                       compass_w,
                                        get_speed,
 //                                     HUDS_LEFT | HUDS_VERT,
                                        HUDS_RIGHT | HUDS_VERT,                                     
@@ -340,7 +349,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 // Remove this when below uncommented       
 //      case 10:
   HIptr = (instr_item *) new instr_label( 10,
-                                          10,
+                                          25,
                                           60,
                                           10,
                                           get_frame_rate,
@@ -355,9 +364,9 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                           TRUE );
   HUD_deque.insert( HUD_deque.begin(), HIptr);
   
-    HIptr = (instr_item *) new lat_label( (cen_x -ladr_w2)/2,
+  HIptr = (instr_item *) new lat_label(  (cen_x - (compass_w/2))/2,
                                           max_y,    
-                                          60,
+                                          1,
                                           text_h,
                                           get_latitude,
                                           "%s%", //"%.0f",
@@ -371,21 +380,19 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                           TRUE );
   HUD_deque.insert( HUD_deque.begin(), HIptr);
     
-    HIptr = (instr_item *) new lon_label(
-                                         //(cen_x+ladr_x2) +((max_x-(cen_x+ladr_x2))/2),
-                                         (2*cen_x) - ((cen_x -ladr_w2)/2),
-                                         max_y,
-                                         60, text_h,
-                                         get_longitude,
-                                         "%s%",//"%.0f",
-                                         "", //"Lon ",  
-                                         "",
-                                         1.0,
-                                         HUDS_TOP,
-                                         CENTER_JUST,
-                                         font_size,
-                                         0,
-                                         TRUE );
+    HIptr = (instr_item *) new lon_label(((cen_x+compass_w/2)+(2*cen_x))/2,
+                                          max_y,
+                                          1, text_h,
+                                          get_longitude,
+                                          "%s%",//"%.0f",
+                                          "", //"Lon ", 
+                                          "",
+                                          1.0,
+                                          HUDS_TOP,
+                                          CENTER_JUST,
+                                          font_size,
+                                          0,
+                                          TRUE );
   HUD_deque.insert( HUD_deque.begin(), HIptr);
     
 /*
@@ -644,10 +651,12 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
     int ladr_w2 = 60;
 //  int ladr_h2 = 90;
 //  int ladr_t = 35;
-//  int compass_w2 = 100;
+    int compass_w = 200;
 //  int gap = 10;
 
     font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
+
+    HUD_style = 2;
 
     FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
 
@@ -672,9 +681,9 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
     instr_item* p;
 
 //      case 4:    // GYRO COMPASS
-    p =new hud_card( cen_x-100,
+    p =new hud_card( cen_x-(compass_w/2),
                      max_y,
-                     200,
+                     compass_w,
                      28,
                      get_view_direction,
                      HUDS_TOP,
@@ -687,9 +696,9 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                      true);
     HUD_deque.push_front( p );
 
-    p = new lat_label( (cen_x -ladr_w2)/2,
+    p = new lat_label( (cen_x - compass_w/2)/2,
                        max_y,
-                       60, text_h,
+                       0, text_h,
                        get_latitude,
                        "%s%", //"%.0f",
                        "", //"Lat ",
@@ -715,9 +724,9 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 //           TRUE );
 //    HUD_deque.push_front( p );
     
-    p = new lon_label( (2*cen_x) - ((cen_x -ladr_w2)/2),
+    p = new lon_label(((cen_x+compass_w/2)+(2*cen_x))/2,
                        max_y,
-                       60, text_h,
+                       1, text_h,
                        get_longitude,
                        "%s%",//"%.0f",
                        "", //"Lon ",
@@ -730,72 +739,61 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                        TRUE );
     HUD_deque.push_front( p );
     
-//    p = new instr_label( 480, 450, 60, 10,
-//           get_long_min,
-//           "%05.2f",
-//           "",
-//           NULL,
-//           1.0,
-//           HUDS_TOP,
-//           CENTER_JUST,
-//           font_size,
-//           0,
-//           TRUE );
-//    HUD_deque.push_front( p );
+    int x_pos = 40;
     
-    p = new instr_label( 10, 10, 60, 10,
+    p = new instr_label( x_pos, 25, 60, 10,
                          get_frame_rate,
                          "%7.1f",
                          "Frame rate =",
                          NULL,
                          1.0,
                          HUDS_TOP,
-                         RIGHT_JUST,
+                         LEFT_JUST,
                          font_size,
                          0, 
                          TRUE );
     HUD_deque.push_front( p );
 
-    p = new instr_label( 10, 25, 120, 10,
+    p = new instr_label( x_pos, 40, 120, 10,
                          get_vfc_tris_culled,
                          "%7.0f",
-                         "Culled     =",
+                         "Culled       =",
                          NULL,
                          1.0,
                          HUDS_TOP,
-                         RIGHT_JUST,
+                         LEFT_JUST,
                          font_size,
                          0,
                          TRUE );
     HUD_deque.push_front( p );
 
-    p = new instr_label( 10, 40, 120, 10,
+    p = new instr_label( x_pos, 55, 120, 10,
                          get_vfc_tris_drawn,
                          "%7.0f",
                          "Rendered   =",
                          NULL,
                          1.0,
                          HUDS_TOP,
-                         RIGHT_JUST,
+                         LEFT_JUST,
                          font_size,
                          0,
                          TRUE );
     HUD_deque.push_front( p );
     
-    p = new instr_label( 10, 55, 90, 10,
+    p = new instr_label( x_pos, 70, 90, 10,
                          get_fov,
                          "%7.1f",
-                         "FOV         ",
+                         "FOV          = ",
                          NULL,
                          1.0,
                          HUDS_TOP,
-                         RIGHT_JUST,
+                         LEFT_JUST,
                          font_size,
                          0,
                          TRUE );
     HUD_deque.push_front( p );
 
-    const int x_pos = 480;
+    x_pos = 480;
     
     p = new instr_label ( x_pos,
                           70,
@@ -803,11 +801,11 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                           10,
                           get_aoa,
                           "%7.2f",
-                          "AOA    ",
+                          "AOA      ",
                           " Deg",
                           1.0,
                           HUDS_TOP,
-                          RIGHT_JUST,
+                          LEFT_JUST,
                           font_size,
                           0,
                           TRUE );
@@ -820,7 +818,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                          " Kts",
                          1.0,
                          HUDS_TOP,
-                         RIGHT_JUST,
+                         LEFT_JUST,
                          font_size,
                          0,
                          TRUE );
@@ -838,7 +836,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
              units,
              1.0,
              HUDS_TOP,
-             RIGHT_JUST,
+             LEFT_JUST,
              font_size,
              0,
              TRUE );
@@ -851,7 +849,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
              units,
              1.0,
              HUDS_TOP,
-             RIGHT_JUST,
+             LEFT_JUST,
              font_size,
              0,
              TRUE );
@@ -864,7 +862,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
              " Deg",
              1.0,
              HUDS_TOP,
-             RIGHT_JUST,
+             LEFT_JUST,
              font_size,
              0,
              TRUE );
@@ -1001,35 +999,20 @@ int brightness        = pHUDInstr->get_brightness();
 // all C++.
 //
 void fgUpdateHUD( void ) {
-//  int i;
   int brightness;
 //  int day_night_sw = current_aircraft.controls->day_night_switch;
   int day_night_sw = global_day_night_switch;
   int hud_displays = HUD_deque.size();
   instr_item *pHUDInstr;
-  int line_width;
+  float line_width;
 
   if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
     return;
     }
 
-//  vector < fgLineSeg2D > :: iterator first_lineSeg = HUD_LineList.begin();
-//  vector < fgLineSeg2D > :: iterator last_lineSeg  = HUD_LineList.end();
-//  HUD_LineList.erase( first_lineSeg, last_lineSeg);
-  HUD_LineList.erase( HUD_LineList.begin(), HUD_LineList.end() );
-//  first = HUD_StippleLineList.begin();
-//  last  = HUD_StippleLineList.end();
-//  HUD_StippleLineList.erase( first, last);
-//  HUD_StippleLineList.erase( HUD_StippleLineList.begin(),
-//                           HUD_StippleLineList.end() );
-#ifdef USE_HUD_TextList
-//  vector < fgTextString > :: iterator first_string = HUD_TextList.begin();
-//  vector < fgTextString > :: iterator last_string  = HUD_TextList.end();
-//  HUD_TextList.erase( first_string, last_string);
-  HUD_TextList.erase( HUD_TextList.begin(), HUD_TextList.end() );
-#endif
-  
-  line_width = (current_options.get_xsize() > 1000) ? 2 : 1;
+  HUD_TextList.erase();
+  HUD_LineList.erase();
+//  HUD_StippleLineList.erase();
   
   pHUDInstr = HUD_deque[0];
   brightness = pHUDInstr->get_brightness();
@@ -1040,7 +1023,6 @@ void fgUpdateHUD( void ) {
 
   glLoadIdentity();
   gluOrtho2D(0, 640, 0, 480);
-//  gluOrtho2D(0, 1024, 0, 768);  
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
@@ -1051,8 +1033,6 @@ void fgUpdateHUD( void ) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
 
-  glLineWidth(line_width);
-
   // We can do translucency, so why not. :-)
 //  glEnable    ( GL_BLEND ) ;
 //  glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
@@ -1060,18 +1040,22 @@ void fgUpdateHUD( void ) {
   if( day_night_sw == DAY) {
       switch (brightness) {
           case BRT_LIGHT:
+//            glColor4f (0.1, 0.9, 0.1, 0.75);
             glColor3f (0.1, 0.9, 0.1);
             break;
 
           case BRT_MEDIUM:
+//            glColor4f (0.1, 0.7, 0.0, 0.75);
             glColor3f (0.1, 0.7, 0.0);
             break;
 
           case BRT_DARK:
-            glColor3f (0.0, 0.5, 0.0);
+//            glColor4f (0.0, 0.6, 0.0, 0.75);
+            glColor3f(0.0, 0.6, 0.0);
             break;
 
           case BRT_BLACK:
+//            glColor4f( 0.0, 0.0, 0.0, 0.75);
             glColor3f( 0.0, 0.0, 0.0);
             break;
 
@@ -1082,31 +1066,33 @@ void fgUpdateHUD( void ) {
       if( day_night_sw == NIGHT) {
           switch (brightness) {
               case BRT_LIGHT:
+//                glColor4f (0.9, 0.1, 0.1, 0.75);
                 glColor3f (0.9, 0.1, 0.1);
                 break;
 
               case BRT_MEDIUM:
+//                glColor4f (0.7, 0.0, 0.1, 0.75);
                 glColor3f (0.7, 0.0, 0.1);
                 break;
 
               case BRT_DARK:
               default:
-                  glColor3f (0.5, 0.0, 0.0);
+//                glColor4f (0.6, 0.0, 0.0, 0.75);
+                  glColor3f (0.6, 0.0, 0.0);
           }
       }
           else {     // Just in case default
+//            glColor4f (0.1, 0.9, 0.1, 0.75);
               glColor3f (0.1, 0.9, 0.1);
           }
   }
+
   deque < instr_item * > :: iterator current = HUD_deque.begin();
   deque < instr_item * > :: iterator last = HUD_deque.end();
 
   for ( ; current != last; ++current ) {
       pHUDInstr = *current;
 
-      // for( i = hud_displays; i; --i) { // Draw everything
-      // if( HUD_deque.at(i)->enabled()) {
-      // pHUDInstr = HUD_deque[i - 1];
       if( pHUDInstr->enabled()) {
           //  fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
           //            hud->code, hud->status );
@@ -1116,52 +1102,22 @@ void fgUpdateHUD( void ) {
       }
   }
 
-  vector < fgLineSeg2D > :: iterator curSeg = HUD_LineList.begin();
-  vector < fgLineSeg2D > :: iterator lastSeg = HUD_LineList.end();
+  char *gmt_str = get_formated_gmt_time();
+  HUD_TextList.add( fgText( gmt_str, 40, 10) );
+  
+  HUD_TextList.draw();
 
-  glBegin(GL_LINES);
-  for ( ; curSeg != lastSeg; curSeg++ ) {
-      curSeg->draw();
-  }
-  glEnd();
-  
-//  curSeg = HUD_StippleLineList.begin();
-//  lastSeg = HUD_StippleLineList.end();
-  
+  line_width = (current_options.get_xsize() > 1000) ? 1.0 : 0.5;
+  glLineWidth(line_width);
+  HUD_LineList.draw();
+
 //  glEnable(GL_LINE_STIPPLE);
 //  glLineStipple( 1, 0x00FF );
-//  glBegin(GL_LINES);
-//  for ( ; curSeg != lastSeg; curSeg++ ) {
-//    curSeg->draw();
-//  }
-//  glEnd();
+//  HUD_StippleLineList.draw();
 //  glDisable(GL_LINE_STIPPLE);
-#ifdef USE_HUD_TextList
-#define textString( x , y, text, font )  TextString( font, text, x , y )
-#endif
-  
-#ifdef USE_HUD_TextList
-  GLfloat mat[16];
-  glPushMatrix();
-  glGetFloatv(GL_MODELVIEW_MATRIX, mat);
-  HUD_TextList.push_back( fgTextString( GLUT_BITMAP_8_BY_13,
-                                        get_formated_gmt_time(),
-                                        450, 445)
-                        );
-//  glFontBegin ( myFont );
-  vector < fgTextString > :: iterator curString = HUD_TextList.begin();
-  vector < fgTextString > :: iterator lastString = HUD_TextList.end();
-  
-  for ( ; curString != lastString; curString++ ) {
-      glLoadMatrixf( mat );
-      curString->draw();
-  }
-//  glFontEnd ();
-  glPopMatrix();
-#endif
-  
-//  glDisable   ( GL_BLEND ) ;
 
+//  glDisable( GL_BLEND );
+  
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
   glMatrixMode(GL_PROJECTION);

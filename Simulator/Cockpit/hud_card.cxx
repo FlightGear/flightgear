@@ -19,7 +19,9 @@
 #include "hud.hxx"
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font )  TextString( font, text, x , y )
+#define textString( x , y, text, font )  TextString( text, x , y )
+#else
+#define textString( x , y, text, font )  puDrawString ( guiFnt, text, x, y );
 #endif
 
 //========== Top of hud_card class member definitions =============

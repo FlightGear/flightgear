@@ -34,13 +34,19 @@ extern void maybeToggleMouse( void );
 extern void BusyCursor( int restore );
 
 extern void guiToggleMenu(void);
-extern void mkDialog(char *txt);
+extern void mkDialog(const char *txt);
 extern void ConfirmExitDialog(void);
 extern void guiFixPanel( void );
 
 extern puFont guiFnt;
 extern fntTexFont *guiFntHandle;
 
+// GLOBAL COMMON DIALOG BOX TEXT STRINGS
+extern char *gui_msg_OK;     // "OK"
+extern char *gui_msg_NO;     // "NO"
+extern char *gui_msg_YES;    // "YES"
+extern char *gui_msg_CANCEL; // "CANCEL"
+extern char *gui_msg_RESET;  // "RESET"
 
 // MACROS TO HELP KEEP PUI LIVE INTERFACE STACK IN SYNC
 // These insure that the mouse is active when dialog is shown

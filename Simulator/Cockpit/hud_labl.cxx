@@ -19,7 +19,9 @@
 #include "hud.hxx"
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font )  TextString( font, text, x , y )
+#define textString( x , y, text, font )  TextString( text, x , y )
+#else
+#define textString( x , y, text, font )  puDrawString ( guiFnt, text, x, y );
 #endif
 
 //======================= Top of instr_label class =========================
@@ -105,9 +107,9 @@ instr_label & instr_label ::operator = (const instr_label & rhs )
     justify    = rhs.justify;
     pre_str    = rhs.pre_str;
     post_str   = rhs.post_str;
-    strcpy(format_buffer,rhs.format_buffer);    
+    strcpy(format_buffer,rhs.format_buffer);	
     }
-    return *this;
+  return *this;
 }
 
 //
@@ -123,45 +125,33 @@ draw( void )       // Required method in base class
   int lenstr;
   RECT  scrn_rect = get_location();
 
-//  if( pre_str != NULL) {
-//    if( post_str != NULL ) {
-//      sprintf( format_buffer, "%s%s%s", pre_str, pformat, post_str );
-//      }
-//    else {
-//      sprintf( format_buffer, "%s%s",   pre_str, pformat );
-//      }
-//    }
-//  else {
-//    if( post_str != NULL ) {
-//      sprintf( format_buffer, "%s%s",   pformat, post_str );
-//      }
-//    } // else do nothing if both pre and post strings are nulls. Interesting.
-
   if( data_available() ) {
-    lenstr = sprintf( label_buffer, format_buffer, get_value() );
+    sprintf( label_buffer, format_buffer, get_value() );
     }
   else {
-    lenstr = sprintf( label_buffer, format_buffer );
+    sprintf( label_buffer, format_buffer );
     }
+  
+  lenstr = getStringWidth( label_buffer );
+						
     
 #ifdef DEBUGHUD
-    fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
-    fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
-    fgPrintf( FG_COCKPIT, FG_DEBUG, label_buffer );
-    fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
+  fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
+  fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
+  fgPrintf( FG_COCKPIT, FG_DEBUG, label_buffer );
+  fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
 #endif
 //  lenstr = strlen( label_buffer );
 
-  posincr = 0;   //  default to RIGHT_JUST ... center located calc: -lenstr*8;
-
-  if( justify == CENTER_JUST ) {
-    posincr =  - (lenstr << 2); //  -lenstr*4;
-    }
-  else {
-    if( justify == LEFT_JUST ) {
-      posincr = - (lenstr << 8);  // 0;
-      }
-    }
+  if( justify == RIGHT_JUST ) {
+	  posincr = scrn_rect.right - lenstr;
+  }else if( justify == CENTER_JUST ) {
+	  posincr = get_span() - (lenstr/2); //  -lenstr*4;
+  }  else {
+      //  justify == LEFT_JUST
+      posincr = 0;  // 0;
+  }
+  
   if( fontSize == SMALL ) {
     textString( scrn_rect.left + posincr, scrn_rect.top,
                 label_buffer, GLUT_BITMAP_8_BY_13);

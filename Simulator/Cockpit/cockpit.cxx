@@ -38,7 +38,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
-#include <GUI/gui.h>
 #include <Include/fg_constants.h>
 #include <Include/general.hxx>
 #include <Main/options.hxx>
@@ -49,6 +48,7 @@
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/fg_time.hxx>
+#include <GUI/gui.h>
 
 #include "cockpit.hxx"
 
@@ -57,7 +57,11 @@
 // cockpit/panel/hud system
 
 static pCockpit ac_cockpit;
+fntRenderer *HUDtext = 0;
+float  HUD_TextSize = 0;
+int HUD_style = 0;
 
+float HUD_matrix[16];
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
@@ -65,32 +69,19 @@ static pCockpit ac_cockpit;
 
 float get_latitude( void )
 {
-//  FGState *f;
     double lat;
-    
-//  current_aircraft.fdm_state
 
     lat = current_aircraft.fdm_state->get_Latitude() * RAD_TO_DEG;
 
     float flat = lat;
     return(flat);
 
-//  if(fabs(lat)<1.0)
-//  {
-//      if(lat<0)
-//          return( -(double)((int)lat) );
-//      else
-//          return( (double)((int)lat) );
-//  }
-//  return( (double)((int)lat) );
 }
+
 float get_lat_min( void )
 {
-//  FGState *f;
     double      a, d;
 
-//  current_aircraft.fdm_state
-    
     a = current_aircraft.fdm_state->get_Latitude() * RAD_TO_DEG;    
     if (a < 0.0) {
         a = -a;
@@ -104,23 +95,11 @@ float get_lat_min( void )
 float get_longitude( void )
 {
     double lon;
-//  FGState *f;
-    
-//  current_aircraft.fdm_state
 
     lon = current_aircraft.fdm_state->get_Longitude() * RAD_TO_DEG;
 
     float flon = lon;
     return(flon);
-    
-//  if(fabs(lon)<1.0)
-//  {
-//      if(lon<0)
-//          return( -(double)((int)lon) );
-//      else
-//          return( (double)((int)lon) );
-//  }
-//  return( (double)((int)lon) );
 }
 
 
@@ -139,11 +118,7 @@ get_formated_gmt_time( void )
 
 float get_long_min( void )
 {
-//  FGState *f;
     double  a, d;
-
-//  current_aircraft.fdm_state
-    
     a = current_aircraft.fdm_state->get_Longitude() * RAD_TO_DEG;   
     if (a < 0.0) {
         a = -a;
@@ -234,10 +209,6 @@ float get_altitude( void )
 
 float get_agl( void )
 {
-//  FGState *f;
-
-//  f = current_aircraft.fdm_state;
-
     float agl;
 
     if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
@@ -252,11 +223,7 @@ float get_agl( void )
 
 float get_sideslip( void )
 {
-//  FGState *f;
-        
-//  f = current_aircraft.fdm_state;
     float sideslip = current_aircraft.fdm_state->get_Beta();
-        
     return( sideslip );
 }
 
@@ -292,10 +259,6 @@ float get_vfc_tris_culled   ( void )
 
 float get_climb_rate( void )
 {
-//  FGState *f;
-
-//  current_aircraft.fdm_state
-
     float climb_rate;
     if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * 60.0;
@@ -308,22 +271,16 @@ float get_climb_rate( void )
 
 float get_view_direction( void )
 {
-//  FGState *f;
-
-
-//    FGView *pview;
     double view;
  
-//    pview = &current_view;
-//  current_aircraft.fdm_state
-
     view = FG_2PI - current_view.get_view_offset();
-
     view = ( current_aircraft.fdm_state->get_Psi() + view) * RAD_TO_DEG;
+    
     if(view > 360.)
         view -= 360.;
     else if(view<0.)
         view += 360.;
+    
     float fview = view;
     return( fview );
 }
@@ -352,7 +309,7 @@ char *dmshh_format(double degrees)
     if (min_part >= 60)
       min_part -= 60, deg_part += 1;
 
-    sprintf(buf,"%02d*%02d\'%05.2f\"",deg_part,min_part,sec_part);
+    sprintf(buf,"%02d*%02d %05.2f",deg_part,min_part,sec_part);
 
     return buf;
 }
@@ -387,7 +344,7 @@ static char *toDMS(float a)
   if (neg)
     d = -d;
   
-  sprintf(dms, "%.0f*%02.0f'%04.1f\"", d, m, s);
+  sprintf(dms, "%.0f*%02.0f %04.1f", d, m, s);
   return dms;
 }
 
@@ -415,10 +372,12 @@ static char *toDM(float a)
   }
   if (neg) d = -d;
   
-  sprintf(dm, "%.0f*%06.3f'", d, m);
+  sprintf(dm, "%.0f*%06.3f", d, m);
   return dm;
 }
 
+// Have to set the LatLon display type
+//static char *(*fgLatLonFormat)(float) = toDM;
 static char *(*fgLatLonFormat)(float);
 
 char *coord_format_lat(float latitude)
@@ -473,105 +432,6 @@ char *coord_format_latlon(double latitude, double longitude)
 }
 #endif
 
-#ifdef FAST_TEXT_TEST
-#undef FAST_TEXT_TEST
-#endif
-
-#ifdef FAST_TEXT_TEST
-
-static unsigned int first=0, last=128;
-unsigned int font_base;
-
-#define FONT "-adobe-courier-medium-r-normal--24-240-75-75-m-150-iso8859-1"
-HFONT hFont;
-
-void Font_Setup(void)
-{
-#ifdef _WIN32
-  int count;
-  HDC    hdc;  
-  HGLRC  hglrc; 
-
-
-  hdc = wglGetCurrentDC();
-  hglrc = wglGetCurrentContext();
-  
-  if (hdc == 0 || hglrc == 0) {
-    printf("Could not get context or DC\n");
-    exit(1);
-  }
-  
-  if (!wglMakeCurrent(hdc, hglrc)) {
-    printf("Could not make context current\n");
-    exit(1);
-  }
-
-#define FONTBASE 0x1000
-    /*
-    hFont = GetStockObject(SYSTEM_FONT);
-    hFont = CreateFont(h, w, esc, orient, weight,
-        ital, under, strike, set, out, clip, qual, pitch/fam, face);
-    */
-    hFont = CreateFont(30, 0, 0, 0, FW_NORMAL,
-        FALSE, FALSE, FALSE, ANSI_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DRAFT_QUALITY,
-        FIXED_PITCH | FF_MODERN, "Arial");
-    if (!hFont) {
-    MessageBox(WindowFromDC(hdc),
-        "Failed to find acceptable bitmap font.",
-        "OpenGL Application Error",
-        MB_ICONERROR | MB_OK);
-    exit(1);
-    }
-    (void) SelectObject(hdc, hFont);
-    wglUseFontBitmaps(hdc, 0, 255, FONTBASE);
-    glListBase(FONTBASE);
-#if 0
-  SelectObject (hdc, GetStockObject (SYSTEM_FONT));
-
-  count=last-first+1;
-  font_base = glGenLists(count);
-  wglUseFontBitmaps (hdc, first, last, font_base);
-  if (font_base == 0) {
-    printf("Could not generate Text_Setup list\n");
-    exit(1);
-  }
-#endif // 0  
-#else
-  Display *Dpy;
-  XFontStruct *fontInfo;
-  Font id;
-
-  Dpy = XOpenDisplay(NULL);
-  fontInfo = XLoadQueryFont(Dpy, FONT);
-  if (fontInfo == NULL)
-    {
-      printf("Failed to load font %s\n", FONT);
-      exit(1);
-    }
-
-  id = fontInfo->fid;
-  first = fontInfo->min_char_or_byte2;
-  last = fontInfo->max_char_or_byte2;
-  
-  base = glGenLists((GLuint) last+1);
-  if (base == 0) {
-    printf ("out of display lists\n");
-    exit (1);
-  }
-  glXUseXFont(id, first, last-first+1, base+first);
-#endif
-}
-
-static void
-drawString(char *string, GLfloat x, GLfloat y, GLfloat color[4])
-{
-    glColor4fv(color);
-    glRasterPos2f(x, y);
-    glCallLists(strlen(string), GL_BYTE, (GLbyte *) string);
-}
-
-#endif // #ifdef FAST_TEXT_TEST
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
@@ -589,10 +449,6 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     // HI_Head is now a null pointer so we can generate a new list from the
     // current aircraft.
 
-#ifdef FAST_TEXT_TEST
-    Font_Setup();
-#endif // #ifdef FAST_TEXT_TEST
-    
     fgHUDInit( cur_aircraft );
     ac_cockpit = new fg_Cockpit();
     
@@ -606,80 +462,61 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     FG_LOG( FG_COCKPIT, FG_INFO,
         "  Code " << ac_cockpit->code() << " Status " 
         << ac_cockpit->status() );
-    
+
+//  HUD_TextSize = (current_options.get_xsize() > 1000) ? 10 : 8;
+    HUD_TextSize = 10;
+    HUDtext = new fntRenderer();
+    HUDtext -> setFont      ( guiFntHandle ) ;
+    HUDtext -> setPointSize ( HUD_TextSize ) ;
+    HUD_TextList.setFont( HUDtext );
+
     return true;
 }
 
 
 void fgCockpitUpdate( void ) {
 
-#define DISPLAY_COUNTER
-#ifdef DISPLAY_COUNTER
-    static float lightCheck[4] = { 0.7F, 0.7F, 0.7F, 1.0F };
-    char buf[64],*ptr;
-//  int fontSize;
-    int c;
-#endif
+    int iwidth   = current_view.get_winWidth();
+    int iheight  = current_view.get_winHeight();
+    float width  = iwidth;
+    float height = iheight;
     
     FG_LOG( FG_COCKPIT, FG_DEBUG,
         "Cockpit: code " << ac_cockpit->code() << " status " 
         << ac_cockpit->status() );
 
     if ( current_options.get_hud_status() ) {
-    // This will check the global hud linked list pointer.
-    // If these is anything to draw it will.
-    fgUpdateHUD();
+        // This will check the global hud linked list pointer.
+        // If these is anything to draw it will.
+        fgUpdateHUD();
     }
+#define DISPLAY_COUNTER
 #ifdef DISPLAY_COUNTER
     else
     {
+        char buf[64];
         float fps    =       get_frame_rate();
-        float tris   = fps * get_vfc_tris_drawn();
-        float culled = fps * get_vfc_tris_culled();
-        
-        int len = sprintf(buf," %4.1f  %7.0f  %7.0f",
-                          fps, tris, culled);
-//      sprintf(buf,"Tris Per Sec: %7.0f", t);      
-//      fontSize = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
+//      float tris   = fps * get_vfc_tris_drawn();
+//      float culled = fps * get_vfc_tris_culled();
+//      sprintf(buf,"%-4.1f  %7.0f  %7.0f", fps, tris, culled);
+        sprintf(buf,"%-5.1f", fps);
+
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
-
         glLoadIdentity();
-        gluOrtho2D(0, 1024, 0, 768);
+        gluOrtho2D(0, width, 0, height);
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
         glLoadIdentity();
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
-
-//      glColor3f (.90, 0.27, 0.67);
         
+        glColor3f (0.9, 0.4, 0.2);
 
-#ifdef FAST_TEXT_TEST
-        drawString(buf, 250.0F, 10.0F, lightCheck);
-//      glRasterPos2f( 220, 10);
-//      for (int i=0; i < len; i++) {
-//          glCallList(font_base+buf[i]);
-//      }
-#else
-        glColor3f (.8, 0.8, 0.8);
-        glTranslatef( 400, 10, 0);
-        glScalef(.1, .1, 0.0);
-        ptr = buf;
-        while ( ( c = *ptr++) ){
-            glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN, c);
-        }
-#endif // #ifdef FAST_TEXT_TEST
-
-//      glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN, ' ');
-//      glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN, ' ');
-        
-//      ptr = get_formated_gmt_time();
-//      while ( ( c = *ptr++) ){
-//          glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN, c);
-//      }
-        
+        guiFnt.drawString( buf,
+                           width/2 - guiFnt.getStringWidth(buf)/2,
+                           10 );
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LIGHTING);
         glMatrixMode(GL_PROJECTION);
@@ -687,14 +524,13 @@ void fgCockpitUpdate( void ) {
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
     }
-#endif // DISPLAY_COUNTER
-
-    if ( current_options.get_panel_status() && 
-     (fabs( current_view.get_view_offset() ) < 0.2) )
+#endif // #ifdef DISPLAY_COUNTER
+    
+    if( current_options.get_panel_status() && 
+         (fabs( current_view.get_view_offset() ) < 0.2) )
     {
-    xglViewport( 0, 0, 
-             current_view.get_winWidth(), 
-             current_view.get_winHeight() );
-    FGPanel::OurPanel->Update();
+        xglViewport( 0, 0, iwidth, iheight );
+
+        FGPanel::OurPanel->Update();
     }
 }

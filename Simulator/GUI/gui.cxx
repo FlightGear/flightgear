@@ -61,7 +61,6 @@
 
 #include "gui.h"
 
-FG_USING_STD(cout);
 FG_USING_STD(string);
 
 puFont guiFnt = 0;
@@ -82,8 +81,22 @@ static puText       *YNdialogBoxMessage = 0;
 static puOneShot    *YNdialogBoxOkButton = 0;
 static puOneShot    *YNdialogBoxNoButton = 0;
 
-// extern void NewAltitude( puObject *cb );
-// extern void NewHeading( puObject *cb );
+static char msg_OK[]     = "OK";
+static char msg_NO[]     = "NO";
+static char msg_YES[]    = "YES";
+static char msg_CANCEL[] = "Cancel";
+static char msg_RESET[]  = "Reset";
+
+char *gui_msg_OK;     // "OK"
+char *gui_msg_NO;     // "NO"
+char *gui_msg_YES;    // "YES"
+char *gui_msg_CANCEL; // "CANCEL"
+char *gui_msg_RESET;  // "RESET"
+
+static char global_dialog_string[256];
+
+extern void NewAltitude( puObject *cb );
+extern void NewHeading( puObject *cb );
 extern void fgAPAdjust( puObject * );
 extern void fgLatLonFormatToggle( puObject *);
 
@@ -105,7 +118,6 @@ void guiMotionFunc ( int x, int y )
     glutPostRedisplay () ;
 }
 
-
 void guiMouseFunc(int button, int updown, int x, int y)
 {
     _mX = x;
@@ -114,7 +126,6 @@ void guiMouseFunc(int button, int updown, int x, int y)
         last_buttons |=  ( 1 << button ) ;
     else
         last_buttons &= ~( 1 << button ) ;
-    
     puMouse (button, updown, x,y);
     glutPostRedisplay ();
 }
@@ -147,14 +158,15 @@ static inline void TurnCursorOff( void )
 #if defined ( WIN32 ) || defined(__CYGWIN32__)
     glutSetCursor(GLUT_CURSOR_NONE);
 #else  // I guess this is what we want to do ??
- #if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
+#if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
     glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
- #endif
+#endif
 #endif
 }
 
 void maybeToggleMouse( void )
 {
+#ifdef WIN32
     static int first_time = ~0;
     static int mouse_changed = 0;
 
@@ -172,6 +184,7 @@ void maybeToggleMouse( void )
         }
     }
     first_time = ~first_time;
+#endif // #ifdef WIN32
 }
 
 // Call with FALSE to init and TRUE to restore
@@ -182,7 +195,9 @@ void BusyCursor( int restore )
         glutSetCursor(cursor);
     } else {
         cursor = glutGet( GLUT_WINDOW_CURSOR );
+#ifdef WIN32
         TurnCursorOn();
+#endif
         glutSetCursor( GLUT_CURSOR_WAIT );
     }
 }
@@ -191,20 +206,14 @@ void BusyCursor( int restore )
 // Intercept the Escape Key
 void ConfirmExitDialog(void)
 {
-    string Msg("Really Quit");
-    YNdialogBoxMessage -> setLabel(Msg.c_str());
-    YNdialogBoxNoButton-> makeReturnDefault  (TRUE );
     FG_PUSH_PUI_DIALOG( YNdialogBox );
 }
 
 // General Purpose Message Box
-void mkDialog (char *txt)
+void mkDialog (const char *txt)
 {
-    void goAwayCb(puObject *);
-    dialogBoxMessage->setLabel(txt);
-    dialogBoxOkButton -> setLegend          ("OK");
-    dialogBoxOkButton -> makeReturnDefault  (TRUE );
-    dialogBoxOkButton -> setCallback        (goAwayCb);
+    strncpy(global_dialog_string, txt, 256);
+    dialogBoxMessage->setLabel(global_dialog_string);
     FG_PUSH_PUI_DIALOG( dialogBox );
 }
 
@@ -212,22 +221,21 @@ void mkDialog (char *txt)
 void guiFixPanel( void )
 {
     int toggle_pause;
-    
-    if ( current_options.get_panel_status() ) {
-		
-	FGView *v = &current_view;
-	FGTime *t = FGTime::cur_time_params;
 
-	if( (toggle_pause = !t->getPause()) )
-	    t->togglePauseMode();
-	
-	// this seems to be the only way to do this :-(
-	// problem is the viewport has been mucked with
-	xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
-	FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
-		
-	if(toggle_pause)
-	    t->togglePauseMode();
+    if ( current_options.get_panel_status() ) {
+        FGView *v = &current_view;
+        FGTime *t = FGTime::cur_time_params;
+
+        if( (toggle_pause = !t->getPause()) )
+            t->togglePauseMode();
+
+        // this seems to be the only way to do this :-(
+        // problem is the viewport has been mucked with
+        xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
+        FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
+
+        if(toggle_pause)
+            t->togglePauseMode();
     }
 }
 
@@ -235,13 +243,17 @@ void guiFixPanel( void )
 void guiToggleMenu(void)
 {
     if( menu_on ) {
-	// printf("Hiding Menu\n");
-	mainMenuBar->hide  ();
-	TurnCursorOff();
+        // printf("Hiding Menu\n");
+        mainMenuBar->hide  ();
+#ifdef WIN32
+        TurnCursorOff();
+#endif // #ifdef WIN32
     } else {
-	// printf("Showing Menu\n");
-	mainMenuBar->reveal();
-	TurnCursorOn();
+        // printf("Showing Menu\n");
+        mainMenuBar->reveal();
+#ifdef WIN32
+        TurnCursorOn();
+#endif // #ifdef WIN32
     }
     menu_on = ~menu_on;
 }
@@ -272,12 +284,12 @@ void hideMenuCb (puObject *cb)
 void goodBye(puObject *)
 {
     // FG_LOG( FG_INPUT, FG_ALERT,
-    //		"Program exiting normally at user request." );
+    //      "Program exiting normally at user request." );
     cout << "Program exiting normally at user request." << endl;
 
-    //	if(gps_bug)
-    //		fclose(gps_bug);
-				
+    //  if(gps_bug)
+    //      fclose(gps_bug);
+
     exit(-1);
 }
 
@@ -289,15 +301,18 @@ void goAwayCb (puObject *me)
 
 void mkDialogInit (void)
 {
-    //	printf("mkDialogInit\n");
+    //  printf("mkDialogInit\n");
     int x = (current_options.get_xsize()/2 - 400/2);
     int y = (current_options.get_ysize()/2 - 100/2);
     dialogBox = new puDialogBox (x, y); // 150, 50
     {
-	dialogFrame = new puFrame (0,0,400,100);
-	dialogBoxMessage  =  new puText         (10, 70);
-	dialogBoxMessage  -> setLabel           ("");
-	dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
+        dialogFrame = new puFrame (0,0,400,100);
+        dialogBoxMessage  =  new puText         (10, 70);
+        dialogBoxMessage  -> setLabel           ("");
+        dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
+        dialogBoxOkButton -> setLegend          (gui_msg_OK);
+        dialogBoxOkButton -> makeReturnDefault  (TRUE );
+        dialogBoxOkButton -> setCallback        (goAwayCb);
     }
     FG_FINALIZE_PUI_DIALOG( dialogBox );
 }
@@ -314,30 +329,33 @@ void goAwayYesNoCb(puObject *me)
 
 void ConfirmExitDialogInit(void)
 {
-    //	printf("ConfirmExitDialogInit\n");
-    string Msg("Really Quit");
-    //	int len = 350/2 - puGetStringWidth( puGetDefaultLabelFont(), AptLabel )/2;
-    int len = 200 - puGetStringWidth( puGetDefaultLabelFont(), Msg.c_str() )/2;
-	
+    char msg[] = "Really Quit";
+    char *s;
+
+    //  printf("ConfirmExitDialogInit\n");
+    int len = 200 - puGetStringWidth( puGetDefaultLabelFont(), msg )/2;
+
     int x = (current_options.get_xsize()/2 - 400/2);
     int y = (current_options.get_ysize()/2 - 100/2);
 	
     YNdialogBox = new puDialogBox (x, y); // 150, 50
-    //	YNdialogBox = new puDialogBox (150, 50);
+    //  YNdialogBox = new puDialogBox (150, 50);
     {
-	YNdialogFrame = new puFrame (0,0,400, 100);
-		
-	YNdialogBoxMessage  =  new puText         (len, 70);
-	YNdialogBoxMessage  -> setLabel           (Msg.c_str());
-		
-	YNdialogBoxOkButton =  new puOneShot      (100, 10, 160, 50);
-	YNdialogBoxOkButton -> setLegend          ("OK");
-	YNdialogBoxOkButton -> setCallback        (goodBye);
-		
-	YNdialogBoxNoButton =  new puOneShot      (240, 10, 300, 50);
-	YNdialogBoxNoButton -> setLegend          ("NO");
-	//		YNdialogBoxNoButton -> makeReturnDefault  (TRUE );
-	YNdialogBoxNoButton -> setCallback        (goAwayYesNoCb);
+        YNdialogFrame = new puFrame (0,0,400, 100);
+        
+        YNdialogBoxMessage  =  new puText         (len, 70);
+        YNdialogBoxMessage  -> setDefaultValue    (msg);
+        YNdialogBoxMessage  -> getDefaultValue    (&s);
+        YNdialogBoxMessage  -> setLabel           (s);
+        
+        YNdialogBoxOkButton =  new puOneShot      (100, 10, 160, 50);
+        YNdialogBoxOkButton -> setLegend          (gui_msg_OK);
+        YNdialogBoxOkButton -> setCallback        (goodBye);
+        
+        YNdialogBoxNoButton =  new puOneShot      (240, 10, 300, 50);
+        YNdialogBoxNoButton -> setLegend          (gui_msg_NO);
+        //      YNdialogBoxNoButton -> makeReturnDefault  (TRUE );
+        YNdialogBoxNoButton -> setCallback        (goAwayYesNoCb);
     }
     FG_FINALIZE_PUI_DIALOG( YNdialogBox );
 }
@@ -354,8 +372,8 @@ void helpCb (puObject *)
 #if defined(FX) && !defined(WIN32)
 #  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
     if ( global_fullscreen ) {
-	global_fullscreen = false;
-	XMesaSetFXmode( XMESA_FX_WINDOW );
+        global_fullscreen = false;
+        XMesaSetFXmode( XMESA_FX_WINDOW );
     }
 #  endif
 #endif
@@ -364,18 +382,19 @@ void helpCb (puObject *)
     string url = "http://www.flightgear.org/Docs/InstallGuide/getstart.html";
 	
     if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
-	command = "netscape -remote \"openURL(" + url + ")\" &";
+        command = "netscape -remote \"openURL(" + url + ")\" &";
     } else {
-	command = "netscape " + url + " &";
+        command = "netscape " + url + " &";
     }
 #else
     command = "webrun.bat";
 #endif
 	
     system( command.c_str() );
-    string text = "Help started in netscape window.";
-	
-    mkDialog (text.c_str());
+    //string text = "Help started in netscape window.";
+
+    //mkDialog (text.c_str());
+    mkDialog ("Help started in netscape window.");
 }
 
 /// The beginnings of teleportation :-)
@@ -386,14 +405,15 @@ static puFrame         *AptDialogFrame = 0;
 static puText          *AptDialogMessage = 0;
 static puInput         *AptDialogInput = 0;
 
+static char NewAirportId[16];
+static char NewAirportLabel[] = "Enter New Airport ID"; 
+
 static puOneShot       *AptDialogOkButton = 0;
 static puOneShot       *AptDialogCancelButton = 0;
 static puOneShot       *AptDialogResetButton = 0;
 
 void AptDialog_Cancel(puObject *)
 {
-    AptDialogOkButton->makeReturnDefault(FALSE);
-    AptDialogInput->rejectInput();
     FG_POP_PUI_DIALOG( AptDialog );
 }
 
@@ -404,7 +424,7 @@ void AptDialog_OK (puObject *)
     FGTime *t = FGTime::cur_time_params;
     int PauseMode = t->getPause();
     if(!PauseMode)
-	t->togglePauseMode();
+        t->togglePauseMode();
 
     char *s;
     AptDialogInput->getValue(&s);
@@ -413,74 +433,75 @@ void AptDialog_OK (puObject *)
     AptDialog_Cancel( NULL );
     
     if ( AptId.length() ) {
-	// set initial position from airport id
-		
-	fgAIRPORTS airports;
-	fgAIRPORT a;
-		
-	FG_LOG( FG_GENERAL, FG_INFO,
-		"Attempting to set starting position from airport code "
-		<< s );
-		
-	airports.load("apt_simple");
-	if ( airports.search( AptId, &a ) )
-	    {
-		current_options.set_airport_id( AptId.c_str() );
-		BusyCursor(0);
-		fgReInitSubsystems();
-		BusyCursor(1);
-	    } else {
-		AptId  += " not in database.";
-		mkDialog(AptId.c_str());
-	    }
+        // set initial position from airport id
+        fgAIRPORTS airports;
+        fgAIRPORT a;
+
+        FG_LOG( FG_GENERAL, FG_INFO,
+                "Attempting to set starting position from airport code "
+                << s );
+
+        airports.load("apt_simple");
+        if ( airports.search( AptId, &a ) )
+        {
+            current_options.set_airport_id( AptId.c_str() );
+            BusyCursor(0);
+            fgReInitSubsystems();
+            BusyCursor(1);
+        } else {
+            AptId  += " not in database.";
+            mkDialog(AptId.c_str());
+        }
     }
     if( PauseMode != t->getPause() )
-	t->togglePauseMode();
+        t->togglePauseMode();
 }
 
 void AptDialog_Reset(puObject *)
 {
-    AptDialogInput->setValue ( current_options.get_airport_id().c_str() );
+    //  strncpy( NewAirportId, current_options.get_airport_id().c_str(), 16 );
+    sprintf( NewAirportId, "%s", current_options.get_airport_id().c_str() );
+    AptDialogInput->setValue ( NewAirportId );
     AptDialogInput->setCursor( 0 ) ;
 }
 
 void NewAirport(puObject *cb)
 {
-    string AptLabel("Enter New Airport ID");
-    AptDialogMessage ->setLabel( AptLabel.c_str() );
-    AptDialogInput   ->setValue( current_options.get_airport_id().c_str() );
-    AptDialogInput   ->acceptInput();
-    AptDialogOkButton->makeReturnDefault(TRUE);
-    
+    //  strncpy( NewAirportId, current_options.get_airport_id().c_str(), 16 );
+    sprintf( NewAirportId, "%s", current_options.get_airport_id().c_str() );
+    AptDialogInput->setValue( NewAirportId );
+
     FG_PUSH_PUI_DIALOG( AptDialog );
 }
 
 static void NewAirportInit(void)
 {
-    cout << "NewAirportInit" << endl;
+    sprintf( NewAirportId, "%s", current_options.get_airport_id().c_str() );
+    int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
+                                      NewAirportLabel ) / 2;
 
-    string AptLabel("Enter New Airport ID");
-    //  int len = 350/2 - puGetStringWidth( puGetDefaultLabelFont(), AptLabel )/2;
-    int len = 150 - puGetStringWidth( puGetDefaultLabelFont(), AptLabel.c_str() )/2;
-    
     AptDialog = new puDialogBox (150, 50);
     {
-	AptDialogFrame   = new puFrame           (0,0,350, 150);
-	AptDialogMessage = new puText            (len, 110);
-		
-	AptDialogInput   = new puInput           ( 50, 70, 300, 100 );
-		
-	AptDialogOkButton     =  new puOneShot   (50, 10, 110, 50);
-	AptDialogOkButton     ->     setLegend   ("OK");
-	AptDialogOkButton     ->     setCallback (AptDialog_OK);
-		
-	AptDialogCancelButton =  new puOneShot   (140, 10, 210, 50);
-	AptDialogCancelButton ->     setLegend   ("Cancel");
-	AptDialogCancelButton ->     setCallback (AptDialog_Cancel);
-		
-	AptDialogResetButton  =  new puOneShot   (240, 10, 300, 50);
-	AptDialogResetButton  ->     setLegend   ("Reset");
-	AptDialogResetButton  ->     setCallback (AptDialog_Reset);
+        AptDialogFrame   = new puFrame           (0,0,350, 150);
+        AptDialogMessage = new puText            (len, 110);
+        AptDialogMessage ->    setLabel          (NewAirportLabel);
+
+        AptDialogInput   = new puInput           (50, 70, 300, 100);
+        AptDialogInput   ->    setValue          (NewAirportId);
+        AptDialogInput   ->    acceptInput();
+
+        AptDialogOkButton     =  new puOneShot   (50, 10, 110, 50);
+        AptDialogOkButton     ->     setLegend   (gui_msg_OK);
+        AptDialogOkButton     ->     setCallback (AptDialog_OK);
+        AptDialogOkButton     ->     makeReturnDefault(TRUE);
+
+        AptDialogCancelButton =  new puOneShot   (140, 10, 210, 50);
+        AptDialogCancelButton ->     setLegend   (gui_msg_CANCEL);
+        AptDialogCancelButton ->     setCallback (AptDialog_Cancel);
+
+        AptDialogResetButton  =  new puOneShot   (240, 10, 300, 50);
+        AptDialogResetButton  ->     setLegend   (gui_msg_RESET);
+        AptDialogResetButton  ->     setCallback (AptDialog_Reset);
     }
     FG_FINALIZE_PUI_DIALOG( AptDialog );
 }
@@ -490,59 +511,87 @@ static void NewAirportInit(void)
 The menu stuff 
 ---------------------------------------------------------------------*/
 char *fileSubmenu               [] = {
-    "Exit", "Close", "---------", "Print", "---------", "Save", "Reset", NULL };
+    "Exit", "Close", "---------", "Print", "---------", "Save", "Reset", NULL
+};
 puCallback fileSubmenuCb        [] = {
-    MayBeGoodBye, hideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL};	
-	
+    MayBeGoodBye, hideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL
+};
+
 char *editSubmenu               [] = {
-    "Edit text", NULL };
+    "Edit text", NULL
+};
 puCallback editSubmenuCb        [] = {
-    notCb, NULL };
+    notCb, NULL
+};
 
 char *viewSubmenu               [] = {
-    "Cockpit View > ", "View >","------------", "Toggle Panel...", NULL };
+    "Cockpit View > ", "View >","------------", "Toggle Panel...", NULL
+};
 puCallback viewSubmenuCb        [] = {
-    notCb, notCb, NULL, guiTogglePanel, NULL };
-	
+    notCb, notCb, NULL, guiTogglePanel, NULL
+};
+
 char *aircraftSubmenu           [] = {
-    "Autopilot", "Heading", "Altitude", "Navigation", "Communication", NULL};
+    "Autopilot", "Heading", "Altitude", "Navigation", "Communication", NULL
+};
 puCallback aircraftSubmenuCb    [] = {
-    fgAPAdjust, notCb, notCb, fgLatLonFormatToggle, notCb, NULL };
+    fgAPAdjust, NewHeading, NewAltitude, fgLatLonFormatToggle, notCb, NULL
+};
 
 char *environmentSubmenu        [] = {
-    "Airport", "Terrain", "Weather", NULL};
+    "Airport", "Terrain", "Weather", NULL
+};
 puCallback environmentSubmenuCb [] = {
-    NewAirport, notCb, notCb, NULL };
+    NewAirport, notCb, notCb, NULL
+};
 
 char *optionsSubmenu            [] = {
-    "Preferences", "Realism & Reliablity...", NULL};
+    "Preferences", "Realism & Reliablity...", NULL
+};
 puCallback optionsSubmenuCb     [] = {
-    notCb, notCb, NULL};
+    notCb, notCb, NULL
+};
 
 char *helpSubmenu               [] = {
-    "About...", "Help", NULL };
+    "About...", "Help", NULL
+};
 puCallback helpSubmenuCb        [] = {
-    notCb, helpCb, NULL };
+    notCb, helpCb, NULL
+};
 
 
 /* -------------------------------------------------------------------------
-   init the gui
-   _____________________________________________________________________*/
-
+init the gui
+_____________________________________________________________________*/
 
 
 void guiInit()
 {
     char *mesa_win_state;
+    string fntpath;
 
     // Initialize PUI
     puInit();
-    puSetDefaultStyle         ( PUSTYLE_DEFAULT );
+    puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED ); //PUSTYLE_DEFAULT
     puSetDefaultColourScheme  (0.8, 0.8, 0.8, 0.4);
 
+    // Initialize our GLOBAL GUI STRINGS
+    gui_msg_OK     = msg_OK;     // "OK"
+    gui_msg_NO     = msg_NO;     // "NO"
+    gui_msg_YES    = msg_YES;    // "YES"
+    gui_msg_CANCEL = msg_CANCEL; // "CANCEL"
+    gui_msg_RESET  = msg_RESET;  // "RESET"
+
+    // Next check home directory
+    char* envp = ::getenv( "FG_FONTS" );
+    if ( envp != NULL ) {
+        fntpath = envp;
+    } else {
+        fntpath = current_options.get_fg_root() + "/Fonts";
+    }
+
     // Install our fast fonts
-    string fntpath = current_options.get_fg_root() + "/Fonts/" + 
-	"typewriter" + ".txf";
+    fntpath += "/typewriter.txf";
     guiFntHandle = new fntTexFont ;
     guiFntHandle -> load ( fntpath.c_str() ) ;
     puFont GuiFont ( guiFntHandle, 15 ) ;
@@ -550,26 +599,26 @@ void guiInit()
     guiFnt = puGetDefaultLabelFont();
   
     if ( current_options.get_mouse_pointer() == 0 ) {
-	// no preference specified for mouse pointer, attempt to autodetect...
-	// Determine if we need to render the cursor, or if the windowing
-	// system will do it.  First test if we are rendering with glide.
-	if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-	    // Test for the MESA_GLX_FX env variable
-	    if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
-		// test if we are fullscreen mesa/glide
-		if ( (mesa_win_state[0] == 'f') ||
-		     (mesa_win_state[0] == 'F') ) {
-		    puShowCursor ();
-		}
-	    }
-	}
-	mouse_active = ~mouse_active;
+        // no preference specified for mouse pointer, attempt to autodetect...
+        // Determine if we need to render the cursor, or if the windowing
+        // system will do it.  First test if we are rendering with glide.
+        if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
+            // Test for the MESA_GLX_FX env variable
+            if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
+                // test if we are fullscreen mesa/glide
+                if ( (mesa_win_state[0] == 'f') ||
+                     (mesa_win_state[0] == 'F') ) {
+                    puShowCursor ();
+                }
+            }
+        }
+        mouse_active = ~mouse_active;
     } else if ( current_options.get_mouse_pointer() == 1 ) {
-	// don't show pointer
+        // don't show pointer
     } else if ( current_options.get_mouse_pointer() == 2 ) {
-	// force showing pointer
-	puShowCursor();
-	mouse_active = ~mouse_active;
+        // force showing pointer
+        puShowCursor();
+        mouse_active = ~mouse_active;
     }
 
     // Set up our Dialog Boxes
