@@ -57,6 +57,7 @@ extern "C" {
 #include "hud.hxx"
 
 
+static char units[5];
 
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
@@ -616,11 +617,16 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 			 TRUE );
     HUD_deque.push_front( p );
 
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	strcpy(units, " ft");
+    } else {
+	strcpy(units, " m");
+    }
     p = new instr_label( x_pos, 25, 40, 10,
 			 get_altitude,
 			 "%5.0f",
 			 "Altitude ",
-			 " m",
+			 units,
 			 1.0,
 			 HUDS_TOP,
 			 RIGHT_JUST,
@@ -829,6 +835,9 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.26  1998/11/03 12:33:11  curt
+// Display ft or m in mini-hud next to altitude.
+//
 // Revision 1.25  1998/10/17 01:33:57  curt
 // C++ ifying ...
 //
