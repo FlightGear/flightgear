@@ -265,24 +265,6 @@ void fgBuildRenderStates( void ) {
     menus->enable( GL_BLEND );
 }
 
-// fgFindNode -- a function that finds a named node in an ssg graph
-ssgEntity *fgFindNode( ssgEntity *node, const char *name ) {
-    if ( node->getName() != NULL && strcmp( name, node->getName() ) == 0 ) {
-        return node;
-    } else if ( node->isAKindOf(ssgTypeBranch()) ) {
-        ssgEntity *kid = ((ssgBranch*)node)->getKid(0);
-        while ( kid != NULL ) {
-            ssgEntity *n = fgFindNode(kid, name);
-            if ( n != NULL ) {
-                return n;
-            }
-            kid = ((ssgBranch*)node)->getNextKid();
-        }
-    }
-
-    return NULL;
-}
-
 // fgInitVisuals() -- Initialize various GL/view parameters
 void fgInitVisuals( void ) {
     fgLIGHT *l;
