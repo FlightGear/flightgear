@@ -206,7 +206,7 @@ public:
     inline void set_sim_time_sec (double t) { sim_time_sec = t; }
 
     inline const string &get_fg_root () const { return fg_root; }
-    inline void set_fg_root (const string &root) { fg_root = root; }
+    void set_fg_root (const string &root);
 
     inline const string &get_fg_scenery () const { return fg_scenery; }
     inline void set_fg_scenery (const string &scenery) {

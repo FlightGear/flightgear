@@ -22,6 +22,7 @@
 
 
 #include <simgear/misc/commands.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Environment/environment_mgr.hxx>
 
@@ -88,6 +89,20 @@ FGGlobals::~FGGlobals()
   delete props;
   delete commands;
   delete io;
+}
+
+
+// set the fg_root path
+void FGGlobals::set_fg_root (const string &root) {
+    fg_root = root;
+    
+    // append /data to root if it exists
+    SGPath tmp( fg_root );
+    tmp.append( "data" );
+    tmp.append( "version" );
+    if ( ulFileExists( tmp.c_str() ) ) {
+        fg_root += "/data";
+        }
 }
 
 
