@@ -168,7 +168,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   while (!aircraftfile.fail()) {
   	holding_string.erase();
     aircraftfile >> holding_string;
-#if defined(__BORLANDC__) || defined(FG_HAVE_NATIVE_SGI_COMPILERS)
+#if defined(__BORLANDC__) || defined(FG_HAVE_NATIVE_SGI_COMPILERS) || defined(_MSC_VER)
     if (holding_string.compare(0, 2, "//") != 0) {
 #else
     if (holding_string.compare("//",0,2) != 0) {
