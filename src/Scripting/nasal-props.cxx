@@ -213,7 +213,7 @@ static naRef f_globals(naContext c, naRef args)
     return propNodeGhostCreate(c, globals->get_props());
 }
 
-struct {
+static struct {
     naCFunction func;
     char* name;
 } propfuncs[] = {

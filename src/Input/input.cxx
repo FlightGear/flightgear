@@ -551,7 +551,7 @@ FGInput::_init_joystick ()
 // cursors defined as textures referenced in the property tree.  This
 // list could then be eliminated. -Andy
 //
-struct {
+static struct {
   const char * name;
   int cursor;
 } mouse_cursor_map[] = {
