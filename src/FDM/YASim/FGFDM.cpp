@@ -130,9 +130,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	_airplane.setWing(parseWing(a, name));
     } else if(eq(name, "hstab")) {
 	_airplane.setTail(parseWing(a, name));
-    } else if(eq(name, "vstab")) {
-	_airplane.addVStab(parseWing(a, name));
-    } else if(eq(name, "mstab")) {
+    } else if(eq(name, "vstab") || eq(name, "mstab")) {
 	_airplane.addVStab(parseWing(a, name));
     } else if(eq(name, "propeller")) {
 	parsePropeller(a);
@@ -380,46 +378,31 @@ void FGFDM::setOutputProperties()
 
     for(i=0; i<_airplane.getNumRotors(); i++) {
         Rotor*r=(Rotor*)_airplane.getRotor(i);
-        int j=0;
+        int j = 0;
         float f;
         char b[256];
-        while(j=r->getValueforFGSet(j,b,&f))
-        {
-              if (b[0])
-              {
-                 fgSetFloat(b,f);
-              }
-        }
+        while(j = r->getValueforFGSet(j, b, &f))
+            if(b[0]) fgSetFloat(b,f);
         
-        for(j=0; j<r->numRotorparts(); j++) {
+        for(j=0; j < r->numRotorparts(); j++) {
             Rotorpart* s = (Rotorpart*)r->getRotorpart(j);
             char *b;
             int k;
-            for (k=0;k<2;k++)
-            {
-              b=s->getAlphaoutput(k);
-              if (b[0])
-              {
-                 fgSetFloat(b,s->getAlpha(k));
-                 //printf("setting [%s]\n",b);
-              }
+            for(k=0; k<2; k++) {
+                b=s->getAlphaoutput(k);
+                if(b[0]) fgSetFloat(b, s->getAlpha(k));
             }
         }
-        for(j=0; j<r->numRotorblades(); j++) {
+        for(j=0; j < r->numRotorblades(); j++) {
             Rotorblade* s = (Rotorblade*)r->getRotorblade(j);
             char *b;
             int k;
-            for (k=0;k<2;k++)
-            {
-              b=s->getAlphaoutput(k);
-              if (b[0])
-              {
-                 fgSetFloat(b,s->getAlpha(k));
-              }
+            for (k=0; k<2; k++) {
+                b = s->getAlphaoutput(k);
+                if(b[0]) fgSetFloat(b, s->getAlpha(k));
             }
         }
-     }
-
+    }
 
     for(i=0; i<_thrusters.size(); i++) {
 	EngRec* er = (EngRec*)_thrusters.get(i);
@@ -498,6 +481,7 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type)
     _currObj = w;
     return w;
 }
+
 Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
 {
     Rotor* w = new Rotor();
@@ -521,8 +505,6 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     forward[1] = attrf(a, "fy");
     forward[2] = attrf(a, "fz");
     w->setForward(forward);
-
-
 
     w->setMaxCyclicail(attrf(a, "maxcyclicail", 7.6));
     w->setMaxCyclicele(attrf(a, "maxcyclicele", 4.94));
@@ -553,7 +535,7 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     void setAlphamax(float f);
     void setAlpha0factor(float f);
 
-    if(attristrue(a,"ccw"))
+    if(attrb(a,"ccw"))
        w->setCcw(1); 
     
     if(a->hasAttribute("name"))
@@ -572,14 +554,10 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     w->setForceAtPitchA(attrf(a, "forceatpitch_a", 3000));
     w->setPowerAtPitch0(attrf(a, "poweratpitch_0", 300));
     w->setPowerAtPitchB(attrf(a, "poweratpitch_b", 3000));
-    if(attristrue(a,"notorque"))
+    if(attrb(a,"notorque"))
        w->setNotorque(1); 
-    if(attristrue(a,"simblades"))
+    if(attrb(a,"simblades"))
        w->setSimBlades(1); 
-
-
-
-
 
     _currObj = w;
     return w;
@@ -765,11 +743,29 @@ float FGFDM::attrf(XMLAttributes* atts, char* attr, float def)
     else         return (float)atof(val);    
 }
 
-bool FGFDM::attristrue(XMLAttributes* atts, char* attr)
+// ACK: the dreaded ambiguous string boolean.  Remind me to shoot Maik
+// when I have a chance. :).  Unless you have a parser that can check
+// symbol constants (we don't), this kind of coding is just a Bad
+// Idea.  This implementation, for example, silently returns a boolean
+// falsehood for values of "1", "yes", "True", and "TRUE".  Which is
+// especially annoying preexisting boolean attributes in the same
+// parser want to see "1" and will choke on a "true"...
+//
+// Unfortunately, this usage creeped into existing configuration files
+// while I wasn't active, and it's going to be hard to remove.  Issue
+// a warning to nag people into changing their ways for now...
+bool FGFDM::attrb(XMLAttributes* atts, char* attr)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return false;
-    else         return eq(val,"true");    
+
+    if(eq(val,"true")) {
+        SG_LOG(SG_FLIGHT, SG_ALERT, "Warning: " <<
+               "deprecated 'true' boolean in YASim configuration file.  " <<
+               "Use numeric booleans (attribute=\"1\") instead");
+        return true;
+    }
+    return attri(atts, attr, 0) ? true : false;
 }
 
 }; // namespace yasim

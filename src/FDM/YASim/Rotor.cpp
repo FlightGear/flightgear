@@ -18,6 +18,8 @@ namespace yasim {
 
 const float pi=3.14159;
 
+static inline float sqr(float a) { return a * a; }
+
 Rotor::Rotor()
 {
     _alpha0=-.05;
@@ -218,8 +220,8 @@ int Rotor::getValueforFGSet(int j,char *text,float *f)
        rk=l-p;
        rl=1-rk;
        /*
-       rl=Math::sqr(Math::sin(rl*pi/2));
-       rk=Math::sqr(Math::sin(rk*pi/2));
+       rl=sqr(Math::sin(rl*pi/2));
+       rk=sqr(Math::sin(rk*pi/2));
        */
        if(w==2) {k+=2;l+=2;}
        else
@@ -565,7 +567,7 @@ void Rotor::compile()
 
     float phi=Math::atan2(2*omega*_delta,omega0*omega0-omega*omega);
     //float relamp=omega*omega/(2*_delta*Math::sqrt(omega0*omega0-_delta*_delta));
-    float relamp=omega*omega/(2*_delta*Math::sqrt(Math::sqr(omega0*omega0-omega*omega)+4*_delta*_delta*omega*omega));
+    float relamp=omega*omega/(2*_delta*Math::sqrt(sqr(omega0*omega0-omega*omega)+4*_delta*_delta*omega*omega));
     if (!_no_torque)
     {
        torque0=_power_at_pitch_0/4*1000/omega;
@@ -664,7 +666,7 @@ void Rotor::compile()
     _delta*=maxpitchforce/(_max_pitch*omega*lentocenter*2*_weight_per_blade*.453);
     float phi=Math::atan2(2*omega*_delta,omega0*omega0-omega*omega);
     float phi2=Math::abs(omega0-omega)<.000000001?pi/2:Math::atan(2*omega*_delta/(omega0*omega0-omega*omega));
-    float relamp=omega*omega/(2*_delta*Math::sqrt(Math::sqr(omega0*omega0-omega*omega)+4*_delta*_delta*omega*omega));
+    float relamp=omega*omega/(2*_delta*Math::sqrt(sqr(omega0*omega0-omega*omega)+4*_delta*_delta*omega*omega));
     if (!_no_torque)
     {
        torque0=_power_at_pitch_0/_number_of_blades*1000/omega;

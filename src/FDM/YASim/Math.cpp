@@ -19,10 +19,6 @@ float Math::sqrt(float f)
 {
     return (float)::sqrt(f);
 }
-float Math::sqr(float f)
-{
-    return f*f;
-}
 
 float Math::ceil(float f)
 {
@@ -142,15 +138,9 @@ float Math::mag3(float* v)
     return sqrt(dot3(v, v));
 }
 
-
 void Math::unit3(float* v, float* out)
 {
-    float mag=mag3(v);
-    float imag;
-    if (mag!=0)
-      imag= 1/mag;
-    else
-      imag=1;
+    float imag = 1/mag3(v);
     mul3(imag, v, out);
 }
 

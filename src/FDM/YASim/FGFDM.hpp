@@ -48,7 +48,7 @@ private:
     int attri(XMLAttributes* atts, char* attr, int def); 
     float attrf(XMLAttributes* atts, char* attr);
     float attrf(XMLAttributes* atts, char* attr, float def); 
-    bool attristrue(XMLAttributes* atts, char* attr);
+    bool attrb(XMLAttributes* atts, char* attr);
 
     // The core Airplane object we manage.
     Airplane _airplane;

@@ -93,6 +93,7 @@ private:
     void setupState(float aoa, float speed, State* s);
     void solveGear();
     void solve();
+    void solveHelicopter();
     float compileWing(Wing* w);
     float compileRotor(Rotor* w);
     float compileFuselage(Fuselage* f);

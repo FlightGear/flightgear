@@ -12,7 +12,6 @@ public:
     // Simple wrappers around library routines
     static float abs(float f);
     static float sqrt(float f);
-    static float sqr(float f);
     static float ceil(float f);
     static float sin(float f);
     static float cos(float f);

@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "Atmosphere.hpp"
 #include "Thruster.hpp"
 #include "Math.hpp"
@@ -17,6 +15,7 @@
 #include "Model.hpp"
 namespace yasim {
 
+#if 0
 void printState(State* s)
 {
     State tmp = *s;
@@ -39,6 +38,7 @@ void printState(State* s)
     printf("rot: %6.2f %6.2f %6.2f\n", tmp.rot[0], tmp.rot[1], tmp.rot[2]);
     printf("rac: %6.2f %6.2f %6.2f\n", tmp.racc[0], tmp.racc[1], tmp.racc[2]);
 }
+#endif
 
 Model::Model()
 {
@@ -72,7 +72,7 @@ void Model::getThrust(float* out)
     }
 }
 
-void Model::initIteration(float dt)
+void Model::initIteration()
 {
     // Precompute torque and angular momentum for the thrusters
     int i;
@@ -96,10 +96,18 @@ void Model::initIteration(float dt)
 	t->getGyro(v);
 	Math::add3(v, _gyro, _gyro);
     }
+}
 
-
-    
-
+// FIXME: This method looks to me like it's doing *integration*, not
+// initialization.  Integration code should ideally go into
+// calcForces.  Only very "unstiff" problems can be solved well like
+// this (see the engine code for an example); I don't know if rotor
+// dynamics qualify or not.
+// -Andy
+void Model::initRotorIteration()
+{
+    int i;
+    float dt = _integrator.getInterval();
     float lrot[3];
     Math::vmul33(_s->orient, _s->rot, lrot);
     Math::mul3(dt,lrot,lrot);
@@ -115,12 +123,12 @@ void Model::initIteration(float dt)
         Rotorblade* rp = (Rotorblade*)_rotorblades.get(i);
         rp->inititeration(dt,lrot);
     }
-    
 }
 
-void Model::iterate(float dt)
+void Model::iterate()
 {
-    initIteration(dt);
+    initIteration();
+    initRotorIteration();
     _body.recalc(); // FIXME: amortize this, somehow
     _integrator.calcNewInterval();
 }
@@ -144,12 +152,6 @@ State* Model::getState()
 {
     return _s;
 }
-
-void Model::resetState()
-{
-    //_s->resetState();
-}
-
 
 void Model::setState(State* s)
 {
@@ -265,7 +267,6 @@ void Model::calcForces(State* s)
     // velocity), and are therefore constant across the four calls to
     // calcForces.  They get computed before we begin the integration
     // step.
-    //printf("f");
     _body.setGyro(_gyro);
     _body.addTorque(_torque);
     int i;
@@ -299,8 +300,6 @@ void Model::calcForces(State* s)
 	float force[3], torque[3];
 	sf->calcForce(vs, _rho, force, torque);
 	Math::add3(faero, force, faero);
-
-        
 
 	_body.addForce(pos, force);
 	_body.addTorque(torque);
@@ -339,13 +338,6 @@ void Model::calcForces(State* s)
 	_body.addForce(pos, force);
 	_body.addTorque(torque);
     }
-    /*
-    {
-      float cg[3];
-      _body.getCG(cg);
-      //printf("cg: %5.3lf %5.3lf %5.3lf ",cg[0],cg[1],cg[2]);
-    }
-    */
 
     // Get a ground plane in local coordinates.  The first three
     // elements are the normal vector, the final one is the distance
@@ -384,8 +376,6 @@ void Model::calcForces(State* s)
 void Model::newState(State* s)
 {
     _s = s;
-
-    //printState(s);
 
     // Some simple collision detection
     float min = 1e8;

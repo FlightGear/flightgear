@@ -118,7 +118,6 @@ void YASim::bind()
 	sprintf(buf, "/engines/engine[%d]/mp-osi", i);        fgUntie(buf);
 	sprintf(buf, "/engines/engine[%d]/egt-degf", i);      fgUntie(buf);
     }
-
 }
 
 void YASim::init()
@@ -128,6 +127,7 @@ void YASim::init()
 
     // Superclass hook
     common_init();
+
     m->setCrashed(false);
 
     // Figure out the initial speed type
