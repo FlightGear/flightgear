@@ -580,7 +580,6 @@ void fgHiResDump()
     FILE *f;
     string message;
     bool show_pu_cursor = false;
-    bool show_menu = false;
     char *filename = new char [24];
     static int count = 1;
 
