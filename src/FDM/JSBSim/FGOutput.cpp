@@ -59,9 +59,9 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGOutput";
   sFirstPass = dFirstPass = true;
   socket = 0;
-//#ifdef FG_WITH_JSBSIM_SOCKET
+#ifdef FG_WITH_JSBSIM_SOCKET
   socket = new FGfdmSocket("localhost",1138);
-//#endif
+#endif
 }
 
 

@@ -66,7 +66,7 @@ public:
   ~FGAtmosphere(void);
   bool Run(void);
 
-  inline float Getrho(void) {return rho;}
+  inline float Getrho(void) {return density;}
   float CalcRho(float altitude);
 
   inline float GetTemperature(void){return temperature;}
@@ -85,11 +85,11 @@ private:
   float rho;
 
   float h;
-  float temperature;
-  float pressure;
-  float density;
-  float soundspeed;
-  void Calculate(void);
+  float temperature,T;
+  float pressure,p;
+  float density,rhos;
+  float soundspeed,a;
+  void Calculate(float altitude);
 
 
 };
