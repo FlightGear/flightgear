@@ -15,7 +15,8 @@ GLUTmain.o: GLUTmain.c GLUTkey.h fg_init.h views.h ../types.h \
  ../Joystick/joystick.h ../Math/fg_geodesy.h ../Math/polar.h \
  ../Math/../types.h ../Scenery/mesh.h ../Scenery/scenery.h \
  ../Scenery/../types.h ../Time/fg_time.h ../Time/../types.h \
- ../Time/fg_timer.h ../Time/sunpos.h ../Weather/weather.h
+ ../Time/../Flight/flight.h ../Time/fg_timer.h ../Time/sunpos.h \
+ ../Weather/weather.h
 fg_init.o: fg_init.c fg_init.h views.h ../types.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../Math/mat3.h ../constants.h \
@@ -26,7 +27,8 @@ fg_init.o: fg_init.c fg_init.h views.h ../types.h ../Flight/flight.h \
  ../Cockpit/../Flight/flight.h ../Cockpit/../Controls/controls.h \
  ../Joystick/joystick.h ../Math/fg_random.h ../Scenery/mesh.h \
  ../Scenery/scenery.h ../Scenery/../types.h ../Scenery/stars.h \
- ../Time/sunpos.h ../Time/../types.h ../Weather/weather.h
+ ../Time/fg_time.h ../Time/../types.h ../Time/../Flight/flight.h \
+ ../Time/sunpos.h ../Weather/weather.h
 views.o: views.c views.h ../types.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../Math/mat3.h ../constants.h \

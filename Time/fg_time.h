@@ -48,9 +48,10 @@ struct fgTIME {
     double jd;           /* Julian date */
     double mjd;          /* modified Julian date */
 
+    double gst;          /* side real time at prime meridian */
     double lst;          /* local side real time */
 
-    double lst_diff;     /* the difference between the precise
+    double gst_diff;     /* the difference between the precise
 			    sidereal time algorithm result and the
 			    course result.  course + diff has good
 			    accuracy for the short term */
@@ -77,9 +78,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.5  1997/09/16 15:50:31  curt
-/* Working on star alignment and time issues.
+/* Revision 1.6  1997/09/20 03:34:35  curt
+/* Still trying to get those durned stars aligned properly.
 /*
+ * Revision 1.5  1997/09/16 15:50:31  curt
+ * Working on star alignment and time issues.
+ *
  * Revision 1.4  1997/09/13 02:00:08  curt
  * Mostly working on stars and generating sidereal time for accurate star
  * placement.

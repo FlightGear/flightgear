@@ -16,4 +16,5 @@ stars.o: stars.c stars.h ../constants.h ../general.h ../GLUT/views.h \
  ../GLUT/../Flight/LaRCsim/../flight.h ../GLUT/../Math/mat3.h \
  ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
  ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h
+ ../Aircraft/../Controls/../limits.h ../Time/fg_time.h \
+ ../Time/../types.h ../Time/../Flight/flight.h

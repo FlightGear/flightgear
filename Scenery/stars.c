@@ -233,12 +233,12 @@ void fgStarsRender() {
 
 	glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
 
-	angle = FG_2PI * t->lst / 24.0;
-	/* warp += 1.0 * DEG_TO_RAD; */
-	warp = 15.0 * DEG_TO_RAD;
-	glRotatef( -(angle+warp) * RAD_TO_DEG, 0.0, 0.0, 1.0 );
-	printf("Rotating stars by %.2f + %.2f\n", -angle * RAD_TO_DEG,
-	       -warp * RAD_TO_DEG);
+	angle = t->gst * 15.0;  /* 15 degrees per hour rotation */
+	/* warp += 1.0; */
+	/* warp = 15.0; */
+	warp = 0.0;
+	glRotatef( -(angle+warp), 0.0, 0.0, 1.0 );
+	printf("Rotating stars by %.2f degrees + %.2f degrees\n",-angle,-warp);
 
 	glCallList(stars[i]);
 
@@ -252,9 +252,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.9  1997/09/18 16:20:09  curt
-/* At dusk/dawn add/remove stars in stages.
+/* Revision 1.10  1997/09/20 03:34:32  curt
+/* Still trying to get those durned stars aligned properly.
 /*
+ * Revision 1.9  1997/09/18 16:20:09  curt
+ * At dusk/dawn add/remove stars in stages.
+ *
  * Revision 1.8  1997/09/16 22:14:52  curt
  * Tweaked time of day lighting equations.  Don't draw stars during the day.
  *

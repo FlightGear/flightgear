@@ -45,7 +45,7 @@ struct fgTIME cur_time_params;
 /* Initialize the time dependent variables */
 
 void fgTimeInit(struct fgTIME *t) {
-    t->lst_diff = -9999.0;
+    t->gst_diff = -9999.0;
 }
 
 
@@ -112,6 +112,8 @@ double utc_gst (double mjd) {
     x /= 3600.0;
     gst = (1.0/SIDRATE)*hr + x;
 
+    printf("gst => %.4f\n", gst);
+
     return(gst);
 }
 
@@ -136,7 +138,7 @@ double sidereal_precise (double mjd, double lng) {
     gst = utc_gst (mjd);
     lst = gst - RADHR (lng);
     lst -= 24.0*floor(lst/24.0);
-    printf ("%7.4f\n", lst);
+    /* printf ("%7.4f\n", lst); */
 
     /* that's all */
     return (lst);
@@ -199,7 +201,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 /* Update the time dependent variables */
 
 void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
-    double lst_precise, lst_course;
+    double gst_precise, gst_course;
     static long int warp = 0;
 
     /* get current Unix calendar time (in seconds) */
@@ -230,31 +232,39 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
     printf("Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG);
 
     /* Calculate local side real time */
-    if ( t->lst_diff < -100.0 ) {
+    if ( t->gst_diff < -100.0 ) {
 	/* first time through do the expensive calculation & cheap
            calculation to get the difference. */
-	printf("First time, doing precise lst\n");
-	t->lst = lst_precise = 
-	    sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG));
-	lst_course = 
-	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG));
-	t->lst_diff = lst_precise - lst_course;
-    } else {
-	/* course + difference should drift off very slowly */
+	printf("First time, doing precise gst\n");
+	t->gst = gst_precise = sidereal_precise(t->mjd, 0.00);
+	gst_course = sidereal_course(t->gmt, t->cur_time, 0.00);
+	t->gst_diff = gst_precise - gst_course;
+
 	t->lst = 
 	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
-	    + t->lst_diff;
+	    + t->gst_diff;
+    } else {
+	/* course + difference should drift off very slowly */
+	t->gst = 
+	    sidereal_course(t->gmt, t->cur_time, 0.00) + t->gst_diff;
+	t->lst = 
+	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
+	    + t->gst_diff;
     }
-    printf("Current Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", t->lst,
+    printf("Current lon=0.00 Sidereal Time = %.3f\n", t->gst);
+    printf("Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", t->lst,
 	   sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
-	   t->lst_diff);
+	   t->gst_diff);
 }
 
 
 /* $Log$
-/* Revision 1.5  1997/09/16 22:14:52  curt
-/* Tweaked time of day lighting equations.  Don't draw stars during the day.
+/* Revision 1.6  1997/09/20 03:34:34  curt
+/* Still trying to get those durned stars aligned properly.
 /*
+ * Revision 1.5  1997/09/16 22:14:52  curt
+ * Tweaked time of day lighting equations.  Don't draw stars during the day.
+ *
  * Revision 1.4  1997/09/16 15:50:31  curt
  * Working on star alignment and time issues.
  *
