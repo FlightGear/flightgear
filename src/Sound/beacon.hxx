@@ -33,9 +33,6 @@
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
 
-#include <plib/sl.h>
-#include <plib/sm.h>
-
 #include "morse.hxx"
 
 
