@@ -72,8 +72,8 @@ double FGElectricalSupplier::get_output() {
         return amps;
     } else if ( model == FG_ALTERNATOR ) {
         // scale alternator output for rpms < 600.  For rpms >= 600
-        // give full output.  This is just a WAG, but I'm keeping
-        // things simple to start.
+        // give full output.  This is just a WAG, and probably not how
+        // it really works but I'm keeping things "simple" to start.
         double rpm = _rpm_node->getDoubleValue();
         double factor = rpm / 600.0;
         if ( factor > 1.0 ) {
@@ -85,7 +85,7 @@ double FGElectricalSupplier::get_output() {
         // cout << "external amps = " << 0.0 << endl;
         return 0.0;
     } else {
-        cout << "unknown supplier type" << endl;
+        SG_LOG( SG_ALL, SG_ALERT, "unknown supplier type" );
     }
 
     return 0.0;
@@ -334,7 +334,7 @@ void FGElectricalSystem::propogate( FGElectricalComponent *node, double val,
         }
         // cout << s << "  val = " << current << endl;
     } else {
-        cout << "unkown node type" << endl;
+        SG_LOG( SG_ALL, SG_ALERT, "unkown node type" );
     }
 
     if ( current > node->get_value() ) {
