@@ -63,8 +63,8 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/sky/SkySceneLoader.hpp>
-#include <simgear/sky/SkyUtil.hpp>
+#include <simgear/sky/clouds3d/SkySceneLoader.hpp>
+#include <simgear/sky/clouds3d/SkyUtil.hpp>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 

@@ -80,8 +80,8 @@ SG_USING_STD(endl);
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/sky/SkySceneLoader.hpp>
-#include <simgear/sky/SkyUtil.hpp>
+#include <simgear/sky/clouds3d/SkySceneLoader.hpp>
+#include <simgear/sky/clouds3d/SkyUtil.hpp>
 #include <simgear/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
 
