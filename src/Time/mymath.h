@@ -43,7 +43,7 @@
 #include STL_FSTREAM
 #include STL_IOMANIP
 
-// FG_USING_NAMESPACE(std);
+FG_USING_NAMESPACE(std);
 
 #include <fg_constants.h>
 extern const  double PiOver180;
