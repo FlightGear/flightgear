@@ -154,11 +154,11 @@ bool FGGarmin::gen_message() {
 
 // parse Garmin message
 bool FGGarmin::parse_message() {
-    FG_LOG( FG_IO, FG_DEBUG, "parse garmin message" );
+    FG_LOG( FG_IO, FG_INFO, "parse garmin message" );
 
     string msg = buf;
     msg = msg.substr( 0, length );
-    FG_LOG( FG_IO, FG_DEBUG, "entire message = " << msg );
+    FG_LOG( FG_IO, FG_INFO, "entire message = " << msg );
 
     string::size_type begin_line, end_line, begin, end;
     begin_line = begin = 0;
@@ -168,12 +168,12 @@ bool FGGarmin::parse_message() {
     while ( end_line != string::npos ) {
 	string line = msg.substr(begin_line, end_line - begin_line);
 	begin_line = end_line + 1;
-	FG_LOG( FG_IO, FG_DEBUG, "  input line = " << line );
+	FG_LOG( FG_IO, FG_INFO, "  input line = " << line );
 
 	// leading character
 	string start = msg.substr(begin, 1);
 	++begin;
-	FG_LOG( FG_IO, FG_DEBUG, "  start = " << start );
+	FG_LOG( FG_IO, FG_INFO, "  start = " << start );
 
 	// sentence
 	end = msg.find(",", begin);
@@ -183,7 +183,7 @@ bool FGGarmin::parse_message() {
     
 	string sentence = msg.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_DEBUG, "  sentence = " << sentence );
+	FG_LOG( FG_IO, FG_INFO, "  sentence = " << sentence );
 
 	double lon_deg, lon_min, lat_deg, lat_min;
 	double lon, lat, speed, heading, altitude;
@@ -197,7 +197,7 @@ bool FGGarmin::parse_message() {
     
 	    string utc = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_DEBUG, "  utc = " << utc );
+	    FG_LOG( FG_IO, FG_INFO, "  utc = " << utc );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -207,7 +207,7 @@ bool FGGarmin::parse_message() {
     
 	    string junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_DEBUG, "  junk = " << junk );
+	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
 
 	    // lat val
 	    end = msg.find(",", begin);
@@ -236,7 +236,7 @@ bool FGGarmin::parse_message() {
 	    }
 
 	    cur_fdm_state->set_Latitude( lat * DEG_TO_RAD );
-	    FG_LOG( FG_IO, FG_DEBUG, "  lat = " << lat );
+	    FG_LOG( FG_IO, FG_INFO, "  lat = " << lat );
 
 	    // lon val
 	    end = msg.find(",", begin);
@@ -265,7 +265,7 @@ bool FGGarmin::parse_message() {
 	    }
 
 	    cur_fdm_state->set_Longitude( lon * DEG_TO_RAD );
-	    FG_LOG( FG_IO, FG_DEBUG, "  lon = " << lon );
+	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
 
 	    double sl_radius, lat_geoc;
 	    fgGeodToGeoc( cur_fdm_state->get_Latitude(), 
@@ -286,7 +286,7 @@ bool FGGarmin::parse_message() {
 	    speed = atof( speed_str.c_str() );
 	    cur_fdm_state->set_V_equiv_kts( speed );
 	    cur_fdm_state->set_V_ground_speed( speed );
-	    FG_LOG( FG_IO, FG_DEBUG, "  speed = " << speed );
+	    FG_LOG( FG_IO, FG_INFO, "  speed = " << speed );
 
 	    // heading
 	    end = msg.find(",", begin);
@@ -300,7 +300,7 @@ bool FGGarmin::parse_message() {
 	    cur_fdm_state->set_Euler_Angles( cur_fdm_state->get_Phi(), 
 					     cur_fdm_state->get_Theta(), 
 					     heading * DEG_TO_RAD );
-	    FG_LOG( FG_IO, FG_DEBUG, "  heading = " << heading );
+	    FG_LOG( FG_IO, FG_INFO, "  heading = " << heading );
 	} else if ( sentence == "PGRMZ" ) {
 	    // altitude
 	    end = msg.find(",", begin);
@@ -327,7 +327,7 @@ bool FGGarmin::parse_message() {
 
 	    cur_fdm_state->set_Altitude( altitude );
     
- 	    FG_LOG( FG_IO, FG_DEBUG, " altitude  = " << altitude );
+ 	    FG_LOG( FG_IO, FG_INFO, " altitude  = " << altitude );
 
 	}
 
@@ -373,14 +373,24 @@ bool FGGarmin::process() {
 	    return false;
 	}
     } else if ( get_direction() == in ) {
-	if ( io->readline( buf, FG_MAX_MSG_SIZE ) ) {
-	    parse_message();
+	if ( length = io->readline( buf, FG_MAX_MSG_SIZE ) ) {
+	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
+	    if ( parse_message() ) {
+		FG_LOG( FG_IO, FG_ALERT, "Success parsing data." );
+	    } else {
+		FG_LOG( FG_IO, FG_ALERT, "Error parsing data." );
+	    }
 	} else {
 	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
 	    return false;
 	}
-	if ( io->readline( buf, FG_MAX_MSG_SIZE ) ) {
-	    parse_message();
+	if ( length = io->readline( buf, FG_MAX_MSG_SIZE ) ) {
+	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
+	    if ( parse_message() ) {
+		FG_LOG( FG_IO, FG_ALERT, "Success parsing data." );
+	    } else {
+		FG_LOG( FG_IO, FG_ALERT, "Error parsing data." );
+	    }
 	} else {
 	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
 	    return false;

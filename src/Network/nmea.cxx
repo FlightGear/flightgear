@@ -476,13 +476,13 @@ bool FGNMEA::process() {
 	    return false;
 	}
     } else if ( get_direction() == in ) {
-	if ( io->readline( buf, FG_MAX_MSG_SIZE ) ) {
+	if ( length = io->readline( buf, FG_MAX_MSG_SIZE ) ) {
 	    parse_message();
 	} else {
 	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
 	    return false;
 	}
-	if ( io->readline( buf, FG_MAX_MSG_SIZE ) ) {
+	if ( length = io->readline( buf, FG_MAX_MSG_SIZE ) ) {
 	    parse_message();
 	} else {
 	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );

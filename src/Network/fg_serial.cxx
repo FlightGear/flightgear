@@ -116,7 +116,7 @@ int FGSerial::readline( char *buf, int length ) {
 
     // shift save buffer
     for ( i = result; i < save_len; ++i ) {
-	save_buf[ i - result ] = save_buf[result];
+	save_buf[ i - result ] = save_buf[i];
     }
     save_len -= result;
 
