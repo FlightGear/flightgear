@@ -31,6 +31,12 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
 #include <Aircraft/aircraft.hxx>
+#ifdef FG_WEATHERCM
+# include <WeatherCM/FGLocalWeatherDatabase.h>
+#else
+# include <Environment/environment_mgr.hxx>
+# include <Environment/environment.hxx>
+#endif
 
 SG_USING_NAMESPACE(std);
 
@@ -92,7 +98,7 @@ double FGSteam::get_TC_std () { _CatchUp(); return the_TC_std; }
 ////////////////////////////////////////////////////////////////////////
 
 
-int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
+double FGSteam::_UpdateTimePending = 1000000;  /* Forces filters to reset */
 
 
 				// FIXME: no need to use static
@@ -100,7 +106,6 @@ int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 
 void FGSteam::update (double dt)
 {
-    int timesteps = int(dt * fgGetInt("/sim/model-hz")); // FIXME
     if (!isTied) {
         isTied = true;
         fgTie("/steam/airspeed-kt", FGSteam::get_ASI_kias);
@@ -128,7 +133,7 @@ void FGSteam::update (double dt)
         fgTie("/steam/mag-compass-deg", FGSteam::get_MH_deg);
 	fgSetArchivable("/steam/mag-compass-deg");
     }
-    _UpdatesPending += timesteps;
+    _UpdateTimePending += dt;
 }
 
 
@@ -200,9 +205,15 @@ double altFtToPressInHg(double alt_ft)
 
 
 void FGSteam::_CatchUp()
-{ if ( _UpdatesPending != 0 )
-  {	double dt = _UpdatesPending * 1.0 / 
-	    fgGetInt("/sim/model-hz"); // FIXME: inefficient
+{
+  static const SGPropertyNode *heading_deg_node = fgGetNode("/orientation/heading-deg", true);
+  static const SGPropertyNode *mag_var_deg_node = fgGetNode("/environment/magnetic-variation-deg", true);
+  static const SGPropertyNode *mag_dip_deg_node = fgGetNode("/environment/magnetic-dip-deg", true);
+  static const SGPropertyNode *enginge_0_rpm_node = fgGetNode("/engines/engine[0]/rpm", true);
+
+  if ( _UpdateTimePending != 0 )
+  {
+        double dt = _UpdateTimePending;
         double AccN, AccE, AccU;
 	/* int i, j; */
 	double d, the_ENGINE_rpm;
@@ -252,20 +263,20 @@ void FGSteam::_CatchUp()
 	AccN = current_aircraft.fdm_state->get_V_dot_north();
 	AccE = current_aircraft.fdm_state->get_V_dot_east();
 	AccU = current_aircraft.fdm_state->get_V_dot_down()
-	     - 9.81 / 0.3;
+	     - 9.81 * SG_METER_TO_FEET;
 	if ( fabs(the_TC_rad) > 0.2 /* 2.0 */ )
 	{       /* Massive sideslip jams it; it stops turning */
 	        the_MH_degps = 0.0;
-	        the_MH_err   = fgGetDouble("/orientation/heading-deg") - the_MH_deg;
+	        the_MH_err   = heading_deg_node->getDoubleValue() - the_MH_deg;
 	} else
 	{       double MagDip, MagVar, CosDip;
 	        double FrcN, FrcE, FrcU, AccTot;
 	        double EdgN, EdgE, EdgU;
 	        double TrqN, TrqE, TrqU, Torque;
 	        /* Find a force vector towards exact magnetic north */
-	        MagVar = fgGetDouble("/environment/magnetic-variation-deg") 
+	        MagVar = mag_var_deg_node->getDoubleValue() 
                     / SGD_RADIANS_TO_DEGREES;
-	        MagDip = fgGetDouble("/environment/magnetic-dip-deg")
+	        MagDip = mag_var_deg_node->getDoubleValue()
                     / SGD_RADIANS_TO_DEGREES;
 	        CosDip = cos ( MagDip );
 	        FrcN = CosDip * cos ( MagVar );
@@ -296,7 +307,7 @@ void FGSteam::_CatchUp()
 	        }
 	        if ( the_MH_err >  180.0 ) the_MH_err -= 360.0; else
 	        if ( the_MH_err < -180.0 ) the_MH_err += 360.0;
-	        the_MH_deg  = fgGetDouble("/orientation/heading-deg") - the_MH_err;
+	        the_MH_deg  = heading_deg_node->getDoubleValue() - the_MH_err;
 	}
 
 	/**************************
@@ -304,16 +315,24 @@ void FGSteam::_CatchUp()
 	scaling capability for the vacuum pump later on.
 	When we have a real engine model, we can ask it.
 	*/
-	the_ENGINE_rpm = globals->get_controls()->get_throttle(0) * 26.0;
+	the_ENGINE_rpm = enginge_0_rpm_node->getDoubleValue();
 
 	/**************************
 	First, we need to know what the static line is reporting,
-	which is a whole simulation area in itself.  For now, we cheat.
+	which is a whole simulation area in itself.
 	We filter the actual value by one second to
 	account for the line impedance of the plumbing.
 	*/
-	double static_inhg
-            = altFtToPressInHg(fgGetDouble("/position/altitude-ft"));
+#ifdef FG_WEATHERCM
+	sgVec3 plane_pos = { cur_fdm_state->get_Latitude(),
+			     cur_fdm_state->get_Longitude(),
+			     cur_fdm_state->get_Altitude() * SG_FEET_TO_METER };
+	double static_inhg = WeatherDatabase->get(plane_pos).AirPressure *
+	    (0.01 / INHG_TO_MB);
+#else
+	double static_inhg = fgGetDouble("/environment/pressure-inhg");
+#endif
+
 	set_lowpass ( & the_STATIC_inhg, static_inhg, dt ); 
 
 	/*
@@ -372,16 +391,16 @@ void FGSteam::_CatchUp()
 > have it tumble when you exceed the usual pitch or bank limits,
 > put in those insidious turning errors ... for now anyway.
 */
- 	if ( _UpdatesPending > 999999 )
+	if ( _UpdateTimePending > 999999 )
 	    the_DG_err = fgGetDouble("/environment/magnetic-variation-deg");
  	the_DG_degps = 0.01; /* HACK! */
  	if (dt<1.0) the_DG_err += dt * the_DG_degps;
- 	the_DG_deg = fgGetDouble("/orientation/heading-deg") - the_DG_err;
+ 	the_DG_deg = heading_deg_node->getDoubleValue() - the_DG_err;
 
 	/**************************
 	Finished updates, now clear the timer 
 	*/
-	_UpdatesPending = 0;
+	_UpdateTimePending = 0;
   } else {
       // cout << "0 Updates pending" << endl;
   }

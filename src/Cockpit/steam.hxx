@@ -92,7 +92,7 @@ private:
         static double   the_MH_deg, the_MH_degps, the_MH_err;
         static double   the_DG_deg, the_DG_degps, the_DG_inhg, the_DG_err;
 
-	static int	_UpdatesPending;
+	static double	_UpdateTimePending;
 	static void	_CatchUp ();
 
 	static void	set_lowpass ( double *outthe, 
