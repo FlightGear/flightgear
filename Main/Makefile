@@ -26,13 +26,12 @@
 
 TARGET=fg0
 
-CFILES = GLUTmain.c $(INTERFACE_FILES) mesh2GL.c
+CFILES = GLUTmain.c $(INTERFACE_FILES)
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
-	../Flight/Slew/libSlew.a ../Math/libMath.a \
-	../Scenery/libScenery.a \
-	../Time/libTime.a ../Weather/libWeather.a
+	../Flight/Slew/libSlew.a ../Scenery/libScenery.a \
+	../Time/libTime.a ../Weather/libWeather.a ../Math/libMath.a 
 
 
 include ../make.inc
@@ -70,12 +69,12 @@ GLUTkey.o:
 GLTKkey.o:
 	$(CC) $(CFLAGS) -c GLTKkey.c -o $@
 
-mesh2GL.o:
-	$(CC) $(CFLAGS) -c mesh2GL.c -o $@
-
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.29  1997/08/04 20:25:15  curt
+# Organizational tweaking.
+#
 # Revision 1.28  1997/08/02 18:45:01  curt
 # Renamed GLmain.c GLUTmain.c
 #

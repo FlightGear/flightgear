@@ -33,10 +33,6 @@
 #ifdef GLUT
     #include <GL/glut.h>
     #include "GLUTkey.h"
-#elif MESA_TK
-    /* assumes -I/usr/include/mesa in compile command */
-    #include "gltk.h"
-    #include "GLTKkey.h"
 #endif
 
 #include "../constants.h"
@@ -242,8 +238,6 @@ static void fgUpdateVisuals( void ) {
 
     #ifdef GLUT
       glutSwapBuffers();
-    #elif MESA_TK
-      tkSwapBuffers();
     #endif
 }
 
@@ -414,6 +408,7 @@ static void fgMainLoop( void ) {
     fgUpdateVisuals();
 
     if ( ! use_signals ) {
+	/* flight model */
 	fgUpdateTimeDepCalcs(multi_loop);
     }
 
@@ -491,18 +486,6 @@ int main( int argc, char *argv[] ) {
 
       /* Initialize windows */
       glutCreateWindow("Flight Gear");
-
-    #elif MESA_TK
-      /* Define initial window size */
-      tkInitPosition(0, 0, 640, 480);
-
-      /* Define Display Parameters */
-      tkInitDisplayMode( TK_RGB | TK_DEPTH | TK_DOUBLE | TK_DIRECT );
-
-      /* Initialize the main window */
-      if (tkInitWindow("Flight Gear") == GL_FALSE) {
-	  tkQuit();
-      }
     #endif
 
     /* seed the random number generater */
@@ -623,42 +606,26 @@ int main( int argc, char *argv[] ) {
 
       /* pass control off to the GLUT event handler */
       glutMainLoop();
-    #elif MESA_TK
-      /* call fgReshape() on expose events */
-      tkExposeFunc( fgReshape );
-
-      /* call fgReshape() on window resizes */
-      tkReshapeFunc( fgReshape );
-
-      /* call key() on keyboard event */
-      tkKeyDownFunc( GLTKkey );
-
-      /* call fgMainLoop() whenever there is nothing else to do */
-      tkIdleFunc( fgMainLoop );
-
-      /* draw the scene */
-      tkDisplayFunc( fgUpdateVisuals );
-
-      /* pass control off to the tk event handler */
-      tkExec();
     #endif
 
     return(0);
 }
 
+
 #ifdef NO_PRINTF
-
-#include <stdarg.h>
-int printf (const char *format, ...) {
-}
-
+  #include <stdarg.h>
+  int printf (const char *format, ...) {
+  }
 #endif
 
 
 /* $Log$
-/* Revision 1.1  1997/08/02 18:45:00  curt
-/* Renamed GLmain.c GLUTmain.c
+/* Revision 1.2  1997/08/04 20:25:15  curt
+/* Organizational tweaking.
 /*
+ * Revision 1.1  1997/08/02 18:45:00  curt
+ * Renamed GLmain.c GLUTmain.c
+ *
  * Revision 1.43  1997/08/02 16:23:47  curt
  * Misc. tweaks.
  *
