@@ -120,6 +120,9 @@ static void global2net( FGNetCtrls *net ) {
     net->master_alt = node->getChild("master-alt")->getBoolValue();
     net->master_avionics = node->getChild("master-avionics")->getBoolValue();
 
+    net->wind_speed_kt = fgGetDouble("/environment/wind-speed-kt");
+    net->wind_dir_deg = fgGetDouble("/environment/wind-from-heading-deg");
+
     // cur_fdm_state->get_ground_elev_ft() is what we want ... this
     // reports the altitude of the aircraft.
     // "/environment/ground-elevation-m" reports the ground elevation
@@ -128,6 +131,16 @@ static void global2net( FGNetCtrls *net ) {
     net->hground = cur_fdm_state->get_ground_elev_ft() * SG_FEET_TO_METER;
     net->magvar = fgGetDouble("/environment/magnetic-variation-deg");
     net->speedup = fgGetInt("/sim/speed-up");
+    net->freeze = 0;
+    if ( fgGetBool("/sim/freeze/master") ) {
+        net->freeze |= 0x01;
+    }
+    if ( fgGetBool("/sim/freeze/position") ) {
+        net->freeze |= 0x02;
+    }
+    if ( fgGetBool("/sim/freeze/fuel") ) {
+        net->freeze |= 0x04;
+    }
 
     // convert to network byte order
     net->version = htonl(net->version);
@@ -158,9 +171,12 @@ static void global2net( FGNetCtrls *net ) {
     net->master_bat = htonl(net->master_bat);
     net->master_alt = htonl(net->master_alt);
     net->master_avionics = htonl(net->master_avionics);
+    htond(net->wind_speed_kt);
+    htond(net->wind_dir_deg);
     htond(net->hground);
     htond(net->magvar);
     net->speedup = htonl(net->speedup);
+    net->freeze = htonl(net->freeze);
 }
 
 
@@ -379,8 +395,10 @@ void FGExternalNet::init() {
 
     double lon = fgGetDouble( "/position/longitude-deg" );
     double lat = fgGetDouble( "/position/latitude-deg" );
+    double alt = fgGetDouble( "/position/altitude-ft" );
     double ground = fgGetDouble( "/environment/ground-elevation-m" );
     double heading = fgGetDouble("/orientation/heading-deg");
+    double speed = fgGetDouble( "/velocities/airspeed-kt" );
 
     char cmd[256];
 
@@ -395,7 +413,17 @@ void FGExternalNet::init() {
     while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
 
+    sprintf( cmd, "/altitude-ft?value=%.8f", alt );
+    http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    while ( !http->isDone(1000000) ) http->poll(0);
+    delete http;
+
     sprintf( cmd, "/ground-m?value=%.8f", ground );
+    http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    while ( !http->isDone(1000000) ) http->poll(0);
+    delete http;
+
+    sprintf( cmd, "/speed-kts?value=%.8f", speed );
     http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
     while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
@@ -407,7 +435,11 @@ void FGExternalNet::init() {
 
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
-    sprintf( cmd, "/reset?value=ground" );
+    if( fgGetBool("/sim/startup/onground") ) {
+      sprintf( cmd, "/reset?value=ground" );
+    } else {
+      sprintf( cmd, "/reset?value=air" );
+    }
     http = new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
     while ( !http->isDone(1000000) ) http->poll(0);
     delete http;
