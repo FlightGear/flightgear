@@ -171,8 +171,8 @@ void FGState::Initialize(float U, float V, float W,
   float alpha, beta, gamma;
   float qbar, Vt;
 
-  FDMExec->GetPosition()->SetLatitude(Latitude*DEGTORAD);
-  FDMExec->GetPosition()->SetLongitude(Longitude*DEGTORAD);
+  FDMExec->GetPosition()->SetLatitude(Latitude);
+  FDMExec->GetPosition()->SetLongitude(Longitude);
   FDMExec->GetPosition()->Seth(H);
 
   FDMExec->GetAtmosphere()->Run();
@@ -480,7 +480,7 @@ FGMatrix FGState::GetTs2b(float alpha, float beta)
   mTs2b(1,1) = -ca*cb;
   mTs2b(1,2) = -ca*sb;
   mTs2b(1,3) = sa;
-  mTs2b(2,1) = sb;
+  mTs2b(2,1) = -sb;
   mTs2b(2,2) = cb;
   mTs2b(2,3) = 0.0;
   mTs2b(3,1) = -sa*cb;

@@ -139,13 +139,14 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
                                            vbaseXYZcg(3),
                                            vXYZcg(3),
                                            vXYZep(3),
-                                           vEuler(3)
+                                           vEuler(3),
+                                           vFs(3)
 {
   Name = "FGAircraft";
 
-  AxisIdx["LIFT"]  = 0;
+  AxisIdx["DRAG"]  = 0;
   AxisIdx["SIDE"]  = 1;
-  AxisIdx["DRAG"]  = 2;
+  AxisIdx["LIFT"]  = 2;
   AxisIdx["ROLL"]  = 3;
   AxisIdx["PITCH"] = 4;
   AxisIdx["YAW"]   = 5;
@@ -197,6 +198,8 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
     } else if (token == "FLIGHT_CONTROL") {
       cout << "  Reading Flight Control" << endl;
       ReadFlightControls(&AC_cfg);
+    } else if (token == "OUTPUT") {
+      ReadOutput(&AC_cfg);
     }
   }
 
@@ -322,7 +325,6 @@ void FGAircraft::MassChange()
 
 void FGAircraft::FMAero(void)
 {
-  static FGColumnVector vFs(3);
   static FGColumnVector vDXYZcg(3);
   unsigned int axis_ctr,ctr;
 
@@ -348,7 +350,7 @@ void FGAircraft::FMAero(void)
 
   vMoments(eL) += vForces(eZ)*vDXYZcg(eY) - vForces(eY)*vDXYZcg(eZ); // rolling moment
   vMoments(eM) += vForces(eX)*vDXYZcg(eZ) - vForces(eZ)*vDXYZcg(eX); // pitching moment
-  vMoments(eN) += vForces(eX)*vDXYZcg(eY) - vForces(eY)*vDXYZcg(eX); // yawing moment
+  vMoments(eN) += vForces(eY)*vDXYZcg(eX) - vForces(eX)*vDXYZcg(eY); // yawing moment
 
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr = 0; ctr < Coeff[axis_ctr+3].size(); ctr++) {
@@ -511,6 +513,71 @@ void FGAircraft::ReadUndercarriage(FGConfigFile* AC_cfg)
 
 /******************************************************************************/
 
+void FGAircraft::ReadOutput(FGConfigFile* AC_cfg)
+{
+  string token, parameter;
+  int OutRate = 0;
+  int subsystems = 0;
+
+  token = AC_cfg->GetValue("NAME");
+  Output->SetFilename(token);
+  token = AC_cfg->GetValue("TYPE");
+  Output->SetType(token);
+  AC_cfg->GetNextConfigLine();
+
+  while ((token = AC_cfg->GetValue()) != "/OUTPUT") {
+    *AC_cfg >> parameter;
+    if (parameter == "RATE_IN_HZ") *AC_cfg >> OutRate;
+    if (parameter == "SIMULATION") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssSimulation;
+    }
+    if (parameter == "AEROSURFACES") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssAerosurfaces;
+    }
+    if (parameter == "RATES") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssRates;
+    }
+    if (parameter == "VELOCITIES") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssVelocities;
+    }
+    if (parameter == "FORCES") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssForces;
+    }
+    if (parameter == "MOMENTS") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssMoments;
+    }
+    if (parameter == "ATMOSPHERE") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssAtmosphere;
+    }
+    if (parameter == "MASSPROPS") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssMassProps;
+    }
+    if (parameter == "POSITION") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssPosition;
+    }
+    if (parameter == "COEFFICIENTS") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssCoefficients;
+    }
+  }
+
+  Output->SetSubsystems(subsystems);
+
+  OutRate = OutRate>120?120:(OutRate<0?0:OutRate);
+  Output->SetRate( (int)(0.5 + 1.0/(State->Getdt()*OutRate)) );
+}
+
+/******************************************************************************/
+
 void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg)
 {
   string token = AC_cfg->GetValue();
@@ -570,5 +637,47 @@ void FGAircraft::DisplayCoeffFactors(int multipliers)
 }
 
 /******************************************************************************/
+
+string FGAircraft::GetCoefficientStrings(void)
+{
+  string CoeffStrings = "";
+  bool firstime = true;
+
+  for (unsigned int axis = 0; axis < 6; axis++) {
+    for (unsigned int sd = 0; sd < Coeff[axis].size(); sd++) {
+      if (firstime) {
+        firstime = false;
+      } else {
+        CoeffStrings += ", ";
+      }
+      CoeffStrings += Coeff[axis][sd].Getname();
+    }
+  }
+
+  return CoeffStrings;
+}
+
+/******************************************************************************/
+
+string FGAircraft::GetCoefficientValues(void)
+{
+  string SDValues = "";
+  char buffer[10];
+  bool firstime = true;
+
+  for (unsigned int axis = 0; axis < 6; axis++) {
+    for (unsigned int sd = 0; sd < Coeff[axis].size(); sd++) {
+      if (firstime) {
+        firstime = false;
+      } else {
+        SDValues += ", ";
+      }
+      sprintf(buffer, "%9.6f", Coeff[axis][sd].GetSD());
+      SDValues += string(buffer);
+    }
+  }
+
+  return SDValues;;
+}
 
 

@@ -64,10 +64,12 @@ int FGJSBsim::init( double dt ) {
     FGPath engine_path( current_options.get_fg_root() );
     engine_path.append( "Engine" );
 
+    FDMExec.GetState()->Setdt( dt );
+
     FDMExec.GetAircraft()->LoadAircraft( aircraft_path.str(), 
-					 engine_path.str(), 
+					 engine_path.str(),
 					 current_options.get_aircraft() );
-    FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" << 
+    FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" <<
 	    current_options.get_aircraft() );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Initializing JSBsim with:" );
@@ -85,9 +87,9 @@ int FGJSBsim::init( double dt ) {
       current_options.get_uBody(),
       current_options.get_vBody(),
       current_options.get_wBody(),
-      get_Phi() * DEGTORAD,
-      get_Theta() * DEGTORAD,
-      get_Psi() * DEGTORAD,
+      get_Phi(),
+      get_Theta(),
+      get_Psi(),
       get_Latitude(),
       get_Longitude(),
       get_Altitude()
@@ -95,7 +97,6 @@ int FGJSBsim::init( double dt ) {
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded initial conditions" );
 
-    FDMExec.GetState()->Setdt( dt );
     FG_LOG( FG_FLIGHT, FG_INFO, "  set dt" );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing JSBsim" );
@@ -128,6 +129,8 @@ int FGJSBsim::update( int multiloop ) {
     FDMExec.GetFCS()->SetDsbCmd( 0.0 );
     FDMExec.GetFCS()->SetDspCmd( 0.0 );
     FDMExec.GetFCS()->SetThrottleCmd( FGControls::ALL_ENGINES,
+                                           controls.get_throttle( 0 ) * 100.0 );
+    FDMExec.GetFCS()->SetThrottlePos( FGControls::ALL_ENGINES,
                                            controls.get_throttle( 0 ) * 100.0 );
     // FCS->SetBrake( controls.get_brake( 0 ) );
 

@@ -97,17 +97,17 @@ INCLUDES
 *******************************************************************************/
 
 #ifdef FGFS
-#  include <simgear/compiler.h>
+#  include <Include/compiler.h>
 #  ifdef FG_HAVE_STD_INCLUDES
+#    include <fstream>
 #    include <vector>
-#    include <map>
 #  else
+#    include <fstream.h>
 #    include <vector.h>
-#    include <map.h>
 #  endif
 #else
+#  include <fstream>
 #  include <vector>
-#  include <map>
 #endif
 
 #include "FGModel.h"
@@ -116,7 +116,6 @@ INCLUDES
 #include "FGTank.h"
 #include "FGLGear.h"
 #include "FGConfigFile.h"
-#include "FGMatrix.h"
 
 /*******************************************************************************
 DEFINITIONS
@@ -130,17 +129,13 @@ CLASS DECLARATION
 
 class FGAircraft : public FGModel
 {
-  enum {eL=1, eM, eN};
-  enum {eX=1, eY, eZ};
-  enum {eP=1, eQ, eR};
-  enum {ePhi=1, eTht, ePsi};
-
 public:
   FGAircraft(FGFDMExec*);
   ~FGAircraft(void);
 
   bool Run(void);
   bool LoadAircraft(string, string, string);
+  bool LoadAircraftEx(string, string, string);
   inline string GetAircraftName(void) {return AircraftName;}
   inline void SetGearUp(bool tt) {GearUp = tt;}
   inline bool GetGearUp(void) {return GearUp;}
@@ -151,53 +146,43 @@ public:
   inline FGTank* GetTank(int tt) {return Tank[tt];}
   inline float GetWeight(void) {return Weight;}
   inline float GetMass(void) {return Mass;}
-  inline FGColumnVector GetMoments(void) {return vMoments;}
-  inline FGColumnVector GetForces(void) {return vForces;}
-  inline FGColumnVector GetvFs(void) {return vFs;}
+  inline float GetL(void) {return Moments[0];}
+  inline float GetM(void) {return Moments[1];}
+  inline float GetN(void) {return Moments[2];}
+  inline float GetFx(void) {return Forces[0];}
+  inline float GetFy(void) {return Forces[1];}
+  inline float GetFz(void) {return Forces[2];}
   inline float GetIxx(void) {return Ixx;}
   inline float GetIyy(void) {return Iyy;}
   inline float GetIzz(void) {return Izz;}
   inline float GetIxz(void) {return Ixz;}
+  inline float GetXcg(void) {return Xcg;}
   inline int   GetNumEngines(void) {return numEngines;}
-  inline FGColumnVector GetXYZcg(void) {return vXYZcg;}
-  string GetCoefficientStrings(void);
-  string GetCoefficientValues(void);
 
-  enum { ssSimulation   = 1,
-         ssAerosurfaces = 2,
-         ssRates        = 4,
-         ssVelocities   = 8,
-         ssForces       = 16,
-         ssMoments      = 32,
-         ssAtmosphere   = 64,
-         ssMassProps    = 128,
-         ssCoefficients = 256,
-         ssPosition     = 512 } subsystems;
-         
 private:
   void GetState(void);
+  void PutState(void);
   void FMAero(void);
   void FMGear(void);
   void FMMass(void);
   void FMProp(void);
   void MassChange(void);
-  FGColumnVector vMoments;
-  FGColumnVector vForces;
-  FGColumnVector vFs;
-  FGColumnVector vXYZrp;
-  FGColumnVector vbaseXYZcg;
-  FGColumnVector vXYZcg;
-  FGColumnVector vXYZep;
-  FGColumnVector vEuler;
+  float Moments[3];
+  float Forces[3];
+  string AircraftName;
   float baseIxx, baseIyy, baseIzz, baseIxz, EmptyMass, Mass;
   float Ixx, Iyy, Izz, Ixz;
+  float Xrp, Yrp, Zrp;
+  float baseXcg, baseYcg, baseZcg;
+  float Xcg, Ycg, Zcg;
+  float Xep, Yep, Zep;
   float rho, qbar, Vt;
   float alpha, beta;
   float WingArea, WingSpan, cbar;
+  float phi, tht, psi;
   float Weight, EmptyWeight;
   float dt;
-  double CFGVersion;
-  string AircraftName;
+  float CFGVersion;
   
   int numTanks;
   int numEngines;
@@ -206,29 +191,24 @@ private:
   FGTank* Tank[MAX_TANKS];
   FGEngine *Engine[MAX_ENGINES];
 
-  typedef map<string,int> AxisIndex;
-  AxisIndex AxisIdx;
-
-  typedef vector<FGCoefficient> CoeffArray;
-  typedef vector<CoeffArray> CoeffVector;
-
-  CoeffVector Coeff;
-
-  void DisplayCoeffFactors(int multipliers);
+  FGCoefficient *Coeff[6][10];
+  int coeff_ctr[6];
 
   bool GearUp;
 
+  enum Param {LiftCoeff,
+              DragCoeff,
+              SideCoeff,
+              RollCoeff,
+              PitchCoeff,
+              YawCoeff,
+              numCoeffs};
+
   string Axis[6];
   vector <FGLGear*> lGear;
-  string AircraftPath;
-  string EnginePath;
-  void ReadMetrics(FGConfigFile*);
-  void ReadPropulsion(FGConfigFile*);
-  void ReadFlightControls(FGConfigFile*);
-  void ReadAerodynamics(FGConfigFile*);
-  void ReadUndercarriage(FGConfigFile*);
-  void ReadPrologue(FGConfigFile*);
-  void ReadOutput(FGConfigFile*);
+
+protected:
+
 };
 
 /******************************************************************************/

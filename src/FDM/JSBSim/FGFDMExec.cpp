@@ -112,7 +112,7 @@ FGFDMExec::FGFDMExec(void)
   // instance, the atmosphere model gets executed every fifth pass it is called
   // by the executive. Everything else here gets executed each pass.
 
-  Schedule(Atmosphere,  5);
+  Schedule(Atmosphere,  1);
   Schedule(FCS,         1);
   Schedule(Aircraft,    1);
   Schedule(Rotation,    1);
@@ -176,13 +176,16 @@ bool FGFDMExec::Run(void)
   return true;
 }
 
+
 bool FGFDMExec::RunIC(FGInitialCondition *fgic)
 {
-  float save_dt=State->Getdt();
+  float save_dt = State->Getdt();
+
   State->Setdt(0.0);
   State->Initialize(fgic);
   Run();
   State->Setdt(save_dt);
+
   return true;
 }
   
