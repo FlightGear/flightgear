@@ -23,6 +23,8 @@
 
 #include "LaRCsim.hxx"
 
+#include <Include/fg_constants.h>
+
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <Debug/logstream.hxx>
@@ -328,11 +330,19 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
 	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
 	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
 	    << " radius_to_vehicle = " << Radius_to_vehicle );
-	    
+
+    double tmp_lon_geoc = Lon_geocentric;
+    while ( tmp_lon_geoc < -FG_PI ) { tmp_lon_geoc += FG_2PI; }
+    while ( tmp_lon_geoc > FG_PI ) { tmp_lon_geoc -= FG_2PI; }
+
+    double tmp_lon = Longitude;
+    while ( tmp_lon < -FG_PI ) { tmp_lon += FG_2PI; }
+    while ( tmp_lon > FG_PI ) { tmp_lon -= FG_2PI; }
+
     // Positions
-    f.set_Geocentric_Position( Lat_geocentric, Lon_geocentric, 
+    f.set_Geocentric_Position( Lat_geocentric, tmp_lon_geoc, 
                                Radius_to_vehicle );
-    f.set_Geodetic_Position( Latitude, Longitude, Altitude );
+    f.set_Geodetic_Position( Latitude, tmp_lon, Altitude );
     f.set_Euler_Angles( Phi, Theta, Psi );
 
     // Miscellaneous quantities
