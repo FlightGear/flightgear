@@ -58,6 +58,7 @@
 #include <Main/fg_init.hxx>
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
+#include <Network/network.h>
 #include <Time/fg_time.hxx>
 
 #include "gui.h"
@@ -507,6 +508,91 @@ static void NewAirportInit(void)
     FG_FINALIZE_PUI_DIALOG( AptDialog );
 }
 
+/// The beginnings of networking :-)
+//  Needs cleaning up but works
+//  These statics should disapear when this is a class
+static puDialogBox     *NetIdDialog = 0;
+static puFrame         *NetIdDialogFrame = 0;
+static puText          *NetIdDialogMessage = 0;
+static puInput         *NetIdDialogInput = 0;
+
+static char NewNetId[16];
+static char NewNetIdLabel[] = "Enter New Callsign"; 
+
+static puOneShot       *NetIdDialogOkButton = 0;
+static puOneShot       *NetIdDialogCancelButton = 0;
+
+void NetIdDialog_Cancel(puObject *)
+{
+    FG_POP_PUI_DIALOG( NetIdDialog );
+}
+
+void NetIdDialog_OK (puObject *)
+{
+    string NetId;
+    
+    FGTime *t = FGTime::cur_time_params;
+    int PauseMode = t->getPause();
+    if(!PauseMode)
+        t->togglePauseMode();
+
+    char *s;
+    NetIdDialogInput->getValue(&s);
+    NetId = s;
+    
+    NetIdDialog_Cancel( NULL );
+    current_options.set_net_id( NetId.c_str() );
+    net_hud_display = 1;
+
+    if( PauseMode != t->getPause() )
+        t->togglePauseMode();
+}
+
+void NewCallSign(puObject *cb)
+{
+    sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+    NetIdDialogInput->setValue( NewNetId );
+
+    FG_PUSH_PUI_DIALOG( NetIdDialog );
+}
+
+static void NewNetIdInit(void)
+{
+    sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+    int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
+                                      NewNetIdLabel ) / 2;
+
+    NetIdDialog = new puDialogBox (150, 50);
+    {
+        NetIdDialogFrame   = new puFrame           (0,0,350, 150);
+        NetIdDialogMessage = new puText            (len, 110);
+        NetIdDialogMessage ->    setLabel          (NewNetIdLabel);
+
+        NetIdDialogInput   = new puInput           (50, 70, 300, 100);
+        NetIdDialogInput   ->    setValue          (NewNetId);
+        NetIdDialogInput   ->    acceptInput();
+
+        NetIdDialogOkButton     =  new puOneShot   (50, 10, 110, 50);
+        NetIdDialogOkButton     ->     setLegend   (gui_msg_OK);
+        NetIdDialogOkButton     ->     setCallback (NetIdDialog_OK);
+        NetIdDialogOkButton     ->     makeReturnDefault(TRUE);
+
+        NetIdDialogCancelButton =  new puOneShot   (240, 10, 300, 50);
+        NetIdDialogCancelButton ->     setLegend   (gui_msg_CANCEL);
+        NetIdDialogCancelButton ->     setCallback (NetIdDialog_Cancel);
+
+    }
+    FG_FINALIZE_PUI_DIALOG( NetIdDialog );
+}
+
+static void net_display_toggle( puObject *cb)
+{
+	net_hud_display = (net_hud_display) ? 0 : 1;
+}
+
+/***************  End Networking  **************/
+
+
 
 /* -----------------------------------------------------------------------
 The menu stuff 
@@ -552,6 +638,17 @@ char *optionsSubmenu            [] = {
 puCallback optionsSubmenuCb     [] = {
     notCb, notCb, NULL
 };
+
+#ifdef FG_NETWORK_OLK
+char *networkSubmenu            [] = {
+    "Unregister from FGD ", "Send MSG to All", "Send MSG", "Show Pilots", "Register to FGD",
+    "Scan for Deamons", "Enter Callsign", "Display Netinfos", "Toggle Display", NULL
+};
+puCallback networkSubmenuCb     [] = {
+    notCb, notCb, notCb, notCb, notCb, notCb, NewCallSign, notCb,
+    net_display_toggle, NULL
+};
+#endif
 
 char *helpSubmenu               [] = {
     "About...", "Help", NULL
@@ -626,6 +723,9 @@ void guiInit()
     // Set up our Dialog Boxes
     ConfirmExitDialogInit();
     NewAirportInit();
+#ifdef FG_NETWORK_OLK
+    NewNetIdInit();
+#endif
     mkDialogInit();
     
     // Make the menu bar
@@ -636,6 +736,9 @@ void guiInit()
     mainMenuBar -> add_submenu ("Aircraft", aircraftSubmenu, aircraftSubmenuCb);
     mainMenuBar -> add_submenu ("Environment", environmentSubmenu, environmentSubmenuCb);
     mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
+#ifdef FG_NETWORK_OLK
+    mainMenuBar -> add_submenu ("Network", networkSubmenu, networkSubmenuCb);
+#endif
     mainMenuBar -> add_submenu ("Help", helpSubmenu, helpSubmenuCb);
     mainMenuBar-> close ();
     // Set up menu bar toggle

@@ -201,6 +201,7 @@ fgOPTIONS::fgOPTIONS() :
     }
 
     airport_id = "";  // default airport id
+    net_id = "";
 
     // initialize port config string list
     port_options_list.erase ( port_options_list.begin(), 

@@ -151,6 +151,9 @@ private:
 
     // Serial port configuration strings
     str_container port_options_list;
+
+    // Network options
+    string net_id;
     
 public:
 
@@ -210,6 +213,7 @@ public:
     inline str_container get_port_options_list() const { 
 	return port_options_list;
     }
+    inline string get_net_id() const { return net_id; }
 
     // Update functions
     inline void set_airport_id( const string id ) { airport_id = id; }
@@ -230,6 +234,7 @@ public:
     void toggle_panel();
     inline void set_xsize( int x ) { xsize= x; }
     inline void set_ysize( int y ) { xsize= y; }
+    inline void set_net_id( const string id ) { net_id = id; }
 
 private:
 

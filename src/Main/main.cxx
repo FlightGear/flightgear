@@ -427,7 +427,7 @@ static void fgRenderFrame( void ) {
 	sgMultMat4( sgVIEW, current_view.sgVIEW, sgTRANS );
 	ssgSetCamera( sgVIEW );
 	// ssgSetCamera( current_view.sgVIEW );
-	ssgCullAndDraw( scene );
+	// ssgCullAndDraw( scene );
 
     }
 
@@ -1066,8 +1066,10 @@ int main( int argc, char **argv ) {
     // distribution) specifically from the ssg tux example
     //
 
-    ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    // ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    // ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
 
     scene = new ssgRoot;
     penguin = new ssgTransform;

@@ -50,6 +50,7 @@
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
+#include <Network/network.h>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 
@@ -1105,6 +1106,12 @@ void fgUpdateHUD( void ) {
   char *gmt_str = get_formated_gmt_time();
   HUD_TextList.add( fgText( 40, 10, gmt_str) );
   
+#ifdef FG_NETWORK_OLK
+  if ( net_hud_display ) {
+      net_hud_update();
+  }
+#endif
+
   HUD_TextList.draw();
 
   line_width = (current_options.get_xsize() > 1000) ? 1.0 : 0.5;

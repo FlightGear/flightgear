@@ -49,6 +49,9 @@
    release build */
 #undef FG_NDEBUG
    
+/* Define to include Oliver's networking support */
+#undef FG_NETWORK_OLK
+   
 /* Define to the type of elements in the array set by `getgroups'.
    Usually this is either `int' or `gid_t'.  */
 #undef GETGROUPS_T
