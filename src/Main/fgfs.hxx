@@ -332,8 +332,9 @@ public:
     virtual void resume ();
     virtual bool is_suspended () const;
 
-    virtual void add (GroupType group, const string &name,
+    virtual void add (const char * name,
                       FGSubsystem * subsystem,
+                      GroupType group = GENERAL, 
                       double min_time_sec = 0);
 
     virtual FGSubsystemGroup * get_group (GroupType group);

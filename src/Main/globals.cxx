@@ -91,6 +91,28 @@ FGGlobals::~FGGlobals()
 }
 
 
+FGSubsystemMgr *
+FGGlobals::get_subsystem_mgr () const
+{
+    return subsystem_mgr;
+}
+
+FGSubsystem *
+FGGlobals::get_subsystem (const char * name)
+{
+    return subsystem_mgr->get_subsystem(name);
+}
+
+void
+FGGlobals::add_subsystem (const char * name,
+                          FGSubsystem * subsystem,
+                          FGSubsystemMgr::GroupType type,
+                          double min_time_sec)
+{
+    subsystem_mgr->add(name, subsystem, type, min_time_sec);
+}
+
+
 // Save the current state as the initial state.
 void
 FGGlobals::saveInitialState ()

@@ -1475,27 +1475,21 @@ bool fgInitSubsystems() {
     // Create and register the logger.
     ////////////////////////////////////////////////////////////////////
     
-    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
-                                      "logger",
-                                      new FGLogger);
+    globals->add_subsystem("logger", new FGLogger);
 
 
     ////////////////////////////////////////////////////////////////////
     // Create and register the script manager.
     ////////////////////////////////////////////////////////////////////
 
-    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
-                                      "scripting",
-                                      new FGScriptMgr);
+    globals->add_subsystem("scripting", new FGScriptMgr);
 
 
     ////////////////////////////////////////////////////////////////////
     // Create and register the XML GUI.
     ////////////////////////////////////////////////////////////////////
 
-    globals->get_subsystem_mgr()->add(FGSubsystemMgr::INIT,
-                                      "gui",
-                                      new NewGUI);
+    globals->add_subsystem("gui", new NewGUI, FGSubsystemMgr::INIT);
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1664,26 +1658,17 @@ bool fgInitSubsystems() {
     // Initialize the sound-effects subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
-                                      "fx",
-                                      new FGFX);
+    globals->add_subsystem("fx", new FGFX);
     
-
 #endif
 
-    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
-                                      "instrumentation",
-                                      new FGInstrumentMgr);
-    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
-                                      "systems",
-                                      new FGSystemMgr);
+    globals->add_subsystem("instrumentation", new FGInstrumentMgr);
+    globals->add_subsystem("systems", new FGSystemMgr);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the radio stack subsystem.
     ////////////////////////////////////////////////////////////////////
 
-                                // A textbook example of how FGSubsystem
-                                // should work...
     current_radiostack = new FGRadioStack;
     current_radiostack->init();
     current_radiostack->bind();
@@ -1764,9 +1749,7 @@ bool fgInitSubsystems() {
     // Initialize the input subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
-                                      "input",
-                                      new FGInput);
+    globals->add_subsystem("input", new FGInput);
 
 
     ////////////////////////////////////////////////////////////////////

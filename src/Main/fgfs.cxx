@@ -309,8 +309,8 @@ FGSubsystemMgr::is_suspended () const
 }
 
 void
-FGSubsystemMgr::add (GroupType group, const string &name,
-                     FGSubsystem * subsystem, double min_time_sec)
+FGSubsystemMgr::add (const char * name, FGSubsystem * subsystem,
+                     GroupType group, double min_time_sec)
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Adding subsystem " << name);
     get_group(group)->set_subsystem(name, subsystem, min_time_sec);

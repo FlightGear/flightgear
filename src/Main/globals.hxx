@@ -29,6 +29,8 @@
 #include <vector>
 #include STL_STRING
 
+#include "fgfs.hxx"
+
 SG_USING_STD( vector );
 SG_USING_STD( string );
 
@@ -67,7 +69,6 @@ class FGModelMgr;
 class FGScenery;
 class FGSoundMgr;
 class FGSteam;
-class FGSubsystemMgr;
 class FGTextureLoader;
 class FGTileMgr;
 class FGViewMgr;
@@ -178,9 +179,15 @@ public:
     FGGlobals();
     ~FGGlobals();
 
-    inline FGSubsystemMgr * get_subsystem_mgr () const {
-        return subsystem_mgr;
-    }
+    virtual FGSubsystemMgr * get_subsystem_mgr () const;
+
+    virtual FGSubsystem * get_subsystem (const char * name);
+
+    virtual void add_subsystem (const char * name,
+                                FGSubsystem * subsystem,
+                                FGSubsystemMgr::GroupType
+                                  type = FGSubsystemMgr::GENERAL,
+                                double min_time_sec = 0);
 
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
