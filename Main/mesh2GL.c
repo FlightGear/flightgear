@@ -47,7 +47,7 @@ GLint mesh2GL(struct mesh *m) {
 
     printf("In mesh2GL(), generating GL call list.\n");
 
-    istep = jstep = 4;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 10;  /* Detail level 1 -- 1200 ... */
 
     /* setup the batch transformation */
     fgRotateBatchInit(-m->originx * ARCSEC_TO_RAD, -m->originy * ARCSEC_TO_RAD);
@@ -132,9 +132,15 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.27  1997/07/09 21:31:13  curt
-/* Working on making the ground "hard."
+/* Revision 1.28  1997/07/10 04:26:37  curt
+/* We now can interpolated ground elevation for any position in the grid.  We
+/* can use this to enforce a "hard" ground.  We still need to enforce some
+/* bounds checking so that we don't try to lookup data points outside the
+/* grid data set.
 /*
+ * Revision 1.27  1997/07/09 21:31:13  curt
+ * Working on making the ground "hard."
+ *
  * Revision 1.26  1997/07/08 18:20:13  curt
  * Working on establishing a hard ground.
  *
