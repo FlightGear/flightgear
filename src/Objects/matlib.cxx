@@ -278,11 +278,23 @@ void FGMaterialLib::set_step ( int step )
 }
 
 
-
-
-
-
-
-
-
-
+// Load one pending "deferred" texture.  Return true if a texture
+// loaded successfully, false if no pending, or error.
+void FGMaterialLib::load_next_deferred() {
+    // container::iterator it = begin();
+    for ( material_map_iterator it = begin(); it != end(); it++ ) {
+	const string &key = it->first;
+	FGNewMat &slot = it->second;
+	if ( ! slot.get_texture_loaded() ) {
+            SG_LOG( SG_GENERAL, SG_INFO, "Loading texture for " << key );
+#ifdef PLIB_1_2_X
+            slot.get_textured()->
+                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0, 0 );
+#else
+            slot.get_textured()->
+                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0 );
+#endif
+            slot.set_texture_loaded( true );
+        }
+    }
+}

@@ -113,7 +113,12 @@ public:
     inline void set_material_name( const string& n ) { material_name = n; }
 
     inline string get_texture_name() const { return texture_name; }
+    inline const char *get_texture_name_c_str() const {
+        return texture_name.c_str();
+    }
     inline void set_texture_name( const string& n ) { texture_name = n; }
+
+    inline ssgSimpleState *get_textured() { return textured; }
 
     inline double get_xsize() const { return xsize; }
     inline double get_ysize() const { return ysize; }
@@ -128,6 +133,9 @@ public:
     inline void set_diffuse( sgVec4 d ) { sgCopyVec4( diffuse, d ); }
     inline void set_specular( sgVec4 s ) { sgCopyVec4( specular, s ); }
     inline void set_emission( sgVec4 e ) { sgCopyVec4( emission, e ); }
+
+    inline bool get_texture_loaded() const { return texture_loaded; }
+    inline void set_texture_loaded( bool val ) { texture_loaded = val; }
 
     inline double get_light_coverage () const { return light_coverage; }
     inline void set_light_coverage (double coverage) {

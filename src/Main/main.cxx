@@ -81,6 +81,7 @@
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
+#include <Objects/matlib.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -1035,6 +1036,9 @@ static void fgMainLoop( void ) {
 			    cur_fdm_state->get_Latitude()
                             * SGD_RADIANS_TO_DEGREES );
 
+    // see if we need to load any deferred-load textures
+    material_lib.load_next_deferred();
+
     // Process/manage pending events
     global_events.Process();
 
@@ -1525,10 +1529,11 @@ int main( int argc, char **argv ) {
 		   0.0 );
     globals->set_ephem( ephem );
 
+    thesky = new SGSky;
+
     SGPath sky_tex_path( globals->get_fg_root() );
     sky_tex_path.append( "Textures" );
     sky_tex_path.append( "Sky" );
-    thesky = new SGSky;
     thesky->texture_path( sky_tex_path.str() );
 
     thesky->build( 550.0, 550.0,
