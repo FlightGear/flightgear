@@ -1,9 +1,9 @@
 #---------------------------------------------------------------------------
 # Makefile
 #
-# Written by Curtis Olson, started January 1998.
+# Written by Curtis Olson, started October 1997.
 #
-# Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+# Copyright (C) 1997 - 1998  Curtis L. Olson  - curt@me.umn.edu
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,34 +24,23 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = splittris
+bin_PROGRAMS = fixobj
 
-CFILES = splittris.c
-LDLIBS = -lMath -lScenery -lm
+fixobj_SOURCES = main.c mat3.h obj.c obj.h MAT3vec.c
 
+fixobj_LDADD =
 
-include $(FG_ROOT_SRC)/commondefs
-
-
-#---------------------------------------------------------------------------
-# Rule for TARGET
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OBJECTS)
-	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
-
-
-include $(COMMONRULES)
+INCLUDES += -I../../Simulator
 
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.3  1998/01/21 02:55:55  curt
+# Revision 1.1  1998/04/08 23:19:35  curt
+# Adopted Gnu automake/autoconf system.
+#
+# Revision 1.2  1998/01/21 02:55:53  curt
 # Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
 #
-# Revision 1.2  1998/01/14 15:54:42  curt
-# Initial revision completed.
-#
-# Revision 1.1  1998/01/14 02:11:30  curt
+# Revision 1.1  1997/12/08 19:28:54  curt
 # Initial revision.
 #

@@ -1,9 +1,9 @@
 #---------------------------------------------------------------------------
 # Makefile
 #
-# Written by Curtis Olson, started October 1997.
+# Written by Curtis Olson, started January 1998.
 #
-# Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+# Copyright (C) 1998  Curtis L. Olson  - curt@me.umn.edu
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,31 +24,30 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = fixobj
+bin_PROGRAMS = tri2obj
 
-CFILES = main.c obj.c
-LDLIBS = -lMath -lm
+tri2obj_SOURCES = \
+	tri2obj.c tri2obj.h \
+	MAT3vec.c \
+	fg_geodesy.c fg_geodesy.h \
+	mat3.h \
+	polar.c polar.h
 
+tri2obj_LDADD = \
+	$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
 
-include $(FG_ROOT_SRC)/commondefs
-
-
-#---------------------------------------------------------------------------
-# Rule for TARGET
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OBJECTS)
-	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
-
-
-include $(COMMONRULES)
+INCLUDES += -I../../Simulator
 
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.2  1998/01/21 02:55:53  curt
+# Revision 1.1  1998/04/08 23:22:13  curt
+# Adopted Gnu automake/autoconf system.
+#
+# Revision 1.2  1998/01/21 02:55:46  curt
 # Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
 #
-# Revision 1.1  1997/12/08 19:28:54  curt
+# Revision 1.1  1998/01/15 02:45:25  curt
 # Initial revision.
 #
+

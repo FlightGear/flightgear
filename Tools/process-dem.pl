@@ -28,7 +28,7 @@
 
 $| = 1;                         # flush buffers after every write
 
-$do_demfit =     1;
+$do_dem2node =     1;
 $do_triangle_1 = 1;
 $do_fixnode =    1;
 $do_splittris =  1;
@@ -69,8 +69,8 @@ while ( $dem_file = shift(@ARGV) ) {
     }
 
 
-    if ( $do_demfit ) {
-	demfit() ;
+    if ( $do_dem2node ) {
+	dem2node() ;
     } else {
 	$subdir = "../Scenery/w100n040/w093n045";
 	print "WARNING:  Hardcoding subdir = $subdir\n";
@@ -123,7 +123,7 @@ sub file_root {
 #     splits dem file into 64 file.node's which contain the
 #     irregularly fitted vertices
 
-sub demfit {
+sub dem2node {
     if ( $dem_file =~ m/.gz$/ ) {
 	$command = "gzip -dc $dem_file | Dem2node/dem2node $ENV{FG_ROOT} - $error";
     } else {
@@ -387,6 +387,9 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.15  1998/04/08 23:24:07  curt
+# Adopted Gnu automake/autoconf system.
+#
 # Revision 1.14  1998/04/06 21:09:38  curt
 # Additional win32 support.
 # Fixed a bad bug in dem file parsing that was causing the output to be

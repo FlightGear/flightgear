@@ -36,11 +36,11 @@
 
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
-#include <Math/fg_geodesy.h>
-#include <Math/mat3.h>
-#include <Math/polar.h>
-#include <Scenery/bucketutils.h>
+#include <Scenery/Bucket/bucketutils.h>
 
+#include "fg_geodesy.h"
+#include "mat3.h"
+#include "polar.h"
 
 int nodecount, tricount;
 double xmin, xmax, ymin, ymax;
@@ -612,9 +612,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.6  1998/03/03 15:36:13  curt
-/* Tweaks for compiling with g++
+/* Revision 1.7  1998/04/08 23:21:13  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.6  1998/03/03 15:36:13  curt
+ * Tweaks for compiling with g++
+ *
  * Revision 1.5  1998/03/03 03:37:04  curt
  * Cumulative tweaks.
  *

@@ -29,7 +29,7 @@
 
 #include "obj.h"
 
-#include "../../Src/Math/mat3.h"
+#include "mat3.h"
 
 
 /* what do ya' know, here's some global variables */
@@ -291,9 +291,12 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.7  1998/03/19 02:51:41  curt
-/* Added special case handling to compensate for bugs in our beloved tri striper
+/* Revision 1.8  1998/04/08 23:19:37  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.7  1998/03/19 02:51:41  curt
+ * Added special case handling to compensate for bugs in our beloved tri striper
+ *
  * Revision 1.6  1998/03/03 15:36:12  curt
  * Tweaks for compiling with g++
  *

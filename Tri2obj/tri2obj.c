@@ -34,10 +34,11 @@
 
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
-#include <Math/fg_geodesy.h>
-#include <Math/mat3.h>
-#include <Math/polar.h>
-#include <Scenery/bucketutils.h>
+#include <Scenery/Bucket/bucketutils.h>
+
+#include "fg_geodesy.h"
+#include "mat3.h"
+#include "polar.h"
 
 
 int nodecount, tricount;
@@ -639,9 +640,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.11  1998/03/03 16:01:00  curt
-/* More c++ compile tweaks.
+/* Revision 1.12  1998/04/08 23:22:18  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.11  1998/03/03 16:01:00  curt
+ * More c++ compile tweaks.
+ *
  * Revision 1.10  1998/01/31 00:41:27  curt
  * Made a few changes converting floats to doubles.
  *
