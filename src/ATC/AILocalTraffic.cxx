@@ -169,25 +169,14 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 				return(false);
 			}
 			freq = (double)tower->get_freq() / 100.0;
-		} else {
-			// Check CTAF, unicom etc
-		}
-		if(a.ground_freq) {		// Ground control
-			ground = (FGGround*)ATC->GetATCPointer((string)airportID, GROUND);	// Maybe need some error checking here
+			ground = tower->GetGroundPtr();
 			if(ground == NULL) {
 				// Something has gone wrong :-(
-				cout << "ERROR - ground has frequency but can't get ground pointer :-(\n";
+				cout << "ERROR - can't get a ground pointer from tower control in FGAILocalTraffic::Init() :-(\n";
 				return(false);
 			}
-			freq = (double)tower->get_freq() / 100.0;
 		} else {
-			// Initialise ground anyway to do the shortest path stuff!
-			// This is a bit of a hack - might need to be altered sometime, but
-			// in theory AILocalTraffic doesn't get called unless we have a logical
-			// network for ground to use so it should work for now!
-			ground = new FGGround(airportID);	// TODO - ought to set a flag saying that we're responsible
-											// for deleting ground in this instance, since normally we're not.
-			ground->Init();
+			// Check CTAF, unicom etc
 		}
 	} else {
 		//cout << "Unable to find airport details in FGAILocalTraffic::Init()\n";
@@ -199,7 +188,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	// WARNING - we use this elev for the whole airport - some assumptions in the code 
 	// might fall down with very slopey airports.
 
-	//cout << "In Init(), initialState = " << initialState << '\n';
+	//cout << "In Init(), initialState = " << initialState << endl;
 	operatingState = initialState;
 	switch(operatingState) {
 	case PARKED:

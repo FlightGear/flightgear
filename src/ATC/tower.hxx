@@ -40,6 +40,14 @@ SG_USING_STD(ios);
 //DCL - a complete guess for now.
 #define FG_TOWER_DEFAULT_RANGE 30
 
+enum tower_traffic_type {
+	CIRCUIT,
+	INBOUND,
+	OUTBOUND,
+	STRAIGHT_IN
+	// Umm - what's the difference between INBOUND and STRAIGHT_IN ?
+};
+
 // Structure for holding details of a plane under tower control.
 // Not fixed yet - may include more stuff later.
 class TowerPlaneRec {
@@ -64,7 +72,11 @@ class TowerPlaneRec {
 	bool finalAcknowledged;
 	bool onRwy;
 	// enum type - light, medium, heavy etc - we need someway of approximating the aircraft type and performance.
+	
+	// Type of operation the plane is doing
+	tower_traffic_type opType;
 };
+
 
 typedef list < TowerPlaneRec* > tower_plane_rec_list_type;
 typedef tower_plane_rec_list_type::iterator tower_plane_rec_list_iterator;
@@ -73,7 +85,7 @@ typedef tower_plane_rec_list_type::const_iterator tower_plane_rec_list_const_ite
 
 class FGTower : public FGATC {
 
-	public:
+public:
 	
 	FGTower();
 	~FGTower();
@@ -92,20 +104,27 @@ class FGTower : public FGATC {
 	void ReportGoingAround(string ID);
 	void ReportRunwayVacated(string ID);
 	
-	// Parse a literal message to decide which of above it represents. 
-	// (a long term project that eventually will hopefully receive the output from voice recognition software.)
-	void LiteralTransmission(string trns, string ID);
-	
 	inline void SetDisplay() {display = true;}
 	inline void SetNoDisplay() {display = false;}
 	
 	inline string get_trans_ident() { return trans_ident; }
 	inline atc_type GetType() { return TOWER; }
 	
-	// Make a request of tower control
-	//void Request(tower_request request);
+	inline FGGround* GetGroundPtr() {return ground; }
+
+private:
+	FGATCMgr* ATCmgr;	
+	// This is purely for synactic convienience to avoid writing globals->get_ATC_mgr()-> all through the code!
 	
-	private:
+	// Calculate the eta of each plane to the threshold.
+	// For ground traffic this is the fastest they can get there.
+	// For air traffic this is the middle approximation.
+	void doThresholdETACalc();
+	
+	// Order the list of traffic as per expected threshold use and flag any conflicts
+	bool doThresholdUseOrder();
+	
+	void doCommunication();
 	
 	void IssueLandingClearance(TowerPlaneRec* tpr);
 	void IssueGoAround(TowerPlaneRec* tpr);
@@ -114,10 +133,12 @@ class FGTower : public FGATC {
 	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
 	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
 	
+	bool rwyOccupied;	// Active runway occupied flag.  For now we'll disregard multiple runway and land-and-hold-short operations
+	
 	// Need a data structure to hold details of the various active planes
 	// or possibly another data structure with the positions of the inactive planes.
 	// Need a data structure to hold outstanding communications from aircraft.
-	
+/*	
 	// Linked-list of planes on approach ordered with nearest first (timewise).
 	// Includes planes that have landed but not yet vacated runway.
 	// Somewhat analagous to the paper strips used (used to be used?) in real life.
@@ -131,12 +152,16 @@ class FGTower : public FGATC {
 	
 	// List of planes on rwy
 	tower_plane_rec_list_type rwyList;
+*/
+
+	// Linked list of all planes due to use a given rwy arranged in projected order of rwy use
+	tower_plane_rec_list_type trafficList;	// TODO - needs to be expandable to more than one rwy
 
 	// Ground can be separate or handled by tower in real life.
 	// In the program we will always use a separate FGGround class, but we need to know
 	// whether it is supposed to be separate or not to give the correct instructions.
 	bool separateGround;	// true if ground control is separate
-	FGGround* groundPtr;	// The ground control associated with this airport.
+	FGGround* ground;	// The ground control associated with this airport.
 	
 	
 	// for failure modeling

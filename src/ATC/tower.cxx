@@ -76,13 +76,55 @@ finalAcknowledged(false)
 // FGTower
 
 FGTower::FGTower() {
+	ATCmgr = globals->get_ATC_mgr();
 }
 
 FGTower::~FGTower() {
+	if(!separateGround) {
+		delete ground;
+	}
 }
 
 void FGTower::Init() {
     display = false;
+	
+	// Need some way to initialise rwyOccupied flag correctly if the user is on the runway and to know its the user.
+	// I'll punt the startup issue for now though!!!
+	rwyOccupied = false;
+	
+	// Setup the ground control at this airport
+	AirportATC a;
+	if(ATCmgr->GetAirportATCDetails(ident, &a)) {
+		if(a.ground_freq) {		// Ground control
+			ground = (FGGround*)ATCmgr->GetATCPointer(ident, GROUND);
+			separateGround = true;
+			if(ground == NULL) {
+				// Something has gone wrong :-(
+				cout << "ERROR - ground has frequency but can't get ground pointer :-(\n";
+				ground = new FGGround(ident);
+				separateGround = false;
+				ground->Init();
+				if(display) {
+					ground->SetDisplay();
+				} else {
+					ground->SetNoDisplay();
+				}
+			}
+		} else {
+			// Initialise ground anyway to do the shortest path stuff!
+			// Note that we're now responsible for updating and deleting this - NOT the ATCMgr.
+			ground = new FGGround(ident);
+			separateGround = false;
+			ground->Init();
+			if(display) {
+				ground->SetDisplay();
+			} else {
+				ground->SetNoDisplay();
+			}
+		}
+	} else {
+		//cout << "Unable to find airport details in FGTower::Init()\n";
+	}
 }
 
 void FGTower::Update() {
@@ -94,14 +136,58 @@ void FGTower::Update() {
     // We need to check for planes not under our control coming within our 
     // control area and address if necessary.
 
-    // Hardwired for testing
-    static int play = 0;
-    if(play == 200) {
-	//cout << "Registering message in tower.cxx ****************************\n";
-	//globals->get_ATC_display()->RegisterSingleMessage((string)"Cessna eight-two-zero Cleared for takeoff", 2);
-    }
-    ++play;
+	// TODO - a lot of the below probably doesn't need to be called every frame and should be staggered.
+	
+	// Sort the arriving planes
+
+	// Calculate the eta of each plane to the threshold.
+	// For ground traffic this is the fastest they can get there.
+	// For air traffic this is the middle approximation.
+	doThresholdETACalc();
+	
+	// Order the list of traffic as per expected threshold use and flag any conflicts
+	bool conflicts = doThresholdUseOrder();
+	
+	// sortConficts() !!!
+	
+	doCommunication();
+	
+	if(!separateGround) {
+		// The display stuff might have to get more clever than this when not separate 
+		// since the tower and ground might try communicating simultaneously even though
+		// they're mean't to be the same contoller/frequency!!
+		if(display) {
+			ground->SetDisplay();
+		} else {
+			ground->SetNoDisplay();
+		}
+		ground->Update();
+	}
 }
+
+// Calculate the eta of each plane to the threshold.
+// For ground traffic this is the fastest they can get there.
+// For air traffic this is the middle approximation.
+void FGTower::doThresholdETACalc() {
+	// For now we'll be very crude and hardwire expected speeds to C172-like values
+	double app_ias = 100.0;			// Speed during straight-in approach
+	double circuit_ias = 80.0;		// Speed around circuit
+	double final_ias = 70.0;		// Speed during final approach
+
+	tower_plane_rec_list_iterator twrItr;
+
+	for(twrItr = trafficList.begin(); twrItr != trafficList.end(); twrItr++) {
+	}
+	
+}
+
+bool FGTower::doThresholdUseOrder() {
+	return(true);
+}
+
+void FGTower::doCommunication() {
+}
+		
 
 void FGTower::RequestLandingClearance(string ID) {
 	cout << "Request Landing Clearance called...\n";
