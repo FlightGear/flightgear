@@ -107,7 +107,7 @@ public:
 	// Run the internal calculations
 	// Derived classes should call this method from their own Update methods if they 
 	// wish to use the response timer functionality.
-	void Update(double dt);
+	virtual void Update(double dt);
 	
 	// Add plane to a stack
 	virtual void AddPlane(string pid);
