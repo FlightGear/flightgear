@@ -1070,33 +1070,6 @@ static void fgMainLoop( void ) {
            cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
            cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
-#if 0
-// This code is used by LaRCsim/UIUC to position the aircraft at a proper
-// place. This code should eventually go into the LaRCsim directory.
-// Commented out at Jul 27 2003 because tests show it is not needed.
-// Can probbaly be safely removed after Spet. 2003 - EMH
-
-    if ( acmodel_location != 0 ) {
-      if ( acmodel_location->get_cur_elev_m() > -9990 && cur_fdm_state->get_inited() ) {
-        if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
-             (acmodel_location->get_cur_elev_m() + alt_adjust_m - 130.0) ) {
-            // now set aircraft altitude above ground
-            printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
-               cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-               acmodel_location->get_cur_elev_m() + alt_adjust_m - 130.0,
-               acmodel_location->get_cur_elev_m() + alt_adjust_m );
-            cur_fdm_state->set_Altitude( (acmodel_location->get_cur_elev_m() 
-                                                + alt_adjust_m) * SG_METER_TO_FEET );
-            SG_LOG( SG_ALL, SG_DEBUG, 
-                "<*> resetting altitude to " 
-                << cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
-                << " meters" );
-        }
-      }
-    }
-// End of code in question. (see Curt is this code used? above)
-#endif
-
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
            scenery.get_cur_elev(),
            cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
