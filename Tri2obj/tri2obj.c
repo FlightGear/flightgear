@@ -171,7 +171,7 @@ void triload(char *basename) {
 /* dump in WaveFront .obj format */
 void dump_obj(char *basename) {
     char objname[256];
-    double n1[3], n2[3], n3[3];
+    double n1[3], n2[3], n3[3], norm[3], temp;
     FILE *obj;
     int i, t1, t2, t3, count;
 
@@ -214,10 +214,13 @@ void dump_obj(char *basename) {
 	    count = 3;
 	}
 
-	fprintf(obj, "vn %.4f %.4f %.4f\n", 
-		( n1[0] + n2[0] + n3[0] ) / (double)count,
-		( n1[1] + n2[1] + n3[1] ) / (double)count,
-		( n1[2] + n2[2] + n3[2] ) / (double)count );
+	norm[0] = ( n1[0] + n2[0] + n3[0] ) / (double)count;
+	norm[1] = ( n1[1] + n2[1] + n3[1] ) / (double)count;
+	norm[2] = ( n1[2] + n2[2] + n3[2] ) / (double)count;
+
+	MAT3_NORMALIZE_VEC(norm, temp);
+	
+	fprintf(obj, "vn %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);
     }
 
     /* dump faces */
@@ -248,9 +251,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.3  1997/11/15 18:05:05  curt
-/* minor tweaks ...
+/* Revision 1.4  1997/12/02 13:13:32  curt
+/* Fixed problem with averaged vertex normals.
 /*
+ * Revision 1.3  1997/11/15 18:05:05  curt
+ * minor tweaks ...
+ *
  * Revision 1.2  1997/11/14 00:29:13  curt
  * Transform scenery coordinates at this point in pipeline when scenery is
  * being translated to .obj format, not when it is being loaded into the end

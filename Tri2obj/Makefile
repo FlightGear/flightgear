@@ -33,7 +33,7 @@ OFILES = $(CFILES:.c=.o)
 include ../make.inc
 
 
-CFLAGS = $(FG_CFLAGS) -g
+CFLAGS = $(FG_CFLAGS) -O3 -fomit-frame-pointer -funroll-all-loops -ffast-math
 
 
 #---------------------------------------------------------------------------
@@ -66,6 +66,9 @@ tri2obj.o: tri2obj.c
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/12/02 13:13:32  curt
+# Fixed problem with averaged vertex normals.
+#
 # Revision 1.2  1997/11/14 00:29:13  curt
 # Transform scenery coordinates at this point in pipeline when scenery is
 # being translated to .obj format, not when it is being loaded into the end
