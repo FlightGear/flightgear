@@ -54,6 +54,7 @@ FG_USING_NAMESPACE(std);
 
 #define MAX_EX_NODES 10000
 
+#if 0
 #ifdef WIN32
 # ifdef __BORLANDC__
 #  include <dir.h>
@@ -62,6 +63,7 @@ FG_USING_NAMESPACE(std);
 #  define MKDIR(a) mkdir(a,S_IRWXU)  // I am just guessing at this flag (NHV)
 # endif // __BORLANDC__
 #endif // WIN32
+#endif //0
 
 
 fgDEM::fgDEM( void ) {
@@ -71,6 +73,7 @@ fgDEM::fgDEM( void ) {
 }
 
 
+#if 0
 #ifdef WIN32
 
 // return the file path name ( foo/bar/file.ext = foo/bar )
@@ -114,6 +117,7 @@ static int my_mkdir (const char *dir) {
 }
 
 #endif // WIN32
+#endif //0
 
 
 // open a DEM file
@@ -746,12 +750,13 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
     if ( result != 0 && errno == ENOENT ) {
 	cout << "Creating directory\n";
 
-#ifndef WIN32
+// #ifndef WIN32
 
 	command = "mkdir -p " + dir + "\n";
 	system( command.c_str() );
 
-#else // WIN32
+#if 0
+// #else // WIN32
 
 	// Cygwin crashes when trying to output to node file
 	// explicitly making directory structure seems OK on Win95
@@ -767,7 +772,8 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
 	dir = fg_root + "/Scenery/" + base_path;
 	if (my_mkdir ( dir.c_str() )) { exit (-1); }
 
-#endif // WIN32
+// #endif // WIN32
+#endif //0
 
     } else {
 	// assume directory exists
@@ -852,6 +858,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/10/28 19:38:20  curt
+// Elliminate some unnecessary win32 specific stuff (by Norman Vine)
+//
 // Revision 1.19  1998/10/22 21:59:19  curt
 // Fixed a couple subtle bugs that resulted from some of my c++ conversions.
 // One bug could cause a segfault on certain input, and the other bug could
