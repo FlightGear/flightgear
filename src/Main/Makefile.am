@@ -48,7 +48,6 @@ fgfs_SOURCES = \
         fgfs.cxx fgfs.hxx \
 	globals.cxx globals.hxx \
         logger.cxx logger.hxx \
-        model.cxx model.hxx \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
 	viewer.cxx viewer.hxx \
@@ -68,6 +67,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
 	$(top_builddir)/src/GUI/libGUI.a \
+	$(top_builddir)/src/Model/libModel.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
 	$(top_builddir)/src/Sound/libSound.a \

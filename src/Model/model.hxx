@@ -10,15 +10,11 @@
 # error This library requires C++
 #endif
 
-#include <string>
 #include <vector>
 
-SG_USING_STD(string);
 SG_USING_STD(vector);
 
-#include "fgfs.hxx"
-#include <simgear/misc/props.hxx>
-#include <simgear/timing/timestamp.hxx>
+#include <Main/fg_props.hxx>
 
 // Has anyone done anything *really* stupid, like making min and max macros?
 #ifdef min
@@ -28,29 +24,58 @@ SG_USING_STD(vector);
 #undef max
 #endif
 
-class FGAircraftModel : public FGSubsystem
+class FG3DModel
 {
 public:
 
-  FGAircraftModel ();
-  virtual ~FGAircraftModel ();
+  FG3DModel ();
+  virtual ~FG3DModel ();
 
-  virtual void init ();
-  virtual void bind ();
-  virtual void unbind ();
+  virtual void init (const string &path);
   virtual void update (int dt);
+
+  virtual bool getVisible () const;
+  virtual void setVisible (bool visible);
+
+  virtual double getLongitudeDeg () const { return _lon_deg; }
+  virtual double getLatitudeDeg () const { return _lat_deg; }
+  virtual double getElevationFt () const { return _elev_ft; }
+
+  virtual void setPosition (double lon_deg, double lat_deg, double elev_ft);
+
+  virtual double getRoll () const { return _roll_deg; }
+  virtual double getPitch () const { return _pitch_deg; }
+  virtual double getHeading () const { return _heading_deg; }
+
+  virtual void setOrientation (double roll_deg, double pitch_deg,
+			       double heading_deg);
+
+  virtual ssgEntity * getSceneGraph () const { return _selector; }
 
 private:
 
   class Animation;
-
   Animation * make_animation (const char * object_name, SGPropertyNode * node);
 
+				// Geodetic position
+  double _lon_deg;
+  double _lat_deg;
+  double _elev_ft;
+
+				// Orientation
+  double _roll_deg;
+  double _pitch_deg;
+  double _heading_deg;
+
+				// Animations
+
+  vector <Animation *> _animations;
+
+
+				// Scene graph
   ssgEntity * _model;
   ssgSelector * _selector;
   ssgTransform * _position;
-
-  vector <Animation *> _animations;
 
 
   
@@ -195,8 +220,6 @@ private:
   };
 
 };
-
-extern FGAircraftModel current_model;
 
 #endif // __MODEL_HXX
 

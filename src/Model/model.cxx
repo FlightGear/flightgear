@@ -14,17 +14,15 @@
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include "globals.hxx"
-#include "fg_props.hxx"
-#include "viewmgr.hxx"
+#include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
+
 #include "model.hxx"
-
-extern ssgRoot * cockpit;		// FIXME: from main.cxx
-
-FGAircraftModel current_model;	// FIXME: add to globals
 
 
 
@@ -124,19 +122,62 @@ set_translation (sgMat4 &matrix, double position_m, sgVec3 &axis)
 }
 
 
+// TODO: once this is working, look at Norm's optimized version
+static void
+world_coordinate( sgCoord *obj_pos,
+		  double lat_deg, double lon_deg, double elev_ft,
+		  double roll_deg, double pitch_deg, double hdg_deg)
+{
+  Point3D center = scenery.get_center();
+
+  // setup transforms
+  Point3D geod( lon_deg * SGD_DEGREES_TO_RADIANS,
+		lat_deg * SGD_DEGREES_TO_RADIANS,
+		elev_ft * SG_FEET_TO_METER);
+	
+  Point3D world_pos = sgGeodToCart( geod );
+  Point3D offset = world_pos - center;
+	
+  sgMat4 POS;
+  sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
+
+  sgVec3 obj_bk, obj_rt, obj_up;
+  sgSetVec3( obj_bk, 1.0, 0.0, 0.0); // X axis
+  sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
+  sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
+
+  sgMat4 ROT_lon, ROT_lat, ROT_hdg, ROT_pitch, ROT_roll;
+  sgMakeRotMat4( ROT_lon, lon_deg, obj_up );
+  sgMakeRotMat4( ROT_lat, 90 - lat_deg, obj_rt );
+  sgMakeRotMat4( ROT_hdg, -hdg_deg, obj_up );
+  sgMakeRotMat4( ROT_pitch, pitch_deg, obj_rt );
+  sgMakeRotMat4( ROT_roll, -roll_deg, obj_bk );
+
+  sgMat4 TRANS;
+  sgCopyMat4( TRANS, ROT_roll );
+  sgPostMultMat4( TRANS, ROT_pitch );
+  sgPostMultMat4( TRANS, ROT_hdg );
+  sgPostMultMat4( TRANS, ROT_lat );
+  sgPostMultMat4( TRANS, ROT_lon );
+  sgPostMultMat4( TRANS, POS );
+
+  sgSetCoord( obj_pos, TRANS );
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGAircraftModel
+// Implementation of FG3DModel
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::FGAircraftModel ()
+FG3DModel::FG3DModel ()
   : _model(0),
     _selector(new ssgSelector),
     _position(new ssgTransform)
 {
 }
 
-FGAircraftModel::~FGAircraftModel ()
+FG3DModel::~FG3DModel ()
 {
   // since the nodes are attached to the scene graph, they'll be
   // deleted automatically
@@ -150,39 +191,32 @@ FGAircraftModel::~FGAircraftModel ()
 }
 
 void 
-FGAircraftModel::init ()
+FG3DModel::init (const string &path)
 {
-  // TODO: optionally load an XML file with a pointer to the 3D object
-  // and placement and animation info
-
   SGPropertyNode props;
 
-  SG_LOG(SG_INPUT, SG_INFO, "Initializing aircraft 3D model");
-
 				// Load the 3D aircraft object itself
-  // DCL - the xml parser requires the full path but the ssgLoader doesn't
-  // so lets have two paths.
   SGPath xmlpath = globals->get_fg_root();
-  SGPath modelpath = (string)fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
+  SGPath modelpath = path;
   xmlpath.append(modelpath.str());
 
+				// Check for an XML wrapper
   if (xmlpath.str().substr(xmlpath.str().size() - 4, 4) == ".xml") {
     readProperties(xmlpath.str(), &props);
     if (props.hasValue("/path")) {
       modelpath = modelpath.dir();
       modelpath.append(props.getStringValue("/path"));
     } else {
-      modelpath = "Models/Geometry/glider.ac";
+      throw sg_exception("No path for model");
     }
   }
 
+				// Assume that textures are in
+				// the same location as the XML file.
   ssgTexturePath((char *)xmlpath.dir().c_str());
   _model = ssgLoad((char *)modelpath.c_str());
-  if (_model == 0) {
-    _model = ssgLoad((char *)"Models/Geometry/glider.ac");
-    if (_model == 0)
-      throw sg_exception("Failed to load an aircraft model");
-  }
+  if (_model == 0)
+    throw sg_exception("Failed to load 3D model");
 
 				// Load animations
   vector<SGPropertyNode *> animation_nodes = props.getChildren("animation");
@@ -224,75 +258,53 @@ FGAircraftModel::init ()
 				// Set up the selector node
   _selector->addKid(_position);
   _selector->clrTraversalMaskBits(SSGTRAV_HOT);
-  cockpit->addKid(_selector);
-}
-
-void 
-FGAircraftModel::bind ()
-{
-}
-
-void 
-FGAircraftModel::unbind ()
-{
 }
 
 void
-FGAircraftModel::update (int dt)
+FG3DModel::update (int dt)
 {
-  sgMat4 MODEL_ROT, LOCAL;
-  sgMat4 sgTRANS;
+  for (unsigned int i = 0; i < _animations.size(); i++)
+    _animations[i]->update(dt);
 
-  int view_number = globals->get_viewmgr()->get_current();
+  _selector->select(true);
 
-  if (view_number == 0 && !fgGetBool("/sim/view/internal")) {
-    _selector->select(false);
-  } else {
-    for (unsigned int i = 0; i < _animations.size(); i++)
-      _animations[i]->update(dt);
-
-    _selector->select(true);
-    FGViewer *current_view = 
-      (FGViewer *)globals->get_viewmgr()->get_view( view_number );
-    
-    // FIXME: this class needs to be unlinked from the viewer
-    // get transform for current position in the world...
-    sgMakeTransMat4( sgTRANS, current_view->getRelativeViewPos() );
-
-    // get a copy of the LOCAL rotation from the current view...
-    sgCopyMat4( LOCAL, current_view->get_LOCAL_ROT() );
-
-    // Make the MODEL Rotation (just reordering the LOCAL matrix
-    //  and flipping the model over on its feet)...
-    MODEL_ROT[0][0] = -LOCAL[2][0];
-    MODEL_ROT[0][1] = -LOCAL[2][1];
-    MODEL_ROT[0][2] = -LOCAL[2][2];
-    MODEL_ROT[0][3] = SG_ZERO;
-    MODEL_ROT[1][0] = LOCAL[1][0];
-    MODEL_ROT[1][1] = LOCAL[1][1];
-    MODEL_ROT[1][2] = LOCAL[1][2];
-    MODEL_ROT[1][3] = SG_ZERO;
-    MODEL_ROT[2][0] = LOCAL[0][0];
-    MODEL_ROT[2][1] = LOCAL[0][1];
-    MODEL_ROT[2][2] = LOCAL[0][2];
-    MODEL_ROT[2][3] = SG_ZERO;
-
-    // add the position data to the matrix
-    MODEL_ROT[3][0] = SG_ZERO;
-    MODEL_ROT[3][1] = SG_ZERO;
-    MODEL_ROT[3][2] = SG_ZERO;
-    MODEL_ROT[3][3] = SG_ONE;
-
-    sgPostMultMat4( MODEL_ROT, sgTRANS );
-
-    sgCoord tuxpos;
-    sgSetCoord( &tuxpos, MODEL_ROT );
-    _position->setTransform( &tuxpos );
-  }
+  sgCoord obj_pos;
+  world_coordinate(&obj_pos, _lat_deg, _lon_deg, _elev_ft,
+		   _roll_deg, _pitch_deg, _heading_deg);
+  _position->setTransform(&obj_pos);
 }
 
-FGAircraftModel::Animation *
-FGAircraftModel::make_animation (const char * object_name,
+bool
+FG3DModel::getVisible () const
+{
+  return _selector->getSelect();
+}
+
+void
+FG3DModel::setVisible (bool visible)
+{
+  _selector->select(visible);
+}
+
+void
+FG3DModel::setPosition (double lon_deg, double lat_deg, double elev_ft)
+{
+  _lon_deg = lon_deg;
+  _lat_deg = lat_deg;
+  _elev_ft = elev_ft;
+}
+
+void
+FG3DModel::setOrientation (double roll_deg, double pitch_deg,
+			   double heading_deg)
+{
+  _roll_deg = roll_deg;
+  _pitch_deg = pitch_deg;
+  _heading_deg = heading_deg;
+}
+
+FG3DModel::Animation *
+FG3DModel::make_animation (const char * object_name,
 				 SGPropertyNode * node)
 {
   Animation * animation = 0;
@@ -327,35 +339,35 @@ FGAircraftModel::make_animation (const char * object_name,
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGAircraftModel::Animation
+// Implementation of FG3DModel::Animation
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::Animation::Animation ()
+FG3DModel::Animation::Animation ()
 {
 }
 
-FGAircraftModel::Animation::~Animation ()
+FG3DModel::Animation::~Animation ()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGAircraftModel::NullAnimation
+// Implementation of FG3DModel::NullAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::NullAnimation::NullAnimation ()
+FG3DModel::NullAnimation::NullAnimation ()
   : _branch(new ssgBranch)
 {
 }
 
-FGAircraftModel::NullAnimation::~NullAnimation ()
+FG3DModel::NullAnimation::~NullAnimation ()
 {
   _branch = 0;
 }
 
 void
-FGAircraftModel::NullAnimation::init (ssgEntity * object,
+FG3DModel::NullAnimation::init (ssgEntity * object,
 				      SGPropertyNode * props)
 {
   splice_branch(_branch, object);
@@ -363,30 +375,30 @@ FGAircraftModel::NullAnimation::init (ssgEntity * object,
 }
 
 void
-FGAircraftModel::NullAnimation::update (int dt)
+FG3DModel::NullAnimation::update (int dt)
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGAircraftModel::SelectAnimation
+// Implementation of FG3DModel::SelectAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::SelectAnimation::SelectAnimation ()
+FG3DModel::SelectAnimation::SelectAnimation ()
   : _condition(0),
     _selector(new ssgSelector)
 {
 }
 
-FGAircraftModel::SelectAnimation::~SelectAnimation ()
+FG3DModel::SelectAnimation::~SelectAnimation ()
 {
   delete _condition;
   _selector = 0;
 }
 
 void
-FGAircraftModel::SelectAnimation::init (ssgEntity * object,
+FG3DModel::SelectAnimation::init (ssgEntity * object,
 				      SGPropertyNode * props)
 {
   splice_branch(_selector, object);
@@ -398,7 +410,7 @@ FGAircraftModel::SelectAnimation::init (ssgEntity * object,
 }
 
 void
-FGAircraftModel::SelectAnimation::update (int dt)
+FG3DModel::SelectAnimation::update (int dt)
 {
   if (_condition != 0 && _condition->test()) 
     _selector->select(0xffff);
@@ -409,10 +421,10 @@ FGAircraftModel::SelectAnimation::update (int dt)
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGAircraftModel::SpinAnimation
+// Implementation of FG3DModel::SpinAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::SpinAnimation::SpinAnimation ()
+FG3DModel::SpinAnimation::SpinAnimation ()
   : _prop(0),
     _factor(0),
     _position_deg(0),
@@ -420,13 +432,13 @@ FGAircraftModel::SpinAnimation::SpinAnimation ()
 {
 }
 
-FGAircraftModel::SpinAnimation::~SpinAnimation ()
+FG3DModel::SpinAnimation::~SpinAnimation ()
 {
   _transform = 0;
 }
 
 void
-FGAircraftModel::SpinAnimation::init (ssgEntity * object,
+FG3DModel::SpinAnimation::init (ssgEntity * object,
 				      SGPropertyNode * props)
 {
 				// Splice in the new transform node
@@ -445,7 +457,7 @@ FGAircraftModel::SpinAnimation::init (ssgEntity * object,
 }
 
 void
-FGAircraftModel::SpinAnimation::update (int dt)
+FG3DModel::SpinAnimation::update (int dt)
 {
   float velocity_rpms = (_prop->getDoubleValue() * _factor / 60000.0);
   _position_deg += (dt * velocity_rpms * 360);
@@ -460,10 +472,10 @@ FGAircraftModel::SpinAnimation::update (int dt)
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGAircraftModel::RotateAnimation
+// Implementation of FG3DModel::RotateAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::RotateAnimation::RotateAnimation ()
+FG3DModel::RotateAnimation::RotateAnimation ()
   : _prop(0),
     _offset_deg(0.0),
     _factor(1.0),
@@ -476,13 +488,13 @@ FGAircraftModel::RotateAnimation::RotateAnimation ()
 {
 }
 
-FGAircraftModel::RotateAnimation::~RotateAnimation ()
+FG3DModel::RotateAnimation::~RotateAnimation ()
 {
   _transform = 0;
 }
 
 void
-FGAircraftModel::RotateAnimation::init (ssgEntity * object,
+FG3DModel::RotateAnimation::init (ssgEntity * object,
 					SGPropertyNode * props)
 {
 				// Splice in the new transform node
@@ -510,7 +522,7 @@ FGAircraftModel::RotateAnimation::init (ssgEntity * object,
 }
 
 void
-FGAircraftModel::RotateAnimation::update (int dt)
+FG3DModel::RotateAnimation::update (int dt)
 {
   _position_deg = ((_prop->getDoubleValue() + _offset_deg) * _factor);
   if (_has_min && _position_deg < _min_deg)
@@ -524,10 +536,10 @@ FGAircraftModel::RotateAnimation::update (int dt)
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGAircraftModel::TranslateAnimation
+// Implementation of FG3DModel::TranslateAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FGAircraftModel::TranslateAnimation::TranslateAnimation ()
+FG3DModel::TranslateAnimation::TranslateAnimation ()
   : _prop(0),
     _offset_m(0.0),
     _factor(1.0),
@@ -540,13 +552,13 @@ FGAircraftModel::TranslateAnimation::TranslateAnimation ()
 {
 }
 
-FGAircraftModel::TranslateAnimation::~TranslateAnimation ()
+FG3DModel::TranslateAnimation::~TranslateAnimation ()
 {
   _transform = 0;
 }
 
 void
-FGAircraftModel::TranslateAnimation::init (ssgEntity * object,
+FG3DModel::TranslateAnimation::init (ssgEntity * object,
 					SGPropertyNode * props)
 {
 				// Splice in the new transform node
@@ -571,7 +583,7 @@ FGAircraftModel::TranslateAnimation::init (ssgEntity * object,
 }
 
 void
-FGAircraftModel::TranslateAnimation::update (int dt)
+FG3DModel::TranslateAnimation::update (int dt)
 {
   _position_m = ((_prop->getDoubleValue() + _offset_m) * _factor);
   if (_has_min && _position_m < _min_m)

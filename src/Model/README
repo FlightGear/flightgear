@@ -1,0 +1,14 @@
+Last updated $Date$
+
+This directory contains code for loading, positioning, orienting, and
+animating 3D models.
+
+acmodel.cxx
+acmodel.hxx
+  This module defines the FGAircraftModel subsystem, which manages the 3D
+  model representing the aircraft the user is flying.
+
+model.cxx
+model.hxx
+  This module defines the FG3DModel class, which represents any 3D
+  model in the FlightGear world.

@@ -61,11 +61,6 @@ main.cxx
   methods; eventually, this will be a short, simple file defining the
   top-level flow logic of the program.
 
-model.cxx
-model.hxx
-  This module defines the FGAircraftModel subsystem, which controls
-  the display and animation of 3D models in FlightGear.
-
 options.cxx
 options.hxx
   This module defines global functions for parsing command-line

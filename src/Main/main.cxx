@@ -96,6 +96,7 @@ SG_USING_STD(endl);
 
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
+#include <Model/acmodel.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -163,7 +164,6 @@ float scene_farplane = 120000.0f;
 #include "viewmgr.hxx"
 #include "options.hxx"
 #include "logger.hxx"
-#include "model.hxx"
 
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
