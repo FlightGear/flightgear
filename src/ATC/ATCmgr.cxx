@@ -281,11 +281,12 @@ bool FGATCMgr::CommRegisterAirport(string ident, int chan) {
 // Remove from list only if not needed by the AI system or the other comm channel
 // Note that chan is zero based.
 void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
-	SG_LOG(SG_ATC, SG_BULK, "CommRemoveFromList called for airport " << id << " by channel " << chan);
+	SG_LOG(SG_ATC, SG_BULK, "CommRemoveFromList called for airport " << id << " " << tp << " by channel " << chan);
 	if(airport_atc_map.find((string)id) != airport_atc_map.end()) {
 		AirportATC* a = airport_atc_map[(string)id];
 		//cout << "In CommRemoveFromList, a->ground_freq = " << a->ground_freq << endl;
-		if(a->set_by_AI) {
+		if(a->set_by_AI && tp != ATIS) {
+			SG_LOG(SG_ATC, SG_BULK, "In CommRemoveFromList, service was set by AI\n");
 			// Don't remove
 			FGATC* aptr = GetATCPointer((string)id, tp);
 			switch(chan) {
@@ -533,7 +534,7 @@ void FGATCMgr::FreqSearch(int channel) {
 		// This was a switch-case statement but the compiler didn't like the new variable creation with it. 
 		if(comm_type[chan] == ATIS) {
 			CommRegisterAirport(comm_ident[chan], chan);
-			FGATC* app = FindInList(comm_ident[chan], TOWER);
+			FGATC* app = FindInList(comm_ident[chan], ATIS);
 			if(app != NULL) {
 				// The station is already in the ATC list
 				//cout << "In list - flagging SetDisplay..." << endl;
