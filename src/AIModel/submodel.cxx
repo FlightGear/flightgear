@@ -88,9 +88,7 @@ FGSubmodelMgr::update (double dt)
   if (!(_serviceable_node->getBoolValue())) return;
   int i=-1;
 
-  if (_user_alt_node->getDoubleValue() > contrail_altitude) {
-     _contrail_trigger->setBoolValue(true);
-  }   
+  _contrail_trigger->setBoolValue(_user_alt_node->getDoubleValue() > contrail_altitude);
 
   submodel_iterator = submodels.begin();
   while(submodel_iterator != submodels.end()) {
@@ -150,8 +148,6 @@ FGSubmodelMgr::release (submodel* sm, double dt)
 void
 FGSubmodelMgr::load ()
 {
-
-    int i;
     SGPropertyNode *path = fgGetNode("/sim/submodels/path");
     SGPropertyNode root;
 
@@ -169,12 +165,14 @@ FGSubmodelMgr::load ()
       }
     }
 
-   int count = root.nChildren();
-   for (i = 0; i < count; i++) { 
-     // cout << "Reading submodel " << i << endl;        
-     SGPropertyNode *prop;
+   vector<SGPropertyNode_ptr> children = root.getChildren("submodel");
+   vector<SGPropertyNode_ptr>::iterator it = children.begin();
+   vector<SGPropertyNode_ptr>::iterator end = children.end();
+   for (int i = 0; it < end; ++it, i++) {
+
+     // cout << "Reading submodel " << (*it)->getPath() << endl;
      submodel* sm = new submodel;
-     SGPropertyNode * entry_node = root.getChild(i);
+     SGPropertyNode * entry_node = *it;
      sm->trigger        = fgGetNode(entry_node->getStringValue("trigger", "none"), true);
      sm->name           = entry_node->getStringValue("name", "none_defined");
      sm->model          = entry_node->getStringValue("model", "Models/Geometry/rocket.ac");
