@@ -1427,12 +1427,23 @@ puCallback viewSubmenuCb        [] = {
     guiTogglePanel, NULL
 };
 
-char *aircraftSubmenu           [] = {
-    "Autopilot", "Heading", "Altitude", "Navigation", "Airport", 
-    /* "Communication", */ NULL
+//  "---------", 
+
+char *autopilotSubmenu           [] = {
+    "Toggle HUD Format", "Adjust AP Settings",
+    "---------", 
+    "Clear Route", "Skip Current Waypoint", "Add Waypoint",
+    "---------", 
+    "Set Altitude", "Set Heading",
+    NULL
 };
-puCallback aircraftSubmenuCb    [] = {
-    fgAPAdjust, NewHeading, NewAltitude, fgLatLonFormatToggle, NewTgtAirport, 
+
+puCallback autopilotSubmenuCb    [] = {
+    fgLatLonFormatToggle, fgAPAdjust,
+    NULL,
+    ClearRoute, PopWayPoint, AddWayPoint,
+    NULL,
+    NewAltitude, NewHeading,
     /* notCb, */ NULL
 };
 
@@ -1559,8 +1570,8 @@ void guiInit()
     mainMenuBar -> add_submenu ("File", fileSubmenu, fileSubmenuCb);
     // mainMenuBar -> add_submenu ("Edit", editSubmenu, editSubmenuCb);
     mainMenuBar -> add_submenu ("View", viewSubmenu, viewSubmenuCb);
-    mainMenuBar -> add_submenu ("Aircraft", aircraftSubmenu, aircraftSubmenuCb);
     mainMenuBar -> add_submenu ("Environment", environmentSubmenu, environmentSubmenuCb);
+    mainMenuBar -> add_submenu ("Autopilot", autopilotSubmenu, autopilotSubmenuCb);
     // mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
 #ifdef FG_NETWORK_OLK
     if ( current_options.get_network_olk() ) {
