@@ -1547,7 +1547,7 @@ static bool fgMainInit( int argc, char **argv ) {
 #endif
 
     // set default log levels
-    sglog().setLogLevels( SG_ALL, SG_WARN );
+    sglog().setLogLevels( SG_ALL, SG_INFO );
 
     string version;
 #ifdef FLIGHTGEAR_VERSION
