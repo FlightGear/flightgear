@@ -43,7 +43,7 @@ CFLAGS = $(FG_CFLAGS) -g
 all: $(TARGET)
 
 $(TARGET): $(OFILES)
-	$(CC) $(OFILES) -o $(TARGET)
+	$(CC) $(OFILES) -o $(TARGET) ../../Src/Math/libMath.a -lm
 
 clean:
 	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
@@ -66,6 +66,12 @@ tri2obj.o: tri2obj.c
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/11/14 00:29:13  curt
+# Transform scenery coordinates at this point in pipeline when scenery is
+# being translated to .obj format, not when it is being loaded into the end
+# renderer.  Precalculate normals for each node as average of the normals
+# of each containing polygon so Garoude shading is now supportable.
+#
 # Revision 1.1  1997/10/29 23:05:14  curt
 # Initial revision.
 #

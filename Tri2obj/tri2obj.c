@@ -29,16 +29,85 @@
 
 #include "tri2obj.h"
 
+#include "../../Src/constants.h"
+#include "../../Src/types.h"
+#include "../../Src/Math/fg_geodesy.h"
+#include "../../Src/Math/mat3.h"
+#include "../../Src/Math/polar.h"
+
 
 int nodecount, tricount;
-double nodes[MAX_NODES][3];
+struct fgCartesianPoint nodes[MAX_NODES];
 int tris[MAX_TRIS][3];
 int new_tris[MAX_TRIS][3];
+
+
+/* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
+ * a cartesian point */
+struct fgCartesianPoint geod_to_cart(double geod[3]) {
+    struct fgCartesianPoint p;
+    double gc_lon, gc_lat, sl_radius;
+
+    /* printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
+	   geod[0], geod[1], geod[2]); */
+
+    gc_lon = geod[0]*ARCSEC_TO_RAD;
+    fgGeodToGeoc(geod[1]*ARCSEC_TO_RAD, geod[2], &sl_radius, &gc_lat);
+
+    /* printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
+	   gc_lat, sl_radius+geod[2]); */
+
+    p = fgPolarToCart(gc_lon, gc_lat, sl_radius+geod[2]);
+    
+    /* printf("A cart point is (%.8f, %.8f, %.8f)\n", p.x, p.y, p.z); */
+
+    return(p);
+}
+
+
+/* given three points defining a triangle, calculate the normal */
+void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2, 
+		 struct fgCartesianPoint p3, double normal[3])
+{
+    double v1[3], v2[3];
+    float temp;
+
+    v1[0] = p2.x - p1.x; v1[1] = p2.y - p1.y; v1[2] = p2.z - p1.z;
+    v2[0] = p3.x - p1.x; v2[1] = p3.y - p1.y; v2[2] = p3.z - p1.z;
+
+    MAT3cross_product(normal, v1, v2);
+    MAT3_NORMALIZE_VEC(normal,temp);
+
+    /* printf("Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]); */
+}
+
+
+/* return the index of all triangles containing the specified node */
+void find_tris(int n, int *t1, int *t2, int *t3) {
+    int i;
+
+    *t1 = *t2 = *t3 = 0;
+
+    i = 1;
+    while ( i <= tricount ) {
+        if ( (n == tris[i][0]) || (n == tris[i][1]) || (n == tris[i][2]) ) {
+            if ( *t1 == 0 ) {
+		*t1 = i;
+            } else if ( *t2 == 0 ) {
+		*t2 = i;
+	    } else {
+		*t3 = i;
+	    }
+        }
+        i++;
+    }
+}
 
 
 /* Initialize a new mesh structure */
 void triload(char *basename) {
     char nodename[256], elename[256];
+    double n[3];
     FILE *node, *ele;
     int dim, junk1, junk2;
     int i;
@@ -65,9 +134,11 @@ void triload(char *basename) {
 
     for ( i = 1; i <= nodecount; i++ ) {
 	fscanf(node, "%d %lf %lf %lf %d\n", &junk1, 
-	       &nodes[i][0], &nodes[i][1], &nodes[i][2], &junk2);
-	/* printf("%d %.2f %.2f %.2f\n", 
-	       junk1, nodes[i][0], nodes[i][1], nodes[i][2]); */
+	       &n[0], &n[1], &n[2], &junk2);
+	printf("%d %.2f %.2f %.2f\n", junk1, n[0], n[1], n[2]);
+	nodes[i] = geod_to_cart(n);
+	printf("%d %.2f %.2f %.2f\n", 
+	       junk1, nodes[i].x, nodes[i].y, nodes[i].z);
     }
 
     fclose(node);
@@ -100,8 +171,9 @@ void triload(char *basename) {
 /* dump in WaveFront .obj format */
 void dump_obj(char *basename) {
     char objname[256];
+    double n1[3], n2[3], n3[3];
     FILE *obj;
-    int i;
+    int i, t1, t2, t3, count;
 
     strcpy(objname, basename);
     strcat(objname, ".obj");
@@ -113,12 +185,45 @@ void dump_obj(char *basename) {
     /* dump vertices */
     for ( i = 1; i <= nodecount; i++ ) {
 	fprintf(obj, "v %.2f %.2f %.2f\n", 
-		nodes[i][0], nodes[i][1], nodes[i][2]);
+		nodes[i].x, nodes[i].y, nodes[i].z);
+    }
+
+    /* calculate and generate normals */
+    for ( i = 1; i <= nodecount; i++ ) {
+	find_tris(i, &t1, &t2, &t3);
+
+	n1[0] = n1[1] = n1[2] = 0.0;
+	n2[0] = n2[1] = n2[2] = 0.0;
+	n3[0] = n3[1] = n3[3] = 0.0;
+
+	count = 1;
+	calc_normal(nodes[tris[t1][0]], nodes[tris[t1][1]], nodes[tris[t1][2]], 
+		    n1);
+
+	if ( t2 > 0 ) {
+	    calc_normal(nodes[tris[t2][0]], nodes[tris[t2][1]], 
+			nodes[tris[t2][2]], n2);
+	    count = 2;
+	}
+
+	if ( t3 > 0 ) {
+	    calc_normal(nodes[tris[t3][0]], nodes[tris[t3][1]],
+			nodes[tris[t3][2]], n3);
+	    count = 3;
+	}
+
+	fprintf(obj, "vn %.4f %.4f %.4f\n", 
+		( n1[0] + n2[0] + n3[0] ) / (double)count,
+		( n1[1] + n2[1] + n3[1] ) / (double)count,
+		( n1[2] + n2[2] + n3[2] ) / (double)count );
     }
 
     /* dump faces */
     for ( i = 1; i <= tricount; i++ ) {
-	fprintf(obj, "f %d %d %d\n", tris[i][0], tris[i][1], tris[i][2]);
+	fprintf(obj, "f %d//%d %d//%d %d//%d\n", 
+		tris[i][0], tris[i][0], 
+		tris[i][1], tris[i][1], 
+		tris[i][2], tris[i][2]);
     }
 
     fclose(obj);
@@ -140,7 +245,13 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.1  1997/10/29 23:05:15  curt
-/* Initial revision.
+/* Revision 1.2  1997/11/14 00:29:13  curt
+/* Transform scenery coordinates at this point in pipeline when scenery is
+/* being translated to .obj format, not when it is being loaded into the end
+/* renderer.  Precalculate normals for each node as average of the normals
+/* of each containing polygon so Garoude shading is now supportable.
 /*
+ * Revision 1.1  1997/10/29 23:05:15  curt
+ * Initial revision.
+ *
  */
