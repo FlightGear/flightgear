@@ -89,15 +89,16 @@ void waitForButton(jsSuper *jss, int wait_ms) {
 
 void writeAxisProperties(fstream &fs, int control,int joystick, int axis) {
      
-     char jsDesc[40];
-     snprintf(jsDesc,40,"--prop:/input/joysticks/js[%d]/axis[%d]",joystick,axis);
-     fs << jsDesc  << "/control=" << axes_propnames[control] << endl; 
+     char jsDesc[80];
+     snprintf(jsDesc,80,"--prop:/input/joysticks/js[%d]/axis[%d]/binding",joystick,axis);
+     fs << jsDesc  << "/command=property-scale" << endl; 
+     fs << jsDesc  << "/property=" << axes_propnames[control] << endl; 
      
      fs << jsDesc << "/dead-band=0.02"  << endl; 
      
      if( half_range[control] == true) {
        fs << jsDesc << "/offset=-1.0" << endl; 
-       fs << jsDesc << "/factor=0.5" << endl;
+       fs << jsDesc << "/factor=-0.5" << endl;
      } else {
        fs << jsDesc << "/offset=0.0" << endl; 
        fs << jsDesc << "/factor=1.0" << endl;
@@ -107,13 +108,13 @@ void writeAxisProperties(fstream &fs, int control,int joystick, int axis) {
 
 void writeButtonProperties(fstream &fs, int property,int joystick, int button) {
      
-     char jsDesc[40];
-     snprintf(jsDesc,40,"--prop:/input/joysticks/js[%d]/button[%d]",joystick,button);
+     char jsDesc[80];
+     snprintf(jsDesc,80,"--prop:/input/joysticks/js[%d]/button[%d]/binding",joystick,button);
      
-     fs << jsDesc << "/action=adjust" << endl; 
-     fs << jsDesc << "/control=" << button_propnames[property] << endl;
-     fs << jsDesc << "/step=" << button_step[property] << endl; 
      fs << jsDesc << "/repeatable=" << button_repeat[property] << endl;
+     fs << jsDesc << "/command=property-adjust" << endl; 
+     fs << jsDesc << "/property=" << button_propnames[property] << endl;
+     fs << jsDesc << "/step=" << button_step[property] << endl; 
      fs << endl; 
 }    
 
