@@ -8,7 +8,7 @@
 
 unsigned char env_map[TEXRES_X][TEXRES_Y][4];
 GLuint texName;
-float window_x = 640, window_y = 480;
+int window_x = 640, window_y = 480;
 float alpha = 0.0, beta = 0.0;
 
   /*****************************************************************/
@@ -44,8 +44,8 @@ void setColor(float x, float y, float z, float angular_size, float r, float g, f
           float rz = -tz;
 
           float inv_m = 1.0 / (2.0 * sqrt(rx*rx + ry*ry + (rz + 1)*(rz + 1)));
-          int s = TEXRES_X * (rx * inv_m + 0.5);
-          int t = TEXRES_Y * (ry * inv_m + 0.5);
+          int s = (int)(TEXRES_X * (rx * inv_m + 0.5));
+          int t = (int)(TEXRES_Y * (ry * inv_m + 0.5));
 
           //seg_fault protection:
           if (s<0) s=0; 
@@ -54,10 +54,10 @@ void setColor(float x, float y, float z, float angular_size, float r, float g, f
           if (t<0) t=0;
           if (t>=TEXRES_Y) t=TEXRES_Y-1;
 
-          env_map[s][t][0] = r * 255;  
-          env_map[s][t][1] = g * 255;
-          env_map[s][t][2] = b * 255;
-          env_map[s][t][3] = a * 255;
+          env_map[s][t][0] = (unsigned char)(r * 255);
+          env_map[s][t][1] = (unsigned char)(g * 255);
+          env_map[s][t][2] = (unsigned char)(b * 255);
+          env_map[s][t][3] = (unsigned char)(a * 255);
         }
       }
     }
@@ -124,7 +124,7 @@ void display()
   //show light
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective((GLdouble) 60.0, window_x/window_y, (GLdouble) 1.0, (GLdouble) 100.0);
+  gluPerspective((GLdouble) 60.0, (float)window_x/window_y, (GLdouble) 1.0, (GLdouble) 100.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
@@ -177,9 +177,9 @@ void display()
   //show how the map looks like
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  //gluOrtho2D(0.0  -10.0, 1.0 +10.0, -window_x/window_y -10.0,0.0 +10.0);
+  //gluOrtho2D(0.0  -10.0, 1.0 +10.0, -(float)window_x/window_y -10.0,0.0 +10.0);
   //glOrtho(0.0, 5.0, -5.0, 0.0, -10.0, 10.0);
-  glOrtho(0.0, 5.0*(window_x/window_y), -5.0, 0.0, -10.0, 10.0);
+  glOrtho(0.0, 5.0*((float)window_x/window_y), -5.0, 0.0, -10.0, 10.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glEnable(GL_TEXTURE_2D);
