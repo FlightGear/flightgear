@@ -74,12 +74,12 @@ public:
   
 private:
   FGConfigFile* AC_cfg;
-  vector<float> Detents;
-  vector<float> TransitionTimes;
+  vector<double> Detents;
+  vector<double> TransitionTimes;
   int NumDetents,fi;
-  float lastFlapHandle;
-  float Flap_Handle;
-  float Flap_Position;
+  double lastFlapHandle;
+  double Flap_Handle;
+  double Flap_Position;
   bool  Flaps_In_Transit;
 
   void Debug(void);

@@ -102,7 +102,7 @@ FGColumnVector3& FGForce::GetBodyForces(void) {
 FGMatrix33 FGForce::Transform(void) {
   switch(ttype) {
   case tWindBody:
-    return fdmex->GetState()->GetTs2b(fdmex->GetTranslation()->Getalpha(),fdmex->GetTranslation()->Getbeta());
+    return fdmex->GetState()->GetTs2b();
   case tLocalBody:
     return fdmex->GetState()->GetTl2b();
   case tCustom:
@@ -117,10 +117,10 @@ FGMatrix33 FGForce::Transform(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGForce::SetAnglesToBody(float broll, float bpitch, float byaw) {
+void FGForce::SetAnglesToBody(double broll, double bpitch, double byaw) {
 
   if(ttype == tCustom) {
-    float cp,sp,cr,sr,cy,sy;
+    double cp,sp,cr,sr,cy,sy;
 
     cp=cos(bpitch); sp=sin(bpitch);
     cr=cos(broll);  sr=sin(broll);

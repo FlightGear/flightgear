@@ -57,7 +57,7 @@ public:
   FGTurboShaft(FGFDMExec* exec, FGConfigFile* Eng_cfg);
   ~FGTurboShaft();
 
-  float Calculate(float);
+  double Calculate(double);
 private:
   void Debug(void);
 };

@@ -54,7 +54,7 @@ FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
   Name = Eng_cfg->GetValue("NAME");
   Eng_cfg->GetNextConfigLine();
 
-  while (Eng_cfg->GetValue() != "/FG_ROCKET") {
+  while (Eng_cfg->GetValue() != string("/FG_ROCKET")) {
     *Eng_cfg >> token;
     if      (token == "SHR")           *Eng_cfg >> SHR;
     else if (token == "MAX_PC")        *Eng_cfg >> maxPC;
@@ -97,9 +97,9 @@ FGRocket::~FGRocket()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGRocket::Calculate(float pe)
+double FGRocket::Calculate(double pe)
 {
-  float Cf;
+  double Cf;
 
   ConsumeFuel();
 
@@ -111,7 +111,7 @@ float FGRocket::Calculate(float pe)
     PC = 0.0;
   } else {
     PctPower = Throttle / MaxThrottle;
-    PC = maxPC*PctPower * (1.0 + Variance * ((float)rand()/(float)RAND_MAX - 0.5));
+    PC = maxPC*PctPower * (1.0 + Variance * ((double)rand()/(double)RAND_MAX - 0.5));
     Cf = sqrt(kFactor*(1 - pow(pe/(PC), (SHR-1)/SHR)));
     Flameout = false;
   }

@@ -116,19 +116,19 @@ public:
       coefficient times the chamber pressure.
       @param pe nozzle exit pressure
       @return thrust coefficient times chamber pressure */
-  float Calculate(float pe);
+  double Calculate(double pe);
   
   /** Gets the chamber pressure.
       @return chamber pressure in psf. */
-  float GetChamberPressure(void) {return PC;}
+  double GetChamberPressure(void) {return PC;}
 
 private:
-  float SHR;
-  float maxPC;
-  float propEff;
-  float kFactor;
-  float Variance;
-  float PC;
+  double SHR;
+  double maxPC;
+  double propEff;
+  double kFactor;
+  double Variance;
+  double PC;
   void Debug(void);
 };
 

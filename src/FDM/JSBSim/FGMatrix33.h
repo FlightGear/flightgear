@@ -111,7 +111,7 @@ public:
   FGMatrix33 operator*(const FGMatrix33& B);
   FGMatrix33 operator*(const double scalar);
   FGMatrix33 operator/(const double scalar);
-  FGMatrix33& operator<<(const float ff);
+  FGMatrix33& operator<<(const double ff);
 
   friend ostream& operator<<(ostream& os, const FGMatrix33& M);
   friend istream& operator>>(istream& is, FGMatrix33& M);

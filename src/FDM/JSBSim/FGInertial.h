@@ -75,7 +75,7 @@ public:
   bool Run(void);
   FGColumnVector3& GetForces(void) {return vForces;}
   FGColumnVector3& GetGravity(void) {return vGravity;}
-  float GetForces(int n) {return vForces(n);}
+  double GetForces(int n) {return vForces(n);}
   bool LoadInertial(FGConfigFile* AC_cfg);
   double SLgravity(void) {return gAccelReference;}
   double gravity(void) {return gAccel;}

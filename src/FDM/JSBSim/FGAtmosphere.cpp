@@ -135,19 +135,19 @@ bool FGAtmosphere::Run(void)
     soundspeed = sqrt(SHRatio*Reng*temperature);
 
     State->Seta(soundspeed);
-
   } else {                               // skip Run() execution this time
   }
+
   return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAtmosphere::Calculate(float altitude)
+void FGAtmosphere::Calculate(double altitude)
 {
   //see reference [1]
 
-  float slope,reftemp,refpress;
+  double slope,reftemp,refpress;
   int i=0; bool lookup = false;
   // cout << "Atmosphere:  h=" << altitude << " rho= " << density << endl;
   i=lastIndex;

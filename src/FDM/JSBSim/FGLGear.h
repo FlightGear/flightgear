@@ -200,22 +200,22 @@ public:
 
   /// Gets the location of the gear in Body axes
   FGColumnVector3& GetBodyLocation(void) { return vWhlBodyVec; }
-  float GetBodyLocation(int idx) { return vWhlBodyVec(idx); }
+  double GetBodyLocation(int idx) { return vWhlBodyVec(idx); }
 
   FGColumnVector3& GetLocalGear(void) { return vLocalGear; }
-  float GetLocalGear(int idx) { return vLocalGear(idx); }
+  double GetLocalGear(int idx) { return vLocalGear(idx); }
 
   /// Gets the name of the gear
   inline string GetName(void)      {return name;          }
   /// Gets the Weight On Wheels flag value
   inline bool   GetWOW(void)       {return WOW;           }
   /// Gets the current compressed length of the gear in feet
-  inline float  GetCompLen(void)   {return compressLength;}
+  inline double  GetCompLen(void)   {return compressLength;}
   /// Gets the current gear compression velocity in ft/sec
-  inline float  GetCompVel(void)   {return compressSpeed; }
+  inline double  GetCompVel(void)   {return compressSpeed; }
   /// Gets the gear compression force in pounds
-  inline float  GetCompForce(void) {return Force()(3);    }
-  inline float  GetBrakeFCoeff(void) {return BrakeFCoeff;}
+  inline double  GetCompForce(void) {return Force()(3);    }
+  inline double  GetBrakeFCoeff(void) {return BrakeFCoeff;}
   
   /// Sets the brake value in percent (0 - 100)
   inline void SetBrake(double bp) {brakePct = bp;}
@@ -226,8 +226,8 @@ public:
   /** Get the console touchdown reporting feature
       @return true if reporting is turned on */
   inline bool GetReport(void)    { return ReportEnable; }
-  inline float GetSteerAngle(void) { return SteerAngle;}
-  inline float GetstaticFCoeff(void) { return staticFCoeff;}
+  inline double GetSteerAngle(void) { return SteerAngle;}
+  inline double GetstaticFCoeff(void) { return staticFCoeff;}
   
   inline int GetBrakeGroup(void) { return (int)eBrakeGrp; }
   inline int GetSteerType(void)  { return (int)eSteerType; }
@@ -240,21 +240,22 @@ private:
   FGColumnVector3 vForce;
   FGColumnVector3 vLocalForce;
   FGColumnVector3 vWhlVelVec;     // Velocity of this wheel (Local)
-  float SteerAngle;
-  float kSpring;
-  float bDamp;
-  float compressLength;
-  float compressSpeed;
-  float staticFCoeff, dynamicFCoeff, rollingFCoeff;
-  float brakePct;
-  float BrakeFCoeff;
-  float maxCompLen;
+  double SteerAngle;
+  double kSpring;
+  double bDamp;
+  double compressLength;
+  double compressSpeed;
+  double staticFCoeff, dynamicFCoeff, rollingFCoeff;
+  double brakePct;
+  double BrakeFCoeff;
+  double maxCompLen;
   double SinkRate;
   double GroundSpeed;
   double DistanceTraveled;
   double MaximumStrutForce;
   double MaximumStrutTravel;
   bool WOW;
+  bool lastWOW;
   bool FirstContact;
   bool Reported;
   bool ReportEnable;
@@ -263,7 +264,7 @@ private:
   string sBrakeGroup;
   BrakeGroup eBrakeGrp;
   SteerType  eSteerType;
-  float  maxSteerAngle;
+  double  maxSteerAngle;
 
   FGFDMExec*  Exec;
   FGState*    State;

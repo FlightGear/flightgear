@@ -218,7 +218,7 @@ FGColumnVector3 operator*(const double scalar, const FGColumnVector3& C)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGColumnVector3::Magnitude(void)
+double FGColumnVector3::Magnitude(void)
 {
   double num;
 
@@ -307,7 +307,7 @@ ostream& operator<<(ostream& os, const FGColumnVector3& col)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector3& FGColumnVector3::operator<<(const float ff)
+FGColumnVector3& FGColumnVector3::operator<<(const double ff)
 {
   data[rowCtr] = ff;
   if (++rowCtr > 3 )

@@ -107,13 +107,13 @@ bool FGFCS::Run(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFCS::SetThrottleCmd(int engineNum, float setting)
+void FGFCS::SetThrottleCmd(int engineNum, double setting)
 {
   unsigned int ctr;
 
-  if ((int)ThrottleCmd.size() > engineNum) {
+  if (engineNum < (int)ThrottlePos.size()) {
     if (engineNum < 0) {
-      for (ctr=0;ctr<=ThrottleCmd.size();ctr++) ThrottleCmd[ctr] = setting;
+      for (ctr=0;ctr<ThrottleCmd.size();ctr++) ThrottleCmd[ctr] = setting;
     } else {
       ThrottleCmd[engineNum] = setting;
     }
@@ -126,13 +126,13 @@ void FGFCS::SetThrottleCmd(int engineNum, float setting)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFCS::SetThrottlePos(int engineNum, float setting)
+void FGFCS::SetThrottlePos(int engineNum, double setting)
 {
   unsigned int ctr;
 
-  if ((int)ThrottlePos.size() > engineNum) {
+  if (engineNum < (int)ThrottlePos.size()) {
     if (engineNum < 0) {
-      for (ctr=0;ctr<=ThrottlePos.size();ctr++) ThrottlePos[ctr] = setting;
+      for (ctr=0;ctr<ThrottlePos.size();ctr++) ThrottlePos[ctr] = setting;
     } else {
       ThrottlePos[engineNum] = setting;
     }
@@ -145,9 +145,9 @@ void FGFCS::SetThrottlePos(int engineNum, float setting)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGFCS::GetThrottleCmd(int engineNum)
+double FGFCS::GetThrottleCmd(int engineNum)
 {
-  if ((int)ThrottleCmd.size() > engineNum) {
+  if (engineNum < (int)ThrottlePos.size()) {
     if (engineNum < 0) {
        cerr << "Cannot get throttle value for ALL engines" << endl;
     } else {
@@ -162,9 +162,9 @@ float FGFCS::GetThrottleCmd(int engineNum)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGFCS::GetThrottlePos(int engineNum)
+double FGFCS::GetThrottlePos(int engineNum)
 {
-  if ((int)ThrottlePos.size() > engineNum) {
+  if (engineNum < (int)ThrottlePos.size()) {
     if (engineNum < 0) {
        cerr << "Cannot get throttle value for ALL engines" << endl;
     } else {
@@ -179,27 +179,31 @@ float FGFCS::GetThrottlePos(int engineNum)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFCS::SetMixtureCmd(int engineNum, float setting)
+void FGFCS::SetMixtureCmd(int engineNum, double setting)
 {
   unsigned int ctr;
 
-  if (engineNum < 0) {
-    for (ctr=0;ctr<MixtureCmd.size();ctr++) MixtureCmd[ctr] = setting;
-  } else {
-    MixtureCmd[engineNum] = setting;
+  if (engineNum < (int)ThrottlePos.size()) {
+    if (engineNum < 0) {
+      for (ctr=0;ctr<MixtureCmd.size();ctr++) MixtureCmd[ctr] = setting;
+    } else {
+      MixtureCmd[engineNum] = setting;
+    }
   }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGFCS::SetMixturePos(int engineNum, float setting)
+void FGFCS::SetMixturePos(int engineNum, double setting)
 {
   unsigned int ctr;
 
-  if (engineNum < 0) {
-    for (ctr=0;ctr<=MixtureCmd.size();ctr++) MixturePos[ctr] = MixtureCmd[ctr];
-  } else {
-    MixturePos[engineNum] = setting;
+  if (engineNum < (int)ThrottlePos.size()) {
+    if (engineNum < 0) {
+      for (ctr=0;ctr<=MixtureCmd.size();ctr++) MixturePos[ctr] = MixtureCmd[ctr];
+    } else {
+      MixturePos[engineNum] = setting;
+    }
   }
 }
 
@@ -212,7 +216,7 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
   Name = Name + ":" + AC_cfg->GetValue("NAME");
   if (debug_lvl > 0) cout << "    Control System Name: " << Name << endl;
   AC_cfg->GetNextConfigLine();
-  while ((token = AC_cfg->GetValue()) != "/FLIGHT_CONTROL") {
+  while ((token = AC_cfg->GetValue()) != string("/FLIGHT_CONTROL")) {
     if (token == "COMPONENT") {
       token = AC_cfg->GetValue("TYPE");
       if (debug_lvl > 0) cout << "    Loading Component \""
@@ -252,7 +256,7 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGFCS::GetComponentOutput(eParam idx) {
+double FGFCS::GetComponentOutput(eParam idx) {
   return Components[idx]->GetOutput();
 }
 
@@ -264,7 +268,7 @@ string FGFCS::GetComponentName(int idx) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGFCS::GetBrake(FGLGear::BrakeGroup bg) {
+double FGFCS::GetBrake(FGLGear::BrakeGroup bg) {
   switch (bg) {
   case FGLGear::bgLeft:
     return LeftBrake;

@@ -60,46 +60,61 @@ FGConfigFile::~FGConfigFile()
 
 string FGConfigFile::GetNextConfigLine(void)
 {
-  int deblank;
+  int deblank, not_found = string::npos;
+  int comment_starts_at;
+  int comment_ends_at;
+  int comment_length;
+  int line_length;
+  bool start_comment, end_comment;
+  string CommentStringTemp;
 
   do {
     CurrentLine = GetLine();
-    if (CurrentLine.find("<!--") != CurrentLine.npos) {
-      CommentsOn = true;
-      CommentString = "";
-      if (CurrentLine.find("<!--") != CurrentLine.npos)
-        CurrentLine.erase(CurrentLine.find("<!--"),4);
-      while((deblank = CurrentLine.find(" ")) != CurrentLine.npos) CurrentLine.erase(deblank,1);
-      if (CurrentLine.size() <= 2) CurrentLine = "";
-    }
+    line_length = CurrentLine.length();
+    comment_starts_at = CurrentLine.find("<!--");
+    
+    if (comment_starts_at >= 0) start_comment = true;
+    else start_comment = false;
+    
+    comment_ends_at = CurrentLine.find("-->");
+    
+    if (comment_ends_at >= 0) end_comment = true;
+    else end_comment = false;
 
-    if (CurrentLine.find("-->") != CurrentLine.npos) {
+    if (!start_comment && !end_comment) {                              //  command comment
+      if (CommentsOn) CommentStringTemp = CurrentLine;
+      CommentString += CommentStringTemp + "\r\n";
+    } else if (start_comment && comment_ends_at > comment_starts_at) { //  <!-- ... -->
       CommentsOn = false;
-
-      if (CurrentLine.find("-->") != CurrentLine.npos)
-        CurrentLine.erase(CurrentLine.find("-->"),4);
-
-      while((deblank = CurrentLine.find(" ")) != CurrentLine.npos) CurrentLine.erase(deblank,1);
-      if (CurrentLine.size() <= 2) CurrentLine = "";
-
-      CommentString += CurrentLine;
-      GetNextConfigLine();
+      comment_length = comment_ends_at + 2 - comment_starts_at + 1;
+      LineComment = CurrentLine.substr(comment_starts_at+4, comment_length-4-3);
+      CurrentLine.erase(comment_starts_at, comment_length);
+    } else if ( start_comment && !end_comment) {                       //  <!-- ...
+      CommentsOn = true;
+      comment_length = line_length - comment_starts_at;
+      CommentStringTemp = CurrentLine.substr(comment_starts_at+4, comment_length-4);
+      CommentString = CommentStringTemp + "\r\n";
+      CurrentLine.erase(comment_starts_at, comment_length);
+    } else if (!start_comment && end_comment) {                       //  ... -->
+      CommentsOn = false;
+      comment_length = comment_ends_at + 2 + 1;
+      CommentStringTemp = CurrentLine.substr(0, comment_length-4);
+      CommentString += CommentStringTemp + "\r\n";
+      CurrentLine.erase(0, comment_length);
+    } else if (start_comment && comment_ends_at < comment_starts_at) { //  --> command <!--
+      cerr << "Old comment ends and new one starts - bad JSBSim config file form." << endl;
+      CommentsOn = false;
+      comment_length = comment_ends_at + 2 + 1;
+      CommentStringTemp = CurrentLine.substr(0, comment_length-4);
+      CommentString += CommentStringTemp + "\r\n";
+      CurrentLine.erase(0, comment_length);
     }
-
-    if (CommentsOn) CommentString += CurrentLine + "\r\n";
-
+    
   } while (CommentsOn);
 
   if (CurrentLine.length() == 0) GetNextConfigLine();
   CurrentIndex = 0;
   return CurrentLine;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-string FGConfigFile::GetCommentString(void)
-{
-    return CommentString;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,14 +201,18 @@ string FGConfigFile::GetLine(void)
   int test;
 
   while ((test = cfgfile.get()) != EOF) {
-    if (test >= 0x20) {
-      scratch += (char)test;
+    if (test >= 0x20 || test == 0x09) {
+      if (test == 0x09) {
+        scratch += (char)0x20;
+      } else {
+        scratch += (char)test;
+      }
     } else {
-      if ((test = cfgfile.get()) != EOF) {
+      if ((test = cfgfile.get()) != EOF) { // get *next* character
 #if defined ( sgi ) && !defined( __GNUC__ )
-        if (test >= 0x20) cfgfile.putback(test);
+        if (test >= 0x20 || test == 0x09) cfgfile.putback(test);
 #else
-        if (test >= 0x20) cfgfile.unget();
+        if (test >= 0x20 || test == 0x09) cfgfile.unget();
 #endif
         break;
       }
@@ -204,7 +223,7 @@ string FGConfigFile::GetLine(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+/*
 FGConfigFile& FGConfigFile::operator>>(double& val)
 {
   unsigned int pos, end;
@@ -219,10 +238,10 @@ FGConfigFile& FGConfigFile::operator>>(double& val)
   if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
   return *this;
 }
-
+*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGConfigFile& FGConfigFile::operator>>(float& val)
+FGConfigFile& FGConfigFile::operator>>(double& val)
 {
   unsigned int pos, end;
 

@@ -78,8 +78,8 @@ public:
   ~FGTable();
   FGTable(int nRows);
   FGTable(int nRows, int nCols);
-  float GetValue(float key);
-  float GetValue(float rowKey, float colKey);
+  double GetValue(double key);
+  double GetValue(double rowKey, double colKey);
   /** Read the table in.
       Data in the config file should be in matrix format with the row
       independents as the first column and the column independents in
@@ -92,19 +92,19 @@ public:
        </pre>
        */
   void operator<<(FGConfigFile&);
-  FGTable& operator<<(const float n);
-  FGTable& operator<<(const int n);
   FGTable& operator<<(const double n);
-  inline float GetElement(int r, int c) {return Data[r][c];}
+  FGTable& operator<<(const int n);
+//  FGTable& operator<<(const double n);
+  inline double GetElement(int r, int c) {return Data[r][c];}
   void Print(void);
   
 private:
   enum type {tt1D, tt2D} Type;
-  float** Data;
+  double** Data;
   int nRows, nCols;
   unsigned int colCounter;
   unsigned int rowCounter;
-  float** Allocate(void);
+  double** Allocate(void);
   void Debug(void);
 };
 

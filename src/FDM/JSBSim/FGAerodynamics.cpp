@@ -88,13 +88,9 @@ FGAerodynamics::~FGAerodynamics()
 
 bool FGAerodynamics::Run(void)
 {
-  float alpha, beta;
   unsigned int axis_ctr,ctr;
 
   if (!FGModel::Run()) {
-
-    alpha = Translation->Getalpha();
-    beta = Translation->Getbeta();
 
     vLastFs = vFs;
     vFs.InitMatrix();
@@ -105,7 +101,7 @@ bool FGAerodynamics::Run(void)
       }
     }
 
-    vForces = State->GetTs2b(alpha, beta)*vFs;
+    vForces = State->GetTs2b()*vFs;
 
     vDXYZcg(eX) = -(Aircraft->GetXYZrp(eX) 
                       - MassBalance->GetXYZcg(eX))*inchtoft;
@@ -135,12 +131,12 @@ bool FGAerodynamics::Load(FGConfigFile* AC_cfg)
 
   AC_cfg->GetNextConfigLine();
 
-  while ((token = AC_cfg->GetValue()) != "/AERODYNAMICS") {
+  while ((token = AC_cfg->GetValue()) != string("/AERODYNAMICS")) {
     if (token == "AXIS") {
       CoeffArray ca;
       axis = AC_cfg->GetValue("NAME");
       AC_cfg->GetNextConfigLine();
-      while ((token = AC_cfg->GetValue()) != "/AXIS") {
+      while ((token = AC_cfg->GetValue()) != string("/AXIS")) {
         if( token == "COEFFICIENT" ) {
           ca.push_back( new FGCoefficient(FDMExec) );
           ca.back()->Load(AC_cfg);
@@ -202,7 +198,7 @@ string FGAerodynamics::GetCoefficientValues(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGAerodynamics::GetNlf(void)
+double FGAerodynamics::GetNlf(void)
 {
   if (fabs(Position->GetGamma()) < 1.57) {
     return (vFs(eZ)/(MassBalance->GetWeight()*cos(Position->GetGamma())));
@@ -213,9 +209,9 @@ float FGAerodynamics::GetNlf(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGAerodynamics::GetLoD(void)
+double FGAerodynamics::GetLoD(void)
 {
-  float LoD;
+  double LoD;
 
   if (vFs(1) != 0.00) return vFs(3)/vFs(1);
   else                return 0.00;

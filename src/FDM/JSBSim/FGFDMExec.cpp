@@ -320,6 +320,7 @@ int FGFDMExec::Schedule(FGModel* model, int rate)
     model_iterator->NextModel->SetRate(rate);
 
   }
+  
   return 0;
 }
 
@@ -413,7 +414,7 @@ bool FGFDMExec::LoadScript(string script)
   string aircraft="";
   string initialize="";
   bool result=false;
-  float dt=0.0;
+  double dt=0.0;
   int i;
   struct condition *newCondition;
 
@@ -424,13 +425,13 @@ bool FGFDMExec::LoadScript(string script)
   Scripted = true;
   if (debug_lvl > 0) cout << "Reading Script File " << ScriptName << endl;
 
-  while (Script.GetNextConfigLine() != "EOF" && Script.GetValue() != "/runscript") {
+  while (Script.GetNextConfigLine() != string("EOF") && Script.GetValue() != string("/runscript")) {
     token = Script.GetValue();
     if (token == "use") {
-      if ((token = Script.GetValue("aircraft")) != "") {
+      if ((token = Script.GetValue("aircraft")) != string("")) {
         aircraft = token;
         if (debug_lvl > 0) cout << "  Use aircraft: " << token << endl;
-      } else if ((token = Script.GetValue("initialize")) != "") {
+      } else if ((token = Script.GetValue("initialize")) != string("")) {
         initialize = token;
         if (debug_lvl > 0) cout << "  Use reset file: " << token << endl;
       } else {
@@ -444,13 +445,13 @@ bool FGFDMExec::LoadScript(string script)
       State->Setdt(dt);
       Script.GetNextConfigLine();
       token = Script.GetValue();
-      while (token != "/run") {
+      while (token != string("/run")) {
 
         if (token == "when") {
           Script.GetNextConfigLine();
           token = Script.GetValue();
           newCondition = new struct condition();
-          while (token != "/when") {
+          while (token != string("/when")) {
             if (token == "parameter") {
               newCondition->TestParam.push_back(State->GetParameterIndex(Script.GetValue("name")));
               newCondition->TestValue.push_back(strtod(Script.GetValue("value").c_str(), NULL));
@@ -599,8 +600,8 @@ void FGFDMExec::RunScript(void)
 
   int count=0;
 
-  float currentTime = State->Getsim_time();
-  float newSetValue;
+  double currentTime = State->Getsim_time();
+  double newSetValue;
 
   while (iC < Conditions.end()) {
     // determine whether the set of conditional tests for this condition equate
@@ -668,6 +669,9 @@ void FGFDMExec::RunScript(void)
           break;
         }
         State->SetParameter(iC->SetParam[i], newSetValue);
+        if ((unsigned long int)Propulsion->GetTank(0) == 0) {
+          cout << "Param # getting set: " << iC->SetParam[i] << " Value: " << newSetValue << endl;
+        }
       }
     }
     iC++;

@@ -116,10 +116,11 @@ public:
   string GetNextConfigLine(void);
   string GetValue(string);
   string GetValue(void);
-  string GetCommentString(void);
+  string GetCommentString(void) {return CommentString;}
+  string GetLineComment(void) {return LineComment;}
   bool IsOpen(void) {return Opened;}
+//  FGConfigFile& operator>>(double&);
   FGConfigFile& operator>>(double&);
-  FGConfigFile& operator>>(float&);
   FGConfigFile& operator>>(int&);
   FGConfigFile& operator>>(string&);
   FGConfigFile& operator>>(eParam&);
@@ -129,6 +130,7 @@ private:
   ifstream cfgfile;
   string   CurrentLine;
   string   CommentString;
+  string   LineComment;
   bool     CommentsOn;
   bool     Opened;
   unsigned int      CurrentIndex;

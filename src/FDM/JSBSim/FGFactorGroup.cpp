@@ -99,7 +99,7 @@ bool FGFactorGroup::Load(FGConfigFile *AC_cfg) {
       //if (debug_lvl > 0) DisplayCoeffFactors(ca.back()->Getmultipliers());
     } 
     token = AC_cfg->GetValue();  
-    while ( token != "/GROUP" ) {
+    while ( token != string("/GROUP") ) {
           sum.push_back( new FGCoefficient(FDMExec) );
           sum.back()->Load(AC_cfg);
           //if (debug_lvl > 0) DisplayCoeffFactors(ca.back()->Getmultipliers());
@@ -114,9 +114,9 @@ bool FGFactorGroup::Load(FGConfigFile *AC_cfg) {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-float FGFactorGroup::TotalValue(void) {
+double FGFactorGroup::TotalValue(void) {
   int i;
-  float totalsum=0;
+  double totalsum=0;
   SDtotal=0.0;
   for(i=0;i<sum.size();i++) {
      totalsum+=sum[i]->TotalValue();

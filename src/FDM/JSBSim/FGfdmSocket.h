@@ -97,7 +97,7 @@ public:
   ~FGfdmSocket();
   void Send(void);
   void Append(const char*);
-  void Append(float);
+  void Append(double);
   void Append(long);
   void Clear(void);
 

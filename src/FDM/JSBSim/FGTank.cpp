@@ -61,7 +61,7 @@ FGTank::FGTank(FGConfigFile* AC_cfg)
   else                         Type = ttUNKNOWN;
   
   AC_cfg->GetNextConfigLine();
-  while ((token = AC_cfg->GetValue()) != "/AC_TANK") {
+  while ((token = AC_cfg->GetValue()) != string("/AC_TANK")) {
     if (token == "XLOC") *AC_cfg >> X;
     else if (token == "YLOC") *AC_cfg >> Y;
     else if (token == "ZLOC") *AC_cfg >> Z;
@@ -99,9 +99,9 @@ FGTank::~FGTank()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGTank::Reduce(float used)
+double FGTank::Reduce(double used)
 {
-  float shortage;
+  double shortage;
 
   if (used < Contents) {
     Contents -= used;

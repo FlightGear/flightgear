@@ -58,7 +58,7 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMEx
 
   Name = Nzl_cfg->GetValue("NAME");
   Nzl_cfg->GetNextConfigLine();
-  while (Nzl_cfg->GetValue() != "/FG_NOZZLE") {
+  while (Nzl_cfg->GetValue() != string("/FG_NOZZLE")) {
     *Nzl_cfg >> token;
     if      (token == "PE")      *Nzl_cfg >> PE;
     else if (token == "EXPR")    *Nzl_cfg >> ExpR;
@@ -92,10 +92,10 @@ FGNozzle::~FGNozzle()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGNozzle::Calculate(float CfPc)
+double FGNozzle::Calculate(double CfPc)
 {
-  float pAtm = fdmex->GetAtmosphere()->GetPressure();
-  Thrust = max((float)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
+  double pAtm = fdmex->GetAtmosphere()->GetPressure();
+  Thrust = max((double)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
   vFn(1) = Thrust;
 
   return Thrust;
@@ -103,7 +103,7 @@ float FGNozzle::Calculate(float CfPc)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGNozzle::GetPowerRequired(void)
+double FGNozzle::GetPowerRequired(void)
 {
   return PE;
 }

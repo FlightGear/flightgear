@@ -204,7 +204,7 @@ FGColumnVector4 operator*(const double scalar, const FGColumnVector4& C)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGColumnVector4::Magnitude(void)
+double FGColumnVector4::Magnitude(void)
 {
   double num;
 
@@ -299,7 +299,7 @@ ostream& operator<<(ostream& os, FGColumnVector4& col)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector4& FGColumnVector4::operator<<(const float ff)
+FGColumnVector4& FGColumnVector4::operator<<(const double ff)
 {
   data[rowCtr] = ff;
   if (++rowCtr > 4 )

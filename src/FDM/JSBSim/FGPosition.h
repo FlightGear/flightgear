@@ -104,10 +104,10 @@ public:
   inline FGColumnVector3& GetRunwayNormal(void) { return vRunwayNormal; }
   
   inline double GetGamma(void) { return gamma; }
-  inline void SetGamma(float tt) { gamma = tt; }
+  inline void SetGamma(double tt) { gamma = tt; }
   inline double GetHOverB(void) { return hoverb; }
   void SetvVel(const FGColumnVector3& v) { vVel = v; }
-  void SetLatitude(float tt) { Latitude = tt; }
+  void SetLatitude(double tt) { Latitude = tt; }
   void SetLongitude(double tt) { Longitude = tt; }
   void Seth(double tt);
   void SetRunwayRadius(double tt) { RunwayRadius = tt; }
@@ -127,13 +127,13 @@ private:
   double LatitudeDot, LongitudeDot, RadiusDot;
   double lastLatitudeDot, lastLongitudeDot, lastRadiusDot;
   double Longitude, Latitude;
-  float dt;
+  double dt;
   double RunwayRadius;
   double DistanceAGL;
   double SeaLevelRadius;
   double gamma;
   double Vt, Vground;
-  float hoverb,b;
+  double hoverb,b;
 
   double psigt;
 

@@ -105,7 +105,7 @@ FGTranslation::~FGTranslation()
 
 bool FGTranslation::Run(void)
 {
-  float Tc = 0.5*State->Getdt()*rate;
+  double Tc = 0.5*State->Getdt()*rate;
 
   if (!FGModel::Run()) {
 
@@ -133,8 +133,8 @@ bool FGTranslation::Run(void)
                sqrt(vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW))) : 0.0;
 
       // stolen, quite shamelessly, from LaRCsim
-      float mUW = (vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW));
-      float signU=1;
+      double mUW = (vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW));
+      double signU=1;
       if (vAero(eU) != 0.0)
         signU = vAero(eU)/fabs(vAero(eU));
 

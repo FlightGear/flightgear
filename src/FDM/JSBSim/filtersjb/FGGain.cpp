@@ -132,8 +132,8 @@ FGGain::~FGGain()
 
 bool FGGain::Run(void )
 {
-  float SchedGain = 1.0;
-  float LookupVal = 0;
+  double SchedGain = 1.0;
+  double LookupVal = 0;
 
   FGFCSComponent::Run(); // call the base class for initialization of Input
 

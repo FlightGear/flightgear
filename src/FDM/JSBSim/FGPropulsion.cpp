@@ -87,8 +87,9 @@ FGPropulsion::~FGPropulsion()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropulsion::Run(void) {
-  float PowerAvailable;
+bool FGPropulsion::Run(void)
+{
+  double PowerAvailable;
   dt = State->Getdt();
 
   Forces->InitMatrix();
@@ -102,7 +103,6 @@ bool FGPropulsion::Run(void) {
       *Forces  += Thrusters[i]->GetBodyForces();  // sum body frame forces
       *Moments += Thrusters[i]->GetMoments();     // sum body frame moments
     }
-
     return false;
   } else {
     return true;
@@ -112,8 +112,8 @@ bool FGPropulsion::Run(void) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGPropulsion::GetSteadyState(void) {
-  float PowerAvailable;
-  float currentThrust = 0, lastThrust=-1;
+  double PowerAvailable;
+  double currentThrust = 0, lastThrust=-1;
   dt = State->Getdt();
   int steady_count,j=0;
   bool steady=false;
@@ -153,7 +153,7 @@ bool FGPropulsion::GetSteadyState(void) {
 
 
 bool FGPropulsion::ICEngineStart(void) {
-  float PowerAvailable;
+  double PowerAvailable;
   int j;
   dt = State->Getdt();
 
@@ -198,7 +198,7 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
 
   AC_cfg->GetNextConfigLine();
 
-  while ((token = AC_cfg->GetValue()) != "/PROPULSION") {
+  while ((token = AC_cfg->GetValue()) != string("/PROPULSION")) {
 
     if (token == "AC_ENGINE") {                   // ============ READING ENGINES
 
@@ -230,7 +230,7 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
         }
 
         AC_cfg->GetNextConfigLine();
-        while ((token = AC_cfg->GetValue()) != "/AC_ENGINE") {
+        while ((token = AC_cfg->GetValue()) != string("/AC_ENGINE")) {
           *AC_cfg >> token;
           if      (token == "XLOC")  { *AC_cfg >> xLoc; }
           else if (token == "YLOC")  { *AC_cfg >> yLoc; }
@@ -299,7 +299,7 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
         }
 
         AC_cfg->GetNextConfigLine();
-        while ((token = AC_cfg->GetValue()) != "/AC_THRUSTER") {
+        while ((token = AC_cfg->GetValue()) != string("/AC_THRUSTER")) {
           *AC_cfg >> token;
           if (token == "XLOC") *AC_cfg >> xLoc;
           else if (token == "YLOC") *AC_cfg >> yLoc;
@@ -453,9 +453,9 @@ FGColumnVector3& FGPropulsion::GetTanksCG(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksWeight(void)
+double FGPropulsion::GetTanksWeight(void)
 {
-  float Tw = 0.0;
+  double Tw = 0.0;
 
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
@@ -467,9 +467,9 @@ float FGPropulsion::GetTanksWeight(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIxx(const FGColumnVector3& vXYZcg)
+double FGPropulsion::GetTanksIxx(const FGColumnVector3& vXYZcg)
 {
-  float I = 0.0;
+  double I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
     I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetX() - vXYZcg(eX)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
@@ -480,9 +480,9 @@ float FGPropulsion::GetTanksIxx(const FGColumnVector3& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIyy(const FGColumnVector3& vXYZcg)
+double FGPropulsion::GetTanksIyy(const FGColumnVector3& vXYZcg)
 {
-  float I = 0.0;
+  double I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
     I += ((*iTank)->GetY() - vXYZcg(eY))*((*iTank)->GetY() - vXYZcg(eY)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
@@ -493,9 +493,9 @@ float FGPropulsion::GetTanksIyy(const FGColumnVector3& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIzz(const FGColumnVector3& vXYZcg)
+double FGPropulsion::GetTanksIzz(const FGColumnVector3& vXYZcg)
 {
-  float I = 0.0;
+  double I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
     I += ((*iTank)->GetZ() - vXYZcg(eZ))*((*iTank)->GetZ() - vXYZcg(eZ)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
@@ -506,9 +506,9 @@ float FGPropulsion::GetTanksIzz(const FGColumnVector3& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIxz(const FGColumnVector3& vXYZcg)
+double FGPropulsion::GetTanksIxz(const FGColumnVector3& vXYZcg)
 {
-  float I = 0.0;
+  double I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
     I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetZ() - vXYZcg(eZ)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
@@ -519,9 +519,9 @@ float FGPropulsion::GetTanksIxz(const FGColumnVector3& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIxy(const FGColumnVector3& vXYZcg)
+double FGPropulsion::GetTanksIxy(const FGColumnVector3& vXYZcg)
 {
-  float I = 0.0;
+  double I = 0.0;
   iTank = Tanks.begin();
   while (iTank != Tanks.end()) {
     I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetY() - vXYZcg(eY)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());

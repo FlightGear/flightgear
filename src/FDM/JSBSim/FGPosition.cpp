@@ -91,7 +91,7 @@ static const char *IdHdr = ID_POSITION;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-extern float globalTriNormal[3];
+extern double globalTriNormal[3];
 extern double globalSceneryAltitude;
 extern double globalSeaLevelRadius;
 

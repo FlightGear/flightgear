@@ -43,17 +43,22 @@ INCLUDES
 #  include <math.h>
 #  include <queue>
 #  include STL_STRING
-  SG_USING_STD(queue);
+
+SG_USING_STD(string);
+SG_USING_STD(queue);
+
 #else
+
+#  include <queue>
+#  include <string>
 #  if defined(sgi) && !defined(__GNUC__)
 #    include <math.h>
-#    include <queue.h>
-#    include <string.h>
 #  else
 #    include <cmath>
-#    include <queue>
-#    include <string>
 #  endif
+
+using std::string;
+using std::queue;
 #endif
 
 #ifndef M_PI 

@@ -79,7 +79,7 @@ private:
   vector <eParam> InputIndices;
   vector <int> InputTypes;
   bool clip;
-  float clipmin,clipmax;
+  double clipmin,clipmax;
   void Debug(void);
 };
 

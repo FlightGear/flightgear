@@ -115,7 +115,7 @@ void FGfdmSocket::Append(const char* item)
   size++;
 }
 
-void FGfdmSocket::Append(float item)
+void FGfdmSocket::Append(double item)
 {
   char s[25];
 

@@ -61,7 +61,7 @@ FGTurboProp::~FGTurboProp()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGTurboProp::Calculate(float dummy)
+double FGTurboProp::Calculate(double dummy)
 {
   ConsumeFuel();
   return 0.0;

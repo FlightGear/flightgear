@@ -73,16 +73,16 @@ public:
   /// Destructor
   ~FGNozzle();
 
-  float Calculate(float CfPc);
-  float GetPowerRequired(void);
+  double Calculate(double CfPc);
+  double GetPowerRequired(void);
   
 private:
-  float PE;
-  float ExpR;
-  float nzlEff;
-  float Diameter;
-  float AreaT;
-  float Area2;
+  double PE;
+  double ExpR;
+  double nzlEff;
+  double Diameter;
+  double AreaT;
+  double Area2;
   void Debug(void);
 };
 

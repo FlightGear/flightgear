@@ -169,18 +169,18 @@ public:
   string GetPropulsionValues(void);
 
   inline FGColumnVector3& GetForces(void)  {return *Forces; }
-  inline float GetForces(int n) { return (*Forces)(n);}
+  inline double GetForces(int n) { return (*Forces)(n);}
   inline FGColumnVector3& GetMoments(void) {return *Moments;}
-  inline float GetMoments(int n) {return (*Moments)(n);}
+  inline double GetMoments(int n) {return (*Moments)(n);}
   
   FGColumnVector3& GetTanksCG(void);
-  float GetTanksWeight(void);
+  double GetTanksWeight(void);
 
-  float GetTanksIxx(const FGColumnVector3& vXYZcg);
-  float GetTanksIyy(const FGColumnVector3& vXYZcg);
-  float GetTanksIzz(const FGColumnVector3& vXYZcg);
-  float GetTanksIxz(const FGColumnVector3& vXYZcg);
-  float GetTanksIxy(const FGColumnVector3& vXYZcg);
+  double GetTanksIxx(const FGColumnVector3& vXYZcg);
+  double GetTanksIyy(const FGColumnVector3& vXYZcg);
+  double GetTanksIzz(const FGColumnVector3& vXYZcg);
+  double GetTanksIxz(const FGColumnVector3& vXYZcg);
+  double GetTanksIxy(const FGColumnVector3& vXYZcg);
 
 private:
   vector <FGEngine*>   Engines;
@@ -194,7 +194,7 @@ private:
   unsigned int numEngines;
   unsigned int numTanks;
   unsigned int numThrusters;
-  float dt;
+  double dt;
   FGColumnVector3 *Forces;
   FGColumnVector3 *Moments;
   FGColumnVector3 vXYZtank;

@@ -140,7 +140,7 @@ bool FGCoefficient::Load(FGConfigFile *AC_cfg) {
     n     = multparms.find("|");
     start = 0;
 
-    if(multparms != "FG_NONE") {
+    if (multparms != string("FG_NONE")) {
       while (n < end && n >= 0) {
         n -= start;
         mult = multparms.substr(start,n);
@@ -179,9 +179,9 @@ bool FGCoefficient::Load(FGConfigFile *AC_cfg) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGCoefficient::Value(float rVal, float cVal)
+double FGCoefficient::Value(double rVal, double cVal)
 {
-  float Value;
+  double Value;
   unsigned int midx;
 
   SD = Value = Table->GetValue(rVal, cVal);
@@ -194,9 +194,9 @@ float FGCoefficient::Value(float rVal, float cVal)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGCoefficient::Value(float Val)
+double FGCoefficient::Value(double Val)
 {
-  float Value;
+  double Value;
 
   SD = Value = Table->GetValue(Val);
   
@@ -208,9 +208,9 @@ float FGCoefficient::Value(float Val)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGCoefficient::Value(void)
+double FGCoefficient::Value(void)
 {
-	float Value;
+	double Value;
 
   SD = Value = StaticValue;
 
@@ -222,7 +222,7 @@ float FGCoefficient::Value(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGCoefficient::TotalValue()
+double FGCoefficient::TotalValue()
 {
   
   switch(type) {

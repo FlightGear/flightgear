@@ -82,24 +82,24 @@ public:
   FGTank(FGConfigFile*);
   ~FGTank();
 
-  float Reduce(float);
+  double Reduce(double);
   int GetType(void) {return Type;}
   bool GetSelected(void) {return Selected;}
-  float GetPctFull(void) {return PctFull;}
-  float GetContents(void) {return Contents;}
-  float inline GetX(void) {return X;}
-  float inline GetY(void) {return Y;}
-  float inline GetZ(void) {return Z;}
+  double GetPctFull(void) {return PctFull;}
+  double GetContents(void) {return Contents;}
+  double inline GetX(void) {return X;}
+  double inline GetY(void) {return Y;}
+  double inline GetZ(void) {return Z;}
 
   enum TankType {ttUNKNOWN, ttFUEL, ttOXIDIZER};
 
 private:
   TankType Type;
-  float X, Y, Z;
-  float Capacity;
-  float Radius;
-  float PctFull;
-  float Contents;
+  double X, Y, Z;
+  double Capacity;
+  double Radius;
+  double PctFull;
+  double Contents;
   bool  Selected;
   void Debug(void);
 };

@@ -112,7 +112,7 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   FCS         = Exec->GetFCS();
   MassBalance = Exec->GetMassBalance();
 
-  WOW = false;
+  WOW = lastWOW = false;
   ReportEnable = true;
   FirstContact = false;
   Reported = false;
@@ -147,6 +147,7 @@ FGLGear::FGLGear(const FGLGear& lgear)
   vLocalGear = lgear.vLocalGear;
 
   WOW                = lgear.WOW;
+  lastWOW            = lgear.lastWOW;
   ReportEnable       = lgear.ReportEnable;
   FirstContact       = lgear.FirstContact;
   DistanceTraveled   = lgear.DistanceTraveled;
@@ -184,10 +185,10 @@ FGLGear::~FGLGear()
 
 FGColumnVector3& FGLGear::Force(void)
 {
-  float SteerGain;
-  float SinWheel, CosWheel, SideWhlVel, RollingWhlVel;
-  float RudderPedal, RollingForce, SideForce, FCoeff;
-  float WheelSlip;
+  double SteerGain;
+  double SinWheel, CosWheel, SideWhlVel, RollingWhlVel;
+  double RudderPedal, RollingForce, SideForce, FCoeff;
+  double WheelSlip;
 
   vWhlBodyVec     = (vXYZ - MassBalance->GetXYZcg()) / 12.0;
   vWhlBodyVec(eX) = -vWhlBodyVec(eX);
@@ -337,7 +338,7 @@ FGColumnVector3& FGLGear::Force(void)
 // case. NOTE: SQUARE LAW DAMPING NO GOOD!
 
     vLocalForce(eZ) =  min(-compressLength * kSpring
-                           - compressSpeed * bDamp, (float)0.0);
+                           - compressSpeed * bDamp, (double)0.0);
 
     MaximumStrutForce = max(MaximumStrutForce, fabs(vLocalForce(eZ)));
     MaximumStrutTravel = max(MaximumStrutTravel, fabs(compressLength));
@@ -395,6 +396,23 @@ FGColumnVector3& FGLGear::Force(void)
 
   if (ReportEnable && Position->GetVel().Magnitude() <= 0.05 && !Reported) {
     if (debug_lvl > 0) Report();
+  }
+
+  if (lastWOW != WOW) {
+    PutMessage("GEAR_CONTACT", WOW);
+  }
+
+  lastWOW = WOW;
+
+  // Crash detection logic (really out-of-bounds detection)
+  
+  if (compressLength > 500.0 ||
+      vForce.Magnitude() > 100000000.0 ||
+      vMoment.Magnitude() > 5000000000.0 ||
+      SinkRate > 1.4666*30)
+  {
+    PutMessage("Crash Detected");
+    Exec->Freeze();
   }
 
   return vForce;

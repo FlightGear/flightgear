@@ -98,11 +98,11 @@ class FGFactorGroup: public FGCoefficient {
     ~FGFactorGroup();
     
     bool Load(FGConfigFile *AC_cfg);
-    float TotalValue(void);
+    double TotalValue(void);
     //string GetCoefficientStrings(void);
     //string GetCoefficientValues(void);
-    inline float GetSD(void) { return SDtotal; }
-    inline float GetFactorSD(void) { return FGCoefficient::GetSD(); }
+    inline double GetSD(void) { return SDtotal; }
+    inline double GetFactorSD(void) { return FGCoefficient::GetSD(); }
     
   private:
     FGFDMExec *FDMExec;
@@ -110,7 +110,7 @@ class FGFactorGroup: public FGCoefficient {
     string description;
     typedef vector<FGCoefficient*> CoeffArray;
     CoeffArray sum;
-    float SDtotal;
+    double SDtotal;
     void Debug(void);
 };
     

@@ -294,18 +294,18 @@ private:
   struct condition {
     vector <eParam>  TestParam;
     vector <eParam>  SetParam;
-    vector <float>   TestValue;
-    vector <float>   SetValue;
+    vector <double>   TestValue;
+    vector <double>   SetValue;
     vector <string>  Comparison;
-    vector <float>   TC;
+    vector <double>   TC;
     vector <bool>    Persistent;
     vector <eAction> Action;
     vector <eType>   Type;
     vector <bool>    Triggered;
-    vector <float>   newValue;
-    vector <float>   OriginalValue;
-    vector <float>   StartTime;
-    vector <float>   EndTime;
+    vector <double>   newValue;
+    vector <double>   OriginalValue;
+    vector <double>   StartTime;
+    vector <double>   EndTime;
 
     condition() {
     }
@@ -326,8 +326,8 @@ private:
   string EnginePath;
   string ScriptPath;
   string ScriptName;
-  float  StartTime;
-  float  EndTime;
+  double  StartTime;
+  double  EndTime;
   vector <struct condition> Conditions;
 
   FGState*           State;

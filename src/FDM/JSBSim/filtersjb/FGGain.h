@@ -77,8 +77,8 @@ private:
   FGConfigFile* AC_cfg;
   FGTable* Table;
   FGState* State;
-  float Gain;
-  float Min, Max;
+  double Gain;
+  double Min, Max;
   int Rows;
   eParam ScheduledBy;
 

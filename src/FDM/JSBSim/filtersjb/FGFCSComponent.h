@@ -99,7 +99,7 @@ public:
 
   virtual bool Run(void);
   virtual void SetOutput(void);
-  inline float GetOutput (void) {return Output;}
+  inline double GetOutput (void) {return Output;}
   inline string GetName(void) {return Name;}
 
 protected:
@@ -110,10 +110,10 @@ protected:
   string Name;
   int ID;
   eParam InputIdx;
-  float Input;
+  double Input;
   string sOutputIdx;
   eParam OutputIdx;
-  float Output;
+  double Output;
   bool IsOutput;
   virtual void Debug(void);
 };

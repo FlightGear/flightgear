@@ -61,7 +61,7 @@ FGTurboShaft::~FGTurboShaft()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGTurboShaft::Calculate(float dummy) {
+double FGTurboShaft::Calculate(double dummy) {
   ConsumeFuel();
   return 0.0;
 }

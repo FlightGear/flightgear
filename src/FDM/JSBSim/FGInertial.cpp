@@ -78,7 +78,7 @@ FGInertial::~FGInertial(void)
 
 bool FGInertial::Run(void)
 {
-  float stht, ctht, sphi, cphi;
+  double stht, ctht, sphi, cphi;
 
   if (!FGModel::Run()) {
 

@@ -134,8 +134,8 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
 
   ReadPrologue(AC_cfg);
 
-  while ((AC_cfg->GetNextConfigLine() != "EOF") &&
-         (token = AC_cfg->GetValue()) != "/FDM_CONFIG") {
+  while ((AC_cfg->GetNextConfigLine() != string("EOF")) &&
+         (token = AC_cfg->GetValue()) != string("/FDM_CONFIG")) {
     if (token == "METRICS") {
       if (debug_lvl > 0) cout << fgcyan << "\n  Reading Metrics" << fgdef << endl;
       ReadMetrics(AC_cfg);
@@ -196,16 +196,40 @@ bool FGAircraft::Run(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg)
+{
+  string token = AC_cfg->GetValue();
+  string scratch;
+  AircraftName = AC_cfg->GetValue("NAME");
+  if (debug_lvl > 0) cout << underon << "Reading Aircraft Configuration File"
+            << underoff << ": " << highint << AircraftName << normint << endl;
+  scratch = AC_cfg->GetValue("VERSION").c_str();
+
+  CFGVersion = AC_cfg->GetValue("VERSION");
+
+  if (debug_lvl > 0)
+    cout << "                            Version: " << highint << CFGVersion
+                                                             << normint << endl;
+  if (CFGVersion != needed_cfg_version) {
+    cerr << endl << fgred << "YOU HAVE AN INCOMPATIBLE CFG FILE FOR THIS AIRCRAFT."
+            " RESULTS WILL BE UNPREDICTABLE !!" << endl;
+    cerr << "Current version needed is: " << needed_cfg_version << endl;
+    cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGAircraft::ReadMetrics(FGConfigFile* AC_cfg)
 {
   string token = "";
   string parameter;
-  float EW, bixx, biyy, bizz, bixz, biyz;
+  double EW, bixx, biyy, bizz, bixz, biyz;
   FGColumnVector3 vbaseXYZcg(3);
 
   AC_cfg->GetNextConfigLine();
 
-  while ((token = AC_cfg->GetValue()) != "/METRICS") {
+  while ((token = AC_cfg->GetValue()) != string("/METRICS")) {
     *AC_cfg >> parameter;
     if (parameter == "AC_WINGAREA") {
       *AC_cfg >> WingArea;
@@ -325,100 +349,8 @@ void FGAircraft::ReadUndercarriage(FGConfigFile* AC_cfg)
 
 void FGAircraft::ReadOutput(FGConfigFile* AC_cfg)
 {
-  string token, parameter;
-  int OutRate = 0;
-  int subsystems = 0;
-
-  token = AC_cfg->GetValue("NAME");
-  Output->SetFilename(token);
-  token = AC_cfg->GetValue("TYPE");
-  Output->SetType(token);
-  AC_cfg->GetNextConfigLine();
-
-  while ((token = AC_cfg->GetValue()) != "/OUTPUT") {
-    *AC_cfg >> parameter;
-    if (parameter == "RATE_IN_HZ") *AC_cfg >> OutRate;
-    if (parameter == "SIMULATION") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssSimulation;
-    }
-    if (parameter == "AEROSURFACES") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssAerosurfaces;
-    }
-    if (parameter == "RATES") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssRates;
-    }
-    if (parameter == "VELOCITIES") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssVelocities;
-    }
-    if (parameter == "FORCES") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssForces;
-    }
-    if (parameter == "MOMENTS") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssMoments;
-    }
-    if (parameter == "ATMOSPHERE") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssAtmosphere;
-    }
-    if (parameter == "MASSPROPS") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssMassProps;
-    }
-    if (parameter == "POSITION") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssPosition;
-    }
-    if (parameter == "COEFFICIENTS") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssCoefficients;
-    }
-    if (parameter == "GROUND_REACTIONS") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssGroundReactions;
-    }
-    if (parameter == "FCS") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssFCS;
-    }
-    if (parameter == "PROPULSION") {
-      *AC_cfg >> parameter;
-      if (parameter == "ON") subsystems += ssPropulsion;
-    }
-  }
-
-  Output->SetSubsystems(subsystems);
-
-  OutRate = OutRate>120?120:(OutRate<0?0:OutRate);
-  Output->SetRate( (int)(0.5 + 1.0/(State->Getdt()*OutRate)) );
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg)
-{
-  string token = AC_cfg->GetValue();
-  string scratch;
-  AircraftName = AC_cfg->GetValue("NAME");
-  if (debug_lvl > 0) cout << underon << "Reading Aircraft Configuration File"
-            << underoff << ": " << highint << AircraftName << normint << endl;
-  scratch = AC_cfg->GetValue("VERSION").c_str();
-
-  CFGVersion = AC_cfg->GetValue("VERSION");
-
-  if (debug_lvl > 0)
-    cout << "                            Version: " << highint << CFGVersion
-                                                             << normint << endl;
-  if (CFGVersion != needed_cfg_version) {
-    cerr << endl << fgred << "YOU HAVE AN INCOMPATIBLE CFG FILE FOR THIS AIRCRAFT."
-            " RESULTS WILL BE UNPREDICTABLE !!" << endl;
-    cerr << "Current version needed is: " << needed_cfg_version << endl;
-    cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
+  if (!Output->Load(AC_cfg)) {
+    cerr << "Output not successfully loaded" << endl;
   }
 }
 

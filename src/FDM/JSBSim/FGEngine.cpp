@@ -102,11 +102,10 @@ FGEngine::~FGEngine()
 // and sets the starved flag if necessary.
 
 void FGEngine::ConsumeFuel(void) {
-  float Fshortage, Oshortage;
+  double Fshortage, Oshortage;
   FGTank* Tank;
 
   if (TrimMode) return;
-
   Fshortage = Oshortage = 0.0;
   for (unsigned int i=0; i<SourceTanks.size(); i++) {
     Tank = Propulsion->GetTank(i);
@@ -123,21 +122,21 @@ void FGEngine::ConsumeFuel(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGEngine::CalcFuelNeed(void) {
+double FGEngine::CalcFuelNeed(void) {
   FuelNeed = SLFuelFlowMax*PctPower*State->Getdt()*Propulsion->GetRate();
   return FuelNeed;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGEngine::CalcOxidizerNeed(void) {
+double FGEngine::CalcOxidizerNeed(void) {
   OxidizerNeed = SLOxiFlowMax*PctPower*State->Getdt()*Propulsion->GetRate();
   return OxidizerNeed;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGEngine::SetPlacement(float x, float y, float z, float pitch, float yaw) {
+void FGEngine::SetPlacement(double x, double y, double z, double pitch, double yaw) {
   X = x;
   Y = y;
   Z = z;

@@ -259,6 +259,28 @@ bool FGJSBsim::update( int multiloop ) {
         fdmex->Run();
     }
 
+    struct FGJSBBase::Message* msg;
+    while (fdmex->ReadMessage()) {
+      msg = fdmex->ProcessMessage();
+      switch (msg->type) {
+      case FGJSBBase::Message::eText:
+        cout << msg->messageId << ": " << msg->text << endl;
+        break;
+      case FGJSBBase::Message::eBool:
+        cout << msg->messageId << ": " << msg->text << " " << msg->bVal << endl;
+        break;
+      case FGJSBBase::Message::eInteger:
+        cout << msg->messageId << ": " << msg->text << " " << msg->iVal << endl;
+        break;
+      case FGJSBBase::Message::eDouble:
+        cout << msg->messageId << ": " << msg->text << " " << msg->dVal << endl;
+        break;
+      default:
+        cerr << "Unrecognized message type." << endl;
+              break;
+      }
+    }
+
     for( i=0; i<get_num_engines(); i++ ) {
       FGEngInterface * e = get_engine(i);
       FGEngine * eng = Propulsion->GetEngine(i);

@@ -49,8 +49,8 @@ CLASS IMPLEMENTATION
 FGFlaps::FGFlaps(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
 AC_cfg(AC_cfg) {
   string token;
-  float tmpDetent;
-  float tmpTime;
+  double tmpDetent;
+  double tmpTime;
 
   Detents.clear();
   TransitionTimes.clear();
@@ -109,8 +109,8 @@ FGFlaps::~FGFlaps()
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGFlaps::Run(void ) {
-  float dt=fcs->GetState()->Getdt();
-  float flap_transit_rate=0;
+  double dt=fcs->GetState()->Getdt();
+  double flap_transit_rate=0;
 
   FGFCSComponent::Run(); // call the base class for initialization of Input
   Flap_Handle = Input*Detents[NumDetents-1];

@@ -101,8 +101,8 @@ FGRotation::~FGRotation()
 
 bool FGRotation::Run(void)
 {
-  float L2, N1;
-  float tTheta;
+  double L2, N1;
+  double tTheta;
 
   if (!FGModel::Run()) {
     GetState();

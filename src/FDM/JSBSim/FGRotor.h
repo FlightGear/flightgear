@@ -56,7 +56,7 @@ public:
   FGRotor(FGFDMExec *FDMExec);
   ~FGRotor();
 
-  float Calculate(float);
+  double Calculate(double);
 
 private:
   void Debug(void);

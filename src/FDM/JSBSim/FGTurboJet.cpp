@@ -62,7 +62,7 @@ FGTurboJet::~FGTurboJet()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGTurboJet::Calculate(float dummy)
+double FGTurboJet::Calculate(double dummy)
 {
   ConsumeFuel();
   return 0.0;

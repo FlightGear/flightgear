@@ -61,8 +61,8 @@ FGGroundReactions::FGGroundReactions(FGFDMExec* fgex) : FGModel(fgex),
 
 bool FGGroundReactions::Run(void)
 {
-  float steerAngle = 0.0;
-  float xForces = 0.0, yForces = 0.0;
+  double steerAngle = 0.0;
+  double xForces = 0.0, yForces = 0.0;
 
   if (!FGModel::Run()) {
     vForces.InitMatrix();
@@ -147,7 +147,7 @@ bool FGGroundReactions::Load(FGConfigFile* AC_cfg)
 
   AC_cfg->GetNextConfigLine();
 
-  while ((token = AC_cfg->GetValue()) != "/UNDERCARRIAGE") {
+  while ((token = AC_cfg->GetValue()) != string("/UNDERCARRIAGE")) {
     lGear.push_back(FGLGear(AC_cfg, FDMExec));
   }
 

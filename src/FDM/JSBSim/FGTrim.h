@@ -145,11 +145,11 @@ private:
   int N, Nsub;
   TrimMode mode;
   int Debug;
-  float Tolerance, A_Tolerance;
-  float wdot,udot,qdot;
-  float dth;
-  float *sub_iterations;
-  float *successful;
+  double Tolerance, A_Tolerance;
+  double wdot,udot,qdot;
+  double dth;
+  double *sub_iterations;
+  double *successful;
   bool *solution;
   int max_sub_iterations;
   int max_iterations;
@@ -159,7 +159,7 @@ private:
   bool trim_failed;
   int axis_count;
   int solutionDomain;
-  float xlo,xhi,alo,ahi;
+  double xlo,xhi,alo,ahi;
 
   FGFDMExec* fdmex;
   FGInitialCondition* fgic;
@@ -261,7 +261,7 @@ public:
       held to a tolerance of 1/10th of the given.  The default is 
       0.001 for the recti-linear accelerations and 0.0001 for the angular.
   */         
-  inline void SetTolerance(float tt) {
+  inline void SetTolerance(double tt) {
     Tolerance = tt;
     A_Tolerance = tt / 10;
   }

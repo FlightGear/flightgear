@@ -59,7 +59,7 @@ FGRotor::~FGRotor()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGRotor::Calculate(float PowerAvailable)
+double FGRotor::Calculate(double PowerAvailable)
 {
   return 0.0;
 }
