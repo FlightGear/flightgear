@@ -28,43 +28,71 @@ dist-hook:
 # make the base distribution with textures, sounds and a bit of
 # scenery, and all the other associated files
 
-fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch fgfs-textures-high
-
 fgfs-base-tar:
-	(cd $(HOME); \
-	tar --exclude=CVS \
+	(cd ..; \
+	tar \
+	--exclude=CVS \
+	--exclude='*~' \
+	--exclude='*.xcf' \
 	--exclude='*/c172/Instruments.high' \
-	--exclude='*/Models/Aircraft/*' \
 	--exclude='*/Textures/Unused' \
 	--exclude='*/Textures.high/*.save' \
+	--exclude='*/Textures.high/*.new' \
+	--exclude='*/Docs/source' \
 	-czvf fgfs-base-$(VERSION).tar.gz \
-	FlightGear/A[A-su-z]* \
-	FlightGear/[B-CE-R]* \
-	FlightGear/Scenery/w130n30/w123n37 \
-	FlightGear/Scenery/w130n30/w122n37 \
-	FlightGear/Sounds \
-	FlightGear/[T-Za]* FlightGear/[c-z]*)
-
-fgfs-base-zip:
-	(cd $(HOME); \
-	zip -rv fgfs-base-$(VERSION).zip \
-	FlightGear/A[A-su-z]* \
-	FlightGear/[B-CE-R]* \
-	FlightGear/Scenery/w130n30/w123n37 \
-	FlightGear/Scenery/w130n30/w122n37 \
-	FlightGear/Sounds \
-	FlightGear/[T-Za]* FlightGear/[c-z]* \
-	-x '*/CVS/*' -x '*/Textures/Unused/*' -x '*/Models/Aircraft/*' )
-
-fgfs-base-patch:
-	(cd $(HOME); \
-	tar --newer 6/18/2001 -czvf fgfs-base-patch-$(VERSION)c.tar.gz \
-	FlightGear/A[A-su-z]* \
-	FlightGear/[B-CE-R]* \
-	FlightGear/Scenery/w130n30/w123n37 \
-	FlightGear/Scenery/w130n30/w122n37 \
-	FlightGear/Sounds \
-	FlightGear/[T-Za]* FlightGear/[c-z]*)
+		data/ATC \
+		data/AUTHORS \
+                data/Aircraft/737 \
+                data/Aircraft/747 \
+                data/Aircraft/A320 \
+                data/Aircraft/ComperSwift \
+                data/Aircraft/Generic \
+                data/Aircraft/Hunter \
+                data/Aircraft/Instruments \
+                data/Aircraft/Instruments-3d \
+                data/Aircraft/OV10 \
+                data/Aircraft/T38 \
+                data/Aircraft/UIUC \
+                data/Aircraft/X15 \
+                data/Aircraft/YF-23 \
+                data/Aircraft/a4 \
+                data/Aircraft/an225 \
+                data/Aircraft/b52 \
+                data/Aircraft/bo105 \
+                data/Aircraft/c172 \
+                data/Aircraft/c172-fs-set.xml \
+                data/Aircraft/c172-le \
+                data/Aircraft/c172p \
+                data/Aircraft/c172r \
+                data/Aircraft/c172x \
+                data/Aircraft/c182 \
+                data/Aircraft/c310 \
+                data/Aircraft/c310u3a \
+                data/Aircraft/dc3 \
+                data/Aircraft/f16 \
+                data/Aircraft/j22 \
+                data/Aircraft/j3cub \
+                data/Aircraft/ornithopter \
+                data/Aircraft/p51d \
+                data/Aircraft/pa28-161 \
+                data/Aircraft/seahawk \
+                data/Aircraft/sgs233 \
+                data/Aircraft/t6texan2 \
+                data/Aircraft/tsr2 \
+                data/Aircraft/ufo \
+                data/Aircraft/wrightFlyer1903 \
+		data/Airports \
+		data/Astro \
+		data/[C-H]* \
+		data/Input \
+		data/[J-R]* \
+		data/Scenery \
+		data/Sounds \
+		data/[T-W]* \
+		data/gui \
+		data/[j-p]* \
+		data/version \
+	)
 
 fgfs-textures-high:
 	(cd $(HOME); \
