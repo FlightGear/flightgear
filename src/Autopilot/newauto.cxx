@@ -240,7 +240,7 @@ void FGAutopilot::init ()
     roll_out_node = fgGetNode("/autopilot/config/roll-out-deg", true);
     roll_out_smooth_node = fgGetNode("/autopilot/config/roll-out-smooth-deg", true);
 
-    current_throttle = fgGetNode("/controls/throttle");
+    current_throttle = fgGetNode("/controls/engines/engine/throttle");
 
     // initialize config properties with defaults (in case config isn't there)
     if ( TargetClimbRate->getFloatValue() < 1 )

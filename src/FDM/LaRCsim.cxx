@@ -113,19 +113,19 @@ void FGLaRCsim::update( double dt ) {
 
 	// Fake control-surface positions
 	fgSetDouble("/surface-positions/flap-pos-norm",
-		    fgGetDouble("/controls/flaps"));
+		    fgGetDouble("/controls/flight/flaps"));
 				// FIXME: ignoring trim
 	fgSetDouble("/surface-positions/elevator-pos-norm",
-		    fgGetDouble("/controls/elevator"));
+		    fgGetDouble("/controls/flight/elevator"));
 				// FIXME: ignoring trim
 	fgSetDouble("/surface-positions/left-aileron-pos-norm",
-		    fgGetDouble("/controls/aileron"));
+		    fgGetDouble("/controls/flight/aileron"));
 				// FIXME: ignoring trim
 	fgSetDouble("/surface-positions/right-aileron-pos-norm",
-		    -1 * fgGetDouble("/controls/aileron"));
+		    -1 * fgGetDouble("/controls/flight/aileron"));
 				// FIXME: ignoring trim
 	fgSetDouble("/surface-positions/rudder-pos-norm",
-		    fgGetDouble("/controls/rudder"));
+		    fgGetDouble("/controls/flight/rudder"));
 
 	// copy engine state values onto "bus"
 	fgSetDouble("/engines/engine/rpm", eng.get_RPM());

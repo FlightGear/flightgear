@@ -257,8 +257,8 @@ private:
     SGPropertyNode *right_aileron_pos_pct;
     SGPropertyNode *rudder_pos_pct;
     SGPropertyNode *flap_pos_pct;
-    SGPropertyNode *speed_brake_pos_pct;
-    SGPropertyNode *spoiler_pos_pct;
+    SGPropertyNode *speedbrake_pos_pct;
+    SGPropertyNode *spoilers_pos_pct;
     
     SGPropertyNode *gear_pos_pct;
     

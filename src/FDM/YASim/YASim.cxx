@@ -48,7 +48,7 @@ void YASim::printDEBUG()
 //  	       fgGetFloat("/engines/engine[0]/epr"),
 //  	       fgGetFloat("/engines/engine[0]/egt"));
 
-// 	printf("gear: %f\n", fgGetFloat("/controls/gear-down"));
+// 	printf("gear: %f\n", fgGetFloat("/controls/gear/gear-down"));
 
 //    	printf("alpha %5.1f beta %5.1f\n", get_Alpha()*57.3, get_Beta()*57.3);
 
@@ -170,20 +170,20 @@ void YASim::init()
 //     for(i=0; i<m->numThrusters(); i++) {
 // 	// Sanify the initial input conditions
 // 	char buf[64];
-//  	sprintf(buf, "/controls/throttle[%d]", i);        fgSetFloat(buf, 0);
-// 	sprintf(buf, "/controls/mixture[%d]", i);         fgSetFloat(buf, 1);
-// 	sprintf(buf, "/controls/propeller-pitch[%d]", i); fgSetFloat(buf, 1);
-// 	sprintf(buf, "/controls/afterburner[%d]", i);     fgSetFloat(buf, 0);
+//  	sprintf(buf, "/controls/engines/engine[%d]/throttle", i);        fgSetFloat(buf, 0);
+// 	sprintf(buf, "/controls/engines/engine[%d]/mixture", i);         fgSetFloat(buf, 1);
+// 	sprintf(buf, "/controls/engines/engine[%d]/propeller-pitch", i); fgSetFloat(buf, 1);
+// 	sprintf(buf, "/controls/engines/engine[%d]/augmentation", i);     fgSetFloat(buf, 0);
 //     }
 
-//     fgSetFloat("/controls/slats", 0);
-//     fgSetFloat("/controls/spoilers", 0);
+//     fgSetFloat("/controls/flight/slats", 0);
+//     fgSetFloat("/controls/flight/spoilers", 0);
 
     // Are we at ground level?  If so, lift the plane up so the gear
     // clear the ground.
     double runway_altitude = get_Runway_altitude();
     if(get_Altitude() - runway_altitude < 50) {
-        fgSetBool("/controls/gear-down", false);
+        fgSetBool("/controls/gear/gear-down", false);
 	float minGearZ = 1e18;
 	for(i=0; i<a->numGear(); i++) {
 	    Gear* g = a->getGear(i);
@@ -193,7 +193,7 @@ void YASim::init()
 		minGearZ = pos[2];
 	}
 	_set_Altitude(runway_altitude - minGearZ*M2FT);
-	fgSetBool("/controls/gear-down", true);
+	fgSetBool("/controls/gear/gear-down", true);
     }
 
     // The pilot's eyepoint

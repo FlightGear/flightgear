@@ -135,8 +135,10 @@ public:
   virtual double  GetNozzle(void) { return NozzlePosition; } 
   virtual bool    GetAugmentation(void) { return Augmentation; } 
   virtual bool    GetInjection(void) { return Injection; }
-  virtual bool    GetIgnition(void) { return Ignition; }
+  virtual int     GetIgnition(void) { return Ignition; }
   virtual bool    GetReversed(void) { return Reversed; }
+  virtual bool    GetCutoff(void) { return Cutoff; }
+  virtual bool    GetNitrous(void) { return Nitrous; }
 
   virtual double getFuelFlow_gph () const {
     return FuelFlow_gph;
@@ -162,15 +164,21 @@ public:
     return FuelFlow_pph;
   }
 
-  virtual void SetStarved(bool tt) {Starved = tt;}
-  virtual void SetStarved(void)    {Starved = true;}
+  virtual void SetStarved(bool tt) { Starved = tt; }
+  virtual void SetStarved(void)    { Starved = true; }
 
   virtual void SetRunning(bool bb) { Running=bb; }
-  virtual void SetName(string name) {Name = name;}
+  virtual void SetName(string name) { Name = name; }
   virtual void AddFeedTank(int tkID);
 
   virtual void SetMagnetos(int m) { Magnetos = m; }
-  virtual void SetStarter(bool s) { Starter = s;}
+  virtual void SetStarter(bool s) { Starter = s; }
+  virtual void SetAugmentation(bool a) { Augmentation = a; }
+  virtual void SetInjection(bool i) { Injection = i; }
+  virtual void SetIgnition(int ig) { Ignition = ig; }
+  virtual void SetReverse(bool r) { Reversed = r; }
+  virtual void SetCutoff(bool c) { Cutoff = c; }
+  virtual void SetNitrous(bool n) { Nitrous = n; }
 
   /** Calculates the thrust of the engine, and other engine functions.
       @param PowerRequired this is the power required to run the thrusting device
@@ -251,8 +259,10 @@ protected:
   double NozzlePosition;
   bool Augmentation;
   bool Injection;
-  bool Ignition;
+  int Ignition;
   bool Reversed;
+  bool Cutoff;
+  bool Nitrous;
 
   FGFDMExec*      FDMExec;
   FGState*        State;

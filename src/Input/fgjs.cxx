@@ -39,9 +39,9 @@ string axes_humannames[8] = { "elevator", "ailerons", "rudder", "throttle",
                               "longitudinal view" 
                             };
 
-string axes_propnames[8]={ "/controls/elevator","/controls/aileron",
-                           "/controls/rudder","/controls/throttle",
-                           "/controls/mixture","/controls/pitch", 
+string axes_propnames[8]={ "/controls/flight/elevator","/controls/flight/aileron",
+                           "/controls/flight/rudder","/controls/engines/engine/throttle",
+                           "/controls/engines/engine/mixture","/controls/engines/engine/pitch", 
                            "/sim/views/axes/lat","/sim/views/axes/long" 
                          };
                       
@@ -54,10 +54,10 @@ string button_humannames[7]= { "apply all brakes", "apply left brake",
                                "apply nose-down trim"
                              }; 
 
-string button_propnames[7]={ "/controls/brakes/all", "/controls/brakes[0]",
-                             "/controls/brakes[1]", "/controls/flaps",
-                             "/controls/flaps","/controls/elevator-trim",
-                             "/controls/elevator-trim" 
+string button_propnames[7]={ "/controls/gear/wheel[-1]/brake", "/controls/gear/wheel[0]/brake",
+                             "/controls/gear/wheel[1]/brake", "/controls/flight/flaps",
+                             "/controls/flight/flaps","/controls/flight/elevator-trim",
+                             "/controls/flight/elevator-trim" 
                            };                                                   
  
 

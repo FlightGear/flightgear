@@ -100,56 +100,65 @@ static void htond (double &x)
 // Populate the FGNetCtrls structure from the property tree.
 void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
     int i;
-
-    SGPropertyNode * node = fgGetNode("/controls", true);
+    bool b; 
+    SGPropertyNode * node;
+    SGPropertyNode * tempnode;
 
     // fill in values
+    node  = fgGetNode("/controls/flight", true);
     net->version = FG_NET_CTRLS_VERSION;
     net->aileron = node->getDoubleValue( "aileron" );
     net->elevator = node->getDoubleValue( "elevator" );
     net->elevator_trim = node->getDoubleValue( "elevator-trim" );
     net->rudder = node->getDoubleValue( "rudder" );
     net->flaps = node->getDoubleValue( "flaps" );
+    node = fgGetNode("/controls", true); 
     net->flaps_power
             = node->getDoubleValue( "/systems/electrical/outputs/flaps",
                                     1.0 ) >= 1.0;
     net->num_engines = FGNetCtrls::FG_MAX_ENGINES;
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+        node = fgGetNode("/controls/engines/engine", i );
 	net->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	net->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
-	net->fuel_pump_power[i]
-            = node->getDoubleValue( "/systems/electrical/outputs/fuel-pump",
-                                    1.0 ) >= 1.0;
 	net->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
 	net->magnetos[i] = node->getIntValue( "magnetos", 0 );
 	if ( i == 0 ) {
 	  // cout << "Magnetos -> " << node->getIntValue( "magnetos", 0 );
 	}
+	if ( i == 0 ) {
+	  // cout << "Starter -> " << node->getIntValue( "starter", false )
+	  //      << endl;
+	}
+        node = fgGetNode("/controls", true);
+	net->fuel_pump_power[i]
+            = node->getDoubleValue( "/systems/electrical/outputs/fuel-pump",
+                                    1.0 ) >= 1.0;
+
 	net->starter_power[i]
             = node->getDoubleValue( "/systems/electrical/outputs/starter",
                                     1.0 ) >= 1.0;
-	if ( i == 0 ) {
-	  // cout << " Starter -> " << node->getIntValue( "stater", false )
-	  //      << endl;
-	}
     }
     net->num_tanks = FGNetCtrls::FG_MAX_TANKS;
     for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
-        if ( node->getChild("fuel-selector", i) != 0 ) {
+        node = fgGetNode("/controls/fuel/tank", i);
+        if ( node->getChild("fuel-selector") != 0 ) {
             net->fuel_selector[i]
-                = node->getChild("fuel-selector", i)->getDoubleValue();
+                = node->getChild("fuel-selector")->getBoolValue();
         } else {
             net->fuel_selector[i] = false;
         }
     }
     net->num_wheels = FGNetCtrls::FG_MAX_WHEELS;
+    tempnode = fgGetNode("/controls/gear", true);
     for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-        if ( node->getChild("brakes", i) != 0 ) {
-            if ( node->getChild("parking-brake")->getDoubleValue() > 0.0 ) {
+        node = fgGetNode("/controls/gear/wheel", i);
+        if ( node->getChild("brake") != 0 ) {
+            if ( tempnode->getChild("parking-brake")->getDoubleValue() > 0.0 ) {
                 net->brake[i] = 1.0;
            } else {
                 net->brake[i]
-                    = node->getChild("brakes", i)->getDoubleValue();
+                    = node->getChild("brake")->getDoubleValue();
             }
         } else {
             net->brake[i] = 0.0;
@@ -227,7 +236,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
 void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
     int i;
 
-    SGPropertyNode * node = fgGetNode("/controls", true);
+    SGPropertyNode * node;
 
     if ( net_byte_order ) {
         // convert from network byte order
@@ -274,7 +283,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
                 "FlightGear needs version = " << FG_NET_CTRLS_VERSION
                 << " but is receiving version = "  << net->version );
     }
-
+    node = fgGetNode("/controls/flight", true);
     node->setDoubleValue( "aileron", net->aileron );
     node->setDoubleValue( "elevator", net->elevator );
     node->setDoubleValue( "elevator-trim", net->elevator_trim );
@@ -284,11 +293,12 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
     fgSetBool( "/systems/electrical/outputs/flaps", net->flaps_power );
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
-        node->getChild( "throttle", i )->setDoubleValue( net->throttle[i] );
-        node->getChild( "mixture", i )->setDoubleValue( net->mixture[i] );
-        node->getChild( "propeller-pitch", i )
+        node = fgGetNode("/controls/engines/engine", i);
+        node->getChild( "throttle" )->setDoubleValue( net->throttle[i] );
+        node->getChild( "mixture" )->setDoubleValue( net->mixture[i] );
+        node->getChild( "propeller-pitch" )
             ->setDoubleValue( net->prop_advance[i] );
-        node->getChild( "magnetos", i )->setDoubleValue( net->magnetos[i] );
+        node->getChild( "magnetos" )->setDoubleValue( net->magnetos[i] );
     }
 
     fgSetBool( "/systems/electrical/outputs/fuel-pump",
@@ -297,13 +307,16 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
                net->starter_power[0] );
 
     for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
-        node->getChild( "fuel-selector", i )
+        node = fgGetNode( "/controls/fuel/tank", i );
+        node->getChild( "fuel-selector" )
             ->setBoolValue( net->fuel_selector[i] );
     }
     for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-        node->getChild( "brakes", i )->setDoubleValue( net->brake[i] );
+        node = fgGetNode( "/controls/gear/wheel", i );
+        node->getChild( "brake" )->setDoubleValue( net->brake[i] );
     }
 
+    node = fgGetNode( "/controls/gear", true );
     node->setBoolValue( "gear-down", net->gear_handle );
 
     node = fgGetNode( "/controls/switches", true );

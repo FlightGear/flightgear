@@ -80,6 +80,8 @@ FGEngine::FGEngine(FGFDMExec* exec)
     Starter(false),
     FuelNeed(0.0), OxidizerNeed(0.0),
     Starved(false), Flameout(false), Running(false), Cranking(false),
+    Augmentation(false), Injection(false), Ignition(false),
+    Reversed(false), Cutoff(true), Nitrous(false),
     PctPower(0.0),
     EngineNumber(-1),
     TrimMode(false),
