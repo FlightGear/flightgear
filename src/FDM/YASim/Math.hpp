@@ -12,11 +12,15 @@ public:
     // Simple wrappers around library routines
     static float abs(float f);
     static float sqrt(float f);
+    static float sqr(float f);
     static float ceil(float f);
     static float sin(float f);
     static float cos(float f);
     static float tan(float f);
+    static float atan(float f);
     static float atan2(float y, float x);
+    static float asin(float f);
+    static float acos(float f);
 
     // Takes two args and runs afoul of the Koenig rules.
     static float pow(double base, double exp);

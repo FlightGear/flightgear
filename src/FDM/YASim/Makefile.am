@@ -22,6 +22,9 @@ SHARED_SOURCES = \
         PropEngine.cpp PropEngine.hpp \
         Propeller.cpp Propeller.hpp \
         RigidBody.cpp RigidBody.hpp \
+        Rotor.cpp Rotor.hpp \
+        Rotorblade.cpp Rotorblade.hpp \
+        Rotorpart.cpp Rotorpart.hpp \
         SimpleJet.cpp SimpleJet.hpp \
         Surface.cpp Surface.hpp \
         Thruster.cpp Thruster.hpp \

@@ -10,8 +10,12 @@
 #include "PropEngine.hpp"
 #include "Propeller.hpp"
 #include "PistonEngine.hpp"
+#include "Rotor.hpp"
+#include "Rotorpart.hpp"
+#include "Rotorblade.hpp"
 
 #include "FGFDM.hpp"
+
 namespace yasim {
 
 // Some conversion factors
@@ -28,6 +32,7 @@ static const float INHG2PA = 3386.389;
 static const float K2DEGF = 1.8;
 static const float K2DEGFOFFSET = -459.4;
 static const float CIN2CM = 1.6387064e-5;
+static const float YASIM_PI = 3.14159265358979323846;
 
 // Stubs, so that this can be compiled without the FlightGear
 // binary.  What's the best way to handle this?
@@ -119,11 +124,15 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	_airplane.setPilotPos(v);
+    } else if(eq(name, "rotor")) {
+        _airplane.addRotor(parseRotor(a, name));
     } else if(eq(name, "wing")) {
 	_airplane.setWing(parseWing(a, name));
     } else if(eq(name, "hstab")) {
 	_airplane.setTail(parseWing(a, name));
     } else if(eq(name, "vstab")) {
+	_airplane.addVStab(parseWing(a, name));
+    } else if(eq(name, "mstab")) {
 	_airplane.addVStab(parseWing(a, name));
     } else if(eq(name, "propeller")) {
 	parsePropeller(a);
@@ -226,6 +235,11 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
     } else if(eq(name, "spoiler")) {
 	((Wing*)_currObj)->setSpoiler(attrf(a, "start"), attrf(a, "end"),
 				      attrf(a, "lift"), attrf(a, "drag"));
+    /* } else if(eq(name, "collective")) {
+        ((Rotor*)_currObj)->setcollective(attrf(a, "min"), attrf(a, "max"));
+    } else if(eq(name, "cyclic")) {
+        ((Rotor*)_currObj)->setcyclic(attrf(a, "ail"), attrf(a, "ele"));
+    */                               
     } else if(eq(name, "actionpt")) {
  	v[0] = attrf(a, "x");
 	v[1] = attrf(a, "y");
@@ -351,6 +365,49 @@ void FGFDM::setOutputProperties()
         fgSetFloat("/consumables/fuel/total-fuel-norm", totalFuel/totalCap);
     }
 
+    for(i=0; i<_airplane.getNumRotors(); i++) {
+        Rotor*r=(Rotor*)_airplane.getRotor(i);
+        int j=0;
+        float f;
+        char b[256];
+        while(j=r->getValueforFGSet(j,b,&f))
+        {
+              if (b[0])
+              {
+                 fgSetFloat(b,f);
+              }
+        }
+        
+        for(j=0; j<r->numRotorparts(); j++) {
+            Rotorpart* s = (Rotorpart*)r->getRotorpart(j);
+            char *b;
+            int k;
+            for (k=0;k<2;k++)
+            {
+              b=s->getAlphaoutput(k);
+              if (b[0])
+              {
+                 fgSetFloat(b,s->getAlpha(k));
+                 //printf("setting [%s]\n",b);
+              }
+            }
+        }
+        for(j=0; j<r->numRotorblades(); j++) {
+            Rotorblade* s = (Rotorblade*)r->getRotorblade(j);
+            char *b;
+            int k;
+            for (k=0;k<2;k++)
+            {
+              b=s->getAlphaoutput(k);
+              if (b[0])
+              {
+                 fgSetFloat(b,s->getAlpha(k));
+              }
+            }
+        }
+     }
+
+
     for(i=0; i<_thrusters.size(); i++) {
 	EngRec* er = (EngRec*)_thrusters.get(i);
         Thruster* t = er->eng;
@@ -424,6 +481,92 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type)
 
     float effect = attrf(a, "effectiveness", 1);
     w->setDragScale(w->getDragScale()*effect);
+
+    _currObj = w;
+    return w;
+}
+Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
+{
+    Rotor* w = new Rotor();
+
+    float defDihed = 0;
+
+    float pos[3];
+    pos[0] = attrf(a, "x");
+    pos[1] = attrf(a, "y");
+    pos[2] = attrf(a, "z");
+    w->setBase(pos);
+
+    float normal[3];
+    normal[0] = attrf(a, "nx");
+    normal[1] = attrf(a, "ny");
+    normal[2] = attrf(a, "nz");
+    w->setNormal(normal);
+
+    float forward[3];
+    forward[0] = attrf(a, "fx");
+    forward[1] = attrf(a, "fy");
+    forward[2] = attrf(a, "fz");
+    w->setForward(forward);
+
+
+
+    w->setMaxCyclicail(attrf(a, "maxcyclicail", 7.6));
+    w->setMaxCyclicele(attrf(a, "maxcyclicele", 4.94));
+    w->setMinCyclicail(attrf(a, "mincyclicail", -7.6));
+    w->setMinCyclicele(attrf(a, "mincyclicele", -4.94));
+    w->setMaxCollective(attrf(a, "maxcollective", 15.8));
+    w->setMinCollective(attrf(a, "mincollective", -0.2));
+    w->setDiameter(attrf(a, "diameter", 10.2));
+    w->setWeightPerBlade(attrf(a, "weightperblade", 44));
+    w->setNumberOfBlades(attrf(a, "numblades", 4));
+    w->setRelBladeCenter(attrf(a, "relbladecenter", 0.7));
+    w->setDynamic(attrf(a, "dynamic", 0.7));
+    w->setDelta3(attrf(a, "delta3", 0));
+    w->setDelta(attrf(a, "delta", 0));
+    w->setTranslift(attrf(a, "translift", 0.05));
+    w->setC2(attrf(a, "dragfactor", 1));
+    w->setStepspersecond(attrf(a, "stepspersecond", 120));
+    w->setRPM(attrf(a, "rpm", 424));
+    w->setRelLenHinge(attrf(a, "rellenflaphinge", 0.07));
+    w->setAlpha0((attrf(a, "flap0", -5))*YASIM_PI/180);
+    w->setAlphamin((attrf(a, "flapmin", -15))/180*YASIM_PI);
+    w->setAlphamax((attrf(a, "flapmax",  15))*YASIM_PI/180);
+    w->setAlpha0factor(attrf(a, "flap0factor", 1));
+    w->setTeeterdamp(attrf(a,"teeterdamp",.0001));
+    w->setMaxteeterdamp(attrf(a,"maxteeterdamp",1000));
+    w->setRelLenTeeterHinge(attrf(a,"rellenteeterhinge",0.01));
+    void setAlphamin(float f);
+    void setAlphamax(float f);
+    void setAlpha0factor(float f);
+
+    if(attristrue(a,"ccw"))
+       w->setCcw(1); 
+    
+    if(a->hasAttribute("name"))
+       w->setName(a->getValue("name") );
+    if(a->hasAttribute("alphaout0"))
+       w->setAlphaoutput(0,a->getValue("alphaout0") );
+    if(a->hasAttribute("alphaout1"))  w->setAlphaoutput(1,a->getValue("alphaout1") );
+    if(a->hasAttribute("alphaout2"))  w->setAlphaoutput(2,a->getValue("alphaout2") );
+    if(a->hasAttribute("alphaout3"))  w->setAlphaoutput(3,a->getValue("alphaout3") );
+    if(a->hasAttribute("coneout"))  w->setAlphaoutput(4,a->getValue("coneout") );
+    if(a->hasAttribute("yawout"))   w->setAlphaoutput(5,a->getValue("yawout") );
+    if(a->hasAttribute("rollout"))  w->setAlphaoutput(6,a->getValue("rollout") );
+
+    w->setPitchA(attrf(a, "pitch_a", 10));
+    w->setPitchB(attrf(a, "pitch_b", 10));
+    w->setForceAtPitchA(attrf(a, "forceatpitch_a", 3000));
+    w->setPowerAtPitch0(attrf(a, "poweratpitch_0", 300));
+    w->setPowerAtPitchB(attrf(a, "poweratpitch_b", 3000));
+    if(attristrue(a,"notorque"))
+       w->setNotorque(1); 
+    if(attristrue(a,"simblades"))
+       w->setSimBlades(1); 
+
+
+
+
 
     _currObj = w;
     return w;
@@ -531,6 +674,10 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
     if(eq(name, "CASTERING")) return ControlMap::CASTERING;
     if(eq(name, "PROPPITCH")) return ControlMap::PROPPITCH;
+    if(eq(name, "COLLECTIVE")) return ControlMap::COLLECTIVE;
+    if(eq(name, "CYCLICAIL")) return ControlMap::CYCLICAIL;
+    if(eq(name, "CYCLICELE")) return ControlMap::CYCLICELE;
+    if(eq(name, "ROTORENGINEON")) return ControlMap::ROTORENGINEON;
     SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
            << name << "' in YASim aircraft description.");
     exit(1);
@@ -603,6 +750,13 @@ float FGFDM::attrf(XMLAttributes* atts, char* attr, float def)
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
     else         return (float)atof(val);    
+}
+
+bool FGFDM::attristrue(XMLAttributes* atts, char* attr)
+{
+    const char* val = atts->getValue(attr);
+    if(val == 0) return false;
+    else         return eq(val,"true");    
 }
 
 }; // namespace yasim

@@ -5,8 +5,9 @@
 #include "Glue.hpp"
 #include "RigidBody.hpp"
 #include "Surface.hpp"
+#include "Rotorpart.hpp"
+#include "Rotorblade.hpp"
 #include "Thruster.hpp"
-
 #include "Airplane.hpp"
 
 namespace yasim {
@@ -72,7 +73,7 @@ void Airplane::iterate(float dt)
     // The gear might have moved.  Change their aerodynamics.
     updateGearState();
 
-    _model.iterate();
+    _model.iterate(dt);
 }
 
 void Airplane::consumeFuel(float dt)
@@ -253,6 +254,11 @@ void Airplane::setTail(Wing* tail)
 void Airplane::addVStab(Wing* vstab)
 {
     _vstabs.add(vstab);
+}
+
+void Airplane::addRotor(Rotor* rotor)
+{
+    _rotors.add(rotor);
 }
 
 void Airplane::addFuselage(float* front, float* back, float width,
@@ -443,6 +449,69 @@ float Airplane::compileWing(Wing* w)
     return wgt;
 }
 
+float Airplane::compileRotor(Rotor* w)
+{
+    /* todo contact points
+    // The tip of the wing is a contact point
+    float tip[3];
+    w->getTip(tip);
+    addContactPoint(tip);
+    if(w->isMirrored()) {
+        tip[1] *= -1;
+        addContactPoint(tip);
+    }
+    */
+
+    // Make sure it's initialized.  The surfaces will pop out with
+    // total drag coefficients equal to their areas, which is what we
+    // want.
+    w->compile();
+    _model.addRotor(w);
+
+    float wgt = 0;
+    int i;
+    /* Todo: add rotor to model!!!
+       Todo: calc and add mass!!!
+    */
+    for(i=0; i<w->numRotorparts(); i++) {
+        Rotorpart* s = (Rotorpart*)w->getRotorpart(i);
+
+        //float td = s->getTotalDrag();
+        //s->setTotalDrag(td);
+
+        _model.addRotorpart(s);
+
+        
+        float mass = s->getWeight();
+        mass = mass * Math::sqrt(mass);
+        float pos[3];
+        s->getPosition(pos);
+        _model.getBody()->addMass(mass, pos);
+        wgt += mass;
+        
+    }
+    
+    for(i=0; i<w->numRotorblades(); i++) {
+        Rotorblade* s = (Rotorblade*)w->getRotorblade(i);
+
+        //float td = s->getTotalDrag();
+        //s->setTotalDrag(td);
+
+        _model.addRotorblade(s);
+
+        
+        float mass = s->getWeight();
+        mass = mass * Math::sqrt(mass);
+        float pos[3];
+        s->getPosition(pos);
+        _model.getBody()->addMass(mass, pos);
+        wgt += mass;
+        
+    }
+    
+    return wgt;
+}
+
 float Airplane::compileFuselage(Fuselage* f)
 {
     // The front and back are contact points
@@ -576,11 +645,16 @@ void Airplane::compile()
     float aeroWgt = 0;
 
     // The Wing objects
-    aeroWgt += compileWing(_wing);
-    aeroWgt += compileWing(_tail);
+    if (_wing)
+      aeroWgt += compileWing(_wing);
+    if (_tail)
+      aeroWgt += compileWing(_tail);
     int i;
     for(i=0; i<_vstabs.size(); i++) {
         aeroWgt += compileWing((Wing*)_vstabs.get(i)); 
+    }
+    for(i=0; i<_rotors.size(); i++) {
+        aeroWgt += compileRotor((Rotor*)_rotors.get(i)); 
     }
     
     // The fuselage(s)
@@ -628,10 +702,15 @@ void Airplane::compile()
 
     // Ground effect
     float gepos[3];
-    float gespan = _wing->getGroundEffect(gepos);
+    float gespan;
+    if(_wing)
+      gespan = _wing->getGroundEffect(gepos);
+    else
+      gespan=0;
     _model.setGroundEffect(gepos, gespan, 0.15f);
 
     solveGear();
+    
     solve();
 
     // Do this after solveGear, because it creates "gear" objects that
@@ -750,7 +829,7 @@ void Airplane::runCruise()
     // Precompute thrust in the model, and calculate aerodynamic forces
     _model.getBody()->recalc();
     _model.getBody()->reset();
-    _model.initIteration();
+    _model.initIteration(.01);//hier parameter egal
     _model.calcForces(&_cruiseState);
 }
 
@@ -793,7 +872,7 @@ void Airplane::runApproach()
     // Precompute thrust in the model, and calculate aerodynamic forces
     _model.getBody()->recalc();
     _model.getBody()->reset();
-    _model.initIteration();
+    _model.initIteration(.01);//hier parameter egal
     _model.calcForces(&_approachState);
 }
 
@@ -801,8 +880,10 @@ void Airplane::applyDragFactor(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
     _dragFactor *= applied;
-    _wing->setDragScale(_wing->getDragScale() * applied);
-    _tail->setDragScale(_tail->getDragScale() * applied);
+    if(_wing)
+      _wing->setDragScale(_wing->getDragScale() * applied);
+    if(_tail)
+      _tail->setDragScale(_tail->getDragScale() * applied);
     int i;
     for(i=0; i<_vstabs.size(); i++) {
 	Wing* w = (Wing*)_vstabs.get(i);
@@ -818,8 +899,10 @@ void Airplane::applyLiftRatio(float factor)
 {
     float applied = Math::pow(factor, SOLVE_TWEAK);
     _liftRatio *= applied;
-    _wing->setLiftRatio(_wing->getLiftRatio() * applied);
-    _tail->setLiftRatio(_tail->getLiftRatio() * applied);
+    if(_wing)
+      _wing->setLiftRatio(_wing->getLiftRatio() * applied);
+    if(_tail)
+      _tail->setLiftRatio(_tail->getLiftRatio() * applied);
     int i;
     for(i=0; i<_vstabs.size(); i++) {
         Wing* w = (Wing*)_vstabs.get(i);
@@ -848,6 +931,8 @@ void Airplane::solve()
     float tmp[3];
     _solutionIterations = 0;
     _failureMsg = 0;
+    if((_wing)&&(_tail))
+    {
     while(1) {
 #if 0
         printf("%d %f %f %f %f %f\n", //DEBUG
@@ -859,9 +944,9 @@ void Airplane::solve()
                _approachElevator.val);
 #endif
 
-	if(_solutionIterations++ > 10000) {
+        if(_solutionIterations++ > 10000) { 
             _failureMsg = "Solution failed to converge after 10000 iterations";
-	    return;
+            return;
         }
 
 	// Run an iteration at cruise, and extract the needed numbers:
@@ -986,5 +1071,19 @@ void Airplane::solve()
 	_failureMsg = "Tail incidence > 10 degrees";
 	return;
     }
+    }
+    else
+    {
+        applyDragFactor(Math::pow(15.7/1000, 1/SOLVE_TWEAK));
+        applyLiftRatio(Math::pow(104, 1/SOLVE_TWEAK));
+        setupState(0,0, &_cruiseState);
+        _model.setState(&_cruiseState);
+        _controls.reset();
+        _model.getBody()->reset();
+
+
+    }
+
+    return;
 }
 }; // namespace yasim

@@ -4,6 +4,7 @@
 #include "PistonEngine.hpp"
 #include "Gear.hpp"
 #include "Wing.hpp"
+#include "Rotor.hpp"
 #include "Math.hpp"
 #include "Propeller.hpp"
 
@@ -199,6 +200,10 @@ void ControlMap::applyControls(float dt)
 	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);         break;
 	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);         break;
 	case SPOILER:  ((Wing*)obj)->setSpoiler(lval, rval);       break;
+        case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);        break;
+        case CYCLICAIL:    ((Rotor*)obj)->setCyclicail(lval,rval);         break;
+        case CYCLICELE:    ((Rotor*)obj)->setCyclicele(lval,rval);         break;
+        case ROTORENGINEON: ((Rotor*)obj)->setEngineOn((int)lval); break;
 	case BOOST:
 	    ((Thruster*)obj)->getPistonEngine()->setBoost(lval);
 	    break;
@@ -213,6 +218,9 @@ float ControlMap::rangeMin(int type)
     case FLAP0:    return -1;  // [-1:1]
     case FLAP1:    return -1;
     case STEER:    return -1;
+    case CYCLICELE: return -1;
+    case CYCLICAIL: return -1;
+    case COLLECTIVE: return -1;
     case MAGNETOS: return 0;   // [0:3]
     default:       return 0;   // [0:1]
     }

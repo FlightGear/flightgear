@@ -19,10 +19,24 @@ float Math::sqrt(float f)
 {
     return (float)::sqrt(f);
 }
+float Math::sqr(float f)
+{
+    return f*f;
+}
 
 float Math::ceil(float f)
 {
     return (float)::ceil(f);
+}
+
+float Math::acos(float f)
+{
+    return (float)::acos(f);
+}
+
+float Math::asin(float f)
+{
+    return (float)::asin(f);
 }
 
 float Math::cos(float f)
@@ -38,6 +52,11 @@ float Math::sin(float f)
 float Math::tan(float f)
 {
     return (float)::tan(f);
+}
+
+float Math::atan(float f)
+{
+    return (float)::atan(f);
 }
 
 float Math::atan2(float y, float x)
@@ -126,7 +145,12 @@ float Math::mag3(float* v)
 
 void Math::unit3(float* v, float* out)
 {
-    float imag = 1/mag3(v);
+    float mag=mag3(v);
+    float imag;
+    if (mag!=0)
+      imag= 1/mag;
+    else
+      imag=1;
     mul3(imag, v, out);
 }
 

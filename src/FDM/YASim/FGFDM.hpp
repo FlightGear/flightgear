@@ -36,6 +36,7 @@ private:
 
     void setOutputProperties();
 
+    Rotor* parseRotor(XMLAttributes* a, const char* name);
     Wing* parseWing(XMLAttributes* a, const char* name);
     int parseAxis(const char* name);
     int parseOutput(const char* name);
@@ -47,6 +48,7 @@ private:
     int attri(XMLAttributes* atts, char* attr, int def); 
     float attrf(XMLAttributes* atts, char* attr);
     float attrf(XMLAttributes* atts, char* attr, float def); 
+    bool attristrue(XMLAttributes* atts, char* attr);
 
     // The core Airplane object we manage.
     Airplane _airplane;

@@ -13,7 +13,8 @@ public:
 		      ADVANCE, REHEAT, PROP,
 		      BRAKE, STEER, EXTEND,
 		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER, VECTOR,
-                      BOOST, CASTERING, PROPPITCH };
+                      BOOST, CASTERING, PROPPITCH, 
+                      COLLECTIVE, CYCLICAIL, CYCLICELE, ROTORENGINEON};
 
     enum { OPT_SPLIT  = 0x01,
            OPT_INVERT = 0x02,

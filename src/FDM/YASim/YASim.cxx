@@ -23,8 +23,9 @@
 
 using namespace yasim;
 
-static const float RAD2DEG = 180/3.14159265358979323846;
-static const float PI2 = 3.14159265358979323846*2;
+static const float YASIM_PI = 3.14159265358979323846;
+static const float RAD2DEG = 180/YASIM_PI;
+static const float PI2 = YASIM_PI*2;
 static const float RAD2RPM = 9.54929658551;
 static const float M2FT = 3.2808399;
 static const float FT2M = 0.3048;
@@ -127,7 +128,6 @@ void YASim::init()
 
     // Superclass hook
     common_init();
-
     m->setCrashed(false);
 
     // Figure out the initial speed type

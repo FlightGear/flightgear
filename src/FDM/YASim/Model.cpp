@@ -9,6 +9,9 @@
 #include "PistonEngine.hpp"
 #include "Gear.hpp"
 #include "Surface.hpp"
+#include "Rotor.hpp"
+#include "Rotorpart.hpp"
+#include "Rotorblade.hpp"
 #include "Glue.hpp"
 
 #include "Model.hpp"
@@ -69,7 +72,7 @@ void Model::getThrust(float* out)
     }
 }
 
-void Model::initIteration()
+void Model::initIteration(float dt)
 {
     // Precompute torque and angular momentum for the thrusters
     int i;
@@ -93,11 +96,31 @@ void Model::initIteration()
 	t->getGyro(v);
 	Math::add3(v, _gyro, _gyro);
     }
+
+
+    
+
+    float lrot[3];
+    Math::vmul33(_s->orient, _s->rot, lrot);
+    Math::mul3(dt,lrot,lrot);
+    for(i=0; i<_rotors.size(); i++) {
+        Rotor* r = (Rotor*)_rotors.get(i);
+        r->inititeration(dt);
+    }
+    for(i=0; i<_rotorparts.size(); i++) {
+        Rotorpart* rp = (Rotorpart*)_rotorparts.get(i);
+        rp->inititeration(dt,lrot);
+    }
+    for(i=0; i<_rotorblades.size(); i++) {
+        Rotorblade* rp = (Rotorblade*)_rotorblades.get(i);
+        rp->inititeration(dt,lrot);
+    }
+    
 }
 
-void Model::iterate()
+void Model::iterate(float dt)
 {
-    initIteration();
+    initIteration(dt);
     _body.recalc(); // FIXME: amortize this, somehow
     _integrator.calcNewInterval();
 }
@@ -122,6 +145,12 @@ State* Model::getState()
     return _s;
 }
 
+void Model::resetState()
+{
+    //_s->resetState();
+}
+
+
 void Model::setState(State* s)
 {
     _integrator.setState(s);
@@ -141,6 +170,19 @@ Integrator* Model::getIntegrator()
 Surface* Model::getSurface(int handle)
 {
     return (Surface*)_surfaces.get(handle);
+}
+
+Rotorpart* Model::getRotorpart(int handle)
+{
+    return (Rotorpart*)_rotorparts.get(handle);
+}
+Rotorblade* Model::getRotorblade(int handle)
+{
+    return (Rotorblade*)_rotorblades.get(handle);
+}
+Rotor* Model::getRotor(int handle)
+{
+    return (Rotor*)_rotors.get(handle);
 }
 
 int Model::addThruster(Thruster* t)
@@ -166,6 +208,19 @@ void Model::setThruster(int handle, Thruster* t)
 int Model::addSurface(Surface* surf)
 {
     return _surfaces.add(surf);
+}
+
+int Model::addRotorpart(Rotorpart* rpart)
+{
+    return _rotorparts.add(rpart);
+}
+int Model::addRotorblade(Rotorblade* rblade)
+{
+    return _rotorblades.add(rblade);
+}
+int Model::addRotor(Rotor* r)
+{
+    return _rotors.add(r);
 }
 
 int Model::addGear(Gear* gear)
@@ -210,6 +265,7 @@ void Model::calcForces(State* s)
     // velocity), and are therefore constant across the four calls to
     // calcForces.  They get computed before we begin the integration
     // step.
+    //printf("f");
     _body.setGyro(_gyro);
     _body.addTorque(_torque);
     int i;
@@ -243,9 +299,53 @@ void Model::calcForces(State* s)
 	float force[3], torque[3];
 	sf->calcForce(vs, _rho, force, torque);
 	Math::add3(faero, force, faero);
+
+        
+
 	_body.addForce(pos, force);
 	_body.addTorque(torque);
     }
+    for(i=0; i<_rotorparts.size(); i++) {
+        Rotorpart* sf = (Rotorpart*)_rotorparts.get(i);
+
+	// Vsurf = wind - velocity + (rot cross (cg - pos))
+	float vs[3], pos[3];
+	sf->getPosition(pos);
+        localWind(pos, s, vs);
+
+	float force[3], torque[3];
+	sf->calcForce(vs, _rho, force, torque);
+        //Math::add3(faero, force, faero);
+
+        sf->getPositionForceAttac(pos);
+
+	_body.addForce(pos, force);
+	_body.addTorque(torque);
+    }
+    for(i=0; i<_rotorblades.size(); i++) {
+        Rotorblade* sf = (Rotorblade*)_rotorblades.get(i);
+
+	// Vsurf = wind - velocity + (rot cross (cg - pos))
+	float vs[3], pos[3];
+	sf->getPosition(pos);
+        localWind(pos, s, vs);
+
+	float force[3], torque[3];
+	sf->calcForce(vs, _rho, force, torque);
+        //Math::add3(faero, force, faero);
+
+        sf->getPositionForceAttac(pos);
+
+	_body.addForce(pos, force);
+	_body.addTorque(torque);
+    }
+    /*
+    {
+      float cg[3];
+      _body.getCG(cg);
+      //printf("cg: %5.3lf %5.3lf %5.3lf ",cg[0],cg[1],cg[2]);
+    }
+    */
 
     // Get a ground plane in local coordinates.  The first three
     // elements are the normal vector, the final one is the distance
