@@ -394,6 +394,12 @@ void trRenderFrame( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame( void ) {
+  
+    static long old_elapsed_ms = 0;
+
+    int dt_ms = int(globals->get_elapsed_time_ms() - old_elapsed_ms);
+    old_elapsed_ms = globals->get_elapsed_time_ms();
+
     static const SGPropertyNode *longitude
 	= fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
@@ -596,7 +602,7 @@ void fgRenderFrame( void ) {
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-	current_model.update(0); // FIXME: use real delta time
+	current_model.update(dt_ms);
 
 	// $$$ begin - added VS Renganthan 17 Oct 2K
 	fgUpdateDCS();
@@ -725,21 +731,21 @@ void fgRenderFrame( void ) {
 	// glDisable( GL_TEXTURE_2D );
 
 	// update the input subsystem
-	current_input.update(1); // FIXME: use real dt
+	current_input.update(dt_ms);
 
 	// update the controls subsystem
-	globals->get_controls()->update(1); // FIXME: use real dt
+	globals->get_controls()->update(dt_ms);
 
 	hud_and_panel->apply();
 	fgCockpitUpdate();
 
 	// Use the hud_and_panel ssgSimpleState for rendering the ATC output
 	// This only works properly if called before the panel call
-	globals->get_ATC_display()->update(1);  // FIXME: use real dt
+	globals->get_ATC_display()->update(dt_ms);
 
 	// update the panel subsystem
 	if ( current_panel != NULL ) {
-	    current_panel->update(1); // FIXME: use real dt
+	    current_panel->update(dt_ms);
 	}
 
 	// We can do translucent menus, so why not. :-)
@@ -750,7 +756,7 @@ void fgRenderFrame( void ) {
 
 	// glEnable( GL_FOG );
 
-	globals->get_logger()->update(0); // FIXME: use real dt
+	globals->get_logger()->update(dt_ms);
     }
 
     glutSwapBuffers();
