@@ -752,6 +752,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	parse_channel( "garmin", arg.substr(9) );
     } else if ( arg.find( "--nmea=" ) != string::npos ) {
 	parse_channel( "nmea", arg.substr(7) );
+    } else if ( arg.find( "--pve=" ) != string::npos ) {
+	parse_channel( "pve", arg.substr(6) );
+    } else if ( arg.find( "--rul=" ) != string::npos ) {
+	parse_channel( "rul", arg.substr(6) );
 #ifdef FG_NETWORK_OLK
     } else if ( arg == "--net-hud" ) {
 	net_hud_display = 1;	

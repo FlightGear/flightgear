@@ -48,6 +48,8 @@
 #include <Network/protocol.hxx>
 #include <Network/garmin.hxx>
 #include <Network/nmea.hxx>
+#include <Network/pve.hxx>
+#include <Network/rul.hxx>
 
 // #include <Time/fg_time.hxx>
 #include <Time/timestamp.hxx>
@@ -79,12 +81,18 @@ static FGProtocol *parse_port_config( const string& config )
     FG_LOG( FG_IO, FG_INFO, "  protocol = " << protocol );
 
     FGProtocol *io;
-    if ( protocol == "nmea" ) {
-	FGNMEA *nmea = new FGNMEA;
-	io = nmea;
-    } else if ( protocol == "garmin" ) {
+    if ( protocol == "garmin" ) {
 	FGGarmin *garmin = new FGGarmin;
 	io = garmin;
+    } else if ( protocol == "nmea" ) {
+	FGNMEA *nmea = new FGNMEA;
+	io = nmea;
+    } else if ( protocol == "pve" ) {
+	FGPVE *pve = new FGPVE;
+	io = pve;
+    } else if ( protocol == "rul" ) {
+	FGRUL *rul = new FGRUL;
+	io = rul;
     } else {
 	return NULL;
     }
