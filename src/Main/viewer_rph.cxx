@@ -189,7 +189,7 @@ void FGViewerRPH::update() {
 	    << abs_view_pos[0] << ","
 	    << abs_view_pos[1] << ","
 	    << abs_view_pos[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = "
+    FG_LOG( FG_VIEW, FG_DEBUG, "(RPH) Relative view pos = "
 	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
 
     // code to calculate LOCAL matrix calculated from Phi, Theta, and
@@ -275,8 +275,9 @@ void FGViewerRPH::update() {
     // cout << "VIEW_OFFSET matrix" << endl;
     // print_sgMat4( VIEW_OFFSET );
     sgXformVec3( view_forward, forward, VIEW_OFFSET );
-    // cout << "view_forward = " << view_forward[0] << ","
-    //      << view_forward[1] << "," << view_forward[2] << endl;
+    FG_LOG( FG_VIEW, FG_DEBUG, "(RPH) view forward = "
+	    << view_forward[0] << "," << view_forward[1] << ","
+	    << view_forward[2] );
 	
     // VIEW_ROT = LARC_TO_SSG * ( VIEWo * VIEW_OFFSET )
 #ifdef USE_FAST_VIEWROT

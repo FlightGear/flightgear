@@ -83,7 +83,7 @@ void GLUTkey(unsigned char k, int x, int y) {
     int speed;
 
     FGInterface *f = current_aircraft.fdm_state;
-    FGViewerRPH *v = (FGViewerRPH *)globals->get_current_view();
+    FGViewer *v = globals->get_current_view();
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );
     if ( puKeyboard(k, PU_DOWN) ) {
@@ -153,75 +153,27 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 49: // numeric keypad 1
 	    v->set_goal_view_offset( FG_PI * 0.75 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(-25.0, 25.0, 1.0);
-		v->set_view_offset( FG_PI * 0.75 );
-	    }
 	    return;
 	case 50: // numeric keypad 2
 	    v->set_goal_view_offset( FG_PI );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(-25.0, 0.0, 1.0);
-		v->set_view_offset( FG_PI );
-	    }
 	    return;
 	case 51: // numeric keypad 3
 	    v->set_goal_view_offset( FG_PI * 1.25 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(-25.0, -25.0, 1.0);
-		v->set_view_offset( FG_PI * 1.25 );
-	    }
 	    return;
 	case 52: // numeric keypad 4
 	    v->set_goal_view_offset( FG_PI * 0.50 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(0.0, 25.0, 1.0);
-		v->set_view_offset( FG_PI * 0.50 );
-	    }
 	    return;
 	case 54: // numeric keypad 6
 	    v->set_goal_view_offset( FG_PI * 1.50 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(0.0, -25.0, 1.0);
-		v->set_view_offset( FG_PI * 1.50 );
-	    }
 	    return;
 	case 55: // numeric keypad 7
 	    v->set_goal_view_offset( FG_PI * 0.25 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(25.0, 25.0, 1.0);
-		v->set_view_offset( FG_PI * 0.25 );
-	    }
 	    return;
 	case 56: // numeric keypad 8
 	    v->set_goal_view_offset( 0.00 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(25.0, 0.0, 1.0);
-		v->set_view_offset( 0.00 );
-	    }
 	    return;
 	case 57: // numeric keypad 9
 	    v->set_goal_view_offset( FG_PI * 1.75 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(25.0, -25.0, 1.0);
-		v->set_view_offset( FG_PI * 1.75 );
-	    }
 	    return;
 	case 65: // A key
 	    speed = globals->get_options()->get_speed_up();
@@ -419,23 +371,6 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 118: // v key
 	    globals->set_current_view( globals->get_viewmgr()->next_view() );
-#if 0
-	    // globals->get_options()->cycle_view_mode();
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_options()->set_view_mode(FGOptions::FG_VIEW_PILOT);
-		v->set_goal_view_offset( 0.0 );
-		v->set_view_offset( 0.0 );
-	    } else if ( globals->get_options()->get_view_mode() ==
-			FGOptions::FG_VIEW_PILOT )
-	    {
-		globals->get_options()->set_view_mode( FGOptions::FG_VIEW_FOLLOW );
-		v->set_goal_view_offset( FG_PI * 1.75 );
-		v->set_view_offset( FG_PI * 1.75 );
-		globals->get_current_view()->set_pilot_offset(25.0, -25.0, 1.0);
-	    }
-#endif
 	    fgReshape( globals->get_options()->get_xsize(),
 		       globals->get_options()->get_ysize() );
 	    return;
@@ -474,7 +409,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 // Handle "special" keyboard events
 void GLUTspecialkey(int k, int x, int y) {
-    FGViewerRPH *v = (FGViewerRPH *)globals->get_current_view();
+    FGViewer *v = globals->get_current_view();
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Special key hit = " << k );
 
@@ -556,75 +491,27 @@ void GLUTspecialkey(int k, int x, int y) {
 	}
 	case GLUT_KEY_END: // numeric keypad 1
 	    v->set_goal_view_offset( FG_PI * 0.75 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW)
-	    {
-		globals->get_current_view()->set_pilot_offset(-25.0, 25.0, 1.0);
-		v->set_view_offset( FG_PI * 0.75 );
-	    }
 	    return;
 	case GLUT_KEY_DOWN: // numeric keypad 2
 	    v->set_goal_view_offset( FG_PI );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(-25.0, 0.0, 1.0);
-		v->set_view_offset( FG_PI );
-	    }
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3
 	    v->set_goal_view_offset( FG_PI * 1.25 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW)
-	    {
-		globals->get_current_view()->set_pilot_offset(-25.0, -25.0, 1.0);
-		v->set_view_offset( FG_PI * 1.25 );
-	    }
 	    return;
 	case GLUT_KEY_LEFT: // numeric keypad 4
 	    v->set_goal_view_offset( FG_PI * 0.50 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(0.0, 25.0, 1.0);
-		v->set_view_offset( FG_PI * 0.50 );
-	    }
 	    return;
 	case GLUT_KEY_RIGHT: // numeric keypad 6
 	    v->set_goal_view_offset( FG_PI * 1.50 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(0.0, -25.0, 1.0);
-		v->set_view_offset( FG_PI * 1.50 );
-	    }
 	    return;
 	case GLUT_KEY_HOME: // numeric keypad 7
 	    v->set_goal_view_offset( FG_PI * 0.25 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(25.0, 25.0, 1.0);
-		v->set_view_offset( FG_PI * 0.25 );
-	    }
 	    return;
 	case GLUT_KEY_UP: // numeric keypad 8
 	    v->set_goal_view_offset( 0.00 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(25.0, 0.0, 1.0);
-		v->set_view_offset( 0.00 );
-	    }
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9
 	    v->set_goal_view_offset( FG_PI * 1.75 );
-	    if ( globals->get_options()->get_view_mode() ==
-		 FGOptions::FG_VIEW_FOLLOW )
-	    {
-		globals->get_current_view()->set_pilot_offset(25.0, -25.0, 1.0);
-		v->set_view_offset( FG_PI * 1.75 );
-	    }
 	    return;
 	}
     } else {

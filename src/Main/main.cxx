@@ -341,12 +341,16 @@ void fgRenderFrame( void ) {
 
 	sgVec3 po;		// chase view pilot_offset
 	sgVec3 wup;		// chase view world up
-	sgSetVec3( po, 0.0, 0.0, 200.0 );
+	sgSetVec3( po, 0.0, 0.0, 50.0 );
 	sgCopyVec3( wup, pilot_view->get_world_up() );
-	// sgMat4 CXFM;		// chase view + pilot offset xform
-	// sgMakeRotMat4( CXFM, cur_fdm_state->get_Psi() * RAD_TO_DEG, wup );
-	// sgVec3 npo;		// new pilot offset after rotation
-	// sgXformVec3( npo, po, CXFM );
+	sgMat4 CXFM;		// chase view + pilot offset xform
+	sgMakeRotMat4( CXFM,
+		       chase_view->get_view_offset() * RAD_TO_DEG -
+		       cur_fdm_state->get_Psi() * RAD_TO_DEG,
+		       wup );
+	sgVec3 npo;		// new pilot offset after rotation
+	sgXformVec3( po, po, pilot_view->get_UP() );
+	sgXformVec3( npo, po, CXFM );
 
 	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
 				       cur_fdm_state->get_Lat_geocentric(), 
@@ -355,26 +359,11 @@ void fgRenderFrame( void ) {
 	chase_view->set_sea_level_radius( cur_fdm_state->
 					  get_Sea_level_radius() *
 					  FEET_TO_METER );
-	chase_view->set_pilot_offset( po[0], po[1], po[2] );
-	sgVec3 negpo;
-	sgNegateVec3( negpo, po );
-	chase_view->set_view_forward( negpo ); 
+	chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
+	chase_view->set_view_forward( pilot_view->get_view_pos() ); 
 	chase_view->set_view_up( wup );
 
 #if 0
-	// this is a test, we are trying to match RPH and LookAt
-	// matrices
-	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-				       cur_fdm_state->get_Lat_geocentric(), 
-				       cur_fdm_state->get_Altitude() *
-				       FEET_TO_METER );
-	chase_view->set_sea_level_radius( cur_fdm_state->
-					  get_Sea_level_radius() *
-					  FEET_TO_METER );
-	chase_view->set_view_forward( pilot_view->get_view_forward() );
-	chase_view->set_view_up( pilot_view->get_view_up() );
-#endif
-
 	sgMat4 rph;
 	sgCopyMat4( rph, pilot_view->get_VIEW() );
 	cout << "RPH Matrix = " << endl;
@@ -395,22 +384,9 @@ void fgRenderFrame( void ) {
 	    }
 	    cout << endl;
 	}
-
-	// update view volume parameters
-	// cout << "before pilot_view update" << endl;
-#if 0
-        if ( globals->get_options()->get_view_mode() ==
-	     FGOptions::FG_VIEW_FOLLOW )
-	{
-	    float * offset = globals->get_current_view()->get_pilot_offset();
-	    globals->get_current_view()->set_pilot_offset( offset[0],
-							   offset[1],
-							   offset[2] );
-	} else {
-	    globals->get_current_view()->set_pilot_offset(0.0, 0.0, 0.0);
-	}
 #endif
 
+	// update view port
 	if ( ! fgPanelVisible() ) {
 	    xglViewport( 0, 0 ,
 			 (GLint)(globals->get_options()->get_xsize()),
@@ -737,39 +713,32 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     }
 
     // update the view angle
+    FGViewer *v = globals->get_current_view();
     for ( i = 0; i < multi_loop; i++ ) {
-	if ( fabs(globals->get_current_view()->get_goal_view_offset() - 
-		  globals->get_current_view()->get_view_offset()) < 0.05 )
-	{
-	    globals->get_current_view()->set_view_offset( globals->get_current_view()->get_goal_view_offset() );
+	if ( fabs(v->get_goal_view_offset() - v->get_view_offset()) < 0.05 ) {
+	    v->set_view_offset( v->get_goal_view_offset() );
 	    break;
 	} else {
 	    // move current_view.view_offset towards
 	    // current_view.goal_view_offset
-	    if ( globals->get_current_view()->get_goal_view_offset() > 
-		 globals->get_current_view()->get_view_offset() )
+	    if ( v->get_goal_view_offset() > v->get_view_offset() )
             {
-		if ( globals->get_current_view()->get_goal_view_offset() - 
-		     globals->get_current_view()->get_view_offset() < FG_PI )
-                {
-		    globals->get_current_view()->inc_view_offset( 0.01 );
+		if ( v->get_goal_view_offset() - v->get_view_offset() < FG_PI ){
+		    v->inc_view_offset( 0.01 );
 		} else {
-		    globals->get_current_view()->inc_view_offset( -0.01 );
+		    v->inc_view_offset( -0.01 );
 		}
 	    } else {
-		if ( globals->get_current_view()->get_view_offset() - 
-		     globals->get_current_view()->get_goal_view_offset() <
-		     FG_PI )
-                {
-		    globals->get_current_view()->inc_view_offset( -0.01 );
+		if ( v->get_view_offset() - v->get_goal_view_offset() < FG_PI ){
+		    v->inc_view_offset( -0.01 );
 		} else {
-		    globals->get_current_view()->inc_view_offset( 0.01 );
+		    v->inc_view_offset( 0.01 );
 		}
 	    }
-	    if ( globals->get_current_view()->get_view_offset() > FG_2PI ) {
-		globals->get_current_view()->inc_view_offset( -FG_2PI );
-	    } else if ( globals->get_current_view()->get_view_offset() < 0 ) {
-		globals->get_current_view()->inc_view_offset( FG_2PI );
+	    if ( v->get_view_offset() > FG_2PI ) {
+		v->inc_view_offset( -FG_2PI );
+	    } else if ( v->get_view_offset() < 0 ) {
+		v->inc_view_offset( FG_2PI );
 	    }
 	}
     }
