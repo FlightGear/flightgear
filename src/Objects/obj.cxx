@@ -417,6 +417,7 @@ public:
   ssgBranch * branch;
   double lon_deg;
   double lat_deg;
+  unsigned int seed;
 };
 
 
@@ -438,10 +439,10 @@ public:
 static void
 fill_in_triangle (float * p1, float * p2, float * p3,
 		  FGNewMat::ObjectGroup * object_group, ssgBranch * branch,
-		  double lon_deg, double lat_deg)
+		  double lon_deg, double lat_deg, unsigned int seed)
 {
 				// generate a repeatable random seed
-    sg_srandom((unsigned int)(p1[0]));
+    sg_srandom(seed);
 
     int nObjects = object_group->get_object_count();
     for (int i = 0; i < nObjects; i++) {
@@ -491,7 +492,8 @@ tri_in_range_callback (ssgEntity * entity, int mask)
   TriUserData * data = (TriUserData *)entity->getUserData();
   if (!data->is_filled_in) {
     fill_in_triangle(data->p1, data->p2, data->p3, data->object_group,
-		     data->branch, data->lon_deg, data->lat_deg);
+		     data->branch, data->lon_deg, data->lat_deg,
+		     data->seed);
     data->is_filled_in = true;
   }
   return 1;
@@ -658,6 +660,7 @@ setup_triangle (float * p1, float * p2, float * p3,
 	data->branch = in_range;
 	data->lon_deg = lon_deg;
 	data->lat_deg = lat_deg;
+	data->seed = (unsigned int)(p1[0] * i);
 
 				// Set up the in-range node.
 	in_range->setUserData(data);
