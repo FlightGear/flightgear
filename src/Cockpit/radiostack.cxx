@@ -135,9 +135,9 @@ FGRadioStack::bind ()
     fgTie("/radios/nav[0]/frequencies/selected-mhz", this,
 	  &FGRadioStack::get_nav1_freq, &FGRadioStack::set_nav1_freq);
     fgSetArchivable("/radios/nav[0]/frequencies/selected-mhz");
-    fgTie("/radios/nav[0]/standby-mhz", this,
+    fgTie("/radios/nav[0]/frequencies/standby-mhz", this,
 	  &FGRadioStack::get_nav1_alt_freq, &FGRadioStack::set_nav1_alt_freq);
-    fgSetArchivable("/radios/nav[0]/standby-mhz");
+    fgSetArchivable("/radios/nav[0]/frequencies/standby-mhz");
     fgTie("/radios/nav[0]/radials/selected-deg", this,
 	  &FGRadioStack::get_nav1_sel_radial,
 	  &FGRadioStack::set_nav1_sel_radial);
@@ -170,9 +170,9 @@ FGRadioStack::bind ()
     fgTie("/radios/nav[1]/frequencies/selected-mhz", this,
 	  &FGRadioStack::get_nav2_freq, &FGRadioStack::set_nav2_freq);
     fgSetArchivable("/radios/nav[1]/frequencies/selected-mhz");
-    fgTie("/radios/nav[1]/standby-mhz", this,
+    fgTie("/radios/nav[1]/frequencies/standby-mhz", this,
 	  &FGRadioStack::get_nav2_alt_freq, &FGRadioStack::set_nav2_alt_freq);
-    fgSetArchivable("/radios/nav[1]/standby-mhz");
+    fgSetArchivable("/radios/nav[1]/frequencies/standby-mhz");
     fgTie("/radios/nav[1]/radials/selected-deg", this,
 	  &FGRadioStack::get_nav2_sel_radial,
 	  &FGRadioStack::set_nav2_sel_radial);
@@ -232,7 +232,7 @@ void
 FGRadioStack::unbind ()
 {
     fgUntie("/radios/nav[0]/frequencies/selected-mhz");
-    fgUntie("/radios/nav[0]/standby-mhz");
+    fgUntie("/radios/nav[0]/frequencies/standby-mhz");
     fgUntie("/radios/nav[0]/radials/actual-deg");
     fgUntie("/radios/nav[0]/radials/selected-deg");
     fgUntie("/radios/nav[0]/on");
@@ -246,8 +246,8 @@ FGRadioStack::unbind ()
     fgUntie("/radios/nav[0]/gs-needle-deflection");
 
     fgUntie("/radios/nav[1]/frequencies/selected-mhz");
-    fgUntie("/radios/nav[1]/standby-mhz");
-    fgUntie("/radios/nav[1]//radials/actual-deg");
+    fgUntie("/radios/nav[1]/frequencies/standby-mhz");
+    fgUntie("/radios/nav[1]/radials/actual-deg");
     fgUntie("/radios/nav[1]/radials/selected-deg");
     fgUntie("/radios/nav[1]/on");
     fgUntie("/radios/nav[1]/ident");
