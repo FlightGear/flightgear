@@ -35,6 +35,7 @@
 #include <simgear/misc/fgpath.hxx>
 #include <Main/globals.hxx>
 #include <Objects/texload.h>
+#include <Time/light.hxx>
 
 #include "hud.hxx"
 #include "panel.hxx"

@@ -153,16 +153,22 @@ void FGTileMgr::load_tile( const FGBucket& b, int cache_index) {
 }
 
 
+static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
+    sgVec3 tmp;
+    sgSetVec3(tmp, src[0], src[1], src[2] );
+    sgMat4 TMP;
+    sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
+    sgXformVec3(tmp, tmp, TMP);
+    sgSetVec3(dst, tmp[2], tmp[1], tmp[0] );
+}
+
+
 // Determine scenery altitude via ssg.  Normally this just happens
 // when we render the scene, but we'd also like to be able to do this
 // explicitely.  lat & lon are in radians.  view_pos in current world
 // coordinate translated near (0,0,0) (in meters.)  Returns result in
 // meters.
-
-bool
-FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, 
-			     sgVec3 view_pos )
-{
+bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos ) {
     sgdVec3 orig, dir;
 
     sgdSetVec3(orig, view_pos );
@@ -193,7 +199,7 @@ FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos,
 	sgSetVec3(tmp, hit_list.get_normal(this_hit));
 	ssgState *IntersectedLeafState =
 	    ((ssgLeaf*)hit_list.get_entity(this_hit))->getState();
-	globals->get_current_view()->CurrentNormalInLocalPlane(tmp, tmp);
+	CurrentNormalInLocalPlane(tmp, tmp);
 	sgdSetVec3( scenery.cur_normal, tmp );
 	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
 	return true;

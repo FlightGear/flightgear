@@ -515,26 +515,16 @@ bool fgInitSubsystems( void ) {
 
     // now handled inside of the fgTileMgrUpdate()
 
-    /*
-    geod_pos = Point3D( cur_fdm_state->get_Longitude(), cur_fdm_state->get_Latitude(), 0.0);
-    tmp_abs_view_pos = sgGeodToCart(geod_pos);
-
-    FG_LOG( FG_GENERAL, FG_DEBUG,
-    	    "Initial abs_view_pos = " << tmp_abs_view_pos );
-    scenery.cur_elev =
-	fgTileMgrCurElev( cur_fdm_state->get_Longitude(), cur_fdm_state->get_Latitude(),
-			  tmp_abs_view_pos );
-    FG_LOG( FG_GENERAL, FG_DEBUG,
-	    "Altitude after update " << scenery.cur_elev );
-    */
-
     // Reset our altitude if we are below ground
-    FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << cur_fdm_state->get_Altitude() );
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = "
+	    << cur_fdm_state->get_Altitude() );
     FG_LOG( FG_GENERAL, FG_DEBUG, "Current runway altitude = " <<
 	    cur_fdm_state->get_Runway_altitude() );
 
-    if ( cur_fdm_state->get_Altitude() < cur_fdm_state->get_Runway_altitude() + 3.758099) {
-	cur_fdm_state->set_Altitude( cur_fdm_state->get_Runway_altitude() + 3.758099 );
+    if ( cur_fdm_state->get_Altitude() < cur_fdm_state->get_Runway_altitude() +
+	 3.758099) {
+	cur_fdm_state->set_Altitude( cur_fdm_state->get_Runway_altitude() +
+				     3.758099 );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,

@@ -56,6 +56,8 @@ FG_USING_STD(vector);
 FG_USING_STD(string);
 
 #define NEW_DEFAULT_MODEL_HZ 120
+#define FG_FOV_MIN 0.1
+#define FG_FOV_MAX 179.9
 
 
 class FGOptions {

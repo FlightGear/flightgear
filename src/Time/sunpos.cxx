@@ -63,6 +63,7 @@
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Time/light.hxx>
 
 #include "sunpos.hxx"
 
@@ -242,7 +243,7 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
-    FGViewer *v;
+    FGViewerRPH *v;
     sgVec3 nup, nsun, surface_to_sun;
     Point3D p, rel_sunpos;
     double dot, east_dot;

@@ -62,6 +62,7 @@
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Time/light.hxx>
 
 #include "moonpos.hxx"
 
@@ -334,7 +335,7 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 // update the cur_time_params structure with the current moon position
 void fgUpdateMoonPos( void ) {
     fgLIGHT *l;
-    FGViewer *v;
+    FGViewerRPH *v;
     sgVec3 nup, nmoon, surface_to_moon;
     Point3D p, rel_moonpos;
     double dot, east_dot;

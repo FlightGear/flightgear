@@ -79,7 +79,7 @@ extern void fgReshape( int width, int height );
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
     FGInterface *f;
-    FGViewer *v;
+    FGViewerRPH *v;
     float fov, tmp;
     static bool winding_ccw = true;
     int speed;
@@ -473,7 +473,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 // Handle "special" keyboard events
 void GLUTspecialkey(int k, int x, int y) {
-    FGViewer *v;
+    FGViewerRPH *v;
 
     v = globals->get_current_view();
 

@@ -89,6 +89,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_timer.hxx>
+#include <Time/light.hxx>
 #include <Time/sunpos.hxx>
 #include <Time/tmp.hxx>
 
@@ -1339,7 +1340,7 @@ int main( int argc, char **argv ) {
     FGOptions *options = new FGOptions;
     globals->set_options( options );
 
-    FGViewer *pv = new FGViewer;
+    FGViewerRPH *pv = new FGViewerRPH;
     globals->set_current_view( pv );
     // FGViewer *cv = new FGViewer;
     // globals->set_current_view( cv );
