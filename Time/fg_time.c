@@ -232,8 +232,8 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
     /* get current Unix calendar time (in seconds) */
     /* warp = 60; */
-    warp += 0;
-    t->cur_time = time(NULL) + (0) * 60 * 60;
+    warp += 100;
+    t->cur_time = time(NULL) + (-3.5) * 60 * 60;
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
@@ -285,10 +285,14 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.20  1997/12/15 23:55:06  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.21  1997/12/23 04:58:39  curt
+/* Tweaked the sky coloring a bit to build in structures to allow finer rgb
+/* control.
 /*
+ * Revision 1.20  1997/12/15 23:55:06  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.19  1997/12/15 20:59:10  curt
  * Misc. tweaks.
  *
