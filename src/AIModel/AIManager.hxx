@@ -67,6 +67,7 @@ public:
     void* createThermal( FGAIModelEntity *entity );
     void* createStorm( FGAIModelEntity *entity );
     void* createShip( FGAIModelEntity *entity );
+    void* createCarrier( FGAIModelEntity *entity );
 
     void destroyObject( void* ID );
 

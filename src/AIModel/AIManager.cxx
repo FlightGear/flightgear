@@ -30,6 +30,7 @@
 #include "AIBallistic.hxx"
 #include "AIStorm.hxx"
 #include "AIThermal.hxx"
+#include "AICarrier.hxx"
 
 SG_USING_STD(list);
 
@@ -185,6 +186,30 @@ FGAIManager::createShip( FGAIModelEntity *entity ) {
 }
 
 void*
+FGAIManager::createCarrier( FGAIModelEntity *entity ) {
+
+        FGAIShip* ai_carrier = new FGAICarrier(this);
+        ai_list.push_back(ai_carrier);
+        ++numObjects[0];
+        ++numObjects[FGAIBase::otShip];
+        ai_carrier->setHeading(entity->heading);
+        ai_carrier->setSpeed(entity->speed);
+        ai_carrier->setPath(entity->path.c_str());
+        ai_carrier->setAltitude(entity->altitude);
+        ai_carrier->setLongitude(entity->longitude);
+        ai_carrier->setLatitude(entity->latitude);
+        ai_carrier->setBank(entity->rudder);
+
+        if ( entity->fp ) {
+           ai_carrier->setFlightPlan(entity->fp);
+        }
+
+        ai_carrier->init();
+        ai_carrier->bind();
+        return ai_carrier;
+}
+
+void*
 FGAIManager::createBallistic( FGAIModelEntity *entity ) {
 
         FGAIBallistic* ai_ballistic = new FGAIBallistic(this);
@@ -300,6 +325,9 @@ void FGAIManager::processScenario( string &filename ) {
 
       } else if ( en->m_type == "ship") {
         createShip( en );
+
+      } else if ( en->m_type == "carrier") {
+        createCarrier( en );
 
       } else if ( en->m_type == "thunderstorm") {
         createStorm( en );
