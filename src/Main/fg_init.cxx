@@ -269,20 +269,6 @@ bool fgInitConfig ( int argc, char **argv ) {
     // These will override anything specified in a config file
     fgParseOptions(argc, argv);
 
-    // read in the top level aircraft definition file
-    SGPath apath( globals->get_fg_root() );
-    apath.append( "Aircraft" );
-    apath.append( fgGetString("/sim/aircraft") );
-    apath.concat( "-set.xml" );
-    try {
-	readProperties(apath.str(), globals->get_props());
-    } catch (const sg_exception &e) {
-	string message = "Error loading aircraft file: ";
-	message += e.getFormattedMessage();
-	SG_LOG(SG_INPUT, SG_ALERT, message);
-	exit(2);
-    }
-
     return true;
 }
 
