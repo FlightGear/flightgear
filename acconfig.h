@@ -45,6 +45,10 @@
 /* Define if you have <dirent.h>.  */
 #undef DIRENT
 
+/* Define to eliminate all trace of debugging messages such as for a 
+   release build */
+#undef FG_NDEBUG
+   
 /* Define to the type of elements in the array set by `getgroups'.
    Usually this is either `int' or `gid_t'.  */
 #undef GETGROUPS_T

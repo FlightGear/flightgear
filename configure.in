@@ -28,6 +28,15 @@ dnl AC_ISC_POSIX
 dnl Check to see if this `configure' is being run in the `Cygwin32' environment
 dnl AM_CYGWIN32
 
+dnl Specify if we want logging (testing build) or not (release build)
+# set logging default value
+# with_logging=yes
+AC_ARG_WITH(logging, [  --with-logging          Include logging output (default)])
+if test "x$with_logging" = "xno" ; then
+    AC_DEFINE(FG_NDEBUG)
+fi
+
+
 dnl specify if we are building with "checker"
 AC_ARG_WITH(efence, [  --with-efence           Specify if we are building with "electric-fence"])
 
