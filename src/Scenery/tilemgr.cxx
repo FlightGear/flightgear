@@ -39,7 +39,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewer.hxx>
-#include <Objects/obj.hxx>
 
 #include "newcache.hxx"
 #include "scenery.hxx"

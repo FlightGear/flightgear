@@ -37,6 +37,7 @@
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/tgdb/apt_signs.hxx>
+#include <simgear/scene/tgdb/obj.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
@@ -45,7 +46,6 @@
 #include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/light.hxx>
-#include <Objects/obj.hxx>
 
 #include "tileentry.hxx"
 #include "tilemgr.hxx"
@@ -549,7 +549,7 @@ bool FGTileEntry::obj_load( const string& path,
         fgGetBool("/sim/rendering/random-objects", true);
 
     // try loading binary format
-    if ( fgBinObjLoad( path, is_base,
+    if ( sgBinObjLoad( path, is_base,
                        &c, &br, globals->get_matlib(), use_random_objects,
                        geometry, rwy_lights, taxi_lights, ground_lights ) )
     {
@@ -559,7 +559,7 @@ bool FGTileEntry::obj_load( const string& path,
         }
     } else {
         // default to an ocean tile
-        if ( fgGenTile( path, tile_bucket, &c, &br,
+        if ( sgGenTile( path, tile_bucket, &c, &br,
                         globals->get_matlib(), geometry ) )
         {
             center = c;
@@ -779,7 +779,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
         ssgBranch *geometry = new ssgBranch;
         Point3D c;
         double br;
-        if ( fgGenTile( basename.str(), tile_bucket, &c, &br,
+        if ( sgGenTile( basename.str(), tile_bucket, &c, &br,
                         globals->get_matlib(), geometry ) ) {
             center = c;
             bounding_radius = br;
