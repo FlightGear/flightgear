@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include GLUT_H
+#include FG_GLUT_H
 
 #define TEXRES_X 256
 #define TEXRES_Y 256

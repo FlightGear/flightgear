@@ -18,7 +18,7 @@ Date: Fri, 24 Apr 1998 07:33:51 -0800
 #include <stdio.h>
 #include <stdlib.h>
 
-#include GLUT_H
+#include FG_GLUT_H
 
 
 void getPrints ( GLenum token, char *string )

@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#include GLUT_H
+#include FG_GLUT_H
 
 
 int main() {
