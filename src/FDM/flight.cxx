@@ -24,13 +24,13 @@
 #include <stdio.h>
 
 #include <Debug/logstream.hxx>
-#include <FDM/External/external.hxx>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Time/timestamp.hxx>
 
+#include "External.hxx"
 #include "flight.hxx"
 #include "JSBsim.hxx"
 #include "LaRCsim.hxx"
@@ -87,110 +87,6 @@ void FGInterface::extrapolate( int time_offset ) {
     geodetic_position_v[2] = alt;
     geocentric_position_v[2] = radius;
 }
-
-
-#if 0
-// Initialize the flight model parameters
-int fgFDMInit(int model, FGInterface& f, double dt) {
-    double save_alt = 0.0;
-
-    FG_LOG( FG_FLIGHT ,FG_INFO, "Initializing flight model" );
-
-    base_fdm_state = f;
-
-    if ( model == FGInterface::FG_SLEW ) {
-	// fgSlewInit(dt);
-#ifndef __MWERKS__   // -dw- 04/22/99 JSB sim not ported yet
-    } else if ( model == FGInterface::FG_JSBSIM ) {
-	fgJSBsimInit(dt, f);
-	fgJSBsim_2_FGInterface(base_fdm_state);
-#endif
-    } else if ( model == FGInterface::FG_LARCSIM ) {
-	// lets try to avoid really screwing up the LaRCsim model
-	if ( base_fdm_state.get_Altitude() < -9000.0 ) {
-	    save_alt = base_fdm_state.get_Altitude();
-	    base_fdm_state.set_Altitude( 0.0 );
-	}
-
-	// translate FG to LaRCsim structure
-	FGInterface_2_LaRCsim(base_fdm_state);
-
-	// initialize LaRCsim
-	fgLaRCsimInit(dt);
-
-	FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << 
-		base_fdm_state.get_Latitude() );
-
-	// translate LaRCsim back to FG structure
-	fgLaRCsim_2_FGInterface(base_fdm_state);
-
-	// but lets restore our original bogus altitude when we are done
-	if ( save_alt < -9000.0 ) {
-	    base_fdm_state.set_Altitude( save_alt );
-	}
-    } else if ( model == FGInterface::FG_EXTERNAL ) {
-	fgExternalInit(base_fdm_state);
-    } else {
-	FG_LOG( FG_FLIGHT, FG_WARN,
-		"Unimplemented flight model == " << model );
-    }
-
-    // set valid time for this record
-    base_fdm_state.stamp_time();
-	
-    f = base_fdm_state;
-
-    return 1;
-}
-#endif
-
-
-#if 0
-// Run multiloop iterations of the flight model
-int fgFDMUpdate(int model, FGInterface& f, int multiloop, int time_offset) {
-    double time_step, start_elev, end_elev;
-
-    // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
-
-    // set valid time for this record
-    base_fdm_state.stamp_time();
-
-    time_step = (1.0 / current_options.get_model_hz()) * multiloop;
-    start_elev = base_fdm_state.get_Altitude();
-
-    if ( model == FGInterface::FG_SLEW ) {
-	// fgSlewUpdate(f, multiloop);
-#ifndef __MWERKS__   // -dw- 04/22/99 JSB sim not ported yet
-    } else if ( model == FGInterface::FG_JSBSIM ) {
-	fgJSBsimUpdate(base_fdm_state, multiloop);
-	f = base_fdm_state;
-#endif
-    } else if ( model == FGInterface::FG_LARCSIM ) {
-	fgLaRCsimUpdate(base_fdm_state, multiloop);
-	// extrapolate position based on actual time
-	// f = extrapolate_fdm( base_fdm_state, time_offset );
-	f = base_fdm_state;
-    } else if ( model == FGInterface::FG_EXTERNAL ) {
-	// fgExternalUpdate(f, multiloop);
-	FGTimeStamp current;
-	current.stamp();
-	f = base_fdm_state;
-	f.extrapolate( current - base_fdm_state.get_time_stamp() );
-    } else {
-	FG_LOG( FG_FLIGHT, FG_WARN,
-		"Unimplemented flight model == " <<  model );
-    }
-
-    end_elev = base_fdm_state.get_Altitude();
-
-    if ( time_step > 0.0 ) {
-	// feet per second
-	base_fdm_state.set_Climb_Rate( (end_elev - start_elev) / time_step );
-    }
-
-    return 1;
-}
-#endif
 
 
 // Set the altitude (force)
