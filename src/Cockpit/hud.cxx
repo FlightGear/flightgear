@@ -717,7 +717,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 	FGPath path(globals->get_fg_root());
 	path.append(hud_path);
 	
-	ifstream input(path.c_str(), ios::binary);
+	ifstream input(path.c_str());
 	if (!input.good()) 
 		{
 			FG_LOG(FG_INPUT, FG_ALERT,
@@ -747,7 +747,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 	path.append("Huds/Minimal/default.xml");
 
 
-	ifstream input(path.c_str(), ios::binary);
+	ifstream input(path.c_str());
 	if (!input.good()) {
 		FG_LOG(FG_INPUT, FG_ALERT,
 			"Cannot read Hud configuration from " << path.str());

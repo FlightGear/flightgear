@@ -426,7 +426,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
 	switch (k) {
  	case GLUT_KEY_F1: {
- 	    ifstream input("fgfs.sav", ios::binary);
+ 	    ifstream input("fgfs.sav");
  	    if (input.good() && fgLoadFlight(input)) {
    	        input.close();
  		FG_LOG(FG_INPUT, FG_INFO, "Restored flight from fgfs.sav");
@@ -438,7 +438,7 @@ void GLUTspecialkey(int k, int x, int y) {
  	case GLUT_KEY_F2: {
  	    FG_LOG(FG_INPUT, FG_INFO, "Saving flight");
 	    cerr << "Opening output stream" << endl;
- 	    ofstream output("fgfs.sav", ios::binary);
+ 	    ofstream output("fgfs.sav");
 	    cerr << "output stream opened" << endl;
  	    if (output.good() && fgSaveFlight(output)) {
  		output.close();

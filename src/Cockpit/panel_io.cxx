@@ -817,7 +817,7 @@ fgReadPanel (const string &relative_path)
   FGPanel * panel = 0;
   FGPath path(globals->get_fg_root());
   path.append(relative_path);
-  ifstream input(path.c_str(), ios::binary);
+  ifstream input(path.c_str());
   if (!input.good()) {
     FG_LOG(FG_INPUT, FG_ALERT,
 	   "Cannot read panel configuration from " << path.str());
