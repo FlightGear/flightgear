@@ -66,9 +66,9 @@ void mesh_set_option_name(struct mesh *m, char *name) {
 void mesh_set_option_value(struct mesh *m, char *value) {
     printf("Setting %s to %s\n", m->option_name, value);
 
-    if ( strcmp(m->option_name, "originx") == 0 ) {
+    if ( strcmp(m->option_name, "origin_lat") == 0 ) {
 	m->originx = atof(value);
-    } else if ( strcmp(m->option_name, "originy") == 0 ) {
+    } else if ( strcmp(m->option_name, "origin_lon") == 0 ) {
 	m->originy = atof(value);
     } else if ( strcmp(m->option_name, "rows") == 0 ) {
 	m->rows = atoi(value);
@@ -86,7 +86,10 @@ void mesh_set_option_value(struct mesh *m, char *value) {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/16 16:07:04  curt
-/* Initial revision.
+/* Revision 1.2  1997/05/19 18:20:50  curt
+/* Slight change to origin key words.
 /*
+ * Revision 1.1  1997/05/16 16:07:04  curt
+ * Initial revision.
+ *
  */
