@@ -112,7 +112,8 @@ FGIO::parse_port_config( const string& config )
             if ( tokens.size() != 6 ) {
                 SG_LOG( SG_IO, SG_ALERT, "Usage: --atcsim=[no-]pedals,"
                         << "input0_config,input1_config,"
-                        << "output0_config,output1_config" );
+                        << "output0_config,output1_config,file.nas" );
+                return NULL;
             }
             if ( tokens[1] == "no-pedals" ) {
                 fgSetBool( "/input/atcsim/ignore-pedal-controls", true );
