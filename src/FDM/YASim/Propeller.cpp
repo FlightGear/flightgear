@@ -53,6 +53,9 @@ void Propeller::calc(float density, float v, float omega,
     // calculate V (propeller "speed")
     if(v < 0) v = 0;
 
+    // The model doesn't work for propellers turning backwards.
+    if(omega < 0.001) omega = 0.001;
+
     float J = v/omega;
     float lambda = J/_j0;
 
