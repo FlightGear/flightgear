@@ -211,7 +211,7 @@ void FGTable::Print(void)
   if (Type == tt1D) startRow = 1;
   else startRow = 0;
 
-  cout.setf(ios::fixed); // set up output stream
+  ios::fmtflags flags = cout.setf(ios::fixed); // set up output stream
   cout.precision(4);
 
   for (int r=startRow; r<=nRows; r++) {
@@ -225,7 +225,7 @@ void FGTable::Print(void)
     }
     cout << endl;
   }
-  cout.setf((ios_base::fmtflags)0, ios::floatfield); // reset
+  cout.setf(flags); // reset
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
