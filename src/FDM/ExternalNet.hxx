@@ -77,11 +77,11 @@ private:
 public:
 
     // Constructor
-    FGExternalNet::FGExternalNet( double dt,
+    FGExternalNet( double dt,
                                   string host, int dop, int dip, int cp );
 
     // Destructor
-    FGExternalNet::~FGExternalNet();
+    ~FGExternalNet();
 
     // Reset flight params to a specific position
     void init();
