@@ -64,8 +64,13 @@ public:
 
     // getters
     inline int size() const { return views.size(); }
-    inline FGViewer *get_view() {
-	return views[current];
+    inline int get_current() const { return current; }
+    inline FGViewer *get_current_view() {
+	if ( current < (int)views.size() ) {
+	    return views[current];
+	} else {
+	    return NULL;
+	}
     }
     inline FGViewer *get_view( int i ) {
 	if ( i < 0 ) { i = 0; }
@@ -89,9 +94,9 @@ public:
 
     // setters
     inline void clear() { views.clear(); }
+    inline void set_view( const int v ) { current = v; }
     inline void add_view( FGViewer * v ) {
 	views.push_back(v);
-	current = views.size() - 1;
     }
 };
 

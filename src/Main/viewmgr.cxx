@@ -25,7 +25,9 @@
 
 
 // Constructor
-FGViewMgr::FGViewMgr( void ) {
+FGViewMgr::FGViewMgr( void ) :
+    current( 0 )
+{
 }
 
 
