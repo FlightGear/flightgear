@@ -52,26 +52,14 @@ enum PatternLeg {
 enum TaxiState {
 	TD_INBOUND,
 	TD_OUTBOUND,
-	TD_NONE
+	TD_NONE,
+	TD_LINING_UP
 };
 
 enum OperatingState {
 	IN_PATTERN,
 	TAXIING,
 	PARKED
-};
-
-// perhaps we could use an FGRunway instead of this
-struct RunwayDetails {
-	Point3D threshold_pos;
-	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
-	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
-	double mag_hdg;
-	double mag_var;
-	double hdg;		// true runway heading
-	double length;	// In *METERS*
-	int ID;		// 1 -> 36
-	string rwyID;
 };
 
 struct StartofDescent {
@@ -95,6 +83,18 @@ public:
 	
 	// Go out and practice circuits
 	void FlyCircuits(int numCircuits, bool tag);
+	
+	// TODO - this will get more complex and moved into the main class
+	// body eventually since the position approved to taxi to will have
+	// to be passed.
+	inline void ApproveTaxiRequest() {taxiRequestCleared = true;}
+	
+	inline void DenyTaxiRequest() {taxiRequestCleared = false;}
+	
+	void RegisterTransmission(int code); 
+	
+	// This is a hack and will probably go eventually
+	inline bool AtHoldShort() {return(holdingShort);}
 	
 protected:
 	
@@ -164,6 +164,8 @@ private:
 	// any permitted parking spot) and that all taxiing out is to runways.
 	bool parked;
 	bool taxiing;
+	bool taxiRequestPending;
+	bool taxiRequestCleared;
 	TaxiState taxiState;
 	double desiredTaxiHeading;
 	double taxiTurnRadius;
@@ -172,8 +174,18 @@ private:
 	ground_network_path_type path;	// a path through the ground network for the plane to taxi
 	unsigned int taxiPathPos;	// position of iterator in taxi path when applicable
 	node* nextTaxiNode;	// next node in taxi path
+	node* holdShortNode;
 	//Runway out_dest; //FIXME - implement this
+	bool holdingShort;
+	bool reportReadyForDeparture;	// set true when ATC has requested that the plane report when ready for departure
+	bool clearedToLineUp;
+	bool clearedToTakeOff;
 	bool liningUp;	// Set true when the turn onto the runway heading is commenced when taxiing out
+	bool contactTower;	// we have been told to contact tower
+	bool contactGround;	// we have been told to contact ground
+	bool changeFreq;	// true when we need to change frequency
+	atc_type changeFreqType;	// the service we need to change to
+	double responseCounter;		// timer in seconds to allow response to requests to be a little while after them
 
 	void FlyTrafficPattern(double dt);
 

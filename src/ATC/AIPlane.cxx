@@ -18,21 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-/*****************************************************************
-*
-* WARNING - Curt has some ideas about AI traffic so anything in here
-* may get rewritten or scrapped.  Contact Curt curt@flightgear.org 
-* before spending any time or effort on this code!!!
-*
-******************************************************************/
-
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-//#include <Scenery/scenery.hxx>
-//#include <simgear/constants.h>
 #include <simgear/math/point3d.hxx>
-//#include <simgear/math/sg_geodesy.hxx>
-//#include <simgear/misc/sg_path.hxx>
+#include <simgear/debug/logstream.hxx>
 #include <math.h>
 #include <string>
 SG_USING_STD(string);
@@ -63,11 +52,13 @@ void FGAIPlane::LevelWings(void) {
 }
 
 void FGAIPlane::Transmit(string msg) {
+	SG_LOG(SG_ATC, SG_INFO, "Transmit called, msg = " << msg);
 	double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
 	//double user_freq0 = ("/radios/comm[0]/frequencies/selected-mhz");
 	//comm1 is not used yet.
 	
 	if(freq == user_freq0) {
+		//cout << "Transmitting..." << endl;
 		// we are on the same frequency, so check distance to the user plane
 		if(1) {
 			// For now (testing) assume in range !!!
@@ -75,4 +66,7 @@ void FGAIPlane::Transmit(string msg) {
 			globals->get_ATC_display()->RegisterSingleMessage(msg, 0);
 		}
 	}
+}
+
+void FGAIPlane::RegisterTransmission(int code) {
 }

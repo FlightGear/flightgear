@@ -35,6 +35,7 @@
 #include <simgear/math/point3d.hxx>
 
 #include "AIEntity.hxx"
+#include "ATC.hxx"
 
 
 /*****************************************************************
@@ -54,8 +55,13 @@ public:
 
     // Run the internal calculations
     virtual void Update(double dt);
+	
+	// Send a transmission *TO* the AIPlane.
+	// FIXME int code is a hack - eventually this will receive Alexander's coded messages.
+	virtual void RegisterTransmission(int code);
 
 protected:
+	PlaneRec plane;
 
     double mag_hdg;	// degrees - the heading that the physical aircraft is *pointing*
     double track;	// track that the physical aircraft is *following* - degrees relative to *true* north
@@ -80,7 +86,6 @@ protected:
 
     void Bank(double angle);
     void LevelWings(void);
-
 };
 
 #endif  // _FG_AI_PLANE_HXX
