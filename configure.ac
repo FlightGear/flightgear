@@ -12,7 +12,7 @@ AC_CONFIG_SRCDIR([src/Aircraft/aircraft.cxx])
 AC_PREREQ(2.52)
 
 # Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.7.11pre1)
+AM_INIT_AUTOMAKE(FlightGear, 0.7.11pre2)
 
 # Checks for programs.
 AC_PROG_MAKE_SET
@@ -54,15 +54,19 @@ AM_CONDITIONAL(IS_CYGWIN, test "x$is_cygwin" = "xyes")
 # Used by JSBSim
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
 
+
 # Used on the Irix platform
 AR="ar"
+ARFLAGS="cru"
 OS=`uname -s`
 if test "$OS" = "IRIX" -o "$OS" = "IRIX64"; then
     if test "$CXX" = "CC"; then
         AR="CC -ar"
-        AC_SUBST(AR)
+        ARFLAGS="-o"
     fi
 fi
+AC_SUBST(AR)
+AC_SUBST(ARFLAGS)
 
 
 # Specify if we want logging (testing build) or not (release build)

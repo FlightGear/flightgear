@@ -17,14 +17,8 @@ echo -n " automake: `automake --version | head -1 | awk '{print $4}'`"
 echo " ($AUTO_MAKE_VERSION)"
 echo ""
 
-ACLOCAL_OPTS=""
-if [ $AUTO_MAKE_VERSION -ge 14 ]; then
-    if [ $OSTYPE = "IRIX" -o $OSTYPE = "IRIX64" ]; then    echo " -I ."
-        ACLOCAL_OPTS="-I ."
-    fi
-fi
-echo "Running aclocal $ACLOCAL_OPTS"
-aclocal $ACLOCAL_OPTS
+echo "Running aclocal"
+aclocal
 
 echo "Running autoheader"
 autoheader
@@ -33,14 +27,8 @@ if [ ! -e src/Include/config.h.in ]; then
     exit 1
 fi    
 
-echo -n "Running automake"
-if [ $OSTYPE = "IRIX" -o $OSTYPE = "IRIX64" ]; then
-    echo " --add-missing --include-deps"
-    automake --add-missing --include-deps
-else
-    echo " --add-missing"
-    automake --add-missing
-fi
+echo "Running automake --add-missing"
+automake --add-missing
 
 echo "Running autoconf"
 autoconf
@@ -48,16 +36,6 @@ autoconf
 if [ ! -e configure ]; then
     echo "ERROR: configure was not created!"
     exit 1
-fi
-
-# fixup Makefiles for Irix
-if test "$OSTYPE" = "IRIX" -o "$OSTYPE" = "IRIX64"; then
-    echo "Fixing Makefiles for Irix"
-    for n in `find . -name Makefile.in`; do \
-        mv -f $n $n.ar-new; \
-        sed 's/$(AR) cru/$(AR) -o/g' $n.ar-new > $n; \
-        rm -f $n.ar-new; \
-    done;
 fi
 
 echo ""
