@@ -151,7 +151,7 @@ The second is that the user has started the sim at or close to the airport, and
 hence the traffic must be initialised with respect to the user as well as each other.
 To a certain extent it's FGAIMgr that has to worry about this, but we need to provide
 sufficient initialisation functionality within the plane classes to allow the manager
-to initialy position them where and how required.
+to initially position them where and how required.
 */
 bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg initialLeg) {
 	//cout << "FGAILocalTraffic.Init(...) called" << endl;
