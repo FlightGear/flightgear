@@ -482,7 +482,6 @@ double FGSteam::get_HackOBS2_deg () {
 
 double FGSteam::get_HackADF_deg () {
     static double last_r = 0;
-    double r;
 
     if ( current_radiostack->get_adf_inrange() ) {
 	double r = current_radiostack->get_adf_heading()

@@ -714,7 +714,7 @@ void fgCockpitUpdate( void ) {
     int iwidth   = xsize_node->getIntValue();
     int iheight  = ysize_node->getIntValue();
     float width  = iwidth;
-    float height = iheight;
+    // float height = iheight;
 
 				// FIXME: inefficient
     if ( hud_visibility_node->getBoolValue() ) {

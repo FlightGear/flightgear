@@ -831,130 +831,131 @@ static puSlider    *HUDalphaHS0;
 static char         SliderText[2][ 8 ];
 
 static void alpha_adj( puObject *hs ) {
-	float val ;
+    float val ;
 
-	hs-> getValue ( &val ) ;
-	fgAP_CLAMP ( val, 0.1, 1.0 ) ;
-	//    printf ( "maxroll_adj( %p ) %f %f\n", hs, val, MaxRollAdjust * val ) ;
-	hud_trans_alpha = val;
-	sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
-	HUDalphaText -> setLabel ( SliderText[ 0 ] ) ;
+    hs-> getValue ( &val ) ;
+    fgAP_CLAMP ( val, 0.1, 1.0 ) ;
+    // printf ( "maxroll_adj( %p ) %f %f\n", hs, val, MaxRollAdjust * val ) ;
+    hud_trans_alpha = val;
+    sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
+    HUDalphaText -> setLabel ( SliderText[ 0 ] ) ;
 }
 
 void fgHUDalphaAdjust( puObject * ) {
-        fgSetBool("/sim/hud/antialiased", true);
-	FG_PUSH_PUI_DIALOG( HUDalphaDialog );
+    fgSetBool("/sim/hud/antialiased", true);
+    FG_PUSH_PUI_DIALOG( HUDalphaDialog );
 }
 
 static void goAwayHUDalphaAdjust (puObject *)
 {
-	FG_POP_PUI_DIALOG( HUDalphaDialog );
+    FG_POP_PUI_DIALOG( HUDalphaDialog );
 }
 
 static void cancelHUDalphaAdjust (puObject *)
 {
-	fgSetBool("/sim/hud/antialiased", false);
-	FG_POP_PUI_DIALOG( HUDalphaDialog );
+    fgSetBool("/sim/hud/antialiased", false);
+    FG_POP_PUI_DIALOG( HUDalphaDialog );
 }
 
 // Done once at system initialization
 void fgHUDalphaInit( void ) {
 
-	//	printf("fgHUDalphaInit\n");
+    //	printf("fgHUDalphaInit\n");
 #define HORIZONTAL  FALSE
 
-	int DialogX = 40;
-	int DialogY = 100;
-	int DialogWidth = 240;
+    int DialogX = 40;
+    int DialogY = 100;
+    int DialogWidth = 240;
 
-	char Label[] =  "HUD Adjuster";
-	char *s;
+    char Label[] =  "HUD Adjuster";
+    char *s;
 
-	int labelX = (DialogWidth / 2) -
-				 (puGetStringWidth( puGetDefaultLabelFont(), Label ) / 2);
+    int labelX = (DialogWidth / 2) -
+        (puGetStringWidth( puGetDefaultLabelFont(), Label ) / 2);
 	
-	int nSliders = 1;
-	int slider_x = 10;
-	int slider_y = 55;
-	int slider_width = 220;
-	int slider_title_x = 15;
-	int slider_value_x = 160;
-	float slider_delta = 0.05f;
+    int nSliders = 1;
+    int slider_x = 10;
+    int slider_y = 55;
+    int slider_width = 220;
+    int slider_title_x = 15;
+    int slider_value_x = 160;
+    float slider_delta = 0.05f;
 
-	puFont HUDalphaLegendFont;
-	puFont HUDalphaLabelFont;
-	puGetDefaultFonts ( &HUDalphaLegendFont, &HUDalphaLabelFont );
+    puFont HUDalphaLegendFont;
+    puFont HUDalphaLabelFont;
+    puGetDefaultFonts ( &HUDalphaLegendFont, &HUDalphaLabelFont );
 	
-	HUDalphaDialog = new puDialogBox ( DialogX, DialogY ); {
-		int horiz_slider_height = puGetStringHeight (HUDalphaLabelFont) +
-								  puGetStringDescender (HUDalphaLabelFont) +
-								  PUSTR_TGAP + PUSTR_BGAP + 5;
+    HUDalphaDialog = new puDialogBox ( DialogX, DialogY ); {
+        int horiz_slider_height = puGetStringHeight (HUDalphaLabelFont) +
+            puGetStringDescender (HUDalphaLabelFont) +
+            PUSTR_TGAP + PUSTR_BGAP + 5;
 
-		puFrame *
-		HUDalphaFrame = new puFrame ( 0, 0,
-									  DialogWidth,
-									  85 + nSliders * horiz_slider_height );
+        /* puFrame *
+            HUDalphaFrame = new puFrame ( 0, 0, DialogWidth,
+                                          85 + nSliders
+                                          * horiz_slider_height ); */
+
+        puText *
+            HUDalphaDialogMessage = new puText ( labelX,
+                                                 52 + nSliders
+                                                 * horiz_slider_height );
+        HUDalphaDialogMessage -> setDefaultValue ( Label );
+        HUDalphaDialogMessage -> getDefaultValue ( &s );
+        HUDalphaDialogMessage -> setLabel        ( s );
+
+        HUDalphaHS0 = new puSlider ( slider_x, slider_y,
+                                     slider_width, HORIZONTAL ) ;
+        HUDalphaHS0->     setDelta ( slider_delta ) ;
+        HUDalphaHS0->     setValue ( hud_trans_alpha ) ;
+        HUDalphaHS0->    setCBMode ( PUSLIDER_DELTA ) ;
+        HUDalphaHS0->  setCallback ( alpha_adj ) ;
+
+        puText *
+            HUDalphaTitle =      new puText ( slider_title_x, slider_y ) ;
+        HUDalphaTitle-> setDefaultValue ( "Alpha" ) ;
+        HUDalphaTitle-> getDefaultValue ( &s ) ;
+        HUDalphaTitle->        setLabel ( s ) ;
 		
-		puText *
-		HUDalphaDialogMessage = new puText ( labelX,
-											 52 + nSliders
-											 * horiz_slider_height );
-		HUDalphaDialogMessage -> setDefaultValue ( Label );
-		HUDalphaDialogMessage -> getDefaultValue ( &s );
-		HUDalphaDialogMessage -> setLabel        ( s );
+        HUDalphaText = new puText ( slider_value_x, slider_y ) ;
+        sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
+        HUDalphaText-> setLabel ( SliderText[ 0 ] ) ;
 
-		HUDalphaHS0 = new puSlider ( slider_x, slider_y,
-									 slider_width, HORIZONTAL ) ;
-		HUDalphaHS0->     setDelta ( slider_delta ) ;
-		HUDalphaHS0->     setValue ( hud_trans_alpha ) ;
-		HUDalphaHS0->    setCBMode ( PUSLIDER_DELTA ) ;
-		HUDalphaHS0->  setCallback ( alpha_adj ) ;
+        puOneShot *
+            HUDalphaOkButton =     new puOneShot ( 10, 10, 60, 45 );
+        HUDalphaOkButton->         setLegend ( gui_msg_OK );
+        HUDalphaOkButton-> makeReturnDefault ( TRUE );
+        HUDalphaOkButton->       setCallback ( goAwayHUDalphaAdjust );
 
-		puText *
-		HUDalphaTitle =      new puText ( slider_title_x, slider_y ) ;
-		HUDalphaTitle-> setDefaultValue ( "Alpha" ) ;
-		HUDalphaTitle-> getDefaultValue ( &s ) ;
-		HUDalphaTitle->        setLabel ( s ) ;
-		
-		HUDalphaText = new puText ( slider_value_x, slider_y ) ;
-		sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
-		HUDalphaText-> setLabel ( SliderText[ 0 ] ) ;
-
-
-		puOneShot *
-		HUDalphaOkButton =     new puOneShot ( 10, 10, 60, 45 );
-		HUDalphaOkButton->         setLegend ( gui_msg_OK );
-		HUDalphaOkButton-> makeReturnDefault ( TRUE );
-		HUDalphaOkButton->       setCallback ( goAwayHUDalphaAdjust );
-		
-		puOneShot *
-		HUDalphaNoButton = new puOneShot ( 160, 10, 230, 45 );
-		HUDalphaNoButton->     setLegend ( gui_msg_CANCEL );
-		HUDalphaNoButton->   setCallback ( cancelHUDalphaAdjust );
-	}
-	FG_FINALIZE_PUI_DIALOG( HUDalphaDialog );
+        puOneShot *
+            HUDalphaNoButton = new puOneShot ( 160, 10, 230, 45 );
+        HUDalphaNoButton->     setLegend ( gui_msg_CANCEL );
+        HUDalphaNoButton->   setCallback ( cancelHUDalphaAdjust );
+    }
+    FG_FINALIZE_PUI_DIALOG( HUDalphaDialog );
 
 #undef HORIZONTAL
 }
 
-void fgHUDReshape(void) {
-	if ( HUDtext )
-		delete HUDtext;
 
-	HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
-        HUD_TextSize = 10;
-	HUDtext = new fntRenderer();
-	HUDtext -> setFont      ( guiFntHandle ) ;
-	HUDtext -> setPointSize ( HUD_TextSize ) ;
-	HUD_TextList.setFont( HUDtext );
+void fgHUDReshape(void) {
+    if ( HUDtext )
+        delete HUDtext;
+
+    HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
+    HUD_TextSize = 10;
+    HUDtext = new fntRenderer();
+    HUDtext -> setFont      ( guiFntHandle ) ;
+    HUDtext -> setPointSize ( HUD_TextSize ) ;
+    HUD_TextList.setFont( HUDtext );
 }
 
 
 static void set_hud_color(float r, float g, float b) {
-	fgGetBool("/sim/hud/antialiased") ?
-            glColor4f(r,g,b,hud_trans_alpha) :
-            glColor3f(r,g,b);
+    fgGetBool("/sim/hud/antialiased") ?
+        glColor4f(r,g,b,hud_trans_alpha) :
+        glColor3f(r,g,b);
 }
+
 
 // fgUpdateHUD
 //

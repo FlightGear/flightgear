@@ -45,12 +45,12 @@ HudLadder ::   HudLadder(  string name,
     factor				( factr		  ),
     hudladder_type		( name		  ),
     frl					( frl_spot		),
+    target_spot			( target		),
     velocity_vector		( vel_vec		),
     drift_marker		( drift			),
     alpha_bracket		( alpha			),
     energy_marker		( energy		),
     climb_dive_marker	( climb		),
-    target_spot			( target		),
     glide_slope_marker	( glide			),
     glide_slope			( glide_slope_val),
     energy_worm			( worm_energy),
@@ -79,12 +79,12 @@ HudLadder( const HudLadder & image ) :
     factor				( image.factor        ),
     hudladder_type		( image.hudladder_type),
     frl					( image.frl),
+    target_spot			( image.target_spot),
     velocity_vector		( image.velocity_vector),
     drift_marker		( image.drift_marker),
     alpha_bracket		( image.alpha_bracket),
     energy_marker		( image.energy_marker),
     climb_dive_marker	( image.climb_dive_marker),
-    target_spot			( image.target_spot),
     glide_slope_marker	( image.glide_slope_marker),
     glide_slope			( image.glide_slope),
     energy_worm			( image.energy_worm),
@@ -127,15 +127,17 @@ void HudLadder :: draw( void )
 
     float  x_ini,x_ini2;
     float  x_end,x_end2;
-    float  y;
+    float  y = 0;
     int count;
-    float cosine, sine,xvvr,yvvr,Vxx,Vyy,Vzz,up_vel,ground_vel,actslope;
-    float Axx,Ayy,Azz,total_vel,pot_slope,t1,t2,psi,alpha,pla;
-    float vel_x,vel_y,drift;
-    char     Textaux[8] ;
-    bool  pitch_ladder;
-    bool  climb_dive_ladder;
-    bool  clip_plane;
+    float cosine, sine, xvvr, yvvr, Vxx = 0.0, Vyy = 0.0, Vzz = 0.0,
+        up_vel, ground_vel, actslope = 0.0;
+    float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope, t1,
+        t2 = 0.0, psi = 0.0, alpha,pla;
+    float vel_x = 0.0, vel_y = 0.0, drift;
+    // char     Textaux[8] ;
+    bool  pitch_ladder = false;
+    bool  climb_dive_ladder = false;
+    bool  clip_plane = false;
 
     GLdouble eqn_top[4] = {0.0,-1.0,0.0,0.0};
     GLdouble eqn_left[4] = {-1.0,0.0,0.0,100.0};
@@ -473,13 +475,15 @@ void HudLadder :: draw( void )
         float    bot ;
         float    top ;
         float    text_offset = 4.0f ;
-	float    zero_offset;
+	float    zero_offset = 0.0;
 		
-	if(climb_dive_ladder)
+	if ( climb_dive_ladder ) {
 	    zero_offset = 50.0f ;
-	else
-	    if(pitch_ladder)
+	} else {
+	    if ( pitch_ladder ) {
 		zero_offset = 10.0f ;
+            }
+        }
 		
 	fntFont *font      = HUDtext->getFont();
 	float    pointsize = HUDtext->getPointSize();
