@@ -2,6 +2,10 @@
 | Done
 --------------------------------------------------------------------------
 
+7/3/98 -  Generate and store the transform matrix when rendering by
+           material property so we don't have to push, transform, pop
+           continually.  See mesa code for gluLookAt()
+
 6/11/98 -  convert to static libraries and reduce libtool usage ...
 
 6/11/98 -  Converted to GL_FOG_EXP2
