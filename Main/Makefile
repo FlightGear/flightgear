@@ -37,12 +37,12 @@ INTERFACE_FILES = GLUTkey.c
 #---------------------------------------------------------------------------
 
 # For OpenGL
-GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
+# GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 
 # For Mesa
-# MESA_LIBS = -L/usr/lib/mesa -lMesaaux -lMesatk -lMesaGLU -lMesaGL
-# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+MESA_LIBS = -L/usr/lib/mesa -lMesaaux -lMesatk -lMesaGLU -lMesaGL
+X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 
 CFLAGS = $(STD_CFLAGS) $(INTERFACE_FLAGS)
@@ -86,6 +86,9 @@ mesh2GL.o: mesh2GL.c ../scenery/mesh.h
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/05/23 00:35:13  curt
+# Trying to get fog to work ...
+#
 # Revision 1.2  1997/05/21 15:57:52  curt
 # Renamed due to added GLUT support.
 #

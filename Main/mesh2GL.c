@@ -1,5 +1,5 @@
 /**************************************************************************
- * mesh2ogl.c -- walk through a mesh data structure and make ogl calls
+ * mesh2GL.c -- walk through a mesh data structure and make GL calls
  *
  * Written by Curtis Olson, started May 1997.
  *
@@ -37,28 +37,27 @@ static void mat3_cross_product(float result_vec[3], register float vec1[3],
 /* walk through mesh and make ogl calls */
 GLint mesh_to_ogl(struct mesh *m) {
     GLint mesh;
-    static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 };
+    /* static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 }; */
 
     float x1, y1, x2, y2, z11, z12, z21, z22;
     float v1[3], v2[3], normal[3]; 
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 10;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
-    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color );
-    glShadeModel( GL_FLAT ); /* glShadeModel( GL_SMOOTH ); */
+    /* glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color ); */
 
     iend = m->cols - 1;
     jend = m->rows - 1;
     
-    y1 = m->originy;
+    y1 = 0.0; /* y1 = m->originy; */
     y2 = y1 + (m->col_step * istep);
     
     for ( i = 0; i < iend; i += istep ) {
-	x1 = m->originx;
+	x1 = 0.0; /* x1 = m->originx; */
 	x2 = x1 + (m->row_step * jstep);
 	for ( j = 0; j < jend; j += jstep ) {
 	    z11 = 0.03 * m->mesh_data[j         * m->rows + i        ];
@@ -75,8 +74,8 @@ GLint mesh_to_ogl(struct mesh *m) {
 	    v2[0] = x2 - x1; v2[1] = y2 - y1; v2[2] = z22 - z11;
 	    mat3_cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
-	    glNormal3fv(normal);
 	    glBegin(GL_POLYGON);
+	    glNormal3fv(normal);
 	    glVertex3f(x1, y1, z11);
 	    glVertex3f(x2, y1, z21);
 	    glVertex3f(x2, y2, z22);
@@ -89,8 +88,8 @@ GLint mesh_to_ogl(struct mesh *m) {
 	    v2[0] = 0;       v2[1] = y2 - y1; v2[2] = z12 - z11;
 	    mat3_cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
-	    glNormal3fv(normal);
 	    glBegin(GL_POLYGON);
+	    glNormal3fv(normal);
 	    glVertex3f(x1, y1, z11);
 	    glVertex3f(x2, y2, z22);
 	    glVertex3f(x1, y2, z12);
@@ -113,9 +112,12 @@ GLint mesh_to_ogl(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/21 15:57:52  curt
-/* Renamed due to added GLUT support.
+/* Revision 1.2  1997/05/23 00:35:13  curt
+/* Trying to get fog to work ...
 /*
+ * Revision 1.1  1997/05/21 15:57:52  curt
+ * Renamed due to added GLUT support.
+ *
  * Revision 1.3  1997/05/19 18:22:42  curt
  * Parameter tweaking ... starting to stub in fog support.
  *

@@ -15,6 +15,7 @@
 #include "GLUTkey.h"
 #include "../aircraft/aircraft.h"
 
+extern double fogDensity;
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
@@ -48,6 +49,17 @@ void GLUTkey(unsigned char k, int x, int y) {
 	return;
     case 4:
 	c->throttle[0] += 0.05;
+	return;
+    case 122:
+	fogDensity *= 1.10;
+	glFogf(GL_FOG_DENSITY, fogDensity);
+	printf("Fog density = %.4f\n", fogDensity);
+	return;
+    case 90:
+	fogDensity /= 1.10;
+	glFogf(GL_FOG_DENSITY, fogDensity);
+	printf("Fog density = %.4f\n", fogDensity);
+	return;
     case 27: /* ESC */
 	exit(0);
     }
@@ -56,9 +68,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/21 15:57:50  curt
-/* Renamed due to added GLUT support.
+/* Revision 1.2  1997/05/23 00:35:12  curt
+/* Trying to get fog to work ...
 /*
+ * Revision 1.1  1997/05/21 15:57:50  curt
+ * Renamed due to added GLUT support.
+ *
  * Revision 1.2  1997/05/19 18:22:41  curt
  * Parameter tweaking ... starting to stub in fog support.
  *

@@ -19,14 +19,6 @@
 
     /* custom print routine */
     static int scanner_debug = 0;
-    static int scanner_msg_len;
-    static char scanner_msg[1024];
-
-    static void scanner_print(char *s) {
-        if ( scanner_debug ) {
-            printf("%s", s);
-        }
-    }
 
     /* Routines to manage a stack of nested input buffers (for
        processing the #include directive */
@@ -100,87 +92,111 @@ other		.
 /* Rules */ 
 %%
 
-include         { scanner_print("return IncludeSym\n");
+include         { if ( scanner_debug ) {
+                      printf("return IncludeSym\n");
+                  }
                   return IncludeSym;
                 }
 
-mesh            { scanner_print("return MeshSym\n");
+mesh            { if ( scanner_debug ) {
+                      printf("return MeshSym\n");
+                  }
                   return MeshSym;
                 }
 
-row             { scanner_print("return RowSym\n");
+row             { if ( scanner_debug ) {
+                      printf("return RowSym\n");
+                  }
                   return RowSym;
                 }
 
-chunk           { scanner_print("return ChunkSym\n");
+chunk           { if ( scanner_debug ) {
+                      printf("return ChunkSym\n");
+                  }
                   return ChunkSym;
                 }
 
-bounds          { scanner_print("return BoundsSym\n");
+bounds          { if ( scanner_debug ) {
+                      printf("return BoundsSym\n");
+                  }
                   return BoundsSym;
                 }
 
-place           { scanner_print("return PlaceSym\n");
+place           { if ( scanner_debug ) {
+                      printf("return PlaceSym\n");
+                  }
                   return PlaceSym;
                 }
 
-{ident}		{ scanner_msg_len = snprintf(scanner_msg, 1024, 
-                           "return Identifier = %s\n", yytext);
-                  scanner_msg[scanner_msg_len] = '\0';
-                  scanner_print(scanner_msg);
+{ident}		{ if ( scanner_debug ) {
+                      printf("return Identifier = %s\n", yytext);
+                  }
                   return Identifier;
                 }
 
-{number}	{ scanner_print("return Number\n");
+{number}	{ if ( scanner_debug ) {
+                      printf("return Number\n");
+                  }
                   return Number;
                 }
 
-{string}        { scanner_msg_len = snprintf(scanner_msg, 1024,
-			   "return StringLiteral = %s\n", yytext);
-                  scanner_msg[scanner_msg_len] = '\0';
-                  scanner_print(scanner_msg);
+{string}        { if ( scanner_debug ) {
+                      printf("return StringLiteral = %s\n", yytext);
+                  }
                   return StringLiteral;
                 }
 
-{bad_string}    { scanner_msg_len = snprintf(scanner_msg, 1024,
-                           "return BadStringLiteral = %s\n", yytext);
-                  scanner_msg[scanner_msg_len] = '\0';
-                  scanner_print(scanner_msg);
+{bad_string}    { if ( scanner_debug ) {
+                      printf("return BadStringLiteral = %s\n", yytext);
+                  }
                   return BadStringLiteral; 
                 }
 
 "\n"		{ line_num++; 
-                  scanner_msg_len = snprintf(scanner_msg, 1024,
-                           "Line number = %d\n", line_num);
-                  scanner_msg[scanner_msg_len] = '\0';
-                  scanner_print(scanner_msg);
-                }
+                  if ( scanner_debug ) {
+                      printf("Line number = %d\n", line_num);
+                  }
+               }
 
-"#"		{ scanner_print("return HashSym\n");
+"#"		{ if ( scanner_debug ) {
+                      printf("return HashSym\n");
+                  }
                   return HashSym; 
                 }
 
-"="		{ scanner_print("return EqualSym\n");
+"="		{ if ( scanner_debug ) {
+                      printf("return EqualSym\n");
+                  }
                   return EqualSym; 
                 }
 
-","		{ scanner_print("return CommaSym\n");
+","		{ if ( scanner_debug ) {
+                      printf("return CommaSym\n");
+                  }
                   return CommaSym; 
                 }
 
-"{"		{ scanner_print("return LBraceSym\n");
+"{"		{ if ( scanner_debug ) {
+                      printf("return LBraceSym\n");
+                  }
                   return LBraceSym; 
                 }
 
-"}"		{ scanner_print("return RBraceSym\n");
+"}"		{ if ( scanner_debug ) {
+                      printf("return RBraceSym\n");
+                  }
                   return RBraceSym;
                 }
 
-"("		{ scanner_print("return LParenSym\n");
+"("		{ if ( scanner_debug ) {
+                      printf("return LParenSym\n");
+                  }
                   return LParenSym; 
                 }
 
-")"		{ scanner_print("return RParenSym\n");
+")"		{ if ( scanner_debug ) {
+                      printf("return RParenSym\n");
+                  }
                   return RParenSym;
                 }
 
@@ -196,10 +212,9 @@ place           { scanner_print("return PlaceSym\n");
 
 {ws}		{ ; }
 
-{other}		{ scanner_msg_len = snprintf(scanner_msg, 1024,
-			   "Scanned some unexpected text = `%s'\n", yytext);
-                  scanner_msg[scanner_msg_len] = '\0';
-                  scanner_print(scanner_msg);
+{other}		{ if ( scanner_debug ) {
+                      printf("Scanned some unexpected text = `%s'\n", yytext);
+                  }
 		  return ErrorMisc; 
 		}
 
