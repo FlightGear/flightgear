@@ -133,10 +133,10 @@ class sgVec3Slider : public puDialogBox
 };
 
 sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
-                                                                   const char *Xtitle = "X",
-                                                                   const char *Ytitle = "Y",
-                                                                   const char *Ztitle = "Z"     )
-                                        : puDialogBox ( x, y )
+                             const char *Xtitle,
+                             const char *Ytitle,
+                             const char *Ztitle )
+    : puDialogBox ( x, y )
 {
         int DialogX = x;
         int DialogY = y;

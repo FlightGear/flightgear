@@ -22,8 +22,6 @@
 //#ifdef FG_NETWORK_OLK
 
 #include <plib/pu.h>
-//#include <NetworkOLK/network.h>
-//#include <Network/network.h>
 
 extern void NetIdDialog_Cancel(puObject *);
 extern void NewCallSign(puObject *cb);

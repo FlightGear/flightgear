@@ -247,7 +247,7 @@ void BusyCursor( int restore )
 
 // Center the view offsets
 void CenterView( void ) {
-    if( mouse_mode = MOUSE_VIEW ) {
+    if( mouse_mode == MOUSE_VIEW ) {
 	mouse_mode = MOUSE_POINTER;
 	_savedX = fgGetInt("/sim/startup/xsize")/2;
 	_savedY = fgGetInt("/sim/startup/ysize")/2;

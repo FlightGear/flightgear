@@ -224,7 +224,7 @@ bool FGSoundMgr::play_looped( const string& refname ) {
 
 
 // tell the scheduler to play the indexed sample once
-bool FGSoundMgr::FGSoundMgr::play_once( const string& refname ) {
+bool FGSoundMgr::play_once( const string& refname ) {
     sound_map_iterator it = sounds.find( refname );
     if ( it != sounds.end() ) {
 	FGSimpleSound *sample = it->second;

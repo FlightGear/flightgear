@@ -236,9 +236,11 @@ void FGTileMgr::schedule_needed() {
     b = sgBucketOffset( longitude, latitude, 0, 0 );
     sched_tile( b );
 
+    int x, y;
+
     // schedule next ring of 8 tiles
-    for ( int x = -1; x <= 1; ++x ) {
-	for ( int y = -1; y <= 1; ++y ) {
+    for ( x = -1; x <= 1; ++x ) {
+	for ( y = -1; y <= 1; ++y ) {
 	    if ( x != 0 || y != 0 ) {
 		b = sgBucketOffset( longitude, latitude, x, y );
 		if ( ! global_tile_cache.exists( b ) ) {
@@ -249,8 +251,8 @@ void FGTileMgr::schedule_needed() {
     }
     
     // schedule remaining tiles
-    for ( int x = -xrange; x <= xrange; ++x ) {
-	for ( int y = -yrange; y <= yrange; ++y ) {
+    for ( x = -xrange; x <= xrange; ++x ) {
+	for ( y = -yrange; y <= yrange; ++y ) {
 	    if ( x < -1 || x > 1 || y < -1 || y > 1 ) {
 		SGBucket b = sgBucketOffset( longitude, latitude, x, y );
 		if ( ! global_tile_cache.exists( b ) ) {
