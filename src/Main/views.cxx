@@ -508,6 +508,8 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
 
+    sgMat4 sgLOCAL, sgUP, sgVIEW;
+
     if ( update_fov ) {
 	// printf("Updating fov\n");
 	UpdateFOV( current_options );
@@ -624,9 +626,34 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	/* printf("Yaw matrix\n");
 	   MAT3print(TMP, stdout); */
 	MAT3mult(LOCAL, R, TMP);
-	// printf("FG derived LOCAL matrix\n");
+	// cout << "FG derived LOCAL matrix using MAT3 routines" << endl;
 	// MAT3print(LOCAL, stdout);
 
+	sgMakeRotMat4( sgLOCAL, 
+		       f->get_Psi() * RAD_TO_DEG,
+		       f->get_Phi() * RAD_TO_DEG,
+		       f->get_Theta() * RAD_TO_DEG );
+	/*
+	cout << "FG derived LOCAL matrix using sg routines" << endl;
+	MAT3mat print;
+	int i;
+	int j;
+	for ( i = 0; i < 4; i++ ) {
+	    for ( j = 0; j < 4; j++ ) {
+		print[i][j] = sgLOCAL[i][j];
+	    }
+	}
+	MAT3print( print, stdout);
+
+	sgMat4 sgIDENT;
+	sgMakeIdentMat4( sgIDENT );
+	for ( i = 0; i < 4; i++ ) {
+	    for ( j = 0; j < 4; j++ ) {
+		print[i][j] = sgIDENT[i][j];
+	    }
+	}
+	MAT3print( print, stdout);
+	*/
     } // if ( use_larcsim_local_to_body ) 
 
 #if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
@@ -645,8 +672,25 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     // MAT3print(TMP, stdout);
 
     MAT3mult(UP, R, TMP);
-    // printf("Local up matrix\n");
+    // cout << "Local up matrix" << endl;;
     // MAT3print(UP, stdout);
+
+    sgMakeRotMat4( sgUP, 
+		   f->get_Longitude() * RAD_TO_DEG,
+		   0.0,
+		   -f->get_Latitude() * RAD_TO_DEG );
+    /*
+    cout << "FG derived UP matrix using sg routines" << endl;
+    MAT3mat print;
+    int i;
+    int j;
+    for ( i = 0; i < 4; i++ ) {
+	for ( j = 0; j < 4; j++ ) {
+	    print[i][j] = sgUP[i][j];
+	}
+    }
+    MAT3print( print, stdout);
+    */
 
     MAT3_SET_VEC(local_up, 1.0, 0.0, 0.0);
     MAT3mult_vec(local_up, local_up, UP);
@@ -662,8 +706,20 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
     // Calculate the VIEW matrix
     MAT3mult(VIEW, LOCAL, UP);
-    // printf("VIEW matrix\n");
-    // MAT3print(VIEW, stdout);
+    cout << "VIEW matrix" << endl;;
+    MAT3print(VIEW, stdout);
+
+    sgMultMat4( sgVIEW, sgLOCAL, sgUP );
+    cout << "FG derived VIEW matrix using sg routines" << endl;
+    MAT3mat print;
+    int i;
+    int j;
+    for ( i = 0; i < 4; i++ ) {
+	for ( j = 0; j < 4; j++ ) {
+	    print[i][j] = sgVIEW[i][j];
+	}
+    }
+    MAT3print( print, stdout);
 
     // generate the current up, forward, and fwrd-view vectors
     MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);

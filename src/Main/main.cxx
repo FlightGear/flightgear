@@ -1058,8 +1058,8 @@ int main( int argc, char **argv ) {
     // distribution) specifically from the ssg tux example
     //
 
-    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
 
     scene = new ssgRoot;
     penguin = new ssgTransform;
@@ -1070,8 +1070,6 @@ int main( int argc, char **argv ) {
     ssgStripify( penguin );
 
     scene->addKid( penguin );
-
-    cout << "loaded ssg scene so it should be ready to go" << endl;
 
     // pass control off to the master GLUT event handler
     glutMainLoop();

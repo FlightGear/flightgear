@@ -1,21 +1,13 @@
 You *must* have the plib library installed on your system to build
 the FGFS simulator!"
 
-You can get the original library from:
+You can get the library from:
 
     http://www.woodsoup.org/projs/plib/
 
 Build notes:
 
-When you run "./configure" to configure the package, plib's defaults
-to installing the headers in /usr/local/plib/include and the libraries
-in /usr/local/plib/lib.
-
-If you would prefer to install these in /usr/local/include/plib/ and
-/usr/local/lib, then run configure with the following options:
-
-    ./configure --prefix=/usr/local --includedir=/usr/local/include/plib
-
-Installing into /usr/local/include/plib/ and /usr/local/lib makes it 
-possible for the fgfs configure script to automatically locate the plib 
-includes and libs.
+You should be able to just run "./configure" to configure the package
+and use all of plib's defaults.  Then run "make" followed by "make
+install".  By default, plib installs itself into /usr/local/plib/
+which is where flightgear now expects to find it.
