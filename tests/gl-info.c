@@ -100,6 +100,8 @@ int main ( int argc, char **argv )
   getPrinti( GL_UNPACK_ROW_LENGTH  , "GL_UNPACK_ROW_LENGTH"   ) ;
   getPrinti( GL_UNPACK_SKIP_PIXELS  , "GL_UNPACK_SKIP_PIXELS"   ) ;
   getPrinti( GL_UNPACK_SKIP_ROWS  , "GL_UNPACK_SKIP_ROWS"   ) ;
+  getPrinti( GL_BLEND_SRC  , "GL_BLEND_SRC"   ) ;
+  getPrinti( GL_BLEND_DST  , "GL_BLEND_DST"   ) ;
 
   return 0 ;
 }
