@@ -144,12 +144,12 @@ Bruce Finney <bfinney@gte.net>
 
 Melchior Franz <a8603365@unet.univie.ac.at>
   Made that joystick high/low support for joystick hats.
-  Nasal-ified the Saitek X45 joystick which now is the bases of a lot of
+  Nasal-ified the Saitek X45 joystick which now forms the basis of a lot of
   porgrammable joysticks.
   Created the led.txf font.
   Made some improvements of the telnet and the http interface.
   Ruthlessly hunted down memory leaks in FlightGear, SimGear, and JSBSim.
-  Mantains the only fully working helicopter model in FlightGear.
+  Maintains the only fully working helicopter model in FlightGear (Bolkow 105).
 
 
 Jean-loup Gailly and Mark Adler <zlib@gzip.org>
@@ -195,9 +195,9 @@ Erik Hofman <erik@ehofman.com>
   Major overhaul and parameterization of the sound module, to allow
   aircraft-specific sound configuration at runtime.
   Did a lot of code improvements and bug-hunting.
-  Creator of a lot of ground textures.
-  Creator of the F-15, F-16, F-104, T-37, PC-7, Fokker 50 and 100 models.
-  Maintains the Irix port.
+  Creator of most of the ground textures.
+  Maintainer of the F-15, F-16, F-104, T-37, PC-7, Fokker 50 and 100 models.
+  Keeps the Irix port current.
   Localization support.
 
 
@@ -244,6 +244,9 @@ Chris Lampard <c.lampard@ntlworld.com>
 
 David Luff <david.luff@nottingham.ac.uk>
   Contributed heavily to the IO360 piston engine model.
+  Created the ATC intelligent traffic subsystem.
+  Creator of TaxiDraw, a program to modify the taxiway layout
+  for FlightGear.
 
 
 Lewis Magruder <blackhawk96@hotmail.com>
@@ -378,7 +381,7 @@ Andy Ross <andy@plausible.org>
   information rather than aerodynamic coefficients.
   Added support for placing 2D panel objects in 3D space.
   Modified the HUD code to make it more accurate and added 3D support.
-  Modiefied the UI code to allow a far more flexible grouping system.
+  Modified the UI code to allow a far more flexible grouping system.
   Added the Nasal scripting language and added FlightGear integration.
 
 
@@ -486,7 +489,7 @@ Norman Vine <nhv@yahoo.com>
   Ultra hires tiled screen dumps.
   Contributed the initial 'goto airport' and 'reset' functions
   Contributed the initial http image server code
-  Did the build instructions for OpenAL (and SDL) under Cygwin.
+  Did the build instructions for OpenAL (and SDL) for Cygwin.
 
 
 Roland Voegtli <voegtli@sanw.unibe.ch>
@@ -546,14 +549,21 @@ John Wojnaroski <castle@mminternet.com>
   Open Glass Cockpit project
   3d clouds
 
+
 Lee Elliot <leee@spatial.freeserve.co.uk>
   Author of the YF-23, A-10, Ann225, B-52 and TSR-2 models.
   Did a lot of suggestions for better aircraft modelling, some of which
   resulted in code changes to accomplish them.
 
+
 Innis Cunningham <innisc@hotmail.com>
+  Modelled the 737 and contributed to the T38.
+
+
+Vivian Meazza <vivian.meazza@lineone.net>
   Added a number of excellent aircraft models including the Hawker Hunter
   and Seahawk.
+
 
 Space Imaging, Inc  http://www.spaceimaging.com/
   Space Imaging has allowed us to use the images in their archive for
