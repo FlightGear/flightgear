@@ -374,8 +374,8 @@ void guiTogglePanel(puObject *cb)
   else
     fgSetBool("/sim/panel/visibility", true);
 
-  fgReshape(fgGetInt("/sim/startup/xsize"),
-	    fgGetInt("/sim/startup/ysize"));
+  globals->get_renderer()->resize(fgGetInt("/sim/startup/xsize"),
+                                  fgGetInt("/sim/startup/ysize"));
 }
 
 void goodBye(puObject *)
@@ -669,7 +669,7 @@ void fgHiResDump()
 
     }
 
-    fgReshape( width, height );
+    globals->get_renderer()->resize( width, height );
 
     trDelete(tr);
 
@@ -722,7 +722,7 @@ GLubyte *hiResScreenCapture( int multiplier )
     int x,y;
     for ( y = 0; y < multiplier; y++ ) {
 	for ( x = 0; x < multiplier; x++ ) {
-	    fgReshape( cur_width, cur_height );
+	    globals->get_renderer()->resize( cur_width, cur_height );
 	    // pan to tile
 	    rotateView( 0, (y*fov)-((multiplier-1)*fov/2), (x*fov)-((multiplier-1)*fov/2) );
 	    fgRenderFrame();
@@ -794,8 +794,8 @@ void fgDumpSnapShot () {
     }
 
     globals->get_renderer()->init();
-    fgReshape( fgGetInt("/sim/startup/xsize"),
-	       fgGetInt("/sim/startup/ysize") );
+    globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
+                                     fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
