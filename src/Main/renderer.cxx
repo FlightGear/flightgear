@@ -815,6 +815,7 @@ FGRenderer::resize( int width, int height ) {
 
 static void fgHackFrustum() {
 
+#if 0
     /* experiment in assymetric view frustums */
     sgFrustum *f = ssgGetFrustum();
     cout << " l = " << f->getLeft()
@@ -831,6 +832,8 @@ static void fgHackFrustum() {
     double r = l + w;
     ssgSetFrustum(l, r, f->getBot(), f->getTop(), f->getNear(), f->getFar());
     incr += 0.001;
+#endif
+
 }
 
 
