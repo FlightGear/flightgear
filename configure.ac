@@ -275,7 +275,7 @@ case "${host}" in
 *-apple-darwin*)
     dnl Mac OS X
 
-    LIBS="$LIBS -framework GLUT -framework OpenGL -framework Carbon -lobjc"
+    LIBS="$LIBS -framework GLUT -framework OpenGL -framework AGL -framework Carbon -lobjc"
     ;;
 
 *)
