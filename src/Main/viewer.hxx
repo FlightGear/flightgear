@@ -38,12 +38,22 @@
 // Define a structure containing view information
 class FGViewer {
 
+public:
+
+    enum fgViewType {
+	FG_RPH = 0,
+	FG_LOOKAT = 1,
+	FG_HPR = 2
+    };
+
 private:
 
     // flag forcing a recalc of derived view parameters
     bool dirty;
 
 protected:
+
+    fgViewType _type;
 
     // the current view offset angle from forward (rotated about the
     // view_up vector)
@@ -151,6 +161,8 @@ public:
     //////////////////////////////////////////////////////////////////////
     // accessor functions
     //////////////////////////////////////////////////////////////////////
+    inline int get_type() const { return _type ; }
+    inline int is_a( int t ) const { return get_type() == t ; }
     inline bool is_dirty() const { return dirty; }
     inline double get_view_offset() const { return view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }

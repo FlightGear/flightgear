@@ -48,62 +48,41 @@ FGViewerLookAt::FGViewerLookAt( void )
 }
 
 
-static void fgLookAt( sgVec3 eye, sgVec3 center, sgVec3 up, sgMat4 &m ) {
-    double x[3], y[3], z[3];
-    double mag;
+void fgMakeLookAtMat4 ( sgMat4 dst, const sgVec3 eye, const sgVec3 center,
+			const sgVec3 up )
+{
+  // Caveats:
+  // 1) In order to compute the line of sight, the eye point must not be equal
+  //    to the center point.
+  // 2) The up vector must not be parallel to the line of sight from the eye
+  //    to the center point.
 
-    /* Make rotation matrix */
+  /* Compute the direction vectors */
+  sgVec3 x,y,z;
 
-    /* Z vector */
-    z[0] = eye[0] - center[0];
-    z[1] = eye[1] - center[1];
-    z[2] = eye[2] - center[2];
-    mag = sqrt( z[0]*z[0] + z[1]*z[1] + z[2]*z[2] );
-    if (mag) {  /* mpichler, 19950515 */
-        z[0] /= mag;
-        z[1] /= mag;
-        z[2] /= mag;
-    }
+  /* Y vector = center - eye */
+  sgSubVec3 ( y, center, eye ) ;
 
-    /* Y vector */
-    y[0] = up[0];
-    y[1] = up[1];
-    y[2] = up[2];
+  /* Z vector = up */
+  sgCopyVec3 ( z, up ) ;
 
-    /* X vector = Y cross Z */
-    x[0] =  y[1]*z[2] - y[2]*z[1];
-    x[1] = -y[0]*z[2] + y[2]*z[0];
-    x[2] =  y[0]*z[1] - y[1]*z[0];
+  /* X vector = Y cross Z */
+  sgVectorProductVec3 ( x, y, z ) ;
 
-    /* Recompute Y = Z cross X */
-    y[0] =  z[1]*x[2] - z[2]*x[1];
-    y[1] = -z[0]*x[2] + z[2]*x[0];
-    y[2] =  z[0]*x[1] - z[1]*x[0];
+  /* Recompute Z = X cross Y */
+  sgVectorProductVec3 ( z, x, y ) ;
 
-    /* mpichler, 19950515 */
-    /* cross product gives area of parallelogram, which is < 1.0 for
-     * non-perpendicular unit-length vectors; so normalize x, y here
-     */
+  /* Normalize everything */
+  sgNormaliseVec3 ( x ) ;
+  sgNormaliseVec3 ( y ) ;
+  sgNormaliseVec3 ( z ) ;
 
-    mag = sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
-    if (mag) {
-        x[0] /= mag;
-        x[1] /= mag;
-        x[2] /= mag;
-    }
-
-    mag = sqrt( y[0]*y[0] + y[1]*y[1] + y[2]*y[2] );
-    if (mag) {
-        y[0] /= mag;
-        y[1] /= mag;
-        y[2] /= mag;
-    }
-
-#define M(row,col)  m[row][col]
-    M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
-    M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
-    M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
-    M(3,0) = -eye[0]; M(3,1) = -eye[1]; M(3,2) = -eye[2]; M(3,3) = 1.0;
+  /* Build the matrix */
+#define M(row,col)  dst[row][col]
+  M(0,0) = x[0];    M(0,1) = x[1];    M(0,2) = x[2];    M(0,3) = 0.0;
+  M(1,0) = y[0];    M(1,1) = y[1];    M(1,2) = y[2];    M(1,3) = 0.0;
+  M(2,0) = z[0];    M(2,1) = z[1];    M(2,2) = z[2];    M(2,3) = 0.0;
+  M(3,0) = eye[0];  M(3,1) = eye[1];  M(3,2) = eye[2];  M(3,3) = 1.0;
 #undef M
 }
 
@@ -152,24 +131,28 @@ void FGViewerLookAt::update() {
     sgdVec3 vp;
     sgdSubVec3( vp, abs_view_pos, sc );
     sgSetVec3( view_pos, vp );
+    sgAddVec3( view_pos, pilot_offset );
 
     FG_LOG( FG_VIEW, FG_DEBUG, "sea level radius = " << sea_level_radius );
     FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = "
+    FG_LOG( FG_VIEW, FG_INFO, "Absolute view pos = "
 	    << abs_view_pos[0] << ","
 	    << abs_view_pos[1] << ","
 	    << abs_view_pos[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = "
+    FG_LOG( FG_VIEW, FG_INFO, "Relative view pos = "
 	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "view forward = "
+    FG_LOG( FG_VIEW, FG_INFO, "pilot offset = "
+	    << pilot_offset[0] << "," << pilot_offset[1] << ","
+	    << pilot_offset[2] );
+    FG_LOG( FG_VIEW, FG_INFO, "view forward = "
 	    << view_forward[0] << "," << view_forward[1] << ","
 	    << view_forward[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "view up = "
+    FG_LOG( FG_VIEW, FG_INFO, "view up = "
 	    << view_up[0] << "," << view_up[1] << ","
 	    << view_up[2] );
 
     // Make the VIEW matrix.
-    fgLookAt( view_pos, view_forward, view_up, VIEW );
+    fgMakeLookAtMat4( VIEW, view_pos, view_forward, view_up );
     // cout << "VIEW matrix" << endl;
     // print_sgMat4( VIEW );
 

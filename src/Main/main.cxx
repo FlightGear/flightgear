@@ -46,19 +46,19 @@
 #endif
 
 #ifdef HAVE_SYS_STAT_H
-#  include <sys/stat.h> /* for stat() */
+#  include <sys/stat.h>		// for stat()
 #endif
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>    /* for stat() */
+#  include <unistd.h>		// for stat()
 #endif
 
-#include <plib/pu.h>			// plib include
-#include <plib/ssg.h>		// plib include
+#include <plib/pu.h>
+#include <plib/ssg.h>
 
 #ifdef ENABLE_AUDIO_SUPPORT
-#  include <plib/sl.h>		// plib include
-#  include <plib/sm.h>		// plib include
+#  include <plib/sl.h>
+#  include <plib/sm.h>
 #endif
 
 #include <simgear/constants.h>  // for VERSION
@@ -341,37 +341,42 @@ void fgRenderFrame( void ) {
 
 	sgVec3 po;		// chase view pilot_offset
 	sgVec3 wup;		// chase view world up
-	sgCopyVec3( po, chase_view->get_pilot_offset() );
-	sgCopyVec3( wup, chase_view->get_world_up() );
-	sgMat4 CXFM;		// chase view + pilot offset xform
-	sgMakeRotMat4( CXFM, cur_fdm_state->get_Psi() * RAD_TO_DEG, wup );
-	sgVec3 npo;		// new pilot offset after rotation
-	sgXformVec3( npo, po, CXFM );
+	sgSetVec3( po, 0.0, 0.0, 200.0 );
+	sgCopyVec3( wup, pilot_view->get_world_up() );
+	// sgMat4 CXFM;		// chase view + pilot offset xform
+	// sgMakeRotMat4( CXFM, cur_fdm_state->get_Psi() * RAD_TO_DEG, wup );
+	// sgVec3 npo;		// new pilot offset after rotation
+	// sgXformVec3( npo, po, CXFM );
 
 	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
 				       cur_fdm_state->get_Lat_geocentric(), 
 				       cur_fdm_state->get_Altitude() *
 				       FEET_TO_METER );
-	chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
+	chase_view->set_sea_level_radius( cur_fdm_state->
+					  get_Sea_level_radius() *
+					  FEET_TO_METER );
+	chase_view->set_pilot_offset( po[0], po[1], po[2] );
 	sgVec3 negpo;
-	sgNegateVec3( negpo, npo );
+	sgNegateVec3( negpo, po );
 	chase_view->set_view_forward( negpo ); 
 	chase_view->set_view_up( wup );
 
 #if 0
 	// this is a test, we are trying to match RPH and LookAt
 	// matrices
-	tv->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
-			       cur_fdm_state->get_Lat_geocentric(), 
-			       cur_fdm_state->get_Altitude() *
-			       FEET_TO_METER );
-	tv->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-				  FEET_TO_METER );
-	tv->set_view_forward( globals->get_current_view()->get_view_forward() );
-	tv->set_view_up( globals->get_current_view()->get_view_up() );
+	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+				       cur_fdm_state->get_Lat_geocentric(), 
+				       cur_fdm_state->get_Altitude() *
+				       FEET_TO_METER );
+	chase_view->set_sea_level_radius( cur_fdm_state->
+					  get_Sea_level_radius() *
+					  FEET_TO_METER );
+	chase_view->set_view_forward( pilot_view->get_view_forward() );
+	chase_view->set_view_up( pilot_view->get_view_up() );
+#endif
 
 	sgMat4 rph;
-	sgCopyMat4( rph, globals->get_current_view()->get_VIEW_ROT() );
+	sgCopyMat4( rph, pilot_view->get_VIEW() );
 	cout << "RPH Matrix = " << endl;
 	int i, j;
 	for ( i = 0; i < 4; i++ ) {
@@ -380,8 +385,9 @@ void fgRenderFrame( void ) {
 	    }
 	    cout << endl;
 	}
+
 	sgMat4 la;
-	sgCopyMat4( la, tv->get_VIEW_ROT() );
+	sgCopyMat4( la, chase_view->get_VIEW() );
 	cout << "LookAt Matrix = " << endl;
 	for ( i = 0; i < 4; i++ ) {
 	    for ( j = 0; j < 4; j++ ) {
@@ -389,10 +395,10 @@ void fgRenderFrame( void ) {
 	    }
 	    cout << endl;
 	}
-#endif
 
 	// update view volume parameters
 	// cout << "before pilot_view update" << endl;
+#if 0
         if ( globals->get_options()->get_view_mode() ==
 	     FGOptions::FG_VIEW_FOLLOW )
 	{
@@ -403,6 +409,7 @@ void fgRenderFrame( void ) {
 	} else {
 	    globals->get_current_view()->set_pilot_offset(0.0, 0.0, 0.0);
 	}
+#endif
 
 	if ( ! fgPanelVisible() ) {
 	    xglViewport( 0, 0 ,
@@ -586,20 +593,18 @@ void fgRenderFrame( void ) {
 	    ssgSetNearFar( 0.5f, 120000.0f );
 	}
 
-	if ( globals->get_options()->get_view_mode() == 
-	     FGOptions::FG_VIEW_PILOT )
-        {
+	if ( globals->get_viewmgr()->get_current() == 0 ) {
 	    // disable TuX
 	    penguin_sel->select(0);
-	} else if ( globals->get_options()->get_view_mode() == 
-		    FGOptions::FG_VIEW_FOLLOW )
-        {
+	} else { 
 	    // enable TuX and set up his position and orientation
 	    penguin_sel->select(1);
 
+	    FGViewerRPH *pilot_view =
+		(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
+
 	    sgMat4 sgTRANS;
-	    sgMakeTransMat4( sgTRANS, 
-			     globals->get_current_view()->get_view_pos() );
+	    sgMakeTransMat4( sgTRANS, pilot_view->get_view_pos() );
 
 	    sgVec3 ownship_up;
 	    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
@@ -615,7 +620,7 @@ void fgRenderFrame( void ) {
 	    // sgTUX = ( sgROT * pilot_view.VIEW_ROT ) * sgTRANS
 	    sgMat4 sgTUX;
 	    sgCopyMat4( sgTUX, sgROT );
-	    sgPostMultMat4( sgTUX, globals->get_current_view()->get_VIEW_ROT() );
+	    sgPostMultMat4( sgTUX, pilot_view->get_VIEW_ROT() );
 	    sgPostMultMat4( sgTUX, sgTRANS );
 	
 	    sgCoord tuxpos;
