@@ -370,6 +370,7 @@ public:
   virtual ~FGPanelInstrument ();
 
   virtual void draw () = 0;
+  virtual void drawHotspots();
 
   virtual void setPosition(int x, int y);
   virtual void setSize(int w, int h);

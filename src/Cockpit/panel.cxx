@@ -436,6 +436,21 @@ FGPanel::draw()
     glPopMatrix();
   }
 
+  // Draw yellow "hotspots" if directed to.  This is a panel authoring
+  // feature; not intended to be high performance or to look good.
+  if(fgGetBool("/sim/panel-hotspots")) {
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(1, 1, 0);
+    
+    for(int i=0; i<_instruments.size(); i++)
+      _instruments[i]->drawHotspots();
+
+    glPopAttrib();
+  }
+
+
   // restore some original state
   glPopAttrib();
   glPolygonOffset(0, 0);
@@ -647,6 +662,25 @@ FGPanelInstrument::~FGPanelInstrument ()
        it++) {
     delete *it;
     *it = 0;
+  }
+}
+
+void
+FGPanelInstrument::drawHotspots()
+{
+  for(int i=0; i<_actions.size(); i++) {
+    FGPanelAction* a = _actions[i];
+    float x1 = getXPos() + a->getX();
+    float x2 = x1 + a->getWidth();
+    float y1 = getYPos() + a->getY();
+    float y2 = y1 + a->getHeight();
+
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(x1, y1);
+    glVertex2f(x1, y2);
+    glVertex2f(x2, y2);
+    glVertex2f(x2, y1);
+    glEnd();
   }
 }
 
