@@ -1,0 +1,57 @@
+A very special thanks is due to the following people and groups.
+
+Note, as hard as I've tried, I've found it impossible to perfectly
+maintain this file.  If you are aware of someone who you think might
+be included here, PLEASE let me know.  Projects like this are made
+possible only by the help and hard work of others.  I want to properly
+credit everyone who has contributed to this project.
+
+
+Steve Baker <sbaker@link.com>
+  Steve has provided an immense amount of coaching and tutelage, both
+  on the subjects of flight simulation and OpenGL.  It has been his
+  comments and thoughts that have prompted the implementation of most
+  of the more sophisticated features of Flight Gear.
+
+
+Gene Buckle <geneb@nwlink.com>
+  Gene has done a lot of work getting FG to compile with the MSVC++
+  compiler.  Also, he has pushed, proded, and bugged me endlessly to
+  do my stuff right.  (I mean that in a good way, because sometimes
+  when the little nudge in the right direction isn't working, I need
+  a good hard shove.) :-)
+
+
+Michael I. Gold <gold@puck.asd.sgi.com> -- Patiently answered my endless
+  "newbie" OpenGL questions.  His effort alone has made me a great SGI
+  fan.
+
+
+Bruce Jackson <e.b.jackson@larc.nasa.gov> 
+  http://agcbwww.larc.nasa.gov/People/ebj.html -- Developed the
+  LaRCsim code which we use to provide the flight model.  Also
+  patiently answered my many, many questions.
+
+
+Reto Koradi <kor@mol.biol.ethz.ch> http://www.mol.biol.ethz.ch/~kor
+  Helped me get on track with setting up fog effects.
+
+
+Eric Mitchell <mitchell@mars.ark.com>
+  Contributed some topnotch scenery textures.
+
+
+Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
+  Author of the Triangle program.  Triangle is used to calculate the
+  Delauney triangulation of our irregular terrain.
+
+
+U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
+  Provided geographic data used by this project
+
+
+Robert Allan Zeh <raz@cmg.FCNBD.COM>
+  Helped me tremendously in figuring out the Cygnus win32 compiler and
+  how to link with .dll's.  With out him the first runable win32
+  version of FG would have been impossible.
+
