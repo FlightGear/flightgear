@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>		// atof(), atoi()
 #include <string.h>		// strcmp()
+#include <algorithm>
 
 #include STL_STRING
 
@@ -62,6 +63,7 @@
 
 
 SG_USING_STD(string);
+SG_USING_STD(sort);
 SG_USING_NAMESPACE(std);
 
 
@@ -1872,6 +1874,8 @@ fgUsage (bool verbose)
 
 // Show available aircraft types
 void fgShowAircraft(void) {
+   vector<string> aircraft;
+
    SGPath path( globals->get_fg_root() );
    path.append("Aircraft");
 
@@ -1884,7 +1888,6 @@ void fgShowAircraft(void) {
       exit(-1);
    }
 
-   cout << "Available aircraft:" << endl;
    while ((dire = ulReadDir(dirp)) != NULL) {
       char *ptr;
 
@@ -1916,9 +1919,15 @@ void fgShowAircraft(void) {
              snprintf(cstr, 96, "   %-27s\n%32c%s", dire->d_name, ' ',
                       (desc) ? desc->getStringValue() : "" );
 
-          cout << cstr << endl;
+          aircraft.push_back(cstr);
       }
    }
 
+   sort(aircraft.begin(), aircraft.end());
+   cout << "Available aircraft:" << endl;
+   for (int i = 0; i < aircraft.size(); i++)
+      cout << aircraft[i] << endl;
+
+   aircraft.clear();
    ulCloseDir(dirp);
 }
