@@ -42,6 +42,7 @@ CFLAGS = $(FG_CFLAGS)
 
 $(TARGET): $(OFILES)
 	$(AR) rv $(TARGET) $(OFILES)
+	$(RANLIB) $(TARGET)
 
 all: $(TARGET)
 
@@ -61,6 +62,9 @@ polar.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1997/07/12 02:24:46  curt
+# Added ranlib.
+#
 # Revision 1.8  1997/07/07 20:59:48  curt
 # Working on scenery transformations to enable us to fly fluidly over the
 # poles with no discontinuity/distortion in scenery.
