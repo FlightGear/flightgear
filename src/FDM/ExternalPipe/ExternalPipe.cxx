@@ -46,6 +46,8 @@ FGExternalPipe::FGExternalPipe( double dt, string name ) {
 
     buf = new char[sizeof(ctrls) + 1];
 
+    cout << "dt = " << dt << endl;
+
 #if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
     fifo_name_1 = name + "1";
     fifo_name_2 = name + "2";
@@ -198,16 +200,21 @@ void FGExternalPipe::update( double dt ) {
         return;
     }
 
+    int iterations = _calc_multiloop(dt);
+
     // Send control positions to remote fdm
     length = sizeof(ctrls);
     FGProps2NetCtrls( &ctrls, false );
-    buf[0] = '2';
     char *ptr = buf;
+    *ptr = '2';
     ptr++;
+    *((int *)ptr) = iterations;
+    ptr += sizeof(int);
     memcpy( ptr, (char *)(&ctrls), length );
     result = std::write( pd1, buf, length + 1 );
     if ( result == -1 ) {
-        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: " << fifo_name_1 );
+        SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: "
+                << fifo_name_1 );
     }
     // cout << "wrote to pipe" << endl;
 
