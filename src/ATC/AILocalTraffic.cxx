@@ -100,7 +100,8 @@ void FGAILocalTraffic::Init() {
 
 // Commands to do something from higher level logic
 void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
-	circuitsToFly += numCircuits;
+	circuitsToFly += numCircuits - 1;	// Hack (-1) because we only test and decrement circuitsToFly after landing
+										// thus flying one to many circuits.  TODO - Need to sort this out better!
 	touchAndGo = tag;
 	
 	//At the moment we'll assume that we are always finished previous circuits when called,
@@ -495,39 +496,47 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 	node_array_type exitNodes = airport.GetExits(rwy.ID);	//I suppose we ought to have some fallback for rwy with no defined exits?
 	//cout << "Got exits" << endl;
 	//cout << "Size of exits array is " << exitNodes.size() << endl;
-	//Find the next exit from orthopos.y
-	double d;
-	double dist = 100000;	//ie. longer than any runway in existance
-	double backdist = 100000;
-	node_array_iterator nItr = exitNodes.begin();
-	node* rwyExit = *(exitNodes.begin());
-	int gateID;		//This might want to be more persistant at some point
-	while(nItr != exitNodes.end()) {
-		d = ortho.ConvertToLocal((*nItr)->pos).y() - ortho.ConvertToLocal(pos).y(); 	//FIXME - consider making orthopos a class variable
-		if(d > 0.0) {
-			if(d < dist) {
-				dist = d;
-				rwyExit = *nItr;
+	if(exitNodes.size()) {
+		//Find the next exit from orthopos.y
+		double d;
+		double dist = 100000;	//ie. longer than any runway in existance
+		double backdist = 100000;
+		node_array_iterator nItr = exitNodes.begin();
+		node* rwyExit = *(exitNodes.begin());
+		int gateID;		//This might want to be more persistant at some point
+		while(nItr != exitNodes.end()) {
+			d = ortho.ConvertToLocal((*nItr)->pos).y() - ortho.ConvertToLocal(pos).y(); 	//FIXME - consider making orthopos a class variable
+			if(d > 0.0) {
+				if(d < dist) {
+					dist = d;
+					rwyExit = *nItr;
+				}
+			} else {
+				if(fabs(d) < backdist) {
+					backdist = d;
+					//TODO - need some logic here that if we don't get a forward exit we turn round and store the backwards one
+				}
 			}
-		} else {
-			if(fabs(d) < backdist) {
-				backdist = d;
-				//TODO - need some logic here that if we don't get a forward exit we turn round and store the backwards one
-			}
+			++nItr;
 		}
-		++nItr;
+		//cout << "Calculated dist, dist = " << dist << endl;
+		// GetNodeList(exitNode->parking) and add to from here to exit node 
+		gateID = airport.GetRandomGateID();
+		//cout << "gateID = " << gateID << endl;
+		in_dest = airport.GetGateNode(gateID);
+		//cout << "in_dest got..." << endl;
+		path = airport.GetPath(rwyExit, in_dest);	//TODO - need to convert a and b to actual nodes!!
+		//cout << "path got..." << endl;
+		//cout << "Size of path is " << path.size() << endl;
+		taxiState = TD_INBOUND;
+		StartTaxi();
+	} else {
+		// Something must have gone wrong with the ground network file - or there is only a rwy here and no exits defined
+		SG_LOG(SG_GENERAL, SG_ALERT, "No exits found by FGAILocalTraffic from runway " << rwy.ID << " at " << airportID << '\n');
+		// What shall we do - just remove the plane from sight?
+		aip.setVisible(false);
+		operatingState = PARKED;
 	}
-	//cout << "Calculated dist, dist = " << dist << endl;
-	// GetNodeList(exitNode->parking) and add to from here to exit node 
-	gateID = airport.GetRandomGateID();
-	//cout << "gateID = " << gateID << endl;
-	in_dest = airport.GetGateNode(gateID);
-	//cout << "in_dest got..." << endl;
-	path = airport.GetPath(rwyExit, in_dest);	//TODO - need to convert a and b to actual nodes!!
-	//cout << "path got..." << endl;
-	//cout << "Size of path is " << path.size() << endl;
-	taxiState = TD_INBOUND;
-	StartTaxi();
 }
 
 // Set the class variable nextTaxiNode to the next node in the path
@@ -538,7 +547,7 @@ void FGAILocalTraffic::GetNextTaxiNode() {
 	//cout << "taxiPathPos = " << taxiPathPos << endl;
 	ground_network_path_iterator pathItr = path.begin() + taxiPathPos;
 	if(pathItr == path.end()) {
-		//cout << "ERROR IN AILocalTraffic::GetNextTaxiNode - no more nodes in path" << endl;
+		SG_LOG(SG_GENERAL, SG_ALERT, "ERROR IN AILocalTraffic::GetNextTaxiNode - no more nodes in path\n");
 	} else {
 		if((*pathItr)->struct_type == NODE) {
 			//cout << "ITS A NODE" << endl;
@@ -553,13 +562,13 @@ void FGAILocalTraffic::GetNextTaxiNode() {
 			pathItr++;
 			taxiPathPos++;
 			if(pathItr == path.end()) {
-				//cout << "ERROR IN AILocalTraffic::GetNextTaxiNode - path ended with an arc" << endl;
+				SG_LOG(SG_GENERAL, SG_ALERT, "ERROR IN AILocalTraffic::GetNextTaxiNode - path ended with an arc\n");
 			} else if((*pathItr)->struct_type == NODE) {
 				nextTaxiNode = (node*)*pathItr;
 				++taxiPathPos;
 			} else {
-				// OOPS - two non-nodes in a row - that shouldn't happen ATM
-				//cout << "ERROR IN AILocalTraffic::GetNextTaxiNode - two non-nodes in sequence" << endl;
+				//OOPS - two non-nodes in a row - that shouldn't happen ATM
+				SG_LOG(SG_GENERAL, SG_ALERT, "ERROR IN AILocalTraffic::GetNextTaxiNode - two non-nodes in sequence\n");
 			}
 		}
 	}
