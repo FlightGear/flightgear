@@ -105,10 +105,10 @@ All objects, including the top-level dialog, accept the following
 properties, though they will ignore any that are not relevant:
 
  x - the X position of the bottom left corner of the object, in
-   pseudo-pixels.  The default is 0.
+   pseudo-pixels.  The default is to center the dialog.
 
  y - the Y position of the bottom left corner of the object, in
-   pseudo-pixels.  The default is 0.
+   pseudo-pixels.  The default is to center the dialog.
 
  width - the width of the object, in pseudo-pixels.  The default is
    the width of the parent container.
@@ -288,6 +288,27 @@ Example:
    <value>overcast</value>
    <value>cirrus</value>
   </combo>
+
+
+
+select
+------
+
+A scrollable list of selections.
+
+  selection - a path in the property tree which holds the selectable items.
+
+Example:
+
+  <select>
+   <x>10</x>
+   <y>50</y>
+   <width>200</width>
+   <height>25</height>
+   <property>/sim/aircraft</property>
+   <selection>/sim/aircraft-types</selection>
+  </select>
+
 
 
 slider

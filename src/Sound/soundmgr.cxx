@@ -125,6 +125,8 @@ FGSoundMgr::~FGSoundMgr() {
     sample_map_iterator sample_end = samples.end();
     for ( ; sample_current != sample_end; ++sample_current ) {
 	sample_ref *sr = sample_current->second;
+
+        audio_sched->stopSample(sr->sample);
 	delete sr->sample;
 	delete sr;
     }
@@ -136,6 +138,8 @@ FGSoundMgr::~FGSoundMgr() {
     sound_map_iterator sound_end = sounds.end();
     for ( ; sound_current != sound_end; ++sound_current ) {
         FGSimpleSound *s = sound_current->second;
+
+        audio_sched->stopSample(s->get_sample());
         delete s;
     }
 

@@ -1368,6 +1368,9 @@ static void fgIdleFunction ( void ) {
 	// setup OpenGL view parameters
 	fgInitVisuals();
 
+        // Read the list of available aircrafts
+        fgReadAircraft();
+
 	idle_state++;
     } else if ( idle_state == 5 ) {
 
@@ -1630,6 +1633,9 @@ static bool fgMainInit( int argc, char **argv ) {
     // passing off control to glut and before fgInitGeneral to get our
     // fonts !!!
     guiInit();
+
+    // Read the list of available aircrafts
+    fgReadAircraft();
 
 #ifdef GL_EXT_texture_lod_bias
     glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;

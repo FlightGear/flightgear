@@ -208,7 +208,6 @@ do_reinit (const SGPropertyNode * arg)
     return result;
 }
 
-
 /**
  * Built-in command: suspend one or more subsystems.
  *

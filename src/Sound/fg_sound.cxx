@@ -77,6 +77,8 @@ FGSound::FGSound()
 
 FGSound::~FGSound()
 {
+   _mgr->get_scheduler()->stopSample(_sample->get_sample());
+
    if (_property)
       delete _property;
 
@@ -85,7 +87,6 @@ FGSound::~FGSound()
 
    _volume.clear();
    _pitch.clear();
-
    delete _sample;
 }
 

@@ -34,6 +34,7 @@
 
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
+#include <Main/fg_init.hxx>
 
 
 // Define a structure containing all the parameters for an aircraft
@@ -56,6 +57,9 @@ void fgAircraftInit( void );
 void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
-#endif // _AIRCRAFT_HXX
+// Read the list of available aircraft into to property tree
+void fgReadAircraft(void);
+bool fgLoadAircraft (const SGPropertyNode * arg);
 
+#endif // _AIRCRAFT_HXX
 

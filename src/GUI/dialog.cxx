@@ -196,7 +196,9 @@ FGDialog::display (SGPropertyNode * props)
         return;
     }
 
-    _object = makeObject(props, 1024, 768);
+    _object = makeObject(props,
+                      globals->get_props()->getIntValue("/sim/startup/xsize"),
+                      globals->get_props()->getIntValue("/sim/startup/ysize"));
 
     if (_object != 0) {
         _object->reveal();
@@ -280,6 +282,23 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         dial->setWrap(props->getBoolValue("wrap", true));
         setupObject(dial, props);
         return dial;
+    } else if (type == "select") {
+        vector<SGPropertyNode_ptr> value_nodes;
+        SGPropertyNode * selection_node =
+                fgGetNode(props->getChild("selection")->getStringValue(), true);
+
+        for (int q = 0; q < selection_node->nChildren(); q++)
+            value_nodes.push_back(selection_node->getChild(q));
+
+        char ** entries = make_char_array(value_nodes.size());
+        for (int i = 0, j = value_nodes.size() - 1;
+             i < value_nodes.size();
+             i++, j--)
+            entries[i] = strdup((char *)value_nodes[i]->getName());
+        puSelectBox * select =
+            new puSelectBox(x, y, x + width, y + height, entries);
+        setupObject(select, props);
+        return select;
     } else {
         return 0;
     }
