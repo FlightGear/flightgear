@@ -26,8 +26,8 @@
 
 #include <signal.h>    /* for timer routines */
 #include <stdio.h>     /* for printf() */
-#include <time.h>      /* for get/setitimer */
-#include <sys/timeb.h> /* for ftime() and struct timeb */
+#include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
+#include <unistd.h>
 
 
 #include "fg_timer.h"
@@ -82,20 +82,22 @@ void fgTimerInit(float dt, void (*f)()) {
 /* This function returns the number of milleseconds since the last
    time it was called. */
 int fgGetTimeInterval() {
-    static struct timeb last;
-    static struct timeb current;
+    static struct timeval last;
+    static struct timeval current;
+    static struct timezone tz;
     static int inited = 0;
 
     int interval;
 
     if ( ! inited ) {
 	inited = 1;
-	ftime(&last);
+	gettimeofday(&last, &tz);
 	interval = 0;
     } else {
-	ftime(&current);
-	interval = 1000 * (current.time - last.time) + 
-	    (current.millitm - last.millitm);
+	gettimeofday(&current, &tz);
+	interval = 1000000 * (current.tv_sec - last.tv_sec) + 
+	    (current.tv_usec - last.tv_usec);
+	interval /= 1000;  /* convert back to milleseconds */
 	last = current;
     }
 
@@ -104,10 +106,13 @@ int fgGetTimeInterval() {
 
 
 /* $Log$
-/* Revision 1.2  1997/06/17 03:41:10  curt
-/* Nonsignal based interval timing is now working.
-/* This would be a good time to look at cleaning up the code structure a bit.
+/* Revision 1.3  1997/06/17 16:52:04  curt
+/* Timer interval stuff now uses gettimeofday() instead of ftime()
 /*
+ * Revision 1.2  1997/06/17 03:41:10  curt
+ * Nonsignal based interval timing is now working.
+ * This would be a good time to look at cleaning up the code structure a bit.
+ *
  * Revision 1.1  1997/06/16 19:24:20  curt
  * Initial revision.
  *

@@ -46,6 +46,10 @@
 #define DEG_TO_RAD       0.017453292
 #define RAD_TO_DEG       57.29577951
 
+#ifndef PI2                                     
+#define PI2  (M_PI + M_PI)
+#endif                                                           
+
 /* This is a record containing all the info for the aircraft currently
    being operated */
 struct aircraft_params current_aircraft;
@@ -77,7 +81,7 @@ double goal_view_offset = 0.0;
 double Simtime;
 
 /* Another hack */
-int use_signals = 1;
+int use_signals = 0;
 
 
 /**************************************************************************
@@ -295,15 +299,15 @@ static void fgMainLoop( void ) {
     int elapsed, multi_loop;
 
     elapsed = fgGetTimeInterval();
-    /* printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
-	   remainder); */
+    printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
+	   remainder);
     printf("--> Frame rate is = %.2f\n", 1000.0 / (float)elapsed);
     elapsed += remainder;
 
     multi_loop = ((float)elapsed * 0.001) * DEFAULT_MODEL_HZ;
     remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
-    /* printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
-	   remainder); */
+    printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
+	   remainder);
 
     aircraft_debug(1);
     fgUpdateVisuals();
@@ -475,9 +479,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.16  1997/06/17 04:19:16  curt
-/* More timer related tweaks with respect to view direction changes.
+/* Revision 1.17  1997/06/17 16:51:58  curt
+/* Timer interval stuff now uses gettimeofday() instead of ftime()
 /*
+ * Revision 1.16  1997/06/17 04:19:16  curt
+ * More timer related tweaks with respect to view direction changes.
+ *
  * Revision 1.15  1997/06/17 03:41:10  curt
  * Nonsignal based interval timing is now working.
  * This would be a good time to look at cleaning up the code structure a bit.

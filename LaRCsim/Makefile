@@ -8,7 +8,7 @@
 #---------------------------------------------------------------------------
 
 
-TARGET=libLaRCsim.a
+TARGET = libLaRCsim.a
 
 LaRCsimFILES = atmos_62.c ls_accel.c ls_aux.c ls_geodesy.c ls_gravity.c \
 	ls_step.c ls_model.c default_model_routines.c ls_init.c ls_sync.c \
@@ -56,6 +56,9 @@ clean:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/06/17 16:52:02  curt
+# Timer interval stuff now uses gettimeofday() instead of ftime()
+#
 # Revision 1.1  1997/05/29 00:09:52  curt
 # Initial Flight Gear revision.
 #
