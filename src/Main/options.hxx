@@ -153,6 +153,7 @@ private:
     bool hud_status;    // HUD on/off
     bool panel_status;  // Panel on/off
     bool sound;         // play sound effects
+    bool anti_alias_hud;
 
     // Flight Model options
     int flight_model;   // Core flight model code:  jsb, larcsim, magic, etc.
@@ -171,6 +172,7 @@ private:
     bool textures;      // Textures enabled/disabled
     bool wireframe;     // Wireframe mode enabled/disabled
     int xsize, ysize;   // window size derived from geometry string
+    int bpp;            // bits per pixel
     fgViewMode view_mode; // view mode
 
     // Scenery options
@@ -231,6 +233,7 @@ public:
     inline bool get_intro_music() const { return intro_music; }
     inline int get_mouse_pointer() const { return mouse_pointer; }
     inline bool get_pause() const { return pause; }
+    inline bool get_anti_alias_hud() const { return anti_alias_hud; }
     inline fgControlMode get_control_mode() const { return control_mode; }
     inline void set_control_mode( fgControlMode mode ) { control_mode = mode; }
     inline fgAutoCoordMode get_auto_coordination() const { 
@@ -259,6 +262,7 @@ public:
     inline bool get_wireframe() const { return wireframe; }
     inline int get_xsize() const { return xsize; }
     inline int get_ysize() const { return ysize; }
+    inline int get_bpp() const { return bpp; }
     inline fgViewMode get_view_mode() const { return view_mode; }
     inline int get_tile_radius() const { return tile_radius; }
     inline int get_tile_diameter() const { return tile_diameter; }
@@ -293,6 +297,7 @@ public:
     inline void set_intro_music (bool value) { intro_music = value; }
     inline void set_mouse_pointer (int value) { mouse_pointer = value; }
     inline void set_pause (bool value) { pause = value; }
+    inline void set_anti_alias_hud (bool value) { anti_alias_hud = value; }
     inline void set_hud_status( bool status ) { hud_status = status; }
     inline void set_sound (bool value) { sound = value; }
     inline void set_flight_model (int value) { flight_model = value; }

@@ -162,6 +162,7 @@ fgOPTIONS::fgOPTIONS() :
     hud_status(1),
     panel_status(0),
     sound(1),
+    anti_alias_hud(0),
 
     // Flight Model options
     flight_model( FGInterface::FG_LARCSIM ),
@@ -181,6 +182,7 @@ fgOPTIONS::fgOPTIONS() :
     wireframe(0),
     xsize(640),
     ysize(480),
+    bpp(16),
     view_mode(FG_VIEW_PILOT),
 
     // Scenery options
@@ -250,7 +252,7 @@ fgOPTIONS::toggle_panel() {
     }
     // fgReshape( xsize, ysize);
     fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
-    
+
     if( !toggle_pause )
         t->togglePauseMode();
 }
@@ -601,6 +603,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	pause = false;	
     } else if ( arg == "--enable-pause" ) {
 	pause = true;	
+    } else if ( arg == "--disable-anti-alias-hud" ) {
+	anti_alias_hud = false;	
+    } else if ( arg == "--enable-anti-alias-hud" ) {
+	anti_alias_hud = true;	
     } else if ( arg.find( "--control=") != string::npos ) {
 	parse_control( arg.substr(10) );
     } else if ( arg == "--disable-auto-coordination" ) {
@@ -734,6 +740,15 @@ int fgOPTIONS::parse_option( const string& arg ) {
  	    FG_LOG( FG_GENERAL, FG_ALERT,
  		    "Setting geometry to " << xsize << 'x' << ysize << '\n');
   	}
+    } else if ( arg.find( "--bpp=" ) != string::npos ) {
+	string bits_per_pix = arg.substr( 6 );
+	if ( bits_per_pix == "16" ) {
+	    bpp = 16;
+	} else if ( bits_per_pix == "24" ) {
+	    bpp = 24;
+	} else if ( bits_per_pix == "32" ) {
+	    bpp = 32;
+	}
     } else if ( arg == "--units-feet" ) {
 	units = FG_UNITS_FEET;	
     } else if ( arg == "--units-meters" ) {
@@ -888,6 +903,8 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--enable-panel:  enable instrumetn panel" << endl;
     cout << "\t--disable-sound:  disable sound effects" << endl;
     cout << "\t--enable-sound:  enable sound effects" << endl;
+    cout << "\t--disable-anti-alias-hud:  disable anti aliased hud" << endl;
+    cout << "\t--enable-anti-alias-hud:  enable anti aliased hud" << endl;
     cout << endl;
  
     cout << "Flight Model:" << endl;

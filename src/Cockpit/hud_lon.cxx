@@ -1,22 +1,3 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#include <simgear/constants.h>
-#include <simgear/math/fg_random.h>
-#include <simgear/math/polar3d.hxx>
-
-#include <Aircraft/aircraft.hxx>
-#include <GUI/gui.h>
-#include <Scenery/scenery.hxx>
-#include <Time/fg_timer.hxx>
 
 #include "hud.hxx"
 
@@ -151,10 +132,10 @@ draw( void )       // Required method in base class
   if( justify == RIGHT_JUST ) {
 	  posincr = scrn_rect.right - lenstr;
   }else if( justify == CENTER_JUST ) {
-	  posincr = get_span() - (lenstr/2); //  -lenstr*4;
+	  posincr = get_span() - (lenstr/2);
   }  else {
       //  justify == LEFT_JUST
-      posincr = 0;  // 0;
+      posincr = 0;
   }
   
   if( fontSize == SMALL ) {

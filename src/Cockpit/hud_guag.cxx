@@ -1,22 +1,3 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#include <simgear/constants.h>
-#include <simgear/math/fg_random.h>
-#include <simgear/math/polar3d.hxx>
-
-#include <Aircraft/aircraft.hxx>
-#include <GUI/gui.h>
-#include <Scenery/scenery.hxx>
-#include <Time/fg_timer.hxx>
 
 #include "hud.hxx"
 
@@ -110,11 +91,11 @@ void guage_instr :: draw (void)
     char TextScale[80];
     bool condition;
     int disp_val = 0;
-    float vmin         = min_val();
-    float vmax         = max_val();
-    POINT mid_scr       = get_centroid();
-    float cur_value    = get_value();
-    RECT   scrn_rect    = get_location();
+    float vmin       = min_val();
+    float vmax       = max_val();
+    POINT mid_scr    = get_centroid();
+    float cur_value  = get_value();
+    RECT  scrn_rect  = get_location();
     UINT options     = get_options();
 
     width = scrn_rect.left + scrn_rect.right;

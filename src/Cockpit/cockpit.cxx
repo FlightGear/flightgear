@@ -57,11 +57,6 @@
 // cockpit/panel/hud system
 
 static pCockpit ac_cockpit;
-fntRenderer *HUDtext = 0;
-float  HUD_TextSize = 0;
-int HUD_style = 0;
-
-float HUD_matrix[16];
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
@@ -466,27 +461,19 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
         "  Code " << ac_cockpit->code() << " Status " 
         << ac_cockpit->status() );
 
-//  HUD_TextSize = (current_options.get_xsize() > 1000) ? 10 : 8;
-    HUD_TextSize = 10;
-    HUDtext = new fntRenderer();
-    HUDtext -> setFont      ( guiFntHandle ) ;
-    HUDtext -> setPointSize ( HUD_TextSize ) ;
-    HUD_TextList.setFont( HUDtext );
-
-    return true;
+	return true;
 }
-
 
 void fgCockpitUpdate( void ) {
 
-    int iwidth   = current_view.get_winWidth();
-    int iheight  = current_view.get_winHeight();
-    float width  = iwidth;
-    float height = iheight;
-    
     FG_LOG( FG_COCKPIT, FG_DEBUG,
         "Cockpit: code " << ac_cockpit->code() << " status " 
         << ac_cockpit->status() );
+
+	int iwidth   = current_view.get_winWidth();
+	int iheight  = current_view.get_winHeight();
+	float width  = iwidth;
+	float height = iheight;
 
     if ( current_options.get_hud_status() ) {
         // This will check the global hud linked list pointer.

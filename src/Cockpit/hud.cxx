@@ -38,14 +38,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_VALUES_H
-#  include <values.h>  // for MAXINT
-#endif
-
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_random.h>
-#include <simgear/math/polar3d.hxx>
+//#include <simgear/math/fg_random.h>
+//#include <simgear/math/polar3d.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/newauto.hxx>
@@ -55,7 +51,7 @@
 #include <NetworkOLK/network.h>
 #endif
 #include <Scenery/scenery.hxx>
-#include <Time/fg_timer.hxx>
+//#include <Time/fg_timer.hxx>
 
 #if defined ( __sun__ ) || defined ( __sgi )
 extern "C" {
@@ -78,7 +74,13 @@ fgTextList         HUD_TextList;
 fgLineList         HUD_LineList;
 fgLineList         HUD_StippleLineList;
 
-float hud_trans_alpha = 0.5f;
+fntRenderer *HUDtext = 0;
+float  HUD_TextSize = 0;
+int HUD_style = 0;
+
+float HUD_matrix[16];
+static float hud_trans_alpha = 0.67f;
+
 void fgHUDalphaInit( void );
 
 class locRECT {
@@ -99,6 +101,7 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 }
 // #define DEBUG
 
+#ifdef OLD_CODE
 void drawOneLine( UINT x1, UINT y1, UINT x2, UINT y2)
 {
   glBegin(GL_LINES);
@@ -125,7 +128,6 @@ void textString( int x, int y, char *msg, void *font ){
     if(*msg)
     {
 //      puDrawString (  NULL, msg, x, y );
-        
         glRasterPos2f(x, y);
         while (*msg) {
             glutBitmapCharacter(font, *msg);
@@ -171,6 +173,7 @@ int getStringWidth ( char *str )
     }
     return 0 ;
 }
+#endif // OLD_CODE
 
 //========================= End of Class Implementations===================
 // fgHUDInit
@@ -188,7 +191,6 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 {
   instr_item *HIptr;
 //  int index;
-  int font_size;
 
 //  int off = 50;
   int min_x = 25; //off/2;
@@ -204,7 +206,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
   int compass_w = 200;
   int gap = 10;
 
-  font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
+//  int font_size = current_options.get_xsize() / 60;
+  int font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
   
   HUD_style = 1;
 
@@ -658,6 +661,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 //  while( HIptr );
 
   fgHUDalphaInit();
+  fgHUDReshape();
    return 0;  // For now. Later we may use this for an error code.
 
 }
@@ -666,7 +670,6 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 {
 //    instr_item *HIptr;
 //    int index;
-    int font_size;
 
     int off = 50;
 //  int min_x = off;
@@ -682,7 +685,8 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
     int compass_w = 200;
 //  int gap = 10;
 
-    font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
+//	int font_size = current_options.get_xsize() / 60;
+    int font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
 
     HUD_style = 2;
 
@@ -1029,15 +1033,11 @@ int brightness        = pHUDInstr->get_brightness();
 #define fgAP_CLAMP(val,min,max) ( (val) = (val) > (max) ? (max) : (val) < (min) ? (min) : (val) )
 
 static puDialogBox *HUDalphaDialog;
-static puFrame     *HUDalphaFrame;
-static puText      *HUDalphaDialogMessage;
-static puText      *HUDalphaTitle;
 static puText      *HUDalphaText;
-static puOneShot   *HUDalphaOkButton;
 static puSlider    *HUDalphaHS0;
-static puFont       HUDalphaLegendFont;
-static puFont       HUDalphaLabelFont;
-static char         SliderText[1][ 8 ];
+//static puText      *HUDtextText;
+//static puSlider    *HUDalphaHS1;
+static char         SliderText[2][ 8 ];
 
 static void alpha_adj( puObject *hs ) {
 	float val ;
@@ -1051,6 +1051,7 @@ static void alpha_adj( puObject *hs ) {
 }
 
 void fgHUDalphaAdjust( puObject * ) {
+	current_options.set_anti_alias_hud(1);
 	FG_PUSH_PUI_DIALOG( HUDalphaDialog );
 }
 
@@ -1059,41 +1060,51 @@ static void goAwayHUDalphaAdjust (puObject *)
 	FG_POP_PUI_DIALOG( HUDalphaDialog );
 }
 
+static void cancelHUDalphaAdjust (puObject *)
+{
+	current_options.set_anti_alias_hud(0);
+	FG_POP_PUI_DIALOG( HUDalphaDialog );
+}
+
 // Done once at system initialization
 void fgHUDalphaInit( void ) {
 
-	//	printf("fgAPAdjustInit\n");
+	//	printf("fgHUDalphaInit\n");
 #define HORIZONTAL  FALSE
 
 	int DialogX = 40;
 	int DialogY = 100;
-	int DialogWidth = 230;
+	int DialogWidth = 240;
 
-	char Label[] =  "HUD Alpha Adjust";
+	char Label[] =  "HUD Adjuster";
 	char *s;
 
 	int labelX = (DialogWidth / 2) -
 				 (puGetStringWidth( puGetDefaultLabelFont(), Label ) / 2);
-	labelX -= 30;  // KLUDGEY
-
+	
 	int nSliders = 1;
 	int slider_x = 10;
 	int slider_y = 55;
-	int slider_width = 210;
+	int slider_width = 220;
 	int slider_title_x = 15;
 	int slider_value_x = 160;
 	float slider_delta = 0.05f;
 
-	puGetDefaultFonts (  &HUDalphaLegendFont,  &HUDalphaLabelFont );
+	puFont HUDalphaLegendFont;
+	puFont HUDalphaLabelFont;
+	puGetDefaultFonts ( &HUDalphaLegendFont, &HUDalphaLabelFont );
+	
 	HUDalphaDialog = new puDialogBox ( DialogX, DialogY ); {
 		int horiz_slider_height = puGetStringHeight (HUDalphaLabelFont) +
 								  puGetStringDescender (HUDalphaLabelFont) +
 								  PUSTR_TGAP + PUSTR_BGAP + 5;
 
+		puFrame *
 		HUDalphaFrame = new puFrame ( 0, 0,
 									  DialogWidth,
 									  85 + nSliders * horiz_slider_height );
-
+		
+		puText *
 		HUDalphaDialogMessage = new puText ( labelX,
 											 52 + nSliders
 											 * horiz_slider_height );
@@ -1103,28 +1114,55 @@ void fgHUDalphaInit( void ) {
 
 		HUDalphaHS0 = new puSlider ( slider_x, slider_y,
 									 slider_width, HORIZONTAL ) ;
-		HUDalphaHS0-> setDelta ( slider_delta ) ;
-		HUDalphaHS0-> setValue ( hud_trans_alpha ) ;
-		HUDalphaHS0-> setCBMode ( PUSLIDER_DELTA ) ;
-		HUDalphaHS0-> setCallback ( alpha_adj ) ;
+		HUDalphaHS0->     setDelta ( slider_delta ) ;
+		HUDalphaHS0->     setValue ( hud_trans_alpha ) ;
+		HUDalphaHS0->    setCBMode ( PUSLIDER_DELTA ) ;
+		HUDalphaHS0->  setCallback ( alpha_adj ) ;
 
-		sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
-		HUDalphaTitle = new puText ( slider_title_x, slider_y ) ;
-		HUDalphaTitle-> setDefaultValue ( "MaxAlpha" ) ;
+		puText *
+		HUDalphaTitle =      new puText ( slider_title_x, slider_y ) ;
+		HUDalphaTitle-> setDefaultValue ( "Alpha" ) ;
 		HUDalphaTitle-> getDefaultValue ( &s ) ;
-		HUDalphaTitle-> setLabel ( s ) ;
+		HUDalphaTitle->        setLabel ( s ) ;
+		
 		HUDalphaText = new puText ( slider_value_x, slider_y ) ;
+		sprintf( SliderText[ 0 ], "%05.2f", hud_trans_alpha );
 		HUDalphaText-> setLabel ( SliderText[ 0 ] ) ;
 
 
-		HUDalphaOkButton = new puOneShot ( 10, 10, 60, 50 );
-		HUDalphaOkButton-> setLegend ( gui_msg_OK );
+		puOneShot *
+		HUDalphaOkButton =     new puOneShot ( 10, 10, 60, 45 );
+		HUDalphaOkButton->         setLegend ( gui_msg_OK );
 		HUDalphaOkButton-> makeReturnDefault ( TRUE );
-		HUDalphaOkButton-> setCallback ( goAwayHUDalphaAdjust );
+		HUDalphaOkButton->       setCallback ( goAwayHUDalphaAdjust );
+		
+		puOneShot *
+		HUDalphaNoButton = new puOneShot ( 160, 10, 230, 45 );
+		HUDalphaNoButton->     setLegend ( gui_msg_CANCEL );
+		HUDalphaNoButton->   setCallback ( cancelHUDalphaAdjust );
 	}
 	FG_FINALIZE_PUI_DIALOG( HUDalphaDialog );
 
 #undef HORIZONTAL
+}
+
+void fgHUDReshape(void) {
+	if ( HUDtext )
+		delete HUDtext;
+
+	HUD_TextSize = current_options.get_xsize() / 60;
+//    HUD_TextSize = 10;
+	HUDtext = new fntRenderer();
+	HUDtext -> setFont      ( guiFntHandle ) ;
+	HUDtext -> setPointSize ( HUD_TextSize ) ;
+	HUD_TextList.setFont( HUDtext );
+}
+
+
+static void set_hud_color(float r, float g, float b) {
+	current_options.get_anti_alias_hud() ?
+			glColor4f(r,g,b,hud_trans_alpha) :
+			glColor3f(r,g,b);
 }
 
 // fgUpdateHUD
@@ -1162,65 +1200,59 @@ void fgUpdateHUD( void ) {
   glPushMatrix();
   glLoadIdentity();
 
-  glColor3f(1.0, 1.0, 1.0);
-  glIndexi(7);
-
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
 
-  // #define ANTI_ALIAS_HUD
-#ifdef ANTI_ALIAS_HUD
-#define HUD_COLOR(r,g,b)  glColor4f(r,g,b,hud_trans_alpha)
-  glEnable(GL_LINE_SMOOTH);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-  glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
-  glLineWidth(1.5);
-#else
-#define HUD_COLOR(r,g,b)  glColor3f(r,g,b)
-  glLineWidth(1.0);
-#endif
+  if( current_options.get_anti_alias_hud() ) {
+	  glEnable(GL_LINE_SMOOTH);
+//	  glEnable(GL_BLEND);
+	  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+	  glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
+	  glLineWidth(1.5);
+  } else {
+	  glLineWidth(1.0);
+  }
 
   if( day_night_sw == DAY) {
 	  switch (brightness) {
 		  case BRT_LIGHT:
-            HUD_COLOR (0.1f, 0.9f, 0.1f);
+            set_hud_color (0.1f, 0.9f, 0.1f);
             break;
 
           case BRT_MEDIUM:
-            HUD_COLOR (0.1f, 0.7f, 0.0f);
+            set_hud_color (0.1f, 0.7f, 0.0f);
             break;
 
           case BRT_DARK:
-            HUD_COLOR (0.0f, 0.6f, 0.0f);
+            set_hud_color (0.0f, 0.6f, 0.0f);
             break;
 
           case BRT_BLACK:
-            HUD_COLOR( 0.0f, 0.0f, 0.0f);
+            set_hud_color( 0.0f, 0.0f, 0.0f);
             break;
 
           default:
- 		    HUD_COLOR (0.1f, 0.9f, 0.1f);
+ 		    set_hud_color (0.1f, 0.9f, 0.1f);
 	  }
   }
   else {
 	  if( day_night_sw == NIGHT) {
 		  switch (brightness) {
 			  case BRT_LIGHT:
-                HUD_COLOR (0.9f, 0.1f, 0.1f);
+                set_hud_color (0.9f, 0.1f, 0.1f);
                 break;
 
               case BRT_MEDIUM:
-                HUD_COLOR (0.7f, 0.0f, 0.1f);
+                set_hud_color (0.7f, 0.0f, 0.1f);
                 break;
 
 			  case BRT_DARK:
 			  default:
-				  HUD_COLOR (0.6f, 0.0f, 0.0f);
+				  set_hud_color (0.6f, 0.0f, 0.0f);
 		  }
 	  }
 	  else {     // Just in case default
-		  HUD_COLOR (0.1f, 0.9f, 0.1f);
+		  set_hud_color (0.1f, 0.9f, 0.1f);
 	  }
   }
 
@@ -1234,8 +1266,6 @@ void fgUpdateHUD( void ) {
 		  //  fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
 		  //            hud->code, hud->status );
 		  pHUDInstr->draw();
-//	      HUD_deque.at(i)->draw(); // Responsible for broken or fixed variants.
-                              // No broken displays honored just now.
 	  }
   }
 
@@ -1291,12 +1321,11 @@ void fgUpdateHUD( void ) {
 //  HUD_StippleLineList.draw();
 //  glDisable(GL_LINE_STIPPLE);
 
-  
-#ifdef ANTI_ALIAS_HUD
-  glDisable(GL_BLEND);
-  glDisable(GL_LINE_SMOOTH);
-  glLineWidth(1.0);
-#endif
+  if( current_options.get_anti_alias_hud() ) {
+//	  glDisable(GL_BLEND);
+	  glDisable(GL_LINE_SMOOTH);
+	  glLineWidth(1.0);
+  }
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);

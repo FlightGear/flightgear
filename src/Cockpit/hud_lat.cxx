@@ -1,22 +1,3 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#include <simgear/constants.h>
-#include <simgear/math/fg_random.h>
-#include <simgear/math/polar3d.hxx>
-
-#include <Aircraft/aircraft.hxx>
-#include <GUI/gui.h>
-#include <Scenery/scenery.hxx>
-#include <Time/fg_timer.hxx>
 
 #include "hud.hxx"
 
@@ -126,14 +107,16 @@ draw( void )       // Required method in base class
   int posincr;
   int lenstr;
   RECT  scrn_rect = get_location();
-  float lat = get_value();
+//  float lat = get_value();
   
   if( data_available() ) {
-     sprintf( label_buffer, format_buffer, coord_format_lat(lat) );
+//	  sprintf( label_buffer, format_buffer, coord_format_lat(lat) );
+	  sprintf( label_buffer, format_buffer,
+			   coord_format_lat( get_value()) );
     }
   else {
      sprintf( label_buffer, format_buffer );
-    }
+  }
     
 #ifdef DEBUGHUD
   fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
@@ -142,14 +125,13 @@ draw( void )       // Required method in base class
   fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
 #endif
 
-	lenstr = getStringWidth(label_buffer);
+  lenstr = getStringWidth(label_buffer);
 						
   if( justify == RIGHT_JUST ) {
 	  posincr = scrn_rect.right - lenstr;
   }else if( justify == CENTER_JUST ) {
-	  posincr = get_span() - (lenstr/2); //  -lenstr*4;
-  }  else {
-      //  justify == LEFT_JUST
+	  posincr = get_span() - (lenstr/2);
+  }  else {  //  justify == LEFT_JUST
       posincr = 0;  // 0;
   }
   

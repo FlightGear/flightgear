@@ -1146,8 +1146,8 @@ void fgReshape( int width, int height ) {
     } else {
 	current_view.set_win_ratio( (GLfloat) width / 
 	                            ((GLfloat) (height)*0.4232) );
-	glViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
-		    (GLint)((height)*0.4232) );
+	glViewport(0, (GLint)((height)*0.5768),
+		   (GLint)(width), (GLint)((height)*0.4232) );
     }
 
     current_view.set_winWidth( width );
@@ -1155,13 +1155,15 @@ void fgReshape( int width, int height ) {
     current_view.force_update_fov_math();
 
     // set these fov to be the same as in fgRenderFrame()
-    float x_fov = current_options.get_fov();
-    float y_fov = x_fov * 1.0 / current_view.get_win_ratio();
-    ssgSetFOV( x_fov, y_fov );
+    // float x_fov = current_options.get_fov();
+    // float y_fov = x_fov * 1.0 / current_view.get_win_ratio();
+    // ssgSetFOV( x_fov, y_fov );
 
-    glViewport ( 0, 0, width, height );
+    // glViewport ( 0, 0, width, height );
     float fov = current_options.get_fov();
     ssgSetFOV(fov * current_view.get_win_ratio(), fov);
+
+    fgHUDReshape();
 
     if ( idle_state == 1000 ) {
 	// yes we've finished all our initializations and are running
@@ -1199,9 +1201,10 @@ int fgGlutInit( int *argc, char **argv ) {
     } else {
 	// Open the cool new 'game mode' window
 	char game_mode_str[256];
-	sprintf( game_mode_str, "width=%d height=%d bpp=32",
+	sprintf( game_mode_str, "width=%d height=%d bpp=%d",
 		 current_options.get_xsize(),
-		 current_options.get_ysize() );
+		 current_options.get_ysize(),
+		 current_options.get_bpp());
 
 	FG_LOG( FG_GENERAL, FG_INFO, 
 		"game mode params = " << game_mode_str );

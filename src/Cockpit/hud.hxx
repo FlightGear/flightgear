@@ -40,9 +40,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_VALUES_H
-#  include <values.h>  // for MAXINT
-#endif
+//#ifdef HAVE_VALUES_H
+//#  include <values.h>  // for MAXINT
+//#endif
 
 #include <vector>       // STL vector
 #include <deque>        // STL double ended queue
@@ -190,6 +190,7 @@ extern char *coord_format_lon(float);
 //extern char *coord_format_latlon(float latitude, float longitude);  // cockpit.cxx
 
 extern char *get_formated_gmt_time( void );
+extern void fgHUDReshape(void);
 
 enum  hudinstype{ HUDno_instr,
               HUDscale,
@@ -297,32 +298,28 @@ public:
     ~fgLineList( void ) {}
     void add( fgLineSeg2D seg ) { List.push_back(seg); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
-    void draw( void ) {
-	vector < fgLineSeg2D > :: iterator curSeg;
-	vector < fgLineSeg2D > :: iterator lastSeg;
-	curSeg  = List.begin();
-	lastSeg = List.end();
-	glBegin(GL_LINES);
-	for ( ; curSeg != lastSeg; curSeg++ ) {
-	    curSeg->draw();
+	void draw( void ) {
+		vector < fgLineSeg2D > :: iterator curSeg;
+		vector < fgLineSeg2D > :: iterator lastSeg;
+		curSeg  = List.begin();
+		lastSeg = List.end();
+		glBegin(GL_LINES);
+		for ( ; curSeg != lastSeg; curSeg++ ) {
+			curSeg->draw();
+		}
+		glEnd();
 	}
-	glEnd();
-    }
-
-#if 0
-    void draw( void ) {
+/*    void draw( void ) {
         vector < fgLineSeg2D > :: iterator curSeg;
         vector < fgLineSeg2D > :: iterator lastSeg;
-	curSeg  = List.begin();
+       curSeg  = List.begin();
         lastSeg = List.end();
         glBegin(GL_LINES);
         for ( ; curSeg != lastSeg; curSeg++ ) {
             curSeg->draw();
         }
         glEnd();
-    }
-#endif
-
+    } */
 };
 
 class fgTextList {

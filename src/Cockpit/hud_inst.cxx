@@ -1,23 +1,3 @@
-// Abstract Base Class instr_item
-//
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#include <simgear/constants.h>
-#include <simgear/math/fg_random.h>
-#include <simgear/math/polar3d.hxx>
-
-#include <Aircraft/aircraft.hxx>
-#include <Scenery/scenery.hxx>
-#include <Time/fg_timer.hxx>
 
 #include "hud.hxx"
 
