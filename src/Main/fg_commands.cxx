@@ -52,6 +52,10 @@ public:
     { return _value ? _value : &_dummy_0; }
   virtual const SGPropertyNode * getStep () const 
     { return _step ? _step : &_dummy_0; }
+  virtual const SGPropertyNode * getMin () const { return _min; }
+  virtual const SGPropertyNode * getMax () const { return _max; }
+  virtual const SGPropertyNode * getWrap () const
+    { return _wrap ? _wrap : &_dummy_0; }
   virtual const SGPropertyNode * getFactor () const 
     { return _factor ? _factor : &_dummy_1; }
   virtual const SGPropertyNode * getSetting () const 
@@ -65,6 +69,9 @@ private:
   mutable SGPropertyNode * _prop2;
   const SGPropertyNode * _value;
   const SGPropertyNode * _step;
+  const SGPropertyNode * _min;
+  const SGPropertyNode * _max;
+  const SGPropertyNode * _wrap;
   const SGPropertyNode * _factor;
   const SGPropertyNode * _setting;
   const SGPropertyNode * _offset;
@@ -79,6 +86,9 @@ PropertyCommandState::PropertyCommandState (const SGPropertyNode * arg)
     _prop2(fgGetNode(arg->getStringValue("property[1]", "/null"), true)),
     _value(arg->getNode("value")),
     _step(arg->getNode("step")),
+    _min(arg->getNode("min")),
+    _max(arg->getNode("max")),
+    _wrap(arg->getNode("wrap")),
     _factor(arg->getNode("factor")),
     _setting(arg->getNode("setting")),
     _offset(arg->getNode("offset"))
@@ -336,7 +346,12 @@ do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
  * Built-in command: increment or decrement a property value.
  *
  * property: the name of the property to increment or decrement.
- * step: the amount of the increment or decrement.
+ * step: the amount of the increment or decrement (default: 0).
+ * min: the minimum allowed value (default: no minimum).
+ * max: the maximum allowed value (default: no maximum).
+ * wrap: true if the value should be wrapped when it passes min or max;
+ *       both min and max must be present for this to work (default:
+ *       false).
  */
 static bool
 do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
@@ -345,6 +360,9 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
     *state = new PropertyCommandState(arg);
   SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
   const SGPropertyNode * step = ((PropertyCommandState *)(*state))->getStep();
+  const SGPropertyNode * min = ((PropertyCommandState *)(*state))->getMin();
+  const SGPropertyNode * max = ((PropertyCommandState *)(*state))->getMax();
+  bool wrap = ((PropertyCommandState *)(*state))->getWrap()->getBoolValue();
 
   switch (prop->getType()) {
   case SGPropertyNode::BOOL:
@@ -352,20 +370,77 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
       return prop->setBoolValue(!prop->getBoolValue());
     else
       return true;
-  case SGPropertyNode::INT:
-    return prop->setIntValue(prop->getIntValue()
-			     + step->getIntValue());
-  case SGPropertyNode::LONG:
-    return prop->setLongValue(prop->getLongValue()
-			      + step->getLongValue());
-  case SGPropertyNode::FLOAT:
-    return prop->setFloatValue(prop->getFloatValue()
-			       + step->getFloatValue());
+  case SGPropertyNode::INT: {
+    int value = prop->getIntValue() + step->getIntValue();
+    if (min && (value < min->getIntValue())) {
+      if (wrap && max)
+	value = max->getIntValue();
+      else
+	value = min->getIntValue();
+    }
+    if (max && value > max->getIntValue()) {
+      if (wrap && min)
+	value = min->getIntValue();
+      else
+	value = max->getIntValue();
+    }
+    return prop->setIntValue(value);
+  }
+  case SGPropertyNode::LONG: {
+    long value = prop->getLongValue() + step->getLongValue();
+    if (min && (value < min->getLongValue())) {
+      if (wrap && max)
+	value = max->getLongValue();
+      else
+	value = min->getLongValue();
+    }
+    if (max && value > max->getLongValue()) {
+      if (wrap && min)
+	value = min->getLongValue();
+      else
+	value = max->getLongValue();
+    }
+    return prop->setLongValue(value);
+  }
+  case SGPropertyNode::FLOAT: {
+    float value = prop->getFloatValue() + step->getFloatValue();
+    if (min && (value < min->getFloatValue())) {
+      if (wrap && max)
+	value = max->getFloatValue();
+      else
+	value = min->getFloatValue();
+    }
+    if (max && value > max->getFloatValue()) {
+      if (wrap && min)
+	value = min->getFloatValue();
+      else
+	value = max->getFloatValue();
+    }
+    return prop->setFloatValue(value);
+  }
   case SGPropertyNode::DOUBLE:
   case SGPropertyNode::UNSPECIFIED:
-    return prop->setDoubleValue(prop->getDoubleValue()
-				+ step->getDoubleValue());
-  default:			// doesn't make sense with strings
+  case SGPropertyNode::NONE: {
+    double value = prop->getDoubleValue() + step->getDoubleValue();
+    if (min && (value < min->getDoubleValue())) {
+      if (wrap && max)
+	value = max->getDoubleValue();
+      else
+	value = min->getDoubleValue();
+    }
+    if (max && value > max->getDoubleValue()) {
+      if (wrap && min)
+	value = min->getDoubleValue();
+      else
+	value = max->getDoubleValue();
+    }
+    return prop->setDoubleValue(value);
+  }
+  case SGPropertyNode::STRING: // doesn't make sense with strings
+    SG_LOG(SG_INPUT, SG_ALERT, "Cannot adjust a string value");
+    return false;
+  default:
+    SG_LOG(SG_INPUT, SG_ALERT, "Unknown value type");
     return false;
   }
 }
@@ -401,6 +476,7 @@ do_property_multiply (const SGPropertyNode * arg, SGCommandState ** state)
 				     * factor->getDoubleValue()));
   case SGPropertyNode::DOUBLE:
   case SGPropertyNode::UNSPECIFIED:
+  case SGPropertyNode::NONE:
     return prop->setDoubleValue(prop->getDoubleValue()
 				* factor->getDoubleValue());
   default:			// doesn't make sense with strings
