@@ -377,17 +377,18 @@ FGNavCom::update(double dt)
                 SG_LOG( SG_COCKPIT, SG_ALERT,
                         "Can't find nav-dme-ident sound" );
             }
-            cout << "nav_last_time = " << nav_last_time << " ";
-            cout << "cur_time = " << globals->get_time_params()->get_cur_time();
+            // cout << "nav_last_time = " << nav_last_time << " ";
+            // cout << "cur_time = "
+            //      << globals->get_time_params()->get_cur_time();
 	    if ( nav_last_time <
 		 globals->get_time_params()->get_cur_time() - 30 ) {
 		nav_last_time = globals->get_time_params()->get_cur_time();
 		nav_play_count = 0;
 	    }
-            cout << " nav_play_count = " << nav_play_count << endl;
-            cout << "playing = "
-                 << globals->get_soundmgr()->is_playing(nav_fx_name)
-                 << endl;
+            // cout << " nav_play_count = " << nav_play_count << endl;
+            // cout << "playing = "
+            //      << globals->get_soundmgr()->is_playing(nav_fx_name)
+            //      << endl;
 	    if ( nav_play_count < 4 ) {
 		// play VOR ident
 		if ( !globals->get_soundmgr()->is_playing(nav_fx_name) ) {
@@ -476,11 +477,11 @@ void FGNavCom::search()
 	    nav_play_count = offset / 4;
 	    nav_last_time = globals->get_time_params()->get_cur_time() -
 		offset;
-	    cout << "offset = " << offset << " play_count = "
-	         << nav_play_count
-	         << " nav_last_time = " << nav_last_time
-	         << " current time = "
-	         << globals->get_time_params()->get_cur_time() << endl;
+	    // cout << "offset = " << offset << " play_count = "
+	    //      << nav_play_count
+	    //      << " nav_last_time = " << nav_last_time
+	    //      << " current time = "
+	    //      << globals->get_time_params()->get_cur_time() << endl;
 #endif
 
 	    // cout << "Found an ils station in range" << endl;
@@ -516,7 +517,7 @@ void FGNavCom::search()
 	    sound = morse.make_ident( nav_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {
-                cout << "Added nav-vor-ident sound" << endl;
+                // cout << "Added nav-vor-ident sound" << endl;
             } else {
                 cout << "Failed to add v1-vor-ident sound" << endl;
             }
@@ -532,10 +533,10 @@ void FGNavCom::search()
 	    nav_play_count = offset / 4;
 	    nav_last_time = globals->get_time_params()->get_cur_time() -
 		offset;
-	    cout << "offset = " << offset << " play_count = "
-	         << nav_play_count << " nav_last_time = "
-	         << nav_last_time << " current time = "
-	         << globals->get_time_params()->get_cur_time() << endl;
+	    // cout << "offset = " << offset << " play_count = "
+	    //      << nav_play_count << " nav_last_time = "
+	    //      << nav_last_time << " current time = "
+	    //      << globals->get_time_params()->get_cur_time() << endl;
 #endif
 
 	    // cout << "Found a vor station in range" << endl;
