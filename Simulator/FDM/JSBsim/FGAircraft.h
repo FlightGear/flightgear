@@ -145,6 +145,8 @@ INCLUDES
 #  else
 #    include <fstream.h>
 #  endif
+#  include STL_STRING
+   FG_USING_STD(string);
 #else
 #  include <fstream>
 #endif
@@ -157,6 +159,10 @@ INCLUDES
 /*******************************************************************************
 DEFINITIONS
 *******************************************************************************/
+
+#ifndef FGFS
+using namespace std;
+#endif
 
 /*******************************************************************************
 CLASS DECLARATION
@@ -182,7 +188,7 @@ public:
   // ***************************************************************************
   /** This function must be called with the name of an aircraft which
       has an associated .dat file in the appropriate subdirectory. The paths
-      to the appropriate subdirectories are given as the first two parameters. 
+      to the appropriate subdirectories are given as the first two parameters.
       @memo Loads the given aircraft.
       @param string Path to the aircraft files
       @param string Path to the engine files
@@ -190,6 +196,18 @@ public:
       @return True - if successful
   */
   bool LoadAircraft(string, string, string);
+
+  // ***************************************************************************
+  /** This function must be called with the name of an aircraft which
+      has an associated .dat file in the appropriate subdirectory. The paths
+      to the appropriate subdirectories are given as the first two parameters.
+      @memo Loads the given aircraft.
+      @param string Path to the aircraft files
+      @param string Path to the engine files
+      @param string The name of the aircraft to be loaded, e.g. "X15".
+      @return True - if successful
+  */
+  bool LoadAircraftEx(string, string, string);
 
   // ***************************************************************************
   /** @memo Gets the aircraft name as defined in the aircraft config file.

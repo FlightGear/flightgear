@@ -191,6 +191,9 @@ void FGOutput::DelimitedOutput(void)
     cout << "Longitude,";
     cout << "QBar,";
     cout << "Alpha";
+    cout << "L";
+    cout << "M";
+    cout << "N";
     cout << endl;
     FirstPass = false;
   } else {
@@ -216,7 +219,10 @@ void FGOutput::DelimitedOutput(void)
     cout << State->Getlatitude() << ",";
     cout << State->Getlongitude() << ",";
     cout << State->Getqbar() << ",";
-    cout << Translation->Getalpha() << "";
+    cout << Translation->Getalpha() << ",";
+		cout << Aircraft->GetL() << ",";
+		cout << Aircraft->GetM() << ",";
+		cout << Aircraft->GetN() << "";
     cout << endl;
   }
 }

@@ -123,27 +123,11 @@ INCLUDES
 ************************************ CODE **************************************
 *******************************************************************************/
 
-FGCoefficient::FGCoefficient(FGFDMExec* fdex)
-{
-  FDMExec     = fdex;
-  State       = FDMExec->GetState();
-  Atmosphere  = FDMExec->GetAtmosphere();
-  FCS         = FDMExec->GetFCS();
-  Aircraft    = FDMExec->GetAircraft();
-  Translation = FDMExec->GetTranslation();
-  Rotation    = FDMExec->GetRotation();
-  Position    = FDMExec->GetPosition();
-  Auxiliary   = FDMExec->GetAuxiliary();
-  Output      = FDMExec->GetOutput();
-
-  rows = columns = 0;
-}
-
-
-FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
+FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
 {
   int r, c;
   float ftrashcan;
+  string strashcan;
 
   FDMExec     = fdex;
   State       = FDMExec->GetState();
@@ -155,14 +139,16 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
   Position    = FDMExec->GetPosition();
   Auxiliary   = FDMExec->GetAuxiliary();
   Output      = FDMExec->GetOutput();
-
-  ifstream coeffDefFile(fname.c_str());
 
   if (coeffDefFile) {
     if (!coeffDefFile.fail()) {
       coeffDefFile >> name;
+      cout << "   " << name << endl;
+      coeffDefFile >> strashcan;
       coeffDefFile >> description;
+      cout << "   " << description << endl;
       coeffDefFile >> method;
+      cout << "   " << method << endl;
 
       if      (method == "EQUATION") type = EQUATION;
       else if (method == "TABLE")    type = TABLE;
@@ -172,84 +158,107 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
 
       if (type == VECTOR || type == TABLE) {
         coeffDefFile >> rows;
+        cout << "   Rows: " << rows << " ";
         if (type == TABLE) {
           coeffDefFile >> columns;
+          cout << "Cols: " << columns;
         }
         coeffDefFile >> LookupR;
+        cout << endl;
+        cout << "   Row indexing parameter: " << LookupR << endl;
       }
 
       if (type == TABLE) {
         coeffDefFile >> LookupC;
+        cout << "   Column indexing parameter: " << LookupC << endl;
       }
 
       coeffDefFile >> multipliers;
-
+      cout << "   Non-Dimensionalized by: ";
+      
       mult_count = 0;
       if (multipliers & FG_QBAR) {
         mult_idx[mult_count] = FG_QBAR;
         mult_count++;
+        cout << "qbar ";
       }
       if (multipliers & FG_WINGAREA) {
         mult_idx[mult_count] = FG_WINGAREA;
         mult_count++;
+        cout << "S ";
       }
       if (multipliers & FG_WINGSPAN) {
         mult_idx[mult_count] = FG_WINGSPAN;
         mult_count++;
+        cout << "b ";
       }
       if (multipliers & FG_CBAR) {
         mult_idx[mult_count] = FG_CBAR;
         mult_count++;
+        cout << "c ";
       }
       if (multipliers & FG_ALPHA) {
         mult_idx[mult_count] = FG_ALPHA;
         mult_count++;
+        cout << "alpha ";
       }
       if (multipliers & FG_ALPHADOT) {
         mult_idx[mult_count] = FG_ALPHADOT;
         mult_count++;
+        cout << "alphadot ";
       }
       if (multipliers & FG_BETA) {
         mult_idx[mult_count] = FG_BETA;
         mult_count++;
+        cout << "beta ";
       }
       if (multipliers & FG_BETADOT) {
         mult_idx[mult_count] = FG_BETADOT;
         mult_count++;
+        cout << "betadot ";
       }
       if (multipliers & FG_PITCHRATE) {
         mult_idx[mult_count] = FG_PITCHRATE;
         mult_count++;
+        cout << "q ";
       }
       if (multipliers & FG_ROLLRATE) {
         mult_idx[mult_count] = FG_ROLLRATE;
         mult_count++;
+        cout << "p ";
       }
       if (multipliers & FG_YAWRATE) {
         mult_idx[mult_count] = FG_YAWRATE;
         mult_count++;
+        cout << "r ";
       }
       if (multipliers & FG_ELEVATOR) {
         mult_idx[mult_count] = FG_ELEVATOR;
         mult_count++;
+        cout << "De ";
       }
       if (multipliers & FG_AILERON) {
         mult_idx[mult_count] = FG_AILERON;
         mult_count++;
+        cout << "Da ";
       }
       if (multipliers & FG_RUDDER) {
         mult_idx[mult_count] = FG_RUDDER;
         mult_count++;
+        cout << "Dr ";
       }
       if (multipliers & FG_MACH) {
         mult_idx[mult_count] = FG_MACH;
         mult_count++;
+        cout << "Mach ";
       }
       if (multipliers & FG_ALTITUDE) {
         mult_idx[mult_count] = FG_ALTITUDE;
         mult_count++;
+        cout << "h ";
       }
-
+			cout << endl;
+			
       switch(type) {
       case VALUE:
         coeffDefFile >> StaticValue;
@@ -261,6 +270,15 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
           coeffDefFile >> Table3D[r][0];
           coeffDefFile >> Table3D[r][1];
         }
+
+        for (r=0;r<=rows;r++) {
+        	cout << "	";
+        	for (c=0;c<=columns;c++) {
+        		cout << Table3D[r][c] << "	";
+        	}
+        	cout << endl;
+        }
+
         break;
       case TABLE:
         Allocate(rows, columns);
@@ -273,51 +291,21 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, string fname)
             coeffDefFile >> Table3D[r][c];
           }
         }
+
+        for (r=0;r<=rows;r++) {
+        	cout << "	";
+        	for (c=0;c<=columns;c++) {
+        		cout << Table3D[r][c] << "	";
+        	}
+        	cout << endl;
+        }
+        
         break;
       }
     } else {
       cerr << "Empty file" << endl;
     }
-    coeffDefFile.close();
   }
-}
-
-
-FGCoefficient::FGCoefficient(FGFDMExec* fdex, int r, int c)
-{
-  FDMExec     = fdex;
-  State       = FDMExec->GetState();
-  Atmosphere  = FDMExec->GetAtmosphere();
-  FCS         = FDMExec->GetFCS();
-  Aircraft    = FDMExec->GetAircraft();
-  Translation = FDMExec->GetTranslation();
-  Rotation    = FDMExec->GetRotation();
-  Position    = FDMExec->GetPosition();
-  Auxiliary   = FDMExec->GetAuxiliary();
-  Output      = FDMExec->GetOutput();
-
-  rows = r;
-  columns = c;
-  Allocate(r,c);
-}
-
-
-FGCoefficient::FGCoefficient(FGFDMExec* fdex, int n)
-{
-  FDMExec     = fdex;
-  State       = FDMExec->GetState();
-  Atmosphere  = FDMExec->GetAtmosphere();
-  FCS         = FDMExec->GetFCS();
-  Aircraft    = FDMExec->GetAircraft();
-  Translation = FDMExec->GetTranslation();
-  Rotation    = FDMExec->GetRotation();
-  Position    = FDMExec->GetPosition();
-  Auxiliary   = FDMExec->GetAuxiliary();
-  Output      = FDMExec->GetOutput();
-
-  rows = n;
-  columns = 0;
-  Allocate(n);
 }
 
 
@@ -365,10 +353,14 @@ float FGCoefficient::Value(float rVal, float cVal)
   col2temp = rFactor*(Table3D[r][c] - Table3D[r-1][c]) + Table3D[r-1][c];
 
   Value = col1temp + cFactor*(col2temp - col1temp);
-
+  
+//cout << "Value for " << description << " is " << Value;
+ 
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
   }
+
+//cout << " after multipliers it is: " << Value << endl;
 
   return Value;
 }
@@ -390,23 +382,46 @@ float FGCoefficient::Value(float Val)
   } else {
     Factor = 1.0;
   }
+
   Value = Factor*(Table3D[r][1] - Table3D[r-1][1]) + Table3D[r-1][1];
 
+// cout << "Value for " << description << " is " << Value;
+ 
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
   }
+
+//cout << " after multipliers it is: " << Value << endl;
 
   return Value;
 }
 
 
-float FGCoefficient::Value()
+float FGCoefficient::Value(void)
+{
+	float Value;
+	int midx;
+	
+	Value = StaticValue;
+
+// cout << "Value for " << description << " is " << Value << endl;
+ 
+  for (midx=0;midx<mult_count;midx++) {
+    Value *= GetCoeffVal(mult_idx[midx]);
+  }
+
+// cout << " after multipliers it is: " << Value << endl;
+
+  return Value;
+}
+
+float FGCoefficient::TotalValue()
 {
   switch(type) {
   case 0:
     return -1;
   case 1:
-    return (StaticValue);
+    return (Value());
   case 2:
     return (Value(GetCoeffVal(LookupR)));
   case 3:
@@ -421,36 +436,52 @@ float FGCoefficient::GetCoeffVal(int val_idx)
 {
   switch(val_idx) {
   case FG_QBAR:
+//cout << "Qbar: " << State->Getqbar() << endl;
     return State->Getqbar();
   case FG_WINGAREA:
+//cout << "S: " << Aircraft->GetWingArea() << endl;  
     return Aircraft->GetWingArea();
   case FG_WINGSPAN:
+//cout << "b: " << Aircraft->GetWingSpan() << endl;
     return Aircraft->GetWingSpan();
   case FG_CBAR:
+//cout << "Cbar: " << Aircraft->Getcbar() << endl;
     return Aircraft->Getcbar();
   case FG_ALPHA:
+//cout << "Alpha: " << Translation->Getalpha() << endl;
     return Translation->Getalpha();
   case FG_ALPHADOT:
+//cout << "Adot: " << State->Getadot() << endl;
     return State->Getadot();
   case FG_BETA:
+//cout << "Beta: " << Translation->Getbeta() << endl;
     return Translation->Getbeta();
   case FG_BETADOT:
+//cout << "Bdot: " << State->Getbdot() << endl;
     return State->Getbdot();
   case FG_PITCHRATE:
+//cout << "Q: " << Rotation->GetQ() << endl;
     return Rotation->GetQ();
   case FG_ROLLRATE:
+//cout << "P: " << Rotation->GetP() << endl;
     return Rotation->GetP();
   case FG_YAWRATE:
+//cout << "R: " << Rotation->GetR() << endl;
     return Rotation->GetR();
   case FG_ELEVATOR:
+//cout << "De: " << FCS->GetDe() << endl;
     return FCS->GetDe();
   case FG_AILERON:
+//cout << "Da: " << FCS->GetDa() << endl;
     return FCS->GetDa();
   case FG_RUDDER:
+//cout << "Dr: " << FCS->GetDr() << endl;
     return FCS->GetDr();
   case FG_MACH:
+//cout << "Mach: " << State->GetMach() << endl;
     return State->GetMach();
   case FG_ALTITUDE:
+//cout << "h: " << State->Geth() << endl;
     return State->Geth();
   }
   return 0;

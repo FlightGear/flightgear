@@ -53,6 +53,8 @@ Excel. The data is from the ICAO atmosphere model.
 CLASS DECLARATION
 *******************************************************************************/
 
+using namespace std;
+
 class FGAtmosphere : public FGModel
 {
 public:

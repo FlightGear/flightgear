@@ -54,6 +54,9 @@ INCLUDES
 /*******************************************************************************
 DEFINES
 *******************************************************************************/
+
+using namespace std;
+
 #define FG_QBAR         1
 #define FG_WINGAREA     2
 #define FG_WINGSPAN     4
@@ -190,31 +193,11 @@ class FGCoefficient
 {
 public:
   // ***************************************************************************
-  /** @memo Constructor
-      @param FGFDMExec* - pointer to owning simulation executive
-  */
-  FGCoefficient(FGFDMExec*);
-
-  // ***************************************************************************
-  /** @memo Constructor for two independent variable table
-      @param
-      @return
-  */
-  FGCoefficient(FGFDMExec*, int, int);
-
-  // ***************************************************************************
   /** @memo
       @param
       @return
   */
-  FGCoefficient(FGFDMExec*, int);
-
-  // ***************************************************************************
-  /** @memo
-      @param
-      @return
-  */
-  FGCoefficient(FGFDMExec*, string);
+  FGCoefficient(FGFDMExec*, ifstream&);
 
   // ***************************************************************************
   /** @memo
@@ -257,6 +240,13 @@ public:
       @return
   */
   float Value(void);
+
+  // ***************************************************************************
+  /** @memo
+      @param
+      @return
+  */
+  float TotalValue(void);
 
   // ***************************************************************************
   /** @memo

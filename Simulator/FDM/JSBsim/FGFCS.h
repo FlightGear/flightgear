@@ -44,6 +44,7 @@ INCLUDES
 CLASS DECLARATION
 *******************************************************************************/
 
+using namespace std;
 
 class FGFCS : public FGModel
 {
