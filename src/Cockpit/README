@@ -1,0 +1,9 @@
+src/Cockpit/ - instrument and display-related code
+
+This directory contains various subsystems and code modules related to
+the cockpit, including the HUD and the 2D panel.  The code from here
+is gradually being sorted out into separate code modules -- please do
+not add anything new here.  All new code for gauges and avionics
+should go in src/Instrumentation/, and all new code aircraft systems
+(like the electrical or vacuum systems) should go in src/Systems/.
+Any new 2D or 3D modelling code should go in src/Model/.
