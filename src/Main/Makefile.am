@@ -82,6 +82,4 @@ fgfs_LDADD = \
 	$(opengl_LIBS) \
 	$(audio_LIBS)
 
-fgfs_CFLAGS = -DTHIS_IS_A_TEST
-
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
