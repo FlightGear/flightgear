@@ -373,12 +373,14 @@ FGPanel::draw()
   glEnable(GL_BLEND);
   glEnable(GL_ALPHA_TEST);
   glEnable(GL_COLOR_MATERIAL);
-  // glColor4f(1.0, 1.0, 1.0, 1.0);
-  if ( cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES < 95.0 ) {
-      glColor4fv( cur_light_params.scene_diffuse );
-  } else {
-      glColor4f(0.7, 0.2, 0.2, 1.0);
+  sgVec4 panel_color;
+  sgCopyVec4( panel_color, cur_light_params.scene_diffuse );
+  if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
+      if ( panel_color[0] < 0.7 ) panel_color[0] = 0.7;
+      if ( panel_color[1] < 0.2 ) panel_color[1] = 0.2;
+      if ( panel_color[2] < 0.2 ) panel_color[2] = 0.2;
   }
+  glColor4fv( panel_color );
   if (_bg != 0) {
     glBindTexture(GL_TEXTURE_2D, _bg->getHandle());
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -877,12 +879,14 @@ FGTexturedLayer::draw ()
     
 				// From Curt: turn on the panel
 				// lights after sundown.
-    if ( cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES < 95.0 ) {
-      glColor4fv( cur_light_params.scene_diffuse );
-    } else {
-      glColor4f(0.7, 0.2, 0.2, 1.0);
+    sgVec4 panel_color;
+    sgCopyVec4( panel_color, cur_light_params.scene_diffuse );
+    if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
+        if ( panel_color[0] < 0.7 ) panel_color[0] = 0.7;
+        if ( panel_color[1] < 0.2 ) panel_color[1] = 0.2;
+        if ( panel_color[2] < 0.2 ) panel_color[2] = 0.2;
     }
-
+    glColor4fv( panel_color );
 
     glTexCoord2f(_texture.getMinX(), _texture.getMinY()); glVertex2f(-w2, -h2);
     glTexCoord2f(_texture.getMaxX(), _texture.getMinY()); glVertex2f(w2, -h2);
