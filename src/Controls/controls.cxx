@@ -148,7 +148,7 @@ void FGControls::reset_all()
     set_augmentation( ALL_ENGINES, false );
     set_reverser( ALL_ENGINES, false );
     set_water_injection( ALL_ENGINES, false );
-    set_condition( ALL_ENGINES, 0 );
+    set_condition( ALL_ENGINES, 1.0 );
     throttle_idle = true;
     set_fuel_selector( ALL_TANKS, true );
     dump_valve = false;
@@ -201,7 +201,7 @@ FGControls::init ()
         water_injection[engine] = false;
         nitrous_injection[engine] = false;
         cowl_flaps_norm[engine] = 0.0;
-        condition[engine] = 0;
+        condition[engine] = 1.0;
     }
 
     brake_left = brake_right = brake_parking = 0.0;
@@ -348,7 +348,8 @@ FGControls::bind ()
          &FGControls::set_cowl_flaps_norm);
     fgSetArchivable(name);
 
-    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/feather", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/propeller-feather", index);
     fgTie(name, this, index,
 	 &FGControls::get_feather, &FGControls::set_feather);
     fgSetArchivable(name);
@@ -841,7 +842,8 @@ void FGControls::unbind ()
     snprintf(name, MAX_NAME_LEN,
              "/controls/engines/engine[%d]/cowl-flaps-norm", index);
     fgUntie(name);
-    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/feather", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/propeller-feather", index);
     fgUntie(name);
     snprintf(name, MAX_NAME_LEN,
              "/controls/engines/engine[%d]/ignition", index);
@@ -1521,17 +1523,15 @@ FGControls::set_water_injection( int engine, bool val )
 }
 
 void
-FGControls::set_condition( int engine, int val )
+FGControls::set_condition( int engine, double val )
 {
     if ( engine == ALL_ENGINES ) {
 	for ( int i = 0; i < MAX_ENGINES; i++ ) {
 	    condition[i] = val;
-	    CLAMP( &condition[i], 0, 3 );
 	}
     } else {
 	if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 	    condition[engine] = val;
-	    CLAMP( &condition[engine], 0, 3 );
 	}
     }
 }

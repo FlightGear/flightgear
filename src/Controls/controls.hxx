@@ -140,7 +140,7 @@ private:
     bool augmentation[MAX_ENGINES];
     bool reverser[MAX_ENGINES];
     bool water_injection[MAX_ENGINES];
-    int condition[MAX_ENGINES];           // turboprop speed select
+    double condition[MAX_ENGINES];           // turboprop speed select
 
     // controls/fuel/
     bool dump_valve;
@@ -316,7 +316,7 @@ public:
     inline bool get_water_injection(int engine) const { 
         return water_injection[engine]; 
     }
-    inline int get_condition(int engine) const { return condition[engine]; }
+    inline double get_condition(int engine) const { return condition[engine]; }
 
     // controls/fuel/
     inline bool get_dump_valve() const { return dump_valve; }
@@ -501,7 +501,7 @@ public:
     void set_augmentation( int engine, bool val );
     void set_reverser( int engine, bool val );
     void set_water_injection( int engine, bool val );
-    void set_condition( int engine, int val );    
+    void set_condition( int engine, double val );    
 
     // controls/fuel
     void set_dump_valve( bool val );
