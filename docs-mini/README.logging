@@ -10,12 +10,14 @@ Gnumeric or Excel).  Logging is defined in the '/logging' subbranch of
 the main property tree; under '/logging', each '/log' subbranch
 defines a separate log with its own output file and interval.  Here is
 a simple example that logs the rudder and aileron settings every
-second (1000ms) to the file steering.csv:
+second (1000ms) to the file steering.csv, using a comma (the default,
+anyway) as the field delimiter:
 
  <logging>
   <log>
    <filename>steering.csv</filename>
    <interval-ms>1000</interval-ms>
+   <delimiter>,</delimiter>
    <entry>
     <title>Rudder</title>
     <property>/controls/rudder</property>
@@ -28,9 +30,14 @@ second (1000ms) to the file steering.csv:
  </logging>
 
 Each 'log' subbranch contains an optional 'filename' property
-(defaults to "fg_log.csv"), an optional 'interval-ms' property
-(defaults to 0, which logs every frame), and a series of 'entry'
-subbranches.
+(defaults to "fg_log.csv"), an optional 'delimiter' property (defaults
+to a comma), an optional 'interval-ms' property (defaults to 0, which
+logs every frame), and a series of 'entry' subbranches.  The
+'delimiter' property uses only the first character of the property
+value as the delimiter.  Note that the logger does no escaping, so you
+must choose a delimiter that will not appear in the property values
+(that's not hard, since most of the values are numeric, but watch for
+commas in the titles).
 
 Each 'entry' subbranch contains a 'property' property specifying the
 name of the property to be logged, and an optional 'title' property
