@@ -58,7 +58,7 @@ void fgSplashInit ( void ) {
     splash.bind();
 
     // load in the texture data
-    int num = (int)(sg_random() * 4.0 + 1.0);
+    int num = (int)(sg_random() * 3.0 + 1.0);
     char num_str[256];
     sprintf(num_str, "%d", num);
 
@@ -90,8 +90,8 @@ void fgSplashInit ( void ) {
 // Update the splash screen with progress specified from 0.0 to 1.0
 void fgSplashUpdate ( double progress, float alpha ) {
     int xmin, ymin, xmax, ymax;
-    int xsize = 480;
-    int ysize = 380;
+    int xsize = 512;
+    int ysize = 512;
 
     if ( !fgGetInt("/sim/startup/xsize")
 	 || !fgGetInt("/sim/startup/ysize") ) {
