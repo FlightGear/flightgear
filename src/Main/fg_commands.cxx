@@ -34,79 +34,39 @@ SG_USING_STD(ofstream);
 
 
 ////////////////////////////////////////////////////////////////////////
-// Saved command states.
+// Static helper functions.
 ////////////////////////////////////////////////////////////////////////
 
 
 /**
- * Base saved state for property commands.
- *
- * Since this class isn't publicly visible, it is simply an aggregate
- * of all the stuff any property command needs.
+ * Template function to wrap a value.
  */
-class PropertyCommandState : public SGCommandState
+template <class T>
+static inline void
+do_wrap (T * value, T min, T max)
 {
-public:
-  PropertyCommandState (const SGPropertyNode * arg);
-  virtual SGPropertyNode * getProp () const { return _prop; }
-  virtual SGPropertyNode * getProp2 () const { return _prop2; }
-  virtual const SGPropertyNode * getValue () const
-    { return _value ? _value : &_dummy_0; }
-  virtual const bool hasStep () const { return _step != 0; }
-  virtual const SGPropertyNode * getStep () const 
-    { return _step ? _step : &_dummy_0; }
-  virtual const SGPropertyNode * getMin () const { return _min; }
-  virtual const SGPropertyNode * getMax () const { return _max; }
-  virtual const SGPropertyNode * getWrap () const
-    { return _wrap ? _wrap : &_dummy_0; }
-  virtual const SGPropertyNode * getFactor () const 
-    { return _factor ? _factor : &_dummy_1; }
-  virtual const SGPropertyNode * getSquared () const 
-    { return _squared ? _squared : &_dummy_0; }
-  virtual const SGPropertyNode * getSetting () const 
-    { return _setting ? _setting : &_dummy_0; }
-  virtual const SGPropertyNode * getOffset () const
-    { return _offset ? _offset : &_dummy_0; }
-private:
-  static SGPropertyNode _dummy_0;
-  static SGPropertyNode _dummy_1;
-  mutable SGPropertyNode * _prop;
-  mutable SGPropertyNode * _prop2;
-  const SGPropertyNode * _value;
-  const SGPropertyNode * _step;
-  const SGPropertyNode * _min;
-  const SGPropertyNode * _max;
-  const SGPropertyNode * _wrap;
-  const SGPropertyNode * _factor;
-  const SGPropertyNode * _squared;
-  const SGPropertyNode * _setting;
-  const SGPropertyNode * _offset;
-};
-
-SGPropertyNode PropertyCommandState::_dummy_0;
-SGPropertyNode PropertyCommandState::_dummy_1;
-
-PropertyCommandState::PropertyCommandState (const SGPropertyNode * arg)
-  : SGCommandState(arg),
-    _prop(fgGetNode(arg->getStringValue("property[0]", "/null"), true)),
-    _prop2(fgGetNode(arg->getStringValue("property[1]", "/null"), true)),
-    _value(arg->getNode("value")),
-    _step(arg->getNode("step")),
-    _min(arg->getNode("min")),
-    _max(arg->getNode("max")),
-    _wrap(arg->getNode("wrap")),
-    _factor(arg->getNode("factor")),
-    _squared(arg->getNode("squared")),
-    _setting(arg->getNode("setting")),
-    _offset(arg->getNode("offset"))
-{
-				// It would be better not to do this
-				// every time, but it's not that big
-				// a deal.  I don't know enough about
-				// C++ static initialization to fix it.
-  _dummy_1.setDoubleValue(1.0);
+    if (min >= max) {           // basic sanity check
+        *value = min;
+    } else {
+        T range = max - min;
+        while (*value < min)
+            *value += range;
+        while (*value > max)
+            *value -= range;
+    }
 }
 
+static inline SGPropertyNode *
+get_prop (const SGPropertyNode * arg)
+{
+    return fgGetNode(arg->getStringValue("property[0]", "/null"), true);
+}
+
+static inline SGPropertyNode *
+get_prop2 (const SGPropertyNode * arg)
+{
+    return fgGetNode(arg->getStringValue("property[1]", "/null"), true);
+}
 
 
 
@@ -367,9 +327,7 @@ do_lighting_update (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_toggle (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  if (*state == 0)
-    *state = new PropertyCommandState(arg);
-  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
+  SGPropertyNode * prop = get_prop(arg);
   return prop->setBoolValue(!prop->getBoolValue());
 }
 
@@ -383,27 +341,32 @@ do_property_toggle (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  if (*state == 0)
-    *state = new PropertyCommandState(arg);
-  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
-  const SGPropertyNode * value =
-    ((PropertyCommandState *)(*state))->getValue();
+  SGPropertyNode * prop = get_prop(arg);
+  const SGPropertyNode * value = arg->getNode("value");
 
   switch (prop->getType()) {
+
   case SGPropertyNode::BOOL:
     return prop->setBoolValue(value->getBoolValue());
+
   case SGPropertyNode::INT:
     return prop->setIntValue(value->getIntValue());
+
   case SGPropertyNode::LONG:
     return prop->setLongValue(value->getLongValue());
+
   case SGPropertyNode::FLOAT:
     return prop->setFloatValue(value->getFloatValue());
+
   case SGPropertyNode::DOUBLE:
     return prop->setDoubleValue(value->getDoubleValue());
+
   case SGPropertyNode::STRING:
     return prop->setStringValue(value->getStringValue());
+
   default:
     return prop->setUnspecifiedValue(value->getStringValue());
+
   }
 }
 
@@ -424,29 +387,26 @@ do_property_assign (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  if (*state == 0)
-    *state = new PropertyCommandState(arg);
-  bool hasStep = ((PropertyCommandState *)(*state))->hasStep();
-  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
-  const SGPropertyNode * step = ((PropertyCommandState *)(*state))->getStep();
-  const SGPropertyNode * offset =
-    ((PropertyCommandState *)(*state))->getOffset();
-  const SGPropertyNode * factor =
-    ((PropertyCommandState *)(*state))->getFactor();
-  const SGPropertyNode * min = ((PropertyCommandState *)(*state))->getMin();
-  const SGPropertyNode * max = ((PropertyCommandState *)(*state))->getMax();
-  bool wrap = ((PropertyCommandState *)(*state))->getWrap()->getBoolValue();
+  SGPropertyNode * prop = get_prop(arg);
+  const SGPropertyNode * step = arg->getChild("step");
+  const SGPropertyNode * offset = arg->getChild("offset");
+  const SGPropertyNode * factor = arg->getChild("factor");
+  const SGPropertyNode * min = arg->getChild("min");
+  const SGPropertyNode * max = arg->getChild("max");
+  bool wrap = arg->getBoolValue("wrap");
+
+  if (min == 0 || max == 0)
+      wrap = false;
 
   double amount = 0;
-  if (!hasStep) {
+  if (step == 0)
     amount = offset->getDoubleValue() * factor->getDoubleValue();
-  }
-
 
   switch (prop->getType()) {
-  case SGPropertyNode::BOOL:
+
+  case SGPropertyNode::BOOL: {
     bool value;
-    if (hasStep)
+    if (step != 0)
       value = step->getBoolValue();
     else
       value = (0.0 != amount);
@@ -454,94 +414,86 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
       return prop->setBoolValue(!prop->getBoolValue());
     else
       return true;
+  }
+
   case SGPropertyNode::INT: {
     int value;
-    if (hasStep)
+    if (step != 0)
       value = prop->getIntValue() + step->getIntValue();
     else
       value = prop->getIntValue() + int(amount);
-    if (min && (value < min->getIntValue())) {
-      if (wrap && max)
-	value = max->getIntValue();
-      else
-	value = min->getIntValue();
-    }
-    if (max && value > max->getIntValue()) {
-      if (wrap && min)
-	value = min->getIntValue();
-      else
-	value = max->getIntValue();
+    if (wrap) {
+        do_wrap(&value, min->getIntValue(), max->getIntValue());
+    } else {
+        if (min != 0 && value < min->getIntValue())
+            value = min->getIntValue();
+        if (max != 0 && value > max->getIntValue())
+            value = max->getIntValue();
     }
     return prop->setIntValue(value);
   }
+
   case SGPropertyNode::LONG: {
     long value;
-    if (hasStep)
+    if (step != 0)
       value = prop->getLongValue() + step->getLongValue();
     else
       value = prop->getLongValue() + long(amount);
-    if (min && (value < min->getLongValue())) {
-      if (wrap && max)
-	value = max->getLongValue();
-      else
-	value = min->getLongValue();
-    }
-    if (max && value > max->getLongValue()) {
-      if (wrap && min)
-	value = min->getLongValue();
-      else
-	value = max->getLongValue();
+    if (wrap) {
+        do_wrap(&value, min->getLongValue(), max->getLongValue());
+    } else {
+        if (min != 0 && value < min->getLongValue())
+            value = min->getLongValue();
+        if (max != 0 && value > max->getLongValue())
+            value = max->getLongValue();
     }
     return prop->setLongValue(value);
   }
+
   case SGPropertyNode::FLOAT: {
     float value;
-    if (hasStep)
+    if (step != 0)
       value = prop->getFloatValue() + step->getFloatValue();
     else
       value = prop->getFloatValue() + float(amount);
-    if (min && (value < min->getFloatValue())) {
-      if (wrap && max)
-	value = max->getFloatValue();
-      else
-	value = min->getFloatValue();
-    }
-    if (max && value > max->getFloatValue()) {
-      if (wrap && min)
-	value = min->getFloatValue();
-      else
-	value = max->getFloatValue();
+    if (wrap) {
+        do_wrap(&value, min->getFloatValue(), max->getFloatValue());
+    } else {
+        if (min != 0 && value < min->getFloatValue())
+            value = min->getFloatValue();
+        if (max != 0 && value > max->getFloatValue())
+            value = max->getFloatValue();
     }
     return prop->setFloatValue(value);
   }
+
   case SGPropertyNode::DOUBLE:
   case SGPropertyNode::UNSPECIFIED:
   case SGPropertyNode::NONE: {
     double value;
-    if (hasStep)
+    if (step != 0)
       value = prop->getDoubleValue() + step->getDoubleValue();
     else
       value = prop->getDoubleValue() + amount;
-    if (min && (value < min->getDoubleValue())) {
-      if (wrap && max)
-	value = max->getDoubleValue();
-      else
-	value = min->getDoubleValue();
-    }
-    if (max && value > max->getDoubleValue()) {
-      if (wrap && min)
-	value = min->getDoubleValue();
-      else
-	value = max->getDoubleValue();
+    if (wrap) {
+        do_wrap(&value, min->getDoubleValue(), max->getDoubleValue());
+    } else {
+        if (min != 0 && value < min->getDoubleValue())
+            value = min->getDoubleValue();
+        if (max != 0 && value > max->getDoubleValue())
+            value = max->getDoubleValue();
     }
     return prop->setDoubleValue(value);
   }
+
   case SGPropertyNode::STRING: // doesn't make sense with strings
     SG_LOG(SG_INPUT, SG_ALERT, "Cannot adjust a string value");
     return false;
+
   default:
     SG_LOG(SG_INPUT, SG_ALERT, "Unknown value type");
     return false;
+
   }
 }
 
@@ -555,30 +507,35 @@ do_property_adjust (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_multiply (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  if (*state == 0)
-    *state = new PropertyCommandState(arg);
-  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
-  const SGPropertyNode * factor =
-    ((PropertyCommandState *)(*state))->getFactor();
+  SGPropertyNode * prop = get_prop(arg);
+  const SGPropertyNode * factor = arg->getChild("factor");
+
+  if (factor == 0)
+      return true;
 
   switch (prop->getType()) {
+
   case SGPropertyNode::BOOL:
-    return prop->setBoolValue(prop->getBoolValue() &&
-			      factor->getBoolValue());
+    return prop->setBoolValue(prop->getBoolValue() && factor->getBoolValue());
+
   case SGPropertyNode::INT:
     return prop->setIntValue(int(prop->getIntValue()
-				 * factor->getDoubleValue()));
+                                 * factor->getDoubleValue()));
+
   case SGPropertyNode::LONG:
     return prop->setLongValue(long(prop->getLongValue()
 				   * factor->getDoubleValue()));
+
   case SGPropertyNode::FLOAT:
     return prop->setFloatValue(float(prop->getFloatValue()
 				     * factor->getDoubleValue()));
+
   case SGPropertyNode::DOUBLE:
   case SGPropertyNode::UNSPECIFIED:
   case SGPropertyNode::NONE:
     return prop->setDoubleValue(prop->getDoubleValue()
 				* factor->getDoubleValue());
+
   default:			// doesn't make sense with strings
     return false;
   }
@@ -594,10 +551,8 @@ do_property_multiply (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  if (*state == 0)
-    *state = new PropertyCommandState(arg);
-  SGPropertyNode * prop1 = ((PropertyCommandState *)(*state))->getProp();
-  SGPropertyNode * prop2 = ((PropertyCommandState *)(*state))->getProp2();
+  SGPropertyNode * prop1 = get_prop(arg);
+  SGPropertyNode * prop2 = get_prop2(arg);
 
 				// FIXME: inefficient
   const string & tmp = prop1->getStringValue();
@@ -617,23 +572,16 @@ do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_property_scale (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  if (*state == 0)
-    *state = new PropertyCommandState(arg);
-  SGPropertyNode * prop = ((PropertyCommandState *)(*state))->getProp();
-  double setting =
-    ((PropertyCommandState *)(*state))->getSetting()->getDoubleValue();
-  double offset =
-    ((PropertyCommandState *)(*state))->getOffset()->getDoubleValue();
-  double factor =
-    ((PropertyCommandState *)(*state))->getFactor()->getDoubleValue();
-  bool squared =
-    ((PropertyCommandState *)(*state))->getSquared()->getBoolValue();
+  SGPropertyNode * prop = get_prop(arg);
+  double setting = arg->getDoubleValue("setting");
+  double offset = arg->getDoubleValue("offset", 0.0);
+  double factor = arg->getDoubleValue("factor", 1.0);
+  bool squared = arg->getBoolValue("squared", false);
 
   if (squared)
     setting = (setting < 0 ? -1 : 1) * setting * setting;
-  double result = (setting + offset) * factor;
 
-  return prop->setDoubleValue(result);
+  return prop->setDoubleValue((setting + offset) * factor);
 }
 
 
