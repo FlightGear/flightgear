@@ -214,7 +214,7 @@ void FGAutopilot::update_old_control_values() {
 
 // Initialize autopilot subsystem
 void FGAutopilot::init() {
-    FG_LOG( FG_AUTOPILOT, FG_INFO, "Init AutoPilot Subsystem" );
+    SG_LOG( SG_AUTOPILOT, SG_INFO, "Init AutoPilot Subsystem" );
 
     heading_hold = false ;      // turn the heading hold off
     altitude_hold = false ;     // turn the altitude hold off
@@ -522,7 +522,7 @@ int FGAutopilot::run() {
 	    // figure out how far off we are from desired heading
 
 	    // Now it is time to deterime how far we should be rolled.
-	    FG_LOG( FG_AUTOPILOT, FG_DEBUG, "RelHeading: " << RelHeading );
+	    SG_LOG( SG_AUTOPILOT, SG_DEBUG, "RelHeading: " << RelHeading );
 
 
 	    // Check if we are further from heading than the roll out point
@@ -551,7 +551,7 @@ int FGAutopilot::run() {
 
 	    // Compare Target roll to Current Roll, Generate Rel Roll
 
-	    FG_LOG( FG_COCKPIT, FG_BULK, "TargetRoll: " << TargetRoll );
+	    SG_LOG( SG_COCKPIT, SG_BULK, "TargetRoll: " << TargetRoll );
 
 	    RelRoll = NormalizeDegrees( TargetRoll - FGBFI::getRoll() );
 
@@ -813,7 +813,7 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 		MakeTargetAltitudeStr( TargetAltitude * SG_METER_TO_FEET );
 	    }
 
-	    FG_LOG( FG_COCKPIT, FG_INFO, " set_HeadingMode: ( "
+	    SG_LOG( SG_COCKPIT, SG_INFO, " set_HeadingMode: ( "
 		    << get_TargetLatitude()  << " "
 		    << get_TargetLongitude() << " ) "
 		    );
@@ -858,7 +858,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     }
     
     update_old_control_values();
-    FG_LOG( FG_COCKPIT, FG_INFO, " set_AltitudeMode():" );
+    SG_LOG( SG_COCKPIT, SG_INFO, " set_AltitudeMode():" );
 }
 
 
@@ -1036,6 +1036,6 @@ void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
     }
 
     update_old_control_values();
-    FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetAutoThrottle: ("
+    SG_LOG( SG_COCKPIT, SG_INFO, " fgAPSetAutoThrottle: ("
 	    << auto_throttle << ") " << TargetSpeed );
 }

@@ -94,7 +94,7 @@ bool FGPVE::gen_message() {
     // printf( "p [ %u %u ]  [ %u %u ]  [ %u %u ]\n", 
     //         roll_b1, roll_b2, pitch_b1, pitch_b2, heave_b1, heave_b2 );
 
-    FG_LOG( FG_IO, FG_INFO, "roll=" << roll << " pitch=" << pitch <<
+    SG_LOG( SG_IO, SG_INFO, "roll=" << roll << " pitch=" << pitch <<
 	    " heave=" << heave );
 
     return true;
@@ -103,7 +103,7 @@ bool FGPVE::gen_message() {
 
 // parse RUL message
 bool FGPVE::parse_message() {
-    FG_LOG( FG_IO, FG_ALERT, "PVE input not supported" );
+    SG_LOG( SG_IO, SG_ALERT, "PVE input not supported" );
 
     return false;
 }
@@ -116,11 +116,11 @@ bool FGPVE::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
-	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
-	FG_LOG( FG_IO, FG_ALERT, "in direction not supported for RUL." );
+	SG_LOG( SG_IO, SG_ALERT, "in direction not supported for RUL." );
 	return false;
     }
 

@@ -83,7 +83,7 @@ reinit ()
 				// that's going to get clobbered
 				// when we reinit the subsystems.
 
-  FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI reinit");
+  SG_LOG(SG_GENERAL, SG_INFO, "Starting BFI reinit");
 
 				// TODO: add more AP stuff
   bool apHeadingLock = FGBFI::getAPHeadingLock();
@@ -114,7 +114,7 @@ reinit ()
 
   _needReinit = false;
 
-  FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI reinit");
+  SG_LOG(SG_GENERAL, SG_INFO, "Ending BFI reinit");
 }
 
 // BEGIN: kludge
@@ -175,7 +175,7 @@ _set_view_from_axes ()
 void
 FGBFI::init ()
 {
-  FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI init");
+  SG_LOG(SG_GENERAL, SG_INFO, "Starting BFI init");
 
 				// Simulation
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
@@ -219,7 +219,7 @@ FGBFI::init ()
 
   _needReinit = false;
 
-  FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI init");
+  SG_LOG(SG_GENERAL, SG_INFO, "Ending BFI init");
 }
 
 
@@ -310,7 +310,7 @@ FGBFI::setDateString (string date_string)
 				// if the save file has been edited
 				// by hand.
   if (ret != 6) {
-    FG_LOG(FG_INPUT, FG_ALERT, "Date/time string " << date_string
+    SG_LOG(SG_INPUT, SG_ALERT, "Date/time string " << date_string
 	   << " not in YYYY-MM-DDTHH:MM:SS format; skipped");
     return;
   }

@@ -77,9 +77,9 @@ FGBalloonSim::~FGBalloonSim() {
 void FGBalloonSim::init() {
     sgVec3 temp;
 
-    FG_LOG( FG_FLIGHT, FG_INFO, "Starting initializing BalloonSim" );
+    SG_LOG( SG_FLIGHT, SG_INFO, "Starting initializing BalloonSim" );
 
-    FG_LOG( FG_FLIGHT, FG_INFO, "  created a balloon" );
+    SG_LOG( SG_FLIGHT, SG_INFO, "  created a balloon" );
 
     //set position
     sgSetVec3( temp,
@@ -102,7 +102,7 @@ void FGBalloonSim::init() {
 	       fgGetDouble("/velocities/wBody") );
     current_balloon.setVelocity( temp );
 
-    FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing BalloonSim" );
+    SG_LOG( SG_FLIGHT, SG_INFO, "Finished initializing BalloonSim" );
 }
 
 
@@ -146,7 +146,7 @@ bool FGBalloonSim::update( int multiloop ) {
     /*sgVec3 temp, temp2;
     current_balloon.getPosition( temp );
     current_balloon.getVelocity( temp2 );
-    FG_LOG( FG_FLIGHT, FG_INFO, "T: " << current_balloon.getTemperature() <<
+    SG_LOG( SG_FLIGHT, SG_INFO, "T: " << current_balloon.getTemperature() <<
 				" alt: " << temp[2] <<
 				" gr_alt: " << get_Runway_altitude() << 
 				" burner: " << controls.get_elevator() <<

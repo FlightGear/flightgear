@@ -86,7 +86,7 @@ bool FGRUL::gen_message() {
     sprintf( buf, "p%c%c\n", roll, pitch);
     length = 4;
 
-    FG_LOG( FG_IO, FG_INFO, "p " << roll << " " << pitch );
+    SG_LOG( SG_IO, SG_INFO, "p " << roll << " " << pitch );
 
     return true;
 }
@@ -94,7 +94,7 @@ bool FGRUL::gen_message() {
 
 // parse RUL message
 bool FGRUL::parse_message() {
-    FG_LOG( FG_IO, FG_ALERT, "RUL input not supported" );
+    SG_LOG( SG_IO, SG_ALERT, "RUL input not supported" );
 
     return false;
 }
@@ -107,11 +107,11 @@ bool FGRUL::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
-	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
-	FG_LOG( FG_IO, FG_ALERT, "in direction not supported for RUL." );
+	SG_LOG( SG_IO, SG_ALERT, "in direction not supported for RUL." );
 	return false;
     }
 

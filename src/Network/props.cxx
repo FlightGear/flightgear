@@ -50,7 +50,7 @@ bool FGProps::open() {
     path = "/";
 
     if ( is_enabled() ) {
-	FG_LOG( FG_IO, FG_ALERT, "This shouldn't happen, but the channel " 
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
 	return false;
     }
@@ -58,12 +58,12 @@ bool FGProps::open() {
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
-	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
+	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
 	return false;
     }
 
     set_enabled( true );
-    FG_LOG( FG_IO, FG_INFO, "Opening properties channel communication layer." );
+    SG_LOG( SG_IO, SG_INFO, "Opening properties channel communication layer." );
 
     return true;
 }
@@ -236,11 +236,11 @@ bool FGProps::process() {
     if ( get_direction() == SG_IO_BI ) {
 	// cout << "  (bi directional)" << endl;
 	while ( io->readline( buf, max_cmd_len ) > 0 ) {
-	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Success reading data." );
 	    process_command( buf );
 	}
     } else {
-	FG_LOG( FG_IO, FG_ALERT, 
+	SG_LOG( SG_IO, SG_ALERT, 
 		"in or out direction not supported for FGProps." );
     }
 

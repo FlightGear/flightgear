@@ -71,7 +71,7 @@ fgLIGHT::fgLIGHT( void ) {
 
 // initialize lighting tables
 void fgLIGHT::Init( void ) {
-    FG_LOG( FG_EVENT, FG_INFO, 
+    SG_LOG( SG_EVENT, SG_INFO, 
 	    "Initializing Lighting interpolation tables." );
 
     // build the path name to the ambient lookup table
@@ -107,19 +107,19 @@ void fgLIGHT::Update( void ) {
 
     f = current_aircraft.fdm_state;
 
-    FG_LOG( FG_EVENT, FG_INFO, "Updating light parameters." );
+    SG_LOG( SG_EVENT, SG_INFO, "Updating light parameters." );
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
 
     deg = sun_angle * SGD_RADIANS_TO_DEGREES;
-    FG_LOG( FG_EVENT, FG_INFO, "  Sun angle = " << deg );
+    SG_LOG( SG_EVENT, SG_INFO, "  Sun angle = " << deg );
 
     ambient = ambient_tbl->interpolate( deg );
     diffuse = diffuse_tbl->interpolate( deg );
     sky_brightness = sky_tbl->interpolate( deg );
 
-    FG_LOG( FG_EVENT, FG_INFO, 
+    SG_LOG( SG_EVENT, SG_INFO, 
 	    "  ambient = " << ambient << "  diffuse = " << diffuse 
 	    << "  sky = " << sky_brightness );
 
@@ -160,7 +160,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
     f = current_aircraft.fdm_state;
 
-    FG_LOG( FG_EVENT, FG_DEBUG, "Updating adjusted fog parameters." );
+    SG_LOG( SG_EVENT, SG_DEBUG, "Updating adjusted fog parameters." );
 
     // set fog color (we'll try to match the sunset color in the
     // direction we are looking
@@ -179,7 +179,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	rotation -= SGD_2PI;
     }
     rotation *= SGD_RADIANS_TO_DEGREES;
-    // fgPrintf( FG_EVENT, FG_INFO, 
+    // fgPrintf( SG_EVENT, SG_INFO, 
     //           "  View to sun difference in degrees = %.2f\n", rotation);
 
     // next check if we are in a sunset/sunrise situation

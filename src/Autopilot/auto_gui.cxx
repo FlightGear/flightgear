@@ -609,7 +609,7 @@ void TgtAptDialog_OK (puObject *)
     double t1, t2;
     if ( fgFindAirportID( TgtAptId, &a ) ) {
 
-	 FG_LOG( FG_GENERAL, FG_INFO,
+	 SG_LOG( SG_GENERAL, SG_INFO,
 		 "Adding waypoint (airport) = " << TgtAptId );
         
 	 sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
@@ -620,7 +620,7 @@ void TgtAptDialog_OK (puObject *)
     } else if ( current_fixlist->query( TgtAptId, 0.0, 0.0, 0.0,
 					&f, &t1, &t2 ) )
     {
-	 FG_LOG( FG_GENERAL, FG_INFO,
+	 SG_LOG( SG_GENERAL, SG_INFO,
 		 "Adding waypoint (fix) = " << TgtAptId );
         
 	 sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
@@ -675,10 +675,10 @@ void ClearRoute(puObject *cb)
 
 void NewTgtAirportInit(void)
 {
-    FG_LOG( FG_AUTOPILOT, FG_INFO, " enter NewTgtAirportInit()" );
+    SG_LOG( SG_AUTOPILOT, SG_INFO, " enter NewTgtAirportInit()" );
     //	fgAPset_tgt_airport_id( fgGetString("/sim/startup/airport-id") );	
     sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
-    FG_LOG( FG_AUTOPILOT, FG_INFO, " NewTgtAirportId " << NewTgtAirportId );
+    SG_LOG( SG_AUTOPILOT, SG_INFO, " NewTgtAirportId " << NewTgtAirportId );
     //	printf(" NewTgtAirportId %s\n", NewTgtAirportId);
     int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
                                       NewTgtAirportLabel ) / 2;

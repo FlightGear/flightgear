@@ -184,13 +184,13 @@ void FGViewerRPH::update() {
     sgdSubVec3( vp, abs_view_pos, sc );
     sgSetVec3( view_pos, vp );
 
-    FG_LOG( FG_VIEW, FG_DEBUG, "sea level radius = " << sea_level_radius );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "sea level radius = " << sea_level_radius );
+    SG_LOG( SG_VIEW, SG_DEBUG, "Polar view pos = " << p );
+    SG_LOG( SG_VIEW, SG_DEBUG, "Absolute view pos = "
 	    << abs_view_pos[0] << ","
 	    << abs_view_pos[1] << ","
 	    << abs_view_pos[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "(RPH) Relative view pos = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "(RPH) Relative view pos = "
 	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
 
     // code to calculate LOCAL matrix calculated from Phi, Theta, and
@@ -276,7 +276,7 @@ void FGViewerRPH::update() {
     // cout << "VIEW_OFFSET matrix" << endl;
     // print_sgMat4( VIEW_OFFSET );
     sgXformVec3( view_forward, forward, VIEW_OFFSET );
-    FG_LOG( FG_VIEW, FG_DEBUG, "(RPH) view forward = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "(RPH) view forward = "
 	    << view_forward[0] << "," << view_forward[1] << ","
 	    << view_forward[2] );
 	

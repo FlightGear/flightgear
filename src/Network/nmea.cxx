@@ -125,8 +125,8 @@ bool FGNMEA::gen_message() {
     sprintf( gga_sum, "%02X", calc_nmea_cksum(gga) );
 
 
-    FG_LOG( FG_IO, FG_DEBUG, rmc );
-    FG_LOG( FG_IO, FG_DEBUG, gga );
+    SG_LOG( SG_IO, SG_DEBUG, rmc );
+    SG_LOG( SG_IO, SG_DEBUG, gga );
 
     string nmea_sentence;
 
@@ -160,11 +160,11 @@ bool FGNMEA::gen_message() {
 // $GPGGA,163227,3321.173,N,11039.855,W,1,,,3333,F,,,,*0F
 
 bool FGNMEA::parse_message() {
-    FG_LOG( FG_IO, FG_INFO, "parse nmea message" );
+    SG_LOG( SG_IO, SG_INFO, "parse nmea message" );
 
     string msg = buf;
     msg = msg.substr( 0, length );
-    FG_LOG( FG_IO, FG_INFO, "entire message = " << msg );
+    SG_LOG( SG_IO, SG_INFO, "entire message = " << msg );
 
     string::size_type begin_line, end_line, begin, end;
     begin_line = begin = 0;
@@ -174,12 +174,12 @@ bool FGNMEA::parse_message() {
     while ( end_line != string::npos ) {
 	string line = msg.substr(begin_line, end_line - begin_line);
 	begin_line = end_line + 1;
-	FG_LOG( FG_IO, FG_INFO, "  input line = " << line );
+	SG_LOG( SG_IO, SG_INFO, "  input line = " << line );
 
 	// leading character
 	string start = msg.substr(begin, 1);
 	++begin;
-	FG_LOG( FG_IO, FG_INFO, "  start = " << start );
+	SG_LOG( SG_IO, SG_INFO, "  start = " << start );
 
 	// sentence
 	end = msg.find(",", begin);
@@ -189,7 +189,7 @@ bool FGNMEA::parse_message() {
     
 	string sentence = msg.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_INFO, "  sentence = " << sentence );
+	SG_LOG( SG_IO, SG_INFO, "  sentence = " << sentence );
 
 	double lon_deg, lon_min, lat_deg, lat_min;
 	double lon, lat, speed, heading, altitude;
@@ -203,7 +203,7 @@ bool FGNMEA::parse_message() {
     
 	    string utc = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  utc = " << utc );
+	    SG_LOG( SG_IO, SG_INFO, "  utc = " << utc );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -213,7 +213,7 @@ bool FGNMEA::parse_message() {
     
 	    string junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // lat val
 	    end = msg.find(",", begin);
@@ -242,7 +242,7 @@ bool FGNMEA::parse_message() {
 	    }
 
 	    cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lat = " << lat );
+	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
 
 	    // lon val
 	    end = msg.find(",", begin);
@@ -271,7 +271,7 @@ bool FGNMEA::parse_message() {
 	    }
 
 	    cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
+	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
 
 #if 0
 	    double sl_radius, lat_geoc;
@@ -294,7 +294,7 @@ bool FGNMEA::parse_message() {
 	    speed = atof( speed_str.c_str() );
 	    cur_fdm_state->set_V_calibrated_kts( speed );
 	    // cur_fdm_state->set_V_ground_speed( speed );
-	    FG_LOG( FG_IO, FG_INFO, "  speed = " << speed );
+	    SG_LOG( SG_IO, SG_INFO, "  speed = " << speed );
 
 	    // heading
 	    end = msg.find(",", begin);
@@ -308,7 +308,7 @@ bool FGNMEA::parse_message() {
 	    cur_fdm_state->set_Euler_Angles( cur_fdm_state->get_Phi(), 
 					     cur_fdm_state->get_Theta(), 
 					     heading * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  heading = " << heading );
+	    SG_LOG( SG_IO, SG_INFO, "  heading = " << heading );
 	} else if ( sentence == "GPGGA" ) {
 	    // time
 	    end = msg.find(",", begin);
@@ -318,7 +318,7 @@ bool FGNMEA::parse_message() {
     
 	    string utc = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  utc = " << utc );
+	    SG_LOG( SG_IO, SG_INFO, "  utc = " << utc );
 
 	    // lat val
 	    end = msg.find(",", begin);
@@ -347,7 +347,7 @@ bool FGNMEA::parse_message() {
 	    }
 
 	    // cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lat = " << lat );
+	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
 
 	    // lon val
 	    end = msg.find(",", begin);
@@ -376,7 +376,7 @@ bool FGNMEA::parse_message() {
 	    }
 
 	    // cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
+	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -386,7 +386,7 @@ bool FGNMEA::parse_message() {
     
 	    string junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -396,7 +396,7 @@ bool FGNMEA::parse_message() {
     
 	    junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -406,7 +406,7 @@ bool FGNMEA::parse_message() {
     
 	    junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // altitude
 	    end = msg.find(",", begin);
@@ -433,7 +433,7 @@ bool FGNMEA::parse_message() {
 
 	    cur_fdm_state->set_Altitude( altitude );
     
- 	    FG_LOG( FG_IO, FG_INFO, " altitude  = " << altitude );
+ 	    SG_LOG( SG_IO, SG_INFO, " altitude  = " << altitude );
 
 	}
 
@@ -450,7 +450,7 @@ bool FGNMEA::parse_message() {
 // open hailing frequencies
 bool FGNMEA::open() {
     if ( is_enabled() ) {
-	FG_LOG( FG_IO, FG_ALERT, "This shouldn't happen, but the channel " 
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
 	return false;
     }
@@ -458,7 +458,7 @@ bool FGNMEA::open() {
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
-	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
+	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
 	return false;
     }
 
@@ -475,20 +475,20 @@ bool FGNMEA::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
-	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
 	    return false;
 	}
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
 	    return false;
 	}
     }

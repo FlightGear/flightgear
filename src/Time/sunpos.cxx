@@ -108,7 +108,7 @@ static double julian_date(int y, int m, int d) {
 
     /* lazy test to ensure gregorian calendar */
     if (y < 1583) {
-	FG_LOG( FG_EVENT, FG_ALERT, 
+	SG_LOG( SG_EVENT, SG_ALERT, 
 		"WHOOPS! Julian dates only valid for 1582 oct 15 or later" );
     }
 
@@ -260,8 +260,8 @@ void fgUpdateSunPos( void ) {
     SGTime *t = globals->get_time_params();
     v = (FGViewerRPH *)globals->get_current_view();
 
-    FG_LOG( FG_EVENT, FG_INFO, "  Updating Sun position" );
-    FG_LOG( FG_EVENT, FG_INFO, "  Gst = " << t->getGst() );
+    SG_LOG( SG_EVENT, SG_INFO, "  Updating Sun position" );
+    SG_LOG( SG_EVENT, SG_INFO, "  Gst = " << t->getGst() );
 
     fgSunPositionGST(t->getGst(), &l->sun_lon, &sun_gd_lat);
 
@@ -270,8 +270,8 @@ void fgUpdateSunPos( void ) {
     p = Point3D( l->sun_lon, l->sun_gc_lat, sl_radius );
     l->fg_sunpos = sgPolarToCart3d(p);
 
-    FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->get_cur_time() );
-    FG_LOG( FG_EVENT, FG_INFO, 
+    SG_LOG( SG_EVENT, SG_INFO, "    t->cur_time = " << t->get_cur_time() );
+    SG_LOG( SG_EVENT, SG_INFO, 
 	    "    Sun Geodetic lat = " << sun_gd_lat
 	    << " Geocentric lat = " << l->sun_gc_lat );
 
@@ -298,7 +298,7 @@ void fgUpdateSunPos( void ) {
     //      << nsun[2] << endl;
 
     l->sun_angle = acos( sgScalarProductVec3 ( nup, nsun ) );
-    FG_LOG( FG_EVENT, FG_INFO, "sun angle relative to current location = "
+    SG_LOG( SG_EVENT, SG_INFO, "sun angle relative to current location = "
 	    << l->sun_angle );
     
     // calculate vector to sun's position on the earth's surface

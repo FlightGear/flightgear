@@ -723,11 +723,11 @@ parse_option (const string& arg)
  	}
 
  	if ( !geometry_ok ) {
-  	    FG_LOG( FG_GENERAL, FG_ALERT, "Unknown geometry: " << geometry );
- 	    FG_LOG( FG_GENERAL, FG_ALERT,
+  	    SG_LOG( SG_GENERAL, SG_ALERT, "Unknown geometry: " << geometry );
+ 	    SG_LOG( SG_GENERAL, SG_ALERT,
  		    "Setting geometry to " << xsize << 'x' << ysize << '\n');
   	} else {
-	  FG_LOG( FG_GENERAL, FG_INFO,
+	  SG_LOG( SG_GENERAL, SG_INFO,
 		  "Setting geometry to " << xsize << 'x' << ysize << '\n');
 	  fgSetInt("/sim/startup/xsize", xsize);
 	  fgSetInt("/sim/startup/ysize", ysize);
@@ -741,7 +741,7 @@ parse_option (const string& arg)
 	} else if ( bits_per_pix == "32" ) {
 	    fgSetInt("/sim/rendering/bits-per-pixel", 32);
 	} else {
-	  FG_LOG(FG_GENERAL, FG_ALERT, "Unsupported bpp " << bits_per_pix);
+	  SG_LOG(SG_GENERAL, SG_ALERT, "Unsupported bpp " << bits_per_pix);
 	}
     } else if ( arg == "--units-feet" ) {
 	fgSetString("/sim/startup/units", "feet");
@@ -806,13 +806,13 @@ parse_option (const string& arg)
         string assign = arg.substr(7);
 	int pos = assign.find('=');
 	if (pos == arg.npos || pos == 0) {
-	    FG_LOG(FG_GENERAL, FG_ALERT, "Bad property assignment: " << arg);
+	    SG_LOG(SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg);
 	    return FG_OPTIONS_ERROR;
 	}
 	string name = assign.substr(0, pos);
 	string value = assign.substr(pos + 1);
 	fgSetString(name.c_str(), value);
-	// FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
+	// SG_LOG(SG_GENERAL, SG_INFO, "Setting default value of property "
 	//        << name << " to \"" << value << '"');
     // $$$ begin - added VS Renganathan, 14 Oct 2K
     // for multi-window outside window imagery
@@ -843,12 +843,12 @@ parse_option (const string& arg)
         string val = arg.substr(7);
 	int pos = val.find('@');
 	if (pos == string::npos) {
-	  FG_LOG(FG_GENERAL, FG_ALERT, "bad wind value " << val);
+	  SG_LOG(SG_GENERAL, SG_ALERT, "bad wind value " << val);
 	  return FG_OPTIONS_ERROR;
 	}
 	double dir = atof(val.substr(0,pos).c_str());
 	double speed = atof(val.substr(pos+1).c_str());
-	FG_LOG(FG_GENERAL, FG_INFO, "WIND: " << dir << '@' << 
+	SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << dir << '@' << 
 	       speed << " knots" << endl);
 				// convert to fps
 	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
@@ -867,12 +867,12 @@ parse_option (const string& arg)
     } else if ( arg.find( "--config=" ) == 0 ) {
         string file = arg.substr(9);
         if (!readProperties(file, globals->get_props())) {
-	  FG_LOG(FG_IO, FG_ALERT,
+	  SG_LOG(SG_IO, SG_ALERT,
 		 "--config: failed to read properties from " << file);
 	  return FG_OPTIONS_ERROR;
 	}
     } else {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
+	SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
     }
     
@@ -887,10 +887,10 @@ fgScanForRoot (int argc, char **argv)
 {
     int i = 1;
 
-    FG_LOG(FG_GENERAL, FG_INFO, "Scanning for root: command line");
+    SG_LOG(SG_GENERAL, SG_INFO, "Scanning for root: command line");
 
     while ( i < argc ) {
-	FG_LOG( FG_GENERAL, FG_DEBUG, "argv[" << i << "] = " << argv[i] );
+	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
 
 	string arg = argv[i];
 	if ( arg.find( "--fg-root=" ) == 0 ) {
@@ -912,7 +912,7 @@ fgScanForRoot (const string& path)
     if ( !in.is_open() )
       return "";
 
-    FG_LOG( FG_GENERAL, FG_INFO, "Scanning for root: " << path );
+    SG_LOG( SG_GENERAL, SG_INFO, "Scanning for root: " << path );
 
     in >> skipcomment;
 #ifndef __MWERKS__
@@ -949,10 +949,10 @@ fgParseOptions (int argc, char **argv) {
     int i = 1;
     int result;
 
-    FG_LOG(FG_GENERAL, FG_INFO, "Processing command line arguments");
+    SG_LOG(SG_GENERAL, SG_INFO, "Processing command line arguments");
 
     while ( i < argc ) {
-	FG_LOG( FG_GENERAL, FG_DEBUG, "argv[" << i << "] = " << argv[i] );
+	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
 
 	result = parse_option(argv[i]);
 	if ( (result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR) ) {
@@ -972,7 +972,7 @@ fgParseOptions (const string& path) {
     if ( !in.is_open() )
       return;
 
-    FG_LOG( FG_GENERAL, FG_INFO, "Processing config file: " << path );
+    SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path );
 
     in >> skipcomment;
 #ifndef __MWERKS__
@@ -993,7 +993,7 @@ fgParseOptions (const string& path) {
 #endif
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
-	    FG_LOG( FG_GENERAL, FG_ALERT, 
+	    SG_LOG( SG_GENERAL, SG_ALERT, 
 		    "Config file parse error: " << path << " '" 
 		    << line << "'" );
 	    fgUsage();

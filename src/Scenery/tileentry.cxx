@@ -82,15 +82,15 @@ static void my_remove_branch( ssgBranch * branch ) {
 // ssg as well as the whole ssg branch
 void FGTileEntry::free_tile() {
     int i;
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
+    SG_LOG( SG_TERRAIN, SG_DEBUG,
 	    "FREEING TILE = (" << tile_bucket << ")" );
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
+    SG_LOG( SG_TERRAIN, SG_DEBUG,
 	    "  deleting " << nodes.size() << " nodes" );
     nodes.clear();
 
     // delete the ssg structures
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
+    SG_LOG( SG_TERRAIN, SG_DEBUG,
 	    "  deleting (leaf data) vertex, normal, and "
 	    << " texture coordinate arrays" );
 
@@ -127,12 +127,12 @@ void FGTileEntry::free_tile() {
 	    parent->removeKid( terra_transform );
 	    terra_transform = NULL;
 	} else {
-	    FG_LOG( FG_TERRAIN, FG_ALERT,
+	    SG_LOG( SG_TERRAIN, SG_ALERT,
 		    "parent pointer is NULL!  Dying" );
 	    exit(-1);
 	}
     } else {
-	FG_LOG( FG_TERRAIN, FG_ALERT,
+	SG_LOG( SG_TERRAIN, SG_ALERT,
 		"Parent count is zero for an ssg tile!  Dying" );
 	exit(-1);
     }
@@ -147,12 +147,12 @@ void FGTileEntry::free_tile() {
 		parent->removeKid( lights_transform );
 		lights_transform = NULL;
 	    } else {
-		FG_LOG( FG_TERRAIN, FG_ALERT,
+		SG_LOG( SG_TERRAIN, SG_ALERT,
 			"parent pointer is NULL!  Dying" );
 		exit(-1);
 	    }
 	} else {
-	    FG_LOG( FG_TERRAIN, FG_ALERT,
+	    SG_LOG( SG_TERRAIN, SG_ALERT,
 		    "Parent count is zero for an ssg light tile!  Dying" );
 	    exit(-1);
 	}

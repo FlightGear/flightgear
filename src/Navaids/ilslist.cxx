@@ -50,7 +50,7 @@ bool FGILSList::init( FGPath path ) {
 
     fg_gzifstream in( path.str() );
     if ( !in.is_open() ) {
-        FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << path.str() );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
         exit(-1);
     }
 

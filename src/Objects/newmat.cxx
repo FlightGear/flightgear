@@ -177,19 +177,19 @@ void FGNewMat::set_ssg_state( ssgSimpleState *s ) {
 
 
 void FGNewMat::dump_info () {
-    FG_LOG( FG_TERRAIN, FG_INFO, "{" << endl << "  texture = " 
+    SG_LOG( SG_TERRAIN, SG_INFO, "{" << endl << "  texture = " 
 	    << texture_name );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  xsize = " << xsize );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  ysize = " << ysize );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  ambient = " << ambient[0] << " "
+    SG_LOG( SG_TERRAIN, SG_INFO, "  xsize = " << xsize );
+    SG_LOG( SG_TERRAIN, SG_INFO, "  ysize = " << ysize );
+    SG_LOG( SG_TERRAIN, SG_INFO, "  ambient = " << ambient[0] << " "
 	    << ambient[1] <<" "<< ambient[2] <<" "<< ambient[3] );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  diffuse = " << diffuse[0] << " " 
+    SG_LOG( SG_TERRAIN, SG_INFO, "  diffuse = " << diffuse[0] << " " 
 	    << diffuse[1] << " " << diffuse[2] << " " << diffuse[3] );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  specular = " << specular[0] << " " 
+    SG_LOG( SG_TERRAIN, SG_INFO, "  specular = " << specular[0] << " " 
 	    << specular[1] << " " << specular[2] << " " << specular[3]);
-    FG_LOG( FG_TERRAIN, FG_INFO, "  emission = " << emission[0] << " " 
+    SG_LOG( SG_TERRAIN, SG_INFO, "  emission = " << emission[0] << " " 
 	    << emission[1] << " " << emission[2] << " " << emission[3]);
-    FG_LOG( FG_TERRAIN, FG_INFO, "  alpha = " << alpha << endl <<"}" );
+    SG_LOG( SG_TERRAIN, SG_INFO, "  alpha = " << alpha << endl <<"}" );
 	    
 }
 
@@ -237,7 +237,7 @@ operator >> ( istream& in, FGNewMat& m )
 	    } else if ( token == "no" ) {
 		m.alpha = 0;
 	    } else {
-		FG_LOG( FG_TERRAIN, FG_INFO, "Bad alpha value " << token );
+		SG_LOG( SG_TERRAIN, SG_INFO, "Bad alpha value " << token );
 	    }
 	} else if ( token == "light-coverage" ) {
 	    in >> token >> m.light_coverage;

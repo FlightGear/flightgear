@@ -92,7 +92,7 @@ bool FGMaterialLib::load( const string& mpath ) {
 
     fg_gzifstream in( mpath );
     if ( ! in.is_open() ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << mpath );
+	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << mpath );
 	exit(-1);
     }
 
@@ -117,7 +117,7 @@ bool FGMaterialLib::load( const string& mpath ) {
 	if ( material_name == "alias" ) {
 	    string src_mat, dst_mat;
 	    in >> dst_mat >> src_mat;
-	    FG_LOG( FG_GENERAL, FG_INFO, "  Material alias: " << dst_mat <<
+	    SG_LOG( SG_GENERAL, SG_INFO, "  Material alias: " << dst_mat <<
 		    " mapped to " << src_mat );
 	    FGNewMat m = matlib[src_mat];
 	    matlib[dst_mat] = m;
@@ -140,7 +140,7 @@ bool FGMaterialLib::load( const string& mpath ) {
 		    tex_path.append( "Textures" );
 		}
 	    
-		FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
+		SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
 			<< material_name << " (" << tex_path.c_str() << ")");
 
 		GLenum shade_model = GL_SMOOTH;
@@ -203,7 +203,7 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
 
     FGNewMat m( mat_name, tex_name );
 
-    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
+    SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
 	    << mat_name << " (" << tex_path << ")");
 
 #if EXTRA_DEBUG
@@ -232,7 +232,7 @@ bool FGMaterialLib::add_item ( const string &mat_name, ssgSimpleState *state )
     FGNewMat m( mat_name );
     m.set_ssg_state( state );
 
-    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material given a premade "
+    SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material given a premade "
 	    << "ssgSimpleState = " << mat_name );
 
 #if EXTRA_DEBUG
@@ -269,7 +269,7 @@ void FGMaterialLib::set_step ( int step )
     // container::iterator it = begin();
     for ( material_map_iterator it = begin(); it != end(); it++ ) {
 	const string &key = it->first;
-	FG_LOG( FG_GENERAL, FG_INFO,
+	SG_LOG( SG_GENERAL, SG_INFO,
 		"Updating material " << key << " to step " << step );
 	FGNewMat &slot = it->second;
 	slot.get_state()->selectStep(step);

@@ -292,7 +292,7 @@ readLadder(const SGPropertyNode * node)
 				waypoint		= node->getBoolValue("enable_waypoint_marker",false);
 				working			= node->getBoolValue("working");
 
-				FG_LOG(FG_INPUT, FG_INFO, "Done reading instrument " << name);
+				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 	
 				
 				p = (instr_item *) new HudLadder( name, x, y,
@@ -343,7 +343,7 @@ readCard(const SGPropertyNode * node)
 				working			= node->getBoolValue("working");
 
 
-				FG_LOG(FG_INPUT, FG_INFO, "Done reading instrument " << name);
+				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
 				if(type=="guage")
@@ -439,7 +439,7 @@ readLabel(const SGPropertyNode * node)
 				working             = node->getBoolValue("working");
 
 
-				FG_LOG(FG_INPUT, FG_INFO, "Done reading instrument " << name);
+				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
 				if(justi==0)
@@ -580,7 +580,7 @@ readTBI(const SGPropertyNode * node)
 				gap_width      = node->getIntValue("gap_width");
 				working        = node->getBoolValue("working");
 
-				FG_LOG(FG_INPUT, FG_INFO, "Done reading instrument " << name);
+				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
 				p = (instr_item *) new fgTBI_instr(	x,
@@ -663,19 +663,19 @@ int readHud( istream &input )
 
 
 	if (!readProperties(input, &root)) {
-		FG_LOG(FG_INPUT, FG_ALERT, "Malformed property list for hud.");
+		SG_LOG(SG_INPUT, SG_ALERT, "Malformed property list for hud.");
 		return 0;
 	}
   
 	
-	FG_LOG(FG_INPUT, FG_INFO, "Read properties for  " <<
+	SG_LOG(SG_INPUT, SG_INFO, "Read properties for  " <<
 		root.getStringValue("name"));
 
 
 	HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());  // empty the HUD deque
 
 
-	FG_LOG(FG_INPUT, FG_INFO, "Reading Hud instruments");
+	SG_LOG(SG_INPUT, SG_INFO, "Reading Hud instruments");
 
 	const SGPropertyNode * instrument_group = root.getChild("instruments");
 	int nInstruments = instrument_group->nChildren();
@@ -687,7 +687,7 @@ int readHud( istream &input )
 		FGPath path( globals->get_fg_root() );
 		path.append(node->getStringValue("path"));
 
-		FG_LOG(FG_INPUT, FG_INFO, "Reading Instrument "
+		SG_LOG(SG_INPUT, SG_INFO, "Reading Instrument "
 		<< node->getName()
 		<< " from "
 		<< path.str());
@@ -710,7 +710,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 
 	HUD_style = 1;
 
-	FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
+	SG_LOG( SG_COCKPIT, SG_INFO, "Initializing current aircraft HUD" );
 
     string hud_path =
 	fgGetString("/sim/hud/path", "Huds/Default/default.xml");
@@ -720,7 +720,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 	ifstream input(path.c_str());
 	if (!input.good()) 
 		{
-			FG_LOG(FG_INPUT, FG_ALERT,
+			SG_LOG(SG_INPUT, SG_ALERT,
 			"Cannot read Hud configuration from " << path.str());
 		} 
 	else 
@@ -741,7 +741,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 
     HUD_style = 2;
 
-    FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
+    SG_LOG( SG_COCKPIT, SG_INFO, "Initializing current aircraft HUD" );
 
 	FGPath path(globals->get_fg_root());
 	path.append("Huds/Minimal/default.xml");
@@ -749,7 +749,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 
 	ifstream input(path.c_str());
 	if (!input.good()) {
-		FG_LOG(FG_INPUT, FG_ALERT,
+		SG_LOG(SG_INPUT, SG_ALERT,
 			"Cannot read Hud configuration from " << path.str());
 	} 
 	else {
@@ -1077,7 +1077,7 @@ void fgUpdateHUD( void ) {
 	  pHUDInstr = *current;
 
 	  if( pHUDInstr->enabled()) {
-		  //  fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
+		  //  fgPrintf( SG_COCKPIT, SG_DEBUG, "HUD Code %d  Status %d\n",
 		  //            hud->code, hud->status );
 		  pHUDInstr->draw();
 		  

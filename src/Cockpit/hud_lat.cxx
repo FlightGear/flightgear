@@ -119,10 +119,10 @@ draw( void )       // Required method in base class
   }
     
 #ifdef DEBUGHUD
-  fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
-  fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
-  fgPrintf( FG_COCKPIT, FG_DEBUG, label_buffer );
-  fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
+  fgPrintf( SG_COCKPIT, SG_DEBUG,  format_buffer );
+  fgPrintf( SG_COCKPIT, SG_DEBUG,  "\n" );
+  fgPrintf( SG_COCKPIT, SG_DEBUG, label_buffer );
+  fgPrintf( SG_COCKPIT, SG_DEBUG, "\n" );
 #endif
 
   lenstr = getStringWidth(label_buffer);

@@ -55,7 +55,7 @@ FGRunways::FGRunways( const string& file ) {
     storage = new c4_Storage( file.c_str(), false );
 
     if ( !storage->Strategy().IsValid() ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << file );
+	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
 	exit(-1);
     }
 
@@ -175,7 +175,7 @@ int FGRunwaysUtil::load( const string& file ) {
 
     fg_gzifstream in( file );
     if ( !in.is_open() ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << file );
+	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
 	exit(-1);
     }
 

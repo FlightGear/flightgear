@@ -196,7 +196,7 @@ bool FGRAY::gen_message() {
 
 // parse RUL message
 bool FGRAY::parse_message() {
-    FG_LOG( FG_IO, FG_ALERT, "RAY input not supported" );
+    SG_LOG( SG_IO, SG_ALERT, "RAY input not supported" );
 
     return false;
 }
@@ -209,11 +209,11 @@ bool FGRAY::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
-	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
-	FG_LOG( FG_IO, FG_ALERT, "in direction not supported for RAY." );
+	SG_LOG( SG_IO, SG_ALERT, "in direction not supported for RAY." );
 	return false;
     }
 

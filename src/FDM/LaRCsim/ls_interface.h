@@ -66,6 +66,9 @@ int ls_ForceAltitude(double alt_feet);
 
 
 // $Log$
+// Revision 1.5  2001/03/24 05:03:12  curt
+// SG-ified logstream.
+//
 // Revision 1.4  2000/10/23 22:34:54  curt
 // I tested:
 // LaRCsim c172 on-ground and in-air starts, reset: all work
@@ -104,7 +107,7 @@ int ls_ForceAltitude(double alt_feet);
 // -- that small set is declared virtual, the default implementation
 // provided preserves the old behavior
 // -- all of the vector data members are now initialized.
-// -- added busdump() method -- FG_LOG's  all the bus data when called,
+// -- added busdump() method -- SG_LOG's  all the bus data when called,
 // useful for diagnostics.
 //
 // src/FDM/ADA.cxx

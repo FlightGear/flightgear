@@ -225,7 +225,7 @@ bool FGADA::copy_from_FGADA() {
     _set_Omega_Body( P_body, Q_body, R_body );
     _set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
-    //    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
+    //    SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << Longitude 
     //	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
     //	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
     //	    << " radius_to_vehicle = " << Radius_to_vehicle );

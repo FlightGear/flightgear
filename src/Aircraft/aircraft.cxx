@@ -35,7 +35,7 @@ fgAIRCRAFT current_aircraft;
 
 // Initialize an Aircraft structure
 void fgAircraftInit( void ) {
-    FG_LOG( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure" );
+    SG_LOG( SG_AIRCRAFT, SG_INFO, "Initializing Aircraft structure" );
 
     current_aircraft.fdm_state   = cur_fdm_state;
     current_aircraft.controls = &controls;
@@ -48,7 +48,7 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
     f = a->fdm_state;
 
-    FG_LOG( FG_FLIGHT, FG_DEBUG,
+    SG_LOG( SG_FLIGHT, SG_DEBUG,
 	    "Pos = ("
 	    << (f->get_Longitude() * 3600.0 * SGD_RADIANS_TO_DEGREES) << "," 
 	    << (f->get_Latitude()  * 3600.0 * SGD_RADIANS_TO_DEGREES) << ","
@@ -58,7 +58,7 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 	    << f->get_Theta() << "," 
 	    << f->get_Psi() << ")" );
 
-    FG_LOG( FG_FLIGHT, FG_DEBUG,
+    SG_LOG( SG_FLIGHT, SG_DEBUG,
 	    "Kts = " << f->get_V_equiv_kts() 
 	    << "  Elev = " << controls.get_elevator() 
 	    << "  Aileron = " << controls.get_aileron() 

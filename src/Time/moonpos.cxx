@@ -200,7 +200,7 @@ static double julian_date(int y, int m, int d) {
 
     /* lazy test to ensure gregorian calendar */
     if (y < 1583) {
-	FG_LOG( FG_EVENT, FG_ALERT, 
+	SG_LOG( SG_EVENT, SG_ALERT, 
 		"WHOOPS! Julian dates only valid for 1582 oct 15 or later" );
     }
 
@@ -352,7 +352,7 @@ void fgUpdateMoonPos( void ) {
     SGTime *t = globals->get_time_params();
     v = (FGViewerRPH *)globals->get_current_view();
 
-    FG_LOG( FG_EVENT, FG_INFO, "  Updating Moon position" );
+    SG_LOG( SG_EVENT, SG_INFO, "  Updating Moon position" );
 
     // (not sure why there was two)
     // fgMoonPosition(t->cur_time, &l->moon_lon, &moon_gd_lat);
@@ -363,8 +363,8 @@ void fgUpdateMoonPos( void ) {
     p = Point3D( l->moon_lon, l->moon_gc_lat, sl_radius );
     l->fg_moonpos = sgPolarToCart3d(p);
 
-    FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->get_cur_time() );
-    FG_LOG( FG_EVENT, FG_INFO, 
+    SG_LOG( SG_EVENT, SG_INFO, "    t->cur_time = " << t->get_cur_time() );
+    SG_LOG( SG_EVENT, SG_INFO, 
 	    "    Moon Geodetic lat = " << moon_gd_lat
 	    << " Geocentric lat = " << l->moon_gc_lat );
 
@@ -391,7 +391,7 @@ void fgUpdateMoonPos( void ) {
     //      << nmoon[2] << endl;
 
     l->moon_angle = acos( sgScalarProductVec3( nup, nmoon ) );
-    FG_LOG( FG_EVENT, FG_INFO, "moon angle relative to current location = " 
+    SG_LOG( SG_EVENT, SG_INFO, "moon angle relative to current location = " 
 	    << l->moon_angle );
     
     // calculate vector to moon's position on the earth's surface

@@ -95,7 +95,7 @@ inline void
 fgUntie (const string &name)
 {
   if (!globals->get_props()->untie(name))
-    FG_LOG(FG_GENERAL, FG_WARN, "Failed to untie property " << name);
+    SG_LOG(SG_GENERAL, SG_WARN, "Failed to untie property " << name);
 }
 
 
@@ -105,7 +105,7 @@ fgTie (const string &name, bool *pointer, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValuePointer<bool>(pointer),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
@@ -114,7 +114,7 @@ fgTie (const string &name, int *pointer, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValuePointer<int>(pointer),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
@@ -123,7 +123,7 @@ fgTie (const string &name, float *pointer, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValuePointer<float>(pointer),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
@@ -132,7 +132,7 @@ fgTie (const string &name, double *pointer, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValuePointer<double>(pointer),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
@@ -141,7 +141,7 @@ fgTie (const string &name, string *pointer, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValuePointer<string>(pointer),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
@@ -152,7 +152,7 @@ fgTie (const string &name, V (*getter)(), void (*setter)(V) = 0,
 {
   if (!globals->get_props()->tie(name, SGRawValueFunctions<V>(getter, setter),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to functions");
 }
 
@@ -166,7 +166,7 @@ fgTie (const string &name, int index, V (*getter)(int),
 							       getter,
 							       setter),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to indexed functions");
 }
 
@@ -178,7 +178,7 @@ fgTie (const string &name, T * obj, V (T::*getter)() const,
   if (!globals->get_props()->tie(name,
 				 SGRawValueMethods<T,V>(*obj, getter, setter),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to object methods");
 }
 
@@ -194,7 +194,7 @@ fgTie (const string &name, T * obj, int index,
 							       getter,
 							       setter),
 				 useDefault))
-    FG_LOG(FG_GENERAL, FG_WARN,
+    SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to indexed object methods");
 }
 

@@ -133,9 +133,9 @@ bool FGAtlas::gen_message() {
 	     current_radiostack->get_adf_freq() );
     sprintf( patla_sum, "%02X", calc_atlas_cksum(patla) );
 
-    FG_LOG( FG_IO, FG_DEBUG, rmc );
-    FG_LOG( FG_IO, FG_DEBUG, gga );
-    FG_LOG( FG_IO, FG_DEBUG, patla );
+    SG_LOG( SG_IO, SG_DEBUG, rmc );
+    SG_LOG( SG_IO, SG_DEBUG, gga );
+    SG_LOG( SG_IO, SG_DEBUG, patla );
 
     string atlas_sentence;
 
@@ -176,11 +176,11 @@ bool FGAtlas::gen_message() {
 // $GPGGA,163227,3321.173,N,11039.855,W,1,,,3333,F,,,,*0F
 
 bool FGAtlas::parse_message() {
-    FG_LOG( FG_IO, FG_INFO, "parse atlas message" );
+    SG_LOG( SG_IO, SG_INFO, "parse atlas message" );
 
     string msg = buf;
     msg = msg.substr( 0, length );
-    FG_LOG( FG_IO, FG_INFO, "entire message = " << msg );
+    SG_LOG( SG_IO, SG_INFO, "entire message = " << msg );
 
     string::size_type begin_line, end_line, begin, end;
     begin_line = begin = 0;
@@ -190,12 +190,12 @@ bool FGAtlas::parse_message() {
     while ( end_line != string::npos ) {
 	string line = msg.substr(begin_line, end_line - begin_line);
 	begin_line = end_line + 1;
-	FG_LOG( FG_IO, FG_INFO, "  input line = " << line );
+	SG_LOG( SG_IO, SG_INFO, "  input line = " << line );
 
 	// leading character
 	string start = msg.substr(begin, 1);
 	++begin;
-	FG_LOG( FG_IO, FG_INFO, "  start = " << start );
+	SG_LOG( SG_IO, SG_INFO, "  start = " << start );
 
 	// sentence
 	end = msg.find(",", begin);
@@ -205,7 +205,7 @@ bool FGAtlas::parse_message() {
     
 	string sentence = msg.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_INFO, "  sentence = " << sentence );
+	SG_LOG( SG_IO, SG_INFO, "  sentence = " << sentence );
 
 	double lon_deg, lon_min, lat_deg, lat_min;
 	double lon, lat, speed, heading, altitude;
@@ -219,7 +219,7 @@ bool FGAtlas::parse_message() {
     
 	    string utc = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  utc = " << utc );
+	    SG_LOG( SG_IO, SG_INFO, "  utc = " << utc );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -229,7 +229,7 @@ bool FGAtlas::parse_message() {
     
 	    string junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // lat val
 	    end = msg.find(",", begin);
@@ -258,7 +258,7 @@ bool FGAtlas::parse_message() {
 	    }
 
 	    cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lat = " << lat );
+	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
 
 	    // lon val
 	    end = msg.find(",", begin);
@@ -287,7 +287,7 @@ bool FGAtlas::parse_message() {
 	    }
 
 	    cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
+	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
 
 #if 0
 	    double sl_radius, lat_geoc;
@@ -310,7 +310,7 @@ bool FGAtlas::parse_message() {
 	    speed = atof( speed_str.c_str() );
 	    cur_fdm_state->set_V_calibrated_kts( speed );
 	    // cur_fdm_state->set_V_ground_speed( speed );
-	    FG_LOG( FG_IO, FG_INFO, "  speed = " << speed );
+	    SG_LOG( SG_IO, SG_INFO, "  speed = " << speed );
 
 	    // heading
 	    end = msg.find(",", begin);
@@ -324,7 +324,7 @@ bool FGAtlas::parse_message() {
 	    cur_fdm_state->set_Euler_Angles( cur_fdm_state->get_Phi(), 
 					     cur_fdm_state->get_Theta(), 
 					     heading * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  heading = " << heading );
+	    SG_LOG( SG_IO, SG_INFO, "  heading = " << heading );
 	} else if ( sentence == "GPGGA" ) {
 	    // time
 	    end = msg.find(",", begin);
@@ -334,7 +334,7 @@ bool FGAtlas::parse_message() {
     
 	    string utc = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  utc = " << utc );
+	    SG_LOG( SG_IO, SG_INFO, "  utc = " << utc );
 
 	    // lat val
 	    end = msg.find(",", begin);
@@ -363,7 +363,7 @@ bool FGAtlas::parse_message() {
 	    }
 
 	    // cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lat = " << lat );
+	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
 
 	    // lon val
 	    end = msg.find(",", begin);
@@ -392,7 +392,7 @@ bool FGAtlas::parse_message() {
 	    }
 
 	    // cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
-	    FG_LOG( FG_IO, FG_INFO, "  lon = " << lon );
+	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -402,7 +402,7 @@ bool FGAtlas::parse_message() {
     
 	    string junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -412,7 +412,7 @@ bool FGAtlas::parse_message() {
     
 	    junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // junk
 	    end = msg.find(",", begin);
@@ -422,7 +422,7 @@ bool FGAtlas::parse_message() {
     
 	    junk = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  junk = " << junk );
+	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
 
 	    // altitude
 	    end = msg.find(",", begin);
@@ -449,7 +449,7 @@ bool FGAtlas::parse_message() {
 
 	    cur_fdm_state->set_Altitude( altitude );
     
- 	    FG_LOG( FG_IO, FG_INFO, " altitude  = " << altitude );
+ 	    SG_LOG( SG_IO, SG_INFO, " altitude  = " << altitude );
 
 	} else if ( sentence == "PATLA" ) {
 	    // nav1 freq
@@ -460,7 +460,7 @@ bool FGAtlas::parse_message() {
     
 	    string nav1_freq = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  nav1_freq = " << nav1_freq );
+	    SG_LOG( SG_IO, SG_INFO, "  nav1_freq = " << nav1_freq );
 
 	    // nav1 selected radial
 	    end = msg.find(",", begin);
@@ -470,7 +470,7 @@ bool FGAtlas::parse_message() {
     
 	    string nav1_rad = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  nav1_rad = " << nav1_rad );
+	    SG_LOG( SG_IO, SG_INFO, "  nav1_rad = " << nav1_rad );
 
 	    // nav2 freq
 	    end = msg.find(",", begin);
@@ -480,7 +480,7 @@ bool FGAtlas::parse_message() {
     
 	    string nav2_freq = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  nav2_freq = " << nav2_freq );
+	    SG_LOG( SG_IO, SG_INFO, "  nav2_freq = " << nav2_freq );
 
 	    // nav2 selected radial
 	    end = msg.find(",", begin);
@@ -490,7 +490,7 @@ bool FGAtlas::parse_message() {
     
 	    string nav2_rad = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  nav2_rad = " << nav2_rad );
+	    SG_LOG( SG_IO, SG_INFO, "  nav2_rad = " << nav2_rad );
 
 	    // adf freq
 	    end = msg.find("*", begin);
@@ -500,7 +500,7 @@ bool FGAtlas::parse_message() {
     
 	    string adf_freq = msg.substr(begin, end - begin);
 	    begin = end + 1;
-	    FG_LOG( FG_IO, FG_INFO, "  adf_freq = " << adf_freq );
+	    SG_LOG( SG_IO, SG_INFO, "  adf_freq = " << adf_freq );
 	}
 
 	// printf("%.8f %.8f\n", lon, lat);
@@ -516,7 +516,7 @@ bool FGAtlas::parse_message() {
 // open hailing frequencies
 bool FGAtlas::open() {
     if ( is_enabled() ) {
-	FG_LOG( FG_IO, FG_ALERT, "This shouldn't happen, but the channel " 
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
 	return false;
     }
@@ -524,7 +524,7 @@ bool FGAtlas::open() {
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
-	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
+	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
 	return false;
     }
 
@@ -541,20 +541,20 @@ bool FGAtlas::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
-	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
 	    return false;
 	}
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
-	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
+	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
 	    return false;
 	}
     }

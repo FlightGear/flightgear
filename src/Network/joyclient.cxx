@@ -39,7 +39,7 @@ FGJoyClient::~FGJoyClient() {
 // open hailing frequencies
 bool FGJoyClient::open() {
     if ( is_enabled() ) {
-	FG_LOG( FG_IO, FG_ALERT, "This shouldn't happen, but the channel " 
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
 	return false;
     }
@@ -47,7 +47,7 @@ bool FGJoyClient::open() {
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
-	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
+	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
 	return false;
     }
 
@@ -63,16 +63,16 @@ bool FGJoyClient::process() {
     int length = sizeof(int[2]);
 
     if ( get_direction() == SG_IO_OUT ) {
-	FG_LOG( FG_IO, FG_ALERT, "joyclient protocol is read only" );
+	SG_LOG( SG_IO, SG_ALERT, "joyclient protocol is read only" );
 	return false;
     } else if ( get_direction() == SG_IO_IN ) {
-	FG_LOG( FG_IO, FG_DEBUG, "Searching for data." );
+	SG_LOG( SG_IO, SG_DEBUG, "Searching for data." );
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
-		FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
+		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
 		int *msg;
 		msg = (int *)buf;
-		FG_LOG( FG_IO, FG_DEBUG, "X = " << msg[0] << " Y = "
+		SG_LOG( SG_IO, SG_DEBUG, "X = " << msg[0] << " Y = "
 			<< msg[1] );
 		double aileron = ((double)msg[0] / 2048.0) - 1.0;
 		double elevator = ((double)msg[1] / 2048.0) - 1.0;
@@ -87,10 +87,10 @@ bool FGJoyClient::process() {
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
-		FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
+		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
 		int *msg;
 		msg = (int *)buf;
-		FG_LOG( FG_IO, FG_DEBUG, "X = " << msg[0] << " Y = "
+		SG_LOG( SG_IO, SG_DEBUG, "X = " << msg[0] << " Y = "
 			<< msg[1] );
 		double aileron = ((double)msg[0] / 2048.0) - 1.0;
 		double elevator = ((double)msg[1] / 2048.0) - 1.0;

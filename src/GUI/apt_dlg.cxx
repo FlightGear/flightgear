@@ -72,7 +72,7 @@ void AptDialog_OK (puObject *)
 
 	if ( AptId.length() ) {
 		// set initial position from airport id
-		FG_LOG( FG_GENERAL, FG_INFO,
+		SG_LOG( SG_GENERAL, SG_INFO,
 				"Attempting to set starting position from airport code "
 				<< AptId );
 

@@ -60,7 +60,7 @@ static FGProtocol *parse_port_config( const string& config )
 
     begin = 0;
 
-    FG_LOG( FG_IO, FG_INFO, "Parse I/O channel request: " << config );
+    SG_LOG( SG_IO, SG_INFO, "Parse I/O channel request: " << config );
 
     // determine protocol
     end = config.find(",", begin);
@@ -70,7 +70,7 @@ static FGProtocol *parse_port_config( const string& config )
     
     string protocol = config.substr(begin, end - begin);
     begin = end + 1;
-    FG_LOG( FG_IO, FG_INFO, "  protocol = " << protocol );
+    SG_LOG( SG_IO, SG_INFO, "  protocol = " << protocol );
 
     FGProtocol *io;
     if ( protocol == "atlas" ) {
@@ -112,7 +112,7 @@ static FGProtocol *parse_port_config( const string& config )
     
     string medium = config.substr(begin, end - begin);
     begin = end + 1;
-    FG_LOG( FG_IO, FG_INFO, "  medium = " << medium );
+    SG_LOG( SG_IO, SG_INFO, "  medium = " << medium );
 
     // determine direction
     end = config.find(",", begin);
@@ -123,7 +123,7 @@ static FGProtocol *parse_port_config( const string& config )
     string direction = config.substr(begin, end - begin);
     begin = end + 1;
     io->set_direction( direction );
-    FG_LOG( FG_IO, FG_INFO, "  direction = " << direction );
+    SG_LOG( SG_IO, SG_INFO, "  direction = " << direction );
 
     // determine hertz
     end = config.find(",", begin);
@@ -135,7 +135,7 @@ static FGProtocol *parse_port_config( const string& config )
     begin = end + 1;
     double hertz = atof( hertz_str.c_str() );
     io->set_hz( hertz );
-    FG_LOG( FG_IO, FG_INFO, "  hertz = " << hertz );
+    SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
 
     if ( medium == "serial" ) {
 	// device name
@@ -146,18 +146,18 @@ static FGProtocol *parse_port_config( const string& config )
     
 	string device = config.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_INFO, "  device = " << device );
+	SG_LOG( SG_IO, SG_INFO, "  device = " << device );
 
 	// baud
 	string baud = config.substr(begin);
-	FG_LOG( FG_IO, FG_INFO, "  baud = " << baud );
+	SG_LOG( SG_IO, SG_INFO, "  baud = " << baud );
 
 	SGSerial *ch = new SGSerial( device, baud );
 	io->set_io_channel( ch );
     } else if ( medium == "file" ) {
 	// file name
 	string file = config.substr(begin);
-	FG_LOG( FG_IO, FG_INFO, "  file name = " << file );
+	SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
 
 	SGFile *ch = new SGFile( file );
 	io->set_io_channel( ch );
@@ -170,7 +170,7 @@ static FGProtocol *parse_port_config( const string& config )
     
 	string hostname = config.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_INFO, "  hostname = " << hostname );
+	SG_LOG( SG_IO, SG_INFO, "  hostname = " << hostname );
 
 	// port string
 	end = config.find(",", begin);
@@ -180,11 +180,11 @@ static FGProtocol *parse_port_config( const string& config )
     
 	string port = config.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_INFO, "  port string = " << port );
+	SG_LOG( SG_IO, SG_INFO, "  port string = " << port );
 
 	// socket style
 	string style_str = config.substr(begin);
-	FG_LOG( FG_IO, FG_INFO, "  style string = " << style_str );
+	SG_LOG( SG_IO, SG_INFO, "  style string = " << style_str );
        
 	SGSocket *ch = new SGSocket( hostname, port, style_str );
 	io->set_io_channel( ch );
@@ -197,7 +197,7 @@ static FGProtocol *parse_port_config( const string& config )
 // step through the port config streams (from fgOPTIONS) and setup
 // serial port channels for each
 void fgIOInit() {
-    // FG_LOG( FG_IO, FG_INFO, "I/O Channel initialization, " << 
+    // SG_LOG( SG_IO, SG_INFO, "I/O Channel initialization, " << 
     //         globals->get_channel_options_list()->size() << " requests." );
 
     FGProtocol *p;
@@ -215,11 +215,11 @@ void fgIOInit() {
 	    p->open();
 	    global_io_list.push_back( p );
 	    if ( !p->is_enabled() ) {
-		FG_LOG( FG_IO, FG_ALERT, "I/O Channel config failed." );
+		SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
 		exit(-1);
 	    }
 	} else {
-	    FG_LOG( FG_IO, FG_INFO, "I/O Channel parse failed." );
+	    SG_LOG( SG_IO, SG_INFO, "I/O Channel parse failed." );
 	}
     }
 }

@@ -133,21 +133,21 @@ void FGViewerLookAt::update() {
     sgSetVec3( view_pos, vp );
     sgAddVec3( view_pos, pilot_offset );
 
-    FG_LOG( FG_VIEW, FG_DEBUG, "sea level radius = " << sea_level_radius );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "sea level radius = " << sea_level_radius );
+    SG_LOG( SG_VIEW, SG_DEBUG, "Polar view pos = " << p );
+    SG_LOG( SG_VIEW, SG_DEBUG, "Absolute view pos = "
 	    << abs_view_pos[0] << ","
 	    << abs_view_pos[1] << ","
 	    << abs_view_pos[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "Relative view pos = "
 	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "pilot offset = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "pilot offset = "
 	    << pilot_offset[0] << "," << pilot_offset[1] << ","
 	    << pilot_offset[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "view forward = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "view forward = "
 	    << view_forward[0] << "," << view_forward[1] << ","
 	    << view_forward[2] );
-    FG_LOG( FG_VIEW, FG_DEBUG, "view up = "
+    SG_LOG( SG_VIEW, SG_DEBUG, "view up = "
 	    << view_up[0] << "," << view_up[1] << ","
 	    << view_up[2] );
 

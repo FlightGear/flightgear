@@ -672,7 +672,7 @@ char *coord_format_latlon(double latitude, double longitude)
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
-    FG_LOG( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem" );
+    SG_LOG( SG_COCKPIT, SG_INFO, "Initializing cockpit subsystem" );
 
     //  cockpit->code = 1;  /* It will be aircraft dependent */
     //  cockpit->status = 0;
@@ -692,7 +692,7 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     // Have to set the LatLon display type
     fgLatLonFormat = toDM;
     
-    FG_LOG( FG_COCKPIT, FG_INFO,
+    SG_LOG( SG_COCKPIT, SG_INFO,
         "  Code " << ac_cockpit->code() << " Status " 
         << ac_cockpit->status() );
 
@@ -701,7 +701,7 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 
 void fgCockpitUpdate( void ) {
 
-    FG_LOG( FG_COCKPIT, FG_DEBUG,
+    SG_LOG( SG_COCKPIT, SG_DEBUG,
         "Cockpit: code " << ac_cockpit->code() << " status " 
         << ac_cockpit->status() );
 

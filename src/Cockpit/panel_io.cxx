@@ -223,7 +223,7 @@ readTexture (const SGPropertyNode * node)
 			   node->getFloatValue("y1"),
 			   node->getFloatValue("x2", 1.0),
 			   node->getFloatValue("y2", 1.0));
-  FG_LOG(FG_INPUT, FG_INFO, "Read texture " << node->getName());
+  SG_LOG(SG_INPUT, SG_INFO, "Read texture " << node->getName());
   return texture;
 }
 
@@ -268,7 +268,7 @@ readAction (const SGPropertyNode * node, float hscale, float vscale)
   int h = int(node->getIntValue("h") * vscale);
 
   if (type == "") {
-    FG_LOG(FG_INPUT, FG_ALERT,
+    SG_LOG(SG_INPUT, SG_ALERT,
 	   "No type supplied for action " << name << " assuming \"adjust\"");
     type = "adjust";
   }
@@ -282,7 +282,7 @@ readAction (const SGPropertyNode * node, float hscale, float vscale)
     float max = node->getFloatValue("max", 0.0);
     bool wrap = node->getBoolValue("wrap", false);
     if (min == max)
-      FG_LOG(FG_INPUT, FG_ALERT, "Action " << node->getName()
+      SG_LOG(SG_INPUT, SG_ALERT, "Action " << node->getName()
 	     << " has same min and max value");
     action = new FGAdjustAction(button, x, y, w, h, value,
 				increment, min, max, wrap);
@@ -306,7 +306,7 @@ readAction (const SGPropertyNode * node, float hscale, float vscale)
 
 				// Unrecognized type
   else {
-    FG_LOG(FG_INPUT, FG_ALERT, "Unrecognized action type " << type);
+    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized action type " << type);
     return 0;
   }
 
@@ -350,7 +350,7 @@ readTransformation (const SGPropertyNode * node, float hscale, float vscale)
   SGValue * value = 0;
 
   if (type == "") {
-    FG_LOG(FG_INPUT, FG_ALERT,
+    SG_LOG(SG_INPUT, SG_ALERT,
 	   "No type supplied for transformation " << name
 	   << " assuming \"rotation\"");
     type = "rotation";
@@ -390,12 +390,12 @@ readTransformation (const SGPropertyNode * node, float hscale, float vscale)
   } 
 
   else {
-    FG_LOG(FG_INPUT, FG_ALERT, "Unrecognized transformation type " << type);
+    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized transformation type " << type);
     delete t;
     return 0;
   }
 
-  FG_LOG(FG_INPUT, FG_INFO, "Read transformation " << name);
+  SG_LOG(SG_INPUT, SG_INFO, "Read transformation " << name);
   return t;
 }
 
@@ -426,7 +426,7 @@ readTextChunk (const SGPropertyNode * node)
 
 				// Default to literal text.
   if (type == "") {
-    FG_LOG(FG_INPUT, FG_INFO, "No type provided for text chunk " << name
+    SG_LOG(SG_INPUT, SG_INFO, "No type provided for text chunk " << name
 	   << " assuming \"literal\"");
     type = "literal";
   }
@@ -455,7 +455,7 @@ readTextChunk (const SGPropertyNode * node)
 
 				// Unknown type.
   else {
-    FG_LOG(FG_INPUT, FG_ALERT, "Unrecognized type " << type
+    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized type " << type
 	   << " for text chunk " << name);
     return 0;
   }
@@ -500,7 +500,7 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
 
 
   if (type == "") {
-    FG_LOG(FG_INPUT, FG_ALERT,
+    SG_LOG(SG_INPUT, SG_ALERT,
 	   "No type supplied for layer " << name
 	   << " assuming \"texture\"");
     type = "texture";
@@ -566,13 +566,13 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
     }
 
     else if (layerclass == "") {
-      FG_LOG(FG_INPUT, FG_ALERT, "No class provided for built-in layer "
+      SG_LOG(SG_INPUT, SG_ALERT, "No class provided for built-in layer "
 	     << name);
       return 0;
     }
 
     else {
-      FG_LOG(FG_INPUT, FG_ALERT, "Unknown built-in layer class "
+      SG_LOG(SG_INPUT, SG_ALERT, "Unknown built-in layer class "
 	     << layerclass);
       return 0;
     }
@@ -580,7 +580,7 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
 
 				// An unknown type.
   else {
-    FG_LOG(FG_INPUT, FG_ALERT, "Unrecognized layer type " << type);
+    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized layer type " << type);
     delete layer;
     return 0;
   }
@@ -602,7 +602,7 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
     }
   }
   
-  FG_LOG(FG_INPUT, FG_INFO, "Read layer " << name);
+  SG_LOG(SG_INPUT, SG_INFO, "Read layer " << name);
   return layer;
 }
 
@@ -637,7 +637,7 @@ readInstrument (const SGPropertyNode * node, int x, int y,
     h = real_h;
   }
 
-  FG_LOG(FG_INPUT, FG_INFO, "Reading instrument " << name);
+  SG_LOG(SG_INPUT, SG_INFO, "Reading instrument " << name);
 
   FGLayeredInstrument * instrument =
     new FGLayeredInstrument(x, y, w, h);
@@ -676,7 +676,7 @@ readInstrument (const SGPropertyNode * node, int x, int y,
     }
   }
     
-  FG_LOG(FG_INPUT, FG_INFO, "Done reading instrument " << name);
+  SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
   return instrument;
 }
 
@@ -701,10 +701,10 @@ fgReadPanel (istream &input)
   // Read the property list from disk.
   //
   if (!readProperties(input, &root)) {
-    FG_LOG(FG_INPUT, FG_ALERT, "Malformed property list for panel.");
+    SG_LOG(SG_INPUT, SG_ALERT, "Malformed property list for panel.");
     return 0;
   }
-  FG_LOG(FG_INPUT, FG_INFO, "Read properties for panel " <<
+  SG_LOG(SG_INPUT, SG_INFO, "Read properties for panel " <<
 	 root.getStringValue("name"));
 
   //
@@ -747,13 +747,13 @@ fgReadPanel (istream &input)
   if (bgTexture == "")
     bgTexture = "FOO";
   panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
-  FG_LOG(FG_INPUT, FG_INFO, "Set background texture to " << bgTexture);
+  SG_LOG(SG_INPUT, SG_INFO, "Set background texture to " << bgTexture);
 
 
   //
   // Create each instrument.
   //
-  FG_LOG(FG_INPUT, FG_INFO, "Reading panel instruments");
+  SG_LOG(SG_INPUT, SG_INFO, "Reading panel instruments");
   const SGPropertyNode * instrument_group = root.getChild("instruments");
   if (instrument_group != 0) {
     int nInstruments = instrument_group->nChildren();
@@ -763,7 +763,7 @@ fgReadPanel (istream &input)
       FGPath path( globals->get_fg_root() );
       path.append(node->getStringValue("path"));
       
-      FG_LOG(FG_INPUT, FG_INFO, "Reading instrument "
+      SG_LOG(SG_INPUT, SG_INFO, "Reading instrument "
 	     << node->getName()
 	     << " from "
 	     << path.str());
@@ -774,7 +774,7 @@ fgReadPanel (istream &input)
       int h = node->getIntValue("h", -1);
       
       if (x == -1 || y == -1) {
-	FG_LOG(FG_INPUT, FG_ALERT, "x and y positions must be specified and >0");
+	SG_LOG(SG_INPUT, SG_ALERT, "x and y positions must be specified and >0");
 	delete panel;
 	return 0;
       }
@@ -795,7 +795,7 @@ fgReadPanel (istream &input)
       panel->addInstrument(instrument);
     }
   }
-  FG_LOG(FG_INPUT, FG_INFO, "Done reading panel instruments");
+  SG_LOG(SG_INPUT, SG_INFO, "Done reading panel instruments");
 
 
   //
@@ -819,7 +819,7 @@ fgReadPanel (const string &relative_path)
   path.append(relative_path);
   ifstream input(path.c_str());
   if (!input.good()) {
-    FG_LOG(FG_INPUT, FG_ALERT,
+    SG_LOG(SG_INPUT, SG_ALERT,
 	   "Cannot read panel configuration from " << path.str());
   } else {
     panel = fgReadPanel(input);

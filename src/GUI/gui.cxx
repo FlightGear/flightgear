@@ -209,10 +209,10 @@ void SaveDialogOk(puObject*) {
     if (output.good() && fgSaveFlight(output)) {
 	output.close();
 	mkDialog("Saved flight");
-	FG_LOG(FG_INPUT, FG_INFO, "Saved flight");
+	SG_LOG(SG_INPUT, SG_INFO, "Saved flight");
     } else {
 	mkDialog("Cannot save flight");
-	FG_LOG(FG_INPUT, FG_ALERT, "Cannot save flight");
+	SG_LOG(SG_INPUT, SG_ALERT, "Cannot save flight");
     }
 }
 
@@ -268,10 +268,10 @@ void LoadDialogOk(puObject *) {
     if (input.good() && fgLoadFlight(input)) {
 	input.close();
 	mkDialog("Loaded flight");
-	FG_LOG(FG_INPUT, FG_INFO, "Restored flight");
+	SG_LOG(SG_INPUT, SG_INFO, "Restored flight");
     } else {
 	mkDialog("Failed to load flight");
-	FG_LOG(FG_INPUT, FG_ALERT, "Cannot load flight");
+	SG_LOG(SG_INPUT, SG_ALERT, "Cannot load flight");
     }
 }
 
@@ -328,7 +328,7 @@ void hideMenuCb (puObject *cb)
 
 void goodBye(puObject *)
 {
-    // FG_LOG( FG_INPUT, FG_ALERT,
+    // SG_LOG( SG_INPUT, SG_ALERT,
     //      "Program exiting normally at user request." );
     cout << "Program exiting normally at user request." << endl;
 

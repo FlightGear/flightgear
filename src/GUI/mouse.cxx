@@ -492,7 +492,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     y = _mY - (int)(offset * elevator_sensitivity);
                     
                     glutSetCursor(GLUT_CURSOR_CROSSHAIR);
-                    FG_LOG( FG_INPUT, FG_INFO, "Mouse in yoke mode" );
+                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in yoke mode" );
                     break;
                     
                 case MOUSE_YOKE:
@@ -504,7 +504,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     Quat0();
                     build_rotmatrix(GuiQuat_mat, curGuiQuat);
                     glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
-                    FG_LOG( FG_INPUT, FG_INFO, "Mouse in view mode" );
+                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in view mode" );
                     break;
                     
                 case MOUSE_VIEW:
@@ -524,7 +524,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     if(!gui_menu_on)
                         TurnCursorOff();
                     
-                    FG_LOG( FG_INPUT, FG_INFO, "Mouse in pointer mode" );
+                    SG_LOG( SG_INPUT, SG_INFO, "Mouse in pointer mode" );
                     break;
             }     
             glutWarpPointer( x, y );

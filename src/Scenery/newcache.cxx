@@ -75,7 +75,7 @@ FGNewCache::~FGNewCache( void ) {
 
 // Free a tile cache entry
 void FGNewCache::entry_free( long cache_index ) {
-    FG_LOG( FG_TERRAIN, FG_INFO, "FREEING CACHE ENTRY = " << cache_index );
+    SG_LOG( SG_TERRAIN, SG_INFO, "FREEING CACHE ENTRY = " << cache_index );
     FGTileEntry *e = tile_cache[cache_index];
     e->free_tile();
     delete( e );
@@ -85,14 +85,14 @@ void FGNewCache::entry_free( long cache_index ) {
 
 // Initialize the tile cache subsystem
 void FGNewCache::init( void ) {
-    FG_LOG( FG_TERRAIN, FG_INFO, "Initializing the tile cache." );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Initializing the tile cache." );
 
     // expand cache if needed.  For best results ... i.e. to avoid
     // tile load problems and blank areas: 
     max_cache_size = 50;	// a random number to start with
-    FG_LOG( FG_TERRAIN, FG_INFO, "  max cache size = " 
+    SG_LOG( SG_TERRAIN, SG_INFO, "  max cache size = " 
 	    << max_cache_size );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  current cache size = " 
+    SG_LOG( SG_TERRAIN, SG_INFO, "  current cache size = " 
 	    << tile_cache.size() );
     
     tile_map_iterator current = tile_cache.begin();
@@ -100,7 +100,7 @@ void FGNewCache::init( void ) {
     
     for ( ; current != end; ++current ) {
 	long index = current->first;
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "clearing " << index );
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "clearing " << index );
 	FGTileEntry *e = current->second;
 	e->tile_bucket.make_bad();
 	entry_free(index);
@@ -109,7 +109,7 @@ void FGNewCache::init( void ) {
     // and ... just in case we missed something ... 
     terrain->removeAllKids();
 
-    FG_LOG( FG_TERRAIN, FG_INFO, "  done with init()"  );
+    SG_LOG( SG_TERRAIN, SG_INFO, "  done with init()"  );
 }
 
 
@@ -192,7 +192,7 @@ static ssgLeaf *gen_lights( ssgVertexArray *lights, int inc, float bright ) {
 
 // Fill in a tile cache entry with real data for the specified bucket
 void FGNewCache::fill_in( const SGBucket& b ) {
-    FG_LOG( FG_TERRAIN, FG_INFO, "FILL IN CACHE ENTRY = " << b.gen_index() );
+    SG_LOG( SG_TERRAIN, SG_INFO, "FILL IN CACHE ENTRY = " << b.gen_index() );
 
     // clear out a distant entry in the cache if needed.
     make_space();
@@ -207,7 +207,7 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     // update the contents
     e->center = Point3D( 0.0 );
     if ( e->vec3_ptrs.size() || e->vec2_ptrs.size() || e->index_ptrs.size() ) {
-	FG_LOG( FG_TERRAIN, FG_ALERT, 
+	SG_LOG( SG_TERRAIN, SG_ALERT, 
 		"Attempting to overwrite existing or"
 		<< " not properly freed leaf data." );
 	exit(-1);
@@ -239,13 +239,13 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     }
   
     // load custom objects
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "CUSTOM OBJECTS" );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "CUSTOM OBJECTS" );
 
     FGPath index_path = tile_path;
     index_path.append( b.gen_index_str() );
     index_path.concat( ".ind" );
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Looking in " << index_path.str() );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "Looking in " << index_path.str() );
 
     fg_gzifstream in( index_path.str() );
 
@@ -260,7 +260,7 @@ void FGNewCache::fill_in( const SGBucket& b ) {
 #else
 	    in >> skipws;
 #endif
-	    FG_LOG( FG_TERRAIN, FG_DEBUG, "token = " << token
+	    SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
 		    << " name = " << name );
 
 	    FGPath custom_path = tile_path;
@@ -288,7 +288,7 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     e->lights_range = NULL;
     /* uncomment this section for testing ground lights */
     if ( light_pts->getNum() ) {
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "generating lights" );
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "generating lights" );
 	e->lights_transform = new ssgTransform;
 	e->lights_range = new ssgRangeSelector;
 	e->lights_brightness = new ssgSelector;
@@ -314,11 +314,11 @@ void FGNewCache::fill_in( const SGBucket& b ) {
 
 // Ensure at least one entry is free in the cache
 void FGNewCache::make_space() {
-    FG_LOG( FG_TERRAIN, FG_INFO, "Make space in cache" );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Make space in cache" );
 
     
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "cache entries = " << tile_cache.size() );
-    FG_LOG( FG_TERRAIN, FG_INFO, "max size = " << max_cache_size );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "cache entries = " << tile_cache.size() );
+    SG_LOG( SG_TERRAIN, SG_INFO, "max size = " << max_cache_size );
 
     if ( (int)tile_cache.size() < max_cache_size ) {
 	// space in the cache, return
@@ -343,18 +343,18 @@ void FGNewCache::make_space() {
 	    sgdCopyVec3( abs_view_pos,
 			 globals->get_current_view()->get_abs_view_pos() );
 
-	    FG_LOG( FG_TERRAIN, FG_DEBUG, "DIST Abs view pos = " 
+	    SG_LOG( SG_TERRAIN, SG_DEBUG, "DIST Abs view pos = " 
 		    << abs_view_pos[0] << ","
 		    << abs_view_pos[1] << ","
 		    << abs_view_pos[2] );
-	    FG_LOG( FG_TERRAIN, FG_DEBUG,
+	    SG_LOG( SG_TERRAIN, SG_DEBUG,
 		    "    ref point = " << e->center );
 
 	    sgdVec3 center;
 	    sgdSetVec3( center, e->center.x(), e->center.y(), e->center.z() );
 	    dist = sgdDistanceVec3( center, abs_view_pos );
 
-	    FG_LOG( FG_TERRAIN, FG_DEBUG, "    distance = " << dist );
+	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    distance = " << dist );
 
 	    if ( dist > max_dist ) {
 		max_dist = dist;
@@ -367,11 +367,11 @@ void FGNewCache::make_space() {
 	// index.
 
 	if ( max_index >= 0 ) {
-	    FG_LOG( FG_TERRAIN, FG_DEBUG, "    max_dist = " << max_dist );
-	    FG_LOG( FG_TERRAIN, FG_DEBUG, "    index = " << max_index );
+	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    max_dist = " << max_dist );
+	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    index = " << max_index );
 	    entry_free( max_index );
 	} else {
-	    FG_LOG( FG_TERRAIN, FG_ALERT, "WHOOPS!!! Dying in next_avail()" );
+	    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! Dying in next_avail()" );
 	    exit( -1 );
 	}
     }

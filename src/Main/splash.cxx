@@ -58,7 +58,7 @@ static GLubyte *splash_texbuf;
 void fgSplashInit ( void ) {
     int width, height;
 
-    FG_LOG( FG_GENERAL, FG_INFO, "Initializing splash screen" );
+    SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
 #ifdef GL_VERSION_1_1
     xglGenTextures(1, &splash_texid);
     xglBindTexture(GL_TEXTURE_2D, splash_texid);
@@ -93,7 +93,7 @@ void fgSplashInit ( void ) {
 	if ( (splash_texbuf = 
 	      read_rgb_texture(fg_tpath.c_str(), &width, &height)) == NULL )
 	{
-	    FG_LOG( FG_GENERAL, FG_ALERT, 
+	    SG_LOG( SG_GENERAL, SG_ALERT, 
 		    "Error in loading splash screen texture " << tpath.str() );
 	    exit(-1);
 	} 

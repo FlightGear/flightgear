@@ -124,7 +124,7 @@ fgEVENT::~fgEVENT()
 void
 fgEVENT::run()
 {
-    FG_LOG(FG_EVENT, FG_DEBUG, "Running " << description );
+    SG_LOG(SG_EVENT, SG_DEBUG, "Running " << description );
 
     // record starting time
     last_run.stamp();
@@ -161,7 +161,7 @@ fgEVENT::run()
 int
 fgEVENT::PrintStats() const
 {
-    FG_LOG( FG_EVENT, FG_INFO, 
+    SG_LOG( SG_EVENT, SG_INFO, 
 	    "  " << description 
 	    << " int=" << interval / 1000.0
 	    << " cum=" << cum_time
@@ -179,7 +179,7 @@ fgEVENT_MGR::fgEVENT_MGR( void ) {
 
 // Initialize the scheduling subsystem
 void fgEVENT_MGR::Init( void ) {
-    FG_LOG(FG_EVENT, FG_INFO, "Initializing event manager" );
+    SG_LOG(SG_EVENT, SG_INFO, "Initializing event manager" );
 
     run_queue.erase( run_queue.begin(), run_queue.end() );
     event_table.erase( event_table.begin(), event_table.end() );
@@ -196,7 +196,7 @@ fgEVENT_MGR::Register( const string& desc,
     // convert interval specified in milleseconds to usec
     fgEVENT* e = new fgEVENT( desc, cb, status, interval * 1000 );
 
-    FG_LOG( FG_EVENT, FG_INFO, "Registering event: " << desc );
+    SG_LOG( SG_EVENT, SG_INFO, "Registering event: " << desc );
 
     // Actually run the event
     e->run();
@@ -229,9 +229,9 @@ void fgEVENT_MGR::Resume( void ) {
 void
 fgEVENT_MGR::PrintStats()
 {
-    FG_LOG( FG_EVENT, FG_INFO, "" );
-    FG_LOG( FG_EVENT, FG_INFO, "Event Stats" );
-    FG_LOG( FG_EVENT, FG_INFO, "-----------" );
+    SG_LOG( SG_EVENT, SG_INFO, "" );
+    SG_LOG( SG_EVENT, SG_INFO, "Event Stats" );
+    SG_LOG( SG_EVENT, SG_INFO, "-----------" );
 
     ConstEventIterator first = event_table.begin();
     ConstEventIterator last = event_table.end();
@@ -245,7 +245,7 @@ fgEVENT_MGR::PrintStats()
 	      event_table.end(),
 	      mem_fun( &fgEVENT::PrintStats ) );
 #endif
-    FG_LOG( FG_EVENT, FG_INFO, "");
+    SG_LOG( SG_EVENT, SG_INFO, "");
 }
 
 
@@ -256,12 +256,12 @@ void fgEVENT_MGR::Process( void ) {
     SGTimeStamp cur_time;
     unsigned int i, size;
 
-    FG_LOG( FG_EVENT, FG_DEBUG, "Processing events" );
+    SG_LOG( SG_EVENT, SG_DEBUG, "Processing events" );
     
     // get the current time
     cur_time.stamp();
 
-    FG_LOG( FG_EVENT, FG_DEBUG, 
+    SG_LOG( SG_EVENT, SG_DEBUG, 
 	    "  Current timestamp = " << cur_time.get_seconds() );
 
     // printf("Checking if anything is ready to move to the run queue\n");
@@ -273,7 +273,7 @@ void fgEVENT_MGR::Process( void ) {
 	// e = *current++;
 	e_ptr = event_table[i];
 	if ( e_ptr->status == fgEVENT::FG_EVENT_READY ) {
-	    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    SG_LOG( SG_EVENT, SG_DEBUG, 
 		    "  Item " << i << " current " << cur_time.get_seconds()
 		    << " next run @ " << e_ptr->next_run.get_seconds() );
 	    if ( ( e_ptr->next_run - cur_time ) <= 0 ) {

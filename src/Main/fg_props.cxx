@@ -52,7 +52,7 @@ fgLoadFlight (istream &input)
 				// new initial state.
     globals->saveInitialState();
   } else {
-    FG_LOG(FG_INPUT, FG_ALERT, "Error restoring flight; aborted");
+    SG_LOG(SG_INPUT, SG_ALERT, "Error restoring flight; aborted");
     return false;
   }
 }

@@ -64,7 +64,7 @@ FGSoundMgr::FGSoundMgr() {
     audio_sched = new slScheduler( 8000 );
     audio_mixer = new smMixer;
 
-    FG_LOG( FG_GENERAL, FG_INFO,
+    SG_LOG( SG_GENERAL, SG_INFO,
 	    "Rate = " << audio_sched->getRate()
 	    << "  Bps = " << audio_sched->getBps()
 	    << "  Stereo = " << audio_sched->getStereo() );

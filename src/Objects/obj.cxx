@@ -131,7 +131,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 	// set ssgState
 	state = newmat->get_state();
     } else {
-	FG_LOG( FG_TERRAIN, FG_ALERT, 
+	SG_LOG( SG_TERRAIN, SG_ALERT, 
 		"Ack! unknown usemtl name = " << "Ocean" 
 		<< " in " << path );
     }
@@ -377,8 +377,8 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
     // Attempt to open "path.gz" or "path"
     fg_gzifstream in( path );
     if ( ! in.is_open() ) {
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "Cannot open file: " << path );
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "default to ocean tile: " << path );
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "Cannot open file: " << path );
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "default to ocean tile: " << path );
 
 	return NULL;
     }
@@ -431,7 +431,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		in >> scenery_version;
 		// cout << "scenery_version = " << scenery_version << endl;
 		if ( scenery_version > 0.4 ) {
-		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+		    SG_LOG( SG_TERRAIN, SG_ALERT, 
 			    "\nYou are attempting to load a tile format that\n"
 			    << "is newer than this version of flightgear can\n"
 			    << "handle.  You should upgrade your copy of\n"
@@ -466,7 +466,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		if ( ! shared_done ) {
 		    // sanity check
 		    if ( (int)nodes.size() != vncount ) {
-			FG_LOG( FG_TERRAIN, FG_ALERT, 
+			SG_LOG( SG_TERRAIN, SG_ALERT, 
 				"Tile has mismatched nodes = " << nodes.size()
 				<< " and normals = " << vncount << " : " 
 				<< path );
@@ -519,14 +519,14 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		    file += material;
 		    cout << "current file = " << file << endl;
 		    if ( ! material_lib.add_item( file ) ) {
-			FG_LOG( FG_TERRAIN, FG_ALERT, 
+			SG_LOG( SG_TERRAIN, SG_ALERT, 
 				"Ack! unknown usemtl name = " << material 
 				<< " in " << path );
 		    } else {
 			// locate our newly created material
 			newmat = material_lib.find( material );
 			if ( newmat == NULL ) {
-			    FG_LOG( FG_TERRAIN, FG_ALERT, 
+			    SG_LOG( SG_TERRAIN, SG_ALERT, 
 				    "Ack! bad on the fly materia create = "
 				    << material << " in " << path );
 			}
@@ -566,7 +566,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		       >> normals[vncount][2];
 		    vncount++;
 		} else {
-		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+		    SG_LOG( SG_TERRAIN, SG_ALERT, 
 			    "Read too many vertex normals in " << path 
 			    << " ... dying :-(" );
 		    exit(-1);
@@ -578,7 +578,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		       >> tex_coords[vtcount][1];
 		    vtcount++;
 		} else {
-		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+		    SG_LOG( SG_TERRAIN, SG_ALERT, 
 			    "Read too many vertex texture coords in " << path
 			    << " ... dying :-("
 			    );
@@ -596,14 +596,14 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 			t->ncount++;
 		    }
 		} else {
-		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+		    SG_LOG( SG_TERRAIN, SG_ALERT, 
 			    "Read too many nodes in " << path 
 			    << " ... dying :-(");
 		    exit(-1);
 		}
 	    } else if ( (token == "tf") || (token == "ts") || (token == "f") ) {
 		// triangle fan, strip, or individual face
-		// FG_LOG( FG_TERRAIN, FG_INFO, "new fan or strip");
+		// SG_LOG( SG_TERRAIN, SG_INFO, "new fan or strip");
 
 		fan_vertices.clear();
 		fan_tex_coords.clear();
@@ -757,7 +757,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		if ( is_base ) {
 		    if ( coverage > 0.0 ) {
 			if ( coverage < 10000.0 ) {
-			    FG_LOG(FG_INPUT, FG_ALERT, "Light coverage is "
+			    SG_LOG(SG_INPUT, SG_ALERT, "Light coverage is "
 				   << coverage << ", pushing up to 10000");
 			    coverage = 10000;
 			}
@@ -765,7 +765,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		    }
 		}
 	    } else {
-		FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
+		SG_LOG( SG_TERRAIN, SG_WARN, "Unknown token in " 
 			<< path << " = " << token );
 	    }
 
@@ -784,7 +784,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
     }
 
     stopwatch.stop();
-    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+    SG_LOG( SG_TERRAIN, SG_DEBUG, 
 	    "Loaded " << path << " in " 
 	    << stopwatch.elapsedSeconds() << " seconds" );
 
@@ -815,14 +815,14 @@ static ssgLeaf *gen_leaf( const string& path,
 	file += material;
 	cout << "current file = " << file << endl;
 	if ( ! material_lib.add_item( file ) ) {
-	    FG_LOG( FG_TERRAIN, FG_ALERT, 
+	    SG_LOG( SG_TERRAIN, SG_ALERT, 
 		    "Ack! unknown usemtl name = " << material 
 		    << " in " << path );
 	} else {
 	    // locate our newly created material
 	    newmat = material_lib.find( material );
 	    if ( newmat == NULL ) {
-		FG_LOG( FG_TERRAIN, FG_ALERT, 
+		SG_LOG( SG_TERRAIN, SG_ALERT, 
 			"Ack! bad on the fly materia create = "
 			<< material << " in " << path );
 	    }
@@ -889,7 +889,7 @@ static ssgLeaf *gen_leaf( const string& path,
     if ( calc_lights ) {
 	if ( coverage > 0.0 ) {
 	    if ( coverage < 10000.0 ) {
-		FG_LOG(FG_INPUT, FG_ALERT, "Light coverage is "
+		SG_LOG(SG_INPUT, SG_ALERT, "Light coverage is "
 		       << coverage << ", pushing up to 10000");
 		coverage = 10000;
 	    }

@@ -84,14 +84,14 @@ FGTileMgr::~FGTileMgr() {
 
 // Initialize the Tile Manager subsystem
 int FGTileMgr::init() {
-    FG_LOG( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem." );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
     if ( state != Start ) {
-	FG_LOG( FG_TERRAIN, FG_INFO,
+	SG_LOG( SG_TERRAIN, SG_INFO,
 		"... Reinitializing." );
 	destroy_queue();
     } else {
-	FG_LOG( FG_TERRAIN, FG_INFO,
+	SG_LOG( SG_TERRAIN, SG_INFO,
 		"... First time through." );
 	global_tile_cache.init();
     }
@@ -128,12 +128,12 @@ void FGTileMgr::load_tile( const SGBucket& b ) {
     FGTileEntry *t = global_tile_cache.get_tile( b );
 
     if ( t == NULL ) {
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "Loading tile " << b );
 	global_tile_cache.fill_in( b );
 	t = global_tile_cache.get_tile( b );
 	t->prep_ssg_node( scenery.center, vis);
     } else {
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "Tile already in cache " << b );
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "Tile already in cache " << b );
     }
 }
 
@@ -195,7 +195,7 @@ bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, double *terrain_elev ) {
 	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
 	return true;
     } else {
-	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
+	SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
 	*terrain_elev = 0.0;
 	float *up = globals->get_current_view()->get_world_up();
 	sgdSetVec3(scenery.cur_normal, up[0], up[1], up[2]);
@@ -269,7 +269,7 @@ void FGTileMgr::initialize_queue()
     // First time through or we have teleported, initialize the
     // system and load all relavant tiles
 
-    FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << current_bucket );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Updating Tile list for " << current_bucket );
     cout << "tile cache size = " << global_tile_cache.get_size() << endl;
 
     int i;
@@ -289,7 +289,7 @@ void FGTileMgr::initialize_queue()
     // have something to see in our first frame.
     for ( i = 0; i < 9; ++i ) {
         if ( load_queue.size() ) {
-            FG_LOG( FG_TERRAIN, FG_DEBUG, 
+            SG_LOG( SG_TERRAIN, SG_DEBUG, 
                     "Load queue not empty, loading a tile" );
 
             SGBucket pending = load_queue.front();
@@ -313,7 +313,7 @@ void FGTileMgr::destroy_queue() {
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
 int FGTileMgr::update( double lon, double lat ) {
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "FGTileMgr::update()" );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
 
     // FGInterface *f = current_aircraft.fdm_state;
 
@@ -322,17 +322,17 @@ int FGTileMgr::update( double lon, double lat ) {
     // latitude = f->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     longitude = lon;
     latitude = lat;
-    // FG_LOG( FG_TERRAIN, FG_DEBUG, "lon "<< lonlat[LON] <<
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, "lon "<< lonlat[LON] <<
     //      " lat " << lonlat[LAT] );
 
     current_bucket.set_bucket( longitude, latitude );
-    // FG_LOG( FG_TERRAIN, FG_DEBUG, "Updating Tile list for " << current_bucket );
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating Tile list for " << current_bucket );
 
     if ( global_tile_cache.exists( current_bucket ) ) {
         current_tile = global_tile_cache.get_tile( current_bucket );
         scenery.next_center = current_tile->center;
     } else {
-        FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found (Ok if initializing)" );
+        SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
     }
 
     if ( state == Running ) {
@@ -347,7 +347,7 @@ int FGTileMgr::update( double lon, double lat ) {
     }
 
     if ( load_queue.size() ) {
-	FG_LOG( FG_TERRAIN, FG_INFO, "Load queue size = " << load_queue.size()
+	SG_LOG( SG_TERRAIN, SG_INFO, "Load queue size = " << load_queue.size()
 		<< " loading a tile" );
 
 	SGBucket pending = load_queue.front();

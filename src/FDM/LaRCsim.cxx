@@ -86,7 +86,7 @@ void FGLaRCsim::init() {
     set_Tank1Fuel(28.0);
     set_Tank2Fuel(28.0);  
 
-    // FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::init()"  );
+    // SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::init()"  );
 
     double save_alt = 0.0;
 
@@ -101,7 +101,7 @@ void FGLaRCsim::init() {
     // actual LaRCsim top level init
     // ls_toplevel_init( dt, (char *)fgGetString("/sim/aircraft").c_str() );
 
-    FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << 
+    SG_LOG( SG_FLIGHT, SG_INFO, "FG pos = " << 
 	    get_Latitude() );
 
     // translate LaRCsim back to FG structure
@@ -151,17 +151,17 @@ bool FGLaRCsim::update( int multiloop ) {
 			  * get_delta_t() ); 
 
 #if 0
-	FG_LOG( FG_FLIGHT, FG_INFO, "Throttle = "
+	SG_LOG( SG_FLIGHT, SG_INFO, "Throttle = "
 		<< controls.get_throttle( 0 ) * 100.0);
-	FG_LOG( FG_FLIGHT, FG_INFO, " Mixture = " << 80);
-	FG_LOG( FG_FLIGHT, FG_INFO, " RPM = " << eng.get_RPM());
-	FG_LOG( FG_FLIGHT, FG_INFO, " MP = " << eng.get_Manifold_Pressure());
-	FG_LOG( FG_FLIGHT, FG_INFO, " HP = "
+	SG_LOG( SG_FLIGHT, SG_INFO, " Mixture = " << 80);
+	SG_LOG( SG_FLIGHT, SG_INFO, " RPM = " << eng.get_RPM());
+	SG_LOG( SG_FLIGHT, SG_INFO, " MP = " << eng.get_Manifold_Pressure());
+	SG_LOG( SG_FLIGHT, SG_INFO, " HP = "
 	  	<< ( eng.get_MaxHP() * eng.get_Percentage_Power()/ 100.0) );
-	FG_LOG( FG_FLIGHT, FG_INFO, " EGT = " << eng.get_EGT());
-	FG_LOG( FG_FLIGHT, FG_INFO, " Thrust (N) "
+	SG_LOG( SG_FLIGHT, SG_INFO, " EGT = " << eng.get_EGT());
+	SG_LOG( SG_FLIGHT, SG_INFO, " Thrust (N) "
 	  	<< eng.get_prop_thrust_SI());	// Thrust in Newtons
-	FG_LOG( FG_FLIGHT, FG_INFO, '\n');
+	SG_LOG( SG_FLIGHT, SG_INFO, '\n');
 #endif
         F_X_engine = eng.get_prop_thrust_lbs();
 	// cout << "F_X_engine = " << F_X_engine << '\n';
@@ -468,7 +468,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
 
     _set_Mach_number( Mach_number );
 
-    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
+    SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << Longitude 
 	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
 	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
 	    << " radius_to_vehicle = " << Radius_to_vehicle );
@@ -575,20 +575,20 @@ void FGLaRCsim::set_ls(void) {
     V_down_airmass = lsic->GetVdownAirmassFpsIC();
     ls_loop(0.0,-1);
     copy_from_LaRCsim();
-    FG_LOG( FG_FLIGHT, FG_INFO, "  FGLaRCsim::set_ls(): "  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     Phi: " <<  Phi  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     Theta: " <<  Theta  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     Psi: " <<  Psi  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     V_north: " <<  V_north  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     V_east: " <<  V_east  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     V_down: " <<  V_down  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     Altitude: " <<  Altitude  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     Latitude: " <<  Latitude  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     Longitude: " <<  Longitude  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     Runway_altitude: " <<  Runway_altitude  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     V_north_airmass: " <<  V_north_airmass  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     V_east_airmass: " <<  V_east_airmass  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "     V_down_airmass: " <<  V_down_airmass  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "  FGLaRCsim::set_ls(): "  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     Phi: " <<  Phi  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     Theta: " <<  Theta  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     Psi: " <<  Psi  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     V_north: " <<  V_north  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     V_east: " <<  V_east  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     V_down: " <<  V_down  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     Altitude: " <<  Altitude  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     Latitude: " <<  Latitude  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     Longitude: " <<  Longitude  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     Runway_altitude: " <<  Runway_altitude  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     V_north_airmass: " <<  V_north_airmass  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     V_east_airmass: " <<  V_east_airmass  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "     V_down_airmass: " <<  V_down_airmass  );
 }  
 
 void FGLaRCsim::snap_shot(void) {
@@ -608,7 +608,7 @@ void FGLaRCsim::snap_shot(void) {
 
 //Positions
 void FGLaRCsim::set_Latitude(double lat) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Latitude: " << lat  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Latitude: " << lat  );
     snap_shot();
     lsic->SetLatitudeGDRadIC(lat);
     set_ls();
@@ -616,7 +616,7 @@ void FGLaRCsim::set_Latitude(double lat) {
 }  
 
 void FGLaRCsim::set_Longitude(double lon) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
     snap_shot();
     lsic->SetLongitudeRadIC(lon);
     set_ls();
@@ -624,7 +624,7 @@ void FGLaRCsim::set_Longitude(double lon) {
 }  
 
 void FGLaRCsim::set_Altitude(double alt) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
     snap_shot();
     lsic->SetAltitudeFtIC(alt);
     set_ls();
@@ -632,7 +632,7 @@ void FGLaRCsim::set_Altitude(double alt) {
 }
 
 void FGLaRCsim::set_V_calibrated_kts(double vc) {
-    FG_LOG( FG_FLIGHT, FG_INFO, 
+    SG_LOG( SG_FLIGHT, SG_INFO, 
 	    "FGLaRCsim::set_V_calibrated_kts: " << vc  );
     snap_shot();
     lsic->SetVcalibratedKtsIC(vc);
@@ -641,7 +641,7 @@ void FGLaRCsim::set_V_calibrated_kts(double vc) {
 }  
 
 void FGLaRCsim::set_Mach_number(double mach) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Mach_number: " << mach  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Mach_number: " << mach  );
     snap_shot();
     lsic->SetMachIC(mach);
     set_ls();
@@ -649,7 +649,7 @@ void FGLaRCsim::set_Mach_number(double mach) {
 }  
 
 void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_local: " 
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_local: " 
 	    << north << "  " << east << "  " << down   );
     snap_shot();
     lsic->SetVNEDFpsIC(north, east, down);
@@ -658,7 +658,7 @@ void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
 }  
 
 void FGLaRCsim::set_Velocities_Wind_Body( double u, double v, double w){
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_Wind_Body: " 
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_Wind_Body: " 
 	    << u << "  " << v << "  " << w   );
     snap_shot();
     lsic->SetUVWFpsIC(u,v,w);
@@ -668,7 +668,7 @@ void FGLaRCsim::set_Velocities_Wind_Body( double u, double v, double w){
 
 //Euler angles 
 void FGLaRCsim::set_Euler_Angles( double phi, double theta, double psi ) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Euler_angles: " 
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Euler_angles: " 
 	    << phi << "  " << theta << "  " << psi   );
 
     snap_shot();
@@ -681,7 +681,7 @@ void FGLaRCsim::set_Euler_Angles( double phi, double theta, double psi ) {
 
 //Flight Path
 void FGLaRCsim::set_Climb_Rate( double roc) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Climb_rate: " << roc  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Climb_rate: " << roc  );
     snap_shot();
     lsic->SetClimbRateFpsIC(roc);
     set_ls();
@@ -689,7 +689,7 @@ void FGLaRCsim::set_Climb_Rate( double roc) {
 }  
 
 void FGLaRCsim::set_Gamma_vert_rad( double gamma) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Gamma_vert_rad: " << gamma  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Gamma_vert_rad: " << gamma  );
     snap_shot();
     lsic->SetFlightPathAngleRadIC(gamma);
     set_ls();
@@ -697,7 +697,7 @@ void FGLaRCsim::set_Gamma_vert_rad( double gamma) {
 }  
 
 void FGLaRCsim::set_Runway_altitude(double ralt) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Runway_altitude: " << ralt  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Runway_altitude: " << ralt  );
     snap_shot();
     lsic->SetRunwayAltitudeFtIC(ralt);
     set_ls();
@@ -705,7 +705,7 @@ void FGLaRCsim::set_Runway_altitude(double ralt) {
 } 
 
 void FGLaRCsim::set_AltitudeAGL(double altagl) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_AltitudeAGL: " << altagl  );
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_AltitudeAGL: " << altagl  );
     snap_shot();
     lsic->SetAltitudeAGLFtIC(altagl);
     set_ls();
@@ -715,7 +715,7 @@ void FGLaRCsim::set_AltitudeAGL(double altagl) {
 void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth, 
 					      double weast, 
 					      double wdown ) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_Local_Airmass: " 
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_Local_Airmass: " 
 	    << wnorth << "  " << weast << "  " << wdown );
     snap_shot();
     lsic->SetVNEDAirmassFpsIC( wnorth, weast, wdown );
@@ -724,23 +724,23 @@ void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth,
 }     
 
 void FGLaRCsim::set_Static_pressure(double p) { 
-    FG_LOG( FG_FLIGHT, FG_INFO, 
+    SG_LOG( SG_FLIGHT, SG_INFO, 
 	    "FGLaRCsim::set_Static_pressure: " << p  );
-    FG_LOG( FG_FLIGHT, FG_INFO, 
+    SG_LOG( SG_FLIGHT, SG_INFO, 
 	    "LaRCsim does not support externally supplied atmospheric data" );
 }
 
 void FGLaRCsim::set_Static_temperature(double T) { 
-    FG_LOG( FG_FLIGHT, FG_INFO, 
+    SG_LOG( SG_FLIGHT, SG_INFO, 
 	    "FGLaRCsim::set_Static_temperature: " << T  );
-    FG_LOG( FG_FLIGHT, FG_INFO, 
+    SG_LOG( SG_FLIGHT, SG_INFO, 
 	    "LaRCsim does not support externally supplied atmospheric data" );
 
 }
 
 void FGLaRCsim::set_Density(double rho) { 
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Density: " << rho  );
-    FG_LOG( FG_FLIGHT, FG_INFO, 
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Density: " << rho  );
+    SG_LOG( SG_FLIGHT, SG_INFO, 
 	    "LaRCsim does not support externally supplied atmospheric data" );
 
 }

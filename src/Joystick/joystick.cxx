@@ -165,13 +165,13 @@ fgJoystickInit()
 {
     bool seen_joystick = false;
 
-    FG_LOG(FG_INPUT, FG_INFO, "Initializing joysticks");
+    SG_LOG(SG_INPUT, SG_INFO, "Initializing joysticks");
 
     for (int i = 0; i < MAX_JOYSTICKS; i++) {
 	jsJoystick * js = new jsJoystick(i);
 	joysticks[i].js = js;
 	if (js->notWorking()) {
-	    FG_LOG(FG_INPUT, FG_INFO, "Joystick " << i << " not found");
+	    SG_LOG(SG_INPUT, SG_INFO, "Joystick " << i << " not found");
 	    continue;
 	}
 #ifdef WIN32
@@ -188,7 +188,7 @@ fgJoystickInit()
 	joysticks[i].naxes = naxes;
 	joysticks[i].nbuttons = nbuttons;
 
-	FG_LOG(FG_INPUT, FG_INFO, "Initializing joystick " << i);
+	SG_LOG(SG_INPUT, SG_INFO, "Initializing joystick " << i);
 	seen_joystick = true;
 
 	// Set up range arrays
@@ -217,19 +217,19 @@ fgJoystickInit()
 	    base += jsNames[i];
 	    base += '/';
 	    base += axisNames[j];
-	    FG_LOG(FG_INPUT, FG_INFO, "  Axis " << j << ':');
+	    SG_LOG(SG_INPUT, SG_INFO, "  Axis " << j << ':');
 
 	    // Control property
 	    string name = base;
 	    name += "/control";
 	    SGValue * value = fgGetValue(name);
 	    if (value == 0) {
-		FG_LOG(FG_INPUT, FG_INFO, "    no control defined");
+		SG_LOG(SG_INPUT, SG_INFO, "    no control defined");
 		continue;
 	    }
 	    const string &control = value->getStringValue();
 	    a.value = fgGetValue(control, true);
-	    FG_LOG(FG_INPUT, FG_INFO, "    using control " << control);
+	    SG_LOG(SG_INPUT, SG_INFO, "    using control " << control);
 
 	    // Dead band
 	    name = base;
@@ -237,7 +237,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		js->setDeadBand(j, value->getDoubleValue());
-	    FG_LOG(FG_INPUT, FG_INFO, "    dead-band is " << js->getDeadBand(j));
+	    SG_LOG(SG_INPUT, SG_INFO, "    dead-band is " << js->getDeadBand(j));
 
 	    // Offset
 	    name = base;
@@ -245,7 +245,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		a.offset = value->getDoubleValue();
-	    FG_LOG(FG_INPUT, FG_INFO, "    offset is " << a.offset);
+	    SG_LOG(SG_INPUT, SG_INFO, "    offset is " << a.offset);
 
 
 	    // Factor
@@ -254,7 +254,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		a.factor = value->getDoubleValue();
-	    FG_LOG(FG_INPUT, FG_INFO, "    factor is " << a.factor);
+	    SG_LOG(SG_INPUT, SG_INFO, "    factor is " << a.factor);
 
 
 	    // Tolerance
@@ -263,7 +263,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		a.tolerance = value->getDoubleValue();
-	    FG_LOG(FG_INPUT, FG_INFO, "    tolerance is " << a.tolerance);
+	    SG_LOG(SG_INPUT, SG_INFO, "    tolerance is " << a.tolerance);
 
 
 	    // Saturation
@@ -272,7 +272,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		js->setSaturation(j, value->getDoubleValue());
-	    FG_LOG(FG_INPUT, FG_INFO, "    saturation is " << js->getSaturation(j));
+	    SG_LOG(SG_INPUT, SG_INFO, "    saturation is " << js->getSaturation(j));
 
 	    // Minimum range
 	    name = base;
@@ -280,7 +280,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		minRange[j] = value->getDoubleValue();
-	    FG_LOG(FG_INPUT, FG_INFO, "    min-range is " << minRange[j]);
+	    SG_LOG(SG_INPUT, SG_INFO, "    min-range is " << minRange[j]);
 
 	    // Maximum range
 	    name = base;
@@ -288,7 +288,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		maxRange[j] = value->getDoubleValue();
-	    FG_LOG(FG_INPUT, FG_INFO, "    max-range is " << maxRange[j]);
+	    SG_LOG(SG_INPUT, SG_INFO, "    max-range is " << maxRange[j]);
 
 	    // Center
 	    name = base;
@@ -296,7 +296,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		center[j] = value->getDoubleValue();
-	    FG_LOG(FG_INPUT, FG_INFO, "    center is " << center[j]);
+	    SG_LOG(SG_INPUT, SG_INFO, "    center is " << center[j]);
       
             // Capture
 	    name = base;
@@ -311,11 +311,11 @@ fgJoystickInit()
 		    a.capture->captured = false;
 	 	    a.capture->name = control;
 		    a.capture->value = fgGetValue(trimname);
-	            FG_LOG(FG_INPUT, FG_INFO, "    capture is " 
+	            SG_LOG(SG_INPUT, SG_INFO, "    capture is " 
 			   << value->getDoubleValue() );
                 } else {
 		    a.capture = NULL;
-		    FG_LOG(FG_INPUT, FG_INFO, "    capture is " 	
+		    SG_LOG(SG_INPUT, SG_INFO, "    capture is " 	
 			   << "unsupported by FDM" );
 		}				
 	   }		 	        
@@ -332,7 +332,7 @@ fgJoystickInit()
 	    base += jsNames[i];
 	    base += '/';
 	    base += buttonNames[j];
-	    FG_LOG(FG_INPUT, FG_INFO, "  Button " << j << ':');
+	    SG_LOG(SG_INPUT, SG_INFO, "  Button " << j << ':');
 
 	    // Control property
 	    string name = base;
@@ -340,12 +340,12 @@ fgJoystickInit()
 	    cout << "Trying name " << name << endl;
 	    SGValue * value = fgGetValue(name);
 	    if (value == 0) {
-		FG_LOG(FG_INPUT, FG_INFO, "    no control defined");
+		SG_LOG(SG_INPUT, SG_INFO, "    no control defined");
 		continue;
 	    }
 	    const string &control = value->getStringValue();
 	    b.value = fgGetValue(control, true);
-	    FG_LOG(FG_INPUT, FG_INFO, "    using control " << control);
+	    SG_LOG(SG_INPUT, SG_INFO, "    using control " << control);
 
 	    // Step
 	    name = base;
@@ -353,7 +353,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		b.step = value->getDoubleValue();
-	    FG_LOG(FG_INPUT, FG_INFO, "    step is " << b.step);
+	    SG_LOG(SG_INPUT, SG_INFO, "    step is " << b.step);
 
 	    // Type
 	    name = base;
@@ -372,12 +372,12 @@ fgJoystickInit()
 		b.action = button::ADJUST;
 		b.isRepeatable = true;
 	    } else {
-		FG_LOG(FG_INPUT, FG_ALERT, "    unknown action " << action);
+		SG_LOG(SG_INPUT, SG_ALERT, "    unknown action " << action);
 		action = "adjust";
 		b.action = button::ADJUST;
 		b.isRepeatable = true;
 	    }
-	    FG_LOG(FG_INPUT, FG_INFO, "    action is " << action);
+	    SG_LOG(SG_INPUT, SG_INFO, "    action is " << action);
 
 	    // Repeatability.
 	    name = base;
@@ -385,7 +385,7 @@ fgJoystickInit()
 	    value = fgGetValue(name);
 	    if (value != 0)
 		b.isRepeatable = value->getBoolValue();
-	    FG_LOG(FG_INPUT, FG_INFO, (b.isRepeatable ?
+	    SG_LOG(SG_INPUT, SG_INFO, (b.isRepeatable ?
 				       "    repeatable" : "    not repeatable"));
 	}
 
@@ -402,9 +402,9 @@ fgJoystickInit()
     trimmed = fgGetValue("/fdm/trim/trimmed");
     
     if (seen_joystick)
-	FG_LOG(FG_INPUT, FG_INFO, "Done initializing joysticks");
+	SG_LOG(SG_INPUT, SG_INFO, "Done initializing joysticks");
     else
-	FG_LOG(FG_INPUT, FG_ALERT, "No joysticks detected");
+	SG_LOG(SG_INPUT, SG_ALERT, "No joysticks detected");
 
     return seen_joystick;
 }
@@ -442,7 +442,7 @@ fgJoystickRead()
 	        // joystick. When a trim succeeds, the above
 	        // is true for one frame only.
 		a.capture->captured = false;
-	        FG_LOG( FG_GENERAL, FG_INFO, "Successful trim, capture is " <<
+	        SG_LOG( SG_GENERAL, SG_INFO, "Successful trim, capture is " <<
 			"enabled on " << a.capture->name );
 	    } 
 
@@ -458,12 +458,12 @@ fgJoystickRead()
 	        
 		if ( a.capture && !a.capture->captured ) {
 		    diff = js_val - a.capture->value->getDoubleValue();
-                    FG_LOG( FG_GENERAL, FG_INFO, a.capture->name
+                    SG_LOG( SG_GENERAL, SG_INFO, a.capture->name
 			    << " capture: " << diff );
 		    if ( fabs( diff ) < a.capture->tolerance ) {
 			flag = a.value->setDoubleValue( js_val );
 			a.capture->captured = true;
-			FG_LOG(FG_GENERAL,FG_INFO, a.capture->name 
+			SG_LOG(SG_GENERAL,SG_INFO, a.capture->name 
 			       << " captured." );
 		    }
 		} else {
@@ -472,7 +472,7 @@ fgJoystickRead()
 	    }
 	    	
 	    if (!flag)
-		FG_LOG(FG_INPUT, FG_ALERT, "Failed to set value for joystick "
+		SG_LOG(SG_INPUT, SG_ALERT, "Failed to set value for joystick "
 		       << i << ", axis " << j);
 	}
 
@@ -541,7 +541,7 @@ fgJoystickRead()
 		b.lastState = 0;
 	    }
 	    if (!flag)
-		FG_LOG(FG_INPUT, FG_ALERT, "Failed to set value for "
+		SG_LOG(SG_INPUT, SG_ALERT, "Failed to set value for "
 		       << jsNames[i] << ' ' << buttonNames[j]);
 	}
     }

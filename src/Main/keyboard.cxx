@@ -85,13 +85,13 @@ void GLUTkey(unsigned char k, int x, int y) {
     FGInterface *f = current_aircraft.fdm_state;
     FGViewer *v = globals->get_current_view();
 
-    FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );
+    SG_LOG( SG_INPUT, SG_DEBUG, "Key hit = " << k );
     if ( puKeyboard(k, PU_DOWN) ) {
 	return;
     }
 
     if ( GLUT_ACTIVE_ALT && glutGetModifiers() ) {
-	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
+	SG_LOG( SG_INPUT, SG_DEBUG, " SHIFTED" );
 	switch (k) {
 	case 1: // Ctrl-A key
 	    current_autopilot->set_AltitudeMode( 
@@ -237,7 +237,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	}
     } else {
-	FG_LOG( FG_INPUT, FG_DEBUG, "" );
+	SG_LOG( SG_INPUT, SG_DEBUG, "" );
 	switch (k) {
 	case 50: // numeric keypad 2
 	    if ( current_autopilot->get_AltitudeEnabled() ) {
@@ -300,12 +300,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
  	case 91: // [ key
  	    controls.move_flaps(-0.34);
- 	    FG_LOG( FG_INPUT, FG_INFO,
+ 	    SG_LOG( SG_INPUT, SG_INFO,
 		    "Set flaps to " << controls.get_flaps() );
  	    return;
  	case 93: // ] key
  	    controls.move_flaps(0.34);
- 	    FG_LOG( FG_INPUT, FG_INFO,
+ 	    SG_LOG( SG_INPUT, SG_INFO,
 		    "Set flaps to " << controls.get_flaps() );
  	    return;
 	case 97: // a key
@@ -356,16 +356,16 @@ void GLUTkey(unsigned char k, int x, int y) {
 		tile_path.append( p.gen_index_str() );
 
 		// printf position and attitude information
-		FG_LOG( FG_INPUT, FG_INFO,
+		SG_LOG( SG_INPUT, SG_INFO,
 			"Lon = " << f->get_Longitude() * SGD_RADIANS_TO_DEGREES
 			<< "  Lat = " << f->get_Latitude() * SGD_RADIANS_TO_DEGREES
 			<< "  Altitude = " << f->get_Altitude() * SG_FEET_TO_METER
 			);
-		FG_LOG( FG_INPUT, FG_INFO,
+		SG_LOG( SG_INPUT, SG_INFO,
 			"Heading = " << f->get_Psi() * SGD_RADIANS_TO_DEGREES 
 			<< "  Roll = " << f->get_Phi() * SGD_RADIANS_TO_DEGREES
 			<< "  Pitch = " << f->get_Theta() * SGD_RADIANS_TO_DEGREES );
-		FG_LOG( FG_INPUT, FG_INFO, tile_path.c_str());
+		SG_LOG( SG_INPUT, SG_INFO, tile_path.c_str());
 	    }
 	    return;
 	case 116: // t key
@@ -403,7 +403,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // if( fg_DebugOutput ) {
 	    //   fclose( fg_DebugOutput );
 	    // }
-	    FG_LOG( FG_INPUT, FG_ALERT, 
+	    SG_LOG( SG_INPUT, SG_ALERT, 
 		    "Program exit requested." );
 	    ConfirmExitDialog();
 	    return;
@@ -416,35 +416,35 @@ void GLUTkey(unsigned char k, int x, int y) {
 void GLUTspecialkey(int k, int x, int y) {
     FGViewer *v = globals->get_current_view();
 
-    FG_LOG( FG_INPUT, FG_DEBUG, "Special key hit = " << k );
+    SG_LOG( SG_INPUT, SG_DEBUG, "Special key hit = " << k );
 
     if ( puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN) ) {
 	return;
     }
 
     if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
-	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
+	SG_LOG( SG_INPUT, SG_DEBUG, " SHIFTED" );
 	switch (k) {
  	case GLUT_KEY_F1: {
  	    ifstream input("fgfs.sav");
  	    if (input.good() && fgLoadFlight(input)) {
    	        input.close();
- 		FG_LOG(FG_INPUT, FG_INFO, "Restored flight from fgfs.sav");
+ 		SG_LOG(SG_INPUT, SG_INFO, "Restored flight from fgfs.sav");
  	    } else {
- 	        FG_LOG(FG_INPUT, FG_ALERT, "Cannot load flight from fgfs.sav");
+ 	        SG_LOG(SG_INPUT, SG_ALERT, "Cannot load flight from fgfs.sav");
  	    }
  	    return;
  	}
  	case GLUT_KEY_F2: {
- 	    FG_LOG(FG_INPUT, FG_INFO, "Saving flight");
+ 	    SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
 	    cerr << "Opening output stream" << endl;
  	    ofstream output("fgfs.sav");
 	    cerr << "output stream opened" << endl;
  	    if (output.good() && fgSaveFlight(output)) {
  		output.close();
- 		FG_LOG(FG_INPUT, FG_INFO, "Saved flight to fgfs.sav");
+ 		SG_LOG(SG_INPUT, SG_INFO, "Saved flight to fgfs.sav");
  	    } else {
- 	        FG_LOG(FG_INPUT, FG_ALERT, "Cannot save flight to fgfs.sav");
+ 	        SG_LOG(SG_INPUT, SG_ALERT, "Cannot save flight to fgfs.sav");
  	    }
  	    return;
  	}
@@ -453,11 +453,11 @@ void GLUTspecialkey(int k, int x, int y) {
 	    fgGetString("/sim/panel/path", "Panels/Default/default.xml");
 	  FGPanel * new_panel = fgReadPanel(panel_path);
 	  if (new_panel == 0) {
-	    FG_LOG(FG_INPUT, FG_ALERT,
+	    SG_LOG(SG_INPUT, SG_ALERT,
 		   "Error reading new panel from " << panel_path);
 	    return;
 	  }
-	  FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from " << panel_path);
+	  SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
 	  current_panel->unbind();
 	  delete current_panel;
 	  current_panel = new_panel;
@@ -466,13 +466,13 @@ void GLUTspecialkey(int k, int x, int y) {
 	case GLUT_KEY_F4: {
 	  FGPath props_path(globals->get_fg_root());
 	  props_path.append("preferences.xml");
-	  FG_LOG(FG_INPUT, FG_INFO, "Rereading global preferences");
+	  SG_LOG(SG_INPUT, SG_INFO, "Rereading global preferences");
 	  if (!readProperties(props_path.str(), globals->get_props())) {
-	    FG_LOG(FG_INPUT, FG_ALERT,
+	    SG_LOG(SG_INPUT, SG_ALERT,
 		   "Failed to reread global preferences from "
 		   << props_path.str());
 	  } else {
-	    FG_LOG(FG_INPUT, FG_INFO, "Finished Reading global preferences");
+	    SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
 	  }
 	  return;
 	}
@@ -522,12 +522,12 @@ void GLUTspecialkey(int k, int x, int y) {
 	    return;
 	}
     } else {
-        FG_LOG( FG_INPUT, FG_DEBUG, "" );
+        SG_LOG( SG_INPUT, SG_DEBUG, "" );
 	switch (k) {
 	case GLUT_KEY_F2: // F2 Reload Tile Cache...
 	    {
 		bool freeze = globals->get_freeze();
-		FG_LOG(FG_INPUT, FG_INFO, "ReIniting TileCache");
+		SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
 		if ( !freeze ) 
 		    globals->set_freeze( true );
 		BusyCursor(0);
@@ -537,7 +537,7 @@ void GLUTspecialkey(int k, int x, int y) {
 		        cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES,
 			cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
 		} else {
-		    FG_LOG( FG_GENERAL, FG_ALERT, 
+		    SG_LOG( SG_GENERAL, SG_ALERT, 
 			    "Error in Tile Manager initialization!" );
 		    exit(-1);
 		}
@@ -566,22 +566,22 @@ void GLUTspecialkey(int k, int x, int y) {
 	    const string &fog = fgGetString("/sim/rendering/fog");
 	    if (fog == "disabled") {
 	      fgSetString("/sim/rendering/fog", "fastest");
-	      FG_LOG(FG_INPUT, FG_INFO, "Fog enabled, hint=fastest");
+	      SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=fastest");
 	    } else if (fog == "fastest") {
 	      fgSetString("/sim/rendering/fog", "nicest");
-	      FG_LOG(FG_INPUT, FG_INFO, "Fog enabled, hint=nicest");
+	      SG_LOG(SG_INPUT, SG_INFO, "Fog enabled, hint=nicest");
 	    } else if (fog == "nicest") {
 	      fgSetString("/sim/rendering/fog", "disabled");
-	      FG_LOG(FG_INPUT, FG_INFO, "Fog disabled");
+	      SG_LOG(SG_INPUT, SG_INFO, "Fog disabled");
 	    } else {
 	      fgSetString("/sim/rendering/fog", "disabled");
-	      FG_LOG(FG_INPUT, FG_ALERT, "Unrecognized fog type "
+	      SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized fog type "
 		     << fog << ", changed to 'disabled'");
 	    }
  	    return;
 	}
  	case GLUT_KEY_F9: // F9 toggles textures on and off...
-	    FG_LOG( FG_INPUT, FG_INFO, "Toggling texture" );
+	    SG_LOG( SG_INPUT, SG_INFO, "Toggling texture" );
 	    if ( fgGetBool("/sim/rendering/textures")) {
 		fgSetBool("/sim/rendering/textures", false);
 		material_lib.set_step( 1 );
@@ -591,15 +591,15 @@ void GLUTspecialkey(int k, int x, int y) {
 	    }
  	    return;
 	case GLUT_KEY_F10: // F10 toggles menu on and off...
-	    FG_LOG(FG_INPUT, FG_INFO, "Invoking call back function");
+	    SG_LOG(SG_INPUT, SG_INFO, "Invoking call back function");
 	    guiToggleMenu();
 	    return;
 	case GLUT_KEY_F11: // F11 Altitude Dialog.
-	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Altitude call back function");
+	    SG_LOG(SG_INPUT, SG_INFO, "Invoking Altitude call back function");
 	    NewAltitude( NULL );
 	    return;
 	case GLUT_KEY_F12: // F12 Heading Dialog...
-	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Heading call back function");
+	    SG_LOG(SG_INPUT, SG_INFO, "Invoking Heading call back function");
 	    NewHeading( NULL );
 	    return;
 	case GLUT_KEY_UP:

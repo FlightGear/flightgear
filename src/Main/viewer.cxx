@@ -42,7 +42,7 @@ fov(55.0)
 
 // Update the view parameters
 void FGViewer::update() {
-    FG_LOG( FG_VIEW, FG_ALERT, "Shouldn't ever see this" );
+    SG_LOG( SG_VIEW, SG_ALERT, "Shouldn't ever see this" );
     exit(-1);
 }
 

@@ -590,7 +590,7 @@ void fgRenderFrame( void ) {
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.cur_elev;
 
-	// FG_LOG( FG_ALL, FG_INFO, "visibility is " 
+	// SG_LOG( SG_ALL, SG_INFO, "visibility is " 
 	//         << current_weather.get_visibility() );
 	    
 	if ( agl > 10.0 ) {
@@ -875,8 +875,8 @@ static void fgMainLoop( void ) {
 
     SGTime *t = globals->get_time_params();
 
-    FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
-    FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
+    SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
+    SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
 
 #ifdef FG_NETWORK_OLK
     if ( fgGetBool("/sim/networking/network-olk") ) {
@@ -923,7 +923,7 @@ static void fgMainLoop( void ) {
 	    fgFDMForceAltitude( fgGetString("/sim/flight-model"), 
 				scenery.cur_elev + alt_adjust_m );
 
-	    FG_LOG( FG_ALL, FG_DEBUG, 
+	    SG_LOG( SG_ALL, SG_DEBUG, 
 		    "<*> resetting altitude to " 
 		    << cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
 		    << " meters" );
@@ -956,7 +956,7 @@ static void fgMainLoop( void ) {
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
-    FG_LOG( FG_ALL, FG_DEBUG, 
+    SG_LOG( SG_ALL, SG_DEBUG, 
 	    "Elapsed time interval is = " << elapsed 
 	    << ", previous remainder is = " << remainder );
 
@@ -982,7 +982,7 @@ static void fgMainLoop( void ) {
 #else
     if ( (t->get_cur_time() != last_time) && (last_time > 0) ) {
 	general.set_frame_rate( frames );
-	FG_LOG( FG_ALL, FG_DEBUG, 
+	SG_LOG( SG_ALL, SG_DEBUG, 
 		"--> Frame rate is = " << general.get_frame_rate() );
 	frames = 0;
     }
@@ -999,7 +999,7 @@ static void fgMainLoop( void ) {
 			      fgGetInt("/sim/model-hz"));
     remainder = elapsed - ( (global_multi_loop*1000000) / 
 			    fgGetInt("/sim/model-hz") );
-    FG_LOG( FG_ALL, FG_DEBUG, 
+    SG_LOG( SG_ALL, SG_DEBUG, 
 	    "Model iterations needed = " << global_multi_loop
 	    << ", new remainder = " << remainder );
 	
@@ -1014,7 +1014,7 @@ static void fgMainLoop( void ) {
     if ( global_multi_loop > 0 ) {
 	fgUpdateTimeDepCalcs();
     } else {
-	FG_LOG( FG_ALL, FG_DEBUG, 
+	SG_LOG( SG_ALL, SG_DEBUG, 
 		"Elapsed time is zero ... we're zinging" );
     }
 
@@ -1088,7 +1088,7 @@ static void fgMainLoop( void ) {
     // redraw display
     fgRenderFrame();
 
-    FG_LOG( FG_ALL, FG_DEBUG, "" );
+    SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
 
 
@@ -1121,7 +1121,7 @@ static void fgIdleFunction ( void ) {
 	    string command = "(touch " + lockfile + "; mpg123 "
 		+ mp3file.str() + "> /dev/null 2>&1; /bin/rm "
 		+ lockfile + ") &";
-	    FG_LOG( FG_GENERAL, FG_INFO, 
+	    SG_LOG( SG_GENERAL, SG_INFO, 
 		    "Starting intro music: " << mp3file.str() );
 	    system ( command.c_str() );
 	}
@@ -1145,7 +1145,7 @@ static void fgIdleFunction ( void ) {
 	// a subsystem to flightgear, its initialization call should
 	// located in this routine.
 	if( !fgInitSubsystems()) {
-	    FG_LOG( FG_GENERAL, FG_ALERT,
+	    SG_LOG( SG_GENERAL, SG_ALERT,
 		    "Subsystem initializations failed ..." );
 	    exit(-1);
 	}
@@ -1169,14 +1169,14 @@ static void fgIdleFunction ( void ) {
 	    string lockfile = "/tmp/mpg123.running";
 	    struct stat stat_buf;
 
-	    FG_LOG( FG_GENERAL, FG_INFO, 
+	    SG_LOG( SG_GENERAL, SG_INFO, 
 		    "Waiting for mpg123 player to finish ..." );
 	    while ( stat(lockfile.c_str(), &stat_buf) == 0 ) {
 		// file exist, wait ...
 		sleep(1);
-		FG_LOG( FG_GENERAL, FG_INFO, ".");
+		SG_LOG( SG_GENERAL, SG_INFO, ".");
 	    }
-	    FG_LOG( FG_GENERAL, FG_INFO, "");
+	    SG_LOG( SG_GENERAL, SG_INFO, "");
 	}
 #endif // WIN32
 
@@ -1187,7 +1187,7 @@ static void fgIdleFunction ( void ) {
 						"Sounds/wasp.wav") );
 	    globals->get_soundmgr()->add( s1, "engine loop" );
 	    globals->get_soundmgr()->play_looped( "engine loop" );
-	    FG_LOG( FG_GENERAL, FG_INFO,
+	    SG_LOG( SG_GENERAL, SG_INFO,
 		    "Rate = " << s1->get_sample()->getRate()
 		    << "  Bps = " << s1->get_sample()->getBps()
 		    << "  Stereo = " << s1->get_sample()->getStereo() );
@@ -1271,7 +1271,7 @@ int fgGlutInit( int *argc, char **argv ) {
     // Define Display Parameters
     glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
-    FG_LOG( FG_GENERAL, FG_INFO, "Opening a window: " <<
+    SG_LOG( SG_GENERAL, SG_INFO, "Opening a window: " <<
 	    fgGetInt("/sim/startup/xsize") << "x"
 	    << fgGetInt("/sim/startup/ysize") );
 
@@ -1292,7 +1292,7 @@ int fgGlutInit( int *argc, char **argv ) {
 		 fgGetInt("/sim/startup/ysize"),
 		 fgGetInt("/sim/rendering/bits-per-pixel"));
 
-	FG_LOG( FG_GENERAL, FG_INFO, 
+	SG_LOG( SG_GENERAL, SG_INFO, 
 		"game mode params = " << game_mode_str );
 	glutGameModeString( game_mode_str );
 	glutEnterGameMode();
@@ -1305,16 +1305,16 @@ int fgGlutInit( int *argc, char **argv ) {
     general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
     general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
     general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
-    FG_LOG( FG_GENERAL, FG_INFO, general.get_glRenderer() );
+    SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
 
     GLint tmp;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
     general.set_glMaxTexSize( tmp );
-    FG_LOG ( FG_GENERAL, FG_INFO, "Max texture size = " << tmp );
+    SG_LOG ( SG_GENERAL, SG_INFO, "Max texture size = " << tmp );
 
     glGetIntegerv( GL_DEPTH_BITS, &tmp );
     general.set_glDepthBits( tmp );
-    FG_LOG ( FG_GENERAL, FG_INFO, "Depth buffer bits = " << tmp );
+    SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
 
     return 1;
 }
@@ -1359,7 +1359,7 @@ int main( int argc, char **argv ) {
 #endif
 
     // set default log levels
-    fglog().setLogLevels( FG_ALL, FG_INFO );
+    sglog().setLogLevels( SG_ALL, SG_INFO );
 
     string version;
 #ifdef FLIGHTGEAR_VERSION
@@ -1367,7 +1367,7 @@ int main( int argc, char **argv ) {
 #else
     version = "unknown version";
 #endif
-    FG_LOG( FG_GENERAL, FG_INFO, "FlightGear:  Version "
+    SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
 	    << version << endl );
 
     // Allocate global data structures.  This needs to happen before
@@ -1412,19 +1412,19 @@ int main( int argc, char **argv ) {
 
     // Load the configuration parameters
     if ( !fgInitConfig(argc, argv) ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Config option parsing failed ..." );
+	SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
 	exit(-1);
     }
 
     // Initialize the Window/Graphics environment.
     if( !fgGlutInit(&argc, argv) ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, "GLUT initialization failed ..." );
+	SG_LOG( SG_GENERAL, SG_ALERT, "GLUT initialization failed ..." );
 	exit(-1);
     }
 
     // Initialize the various GLUT Event Handlers.
     if( !fgGlutInitEvents() ) {
- 	FG_LOG( FG_GENERAL, FG_ALERT, 
+ 	SG_LOG( SG_GENERAL, SG_ALERT, 
  		"GLUT event handler initialization failed ..." );
  	exit(-1);
     }
@@ -1477,12 +1477,12 @@ int main( int argc, char **argv ) {
 	globals->set_warp( offset - (aircraftLocalTime - systemLocalTime) - 
 			   cur_time ); 
     } else {
-        FG_LOG( FG_GENERAL, FG_ALERT,
+        SG_LOG( SG_GENERAL, SG_ALERT,
 		"Unsupported offset type " << offset_type );
 	exit( -1 );
     }
 
-    FG_LOG( FG_GENERAL, FG_INFO, "After time init, warp = " 
+    SG_LOG( SG_GENERAL, SG_INFO, "After time init, warp = " 
 	    << globals->get_warp() );
 
     globals->set_warp_delta( 0 );
@@ -1493,7 +1493,7 @@ int main( int argc, char **argv ) {
 
     // Do some quick general initializations
     if( !fgInitGeneral()) {
-	FG_LOG( FG_GENERAL, FG_ALERT, 
+	SG_LOG( SG_GENERAL, SG_ALERT, 
 		"General initializations failed ..." );
 	exit(-1);
     }
@@ -1592,7 +1592,7 @@ int main( int argc, char **argv ) {
 	  acmodel_proprpms[acmodel_npropsettings][1] = prop_high;
 	  acmodel_npropsettings++;
 
-	  FG_LOG( FG_GENERAL, FG_INFO, "PROPELLER SETTING " << prop_low <<
+	  SG_LOG( SG_GENERAL, SG_INFO, "PROPELLER SETTING " << prop_low <<
 		  " " << prop_high );
 	}
       }
@@ -1665,7 +1665,7 @@ void fgLoadDCS(void) {
     tile_path.append( "Objects.txt" );
     fg_gzifstream in( tile_path.str() );
     if ( ! in.is_open() ) {
-	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << tile_path.str() );
+	SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << tile_path.str() );
     }
 
     FGPath modelpath( globals->get_fg_root() );
@@ -1713,7 +1713,7 @@ void fgLoadDCS(void) {
 		 	ship_sel->addKid( ship_pos[objc] ); // add transform node to selector
 			}
        	else
-       		FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << obj_filename );
+       		SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << obj_filename );
             
       	if (in.eof()) break;
             objc++;

@@ -59,7 +59,7 @@ FGGlobals::saveInitialState ()
   delete initial_state;
   initial_state = new SGPropertyNode();
   if (!copyProperties(props, initial_state))
-    FG_LOG(FG_GENERAL, FG_ALERT, "Error saving initial state");
+    SG_LOG(SG_GENERAL, SG_ALERT, "Error saving initial state");
 }
 
 
@@ -68,12 +68,12 @@ void
 FGGlobals::restoreInitialState ()
 {
   if (initial_state == 0) {
-    FG_LOG(FG_GENERAL, FG_ALERT, "No initial state available to restore!!!");
+    SG_LOG(SG_GENERAL, SG_ALERT, "No initial state available to restore!!!");
   } else if (!copyProperties(initial_state, props)) {
-    FG_LOG(FG_GENERAL, FG_INFO,
+    SG_LOG(SG_GENERAL, SG_INFO,
 	   "Some errors restoring initial state (probably just read-only props)");
   } else {
-    FG_LOG(FG_GENERAL, FG_INFO, "Initial state restored successfully");
+    SG_LOG(SG_GENERAL, SG_INFO, "Initial state restored successfully");
   }
 }
 

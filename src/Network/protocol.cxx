@@ -42,7 +42,7 @@ FGProtocol::~FGProtocol() {
 // standard I/O channel open routine
 bool FGProtocol::open() {
     if ( is_enabled() ) {
-	FG_LOG( FG_IO, FG_ALERT, "This shouldn't happen, but the channel " 
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
 		<< "is already in use, ignoring" );
 	return false;
     }
@@ -50,7 +50,7 @@ bool FGProtocol::open() {
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
-	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
+	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
 	return false;
     }
 
@@ -62,14 +62,14 @@ bool FGProtocol::open() {
 
 // dummy process routine
 bool FGProtocol::process() {
-    FG_LOG( FG_IO, FG_INFO, "dummy FGProtocol::process()" );
+    SG_LOG( SG_IO, SG_INFO, "dummy FGProtocol::process()" );
     return false;
 }
 
 
 // dummy close routine
 bool FGProtocol::close() {
-    FG_LOG( FG_IO, FG_INFO, "dummy FGProtocol::close()" );
+    SG_LOG( SG_IO, SG_INFO, "dummy FGProtocol::close()" );
     return false;
 }
 
@@ -90,7 +90,7 @@ bool FGProtocol::gen_message() {
 
 // dummy close routine
 bool FGProtocol::parse_message() {
-    FG_LOG( FG_IO, FG_INFO, "dummy FGProtocol::close()" );
+    SG_LOG( SG_IO, SG_INFO, "dummy FGProtocol::close()" );
     return false;
 }
 

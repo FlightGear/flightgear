@@ -55,7 +55,7 @@ FGWeather::~FGWeather() {
 
 // Initialize the weather modeling subsystem
 void FGWeather::Init( ) {
-    FG_LOG( FG_GENERAL, FG_INFO, "Initializing weather subsystem");
+    SG_LOG( SG_GENERAL, SG_INFO, "Initializing weather subsystem");
 
     // Configure some wind
     // FG_V_north_airmass = 15; // ft/s =~ 10mph
