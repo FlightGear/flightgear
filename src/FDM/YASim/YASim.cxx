@@ -420,6 +420,7 @@ void YASim::copyFromYASim()
 	SGPropertyNode * node = fgGetNode("gear/gear", i, true);
 	node->setBoolValue("has-brake", g->getBrake() != 0);
 	node->setBoolValue("wow", g->getCompressFraction() != 0);
+	node->setFloatValue("compression-norm", g->getCompressFraction());
     }
 
     for(i=0; i<model->numThrusters(); i++) {
