@@ -239,7 +239,9 @@ void FGExternalNet::init() {
 
     sprintf( cmd, "/longitude-deg?value=%.8f", lon );
     new HTTPClient( fdm_host.c_str(), cmd_port, cmd );
+    cout << "before loop()" << endl;
     netChannel::loop(0);
+    cout << "here" << endl;
 
     sprintf( cmd, "/latitude-deg?value=%.8f", lat );
     new HTTPClient( fdm_host.c_str(), cmd_port, cmd );

@@ -792,7 +792,7 @@ bool fgInitSubsystems( void ) {
 
     FGLocalWeatherDatabase::DatabaseWorkingType working_type;
 
-    if (!strcmp("/environment/weather/working-type", "internet"))
+    if (!strcmp(fgGetString("/environment/weather/working-type"), "internet"))
     {
       working_type = FGLocalWeatherDatabase::use_internet;
     } else {

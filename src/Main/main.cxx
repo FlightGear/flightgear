@@ -292,11 +292,11 @@ void fgInitVisuals( void ) {
 
     // glFogi (GL_FOG_MODE, GL_LINEAR);
     glFogi (GL_FOG_MODE, GL_EXP2);
-    if ( (!strcmp("/sim/rendering/fog", "disabled")) || 
+    if ( (!strcmp(fgGetString("/sim/rendering/fog"), "disabled")) || 
 	 (!fgGetBool("/sim/rendering/shading"))) {
 	// if fastest fog requested, or if flat shading force fastest
 	glHint ( GL_FOG_HINT, GL_FASTEST );
-    } else if ( !strcmp("/sim/rendering/fog", "nicest") ) {
+    } else if ( !strcmp(fgGetString("/sim/rendering/fog"), "nicest") ) {
 	glHint ( GL_FOG_HINT, GL_NICEST );
     }
     if ( fgGetBool("/sim/rendering/wireframe") ) {
@@ -802,7 +802,7 @@ void fgUpdateTimeDepCalcs() {
 	FGSteam::update( multi_loop * fgGetInt("/sim/speed-up") );
     }
 
-    if ( !strcmp("/sim/view-mode", "pilot") ) {
+    if ( !strcmp(fgGetString("/sim/view-mode"), "pilot") ) {
 	cur_view_fdm = *cur_fdm_state;
 	// do nothing
     }
@@ -1758,7 +1758,7 @@ void fgUpdateDCS (void) {
     
     // Deck should be the first object in objects.txt in case of fdm=ada
 
-    if (!strcmp("/sim/flight-model", "ada")) {
+    if (!strcmp(fgGetString("/sim/flight-model"), "ada")) {
 		if ((fdm->get_iaux(1))==1)
 		{
 			obj_lat[1] = fdm->get_daux(1)*SGD_DEGREES_TO_RADIANS;

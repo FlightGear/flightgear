@@ -50,7 +50,9 @@ public:
 	while (*s)
 	    fputc(*s++,stdout);
 
+	printf("done\n");
 	buffer.remove();
+	printf("after buffer.remove()\n");
     }
 };
 

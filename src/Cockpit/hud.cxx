@@ -646,10 +646,12 @@ readTBI(const SGPropertyNode * node)
 
 int readInstrument(const SGPropertyNode * node)
 {
+    static const SGPropertyNode *startup_units_node
+        = fgGetNode("/sim/startup/units");
 
     instr_item *HIptr;
     
-    if ( !strcmp("/sim/startup/units", "feet") ) {
+    if ( !strcmp(startup_units_node->getStringValue(), "feet") ) {
         strcpy(units, " ft");
     } else {
         strcpy(units, " m");
