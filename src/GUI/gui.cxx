@@ -116,21 +116,22 @@ void initMenu()
              SGPropertyNode *call = option[i]->getNode("call");
              SGPropertyNode *sep = option[i]->getNode("seperator");
 
+             int pos = option.size()-i-1;
              if (sep)
-                Menu[h].submenu[i] = strdup("----------");
+                Menu[h].submenu[pos] = strdup("----------");
 
              else if (call && strcmp(call->getStringValue(), ""))
-                 Menu[h].submenu[i] = strdup(name->getStringValue());
+                 Menu[h].submenu[pos] = strdup(name->getStringValue());
 
              else
-                 Menu[h].submenu[i] = strdup("not specified");
+                 Menu[h].submenu[pos] = strdup("not specified");
 
-             Menu[h].cb[i] = NULL;
+             Menu[h].cb[pos] = NULL;
              for (unsigned int j=0; __fg_gui_fn[j].fn; j++)
                  if (call &&
                      !strcmp(call->getStringValue(), __fg_gui_fn[j].name) )
                  {
-                     Menu[h].cb[i] = __fg_gui_fn[j].fn;
+                     Menu[h].cb[pos] = __fg_gui_fn[j].fn;
                      break;
                  }
          }
