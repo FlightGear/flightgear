@@ -37,16 +37,17 @@
 //  (7)  Defines FG_NEED_AUTO_PTR if STL doesn't provide auto_ptr<>.
 //  (8)  Defines FG_NO_ARROW_OPERATOR if the compiler is unable
 //       to support operator->() for iterators.
-//  (9)  Defines FG_USE_EXCEPTIONS if the compiler (in the current
-//       compilation mode) supports exceptions.
+//  (9)  Defines FG_USE_EXCEPTIONS if the compiler supports exceptions.
+//       Note: no FlightGear code uses exceptions.
 //  (10) Define FG_NAMESPACES if the compiler supports namespaces.
-//  (11) Define FG_MATH_FN_IN_NAMESPACE_STD if C math functions are in <cmath>
-//       and std::
-//  (12) Define FG_HAVE_STD if ISO C++ Standard headers are supported.
+//  (11) FG_MATH_FN_IN_NAMESPACE_STD -- not used??
+//  (12) Define FG_HAVE_STD if std namespace is supported.
 //  (13) Defines FG_CLASS_PARTIAL_SPECIALIZATION if the compiler 
 //       supports partial specialization of class templates.
-//  (14) Defines FG_HAVE_STD_INCLUDES to use <iostream> instead of <iostream.h>
+//  (14) Defines FG_HAVE_STD_INCLUDES to use ISO C++ Standard headers.
 //  (15) Defines FG_HAVE_STREAMBUF if <streambuf> of <streambuf.h> are present.
+//  (16) Define FG_MATH_EXCEPTION_CLASH if math.h defines an exception class
+//       that clashes with the one defined in <stdexcept>.
 
 #ifdef __GNUC__
 #  if __GNUC__ == 2 
@@ -91,7 +92,42 @@
 #  endif
 #endif
 
+//
+// Metrowerks 
+//
+#if defined(__MWERKS__)
+/*
+  CodeWarrior compiler from Metrowerks, Inc.
+*/
+#  if (__MWERKS__ < 0x0900) //|| macintosh
+#    define FG_HAVE_TRAITS
+#    define FG_HAVE_STD_INCLUDES
+#    define FG_HAVE_STD
+#    define FG_NAMESPACES
+
+#    define STL_ALGORITHM  <algorithm>
+#    define STL_FUNCTIONAL <functional>
+#    define STL_IOMANIP    <iomanip>
+#    define STL_IOSTREAM   <iostream>
+#    define STL_STDEXCEPT  <stdexcept>
+#    define STL_STRING     <string>
+
+// Temp:
+#    define bcopy(from, to, n) memcpy(to, from, n)
+
+// -rp- please use FG_MEM_COPY everywhere !
+#    define FG_MEM_COPY(to,from,n) memcpy(to, from, n)
+
+#  elif (__MWERKS__ >= 0x0900) && __INTEL__
+#    error still to be supported...
+#  else
+#    error unknown Metrowerks compiler
+#  endif
+#endif
+
+//
 // Microsoft compilers.
+//
 #ifdef _MSC_VER
 #  if _MSC_VER == 1200 // msvc++ 6.0
 #    define FG_NAMESPACES
@@ -111,6 +147,8 @@
 #    pragma warning(disable: 4244) // conversion from double to float
 #    pragma warning(disable: 4305) //
 
+#  elif _MSC_VER == 1100 // msvc++ 5.0
+#    error MSVC++ 5.0 still to be supported...
 #  else
 #    error What version of MSVC++ is this?
 #  endif
@@ -145,6 +183,10 @@
 #  define FG_HAVE_STD
 
 #endif // __BORLANDC__
+
+//
+// No user modifiable definitions beyond here.
+//
 
 #ifdef FG_NEED_EXPLICIT
 #  define explicit
@@ -222,6 +264,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.5  1999/01/19 20:41:25  curt
+// Added support for MacOS (Metrowerks)
+//
 // Revision 1.4  1999/01/06 21:47:37  curt
 // renamed general.h to general.hxx
 // More portability enhancements to compiler.h
