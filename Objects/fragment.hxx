@@ -45,7 +45,6 @@
 
 #include <vector>
 
-#include <Bucket/bucketutils.h>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
@@ -176,6 +175,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.11  1999/03/25 19:02:53  curt
+// Removed an unneeded include.
+//
 // Revision 1.10  1999/03/15 17:59:12  curt
 // MSVC++ portability tweaks contributed by Bernie Bright.
 //   Un-nested struct fgFace.
