@@ -35,16 +35,59 @@
 #include <gfc/gdbf.h>
 #include <gfc/gshapefile.h>
 
-// include Generic Polygon Clipping Library
+#undef E
+#undef DEG_TO_RAD
+#undef RAD_TO_DEG
 
+// include Generic Polygon Clipping Library
 extern "C" {
 #include <gpc.h>
 }
 
+#include <Bucket/newbucket.hxx>
 #include <Debug/logstream.hxx>
 
 
+class point2d {
+public:
+    double x, y;
+};
+
+
+static void clip_and_write_poly( FGBucket b, int n_vertices, double *coords ) {
+    point2d c, min, max;
+    c.x = b.get_center_lon();
+    c.y = b.get_center_lat();
+    double span = bucket_span(c.y);
+
+    // calculate bucket dimensions
+    if ( (c.y >= -89.0) && (c.y < 89.0) ) {
+	min.x = c.x - span / 2.0;
+	max.x = c.x + span / 2.0;
+	min.y = c.y - FG_HALF_BUCKET_SPAN;
+	max.y = c.y + FG_HALF_BUCKET_SPAN;
+    } else if ( c.y < -89.0) {
+	min.x = -90.0;
+	max.x = -89.0;
+	min.y = -180.0;
+	max.y = 180.0;
+    } else if ( c.y >= 89.0) {
+	min.x = 89.0;
+	max.x = 90.0;
+	min.y = -180.0;
+	max.y = 180.0;
+    } else {
+	FG_LOG ( FG_GENERAL, FG_ALERT, 
+		 "Out of range latitude in clip_and_write_poly() = " << c.y );
+    }
+
+    
+}
+
+
 int main( int argc, char **argv ) {
+    point2d min, max;
+
     fglog().setLogLevels( FG_ALL, FG_DEBUG );
 
     if ( argc != 2 ) {
@@ -86,6 +129,50 @@ int main( int argc, char **argv ) {
 	    FG_LOG( FG_GENERAL, FG_DEBUG, "  ring " << j << " = " );
 	    FG_LOG( FG_GENERAL, FG_INFO, n_vertices );
 
+	    // find min/max of this polygon
+	    min.x = min.y = 200.0;
+	    max.x = max.y = -200.0;
+	    for ( int k = 0; k < n_vertices; k++ ) {
+		if ( coords[k*2+0] < min.x ) { min.x = coords[k*2+0]; }
+		if ( coords[k*2+1] < min.y ) { min.y = coords[k*2+1]; }
+		if ( coords[k*2+0] > max.x ) { max.x = coords[k*2+0]; }
+		if ( coords[k*2+1] > max.y ) { max.y = coords[k*2+1]; }
+	    }
+	    FG_LOG( FG_GENERAL, FG_INFO, "min = " << min.x << "," << min.y
+		    << " max = " << max.x << "," << max.y );
+
+	    // find buckets for min, and max points of convex hull.
+	    // note to self: self, you should think about checking for
+	    // polygons that span the date line
+	    FGBucket b_min(min.x, min.y);
+	    FGBucket b_max(max.x, max.y);
+	    cout << "Bucket min = " << b_min << endl;
+	    cout << "Bucket max = " << b_max << endl;
+	    
+	    if ( b_min == b_max ) {
+		clip_and_write_poly( b_min, n_vertices, coords );
+	    } else {
+		FGBucket b_cur;
+		int dx, dy, i, j;
+
+		fgBucketDiff(b_min, b_max, &dx, &dy);
+		cout << "airport spans tile boundaries" << endl;
+		cout << "  dx = " << dx << "  dy = " << dy << endl;
+
+		if ( (dx > 1) || (dy > 1) ) {
+		    cout << "somethings really wrong!!!!" << endl;
+		    exit(-1);
+		}
+
+		for ( j = 0; j <= dy; j++ ) {
+		    for ( i = 0; i <= dx; i++ ) {
+			b_cur = fgBucketOffset(min.x, min.y, i, j);
+			clip_and_write_poly( b_cur, n_vertices, coords );
+		    }
+		}
+		// string answer; cin >> answer;
+	    }
+
 	    for ( int k = 0; k < n_vertices; k++ ) {
 		lon = coords[k*2+0];
 		lat = coords[k*2+1];
@@ -98,6 +185,9 @@ int main( int argc, char **argv ) {
 }
 
 // $Log$
+// Revision 1.2  1999/02/19 19:05:18  curt
+// Working on clipping shapes and distributing into buckets.
+//
 // Revision 1.1  1999/02/15 19:10:23  curt
 // Initial revision.
 //
