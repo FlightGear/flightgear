@@ -22,6 +22,13 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
+
+#include <config.h>
+ 
+#ifdef HAVE_WINDOWS_H                                           
+#  include <windows.h>                                           
+#endif                                                               
+ 
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
@@ -181,9 +188,12 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/03/09 22:47:25  curt
-/* Incorporated Durk's updates.
+/* Revision 1.9  1998/04/03 21:52:51  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.8  1998/03/09 22:47:25  curt
+ * Incorporated Durk's updates.
+ *
  * Revision 1.7  1998/02/23 19:07:56  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

@@ -23,7 +23,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -204,11 +206,14 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/02/23 19:07:55  curt
-/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
-/* calculation code between sun display, and other FG sections that use this
-/* for things like lighting.
+/* Revision 1.8  1998/04/03 21:52:50  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.7  1998/02/23 19:07:55  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.6  1998/02/12 21:59:36  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

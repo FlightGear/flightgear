@@ -24,16 +24,13 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
 #include <math.h>
-/*
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-*/
 
 #include <GL/glut.h>
 #include <XGL/xgl.h>
@@ -354,9 +351,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/03/09 22:47:25  curt
-/* Incorporated Durk's updates.
+/* Revision 1.9  1998/04/03 21:52:50  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.8  1998/03/09 22:47:25  curt
+ * Incorporated Durk's updates.
+ *
  * Revision 1.7  1998/02/19 13:05:49  curt
  * Incorporated some HUD tweaks from Michelle America.
  * Tweaked the sky's sunset/rise colors.

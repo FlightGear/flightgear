@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -255,9 +257,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/03/14 00:27:12  curt
-/* Updated fgGENERAL to a "type" of struct.
+/* Revision 1.10  1998/04/03 21:52:51  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.9  1998/03/14 00:27:12  curt
+ * Updated fgGENERAL to a "type" of struct.
+ *
  * Revision 1.8  1998/02/12 21:59:38  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
