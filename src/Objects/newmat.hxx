@@ -73,28 +73,85 @@ public:
 
   /**
    * A randomly-placeable object.
+   *
+   * FGNewMat uses this class to keep track of the model(s) and
+   * parameters for a single instance of a randomly-placeable object.
+   * The object can have more than one variant model (i.e. slightly
+   * different shapes of trees), but they are considered equivalent
+   * and interchangeable.
    */
   class Object
   {
   public:
 
+    /**
+     * The heading type for a randomly-placed object.
+     */
     enum HeadingType {
       HEADING_FIXED,
       HEADING_BILLBOARD,
       HEADING_RANDOM
     };
 
+
+    /**
+     * Get the number of variant models available for the object.
+     *
+     * @return The number of variant models.
+     */
     int get_model_count () const;
+
+
+    /**
+     * Get a specific variant model for the object.
+     *
+     * @param index The index of the model.
+     * @return The model.
+     */
     ssgEntity * get_model (int index) const;
+
+
+    /**
+     * Get a randomly-selected variant model for the object.
+     *
+     * @return A randomly select model from the variants.
+     */
     ssgEntity * get_random_model () const;
+
+
+    /**
+     * Get the average number of meters^2 occupied by each instance.
+     *
+     * @return The coverage in meters^2.
+     */
     double get_coverage_m2 () const;
+
+
+    /**
+     * Get the heading type for the object.
+     *
+     * @return The heading type.
+     */
     HeadingType get_heading_type () const;
+
   protected:
+
     friend class ObjectGroup;
+
     Object (const SGPropertyNode * node, double range_m);
+
     virtual ~Object ();
+
   private:
+
+    /**
+     * Actually load the models.
+     *
+     * This class uses lazy loading so that models won't be held
+     * in memory for materials that are never referenced.
+     */
     void load_models () const;
+
     vector<string> _paths;
     mutable vector<ssgEntity *> _models;
     mutable bool _models_loaded;
@@ -106,20 +163,53 @@ public:
 
   /**
    * A collection of related objects with the same visual range.
+   *
+   * Grouping objects with the same range together significantly
+   * reduces the memory requirements of randomly-placed objects.
+   * Each FGNewMat instance keeps a (possibly-empty) list of
+   * object groups for placing randomly on the scenery.
    */
   class ObjectGroup
   {
   public:
     virtual ~ObjectGroup ();
+
+
+    /**
+     * Get the visual range of the object in meters.
+     *
+     * @return The visual range.
+     */
     double get_range_m () const;
+
+
+    /**
+     * Get the number of objects in the group.
+     *
+     * @return The number of objects.
+     */
     int get_object_count () const;
+
+
+    /**
+     * Get a specific object.
+     *
+     * @param index The object's index, zero-based.
+     * @return The object selected.
+     */
     Object * get_object (int index) const;
+
   protected:
+
     friend class FGNewMat;
+
     ObjectGroup (SGPropertyNode * node);
+
   private:
+
     double _range_m;
     vector<Object *> _objects;
+
   };
 
 
