@@ -130,6 +130,9 @@ FGGeneral general;
 static int idle_state = 0;
 static int global_multi_loop;
 
+// attempt to avoid a large bounce at startup
+static bool initial_freeze = true;
+
 // Another hack
 int use_signals = 0;
 
@@ -617,7 +620,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	multi_loop = 1;
     }
 
-    if ( !globals->get_freeze() ) {
+    if ( !globals->get_freeze() && !initial_freeze ) {
 	// run Autopilot system
 	current_autopilot->run();
 
@@ -633,6 +636,10 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	//              fdm_state, 0, remainder );
 	cur_fdm_state->update( 0 );
 	FGSteam::update( 0 );
+
+	if ( global_tile_mgr.queue_size() == 0 ) {
+	    initial_freeze = false;
+	}
     }
 
     fdm_list.push_back( *cur_fdm_state );

@@ -250,15 +250,15 @@ FGBFI::reinit ()
 
   cout << "BFI: start reinit\n";
 
-  setHeading(getHeading());
-  setPitch(getPitch());
-  setRoll(getRoll());
-  setSpeedNorth(getSpeedNorth());
-  setSpeedEast(getSpeedEast());
-  setSpeedDown(getSpeedDown());
-  setLatitude(getLatitude());
-  setLongitude(getLongitude());
-  setAltitude(getAltitude());
+//   setHeading(getHeading());
+//   setPitch(getPitch());
+//   setRoll(getRoll());
+//   setSpeedNorth(getSpeedNorth());
+//   setSpeedEast(getSpeedEast());
+//   setSpeedDown(getSpeedDown());
+//   setLatitude(getLatitude());
+//   setLongitude(getLongitude());
+//   setAltitude(getAltitude());
 
 				// TODO: add more AP stuff
   double elevator = getElevator();
