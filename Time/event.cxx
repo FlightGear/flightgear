@@ -167,7 +167,7 @@ void fgEVENT_MGR::PrintStats( void ) {
     printf("-----------\n");
 
     while ( current != last ) {
-	e = *current++;
+	e = *(current++);
 	printf("  %-20s int=%.2fs cum=%ld min=%ld max=%ld count=%ld ave=%.2f\n",
 	       e.description, 
 	       e.interval / 1000.0,
@@ -235,6 +235,9 @@ void fgEventPrintStats( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/08/20 15:12:26  curt
+// Tweak ...
+//
 // Revision 1.5  1998/06/12 00:59:52  curt
 // Build only static libraries.
 // Declare memmove/memset for Sloaris.
