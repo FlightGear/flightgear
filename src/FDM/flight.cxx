@@ -270,14 +270,17 @@ FGInterface::bind ()
 	&FGInterface::get_Latitude_deg,
 	&FGInterface::set_Latitude_deg,
 	false);
+  fgSetArchivable("/position/latitude-deg");
   fgTie("/position/longitude-deg", this,
 	&FGInterface::get_Longitude_deg,
 	&FGInterface::set_Longitude_deg,
 	false);
+  fgSetArchivable("/position/longitude-deg");
   fgTie("/position/altitude-ft", this,
 	&FGInterface::get_Altitude,
 	&FGInterface::set_Altitude,
 	false);
+  fgSetArchivable("/position/altitude-ft");
   fgTie("/position/altitude-agl-ft", this,
 	&FGInterface::get_Altitude_AGL); // read-only
 
@@ -285,12 +288,15 @@ FGInterface::bind ()
   fgTie("/orientation/roll-deg", this,
 	&FGInterface::get_Phi_deg,
 	&FGInterface::set_Phi_deg);
+  fgSetArchivable("/orientation/roll-deg");
   fgTie("/orientation/pitch-deg", this,
 	&FGInterface::get_Theta_deg,
 	&FGInterface::set_Theta_deg);
+  fgSetArchivable("/orientation/pitch-deg");
   fgTie("/orientation/heading-deg", this,
 	&FGInterface::get_Psi_deg,
 	&FGInterface::set_Psi_deg);
+  fgSetArchivable("/orientation/heading-deg");
 
 				// Calibrated airspeed
   fgTie("/velocities/airspeed-kt", this,
@@ -301,12 +307,15 @@ FGInterface::bind ()
   fgTie("/velocities/speed-north-fps", this,
 	&FGInterface::get_V_north,
 	&FGInterface::set_V_north);
+  fgSetArchivable("/velocities/speed-north-fps");
   fgTie("/velocities/speed-east-fps", this,
 	&FGInterface::get_V_east,
 	&FGInterface::set_V_east);
+  fgSetArchivable("/velocities/speed-east-fps");
   fgTie("/velocities/speed-down-fps", this,
 	&FGInterface::get_V_down,
 	&FGInterface::set_V_down);
+  fgSetArchivable("/velocities/speed-down-fps");
 
 				// Relative wind
   fgTie("/velocities/uBody-fps", this,
