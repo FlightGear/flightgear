@@ -248,14 +248,28 @@ AC_SUBST(opengl_LIBS)
 dnl Check if Generic Polygon Clipping library is installed
 dnl (from http://www.cs.man.ac.uk/aig/staff/alan/software/)
 AC_CHECK_HEADERS( gpc.h )
-if test "x$ac_cv_header_windows_h" != "xyes"; then
+if test "x$ac_cv_header_gpc_h" != "xyes"; then
     echo
     echo "You need to have the GPC library installed on your system to build"
-    echo "the scenery generation tools, otherwise, the build will fail."
+    echo "some of the scenery generation tools, otherwise, they may fail."
     echo
     echo "You can get the library from:"
     echo 
     echo "    http://www.cs.man.ac.uk/aig/staff/alan/software/"
+    echo
+fi
+
+dnl Check if  Geographic Foundation Classes library is installed
+dnl (from http://www.geog.psu.edu/~qian/gfc/index.html)
+AC_CHECK_HEADERS( gfc/gdbf.h )
+if test "x$ac_cv_header_gfc_gdbf_h" != "xyes"; then
+    echo
+    echo "You need to have the GFC library installed on your system to build"
+    echo "some of the scenery generation tools, otherwise, they may fail."
+    echo
+    echo "You can get the library from:"
+    echo 
+    echo "    http://www.geog.psu.edu/~qian/gfc/index.html"
     echo
 fi
 
