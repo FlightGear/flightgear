@@ -55,17 +55,24 @@
 
 /* in meters of course */
 #define CENTER_ELEV   25000.0
+
 #define INNER_RADIUS  50000.0
 #define INNER_ELEV    20000.0
+
 #define MIDDLE_RADIUS 70000.0
 #define MIDDLE_ELEV    8000.0
+
 #define OUTER_RADIUS  80000.0
 #define OUTER_ELEV        0.0
+
+#define BOTTOM_RADIUS 50000.0
+#define BOTTOM_ELEV   -2000.0
 
 
 static float inner_vertex[12][3];
 static float middle_vertex[12][3];
 static float outer_vertex[12][3];
+static float bottom_vertex[12][3];
 
 static float inner_color[12][4];
 static float middle_color[12][4];
@@ -97,6 +104,9 @@ void fgSkyVerticesInit( void ) {
 	outer_vertex[i][1] = sin((double)theta) * OUTER_RADIUS;
 	outer_vertex[i][2] = OUTER_ELEV;
 	    
+	bottom_vertex[i][0] = cos((double)theta) * BOTTOM_RADIUS;
+	bottom_vertex[i][1] = sin((double)theta) * BOTTOM_RADIUS;
+	bottom_vertex[i][2] = BOTTOM_ELEV;
     }
 }
 
@@ -325,15 +335,32 @@ void fgSkyRender( void ) {
     xglVertex3fv( middle_vertex[0] );
     xglEnd();
 
+    /* Draw the bottom skirt */
+    xglBegin( GL_TRIANGLE_STRIP );
+    for ( i = 0; i < 12; i++ ) {
+	xglColor4fv( l->fog_color );
+	xglVertex3fv( bottom_vertex[i] );
+	xglColor4fv( outer_color[i] );
+	xglVertex3fv( outer_vertex[i] );
+    }
+    xglColor4fv( l->fog_color );
+    xglVertex3fv( bottom_vertex[0] );
+    xglColor4fv( outer_color[0] );
+    xglVertex3fv( outer_vertex[0] );
+    xglEnd();
     xglPopMatrix();
 }
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:26:59  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.4  1998/01/26 15:54:28  curt
+/* Added a "skirt" to try to help hide gaps between scenery and sky.  This will
+/* have to be revisited in the future.
 /*
+ * Revision 1.3  1998/01/19 19:26:59  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.2  1998/01/19 18:40:17  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.
