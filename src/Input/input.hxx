@@ -83,7 +83,7 @@ public:
   /**
    * Destructor.
    */
-  virtual ~FGBinding ();
+  virtual ~FGBinding () {}
 
 
   /**
@@ -148,7 +148,7 @@ private:
 
   string _command_name;
   mutable SGCommandMgr::command_t _command;
-  mutable SGPropertyNode * _arg;
+  mutable SGPropertyNode_ptr _arg;
   mutable SGPropertyNode_ptr _setting;
 };
 
