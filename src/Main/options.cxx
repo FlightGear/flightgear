@@ -623,21 +623,54 @@ fgOptLanguage( const char *arg )
     return FG_OPTIONS_OK;
 }
 
+static void
+clearLocation ()
+{
+    fgSetString("/sim/presets/airport-id", "");
+    fgSetString("/sim/presets/vor-id", "");
+    fgSetString("/sim/presets/ndb-id", "");
+    fgSetString("/sim/presets/fix", "");
+}
+
+static int
+fgOptVOR( const char * arg )
+{
+    clearLocation();
+    fgSetString("/sim/presets/vor-id", arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptNDB( const char * arg )
+{
+    clearLocation();
+    fgSetString("/sim/presets/ndb-id", arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptFIX( const char * arg )
+{
+    clearLocation();
+    fgSetString("/sim/presets/fix", arg);
+    return FG_OPTIONS_OK;
+}
+
 static int
 fgOptLon( const char *arg )
 {
+    clearLocation();
     fgSetDouble("/sim/presets/longitude-deg", parse_degree( arg ));
     fgSetDouble("/position/longitude-deg", parse_degree( arg ));
-    fgSetString("/sim/presets/airport-id", "");
     return FG_OPTIONS_OK;
 }
 
 static int
 fgOptLat( const char *arg )
 {
+    clearLocation();
     fgSetDouble("/sim/presets/latitude-deg", parse_degree( arg ));
     fgSetDouble("/position/latitude-deg", parse_degree( arg ));
-    fgSetString("/sim/presets/airport-id", "");
     return FG_OPTIONS_OK;
 }
 
@@ -1015,6 +1048,9 @@ struct OptionDesc {
     {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"airport-id",                   true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"runway",                       true,  OPTION_STRING, "/sim/presets/runway", false, "", 0 },
+    {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },
+    {"ndb",                          true,  OPTION_FUNC,   "", false, "", fgOptNDB },
+    {"fix",                          true,  OPTION_FUNC,   "", false, "", fgOptFIX },
     {"offset-distance",              true,  OPTION_DOUBLE, "/sim/presets/offset-distance", false, "", 0 },
     {"offset-azimuth",               true,  OPTION_DOUBLE, "/sim/presets/offset-azimuth", false, "", 0 },
     {"lon",                          true,  OPTION_FUNC,   "", false, "", fgOptLon },
@@ -1110,6 +1146,7 @@ struct OptionDesc {
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
     {"random-wind",                  false, OPTION_FUNC,   "", false, "", fgOptRandomWind },
     {"wind",                         true,  OPTION_FUNC,   "", false, "", fgOptWind },
+    {"turbulence",                   true,  OPTION_DOUBLE,  "/environment/turbulence-norm", false, "", 0 },
     {"wp",                           true,  OPTION_FUNC,   "", false, "", fgOptWp },
     {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
