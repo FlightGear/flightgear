@@ -256,10 +256,6 @@ static void fgRenderFrame( void ) {
 	// set the sun position
 	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
-	sgVec3 sunpos;
-	sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
-	ssgGetLight( 0 ) -> setPosition( sunpos );
-
 	clear_mask = GL_DEPTH_BUFFER_BIT;
 	if ( current_options.get_wireframe() ) {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
@@ -317,7 +313,9 @@ static void fgRenderFrame( void ) {
 
 	// draw stars and planets
 	fgStarsRender();
+	xglDisable( GL_COLOR_MATERIAL ); // just to make sure ...
 	xglEnable( GL_CULL_FACE ); // for moon
+	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 	//xglEnable(GL_DEPTH_TEST);
 	SolarSystem::theSolarSystem->draw();
 
@@ -358,9 +356,9 @@ static void fgRenderFrame( void ) {
 	    // xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
 	}
 
-	// global_tile_mgr.render();
-
-	// ssg test
+	sgVec3 sunpos;
+	sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
+	ssgGetLight( 0 ) -> setPosition( sunpos );
 
 	// xglMatrixMode( GL_PROJECTION );
 	// xglLoadIdentity();

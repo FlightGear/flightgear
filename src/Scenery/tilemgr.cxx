@@ -94,6 +94,8 @@ int FGTileMgr::init( void ) {
 	material_mgr.load_lib();
     }
 
+    global_tile_cache.init();
+
     state = Inited;
 
     return 1;
