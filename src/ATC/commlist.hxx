@@ -44,6 +44,7 @@
 #include "ATC.hxx"
 #include "atis.hxx"
 
+SG_USING_STD(list);
 SG_USING_STD(map);
 SG_USING_STD(vector);
 SG_USING_STD(string);
