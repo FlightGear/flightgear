@@ -71,6 +71,8 @@ void fgOSOpenWindow(int w, int h, int bpp,
         throw sg_throwable(string("Failed to initialize SDL: ")
                            + SDL_GetError());
 
+    SDL_WM_SetCaption("FlightGear", "FlightGear");
+
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, cbits);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, cbits);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, cbits);
@@ -88,8 +90,6 @@ void fgOSOpenWindow(int w, int h, int bpp,
     if (SDL_SetVideoMode(w, h, 16, vidmask) == 0)
         throw sg_throwable(string("Failed to set SDL video mode: ")
                                    + SDL_GetError());
-
-    SDL_WM_SetCaption("FlightGear", "FlightGear");
 
     // This enables keycode translation (e.g. capital letters when
     // shift is pressed, as well as i18n input methods).  Eventually,
