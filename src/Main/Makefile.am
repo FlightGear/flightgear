@@ -20,8 +20,10 @@ THREAD_LIBS =
 endif
 
 if HAVE_PLIB_PSL
+SCRIPTING_LIBS = $(top_builddir)/src/Scripting/libScripting.a
 PSL_LIBS = -lplibpsl
 else
+SCRIPTING_LIBS =
 PSL_LIBS =
 endif
 
@@ -72,7 +74,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Model/libModel.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
-	$(top_builddir)/src/Scripting/libScripting.a \
+        $(SCRIPTING_LIBS) \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
         $(NETWORK_LIBS) \
