@@ -46,6 +46,7 @@ FGAIBase *FGAIBase::_self = NULL;
 
 FGAIBase::FGAIBase() {
     _self = this;
+    _type_str = "model";
 }
 
 FGAIBase::~FGAIBase() {
@@ -66,11 +67,11 @@ void FGAIBase::Transform() {
 bool FGAIBase::init() {
 
    SGPropertyNode *root = globals->get_props()->getNode("ai/modeles", true);
-   vector<SGPropertyNode_ptr> p_vec = root->getChildren("model");
+   vector<SGPropertyNode_ptr> p_vec = root->getChildren(_type_str);
    unsigned num = p_vec.size();
    p_vec.clear();
 
-   props = root->getNode("model", num, true);
+   props = root->getNode(_type_str, num, true);
    ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
 	                             model_path.c_str(),
                                      props,

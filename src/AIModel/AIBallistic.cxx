@@ -28,6 +28,7 @@
 
 
 FGAIBallistic::FGAIBallistic() {
+    _type_str = "ballistic";
 }
 
 FGAIBallistic::~FGAIBallistic() {

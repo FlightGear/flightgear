@@ -78,6 +78,7 @@ protected:
     void Transform();
 
     static FGAIBase *_self;
+    const char *_type_str;
 
 private:
 
@@ -85,6 +86,7 @@ private:
     static void _setLatitude ( double latitude );
     static double _getLongitude();
     static double _getLatitude ();
+
 };
 
 

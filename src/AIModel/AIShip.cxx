@@ -30,6 +30,7 @@
 FGAIShip::FGAIShip() {
    hdg_lock = false;
    rudder = 0.0;
+   _type_str = "ship";
 }
 
 FGAIShip::~FGAIShip() {

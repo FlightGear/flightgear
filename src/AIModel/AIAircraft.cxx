@@ -51,6 +51,7 @@ FGAIAircraft::FGAIAircraft() {
    // set heading and altitude locks
    hdg_lock = false;
    alt_lock = false;
+   _type_str = "aircraft";
 }
 
 
