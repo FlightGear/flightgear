@@ -110,12 +110,39 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 #endif
 
+#if defined( sgi )
+#include <sys/fpu.h>
+
+/*
+    set the special "flush zero" bit (FS, bit 24) in the Control Status
+    Register of the FPU of R4k and beyond so that the result of any
+    underflowing operation will be clamped to zero, and no exception of
+    any kind will be generated on the CPU.  This has no effect on an
+    R3000.
+
+    the FS bit is inherited by processes fork()ed out of this one,
+    but it is not inherited across an exec().  so anytime you exec()
+    a process, you must re-set the FS bit in that process.
+  */
+void flush_fpe(void)
+{
+    union fpc_csr f;
+    f.fc_word = get_fpc_csr();
+    f.fc_struct.flush = 1;
+    set_fpc_csr(f.fc_word);
+}
+#endif
+
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 
     // Enable floating-point exceptions for Linux/x86
 #if defined(__linux__) && defined(__i386__)
     initFPE();
+#endif
+
+#if defined(sgi)
+    flush_fpe();
 #endif
 
     // Enable floating-point exceptions for Windows
