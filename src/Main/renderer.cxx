@@ -908,11 +908,11 @@ FGRenderer::resize( int width, int height ) {
       }
 
       ssgSetFOV( viewmgr->get_current_view()->get_h_fov(),
-               viewmgr->get_current_view()->get_v_fov() );
+                 viewmgr->get_current_view()->get_v_fov() );
 
 #ifdef FG_USE_CLOUDS_3D
       sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
-               viewmgr->get_current_view()->get_v_fov() );
+                          viewmgr->get_current_view()->get_v_fov() );
 #endif
     }
 

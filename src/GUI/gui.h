@@ -60,6 +60,7 @@ extern void reInit(puObject *);
 extern void dumpSnapShot(puObject *);
 #ifdef TR_HIRES_SNAP
 extern void dumpHiResSnapShot(puObject *);
+extern void fgHiResDump();
 #endif
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 extern void printScreen(puObject *);

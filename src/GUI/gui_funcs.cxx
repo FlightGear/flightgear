@@ -521,7 +521,7 @@ void fgHiResDump()
     static int count = 1;
 
     static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+        = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
@@ -550,6 +550,9 @@ void fgHiResDump()
     ssgSetCamera( (sgVec4 *)globals->get_current_view()->get_VIEW() );
     ssgSetFOV( globals->get_current_view()->get_h_fov(),
 	       globals->get_current_view()->get_v_fov() );
+    cout << "FOV = " << globals->get_current_view()->get_h_fov()
+         << ", " << globals->get_current_view()->get_v_fov() << endl;
+ 
     // ssgSetNearFar( 10.0f, 120000.0f );
     ssgSetNearFar( 0.5f, 1200000.0f );
 
@@ -559,7 +562,7 @@ void fgHiResDump()
     // support any image size
 
     // This should be a requester to get multiplier from user
-    int multiplier = 3;
+    int multiplier = fgGetInt("/sim/startup/hires-multiplier", 3);
     int width = fgGetInt("/sim/startup/xsize");
     int height = fgGetInt("/sim/startup/ysize");
 	

@@ -457,6 +457,17 @@ do_screen_capture (const SGPropertyNode * arg)
 
 
 /**
+ * Built-in command: hires capture screen.
+ */
+static bool
+do_hires_screen_capture (const SGPropertyNode * arg)
+{
+  fgHiResDump();
+  return true;
+}
+
+
+/**
  * Reload the tile cache.
  */
 static bool
@@ -1244,6 +1255,7 @@ static struct {
     { "preferences-load", do_preferences_load },
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
+    { "hires-screen-capture", do_hires_screen_capture },
     { "tile-cache-reload", do_tile_cache_reload },
     { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },
