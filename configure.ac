@@ -486,7 +486,13 @@ int main() {
 ],
   AC_MSG_RESULT(yes),
   [AC_MSG_RESULT(wrong version);
-   AC_MSG_ERROR([Install metakit 2.4.3 or later first...])],
+   AC_MSG_ERROR([
+
+Install metakit 2.4.3 or later first.
+
+Or, the compiler may not be finding your libmk4.so library.
+Please check the config.log file for specific details of the
+failure if you believe you have the correct metakit version.])],
   AC_MSG_RESULT(yes)
 )
 LIBS="$saved_LIBS"
