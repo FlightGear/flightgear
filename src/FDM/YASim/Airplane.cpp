@@ -35,15 +35,16 @@ Airplane::Airplane()
 
 Airplane::~Airplane()
 {
-    for(int i=0; i<_fuselages.size(); i++)
+    int i;
+    for(i=0; i<_fuselages.size(); i++)
 	delete (Fuselage*)_fuselages.get(i);
-    for(int i=0; i<_tanks.size(); i++)
+    for(i=0; i<_tanks.size(); i++)
 	delete (Tank*)_tanks.get(i);
-    for(int i=0; i<_thrusters.size(); i++)
+    for(i=0; i<_thrusters.size(); i++)
 	delete (ThrustRec*)_thrusters.get(i);
-    for(int i=0; i<_gears.size(); i++)
+    for(i=0; i<_gears.size(); i++)
 	delete (GearRec*)_gears.get(i);
-    for(int i=0; i<_surfs.size(); i++)
+    for(i=0; i<_surfs.size(); i++)
 	delete (Surface*)_surfs.get(i);    
 }
 
@@ -85,12 +86,14 @@ void Airplane::getPilotAccel(float* out)
 
 void Airplane::setPilotPos(float* pos)
 {
-    for(int i=0; i<3; i++) _pilotPos[i] = pos[i];
+    int i;
+    for(i=0; i<3; i++) _pilotPos[i] = pos[i];
 }
 
 void Airplane::getPilotPos(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _pilotPos[i];
+    int i;
+    for(i=0; i<3; i++) out[i] = _pilotPos[i];
 }
 
 int Airplane::numGear()
@@ -105,7 +108,8 @@ Gear* Airplane::getGear(int g)
 
 void Airplane::setGearState(bool down, float dt)
 {
-    for(int i=0; i<_gears.size(); i++) {
+    int i;
+    for(i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
         if(gr->time == 0) {
             // Non-extensible
@@ -206,7 +210,8 @@ void Airplane::addVStab(Wing* vstab)
 void Airplane::addFuselage(float* front, float* back, float width)
 {
     Fuselage* f = new Fuselage();
-    for(int i=0; i<3; i++) {
+    int i;
+    for(i=0; i<3; i++) {
 	f->front[i] = front[i];
 	f->back[i]  = back[i];
     }
@@ -217,7 +222,8 @@ void Airplane::addFuselage(float* front, float* back, float width)
 int Airplane::addTank(float* pos, float cap, float density)
 {
     Tank* t = new Tank();
-    for(int i=0; i<3; i++) t->pos[i] = pos[i];
+    int i;
+    for(i=0; i<3; i++) t->pos[i] = pos[i];
     t->cap = cap;
     t->fill = cap;
     t->density = density;
@@ -239,7 +245,8 @@ void Airplane::addThruster(Thruster* thruster, float mass, float* cg)
     ThrustRec* t = new ThrustRec();
     t->thruster = thruster;
     t->mass = mass;
-    for(int i=0; i<3; i++) t->cg[i] = cg[i];
+    int i;
+    for(i=0; i<3; i++) t->cg[i] = cg[i];
     _thrusters.add(t);
 }
 
@@ -284,7 +291,8 @@ void Airplane::setWeight(int handle, float mass)
 
 void Airplane::setFuelFraction(float frac)
 {
-    for(int i=0; i<_tanks.size(); i++) {
+    int i;
+    for(i=0; i<_tanks.size(); i++) {
         Tank* t = (Tank*)_tanks.get(i);
         _model.getBody()->setMass(t->handle, t->cap * frac);
     }
@@ -330,7 +338,8 @@ void Airplane::setupState(float aoa, float speed, State* s)
 
     s->v[0] = speed; s->v[1] = 0; s->v[2] = 0;
 
-    for(int i=0; i<3; i++)
+    int i;
+    for(i=0; i<3; i++)
 	s->pos[i] = s->rot[i] = s->acc[i] = s->racc[i] = 0;
 
     // Put us 1m above the origin, or else the gravity computation in
@@ -346,7 +355,8 @@ float Airplane::compileWing(Wing* w)
     w->compile();
 
     float wgt = 0;
-    for(int i=0; i<w->numSurfaces(); i++) {
+    int i;
+    for(i=0; i<w->numSurfaces(); i++) {
         Surface* s = (Surface*)w->getSurface(i);
         _model.addSurface(s);
 
@@ -367,7 +377,8 @@ float Airplane::compileFuselage(Fuselage* f)
     float wid = f->width;
     int segs = (int)Math::ceil(len/wid);
     float segWgt = len*wid/segs;
-    for(int j=0; j<segs; j++) {
+    int j;
+    for(j=0; j<segs; j++) {
         float frac = (j+0.5) / segs;
         float pos[3];
         Math::mul3(frac, fwd, pos);
@@ -442,34 +453,35 @@ void Airplane::compile()
     // The Wing objects
     aeroWgt += compileWing(_wing);
     aeroWgt += compileWing(_tail);
-    for(int i=0; i<_vstabs.size(); i++) {
+    int i;
+    for(i=0; i<_vstabs.size(); i++) {
         aeroWgt += compileWing((Wing*)_vstabs.get(i)); 
     }
     
     // The fuselage(s)
-    for(int i=0; i<_fuselages.size(); i++) {
+    for(i=0; i<_fuselages.size(); i++) {
         aeroWgt += compileFuselage((Fuselage*)_fuselages.get(i));
     }
 
     // Count up the absolute weight we have
     float nonAeroWgt = _ballast;
-    for(int i=0; i<_thrusters.size(); i++)
+    for(i=0; i<_thrusters.size(); i++)
         nonAeroWgt += ((ThrustRec*)_thrusters.get(i))->mass;
 
     // Rescale to the specified empty weight
     float wscale = (_emptyWeight-nonAeroWgt)/aeroWgt;
-    for(int i=firstMass; i<body->numMasses(); i++)
+    for(i=firstMass; i<body->numMasses(); i++)
         body->setMass(i, body->getMass(i)*wscale);
 
     // Add the thruster masses
-    for(int i=0; i<_thrusters.size(); i++) {
+    for(i=0; i<_thrusters.size(); i++) {
         ThrustRec* t = (ThrustRec*)_thrusters.get(i);
         body->addMass(t->mass, t->cg);
     }
 
     // Add the tanks, empty for now.
     float totalFuel = 0;
-    for(int i=0; i<_tanks.size(); i++) { 
+    for(i=0; i<_tanks.size(); i++) { 
         Tank* t = (Tank*)_tanks.get(i); 
         t->handle = body->addMass(0, t->pos);
         totalFuel += t->cap;
@@ -480,11 +492,11 @@ void Airplane::compile()
     body->recalc();
 
     // Add surfaces for the landing gear.
-    for(int i=0; i<_gears.size(); i++)
+    for(i=0; i<_gears.size(); i++)
         compileGear((GearRec*)_gears.get(i));
 
     // The Thruster objects
-    for(int i=0; i<_thrusters.size(); i++) {
+    for(i=0; i<_thrusters.size(); i++) {
         ThrustRec* tr = (ThrustRec*)_thrusters.get(i);
         tr->handle = _model.addThruster(tr->thruster);
     }
@@ -512,7 +524,8 @@ void Airplane::solveGear()
     // "buffer" to keep things from blowing up with aircraft with a
     // single gear very near the c.g. (AV-8, for example).
     float total = 0;
-    for(int i=0; i<_gears.size(); i++) {
+    int i;
+    for(i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
         Gear* g = gr->gear;
         g->getPosition(pos);
@@ -522,7 +535,7 @@ void Airplane::solveGear()
     }
 
     // Renormalize so they sum to 1
-    for(int i=0; i<_gears.size(); i++)
+    for(i=0; i<_gears.size(); i++)
         ((GearRec*)_gears.get(i))->wgt /= total;
     
     // The force at max compression should be sufficient to stop a
@@ -535,7 +548,7 @@ void Airplane::solveGear()
     // each gear.
     float energy = 0.5*_approachWeight*descentRate*descentRate;
 
-    for(int i=0; i<_gears.size(); i++) {
+    for(i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
         float e = energy * gr->wgt;
         float comp[3];
@@ -558,7 +571,8 @@ void Airplane::solveGear()
 
 void Airplane::stabilizeThrust()
 {
-    for(int i=0; i<_thrusters.size(); i++)
+    int i;
+    for(i=0; i<_thrusters.size(); i++)
 	_model.getThruster(i)->stabilize();
 }
 
@@ -570,7 +584,8 @@ void Airplane::runCruise()
 
     // The control configuration
     _controls.reset();
-    for(int i=0; i<_cruiseControls.size(); i++) {
+    int i;
+    for(i=0; i<_cruiseControls.size(); i++) {
 	Control* c = (Control*)_cruiseControls.get(i);
 	_controls.setInput(c->control, c->val);
     }
@@ -589,7 +604,7 @@ void Airplane::runCruise()
    
     // Set up the thruster parameters and iterate until the thrust
     // stabilizes.
-    for(int i=0; i<_thrusters.size(); i++) {
+    for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
 	t->setAir(_cruiseP, _cruiseT);
@@ -610,7 +625,8 @@ void Airplane::runApproach()
 
     // The control configuration
     _controls.reset();
-    for(int i=0; i<_approachControls.size(); i++) {
+    int i;
+    for(i=0; i<_approachControls.size(); i++) {
 	Control* c = (Control*)_approachControls.get(i);
 	_controls.setInput(c->control, c->val);
     }
@@ -629,7 +645,7 @@ void Airplane::runApproach()
 
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.
-    for(int i=0; i<_thrusters.size(); i++) {
+    for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
 	t->setAir(_approachP, _approachT);
@@ -648,11 +664,12 @@ void Airplane::applyDragFactor(float factor)
     _dragFactor *= applied;
     _wing->setDragScale(_wing->getDragScale() * applied);
     _tail->setDragScale(_tail->getDragScale() * applied);
-    for(int i=0; i<_vstabs.size(); i++) {
+    int i;
+    for(i=0; i<_vstabs.size(); i++) {
 	Wing* w = (Wing*)_vstabs.get(i);
 	w->setDragScale(w->getDragScale() * applied);
     }
-    for(int i=0; i<_surfs.size(); i++) {
+    for(i=0; i<_surfs.size(); i++) {
 	Surface* s = (Surface*)_surfs.get(i);
 	s->setTotalDrag(s->getTotalDrag() * applied);
     }
@@ -664,7 +681,8 @@ void Airplane::applyLiftRatio(float factor)
     _liftRatio *= applied;
     _wing->setLiftRatio(_wing->getLiftRatio() * applied);
     _tail->setLiftRatio(_tail->getLiftRatio() * applied);
-    for(int i=0; i<_vstabs.size(); i++) {
+    int i;
+    for(i=0; i<_vstabs.size(); i++) {
         Wing* w = (Wing*)_vstabs.get(i);
         w->setLiftRatio(w->getLiftRatio() * applied);
     }

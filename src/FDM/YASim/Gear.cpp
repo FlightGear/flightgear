@@ -6,7 +6,8 @@ namespace yasim {
 
 Gear::Gear()
 {
-    for(int i=0; i<3; i++)
+    int i;
+    for(i=0; i<3; i++)
 	_pos[i] = _cmpr[i] = 0;
     _spring = 1;
     _damp = 0;
@@ -19,12 +20,14 @@ Gear::Gear()
 
 void Gear::setPosition(float* position)
 {
-    for(int i=0; i<3; i++) _pos[i] = position[i];
+    int i;
+    for(i=0; i<3; i++) _pos[i] = position[i];
 }
 
 void Gear::setCompression(float* compression)
 {
-    for(int i=0; i<3; i++) _cmpr[i] = compression[i];
+    int i;
+    for(i=0; i<3; i++) _cmpr[i] = compression[i];
 }
 
 void Gear::setSpring(float spring)
@@ -64,12 +67,14 @@ void Gear::setExtension(float extension)
 
 void Gear::getPosition(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _pos[i];
+    int i;
+    for(i=0; i<3; i++) out[i] = _pos[i];
 }
 
 void Gear::getCompression(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _cmpr[i];    
+    int i;
+    for(i=0; i<3; i++) out[i] = _cmpr[i];    
 }
 
 float Gear::getSpring()
@@ -126,7 +131,8 @@ float Gear::getCompressFraction()
 void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
 {
     // Init the return values
-    for(int i=0; i<3; i++) _force[i] = _contact[i] = 0;
+    int i;
+    for(i=0; i<3; i++) _force[i] = _contact[i] = 0;
 
     // Don't bother if it's not down
     if(_extension < 1)
@@ -150,7 +156,7 @@ void Gear::calcForce(RigidBody* body, float* v, float* rot, float* ground)
     // Calculate the point of ground _contact.
     _frac = a/(a-b);
     if(b < 0) _frac = 1;
-    for(int i=0; i<3; i++)
+    for(i=0; i<3; i++)
 	_contact[i] = _pos[i] + _frac*_cmpr[i];
 
     // Turn _cmpr into a unit vector and a magnitude

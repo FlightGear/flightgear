@@ -5,10 +5,11 @@ namespace yasim {
 Thruster::Thruster()
 {
     _dir[0] = 1; _dir[1] = 0; _dir[2] = 0;
-    for(int i=0; i<3; i++) _pos[i] = _wind[i] = 0;
+    int i;
+    for(i=0; i<3; i++) _pos[i] = _wind[i] = 0;
     _throttle = 0;
     _mixture = 0;
-    _P = _T = _rho = 0;
+    _pressure = _temp = _rho = 0;
 }
 
 Thruster::~Thruster()
@@ -17,17 +18,20 @@ Thruster::~Thruster()
 
 void Thruster::getPosition(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _pos[i];
+    int i;
+    for(i=0; i<3; i++) out[i] = _pos[i];
 }
 
 void Thruster::setPosition(float* pos)
 {
-    for(int i=0; i<3; i++) _pos[i] = pos[i];
+    int i;
+    for(i=0; i<3; i++) _pos[i] = pos[i];
 }
 
 void Thruster::getDirection(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _dir[i];
+    int i;
+    for(i=0; i<3; i++) out[i] = _dir[i];
 }
 
 void Thruster::setDirection(float* dir)
@@ -47,14 +51,15 @@ void Thruster::setMixture(float mixture)
 
 void Thruster::setWind(float* wind)
 {
-    for(int i=0; i<3; i++) _wind[i] = wind[i];
+    int i;
+    for(i=0; i<3; i++) _wind[i] = wind[i];
 }
 
 void Thruster::setAir(float pressure, float temp)
 {
-    _P = pressure;
-    _T = temp;
-    _rho = _P / (287.1 * _T);
+    _pressure = pressure;
+    _temp = temp;
+    _rho = _pressure / (287.1 * _temp);
 }
 
 }; // namespace yasim

@@ -21,9 +21,11 @@ struct State {
 
     // Simple initialization
     State() {
-        for(int i=0; i<3; i++) {
+        int i;
+        for(i=0; i<3; i++) {
             pos[i] = v[i] = rot[i] = acc[i] = racc[i] = 0;
-            for(int j=0; j<3; j++)
+            int j;
+            for(j=0; j<3; j++)
                 orient[3*i+j] = i==j ? 1 : 0;
         }
     }

@@ -37,24 +37,25 @@ FGFDM::FGFDM()
 
 FGFDM::~FGFDM()
 {
-    for(int i=0; i<_axes.size(); i++) {
+    int i;
+    for(i=0; i<_axes.size(); i++) {
 	AxisRec* a = (AxisRec*)_axes.get(i);
 	delete[] a->name;
 	delete a;
     }
-    for(int i=0; i<_pistons.size(); i++) {
+    for(i=0; i<_pistons.size(); i++) {
 	EngRec* er = (EngRec*)_pistons.get(i);
 	delete[] er->prefix;
 	delete (PropEngine*)er->eng;
 	delete er;
     }
-    for(int i=0; i<_jets.size(); i++) {
+    for(i=0; i<_jets.size(); i++) {
 	EngRec* er = (EngRec*)_pistons.get(i);
 	delete[] er->prefix;
 	delete (Jet*)er->eng;
 	delete er;
     }
-    for(int i=0; i<_weights.size(); i++) {
+    for(i=0; i<_weights.size(); i++) {
 	WeightRec* wr = (WeightRec*)_weights.get(i);
 	delete[] wr->prop;
 	delete wr;
@@ -247,7 +248,8 @@ void FGFDM::getExternalInput(float dt)
     // The control axes
     ControlMap* cm = _airplane.getControlMap();
     cm->reset();
-    for(int i=0; i<_axes.size(); i++) {
+    int i;
+    for(i=0; i<_axes.size(); i++) {
 	AxisRec* a = (AxisRec*)_axes.get(i);
 	float val = fgGetFloat(a->name, 0);
 	cm->setInput(a->handle, val);
@@ -255,7 +257,7 @@ void FGFDM::getExternalInput(float dt)
     cm->applyControls();
 
     // Weights
-    for(int i=0; i<_weights.size(); i++) {
+    for(i=0; i<_weights.size(); i++) {
 	WeightRec* wr = (WeightRec*)_weights.get(i);
 	_airplane.setWeight(wr->handle, fgGetFloat(wr->prop));
     }
@@ -267,24 +269,25 @@ void FGFDM::getExternalInput(float dt)
 void FGFDM::setOutputProperties()
 {
     char buf[256];
-    for(int i=0; i<_airplane.numTanks(); i++) {
+    int i;
+    for(i=0; i<_airplane.numTanks(); i++) {
 	sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
 	fgSetFloat(buf,
 		   CM2GALS*_airplane.getFuel(i)/_airplane.getFuelDensity(i));
     }
 
-    for(int i=0; i<_pistons.size(); i++) {
+    for(i=0; i<_pistons.size(); i++) {
 	EngRec* er = (EngRec*)_pistons.get(i);
 	PropEngine* p = (PropEngine*)er->eng;
 
 	sprintf(buf, "%s/rpm", er->prefix);
-	fgSetFloat(buf, p->getOmega() * (30/3.15149265358979));
+	fgSetFloat(buf, p->getOmega() / RPM2RAD);
 
 	sprintf(buf, "%s/fuel-flow-gph", er->prefix);
 	fgSetFloat(buf, p->getFuelFlow() * (3600*2.2/5)); // FIXME, wrong
     }
 
-    for(int i=0; i<_jets.size(); i++) {
+    for(i=0; i<_jets.size(); i++) {
 	EngRec* er = (EngRec*)_jets.get(i);
 	Jet* j = (Jet*)er->eng;
 	
@@ -380,7 +383,8 @@ void FGFDM::parsePropeller(XMLAttributes* a)
 // yet.
 int FGFDM::parseAxis(const char* name)
 {
-    for(int i=0; i<_axes.size(); i++) {
+    int i;
+    for(i=0; i<_axes.size(); i++) {
 	AxisRec* a = (AxisRec*)_axes.get(i);
 	if(eq(a->name, name))
 	    return a->handle;

@@ -10,14 +10,16 @@ namespace yasim {
 
 ControlMap::~ControlMap()
 {
-    for(int i=0; i<_inputs.size(); i++) {
+    int i;
+    for(i=0; i<_inputs.size(); i++) {
 	Vector* v = (Vector*)_inputs.get(i);
-	for(int j=0; j<v->size(); j++)
+	int j;
+	for(j=0; j<v->size(); j++)
 	    delete (MapRec*)v->get(j);
 	delete v;
     }
 
-    for(int i=0; i<_outputs.size(); i++) {
+    for(i=0; i<_outputs.size(); i++) {
 	OutRec* o = (OutRec*)_outputs.get(i);
 	delete[] o->values;
 	delete o;
@@ -34,7 +36,8 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
 {
     // See if the output object already exists
     OutRec* out = 0;
-    for(int i=0; i<_outputs.size(); i++) {
+    int i;
+    for(i=0; i<_outputs.size(); i++) {
 	OutRec* o = (OutRec*)_outputs.get(i);
 	if(o->object == object && o->type == type) {
 	    out = o;
@@ -73,9 +76,11 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
 void ControlMap::reset()
 {
     // Set all the values to zero
-    for(int i=0; i<_outputs.size(); i++) {
+    int i;
+    for(i=0; i<_outputs.size(); i++) {
 	OutRec* o = (OutRec*)_outputs.get(i);
-	for(int j=0; j<o->n; j++)
+	int j;
+	for(j=0; j<o->n; j++)
 	    o->values[j] = 0;
     }
 }
@@ -83,7 +88,8 @@ void ControlMap::reset()
 void ControlMap::setInput(int input, float value)
 {
     Vector* maps = (Vector*)_inputs.get(input);
-    for(int i=0; i<maps->size(); i++) {
+    int i;
+    for(i=0; i<maps->size(); i++) {
 	MapRec* map = (MapRec*)maps->get(i);
 	map->out->values[map->idx] = value;
     }
@@ -91,13 +97,15 @@ void ControlMap::setInput(int input, float value)
 
 void ControlMap::applyControls()
 {
-    for(int outrec=0; outrec<_outputs.size(); outrec++) {
+    int outrec;
+    for(outrec=0; outrec<_outputs.size(); outrec++) {
 	OutRec* o = (OutRec*)_outputs.get(outrec);
 	
 	// Generate a summed value.  Note the check for "split"
 	// control axes like ailerons.
 	float lval = 0, rval = 0;
-	for(int i=0; i<o->n; i++) {
+	int i;
+	for(i=0; i<o->n; i++) {
 	    float val = o->values[i];
 	    int opt = (int)o->options.get(i);
 	    if(opt & OPT_SQUARE)

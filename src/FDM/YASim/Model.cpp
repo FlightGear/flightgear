@@ -25,7 +25,8 @@ void printState(State* s)
     printf("\nNEW STATE (LOCAL COORDS)\n");
     printf("pos: %10.2f %10.2f %10.2f\n", tmp.pos[0], tmp.pos[1], tmp.pos[2]);
     printf("o:   ");
-    for(int i=0; i<3; i++) {
+    int i;
+    for(i=0; i<3; i++) {
 	if(i != 0) printf("     ");
 	printf("%6.2f %6.2f %6.2f\n",
 	       tmp.orient[3*i+0], tmp.orient[3*i+1], tmp.orient[3*i+2]);
@@ -38,7 +39,8 @@ void printState(State* s)
 
 Model::Model()
 {
-    for(int i=0; i<3; i++) _wind[i] = 0;
+    int i;
+    for(i=0; i<3; i++) _wind[i] = 0;
 
     _integrator.setBody(&_body);
     _integrator.setEnvironment(this);
@@ -56,7 +58,8 @@ void Model::getThrust(float* out)
 {
     float tmp[3];
     out[0] = out[1] = out[2] = 0;
-    for(int i=0; i<_thrusters.size(); i++) {
+    int i;
+    for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = (Thruster*)_thrusters.get(i);
 	t->getThrust(tmp);
 	Math::add3(tmp, out, out);
@@ -66,9 +69,10 @@ void Model::getThrust(float* out)
 void Model::initIteration()
 {
     // Precompute torque and angular momentum for the thrusters
-    for(int i=0; i<3; i++)
+    int i;
+    for(i=0; i<3; i++)
 	_gyro[i] = _torque[i] = 0;
-    for(int i=0; i<_thrusters.size(); i++) {
+    for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = (Thruster*)_thrusters.get(i);
 	
         // Get the wind velocity at the thruster location
@@ -77,7 +81,7 @@ void Model::initIteration()
         localWind(pos, _s, v);
 
 	t->setWind(v);
-	t->setAir(_P, _T);
+	t->setAir(_pressure, _temp);
 	t->integrate(_integrator.getInterval());
 
 	t->getTorque(v);
@@ -164,14 +168,15 @@ void Model::setGroundEffect(float* pos, float span, float mul)
 // (v dot _ground)-_ground[3] gives the distance AGL.
 void Model::setGroundPlane(double* planeNormal, double fromOrigin)
 {
-    for(int i=0; i<3; i++) _ground[i] = planeNormal[i];
+    int i;
+    for(i=0; i<3; i++) _ground[i] = planeNormal[i];
     _ground[3] = fromOrigin;
 }
 
 void Model::setAir(float pressure, float temp)
 {
-    _P = pressure;
-    _T = temp;
+    _pressure = pressure;
+    _temp = temp;
     _rho = Atmosphere::calcDensity(pressure, temp);
 }
 
@@ -189,7 +194,8 @@ void Model::calcForces(State* s)
     // step.
     _body.setGyro(_gyro);
     _body.addTorque(_torque);
-    for(int i=0; i<_thrusters.size(); i++) {
+    int i;
+    for(i=0; i<_thrusters.size(); i++) {
 	Thruster* t = (Thruster*)_thrusters.get(i);
 	float thrust[3], pos[3];
 	t->getThrust(thrust);
@@ -208,7 +214,7 @@ void Model::calcForces(State* s)
     // point is different due to rotation.
     float faero[3];
     faero[0] = faero[1] = faero[2] = 0;
-    for(int i=0; i<_surfaces.size(); i++) {
+    for(i=0; i<_surfaces.size(); i++) {
 	Surface* sf = (Surface*)_surfaces.get(i);
 
 	// Vsurf = wind - velocity + (rot cross (cg - pos))
@@ -247,7 +253,7 @@ void Model::calcForces(State* s)
     Math::vmul33(s->orient, s->v, lv);
 
     // The landing gear
-    for(int i=0; i<_gears.size(); i++) {
+    for(i=0; i<_gears.size(); i++) {
 	float force[3], contact[3];
 	Gear* g = (Gear*)_gears.get(i);
 	g->calcForce(&_body, lv, lrot, ground);
@@ -265,7 +271,8 @@ void Model::newState(State* s)
     // Some simple collision detection
     float ground[4], pos[3], cmpr[3];
     ground[3] = localGround(s, ground);
-    for(int i=0; i<_gears.size(); i++) {
+    int i;
+    for(i=0; i<_gears.size(); i++) {
 	Gear* g = (Gear*)_gears.get(i);
 	g->getPosition(pos);
 	g->getCompression(cmpr);

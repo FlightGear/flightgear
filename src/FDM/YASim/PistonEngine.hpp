@@ -23,7 +23,7 @@ public:
 	      float* powerOut, float* fuelFlowOut);
 
 private:
-    float _P0;       // reference power setting
+    float _power0;   // reference power setting
     float _omega0;   //   "       engine speed
     float _rho0;     //   "       manifold air density
     float _f0;       // "ideal" fuel flow at P0/omega0

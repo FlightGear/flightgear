@@ -9,7 +9,8 @@ Surface::Surface()
     _cx = _cy = _cz = 1;
     _cz0 = 0;
     _peaks[0] = _peaks[1] = 1;
-    for(int i=0; i<4; i++)
+    int i;
+    for(i=0; i<4; i++)
 	_stalls[i] = _widths[i] = 0;
     _orient[0] = 1; _orient[1] = 0; _orient[2] = 0;
     _orient[3] = 0; _orient[4] = 1; _orient[5] = 0;
@@ -25,12 +26,14 @@ Surface::Surface()
 
 void Surface::setPosition(float* p)
 {
-    for(int i=0; i<3; i++) _pos[i] = p[i];
+    int i;
+    for(i=0; i<3; i++) _pos[i] = p[i];
 }
 
 void Surface::getPosition(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _pos[i];
+    int i;
+    for(i=0; i<3; i++) out[i] = _pos[i];
 }
 
 void Surface::setChord(float chord)
@@ -85,7 +88,8 @@ void Surface::setStallWidth(int i, float width)
 
 void Surface::setOrientation(float* o)
 {
-    for(int i=0; i<9; i++)
+    int i;
+    for(i=0; i<9; i++)
         _orient[i] = o[i];
 }
 
@@ -138,7 +142,8 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // Handle the blowup condition.  Zero velocity means zero force by
     // definition.
     if(vel == 0) {
-	for(int i=0; i<3; i++) out[i] = torque[i] = 0;
+	int i;
+	for(i=0; i<3; i++) out[i] = torque[i] = 0;
 	return;
     }
 

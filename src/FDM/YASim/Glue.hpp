@@ -43,17 +43,6 @@ public:
     // Returns a geodetic (i.e. gravitational, "level", etc...) "up"
     // vector for the specified xyz position.
     static void geodUp(double* pos, float* out);
-
-private:
-
-    // WGS84 numbers
-    static const double EQURAD = 6378137;         // equatorial radius
-    static const double STRETCH = 1.003352810665; // equ./polar radius
-
-    // Derived from the above
-    static const double SQUASH = 0.99665839311;      // 1/STRETCH
-    static const double POLRAD = 6356823.77346;      // EQURAD*SQUASH
-    static const double iPOLRAD = 1.57311266701e-07; // 1/POLRAD
 };
 
 }; // namespace yasim

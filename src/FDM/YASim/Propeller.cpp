@@ -15,11 +15,11 @@ Propeller::Propeller(float radius, float v, float omega,
     _r = radius;
     _etaC = 0.85; // make this settable?
 
-    _J0 = v/(omega*_lambdaPeak);
-    _baseJ0 = _J0;
+    _j0 = v/(omega*_lambdaPeak);
+    _baseJ0 = _j0;
 
     float V2 = v*v + (_r*omega)*(_r*omega);
-    _F0 = 2*_etaC*power/(rho*v*V2);
+    _f0 = 2*_etaC*power/(rho*v*V2);
 
     _matchTakeoff = false;
 }
@@ -29,17 +29,17 @@ void Propeller::setTakeoff(float omega0, float power0)
     // Takeoff thrust coefficient at lambda==0
     _matchTakeoff = true;
     float V2 = _r*omega0 * _r*omega0;
-    float gamma = _etaC * _beta / _J0;
+    float gamma = _etaC * _beta / _j0;
     float torque = power0 / omega0;
     float density = Atmosphere::getStdDensity(0);
-    _tc0 = (torque * gamma) / (0.5 * density * V2 * _F0);
+    _tc0 = (torque * gamma) / (0.5 * density * V2 * _f0);
 }
     
 void Propeller::modPitch(float mod)
 {
-    _J0 *= mod;
-    if(_J0 < 0.25*_baseJ0) _J0 = 0.25*_baseJ0;
-    if(_J0 > 4*_baseJ0)    _J0 = 4*_baseJ0;
+    _j0 *= mod;
+    if(_j0 < 0.25*_baseJ0) _j0 = 0.25*_baseJ0;
+    if(_j0 > 4*_baseJ0)    _j0 = 4*_baseJ0;
 }
 
 
@@ -54,12 +54,12 @@ void Propeller::calc(float density, float v, float omega,
     if(v < 0) v = 0;
 
     float J = v/omega;
-    float lambda = J/_J0;
+    float lambda = J/_j0;
 
     float torque = 0;
     if(lambda > 1) {
 	lambda = 1.0/lambda;
-	torque = (density*V2*_F0*_J0)/(4*_etaC*_beta*(1-_lambdaPeak));
+	torque = (density*V2*_f0*_j0)/(4*_etaC*_beta*(1-_lambdaPeak));
     }
 
     // There's an undefined point at 1.  Just offset by a tiny bit to
@@ -72,14 +72,14 @@ void Propeller::calc(float density, float v, float omega,
     float l4 = lambda*lambda; l4 = l4*l4;
 
     // thrust/torque ratio
-    float gamma = (_etaC*_beta/_J0)*(1-l4);
+    float gamma = (_etaC*_beta/_j0)*(1-l4);
 
     // Compute a thrust, clamp to takeoff thrust to prevend huge
     // numbers at slow speeds.
     float tc = (1 - lambda) / (1 - _lambdaPeak);
     if(_matchTakeoff && tc > _tc0) tc = _tc0;
 
-    float thrust = 0.5 * density * V2 * _F0 * tc;
+    float thrust = 0.5 * density * V2 * _f0 * tc;
 
     if(torque > 0) {
 	torque -= thrust/gamma;

@@ -2,6 +2,15 @@
 #include "Glue.hpp"
 namespace yasim {
 
+// WGS84 numbers
+static const double EQURAD = 6378137;         // equatorial radius
+static const double STRETCH = 1.003352810665; // equ./polar radius
+
+// Derived from the above
+static const double SQUASH = 0.99665839311;      // 1/STRETCH
+static const double POLRAD = 6356823.77346;      // EQURAD*SQUASH
+static const double iPOLRAD = 1.57311266701e-07; // 1/POLRAD
+
 void Glue::calcAlphaBeta(State* s, float* alpha, float* beta)
 {
     // Convert the velocity to the aircraft frame.
@@ -145,8 +154,9 @@ void Glue::euler2orient(float roll, float pitch, float hdg, float* out)
     // rotation and are done out longhand below for efficiency.
 
     // Init to the identity matrix
-    for(int i=0; i<3; i++)
-        for(int j=0; j<3; j++)
+    int i, j;
+    for(i=0; i<3; i++)
+        for(j=0; j<3; j++)
             out[3*i+j] = (i==j) ? 1 : 0;
 
     // Negate Y and Z
@@ -154,7 +164,8 @@ void Glue::euler2orient(float roll, float pitch, float hdg, float* out)
     
     float s = Math::sin(roll);
     float c = Math::cos(roll);
-    for(int col=0; col<3; col++) {
+    int col;
+    for(col=0; col<3; col++) {
 	float y=out[col+3], z=out[col+6];
 	out[col+3] = c*y - s*z;
 	out[col+6] = s*y + c*z;
@@ -162,7 +173,7 @@ void Glue::euler2orient(float roll, float pitch, float hdg, float* out)
 
     s = Math::sin(pitch);
     c = Math::cos(pitch);
-    for(int col=0; col<3; col++) {
+    for(col=0; col<3; col++) {
 	float x=out[col], z=out[col+6];
 	out[col]   = c*x + s*z;
 	out[col+6] = c*z - s*x;
@@ -170,7 +181,7 @@ void Glue::euler2orient(float roll, float pitch, float hdg, float* out)
 
     s = Math::sin(hdg);
     c = Math::cos(hdg);
-    for(int col=0; col<3; col++) {
+    for(col=0; col<3; col++) {
 	float x=out[col], y=out[col+3];
 	out[col]   = c*x - s*y;
 	out[col+3] = s*x + c*y;

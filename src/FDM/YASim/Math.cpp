@@ -159,7 +159,8 @@ void Math::mmul33(float* a, float* b, float* out)
     tmp[5] = a[3]*b[2] + a[4]*b[5] + a[5]*b[8];
     tmp[8] = a[6]*b[2] + a[7]*b[5] + a[8]*b[8];
 
-    for(int i=0; i<9; i++)
+    int i;
+    for(i=0; i<9; i++)
 	out[i] = tmp[i];
 }
 

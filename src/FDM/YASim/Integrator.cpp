@@ -75,7 +75,8 @@ void Integrator::calcNewInterval()
     float dt = _dt / 4;
 
     orthonormalize(_s.orient);
-    for(int i=0; i<4; i++) {
+    int i;
+    for(i=0; i<4; i++) {
 	_body->reset();
 	_env->calcForces(&s);
 	
@@ -124,7 +125,8 @@ void Integrator::calcNewInterval()
     // First off, sanify the initial orientation
     orthonormalize(_s.orient);
 
-    for(int i=0; i<NITER; i++) {
+    int i;
+    for(i=0; i<NITER; i++) {
 	//
 	// extrapolate forward based on current values of the
 	// derivatives and the ORIGINAL values of the
@@ -139,7 +141,8 @@ void Integrator::calcNewInterval()
 	Math::mmul33(_s.orient, rotmat, ori[i]);
 
 	// add velocity to (original!) position
-	for(int j=0; j<3; j++) pos[i][j] = _s.pos[j];
+	int j;
+	for(j=0; j<3; j++) pos[i][j] = _s.pos[j];
         extrapolatePosition(pos[i], currVel, dt, _s.orient, ori[i]);
 
 	// add acceleration to (original!) velocity
@@ -163,12 +166,12 @@ void Integrator::calcNewInterval()
         // per-coordinate arrays should be changed into a single array
         // of State objects.  Ick.
         State stmp;
-        for(int j=0; j<3; j++) {
+        for(j=0; j<3; j++) {
             stmp.pos[j] = pos[i][j];
             stmp.v[j] = vel[i][j];
             stmp.rot[j] = rot[i][j];
         }
-        for(int j=0; j<9; j++)
+        for(j=0; j<9; j++)
             stmp.orient[j] = ori[i][j];
 	_env->calcForces(&stmp);
 
@@ -190,16 +193,17 @@ void Integrator::calcNewInterval()
     // But the space is "locally" cartesian.
     State derivs;
     float tot = 0;
-    for(int i=0; i<NITER; i++) {
+    for(i=0; i<NITER; i++) {
 	float wgt = WEIGHTS[i];
         tot += wgt;
-        for(int j=0; j<3; j++) {
+        int j;
+        for(j=0; j<3; j++) {
             derivs.v[j]   += wgt*vel[i][j];  derivs.rot[j]    += wgt*rot[i][j];
             derivs.acc[j] += wgt*acc[i][j];  derivs.racc[j] += wgt*rac[i][j];
         }
     }
     float itot = 1/tot;
-    for(int i=0; i<3; i++) {
+    for(i=0; i<3; i++) {
         derivs.v[i]   *= itot;  derivs.rot[i]    *= itot;
         derivs.acc[i] *= itot;  derivs.racc[i] *= itot;
     }
@@ -211,7 +215,7 @@ void Integrator::calcNewInterval()
 
     // save the starting orientation
     float orient0[9];
-    for(int i=0; i<9; i++) orient0[i] = _s.orient[i];
+    for(i=0; i<9; i++) orient0[i] = _s.orient[i];
 
     float rotmat[9];
     rotMatrix(derivs.rot, _dt, rotmat);
@@ -226,7 +230,7 @@ void Integrator::calcNewInterval()
     Math::mul3(_dt, derivs.racc, tmp);
     Math::add3(_s.rot, tmp, _s.rot);
     
-    for(int i=0; i<3; i++) {
+    for(i=0; i<3; i++) {
 	_s.acc[i] = derivs.acc[i];
 	_s.racc[i] = derivs.racc[i];
     }

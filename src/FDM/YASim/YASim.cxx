@@ -16,16 +16,20 @@
 #include "Glue.hpp"
 #include "Gear.hpp"
 #include "PropEngine.hpp"
+#include "PistonEngine.hpp"
 
 #include "YASim.hxx"
 
 using namespace yasim;
 
 static const float RAD2DEG = 180/3.14159265358979323846;
+static const float RAD2RPM = 9.54929658551;
 static const float M2FT = 3.2808399;
 static const float FT2M = 0.3048;
 static const float MPS2KTS = 3600.0/1852.0;
 static const float CM2GALS = 264.172037284; // gallons/cubic meter
+static const float KG2LBS = 2.20462262185;
+static const float W2HP = 1.3416e-3;
 
 void YASim::printDEBUG()
 {
@@ -114,9 +118,32 @@ void YASim::init()
 
     _fdm->init();
 
+    // Create some FG{Eng|Gear}Interface objects
+    int i;
+    for(i=0; i<a->numGear(); i++) {
+        Gear* g = a->getGear(i);
+        FGGearInterface fgg;
+        float pos[3];
+        g->getPosition(pos);
+        fgg.SetX(pos[0]); fgg.SetY(-pos[1]); fgg.SetZ(-pos[2]);
+        add_gear_unit(fgg);
+    }
+    for(i=0; i<m->numThrusters(); i++) {
+        FGEngInterface fge;
+        add_engine(fge);
+
+	// Sanify the initial input conditions
+	char buf[64];
+ 	sprintf(buf, "/controls/throttle[%d]", i);        fgSetFloat(buf, 0);
+	sprintf(buf, "/controls/mixture[%d]", i);         fgSetFloat(buf, 1);
+	sprintf(buf, "/controls/propeller-pitch[%d]", i); fgSetFloat(buf, 1);
+	sprintf(buf, "/controls/afterburner[%d]", i);     fgSetFloat(buf, 0);
+    }
+    
+
     // Lift the plane up so the gear clear the ground
     float minGearZ = 1e18;
-    for(int i=0; i<a->numGear(); i++) {
+    for(i=0; i<a->numGear(); i++) {
 	Gear* g = a->getGear(i);
 	float pos[3];
 	g->getPosition(pos);
@@ -142,7 +169,8 @@ void YASim::init()
 
 bool YASim::update(int iterations)
 {
-    for(int i=0; i<iterations; i++) {
+    int i;
+    for(i=0; i<iterations; i++) {
         // Remember, update only every 4th call
         _updateCount++;
         if(_updateCount >= 4) {
@@ -214,7 +242,8 @@ void YASim::copyToYASim(bool copyState)
     double xyz[3], gplane[3]; float up[3];
     Glue::geod2xyz(lat, lon, ground, xyz);
     Glue::geodUp(xyz, up); // FIXME, needless reverse computation...
-    for(int i=0; i<3; i++) gplane[i] = up[i];
+    int i;
+    for(i=0; i<3; i++) gplane[i] = up[i];
     double rad = gplane[0]*xyz[0] + gplane[1]*xyz[1] + gplane[2]*xyz[2];
     model->setGroundPlane(gplane, rad);
 
@@ -269,7 +298,8 @@ void YASim::copyToYASim(bool copyState)
 // _set_Static_temperature
 void YASim::copyFromYASim()
 {
-    Model* model = _fdm->getAirplane()->getModel();
+    Airplane* airplane = _fdm->getAirplane();
+    Model* model = airplane->getModel();
     State* s = model->getState();
 
     // position
@@ -350,4 +380,43 @@ void YASim::copyFromYASim()
 
     Glue::calcEulerRates(s, &roll, &pitch, &hdg);
     _set_Euler_Rates(roll, pitch, hdg);
+
+    // Fill out our engine and gear objects
+    int i;
+    for(i=0; i<get_num_gear(); i++) {
+        FGGearInterface* fgg = get_gear_unit(i);
+        Gear* g = airplane->getGear(i);
+        if(g->getBrake() != 0)
+            fgg->SetBrake(true);
+        if(g->getCompressFraction() != 0)
+            fgg->SetWoW(true);
+        fgg->SetPosition(g->getExtension());
+    }
+
+    for(i=0; i<get_num_engines(); i++) {
+        FGEngInterface* fge = get_engine(i);
+        Thruster* t = model->getThruster(i);
+
+        fge->set_Running_Flag(true);
+
+        // Note: assumes all tanks have the same fuel density!
+        fge->set_Fuel_Flow(CM2GALS * t->getFuelFlow()
+                           / airplane->getFuelDensity(0));
+
+        float tmp[3];
+        t->getThrust(tmp);
+        fge->set_prop_thrust(Math::mag3(tmp) * KG2LBS / 9.8);
+
+        PropEngine* pe = t->getPropEngine();
+        if(pe) {
+            fge->set_RPM(pe->getOmega() * RAD2RPM);
+
+            pe->getTorque(tmp);
+            float power = Math::mag3(tmp) * pe->getOmega();
+            float maxPower = pe->getPistonEngine()->getPower();
+
+            fge->set_MaxHP(maxPower * W2HP);
+            fge->set_Percentage_Power(100 * power/maxPower);
+        }
+    }
 }

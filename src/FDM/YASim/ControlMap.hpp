@@ -13,9 +13,9 @@ public:
 		      BRAKE, STEER, EXTEND,
 		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER };
 
-    static const int OPT_SPLIT  = 0x01;
-    static const int OPT_INVERT = 0x02;
-    static const int OPT_SQUARE = 0x04;
+    enum { OPT_SPLIT  = 0x01,
+           OPT_INVERT = 0x02,
+           OPT_SQUARE = 0x04 };
 
     // Returns a new, not-yet-used "input handle" for addMapping and
     // setInput.  This typically corresponds to one user axis.

@@ -9,7 +9,7 @@ PistonEngine::PistonEngine(float power, float speed)
     // (2.2 lb/kg, 745.7 W/hp, 3600 sec/hour) 3.69e-07 kg/Ws.
     _f0 = power * 3.69e-07;
 
-    _P0 = power;
+    _power0 = power;
     _omega0 = speed;
 
     // We must be at sea level under standard conditions
@@ -40,7 +40,7 @@ void PistonEngine::setTurboParams(float turbo, float maxMP)
 
 float PistonEngine::getPower()
 {
-    return _P0;
+    return _power0;
 }
 
 void PistonEngine::setThrottle(float t)
@@ -89,7 +89,7 @@ void PistonEngine::calc(float P, float T, float speed,
 
     // And finally the power is just the reference power scaled by the
     // amount of fuel burned.
-    float power = _P0 * burned/_f0;
+    float power = _power0 * burned/_f0;
 
     *torqueOut = power/speed;
     *fuelFlowOut = fuel;

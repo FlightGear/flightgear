@@ -24,7 +24,8 @@ int RigidBody::addMass(float mass, float* pos)
     if(_nMasses == _massesAlloced) {
         _massesAlloced *= 2;
         Mass *m2 = new Mass[_massesAlloced];
-        for(int i=0; i<_nMasses; i++)
+        int i;
+        for(i=0; i<_nMasses; i++)
             m2[i] = _masses[i];
         delete[] _masses;
         _masses = m2;
@@ -86,7 +87,8 @@ void RigidBody::recalc()
     // Calculate the c.g and total mass:
     _totalMass = 0;
     _cg[0] = _cg[1] = _cg[2] = 0;
-    for(int i=0; i<_nMasses; i++) {
+    int i;
+    for(i=0; i<_nMasses; i++) {
         float m = _masses[i].m;
         _totalMass += m;
         _cg[0] += m * _masses[i].p[0];
@@ -96,10 +98,10 @@ void RigidBody::recalc()
     Math::mul3(1/_totalMass, _cg, _cg);
 
     // Now the inertia tensor:
-    for(int i=0; i<9; i++)
-	_I[i] = 0;
+    for(i=0; i<9; i++)
+	_tI[i] = 0;
 
-    for(int i=0; i<_nMasses; i++) {
+    for(i=0; i<_nMasses; i++) {
 	float m = _masses[i].m;
 
 	float x = _masses[i].p[0] - _cg[0];
@@ -109,13 +111,13 @@ void RigidBody::recalc()
 	float xy = m*x*y; float yz = m*y*z; float zx = m*z*x;
 	float x2 = m*x*x; float y2 = m*y*y; float z2 = m*z*z;
 
-	_I[0] += y2+z2;  _I[1] -=    xy;  _I[2] -=    zx;
-	_I[3] -=    xy;  _I[4] += x2+z2;  _I[5] -=    yz;
-	_I[6] -=    zx;	 _I[7] -=    yz;  _I[8] += x2+y2;
+	_tI[0] += y2+z2;  _tI[1] -=    xy;  _tI[2] -=    zx;
+	_tI[3] -=    xy;  _tI[4] += x2+z2;  _tI[5] -=    yz;
+	_tI[6] -=    zx;   _tI[7] -=   yz;  _tI[8] += x2+y2;
     }
 
     // And its inverse
-    Math::invert33(_I, _invI);
+    Math::invert33(_tI, _invI);
 }
 
 void RigidBody::reset()
@@ -195,7 +197,7 @@ void RigidBody::getAngularAccel(float* accelOut)
     // Now work the equation of motion.  Use "v" as a notational
     // shorthand, as the value isn't an acceleration until the end.
     float *v = accelOut;
-    Math::vmul33(_I, _spin, v);  // v = I*omega
+    Math::vmul33(_tI, _spin, v);  // v = I*omega
     Math::cross3(_spin, v, v);   // v = omega X I*omega
     Math::add3(tau, v, v);       // v = tau + (omega X I*omega)
     Math::vmul33(_invI, v, v);   // v = invI*(tau + (omega X I*omega))

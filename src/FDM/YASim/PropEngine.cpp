@@ -42,17 +42,20 @@ float PropEngine::getOmega()
 
 void PropEngine::getThrust(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _thrust[i];    
+    int i;
+    for(i=0; i<3; i++) out[i] = _thrust[i];    
 }
 
 void PropEngine::getTorque(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _torque[i];
+    int i;
+    for(i=0; i<3; i++) out[i] = _torque[i];
 }
 
 void PropEngine::getGyro(float* out)
 {
-    for(int i=0; i<3; i++) out[i] = _gyro[i];
+    int i;
+    for(i=0; i<3; i++) out[i] = _gyro[i];
 }
 
 float PropEngine::getFuelFlow()
@@ -78,7 +81,7 @@ void PropEngine::stabilize()
     while(true) {
 	float etau, ptau, dummy;
 	_prop->calc(_rho, speed, _omega, &dummy, &ptau);
-	_eng->calc(_P, _T, _omega, &etau, &dummy);
+	_eng->calc(_pressure, _temp, _omega, &etau, &dummy);
 	float tdiff = etau - ptau;
 
 	if(Math::abs(tdiff/_moment) < 0.1)
@@ -109,7 +112,7 @@ void PropEngine::integrate(float dt)
     
     _prop->calc(_rho, speed, _omega,
 		&thrust, &propTorque);
-    _eng->calc(_P, _T, _omega, &engTorque, &_fuelFlow);
+    _eng->calc(_pressure, _temp, _omega, &engTorque, &_fuelFlow);
 
     // Turn the thrust into a vector and save it
     Math::mul3(thrust, _dir, _thrust);

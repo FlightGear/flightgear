@@ -50,8 +50,8 @@ protected:
     float _mixture;
 
     float _wind[3];
-    float _P;
-    float _T;
+    float _pressure;
+    float _temp;
     float _rho;
 };
 

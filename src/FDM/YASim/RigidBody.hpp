@@ -110,7 +110,7 @@ private:
     float _gyro[3];
 
     // Inertia tensor, and its inverse.  Computed from the above.
-    float _I[9];
+    float _tI[9];
     float _invI[9];
 
     // Externally determined quantities

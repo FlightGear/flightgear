@@ -71,8 +71,8 @@ private:
     float _wingCenter[3];
 
     double _ground[4];
-    float _P;
-    float _T;
+    float _pressure;
+    float _temp;
     float _rho;
     float _wind[3];
 

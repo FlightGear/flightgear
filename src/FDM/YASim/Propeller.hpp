@@ -25,9 +25,9 @@ public:
 
 private:
     float _r;           // characteristic radius
-    float _J0;          // zero-thrust advance ratio
+    float _j0;          // zero-thrust advance ratio
     float _baseJ0;      //  ... uncorrected for prop advance
-    float _F0;          // thrust coefficient
+    float _f0;          // thrust coefficient
     float _etaC;        // Peak efficiency
     float _lambdaPeak;  // constant, ~0.759835;
     float _beta;        // constant, ~1.48058;
