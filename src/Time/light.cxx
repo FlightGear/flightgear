@@ -133,19 +133,16 @@ void fgLIGHT::Update( void ) {
     // if ( diffuse < 0.0 ) { diffuse = 0.0; }
     // if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
 
-    gamma_correct_c( &ambient );
     scene_ambient[0] = white[0] * ambient;
     scene_ambient[1] = white[1] * ambient;
     scene_ambient[2] = white[2] * ambient;
     scene_ambient[3] = 1.0;
 
-    gamma_correct_c( &diffuse );
     scene_diffuse[0] = white[0] * diffuse;
     scene_diffuse[1] = white[1] * diffuse;
     scene_diffuse[2] = white[2] * diffuse;
     scene_diffuse[3] = 1.0;
 
-    gamma_correct_c( &specular );
     scene_specular[0] = white[0] * specular;
     scene_specular[1] = white[1] * specular;
     scene_specular[2] = white[2] * specular;
@@ -266,7 +263,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
     //
     float *sun_color = thesky->get_sun_color();
 
-    gamma_restore_c( sun_color );
     gamma_restore_rgb( fog_color );
     gamma_restore_rgb( cloud_color );
 
@@ -293,7 +289,6 @@ void fgLIGHT::UpdateAdjFog( void ) {
     // make sure the colors have their original value before they are being
     // used by the rest of the program.
     //
-    gamma_correct_c( sun_color );
     gamma_correct_rgb( fog_color );
     gamma_correct_rgb( cloud_color );
 #endif
