@@ -1676,9 +1676,9 @@ static bool fgMainInit( int argc, char **argv ) {
             SGLookupFunction("glPointParameterfvEXT");
 #elif linux
         glPointParameterfEXT = (OpenGLFuncExt) 
-            SGLookupFunction((GLubyte *)"glPointParameterfEXT");
+            SGLookupFunction("glPointParameterfEXT");
         glPointParameterfvEXT = (OpenGLFuncExtv) 
-            SGLookupFunction((GLubyte *)"glPointParameterfvEXT");
+            SGLookupFunction("glPointParameterfvEXT");
 #endif
    }
 
