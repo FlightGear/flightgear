@@ -163,8 +163,6 @@ fgMATERIAL_MGR::load_lib ( void )
 	in >> material_name >> token;
 
 	if ( token == '{' ) {
-	    FG_LOG( FG_TERRAIN, FG_INFO,
-		    "  Loading material " << material_name );
 	    FGMaterial m;
 	    in >> m;
 
@@ -251,7 +249,7 @@ fgMATERIAL_MGR::load_lib ( void )
     }
 
     materials_loaded = true;
-    return(1);
+    return 1;
 }
 
 

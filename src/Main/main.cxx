@@ -309,11 +309,20 @@ void fgRenderFrame( void ) {
 	xglDisable( GL_DEPTH_TEST );
 	xglDisable( GL_LIGHTING );
 	xglDisable( GL_CULL_FACE );
+
 	xglDisable( GL_FOG );
+	/* if ( current_options.get_fog() > 0 ) {
+	    xglEnable( GL_FOG );
+	    xglFogi( GL_FOG_MODE, GL_EXP2 );
+	    xglFogfv( GL_FOG_COLOR, l->adj_fog_color );
+	} */
+
 	xglShadeModel( GL_SMOOTH );
 	if ( current_options.get_skyblend() ) {
 	    fgSkyRender();
 	}
+
+	// xglDisable( GL_FOG );
 
 	// setup transformation for drawing astronomical objects
 	xglPushMatrix();

@@ -413,33 +413,33 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
 
     // traverse the triangle list for this leaf
     for ( int i = 0; i < leaf->getNumTriangles(); ++i ) {
-	cout << s << "testing triangle = " << i << endl;
+	// cout << s << "testing triangle = " << i << endl;
 
 	leaf->getTriangle( i, &i1, &i2, &i3 );
 
 	// get triangle vertex coordinates
 
 	tmp = leaf->getVertex( i1 );
-	cout << s << "orig point 1 = " << tmp[0] << " " << tmp[1] 
-	     << " " << tmp[2] << endl;
+	// cout << s << "orig point 1 = " << tmp[0] << " " << tmp[1] 
+	//      << " " << tmp[2] << endl;
 	sgXformPnt3( p1, tmp, m ) ;
 
 	tmp = leaf->getVertex( i2 );
-	cout << s << "orig point 2 = " << tmp[0] << " " << tmp[1] 
-	     << " " << tmp[2] << endl;
+	// cout << s << "orig point 2 = " << tmp[0] << " " << tmp[1] 
+	//      << " " << tmp[2] << endl;
 	sgXformPnt3( p2, tmp, m ) ;
 
 	tmp = leaf->getVertex( i3 );
-	cout << s << "orig point 3 = " << tmp[0] << " " << tmp[1] 
-	     << " " << tmp[2] << endl;
+	// cout << s << "orig point 3 = " << tmp[0] << " " << tmp[1] 
+	//      << " " << tmp[2] << endl;
 	sgXformPnt3( p3, tmp, m ) ;
 
-	cout << s << "point 1 = " << p1[0] << " " << p1[1] << " " << p1[2]
-	     << endl;
-	cout << s << "point 2 = " << p2[0] << " " << p2[1] << " " << p2[2]
-	     << endl;
-	cout << s << "point 3 = " << p3[0] << " " << p3[1] << " " << p3[2]
-	     << endl;
+	// cout << s << "point 1 = " << p1[0] << " " << p1[1] << " " << p1[2]
+	//      << endl;
+	// cout << s << "point 2 = " << p2[0] << " " << p2[1] << " " << p2[2]
+	//      << endl;
+	// cout << s << "point 3 = " << p3[0] << " " << p3[1] << " " << p3[2]
+	//      << endl;
 
 	// calculate two edge vectors, and the face normal
 	sgSubVec3(v1, p2, p1);
@@ -647,10 +647,10 @@ void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgMat4 m,
 	    sgVec3 center;
 	    sgCopyVec3( center, bsphere->getCenter() );
 	    sgXformPnt3( center, m ) ;
-	    cout << s << "entity bounding sphere:" << endl;
-	    cout << s << "center = " << center[0] << " "
-		 << center[1] << " " << center[2] << endl;
-    	    cout << s << "radius = " << bsphere->getRadius() << endl;
+	    // cout << s << "entity bounding sphere:" << endl;
+	    // cout << s << "center = " << center[0] << " "
+		//  << center[1] << " " << center[2] << endl;
+    	    // cout << s << "radius = " << bsphere->getRadius() << endl;
 	    double radius_sqd = bsphere->getRadius() * bsphere->getRadius();
 	    if ( sgPointLineDistSquared( center, p, dir ) < radius_sqd ) {
 		// possible intersections
