@@ -26,6 +26,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include "globals.hxx"
+#include "renderer.hxx"
 #include "viewmgr.hxx"
 
 #include "fg_props.hxx"

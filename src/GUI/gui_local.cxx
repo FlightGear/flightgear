@@ -13,6 +13,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/renderer.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/light.hxx>
 

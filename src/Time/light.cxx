@@ -58,6 +58,7 @@ SG_USING_STD(string);
 #include <Main/main.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/renderer.hxx>
 #include <Main/viewer.hxx>
 
 #include "light.hxx"

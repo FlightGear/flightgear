@@ -25,6 +25,7 @@
 
 #include <Main/main.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/renderer.hxx>
 #include <Aircraft/aircraft.hxx>
 
 #include "environment.hxx"

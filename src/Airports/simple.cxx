@@ -35,6 +35,9 @@
 #include <algorithm>
 
 #include <simgear/compiler.h>
+
+#include <plib/sg.h>
+
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -113,7 +116,7 @@ string ScheduleTime::getName(time_t dayStart)
       //cerr << "Nr of items to process: " << nrItems << endl;
       if (nrItems > 0)
   	{
-  	  for (int i = 0; i < start.size(); i++)
+  	  for (unsigned int i = 0; i < start.size(); i++)
   	    {
 	      //cerr << i << endl;
   	      if ((dayStart >= start[i]) && (dayStart <= end[i]))
@@ -209,8 +212,8 @@ void RunwayGroup::setActive(string aptId,
   FGRunway rwy;
   int activeRwys = rwyList.size(); // get the number of runways active
   int nrOfPreferences;
-  bool found = true;
-  double heading;
+  // bool found = true;
+  // double heading;
   double hdgDiff;
   double crossWind;
   double tailWind;
@@ -335,7 +338,7 @@ void RunwayGroup::getActive(int i, string *name, string *type)
     {
       return;
     }
-  if (nrActive == rwyList.size())
+  if (nrActive == (int)rwyList.size())
     {
       *name = rwyList[i].getRwyList(active);
       *type = rwyList[i].getType();
@@ -851,14 +854,14 @@ void FGAirport::getParking (int id, double *lat, double* lon, double *heading)
 
 FGParking *FGAirport::getParking(int i) 
 { 
-  if (i < parkings.size()) 
+  if (i < (int)parkings.size()) 
     return &(parkings[i]); 
   else 
     return 0;
 }
 string FGAirport::getParkingName(int i) 
 { 
-  if (i < parkings.size() && i >= 0) 
+  if (i < (int)parkings.size() && i >= 0) 
     return (parkings[i].getName()); 
   else 
     return string("overflow");
@@ -888,7 +891,7 @@ void  FGAirport::endXML () {
 }
 
 void  FGAirport::startElement (const char * name, const XMLAttributes &atts) {
-  const char * attval;
+  // const char *attval;
   FGParking park;
   //cout << "Start element " << name << endl;
   string attname;

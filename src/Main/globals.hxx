@@ -42,8 +42,6 @@ SG_USING_STD( string );
 typedef vector<string> string_list;
 
 
-#include "renderer.hxx"
-
 // Forward declarations
 
 // This file is included, directly or indirectly, almost everywhere in
@@ -88,6 +86,7 @@ class FGPanel;
 class FGTileMgr;
 class FGViewMgr;
 class FGViewer;
+class FGRenderer;
 
 
 /**

@@ -18,6 +18,7 @@ extern bool glPointParameterIsSupported;
 class FGRenderer {
 
 public:
+
     FGRenderer();
     ~FGRenderer();
 
@@ -31,6 +32,18 @@ public:
     // renderer which needs to set the view frustum itself.
     static void update( bool refresh_camera_settings );
     inline static void update() { update( true ); }
+
+
+    /** FlightGear code should use this routine to set the FOV rather
+     *  than calling the ssg routine directly
+     */
+    static void setFOV( float w, float h );
+
+
+    /** FlightGear code should use this routine to set the Near/Far
+     *  clip planes rather than calling the ssg routine directly
+     */
+    static void setNearFar( float n, float f );
 };
 
 #endif

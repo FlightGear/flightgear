@@ -33,9 +33,13 @@
 #  include <fcntl.h>
 #endif
 
+#include <errno.h>
+#include <math.h>
+
 #include STL_STRING
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -382,7 +386,6 @@ bool FGATCOutput::open( int lock_fd ) {
 /////////////////////////////////////////////////////////////////////
 
 bool FGATCOutput::do_lamps() {
-
     if ( lamps_out_node != NULL ) {
         for ( int i = 0; i < lamps_out_node->nChildren(); ++i ) {
             // read the next config entry from the property tree

@@ -79,6 +79,7 @@
 #include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/renderer.hxx>
 #include <Main/viewmgr.hxx>
 
 #if defined( WIN32 ) && !defined( __CYGWIN__ ) && !defined(__MINGW32__)

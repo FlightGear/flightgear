@@ -12,8 +12,9 @@
 #include <simgear/compiler.h>
 
 #include <vector>
-
 SG_USING_STD(vector);
+
+#include <plib/ssg.h>
 
 class ssgEntity;
 class ssgBranch;

@@ -20,6 +20,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/renderer.hxx>
 #include <Main/viewmgr.hxx>
 #include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
@@ -120,7 +121,7 @@ FGAircraftModel::draw ()
   if (_aircraft->getVisible() && is_internal) {
     glClearDepth(1);
     glClear(GL_DEPTH_BUFFER_BIT);
-    ssgSetNearFar(_nearplane, _farplane);
+    FGRenderer::setNearFar(_nearplane, _farplane);
     ssgCullAndDraw(_scene);
     _selector->select(0);
   } else {

@@ -33,9 +33,13 @@
 #  include <fcntl.h>
 #endif
 
+#include <errno.h>
+#include <math.h>
+
 #include STL_STRING
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Main/fg_props.hxx>
 

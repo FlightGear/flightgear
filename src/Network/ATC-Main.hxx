@@ -30,6 +30,8 @@
 
 #include <plib/netChat.h>
 
+#include <simgear/misc/sg_path.hxx>
+
 #include <Main/fg_props.hxx>
 
 #include "protocol.hxx"

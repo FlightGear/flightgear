@@ -228,6 +228,7 @@ FGRenderer::init( void ) {
 }
 
 
+
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( bool refresh_camera_settings ) {
@@ -501,7 +502,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
             scene_farplane = 120000.0f;
         }
 
-        ssgSetNearFar( scene_nearplane, scene_farplane );
+        setNearFar( scene_nearplane, scene_farplane );
 
         if ( draw_otw && skyblend ) {
             // draw the sky backdrop
@@ -516,8 +517,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         // draw the ssg scene
         glEnable( GL_DEPTH_TEST );
-
-        ssgSetNearFar( scene_nearplane, scene_farplane );
 
         if ( fgGetBool("/sim/rendering/wireframe") ) {
             // draw wire frame
@@ -565,7 +564,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         // the current view frustum will still be freed properly.
         static int counter = 0;
         counter++;
-        if (counter == 200) {
+        if (counter >= 200) {
             sgFrustum f;
             f.setFOV(360, 360);
                     // No need to put the near plane too close;
@@ -584,7 +583,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         // draw runway lighting
         glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
-        ssgSetNearFar( scene_nearplane, scene_farplane );
+
+        // CLO - 02/25/2005 - DO WE NEED THIS extra fgSetNearFar()?
+        // fgSetNearFar( scene_nearplane, scene_farplane );
 
         if ( enhanced_lighting ) {
 
@@ -794,8 +795,8 @@ FGRenderer::resize( int width, int height ) {
           set_aspect_ratio((float)view_h / (float)width);
       }
 
-      ssgSetFOV( viewmgr->get_current_view()->get_h_fov(),
-                 viewmgr->get_current_view()->get_v_fov() );
+      setFOV( viewmgr->get_current_view()->get_h_fov(),
+              viewmgr->get_current_view()->get_v_fov() );
 
 #ifdef FG_USE_CLOUDS_3D
       sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
@@ -807,5 +808,70 @@ FGRenderer::resize( int width, int height ) {
 
 }
 
+
+// These are wrapper functions around ssgSetNearFar() and ssgSetFOV()
+// which will post process and rewrite the resulting frustum if we
+// want to do asymmetric view frustums.
+
+static void fgHackFrustum() {
+
+    /* experiment in assymetric view frustums */
+    sgFrustum *f = ssgGetFrustum();
+    cout << " l = " << f->getLeft()
+         << " r = " << f->getRight()
+         << " b = " << f->getBot()
+         << " t = " << f->getTop()
+         << " n = " << f->getNear()
+         << " f = " << f->getFar()
+         << endl;
+    static double incr = 0.0;
+    double factor = (sin(incr) + 1.0) / 2.0; // map to [0-1]
+    double w = (f->getRight() - f->getLeft()) / 2.0;
+    double l = f->getLeft() + w * factor;
+    double r = l + w;
+    ssgSetFrustum(l, r, f->getBot(), f->getTop(), f->getNear(), f->getFar());
+    incr += 0.001;
+}
+
+
+// we need some static storage space for these values.  However, we
+// can't store it in a renderer class object because the functions
+// that manipulate these are static.  They are static so they can
+// interface to the display callback system.  There's probably a
+// better way, there has to be a better way, but I'm not seeing it
+// right now.
+static float width, height, near, far;
+
+
+/** FlightGear code should use this routine to set the FOV rather than
+ *  calling the ssg routine directly
+ */
+void FGRenderer::setFOV( float w, float h ) {
+    width = w;
+    height = h;
+
+    // fully specify the view frustum before hacking it (so we don't
+    // accumulate hacked effects
+    ssgSetFOV( w, h );
+    ssgSetNearFar( near, far );
+
+    fgHackFrustum();
+}
+
+
+/** FlightGear code should use this routine to set the Near/Far clip
+ *  planes rather than calling the ssg routine directly
+ */
+void FGRenderer::setNearFar( float n, float f ) {
+    near = n;
+    far = f;
+
+    // fully specify the view frustum before hacking it (so we don't
+    // accumulate hacked effects
+    ssgSetNearFar( n, f );
+    ssgSetFOV( width, height );
+
+    fgHackFrustum();
+}
 
 // end of renderer.cxx
