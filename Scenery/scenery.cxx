@@ -86,7 +86,7 @@ int fgSceneryInit( void ) {
 	} 
     } 
 
-    xglTexImage2D(GL_TEXTURE_2D, 0, 3, height, width, 0,
+    xglTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0,
 		  GL_RGB, GL_UNSIGNED_BYTE, texbuf);
 
     return(1);
@@ -123,9 +123,13 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.2  1998/05/02 01:52:16  curt
-/* Playing around with texture coordinates.
+/* Revision 1.3  1998/05/07 23:15:20  curt
+/* Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
+/* Added support for --tile-radius=n option.
 /*
+ * Revision 1.2  1998/05/02 01:52:16  curt
+ * Playing around with texture coordinates.
+ *
  * Revision 1.1  1998/04/30 12:35:30  curt
  * Added a command line rendering option specify smooth/flat shading.
  *

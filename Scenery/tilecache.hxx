@@ -49,8 +49,8 @@
 
 /* For best results ... i.e. to avoid tile load problems and blank areas
  *
- * FG_TILE_CACHE_SIZE >= FG_LOCAL_X_Y + 2*max(FG_LOCAL_X, FG_LOCAL_Y) + 1 */
-#define FG_TILE_CACHE_SIZE 100
+ * FG_TILE_CACHE_SIZE >= (o->tile_radius + 1) ** 2 */
+#define FG_TILE_CACHE_SIZE 121
 
 
 /* Tile cache record */
@@ -88,9 +88,13 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.5  1998/05/02 01:52:17  curt
-/* Playing around with texture coordinates.
+/* Revision 1.6  1998/05/07 23:15:20  curt
+/* Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
+/* Added support for --tile-radius=n option.
 /*
+ * Revision 1.5  1998/05/02 01:52:17  curt
+ * Playing around with texture coordinates.
+ *
  * Revision 1.4  1998/04/30 12:35:31  curt
  * Added a command line rendering option specify smooth/flat shading.
  *

@@ -1,6 +1,5 @@
-/* -*- Mode: C++ -*-
- *
- * tilemgr.c -- routines to handle dynamic management of scenery tiles
+/*
+ * tilemgr.cxx -- routines to handle dynamic management of scenery tiles
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -48,9 +47,7 @@
 #include <Main/options.hxx>
 
 
-#define FG_LOCAL_X           7   /* should be odd */
-#define FG_LOCAL_Y           7   /* should be odd */
-#define FG_LOCAL_X_Y         49  /* At least FG_LOCAL_X times FG_LOCAL_Y */
+#define FG_LOCAL_X_Y         81  /* max(o->tile_radius) ** 2 */
 
 
 /* closest (potentially viewable) tiles, centered on current tile.
@@ -104,9 +101,11 @@ int fgTileMgrUpdate( void ) {
 	/* First time through, initialize the system and load all
          * relavant tiles */
 
-	fgPrintf( FG_TERRAIN, FG_DEBUG, "First time through ... \n");
-	fgPrintf( FG_TERRAIN, FG_DEBUG, "Updating Tile list for %d,%d %d,%d\n",
+	fgPrintf( FG_TERRAIN, FG_INFO, "  First time through ... ");
+	fgPrintf( FG_TERRAIN, FG_INFO, "  Updating Tile list for %d,%d %d,%d\n",
 		  p1.lon, p1.lat, p1.x, p1.y);
+	fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
+		  o->tile_radius * o->tile_radius);
 
 	/* wipe tile cache */
 	fgTileCacheInit();
@@ -126,26 +125,30 @@ int fgTileMgrUpdate( void ) {
            AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
            THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION. */
 
+	fgPrintf( FG_TERRAIN, FG_INFO, "Updating Tile list for %d,%d %d,%d\n",
+		  p1.lon, p1.lat, p1.x, p1.y);
+
 	if ( (p1.lon > p_last.lon) ||
 	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
+	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
+		      o->tile_radius);
 	    for ( j = 0; j < o->tile_radius; j++ ) {
 		/* scrolling East */
 		for ( i = 0; i < o->tile_radius - 1; i++ ) {
-		    tiles[(j*o->tile_radius) + i] = 
-			tiles[(j*o->tile_radius) + i + 1];
+		    tiles[(j*o->tile_radius) + i] = tiles[(j*o->tile_radius) + i + 1];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + 
-					     o->tile_radius - 1]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + o->tile_radius - 1]);
 	    }
 	} else if ( (p1.lon < p_last.lon) ||
 		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
+	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
+		      o->tile_radius);
 	    for ( j = 0; j < o->tile_radius; j++ ) {
 		/* scrolling West */
 		for ( i = o->tile_radius - 1; i > 0; i-- ) {
-		    tiles[(j*o->tile_radius) + i] = 
-			tiles[(j*o->tile_radius) + i - 1];
+		    tiles[(j*o->tile_radius) + i] = tiles[(j*o->tile_radius) + i - 1];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
@@ -155,6 +158,8 @@ int fgTileMgrUpdate( void ) {
 
 	if ( (p1.lat > p_last.lat) ||
 	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
+	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
+		      o->tile_radius);
 	    for ( i = 0; i < o->tile_radius; i++ ) {
 		/* scrolling North */
 		for ( j = 0; j < o->tile_radius - 1; j++ ) {
@@ -167,6 +172,8 @@ int fgTileMgrUpdate( void ) {
 	    }
 	} else if ( (p1.lat < p_last.lat) ||
 		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
+	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
+		      o->tile_radius);
 	    for ( i = 0; i < o->tile_radius; i++ ) {
 		/* scrolling South */
 		for ( j = o->tile_radius - 1; j > 0; j-- ) {
@@ -206,11 +213,11 @@ void fgTileMgrRender( void ) {
     fgTileCacheEntryInfo(index, &display_list, &scenery.next_center );
 
     fgPrintf( FG_TERRAIN, FG_DEBUG, 
-              "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
+	      "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG,
 	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
 
-    for ( i = 0; i < 2 * o->tile_radius; i++ ) {
+    for ( i = 0; i < (o->tile_radius * o->tile_radius); i++ ) {
 	index = tiles[i];
 	/* fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index); */
 	fgTileCacheEntryInfo(index, &display_list, &local_ref );
@@ -230,9 +237,13 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/05/06 03:16:42  curt
-/* Added an option to control square tile radius.
+/* Revision 1.8  1998/05/07 23:15:21  curt
+/* Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
+/* Added support for --tile-radius=n option.
 /*
+ * Revision 1.7  1998/05/06 03:16:42  curt
+ * Added an option to control square tile radius.
+ *
  * Revision 1.6  1998/05/02 01:52:18  curt
  * Playing around with texture coordinates.
  *
