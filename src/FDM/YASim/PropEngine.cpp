@@ -155,7 +155,7 @@ void PropEngine::integrate(float dt)
 
 	// Convert to an acceleration here, so that big propellers
 	// don't seek faster than small ones.
-	float diff = Math::abs(propTorque - targetTorque) / _moment;
+	float diff = Math::abs((propTorque - targetTorque) / _moment);
 	if(diff < 10) mod = 1 + (mod-1)*(0.1*diff);
 
 	_prop->modPitch(mod);
