@@ -41,6 +41,8 @@ typedef struct {
     int rooty;       /* Y coord of upper left *edge* of DEM region in degrees */
     int xdim;        /* X dimension of a pixel */
     int ydim;        /* Y dimension of a pixel */
+    int tmp_min;     /* current 1x1 degree tile minimum */
+    int tmp_max;     /* current 1x1 degree tile maximum */
 
     /* file ptr */
     int fd;          /* Raw DEM file descriptor */
@@ -66,15 +68,18 @@ void rawCloseDemFile( fgRAWDEM *raw );
 
 /* Read a horizontal strip of (1 vertical degree) from the raw DEM
  * file specified by the upper latitude of the stripe specified in
- * degrees */
-void rawReadStrip( fgRAWDEM *raw, int lat );
+ * degrees.  The output the individual ASCII format DEM tiles.  */
+void rawProcessStrip( fgRAWDEM *raw, int lat_degrees, char *path );
 
 
 #endif /* _RAWDEM_H */
 
 
 /* $Log$
-/* Revision 1.1  1998/03/02 23:31:02  curt
-/* Initial revision.
+/* Revision 1.2  1998/03/03 13:10:30  curt
+/* Close to a working version.
 /*
+ * Revision 1.1  1998/03/02 23:31:02  curt
+ * Initial revision.
+ *
  */

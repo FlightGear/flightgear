@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     rawOpenDemFile(&raw, dem_file);
 
     for ( i = 41; i <= 90; i++ ) {
-	rawReadStrip(&raw, i);
+	rawProcessStrip(&raw, i, output_dir);
     }
 
     /* close the raw data file */
@@ -74,7 +74,10 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.1  1998/03/02 23:31:01  curt
-/* Initial revision.
+/* Revision 1.2  1998/03/03 13:10:28  curt
+/* Close to a working version.
 /*
+ * Revision 1.1  1998/03/02 23:31:01  curt
+ * Initial revision.
+ *
  */
