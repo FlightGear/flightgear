@@ -185,6 +185,17 @@ int fgJoystickRead( void ) {
 	js0->read( &b, js_ax0 ) ;
 	controls.set_aileron( js_ax0[0] );
 	controls.set_elevator( -js_ax0[1] );
+
+	//  Added by William Riley -- riley@technologist.com
+	if ( js0->getNumAxes() >= 3 ) {
+	    controls.set_throttle( FGControls::ALL_ENGINES,
+				   ((-js_ax0[2] + 1) / 2) );
+	} 
+	if ( js0->getNumAxes() > 3 ) {
+	    controls.set_rudder( js_ax0[3] );
+	}
+	//  End of William's code
+
     }
 
     if ( ! js1->notWorking() ) {
