@@ -50,11 +50,9 @@
 #ifndef _IO360_HXX_
 #define _IO360_HXX_
 
-#define NEVS_PROP_MODEL
-
-#ifndef NEVS_PROP_MODEL
-#define PHILS_PROP_MODEL
-#endif 
+#define DCL_PROP_MODEL
+//#define NEVS_PROP_MODEL
+//#define PHILS_PROP_MODEL
 
 #include <simgear/compiler.h>
 
@@ -112,7 +110,6 @@ private:
     float Torque_SI;		// Torque in Nm
     float RPS;
     float Torque_Imbalance;
-    float Desired_RPM;		// The RPM that we wish the constant speed prop to maintain if possible
     bool  started;		//flag to indicate the engine is running self sustaining
     bool  cranking;		//flag to indicate the engine is being cranked
 
@@ -157,27 +154,27 @@ private:
     float FGProp1_Blade_Angle;
     float FGProp_Fine_Pitch_Stop;
 
-#ifdef NEVS_PROP_MODEL
+//#ifdef NEVS_PROP_MODEL
     //Extra Propellor variables used by Nev's prop model
     float prop_fudge_factor;
-    float prop_torque;	//Nm
-    float prop_thrust;
-    float blade_length;
-    float allowance_for_spinner;
+    float prop_torque;		// Nm
+    float prop_thrust; 		// Newtons
+    float blade_length; 	// meters
+    float allowance_for_spinner;        // meters
     float num_elements;
     float distance;
     float number_of_blades;
-    float forward_velocity;
-    float angular_velocity_SI;
+    float forward_velocity;             // m/s
+    float angular_velocity_SI;          // rad/s
     float element;
     float element_drag;
     float element_lift;
     float element_torque;
     float rho_air;
-    float prop_power_consumed_SI;
-    float prop_power_consumed_HP;
+    float prop_power_consumed_SI;       // Watts
+    float prop_power_consumed_HP;       // HP
     float theta[6];	//prop angle of each element
-#endif // NEVS_PROP_MODEL
+//#endif // NEVS_PROP_MODEL
 
     // Other internal values
     float Rho;
@@ -234,7 +231,8 @@ public:
     inline float get_EGT() const { return EGT_degF; }	 // Returns EGT in Fahrenheit
     inline float get_CHT() const { return CHT_degF; }    // Note this returns CHT in Fahrenheit
     inline float get_prop_thrust_SI() const { return prop_thrust; }
+    inline float get_prop_thrust_lbs() const { return (prop_thrust * 0.2248); }
 };
 
 
-#endif // _10520D_HXX_
+#endif // _IO360_HXX_

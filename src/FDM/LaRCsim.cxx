@@ -109,6 +109,7 @@ bool FGLaRCsim::update( int multiloop ) {
 
     if ( fgGetString("/sim/aircraft") == "c172" ) {
 	// set control inputs
+	// cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
 	eng.set_IAS( V_calibrated_kts );
 	eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
 	eng.set_Propeller_Lever_Pos( 100 );
@@ -135,20 +136,20 @@ bool FGLaRCsim::update( int multiloop ) {
 	e->set_prop_thrust( eng.get_prop_thrust_SI() );
 
 #if 0
-	FG_LOG( FG_FLIGHT, FG_INFO, "Throttle = " 
+	FG_LOG( FG_FLIGHT, FG_INFO, "Throttle = "
 		<< controls.get_throttle( 0 ) * 100.0);
 	FG_LOG( FG_FLIGHT, FG_INFO, " Mixture = " << 80);
 	FG_LOG( FG_FLIGHT, FG_INFO, " RPM = " << eng.get_RPM());
 	FG_LOG( FG_FLIGHT, FG_INFO, " MP = " << eng.get_Manifold_Pressure());
-	FG_LOG( FG_FLIGHT, FG_INFO, " HP = " 
+	FG_LOG( FG_FLIGHT, FG_INFO, " HP = "
 	  	<< ( eng.get_MaxHP() * eng.get_Percentage_Power()/ 100.0) );
 	FG_LOG( FG_FLIGHT, FG_INFO, " EGT = " << eng.get_EGT());
-	FG_LOG( FG_FLIGHT, FG_INFO, " Thrust (N) " 
+	FG_LOG( FG_FLIGHT, FG_INFO, " Thrust (N) "
 	  	<< eng.get_prop_thrust_SI());	// Thrust in Newtons
 	FG_LOG( FG_FLIGHT, FG_INFO, '\n');
 #endif
-	// Hmm .. Newtons to lbs is 0.2248 ...    
-	F_X_engine = eng.get_prop_thrust_SI() * 0.07;
+        F_X_engine = eng.get_prop_thrust_lbs();
+	// cout << "F_X_engine = " << F_X_engine << '\n';
     }
 
     double save_alt = 0.0;

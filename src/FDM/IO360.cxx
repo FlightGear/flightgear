@@ -87,65 +87,18 @@
 
 FG_USING_STD(cout);
 
-// ------------------------------------------------------------------------
-// CODE
-// ------------------------------------------------------------------------
-
-/*
-// Calculate Engine RPM based on Propellor Lever Position
-float FGNewEngine::Calc_Engine_RPM (float LeverPosition)
-{
-    // Calculate RPM as set by Prop Lever Position. Assumes engine
-    // will run at 1000 RPM at full course
-    
-    float RPM;
-    RPM = LeverPosition * Max_RPM / 100.0;
-    // * ((FGEng_Max_RPM + FGEng_Min_RPM) / 100);
-    
-    if ( RPM >= Max_RPM ) {
-	RPM = Max_RPM;
-    }
-
-    return RPM;
-}
-*/
-
 float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
 {
-    float thi[11];  //array of equivalence ratio values
-    float neta_comb[11];  //corresponding array of combustion efficiency values
+    const int NUM_ELEMENTS = 11;
+    float thi[NUM_ELEMENTS] = {0.0, 0.9, 1.0, 1.05, 1.1, 1.15, 1.2, 1.3, 1.4, 1.5, 1.6};  //array of equivalence ratio values
+    float neta_comb[NUM_ELEMENTS] = {0.98, 0.98, 0.97, 0.95, 0.9, 0.85, 0.79, 0.7, 0.63, 0.57, 0.525};  //corresponding array of combustion efficiency values
+    //combustion efficiency values from Heywood: ISBN 0-07-100499-8
     float neta_comb_actual;
     float factor;
 
-    //thi = (0.0,0.9,1.0,1.05,1.1,1.15,1.2,1.3,1.4,1.5,1.6);
-    thi[0] = 0.0;
-    thi[1] = 0.9;
-    thi[2] = 1.0;
-    thi[3] = 1.05;	//There must be an easier way of doing this !!!!!!!!
-    thi[4] = 1.1;
-    thi[5] = 1.15;
-    thi[6] = 1.2;
-    thi[7] = 1.3;
-    thi[8] = 1.4;
-    thi[9] = 1.5;
-    thi[10] = 1.6;
-    //neta_comb = (0.98,0.98,0.97,0.95,0.9,0.85,0.79,0.7,0.63,0.57,0.525);
-    neta_comb[0] = 0.98;
-    neta_comb[1] = 0.98;
-    neta_comb[2] = 0.97;
-    neta_comb[3] = 0.95;
-    neta_comb[4] = 0.9;
-    neta_comb[5] = 0.85;
-    neta_comb[6] = 0.79;
-    neta_comb[7] = 0.7;
-    neta_comb[8] = 0.63;
-    neta_comb[9] = 0.57;
-    neta_comb[10] = 0.525;
-    //combustion efficiency values from Heywood: ISBN 0-07-100499-8
-
     int i;
     int j;
-    j = 11;  //This must be equal to the number of elements in the lookup table arrays
+    j = NUM_ELEMENTS;  //This must be equal to the number of elements in the lookup table arrays
 
     for(i=0;i<j;i++)
     {
@@ -172,30 +125,20 @@ float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
 
     //if we get here something has gone badly wrong
     cout << "ERROR: error in FGNewEngine::Lookup_Combustion_Efficiency\n";
-    //exit(-1);
-    return neta_comb_actual;  //keeps the compiler happy
+    return neta_comb_actual;
 }
-/*
-float FGNewEngine::Calculate_Delta_T_Exhaust(void)
-{
-	float dT_exhaust;
-	heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
-	dT_exhaust = enthalpy_exhaust / heat_capacity_exhaust;
 
-	return(dT_exhaust);
-}
-*/
 
 // Calculate Manifold Pressure based on Throttle lever Position
 static float Calc_Manifold_Pressure ( float LeverPosn, float MaxMan, float MinMan)
 {
-    float Inches;  
+    float Inches;
     // if ( x < = 0 ) {
     //   x = 0.00001;
     // }
 
     //Note that setting the manifold pressure as a function of lever position only is not strictly accurate
-    //MAP is also a function of engine speed.
+    //MAP is also a function of engine speed. (and ambient pressure if we are going for an actual MAP model)
     Inches = MinMan + (LeverPosn * (MaxMan - MinMan) / 100);
 
     //allow for idle bypass valve or slightly open throttle stop
@@ -206,77 +149,15 @@ static float Calc_Manifold_Pressure ( float LeverPosn, float MaxMan, float MinMa
 }
 
 
-// set initial default values
-void FGNewEngine::init(double dt) {
 
-    CONVERT_CUBIC_INCHES_TO_METERS_CUBED = 1.638706e-5;
-    // Control and environment inputs
-    IAS = 0;
-    Throttle_Lever_Pos = 75;
-    Propeller_Lever_Pos = 75;	
-    Mixture_Lever_Pos = 100;
-    Cp_air = 1005;	// J/KgK
-    Cp_fuel = 1700;	// J/KgK
-    calorific_value_fuel = 47.3e6;  // W/Kg  Note that this is only an approximate value
-    R_air = 287.3;
-    time_step = dt;
 
-    // Engine Specific Variables used by this program that have limits.
-    // Will be set in a parameter file to be read in to create
-    // and instance for each engine.
-    Max_Manifold_Pressure = 28.50;  //Inches Hg. An approximation - should be able to find it in the engine performance data
-    Min_Manifold_Pressure = 6.5;    //Inches Hg. This is a guess corresponding to approx 0.24 bar MAP (7 in Hg) - need to find some proper data for this
-    Max_RPM = 2700;
-    Min_RPM = 600;		    //Recommended idle from Continental data sheet
-    Max_Fuel_Flow = 130;
-    Mag_Derate_Percent = 5;
-//    MaxHP = 285;    //Continental IO520-M
-    MaxHP = 180;    //Lycoming IO360
-//  displacement = 520;  //Continental IO520-M
-    displacement = 360;	 //Lycoming IO360   
-    engine_inertia = 0.2;  //kgm^2 - value taken from a popular family saloon car engine - need to find an aeroengine value !!!!!
-    prop_inertia = 0.03;  //kgm^2 - this value is a total guess - dcl
-    displacement_SI = displacement * CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
+// Calculate Oil Temperature
+static float Oil_Temp (float Fuel_Flow, float Mixture, float IAS)
+{
+    float Oil_Temp = 85;
 
-    Gear_Ratio = 1;
-    started = true;
-    cranking = false;
-
-    CONVERT_HP_TO_WATTS = 745.6999;
-//    ofstream outfile;
- //   outfile.open(ios::out|ios::trunc);
-
-    // Initialise Engine Variables used by this instance
-    Percentage_Power = 0;
-    Manifold_Pressure = 29.00; // Inches
-    RPM = 600;
-    Fuel_Flow = 0;	// lbs/hour
-    Torque = 0;
-    CHT = 298.0;	//deg Kelvin
-    CHT_degF = (CHT * 1.8) - 459.67;  //deg Fahrenheit
-    Mixture = 14;
-    Oil_Pressure = 0;	// PSI
-    Oil_Temp = 85;	// Deg C
-    HP = 0;
-    RPS = 0;
-    Torque_Imbalance = 0;
-    Desired_RPM = 2500;	    //Recommended cruise RPM from Continental datasheet
-
-    // Initialise Propellor Variables used by this instance
-    FGProp1_Angular_V = 0;
-    FGProp1_Coef_Drag =  0.6;
-    FGProp1_Torque = 0;
-    FGProp1_Thrust = 0;
-    FGProp1_RPS = 0;
-    FGProp1_Coef_Lift = 0.1;
-    Alpha1 = 13.5;
-    FGProp1_Blade_Angle = 13.5;
-    FGProp_Fine_Pitch_Stop = 13.5;
-
-    // Other internal values
-    Rho = 0.002378;
+    return (Oil_Temp);
 }
-
 
 // Calculate Oil Pressure
 static float Oil_Press (float Oil_Temp, float Engine_RPM)
@@ -289,42 +170,19 @@ static float Oil_Press (float Oil_Temp, float Engine_RPM)
     float Temp_Deviation = 0;		// Deg C
 
     Oil_Pressure = (Oil_Press_Relief_Valve / Oil_Press_RPM_Max) * Engine_RPM;
-	
+
     // Pressure relief valve opens at Oil_Press_Relief_Valve PSI setting
-    if (Oil_Pressure >= Oil_Press_Relief_Valve)	
+    if (Oil_Pressure >= Oil_Press_Relief_Valve)
 	{
 	    Oil_Pressure = Oil_Press_Relief_Valve;
 	}
-	
+
     // Now adjust pressure according to Temp which affects the viscosity
-	
-    Oil_Pressure += (Design_Oil_Temp - Oil_Temp) * Oil_Viscosity_Index;	
-	
+
+    Oil_Pressure += (Design_Oil_Temp - Oil_Temp) * Oil_Viscosity_Index;
+
     return Oil_Pressure;
 }
-
-
-/*
-// Calculate Cylinder Head Temperature
-static float Calc_CHT (float Fuel_Flow, float Mixture, float IAS, float rhoair, float tamb)
-{
-    float CHT = 350;
-	
-    return CHT;
-}
-*/
-
-/*
-//Calculate Exhaust Gas Temperature
-//For now we will simply adjust this as a function of mixture
-//It may be necessary to consider fuel flow rates and CHT in the calculation in the future
-static float Calc_EGT (float Mixture)
-{
-    float EGT = 1000;   //off the top of my head !!!!
-    //Now adjust for mixture strength
-
-    return EGT;
-}*/
 
 
 // Calculate Density Ratio
@@ -354,6 +212,82 @@ static float IAS_to_FPS (float x)
 }
 
 
+//*************************************************************************************
+// Initialise the engine model
+void FGNewEngine::init(double dt) {
+
+    // These constants should probably be moved eventually
+    CONVERT_CUBIC_INCHES_TO_METERS_CUBED = 1.638706e-5;
+    CONVERT_HP_TO_WATTS = 745.6999;
+
+    // Properties of working fluids
+    Cp_air = 1005;	// J/KgK
+    Cp_fuel = 1700;	// J/KgK
+    calorific_value_fuel = 47.3e6;  // W/Kg  Note that this is only an approximate value
+    R_air = 287.3;
+
+    // Control and environment inputs
+    IAS = 0;
+    Throttle_Lever_Pos = 75;
+    Propeller_Lever_Pos = 75;
+    Mixture_Lever_Pos = 100;
+
+    time_step = dt;
+
+    // Engine Specific Variables.
+    // Will be set in a parameter file to be read in to create
+    // and instance for each engine.
+    Max_Manifold_Pressure = 28.50;  //Inches Hg. An approximation - should be able to find it in the engine performance data
+    Min_Manifold_Pressure = 6.5;    //Inches Hg. This is a guess corresponding to approx 0.24 bar MAP (7 in Hg) - need to find some proper data for this
+    Max_RPM = 2700;
+    Min_RPM = 600;		    //Recommended idle from Continental data sheet
+    Max_Fuel_Flow = 130;
+    Mag_Derate_Percent = 5;
+//    MaxHP = 285;    //Continental IO520-M
+    MaxHP = 180;    //Lycoming IO360
+//  displacement = 520;  //Continental IO520-M
+    displacement = 360;	 //Lycoming IO360
+    displacement_SI = displacement * CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
+    engine_inertia = 0.2;  //kgm^2 - value taken from a popular family saloon car engine - need to find an aeroengine value !!!!!
+    prop_inertia = 0.03;  //kgm^2 - this value is a total guess - dcl
+    Gear_Ratio = 1;
+
+    started = true;
+    cranking = false;
+
+
+    // Initialise Engine Variables used by this instance
+    Percentage_Power = 0;
+    Manifold_Pressure = 29.00; // Inches
+    RPM = 600;
+    Fuel_Flow = 0;	// lbs/hour
+    Torque = 0;
+    Torque_SI = 0;
+    CHT = 298.0;	//deg Kelvin
+    CHT_degF = (CHT * 1.8) - 459.67;  //deg Fahrenheit
+    Mixture = 14;
+    Oil_Pressure = 0;	// PSI
+    Oil_Temp = 85;	// Deg C
+    HP = 0;
+    RPS = 0;
+    Torque_Imbalance = 0;
+
+    // Initialise Propellor Variables used by this instance
+    FGProp1_Angular_V = 0;
+    FGProp1_Coef_Drag =  0.6;
+    FGProp1_Torque = 0;
+    FGProp1_Thrust = 0;
+    FGProp1_RPS = 0;
+    FGProp1_Coef_Lift = 0.1;
+    Alpha1 = 13.5;
+    FGProp1_Blade_Angle = 13.5;
+    FGProp_Fine_Pitch_Stop = 13.5;
+
+    // Other internal values
+    Rho = 0.002378;
+}
+
+
 //*****************************************************************************
 //*****************************************************************************
 // update the engine model based on current control positions
@@ -377,7 +311,7 @@ void FGNewEngine::update() {
     // 0 = Closed, 100 = Fully Open
     // float Throttle_Lever_Pos = 75;
     // 0 = Full Course 100 = Full Fine
-    // float Propeller_Lever_Pos = 75;	
+    // float Propeller_Lever_Pos = 75;
     // 0 = Idle Cut Off 100 = Full Rich
     // float Mixture_Lever_Pos = 100;
 
@@ -398,7 +332,7 @@ void FGNewEngine::update() {
     //==================================================================
     // Engine & Environmental Inputs from elsewhere
 
-    // Calculate Air Density (Rho) - In FG this is calculated in 
+    // Calculate Air Density (Rho) - In FG this is calculated in
     // FG_Atomoshere.cxx
 
     Rho = Density(FG_Pressure_Ht); // In FG FG_Pressure_Ht is "h"
@@ -406,7 +340,7 @@ void FGNewEngine::update() {
 
     // Calculate Manifold Pressure (Engine 1) as set by throttle opening
 
-    Manifold_Pressure = 
+    Manifold_Pressure =
 	Calc_Manifold_Pressure( Throttle_Lever_Pos, Max_Manifold_Pressure, Min_Manifold_Pressure );
     // cout << "manifold pressure = " << Manifold_Pressure << endl;
 
@@ -428,8 +362,8 @@ void FGNewEngine::update() {
 
 //    Desired_RPM = RPM;
 
-//**************	
-	
+//**************
+
     //DCL - calculate mass air flow into engine based on speed and load - separate this out into a function eventually
     //t_amb is actual temperature calculated from altitude
     //calculate density from ideal gas equation
@@ -460,7 +394,7 @@ void FGNewEngine::update() {
     // cout << " air " << m_dot_air << '\n';
 
 //***********************************************************************
-//Calculate percentage power
+//Engine power and torque calculations
 
     // For a given Manifold Pressure and RPM calculate the % Power
     // Multiply Manifold Pressure by RPM
@@ -472,17 +406,21 @@ void FGNewEngine::update() {
 //  Phil's %power correlation
     //  Calculate % Power
     Percentage_Power = (+ 7E-09 * ManXRPM * ManXRPM) + ( + 7E-04 * ManXRPM) - 0.1218;
-    // cout << Percentage_Power <<  "%" << "\t";   
+    // cout << Percentage_Power <<  "%" << "\t";
 */
 
 // DCL %power correlation - basically Phil's correlation modified to give slighty less power at the low end
 // might need some adjustment as the prop model is adjusted
 // My aim is to match the prop model and engine model at the low end to give the manufacturer's recommended idle speed with the throttle closed - 600rpm for the Continental IO520
-    //  Calculate % Power
-    Percentage_Power = (+ 6E-09 * ManXRPM * ManXRPM) + ( + 8E-04 * ManXRPM) - 1.8524;
+    //  Calculate % Power for Nev's prop model
+    //Percentage_Power = (+ 6E-09 * ManXRPM * ManXRPM) + ( + 8E-04 * ManXRPM) - 1.8524;
+
+    // Calculate %power for DCL prop model
+    Percentage_Power = (7e-9 * ManXRPM * ManXRPM) + (7e-4 * ManXRPM) - 1.0;
+
     // cout << Percentage_Power <<  "%" << "\t";
-    
-    
+
+
     // Adjust for Temperature - Temperature above Standard decrease
     // power % by 7/120 per degree F increase, and incease power for
     // temps below at the same ratio
@@ -492,10 +430,10 @@ void FGNewEngine::update() {
 //******DCL - this bit will need altering or removing if I go to true altitude adjusted manifold pressure
     // Adjust for Altitude. In this version a linear variation is
     // used. Decrease 1% for each 1000' increase in Altitde
-    Percentage_Power = Percentage_Power + (FG_Pressure_Ht * 12/10000);	
+    Percentage_Power = Percentage_Power + (FG_Pressure_Ht * 12/10000);
     // cout << Percentage_Power <<  "%" << "\t";
-    
-    
+
+
     //DCL - now adjust power to compensate for mixture
     //uses a curve fit to the data in the IO360 / O360 operating manual
     //due to the shape of the curve I had to use a 6th order fit - I am sure it must be possible to reduce this in future,
@@ -505,16 +443,16 @@ void FGNewEngine::update() {
     //y=10x-12 for now
     abstract_mixture = 10.0 * equivalence_ratio - 12.0;
     float m = abstract_mixture;  //to simplify writing the next equation
-    Percentage_of_best_power_mixture_power = ((-0.0012*m*m*m*m*m*m) + (0.021*m*m*m*m*m) + (-0.1425*m*m*m*m) + (0.4395*m*m*m) + (-0.8909*m*m) + (-0.5155*m) + 100.03);
+    Percentage_of_best_power_mixture_power = ((-0.0012*pow(m,6)) + (0.021*pow(m,5)) + (-0.1425*pow(m,4)) + (0.4395*pow(m,3)) + (-0.8909*m*m) + (-0.5155*m) + 100.03);
     Percentage_Power = Percentage_Power * Percentage_of_best_power_mixture_power / 100.0;
-    
+
     //cout << " %POWER = " << Percentage_Power << '\n';
-    
-//***DCL - FIXME - this needs altering - for instance going richer than full power mixture decreases the %power but increases the fuel flow    
+
+//***DCL - FIXME - this needs altering - for instance going richer than full power mixture decreases the %power but increases the fuel flow
     // Now Calculate Fuel Flow based on % Power Best Power Mixture
     Fuel_Flow = Percentage_Power * Max_Fuel_Flow / 100.0;
     // cout << Fuel_Flow << " lbs/hr"<< endl;
-    
+
     // Now Derate engine for the effects of Bad/Switched off magnetos
     if (Magneto_Left == 0 && Magneto_Right == 0) {
 	// cout << "Both OFF\n";
@@ -523,18 +461,29 @@ void FGNewEngine::update() {
 	// cout << "Both On    ";
     } else if (Magneto_Left == 0 || Magneto_Right== 0) {
 	// cout << "1 Magneto Failed   ";
-	
-	Percentage_Power = Percentage_Power * 
+
+	Percentage_Power = Percentage_Power *
 	    ((100.0 - Mag_Derate_Percent)/100.0);
 	//  cout << FGEng1_Percentage_Power <<  "%" << "\t";
-    }	
+    }
 
+    HP = Percentage_Power * MaxHP / 100.0;
 
+    Power_SI = HP * CONVERT_HP_TO_WATTS;
+
+    // Calculate Engine Torque. Check for div by zero since percentage power correlation does not guarantee zero power at zero rpm.
+    if(RPM == 0) {
+        Torque_SI = 0;
+    }
+    else {
+        Torque_SI = (Power_SI * 60.0) / (2.0 * PI * RPM);  //Torque = power / angular velocity
+	// cout << Torque << " Nm\n";
+    }
 
 //**********************************************************************
 //Calculate Exhaust gas temperature
 
-    // cout << "Thi = " << equivalence_ratio << '\n'; 
+    // cout << "Thi = " << equivalence_ratio << '\n';
 
     combustion_efficiency = Lookup_Combustion_Efficiency(equivalence_ratio);  //The combustion efficiency basically tells us what proportion of the fuels calorific value is released
 
@@ -546,7 +495,7 @@ void FGNewEngine::update() {
     //Regardless - it won't affect the variation of EGT with mixture, and we con always put a multiplier on EGT to get a reasonable peak value.
     enthalpy_exhaust = m_dot_fuel * calorific_value_fuel * combustion_efficiency * 0.33;
     heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
-    delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;	
+    delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;
 //  delta_T_exhaust = Calculate_Delta_T_Exhaust();
 
     // cout << "T_amb " << T_amb;
@@ -567,42 +516,42 @@ void FGNewEngine::update() {
 //***************************************************************************************
 // Calculate Cylinder Head Temperature
 
-/* DCL 27/10/00  
+/* DCL 27/10/00
 
 This is a somewhat rough first attempt at modelling cylinder head temperature.  The cylinder head
-is assumed to be at uniform temperature.  Obviously this is incorrect, but it simplifies things a 
+is assumed to be at uniform temperature.  Obviously this is incorrect, but it simplifies things a
 lot, and we're just looking for the behaviour of CHT to be correct.  Energy transfer to the cylinder
 head is assumed to be one third of the energy released by combustion at all conditions.  This is a
 reasonable estimate, although obviously in real life it varies with different conditions and possibly
-with CHT itself.  I've split energy transfer from the cylinder head into 2 terms - free convection - 
-ie convection to stationary air, and forced convection, ie convection into flowing air.  The basic 
+with CHT itself.  I've split energy transfer from the cylinder head into 2 terms - free convection -
+ie convection to stationary air, and forced convection, ie convection into flowing air.  The basic
 free convection equation is: dqdt = -hAdT   Since we don't know A and are going to set h quite arbitarily
 anyway I've knocked A out and just wrapped it up in h - the only real significance is that the units
 of h will be different but that dosn't really matter to us anyway.  In addition, we have the problem
 that the prop model I'm currently using dosn't model the backwash from the prop which will add to the
-velocity of the cooling air when the prop is turning, so I've added an extra term to try and cope 
+velocity of the cooling air when the prop is turning, so I've added an extra term to try and cope
 with this.
 
-In real life, forced convection equations are genarally empirically derived, and are quite complicated 
-and generally contain such things as the Reynolds and Nusselt numbers to various powers.  The best 
+In real life, forced convection equations are genarally empirically derived, and are quite complicated
+and generally contain such things as the Reynolds and Nusselt numbers to various powers.  The best
 course of action would probably to find an empirical correlation from the literature for a similar
-situation and try and get it to fit well.  However, for now I am using my own made up very simple 
+situation and try and get it to fit well.  However, for now I am using my own made up very simple
 correlation for the energy transfer from the cylinder head:
 
 dqdt = -(h1.dT) -(h2.m_dot.dT) -(h3.rpm.dT)
 
 where dT is the temperature different between the cylinder head and the surrounding air, m_dot is the
 mass flow rate of cooling air through an arbitary volume, rpm is the engine speed in rpm (this is the
-backwash term), and h1, h2, h3 are co-efficients which we can play with to attempt to get the CHT 
+backwash term), and h1, h2, h3 are co-efficients which we can play with to attempt to get the CHT
 behaviour to match real life.
 
 In order to change the values of CHT that the engine settles down at at various conditions,
 have a play with h1, h2 and h3.  In order to change the rate of heating/cooling without affecting
 equilibrium values alter the cylinder head mass, which is really quite arbitary.  Bear in mind that
 altering h1, h2 and h3 will also alter the rate of heating or cooling as well as equilibrium values,
-but altering the cylinder head mass will only alter the rate.  It would I suppose be better to read 
+but altering the cylinder head mass will only alter the rate.  It would I suppose be better to read
 the values from file to avoid the necessity for re-compilation every time I change them.
-		    
+
 */
     //CHT = Calc_CHT( Fuel_Flow, Mixture, IAS);
     // cout << "Cylinder Head Temp (F) = " << CHT << endl;
@@ -623,7 +572,7 @@ the values from file to avoid the necessity for re-compilation every time I chan
     float HeatCapacityCylinderHead;
     float dCHTdt;
 
-    temperature_difference = CHT - T_amb; 
+    temperature_difference = CHT - T_amb;
 
     v_apparent = IAS * 0.5144444;  //convert from knots to m/s
     v_dot_cooling_air = arbitary_area * v_apparent;
@@ -631,7 +580,7 @@ the values from file to avoid the necessity for re-compilation every time I chan
 
     //Calculate rate of energy transfer to cylinder head from combustion
     dqdt_from_combustion = m_dot_fuel * calorific_value_fuel * combustion_efficiency * 0.33;
-    
+
     //Calculate rate of energy transfer from cylinder head due to cooling  NOTE is calculated as rate to but negative
     dqdt_forced = (h2 * m_dot_cooling_air * temperature_difference) + (h3 * RPM * temperature_difference);
     dqdt_free = h1 * temperature_difference;
@@ -652,101 +601,16 @@ the values from file to avoid the necessity for re-compilation every time I chan
 
 // End calculate Cylinder Head Temperature
 
- 
+
 //***************************************************************************************
-// Engine Power & Torque Calculations
+// Oil pressure calculation
 
+    // Calculate Oil Pressure
+    Oil_Pressure = Oil_Press( Oil_Temp, RPM );
+    // cout << "Oil Pressure (PSI) = " << Oil_Pressure << endl;
 
-
-
-	// Calculate Engine Horsepower
-
-	HP = Percentage_Power * MaxHP / 100.0;
-
-	Power_SI = HP * CONVERT_HP_TO_WATTS;
-
-	// Calculate Engine Torque
-
-	Torque = HP * 5252 / RPM;
-	// cout << Torque << "Ft/lbs" << "\t";
-
-	Torque_SI = (Power_SI * 60.0) / (2.0 * PI * RPM);  //Torque = power / angular velocity
-	// cout << Torque << " Nm\n";
-
-
-	// Calculate Oil Pressure
-	Oil_Pressure = Oil_Press( Oil_Temp, RPM );
-	// cout << "Oil Pressure (PSI) = " << Oil_Pressure << endl;
-	
-	//==============================================================
-
-	// Now do the Propellor Calculations
-
-#ifdef PHILS_PROP_MODEL
-
-	// Revs per second
-	FGProp1_RPS = RPM * Gear_Ratio / 60.0;
-	// cout << FGProp1_RPS << " RPS" <<  endl;
-
-	//Radial Flow Vector (V2) Ft/sec at Ref Blade Station (usually 30")
-	FGProp1_Angular_V = FGProp1_RPS * 2 * PI * (Blade_Station / 12);
-	//  cout << FGProp1_Angular_V << "Angular Velocity "  << endl;
-
-	// Axial Flow Vector (Vo) Ft/sec
-	// Some further work required here to allow for inflow at low speeds
-	// Vo = (IAS + 20) * 1.688888;
-	Vo = IAS_to_FPS(IAS + 20);
-	// cout << "Feet/sec = " << Vo << endl;
-
-	// cout << Vo << "Axial Velocity" << endl;
-
-	// Relative Velocity (V1)
-	V1 = sqrt((FGProp1_Angular_V * FGProp1_Angular_V) +
-		  (Vo * Vo));
-	// cout << V1 << "Relative Velocity " << endl;
-
-	// cout << FGProp1_Blade_Angle << " Prop Blade Angle" << endl;
-
-	// Blade Angle of Attack (Alpha1)
-
-/*	cout << "  Alpha1 = " << Alpha1
-	     << "  Blade angle = " << FGProp1_Blade_Angle
-	     << "  Vo = " << Vo
-	     << "  FGProp1_Angular_V = " << FGProp1_Angular_V << endl;*/
-	Alpha1 = FGProp1_Blade_Angle -(atan(Vo / FGProp1_Angular_V) * (180/PI));
-	// cout << Alpha1 << " Alpha1" << endl;
-
-	// Calculate Coefficient of Drag at Alpha1
-	FGProp1_Coef_Drag = (0.0005 * (Alpha1 * Alpha1)) + (0.0003 * Alpha1)
-	    + 0.0094;
-	//	cout << FGProp1_Coef_Drag << " Coef Drag" << endl;
-
-	// Calculate Coefficient of Lift at Alpha1
-	FGProp1_Coef_Lift = -(0.0026 * (Alpha1 * Alpha1)) + (0.1027 * Alpha1)
-	    + 0.2295;
-	// cout << FGProp1_Coef_Lift << " Coef Lift " << endl;
-
-	// Covert Alplha1 to Radians
-	// Alpha1 = Alpha1 * PI / 180;
-
-	//  Calculate Prop Torque
-	FGProp1_Torque = (0.5 * Rho * (V1 * V1) * FGProp_Area
-			  * ((FGProp1_Coef_Lift * sin(Alpha1 * PI / 180))
-			     + (FGProp1_Coef_Drag * cos(Alpha1 * PI / 180))))
-	    * (Blade_Station/12);
-	// cout <<  FGProp1_Torque << " Prop Torque" << endl;
-
-	//  Calculate Prop Thrust
-	// cout << "  V1 = " << V1 << "  Alpha1 = " << Alpha1 << endl;
-	FGProp1_Thrust = 0.5 * Rho * (V1 * V1) * FGProp_Area
-	    * ((FGProp1_Coef_Lift * cos(Alpha1 * PI / 180))
-	       - (FGProp1_Coef_Drag * sin(Alpha1 * PI / 180)));
-	// cout << FGProp1_Thrust << " Prop Thrust " <<  endl;
-
-	// End of Propeller Calculations   
-	//==============================================================
-
-#endif  //PHILS_PROP_MODEL
+//**************************************************************************************
+// Now do the Propeller Calculations
 
 #ifdef NEVS_PROP_MODEL
 
@@ -779,7 +643,7 @@ the values from file to avoid the necessity for re-compilation every time I chan
 	for(i=1;i<=num_elements;i++)
 	{
 	    element = float(i);
-	    distance = (blade_length * (element / num_elements)) + allowance_for_spinner; 
+	    distance = (blade_length * (element / num_elements)) + allowance_for_spinner;
 	    element_drag = 0.5 * rho_air * ((distance * angular_velocity_SI)*(distance * angular_velocity_SI)) * (0.000833 * ((theta[int(element-1)] - (atan(forward_velocity/(distance * angular_velocity_SI))))*(theta[int(element-1)] - (atan(forward_velocity/(distance * angular_velocity_SI))))))
 			    * (0.1 * (blade_length / element)) * number_of_blades;
 
@@ -804,79 +668,78 @@ the values from file to avoid the necessity for re-compilation every time I chan
 
 #endif //NEVS_PROP_MODEL
 
+#ifdef DCL_PROP_MODEL
 
-//#if 0
-#ifdef PHILS_PROP_MODEL  //Do Torque calculations in Ft/lbs - yuk :-(((
-	Torque_Imbalance = FGProp1_Torque - Torque; 
+        double prop_diameter = 1.8;     // meters
+        double J;      			// advance ratio - dimensionless
+        double Cp_20;                   // coefficient of power for 20 degree blade angle
+        double Cp_25;                   // coefficient of power for 25 degree blade angle
+        double Cp;                      // our actual coefficient of power
+        double blade_angle = 23.0;      // degrees
+        double neta_prop_20;
+        double neta_prop_25;
+        double neta_prop;               // prop efficiency
 
-	if (Torque_Imbalance > 5) {
-	    RPM -= 14.5;
-	    // FGProp1_RPM -= 25;
-//	    FGProp1_Blade_Angle -= 0.75;
-	}
+ 	Gear_Ratio = 1.0;
+        FGProp1_RPS = RPM * Gear_Ratio / 60.0;  // Borrow this variable from Phils model for now !!
+        angular_velocity_SI = 2.0 * PI * RPM / 60.0;
+        forward_velocity = IAS * 0.514444444444;        // Convert to m/s
 
-	if (Torque_Imbalance < -5) {
-	    RPM += 14.5;
-	    // FGProp1_RPM += 25;
-//	    FGProp1_Blade_Angle += 0.75;
-	}
-#endif
+        //cout << "Gear_Ratio = " << Gear_Ratio << '\n';
+        //cout << "IAS = " << IAS << '\n';
+        //cout << "forward_velocity = " << forward_velocity << '\n';
+        //cout << "FGProp1_RPS = " << FGProp1_RPS << '\n';
+        //cout << "prop_diameter = " << prop_diameter << '\n';
+        if(FGProp1_RPS == 0)
+            J = 0;
+        else
+            J = forward_velocity / (FGProp1_RPS * prop_diameter);
+        //cout << "advance_ratio = " << J << '\n';
 
+        //Cp correlations based on data from McCormick
+        Cp_20 = 0.0342*J*J*J*J - 0.1102*J*J*J + 0.0365*J*J - 0.0133*J + 0.064;
+        Cp_25 = 0.0119*J*J*J*J - 0.0652*J*J*J + 0.018*J*J - 0.0077*J + 0.0921;
 
-#ifdef NEVS_PROP_MODEL	    //use proper units - Nm
+        //cout << "Cp_20 = " << Cp_20 << '\n';
+        //cout << "Cp_25 = " << Cp_25 << '\n';
+
+        //Assume that the blade angle is between 20 and 25 deg - reasonable for fixed pitch prop but won't hold for variable one !!!
+        Cp = Cp_20 + ( (Cp_25 - Cp_20) * ((blade_angle - 20)/(25 - 20)) );
+    	//cout << "Cp = " << Cp << '\n';
+        //cout << "RPM = " << RPM << '\n';
+        //cout << "angular_velocity_SI = " << angular_velocity_SI << '\n';
+
+        prop_power_consumed_SI = Cp * rho_air * pow(FGProp1_RPS,3.0) * pow(prop_diameter,5.0);
+        //cout << "prop HP consumed = " << prop_power_consumed_SI / 745.699 << '\n';
+        if(angular_velocity_SI == 0)
+            prop_torque = 0;
+        else
+            prop_torque = prop_power_consumed_SI / angular_velocity_SI;
+
+        // calculate neta_prop here
+        neta_prop_20 = 0.1328*J*J*J*J - 1.3073*J*J*J + 0.3525*J*J + 1.5591*J + 0.0007;
+        neta_prop_25 = -0.3121*J*J*J*J + 0.4234*J*J*J - 0.7686*J*J + 1.5237*J - 0.0004;
+        neta_prop = neta_prop_20 + ( (neta_prop_25 - neta_prop_20) * ((blade_angle - 20)/(25 - 20)) );
+
+        //FIXME - need to check for zero forward velocity to avoid divide by zero
+        if(forward_velocity < 0.0001)
+           prop_thrust = 0.0;
+        else
+           prop_thrust = neta_prop * prop_power_consumed_SI / forward_velocity;       //TODO - rename forward_velocity to IAS_SI
+        //cout << "prop_thrust = " << prop_thrust << '\n';
+
+#endif //DCL_PROP_MODEL
+
+        //Calculate new RPM from torque balance and inertia.
 	Torque_Imbalance = Torque_SI - prop_torque;  //This gives a +ve value when the engine torque exeeds the prop torque
 
 	angular_acceleration = Torque_Imbalance / (engine_inertia + prop_inertia);
 	angular_velocity_SI += (angular_acceleration * time_step);
 	RPM = (angular_velocity_SI * 60) / (2.0 * PI);
-#endif
-
-
-
-/*
-	if( RPM > (Desired_RPM + 2)) {
-	    FGProp1_Blade_Angle += 0.75;  //This value could be altered depending on how far from the desired RPM we are
-	}
-
-	if( RPM < (Desired_RPM - 2)) {
-	    FGProp1_Blade_Angle -= 0.75;
-	}
-
-	if (FGProp1_Blade_Angle < FGProp_Fine_Pitch_Stop) {
-	    FGProp1_Blade_Angle = FGProp_Fine_Pitch_Stop;
-	}
-
-	if (RPM >= 2700) {
-	    RPM = 2700;
-	}
-*/
-	//end constant speed prop
-//#endif
 
 	//DCL - stall the engine if RPM drops below 550 - this is possible if mixture lever is pulled right out
 	if(RPM < 550)
 	    RPM = 0;
 
-//	outfile << "RPM = " << RPM << " Blade angle = " << FGProp1_Blade_Angle << " Engine torque = " << Torque << " Prop torque = " << FGProp1_Torque << '\n';
-//	outfile << "RPM = " << RPM << " Engine torque = " << Torque_SI << " Prop torque = " << prop_torque << '\n';    
-
-	// cout << FGEng1_RPM << " Blade_Angle  " << FGProp1_Blade_Angle << endl << endl;
-
-
-
-    // cout << "Final engine RPM = " << RPM << '\n';
 }
 
-
-
-
-// Functions
-
-// Calculate Oil Temperature
-
-static float Oil_Temp (float Fuel_Flow, float Mixture, float IAS)
-{
-    float Oil_Temp = 85;
-	
-    return (Oil_Temp);
-}
