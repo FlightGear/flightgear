@@ -1285,6 +1285,16 @@ bool FGATC610x::do_radio_switches() {
     fgSetInt( "/radios/kt-70/inputs/ident-btn",
               !(radio_switch_data[27] >> 5 & 0x01) );
 
+    // Audio panel switches
+    fgSetInt( "/radios/nav[0]/audio-btn",
+              (radio_switch_data[3] & 0x01) );
+    fgSetInt( "/radios/nav[1]/audio-btn",
+              (radio_switch_data[3] >> 2 & 0x01) );
+    fgSetInt( "/radios/kr-87/inputs/audio-btn",
+              (radio_switch_data[3] >> 4 & 0x01) );
+    fgSetInt( "/radios/marker-beacon/audio-btn",
+              (radio_switch_data[3] >> 6 & 0x01) );
+
     return true;
 }
 
@@ -1810,7 +1820,10 @@ bool FGATC610x::do_switches() {
     fgSetBool( "/controls/circuit-breakers/annunciators",
                switch_matrix[board][7][0] );
 
-    fgSetDouble( "/controls/parking-brake", switch_matrix[board][7][3] );
+    fgSetDouble( "/controls/parking-brake",
+                 switch_matrix[board][7][3] );
+    fgSetDouble( "/radios/marker-beacon/power-btn",
+                 switch_matrix[board][6][1] );
 
     return true;
 }
