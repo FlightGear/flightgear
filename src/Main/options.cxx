@@ -233,7 +233,7 @@ fgOPTIONS::fgOPTIONS() :
 	fg_scenery = "";
     }
 
-    airport_id = "P13";		// default airport id
+    airport_id = "KPAO";	// default airport id
     net_id = "Johnney";		// default pilot's name
 
     // initialize port config string list
@@ -644,14 +644,17 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	sound = true;
     } else if ( arg.find( "--airport-id=") != string::npos ) {
 	airport_id = arg.substr( 13 );
+	current_properties.setStringValue("/position/airport-id", airport_id);
     } else if ( arg.find( "--lon=" ) != string::npos ) {
 	lon = parse_degree( arg.substr(6) );
 	airport_id = "";
 	current_properties.setDoubleValue("/position/longitude", lon);
+	current_properties.setStringValue("/position/airport-id", airport_id);
     } else if ( arg.find( "--lat=" ) != string::npos ) {
 	lat = parse_degree( arg.substr(6) );
 	airport_id = "";
 	current_properties.setDoubleValue("/position/latitude", lat);
+	current_properties.setStringValue("/position/airport-id", airport_id);
     } else if ( arg.find( "--altitude=" ) != string::npos ) {
 	if ( units == FG_UNITS_FEET ) {
 	    altitude = atof( arg.substr(11) ) * FEET_TO_METER;

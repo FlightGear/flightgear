@@ -190,7 +190,7 @@ public:
   static void setADFRotation (double rot);
 
 				// GPS
-  static const string getTargetAirport ();
+  static const string &getTargetAirport ();
   static bool getGPSLock ();
   static double getGPSTargetLatitude ();
   static double getGPSTargetLongitude ();

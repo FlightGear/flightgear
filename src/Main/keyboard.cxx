@@ -74,6 +74,9 @@
 #include "save.hxx"
 #include "views.hxx"
 
+				// From main.cxx
+extern void fgReshape( int width, int height );
+
 
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
@@ -469,6 +472,26 @@ void GLUTspecialkey(int k, int x, int y) {
 	  } else {
 	    FG_LOG(FG_INPUT, FG_INFO, "Finished Reading global preferences");
 	  }
+	  return;
+	}
+	case GLUT_KEY_F5: {
+	  current_panel->setYOffset(current_panel->getYOffset() - 5);
+	  fgReshape(current_view.get_winWidth(),
+		    current_view.get_winHeight());
+	  return;
+	}
+	case GLUT_KEY_F6: {
+	  current_panel->setYOffset(current_panel->getYOffset() + 5);
+	  fgReshape(current_view.get_winWidth(),
+		    current_view.get_winHeight());
+	  return;
+	}
+	case GLUT_KEY_F7: {
+	  current_panel->setXOffset(current_panel->getXOffset() - 5);
+	  return;
+	}
+	case GLUT_KEY_F8: {
+	  current_panel->setXOffset(current_panel->getXOffset() + 5);
 	  return;
 	}
 	case GLUT_KEY_END: // numeric keypad 1

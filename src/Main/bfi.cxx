@@ -104,6 +104,8 @@ FGBFI::init ()
 			     getPanelVisible, setPanelVisible);
 
 				// Position
+  current_properties.tieString("/position/airport-id",
+				getTargetAirport, setTargetAirport);
   current_properties.tieDouble("/position/latitude",
 				getLatitude, setLatitude);
   current_properties.tieDouble("/position/longitude",
@@ -1522,10 +1524,14 @@ FGBFI::setGPSLock (bool lock)
 /**
  * Get the GPS target airport code.
  */
-const string
+const string &
 FGBFI::getTargetAirport ()
 {
-  return current_options.get_airport_id();
+  // FIXME: not thread-safe
+  static string out;
+  out = current_options.get_airport_id();
+
+  return out;
 }
 
 
@@ -1535,6 +1541,7 @@ FGBFI::getTargetAirport ()
 void
 FGBFI::setTargetAirport (const string &airportId)
 {
+  // cout << "setting target airport id = " << airportId << endl;
   current_options.set_airport_id(airportId);
 }
 

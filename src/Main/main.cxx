@@ -1333,6 +1333,8 @@ int main( int argc, char **argv ) {
     // fg_root was specified (ignore all other options for now)
     fgInitFGRoot(argc, argv);
 
+    // cout << "1. airport_id = " << current_options.get_airport_id() << endl;
+
     // Read global preferences from $FG_ROOT/preferences.xml
     FGPath props_path(current_options.get_fg_root());
     props_path.append("preferences.xml");
@@ -1343,6 +1345,8 @@ int main( int argc, char **argv ) {
     } else {
       FG_LOG(FG_INPUT, FG_INFO, "Finished Reading global preferences");
     }
+
+    // cout << "2. airport_id = " << current_options.get_airport_id() << endl;
 
     // Initialize the Aircraft directory to "" (UIUC)
     aircraft_dir = "";
@@ -1379,6 +1383,7 @@ int main( int argc, char **argv ) {
     guiInit();
 
     // set current_options lon/lat if an airport id is specified
+    // cout << "3. airport_id = " << current_options.get_airport_id() << endl;
     if ( current_options.get_airport_id().length() ) {
 	// fgSetPosFromAirportID( current_options.get_airport_id() );
 	fgSetPosFromAirportIDandHdg( current_options.get_airport_id(),
