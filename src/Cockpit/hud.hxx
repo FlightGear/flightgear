@@ -444,9 +444,9 @@ class instr_item {  // An Abstract Base Class (ABC)
                 UINT           height,
                 UINT           width,
                 FLTFNPTR       data_source,
-                float         data_scaling,
+                float          data_scaling,
                 UINT           options,
-                bool           working      = true);
+                bool           working  = true);
 
     instr_item( const instr_item & image );
 
@@ -530,6 +530,8 @@ class instr_label : public instr_item {
     int         fontSize;
     int         blink;
     char format_buffer[80];
+    bool		lat;
+    bool		lon;
 
   public:
     instr_label( int          x,
@@ -538,14 +540,16 @@ class instr_label : public instr_item {
                  UINT         height,
                  FLTFNPTR     data_source,
                  const char  *label_format,
-                 const char  *pre_label_string  = 0,
-                 const char  *post_label_string = 0,
-                 float       scale_data        = 1.0,
-                 UINT         options           = HUDS_TOP,
-                 fgLabelJust  justification     = CENTER_JUST,
-                 int          font_size         = SMALL,
-                 int          blinking          = NOBLINK,
-                 bool         working           = true);
+                 const char  *pre_label_string,
+                 const char  *post_label_string,
+                 float        scale_data,
+                 UINT         options,
+                 fgLabelJust  justification,
+                 int          font_size,
+                 int          blinking,
+		 bool		  latitude,
+		 bool		  longitude,
+                 bool         working);
 
     ~instr_label();
 
@@ -574,14 +578,14 @@ class lat_label : public instr_item {
                  UINT         height,
                  FLTFNPTR     data_source,
                  const char  *label_format,
-                 const char  *pre_label_string  = 0,
-                 const char  *post_label_string = 0,
-                 float       scale_data        = 1.0,
-                 UINT         options           = HUDS_TOP,
-                 fgLabelJust  justification     = CENTER_JUST,
-                 int          font_size         = SMALL,
-                 int          blinking          = NOBLINK,
-                 bool         working           = true);
+                 const char  *pre_label_string,
+                 const char  *post_label_string,
+                 float       scale_data,
+                 UINT         options,
+                 fgLabelJust  justification,
+                 int          font_size,
+                 int          blinking,
+                 bool         working);
 
     ~lat_label();
 
@@ -609,14 +613,14 @@ class lon_label : public instr_item {
                  UINT         height,
                  FLTFNPTR     data_source,
                  const char  *label_format,
-                 const char  *pre_label_string  = 0,
-                 const char  *post_label_string = 0,
-                 float       scale_data        = 1.0,
-                 UINT         options           = HUDS_TOP,
-                 fgLabelJust  justification     = CENTER_JUST,
-                 int          font_size         = SMALL,
-                 int          blinking          = NOBLINK,
-                 bool         working           = true);
+                 const char  *pre_label_string,
+                 const char  *post_label_string,
+                 float       scale_data,
+                 UINT         options,
+                 fgLabelJust  justification,
+                 int          font_size,
+                 int          blinking,
+                 bool         working);
 
     ~lon_label();
 
@@ -652,14 +656,14 @@ class instr_scale : public instr_item {
                  FLTFNPTR     load_fn,
                  UINT         options,
                  float       show_range,
-                 float       max_value    = 100.0,
-                 float       min_value    =   0.0,
-                 float       disp_scaling =   1.0,
-                 UINT         major_divs   =    10,
-                 UINT         minor_divs   =     5,
-                 UINT         rollover     =     0,
-                 int          dp_showing   =     2,
-                 bool         working      =  true);
+                 float       max_value,
+                 float       min_value,
+                 float       disp_scaling,
+                 UINT         major_divs,
+                 UINT         minor_divs,
+                 UINT         rollover,
+                 int          dp_showing,
+                 bool         working = true);
 
     virtual ~instr_scale();
     instr_scale( const instr_scale & image);
@@ -683,7 +687,20 @@ class instr_scale : public instr_item {
 class hud_card : public instr_scale {
   private:
     float val_span;
+    string type;
     float half_width_units;
+    bool  draw_tick_bottom;
+    bool  draw_tick_top;
+    bool  draw_tick_right;
+    bool  draw_tick_left;
+    bool  draw_cap_bottom;
+    bool  draw_cap_top;
+    bool  draw_cap_right;
+    bool  draw_cap_left;
+    float marker_offset;
+    bool  pointer;
+    string  pointer_type;
+
     
   public:
     hud_card( int      x,
@@ -692,15 +709,27 @@ class hud_card : public instr_scale {
               UINT     height,
               FLTFNPTR load_fn,
               UINT     options,
-              float   maxValue      = 100.0,
-              float   minValue      =   0.0,
-              float   disp_scaling  =   1.0,
-              UINT     major_divs    =  10,
-              UINT     minor_divs    =   5,
-              UINT     modulator     = 100,
-              int      dp_showing    =   2,
-              float   value_span    = 100.0,
-              bool     working       = true);
+              float    maxValue,
+              float    minValue,
+              float    disp_scaling,
+              UINT     major_divs,
+              UINT     minor_divs,
+              UINT     modulator,
+              int      dp_showing,
+              float    value_span,
+	      string   type,
+	      bool     draw_tick_bottom,
+	      bool     draw_tick_top,
+	      bool     draw_tick_right,
+	      bool     draw_tick_left,
+	      bool     draw_cap_bottom,
+	      bool     draw_cap_top,
+	      bool     draw_cap_right,
+	      bool     draw_cap_left,
+	      float    marker_offset,
+	      bool     pointer,
+	      string   pointer_type,
+              bool     working);
 
     ~hud_card();
     hud_card( const hud_card & image);
@@ -719,14 +748,14 @@ class guage_instr : public instr_scale {
                  UINT      height,
                  FLTFNPTR  load_fn,
                  UINT      options,
-                 float    disp_scaling = 1.0,
-                 float    maxValue     = 100,
-                 float    minValue     =   0,
-                 UINT      major_divs   =  50,
-                 UINT      minor_divs   =   0,
-                 int       dp_showing   =   2,
-                 UINT      modulus      =   0,
-                 bool      working      = true);
+                 float     disp_scaling,
+                 float     maxValue,
+                 float     minValue,
+                 UINT      major_divs,
+                 UINT      minor_divs,
+                 int       dp_showing,
+                 UINT      modulus,
+                 bool      working);
 
     ~guage_instr();
     guage_instr( const guage_instr & image);
@@ -750,8 +779,8 @@ class dual_instr_item : public instr_item {
                       UINT      height,
                       FLTFNPTR  chn1_source,
                       FLTFNPTR  chn2_source,
-                      bool      working     = true,
-                      UINT      options  = HUDS_TOP);
+                      bool      working,
+                      UINT      options );
 
     virtual ~dual_instr_item() {};
     dual_instr_item( const dual_instr_item & image);
@@ -773,12 +802,12 @@ class fgTBI_instr : public dual_instr_item {
                  int       y,
                  UINT      width,
                  UINT      height,
-                 FLTFNPTR  chn1_source  = get_roll,
-                 FLTFNPTR  chn2_source  = get_sideslip,
-                 float    maxBankAngle = 45.0,
-                 float    maxSlipAngle =  5.0,
-                 UINT      gap_width    =  5,
-                 bool      working      =  true);
+                 FLTFNPTR  chn1_source,
+                 FLTFNPTR  chn2_source,
+                 float    maxBankAngle,
+                 float    maxSlipAngle,
+                 UINT      gap_width,
+                 bool      working);
 
     fgTBI_instr( const fgTBI_instr & image);
     fgTBI_instr & operator = (const fgTBI_instr & rhs );
@@ -800,29 +829,52 @@ class HudLadder : public dual_instr_item {
     UINT   minor_div;
     UINT   label_pos;
     UINT   scr_hole;
-    UINT   minimal;
-    float vmax;
-    float vmin;
-    float factor;
+    float  vmax;
+    float  vmin;
+    float  factor;
+    string hudladder_type;
+    bool   frl;
+    bool   target_spot;
+    bool   velocity_vector;
+    bool   drift_marker;
+    bool   alpha_bracket;
+    bool	energy_marker;
+    bool	climb_dive_marker;
+    bool	glide_slope_marker;
+    float	glide_slope;
+    bool	energy_worm;
+    bool	waypoint_marker;
 
     fgTextList         TextList;
     fgLineList         LineList;
     fgLineList         StippleLineList;
 
   public:
-    HudLadder( int       x,
+    HudLadder( string    name,
+	       int       x,
                int       y,
                UINT      width,
                UINT      height,
-               UINT      minimal        =    0,
-               FLTFNPTR  ptch_source    = get_roll,
-               FLTFNPTR  roll_source    = get_pitch,
-               float     span_units     = 45.0,
-               float     division_units = 10.0,
-               float     minor_division =  0.0,
-               UINT      screen_hole    =   70,
-               UINT      lbl_pos        =    0,
-               bool      working        = true );
+	       float	 factor,
+               FLTFNPTR  ptch_source,
+               FLTFNPTR  roll_source,
+               float     span_units,
+               float     division_units,
+               float     minor_division,
+               UINT      screen_hole,
+               UINT      lbl_pos,
+	       bool	 frl,
+	       bool	 target_spot,
+	       bool     velocity_vector,
+	       bool     drift_marker,
+	       bool     alpha_bracket,
+	       bool	 energy_marker,
+	       bool	 climb_dive_marker,
+	       bool	 glide_slope_marker,
+	       float	 glide_slope,
+	       bool	 energy_worm,
+	       bool	 waypoint_marker,
+               bool      working);
 
     ~HudLadder();
 
@@ -867,6 +919,7 @@ extern void strokeString( int x,
                           char *msg,
                           void *font = GLUT_STROKE_ROMAN,
                           float theta = 0);
+
 //extern void strokeString(float xx,
 //                       float yy,
 //                       char *msg,

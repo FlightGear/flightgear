@@ -23,15 +23,20 @@ instr_label ::
                       fgLabelJust   justification,
                       int           font_size,
                       int           blinking,
-                      bool          working ):
+		      bool			latitude,
+		      bool			longitude,
+                      bool          working):
                            instr_item( x, y, width, height,
-                                       data_source, scale_data,options, working ),
+                                       data_source,scale_data,options, working ),
                            pformat  ( label_format      ),
                            pre_str  ( pre_label_string  ),
                            post_str ( post_label_string ),
                            justify  ( justification     ),
                            fontSize ( font_size         ),
-                           blink    ( blinking          )
+                           blink    ( blinking          ),
+						   lat		( latitude			),
+						   lon		( longitude			)
+
 {
   if( pre_str != NULL) {
     if( post_str != NULL ) {
@@ -63,7 +68,10 @@ instr_label :: instr_label( const instr_label & image) :
                               pformat    ( image.pformat    ),
                               pre_str  ( image.pre_str  ),
                               post_str ( image.post_str ),
-                              blink    ( image.blink    )
+                              blink    ( image.blink    ),
+							  lat	   ( image.lat		),
+							  lon	   ( image.lon		)	
+
 {
   if( pre_str != NULL) {
     if( post_str != NULL ) {
@@ -91,6 +99,10 @@ instr_label & instr_label ::operator = (const instr_label & rhs )
     justify    = rhs.justify;
     pre_str    = rhs.pre_str;
     post_str   = rhs.post_str;
+    lat		   = rhs.lat;
+    lon		   = rhs.lon;
+
+
     strcpy(format_buffer,rhs.format_buffer);	
     }
   return *this;
@@ -110,11 +122,17 @@ draw( void )       // Required method in base class
   RECT  scrn_rect = get_location();
 
   if( data_available() ) {
-    sprintf( label_buffer, format_buffer, get_value() );
+	if(lat)
+		sprintf( label_buffer, format_buffer, coord_format_lat(get_value()) );
+	else
+	if(lon)    
+		sprintf( label_buffer, format_buffer, coord_format_lon(get_value()) );
+	else
+		sprintf( label_buffer, format_buffer, get_value() );
     }
   else {
     sprintf( label_buffer, format_buffer );
-    }
+  }
   
   lenstr = getStringWidth( label_buffer );
 						

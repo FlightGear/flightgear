@@ -286,22 +286,28 @@ float get_view_direction( void )
 }
 
 // $$$ begin - added, VS Renganathan 13 Oct 2K
-#ifdef FIGHTER_HUD
+// #ifdef FIGHTER_HUD
 float get_Vx   ( void )
 {
-    float Vxx = current_aircraft.fdm_state->get_V_north_rel_ground();
+    // CLO - 5 Jan 2000 - something needs to get addressed here
+    // float Vxx = current_aircraft.fdm_state->get_V_north_rel_ground();
+    float Vxx = 0;
     return (Vxx);
 }
 
 float get_Vy   ( void )
 {
-    float Vyy = current_aircraft.fdm_state->get_V_east_rel_ground();
+    // CLO - 5 Jan 2000 - something needs to get addressed here
+    // float Vyy = current_aircraft.fdm_state->get_V_east_rel_ground();
+    float Vyy = 0;
     return (Vyy);
 }
 
 float get_Vz   ( void )
 {
-    float Vzz = current_aircraft.fdm_state->get_V_down_rel_ground();
+    // CLO - 5 Jan 2000 - something needs to get addressed here
+    // float Vzz = current_aircraft.fdm_state->get_V_down_rel_ground();
+    float Vzz = 0;
     return (Vzz);
 }
 
@@ -508,7 +514,7 @@ float get_aux18 (void)
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
     return fdm->get_aux18();
 }
-#endif
+// #endif
 // $$$ end - added, VS Renganathan 13 Oct 2K
 
 
