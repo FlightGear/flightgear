@@ -1450,7 +1450,9 @@ int mainLoop( int argc, char **argv ) {
 
     globals = new FGGlobals;
 
+#if defined(FG_NEW_ENVIRONMENT)
     globals->set_environment_mgr(new FGEnvironmentMgr);
+#endif
 
     // seed the random number generater
     sg_srandom_time();
