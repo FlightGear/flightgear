@@ -99,9 +99,9 @@ int main( int argc, char **argv ) {
 
     fglog().setLogLevels( FG_ALL, FG_DEBUG );
 
-    if ( argc != 3 ) {
+    if ( argc < 3 ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Usage: " << argv[0] 
-		<< " <shape_file> <work_dir>" );
+		<< " <shape_file> <work_dir> [ area_string ]" );
 	exit(-1);
     }
 
@@ -112,6 +112,14 @@ int main( int argc, char **argv ) {
     string command = "mkdir -p " + work_dir;
     system( command.c_str() );
 
+    // allow us to override the area type from the command line.  All
+    // polygons in the processed shape file will be assigned this area
+    // type
+    string force_area_type = "";
+    if ( argc == 4 ) {
+	force_area_type = argv[3];
+    }
+	
     // initialize persistant polygon counter
     string counter_file = work_dir + "/../work.counter";
     poly_index_init( counter_file );
@@ -141,14 +149,30 @@ int main( int argc, char **argv ) {
 	FG_LOG( FG_GENERAL, FG_DEBUG, "Record = " << i << "  rings = " 
 		<< shape.numRings() );
 
-	AreaType area = get_shapefile_type(dbf, i);
-	FG_LOG( FG_GENERAL, FG_DEBUG, "area type = " << get_area_name(area) 
-		<< " (" << (int)area << ")" );
+	AreaType area;
+	if ( force_area_type.length() == 0 ) {
+	    area = get_shapefile_type(dbf, i);
+	    FG_LOG( FG_GENERAL, FG_DEBUG, "area type = " << get_area_name(area) 
+		    << " (" << (int)area << ")" );
+	}
 
 	FG_LOG( FG_GENERAL, FG_INFO, "  record = " << i 
 		<< " ring = " << 0 );
 
-	if ( area == MarshArea ) {
+	if ( force_area_type.length() > 0 ) {
+	    // interior of polygon is assigned to force_area_type,
+	    // holes are maintained
+
+	    area = get_area_type( force_area_type );
+
+	    init_shape(&gpc_shape);
+	    for (  j = 0; j < shape.numRings(); j++ ) {
+		n_vertices = shape.getRing(j, coords);
+		add_to_shape(n_vertices, coords, &gpc_shape);
+	    }
+	    process_shape(path, area, &gpc_shape);
+	    free_shape(&gpc_shape);
+	} else if ( area == MarshArea ) {
 	    // interior of polygon is marsh, holes are water
 
 	    // do main outline first
