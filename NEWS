@@ -1,3 +1,15 @@
+New in 0.58
+* Added JSBsim alpha code ... this is Jon S. Berndts alpha FDM rewrite.
+  Still lots to do, but you can watch a balistic flight for a short time.
+* Renamed Simulator/Flight to Simulator/FDM
+* Tweaks to assist building FGFS on solaris platforms.
+* Moved Lib/DEM to Tools/DEM
+* Started preparations for scenery generation tools overhaul.
+* More MSVC++ support.
+* Removed code that made the sun bigger at the horizon since this is just
+  an optical illusion in real life.
+* Bug fixed so that the sim can start out at an airport below sea level.
+
 New in 0.57
 * Converted to a simpler frame rate counting method.
 * Fixed the AOA reading on the HUD.
