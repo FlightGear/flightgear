@@ -1,7 +1,5 @@
 noinst_LIBRARIES = libJSBsim.a
 
-EXTRA_DIST = aircraft engine
-
 libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGAtmosphere.cpp FGAtmosphere.h \
 	FGAuxiliary.cpp FGAuxiliary.h \
