@@ -57,6 +57,9 @@ Specify the bits per pixel for the renderer.
 .BI "--browser-app=" "path"
 Specify location of your web browser.
 .TP
+.BI "--callsign=" "value"
+Specify a unique name for multiplayer play.
+.TP
 .BI "--config=" "path"
 Load additional properties from path.  Multiple instances of this
 option are recognized.
@@ -72,6 +75,9 @@ Disable auto coordination between aileron and rudder.
 .TP
 .B "--disable-clouds"
 Disable cloud rendering.
+.TP
+.B "--disable-distance-attenuation"
+Disable runway light distance attenuation.
 .TP
 .B "--disable-freeze"
 Start out in a running state.
@@ -126,6 +132,9 @@ Enable auto coordination between aileron and rudder.
 .TP
 .B "--enable-clouds"
 Enable cloud rendering.
+.TP
+.B "--enable-distance-attenuation"
+Enable runway light distance attenuation.
 .TP
 .B "--enable-freeze"
 Start out in a frozen state.
@@ -183,6 +192,9 @@ Specify the root path for data files.
 .BI "--fg-scenery=" "path"
 Specify the base path for scenery data.
 .TP
+.BI "--fix=" "ID"
+Specify starting position relative to a fix.
+.TP
 .BI "--flight-plan=" "file"
 Read all waypoints from the specified file.
 .TP
@@ -200,6 +212,9 @@ Specify initial field of view angle (degrees).
 .TP
 .BI "--garmin=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection using the Garmin GPS protocol.
+.TP
+.BI "--generic=" "params"
+Open connection using the serial port protocol.  See README.IO for details.
 .TP
 .BI "--geometry=" "WxH"
 Specify window geometry (ie. 640x480, 800x600, etc).
@@ -232,6 +247,9 @@ Start a screen shot HTTP server on the specified port.
 .BI "--lat=" "degrees"
 Specify starting latitude (degrees).
 .TP
+.BI "--log-level=" "value"
+Set log level for this session (1..5 where 1=verbose, 5=quiet).
+.TP
 .BI "--lon=" "degrees"
 Specify starting longitude (degrees).
 .TP
@@ -241,6 +259,9 @@ Specify initial mach number.
 .BI "--model-hz=" "n"
 Run the FDM at this rate (iterations per second).
 .TP
+.BI "--multiplay=" "direction,hz,address,port"
+Specify multiplayer communication settings.  Multiple instances allowed.
+.TP
 .BI "--native-ctrls=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection using the FlightGear Native Controls protocol.
 .TP
@@ -249,6 +270,9 @@ Open an IO connection using the FlightGear Native FDM protocol.
 .TP
 .BI "--native=" "medium" "," "direction" "," "hz" "," "options" "," "..."
 Open an IO connection using the FlightGear Native protocol.
+.TP
+.BI "--ndb=" "ID"
+Specify starting position relative to an NDB.
 .TP
 .B "--net-hud"
 Enable network information in the HUD.
@@ -337,6 +361,9 @@ Trace the reads for a property.  Multiple instances allowed.
 .BI "--trace-write=" "property"
 Trace the writes for a property.  Multiple instances allowed.
 .TP
+.BI "--turbulence=" "value"
+Specify turbulence from 0.0 (calm) to 1.0 (severe).
+.TP
 .BI "--uBody=" "value"
 Specify velocity along the body X axis (feet per second unless
 --units-meters specified).
@@ -369,6 +396,9 @@ Specify initial visibility (miles).
 .TP
 .BI "--visibility=" "value"
 Specify initial visibility (meters).
+.TP
+.BI "--vor=" "ID"
+Specify starting position relative to a VOR.
 .TP
 .BI "--wBody=" "value"
 Specify velocity along the body Z axis (feet per second unless
