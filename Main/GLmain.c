@@ -70,9 +70,14 @@ double view_offset = 0.0;
 double goal_view_offset = 0.0;
 
 /* Another hack */
-#define DEFAULT_MODEL_HZ 20
+#define DEFAULT_TIMER_HZ 20
 #define DEFAULT_MULTILOOP 6
+#define DEFAULT_MODEL_HZ (DEFAULT_TIMER_HZ * DEFAULT_MULTILOOP)
+
 double Simtime;
+
+/* Another hack */
+int use_signals = 0;
 
 
 /**************************************************************************
@@ -208,13 +213,19 @@ static void fgUpdateVisuals( void ) {
  * Update internal time dependent calculations (i.e. flight model)
  **************************************************************************/
 
-void fgUpdateTimeDepCalcs() {
+void fgUpdateTimeDepCalcs(int multi_loop) {
     struct flight_params *f;
 
     f = &current_aircraft.flight;
 
     /* update the flight model */
-    fgFlightModelUpdate(FG_LARCSIM, f, DEFAULT_MULTILOOP);
+    if ( multi_loop < 0 ) {
+	printf("updating flight model with default = %d\n", DEFAULT_MULTILOOP);
+	fgFlightModelUpdate(FG_LARCSIM, f, DEFAULT_MULTILOOP);
+    } else {
+	printf("updating flight model with dynamic = %d\n", multi_loop);
+	fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
+    }
 
     if ( fabs(goal_view_offset - view_offset) < 0.09 ) {
 	view_offset = goal_view_offset;
@@ -244,7 +255,7 @@ void fgUpdateTimeDepCalcs() {
 
 void fgInitTimeDepCalcs() {
     /* initialize timer */
-    fgTimerInit( 1.0 / DEFAULT_MODEL_HZ, fgUpdateTimeDepCalcs );
+    fgTimerInit( 1.0 / DEFAULT_TIMER_HZ, fgUpdateTimeDepCalcs );
 }
 
 
@@ -276,11 +287,25 @@ static void fgSceneryDraw() {
 
 /* What should we do when we have nothing else to do?  How about get
  * ready for the next move?*/
-static void fgMainLoop( void )
-{
-    printf("Time interval is = %d\n", fgGetTimeInterval());
+static void fgMainLoop( void ) {
+    static int remainder = 0;
+    int elapsed, multi_loop;
+
+    elapsed = fgGetTimeInterval();
+    printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
+	   remainder);
+
+    multi_loop = ((float)elapsed * 0.001) * DEFAULT_MODEL_HZ;
+    remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
+    printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
+	   remainder);
+
     aircraft_debug(1);
     fgUpdateVisuals();
+
+    if ( ! use_signals ) {
+	fgUpdateTimeDepCalcs(multi_loop);
+    }
 }
 
 
@@ -393,11 +418,13 @@ int main( int argc, char *argv[] ) {
     /* fgSlewInit(-335340,162540, 15, 4.38); */
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
-    fgFlightModelInit(FG_LARCSIM, f, 1.0/(DEFAULT_MODEL_HZ*DEFAULT_MULTILOOP));
+    fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
-    printf("Ready to initialize timer\n");
-    /* init timer routines, signals, etc. */
-    fgInitTimeDepCalcs();
+    if ( use_signals ) {
+	/* init timer routines, signals, etc.  Arrange for an alarm
+	   signal to be generated, etc. */
+	fgInitTimeDepCalcs();
+    }
 
     /* build all objects */
     fgSceneryInit();
@@ -443,9 +470,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.14  1997/06/16 19:32:51  curt
-/* Starting to add general timer support.
+/* Revision 1.15  1997/06/17 03:41:10  curt
+/* Nonsignal based interval timing is now working.
+/* This would be a good time to look at cleaning up the code structure a bit.
 /*
+ * Revision 1.14  1997/06/16 19:32:51  curt
+ * Starting to add general timer support.
+ *
  * Revision 1.13  1997/06/02 03:40:06  curt
  * A tiny bit more view tweaking.
  *

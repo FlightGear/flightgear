@@ -35,7 +35,7 @@
 
 unsigned long int fgSimTime;
 static struct itimerval t, ot;
-static void (*callbackfunc)();
+static void (*callbackfunc)(int multi_loop);
 
 
 /* This routine catches the SIGALRM */
@@ -45,7 +45,9 @@ void fgTimerCatch() {
 
     /* printf("In fgTimerCatch()\n"); */
 
-    callbackfunc();
+    /* -1 tells the routine to use default interval rather than something
+       dynamically calculated based on frame rate */
+    callbackfunc(-1); 
 
     signal(SIGALRM, fgTimerCatch);
 }
@@ -94,15 +96,19 @@ int fgGetTimeInterval() {
 	ftime(&current);
 	interval = 1000 * (current.time - last.time) + 
 	    (current.millitm - last.millitm);
+	last = current;
     }
 
-    last = current;
     return(interval);
 }
 
 
 /* $Log$
-/* Revision 1.1  1997/06/16 19:24:20  curt
-/* Initial revision.
+/* Revision 1.2  1997/06/17 03:41:10  curt
+/* Nonsignal based interval timing is now working.
+/* This would be a good time to look at cleaning up the code structure a bit.
 /*
+ * Revision 1.1  1997/06/16 19:24:20  curt
+ * Initial revision.
+ *
  */
