@@ -3,7 +3,8 @@ noinst_LIBRARIES = libTriangulate.a
 libTriangulate_a_SOURCES = \
 	triangle.cxx triangle.hxx \
 	trinodes.cxx trinodes.hxx \
-	tripoly.cxx tripoly.hxx
+	tripoly.cxx tripoly.hxx \
+	trisegs.cxx trisegs.hxx
 
 INCLUDES += \
 	-I$(top_builddir) \

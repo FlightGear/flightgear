@@ -81,7 +81,7 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 		    // cout << index << endl;
 		}
 		poly.calc_point_inside( trinodes );
-		cout << endl;
+
 		polylist[i].push_back(poly);
 	    }
 	}
@@ -100,13 +100,14 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 // do actual triangulation
 int FGTriangle::do_triangulate( const FGTriPoly& poly ) {
     trinode_list node_list;
-    struct triangulateio in, mid, out, vorout;
+    struct triangulateio in, out;
     int counter;
 
     // define input points
     node_list = trinodes.get_node_list();
 
     in.numberofpoints = node_list.size();
+    in.numberofpointattributes = 0;
     in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
 
     trinode_list_iterator current, last;
@@ -125,9 +126,53 @@ int FGTriangle::do_triangulate( const FGTriPoly& poly ) {
 // triangulate each of the polygon areas
 int FGTriangle::triangulate() {
     FGTriPoly poly;
+    struct triangulateio in, out;
 
+    trinode_list node_list = trinodes.get_node_list();
+
+    // point list
+    in.numberofpoints = node_list.size();
+    in.numberofpointattributes = 1;
+    in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
+
+    trinode_list_iterator tn_current, tn_last;
+    tn_current = node_list.begin();
+    tn_last = node_list.end();
+    int counter = 0;
+    for ( ; tn_current != tn_last; ++tn_current ) {
+	in.pointlist[counter++] = tn_current->x();
+	in.pointlist[counter++] = tn_current->y();
+    }
+
+    in.pointattributelist = (REAL *) NULL;
+    in.pointmarkerlist = (int *) NULL;
+
+    // segment list
+    in.numberofsegments = 0;
+
+    tripoly_list_iterator tp_current, tp_last;
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	cout << "area type = " << i << endl;
+	tp_current = polylist[i].begin();
+	tp_last = polylist[i].end();
+	for ( ; tp_current != tp_last; ++tp_current ) {
+	    poly = *tp_current;
+	    in.numberofsegments += poly.size() + 1;
+	}
+    }
+
+    in.numberofsegments = 0;
+
+  in.numberofholes = 0;
+  in.numberofregions = 1;
+  in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
+  in.regionlist[0] = 0.5;
+  in.regionlist[1] = 5.0;
+  in.regionlist[2] = 7.0;            /* Regional attribute (for whole mesh). */
+  in.regionlist[3] = 0.1;          /* Area constraint that will not be used. */
+
+  /*
     tripoly_list_iterator current, last;
-
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	cout << "area type = " << i << endl;
 	current = polylist[i].begin();
@@ -139,12 +184,15 @@ int FGTriangle::triangulate() {
 	    do_triangulate( poly );
 	}
     }
-
+    */
     return 0;
 }
 
 
 // $Log$
+// Revision 1.6  1999/03/20 13:22:11  curt
+// Added trisegs.[ch]xx tripoly.[ch]xx.
+//
 // Revision 1.5  1999/03/20 02:21:52  curt
 // Continue shaping the code towards triangulation bliss.  Added code to
 // calculate some point guaranteed to be inside a polygon.
