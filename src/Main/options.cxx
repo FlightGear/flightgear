@@ -1692,7 +1692,7 @@ unsigned int getNumMaturity(const char * str)
   // $FG_ROOT/data/Translations/string-default.xml
   const char levels[][20]= {"alpha","beta","early-production","production",0}; 
 
-  for (int i=0; i<(sizeof(levels)/sizeof(levels[0])-1);i++) 
+  for (unsigned int i=0; i<(sizeof(levels)/sizeof(levels[0])-1);i++) 
     if (strcmp(str,levels[i])==0)
       return i;
 
@@ -1750,7 +1750,6 @@ static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
 
           char cstr[96];
 	  //additionally display status information where it is available
-	  char *status_level = (status) ? status->getStringValue() : "";
           
           if (strlen(dire->d_name) <= 27) {
              snprintf(cstr, 96, "   %-27s  %s", dire->d_name,
