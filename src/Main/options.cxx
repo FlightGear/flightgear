@@ -1045,7 +1045,7 @@ fgUsage ()
     cout << "\t--control=mode:  primary control mode " 
 	 << "(joystick, keyboard, mouse)" << endl;
     cout << "\t--prop:name=value:  set property <name> to <value>" << endl;
-    cout << "\t--file=path:  load additional properties from path" << endl;
+    cout << "\t--config=path:  load additional properties from path" << endl;
     cout << endl;
 
     cout << "Features:" << endl;
