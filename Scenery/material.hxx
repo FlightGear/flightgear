@@ -47,7 +47,7 @@
 #include "tile.hxx"
 
 
-#define FG_MAX_MATERIAL_FRAGS 100
+#define FG_MAX_MATERIAL_FRAGS 400
 
 
 // Material property class
@@ -108,6 +108,9 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.5  1998/06/06 01:07:17  curt
+// Increased per material fragment list size from 100 to 400.
+//
 // Revision 1.4  1998/06/05 22:39:53  curt
 // Working on sorting by, and rendering by material properties.
 //

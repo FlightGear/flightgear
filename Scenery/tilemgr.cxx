@@ -300,8 +300,8 @@ void fgTileMgrRender( void ) {
     fgTILE *t;
     fgVIEW *v;
     struct fgBUCKET p;
-    fgCartesianPoint3d offset, last_center;
-    fgFRAGMENT fragment, *frag_ptr;
+    fgCartesianPoint3d frag_offset, last_offset;
+    fgFRAGMENT *frag_ptr;
     fgMATERIAL *mtl_ptr;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
@@ -328,6 +328,7 @@ void fgTileMgrRender( void ) {
     // initialize the transient per-material fragment lists
     material_mgr.init_transient_material_lists();
 
+    // Pass 1
     // traverse the potentially viewable tile list
     for ( i = 0; i < (o->tile_diameter * o->tile_diameter); i++ ) {
 	index = tiles[i];
@@ -335,51 +336,59 @@ void fgTileMgrRender( void ) {
 	t = c->GetTile(index);
 
 	// calculate tile offset
-	offset.x = t->center.x - scenery.center.x;
-	offset.y = t->center.y - scenery.center.y;
-	offset.z = t->center.z - scenery.center.z;
+	t->offset.x = t->center.x - scenery.center.x;
+	t->offset.y = t->center.y - scenery.center.y;
+	t->offset.z = t->center.z - scenery.center.z;
 
 	// Course (tile based) culling
-	if ( viewable(&offset, t->bounding_radius) ) {
+	if ( viewable(&(t->offset), t->bounding_radius) ) {
 	    // at least a portion of this tile is viewable
 	    
-	    xglPushMatrix();
-	    xglTranslatef(offset.x, offset.y, offset.z);
+	    // xglPushMatrix();
+	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
 
 	    // traverse fragment list for tile
 	    current = t->fragment_list.begin();
 	    last = t->fragment_list.end();
 
 	    while ( current != last ) {
-		fragment = *current++;
-
-		if ( fragment.display_list >= 0 ) {
+		frag_ptr = &(*current);
+		current++;
+		
+		if ( frag_ptr->display_list >= 0 ) {
 		    // Fine (fragment based) culling
-		    offset.x = fragment.center.x - scenery.center.x;
-		    offset.y = fragment.center.y - scenery.center.y;
-		    offset.z = fragment.center.z - scenery.center.z;
+		    frag_offset.x = frag_ptr->center.x - scenery.center.x;
+		    frag_offset.y = frag_ptr->center.y - scenery.center.y;
+		    frag_offset.z = frag_ptr->center.z - scenery.center.z;
 
-		    if ( viewable(&offset, fragment.bounding_radius * 2) ) {
+		    if ( viewable(&frag_offset, frag_ptr->bounding_radius*2) ) {
 			// add to transient per-material property fragment list
-			mtl_ptr = (fgMATERIAL *)(fragment.material_ptr);
+			frag_ptr->tile_offset.x = t->offset.x;
+			frag_ptr->tile_offset.y = t->offset.y;
+			frag_ptr->tile_offset.z = t->offset.z;
+
+			mtl_ptr = (fgMATERIAL *)(frag_ptr->material_ptr);
 			// printf(" lookup = %s\n", mtl_ptr->texture_name);
 			if ( mtl_ptr->list_size < FG_MAX_MATERIAL_FRAGS ) {
-			    mtl_ptr->list[mtl_ptr->list_size] = &fragment;
+			    mtl_ptr->list[mtl_ptr->list_size] = frag_ptr;
 			    (mtl_ptr->list_size)++;
+			} else {
+			    fgPrintf( FG_TERRAIN, FG_ALERT,
+				      "Overran material sorting array\n" );
 			}
 
-			xglCallList(fragment.display_list);
+			// xglCallList(frag_ptr->display_list);
 			drawn++;
 		    } else {
 			// printf("Culled a fragment %.2f %.2f %.2f %.2f\n",
-			//        fragment.center.x, fragment.center.y,
-			//        fragment.center.z, fragment.bounding_radius);
+			//        frag_ptr->center.x, frag_ptr->center.y,
+			//        frag_ptr->center.z, frag_ptr->bounding_radius);
 			culled++;
 		    }
 		}
 	    }
 
-	    xglPopMatrix();
+	    // xglPopMatrix();
 	} else {
 	    culled += t->fragment_list.size();
 	}
@@ -393,6 +402,7 @@ void fgTileMgrRender( void ) {
     // printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
     //        v->vfc_ratio);
 
+    // Pass 2
     // traverse the transient per-material fragment lists and render
     // out all fragments for each material property.
     map < string, fgMATERIAL, less<string> > :: iterator mapcurrent = 
@@ -403,19 +413,55 @@ void fgTileMgrRender( void ) {
     while ( mapcurrent != maplast ) {
         // (char *)key = (*mapcurrent).first;
         // (fgMATERIAL)value = (*mapcurrent).second;
-	size = (*mapcurrent).second.list_size;
-	for ( i = 0; i < size; i++ ) {
-	    // frag_ptr = &(*mapcurrent).second.list[i];
-	    // frag_ptr->tile_center
+	mtl_ptr = &(*mapcurrent).second;
+
+	last_offset.x = last_offset.y = last_offset.z = -99999999.0;
+	xglPushMatrix();
+
+	size = mtl_ptr->list_size;
+	if ( size > 0 ) {
+	    if ( ! o->textures ) {
+		xglMaterialfv (GL_FRONT, GL_AMBIENT, mtl_ptr->ambient);
+		xglMaterialfv (GL_FRONT, GL_DIFFUSE, mtl_ptr->diffuse);
+	    }
+
+	    // printf("traversing = %s, size = %d\n", 
+	    //       mtl_ptr->texture_name, size);
+	    for ( i = 0; i < size; i++ ) {
+		frag_ptr = mtl_ptr->list[i];
+		
+		if ( (frag_ptr->tile_offset.x == last_offset.x) && 
+		     (frag_ptr->tile_offset.y == last_offset.y) &&
+		     (frag_ptr->tile_offset.z == last_offset.z) ) {
+		    // same tile as last time, no transform necessary
+		} else {
+		    // new tile, new translate
+		    xglPopMatrix();
+		    xglPushMatrix();
+		    xglTranslatef( frag_ptr->tile_offset.x, 
+				   frag_ptr->tile_offset.y, 
+				   frag_ptr->tile_offset.z ); 
+		}
+	    
+		// Woohoo!!!  We finally get to draw something!
+		// printf("  display_list = %d\n", frag_ptr->display_list);
+		xglCallList(frag_ptr->display_list);
+
+		last_offset = frag_ptr->tile_offset;
+	    }
 	}
+
+	xglPopMatrix();
 
         *mapcurrent++;
     }
-
 }
 
 
 // $Log$
+// Revision 1.17  1998/06/06 01:07:18  curt
+// Increased per material fragment list size from 100 to 400.
+//
 // Revision 1.16  1998/06/05 22:39:55  curt
 // Working on sorting by, and rendering by material properties.
 //

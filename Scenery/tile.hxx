@@ -51,12 +51,12 @@
 class fgFRAGMENT {
 
 public:
-    // positional data for this object fragment
-    fgCartesianPoint3d tile_center;
-
     // culling data for this object fragment (fine grain culling)
     fgCartesianPoint3d center;
     double bounding_radius;
+
+    // variable offset data for this object fragment for this frame
+    fgCartesianPoint3d tile_offset;
 
     // material property pointer
     void *material_ptr;
@@ -80,6 +80,7 @@ public:
     // culling data for whole tile (course grain culling)
     fgCartesianPoint3d center;
     double bounding_radius;
+    fgCartesianPoint3d offset;
 
     // this tile's official location in the world
     struct fgBUCKET tile_bucket;
@@ -101,6 +102,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1998/06/06 01:07:18  curt
+// Increased per material fragment list size from 100 to 400.
+//
 // Revision 1.3  1998/06/05 22:39:54  curt
 // Working on sorting by, and rendering by material properties.
 //

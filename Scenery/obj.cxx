@@ -151,7 +151,6 @@ int fgObjLoad(char *path, fgTILE *tile) {
 	    sscanf(line, "bs %lf %lf %lf %lf\n", 
 		   &fragment.center.x, &fragment.center.y, &fragment.center.z, 
 		   &fragment.bounding_radius);
-	    fragment.tile_center = tile->center;
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    // node (vertex)
 	    if ( ncount < MAXNODES ) {
@@ -423,6 +422,9 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.10  1998/06/06 01:07:17  curt
+// Increased per material fragment list size from 100 to 400.
+//
 // Revision 1.9  1998/06/05 22:39:54  curt
 // Working on sorting by, and rendering by material properties.
 //
