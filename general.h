@@ -35,6 +35,11 @@
 
 /* the general house keeping structure definition */
 typedef struct {
+    /* Info about OpenGL */
+    char *glVendor;
+    char *glRenderer;
+    char *glVersion;
+
     /* Last frame rate measurement */
     double frame_rate;
     double frames[FG_FRAME_RATE_HISTORY];
@@ -47,10 +52,16 @@ extern fgGENERAL general;
 
 
 /* $Log$
-/* Revision 1.6  1998/05/13 18:23:46  curt
-/* fg_typedefs.h: updated version by Charlie Hotchkiss
-/* general.h: moved fg_root info to fgOPTIONS structure.
+/* Revision 1.7  1998/07/03 14:36:11  curt
+/* Added conversion constants to fg_constants.h to assist with converting
+/*   between various world units and coordinate systems.
+/* Added gl vendor/renderer/version info to general structure.  Initialized
+/*   in fg_init.cxx
 /*
+ * Revision 1.6  1998/05/13 18:23:46  curt
+ * fg_typedefs.h: updated version by Charlie Hotchkiss
+ * general.h: moved fg_root info to fgOPTIONS structure.
+ *
  * Revision 1.5  1998/05/07 23:03:17  curt
  * Lowered size of frame rate history buffer.
  *

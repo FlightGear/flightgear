@@ -103,10 +103,10 @@
 #define RAD_TO_DEG       57.29577951          /* rad*180/pi = deg */
 
 /* Arc seconds to radians */                  /* (arcsec*pi)/(3600*180) = rad */
-#define ARCSEC_TO_RAD 4.84813681109535993589e-06 
+#define ARCSEC_TO_RAD    4.84813681109535993589e-06 
 
 /* Radians to arc seconds */                  /* (rad*3600*180)/pi = arcsec */
-#define RAD_TO_ARCSEC 206264.806247096355156
+#define RAD_TO_ARCSEC    206264.806247096355156
 
 /* Feet to Meters */
 #define FEET_TO_METER    0.3048
@@ -114,6 +114,17 @@
 /* Meters to Feet */
 #define METER_TO_FEET    3.28083989501312335958  
 
+/* Meters to Nautical Miles, 1 nm = 6076.11549 feet */
+#define METER_TO_NM      0.00053995680
+
+/* Nautical Miles to Meters */
+#define NM_TO_METER      1852.0000
+
+/* Radians to Nautical Miles, 1 nm = 1/60 of a degree */
+#define NM_TO_RAD        0.00029088820866572159
+
+/* Nautical Miles to Radians */
+#define RAD_TO_NM        3437.7467707849392526
 
 /* For divide by zero avoidance, this will be close enough to zero */
 #define FG_EPSILON 0.0000001
@@ -134,9 +145,15 @@
 
 
 /* $Log$
-/* Revision 1.5  1998/05/17 16:56:47  curt
-/* Re-organized PI related constants.
+/* Revision 1.6  1998/07/03 14:36:11  curt
+/* Added conversion constants to fg_constants.h to assist with converting
+/*   between various world units and coordinate systems.
+/* Added gl vendor/renderer/version info to general structure.  Initialized
+/*   in fg_init.cxx
 /*
+ * Revision 1.5  1998/05/17 16:56:47  curt
+ * Re-organized PI related constants.
+ *
  * Revision 1.4  1998/05/16 13:03:10  curt
  * Defined field of view max/min limits.
  *
