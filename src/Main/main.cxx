@@ -27,6 +27,7 @@
 
 #if defined(__linux__) && defined(__i386__)
 #  include <fpu_control.h>
+#  include <signal.h>
 #endif
 
 #include <simgear/compiler.h>
@@ -1770,20 +1771,39 @@ int mainLoop( int argc, char **argv ) {
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //         - added Venky         , 12 Nov 2K
 
+#if defined(__linux__) && defined(__i386__)
+
+static void handleFPE (int);
+
+static void
+initFPE ()
+{
+    fpu_control_t fpe_flags = 0;
+    _FPU_GETCW(fpe_flags);
+//     fpe_flags &= ~_FPU_MASK_IM;	// invalid operation
+//     fpe_flags &= ~_FPU_MASK_DM;	// denormalized operand
+//     fpe_flags &= ~_FPU_MASK_ZM;	// zero-divide
+//     fpe_flags &= ~_FPU_MASK_OM;	// overflow
+//     fpe_flags &= ~_FPU_MASK_UM;	// underflow
+//     fpe_flags &= ~_FPU_MASK_PM;	// precision (inexact result)
+    _FPU_SETCW(fpe_flags);
+    signal(SIGFPE, handleFPE);
+}
+
+static void
+handleFPE (int num)
+{
+  initFPE();
+  SG_LOG(SG_GENERAL, SG_ALERT, "Floating point interrupt (SIGFPE)");
+}
+#endif
+
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 
     // Enable floating-point exceptions for Linux/x86
 #if defined(__linux__) && defined(__i386__)
-    fpu_control_t fpe_flags;
-    _FPU_GETCW(fpe_flags);
-//      fpe_flags &= ~_FPU_MASK_IM;	// invalid operation
-//      fpe_flags &= ~_FPU_MASK_DM;	// denormalized operand
-    fpe_flags &= ~_FPU_MASK_ZM;	// zero-divide
-//      fpe_flags &= ~_FPU_MASK_OM;	// overflow
-//      fpe_flags &= ~_FPU_MASK_UM;	// underflow
-//      fpe_flags &= ~_FPU_MASK_PM;	// precision (inexact result)
-    _FPU_SETCW(fpe_flags);
+    initFPE();
 #endif
 
     // Enable floating-point exceptions for Windows
