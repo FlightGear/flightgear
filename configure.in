@@ -92,7 +92,7 @@ dnl Check for (currently Linux only style) joystick support
 AM_CONDITIONAL(ENABLE_LINUX_JOYSTICK, test -r /usr/include/linux/joystick.h )
 
 dnl Enable serial support on Unix type systems
-AM_CONDITIONAL(ENABLE_UNIX_SERIAL, test "x$ac_cv_header_windows_h" != "xyes")
+AM_CONDITIONAL(ENABLE_UNIX_SERIAL, true)
 
 dnl extra library and include directories
 EXTRA_DIRS="/usr/local /usr/X11R6 /opt/X11R6"
