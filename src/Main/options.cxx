@@ -582,6 +582,10 @@ parse_option (const string& arg)
 	fgSetString("/sim/startup/mouse-pointer", "disabled");
     } else if ( arg == "--enable-mouse-pointer" ) {
 	fgSetString("/sim/startup/mouse-pointer", "enabled");
+    } else if ( arg == "--disable-random-objects" ) {
+        fgSetBool("/sim/rendering/random-objects", false);
+    } else if ( arg == "--enable-random-objects" ) {
+        fgSetBool("/sim/rendering/random-objects", true);
     } else if ( arg == "--disable-freeze" ) {
         fgSetBool("/sim/freeze/master", false);
     } else if ( arg == "--enable-freeze" ) {
