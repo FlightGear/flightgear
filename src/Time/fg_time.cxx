@@ -398,8 +398,8 @@ void FGTime::update( double lon, double lat, double alt_m ) {
     // Calculate local magnetic variation
     double field[6];
     // cout << "alt_m = " << alt_m << endl;
-    magvar = SGMagVar( lat, lon, alt_m / 1000.0, jd, field );
-    magdip = atan(field[5]/pow(field[3]*field[3]+field[4]*field[4],0.5));
+    magvar = SGMagVar( lat, lon, alt_m / 1000.0, (long)jd, field );
+    magdip = atan(field[5]/sqrt(field[3]*field[3]+field[4]*field[4]));
 
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current lon=0.00 Sidereal Time = " << gst );

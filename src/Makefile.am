@@ -22,6 +22,7 @@ SUBDIRS = \
         FDM \
         GUI \
         Joystick \
+	Navaids \
         $(NETWORK_DIRS) \
         Objects \
         Scenery \
