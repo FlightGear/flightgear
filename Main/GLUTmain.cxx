@@ -50,6 +50,7 @@
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
+#include <Audio/sl.h>
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
@@ -79,7 +80,13 @@ int use_signals = 0;
 // Yet another other hack. Used for my prototype instrument code. (Durk)
 int displayInstruments; 
 
-/*
+// Global structures for the Audio library
+slScheduler audio_sched ;
+slMixer audio_mixer ;
+slSample *s1;
+slSample *s2;
+
+
 // The following defines flight gear options. Because glutlib will also
 // want to parse its own options, those options must not be included here
 // or they will get parsed by the main program option parser. Hence case
@@ -99,85 +106,7 @@ int displayInstruments;
 // option parser wants only initial characters followed by numbers
 // or pathnames.
 //
-const char *fg_cmdargopts = "a:c:Hhp:r:v:x:?";
-//
-// Where
-//   -a aircraftfilename    aircraft start over ride
-//   -c0x0000 - 0xffffffff  debug class setting
-//    H,h.? help on command line use (does not need Option struct)
-//   -p  priority
-//   -r flightgear          root path to program support files
-//   -v0 -v1                initial view mode (hud/no_hud currently)
-//   -xlogpathname          debug logfile name
-//
-// Defaults in arguments to indicate not set on command line.
-// Program defaults set variables from constants if neither command
-// options or environmental variables effect values.
-//
 
-char  acArgbuf          [ MAXPATH + 1] = "\0";
-int   debugArgValue                    = -2;
-int   priorityArgValue                 = -1;
-char  rootArgbuf        [ MAXPATH + 1] = "\0";
-int   viewArg                          = -1;
-char  logArgbuf         [ MAXPATH + 1] = "\0";
-
-// There is a reason for defining the option structs by name and then
-// creating an array of pointers to options. C++ is unfriendly to
-// initializing arrays of objects that are not built in types. Always
-// look forward. (Besides, you can follow what is going on better and
-// add or modify with greater security. -ch
-//
-Option aircraftOption = { 'a',
-                          OPT_STRING,
-                          acArgbuf,
-                          "Startup aircraft pathname override"
-                        };
-Option debugOption    = { 'c',
-                          OPT_LHEX,       // Long int (32 bits)
-                          &debugArgValue,
-                          "Debug trace level"
-                        };
-Option priorityOption = { 'p',
-                          OPT_INTEGER,
-                          &priorityArgValue,
-                          "Debug priority Threshold"
-                        };
-Option rootOption     = { 'r',
-                          OPT_STRING,
-                          rootArgbuf,
-                          "Root directory for execution"
-                        };
-Option hudOption      = { 'v',
-                          OPT_INTEGER,
-                          &viewArg,
-                          "View mode start" // Naked,HUD,Panel,Chase,Tower...
-                        };
-
-// Only naked view and HUD are implemented at this time
-Option logfileOption  = { 'x',
-                          OPT_STRING,
-                          logArgbuf,
-                          "Debug log file name"
-                        };
-
-#define OptsDefined 6
-Option *CmdLineOptions[ OptsDefined ] = {
-  &aircraftOption,
-  &debugOption,
-  &hudOption,
-  &priorityOption,
-  &rootOption,
-  &logfileOption
-  };
-
-const char *DefaultRootDir  = "\\Flightgear";
-const char *DefaultAircraft = "Navion.acf";
-const char *DefaultDebuglog = "fgdebug.log";
-const int   DefaultViewMode = HUD_VIEW;
-*/
-
-// Debug defaults handled in fg_debug.c
 
 // fgInitVisuals() -- Initialize various GL/view parameters
 static void fgInitVisuals( void ) {
@@ -351,11 +280,12 @@ static void fgRenderFrame( void ) {
 
     if ( o->skyblend ) {
 	glClearColor(black[0], black[1], black[2], black[3]);
+	xglClear( GL_DEPTH_BUFFER_BIT );
     } else {
 	glClearColor(l->sky_color[0], l->sky_color[1], 
 		     l->sky_color[2], l->sky_color[3]);
+	xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
     }
-    xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
     // Tell GL we are switching to model view parameters
     xglMatrixMode(GL_MODELVIEW);
@@ -432,10 +362,10 @@ static void fgRenderFrame( void ) {
 	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
     } else {
 	xglDisable( GL_TEXTURE_2D );
-	// xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
-	// xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
-	xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
-	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
+	xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
+	// xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	// xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
     }
 
     fgTileMgrRender();
@@ -616,6 +546,9 @@ static void fgMainLoop( void ) {
     // Process/manage pending events
     global_events.Process();
 
+    // Run audio scheduler
+    audio_sched.update();
+
     // redraw display
     fgRenderFrame();
 
@@ -762,6 +695,18 @@ int main( int argc, char **argv ) {
 		  "GLUT event handler initialization failed ...\n" );
     }
 
+    // Audio support
+    audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
+    audio_sched . setRate ( 8000 ) ;        /* 8KHz sample rate.  */
+    // audio_sched . setSafetyMargin ( 0.128 ) ;
+    audio_sched . stereo  ( SL_FALSE ) ;    /* Monophonic.        */
+    audio_sched . setBps  (   8   ) ;       /* 8 bit samples.     */
+    s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav" );
+    s2 = new slSample ( "/dos/X-System-HSR/sounds/wind.wav" );
+    s2 -> adjustVolume(0.5);
+    audio_sched . loopSample ( s1 );
+    audio_sched . loopSample ( s2 );
+
     // pass control off to the master GLUT event handler
     glutMainLoop();
 
@@ -779,6 +724,11 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.19  1998/06/01 17:54:40  curt
+// Added Linux audio support.
+// avoid glClear( COLOR_BUFFER_BIT ) when not using it to set the sky color.
+// map stl tweaks.
+//
 // Revision 1.18  1998/05/29 20:37:19  curt
 // Tweaked material properties & lighting a bit in GLUTmain.cxx.
 // Read airport list into a "map" STL for dynamic list sizing and fast tree

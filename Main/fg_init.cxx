@@ -40,6 +40,7 @@
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
+#include <Audio/sl.h>
 #include <Autopilot/autopilot.h>
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
@@ -386,6 +387,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.17  1998/06/01 17:54:42  curt
+// Added Linux audio support.
+// avoid glClear( COLOR_BUFFER_BIT ) when not using it to set the sky color.
+// map stl tweaks.
+//
 // Revision 1.16  1998/05/29 20:37:24  curt
 // Tweaked material properties & lighting a bit in GLUTmain.cxx.
 // Read airport list into a "map" STL for dynamic list sizing and fast tree

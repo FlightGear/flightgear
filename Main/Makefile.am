@@ -26,6 +26,7 @@ fg_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.la \
 	$(top_builddir)/Simulator/Weather/libWeather.la \
         $(top_builddir)/Simulator/Joystick/libJoystick.la \
+	$(top_builddir)/Lib/Audio/libAudio.la \
 	$(top_builddir)/Lib/Math/libMath.la \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
 	$(top_builddir)/Lib/Debug/libDebug.la \

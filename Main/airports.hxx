@@ -36,10 +36,8 @@
 
 #include <map.h>         // STL associative "array"
 
-#if defined(__CYGWIN32__)
+#if defined(WIN32)
 #  include <string>        // Standard C++ string library
-#elif defined(WIN32)
-#  include <string.h>      // Standard C++ string library
 #else
 #  include <std/string.h>  // Standard C++ string library
 #endif
@@ -47,7 +45,9 @@
 
 typedef struct {
     // char id[5];
-    double longitude, latitude, elevation;
+    double longitude;
+    double latitude;
+    double elevation;
 } fgAIRPORT;
 
 
@@ -75,6 +75,11 @@ public:
 
 
 // $Log$
+// Revision 1.3  1998/06/01 17:54:42  curt
+// Added Linux audio support.
+// avoid glClear( COLOR_BUFFER_BIT ) when not using it to set the sky color.
+// map stl tweaks.
+//
 // Revision 1.2  1998/05/29 20:37:22  curt
 // Tweaked material properties & lighting a bit in GLUTmain.cxx.
 // Read airport list into a "map" STL for dynamic list sizing and fast tree
