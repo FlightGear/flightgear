@@ -170,6 +170,9 @@ public:
         switches.push_back( node );
     }
 
+    // set all switches to the specified state
+    void set_switches( bool state );
+
     bool get_state();
 };
 

@@ -180,7 +180,31 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
             add_switch( fgGetNode( child->getStringValue(), true ) );
         }
     }
+
+    // do a 2nd pass to pick up starting switch value if specified
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        // cout << "  " << cname << " = " << cval << endl;
+        if ( cname == "initial-state" ) {
+            if ( cval == "off" ) {
+                set_switches( false );
+            } else {
+                set_switches( true );
+            }
+        }
+    }
 }  
+
+
+// set all switches to the specified state
+void FGElectricalConnector::set_switches( bool state ) {
+    cout << "setting switch state to " << state << endl;
+    for ( unsigned int i = 0; i < switches.size(); ++i ) {
+        switches[i]->setBoolValue( state );
+    }
+}
 
 
 // return true if all switches are true, false otherwise.  A connector
