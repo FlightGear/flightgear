@@ -47,7 +47,7 @@ GLint mesh2GL(struct mesh *m) {
 
     printf("In mesh2GL(), generating GL call list.\n");
 
-    istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 4;  /* Detail level 1 -- 1200 ... */
 
     /* setup the batch transformation */
     fgRotateBatchInit(-m->originx * ARCSEC_TO_RAD, -m->originy * ARCSEC_TO_RAD);
@@ -133,10 +133,13 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.25  1997/07/07 20:59:50  curt
-/* Working on scenery transformations to enable us to fly fluidly over the
-/* poles with no discontinuity/distortion in scenery.
+/* Revision 1.26  1997/07/08 18:20:13  curt
+/* Working on establishing a hard ground.
 /*
+ * Revision 1.25  1997/07/07 20:59:50  curt
+ * Working on scenery transformations to enable us to fly fluidly over the
+ * poles with no discontinuity/distortion in scenery.
+ *
  * Revision 1.24  1997/07/05 20:43:35  curt
  * renamed mat3 directory to Math so we could add other math related routines.
  *

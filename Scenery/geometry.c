@@ -33,7 +33,7 @@
 
 
 static vrmlGeometryType;
-static struct mesh eg;
+struct mesh eg;
 
 
 /* Begin a new vrml geometry statement */
@@ -109,17 +109,23 @@ int vrmlFreeGeometry() {
 
     switch(vrmlGeometryType) {
     case VRML_ELEV_GRID:
-	free(eg.mesh_data);
+	/* We need to rethink this here, we can't just free the data,
+         * because we need it to calculate current ground elevation
+         * ... */
+	/* free(eg.mesh_data); */
     }
     return(vrmlGeometryType);
 }
 
 
 /* $Log$
-/* Revision 1.2  1997/07/07 20:59:51  curt
-/* Working on scenery transformations to enable us to fly fluidly over the
-/* poles with no discontinuity/distortion in scenery.
+/* Revision 1.3  1997/07/08 18:20:13  curt
+/* Working on establishing a hard ground.
 /*
+ * Revision 1.2  1997/07/07 20:59:51  curt
+ * Working on scenery transformations to enable us to fly fluidly over the
+ * poles with no discontinuity/distortion in scenery.
+ *
  * Revision 1.1  1997/06/29 21:16:48  curt
  * More twiddling with the Scenery Management system.
  *

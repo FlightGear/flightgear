@@ -41,6 +41,7 @@
 #include "../constants.h"
 
 #include "../Aircraft/aircraft.h"
+#include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
@@ -372,6 +373,10 @@ void fgInitTimeDepCalcs() {
 static void fgMainLoop( void ) {
     static int remainder = 0;
     int elapsed, multi_loop;
+    double rough_elev;
+    struct flight_params *f;
+
+    f = &current_aircraft.flight;
 
     elapsed = fgGetTimeInterval();
     printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
@@ -389,6 +394,17 @@ static void fgMainLoop( void ) {
 
     if ( ! use_signals ) {
 	fgUpdateTimeDepCalcs(multi_loop);
+    }
+
+    /* I'm just sticking this here for now, it should probably move 
+     * eventually */
+    rough_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
+			       FG_Latitude  * RAD_TO_DEG * 3600.0);
+    printf("Ground elevation is about %.2f meters here.\n", rough_elev);
+    /* FG_Runway_altitude = rough_elev * METER_TO_FEET; */
+
+    if ( FG_Altitude < FG_Runway_altitude ) {
+	FG_Altitude = FG_Runway_altitude + 3.758099;
     }
 }
 
@@ -419,6 +435,7 @@ static void fgReshape( int width, int height ) {
 
 int main( int argc, char *argv[] ) {
     struct flight_params *f;
+    double rough_elev;
 
     f = &current_aircraft.flight;
 
@@ -513,6 +530,25 @@ int main( int argc, char *argv[] ) {
     /* fgSlewInit(-335340,162540, 15, 4.38); */
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
+   /* Initialize the Scenery Management system */
+    fgSceneryInit();
+
+    /* Tell the Scenery Management system where we are so it can load
+     * the correct scenery data */
+    fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude);
+
+    /* I'm just sticking this here for now, it should probably move 
+     * eventually */
+    rough_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
+			       FG_Latitude  * RAD_TO_DEG * 3600.0);
+    printf("Ground elevation is about %.2f meters here.\n", rough_elev);
+    FG_Runway_altitude = rough_elev * METER_TO_FEET;
+
+    if ( FG_Altitude < FG_Runway_altitude ) {
+	FG_Altitude = FG_Runway_altitude + 3.758099;
+    }
+    /* end of thing that I just stuck in that I should probably move */
+
     /* Initialize the flight model data structures base on above values */
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
@@ -521,21 +557,6 @@ int main( int argc, char *argv[] ) {
 	   signal to be generated, etc. */
 	fgInitTimeDepCalcs();
     }
-
-
-    /**********************************************************************
-     * The following section (and the functions elsewhere in this file) 
-     * set up the scenery management system. This part is a big hack, 
-     * and needs to be moved to it's own area.
-     **********************************************************************/
-
-    /* Initialize the Scenery Management system */
-    fgSceneryInit();
-
-    /* Tell the Scenery Management system where we are so it can load
-     * the correct scenery data */
-    fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude);
-
 
     /**********************************************************************
      * Initialize the Event Handlers.
@@ -582,10 +603,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.27  1997/07/07 20:59:49  curt
-/* Working on scenery transformations to enable us to fly fluidly over the
-/* poles with no discontinuity/distortion in scenery.
+/* Revision 1.28  1997/07/08 18:20:12  curt
+/* Working on establishing a hard ground.
 /*
+ * Revision 1.27  1997/07/07 20:59:49  curt
+ * Working on scenery transformations to enable us to fly fluidly over the
+ * poles with no discontinuity/distortion in scenery.
+ *
  * Revision 1.26  1997/07/05 20:43:34  curt
  * renamed mat3 directory to Math so we could add other math related routines.
  *

@@ -45,11 +45,17 @@
 /* Feet to Meters */
 #define FEET_TO_METER    0.3048
 
+/* Meters to Feet */
+#define METER_TO_FEET    3.28083989501312335958  
+
 
 #endif CONSTANTS_H
 
 
 /* $Log$
-/* Revision 1.1  1997/07/07 21:02:36  curt
-/* Initial revision.
-/* */
+/* Revision 1.2  1997/07/08 18:20:11  curt
+/* Working on establishing a hard ground.
+/*
+ * Revision 1.1  1997/07/07 21:02:36  curt
+ * Initial revision.
+ * */

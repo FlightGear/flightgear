@@ -64,17 +64,24 @@ void mesh_set_option_name(struct mesh *m, char *name);
 void mesh_set_option_value(struct mesh *m, char *value);
 
 /* do whatever needs to be done with the mesh now that it's been
-   loaded, such as generating the OpenGL call list. */
+ * loaded, such as generating the OpenGL call list. */
 void mesh_do_it(struct mesh *m);
+
+/* return the current altitude based on mesh data.  We should rewrite
+ * this to interpolate exact values, but for now this is good enough */
+double mesh_altitude(double lon, double lat);
 
 
 #endif MESH_H
 
 
 /* $Log$
-/* Revision 1.3  1997/06/22 21:44:41  curt
-/* Working on intergrating the VRML (subset) parser.
+/* Revision 1.4  1997/07/08 18:20:14  curt
+/* Working on establishing a hard ground.
 /*
+ * Revision 1.3  1997/06/22 21:44:41  curt
+ * Working on intergrating the VRML (subset) parser.
+ *
  * Revision 1.2  1997/05/23 15:40:42  curt
  * Added GNU copyright headers.
  *

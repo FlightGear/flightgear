@@ -37,7 +37,7 @@
 
 /* Temporary hack until we get the scenery management system running */
 extern GLint mesh_hack;
-
+extern struct mesh eg;
 
 /* initialize the non-array mesh values */
 void mesh_init(struct mesh *m) {
@@ -150,10 +150,35 @@ void mesh_do_it(struct mesh *m) {
 }
 
 
+/* return the current altitude based on mesh data.  We should rewrite
+ * this to interpolate exact values, but for now this is good enough */
+double mesh_altitude(double lon, double lat) {
+    /* we expect things in arcsec for now */
+
+    double xoffset, yoffset;
+    int xindex, yindex;
+
+    xoffset = lon - eg.originx;
+    yoffset = lat - eg.originy;
+
+    xindex = xoffset / eg.col_step;
+    yindex = yoffset / eg.row_step;
+
+    if ( (xindex >= 0) && (xindex < eg.cols) ) {
+	if ( (yindex >= 0) && (yindex < eg.rows) ) {
+	    return( eg.mesh_data[xindex * eg.rows + yindex] );
+	}
+    }
+}
+
+
 /* $Log$
-/* Revision 1.6  1997/06/29 21:16:49  curt
-/* More twiddling with the Scenery Management system.
+/* Revision 1.7  1997/07/08 18:20:13  curt
+/* Working on establishing a hard ground.
 /*
+ * Revision 1.6  1997/06/29 21:16:49  curt
+ * More twiddling with the Scenery Management system.
+ *
  * Revision 1.5  1997/06/22 21:44:41  curt
  * Working on intergrating the VRML (subset) parser.
  *
