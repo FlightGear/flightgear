@@ -332,11 +332,11 @@ void maybeToggleMouse( void )
 // Call with FALSE to init and TRUE to restore
 void BusyCursor( int restore )
 {
-    static int cursor = 0;
+    static GLenum cursor = (GLenum) 0;
     if( restore ) {
         glutSetCursor(cursor);
     } else {
-        cursor = glutGet( GLUT_WINDOW_CURSOR );
+        cursor = (GLenum) glutGet( (GLenum) GLUT_WINDOW_CURSOR );
 #if defined(WIN32_CURSOR_TWEAKS)
         TurnCursorOn();
 #endif

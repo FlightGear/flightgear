@@ -80,8 +80,11 @@ private:
     // side real time at prime meridian
     double gst;
 
-    // local side real time
+    // local sidereal time
     double lst;
+
+    // local offset to GMT
+    time_t localOffset;
 
     // the difference between the precise sidereal time algorithm
     // result and the course result.  course + diff has good accuracy
@@ -122,6 +125,7 @@ public:
 
     // Update the time dependent variables
     void update(const FGInterface& f);
+    void updateLocal();
 
     void cal_mjd (int mn, double dy, int yr);
     void utc_gst(); 

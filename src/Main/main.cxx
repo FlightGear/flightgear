@@ -92,7 +92,9 @@
 #include <Time/fg_timer.hxx>
 #include <Time/sunpos.hxx>
 
-#ifdef FG_OLD_WEATHER
+#ifndef FG_OLD_WEATHER
+#  include <WeatherCM/FGLocalWeatherDatabase.h>
+#else
 #  include <Weather/weather.hxx>
 #endif
 
@@ -228,14 +230,15 @@ void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
     // FGView *v = &current_view;
+    static double last_visibility = -9999;
 
     double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
-    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-    GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
+    // GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+    // GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
     // GLfloat mat_shininess[] = { 10.0 };
     GLbitfield clear_mask;
-
+    
     if ( idle_state != 1000 ) {
 	// still initializing, draw the splash screen
 	if ( current_options.get_splash_screen() == 1 ) {
@@ -339,6 +342,40 @@ void fgRenderFrame( void ) {
 	    xglFogi( GL_FOG_MODE, GL_EXP2 );
 	    xglFogfv( GL_FOG_COLOR, l->adj_fog_color );
 	}
+
+	// update fog params if visibility has changed
+	double cur_visibility = WeatherDatabase->getWeatherVisibility();
+	double actual_visibility = cur_visibility;
+
+	if ( current_options.get_clouds() ) {
+	    double diff = fabs( cur_fdm_state->get_Altitude() * FEET_TO_METER -
+				current_options.get_clouds_asl() );
+	    cout << "altitude diff = " << diff << endl;
+	    if ( diff < 100 ) {
+		actual_visibility = cur_visibility * diff / 100.0;
+	    }
+	}
+
+	cout << "actual visibility = " << actual_visibility << endl;
+
+	if ( actual_visibility != last_visibility ) {
+	    last_visibility = actual_visibility;
+
+	    cout << "----> updating fog params" << endl;
+		
+	    GLfloat fog_exp_density;
+	    GLfloat fog_exp2_density;
+    
+	    // for GL_FOG_EXP
+	    fog_exp_density = -log(0.01 / actual_visibility);
+    
+	    // for GL_FOG_EXP2
+	    fog_exp2_density = sqrt( -log(0.01) ) / actual_visibility;
+    
+	    // Set correct opengl fog density
+	    xglFogf (GL_FOG_DENSITY, fog_exp2_density);
+	}
+ 
 	// set lighting parameters
 	xglLightfv( GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
 	xglLightfv( GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );

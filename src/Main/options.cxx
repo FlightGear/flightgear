@@ -167,6 +167,8 @@ fgOPTIONS::fgOPTIONS() :
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
+    clouds(true),
+    clouds_asl(5000*FEET_TO_METER),
     fov(55.0),
     fullscreen(0),
     shading(1),
@@ -656,6 +658,16 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	fog = FG_FOG_FASTEST;	
     } else if ( arg == "--fog-nicest" ) {
 	fog = FG_FOG_NICEST;	
+    } else if ( arg == "--disable-clouds" ) {
+	clouds = false;	
+    } else if ( arg == "--enable-clouds" ) {
+	clouds = true;	
+    } else if ( arg.find( "--clouds-asl=" ) != string::npos ) {
+	if ( units == FG_UNITS_FEET ) {
+	    clouds_asl = atof( arg.substr(13) ) * FEET_TO_METER;
+	} else {
+	    clouds_asl = atof( arg.substr(13) );
+	}
     } else if ( arg.find( "--fov=" ) != string::npos ) {
 	fov = parse_fov( arg.substr(6) );
     } else if ( arg == "--disable-fullscreen" ) {
@@ -709,15 +721,15 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg.find( "--tile-radius=" ) != string::npos ) {
 	tile_radius = parse_tile_radius( arg.substr(14) );
 	tile_diameter = tile_radius * 2 + 1;
-    } else if ( arg.find( "--time-offset-sys=" ) != string::npos ) {
-	time_offset = parse_time_offset( (arg.substr(18)) );
+    } else if ( arg.find( "--time-offset" ) != string::npos ) {
+	time_offset = parse_time_offset( (arg.substr(14)) );
+	//time_offset_type = FG_TIME_SYS_OFFSET;
+    } else if ( arg.find( "--time-match-real") != string::npos ) {
+      //time_offset = parse_time_offset(arg.substr(18));
 	time_offset_type = FG_TIME_SYS_OFFSET;
-    } else if ( arg.find( "--time-offset-lat=") != string::npos ) {
-        time_offset = parse_time_offset(arg.substr(18));
+    } else if ( arg.find( "--time-match-local") != string::npos ) {
+      //time_offset = parse_time_offset(arg.substr(18));
 	time_offset_type = FG_TIME_LAT_OFFSET;
-    } else if ( arg.find( "--time-offset-gmt=") != string::npos ) {
-        time_offset = parse_time_offset(arg.substr(18));
-	time_offset_type = FG_TIME_GMT_OFFSET;
     } else if ( arg.find( "--start-date-sys=") != string::npos ) {
         time_offset = parse_date( (arg.substr(17)) );
 	time_offset_type = FG_TIME_SYS_ABSOLUTE;
@@ -875,6 +887,9 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--fog-disable:  disable fog/haze" << endl;
     cout << "\t--fog-fastest:  enable fastest fog/haze" << endl;
     cout << "\t--fog-nicest:  enable nicest fog/haze" << endl;
+    cout << "\t--enable-clouds:  enable demo cloud layer" << endl;
+    cout << "\t--disable-clouds:  disable demo cloud layer" << endl;
+    cout << "\t--clouds-asl=xxx:  specify altitude of cloud layer above sea level" << endl;
     cout << "\t--fov=xx.x:  specify initial field of view angle in degrees"
 	 << endl;
     cout << "\t--disable-fullscreen:  disable fullscreen mode" << endl;
@@ -904,12 +919,11 @@ void fgOPTIONS::usage ( void ) {
     cout << endl;
 	
     cout << "Time Options:" << endl;
-    cout << "\t--time-offset-sys=[+-]hh:mm:ss: add this time offset to" << endl
-	 << "\t\tyour system time" << endl;
-    cout << "\t--time-offset-gmt:[+-]hh:mm:ss: add this time offset to" << endl
-	 << "\t\tGreenwich Mean Time (GMT)" << endl;
-    cout << "\t--time-offset-lat:[+-]hh:mm:ss: add this time offset to" << endl
-	 << "\t\tLocal Aircraft Time (LAT)" << endl;   
+    cout << "\t--time-offset=[+-]hh:mm:ss: add this time offset" << endl;
+    cout << "\t--time-match-real: Synchronize real-world and FlightGear" << endl
+	 << "\t\ttime. Can be used in combination with --time-offset." << endl;
+    cout << "\t--time-match-local:Synchronize local real-world and " << endl
+	 << "\t\tFlightGear time" << endl;   
     cout << "\t--start-date-sys=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
 	 << "\t\tdate/time. Uses your system time " << endl;
     cout << "\t--start-date-gmt=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl

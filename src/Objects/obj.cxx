@@ -55,6 +55,7 @@
 #include <Math/polar3d.hxx>
 #include <Misc/stopwatch.hxx>
 #include <Scenery/tileentry.hxx>
+#include <Clouds/cloudobj.hxx>
 
 #include "materialmgr.hxx"
 #include "obj.hxx"
@@ -248,6 +249,9 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     leaf->setState( state );
 
     tile->addKid( leaf );
+    if ( current_options.get_clouds() ) {
+	fgGenCloudTile(path, t, tile);
+    }
 
     return tile;
 }
@@ -918,7 +922,11 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
 	    "Loaded " << path << " in " 
 	    << stopwatch.elapsedSeconds() << " seconds" );
-    
+
+    // Generate a cloud layer above the tiles
+    if ( current_options.get_clouds() ) {
+	fgGenCloudTile(path, t, tile);
+    }
     return tile;
 }
 

@@ -45,6 +45,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Airports/libAirports.a \
         $(top_builddir)/Simulator/Network/libNetwork.a \
 	$(top_builddir)/Simulator/Objects/libObjects.a \
+	$(top_builddir)/Simulator/Clouds/libClouds.a \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(WEATHER_LIBS) \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \

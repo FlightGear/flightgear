@@ -427,6 +427,11 @@ bool fgInitSubsystems( void ) {
 			    fgMethodCallback<fgLIGHT>( &cur_light_params,
 						       &fgLIGHT::Update),
 			    fgEVENT::FG_EVENT_READY, 30000 );
+    // update the current timezone each 30 minutes
+    global_events.Register( "fgTIME::updateLocal()",
+			    fgMethodCallback<FGTime>(FGTime::cur_time_params, 
+						     &FGTime::updateLocal),
+			    fgEVENT::FG_EVENT_READY, 1800000);
 
     // Initialize the weather modeling subsystem
 #ifndef FG_OLD_WEATHER

@@ -97,6 +97,27 @@ FGTime::~FGTime()
     delete zonename;
 }
 
+void FGTime::updateLocal()
+{
+  FGInterface* f;
+  f = current_aircraft.fdm_state;
+  time_t currGMT;
+  time_t aircraftLocalTime;
+  GeoCoord location(RAD_TO_DEG * f->get_Latitude(),
+		    RAD_TO_DEG * f->get_Longitude());
+  GeoCoord* nearestTz = tzContainer->getNearest(location);
+  FGPath buffer( current_options.get_fg_root() );
+  buffer.append ("Timezone" );
+  buffer.append ( nearestTz->getDescription() );
+  if (zonename)
+    delete zonename;
+  zonename = strdup(buffer.c_str());
+  currGMT = get_gmt(gmtime(&cur_time));
+  aircraftLocalTime = get_gmt((fgLocaltime(&cur_time, buffer.c_str())));
+  localOffset = aircraftLocalTime - currGMT;
+  // cerr << "Using " << localOffset << " as local time offset Timezone is " 
+  //      << zonename << endl;
+}
 
 // Initialize the time dependent variables (maybe I'll put this in the
 // constructor later)
@@ -132,7 +153,7 @@ void FGTime::init(const FGInterface& f)
 
     // printf("Using %s for timezone information\n", buffer);
     zonename = strdup( buffer.c_str() );
-    show( buffer.c_str(), cur_time, 1); 
+    //show( buffer.c_str(), cur_time, 1); 
     //printf ("Current greenwich mean time = %24s", asctime(gmtime(&cur_time)));
     //printf ("Current local time          = %24s", asctime(localtime(&cur_time)));
     currGMT = get_gmt(gmtime(&cur_time));

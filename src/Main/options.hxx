@@ -161,6 +161,8 @@ private:
 
     // Rendering options
     fgFogKind fog;      // Fog nicest/fastest/disabled
+    bool clouds;        // Enable clouds
+    double clouds_asl;  // Cloud layer height above sea level
     double fov;         // Field of View
     bool fullscreen;    // Full screen mode enabled/disabled
     int shading;        // shading method, 0 = Flat, 1 = Smooth
@@ -250,6 +252,8 @@ public:
     inline void set_speed_up( int speed ) { speed_up = speed; }
     inline bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
     inline fgFogKind get_fog() const { return fog; }
+    inline bool get_clouds() const { return clouds; }
+    inline double get_clouds_asl() const { return clouds_asl; }
     inline double get_fov() const { return fov; }
     inline bool get_fullscreen() const { return fullscreen; }
     inline int get_shading() const { return shading; }
@@ -276,6 +280,8 @@ public:
     // Update functions
     inline void set_airport_id( const string id ) { airport_id = id; }
     inline void set_hud_status( bool status ) { hud_status = status; }
+    inline void set_clouds( bool value ) { clouds = value; }
+    inline void set_clouds_asl( double value ) { clouds_asl = value; }
     inline void set_fov( double amount ) { fov = amount; }
     inline void set_textures( bool status ) { textures = status; }
     inline void cycle_fog( void ) { 
