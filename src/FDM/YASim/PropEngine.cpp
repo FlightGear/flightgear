@@ -23,6 +23,11 @@ PropEngine::~PropEngine()
     delete _eng;
 }
 
+void PropEngine::setMagnetos(int pos)
+{
+    _magnetos = pos;
+}
+
 void PropEngine::setAdvance(float advance)
 {
     _advance = Math::clamp(advance, 0, 1);
@@ -33,6 +38,16 @@ void PropEngine::setVariableProp(float min, float max)
     _variable = true;
     _minOmega = min;
     _maxOmega = max;
+}
+
+bool PropEngine::isRunning()
+{
+    return _eng->isRunning();
+}
+
+bool PropEngine::isCranking()
+{
+    return _eng->isCranking();
 }
 
 float PropEngine::getOmega()
@@ -67,6 +82,8 @@ void PropEngine::stabilize()
 {
     float speed = -Math::dot3(_wind, _dir);
     _eng->setThrottle(_throttle);
+    _eng->setStarter(_starter);
+    _eng->setMagnetos(true);	// FIXME: otherwise, an infinite loop
     _eng->setMixture(_mixture);
 
     if(_variable) {
@@ -109,6 +126,8 @@ void PropEngine::integrate(float dt)
     float propTorque, engTorque, thrust;
 
     _eng->setThrottle(_throttle);
+    _eng->setStarter(_starter);
+    _eng->setMagnetos(_magnetos);
     _eng->setMixture(_mixture);
     
     _prop->calc(_rho, speed, _omega, &thrust, &propTorque);
@@ -126,7 +145,7 @@ void PropEngine::integrate(float dt)
 
     // Clamp to a 500 rpm idle.  This should probably be settable, and
     // needs to go away when the startup code gets written.
-    if(_omega < 52.3) _omega = 52.3;
+//     if(_omega < 52.3) _omega = 52.3;
 
     // Store the total angular momentum into _gyro
     Math::mul3(_omega*_moment, _dir, _gyro);

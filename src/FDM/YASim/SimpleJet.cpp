@@ -13,6 +13,16 @@ void SimpleJet::setThrust(float thrust)
     _thrust = thrust;
 }
 
+bool SimpleJet::isRunning()
+{
+    return true;
+}
+
+bool SimpleJet::isCranking()
+{
+    return false;
+}
+
 void SimpleJet::getThrust(float* out)
 {
     Math::mul3(_thrust * _throttle, _dir, out);

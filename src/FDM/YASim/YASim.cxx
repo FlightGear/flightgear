@@ -419,8 +419,8 @@ void YASim::copyFromYASim()
         SGPropertyNode * node = fgGetNode("engines/engine", i, true);
         Thruster* t = model->getThruster(i);
 
-	node->setBoolValue("running", true);
-	node->setBoolValue("cranking", false);
+	node->setBoolValue("running", t->isRunning());
+	node->setBoolValue("cranking", t->isCranking());
 
         // Note: assumes all tanks have the same fuel density!
 	node->setDoubleValue("fuel-flow-gph", CM2GALS * t->getFuelFlow()

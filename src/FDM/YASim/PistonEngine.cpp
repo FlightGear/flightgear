@@ -9,6 +9,8 @@ const static float CIN2CM = 1.6387064e-5;
 PistonEngine::PistonEngine(float power, float speed)
 {
     _boost = 1;
+    _running = false;
+    _cranking = false;
 
     // Presume a BSFC (in lb/hour per HP) of 0.45.  In SI that becomes
     // (2.2 lb/kg, 745.7 W/hp, 3600 sec/hour) 7.62e-08 kg/Ws.
@@ -69,6 +71,16 @@ void PistonEngine::setThrottle(float t)
     _throttle = t;
 }
 
+void PistonEngine::setStarter(bool s)
+{
+    _starter = s;
+}
+
+void PistonEngine::setMagnetos(int m)
+{
+    _magnetos = m;
+}
+
 void PistonEngine::setMixture(float m)
 {
     _mixture = m;
@@ -77,6 +89,16 @@ void PistonEngine::setMixture(float m)
 void PistonEngine::setBoost(float boost)
 {
     _boost = boost;
+}
+
+bool PistonEngine::isRunning()
+{
+    return _running;
+}
+
+bool PistonEngine::isCranking()
+{
+    return _cranking;
 }
 
 float PistonEngine::getTorque()
@@ -101,6 +123,20 @@ float PistonEngine::getEGT()
 
 void PistonEngine::calc(float pressure, float temp, float speed)
 {
+    if (_magnetos == 0) {
+      _running = false;
+      _mp = _rho0;
+      _torque = 0;
+      _fuelFlow = 0;
+      _egt = 80;		// FIXME: totally made-up
+      return;
+    }
+
+    _running = true;
+    _cranking = false;
+
+    // TODO: degrade performance on single magneto
+
     // Calculate manifold pressure as ambient pressure modified for
     // turbocharging and reduced by the throttle setting.  According
     // to Dave Luff, minimum throttle at sea level corresponds to 6"

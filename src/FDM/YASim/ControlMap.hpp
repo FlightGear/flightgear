@@ -9,7 +9,8 @@ class ControlMap {
 public:
     ~ControlMap();
 
-    enum OutputType { THROTTLE, MIXTURE, ADVANCE, REHEAT, PROP,
+    enum OutputType { THROTTLE, MIXTURE, STARTER, MAGNETOS,
+		      ADVANCE, REHEAT, PROP,
 		      BRAKE, STEER, EXTEND,
 		      INCIDENCE, FLAP0, FLAP1, SLAT, SPOILER, VECTOR,
                       BOOST };

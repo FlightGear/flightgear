@@ -139,18 +139,20 @@ void ControlMap::applyControls()
 
 	void* obj = o->object;
 	switch(o->type) {
-	case THROTTLE: ((Thruster*)obj)->setThrottle(lval);    break;
-	case MIXTURE:  ((Thruster*)obj)->setMixture(lval);     break;
-	case ADVANCE:  ((PropEngine*)obj)->setAdvance(lval);   break;
-	case REHEAT:   ((Jet*)obj)->setReheat(lval);           break;
-	case VECTOR:   ((Jet*)obj)->setRotation(lval);         break;
-	case BRAKE:    ((Gear*)obj)->setBrake(lval);           break;
-	case STEER:    ((Gear*)obj)->setRotation(lval);        break;
-	case EXTEND:   ((Gear*)obj)->setExtension(lval);       break;
-	case SLAT:     ((Wing*)obj)->setSlat(lval);            break;
-	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);     break;
-	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);     break;
-	case SPOILER:  ((Wing*)obj)->setSpoiler(lval, rval);   break;
+	case THROTTLE: ((Thruster*)obj)->setThrottle(lval);        break;
+	case MIXTURE:  ((Thruster*)obj)->setMixture(lval);         break;
+	case STARTER:  ((Thruster*)obj)->setStarter(bool(lval));   break;
+	case MAGNETOS: ((PropEngine*)obj)->setMagnetos(int(lval)); break;
+	case ADVANCE:  ((PropEngine*)obj)->setAdvance(lval);       break;
+	case REHEAT:   ((Jet*)obj)->setReheat(lval);               break;
+	case VECTOR:   ((Jet*)obj)->setRotation(lval);             break;
+	case BRAKE:    ((Gear*)obj)->setBrake(lval);               break;
+	case STEER:    ((Gear*)obj)->setRotation(lval);            break;
+	case EXTEND:   ((Gear*)obj)->setExtension(lval);           break;
+	case SLAT:     ((Wing*)obj)->setSlat(lval);                break;
+	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);         break;
+	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);         break;
+	case SPOILER:  ((Wing*)obj)->setSpoiler(lval, rval);       break;
 	case BOOST:
 	    ((Thruster*)obj)->getPistonEngine()->setBoost(lval);
 	    break;

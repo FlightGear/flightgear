@@ -34,6 +34,8 @@ public:
     float getEGT();
 
     // From Thruster:
+    virtual bool isRunning();
+    virtual bool isCranking();
     virtual void getThrust(float* out);
     virtual void getTorque(float* out);
     virtual void getGyro(float* out);
@@ -60,6 +62,8 @@ private:
     float _n2Min;  // N2 at ground idle
     float _n2Max;  // N2 at takeoff thrust
 
+    bool _running;   // Is the engine running?
+    bool _cranking;  // Is the engine cranking?
     float _thrust;   // Current thrust
     float _epr;      // Current EPR
     float _n1;       // Current UNCORRECTED N1 (percent)

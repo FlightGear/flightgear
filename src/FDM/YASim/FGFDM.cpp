@@ -445,6 +445,8 @@ int FGFDM::parseOutput(const char* name)
 {
     if(eq(name, "THROTTLE"))  return ControlMap::THROTTLE;
     if(eq(name, "MIXTURE"))   return ControlMap::MIXTURE;
+    if(eq(name, "STARTER"))   return ControlMap::STARTER;
+    if(eq(name, "MAGNETOS"))  return ControlMap::MAGNETOS;
     if(eq(name, "ADVANCE"))   return ControlMap::ADVANCE;
     if(eq(name, "REHEAT"))    return ControlMap::REHEAT;
     if(eq(name, "BOOST"))     return ControlMap::BOOST;

@@ -9,6 +9,7 @@ Thruster::Thruster()
     for(i=0; i<3; i++) _pos[i] = _wind[i] = 0;
     _throttle = 0;
     _mixture = 0;
+    _starter = false;
     _pressure = _temp = _rho = 0;
 }
 
@@ -47,6 +48,11 @@ void Thruster::setThrottle(float throttle)
 void Thruster::setMixture(float mixture)
 {
     _mixture = Math::clamp(mixture, 0, 1);
+}
+
+void Thruster::setStarter(bool starter)
+{
+    _starter = starter;
 }
 
 void Thruster::setWind(float* wind)

@@ -30,8 +30,11 @@ public:
     // Controls
     void setThrottle(float throttle);
     void setMixture(float mixture);
+    void setStarter(bool starter);
 
     // Dynamic output
+    virtual bool isRunning()=0;
+    virtual bool isCranking()=0;
     virtual void getThrust(float* out)=0;
     virtual void getTorque(float* out)=0;
     virtual void getGyro(float* out)=0;
@@ -48,6 +51,7 @@ protected:
     float _dir[3];
     float _throttle;
     float _mixture;
+    bool _starter; // true=engaged, false=disengaged
 
     float _wind[3];
     float _pressure;

@@ -12,12 +12,16 @@ public:
     void setCompression(float c);
 
     void setThrottle(float throttle);
+    void setStarter(bool starter);
+    void setMagnetos(int magnetos);
     void setMixture(float mixture);
     void setBoost(float boost); // fraction of turbo-mul used
 
     float getMaxPower(); // max sea-level power
 
     void calc(float pressure, float temp, float speed);
+    bool isRunning();
+    bool isCranking();
     float getTorque();
     float getFuelFlow();
     float getMP();
@@ -37,10 +41,14 @@ private:
 
     // Runtime settables:
     float _throttle;
+    bool _starter; // true=engaged, false=disengaged
+    int _magnetos; // 0=off, 1=right, 2=left, 3=both
     float _mixture;
     float _boost;
 
     // Runtime state/output:
+    bool _running;
+    bool _cranking;
     float _mp;
     float _torque;
     float _fuelFlow;

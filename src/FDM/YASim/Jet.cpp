@@ -29,6 +29,8 @@ Jet::Jet()
     _n2 = _n2Min;
 
     // And sanify the remaining junk, just in case.
+    _running = true;
+    _cranking = false;
     _epr = 1;
     _fuelFlow = 0;
     _egt = 273;
@@ -102,7 +104,6 @@ void Jet::setRotation(float rot)
     if(rot > 1) rot = 1;
     _rotControl = rot;
 }
-
 
 float Jet::getN1()
 {
@@ -185,6 +186,16 @@ void Jet::integrate(float dt)
 						  // 3.5 times as much
 						  // fuel per thrust unit
     _egt = T0 + beta*ibeta0 * (_egt0 - T0);
+}
+
+bool Jet::isRunning()
+{
+    return _running;
+}
+
+bool Jet::isCranking()
+{
+    return _cranking;
 }
 
 void Jet::getThrust(float* out)

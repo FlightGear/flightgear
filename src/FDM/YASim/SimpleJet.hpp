@@ -11,6 +11,8 @@ class SimpleJet : public Thruster
 public:
     SimpleJet();
     void setThrust(float thrust);
+    virtual bool isRunning();
+    virtual bool isCranking();
     virtual void getThrust(float* out);
     virtual void getTorque(float* out);
     virtual void getGyro(float* out);
