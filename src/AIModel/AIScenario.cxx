@@ -41,13 +41,13 @@ FGAIScenario::FGAIScenario(string &filename)
   int i;
   SGPath path( globals->get_fg_root() );
   
-  cout << "/Data/AI/" << filename << endl;
+//   cout << "/Data/AI/" << filename << endl;
   
   path.append( ("/Data/AI/" + filename + ".xml").c_str() );
   SGPropertyNode root;
   readProperties(path.str(), &root);
   
-  cout <<"path " << path.str() << endl;
+//   cout <<"path " << path.str() << endl;
   
   try {
       readProperties(path.str(), &root);
@@ -64,7 +64,7 @@ FGAIScenario::FGAIScenario(string &filename)
   SGPropertyNode * node = root.getNode("scenario");
   for (i = 0; i < node->nChildren(); i++) { 
      
-     cout << "Reading entity data entry " << i << endl;        
+//      cout << "Reading entity data entry " << i << endl;        
      
      SGPropertyNode * entry_node = node->getChild(i);
 
