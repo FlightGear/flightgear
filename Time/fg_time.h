@@ -42,13 +42,18 @@
 /* Define a structure containing global time parameters */
 struct fgTIME {
     /* the date/time in various forms */
-    time_t cur_time;                    /* Unix "calendar" time in seconds */
-    struct tm *gmt;                     /* Break down of GMT time */
+    time_t cur_time;     /* Unix "calendar" time in seconds */
+    struct tm *gmt;      /* Break down of GMT time */
 
-    double jd;                          /* Julian date */
-    double mjd;                         /* modified Julian date */
+    double jd;           /* Julian date */
+    double mjd;          /* modified Julian date */
 
-    double lst;                         /* local side real time */
+    double lst;          /* local side real time */
+
+    double lst_diff;     /* the difference between the precise
+			    sidereal time algorithm result and the
+			    course result.  course + diff has good
+			    accuracy for the short term */
 
     /* position of the sun in various forms */
     double sun_lon, sun_gc_lat;         /* in geocentric coordinates */
@@ -61,6 +66,9 @@ struct fgTIME {
 extern struct fgTIME cur_time_params;
 
 
+/* Initialize the time dependent variables */
+void fgTimeInit(struct fgTIME *t);
+
 /* Update the time dependent variables */
 void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t);
 
@@ -69,10 +77,13 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.4  1997/09/13 02:00:08  curt
-/* Mostly working on stars and generating sidereal time for accurate star
-/* placement.
+/* Revision 1.5  1997/09/16 15:50:31  curt
+/* Working on star alignment and time issues.
 /*
+ * Revision 1.4  1997/09/13 02:00:08  curt
+ * Mostly working on stars and generating sidereal time for accurate star
+ * placement.
+ *
  * Revision 1.3  1997/09/04 02:17:39  curt
  * Shufflin' stuff.
  *

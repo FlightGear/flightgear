@@ -40,6 +40,7 @@
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
 #include "../Scenery/stars.h"
+#include "../Time/fg_time.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
 
@@ -75,9 +76,11 @@ void fgInitSubsystems( void ) {
     double cur_elev;
 
     struct FLIGHT *f;
+    struct TIME *t;
     struct VIEW *v;
 
     f = &current_aircraft.flight;
+    t = &cur_time_params;
     v = &current_view;
 
 
@@ -147,6 +150,10 @@ void fgInitSubsystems( void ) {
     /* fgSlewInit(-335340,162540, 15, 4.38); */
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
+    /* Initialize "time" */
+    fgTimeInit(t);
+    fgTimeUpdate(f, t);
+
     /* Initialize shared sun position and sun_vec */
     fgUpdateSunPos(scenery.center);
 
@@ -205,9 +212,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1997/09/05 14:17:30  curt
-/* More tweaking with stars.
+/* Revision 1.7  1997/09/16 15:50:30  curt
+/* Working on star alignment and time issues.
 /*
+ * Revision 1.6  1997/09/05 14:17:30  curt
+ * More tweaking with stars.
+ *
  * Revision 1.5  1997/09/04 02:17:36  curt
  * Shufflin' stuff.
  *

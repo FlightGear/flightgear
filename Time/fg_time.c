@@ -32,6 +32,7 @@
 #include "fg_time.h"
 #include "../constants.h"
 #include "../Flight/flight.h"
+#include "../Time/fg_time.h"
 
 
 #define DEGHR(x)        ((x)/15.)
@@ -39,6 +40,13 @@
 
 
 struct fgTIME cur_time_params;
+
+
+/* Initialize the time dependent variables */
+
+void fgTimeInit(struct fgTIME *t) {
+    t->lst_diff = -9999.0;
+}
 
 
 /* given a date in months, mn, days, dy, years, yr, return the
@@ -114,12 +122,12 @@ double utc_gst (double mjd) {
  * Provided courtesy of ecdowney@noao.edu (Elwood Downey) 
  */
 
-double sidereal (double mjd, double lng) {
+double sidereal_precise (double mjd, double lng) {
     double gst;
     double lst;
 
-    printf ("Current Lst on JD %13.5f at %8.4f degrees West: ", 
-	    mjd + MJD0, lng);
+    /* printf ("Current Lst on JD %13.5f at %8.4f degrees West: ", 
+       mjd + MJD0, lng); */
 
     /* convert to required internal units */
     lng *= DEG_TO_RAD;
@@ -135,9 +143,65 @@ double sidereal (double mjd, double lng) {
 }
 
 
+/* return a courser but cheaper estimate of sidereal time */
+double sidereal_course(struct tm *gmt, time_t now, double lng) {
+    time_t start, start_gmt;
+    struct tm mt;
+    long int offset;
+    double diff, part, days, hours, lst;
+    int i;
+
+    printf("COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
+           gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
+           gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+
+    mt.tm_mon = 2;
+    mt.tm_mday = 21;
+    mt.tm_year = gmt->tm_year;
+    mt.tm_hour = 12;
+    mt.tm_min = 0;
+    mt.tm_sec = 0;
+
+    start = mktime(&mt);
+
+    offset = -(timezone / 3600 - daylight);
+
+    printf("Raw time zone offset = %ld\n", timezone);
+    printf("Daylight Savings = %d\n", daylight);
+
+    printf("Local hours from GMT = %ld\n", offset);
+
+    start_gmt = start - timezone + (daylight * 3600);
+
+    printf("March 21 noon (CST) = %ld\n", start);
+    printf("March 21 noon (GMT) = %ld\n", start_gmt);
+
+    diff = (now - start_gmt) / (3600.0 * 24.0);
+
+    printf("Time since 3/21/%2d GMT = %.2f\n", gmt->tm_year, diff);
+
+    part = fmod(diff, 1.0);
+    days = diff - part;
+    hours = gmt->tm_hour + gmt->tm_min/60.0 + gmt->tm_sec/3600.0;
+
+    lst = (days - lng)/15.0 + hours - 12;
+
+    while ( lst < 0.0 ) {
+	lst += 24.0;
+    }
+
+    printf("days = %.1f  hours = %.2f  lon = %.2f  lst = %.2f\n", 
+	   days, hours, lng, lst);
+
+    return(lst);
+}
+
+
 /* Update the time dependent variables */
 
 void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
+    double lst_precise, lst_course;
+
     /* get current Unix calendar time (in seconds) */
     t->cur_time = time(NULL);
     printf("Current Unix calendar time = %ld\n", t->cur_time);
@@ -160,17 +224,38 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
     t->jd = t->mjd + MJD0;
     printf("Current Julian Date = %.5f\n", t->jd);
 
+    printf("Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG);
+
     /* Calculate local side real time */
-    t->lst = sidereal(t->mjd, -(FG_Longitude * RAD_TO_DEG));
-    printf("Current Sidereal Time = %.3f\n", t->lst);
+    if ( t->lst_diff < -100.0 ) {
+	/* first time through do the expensive calculation & cheap
+           calculation to get the difference. */
+	printf("First time, doing precise lst\n");
+	t->lst = lst_precise = 
+	    sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG));
+	lst_course = 
+	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG));
+	t->lst_diff = lst_precise - lst_course;
+    } else {
+	/* course + difference should drift off very slowly */
+	t->lst = 
+	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
+	    + t->lst_diff;
+    }
+    printf("Current Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", t->lst,
+	   sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
+	   t->lst_diff);
 }
 
 
 /* $Log$
-/* Revision 1.3  1997/09/13 02:00:08  curt
-/* Mostly working on stars and generating sidereal time for accurate star
-/* placement.
+/* Revision 1.4  1997/09/16 15:50:31  curt
+/* Working on star alignment and time issues.
 /*
+ * Revision 1.3  1997/09/13 02:00:08  curt
+ * Mostly working on stars and generating sidereal time for accurate star
+ * placement.
+ *
  * Revision 1.2  1997/08/27 03:30:35  curt
  * Changed naming scheme of basic shared structures.
  *
