@@ -28,6 +28,7 @@
 #include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
+#include <Main/util.hxx>
 
 #include "environment_mgr.hxx"
 #include "environment_ctrl.hxx"
@@ -346,14 +347,19 @@ FGMetarEnvironmentCtrl::init ()
                  fgGetDouble("/environment/metar/base-wind-speed-kt"),
                  fgGetDouble("/environment/metar/gust-wind-speed-kt") );
 
-    fgSetDouble("/environment/visibility-m",
-        fgGetDouble("/environment/metar/min-visibility-m"));
+    fgDefaultWeatherValue( "visibility-m",
+                           fgGetDouble("/environment/metar/min-visibility-m") );
+
+    // FIXME: this isn't the correct place in the property tree to set
+    // the weather and it doesn't account for weather station
+    // elevation.
     fgSetDouble("/environment/temperature-degc",
         fgGetDouble("/environment/metar/temperature-degc"));
     fgSetDouble("/environment/dewpoint-degc",
         fgGetDouble("/environment/metar/dewpoint-degc"));
-    fgSetDouble("/environment/pressure-inhg",
-        fgGetDouble("/environment/metar/pressure-inhg"));
+
+    fgDefaultWeatherValue( "pressure-sea-level-inhg",
+                           fgGetDouble("/environment/metar/pressure-inhg") );
 
     env->init();
 }
@@ -373,16 +379,19 @@ FGMetarEnvironmentCtrl::reinit ()
                  fgGetDouble("/environment/metar/base-wind-speed-kt"),
                  fgGetDouble("/environment/metar/gust-wind-speed-kt") );
 
-    fgSetDouble("/environment/visibility-m",
-        fgGetDouble("/environment/metar/min-visibility-m"));
-    fgSetDouble("/environment/pressure-inhg",
-        fgGetDouble("/environment/metar/pressure-inhg"));
+    fgDefaultWeatherValue( "visibility-m",
+                           fgGetDouble("/environment/metar/min-visibility-m") );
 
-    // FIXME: The following seem to egt overriden?
+    // FIXME: this isn't the correct place in the property tree to set
+    // the weather and it doesn't account for weather station
+    // elevation.
     fgSetDouble("/environment/temperature-degc",
         fgGetDouble("/environment/metar/temperature-degc"));
     fgSetDouble("/environment/dewpoint-degc",
         fgGetDouble("/environment/metar/dewpoint-degc"));
+
+    fgDefaultWeatherValue( "pressure-sea-level-inhg",
+                           fgGetDouble("/environment/metar/pressure-inhg") );
 #endif
 
     env->reinit();
