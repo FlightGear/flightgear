@@ -66,6 +66,7 @@ private:
     double prop_advance[MAX_ENGINES];
     double brake[MAX_WHEELS];
     bool throttle_idle;
+    bool gear_down;
 
     SGPropertyNode * auto_coordination;
 
@@ -100,6 +101,7 @@ public:
 	return prop_advance[engine];
     }
     inline double get_brake(int wheel) const { return brake[wheel]; }
+    inline bool get_gear_down() const { return gear_down; }
 
     // Update functions
     inline void set_aileron( double pos ) {
@@ -264,6 +266,7 @@ public:
 	    }
 	}
     }
+    inline void set_gear_down( bool gear ) { gear_down = gear; }
 };
 
 
