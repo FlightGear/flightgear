@@ -1,10 +1,9 @@
-// Module:        10520c.c
-//  Author:       Phil Schubert
-//  Date started: 12/03/99
-//  Purpose:      Models a Continental IO-520-M Engine
-//  Called by:    FGSimExec
-// 
-//  Copyright (C) 1999  Philip L. Schubert (philings@ozemail.com.au)
+// IO360.hxx - a piston engine model currently for the IO360 engine fitted to the C172
+//             but with the potential to model other naturally aspirated piston engines
+//             given appropriate config input.
+//
+// Written by David Luff, started 2000.
+// Based on code by Phil Schubert, started 1999.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -18,34 +17,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-// 02111-1307, USA.
-//
-// Further information about the GNU General Public License can also
-// be found on the world wide web at http://www.gnu.org.
-//
-// FUNCTIONAL DESCRIPTION
-// ------------------------------------------------------------------------
-// Models a Continental IO-520-M engine. This engine is used in Cessna
-// 210, 310, Beechcraft Bonaza and Baron C55. The equations used below
-// were determined by a first and second order curve fits using Excel. 
-// The data is from the Cessna Aircraft Corporations Engine and Flight
-// Computer for C310. Part Number D3500-13
-// 
-// ARGUMENTS
-// ------------------------------------------------------------------------
-// 
-// 
-// HISTORY
-// ------------------------------------------------------------------------
-// 12/03/99   	PLS	Created
-// 07/03/99	PLS	Added Calculation of Density, and Prop_Torque
-// 07/03/99	PLS	Restructered Variables to allow easier implementation
-//			of Classes
-// 15/03/99	PLS	Added Oil Pressure, Oil Temperature and CH Temp
-// ------------------------------------------------------------------------
-// INCLUDES
-// ------------------------------------------------------------------------
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
 
 #ifndef _IO360_HXX_
 #define _IO360_HXX_
@@ -65,109 +38,107 @@ class FGNewEngine {
 
 private:
 
-    float CONVERT_HP_TO_WATTS;
+    // These constants should probably be moved eventually
     float CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
+    float CONVERT_HP_TO_WATTS;
 
-    // Control and environment inputs
+    // Properties of working fluids
+    float Cp_air;		// J/KgK
+    float Cp_fuel;		// J/KgK
+    float calorific_value_fuel; // W/Kg
+    float rho_fuel;		// kg/m^3
+    float rho_air;		// kg/m^3
+
+    // environment inputs
+    float p_amb_sea_level;	// Sea level ambient pressure in Pascals
+    float p_amb;		// Ambient pressure at current altitude in Pascals
+    float T_amb;		// ditto deg Kelvin
+
+    // Control inputs
+    float Throttle_Lever_Pos;	// 0 = Closed, 100 = Fully Open
+    float Propeller_Lever_Pos;	// 0 = Full Course 100 = Full Fine
+    float Mixture_Lever_Pos;	// 0 = Idle Cut Off 100 = Full Rich
+
+    //misc
     float IAS;
-    // 0 = Closed, 100 = Fully Open
-    float Throttle_Lever_Pos;
-    // 0 = Full Course 100 = Full Fine
-    float Propeller_Lever_Pos;
-    // 0 = Idle Cut Off 100 = Full Rich
-    float Mixture_Lever_Pos;
+    double time_step;
 
-    // Engine Specific Variables used by this program that have limits.
-    // Will be set in a parameter file to be read in to create
-    // and instance for each engine.
-    float Max_Manifold_Pressure;  //will be lower than ambient pressure for a non turbo/super charged engine due to losses through the throttle.  This is the sea level full throttle value.
-    float Min_Manifold_Pressure;  //Closed throttle valueat idle - governed by the idle bypass valve
-    float Max_RPM;
-    float Min_RPM;
-    float Max_Fuel_Flow;
-    float Mag_Derate_Percent;
-    float MaxHP;
-    float Gear_Ratio;
+    // Engine Specific Variables that should be read in from a config file
+    float MaxHP;		// Horsepower
+    float displacement;		// Cubic inches
+    float displacement_SI;	//m^3 (derived from above rather than read in)
+    float engine_inertia;	//kg.m^2
+    float prop_inertia;		//kg.m^2
+    float Max_Fuel_Flow;	// Units??? Do we need this variable any more??
 
-    // Initialise Engine Variables used by this instance
+    // Engine specific variables that maybe should be read in from config but are pretty generic and won't vary much for a naturally aspirated piston engine.
+    float Max_Manifold_Pressure;    // inches Hg - typical manifold pressure at full throttle and typical max rpm
+    float Min_Manifold_Pressure;    // inches Hg - typical manifold pressure at idle (closed throttle)
+    float Max_RPM;		// rpm - this is really a bit of a hack and could be make redundant if the prop model works properly and takes tips at speed of sound into account.
+    float Min_RPM;		// rpm - possibly redundant ???
+    float Mag_Derate_Percent;	// Percentage reduction in power when mags are switched from 'both' to either 'L' or 'R'
+    float Gear_Ratio;		// Gearing between engine and propellor
+    float n_R;                  // Number of cycles per power stroke - 2 for a 4 stroke engine.
+
+    // Engine Variables not read in from config file
+    float RPM;			// rpm
     float Percentage_Power;	// Power output as percentage of maximum power output
-    float Manifold_Pressure;	// Inches
-    float RPM;
-    float Fuel_Flow_gals_hr;	// gals/hour
-    float Torque;
-    float CHT;			// Cylinder head temperature deg K
+    float Manifold_Pressure;	// Inches Hg
+    float Fuel_Flow_gals_hr;	// USgals/hour
+    float Torque_lbft;		// lb-ft		
+    float Torque_SI;		// Nm
+    float CHT_degK;		// Cylinder head temperature deg K
     float CHT_degF;		// Ditto in deg Fahrenheit
-    float EGT;			// Exhaust gas temperature deg K
-    float EGT_degF;		// Exhaust gas temperature deg Fahrenheit
     float Mixture;
     float Oil_Pressure;		// PSI
     float Oil_Temp;		// Deg C
+    float current_oil_temp;	// deg K
+    /**** one of these is superfluous !!!!***/
     float HP;			// Current power output in HP
     float Power_SI;		// Current power output in Watts
-    float Torque_SI;		// Torque in Nm
-    float Torque_FMEP;          // The component of Engine torque due to FMEP (Nm)
     float RPS;
-    float Torque_Imbalance;
-    bool  running;		//flag to indicate the engine is running self sustaining
-    bool  cranking;		//flag to indicate the engine is being cranked
-    bool  spark;		//flag to indicate a spark is available
-    bool  fuel;			//flag to indicate fuel is available
-
-    //DCL
+    float angular_velocity_SI;  // rad/s
+    float Torque_FMEP;          // The component of Engine torque due to FMEP (Nm)
+    float Torque_Imbalance;	// difference between engine and prop torque
+    float EGT;			// Exhaust gas temperature deg K
+    float EGT_degF;		// Exhaust gas temperature deg Fahrenheit
     float volumetric_efficiency;
     float combustion_efficiency;
-    float equivalence_ratio;
-    float v_dot_air;
-    float m_dot_air;
-    float m_dot_fuel;
-    float swept_volume;
-    float True_Manifold_Pressure;   //in Hg
-    float rho_air_manifold;
-    float R_air;
-    float p_amb_sea_level;	// Pascals
-    float p_amb;		// Pascals
-    float T_amb;		// deg Kelvin
-    float calorific_value_fuel;
-    float rho_air;
-    float rho_fuel;		// kg/m^3
-    float thi_sea_level;
-    float delta_T_exhaust;
-    float displacement;		// Engine displacement in cubic inches - to be read in from config file for each engine
-    float displacement_SI;	// ditto in meters cubed
-    float Cp_air;		// J/KgK
-    float Cp_fuel;		// J/KgK
-    float heat_capacity_exhaust;
-    float enthalpy_exhaust;
-    float Percentage_of_best_power_mixture_power;
+    float equivalence_ratio;	// ratio of stoichiometric AFR over actual AFR 
+    float thi_sea_level;	// the equivalence ratio we would be running at assuming sea level air denisity in the manifold
+    float v_dot_air;		// volume flow rate of air into engine  - m^3/s
+    float m_dot_air;		// mass flow rate of air into engine - kg/s
+    float m_dot_fuel;		// mass flow rate of fuel into engine - kg/s
+    float swept_volume;		// total engine swept volume - m^3
+    /********* swept volume or the geometry used to calculate it should be in the config read section surely ??? ******/
+    float True_Manifold_Pressure;   //in Hg - actual manifold gauge pressure
+    float rho_air_manifold;	// denisty of air in the manifold - kg/m^3
+    float R_air;		// Gas constant of air (287) UNITS???
+    float delta_T_exhaust;	// Temperature change of exhaust this time step - degK
+    float heat_capacity_exhaust;    // exhaust gas specific heat capacity - J/kgK
+    float enthalpy_exhaust;	    // Enthalpy at current exhaust gas conditions - UNITS???
+    float Percentage_of_best_power_mixture_power;   // Current power as a percentage of what power we would have at the same conditions but at best power mixture
     float abstract_mixture;	//temporary hack
-    float engine_inertia;	//kg.m^2
-    float prop_inertia;		//kg.m^2
     float angular_acceleration;	//rad/s^2
-    float n_R;                  //Number of cycles per power stroke
     float FMEP;                 //Friction Mean Effective Pressure (Pa)
-    double time_step;
+
+    // Various bits of housekeeping describing the engines state.
+    bool  running;		// flag to indicate the engine is running self sustaining
+    bool  cranking;		// flag to indicate the engine is being cranked
+    int   crank_counter;	// Number of iterations that the engine has been cranked non-stop
+    bool  spark;		// flag to indicate a spark is available
+    bool  fuel;			// flag to indicate fuel is available
 
     // Propellor Variables
-    float FGProp1_Thrust;
-    float FGProp1_RPS;
-    float FGProp1_Blade_Angle;
+    float FGProp1_RPS;		// rps
     float prop_torque;		// Nm
     float prop_thrust; 		// Newtons
-    float blade_length; 	// meters
-    float forward_velocity;             // m/s
-    float angular_velocity_SI;          // rad/s
-    float prop_power_consumed_SI;       // Watts
-    float prop_power_consumed_HP;       // HP
-    double prop_diameter;               // meters
-    double J;      			// advance ratio - dimensionless
-    double Cp_20;                   // coefficient of power for 20 degree blade angle
-    double Cp_25;                   // coefficient of power for 25 degree blade angle
-    double Cp;                      // Our actual coefficient of power
-    double blade_angle;             // degrees
-    double neta_prop_20;
-    double neta_prop_25;
-    double neta_prop;               // prop efficiency
+    double prop_diameter;       // meters
+    double blade_angle;         // degrees
 
+
+// MEMBER FUNCTIONS
+    
     // Calculate Engine RPM based on Propellor Lever Position
     float Calc_Engine_RPM(float Position);
 
@@ -181,18 +152,32 @@ private:
     // Calculate percentage of best power mixture power based on equivalence ratio
     float Power_Mixture_Correlation(float thi_actual);
 
-    // Calculate exhaust gas temperature rise
+    // Calculate exhaust gas temperature change
     float Calculate_Delta_T_Exhaust(void);
 
+    // Calculate cylinder head temperature
+    float FGNewEngine::Calc_CHT(float CHT);
+
+    void FGNewEngine::Calc_EGT(void);
+
+    // Calculate fuel flow in gals/hr
+    void FGNewEngine::Calc_Fuel_Flow_Gals_Hr(void);
+
+    // Calculate current percentage power
+    void FGNewEngine::Calc_Percentage_Power(bool mag_left, bool mag_right);
+
     // Calculate Oil Temperature
-    float Calc_Oil_Temp (float Fuel_Flow, float Mixture, float IAS);
+    float Calc_Oil_Temp (float oil_temp);
     
     // Calculate Oil Pressure
     float Calc_Oil_Press (float Oil_Temp, float Engine_RPM);
 
+    // Propeller calculations.
+    void FGNewEngine::Do_Prop_Calcs(void);
+
 public:
 
-    ofstream outfile;
+//    ofstream outfile;
 
     //constructor
     FGNewEngine() {
@@ -234,9 +219,6 @@ public:
     // accessors
     inline float get_RPM() const { return RPM; }
     inline float get_Manifold_Pressure() const { return True_Manifold_Pressure; }
-    inline float get_FGProp1_Thrust() const { return FGProp1_Thrust; }
-    inline float get_FGProp1_Blade_Angle() const { return FGProp1_Blade_Angle; }
-
  //   inline float get_Rho() const { return Rho; }
     inline float get_MaxHP() const { return MaxHP; }
     inline float get_Percentage_Power() const { return Percentage_Power; }
@@ -245,6 +227,7 @@ public:
     inline float get_prop_thrust_SI() const { return prop_thrust; }
     inline float get_prop_thrust_lbs() const { return (prop_thrust * 0.2248); }
     inline float get_fuel_flow_gals_hr() const { return (Fuel_Flow_gals_hr); }
+    inline float get_oil_temp() const { return ((current_oil_temp * 1.8) - 459.67); }
 };
 
 
