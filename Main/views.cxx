@@ -58,8 +58,8 @@ void fgVIEW::Init( void ) {
     view_offset = 0.0;
     goal_view_offset = 0.0;
 
-    winWidth = 640;  // FG_DEFAULT_WIN_WIDTH
-    winHeight = 480; // FG_DEFAULT_WIN_HEIGHT
+    winWidth = current_options.get_xsize();
+    winHeight = current_options.get_ysize();
     win_ratio = (double) winWidth / (double) winHeight;
     update_fov = true;
 }
@@ -599,6 +599,12 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.27  1998/11/16 14:00:06  curt
+// Added pow() macro bug work around.
+// Added support for starting FGFS at various resolutions.
+// Added some initial serial port support.
+// Specify default log levels in main().
+//
 // Revision 1.26  1998/11/09 23:39:25  curt
 // Tweaks for the instrument panel.
 //

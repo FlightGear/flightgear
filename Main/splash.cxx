@@ -41,6 +41,7 @@
 #include <Objects/texload.h>
 
 #include "splash.hxx"
+#include "views.hxx"
 
 
 static GLuint splash_texid;
@@ -96,10 +97,10 @@ void fgSplashUpdate ( double progress ) {
     int xsize = 480;
     int ysize = 380;
 
-    xmin = (640 - xsize) / 2;
+    xmin = (current_view.winWidth - xsize) / 2;
     xmax = xmin + xsize;
 
-    ymin = (480 - ysize) / 2;
+    ymin = (current_view.winHeight - ysize) / 2;
     ymax = ymin + ysize;
 
     // first clear the screen;
@@ -110,7 +111,7 @@ void fgSplashUpdate ( double progress ) {
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
-    gluOrtho2D(0, 640, 0, 480);
+    gluOrtho2D(0, current_view.winWidth, 0, current_view.winHeight);
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
@@ -148,6 +149,12 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.8  1998/11/16 14:00:05  curt
+// Added pow() macro bug work around.
+// Added support for starting FGFS at various resolutions.
+// Added some initial serial port support.
+// Specify default log levels in main().
+//
 // Revision 1.7  1998/11/06 21:18:14  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

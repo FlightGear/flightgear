@@ -38,10 +38,14 @@
 #include <Include/fg_constants.h>
 #include <Misc/fgstream.hxx>
 
+#include "fg_serial.hxx"
+
 #include "options.hxx"
+
 
 const int fgOPTIONS::FG_RADIUS_MIN;
 const int fgOPTIONS::FG_RADIUS_MAX;
+
 
 inline double
 atof( const string& str )
@@ -92,10 +96,6 @@ fgOPTIONS::fgOPTIONS() :
     // lon(-111.7884614 + 0.01),
     // lat(  34.8486289 - 0.015),
 
-    // Somewhere near the Grand Canyon
-    // lon(-112.5),
-    // lat(  36.5),
-
     // Jim Brennon's Kingmont Observatory
     // lon(-121.1131667),
     // lat(  38.8293917),
@@ -107,10 +107,6 @@ fgOPTIONS::fgOPTIONS() :
     // Eclipse Watching w73.5 n10 (approx) 18:00 UT
     // lon(-73.5),
     // lat( 10.0),
-
-    // Test Position
-    // lon( 8.5),
-    // lat(47.5),
 
     // Timms Hill (WI)
     // lon(-90.1953055556),
@@ -148,6 +144,8 @@ fgOPTIONS::fgOPTIONS() :
     skyblend(1),
     textures(1),
     wireframe(0),
+    xsize(640),
+    ysize(480),
 
     // Scenery options
     tile_diameter(5),
@@ -157,7 +155,19 @@ fgOPTIONS::fgOPTIONS() :
     tris_or_culled(0),
 	
     // Time options
-    time_offset(0)
+    time_offset(0),
+
+    // Serial port options
+    // port_a(FG_SERIAL_DISABLED),
+    // port_b(FG_SERIAL_DISABLED),
+    // port_c(FG_SERIAL_DISABLED),
+    // port_d(FG_SERIAL_DISABLED),
+
+    port_a_config(""),
+    port_b_config(""),
+    port_c_config(""),
+    port_d_config("")
+
 {
     // set initial values/defaults
     char* envp = ::getenv( "FG_ROOT" );
@@ -339,6 +349,53 @@ fgOPTIONS::parse_fov( const string& arg ) {
 }
 
 
+// Parse serial port option --serial=a,/dev/ttyS1,nmea,4800,out
+//
+// Format is "--serial=port_id,device,format,baud,direction" where
+// 
+//  port_id = {a, b, c, d}
+//  device = OS device name to be open()'ed
+//  format = {nmea, fgfs}
+//  baud = {300, 1200, 2400, ..., 230400}
+//  direction = {in, out, bi}
+//
+bool 
+fgOPTIONS::parse_serial( const string& serial_str ) {
+    string::size_type pos;
+    string port;
+    string config;
+
+    // cout << "Serial string = " << serial_str << endl;
+
+    // port
+    pos = serial_str.find(",");
+    if ( pos == string::npos ) {
+	FG_LOG( FG_GENERAL, FG_ALERT, 
+		"Malformed serial port configure string" );
+	return false;
+    }
+    
+    port = serial_str.substr(0, pos);
+    config = serial_str.substr(++pos);
+
+    if ( port == "a" ) {
+	port_a_config = config;
+    } else if ( port == "b" ) {
+	port_b_config = config;
+    } else if ( port == "c" ) {
+	port_c_config = config;
+    } else if ( port == "d" ) {
+	port_d_config = config;
+    } else {
+	FG_LOG( FG_GENERAL, FG_ALERT, "Valid ports are a - d, config for port "
+		<< port << " ignored" );
+	return false;
+    }
+
+    return true;
+}
+
+
 // Parse a single option
 int fgOPTIONS::parse_option( const string& arg ) {
     // General Options
@@ -418,11 +475,26 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg == "--disable-textures" ) {
 	textures = false;	
     } else if ( arg == "--enable-textures" ) {
-	textures = true;	
+	textures = true;
     } else if ( arg == "--disable-wireframe" ) {
 	wireframe = false;	
     } else if ( arg == "--enable-wireframe" ) {
-	wireframe = true;	
+	wireframe = true;
+    } else if ( arg.find( "--geometry=" ) != string::npos ) {
+	string geometry = arg.substr( 11 );
+	if ( geometry == "640x480" ) {
+	    xsize = 640;
+	    ysize = 480;
+	} else if ( geometry == "800x600" ) {
+	    xsize = 800;
+	    ysize = 600;
+	} else if ( geometry == "1024x768" ) {
+	    xsize = 1024;
+	    ysize = 768;
+	} else {
+	    FG_LOG( FG_GENERAL, FG_ALERT, "Unknown geometry: " << geometry );
+	    exit(-1);
+	}
     } else if ( arg == "--units-feet" ) {
 	units = FG_UNITS_FEET;	
     } else if ( arg == "--units-meters" ) {
@@ -435,7 +507,9 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg == "--hud-tris" ) {
 	tris_or_culled = 0;	
     } else if ( arg == "--hud-culled" ) {
-	tris_or_culled = 1;	
+	tris_or_culled = 1;
+    } else if ( arg.find( "--serial=" ) != string::npos ) {
+	parse_serial( arg.substr(9) );
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
@@ -549,6 +623,7 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--enable-textures:  enable textures\n");
     printf("\t--disable-wireframe:  disable wireframe drawing mode\n");
     printf("\t--enable-wireframe:  enable wireframe drawing mode\n");
+    printf("\t--geomtry=WWWxHHH:  specify window geometry: 640x480, 800x600\n");
     printf("\n");
 
     printf("Scenery Options:\n");
@@ -572,6 +647,12 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.30  1998/11/16 14:00:02  curt
+// Added pow() macro bug work around.
+// Added support for starting FGFS at various resolutions.
+// Added some initial serial port support.
+// Specify default log levels in main().
+//
 // Revision 1.29  1998/11/06 21:18:12  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

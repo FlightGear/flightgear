@@ -178,7 +178,7 @@ static void fgInitVisuals( void ) {
 }
 
 
-#ifdef IS_THIS_BETTER_THAN_A_ZERO_CHARLIE
+#if 0
 // Draw a basic instrument panel
 static void fgUpdateInstrViewParams( void ) {
 
@@ -562,7 +562,8 @@ static void fgMainLoop( void ) {
 	   FG_Runway_altitude * FEET_TO_METER,
 	   FG_Altitude * FEET_TO_METER); */
 
-    // fgAircraftOutputCurrent(a);
+    // Do any serial port work that might need to be done
+    fgSerialProcess();
 
     // see if we need to load any new scenery tiles
     fgTileMgrUpdate();
@@ -606,7 +607,8 @@ static void fgMainLoop( void ) {
 	    // need to calculate some reasonable scaling factor and
 	    // then clamp it on the positive aoa (neg adj) side
 	    double aoa = FG_Gamma_vert_rad * 2.2;
-	    double aoa_adj = pow(-aoa, 3) * pow(M_E, aoa);
+	    double tmp = 3.0;
+	    double aoa_adj = pow(-aoa, tmp) * pow(M_E, aoa);
 	    if (aoa_adj < -0.8) aoa_adj = -0.8;
 	    pitch += aoa_adj;
 	    //fprintf(stderr, "pitch3: %f ", pitch);
@@ -831,8 +833,12 @@ int fgGlutInit( int *argc, char **argv ) {
     // Define Display Parameters
     xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
+    FG_LOG( FG_GENERAL, FG_INFO, "Opening a window: " <<
+	    current_options.get_xsize() << "x" << current_options.get_ysize() );
+
     // Define initial window size
-    xglutInitWindowSize(640, 480);
+    xglutInitWindowSize( current_options.get_xsize(),
+			 current_options.get_ysize() );
 
     // Initialize windows
     if ( current_options.get_game_mode() == 0 ) {
@@ -840,7 +846,11 @@ int fgGlutInit( int *argc, char **argv ) {
 	xglutCreateWindow("Flight Gear");
     } else {
 	// Open the cool new 'game mode' window
-	glutGameModeString("width=640 height=480 bpp=16");
+	string game_mode_params = "width=" + current_options.get_xsize();
+	game_mode_params += "height=" + current_options.get_ysize();
+	game_mode_params += " bpp=16";
+	cout << "game mode params = " << game_mode_params;
+	glutGameModeString( game_mode_params.c_str() );
 	glutEnterGameMode();
     }
 
@@ -886,6 +896,9 @@ int main( int argc, char **argv ) {
     // Initialize the [old] debugging output system
     // fgInitDebug();
 
+    // set default log levels
+    fglog().setLogLevels( FG_ALL, FG_INFO );
+
     FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version" << VERSION << endl );
 
     // Attempt to locate and parse a config file
@@ -909,7 +922,8 @@ int main( int argc, char **argv ) {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
 	current_options.usage();
-	FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
+	// FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
+	cout << endl << "Exiting ..." << endl;
 	exit(-1);
     }
     
@@ -946,6 +960,12 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.67  1998/11/16 13:59:58  curt
+// Added pow() macro bug work around.
+// Added support for starting FGFS at various resolutions.
+// Added some initial serial port support.
+// Specify default log levels in main().
+//
 // Revision 1.66  1998/11/11 00:24:00  curt
 // Added Michael Johnson's audio patches for testing.
 // Also did a few tweaks to avoid numerical problems when starting at a place

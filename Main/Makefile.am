@@ -23,6 +23,12 @@ if ENABLE_XMESA_FX
 DEFS += -DXMESA -DFX
 endif
 
+if ENABLE_UNIX_SERIAL
+SERIAL_LIBS = $(top_builddir)/Lib/Serial/libSerial.a
+else
+SERIAL_LIBS =
+endif
+
 EXTRA_DIST = runfgfs.in runfgfs.bat.in
 
 bin_PROGRAMS = fgfs
@@ -33,6 +39,7 @@ fgfs_SOURCES = \
 	GLUTkey.cxx GLUTkey.hxx GLUTmain.cxx \
 	fg_config.h \
 	fg_init.cxx fg_init.hxx \
+	fg_serial.cxx fg_serial.hxx \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
 	views.cxx views.hxx
@@ -53,7 +60,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \
-	$(AUDIO_LIBS) \
+	$(AUDIO_LIBS) $(SERIAL_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \

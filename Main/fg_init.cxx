@@ -129,9 +129,6 @@ int fgInitGeneral( void ) {
 
     g = &general;
 
-    // set default log levels
-    fglog().setLogLevels( FG_ALL, FG_INFO );
-
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
 
@@ -373,7 +370,10 @@ int fgInitSubsystems( void )
 
     // Autopilot init added here, by Jeff Goeke-Smith
     fgAPInit(&current_aircraft);
-    
+
+    // Initialize serial ports
+    fgSerialInit();
+
     FG_LOG( FG_GENERAL, FG_INFO, endl);
 
     return(1);
@@ -381,6 +381,12 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.50  1998/11/16 14:00:01  curt
+// Added pow() macro bug work around.
+// Added support for starting FGFS at various resolutions.
+// Added some initial serial port support.
+// Specify default log levels in main().
+//
 // Revision 1.49  1998/11/11 00:24:02  curt
 // Added Michael Johnson's audio patches for testing.
 // Also did a few tweaks to avoid numerical problems when starting at a place

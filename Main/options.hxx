@@ -47,6 +47,8 @@
 using namespace std;
 #endif
 
+#include "fg_serial.hxx"
+
 
 class fgOPTIONS {
 
@@ -112,6 +114,7 @@ private:
     bool skyblend;      // Blend sky to haze (using polygons) or just clear
     bool textures;      // Textures enabled/disabled
     bool wireframe;     // Wireframe mode enabled/disabled
+    int xsize, ysize;   // window size derived from geometry string
 
     // Scenery options
     int tile_radius;   // Square radius of rendered tiles (around center 
@@ -128,6 +131,18 @@ private:
     // Time options
     int time_offset;   // Offset true time by this many seconds
 
+    // Serial Ports, we currently support up to four channels
+    // fgSerialPortKind port_a_kind;  // Port a kind
+    // fgSerialPortKind port_b_kind;  // Port b kind
+    // fgSerialPortKind port_c_kind;  // Port c kind
+    // fgSerialPortKind port_d_kind;  // Port d kind
+
+    // Serial port configuration strings
+    string port_a_config;
+    string port_b_config;
+    string port_c_config;
+    string port_d_config;
+    
 public:
 
     fgOPTIONS();
@@ -171,11 +186,25 @@ public:
     inline bool get_skyblend() const { return skyblend; }
     inline bool get_textures() const { return textures; }
     inline bool get_wireframe() const { return wireframe; }
+    inline int get_xsize() const { return xsize; }
+    inline int get_ysize() const { return ysize; }
     inline int get_tile_radius() const { return tile_radius; }
     inline int get_tile_diameter() const { return tile_diameter; }
-    inline int get_time_offset() const { return time_offset; }
+
     inline int get_units() const { return units; }
     inline int get_tris_or_culled() const { return tris_or_culled; }
+
+    inline int get_time_offset() const { return time_offset; }
+
+    // inline fgSerialPortKind get_port_a_kind() const { return port_a_kind; }
+    // inline fgSerialPortKind get_port_b_kind() const { return port_b_kind; }
+    // inline fgSerialPortKind get_port_c_kind() const { return port_c_kind; }
+    // inline fgSerialPortKind get_port_d_kind() const { return port_d_kind; }
+
+    inline string get_port_a_config() const { return port_a_config; }
+    inline string get_port_b_config() const { return port_b_config; }
+    inline string get_port_c_config() const { return port_c_config; }
+    inline string get_port_d_config() const { return port_d_config; }
 
     // Update functions
     inline void set_hud_status( bool status ) { hud_status = status; }
@@ -201,6 +230,7 @@ private:
     int parse_tile_radius( const string& arg );
     int parse_flight_model( const string& fm );
     double parse_fov( const string& arg );
+    bool parse_serial( const string& serial_str );
 };
 
 
@@ -211,6 +241,12 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.21  1998/11/16 14:00:04  curt
+// Added pow() macro bug work around.
+// Added support for starting FGFS at various resolutions.
+// Added some initial serial port support.
+// Specify default log levels in main().
+//
 // Revision 1.20  1998/11/02 23:04:05  curt
 // HUD units now display in feet by default with meters being a command line
 // option.
