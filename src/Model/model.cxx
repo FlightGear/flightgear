@@ -128,19 +128,31 @@ world_coordinate( sgCoord *obj_pos,
 		  double lat_deg, double lon_deg, double elev_ft,
 		  double roll_deg, double pitch_deg, double hdg_deg)
 {
+  // setup translation
+  double sea_level_radius_m;
+  double lat_geoc_rad;
+
+  // Convert from geodetic to geocentric
+  // coordinates.
+  sgGeodToGeoc(lat_deg * SGD_DEGREES_TO_RADIANS,
+	       elev_ft * SG_FEET_TO_METER,
+	       &sea_level_radius_m,
+	       &lat_geoc_rad);
+
   Point3D center = scenery.get_center();
 
-  // setup transforms
-  Point3D geod( lon_deg * SGD_DEGREES_TO_RADIANS,
-		lat_deg * SGD_DEGREES_TO_RADIANS,
-		elev_ft * SG_FEET_TO_METER);
+  Point3D geod = Point3D(lon_deg * SG_DEGREES_TO_RADIANS,
+			 lat_geoc_rad,
+			 sea_level_radius_m);
+  geod.setz(geod.radius() + elev_ft * SG_FEET_TO_METER);
 	
-  Point3D world_pos = sgGeodToCart( geod );
+  Point3D world_pos = sgPolarToCart3d( geod );
   Point3D offset = world_pos - center;
 	
   sgMat4 POS;
   sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
 
+  // setup transforms
   sgVec3 obj_bk, obj_rt, obj_up;
   sgSetVec3( obj_bk, 1.0, 0.0, 0.0); // X axis
   sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
