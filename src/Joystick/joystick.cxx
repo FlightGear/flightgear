@@ -217,7 +217,7 @@ int fgJoystickRead( void ) {
 
 	//  Added by William Riley -- riley@technologist.com
 	if ( js0->getNumAxes() >= 3 ) {
-	    throttle_tmp=(-js_ax0[2] + 1) / 2;
+	    throttle_tmp=(-js_ax0[3] + 1) / 2;
         
 	    if(sync_throttle == true) {
 		if (fabs(controls.get_throttle(0)-throttle_tmp)
@@ -235,7 +235,7 @@ int fgJoystickRead( void ) {
 	    if ( current_options.get_auto_coordination() !=
 		  fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
 	    {
-		controls.set_rudder( js_ax0[3] );
+		controls.set_rudder( js_ax0[2] );
 	    }
 	}
 	//  End of William's code
