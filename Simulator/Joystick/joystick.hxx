@@ -33,10 +33,10 @@
 // Initialize the joystick(s)
 int fgJoystickInit( void );
 
-#if defined( ENABLE_LINUX_JOYSTICK )
+#if defined( ENABLE_PLIB_JOYSTICK )
     // update the control parameters based on joystick intput
     int fgJoystickRead( void );
-#endif // ENABLE_LINUX_JOYSTICK
+#endif // ENABLE_PLIB_JOYSTICK
 
 
 #endif // _JOYSTICK_HXX

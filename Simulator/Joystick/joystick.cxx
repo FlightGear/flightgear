@@ -32,7 +32,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
 
-#if defined( ENABLE_LINUX_JOYSTICK )
+#if defined( ENABLE_PLIB_JOYSTICK )
 #  include <plib/js.h>
 #elif defined( ENABLE_GLUT_JOYSTICK )
 #  include <GL/glut.h>
@@ -43,7 +43,7 @@
 #include "joystick.hxx"
 
 
-#if defined( ENABLE_LINUX_JOYSTICK )
+#if defined( ENABLE_PLIB_JOYSTICK )
 
 // joystick classes
 static jsJoystick *js0;
@@ -119,7 +119,7 @@ int fgJoystickInit( void ) {
 
     FG_LOG( FG_INPUT, FG_INFO, "Initializing joystick" );
 
-#if defined( ENABLE_LINUX_JOYSTICK )
+#if defined( ENABLE_PLIB_JOYSTICK )
 
     js0 = new jsJoystick ( 0 );
     js1 = new jsJoystick ( 1 );
@@ -171,7 +171,7 @@ int fgJoystickInit( void ) {
 }
 
 
-#if defined( ENABLE_LINUX_JOYSTICK )
+#if defined( ENABLE_PLIB_JOYSTICK )
 
 // update the control parameters based on joystick intput
 int fgJoystickRead( void ) {
@@ -192,6 +192,5 @@ int fgJoystickRead( void ) {
     return 1;
 }
 
-#endif // ENABLE_LINUX_JOYSTICK
-
+#endif // ENABLE_PLIB_JOYSTICK
 
