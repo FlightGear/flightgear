@@ -185,18 +185,24 @@ double get_altitude( void )
 	// rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
 	//		                   FG_Latitude  * RAD_TO_ARCSEC);
 
-	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
+	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	    return FG_Altitude;
+	} else {
+	    return FG_Altitude * FEET_TO_METER;
+	}
 }
 
 double get_agl( void )
 {
         fgFLIGHT *f;
-        double agl;
 
         f = current_aircraft.flight;
-        agl = FG_Altitude * FEET_TO_METER - scenery.cur_elev;
 
-        return( agl );
+	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	    return FG_Altitude - scenery.cur_elev * METER_TO_FEET;
+	} else {
+	    return FG_Altitude * FEET_TO_METER - scenery.cur_elev;
+	}
 }
 
 double get_sideslip( void )
@@ -242,7 +248,11 @@ double get_climb_rate( void )
 
 	f = current_aircraft.flight;
 
-	return( FG_Climb_Rate * FEET_TO_METER * 60.0 );
+	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	    return FG_Climb_Rate * 60.0;
+	} else {
+	    return FG_Climb_Rate * FEET_TO_METER * 60.0;
+	}
 }
 
 
@@ -300,6 +310,10 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/11/02 23:04:02  curt
+// HUD units now display in feet by default with meters being a command line
+// option.
+//
 // Revision 1.20  1998/10/25 14:08:40  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //

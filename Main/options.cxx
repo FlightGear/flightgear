@@ -153,6 +153,7 @@ fgOPTIONS::fgOPTIONS() :
     tile_diameter(5),
 
     // HUD options
+    units(FG_UNITS_FEET),
     tris_or_culled(0),
 	
     // Time options
@@ -422,6 +423,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	wireframe = false;	
     } else if ( arg == "--enable-wireframe" ) {
 	wireframe = true;	
+    } else if ( arg == "--units-feet" ) {
+	units = FG_UNITS_FEET;	
+    } else if ( arg == "--units-meters" ) {
+	units = FG_UNITS_METERS;	
     } else if ( arg.find( "--tile-radius=" ) != string::npos ) {
 	tile_radius = parse_tile_radius( arg.substr(14) );
 	tile_diameter = tile_radius * 2 + 1;
@@ -552,6 +557,8 @@ void fgOPTIONS::usage ( void ) {
     printf("\n");
 
     printf("Hud Options:\n");
+    printf("\t--units-feet:  Hud displays units in feet\n");
+    printf("\t--units-meters:  Hud displays units in meters\n");
     printf("\t--hud-tris:  Hud displays number of triangles rendered\n");
     printf("\t--hud-culled:  Hud displays percentage of triangles culled\n");
 	
@@ -566,6 +573,10 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.27  1998/11/02 23:04:04  curt
+// HUD units now display in feet by default with meters being a command line
+// option.
+//
 // Revision 1.26  1998/10/17 01:34:24  curt
 // C++ ifying ...
 //

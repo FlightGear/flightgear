@@ -59,6 +59,12 @@ public:
 	FG_OPTIONS_ERROR = 2
     };
 
+    enum
+    {
+	FG_UNITS_FEET = 0,
+	FG_UNITS_METERS = 1
+    };
+
     enum fgFogKind
     {
 	FG_FOG_DISABLED = 0,
@@ -116,6 +122,7 @@ private:
                        // further away.
 
     // HUD options
+    int units;         // feet or meters
     int tris_or_culled;
 
     // Time options
@@ -167,6 +174,7 @@ public:
     inline int get_tile_radius() const { return tile_radius; }
     inline int get_tile_diameter() const { return tile_diameter; }
     inline int get_time_offset() const { return time_offset; }
+    inline int get_units() const { return units; }
     inline int get_tris_or_culled() const { return tris_or_culled; }
 
     // Update functions
@@ -203,6 +211,10 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.20  1998/11/02 23:04:05  curt
+// HUD units now display in feet by default with meters being a command line
+// option.
+//
 // Revision 1.19  1998/10/25 14:08:49  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //
