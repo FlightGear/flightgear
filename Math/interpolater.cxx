@@ -36,8 +36,6 @@
 // Constructor -- loads the interpolation table from the specified
 // file
 fgINTERPTABLE::fgINTERPTABLE( const string& file ) {
-    string fgfile, line;
-
     FG_LOG( FG_MATH, FG_INFO, "Initializing Interpolator for " << file );
 
     fg_gzifstream in( file );
@@ -103,6 +101,9 @@ fgINTERPTABLE::~fgINTERPTABLE( void ) {
 
 
 // $Log$
+// Revision 1.6  1999/01/27 04:46:16  curt
+// Portability tweaks by Bernie Bright.
+//
 // Revision 1.5  1998/11/06 21:17:27  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

@@ -8,14 +8,20 @@
 // $Id$
 // (Log is kept at end of this file)
 
-
-#include <math.h>
-#include <errno.h>
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDES
+# include <cmath>
+# include <cerrno>
+#else
+# include <math.h>
+# include <errno.h>
+#endif
 
 #include <Include/fg_constants.h>
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
 
+FG_USING_STD(cout);
 
 // ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator
 #define ONE_SECOND 4.848136811E-6
@@ -156,6 +162,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.5  1999/01/27 04:46:14  curt
+Portability tweaks by Bernie Bright.
+
 Revision 1.4  1998/11/20 01:00:36  curt
 Patch in fgGeoc2Geod() to avoid a floating explosion.
 point3d.hxx include math.h for FreeBSD
@@ -242,6 +251,9 @@ Initial Flight Gear revision.
 
 
 // $Log$
+// Revision 1.5  1999/01/27 04:46:14  curt
+// Portability tweaks by Bernie Bright.
+//
 // Revision 1.4  1998/11/20 01:00:36  curt
 // Patch in fgGeoc2Geod() to avoid a floating explosion.
 // point3d.hxx include math.h for FreeBSD

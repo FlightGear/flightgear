@@ -35,6 +35,8 @@
 
 #include <string>
 
+#include "Include/compiler.h"
+FG_USING_STD(string);
 
 #define MAX_TABLE_SIZE 32
 
@@ -61,6 +63,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/01/27 04:46:17  curt
+// Portability tweaks by Bernie Bright.
+//
 // Revision 1.3  1998/11/06 21:17:28  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

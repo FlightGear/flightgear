@@ -30,40 +30,6 @@
 #include "polar3d.hxx"
 
 
-// Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
-// must be specified in radians.  The FG convention is for distances
-// to be specified in meters
-Point3D fgPolarToCart3d(const Point3D& p) {
-    Point3D pnew;
-    double tmp;
-
-    tmp = cos( p.lat() ) * p.radius();
-
-    pnew = Point3D ( cos( p.lon() ) * tmp,
-		     sin( p.lon() ) * tmp,
-		     sin( p.lat() ) * p.radius() );
-
-    return pnew;
-}
-
-
-// Convert a cartesian coordinate to polar coordinates (lon/lat
-// specified in radians.  Distances are specified in meters.
-Point3D fgCartToPolar3d(const Point3D& cp) {
-    Point3D pp;
-
-    pp = Point3D( atan2( cp.y(), cp.x() ),
-		  FG_PI_2 - 
-		  atan2( sqrt(cp.x()*cp.x() + cp.y()*cp.y()), cp.z() ),
-		  sqrt(cp.x()*cp.x() + cp.y()*cp.y() + cp.z()*cp.z()) );
-
-    // printf("lon = %.2f  lat = %.2f  radius = %.2f\n", 
-    //        pp.lon, pp.lat, pp.radius);
-
-    return pp;
-}
-
-
 // Find the Altitude above the Ellipsoid (WGS84) given the Earth
 // Centered Cartesian coordinate vector Distances are specified in
 // meters.
@@ -95,6 +61,9 @@ double fgGeodAltFromCart(const Point3D& cp)
 
 
 // $Log$
+// Revision 1.6  1999/01/27 04:46:19  curt
+// Portability tweaks by Bernie Bright.
+//
 // Revision 1.5  1998/10/18 01:17:13  curt
 // Point3D tweaks.
 //

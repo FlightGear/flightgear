@@ -30,14 +30,24 @@
 # error This library requires C++
 #endif                                   
 
+#include "Include/compiler.h"
 
-#include <iostream>
-#include <assert.h>
-#if defined( __BORLANDC__ )
-#  define exception c_exception
-#elif defined( __FreeBSD__ )
-#  include <math.h>
+#ifdef FG_MATH_EXCEPTION_CLASH
+# define exception c_exception
 #endif
+
+#ifdef FG_HAVE_STD_INCLUDES
+# include <iostream>
+# include <cassert>
+# include <cmath>
+#else
+# include <iostream.h>
+# include <assert.h>
+# include <math.h>
+#endif
+
+FG_USING_STD(ostream);
+FG_USING_STD(istream);
 
 // -rp- assert.h is buggy under MWCWP3, as multiple #include undef assert !
 #ifdef __MWERKS__
@@ -47,6 +57,13 @@
 const double fgPoint3_Epsilon = 0.0000001;
 
 enum {PX, PY, PZ};		    // axes
+
+// Kludge for msvc++ 6.0 - requires forward decls of friend functions.
+class Point3D;
+istream& operator>> ( istream&, Point3D& );
+ostream& operator<< ( ostream&, const Point3D& );
+Point3D operator- (const Point3D& p);	            // -p1
+bool operator== (const Point3D& a, const Point3D& b);  // p1 == p2?
 
 
 ///////////////////////////
@@ -303,6 +320,9 @@ Point3D::distance3D(const Point3D& a ) const
 
 
 // $Log$
+// Revision 1.8  1999/01/27 04:46:18  curt
+// Portability tweaks by Bernie Bright.
+//
 // Revision 1.7  1999/01/19 20:56:58  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //
