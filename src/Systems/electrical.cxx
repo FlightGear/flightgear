@@ -145,17 +145,17 @@ FGElectricalSwitch::FGElectricalSwitch( SGPropertyNode *node ) :
         string cval = child->getStringValue();
         if ( cname == "prop" ) {
             switch_node = fgGetNode( cval.c_str(), true );
-            cout << "switch node = " << cval << endl;
+            // cout << "switch node = " << cval << endl;
         } else if ( cname == "initial-state" ) {
             if ( cval == "off" || cval == "false" ) {
                 initial_state = false;
             }
-            cout << "initial state = " << initial_state << endl;
+            // cout << "initial state = " << initial_state << endl;
         }            
     }
 
     switch_node->setBoolValue( initial_state );
-    cout << "  value = " << switch_node->getBoolValue() << endl;
+    // cout << "  value = " << switch_node->getBoolValue() << endl;
 }
 
 
@@ -204,13 +204,8 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
                         << child->getStringValue() );
             }
         } else if ( cname == "switch" ) {
-            // set default value of switch to true
-            // cout << "Switch = " << child->getStringValue() << endl;
+             // cout << "Switch = " << child->getStringValue() << endl;
             FGElectricalSwitch s( child );
-            // FGElectricalSwitch s( fgGetNode(child->getStringValue(), true),
-            //                       100.0f,
-            //                       false );
-            // fgSetBool( child->getStringValue(), true );
             add_switch( s );
         }
     }
