@@ -174,8 +174,6 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
         g->setBrake(attrf(a, "skid", 0));
 	g->setStaticFriction(attrf(a, "sfric", 0.8));
 	g->setDynamicFriction(attrf(a, "dfric", 0.7));
-	if(a->hasAttribute("castering"))
-	    g->setCastering(true);
 	_airplane.addGear(g);
     } else if(eq(name, "fuselage")) {
 	float b[3];
@@ -500,6 +498,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "FLAP1"))     return ControlMap::FLAP1;
     if(eq(name, "SLAT"))      return ControlMap::SLAT;
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
+    if(eq(name, "CASTERING")) return ControlMap::CASTERING;
     SG_LOG(SG_FLIGHT,SG_ALERT,"Unrecognized control type '"
            << name << "' in YASim aircraft description.");
     exit(1);

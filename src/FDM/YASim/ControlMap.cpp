@@ -192,6 +192,7 @@ void ControlMap::applyControls(float dt)
 	case BRAKE:    ((Gear*)obj)->setBrake(lval);               break;
 	case STEER:    ((Gear*)obj)->setRotation(lval);            break;
 	case EXTEND:   ((Gear*)obj)->setExtension(lval);           break;
+	case CASTERING:((Gear*)obj)->setCastering(lval != 0);      break;
 	case SLAT:     ((Wing*)obj)->setSlat(lval);                break;
 	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);         break;
 	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);         break;
