@@ -239,7 +239,7 @@ static void fgRenderFrame( void ) {
     /* update view volume parameters */
     fgUpdateViewParams();
 
-    xglClear( GL_DEPTH_BUFFER_BIT /* | GL_COLOR_BUFFER_BIT */ );
+    xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
     /* Tell GL we are switching to model view parameters */
     xglMatrixMode(GL_MODELVIEW);
@@ -520,7 +520,7 @@ static void fgMainLoop( void ) {
     fgAircraftOutputCurrent(a);
 
     /* see if we need to load any new scenery tiles */
-    /* fgTileMgrUpdate(); */
+    fgTileMgrUpdate();
 
     /* Process/manage pending events */
     fgEventProcess();
@@ -635,10 +635,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.50  1998/01/19 19:27:07  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.51  1998/01/26 15:57:05  curt
+/* Tweaks for dynamic scenery development.
 /*
+ * Revision 1.50  1998/01/19 19:27:07  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.49  1998/01/19 18:40:31  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.
