@@ -213,7 +213,7 @@ int fgAPRun( void )
 		//assert(RelHeading > -180);
 		
 		// Now it is time to deterime how far we should be rolled.
-		fgPrintf( FG_COCKPIT, FG_INFO, "RelHeading:\n");
+		fgPrintf( FG_COCKPIT, FG_DEBUG, "RelHeading:\n");
 		
 		
 		if ( abs(RelHeading) > APData->RollOut )  // We are further from heading than the roll out point
@@ -236,7 +236,7 @@ int fgAPRun( void )
 		// Target Roll has now been Found.
 		
 		// Compare Target roll to Current Roll, Generate Rel Roll
-		fgPrintf( FG_COCKPIT, FG_INFO, "TargetRoll:\n");
+		fgPrintf( FG_COCKPIT, FG_DEBUG, "TargetRoll:\n");
 		
 		RelRoll = TargetRoll - fgAPget_roll();
 		 
