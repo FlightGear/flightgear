@@ -133,7 +133,8 @@ void
 FGBinding::fire (double setting) const
 {
   SGPropertyNode arg;
-  copyProperties(_arg, &arg);
+  if (_arg != 0)
+    copyProperties(_arg, &arg);
   arg.setDoubleValue("setting", setting);
   _fire(&arg);
 }
@@ -199,6 +200,9 @@ FGInput::update ()
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
+  SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
+	 << " with modifiers " << modifiers);
+
 				// Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
     SG_LOG(SG_INPUT, SG_ALERT, "Key value " << k << " out of range");
@@ -209,8 +213,8 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 				// Key pressed.
   if (modifiers&FG_MOD_UP == 0) {
-    // SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
-    //        << " with modifiers " << modifiers);
+    // SG_LOG( SG_INPUT, SG_INFO, "User pressed key " << k
+    //         << " with modifiers " << modifiers );
     if (!b.last_state || b.is_repeatable) {
       const binding_list_t &bindings =
 	_find_key_bindings(k, modifiers);
