@@ -36,7 +36,7 @@ State* Integrator::getState()
 // using the specified orientation.
 void Integrator::l2gVector(float* orient, float* v, float* out)
 {
-    Math::tmul33(_s.orient, v, out);
+    Math::tmul33(orient, v, out);
 }
 
 // Updates a position vector for a body c.g. motion with velocity v
