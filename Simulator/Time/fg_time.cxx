@@ -223,8 +223,8 @@ double FGTime::sidereal_precise (double lng)
     // compute LST and print
     utc_gst();
     lstTmp = gst - RADHR (lng);
-    lstTmp -= 24.0*floor(lst/24.0);
-    // printf ("%7.4f\n", lst);
+    lstTmp -= 24.0*floor(lstTmp/24.0);
+    // printf ("%7.4f\n", lstTmp);
 
     // that's all
     return (lstTmp);
