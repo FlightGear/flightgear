@@ -178,7 +178,7 @@ fgSetDefaults ()
 #else
     fgSetString("/sim/startup/browser-app", "webrun.bat");
 #endif
-    fgSetString("/sim/logging/priority", "warn");
+    fgSetString("/sim/logging/priority", "alert");
 
 				// Features
     fgSetBool("/sim/hud/antialiased", false);
@@ -952,7 +952,7 @@ fgOptLogLevel( const char *arg )
       logbuf::set_log_priority(SG_BULK);
     } else if (priority == "debug") {
       logbuf::set_log_priority(SG_DEBUG);
-    } else if (priority.empty() || priority == "info") { // default
+    } else if (priority == "info") {
       logbuf::set_log_priority(SG_INFO);
     } else if (priority == "warn") {
       logbuf::set_log_priority(SG_WARN);
@@ -961,7 +961,7 @@ fgOptLogLevel( const char *arg )
     } else {
       SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
     }
-    SG_LOG(SG_GENERAL, SG_INFO, "Logging priority is " << priority);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "Logging priority is " << priority);
 
     return FG_OPTIONS_OK;
 }
@@ -1158,8 +1158,8 @@ fgOptADF( const char * arg )
 {
     double rot, freq;
     if (parse_colon(arg, &rot, &freq))
-        fgSetDouble("/radios/kr-87/inputs/rotation-deg", rot);
-    fgSetDouble("/radios/kr-87/outputs/selected-khz", freq);
+        fgSetDouble("/instrumentation/adf/rotation-deg", rot);
+    fgSetDouble("/instrumentation/adf/frequencies/selected-khz", freq);
     return FG_OPTIONS_OK;
 }
 
