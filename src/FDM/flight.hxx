@@ -341,26 +341,26 @@ public:
     }
 
     FG_VECTOR_3    n_cg_body_v;
-     inline double * get_N_cg_body_v() { return n_cg_body_v; }
-     inline double get_N_X_cg() const { return n_cg_body_v[0]; }
-     inline double get_N_Y_cg() const { return n_cg_body_v[1]; }
-     inline double get_N_Z_cg() const { return n_cg_body_v[2]; }
-     inline void set_Accels_CG_Body_N( double x, double y, double z ) {
-	n_cg_body_v[0] = x;
-	n_cg_body_v[1] = y;
-	n_cg_body_v[2] = z;
-    } 
+    // inline double * get_N_cg_body_v() { return n_cg_body_v; }
+    // inline double get_N_X_cg() const { return n_cg_body_v[0]; }
+    // inline double get_N_Y_cg() const { return n_cg_body_v[1]; }
+    // inline double get_N_Z_cg() const { return n_cg_body_v[2]; }
+    // inline void set_Accels_CG_Body_N( double x, double y, double z ) {
+    //    n_cg_body_v[0] = x;
+    //    n_cg_body_v[1] = y;
+    //    n_cg_body_v[2] = z;
+    // } 
 
     FG_VECTOR_3    n_pilot_body_v;
     // inline double * get_N_pilot_body_v() { return n_pilot_body_v; }
-    inline double get_N_X_pilot() const { return n_pilot_body_v[0]; }
-    inline double get_N_Y_pilot() const { return n_pilot_body_v[1]; }
-    inline double get_N_Z_pilot() const { return n_pilot_body_v[2]; }
-    inline void set_Accels_Pilot_Body_N( double x, double y, double z ) {
-	n_pilot_body_v[0] = x;
-	n_pilot_body_v[1] = y;
-	n_pilot_body_v[2] = z;
-    } 
+    // inline double get_N_X_pilot() const { return n_pilot_body_v[0]; }
+    // inline double get_N_Y_pilot() const { return n_pilot_body_v[1]; }
+    // inline double get_N_Z_pilot() const { return n_pilot_body_v[2]; }
+    // inline void set_Accels_Pilot_Body_N( double x, double y, double z ) {
+    //    n_pilot_body_v[0] = x;
+    //    n_pilot_body_v[1] = y;
+    //    n_pilot_body_v[2] = z;
+    // } 
     
     double nlf;  //Normal Load Factor
     double get_Nlf(void) { return nlf; }  

@@ -256,6 +256,11 @@ int FGJSBsim::copy_from_JSBsim() {
                     FDMExec.GetAircraft()->GetXYZcg()(2),
                     FDMExec.GetAircraft()->GetXYZcg()(3) );
   
+  
+  set_Accels_Local( FDMExec.GetPosition()->GetVelDot()(1),
+                    FDMExec.GetPosition()->GetVelDot()(2),
+                    FDMExec.GetPosition()->GetVelDot()(3) );
+                    
   set_Accels_Body ( FDMExec.GetTranslation()->GetUVWdot()(1),
                     FDMExec.GetTranslation()->GetUVWdot()(2),
                     FDMExec.GetTranslation()->GetUVWdot()(3) );
@@ -264,17 +269,18 @@ int FGJSBsim::copy_from_JSBsim() {
                        FDMExec.GetTranslation()->GetUVWdot()(2),
                        FDMExec.GetTranslation()->GetUVWdot()(3) );
   
-  set_Accels_CG_Body_N ( FDMExec.GetTranslation()->GetNcg()(1),
-                         FDMExec.GetTranslation()->GetNcg()(2),
-                         FDMExec.GetTranslation()->GetNcg()(3) );
+  //set_Accels_CG_Body_N ( FDMExec.GetTranslation()->GetNcg()(1),
+  //                       FDMExec.GetTranslation()->GetNcg()(2),
+  //                       FDMExec.GetTranslation()->GetNcg()(3) );
+  //
   
   set_Accels_Pilot_Body( FDMExec.GetAuxiliary()->GetPilotAccel()(1),
                          FDMExec.GetAuxiliary()->GetPilotAccel()(2),
                          FDMExec.GetAuxiliary()->GetPilotAccel()(3) );
   
-  set_Accels_Pilot_Body_N( FDMExec.GetAuxiliary()->GetNpilot()(1),
-                           FDMExec.GetAuxiliary()->GetNpilot()(2),
-                           FDMExec.GetAuxiliary()->GetNpilot()(3) );
+  //set_Accels_Pilot_Body_N( FDMExec.GetAuxiliary()->GetNpilot()(1),
+  //                         FDMExec.GetAuxiliary()->GetNpilot()(2),
+  //                         FDMExec.GetAuxiliary()->GetNpilot()(3) );
   
                            
   
@@ -304,11 +310,13 @@ int FGJSBsim::copy_from_JSBsim() {
                   FDMExec.GetState()->GetParameter(FG_PITCHRATE),
                   FDMExec.GetState()->GetParameter(FG_YAWRATE) );
 
-  /* HUH!?! */ set_Euler_Rates( FDMExec.GetRotation()->Getphi(),
-                   FDMExec.GetRotation()->Gettht(),
-                   FDMExec.GetRotation()->Getpsi() );
+  set_Euler_Rates( FDMExec.GetRotation()->GetEulerRates()(1),
+                   FDMExec.GetRotation()->GetEulerRates()(2),
+                   FDMExec.GetRotation()->GetEulerRates()(3) );
 
-  // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+  set_Geocentric_Rates( FDMExec.GetPosition()->GetLatitudeDot(),
+                        FDMExec.GetPosition()->GetLongitudeDot(),
+                        FDMExec.GetPosition()->Gethdot() );
 
   set_Mach_number( FDMExec.GetTranslation()->GetMach());
 
@@ -339,10 +347,26 @@ int FGJSBsim::copy_from_JSBsim() {
 
   set_Alpha( FDMExec.GetTranslation()->Getalpha() );
   set_Beta( FDMExec.GetTranslation()->Getbeta() );
-
+  
+  set_Cos_phi( FDMExec.GetRotation()->GetCosphi() );
+  //set_Sin_phi ( FDMExec.GetRotation()->GetSinpphi() );
+  
+  set_Cos_theta( FDMExec.GetRotation()->GetCostht() );
+  //set_Sin_theta ( FDMExec.GetRotation()->GetSintht() );
+  
+  //set_Cos_psi( FDMExec.GetRotation()->GetCospsi() );
+  //set_Sin_psi ( FDMExec.GetRotation()->GetSinpsi() );
+  
   set_Gamma_vert_rad( FDMExec.GetPosition()->GetGamma() );
   // set_Gamma_horiz_rad( Gamma_horiz_rad );
 
+
+  set_Density( FDMExec.GetAtmosphere()->GetDensity() );
+  set_Static_pressure( FDMExec.GetAtmosphere()->GetPressure() );
+  set_Static_temperature ( FDMExec.GetAtmosphere()->GetTemperature() );
+  
+  
+  
   /* **FIXME*** */ set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
   /* **FIXME*** */ set_Earth_position_angle( 0.0 );
 
