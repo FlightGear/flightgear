@@ -341,7 +341,7 @@ void FGFDM::getExternalInput(float dt)
 	if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
             sprintf(buf, "%s/rpm", er->prefix);
-            p->setOmega(fgGetFloat(buf) * RPM2RAD);
+            p->setOmega(fgGetFloat(buf, 500) * RPM2RAD);
         }
     }
 }
