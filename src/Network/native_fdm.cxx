@@ -147,11 +147,14 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     net->v_wind_body_north = cur_fdm_state->get_uBody();
     net->v_wind_body_east = cur_fdm_state->get_vBody();
     net->v_wind_body_down = cur_fdm_state->get_wBody();
-    net->stall_warning = fgGetDouble("/sim/alarms/stall-warning", 0.0);
 
     net->A_X_pilot = cur_fdm_state->get_A_X_pilot();
     net->A_Y_pilot = cur_fdm_state->get_A_Y_pilot();
     net->A_Z_pilot = cur_fdm_state->get_A_Z_pilot();
+
+    net->stall_warning = fgGetDouble("/sim/alarms/stall-warning", 0.0);
+    net->slip_deg
+      = fgGetDouble("/instrumentation/slip-skid-ball/indicated-slip-skid");
 
     // Engine parameters
     net->num_engines = FGNetFDM::FG_MAX_ENGINES;
@@ -227,11 +230,13 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->v_wind_body_north);
         htonf(net->v_wind_body_east);
         htonf(net->v_wind_body_down);
-        htonf(net->stall_warning);
 
         htonf(net->A_X_pilot);
         htonf(net->A_Y_pilot);
         htonf(net->A_Z_pilot);
+
+        htonf(net->stall_warning);
+        htonf(net->slip_deg);
 
         for ( i = 0; i < net->num_engines; ++i ) {
             net->eng_state[i] = htonl(net->eng_state[i]);
@@ -297,11 +302,13 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->v_wind_body_north);
         htonf(net->v_wind_body_east);
         htonf(net->v_wind_body_down);
-        htonf(net->stall_warning);
 
         htonf(net->A_X_pilot);
         htonf(net->A_Y_pilot);
         htonf(net->A_Z_pilot);
+
+        htonf(net->stall_warning);
+        htonf(net->slip_deg);
 
         net->num_engines = htonl(net->num_engines);
         for ( i = 0; i < net->num_engines; ++i ) {
@@ -369,10 +376,14 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
                                                   net->v_wind_body_east,
                                                   net->v_wind_body_down );
 
-        fgSetDouble( "/sim/alarms/stall-warning", net->stall_warning );
         cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
 					       net->A_Y_pilot,
 					       net->A_Z_pilot );
+
+        fgSetDouble( "/sim/alarms/stall-warning", net->stall_warning );
+	fgSetDouble( "/instrumentation/slip-skid-ball/indicated-slip-skid",
+		     net->slip_deg );
+	fgSetBool( "/instrumentation/slip-skid-ball/override", true );
 
 	for ( i = 0; i < net->num_engines; ++i ) {
 	    SGPropertyNode *node = fgGetNode( "engines/engine", i, true );

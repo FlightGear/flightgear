@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 13;
+const int FG_NET_FDM_VERSION = 14;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -79,13 +79,14 @@ public:
     float v_wind_body_down;     // down/vertical velocity in local/body
                                 // frame relative to local airmass, fps
 
-    // Stall
-    float stall_warning;        // 0.0 - 1.0 indicating the amount of stall
-
     // Accelerations
     float A_X_pilot;		// X accel in body frame ft/sec^2
     float A_Y_pilot;		// Y accel in body frame ft/sec^2
     float A_Z_pilot;		// Z accel in body frame ft/sec^2
+
+    // Stall
+    float stall_warning;        // 0.0 - 1.0 indicating the amount of stall
+    float slip_deg;		// slip ball deflection
 
     // Pressure
     
