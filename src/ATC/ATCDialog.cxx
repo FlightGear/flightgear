@@ -210,8 +210,6 @@ static void ATCDialogOK (puObject *me)
 // DCL
 static void ATCDialog(puObject *cb)
 {
-    //ApHeadingDialogInput   ->    setValue ( heading );
-    //ApHeadingDialogInput    -> acceptInput();
     FG_PUSH_PUI_DIALOG(atcDialog);
 }
 
@@ -303,26 +301,35 @@ FGATCDialog::FGATCDialog() {
 }
 
 FGATCDialog::~FGATCDialog() {
-	if(atcFreqDialog) delete atcFreqDialog;
-	if(atcFreqDisplay) delete atcFreqDisplay;
+	if(atcFreqDialog) puDeleteObject(atcFreqDialog);
+	if(atcFreqDisplay) puDeleteObject(atcFreqDisplay);
+	if(ATCMenuBox) puDeleteObject(ATCMenuBox);
 }
 
 void FGATCDialog::Init() {
 	// Add ATC-freq-search to the command list
 	globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
 	
+	int w;
+	int h;
+	int x;
+	int y;
+	
 	// Init the freq-search dialog
+	w = 300;
+	h = 150;
+	x = (fgGetInt("/sim/startup/xsize") / 2) - (w / 2);
+	y = 50;
 	char *s;
-	int hsize = 150;
-	atcFreqDialog = new puDialogBox (150, 50);
+	atcFreqDialog = new puDialogBox (x, y);
 	{
-		atcFreqDialogFrame = new puFrame (0, 0, 300, hsize);
-		atcFreqDialogMessage = new puText          (40, (hsize - 30));
+		atcFreqDialogFrame = new puFrame (0, 0, w, h);
+		atcFreqDialogMessage = new puText          (40, (h - 30));
 		atcFreqDialogMessage->setDefaultValue ("Enter airport identifier:");
 		atcFreqDialogMessage->getDefaultValue (&s);
 		atcFreqDialogMessage->setLabel(s);
 	
-		atcFreqDialogInput = new puInput (50, (hsize - 75), 150, (hsize - 45));
+		atcFreqDialogInput = new puInput (50, (h - 75), 150, (h - 45));
 			
 		atcFreqDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
 		atcFreqDialogOkButton     ->     setLegend         (gui_msg_OK);
@@ -339,18 +346,21 @@ void FGATCDialog::Init() {
 	FG_FINALIZE_PUI_DIALOG(atcFreqDialog);
 	
 	// Init the freq-display dialog
-	hsize = 100;
-	atcFreqDisplay = new puDialogBox (250, 50);
+	w = 400;
+	h = 100;
+	x = (fgGetInt("/sim/startup/xsize") / 2) - (w / 2);
+	y = 50;
+	atcFreqDisplay = new puDialogBox (x, y);
 	{
-		atcFreqDisplayFrame   = new puFrame (0, 0, 400, hsize);
+		atcFreqDisplayFrame   = new puFrame (0, 0, w, h);
 		
-		atcFreqDisplayMessage = new puText          (40, (hsize - 30));
+		atcFreqDisplayMessage = new puText          (40, (h - 30));
 		atcFreqDisplayMessage    -> setDefaultValue ("No freqencies found");
 		atcFreqDisplayMessage    -> getDefaultValue (&s);
 		atcFreqDisplayMessage    -> setLabel        (s);
 		
 		for(int i=0; i<ATC_MAX_FREQ_DISPLAY; ++i) {
-			atcFreqDisplayText[i] = new puText(40, hsize - 65 - (30 * i));
+			atcFreqDisplayText[i] = new puText(40, h - 65 - (30 * i));
 			atcFreqDisplayText[i]->setDefaultValue("");
 			atcFreqDisplayText[i]-> getDefaultValue (&s);
 			atcFreqDisplayText[i]-> setLabel        (s);
@@ -363,6 +373,31 @@ void FGATCDialog::Init() {
 		atcFreqDisplayOkButton     ->     setCallback       (FreqDisplayOK);
 	}
 	FG_FINALIZE_PUI_DIALOG(atcFreqDisplay);
+	
+	// Init AK's interactive ATC menus
+	w = 500;
+	h = 110;
+	x = (fgGetInt("/sim/startup/xsize") / 2) - (w / 2);
+	//y = (fgGetInt("/sim/startup/ysize") / 2) - (h / 2);
+	y = 50;
+	ATCMenuBox = new puDialogBox (x, y);
+	{
+		ATCMenuFrame = new puFrame (0,0,w,h);
+		ATCMenuBoxMessage = new puText (w / 2, h - 30);
+		ATCMenuBoxMessage -> setLabel( "No transmission available" );
+		ATCMenuBoxMessage -> setLabelPlace(PUPLACE_TOP_CENTERED);
+		ATCOptionsList = new puButtonBox (50, 60, 450, 50, NULL, true);
+		ATCOptionsList -> hide();
+		atcDialogOkButton     =  new puOneShot         ((w/2)-85, 10, (w/2)-25, 50);
+		atcDialogOkButton     ->     setLegend         (gui_msg_OK);
+		atcDialogOkButton     ->     makeReturnDefault (TRUE);
+		atcDialogOkButton     ->     setCallback       (AKATCDialogOK);
+		
+		atcDialogCancelButton =  new puOneShot         ((w/2)+25, 10, (w/2)+85, 50);
+		atcDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
+		atcDialogCancelButton ->     setCallback       (AKATCDialogCancel);
+	}
+	FG_FINALIZE_PUI_DIALOG(ATCMenuBox);
 }
 
 // AK
@@ -424,19 +459,15 @@ void FGATCDialog::DoDialog() {
 		fgSetBool("/sim/atc/opt8",false);
 		fgSetBool("/sim/atc/opt9",false);
 		
-		//int yc = 10;
-		int yc = 70;
-		int xsize = 600;
+		int w = 500;
+		int k = atcmlist.size();
+		int h = 110 + k * 25;
+		//cout << "k = " << k << '\n';
 		
-		if ( atcmlist.size() != 0 ){ 
-			int k=atcmlist.size();
-			//int k = 3;
-			//cout << "k = " << k << endl;
-			int y = (fgGetInt("/sim/startup/ysize") - 200 - 20 - k*20);
-			ATCMenuBox = new puDialogBox (100, y);
-			ATCMenuFrame      =  new puFrame (0,0,xsize,yc+40);
+		ATCMenuFrame->setSize(w, h); 
+		
+		if(k) { 
 			// loop over all entries in atcmentrylist
-			ATCOptionsList = new puButtonBox (50, 50, 450, 50+(k*25), NULL, true);
 			char** optList = new char*[k+1];
 			int kk = 0;
 			for ( ; current != last ; ++current ) {
@@ -449,35 +480,21 @@ void FGATCDialog::DoDialog() {
 				strcpy(optList[kk], mentry[kk].c_str());
 				//cout << "optList[" << kk << "] = " << optList[kk] << endl; 
 				mtrans[kk] =              current->transmission;
-				//ATCMenuBoxMessage =  new puText (10, yc);
-				//ATCMenuBoxMessage ->     setLabel( mentry[kk].c_str() );
-				yc += 20;
 				++kk;
 			} 
-			yc += 2*20;
 			optList[k] = NULL;
 			ATCOptionsList->newList(optList);
+			ATCOptionsList->setSize(w-100, h-100);
+			ATCOptionsList->reveal();
+			ATCMenuBoxMessage -> setLabel( "ATC Menu" );
+			ATCMenuBoxMessage -> setPosition(w / 2, h - 30);
 		} else {
-			int y = (fgGetInt("/sim/startup/ysize") - 100 - 20 );
-			ATCMenuBox = new puDialogBox (10, y);
-			ATCMenuFrame      =  new puFrame (0,0,xsize,yc+40);
-			ATCMenuBoxMessage =  new puText (10, yc-10);
+			ATCOptionsList->hide();
 			ATCMenuBoxMessage ->     setLabel( "No transmission available" );
+			ATCMenuBoxMessage -> setPosition(w / 2, h - 20);
 		}
 		
-		ATCMenuBoxMessage =  new puText (10, yc+10);
-		ATCMenuBoxMessage ->     setLabel( "ATC Menu" );
-		atcDialogOkButton     =  new puOneShot         ((xsize/2)-85, 10, (xsize/2)-25, 50);
-		atcDialogOkButton     ->     setLegend         (gui_msg_OK);
-		atcDialogOkButton     ->     makeReturnDefault (TRUE);
-		atcDialogOkButton     ->     setCallback       (AKATCDialogOK);
-		
-		atcDialogCancelButton =  new puOneShot         ((xsize/2)+25, 10, (xsize/2)+85, 50);
-		atcDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcDialogCancelButton ->     setCallback       (AKATCDialogCancel);
-		FG_FINALIZE_PUI_DIALOG( ATCMenuBox );
 		FG_PUSH_PUI_DIALOG( ATCMenuBox );
-		
 		
 		/*	
 		if ( atckey != -1 && TransDisplayed && mtrans[atckey-1].c_str() != "" ) {
