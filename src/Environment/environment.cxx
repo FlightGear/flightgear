@@ -129,6 +129,7 @@ FGEnvironment::FGEnvironment()
     turbulence_norm(0)
 {
   _setup_tables();
+  _recalc_density();
 }
 
 FGEnvironment::FGEnvironment (const FGEnvironment &env)
