@@ -220,6 +220,9 @@ dnl check for some default libraries
 AC_SEARCH_LIBS(cos, m)
 AC_SEARCH_LIBS(dlclose, dl)
 
+dnl search for FreeBSD library
+AC_SEARCH_LIBS(hid_init, usbhid)
+
 base_LIBS="$LIBS"
 
 dnl Check for SDL if enabled.
