@@ -77,6 +77,7 @@ SG_USING_STD(endl);
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/loader.hxx>
 #include <simgear/scene/model/location.hxx>
@@ -117,7 +118,6 @@ SG_USING_STD(endl);
 #include <MultiPlayer/multiplayrxmgr.hxx>
 #endif
 
-#include <Objects/matlib.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #ifdef ENABLE_AUDIO_SUPPORT

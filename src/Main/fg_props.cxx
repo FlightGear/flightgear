@@ -28,6 +28,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/material/matlib.hxx>
 #include <simgear/sound/soundmgr.hxx>
 
 #include STL_IOSTREAM
@@ -41,7 +42,6 @@
 #else
 #  include <Environment/environment.hxx>
 #endif // FG_WEATHERCM
-#include <Objects/matlib.hxx>
 
 #include <GUI/gui.h>
 

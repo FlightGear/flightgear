@@ -23,8 +23,8 @@
 
 #include <plib/sg.h>
 
-#include "newmat.hxx"
-#include "matlib.hxx"
+#include <simgear/scene/material/mat.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
 #include "pt_lights.hxx"
 

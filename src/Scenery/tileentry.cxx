@@ -32,6 +32,8 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/scene/material/mat.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
@@ -40,8 +42,6 @@
 #include <Scenery/scenery.hxx>
 #include <Time/light.hxx>
 #include <Objects/apt_signs.hxx>
-#include <Objects/matlib.hxx>
-#include <Objects/newmat.hxx>
 #include <Objects/obj.hxx>
 
 #include "tileentry.hxx"

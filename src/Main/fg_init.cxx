@@ -63,6 +63,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/material/matlib.hxx>
 #ifdef FG_USE_CLOUDS_3D
 #  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
 #  include <simgear/sky/clouds3d/SkyUtil.hpp>
@@ -97,8 +98,6 @@
 #include <Include/general.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
-// #include <Joystick/joystick.hxx>
-#include <Objects/matlib.hxx>
 #include <Model/acmodel.hxx>
 #include <Navaids/fixlist.hxx>
 #include <Navaids/ilslist.hxx>
@@ -1327,7 +1326,7 @@ bool fgInitSubsystems() {
 
     SGPath mpath( globals->get_fg_root() );
     mpath.append( "materials.xml" );
-    if ( ! material_lib.load( mpath.str() ) ) {
+    if ( ! material_lib.load( globals->get_fg_root(), mpath.str() ) ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
         exit(-1);
     }

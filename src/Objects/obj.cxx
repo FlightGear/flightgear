@@ -52,14 +52,14 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/stopwatch.hxx>
 #include <simgear/misc/texcoord.hxx>
+#include <simgear/scene/material/mat.hxx>
+#include <simgear/scene/material/matlib.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Time/light.hxx>
 #include <Scenery/tileentry.hxx>
 
-#include "newmat.hxx"
-#include "matlib.hxx"
 #include "pt_lights.hxx"
 #include "obj.hxx"
 
@@ -365,7 +365,11 @@ void TriUserData::add_object_to_triangle (FGNewMat::Object * object)
 
     ssgTransform * pos = new ssgTransform;
     pos->setTransform(mat);
-    pos->addKid(object->get_random_model());
+    pos->addKid( object->get_random_model( globals->get_model_loader(),
+                                           globals->get_fg_root(),
+                                           globals->get_props(),
+                                           globals->get_sim_time_sec() )
+                 );
     branch->addKid(pos);
 }
 
