@@ -31,7 +31,10 @@
 
 FGATC::FGATC() {
 	freqClear = true;
+	receiving = false;
+	respond = false;
 	runResponseCounter = false;
+	responseID = "";
 	responseReqd = false;
 }
 

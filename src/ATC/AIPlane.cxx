@@ -78,6 +78,7 @@ void FGAIPlane::Update(double dt) {
 	// This turns on rendering if on the same freq as the user
 	// TODO - turn it off if user switches to another freq - keep track of where in message we are etc.
 	if(_transmit) {
+		//cout << "transmit\n";
 		double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
 		double user_freq1 = fgGetDouble("/radios/comm[1]/frequencies/selected-mhz");
 		_counter = 0.0;
@@ -91,8 +92,6 @@ void FGAIPlane::Update(double dt) {
 				// For now assume in range !!!
 				// TODO - implement range checking
 				Render(plane.callsign, false);
-				_transmit = false;
-				_transmitting = true;
 			}
 		}
 		// Run the callback regardless of whether on same freq as user or not.
@@ -100,6 +99,8 @@ void FGAIPlane::Update(double dt) {
 		if(_callback_code) {
 			ProcessCallback(_callback_code);
 		}
+		_transmit = false;
+		_transmitting = true;
 	} else if(_transmitting) {
 		if(_counter >= _max_count) {
 			NoRender(plane.callsign);
