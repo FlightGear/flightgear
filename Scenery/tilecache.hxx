@@ -42,7 +42,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Bucket/bucketutils.h>
+#include <Bucket/newbucket.hxx>
 #include <Math/point3d.hxx>
 
 #include "tile.hxx"
@@ -75,7 +75,7 @@ public:
     void init( void );
 
     // Search for the specified "bucket" in the cache 
-    int exists( const fgBUCKET& p );
+    int exists( const FGBucket& p );
 
     // Return index of next available slot in tile cache 
     int next_avail( void );
@@ -84,7 +84,7 @@ public:
     void entry_free( int index );
 
     // Fill in a tile cache entry with real data for the specified bucket 
-    void fill_in( int index, const fgBUCKET& p );
+    void fill_in( int index, FGBucket& p );
 
     // Return a pointer to the specified tile cache entry 
     fgTILE *get_tile( int index ) {
@@ -104,6 +104,9 @@ extern fgTILECACHE global_tile_cache;
 
 
 // $Log$
+// Revision 1.14  1999/03/25 19:03:27  curt
+// Converted to use new bucket routines.
+//
 // Revision 1.13  1998/11/09 23:40:51  curt
 // Bernie Bright <bbright@c031.aone.net.au> writes:
 // I've made some changes to the Scenery handling.  Basically just tidy ups.

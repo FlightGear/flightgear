@@ -36,7 +36,7 @@
 #include <Aircraft/aircraft.hxx>
 
 #include <Debug/logstream.hxx>
-#include <Bucket/bucketutils.hxx>
+// #include <Bucket/bucketutils.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -89,7 +89,7 @@ int fgTileMgrInit( void ) {
 
 
 // load a tile
-void fgTileMgrLoadTile( const fgBUCKET& p, int *index) {
+void fgTileMgrLoadTile( const FGBucket& p, int *index) {
     fgTILECACHE *c;
 
     c = &global_tile_cache;
@@ -117,11 +117,7 @@ static double point_line_dist_squared( const Point3D& tc, const Point3D& vp,
     p[0] = tc.x(); p[1] = tc.y(); p[2] = tc.z();
     p0[0] = vp.x(); p0[1] = vp.y(); p0[2] = vp.z();
 
-    dist = fgPointLineSquared(p, p0, d);
-
-    // cout << "dist = " << dist << endl;
-
-    return(dist);
+    return fgPointLineSquared(p, p0, d);
 }
 
 
@@ -130,7 +126,7 @@ static double point_line_dist_squared( const Point3D& tc, const Point3D& vp,
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
 double
-fgTileMgrCurElevNEW( const fgBUCKET& p ) {
+fgTileMgrCurElevNEW( const FGBucket& p ) {
     fgTILE *t;
     fgFRAGMENT *frag_ptr;
     Point3D abs_view_pos = current_view.get_abs_view_pos();
@@ -157,7 +153,7 @@ fgTileMgrCurElevNEW( const fgBUCKET& p ) {
     scenery.next_center = t->center;
     
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
-	    "Current bucket = " << p << "  Index = " << fgBucketGenIndex(&p) );
+	    "Current bucket = " << p << "  Index = " << p.gen_index_str() );
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "abs_view_pos = " << abs_view_pos );
 
@@ -231,18 +227,14 @@ double
 fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     fgTILECACHE *c;
     fgTILE *t;
-    // fgVIEW *v;
     fgFRAGMENT *frag_ptr;
-    fgBUCKET p;
     Point3D earth_center(0.0);
     Point3D result;
     MAT3vec local_up;
     double dist, lat_geod, alt, sea_level_r;
-    // double x, y, z;
     int index;
 
     c = &global_tile_cache;
-    // v = &current_view;
 
     local_up[0] = abs_view_pos.x();
     local_up[1] = abs_view_pos.y();
@@ -251,7 +243,7 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     FG_LOG( FG_TERRAIN, FG_DEBUG, "Absolute view pos = " << abs_view_pos );
 
     // Find current translation offset
-    fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
+    FGBucket p( lon * RAD_TO_DEG, lat * RAD_TO_DEG );
     index = c->exists(p);
     if ( index < 0 ) {
 	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
@@ -265,7 +257,10 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
 	    "Pos = (" << lon * RAD_TO_DEG << ", " << lat * RAD_TO_DEG
 	    << ")  Current bucket = " << p 
-	    << "  Index = " << fgBucketGenIndex(&p) );
+	    << "  Index = " << p.gen_index_str() );
+
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Tile center " << t->center 
+	    << "  bounding radius = " << t->bounding_radius );
 
     // calculate tile offset
     // x = (t->offset.x = t->center.x - scenery.center.x);
@@ -281,6 +276,8 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
        v->local_up), t->bounding_radius); */
 
     dist = point_line_dist_squared( t->center, abs_view_pos, local_up );
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "(gross check) dist squared = " << dist );
+
     if ( dist < FG_SQUARE(t->bounding_radius) ) {
 
 	// traverse fragment list for tile
@@ -334,8 +331,10 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 int fgTileMgrUpdate( void ) {
     fgTILECACHE *c;
     FGInterface *f;
-    fgBUCKET p1, p2;
-    static fgBUCKET p_last = {-1000, 0, 0, 0};
+    FGBucket p2;
+    static FGBucket p_last(false);
+    static double last_lon = -1000.0;  // in degrees
+    static double last_lat = -1000.0;  // in degrees
     int tile_diameter;
     int i, j, dw, dh;
 
@@ -344,15 +343,15 @@ int fgTileMgrUpdate( void ) {
 
     tile_diameter = current_options.get_tile_diameter();
 
-    fgBucketFind( f->get_Longitude() * RAD_TO_DEG,
-		  f->get_Latitude() * RAD_TO_DEG, &p1);
+    FGBucket p1( f->get_Longitude() * RAD_TO_DEG,
+		 f->get_Latitude() * RAD_TO_DEG );
     dw = tile_diameter / 2;
     dh = tile_diameter / 2;
 
     if ( p1 == p_last ) {
 	// same bucket as last time
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
-    } else if ( p_last.lon == -1000 ) {
+    } else if ( p_last.get_lon() == -1000 ) {
 	// First time through, initialize the system and load all
 	// relavant tiles
 
@@ -368,7 +367,10 @@ int fgTileMgrUpdate( void ) {
 	// build the local area list and update cache
 	for ( j = 0; j < tile_diameter; j++ ) {
 	    for ( i = 0; i < tile_diameter; i++ ) {
-		fgBucketOffset(&p1, &p2, i - dw, j - dh);
+		// fgBucketOffset(&p1, &p2, i - dw, j - dh);
+		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
+				     f->get_Latitude() * RAD_TO_DEG,
+				     i - dw, j -dh );
 		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + i]);
 	    }
 	}
@@ -382,8 +384,8 @@ int fgTileMgrUpdate( void ) {
 
 	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
 
-	if ( (p1.lon > p_last.lon) ||
-	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
+	if ( (p1.get_lon() > p_last.get_lon()) ||
+	     ( (p1.get_lon() == p_last.get_lon()) && (p1.get_x() > p_last.get_x()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
 		    "  Loading " << tile_diameter << "tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
@@ -393,12 +395,13 @@ int fgTileMgrUpdate( void ) {
 			tiles[(j*tile_diameter) + i + 1];
 		}
 		// load in new column
-		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
+		// fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
+		p2 = fgBucketOffset( last_lon, last_lat, dw + 1, j - dh );
 		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + 
 					     tile_diameter - 1]);
 	    }
-	} else if ( (p1.lon < p_last.lon) ||
-		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
+	} else if ( (p1.get_lon() < p_last.get_lon()) ||
+		    ( (p1.get_lon() == p_last.get_lon()) && (p1.get_x() < p_last.get_x()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
 		    "  Loading " << tile_diameter << "tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
@@ -408,13 +411,14 @@ int fgTileMgrUpdate( void ) {
 			tiles[(j*tile_diameter) + i - 1];
 		}
 		// load in new column
-		fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
+		// fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
+		p2 = fgBucketOffset( last_lon, last_lat, -dw - 1, j - dh );
 		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + 0]);
 	    }
 	}
 
-	if ( (p1.lat > p_last.lat) ||
-	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
+	if ( (p1.get_lat() > p_last.get_lat()) ||
+	     ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() > p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
 		    "  Loading " << tile_diameter << "tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
@@ -424,12 +428,13 @@ int fgTileMgrUpdate( void ) {
 			tiles[((j+1) * tile_diameter) + i];
 		}
 		// load in new column
-		fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
+		// fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
+		p2 = fgBucketOffset( last_lon, last_lat, i - dw, dh + 1);
 		fgTileMgrLoadTile( p2, &tiles[((tile_diameter-1) * 
 					       tile_diameter) + i]);
 	    }
-	} else if ( (p1.lat < p_last.lat) ||
-		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
+	} else if ( (p1.get_lat() < p_last.get_lat()) ||
+		    ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() < p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
 		    "  Loading " << tile_diameter << "tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
@@ -439,7 +444,8 @@ int fgTileMgrUpdate( void ) {
 			tiles[((j-1) * tile_diameter) + i];
 		}
 		// load in new column
-		fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
+		// fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
+		p2 = fgBucketOffset( last_lon, last_lat, i - dw, -dh - 1);
 		fgTileMgrLoadTile( p2, &tiles[0 + i]);
 	    }
 	}
@@ -453,10 +459,9 @@ int fgTileMgrUpdate( void ) {
 	fgTileMgrCurElev( f->get_Longitude(), f->get_Latitude(), 
 			  tmp_abs_view_pos );
 
-    p_last.lon = p1.lon;
-    p_last.lat = p1.lat;
-    p_last.x = p1.x;
-    p_last.y = p1.y;
+    p_last = p1;
+    last_lon = f->get_Longitude() * RAD_TO_DEG;
+    last_lat = f->get_Latitude() * RAD_TO_DEG;
 
     return 1;
 }
@@ -758,6 +763,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.55  1999/03/25 19:03:28  curt
+// Converted to use new bucket routines.
+//
 // Revision 1.54  1999/02/26 22:10:05  curt
 // Added initial support for native SGI compilers.
 //

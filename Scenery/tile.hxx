@@ -46,17 +46,18 @@
 #include <vector>
 #include STL_STRING
 
-#include <Bucket/bucketutils.h>
+#include <Bucket/newbucket.hxx>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Objects/fragment.hxx>
 
-FG_USING_STD(string);
-FG_USING_STD(vector);
-
 #ifdef FG_HAVE_NATIVE_SGI_COMPILERS
 #include <strings.h>
 #endif
+
+FG_USING_STD(string);
+FG_USING_STD(vector);
+
 
 // Scenery tile class
 class fgTILE {
@@ -79,7 +80,7 @@ public:
     GLdouble model_view[16];
 
     // this tile's official location in the world
-    fgBUCKET tile_bucket;
+    FGBucket tile_bucket;
 
     // the tile cache will mark here if the tile is being used
     bool used;
@@ -161,6 +162,9 @@ private:
 
 
 // $Log$
+// Revision 1.26  1999/03/25 19:03:25  curt
+// Converted to use new bucket routines.
+//
 // Revision 1.25  1999/03/02 01:03:30  curt
 // Tweaks for building with native SGI compilers.
 //

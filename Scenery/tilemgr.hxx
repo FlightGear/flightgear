@@ -31,7 +31,7 @@
 #endif                                   
 
 
-#include <Bucket/bucketutils.hxx>
+#include <Bucket/newbucket.hxx>
 
 
 // Initialize the Tile Manager subsystem
@@ -47,7 +47,7 @@ int fgTileMgrUpdate( void );
 // render the scene, but we'd also like to be able to do this
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
-double fgTileMgrCurElevNEW( const fgBUCKET& p );
+double fgTileMgrCurElevNEW( const FGBucket& p );
 double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos );
 
 
@@ -59,6 +59,9 @@ void fgTileMgrRender( void );
 
 
 // $Log$
+// Revision 1.8  1999/03/25 19:03:29  curt
+// Converted to use new bucket routines.
+//
 // Revision 1.7  1999/01/27 04:49:49  curt
 // Fixes so that the sim can start out at an airport below sea level.
 //

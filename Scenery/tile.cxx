@@ -29,7 +29,7 @@
 
 #include <Debug/logstream.hxx>
 #include <Scenery/tile.hxx>
-#include "Bucket/bucketutils.hxx"
+#include "Bucket/newbucket.hxx"
 
 #include "tile.hxx"
 
@@ -67,6 +67,9 @@ fgTILE::release_fragments()
 
 
 // $Log$
+// Revision 1.16  1999/03/25 19:03:24  curt
+// Converted to use new bucket routines.
+//
 // Revision 1.15  1999/03/02 01:03:29  curt
 // Tweaks for building with native SGI compilers.
 //

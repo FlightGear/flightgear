@@ -35,7 +35,7 @@
 
 #include <Debug/logstream.hxx>
 #include <Airports/genapt.hxx>
-#include <Bucket/bucketutils.hxx>
+// #include <Bucket/bucketutils.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Objects/obj.hxx>
@@ -69,7 +69,7 @@ fgTILECACHE::init( void )
 
 // Search for the specified "bucket" in the cache
 int
-fgTILECACHE::exists( const fgBUCKET& p )
+fgTILECACHE::exists( const FGBucket& p )
 {
     int i;
 
@@ -87,11 +87,11 @@ fgTILECACHE::exists( const fgBUCKET& p )
 
 // Fill in a tile cache entry with real data for the specified bucket
 void
-fgTILECACHE::fill_in( int index, const fgBUCKET& p )
+fgTILECACHE::fill_in( int index, FGBucket& p )
 {
     // Load the appropriate data file and build tile fragment list
     string tile_path = current_options.get_fg_root() +
-	"/Scenery/" + fgBucketGenBasePath(p) + "/" + fgBucketGenIndex(p);
+	"/Scenery/" + p.gen_base_path() + "/" + p.gen_index_str();
 
     tile_cache[index].used = true;
     tile_cache[index].tile_bucket = p;
@@ -181,6 +181,9 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.23  1999/03/25 19:03:26  curt
+// Converted to use new bucket routines.
+//
 // Revision 1.22  1999/02/26 22:10:04  curt
 // Added initial support for native SGI compilers.
 //
