@@ -125,6 +125,7 @@ bool FGPropulsion::GetSteadyState(void)
       Engines[i]->SetTrimMode(true);
       Thrusters[i]->SetdeltaT(dt*rate);
       steady=false;
+      steady_count=0;
       while (!steady && j < 6000) {
         PowerAvailable = Engines[i]->Calculate(Thrusters[i]->GetPowerRequired());
         lastThrust = currentThrust;

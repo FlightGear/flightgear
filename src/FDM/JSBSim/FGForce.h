@@ -260,6 +260,10 @@ public:
   inline void SetLocationY(double y) {vXYZn(2) = y;}
   inline void SetLocationZ(double z) {vXYZn(3) = z;}
   inline void SetLocation(FGColumnVector3 vv) { vXYZn = vv; }
+  
+  inline double GetLocationX( void ) { return vXYZn(1);}
+  inline double GetLocationY( void ) { return vXYZn(2);}
+  inline double GetLocationZ( void ) { return vXYZn(3);}
   FGColumnVector3& GetLocation(void) { return vXYZn; }
 
   //these angles are relative to body axes, not earth!!!!!

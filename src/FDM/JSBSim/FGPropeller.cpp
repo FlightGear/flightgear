@@ -158,8 +158,8 @@ double FGPropeller::Calculate(double PowerAvailable)
   if (P_Factor > 0.0001) {
     alpha = fdmex->GetTranslation()->Getalpha();
     beta  = fdmex->GetTranslation()->Getbeta();
-    SetLocationY(P_Factor*alpha*fabs(Sense)/Sense);
-    SetLocationZ(P_Factor*beta*fabs(Sense)/Sense);
+    SetLocationY( GetLocationY() + P_Factor*alpha*fabs(Sense)/Sense);
+    SetLocationZ( GetLocationZ() + P_Factor*beta*fabs(Sense)/Sense);
   } else if (P_Factor < 0.000) {
     cerr << "P-Factor value in config file must be greater than zero" << endl;
   }
