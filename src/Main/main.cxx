@@ -379,7 +379,8 @@ void trRenderFrame( void ) {
     ssgSetNearFar( scene_nearplane, scene_farplane );
     ssgCullAndDraw( globals->get_scenery()->get_lighting() );
 
-    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+    if (fgGetBool("/environment/clouds/status"))
+      thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
     globals->get_model_mgr()->draw();
     globals->get_aircraft_model()->draw();
@@ -705,6 +706,7 @@ void fgRenderFrame() {
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky cloud layers
+	  if (fgGetBool("/environment/clouds/status"))
 	    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 	}
 
@@ -1567,27 +1569,6 @@ int mainLoop( int argc, char **argv ) {
 		   globals->get_ephem()->getPlanets(), 60000.0,
 		   globals->get_ephem()->getNumStars(),
 		   globals->get_ephem()->getStars(), 60000.0 );
-
-    if ( fgGetBool("/environment/clouds/status") ) {
-	// thesky->add_cloud_layer( 2000.0, 200.0, 50.0, 40000.0,
-        //                          SG_CLOUD_OVERCAST );
-        SGCloudLayer * layer = new SGCloudLayer(sky_tex_path.str());
-	layer->setElevation_m(fgGetDouble("/environment/clouds/altitude-ft")
-			       * SG_FEET_TO_METER);
-	layer->setThickness_m(200.0);
-	layer->setTransition_m(50.0);
-	layer->setSpan_m(40000.0);
-	layer->setType(SGCloudLayer::SG_CLOUD_MOSTLY_SUNNY);
-	thesky->add_cloud_layer(layer);
-
-	layer = new SGCloudLayer(sky_tex_path.str());
-	layer->setElevation_m(6000.0);
-	layer->setThickness_m(20.0);
-	layer->setTransition_m(10.0);
-	layer->setSpan_m(40000.0);
-	layer->setType(SGCloudLayer::SG_CLOUD_CIRRUS);
-	thesky->add_cloud_layer(layer);
-    }
 
     // Initialize MagVar model
     SGMagVar *magvar = new SGMagVar();
