@@ -286,6 +286,7 @@ while ( <MASTER> ) {
 
 	$thumbinfo = `identify $mdir/$linkname.jpg`;
 	($name, $type, $geom, $junk) = split(/\s+/, $thumbinfo, 4);
+	$geom =~ s/\+.*//;
 	($twidth, $theight) = split(/x/, $geom);
         print "movie thumb geom = $geom  $twidth  $theight\n";
 
