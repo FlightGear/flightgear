@@ -61,6 +61,8 @@ private:
     SGPropertyNode_ptr _pitch_in_node;
     SGPropertyNode_ptr _roll_in_node;
     SGPropertyNode_ptr _suction_node;
+    SGPropertyNode_ptr _pitch_int_node;
+    SGPropertyNode_ptr _roll_int_node;
     SGPropertyNode_ptr _pitch_out_node;
     SGPropertyNode_ptr _roll_out_node;
     

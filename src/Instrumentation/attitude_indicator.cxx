@@ -36,6 +36,12 @@ AttitudeIndicator::init ()
         fgGetNode("/instrumentation/attitude-indicator/caged-flag", true);
     _tumble_node =
         fgGetNode("/instrumentation/attitude-indicator/tumble-norm", true);
+    _pitch_int_node =
+        fgGetNode("/instrumentation/attitude-indicator/internal-pitch-deg",
+                  true);
+    _roll_int_node =
+        fgGetNode("/instrumentation/attitude-indicator/internal-roll-deg",
+                  true);
     _pitch_out_node =
         fgGetNode("/instrumentation/attitude-indicator/indicated-pitch-deg",
                   true);
@@ -65,8 +71,8 @@ AttitudeIndicator::update (double dt)
 {
                                 // If it's caged, it doesn't indicate
     if (_caged_node->getBoolValue()) {
-        _roll_out_node->setDoubleValue(0.0);
-        _pitch_out_node->setDoubleValue(0.0);
+        _roll_int_node->setDoubleValue(0.0);
+        _pitch_int_node->setDoubleValue(0.0);
         return;
     }
 
@@ -111,14 +117,34 @@ AttitudeIndicator::update (double dt)
         _tumble_node->setDoubleValue(tumble);
     }
 
-    roll = fgGetLowPass(_roll_out_node->getDoubleValue(), roll,
+    roll = fgGetLowPass(_roll_int_node->getDoubleValue(), roll,
                         responsiveness);
-    pitch = fgGetLowPass(_pitch_out_node->getDoubleValue(), pitch,
+    pitch = fgGetLowPass(_pitch_int_node->getDoubleValue(), pitch,
                          responsiveness);
 
                                 // Assign the new values
-    _roll_out_node->setDoubleValue(roll);
-    _pitch_out_node->setDoubleValue(pitch);
+    _roll_int_node->setDoubleValue(roll);
+    _pitch_int_node->setDoubleValue(pitch);
+
+    // add in a gyro underspin "error" if gyro is spinning too slowly
+    const double spin_thresh = 0.4;
+    const double max_roll_error = 40.0;
+    const double max_pitch_error = 15.0;
+    double roll_error;
+    double pitch_error;
+    if ( spin <= spin_thresh ) {
+        double roll_error_factor = (spin_thresh - spin) / spin_thresh;
+        double pitch_error_factor = (spin_thresh - spin) / spin_thresh;
+        roll_error = roll_error_factor * roll_error_factor * max_roll_error;
+        pitch_error = pitch_error_factor * pitch_error_factor * max_pitch_error;
+    } else {
+        roll_error = 0.0;
+        pitch_error = 0.0;
+    }
+
+    _roll_out_node->setDoubleValue(roll + roll_error);
+    _pitch_out_node->setDoubleValue(pitch + pitch_error);
+    
 }
 
 // end of attitude_indicator.cxx
