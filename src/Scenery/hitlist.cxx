@@ -30,7 +30,7 @@ extern ssgBranch *terrain;
 
 // check to see if the intersection point is
 // actually inside this face
-static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
+static bool pointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
 {
     double xmin, xmax, ymin, ymax, zmin, zmax;
 	
@@ -211,7 +211,7 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
 
 	sgdVec3 point;
 	if( sgdIsectInfLinePlane( point, orig, dir, plane ) ) {
-	    if( sgdPointInTriangle( point, tri ) ) {
+	    if( pointInTriangle( point, tri ) ) {
 		add(leaf,i,point,plane);
 		num_hits++;
 	    }
