@@ -55,6 +55,7 @@ private:
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _heading_node;
+    SGPropertyNode_ptr _roll_node;
     SGPropertyNode_ptr _beta_node;
     SGPropertyNode_ptr _variation_node;
     SGPropertyNode_ptr _dip_node;
