@@ -1,11 +1,12 @@
-July 21, 1997
+March 15, 1998
 =============
 
 Here is a quick outline of *one* way you can build FG for Win32 using
 a completely free development environment.
 
-1.  Install and configure the Cygnus Gnu-Win32  development
-    environment.  The main Cygnus Gnu-Win32 page is at: 
+1.  Install and configure the Cygnus Gnu-Win32 development
+    environment. The latest version is Beta 19. The main 
+    Cygnus Gnu-Win32 page is at: 
 
         http://www.cygnus.com/misc/gnu-win32/
 
@@ -13,20 +14,30 @@ a completely free development environment.
 
         ftp://ftp.cygnus.com/pub/gnu-win32/latest/cdk.exe
 
-    To install, just run the file: "cdk.exe".  Be sure to read this
-    package's README for post installation configuration instructions:
+    To install, just run the file: "cdk.exe" by double-clicking on it
+    from windows explorer.  Be sure to read this package's README:
 
         http://www.cygnus.com/misc/gnu-win32/readme_toc.html
 
-
-2.  Fetch the Flight Gear prototype code.  It can be found at:
-
-        http://www.menet.umn.edu/~curt/fgfs/prototype/source/
-
-    Grab the latest .zip file.
+    and install them as well. After installing the cygnus compiler
+    and the usertools you should find a program group "Gygnus" 
+    in your start menu.
 
 
-3.  Unpack the FG prototype code.  Run:
+2.  Fetch the Flight Gear source code and win32 libs.  They can be
+    found at:
+
+        http://www.menet.umn.edu/~curt/fgfs/Downloads/
+
+    Grab the latest source-X.XX.zip file.
+
+    In addition, you need the win32 libraries from win32-libs-X.XX.zip
+
+    Also, don't forget to download scenery and textures.  These aren't
+    needed to built the code, but you'll need them before you can run
+    the executable.
+
+3.  Unpack the FG prototype code and the libraries.  Run:
 
         pkunzip -d <file>.zip
 
@@ -34,69 +45,101 @@ a completely free development environment.
     subdirectories.  Otherwise you will have one big mess!
 
     This should create a directory called ``FlightGear'' with several
-    subdirectories.
+    subdirectories. Do the same with the libraries.
 
 
-3.  Install the OpenGL/GLUT headers.  Cd to the newly created
-    directory:  ``FlightGear\Src\Win32''.  There you will find a file
-    called gl-hdrs.zip.  Assuming you installed the free Cygnus
-    compiler in C:\gnuwin32\b18,, copy the file ``gl-hdrs.zip'' to
-    ``c:\gnuwin32\b18\include\":  
+4.  The win32-libs zip file provides the necessary OpenGL/GLUT headers
+    and libraries for the build process.
 
-        copy gl-hdrs.zip c:\gnuwin32\b18\include\
+    Before trying to run the executable, you should copy glut.dll from
 
-    Then go to the c:\gnuwin32\b18\include\ directory and run:
+        ...\FlightGear\Win32\glut.dll
 
-        pkunzip -d gl-hdrs.zip
-
-    Remember the -d option!  You can remove the gl-hdrs.zip file if
-    you wish. 
+    into someplace in your path such as:
+   
+        ...\FlightGear\Src\Main\glut.dll
 
 
-4.  Install the OpenGL dynamic link libraries.  If you are running
-    an NT system you can skip this step.  NT comes with the OpenGL
-    libraries.  If you are running windows 95, you should grab the
-    OpenGL libraries from the Microsoft ftp server:
+5.  Install the Silicon Graphics OpenGL dynamic link libraries. For
+    this purpose, get the file sgi-opengl2.exe from the flight gear
+    project site.  This is a win95/winnt self extracting installation 
+    program.  Install it by double-clicking in windows explorer.
 
-        ftp://ftp.microsoft.com/Softlib/MSLFILES/Opengl95.exe
 
-    This is a self extracting compressed archive, so run this .exe to
-    extract the files.  To install these permanently on your system,
-    you can copy them to your ``c:\windows\system\" directory.
-    Otherwise, you could just as easily copy them to the
-    ``FlightGear\Src\GLUT'' directory or else someplace that is in
-    your path.
+6.  Edit the ``commondefs'' file, if necessary.  Go to the main
+    FlightGear source directory.  From where ever you extracted the FG
+    code, cd to ``FlightGear\Src''.  Edit the file called
+    ``commondefs''.  Find the part of the file that says: ``Uncomment
+    one of the following sections depending on your system''
 
-4.  Edit the ``make.inc'' file.  Go back to the main FlightGear source
-    directory.  From where ever you extracted the FG code, cd to
-    ``FlightGear\Src''.  Edit the file called ``make.inc''.  Find the
-    part of the file that says:  ``Uncomment one of the following
-    sections depending on your system'' 
-
-    Uncomment all the makefile defines in the ``Cygnus Win32''
+    Uncomment all the makefile defines in the ``Cygnus Win32 beta19''
     section.  Also, you should comment out any of the defines in the
-    other platform dependent sections.
+    other platform dependent sections. Depending on the version,
+    you may find, that the appropriate settings are already done
+    and you can skip this step.
 
 
-5.  Build the executable.  From the same ``FlightGear\Src'' directory,
-    run the following command:
+7.  Prepare the shell.  Call the Cygnus shell from the start menu.
+    At first, you have to mount your flight gear drive (assuming it is g:) 
+    with 
 
-        make
+    mount g:/ /mnt
 
-    make is a build utility that comes with the Cygnus development
-    environment.
+    (Be careful writing slashes; you are working within a strange mixture 
+    of DOS/WIN95/UNIX here.)
+
+    If anything went wrong with mounting you can unmount the drive with
+    mount --reset.
+
+    Now change to the flight gear source directory with
+
+    cd /mnt/FlightGear/Src    
+
+    (make sure you're correct with the "pwd" command)
+
+
+    Next, you have to set the environment variables as:
+
+    SET FG_ROOT=/mnt/FlightGear
+    SET FG_ROOT_SRC=${FG_ROOT}/Src
+    SET FG_ROOT_LIB=${FG_ROOT}/Lib
+
+
+8.  Build the executable. Type first
+
+    make depend
+
+    and after that's done type
+
+    make
 
     You will see a few warning messages from the compiler, but none of
     these are serious.  
 
-
-6.  Try it out!  When make is done, cd to the FlightGear\Src\GLUT
-    directory and run the simulator:
-
-        fg0
+    Be prepared flight gear to need 10 minutes or more for compilation
+    (depending of your system).
 
 
-7.  I wrote this document from the top of my head so it is certain to
-    contain errors.   Please send me email (curt@me.umn.edu) and let
-    me know what changes need to be made to this document and these
-    procedures to make them easier to understand and follow.
+9.  Try it out!  When make is done close the Cygnus shell. There are several
+    possibilities running flight gear. The one which should always work
+    is as follows:
+
+    Open an ordinary DOS shell. Within this one reset the flight gear root 
+    environment variable to  
+
+    SET FG_ROOT=g:\flightgear
+
+    (or whatever your drive is.) This is absolutely necessary as win95
+    does not recover your "mounted" drive.
+
+    Goto the directory where your freshly build executable sits, i.e.
+
+    cd g:\flightgear\src\main
+  
+    and type fg0.exe.
+
+
+10. Tell me that it works! If it doesn't, tell me what goes wrong.  My
+    email is curt@me.umn.edu.  Please send me email and let me know
+    what changes need to be made to this document and these procedures
+    to make them easier to understand and follow.
