@@ -27,7 +27,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
 
 #include "vector.hxx"
 
@@ -135,9 +135,12 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d) {
 
 
 /* $Log$
-/* Revision 1.3  1998/08/24 20:04:12  curt
-/* Various "inline" code optimizations contributed by Norman Vine.
+/* Revision 1.4  1998/10/16 00:50:31  curt
+/* Added point3d.hxx to replace cheezy fgPoint3d struct.
 /*
+ * Revision 1.3  1998/08/24 20:04:12  curt
+ * Various "inline" code optimizations contributed by Norman Vine.
+ *
  * Revision 1.2  1998/07/24 21:34:38  curt
  * fgPointLine() rewritten into fgPointLineSquared() ... this ultimately saves
  * us from doing a sqrt().

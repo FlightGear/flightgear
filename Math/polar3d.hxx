@@ -34,33 +34,37 @@
 
 
 #include <Include/fg_constants.h>
-#include <Include/fg_types.h>
+// #include <Include/fg_types.h>
+#include <Math/point3d.hxx>
 
 
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
  * must be specified in radians.  The FG convention is for distances
  * to be specified in meters */
-fgPoint3d fgPolarToCart3d(fgPoint3d p);
+Point3D fgPolarToCart3d(const Point3D& p);
 
 
 /* Convert a cartesian coordinate to polar coordinates (lon/lat
  * specified in radians.  Distances are specified in meters. */
-fgPoint3d fgCartToPolar3d(fgPoint3d cp);
+Point3D fgCartToPolar3d(const Point3D& cp);
 
 
 /* Find the Altitude above the Ellipsoid (WGS84) given the Earth
  * Centered Cartesian coordinate vector Distances are specified in
  * meters. */
-double fgGeodAltFromCart(fgPoint3d cp);
+double fgGeodAltFromCart(const Point3D& cp);
 
 
 #endif /* _POLAR_HXX */
 
 
 /* $Log$
-/* Revision 1.2  1998/08/24 20:04:12  curt
-/* Various "inline" code optimizations contributed by Norman Vine.
+/* Revision 1.3  1998/10/16 00:50:30  curt
+/* Added point3d.hxx to replace cheezy fgPoint3d struct.
 /*
+ * Revision 1.2  1998/08/24 20:04:12  curt
+ * Various "inline" code optimizations contributed by Norman Vine.
+ *
  * Revision 1.1  1998/07/08 14:40:09  curt
  * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
  * Updated fg_geodesy comments to reflect that routines expect and produce

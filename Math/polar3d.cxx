@@ -35,15 +35,15 @@
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
  * must be specified in radians.  The FG convention is for distances
  * to be specified in meters */
-fgPoint3d fgPolarToCart3d(fgPoint3d p) {
-    fgPoint3d pnew;
+Point3D fgPolarToCart3d(const Point3D& p) {
+    Point3D pnew;
     double tmp;
 
-    tmp = cos(p.lat) * p.radius;
+    tmp = cos( p.lat() ) * p.radius();
 
-    pnew.x = cos(p.lon) * tmp;
-    pnew.y = sin(p.lon) * tmp;
-    pnew.z = sin(p.lat) * p.radius;
+    pnew.setvals( cos( p.lon() ) * tmp,
+		  sin( p.lon() ) * tmp,
+		  sin( p.lat() ) * p.radius() );
 
     return(pnew);
 }
@@ -51,15 +51,16 @@ fgPoint3d fgPolarToCart3d(fgPoint3d p) {
 
 /* Convert a cartesian coordinate to polar coordinates (lon/lat
  * specified in radians.  Distances are specified in meters. */
-fgPoint3d fgCartToPolar3d(fgPoint3d cp) {
-    fgPoint3d pp;
+Point3D fgCartToPolar3d(const Point3D& cp) {
+    Point3D pp;
 
-    pp.lon = atan2( cp.y, cp.x );
-    pp.lat = FG_PI_2 - atan2( sqrt(cp.x*cp.x + cp.y*cp.y), cp.z );
-    pp.radius = sqrt(cp.x*cp.x + cp.y*cp.y + cp.z*cp.z);
+    pp.setvals( atan2( cp.y(), cp.x() ),
+		FG_PI_2 - atan2( sqrt(cp.x()*cp.x() + cp.y()*cp.y()), cp.z() ),
+		sqrt(cp.x()*cp.x() + cp.y()*cp.y() + cp.z()*cp.z()) );
 
     /* printf("lon = %.2f  lat = %.2f  radius = %.2f\n", 
               pp.lon, pp.lat, pp.radius); */
+
     return(pp);
 }
 
@@ -67,14 +68,14 @@ fgPoint3d fgCartToPolar3d(fgPoint3d cp) {
 /* Find the Altitude above the Ellipsoid (WGS84) given the Earth
  * Centered Cartesian coordinate vector Distances are specified in
  * meters. */
-double fgGeodAltFromCart(fgPoint3d cp)
+double fgGeodAltFromCart(const Point3D& cp)
 {
     double t_lat, x_alpha, mu_alpha;
     double lat_geoc, radius;
     double result;
 
-    lat_geoc = FG_PI_2 - atan2( sqrt(cp.x*cp.x + cp.y*cp.y), cp.z );
-    radius = sqrt(cp.x*cp.x + cp.y*cp.y + cp.z*cp.z);
+    lat_geoc = FG_PI_2 - atan2( sqrt(cp.x()*cp.x() + cp.y()*cp.y()), cp.z() );
+    radius = sqrt( cp.x()*cp.x() + cp.y()*cp.y() + cp.z()*cp.z() );
 	
     if( ( (FG_PI_2 - lat_geoc) < ONE_SECOND )    /* near North pole */
 	|| ( (FG_PI_2 + lat_geoc) < ONE_SECOND ) )   /* near South pole */
@@ -95,9 +96,12 @@ double fgGeodAltFromCart(fgPoint3d cp)
 
 
 /* $Log$
-/* Revision 1.2  1998/08/24 20:04:11  curt
-/* Various "inline" code optimizations contributed by Norman Vine.
+/* Revision 1.3  1998/10/16 00:50:29  curt
+/* Added point3d.hxx to replace cheezy fgPoint3d struct.
 /*
+ * Revision 1.2  1998/08/24 20:04:11  curt
+ * Various "inline" code optimizations contributed by Norman Vine.
+ *
  * Revision 1.1  1998/07/08 14:40:08  curt
  * polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
  * Updated fg_geodesy comments to reflect that routines expect and produce
