@@ -1,6 +1,14 @@
 #!/bin/sh
 
-WINDOW=YES
+if [ $1 = "--full" ]; then
+    echo "Running full screen ..."
+    shift
+    WINDOW=NO
+else
+    echo "Running in a window, use --full to run full screen."
+    WINDOW=YES
+fi
+echo
 
 if [ $WINDOW = "YES" ]; then
     # in a window (slow hack)

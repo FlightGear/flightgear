@@ -478,28 +478,30 @@ static void send_rul_out( fgIOCHANNEL *p ) {
     
     // get roll and pitch, convert to degrees
     double roll_deg = f->get_Phi() * RAD_TO_DEG;
-    while ( roll_deg < 0.0 ) {
+    while ( roll_deg < -180.0 ) {
 	roll_deg += 360.0;
     }
-    while ( roll_deg > 360.0 ) {
+    while ( roll_deg > 180.0 ) {
 	roll_deg -= 360.0;
     }
 
     double pitch_deg = f->get_Theta() * RAD_TO_DEG;
-    while ( pitch_deg < 0.0 ) {
+    while ( pitch_deg < -180.0 ) {
 	pitch_deg += 360.0;
     }
-    while ( pitch_deg > 360.0 ) {
+    while ( pitch_deg > 180.0 ) {
 	pitch_deg -= 360.0;
     }
 
     // scale roll and pitch to output format (1 - 255)
-    int roll = (int)(roll_deg * 254.0 / 359.0) + 1;
-    int pitch = (int)(pitch_deg * 254.0 / 359.0) + 1;
+    // straight && level == (128, 128)
+
+    int roll = (int)( (roll_deg+180.0) * 255.0 / 360.0) + 1;
+    int pitch = (int)( (pitch_deg+180.0) * 255.0 / 360.0) + 1;
 
     sprintf( rul, "p%c%c\n", roll, pitch);
 
-    FG_LOG( FG_SERIAL, FG_DEBUG, "p " << roll << " " << pitch );
+    FG_LOG( FG_SERIAL, FG_INFO, "p " << roll << " " << pitch );
 
     string rul_sentence = rul;
     p->port.write_port(rul_sentence);
