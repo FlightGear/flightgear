@@ -27,6 +27,7 @@
 
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/magvar/magvar.hxx>
+#include <simgear/route/route.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 
@@ -54,6 +55,9 @@ private:
     // Magnetic Variation
     SGMagVar *mag;
 
+    // Global autopilot "route"
+    SGRoute *route;
+
 public:
 
     FGGlobals();
@@ -78,6 +82,9 @@ public:
 
     inline SGMagVar *get_mag() const { return mag; }
     inline void set_mag( SGMagVar *m ) { mag = m; }
+
+    inline SGRoute *get_route() const { return route; }
+    inline void set_route( SGRoute *r ) { route = r; }
 };
 
 

@@ -45,6 +45,7 @@ bool global_fullscreen = true;
 #include <simgear/timing/sg_time.hxx>
 
 #include <Include/general.hxx>
+#include <Airports/simple.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
@@ -52,6 +53,7 @@ bool global_fullscreen = true;
 #  include <NetworkOLK/network.h>
 #endif
 
+#include "fg_init.hxx"
 #include "globals.hxx"
 #include "options.hxx"
 #include "views.hxx"
@@ -589,6 +591,36 @@ fgOPTIONS::parse_channel( const string& type, const string& channel_str ) {
 }
 
 
+// Parse --wp=ID[,alt]
+bool fgOPTIONS::parse_wp( const string& arg ) {
+    string id, alt_str;
+    double alt = 0.0;
+
+    int pos = arg.find( "," );
+    if ( pos != string::npos ) {
+	id = arg.substr( 0, pos );
+	alt_str = arg.substr( pos + 1 );
+	// cout << "id str = " << id << "  alt str = " << alt_str << endl;
+	alt = atof( alt_str.c_str() );
+	if ( units == FG_UNITS_FEET ) {
+	    alt *= FEET_TO_METER;
+	}
+    } else {
+	id = arg;
+    }
+
+    FGAirport a;
+    if ( fgFindAirportID( id, &a ) ) {
+	SGWayPoint wp( a.longitude, a.latitude, alt, SGWayPoint::WGS84, id );
+	globals->get_route()->add_waypoint( wp );
+
+	return true;
+    } else {
+	return false;
+    }
+}
+
+
 // Parse a single option
 int fgOPTIONS::parse_option( const string& arg ) {
     // General Options
@@ -864,6 +896,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	current_properties.setStringValue(name.c_str(), value);
 	FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
 	       << name << " to \"" << value << '"');
+    } else if ( arg.find( "--wp=" ) != string::npos ) {
+	parse_wp( arg.substr( 5 ) );
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
@@ -1043,7 +1077,7 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--notrim:  Do NOT attempt to trim the model when initializing JSBsim" << endl;
     cout << endl;
     //(UIUC)
-    cout <<"Aircraft model directory" << endl;
+    cout <<"Aircraft model directory:" << endl;
     cout <<"\t--aircraft-dir=<path> path is relative to the path of the executable" << endl;
     cout << endl;
 
@@ -1119,7 +1153,7 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--start-date-lat=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
 	 << "\t\tdate/time. Uses Local Aircraft Time" << endl;
 #ifdef FG_NETWORK_OLK
-    cout << "" << endl;
+    cout << endl;
 
     cout << "Network Options:" << endl;
     cout << "\t--enable-network-olk:  enable Multipilot mode" << endl;
@@ -1127,6 +1161,13 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--net-hud:  Hud displays network info" << endl;
     cout << "\t--net-id=name:  specify your own callsign" << endl;
 #endif
+
+    cout << endl;
+    cout << "Route/Way Point Options:" << endl;
+    cout << "\t--wp=ID[,alt]:  specify a waypoint for the GC autopilot" << endl;
+    cout << "\t\tYou can specify multiple waypoints (a route) with multiple"
+	 << endl;
+    cout << "\t\tinstances of --wp=" << endl;
 }
 
 

@@ -1302,6 +1302,8 @@ int main( int argc, char **argv ) {
 
     // needs to happen before we parse command line options
     globals = new FGGlobals;
+    SGRoute *route = new SGRoute;
+    globals->set_route( route );
 
     // Load the configuration parameters
     if ( !fgInitConfig(argc, argv) ) {

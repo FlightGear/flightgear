@@ -552,6 +552,7 @@ void GLUTspecialkey(int k, int x, int y) {
 		 FGAutopilot::FG_HEADING_WAYPOINT ) {
 		current_autopilot->set_HeadingMode(
 		    FGAutopilot::FG_HEADING_WAYPOINT );
+		current_autopilot->set_HeadingEnabled( true );
 	    } else {
 		current_autopilot->set_HeadingMode(
 		    FGAutopilot::FG_HEADING_LOCK );

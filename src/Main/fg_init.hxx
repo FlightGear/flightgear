@@ -31,6 +31,9 @@
 #endif                                   
 
 
+#include <Airports/simple.hxx>
+
+
 // Read in configuration (file and command line) and just set fg_root
 bool fgInitFGRoot ( int argc, char **argv );
 
@@ -52,6 +55,9 @@ bool fgInitSubsystems( void );
 // Reset
 void fgReInitSubsystems( void );
 
+
+// find basic airport location info from airport database
+bool fgFindAirportID( const string& id, FGAirport *a );
 
 // Set current_options lon/lat given an airport id
 bool fgSetPosFromAirportID( const string& id );

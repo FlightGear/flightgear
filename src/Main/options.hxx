@@ -384,6 +384,7 @@ private:
     int parse_fdm( const string& fm );
     double parse_fov( const string& arg );
     bool parse_channel( const string& type, const string& channel_str );
+    bool parse_wp( const string& arg );
 };
 
 

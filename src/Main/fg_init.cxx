@@ -161,44 +161,20 @@ bool fgInitConfig ( int argc, char **argv ) {
 }
 
 
-// Set current_options lon/lat given an airport id
-bool fgSetPosFromAirportID( const string& id ) {
-    FGAirport a;
-    double lon, lat;
-
+// find basic airport location info from airport database
+bool fgFindAirportID( const string& id, FGAirport *a ) {
     if ( id.length() ) {
-	// set initial position from airport id
-
 	FGPath path( current_options.get_fg_root() );
 	path.append( "Airports" );
 	path.append( "simple.mk4" );
 	FGAirports airports( path.c_str() );
 
-	FG_LOG( FG_GENERAL, FG_INFO,
-		"Attempting to set starting position from airport code "
-		<< id );
+	FG_LOG( FG_GENERAL, FG_INFO, "Searching for airport code = " << id );
 
-	// FGPath inpath( current_options.get_fg_root() );
-	// inpath.append( "Airports" );
-	// inpath.append( "apt_simple" );
-	// airports.load( inpath.c_str() );
-
-	// FGPath outpath( current_options.get_fg_root() );
-	// outpath.append( "Airports" );
-	// outpath.append( "simple.gdbm" );
-	// airports.dump_gdbm( outpath.c_str() );
-
-	if ( ! airports.search( id, &a ) ) {
+	if ( ! airports.search( id, a ) ) {
 	    FG_LOG( FG_GENERAL, FG_ALERT,
-		    "Failed to find " << id << " in database." );
+		    "Failed to find " << id << " in " << path.str() );
 	    return false;
-	} else {
-	    current_options.set_lon( a.longitude );
-	    current_options.set_lat( a.latitude );
-	    current_properties.setDoubleValue("/position/longitude",
-					      a.longitude);
-	    current_properties.setDoubleValue("/position/latitude",
-					      a.latitude);
 	}
     } else {
 	return false;
@@ -206,10 +182,39 @@ bool fgSetPosFromAirportID( const string& id ) {
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Position for " << id << " is ("
-	    << a.longitude << ", "
-	    << a.latitude << ")" );
+	    << a->longitude << ", "
+	    << a->latitude << ")" );
 
     return true;
+}
+
+
+// Set current_options lon/lat given an airport id
+bool fgSetPosFromAirportID( const string& id ) {
+    FGAirport a;
+    double lon, lat;
+
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "Attempting to set starting position from airport code " << id );
+
+    if ( fgFindAirportID( id, &a ) ) {
+	current_options.set_lon( a.longitude );
+	current_options.set_lat( a.latitude );
+	current_properties.setDoubleValue("/position/longitude",
+					  a.longitude);
+	current_properties.setDoubleValue("/position/latitude",
+					  a.latitude);
+
+	FG_LOG( FG_GENERAL, FG_INFO,
+		"Position for " << id << " is ("
+		<< a.longitude << ", "
+		<< a.latitude << ")" );
+
+	return true;
+    } else {
+	return false;
+    }
+
 }
 
 

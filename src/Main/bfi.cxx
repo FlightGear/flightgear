@@ -314,9 +314,6 @@ FGBFI::reinit ()
   setAPAltitude(apAltitude);
   setTargetAirport(targetAirport);
   setGPSLock(gpsLock);
-  // setGPSTargetLatitude(gpsLatitude);
-  // setGPSTargetLongitude(gpsLongitude);
-  setGPSTargetWayPoint(gpsLatitude, gpsLongitude);
 
   _needReinit = false;
 
@@ -1555,28 +1552,6 @@ FGBFI::getGPSTargetLatitude ()
 {
     return current_autopilot->get_TargetLatitude();
 }
-
-
-/**
- * Set the GPS target waypoint
- */
-void
-FGBFI::setGPSTargetWayPoint (double latitude, double longitude)
-{
-  current_autopilot->set_WayPoint( longitude, latitude, "reload" );
-}
-
-
-#if 0
-/**
- * Set the GPS target latitude in degrees (negative for south).
- */
-void
-FGBFI::setGPSTargetLatitude (double latitude)
-{
-  current_autopilot->set_TargetLatitude( latitude );
-}
-#endif
 
 
 /**
