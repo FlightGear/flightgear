@@ -63,6 +63,7 @@
 
 #include "keyboard.hxx"
 #include "options.hxx"
+#include "save.hxx"
 #include "views.hxx"
 
 extern void NewAltitude( puObject *cb );
@@ -383,6 +384,27 @@ void GLUTspecialkey(int k, int x, int y) {
     if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
 	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
 	switch (k) {
+ 	case GLUT_KEY_F1: {
+ 	    ifstream input("fgfs.sav");
+ 	    if (input.good() && fgLoadFlight(input)) {
+   	        input.close();
+ 		FG_LOG(FG_INPUT, FG_INFO, "Restored flight from fgfs.sav");
+ 	    } else {
+ 	        FG_LOG(FG_INPUT, FG_ALERT, "Cannot load flight from fgfs.sav");
+ 	    }
+ 	    return;
+ 	}
+ 	case GLUT_KEY_F2: {
+ 	    FG_LOG(FG_INPUT, FG_INFO, "Saving flight");
+ 	    ofstream output("fgfs.sav");
+ 	    if (output.good() && fgSaveFlight(output)) {
+ 		output.close();
+ 		FG_LOG(FG_INPUT, FG_INFO, "Saved flight to fgfs.sav");
+ 	    } else {
+ 	        FG_LOG(FG_INPUT, FG_ALERT, "Cannot save flight to fgfs.sav");
+ 	    }
+ 	    return;
+ 	}
 	case GLUT_KEY_END: // numeric keypad 1
 	    v->set_goal_view_offset( FG_PI * 0.75 );
 	    return;

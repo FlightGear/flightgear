@@ -37,6 +37,7 @@ fgfs_SOURCES = \
 	keyboard.cxx keyboard.hxx \
 	main.cxx \
 	options.cxx options.hxx \
+	save.cxx save.hxx \
 	splash.cxx splash.hxx \
 	views.cxx views.hxx
 

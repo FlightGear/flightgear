@@ -271,12 +271,35 @@ public:
     inline string get_net_id() const { return net_id; }
 
     // Update functions
+    inline void set_fg_root (const string value) { fg_root = value; }
     inline void set_airport_id( const string id ) { airport_id = id; }
+    inline void set_lon (double value) { lon = value; }
+    inline void set_lat (double value) { lat = value; }
+    inline void set_altitude (double value) { altitude = value; }
+    inline void set_heading (double value) { heading = value; }
+    inline void set_roll (double value) { roll = value; }
+    inline void set_pitch (double value) { pitch = value; }
+    inline void set_uBody (double value) { uBody = value; }
+    inline void set_vBody (double value) { vBody = value; }
+    inline void set_wBody (double value) { wBody = value; }
+    inline void set_game_mode (bool value) { game_mode = value; }
+    inline void set_splash_screen (bool value) { splash_screen = value; }
+    inline void set_intro_music (bool value) { intro_music = value; }
+    inline void set_mouse_pointer (int value) { mouse_pointer = value; }
+    inline void set_pause (bool value) { pause = value; }
     inline void set_hud_status( bool status ) { hud_status = status; }
+    inline void set_sound (bool value) { sound = value; }
+    inline void set_flight_model (int value) { flight_model = value; }
+    inline void set_model_hz (int value) { model_hz = value; }
+    inline void set_fog (fgFogKind value) { fog = value; }
     inline void set_clouds( bool value ) { clouds = value; }
     inline void set_clouds_asl( double value ) { clouds_asl = value; }
     inline void set_fov( double amount ) { fov = amount; }
+    inline void set_fullscreen (bool value) { fullscreen = value; }
+    inline void set_shading (int value) { shading = value; }
+    inline void set_skyblend (bool value) { skyblend = value; }
     inline void set_textures( bool status ) { textures = status; }
+    inline void set_wireframe (bool status) { wireframe = status; }
     inline void cycle_fog( void ) { 
 	if ( fog == FG_FOG_DISABLED ) {
 	    fog = FG_FOG_FASTEST;
@@ -291,6 +314,13 @@ public:
     void toggle_panel();
     inline void set_xsize( int x ) { xsize = x; }
     inline void set_ysize( int y ) { ysize = y; }
+    inline void set_view_mode (fgViewMode value) { view_mode = value; }
+    inline void set_tile_radius (int value) { tile_radius = value; }
+    inline void set_tile_diameter (int value) { tile_diameter = value; }
+    inline void set_units (int value) { units = value; }
+    inline void set_tris_or_culled (int value) { tris_or_culled = value; }
+    inline void set_time_offset (int value) { time_offset = value; }
+    inline void set_time_offset_type (int value) { time_offset_type = value; }
     inline void cycle_view_mode() { 
 	if ( view_mode == FG_VIEW_PILOT ) {
 	    view_mode = FG_VIEW_FOLLOW;
