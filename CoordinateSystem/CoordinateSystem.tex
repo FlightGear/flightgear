@@ -150,95 +150,22 @@ coordinate systems.  LaRCsim comes with code to convert back and forth
 between geodetic and geocentric coordinates.  So, we only need to
 convert between geocentric and cartesian coordinates to complete the
 picture.  Converting from geocentric to cartesian coordinates is done
-by using the following formula:  \\
-$x = cos(lon_\mathit{geocentric}) * cos(lat_\mathit{geocentric}) *
-radius_\mathit{geocentric}$  \\
-$y = sin(lon_\mathit{geocentric}) * cos(lat_\mathit{geocentric}) *
-radius_\mathit{geocentric}$ \\
-$z = sin(lat_\mathit{geocentric}) * radius_\mathit{geocentric}$
+by using the following formula:
 
-So far I haven't needed to convert from the cartesian coordinate
-system back into any of the polar representations so I haven't derived
-that part yet.  However, it should be pretty straightforward.
+\noindent
+\[ x = cos(lon_\mathit{geocentric}) * cos(lat_\mathit{geocentric}) *
+radius_\mathit{geocentric} \]
+\[ y = sin(lon_\mathit{geocentric}) * cos(lat_\mathit{geocentric}) *
+radius_\mathit{geocentric} \]
+\[ z = sin(lat_\mathit{geocentric}) * radius_\mathit{geocentric} \]
 
+Here is the formula to convert from cartesian coordinates back into
+geocentric coordinates:
 
-\section{Scenery Representation}
-
-This section is a work in progress.  I am hashing out ideas as I
-write, so please feel free to send me your comments and suggestions.
-
-\subsection{External Scenery Representation}
-
-This section should deal with the external file format(s) that FG can
-use for input.
-
-\subsection{Internal Scenery Representation}
-
-This section describes how FG represents, manipulates, and
-transforms scenery internally.
-
-Internal, all FG scenery is defined using the coordinate system shown
-in figure \ref{fig:coords}.  This means that regardless of the
-external scenery representation, FG will convert all object to it's
-internal coordinate system when it loads the external file.  Note,
-when a default external FG scenery representation is created, its
-representation should probably parallel the internal FG representation
-as close as possible.  This way, most necessary conversions can then
-be done offline in advance.
-
-\subsection{Scenery Partitioning}
-
-For a first stab, scenery will be partitioned along longitude and
-latitude lines.  This will form trapezium shaped chunks.  I'd like to
-shoot for 10km x 10km chunks.  So, as we move towards the poles, the
-width in degrees of these areas will have to increase.  Figure
-\ref{fig:trap} shows an exaggerated scenery area.
-
-\begin{figure}[hbt]
-  \centerline{                   
-      \psfig{file=trap.eps}
-  }
-  \caption{Scenery Partitioning Scheme}
-  \label{fig:trap}
-\end{figure}
-
-\subsection{Reference Points}
-
-Each scenery area will have a reference point at the center of its
-area.  This reference point (for purposes of avoiding floating point
-precision problems) defines the origin of a local coordinate system
-which is oriented the same as the global coordinate system.  The only
-difference is the origin is translated from the center of the earth to
-the center of the individual areas.  Figure \ref{fig:reference}
-demonstrates this.
-
-\begin{figure}[hbt]
-  \centerline{                   
-      \psfig{file=ref.eps}
-  }
-  \caption{Reference Points and Translations}
-  \label{fig:reference}
-\end{figure}
-
-All the objects for a specific scenery area will be defined based on
-this local coordinate system.  For each scenery area we define a
-vector $\vec{\mathbf{a}}$ which represents the distance from the
-center of the earth to the local coordinate system.
-
-
-\subsection{Putting the pieces of scenery together}
-
-To render a scene, the scenery manager will need to load all the
-nearby areas.  Also, we define a vector $\vec{\mathbf{v}}$ which
-represents the distance from the center of the earth to the current
-view point.  Before rendering each scenery area we translate it by
-$\vec{\mathbf{a}} - \vec{\mathbf{v}}$.  This moves all the current
-scenery areas near the origin, while maintaining the relative
-positions and orientations.  All these transformations are inexpensive
-to calculate and can be done easily with standard OpenGL calls.
-
-It is straightforward to calculate the proper view point and up vector
-so that the scenery will appear right side up when it is rendered.
+\noindent
+\[ lon = atan2( y, x ) \]
+\[ lat = \frac{\pi}{2} - atan2( \sqrt{x*x + y*y}, z ) \]
+\[ radius = \sqrt{x*x + y*y + z*z} \]
 
 
 
