@@ -117,6 +117,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #if defined( sgi )
 #include <sys/fpu.h>
 #include <sys/sysmp.h>
+#include <unistd.h>
 
 /*
  *  set the special "flush zero" bit (FS, bit 24) in the Control Status
