@@ -1089,176 +1089,189 @@ fgParseOptions (const string& path) {
 void 
 fgUsage ()
 {
-    cout << "Usage: fgfs [ options ... ]" << endl;
-    cout << endl;
+    cout << "Usage: fgfs [ option ... ]" << endl
+         << endl
 
-    cout << "General Options:" << endl;
-    cout << "\t--help -h:  print usage" << endl;
-    cout << "\t--fg-root=path:  specify the root path for all the data files"
-	 << endl;
-    cout << "\t--fg-scenery=path:  specify the base path for all the scenery"
-	 << " data." << endl
-	 << "\t\tdefaults to $FG_ROOT/Scenery" << endl;
-    cout << "\t--disable-game-mode:  disable full-screen game mode" << endl;
-    cout << "\t--enable-game-mode:  enable full-screen game mode" << endl;
-    cout << "\t--disable-splash-screen:  disable splash screen" << endl;
-    cout << "\t--enable-splash-screen:  enable splash screen" << endl;
-    cout << "\t--disable-intro-music:  disable introduction music" << endl;
-    cout << "\t--enable-intro-music:  enable introduction music" << endl;
-    cout << "\t--disable-mouse-pointer:  disable extra mouse pointer" << endl;
-    cout << "\t--enable-mouse-pointer:  enable extra mouse pointer (i.e. for"
-	 << endl;
-    cout << "\t\tfull screen voodoo/voodoo-II based cards.)" << endl;
-    cout << "\t--disable-freeze:  start out in a running state" << endl;
-    cout << "\t--enable-freeze:  start out in a frozen state" << endl;
-    cout << "\t--disable-fuel-freeze:  fuel is consumed normally" << endl;
-    cout << "\t--enable-fuel-freeze:  fuel tanks magically maintain their current contents" << endl;
-    cout << "\t--control=mode:  primary control mode " 
-	 << "(joystick, keyboard, mouse)" << endl;
-    cout << "\t--enable-auto-coordination:  enable auto coordination" << endl;
-    cout << "\t--disable-auto-coordination:  disable auto coordination" << endl;
-    cout << "\t--browser-app=/path/to/app:  specify location of your web browser" << endl;
-    cout << "\t--prop:name=value:  set property <name> to <value>" << endl;
-    cout << "\t--config=path:  load additional properties from path" << endl;
-    cout << endl;
+         << "General Options:" << endl
+         << "    --help, -h                    Print usage" << endl
+         << "    --fg-root=path                Specify the root data path" << endl
+         << "    --fg-scenery=path             Specify the base scenery path;" << endl
+	 << "                                  Defaults to $FG_ROOT/Scenery" << endl
+         << "    --disable-game-mode           Disable full-screen game mode" << endl
+         << "    --enable-game-mode            Enable full-screen game mode" << endl
+         << "    --disable-splash-screen       Disable splash screen" << endl
+         << "    --enable-splash-screen        Enable splash screen" << endl
+         << "    --disable-intro-music         Disable introduction music" << endl
+         << "    --enable-intro-music          Enable introduction music" << endl
+         << "    --disable-mouse-pointer       Disable extra mouse pointer" << endl
+         << "    --enable-mouse-pointer        Enable extra mouse pointer (i.e. for full-" << endl
+         << "                                  screen Voodoo based cards)" << endl
+         << "    --disable-freeze              Start in a running state" << endl
+         << "    --enable-freeze               Start in a frozen state" << endl
+         << "    --disable-fuel-freeze         Fuel is consumed normally" << endl
+         << "    --enable-fuel-freeze          Fuel tank quantity forced to remain constant" << endl
+         << "    --control=mode                Primary control mode (joystick, keyboard," << endl
+         << "                                  mouse)" << endl
+         << "    --enable-auto-coordination    Enable auto coordination" << endl
+         << "    --disable-auto-coordination   Disable auto coordination" << endl
+         << "    --browser-app=path            Specify path to your web browser" << endl
+         << "    --prop:name=value             Set property <name> to <value>" << endl
+         << "    --config=path                 Load additional properties from path" << endl
+         << "    --units-feet                  Use feet for distances" << endl
+         << "    --units-meters                Use meters for distances" << endl
+         << endl
 
-    cout << "Features:" << endl;
-    cout << "\t--disable-hud:  disable heads up display" << endl;
-    cout << "\t--enable-hud:  enable heads up display" << endl;
-    cout << "\t--disable-panel:  disable instrument panel" << endl;
-    cout << "\t--enable-panel:  enable instrument panel" << endl;
-    cout << "\t--disable-sound:  disable sound effects" << endl;
-    cout << "\t--enable-sound:  enable sound effects" << endl;
-    cout << "\t--disable-anti-alias-hud:  disable anti aliased hud" << endl;
-    cout << "\t--enable-anti-alias-hud:  enable anti aliased hud" << endl;
-    cout << endl;
+         << "Features:" << endl
+         << "    --disable-hud                 Disable Heads Up Display (HUD)" << endl
+         << "    --enable-hud                  Enable Heads Up Display (HUD)" << endl
+         << "    --disable-panel               Disable instrument panel" << endl
+         << "    --enable-panel                Enable instrument panel" << endl
+         << "    --disable-sound               Disable sound effects" << endl
+         << "    --enable-sound                Enable sound effects" << endl
+         << "    --disable-anti-alias-hud      Disable anti-aliased HUD" << endl
+         << "    --enable-anti-alias-hud       Enable anti-aliased HUD" << endl
+         << endl
 
-    cout << "Aircraft:" <<endl;
-    cout << "\t--aircraft=name:  select a top level <name>-set.xml file which" << endl;
-    cout << "\t\twill automatically pull in the correct flight dynamics model," << endl;
-    cout << "\t\taero specification, external 3d model, instrument panel, sounds," << endl;
-    cout << "\t\tetc." << endl;
-    
-    cout << endl;
+         << "Aircraft:" <<endl
+         << "    --aircraft=name               Select an aircraft profile as defined by a" << endl
+         << "                                  top level <name>-set.xml" << endl
+         << endl
 
-    cout << "Flight Model:" << endl;
-    cout << "\t--fdm=abcd:  selects the core flight model code." << endl;
-    cout << "\t\tcan be one of jsb, larcsim, magic, null, external, balloon, or ada"
-	 << endl;
-    cout << "\t--aero=abcd:  aerodynamics model to load" << endl;
-    cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
-	 << endl;
-    cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
-    cout << "\t--notrim:  Do NOT attempt to trim the model when initializing JSBsim" << endl;
-    cout << "\t--on-ground:  Start up at ground level (default)" << endl;
-    cout << "\t--in-air:  Start up in air (implied by specifying an initial"
-	 << " altitude above ground level." << endl;
-    cout << "\t--wind=DIR@SPEED: specify wind coming from DIR (degrees) at SPEED (knots)" << endl;
-    cout << endl;
+         << "Flight Model:" << endl
+         << "    --fdm=name                    Select the core flight dynamics model" << endl
+         << "                                  Can be one of jsb, larcsim, yasim, magic," << endl
+         << "                                  balloon, ada, external, or null" << endl
+         << "    --aero=name                   Select aircraft aerodynamics model to load" << endl
+         << "    --model-hz=n                  Run the FDM this rate (iterations per" << endl
+         << "                                  second)" << endl
+         << "    --speed=n                     Run the FDM 'n' times faster than real time" << endl
+         << "    --notrim                      Do NOT attempt to trim the model (only with" << endl
+         << "                                  fdm=jsbsim)" << endl
+         << "    --on-ground                   Start at ground level (default)" << endl
+         << "    --in-air                      Start in air (implied when using --altitude)" << endl
+         << "    --wind=DIR@SPEED              Specify wind coming from DIR (degrees) at" << endl
+         << "                                  SPEED (knots)" << endl
+         << endl
 
-    //(UIUC)
-    cout <<"Aircraft model directory:" << endl;
-    cout <<"\t--aircraft-dir=<path> path is relative to the path of the executable" << endl;
-    cout << endl;
+         << "Aircraft model directory (UIUC FDM ONLY):" << endl
+         << "    --aircraft-dir=path           Aircraft directory relative to the path of" << endl
+         << "                                  the executable" << endl
+         << endl
 
-    cout << "Initial Position and Orientation:" << endl;
-    cout << "\t--airport-id=ABCD:  specify starting postion by airport id" 
-	 << endl;
-    cout << "\t--offset-distance:  specify distance to threshold"
-         << " (NM)" << endl; 
-    cout << "\t--offset-azimuth:  specify heading to threshold (deg) " 
-         << endl;    
-    cout << "\t--lon=degrees:  starting longitude in degrees (west = -)" 
-	 << endl;
-    cout << "\t--lat=degrees:  starting latitude in degrees (south = -)"
-	 << endl;
-    cout << "\t--altitude=feet:  starting altitude in feet" << endl;
-    cout << "\t\t(unless --units-meters specified)" << endl;
-    cout << "\t--heading=degrees:  heading (yaw) angle in degrees (Psi)"
-	 << endl;
-    cout << "\t--roll=degrees:  roll angle in degrees (Phi)" << endl;
-    cout << "\t--pitch=degrees:  pitch angle in degrees (Theta)" << endl;
-    cout << "\t--uBody=feet per second:  velocity along the body X axis"
-	 << endl;
-    cout << "\t--vBody=feet per second:  velocity along the body Y axis"
-	 << endl;
-    cout << "\t--wBody=feet per second:  velocity along the body Z axis"
-	 << endl;
-    cout << "\t\t(unless --units-meters specified)" << endl;
-    cout << "\t--vc= initial airspeed in knots" << endl;
-    cout << "\t--mach= initial mach number" << endl;
-    cout << endl;
+         << "Initial Position and Orientation:" << endl
+         << "    --airport-id=ID               Specify starting position by airport ID" << endl
+         << "    --offset-distance=nm          Specify distance to threshold" << endl 
+         << "    --offset-azimuth=degrees      Specify heading to threshold" << endl    
+         << "    --lon=degrees                 Starting longitude (west = -)" << endl
+         << "    --lat=degrees                 Starting latitude (south = -)" << endl
+         << "    --altitude=value              Starting altitude (in feet unless" << endl
+         << "                                  --units-meters specified)" << endl
+         << "    --heading=degrees             Specify heading (yaw) angle (Psi)" << endl
+         << "    --roll=degrees                Specify roll angle (Phi)" << endl
+         << "    --pitch=degrees               Specify pitch angle (Theta)" << endl
+         << "    --uBody=units_per_sec         Specify velocity along the body X axis" << endl
+         << "                                  (in feet unless --units-meters specified)" << endl
+         << "    --vBody=units_per_sec         Specify velocity along the body Y axis" << endl
+         << "                                  (in feet unless --units-meters specified)" << endl
+         << "    --wBody=units_per_sec         Specify velocity along the body Z axis" << endl
+         << "                                  (in feet unless --units-meters specified)" << endl
+         << "    --vc=knots                    Specify initial airspeed" << endl
+         << "    --mach=num                    Specify initial mach number" << endl
+         << endl
 
-    cout << "Rendering Options:" << endl;
-    cout << "\t--fog-disable:  disable fog/haze" << endl;
-    cout << "\t--fog-fastest:  enable fastest fog/haze" << endl;
-    cout << "\t--fog-nicest:  enable nicest fog/haze" << endl;
-    cout << "\t--enable-clouds:  enable demo cloud layer" << endl;
-    cout << "\t--disable-clouds:  disable demo cloud layer" << endl;
-    cout << "\t--clouds-asl=xxx:  specify altitude of cloud layer above sea level" << endl;
-    cout << "\t--fov=xx.x:  specify initial field of view angle in degrees"
-	 << endl;
-    cout << "\t--disable-fullscreen:  disable fullscreen mode" << endl;
-    cout << "\t--enable-fullscreen:  enable fullscreen mode" << endl;
-    cout << "\t--shading-flat:  enable flat shading" << endl;
-    cout << "\t--shading-smooth:  enable smooth shading" << endl;
-    cout << "\t--disable-skyblend:  disable sky blending" << endl;
-    cout << "\t--enable-skyblend:  enable sky blending" << endl;
-    cout << "\t--disable-textures:  disable textures" << endl;
-    cout << "\t--enable-textures:  enable textures" << endl;
-    cout << "\t--disable-wireframe:  disable wireframe drawing mode" << endl;
-    cout << "\t--enable-wireframe:  enable wireframe drawing mode" << endl;
-    cout << "\t--geometry=WWWxHHH:  window geometry: 640x480, 800x600, etc."
-	 << endl;
-    cout << "\t--view-offset=xxx:  set the default forward view direction"
-	 << endl;
-    cout << "\t\tas an offset from straight ahead.  Allowable values are"
-	 << endl;
-    cout << "\t\tLEFT, RIGHT, CENTER, or a specific number of degrees" << endl;
-    cout << "\t--visibility=xxx:  specify initial visibility in meters" << endl;
-    cout << "\t--visibility-miles=xxx:  specify initial visibility in miles"
-	 << endl;
-    cout << endl;
+         << "Rendering Options:" << endl
+         << "    --bpp=depth                   Specify the bits per pixel" << endl
+         << "    --fog-disable                 Disable fog/haze" << endl
+         << "    --fog-fastest                 Enable fastest fog/haze" << endl
+         << "    --fog-nicest                  Enable nicest fog/haze" << endl
+         << "    --enable-clouds               Enable cloud layers" << endl
+         << "    --disable-clouds              Disable cloud layers" << endl
+         << "    --clouds-asl=altitude         Specify altitude of cloud layer above sea" << endl
+         << "                                  level" << endl
+         << "    --fov=degrees                 Specify field of view angle" << endl
+         << "    --disable-fullscreen          Disable fullscreen mode" << endl
+         << "    --enable-fullscreen           Enable fullscreen mode" << endl
+         << "    --shading-flat                Enable flat shading" << endl
+         << "    --shading-smooth              Enable smooth shading" << endl
+         << "    --disable-skyblend            Disable sky blending" << endl
+         << "    --enable-skyblend             Enable sky blending" << endl
+         << "    --disable-textures            Disable textures" << endl
+         << "    --enable-textures             Enable textures" << endl
+         << "    --disable-wireframe           Disable wireframe drawing mode" << endl
+         << "    --enable-wireframe            Enable wireframe drawing mode" << endl
+         << "    --geometry=WxH                Specify window geometry (640x480, etc)" << endl
+         << "    --view-offset=value           Specify the default forward view direction" << endl
+         << "                                  as an offset from straight ahead.  Allowable" << endl
+         << "                                  values are LEFT, RIGHT, CENTER, or a specific" << endl
+         << "                                  number in degrees" << endl
+         << "    --visibility=meters           Specify initial visibility" << endl
+         << "    --visibility-miles=miles      Specify initial visibility in miles" << endl
+         << endl
 
-    cout << "Hud Options:" << endl;
-    cout << "\t--units-feet:  Hud displays units in feet" << endl;
-    cout << "\t--units-meters:  Hud displays units in meters" << endl;
-    cout << "\t--hud-tris:  Hud displays number of triangles rendered" << endl;
-    cout << "\t--hud-culled:  Hud displays percentage of triangles culled"
-	 << endl;
-    cout << endl;
+         << "Hud Options:" << endl
+         << "    --hud-tris                    Hud displays number of triangles rendered" << endl
+         << "    --hud-culled                  Hud displays percentage of triangles culled" << endl
+         << endl
 	
-    cout << "Time Options:" << endl;
-    cout << "\t--time-offset=[+-]hh:mm:ss: add this time offset" << endl;
-    cout << "\t--time-match-real: Synchronize real-world and FlightGear" << endl
-	 << "\t\ttime. Can be used in combination with --time-offset." << endl;
-    cout << "\t--time-match-local:Synchronize local real-world and " << endl
-	 << "\t\tFlightGear time" << endl;   
-    cout << "\t--start-date-sys=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
-	 << "\t\tdate/time. Uses your system time " << endl;
-    cout << "\t--start-date-gmt=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
-	 << "\t\tdate/time. Uses Greenwich Mean Time" << endl;
-    cout << "\t--start-date-lat=yyyy:mm:dd:hh:mm:ss: specify a starting" << endl
-	 << "\t\tdate/time. Uses Local Aircraft Time" << endl;
-    cout << endl;
+         << "Time Options:" << endl
+         << "    --time-offset=[+-]hh:mm:ss    Add this time offset; can be use in" << endl
+         << "                                  combination with other time options" << endl
+         << "    --time-match-real             Synchronize time with real-world time" << endl
+         << "    --time-match-local            Synchronize time with local real-world time" << endl
+         << "    --start-date-sys=yyyy:mm:dd:hh:mm:ss" << endl
+         << "                                  Specify a starting date/time with respect to" << endl
+         << "                                  system time" << endl
+         << "    --start-date-gmt=yyyy:mm:dd:hh:mm:ss" << endl
+         << "                                  Specify a starting date/time with respect to" << endl
+         << "                                  Greenwich Mean Time" << endl
+         << "    --start-date-lat=yyyy:mm:dd:hh:mm:ss" << endl
+         << "                                  Specify a starting date/time with respect to" << endl
+         << "                                  Local Aircraft Time" << endl
+         << endl
 
-    cout << "Network Options:" << endl;
-    cout << "\t--httpd=port:  enable http server on the specified port" << endl;
+         << "Network Options:" << endl
+         << "    --httpd=port                  Enable http server on the specified port" << endl
 #ifdef FG_JPEG_SERVER
-    cout << "\t--jpg-httpd=port:  enable screen shot http server on the specified port" << endl;
+         << "    --jpg-httpd=port              Enable screen shot http server on the" << endl
+         << "                                  specified port" << endl
 #endif
 #ifdef FG_NETWORK_OLK
-    cout << "\t--enable-network-olk:  enable Multipilot mode" << endl;
-    cout << "\t--disable-network-olk:  disable Multipilot mode (default)" << endl;
-    cout << "\t--net-hud:  Hud displays network info" << endl;
-    cout << "\t--net-id=name:  specify your own callsign" << endl;
+         << "    --disable-network-olk         Disable Multipilot mode (default)" << endl
+         << "    --enable-network-olk          Enable Multipilot mode" << endl
+         << "    --net-hud                     Hud displays network info" << endl
+         << "    --net-id=name                 Specify your own callsign" << endl
 #endif
+         << endl
 
-    cout << endl;
-    cout << "Route/Way Point Options:" << endl;
-    cout << "\t--wp=ID[@alt]:  specify a waypoint for the GC autopilot" << endl;
-    cout << "\t\tYou can specify multiple waypoints (a route) with multiple"
-	 << endl;
-    cout << "\t\tinstances of --wp=" << endl;
-    cout << "\t--flight-plan=[file]: Read all waypoints from [file]" <<endl;
+         << "Route/Way Point Options:" << endl
+         << "    --wp=ID[@alt]                 Specify a waypoint for the GC autopilot;" << endl
+         << "                                  multiple instances can be used to create a" << endl
+         << "                                  route" << endl
+         << "    --flight-plan=file            Read all waypoints from a file" << endl
+         << endl
+
+         << "IO Options:" << endl
+         << "    --gamin=params                Open connection using the Garmin GPS protocol" << endl
+         << "    --joyclient=params            Open connection to an Agwagon joystick" << endl
+         << "    --native-ctrls=params         Open connection using the FG Native Controls" << endl
+         << "                                  protocol" << endl
+         << "    --native-fdm=params           Open connection using the FG Native FDM" << endl
+         << "                                  protocol" << endl
+         << "    --native=params               Open connection using the FG Native protocol" << endl
+         << "    --nmea=params                 Open connection using the NMEA protocol" << endl
+         << "    --opengc=params               Open connection using the OpenGC protocol" << endl
+         << "    --props=params                Open connection using the interactive" << endl
+         << "                                  property manager" << endl
+         << "    --pve=params                  Open connection using the PVE protocol" << endl
+         << "    --ray=params                  Open connection using the RayWoodworth" << endl
+         << "                                  motion chair protocol" << endl
+         << "    --rul=params                  Open connection using the RUL protocol" << endl
+         << endl
+
+         << "Debugging Options:" << endl
+         << "    --trace-read=property         Trace the reads for a property; multiple" << endl
+         << "                                  instances allowed." << endl
+         << "    --trace-write=property        Trace the writes for a property; multiple" << endl
+         << "                                  instances allowed." << endl
+         << endl;
 }
