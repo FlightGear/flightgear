@@ -64,7 +64,7 @@ a completely free development environment.
     extract the files.  To install these permanently on your system,
     you can copy them to your ``c:\windows\system\" directory.
     Otherwise, you could just as easily copy them to the
-    ``FlightGear\Src\OpenGL'' directory or else someplace that is in
+    ``FlightGear\Src\GLUT'' directory or else someplace that is in
     your path.
 
 4.  Edit the ``make.inc'' file.  Go back to the main FlightGear source
@@ -90,7 +90,7 @@ a completely free development environment.
     these are serious.  
 
 
-6.  Try it out!  When make is done, cd to the FlightGear\Src\OpenGL
+6.  Try it out!  When make is done, cd to the FlightGear\Src\GLUT
     directory and run the simulator:
 
         fg0

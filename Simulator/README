@@ -1,9 +1,9 @@
 majordomo writes:
 Subdirectories
 ==============
-OpenGL/
+GLUT/
 -------
-"main()" and OpenGL dependent mouse/keyboard/graphics code.
+"main()" and GLUT dependent mouse/keyboard/graphics code.
 
 
 Aircraft/
