@@ -251,10 +251,14 @@ void FGTileMgr::initialize_queue()
 int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
 	sgdVec3 abs_pos_vector;
         sgdCopyVec3(abs_pos_vector , globals->get_current_view()->get_absolute_view_pos());
-        return update( lon, lat, visibility_meters, abs_pos_vector, current_bucket, previous_bucket );
+        return update( lon, lat, visibility_meters, abs_pos_vector,
+                       current_bucket, previous_bucket,
+                       globals->get_scenery()->get_center() );
 }
 
-int FGTileMgr::update( double lon, double lat, double visibility_meters, sgdVec3 abs_pos_vector, SGBucket p_current, SGBucket p_previous ) {
+int FGTileMgr::update( double lon, double lat, double visibility_meters,
+                       sgdVec3 abs_pos_vector, SGBucket p_current,
+                       SGBucket p_previous, Point3D center ) {
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << lon << " " << lat );
 
@@ -342,13 +346,13 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters, sgdVec3
     }
 
     // no reason to update this if we haven't moved...
-    if ( longitude != last_longitude || latitude == last_latitude ) {
+    if ( longitude != last_longitude || latitude != last_latitude ) {
       // update current elevation... 
-      updateCurrentElevAtPos(abs_pos_vector);
+      if (updateCurrentElevAtPos(abs_pos_vector, center)) {
+        last_longitude = longitude;
+        last_latitude = latitude;
+      }
     }
-
-    last_longitude = longitude;
-    last_latitude = latitude;
 
 #if 0
     }
@@ -378,28 +382,25 @@ void FGTileMgr::setCurrentTile(double longitude, double latitude) {
     }
 }
 
-void FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector) {
+int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
 
   sgdVec3 sc;
+
   sgdSetVec3( sc,
-    globals->get_scenery()->get_center()[0],
-    globals->get_scenery()->get_center()[1],
-    globals->get_scenery()->get_center()[2] );
+    center[0],
+    center[1],
+    center[2]);
 
     // overridden with actual values if a terrain intersection is
     // found
     double hit_elev = -9999.0;
     double hit_radius = 0.0;
     sgdVec3 hit_normal = { 0.0, 0.0, 0.0 };
-
+    
     bool hit = false;
     if ( fabs(sc[0]) > 1.0 || fabs(sc[1]) > 1.0 || fabs(sc[2]) > 1.0 ) {
        // scenery center has been properly defined so any hit
        // should be valid (and not just luck)
-       sgdSetVec3( sc,
-	  globals->get_scenery()->get_center()[0],
-	  globals->get_scenery()->get_center()[1],
-	  globals->get_scenery()->get_center()[2] );
        hit = fgCurrentElev(abs_pos_vector,
 	  sc,
 	  current_tile->get_terra_transform(),
@@ -418,13 +419,26 @@ void FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector) {
           globals->get_scenery()->set_cur_radius( 0.0 );
           globals->get_scenery()->set_cur_normal( hit_normal );
     }
-
+    return hit;
 }
 
 void FGTileMgr::prep_ssg_nodes(float vis) {
-//    float vis = 0.0;
 
-//    vis = fgGetDouble("/environment/visibility-m");
+    // traverse the potentially viewable tile list and update range
+    // selector and transform
+
+    // just setup and call new function...
+
+    sgVec3 up;
+    sgCopyVec3( up, globals->get_current_view()->get_world_up() );
+
+    Point3D center;
+    center = globals->get_scenery()->get_center();
+    prep_ssg_nodes( vis, up, center );
+
+}
+
+void FGTileMgr::prep_ssg_nodes(float vis, sgVec3 up, Point3D center) {
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
@@ -432,13 +446,10 @@ void FGTileMgr::prep_ssg_nodes(float vis) {
     FGTileEntry *e;
     tile_cache.reset_traversal();
 
-    sgVec3 up;
-    sgCopyVec3( up, globals->get_current_view()->get_world_up() );
-	
     while ( ! tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
 	if ( (e = tile_cache.get_current()) ) {
-	    e->prep_ssg_node( globals->get_scenery()->get_center(), up, vis);
+	    e->prep_ssg_node( center, up, vis);
         } else {
 	    SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
         }

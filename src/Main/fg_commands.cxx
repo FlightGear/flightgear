@@ -275,6 +275,7 @@ do_view_cycle (const SGPropertyNode * arg, SGCommandState ** state)
           globals->get_props()->setBoolValue( "/sim/hud/visibility", false );
       }
   }
+  global_tile_mgr.refresh_view_timestamps();
 //   fgReshape(fgGetInt("/sim/startup/xsize"), fgGetInt("/sim/startup/ysize"));
   return true;
 }
@@ -666,5 +667,4 @@ fgInitCommands ()
   }
 }
 
-// end of fg_commands.hxx
-
+// end of fg_commands.cxx

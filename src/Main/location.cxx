@@ -36,6 +36,7 @@
 #include <simgear/math/vector.hxx>
 
 #include <Scenery/scenery.hxx>
+
 #include "globals.hxx"
 
 #include "location.hxx"
@@ -112,7 +113,9 @@ FGLocation::FGLocation( void ):
     _alt_ft(0),
     _roll_deg(0),
     _pitch_deg(0),
-    _heading_deg(0)
+    _heading_deg(0),
+    _cur_elev_m(0),
+    _tile_center(0)
 {
     sgdZeroVec3(_absolute_view_pos);
 }
@@ -241,7 +244,7 @@ FGLocation::recalcPosition (double lon_deg, double lat_deg, double alt_ft) const
   Point3D p = Point3D(lon_deg * SG_DEGREES_TO_RADIANS,
 		      lat_geoc_rad,
 		      sea_level_radius_m);
-  Point3D tmp = sgPolarToCart3d(p) - globals->get_scenery()->get_next_center();
+  Point3D tmp = sgPolarToCart3d(p) - _tile_center;
   sgSetVec3(_zero_elev_view_pos, tmp[0], tmp[1], tmp[2]);
 
 				// Calculate the absolute view position
@@ -254,11 +257,15 @@ FGLocation::recalcPosition (double lon_deg, double lat_deg, double alt_ft) const
 				// Calculate the relative view position
 				// from the scenery center.
                                 // aka Relative View Position
+
+  // FIXME: view position should ONLY be calculated in the viewer...
+  // Anything else should calculate their own positions relative to the 
+  // viewer's tile_center.
   sgdVec3 scenery_center;
   sgdSetVec3(scenery_center,
-	     globals->get_scenery()->get_next_center().x(),
-	     globals->get_scenery()->get_next_center().y(),
-	     globals->get_scenery()->get_next_center().z());
+        globals->get_scenery()->get_center().x(),
+        globals->get_scenery()->get_center().y(),
+        globals->get_scenery()->get_center().z());
   sgdVec3 view_pos;
   sgdSubVec3(view_pos, _absolute_view_pos, scenery_center);
   sgSetVec3(_relative_view_pos, view_pos);

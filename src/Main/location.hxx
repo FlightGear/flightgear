@@ -32,6 +32,7 @@
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/bucket/newbucket.hxx>
+#include <simgear/math/point3d.hxx>
 
 #include <plib/sg.h>		// plib include
 
@@ -115,6 +116,8 @@ public:
     inline SGBucket get_current_bucket () { return _current_bucket; }
     void set_previous_bucket ( SGBucket previous_bucket ) { _previous_bucket = previous_bucket; }
     inline SGBucket get_previous_bucket () { return _previous_bucket; }
+    void set_tile_center ( Point3D tile_center ) { _tile_center = tile_center; }
+    inline Point3D get_tile_center () { return _tile_center; }
 
     // Matrices...
     virtual const sgVec4 * getTransformMatrix() { if ( _dirty ) { recalc(); }	return TRANS; }
@@ -150,6 +153,7 @@ private:
     // getting current elevation from tilemgr.
     SGBucket _previous_bucket;
     SGBucket _current_bucket;
+    Point3D _tile_center;
 
     // surface vector heading south
     sgVec3 _surface_south;

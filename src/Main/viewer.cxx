@@ -561,8 +561,11 @@ FGViewer::recalcLookAt ()
     recalcOurOwnLocation( _target_location, _target_lon_deg, _target_lat_deg, _target_alt_ft, 
           _target_roll_deg, _target_pitch_deg, _target_heading_deg );
   }
-  // save the "at" target object positon...
-  sgCopyVec3(at_pos,  _target_location->get_view_pos());
+  // calculate the "at" target object positon relative to eye or view's tile center...
+  sgdVec3 dVec3;
+  sgdSetVec3(dVec3,  _location->get_tile_center()[0], _location->get_tile_center()[1], _location->get_tile_center()[2]);
+  sgdSubVec3(dVec3, _target_location->get_absolute_view_pos(), dVec3 );
+  sgSetVec3(at_pos, dVec3[0], dVec3[1], dVec3[2]);
 
   // Update location data for eye...
   if ( _from_model ) {

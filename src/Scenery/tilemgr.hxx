@@ -30,6 +30,7 @@
 #endif                                   
 
 #include <simgear/compiler.h>
+#include <simgear/math/point3d.hxx>
 
 #include <queue>
 
@@ -163,9 +164,9 @@ public:
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
     int update( double lon, double lat, double visibility_meters );
-    int update( double lon, double lat, double visibility_meters, sgdVec3 abs_pos_vector, SGBucket p_current, SGBucket p_previous );
+    int update( double lon, double lat, double visibility_meters, sgdVec3 abs_pos_vector, SGBucket p_current, SGBucket p_previous, Point3D center );
     void setCurrentTile( double longitude, double latitude );
-    void updateCurrentElevAtPos(sgdVec3 abs_pos_vector);
+    int updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center );
 
     // Determine scenery altitude.  Normally this just happens when we
     // render the scene, but we'd also like to be able to do this
@@ -182,6 +183,7 @@ public:
     // transform and update it's range selector based on current
     // visibilty
     void prep_ssg_nodes(float visibility_meters);
+    void prep_ssg_nodes(float visibility_meters, sgVec3 up, Point3D center);
 
     //
     // Set flag with event manager so that non-moving view refreshes tiles...

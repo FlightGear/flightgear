@@ -625,7 +625,9 @@ void fgRenderFrame() {
 # endif
 
 	// position tile nodes and update range selectors
-	global_tile_mgr.prep_ssg_nodes(visibility_meters);
+
+        // this is done in the main loop now...
+        // global_tile_mgr.prep_ssg_nodes(visibility_meters);
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky backdrop
@@ -1064,10 +1066,6 @@ static void fgMainLoop( void ) {
     }
 #endif
 
-    // redraw display
-    fgRenderFrame();
-
-
     //
     // Tile Manager updates - see if we need to load any new scenery tiles.
     //   this code ties together the fdm, viewer and scenery classes...
@@ -1080,12 +1078,16 @@ static void fgMainLoop( void ) {
     // ...only if location is different than the viewer (to avoid duplicating effort)
     if( acmodel_location != current_view->getFGLocation() ) {
       if( acmodel_location != 0 ) {
+        global_tile_mgr.prep_ssg_nodes(visibility_meters,
+               acmodel_location->get_world_up(),
+               acmodel_location->get_tile_center());
         global_tile_mgr.update( acmodel_location->getLongitude_deg(),
  			    acmodel_location->getLatitude_deg(),
                             visibility_meters,
                             acmodel_location->get_absolute_view_pos(),
                             acmodel_location->get_current_bucket(),
-                            acmodel_location->get_previous_bucket()
+                            acmodel_location->get_previous_bucket(),
+                            acmodel_location->get_tile_center()
                             );
         // save results of update in FGLocation for fdm...
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
@@ -1093,9 +1095,13 @@ static void fgMainLoop( void ) {
         }
         acmodel_location->set_current_bucket( global_tile_mgr.get_current_bucket() );
         acmodel_location->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
+        acmodel_location->set_tile_center( globals->get_scenery()->get_next_center() );
       }
     }
 
+    global_tile_mgr.prep_ssg_nodes(visibility_meters,
+       current_view->getFGLocation()->get_world_up(),
+       current_view->getFGLocation()->get_tile_center());
     // update tile manager for view...
     // IMPORTANT!!! the tilemgr update for view location _must_ be done last 
     // after the FDM's until all of Flight Gear code references the viewer's location
@@ -1105,7 +1111,8 @@ static void fgMainLoop( void ) {
                             visibility_meters,
                             current_view->get_absolute_view_pos(),
                             current_view->getFGLocation()->get_current_bucket(),
-                            current_view->getFGLocation()->get_previous_bucket()
+                            current_view->getFGLocation()->get_previous_bucket(),
+                            current_view->getFGLocation()->get_tile_center()
                             );
     // save results of update in FGLocation for fdm...
     if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
@@ -1113,6 +1120,7 @@ static void fgMainLoop( void ) {
     }
     current_view->getFGLocation()->set_current_bucket( global_tile_mgr.get_current_bucket() );
     current_view->getFGLocation()->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
+    current_view->getFGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
 
     // If fdm location is same as viewer's then we didn't do the update for fdm location 
     //   above so we need to save the viewer results in the fdm FGLocation as well...
@@ -1123,11 +1131,14 @@ static void fgMainLoop( void ) {
         }
         acmodel_location->set_current_bucket( global_tile_mgr.get_current_bucket() );
         acmodel_location->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
+        acmodel_location->set_tile_center( globals->get_scenery()->get_next_center() );
       }
     }
 
     // END Tile Manager udpates
 
+    // redraw display
+    fgRenderFrame();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
