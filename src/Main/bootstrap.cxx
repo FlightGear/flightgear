@@ -31,6 +31,7 @@
 #endif
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
@@ -190,6 +191,7 @@ int main ( int argc, char **argv ) {
              << "\n (received from " << t.getOrigin() << ')' << endl;
     } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
+        perror("Possible cause");
     }
 
     return 0;
