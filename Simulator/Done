@@ -2,6 +2,10 @@
 | Done
 --------------------------------------------------------------------------
 
+6/11/98 -  convert to static libraries and reduce libtool usage ...
+
+6/11/98 -  Converted to GL_FOG_EXP2
+
 5/29/98 -  Widened edges of tiles to overlap a bit.  This should help 
            reduce floating point induced gaps between tiles.
 

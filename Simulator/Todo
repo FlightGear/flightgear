@@ -2,6 +2,18 @@
 | Todo 
 --------------------------------------------------------------------------
 
+6/10/98 -  problem with view culling when not looking forward.  Need to 
+           generate the correct matrix and work it into the calculations.
+
+6/10/98 -  terrain generation - add an option to try to iteratively change
+           the error tolerance to try to generate "close" to a certain
+           number of vertices so that we can have consistent size, rendering
+           speed etc. among various terrain tiles.
+
+6/10/98 -  Generate and store the transform matrix when rendering by
+           material property so we don't have to push, transform, pop
+           continually.  See mesa code for gluLookAt()
+
 5/26/98 -  Add version checking to scenery files
 
 4/25/98 -  Roll all of Time/sunpos.cxx into Astro/sun.cxx
@@ -62,6 +74,3 @@
 
 12/29/97 - glut windows or something for panel area - consider 3d
            panels, careful of texture memory problems.
-
-1/5/98 -   bzflag sound code might be able to work for us.
-
