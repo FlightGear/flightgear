@@ -32,12 +32,14 @@
 
 #include <Include/compiler.h>
 
+#include <string>
 #include <vector>
 
 #include <Main/construct_types.hxx>
 
 #include "trinodes.hxx"
 
+FG_USING_STD(string);
 FG_USING_STD(vector);
 
 
@@ -62,6 +64,26 @@ public:
     // Constructor and destructor
     FGPolygon( void );
     ~FGPolygon( void );
+
+    // Add a contour
+    inline void add_contour( const point_list contour, const int hole_flag ) {
+	poly.push_back( contour );
+	hole_list.push_back( hole_flag );
+    }
+
+    // Get a contour
+    inline point_list get_contour( const int i ) const {
+	return poly[i];
+    }
+
+    // Delete a contour
+    inline void delete_contour( const int i ) {
+	polytype_iterator start_poly = poly.begin();
+	poly.erase( start_poly + i );
+
+	int_list_iterator start_hole = hole_list.begin();
+	hole_list.erase( start_hole + i );
+    }
 
     // Add the specified node (index) to the polygon
     inline void add_node( int contour, Point3D p ) {
@@ -104,8 +126,20 @@ public:
 	hole_list[contour] = flag;
     }
 
+    // erase
     inline void erase() { poly.clear(); }
 
+    // informational
+
+    // return the area of a contour (assumes simple polygons,
+    // i.e. non-self intersecting.)
+    double area_contour( const int contour );
+
+    // return the smallest interior angle of the polygon
+    double minangle_contour( const int contour );
+
+    // output
+    void write( const string& file );
 };
 
 

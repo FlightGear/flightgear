@@ -168,11 +168,12 @@ FGTriangle::build( const point_list& corner_list,
     // traverse the polygon lists and build the segment (edge) list
     // that is used by the "Triangle" lib.
 
+    cout << "building segment list" << endl;
     int i1, i2;
     Point3D p1, p2;
     point_list node_list = in_nodes.get_node_list();
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	// cout << "area type = " << i << endl;
+	cout << "area type = " << i << endl;
 	poly_list_iterator tp_current, tp_last;
 	tp_current = polylist[i].begin();
 	tp_last = polylist[i].end();
@@ -180,7 +181,8 @@ FGTriangle::build( const point_list& corner_list,
 	// process each polygon in list
 	for ( ; tp_current != tp_last; ++tp_current ) {
 	    poly = *tp_current;
-
+	    cout << "  processing a polygon with contours = " 
+		 << poly.contours() << endl;
 	    for ( int j = 0; j < (int)poly.contours(); ++j) {
 		for ( int k = 0; k < (int)(poly.contour_size(j) - 1); ++k ) {
 		    p1 = poly.get_pt( j, k );

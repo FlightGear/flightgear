@@ -48,6 +48,12 @@ typedef point_list::iterator point_list_iterator;
 typedef point_list::const_iterator const_point_list_iterator;
 
 
+class point2d {
+public:
+    double x, y;
+};
+
+
 #endif // _CONSTRUCT_TYPES_HXX
 
 

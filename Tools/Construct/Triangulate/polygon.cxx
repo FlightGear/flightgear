@@ -57,6 +57,33 @@ static double slope( const Point3D& p0, const Point3D& p1 ) {
 }
 
 
+// Calculate theta of angle (a, b, c)
+static double calc_angle(point2d a, point2d b, point2d c) {
+    point2d u, v;
+    double udist, vdist, uv_dot, tmp;
+
+    // u . v = ||u|| * ||v|| * cos(theta)
+
+    u.x = b.x - a.x;
+    u.y = b.y - a.y;
+    udist = sqrt( u.x * u.x + u.y * u.y );
+    // printf("udist = %.6f\n", udist);
+
+    v.x = b.x - c.x;
+    v.y = b.y - c.y;
+    vdist = sqrt( v.x * v.x + v.y * v.y );
+    // printf("vdist = %.6f\n", vdist);
+
+    uv_dot = u.x * v.x + u.y * v.y;
+    // printf("uv_dot = %.6f\n", uv_dot);
+
+    tmp = uv_dot / (udist * vdist);
+    // printf("tmp = %.6f\n", tmp);
+
+    return acos(tmp);
+}
+
+
 // Given a line segment specified by two endpoints p1 and p2, return
 // the y value of a point on the line that intersects with the
 // verticle line through x.  Return true if an intersection is found,
@@ -218,6 +245,81 @@ void FGPolygon::calc_point_inside( const int contour,
 }
 
 
+// return the perimeter of a contour (assumes simple polygons,
+// i.e. non-self intersecting.)
+double FGPolygon::area_contour( const int contour ) {
+    // area = 1/2 * sum[i = 0 to k-1][x(i)*y(i+1) - x(i+1)*y(i)]
+    // where k is defined as 0
+
+    point_list c = poly[contour];
+    int size = c.size();
+    double sum = 0.0;
+
+    for ( int i = 0; i < size; ++i ) {
+	sum += c[(i+1)%size].x() * c[i].y() - c[i].x() * c[(i+1)%size].y();
+    }
+
+    return sum / 2.0;
+}
+
+
+// return the smallest interior angle of the polygon
+double FGPolygon::minangle_contour( const int contour ) {
+    point_list c = poly[contour];
+    int size = c.size();
+    int p1_index, p2_index, p3_index;
+    point2d p1, p2, p3;
+    double angle;
+    double min_angle = 2.0 * FG_PI;
+
+    for ( int i = 0; i < size; ++i ) {
+	p1_index = i - 1;
+	if ( p1_index < 0 ) {
+	    p1_index += size;
+	}
+
+	p2_index = i;
+
+	p3_index = i + 1;
+	if ( p3_index >= size ) {
+	    p3_index -= size;
+	}
+
+	p1.x = c[p1_index].x();
+	p1.y = c[p1_index].y();
+
+	p2.x = c[p2_index].x();
+	p2.y = c[p2_index].y();
+
+	p3.x = c[p3_index].x();
+	p3.y = c[p3_index].y();
+
+	angle = calc_angle( p1, p2, p3 );
+
+	if ( angle < min_angle ) {
+	    min_angle = angle;
+	}
+    }
+
+    return min_angle;
+}
+
+
+// output
+void FGPolygon::write( const string& file ) {
+    FILE *fp = fopen( file.c_str(), "w" );
+    
+    for ( int i = 0; i < (int)poly.size(); ++i ) {
+	for ( int j = 0; j < (int)poly[i].size(); ++j ) {
+	    fprintf(fp, "%.6f %.6f\n", poly[i][j].x(), poly[i][j].y());
+	}
+	fprintf(fp, "%.6f %.6f\n", poly[i][0].x(), poly[i][0].y());
+    }
+
+    fclose(fp);
+}
+
+
 //
 // wrapper functions for gpc polygon clip routines
 //
@@ -228,13 +330,13 @@ void make_gpc_poly( const FGPolygon& in, gpc_polygon *out ) {
     v_list.num_vertices = 0;
     v_list.vertex = new gpc_vertex[FG_MAX_VERTICES];
 
-    cout << "making a gpc_poly" << endl;
-    cout << "  input contours = " << in.contours() << endl;
+    // cout << "making a gpc_poly" << endl;
+    // cout << "  input contours = " << in.contours() << endl;
 
     Point3D p;
     // build the gpc_polygon structures
     for ( int i = 0; i < in.contours(); ++i ) {
-	cout << "    contour " << i << " = " << in.contour_size( i ) << endl;
+	// cout << "    contour " << i << " = " << in.contour_size( i ) << endl;
 	for ( int j = 0; j < in.contour_size( i ); ++j ) {
 	    p = in.get_pt( i, j );
 	    v_list.vertex[j].x = p.x();

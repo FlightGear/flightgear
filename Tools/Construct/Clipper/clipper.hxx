@@ -45,6 +45,7 @@ extern "C" {
 }
 #endif
 
+#include <Main/construct_types.hxx>
 #include <Triangulate/polygon.hxx>
 
 #include STL_STRING
@@ -62,12 +63,6 @@ FG_USING_STD(vector);
 #define FG_MAX_AREA_TYPES 20
 #define EXTRA_SAFETY_CLIP
 // #define FG_MAX_VERTICES 100000
-
-
-class point2d {
-public:
-    double x, y;
-};
 
 
 class FGPolyList {
@@ -99,9 +94,15 @@ public:
     // Load a polygon definition file
     bool load_polys(const string& path);
 
-    // merge any slivers in the specified polygon with larger
-    // neighboring polygons of higher priorigy
-    void merge_slivers( FGPolygon& poly);
+    // remove any slivers from in polygon and move them to out
+    // polygon.
+    void move_slivers( FGPolygon& in, FGPolygon& out );
+
+    // for each sliver contour, see if a union with another polygon
+    // yields a polygon with no increased contours (i.e. the sliver is
+    // adjacent and can be merged.)  If so, replace the clipped
+    // polygon with the new polygon that has the sliver merged in.
+    void merge_slivers( FGPolyList& clipped, FGPolygon& slivers );
     
     // Do actually clipping work
     bool clip_all(const point2d& min, const point2d& max);
