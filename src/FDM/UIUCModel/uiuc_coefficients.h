@@ -9,7 +9,7 @@
 #include "uiuc_coef_sideforce.h"
 #include "uiuc_coef_roll.h"
 #include "uiuc_coef_yaw.h"
-#include "../LaRCsim/ls_generic.h"
+#include <FDM/LaRCsim/ls_generic.h>
 
 
 void uiuc_coefficients();

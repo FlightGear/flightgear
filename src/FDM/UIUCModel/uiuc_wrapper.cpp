@@ -71,7 +71,7 @@
 #include "uiuc_recorder.h"
 #include "uiuc_menu.h"
 #include "uiuc_betaprobe.h"
-#include "../FDM/LaRCsim/ls_generic.h"
+#include <FDM/LaRCsim/ls_generic.h>
 
 extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);
