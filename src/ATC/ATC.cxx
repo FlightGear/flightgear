@@ -34,8 +34,10 @@ FGATC::FGATC() {
 	receiving = false;
 	respond = false;
 	runResponseCounter = false;
+	_runReleaseCounter = false;
 	responseID = "";
 	responseReqd = false;
+	_type = INVALID;
 }
 
 FGATC::~FGATC() {
@@ -51,6 +53,15 @@ void FGATC::Update(double dt) {
 			//cout << "RESPOND\n";
 		} else {
 			responseCounter += dt;
+		}
+	}
+	
+	if(_runReleaseCounter) {
+		if(_releaseCounter >= _releaseTime) {
+			freqClear = true;
+			_runReleaseCounter = false;
+		} else {
+			_releaseCounter += dt;
 		}
 	}
 }
@@ -71,12 +82,15 @@ void FGATC::SetResponseReqd(string rid) {
 }
 
 void FGATC::NotifyTransmissionFinished(string rid) {
+	//cout << "Transmission finished, callsign = " << rid << '\n';
 	receiving = false;
 	responseID = rid;
 	if(responseReqd) {
 		runResponseCounter = true;
 		responseCounter = 0.0;
-		responseTime = 1.8;		// TODO - randomize this slightly.
+		responseTime = 1.2;	// TODO - randomize this slightly, and allow it to be dependent on the transmission and how busy the ATC is.
+		respond = false;	// TODO - this ignores the fact that more than one plane could call this before response
+							// Shouldn't happen with AI only, but user could confuse things??
 	} else {
 		freqClear = true;
 	}
@@ -93,10 +107,6 @@ void FGATC::SetDisplay() {
 }
 
 void FGATC::SetNoDisplay() {
-}
-
-atc_type FGATC::GetType() {
-	return INVALID;
 }
 
 void FGATC::SetData(ATCData* d) {

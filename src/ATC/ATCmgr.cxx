@@ -48,6 +48,7 @@ AirportATC::AirportATC() :
     ground_active(false),
     set_by_AI(false),
 	numAI(0)
+	//airport_atc_map.clear();
 {
 	for(int i=0; i<ATC_NUM_TYPES; ++i) {
 		set_by_comm[0][i] = false;
@@ -58,9 +59,9 @@ AirportATC::AirportATC() :
 FGATCMgr::FGATCMgr() {
 	comm_ident[0] = "";
 	comm_ident[1] = "";
-	last_comm_ident[0] = "";
-	last_comm_ident[1] = "";
-	approach_ident = "";
+	//last_comm_ident[0] = "";
+	//last_comm_ident[1] = "";
+	//approach_ident = "";
 	last_in_range = false;
 	comm_type[0] = INVALID;
 	comm_type[1] = INVALID;
@@ -83,6 +84,8 @@ void FGATCMgr::unbind() {
 }
 
 void FGATCMgr::init() {
+	//cout << "ATCMgr::init called..." << endl;
+	
 	comm_node[0] = fgGetNode("/radios/comm[0]/frequencies/selected-mhz", true);
 	comm_node[1] = fgGetNode("/radios/comm[1]/frequencies/selected-mhz", true);
 	lon_node = fgGetNode("/position/longitude-deg", true);
@@ -135,6 +138,7 @@ void FGATCMgr::init() {
     current_atcdialog->Init();
 
 	initDone = true;
+	//cout << "ATCmgr::init done!" << endl;
 }
 
 void FGATCMgr::update(double dt) {
@@ -149,7 +153,7 @@ void FGATCMgr::update(double dt) {
 	//Traverse the list of active stations.
 	//Only update one class per update step to avoid the whole ATC system having to calculate between frames.
 	//Eventually we should only update every so many steps.
-	//cout << "In FGATCMgr::update - atc_list.size = " << atc_list.size() << '\n';
+	//cout << "In FGATCMgr::update - atc_list.size = " << atc_list.size() << endl;
 	if(atc_list.size()) {
 		if(atc_list_itr == atc_list.end()) {
 			atc_list_itr = atc_list.begin();
@@ -160,6 +164,14 @@ void FGATCMgr::update(double dt) {
 		//cout << "Done ATC update..." << endl;
 		++atc_list_itr;
 	}
+	
+	/*
+	cout << "ATC_LIST: " << atc_list.size() << ' ';
+	for(atc_list_iterator it = atc_list.begin(); it != atc_list.end(); it++) {
+		cout << (*it)->get_ident() << ' ';
+	}
+	cout << '\n';
+	*/
 	
 	// Search the tuned frequencies every now and then - this should be done with the event scheduler
 	static int i = 0;	// Very ugly - but there should only ever be one instance of FGATCMgr.
@@ -197,6 +209,7 @@ unsigned short int FGATCMgr::GetFrequency(string ident, atc_type tp) {
 // Might need more sophistication in this in the future - eg registration by aircraft call-sign.
 bool FGATCMgr::AIRegisterAirport(string ident) {
 	SG_LOG(SG_ATC, SG_BULK, "AI registered airport " << ident << " with the ATC system");
+	//cout << "AI registered airport " << ident << " with the ATC system" << '\n';
 	if(airport_atc_map.find(ident) != airport_atc_map.end()) {
 		airport_atc_map[ident]->set_by_AI = true;
 		airport_atc_map[ident]->numAI++;
@@ -234,9 +247,19 @@ bool FGATCMgr::AIRegisterAirport(string ident) {
 // Channel is zero based
 bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 	SG_LOG(SG_ATC, SG_BULK, "Comm channel " << chan << " registered airport " << ident);
+	//cout << "Comm channel " << chan << " registered airport " << ident << '\n';
 	if(airport_atc_map.find(ident) != airport_atc_map.end()) {
 		//cout << "IN MAP - flagging set by comm..." << endl;
 		airport_atc_map[ident]->set_by_comm[chan][tp] = true;
+		if(tp == ATIS) {
+			airport_atc_map[ident]->atis_active = true;
+		} else if(tp == TOWER) {
+			airport_atc_map[ident]->tower_active = true;
+		} else if(tp == GROUND) {
+			airport_atc_map[ident]->ground_active = true;
+		} else if(tp == APPROACH) {
+			//a->approach_active = true;
+		}	// TODO - there *must* be a better way to do this!!!
 		return(true);
 	} else {
 		//cout << "NOT IN MAP - creating new..." << endl;
@@ -253,6 +276,15 @@ bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 			a->tower_active = false;
 			a->ground_freq = GetFrequency(ident, GROUND);
 			a->ground_active = false;
+			if(tp == ATIS) {
+				a->atis_active = true;
+			} else if(tp == TOWER) {
+				a->tower_active = true;
+			} else if(tp == GROUND) {
+				a->ground_active = true;
+			} else if(tp == APPROACH) {
+				//a->approach_active = true;
+			}	// TODO - there *must* be a better way to do this!!!
 			// TODO - some airports will have a tower/ground frequency but be inactive overnight.
 			a->set_by_AI = false;
 			a->numAI = 0;
@@ -267,8 +299,9 @@ bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 
 // Remove from list only if not needed by the AI system or the other comm channel
 // Note that chan is zero based.
-void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
+void FGATCMgr::CommRemoveFromList(string id, atc_type tp, int chan) {
 	SG_LOG(SG_ATC, SG_BULK, "CommRemoveFromList called for airport " << id << " " << tp << " by channel " << chan);
+	//cout << "CommRemoveFromList called for airport " << id << " " << tp << " by channel " << chan << '\n';
 	if(airport_atc_map.find(id) != airport_atc_map.end()) {
 		AirportATC* a = airport_atc_map[id];
 		//cout << "In CommRemoveFromList, a->ground_freq = " << a->ground_freq << endl;
@@ -309,12 +342,16 @@ void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
 				a->set_by_comm[0][tp] = false;
 				// Remove only if not also set by the other comm channel
 				if(!a->set_by_comm[1][tp]) {
+					a->tower_active = false;
+					a->ground_active = false;
 					RemoveFromList(id, tp);
 				}
 				break;
 			case 1:
 				a->set_by_comm[1][tp] = false;
 				if(!a->set_by_comm[0][tp]) {
+					a->tower_active = false;
+					a->ground_active = false;
 					RemoveFromList(id, tp);
 				}
 				break;
@@ -326,24 +363,26 @@ void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
 
 // Remove from list - should only be called from above or similar
 // This function *will* remove it from the list regardless of who else might want it.
-void FGATCMgr::RemoveFromList(const char* id, atc_type tp) {
-	//cout << "Requested type = " << tp << '\n';
-	//cout << "id = " << id << '\n';
-	atc_list_itr = atc_list.begin();
-	while(atc_list_itr != atc_list.end()) {
-		//cout << "type = " << (*atc_list_itr)->GetType() << '\n';
-		//cout << "Ident = " << (*atc_list_itr)->get_ident() << '\n';
-		if( (!strcmp((*atc_list_itr)->get_ident(), id))
-			&& ((*atc_list_itr)->GetType() == tp) ) {
-				//Before removing it stop it transmitting!!
-				//cout << "OBLITERATING FROM LIST!!!\n";
-				(*atc_list_itr)->SetNoDisplay();
-				(*atc_list_itr)->Update(0.00833);
-				delete (*atc_list_itr);
-				atc_list_itr = atc_list.erase(atc_list_itr);
-				break;
-			}  // Note that that can upset where we are in the list but that doesn't really matter
-		++atc_list_itr;
+void FGATCMgr::RemoveFromList(string id, atc_type tp) {
+	//cout << "FGATCMgr::RemoveFromList called..." << endl;
+	//cout << "Requested type = " << tp << endl;
+	//cout << "id = " << id << endl;
+	atc_list_iterator it = atc_list.begin();
+	while(it != atc_list.end()) {
+		//cout << "type = " << (*it)->GetType() << '\n';
+		//cout << "Ident = " << (*it)->get_ident() << '\n';
+		if( (!strcmp((*it)->get_ident(), id.c_str()))
+			&& ((*it)->GetType() == tp) ) {
+			//Before removing it stop it transmitting!!
+			//cout << "OBLITERATING FROM LIST!!!\n";
+			(*it)->SetNoDisplay();
+			(*it)->Update(0.00833);
+			delete (*it);
+			atc_list.erase(it);
+			atc_list_itr = atc_list.begin();	// Reset the persistent itr incase we've left it off the end.
+			break;
+		}
+		++it;
 	}
 }
 
@@ -351,16 +390,18 @@ void FGATCMgr::RemoveFromList(const char* id, atc_type tp) {
 // Find in list - return a currently active ATC pointer given ICAO code and type
 // Return NULL if the given service is not in the list
 // - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
-FGATC* FGATCMgr::FindInList(const char* id, atc_type tp) {
-	atc_list_itr = atc_list.begin();
-	while(atc_list_itr != atc_list.end()) {
-		if( (!strcmp((*atc_list_itr)->get_ident(), id))
-		&& ((*atc_list_itr)->GetType() == tp) ) {
-			return(*atc_list_itr);
-		}	// Note that that can upset where we are in the list but that shouldn't really matter
-		++atc_list_itr;
+FGATC* FGATCMgr::FindInList(string id, atc_type tp) {
+	//cout << "Entering FindInList for " << id << ' ' << tp << endl;
+	atc_list_iterator it = atc_list.begin();
+	while(it != atc_list.end()) {
+		if( (!strcmp((*it)->get_ident(), id.c_str()))
+		&& ((*it)->GetType() == tp) ) {
+			return(*it);
+		}
+		++it;
 	}
 	// If we get here it's not in the list
+	//cout << "Couldn't find it in the list though :-(" << endl;
 	return(NULL);
 }
 
@@ -381,8 +422,10 @@ bool FGATCMgr::GetAirportATCDetails(string icao, AirportATC* a) {
 // - at the moment all these GetATC... functions exposed are just too complicated.
 FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 	if(airport_atc_map.find(icao) == airport_atc_map.end()) {
+		//cout << "Unable to find " << icao << ' ' << type << " in the airport_atc_map" << endl;
 		return NULL;
 	}
+	//cout << "Found " << icao << ' ' << type << endl;
 	AirportATC *a = airport_atc_map[icao];
 	//cout << "a->lon = " << a->lon << '\n';
 	//cout << "a->elev = " << a->elev << '\n';
@@ -400,6 +443,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 				atc_list.push_back(t);
 				a->tower_active = true;
 				airport_atc_map[icao] = a;
+				//cout << "Initing tower in GetATCPointer()\n";
 				t->Init();
 				return(t);
 			} else {
@@ -441,6 +485,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 	}
 	
 	SG_LOG(SG_ATC, SG_ALERT, "ERROR IN FGATCMgr - reached end of GetATCPointer");
+	//cout << "ERROR IN FGATCMgr - reached end of GetATCPointer" << endl;
 	
 	return(NULL);
 }
@@ -503,7 +548,7 @@ void FGATCMgr::FreqSearch(int channel) {
 			}
 		}
 		// At this point we can assume that we need to add the service.
-		comm_ident[chan] = (data.ident).c_str();
+		comm_ident[chan] = data.ident;
 		comm_type[chan] = data.type;
 		comm_x[chan] = (double)data.x;
 		comm_y[chan] = (double)data.y;
@@ -520,6 +565,7 @@ void FGATCMgr::FreqSearch(int channel) {
 			if(app != NULL) {
 				// The station is already in the ATC list
 				//cout << "In list - flagging SetDisplay..." << endl;
+				comm_atc_ptr[chan] = app;
 				app->SetDisplay();
 			} else {
 				// Generate the station and put in the ATC list
@@ -532,19 +578,24 @@ void FGATCMgr::FreqSearch(int channel) {
 				atc_list.push_back(a);
 			}
 		} else if (comm_type[chan] == TOWER) {
+			//cout << "TOWER TOWER TOWER\n";
 			CommRegisterAirport(comm_ident[chan], chan, TOWER);
 			//cout << "Done (TOWER)" << endl;
 			FGATC* app = FindInList(comm_ident[chan], TOWER);
 			if(app != NULL) {
 				// The station is already in the ATC list
-                                SG_LOG(SG_GENERAL, SG_DEBUG, comm_ident[chan] << " is in list - flagging SetDisplay...");
+				SG_LOG(SG_GENERAL, SG_DEBUG, comm_ident[chan] << " is in list - flagging SetDisplay...");
+				//cout << comm_ident[chan] << " is in list - flagging SetDisplay...\n";
+				comm_atc_ptr[chan] = app;
 				app->SetDisplay();
 			} else {
 				// Generate the station and put in the ATC list
-                                SG_LOG(SG_GENERAL, SG_DEBUG, comm_ident[chan] << " is not in list - generating...");
+				SG_LOG(SG_GENERAL, SG_DEBUG, comm_ident[chan] << " is not in list - generating...");
+				//cout << comm_ident[chan] << " is not in list - generating...\n";
 				FGTower* t = new FGTower;
 				t->SetData(&data);
 				comm_atc_ptr[chan] = t;
+				//cout << "Initing tower in FreqSearch()\n";
 				t->Init();
 				t->SetDisplay();
 				atc_list.push_back(t);
@@ -555,6 +606,7 @@ void FGATCMgr::FreqSearch(int channel) {
 			FGATC* app = FindInList(comm_ident[chan], GROUND);
 			if(app != NULL) {
 				// The station is already in the ATC list
+				comm_atc_ptr[chan] = app;
 				app->SetDisplay();
 			} else {
 				// Generate the station and put in the ATC list
@@ -638,19 +690,21 @@ void FGATCMgr::AreaSearch() {
 	
 	// remove planes which are out of range
 	// TODO - I'm not entirely sure that this belongs here.
-	atc_list_itr = atc_list.begin();
-	while(atc_list_itr != atc_list.end()) {
-		if((*atc_list_itr)->GetType() == APPROACH ) {
-			int np = (*atc_list_itr)->RemovePlane();
+	atc_list_iterator it = atc_list.begin();
+	while(it != atc_list.end()) {
+		if((*it)->GetType() == APPROACH ) {
+			int np = (*it)->RemovePlane();
 			// if approach has no planes left remove it from ATC list
 			if ( np == 0) {
-				(*atc_list_itr)->SetNoDisplay();
-				(*atc_list_itr)->Update(0.00833);
-				delete (*atc_list_itr);
-				atc_list_itr = atc_list.erase(atc_list_itr);
+				//cout << "REMOVING AN APPROACH STATION WITH NO PLANES..." << endl;
+				(*it)->SetNoDisplay();
+				(*it)->Update(0.00833);
+				delete (*it);
+				atc_list.erase(it);
+				atc_list_itr = atc_list.begin();	// Reset the persistent itr incase we've left it off the end.
 				break;     // the other stations will be checked next time
 			}
 		}
-		++atc_list_itr;
+		++it;
 	}
 }

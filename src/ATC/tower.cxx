@@ -46,6 +46,7 @@ SG_USING_STD(cout);
 // TowerPlaneRec
 
 TowerPlaneRec::TowerPlaneRec() :
+	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -65,12 +66,13 @@ TowerPlaneRec::TowerPlaneRec() :
 	opType(TTT_UNKNOWN),
 	leg(LEG_UNKNOWN),
 	landingType(AIP_LT_UNKNOWN),
-	isUser(false) 
+	isUser(false)
 {
 	plane.callsign = "UNKNOWN";
 }
 
 TowerPlaneRec::TowerPlaneRec(PlaneRec p) :
+	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -96,6 +98,7 @@ TowerPlaneRec::TowerPlaneRec(PlaneRec p) :
 }
 
 TowerPlaneRec::TowerPlaneRec(Point3D pt) :
+	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -122,6 +125,7 @@ TowerPlaneRec::TowerPlaneRec(Point3D pt) :
 }
 
 TowerPlaneRec::TowerPlaneRec(PlaneRec p, Point3D pt) :
+	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -153,22 +157,38 @@ TowerPlaneRec::TowerPlaneRec(PlaneRec p, Point3D pt) :
 /*******************************************
                TODO List
 			   
-Currently user is assumed to have taken off again when leaving the runway - check speed/elev for taxiing-in.
+Currently user is assumed to have taken off again when leaving the runway - check speed/elev for taxiing-in. (MAJOR)
 
-Tell AI plane to contact ground when taxiing in.
+Use track instead of heading to determine what leg of the circuit the user is flying. (MINOR)
 
-Use track instead of heading to determine what leg of the circuit the user is flying.
-
-Use altitude as well as position to try to determine if the user has left the circuit.
+Use altitude as well as position to try to determine if the user has left the circuit. (MEDIUM - other issues as well).
 
 Currently HoldShortReported code assumes there will be only one plane holding for the runway at once and 
-will break when planes start queueing.
+will break when planes start queueing. (CRITICAL)
 
-Implement ReportRunwayVacated
+Report-Runway-Vacated is left as only user ATC option following a go-around. (MAJOR)
+
+Report Go-Around should be added to user options following reporting final or downwind. (MEDIUM).
+
+Report-Downwind is not added as ATC option when user takes off to fly a circuit. (MAJOR)
+
+eta of USER can be calculated very wrongly in circuit if flying straight out and turn4 etc are with +ve ortho y. 
+This can then screw up circuit ordering for other planes (MEDIUM)
+
+USER leaving circuit needs to be more robustly considered when intentions unknown
+Currently only considered during climbout and breaks when user turns (MEDIUM).
+
+GetPos() of the AI planes is called erratically - either too much or not enough. (MINOR)
+
+GO-AROUND is instructed very late at < 12s to landing - possibly make more dependent on chance of rwy clearing before landing (FEATURE)
+
+Need to make clear when TowerPlaneRecs do or don't get deleted in RemoveFromCircuitList etc. (MINOR until I misuse it - then CRITICAL!)
 *******************************************/
 
 FGTower::FGTower() {
 	ATCmgr = globals->get_ATC_mgr();
+	
+	_type = TOWER;
 	
 	// Init the property nodes - TODO - need to make sure we're getting surface winds.
 	wind_from_hdg = fgGetNode("/environment/wind-from-heading-deg", true);
@@ -178,11 +198,14 @@ FGTower::FGTower() {
 	update_count_max = 15;
 	
 	holdListItr = holdList.begin();
+	appList.clear();
 	appListItr = appList.begin();
 	depListItr = depList.begin();
 	rwyListItr = rwyList.begin();
 	circuitListItr = circuitList.begin();
 	trafficListItr = trafficList.begin();
+	vacatedList.clear();
+	vacatedListItr = vacatedList.begin();
 	
 	freqClear = true;
 	
@@ -192,6 +215,8 @@ FGTower::FGTower() {
 	nominal_downwind_leg_pos = 1000.0;
 	nominal_base_leg_pos = -1000.0;
 	// TODO - set nominal crosswind leg pos based on minimum distance from takeoff end of rwy.
+	
+	_departureControlled = false;
 }
 
 FGTower::~FGTower() {
@@ -201,6 +226,7 @@ FGTower::~FGTower() {
 }
 
 void FGTower::Init() {
+	//cout << "Initialising tower " << ident << '\n';
     display = false;
 	
 	// Pointers to user's position
@@ -257,14 +283,18 @@ void FGTower::Init() {
 		}
 	}
 	
-	// Get the airport elevation
-	aptElev = dclGetAirportElev(ident.c_str()) * SG_FEET_TO_METER;
+	// TODO - attempt to get a departure control pointer to see if we need to hand off departing traffic to departure.
 	
+	// Get the airport elevation
+	aptElev = dclGetAirportElev(ident.c_str());
+	
+	// TODO - this function only assumes one active rwy.
 	DoRwyDetails();
 	
-	// FIXME - this currently assumes use of the active rwy by the user.
-	rwyOccupied = OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0));
+	// TODO - this currently assumes only one active runway.
+	rwyOccupied = OnActiveRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0));
 	if(rwyOccupied) {
+		//cout << "User found on active runway\n";
 		// Assume the user is started at the threshold ready to take-off
 		TowerPlaneRec* t = new TowerPlaneRec;
 		t->plane.callsign = fgGetString("/sim/user/callsign");
@@ -278,9 +308,12 @@ void FGTower::Init() {
 		rwyList.push_back(t);
 		departed = false;
 	} else {
+		//cout << "User not on active runway\n";
 		// For now assume that this means the user is not at the airport and is in the air.
 		// TODO FIXME - this will break when user starts on apron, at hold short, etc.
-		current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
+		if(!OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0))) {
+			current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
+		}
 	}
 }
 
@@ -357,6 +390,10 @@ void FGTower::Update(double dt) {
 		CheckApproachList(dt);
 	}
 	
+	if(update_count == 8) {
+		CheckDepartureList(dt);
+	}
+	
 	// TODO - do one plane from the departure list and set departed = false when out of consideration
 	
 	//doCommunication();
@@ -399,7 +436,7 @@ void FGTower::Update(double dt) {
 
 void FGTower::ReceiveUserCallback(int code) {
 	if(code == (int)USER_REQUEST_VFR_DEPARTURE) {
-		cout << "User requested departure\n";
+		//cout << "User requested departure\n";
 	} else if(code == (int)USER_REQUEST_VFR_ARRIVAL) {
 		VFRArrivalContact("USER");
 	} else if(code == (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP) {
@@ -417,11 +454,12 @@ void FGTower::ReceiveUserCallback(int code) {
 }
 
 void FGTower::Respond() {
-	cout << "Entering Respond, responseID = " << responseID << endl;
+	//cout << "\nEntering Respond, responseID = " << responseID << endl;
 	TowerPlaneRec* t = FindPlane(responseID);
 	if(t) {
 		// This will grow!!!
 		if(t->vfrArrivalReported && !t->vfrArrivalAcknowledged) {
+			//cout << "Tower " << ident << " is responding to VFR arrival reported...\n";
 			// Testing - hardwire straight in for now
 			string trns = t->plane.callsign;
 			trns += " ";
@@ -433,24 +471,37 @@ void FGTower::Respond() {
 			Point3D op = ortho.ConvertToLocal(t->pos);
 			if(op.y() < -1000) {
 				trns += " Report three mile straight-in runway ";
-				current_atcdialog->add_entry(ident, "@AP Tower @CS @MI mile final Runway @RW", "Report Final", TOWER, (int)USER_REPORT_3_MILE_FINAL);
+				t->opType = STRAIGHT_IN;
+				if(t->isUser) {
+					current_atcdialog->add_entry(ident, "@AP Tower @CS @MI mile final Runway @RW", "Report Final", TOWER, (int)USER_REPORT_3_MILE_FINAL);
+				} else {
+					t->planePtr->RegisterTransmission(14);
+				}
 			} else {
 				// For now we'll just request reporting downwind.
 				// TODO - In real life something like 'report 2 miles southwest right downwind rwy 19R' might be used
 				// but I'm not sure how to handle all permutations of which direction to tell to report from yet.
 				trns += " Report ";
-				trns += (rwy.patternDirection ? "right " : "left ");
+				//cout << "Responding, rwy.patterDirection is " << rwy.patternDirection << '\n';
+				trns += ((rwy.patternDirection == 1) ? "right " : "left ");
 				trns += "downwind runway ";
-				current_atcdialog->add_entry(ident, "@AP Tower @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
+				t->opType = CIRCUIT;
+				// leave it in the app list until it gets into pattern though.
+				if(t->isUser) {
+					current_atcdialog->add_entry(ident, "@AP Tower @CS Downwind @RW", "Report Downwind", TOWER, (int)USER_REPORT_DOWNWIND);
+				} else {
+					t->planePtr->RegisterTransmission(15);
+				}
 			}
 			trns += ConvertRwyNumToSpokenString(activeRwy);
 			if(display) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 			} else {
-				cout << "Not displaying, trns was " << trns << '\n';
+				//cout << "Not displaying, trns was " << trns << '\n';
 			}
 			t->vfrArrivalAcknowledged = true;
 		} else if(t->downwindReported) {
+			//cout << "Tower " << ident << " is responding to downwind reported...\n";
 			t->downwindReported = false;
 			int i = 1;
 			for(tower_plane_rec_list_iterator twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
@@ -461,9 +512,10 @@ void FGTower::Respond() {
 			trns += " Number ";
 			trns += ConvertNumToSpokenDigits(i);
 			trns += " ";
-			if(i == 1) {
-				trns += "Cleared to land";
+			if((i == 1) && (!rwyList.size()) && (t->nextOnRwy)) {
+				trns += "Cleared to land";	// TODO - clear for the option if appropriate
 				t->clearedToLand = true;
+				if(!t->isUser) t->planePtr->RegisterTransmission(7);
 			}
 			if(display) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns);
@@ -471,8 +523,10 @@ void FGTower::Respond() {
 			if(t->isUser) {
 				if(t->opType == TTT_UNKNOWN) t->opType = CIRCUIT;
 				current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
+				// TODO - add report going around as an option
 			}
 		} else if(t->holdShortReported) {
+			//cout << "Tower " << ident << " is reponding to holdShortReported...\n";
 			if(t->nextOnRwy) {
 				if(rwyOccupied) {	// TODO - ought to add a sanity check that it isn't this plane only on the runway (even though it shouldn't be!!)
 					// Do nothing for now - consider acknowloging hold short eventually
@@ -503,11 +557,12 @@ void FGTower::Respond() {
 			}
 			t->holdShortReported = false;
 		} else if(t->finalReported && !(t->finalAcknowledged)) {
+			//cout << "Tower " << ident << " is responding to finalReported...\n";
 			bool disp = true;
 			string trns = t->plane.callsign;
-			cout << (t->nextOnRwy ? "Next on rwy " : "Not next!! ");
-			cout << (rwyOccupied ? "RWY OCCUPIED!!\n" : "Rwy not occupied\n");
-			if(t->nextOnRwy && !rwyOccupied) {
+			//cout << (t->nextOnRwy ? "Next on rwy " : "Not next!! ");
+			//cout << (rwyOccupied ? "RWY OCCUPIED!!\n" : "Rwy not occupied\n");
+			if(t->nextOnRwy && !rwyOccupied && !(t->instructedToGoAround)) {
 				if(t->landingType == FULL_STOP) {
 					trns += " cleared to land ";
 				} else {
@@ -515,7 +570,13 @@ void FGTower::Respond() {
 				}
 				// TODO - add winds
 				t->clearedToLand = true;
-				if(t->isUser) current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
+				// Maybe remove report downwind from menu here as well incase user didn't bother to?
+				if(t->isUser) {
+					current_atcdialog->add_entry(ident, "@CS Clear of the runway", "Report runway vacated", TOWER, USER_REPORT_RWY_VACATED);
+					// TODO - add report going around as an option.
+				} else {
+					t->planePtr->RegisterTransmission(7);
+				}
 			} else if(t->eta < 20) {
 				// Do nothing - we'll be telling it to go around in less than 10 seconds if the
 				// runway doesn't clear so no point in calling "continue approach".
@@ -529,27 +590,38 @@ void FGTower::Respond() {
 			}
 			t->finalAcknowledged = true;
 		} else if(t->rwyVacatedReported && !(t->rwyVacatedAcknowledged)) {
-			string trns = t->plane.callsign;
-			if(separateGround) {
-				trns += " Contact ground on ";
-				double f = globals->get_ATC_mgr()->GetFrequency(ident, GROUND) / 100.0;	
-				char buf[10];
-				sprintf(buf, "%.2f", f);
-				trns += buf;
-				trns += " Good Day";
-			} else {
-				// Cop-out!!
-				trns += " cleared for taxi to the GA parking";
-			}
-			if(display) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns);
-			}
+			ProcessRunwayVacatedReport(t);
 			t->rwyVacatedAcknowledged = true;
-			// Maybe we should check that the plane really *has* vacated the runway!
 		}
 	}
-	freqClear = true;	// FIXME - set this to come true after enough time to render the message
-	//cout << "Done Respond" << endl;
+	//freqClear = true;	// FIXME - set this to come true after enough time to render the message
+	_releaseCounter = 0.0;
+	_releaseTime = 5.5;
+	_runReleaseCounter = true;
+	//cout << "Done Respond\n" << endl;
+}
+
+void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
+	//cout << "Processing rwy vacated...\n";
+	string trns = t->plane.callsign;
+	if(separateGround) {
+		trns += " Contact ground on ";
+		double f = globals->get_ATC_mgr()->GetFrequency(ident, GROUND) / 100.0;	
+		char buf[10];
+		sprintf(buf, "%.2f", f);
+		trns += buf;
+		trns += " Good Day";
+		if(!t->isUser) t->planePtr->RegisterTransmission(5);
+	} else {
+		// Cop-out!!
+		trns += " cleared for taxi to the GA parking";
+		if(!t->isUser) t->planePtr->RegisterTransmission(6);	// TODO - this is a mega-hack!!
+	}
+	//cout << "trns = " << trns << '\n';
+	if(display) {
+		globals->get_ATC_display()->RegisterSingleMessage(trns);
+	}
+	// Maybe we should check that the plane really *has* vacated the runway!
 }
 
 // Currently this assumes we *are* next on the runway and doesn't check for planes about to land - 
@@ -659,6 +731,10 @@ void FGTower::ClearHoldingPlane(TowerPlaneRec* t) {
 	//cout << "Done ClearHoldingPlane " << endl;
 }
 
+
+// ***************************************************************************************
+// ********** Functions to periodically check what the various traffic is doing **********
+
 // Do one plane from the hold list
 void FGTower::CheckHoldList(double dt) {
 	//cout << "Entering CheckHoldList..." << endl;
@@ -710,10 +786,12 @@ void FGTower::CheckCircuitList(double dt) {
 			circuitListItr = circuitList.begin();
 		}
 		TowerPlaneRec* t = *circuitListItr;
+		//cout << ident <<  ' ' << circuitList.size() << ' ' << t->plane.callsign << " " << t->leg << " eta " << t->eta << '\n';
 		if(t->isUser) {
 			t->pos.setlon(user_lon_node->getDoubleValue());
 			t->pos.setlat(user_lat_node->getDoubleValue());
 			t->pos.setelev(user_elev_node->getDoubleValue());
+			//cout << ident <<  ' ' << circuitList.size() << ' ' << t->plane.callsign << " " << t->leg << " eta " << t->eta << '\n';
 		} else {
 			t->pos = t->planePtr->GetPos();		// We should probably only set the pos's on one walk through the traffic list in the update function, to save a few CPU should we end up duplicating this.
 			t->landingType = t->planePtr->GetLandingOption();
@@ -738,11 +816,13 @@ void FGTower::CheckCircuitList(double dt) {
 					//cout << "Climbout\n";
 					// If it's the user we may be unsure of his/her intentions.
 					// (Hopefully the AI planes won't try confusing the sim!!!)
+					//cout << "tortho.y = " << tortho.y() << '\n';
 					if(t->opType == TTT_UNKNOWN) {
 						if(tortho.y() > 5000) {
 							// 5 km out from threshold - assume it's a departure
 							t->opType = OUTBOUND;	// TODO - could check if the user has climbed significantly above circuit altitude as well.
 							// Since we are unknown operation we should be in depList already.
+							//cout << ident << " Removing user from circuitList (TTT_UNKNOWN)\n";
 							circuitList.erase(circuitListItr);
 							RemoveFromTrafficList(t->plane.callsign);
 							circuitListItr = circuitList.begin();
@@ -752,6 +832,7 @@ void FGTower::CheckCircuitList(double dt) {
 							// 10 km out - assume the user has abandoned the circuit!!
 							t->opType = OUTBOUND;
 							depList.push_back(t);
+							//cout << ident << " removing user from circuitList (CIRCUIT)\n";
 							circuitList.erase(circuitListItr);
 							circuitListItr = circuitList.begin();
 						}
@@ -807,70 +888,79 @@ void FGTower::CheckCircuitList(double dt) {
 		// TODO - at the moment we're constraining plane 2 based on plane 1 - this won't (or might not) work for 3 planes in the circuit!!
 		if(circuitListItr == circuitList.begin()) {
 			switch(t->leg) {
-			case FINAL:
+				case FINAL:
 				// Base leg must be at least as far out as the plane is - actually possibly not necessary for separation, but we'll use that for now.
 				base_leg_pos = tortho.y();
 				//cout << "base_leg_pos = " << base_leg_pos << '\n';
 				break;
-			case TURN4:
+				case TURN4:
 				// Fall through to base
-			case BASE:
+				case BASE:
 				base_leg_pos = tortho.y();
 				//cout << "base_leg_pos = " << base_leg_pos << '\n';
 				break;
-			case TURN3:
+				case TURN3:
 				// Fall through to downwind
-			case DOWNWIND:
+				case DOWNWIND:
 				// Only have the downwind leg pos as turn-to-base constraint if more negative than we already have.
 				base_leg_pos = (tortho.y() < base_leg_pos ? tortho.y() : base_leg_pos);
 				//cout << "base_leg_pos = " << base_leg_pos;
 				downwind_leg_pos = tortho.x();		// Assume that a following plane can simply be constrained by the immediately in front downwind plane
 				//cout << " downwind_leg_pos = " << downwind_leg_pos << '\n';
 				break;
-			case TURN2:
+				case TURN2:
 				// Fall through to crosswind
-			case CROSSWIND:
+				case CROSSWIND:
 				crosswind_leg_pos = tortho.y();
 				//cout << "crosswind_leg_pos = " << crosswind_leg_pos << '\n';
 				t->instructedToGoAround = false;
 				break;
-			case TURN1:
+				case TURN1:
 				// Fall through to climbout
-			case CLIMBOUT:
+				case CLIMBOUT:
 				// Only use current by constraint as largest
 				crosswind_leg_pos = (tortho.y() > crosswind_leg_pos ? tortho.y() : crosswind_leg_pos);
 				//cout << "crosswind_leg_pos = " << crosswind_leg_pos << '\n';
 				break;
-			case TAKEOFF_ROLL:
+				case TAKEOFF_ROLL:
 				break;
-			case LEG_UNKNOWN:
+				case LEG_UNKNOWN:
 				break;
-			case LANDING_ROLL:
+				case LANDING_ROLL:
 				break;
-			default:
+				default:
 				break;
 			}
 		}
 		
-		if(t->leg == FINAL) {
-			if(t->landingType == FULL_STOP) t->opType = INBOUND;
-			if(t->eta < 12 && rwyList.size() && !(t->instructedToGoAround)) {
-				// TODO - need to make this more sophisticated 
-				// eg. is the plane accelerating down the runway taking off [OK],
-				// or stationary near the start [V. BAD!!].
-				// For now this should stop the AI plane landing on top of the user.
-				string trns = t->plane.callsign;
-				trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
-				if(display) {
-					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
-				}
-				t->instructedToGoAround = true;
-				if(t->planePtr) {
-					cout << "Registering Go-around transmission with AI plane\n";
-					t->planePtr->RegisterTransmission(13);
+		if(t->leg == FINAL && !(t->instructedToGoAround)) {
+			//cout << "YES FINAL, t->eta = " << t->eta << ", rwyList.size() = " << rwyList.size() << '\n';
+			if(t->landingType == FULL_STOP) {
+				t->opType = INBOUND;
+				//cout << "\n******** SWITCHING TO INBOUND AT POINT AAA *********\n\n";
+				if(t->eta < 12 && rwyList.size()) {
+					// TODO - need to make this more sophisticated 
+					// eg. is the plane accelerating down the runway taking off [OK],
+					// or stationary near the start [V. BAD!!].
+					// For now this should stop the AI plane landing on top of the user.
+					string trns = t->plane.callsign;
+					trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
+					if(display) {
+						globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+					}
+					t->instructedToGoAround = true;
+					t->clearedToLand = false;
+					// Assume it complies!!!
+					t->opType = CIRCUIT;
+					t->leg = CLIMBOUT;
+					if(t->planePtr) {
+						//cout << "Registering Go-around transmission with AI plane\n";
+						t->planePtr->RegisterTransmission(13);
+					}
 				}
 			}
 		} else if(t->leg == LANDING_ROLL) {
+			//cout << t->plane.callsign << " has landed - adding to rwyList\n";
 			rwyList.push_front(t);
 			// TODO - if(!clearedToLand) shout something!!
 			t->clearedToLand = false;
@@ -878,6 +968,7 @@ void FGTower::CheckCircuitList(double dt) {
 			if(t->isUser) {
 				t->opType = TTT_UNKNOWN;
 			}	// TODO - allow the user to specify opType via ATC menu
+			//cout << ident << " Removing " << t->plane.callsign << " from circuitList..." << endl;
 			circuitListItr = circuitList.erase(circuitListItr);
 			if(circuitListItr == circuitList.end() ) {
 				circuitListItr = circuitList.begin();
@@ -909,16 +1000,24 @@ void FGTower::CheckRunwayList(double dt) {
 			}
 			bool on_rwy = OnActiveRunway(t->pos);
 			if(!on_rwy) {
+				// TODO - for all of these we need to check what the user is *actually* doing!
 				if((t->opType == INBOUND) || (t->opType == STRAIGHT_IN)) {
-					rwyList.pop_front();
-					delete t;
-					// TODO - tell it to taxi / contact ground / don't delete it etc!
+					//cout << "Tower " << ident << " is removing plane " << t->plane.callsign << " from rwy list (vacated)\n";
+					//cout << "Size of rwylist was " << rwyList.size() << '\n';
+					//cout << "Size of vacatedList was " << vacatedList.size() << '\n';
+					RemoveFromRwyList(t->plane.callsign);
+					vacatedList.push_back(t);
+					//cout << "Size of rwylist is " << rwyList.size() << '\n';
+					//cout << "Size of vacatedList is " << vacatedList.size() << '\n';
+					// At the moment we wait until Runway Vacated is reported by the plane before telling to contact ground etc.
+					// It's possible we could be a bit more proactive about this.
 				} else if(t->opType == OUTBOUND) {
 					depList.push_back(t);
 					rwyList.pop_front();
 					departed = true;
 					timeSinceLastDeparture = 0.0;
 				} else if(t->opType == CIRCUIT) {
+					//cout << ident << " adding " << t->plane.callsign << " to circuitList" << endl;
 					circuitList.push_back(t);
 					AddToTrafficList(t);
 					rwyList.pop_front();
@@ -926,6 +1025,7 @@ void FGTower::CheckRunwayList(double dt) {
 					timeSinceLastDeparture = 0.0;
 				} else if(t->opType == TTT_UNKNOWN) {
 					depList.push_back(t);
+					//cout << ident << " adding " << t->plane.callsign << " to circuitList" << endl;
 					circuitList.push_back(t);
 					AddToTrafficList(t);
 					rwyList.pop_front();
@@ -942,25 +1042,139 @@ void FGTower::CheckRunwayList(double dt) {
 
 // Do one plane from the approach list
 void FGTower::CheckApproachList(double dt) {
+	//cout << "CheckApproachList called for " << ident << endl;
+	//cout << "AppList.size is " << appList.size() << endl;
 	if(appList.size()) {
 		if(appListItr == appList.end()) {
 			appListItr = appList.begin();
 		}
 		TowerPlaneRec* t = *appListItr;
 		//cout << "t = " << t << endl;
+		//cout << "Checking " << t->plane.callsign << endl;
 		if(t->isUser) {
 			t->pos.setlon(user_lon_node->getDoubleValue());
 			t->pos.setlat(user_lat_node->getDoubleValue());
 			t->pos.setelev(user_elev_node->getDoubleValue());
 		} else {
 			// TODO - set/update the position if it's an AI plane
+		}
+		//cout << "eta is " << t->eta << ", rwy is " << (rwyList.size() ? "occupied " : "clear ") << '\n';
+		if(t->eta < 12 && rwyList.size() && !(t->instructedToGoAround)) {
+			// TODO - need to make this more sophisticated 
+			// eg. is the plane accelerating down the runway taking off [OK],
+			// or stationary near the start [V. BAD!!].
+			// For now this should stop the AI plane landing on top of the user.
+			string trns = t->plane.callsign;
+			trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+			}
+			t->instructedToGoAround = true;
+			t->clearedToLand = false;
+			t->nextOnRwy = false;	// But note this is recalculated so don't rely on it
+			// Assume it complies!!!
+			t->opType = CIRCUIT;
+			t->leg = CLIMBOUT;
+			if(!t->isUser) {
+				if(t->planePtr) {
+					//cout << "Registering Go-around transmission with AI plane\n";
+					t->planePtr->RegisterTransmission(13);
+				}
+			} else {
+				// TODO - add Go-around ack to comm options,
+				// remove report rwy vacated. (possibly).
+			}
 		}				
-		if(t->nextOnRwy && !(t->clearedToLand)) {
+		if(t->nextOnRwy && !(t->clearedToLand) && !(t->instructedToGoAround)) {
 			// check distance away and whether runway occupied
 			// and schedule transmission if necessary
-		}				
+		}
+		
+		// Check for landing...
+		bool landed = false;
+		if(!t->isUser) {
+			if(t->planePtr) {
+				if(t->planePtr->GetLeg() == LANDING_ROLL) {
+					landed = true;
+				}
+			} else {
+				SG_LOG(SG_ATC, SG_ALERT, "WARNING - not user and null planePtr in CheckApproachList!");
+			}
+		} else {	// user
+			if(OnActiveRunway(t->pos)) {
+				landed = true;
+			}
+		}
+		
+		if(landed) {
+			// Duplicated in CheckCircuitList - must be able to rationalise this somehow!
+			//cout << "A " << t->plane.callsign << " has landed, adding to rwyList...\n";
+			rwyList.push_front(t);
+			// TODO - if(!clearedToLand) shout something!!
+			t->clearedToLand = false;
+			RemoveFromTrafficList(t->plane.callsign);
+			//if(t->isUser) {
+				//	t->opType = TTT_UNKNOWN;
+			//}	// TODO - allow the user to specify opType via ATC menu
+			appListItr = appList.erase(appListItr);
+			if(appListItr == appList.end() ) {
+				appListItr = appList.begin();
+			}
+		}
+		
 		++appListItr;
 	}
+	//cout << "Done" << endl;
+}
+
+// Do one plane from the departure list
+void FGTower::CheckDepartureList(double dt) {
+	if(depList.size()) {
+		if(depListItr == depList.end()) {
+			depListItr = depList.begin();
+		}
+		TowerPlaneRec* t = *depListItr;
+		//cout << "Dep list, checking " << t->plane.callsign;
+		
+		double distout;	// meters
+		if(t->isUser) distout = dclGetHorizontalSeparation(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
+		else distout = dclGetHorizontalSeparation(Point3D(lon, lat, elev), t->planePtr->GetPos());
+		//cout << " distout = " << distout << '\n';
+		if(distout > 10000) {
+			string trns = t->plane.callsign;
+			trns += " You are now clear of my airspace, good day";
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+			}
+			if(t->isUser) {
+				// Change the communication options
+				RemoveAllUserDialogOptions();
+				current_atcdialog->add_entry(ident, "@AP Tower @CS @MI miles @CD of the airport for full stop with the ATIS", "Contact tower for VFR arrival (full stop)", TOWER, (int)USER_REQUEST_VFR_ARRIVAL_FULL_STOP);
+			} else {
+				// Send a clear-of-airspace signal
+				// TODO - implement this once we actually have departing AI traffic (currently all circuits or arrivals).
+			}
+			RemovePlane(t->plane.callsign);
+		} else {
+			++depListItr;
+		}
+	}
+}
+
+// ********** End periodic check functions ***********************************************
+// ***************************************************************************************
+
+
+// Remove all dialog options for this tower.
+void FGTower::RemoveAllUserDialogOptions() {
+	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_DEPARTURE, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL_FULL_STOP, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REPORT_3_MILE_FINAL, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REPORT_DOWNWIND, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REPORT_RWY_VACATED, TOWER);
+	current_atcdialog->remove_entry(ident, USER_REPORT_GOING_AROUND, TOWER);	
 }
 
 // Returns true if positions of crosswind/downwind/base leg turns should be constrained by previous traffic
@@ -1011,6 +1225,7 @@ void FGTower::DoRwyDetails() {
 	FGRunway runway;
 	bool rwyGood = globals->get_runways()->search(ident, int(hdg), &runway);
 	if(rwyGood) {
+		//cout << "RUNWAY GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOD\n";
 		activeRwy = runway.rwy_no;
 		rwy.rwyID = runway.rwy_no;
 		SG_LOG(SG_ATC, SG_INFO, "Active runway for airport " << ident << " is " << activeRwy);
@@ -1051,6 +1266,7 @@ void FGTower::DoRwyDetails() {
 		if(rwy.rwyID.size() == 3) {
 			rwy.patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
 		}
+		//cout << "Doing details, rwy.patterDirection is " << rwy.patternDirection << '\n';
 	} else {
 		SG_LOG(SG_ATC, SG_ALERT, "Help  - can't get good runway in FGTower!!");
 		activeRwy = "NN";
@@ -1113,10 +1329,42 @@ bool FGTower::RemoveFromTrafficList(string id) {
 		TowerPlaneRec* tpr = *twrItr;
 		if(tpr->plane.callsign == id) {
 			trafficList.erase(twrItr);
+			trafficListItr = trafficList.begin();
 			return(true);
 		}
 	}	
 	SG_LOG(SG_ATC, SG_WARN, "Warning - unable to remove aircraft " << id << " from trafficList in FGTower");
+	return(false);
+}
+
+
+// Returns true if successful
+bool FGTower::RemoveFromAppList(string id) {
+	tower_plane_rec_list_iterator twrItr;
+	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+		TowerPlaneRec* tpr = *twrItr;
+		if(tpr->plane.callsign == id) {
+			appList.erase(twrItr);
+			appListItr = appList.begin();
+			return(true);
+		}
+	}	
+	//SG_LOG(SG_ATC, SG_WARN, "Warning - unable to remove aircraft " << id << " from appList in FGTower");
+	return(false);
+}
+
+// Returns true if successful
+bool FGTower::RemoveFromRwyList(string id) {
+	tower_plane_rec_list_iterator twrItr;
+	for(twrItr = rwyList.begin(); twrItr != rwyList.end(); twrItr++) {
+		TowerPlaneRec* tpr = *twrItr;
+		if(tpr->plane.callsign == id) {
+			rwyList.erase(twrItr);
+			rwyListItr = rwyList.begin();
+			return(true);
+		}
+	}	
+	//SG_LOG(SG_ATC, SG_WARN, "Warning - unable to remove aircraft " << id << " from rwyList in FGTower");
 	return(false);
 }
 
@@ -1198,30 +1446,51 @@ bool FGTower::AddToTrafficList(TowerPlaneRec* t, bool holding) {
 
 // Add a tower plane rec with ETA to the circuit list in the correct position ETA-wise
 // Returns true if this might cause a separation conflict (based on ETA) with other traffic, false otherwise.
+// Safe to add a plane that is already in - planes with the same callsign are not added.
 bool FGTower::AddToCircuitList(TowerPlaneRec* t) {
+	if(!t) {
+		//cout << "**********************************************\n";
+		//cout << "AddToCircuitList called with NULL pointer!!!!!\n";
+		//cout << "**********************************************\n";
+		return false;
+	}
 	//cout << "ADD: " << circuitList.size();
-	//cout << "AddToCircuitList called, currently size = " << circuitList.size() << endl;
+	//cout << ident << " AddToCircuitList called for " << t->plane.callsign << ", currently size = " << circuitList.size() << endl;
 	double separation_time = 60.0;	// seconds - this is currently a guess for light plane separation, and includes a few seconds for a holding plane to taxi onto the rwy.
 	bool conflict = false;
 	tower_plane_rec_list_iterator twrItr;
+	// First check if the plane is already in the list
+	//cout << "A" << endl;
+	//cout << "Checking whether " << t->plane.callsign << " is already in circuit list..." << endl;
+	//cout << "B" << endl;
 	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
-			TowerPlaneRec* tpr = *twrItr;
-				
-				if(t->eta < tpr->eta) {
-					// Ugg - this one's tricky.
-					// It depends on what the two planes are doing and whether there's a conflict what we do.
-					if(tpr->eta - t->eta > separation_time) {	// No probs, plane 2 can squeeze in before plane 1 with no apparent conflict
-						circuitList.insert(twrItr, t);
-					} else {	// Ooops - this ones tricky - we have a potential conflict!
-						conflict = true;
-						// HACK - just add anyway for now and flag conflict.
-						circuitList.insert(twrItr, t);
-					}
-					//cout << "\tC\t" << circuitList.size() << '\n';
-					return(conflict);
-				}
+		if((*twrItr)->plane.callsign == t->plane.callsign) {
+			//cout << "In list - returning...\n";
+			return false;
+		}
+	}
+	//cout << "Not in list - adding..." << endl;
+	
+	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+		TowerPlaneRec* tpr = *twrItr;
+		//cout << tpr->plane.callsign << " eta is " << tpr->eta << '\n';
+		//cout << "New eta is " << t->eta << '\n';		
+		if(t->eta < tpr->eta) {
+			// Ugg - this one's tricky.
+			// It depends on what the two planes are doing and whether there's a conflict what we do.
+			if(tpr->eta - t->eta > separation_time) {	// No probs, plane 2 can squeeze in before plane 1 with no apparent conflict
+				circuitList.insert(twrItr, t);
+			} else {	// Ooops - this ones tricky - we have a potential conflict!
+				conflict = true;
+				// HACK - just add anyway for now and flag conflict.
+				circuitList.insert(twrItr, t);
+			}
+			//cout << "\tC\t" << circuitList.size() << '\n';
+			return(conflict);
+		}
 	}
 	// If we get here we must be at the end of the list, or maybe the list is empty.
+	//cout << ident << " adding " << t->plane.callsign << " to circuitList" << endl;
 	circuitList.push_back(t);	// TODO - check the separation with the preceding plane for the conflict flag.
 	//cout << "\tE\t" << circuitList.size() << endl;
 	return(conflict);
@@ -1250,13 +1519,14 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 	Point3D op = ortho.ConvertToLocal(tpr->pos);
 	//if(printout) {
 	//if(!tpr->isUser) cout << "Orthopos is " << op.x() << ", " << op.y() << ' ';
-	//	cout << "opType is " << tpr->opType << '\n';
+	//cout << "opType is " << tpr->opType << '\n';
 	//}
 	double dist_out_m = op.y();
-	double dist_across_m = fabs(op.x());	// FIXME = the fabs is a hack to cope with the fact that we don't know the circuit direction yet
+	double dist_across_m = fabs(op.x());	// The fabs is a hack to cope with the fact that we don't know the circuit direction yet
 	//cout << "Doing ETA calc for " << tpr->plane.callsign << '\n';
 	
-	if(tpr->opType == STRAIGHT_IN) {
+	if(tpr->opType == STRAIGHT_IN || tpr->opType == INBOUND) {
+		//cout << "CASE 1\n";
 		double dist_to_go_m = sqrt((dist_out_m * dist_out_m) + (dist_across_m * dist_across_m));
 		if(dist_to_go_m < 1000) {
 			tpr->eta = dist_to_go_m / final_ias;
@@ -1264,13 +1534,15 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 			tpr->eta = (1000.0 / final_ias) + ((dist_to_go_m - 1000.0) / app_ias);
 		}
 	} else if(tpr->opType == CIRCUIT || tpr->opType == TTT_UNKNOWN) {	// Hack alert - UNKNOWN has sort of been added here as a temporary hack.
+		//cout << "CASE 2\n";
 		// It's complicated - depends on if base leg is delayed or not
 		//if(printout) {
-		//	cout << "Leg = " << tpr->leg << '\n';
+		//cout << "Leg = " << tpr->leg << '\n';
 		//}
 		if(tpr->leg == LANDING_ROLL) {
 			tpr->eta = 0;
 		} else if((tpr->leg == FINAL) || (tpr->leg == TURN4)) {
+			//cout << "dist_out_m = " << dist_out_m << '\n';
 			tpr->eta = fabs(dist_out_m) / final_ias;
 		} else if((tpr->leg == BASE) || (tpr->leg == TURN3)) {
 			tpr->eta = (fabs(dist_out_m) / final_ias) + (dist_across_m / circuit_ias);
@@ -1289,7 +1561,7 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 			if(!GetDownwindConstraint(current_dist_across_m)) {
 				current_dist_across_m = nominal_dist_across_m;
 			}
-			double nominal_cross_dist_out_m = 2000;	// Bit of a guess - AI plane turns to crosswind at 600ft agl.
+			double nominal_cross_dist_out_m = 2000;	// Bit of a guess - AI plane turns to crosswind at 700ft agl.
 			tpr->eta = fabs(current_base_dist_out_m) / final_ias;	// final
 			//cout << "a = " << tpr->eta << '\n';
 			if((tpr->leg == DOWNWIND) || (tpr->leg == TURN2)) {
@@ -1298,24 +1570,35 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 				tpr->eta += fabs(current_base_dist_out_m - dist_out_m) / circuit_ias;
 				//cout << "c = " << tpr->eta << '\n';
 			} else if((tpr->leg == CROSSWIND) || (tpr->leg == TURN1)) {
+				//cout << "CROSSWIND calc: ";
+				//cout << tpr->eta << ' ';
 				if(dist_across_m > nominal_dist_across_m) {
 					tpr->eta += dist_across_m / circuit_ias;
+					//cout << "a ";
 				} else {
 					tpr->eta += nominal_dist_across_m / circuit_ias;
+					//cout << "b ";
 				}
+				//cout << tpr->eta << ' ';
 				// should we use the dist across of the previous plane if there is previous still on downwind?
 				//if(printout) cout << "bb = " << tpr->eta << '\n';
 				if(dist_out_m > nominal_cross_dist_out_m) {
 					tpr->eta += fabs(current_base_dist_out_m - dist_out_m) / circuit_ias;
+					//cout << "c ";
 				} else {
 					tpr->eta += fabs(current_base_dist_out_m - nominal_cross_dist_out_m) / circuit_ias;
+					//cout << "d ";
 				}
+				//cout << tpr->eta << ' ';
 				//if(printout) cout << "cc = " << tpr->eta << '\n';
 				if(nominal_dist_across_m > dist_across_m) {
 					tpr->eta += (nominal_dist_across_m - dist_across_m) / circuit_ias;
+					//cout << "e ";
 				} else {
 					// Nothing to add
+					//cout << "f ";
 				}
+				//cout << tpr->eta << '\n';
 				//if(printout) cout << "dd = " << tpr->eta << '\n';
 			} else {
 				// We've only just started - why not use a generic estimate?
@@ -1346,18 +1629,23 @@ double FGTower::CalcDistOutMiles(TowerPlaneRec* tpr) {
 }
 
 
-// Iterate through all the lists and call CalcETA for all the planes.
+// Iterate through all the lists, update the position of, and call CalcETA for all the planes.
 void FGTower::doThresholdETACalc() {
 	//cout << "Entering doThresholdETACalc..." << endl;
 	tower_plane_rec_list_iterator twrItr;
 	// Do the approach list first
 	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
+		if(!(tpr->isUser)) tpr->pos = tpr->planePtr->GetPos();
+		//cout << "APP: ";
 		CalcETA(tpr);
 	}	
 	// Then the circuit list
+	//cout << "Circuit list size is " << circuitList.size() << '\n';
 	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
+		if(!(tpr->isUser)) tpr->pos = tpr->planePtr->GetPos();
+		//cout << "CIRC: ";
 		CalcETA(tpr);
 	}
 	//cout << "Done doThresholdETCCalc" << endl;
@@ -1480,7 +1768,9 @@ void FGTower::RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type 
 	CalcETA(t);
 	
 	if(op == CIRCUIT && lg != LEG_UNKNOWN) {
+		cout << "AAAAAAAAAAAAAAAaa" << endl;
 		AddToCircuitList(t);
+		cout << "BBBBBBBBBBBBBBbbb" << endl;
 	} else {
 		// FLAG A WARNING
 	}
@@ -1488,12 +1778,16 @@ void FGTower::RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type 
 	doThresholdUseOrder();
 }
 
+void FGTower::DeregisterAIPlane(string id) {
+	RemovePlane(id);
+}
+
 // Contact tower for VFR approach
 // eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
 // This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
 // opt defaults to AIP_LT_UNKNOWN
 void FGTower::VFRArrivalContact(string ID, LandingType opt) {
-	//cout << "Request Landing Clearance called...\n";
+	//cout << "USER Request Landing Clearance called for ID " << ID << '\n';
 	
 	// For now we'll assume that the user is a light plane and can get him/her to join the circuit if necessary.
 
@@ -1542,11 +1836,38 @@ void FGTower::VFRArrivalContact(string ID, LandingType opt) {
 	current_atcdialog->remove_entry(ident, USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO, TOWER);
 }
 
+// landingType defaults to AIP_LT_UNKNOWN
+void FGTower::VFRArrivalContact(PlaneRec plane, FGAIPlane* requestee, LandingType lt) {
+	//cout << "VFRArrivalContact called for plane " << plane.callsign << " at " << ident << '\n';
+	// Possible hack - assume this plane is new for now - TODO - should check really
+	TowerPlaneRec* t = new TowerPlaneRec;
+	t->plane = plane;
+	t->planePtr = requestee;
+	t->landingType = lt;
+	t->pos = requestee->GetPos();
+	
+	//cout << "Hold Short reported by " << plane.callsign << '\n';
+	SG_LOG(SG_ATC, SG_BULK, "VFR arrival contact made by " << plane.callsign);
+	//cout << "VFR arrival contact made by " << plane.callsign << '\n';
+
+	// HACK - to get up and running I'm going to assume a staight-in final for now.
+	t->opType = STRAIGHT_IN;
+	
+	t->vfrArrivalReported = true;
+	responseReqd = true;
+	
+	//cout << "Before adding, appList.size = " << appList.size() << " at " << ident << '\n';
+	appList.push_back(t);	// Not necessarily permanent
+	//cout << "After adding, appList.size = " << appList.size() << " at " << ident << '\n';
+	AddToTrafficList(t);
+}
+
 void FGTower::RequestDepartureClearance(string ID) {
 	//cout << "Request Departure Clearance called...\n";
 }
 	
 void FGTower::ReportFinal(string ID) {
+	//cout << "Report Final Called at tower " << ident << " by plane " << ID << '\n';
 	if(ID == "USER") {
 		ID = fgGetString("/sim/user/callsign");
 		current_atcdialog->remove_entry(ident, USER_REPORT_3_MILE_FINAL, TOWER);
@@ -1557,7 +1878,12 @@ void FGTower::ReportFinal(string ID) {
 		t->finalAcknowledged = false;
 		if(!(t->clearedToLand)) {
 			responseReqd = true;
-		} // possibly respond with wind even if already cleared to land?
+		} else {
+			// possibly respond with wind even if already cleared to land?
+			t->finalReported = false;
+			t->finalAcknowledged = true;
+			// HACK!! - prevents next reporting being misinterpreted as this one.
+		}
 	} else {
 		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportFinal(...)");
 	}
@@ -1586,36 +1912,113 @@ void FGTower::ReportLongFinal(string ID) {
 //void FGTower::ReportGoingAround(string ID);
 
 void FGTower::ReportRunwayVacated(string ID) {
-	//cout << "Report Runway Vacated Called...\n";
+	//cout << "Report Runway Vacated Called at tower " << ident << " by plane " << ID << '\n';
 	if(ID == "USER") {
 		ID = fgGetString("/sim/user/callsign");
 		current_atcdialog->remove_entry(ident, USER_REPORT_RWY_VACATED, TOWER);
 	}
 	TowerPlaneRec* t = FindPlane(ID);
 	if(t) {
+		//cout << "Found it...\n";
 		t->rwyVacatedReported = true;
 		responseReqd = true;
 	} else {
 		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportRunwayVacated(...)");
+		SG_LOG(SG_ATC, SG_ALERT, "A WARNING: Unable to find plane " << ID << " in FGTower::ReportRunwayVacated(...)");
+		//cout << "WARNING: Unable to find plane " << ID << " in FGTower::ReportRunwayVacated(...)\n";
 	}
 }
 
 TowerPlaneRec* FGTower::FindPlane(string ID) {
+	//cout << "FindPlane called for " << ID << "...\n";
 	tower_plane_rec_list_iterator twrItr;
 	// Do the approach list first
 	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+		//cout << "appList callsign is " << (*twrItr)->plane.callsign << '\n';
 		if((*twrItr)->plane.callsign == ID) return(*twrItr);
 	}	
 	// Then the circuit list
 	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+		//cout << "circuitList callsign is " << (*twrItr)->plane.callsign << '\n';
 		if((*twrItr)->plane.callsign == ID) return(*twrItr);
 	}
-	// And finally the hold list
+	// Then the runway list
+	//cout << "rwyList.size() is " << rwyList.size() << '\n';
+	for(twrItr = rwyList.begin(); twrItr != rwyList.end(); twrItr++) {
+		//cout << "rwyList callsign is " << (*twrItr)->plane.callsign << '\n';
+		if((*twrItr)->plane.callsign == ID) return(*twrItr);
+	}
+	// The hold list
 	for(twrItr = holdList.begin(); twrItr != holdList.end(); twrItr++) {
 		if((*twrItr)->plane.callsign == ID) return(*twrItr);
 	}
+	// And finally the vacated list
+	for(twrItr = vacatedList.begin(); twrItr != vacatedList.end(); twrItr++) {
+		//cout << "vacatedList callsign is " << (*twrItr)->plane.callsign << '\n';
+		if((*twrItr)->plane.callsign == ID) return(*twrItr);
+	}
 	SG_LOG(SG_ATC, SG_WARN, "Unable to find " << ID << " in FGTower::FindPlane(...)");
+	//exit(-1);
 	return(NULL);
+}
+
+void FGTower::RemovePlane(string ID) {
+	//cout << ident << " RemovePlane called for " << ID << '\n';
+	// We have to be careful here - we want to erase the plane from all lists it is in,
+	// but we can only delete it once, AT THE END.
+	TowerPlaneRec* t = NULL;
+	tower_plane_rec_list_iterator twrItr;
+	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) {
+			t = *twrItr;
+			twrItr = appList.erase(twrItr);
+			appListItr = appList.begin();
+		}
+	}
+	for(twrItr = depList.begin(); twrItr != depList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) {
+			t = *twrItr;
+			twrItr = depList.erase(twrItr);
+			depListItr = depList.begin();
+		}
+	}
+	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) {
+			t = *twrItr;
+			twrItr = circuitList.erase(twrItr);
+			circuitListItr = circuitList.begin();
+		}
+	}
+	for(twrItr = holdList.begin(); twrItr != holdList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) {
+			t = *twrItr;
+			twrItr = holdList.erase(twrItr);
+			holdListItr = holdList.begin();
+		}
+	}
+	for(twrItr = rwyList.begin(); twrItr != rwyList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) {
+			t = *twrItr;
+			twrItr = rwyList.erase(twrItr);
+			rwyListItr = rwyList.begin();
+		}
+	}
+	for(twrItr = vacatedList.begin(); twrItr != vacatedList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) {
+			t = *twrItr;
+			twrItr = vacatedList.erase(twrItr);
+			vacatedListItr = vacatedList.begin();
+		}
+	}
+	for(twrItr = trafficList.begin(); twrItr != trafficList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == ID) {
+			t = *twrItr;
+			twrItr = trafficList.erase(twrItr);
+			trafficListItr = trafficList.begin();
+		}
+	}
+	// And finally, delete the record if we found it.
+	if(t) delete t;
 }
 
 void FGTower::ReportDownwind(string ID) {
@@ -1628,6 +2031,16 @@ void FGTower::ReportDownwind(string ID) {
 	if(t) {
 		t->downwindReported = true;
 		responseReqd = true;
+		// If the plane is in the app list, remove it and put it in the circuit list instead.
+		// Ideally we might want to do this at the 2 mile report prior to 45 deg entry, but at
+		// the moment that would b&gg?r up the constraint position calculations.
+		RemoveFromAppList(ID);
+		t->leg = DOWNWIND;
+		t->pos = t->planePtr->GetPos();
+		CalcETA(t);
+		//cout << "DDDDDDDDDDDDDDDDdddddddd" << endl;
+		AddToCircuitList(t);
+		//cout << "EEEEEEEEEEEEEEEEEEEEeeeeee" << endl;
 	} else {
 		SG_LOG(SG_ATC, SG_WARN, "WARNING: Unable to find plane " << ID << " in FGTower::ReportDownwind(...)");
 	}
@@ -1730,7 +2143,7 @@ string FGTower::GenText(const string& m, int c) {
 				else if ( strcmp ( tag, "@MI" ) == 0 ) {
 					char buf[10];
 					//sprintf( buf, "%3.1f", tpars.miles );
-					int dist_miles = dclGetHorizontalSeparation(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue())) / 1600;
+					int dist_miles = (int)dclGetHorizontalSeparation(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue())) / 1600;
 					sprintf(buf, "%i", dist_miles);
 					strcat( &dum[0], &buf[0] );
 				}

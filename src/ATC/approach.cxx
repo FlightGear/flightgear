@@ -42,6 +42,8 @@
 FGApproach::FGApproach(){
   comm1_node = fgGetNode("/radios/comm[0]/frequencies/selected-mhz", true);
   comm2_node = fgGetNode("/radios/comm[1]/frequencies/selected-mhz", true);
+  
+  _type = APPROACH;
 
   num_planes = 0;
   lon_node   = fgGetNode("/position/longitude-deg", true);

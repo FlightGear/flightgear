@@ -148,7 +148,7 @@ public:
 	// The user will just have to wait for a gap in dialog as in real life.
 	
 	// Return the type of ATC station that the class represents
-	virtual atc_type GetType();
+	inline atc_type GetType() { return _type; }
 	
 	// Set the core ATC data
 	void SetData(ATCData* d);
@@ -192,6 +192,7 @@ protected:
 	int range;
 	string ident;		// Code of the airport its at.
 	string name;		// Name transmitted in the broadcast.
+	atc_type _type;
 	
 	// Rendering related stuff
 	bool voice;			// Flag - true if we are using voice
@@ -209,6 +210,9 @@ protected:
 	string responseID;	// ID of the plane to respond to
 	bool respond;	// Flag to indicate now is the time to respond - ie set following the count down of the response timer.
 	// Derived classes only need monitor this flag, and use the response ID, as long as they call FGATC::Update(...)
+	bool _runReleaseCounter;	// A timer for releasing the frequency after giving the message enough time to display
+	double _releaseTime;
+	double _releaseCounter;
 };
 
 inline istream&

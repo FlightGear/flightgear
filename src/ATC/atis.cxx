@@ -64,6 +64,7 @@ FGATIS::FGATIS() :
 {
 	vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
 	voiceOK = (vPtr == NULL ? false : true);
+	_type = ATIS;
 }
 
 FGATIS::~FGATIS() {

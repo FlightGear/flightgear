@@ -60,7 +60,8 @@ enum tower_callback_type {
 	USER_REQUEST_VFR_ARRIVAL_TOUCH_AND_GO = 4,
 	USER_REPORT_3_MILE_FINAL = 5,
 	USER_REPORT_DOWNWIND = 6,
-	USER_REPORT_RWY_VACATED = 7
+	USER_REPORT_RWY_VACATED = 7,
+	USER_REPORT_GOING_AROUND = 8
 };
 
 // TODO - need some differentiation of IFR and VFR traffic in order to give the former priority.
@@ -135,6 +136,8 @@ public:
 	// eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
 	// This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
 	void VFRArrivalContact(string ID, LandingType opt = AIP_LT_UNKNOWN);
+	// For the AI planes...
+	void VFRArrivalContact(PlaneRec plane, FGAIPlane* requestee, LandingType lt = AIP_LT_UNKNOWN);
 	
 	void RequestDepartureClearance(string ID);	
 	void ReportFinal(string ID);
@@ -154,6 +157,9 @@ public:
 	// CAUTION - currently it is assumed that this plane's callsign is unique - it is up to AIMgr to generate unique callsigns.
 	void RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type op, PatternLeg lg = LEG_UNKNOWN);
 	
+	// Deregister and remove an AI plane.
+	void DeregisterAIPlane(string id);
+	
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.
 	inline string GetActiveRunway() { return activeRwy; }
@@ -165,7 +171,6 @@ public:
 	inline void SetNoDisplay() { display = false; }
 	
 	inline string get_trans_ident() { return trans_ident; }
-	inline atc_type GetType() { return TOWER; }
 	
 	inline FGGround* GetGroundPtr() { return ground; }
 	
@@ -184,13 +189,17 @@ private:
 	// Respond to a transmission
 	void Respond();
 	
-	void CheckHoldList(double dt);
-
-	void CheckCircuitList(double dt);
+	void ProcessRunwayVacatedReport(TowerPlaneRec* t);
 	
+	// Remove all options from the user dialog choice
+	void RemoveAllUserDialogOptions();
+	
+	// Periodic checks on the various traffic.
+	void CheckHoldList(double dt);
+	void CheckCircuitList(double dt);
 	void CheckRunwayList(double dt);
-
 	void CheckApproachList(double dt);
+	void CheckDepartureList(double dt);
 	
 	// Currently this assumes we *are* next on the runway and doesn't check for planes about to land - 
 	// this should be done prior to calling this function.
@@ -198,6 +207,9 @@ private:
 	
 	// Find a pointer to plane of callsign ID within the internal data structures
 	TowerPlaneRec* FindPlane(string ID);
+	
+	// Remove and delete all instances of a plane with a given ID
+	void RemovePlane(string ID);
 	
 	// Figure out if a given position lies on the active runway
 	// Might have to change when we consider more than one active rwy.
@@ -292,8 +304,14 @@ private:
 	tower_plane_rec_list_type trafficList;	// TODO - needs to be expandable to more than one rwy
 	tower_plane_rec_list_iterator trafficListItr;
 	
+	// List of planes that have vacated the runway inbound but not yet handed off to ground
+	tower_plane_rec_list_type vacatedList;
+	tower_plane_rec_list_iterator vacatedListItr;
+	
 	// Returns true if successful
 	bool RemoveFromTrafficList(string id);
+	bool RemoveFromAppList(string id);
+	bool RemoveFromRwyList(string id);
 	
 	// Return the ETA of plane no. list_pos (1-based) in the traffic list.
 	// i.e. list_pos = 1 implies next to use runway.
@@ -310,6 +328,9 @@ private:
 	// whether it is supposed to be separate or not to give the correct instructions.
 	bool separateGround;	// true if ground control is separate
 	FGGround* ground;	// The ground control associated with this airport.
+	
+	bool _departureControlled;	// true if we need to hand off departing traffic to departure control
+	//FGDeparture* _departure;	// The relevant departure control (once we've actually written it!)
 	
 	// for failure modeling
 	string trans_ident;		// transmitted ident

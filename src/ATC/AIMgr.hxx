@@ -54,19 +54,32 @@ private:
     // at any point in or at the end of the list.
     // Hence any new access must explicitly first check for atc_list.end() before dereferencing.
 	
-	// A list of airport ID's
-	typedef list < string > aptID_list_type;
-	typedef aptID_list_type::iterator aptID_list_iterator;
+	// A list of airport or airplane ID's
+	typedef list < string > ID_list_type;
+	typedef ID_list_type::iterator ID_list_iterator;
+
+	// Temporary storage of ID of planes scheduled for removeal
+	ID_list_type removalList;
 	
 	// A map of airport-IDs that have taxiway network files against bucket number
-	typedef map < int, aptID_list_type* > ai_apt_map_type;
+	typedef map < int, ID_list_type* > ai_apt_map_type;
 	typedef ai_apt_map_type::iterator ai_apt_map_iterator;
-	ai_apt_map_type airports;
+	ai_apt_map_type facilities;
 	
 	// A map of airport ID's that we've activated AI traffic at
 	typedef map < string, int > ai_activated_map_type;
 	typedef ai_activated_map_type::iterator ai_activated_map_iterator;
 	ai_activated_map_type activated;
+	
+	// AI traffic lists mapped by airport
+	typedef map < string, ai_list_type > ai_traffic_map_type;
+	typedef ai_traffic_map_type::iterator ai_traffic_map_iterator;
+	ai_traffic_map_type traffic;
+	
+	// A map of callsigns that we have used (eg CFGFS or N0546D - the code will generate Cessna-four-six-delta from this later)
+	typedef map < string, int > ai_callsigns_map_type;
+	typedef ai_callsigns_map_type::iterator ai_callsigns_map_iterator;
+	ai_callsigns_map_type ai_callsigns_used;
 
     // Position of the Users Aircraft
     double lon;
@@ -89,8 +102,15 @@ public:
     void unbind();
 
     void update(double dt);
+	
+	// Signal that it is OK to remove a plane of callsign s
+	// (To be called by the plane itself).
+	void ScheduleRemoval(string s);
 
 private:
+	
+	ssgBranch* _defaultModel;  // Cessna 172!
+	ssgBranch* _piperModel;    // pa28-161
 
 	bool initDone;	// Hack - guard against update getting called before init
 
@@ -98,10 +118,19 @@ private:
     //void RemoveFromList(const char* id, atc_type tp);
 	
 	// Activate AI traffic at an airport
-	void ActivateAirport(string id);
+	void ActivateAirport(string ident);
+	
+	// Hack - Generate AI traffic at an airport with no facilities file, with the first plane being at least min_dist out.
+	void GenerateSimpleAirportTraffic(string ident, double min_dist = 0.0);
 	
 	// Search for valid airports in the vicinity of the user and activate them if necessary
 	void SearchByPos(double range);
+	
+	string GenerateCallsign();
+	
+	string GenerateUniqueCallsign();
+	
+	string GenerateShortForm(string callsign, string plane_str = "Cessna-", bool local = false);
 
 };
 

@@ -114,36 +114,69 @@ string ConvertRwyNumToSpokenString(string s) {
 // Return the phonetic letter of a letter represented as an integer 1->26
 string GetPhoneticIdent(int i) {
 	// TODO - Check i is between 1 and 26 and wrap if necessary
-	switch(i) {
-	case 1 : return("alpha");
-	case 2 : return("bravo");
-	case 3 : return("charlie");
-	case 4 : return("delta");
-	case 5 : return("echo");
-	case 6 : return("foxtrot");
-	case 7 : return("golf");
-	case 8 : return("hotel");
-	case 9 : return("india");
-	case 10 : return("juliet");
-	case 11 : return("kilo");
-	case 12 : return("lima");
-	case 13 : return("mike");
-	case 14 : return("november");
-	case 15 : return("oscar");
-	case 16 : return("papa");
-	case 17 : return("quebec");
-	case 18 : return("romeo");
-	case 19 : return("sierra");
-	case 20 : return("tango");
-	case 21 : return("uniform");
-	case 22 : return("victor");
-	case 23 : return("whiskey");
-	case 24 : return("x-ray");
-	case 25 : return("yankee");
-	case 26 : return("zulu");
+	return(GetPhoneticIdent(char('a' + (i-1))));
+}
+
+// Return the phonetic letter of a character in the range a-z or A-Z.
+// Currently always returns prefixed by lowercase.
+string GetPhoneticIdent(char c) {
+	c = tolower(c);
+	// TODO - Check c is between a and z and wrap if necessary
+	switch(c) {
+	case 'a' : return("alpha");
+	case 'b' : return("bravo");
+	case 'c' : return("charlie");
+	case 'd' : return("delta");
+	case 'e' : return("echo");
+	case 'f' : return("foxtrot");
+	case 'g' : return("golf");
+	case 'h' : return("hotel");
+	case 'i' : return("india");
+	case 'j' : return("juliet");
+	case 'k' : return("kilo");
+	case 'l' : return("lima");
+	case 'm' : return("mike");
+	case 'n' : return("november");
+	case 'o' : return("oscar");
+	case 'p' : return("papa");
+	case 'q' : return("quebec");
+	case 'r' : return("romeo");
+	case 's' : return("sierra");
+	case 't' : return("tango");
+	case 'u' : return("uniform");
+	case 'v' : return("victor");
+	case 'w' : return("whiskey");
+	case 'x' : return("x-ray");
+	case 'y' : return("yankee");
+	case 'z' : return("zulu");
 	}
 	// We shouldn't get here
 	return("Error");
+}
+
+// Get the compass direction associated with a heading in degrees
+// Currently returns 8 direction resolution (N, NE, E etc...)
+// Might be modified in future to return 4, 8 or 16 resolution but defaulting to 8. 
+string GetCompassDirection(double h) {
+	while(h < 0.0) h += 360.0;
+	while(h > 360.0) h -= 360.0;
+	if(h < 22.5 || h > 337.5) {
+		return("North");
+	} else if(h < 67.5) {
+		return("North-East");
+	} else if(h < 112.5) {
+		return("East");
+	} else if(h < 157.5) {
+		return("South-East");
+	} else if(h < 202.5) {
+		return("South");
+	} else if(h < 247.5) {
+		return("South-West");
+	} else if(h < 292.5) {
+		return("West");
+	} else {
+		return("North-West");
+	}
 }
 
 //================================================================================================================
@@ -305,15 +338,30 @@ double dclGetAirportElev( const string& id ) {
     FGAirport a;
     // double lon, lat;
 
-    SG_LOG( SG_GENERAL, SG_INFO,
+    SG_LOG( SG_ATC, SG_INFO,
             "Finding elevation for airport: " << id );
 
     if ( dclFindAirportID( id, &a ) ) {
-        return a.elevation;
+        return a.elevation * SG_FEET_TO_METER;
     } else {
         return -9999.0;
     }
 }
+
+// get airport position
+Point3D dclGetAirportPos( const string& id ) {
+    FGAirport a;
+    // double lon, lat;
+
+    SG_LOG( SG_ATC, SG_INFO,
+            "Finding position for airport: " << id );
+
+    if ( dclFindAirportID( id, &a ) ) {
+        return Point3D(a.longitude, a.latitude, a.elevation);
+    } else {
+        return Point3D(0.0, 0.0, -9999.0);
+    }
+}	
 
 // Runway stuff
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway

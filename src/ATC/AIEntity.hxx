@@ -41,7 +41,11 @@ class FGAIEntity {
 
 public:
 
+	FGAIEntity();
     virtual ~FGAIEntity();
+	
+	// Set the 3D model to use (Must be called)
+	void SetModel(ssgBranch* model);
 
     // Run the internal calculations
     virtual void Update(double dt);
@@ -50,17 +54,20 @@ public:
     // FIXME int code is a hack - eventually this will receive Alexander's coded messages.
     virtual void RegisterTransmission(int code);
 	
-	inline Point3D GetPos() { return(pos); }
-
+	inline Point3D GetPos() { return(_pos); }
+	
+	virtual string GetCallsign();
+	
 protected:
 
-    Point3D pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
-    double hdg;		//True heading in degrees
-    double roll;	//degrees
-    double pitch;	//degrees
+    Point3D _pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
+    double _hdg;		//True heading in degrees
+    double _roll;	//degrees
+    double _pitch;	//degrees
 
-    char* model_path;	//Path to the 3D model
-    SGModelPlacement aip;
+    char* _model_path;	//Path to the 3D model
+	ssgBranch* _model;	// Pointer to the model
+    SGModelPlacement _aip;
 
     void Transform();
 };

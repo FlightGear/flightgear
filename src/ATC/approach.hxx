@@ -169,7 +169,6 @@ public:
   inline double get_bucket() const { return bucket; }
   inline int get_pnum() const { return num_planes; }
   inline string get_trans_ident() { return trans_ident; }
-  inline atc_type GetType() { return APPROACH; }
   
 private:
 

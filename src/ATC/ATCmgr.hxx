@@ -128,10 +128,9 @@ private:
 
     double comm_range[2], comm_effective_range[2];
     bool comm_valid[2]; 
-    const char* comm_ident[2];
-    const char* last_comm_ident[2];
-
-    const char* approach_ident;
+    string comm_ident[2];
+    //string last_comm_ident[2];
+    //string approach_ident;
     bool last_in_range;
 
     //FGATIS atis;
@@ -195,17 +194,17 @@ private:
 
     // Remove a class from the atc_list and delete it from memory
 	// *if* no other comm channel or AI plane is using it.
-    void CommRemoveFromList(const char* id, atc_type tp, int chan);
+    void CommRemoveFromList(string id, atc_type tp, int chan);
 
     // Remove a class from the atc_list and delete it from memory
 	// Should be called from the above - not directly!!
-    void RemoveFromList(const char* id, atc_type tp);
+    void RemoveFromList(string id, atc_type tp);
 
     // Return a pointer to a class in the list given ICAO code and type
 	// (external interface to this is through GetATCPointer) 
 	// Return NULL if the given service is not in the list
 	// - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
-    FGATC* FindInList(const char* id, atc_type tp);
+    FGATC* FindInList(string id, atc_type tp);
 
     // Search the specified channel for stations on the same frequency and in range.
     void FreqSearch(int channel);

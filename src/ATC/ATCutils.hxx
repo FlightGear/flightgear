@@ -56,6 +56,14 @@ string ConvertRwyNumToSpokenString(string s);
 // Return the phonetic letter of a letter represented as an integer 1->26
 string GetPhoneticIdent(int i);
 
+// Return the phonetic letter of a character in the range a-z or A-Z.
+// Currently always returns prefixed by lowercase.
+string GetPhoneticIdent(char c);
+
+// Get the compass direction associated with a heading in degrees
+// Currently returns 8 direction resolution (N, NE, E etc...)
+// Might be modified in future to return 4, 8 or 16 resolution but defaulting to 8. 
+string GetCompassDirection(double h);
 
 /*******************************
 *
@@ -97,8 +105,11 @@ double GetAngleDiff_deg( const double &a1, const double &a2);
 // find basic airport location info from airport database
 bool dclFindAirportID( const string& id, FGAirport *a );
 
-// get airport elevation
+// get airport elevation IN METERS
 double dclGetAirportElev( const string& id );
+
+// get airport position (elev portion in FEET)
+Point3D dclGetAirportPos( const string& id );
 
 /****************
 *

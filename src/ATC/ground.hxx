@@ -232,7 +232,6 @@ public:
     void Update(double dt);
 	
 	inline string get_trans_ident() { return trans_ident; }
-	inline atc_type GetType() { return GROUND; }
     inline void SetDisplay() {display = true;}
     inline void SetNoDisplay() {display = false;}
 
@@ -257,6 +256,9 @@ public:
 	
 	// Return a pointer to an unused gate
 	Gate* GetGateNode();
+	
+	// Return a pointer to a hold short node
+	node* GetHoldShortNode(string rwyID);
 	
 	// Runway stuff - this might change in the future.
 	// Get a list of exits from a given runway

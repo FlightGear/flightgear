@@ -17,6 +17,7 @@ libATC_a_SOURCES = \
 	AIEntity.hxx AIEntity.cxx \
 	AIPlane.hxx AIPlane.cxx \
 	AILocalTraffic.hxx AILocalTraffic.cxx \
+	AIGAVFRTraffic.hxx AIGAVFRTraffic.cxx \
 	transmission.hxx transmission.cxx transmissionlist.hxx transmissionlist.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

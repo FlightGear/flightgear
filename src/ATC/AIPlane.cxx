@@ -53,6 +53,7 @@ void FGAIPlane::Update(double dt) {
 	if(_pending) {
 		if(tuned_station) {
 			if(tuned_station->GetFreqClear()) {
+				//cout << "TUNED STATION FREQ CLEAR\n";
 				tuned_station->SetFreqInUse();
 				_pending = false;
 				_transmit = true;
@@ -69,6 +70,7 @@ void FGAIPlane::Update(double dt) {
 			}
 		} else {
 			// Not tuned to ATC - Just go ahead and transmit
+			//cout << "NOT TUNED TO ATC\n";
 			_pending = false;
 			_transmit = true;
 			_transmitting = false;
@@ -115,16 +117,16 @@ void FGAIPlane::Update(double dt) {
 
 void FGAIPlane::Bank(double angle) {
 	// This *should* bank us smoothly to any angle
-	if(fabs(roll - angle) > 0.6) {
-		roll -= ((roll - angle)/fabs(roll - angle));  
+	if(fabs(_roll - angle) > 0.6) {
+		_roll -= ((_roll - angle)/fabs(_roll - angle));  
 	}
 }
 
 // Duplication of Bank(0.0) really - should I cut this?
 void FGAIPlane::LevelWings(void) {
 	// bring the plane back to level smoothly (this should work to come out of either bank)
-	if(fabs(roll) > 0.6) {
-		roll -= (roll/fabs(roll));
+	if(fabs(_roll) > 0.6) {
+		_roll -= (_roll/fabs(_roll));
 	}
 }
 

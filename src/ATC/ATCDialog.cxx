@@ -260,7 +260,7 @@ void FGATCDialog::add_entry(string station, string transmission, string menutext
 
 void FGATCDialog::remove_entry( const string &station, const string &trans, atc_type type ) {
   atcmentry_vec_type* p = &((available_dialog[type])[station]);
-  atcmentry_vec_iterator current  = p->begin();  
+  atcmentry_vec_iterator current = p->begin();  
   while(current != p->end()) {
     if(current->transmission == trans) current = p->erase(current);
 	else ++current;
@@ -269,7 +269,7 @@ void FGATCDialog::remove_entry( const string &station, const string &trans, atc_
 
 void FGATCDialog::remove_entry( const string &station, int code, atc_type type ) {
   atcmentry_vec_type* p = &((available_dialog[type])[station]);
-  atcmentry_vec_iterator current  = p->begin();
+  atcmentry_vec_iterator current = p->begin();
   while(current != p->end()) {
     if(current->callback_code == code) current = p->erase(current);
 	else ++current;
@@ -279,7 +279,7 @@ void FGATCDialog::remove_entry( const string &station, int code, atc_type type )
 // query the database whether the transmission is already registered; 
 bool FGATCDialog::trans_reg( const string &station, const string &trans, atc_type type ) {
   atcmentry_vec_type* p = &((available_dialog[type])[station]);
-  atcmentry_vec_iterator current  = p->begin();
+  atcmentry_vec_iterator current = p->begin();
   for ( ; current != p->end() ; ++current ) {
     if ( current->transmission == trans ) return true;
   }
@@ -289,7 +289,7 @@ bool FGATCDialog::trans_reg( const string &station, const string &trans, atc_typ
 // query the database whether the transmission is already registered; 
 bool FGATCDialog::trans_reg( const string &station, int code, atc_type type ) {
   atcmentry_vec_type* p = &((available_dialog[type])[station]);
-  atcmentry_vec_iterator current  = p->begin();
+  atcmentry_vec_iterator current = p->begin();
   for ( ; current != p->end() ; ++current ) {
     if ( current->callback_code == code ) return true;
   }
@@ -397,14 +397,23 @@ void FGATCDialog::PopupCallback() {
 				break;
 			}
 		} else if(atcptr->GetType() == TOWER) {
-			ATCMenuEntry a = ((available_dialog[TOWER])[(string)atcptr->get_ident()])[atcDialogCommunicationOptions->getValue()];
-			atcptr->SetFreqInUse();
-			globals->get_ATC_display()->RegisterSingleMessage(atcptr->GenText(a.transmission, a.callback_code));
-			_callbackPending = true;
-			_callbackTimer = 0.0;
-			_callbackWait = 5.0;
-			_callbackPtr = atcptr;
-			_callbackCode = a.callback_code;
+			//cout << "TOWER " << endl;
+			//cout << "ident is " << atcptr->get_ident() << endl;
+			atcmentry_vec_type atcmlist = (available_dialog[TOWER])[(string)atcptr->get_ident()];
+			if(atcmlist.size()) {
+				//cout << "Doing callback...\n";
+				ATCMenuEntry a = atcmlist[atcDialogCommunicationOptions->getValue()];
+				atcptr->SetFreqInUse();
+				globals->get_ATC_display()->RegisterSingleMessage(atcptr->GenText(a.transmission, a.callback_code));
+				_callbackPending = true;
+				_callbackTimer = 0.0;
+				_callbackWait = 5.0;
+				_callbackPtr = atcptr;
+				_callbackCode = a.callback_code;
+			} else {
+				//cout << "No options available...\n";
+			}
+			//cout << "Donded" << endl;
 		}
 	}
 }

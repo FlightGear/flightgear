@@ -83,6 +83,9 @@ public:
 	
 	// Return what type of landing we're doing on this circuit
 	virtual LandingType GetLandingOption();
+	
+	// Return the callsign
+	inline string GetCallsign() {return plane.callsign;}
 
 protected:
 	PlaneRec plane;

@@ -51,17 +51,28 @@ SG_USING_STD(string);
 #include "ATCmgr.hxx"
 #include "AILocalTraffic.hxx"
 #include "ATCutils.hxx"
+#include "AIMgr.hxx"
 
 FGAILocalTraffic::FGAILocalTraffic() {
+	/*ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
+	                                  planepath.c_str(),
+	                                  globals->get_props(),
+	                                  globals->get_sim_time_sec() );
+	*//*
+	_model = model;
+	_model->ref();
+	_aip.init(_model);
+	*/
+	//SetModel(model);
+	
 	ATC = globals->get_ATC_mgr();
 	
-	// TODO - unhardwire this - possibly let the AI manager set the callsign
-	plane.callsign = "Trainer-two-five-charlie";
+	// TODO - unhardwire this
 	plane.type = GA_SINGLE;
 	
-	roll = 0.0;
-	pitch = 0.0;
-	hdg = 270.0;
+	_roll = 0.0;
+	_pitch = 0.0;
+	_hdg = 270.0;
 	
 	//Hardwire initialisation for now - a lot of this should be read in from config eventually
 	Vr = 70.0;
@@ -90,23 +101,66 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	holdingShort = false;
 	clearedToLineUp = false;
 	clearedToTakeOff = false;
+	_clearedToLand = false;
 	reportReadyForDeparture = false;
 	contactTower = false;
 	contactGround = false;
+	_taxiToGA = false;
 	
 	descending = false;
 	targetDescentRate = 0.0;
 	goAround = false;
 	goAroundCalled = false;
+	
+	transmitted = false;
+	
+	freeTaxi = false;
+	_savedSlope = 0.0;
+	
+	_controlled = false;
 }
 
 FGAILocalTraffic::~FGAILocalTraffic() {
+	//_model->deRef();
 }
 
+void FGAILocalTraffic::GetAirportDetails(string id) {
+	AirportATC a;
+	if(ATC->GetAirportATCDetails(airportID, &a)) {
+		if(a.tower_freq) {	// Has a tower - TODO - check the opening hours!!!
+			tower = (FGTower*)ATC->GetATCPointer(airportID, TOWER);	// Maybe need some error checking here
+			if(tower == NULL) {
+				// Something has gone wrong - abort or carry on with un-towered operation?
+				SG_LOG(SG_ATC, SG_ALERT, "ERROR - can't get a tower pointer from tower control for " << airportID << " in FGAILocalTraffic::GetAirportDetails() :-(");
+				_controlled = false;
+			} else {
+				_controlled = true;
+			}
+			if(tower) {
+				ground = tower->GetGroundPtr();
+				if(ground == NULL) {
+					// Something has gone wrong :-(
+					SG_LOG(SG_ATC, SG_ALERT, "ERROR - can't get a ground pointer from tower control in FGAILocalTraffic::GetAirportDetails() :-(");
+				}
+			}
+		} else {
+			_controlled = false;
+			// TODO - Check CTAF, unicom etc
+		}
+	} else {
+		SG_LOG(SG_ATC, SG_ALERT, "Unable to find airport details in for " << airportID << " in FGAILocalTraffic::GetAirportDetails() :-(");
+		_controlled = false;
+	}
+	// Get the airport elevation
+	aptElev = dclGetAirportElev(airportID.c_str());
+	//cout << "Airport elev in AILocalTraffic = " << aptElev << '\n';
+	// WARNING - we use this elev for the whole airport - some assumptions in the code 
+	// might fall down with very slopey airports.
+}
 
 // Get details of the active runway
 // It is assumed that by the time this is called the tower control and airport code will have been set up.
-void FGAILocalTraffic::GetRwyDetails() {
+void FGAILocalTraffic::GetRwyDetails(string id) {
 	//cout << "GetRwyDetails called" << endl;
 	
 	rwy.rwyID = tower->GetActiveRunway();
@@ -114,12 +168,9 @@ void FGAILocalTraffic::GetRwyDetails() {
 	// Now we need to get the threshold position and rwy heading
 	
 	FGRunway runway;
-	bool rwyGood = globals->get_runways()->search(airportID, rwy.rwyID,
-                                                      &runway);
+	bool rwyGood = globals->get_runways()->search(id, rwy.rwyID, &runway);
 	if(rwyGood) {
-		// Get the threshold position
-    	hdg = runway.heading;	// TODO - check - is this our heading we are setting here, and if so should we be?
-		//cout << "hdg reset to " << hdg << '\n';
+    	double hdg = runway.heading;
 		double other_way = hdg - 180.0;
 		while(other_way <= 0.0) {
 			other_way += 360.0;
@@ -132,6 +183,7 @@ void FGAILocalTraffic::GetRwyDetails() {
     	double tshlon, tshlat, tshr;
 		double tolon, tolat, tor;
 		rwy.length = runway.length * SG_FEET_TO_METER;
+		rwy.width = runway.width * SG_FEET_TO_METER;
     	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
         	                rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
     	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), hdg, 
@@ -144,6 +196,7 @@ void FGAILocalTraffic::GetRwyDetails() {
 		//cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
 		rwy.hdg = hdg;
 		// Set the projection for the local area
+		//cout << "Initing ortho for airport " << id << '\n';
 		ortho.Init(rwy.threshold_pos, rwy.hdg);	
 		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
 		rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
@@ -164,56 +217,38 @@ To a certain extent it's FGAIMgr that has to worry about this, but we need to pr
 sufficient initialisation functionality within the plane classes to allow the manager
 to initially position them where and how required.
 */
-bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg initialLeg) {
+bool FGAILocalTraffic::Init(const string& callsign, string ICAO, OperatingState initialState, PatternLeg initialLeg) {
 	//cout << "FGAILocalTraffic.Init(...) called" << endl;
-	// Hack alert - Hardwired path!!
-	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
-	ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
-	                                  planepath.c_str(),
-	                                  globals->get_props(),
-	                                  globals->get_sim_time_sec() );
-	aip.init( model );
-	aip.setVisible(false);		// This will be set to true once a valid ground elevation has been determined
-	globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
-	
-	// Find the tower frequency - this is dependent on the ATC system being initialised before the AI system
 	airportID = ICAO;
-	AirportATC a;
-	if(ATC->GetAirportATCDetails(airportID, &a)) {
-		if(a.tower_freq) {	// Has a tower
-			tower = (FGTower*)ATC->GetATCPointer(airportID, TOWER);	// Maybe need some error checking here
-			if(tower == NULL) {
-				// Something has gone wrong - abort or carry on with un-towered operation?
-				return(false);
-			}
-			freq = (double)tower->get_freq() / 100.0;
-			ground = tower->GetGroundPtr();
-			if(ground == NULL) {
-				// Something has gone wrong :-(
-				SG_LOG(SG_ATC, SG_ALERT, "ERROR - can't get a ground pointer from tower control in FGAILocalTraffic::Init() :-(");
-				return(false);
-			} else if((initialState == PARKED) || (initialState == TAXIING)) {
-				freq = (double)ground->get_freq() / 100.0;
-			}
-			//cout << "AILocalTraffic freq is " << freq << '\n';
-		} else {
-			// TODO - Check CTAF, unicom etc
-		}
-	} else {
-		//cout << "Unable to find airport details in FGAILocalTraffic::Init()\n";
+	
+	plane.callsign = callsign;
+	
+	if(initialState == EN_ROUTE) return(true);
+	
+	// Get the ATC pointers and airport elev
+	GetAirportDetails(airportID);
+	
+	// Get the active runway details (and copy them into rwy)
+	GetRwyDetails(airportID);
+	//cout << "Runway is " << rwy.rwyID << '\n';
+	
+	// FIXME TODO - pattern direction is still hardwired
+	patternDirection = -1;		// Left
+	// At the bare minimum we ought to make sure it goes the right way at dual parallel rwy airports!
+	if(rwy.rwyID.size() == 3) {
+		patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
 	}
 	
-		// Get the active runway details (and copy them into rwy)
-		GetRwyDetails();
-
-	// Get the airport elevation
-	aptElev = dclGetAirportElev(airportID.c_str()) * SG_FEET_TO_METER;
-	//cout << "Airport elev in AILocalTraffic = " << aptElev << '\n';
-	// WARNING - we use this elev for the whole airport - some assumptions in the code 
-	// might fall down with very slopey airports.
+	// TODO - this assumes a controlled airport - make sure we revert to CTAF etc if uncontrolled or after-hours.
+	if((initialState == PARKED) || (initialState == TAXIING)) {
+		freq = (double)ground->get_freq() / 100.0;
+	} else {
+		freq = (double)tower->get_freq() / 100.0;
+	}
 
 	//cout << "In Init(), initialState = " << initialState << endl;
 	operatingState = initialState;
+	Point3D orthopos;
 	switch(operatingState) {
 	case PARKED:
 		tuned_station = ground;
@@ -224,13 +259,13 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 			SG_LOG(SG_ATC, SG_ALERT, "No gate found by FGAILocalTraffic whilst attempting Init at " << airportID << '\n');
 			return(false);
 		}
-		pitch = 0.0;
-		roll = 0.0;
+		_pitch = 0.0;
+		_roll = 0.0;
 		vel = 0.0;
 		slope = 0.0;
-		pos = ourGate->pos;
-		pos.setelev(aptElev);
-		hdg = ourGate->heading;
+		_pos = ourGate->pos;
+		_pos.setelev(aptElev);
+		_hdg = ourGate->heading;
 		
 		// Now we've set the position we can do the ground elev
 		elevInitGood = false;
@@ -240,9 +275,36 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 		Transform();
 		break;
 	case TAXIING:
-		tuned_station = ground;
+		//tuned_station = ground;
 		// FIXME - implement this case properly
-		return(false);	// remove this line when fixed!
+		// For now we'll assume that the plane should start at the hold short in this case
+		// and that we're working without ground network elements.  Ie. an airport with no facility file.
+		tuned_station = tower;
+		freeTaxi = true;
+		// Set a position and orientation in an approximate place for hold short.
+		//cout << "rwy.width = " << rwy.width << '\n';
+		orthopos = Point3D((rwy.width / 2.0 + 10.0) * -1.0, 0.0, 0.0);
+		// TODO - set the x pos to be +ve if a RH parallel rwy.
+		_pos = ortho.ConvertFromLocal(orthopos);
+		_pos.setelev(aptElev);
+		_hdg = rwy.hdg + 90.0;
+		// TODO - reset the heading if RH rwy.
+		_pitch = 0.0;
+		_roll = 0.0;
+		vel = 0.0;
+		slope = 0.0;
+		elevInitGood = false;
+		inAir = false;
+		DoGroundElev();
+		Transform();
+		
+		responseCounter = 0.0;
+		contactTower = false;
+		changeFreq = true;
+		holdingShort = true;
+		clearedToLineUp = false;
+		changeFreqType = TOWER;
+		
 		break;
 	case IN_PATTERN:
 		// For now we'll always start the in_pattern case on the threshold ready to take-off
@@ -257,34 +319,28 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 		
 		circuitsToFly = 0;		// ie just fly this circuit and then stop
 		touchAndGo = false;
-		// FIXME TODO - pattern direction is still hardwired
-		patternDirection = -1;		// Left
-		// At the bare minimum we ought to make sure it goes the right way at dual parallel rwy airports!
-		if(rwy.rwyID.size() == 3) {
-			patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
-		}
 
 		if(initialLeg == DOWNWIND) {
-			pos = ortho.ConvertFromLocal(Point3D(1000*patternDirection, 800, 0.0));
-			pos.setelev(rwy.threshold_pos.elev() + 1000 * SG_FEET_TO_METER);
-			hdg = rwy.hdg + 180.0;
+			_pos = ortho.ConvertFromLocal(Point3D(1000*patternDirection, 800, 0.0));
+			_pos.setelev(rwy.threshold_pos.elev() + 1000 * SG_FEET_TO_METER);
+			_hdg = rwy.hdg + 180.0;
 			leg = DOWNWIND;
 			elevInitGood = false;
 			inAir = true;
 			track = rwy.hdg - (180 * patternDirection);	//should tend to bring track back into the 0->360 range
 			slope = 0.0;
-			pitch = 0.0;
-			roll = 0.0;
+			_pitch = 0.0;
+			_roll = 0.0;
 			IAS = 90.0;
 			descending = false;
-			aip.setVisible(true);
+			_aip.setVisible(true);
 			tower->RegisterAIPlane(plane, this, CIRCUIT, DOWNWIND);
 		} else {			
 			// Default to initial position on threshold for now
-			pos.setlat(rwy.threshold_pos.lat());
-			pos.setlon(rwy.threshold_pos.lon());
-			pos.setelev(rwy.threshold_pos.elev());
-			hdg = rwy.hdg;
+			_pos.setlat(rwy.threshold_pos.lat());
+			_pos.setlon(rwy.threshold_pos.lon());
+			_pos.setelev(rwy.threshold_pos.elev());
+			_hdg = rwy.hdg;
 			
 			// Now we've set the position we can do the ground elev
 			// This might not always be necessary if we implement in-air start
@@ -292,8 +348,8 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 			inAir = false;
 			DoGroundElev();
 			
-			pitch = 0.0;
-			roll = 0.0;
+			_pitch = 0.0;
+			_roll = 0.0;
 			leg = TAKEOFF_ROLL;
 			vel = 0.0;
 			slope = 0.0;
@@ -303,6 +359,9 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 		
 		Transform();
 		break;
+	case EN_ROUTE:
+		// This implies we're being init'd by AIGAVFRTraffic - simple return now
+		return(true);
 	default:
 		SG_LOG(SG_ATC, SG_ALERT, "Attempt to set unknown operating state in FGAILocalTraffic.Init(...)\n");
 		return(false);
@@ -310,6 +369,41 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	
 	
 	return(true);
+}
+
+
+// Set up downwind state - this is designed to be called from derived classes who are already tuned to tower
+void FGAILocalTraffic::DownwindEntry() {
+	circuitsToFly = 0;		// ie just fly this circuit and then stop
+	touchAndGo = false;
+	operatingState = IN_PATTERN;
+	leg = DOWNWIND;
+	elevInitGood = false;
+	inAir = true;
+	track = rwy.hdg - (180 * patternDirection);	//should tend to bring track back into the 0->360 range
+	slope = 0.0;
+	_pitch = 0.0;
+	_roll = 0.0;
+	IAS = 90.0;
+	descending = false;
+}
+
+void FGAILocalTraffic::StraightInEntry(bool des) {
+	//cout << "************ STRAIGHT-IN ********************\n";
+	circuitsToFly = 0;		// ie just fly this circuit and then stop
+	touchAndGo = false;
+	operatingState = IN_PATTERN;
+	leg = FINAL;
+	elevInitGood = false;
+	inAir = true;
+	track = rwy.hdg;
+	transmitted = true;	// TODO - fix this hack.
+	// TODO - set up the next 5 properly for a descent!
+	slope = -5.5;
+	_pitch = 0.0;
+	_roll = 0.0;
+	IAS = 90.0;
+	descending = des;
 }
 
 
@@ -334,19 +428,23 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 		return;
 		break;
 	case TAXIING:
-		// TODO - For now we'll punt this and do nothing
+		// HACK - assume that we're taxiing out for now
+		circuitsToFly += numCircuits;
+		touchAndGo = tag;
 		break;
 	case PARKED:
 		circuitsToFly = numCircuits;	// Note that one too many circuits gets flown because we only test and decrement circuitsToFly after landing
 										// thus flying one too many circuits.  TODO - Need to sort this out better!
 		touchAndGo = tag;
 		break;
+	case EN_ROUTE:
+		break;
 	}
 }   
 
 // Run the internal calculations
 void FGAILocalTraffic::Update(double dt) {
-	//cout << "A" << flush;
+	//cout << "U" << flush;
 	//double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
 	responseCounter += dt;
 	if((contactTower) && (responseCounter >= 8.0)) {
@@ -366,6 +464,35 @@ void FGAILocalTraffic::Update(double dt) {
 		changeFreqType = TOWER;
 	}
 	
+	if((contactGround) && (responseCounter >= 8.0)) {
+		// Acknowledge request before changing frequency so it gets rendered if the user is on the same freq
+		string trns = "Ground ";
+		double f = globals->get_ATC_mgr()->GetFrequency(airportID, GROUND) / 100.0;	
+		char buf[10];
+		sprintf(buf, "%.2f", f);
+		trns += buf;
+		trns += " ";
+		trns += "Good Day";
+		pending_transmission = trns;
+		ConditionalTransmit(5.0);
+		responseCounter = 0.0;
+		contactGround = false;
+		changeFreq = true;
+		changeFreqType = GROUND;
+	}
+	
+	if((_taxiToGA) && (responseCounter >= 8.0)) {
+		// Acknowledge request before changing frequency so it gets rendered if the user is on the same freq
+		string trns = "GA Parking, Thank you and Good Day";
+		//double f = globals->get_ATC_mgr()->GetFrequency(airportID, GROUND) / 100.0;	
+		pending_transmission = trns;
+		ConditionalTransmit(5.0);
+		tower->DeregisterAIPlane(plane.callsign);
+		_taxiToGA = false;
+		// HACK - check if we are at a simple airport or not first
+		globals->get_AI_mgr()->ScheduleRemoval(plane.callsign);
+	}		
+	
 	if((changeFreq) && (responseCounter > 8.0)) {
 		switch(changeFreqType) {
 		case TOWER:
@@ -373,7 +500,6 @@ void FGAILocalTraffic::Update(double dt) {
 			freq = (double)tower->get_freq() / 100.0;
 			//Transmit("DING!");
 			// Contact the tower, even if only virtually
-			changeFreq = false;
 			pending_transmission = plane.callsign;
 			pending_transmission += " at hold short for runway ";
 			pending_transmission += ConvertRwyNumToSpokenString(rwy.rwyID);
@@ -387,8 +513,12 @@ void FGAILocalTraffic::Update(double dt) {
 			Transmit(2);
 			break;
 		case GROUND:
+			tower->DeregisterAIPlane(plane.callsign);
 			tuned_station = ground;
 			freq = (double)ground->get_freq() / 100.0;
+			// HACK - check if we are at a simple airport or not first
+			// TODO FIXME TODO FIXME !!!!!!!
+			if(airportID != "KEMT") globals->get_AI_mgr()->ScheduleRemoval(plane.callsign);
 			break;
 		// And to avoid compiler warnings...
 		case APPROACH:  break;
@@ -397,9 +527,10 @@ void FGAILocalTraffic::Update(double dt) {
 		case DEPARTURE: break;
 		case INVALID:   break;
 		}
+		changeFreq = false;
 	}
 	
-	//cout << "." << flush;
+	//cout << "," << flush;
 		
 	switch(operatingState) {
 	case IN_PATTERN:
@@ -407,11 +538,11 @@ void FGAILocalTraffic::Update(double dt) {
 		if(!inAir) {
 			DoGroundElev();
 			if(!elevInitGood) {
-				if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-					pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+				if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+					_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 					//cout << "TAKEOFF_ROLL, POS = " << pos.lon() << ", " << pos.lat() << ", " << pos.elev() << '\n';
 					//Transform();
-					aip.setVisible(true);
+					_aip.setVisible(true);
 					//cout << "Making plane visible!\n";
 					elevInitGood = true;
 				}
@@ -425,17 +556,17 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "*" << flush;
 		if(!elevInitGood) {
 			//DoGroundElev();
-			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-				pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+			if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+				_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 				//Transform();
-				aip.setVisible(true);
+				_aip.setVisible(true);
 				//Transform();
 				//cout << "Making plane visible!\n";
 				elevInitGood = true;
 			}
 		}
 		DoGroundElev();
-		//cout << "," << flush;
+		//cout << "~" << flush;
 		if(!((holdingShort) && (!clearedToLineUp))) {
 			//cout << "|" << flush;
 			Taxi(dt);
@@ -445,7 +576,18 @@ void FGAILocalTraffic::Update(double dt) {
 			// possible assumption that we're at the hold short here - may not always hold
 			// TODO - sort out the case where we're cleared to line-up first and then cleared to take-off on the rwy.
 			taxiState = TD_LINING_UP;
+			//cout << "A" << endl;
 			path = ground->GetPath(holdShortNode, rwy.rwyID);
+			//cout << "B" << endl;
+			if(!path.size()) {	// Assume no facility file so we'll just taxi to a point on the runway near the threshold
+				//cout << "C" << endl;
+				node* np = new node;
+				np->struct_type = NODE;
+				np->pos = ortho.ConvertFromLocal(Point3D(0.0, 10.0, 0.0));
+				path.push_back(np);
+			} else {
+				//cout << "D" << endl;
+			}
 			/*
 			cout << "path returned was:" << endl;
 			for(unsigned int i=0; i<path.size(); ++i) {
@@ -474,10 +616,10 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "In PARKED\n";
 		if(!elevInitGood) {
 			DoGroundElev();
-			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-				pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+			if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+				_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 				//Transform();
-				aip.setVisible(true);
+				_aip.setVisible(true);
 				//Transform();
 				//cout << "Making plane visible!\n";
 				elevInitGood = true;
@@ -488,7 +630,7 @@ void FGAILocalTraffic::Update(double dt) {
 			if((taxiRequestPending) && (taxiRequestCleared)) {
 				//cout << "&" << flush;
 				// Get the active runway details (in case they've changed since init)
-				GetRwyDetails();
+				GetRwyDetails(airportID);
 				
 				// Get the takeoff node for the active runway, get a path to it and start taxiing
 				path = ground->GetPathToHoldShort(ourGate, rwy.rwyID);
@@ -550,10 +692,10 @@ void FGAILocalTraffic::Update(double dt) {
 	}
 	//cout << "I " << flush;
 	
-	// Convienience output for AI debugging user the property logger
-	fgSetDouble("/AI/Local1/ortho-x", (ortho.ConvertToLocal(pos)).x());
-	fgSetDouble("/AI/Local1/ortho-y", (ortho.ConvertToLocal(pos)).y());
-	fgSetDouble("/AI/Local1/elev", pos.elev() * SG_METER_TO_FEET);
+	// Convienience output for AI debugging using the property logger
+	//fgSetDouble("/AI/Local1/ortho-x", (ortho.ConvertToLocal(_pos)).x());
+	//fgSetDouble("/AI/Local1/ortho-y", (ortho.ConvertToLocal(_pos)).y());
+	//fgSetDouble("/AI/Local1/elev", _pos.elev() * SG_METER_TO_FEET);
 	
 	// And finally, call parent for transmission rendering
 	FGAIPlane::Update(dt);
@@ -580,9 +722,25 @@ void FGAILocalTraffic::RegisterTransmission(int code) {
 		clearedToTakeOff = true;
 		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " cleared to take-off...");
 		break;
+	case 5: // contact ground
+		responseCounter = 0;
+		contactGround = true;
+		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " told to contact ground...");
+		break;
+	// case 6 is a temporary mega-hack for controlled airports without separate ground control
+	case 6: // taxi to the GA parking
+		responseCounter = 0;
+		_taxiToGA = true;
+		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " told to taxi to the GA parking...");
+		break;
+	case 7:  // Cleared to land (also implies cleared for the option
+		_clearedToLand = true;
+		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " cleared to land...");
+		break;
 	case 13: // Go around!
 		responseCounter = 0;
 		goAround = true;
+		_clearedToLand = false;
 		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " told to go-around!!");
 		break;
 	default:
@@ -597,8 +755,6 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	// Need to differentiate between in-air (IAS governed) and on-ground (vel governed)
 	// Take-off is an interesting case - we are on the ground but takeoff speed is IAS governed.
 	
-	static bool transmitted = false;	// FIXME - this is a hack
-
 	// WIND
 	// Wind has two effects - a mechanical one in that IAS translates to a different vel, and the hdg != track,
 	// but also a piloting effect, in that the AI must be able to descend at a different rate in order to hit the threshold.
@@ -609,9 +765,9 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	double turn_time = 60.0;	// seconds - TODO - check this guess
 	double turn_circumference;
 	double turn_radius;
-	Point3D orthopos = ortho.ConvertToLocal(pos);	// ortho position of the plane
+	Point3D orthopos = ortho.ConvertToLocal(_pos);	// ortho position of the plane
 	//cout << "runway elev = " << rwy.threshold_pos.elev() << ' ' << rwy.threshold_pos.elev() * SG_METER_TO_FEET << '\n';
-	//cout << "elev = " << pos.elev() << ' ' << pos.elev() * SG_METER_TO_FEET << '\n';
+	//cout << "elev = " << _pos.elev() << ' ' << _pos.elev() * SG_METER_TO_FEET << '\n';
 
 	// HACK FOR TESTING - REMOVE
 	//cout << "Calling ExitRunway..." << endl;
@@ -633,13 +789,13 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			double dveldt = 5.0;
 			vel += dveldt * dt;
 		}
-		if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+		if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+			_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		}
-		IAS = vel + (cos((hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
+		IAS = vel + (cos((_hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
 		if(IAS >= 70) {
 			leg = CLIMBOUT;
-			pitch = 10.0;
+			_pitch = 10.0;
 			IAS = best_rate_of_climb_speed;
 			//slope = 7.0;	
 			slope = 6.0;	// Reduced it slightly since it's climbing a lot steeper than I can in the JSBSim C172.
@@ -652,24 +808,24 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		// (decided in FGTower and accessed through GetCrosswindConstraint(...)).
 		// According to AIM, traffic should climb to within 300ft of pattern altitude before commencing crosswind turn.
 		// TODO - At hot 'n high airports this may be 500ft AGL though - need to make this a variable.
-		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 700) {
+		if((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 700) {
 			double cc = 0.0;
 			if(tower->GetCrosswindConstraint(cc)) {
 				if(orthopos.y() > cc) {
-					cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
+					//cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
 					leg = TURN1;
 				}
 			} else if(orthopos.y() > 1500.0) {   // Added this constraint as a hack to prevent turning too early when going around.
 				// TODO - We should be doing it as a distance from takeoff end, not theshold end though.
-				cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
+				//cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
 				leg = TURN1;
 			}
 		}
 		// Need to check for levelling off in case we can't turn crosswind as soon
 		// as we would like due to other traffic.
-		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
+		if((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
 			slope = 0.0;
-			pitch = 0.0;
+			_pitch = 0.0;
 			IAS = 80.0;		// FIXME - use smooth transistion to new speed and attitude.
 		}
 		if(goAround && !goAroundCalled) {
@@ -692,21 +848,21 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		goAround = false;
 		LevelWings();
 		track = rwy.hdg + (90.0 * patternDirection);
-		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
+		if((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
 			slope = 0.0;
-			pitch = 0.0;
+			_pitch = 0.0;
 			IAS = 80.0;		// FIXME - use smooth transistion to new speed
 		}
 		// turn 1000m out for now, taking other traffic into accout
-		if(fabs(orthopos.x()) > 980) {
+		if(fabs(orthopos.x()) > 900) {
 			double dd = 0.0;
 			if(tower->GetDownwindConstraint(dd)) {
 				if(fabs(orthopos.x()) > fabs(dd)) {
-					cout << "Turning to downwind, distance from centerline = " << fabs(orthopos.x()) << '\n'; 
+					//cout << "Turning to downwind, distance from centerline = " << fabs(orthopos.x()) << '\n'; 
 					leg = TURN2;
 				}
 			} else {
-				cout << "Turning to downwind, distance from centerline = " << fabs(orthopos.x()) << '\n'; 
+				//cout << "Turning to downwind, distance from centerline = " << fabs(orthopos.x()) << '\n'; 
 				leg = TURN2;
 			}
 		}
@@ -715,9 +871,9 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		track += (360.0 / turn_time) * dt * patternDirection;
 		Bank(25.0 * patternDirection);
 		// just in case we didn't make height on crosswind
-		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
+		if((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
 			slope = 0.0;
-			pitch = 0.0;
+			_pitch = 0.0;
 			IAS = 80.0;		// FIXME - use smooth transistion to new speed
 		}
 		if((track < (rwy.hdg - 179.0)) || (track > (rwy.hdg + 179.0))) {
@@ -730,9 +886,14 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		LevelWings();
 		track = rwy.hdg - (180 * patternDirection);	//should tend to bring track back into the 0->360 range
 		// just in case we didn't make height on crosswind
-		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
+		if(((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 995) && ((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET < 1015)) {
 			slope = 0.0;
-			pitch = 0.0;
+			_pitch = 0.0;
+			IAS = 90.0;		// FIXME - use smooth transistion to new speed
+		}
+		if((_pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET >= 1015) {
+			slope = -1.0;
+			_pitch = -1.0;
 			IAS = 90.0;		// FIXME - use smooth transistion to new speed
 		}
 		if((orthopos.y() < 0) && (!transmitted)) {
@@ -740,6 +901,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			transmitted = true;
 		}
 		if((orthopos.y() < -100) && (!descending)) {
+			//cout << "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDdddd\n";
 			// Maybe we should think about when to start descending.
 			// For now we're assuming that we aim to follow the same glidepath regardless of wind.
 			double d1;
@@ -752,7 +914,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		if(descending) {
 			slope = -5.5;	// FIXME - calculate to descent at 500fpm and hit the desired point on the runway (taking wind into account as well!!)
-			pitch = -3.0;
+			_pitch = -3.0;
 			IAS = 85.0;
 		}
 		
@@ -766,13 +928,13 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			double bb = 0.0;
 			if(tower->GetBaseConstraint(bb)) {
 				if(fabs(orthopos.y()) > fabs(bb)) {
-					cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
+					//cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
 					leg = TURN3;
 					transmitted = false;
 					IAS = 80.0;
 				}
 			} else {
-				cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
+				//cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
 				leg = TURN3;
 				transmitted = false;
 				IAS = 80.0;
@@ -789,7 +951,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	case BASE:
 		LevelWings();
 		if(!transmitted) {
-			TransmitPatternPositionReport();
+			// Base report should only be transmitted at uncontrolled airport - not towered.
+			if(!_controlled) TransmitPatternPositionReport();
 			transmitted = true;
 		}
 		
@@ -805,7 +968,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		if(descending) {
 			slope = -5.5;	// FIXME - calculate to descent at 500fpm and hit the threshold (taking wind into account as well!!)
-			pitch = -4.0;
+			_pitch = -4.0;
 			IAS = 70.0;
 		}
 		
@@ -833,16 +996,17 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	case FINAL:
 		if(goAround && responseCounter > 2.0) {
 			leg = CLIMBOUT;
-			pitch = 8.0;
+			_pitch = 8.0;
 			IAS = best_rate_of_climb_speed;
 			slope = 5.0;	// A bit less steep than the initial climbout.
 			inAir = true;
 			goAroundCalled = false;
+			descending = false;
 			break;
 		}
 		LevelWings();
 		if(!transmitted) {
-			TransmitPatternPositionReport();
+			if((!_controlled) || (!_clearedToLand)) TransmitPatternPositionReport();
 			transmitted = true;
 		}
 		if(!descending) {
@@ -855,33 +1019,70 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 
 		}
 		if(descending) {
-			slope = -5.5;	// FIXME - calculate to descent at 500fpm and hit the threshold (taking wind into account as well!!)
-			pitch = -4.0;
-			IAS = 70.0;
+			if(orthopos.y() < -50.0) {
+				double thesh_offset = 30.0;
+				slope = atan((_pos.elev() - dclGetAirportElev(airportID)) / (orthopos.y() - thesh_offset)) * DCL_RADIANS_TO_DEGREES;
+				//cout << "slope = " << slope << ", elev = " << _pos.elev() << ", apt_elev = " << dclGetAirportElev(airportID) << ", op.y = " << orthopos.y() << '\n';
+				if(slope < -10.0) slope = -10.0;
+				_savedSlope = slope;
+				_pitch = -4.0;
+				IAS = 70.0;
+			} else {
+				if(_pos.elev() < (rwy.threshold_pos.elev()+10.0+wheelOffset)) {
+					if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+						if(_pos.elev() < (_aip.getSGLocation()->get_cur_elev_m() + wheelOffset + 1.0)) {
+							slope = -2.0;
+							_pitch = 1.0;
+							IAS = 55.0;
+						} else if(_pos.elev() < (_aip.getSGLocation()->get_cur_elev_m() + wheelOffset + 5.0)) {
+							slope = -4.0;
+							_pitch = -2.0;
+							IAS = 60.0;
+						} else {
+							slope = _savedSlope;
+							_pitch = -3.0;
+							IAS = 65.0;
+						}
+					} else {
+						// Elev not determined
+						slope = _savedSlope;
+						_pitch = -3.0;
+						IAS = 65.0;
+					}
+				} else {
+					slope = _savedSlope;
+					_pitch = -3.0;
+					IAS = 65.0;
+				}
+			}
 		}
 		// Try and track the extended centreline
 		track = rwy.hdg - (0.2 * orthopos.x());
 		//cout << "orthopos.x() = " << orthopos.x() << " hdg = " << hdg << '\n';
-		if(pos.elev() < (rwy.threshold_pos.elev()+20.0+wheelOffset)) {
+		if(_pos.elev() < (rwy.threshold_pos.elev()+20.0+wheelOffset)) {
 			DoGroundElev();	// Need to call it here expicitly on final since it's only called
 			               	// for us in update(...) when the inAir flag is false.
 		}
-		if(pos.elev() < (rwy.threshold_pos.elev()+10.0+wheelOffset)) {
-			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-				if((aip.getSGLocation()->get_cur_elev_m() + wheelOffset) > pos.elev()) {
+		if(_pos.elev() < (rwy.threshold_pos.elev()+10.0+wheelOffset)) {
+			//slope = -1.0;
+			//_pitch = 1.0;
+			if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+				if((_aip.getSGLocation()->get_cur_elev_m() + wheelOffset) > _pos.elev()) {
 					slope = 0.0;
-					pitch = 0.0;
+					_pitch = 0.0;
 					leg = LANDING_ROLL;
 					inAir = false;
 				}
 			}	// else need a fallback position based on arpt elev in case ground elev determination fails?
-		}
+		} else {
+			// TODO
+		}			
 		break;
 	case LANDING_ROLL:
 		//inAir = false;
 		descending = false;
-		if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+		if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+			_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		}
 		track = rwy.hdg;
 		dveldt = -5.0;
@@ -912,7 +1113,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		// Does it really matter?
 		
 		// Apply wind to ground-relative velocity if in the air
-		vel = IAS - (cos((hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
+		vel = IAS - (cos((_hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
 		//crab = f(track, wind, vel);
 		// The vector we need to fly is our desired vector minus the wind vector
 		// TODO - we probably ought to use plib's built in vector types and operations for this
@@ -946,9 +1147,11 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		crab = 0.0;
 	}
 	
-	hdg = track + crab;
+	//cout << "X " << orthopos.x() << "  Y " << orthopos.y() << "  SLOPE " << slope << "  elev " << _pos.elev() * SG_METER_TO_FEET << '\n';
+	
+	_hdg = track + crab;
 	dist = vel * 0.514444 * dt;
-	pos = dclUpdatePosition(pos, track, slope, dist);
+	_pos = dclUpdatePosition(_pos, track, slope, dist);
 }
 
 // Pattern direction is true for right, false for left
@@ -1025,11 +1228,13 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 	}
 	trns += ConvertRwyNumToSpokenString(rwy.rwyID);
 	
+	trns += " ";
+	
 	// And add the airport name again
 	trns += tower->get_name();
 	
-	pending_transmission = trns;	// FIXME - make up pending_transmission natively	
-	ConditionalTransmit(90.0, code);		// Assume a report of this leg will be invalid if we can't transmit within a minute and a half.
+	pending_transmission = trns;
+	ConditionalTransmit(60.0, code);		// Assume a report of this leg will be invalid if we can't transmit within a minute.
 }
 
 // Callback handler
@@ -1037,6 +1242,7 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 void FGAILocalTraffic::ProcessCallback(int code) {
 	// 1 - Request Departure from ground
 	// 2 - Report at hold short
+	// 3 - Report runway vacated
 	// 10 - report crosswind
 	// 11 - report downwind
 	// 12 - report base
@@ -1045,6 +1251,8 @@ void FGAILocalTraffic::ProcessCallback(int code) {
 		ground->RequestDeparture(plane, this);
 	} else if(code == 2) {
 		tower->ContactAtHoldShort(plane, this, CIRCUIT);
+	} else if(code == 3) {
+		tower->ReportRunwayVacated(plane.callsign);
 	} else if(code == 11) {
 		tower->ReportDownwind(plane.callsign);
 	} else if(code == 13) {
@@ -1055,6 +1263,9 @@ void FGAILocalTraffic::ProcessCallback(int code) {
 void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 	//cout << "In ExitRunway" << endl;
 	//cout << "Runway ID is " << rwy.ID << endl;
+	
+	_clearedToLand = false;
+	
 	node_array_type exitNodes = ground->GetExits(rwy.rwyID);	//I suppose we ought to have some fallback for rwy with no defined exits?
 	/*
 	cout << "Node ID's of exits are ";
@@ -1072,7 +1283,7 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 		node* rwyExit = *(exitNodes.begin());
 		//int gateID;		//This might want to be more persistant at some point
 		while(nItr != exitNodes.end()) {
-			d = ortho.ConvertToLocal((*nItr)->pos).y() - ortho.ConvertToLocal(pos).y(); 	//FIXME - consider making orthopos a class variable
+			d = ortho.ConvertToLocal((*nItr)->pos).y() - ortho.ConvertToLocal(_pos).y(); 	//FIXME - consider making orthopos a class variable
 			if(d > 0.0) {
 				if(d < dist) {
 					dist = d;
@@ -1091,7 +1302,8 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 			// Implies no available gates - what shall we do?
 			// For now just vanish the plane - possibly we can make this more elegant in the future
 			SG_LOG(SG_ATC, SG_ALERT, "No gate found by FGAILocalTraffic whilst landing at " << airportID << '\n');
-			aip.setVisible(false);
+			//_aip.setVisible(false);
+			//cout << "Setting visible false\n";
 			operatingState = PARKED;
 			return;
 		}
@@ -1113,9 +1325,16 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 		StartTaxi();
 	} else {
 		// Something must have gone wrong with the ground network file - or there is only a rwy here and no exits defined
-		SG_LOG(SG_ATC, SG_ALERT, "No exits found by FGAILocalTraffic from runway " << rwy.rwyID << " at " << airportID << '\n');
+		SG_LOG(SG_ATC, SG_INFO, "No exits found by FGAILocalTraffic from runway " << rwy.rwyID << " at " << airportID << '\n');
+		//cout << "No exits found by " << plane.callsign << " from runway " << rwy.rwyID << " at " << airportID << '\n';
 		// What shall we do - just remove the plane from sight?
-		aip.setVisible(false);
+		_aip.setVisible(false);
+		//cout << "Setting visible false\n";
+		//tower->ReportRunwayVacated(plane.callsign);
+		string trns = "Clear of the runway ";
+		trns += plane.callsign;
+		pending_transmission = trns;
+		Transmit(3);
 		operatingState = PARKED;
 	}
 }
@@ -1159,6 +1378,7 @@ void FGAILocalTraffic::GetNextTaxiNode() {
 void FGAILocalTraffic::StartTaxi() {
 	//cout << "StartTaxi called" << endl;
 	operatingState = TAXIING;
+	
 	taxiPathPos = 0;
 	
 	//Set the desired heading
@@ -1166,7 +1386,7 @@ void FGAILocalTraffic::StartTaxi() {
 	//Eventually we may need to consider the fact that we might start on a curved arc and
 	//not be able to head directly for the first node.
 	GetNextTaxiNode();	// sets the class variable nextTaxiNode to the next taxi node!
-	desiredTaxiHeading = GetHeadingFromTo(pos, nextTaxiNode->pos);
+	desiredTaxiHeading = GetHeadingFromTo(_pos, nextTaxiNode->pos);
 	//cout << "First taxi heading is " << desiredTaxiHeading << endl;
 }
 
@@ -1211,7 +1431,7 @@ void FGAILocalTraffic::Taxi(double dt) {
 	// Look out for the finish!!
 
 	//Point3D orthopos = ortho.ConvertToLocal(pos);	// ortho position of the plane
-	desiredTaxiHeading = GetHeadingFromTo(pos, nextTaxiNode->pos);
+	desiredTaxiHeading = GetHeadingFromTo(_pos, nextTaxiNode->pos);
 	
 	bool lastNode = (taxiPathPos == path.size() ? true : false);
 	if(lastNode) {
@@ -1221,7 +1441,7 @@ void FGAILocalTraffic::Taxi(double dt) {
 	// HACK ALERT! - for now we will taxi at constant speed for straights and turns
 	
 	// Remember that hdg is always equal to track when taxiing so we don't have to consider them both
-	double dist_to_go = dclGetHorizontalSeparation(pos, nextTaxiNode->pos);	// we may be able to do this more cheaply using orthopos
+	double dist_to_go = dclGetHorizontalSeparation(_pos, nextTaxiNode->pos);	// we may be able to do this more cheaply using orthopos
 	//cout << "dist_to_go = " << dist_to_go << endl;
 	if((nextTaxiNode->type == GATE) && (dist_to_go <= 0.1)) {
 		// This might be more robust to outward paths starting with a gate if we check for either
@@ -1233,18 +1453,18 @@ void FGAILocalTraffic::Taxi(double dt) {
 		// ((s.dt)/(PI.r)) x 180 degrees
 		// or alternatively (s.dt)/r radians
 		//cout << "hdg = " << hdg << " desired taxi heading = " << desiredTaxiHeading << '\n';
-		hdg = TaxiTurnTowardsHeading(hdg, desiredTaxiHeading, nominalTaxiSpeed, taxiTurnRadius, dt);
+		_hdg = TaxiTurnTowardsHeading(_hdg, desiredTaxiHeading, nominalTaxiSpeed, taxiTurnRadius, dt);
 		double vel = nominalTaxiSpeed;
 		//cout << "vel = " << vel << endl;
 		double dist = vel * 0.514444 * dt;
 		//cout << "dist = " << dist << endl;
-		double track = hdg;
+		double track = _hdg;
 		//cout << "track = " << track << endl;
 		double slope = 0.0;
-		pos = dclUpdatePosition(pos, track, slope, dist);
+		_pos = dclUpdatePosition(_pos, track, slope, dist);
 		//cout << "Updated position...\n";
-		if(aip.getSGLocation()->get_cur_elev_m() > -9990) {
-			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+		if(_aip.getSGLocation()->get_cur_elev_m() > -9990) {
+			_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		} // else don't change the elev until we get a valid ground elev again!
 	} else if(lastNode) {
 		if(taxiState == TD_LINING_UP) {
@@ -1252,20 +1472,20 @@ void FGAILocalTraffic::Taxi(double dt) {
 				liningUp = true;
 			}
 			if(liningUp) {
-				hdg = TaxiTurnTowardsHeading(hdg, rwy.hdg, nominalTaxiSpeed, taxiTurnRadius, dt);
+				_hdg = TaxiTurnTowardsHeading(_hdg, rwy.hdg, nominalTaxiSpeed, taxiTurnRadius, dt);
 				double vel = nominalTaxiSpeed;
 				//cout << "vel = " << vel << endl;
 				double dist = vel * 0.514444 * dt;
 				//cout << "dist = " << dist << endl;
-				double track = hdg;
+				double track = _hdg;
 				//cout << "track = " << track << endl;
 				double slope = 0.0;
-				pos = dclUpdatePosition(pos, track, slope, dist);
+				_pos = dclUpdatePosition(_pos, track, slope, dist);
 				//cout << "Updated position...\n";
-				if(aip.getSGLocation()->get_cur_elev_m() > -9990) {
-					pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+				if(_aip.getSGLocation()->get_cur_elev_m() > -9990) {
+					_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 				} // else don't change the elev until we get a valid ground elev again!
-				if(fabs(hdg - rwy.hdg) <= 1.0) {
+				if(fabs(_hdg - rwy.hdg) <= 1.0) {
 					operatingState = IN_PATTERN;
 					leg = TAKEOFF_ROLL;
 					inAir = false;
@@ -1301,9 +1521,9 @@ void FGAILocalTraffic::DoGroundElev() {
 	
 	double visibility_meters = fgGetDouble("/environment/visibility-m");
 	//globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
-	globals->get_tile_mgr()->prep_ssg_nodes( aip.getSGLocation(),	visibility_meters );
+	globals->get_tile_mgr()->prep_ssg_nodes( _aip.getSGLocation(),	visibility_meters );
         Point3D scenery_center = globals->get_scenery()->get_center();
-	globals->get_tile_mgr()->update( aip.getSGLocation(), visibility_meters, (aip.getSGLocation())->get_absolute_view_pos( scenery_center ) );
+	globals->get_tile_mgr()->update( _aip.getSGLocation(), visibility_meters, (_aip.getSGLocation())->get_absolute_view_pos( scenery_center ) );
 	// save results of update in SGLocation for fdm...
 	
 	//if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
@@ -1312,10 +1532,10 @@ void FGAILocalTraffic::DoGroundElev() {
 	//}
 	
 	// The need for this here means that at least 2 consecutive passes are needed :-(
-	aip.getSGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
+	_aip.getSGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
 	
 	//cout << "Transform Elev is " << globals->get_scenery()->get_cur_elev() << '\n';
-	aip.getSGLocation()->set_cur_elev_m(globals->get_scenery()->get_cur_elev());
+	_aip.getSGLocation()->set_cur_elev_m(globals->get_scenery()->get_cur_elev());
 	//return(globals->get_scenery()->get_cur_elev());
 }
 

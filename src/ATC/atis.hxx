@@ -86,7 +86,6 @@ class FGATIS : public FGATC {
 	//Indicate that this instance should not be outputting to the ATC display
 	inline void SetNoDisplay(void) {display = false;}
 	
-	inline atc_type GetType() { return ATIS; }
 	//inline void set_type(const atc_type tp) {type = tp;}
 	inline string get_trans_ident() { return trans_ident; }
 	inline void set_refname(string r) { refname = r; } 

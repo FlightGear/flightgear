@@ -45,7 +45,8 @@ enum TaxiState {
 enum OperatingState {
 	IN_PATTERN,
 	TAXIING,
-	PARKED
+	PARKED,
+	EN_ROUTE
 };
 
 struct StartOfDescent {
@@ -58,11 +59,12 @@ class FGAILocalTraffic : public FGAIPlane {
 	
 public:
 	
+	// At the moment we expect the expanded short form callsign - eventually we will just want the reg + type.
 	FGAILocalTraffic();
 	~FGAILocalTraffic();
 	
 	// Initialise
-	bool Init(string ICAO, OperatingState initialState = PARKED, PatternLeg initialLeg = DOWNWIND);
+	bool Init(const string& callsign, string ICAO, OperatingState initialState = PARKED, PatternLeg initialLeg = DOWNWIND);
 	
 	// Run the internal calculations
 	void Update(double dt);
@@ -94,8 +96,37 @@ protected:
 	// Attempt to enter the traffic pattern in a reasonably intelligent manner
 	void EnterTrafficPattern(double dt);
 	
+	// Set up the internal state to be consistent for a downwind entry.
+	void DownwindEntry();
+	
+	// Ditto for straight-in
+	void StraightInEntry(bool des = false);
+	
 	// Do what is necessary to land and parkup at home airport
 	void ReturnToBase(double dt);
+	
+	// Airport/runway/pattern details
+	string airportID;	// The ICAO code of the airport that we're operating around
+	double aptElev;		// Airport elevation
+	FGGround* ground;	// A pointer to the ground control.
+	FGTower* tower;	// A pointer to the tower control.
+	bool _controlled;	// Set true if we find tower control working for the airport, false otherwise.
+	RunwayDetails rwy;
+	double patternDirection;	// 1 for right, -1 for left (This is double because we multiply/divide turn rates
+	// with it to get RH/LH turns - DON'T convert it to int under ANY circumstances!!
+	double glideAngle;		// Assumed to be visual glidepath angle for FGAILocalTraffic - can be found at www.airnav.com
+	// Its conceivable that patternDirection and glidePath could be moved into the RunwayDetails structure.
+	
+	// Its possible that this might be moved out to the ground/airport class at some point.
+	FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the threshold at the origin
+	// and the runway aligned with the y axis.
+	
+	void GetAirportDetails(string id);
+	
+	void GetRwyDetails(string id);
+	
+	double responseCounter;		// timer in seconds to allow response to requests to be a little while after them
+	// Will almost certainly get moved to FGAIPlane.	
 	
 private:
 	FGATCMgr* ATC;	
@@ -105,21 +136,7 @@ private:
 	OperatingState operatingState;
 	int circuitsToFly;	//Number of circuits still to do in this session NOT INCLUDING THE CURRENT ONE
 	bool touchAndGo;	//True if circuits should be flown touch and go, false for full stop
-	
-	// Its possible that this might be moved out to the ground/airport class at some point.
-	FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the threshold at the origin
-	// and the runway aligned with the y axis.
-	
-	// Airport/runway/pattern details
-	string airportID;	// The ICAO code of the airport that we're operating around
-	double aptElev;		// Airport elevation
-	FGGround* ground;	// A pointer to the ground control.
-	FGTower* tower;	// A pointer to the tower control.
-	RunwayDetails rwy;
-	double patternDirection;	// 1 for right, -1 for left (This is double because we multiply/divide turn rates
-	// with it to get RH/LH turns - DON'T convert it to int under ANY circumstances!!
-	double glideAngle;		// Assumed to be visual glidepath angle for FGAILocalTraffic - can be found at www.airnav.com
-	// Its conceivable that patternDirection and glidePath could be moved into the RunwayDetails structure.
+	bool transmitted;	// Set true when a position report for the current leg has been transmitted.
 	
 	// Performance characteristics of the plane in knots and ft/min - some of this might get moved out into FGAIPlane
 	double Vr;
@@ -175,14 +192,19 @@ private:
 	bool reportReadyForDeparture;	// set true when ATC has requested that the plane report when ready for departure
 	bool clearedToLineUp;
 	bool clearedToTakeOff;
+	bool _clearedToLand;	// also implies cleared for the option.
 	bool liningUp;	// Set true when the turn onto the runway heading is commenced when taxiing out
 	bool goAround;	// Set true if need to go-around
 	bool goAroundCalled;	// Set true during go-around only after we have called our go-around on the radio
 	bool contactTower;	// we have been told to contact tower
 	bool contactGround;	// we have been told to contact ground
 	bool changeFreq;	// true when we need to change frequency
+	bool _taxiToGA;		// Temporary mega-hack indicating we are to taxi to the GA parking and disconnect from tower control.
 	atc_type changeFreqType;	// the service we need to change to
-	double responseCounter;		// timer in seconds to allow response to requests to be a little while after them
+	bool freeTaxi;	// False if the airport has a facilities file with a logical taxi network defined, true if we need to calculate our own taxiing points.
+	
+	// Hack for getting close to the runway when atan can go pear-shaped
+	double _savedSlope;
 
 	void FlyTrafficPattern(double dt);
 
@@ -201,8 +223,6 @@ private:
 	void GetNextTaxiNode();
 	
 	void DoGroundElev();
-	
-	void GetRwyDetails();
 };
 
 #endif  // _FG_AILocalTraffic_HXX

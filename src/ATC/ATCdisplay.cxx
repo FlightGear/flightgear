@@ -35,8 +35,8 @@
 FGATCDisplay::FGATCDisplay() {
 	rep_msg = false;
 	change_msg_flag = false;
-	dsp_offset1 = 0;
-	dsp_offset2 = 0;
+	dsp_offset1 = 0.0;
+	dsp_offset2 = 0.0;
 }
 
 
@@ -195,6 +195,7 @@ void FGATCDisplay::update(double dt) {
 }
 
 void FGATCDisplay::RegisterSingleMessage(string msg, double delay) {
+	//cout << msg << '\n';
 	atcMessage m;
 	m.msg = msg;
 	m.repeating = false;

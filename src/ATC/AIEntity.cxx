@@ -40,10 +40,30 @@
 
 #include "AIEntity.hxx"
 
+FGAIEntity::FGAIEntity() {
+}
+
 FGAIEntity::~FGAIEntity() {
+	//cout << "FGAIEntity dtor called..." << endl;
+	_model->deRef();	// Ought to check valid?
+	//cout << "Removing model from scene graph..." << endl;
+	globals->get_scenery()->get_scene_graph()->removeKid(_aip.getSceneGraph());
+	//cout << "Done!" << endl;
+}
+
+void FGAIEntity::SetModel(ssgBranch* model) {
+	_model = model;
+	_model->ref();
+	_aip.init(_model);
+	_aip.setVisible(false);
+	globals->get_scenery()->get_scene_graph()->addKid(_aip.getSceneGraph());
 }
 
 void FGAIEntity::Update(double dt) {
+}
+
+string FGAIEntity::GetCallsign() {
+	return("");
 }
 
 void FGAIEntity::RegisterTransmission(int code) {
@@ -52,7 +72,7 @@ void FGAIEntity::RegisterTransmission(int code) {
 // Run the internal calculations
 //void FGAIEntity::Update() {
 void FGAIEntity::Transform() {
-    aip.setPosition(pos.lon(), pos.lat(), pos.elev() * SG_METER_TO_FEET);
-    aip.setOrientation(roll, pitch, hdg);
-    aip.update( globals->get_scenery()->get_center() );    
+    _aip.setPosition(_pos.lon(), _pos.lat(), _pos.elev() * SG_METER_TO_FEET);
+    _aip.setOrientation(_roll, _pitch, _hdg);
+    _aip.update( globals->get_scenery()->get_center() );    
 }

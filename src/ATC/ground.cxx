@@ -53,6 +53,7 @@ a_path::a_path() {
 
 FGGround::FGGround() {
 	ATCmgr = globals->get_ATC_mgr();
+	_type = GROUND;
 	display = false;
 	networkLoadOK = false;
 	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
@@ -454,6 +455,11 @@ Gate* FGGround::GetGateNode() {
 }
 
 
+node* FGGround::GetHoldShortNode(string rwyID) {
+	return(NULL);	// TODO - either implement me or remove me!!!
+}
+
+
 // WARNING - This is hardwired to my prototype logical network format
 // and will almost certainly change when Bernie's stuff comes on-line.
 // Returns NULL if it can't find a valid node.
@@ -495,7 +501,7 @@ ground_network_path_type FGGround::GetPath(node* A, node* B) {
 ground_network_path_type FGGround::GetPath(node* A, string rwyID) {
 	node* b = GetThresholdNode(rwyID);
 	if(b == NULL) {
-		SG_LOG(SG_ATC, SG_ALERT, "ERROR - unable to find path to runway theshold in ground.cxx\n");
+		SG_LOG(SG_ATC, SG_ALERT, "ERROR - unable to find path to runway theshold in ground.cxx for airport " << ident << '\n');
 		ground_network_path_type emptyPath;
 		emptyPath.erase(emptyPath.begin(), emptyPath.end());
 		return(emptyPath);
