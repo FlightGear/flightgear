@@ -25,7 +25,7 @@
 #include "dme.hxx"
 #include "gps.hxx"
 #include "heading_indicator.hxx"
-#include "kr_87.cxx"
+#include "kr_87.hxx"
 #include "mag_compass.hxx"
 #include "slip_skid_ball.hxx"
 #include "turn_indicator.hxx"

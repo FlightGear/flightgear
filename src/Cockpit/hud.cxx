@@ -455,6 +455,7 @@ readLabel(const SGPropertyNode * node)
         }
     }
 
+#ifdef ENABLE_SP_FMDS
     if ( loadfn== "aux1" ) {
         load_fn = get_aux1;
     } else if ( loadfn == "aux2" ) {
@@ -491,7 +492,9 @@ readLabel(const SGPropertyNode * node)
         load_fn = get_aux17;
     } else if ( loadfn == "aux18" ) {
         load_fn = get_aux18;
-    } else if ( loadfn == "ax" ) {
+    } else
+#endif
+      if ( loadfn == "ax" ) {
         load_fn = get_Ax;
     } else if ( loadfn == "speed" ) {
         load_fn = get_speed;

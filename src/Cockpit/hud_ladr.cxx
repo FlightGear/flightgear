@@ -161,13 +161,14 @@ void HudLadder :: draw( void )
     alpha = get_aoa();
     pla = get_throttleval();
 
+#ifdef ENABLE_SP_FMDS
     int lgear,wown,wowm,ilcanclaw,ihook;
     ilcanclaw = get_iaux2();
     lgear = get_iaux3();
     wown = get_iaux4();
     wowm = get_iaux5();
     ihook = get_iaux6();
-    
+#endif
     float pitch_value = current_ch1() * SGD_RADIANS_TO_DEGREES;
 	
     if(hudladder_type=="Climb/Dive Ladder") {
@@ -310,6 +311,7 @@ void HudLadder :: draw( void )
 	glVertex2f(vel_x, vel_y+6);
 	glEnd();
 
+#ifdef ENABLE_SP_FMDS
 	// OBJECT MOVING RETICLE
 	// TYPE LINE
 	// ATTRIB - ON CONDITION
@@ -346,6 +348,7 @@ void HudLadder :: draw( void )
 	    glVertex2f(vel_x+4, vel_y-8);
 	    glEnd();
 	}
+#endif
     }//if velocity_vector
 
     //***************************************************************
@@ -353,6 +356,7 @@ void HudLadder :: draw( void )
     // TYPE - SQUARE_BRACKET
     // ATTRIB - ON CONDITION
     // alpha bracket
+#ifdef ENABLE_SP_FMDS
     if (alpha_bracket)	{
 	if (ihook == 1) {
 	    glBegin(GL_LINE_STRIP);
@@ -369,6 +373,7 @@ void HudLadder :: draw( void )
 	    glEnd();
 	}
     }
+#endif
     //printf("xvr=%f,yvr=%f,Vx=%f,Vy=%f,Vz=%f\n",xvvr,yvvr,Vx,Vy,Vz);
     //printf("Ax=%f,Ay=%f,Az=%f\n",Ax,Ay,Az);
     //****************************************************************	
@@ -417,6 +422,7 @@ void HudLadder :: draw( void )
     // OBJECT STATIC RETICLE
     // TYPE LINE
     // ATTRIB - ON CONDITION
+#ifdef ENABLE_SP_FMDS
     if (energy_worm)	{
 	if (ilcanclaw == 1) {
 	    glBegin(GL_LINE_STRIP);
@@ -443,6 +449,7 @@ void HudLadder :: draw( void )
 	    glEnd();
 	}
     }
+#endif
     //*************************************************************
     // OBJECT MOVING RETICLE
     // TYPE DIAMOND
@@ -645,12 +652,14 @@ void HudLadder :: draw( void )
 		// TYPE LINE
 		// ATTRIB - ON CONDITION
 		// draw appraoch glide slope marker
+#ifdef ENABLE_SP_FMDS
 		if (glide_slope_marker)	{
 		    if (ihook) {
 			Line(-half_span+15, (glide_slope-actslope)*factor, -half_span + hole, (glide_slope-actslope)*factor);
 			Line(half_span-15, (glide_slope-actslope)*factor, half_span - hole, (glide_slope-actslope)*factor);
 		    }
 		}// if glide_slope_marker
+#endif
 	    }
         TextList.draw();
 
@@ -670,6 +679,7 @@ void HudLadder :: draw( void )
     glPopMatrix();
     //*************************************************************
     //*************************************************************
+#ifdef ENABLE_SP_FMDS
     if(waypoint_marker) {
 	//waypoint marker computation
 	float fromwp_lat,towp_lat,fromwp_lon,towp_lon,dist,delx,dely,hyp,theta,brg;
@@ -758,6 +768,7 @@ void HudLadder :: draw( void )
 
 	  } //brg<12
     } // if waypoint_marker
+#endif
 }//draw
 
 /******************************************************************/
