@@ -19,14 +19,18 @@
 // Modified by Cdr. VS Renganthan <vsranga@ada.ernet.in>, 12 Oct 2K
 
 #include <simgear/io/iochannel.hxx>
+#include <simgear/constants.h>
 
 #include <Controls/controls.hxx>
-#include <GUI/gui.h>
 #include <Main/globals.hxx>
+
+#include <Main/fg_props.hxx> //to get ID of window (left/right or center)
+#include <Scenery/scenery.hxx> //to pass ground elevation to FDM
 
 #include "ADA.hxx"
 
-#define numberofbytes 472
+#define numberofbytes 472 // from FDM to visuals
+#define nbytes 8	//from visuals to FDM
 
 struct {
     double number_of_bytes;
@@ -101,6 +105,14 @@ struct {
     float aux18;
 } sixdof_to_visuals;
 
+double view_offset; //if this zero, means center window
+
+struct {
+	double ground_elevation;
+} visuals_to_sixdof;
+
+#define ground_elevation visuals_to_sixdof.ground_elevation
+
 #define number_of_bytes sixdof_to_visuals.number_of_bytes
 #define U_dot_local sixdof_to_visuals.U_dot_local
 #define V_dot_local sixdof_to_visuals.V_dot_local
@@ -156,25 +168,27 @@ FGADA::~FGADA() {
 // for each subsequent iteration through the EOM
 void FGADA::init() {
 
-				// explicitly call the superclass's
-				// init() method first.
+	// explicitly call the superclass's
+	// init() method first.
     FGInterface::init();
 
     // cout << "FGADA::init()" << endl;
 
-    char Buffer[numberofbytes];
+    char OutBuffer[nbytes];
+    copy_to_FGADA();
 
     printf("\nInitialising UDP sockets\n");
     // initialise a "udp" socket
-    fdmsock = new SGSocket( "reddy_pc", "5001", "udp" );
+    fdmsock = new SGSocket( "fdm_pc", "5001", "udp" );
 
     // open as a client
     bool result = fdmsock->open(SG_IO_OUT);
     if (result == false) {
 	printf ("Socket Open Error\n");
     } else {
-	// Dummy Write FGExternal structure from socket to establish connection
-	int result = fdmsock->write(Buffer, numberofbytes);
+    copy_to_FGADA();
+	// Write FGExternal structure from socket to establish connection
+	int result = fdmsock->write(OutBuffer, nbytes);
 	printf("Connection established.\n");
     }
 }
@@ -187,6 +201,7 @@ bool FGADA::update( int multiloop ) {
     // cout << "FGADA::update()" << endl;
 
     char Buffer[numberofbytes];
+    char OutBuffer[nbytes];
 
     // Read FGExternal structure from socket
     while (1) {
@@ -194,21 +209,19 @@ bool FGADA::update( int multiloop ) {
       if (result == numberofbytes) {
          // Copy buffer into FGExternal structure
          memcpy (&sixdof_to_visuals, &Buffer, sizeof (Buffer));
+	     // Convert from the FGExternal struct to the FGInterface struct (input)
+		 copy_from_FGADA();
       } else {
          break;
       }
     }
 
-    //cout << endl << sixdof_to_visuals.aux18 << endl;
-    // Close Visuals through message/flag from Flight model
-    if (sixdof_to_visuals.aux18 == 1) {
-	fdmsock->close();
-	ConfirmExitDialog();           
-    }
-    //cout << endl << sixdof_to_visuals.aux18 << endl;
-
-    // Convert from the FGExternal struct to the FGInterface struct (input)
-    copy_from_FGADA();
+    copy_to_FGADA();
+    fgGetDouble("/sim/view/offset",view_offset);
+	if ( view_offset == 0.0) {
+         memcpy (&OutBuffer, &visuals_to_sixdof, sizeof (OutBuffer));
+		 int result = fdmsock->write(OutBuffer, nbytes);
+	}
 
     return true;
 }
@@ -216,6 +229,7 @@ bool FGADA::update( int multiloop ) {
 // Convert from the FGInterface struct to the FGADA struct (output)
 bool FGADA::copy_to_FGADA () {
 
+	ground_elevation = scenery.cur_elev;
     return true;
 }
 
@@ -223,43 +237,34 @@ bool FGADA::copy_to_FGADA () {
 // Convert from the FGADA struct to the FGInterface struct (input)
 bool FGADA::copy_from_FGADA() {
 
-    // Velocities
-    _set_Velocities_Local( V_north, V_east, V_down );
-    _set_V_calibrated_kts( V_calibrated_kts );
-
-    // Angular rates 
-    _set_Omega_Body( P_body, Q_body, R_body );
-    _set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
-
-    //    SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << Longitude 
-    //	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
-    //	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
-    //	    << " radius_to_vehicle = " << Radius_to_vehicle );
-	    
-    // Positions
-    _set_Geocentric_Position( Lat_geocentric, Lon_geocentric,
-			      Radius_to_vehicle );
+    //Positions and attitudes for The Rendering engine
     _set_Geodetic_Position( Latitude, Longitude, Altitude );
     _set_Euler_Angles( Phi, Theta, Psi );
-
-    // Miscellaneous quantities
-    _set_Alpha( Alpha );
-    _set_Beta( Beta );
-    _set_Gamma_vert_rad( Gamma_vert_rad );
+    _set_Geocentric_Position( Lat_geocentric, Lon_geocentric,
+			      Radius_to_vehicle );
     _set_Sea_level_radius( Sea_level_radius );
+
+	_set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
     _set_Earth_position_angle( Earth_position_angle );
-    _set_Runway_altitude( Runway_altitude );
     _set_sin_lat_geocentric(Lat_geocentric);
     _set_cos_lat_geocentric(Lat_geocentric);
     _set_sin_cos_longitude(Longitude);
     _set_sin_cos_latitude(Latitude);
+    
+	// Velocities and accelerations for the pitch ladder and velocity vector
     _set_Accels_Local( U_dot_local, V_dot_local, W_dot_local );
-    _set_Velocities_Ground( U_local, V_local, W_local );
-    _set_Accels_CG_Body_N( anxg,anyg,anzg);
-    _set_Mach_number( Machno);
+    _set_Velocities_Ground( U_local, V_local, W_local );//same as V_NED in mps
+    _set_Velocities_Local( V_north, V_east, V_down ); //same as UVW_local in fps
 
-    //    printf("sr=%f\n",Sea_level_radius);
-    //    printf("psi = %f %f\n",Psi,Psi*SGD_RADIANS_TO_DEGREES);    
+    //Positions and attitude for ship
+	_set_daux(1,sixdof_to_visuals.aux1);//ship lat
+    _set_daux(2,sixdof_to_visuals.aux2);//ship lon
+    _set_daux(3,sixdof_to_visuals.aux3);//ship alt+heave
+    _set_daux(4,sixdof_to_visuals.aux4);//distance of a/c from ski-jump exit
+    _set_faux(1,sixdof_to_visuals.aux9);//ship pitch
+    _set_faux(2,sixdof_to_visuals.aux10);//ship roll
+    _set_faux(3,sixdof_to_visuals.aux11);//ship yaw
+    _set_iaux(1,sixdof_to_visuals.iaux1);//flag for drawing ship
 
     // controls
     globals->get_controls()->set_throttle(0,throttle/131.0);
@@ -268,38 +273,53 @@ bool FGADA::copy_from_FGADA() {
     globals->get_controls()->set_rudder(rpedal);
 
     // auxilliary parameters for HUD
-    set_iaux1(sixdof_to_visuals.iaux1);
-    set_iaux2(sixdof_to_visuals.iaux2);
-    set_iaux3(sixdof_to_visuals.iaux3);
-    set_iaux4(sixdof_to_visuals.iaux4);
-    set_iaux5(sixdof_to_visuals.iaux5);
-    set_iaux6(sixdof_to_visuals.iaux6);
-    set_iaux7(sixdof_to_visuals.iaux7);
-    set_iaux8(sixdof_to_visuals.iaux8);
-    set_iaux9(sixdof_to_visuals.iaux9);
-    set_iaux10(sixdof_to_visuals.iaux10);
-    set_iaux11(sixdof_to_visuals.iaux11);
-    set_iaux12(sixdof_to_visuals.iaux12);
-    set_aux1(sixdof_to_visuals.aux1);
-    set_aux2(sixdof_to_visuals.aux2);
-    set_aux3(sixdof_to_visuals.aux3);
-    set_aux4(sixdof_to_visuals.aux4);
-    set_aux5(sixdof_to_visuals.aux5);
-    set_aux6(sixdof_to_visuals.aux6);
-    set_aux7(sixdof_to_visuals.aux7);
-    set_aux8(sixdof_to_visuals.aux8);
-    set_aux9(sixdof_to_visuals.aux9);
-    set_aux10(sixdof_to_visuals.aux10);
-    set_aux11(sixdof_to_visuals.aux11);
-    set_aux12(sixdof_to_visuals.aux12);
-    set_aux13(sixdof_to_visuals.aux13);
-    set_aux14(sixdof_to_visuals.aux14);
-    set_aux15(sixdof_to_visuals.aux15);
-    set_aux16(sixdof_to_visuals.aux16);
-    set_aux17(sixdof_to_visuals.aux17);
-    set_aux18(sixdof_to_visuals.aux18);
-    
-    cout << endl << sixdof_to_visuals.aux18 << endl;
+    _set_V_calibrated_kts( V_calibrated_kts );
+    _set_Alpha( Alpha );
+    _set_Beta( Beta );
+    _set_Accels_CG_Body_N( anxg,anyg,anzg);
+    _set_Mach_number( Machno);
+    _set_Climb_Rate( W_local*SG_METER_TO_FEET ); //pressure alt in feet for lca(navy)
 
+    _set_iaux(2,sixdof_to_visuals.iaux2);//control law mode switch posn
+    _set_iaux(3,sixdof_to_visuals.iaux3);//ldg gear posn
+    _set_iaux(4,sixdof_to_visuals.iaux4);// wow nose status
+    _set_iaux(5,sixdof_to_visuals.iaux5);// wow main status
+    _set_iaux(6,sixdof_to_visuals.iaux6);// arrester hook posn
+    _set_iaux(7,sixdof_to_visuals.iaux7);
+    _set_iaux(8,sixdof_to_visuals.iaux8);
+    _set_iaux(9,sixdof_to_visuals.iaux9);
+    _set_iaux(10,sixdof_to_visuals.iaux10);
+    _set_iaux(11,sixdof_to_visuals.iaux11);
+    _set_iaux(12,sixdof_to_visuals.iaux12);
+
+    _set_daux(5,sixdof_to_visuals.aux5);
+    _set_daux(6,sixdof_to_visuals.aux6);
+    _set_daux(7,sixdof_to_visuals.aux7);
+    _set_daux(8,sixdof_to_visuals.aux8);
+
+    _set_faux(4,sixdof_to_visuals.aux12);
+    _set_faux(5,sixdof_to_visuals.aux13);
+    _set_faux(6,sixdof_to_visuals.aux14);
+    _set_faux(7,sixdof_to_visuals.aux15);
+    _set_faux(8,sixdof_to_visuals.aux16);
+    _set_faux(9,sixdof_to_visuals.aux17);
+    _set_faux(10,sixdof_to_visuals.aux18);
+
+    // Angular rates 
+    _set_Omega_Body( P_body, Q_body, R_body );
+
+    // Miscellaneous quantities
+    _set_Gamma_vert_rad( Gamma_vert_rad );
+    _set_Runway_altitude( Runway_altitude );
+
+    //    SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << Longitude 
+    //	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
+    //	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
+    //	    << " radius_to_vehicle = " << Radius_to_vehicle );
+	    
+
+    //    printf("sr=%f\n",Sea_level_radius);
+    //    printf("psi = %f %f\n",Psi,Psi*SGD_RADIANS_TO_DEGREES);    
+    
     return true;
 }

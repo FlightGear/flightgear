@@ -784,18 +784,21 @@ public:
     inline double get_vBody () const { return v_wind_body_v[1]; }
     inline double get_wBody () const { return v_wind_body_v[2]; }
 
-    // inline double * get_V_local_rel_ground_v() {
-    //     return v_local_rel_ground_v;
-    // }
-    // inline double get_V_north_rel_ground() const {
-    //     return v_local_rel_ground_v[0];
-    // }
-    // inline double get_V_east_rel_ground() const {
-    //     return v_local_rel_ground_v[1];
-    // }
-    // inline double get_V_down_rel_ground() const {
-    //    return v_local_rel_ground_v[2];
-    // }
+    // Please dont comment these out. fdm=ada uses these (see
+    // cockpit.cxx) --->
+    inline double * get_V_local_rel_ground_v() {
+        return v_local_rel_ground_v;
+    }
+    inline double get_V_north_rel_ground() const {
+        return v_local_rel_ground_v[0];
+    }
+    inline double get_V_east_rel_ground() const {
+        return v_local_rel_ground_v[1];
+    }
+    inline double get_V_down_rel_ground() const {
+        return v_local_rel_ground_v[2];
+    }
+    // <--- fdm=ada uses these (see cockpit.cxx)
 
     // inline double * get_V_local_airmass_v() { return v_local_airmass_v; }
     inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }
