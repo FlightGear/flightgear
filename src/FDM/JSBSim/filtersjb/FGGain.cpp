@@ -92,10 +92,8 @@ FGGain::FGGain(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       Table = new FGTable(Rows);
     } else if (token == "SCHEDULED_BY") {
       token = AC_cfg->GetValue("SCHEDULED_BY");
-      if (token.find("FG_") != token.npos) {
-        *AC_cfg >> strScheduledBy;
-        ScheduledBy = PropertyManager->GetNode( strScheduledBy ); 
-      } 
+      *AC_cfg >> strScheduledBy;
+      ScheduledBy = PropertyManager->GetNode( strScheduledBy ); 
     } else if (token == "OUTPUT") {
       IsOutput = true;
       *AC_cfg >> sOutputIdx;      
