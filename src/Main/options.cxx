@@ -989,14 +989,7 @@ parse_option (const string& arg)
 	  exit(2);
 	}
     } else if ( arg.find( "--aircraft=" ) == 0 ) {
-        // read in the top level aircraft definition file
-        SGPath apath( globals->get_fg_root() );
-        apath.append( "Aircraft" );
-        apath.append( arg.substr(11) );
-        apath.concat( "-set.xml" );
-	SG_LOG(SG_INPUT, SG_INFO, "Reading aircraft: " << arg.substr(11)
-	    << " from " << apath.str());
-	readProperties( apath.str(), globals->get_props() );
+        fgSetString("/sim/aircraft", arg.substr(11).c_str());
     } else {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;

@@ -341,48 +341,11 @@ bool fgDetectLanguage() {
     return true;
 }
 
-
-// Read in configuration (file and command line)
-bool fgInitConfig ( int argc, char **argv ) {
-
-                                // First, set some sane default values
-    fgSetDefaults();
-
-    // Read global preferences from $FG_ROOT/preferences.xml
-    SGPath props_path(globals->get_fg_root());
-    props_path.append("preferences.xml");
-    SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
-    readProperties(props_path.str(), globals->get_props());
-    SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
-
-    // Detect the required language as early as possible
-    if (fgDetectLanguage() != true)
-       return false;
-
-    // Read the default aircraft config file.
-    string aircraft = fgGetString("/sim/aircraft", "");
-    if (aircraft.size() > 0) {
-      SGPath aircraft_path(globals->get_fg_root());
-      aircraft_path.append("Aircraft");
-      aircraft_path.append(aircraft);
-      aircraft_path.concat("-set.xml");
-      SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
-             << " from " << aircraft_path.str());
-      try {
-        readProperties(aircraft_path.str(), globals->get_props());
-      } catch (const sg_exception &e) {
-        string message = "Error reading default aircraft: ";
-        message += e.getFormattedMessage();
-        SG_LOG(SG_INPUT, SG_ALERT, message);
-        exit(2);
-      }
-    } else {
-      SG_LOG(SG_INPUT, SG_ALERT, "No default aircraft specified");
-    }
-
-    // Attempt to locate and parse the various config files in order
-    // from least precidence to greatest precidence
-
+// Attempt to locate and parse the various non-XML config files in order
+// from least precidence to greatest precidence
+static void
+do_options (int argc, char ** argv)
+{
     // Check for $fg_root/system.fgfsrc
     SGPath config( globals->get_fg_root() );
     config.append( "system.fgfsrc" );
@@ -416,6 +379,49 @@ bool fgInitConfig ( int argc, char **argv ) {
     // Parse remaining command line options
     // These will override anything specified in a config file
     fgParseArgs(argc, argv);
+}
+
+
+// Read in configuration (file and command line)
+bool fgInitConfig ( int argc, char **argv ) {
+
+                                // First, set some sane default values
+    fgSetDefaults();
+
+    // Read global preferences from $FG_ROOT/preferences.xml
+    SGPath props_path(globals->get_fg_root());
+    props_path.append("preferences.xml");
+    SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
+    readProperties(props_path.str(), globals->get_props());
+    SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
+
+    // Detect the required language as early as possible
+    if (fgDetectLanguage() != true)
+       return false;
+
+    // Read the default aircraft config file.
+    do_options(argc, argv);     // preparse options for default aircraft
+    string aircraft = fgGetString("/sim/aircraft", "");
+    if (aircraft.size() > 0) {
+      SGPath aircraft_path(globals->get_fg_root());
+      aircraft_path.append("Aircraft");
+      aircraft_path.append(aircraft);
+      aircraft_path.concat("-set.xml");
+      SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
+             << " from " << aircraft_path.str());
+      try {
+        readProperties(aircraft_path.str(), globals->get_props());
+      } catch (const sg_exception &e) {
+        string message = "Error reading default aircraft: ";
+        message += e.getFormattedMessage();
+        SG_LOG(SG_INPUT, SG_ALERT, message);
+        exit(2);
+      }
+    } else {
+      SG_LOG(SG_INPUT, SG_ALERT, "No default aircraft specified");
+    }
+
+    do_options(argc, argv);
 
     return true;
 }
