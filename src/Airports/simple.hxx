@@ -55,6 +55,8 @@ struct FGAirport {
     string _code;               // depricated and can be removed
     string _name;
     bool _has_metar;
+
+    FGAirport() : _longitude(0), _latitude(0), _elevation(0) {}
 };
 
 typedef map < string, FGAirport > airport_map;
