@@ -41,12 +41,25 @@ class FGOpenGC : public FGProtocol, public FGInterface {
     ogcFGData buf;
     int length;
     
+    // Environment
     SGPropertyNode *press_node;
     SGPropertyNode *temp_node;
     SGPropertyNode *wind_dir_node;
     SGPropertyNode *wind_speed_node;
-    SGPropertyNode *epr0_node;
+    SGPropertyNode *mag_var_node;
     
+    // Position
+    SGPropertyNode *p_latitude;
+    SGPropertyNode *p_longitude;
+    SGPropertyNode *p_alt_node;
+    SGPropertyNode *p_altitude;
+    SGPropertyNode *p_altitude_agl;
+    
+    SGPropertyNode *egt0_node;
+    SGPropertyNode *egt1_node;
+    SGPropertyNode *egt2_node;
+    SGPropertyNode *egt3_node;
+        
     // Control surfaces
     SGPropertyNode *p_left_aileron;
     SGPropertyNode *p_right_aileron;

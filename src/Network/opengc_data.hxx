@@ -46,11 +46,13 @@ public:
     int	version_id;
     int	msg_type;
     int	msg_content;
+    int  reserved;
 
     // position
 
     double	latitude;
     double	longitude;
+    double	elevation;
     double	magvar;
 
     // flight parameters
@@ -100,16 +102,23 @@ public:
     // engine data
 
     double	rpm[4];  // this is for pistons, jets see below
-    double 	n1_turbine[4];
+    double	n1_turbine[4];
     double	epr[4];
     double	egt[4];
-    double 	n2_turbine[4];
+    double  n2_turbine[4];
     double	fuel_flow[4];
     double  man_pressure[4];
     double	oil_pressure[4];
+    double	oil_temp[4];
+    double	oil_quantity[4];
+    double	hyd_pressure[4];
     double	throttle[4];
     double	mixture[4];
     double	prop_advance[4];
+    
+    // fuel system
+    double main_tank;
+    double tank[4];
    
     // Pressures and temperatures
 
