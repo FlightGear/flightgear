@@ -25,7 +25,7 @@
 
 TARGET = fg-$(FG_VERSION)
 
-CFILES = fg_debug.c fg_getopt.c fg_init.c views.c GLUTmain.c GLUTkey.c
+CFILES = fg_debug.c fg_getopt.c fg_init.c views.c GLUTkey.c GLUTmain.c
 
 FGLIBS = -lAircraft -lAstro -lCockpit -lControls -lFlight \
 	-lJoystick -lLaRCsim -lSlew -lScenery -lTime -lWeather -lMath \
@@ -51,6 +51,9 @@ include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.49  1998/03/09 22:46:18  curt
+# Minor tweaks.
+#
 # Revision 1.48  1998/02/12 21:59:47  curt
 # Incorporated code changes contributed by Charlie Hotchkiss
 # <chotchkiss@namg.us.anritsu.com>

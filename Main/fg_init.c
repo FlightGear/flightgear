@@ -133,8 +133,8 @@ int fgInitSubsystems( void ) {
     FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
     /* Initial Position at (P13) Globe, AZ */
-    FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
-    FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
+    FG_Longitude = ( -110.6642444 ) * DEG_TO_RAD;
+    FG_Latitude  = (  33.3528917 ) * DEG_TO_RAD;
     FG_Runway_altitude = (3234.5 + 300);
     FG_Altitude = FG_Runway_altitude + 3.758099;
 
@@ -150,29 +150,29 @@ int fgInitSubsystems( void ) {
     // FG_Runway_altitude = (2641 + 0);
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    /* Initial Position at near Anchoraze, AK */
-    /* FG_Longitude = ( -150.00 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  61.17 ) * DEG_TO_RAD; */
-    /* FG_Runway_altitude = (2641 + 07777); */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    // Initial Position at near Anchoraze, AK
+    // FG_Longitude = ( -152.00 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  61.17 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = (0);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    /* Initial Position at (SEZ) SEDONA airport */
-    /* FG_Longitude = (-111.7884614 + 0.02) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  34.8486289 - 0.04) * DEG_TO_RAD; */
-    /* FG_Runway_altitude = (4827 + 800); */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    // Initial Position at (SEZ) SEDONA airport
+    // FG_Longitude = (-111.7884614 + 0.02) * DEG_TO_RAD;
+    // FG_Latitude  = (  34.8486289 - 0.04) * DEG_TO_RAD;
+    // FG_Runway_altitude = (4827 + 800);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
         
-    /* Initial Position at (HSP) Hot Springs, VA */
-    /* FG_Longitude = (-79.8338964 + 0.02) * DEG_TO_RAD; */
-    /* FG_Latitude  = ( 37.9514564 + 0.05) * DEG_TO_RAD; */
-    /* FG_Runway_altitude = (792 + 1500); */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    // Initial Position at (HSP) Hot Springs, VA
+    // FG_Longitude = (-79.8338964 + 0.02) * DEG_TO_RAD;
+    // FG_Latitude  = ( 37.9514564 + 0.05) * DEG_TO_RAD;
+    // FG_Runway_altitude = (792 + 1500);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
     
-    /* Initial Position at (ANE) Anoka County airport */
-    /* FG_Longitude = -93.2113889 * DEG_TO_RAD; */
-    /* FG_Latitude  = 45.145 * DEG_TO_RAD; */
-    /* FG_Runway_altitude = 912; */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    // Initial Position at (ANE) Anoka County airport
+    // FG_Longitude = -93.2113889 * DEG_TO_RAD;
+    // FG_Latitude  = 45.145 * DEG_TO_RAD;
+    // FG_Runway_altitude = 912;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     /* Initial Position north of the city of Globe */
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
@@ -181,7 +181,7 @@ int fgInitSubsystems( void ) {
     /* FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Altitude = 0.0 + 3.758099; */
 
-    /* Initial Posisition near where I used to live in Globe, AZ */
+    /* Initial Position near where I used to live in Globe, AZ */
     /* FG_Longitude = ( -398757.6 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD;  */
     /* FG_Runway_altitude = 5000.0; */
@@ -226,11 +226,17 @@ int fgInitSubsystems( void ) {
     // FG_Runway_altitude = 920.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    // Test Position
-    // FG_Longitude = ( -111.18 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   33.70 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 5000.0;
+    // Eclipse Watching w73.5 n10 (approx) 18:00 UT
+    // FG_Longitude = ( -73.5 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  10.0 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 0.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
+
+    // Test Position
+    FG_Longitude = ( -122.1469647 ) * DEG_TO_RAD;
+    FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
+    FG_Runway_altitude = 2000.0;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // A random test position
     // FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD;
@@ -393,11 +399,14 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.49  1998/02/23 19:07:59  curt
-/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
-/* calculation code between sun display, and other FG sections that use this
-/* for things like lighting.
+/* Revision 1.50  1998/03/09 22:46:19  curt
+/* Minor tweaks.
 /*
+ * Revision 1.49  1998/02/23 19:07:59  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.48  1998/02/21 14:53:15  curt
  * Added Charlie's HUD changes.
  *
