@@ -594,7 +594,7 @@ FGAutopilot::update (double dt)
 		    set_HeadingMode( FG_HEADING_WAYPOINT );
 		} else {
 		    // end of the line
-		    heading_mode = FG_TRUE_HEADING_LOCK;
+		    heading_mode = DEFAULT_AP_HEADING_LOCK;
 		    // use current heading
 		    TargetHeading = heading_node->getDoubleValue();
 		}
@@ -695,6 +695,8 @@ FGAutopilot::update (double dt)
 	    climb_rate =
 		( TargetAltitude -
 		  globals->get_steam()->get_ALT_ft() * SG_FEET_TO_METER ) * 8.0;
+        } else if ( altitude_mode == FG_TRUE_ALTITUDE_LOCK ) {
+            climb_rate = ( TargetAltitude - alt ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	    double x = current_radiostack->get_navcom1()->get_nav_gs_dist();
 	    double y = (altitude_node->getDoubleValue()
@@ -915,7 +917,7 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 
 	    if ( waypoint.get_target_alt() > 0.0 ) {
 		TargetAltitude = waypoint.get_target_alt();
-		altitude_mode = FG_ALTITUDE_LOCK;
+		altitude_mode = DEFAULT_AP_ALTITUDE_LOCK;
 		set_AltitudeEnabled( true );
 		MakeTargetAltitudeStr( TargetAltitude * SG_METER_TO_FEET );
 	    }
@@ -941,7 +943,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     alt_error_accum = 0.0;
 
 
-    if ( altitude_mode == FG_ALTITUDE_LOCK ) {
+    if ( altitude_mode == DEFAULT_AP_ALTITUDE_LOCK ) {
 	if ( TargetAltitude < altitude_agl_node->getDoubleValue()
              * SG_FEET_TO_METER ) {
 	}
@@ -971,6 +973,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
 
 void FGAutopilot::AltitudeSet( double new_altitude ) {
     double target_alt = new_altitude;
+    altitude_mode = DEFAULT_AP_ALTITUDE_LOCK;
 
     if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
 	target_alt = new_altitude * SG_FEET_TO_METER;
@@ -981,7 +984,6 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
     }
 
     TargetAltitude = target_alt;
-    altitude_mode = FG_ALTITUDE_LOCK;
 
     if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
 	target_alt *= SG_METER_TO_FEET;
@@ -1030,7 +1032,7 @@ void FGAutopilot::AltitudeAdjust( double inc )
     if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
 	target_agl *= SG_METER_TO_FEET;
 
-    if ( altitude_mode == FG_ALTITUDE_LOCK ) {
+    if ( altitude_mode == DEFAULT_AP_ALTITUDE_LOCK ) {
 	MakeTargetAltitudeStr( target_alt );
     } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	MakeTargetAltitudeStr( target_agl );
@@ -1044,7 +1046,7 @@ void FGAutopilot::HeadingAdjust( double inc ) {
     if ( heading_mode != FG_DG_HEADING_LOCK
 	 && heading_mode != FG_TRUE_HEADING_LOCK )
     {
-	heading_mode = FG_DG_HEADING_LOCK;
+	heading_mode = DEFAULT_AP_HEADING_LOCK;
     }
 
     if ( heading_mode == FG_DG_HEADING_LOCK ) {
@@ -1060,6 +1062,7 @@ void FGAutopilot::HeadingAdjust( double inc ) {
 
 
 void FGAutopilot::HeadingSet( double new_heading ) {
+    heading_mode = DEFAULT_AP_HEADING_LOCK;
     if( heading_mode == FG_TRUE_HEADING_LOCK ) {
         new_heading = NormalizeDegrees( new_heading );
         TargetHeading = new_heading;
@@ -1114,7 +1117,7 @@ FGAutopilot::getAPAltitudeLock () const
 {
     return (get_AltitudeEnabled() &&
 	    get_AltitudeMode()
-	    == FGAutopilot::FG_ALTITUDE_LOCK);
+	    == DEFAULT_AP_ALTITUDE_LOCK);
 }
 
 
@@ -1125,8 +1128,8 @@ void
 FGAutopilot::setAPAltitudeLock (bool lock)
 {
   if (lock)
-    set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
-  if (get_AltitudeMode() == FGAutopilot::FG_ALTITUDE_LOCK)
+    set_AltitudeMode(DEFAULT_AP_ALTITUDE_LOCK);
+  if (get_AltitudeMode() == DEFAULT_AP_ALTITUDE_LOCK)
     set_AltitudeEnabled(lock);
 }
 

@@ -40,7 +40,7 @@ class FGAutopilot : public FGSubsystem
 public:
 
     enum fgAutoHeadingMode {
-	FG_DG_HEADING_LOCK = 0,	  // follow bug on directional gryo
+	FG_DG_HEADING_LOCK = 0,	  // follow bug on directional gryo (vacuum)
 	FG_TC_HEADING_LOCK = 1,   // keep turn coordinator zero'd
 	FG_TRUE_HEADING_LOCK = 2, // lock to true heading (i.e. a perfect world)
 	FG_HEADING_NAV1 = 3,      // follow nav1 radial
@@ -49,11 +49,13 @@ public:
     };
 
     enum fgAutoAltitudeMode {
-	FG_ALTITUDE_LOCK = 0,     // lock to a specific altitude
+	FG_ALTITUDE_LOCK = 0,     // lock to a specific altitude (indicated)
 	FG_ALTITUDE_TERRAIN = 1,  // try to maintain a specific AGL
 	FG_ALTITUDE_GS1 = 2,      // follow glide slope 1
 	FG_ALTITUDE_GS2 = 3,      // follow glide slope 2
-        FG_ALTITUDE_ARM = 4       // ascend to selected altitude
+        FG_ALTITUDE_ARM = 4,      // ascend to selected altitude
+        FG_TRUE_ALTITUDE_LOCK = 5 // lock to a specific true altitude
+                                  // (i.e. a perfect world)
     };
 
 
@@ -271,9 +273,9 @@ private:
 
 
 #define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_DG_HEADING_LOCK
-// #define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_TRUE_HEADING_LOCK
 #define DEFAULT_AP_ALTITUDE_LOCK FGAutopilot::FG_ALTITUDE_LOCK
-
+//#define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_TRUE_HEADING_LOCK
+//#define DEFAULT_AP_ALTITUDE_LOCK FGAutopilot::FG_TRUE_ALTITUDE_LOCK
 
 /**
  * static functions for autopilot properties
