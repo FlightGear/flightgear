@@ -76,7 +76,7 @@ else
   AC_DEFINE([FG_MPLAYER_AS], 1, [Define to build with default multiplayer support])
 fi
 
-AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno")
+AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno" -a "x$with_multiplayer" = "xno")
 AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
 
 
