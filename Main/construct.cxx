@@ -27,6 +27,7 @@
 
 #include <Bucket/newbucket.hxx>
 
+#include <Debug/logstream.hxx>
 #include <Array/array.hxx>
 #include <Clipper/clipper.hxx>
 #include <GenOutput/genobj.hxx>
@@ -49,7 +50,7 @@ int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
     }
 
     array.parse();
-    array.fit( 100 );
+    array.fit( 200 );
 
     return 1;
 }
@@ -137,11 +138,12 @@ void do_triangulate( const FGArray& array, const FGClipper& clipper,
     // first we need to consolidate the points of the DEM fit list and
     // all the polygons into a more "Triangle" friendly format
 
+    fitnode_list corner_list = array.get_corner_node_list();
     fitnode_list fit_list = array.get_fit_node_list();
     FGgpcPolyList gpc_polys = clipper.get_polys_clipped();
 
     cout << "ready to build node list and polygons" << endl;
-    t.build( fit_list, gpc_polys );
+    t.build( corner_list, fit_list, gpc_polys );
     cout << "done building node list and polygons" << endl;
 
     cout << "ready to do triangulation" << endl;
@@ -151,30 +153,17 @@ void do_triangulate( const FGArray& array, const FGClipper& clipper,
 
 
 // generate the flight gear scenery file
-void do_output( const FGBucket &b, const FGTriangle& t, FGGenOutput& output ) {
-    output.build( t );
-    output.write( b, "output" );
+void do_output( const string& base, const FGBucket &b, const FGTriangle& t, 
+		const FGArray& array, FGGenOutput& output ) {
+    output.build( array, t );
+    output.write( base, b );
 }
 
 
-main(int argc, char **argv) {
-    fitnode_list fit_list;
-    double lon, lat;
-
-    if ( argc != 2 ) {
-	cout << "Usage: " << argv[0] << " work_base" << endl;
-	exit(-1);
-    }
-
-    string work_base = argv[1];
-   
-    // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
-    // lon = -110.664244; lat = 33.352890;     // P13
-    // lon = -93.211389; lat = 45.145000;      // KANE
-    // lon = -92.486188; lat = 44.590190;      // KRGK
-    lon = -89.744682312011719; lat= 29.314495086669922;
-
-    FGBucket b( lon, lat );
+void construct_tile( const string& work_base, const string& output_base,
+		     FGBucket& b )
+{
+    cout << "Construct tile, bucket = " << b << endl;
 
     // load and fit grid of elevation data
     FGArray array;
@@ -190,11 +179,70 @@ main(int argc, char **argv) {
 
     // generate the output
     FGGenOutput output;
-    do_output( b, t, output );
+    do_output( output_base, b, t, array, output );
+}
+
+
+main(int argc, char **argv) {
+    fitnode_list fit_list;
+    double lon, lat;
+
+    fglog().setLogLevels( FG_ALL, FG_DEBUG );
+
+    if ( argc != 3 ) {
+	cout << "Usage: " << argv[0] << " <work_base> <output_base>" << endl;
+	exit(-1);
+    }
+
+    string work_base = argv[1];
+    string output_base = argv[2];
+   
+    // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
+    // lon = -110.664244; lat = 33.352890;     // P13
+    // lon = -93.211389; lat = 45.145000;      // KANE
+    // lon = -92.486188; lat = 44.590190;      // KRGK
+    // lon = -89.744682312011719; lat= 29.314495086669922;
+    // lon = -122.488090; lat = 42.743183;     // 64S
+    // lon = -114.861097; lat = 35.947480;     // 61B
+    lon = -112.012175; lat = 41.195944;      // KOGD
+
+    double min_x = lon - 1;
+    double min_y = lat - 1;
+    FGBucket b_min( min_x, min_y );
+    FGBucket b_max( lon + 1, lat + 1 );
+
+    // FGBucket b(550363L);
+    // construct_tile( work_base, output_base, b );
+    // exit(0);
+
+    if ( b_min == b_max ) {
+	construct_tile( work_base, output_base, b_min );
+    } else {
+	FGBucket b_cur;
+	int dx, dy, i, j;
+	    
+	fgBucketDiff(b_min, b_max, &dx, &dy);
+	cout << "  construction area spans tile boundaries" << endl;
+	cout << "  dx = " << dx << "  dy = " << dy << endl;
+
+	for ( j = 0; j <= dy; j++ ) {
+	    for ( i = 0; i <= dx; i++ ) {
+		b_cur = fgBucketOffset(min_x, min_y, i, j);
+		construct_tile( work_base, output_base, b_cur );
+	    }
+	}
+	// string answer; cin >> answer;
+    }
 }
 
 
 // $Log$
+// Revision 1.10  1999/03/27 05:25:02  curt
+// Fit with a value of 200 rather than 100.
+// Handle corner nodes separately from the rest of the fitted nodes.
+// Write scenery file to correct location.
+// First hack at generating scenery for multiple tiles in one invocation.
+//
 // Revision 1.9  1999/03/25 19:04:31  curt
 // Preparations for outputing scenery file to correct location.
 // Minor tweaks related to FGBucket usage.
