@@ -901,13 +901,13 @@ static void fgIdleFunction ( void ) {
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
     if ( ! current_options.get_panel_status() ) {
-	// current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
-	// xglViewport(0, 0 , (GLint)(width), (GLint)(height) );
+	current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
+	xglViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
-	// current_view.set_win_ratio( (GLfloat) width / 
-	//                             ((GLfloat) (height)*0.4232) );
-	// xglViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
-	//                             (GLint)((height)*0.4232) );
+	current_view.set_win_ratio( (GLfloat) width / 
+	                            ((GLfloat) (height)*0.4232) );
+	xglViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
+		    (GLint)((height)*0.4232) );
     }
 
     current_view.set_winWidth( width );

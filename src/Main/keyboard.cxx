@@ -420,9 +420,15 @@ void GLUTspecialkey(int k, int x, int y) {
  	    return;
  	case GLUT_KEY_F9: // F9 toggles textures on and off...
 	    if ( material_mgr.loaded() ) {
-		current_options.get_textures() ?
-		    current_options.set_textures(false) :
+ 	        if (current_options.get_textures()) {
+ 		    current_options.set_textures(false);
+ 		    glDisable(GL_TEXTURE_2D);
+ 		    ssgOverrideTexture(true);
+ 		} else {
 		    current_options.set_textures(true);
+ 		    glEnable(GL_TEXTURE_2D);
+ 		    ssgOverrideTexture(false);
+		}
 		FG_LOG( FG_INPUT, FG_INFO, "Toggling texture" );
 	    } else {
 		FG_LOG( FG_INPUT, FG_INFO, 

@@ -153,10 +153,10 @@ void FGView::UpdateViewParams( void ) {
     }
 
     if ( ! current_options.get_panel_status() ) {
-	// xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
+	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
     } else {
-	// xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
-	//             (GLint)((winHeight)*0.4232) );
+	xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
+		    (GLint)((winHeight)*0.4232) );
     }
 
     panel_hist = current_options.get_panel_status();

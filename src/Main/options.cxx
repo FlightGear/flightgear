@@ -642,7 +642,6 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	flight_model = parse_fdm( arg.substr(6) );
     } else if ( arg.find( "--model-hz=" ) != string::npos ) {
 	model_hz = atoi( arg.substr(11) );
-	cout << "model hz = " << model_hz << endl;
     } else if ( arg.find( "--speed=" ) != string::npos ) {
 	speed_up = atoi( arg.substr(8) );
     } else if ( arg == "--fog-disable" ) {
