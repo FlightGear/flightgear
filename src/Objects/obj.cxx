@@ -910,7 +910,7 @@ static ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
     int i;
 
     SGBinObject obj;
-    bool result = sgReadBinObj( path, &obj );
+    bool result = obj.read_bin( path );
 
     if ( !result ) {
 	return NULL;
