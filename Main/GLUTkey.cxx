@@ -75,6 +75,7 @@ void GLUTkey(unsigned char k, int x, int y) {
     fgVIEW *v;
     struct fgWEATHER *w;
     float fov, tmp;
+    static bool winding_ccw = true;
 
     c = current_aircraft.controls;
     f = current_aircraft.flight;
@@ -93,6 +94,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 8: // Ctrl-H key
 	    fgAPToggleHeading();
+	    return;
+	case 18: // Ctrl-R key
+	    // temporary
+	    winding_ccw = !winding_ccw;
+	    if ( winding_ccw ) {
+		glFrontFace ( GL_CCW );
+	    } else {
+		glFrontFace ( GL_CW );
+	    }
 	    return;
 	case 19: // Ctrl-S key
 	    fgAPToggleAutoThrottle();
@@ -381,6 +391,10 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.29  1998/10/20 14:58:57  curt
+// Ctrl-R now reverses default polygon winding so I can see if a hole in the
+// terrain is a result of improper winding, or if it is just an empty hole.
+//
 // Revision 1.28  1998/10/17 01:34:20  curt
 // C++ ifying ...
 //
