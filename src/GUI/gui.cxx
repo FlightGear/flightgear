@@ -120,7 +120,6 @@ void initMenu()
              if (sep) {
                 Menu[h].submenu[pos] = strdup("----------");
              } else if (call && strcmp(call->getStringValue(), "")) {
-                 cout << name->getStringValue() << endl;
                  string text = fgGetString( name->getStringValue(),
                                         "/strings/null" );
                  Menu[h].submenu[pos]
@@ -140,7 +139,6 @@ void initMenu()
          }
 
          SGPropertyNode *name = submenu[h]->getNode("name");
-         cout << name->getStringValue() << endl;
          string text = fgGetString( name->getStringValue(),
                                     "/strings/null" );
 
