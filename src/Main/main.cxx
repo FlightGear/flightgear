@@ -657,7 +657,7 @@ void fgRenderFrame( void ) {
 
 	// draw lighting
 	// Set punch through fog density
-	glFogf (GL_FOG_DENSITY, fog_exp2_density);
+	glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
 
 	ssgCullAndDraw( lighting );
 
@@ -673,7 +673,6 @@ void fgRenderFrame( void ) {
 	fgCockpitUpdate();
 
 	// We can do translucent menus, so why not. :-)
-	// glEnable ( GL_BLEND ) ;
 	menus->apply();
 	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 	puDisplay();
