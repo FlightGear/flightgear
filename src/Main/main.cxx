@@ -736,6 +736,12 @@ void fgRenderFrame() {
 
             // return to the desired diffuse color
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
+
+            // FIXME: This should not be needed, but at this time (08/15/2003)
+            //        certain NVidia drivers don't seem to implement
+            //        fgPushAttrib(FG_FOG_BIT) properly. The result is that
+            //        there is not fog when looking at the sun.
+            glFogf ( GL_FOG_DENSITY, fog_exp2_density );
         }
 
         // draw the ssg scene
