@@ -303,8 +303,8 @@ void FGViewerRPH::update() {
     // THIS IS THE EXPERIMENTAL VIEWING ANGLE SHIFTER
     // THE MAJORITY OF THE WORK IS DONE IN GUI.CXX
     // this in gui.cxx for now just testing
-    extern float quat_mat[4][4];
-    sgPreMultMat4( VIEW, quat_mat);
+    extern float GuiQuat_mat[4][4];
+    sgPreMultMat4( VIEW, GuiQuat_mat);
     // !!!!!!!!!! testing	
 
     // Given a vector pointing straight down (-Z), map into onto the

@@ -1550,16 +1550,8 @@ int main( int argc, char **argv ) {
     }
 
     FGPath modelpath( globals->get_options()->get_fg_root() );
-    // modelpath.append( "Models" );
-    // modelpath.append( "Geometry" );
-  
-    FGPath texturepath( globals->get_options()->get_fg_root() );
-    texturepath.append( "Models" );
-    texturepath.append( "Textures" );
-  
     ssgModelPath( (char *)modelpath.c_str() );
-    ssgTexturePath( (char *)texturepath.c_str() );
-
+  
     // Scene graph root
     scene = new ssgRoot;
     scene->setName( "Scene" );
@@ -1624,6 +1616,15 @@ int main( int argc, char **argv ) {
     string acmodel_path =
 	globals->get_props()->getStringValue("/sim/model/path",
 					"Models/Geometry/glider.ac");
+
+    string full_model = globals->get_options()->get_fg_root() + "/"
+	+ acmodel_path;
+    int pos = full_model.rfind("/");
+    
+    FGPath texturepath( full_model.substr(0, pos) );
+    cout << "Texture path = " << texturepath.str() << endl;
+    ssgTexturePath( (char *)texturepath.c_str() );
+
     ssgEntity *acmodel_obj = ssgLoad((char *)(acmodel_path.c_str()));
 
     // find moving parts (if this is an MDL model)
