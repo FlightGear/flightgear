@@ -141,7 +141,7 @@ void FGView::cycle_view_mode() {
 }
 
 
-#ifdef 0
+#if 0
 // Basically, this is a modified version of the Mesa gluLookAt()
 // function that's been modified slightly so we can capture the
 // result before sending it off to OpenGL land.
@@ -241,35 +241,35 @@ void FGView::UpdateViewParams( void ) {
     }
 
     if ( ! current_options.get_panel_status() ) {
-	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
+	// xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
     } else {
-	xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
-		    (GLint)((winHeight)*0.4232) );
+	// xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
+	//             (GLint)((winHeight)*0.4232) );
     }
 
     // Tell GL we are about to modify the projection parameters
-    xglMatrixMode(GL_PROJECTION);
-    xglLoadIdentity();
+    // xglMatrixMode(GL_PROJECTION);
+    // xglLoadIdentity();
     if ( f->get_Altitude() * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
 	// ssgSetNearFar( 10.0, 100000.0 );
-	gluPerspective(current_options.get_fov(), win_ratio, 10.0, 100000.0);
+	// gluPerspective(current_options.get_fov(), win_ratio, 10.0, 100000.0);
     } else {
 	// ssgSetNearFar( 0.5, 100000.0 );
-	gluPerspective(current_options.get_fov(), win_ratio, 0.5, 100000.0);
+	// gluPerspective(current_options.get_fov(), win_ratio, 0.5, 100000.0);
 	// printf("Near ground, minimizing near clip plane\n");
     }
     // }
 
-    xglMatrixMode(GL_MODELVIEW);
-    xglLoadIdentity();
+    // xglMatrixMode(GL_MODELVIEW);
+    // xglLoadIdentity();
 
     // set up our view volume (default)
 #if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
-    LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
+    /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
 	   view_pos.x() + view_forward[0], 
 	   view_pos.y() + view_forward[1], 
 	   view_pos.z() + view_forward[2],
-	   view_up[0], view_up[1], view_up[2]);
+	   view_up[0], view_up[1], view_up[2]); */
 
     // look almost straight up (testing and eclipse watching)
     /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
@@ -387,7 +387,7 @@ void FGView::UpdateViewParams( void ) {
 	m[15] = 1.0 /* m[3] * -view_pos.x() + m[7] * -view_pos.y() + m[11] * -view_pos.z() + m[15] */;
 
 	// xglMultMatrixd( m );
-	xglLoadMatrixf( m );
+	// xglLoadMatrixf( m );
     }
 #endif // FG_VIEW_INLINE_OPTIMIZATIONS
 

@@ -119,7 +119,7 @@ public:
     Point3D view_pos;
 
     // cartesion coordinates of current lon/lat if at sea level
-    // translated to scenery.center*/
+    // translated to scenery.center
     Point3D cur_zero_elev;
 
     // vector in cartesian coordinates from current position to the

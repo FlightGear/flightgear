@@ -138,6 +138,14 @@ ssgBranch *terrain = NULL;
 ssgSelector *penguin_sel = NULL;
 ssgTransform *penguin_pos = NULL;
 
+// hack
+sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
+{
+  {  1.0f,  0.0f,  0.0f,  0.0f },
+  {  0.0f,  0.0f, -1.0f,  0.0f },
+  {  0.0f,  1.0f,  0.0f,  0.0f },
+  {  0.0f,  0.0f,  0.0f,  1.0f }
+} ;
 
 // The following defines flight gear options. Because glutlib will also
 // want to parse its own options, those options must not be included here
@@ -209,52 +217,6 @@ static void fgInitVisuals( void ) {
 }
 
 
-#if 0
-// Draw a basic instrument panel
-static void fgUpdateInstrViewParams( void ) {
-
-    exit(0);
-
-    fgVIEW *v = &current_view;
-
-    xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) / 2);
-  
-    xglMatrixMode(GL_PROJECTION);
-    xglPushMatrix();
-  
-    xglLoadIdentity();
-    gluOrtho2D(0, 640, 0, 480);
-    xglMatrixMode(GL_MODELVIEW);
-    xglPushMatrix();
-    xglLoadIdentity();
-
-    xglColor3f(1.0, 1.0, 1.0);
-    xglIndexi(7);
-  
-    xglDisable(GL_DEPTH_TEST);
-    xglDisable(GL_LIGHTING);
-  
-    xglLineWidth(1);
-    xglColor3f (0.5, 0.5, 0.5);
-
-    xglBegin(GL_QUADS);
-    xglVertex2f(0.0, 0.00);
-    xglVertex2f(0.0, 480.0);
-    xglVertex2f(640.0,480.0);
-    xglVertex2f(640.0, 0.0);
-    xglEnd();
-
-    xglRectf(0.0,0.0, 640, 480);
-    xglEnable(GL_DEPTH_TEST);
-    xglEnable(GL_LIGHTING);
-    xglMatrixMode(GL_PROJECTION);
-    xglPopMatrix();
-    xglMatrixMode(GL_MODELVIEW);
-    xglPopMatrix();
-}
-#endif
-
-
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
@@ -316,8 +278,18 @@ static void fgRenderFrame( void ) {
 	xglClear( clear_mask );
 
 	// Tell GL we are switching to model view parameters
+
+	// I really should create a derived ssg node or use a call
+	// back or something so that I can draw the sky within the
+	// ssgCullandDraw() function, but for now I just mimic what
+	// ssg does to set up the model view matrix
 	xglMatrixMode(GL_MODELVIEW);
-	// xglLoadIdentity();
+	xglLoadIdentity();
+	sgMat4 vm_tmp, view_mat;
+	sgTransposeNegateMat4 ( vm_tmp, v->sgVIEW ) ;
+	sgCopyMat4( view_mat, copy_of_ssgOpenGLAxisSwapMatrix ) ;
+	sgPreMultMat4( view_mat, vm_tmp ) ;
+	xglLoadMatrixf( (float *)view_mat );
 
 	// draw sky
 	xglDisable( GL_DEPTH_TEST );
@@ -387,8 +359,8 @@ static void fgRenderFrame( void ) {
 
 	// ssg test
 
-	xglMatrixMode( GL_PROJECTION );
-	xglLoadIdentity();
+	// xglMatrixMode( GL_PROJECTION );
+	// xglLoadIdentity();
 	ssgSetFOV( current_options.get_fov(), 0.0f );
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
@@ -918,13 +890,13 @@ static void fgIdleFunction ( void ) {
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
     if ( ! current_options.get_panel_status() ) {
-	current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
-	xglViewport(0, 0 , (GLint)(width), (GLint)(height) );
+	// current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
+	// xglViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
-	current_view.set_win_ratio( (GLfloat) width / 
-				    ((GLfloat) (height)*0.4232) );
-	xglViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
-		    (GLint)((height)*0.4232) );
+	// current_view.set_win_ratio( (GLfloat) width / 
+	//                             ((GLfloat) (height)*0.4232) );
+	// xglViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
+	//                             (GLint)((height)*0.4232) );
     }
 
     current_view.set_winWidth( width );
