@@ -108,6 +108,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 88: /* X key */
 	    o->fov *= 1.05;
+	    if ( o->fov > FG_FOV_MAX ) {
+		o->fov = FG_FOV_MAX;
+	    }
 	    return;
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
@@ -173,6 +176,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 120: /* X key */
 	    o->fov /= 1.05;
+	    if ( o->fov < FG_FOV_MIN ) {
+		o->fov = FG_FOV_MIN;
+	    }
 	    return;
 	case 122: /* z key */
 	    w->visibility *= 1.10;
@@ -274,13 +280,16 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.8  1998/05/13 18:29:56  curt
-/* Added a keyboard binding to dynamically adjust field of view.
-/* Added a command line option to specify fov.
-/* Adjusted terrain color.
-/* Root path info moved to fgOPTIONS.
-/* Added ability to parse options out of a config file.
+/* Revision 1.9  1998/05/16 13:05:21  curt
+/* Added limits to fov.
 /*
+ * Revision 1.8  1998/05/13 18:29:56  curt
+ * Added a keyboard binding to dynamically adjust field of view.
+ * Added a command line option to specify fov.
+ * Adjusted terrain color.
+ * Root path info moved to fgOPTIONS.
+ * Added ability to parse options out of a config file.
+ *
  * Revision 1.7  1998/05/07 23:14:14  curt
  * Added "D" key binding to set autopilot heading.
  * Made frame rate calculation average out over last 10 frames.
