@@ -1,0 +1,4 @@
+tri2obj.o: tri2obj.c tri2obj.h ../../Src/Include/constants.h \
+ ../../Src/Include/types.h ../../Src/Math/fg_geodesy.h \
+ ../../Src/Math/mat3.h ../../Src/Math/polar.h \
+ ../../Src/Math/../Include/types.h
