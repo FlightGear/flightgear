@@ -1159,7 +1159,7 @@ fgUsage (bool verbose)
     } catch (const sg_exception &ex) {
         cout << "Unable to read the help file." << endl;
         cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
-        cout << "and the location of the base directory is specified bij setting $FG_ROOT or" << endl;
+        cout << "and the location of the base directory is specified by setting $FG_ROOT or" << endl;
         cout << "by adding --fg-root=path as a program argument." << endl;
         
         exit(-1);
