@@ -27,6 +27,11 @@
 
 #include <simgear/compiler.h>
 
+#include <map>
+SG_USING_STD(map);
+
+#include <simgear/compiler.h>
+
 #ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>
 #endif
@@ -40,11 +45,33 @@
 
 #include "newmat.hxx"
 
+
+////////////////////////////////////////////////////////////////////////
+// Local static variables.
+// FIXME: write a proper manager.
+////////////////////////////////////////////////////////////////////////
+
+// Objects already loaded (that can be reused).
+map<string,ssgEntity *> object_map;
+
 
 
 ////////////////////////////////////////////////////////////////////////
 // Local static functions.
 ////////////////////////////////////////////////////////////////////////
+
+// FIXME: this is totally evil and non-robust: it assumes that
+// entities will never be refcounted to 0 (which is safe for now).
+static ssgEntity *
+load_object (char * path)
+{
+  ssgEntity * object = object_map[path];
+  if (object == 0) {
+    object = ssgLoad(path);
+    object_map[path] = object;
+  }
+  return object;
+}
 
 /**
  * Internal method to test whether a file exists.
@@ -152,7 +179,7 @@ FGNewMat::read_properties (const SGPropertyNode * props)
       SGPath path = globals->get_fg_root();
       path.append(object_node->getStringValue("path"));
       ssgTexturePath((char *)path.dir().c_str());
-      ssgEntity * model = ssgLoad((char *)path.c_str());
+      ssgEntity * model = load_object((char *)path.c_str());
       if (model != 0) {
           // float ranges[] = {0, object_node->getDoubleValue("range-m", 2000)};
           // object.model = new ssgRangeSelector;

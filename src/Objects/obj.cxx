@@ -346,15 +346,136 @@ add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
     branch->addKid(pos);
 }
 
+class RandomObjectUserData : public ssgBase
+{
+public:
+  bool is_filled_in;
+  float * p1;
+  float * p2;
+  float * p3;
+  FGNewMat * mat;
+  int object_index;
+  ssgBranch * branch;
+  sgMat4 ROT;
+};
+
 
 /**
- * Populate a single triangle with randomly-placed objects.
+ * Fill in a triangle with randomly-placed objects.
  *
- * The objects and their density are defined in the material.  If the
- * density is smaller than the minimum, there is an appropriate chance
- * of one appearing.  The ssgBranch supplied will be populated
- * with the randomly-placed objects, with all objects of each type
- * under a range selector.
+ * This method is invoked by a callback when the triangle is in range
+ * but not yet populated.
+ *
+ * @param p1 The first vertex of the triangle.
+ * @param p2 The second vertex of the triangle.
+ * @param p3 The third vertex of the triangle.
+ * @param mat The triangle's material.
+ * @param object_index The index of the random object in the triangle.
+ * @param branch The branch where the objects should be added.
+ * @param ROT The rotation matrix to align objects with the earth's
+ *        surface.
+ */
+static void
+fill_in_triangle (float * p1, float * p2, float * p3, FGNewMat * mat,
+		  int object_index, ssgBranch * branch, sgMat4 ROT)
+{
+    sgVec3 center;
+    sgSetVec3(center,
+	      (p1[0] + p2[0] + p3[0]) / 3.0,
+	      (p1[1] + p2[1] + p3[1]) / 3.0,
+	      (p1[2] + p2[2] + p3[2]) / 3.0);
+    double area = sgTriArea(p1, p2, p3);
+    double num = area / mat->get_object_coverage(object_index);
+
+    // place an object each unit of area
+    while ( num > 1.0 ) {
+      add_object_to_triangle(p1, p2, p3, center,
+			     ROT, mat, object_index, branch);
+      num -= 1.0;
+    }
+    // for partial units of area, use a zombie door method to
+    // create the proper random chance of an object being created
+    // for this triangle
+    if ( num > 0.0 ) {
+      if ( sg_random() <= num ) {
+	// a zombie made it through our door
+	add_object_to_triangle(p1, p2, p3, center,
+			       ROT, mat, object_index, branch);
+      }
+    }
+}
+
+
+/**
+ * SSG callback for an in-range triangle of randomly-placed objects.
+ *
+ * This pretraversal callback is attached to a branch that is traversed
+ * only when a triangle is in range.  If the triangle is not currently
+ * populated with randomly-placed objects, this callback will populate
+ * it.
+ *
+ * @param entity The entity to which the callback is attached (not used).
+ * @param mask The entity's traversal mask (not used).
+ * @return Always 1, to allow traversal and culling to continue.
+ */
+static int
+in_range_callback (ssgEntity * entity, int mask)
+{
+  RandomObjectUserData * data = (RandomObjectUserData *)entity->getUserData();
+  if (!data->is_filled_in) {
+    fill_in_triangle(data->p1, data->p2, data->p3, data->mat,
+		     data->object_index, data->branch, data->ROT);
+    data->is_filled_in = true;
+  }
+  return 1;
+}
+
+
+/**
+ * SSG callback for an out-of-range triangle of randomly-placed objects.
+ *
+ * This pretraversal callback is attached to a branch that is traversed
+ * only when a triangle is out of range.  If the triangle is currently
+ * populated with randomly-placed objects, the objects will be removed.
+ *
+ *
+ * @param entity The entity to which the callback is attached (not used).
+ * @param mask The entity's traversal mask (not used).
+ * @return Always 0, to prevent any further traversal or culling.
+ */
+static int
+out_of_range_callback (ssgEntity * entity, int mask)
+{
+  RandomObjectUserData * data = (RandomObjectUserData *)entity->getUserData();
+  if (data->is_filled_in) {
+    data->branch->removeAllKids();
+    data->is_filled_in = false;
+  }
+  return 0;
+}
+
+
+/**
+ * ssgEntity pre-traversal callback to skip a culling test.
+ *
+ * This is necessary so that the in-range/out-of-range callbacks will
+ * be reached even when there is no leaf data underneath.
+ *
+ * @param entity The entity originating the callback (not used).
+ * @param mask The entity's traversal mask (not used).
+ * @return Always 2 to allow traversal without a cull test.
+ */
+static int
+notest_callback (ssgEntity * entity, int mask)
+{
+  return 2;
+}
+
+
+/**
+ * Set up a triangle for randomly-placed objects.
+ *
+ * No objects will be added unless the triangle comes into range.
  *
  * @param leaf The leaf containing the data for the terrain surface.
  * @param tri_index The index of the triangle in the leaf.
@@ -365,12 +486,9 @@ add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
  *        surface at the current lat/lon.
  */
 static void
-populate_triangle (float * p1, float * p2, float * p3,
+setup_triangle (float * p1, float * p2, float * p3,
 		   FGNewMat * mat, ssgBranch * branch, sgMat4 ROT)
 {
-				// Calculate the triangle area.
-    double area = sgTriArea(p1, p2, p3);
-
 				// Set up a single center point for LOD
     sgVec3 center;
     sgSetVec3(center,
@@ -385,35 +503,54 @@ populate_triangle (float * p1, float * p2, float * p3,
     sgMat4 TRANS;
     sgMakeTransMat4(TRANS, center);
     location->setTransform(TRANS);
+    location->setTravCallback(SSG_CALLBACK_PRETRAV, notest_callback);
     branch->addKid(location);
 
-				// Iterate through all the objects types.
+				// Calculate the triangle area.
+    double area = sgTriArea(p1, p2, p3);
+
+				// Iterate through all the object types.
     int num_objects = mat->get_object_count();
     for (int i = 0; i < num_objects; i++) {
-        double num = area / mat->get_object_coverage(i);
-	float ranges[] = {0, mat->get_object_lod(i)};
+
+				// Set up the range selector.  Note that
+				// we provide only two ranges, so the
+				// upper limit will be infinity.
+	float ranges[] = {0, mat->get_object_lod(i), 9999999};
 	ssgRangeSelector * lod = new ssgRangeSelector;
-	lod->setRanges(ranges, 2);
+	lod->setRanges(ranges, 3);
+	lod->setTravCallback(SSG_CALLBACK_PRETRAV, notest_callback);
 	location->addKid(lod);
-	ssgBranch * objects = new ssgBranch;
-	lod->addKid(objects);
-	      
-	// place an object each unit of area
-	while ( num > 1.0 ) {
-	  add_object_to_triangle(p1, p2, p3, center,
-				 ROT, mat, i, objects);
-	  num -= 1.0;
-	}
-	// for partial units of area, use a zombie door method to
-	// create the proper random chance of an object being created
-	// for this triangle
-	if ( num > 0.0 ) {
-	  if ( sg_random() <= num ) {
-	    // a zombie made it through our door
-	    add_object_to_triangle(p1, p2, p3, center,
-				   ROT, mat, i, objects);
-	  }
-	}
+
+				// Create the in-range and out-of-range
+				// branches.
+	ssgBranch * in_range = new ssgBranch;
+	ssgBranch * out_of_range = new ssgBranch;
+
+				// Set up the user data for if/when
+				// the random objects in this triangle
+				// are filled in.
+	RandomObjectUserData * data = new RandomObjectUserData;
+	data->is_filled_in = false;
+	data->p1 = p1;
+	data->p2 = p2;
+	data->p3 = p3;
+	data->mat = mat;
+	data->object_index = i;
+	data->branch = in_range;
+	sgCopyMat4(data->ROT, ROT);
+
+				// Set up the in-range node.
+	in_range->setUserData(data);
+	in_range->setTravCallback(SSG_CALLBACK_PRETRAV,
+				 in_range_callback);
+	lod->addKid(in_range);
+
+				// Set up the out-of-range node.
+	out_of_range->setUserData(data);
+	out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
+				      out_of_range_callback);
+	lod->addKid(out_of_range);
     }
 }
 
@@ -507,10 +644,10 @@ gen_random_surface_objects (ssgLeaf *leaf,
     for ( int i = 0; i < num_tris; ++i ) {
       short n1, n2, n3;
       leaf->getTriangle(i, &n1, &n2, &n3);
-      populate_triangle(leaf->getVertex(n1),
-			leaf->getVertex(n2),
-			leaf->getVertex(n3),
-			mat, branch, ROT);
+      setup_triangle(leaf->getVertex(n1),
+		     leaf->getVertex(n2),
+		     leaf->getVertex(n3),
+		     mat, branch, ROT);
     }
 }
 
