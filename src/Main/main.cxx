@@ -143,8 +143,8 @@ SG_USING_STD(endl);
 
 #include "fg_commands.hxx"
 
-glPointParameterfProc glPointParameterfPtr;
-glPointParameterfvProc glPointParameterfvPtr;
+glPointParameterfProc glPointParameterfPtr = 0;
+glPointParameterfvProc glPointParameterfvPtr = 0;
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 //Required for using GL_extensions
@@ -767,9 +767,9 @@ void fgRenderFrame() {
             // Enable states for drawing points with GL_extension
             glEnable(GL_POINT_SMOOTH);
 
-#ifdef GL_EXT_point_parameters
-            if ( fgGetBool("/sim/rendering/distance-attenuation")
-                 && SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") )
+            if ( fgGetBool("/sim/rendering/distance-attenuation") &&
+                 ( SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ||
+                   SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) )
             {
                 // Enable states for drawing points with GL_extension
                 glEnable(GL_POINT_SMOOTH);
@@ -779,7 +779,6 @@ void fgRenderFrame() {
                 glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT, quadratic);
                 glPointParameterfPtr(GL_POINT_SIZE_MIN_EXT, 1.0); 
             }
-#endif
 
             glPointSize(4.0);
 
@@ -823,14 +822,13 @@ void fgRenderFrame() {
 
 
         if (fgGetBool("/sim/rendering/enhanced-lighting")) {
-#ifdef GL_EXT_point_parameters
-            if ( fgGetBool("/sim/rendering/distance-attenuation")
-                 && SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") )
+            if ( fgGetBool("/sim/rendering/distance-attenuation") &&
+                 ( SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ||
+                   SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) )
             {
                 glPointParameterfvPtr(GL_DISTANCE_ATTENUATION_EXT,
                                       default_attenuation);
             }
-#endif
 
             glPointSize(1.0);
             glDisable(GL_POINT_SMOOTH);
@@ -1658,10 +1656,18 @@ static bool fgMainInit( int argc, char **argv ) {
             // get the address of our OpenGL extensions
     if ( fgGetBool("/sim/rendering/distance-attenuation") )
     {
-        glPointParameterfPtr = (glPointParameterfProc)
-                               SGLookupFunction("glPointParameterfEXT");
-        glPointParameterfvPtr = (glPointParameterfvProc)
-                                SGLookupFunction("glPointParameterfvEXT");
+        if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
+            glPointParameterfPtr = (glPointParameterfProc)
+                                   SGLookupFunction("glPointParameterfEXT");
+            glPointParameterfvPtr = (glPointParameterfvProc)
+                                    SGLookupFunction("glPointParameterfvEXT");
+
+        } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
+            glPointParameterfPtr = (glPointParameterfProc)
+                                   SGLookupFunction("glPointParameterfARB");
+            glPointParameterfvPtr = (glPointParameterfvProc)
+                                    SGLookupFunction("glPointParameterfvARB");
+        } 
    }
 
     // based on the requested presets, calculate the true starting
