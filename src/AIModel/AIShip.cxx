@@ -96,18 +96,18 @@ void FGAIShip::Run(double dt) {
    
    // adjust heading based on current rudder angle
    if (rudder != 0.0)  {
-   /*  rd_turn_radius_ft = 0.088362 * speed * speed
+   /*  turn_radius_ft = 0.088362 * speed * speed
                        / tan( fabs(rudder) / SG_RADIANS_TO_DEGREES );
-     turn_circum_ft = SGD_2PI * rd_turn_radius_ft;
+     turn_circum_ft = SGD_2PI * turn_radius_ft;
      dist_covered_ft = speed * 1.686 * dt; 
      alpha = dist_covered_ft / turn_circum_ft * 360.0;*/
      
-     if (rd_turn_radius_ft <= 0) rd_turn_radius_ft = 0; // don't allow nonsense values
+     if (turn_radius_ft <= 0) turn_radius_ft = 0; // don't allow nonsense values
      
-//     cout << "speed " << speed << " turn radius " << rd_turn_radius_ft << endl;
+//     cout << "speed " << speed << " turn radius " << turn_radius_ft << endl;
 
 // adjust turn radius for speed. The equation is very approximate.
-     sp_turn_radius_ft = 10 * pow ((speed - 15),2) + rd_turn_radius_ft;
+     sp_turn_radius_ft = 10 * pow ((speed - 15),2) + turn_radius_ft;
 //     cout << "speed " << speed << " speed turn radius " << sp_turn_radius_ft << endl; 
 
 // adjust turn radius for rudder angle. The equation is even more approximate.     
