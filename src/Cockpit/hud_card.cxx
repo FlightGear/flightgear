@@ -151,7 +151,7 @@ draw( void ) //  (HUD_scale * pscale )
     width = scrn_rect.left + scrn_rect.right;
     marker_xs = scrn_rect.left;  // x start
 
-    if(type=="guage") {
+    if(type=="gauge") {
 
         vmin   = min_val();
         vmax   = max_val();
