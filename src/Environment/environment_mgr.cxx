@@ -86,7 +86,6 @@ FGEnvironmentMgr::bind ()
   fgSetArchivable("/environment/pressure-inhg");
   fgTie("/environment/density-slugft3", _environment,
 	&FGEnvironment::get_density_slugft3); // read-only
-  fgSetArchivable("/environment/density-inhg");
   fgTie("/environment/wind-from-heading-deg", _environment,
 	&FGEnvironment::get_wind_from_heading_deg,
 	&FGEnvironment::set_wind_from_heading_deg);
