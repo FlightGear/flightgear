@@ -89,7 +89,7 @@ private:
     float Fuel_Flow_gals_hr;	// USgals/hour
     float Torque_lbft;		// lb-ft		
     float Torque_SI;		// Nm
-    float CHT_degK;		// Cylinder head temperature deg K
+    float CHT;			// Cylinder head temperature deg K
     float CHT_degF;		// Ditto in deg Fahrenheit
     float Mixture;
     float Oil_Pressure;		// PSI
@@ -158,8 +158,9 @@ private:
     float Calculate_Delta_T_Exhaust(void);
 
     // Calculate cylinder head temperature
-    float FGNewEngine::Calc_CHT(float CHT);
+    void FGNewEngine::Calc_CHT(void);
 
+    // Calculate exhaust gas temperature
     void FGNewEngine::Calc_EGT(void);
 
     // Calculate fuel flow in gals/hr

@@ -125,11 +125,11 @@ void FGLaRCsim::update( int multiloop ) {
 	if ( ! fuel_freeze->getBoolValue() ) {
 	    //Assume we are using both tanks equally for now
 	    fgSetDouble("/consumables/fuel/tank[0]/level-gal_us",
-			fgGetDouble("/consumables/fuel/tank[0]")
+			fgGetDouble("/consumables/fuel/tank[0]/level-gal_us")
 			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
 			* get_delta_t());
 	    fgSetDouble("/consumables/fuel/tank[1]/level-gal_us",
-			fgGetDouble("/consumables/fuel/tank[1]")
+			fgGetDouble("/consumables/fuel/tank[1]/level-gal_us")
 			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
 			* get_delta_t());
 	}

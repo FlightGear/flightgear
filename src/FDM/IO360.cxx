@@ -97,7 +97,7 @@ void FGNewEngine::init(double dt) {
     Fuel_Flow_gals_hr = 0;
 //    Torque = 0;
     Torque_SI = 0;
-    CHT_degK = 298.0;			//deg Kelvin
+    CHT = 298.0;			//deg Kelvin
     CHT_degF = (CHT_degF * 1.8) - 459.67;	//deg Fahrenheit
     Mixture = 14;
     Oil_Pressure = 0;	// PSI
@@ -133,12 +133,13 @@ void FGNewEngine::update() {
 //	cout << "n = " << RPM << " rpm\n";
 //      cout << "T_amb = " << T_amb << '\n';
 //	cout << "running = " << running << '\n';
-//	cout << "fuel = " << fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") << '\n';
-	cout << "Percentage_Power = " << Percentage_Power << '\n';
-	cout << "current_oil_temp = " << current_oil_temp << '\n';
+	cout << "fuel = " << fgGetFloat("/consumables/fuel/tank[0]/level-gal_us") << '\n';
+//	cout << "Percentage_Power = " << Percentage_Power << '\n';
+//	cout << "current_oil_temp = " << current_oil_temp << '\n';
+	cout << "EGT = " << EGT << '\n';
     }
     count1++;
-    if(count1 == 600)
+    if(count1 == 100)
 	count1 = 0;
 */
 
@@ -252,11 +253,13 @@ void FGNewEngine::update() {
     }
 
     //Calculate Exhaust gas temperature
-    Calc_EGT();
+    if(running)
+	Calc_EGT();
+    else
+	EGT = 298.0;
 
     // Calculate Cylinder Head Temperature
-    CHT_degK = Calc_CHT(CHT_degK);
-    CHT_degF = (CHT_degK * 1.8) - 459.67;
+    Calc_CHT();
     
     // Calculate oil temperature
     current_oil_temp = Calc_Oil_Temp(current_oil_temp);
@@ -288,8 +291,13 @@ void FGNewEngine::update() {
 	} else if((RPM <= 480) && (cranking)) {
 	    //Make sure the engine noise dosn't play if the engine won't start due to eg mixture lever pulled out.
 	    running = false;
+	    EGT = 298.0;
 	}
     }
+
+    // And finally, do any unit conversions from internal units to output units
+    EGT_degF = (EGT * 1.8) - 459.67;
+    CHT_degF = (CHT * 1.8) - 459.67;
 }
 
 //*****************************************************************************************************
@@ -395,7 +403,7 @@ float FGNewEngine::Power_Mixture_Correlation(float thi_actual)
 // Calculate Cylinder Head Temperature
 // Crudely models the cylinder head as an arbitary lump of arbitary size and area with one third of combustion energy
 // as heat input and heat output as a function of airspeed and temperature.  Could be improved!!!
-float FGNewEngine::Calc_CHT(float CHT)
+void FGNewEngine::Calc_CHT()
 {
     float h1 = -95.0;   //co-efficient for free convection
     float h2 = -3.95;   //co-efficient for forced convection
@@ -440,8 +448,6 @@ float FGNewEngine::Calc_CHT(float CHT)
     dCHTdt = dqdt_cylinder_head / HeatCapacityCylinderHead;
     
     CHT += (dCHTdt * time_step);
-
-    return(CHT);
 }
 
 // Calculate exhaust gas temperature
@@ -464,8 +470,6 @@ void FGNewEngine::Calc_EGT()
     //For now we will aim for a peak of around 400 degC (750 degF)
 
     EGT *= 0.444 + ((0.544 - 0.444) * Percentage_Power / 100.0);
-
-    EGT_degF = (EGT * 1.8) - 459.67;
 }
 
 // Calculate Manifold Pressure based on Throttle lever Position
