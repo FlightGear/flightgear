@@ -298,6 +298,11 @@ William Riley <riley@technologist.com>
   Patch to support a first joystick with more than two axes.
 
 
+Andy Ross <andy@plausible.org>
+  Contributed a new configurable FDM, "YASim", based on geometry
+  information rather than aerodynamic coefficients.
+
+
 Paul Schlyter <pausch@saaf.se>  
   Mr. Schlyter provided Durk Talsma with all the information 
   he needed to write the astro code. Mr. S. is also willing 
