@@ -1348,7 +1348,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
     // Add runway lights to scene graph if any exist
     if ( rwy_lights_range->getNumKids() > 0 ) {
-        SG_LOG( SG_TERRAIN, SG_INFO, "adding runway lights" );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "adding runway lights" );
         rwy_lights_transform->addKid( rwy_lights_range );
         rwy_lights_transform->setTransform( &sgcoord );
     }

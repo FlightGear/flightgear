@@ -101,8 +101,13 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
     FGNewMat *newmat = material_lib.find( material );
-    // FGNewMat *newmat = material_lib.find( "IrrCropPastureCover" );
-    leaf->setState( newmat->get_state() );
+
+    if ( newmat != NULL ) {
+        leaf->setState( newmat->get_state() );
+    } else {
+        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
+                << material );
+    }
 
     return leaf;
 }

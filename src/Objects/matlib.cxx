@@ -252,6 +252,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     matlib["RWY_WHITE_LIGHTS"] = new FGNewMat(rwy_white_lights);
     // For backwards compatibility ... remove someday
     matlib["RUNWAY_LIGHTS"] = new FGNewMat(rwy_white_lights);
+    matlib["RWY_LIGHTS"] = new FGNewMat(rwy_white_lights);
     // end of backwards compatitibilty
 
     // hard coded runway vasi light state
