@@ -116,6 +116,25 @@ limit_value (double * value, const SGPropertyNode * arg)
     }
 }
 
+static bool
+compare_values (SGPropertyNode * value1, SGPropertyNode * value2)
+{
+    switch (value1->getType()) {
+    case SGPropertyNode::BOOL:
+        return (value1->getBoolValue() == value2->getBoolValue());
+    case SGPropertyNode::INT:
+        return (value1->getIntValue() == value2->getIntValue());
+    case SGPropertyNode::LONG:
+        return (value1->getLongValue() == value2->getLongValue());
+    case SGPropertyNode::FLOAT:
+        return (value1->getFloatValue() == value2->getFloatValue());
+    case SGPropertyNode::DOUBLE:
+        return (value1->getDoubleValue() == value2->getDoubleValue());
+    default:
+        return !strcmp(value1->getStringValue(), value2->getStringValue());
+    }
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -531,6 +550,45 @@ do_property_scale (const SGPropertyNode * arg)
 
 
 /**
+ * Built-in command: cycle a property through a set of values.
+ *
+ * If the current value isn't in the list, the cycle will
+ * (re)start from the beginning.
+ *
+ * property: the name of the property to cycle.
+ * value[*]: the list of values to cycle through.
+ */
+static bool
+do_property_cycle (const SGPropertyNode * arg)
+{
+    SGPropertyNode * prop = get_prop(arg);
+    vector<SGPropertyNode_ptr> values = arg->getChildren("value");
+    int selection = -1;
+    int nSelections = values.size();
+
+    if (nSelections < 1) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "No values for property-cycle");
+        return false;
+    }
+
+                                // Try to find the current selection
+    for (int i = 0; i < nSelections; i++) {
+        if (compare_values(prop, values[i])) {
+            selection = i + 1;
+            break;
+        }
+    }
+
+                                // Default or wrap to the first selection
+    if (selection < 0 || selection >= nSelections)
+        selection = 0;
+
+    prop->setUnspecifiedValue(values[selection]->getStringValue());
+    return true;
+}
+
+
+/**
  * Built-in command: Show an XML-configured dialog.
  *
  * dialog-name: the name of the GUI dialog to display.
@@ -678,6 +736,7 @@ static struct {
     { "property-multiply", do_property_multiply },
     { "property-swap", do_property_swap },
     { "property-scale", do_property_scale },
+    { "property-cycle", do_property_cycle },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
     { "dialog-show", do_dialog_show },
