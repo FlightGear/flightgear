@@ -46,8 +46,6 @@
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>    /* for fork() && stat() */
-#  include <sys/types.h> /* for wait() */
-#  include <sys/wait.h>  /* for wait() */
 #endif
 
 #include <Include/fg_constants.h>  // for VERSION
@@ -144,7 +142,7 @@ static void fgInitVisuals( void ) {
 
     // If enabled, normal vectors specified with glNormal are scaled
     // to unit length after transformation.  See glNormal.
-    xglEnable( GL_NORMALIZE );
+    // xglEnable( GL_NORMALIZE );
 
     xglEnable( GL_LIGHTING );
     xglEnable( GL_LIGHT0 );
@@ -168,6 +166,11 @@ static void fgInitVisuals( void ) {
 
     // This is the default anyways, but it can't hurt
     xglFrontFace ( GL_CCW );
+
+    // Just testing ...
+    // xglEnable(GL_POINT_SMOOTH);
+    // xglEnable(GL_LINE_SMOOTH);
+    // xglEnable(GL_POLYGON_SMOOTH);      
 }
 
 
@@ -330,7 +333,12 @@ static void fgRenderFrame( void ) {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
 	if ( current_options.get_skyblend() ) {
-	    glClearColor(black[0], black[1], black[2], black[3]);
+	    if ( current_options.get_textures() ) {
+		// glClearColor(black[0], black[1], black[2], black[3]);
+		glClearColor(l->fog_color[0], l->fog_color[1], 
+			     l->fog_color[2], l->fog_color[3]);
+		clear_mask |= GL_COLOR_BUFFER_BIT;		
+	    }
 	} else {
 	    glClearColor(l->sky_color[0], l->sky_color[1], 
 			 l->sky_color[2], l->sky_color[3]);
@@ -638,7 +646,7 @@ static void fgMainLoop( void ) {
 static void fgIdleFunction ( void ) {
     fgGENERAL *g;
     char path[256], mp3file[256], command[256], slfile[256];
-    // static char *lockfile = "/tmp/mpg123.running";
+    static char *lockfile = "/tmp/mpg123.running";
 
     g = &general;
 
@@ -658,21 +666,13 @@ static void fgIdleFunction ( void ) {
 	    current_options.get_fg_root(mp3file);
 	    strcat(mp3file, "/Sounds/");
 	    strcat(mp3file, "intro.mp3");
-	    /* 
+
 	    sprintf(command, 
 		    "(touch %s; mpg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
 		    lockfile, mp3file, lockfile );
-		    */
-	    sprintf(command, "mpg123 %s > /dev/null 2>&1", mp3file);
 	    fgPrintf( FG_GENERAL, FG_INFO, 
 		      "Starting intro music: %s\n", mp3file);
-
-	    int pid = fork () ;
-
-	    if ( pid == 0 ) {
-		system ( command );
-		exit ( 0 ) ;
-	    }
+	    system(command);
 	}
 #endif
 
@@ -725,20 +725,16 @@ static void fgIdleFunction ( void ) {
 #if !defined(WIN32)
 	if ( current_options.get_intro_music() ) {
 	    // Let's wait for mpg123 to finish
-	    // struct stat stat_buf;
+	    struct stat stat_buf;
 
 	    fgPrintf( FG_GENERAL, FG_INFO, 
 		      "Waiting for mpg123 player to finish ...\n" );
-	    /*
 	    while ( stat(lockfile, &stat_buf) == 0 ) {
 		// file exist, wait ...
 		sleep(1);
 		fgPrintf( FG_GENERAL, FG_INFO, ".");
 	    }
 	    fgPrintf( FG_GENERAL, FG_INFO, "\n");
-	    */
-
-	    wait(0);
 	}
 #endif // WIN32
 
@@ -914,6 +910,12 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.37  1998/07/20 12:49:44  curt
+// Tweaked color buffer clearing defaults.  We clear the color buffer if we
+// are doing textures.  Assumptions:  If we are doing textures we have hardware
+// support that can clear the color buffer for "free."  If we are doing software
+// rendering with textures, then the extra clear time gets lost in the noise.
+//
 // Revision 1.36  1998/07/16 17:33:35  curt
 // "H" / "h" now control hud brightness as well with off being one of the
 //   states.
