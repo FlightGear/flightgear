@@ -71,7 +71,7 @@ bool FGJoyClient::process() {
 	    FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
 	    int *msg;
 	    msg = (int *)buf;
-	    FG_LOG( FG_IO, FG_INFO, "X = " << msg[0] << " Y = " << msg[1] );
+	    FG_LOG( FG_IO, FG_DEBUG, "X = " << msg[0] << " Y = " << msg[1] );
 	    double aileron = ((double)msg[0] / 2048.0) - 1.0;
 	    double elevator = ((double)msg[1] / 2048.0) - 1.0;
 	    if ( fabs(aileron) < 0.05 ) {

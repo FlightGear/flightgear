@@ -50,6 +50,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
     if ( current_ilslist->query( lon, lat, elev, nav1_freq,
 				 &ils, &nav1_heading, &nav1_dist) ) {
 	nav1_inrange = true;
+	nav1_loc = true;
 	nav1_lon = ils.get_loclon();
 	nav1_lat = ils.get_loclat();
 	nav1_elev = ils.get_gselev();
@@ -61,7 +62,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	//      << " dist = " << nav1_dist << endl;
     } else {
 	nav1_inrange = false;
-	cout << "not picking up vor. :-(" << endl;
+	// cout << "not picking up vor. :-(" << endl;
     }
 
     // nav1
@@ -69,6 +70,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
     if ( current_navlist->query( lon, lat, elev, nav2_freq,
 				 &nav, &nav2_heading, &nav2_dist) ) {
 	nav2_inrange = true;
+	nav2_loc = false;
 	nav2_lon = nav.get_lon();
 	nav2_lat = nav.get_lat();
 	nav2_elev = nav.get_elev();
@@ -78,7 +80,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	//      << " dist = " << nav2_dist << endl;
     } else {
 	nav2_inrange = false;
-	cout << "not picking up vor. :-(" << endl;
+	// cout << "not picking up vor. :-(" << endl;
     }
 
     // adf
@@ -95,7 +97,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	//      << " dist = " << junk << endl;
     } else {
 	adf_inrange = false;
-	cout << "not picking up adf. :-(" << endl;
+	// cout << "not picking up adf. :-(" << endl;
     }
 }
 

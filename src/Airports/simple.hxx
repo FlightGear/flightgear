@@ -32,7 +32,15 @@
 #endif                                   
 
 
-#include <gdbm.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_GDBM
+#  include <gdbm.h>
+#else
+#  include <simgear/gdbm/gdbm.h>
+#endif
 
 #include <simgear/compiler.h>
 

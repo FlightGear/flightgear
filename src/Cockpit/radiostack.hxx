@@ -44,6 +44,7 @@ class FGRadioStack {
     double nav1_target_gs;
 
     bool nav2_inrange;
+    bool nav2_loc;
     double nav2_freq;
     double nav2_radial;
     double nav2_lon;
@@ -98,6 +99,7 @@ public:
     inline double get_nav1_target_gs() const { return nav1_target_gs; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
+    inline bool get_nav2_loc() const { return nav2_loc; }
     inline double get_nav2_radial() const { return nav2_radial; }
     inline double get_nav2_lon() const { return nav2_lon; }
     inline double get_nav2_lat() const { return nav2_lat; }

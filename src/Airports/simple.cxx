@@ -24,9 +24,18 @@
 // $Id$
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <sys/types.h>		// for gdbm open flags
 #include <sys/stat.h>		// for gdbm open flags
-#include <gdbm.h>
+
+#ifdef HAVE_GDBM
+#  include <gdbm.h>
+#else
+#  include <simgear/gdbm/gdbm.h>
+#endif
 
 #include <simgear/compiler.h>
 

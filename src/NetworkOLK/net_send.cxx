@@ -53,11 +53,11 @@ int result;
 
 #if defined( __CYGWIN__ )
 #include <errno.h>
-const char *const *sys_errlist = _sys_errlist;
 #else
-extern const char *const sys_errlist[];
 extern int errno;
 #endif
+
+extern const char *const sys_errlist[];
 
 int current_port  = 10000; 
 u_short base_port = 10000;

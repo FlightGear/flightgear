@@ -8,6 +8,6 @@ libNavaids_a_SOURCES = \
 	nav.hxx navlist.hxx navlist.cxx
 
 testnavs_SOURCES = testnavs.cxx
-testnavs_LDADD = libNavaids.a -lsgdebug -lsgmath -lsgmisc -lz
+testnavs_LDADD = libNavaids.a -lsgmath -lsgmisc -lsgdebug -lz
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
