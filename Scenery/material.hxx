@@ -46,19 +46,22 @@ extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
 
-#include <map>             // STL associative "array"
 #include <string>          // Standard C++ string library
+#include <map>             // STL associative "array"
 
 #include "tile.hxx"
 
 
-#define FG_MAX_MATERIAL_FRAGS 400
+#define FG_MAX_MATERIAL_FRAGS 800
 
 
 // Material property class
 class fgMATERIAL {
 
 public:
+    // OpenGL texture name
+    GLuint texture_id;
+
     // file name of texture
     char texture_name[256];
 
@@ -113,6 +116,11 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.8  1998/06/17 21:36:39  curt
+// Load and manage multiple textures defined in the Materials library.
+// Boost max material fagments for each material property to 800.
+// Multiple texture support when rendering.
+//
 // Revision 1.7  1998/06/12 00:58:04  curt
 // Build only static libraries.
 // Declare memmove/memset for Sloaris.

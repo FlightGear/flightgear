@@ -305,7 +305,7 @@ void fgTileMgrRender( void ) {
     fgMATERIAL *mtl_ptr;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
-    int i, j, size;
+    int i, size;
     int index;
     int culled = 0;
     int drawn = 0;
@@ -432,7 +432,9 @@ void fgTileMgrRender( void ) {
 
 	size = mtl_ptr->list_size;
 	if ( size > 0 ) {
-	    if ( ! o->textures ) {
+	    if ( o->textures ) {
+		xglBindTexture(GL_TEXTURE_2D, mtl_ptr->texture_id);
+	    } else {
 		xglMaterialfv (GL_FRONT, GL_AMBIENT, mtl_ptr->ambient);
 		xglMaterialfv (GL_FRONT, GL_DIFFUSE, mtl_ptr->diffuse);
 	    }
@@ -472,6 +474,11 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/06/17 21:36:42  curt
+// Load and manage multiple textures defined in the Materials library.
+// Boost max material fagments for each material property to 800.
+// Multiple texture support when rendering.
+//
 // Revision 1.19  1998/06/08 17:57:54  curt
 // Working first pass at material proporty sorting.
 //

@@ -40,7 +40,7 @@
 #include <Main/options.hxx>
 
 #include "material.hxx"
-
+#include "texload.h"
 
 // global material management class
 fgMATERIAL_MGR material_mgr;
@@ -73,25 +73,27 @@ int fgMATERIAL_MGR::load_lib ( void ) {
     fgMATERIAL m;
     fgOPTIONS *o;
     char material_name[256];
-    char path[256], fgpath[256];
+    char mpath[256], fg_mpath[256], tpath[256], fg_tpath[256];
     char line[256], *line_ptr;
+    GLubyte *texbuf;
     fgFile f;
+    int width, height;
 
     o = &current_options;
 
     // build the path name to the material db
-    path[0] = '\0';
-    strcat(path, o->fg_root);
-    strcat(path, "/Scenery/");
-    strcat(path, "Materials");
-    strcpy(fgpath, path);
-    strcat(fgpath, ".gz");
+    mpath[0] = '\0';
+    strcat(mpath, o->fg_root);
+    strcat(mpath, "/Scenery/");
+    strcat(mpath, "Materials");
+    strcpy(fg_mpath, mpath);
+    strcat(fg_mpath, ".gz");
 
     // first try "path.gz"
-    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
+    if ( (f = fgopen(fg_mpath, "rb")) == NULL ) {
         // next try "path"    
-        if ( (f = fgopen(path, "rb")) == NULL ) {
-            fgPrintf(FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", path);
+        if ( (f = fgopen(mpath, "rb")) == NULL ) {
+            fgPrintf(FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", mpath);
         }       
     }
 
@@ -133,6 +135,43 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    }
 	    // printf("texture name = %s\n", line_ptr);
 	    sscanf(line_ptr, "%s\n", m.texture_name);
+
+	    // create the texture object and bind it
+	    xglGenTextures(1, &m.texture_id);
+	    xglBindTexture(GL_TEXTURE_2D, m.texture_id);
+
+	    // set the texture parameters for this texture
+	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
+	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
+	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+			      GL_LINEAR /* GL_LINEAR_MIPMAP_LINEAR */ ) ;
+	    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+	    xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+
+	    /* load in the texture data */
+	    tpath[0] = '\0';
+	    strcat(tpath, o->fg_root);
+	    strcat(tpath, "/Textures/");
+	    strcat(tpath, m.texture_name);
+	    strcat(tpath, ".rgb");
+
+	    // Try uncompressed
+	    if ( (texbuf = read_rgb_texture(tpath, &width, &height)) == NULL ) {
+		// Try compressed
+		strcpy(fg_tpath, tpath);
+		strcat(fg_tpath, ".gz");
+		if ( (texbuf = read_rgb_texture(fg_tpath, &width, &height)) 
+		     == NULL ) {
+		    fgPrintf( FG_GENERAL, FG_EXIT, 
+			      "Error in loading texture %s\n", tpath );
+		    return(0);
+		} 
+	    } 
+
+	    xglTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0,
+			  GL_RGB, GL_UNSIGNED_BYTE, texbuf);
+
 	} else if ( strncmp(line_ptr, "ambient", 7) == 0 ) {
 	    line_ptr += 7;
 	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
@@ -209,6 +248,11 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/06/17 21:36:39  curt
+// Load and manage multiple textures defined in the Materials library.
+// Boost max material fagments for each material property to 800.
+// Multiple texture support when rendering.
+//
 // Revision 1.4  1998/06/12 00:58:04  curt
 // Build only static libraries.
 // Declare memmove/memset for Sloaris.

@@ -40,8 +40,8 @@ extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
 
-#include <map>     // STL
 #include <string>  // Standard C++ library
+#include <map>     // STL
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
@@ -115,7 +115,6 @@ int fgObjLoad(char *path, fgTILE *tile) {
     fgFile f;
     int in_fragment, in_faces, ncount, vncount, n1, n2, n3, n4;
     int last1, last2, odd;
-    int i;
 
     o = &current_options;
 
@@ -436,6 +435,11 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.14  1998/06/17 21:36:40  curt
+// Load and manage multiple textures defined in the Materials library.
+// Boost max material fagments for each material property to 800.
+// Multiple texture support when rendering.
+//
 // Revision 1.13  1998/06/12 00:58:05  curt
 // Build only static libraries.
 // Declare memmove/memset for Sloaris.

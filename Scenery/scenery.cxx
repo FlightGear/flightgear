@@ -41,9 +41,10 @@
 
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
-#include <Scenery/obj.hxx>
-#include <Scenery/scenery.hxx>
-#include <Scenery/texload.h>
+
+#include "obj.hxx"
+#include "scenery.hxx"
+// #include "texload.h"
 
 
 /* Temporary hack until we get a better texture management system running */
@@ -57,14 +58,15 @@ struct fgSCENERY scenery;
 /* Initialize the Scenery Management system */
 int fgSceneryInit( void ) {
     fgOPTIONS *o;
-    char path[1024], fgpath[1024];
-    GLubyte *texbuf;
-    int width, height;
+    // char path[1024], fgpath[1024];
+    // GLubyte *texbuf;
+    // int width, height;
 
     o = &current_options;
 
     fgPrintf(FG_TERRAIN, FG_INFO, "Initializing scenery subsystem\n");
 
+#ifdef 0
     /* set the default terrain detail level */
     // scenery.terrain_skip = 6;
 
@@ -88,7 +90,7 @@ int fgSceneryInit( void ) {
 
     xglTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0,
 		  GL_RGB, GL_UNSIGNED_BYTE, texbuf);
-
+#endif // 0
     return(1);
 }
 
@@ -97,7 +99,7 @@ int fgSceneryInit( void ) {
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
     fgOPTIONS *o;
-    double max_radius;
+    // double max_radius;
     char path[1024];
 
     o = &current_options;
@@ -123,9 +125,14 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/05/13 18:26:40  curt
-/* Root path info moved to fgOPTIONS.
+/* Revision 1.5  1998/06/17 21:36:41  curt
+/* Load and manage multiple textures defined in the Materials library.
+/* Boost max material fagments for each material property to 800.
+/* Multiple texture support when rendering.
 /*
+ * Revision 1.4  1998/05/13 18:26:40  curt
+ * Root path info moved to fgOPTIONS.
+ *
  * Revision 1.3  1998/05/07 23:15:20  curt
  * Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
  * Added support for --tile-radius=n option.
