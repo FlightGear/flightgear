@@ -106,6 +106,44 @@ static int gen_test_light_map() {
 }
 
 
+// generate standard colored directional light environment texture map
+static int gen_standard_dir_light_map( int r, int g, int b, int alpha ) {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = r;
+            env_map[i][j][1] = g;
+            env_map[i][j][2] = b;
+            env_map[i][j][3] = (int)(bright * alpha);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+
 // generate the directional white light environment texture map
 static int gen_white_light_map() {
     const int env_tex_res = 32;
@@ -121,9 +159,235 @@ static int gen_white_light_map() {
             if ( dist > 1.0 ) { dist = 1.0; }
             double bright = cos( dist * SGD_PI_2 );
             if ( bright < 0.3 ) { bright = 0.3; }
-            env_map[i][j][0] = 255;
-            env_map[i][j][1] = 255;
-            env_map[i][j][2] = 255;
+            env_map[i][j][0] = 235;
+            env_map[i][j][1] = 235;
+            env_map[i][j][2] = 215; // slight yellow tint
+            env_map[i][j][3] = (int)(bright * 255);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+// generate the medium intensity directional white light environment
+// texture map
+static int gen_white_light_medium_map() {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = 235;
+            env_map[i][j][1] = 235;
+            env_map[i][j][2] = 215; // slight yellow tint
+            env_map[i][j][3] = (int)(bright * 205);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+// generate the low intensity directional white light environment
+// texture map
+static int gen_white_light_low_map() {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = 235;
+            env_map[i][j][1] = 235;
+            env_map[i][j][2] = 215; // slight yellow tint
+            env_map[i][j][3] = (int)(bright * 155);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+// generate the directional yellow light environment texture map
+static int gen_yellow_light_map() {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = 235;
+            env_map[i][j][1] = 235;
+            env_map[i][j][2] = 20; 
+            env_map[i][j][3] = (int)(bright * 255);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+// generate the medium intensity directional yellow light environment
+// texture map
+static int gen_yellow_light_medium_map() {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = 235;
+            env_map[i][j][1] = 235;
+            env_map[i][j][2] = 20; 
+            env_map[i][j][3] = (int)(bright * 205);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+// generate the low intensity directional yellow light environment
+// texture map
+static int gen_yellow_light_low_map() {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = 235;
+            env_map[i][j][1] = 235;
+            env_map[i][j][2] = 20; 
+            env_map[i][j][3] = (int)(bright * 155);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+// generate the directional red light environment texture map
+static int gen_red_light_map() {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+            if ( bright < 0.3 ) { bright = 0.3; }
+            env_map[i][j][0] = 235;
+            env_map[i][j][1] = 20;
+            env_map[i][j][2] = 20; 
             env_map[i][j][3] = (int)(bright * 255);
         }
     }
@@ -241,7 +505,10 @@ bool FGMaterialLib::load( const string& mpath ) {
     gnd_lights->disable( GL_LIGHTING );
     matlib["GROUND_LIGHTS"] = new FGNewMat(gnd_lights);
 
+    GLuint tex_name;
+
     // hard coded runway white light state
+    tex_name = gen_standard_dir_light_map( 235, 235, 215, 255 );
     ssgSimpleState *rwy_white_lights = new ssgSimpleState();
     rwy_white_lights->ref();
     rwy_white_lights->disable( GL_LIGHTING );
@@ -254,12 +521,131 @@ bool FGMaterialLib::load( const string& mpath ) {
     rwy_white_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
     rwy_white_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
     rwy_white_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
-    rwy_white_lights->setTexture( gen_white_light_map() );
+    rwy_white_lights->setTexture( tex_name );
     matlib["RWY_WHITE_LIGHTS"] = new FGNewMat(rwy_white_lights);
     // For backwards compatibility ... remove someday
     matlib["RUNWAY_LIGHTS"] = new FGNewMat(rwy_white_lights);
     matlib["RWY_LIGHTS"] = new FGNewMat(rwy_white_lights);
     // end of backwards compatitibilty
+
+    // hard coded runway medium intensity white light state
+    tex_name = gen_standard_dir_light_map( 235, 235, 215, 205 );
+    ssgSimpleState *rwy_white_medium_lights = new ssgSimpleState();
+    rwy_white_medium_lights->ref();
+    rwy_white_medium_lights->disable( GL_LIGHTING );
+    rwy_white_medium_lights->enable ( GL_CULL_FACE ) ;
+    rwy_white_medium_lights->enable( GL_TEXTURE_2D );
+    rwy_white_medium_lights->enable( GL_BLEND );
+    rwy_white_medium_lights->enable( GL_ALPHA_TEST );
+    rwy_white_medium_lights->enable( GL_COLOR_MATERIAL );
+    rwy_white_medium_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_white_medium_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_white_medium_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_white_medium_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_white_medium_lights->setTexture( tex_name );
+    matlib["RWY_WHITE_MEDIUM_LIGHTS"] = new FGNewMat(rwy_white_medium_lights);
+
+    // hard coded runway low intensity white light state
+    tex_name = gen_standard_dir_light_map( 235, 235, 215, 155 );
+    ssgSimpleState *rwy_white_low_lights = new ssgSimpleState();
+    rwy_white_low_lights->ref();
+    rwy_white_low_lights->disable( GL_LIGHTING );
+    rwy_white_low_lights->enable ( GL_CULL_FACE ) ;
+    rwy_white_low_lights->enable( GL_TEXTURE_2D );
+    rwy_white_low_lights->enable( GL_BLEND );
+    rwy_white_low_lights->enable( GL_ALPHA_TEST );
+    rwy_white_low_lights->enable( GL_COLOR_MATERIAL );
+    rwy_white_low_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_white_low_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_white_low_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_white_low_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_white_low_lights->setTexture( tex_name );
+    matlib["RWY_WHITE_LOW_LIGHTS"] = new FGNewMat(rwy_white_low_lights);
+
+    // hard coded runway yellow light state
+    tex_name = gen_standard_dir_light_map( 235, 235, 20, 255 );
+    ssgSimpleState *rwy_yellow_lights = new ssgSimpleState();
+    rwy_yellow_lights->ref();
+    rwy_yellow_lights->disable( GL_LIGHTING );
+    rwy_yellow_lights->enable ( GL_CULL_FACE ) ;
+    rwy_yellow_lights->enable( GL_TEXTURE_2D );
+    rwy_yellow_lights->enable( GL_BLEND );
+    rwy_yellow_lights->enable( GL_ALPHA_TEST );
+    rwy_yellow_lights->enable( GL_COLOR_MATERIAL );
+    rwy_yellow_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_yellow_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_yellow_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_yellow_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_yellow_lights->setTexture( tex_name );
+    matlib["RWY_YELLOW_LIGHTS"] = new FGNewMat(rwy_yellow_lights);
+
+    // hard coded runway medium intensity yellow light state
+    tex_name = gen_standard_dir_light_map( 235, 235, 20, 205 );
+    ssgSimpleState *rwy_yellow_medium_lights = new ssgSimpleState();
+    rwy_yellow_medium_lights->ref();
+    rwy_yellow_medium_lights->disable( GL_LIGHTING );
+    rwy_yellow_medium_lights->enable ( GL_CULL_FACE ) ;
+    rwy_yellow_medium_lights->enable( GL_TEXTURE_2D );
+    rwy_yellow_medium_lights->enable( GL_BLEND );
+    rwy_yellow_medium_lights->enable( GL_ALPHA_TEST );
+    rwy_yellow_medium_lights->enable( GL_COLOR_MATERIAL );
+    rwy_yellow_medium_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_yellow_medium_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_yellow_medium_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_yellow_medium_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_yellow_medium_lights->setTexture( tex_name );
+    matlib["RWY_YELLOW_MEDIUM_LIGHTS"] = new FGNewMat(rwy_yellow_medium_lights);
+
+    // hard coded runway low intensity yellow light state
+    tex_name = gen_standard_dir_light_map( 235, 235, 20, 155 );
+    ssgSimpleState *rwy_yellow_low_lights = new ssgSimpleState();
+    rwy_yellow_low_lights->ref();
+    rwy_yellow_low_lights->disable( GL_LIGHTING );
+    rwy_yellow_low_lights->enable ( GL_CULL_FACE ) ;
+    rwy_yellow_low_lights->enable( GL_TEXTURE_2D );
+    rwy_yellow_low_lights->enable( GL_BLEND );
+    rwy_yellow_low_lights->enable( GL_ALPHA_TEST );
+    rwy_yellow_low_lights->enable( GL_COLOR_MATERIAL );
+    rwy_yellow_low_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_yellow_low_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_yellow_low_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_yellow_low_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_yellow_low_lights->setTexture( tex_name );
+    matlib["RWY_YELLOW_LOW_LIGHTS"] = new FGNewMat(rwy_yellow_low_lights);
+
+    // hard coded runway red light state
+    tex_name = gen_standard_dir_light_map( 235, 20, 20, 255 );
+    ssgSimpleState *rwy_red_lights = new ssgSimpleState();
+    rwy_red_lights->ref();
+    rwy_red_lights->disable( GL_LIGHTING );
+    rwy_red_lights->enable ( GL_CULL_FACE ) ;
+    rwy_red_lights->enable( GL_TEXTURE_2D );
+    rwy_red_lights->enable( GL_BLEND );
+    rwy_red_lights->enable( GL_ALPHA_TEST );
+    rwy_red_lights->enable( GL_COLOR_MATERIAL );
+    rwy_red_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_red_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_red_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_red_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_red_lights->setTexture( tex_name );
+    matlib["RWY_RED_LIGHTS"] = new FGNewMat(rwy_red_lights);
+
+    // hard coded mediume intensity runway red light state
+    tex_name = gen_standard_dir_light_map( 235, 20, 20, 205 );
+    ssgSimpleState *rwy_red_medium_lights = new ssgSimpleState();
+    rwy_red_medium_lights->ref();
+    rwy_red_medium_lights->disable( GL_LIGHTING );
+    rwy_red_medium_lights->enable ( GL_CULL_FACE ) ;
+    rwy_red_medium_lights->enable( GL_TEXTURE_2D );
+    rwy_red_medium_lights->enable( GL_BLEND );
+    rwy_red_medium_lights->enable( GL_ALPHA_TEST );
+    rwy_red_medium_lights->enable( GL_COLOR_MATERIAL );
+    rwy_red_medium_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_red_medium_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_red_medium_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_red_medium_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_red_medium_lights->setTexture( tex_name );
+    matlib["RWY_RED_MEDIUM_LIGHTS"] = new FGNewMat(rwy_red_medium_lights);
 
     // hard coded runway vasi light state
     ssgSimpleState *rwy_vasi_lights = new ssgSimpleState();
