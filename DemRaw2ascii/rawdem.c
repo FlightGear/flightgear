@@ -325,7 +325,8 @@ void rawDumpAsciiDEM( fgRAWDEM *raw, char *path, int ilon, int ilat ) {
 	/* row / column id of this profile */
 	fprintf(fd, "%6d%6d", 1, j + 1);
 
-	/* Number of columns and rows (elevations) in this profile */
+	/* Number of rows and columns (elevation points) in this
+           profile */
 	fprintf(fd, "%6d%6d", 3600 / raw->xdim + 1, 1);
 
 	/* Ground planimetric coordinates (arc-seconds) of the first
@@ -342,7 +343,8 @@ void rawDumpAsciiDEM( fgRAWDEM *raw, char *path, int ilon, int ilat ) {
 	fprintf(fd, "   %20.15E", 0.0);
 	fprintf(fd, "   %20.15E", 0.0);
 
-	/* One (usually) dimensional array (prof_num_cols,1) of elevations */
+	/* One (usually) dimensional array (1,prof_num_cols) of
+           elevations */
 	for ( i = 0; i <= 120; i++ ) {
 	    fprintf(fd, "%6.0f", raw->edge[j][i]);
 	}
@@ -440,11 +442,14 @@ void rawProcessStrip( fgRAWDEM *raw, int lat_degrees, char *path ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/04/06 21:09:43  curt
-/* Additional win32 support.
-/* Fixed a bad bug in dem file parsing that was causing the output to be
-/* flipped about x = y.
+/* Revision 1.5  1998/04/18 03:59:46  curt
+/* Incorporated into gnu automake/autoconf system.
 /*
+ * Revision 1.4  1998/04/06 21:09:43  curt
+ * Additional win32 support.
+ * Fixed a bad bug in dem file parsing that was causing the output to be
+ * flipped about x = y.
+ *
  * Revision 1.3  1998/03/03 13:10:29  curt
  * Close to a working version.
  *
