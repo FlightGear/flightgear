@@ -3,7 +3,7 @@ dnl originally from ncftp 2.3.0
 dnl added wi_EXTRA_PDIR and wi_ANSI_C
 dnl $Id$
 dnl
-AC_DEFUN(wi_EXTRA_IDIR, [
+AC_DEFUN([wi_EXTRA_IDIR], [
 incdir="$1"
 if test -r $incdir ; then
 	case "$CPPFLAGS" in
@@ -25,7 +25,7 @@ dnl
 dnl
 dnl
 dnl
-AC_DEFUN(wi_EXTRA_LDIR, [
+AC_DEFUN([wi_EXTRA_LDIR], [
 mylibdir="$1"
 if test -r $mylibdir ; then
 	case "$LDFLAGS" in
@@ -47,7 +47,7 @@ dnl
 dnl __FP__
 dnl
 dnl
-AC_DEFUN(wi_EXTRA_PDIR, [
+AC_DEFUN([wi_EXTRA_PDIR], [
 progdir="$1"
 if test -r $progdir ; then
 	case "$PATH" in
@@ -76,7 +76,7 @@ dnl
 dnl If you want to look for subdirectories in include/lib directories,
 dnl you pass the names in argument 3, otherwise pass a dash.
 dnl
-AC_DEFUN(wi_EXTRA_DIRS, [echo "checking for extra include and lib directories..." 1>&6
+AC_DEFUN([wi_EXTRA_DIRS], [echo "checking for extra include and lib directories..." 1>&6
 ifelse([$1], yes, [dnl
 b1=`cd .. ; pwd`
 b2=`cd ../.. ; pwd`
@@ -111,7 +111,7 @@ done
 dnl
 dnl
 dnl
-AC_DEFUN(wi_HPUX_CFLAGS,
+AC_DEFUN([wi_HPUX_CFLAGS],
 [AC_MSG_CHECKING(if HP-UX ansi C compiler flags are needed)
 AC_REQUIRE([AC_PROG_CC])
 os=`uname -s | tr '[A-Z]' '[a-z]'`
@@ -144,7 +144,7 @@ AC_MSG_RESULT($ac_cv_hpux_flags)
 dnl
 dnl
 dnl
-AC_DEFUN(wi_CFLAGS, [AC_REQUIRE([AC_PROG_CC])
+AC_DEFUN([wi_CFLAGS], [AC_REQUIRE([AC_PROG_CC])
 wi_HPUX_CFLAGS
 	if test "$CFLAGS" = "" ; then
 		CFLAGS="-O"
@@ -165,7 +165,7 @@ wi_HPUX_CFLAGS
 dnl
 dnl
 dnl
-AC_DEFUN(wi_PROTOTYPES, [
+AC_DEFUN([wi_PROTOTYPES], [
 AC_MSG_CHECKING(if the compiler supports function prototypes)
 AC_TRY_COMPILE(,[extern void exit(int status);],[wi_cv_prototypes=yes
 AC_DEFINE(PROTOTYPES)],wi_cv_prototypes=no)
@@ -174,7 +174,7 @@ AC_MSG_RESULT($wi_cv_prototypes)
 dnl
 dnl
 dnl
-AC_DEFUN(wi_ANSI_C, [
+AC_DEFUN([wi_ANSI_C], [
 AC_MSG_CHECKING(ANSI-style function definitions)
 AC_TRY_COMPILE(,[int blubb(int x) { return 0; }],[wi_cv_ansi_funcs=yes
 AC_DEFINE(ANSI_FUNCS)],wi_cv_ansi_funcs=no)
@@ -183,7 +183,7 @@ AC_MSG_RESULT($wi_cv_ansi_funcs)
 dnl
 dnl
 dnl
-AC_DEFUN(wi_HEADER_SYS_SELECT_H, [
+AC_DEFUN([wi_HEADER_SYS_SELECT_H], [
 # See if <sys/select.h> is includable after <sys/time.h>
 if test "$ac_cv_header_sys_time_h" = no ; then
 AC_CHECK_HEADERS(sys/time.h sys/select.h)
@@ -211,7 +211,7 @@ fi
 dnl
 dnl
 dnl
-AC_DEFUN(wi_LIB_RESOLV, [
+AC_DEFUN([wi_LIB_RESOLV], [
 # See if we could access two well-known sites without help of any special
 # libraries, like resolv.
 
@@ -244,7 +244,7 @@ dnl
 dnl
 dnl
 
-AC_DEFUN(wi_LIB_NSL, [
+AC_DEFUN([wi_LIB_NSL], [
 AC_MSG_CHECKING(if we can use -lnsl)
 ac_save_LIBS="$LIBS";
 LIBS="$LIBS -lnsl";
@@ -261,7 +261,7 @@ dnl
 dnl
 dnl
 
-AC_DEFUN(nc_PATH_PROG_ZCAT, [
+AC_DEFUN([nc_PATH_PROG_ZCAT], [
 AC_PATH_PROG(GZCAT,gzcat)
 AC_PATH_PROG(ZCAT,zcat)
 if test "x$GZCAT" = x ; then
@@ -287,7 +287,7 @@ fi
 dnl
 dnl
 dnl
-AC_DEFUN(wi_SYSV_EXTRA_DIRS, [
+AC_DEFUN([wi_SYSV_EXTRA_DIRS], [
 # Use System V because their curses extensions are required.  This must
 # be done early so we use the -I and -L in the library checks also.
 # This is mostly a Solaris/SunOS hack.  Note that doing this will also
@@ -305,7 +305,7 @@ fi
 dnl
 dnl
 dnl
-AC_DEFUN(wi_DEFINE_UNAME, [
+AC_DEFUN([wi_DEFINE_UNAME], [
 # Get first 127 chars of all uname information.  Some folks have
 # way too much stuff there, so grab only the first 127.
 unam=`uname -a 2>/dev/null | cut -c1-127`
@@ -316,7 +316,7 @@ fi
 dnl
 dnl
 dnl
-AC_DEFUN(wi_READLINE_WITH_NCURSES, [
+AC_DEFUN([wi_READLINE_WITH_NCURSES], [
 # Readline and Ncurses could both define "backspace".
 # Warn about this if we have both things in our definitions list.
 
@@ -352,7 +352,7 @@ dnl
 
 dnl AC_EXT_DAYLIGHT
 dnl Check for an external variable daylight. Stolen from w3c-libwww.
-AC_DEFUN(AC_EXT_DAYLIGHT,
+AC_DEFUN([AC_EXT_DAYLIGHT],
 [ AC_MSG_CHECKING(int daylight variable)
 AC_TRY_COMPILE([#include <time.h>], [return daylight;],
   have_daylight=yes,
@@ -362,7 +362,7 @@ AC_MSG_RESULT($have_daylight)
 
 dnl AC_EXT_TIMEZONE
 dnl Check for an external variable timezone. Stolen from tcl-8.0.
-AC_DEFUN(AC_EXT_TIMEZONE,
+AC_DEFUN([AC_EXT_TIMEZONE],
 [
 #
 # Its important to include time.h in this check, as some systems (like convex)
