@@ -9,5 +9,5 @@ EXTRA_DIST = \
 	fg_typedefs.h \
 	fg_stl_config.h \
 	fg_zlib.h \
-	general.h \
+	general.hxx \
 	keys.h

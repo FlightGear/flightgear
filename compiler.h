@@ -93,8 +93,26 @@
 
 // Microsoft compilers.
 #ifdef _MSC_VER
-#  if _MSC_VER < 1100
-#    define FG_NEED_EXPLICIT
+#  if _MSC_VER == 1200 // msvc++ 6.0
+#    define FG_NAMESPACES
+#    define FG_HAVE_STD
+#    define FG_HAVE_STD_INCLUDES
+#    define FG_HAVE_STREAMBUF
+
+#    define STL_ALGORITHM  <algorithm>
+#    define STL_FUNCTIONAL <functional>
+#    define STL_IOMANIP    <iomanip>
+#    define STL_IOSTREAM   <iostream>
+#    define STL_STDEXCEPT  <stdexcept>
+#    define STL_STRING     <string>
+#    define STL_STRSTREAM  <strstream>
+
+#    pragma warning(disable: 4786) // identifier was truncated to '255' characters
+#    pragma warning(disable: 4244) // conversion from double to float
+#    pragma warning(disable: 4305) //
+
+#  else
+#    error What version of MSVC++ is this?
 #  endif
 #endif
 
@@ -172,8 +190,10 @@
 
 # ifdef FG_HAVE_STD
 #  define FG_USING_STD(X) using std::X
+#  define STD std
 # else
 #  define FG_USING_STD(X) 
+#  define STD
 # endif
 
 // Additional <functional> implementation from SGI STL 3.11
@@ -202,6 +222,10 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.4  1999/01/06 21:47:37  curt
+// renamed general.h to general.hxx
+// More portability enhancements to compiler.h
+//
 // Revision 1.3  1998/11/06 14:04:09  curt
 // More portability improvements by Bernie Bright.
 //
