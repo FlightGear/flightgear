@@ -8,6 +8,11 @@
 #include <Main/util.hxx>
 
 
+// Use a bigger number to be more responsive, or a smaller number
+// to be more sluggish (the base time is 1.0).
+#define RESPONSIVENESS 0.25
+
+
 TurnIndicator::TurnIndicator ()
 {
 }
@@ -64,9 +69,7 @@ TurnIndicator::update (double dt)
 
                                 // Lag left, based on gyro spin
     rate = -2.5 + (factor * (rate + 2.5));
-
-                                // Add a lag, based on gyro spin
-    rate = fgGetLowPass(_last_rate, rate, dt/factor);
+    rate = fgGetLowPass(_last_rate, rate, dt*RESPONSIVENESS);
     _last_rate = rate;
     
                                 // Publish the indicated rate
