@@ -13,17 +13,10 @@ dist-hook:
 # Use "make <target>"
 ##########################################################################
 
-FG_ROOT=$(HOME)/FlightGear
-
-# refresh the fg-root installation
-update-fg-root:
-	tar cf - AUTHORS COPYING NEWS README README.Linux README.Unix \
-		README.Win32 README.anoncvs README.autoconf README.running \
-		Thanks \
-		| (cd $HOME/FlightGear; tar xvf -)
 
 # make the base distribution with textures, sounds and a bit of
 # scenery, and all the other associated files
+
 fgfs-base: fgfs-base-tar fgfs-base-zip
 
 fgfs-base-tar:
@@ -44,25 +37,30 @@ fgfs-base-zip:
 	FlightGear/Textures FlightGear/Thanks \
 	FlightGear/[m-r]* )
 
+
 # make the documentation distribution
+
 fgfs-docs: fgfs-docs-tar fgfs-docs-zip
 
 fgfs-docs-tar:
-	tar czvf fgfs-docs-$(VERSION).tar.gz Docs
+	( cd .. ; \
+	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear/Docs )
 
-# make the documentation distribution
 fgfs-docs-zip:
-	zip -r fgfs-docs-$(VERSION).zip Docs
+	( cd .. ; \
+	zip -r fgfs-docs-$(VERSION).zip FlightGear/Docs )
+
 
 # make the win32-bin distribution
+
 fgfs-win32-bin:
 	(cd $(HOME); \
 	zip -r fgfs-win32-bin-$(VERSION).zip FlightGear/bin )
 
 # make the win32-libs distribution
 win32-libs:
-	( zip -r win32-libs-$(VERSION).zip Win32/Makefile \
-	Win32/README.glut Win32/cygwinb19.dll Win32/def \
+	( zip -r ../win32-libs-$(VERSION).zip Win32/Makefile \
+	Win32/README.glut Win32/cygwinb1.dll Win32/def \
 	Win32/*.exp Win32/gen-def-from-errors.pl \
 	Win32/glut.dll Win32/glut32.dll Win32/impdef.cpp \
 	Win32/impdef.exe Win32/include \
