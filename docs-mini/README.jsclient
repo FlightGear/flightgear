@@ -1,0 +1,12 @@
+Start flightgear with
+fgfs --jsclient=socket,in,<hz>,,<port>,udp --prop:/jsclient/axis[i]="/property/you/want/to/control" --prop:/jsclient/axis[i+1]="/another/property/you/want/to/control" ...
+eg:
+# fgfs --aircraft=yf23-yasim --airport=KEMT --jsclient=socket,in,5,,16759,udp --prop:/jsclient/axis[0]="/controls/flight/spoilers" --prop:/jsclient/axis[1]="/radios/comm/volume"
+
+
+Start the server on the machine with the remote gameport:
+JsServer <host> <port>
+eg: 
+# JsServer 192.168.1.1 16759
+
+(JsServer can be started before or after fgfs)

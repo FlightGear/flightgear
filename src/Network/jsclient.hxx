@@ -1,8 +1,8 @@
-// jsclient.cxx -- simple UDP networked jsstick client
+// jsclient.hxx -- simple UDP networked joystick client
 //
 // Copyright (C) 2003 by Manuel Bessler and Stephen Lowry
 //
-// based on jsclient.cxx by Curtis Olson
+// based on joyclient.hxx by Curtis Olson
 // Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
@@ -41,7 +41,11 @@ class FGJsClient : public FGProtocol {
 
     char buf[256];
     int length;
-
+    double axis[4];
+    SGPropertyNode *axisdef[4];
+    string axisdefstr[4];
+    bool active;
+				
 public:
 
     FGJsClient();

@@ -26,11 +26,26 @@
 #include <simgear/io/iochannel.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <Main/fg_props.hxx>
 
 #include "jsclient.hxx"
 
 
 FGJsClient::FGJsClient() {
+	active = fgHasNode("/jsclient"); // if exist, assume bindings are defined
+	SG_LOG( SG_IO, SG_INFO, "/jsclient exists, activating JsClient remote joystick support");
+
+	for( int i = 0; i < 4; ++i )
+	{
+    	    axisdef[i] = fgGetNode("/jsclient/axis", i);
+	    if( axisdef[i] != NULL )
+	    {
+        	    axisdefstr[i] = axisdef[i]->getStringValue();
+		    SG_LOG( SG_IO, SG_INFO, "jsclient axis[" << i << "] mapped to property " << axisdefstr[i]);
+	    }
+	    else
+		axisdefstr[i] = "";
+	}
 }
 
 FGJsClient::~FGJsClient() {
@@ -63,6 +78,8 @@ bool FGJsClient::process() {
     SGIOChannel *io = get_io_channel();
     int length = 4+4+4+4+4+4;
 
+//    if( ! active )
+//	    return true;
     if ( get_direction() == SG_IO_OUT ) {
 	SG_LOG( SG_IO, SG_ALERT, "JsClient protocol is read only" );
 	return false;
@@ -73,19 +90,14 @@ bool FGJsClient::process() {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
 		long int *msg;
 		msg = (long int *)buf;
-		SG_LOG( SG_IO, SG_DEBUG, "ax0 = " << msg[0] << " ax1 = "
-			<< msg[1] << "ax2 = " << msg[2] << "ax3 = " << msg[3]);
-		double axis1 = ((double)msg[0] / 2147483647.0);
-		double axis2 = ((double)msg[1] / 2147483647.0);
-		if ( fabs(axis1) < 0.05 ) {
-		    axis1 = 0.0;
+		for( int i = 0; i < 4; ++i )
+		{
+			axis[i] = ((double)msg[i] / 2147483647.0);
+			if ( fabs(axis[i]) < 0.05 )
+			    axis[i] = 0.0;
+			if( axisdefstr[i].length() != 0 )
+    			    fgSetFloat(axisdefstr[i].c_str(), axis[i]);
 		}
-		if ( fabs(axis2) < 0.05 ) {
-		    axis2 = 0.0;
-		}
-		globals->get_controls()->set_throttle(FGControls::ALL_ENGINES, axis1);
-//		globals->get_controls()->set_aileron( axis1 );
-//		globals->get_controls()->set_elevator( -axis2 );
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
@@ -94,17 +106,14 @@ bool FGJsClient::process() {
 		msg = (long int *)buf;
 		SG_LOG( SG_IO, SG_DEBUG, "ax0 = " << msg[0] << " ax1 = "
 			<< msg[1] << "ax2 = " << msg[2] << "ax3 = " << msg[3]);
-		double axis1 = ((double)msg[0] / 2147483647.0);
-		double axis2 = ((double)msg[1] / 2147483647.0);
-		if ( fabs(axis1) < 0.05 ) {
-		    axis1 = 0.0;
+		for( int i = 0; i < 4; ++i )
+		{
+			axis[i] = ((double)msg[i] / 2147483647.0);
+			if ( fabs(axis[i]) < 0.05 )
+			    axis[i] = 0.0;
+			if( axisdefstr[i].length() != 0 )
+    			    fgSetFloat(axisdefstr[i].c_str(), axis[i]);
 		}
-		if ( fabs(axis2) < 0.05 ) {
-		    axis2 = 0.0;
-		}
-		globals->get_controls()->set_throttle(FGControls::ALL_ENGINES, axis1);
-//		globals->get_controls()->set_aileron( axis1 );
-//		globals->get_controls()->set_elevator( -axis2 );
 	    }
 	}
     }
