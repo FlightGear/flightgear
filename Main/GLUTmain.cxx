@@ -53,11 +53,8 @@
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
-//#include <Astro/moon.hxx>
-//#include <Astro/planets.hxx>
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
-//#include <Astro/sun.hxx>
 #include <Astro/solarsystem.hxx>
 
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -104,6 +101,8 @@ int panel_hist = 0;
 
 // Global structures for the Audio library
 #ifdef ENABLE_AUDIO_SUPPORT
+slEnvelope pitch_envelope ( 1, SL_SAMPLE_ONE_SHOT ) ;
+slEnvelope volume_envelope ( 1, SL_SAMPLE_ONE_SHOT ) ;
 slScheduler *audio_sched;
 smMixer *audio_mixer;
 slSample *s1;
@@ -455,6 +454,7 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
+    fgCONTROLS *c;
     fgFLIGHT *f;
     fgGENERAL *g;
     fgTIME *t;
@@ -465,6 +465,7 @@ static void fgMainLoop( void ) {
     // double joy_x, joy_y;
     // int joy_b1, joy_b2;
 
+    c = &cur_control_params;
     f = current_aircraft.flight;
     g = &general;
     t = &cur_time_params;
@@ -572,6 +573,11 @@ static void fgMainLoop( void ) {
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( current_options.get_sound() ) {
+	double param = c->throttle[0] * 2.0 + 1.0;
+
+	pitch_envelope.setStep  ( 0, 0.01, param );
+	volume_envelope.setStep ( 0, 0.01, param );
+
 	audio_sched -> update();
     }
 #endif
@@ -679,7 +685,7 @@ static void fgIdleFunction ( void ) {
 
 	audio_sched = new slScheduler ( 8000 );
 	audio_mixer = new smMixer;
-	audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
+	audio_mixer -> setMasterVolume ( 50 ) ;  /* 80% of max volume. */
 	audio_sched -> setSafetyMargin ( 1.0 ) ;
 	string slfile = current_options.get_fg_root() + "/Sounds/wasp.wav";
 
@@ -688,6 +694,16 @@ static void fgIdleFunction ( void ) {
 	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
 	audio_sched -> loopSample ( s1 );
 	
+	pitch_envelope.setStep  ( 0, 0.01, 0.6 );
+	volume_envelope.setStep ( 0, 0.01, 0.6 );
+
+	audio_sched -> addSampleEnvelope( s1, 0, 0, &
+					  pitch_envelope,
+					  SL_PITCH_ENVELOPE );
+	audio_sched -> addSampleEnvelope( s1, 0, 1, 
+					  &volume_envelope,
+					  SL_VOLUME_ENVELOPE );
+
 	// strcpy(slfile, path);
 	// strcat(slfile, "thunder.wav");
 	// s2 -> loadFile ( slfile );
@@ -872,6 +888,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.52  1998/09/25 16:02:07  curt
+// Added support for pitch and volume envelopes and tied them to the
+// throttle setting.
+//
 // Revision 1.51  1998/09/15 04:27:28  curt
 // Changes for new Astro code.
 //
