@@ -313,6 +313,83 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 }
 
 
+/**
+ * Add an object to a random location inside a triangle.
+ *
+ * @param p1 The first vertex of the triangle.
+ * @param p2 The second vertex of the triangle.
+ * @param p3 The third vertex of the triangle.
+ * @param center The center of the triangle.
+ * @param ROT The world-up rotation matrix.
+ * @param mat The material object.
+ * @param object_index The index of the dynamically-placed object in
+ *        the material.
+ * @param branch The branch where the object should be added to the
+ *        scene graph.
+ */
+static void
+add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
+			sgMat4 ROT, FGNewMat * mat, int object_index,
+			ssgBranch * branch)
+{
+    sgVec3 result;
+
+    random_pt_inside_tri(result, p1, p2, p3);
+    sgSubVec3(result, center);
+    sgMat4 OBJ_pos, OBJ;
+    sgMakeTransMat4(OBJ_pos, result);
+    sgCopyMat4(OBJ, ROT);
+    sgPostMultMat4(OBJ, OBJ_pos);
+    ssgTransform * pos = new ssgTransform;
+    pos->setTransform(OBJ);
+    float obj_range = mat->get_object_lod(object_index);
+    float range_div = (sg_random() * obj_range);
+    if (range_div < 0.0000001) {
+      // avoid a divide by zero error
+      range_div = 1.0;
+    }
+    float random_range = 160.0 * obj_range / range_div + obj_range;
+    float ranges[] = {0, random_range};
+    ssgRangeSelector *range = new ssgRangeSelector;
+    range->setRanges(ranges, 2);
+    range->addKid(mat->get_object(object_index));
+    pos->addKid(range);
+    branch->addKid(pos);
+}
+
+
+/**
+ * Create a rotation matrix to align an object for the current lat/lon.
+ *
+ * By default, objects are aligned for the north pole.  This code
+ * calculates a matrix to rotate them for the surface of the earth in
+ * the current location.
+ *
+ * TODO: there should be a single version of this method somewhere
+ * for all of SimGear.
+ *
+ * @param ROT The resulting rotation matrix.
+ * @param hdg_deg The object heading in degrees.
+ * @param lon_deg The longitude in degrees.
+ * @param lat_deg The latitude in degrees.
+ */
+static void
+makeWorldUpRotationMatrix (sgMat4 ROT, double hdg_deg,
+			   double lon_deg, double lat_deg)
+{
+    sgVec3 obj_right, obj_up;
+    sgSetVec3(obj_right, 0.0, 1.0, 0.0); // Y axis
+    sgSetVec3(obj_up, 0.0, 0.0, 1.0); // Z axis
+    sgMat4 ROT_lon, ROT_lat, ROT_hdg;
+    sgMakeRotMat4(ROT_lon, lon_deg, obj_up);
+    sgMakeRotMat4(ROT_lat, 90 - lat_deg, obj_right);
+    sgMakeRotMat4(ROT_hdg, hdg_deg, obj_up);
+    sgCopyMat4(ROT, ROT_hdg);
+    sgPostMultMat4(ROT, ROT_lat);
+    sgPostMultMat4(ROT, ROT_lon);
+}
+
+
 static void
 gen_random_surface_objects (ssgLeaf *leaf,
 			    ssgBranch *branch,
@@ -330,20 +407,8 @@ gen_random_surface_objects (ssgLeaf *leaf,
     float hdg_deg = 0.0;	// do something here later
 
 
-    // The object will be aligned for the north pole.  This code
-    // calculates a matrix to rotate it to for the surface of the
-    // earth in the current location.
-    sgVec3 obj_right, obj_up;
-    sgSetVec3(obj_right, 0.0, 1.0, 0.0); // Y axis
-    sgSetVec3(obj_up, 0.0, 0.0, 1.0); // Z axis
-    sgMat4 ROT_lon, ROT_lat, ROT_hdg;
-    sgMakeRotMat4(ROT_lon, lon_deg, obj_up);
-    sgMakeRotMat4(ROT_lat, 90 - lat_deg, obj_right);
-    sgMakeRotMat4(ROT_hdg, hdg_deg, obj_up);
     sgMat4 ROT;
-    sgCopyMat4(ROT, ROT_hdg);
-    sgPostMultMat4(ROT, ROT_lat);
-    sgPostMultMat4(ROT, ROT_lon);
+    makeWorldUpRotationMatrix(ROT, hdg_deg, lon_deg, lat_deg);
 
     if ( num > 0 ) {
 	short int n1, n2, n3;
@@ -383,27 +448,8 @@ gen_random_surface_objects (ssgLeaf *leaf,
 	      
 	      // place an object each unit of area
 	      while ( num > 1.0 ) {
-		random_pt_inside_tri( result, p1, p2, p3 );
-		sgSubVec3(result, center);
-		sgMat4 OBJ_pos, OBJ;
-		sgMakeTransMat4(OBJ_pos, result);
-		sgCopyMat4(OBJ, ROT);
-		sgPostMultMat4(OBJ, OBJ_pos);
-		ssgTransform * pos = new ssgTransform;
-		pos->setTransform(OBJ);
-                float obj_range = mat->get_object_lod(j);
-                float range_div = (sg_random() * obj_range);
-                if (range_div < 0.0000001) {
-                    // avoid a divide by zero error
-                    range_div = 1.0;
-                }
-                float random_range = 160.0 * obj_range / range_div + obj_range;
-                float ranges[] = {0, random_range};
-                ssgRangeSelector *range = new ssgRangeSelector;
-                range->setRanges(ranges, 2);
-                range->addKid(mat->get_object(j));
-                pos->addKid(range);
-		location->addKid(pos);
+		add_object_to_triangle(p1, p2, p3, center,
+				       ROT, mat, j, location);
 		num -= 1.0;
 	      }
 	      // for partial units of area, use a zombie door method to
@@ -412,33 +458,20 @@ gen_random_surface_objects (ssgLeaf *leaf,
 	      if ( num > 0.0 ) {
 		if ( sg_random() <= num ) {
 		  // a zombie made it through our door
-		  random_pt_inside_tri( result, p1, p2, p3 );
-		  sgSubVec3(result, center);
-		  sgMat4 OBJ_pos, OBJ;
-		  sgMakeTransMat4(OBJ_pos, result);
-		  sgCopyMat4(OBJ, ROT);
-		  sgPostMultMat4(OBJ, OBJ_pos);
- 		  ssgTransform * pos = new ssgTransform;
- 		  pos->setTransform(OBJ);
-                  float obj_range = mat->get_object_lod(j);
-                  float range_div = (sg_random() * obj_range);
-                  if (range_div < 0.0000001) {
-                      // avoid a divide by zero error
-                      range_div = 1.0;
-                  }
-                  float random_range = 160.0 * obj_range / range_div + obj_range;
-                  float ranges[] = {0, random_range};
-                  ssgRangeSelector *range = new ssgRangeSelector;
-                  range->setRanges(ranges, 2);
-                  range->addKid(mat->get_object(j));
-		  pos->addKid(range);
-		  location->addKid(pos);
+		  add_object_to_triangle(p1, p2, p3, center,
+					 ROT, mat, j, location);
 		}
 	      }
 	    }
 	}
     }
 }
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Scenery loaders.
+////////////////////////////////////////////////////////////////////////
 
 
 // Load an Ascii obj file
