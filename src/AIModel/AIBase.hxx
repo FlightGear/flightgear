@@ -21,6 +21,7 @@
 #define _FG_AIBASE_HXX
 
 #include <string>
+#include <list>
 
 #include <simgear/constants.h>
 #include <simgear/math/point3d.hxx>
@@ -29,6 +30,7 @@
 #include <Main/fg_props.hxx>
 
 SG_USING_STD(string);
+SG_USING_STD(list);
 
 class FGAIManager;
 class FGAIFlightPlan;
@@ -67,6 +69,9 @@ typedef struct {
    bool wind;                 // if true, model reacts to parent wind
    double mass;               // in slugs
    bool aero_stabilised;      // if true, ballistic object aligns with trajectory
+   list<string> solid_objects;    // List of solid object names
+   list<string> wire_objects;     // List of wire object names
+   list<string> catapult_objects; // List of catapult object names
    double radius;             // used by ship ojects, in feet
     
 } FGAIModelEntity;

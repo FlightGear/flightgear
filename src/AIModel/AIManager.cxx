@@ -192,7 +192,7 @@ FGAIManager::createCarrier( FGAIModelEntity *entity ) {
     
     //cout << "creating carrier" << endl;
 
-        FGAIShip* ai_carrier = new FGAICarrier(this);
+        FGAICarrier* ai_carrier = new FGAICarrier(this);
         ai_list.push_back(ai_carrier);
         ++numObjects[0];
         ++numObjects[FGAIBase::otShip];
@@ -203,6 +203,9 @@ FGAIManager::createCarrier( FGAIModelEntity *entity ) {
         ai_carrier->setLongitude(entity->longitude);
         ai_carrier->setLatitude(entity->latitude);
         ai_carrier->setBank(entity->rudder);
+        ai_carrier->setSolidObjects(entity->solid_objects);
+        ai_carrier->setWireObjects(entity->wire_objects);
+        ai_carrier->setCatapultObjects(entity->catapult_objects);
         ai_carrier->setRadius(entity->radius);
 
         if ( entity->fp ) {

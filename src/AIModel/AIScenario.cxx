@@ -16,6 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <cstdio>
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -32,7 +33,8 @@
 #include "AIScenario.hxx"
 #include "AIFlightPlan.hxx"
 
-
+static list<string>
+getAllNodeVals(const char* name, SGPropertyNode * entry_node);
 
 FGAIScenario::FGAIScenario(string &filename)
 {
@@ -92,6 +94,10 @@ FGAIScenario::FGAIScenario(string &filename)
      en->y_pivot         = entry_node->getDoubleValue("y-pivot", 0.0); 
      en->z_pivot         = entry_node->getDoubleValue("z-pivot", 0.0); */
      
+     en->wire_objects     = getAllNodeVals("wire", entry_node);
+     en->catapult_objects = getAllNodeVals("catapult", entry_node);
+     en->solid_objects    = getAllNodeVals("solid", entry_node);
+
      en->fp             = NULL;
      if (en->flightplan != ""){
         en->fp = new FGAIFlightPlan( en->flightplan );
@@ -125,6 +131,26 @@ int FGAIScenario::nEntries( void )
 {
   return entries.size();
 }
+
+static list<string>
+getAllNodeVals(const char* name, SGPropertyNode * entry_node)
+{
+  list<string> retval;
+  int i=0;
+  do {
+    char nodename[100];
+    snprintf(nodename, sizeof(nodename), "%s[%d]", name, i);
+    const char* objname = entry_node->getStringValue(nodename, 0);
+    if (objname == 0)
+      return retval;
+
+    retval.push_back(string(objname));
+    ++i;
+  } while (1);
+
+  return retval;
+}
+
 
 // end scenario.cxx
 

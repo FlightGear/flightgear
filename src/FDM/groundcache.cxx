@@ -49,31 +49,31 @@ FGGroundCache::extractGroundProperty( ssgLeaf* l )
   GroundProperty *gp = new GroundProperty;
   gp->wire_id = -1;
   
-//   FGAICarrierHardware *ud =
-//     dynamic_cast<FGAICarrierHardware*>(l->getUserData());
-//   if (ud) {
-//     switch (ud->type) {
-//     case FGAICarrierHardware::Wire:
-//       gp->type = FGInterface::Wire;
-//       gp->wire_id = ud->id;
-//       break;
-//     case FGAICarrierHardware::Catapult:
-//       gp->type = FGInterface::Catapult;
-//       break;
-//     default:
-//       gp->type = FGInterface::Solid;
-//       break;
-//     }
+  FGAICarrierHardware *ud =
+    dynamic_cast<FGAICarrierHardware*>(l->getUserData());
+  if (ud) {
+    switch (ud->type) {
+    case FGAICarrierHardware::Wire:
+      gp->type = FGInterface::Wire;
+      gp->wire_id = ud->id;
+      break;
+    case FGAICarrierHardware::Catapult:
+      gp->type = FGInterface::Catapult;
+      break;
+    default:
+      gp->type = FGInterface::Solid;
+      break;
+    }
 
-//     // Copy the velocity from the carrier class.
-//     ud->carrier->getVelocityWrtEarth( gp->vel );
-//   }
+    // Copy the velocity from the carrier class.
+    ud->carrier->getVelocityWrtEarth( gp->vel );
+  }
 
-//   else {
+  else {
 
     // Initialize velocity field.
     sgSetVec3( gp->vel, 0.0, 0.0, 0.0 );
-//   }
+  }
   
   // Get the texture name and decide what ground type we have.
   ssgState *st = l->getState();

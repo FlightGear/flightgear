@@ -21,8 +21,52 @@
 #ifndef _FG_AICARRIER_HXX
 #define _FG_AICARRIER_HXX
 
+#include <string>
+#include <list>
+#include <plib/ssg.h>
+#include <simgear/compiler.h>
+
+SG_USING_STD(string);
+SG_USING_STD(list);
+
 #include "AIShip.hxx"
 class FGAIManager;
+class FGAICarrier;
+
+class FGAICarrierHardware : public ssgBase {
+public:
+
+  enum Type { Catapult, Wire, Solid };
+
+  FGAICarrier *carrier;
+  int id;
+  Type type;
+
+  static FGAICarrierHardware* newCatapult(FGAICarrier *c) {
+    FGAICarrierHardware* ch = new FGAICarrierHardware;
+    ch->carrier = c;
+    ch->type = Catapult;
+    ch->id = unique_id++;
+    return ch;
+  }
+  static FGAICarrierHardware* newWire(FGAICarrier *c) {
+    FGAICarrierHardware* ch = new FGAICarrierHardware;
+    ch->carrier = c;
+    ch->type = Wire;
+    ch->id = unique_id++;
+    return ch;
+  }
+  static FGAICarrierHardware* newSolid(FGAICarrier *c) {
+    FGAICarrierHardware* ch = new FGAICarrierHardware;
+    ch->carrier = c;
+    ch->type = Solid;
+    ch->id = unique_id++;
+    return ch;
+  }
+
+private:
+  static int unique_id;
+};
 
 class FGAICarrier  : public FGAIShip {
 	
@@ -30,10 +74,29 @@ public:
 	
 	FGAICarrier(FGAIManager* mgr);
 	~FGAICarrier();
+
+        void setSolidObjects(const list<string>& solid_objects);
+        void setWireObjects(const list<string>& wire_objects);
+        void setCatapultObjects(const list<string>& catapult_objects);
+
+	void getVelocityWrtEarth(sgVec3 v);
 	
+	bool init();
+
 private:
 
 	void update(double dt);
+	void mark_nohot(ssgEntity*);
+	bool mark_wires(ssgEntity*, const list<string>&);
+	bool mark_cat(ssgEntity*, const list<string>&);
+	bool mark_solid(ssgEntity*, const list<string>&);
+
+	list<string> solid_objects;       // List of solid object names
+	list<string> wire_objects;        // List of wire object names
+	list<string> catapult_objects;    // List of catapult object names
+
+	// Velocity wrt earth.
+	sgVec3 vel_wrt_earth;
 };
 
 #endif  // _FG_AICARRIER_HXX
