@@ -84,6 +84,13 @@ FGFX::init()
 }
 
 void
+FGFX::reinit()
+{
+   _sound.clear();
+   init();
+};
+
+void
 FGFX::bind ()
 {
 }

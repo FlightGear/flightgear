@@ -123,7 +123,7 @@ public:
 
 
     /**
-     * Initialize the sound manager.
+     * (re) initialize the sound manager.
      */
     void init();
 
@@ -160,6 +160,9 @@ public:
 
     // is audio working?
     inline bool is_working() const { return !audio_sched->notWorking(); }
+
+    // reinitialize the sound manager
+    inline void reinit() { init(); }
 
     // add a sound effect, return true if successful
     bool add( FGSimpleSound *sound, const string& refname);

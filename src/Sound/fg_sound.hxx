@@ -53,6 +53,8 @@ public:
   virtual void unbind ();
   virtual void update (double dt);
 
+  void stop();
+
 protected:
 
   enum { MAXPROP=5 };

@@ -35,12 +35,18 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/viewmgr.hxx>
+#include <Sound/fg_fx.hxx>
+#include <Sound/soundmgr.hxx>
+#include <Cockpit/panel.hxx>
+#include <Cockpit/hud.hxx>
+#include <Cockpit/panel_io.hxx>
+#include <Model/acmodel.hxx>
+#include <Autopilot/newauto.hxx>
 #include <Main/fgfs.hxx>
 
 #include "aircraft.hxx"
 
-extern void fgInitFDM(void);
-class FGFX;
 
 // This is a record containing all the info for the aircraft currently
 // being operated
@@ -149,10 +155,18 @@ fgLoadAircraft (const SGPropertyNode * arg)
         fgSetBool("/sim/freeze/master", true);
     }
 
+    // TODO:
+    //    remove electrical system
     cur_fdm_state->unbind();
 
+    // Save the selected aircraft model since restoreInitialState
+    // will obverwrite it.
+    //
     string aircraft = fgGetString("/sim/aircraft", "");
     globals->restoreInitialState();
+
+    fgSetString("/sim/aircraft", aircraft.c_str());
+    fgSetString("/sim/panel/path", "Aircraft/c172/Panels/c172-vfr-panel.xml");
 
     if ( aircraft.size() > 0 ) {
         SGPath aircraft_path(globals->get_fg_root());
@@ -173,18 +187,55 @@ fgLoadAircraft (const SGPropertyNode * arg)
         SG_LOG(SG_INPUT, SG_ALERT, "No default aircraft specified");
     }
 
-    // Update the FDM
+    // Initialize the (new) 2D panel.
     //
-    fgSetString("/sim/aircraft", aircraft.c_str());
-    fgInitFDM();
+    string panel_path = fgGetString("/sim/panel/path",
+                                    "Aircraft/c172/Panels/c172-vfr-panel.xml");
+
+    FGPanel *panel = fgReadPanel(panel_path);
+    if (panel == 0) {
+        SG_LOG( SG_INPUT, SG_ALERT,
+                "Error reading new panel from " << panel_path );
+    } else {
+        SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
+        globals->get_current_panel()->unbind();
+        delete globals->get_current_panel();
+        globals->set_current_panel( panel );
+        globals->get_current_panel()->init();
+        globals->get_current_panel()->bind();
+        globals->get_current_panel()->update(0);
+    }
+
+    // Load the new 3D model
+    //
+    globals->get_aircraft_model()->unbind();
+    delete globals->get_aircraft_model();
+    globals->set_aircraft_model(new FGAircraftModel);
+    globals->get_aircraft_model()->init();
+    globals->get_aircraft_model()->bind();
+
+    // TODO:
+    //    load new electrical system
+    //
 
     // update our position based on current presets
     fgInitPosition();
+
+    // Update the HUD
+    fgHUDInit(&current_aircraft);
 
     SGTime *t = globals->get_time_params();
     delete t;
     t = fgInitTime();
     globals->set_time_params( t );
+
+    // Reinitialize some subsystems
+    //
+    globals->get_viewmgr()->reinit();
+    globals->get_controls()->reset_all();
+    globals->get_autopilot()->reset();
+    globals->get_aircraft_model()->reinit();
+    globals->get_subsystem("fx")->reinit();
 
     fgReInitSubsystems();
 

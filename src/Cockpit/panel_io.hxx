@@ -35,6 +35,8 @@
 
 SG_USING_STD(istream);
 
+class FGPanel;
+
 extern FGPanel * fgReadPanel (istream &input);
 extern FGPanel * fgReadPanel (const string &relative_path);
 

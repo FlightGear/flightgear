@@ -44,7 +44,7 @@
 
 #include <GUI/gui.h>
 
-#include "panel.hxx"
+// #include "panel.hxx"
 #include "panel_io.hxx"
 
 //built-in layers
