@@ -60,5 +60,10 @@ void fgUpdateMoonPos( void );
 
 void fgSunPosition(time_t ssue, double *lon, double *lat);
 
+/* given a particular time expressed in side real time at prime
+ * meridian (GST), compute position on the earth (lat, lon) such that
+ * sun is directly overhead.  (lat, lon are reported in radians */
+void fgSunPositionGST(double gst, double *lon, double *lat);
 
-#endif /* _SUNPOS_H */
+
+#endif /* _SUNPOS_HXX */

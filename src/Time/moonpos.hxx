@@ -61,4 +61,4 @@ void fgUpdateMoonPos( void );
 void fgMoonPosition(time_t ssue, double *lon, double *lat);
 
 
-#endif /* _MOONPOS_H */
+#endif /* _MOONPOS_HXX */

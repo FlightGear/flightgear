@@ -6,6 +6,7 @@ libTime_a_SOURCES = \
 	light.cxx light.hxx \
 	moonpos.cxx moonpos.hxx \
 	sunpos.cxx sunpos.hxx \
+	sunsolver.cxx sunsolver.hxx \
 	tmp.cxx tmp.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

@@ -90,6 +90,10 @@ bool fgInitPosition();
 // returns a new instance of the SGTime class
 SGTime *fgInitTime();
 
+// set up a time offset (aka warp) if one is specified
+void fgInitTimeOffset();
+
+
 #endif // _FG_INIT_HXX
 
 

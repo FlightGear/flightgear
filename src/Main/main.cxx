@@ -954,8 +954,8 @@ void fgUpdateTimeDepCalcs() {
 
     // Update solar system
     globals->get_ephem()->update( globals->get_time_params()->getMjd(),
-                              globals->get_time_params()->getLst(),
-                              cur_fdm_state->get_Latitude() );
+                                  globals->get_time_params()->getLst(),
+                                  cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
     current_radiostack->update(delta_time_sec);
@@ -1369,6 +1369,10 @@ static void fgIdleFunction ( void ) {
 
         idle_state++;
     } else if ( idle_state == 4 ) {
+        // Initialize the time offset (warp) after fgInitSubsystem
+        // (which initializes the lighting interpolation tables.)
+        fgInitTimeOffset();
+
         // setup OpenGL view parameters
         fgInitVisuals();
 
@@ -1381,6 +1385,9 @@ static void fgIdleFunction ( void ) {
         idle_state++;
     } else if ( idle_state == 6 ) {
         // sleep(1);
+
+        fgUpdateSkyAndLightingParams();
+
         idle_state = 1000;
 
         SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
@@ -1725,11 +1732,11 @@ bool fgMainInit( int argc, char **argv ) {
     ephem_data_path.append( "Astro" );
     SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
     ephem->update( globals->get_time_params()->getMjd(),
-               globals->get_time_params()->getLst(),
-               0.0 );
+                   globals->get_time_params()->getLst(),
+                   0.0 );
     globals->set_ephem( ephem );
 
-                            // TODO: move to environment mgr
+    // TODO: move to environment mgr
     thesky = new SGSky;
     SGPath texture_path(globals->get_fg_root());
     texture_path.append("Textures");
@@ -1738,7 +1745,6 @@ bool fgMainInit( int argc, char **argv ) {
         SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
         thesky->add_cloud_layer(layer);
     }
-
 
     SGPath sky_tex_path( globals->get_fg_root() );
     sky_tex_path.append( "Textures" );

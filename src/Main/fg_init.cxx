@@ -108,8 +108,9 @@
 #include <Systems/system_mgr.hxx>
 #include <Time/FGEventMgr.hxx>
 #include <Time/light.hxx>
-#include <Time/sunpos.hxx>
 #include <Time/moonpos.hxx>
+#include <Time/sunpos.hxx>
+#include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
 
 #ifdef FG_MPLAYER_AS
@@ -1255,38 +1256,6 @@ SGTime *fgInitTime() {
                             zone.str(),
                             cur_time_override->getLongValue() );
 
-    // Handle potential user specified time offsets
-    time_t cur_time = t->get_cur_time();
-    time_t currGMT = sgTimeGetGMT( gmtime(&cur_time) );
-    time_t systemLocalTime = sgTimeGetGMT( localtime(&cur_time) );
-    time_t aircraftLocalTime = 
-        sgTimeGetGMT( fgLocaltime(&cur_time, t->get_zonename() ) );
-
-    // Okay, we now have six possible scenarios
-    int offset = fgGetInt("/sim/startup/time-offset");
-    const string &offset_type = fgGetString("/sim/startup/time-offset-type");
-    if (offset_type == "system-offset") {
-        globals->set_warp( offset );
-    } else if (offset_type == "gmt-offset") {
-        globals->set_warp( offset - (currGMT - systemLocalTime) );
-    } else if (offset_type == "latitude-offset") {
-        globals->set_warp( offset - (aircraftLocalTime - systemLocalTime) );
-    } else if (offset_type == "system") {
-        globals->set_warp( offset - cur_time );
-    } else if (offset_type == "gmt") {
-        globals->set_warp( offset - currGMT );
-    } else if (offset_type == "latitude") {
-        globals->set_warp( offset - (aircraftLocalTime - systemLocalTime) - 
-                           cur_time ); 
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "FG_TIME::Unsupported offset type " << offset_type );
-        exit( -1 );
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO, "After time init, warp = " 
-            << globals->get_warp() );
-
     globals->set_warp_delta( 0 );
 
     t->update( 0.0, 0.0,
@@ -1296,6 +1265,78 @@ SGTime *fgInitTime() {
     return t;
 }
 
+
+// set up a time offset (aka warp) if one is specified
+void fgInitTimeOffset() {
+    static const SGPropertyNode *longitude
+        = fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+        = fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *cur_time_override
+        = fgGetNode("/sim/time/cur-time-override", true);
+
+    // Handle potential user specified time offsets
+    SGTime *t = globals->get_time_params();
+    time_t cur_time = t->get_cur_time();
+    time_t currGMT = sgTimeGetGMT( gmtime(&cur_time) );
+    time_t systemLocalTime = sgTimeGetGMT( localtime(&cur_time) );
+    time_t aircraftLocalTime = 
+        sgTimeGetGMT( fgLocaltime(&cur_time, t->get_zonename() ) );
+
+    // Okay, we now have several possible scenarios
+    int offset = fgGetInt("/sim/startup/time-offset");
+    int warp = 0;
+    const string &offset_type = fgGetString("/sim/startup/time-offset-type");
+    if ( offset_type == "noon" ) {
+        warp = fgTimeSecondsUntilNoon( cur_time,
+                                       longitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS,
+                                       latitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS ); 
+    } else if ( offset_type == "midnight" ) {
+        warp = fgTimeSecondsUntilMidnight( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS ); 
+    } else if ( offset_type == "dawn" ) {
+        warp = fgTimeSecondsUntilDawn( cur_time,
+                                       longitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS,
+                                       latitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS ); 
+     } else if ( offset_type == "dusk" ) {
+        warp = fgTimeSecondsUntilDusk( cur_time,
+                                       longitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS,
+                                       latitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS ); 
+    } else if ( offset_type == "system-offset" ) {
+        warp = offset;
+    } else if ( offset_type == "gmt-offset" ) {
+        warp = offset - (currGMT - systemLocalTime);
+    } else if ( offset_type == "latitude-offset" ) {
+        warp = offset - (aircraftLocalTime - systemLocalTime);
+    } else if ( offset_type == "system" ) {
+        warp = offset - cur_time;
+    } else if ( offset_type == "gmt" ) {
+        warp = offset - currGMT;
+    } else if ( offset_type == "latitude" ) {
+        warp = offset - (aircraftLocalTime - systemLocalTime) - cur_time; 
+    } else {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "FG_TIME::Unsupported offset type " << offset_type );
+        exit( -1 );
+    }
+    globals->set_warp( warp );
+    t->update( 0.0, 0.0, cur_time_override->getLongValue(),
+               globals->get_warp() );
+
+    SG_LOG( SG_GENERAL, SG_INFO, "After fgInitTimeOffset(): warp = " 
+            << globals->get_warp() );
+
+    fgUpdateSkyAndLightingParams();
+}
 
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight

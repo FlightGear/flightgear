@@ -211,7 +211,7 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
  * meridian (GST), compute position on the earth (lat, lon) such that
  * sun is directly overhead.  (lat, lon are reported in radians */
 
-static void fgSunPositionGST(double gst, double *lon, double *lat) {
+void fgSunPositionGST(double gst, double *lon, double *lat) {
     /* time_t  ssue;           seconds since unix epoch */
     /* double *lat;            (return) latitude        */
     /* double *lon;            (return) longitude       */
@@ -227,7 +227,7 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 			    globals->get_ephem()->get_sun()->getLat(),
 			    &alpha, &delta );
 
-//    tmp = alpha - (SGD_2PI/24)*GST(ssue);
+    // tmp = alpha - (SGD_2PI/24)*GST(ssue);
     tmp = alpha - (SGD_2PI/24)*gst;	
     if (tmp < -SGD_PI) {
 	do tmp += SGD_2PI;
