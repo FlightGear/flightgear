@@ -62,12 +62,8 @@ clean:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1997/05/30 19:30:16  curt
+# The LaRCsim flight model is starting to look like it is working.
+#
 # Revision 1.1  1997/05/30 19:25:56  curt
 # The MAT3 routines from SRGP.
-#
-# Revision 1.2  1997/05/23 15:40:29  curt
-# Added GNU copyright headers.
-#
-# Revision 1.1  1997/05/16 15:58:23  curt
-# Initial revision.
-#
