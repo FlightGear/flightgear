@@ -258,7 +258,8 @@ void fgInitVisuals( void ) {
 // For HiRes screen Dumps using Brian Pauls TR Library
 void trRenderFrame( void ) {
 #ifdef FG_ENABLE_MULTIPASS_CLOUDS
-    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds");
+    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds") &&
+                            !SGCloudLayer::enable_bump_mapping; // ugly artefact now
 #else
     bool multi_pass_clouds = false;
 #endif
@@ -383,7 +384,8 @@ void fgRenderFrame() {
     bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
     bool distance_attenuation = fgGetBool("/sim/rendering/distance-attenuation");
 #ifdef FG_ENABLE_MULTIPASS_CLOUDS
-    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds");
+    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds") && 
+                                !SGCloudLayer::enable_bump_mapping;  // ugly artefact now
 #else
     bool multi_pass_clouds = false;
 #endif
