@@ -87,7 +87,6 @@ public:
   void bind(void);
   void unbind(void);
 
-  
 private:
   FGColumnVector3 vOmegaLocal;
   FGColumnVector3 vForces;

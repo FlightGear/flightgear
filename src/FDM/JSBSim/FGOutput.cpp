@@ -211,6 +211,10 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << ", ";
       outstream << Aerodynamics->GetCoefficientStrings();
     }
+    if (SubSystems & ssFCS) {
+      outstream << ", ";
+      outstream << FCS->GetComponentStrings();
+    }
     if (SubSystems & ssGroundReactions) {
       outstream << ", ";
       outstream << GroundReactions->GetGroundReactionStrings();
@@ -293,6 +297,10 @@ void FGOutput::DelimitedOutput(string fname)
   if (SubSystems & ssCoefficients) {
     outstream << ", ";
     outstream << Aerodynamics->GetCoefficientValues();
+  }
+  if (SubSystems & ssFCS) {
+    outstream << ", ";
+    outstream << FCS->GetComponentValues();
   }
   if (SubSystems & ssGroundReactions) {
     outstream << ", ";

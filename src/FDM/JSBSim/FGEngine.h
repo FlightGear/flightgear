@@ -111,7 +111,7 @@ public:
   FGEngine(FGFDMExec* exec);
   virtual ~FGEngine();
 
-  enum EngineType {etUnknown, etRocket, etPiston, etTurboProp, etTurboJet, etTurboShaft};
+  enum EngineType {etUnknown, etRocket, etPiston, etTurbine};
 
   virtual double  GetThrottleMin(void) { return MinThrottle; }
   virtual double  GetThrottleMax(void) { return MaxThrottle; }

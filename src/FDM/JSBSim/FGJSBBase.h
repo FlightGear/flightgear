@@ -165,7 +165,24 @@ enum eParam {
   FG_VBARV,     //vertical tail volume 
   FG_GEAR_CMD,
   FG_GEAR_POS,
-  FG_HYSTPARM
+  FG_HYSTPARM,
+  AP_ELEVATOR_CMD,
+  AP_AILERON_CMD,
+  AP_RUDDER_CMD,
+  AP_THROTTLE_CMD,
+  AP_SET_ATTITUDE,
+  AP_SET_ALTITUDE,
+  AP_SET_HEADING,
+  AP_SET_AIRSPEED,
+  AP_ACQUIRE_ATTITUDE,
+  AP_ACQUIRE_ALTITUDE,
+  AP_ACQUIRE_HEADING,
+  AP_ACQUIRE_AIRSPEED,
+  AP_ATTITUDE_HOLD_ON,
+  AP_ALTITUDE_HOLD_ON,
+  AP_HEADING_HOLD_ON,
+  AP_AIRSPEED_HOLD_ON,
+  AP_WINGSLEVEL_HOLD_ON
 };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -299,9 +316,11 @@ protected:
   static const double radtodeg;
   static const double degtorad;
   static const double hptoftlbssec;
+  static const double psftoinhg;
   static const double fpstokts;
   static const double ktstofps;
   static const double inchtoft;
+  static const double in3tom3;
   static const double Reng;         // Specific Gas Constant,ft^2/(sec^2*R)
   static const double SHRatio;
   static const string needed_cfg_version;

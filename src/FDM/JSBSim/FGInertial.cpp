@@ -51,14 +51,13 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
 {
   Name = "FGInertial";
 
-  vRadius.InitMatrix();
-  
   // Defaults
   RotationRate    = 0.00007272205217;
   GM              = 14.06252720E15;
   RadiusReference = 20925650.00;
   gAccelReference = GM/(RadiusReference*RadiusReference);
   gAccel          = GM/(RadiusReference*RadiusReference);
+  vRadius.InitMatrix();
   vCoriolis.InitMatrix();
   vCentrifugal.InitMatrix();
   vGravity.InitMatrix();
