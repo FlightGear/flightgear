@@ -338,7 +338,7 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 
 
 // Load an Ascii obj file
-static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
+ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 				  ssgVertexArray *lights, const bool is_base)
 {
     FGNewMat *newmat = NULL;
@@ -902,7 +902,7 @@ static ssgLeaf *gen_leaf( const string& path,
 
 
 // Load an Binary obj file
-static ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
+ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 				ssgVertexArray *lights, const bool is_base)
 {
     int i;
@@ -983,25 +983,4 @@ static ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
     }
 
     return object;
-}
-
-
-// Load an obj file
-ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
-		      ssgVertexArray *lights, const bool is_base)
-{
-    ssgBranch *result = NULL;
-
-    // try loading binary format
-    result = fgBinObjLoad( path, t, lights, is_base );
-    if ( result == NULL ) {
-	// next try the older ascii format
-	result = fgAsciiObjLoad( path, t, lights, is_base );
-	if ( result == NULL ) {
-	    // default to an ocean tile
-	    result = fgGenTile( path, t );
-	}
-    }
-
-    return result;
 }

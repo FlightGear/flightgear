@@ -73,10 +73,10 @@ class FGNewCache {
 public:
 
     // Constructor
-    FGNewCache( void );
+    FGNewCache();
 
     // Destructor
-    ~FGNewCache( void );
+    ~FGNewCache();
 
     // Initialize the tile cache subsystem 
     void init( void );

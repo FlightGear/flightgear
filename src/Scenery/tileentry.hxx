@@ -63,7 +63,9 @@ typedef point_list::iterator point_list_iterator;
 typedef point_list::const_iterator const_point_list_iterator;
 
 
-// Scenery tile class
+/**
+ * A class to encapsulate everything we need to know about a scenery tile.
+ */
 class FGTileEntry {
 
 public:
@@ -90,6 +92,8 @@ public:
     free_vec2_list vec2_ptrs;
     free_index_list index_ptrs;
 
+private:
+
     // ssg tree structure for this tile is as follows:
     // ssgRoot(scene)
     //     - ssgBranch(terrain)
@@ -113,10 +117,15 @@ public:
     // want based on lighting conditions.
     ssgSelector *lights_brightness;
 
+    ssgBranch* obj_load( const std::string& path,
+			 ssgVertexArray* lights, bool is_base );
+
+    ssgLeaf* gen_lights( ssgVertexArray *lights, int inc, float bright );
+
 public:
 
     // Constructor
-    FGTileEntry();
+    FGTileEntry( const SGBucket& b );
 
     // Destructor
     ~FGTileEntry();
@@ -137,6 +146,14 @@ public:
     // Update the ssg transform node for this tile so it can be
     // properly drawn relative to our (0,0,0) point
     void prep_ssg_node( const Point3D& p, float vis);
+
+    /**
+     * Load tile data from a file.
+     * @param base name of directory containing tile data file.
+     * @param is_base is this a base terrain object for which we should generate
+     *        random ground light points
+     */
+    void load( SGPath& base, bool is_base );
 };
 
 

@@ -55,11 +55,16 @@ SG_USING_STD(string);
 #define FG_MAX_NODES 4000
 
 
-// Load a .obj file
-ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile,
-		     ssgVertexArray *lights, const bool is_base);
+// Load a binary object file
+ssgBranch *fgBinObjLoad(const string& path, FGTileEntry *tile,
+			ssgVertexArray *lights, const bool is_base);
+
+// Load an ascii object file
+ssgBranch *fgAsciiObjLoad(const string& path, FGTileEntry *tile,
+			  ssgVertexArray *lights, const bool is_base);
+
+// Generate an ocean tile
+ssgBranch *fgGenTile( const string& path, FGTileEntry *t);
 
 
 #endif // _OBJ_HXX
-
-

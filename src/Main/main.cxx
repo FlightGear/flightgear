@@ -490,7 +490,7 @@ void fgRenderFrame( void ) {
 	    // cout << "----> updating fog params" << endl;
 		
 	    // for GL_FOG_EXP
-	    fog_exp_density = -log(0.01 / actual_visibility);
+	    fog_exp_density = -log(0.01) / actual_visibility;
     
 	    // for GL_FOG_EXP2
 	    fog_exp2_density = sqrt( -log(0.01) ) / actual_visibility;
@@ -565,9 +565,9 @@ void fgRenderFrame( void ) {
 	ssgGetLight( 0 ) -> setPosition( l->sun_vec );
 
         // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
-        // we only set GL_AMBIENT we will never get a completely dark
-        // scene.  Thus instead of playing with GL_AMBIENT, we just
-        // set that to black and instead modify GL_LIGHT_MODEL_AMBIENT.
+        // we only update GL_AMBIENT for our lights we will never get
+        // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
+        // explicitely to black.
 	GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 	GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );

@@ -29,27 +29,46 @@
 
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
+#include STL_STRING
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_random.h>
+#include <simgear/misc/sgstream.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/light.hxx>
+#include <Objects/matlib.hxx>
+#include <Objects/newmat.hxx>
+#include <Objects/obj.hxx>
 
 #include "tileentry.hxx"
 
 SG_USING_STD(for_each);
 SG_USING_STD(mem_fun_ref);
+SG_USING_STD(string);
 
 
 // Constructor
-FGTileEntry::FGTileEntry ()
-    : ncount(0)
+FGTileEntry::FGTileEntry ( const SGBucket& b )
+    : ncount( 0 ),
+      center( Point3D( 0.0 ) ),
+      tile_bucket( b ),
+      terra_transform( new ssgTransform ),
+      terra_range( new ssgRangeSelector )
 {
     nodes.clear();
+
+    // update the contents
+    // if ( vec3_ptrs.size() || vec2_ptrs.size() || index_ptrs.size() ) {
+    //     SG_LOG( SG_TERRAIN, SG_ALERT, 
+    //             "Attempting to overwrite existing or"
+    //             << " not properly freed leaf data." );
+    //     exit(-1);
+    // }
 }
 
 
@@ -228,4 +247,174 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	    lights_brightness->select(0x00);
 	}
     }
+}
+
+
+ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright ) {
+    // generate a repeatable random seed
+    float *p1 = lights->get( 0 );
+    unsigned int *seed = (unsigned int *)p1;
+    sg_srandom( *seed );
+
+    int size = lights->getNum() / inc;
+
+    // Allocate ssg structure
+    ssgVertexArray   *vl = new ssgVertexArray( size + 1 );
+    ssgNormalArray   *nl = NULL;
+    ssgTexCoordArray *tl = NULL;
+    ssgColourArray   *cl = new ssgColourArray( size + 1 );
+
+    sgVec4 color;
+    for ( int i = 0; i < lights->getNum(); ++i ) {
+	// this loop is slightly less efficient than it otherwise
+	// could be, but we want a red light to always be red, and a
+	// yellow light to always be yellow, etc. so we are trying to
+	// preserve the random sequence.
+	float zombie = sg_random();
+	if ( i % inc == 0 ) {
+	    vl->add( lights->get(i) );
+
+	    // factor = sg_random() ^ 2, range = 0 .. 1 concentrated towards 0
+	    float factor = sg_random();
+	    factor *= factor;
+
+	    if ( zombie > 0.5 ) {
+		// 50% chance of yellowish
+		sgSetVec4( color, 0.9, 0.9, 0.3, bright - factor * 0.2 );
+	    } else if ( zombie > 0.15 ) {
+		// 35% chance of whitish
+		sgSetVec4( color, 0.9, 0.9, 0.8, bright - factor * 0.2 );
+	    } else if ( zombie > 0.05 ) {
+		// 10% chance of orangish
+		sgSetVec4( color, 0.9, 0.6, 0.2, bright - factor * 0.2 );
+	    } else {
+		// 5% chance of redish
+		sgSetVec4( color, 0.9, 0.2, 0.2, bright - factor * 0.2 );
+	    }
+	    cl->add( color );
+	}
+    }
+
+    // create ssg leaf
+    ssgLeaf *leaf = 
+	new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
+
+    // assign state
+    FGNewMat *newmat = material_lib.find( "LIGHTS" );
+    leaf->setState( newmat->get_state() );
+
+    return leaf;
+}
+
+
+ssgBranch*
+FGTileEntry::obj_load( const std::string& path,
+		       ssgVertexArray* lights, bool is_base )
+{
+    ssgBranch* result = 0;
+
+    // try loading binary format
+    result = fgBinObjLoad( path, this, lights, is_base );
+    if ( result == NULL ) {
+	// next try the older ascii format
+	result = fgAsciiObjLoad( path, this, lights, is_base );
+	if ( result == NULL ) {
+	    // default to an ocean tile
+	    result = fgGenTile( path, this );
+	}
+    }
+
+    return result;
+}
+
+
+void
+FGTileEntry::load( SGPath& tile_path, bool is_base )
+{
+    // a cheesy hack (to be fixed later)
+    extern ssgBranch *terrain;
+    extern ssgBranch *ground;
+
+    string index_str = tile_bucket.gen_index_str();
+
+    // Generate name of file to load.
+    tile_path.append( tile_bucket.gen_base_path() );
+    SGPath basename = tile_path;
+    basename.append( index_str );
+    string path = basename.str();
+
+    SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << path );
+
+    // fgObjLoad will generate ground lighting for us ...
+    ssgVertexArray *light_pts = new ssgVertexArray( 100 );
+
+    ssgBranch* new_tile = obj_load( path, light_pts, is_base );
+    if ( new_tile != NULL ) {
+	terra_range->addKid( new_tile );
+    }
+
+    // load custom objects
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "CUSTOM OBJECTS" );
+
+    SGPath index_path = tile_path;
+    index_path.append( index_str );
+    index_path.concat( ".ind" );
+
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "Looking in " << index_path.str() );
+
+    sg_gzifstream in( index_path.str() );
+
+    if ( in.is_open() ) {
+	string token, name;
+
+	while ( ! in.eof() ) {
+	    in >> token >> name >> ::skipws;
+	    SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
+		    << " name = " << name );
+
+	    SGPath custom_path = tile_path;
+	    custom_path.append( name );
+	    ssgBranch *custom_obj = obj_load( custom_path.str(), NULL, false );
+	    if ( (new_tile != NULL) && (custom_obj != NULL) ) {
+		new_tile -> addKid( custom_obj );
+	    }
+	}
+    }
+
+    terra_transform->addKid( terra_range );
+
+    // calculate initial tile offset
+    SetOffset( scenery.center );
+    sgCoord sgcoord;
+    sgSetCoord( &sgcoord,
+		offset.x(), offset.y(), offset.z(),
+		0.0, 0.0, 0.0 );
+    terra_transform->setTransform( &sgcoord );
+    terrain->addKid( terra_transform );
+
+    lights_transform = NULL;
+    lights_range = NULL;
+    /* uncomment this section for testing ground lights */
+    if ( light_pts->getNum() ) {
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "generating lights" );
+	lights_transform = new ssgTransform;
+	lights_range = new ssgRangeSelector;
+	lights_brightness = new ssgSelector;
+	ssgLeaf *lights;
+
+	lights = gen_lights( light_pts, 4, 0.7 );
+	lights_brightness->addKid( lights );
+
+	lights = gen_lights( light_pts, 2, 0.85 );
+	lights_brightness->addKid( lights );
+
+	lights = gen_lights( light_pts, 1, 1.0 );
+	lights_brightness->addKid( lights );
+
+	lights_range->addKid( lights_brightness );
+	lights_transform->addKid( lights_range );
+	lights_transform->setTransform( &sgcoord );
+	ground->addKid( lights_transform );
+    }
+    /* end of ground light section */
 }
