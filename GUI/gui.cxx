@@ -151,7 +151,7 @@ void helpCb (puObject *)
     string text = "Help not yet implimented for Win32.";
 #endif
 
-    mkDialog (text.c_str());
+    mkDialog ( (char*)text.c_str() );
 }
 
 /* -----------------------------------------------------------------------
