@@ -119,7 +119,7 @@ bool FGClipper::load_polys(const string& path) {
 			<< lastx << ", " << lasty );
 	    }
 
-	    gpc_add_contour( poly, &v_list );
+	    gpc_add_contour( poly, &v_list, 0 );
 
 	}
 
@@ -172,7 +172,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
     polys_in.safety_base.num_contours = 0;
     polys_in.safety_base.contour = NULL;
-    gpc_add_contour( &polys_in.safety_base, &v_list );
+    gpc_add_contour( &polys_in.safety_base, &v_list, 0 );
 
     // process polygons in priority order
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
@@ -206,11 +206,11 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 		//      << endl;
 		// tmp output accum
 		FILE *ofp= fopen("tmp-debug", "w");
-		gpc_write_polygon(ofp, &tmp);
+		gpc_write_polygon(ofp, 1, &tmp);
 		fclose(ofp);
 
 		ofp= fopen("accum-debug", "w");
-		gpc_write_polygon(ofp, &accum);
+		gpc_write_polygon(ofp, 1, &accum);
 		fclose(ofp);
 
 		gpc_polygon_clip(GPC_DIFF, &tmp, &accum, result_diff);
@@ -259,12 +259,12 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
     // tmp output accum
     FILE *ofp= fopen("accum", "w");
-    gpc_write_polygon(ofp, &accum);
+    gpc_write_polygon(ofp, 1, &accum);
     fclose(ofp);
 
     // tmp output safety_base
     ofp= fopen("remains", "w");
-    gpc_write_polygon(ofp, remains);
+    gpc_write_polygon(ofp, 1, remains);
     fclose(ofp);
 
     return true;

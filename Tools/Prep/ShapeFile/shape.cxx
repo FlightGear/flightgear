@@ -93,7 +93,7 @@ static void clip_and_write_poly( string root, long int p_index, AreaType area,
 
     base.num_contours = 0;
     base.contour = NULL;
-    gpc_add_contour( &base, &v_list );
+    gpc_add_contour( &base, &v_list, 0 );
 
     // FG_LOG( FG_GENERAL, FG_DEBUG, "base = 4 vertices" );
 
@@ -126,7 +126,7 @@ static void clip_and_write_poly( string root, long int p_index, AreaType area,
 	
 	FILE *rfp= fopen( polyfile.c_str(), "w" );
 	fprintf( rfp, "%s\n", poly_type.c_str() );
-	gpc_write_polygon( rfp, &result );
+	gpc_write_polygon( rfp, 1, &result );
 	fclose( rfp );
     }
 
@@ -160,7 +160,7 @@ void add_to_shape(int count, double *coords, gpc_polygon *shape) {
     }
 
     v_list.num_vertices = count;
-    gpc_add_contour( shape, &v_list );
+    gpc_add_contour( shape, &v_list, 0 );
 }
 
 
