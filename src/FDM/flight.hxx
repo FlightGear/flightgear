@@ -512,11 +512,15 @@ public:
     virtual void set_Psi (double psi) { 
       set_Euler_Angles(get_Phi(), get_Theta(), psi);
     }
-    virtual void set_Phi_deg (double phi) { set_Phi(phi * SGD_DEGREES_TO_RADIANS); }
+    virtual void set_Phi_deg (double phi) {
+      set_Phi(phi * SGD_DEGREES_TO_RADIANS);
+    }
     virtual void set_Theta_deg (double theta) {
       set_Theta(theta * SGD_DEGREES_TO_RADIANS); 
     }
-    virtual void set_Psi_deg (double psi) { set_Psi(psi * SGD_DEGREES_TO_RADIANS); }
+    virtual void set_Psi_deg (double psi) {
+      set_Psi(psi * SGD_DEGREES_TO_RADIANS);
+    }
     
     // Flight Path
     virtual void set_Climb_Rate( double roc);
