@@ -21,9 +21,10 @@
  * Input properties:
  *
  * /instrumentation/"name"/serviceable
- * /orientation/heading-deg
- * /orientation/beta-deg
- * /environment/magnetic-variation-deg
+ * /orientation/roll-deg
+ * /orientation/pitch-deg
+ * /orientation/heading-magnetic-deg
+ * /orientation/side-slip-deg
  * /environment/magnetic-dip-deg
  * /accelerations/ned/north-accel-fps_sec
  * /accelerations/ned/east-accel-fps_sec
@@ -54,13 +55,11 @@ private:
     int num;
 
     SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _heading_node;
     SGPropertyNode_ptr _roll_node;
+    SGPropertyNode_ptr _pitch_node;
+    SGPropertyNode_ptr _heading_node;
     SGPropertyNode_ptr _beta_node;
-    SGPropertyNode_ptr _variation_node;
     SGPropertyNode_ptr _dip_node;
-    SGPropertyNode_ptr _y_accel_node;
-    SGPropertyNode_ptr _z_accel_node;
     SGPropertyNode_ptr _north_accel_node;
     SGPropertyNode_ptr _east_accel_node;
     SGPropertyNode_ptr _down_accel_node;

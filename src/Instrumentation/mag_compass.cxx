@@ -59,14 +59,14 @@ MagCompass::init ()
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
-    _heading_node =
-        fgGetNode("/orientation/heading-deg", true);
     _roll_node =
         fgGetNode("/orientation/roll-deg", true);
+    _pitch_node =
+        fgGetNode("/orientation/pitch-deg", true);
+    _heading_node =
+        fgGetNode("/orientation/heading-magnetic-deg", true);
     _beta_node =
         fgGetNode("/orientation/side-slip-deg", true);
-    _variation_node =
-        fgGetNode("/environment/magnetic-variation-deg", true);
     _dip_node =
         fgGetNode("/environment/magnetic-dip-deg", true);
     _north_accel_node =
@@ -84,46 +84,68 @@ MagCompass::init ()
 void
 MagCompass::update (double delta_time_sec)
 {
+                                // don't update if it's broken
+    if (!_serviceable_node->getBoolValue())
+        return;
+
     /*
       Formula for northernly turning error from
       http://williams.best.vwh.net/compass/node4.html:
 
       Hc: compass heading
-      Hm: magnetic heading
+      psi: magnetic heading
       theta: bank angle (right positive; should be phi here)
       mu: dip angle (down positive)
 
       Hc = atan2(sin(Hm)cos(theta)-tan(mu)sin(theta), cos(Hm))
+
+      This function changes the variable names to the more common
+      psi for the heading, theta for the pitch, and phi for the
+      roll.  It also modifies the equation to incorporate pitch
+      as well as roll, as suggested by Chris Metzler.
     */
 
-                                // don't update if it's broken
-    if (!_serviceable_node->getBoolValue())
-        return;
+                                // bank angle (radians)
+    double phi = _roll_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
 
-    // TODO use cached nodes
+                                // pitch angle (radians)
+    double theta = _pitch_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
 
-    // magnetic heading (radians)
-    double Hm = 
-        fgGetDouble("/orientation/heading-magnetic-deg")
-        * SGD_DEGREES_TO_RADIANS;
+                                // magnetic heading (radians)
+    double psi = _heading_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
 
-    // bank angle (radians)
-    double phi =
-        fgGetDouble("/orientation/roll-deg") * SGD_DEGREES_TO_RADIANS;
+                                // magnetic dip (radians)
+    double mu = _dip_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
 
-    // magnetic dip (radians)
-    double mu =
-        fgGetDouble("/environment/magnetic-dip-deg") * SGD_DEGREES_TO_RADIANS;
 
-    // target compass heading (radians)
-    double Hc =
-        atan2(sin(Hm) * cos(phi) - tan(mu) * sin(phi), cos(Hm));
+    ////////////////////////////////////////////////////////////////////
+    // calculate target compass heading Hc in degrees
+    ////////////////////////////////////////////////////////////////////
 
-    Hc *= SGD_RADIANS_TO_DEGREES;
+                                // these are expensive: don't repeat
+    double sin_phi = sin(phi);
+    double sin_theta = sin(theta);
+    double sin_mu = sin(mu);
+    double cos_theta = cos(theta);
+    double cos_psi = cos(psi);
+    double cos_mu = cos(mu);
+
+    double a = cos(phi) * sin(psi) * cos_mu
+        - sin_phi * cos_theta * sin_mu
+        - sin_phi* sin_theta * cos_mu * cos_psi;
+
+    double b = cos_theta * cos_psi * cos(mu)
+        - sin_theta * sin_mu;
+
+    double Hc = atan2(a, b) * SGD_RADIANS_TO_DEGREES;
+
     while (Hc < 0)
         Hc += 360;
     while (Hc >= 360)
         Hc =- 360;
+
+    // TODO add acceleration error
+    // TODO allow binding with excessive dip/sideslip
 
     _out_node->setDoubleValue(Hc);
 
