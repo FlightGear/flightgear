@@ -24,3 +24,44 @@ void PilotOffsetSet( int opt, float setting);
 float PilotOffsetGetSetting( int opt );
 
 #endif // _VEC3_SLIDER_H
+
+/* binding functions for chase view offset */
+
+static void
+setPilotOffsetHeadingDeg (float value)
+{
+	PilotOffsetSet(0, value);
+}
+
+static float
+getPilotOffsetHeadingDeg ()
+{
+	return( PilotOffsetGetSetting(0) );
+}
+
+
+static void
+setPilotOffsetPitchDeg (float value)
+{
+	PilotOffsetSet(1, value);
+}
+
+static float
+getPilotOffsetPitchDeg ()
+{
+	return( PilotOffsetGetSetting(1) );
+}
+
+
+static void
+setPilotOffsetRadiusM (float value)
+{
+	PilotOffsetSet(2, value);
+}
+
+static float
+getPilotOffsetRadiusM ()
+{
+	return( PilotOffsetGetSetting(2) );
+}
+
