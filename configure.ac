@@ -10,7 +10,7 @@ dnl Require at least automake 2.52
 AC_PREREQ(2.52)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.9.1)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.2)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -456,7 +456,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.3.0 or newer])
+AC_MSG_CHECKING([for simgear 0.3.3 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -467,7 +467,7 @@ AC_TRY_RUN([
 
 #define MIN_MAJOR 0
 #define MIN_MINOR 3
-#define MIN_MICRO 0
+#define MIN_MICRO 3
 
 int main() {
     int major, minor, micro;
