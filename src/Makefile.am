@@ -20,7 +20,6 @@ SUBDIRS = \
         FDM \
         GUI \
 	Input \
-        Joystick \
 	Navaids \
         $(NETWORK_DIRS) \
         Objects \
