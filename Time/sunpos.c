@@ -282,13 +282,14 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
        t->sun_gc_lat); */
 
     /* the sun position has to be translated just like everything else */
-    t->sun_vec[0] = t->fg_sunpos.x - scenery_center.x; 
-    t->sun_vec[1] = t->fg_sunpos.y - scenery_center.y;
-    t->sun_vec[2] = t->fg_sunpos.z - scenery_center.z;
-    MAT3_SCALE_VEC(t->sun_vec, t->sun_vec, -1.0);
+    t->sun_vec_inv[0] = t->fg_sunpos.x - scenery_center.x; 
+    t->sun_vec_inv[1] = t->fg_sunpos.y - scenery_center.y;
+    t->sun_vec_inv[2] = t->fg_sunpos.z - scenery_center.z;
+    MAT3_SCALE_VEC(t->sun_vec, t->sun_vec_inv, -1.0);
 
-    /* make this a directional light source only */
+    /* make these are directional light sources only */
     t->sun_vec[3] = 0.0;
+    t->sun_vec_inv[3] = 0.0;
 
     /* calculate thesun's relative angle to local up */
     MAT3_COPY_VEC(nup, v->local_up);
@@ -305,9 +306,12 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
 
 /* $Log$
-/* Revision 1.12  1997/11/15 18:15:39  curt
-/* Reverse direction of sun vector, so object normals can be more normal.
+/* Revision 1.13  1997/11/25 19:25:42  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.12  1997/11/15 18:15:39  curt
+ * Reverse direction of sun vector, so object normals can be more normal.
+ *
  * Revision 1.11  1997/10/28 21:07:21  curt
  * Changed GLUT/ -> Main/
  *

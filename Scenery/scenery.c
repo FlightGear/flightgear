@@ -34,7 +34,7 @@
 
 #include "../general.h"
 
-#include "moon.h"
+#include "astro.h"
 #include "obj.h"
 #include "scenery.h"
 #include "stars.h"
@@ -80,19 +80,19 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 
 /* Render out the current scene */
 void fgSceneryRender() {
-    glPushMatrix();
-    glCallList(area_terrain);
-    glPopMatrix();
-    fgStarsRender();
+    /* glCallList(area_terrain); */
 
-    fgMoonRender();
+    fgAstroRender();
 }
 
 
 /* $Log$
-/* Revision 1.22  1997/10/28 21:00:22  curt
-/* Changing to new terrain format.
+/* Revision 1.23  1997/11/25 19:25:37  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.22  1997/10/28 21:00:22  curt
+ * Changing to new terrain format.
+ *
  * Revision 1.21  1997/10/25 03:24:24  curt
  * Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
  *

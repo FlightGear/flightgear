@@ -73,7 +73,7 @@ static GLfloat win_ratio = 1.0;
 
 /* if the 4th field is 0.0, this specifies a direction ... */
 /* clear color (sky) */
-static GLfloat fgClearColor[4] = {0.60, 0.60, 0.90, 1.0};
+GLfloat fgClearColor[4] = {0.60, 0.60, 0.90, 1.0};
 /* fog color */
 static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
 
@@ -577,9 +577,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.23  1997/11/15 18:16:34  curt
-/* minor tweaks.
+/* Revision 1.24  1997/11/25 19:25:32  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.23  1997/11/15 18:16:34  curt
+ * minor tweaks.
+ *
  * Revision 1.22  1997/10/30 12:38:41  curt
  * Working on new scenery subsystem.
  *

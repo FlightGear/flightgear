@@ -58,6 +58,8 @@ LN = ln -sf
 #
 # -O2          - Enable compiler optimization
 #
+# -O3 -fomit-frame-pointer -funroll-all-loops -ffast-math
+#              - Other potential compiler optimization flags
 #---------------------------------------------------------------------------
 
 GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(VERSION)\"
@@ -129,6 +131,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.19  1997/11/25 19:25:27  curt
+# Changes to integrate Durk's moon/sun code updates + clean up.
+#
 # Revision 1.18  1997/10/28 19:35:41  curt
 # Organizational changes.
 #

@@ -59,7 +59,8 @@ struct fgTIME {
     /* position of the sun in various forms */
     double sun_lon, sun_gc_lat;         /* in geocentric coordinates */
     struct fgCartesianPoint fg_sunpos;  /* in cartesian coordiantes */
-    GLfloat sun_vec[4];                 /* in view coordinates */
+    GLfloat sun_vec[4];                 /* (in view coordinates) */
+    GLfloat sun_vec_inv[4];             /* inverse (in view coordinates) */
     double sun_angle;                   /* the angle between the sun and the 
 					   local horizontal */
 };
@@ -78,9 +79,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.6  1997/09/20 03:34:35  curt
-/* Still trying to get those durned stars aligned properly.
+/* Revision 1.7  1997/11/25 19:25:41  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.6  1997/09/20 03:34:35  curt
+ * Still trying to get those durned stars aligned properly.
+ *
  * Revision 1.5  1997/09/16 15:50:31  curt
  * Working on star alignment and time issues.
  *

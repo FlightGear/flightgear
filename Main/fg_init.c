@@ -38,10 +38,8 @@
 #include "../Joystick/joystick.h"
 #include "../Math/fg_random.h"
 #include "../Scenery/mesh.h"
-#include "../Scenery/moon.h"
-#include "../Scenery/orbits.h"
+#include "../Scenery/astro.h"
 #include "../Scenery/scenery.h"
-#include "../Scenery/stars.h"
 #include "../Time/fg_time.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
@@ -176,14 +174,8 @@ void fgInitSubsystems( void ) {
     	exit( 1 );
     }
 
-    /* Initialize the orbital elements of sun, moon and mayor planets */
-    fgSolarSystemInit(*t);
- 
-    /* Intialize the moon's position */                      
-    fgMoonInit();                                                   
- 
-    /* Initialize the Stars subsystem  */
-    fgStarsInit();
+    /* Initialize Astronomical Objects */
+    fgAstroInit();
 
     /* Initialize the Scenery Management subsystem */
     fgSceneryInit();
@@ -224,9 +216,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.12  1997/11/15 18:16:35  curt
-/* minor tweaks.
+/* Revision 1.13  1997/11/25 19:25:32  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.12  1997/11/15 18:16:35  curt
+ * minor tweaks.
+ *
  * Revision 1.11  1997/10/30 12:38:42  curt
  * Working on new scenery subsystem.
  *

@@ -1,5 +1,6 @@
 /**************************************************************************
  * moon.c
+ * Written by Durk Talsma. Started October 1997, for the flight gear project.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -26,13 +27,123 @@
 #include "orbits.h"
 #include "moon.h"
 
+#include "../general.h"
 #include "../Main/views.h"
 #include "../Time/fg_time.h"
-/* #include "../Aircraft/aircraft.h"*/
-#include "../general.h"
+
+struct CelestialCoord
+    moonPos;
+
+float xMoon, yMoon, zMoon;
+
+/*
+static GLfloat vdata[12][3] =
+{
+   {-X, 0.0, Z }, { X, 0.0, Z }, {-X, 0.0, -Z}, {X, 0.0, -Z },
+   { 0.0, Z, X }, { 0.0, Z, -X}, {0.0, -Z, -X}, {0.0, -Z, -X},
+   { Z, X, 0.0 }, { -Z, X, 0.0}, {Z, -X, 0.0 }, {-Z, -X, 0.0}
+};
+
+static GLuint tindices[20][3] =
+{
+   {0,4,1}, {0,9,4}, {9,5,4}, {4,5,8}, {4,8,1},
+   {8,10,1}, {8,3,10}, {5,3,8}, {5,2,3}, {2,7,3},
+   {7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6},
+   {6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11}
+};*/
+
+GLint moon;
+
+/* -------------------------------------------------------------
+      This section contains the code that generates a yellow
+      Icosahedron. It's under development... (of Course)
+______________________________________________________________*/
+/*
+void NormalizeVector(float v[3])
+{
+   GLfloat d = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+   if (d == 0.0)
+   {
+      printf("zero length vector\n");
+      return;
+   }
+   v[0] /= d;
+   v[1] /= d;
+   v[2] /= d;
+}
+
+void drawTriangle(float *v1, float *v2, float *v3)
+{
+   glBegin(GL_POLYGON);
+   //glBegin(GL_POINTS);
+      glNormal3fv(v1);
+      glVertex3fv(v1);
+      glNormal3fv(v2);
+      glVertex3fv(v2);
+      glNormal3fv(v3);
+      glVertex3fv(v3);
+   glEnd();
+}
+
+void subdivide(float *v1, float *v2, float *v3, long depth)
+{
+   GLfloat v12[3], v23[3], v31[3];
+   GLint i;
+
+   if (!depth)
+   {
+     drawTriangle(v1, v2, v3);
+     return;
+   }
+   for (i = 0; i < 3; i++)
+   {
+       v12[i] = (v1[i] + v2[i]);
+       v23[i] = (v2[i] + v3[i]);
+       v31[i] = (v3[i] + v1[i]);
+   }
+   NormalizeVector(v12);
+   NormalizeVector(v23);
+   NormalizeVector(v31);
+   subdivide(v1, v12, v31, depth - 1);
+   subdivide(v2, v23, v12, depth - 1);
+   subdivide(v3, v31, v23, depth - 1);
+   subdivide(v12, v23, v31,depth - 1);
+
+} */
+/*
+void display(void)
+{
+   int i;
+   glClear(GL_COLOR_BUFFER_BIT);
+   glPushMatrix();
+   glRotatef(spin, 0.0, 0.0, 0.0);
+   glColor3f(1.0, 1.0, 0.0);
+//   glBegin(GL_LINE_LOOP);
+   for (i = 0; i < 20; i++)
+   {
+
+       //glVertex3fv(&vdata[tindices[i][0]][0]);
+       //glVertex3fv(&vdata[tindices[i][1]][0]);
+       //glVertex3fv(&vdata[tindices[i][2]][0]);
+
+       subdivide(&vdata[tindices[i][0]][0],
+                 &vdata[tindices[i][1]][0],
+                 &vdata[tindices[i][2]][0], 3);
 
 
-static GLint moon;
+   }
+//   glEnd();
+  // glFlush();
+  glPopMatrix();
+  glutSwapBuffers();
+} */
+
+/* --------------------------------------------------------------
+
+      This section contains the code that calculates the actual
+      position of the moon in the night sky.
+
+----------------------------------------------------------------*/
 
 struct CelestialCoord fgCalculateMoon(struct OrbElements params,
                                       struct OrbElements sunParams,
@@ -42,7 +153,7 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
           result;
 
     double
-    	eccAnom, ecl, lonecl, latecl, actTime,
+    	  eccAnom, ecl, lonecl, latecl, actTime,
         xv, yv, v, r, xh, yh, zh, xg, yg, zg, xe, ye, ze,
         Ls, Lm, D, F;
 
@@ -54,7 +165,7 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
     eccAnom = fgCalcEccAnom(params.M, params.e);
 
     /* calculate the moon's distance (d) and  true anomaly (v) */
-	xv = params.a * ( cos(eccAnom) - params.e);
+	 xv = params.a * ( cos(eccAnom) - params.e);
     yv = params.a * ( sqrt(1.0 - params.e*params.e) * sin(eccAnom));
     v =atan2(yv, xv);
     r = sqrt(xv*xv + yv*yv);
@@ -75,7 +186,7 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
     F = Lm - params.N;
 
     lonecl += fgDegToRad(
-    			- 1.274 * sin (params.M - 2*D)    			// the Evection
+    			    - 1.274 * sin (params.M - 2*D)    			// the Evection
                 + 0.658 * sin (2 * D)							// the Variation
                 - 0.186 * sin (sunParams.M)					// the yearly variation
                 - 0.059 * sin (2*params.M - 2*D)
@@ -97,9 +208,10 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
               );  /* Yep */
 
     r += (
-    		  - 0.58 * cos(params.M - 2*D)
+    		     - 0.58 * cos(params.M - 2*D)
               - 0.46 * cos(2*D)
-         );
+          ); /* Ok! */
+
     xg = r * cos(lonecl) * cos(latecl);
     yg = r * sin(lonecl) * cos(latecl);
     zg = r *               sin(latecl);
@@ -108,67 +220,63 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
     ye = yg * cos(ecl) - zg * sin(ecl);
     ze = yg * sin(ecl) + zg * cos(ecl);
 
-	result.RightAscension = atan2(ye, xe);
+	 result.RightAscension = atan2(ye, xe);
     result.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
-
     return result;
 }
 
 
 void fgMoonInit()
 {
-   struct CelestialCoord
-       moonPos;
+//   int i;
+//   moon = glGenLists(1);
+//   glNewList(moon, GL_COMPILE );
 
-   moon = glGenLists(1);
-   glNewList(moon, GL_COMPILE );
-	glBegin( GL_POINTS );
+   fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
    moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], cur_time_params);
+   #ifdef DEBUG
    printf("Moon found at %f (ra), %f (dec)\n", moonPos.RightAscension, moonPos.Declination);
-   /* give the moon a temporary color, for testing purposes */
-   glColor3f( 0.0, 1.0, 0.0);
-   glVertex3f( 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination),
-               190000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination),
-   	         190000.0 * sin(moonPos.Declination) );
-   glEnd();
-   glEndList();
-}
+   #endif
+   glColor3f(1.0, 1.0, 0.0);
 
-void fgMoonRender()
-{
-    double angle;
-    static double warp = 0;
-    struct VIEW *v;
-    struct fgTIME *t;
+   /* xMoon = 90000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
+   yMoon = 90000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
+   zMoon = 90000.0 * sin(moonPos.Declination); */
 
-    t = &cur_time_params;
-    v = &current_view;
+   xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
+   yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
+   zMoon = 60000.0 * sin(moonPos.Declination);
 
+//   glPushMatrix();
+//   glBegin(GL_TRIANGLES);
+   /*
+   for (i = 0; i < 20; i++)
+      subdivide(&vdata[tindices[i][0]][0],
+                &vdata[tindices[i][1]][0],
+                &vdata[tindices[i][2]][0], 3);*/
+//     glutSolidSphere(1.0, 25, 25);
 
-   glDisable( GL_FOG );
-	glDisable( GL_LIGHTING );
-	glPushMatrix();
-	glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
-	angle = t->gst * 15.0;  /* 15 degrees per hour rotation */
-	/* warp += 1.0; */
-	/* warp = 15.0; */
-	warp = 0.0;
-	glRotatef( (angle+warp), 0.0, 0.0, -1.0 );
-	printf("Rotating moon by %.2f degrees + %.2f degrees\n",angle,warp);
-
-	glCallList(moon);
-
-	glPopMatrix();
-	glEnable( GL_LIGHTING );
-	glEnable( GL_FOG );
+//   glEnd();
+//   glPopMatrix();
+//   glEndList();
 }
 
 
-/* $Log$
-/* Revision 1.2  1997/10/28 21:00:21  curt
-/* Changing to new terrain format.
-/*
- * Revision 1.1  1997/10/25 03:16:08  curt
- * Initial revision of code contributed by Durk Talsma.
- *
- */
+/* Draw the moon */
+void fgMoonRender() {
+    GLfloat color[4] = { 1.0, 1.0, 1.0, 1.0 };
+
+    /* set lighting parameters */
+    glLightfv(GL_LIGHT0, GL_AMBIENT, color );
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, color );
+    glMaterialfv(GL_FRONT, GL_AMBIENT, fgClearColor);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, color);
+
+    glPushMatrix();
+    glTranslatef(xMoon, yMoon, zMoon);
+    glScalef(1400, 1400, 1400);
+    /* glutSolidSphere(1.0, 25, 25); */
+    glutSolidSphere(1.0, 15, 15);
+    glPopMatrix();
+}
+

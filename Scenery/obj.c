@@ -117,10 +117,10 @@ GLint fgObjLoad(char *path) {
 
 	    glBegin(GL_TRIANGLE_STRIP);
 
-	    printf("new tri strip = %s", line);
+	    /* printf("new tri strip = %s", line); */
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
-	    printf("(t) = ");
+	    /* printf("(t) = "); */
 
 	    /* try to get the proper rotation by calculating an
              * approximate normal and seeing if it is close to the
@@ -169,7 +169,7 @@ GLint fgObjLoad(char *path) {
 
 	    glBegin(GL_TRIANGLES);
 
-	    printf("new triangle = %s", line);
+	    /* printf("new triangle = %s", line);*/
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
             glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
@@ -187,16 +187,16 @@ GLint fgObjLoad(char *path) {
 	    /* continue a triangle strip */
 	    n1 = n2 = 0;
 
-	    printf("continued tri strip = %s ", line);
+	    /* printf("continued tri strip = %s ", line); */
 	    sscanf(line, "q %d %d\n", &n1, &n2);
-	    printf("read %d %d\n", n1, n2);
+	    /* printf("read %d %d\n", n1, n2); */
 
             glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
 	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
 		       nodes[n1][2] - ref.z);
 
 	    if ( n2 > 0 ) {
-		printf(" (cont)\n");
+		/* printf(" (cont)\n"); */
 		glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
 		glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
 			   nodes[n2][2] - ref.z);
@@ -216,9 +216,12 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.5  1997/11/15 18:16:39  curt
-/* minor tweaks.
+/* Revision 1.6  1997/11/25 19:25:35  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.5  1997/11/15 18:16:39  curt
+ * minor tweaks.
+ *
  * Revision 1.4  1997/11/14 00:26:49  curt
  * Transform scenery coordinates earlier in pipeline when scenery is being
  * created, not when it is being loaded.  Precalculate normals for each node

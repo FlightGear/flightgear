@@ -51,7 +51,7 @@
 
 
 /* Define four structures, each with varying amounts of stars */
-static GLint stars[FG_STAR_LEVELS];
+/* static */  GLint stars[FG_STAR_LEVELS];
 
 
 /* Initialize the Star Management Subsystem */
@@ -219,8 +219,6 @@ void fgStarsRender() {
     struct FLIGHT *f;
     struct VIEW *v;
     struct fgTIME *t;
-    double angle;
-    static double warp = 0;
     int i;
 
     f = &current_aircraft.flight;
@@ -231,6 +229,7 @@ void fgStarsRender() {
 
     /* t->sun_angle = 3.0; */ /* to force stars to be drawn (for testing) */
 
+    /* render the stars */
     if ( t->sun_angle > (FG_PI_2 + 5 * DEG_TO_RAD ) ) {
 	/* determine which star structure to draw */
 	if ( t->sun_angle > (FG_PI_2 + 7.25 * DEG_TO_RAD ) ) {
@@ -245,24 +244,9 @@ void fgStarsRender() {
 
 	printf("RENDERING STARS = %d (night)\n", i);
 
-	glDisable( GL_FOG );
 	glDisable( GL_LIGHTING );
-	glPushMatrix();
-
-	glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
-
-	angle = t->gst * 15.0;  /* 15 degrees per hour rotation */
-	/* warp += 1.0; */
-	/* warp = 15.0; */
-	warp = 0.0;
-	glRotatef( (angle+warp), 0.0, 0.0, -1.0 );
-	printf("Rotating stars by %.2f degrees + %.2f degrees\n",angle,warp);
-
 	glCallList(stars[i]);
-
-	glPopMatrix();
 	glEnable( GL_LIGHTING );
-	glEnable( GL_FOG );
     } else {
 	printf("not RENDERING STARS (day)\n");
     }
@@ -270,9 +254,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.15  1997/10/30 12:38:45  curt
-/* Working on new scenery subsystem.
+/* Revision 1.16  1997/11/25 19:25:38  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.15  1997/10/30 12:38:45  curt
+ * Working on new scenery subsystem.
+ *
  * Revision 1.14  1997/10/28 21:00:22  curt
  * Changing to new terrain format.
  *

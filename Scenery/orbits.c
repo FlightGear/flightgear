@@ -43,17 +43,21 @@ double fgCalcActTime(struct fgTIME t)
    /* a hack. This one introduces the 2000 problem into the program */
    year = t.gmt->tm_year + 1900;
 
-   /* calculate the actual time */
+   /* calculate the actual time, rember to add 1 to tm_mon! */
    actTime = 367 * year - 7 *
-	          (year + (t.gmt->tm_mon + 9) / 12) / 4 + 275 *
-	           t.gmt->tm_mon / 9 + t.gmt->tm_mday - 730530;
+	          (year + ((t.gmt->tm_mon+1) + 9) / 12) / 4 + 275 *
+	           (t.gmt->tm_mon+1) / 9 + t.gmt->tm_mday - 730530;
 
     UT = t.gmt->tm_hour + ((double) t.gmt->tm_min / 60);
     /*printf("UT = %f\n", UT); */
     actTime += (UT / 24.0);
+    #define DEBUG 1
+    #ifdef DEBUG
+    printf("Actual Time:\n");
     printf("current day = %f\t", actTime);
     printf("GMT = %d, %d, %d, %d, %d, %d\n",           year, t.gmt->tm_mon, t.gmt->tm_mday,
                                              t.gmt->tm_hour, t.gmt->tm_min, t.gmt->tm_sec);
+    #endif
     return actTime;
 }
 
@@ -132,7 +136,9 @@ void fgSolarSystemInit(struct fgTIME t)
 	    printf("Cannot open data file: '%s'\n", path);
 	    return;
    }
+   #ifdef DEBUG
    printf("reading datafile %s", path);
+   #endif
 
    /* for all the objects... */
    for (i = 0; i < 9; i ++)
@@ -164,7 +170,10 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.1  1997/10/25 03:16:10  curt
-/* Initial revision of code contributed by Durk Talsma.
+/* Revision 1.2  1997/11/25 19:25:36  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.1  1997/10/25 03:16:10  curt
+ * Initial revision of code contributed by Durk Talsma.
+ *
  */

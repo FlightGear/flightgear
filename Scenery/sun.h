@@ -28,13 +28,24 @@
 
 
 struct SunPos fgCalcSunPos(struct OrbElements sunParams);
+extern struct OrbElements pltOrbElements[9];
+extern GLfloat fgClearColor[4];
+
+/* Initialize the Sun */
+void fgSunInit();
+
+/* Draw the Sun */
+void fgSunRender();
 
 
 #endif /* SUN_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/10/25 03:16:12  curt
-/* Initial revision of code contributed by Durk Talsma.
+/* Revision 1.2  1997/11/25 19:25:39  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.1  1997/10/25 03:16:12  curt
+ * Initial revision of code contributed by Durk Talsma.
+ *
  */

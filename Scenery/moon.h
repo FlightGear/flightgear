@@ -29,6 +29,10 @@
 #include "orbits.h"
 
 #include "../Time/fg_time.h"
+#include <math.h>
+
+#define X .525731112119133606
+#define Z .850650808352039932
 
 
  /* Initialize the Moon Display management Subsystem */
@@ -42,15 +46,18 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
                                       struct fgTIME t);
 
 extern struct OrbElements pltOrbElements[9];
-
+extern GLfloat fgClearColor[4];
 
 #endif /* _MOON_H_ */
 
 
 /* $Log$
-/* Revision 1.2  1997/10/25 03:24:23  curt
-/* Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
+/* Revision 1.3  1997/11/25 19:25:35  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.2  1997/10/25 03:24:23  curt
+ * Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
+ *
  * Revision 1.1  1997/10/25 03:16:09  curt
  * Initial revision of code contributed by Durk Talsma.
  *

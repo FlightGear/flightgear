@@ -26,7 +26,7 @@
 
 TARGET = libScenery.a
 
-CFILES = common.c geometry.c mesh.c moon.c obj.c orbits.c planets.c \
+CFILES = astro.c common.c geometry.c mesh.c moon.c obj.c orbits.c planets.c \
 	scenery.c stars.c sun.c
 
 OFILES = $(CFILES:.c=.o)
@@ -59,6 +59,9 @@ realclean: clean
 #---------------------------------------------------------------------------
 
 include depend
+
+astro.o:
+	$(CC) $(CFLAGS) -c astro.c -o $@
 
 common.o:
 	$(CC) $(CFLAGS) -c common.c -o $@
@@ -96,6 +99,9 @@ geometry.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.24  1997/11/25 19:25:33  curt
+# Changes to integrate Durk's moon/sun code updates + clean up.
+#
 # Revision 1.23  1997/10/28 21:00:20  curt
 # Changing to new terrain format.
 #

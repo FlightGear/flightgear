@@ -230,9 +230,9 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
     static long int warp = 0;
 
     /* get current Unix calendar time (in seconds) */
-    warp += 20; 
+    warp += 60; 
     /* warp = 0; */
-    t->cur_time = time(NULL) + 4 * 60 * 60;
+    t->cur_time = time(NULL) + (0) * 60 * 60;
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
@@ -276,17 +276,20 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
 	    + t->gst_diff;
     }
-    printf("Current lon=0.00 Sidereal Time = %.3f\n", t->gst);
-    printf("Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", t->lst,
-	   sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
-	   t->gst_diff);
+    /* printf("Current lon=0.00 Sidereal Time = %.3f\n", t->gst); */
+    /* printf("Current LOCAL Sidereal Time = %.3f (%.3f) (diff = %.3f)\n", 
+           t->lst, sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)),
+	   t->gst_diff); */
 }
 
 
 /* $Log$
-/* Revision 1.10  1997/11/15 18:16:42  curt
-/* minor tweaks.
+/* Revision 1.11  1997/11/25 19:25:40  curt
+/* Changes to integrate Durk's moon/sun code updates + clean up.
 /*
+ * Revision 1.10  1997/11/15 18:16:42  curt
+ * minor tweaks.
+ *
  * Revision 1.9  1997/11/14 00:26:50  curt
  * Transform scenery coordinates earlier in pipeline when scenery is being
  * created, not when it is being loaded.  Precalculate normals for each node
