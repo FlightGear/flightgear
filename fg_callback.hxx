@@ -58,12 +58,15 @@ public:
     // Pointer to function taking no arguments and returning void.
     typedef void (*Proc0v)();
 
+    // A callback instance to invoke the function 'p'
     fgFunctionCallback( Proc0v p );
+
+    // Create a clone on the heap.
     virtual fgCallback* clone() const;
 
 private:
     void* call( void** in );
-    void* call0v( void** );
+    inline void* call0v( void** );
 
 private:
     // Not defined.
@@ -106,7 +109,7 @@ fgFunctionCallback::call0v( void** )
 
 //-----------------------------------------------------------------------------
 //
-// Callback for invoking an instance method.
+// Callback for invoking an object method.
 //
 template< class T >
 class fgMethodCallback : public fgCallback
@@ -115,10 +118,14 @@ public:
     // Pointer to method taking no arguments and returning void.
     typedef void (T::*Method0v)();
 
-    //
-    fgMethodCallback( T* o, Method0v m );
+    // A callback instance to invoke method 'm' of object 'o' 
+    fgMethodCallback( T* o, Method0v m )
+	: fgCallback(0),
+	  object(o),
+	  method0v(m),
+	  doPtr(&fgMethodCallback<T>::call0v) {}
 
-    //
+    // Create a clone on the heap.
     fgCallback* clone() const;
 
 private:
@@ -139,15 +146,6 @@ private:
     typedef void * (fgMethodCallback::*DoPtr)( void ** );
     DoPtr doPtr;
 };
-
-template< class T > inline
-fgMethodCallback<T>::fgMethodCallback( T* o, Method0v m )
-    : fgCallback(0),
-      object(o),
-      method0v(m),
-      doPtr(&fgMethodCallback<T>::call0v)
-{
-}
 
 template< class T > inline fgCallback*
 fgMethodCallback<T>::clone() const
@@ -172,6 +170,25 @@ fgMethodCallback<T>::call0v( void** )
 #endif // _FG_CALLBACK_HXX
 
 // $Log$
+// Revision 1.2  1998/09/15 02:09:04  curt
+// Include/fg_callback.hxx
+//   Moved code inline to stop g++ 2.7 from complaining.
+//
+// Simulator/Time/event.[ch]xx
+//   Changed return type of fgEVENT::printStat().  void caused g++ 2.7 to
+//   complain bitterly.
+//
+// Minor bugfix and changes.
+//
+// Simulator/Main/GLUTmain.cxx
+//   Added missing type to idle_state definition - eliminates a warning.
+//
+// Simulator/Main/fg_init.cxx
+//   Changes to airport lookup.
+//
+// Simulator/Main/options.cxx
+//   Uses fg_gzifstream when loading config file.
+//
 // Revision 1.1  1998/08/30 14:13:48  curt
 // Initial revision.  Contributed by Bernie Bright.
 //
