@@ -190,6 +190,7 @@ FGOptions::FGOptions() :
     bpp(16),
     view_mode(FG_VIEW_PILOT),
     default_view_offset(0),
+    visibility(-1.0),
 
     // HUD options
     units(FG_UNITS_FEET),
@@ -943,6 +944,10 @@ int FGOptions::parse_option( const string& arg ) {
 	pilot_view->set_view_offset( default_view_offset );
 	pilot_view->set_goal_view_offset( default_view_offset );
     // $$$ end - added VS Renganathan, 14 Oct 2K
+    } else if ( arg.find( "--visibility=" ) != string::npos ) {
+	visibility = atof( arg.substr( 13 ) );
+    } else if ( arg.find( "--visibility-miles=" ) != string::npos ) {
+	visibility = atof( arg.substr( 19 ) ) * 5280.0 * FEET_TO_METER;
     } else if ( arg.find( "--wp=" ) != string::npos ) {
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") != string::npos) {
@@ -1180,6 +1185,9 @@ void FGOptions::usage ( void ) {
     cout << "\t\tas an offset from straight ahead.  Allowable values are"
 	 << endl;
     cout << "\t\tLEFT, RIGHT, CENTER, or a specific number of degrees" << endl;
+    cout << "\t--visibility=xxx:  specify initial visibility in meters" << endl;
+    cout << "\t--visibility-miles=xxx:  specify initial visibility in miles"
+	 << endl;
     cout << endl;
 
     cout << "Scenery Options:" << endl;

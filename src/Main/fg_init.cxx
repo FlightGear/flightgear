@@ -622,13 +622,19 @@ bool fgInitSubsystems( void ) {
 	       current_aircraft.fdm_state->get_Longitude(),
 	       current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER );
     FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-	new FGLocalWeatherDatabase( position, globals->get_options()->get_fg_root() );
+	new FGLocalWeatherDatabase( position,
+				    globals->get_options()->get_fg_root() );
     // cout << theFGLocalWeatherDatabase << endl;
     // cout << "visibility = " 
     //      << theFGLocalWeatherDatabase->getWeatherVisibility() << endl;
 
     WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
-     
+    
+    double init_vis = globals->get_options()->get_default_visibility();
+    if ( init_vis > 0 ) {
+	WeatherDatabase->setWeatherVisibility( init_vis );
+    }
+
     // register the periodic update of the weather
     global_events.Register( "weather update", fgUpdateWeatherDatabase,
                             fgEVENT::FG_EVENT_READY, 30000);

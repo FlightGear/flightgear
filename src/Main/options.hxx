@@ -194,6 +194,7 @@ private:
     fgViewMode view_mode; // view mode
     double default_view_offset;	// default forward view offset (for use by
 				// multi-display configuration
+    double visibility;	// visibilty in meters
 
     // HUD options
     int units;         // feet or meters
@@ -296,6 +297,7 @@ public:
     inline double get_default_view_offset() const {
 	return default_view_offset;
     }
+    inline double get_default_visibility() const { return visibility; }
 
     inline int get_units() const { return units; }
     inline int get_tris_or_culled() const { return tris_or_culled; }
@@ -391,9 +393,6 @@ private:
     bool parse_wp( const string& arg );
     bool parse_flightplan(const string& arg);
 };
-
-
-// extern FGOptions current_options;
 
 
 #endif /* _OPTIONS_HXX */
