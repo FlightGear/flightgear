@@ -1,0 +1,198 @@
+Users Guide to FlightGear sound configuration
+Version 0.7.10, Mar 02 2002
+Author: Erik Hofman <erik@ehofman.com>
+
+This document is an attempt to describe the configuration of
+FlightGear flight simulator's aircraft sound via XML.
+
+Some History:
+------------
+Older versions of FGFS had a hard coded audio layer.  This was a
+than ideal state of affairs due to FGFS ability to use different
+aircraft models. Being primarily developed on UNIX type systems, a
+modular approach is taken towards the simulation. To date, most
+alternatives to the default Cessna 172 aircraft are the product
+of research institutions interested in the flight characteristics and
+not cosmetics.  The result of this was that one could fly the X-15 or
+a Boeing 747 but be limited to C172 sounds.
+
+A rewrite of the sound code was done around v0.7.10 by Erik Hofman
+allowing for configuration of the sounds via XML to address this
+limitation.
+
+About The Property Manager:
+--------------------------
+The 
+
+Sound Architecture:
+------------------
+All of the sound configuration files are XML-encoded* property lists.
+The root element of each file is always named <PropertyList>. Tags are
+almost always found in pairs, with the closing tag having a slash
+prefixing the tag name, i.e </PropertyList>. The exception is the tag
+representing an aliased property. In this case a slash is prepended to
+the closing angle bracket.  (see section Aliasing)
+
+The top level sound configuration file is composed of a <fx>, a
+<name>, a <path> sound file and zero or more <volume> and/or <pitch>
+definitions.
+
+[ Paths are relative to $FG_ROOT (the installed location of FGFS data files.) ]
+[ Absolute paths may be used.Comments are bracketed with <!-- -->.            ]
+
+A limited sound configuration file would look something like this:
+
+<PropertyList>
+ <fx>
+  <engine>
+   <name>engine</name>
+   <path>Sounds/wasp.wav</path>
+   <mode>looped</mode>
+   <property>/engines/engine/running</property>
+   <volume>
+    <property>/engines/engine/mp-osi</property>
+    <factor>0.005</factor>
+    <min>0.15</min>
+    <max>0.5</max>
+    <offset>0.15</offset>
+   </volume>
+   <pitch>
+    <property>/engines/engine/rpm</property>
+    <factor>0.0012</factor>
+    <min>0.3</min>
+    <max>5.0</max>
+    <offset>0.3</offset>
+   </pitch>
+  </engine>
+ </fx>
+</PropertyList>
+
+This would define an engine sound event handler for a piston engine driven
+aeroplane. The sound representing the engine is located in $FG_ROOT/Sounds
+and is named wasp.wav. The event is started when the property
+/engines/engine/running becomes non zero. 
+
+When that happens, the sound will be played looped (see <mode>) until the
+property returns zero again. As you can see the volume is mp-osi dependant,
+and the pitch of the sound depents on the engine rpm.
+
+Configuration description:
+-------------------------
+   
+<fx>
+ 	Named FX subtree living under /sim/sound
+ 
+ < ... >
+ 	This is the event seperator. The text inside the brackets
+ 	can be anything. Bit it is adviced to give it a meaningfull name
+        like:
+ 	crank, engine, rumble, gear, squeal, flap, wind, stall or click.
+ 
+ 	The value can be defined multiple times, thus anything which is
+ 	related may have the same name.
+ 
+   <name>
+ 	This defines the name of the event. This name is used internally
+ 	and, although it can me defined multiple times in the same file,
+        should have a unique value unless you realy know what you're doing.
+ 
+ 	Defining it multiple times could lead to unexpected behaviour.
+ 	
+   <path>
+ 	This defined th path to the sound file. The path is relative to the
+ 	FlightGear root directory but could be specified absolute.
+ 
+   <property>
+ 	Define which property triggers the event, and reffers to a node
+ 	in the FlightGear property tree.
+ 	 
+ 	The value is converted to an integer value (anything less than 0.5 is
+ 	is considered to be 0) and handled if it were a boolean value
+ 	(0 = false, anything else = true).
+ 
+ 	The triger depends on the value of <type>.
+ 
+   <type>
+ 	This specifies how the event is triggered.
+ 	There are multiple options:
+ 
+ 	level: 		events are active if the value is true.
+ 			this is the default behaviour.
+ 
+ 	inverted:	events are active if the value is false.
+ 
+ 	flipflop:	events are triggered on state changes.
+ 			this is only usefull for samples which are played
+ 			once.
+ 
+   <mode>
+ 	This defines how the sample should be played:
+ 
+ 	once:		the sample is played once.
+ 			this is the default.
+ 
+ 	looped:		the sample plays continuesly,
+ 			until the event turns false.
+ 
+   
+   <volume> / <pitch>
+ 	Volume or Pitch definition. Currently there may be up to 5
+	volume and up to 5 pitch definitions defined within one sound
+	event. Normally all <offset> values are added together and the
+	results after property calculations will be miltplied.
+	A special condition occurs when the <factor> value is negative,
+	in which case the offset doesn't get added to the other offset values
+	but instead will be used in the multiplication section.
+ 
+     <property>
+ 	Defins which property supplies the value for the calculation.
+ 	The value is treatened as a floating point number.
+ 
+     <type>
+ 	lin:		lineair handling of the property value.
+ 			this is the default.
+ 
+ 	ln:		convert the property value to a natural logarithmic
+ 			value before scaling it.
+ 
+ 	log:		convert the property value to a true logarithmic
+ 			value before scaling it.
+ 
+     <factor>
+ 	Defines the multiplication factor for the property value.
+ 	A special condition is when scale is defined as a negative
+ 	value. In this case the result of |<scale>| * <property) will be
+ 	subtracted from <default>
+ 
+     <offset>
+ 	The initial value for this sound. This value is also used as an
+ 	offset value for calulating the end result.
+ 
+     <min>
+ 	Minimum allowed value.
+ 	This is usefull if sounds start to sound funny. Anything lower
+ 	will be converted to 0.
+ 
+     <max>
+ 
+ 	Maximum allowed value.
+ 	This is usefull if sounds gets to loud. Anything higher will be
+ 	truncated to this value.
+ 
+ 
+ Calculations are made the following way
+ (function can be one of: none, ln or log ):
+ 
+   if (scale < 0) {
+      value[i] = offset[n] - abs(scale[n]) * function(property[n])
+      offset[i] = 0;
+   } else
+      value[i] = scale[n] * function(property[n])
+ 
+ And the end result will be:
+
+ result = offset[0..max] + value[0..max];
+
+
+
+
