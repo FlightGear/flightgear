@@ -169,67 +169,67 @@ FGInterface::bind ()
   // The following two can't be uncommented until we have support for
   // the "long" data type in the property manager
   /*  fgTie("/fdm/time/elapsed", this, 
-	&(FGInterface::get_elapsed));
+	&FGInterface::get_elapsed);
   fgTie("/fdm/time/remainder", this, 
-	&(FGInterface::get_remainder); */
+	&FGInterface::get_remainder); */
   fgTie("/fdm/time/multi_loop", this, 
-	&(FGInterface::get_multi_loop));
+	&FGInterface::get_multi_loop);
 
 			// Aircraft position
   fgTie("/position/latitude", this,
-	&(FGInterface::get_Latitude_deg),
-	&(FGInterface::set_Latitude_deg));
+	&FGInterface::get_Latitude_deg,
+	&FGInterface::set_Latitude_deg);
   fgTie("/position/longitude", this,
-	&(FGInterface::get_Longitude_deg),
-	&(FGInterface::set_Longitude_deg));
+	&FGInterface::get_Longitude_deg,
+	&FGInterface::set_Longitude_deg);
   fgTie("/position/altitude", this,
-	&(FGInterface::get_Altitude),
-	&(FGInterface::set_Altitude));
+	&FGInterface::get_Altitude,
+	&FGInterface::set_Altitude);
   fgTie("/position/altitude-agl", this,
-	&(FGInterface::get_Altitude_AGL)); // read-only
+	&FGInterface::get_Altitude_AGL); // read-only
 
 				// Orientation
   fgTie("/orientation/roll", this,
-	&(FGInterface::get_Phi_deg),
-	&(FGInterface::set_Phi_deg));
+	&FGInterface::get_Phi_deg,
+	&FGInterface::set_Phi_deg);
   fgTie("/orientation/pitch", this,
-	&(FGInterface::get_Theta_deg),
-	&(FGInterface::set_Theta_deg));
+	&FGInterface::get_Theta_deg,
+	&FGInterface::set_Theta_deg);
   fgTie("/orientation/heading", this,
-	&(FGInterface::get_Psi_deg),
-	&(FGInterface::set_Psi_deg));
+	&FGInterface::get_Psi_deg,
+	&FGInterface::set_Psi_deg);
 
 				// Calibrated airspeed
   fgTie("/velocities/airspeed", this,
-	&(FGInterface::get_V_calibrated_kts),
-	&(FGInterface::set_V_calibrated_kts));
+	&FGInterface::get_V_calibrated_kts,
+	&FGInterface::set_V_calibrated_kts);
 
 				// Local velocities
   fgTie("/velocities/speed-north", this,
-	&(FGInterface::get_V_north));
+	&FGInterface::get_V_north);
   fgTie("/velocities/speed-east", this,
-	&(FGInterface::get_V_east),
-	&(FGInterface::set_V_east));
+	&FGInterface::get_V_east,
+	&FGInterface::set_V_east);
   fgTie("/velocities/speed-down", this,
-	&(FGInterface::get_V_down),
-	&(FGInterface::set_V_down));
+	&FGInterface::get_V_down,
+	&FGInterface::set_V_down);
 
 				// Relative wind
   fgTie("/velocities/uBody", this,
-	&(FGInterface::get_uBody),
-	&(FGInterface::set_uBody));
+	&FGInterface::get_uBody,
+	&FGInterface::set_uBody);
   fgTie("/velocities/vBody", this,
-	&(FGInterface::get_vBody),
-	&(FGInterface::set_vBody));
+	&FGInterface::get_vBody,
+	&FGInterface::set_vBody);
   fgTie("/velocities/wBody", this,
-	&(FGInterface::get_wBody),
-	&(FGInterface::set_wBody));
+	&FGInterface::get_wBody,
+	&FGInterface::set_wBody);
 
 				// Climb and slip (read-only)
   fgTie("/velocities/vertical-speed", this,
-	&(FGInterface::get_Climb_Rate)); // read-only
+	&FGInterface::get_Climb_Rate); // read-only
   fgTie("/velocities/side-slip", this,
-	&(FGInterface::get_Beta)); // read-only
+	&FGInterface::get_Beta); // read-only
 }
 
 void
