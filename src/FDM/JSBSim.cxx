@@ -55,8 +55,6 @@
 
 #include "JSBsim.hxx"
 
-double geocRwyRadius;
-
 /******************************************************************************/
 
 // Initialize the JSBsim flight model, dt is the time increment for
@@ -114,7 +112,7 @@ int FGJSBsim::init( double dt ) {
   fgic->SetLatitudeRadIC(get_Latitude());
   fgic->SetLongitudeRadIC(get_Longitude());
 
-  FDMExec.GetPosition()->SetRunwayRadius(geocRwyRadius);
+  FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius);
 
   FG_LOG( FG_FLIGHT, FG_INFO, "  phi: " <<  get_Phi());
   FG_LOG( FG_FLIGHT, FG_INFO, "  theta: " <<  get_Theta() );
@@ -130,11 +128,11 @@ int FGJSBsim::init( double dt ) {
     fgtrim->Report();
     fgtrim->TrimStats();
     fgtrim->ReportState();
-    
+
     controls.set_elevator_trim(FDMExec.GetFCS()->GetDeCmd());
     controls.set_trimmed_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
     //the trimming routine only knows how to get 1 value for throttle
-    
+
     //for(int i=0;i<FDMExec.GetAircraft()->GetNumEngines();i++) {
     //  controls.set_throttle(i,FDMExec.GetFCS()->GetThrottleCmd(i)/100);
     //}
@@ -189,8 +187,8 @@ int FGJSBsim::update( int multiloop ) {
   // FCS->SetBrake( controls.get_brake( 0 ) );
 
   // Inform JSBsim of the local terrain altitude; uncommented 5/3/00
-//  FDMExec.GetPosition()->SetRunwayElevation(get_Runway_altitude()); // seems to work
-  FDMExec.GetPosition()->SetRunwayRadius(geocRwyRadius);
+  //  FDMExec.GetPosition()->SetRunwayElevation(get_Runway_altitude()); // seems to work
+  FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius);
 
   FDMExec.GetAtmosphere()->SetExTemperature(get_Static_temperature());
   FDMExec.GetAtmosphere()->SetExPressure(get_Static_pressure());

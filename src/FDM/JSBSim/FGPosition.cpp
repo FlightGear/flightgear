@@ -126,8 +126,6 @@ bool FGPosition:: Run(void) {
 
     DistanceAGL = Radius - RunwayRadius;   // Geocentric
 
-    cout << "h: " << h << "  DistanceAGL: " << DistanceAGL << endl;
-
     hoverb = h/b;
 
     if(Vt > 0) {
