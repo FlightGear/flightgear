@@ -68,6 +68,7 @@ private:
   double _old_gear_position;
 
   bool _gear_on_ground[MAX_GEAR];
+  float _wheel_spin[MAX_GEAR];
 
 				// looped sounds
   FGSimpleSound * _engine[MAX_ENGINES];
