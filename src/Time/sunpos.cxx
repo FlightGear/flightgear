@@ -62,7 +62,6 @@
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
-#include <Main/views.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "sunpos.hxx"
@@ -243,7 +242,7 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
-    FGView *v;
+    FGViewer *v;
     sgVec3 nup, nsun, v0, surface_to_sun;
     Point3D p, rel_sunpos;
     double dot, east_dot;
@@ -251,7 +250,7 @@ void fgUpdateSunPos( void ) {
 
     l = &cur_light_params;
     SGTime *t = globals->get_time_params();
-    v = &current_view;
+    v = globals->get_current_view();
 
     FG_LOG( FG_EVENT, FG_INFO, "  Updating Sun position" );
     FG_LOG( FG_EVENT, FG_INFO, "  Gst = " << t->getGst() );

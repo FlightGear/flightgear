@@ -47,7 +47,6 @@
 
 #include <Include/general.hxx>
 #include <Main/options.hxx>
-#include <Main/views.hxx>
 #include <Scenery/tileentry.hxx>
 
 #include "matlib.hxx"

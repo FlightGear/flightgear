@@ -30,6 +30,8 @@
 #include <simgear/route/route.hxx>
 #include <simgear/timing/sg_time.hxx>
 
+#include "viewer.hxx"
+
 
 class FGGlobals {
 
@@ -58,6 +60,9 @@ private:
     // Global autopilot "route"
     SGRoute *route;
 
+    FGViewer *pilot_view;
+    FGViewer *current_view;
+
 public:
 
     FGGlobals();
@@ -85,6 +90,13 @@ public:
 
     inline SGRoute *get_route() const { return route; }
     inline void set_route( SGRoute *r ) { route = r; }
+
+    inline FGViewer *get_pilot_view() const { return pilot_view; }
+    inline void set_pilot_view( FGViewer *v ) { pilot_view = v; }
+    
+    inline FGViewer *get_current_view() const { return current_view; }
+    inline void set_current_view( FGViewer *v ) { current_view = v; }
+    
 };
 
 

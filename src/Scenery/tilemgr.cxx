@@ -40,8 +40,8 @@
 #include <simgear/math/vector.hxx>
 
 // #include <Aircraft/aircraft.hxx>
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
-#include <Main/views.hxx>
 #include <Objects/obj.hxx>
 
 #ifndef FG_OLD_WEATHER
@@ -194,14 +194,14 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 	sgSetVec3(tmp, hit_list.get_normal(this_hit));
 	ssgState *IntersectedLeafState =
 	    ((ssgLeaf*)hit_list.get_entity(this_hit))->getState();
-	current_view.CurrentNormalInLocalPlane(tmp, tmp);
+	globals->get_current_view()->CurrentNormalInLocalPlane(tmp, tmp);
 	sgdSetVec3( scenery.cur_normal, tmp );
 	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
 	return true;
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
 	scenery.cur_elev = 0.0;
-	float *up = current_view.local_up;
+	float *up = globals->get_current_view()->get_local_up();
 	sgdSetVec3(scenery.cur_normal, up[0], up[1], up[2]);
 	return false;
     }
@@ -473,8 +473,8 @@ int FGTileMgr::update( double lon, double lat ) {
     } else {
 	// cout << "abs view pos = " << current_view.abs_view_pos
 	//      << " view pos = " << current_view.view_pos << endl;
-	current_elev_ssg( current_view.abs_view_pos,
-			  current_view.view_pos );
+	current_elev_ssg( globals->get_current_view()->get_abs_view_pos(),
+			  globals->get_current_view()->get_view_pos() );
     }
 
     // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;

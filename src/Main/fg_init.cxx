@@ -64,6 +64,7 @@
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
+#include <FDM/ADA.hxx>
 #include <FDM/Balloon.h>
 #include <FDM/External.hxx>
 #include <FDM/JSBSim.hxx>
@@ -93,7 +94,6 @@
 #include "fg_io.hxx"
 #include "globals.hxx"
 #include "options.hxx"
-#include "views.hxx"
 #include "bfi.hxx"
 
 #if defined(FX) && defined(XMESA)
@@ -449,6 +449,8 @@ bool fgInitSubsystems( void ) {
 	cur_fdm_state = new FGLaRCsim;
     } else if ( current_options.get_flight_model() == FGInterface::FG_JSBSIM ) {
 	cur_fdm_state = new FGJSBsim;
+    } else if ( current_options.get_flight_model() == FGInterface::FG_ADA ) {
+	cur_fdm_state = new FGADA;
     } else if ( current_options.get_flight_model() == 
 	 	FGInterface::FG_BALLOONSIM ) {
 	cur_fdm_state = new FGBalloonSim;
@@ -568,12 +570,13 @@ bool fgInitSubsystems( void ) {
 
     // Initialize view parameters
     FG_LOG( FG_GENERAL, FG_DEBUG, "Before current_view.init()");
-    current_view.Init();
-    pilot_view.Init();
+    globals->get_current_view()->Init();
+    globals->get_pilot_view()->Init();
     FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
-    current_view.UpdateViewMath(*cur_fdm_state);
-    pilot_view.UpdateViewMath(*cur_fdm_state);
-    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << current_view.get_abs_view_pos());
+    globals->get_current_view()->UpdateViewMath(*cur_fdm_state);
+    globals->get_pilot_view()->UpdateViewMath(*cur_fdm_state);
+    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
+	    << globals->get_current_view()->get_abs_view_pos());
     // current_view.UpdateWorldToEye(f);
 
     // Initialize the planetary subsystem
@@ -840,15 +843,16 @@ void fgReInitSubsystems( void )
     cur_fdm_state->set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize view parameters
-    current_view.set_view_offset( 0.0 );
-    current_view.set_goal_view_offset( 0.0 );
-    pilot_view.set_view_offset( 0.0 );
-    pilot_view.set_goal_view_offset( 0.0 );
+    globals->get_current_view()->set_view_offset( 0.0 );
+    globals->get_current_view()->set_goal_view_offset( 0.0 );
+    globals->get_pilot_view()->set_view_offset( 0.0 );
+    globals->get_pilot_view()->set_goal_view_offset( 0.0 );
 
     FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
-    current_view.UpdateViewMath(*cur_fdm_state);
-    pilot_view.UpdateViewMath(*cur_fdm_state);
-    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << current_view.get_abs_view_pos());
+    globals->get_current_view()->UpdateViewMath(*cur_fdm_state);
+    globals->get_pilot_view()->UpdateViewMath(*cur_fdm_state);
+    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
+	    << globals->get_current_view()->get_abs_view_pos());
 
     // fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
     //            1.0 / current_options.get_model_hz() );

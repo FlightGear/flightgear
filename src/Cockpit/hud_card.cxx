@@ -74,6 +74,430 @@ operator = (const hud_card & rhs )
   return *this;
 }
 
+// $$$ begin - added, VS Renganathan, 13 Oct 2K
+#ifdef FIGHTER_HUD
+void hud_card ::
+draw( void ) //  (HUD_scale * pscale )
+{
+  float vmin, vmax;
+  int marker_xs;
+  int marker_xe;
+  int marker_ys;
+  int marker_ye;
+  int lenstr;
+  int height, width;
+  int i, last;
+  char TextScale[80];
+  bool condition;
+  int disp_val = 0;
+  POINT mid_scr    = get_centroid();
+  float cur_value  = get_value();
+  RECT   scrn_rect = get_location();
+  UINT options     = get_options();
+
+  height = scrn_rect.top  + scrn_rect.bottom;
+  width = scrn_rect.left + scrn_rect.right;
+
+  vmin = cur_value - half_width_units; // width units == needle travel
+  vmax = cur_value + half_width_units; // or picture unit span.
+  
+  // Draw the basic markings for the scale...
+  
+  if( huds_vert(options) ) { // Vertical scale
+//    drawOneLine( scrn_rect.left,     // Bottom tick bar
+//                 scrn_rect.top,
+//                 width,
+//                 scrn_rect.top);
+
+//    drawOneLine( scrn_rect.left,    // Top tick bar
+//                 height,
+//                 width,
+//                 height );
+      
+      marker_xs = scrn_rect.left;  // x start
+      marker_xe = width;  // x extent
+      marker_ye = height;
+
+//    glBegin(GL_LINES);
+      
+      // Bottom tick bar
+//    glVertex2f( marker_xs, scrn_rect.top);
+//    glVertex2f( marker_xe, scrn_rect.top);
+
+      // Top tick bar
+//    glVertex2f( marker_xs, marker_ye);
+//    glVertex2f( marker_xe, marker_ye );
+//    glEnd();
+
+    // We do not use else in the following so that combining the two
+    // options produces a "caged" display with double carrots. The
+    // same is done for horizontal card indicators.
+
+      if( huds_left(options) ) {    // Calculate x marker offset
+//          drawOneLine( marker_xe, scrn_rect.top,
+//                       marker_xe, marker_ye); // Cap right side
+
+        marker_xs  = marker_xe - scrn_rect.right / 3;   // Adjust tick xs
+                                                      // Indicator carrot
+//      drawOneLine( marker_xs, mid_scr.y,
+//                   marker_xe, mid_scr.y + scrn_rect.right / 6);
+//      drawOneLine( marker_xs, mid_scr.y,
+//                   marker_xe, mid_scr.y - scrn_rect.right / 6);
+
+        glBegin(GL_LINE_STRIP);
+        glVertex2f( 10+marker_xe, mid_scr.y + scrn_rect.right / 6);
+        glVertex2f( 10+marker_xs, mid_scr.y);
+        glVertex2f( 10+marker_xe, mid_scr.y - scrn_rect.right / 6);
+        glEnd();
+    }
+    if( huds_right(options) ) {  // We'll default this for now.
+//        drawOneLine( scrn_rect.left, scrn_rect.top,
+//                     scrn_rect.left, marker_ye );  // Cap left side
+
+        marker_xe = scrn_rect.left + scrn_rect.right / 3;     // Adjust tick xe
+                                                       // Indicator carrot
+//      drawOneLine( scrn_rect.left, mid_scr.y +  scrn_rect.right / 6,
+//                   marker_xe, mid_scr.y );
+//      drawOneLine( scrn_rect.left, mid_scr.y -  scrn_rect.right / 6,
+//                   marker_xe, mid_scr.y);
+        glBegin(GL_LINE_STRIP);
+        glVertex2f( -10+scrn_rect.left, mid_scr.y +  scrn_rect.right / 6);
+        glVertex2f( -10+marker_xe, mid_scr.y );
+        glVertex2f( -10+scrn_rect.left, mid_scr.y -  scrn_rect.right / 6);
+        glEnd();
+    }
+
+    // At this point marker x_start and x_end values are transposed.
+    // To keep this from confusing things they are now interchanged.
+    if(huds_both(options)) {
+      marker_ye = marker_xs;
+      marker_xs = marker_xe;
+      marker_xe = marker_ye;
+      }
+
+    // Work through from bottom to top of scale. Calculating where to put
+    // minor and major ticks.
+
+//  last = FloatToInt(vmax)+1;
+//  i = FloatToInt(vmin);
+    last = (int)vmax + 1;
+    i = (int)vmin;
+    for( ; i <last ; i++ )
+    {
+
+      condition = true;
+      if( !modulo()) {
+        if( i < min_val()) {
+          condition = false;
+          }
+        }
+
+      if( condition ) {  // Show a tick if necessary
+                         // Calculate the location of this tick
+        marker_ys = scrn_rect.top + FloatToInt(((i - vmin) * factor()/*+.5f*/));
+//        marker_ys = scrn_rect.top + (int)((i - vmin) * factor() + .5);
+        // Block calculation artifact from drawing ticks below min coordinate.
+        // Calculation here accounts for text height.
+
+        if(( marker_ys < (scrn_rect.top + 4)) |
+           ( marker_ys > (height - 4))) {
+            // Magic numbers!!!
+          continue;
+          }
+        if( div_min()) {
+//          if( (i%div_min()) == 0) {
+          if( !(i%(int)div_min())) {            
+            if((( marker_ys - 5) > scrn_rect.top ) &&
+               (( marker_ys + 5) < (height))){
+              if( huds_both(options) ) {
+                drawOneLine( scrn_rect.left, marker_ys,
+                             marker_xs,      marker_ys );
+                drawOneLine( marker_xe,      marker_ys,
+                             width,  marker_ys );
+//                glBegin(GL_LINES);
+//                glVertex2f( scrn_rect.left, marker_ys );
+//                glVertex2f( marker_xs,      marker_ys );
+//                glVertex2f( marker_xe,      marker_ys);
+//                glVertex2f( scrn_rect.left + scrn_rect.right,  marker_ys );
+//                glEnd();
+                  }
+              else {
+                if( huds_left(options) ) {
+                  drawOneLine( marker_xs + 4, marker_ys,
+                               marker_xe,     marker_ys );
+                  }
+                else {
+                  drawOneLine( marker_xs,     marker_ys,
+                               marker_xe - 4, marker_ys );
+                  }
+                }
+              }
+            }
+          }
+        if( div_max() ) {
+          if( !(i%(int)div_max()) )         
+          {
+            if(modulo()) {
+                if( disp_val < 0) {
+                    while(disp_val < 0)
+                        disp_val += modulo();
+//              } else {
+//                  disp_val = i % (int)modulo();
+                }
+                disp_val = i % (int) modulo(); // ?????????
+            } else {
+                disp_val = i;
+            }
+
+            lenstr = sprintf( TextScale, "%d",
+                              FloatToInt(disp_val * data_scaling()/*+.5*/));
+//                            (int)(disp_val  * data_scaling() +.5));
+            if(( (marker_ys - 8 ) > scrn_rect.top ) &&
+               ( (marker_ys + 8) < (height))){
+              if( huds_both(options) ) {
+//                drawOneLine( scrn_rect.left, marker_ys,
+//                             marker_xs,      marker_ys);
+//                drawOneLine( marker_xs, marker_ys,
+//                             scrn_rect.left + scrn_rect.right,
+//                             marker_ys);
+                  glBegin(GL_LINE_STRIP);
+                  glVertex2f( scrn_rect.left, marker_ys );
+                  glVertex2f( marker_xs, marker_ys);
+                  glVertex2f( width, marker_ys);
+                  glEnd();
+                  if( !huds_notext(options)) {
+                      textString ( marker_xs + 2,  marker_ys,
+                                   TextScale,  GLUT_BITMAP_8_BY_13 );
+                  }
+              }
+              else {
+                drawOneLine( marker_xs, marker_ys, marker_xe, marker_ys );
+                if( !huds_notext(options) ) {
+                  if( huds_left(options) )              {
+                      textString( marker_xs -  8 * lenstr - 2,
+                                  marker_ys - 4,
+                                  TextScale, GLUT_BITMAP_8_BY_13 );
+                    }
+                  else  {
+                      textString( marker_xe + 3 * lenstr,
+                                  marker_ys - 4,
+                                  TextScale, GLUT_BITMAP_8_BY_13 );
+                  }
+                  }
+                }
+              } // Else read oriented right
+            } // End if modulo division by major interval is zero
+          }  // End if major interval divisor non-zero
+        } // End if condition
+      } // End for range of i from vmin to vmax
+    }  // End if VERTICAL SCALE TYPE
+  else {                                // Horizontal scale by default
+// commented
+      // left tick bar
+//      drawOneLine( scrn_rect.left, scrn_rect.top,
+//                   scrn_rect.left, height);
+
+      // right tick bar
+//      drawOneLine( width, scrn_rect.top,
+//                 width,
+//                 height );
+      
+      marker_ys = scrn_rect.top;           // Starting point for
+      marker_ye = height;                  // tick y location calcs
+      marker_xe = width;
+
+//    glBegin(GL_LINES);
+      // left tick bar
+//    glVertex2f( scrn_rect.left, scrn_rect.top);
+//    glVertex2f( scrn_rect.left, marker_ye);
+
+      // right tick bar
+//    glVertex2f( marker_xe, scrn_rect.top);
+//    glVertex2f( marker_xe, marker_ye );
+//    glEnd();
+
+    if( huds_top(options) ) {
+        // Bottom box line
+// commented 
+//        drawOneLine( scrn_rect.left,
+//                     scrn_rect.top,
+//                     width,
+//                     scrn_rect.top);
+
+        // Tick point adjust
+        marker_ye  = scrn_rect.top + scrn_rect.bottom / 2;
+        
+        // Bottom arrow
+//      drawOneLine( mid_scr.x, marker_ye,
+//                   mid_scr.x - scrn_rect.bottom / 4, scrn_rect.top);
+//      drawOneLine( mid_scr.x, marker_ye,
+//                   mid_scr.x + scrn_rect.bottom / 4, scrn_rect.top);
+
+// commented
+//        glBegin(GL_LINE_STRIP);
+//        glVertex2f( mid_scr.x - scrn_rect.bottom / 4, scrn_rect.top);
+//        glVertex2f( mid_scr.x, marker_ye);
+//        glVertex2f( mid_scr.x + scrn_rect.bottom / 4, scrn_rect.top);
+//        glEnd();
+
+    }
+    if( huds_bottom(options) ) {
+        // Top box line
+        drawOneLine( scrn_rect.left, height,
+                     width, height);
+        // Tick point adjust
+        marker_ys = height - scrn_rect.bottom  / 2;
+        
+        // Top arrow
+//      drawOneLine( mid_scr.x + scrn_rect.bottom / 4,
+//                   scrn_rect.top + scrn_rect.bottom,
+//                   mid_scr.x, marker_ys );
+//      drawOneLine( mid_scr.x - scrn_rect.bottom / 4,
+//                   scrn_rect.top + scrn_rect.bottom,
+//                   mid_scr.x , marker_ys );
+        glBegin(GL_LINE_STRIP);
+        glVertex2f( mid_scr.x + scrn_rect.bottom / 4,
+                    height);
+        glVertex2f( mid_scr.x , marker_ys );
+        glVertex2f( mid_scr.x - scrn_rect.bottom / 4,
+                    height);
+        glEnd();
+    }
+
+//    if(( options & HUDS_BOTTOM) == HUDS_BOTTOM ) {
+//      marker_xe = marker_ys;
+//      marker_ys = marker_ye;
+//      marker_ye = marker_xe;
+//      }
+
+    // printf("vmin = %d  vmax = %d\n", (int)vmin, (int)vmax);
+
+//  last = FloatToInt(vmax)+1;
+//  i    = FloatToInt(vmin);
+    last = (int)vmax + 1;
+    i = (int)vmin;
+    for(; i <last ; i++ )      {
+//    for( i = (int)vmin; i <= (int)vmax; i++ )     {
+      // printf("<*> i = %d\n", i);
+      condition = true;
+      if( !modulo()) {
+        if( i < min_val()) {
+          condition = false;
+          }
+        }
+      // printf("<**> i = %d\n", i);
+      if( condition )        {
+//        marker_xs = scrn_rect.left + (int)((i - vmin) * factor() + .5);
+        marker_xs = scrn_rect.left + FloatToInt(((i - vmin) * factor()/*+ .5f*/));
+        if( div_min()){
+//          if( (i%(int)div_min()) == 0 ) {
+          if( !(i%(int)div_min() )) {           
+            // draw in ticks only if they aren't too close to the edge.
+            if((( marker_xs - 5) > scrn_rect.left ) &&
+               (( marker_xs + 5 )< (scrn_rect.left + scrn_rect.right))){
+
+              if( huds_both(options) ) {
+                drawOneLine( marker_xs, scrn_rect.top,
+                             marker_xs, marker_ys - 4);
+                drawOneLine( marker_xs, marker_ye + 4,
+                             marker_xs, height);
+//                glBegin(GL_LINES);
+//                glVertex2f( marker_xs, scrn_rect.top);
+//                glVertex2f( marker_xs, marker_ys - 4);
+//                glVertex2f( marker_xs, marker_ye + 4);
+//                glVertex2f( marker_xs, scrn_rect.top + scrn_rect.bottom);
+//                glEnd();
+              }
+              else {
+                if( huds_top(options)) {
+                // draw minor ticks
+                  drawOneLine( marker_xs, marker_ys,
+                               marker_xs, marker_ye - 4);
+//  patch for  angled deck heading
+                    if (i == 352) {
+                       glBegin(GL_POLYGON);
+                         glVertex2f( marker_xs, marker_ys+16);
+                         glVertex2f( marker_xs+2, marker_ys+13);
+                         glVertex2f( marker_xs, marker_ys+10);
+                         glVertex2f( marker_xs-2, marker_ys+13);
+                       glEnd();
+                    }
+                  }
+                else {
+                  drawOneLine( marker_xs, marker_ys + 4,
+                               marker_xs, marker_ye);
+                  }
+                }
+              }
+            }
+          }
+    // printf("<***> i = %d\n", i);
+        if( div_max()) {
+      // printf("i = %d\n", i);
+//          if( (i%(int)div_max())==0 ) {
+          if( !(i%(int)div_max()) ) {           
+            if(modulo()) {
+              if( disp_val < 0) {
+                  while(disp_val<0)
+                      disp_val += modulo();
+              }
+              disp_val = i % (int) modulo(); // ?????????
+            } else {
+              disp_val = i;
+            }
+        // printf("disp_val = %d\n", disp_val);
+        // printf("%d\n", (int)(disp_val  * (double)data_scaling() + 0.5));
+            lenstr = sprintf( TextScale, "%d",
+//                            (int)(disp_val  * data_scaling() +.5));
+                              FloatToInt(disp_val * data_scaling()/*+.5*/));
+            // Draw major ticks and text only if far enough from the edge.
+            if(( (marker_xs - 10)> scrn_rect.left ) &&
+               ( (marker_xs + 10) < (scrn_rect.left + scrn_rect.right))){
+              if( huds_both(options) ) {
+//                drawOneLine( marker_xs, scrn_rect.top,
+//                             marker_xs, marker_ys);
+//                drawOneLine( marker_xs, marker_ye,
+//                             marker_xs, scrn_rect.top + scrn_rect.bottom);
+                  glBegin(GL_LINE_STRIP);
+                  glVertex2f( marker_xs, scrn_rect.top);
+                  glVertex2f( marker_xs, marker_ye);
+                  glVertex2f( marker_xs, height);
+                  glEnd();
+                if( !huds_notext(options) ) {
+                  textString ( marker_xs - 4 * lenstr,
+                               marker_ys + 4,
+                               TextScale,  GLUT_BITMAP_8_BY_13 );
+                  }
+                }
+              else {
+                // draw major ticks
+                drawOneLine( marker_xs, marker_ys,
+                             marker_xs, marker_ye );
+                if( !huds_notext(options)) {
+                  if( huds_top(options) )              {
+                    textString ( marker_xs - 4 * lenstr,
+                                 height - 10,
+                                 TextScale, GLUT_BITMAP_8_BY_13 );
+                    }
+                  else  {
+                    textString( marker_xs - 4 * lenstr,
+                                scrn_rect.top,
+                                TextScale, GLUT_BITMAP_8_BY_13 );
+                    }
+                  }
+                }
+              }
+            }
+      }//if(condition)  
+    // printf("<****> i = %d\n", i);
+	  } //if(divmax)
+      } //if(!modulo)
+    } //for
+} //draw
+
+#else
+//$$$ end - VS Renganathan, 13 Oct 2K
+
 void hud_card ::
 draw( void ) //  (HUD_scale * pscale )
 {
@@ -477,3 +901,4 @@ draw( void ) //  (HUD_scale * pscale )
     }
 }
 
+#endif

@@ -1,8 +1,9 @@
-// views.hxx -- data structures and routines for managing and view parameters.
+// viewer.hxx -- class for managing a viewer in the flightgear world.
 //
 // Written by Curtis Olson, started August 1997.
+//                          overhaul started October 2000.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1997 - 2000  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -21,10 +22,9 @@
 // $Id$
 
 
-#ifndef _VIEWS_HXX
-#define _VIEWS_HXX
+#ifndef _VIEWER_HXX
+#define _VIEWER_HXX
 
-#error do not include me!
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
@@ -51,21 +51,22 @@ FG_USING_STD(list);
 
 
 // Define a structure containing view information
-class FGView {
+class FGViewer {
 
-public:
+private:
 
-    // the current offset from forward for viewing
+    // the current view offset angle from forward (rotated about the
+    // view_up vector)
     double view_offset;
 
-    // the goal view offset for viewing (used for smooth view changes)
+    // the goal view offset angle  (used for smooth view changes)
     double goal_view_offset;
 
     // flag forcing update of fov related stuff
     bool update_fov;
 	
-    // fov of view is specified in the y direction, win_ratio is used to
-    // calculate the fov in the X direction = width / height
+    // fov of view is specified in the X direction, win_ratio is used to
+    // calculate the fov in the Y direction.  fov(y) = fov(x) * win_ratio
     double win_ratio;
 
     // width & height of window
@@ -132,10 +133,10 @@ public:
 public:
 
     // Constructor
-    FGView( void );
+    FGViewer( void );
 
     // Destructor
-    ~FGView( void );
+    ~FGViewer( void );
 
     // Initialize a view class
     void Init( void );
@@ -195,13 +196,11 @@ public:
     inline float *get_surface_east() { return surface_east; }
     inline float *get_local_up() { return local_up; }
     inline float *get_view_forward() { return view_forward; }
+
+    inline const sgVec4 *get_VIEW() { return VIEW; }
+    inline const sgVec4 *get_VIEW_ROT() { return VIEW_ROT; }
 };
 
-
-extern FGView pilot_view;
-extern FGView current_view;
-
-
-#endif // _VIEWS_HXX
+#endif // _VIEWER_HXX
 
 

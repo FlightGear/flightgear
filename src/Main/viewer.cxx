@@ -1,9 +1,9 @@
-// views.cxx -- data structures and routines for managing and view
-//               parameters.
+// viewer.cxx -- class for managing a viewer in the flightgear world.
 //
 // Written by Curtis Olson, started August 1997.
+//                          overhaul started October 2000.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1997 - 2000  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -21,7 +21,6 @@
 //
 // $Id$
 
-#error do not compile me
 
 #include <simgear/compiler.h>
 
@@ -42,20 +41,11 @@
 #include <Scenery/scenery.hxx>
 
 #include "options.hxx"
-#include "views.hxx"
-
-
-// This is a record containing current view parameters for the current
-// aircraft position
-FGView pilot_view;
-
-// This is a record containing current view parameters for the current
-// view position
-FGView current_view;
+#include "viewer.hxx"
 
 
 // Constructor
-FGView::FGView( void ) {
+FGViewer::FGViewer( void ) {
 }
 
 #define USE_FAST_VIEWROT
@@ -90,11 +80,10 @@ inline static void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 )
 #endif
 
 // Initialize a view structure
-void FGView::Init( void ) {
+void FGViewer::Init( void ) {
     FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
 
-    view_offset = 0.0;
-    goal_view_offset = 0.0;
+    view_offset = goal_view_offset = current_options.get_default_view_offset();
     sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
 
     winWidth = current_options.get_xsize();
@@ -165,7 +154,7 @@ inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
 
 
 // Update the view volume, position, and orientation
-void FGView::UpdateViewParams( const FGInterface& f ) {
+void FGViewer::UpdateViewParams( const FGInterface& f ) {
     UpdateViewMath(f);
     
     if ( ! fgPanelVisible() ) {
@@ -193,7 +182,7 @@ static void print_sgMat4( sgMat4 &in) {
 
 
 // Update the view parameters
-void FGView::UpdateViewMath( const FGInterface& f ) {
+void FGViewer::UpdateViewMath( const FGInterface& f ) {
 
     Point3D p;
     sgVec3 v0, minus_z, sgvec, forward;
@@ -389,7 +378,7 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 }
 
 
-void FGView::CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
+void FGViewer::CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
     sgVec3 tmp;
     sgSetVec3(tmp, src[0], src[1], src[2] );
     sgMat4 TMP;
@@ -400,5 +389,5 @@ void FGView::CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
 
 
 // Destructor
-FGView::~FGView( void ) {
+FGViewer::~FGViewer( void ) {
 }

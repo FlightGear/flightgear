@@ -189,22 +189,41 @@ int getStringWidth ( char *str )
 
 int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 {
-  instr_item *HIptr;
-//  int index;
+    instr_item *HIptr;
+    //  int index;
 
-//  int off = 50;
-  int min_x = 25; //off/2;
-  int max_x = 615; //640-(off/2);
-//  int min_y = off;
-  int max_y = 430; //480-off;
-  int cen_x = 320;
-  int cen_y = 240;
-  unsigned int text_h = 10;
-  unsigned int ladr_w2 = 60;
-  int ladr_h2 = 90;
-  int ladr_t = 35;
-  int compass_w = 200;
-  int gap = 10;
+    // $$$ begin - added VS Renganathan
+#ifdef FIGHTER_HUD
+    //  int off = 400;
+    int min_x = 200; 
+    int max_x = 440; 
+    //  int min_y = 100;
+    int max_y = 380; 
+    int cen_x = 320;
+    int cen_y = 240;
+    unsigned int text_h = 10;
+    unsigned int ladr_w2 = 60;
+    int ladr_h2 = 90;
+    int ladr_t = 35;
+    int compass_w = 120;
+    int gap = 10;
+#else
+    // $$$ end - added VS Renganathan
+
+    //  int off = 50;
+    int min_x = 25; //off/2;
+    int max_x = 615; //640-(off/2);
+    //  int min_y = off;
+    int max_y = 430; //480-off;
+    int cen_x = 320;
+    int cen_y = 240;
+    unsigned int text_h = 10;
+    unsigned int ladr_w2 = 60;
+    int ladr_h2 = 90;
+    int ladr_t = 35;
+    int compass_w = 200;
+    int gap = 10;
+#endif
 
 //  int font_size = current_options.get_xsize() / 60;
   int font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
@@ -233,6 +252,357 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 //  int x = 290; /*cen_x-30*/
 //  int y = 45;  /*off-5*/
 //  HIptr = (instr_item *) new fgTBI_instr( x, y, ladr_w2, text_h );
+// $$$ begin - added, VS Renganathan 13 Oct 2K
+#ifdef FIGHTER_HUD
+//      case 1:     // Artificial Horizon
+  HIptr = (instr_item *) new HudLadder( cen_x-ladr_w2, cen_y-ladr_h2,
+                                        2*ladr_w2, 2*ladr_h2 );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+//      case 4:    // GYRO COMPASS
+  HIptr = (instr_item *) new hud_card( cen_x-(compass_w/2),
+                                       cen_y+8.0,  //CENTER_DIAMOND_SIZE
+                                       compass_w,
+                                       28,
+                                       get_heading,
+                                       HUDS_TOP,
+                                       360, 0,
+                                       1.0,
+                                       10,   1,
+                                       360,
+                                       0,
+                                       25,
+                                       true);
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+//      case 10:    // Digital KIAS
+        HIptr = (instr_item *) new instr_label ( cen_x-190,
+                                                 cen_y+25,
+                                                  40,
+                                                  30,
+                                                 get_speed,
+                                                 "%5.0f",
+                                                 NULL,
+                                                 " ",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 RIGHT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+// Mach no
+        HIptr = (instr_item *) new instr_label ( cen_x-180,
+                                                 cen_y+5,
+                                                  40,
+                                                  30,
+                                                 get_mach,
+                                                 "%5.2f",
+                                                 NULL,
+                                                 " ",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 RIGHT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+// Pressure Altitude
+        HIptr = (instr_item *) new instr_label ( cen_x+110,
+                                                 cen_y+25,
+                                                  40,
+                                                  30,
+                                                 get_altitude,
+                                                 "%5.0f",
+                                                 NULL,
+                                                 " ",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+// Radio Altitude
+        HIptr = (instr_item *) new instr_label ( cen_x+110,
+                                                 cen_y+5,
+                                                  40,
+                                                  30,
+                                                 get_agl,
+                                                 "%5.0f",
+                                                 NULL,
+                                                 " R",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+//      case 2:    // AOA
+  HIptr = (instr_item *) new hud_card( cen_x-145.0, //min_x +18,
+                                       cen_y-190,
+                                       28,
+                                       120,
+                                       get_aoa,
+                                       HUDS_LEFT | HUDS_VERT,
+//                                       HUDS_RIGHT | HUDS_VERT,                                     
+                                       30.0, -15.0,
+                                       1.0,
+                                       10,  2,
+                                       0,
+                                       0,
+                                       60.0,
+                                       true);
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+//      case 2:    // normal acceleration at cg, g's
+  HIptr = (instr_item *) new hud_card( cen_x-185, //min_x +18,
+                                       cen_y-220,
+                                       18,
+                                       130,
+                                       get_anzg,
+                                       HUDS_LEFT | HUDS_VERT,
+//                                       HUDS_RIGHT | HUDS_VERT,                                     
+                                       10.0, -5.0,
+                                       1.0,
+                                       2,  1,
+                                       0,
+                                       0,
+                                       20.0,
+                                       true);
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+//      case 2:    // VSI
+  HIptr = (instr_item *) new hud_card( (2*cen_x)-195.0, //min_x +18,
+                                       cen_y-190,
+                                       28,
+                                       120,
+                                       get_climb_rate, //fix
+//                                       HUDS_LEFT | HUDS_VERT,
+                                       HUDS_RIGHT | HUDS_VERT,                                     
+                                       500.0, -500.0,
+                                       1.0,
+                                       5,  1,
+                                       0,
+                                       0,
+                                       15.0,
+                                       true);
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+
+// Aux parameter 16 - xposn
+        HIptr = (instr_item *) new instr_label ( cen_x+170,
+                                                 cen_y+200,
+                                                  40,
+                                                  30,
+                                                 get_aux16,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " pstick",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+  
+
+// Aux parameter 17 - xposn
+        HIptr = (instr_item *) new instr_label ( cen_x+170,
+                                                 cen_y+190,
+                                                  40,
+                                                  30,
+                                                 get_aux17,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " rstick",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+  
+  
+  
+  
+  
+  
+  
+// Aux parameter 1 - xposn
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+200,
+                                                  40,
+                                                  30,
+                                                 get_aux1,
+                                                 "%5.0f",
+                                                 NULL,
+                                                 " m",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 2 - pla
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+190,
+                                                  40,
+                                                  30,
+                                                 get_aux9,
+                                                 "%5.0f",
+                                                 NULL,
+                                                 " pla",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 3 - xtd
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+170,
+                                                  40,
+                                                  30,
+                                                 get_aux11,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " xtd",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 4 - ytd
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+160,
+                                                  40,
+                                                  30,
+                                                 get_aux12,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " ytd",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 5 - nztd
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+150,
+                                                  40,
+                                                  30,
+                                                 get_aux10,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " nztd",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 6 - vvtd
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+140,
+                                                  40,
+                                                  30,
+                                                 get_aux13,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " vvtd",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 7 - vtd
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+130,
+                                                  40,
+                                                  30,
+                                                 get_aux14,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " vtd",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 8 - alftd
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+120,
+                                                  40,
+                                                  30,
+                                                 get_aux15,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " alftd",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 9 - fnr
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+100,
+                                                  40,
+                                                  30,
+                                                 get_aux8,
+                                                 "%5.1f",
+                                                 NULL,
+                                                 " fnose",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+
+// Aux parameter 10 - Ax
+        HIptr = (instr_item *) new instr_label ( cen_x+240,
+                                                 cen_y+90,
+                                                  40,
+                                                  30,
+                                                 get_Ax,
+                                                 "%5.2f",
+                                                 NULL,
+                                                 " Ax",
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 LEFT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+#else
+// $$$ end - added , VS Renganathan 13 Oct 2K
+
   HIptr = (instr_item *) new fgTBI_instr( 290, 45, 60, 10 );  
   HUD_deque.insert( HUD_deque.begin(), HIptr);
 
@@ -376,6 +746,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                            0.0
                                           );
   HUD_deque.insert( HUD_deque.begin(), HIptr);
+#endif
 // Remove this when below uncommented       
 //      case 10:
   HIptr = (instr_item *) new instr_label( 10,
@@ -394,7 +765,40 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                           TRUE );
   HUD_deque.insert( HUD_deque.begin(), HIptr);
   
-  HIptr = (instr_item *) new lat_label(  (cen_x - (compass_w/2))/2,
+// $$$ begin - added VS Renganthan 19 Oct 2K
+#ifdef FIGHTER_HUD
+  HIptr = (instr_item *) new lat_label(  70,
+                                          40,    
+                                          1,
+                                          text_h,
+                                          get_latitude,
+                                          "%s%", //"%.0f",
+                                          "", //"Lat ",
+                                          "",
+                                          1.0,
+                                          HUDS_TOP,
+                                          CENTER_JUST,
+                                          font_size,
+                                          0,
+                                          TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+    
+    HIptr = (instr_item *) new lon_label( 475,
+                                          40,
+                                          1, text_h,
+                                          get_longitude,
+                                          "%s%",//"%.0f",
+                                          "", //"Lon ", 
+                                          "",
+                                          1.0,
+                                          HUDS_TOP,
+                                          CENTER_JUST,
+                                          font_size,
+                                          0,
+                                          TRUE );
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+#else
+    HIptr = (instr_item *) new lat_label(  (cen_x - (compass_w/2))/2,
                                           max_y,    
                                           1,
                                           text_h,
@@ -424,7 +828,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                           0,
                                           TRUE );
   HUD_deque.insert( HUD_deque.begin(), HIptr);
-    
+#endif
+// $$$ end - added VS Renganthan 19 Oct 2K
 /*
 //      case 10:    // Digital KIAS
         HIptr = (instr_item *) new instr_label ( 110,

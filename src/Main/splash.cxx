@@ -46,8 +46,8 @@
 #include <Main/options.hxx>
 #include <Objects/texload.h>
 
+#include "globals.hxx"
 #include "splash.hxx"
-#include "views.hxx"
 
 
 static GLuint splash_texid;
@@ -110,14 +110,15 @@ void fgSplashUpdate ( double progress ) {
     int xsize = 480;
     int ysize = 380;
 
-    if ( !current_view.get_winWidth() || !current_view.get_winHeight() ) {
+    if ( !globals->get_current_view()->get_winWidth()
+	 || !globals->get_current_view()->get_winHeight() ) {
 	return;
     }
 
-    xmin = (current_view.get_winWidth() - xsize) / 2;
+    xmin = (globals->get_current_view()->get_winWidth() - xsize) / 2;
     xmax = xmin + xsize;
 
-    ymin = (current_view.get_winHeight() - ysize) / 2;
+    ymin = (globals->get_current_view()->get_winHeight() - ysize) / 2;
     ymax = ymin + ysize;
 
     // first clear the screen;
@@ -128,7 +129,8 @@ void fgSplashUpdate ( double progress ) {
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
-    gluOrtho2D(0, current_view.get_winWidth(), 0, current_view.get_winHeight());
+    gluOrtho2D(0, globals->get_current_view()->get_winWidth(),
+	       0, globals->get_current_view()->get_winHeight());
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();

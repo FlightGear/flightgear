@@ -260,16 +260,19 @@ public:
 	// Christian's hot air balloon simulation
 	FG_BALLOONSIM = 3,
 
+	// AEronautical DEvelopment AGEncy, Bangalore India
+	FG_ADA = 4,
+
 	// The following aren't implemented but are here to spark
 	// thoughts and discussions, and maybe even action.
-	FG_ACM = 4,
-	FG_SUPER_SONIC = 5,
-	FG_HELICOPTER = 6,
-	FG_AUTOGYRO = 7,
-	FG_PARACHUTE = 8,
+	FG_ACM = 5,
+	FG_SUPER_SONIC = 6,
+	FG_HELICOPTER = 7,
+	FG_AUTOGYRO = 8,
+	FG_PARACHUTE = 9,
 
 	// Driven externally via a serial port, net, file, etc.
-	FG_EXTERNAL = 9
+	FG_EXTERNAL = 10
     };
 
     // ========== Mass properties and geometry values ==========
@@ -461,14 +464,14 @@ public:
     }
 
     // inline double * get_N_cg_body_v() { return n_cg_body_v; }
-    // inline double get_N_X_cg() const { return n_cg_body_v[0]; }
-    // inline double get_N_Y_cg() const { return n_cg_body_v[1]; }
-    // inline double get_N_Z_cg() const { return n_cg_body_v[2]; }
-    // inline void set_Accels_CG_Body_N( double x, double y, double z ) {
-    //    n_cg_body_v[0] = x;
-    //    n_cg_body_v[1] = y;
-    //    n_cg_body_v[2] = z;
-    // }
+    inline double get_N_X_cg() const { return n_cg_body_v[0]; }
+    inline double get_N_Y_cg() const { return n_cg_body_v[1]; }
+    inline double get_N_Z_cg() const { return n_cg_body_v[2]; }
+    inline void set_Accels_CG_Body_N( double x, double y, double z ) {
+	n_cg_body_v[0] = x;
+	n_cg_body_v[1] = y;
+	n_cg_body_v[2] = z;
+    }
 
     // inline double * get_N_pilot_body_v() { return n_pilot_body_v; }
     // inline double get_N_X_pilot() const { return n_pilot_body_v[0]; }
@@ -509,21 +512,20 @@ public:
     // inline double * get_V_local_rel_ground_v() {
     //     return v_local_rel_ground_v;
     // }
-    // inline double get_V_north_rel_ground() const {
-    //     return v_local_rel_ground_v[0];
-    // }
-    // inline double get_V_east_rel_ground() const {
-    //     return v_local_rel_ground_v[1];
-    // }
-    // inline double get_V_down_rel_ground() const {
-    //     return v_local_rel_ground_v[2];
-    // }
-    // inline void set_Velocities_Ground(double north, double east, double down)
-    // {
-    //     v_local_rel_ground_v[0] = north;
-    //     v_local_rel_ground_v[1] = east;
-    //     v_local_rel_ground_v[2] = down;
-    // }
+    inline double get_V_north_rel_ground() const {
+        return v_local_rel_ground_v[0];
+    }
+    inline double get_V_east_rel_ground() const {
+	return v_local_rel_ground_v[1];
+    }
+    inline double get_V_down_rel_ground() const {
+        return v_local_rel_ground_v[2];
+    }
+    inline void set_Velocities_Ground(double north, double east, double down) {
+	v_local_rel_ground_v[0] = north;
+	v_local_rel_ground_v[1] = east;
+	v_local_rel_ground_v[2] = down;
+    }
 
     // inline double * get_V_local_airmass_v() { return v_local_airmass_v; }
     inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }

@@ -40,7 +40,7 @@
 
 #include <Cockpit/hud.hxx>
 #include <plib/ssg.h>
-#include <Main/views.hxx>
+#include <Main/globals.hxx>
 
 //#define printf //
 
@@ -208,7 +208,7 @@ int list_not_in( char name[16]) {
    return i;
 }
 
-void fgd_print_Mat4( sgMat4 m ) {
+void fgd_print_Mat4( const sgMat4 m ) {
     printf("0.0 %f 0.1 %f 0.2 %f 0.3 %f\n", 
     m[0][0], m[0][1], m[0][2], m[0][3] );
     printf("1.0 %f 1.1 %f 1.2 %f 1.3 %f\n", 
@@ -286,7 +286,7 @@ void fgd_init(void){
 
 int net_resolv_fgd( char *fgd_host_check ) {
 
-char *fgd_ip_check;
+   char *fgd_ip_check = "";
 
 /* resolving the destination host, here fgd's host */   
    net_r = 0;
@@ -389,11 +389,11 @@ void fgd_send_com( char *FGD_com, char *FGFS_host) {
 
 /* Here sending the previously calculated view.Mat4 by FGFS */
         case 17: if (verbose == 2) printf("Checkpoint\n");
-                 sgCopyMat4(sgFGD_COORD, current_view.VIEW);
+                 sgCopyMat4(sgFGD_COORD, globals->get_current_view()->get_VIEW());
 
                  if (verbose == 2) {
                     printf("current_view\n");
-                    fgd_print_Mat4( current_view.VIEW);
+                    fgd_print_Mat4( globals->get_current_view()->get_VIEW());
                     printf("FGD_COORD\n");
                     fgd_print_Mat4( sgFGD_COORD);
                  }

@@ -43,7 +43,7 @@ fgfs_SOURCES = \
 	options.cxx options.hxx \
 	save.cxx save.hxx \
 	splash.cxx splash.hxx \
-	views.cxx views.hxx
+	viewer.cxx viewer.hxx
 
 fgfs_LDADD = \
 	$(top_builddir)/src/Aircraft/libAircraft.a \

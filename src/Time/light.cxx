@@ -55,8 +55,8 @@ FG_USING_STD(string);
 #include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
-#include <Main/views.hxx>
 
 #include "light.hxx"
 #include "sunpos.hxx"
@@ -169,7 +169,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
     // first determine the difference between our view angle and local
     // direction to the sun
     rotation = -(sun_rotation + FG_PI) 
-	- (f->get_Psi() - current_view.get_view_offset());
+	- (f->get_Psi() - globals->get_current_view()->get_view_offset());
     while ( rotation < 0 ) {
 	rotation += FG_2PI;
     }

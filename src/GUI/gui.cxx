@@ -69,7 +69,6 @@
 #include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
 #include <Main/options.hxx>
-#include <Main/views.hxx>
 #include <Main/save.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
@@ -300,7 +299,8 @@ static inline void TurnCursorOn( void )
     }
 #endif
 #if defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( current_view.get_winWidth()/2, current_view.get_winHeight()/2);
+    glutWarpPointer( globals->get_current_view()->get_winWidth()/2,
+		     globals->get_current_view()->get_winHeight()/2);
 #endif
 }
 
@@ -310,7 +310,8 @@ static inline void TurnCursorOff( void )
 #if defined(WIN32_CURSOR_TWEAKS)
     glutSetCursor(GLUT_CURSOR_NONE);
 #elif defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( current_view.get_winWidth(), current_view.get_winHeight());
+    glutWarpPointer( globals->get_current_view()->get_winWidth(),
+		     globals->get_current_view()->get_winHeight());
 #endif
 }
 
@@ -381,8 +382,8 @@ void guiMotionFunc ( int x, int y )
         // reset left click MOUSE_VIEW toggle feature
         _mVtoggle = 0;
         
-        ww = current_view.get_winWidth();
-        wh = current_view.get_winHeight();
+        ww = globals->get_current_view()->get_winWidth();
+        wh = globals->get_current_view()->get_winHeight();
         
         switch (mouse_mode) {
             case MOUSE_YOKE:
@@ -476,7 +477,7 @@ void guiMotionFunc ( int x, int y )
                 // do horizontal pan
                 // this could be done in above quat
                 // but requires redoing view pipeline
-                offset = current_view.get_goal_view_offset();
+                offset = globals->get_current_view()->get_goal_view_offset();
                 offset += ((_mX - x) * FG_2PI / W );
                 while (offset < 0.0) {
                     offset += FG_2PI;
@@ -484,9 +485,9 @@ void guiMotionFunc ( int x, int y )
                 while (offset > FG_2PI) {
                     offset -= FG_2PI;
                 }
-                current_view.set_goal_view_offset(offset);
+                globals->get_current_view()->set_goal_view_offset(offset);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                current_view.set_view_offset(offset);
+                globals->get_current_view()->set_view_offset(offset);
 #endif
                 break;
             
@@ -543,9 +544,9 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         curquat[1] = _quat[1];
                         curquat[2] = _quat[2];
                         curquat[3] = _quat[3];
-                        current_view.set_goal_view_offset(_view_offset);
+                        globals->get_current_view()->set_goal_view_offset(_view_offset);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                        current_view.set_view_offset(_view_offset);
+                        globals->get_current_view()->set_view_offset(_view_offset);
 #endif
                     } else {
                         // center view
@@ -557,13 +558,13 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         _quat[1] = curquat[1];
                         _quat[2] = curquat[2];
                         _quat[3] = curquat[3];
-                        x = current_view.get_winWidth()/2;
-                        y = current_view.get_winHeight()/2;
+                        x = globals->get_current_view()->get_winWidth()/2;
+                        y = globals->get_current_view()->get_winHeight()/2;
                         Quat0();
-                        _view_offset = current_view.get_goal_view_offset();
-                        current_view.set_goal_view_offset(0.0);
+                        _view_offset = globals->get_current_view()->get_goal_view_offset();
+                        globals->get_current_view()->set_goal_view_offset(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                        current_view.set_view_offset(0.0);
+                        globals->get_current_view()->set_view_offset(0.0);
 #endif
                     }
                     glutWarpPointer( x , y);
@@ -579,8 +580,8 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     _savedX = x;
                     _savedY = y;
                     // start with zero point in center of screen
-                    _mX = current_view.get_winWidth()/2;
-                    _mY = current_view.get_winHeight()/2;
+                    _mX = globals->get_current_view()->get_winWidth()/2;
+                    _mY = globals->get_current_view()->get_winHeight()/2;
                     
                     // try to have the MOUSE_YOKE position
                     // reflect the current stick position
@@ -596,8 +597,8 @@ void guiMouseFunc(int button, int updown, int x, int y)
                 case MOUSE_YOKE:
                     mouse_mode = MOUSE_VIEW;
                     current_options.set_control_mode( fgOPTIONS::FG_JOYSTICK );
-                    x = current_view.get_winWidth()/2;
-                    y = current_view.get_winHeight()/2;
+                    x = globals->get_current_view()->get_winWidth()/2;
+                    y = globals->get_current_view()->get_winHeight()/2;
                     _mVtoggle = 0;
                     Quat0();
                     build_rotmatrix(quat_mat, curquat);
@@ -612,9 +613,9 @@ void guiMouseFunc(int button, int updown, int x, int y)
 #ifdef RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     Quat0();
                     build_rotmatrix(quat_mat, curquat);
-                    current_view.set_goal_view_offset(0.0);
+                    globals->get_current_view()->set_goal_view_offset(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
-                    current_view.set_view_offset(0.0);
+                    globals->get_current_view()->set_view_offset(0.0);
 #endif
 #endif      // RESET_VIEW_ON_LEAVING_MOUSE_VIEW
                     glutSetCursor(GLUT_CURSOR_INHERIT);
@@ -883,12 +884,12 @@ GLubyte *hiResScreenCapture( int multiplier )
 {
 	float oldfov = current_options.get_fov();
 	float fov = oldfov / multiplier;
-	FGView *v = &current_view;
+	FGViewer *v = globals->get_current_view();
 	current_options.set_fov(fov);
 	v->force_update_fov_math();
     fgInitVisuals();
-    int cur_width = current_view.get_winWidth( );
-    int cur_height = current_view.get_winHeight( );
+    int cur_width = globals->get_current_view()->get_winWidth( );
+    int cur_height = globals->get_current_view()->get_winHeight( );
 	if (b1) delete( b1 );
 	// New empty (mostly) bitmap
 	b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
@@ -906,7 +907,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 			b1->copyBitmap( &b2, cur_width*x, cur_height*y );
 		}
 	}
-	current_view.UpdateViewParams(cur_view_fdm);
+	globals->get_current_view()->UpdateViewParams(cur_view_fdm);
 	current_options.set_fov(oldfov);
 	v->force_update_fov_math();
 	return b1->getBitmap();
@@ -927,8 +928,8 @@ void printScreen ( puObject *obj ) {
     mainMenuBar->hide();
 
     CGlPrinter p( CGlPrinter::PRINT_BITMAP );
-    int cur_width = current_view.get_winWidth( );
-    int cur_height = current_view.get_winHeight( );
+    int cur_width = globals->get_current_view()->get_winWidth( );
+    int cur_height = globals->get_current_view()->get_winHeight( );
     p.Begin( "FlightGear", cur_width*3, cur_height*3 );
 	p.End( hiResScreenCapture(3) );
 
@@ -965,7 +966,8 @@ void fgDumpSnapShot () {
     }
 
     fgInitVisuals();
-    fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
+    fgReshape( globals->get_current_view()->get_winWidth(),
+	       globals->get_current_view()->get_winHeight() );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgFenderFrame() shoulnd't

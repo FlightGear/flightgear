@@ -33,8 +33,8 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
-#include <Main/views.hxx>
 #include <Objects/texload.h>
 
 #include "hud.hxx"
@@ -46,7 +46,7 @@ fgPanelVisible ()
 {
   return ((current_options.get_panel_status()) &&
 	  (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_PILOT) &&
-	  (current_view.get_view_offset() == 0.0));
+	  (globals->get_current_view()->get_view_offset() == 0.0));
 }
 
 
@@ -305,8 +305,9 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   }
 
 				// Scale for the real window size.
-  x = int(((float)x / current_view.get_winWidth()) * _winw);
-  y = int(_winh - (((float)y / current_view.get_winHeight()) * _winh));
+  x = int(((float)x / globals->get_current_view()->get_winWidth()) * _winw);
+  y = int(_winh - (((float)y / globals->get_current_view()->get_winHeight())
+		   * _winh));
 
 				// Adjust for offsets.
   x -= _x_offset;

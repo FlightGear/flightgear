@@ -1,0 +1,293 @@
+// ADA.cxx -- interface to the "External"-ly driven ADA flight model
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+// Modified by Cdr. VS Renganthan <vsranga@ada.ernet.in>, 12 Oct 2K
+
+#include <simgear/io/iochannel.hxx>
+
+#include <Controls/controls.hxx>
+#include <GUI/gui.h>
+
+#include "ADA.hxx"
+
+#define numberofbytes 472
+
+struct {
+    double number_of_bytes;
+    double lat_geoc;
+    double lon_geoc;
+    double altitude;
+    double psirad;
+    double thetrad;
+    double phirad;
+    double earth_posn_angle;
+    double radius_to_vehicle;
+    double sea_level_radius;
+    double latitude;
+    double longitude;
+    double Vnorth;
+    double Veast;
+    double Vdown;
+    double Vcas_kts;
+    double prad;
+    double qrad;
+    double rrad;
+    double alpharad;
+    double betarad;
+    double latitude_dot;
+    double longitude_dot;
+    double radius_dot;
+    double Gamma_vert_rad;
+    double Runway_altitude;
+    double throttle;
+    double pstick;
+    double rstick;
+    double rpedal;
+    double U_local;
+    double V_local;
+    double W_local;
+    double U_dot_local;
+    double V_dot_local;
+    double W_dot_local;
+    double Machno;
+    double anxg;
+    double anyg;
+    double anzg;
+    double aux1;
+    double aux2;
+    double aux3;
+    double aux4;
+    double aux5;
+    double aux6;
+    double aux7;
+    double aux8;
+    int iaux1;
+    int iaux2;
+    int iaux3;
+    int iaux4;
+    int iaux5;
+    int iaux6;
+    int iaux7;
+    int iaux8;
+    int iaux9;
+    int iaux10;
+    int iaux11;
+    int iaux12;
+    float aux9;
+    float aux10;
+    float aux11;
+    float aux12;
+    float aux13;
+    float aux14;
+    float aux15;
+    float aux16;
+    float aux17;
+    float aux18;
+} sixdof_to_visuals;
+
+#define number_of_bytes sixdof_to_visuals.number_of_bytes
+#define U_dot_local sixdof_to_visuals.U_dot_local
+#define V_dot_local sixdof_to_visuals.V_dot_local
+#define W_dot_local sixdof_to_visuals.W_dot_local
+#define U_local sixdof_to_visuals.U_local
+#define V_local sixdof_to_visuals.V_local
+#define W_local sixdof_to_visuals.W_local
+#define throttle sixdof_to_visuals.throttle
+#define pstick sixdof_to_visuals.pstick
+#define rstick sixdof_to_visuals.rstick
+#define rpedal sixdof_to_visuals.rpedal
+#define V_north sixdof_to_visuals.Vnorth
+#define V_east sixdof_to_visuals.Veast
+#define V_down sixdof_to_visuals.Vdown
+#define V_calibrated_kts sixdof_to_visuals.Vcas_kts
+#define P_body sixdof_to_visuals.prad
+#define Q_body sixdof_to_visuals.qrad
+#define R_body sixdof_to_visuals.rrad
+#define Latitude_dot sixdof_to_visuals.latitude_dot
+#define Longitude_dot sixdof_to_visuals.longitude_dot
+#define Radius_dot sixdof_to_visuals.radius_dot
+#define Latitude sixdof_to_visuals.latitude
+#define Longitude sixdof_to_visuals.longitude
+#define Lat_geocentric sixdof_to_visuals.lat_geoc
+#define Lon_geocentric sixdof_to_visuals.lon_geoc
+#define Radius_to_vehicle sixdof_to_visuals.radius_to_vehicle
+#define Altitude sixdof_to_visuals.altitude
+#define Phi sixdof_to_visuals.phirad
+#define Theta sixdof_to_visuals.thetrad
+#define Psi sixdof_to_visuals.psirad
+#define Alpha sixdof_to_visuals.alpharad
+#define Beta sixdof_to_visuals.betarad
+#define Sea_level_radius sixdof_to_visuals.sea_level_radius
+#define Earth_position_angle sixdof_to_visuals.earth_posn_angle
+#define Runway_altitude sixdof_to_visuals.Runway_altitude
+#define Gamma_vert_rad sixdof_to_visuals.Gamma_vert_rad
+#define Machno sixdof_to_visuals.Machno
+#define anxg sixdof_to_visuals.anxg
+#define anyg sixdof_to_visuals.anyg
+#define anzg sixdof_to_visuals.anzg
+
+
+// Initialize the ADA flight model, dt is the time increment
+// for each subsequent iteration through the EOM
+bool FGADA::init( double dt ) {
+    // cout << "FGADA::init()" << endl;
+
+    char Buffer[numberofbytes];
+
+    // set valid time for this record
+    stamp_time();
+
+    printf("\nInitialising UDP sockets\n");
+    // initialise a "udp" socket
+    fdmsock = new SGSocket( "reddy_pc", "5001", "udp" );
+
+    // open as a client
+    bool result = fdmsock->open(SG_IO_OUT);
+    if (result == false) {
+	printf ("Socket Open Error\n");
+    } else {
+	// Dummy Write FGExternal structure from socket to establish connection
+	int result = fdmsock->write(Buffer, numberofbytes);
+	printf("Connection established.\n");
+    }
+
+    return true;
+}
+
+
+// Run an iteration of the EOM.  This is essentially a NOP here
+// because these values are getting filled in elsewhere based on
+// external input.
+bool FGADA::update( int multiloop ) {
+    // cout << "FGADA::update()" << endl;
+
+    char Buffer[numberofbytes];
+
+    // Read FGExternal structure from socket
+    int result = fdmsock->read(Buffer, numberofbytes);
+    // Loop to read from top of socket buffer - Last in first out
+    while (result == numberofbytes) {
+	result = fdmsock->read(Buffer, numberofbytes);
+    }
+
+    // Copy buffer into FGExternal structure
+    memcpy (&sixdof_to_visuals, &Buffer, sizeof (Buffer));
+
+    //cout << endl << sixdof_to_visuals.aux18 << endl;
+    // Close Visuals through message/flag from Flight model
+    if (sixdof_to_visuals.aux18 == 1) {
+	fdmsock->close();
+	ConfirmExitDialog();           
+    }
+    //cout << endl << sixdof_to_visuals.aux18 << endl;
+
+    // Convert from the FGExternal struct to the FGInterface struct (input)
+    copy_from_FGADA();
+
+    return true;
+}
+
+// Convert from the FGInterface struct to the FGADA struct (output)
+bool FGADA::copy_to_FGADA () {
+
+    return true;
+}
+
+
+// Convert from the FGADA struct to the FGInterface struct (input)
+bool FGADA::copy_from_FGADA() {
+
+    // Velocities
+    set_Velocities_Local( V_north, V_east, V_down );
+    set_V_calibrated_kts( V_calibrated_kts );
+
+    // Angular rates 
+    set_Omega_Body( P_body, Q_body, R_body );
+    set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+
+    //    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
+    //	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
+    //	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
+    //	    << " radius_to_vehicle = " << Radius_to_vehicle );
+	    
+    // Positions
+    set_Geocentric_Position( Lat_geocentric, Lon_geocentric,Radius_to_vehicle );
+    set_Geodetic_Position( Latitude, Longitude, Altitude );
+    set_Euler_Angles( Phi, Theta, Psi );
+
+    // Miscellaneous quantities
+    set_Alpha( Alpha );
+    set_Beta( Beta );
+    set_Gamma_vert_rad( Gamma_vert_rad );
+    set_Sea_level_radius( Sea_level_radius );
+    set_Earth_position_angle( Earth_position_angle );
+    set_Runway_altitude( Runway_altitude );
+    set_sin_lat_geocentric(Lat_geocentric);
+    set_cos_lat_geocentric(Lat_geocentric);
+    set_sin_cos_longitude(Longitude);
+    set_sin_cos_latitude(Latitude);
+    set_Accels_Local( U_dot_local, V_dot_local, W_dot_local );
+    set_Velocities_Ground( U_local, V_local, W_local );
+    set_Accels_CG_Body_N( anxg,anyg,anzg);
+    set_Mach_number( Machno);
+
+    //    printf("sr=%f\n",Sea_level_radius);
+    //    printf("psi = %f %f\n",Psi,Psi*RAD_TO_DEG);    
+
+    // controls
+    controls.set_throttle(0,throttle/131.0);
+    controls.set_elevator(pstick);
+    controls.set_aileron(rstick);
+    controls.set_rudder(rpedal);
+
+    // auxilliary parameters for HUD
+    set_iaux1(sixdof_to_visuals.iaux1);
+    set_iaux2(sixdof_to_visuals.iaux2);
+    set_iaux3(sixdof_to_visuals.iaux3);
+    set_iaux4(sixdof_to_visuals.iaux4);
+    set_iaux5(sixdof_to_visuals.iaux5);
+    set_iaux6(sixdof_to_visuals.iaux6);
+    set_iaux7(sixdof_to_visuals.iaux7);
+    set_iaux8(sixdof_to_visuals.iaux8);
+    set_iaux9(sixdof_to_visuals.iaux9);
+    set_iaux10(sixdof_to_visuals.iaux10);
+    set_iaux11(sixdof_to_visuals.iaux11);
+    set_iaux12(sixdof_to_visuals.iaux12);
+    set_aux1(sixdof_to_visuals.aux1);
+    set_aux2(sixdof_to_visuals.aux2);
+    set_aux3(sixdof_to_visuals.aux3);
+    set_aux4(sixdof_to_visuals.aux4);
+    set_aux5(sixdof_to_visuals.aux5);
+    set_aux6(sixdof_to_visuals.aux6);
+    set_aux7(sixdof_to_visuals.aux7);
+    set_aux8(sixdof_to_visuals.aux8);
+    set_aux9(sixdof_to_visuals.aux9);
+    set_aux10(sixdof_to_visuals.aux10);
+    set_aux11(sixdof_to_visuals.aux11);
+    set_aux12(sixdof_to_visuals.aux12);
+    set_aux13(sixdof_to_visuals.aux13);
+    set_aux14(sixdof_to_visuals.aux14);
+    set_aux15(sixdof_to_visuals.aux15);
+    set_aux16(sixdof_to_visuals.aux16);
+    set_aux17(sixdof_to_visuals.aux17);
+    set_aux18(sixdof_to_visuals.aux18);
+    
+    cout << endl << sixdof_to_visuals.aux18 << endl;
+
+    return true;
+}

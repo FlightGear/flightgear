@@ -182,6 +182,8 @@ private:
     int xsize, ysize;   // window size derived from geometry string
     int bpp;            // bits per pixel
     fgViewMode view_mode; // view mode
+    double default_view_offset;	// default forward view offset (for use by
+				// multi-display configuration
 
     // Scenery options
     int tile_radius;   // Square radius of rendered tiles (around center 
@@ -286,6 +288,11 @@ public:
     inline int get_ysize() const { return ysize; }
     inline int get_bpp() const { return bpp; }
     inline fgViewMode get_view_mode() const { return view_mode; }
+    inline double get_default_view_offset() const {
+	return default_view_offset;
+    }
+
+
     inline int get_tile_radius() const { return tile_radius; }
     inline int get_tile_diameter() const { return tile_diameter; }
 

@@ -56,7 +56,6 @@ bool global_fullscreen = true;
 #include "fg_init.hxx"
 #include "globals.hxx"
 #include "options.hxx"
-#include "views.hxx"
 
 FG_USING_STD(string);
 FG_USING_NAMESPACE(std);
@@ -188,6 +187,7 @@ fgOPTIONS::fgOPTIONS() :
     ysize(600),
     bpp(16),
     view_mode(FG_VIEW_PILOT),
+    default_view_offset(0),
 
     // Scenery options
     tile_diameter(5),
@@ -268,7 +268,8 @@ fgOPTIONS::toggle_panel() {
     } */
 
     // fgReshape( xsize, ysize);
-    fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
+    fgReshape( globals->get_current_view()->get_winWidth(),
+	       globals->get_current_view()->get_winHeight() );
 
     if( !freeze )
         globals->set_freeze( false );
@@ -522,7 +523,9 @@ int
 fgOPTIONS::parse_fdm( const string& fm ) {
     // cout << "fdm = " << fm << endl;
 
-    if ( fm == "balloon" ) {
+    if ( fm == "ada" ) {
+	return FGInterface::FG_ADA;
+    } else if ( fm == "balloon" ) {
 	return FGInterface::FG_BALLOONSIM;
     } else if ( fm == "external" ) {
 	return FGInterface::FG_EXTERNAL;
@@ -896,6 +899,20 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	current_properties.setStringValue(name.c_str(), value);
 	FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
 	       << name << " to \"" << value << '"');
+    // $$$ begin - added VS Renganathan, 14 Oct 2K
+    // for multi-window outside window imagery
+    } else if ( arg.find( "--view-offset=" ) != string::npos ) {
+	string woffset = arg.substr( 14 );
+	if ( woffset == "LEFT" ) {
+	       default_view_offset = M_PI * 0.25;
+	} else if ( woffset == "RIGHT" ) {
+	    default_view_offset = M_PI * 1.75;
+	} else if ( woffset == "CENTER" ) {
+	    default_view_offset = 0.00;
+	} else {
+	    default_view_offset = atof( woffset.c_str() ) * DEG_TO_RAD;
+	}
+    // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--wp=" ) != string::npos ) {
 	parse_wp( arg.substr( 5 ) );
     } else {
@@ -1069,7 +1086,8 @@ void fgOPTIONS::usage ( void ) {
  
     cout << "Flight Model:" << endl;
     cout << "\t--fdm=abcd:  selects the core flight model code." << endl;
-    cout << "\t\tcan be one of jsb, larcsim, magic, or external" << endl;
+    cout << "\t\tcan be one of jsb, larcsim, magic, external, balloon, or ada"
+	 << endl;
     cout << "\t--aircraft=abcd:  aircraft model to load" << endl;
     cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
 	 << endl;
@@ -1126,6 +1144,11 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--enable-wireframe:  enable wireframe drawing mode" << endl;
     cout << "\t--geometry=WWWxHHH:  window geometry: 640x480, 800x600, etc."
 	 << endl;
+    cout << "\t--view-offset=xxx:  set the default forward view direction"
+	 << endl;
+    cout << "\t\tas an offset from straight ahead.  Allowable values are"
+	 << endl;
+    cout << "\t\tLEFT, RIGHT, CENTER, or a specific number of degrees" << endl;
     cout << endl;
 
     cout << "Scenery Options:" << endl;

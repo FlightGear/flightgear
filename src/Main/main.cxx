@@ -92,6 +92,16 @@
 #include <Time/sunpos.hxx>
 #include <Time/tmp.hxx>
 
+// $$$ begin - added VS Renganathan
+#include <simgear/misc/fgstream.hxx>
+#include <FDM/flight.hxx>
+void fgLoadDCS (void);
+void fgUpdateDCS (void);
+ssgSelector *ship_sel = NULL;
+ssgTransform *ship_pos = NULL;
+//int totalDCSobj = 0;
+// $$$ end - added VS Renganathan
+
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
@@ -107,7 +117,6 @@
 #include "keyboard.hxx"
 #include "options.hxx"
 #include "splash.hxx"
-#include "views.hxx"
 
 
 // -dw- use custom sioux settings so I can see output window
@@ -309,14 +318,16 @@ void fgRenderFrame( void ) {
 	// update view volume parameters
 	// cout << "before pilot_view update" << endl;
         if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW ) {
-	  float * offset = pilot_view.get_pilot_offset();
-	  current_view.set_pilot_offset(offset[0], offset[1], offset[2]);
+	  float * offset = globals->get_pilot_view()->get_pilot_offset();
+	  globals->get_current_view()->set_pilot_offset( offset[0],
+							 offset[1],
+							 offset[2] );
 	} else {
-	  current_view.set_pilot_offset(0.0, 0.0, 0.0);
+	  globals->get_current_view()->set_pilot_offset(0.0, 0.0, 0.0);
 	}
-	pilot_view.UpdateViewParams(*cur_fdm_state);
+	globals->get_pilot_view()->UpdateViewParams(*cur_fdm_state);
 	// cout << "after pilot_view update" << endl;
-	current_view.UpdateViewParams(cur_view_fdm);
+	globals->get_current_view()->UpdateViewParams(cur_view_fdm);
 
 	// set the sun position
 	glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
@@ -348,7 +359,7 @@ void fgRenderFrame( void ) {
 	// ssg does to set up the model view matrix
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	ssgSetCamera( current_view.VIEW );
+	ssgSetCamera( (sgMat4)globals->get_current_view()->get_VIEW() );
 
 	/*
 	sgMat4 vm_tmp, view_mat;
@@ -399,15 +410,15 @@ void fgRenderFrame( void ) {
 	if ( current_options.get_skyblend() ) {
 	    sgVec3 view_pos;
 	    sgSetVec3( view_pos,
-		       current_view.get_view_pos().x(),
-		       current_view.get_view_pos().y(),
-		       current_view.get_view_pos().z() );
+		       globals->get_current_view()->get_view_pos().x(),
+		       globals->get_current_view()->get_view_pos().y(),
+		       globals->get_current_view()->get_view_pos().z() );
 
 	    sgVec3 zero_elev;
 	    sgSetVec3( zero_elev,
-		       current_view.get_cur_zero_elev().x(),
-		       current_view.get_cur_zero_elev().y(),
-		       current_view.get_cur_zero_elev().z() );
+		       globals->get_current_view()->get_cur_zero_elev().x(),
+		       globals->get_current_view()->get_cur_zero_elev().y(),
+		       globals->get_current_view()->get_cur_zero_elev().z() );
 
 	    /* cout << "thesky->repaint() sky_color = "
 		 << cur_light_params.sky_color[0] << " "
@@ -445,7 +456,7 @@ void fgRenderFrame( void ) {
 		 << " moon dec = " << globals->get_ephem()->getMoonDeclination() << endl; */
 
 	    thesky->reposition( view_pos, zero_elev,
-				current_view.get_local_up(),
+				globals->get_current_view()->get_local_up(),
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
 				cur_fdm_state->get_Altitude() * FEET_TO_METER,
@@ -491,7 +502,7 @@ void fgRenderFrame( void ) {
 	// glLoadIdentity();
  	float fov = current_options.get_fov();
  	// ssgSetFOV(fov * current_view.get_win_ratio(), fov);
- 	ssgSetFOV(fov, fov * current_view.get_win_ratio());
+ 	ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
 	    - scenery.cur_elev;
@@ -522,9 +533,9 @@ void fgRenderFrame( void ) {
 
 	    sgMat4 sgTRANS;
 	    sgMakeTransMat4( sgTRANS, 
-			     pilot_view.view_pos.x(),
-			     pilot_view.view_pos.y(),
-			     pilot_view.view_pos.z() );
+			     globals->get_pilot_view()->get_view_pos().x(),
+			     globals->get_pilot_view()->get_view_pos().y(),
+			     globals->get_pilot_view()->get_view_pos().z() );
 
 	    sgVec3 ownship_up;
 	    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
@@ -540,13 +551,17 @@ void fgRenderFrame( void ) {
 	    // sgTUX = ( sgROT * pilot_view.VIEW_ROT ) * sgTRANS
 	    sgMat4 sgTUX;
 	    sgCopyMat4( sgTUX, sgROT );
-	    sgPostMultMat4( sgTUX, pilot_view.VIEW_ROT );
+	    sgPostMultMat4( sgTUX, globals->get_pilot_view()->get_VIEW_ROT() );
 	    sgPostMultMat4( sgTUX, sgTRANS );
 	
 	    sgCoord tuxpos;
 	    sgSetCoord( &tuxpos, sgTUX );
 	    penguin_pos->setTransform( &tuxpos );
 	}
+
+	// $$$ begin - added VS Renganthan 17 Oct 2K
+	fgUpdateDCS();
+	// $$$ end - added VS Renganthan 17 Oct 2K
 
 # ifdef FG_NETWORK_OLK
 	if ( current_options.get_network_olk() ) {
@@ -663,42 +678,42 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 
     // update the view angle
     for ( i = 0; i < multi_loop; i++ ) {
-	if ( fabs(current_view.get_goal_view_offset() - 
-		  current_view.get_view_offset()) < 0.05 )
+	if ( fabs(globals->get_current_view()->get_goal_view_offset() - 
+		  globals->get_current_view()->get_view_offset()) < 0.05 )
 	{
-	    current_view.set_view_offset( current_view.get_goal_view_offset() );
+	    globals->get_current_view()->set_view_offset( globals->get_current_view()->get_goal_view_offset() );
 	    break;
 	} else {
 	    // move current_view.view_offset towards current_view.goal_view_offset
-	    if ( current_view.get_goal_view_offset() > 
-		 current_view.get_view_offset() )
+	    if ( globals->get_current_view()->get_goal_view_offset() > 
+		 globals->get_current_view()->get_view_offset() )
             {
-		if ( current_view.get_goal_view_offset() - 
-		     current_view.get_view_offset() < FG_PI )
+		if ( globals->get_current_view()->get_goal_view_offset() - 
+		     globals->get_current_view()->get_view_offset() < FG_PI )
                 {
-		    current_view.inc_view_offset( 0.01 );
+		    globals->get_current_view()->inc_view_offset( 0.01 );
 		} else {
-		    current_view.inc_view_offset( -0.01 );
+		    globals->get_current_view()->inc_view_offset( -0.01 );
 		}
 	    } else {
-		if ( current_view.get_view_offset() - 
-		     current_view.get_goal_view_offset() < FG_PI )
+		if ( globals->get_current_view()->get_view_offset() - 
+		     globals->get_current_view()->get_goal_view_offset() < FG_PI )
                 {
-		    current_view.inc_view_offset( -0.01 );
+		    globals->get_current_view()->inc_view_offset( -0.01 );
 		} else {
-		    current_view.inc_view_offset( 0.01 );
+		    globals->get_current_view()->inc_view_offset( 0.01 );
 		}
 	    }
-	    if ( current_view.get_view_offset() > FG_2PI ) {
-		current_view.inc_view_offset( -FG_2PI );
-	    } else if ( current_view.get_view_offset() < 0 ) {
-		current_view.inc_view_offset( FG_2PI );
+	    if ( globals->get_current_view()->get_view_offset() > FG_2PI ) {
+		globals->get_current_view()->inc_view_offset( -FG_2PI );
+	    } else if ( globals->get_current_view()->get_view_offset() < 0 ) {
+		globals->get_current_view()->inc_view_offset( FG_2PI );
 	    }
 	}
     }
 
     double tmp = -(l->sun_rotation + FG_PI) 
-	- (cur_fdm_state->get_Psi() - current_view.get_view_offset() );
+	- (cur_fdm_state->get_Psi() - globals->get_current_view()->get_view_offset() );
     while ( tmp < 0.0 ) {
 	tmp += FG_2PI;
     }
@@ -1113,20 +1128,20 @@ static void fgIdleFunction ( void ) {
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
     if ( ! fgPanelVisible() || idle_state != 1000 ) {
-	current_view.set_win_ratio( (float)height / (float)width );
+	globals->get_current_view()->set_win_ratio( (float)height / (float)width );
 	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
         int view_h =
 	  int((current_panel->getViewHeight() - current_panel->getYOffset())
 	      * (height / 768.0)) + 1;
-	current_view.set_win_ratio( (float)view_h / (float)width );
+	globals->get_current_view()->set_win_ratio( (float)view_h / (float)width );
 	glViewport(0, (GLint)(height - view_h),
 		   (GLint)(width), (GLint)(view_h) );
     }
 
-    current_view.set_winWidth( width );
-    current_view.set_winHeight( height );
-    current_view.force_update_fov_math();
+    globals->get_current_view()->set_winWidth( width );
+    globals->get_current_view()->set_winHeight( height );
+    globals->get_current_view()->force_update_fov_math();
 
     // set these fov to be the same as in fgRenderFrame()
     // float x_fov = current_options.get_fov();
@@ -1136,7 +1151,7 @@ void fgReshape( int width, int height ) {
     // glViewport ( 0, 0, width, height );
     float fov = current_options.get_fov();
     // ssgSetFOV(fov * current_view.get_win_ratio(), fov);
-    ssgSetFOV(fov, fov * current_view.get_win_ratio());
+    ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
 
     fgHUDReshape();
 
@@ -1144,7 +1159,7 @@ void fgReshape( int width, int height ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
 	// the system.
-	current_view.UpdateViewParams(cur_view_fdm);
+	globals->get_current_view()->UpdateViewParams(cur_view_fdm);
     }
 }
 
@@ -1313,7 +1328,11 @@ int main( int argc, char **argv ) {
     globals = new FGGlobals;
     SGRoute *route = new SGRoute;
     globals->set_route( route );
-
+    FGViewer *pv = new FGViewer;
+    globals->set_pilot_view( pv );
+    FGViewer *cv = new FGViewer;
+    globals->set_current_view( cv );
+    
     // Load the configuration parameters
     if ( !fgInitConfig(argc, argv) ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Config option parsing failed ..." );
@@ -1451,14 +1470,16 @@ int main( int argc, char **argv ) {
 		   globals->get_ephem()->getNumStars(),
 		   globals->get_ephem()->getStars(), 60000.0 );
 
-    thesky->add_cloud_layer( 2600.0, 200.0, 50.0, 40000.0,
-			     SG_CLOUD_MOSTLY_SUNNY );
-    thesky->add_cloud_layer( 6000.0, 20.0, 10.0, 40000.0,
-			     SG_CLOUD_CIRRUS );
-
-    // thesky->add_cloud_layer( 1000.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
-    // thesky->add_cloud_layer( 1800.0, 400.0, 100.0, SG_CLOUD_OVERCAST );
-    // thesky->add_cloud_layer( 5000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
+    if ( current_options.get_clouds() == true ) {
+	thesky->add_cloud_layer( 2600.0, 200.0, 50.0, 40000.0,
+				 SG_CLOUD_MOSTLY_SUNNY );
+	thesky->add_cloud_layer( 6000.0, 20.0, 10.0, 40000.0,
+				 SG_CLOUD_CIRRUS );
+	// thesky->add_cloud_layer( 1000.0, 200.0, 50.0,
+	//                          SG_CLOUD_MOSTLY_SUNNY );
+	// thesky->add_cloud_layer( 1800.0, 400.0, 100.0, SG_CLOUD_OVERCAST );
+	// thesky->add_cloud_layer( 5000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
+    }
 
     // Initialize MagVar model
     SGMagVar *magvar = new SGMagVar();
@@ -1497,6 +1518,10 @@ int main( int argc, char **argv ) {
     penguin_sel->clrTraversalMaskBits( SSGTRAV_HOT );
     scene->addKid( penguin_sel );
 
+    // $$$ begin - added VS Renganthan 17 Oct 2K
+    fgLoadDCS();
+    // $$$ end - added VS Renganthan 17 Oct 2K
+
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
     if ( current_options.get_network_olk() ) {
@@ -1514,3 +1539,118 @@ int main( int argc, char **argv ) {
     // etc.
     return 0;
 }
+
+
+// $$$ end - added VS Renganathan, 15 Oct 2K
+void fgLoadDCS(void) {
+
+    double obj_lat,obj_lon,obj_alt;
+    int i = 1;
+    string obj_filename;
+
+    FGPath tile_path( current_options.get_fg_root());
+    tile_path.append( "Scenery" );
+    tile_path.append( "Objects.txt" );
+    fg_gzifstream in( tile_path.str() );
+    if ( ! in.is_open() ) {
+	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << tile_path.str() );
+    }
+
+    FGPath modelpath( current_options.get_fg_root() );
+    modelpath.append( "Models" );
+    modelpath.append( "Geometry" );
+  
+    FGPath texturepath( current_options.get_fg_root() );
+    texturepath.append( "Models" );
+    texturepath.append( "Textures" );
+ 
+    ssgModelPath( (char *)modelpath.c_str() );
+    ssgTexturePath( (char *)texturepath.c_str() );
+
+    // while ( ! in.eof() ) {
+    //     in >> obj_filename >> obj_lat >> obj_lon >> obj_alt;
+    //     totalDCSobj = totalDCSobj+1;
+
+    ship_sel = new ssgSelector;
+    ship_pos = new ssgTransform;
+    ssgEntity *ship_obj = ssgLoadOBJ( "saratoga.obj" );
+    if ( ship_obj != NULL ) {
+	ship_pos->addKid( ship_obj ); // add object to transform node
+	ship_sel->addKid( ship_pos ); // add transform node to selector
+	// ssgFlatten( ship_obj );
+	// ssgStripify( ship_sel );
+	ship_sel->clrTraversalMaskBits( SSGTRAV_HOT );
+	scene->addKid( ship_sel ); //add selector node to root node
+    } else {
+	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << "saratoga.obj" );
+    }
+
+    //     if (in.eof()) break;
+
+    // } // while
+    return;
+}
+
+
+void fgUpdateDCS (void) {
+
+    double eye_lat,eye_lon,eye_alt;
+    static double obj_lat=15.377603*DEG_TO_RAD;
+    static double obj_lon= 73.816436*DEG_TO_RAD;
+    static double obj_alt=0.15;
+    static double obj_head;
+    double sl_radius,obj_latgc;
+    float nresultmat[4][4];
+    sgMat4 Trans,rothead,rotlon,rot180,rotlat,resultmat1,resultmat2,resultmat3;
+    double bz[3];
+
+    obj_lat = obj_lat + 0.0000001;
+
+    // Instantaneous Geodetic Lat/Lon/Alt of moving object
+    //    obj_lon = current_aircraft.fdm_state->get_aux5()*DEG_TO_RAD;
+    //    obj_lat = current_aircraft.fdm_state->get_aux6()*DEG_TO_RAD;
+    //    obj_alt = current_aircraft.fdm_state->get_aux7();
+	  
+    // Geodetic to Geocentric angles for rotation
+    sgGeodToGeoc(obj_lat,obj_alt,&sl_radius,&obj_latgc);
+
+    // moving object gbs-posn in cartesian coords
+    Point3D obj_posn = Point3D( obj_lon,obj_lat,obj_alt);
+    Point3D obj_pos = sgGeodToCart( obj_posn );
+
+    // Translate moving object w.r.t eye
+    Point3D Objtrans = obj_pos-scenery.center;
+    bz[0]=Objtrans.x();
+    bz[1]=Objtrans.y();
+    bz[2]=Objtrans.z();
+
+    // rotate dynamic objects for lat,lon & alt and other motion about its axes
+    if ( ship_sel != NULL ) {
+	ship_sel->select(1);
+	
+	sgMat4 sgTRANS;
+	sgMakeTransMat4( sgTRANS, bz[0],bz[1],bz[2]);
+
+	sgVec3 ship_fwd,ship_rt,ship_up;
+	sgSetVec3( ship_fwd, 1.0, 0.0, 0.0);//east,roll
+	sgSetVec3( ship_rt, 0.0, 1.0, 0.0);//up,pitch
+	sgSetVec3( ship_up, 0.0, 0.0, 1.0); //north,yaw
+
+	sgMat4 sgROT_lon, sgROT_lat, sgROT_hdg;
+	sgMakeRotMat4( sgROT_lon, obj_lon*RAD_TO_DEG, ship_up );
+	sgMakeRotMat4( sgROT_lat, 90-obj_latgc*RAD_TO_DEG, ship_rt );
+	sgMakeRotMat4( sgROT_hdg, 180.0, ship_up );
+	
+	sgMat4 sgTUX;
+	sgCopyMat4( sgTUX, sgROT_hdg );
+	sgPostMultMat4( sgTUX, sgROT_lat );
+	sgPostMultMat4( sgTUX, sgROT_lon );
+	sgPostMultMat4( sgTUX, sgTRANS );
+
+	sgCoord shippos;
+	sgSetCoord( &shippos, sgTUX );
+	ship_pos->setTransform( &shippos );
+    }
+}
+
+// $$$ end - added VS Renganathan, 15 Oct 2K

@@ -39,8 +39,8 @@
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
-#include <Main/views.hxx>
 #include <Objects/obj.hxx>
 #include <Scenery/scenery.hxx>  // for scenery.center
 
@@ -283,7 +283,7 @@ FGTileCache::next_avail( void )
 	    return(i);
 	} else if ( tile_cache[i].is_loaded() || tile_cache[i].is_cached() ) {
 	    // calculate approximate distance from view point
-	    abs_view_pos = current_view.get_abs_view_pos();
+	    abs_view_pos = globals->get_current_view()->get_abs_view_pos();
 
 	    FG_LOG( FG_TERRAIN, FG_DEBUG,
 		    "DIST Abs view pos = " << abs_view_pos );

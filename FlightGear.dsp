@@ -2238,7 +2238,7 @@ SOURCE=.\src\Main\splash.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Main\views.cxx
+SOURCE=.\src\Main\viewer.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
