@@ -1,7 +1,6 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libMath.a
 
-lib_LTLIBRARIES = libMath.la
-libMath_la_SOURCES = \
+libMath_a_SOURCES = \
 	MAT3geom.c \
 	MAT3inv.c \
 	MAT3mat.c \

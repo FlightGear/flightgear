@@ -1,7 +1,5 @@
-libdir	= ${exec_prefix}/lib
+lib_LIBRARIES = libXGL.a
 
-lib_LTLIBRARIES = libXGL.la
-
-libXGL_la_SOURCES = xgl.c xgl.h xglUtils.c
+libXGL_a_SOURCES = xgl.c xgl.h xglUtils.c
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator

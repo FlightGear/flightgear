@@ -1,7 +1,5 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libDebug.a
 
-lib_LTLIBRARIES = libDebug.la
-
-libDebug_la_SOURCES = fg_debug.c fg_debug.h
+libDebug_a_SOURCES = fg_debug.c fg_debug.h
 
 INCLUDES += -I$(top_builddir)

@@ -1,7 +1,5 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libBucket.a
 
-lib_LTLIBRARIES = libBucket.la
-
-libBucket_la_SOURCES = bucketutils.c bucketutils.h
+libBucket_a_SOURCES = bucketutils.c bucketutils.h
 
 INCLUDES += -I$(top_builddir)

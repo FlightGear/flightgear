@@ -1,8 +1,6 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libPUI.a
 
-lib_LTLIBRARIES = libPUI.la
-
-libPUI_la_SOURCES = \
+libPUI_a_SOURCES = \
 	pu.h puLocal.h \
 	complex.cxx \
 	pu.cxx \
