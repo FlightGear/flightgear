@@ -378,7 +378,10 @@ getMagDip ()
 static double
 getHeadingMag ()
 {
-  return current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES - getMagVar();
+  double magheading;
+  magheading = current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES - getMagVar();
+  if (magheading < 0) magheading += 360;
+  return magheading;
 }
 
 
