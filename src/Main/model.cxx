@@ -20,7 +20,7 @@
 #include "viewmgr.hxx"
 #include "model.hxx"
 
-extern ssgRoot * scene;		// FIXME: from main.cxx
+extern ssgRoot * cockpit;		// FIXME: from main.cxx
 
 FGAircraftModel current_model;	// FIXME: add to globals
 
@@ -135,7 +135,7 @@ FGAircraftModel::init ()
 				// Set up the selector node
   _selector->addKid(_position);
   _selector->clrTraversalMaskBits(SSGTRAV_HOT);
-  scene->addKid(_selector);
+  cockpit->addKid(_selector);
 }
 
 void 
@@ -384,6 +384,7 @@ FGAircraftModel::Animation::setRotation()
 }
 
 // end of model.cxx
+
 
 
 

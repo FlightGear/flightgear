@@ -137,6 +137,12 @@ ssgTransform *lightpoints_transform = new ssgTransform;
 FGTileEntry *dummy_tile;
 sgVec3 rway_ols;
 // ADA
+// Clip plane settings...
+float cockpit_nearplane = 0.2f;
+float cockpit_farplane = 120000.0f;
+float scene_nearplane = 0.5f;
+float scene_farplane = 120000.0f;
+
 
 #ifndef FG_NEW_ENVIRONMENT
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -175,6 +181,7 @@ void fgReshape( int width, int height );
 
 // ssg variables
 ssgRoot *scene = NULL;
+ssgRoot *cockpit = NULL;
 ssgBranch *terrain_branch = NULL;
 ssgBranch *gnd_lights_branch = NULL;
 ssgBranch *rwy_lights_branch = NULL;
@@ -363,10 +370,17 @@ void trRenderFrame( void ) {
     // return to the desired diffuse color
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
     glEnable( GL_DEPTH_TEST );
+    ssgSetNearFar( scene_nearplane, scene_farplane );
     ssgCullAndDraw( scene );
+
+    // if in cockpit view adjust nearfar...
+    if (globals->get_current_view()->getType() == 0 )
+      ssgSetNearFar( cockpit_nearplane, cockpit_farplane );
+    ssgCullAndDraw( cockpit );
 
     // draw the lights
     glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
+    ssgSetNearFar( scene_nearplane, scene_farplane );
     ssgCullAndDraw( lighting );
 
     thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
@@ -568,12 +582,19 @@ void fgRenderFrame( void ) {
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.get_cur_elev();
 
-	if (fgGetBool("/sim/view/internal"))
-	  ssgSetNearFar( 0.2f, 120000.0f );
-	else if ( agl > 10.0)
-	    ssgSetNearFar( 10.0f, 120000.0f );
-	else
-	    ssgSetNearFar( 0.5f, 120000.0f );
+//	if (fgGetBool("/sim/view/internal"))
+//	  ssgSetNearFar( 0.2f, 120000.0f );
+//	else if ( agl > 10.0)
+
+        if ( agl > 10.0 ) {
+            scene_nearplane = 10.0f;
+            scene_farplane = 120000.0f;
+	} else {
+            scene_nearplane = 0.5f;
+            scene_farplane = 120000.0f;
+        }
+
+        ssgSetNearFar( scene_nearplane, scene_farplane );
 
 	current_model.update(0); // FIXME: use real delta time
 
@@ -619,7 +640,13 @@ void fgRenderFrame( void ) {
 
 	// draw the ssg scene
 	glEnable( GL_DEPTH_TEST );
+        ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( scene );
+
+        // if in cockpit view adjust nearfar...
+        if (globals->get_current_view()->getType() == 0 )
+          ssgSetNearFar( cockpit_nearplane, cockpit_farplane );
+	ssgCullAndDraw( cockpit );
 
 	// change state for lighting here
 
@@ -662,6 +689,7 @@ void fgRenderFrame( void ) {
 	glEnable(GL_BLEND);
 #endif
 
+        ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( lighting );
 
 #ifdef FG_EXPERIMENTAL_LIGHTING
@@ -1408,6 +1436,10 @@ int mainLoop( int argc, char **argv ) {
     scene = new ssgRoot;
     scene->setName( "Scene" );
 
+    // Scene graph root for cockpit
+    cockpit = new ssgRoot;
+    cockpit->setName( "Cockpit" );
+
     lighting = new ssgRoot;
     lighting->setName( "Lighting" );
 
@@ -1865,3 +1897,4 @@ void fgUpdateDCS (void) {
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //           added Venky         , 12 Nov 2K
+
