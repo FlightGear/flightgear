@@ -39,6 +39,7 @@
 #include <Main/views.hxx>
 
 #include "obj.hxx"
+#include "tile.hxx"
 #include "tilecache.hxx"
 
 
@@ -117,7 +118,7 @@ void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
 
 // Free a tile cache entry
 void fgTILECACHE::EntryFree( int index ) {
-    fgFRAGMENT fragment;
+    fgFRAGMENT *fragment;
 
     // Mark this cache entry as un-used
     tile_cache[index].used = 0;
@@ -133,8 +134,11 @@ void fgTILECACHE::EntryFree( int index ) {
     // Step through the fragment list, deleting the display list, then
     // the fragment, until the list is empty.
     while ( tile_cache[index].fragment_list.size() ) {
-	fragment = tile_cache[index].fragment_list.front();
-	xglDeleteLists( fragment.display_list, 1 );
+	list < fgFRAGMENT > :: iterator current =
+	    tile_cache[index].fragment_list.begin();
+	fragment = &(*current);
+	xglDeleteLists( fragment->display_list, 1 );
+
 	tile_cache[index].fragment_list.pop_front();
     }
 }
@@ -209,6 +213,14 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/07/12 03:18:29  curt
+// Added ground collision detection.  This involved:
+// - saving the entire vertex list for each tile with the tile records.
+// - saving the face list for each fragment with the fragment records.
+// - code to intersect the current vertical line with the proper face in
+//   an efficient manner as possible.
+// Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+//
 // Revision 1.11  1998/07/04 00:54:30  curt
 // Added automatic mipmap generation.
 //

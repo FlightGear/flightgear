@@ -22,6 +22,10 @@
 // (Log is kept at end of this file)
 
 
+#include <Include/fg_constants.h>
+#include <Include/fg_types.h>
+#include <Math/mat3.h>
+
 #include "tile.hxx"
 
 
@@ -30,22 +34,289 @@ fgFRAGMENT::fgFRAGMENT ( void ) {
 }
 
 
+// Add a face to the face list
+void fgFRAGMENT::add_face(int n1, int n2, int n3) {
+    fgFACE face;
+
+    face.n1 = n1;
+    face.n2 = n2;
+    face.n3 = n3;
+
+    faces.push_back(face);
+}
+
+
+// return the sign of a value
+static int fg_sign( double x ) {
+    if ( x >= 0 ) {
+	return(1);
+    } else {
+	return(-1);
+    }
+}
+
+
+// return the minimum of the three values
+static double fg_min( double a, double b, double c ) {
+    double result;
+    result = a;
+    if (result > b) result = b;
+    if (result > c) result = c;
+
+    return(result);
+}
+
+
+// return the maximum of the three values
+static double fg_max( double a, double b, double c ) {
+    double result;
+    result = a;
+    if (result < b) result = b;
+    if (result < c) result = c;
+
+    return(result);
+}
+
+
+// test if line intesects with this fragment.  p0 and p1 are the two
+// line end points of the line.  If side_flag is true, check to see
+// that end points are on opposite sides of face.  Returns 1 if it
+// does, 0 otherwise.  If it intesects, result is the point of
+// intersection
+
+int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
+			   fgPoint3d *result)
+{
+    fgTILE *t;
+    fgFACE face;
+    MAT3vec v1, v2, n, center;
+    double p1[3], p2[3], p3[3];
+    double a, b, c, d;
+    double x0, y0, z0, x1, y1, z1, a1, b1, c1;
+    double t1, t2, t3;
+    double xmin, xmax, ymin, ymax, zmin, zmax;
+    double dx, dy, dz, min_dim, x2, y2, x3, y3, rx, ry;
+    int side1, side2;
+    list < fgFACE > :: iterator current;
+    list < fgFACE > :: iterator last;
+
+    // find the associated tile
+    t = (fgTILE *)tile_ptr;
+
+    // printf("Intersecting\n");
+
+    // traverse the face list for this fragment
+    current = faces.begin();
+    last = faces.end();
+    while ( current != last ) {
+	face = *current;
+	current++;
+
+	// printf(".");
+
+	// get face vertex coordinates
+	center[0] = t->center.x;
+	center[1] = t->center.y;
+	center[2] = t->center.z;
+
+	MAT3_ADD_VEC(p1, t->nodes[face.n1], center);
+	MAT3_ADD_VEC(p2, t->nodes[face.n2], center);
+	MAT3_ADD_VEC(p3, t->nodes[face.n3], center);
+
+	// printf("point 1 = %.2f %.2f %.2f\n", p1[0], p1[1], p1[2]);
+	// printf("point 2 = %.2f %.2f %.2f\n", p2[0], p2[1], p2[2]);
+	// printf("point 3 = %.2f %.2f %.2f\n", p3[0], p3[1], p3[2]);
+
+	// calculate two edge vectors, and the face normal
+	MAT3_SUB_VEC(v1, p2, p1);
+	MAT3_SUB_VEC(v2, p3, p1);
+	MAT3cross_product(n, v1, v2);
+
+	// calculate the plane coefficients for the plane defined by
+	// this face.  If n is the normal vector, n = (a, b, c) and p1
+	// is a point on the plane, p1 = (x0, y0, z0), then the
+	// equation of the line is a(x-x0) + b(y-y0) + c(z-z0) = 0
+	a = n[0];
+	b = n[1];
+	c = n[2];
+	d = a * p1[0] + b * p1[1] + c * p1[2];
+	// printf("a, b, c, d = %.2f %.2f %.2f %.2f\n", a, b, c, d);
+
+	// printf("p1(d) = %.2f\n", a * p1[0] + b * p1[1] + c * p1[2]);
+	// printf("p2(d) = %.2f\n", a * p2[0] + b * p2[1] + c * p2[2]);
+	// printf("p3(d) = %.2f\n", a * p3[0] + b * p3[1] + c * p3[2]);
+
+	// calculate the line coefficients for the specified line
+	x0 = end0->x;  x1 = end1->x;
+	y0 = end0->y;  y1 = end1->y;
+	z0 = end0->z;  z1 = end1->z;
+
+	a1 = x1 - x0;
+	b1 = y1 - y0;
+	c1 = z1 - z0;
+
+	// intersect the specified line with this plane
+	t1 = b * b1 / a1;
+	t2 = c * c1 / a1;
+
+	// printf("a = %.2f  t1 = %.2f  t2 = %.2f\n", a, t1, t2);
+
+	if ( fabs(a + t1 + t2) > FG_EPSILON ) {
+	    result->x = (t1*x0 - b*y0 + t2*x0 - c*z0 + d) / (a + t1 + t2);
+	    result->y = (b1/a1) * (result->x - x0) + y0;
+	    result->z = (c1/a1) * (result->x - x0) + z0;	    
+	    // printf("result(d) = %.2f\n", 
+	    //        a * result->x + b * result->y + c * result->z);
+	} else {
+	    // no intersection point
+	    continue;
+	}
+
+	if ( side_flag ) {
+	    // check to see if end0 and end1 are on opposite sides of
+	    // plane
+	    if ( (result->x - x0) > FG_EPSILON ) {
+		t1 = result->x; t2 = x0; t3 = x1;
+	    } else if ( (result->y - y0) > FG_EPSILON ) {
+		t1 = result->y; t2 = y0; t3 = y1;
+	    } else if ( (result->z - z0) > FG_EPSILON ) {
+		t1 = result->z; t2 = z0; t3 = z1;
+	    } else {
+		// everything is too close together to tell the difference
+		// so the current intersection point should work as good
+		// as any
+		return(1);
+	    }
+	    if ( fg_sign(t1 - t2) == fg_sign(t1 - t3) ) {
+		// same side, punt
+		continue;
+	    }
+	}
+
+	// check to see if intersection point is in the bounding
+	// cube of the face
+	xmin = fg_min(p1[0], p2[0], p3[0]);
+	xmax = fg_max(p1[0], p2[0], p3[0]);
+	ymin = fg_min(p1[1], p2[1], p3[1]);
+	ymax = fg_max(p1[1], p2[1], p3[1]);
+	zmin = fg_min(p1[2], p2[2], p3[2]);
+	zmax = fg_max(p1[2], p2[2], p3[2]);
+	// printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
+	//        xmin, ymin, zmin, xmax, ymax, zmax);
+	// punt if outside bouding cube
+	if ( result->x < xmin ) {
+	    continue;
+	} else if ( result->x > xmax ) {
+	    continue;
+	} else if ( result->y < ymin ) {
+	    continue;
+	} else if ( result->y > ymax ) {
+	    continue;
+	} else if ( result->z < zmin ) {
+	    continue;
+	} else if ( result->z > zmax ) {
+	    continue;
+	}
+
+	// (finally) check to see if the intersection point is
+	// actually inside this face
+
+	//first, drop the smallest dimension so we only have to work
+	//in 2d.
+	dx = xmax - xmin;
+	dy = ymax - ymin;
+	dz = zmax - zmin;
+	min_dim = fg_min(dx, dy, dz);
+	if ( fabs(min_dim - dx) <= FG_EPSILON ) {
+	    // x is the smallest dimension
+	    x1 = p1[1]; y1 = p1[2];
+	    x2 = p2[1]; y2 = p2[2];
+	    x3 = p3[1]; y3 = p3[2];
+	    rx = result->y; ry = result->z;
+	} else if ( fabs(min_dim - dy) <= FG_EPSILON ) {
+	    // y is the smallest dimension
+	    x1 = p1[0]; y1 = p1[2];
+	    x2 = p2[0]; y2 = p2[2];
+	    x3 = p3[0]; y3 = p3[2];
+	    rx = result->x; ry = result->z;
+	} else if ( fabs(min_dim - dz) <= FG_EPSILON ) {
+	    // z is the smallest dimension
+	    x1 = p1[0]; y1 = p1[1];
+	    x2 = p2[0]; y2 = p2[1];
+	    x3 = p3[0]; y3 = p3[1];
+	    rx = result->x; ry = result->y;
+	}
+
+	// check if intersection point is on the same side of p1 <-> p2 as p3
+	side1 = fg_sign((y1 - y2) * ((x3) - x2) / (x1 - x2) + y2 - (y3));
+	side2 = fg_sign((y1 - y2) * ((rx) - x2) / (x1 - x2) + y2 - (ry));
+	if ( side1 != side2 ) {
+	    // printf("failed side 1 check\n");
+	    continue;
+	}
+
+	// check if intersection point is on correct side of p2 <-> p3 as p1
+	side1 = fg_sign((y2 - y3) * ((x1) - x3) / (x2 - x3) + y3 - (y1));
+	side2 = fg_sign((y2 - y3) * ((rx) - x3) / (x2 - x3) + y3 - (ry));
+	if ( side1 != side2 ) {
+	    // printf("failed side 2 check\n");
+	    continue;
+	}
+
+	// check if intersection point is on correct side of p1 <-> p3 as p2
+	side1 = fg_sign((y1 - y3) * ((x2) - x3) / (x1 - x3) + y3 - (y2));
+	side2 = fg_sign((y1 - y3) * ((rx) - x3) / (x1 - x3) + y3 - (ry));
+	if ( side1 != side2 ) {
+	    // printf("failed side 3  check\n");
+	    continue;
+	}
+
+	// printf( "intersection point = %.2f %.2f %.2f\n", 
+	//         result->x, result->y, result->z);
+	return(1);
+    }
+
+    // printf("\n");
+
+    return(0);
+}
+
+
 // Destructor
 fgFRAGMENT::~fgFRAGMENT ( void ) {
+    // Step through the face list deleting the items until the list is
+    // empty
+
+    // printf("destructing a fragment with %d faces\n", faces.size());
+
+    while ( faces.size() ) {
+	//  printf("emptying face list\n");
+	faces.pop_front();
+    }
 }
 
 
 // Constructor
 fgTILE::fgTILE ( void ) {
+    nodes = new double[MAX_NODES][3];
 }
 
 
 // Destructor
 fgTILE::~fgTILE ( void ) {
+    free(nodes);
 }
 
 
 // $Log$
+// Revision 1.2  1998/07/12 03:18:28  curt
+// Added ground collision detection.  This involved:
+// - saving the entire vertex list for each tile with the tile records.
+// - saving the face list for each fragment with the fragment records.
+// - code to intersect the current vertical line with the proper face in
+//   an efficient manner as possible.
+// Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+//
 // Revision 1.1  1998/05/23 14:09:21  curt
 // Added tile.cxx and tile.hxx.
 // Working on rewriting the tile management system so a tile is just a list

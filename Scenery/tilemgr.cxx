@@ -316,13 +316,13 @@ void fgTileMgrRender( void ) {
     fgTILECACHE *c;
     fgFLIGHT *f;
     fgOPTIONS *o;
-    fgTILE *t;
+    fgTILE *t, *last_tile_ptr;
     fgVIEW *v;
     fgBUCKET p;
-    fgPoint3d frag_offset, fc, pp;
+    fgPoint3d frag_offset, pp;
+    fgPoint3d earth_center, result;
     fgFRAGMENT *frag_ptr;
     fgMATERIAL *mtl_ptr;
-    fgTILE *last_tile_ptr;
     GLdouble *m;
     double dist, min_dist, lat_geod, alt, sea_level_r;
     double x, y, z;
@@ -342,6 +342,14 @@ void fgTileMgrRender( void ) {
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
     index = c->Exists(&p);
     t = c->GetTile(index);
+
+    scenery.next_center.x = t->center.x;
+    scenery.next_center.y = t->center.y;
+    scenery.next_center.z = t->center.z;
+
+    earth_center.x = 0.0;
+    earth_center.y = 0.0;
+    earth_center.z = 0.0;
 
     fgPrintf( FG_TERRAIN, FG_DEBUG, 
 	      "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
@@ -370,6 +378,7 @@ void fgTileMgrRender( void ) {
 	}
 
 	// Calculate the model_view transformation matrix for this tile
+	// This is equivalent to doing a glTranslatef(x, y, z);
 	m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
 	m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
 	m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
@@ -378,7 +387,12 @@ void fgTileMgrRender( void ) {
 	// temp ... calc current terrain elevation
 	// calculate distance from vertical tangent line at
 	// current position to center of tile.
-	dist = point_line_dist(&(t->offset), &(v->view_pos), v->local_up);
+	
+	/* printf("distance = %.2f, bounding radius = %.2f\n", 
+	       point_line_dist(&(t->offset), &(v->view_pos), v->local_up),
+	       t->bounding_radius); */
+
+	dist = point_line_dist(&(t->center), &(v->abs_view_pos), v->local_up);
 	if ( dist < t->bounding_radius ) {
 
 	    // traverse fragment list for tile
@@ -388,22 +402,27 @@ void fgTileMgrRender( void ) {
 	    while ( current != last ) {
 		frag_ptr = &(*current);
 		current++;
-		dist = point_line_dist( &(frag_ptr->center), &(v->view_pos), 
-					v->local_up);
+		/* printf("distance = %.2f, bounding radius = %.2f\n", 
+		       point_line_dist( &(frag_ptr->center), 
+					&(v->abs_view_pos), v->local_up),
+		       frag_ptr->bounding_radius); */
+
+		dist = point_line_dist( &(frag_ptr->center), 
+					&(v->abs_view_pos), v->local_up);
 		if ( dist <= frag_ptr->bounding_radius ) {
-		    if ( dist < min_dist ) {
-			min_dist = dist;
+		    if ( frag_ptr->intersect( &(v->abs_view_pos), 
+					      &earth_center, 0, &result ) ) {
 			// compute geocentric coordinates of tile center
-			pp = fgCartToPolar3d(frag_ptr->center);
+			pp = fgCartToPolar3d(result);
 			// convert to geodetic coordinates
 			fgGeocToGeod(pp.lat, pp.radius, &lat_geod, 
 				     &alt, &sea_level_r);
+			// printf("alt = %.2f\n", alt);
+			scenery.cur_elev = alt;
+			// exit this loop since we found an intersection
+			break;
 		    }
 		}
-	    }
-
-	    if ( min_dist <= t->bounding_radius ) {
-		printf("min_dist = %.2f  alt = %.2f\n", min_dist, alt);
 	    }
 	}
 
@@ -531,6 +550,14 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.24  1998/07/12 03:18:29  curt
+// Added ground collision detection.  This involved:
+// - saving the entire vertex list for each tile with the tile records.
+// - saving the face list for each fragment with the fragment records.
+// - code to intersect the current vertical line with the proper face in
+//   an efficient manner as possible.
+// Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+//
 // Revision 1.23  1998/07/08 14:47:23  curt
 // Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
 // polare3d.h renamed to polar3d.hxx

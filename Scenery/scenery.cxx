@@ -66,31 +66,8 @@ int fgSceneryInit( void ) {
 
     fgPrintf(FG_TERRAIN, FG_INFO, "Initializing scenery subsystem\n");
 
-#ifdef 0
-    /* set the default terrain detail level */
-    // scenery.terrain_skip = 6;
+    scenery.cur_elev = -9999;
 
-    /* temp: load in a demo texture */
-    path[0] = '\0';
-    strcat(path, o->fg_root);
-    strcat(path, "/Textures/");
-    strcat(path, "desert.rgb");
-
-    // Try uncompressed
-    if ( (texbuf = read_rgb_texture(path, &width, &height)) == NULL ) {
-	// Try compressed
-	strcpy(fgpath, path);
-	strcat(fgpath, ".gz");
-	if ( (texbuf = read_rgb_texture(fgpath, &width, &height)) == NULL ) {
-	    fgPrintf( FG_GENERAL, FG_EXIT, "Error in loading texture %s\n",
-		      path );
-	    return(0);
-	} 
-    } 
-
-    xglTexImage2D(GL_TEXTURE_2D, 0, 3, width, height, 0,
-		  GL_RGB, GL_UNSIGNED_BYTE, texbuf);
-#endif // 0
     return(1);
 }
 
@@ -125,11 +102,19 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/06/17 21:36:41  curt
-/* Load and manage multiple textures defined in the Materials library.
-/* Boost max material fagments for each material property to 800.
-/* Multiple texture support when rendering.
+/* Revision 1.6  1998/07/12 03:18:27  curt
+/* Added ground collision detection.  This involved:
+/* - saving the entire vertex list for each tile with the tile records.
+/* - saving the face list for each fragment with the fragment records.
+/* - code to intersect the current vertical line with the proper face in
+/*   an efficient manner as possible.
+/* Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
 /*
+ * Revision 1.5  1998/06/17 21:36:41  curt
+ * Load and manage multiple textures defined in the Materials library.
+ * Boost max material fagments for each material property to 800.
+ * Multiple texture support when rendering.
+ *
  * Revision 1.4  1998/05/13 18:26:40  curt
  * Root path info moved to fgOPTIONS.
  *

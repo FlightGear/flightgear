@@ -53,6 +53,16 @@ using namespace std;
 
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
+#include <Math/mat3.h>
+
+
+// Maximum nodes per tile
+#define MAX_NODES 1000
+
+
+typedef struct {
+    int n1, n2, n3;
+} fgFACE;
 
 
 // Object fragment data class
@@ -82,8 +92,22 @@ public:
     // OpenGL display list for fragment data
     GLint display_list;
 
+    // face list (this indexes into the master tile vertex list)
+    list < fgFACE > faces;
+
     // Constructor
     fgFRAGMENT ( void );
+
+    // Add a face to the face list
+    void add_face(int n1, int n2, int n3);
+
+    // test if line intesects with this fragment.  p0 and p1 are the
+    // two line end points of the line.  If side_flag is true, check
+    // to see that end points are on opposite sides of face.  Returns
+    // 1 if it does, 0 otherwise.  If it intesects, result is the
+    // point of intersection
+    int intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
+		   fgPoint3d *result);
 
     // Destructor
     ~fgFRAGMENT ( void );
@@ -94,6 +118,10 @@ public:
 class fgTILE {
 
 public:
+
+    // node list (the per fragment face lists reference this node list)
+    double (*nodes)[3];
+    int ncount;
 
     // culling data for whole tile (course grain culling)
     fgPoint3d center;
@@ -121,6 +149,14 @@ public:
 
 
 // $Log$
+// Revision 1.11  1998/07/12 03:18:28  curt
+// Added ground collision detection.  This involved:
+// - saving the entire vertex list for each tile with the tile records.
+// - saving the face list for each fragment with the fragment records.
+// - code to intersect the current vertical line with the proper face in
+//   an efficient manner as possible.
+// Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+//
 // Revision 1.10  1998/07/08 14:47:22  curt
 // Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
 // polare3d.h renamed to polar3d.hxx

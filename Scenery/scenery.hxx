@@ -38,9 +38,6 @@
 
 /* Define a structure containing global scenery parameters */
 struct fgSCENERY {
-    /* number of terrain data points to skip */
-    int terrain_skip;
-
     /* center of current scenery chunk */
     fgPoint3d center;
 
@@ -49,6 +46,10 @@ struct fgSCENERY {
 
     /* angle of sun relative to current local horizontal */
     double sun_angle;
+
+    // elevation of terrain at our current lat/lon (based on the
+    // actual drawn polygons)
+    double cur_elev;
 };
 
 extern struct fgSCENERY scenery;
@@ -71,12 +72,20 @@ void fgSceneryRender( void );
 
 
 /* $Log$
-/* Revision 1.3  1998/07/08 14:47:22  curt
-/* Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
-/* polare3d.h renamed to polar3d.hxx
-/* fg{Cartesian,Polar}Point3d consolodated.
-/* Added some initial support for calculating local current ground elevation.
+/* Revision 1.4  1998/07/12 03:18:28  curt
+/* Added ground collision detection.  This involved:
+/* - saving the entire vertex list for each tile with the tile records.
+/* - saving the face list for each fragment with the fragment records.
+/* - code to intersect the current vertical line with the proper face in
+/*   an efficient manner as possible.
+/* Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
 /*
+ * Revision 1.3  1998/07/08 14:47:22  curt
+ * Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
+ * polare3d.h renamed to polar3d.hxx
+ * fg{Cartesian,Polar}Point3d consolodated.
+ * Added some initial support for calculating local current ground elevation.
+ *
  * Revision 1.2  1998/05/02 01:52:16  curt
  * Playing around with texture coordinates.
  *
