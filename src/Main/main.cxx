@@ -160,8 +160,14 @@ slSample *s2;
 // ssg variables
 ssgRoot *scene = NULL;
 ssgBranch *terrain = NULL;
-ssgSelector *penguin_sel = NULL;
-ssgTransform *penguin_pos = NULL;
+
+// aircraft model stuff
+ssgSelector *acmodel_selector = NULL;
+ssgTransform *acmodel_pos = NULL;
+ssgSelector *prop_selector = NULL;
+ssgSelector *flaps_selector = NULL;
+int acmodel_npropsettings;
+int acmodel_proprpms[4][2];  // different propeller settings
 
 ssgRoot *lighting = NULL;
 ssgBranch *ground = NULL;
@@ -170,7 +176,6 @@ ssgBranch *airport = NULL;
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
 ssgTransform *fgd_pos = NULL;
-//sgMat4 sgTUX;
 #endif
 
 // current fdm/position used for view
@@ -240,6 +245,23 @@ void fgBuildRenderStates( void ) {
     menus->enable( GL_BLEND );
 }
 
+// fgFindNode -- a function that finds a named node in an ssg graph
+ssgEntity *fgFindNode( ssgEntity *node, const char *name ) {
+  if ( node->getName() != NULL && strcmp( name, node->getName() ) == 0 ) {
+    return node;
+  } else if ( node->isAKindOf( ssgTypeBranch() ) ) {
+    ssgEntity *kid = ((ssgBranch*)node)->getKid(0);
+    while (kid != NULL) {
+      ssgEntity *n = fgFindNode(kid, name);
+      if (n != NULL)
+	return n;
+
+      kid = ((ssgBranch*)node)->getNextKid();
+    }
+  }
+
+  return NULL;
+}
 
 // fgInitVisuals() -- Initialize various GL/view parameters
 void fgInitVisuals( void ) {
@@ -585,11 +607,11 @@ void fgRenderFrame( void ) {
 	}
 
 	if ( globals->get_viewmgr()->get_current() == 0 ) {
-	    // disable TuX
-	    penguin_sel->select(0);
+	    // disable aircraft model
+	    acmodel_selector->select(0);
 	} else { 
-	    // enable TuX and set up his position and orientation
-	    penguin_sel->select(1);
+	    // enable aircraft model and set up its position and orientation
+	    acmodel_selector->select(1);
 
 	    FGViewerRPH *pilot_view =
 		(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
@@ -616,7 +638,23 @@ void fgRenderFrame( void ) {
 	
 	    sgCoord tuxpos;
 	    sgSetCoord( &tuxpos, sgTUX );
-	    penguin_pos->setTransform( &tuxpos );
+	    acmodel_pos->setTransform( &tuxpos );
+
+	    // set up moving parts
+	    if (flaps_selector != NULL) {
+	      flaps_selector->select( (FGBFI::getFlaps() > 0.5f) ? 1 : 2 );
+	    }
+
+	    if (prop_selector != NULL) {
+	      int propsel_mask = 0;
+	      for (int i = 0; i < acmodel_npropsettings; i++) {
+		if (FGBFI::getRPM() >= acmodel_proprpms[i][0] &&
+		    FGBFI::getRPM() <= acmodel_proprpms[i][1]) {
+		  propsel_mask |= 1 << i;
+		}
+	      }
+	      prop_selector->select(propsel_mask);
+	    }
 	}
 
 	// $$$ begin - added VS Renganthan 17 Oct 2K
@@ -1508,11 +1546,6 @@ int main( int argc, char **argv ) {
 	exit(-1);
     }
 
-    //
-    // some ssg test stuff (requires data from the plib source
-    // distribution) specifically from the ssg tux example
-    //
-
     FGPath modelpath( globals->get_options()->get_fg_root() );
     // modelpath.append( "Models" );
     // modelpath.append( "Geometry" );
@@ -1582,16 +1615,40 @@ int main( int argc, char **argv ) {
     lighting->addKid( airport );
 
     // temporary visible aircraft "own ship"
-    penguin_sel = new ssgSelector;
-    penguin_pos = new ssgTransform;
-    string tux_path =
+    acmodel_selector = new ssgSelector;
+    acmodel_pos = new ssgTransform;
+
+    string acmodel_path =
       current_properties.getStringValue("/sim/model/path",
 					"Models/Geometry/glider.ac");
-    ssgEntity *tux_obj = ssgLoad((char *)(tux_path.c_str()));
+    ssgEntity *acmodel_obj = ssgLoad((char *)(acmodel_path.c_str()));
+
+    // find moving parts (if this is an MDL model)
+    flaps_selector = (ssgSelector*)fgFindNode( acmodel_obj, "FLAPS" );
+    prop_selector  = (ssgSelector*)fgFindNode( acmodel_obj, "PROP"  );
+
+    acmodel_npropsettings = 0;
+    if (prop_selector != NULL) {
+      for (ssgEntity* kid = prop_selector->getKid(0); kid != NULL;
+	   kid = prop_selector->getNextKid()) {
+	int prop_low, prop_high;
+	if ( sscanf(kid->getName(), "PROP_%d_%d", 
+		    &prop_low, &prop_high) == 2 ) {
+	  prop_low  = (int)((float)prop_low  * (5000.0f / 32767.0f));
+	  prop_high = (int)((float)prop_high * (5000.0f / 32767.0f));
+	  acmodel_proprpms[acmodel_npropsettings][0] = prop_low ;
+	  acmodel_proprpms[acmodel_npropsettings][1] = prop_high;
+	  acmodel_npropsettings++;
+
+	  FG_LOG( FG_GENERAL, FG_INFO, "PROPELLER SETTING " << prop_low <<
+		  " " << prop_high );
+	}
+      }
+    }
 
     // align the model properly for FGFS
-    ssgTransform *tux_align = new ssgTransform;
-    tux_align->addKid(tux_obj);
+    ssgTransform *acmodel_align = new ssgTransform;
+    acmodel_align->addKid(acmodel_obj);
     sgMat4 rot_matrix;
     sgMat4 off_matrix;
     sgMat4 res_matrix;
@@ -1610,14 +1667,14 @@ int main( int argc, char **argv ) {
     sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
     sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
     sgMultMat4(res_matrix, off_matrix, rot_matrix);
-    tux_align->setTransform(res_matrix);
+    acmodel_align->setTransform(res_matrix);
 
-    penguin_pos->addKid( tux_align );
-    penguin_sel->addKid( penguin_pos );
-    ssgFlatten( tux_obj );
-    ssgStripify( penguin_sel );
-    penguin_sel->clrTraversalMaskBits( SSGTRAV_HOT );
-    scene->addKid( penguin_sel );
+    acmodel_pos->addKid( acmodel_align );
+    acmodel_selector->addKid( acmodel_pos );
+    //ssgFlatten( acmodel_obj );
+    //ssgStripify( acmodel_selector );
+    acmodel_selector->clrTraversalMaskBits( SSGTRAV_HOT );
+    scene->addKid( acmodel_selector );
 
     // $$$ begin - added VS Renganthan 17 Oct 2K
     fgLoadDCS();
