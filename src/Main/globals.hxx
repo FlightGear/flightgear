@@ -228,9 +228,6 @@ public:
     inline void set_environment_mgr(FGEnvironmentMgr * mgr) {
       environment_mgr = mgr;
     }
-    const FGEnvironment * get_environment() const;
-    const FGEnvironment * get_environment(double lat, double lon,
-					  double alt) const;
 
     inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }

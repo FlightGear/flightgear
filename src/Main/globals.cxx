@@ -90,18 +90,6 @@ FGGlobals::restoreInitialState ()
   }
 }
 
-const FGEnvironment *
-FGGlobals::get_environment () const
-{
-  return environment_mgr->getEnvironment();
-}
-
-const FGEnvironment *
-FGGlobals::get_environment (double lat, double lon, double alt) const
-{
-  return environment_mgr->getEnvironment(lat, lon, alt);
-}
-
 FGViewer *
 FGGlobals::get_current_view () const
 {

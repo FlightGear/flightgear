@@ -52,6 +52,18 @@ FGEnvironment::FGEnvironment()
 {
 }
 
+FGEnvironment::FGEnvironment (const FGEnvironment &env)
+  : elevation_ft(env.elevation_ft),
+    visibility_m(env.visibility_m),
+    temperature_sea_level_degc(env.temperature_sea_level_degc),
+    pressure_sea_level_inhg(env.pressure_sea_level_inhg),
+    wind_from_heading_deg(env.wind_from_heading_deg),
+    wind_speed_kt(env.wind_speed_kt),
+    wind_from_north_fps(env.wind_from_north_fps),
+    wind_from_east_fps(env.wind_from_east_fps),
+    wind_from_down_fps(env.wind_from_down_fps)
+{
+}
 
 FGEnvironment::~FGEnvironment()
 {
@@ -71,9 +83,21 @@ FGEnvironment::get_temperature_sea_level_degc () const
 }
 
 double
+FGEnvironment::get_temperature_degc () const
+{
+  return temperature_degc;
+}
+
+double
 FGEnvironment::get_pressure_sea_level_inhg () const
 {
   return pressure_sea_level_inhg;
+}
+
+double
+FGEnvironment::get_pressure_inhg () const
+{
+  return pressure_inhg;
 }
 
 double
@@ -106,6 +130,12 @@ FGEnvironment::get_wind_from_down_fps () const
   return wind_from_down_fps;
 }
 
+double
+FGEnvironment::get_elevation_ft () const
+{
+  return elevation_ft;
+}
+
 
 
 void
@@ -118,12 +148,28 @@ void
 FGEnvironment::set_temperature_sea_level_degc (double t)
 {
   temperature_sea_level_degc = t;
+  _recalc_alt_temp();
+}
+
+void
+FGEnvironment::set_temperature_degc (double t)
+{
+  temperature_degc = t;
+  _recalc_sl_temp();
 }
 
 void
 FGEnvironment::set_pressure_sea_level_inhg (double p)
 {
   pressure_sea_level_inhg = p;
+  _recalc_alt_press();
+}
+
+void
+FGEnvironment::set_pressure_inhg (double p)
+{
+  pressure_inhg = p;
+  _recalc_sl_press();
 }
 
 void
@@ -162,6 +208,14 @@ FGEnvironment::set_wind_from_down_fps (double d)
 }
 
 void
+FGEnvironment::set_elevation_ft (double e)
+{
+  elevation_ft = e;
+  _recalc_alt_temp();
+  _recalc_alt_press();
+}
+
+void
 FGEnvironment::_recalc_hdgspd ()
 {
   double angle_rad;
@@ -194,6 +248,49 @@ FGEnvironment::_recalc_ne ()
     cos(wind_from_heading_deg * SGD_DEGREES_TO_RADIANS);
   wind_from_east_fps = speed_fps *
     sin(wind_from_heading_deg * SGD_DEGREES_TO_RADIANS);
+}
+
+void
+FGEnvironment::_recalc_sl_temp ()
+{
+  // Earth atmosphere model from
+  // http://www.grc.nasa.gov/WWW/K-12/airplane/atmos.html
+
+  // Stratospheric temperatures are not really reversible, so use 15degC.
+
+  if (elevation_ft < 36152)	// Troposphere
+    temperature_sea_level_degc =
+      temperature_degc + (.00649 * SG_FEET_TO_METER * elevation_ft);
+  // If we're in the stratosphere, leave sea-level temp alone
+}
+
+void
+FGEnvironment::_recalc_alt_temp ()
+{
+  // Earth atmosphere model from
+  // http://www.grc.nasa.gov/WWW/K-12/airplane/atmos.html
+
+  if (elevation_ft < 36152)	// Troposphere
+    temperature_degc =
+      temperature_sea_level_degc - (.00649 * SG_FEET_TO_METER * elevation_ft);
+  else if (elevation_ft < 82345) // Lower Stratosphere
+    temperature_degc = -56.46;
+  else
+    temperature_degc = -131.21 + (.00299 * SG_FEET_TO_METER * elevation_ft);
+}
+
+void
+FGEnvironment::_recalc_sl_press ()
+{
+  // FIXME: calculate properly
+  pressure_sea_level_inhg = pressure_inhg;
+}
+
+void
+FGEnvironment::_recalc_alt_press ()
+{
+  // FIXME: calculate properly
+  pressure_inhg = pressure_sea_level_inhg;
 }
 
 // end of environment.cxx

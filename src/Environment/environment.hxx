@@ -49,11 +49,14 @@ class FGEnvironment
 public:
 
   FGEnvironment();
+  FGEnvironment (const FGEnvironment &environment);
   virtual ~FGEnvironment();
   
   virtual double get_visibility_m () const;
   virtual double get_temperature_sea_level_degc () const;
+  virtual double get_temperature_degc () const;
   virtual double get_pressure_sea_level_inhg () const;
+  virtual double get_pressure_inhg () const;
   virtual double get_wind_from_heading_deg () const;
   virtual double get_wind_speed_kt () const;
   virtual double get_wind_from_north_fps () const;
@@ -62,21 +65,38 @@ public:
 
   virtual void set_visibility_m (double v);
   virtual void set_temperature_sea_level_degc (double t);
+  virtual void set_temperature_degc (double t);
   virtual void set_pressure_sea_level_inhg (double p);
+  virtual void set_pressure_inhg (double p);
   virtual void set_wind_from_heading_deg (double h);
   virtual void set_wind_speed_kt (double s);
   virtual void set_wind_from_north_fps (double n);
   virtual void set_wind_from_east_fps (double e);
   virtual void set_wind_from_down_fps (double d);
 
+protected:
+
+  friend class FGEnvironmentMgr;
+
+  virtual double get_elevation_ft () const;
+  virtual void set_elevation_ft (double elevation_ft);
+
 private:
 
   void _recalc_hdgspd ();
   void _recalc_ne ();
+  void _recalc_sl_temp ();
+  void _recalc_alt_temp ();
+  void _recalc_sl_press ();
+  void _recalc_alt_press ();
+
+  double elevation_ft;
 
   double visibility_m;
   double temperature_sea_level_degc;
+  double temperature_degc;
   double pressure_sea_level_inhg;
+  double pressure_inhg;
 
   double wind_from_heading_deg;
   double wind_speed_kt;

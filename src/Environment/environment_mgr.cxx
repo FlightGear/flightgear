@@ -60,10 +60,18 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_temperature_sea_level_degc,
 	&FGEnvironment::set_temperature_sea_level_degc);
   fgSetArchivable("/environment/temperature-sea-level-degc");
+  fgTie("/environment/temperature-degc", _environment,
+	&FGEnvironment::get_temperature_degc,
+	&FGEnvironment::set_temperature_degc);
+  fgSetArchivable("/environment/temperature-degc");
   fgTie("/environment/pressure-sea-level-inhg", _environment,
 	&FGEnvironment::get_pressure_sea_level_inhg,
 	&FGEnvironment::set_pressure_sea_level_inhg);
   fgSetArchivable("/environment/pressure-sea-level-inhg");
+  fgTie("/environment/pressure-inhg", _environment,
+	&FGEnvironment::get_pressure_inhg,
+	&FGEnvironment::set_pressure_inhg);
+  fgSetArchivable("/environment/pressure-inhg");
   fgTie("/environment/wind-from-heading-deg", _environment,
 	&FGEnvironment::get_wind_from_heading_deg,
 	&FGEnvironment::set_wind_from_heading_deg);
@@ -103,21 +111,24 @@ FGEnvironmentMgr::update (double dt)
     ->set_Velocities_Local_Airmass(_environment->get_wind_from_north_fps(),
 				   _environment->get_wind_from_east_fps(),
 				   _environment->get_wind_from_down_fps());
+  _environment->set_elevation_ft(fgGetDouble("/position/altitude-ft"));
 }
 
-const FGEnvironment *
+FGEnvironment
 FGEnvironmentMgr::getEnvironment () const
 {
-  return _environment;
+  return *_environment;
 }
 
-const FGEnvironment *
+FGEnvironment
 FGEnvironmentMgr::getEnvironment (double lat, double lon, double alt) const
 {
 				// Always returns the same environment
 				// for now; we'll make it interesting
 				// later.
-  return _environment;
+  FGEnvironment env = *_environment;
+  env.set_elevation_ft(alt);
+  return env;
 }
 
 // end of environment-mgr.cxx
