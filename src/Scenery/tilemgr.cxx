@@ -389,7 +389,6 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
     if ( current_tile != NULL ) {
         globals->get_scenery()->set_next_center( current_tile->center );
     } else {
-        printf("Log level is %d\n", sglog().get_log_priority());
         SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
         globals->get_scenery()->set_next_center( Point3D(0.0) );
     }
