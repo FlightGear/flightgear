@@ -1591,6 +1591,7 @@ bool fgInitSubsystems() {
     // Initialize the 2D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
     fgGetNode("/sim/rendering/bump-mapping", true);
+    fgSetBool("/sim/rendering/bump-mapping", true);
 
 #ifdef FG_USE_CLOUDS_3D
     ////////////////////////////////////////////////////////////////////
