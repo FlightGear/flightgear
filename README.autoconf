@@ -36,6 +36,7 @@ For full optimization using the EGCS compiler on an Intel processor you
 could try something like:
 
     MACH="-mpentium" (-m486 -mpentiumpro etc.)
+    export CC=egcc
     export CFLAGS="-O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
     export CXXFLAGS="-O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
     ./configure
