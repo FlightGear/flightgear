@@ -220,6 +220,7 @@ void NewHeading(puObject *cb)
     //	string ApHeadingLabel( "Enter New Heading" );
     //	ApHeadingDialogMessage  -> setLabel(ApHeadingLabel.c_str());
     float heading = current_autopilot->get_DGTargetHeading();
+    while ( heading < 0.0 ) { heading += 360.0; }
     ApHeadingDialogInput   ->    setValue ( heading );
     ApHeadingDialogInput    -> acceptInput();
     FG_PUSH_PUI_DIALOG( ApHeadingDialog );
