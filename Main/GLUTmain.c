@@ -192,7 +192,7 @@ static void fgUpdateViewParams() {
 
     sky = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
 
-    sky = 0.15; /* force a dark sky (for testing) */
+    /* sky = 0.15; */ /* to force a dark sky (for testing) */
 
     if ( ambient < 0.1 ) { ambient = 0.1; }
     if ( diffuse < 0.0 ) { diffuse = 0.0; }
@@ -577,9 +577,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.20  1997/09/22 14:44:19  curt
-/* Continuing to try to align stars correctly.
+/* Revision 1.21  1997/09/23 00:29:38  curt
+/* Tweaks to get things to compile with gcc-win32.
 /*
+ * Revision 1.20  1997/09/22 14:44:19  curt
+ * Continuing to try to align stars correctly.
+ *
  * Revision 1.19  1997/09/18 16:20:08  curt
  * At dusk/dawn add/remove stars in stages.
  *

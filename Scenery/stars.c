@@ -213,7 +213,7 @@ void fgStarsRender() {
 
     /* FG_PI_2 + 0.1 is about 6 degrees after sundown and before sunrise */
 
-    t->sun_angle = 3.0; /* force stars (for testing) */
+    /* t->sun_angle = 3.0; */ /* to force stars to be drawn (for testing) */
 
     if ( t->sun_angle > (FG_PI_2 + 5 * DEG_TO_RAD ) ) {
 	/* determine which star structure to draw */
@@ -254,9 +254,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.11  1997/09/22 14:44:21  curt
-/* Continuing to try to align stars correctly.
+/* Revision 1.12  1997/09/23 00:29:43  curt
+/* Tweaks to get things to compile with gcc-win32.
 /*
+ * Revision 1.11  1997/09/22 14:44:21  curt
+ * Continuing to try to align stars correctly.
+ *
  * Revision 1.10  1997/09/20 03:34:32  curt
  * Still trying to get those durned stars aligned properly.
  *

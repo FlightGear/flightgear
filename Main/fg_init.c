@@ -111,8 +111,9 @@ void fgInitSubsystems( void ) {
     /* FG_Latitude  = (  45.15 ) * DEG_TO_RAD; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
-    FG_Longitude = ( -583200.00 / 3600.0 ) * DEG_TO_RAD;
-    FG_Latitude  = (  110808.41 / 3600.0 ) * DEG_TO_RAD;
+    /* A random test position */
+    /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
 	   FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
@@ -215,9 +216,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1997/09/22 14:44:20  curt
-/* Continuing to try to align stars correctly.
+/* Revision 1.9  1997/09/23 00:29:39  curt
+/* Tweaks to get things to compile with gcc-win32.
 /*
+ * Revision 1.8  1997/09/22 14:44:20  curt
+ * Continuing to try to align stars correctly.
+ *
  * Revision 1.7  1997/09/16 15:50:30  curt
  * Working on star alignment and time issues.
  *

@@ -551,6 +551,7 @@ Hptr fgHUDInit( struct AIRCRAFT current_aircraft, int color )
 Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, \
 						int hole_len, double (*load_value)() )
 {
+#ifndef WIN32
 	struct HUD_horizon *horizon;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -581,11 +582,13 @@ Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, \
 	hud->instruments = instrument;
 
 	return( hud );
+#endif
 }
 
 Hptr fgHUDAddScale( Hptr hud, int type, int scr_pos, int scr_min, int scr_max, int div_min, int div_max, \
 					int orientation, int with_min, int min_value, int width_units, double (*load_value)() )
 {
+#ifndef WIN32
 	struct HUD_scale *scale;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -622,11 +625,13 @@ Hptr fgHUDAddScale( Hptr hud, int type, int scr_pos, int scr_min, int scr_max, i
 	hud->instruments = instrument;
 
 	return( hud );
+#endif
 }
 
 Hptr fgHUDAddLabel( Hptr hud, int x_pos, int y_pos, int size, int blink, int justify, \
 					char *pre_str, char *post_str, char *format, double (*load_value)() )
 {
+#ifndef WIN32
 	struct HUD_label *label;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -661,12 +666,14 @@ Hptr fgHUDAddLabel( Hptr hud, int x_pos, int y_pos, int size, int blink, int jus
 	hud->instruments = instrument;
 
 	return( hud );
+#endif
 }
 
 Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_height, \
 					int hole_len, int div_units, int label_pos, int width_units, \
 					double (*load_roll)(), double (*load_pitch)() )
 {
+#ifndef WIN32
 	struct HUD_ladder *ladder;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -703,6 +710,7 @@ Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_heig
 	hud->instruments = instrument;
 
 	return( hud );
+#endif
 }
 
 /*
@@ -799,9 +807,12 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.3  1997/09/05 14:17:26  curt
-/* More tweaking with stars.
+/* Revision 1.4  1997/09/23 00:29:32  curt
+/* Tweaks to get things to compile with gcc-win32.
 /*
+ * Revision 1.3  1997/09/05 14:17:26  curt
+ * More tweaking with stars.
+ *
  * Revision 1.2  1997/09/04 02:17:30  curt
  * Shufflin' stuff.
  *

@@ -98,28 +98,31 @@ GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(VERSION)\"
 #---------------------------------------------------------------------------
 # Linux/Mesa with the GLUT toolkit
 #
-INTERFACE_FLAGS = -DGLUT
-INTERFACE_LIBS = -lglut
-INTERFACE_FILES = GLUTmain.c GLUTkey.c
-MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
-FG_CFLAGS = $(GLOBAL_CFLAGS)
+# INTERFACE_FLAGS = -DGLUT
+# INTERFACE_LIBS = -lglut
+# INTERFACE_FILES = GLUTmain.c GLUTkey.c
+# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+# FG_CFLAGS = $(GLOBAL_CFLAGS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
 # Cygnus Win32 (gcc based) with a static version of the GLUT toolkit
 #
-# INTERFACE_FLAGS = -DGLUT 
-# INTERFACE_LIBS = ../Win32/libglut.a
-# INTERFACE_FILES = GLUTmain.c GLUTkey.c
-# GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
-# FG_CFLAGS = $(GLOBAL_CFLAGS) -DWIN32 -DUSE_RAND
+INTERFACE_FLAGS = -DGLUT 
+INTERFACE_LIBS = ../Win32/libglut.a
+INTERFACE_FILES = GLUTmain.c GLUTkey.c
+GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
+FG_CFLAGS = $(GLOBAL_CFLAGS) -DWIN32 -DUSE_RAND
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.15  1997/09/23 00:29:27  curt
+# Tweaks to get things to compile with gcc-win32.
+#
 # Revision 1.14  1997/09/16 22:14:47  curt
 # Tweaked time of day lighting equations.  Don't draw stars during the day.
 #

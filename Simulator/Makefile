@@ -82,7 +82,7 @@ bin-tar: all
 	tar cvzf bin-$(VERSION).tar.gz FlightGear/fgtop FlightGear/fg0 \
 	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/Thanks)
 
-bin-zip: all
+bin-zip: 
 	cp GLUT/fg0.exe GLUT/runfg.bat GLUT/cygwin.dll ..
 	(cd ../..; \
 	zip -r bin-$(VERSION).zip FlightGear/fgtop FlightGear/fg0.exe \
@@ -92,6 +92,9 @@ bin-zip: all
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.27  1997/09/23 00:29:27  curt
+# Tweaks to get things to compile with gcc-win32.
+#
 # Revision 1.26  1997/09/04 02:17:18  curt
 # Shufflin' stuff.
 #

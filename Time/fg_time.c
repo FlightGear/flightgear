@@ -29,6 +29,11 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef WIN32
+#include <sys/time.h> /* for gettimeofday() */
+#include <unistd.h>   /* for gettimeofday() */
+#endif
+
 #include "fg_time.h"
 #include "../constants.h"
 #include "../Flight/flight.h"
@@ -152,6 +157,14 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     long int offset;
     double diff, part, days, hours, lst;
 
+#ifdef WIN32
+    int daylight;
+    long int timezone;
+
+    struct timeval tv;
+    struct timezone tz;
+#endif
+
     printf("COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
            gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
            gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
@@ -164,6 +177,18 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     mt.tm_sec = 0;
 
     start = mktime(&mt);
+
+#ifdef WIN32
+    daylight = mt.tm_isdst;
+    gettimeofday(&tv, &tz);
+    timezone = tz.tz_minuteswest * 60;
+#endif
+
+    if ( daylight > 0 ) {
+	daylight = 1;
+    } else if ( daylight < 0 ) {
+	printf("OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
+    }
 
     offset = -(timezone / 3600 - daylight);
 
@@ -259,9 +284,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.6  1997/09/20 03:34:34  curt
-/* Still trying to get those durned stars aligned properly.
+/* Revision 1.7  1997/09/23 00:29:50  curt
+/* Tweaks to get things to compile with gcc-win32.
 /*
+ * Revision 1.6  1997/09/20 03:34:34  curt
+ * Still trying to get those durned stars aligned properly.
+ *
  * Revision 1.5  1997/09/16 22:14:52  curt
  * Tweaked time of day lighting equations.  Don't draw stars during the day.
  *
