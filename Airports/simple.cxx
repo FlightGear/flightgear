@@ -38,12 +38,15 @@
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
 
+
 fgAIRPORTS::fgAIRPORTS() {
 }
 
 
 // load the data
 int fgAIRPORTS::load( const string& file ) {
+    fgAIRPORT a;
+
     // build the path name to the airport file
     string path = current_options.get_fg_root() + "/Airports/" + file;
     StopWatch t;
@@ -57,11 +60,21 @@ int fgAIRPORTS::load( const string& file ) {
 
     t.start();
 
+    /*
     // We can use the STL copy algorithm because the input
     // file doesn't contain and comments or blank lines.
     copy( istream_iterator<fgAIRPORT,ptrdiff_t>(in.stream()),
 	  istream_iterator<fgAIRPORT,ptrdiff_t>(),
  	  inserter( airports, airports.begin() ) );
+    */
+
+    // read in each line of the file
+    while ( ! in.eof() )
+    {
+	in.eat_comments();
+	in.stream() >> a.id >> a.longitude >> a.latitude >> a.elevation;
+	airports.insert(a);
+    }
 
     t.stop();
 
@@ -120,6 +133,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/09/02 14:35:38  curt
+// Rewrote simple airport loader so it can deal with comments and blank lines.
+//
 // Revision 1.4  1998/09/01 19:02:53  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.
