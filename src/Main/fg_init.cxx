@@ -647,16 +647,6 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
                 "Attempting to set starting position from runway code "
                 << id << " heading " << tgt_hdg );
 
-        // SGPath inpath( globals->get_fg_root() );
-        // inpath.append( "Airports" );
-        // inpath.append( "apt_simple" );
-        // airports.load( inpath.c_str() );
-
-        // SGPath outpath( globals->get_fg_root() );
-        // outpath.append( "Airports" );
-        // outpath.append( "simple.gdbm" );
-        // airports.dump_gdbm( outpath.c_str() );
-
         if ( ! runways.search( id, &r ) ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
                     "Failed to find " << id << " in database." );
@@ -756,6 +746,144 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 }
 
 
+// Set current_options lon/lat given an airport id and heading (degrees)
+static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
+    FGRunway r;
+    FGRunway found_r;
+    double heading = 0.0;
+    string runway;
+
+    // standardize input number
+    string tmp = rwy.substr(1, 1);
+    if ( tmp == "L" || tmp == "R" || tmp == "C" ) {
+        runway = "0";
+        runway += rwy;
+    } else {
+        runway = rwy;
+    }
+
+    if ( id.length() ) {
+        // set initial position from runway and heading
+
+        SGPath path( globals->get_fg_root() );
+        path.append( "Airports" );
+        path.append( "runways.mk4" );
+        FGRunways runways( path.c_str() );
+
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Attempting to set starting position for "
+                << id << ":" << runway );
+
+        if ( ! runways.search( id, &r ) ) {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "Failed to find " << id << " in database." );
+            return false;
+        }
+
+        while ( r.id == id ) {
+            // forward direction
+            if ( r.rwy_no == runway ) {
+                found_r = r;
+                heading = r.heading;
+                SG_LOG( SG_GENERAL, SG_INFO,
+                        "Runway " << r.rwy_no << " heading = " << heading );
+            }
+
+            // calculate reciprocal runway number
+            string snum = r.rwy_no;
+            int len = snum.length();
+            string letter = "";
+            string rev_letter = "";
+            int i;
+            for ( i = 0; i < len; ++i ) {
+                string tmp = snum.substr(i, 1);
+                if ( tmp == "L" ) {
+                    letter = "L";
+                    rev_letter = "R";
+                } else if ( tmp == "R" ) {
+                    letter = "R";
+                    rev_letter = "L";
+                } else if ( tmp == "C" ) {
+                    letter == "C";
+                    rev_letter = "C";
+                }
+            }
+            for ( i = 0; i < len; ++i ) {
+                string tmp = snum.substr(i, 1);
+                if ( tmp == "L" || tmp == "R" || tmp == "C" || tmp == " " ) {
+                    snum = snum.substr(0, i);
+                }
+            }
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Runway num = '" << snum << "'");
+            int num = atoi( snum.c_str() ) + 18;
+            while ( num > 36 ) { num -= 36; }
+            while ( num <= 0 ) { num += 36; }
+
+            char recip_no[10];
+            snprintf( recip_no, 10, "%02d%s", num, rev_letter.c_str() );
+
+            // reverse direction
+            if ( (string)recip_no == runway ) {
+                found_r = r;
+                heading = r.heading + 180;
+                while ( heading > 360.0 ) { heading -= 360; }
+                SG_LOG( SG_GENERAL, SG_INFO,
+                        "Runway " << r.rwy_no << " heading = " << heading );
+            }
+
+            runways.next( &r );
+        }
+    } else {
+        return false;
+    }
+
+    double lat2, lon2, az2;
+    double azimuth = heading + 180.0;
+    while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
+
+    SG_LOG( SG_GENERAL, SG_INFO,
+            "runway =  " << found_r.lon << ", " << found_r.lat
+            << " length = " << found_r.length * SG_FEET_TO_METER * 0.5 
+            << " heading = " << azimuth );
+    
+    geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
+                        azimuth, found_r.length * SG_FEET_TO_METER * 0.5 - 5.0,
+                        &lat2, &lon2, &az2 );
+
+    if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON ) {
+        double olat, olon;
+        double odist = fgGetDouble("/sim/presets/offset-distance");
+        odist *= SG_NM_TO_METER;
+        double oaz = azimuth;
+        if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON ) {
+            oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
+        }
+        while ( oaz >= 360.0 ) { oaz -= 360.0; }
+        geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
+        lat2=olat;
+        lon2=olon;
+    }
+
+    // presets
+    fgSetDouble("/sim/presets/longitude-deg",  lon2 );
+    fgSetDouble("/sim/presets/latitude-deg",  lat2 );
+    fgSetDouble("/sim/presets/heading-deg", heading );
+
+    // other code depends on the actual values being set ...
+    fgSetDouble("/position/longitude-deg",  lon2 );
+    fgSetDouble("/position/latitude-deg",  lat2 );
+    fgSetDouble("/orientation/heading-deg", heading );
+
+    SG_LOG( SG_GENERAL, SG_INFO,
+            "Position for " << id << " is ("
+            << lon2 << ", "
+            << lat2 << ") new heading is "
+            << heading );
+
+    return true;
+}
+
+
 static void fgSetDistOrAltFromGlideSlope() {
     double gs = fgGetDouble("/sim/presets/glideslope");
     double od = fgGetDouble("/sim/presets/offset-distance");
@@ -786,8 +914,11 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition() {
-    // Calculate offset-distance or altitude relative to glide slope
-    // if either was not specified.
+    bool set_pos = false;
+
+    // If glideslope is specified, then calculate offset-distance or
+    // altitude relative to glide slope if either of those was not
+    // specified.
     fgSetDistOrAltFromGlideSlope();
 
     // If we have an explicit, in-range lon/lat, don't change it, just use it.
@@ -801,23 +932,38 @@ bool fgInitPosition() {
     if ( lon_deg >= -180.0 && lon_deg <= 180.0
          && lat_deg >= -90.0 && lat_deg <= 90.0 )
     {
-        // valid lon/lat specified, use it.
-    } else {
-        string apt = fgGetString("/sim/presets/airport-id");
-        double hdg = fgGetDouble("/sim/presets/heading-deg");
-        if ( !apt.empty() ) {
-            // An airport id is requested, set position from that.
-            fgSetPosFromAirportIDandHdg( apt, hdg );
+        set_pos = true;
+    }
 
+    string apt = fgGetString("/sim/presets/airport-id");
+    string rwy_no = fgGetString("/sim/presets/runway");
+    double hdg = fgGetDouble("/sim/presets/heading-deg");
+    if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
+        // An airport + runway is requested
+        if ( fgSetPosFromAirportIDandRwy( apt, rwy_no ) ) {
             // set tower position (a little off the heading for single
             // runway airports)
             fgSetTowerPosFromAirportID( apt, hdg );
-        } else {
-            // No lon/lat specified, no airport specified, default to
-            // middle of KSFO field.
-            fgSetDouble("/sim/presets/longitude-deg", -122.374843);
-            fgSetDouble("/sim/presets/latitude-deg", 37.619002);
+
+            set_pos = true;
         }
+    }
+
+    if ( !set_pos && !apt.empty() ) {
+        if ( fgSetPosFromAirportIDandHdg( apt, hdg ) ) {
+            // set tower position (a little off the heading for single
+            // runway airports)
+            fgSetTowerPosFromAirportID( apt, hdg );
+
+            set_pos = true;
+        }
+    }
+
+    if ( !set_pos ) {
+        // No lon/lat specified, no airport specified, default to
+        // middle of KSFO field.
+        fgSetDouble("/sim/presets/longitude-deg", -122.374843);
+        fgSetDouble("/sim/presets/latitude-deg", 37.619002);
     }
 
     fgSetDouble( "/position/longitude-deg",

@@ -681,9 +681,12 @@ parse_option (const string& arg)
 	fgSetBool("/sim/sound/audible", false);
     } else if ( arg == "--enable-sound" ) {
 	fgSetBool("/sim/sound/audible", true);
+    } else if ( arg.find( "--airport=") == 0 ) {
+	fgSetString("/sim/presets/airport-id", arg.substr(10).c_str());
     } else if ( arg.find( "--airport-id=") == 0 ) {
-				// NB: changed property name!!!
 	fgSetString("/sim/presets/airport-id", arg.substr(13).c_str());
+    } else if ( arg.find( "--runway=") == 0 ) {
+	fgSetString("/sim/presets/runway", arg.substr(9).c_str());
     } else if ( arg.find( "--offset-distance=") == 0 ) {
 	fgSetDouble("/sim/presets/offset-distance", atof(arg.substr(18)));
     } else if ( arg.find( "--offset-azimuth=") == 0 ) {
