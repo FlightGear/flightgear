@@ -32,7 +32,6 @@
 #include "assemtris.hxx"
 
 #include <Include/fg_constants.h>
-#include <Include/fg_types.h>
 #include <Bucket/bucketutils.h>
 
 
@@ -542,6 +541,10 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.3  1998/11/02 18:25:40  curt
+// Check for __CYGWIN__ (b20) as well as __CYGWIN32__ (pre b20 compilers)
+// Other misc. tweaks.
+//
 // Revision 1.2  1998/09/25 19:38:01  curt
 // Minor tweaks so that this actually compiles.
 //
