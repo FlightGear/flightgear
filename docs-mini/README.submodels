@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+
+<!--  Submodels are objects which can be dropped or launched from the user
+      aircraft. The trigger is a boolean property, which you define, which when
+      "true" causes the submodel to be released/launched.
+
+      A submodel will create an AIBallistic object which will follow a ballistic
+      path. By default one submodel will be released when the corresponding 
+      trigger is "true".
+
+      The initial conditions (IC) define the object's starting point (relative
+      to the user aircraft's "reported position"), and its initial speed and
+      direction (relative to the user aircraft).  If you want to release many
+      similar objects with similar IC, then you may use the <repeat>, <delay>
+      and <count> properties to define this.  The allowed properties are:
+
+      <name>         The name of the submodel.
+      <model>        The path to the visual model.
+      <trigger>      The property which will act as the trigger. 
+      <speed>        Initial speed, in feet/sec, relative to user aircraft.
+      <repeat>       Set "true" if you want multiple releases of this submodel.
+      <delay>        Time, in seconds, between repeated releases.
+      <count>        Number of submodels available for multiple release.
+      <slaved>       Not used yet.
+      <x-offset>     Submodel's initial fore/aft position relative to user
+                     aircraft.   Fore is positive.
+      <y-offset>     Submodel's initial left/right position relative to user
+                     aircraft.   Right is positive.
+      <z-offset>     Submodel's initial up/down position relative to user
+                     aircraft.   Up is positive.
+      <yaw-offset>   Submodel's initial azimuth, in degrees, relative to user
+                     aircraft'snose.   Right is positive.
+      <pitch-offset> Submodel's initial elevation, in degrees, relative to user
+                     aircraft's pitch.    Up is positive.
+      <eda>          Equivalent Drag Area in ft squared.  The object is assumed
+                     to have a  mass of 0.03 slugs and a drag coefficient of
+                     0.295, and sea-level air density is assumed.  Adjust the
+                     EDA to give the model the ballistics you need.
+                     The default value is 0.007.
+      <life>         Life span in seconds.  Default is 900.0.
+      <buoyancy>     In ft/sec/sec.  Works opposite acceleration of gravity.
+                     For example, if set to 32 the submodel will feel no 
+                     gravity. If greater than 32 the object will rise.
+                     Default is 0.
+      <wind>         Set to true if you want the submodel to react to the wind.
+                     Default is "false". 
+-->  
+ 
+<PropertyList>
+
+  <submodel>
+    <name>left gun</name>
+    <model>Models/Geometry/tracer.ac</model>
+    <trigger>systems/submodels/submodel[0]/trigger</trigger>
+    <speed>2750.0</speed>
+    <repeat>true</repeat>
+    <delay>0.25</delay>
+    <count>100</count>
+    <x-offset>1.0</x-offset>
+    <y-offset>-7.0</y-offset>
+    <z-offset>-2.0</z-offset>
+    <yaw-offset>0.4</yaw-offset>
+    <pitch-offset>1.8</pitch-offset>
+    <life>2.0</life>
+  </submodel>
+
+  <submodel>
+    <name>right gun</name>
+    <model>Models/Geometry/tracer.ac</model>
+    <trigger>systems/submodels/submodel[0]/trigger</trigger>
+    <speed>2750.0</speed>
+    <repeat>true</repeat>
+    <delay>0.25</delay>
+    <count>100</count>
+    <x-offset>1.0</x-offset>
+    <y-offset>7.0</y-offset>
+    <z-offset>-2.0</z-offset>
+    <yaw-offset>-0.4</yaw-offset>
+    <pitch-offset>1.8</pitch-offset>
+    <life>2.0</life>
+  </submodel>
+
+</PropertyList>
