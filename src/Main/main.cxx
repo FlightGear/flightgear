@@ -299,8 +299,9 @@ void trRenderFrame( void ) {
 
     // we need a white diffuse light for the phase of the moon
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
-    thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
-    thesky->drawUpperClouds( fog_exp2_density );
+    thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
+                     fog_exp2_density );
+    thesky->drawUpperClouds();
 
     // draw the ssg scene
     // return to the desired diffuse color
@@ -613,7 +614,8 @@ void fgRenderFrame() {
 
             // we need a white diffuse light for the phase of the moon
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
-            thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+            thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
+                             fog_exp2_density );
             // return to the desired diffuse color
             ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
         }
@@ -638,7 +640,7 @@ void fgRenderFrame() {
 
                 // Disable depth buffer update, draw the clouds
                 glDepthMask( GL_FALSE );
-                thesky->drawUpperClouds( fog_exp2_density );
+                thesky->drawUpperClouds();
                 if ( multi_pass_clouds ) {
                     thesky->drawLowerClouds();
                 }
@@ -662,7 +664,7 @@ void fgRenderFrame() {
                     glDepthMask( GL_FALSE );
                     glStencilFunc( GL_EQUAL, 1, 1 );
                     glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
-                    thesky->drawUpperClouds( fog_exp2_density );
+                    thesky->drawUpperClouds();
                     thesky->drawLowerClouds();
                     glDepthMask( GL_TRUE );
                     glDisable( GL_STENCIL_TEST );
