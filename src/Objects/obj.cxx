@@ -1427,7 +1427,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     }
 
     geometry->setName( (char *)path.c_str() );
-   
+
     if ( is_base ) {
 	// reference point (center offset/bounding sphere)
 	*center = obj.get_gbs_center();
@@ -1481,6 +1481,19 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 	}
     }
 
+    // Put all randomly-placed objects under a separate branch
+    // (actually an ssgRangeSelector) named "random-models".
+    ssgBranch * random_object_branch = 0;
+    if (use_random_objects) {
+      float ranges[] = {0, 20000}; // Maximum 20km range for random objects
+      ssgRangeSelector * object_lod = new ssgRangeSelector;
+      object_lod->setRanges(ranges, 2);
+      object_lod->setName("random-models");
+      geometry->addKid(object_lod);
+      random_object_branch = new ssgBranch;
+      object_lod->addKid(random_object_branch);
+    }
+
     // generate triangles
     string_list tri_materials = obj.get_tri_materials();
     group_list tris_v = obj.get_tris_v();
@@ -1497,7 +1510,8 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  is_base, ground_lights );
 
 	if (use_random_objects)
-	  gen_random_surface_objects(leaf, geometry, center, material);
+	  gen_random_surface_objects(leaf, random_object_branch,
+				     center, material);
 	geometry->addKid( leaf );
     }
 
@@ -1517,7 +1531,8 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  is_base, ground_lights );
 
 	if (use_random_objects)
-	  gen_random_surface_objects(leaf, geometry, center, material);
+	  gen_random_surface_objects(leaf, random_object_branch,
+				     center, material);
 	geometry->addKid( leaf );
     }
 
@@ -1536,7 +1551,8 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 	if (use_random_objects)
-	  gen_random_surface_objects(leaf, geometry, center, material);
+	  gen_random_surface_objects(leaf, random_object_branch,
+				     center, material);
 	geometry->addKid( leaf );
     }
 
