@@ -23,13 +23,13 @@ extern "C" {
 /* fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
  *     INPUTS:	
  *         lat_geoc	Geocentric latitude, radians, + = North
- *         radius	C.G. radius to earth center, ft
+ *         radius	C.G. radius to earth center (meters)
  *
  *     OUTPUTS:
  *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level, ft
+ *         alt		C.G. altitude above mean sea level (meters)
  *         sea_level_r	radius from earth center to sea level at
- *                      local vertical (surface normal) of C.G.
+ *                      local vertical (surface normal) of C.G. (meters)
  */
 
 void fgGeocToGeod( double lat_geoc, double radius, double
@@ -38,17 +38,17 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 /* fgGeodToGeoc( lat_geod, alt, *sl_radius, *lat_geoc )
  *     INPUTS:	
  *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level, ft
+ *         alt		C.G. altitude above mean sea level (meters)
  *
  *     OUTPUTS:
- *         sl_radius	SEA LEVEL radius to earth center, ft (add Altitude to
- *                      get true distance from earth center.
+ *         sl_radius	SEA LEVEL radius to earth center (meters)
+ *                      (add Altitude to get true distance from earth center.
  *         lat_geoc	Geocentric latitude, radians, + = North
  *
  */
 
 void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
-		   double *lat_geoc );
+		      double *lat_geoc );
 
 
 
@@ -94,6 +94,11 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.4  1998/07/08 14:40:08  curt
+polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+Updated fg_geodesy comments to reflect that routines expect and produce
+  meters.
+
 Revision 1.3  1998/04/21 17:03:48  curt
 Prepairing for C++ integration.
 
@@ -160,9 +165,14 @@ Initial Flight Gear revision.
 
 
 /* $Log$
-/* Revision 1.3  1998/04/21 17:03:48  curt
-/* Prepairing for C++ integration.
+/* Revision 1.4  1998/07/08 14:40:08  curt
+/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+/* Updated fg_geodesy comments to reflect that routines expect and produce
+/*   meters.
 /*
+ * Revision 1.3  1998/04/21 17:03:48  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.2  1998/01/22 02:59:38  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

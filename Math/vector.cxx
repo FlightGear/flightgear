@@ -27,9 +27,11 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <Math/vector.h>
+#include <Include/fg_types.h>
 
-#include <Math/mat3.h>
+#include "vector.hxx"
+
+#include "mat3.h"
 
 
 /* Map a vector onto the plane specified by normal */
@@ -78,18 +80,49 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 }
 
 
+// Given a point p, and a line through p0 with direction vector d,
+// find the shortest distance from the point to the line
+double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d) {
+    MAT3vec u, u1, v;
+    double ud, dd, tmp, dist;
+    
+    // u = p - p0
+    MAT3_SUB_VEC(u, p, p0);
+
+    // calculate the projection, u1, of u along d.
+    // u1 = ( dot_prod(u, d) / dot_prod(d, d) ) * d;
+    ud = MAT3_DOT_PRODUCT(u, d);
+    dd = MAT3_DOT_PRODUCT(d, d);
+    tmp = ud / dd;
+
+    MAT3_SCALE_VEC(u1, d, tmp);;
+
+    // v = u - u1 = vector from closest point on line, p1, to the
+    // original point, p.
+    MAT3_SUB_VEC(v, u, u1);
+
+    dist = sqrt(MAT3_DOT_PRODUCT(v, v));
+
+    return( dist );
+}
+
+
 /* $Log$
-/* Revision 1.3  1998/05/07 23:04:28  curt
-/* Added a blank formating line!
+/* Revision 1.1  1998/07/08 14:40:10  curt
+/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+/* Updated fg_geodesy comments to reflect that routines expect and produce
+/*   meters.
 /*
+ * Revision 1.3  1998/05/07 23:04:28  curt
+ * Added a blank formating line!
+ *
  * Revision 1.2  1998/01/19 19:27:13  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.
  *
  * Revision 1.1  1997/12/22 04:13:17  curt
  * Initial revision.
- *
- */
+ * */
 
 
 

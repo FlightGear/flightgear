@@ -1,5 +1,5 @@
 /**************************************************************************
- * vector.h -- additional vector routines
+ * vector.hxx -- additional vector routines
  *
  * Written by Curtis Olson, started December 1997.
  *
@@ -24,12 +24,12 @@
  **************************************************************************/
 
 
-#ifndef _VECTOR_H
-#define _VECTOR_H
+#ifndef _VECTOR_HXX
+#define _VECTOR_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -40,19 +40,23 @@ extern "C" {
 void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 				    MAT3vec result);
 
+// Given a point p, and a line through p0 with direction vector d,
+// find the shortest distance from the point to the line
+double fgPointLine(MAT3vec p, MAT3vec p0, MAT3vec d);
 
-#ifdef __cplusplus
-}
-#endif
 
-
-#endif /* _VECTOR_H */
+#endif /* _VECTOR_HXX */
 
 
 /* $Log$
-/* Revision 1.4  1998/04/21 17:03:51  curt
-/* Prepairing for C++ integration.
+/* Revision 1.1  1998/07/08 14:40:10  curt
+/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+/* Updated fg_geodesy comments to reflect that routines expect and produce
+/*   meters.
 /*
+ * Revision 1.4  1998/04/21 17:03:51  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.3  1998/01/22 02:59:39  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -24,13 +24,13 @@
 /* fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
  *     INPUTS:	
  *         lat_geoc	Geocentric latitude, radians, + = North
- *         radius	C.G. radius to earth center, ft
+ *         radius	C.G. radius to earth center (meters)
  *
  *     OUTPUTS:
  *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level, ft
+ *         alt		C.G. altitude above mean sea level (meters)
  *         sea_level_r	radius from earth center to sea level at
- *                      local vertical (surface normal) of C.G.
+ *                      local vertical (surface normal) of C.G. (meters)
  */
 
 void fgGeocToGeod( double lat_geoc, double radius, double
@@ -43,12 +43,12 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 	|| ( (FG_PI_2 + lat_geoc) < ONE_SECOND ) )   /* near South pole */
     {
 	*lat_geod = lat_geoc;
-	*sea_level_r = EQUATORIAL_RADIUS_KM*E;
+	*sea_level_r = EQUATORIAL_RADIUS_M*E;
 	*alt = radius - *sea_level_r;
     } else {
 	t_lat = tan(lat_geoc);
-	x_alpha = E*EQUATORIAL_RADIUS_KM/sqrt(t_lat*t_lat + E*E);
-	mu_alpha = atan2(sqrt(RESQ_KM - x_alpha*x_alpha),E*x_alpha);
+	x_alpha = E*EQUATORIAL_RADIUS_M/sqrt(t_lat*t_lat + E*E);
+	mu_alpha = atan2(sqrt(RESQ_M - x_alpha*x_alpha),E*x_alpha);
 	if (lat_geoc < 0) mu_alpha = - mu_alpha;
 	sin_mu_a = sin(mu_alpha);
 	delt_lambda = mu_alpha - lat_geoc;
@@ -56,14 +56,14 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 	l_point = radius - r_alpha;
 	*alt = l_point*cos(delt_lambda);
 	denom = sqrt(1-EPS*EPS*sin_mu_a*sin_mu_a);
-	rho_alpha = EQUATORIAL_RADIUS_KM*(1-EPS)/
+	rho_alpha = EQUATORIAL_RADIUS_M*(1-EPS)/
 	    (denom*denom*denom);
 	delt_mu = atan2(l_point*sin(delt_lambda),rho_alpha + *alt);
 	*lat_geod = mu_alpha - delt_mu;
 	lambda_sl = atan( E*E * tan(*lat_geod) ); /* SL geoc. latitude */
 	sin_lambda_sl = sin( lambda_sl );
 	*sea_level_r = 
-	    sqrt(RESQ_KM / (1 + ((1/(E*E))-1)*sin_lambda_sl*sin_lambda_sl));
+	    sqrt(RESQ_M / (1 + ((1/(E*E))-1)*sin_lambda_sl*sin_lambda_sl));
     }
 }
 
@@ -71,11 +71,11 @@ void fgGeocToGeod( double lat_geoc, double radius, double
 /* fgGeodToGeoc( lat_geod, alt, *sl_radius, *lat_geoc )
  *     INPUTS:	
  *         lat_geod	Geodetic latitude, radians, + = North
- *         alt		C.G. altitude above mean sea level, ft
+ *         alt		C.G. altitude above mean sea level (meters)
  *
  *     OUTPUTS:
- *         sl_radius	SEA LEVEL radius to earth center, ft (add Altitude to
- *                      get true distance from earth center.
+ *         sl_radius	SEA LEVEL radius to earth center (meters)
+ *                      (add Altitude to get true distance from earth center.
  *         lat_geoc	Geocentric latitude, radians, + = North
  *
  */
@@ -91,7 +91,7 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
     sin_mu = sin(lat_geod);	/* Geodetic (map makers') latitude */
     cos_mu = cos(lat_geod);
     *sl_radius = 
-	sqrt(RESQ_KM / (1 + ((1/(E*E))-1)*sin_lambda_sl*sin_lambda_sl));
+	sqrt(RESQ_M / (1 + ((1/(E*E))-1)*sin_lambda_sl*sin_lambda_sl));
     py = *sl_radius*sin_lambda_sl + alt*sin_mu;
     px = *sl_radius*cos_lambda_sl + alt*cos_mu;
     *lat_geoc = atan2( py, px );
@@ -140,6 +140,11 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.6  1998/07/08 14:40:07  curt
+polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+Updated fg_geodesy comments to reflect that routines expect and produce
+  meters.
+
 Revision 1.5  1998/04/25 22:06:23  curt
 Edited cvs log messages in source files ... bad bad bad!
 
@@ -208,9 +213,14 @@ Initial Flight Gear revision.
 
 
 /* $Log$
-/* Revision 1.5  1998/04/25 22:06:23  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.6  1998/07/08 14:40:07  curt
+/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+/* Updated fg_geodesy comments to reflect that routines expect and produce
+/*   meters.
 /*
+ * Revision 1.5  1998/04/25 22:06:23  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.4  1998/01/27 00:47:59  curt
  * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.

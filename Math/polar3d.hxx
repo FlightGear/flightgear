@@ -1,5 +1,5 @@
 /**************************************************************************
- * polar.h -- routines to deal with polar math and transformations
+ * polar.hxx -- routines to deal with polar math and transformations
  *
  * Written by Curtis Olson, started June 1997.
  *
@@ -24,12 +24,12 @@
  **************************************************************************/
 
 
-#ifndef _POLAR_H
-#define _POLAR_H
+#ifndef _POLAR_HXX
+#define _POLAR_HXX
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -39,26 +39,26 @@ extern "C" {
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
  * must be specified in radians.  The FG convention is for distances
  * to be specified in meters */
-fgCartesianPoint3d fgPolarToCart3d(fgPolarPoint3d p);
+fgPoint3d fgPolarToCart3d(fgPoint3d p);
 
 
 /* Convert a cartesian coordinate to polar coordinates (lon/lat
  * specified in radians.  Distances are specified in meters. */
-fgPolarPoint3d fgCartToPolar3d(fgCartesianPoint3d cp);
+fgPoint3d fgCartToPolar3d(fgPoint3d cp);
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _POLAR_H */
+#endif /* _POLAR_HXX */
 
 
 /* $Log$
-/* Revision 1.1  1998/05/02 01:50:11  curt
-/* polar.[ch] renamed to polar3d.[ch]
+/* Revision 1.1  1998/07/08 14:40:09  curt
+/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+/* Updated fg_geodesy comments to reflect that routines expect and produce
+/*   meters.
 /*
+ * Revision 1.1  1998/05/02 01:50:11  curt
+ * polar.[ch] renamed to polar3d.[ch]
+ *
  * Revision 1.9  1998/04/25 22:06:23  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

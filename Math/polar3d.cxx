@@ -1,5 +1,5 @@
 /**************************************************************************
- * polar.c -- routines to deal with polar math and transformations
+ * polar.cxx -- routines to deal with polar math and transformations
  *
  * Written by Curtis Olson, started June 1997.
  *
@@ -29,14 +29,14 @@
 
 #include <Include/fg_constants.h>
 
-#include "polar3d.h"
+#include "polar3d.hxx"
 
 
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
  * must be specified in radians.  The FG convention is for distances
  * to be specified in meters */
-fgCartesianPoint3d fgPolarToCart3d(fgPolarPoint3d p) {
-    fgCartesianPoint3d pnew;
+fgPoint3d fgPolarToCart3d(fgPoint3d p) {
+    fgPoint3d pnew;
 
     pnew.x = cos(p.lon) * cos(p.lat) * p.radius;
     pnew.y = sin(p.lon) * cos(p.lat) * p.radius;
@@ -48,8 +48,8 @@ fgCartesianPoint3d fgPolarToCart3d(fgPolarPoint3d p) {
 
 /* Convert a cartesian coordinate to polar coordinates (lon/lat
  * specified in radians.  Distances are specified in meters. */
-fgPolarPoint3d fgCartToPolar3d(fgCartesianPoint3d cp) {
-    fgPolarPoint3d pp;
+fgPoint3d fgCartToPolar3d(fgPoint3d cp) {
+    fgPoint3d pp;
 
     pp.lon = atan2( cp.y, cp.x );
     pp.lat = FG_PI_2 - atan2( sqrt(cp.x*cp.x + cp.y*cp.y), cp.z );
@@ -62,9 +62,14 @@ fgPolarPoint3d fgCartToPolar3d(fgCartesianPoint3d cp) {
 
 
 /* $Log$
-/* Revision 1.2  1998/05/03 00:45:49  curt
-/* Commented out a debugging printf.
+/* Revision 1.1  1998/07/08 14:40:08  curt
+/* polar3d.[ch] renamed to polar3d.[ch]xx, vector.[ch] renamed to vector.[ch]xx
+/* Updated fg_geodesy comments to reflect that routines expect and produce
+/*   meters.
 /*
+ * Revision 1.2  1998/05/03 00:45:49  curt
+ * Commented out a debugging printf.
+ *
  * Revision 1.1  1998/05/02 01:50:11  curt
  * polar.[ch] renamed to polar3d.[ch]
  *
