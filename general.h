@@ -43,6 +43,10 @@ typedef struct {
     /* Last frame rate measurement */
     double frame_rate;
     double frames[FG_FRAME_RATE_HISTORY];
+
+    /* panel rendering status */
+    int panel_hist;
+
 } fgGENERAL;
 
 /* general contains all the general house keeping parameters. */
@@ -52,12 +56,15 @@ extern fgGENERAL general;
 
 
 /* $Log$
-/* Revision 1.7  1998/07/03 14:36:11  curt
-/* Added conversion constants to fg_constants.h to assist with converting
-/*   between various world units and coordinate systems.
-/* Added gl vendor/renderer/version info to general structure.  Initialized
-/*   in fg_init.cxx
+/* Revision 1.8  1998/08/20 15:09:46  curt
+/* Added a status flat for instrument panel use.
 /*
+ * Revision 1.7  1998/07/03 14:36:11  curt
+ * Added conversion constants to fg_constants.h to assist with converting
+ *   between various world units and coordinate systems.
+ * Added gl vendor/renderer/version info to general structure.  Initialized
+ *   in fg_init.cxx
+ *
  * Revision 1.6  1998/05/13 18:23:46  curt
  * fg_typedefs.h: updated version by Charlie Hotchkiss
  * general.h: moved fg_root info to fgOPTIONS structure.
