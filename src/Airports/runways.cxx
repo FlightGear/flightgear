@@ -82,7 +82,9 @@ FGRunwayList::FGRunwayList( const string& file ) {
     FGRunway rwy;
     while ( in ) {
         in >> rwy;
-        runways.insert(pair<const string, FGRunway>(rwy.id, rwy));
+        if(rwy.type == "R") {
+            runways.insert(pair<const string, FGRunway>(rwy.id, rwy));
+        }
     }
 }
 
@@ -172,7 +174,9 @@ bool FGRunwayList::search( const string& aptid, const string& rwyno,
             // results if this one matches
             current = pos;
             *r = pos->second;
-	    r->rwy_no = revrwyno;
+            // NOTE - matching revrwyno implies that runwayno was
+            // actually correct.
+            r->rwy_no = runwayno;
             r->heading += 180.0;
             string tmp = r->end1_flags;
             r->end1_flags = r->end2_flags;
