@@ -171,12 +171,19 @@ static int parse_int(char *arg, int min, int max) {
     while ( (arg[0] != '=') && (arg[0] != '\0') ) {
 	arg++;
     }
-	
+
+    if ( arg[0] == '=' ) {
+	arg++;
+    }
+
+    printf("parse_int(): arg = %s\n", arg);
+
     result = atoi(arg);
 
     if ( result < min ) { result = min; }
     if ( result > max ) { result = max; }
 
+    printf("parse_int(): result = %d\n", result);
     return(result);
 }
 
@@ -227,7 +234,7 @@ int fgOPTIONS::parse( int argc, char **argv ) {
 	} else if ( strcmp(argv[i], "--enable-wireframe") == 0 ) {
 	    wireframe = 1;	
 	} else if ( strncmp(argv[i], "--tile-radius=", 14) == 0 ) {
-	    tile_radius = parse_int(argv[i], 3, 7);
+	    tile_radius = parse_int(argv[i], 3, 9);
 	} else if ( strncmp(argv[i], "--time-offset=", 14) == 0 ) {
 	    time_offset = parse_time_offset(argv[i]);
 	} else {
@@ -289,6 +296,12 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/05/07 23:14:16  curt
+// Added "D" key binding to set autopilot heading.
+// Made frame rate calculation average out over last 10 frames.
+// Borland C++ floating point exception workaround.
+// Added a --tile-radius=n option.
+//
 // Revision 1.7  1998/05/06 03:16:25  curt
 // Added an averaged global frame rate counter.
 // Added an option to control tile radius.

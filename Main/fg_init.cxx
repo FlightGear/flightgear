@@ -169,6 +169,7 @@ int fgInitPosition( void ) {
 // General house keeping initializations
 int fgInitGeneral( void ) {
     fgGENERAL *g;
+    int i;
 
     g = &general;
 
@@ -188,6 +189,11 @@ int fgInitGeneral( void ) {
 	}
     }
     fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
+
+    // prime the frame rate counter pump
+    for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
+	g->frames[i] = 0.0;
+    }
 
     return ( 1 ); 
 }
@@ -381,6 +387,12 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/05/07 23:14:15  curt
+// Added "D" key binding to set autopilot heading.
+// Made frame rate calculation average out over last 10 frames.
+// Borland C++ floating point exception workaround.
+// Added a --tile-radius=n option.
+//
 // Revision 1.10  1998/05/06 03:16:24  curt
 // Added an averaged global frame rate counter.
 // Added an option to control tile radius.

@@ -29,6 +29,7 @@
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
+#  include <float.h>                    
 #endif
 
 #include <GL/glut.h>
@@ -542,14 +543,19 @@ static void fgMainLoop( void ) {
 	      elapsed, remainder);
 
     // Calculate frame rate average
-    accum = 0.0;
-    for ( i = FG_FRAME_RATE_HISTORY - 2; i >= 0; i-- ) {
-	accum += g->frames[i];
-	g->frames[i+1] = g->frames[i];
+    if ( elapsed > 0.0 ) {
+	accum = 0.0;
+	for ( i = FG_FRAME_RATE_HISTORY - 2; i >= 0; i-- ) {
+	    accum += g->frames[i];
+	    // printf("frame[%d] = %.2f\n", i, g->frames[i]);
+	    g->frames[i+1] = g->frames[i];
+	}
+	g->frames[0] = 1000.0 / (float)elapsed;
+	// printf("frame[0] = %.2f\n", g->frames[0]);
+	accum += g->frames[0];
+	g->frame_rate = accum / (float)FG_FRAME_RATE_HISTORY;
+	// printf("ave = %.2f\n", g->frame_rate);
     }
-    g->frames[0] = 1000.0 / (float)elapsed;
-    accum += g->frames[0];
-    g->frame_rate = accum / (float)FG_FRAME_RATE_HISTORY;
 
     // Calculate model iterations needed for next frame
     fgPrintf( FG_ALL, FG_DEBUG, 
@@ -670,6 +676,10 @@ int main( int argc, char **argv ) {
 
     f = current_aircraft.flight;
 
+#ifdef HAVE_BC5PLUS
+    _control87(MCW_EM, MCW_EM);  /* defined in float.h */
+#endif
+
     // Initialize the debugging output system
     fgInitDebug();
 
@@ -737,6 +747,12 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.12  1998/05/07 23:14:15  curt
+// Added "D" key binding to set autopilot heading.
+// Made frame rate calculation average out over last 10 frames.
+// Borland C++ floating point exception workaround.
+// Added a --tile-radius=n option.
+//
 // Revision 1.11  1998/05/06 03:16:23  curt
 // Added an averaged global frame rate counter.
 // Added an option to control tile radius.

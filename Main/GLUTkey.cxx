@@ -120,7 +120,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 83: /* S key */
 		fgAPSetMode(0);
 		return;
-		
+	case 68: /* D key */
+		fgAPSetHeading(AP_CURRENT_HEADING);
+		return;
 	}
     } else {
 	fgPrintf( FG_INPUT, FG_DEBUG, "\n");
@@ -265,10 +267,16 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.6  1998/04/28 01:20:20  curt
-/* Type-ified fgTIME and fgVIEW.
-/* Added a command line option to disable textures.
+/* Revision 1.7  1998/05/07 23:14:14  curt
+/* Added "D" key binding to set autopilot heading.
+/* Made frame rate calculation average out over last 10 frames.
+/* Borland C++ floating point exception workaround.
+/* Added a --tile-radius=n option.
 /*
+ * Revision 1.6  1998/04/28 01:20:20  curt
+ * Type-ified fgTIME and fgVIEW.
+ * Added a command line option to disable textures.
+ *
  * Revision 1.5  1998/04/25 22:06:29  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *
