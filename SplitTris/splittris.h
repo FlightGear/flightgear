@@ -24,8 +24,8 @@
  */
 
 
-#ifndef FINDEDGES_H
-#define FINDEDGES_H
+#ifndef SPLITTRIS_H
+#define SPLITTRIS_H
 
 
 #include <stdio.h>
@@ -46,11 +46,14 @@ extern int new_tris[MAX_TRIS][3];
 void triload(char *basename);
 
 
-#endif /* FINDEDGES_H */
+#endif /* SPLITTRIS_H */
 
 
 /* $Log$
-/* Revision 1.1  1998/01/14 02:11:32  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/15 02:49:25  curt
+/* Misc. housekeeping.
 /*
+ * Revision 1.1  1998/01/14 02:11:32  curt
+ * Initial revision.
+ *
  */
