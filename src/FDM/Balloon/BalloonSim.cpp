@@ -106,15 +106,15 @@ void balloon::update()
 {
     /************************************************************************/
     /* I'm  simplifying  the  balloon by  reducing the  simulation  to  two */
-    /* points:                                                              */								
+    /* points:                                                              */	
     /* the center of the basket (CB) and the center of the envelope (CE)    */
-    /*                                                                      */								
-    /*                                 ce                                   */								
-    /*                                 I                                    */								
-    /*                                 I                                    */								
-    /*                                 cg (=center of gravity)              */								
-    /*                                 I                                    */								
-    /*                                 cb                                   */								
+    /*                                                                      */
+    /*                                 ce                                   */
+    /*                                 I                                    */
+    /*                                 I                                    */
+    /*                                 cg (=center of gravity)              */
+    /*                                 I                                    */
+    /*                                 cb                                   */
     /*                                                                      */
     /* On each center  are forces acting:  gravity and  wind resitance.  CE */
     /* additionally got the lift  (=> I need to calculate the weight of the */
@@ -240,7 +240,7 @@ void balloon::update()
 
     // care for the ground
     if (position[2] < (ground_level+0.001) )
-	velocity[2] = ground_level;
+	position[2] = ground_level;
 
     //return results
     sgAddVec3(position, dTotal);
