@@ -65,18 +65,25 @@ typedef struct {
 // prototypes
 void fgAPInit( fgAIRCRAFT *current_aircraft );
 int fgAPRun( void );
+
 void fgAPToggleHeading( void );
 void fgAPToggleAltitude( void );
 void fgAPToggleTerrainFollow( void );
 void fgAPToggleAutoThrottle( void );
 
+bool fgAPTerrainFollowEnabled( void );
 bool fgAPAltitudeEnabled( void );
 bool fgAPHeadingEnabled( void );
 bool fgAPAutoThrottleEnabled( void );
+
 void fgAPAltitudeAdjust( double inc );
 void fgAPHeadingAdjust( double inc );
 void fgAPAutoThrottleAdjust( double inc );
 
+void fgAPReset(void);
+
+class puObject;
+void fgAPAdjust( puObject * );
 
 #endif // _AUTOPILOT_HXX
 
