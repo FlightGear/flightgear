@@ -1,12 +1,15 @@
 #include <GL/glut.h>		// needed before pu.h
 #include <plib/pu.h>		// plib include
 
-
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/fg_props.hxx>
 
 #include "gui.h"
 #include "trackball.h"
+
+// from main.cxx
+extern void fgReshape(int, int);
 
 // FOR MOUSE VIEW MODE
 // stashed trackball(_quat0, 0.0, 0.0, 0.0, 0.0);
@@ -38,9 +41,19 @@ void reInit(puObject *cb)
 {
 	BusyCursor(0);
 	Quat0();
+
+	// in case user has changed window size as
+	// restoreInitialState() overwrites these
+	int xsize = fgGetInt("/sim/startup/xsize");
+	int ysize = fgGetInt("/sim/startup/ysize");
+
 	build_rotmatrix(GuiQuat_mat, curGuiQuat);
 	/* check */ globals->restoreInitialState();
+
 	fgReInitSubsystems();
+
+	fgReshape( xsize, ysize );
+
 	BusyCursor(1);
 }
 
