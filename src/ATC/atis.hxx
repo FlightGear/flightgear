@@ -59,8 +59,7 @@ SG_USING_STD(string);
 class FGATIS : public FGATC {
 	
 	char type;
-	double lon, lat;
-	double elev;
+	double lon, lat, elev;
 	double x, y, z;
 	int freq;
 	int range;
